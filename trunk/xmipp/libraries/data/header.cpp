@@ -525,7 +525,7 @@ void headerXmipp::set_dimension(float Ydim, float Xdim)
     header.fNcol = Xdim;
 }
 
-void headerXmipp::get_dimension(float &Ydim, float &Xdim) const
+void headerXmipp::getDimensionension(float &Ydim, float &Xdim) const
 {
     Ydim = header.fNrow;
     Xdim = header.fNcol;

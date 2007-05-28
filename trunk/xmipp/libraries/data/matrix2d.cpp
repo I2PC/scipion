@@ -42,12 +42,12 @@ void svbksb(matrix2D<double> &u, Matrix1D<double> &w, matrix2D<double> &v,
             Matrix1D<double> &b, Matrix1D<double> &x)
 {
     // Call to the numerical recipes routine. Results will be stored in X
-    svbksb(u.adapt_for_numerical_recipes2(),
-           w.adapt_for_numerical_recipes(),
-           v.adapt_for_numerical_recipes2(),
+    svbksb(u.adaptForNumericalRecipes2(),
+           w.adaptForNumericalRecipes(),
+           v.adaptForNumericalRecipes2(),
            u.RowNo(), u.ColNo(),
-           b.adapt_for_numerical_recipes(),
-           x.adapt_for_numerical_recipes());
+           b.adaptForNumericalRecipes(),
+           x.adaptForNumericalRecipes());
 }
 
 /* Solve Cx=d, nonnegative x */
@@ -56,7 +56,7 @@ double solve_nonneg(const matrix2D<double> &C, const Matrix1D<double> &d,
 {
     if (C.xdim == 0)
         REPORT_ERROR(1108, "Solve_nonneg: Matrix is empty");
-    if (C.ydim != d.get_dim())
+    if (C.ydim != d.getDimension())
         REPORT_ERROR(1102, "Solve_nonneg: Different sizes of Matrix and Vector");
     if (d.isRow())
         REPORT_ERROR(1107, "Solve_nonneg: Not correct vector shape");
@@ -87,11 +87,11 @@ void solve_via_Cholesky(const matrix2D<double> &A, const Matrix1D<double> &b,
     matrix2D<double> Ap = A;
     Matrix1D<double> p(XSIZE(A));
     result.resize(XSIZE(A));
-    choldc(Ap.adapt_for_numerical_recipes2(), XSIZE(A),
-           p.adapt_for_numerical_recipes());
-    cholsl(Ap.adapt_for_numerical_recipes2(), XSIZE(A),
-           p.adapt_for_numerical_recipes(), b.adapt_for_numerical_recipes(),
-           result.adapt_for_numerical_recipes());
+    choldc(Ap.adaptForNumericalRecipes2(), XSIZE(A),
+           p.adaptForNumericalRecipes());
+    cholsl(Ap.adaptForNumericalRecipes2(), XSIZE(A),
+           p.adaptForNumericalRecipes(), b.adaptForNumericalRecipes(),
+           result.adaptForNumericalRecipes());
 }
 
 // Special case for complex numbers
@@ -223,7 +223,7 @@ matrix2D<double> rot2D_matrix(double ang)
 /* Translation 2D ---------------------------------------------------------- */
 matrix2D<double> translation2D_matrix(Matrix1D<double> v)
 {
-    if (v.get_dim() != 2)
+    if (v.getDimension() != 2)
         REPORT_ERROR(1002, "Translation2D_matrix: vector is not in R2");
 
     matrix2D<double> result(3, 3);
@@ -282,7 +282,7 @@ matrix2D<double> align_with_Z(const Matrix1D<double> &axis)
     Matrix1D<double>  Axis;
     matrix2D<double>  A(4, 4);
 
-    if (axis.get_dim() != 3)
+    if (axis.getDimension() != 3)
         REPORT_ERROR(1002, "align_with_Z: Axis is not in R3");
 
     // Copy axis and compute length of the projection on YZ plane

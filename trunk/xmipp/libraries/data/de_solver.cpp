@@ -127,7 +127,7 @@ bool DESolver::Solve(int maxGenerations)
                     global_ptr_desolver = this;
                     FOR_ALL_ELEMENTS_IN_MATRIX1D(trialGrad)
                     trialGrad(i) = trialSolution[i];
-                    Powell_optimizer(
+                    powellOptimizer(
                         trialGrad, 0, XSIZE(trialGrad),
                         EnergyFunctionGrad,
                         0.01, trialEnergy,

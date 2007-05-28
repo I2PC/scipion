@@ -199,8 +199,8 @@ void apply_geom_Bspline(VT& V2, matrix2D< double > A, const VT& V1,
  *
  * @code
  * matrix3D< double > V1(10, 10, 10), V2(20, 20, 20);
- * V1.set_Xmipp_origin();
- * V2.set_Xmipp_origin();
+ * V1.setXmippOrigin();
+ * V2.setXmippOrigin();
  *
  * FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(V1, V2)
  * {
@@ -335,7 +335,7 @@ public:
     matrix3D()
     {
         core_init();
-        init_shape();
+        initShape();
         dimension = 3;
     }
 
@@ -357,7 +357,7 @@ public:
     matrix3D(int Zdim, int Ydim, int Xdim)
     {
         core_init();
-        init_shape();
+        initShape();
         resize(Zdim, Ydim, Xdim);
         dimension = 3;
     }
@@ -375,7 +375,7 @@ public:
     matrix3D(const VT& V)
     {
         core_init();
-        init_shape();
+        initShape();
         *this = V;
     }
 
@@ -452,7 +452,7 @@ public:
      *
      * ydim,xdim=0, startingy,startingx=0.
      */
-    void init_shape()
+    void initShape()
     {
         xinit = yinit = zinit = 0;
         xdim = ydim = zdim = 0;
@@ -464,7 +464,7 @@ public:
      * Copy shape variables from a pattern AND THE ARRAY IS RESIZED
      */
     template<typename T1>
-    void copy_shape(const maT1& v)
+    void copyShape(const maT1& v)
     {
         if (XSIZE(*this) != XSIZE(v) || YSIZE(*this) != YSIZE(v) ||
             ZSIZE(*this) != ZSIZE(v))
@@ -546,7 +546,7 @@ public:
      * that the first physical index is 1 and not 0 as it usually is in C. New
      * memory is needed to hold the new double pointer array.
      */
-    T*** adapt_for_numerical_recipes() const
+    T*** adaptForNumericalRecipes() const
     {
         T*** m = NULL;
         ask_Tvolume(m, 1, ZSIZE(*this), 1, YSIZE(*this), 1, XSIZE(*this));
@@ -560,7 +560,7 @@ public:
     /** Kill an array produced for numerical recipes.
      * @ingroup VolumesSizeShape
      */
-    void kill_adaptation_for_numerical_recipes(T*** m) const
+    void killAdaptationForNumericalRecipes(T*** m) const
     {
         free_Tvolume(m, 1, ZSIZE(*this), 1, YSIZE(*this), 1, XSIZE(*this));
     }
@@ -596,10 +596,10 @@ public:
      * center of the volume is defined in the Xmipp fashion.
      *
      * @code
-     * V1.set_Xmipp_origin();
+     * V1.setXmippOrigin();
      * @endcode
      */
-    void set_Xmipp_origin()
+    void setXmippOrigin()
     {
         zinit = FIRST_XMIPP_INDEX(zdim);
         yinit = FIRST_XMIPP_INDEX(ydim);
@@ -616,7 +616,7 @@ public:
      * only need to move the logical starting of the array.
      *
      */
-    void move_origin_to(int k, int i, int j)
+    void moveOriginTo(int k, int i, int j)
     {
         zinit = k + FIRST_XMIPP_INDEX(zdim);
         yinit = i + FIRST_XMIPP_INDEX(ydim);
@@ -738,7 +738,7 @@ public:
     /** Another function for setting the X origin.
      * @ingroup VolumesSizeShape
      */
-    void set_startingX(int _xinit)
+    void setStartingX(int _xinit)
     {
         xinit = _xinit;
     }
@@ -773,10 +773,10 @@ public:
      * Pay attention to the dimension order (Z,Y,X).
      *
      * @code
-     * V.get_dim(Zdim, Ydim, Xdim);
+     * V.getDimension(Zdim, Ydim, Xdim);
      * @endcode
      */
-    void get_dim(int& Ydim, int& Xdim, int& Zdim) const
+    void getDimension(int& Ydim, int& Xdim, int& Zdim) const
     {
         Xdim = xdim;
         Ydim = ydim;
@@ -825,7 +825,7 @@ public:
      * Returns true if this object has got the same shape (origin and size)
      * than the argument
      */
-    bool same_shape(const VT& op) const
+    bool sameShape(const VT& op) const
     {
         return SAME_SHAPE3D(*this, op);
     }
@@ -893,8 +893,8 @@ public:
      * vector of the form (x,y,z).
      *
      * @code
-     * V(vector_R3(1, -2, 0)) = 1;
-     * val = V(vector_R3(1, -2, 0));
+     * V(vectorR3(1, -2, 0)) = 1;
+     * val = V(vectorR3(1, -2, 0));
      * @endcode
      */
     T& operator()(const Matrix1D< double >& v) const
@@ -1091,10 +1091,10 @@ public:
      * This function returns the physical position of a logical one.
      *
      * @code
-     * m.logical2physical(k_log, i_log, j_log, k_phys, i_phys, j_phys);
+     * m.toPhysical(k_log, i_log, j_log, k_phys, i_phys, j_phys);
      * @endcode
      */
-    void logical2physical(int k_log, int i_log, int j_log,
+    void toPhysical(int k_log, int i_log, int j_log,
                           int& k_phys, int& i_phys, int& j_phys) const
     {
         k_phys = k_log - zinit;
@@ -1108,10 +1108,10 @@ public:
      * This function returns the logical position of a physical one.
      *
      * @code
-     * m.physical2logical(i_phys, j_phys, i_log, j_log);
+     * m.toLogical(i_phys, j_phys, i_log, j_log);
      * @endcode
      */
-    void physical2logical(int k_phys, int i_phys, int j_phys,
+    void toLogical(int k_phys, int i_phys, int j_phys,
                           int& k_log, int& i_log, int& j_log) const
     {
         k_log = k_phys + zinit;
@@ -1257,10 +1257,10 @@ public:
      * of the Matrix2D, for which the multiplication is not a component by
      * component multiplication but an algebraic one.
      */
-    friend void array_by_array(const maT& op1, const maT& op2, maT& result,
+    friend void arrayByArray(const maT& op1, const maT& op2, maT& result,
                                char operation)
     {
-        if (!op1.same_shape(op2))
+        if (!op1.sameShape(op2))
             REPORT_ERROR(1007,
                          (std::string) "Array_by_array: different shapes (" +
                          operation + ")");
@@ -1269,7 +1269,7 @@ public:
             operation = '*';
 
         result.resize(op1);
-        core_array_by_array(op1, op2, result, operation);
+        core_arrayByArray(op1, op2, result, operation);
     }
 
     /** Reverse volume values over X axis.
@@ -1298,14 +1298,14 @@ public:
     VT reverseX() const
     {
         VT tmp(*this);
-        tmp.self_reverseX();
+        tmp.selfReverseX();
         return tmp;
     }
 
     /** Reverse matrix values over X axis, keep in this object.
      * @ingroup VolumesUtilites
      */
-    void self_reverseX()
+    void selfReverseX()
     {
         for (int k = 0; k < zdim; k++)
             for (int i = 0; i < ydim; i++)
@@ -1350,14 +1350,14 @@ public:
     VT reverseY() const
     {
         VT tmp(*this);
-        tmp.self_reverseY();
+        tmp.selfReverseY();
         return tmp;
     }
 
     /** Reverse matrix values over Y axis, keep in this object.
      * @ingroup VolumesUtilites
      */
-    void self_reverseY()
+    void selfReverseY()
     {
         for (int k = 0; k < zdim; k++)
             for (int i = 0; i <= (int)(ydim - 1) / 2; i++)
@@ -1398,14 +1398,14 @@ public:
     VT reverseZ() const
     {
         VT tmp(*this);
-        tmp.self_reverseZ();
+        tmp.selfReverseZ();
         return tmp;
     }
 
     /** Reverse matrix values over Z axis, keep in this object.
      * @ingroup VolumesUtilites
      */
-    void self_reverseZ()
+    void selfReverseZ()
     {
         for (int k = 0; k <= (int)(zdim - 1) / 2; k++)
             for (int i = 0; i < ydim; i++)
@@ -1657,7 +1657,7 @@ public:
      * axis needs not to be unitary.
      *
      * @code
-     * V2 = V1.rotate(60, vector_R3(1, 1, 1));
+     * V2 = V1.rotate(60, vectorR3(1, 1, 1));
      * @endcode
      */
     void rotate(double ang, const Matrix1D< double >& axis, VT& result,
@@ -1730,7 +1730,7 @@ public:
      *
      * @code
      * // Displacement of 2 pixels down
-     * V2 = V1.translate(vector_R3(0, 0, 2));
+     * V2 = V1.translate(vectorR3(0, 0, 2));
      * @endcode
      */
     void translate(const Matrix1D< double >& v, VT& result, bool wrap = WRAP)
@@ -1798,11 +1798,11 @@ public:
      * If the input has very high values, sometimes it is better to rescale it
      * to be between 0 and 1.
      */
-    void self_translate_center_of_mass_to_center(bool wrap = WRAP)
+    void self_translate_centerOfMass_to_center(bool wrap = WRAP)
     {
-        set_Xmipp_origin();
+        setXmippOrigin();
         Matrix1D< double > center;
-        center_of_mass(center);
+        centerOfMass(center);
         center *= -1;
         self_translate(center, wrap);
     }
@@ -1810,12 +1810,12 @@ public:
     /** Translate center of mass to center (Bspline).
      * @ingroup VolumesGeometrical
      */
-    void self_translate_center_of_mass_to_center_Bspline(
+    void self_translate_centerOfMass_to_center_Bspline(
         int Splinedegree, bool wrap = WRAP)
     {
-        set_Xmipp_origin();
+        setXmippOrigin();
         Matrix1D< double > center;
-        center_of_mass(center);
+        centerOfMass(center);
         center *= -1;
         self_translate_Bspline(Splinedegree, center, wrap);
     }
@@ -2068,7 +2068,7 @@ public:
      * This function returns the index of the maximum element of an array.
      * array(k,i,j). Returns -1 if the array is empty
      */
-    void max_index(int& kmax, int& imax, int& jmax) const
+    void maxIndex(int& kmax, int& imax, int& jmax) const
     {
         if (XSIZE(*this) == 0)
         {
@@ -2095,7 +2095,7 @@ public:
      * This function returns the index of the minimum element of an array.
      * array(k,i,j). Returns -1 if the array is empty
      */
-    void min_index(int& kmin, int& imin, int& jmin) const
+    void minIndex(int& kmin, int& imin, int& jmin) const
     {
         if (XSIZE(*this) == 0)
         {
@@ -2175,7 +2175,7 @@ public:
             tmp.clear();
             return tmp;
         }
-        tmp.copy_shape(*this);
+        tmp.copyShape(*this);
 
         for (int k = STARTINGZ(*this); k <= FINISHINGZ(*this); k++)
         {
@@ -2203,7 +2203,7 @@ void core_scalar_by_array< complex< double > > (const complex< double >& op1,
 
 // TODO Document
 template<>
-void core_array_by_array< complex< double> > (const maTC& op1, const maTC& op2,
+void core_arrayByArray< complex< double> > (const maTC& op1, const maTC& op2,
         maTC& result, char operation);
 
 /** @defgroup VolumesRelated Related functions
@@ -2235,11 +2235,11 @@ void core_array_by_array< complex< double> > (const maTC& op1, const maTC& op2,
  * V2.startingZ() = 0;
  *
  * // V1 and V2 range from (0,0,0)=(z,y,x) to (1,1,0)
- * cut_to_common_size(V1, V2);
+ * cutToCommonSize(V1, V2);
  * @endcode
  */
 template<typename T>
-void cut_to_common_size(VT& V1, VT& V2)
+void cutToCommonSize(VT& V1, VT& V2)
 {
     int z0 = MAX(STARTINGZ(V1), STARTINGZ(V2));
     int zF = MIN(FINISHINGZ(V1), FINISHINGZ(V2));
@@ -2355,7 +2355,7 @@ void radial_average(const matrix3D< T >& m,
 
 // TODO Document
 template<typename T>
-void VT::print_shape(std::ostream& out) const
+void VT::printShape(std::ostream& out) const
 {
     out << "Size(Z,Y,X): " << ZSIZE(*this) << "x" << YSIZE(*this) << "x"
     << XSIZE(*this)
@@ -2366,7 +2366,7 @@ void VT::print_shape(std::ostream& out) const
 
 // TODO Document
 template<typename T>
-void VT::get_size(int* size) const
+void VT::getSize(int* size) const
 {
     size[0] = xdim;
     size[1] = ydim;
@@ -2963,7 +2963,7 @@ void apply_geom_Bspline(VT& V2, matrix2D< double > A, const VT& V1,
 
 // TODO Document
 template<typename T>
-void VT::compute_stats(double& avg, double& stddev, T& min_val, T& max_val,
+void VT::computeStats(double& avg, double& stddev, T& min_val, T& max_val,
                        const Matrix1D< double >& corner1,
                        const Matrix1D< double >& corner2) const
 {
@@ -2996,7 +2996,7 @@ void VT::compute_stats(double& avg, double& stddev, T& min_val, T& max_val,
 
 // TODO Document
 template <class T>
-void VT::compute_double_minmax(double& min_val, double& max_val,
+void VT::computeDoubleMinMax(double& min_val, double& max_val,
                                const Matrix1D< double >& corner1,
                                const Matrix1D< double >& corner2) const
 {
@@ -3014,7 +3014,7 @@ void VT::compute_double_minmax(double& min_val, double& max_val,
 
 // TODO Document
 template<typename T>
-void VT::center_of_mass(Matrix1D< double >& center, void* mask)
+void VT::centerOfMass(Matrix1D< double >& center, void* mask)
 {
     center.initZeros(3);
     double mass = 0;

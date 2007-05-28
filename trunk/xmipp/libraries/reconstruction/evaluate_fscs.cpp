@@ -133,7 +133,7 @@ void Prog_Evaluate_FSCs_Parameters::compute_average_resolution(
     }
     progress_bar(XSIZE(resol));
     double min_resol, max_resol;
-    resol.compute_stats(avg_resol, stddev_resol, min_resol, max_resol);
+    resol.computeStats(avg_resol, stddev_resol, min_resol, max_resol);
 }
 
 /* Compute average resolution ============================================== */

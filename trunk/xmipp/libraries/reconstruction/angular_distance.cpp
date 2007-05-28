@@ -117,7 +117,7 @@ double Prog_angular_distance_prm::second_angle_set(double rot1, double tilt1,
         if (projdir_mode && i != 2) continue;
         E1.getRow(i, v1);
         E2.getRow(i, v2);
-        double dist = RAD2DEG(acos(CLIP(dot_product(v1, v2), -1, 1)));
+        double dist = RAD2DEG(acos(CLIP(dotProduct(v1, v2), -1, 1)));
         axes_dist += dist;
         N++;
 #ifdef DEBUG

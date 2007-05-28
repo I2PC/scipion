@@ -138,7 +138,7 @@ public:
 
     // Dimension of each slice (image)
     void set_dimension(float Ydim, float Xdim);
-    void get_dimension(float& Ydim, float& Xdim) const;
+    void getDimensionension(float& Ydim, float& Xdim) const;
 
     int get_header_size() const
     {

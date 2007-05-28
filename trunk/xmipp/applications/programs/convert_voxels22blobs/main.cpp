@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
         if (voxels_to_blobs)
         {
             vol_voxels.read(fn_in);
-            vol_voxels().set_Xmipp_origin();
+            vol_voxels().setXmippOrigin();
             voxels2blobs(&(vol_voxels()), blob, vol_blobs, grid_type,
                          grid_relative_size, lambda, NULL, NULL, final_error, false, R);
             vol_blobs.write(fn_out);

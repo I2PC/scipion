@@ -236,7 +236,7 @@ void ImageViewer::generateFFTImage(matrix2D<double> &out)
         if (MULTIDIM_ELEM(Isubs, i) == 1) MULTIDIM_ELEM(out, i) = min_positive - 1;
     }
 
-    out.set_Xmipp_origin();
+    out.setXmippOrigin();
 }
 
 /****************************************************/
@@ -287,7 +287,7 @@ void ImageViewer::doOption(int item)
         Matrix1D<double> radial_profile;
         Matrix1D<int> center_of_rot(2), radial_count;
         radial_average(xmippImage(), center_of_rot, radial_profile, radial_count);
-        radial_profile.show_with_gnuplot("Radius", "Radial average");
+        radial_profile.showWithGnuPlot("Radius", "Radial average");
         radial_profile.edit();
     }
     else if (item == line_setup)
@@ -300,7 +300,7 @@ void ImageViewer::doOption(int item)
         xmippImage().profile(
             xi + STARTINGX(xmippImage()), yi + STARTINGY(xmippImage()),
             xf + STARTINGX(xmippImage()), yf + STARTINGY(xmippImage()), 100, profile);
-        profile.show_with_gnuplot("Length (%)", "Profile");
+        profile.showWithGnuPlot("Length (%)", "Profile");
         profile.edit();
     }
     else if (item == editctfmodel)
@@ -433,7 +433,7 @@ void ImageViewer::updateStatus()
         if (image.valid(pickx, picky))
         {
             int y_log, x_log;
-            xmippImage().physical2logical(picky, pickx, y_log, x_log);
+            xmippImage().toLogical(picky, pickx, y_log, x_log);
             moremsg.sprintf("(%d,%d)=(%d,%d)= %.3f ",
                             picky, pickx,
                             y_log, x_log,
@@ -705,7 +705,7 @@ bool ImageViewer::loadImage(const char *fileName,
                 }
                 else REPORT_ERROR(1, "ImageViewer::loadImage: Unknown format");
 
-                tmpImage().set_Xmipp_origin();
+                tmpImage().setXmippOrigin();
                 minGray = _minGray;
                 maxGray = _maxGray;
                 ok = xmipp2Qt(tmpImage);
@@ -765,7 +765,7 @@ bool ImageViewer::loadMatrix(matrix2D<double> &_matrix,
     }
     tmpImage() = _matrix;
 
-    tmpImage().set_Xmipp_origin();
+    tmpImage().setXmippOrigin();
     minGray = _minGray;
     maxGray = _maxGray;
     ok = xmipp2Qt(tmpImage);
@@ -968,7 +968,7 @@ void ImageViewer::keyPressEvent(QKeyEvent* e)
     case Key_R:
         if (e->state() == ControlButton)
         { // If 'Ctrol R' key,
-            xmippImage().move_origin_to(-xmippImage().startingY(), -xmippImage().startingX());// sets origin at the upper left corner
+            xmippImage().moveOriginTo(-xmippImage().startingY(), -xmippImage().startingX());// sets origin at the upper left corner
         }
         break;
     case Key_Q:
@@ -980,7 +980,7 @@ void ImageViewer::keyPressEvent(QKeyEvent* e)
     case Key_O:    // Xmipp origin
         if (e->state() == ControlButton)
         { // If 'Ctrol N' key,
-            xmippImage().set_Xmipp_origin(); // sets origin at the center of the iamge.
+            xmippImage().setXmippOrigin(); // sets origin at the center of the iamge.
         }
         break;
     case Key_N:    // Natural size (original size)
@@ -1266,7 +1266,7 @@ void ImageViewer::runEnhancePSD(vector<float> enhance_prms)
             I(i, j) = ABS(Iaux(i, j));
         CenterFFT(I(), false);
     }
-    I().set_Xmipp_origin();
+    I().setXmippOrigin();
     xmipp2Qt(I);
     showImage();
 }

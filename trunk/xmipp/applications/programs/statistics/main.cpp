@@ -114,12 +114,12 @@ int main(int argc, char **argv)
                 if (volume_type == headerXmipp::VOL_XMIPP)
                 {
                     volume.read(file_name);
-                    volume().set_Xmipp_origin();
+                    volume().setXmippOrigin();
                 }
                 else if (volume_type == headerXmipp::VOL_INT)
                 {
                     volume_int.read(file_name);
-                    volume_int().set_Xmipp_origin();
+                    volume_int().setXmippOrigin();
                 }
 
                 // Generate mask if necessary
@@ -127,10 +127,10 @@ int main(int argc, char **argv)
                 const matrix3D<int> &mask3D = mask_prm.get_binary_mask3D();
 
                 if (volume_type == headerXmipp::VOL_XMIPP)
-                    compute_stats_within_binary_mask(mask3D, V, min_val, max_val,
+                    computeStats_within_binary_mask(mask3D, V, min_val, max_val,
                                                      avg, stddev);
                 else if (volume_type == headerXmipp::VOL_INT)
-                    compute_stats_within_binary_mask(mask3D, VI, min_val_int,
+                    computeStats_within_binary_mask(mask3D, VI, min_val_int,
                                                      max_val_int, avg, stddev);
 
                 // Show information
@@ -168,14 +168,14 @@ int main(int argc, char **argv)
             {
                 // Read the image applying the header
                 image.read(file_name, false, false, apply_geo);
-                image().set_Xmipp_origin();
+                image().setXmippOrigin();
 
                 // Generate mask if necessary
                 mask_prm.generate_2Dmask(I);
                 const matrix2D<int> &mask2D = mask_prm.get_binary_mask2D();
 
                 // Compute statistics
-                compute_stats_within_binary_mask(mask2D, I, min_val, max_val,
+                computeStats_within_binary_mask(mask2D, I, min_val, max_val,
                                                  avg, stddev);
 
                 // Show information

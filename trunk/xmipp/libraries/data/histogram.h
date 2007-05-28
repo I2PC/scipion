@@ -349,7 +349,7 @@ template<typename T>
 void compute_hist(T& array, histogram1D& hist, int no_steps)
 {
     double min, max;
-    array.compute_double_minmax(min, max);
+    array.computeDoubleMinMax(min, max);
     compute_hist(array, hist, min, max, no_steps);
 }
 
@@ -387,7 +387,7 @@ void compute_hist(const matrix2D< T >& v, histogram1D& hist,
                   int no_steps = 100)
 {
     double min, max;
-    v.compute_double_minmax(min, max, corner1, corner2);
+    v.computeDoubleMinMax(min, max, corner1, corner2);
     hist.init(min, max, no_steps);
 
     Matrix1D< int > r(2);
@@ -407,7 +407,7 @@ void compute_hist(const matrix3D< T >& v, histogram1D& hist,
                   int no_steps = 100)
 {
     double min, max;
-    v.compute_double_minmax(min, max, corner1, corner2);
+    v.computeDoubleMinMax(min, max, corner1, corner2);
     hist.init(min, max, no_steps);
 
     Matrix1D< int >r(3);
@@ -859,10 +859,10 @@ void compute_hist(const T& v1, const T& v2,
                   histogram2D& hist, int no_steps1, int no_steps2)
 {
     double min1, max1;
-    v1.compute_double_minmax(min1, max1);
+    v1.computeDoubleMinMax(min1, max1);
 
     double min2, max2;
-    v2.compute_double_minmax(min2, max2);
+    v2.computeDoubleMinMax(min2, max2);
 
     compute_hist(v1, v2, hist, min1, max1, min2, max2, no_steps1, no_steps2);
 }
@@ -878,7 +878,7 @@ void compute_hist(const T& v1, const T& v2, histogram2D& hist,
                   double m1, double M1, double m2, double M2, int no_steps1,
                   int no_steps2)
 {
-    if (!v1.same_shape(v2))
+    if (!v1.sameShape(v2))
         REPORT_ERROR(1, "compute_hist: v1 and v2 are of different shape");
 
     hist.init(m1, M1, no_steps1, m2, M2, no_steps2);

@@ -168,7 +168,7 @@ void ShowSel::compute_global_normalization_params()
         ImageXmipp I(imgnames[i]);
         if (load_mode == PSD_mode) xmipp2PSD(I(), I());
         double min_val, max_val;
-        I().compute_double_minmax(min_val, max_val);
+        I().computeDoubleMinMax(min_val, max_val);
         if (first || min_val < minPixel) minPixel = min_val;
         if (first || max_val > maxPixel) maxPixel = max_val;
         first = false;

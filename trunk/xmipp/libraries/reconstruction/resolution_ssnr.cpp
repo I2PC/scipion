@@ -115,10 +115,10 @@ void Prog_SSNR_prm::produce_side_info()
         if (Is_VolumeXmipp(fn_S))
         {
             S.read(fn_S);
-            S().set_Xmipp_origin();
+            S().setXmippOrigin();
             N.read(fn_N);
-            N().set_Xmipp_origin();
-            if (!S().same_shape(N()))
+            N().setXmippOrigin();
+            if (!S().sameShape(N()))
                 REPORT_ERROR(1,
                              "SSNR: Signal and Noise volumes are not of the same size");
         }
@@ -155,7 +155,7 @@ void Prog_SSNR_prm::produce_side_info()
     else
     {
         VSSNR.read(fn_VSSNR);
-        VSSNR().set_Xmipp_origin();
+        VSSNR().setXmippOrigin();
     }
 }
 
@@ -182,9 +182,9 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, matrix2D<double> &output)
     {
         ImageXmipp Is, In, Inp;
         Is.read(SF_S.NextImg());
-        Is().set_Xmipp_origin();
+        Is().setXmippOrigin();
         In.read(SF_N.NextImg());
-        In().set_Xmipp_origin();
+        In().setXmippOrigin();
         Inp() = In();
 
         Projection Iths, Ithn;

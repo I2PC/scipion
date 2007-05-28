@@ -345,7 +345,7 @@ void maskImg::updateStatus()
         if (image.valid(pickx, picky))
         {
             int y_log, x_log;
-            xmippImage().physical2logical(picky, pickx, y_log, x_log);
+            xmippImage().toLogical(picky, pickx, y_log, x_log);
             moremsg.sprintf("(%d,%d)= %.3f ",
                             x_log, y_log,
                             xmippImage(y_log, x_log));
@@ -845,13 +845,13 @@ void maskImg::keyPressEvent(QKeyEvent* e)
     case Key_R:
         if (e->state() == ControlButton)
         { // If 'Ctrol R' key,
-            xmippImage().move_origin_to(-xmippImage().startingY(), -xmippImage().startingX());// sets origin at the upper left corner
+            xmippImage().moveOriginTo(-xmippImage().startingY(), -xmippImage().startingX());// sets origin at the upper left corner
         }
         break;
     case Key_O:    // Xmipp origin
         if (e->state() == ControlButton)
         { // If 'Ctrol N' key,
-            xmippImage().set_Xmipp_origin(); // sets origin at the center of the iamge.
+            xmippImage().setXmippOrigin(); // sets origin at the center of the iamge.
         }
         break;
     case Key_Q:    // Quit program

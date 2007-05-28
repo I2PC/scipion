@@ -57,7 +57,7 @@ int dimension;
  * No end of line character is written after this print out.
  *
  * @code
- * a.compute_stats();
+ * a.computeStats();
  * std::cout << "Statistics of variable a ";
  * a.print_stats();
  * std::cout << std::endl;
@@ -68,7 +68,7 @@ void print_stats(std::ostream& out = std::cout) const
     T min, max;
     double avg, dev;
 
-    compute_stats(avg, dev, min, max);
+    computeStats(avg, dev, min, max);
 
     out.setf(std::ios::showpoint);
     int old_prec = out.precision(7);
@@ -140,7 +140,7 @@ T compute_min() const
  *
  * As doubles.
  */
-void compute_double_minmax(double& min, double& max) const
+void computeDoubleMinMax(double& min, double& max) const
 {
     if (size <= 0)
         return;
@@ -162,7 +162,7 @@ void compute_double_minmax(double& min, double& max) const
  *
  * The region is specified by two corners.
  */
-void compute_double_minmax(double& min,
+void computeDoubleMinMax(double& min,
                            double& max,
                            const Matrix1D< double >& corner1,
                            const Matrix1D< double >& corner2) const;
@@ -172,7 +172,7 @@ void compute_double_minmax(double& min,
  *
  * The region is specified by two corners.
  */
-void compute_double_minmax(double& min,
+void computeDoubleMinMax(double& min,
                            double& max,
                            const Matrix1D< int >& corner1,
                            const Matrix1D< int >& corner2) const
@@ -181,7 +181,7 @@ void compute_double_minmax(double& min,
     type_cast(corner1, dcorner1);
     type_cast(corner2, dcorner2);
 
-    compute_double_minmax(min, max, dcorner1, dcorner2);
+    computeDoubleMinMax(min, max, dcorner1, dcorner2);
 }
 
 /** Average of the values in the array.
@@ -254,7 +254,7 @@ double compute_stddev() const
  * The average, standard deviation, minimum and maximum value are
  * returned.
  */
-void compute_stats(double& avg, double& stddev, T& min, T& max) const
+void computeStats(double& avg, double& stddev, T& min, T& max) const
 {
     if (size <= 0)
         return;
@@ -296,7 +296,7 @@ void compute_stats(double& avg, double& stddev, T& min, T& max) const
  *
  * The region is specified by two corners.
  */
-void compute_stats(double& avg,
+void computeStats(double& avg,
                    double& stddev,
                    T& min,
                    T& max,
@@ -307,7 +307,7 @@ void compute_stats(double& avg,
     type_cast(corner1, dcorner1);
     type_cast(corner2, dcorner2);
 
-    compute_stats(avg, stddev, min, max, dcorner1, dcorner2);
+    computeStats(avg, stddev, min, max, dcorner1, dcorner2);
 }
 
 /** Compute statistics within region.
@@ -315,7 +315,7 @@ void compute_stats(double& avg,
  *
  * The region is specified by two corners.
  */
-void compute_stats(double& avg,
+void computeStats(double& avg,
                    double& stddev,
                    T& min,
                    T& max,
@@ -381,7 +381,7 @@ void statistics_adjust(double avgF, double stddevF)
         return;
 
     T min, max;
-    compute_stats(avg0, stddev0, min, max);
+    computeStats(avg0, stddev0, min, max);
 
     if (stddev0 != 0)
         a = static_cast< double >(stddevF) / static_cast< double >(stddev0);
@@ -416,7 +416,7 @@ void statistics_adjust(double avgF, double stddevF)
  *
  * It assumes that the result is already resized.
  */
-friend void core_array_by_array<>(const maT& op1,
+friend void core_arrayByArray<>(const maT& op1,
                                   const maT& op2,
                                   maT& result,
                                   char operation);
@@ -427,7 +427,7 @@ friend void core_array_by_array<>(const maT& op1,
 maT operator+(const maT& op1) const
 {
     maT tmp;
-    array_by_array(*this, op1, tmp, '+');
+    arrayByArray(*this, op1, tmp, '+');
     return tmp;
 }
 
@@ -437,7 +437,7 @@ maT operator+(const maT& op1) const
 maT operator-(const maT& op1) const
 {
     maT tmp;
-    array_by_array(*this, op1, tmp, '-');
+    arrayByArray(*this, op1, tmp, '-');
     return tmp;
 }
 
@@ -447,7 +447,7 @@ maT operator-(const maT& op1) const
 maT operator*(const maT& op1) const
 {
     maT tmp;
-    array_by_array(*this, op1, tmp, '*');
+    arrayByArray(*this, op1, tmp, '*');
     return tmp;
 }
 
@@ -457,7 +457,7 @@ maT operator*(const maT& op1) const
 maT operator/(const maT& op1) const
 {
     maT tmp;
-    array_by_array(*this, op1, tmp, '/');
+    arrayByArray(*this, op1, tmp, '/');
     return tmp;
 }
 
@@ -467,7 +467,7 @@ maT operator/(const maT& op1) const
 maT operator^(const maT& op1) const
 {
     maT tmp;
-    array_by_array(*this, op1, tmp, '^');
+    arrayByArray(*this, op1, tmp, '^');
     return tmp;
 }
 
@@ -476,7 +476,7 @@ maT operator^(const maT& op1) const
  */
 void operator+=(const maT& op1)
 {
-    array_by_array(*this, op1, *this, '+');
+    arrayByArray(*this, op1, *this, '+');
 }
 
 /** v3 -= v2.
@@ -484,7 +484,7 @@ void operator+=(const maT& op1)
  */
 void operator-=(const maT& op1)
 {
-    array_by_array(*this, op1, *this, '-');
+    arrayByArray(*this, op1, *this, '-');
 }
 
 /** v3 *= v2.
@@ -492,7 +492,7 @@ void operator-=(const maT& op1)
  */
 void operator*=(const maT& op1)
 {
-    array_by_array(*this, op1, *this, 'x');
+    arrayByArray(*this, op1, *this, 'x');
 }
 
 /** v3 /= v2.
@@ -500,7 +500,7 @@ void operator*=(const maT& op1)
  */
 void operator/=(const maT& op1)
 {
-    array_by_array(*this, op1, *this, '/');
+    arrayByArray(*this, op1, *this, '/');
 }
 
 /** v3 ^= v2.
@@ -508,7 +508,7 @@ void operator/=(const maT& op1)
  */
 void operator^=(const maT& op1)
 {
-    array_by_array(*this, op1, *this, '^');
+    arrayByArray(*this, op1, *this, '^');
 }
 
 /** @defgroup ArrayByScalar Array "by" scalar operations.
@@ -789,7 +789,7 @@ void core_deallocate()
 template<typename T1>
 void resize(const maT1 &op1)
 {
-    copy_shape(op1);
+    copyShape(op1);
 }
 
 /** Get size.
@@ -799,7 +799,7 @@ void resize(const maT1 &op1)
  * or a vector, then the higher order dimensions will be set to 1, ie,
  * (Xdim, 1, 1) or (Xdim, Ydim, 1).
  */
-void get_size(int* size) const;
+void getSize(int* size) const;
 
 /** Print shape of multidimensional array.
  * @ingroup Size
@@ -809,14 +809,14 @@ void get_size(int* size) const;
  * the end.
  *
  * @code
- * v.print_shape();
+ * v.printShape();
  *
  * std::ofstream fh;
  * ...;
- * v.print_shape(fh);
+ * v.printShape(fh);
  * @endcode
  */
-void print_shape(std::ostream& out = std::cout) const;
+void printShape(std::ostream& out = std::cout) const;
 
 /** Makes an array empty.
  * @ingroup Size
@@ -831,7 +831,7 @@ void print_shape(std::ostream& out = std::cout) const;
 void clear()
 {
     core_deallocate();
-    init_shape();
+    initShape();
 }
 
 /** Index outside logical definition region.
@@ -1099,7 +1099,7 @@ void core_unary_minus()
  */
 bool equal(const maT& op, double accuracy = XMIPP_EQUAL_ACCURACY) const
 {
-    if (!same_shape(op))
+    if (!sameShape(op))
         return false;
     else
         return core_equality(op, accuracy);
@@ -1338,7 +1338,7 @@ void for_all(T(*f)(T))
 friend double dissimilarity(maT& op1, maT& op2, double percentil_out)
 {
     maT diff;
-    array_by_array(op1, op2, diff, '-');
+    arrayByArray(op1, op2, diff, '-');
     diff.ABSnD();
 
     // FIXME
@@ -1619,7 +1619,7 @@ friend maT ABSnD(const maT& a)
  */
 friend void MAXnD(const maT& v1, const maT& v2, maT& result)
 {
-    if (!v1.same_shape(v2))
+    if (!v1.sameShape(v2))
         REPORT_ERROR(1007, "MAX: arrays of different shape");
 
     result.resize(v1);
@@ -1648,7 +1648,7 @@ friend maT MAXnD(const maT& v1, const maT& v2)
  */
 friend void MINnD(const maT& v1, const maT& v2, maT& result)
 {
-    if (!v1.same_shape(v2))
+    if (!v1.sameShape(v2))
         REPORT_ERROR(1007, "MIN: arrays of different shape");
 
     result.resize(v1);
@@ -1762,5 +1762,5 @@ friend maT log10(const maT& a)
  * within the object whose mask value is 1 (also in logical indexes)
  * are taken into account.
  */
-void center_of_mass(Matrix1D< double >& center, void* mask = NULL);
+void centerOfMass(Matrix1D< double >& center, void* mask = NULL);
 

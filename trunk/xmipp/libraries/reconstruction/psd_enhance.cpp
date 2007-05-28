@@ -106,7 +106,7 @@ void Prog_Enhance_PSD_Parameters::apply(matrix2D<double> &PSD)
     Filter.w1 = filter_w1;
     Filter.w2 = filter_w2;
     Filter.raised_w = decay_width;
-    PSD.set_Xmipp_origin();
+    PSD.setXmippOrigin();
     Filter.generate_mask(PSD);
     Filter.apply_mask_Space(PSD);
     STARTINGX(PSD) = STARTINGY(PSD) = 0;
@@ -129,7 +129,7 @@ void Prog_Enhance_PSD_Parameters::apply(matrix2D<double> &PSD)
     //Compute the mean and the standard deviation under the mask
     //and normalize the PSD image
     double min_val, max_val, avg, stddev;
-    compute_stats_within_binary_mask(mask, PSD, min_val, max_val, avg, stddev);
+    computeStats_within_binary_mask(mask, PSD, min_val, max_val, avg, stddev);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(PSD)
     if (mask(i, j)) PSD(i, j) = (PSD(i, j) - avg) / stddev;
 

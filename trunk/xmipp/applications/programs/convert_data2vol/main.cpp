@@ -106,7 +106,7 @@ int main(int argc, char **argv)
         //Adjust the range to 0-1
         mask().range_adjust(0, 1);   // just in case
         //if (noBB)
-        mask().set_Xmipp_origin();   // sets origin at the center of the mask.
+        mask().setXmippOrigin();   // sets origin at the center of the mask.
         cout << mask;       // Output Volumen Information
     }
 
@@ -146,7 +146,7 @@ int main(int argc, char **argv)
         {
             image().resize(mask());         // creates image
         }
-        image().set_Xmipp_origin();       // sets origin at the center of the image.
+        image().setXmippOrigin();       // sets origin at the center of the image.
         int counter = 0;
         double minVal = MAXFLOAT;
         for (int z = STARTINGZ(image()); z <= FINISHINGZ(image()); z++)

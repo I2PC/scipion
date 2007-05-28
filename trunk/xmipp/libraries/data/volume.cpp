@@ -81,7 +81,7 @@ void write_as_CCP4(VolumeT<double> *V, const FileName &fn, double Ts)
     WRITE_FAUX; // 19: MAPS
 
     double minval, maxval, avgval, stddev;
-    (*V)().compute_stats(minval, maxval, avgval, stddev);
+    (*V)().computeStats(minval, maxval, avgval, stddev);
     faux = (float)minval;
     WRITE_FAUX; // 20: Minimum density value
     faux = (float)maxval;

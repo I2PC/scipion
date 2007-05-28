@@ -357,7 +357,7 @@ void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank)
     {
         eachvol_start.push_back(nr_dir);
         vol.read(SFvol.NextImg());
-        vol().set_Xmipp_origin();
+        vol().setXmippOrigin();
         DFlib.go_beginning();
         DFlib.adjust_to_data_line();
         while (!DFlib.eof())
@@ -559,9 +559,9 @@ void Prog_Refine3d_prm::calculate_3DSSNR(Matrix1D<double> &spectral_signal, int 
 
     center.initZeros();
     proj().resize(dim, dim);
-    proj().set_Xmipp_origin();
+    proj().setXmippOrigin();
     mask.resize(dim, dim);
-    mask.set_Xmipp_origin();
+    mask.setXmippOrigin();
     RaisedCosineMask(mask, dim / 2 - 2, dim / 2);
 
     if (verb > 0)
@@ -586,11 +586,11 @@ void Prog_Refine3d_prm::calculate_3DSSNR(Matrix1D<double> &spectral_signal, int 
         fn_tmp2 += ".vol";
         nvol.read(fn_tmp);
         vol.read(fn_tmp2);
-        nvol().set_Xmipp_origin();
-        vol().set_Xmipp_origin();
+        nvol().setXmippOrigin();
+        vol().setXmippOrigin();
         Mone.resize(dim, dim);
         Mone.init_constant(1. / (double)(dim*dim));
-        Mone.set_Xmipp_origin();
+        Mone.setXmippOrigin();
         SFnoise.go_beginning();
 
         c = 0;
@@ -609,7 +609,7 @@ void Prog_Refine3d_prm::calculate_3DSSNR(Matrix1D<double> &spectral_signal, int 
             FourierTransform(proj(), Faux);
             FFT_magnitude(Faux, Maux);
             CenterFFT(Maux, true);
-            Maux.set_Xmipp_origin();
+            Maux.setXmippOrigin();
             Maux *= Maux;
             if (c == 0) alpha_T = Maux * head.Weight();
             else alpha_T += Maux * head.Weight();
@@ -619,7 +619,7 @@ void Prog_Refine3d_prm::calculate_3DSSNR(Matrix1D<double> &spectral_signal, int 
             FourierTransform(proj(), Faux);
             FFT_magnitude(Faux, Maux);
             CenterFFT(Maux, true);
-            Maux.set_Xmipp_origin();
+            Maux.setXmippOrigin();
             Maux *= Maux;
             if (c == 0) Msignal = Maux * head.Weight();
             else Msignal += Maux * head.Weight();
@@ -628,9 +628,9 @@ void Prog_Refine3d_prm::calculate_3DSSNR(Matrix1D<double> &spectral_signal, int 
             if (c % MAX(1, SFnoise.ImgNo() / 60) == 0 && verb > 0) progress_bar(c);
         }
 
-        alpha_T.set_Xmipp_origin();
-        alpha_N.set_Xmipp_origin();
-        Msignal.set_Xmipp_origin();
+        alpha_T.setXmippOrigin();
+        alpha_N.setXmippOrigin();
+        Msignal.setXmippOrigin();
         alpha_signal.initZeros();
         alpha_noise.initZeros();
         input_signal.initZeros();
@@ -709,7 +709,7 @@ void Prog_Refine3d_prm::remake_SFvol(int iter, bool rewrite, bool include_noise)
         while (!SFvol.eof())
         {
             ref_vol.read(SFvol.NextImg());
-            ref_vol().set_Xmipp_origin();
+            ref_vol().setXmippOrigin();
             if (Nvols > 1)
             {
                 fn_tmp2 = fn_tmp + "_vol";
@@ -825,7 +825,7 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv)
             // Read corresponding volume from disc
             fn_vol = SFvol.NextImg();
             vol.read(fn_vol);
-            vol().set_Xmipp_origin();
+            vol().setXmippOrigin();
             dim = vol().RowNo();
             // Store the original volume on disc
             fn_tmp = fn_vol + ".original";
@@ -841,7 +841,7 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv)
                 if (fn_symmask != "")
                 {
                     Vsymmask.read(fn_symmask);
-                    Vsymmask().set_Xmipp_origin();
+                    Vsymmask().setXmippOrigin();
                     if (Vsymmask().compute_max() > 1. || Vsymmask().compute_min() < 0.)
                         REPORT_ERROR(1, "ERROR: sym_mask should have values between 0 and 1!");
                     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Vsymmask())
@@ -1005,7 +1005,7 @@ bool Prog_Refine3d_prm::check_convergence(int iter)
         }
         else fn_vol += ".vol";
         vol.read(fn_vol);
-        vol().set_Xmipp_origin();
+        vol().setXmippOrigin();
         dim = vol().RowNo();
         old_vol().initZeros(vol());
         diff_vol().initZeros(vol());

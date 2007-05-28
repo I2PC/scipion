@@ -94,17 +94,17 @@ int main(int argc, char **argv)
     {
         // Read input volumes
         volume.read(fn_input);
-        volume().set_Xmipp_origin();
+        volume().setXmippOrigin();
         mask_prm.generate_3Dmask(volume());
         VolumeXmipp volume_sym, volume_aux;
 
         // Compute center of mass
-        Matrix1D<double> center_of_mass;
-        volume().center_of_mass(center_of_mass, &mask_prm.get_binary_mask3D());
-        cout << "Center of mass (X,Y,Z)= " << center_of_mass.transpose() << endl;
+        Matrix1D<double> centerOfMass;
+        volume().centerOfMass(centerOfMass, &mask_prm.get_binary_mask3D());
+        cout << "Center of mass (X,Y,Z)= " << centerOfMass.transpose() << endl;
 
         // Move origin to that center of mass
-        volume().self_translate(-center_of_mass, DONT_WRAP);
+        volume().self_translate(-centerOfMass, DONT_WRAP);
         if (centerVolume) volume.write();
 
         // Look for the rotational symmetry axis
@@ -125,7 +125,7 @@ int main(int argc, char **argv)
                     Euler_angles2matrix(rot, tilt, 0, Euler);
                     Matrix1D<double> sym_axis(3);
                     Euler.getRow(2, sym_axis);
-                    sym_axis.self_transpose();
+                    sym_axis.selfTranspose();
 
                     // Symmetrize along this axis
                     volume_sym() = volume();

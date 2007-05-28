@@ -225,10 +225,10 @@ public:
      * setup loops.
      *
      * @code
-     * vol.move_origin_to_center();
+     * vol.moveOriginTo_center();
      * @endcode
      */
-    void move_origin_to_center()
+    void moveOriginTo_center()
     {
         img.startingZ() = FIRST_XMIPP_INDEX(img.zdim);
         img.startingY() = FIRST_XMIPP_INDEX(img.ydim);
@@ -249,7 +249,7 @@ public:
     void adapt_to_size(int Zdim, int Ydim, int Xdim)
     {
         img.initZeros(Zdim, Ydim, Xdim);
-        move_origin_to_center();
+        moveOriginTo_center();
     }
 
     /// @defgroup VolumesAccess Image access.
@@ -495,7 +495,7 @@ public:
         {
             double min_val, max_val;
 
-            (*this)().compute_double_minmax(min_val, max_val);
+            (*this)().computeDoubleMinMax(min_val, max_val);
 
             if (volume_type == VBYTE)
                 a = 255;

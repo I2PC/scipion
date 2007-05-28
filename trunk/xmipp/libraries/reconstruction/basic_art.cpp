@@ -428,10 +428,10 @@ void sort_perpendicular(int numIMG, Recons_info *IMG_Inf,
             if (!VEC_ELEM(chosen, j))
             {
                 VEC_ELEM(product, j) +=
-                    ABS(dot_product(v.Row(VEC_ELEM(ordered_list, i - 1)), v.Row(j)));
+                    ABS(dotProduct(v.Row(VEC_ELEM(ordered_list, i - 1)), v.Row(j)));
                 if (N != -1 && i > N)
                     VEC_ELEM(product, j) -=
-                        ABS(dot_product(v.Row(VEC_ELEM(ordered_list, i - N - 1)), v.Row(j)));
+                        ABS(dotProduct(v.Row(VEC_ELEM(ordered_list, i - N - 1)), v.Row(j)));
                 if (VEC_ELEM(product, j) < min_prod)
                 {
                     min_prod = VEC_ELEM(product, j);
@@ -596,7 +596,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
         {
             surface_mask = new VolumeXmipp;
             surface_mask->read(fn_surface_mask);
-            (*surface_mask)().set_Xmipp_origin();
+            (*surface_mask)().setXmippOrigin();
         }
     }
 
@@ -632,7 +632,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
 
             fn_resi = IMG_Inf[iact_proj].fn_proj;
             read_proj.read(fn_resi);
-            read_proj().set_Xmipp_origin();
+            read_proj().setXmippOrigin();
             weight = read_proj.weight();
             if (weight < 0)
             {
@@ -666,10 +666,10 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
                 {
                     Matrix1D<double> corner;
                     if (Zoutput_volume_size == 0)
-                        corner = vector_R3((double)projXdim / 2, (double)projXdim / 2,
+                        corner = vectorR3((double)projXdim / 2, (double)projXdim / 2,
                                            (double)projXdim / 2);
                     else
-                        corner = vector_R3(
+                        corner = vectorR3(
                                      (double)Xoutput_volume_size / 2,
                                      (double)Youtput_volume_size / 2,
                                      (double)Zoutput_volume_size / 2);
@@ -739,7 +739,7 @@ void Basic_ART_Parameters::compute_CAV_weights(GridVolume &vol_basis0,
     for (int act_proj = 0; act_proj < numProjs_node ; act_proj++)
     {
         read_proj.read(IMG_Inf[ordered_list(act_proj)].fn_proj, apply_shifts);
-        read_proj.move_origin_to_center();
+        read_proj.moveOriginTo_center();
 
         // Projection extension? .........................................
         if (proj_ext != 0)

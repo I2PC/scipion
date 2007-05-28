@@ -205,7 +205,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
      prm.residual_imgs.clear();
      for (int iact_proj = 0; iact_proj < prm.numIMG ; iact_proj++) {
        read_proj.read(prm.IMG_Inf[iact_proj].fn_proj);
-       read_proj().set_Xmipp_origin();
+       read_proj().setXmippOrigin();
        read_proj().initZeros();
        prm.residual_imgs.push_back(read_proj);
      }
@@ -306,7 +306,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
              iact_proj = prm.ordered_list(act_proj);
           }
 	  read_proj.read(prm.IMG_Inf[iact_proj].fn_proj,prm.apply_shifts);
-          read_proj.move_origin_to_center();
+          read_proj.moveOriginTo_center();
           read_proj.rot ()=prm.IMG_Inf[iact_proj].rot;
           read_proj.tilt()=prm.IMG_Inf[iact_proj].tilt;
           read_proj.psi ()=prm.IMG_Inf[iact_proj].psi;
@@ -316,7 +316,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 	     init_random_generator(prm.IMG_Inf[iact_proj].seed);
 	     noisy_projection().resize(read_proj());
 	     noisy_projection().init_random(0,1,"gaussian");
-             noisy_projection.move_origin_to_center();
+             noisy_projection.moveOriginTo_center();
              noisy_projection.rot ()=prm.IMG_Inf[iact_proj].rot;
              noisy_projection.tilt()=prm.IMG_Inf[iact_proj].tilt;
              noisy_projection.psi ()=prm.IMG_Inf[iact_proj].psi;

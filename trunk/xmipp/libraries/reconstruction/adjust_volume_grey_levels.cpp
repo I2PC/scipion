@@ -69,7 +69,7 @@ void Prog_Adjust_Volume_Parameters::produce_side_info()
     VolumeXmipp IV;
     IV.read(fn_vol);
     V = IV();
-    V.set_Xmipp_origin();
+    V.setXmippOrigin();
 
     // Read input selfile
     SF.read(fn_sel);
@@ -108,7 +108,7 @@ double Prog_Adjust_Volume_Parameters::mismatching(double a, double b)
 
         ImageXmipp I;
         I.read(fn);
-        I().set_Xmipp_origin();
+        I().setXmippOrigin();
 
         // Project the auxiliary volume in the same direction
         Projection P;
@@ -156,7 +156,7 @@ void Prog_Adjust_Volume_Parameters::apply(matrix3D<double> &out)
 
         // Compute the image statistics
         double avg, stddev, min, max;
-        I().compute_stats(avg, stddev, min, max);
+        I().computeStats(avg, stddev, min, max);
         double Ni = projXdim * projYdim;
         sum += avg;
         sum2 += stddev * stddev;
@@ -171,7 +171,7 @@ void Prog_Adjust_Volume_Parameters::apply(matrix3D<double> &out)
 
     // Statistics of the volume
     double avg0, stddev0, min0, max0;
-    V.compute_stats(avg0, stddev0, min0, max0);
+    V.computeStats(avg0, stddev0, min0, max0);
 
     // First guess of the transformation parameters a*(x-vm)+b
     // r is the average length of a ray
@@ -210,7 +210,7 @@ void Prog_Adjust_Volume_Parameters::apply(matrix3D<double> &out)
         double ftol = 0.01, fret;
         int iter;
         global_adjust_volume_prm = this;
-        Powell_optimizer(p, 1, 2, &projection_mismatching, ftol, fret, iter, steps, true);
+        powellOptimizer(p, 1, 2, &projection_mismatching, ftol, fret, iter, steps, true);
         a = p(0);
         b = p(1);
     }

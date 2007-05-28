@@ -1190,9 +1190,9 @@ public:
      * // This function enlarges the row vector adding 360 at the beginning
      * void enlarge(const Matrix1D< double >&in, Matrix1D< double >& out)
      * {
-     *     out.resize(in.get_dim() + 1);
+     *     out.resize(in.getDimension() + 1);
      *     out(0) = 360;
-     *     for (int i=1; i<out.get_dim(); i++)
+     *     for (int i=1; i<out.getDimension(); i++)
      *         out(i)=in(i-1);
      * }
      *

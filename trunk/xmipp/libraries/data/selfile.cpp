@@ -683,7 +683,7 @@ void SelFile::get_statistics(Image& _ave, Image& _sd, double& _min,
             continue;
         Image *image = Image::LoadImage(image_name, apply_geo); // reads image
         double min, max, avg, stddev;
-        (*image)().compute_stats(avg, stddev, min, max);
+        (*image)().computeStats(avg, stddev, min, max);
         if (_min > min)
             _min = min;
         if (_max < max)

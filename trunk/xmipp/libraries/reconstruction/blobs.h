@@ -102,7 +102,7 @@ struct blobtype
     \\ Ex:
     \begin{verbatim}
     struct blobtype blob; blob.radius = 2; blob.order = 2; blob.alpha = 3.6;
-    Matrix1D<double> v=vector_R3(1,1,1);
+    Matrix1D<double> v=vectorR3(1,1,1);
     cout << "Blob value at (1,1,1) = " << blob_val(v.mod(),blob) << endl;
     \end{verbatim} */
 #define blob_val(r, blob) kaiser_value(r, blob.radius, blob.alpha, blob.order)
@@ -121,7 +121,7 @@ double kaiser_value(double r, double a, double alpha, int m);
     \\ Ex:
     \begin{verbatim}
     struct blobtype blob; blob.radius = 2; blob.order = 2; blob.alpha = 3.6;
-    Matrix1D<double> v=vector_R3(1,1,1);
+    Matrix1D<double> v=vectorR3(1,1,1);
     cout << "Blob line integral through (1,1,1) = " << blob_proj(v.mod(),blob)
          << endl;
     \end{verbatim} */
@@ -247,7 +247,7 @@ void footprint_blob(ImageOver &blobprint, const struct blobtype &blob,
 
     // Grid definition
     Grid BCCgrid;
-    BCCgrid=BCC_grid(1.41,vector_R3(-5,-5,-5),vector_R3( 5, 5, 5));
+    BCCgrid=BCC_grid(1.41,vectorR3(-5,-5,-5),vector_R3( 5, 5, 5));
 
     cout << "The sum of a single blob over the grid is " <<
          << sum_blob_grid(blob, BCCgrid);

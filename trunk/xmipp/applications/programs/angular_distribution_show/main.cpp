@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
             v.push_back(aux);
 
 
-            aux_ang = vector_R3(rot, tilt, psi);
+            aux_ang = vectorR3(rot, tilt, psi);
             v_ang.push_back(aux_ang);
 
         }
@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
 
             histogram1D dist_hist;
             double min, max;
-            dist.compute_double_minmax(min, max);
+            dist.computeDoubleMinMax(min, max);
             dist_hist.init(min, max, steps);
             for (int i = 0; i < AngleNo; i++) dist_hist.insert_value(di);
             dist_hist.write(fn_hist);

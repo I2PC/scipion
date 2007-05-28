@@ -715,7 +715,7 @@ void Adjust_CTF_Parameters::produce_side_info()
     Filter.FilterBand = HIGHPASS;
     Filter.w1 = 0.04;
     Filter.raised_w = 0.02;
-    enhanced_ctftomodel().set_Xmipp_origin();
+    enhanced_ctftomodel().setXmippOrigin();
     Filter.generate_mask(enhanced_ctftomodel());
     Filter.apply_mask_Space(enhanced_ctftomodel());
     STARTINGX(enhanced_ctftomodel()) = STARTINGY(enhanced_ctftomodel()) = 0;
@@ -1341,7 +1341,7 @@ void estimate_background_sqrt_parameters()
         cout << "Looking for best fitting sqrt ...\n";
     global_penalize = false;
     int iter;
-    Powell_optimizer(*global_adjust, FIRST_SQRT_PARAMETER + 1, SQRT_CTF_PARAMETERS,
+    powellOptimizer(*global_adjust, FIRST_SQRT_PARAMETER + 1, SQRT_CTF_PARAMETERS,
                      &CTF_fitness, 0.05, fitness, iter, steps,
                      global_prm->show_optimization);
 
@@ -1356,7 +1356,7 @@ void estimate_background_sqrt_parameters()
         if (global_prm->show_optimization)
             cout << "     Iteration " << i
             << " penalty=" << global_current_penalty << endl;
-        Powell_optimizer(*global_adjust, FIRST_SQRT_PARAMETER + 1,
+        powellOptimizer(*global_adjust, FIRST_SQRT_PARAMETER + 1,
                          SQRT_CTF_PARAMETERS, &CTF_fitness,
                          0.05, fitness, iter, steps, global_prm->show_optimization);
         global_current_penalty *= 2;
@@ -1738,7 +1738,7 @@ void estimate_envelope_parameters()
     steps(1) = 0; // Do not optimize Cs
     steps(5) = 0; // Do not optimize for alpha, since Ealpha depends on the
     // defocus
-    Powell_optimizer(*global_adjust, FIRST_ENVELOPE_PARAMETER + 1, ENVELOPE_PARAMETERS,
+    powellOptimizer(*global_adjust, FIRST_ENVELOPE_PARAMETER + 1, ENVELOPE_PARAMETERS,
                      &CTF_fitness, 0.05, fitness, iter, steps,
                      global_prm->show_optimization);
 
@@ -1763,7 +1763,7 @@ void estimate_envelope_parameters()
         if (global_prm->show_optimization)
             cout << "     Iteration " << i
             << " penalty=" << global_current_penalty << endl;
-        Powell_optimizer(*global_adjust, FIRST_ENVELOPE_PARAMETER + 1,
+        powellOptimizer(*global_adjust, FIRST_ENVELOPE_PARAMETER + 1,
                          ENVELOPE_PARAMETERS, &CTF_fitness,
                          0.05, fitness, iter, steps, global_prm->show_optimization);
         global_current_penalty *= 2;
@@ -1858,7 +1858,7 @@ void estimate_defoci()
                     (*global_adjust)(2) = angle;
                     (*global_adjust)(4) = K_so_far;
 
-                    Powell_optimizer(*global_adjust, FIRST_DEFOCUS_PARAMETER + 1,
+                    powellOptimizer(*global_adjust, FIRST_DEFOCUS_PARAMETER + 1,
                                      DEFOCUS_PARAMETERS, &CTF_fitness,
                                      0.05, fitness, iter, steps, false);
 
@@ -2051,7 +2051,7 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, bool standalone)
     steps.init_constant(1);
     if (!global_prm->astigmatic_noise)
         steps(3) = steps(4) = steps(7) = steps(8) = steps(10) = 0;
-    Powell_optimizer(*global_adjust, FIRST_SQRT_PARAMETER + 1,
+    powellOptimizer(*global_adjust, FIRST_SQRT_PARAMETER + 1,
                      BACKGROUND_CTF_PARAMETERS, &CTF_fitness,
                      0.01, fitness, iter, steps, global_prm->show_optimization);
 
@@ -2117,7 +2117,7 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, bool standalone)
         steps(12) = 0; // Q0
     if (!global_prm->astigmatic_noise)
         steps(16) = steps(17) = steps(20) = steps(21) = steps(23) = 0;
-    Powell_optimizer(*global_adjust, 0 + 1,
+    powellOptimizer(*global_adjust, 0 + 1,
                      CTF_PARAMETERS, &CTF_fitness,
                      0.01, fitness, iter, steps, global_prm->show_optimization);
     global_ctfmodel.force_physical_meaning();
@@ -2144,7 +2144,7 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, bool standalone)
     if (!global_prm->astigmatic_noise)
         steps(16) = steps(17) = steps(20) = steps(21) = steps(23) = steps(26) =
                                                 steps(27) = steps(29) = 0;
-    Powell_optimizer(*global_adjust, 0 + 1,
+    powellOptimizer(*global_adjust, 0 + 1,
                      ALL_CTF_PARAMETERS, &CTF_fitness,
                      0.01, fitness, iter, steps, global_prm->show_optimization);
     global_ctfmodel.force_physical_meaning();
@@ -2157,14 +2157,14 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, bool standalone)
     }
 
     global_evaluation_reduction = 2;
-    Powell_optimizer(*global_adjust, 0 + 1,
+    powellOptimizer(*global_adjust, 0 + 1,
                      ALL_CTF_PARAMETERS, &CTF_fitness,
                      0.01, fitness, iter, steps, global_prm->show_optimization);
     global_ctfmodel.force_physical_meaning();
     COPY_ctfmodel_TO_CURRENT_GUESS;
 
     global_evaluation_reduction = 1;
-    Powell_optimizer(*global_adjust, 0 + 1,
+    powellOptimizer(*global_adjust, 0 + 1,
                      ALL_CTF_PARAMETERS, &CTF_fitness,
                      0.005, fitness, iter, steps, global_prm->show_optimization);
     global_ctfmodel.force_physical_meaning();

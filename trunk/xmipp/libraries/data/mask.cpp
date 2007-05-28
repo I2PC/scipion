@@ -228,7 +228,7 @@ void KaiserMask(matrix2D<double> &mask, double delta, double Deltaw)
 
     // "Draw" Kaiser window
     mask.resize(2*M + 1, 2*M + 1);
-    mask.set_Xmipp_origin();
+    mask.setXmippOrigin();
     double iI0Beta = 1.0 / bessi0(beta);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
     {
@@ -256,9 +256,9 @@ void SincBlackmanMask(matrix2D<double> &mask,
     matrix2D<double> blackman;
 
 #define EVALUATE_POWER_OF_SINCBLACKMAN2D(N,P) \
-    mask.resize(N,N); mask.set_Xmipp_origin(); \
+    mask.resize(N,N); mask.setXmippOrigin(); \
     SincMask(mask,omega,INNER_MASK,x0,y0); \
-    blackman.resize(N,N); blackman.set_Xmipp_origin(); \
+    blackman.resize(N,N); blackman.setXmippOrigin(); \
     BlackmanMask(blackman); \
     mask *= blackman; \
     P=mask.sum2();
@@ -317,7 +317,7 @@ void SincKaiserMask(matrix2D<double> &mask,
     matrix2D<double> kaiser;
     KaiserMask(kaiser, delta, Deltaw);
     mask.resize(kaiser);
-    mask.set_Xmipp_origin();
+    mask.setXmippOrigin();
     SincMask(mask, omega, INNER_MASK, 0, 0);
     mask *= kaiser;
 }
@@ -341,7 +341,7 @@ void SeparableSincKaiserMask(matrix2D<double> &mask,
 
     // "Draw" Separable Kaiser Sinc window
     mask.resize(2*M + 1, 2*M + 1);
-    mask.set_Xmipp_origin();
+    mask.setXmippOrigin();
     double iI0Beta = 1.0 / bessi0(beta);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
     {
@@ -608,9 +608,9 @@ void SincBlackmanMask(matrix3D<double> &mask,
     matrix3D<double> blackman;
 
 #define EVALUATE_POWER_OF_SINCBLACKMAN3D(N,P) \
-    mask.resize(N,N,N); mask.set_Xmipp_origin(); \
+    mask.resize(N,N,N); mask.setXmippOrigin(); \
     SincMask(mask,omega,INNER_MASK,x0,y0,z0); \
-    blackman.resize(N,N,N); blackman.set_Xmipp_origin(); \
+    blackman.resize(N,N,N); blackman.setXmippOrigin(); \
     BlackmanMask(blackman); \
     mask *= blackman; \
     P=mask.sum2();
@@ -696,11 +696,11 @@ void Mask_Params::resize(int Xdim)
     {
     case INT_MASK:
         imask1D.resize(Xdim);
-        imask1D.set_Xmipp_origin();
+        imask1D.setXmippOrigin();
         break;
     case DOUBLE_MASK:
         dmask1D.resize(Xdim);
-        dmask1D.set_Xmipp_origin();
+        dmask1D.setXmippOrigin();
         break;
     }
 }
@@ -711,11 +711,11 @@ void Mask_Params::resize(int Ydim, int Xdim)
     {
     case INT_MASK:
         imask2D.resize(Ydim, Xdim);
-        imask2D.set_Xmipp_origin();
+        imask2D.setXmippOrigin();
         break;
     case DOUBLE_MASK:
         dmask2D.resize(Ydim, Xdim);
-        dmask2D.set_Xmipp_origin();
+        dmask2D.setXmippOrigin();
         break;
     }
 }
@@ -726,11 +726,11 @@ void Mask_Params::resize(int Zdim, int Ydim, int Xdim)
     {
     case INT_MASK:
         imask3D.resize(Zdim, Ydim, Xdim);
-        imask3D.set_Xmipp_origin();
+        imask3D.setXmippOrigin();
         break;
     case DOUBLE_MASK:
         dmask3D.resize(Zdim, Ydim, Xdim);
-        dmask3D.set_Xmipp_origin();
+        dmask3D.setXmippOrigin();
         break;
     }
 }
@@ -1159,7 +1159,7 @@ void Mask_Params::generate_1Dmask()
         break;
     case READ_MASK:
         imask2D.read(fn_mask);
-        imask2D.set_Xmipp_origin();
+        imask2D.setXmippOrigin();
         break;
     default:
         REPORT_ERROR(3000, "Mask_Params::generate_mask: Non implemented or "
@@ -1209,7 +1209,7 @@ void Mask_Params::generate_2Dmask()
     case READ_MASK:
         I.read(fn_mask);
         type_cast(I(), imask2D);
-        imask2D.set_Xmipp_origin();
+        imask2D.setXmippOrigin();
         break;
     default:
         REPORT_ERROR(3000, "Mask_Params::generate_mask: Unknown mask type :"
@@ -1267,7 +1267,7 @@ void Mask_Params::generate_3Dmask()
     case READ_MASK:
         V.read(fn_mask);
         type_cast(V(), imask3D);
-        imask3D.set_Xmipp_origin();
+        imask3D.setXmippOrigin();
         break;
     default:
         REPORT_ERROR(3000, "Mask_Params::generate_mask: Unknown mask type :"

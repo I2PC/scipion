@@ -617,7 +617,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
                 break;
             case POCS_use:
                 POCS_used++;
-                POCS_errors.compute_stats(POCS_avg,
+                POCS_errors.computeStats(POCS_avg,
                                           POCS_stddev, dummy, POCS_min);
 #ifdef DEBUG_POCS
                 cout << "Reference errors: " << POCS_errors.transpose() << endl;
@@ -674,7 +674,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
                 break;
             case POCS_lowering:
                 // Lower the POCS error before measuring again
-                POCS_errors.compute_stats(POCS_avg,
+                POCS_errors.computeStats(POCS_avg,
                                           POCS_stddev, POCS_max, dummy);
                 POCS_used++;
                 if (POCS_mean_error < POCS_max || POCS_used > 2*POCS_N_measure)

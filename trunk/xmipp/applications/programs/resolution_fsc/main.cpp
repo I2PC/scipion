@@ -47,12 +47,12 @@ public:
         if (Is_ImageXmipp(fn_ref))
         {
             refI.read(fn_ref, false, false, apply_geo);
-            refI().set_Xmipp_origin();
+            refI().setXmippOrigin();
         }
         else if (Is_VolumeXmipp(fn_ref))
         {
             refV.read(fn_ref);
-            refV().set_Xmipp_origin();
+            refV().setXmippOrigin();
         }
         else exit(0);
     }
@@ -188,9 +188,9 @@ int main(int argc, char **argv)
             SF.get_statistics(It, Id, dummy, dummy, apply_geo);
             SF1.get_statistics(I1, Id, dummy, dummy, apply_geo);
             SF2.get_statistics(I2, Id, dummy, dummy, apply_geo);
-            It().set_Xmipp_origin();
-            I1().set_Xmipp_origin();
-            I2().set_Xmipp_origin();
+            It().setXmippOrigin();
+            I1().setXmippOrigin();
+            I2().setXmippOrigin();
 
             fourier_ring_correlation(I1(), I2(), sam, freq, frc, frc_noise);
             differential_phase_residual(I1(), I2(), sam, freq, dpr);

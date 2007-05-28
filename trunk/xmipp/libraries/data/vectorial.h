@@ -62,7 +62,7 @@
  * multidimensional array position.
  *
  * You can perform arithmetic operations on these vectors, and other common
- * operations such as resize, print_shape, ...
+ * operations such as resize, printShape, ...
  */
 class Vectorial_matrix3D
 {
@@ -108,9 +108,9 @@ public:
     /** Print shape.
      * @ingroup VectorialShape
      */
-    void print_shape() const
+    void printShape() const
     {
-        __X.print_shape();
+        __X.printShape();
     }
 
     /** Init zeros.
@@ -126,11 +126,11 @@ public:
     /** Set Xmipp origin.
      * @ingroup VectorialShape
      */
-    void set_Xmipp_origin()
+    void setXmippOrigin()
     {
-        __X.set_Xmipp_origin();
-        __Y.set_Xmipp_origin();
-        __Z.set_Xmipp_origin();
+        __X.setXmippOrigin();
+        __Y.setXmippOrigin();
+        __Z.setXmippOrigin();
     }
 
     /// @defgroup VectorialAccess Component access.
@@ -469,7 +469,7 @@ public:
     maT operator+(const maT& op1) const
     {
         maT temp;
-        OPERATION(array_by_array, *this, op1, temp, '+');
+        OPERATION(arrayByArray, *this, op1, temp, '+');
         return temp;
     }
 
@@ -479,7 +479,7 @@ public:
     maT operator-(const maT& op1) const
     {
         maT temp;
-        OPERATION(array_by_array, *this, op1, temp, '-');
+        OPERATION(arrayByArray, *this, op1, temp, '-');
         return temp;
     }
 
@@ -489,7 +489,7 @@ public:
     maT operator*(const maT& op1) const
     {
         maT temp;
-        OPERATION(array_by_array, *this, op1, temp, '*');
+        OPERATION(arrayByArray, *this, op1, temp, '*');
         return temp;
     }
 
@@ -499,7 +499,7 @@ public:
     maT operator/(const maT& op1) const
     {
         maT temp;
-        OPERATION(array_by_array, *this, op1, temp, '/');
+        OPERATION(arrayByArray, *this, op1, temp, '/');
         return temp;
     }
 
@@ -509,7 +509,7 @@ public:
     maT operator^(const maT& op1) const
     {
         maT temp;
-        OPERATION(array_by_array, *this, op1, temp, '^');
+        OPERATION(arrayByArray, *this, op1, temp, '^');
         return temp;
     }
 
@@ -518,7 +518,7 @@ public:
      */
     void operator+=(const maT& op1)
     {
-        OPERATION(array_by_array, *this, op1, *this, '+');
+        OPERATION(arrayByArray, *this, op1, *this, '+');
     }
 
     /** v3-=v2.
@@ -526,7 +526,7 @@ public:
      */
     void operator-=(const maT& op1)
     {
-        OPERATION(array_by_array, *this, op1, *this, '-');
+        OPERATION(arrayByArray, *this, op1, *this, '-');
     }
 
     /** v3*=v2.
@@ -534,7 +534,7 @@ public:
      */
     void operator*=(const maT& op1)
     {
-        OPERATION(array_by_array, *this, op1, *this, '*');
+        OPERATION(arrayByArray, *this, op1, *this, '*');
     }
 
     /** v3/=v2.
@@ -542,7 +542,7 @@ public:
      */
     void operator/= (const maT& op1)
     {
-        OPERATION(array_by_array, *this, op1, *this, '/');
+        OPERATION(arrayByArray, *this, op1, *this, '/');
     }
 
     /** v3^=v2.
@@ -550,7 +550,7 @@ public:
      */
     void operator^=(const maT& op1)
     {
-        OPERATION(array_by_array, *this, op1, *this, '^');
+        OPERATION(arrayByArray, *this, op1, *this, '^');
     }
 
 #undef OPERATION

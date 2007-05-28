@@ -347,7 +347,7 @@ void ShowTable::scale_and_normalize(matrix2D<double> &I, bool normalize,
         // There is a global normalization
         // recompute the min and max values for this image
         double min_val, max_val, slope;
-        I.compute_double_minmax(min_val, max_val);
+        I.computeDoubleMinMax(min_val, max_val);
         if (minPixel != maxPixel)
             slope = (double)(255) / (double)(maxPixel - minPixel);
         else

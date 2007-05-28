@@ -84,7 +84,7 @@ void Prog_Microscope_Parameters::produce_side_info()
         ctf.ctf.enable_CTFnoise = false;
         ctf.ctf.Produce_Side_Info();
         aux.resize(2*Ydim, 2*Xdim);
-        aux.set_Xmipp_origin();
+        aux.setXmippOrigin();
         ctf.generate_mask(aux);
 
 #ifdef DEBUG
@@ -108,7 +108,7 @@ void Prog_Microscope_Parameters::produce_side_info()
         after_ctf.ctf.read(fn_ctf);
         after_ctf.ctf.Produce_Side_Info();
         aux.resize(2*Ydim, 2*Xdim);
-        aux.set_Xmipp_origin();
+        aux.setXmippOrigin();
         after_ctf.generate_mask(aux);
 #ifdef DEBUG
         after_ctf.write_amplitude("PPPafter.xmp");
@@ -136,7 +136,7 @@ void Prog_Microscope_Parameters::produce_side_info()
 //#define DEBUG
 void Prog_Microscope_Parameters::apply(matrix2D<double> &I)
 {
-    I.set_Xmipp_origin();
+    I.setXmippOrigin();
     I.window(FIRST_XMIPP_INDEX(2*Ydim), FIRST_XMIPP_INDEX(2*Xdim),
              LAST_XMIPP_INDEX(2*Ydim), LAST_XMIPP_INDEX(2*Xdim));
 

@@ -74,9 +74,9 @@ void ShowVol::readFile(const FileName &_fn,
     setCaption(fn.c_str());
     annotateTime(aux_fn);
 
-    V().set_Xmipp_origin();
+    V().setXmippOrigin();
     if (_minGray == 0 && _maxGray == 0)
-        V().compute_double_minmax(minPixel, maxPixel);
+        V().computeDoubleMinMax(minPixel, maxPixel);
     else
     {
         minPixel = _minGray;
@@ -204,7 +204,7 @@ void ShowVol::updateStatus(int k, int i, int j)
 {
     QString message, moremsg;
     int k_log, i_log, j_log;
-    V().physical2logical(k, i, j, k_log, i_log, j_log);
+    V().toLogical(k, i, j, k_log, i_log, j_log);
     if (!V().outside(k_log, i_log, j_log))
     {
         moremsg.sprintf("(%d,%d,%d)=(%d,%d,%d)= %.3f",

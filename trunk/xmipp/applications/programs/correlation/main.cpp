@@ -54,13 +54,13 @@ public:
             if (Is_ImageXmipp(fn_ref))
             {
                 refI.read(fn_ref, false, false, apply_geo);
-                refI().set_Xmipp_origin();
+                refI().setXmippOrigin();
                 fn_msk = get_param(argc, argv, "-mask", "");
                 if (fn_msk != "")
                 {
                     usemask = true;
                     MI.read(fn_msk, false, false, apply_geo);
-                    MI().set_Xmipp_origin();
+                    MI().setXmippOrigin();
                     mask2D.resize(MI());
                     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(MI())
                     {
@@ -72,13 +72,13 @@ public:
             else if (Is_VolumeXmipp(fn_ref))
             {
                 refV.read(fn_ref);
-                refV().set_Xmipp_origin();
+                refV().setXmippOrigin();
                 fn_msk = get_param(argc, argv, "-mask", "");
                 if (fn_msk != "")
                 {
                     usemask = true;
                     MV.read(fn_msk);
-                    MV().set_Xmipp_origin();
+                    MV().setXmippOrigin();
                     mask3D.resize(MV());
                     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(MV())
                     {

@@ -111,7 +111,7 @@ void QtLowPassFilter::apply(Image *_img)
 {
     if (_img != NULL)
     {
-        (*_img)().set_Xmipp_origin();
+        (*_img)().setXmippOrigin();
         filter.generate_mask((*_img)());
         filter.apply_mask_Space((*_img)());
         FOR_ALL_ELEMENTS_IN_MATRIX2D((*_img)())
@@ -137,7 +137,7 @@ void QtHighPassFilter::apply(Image *_img)
 {
     if (_img != NULL)
     {
-        (*_img)().set_Xmipp_origin();
+        (*_img)().setXmippOrigin();
         filter.generate_mask((*_img)());
         filter.apply_mask_Space((*_img)());
         (*_img)().range_adjust(0, 255);

@@ -705,7 +705,7 @@ void PROJECT_Side_Info::produce_Side_Info(const Projection_Parameters &prm,
     if (Is_VolumeXmipp(prm.fn_phantom))
     {
         phantom_vol.read(prm.fn_phantom);
-        phantom_vol().set_Xmipp_origin();
+        phantom_vol().setXmippOrigin();
         voxel_mode = 1;
     }
     else
@@ -756,7 +756,7 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
         {
             project_Volume(side.phantom_vol(), proj, prm.proj_Ydim, prm.proj_Xdim,
                            rot, tilt, psi);
-            IMGMATRIX(proj).self_translate(vector_R2(shiftX, shiftY));
+            IMGMATRIX(proj).self_translate(vectorR2(shiftX, shiftY));
         }
         else
         {

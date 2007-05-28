@@ -239,14 +239,14 @@ void FourierMask::read_mask(const FileName &fn)
         FourierImageXmipp  I;
         I.read(fn_mask);
         mask2D = I();
-        mask2D.set_Xmipp_origin();
+        mask2D.setXmippOrigin();
     }
     else
     {
         FourierVolumeXmipp V;
         V.read(fn_mask);
         mask3D = V();
-        mask3D.set_Xmipp_origin();
+        mask3D.setXmippOrigin();
     }
 }
 

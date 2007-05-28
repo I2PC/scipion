@@ -187,9 +187,9 @@ void Prog_mlf_tomo_prm::produce_Side_info()
 
     // Make relevant masks
     mask.resize(dim, dim, dim);
-    mask.set_Xmipp_origin();
+    mask.setXmippOrigin();
     outside_mask.resize(dim, dim, dim);
-    outside_mask.set_Xmipp_origin();
+    outside_mask.setXmippOrigin();
     BinarySphericalMask(mask, dim / 2, INNER_MASK);
     BinarySphericalMask(outside_mask, dim / 2, OUTSIDE_MASK);
 
@@ -228,15 +228,15 @@ void Prog_mlf_tomo_prm::produce_Side_info()
 
     // Read in all reference images in memory
     Maux.initZeros(dim, dim, dim);
-    Maux.set_Xmipp_origin();
+    Maux.setXmippOrigin();
     nr_ref = 0;
     SFr.go_beginning();
     while (!SFr.eof())
     {
         Fref_trans.push_back(Vdum);
         vol.read(SFr.NextImg());
-        vol().set_Xmipp_origin();
-        //compute_stats_within_binary_mask(outside_mask,vol(),dum,dum,avg,dum);
+        vol().setXmippOrigin();
+        //computeStats_within_binary_mask(outside_mask,vol(),dum,dum,avg,dum);
         //apply_binary_mask(mask,vol(),vol(),avg);
         //Maux+=vol();
         // Store the centered FFT of each reference
@@ -323,9 +323,9 @@ void Prog_mlf_tomo_prm::produce_Side_info()
 
     // Make resolution mask
     resmask.resize(dim, dim, dim);
-    resmask.set_Xmipp_origin();
+    resmask.setXmippOrigin();
     resmask2.resize(dim, dim, dim);
-    resmask2.set_Xmipp_origin();
+    resmask2.setXmippOrigin();
     if (highres > 0.5) REPORT_ERROR(1, "Highres should be lower than 0.5!");
     if (highres < 0) highres = 0.5;
     if (lowres > 0.5) REPORT_ERROR(1, "Lowres should be lower than 0.5!");
@@ -338,7 +338,7 @@ void Prog_mlf_tomo_prm::produce_Side_info()
 
     // Initialize Vsigma2
     matrix3D<double> Mwedge(dim, dim, dim);
-    Mwedge.set_Xmipp_origin();
+    Mwedge.setXmippOrigin();
     Vsigma2.clear();
     for (int i = 0; i < resol_max; i++)
     {
@@ -527,7 +527,7 @@ void Prog_mlf_tomo_prm::estimate_initial_sigma2()
             {
                 fn_vol = SF.NextImg();
                 vol.read(fn_vol);
-                vol().set_Xmipp_origin();
+                vol().setXmippOrigin();
                 if (DF.search_comment(fn_vol))
                 {
                     iwedge = ROUND(DF(6)) - 1;
@@ -595,9 +595,9 @@ void Prog_mlf_tomo_prm::calculate_pdf_trans()
 
     double r2, pdfpix, sum;
     pdf_trans.resize(dim, dim, dim);
-    pdf_trans.set_Xmipp_origin();
+    pdf_trans.setXmippOrigin();
     Mr2.resize(dim, dim, dim);
-    Mr2.set_Xmipp_origin();
+    Mr2.setXmippOrigin();
 
     FOR_ALL_ELEMENTS_IN_MATRIX3D(pdf_trans)
     {
@@ -644,12 +644,12 @@ void Prog_mlf_tomo_prm::update_pointers()
     nr_pointer_mis.clear();
     nonzero_pixels.clear();
     Mwedge.resize(dim, dim, dim);
-    Mwedge.set_Xmipp_origin();
+    Mwedge.setXmippOrigin();
     I.init_identity();
 
     // Get a resolution pointer in Fourier-space
     Mresol.resize(dim, dim, dim);
-    Mresol.set_Xmipp_origin();
+    Mresol.setXmippOrigin();
     FOR_ALL_ELEMENTS_IN_MATRIX3D(Mresol)
     {
         VOL_ELEM(Mresol, k, i, j) = ROUND(sqrt((double)(i * i + j * j + k * k)));
@@ -1011,7 +1011,7 @@ void Prog_mlf_tomo_prm::sum_over_all_images(SelFile &SF,
 
     // Initialize weighted sums to zero
     Mdzero.resize(dim, dim, dim);
-    Mdzero.set_Xmipp_origin();
+    Mdzero.setXmippOrigin();
     sumw.clear();
     LL = 0.;
     wsum_sigma_offset = 0.;
@@ -1046,7 +1046,7 @@ void Prog_mlf_tomo_prm::sum_over_all_images(SelFile &SF,
         // read tomogram from disc
         fn_img = SF.NextImg();
         img.read(fn_img);
-        img().set_Xmipp_origin();
+        img().setXmippOrigin();
 
         // apply (wrapped around!) integer translation of pre-orientation
         opt_offsets(0) = (double)ROUND(img_xoff[imgno]);
@@ -1118,7 +1118,7 @@ void Prog_mlf_tomo_prm::update_parameters(vector<matrix3D<double> > &wsum_Fimgs,
 
     // Pre-calculate sumw_allrefs
     Msum.initZeros(dim, dim, dim);
-    Msum.set_Xmipp_origin();
+    Msum.setXmippOrigin();
     sumw_allrefs = 0.;
     for (int refno = 0;refno < nr_ref; refno++)
     {
@@ -1349,7 +1349,7 @@ void Prog_mlf_tomo_prm::solvent_flattening(vector<matrix3D<double> > &Mref, File
     double solvavg, sumsolv;
 
     solv.read(fn_solvent);
-    solv().set_Xmipp_origin();
+    solv().setXmippOrigin();
     if (XSIZE(solv()) != dim || YSIZE(solv()) != dim || ZSIZE(solv()) != dim)
         REPORT_ERROR(12, "mlf_tomo-solvent_flattening: solvent mask is not of right dimensions");
 

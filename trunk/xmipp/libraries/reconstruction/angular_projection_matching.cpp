@@ -153,7 +153,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
 
     // Create rotational-search mask
     rotmask.resize(dim,dim);
-    rotmask.set_Xmipp_origin();
+    rotmask.setXmippOrigin();
     if (Ri<0.) Ri=0.;
     if (Ro<0.) Ro=(double)dim/2;
     BinaryCrownMask(rotmask,Ri,Ro,INNER_MASK);
@@ -163,7 +163,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
     if (output_classes)
     {
 	empty().resize(dim,dim);
-	empty().set_Xmipp_origin();
+	empty().setXmippOrigin();
 	empty.clear_header();
     }
     // Read symmetry file into memory
@@ -187,10 +187,10 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	while (!SFr.eof())
 	{
 	    proj.read(SFr.NextImg());
-	    proj().set_Xmipp_origin();
+	    proj().setXmippOrigin();
 	    ref_rot[nr_dir]=proj.rot();
 	    ref_tilt[nr_dir]=proj.tilt();
-	    compute_stats_within_binary_mask(rotmask,proj(),dummy,dummy,mean_ref,stddev_ref);
+	    computeStats_within_binary_mask(rotmask,proj(),dummy,dummy,mean_ref,stddev_ref);
 	    proj()-=mean_ref;
 	    apply_binary_mask(rotmask,proj(),proj(),0.);
 	    ref_img.push_back(proj());
@@ -301,7 +301,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	// At this point we have a docfile with all projection directions
 	// Now create reference projection images
 	vol.read(fn_vol);
-	vol().set_Xmipp_origin();
+	vol().setXmippOrigin();
 	nl=DF.dataLineNo();
 	ref_img.clear();
 	ref_rot=(double*)malloc(nl*sizeof(double));
@@ -336,7 +336,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
 		class_avgs.push_back(empty);
 		class_selfiles.push_back(emptySF);
 	    }
-	    compute_stats_within_binary_mask(rotmask,proj(),dummy,dummy,mean_ref,stddev_ref);
+	    computeStats_within_binary_mask(rotmask,proj(),dummy,dummy,mean_ref,stddev_ref);
 	    proj()-=mean_ref;
 	    ref_img.push_back(proj());
 	    ref_stddev[nr_dir]=stddev_ref;
@@ -378,15 +378,15 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
 
   maxCC=-99.e99;
   Mimg.resize(dim,dim);
-  Mimg.set_Xmipp_origin();
+  Mimg.setXmippOrigin();
   Mref.resize(dim,dim);
-  Mref.set_Xmipp_origin();
+  Mref.setXmippOrigin();
   Maux.resize(dim,dim);
-  Maux.set_Xmipp_origin();
+  Maux.setXmippOrigin();
 
   // Calculate mean_img,stddev_img and apply rotmask
   Maux=Mexp;
-  compute_stats_within_binary_mask(rotmask,Mexp,dummy,dummy,mean_img,stddev_img);
+  computeStats_within_binary_mask(rotmask,Mexp,dummy,dummy,mean_img,stddev_img);
   Maux-=mean_img;
   apply_binary_mask(rotmask,Maux,Maux,0.);
 
@@ -444,7 +444,7 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
   opt_yoff=xmax*SIND(opt_psi)-ymax*COSD(opt_psi);
 
   // Calculate optimal correlation coefficient
-  Mimg=Mimg.translate(vector_R2(-xmax,-ymax));
+  Mimg=Mimg.translate(vectorR2(-xmax,-ymax));
   Mimg-=mean_img;
   maxCC=0.;
   FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mimg) {
@@ -479,7 +479,7 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
   while ((!SF.eof())) {
     fn_img=SF.NextImg();
     img.read(fn_img,false,false,false,true);
-    img().set_Xmipp_origin();
+    img().setXmippOrigin();
 
     // Perform the projection matching for each image separately
     PM_process_one_image(img(),img.Phi(),img.Theta(),img.Psi(),

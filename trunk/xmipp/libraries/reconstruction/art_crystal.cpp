@@ -252,7 +252,7 @@ void Crystal_ART_Parameters::produce_Side_Info(
     int mask_xdim = CEIL(MAX(ABS(XX(c1c3)), ABS(XX(c2c4)))) + 3;
     int mask_ydim = CEIL(MAX(ABS(YY(c1c3)), ABS(YY(c2c4)))) + 3;
     unit_cell_mask.initZeros(mask_ydim, mask_xdim);
-    unit_cell_mask.set_Xmipp_origin();
+    unit_cell_mask.setXmippOrigin();
 
     // Resize the reconstructed volume
     Matrix1D<double> r1(3), r2(3);
@@ -341,7 +341,7 @@ void Crystal_ART_Parameters::produce_Side_Info(
     I = unit_cell_mask;
     I.write("unit_cell_mask.xmp");
     cout << "unit_cell_mask shape=";
-    unit_cell_mask.print_shape();
+    unit_cell_mask.printShape();
     cout << endl;
 #endif
 }

@@ -164,7 +164,7 @@ int main(int argc, char **argv)
                 while (!ML2D_prm.SFr.eof())
                 {
                     ML2D_prm.Iref[c].read(ML2D_prm.SFr.NextImg(), false, false, false, false);
-                    ML2D_prm.Iref[c]().set_Xmipp_origin();
+                    ML2D_prm.Iref[c]().setXmippOrigin();
                     c++;
                 }
             }

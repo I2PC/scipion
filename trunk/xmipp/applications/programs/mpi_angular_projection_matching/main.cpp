@@ -94,7 +94,7 @@ int main(int argc, char **argv)
             // Do MPI_Allreduce of the averages (and their weight)
             // And write out temporary selfiles
             Maux.resize(prm.dim, prm.dim);
-            Maux.set_Xmipp_origin();
+            Maux.setXmippOrigin();
             fn_base.compose(prm.fn_root, rank, "");
             for (int dirno = 0; dirno < prm.nr_dir; dirno++)
             {

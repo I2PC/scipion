@@ -56,7 +56,7 @@ ostream& operator << (ostream& out, const Matrix1D< complex<double> > & v)
 }
 
 /* Vector R2 and R3 -------------------------------------------------------- */
-Matrix1D<double> vector_R2(double x, double y)
+Matrix1D<double> vectorR2(double x, double y)
 {
     Matrix1D<double> result(2);
     VEC_ELEM(result, 0) = x;
@@ -64,7 +64,7 @@ Matrix1D<double> vector_R2(double x, double y)
     return result;
 }
 
-Matrix1D<double> vector_R3(double x, double y, double z)
+Matrix1D<double> vectorR3(double x, double y, double z)
 {
     Matrix1D<double> result(3);
     VEC_ELEM(result, 0) = x;
@@ -73,7 +73,7 @@ Matrix1D<double> vector_R3(double x, double y, double z)
     return result;
 }
 
-Matrix1D<int> vector_R3(int x, int y, int z)
+Matrix1D<int> vectorR3(int x, int y, int z)
 {
     Matrix1D<int> result(3);
     VEC_ELEM(result, 0) = x;
@@ -83,18 +83,18 @@ Matrix1D<int> vector_R3(int x, int y, int z)
 }
 
 /* Are orthogonal ---------------------------------------------------------- */
-int are_orthogonal(Matrix1D<double> &v1, Matrix1D<double> &v2,
+int areOrthogonal(Matrix1D<double> &v1, Matrix1D<double> &v2,
                    Matrix1D<double> &v3)
 {
     if (XSIZE(v1) != 3 || XSIZE(v2) != 3 || XSIZE(v3) != 3)
         REPORT_ERROR(1002, "Are orthogonal: Some vector do not belong to R3");
     try
     {
-        if (dot_product(v1, v2) != 0)
+        if (dotProduct(v1, v2) != 0)
             return 0;
-        if (dot_product(v2, v3) != 0)
+        if (dotProduct(v2, v3) != 0)
             return 0;
-        if (dot_product(v1, v3) != 0)
+        if (dotProduct(v1, v3) != 0)
             return 0;
     }
     catch (Xmipp_error)
@@ -105,33 +105,33 @@ int are_orthogonal(Matrix1D<double> &v1, Matrix1D<double> &v2,
 }
 
 /* Are system? ------------------------------------------------------------- */
-int are_system(Matrix1D<double> &v1, Matrix1D<double> &v2,
+int areSystem(Matrix1D<double> &v1, Matrix1D<double> &v2,
                Matrix1D<double> &v3)
 {
     Matrix1D<double> aux(3);
     if (XSIZE(v1) != 3 || XSIZE(v2) != 3 || XSIZE(v3) != 3)
         REPORT_ERROR(1002, "Are orthogonal: Some vector do not belong to R3");
-    aux = vector_product(v1, v2);
+    aux = vectorProduct(v1, v2);
     if (aux != v3)
         return 0;
-    aux = vector_product(v2, v3);
+    aux = vectorProduct(v2, v3);
     if (aux != v1)
         return 0;
-    aux = vector_product(v3, v1);
+    aux = vectorProduct(v3, v1);
     if (aux != v2)
         return 0;
     return 1;
 }
 
 /* Powell's optimizer ------------------------------------------------------ */
-void Powell_optimizer(Matrix1D<double> &p, int i0, int n,
+void powellOptimizer(Matrix1D<double> &p, int i0, int n,
                       double(*f)(double *x), double ftol, double &fret,
                       int &iter, const Matrix1D<double> &steps, bool show)
 {
     double *xi = NULL;
 
     // Adapt indexes of p
-    double *pptr = p.adapt_for_numerical_recipes();
+    double *pptr = p.adaptForNumericalRecipes();
     double *auxpptr = pptr + (i0 - 1);
 
     // Form direction matrix

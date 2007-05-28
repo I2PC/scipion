@@ -151,7 +151,7 @@ void ImageOver::window(int _v0, int _u0, int _vF, int _uF)
 
     int newYdim = (_vF - _v0) * vistep + 1;
     int newXdim = (_uF - _u0) * uistep + 1;
-    img.set_Xmipp_origin();
+    img.setXmippOrigin();
     img.window(FIRST_XMIPP_INDEX(newYdim), FIRST_XMIPP_INDEX(newXdim),
                LAST_XMIPP_INDEX(newYdim), LAST_XMIPP_INDEX(newXdim));
     STARTINGY(img) = 0;

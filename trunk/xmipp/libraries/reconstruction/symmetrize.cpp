@@ -99,7 +99,7 @@ void symmetrize(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
         /* *** CO: I am not very sure about the reason for this, but it
            seems to work */
         // apply_geom(V_aux2(),L,V_aux(),IS_NOT_INV,prm.wrap);
-        array_by_array(V_out(), V_aux(), V_out(), '+');
+        arrayByArray(V_out(), V_aux(), V_out(), '+');
         if (show_progress) progress_bar(i);
     }
     if (show_progress) progress_bar(SL.SymsNo());
@@ -123,11 +123,11 @@ void symmetrize_Bspline(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out
         matrix3D<int> mask;
         int rad;
         mask.resize(V_in());
-        mask.set_Xmipp_origin();
+        mask.setXmippOrigin();
         rad = MIN(V_in().RowNo(), V_in().ColNo());
         rad = MIN(rad, V_in().SliNo());
         BinarySphericalMask(mask, rad / 2, OUTSIDE_MASK);
-        compute_stats_within_binary_mask(mask, V_in(), dum, dum, avg, dum);
+        computeStats_within_binary_mask(mask, V_in(), dum, dum, avg, dum);
     }
 
     V_out = V_in;
@@ -142,7 +142,7 @@ void symmetrize_Bspline(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out
         R(3, 2) = sh(2) * V_aux().SliNo();
 
         apply_geom_Bspline(V_aux(), R.transpose(), V_in(), Splinedegree, IS_NOT_INV, wrap, avg);
-        array_by_array(V_out(), V_aux(), V_out(), '+');
+        arrayByArray(V_out(), V_aux(), V_out(), '+');
 
 #ifdef DEBUG
         V_aux.write((string)"PPPsym_" + ItoA(i) + ".vol");

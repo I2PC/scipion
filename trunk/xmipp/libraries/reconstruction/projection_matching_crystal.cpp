@@ -111,10 +111,10 @@ void Prog_projection_matching_crystal_prm::produce_Side_info()
     {
         //readimage
         proj.read(SFref.NextImg());
-        proj().set_Xmipp_origin();
+        proj().setXmippOrigin();
         ref_rot[nr_dir] = proj.rot();
         ref_tilt[nr_dir]  = proj.tilt();
-        proj().compute_stats(mean_ref, stddev_ref, dummy, dummy);
+        proj().computeStats(mean_ref, stddev_ref, dummy, dummy);
         proj() -= mean_ref;
         ref_img.push_back(proj());
         ref_stddev[nr_dir] = stddev_ref;
@@ -186,15 +186,15 @@ void Prog_projection_matching_crystal_prm::PM_process_one_image(matrix2D<double>
 
     maxCC = -99.e99;
     Mimg.resize(dim, dim);
-    Mimg.set_Xmipp_origin();
+    Mimg.setXmippOrigin();
     Mref.resize(dim, dim);
-    Mref.set_Xmipp_origin();
+    Mref.setXmippOrigin();
     Maux.resize(dim, dim);
-    Maux.set_Xmipp_origin();
+    Maux.setXmippOrigin();
 
     // Calculate mean_img,stddev_img and apply rotmask
     Maux = Mexp;
-    Mexp.compute_stats(mean_img, stddev_img, dummy, dummy);
+    Mexp.computeStats(mean_img, stddev_img, dummy, dummy);
     Maux -= mean_img;
 
     //compute psi range
@@ -331,7 +331,7 @@ void Prog_projection_matching_crystal_prm::PM_loop_over_all_images(DocFile &DFo,
         fn_img = SFexp.NextImg();
         //last true means shift are applied but not psi
         img.read(fn_img, false, false, false, true);
-        img().set_Xmipp_origin();
+        img().setXmippOrigin();
         // Perform the projection matching for each image separately
         // NOTE (float)1. should be the scale but since
         // scale field in the image is not reliable a put 1

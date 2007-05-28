@@ -125,7 +125,7 @@ int main(int argc, char **argv)
     {
         // Initialize some additional stuff
         Maux.resize(ML2D_prm.dim, ML2D_prm.dim);
-        Maux.set_Xmipp_origin();
+        Maux.setXmippOrigin();
         for (int refno = 0; refno < ML2D_prm.n_ref; refno++) conv.push_back(-1.);
 
         // Loop over all iterations
@@ -285,7 +285,7 @@ int main(int argc, char **argv)
                 while (!ML2D_prm.SFr.eof())
                 {
                     ML2D_prm.Iref[c].read(ML2D_prm.SFr.NextImg(), false, false, false, false);
-                    ML2D_prm.Iref[c]().set_Xmipp_origin();
+                    ML2D_prm.Iref[c]().setXmippOrigin();
                     c++;
                 }
             }

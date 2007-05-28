@@ -240,11 +240,11 @@ public:
      * finishingY to setup loops.
      *
      * @code
-     * I.move_origin_to_center();
+     * I.moveOriginTo_center();
      * @endcode
      *
      */
-    void move_origin_to_center()
+    void moveOriginTo_center()
     {
         img.startingY() = FIRST_XMIPP_INDEX(img.ydim);
         img.startingX() = FIRST_XMIPP_INDEX(img.xdim);
@@ -263,7 +263,7 @@ public:
     void adapt_to_size(int Ydim, int Xdim)
     {
         img.initZeros(Ydim, Xdim);
-        move_origin_to_center();
+        moveOriginTo_center();
     }
 
     /// @defgroup ImageAccess Image access
@@ -532,7 +532,7 @@ public:
         if (image_type != IFLOAT)
         {
             double min_val, max_val;
-            (*this)().compute_double_minmax(min_val, max_val);
+            (*this)().computeDoubleMinMax(min_val, max_val);
             if (image_type == IBYTE)
                 a = 255;
             else

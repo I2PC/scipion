@@ -77,7 +77,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
         headerXmipp     header;
         header.read(fn_micrograph);
         float fXdim, fYdim;
-        header.get_dimension(fYdim, fXdim);
+        header.getDimensionension(fYdim, fXdim);
         Xdim = (int) fXdim;
         Ydim = (int)fYdim;
         __offset = header.get_header_size();
@@ -463,7 +463,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
     double Dmax, Dmin;
     if (compute_transmitance || compute_inverse)
     {
-        (*this).compute_double_minmax(Dmin, Dmax);
+        (*this).computeDoubleMinMax(Dmin, Dmax);
         //#define DEBUG66
 #ifdef DEBUG66
 
@@ -687,7 +687,7 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
 void normalize_OldXmipp(Image *I)
 {
     double avg, stddev, min, max;
-    (*I)().compute_stats(avg, stddev, min, max);
+    (*I)().computeStats(avg, stddev, min, max);
     (*I)() -= avg;
     (*I)() /= stddev;
 }
@@ -696,8 +696,8 @@ void normalize_Near_OldXmipp(Image *I, const matrix2D<int> &bg_mask)
 {
     double avg, stddev, min, max;
     double avgbg, stddevbg, minbg, maxbg;
-    (*I)().compute_stats(avg, stddev, min, max);
-    compute_stats_within_binary_mask(bg_mask, (*I)(), minbg, maxbg, avgbg,
+    (*I)().computeStats(avg, stddev, min, max);
+    computeStats_within_binary_mask(bg_mask, (*I)(), minbg, maxbg, avgbg,
                                      stddevbg);
     (*I)() -= avg;
     (*I)() /= stddevbg;
@@ -707,7 +707,7 @@ void normalize_Oldmipp_decomposition(Image *I, const matrix2D<int> &bg_mask,
                                      const matrix2D<double> *mask)
 {
     double avgbg, stddevbg, minbg, maxbg;
-    compute_stats_within_binary_mask(bg_mask, (*I)(), minbg, maxbg, avgbg,
+    computeStats_within_binary_mask(bg_mask, (*I)(), minbg, maxbg, avgbg,
                                      stddevbg);
     (*I)() -= avgbg;
     (*I)() /= stddevbg;
@@ -720,8 +720,8 @@ void normalize_Michael(Image *I, const matrix2D<int> &bg_mask)
 {
     double avg, stddev, min, max;
     double avgbg, stddevbg, minbg, maxbg;
-    (*I)().compute_stats(avg, stddev, min, max);
-    compute_stats_within_binary_mask(bg_mask, (*I)(), minbg, maxbg, avgbg,
+    (*I)().computeStats(avg, stddev, min, max);
+    computeStats_within_binary_mask(bg_mask, (*I)(), minbg, maxbg, avgbg,
                                      stddevbg);
     if (avgbg > 0)
     {
@@ -738,7 +738,7 @@ void normalize_Michael(Image *I, const matrix2D<int> &bg_mask)
 void normalize_NewXmipp(Image *I, const matrix2D<int> &bg_mask)
 {
     double avgbg, stddevbg, minbg, maxbg;
-    compute_stats_within_binary_mask(bg_mask, (*I)(), minbg, maxbg, avgbg,
+    computeStats_within_binary_mask(bg_mask, (*I)(), minbg, maxbg, avgbg,
                                      stddevbg);
     (*I)() -= avgbg;
     (*I)() /= stddevbg;
@@ -748,8 +748,8 @@ void normalize_NewXmipp2(Image *I, const matrix2D<int> &bg_mask)
 {
     double avg, stddev, min, max;
     double avgbg, stddevbg, minbg, maxbg;
-    (*I)().compute_stats(avg, stddev, min, max);
-    compute_stats_within_binary_mask(bg_mask, (*I)(), minbg, maxbg, avgbg,
+    (*I)().computeStats(avg, stddev, min, max);
+    computeStats_within_binary_mask(bg_mask, (*I)(), minbg, maxbg, avgbg,
                                      stddevbg);
     (*I)() -= avgbg;
     (*I)() /= ABS(avg - avgbg);
@@ -764,7 +764,7 @@ void normalize_ramp(Image *I, const matrix2D<int> &bg_mask)
 
     // Fit a least squares plane through the background pixels
     allpoints.clear();
-    (*I)().set_Xmipp_origin();
+    (*I)().setXmippOrigin();
     FOR_ALL_ELEMENTS_IN_MATRIX2D((*I)())
     {
         if (MAT_ELEM(bg_mask, i, j))
@@ -783,7 +783,7 @@ void normalize_ramp(Image *I, const matrix2D<int> &bg_mask)
         MAT_ELEM((*I)(), i, j) -= pA * j + pB * i + pC;
     }
     // Divide by the remaining std.dev. in the background region
-    compute_stats_within_binary_mask(bg_mask, (*I)(), minbg, maxbg, avgbg,
+    computeStats_within_binary_mask(bg_mask, (*I)(), minbg, maxbg, avgbg,
                                      stddevbg);
     (*I)() /= stddevbg;
 
@@ -795,8 +795,8 @@ void normalize_NewXmipp(Image *I, const matrix2D<int> &bg_mask)
 {
     double avg, stddev, min, max;
     double avgbg, stddevbg, minbg, maxbg;
-    (*I)().compute_stats(avg, stddev, min, max);
-    compute_stats_within_binary_mask(bg_mask, (*I)(), minbg, maxbg, avgbg,
+    (*I)().computeStats(avg, stddev, min, max);
+    computeStats_within_binary_mask(bg_mask, (*I)(), minbg, maxbg, avgbg,
                                      stddevbg);
     (*I)() -= avgbg;
     (*I)() /= avg - avgbg;

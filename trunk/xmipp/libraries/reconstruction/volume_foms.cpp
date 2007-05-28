@@ -311,10 +311,10 @@ void compute_hs_FOMs(Volume *vol_phantom,
     histogram1D Hpf, Hpb;    // Phantom fore and background histograms
     histogram1D Hrf, Hrb;    // Reconstruction for and background histograms
     double min, max;
-    (*vol_phantom)().compute_double_minmax(min, max);
+    (*vol_phantom)().computeDoubleMinMax(min, max);
     Hpf.init(min, max, 100);
     Hpb.init(min, max, 100);
-    (*vol_recons)().compute_double_minmax(min, max);
+    (*vol_recons)().computeDoubleMinMax(min, max);
     Hrf.init(min, max, 100);
     Hrb.init(min, max, 100);
     double phantom_dt_err, recons_dt_err;

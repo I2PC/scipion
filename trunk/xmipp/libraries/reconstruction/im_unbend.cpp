@@ -136,7 +136,7 @@ void ImUmbend::UnBending()
         exit(1);
     }
     //xmipp coordinates in image
-    //inIm().set_Xmipp_origin();
+    //inIm().setXmippOrigin();
     O[1] = inIm().ColNo() * 0.5;
     O[2] = inIm().RowNo() * 0.5;
     outIm().resize(inIm());

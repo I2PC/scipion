@@ -196,8 +196,8 @@ void SelectDWTBlock(int scale,
                     int& x2)
 {
     double Nx = Get_Max_Scale(XSIZE(I));
-    I.physical2logical(DWT_Imin(scale, Nx, quadrant[0]), x1);
-    I.physical2logical(DWT_Imax(scale, Nx, quadrant[0]), x2);
+    I.toLogical(DWT_Imin(scale, Nx, quadrant[0]), x1);
+    I.toLogical(DWT_Imax(scale, Nx, quadrant[0]), x2);
 }
 
 /** Select Block 2D.
@@ -225,8 +225,8 @@ void SelectDWTBlock(int scale,
     x2 = DWT_Imax(scale, Nx, quadrant[0]);
     y2 = DWT_Imax(scale, Ny, quadrant[1]);
 
-    I.physical2logical(y1, x1, y1, x1);
-    I.physical2logical(y2, x2, y2, x2);
+    I.toLogical(y1, x1, y1, x1);
+    I.toLogical(y2, x2, y2, x2);
 }
 
 /** Select Block 3D.
@@ -259,8 +259,8 @@ void SelectDWTBlock(int scale,
     y2 = DWT_Imax(scale, Ny, quadrant[1]);
     z2 = DWT_Imax(scale, Nz, quadrant[2]);
 
-    I.physical2logical(z1, y1, x1, z1, y1, x1);
-    I.physical2logical(z2, y2, x2, z2, y2, x2);
+    I.toLogical(z1, y1, x1, z1, y1, x1);
+    I.toLogical(z2, y2, x2, z2, y2, x2);
 }
 
 /** Get maximum scale.

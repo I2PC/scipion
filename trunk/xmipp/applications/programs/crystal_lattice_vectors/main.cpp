@@ -113,8 +113,8 @@ int main(int argc, char **argv)
             a.resize(3);
             b = Vp.Col(1);
             b.resize(3);
-            double gammap = RAD2DEG(atan2(vector_product(a, b).module(),
-                                          dot_product(a, b)));
+            double gammap = RAD2DEG(atan2(vectorProduct(a, b).module(),
+                                          dotProduct(a, b)));
             cout << "Angle from ap* to bp*="
             << gammap << endl;
         }
@@ -130,8 +130,8 @@ int main(int argc, char **argv)
             a.resize(3);
             b = v.Col(1);
             b.resize(3);
-            gamma = RAD2DEG(atan2(vector_product(a, b).module(),
-                                  dot_product(a, b)));
+            gamma = RAD2DEG(atan2(vectorProduct(a, b).module(),
+                                  dotProduct(a, b)));
             /*         if (MRC) {
                         rot=taya+(180-gamma)-rot;
                         Euler_angles2matrix(rot,tilt,psi,E2D); E2D.resize(2,2);

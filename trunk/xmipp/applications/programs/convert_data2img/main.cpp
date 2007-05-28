@@ -110,7 +110,7 @@ int main(int argc, char **argv)
         //Adjust the range to 0-1
         mask().range_adjust(0, 1);   // just in case
         if (noBB)
-            mask().set_Xmipp_origin();   // sets origin at the center of the mask.
+            mask().setXmippOrigin();   // sets origin at the center of the mask.
         cout << mask;       // Output Volumen Information
     }
 
@@ -135,7 +135,7 @@ int main(int argc, char **argv)
         NewYDim = (maxYPixel - minYPixel) +  1;
         cout << "minX = " << minXPixel << " maxX = " << maxXPixel << " DimX = " << NewXDim << endl;
         cout << "minY = " << minYPixel << " maxY = " << maxYPixel << " DimY= " << NewYDim << endl;
-        mask().move_origin_to(minYPixel + NewYDim / 2, minXPixel + NewXDim / 2);   // sets origin at the center of the mask.
+        mask().moveOriginTo(minYPixel + NewYDim / 2, minXPixel + NewXDim / 2);   // sets origin at the center of the mask.
     }
 
     cout << endl << "Reading input file...." << endl;
@@ -177,7 +177,7 @@ int main(int argc, char **argv)
             else
                 image().resize(NewYDim, NewXDim);
         }
-        image().set_Xmipp_origin();       // sets origin at the center of the image.
+        image().setXmippOrigin();       // sets origin at the center of the image.
         int counter = 0;
         double minVal = MAXFLOAT;
         for (int y = STARTINGY(image()); y <= FINISHINGY(image()); y++)

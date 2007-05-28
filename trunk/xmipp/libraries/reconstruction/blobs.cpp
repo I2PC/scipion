@@ -145,8 +145,8 @@ double sum_blob_SimpleGrid(const struct blobtype &blob, const SimpleGrid &grid,
     double        sum = 0.0;
 
 // Compute the limits of the blob in the grid coordinate system
-    grid.universe2grid(vector_R3(-blob.radius, -blob.radius, -blob.radius), corner1);
-    grid.universe2grid(vector_R3(blob.radius, blob.radius, blob.radius), corner2);
+    grid.universe2grid(vectorR3(-blob.radius, -blob.radius, -blob.radius), corner1);
+    grid.universe2grid(vectorR3(blob.radius, blob.radius, blob.radius), corner2);
     if (D != NULL)
         box_enclosing(corner1, corner2, *D, corner1, corner2);
 
@@ -438,7 +438,7 @@ void blobs2voxels_SimpleGrid(const matrix3D<double> &vol_blobs,
     bool condition = !FORW;
     if (condition)
     {
-        (*vol_voxels)().print_shape();
+        (*vol_voxels)().printShape();
         cout << endl;
         cout << "x0= " << x0 << " xF= " << xF << endl;
         cout << "y0= " << y0 << " yF= " << yF << endl;
@@ -776,7 +776,7 @@ void blobs2voxels(const GridVolume &vol_blobs,
     else
     {
         (*vol_voxels).initZeros(Zdim, Ydim, Xdim);
-        (*vol_voxels).set_Xmipp_origin();
+        (*vol_voxels).setXmippOrigin();
     }
 
     // Convert each subvolume ...............................................

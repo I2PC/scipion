@@ -115,7 +115,7 @@ double point_line_distance_3D(const Matrix1D<double> &p,
     Matrix1D<double> p_a(3);
 
     V3_MINUS_V3(p_a, p, a);
-    return (vector_product(p_a, v).module() / v.module());
+    return (vectorProduct(p_a, v).module() / v.module());
 }
 
 /* Least-squares-fit a plane to an arbitrary number of (x,y,z) points
@@ -440,10 +440,10 @@ int line_plane_intersection(const Matrix1D<double> normal_plane,
     intersection_point.resize(3);
     // if au+bv+cw=0, then your line is either in the plane, or
     // parallel to it
-    if (ABS(dot_product(normal_plane, vector_line)) < XMIPP_EQUAL_ACCURACY)
+    if (ABS(dotProduct(normal_plane, vector_line)) < XMIPP_EQUAL_ACCURACY)
     {
         intersection_point = point_line + vector_line;
-        if (ABS(dot_product(intersection_point, normal_plane) +
+        if (ABS(dotProduct(intersection_point, normal_plane) +
                 point_plane_at_x_y_zero) < XMIPP_EQUAL_ACCURACY)
             return(1);
         else
@@ -451,9 +451,9 @@ int line_plane_intersection(const Matrix1D<double> normal_plane,
 
     }
     //compute intersection
-    l = -1.0 * dot_product(point_line, normal_plane) +
+    l = -1.0 * dotProduct(point_line, normal_plane) +
         point_plane_at_x_y_zero;
-    l /=  dot_product(normal_plane, vector_line);
+    l /=  dotProduct(normal_plane, vector_line);
 
     intersection_point = point_line + l * vector_line;
     return(0);
@@ -573,14 +573,14 @@ void Euler_direction2angles(Matrix1D<double> &v0,
         VEC_ELEM(v_aux, 1) = sin(aux_beta) * sin(aux_alpha);
         VEC_ELEM(v_aux, 2) = cos(aux_beta);
 
-        error = fabs(dot_product(v, v_aux) - 1.);
+        error = fabs(dotProduct(v, v_aux) - 1.);
         alpha = aux_alpha;
         beta = aux_beta;
 
         VEC_ELEM(v_aux, 0) = sin(aux_beta) * cos(-1. * aux_alpha);
         VEC_ELEM(v_aux, 1) = sin(aux_beta) * sin(-1. * aux_alpha);
         VEC_ELEM(v_aux, 2) = cos(aux_beta);
-        newerror = fabs(dot_product(v, v_aux) - 1.);
+        newerror = fabs(dotProduct(v, v_aux) - 1.);
         if (error > newerror)
         {
             alpha = -1. * aux_alpha;
@@ -591,7 +591,7 @@ void Euler_direction2angles(Matrix1D<double> &v0,
         VEC_ELEM(v_aux, 0) = sin(-aux_beta) * cos(-1. * aux_alpha);
         VEC_ELEM(v_aux, 1) = sin(-aux_beta) * sin(-1. * aux_alpha);
         VEC_ELEM(v_aux, 2) = cos(-aux_beta);
-        newerror = fabs(dot_product(v, v_aux) - 1.);
+        newerror = fabs(dotProduct(v, v_aux) - 1.);
         if (error > newerror)
         {
             alpha = -1. * aux_alpha;
@@ -602,7 +602,7 @@ void Euler_direction2angles(Matrix1D<double> &v0,
         VEC_ELEM(v_aux, 0) = sin(-aux_beta) * cos(aux_alpha);
         VEC_ELEM(v_aux, 1) = sin(-aux_beta) * sin(aux_alpha);
         VEC_ELEM(v_aux, 2) = cos(-aux_beta);
-        newerror = fabs(dot_product(v, v_aux) - 1.);
+        newerror = fabs(dotProduct(v, v_aux) - 1.);
 
         if (error > newerror)
         {

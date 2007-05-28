@@ -120,7 +120,7 @@ int main(int argc, char **argv)
                 // Read image and estimate angular parameters
                 ImageXmipp I;
                 I.read(SF_in.NextImg(), false, false, false);
-                I().set_Xmipp_origin();
+                I().setXmippOrigin();
                 double shiftX, shiftY, psi, rot, tilt;
                 prm.predict_angles(I, shiftX, shiftY, rot, tilt, psi);
                 double corr = prm.predicted_corr[i-myFirst];

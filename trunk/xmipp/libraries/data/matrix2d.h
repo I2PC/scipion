@@ -252,8 +252,8 @@ int best_prec(float F, int _width);
  *
  * @code
  * matrix2D< double > m1(10, 10), m2(20, 20);
- * m1.set_Xmipp_origin();
- * m2.set_Xmipp_origin();
+ * m1.setXmippOrigin();
+ * m2.setXmippOrigin();
  *
  * FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(m1, m2)
  * {
@@ -542,7 +542,7 @@ public:
     matrix2D()
     {
         core_init();
-        init_shape();
+        initShape();
         dimension = 2;
     }
 
@@ -561,7 +561,7 @@ public:
     matrix2D(int Ydim, int Xdim)
     {
         core_init();
-        init_shape();
+        initShape();
         data = new T[Ydim * Xdim];
 
         if (data == NULL)
@@ -589,7 +589,7 @@ public:
     matrix2D(const mT& v)
     {
         core_init();
-        init_shape();
+        initShape();
         *this = v;
     }
 
@@ -802,7 +802,7 @@ public:
      *
      * ydim,xdim=0, startingy,startingx=0.
      */
-    void init_shape()
+    void initShape()
     {
         xinit = yinit = 0;
         xdim = ydim = 0;
@@ -814,7 +814,7 @@ public:
      * Copy shape variables from a pattern AND THE ARRAY IS RESIZED
      */
     template<typename T1>
-    void copy_shape(const maT1& v)
+    void copyShape(const maT1& v)
     {
         if (XSIZE(*this) != XSIZE(v) || YSIZE(*this) != YSIZE(v))
             resize(YSIZE(v), XSIZE(v));
@@ -884,7 +884,7 @@ public:
      * that the first physical index is 1 and not 0 as it usually is in C. New
      * memory is needed to hold the new double pointer array.
      */
-    T** adapt_for_numerical_recipes() const
+    T** adaptForNumericalRecipes() const
     {
         T** m = NULL;
         ask_Tmatrix(m, 1, YSIZE(*this), 1, XSIZE(*this));
@@ -902,7 +902,7 @@ public:
      * work with 2D arrays as a single pointer. The first element of the array
      * is pointed by result[1*Xdim+1], and in general result[i*Xdim+j]
      */
-    T* adapt_for_numerical_recipes2() const
+    T* adaptForNumericalRecipes2() const
     {
         return data - 1 - XSIZE(*this);
     }
@@ -924,7 +924,7 @@ public:
      *
      * The allocated memory is freed.
      */
-    void kill_adaptation_for_numerical_recipes(T** m) const
+    void killAdaptationForNumericalRecipes(T** m) const
     {
         free_Tmatrix(m, 1, YSIZE(*this), 1, XSIZE(*this));
     }
@@ -934,7 +934,7 @@ public:
      *
      * Nothing needs to be done in fact.
      */
-    void kill_adaptation_for_numerical_recipes2(T** m) const
+    void killAdaptationForNumericalRecipes2(T** m) const
         {}
 
     /** Intersects
@@ -967,10 +967,10 @@ public:
      * center of the matrix is defined in the Xmipp fashion.
      *
      * @code
-     * m1.set_Xmipp_origin();
+     * m1.setXmippOrigin();
      * @endcode
      */
-    void set_Xmipp_origin()
+    void setXmippOrigin()
     {
         yinit = FIRST_XMIPP_INDEX(ydim);
         xinit = FIRST_XMIPP_INDEX(xdim);
@@ -985,7 +985,7 @@ public:
      * go from 3 to 5. This is very useful for convolution operations where you
      * only need to move the logical starting of the array.
      */
-    void move_origin_to(int i, int j)
+    void moveOriginTo(int i, int j)
     {
         yinit = i + FIRST_XMIPP_INDEX(ydim);
         xinit = j + FIRST_XMIPP_INDEX(xdim);
@@ -1054,7 +1054,7 @@ public:
     /** Another function for setting the X origin
      *@ingroup MatricesSize
      */
-    void set_startingX(int _xinit)
+    void setStartingX(int _xinit)
     {
         xinit = _xinit;
     }
@@ -1089,10 +1089,10 @@ public:
      * Pay attention to the dimension order (Y,X).
      *
      * @code
-     * m.get_dim(Ydim, Xdim);
+     * m.getDimension(Ydim, Xdim);
      * @endcode
      */
-    void get_dim(int& Ydim, int& Xdim) const
+    void getDimension(int& Ydim, int& Xdim) const
     {
         Xdim = xdim;
         Ydim = ydim;
@@ -1128,7 +1128,7 @@ public:
      * Returns true if this object has got the same shape (origin and size) than
      * the argument
      */
-    bool same_shape(const maT& op) const
+    bool sameShape(const maT& op) const
     {
         return SAME_SHAPE2D(*this, op);
     }
@@ -1196,8 +1196,8 @@ public:
      * first a vector of the form (x,y).
      *
      * @code
-     * m(vector_R2(1, -2)) = 1;
-     * val = m(vector_R2(1, -2));
+     * m(vectorR2(1, -2)) = 1;
+     * val = m(vectorR2(1, -2));
      * @endcode
      */
     T& operator()(const Matrix1D< double >& v) const
@@ -1382,10 +1382,10 @@ public:
      * This function returns the physical position of a logical one.
      *
      * @code
-     * m.logical2physical(i_log, j_log, i_phys, j_phys);
+     * m.toPhysical(i_log, j_log, i_phys, j_phys);
      * @endcode
      */
-    void logical2physical(int i_log, int j_log, int& i_phys, int& j_phys) const
+    void toPhysical(int i_log, int j_log, int& i_phys, int& j_phys) const
     {
         i_phys = i_log - yinit;
         j_phys = j_log - xinit;
@@ -1397,10 +1397,10 @@ public:
      * This function returns the logical position of a physical one.
      *
      * @code
-     * m.physical2logical(i_phys, j_phys, i_log, j_log);
+     * m.toLogical(i_phys, j_phys, i_log, j_log);
      * @endcode
      */
-    void physical2logical(int i_phys, int j_phys, int &i_log, int& j_log) const
+    void toLogical(int i_phys, int j_phys, int &i_log, int& j_log) const
     {
         i_log = i_phys + yinit;
         j_log = j_phys + xinit;
@@ -1510,7 +1510,7 @@ public:
         if (i < yinit || i >= yinit + ydim)
             REPORT_ERROR(1103, "setRow: Matrix subscript (i) out of range");
 
-        if (v.get_dim() != xdim)
+        if (v.getDimension() != xdim)
             REPORT_ERROR(1102,
                          "setRow: Vector dimension different from matrix one");
 
@@ -1540,7 +1540,7 @@ public:
         if (j < xinit || j >= xinit + xdim)
             REPORT_ERROR(1103, "setCol: Matrix subscript (j) out of range");
 
-        if (v.get_dim() != ydim)
+        if (v.getDimension() != ydim)
             REPORT_ERROR(1102,
                          "setCol: Vector dimension different from matrix one");
 
@@ -1568,7 +1568,7 @@ public:
      * Matrix2D, for which the multiplication is not a component by component
      * multiplication but an algebraic one.
      */
-    friend void array_by_array(const maT& op1, const maT& op2, maT& result,
+    friend void arrayByArray(const maT& op1, const maT& op2, maT& result,
                                char operation)
     {
         if (operation == '*')
@@ -1578,13 +1578,13 @@ public:
             if (operation == 'x')
                 operation = '*';
 
-            if (!op1.same_shape(op2))
+            if (!op1.sameShape(op2))
                 REPORT_ERROR(1007,
                              (string) "Array_by_array: different shapes (" +
                              operation + ")");
 
             result.resize(op1);
-            core_array_by_array(op1, op2, result, operation);
+            core_arrayByArray(op1, op2, result, operation);
         }
     }
 
@@ -1630,7 +1630,7 @@ public:
     mT reverseX() const
     {
         mT temp(*this);
-        temp.self_reverseX();
+        temp.selfReverseX();
 
         return temp;
     }
@@ -1638,7 +1638,7 @@ public:
     /** Reverse matrix values over X axis, keep in this object
      * @ingroup MatricesUtilities
      */
-    void self_reverseX()
+    void selfReverseX()
     {
         T aux;
         int jmax = (int)(XSIZE(*this) - 1) / 2;
@@ -1669,7 +1669,7 @@ public:
     mT reverseY() const
     {
         mT temp(*this);
-        temp.self_reverseY();
+        temp.selfReverseY();
 
         return temp;
     }
@@ -1677,7 +1677,7 @@ public:
     /** Reverse matrix values over Y axis, keep in this object.
      * @ingroup MatricesUtilities
      */
-    void self_reverseY()
+    void selfReverseY()
     {
         T aux;
         int imax = (int)(YSIZE(*this) - 1) / 2;
@@ -2050,7 +2050,7 @@ public:
      *
      * @code
      * // m1 is shifted 2 pixels down and stored in m2
-     * m2 = m1.translate(vector_R2(0, 2));
+     * m2 = m1.translate(vectorR2(0, 2));
      * @endcode
      */
     void translate(const Matrix1D< double >& v, mT& result,
@@ -2094,7 +2094,7 @@ public:
      *
      * @code
      * // m1 is shifted 2 pixels down and stored in m2
-     * m2 = m1.translate(vector_R2(0, 2));
+     * m2 = m1.translate(vectorR2(0, 2));
      * @endcode
      */
     void translate_Bspline(int Splinedegree,
@@ -2139,11 +2139,11 @@ public:
      * If the input has very high values, it is better to rescale it to be
      * between 0 and 1.
      */
-    void self_translate_center_of_mass_to_center(bool wrap = WRAP)
+    void self_translate_centerOfMass_to_center(bool wrap = WRAP)
     {
-        set_Xmipp_origin();
+        setXmippOrigin();
         Matrix1D< double > center;
-        center_of_mass(center);
+        centerOfMass(center);
         center *= -1;
         self_translate(center, wrap);
     }
@@ -2154,12 +2154,12 @@ public:
      * If the input has very high values, it is better to rescale it to be
      * between 0 and 1.
      */
-    void self_translate_center_of_mass_to_center_Bspline(
+    void self_translate_centerOfMass_to_center_Bspline(
         int Splinedegree, bool wrap = WRAP)
     {
-        set_Xmipp_origin();
+        setXmippOrigin();
         Matrix1D< double > center;
-        center_of_mass(center);
+        centerOfMass(center);
         center *= -1;
         self_translate_Bspline(Splinedegree, center, wrap);
     }
@@ -2625,7 +2625,7 @@ public:
      */
     friend void mul_elements(const mT& op1, const mT& op2, mT& result)
     {
-        array_by_array(op1, op2, result, 'x');
+        arrayByArray(op1, op2, result, 'x');
     }
 
     /** The same as before but the result is returned
@@ -2869,7 +2869,7 @@ public:
      * This function returns the index of the maximum element of an array(i,j).
      * Returns -1 if the array is empty
      */
-    void max_index(int& imax, int& jmax) const
+    void maxIndex(int& imax, int& jmax) const
     {
         if (XSIZE(*this) == 0)
         {
@@ -2895,7 +2895,7 @@ public:
      * This function returns the index of the minimum element of an array(i,j).
      * Returns -1 if the array is empty
      */
-    void min_index(int& imin, int& jmin) const
+    void minIndex(int& imin, int& jmin) const
     {
         if (XSIZE(*this) == 0)
         {
@@ -2933,7 +2933,7 @@ void core_scalar_by_array< complex< double > > (const complex< double >& op1,
         const maTC& op2, maTC& result, char operation);
 
 template<>
-void core_array_by_array< complex< double > > (const maTC& op1, const maTC& op2,
+void core_arrayByArray< complex< double > > (const maTC& op1, const maTC& op2,
         maTC& result, char operation);
 
 template<>
@@ -2972,7 +2972,7 @@ matrix2D< double > rot2D_matrix(double ang);
  *
  * @code
  * // Displacement of 1 pixel to the right
- * m = translation2D_matrix(vector_R2(1, 0));
+ * m = translation2D_matrix(vectorR2(1, 0));
  * @endcode
  */
 matrix2D< double > translation2D_matrix(const Matrix1D< double > v);
@@ -3019,7 +3019,7 @@ matrix2D< double > rot3D_matrix(double ang, char axis);
  * not to be unitary.
  *
  * @code
- * m = rot3D_matrix(60, vector_R3(1, 1, 1));
+ * m = rot3D_matrix(60, vectorR3(1, 1, 1));
  * @endcode
  */
 matrix2D< double > rot3D_matrix(double ang, const Matrix1D< double >& axis);
@@ -3049,7 +3049,7 @@ matrix2D< double > align_with_Z(const Matrix1D< double >& axis);
  *
  * @code
  * // Displacement of 2 pixels down
- * m = translation3D_matrix(vector_R3(0, 0, 2));
+ * m = translation3D_matrix(vectorR3(0, 0, 2));
  * @endcode
  */
 matrix2D< double > translation3D_matrix(const Matrix1D< double >& v);
@@ -3080,12 +3080,12 @@ matrix2D< double > scale3D_matrix(const Matrix1D< double >& sc);
  * matrix2D< double > m2(4, 4);
  * m2.startingX() = 0;
  * m2.startingY() = 0;
- * cut_to_common_size(m1, m2);
+ * cutToCommonSize(m1, m2);
  * // m1 and m2 range from (0,0)=(y,x) to (2,0)
  * @endcode
  */
 template<typename T>
-void cut_to_common_size(mT& m1, mT& m2)
+void cutToCommonSize(mT& m1, mT& m2)
 {
     int y0 = MAX(STARTINGY(m1), STARTINGY(m2));
     int yF = MIN(FINISHINGY(m1), FINISHINGY(m2));
@@ -3252,7 +3252,7 @@ void lsqlin(const matrix2D< double >& C, const Matrix1D< double >& d,
 
 // TODO Document
 template<typename T>
-void mT::print_shape(ostream& out) const
+void mT::printShape(ostream& out) const
 {
     out << "Size(Y,X): " << YSIZE(*this) << "x" << XSIZE(*this)
     << " i=[" << STARTINGY(*this) << ".." << FINISHINGY(*this) << "]"
@@ -3261,7 +3261,7 @@ void mT::print_shape(ostream& out) const
 
 // TODO Document
 template<typename T>
-void mT::get_size(int* size) const
+void mT::getSize(int* size) const
 {
     size[0] = xdim;
     size[1] = ydim;
@@ -3391,7 +3391,7 @@ void mT::patch(const mT& patch_array, char operation)
 
 // TODO Document
 template<typename T>
-void mT::compute_stats(double& avg, double& stddev, T& min_val, T& max_val,
+void mT::computeStats(double& avg, double& stddev, T& min_val, T& max_val,
                        const Matrix1D< double >& corner1,
                        const Matrix1D< double >& corner2) const
 {
@@ -3425,7 +3425,7 @@ void mT::compute_stats(double& avg, double& stddev, T& min_val, T& max_val,
 
 // TODO Document
 template<typename T>
-void mT::compute_double_minmax(double& min_val, double& max_val,
+void mT::computeDoubleMinMax(double& min_val, double& max_val,
                                const Matrix1D< double >& corner1,
                                const Matrix1D< double >& corner2) const
 {
@@ -3443,7 +3443,7 @@ void mT::compute_double_minmax(double& min_val, double& max_val,
 
 // TODO Document
 template<typename T>
-void mT::center_of_mass(Matrix1D< double >& center, void* mask)
+void mT::centerOfMass(Matrix1D< double >& center, void* mask)
 {
     center.initZeros(2);
     double mass = 0;
@@ -3504,7 +3504,7 @@ void solve(const mT& A, const vT& b, vT& result)
     if (A.xdim != A.ydim)
         REPORT_ERROR(1109, "Solve: Matrix is not squared");
 
-    if (A.xdim != b.get_dim())
+    if (A.xdim != b.getDimension())
         REPORT_ERROR(1102, "Solve: Different sizes of Matrix and Vector");
 
     if (b.isRow())
@@ -3530,7 +3530,7 @@ void solve_by_svd(const matrix2D< T >& A, const Matrix1D< T >& b,
     if (A.xdim != A.ydim)
         REPORT_ERROR(1109, "Solve: Matrix is not squared");
 
-    if (A.xdim != b.get_dim())
+    if (A.xdim != b.getDimension())
         REPORT_ERROR(1102, "Solve: Different sizes of Matrix and Vector");
 
     if (b.isRow())
@@ -3550,7 +3550,7 @@ void solve_by_svd(const matrix2D< T >& A, const Matrix1D< T >& b,
         w(i) = 0;
 
     // Set size of matrices
-    result.resize(b.get_dim());
+    result.resize(b.getDimension());
 
     // Xmipp interface that calls to svdksb of numerical recipes
     Matrix1D< double > bd;
@@ -3574,8 +3574,8 @@ void solve(const mT& A, const mT& b, mT& result)
     // Solve
     result = b;
     mT Aux = A;
-    gaussj(Aux.adapt_for_numerical_recipes2(), Aux.ydim,
-           result.adapt_for_numerical_recipes2(), b.xdim);
+    gaussj(Aux.adaptForNumericalRecipes2(), Aux.ydim,
+           result.adaptForNumericalRecipes2(), b.xdim);
 }
 
 // TODO Document
@@ -3584,17 +3584,17 @@ void ludcmp(const mT& A, mT& LU, Matrix1D< int >& indx, T& d)
 {
     LU = A;
     indx.resize(XSIZE(A));
-    ludcmp(LU.adapt_for_numerical_recipes2(), XSIZE(A),
-           indx.adapt_for_numerical_recipes(), &d);
+    ludcmp(LU.adaptForNumericalRecipes2(), XSIZE(A),
+           indx.adaptForNumericalRecipes(), &d);
 }
 
 // TODO Document
 template<typename T>
 void lubksb(const mT& LU, Matrix1D< int >& indx, vT& b)
 {
-    lubksb(LU.adapt_for_numerical_recipes2(), XSIZE(indx),
-           indx.adapt_for_numerical_recipes(),
-           b.adapt_for_numerical_recipes());
+    lubksb(LU.adaptForNumericalRecipes2(), XSIZE(indx),
+           indx.adaptForNumericalRecipes(),
+           b.adaptForNumericalRecipes());
 }
 
 // TODO Document

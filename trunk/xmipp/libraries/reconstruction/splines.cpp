@@ -54,8 +54,8 @@ double sum_spatial_Bspline03_SimpleGrid(const SimpleGrid &grid)
     double        sum = 0.0;
 
 // Compute the limits of the spline in the grid coordinate system
-    grid.universe2grid(vector_R3(-2.0, -2.0, -2.0), corner1);
-    grid.universe2grid(vector_R3(2.0, 2.0, 2.0), corner2);
+    grid.universe2grid(vectorR3(-2.0, -2.0, -2.0), corner1);
+    grid.universe2grid(vectorR3(2.0, 2.0, 2.0), corner2);
 
 // Compute the sum in the points inside the grid
 // The integer part of the vectors is taken for not picking points
@@ -237,7 +237,7 @@ void spatial_Bspline032voxels_SimpleGrid(const matrix3D<double> &vol_splines,
 
 #ifdef DEBUG
     bool condition = true;
-    (*vol_voxels)().print_shape();
+    (*vol_voxels)().printShape();
     cout << endl;
     cout << "x0= " << x0 << " xF= " << xF << endl;
     cout << "y0= " << y0 << " yF= " << yF << endl;
@@ -398,7 +398,7 @@ void spatial_Bspline032voxels(const GridVolume &vol_splines,
     else
     {
         (*vol_voxels).initZeros(Zdim, Ydim, Xdim);
-        (*vol_voxels).set_Xmipp_origin();
+        (*vol_voxels).setXmippOrigin();
     }
 
     // Convert each subvolume ...............................................

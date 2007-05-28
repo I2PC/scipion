@@ -201,21 +201,21 @@ public:
     /**@name Grid structure */
     //@{
     /** Set X vector of the grid.
-        \\Ex: Matrix1D<double> X=vector_R3(1,0,0); sg.set_X(X); */
+        \\Ex: Matrix1D<double> X=vectorR3(1,0,0); sg.set_X(X); */
     void set_X(const Matrix1D<double> &v)
     {
         basis.setCol(0, v);
     }
 
     /** Set Y vector of the grid.
-        \\Ex: Matrix1D<double> Y=vector_R3(0,1,0); sg.set_Y(Y); */
+        \\Ex: Matrix1D<double> Y=vectorR3(0,1,0); sg.set_Y(Y); */
     void set_Y(const Matrix1D<double> &v)
     {
         basis.setCol(1, v);
     }
 
     /** Set Z vector of the grid.
-        \\Ex: Matrix1D<double> Z=vector_R3(1,1,1); sg.set_Z(Z); */
+        \\Ex: Matrix1D<double> Z=vectorR3(1,1,1); sg.set_Z(Z); */
     void set_Z(const Matrix1D<double> &v)
     {
         basis.setCol(2, v);
@@ -249,14 +249,14 @@ public:
         highest-lowest+1.
         \\ Ex: Build a volume able to hold this grid
         \begin{verbatim}
-        grid.get_size(Zdim,Ydim,Xdim);
+        grid.getSize(Zdim,Ydim,Xdim);
         vol().resize(Zdim,Ydim,Xdim);
         STARTINGX(Vol_aux())=(int) XX(grid.lowest);
         STARTINGY(Vol_aux())=(int) YY(grid.lowest);
         STARTINGZ(Vol_aux())=(int) ZZ(grid.lowest);
         \end{verbatim}
     */
-    void get_size(int &Zdim, int &Ydim, int &Xdim) const
+    void getSize(int &Zdim, int &Ydim, int &Xdim) const
     {
         Zdim = (int)(ZZ(highest) - ZZ(lowest)) + 1;
         Ydim = (int)(YY(highest) - YY(lowest)) + 1;
@@ -311,7 +311,7 @@ public:
         \\ Ex:
         \begin{verbatim}
         SimpleGrid sg;
-        sg.set_Z(vector_R3(1,1,1)); --> Change grid vectors
+        sg.set_Z(vectorR3(1,1,1)); --> Change grid vectors
         sg.prepare_grid();          --> Now the grid is ready to work
         \end{verbatim} */
     void prepare_grid();
@@ -333,7 +333,7 @@ public:
         \begin{verbatim}
         return origin+(XX(gv)*X+YY(gv)*Y+ZZ(gv)*Z)*relative_size;
         \end{verbatim}
-        \\Ex: Matrix1D<double> uv; sg.grid2universe(vector_R3(-1,2,1),uv); */
+        \\Ex: Matrix1D<double> uv; sg.grid2universe(vectorR3(-1,2,1),uv); */
     void grid2universe(const Matrix1D<double> &gv, Matrix1D<double> &uv) const
     {
         SPEED_UP_temps;
@@ -361,7 +361,7 @@ public:
         \\Ex:
         \begin{verbatim}
            SimpleGrid sg;
-           sg.origin=vector_R3(10,10,10);
+           sg.origin=vectorR3(10,10,10);
            cout << "What is the position within the grid of the origin? "
                 << sg.universe2grid(sg.origin);
         \end{verbatim} */
@@ -397,7 +397,7 @@ public:
         the volume is projecting, but it doesn't tell you the value.
         See \URL[Uproject_to_plane]{Uproject_to_plane.2.html} for more
         information.
-        \\ Ex: Matrix1D<double> up=sg.Gproject_to_plane(vector_R3(1,0,0),45,45,60); */
+        \\ Ex: Matrix1D<double> up=sg.Gproject_to_plane(vectorR3(1,0,0),45,45,60); */
     void Gproject_to_plane(const Matrix1D<double> &gr,
                            double rot, double tilt, double psi, Matrix1D<double> &result) const
     {
@@ -414,7 +414,7 @@ public:
         \\ Ex:
         \begin{verbatim}
         matrix2D<double> euler; Euler_angles2matrix(45,45,60,euler);
-        Matrix1D<double> up=sg.Gproject_to_plane(vector_R3(1,0,0),euler);
+        Matrix1D<double> up=sg.Gproject_to_plane(vectorR3(1,0,0),euler);
         \end{verbatim} */
     void Gproject_to_plane(const Matrix1D<double> &gr,
                            const matrix2D<double> &euler, Matrix1D<double> &result) const
@@ -537,7 +537,7 @@ public:
         grid is the number 0. An exception is thrown if you try to access
         a simple grid beyond the number of actual simple grids inside the
         complex one.
-        \\ Ex: BCC(0).origin=vector_R3(1,1,1); */
+        \\ Ex: BCC(0).origin=vectorR3(1,1,1); */
     SimpleGrid& operator()(int n)
     {
         if (n>LG.size())
@@ -669,9 +669,9 @@ Grid Create_CC_grid(double relative_size,
     This function makes a call to the previous one with
     \begin{verbatim}
     corner1:         -origin
-    corner2:         vector_R3(Xdim,Ydim,Zdim)-origin-1
+    corner2:         vectorR3(Xdim,Ydim,Zdim)-origin-1
     relative_size:   specified
-    origin:          vector_R3((int)(Xdim/2.0),(int)(Ydim/2.0),(int)(Zdim/2.0))
+    origin:          vectorR3((int)(Xdim/2.0),(int)(Ydim/2.0),(int)(Zdim/2.0))
     \end{verbatim}
 
     That is to say, the origin of the grid is at its center, corner1
@@ -697,7 +697,7 @@ Grid Create_CC_grid(double relative_size,
     corner1:         specified
     corner2:         specified
     relative_size:   specified
-    origin:          ROUNDnD((corner1+corner2)/2)+relative_size/2*vector_R3(1,1,1)
+    origin:          ROUNDnD((corner1+corner2)/2)+relative_size/2*vectorR3(1,1,1)
     \end{verbatim}
 
     As you see the BCC grid is the superposition of 2 CC grids one shifted
@@ -723,19 +723,19 @@ Grid Create_BCC_grid(double relative_size,
     corner1:         specified
     corner2:         specified
     relative_size:   specified
-    origin:          origin+relative_size/2*vector_R3(0,1,1)
+    origin:          origin+relative_size/2*vectorR3(0,1,1)
 
     Grid(2) -------------------------------------
     corner1:         specified
     corner2:         specified
     relative_size:   specified
-    origin:          origin+relative_size/2*vector_R3(1,0,1)
+    origin:          origin+relative_size/2*vectorR3(1,0,1)
 
     Grid(3) -------------------------------------
     corner1:         specified
     corner2:         specified
     relative_size:   specified
-    origin:          origin+relative_size/2*vector_R3(1,1,0)
+    origin:          origin+relative_size/2*vectorR3(1,1,0)
     \end{verbatim}
 */
 Grid Create_FCC_grid(double relative_size,
@@ -888,7 +888,7 @@ public:
         for (int i = 0; i < G.GridsNo(); i++)
         {
             SimpleGrid & grid = G(i);
-            grid.get_size(Zdim, Ydim, Xdim);
+            grid.getSize(Zdim, Ydim, Xdim);
             Vol_aux = new VolumeT<T>;
             (*Vol_aux)().resize(Zdim, Ydim, Xdim);  // Using this function
             // after empty creation the volume
@@ -922,7 +922,7 @@ public:
 
             // Resize auxiliary volume
             int Zdim, Ydim, Xdim;
-            grid.get_size(Zdim, Ydim, Xdim);
+            grid.getSize(Zdim, Ydim, Xdim);
             Vol_aux = new VolumeT<T>;
             (*Vol_aux)().resize(Zdim, Ydim, Xdim);
             STARTINGX((*Vol_aux)()) = (int) XX(grid.lowest); // This values are already
@@ -1119,7 +1119,7 @@ public:
     for (int i=0; i<VolumesNo(); i++) { \
         try { \
             Vol_aux = new VolumeT<T>; \
-            array_by_array((*this)(i)(),GV(i)(),(*Vol_aux)(),op); \
+            arrayByArray((*this)(i)(),GV(i)(),(*Vol_aux)(),op); \
             result.LV.push_back(Vol_aux); \
         } catch (Xmipp_error XE) {\
             cout << XE; \
@@ -1176,7 +1176,7 @@ public:
     \
     for (int i=0; i<VolumesNo(); i++) { \
         try { \
-            array_by_array((*this)(i)(),GV(i)(),(*this)(i)(),op); \
+            arrayByArray((*this)(i)(),GV(i)(),(*this)(i)(),op); \
         } catch (Xmipp_error XE) {\
             cout << XE; \
             REPORT_ERROR(3004,(string)"GridVolume::"+op+"=: Different shape of volume " +\

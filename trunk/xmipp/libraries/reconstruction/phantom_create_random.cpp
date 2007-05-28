@@ -87,7 +87,7 @@ void Random_Phantom_Side_Info::produce_Side_Info(
     {
         voxel_mode = true;
         VoxelPhantom.read(prm.fn_random);
-        VoxelPhantom().set_Xmipp_origin();
+        VoxelPhantom().setXmippOrigin();
     }
     else
     {
@@ -373,7 +373,7 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
 #endif
 
             // Compute projection power
-            proj().compute_stats(avg, proj_power(n), dummy, dummy);
+            proj().computeStats(avg, proj_power(n), dummy, dummy);
 
 
             if (n % 30 == 0) progress_bar(n);
@@ -383,19 +383,19 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
         compute_hist(volume, hist_vol, 300);
         compute_hist(proj_power, hist_proj, 300);
         compute_hist(proj_area, hist_area, 300);
-        volume.compute_stats(avg, stddev, dummy, dummy);
+        volume.computeStats(avg, stddev, dummy, dummy);
         cout << "# Volume average: " << avg << endl
         << "# Volume stddev:  " << stddev << endl
         << "# Volume percentil  2.5%: " << hist_vol.percentil(2.5) << endl
         << "# Volume percentil 97.5%: " << hist_vol.percentil(97.5) << endl
         << hist_vol << endl << endl;
-        proj_power.compute_stats(power_avg, power_stddev, dummy, dummy);
+        proj_power.computeStats(power_avg, power_stddev, dummy, dummy);
         cout << "# Projection power average: " << power_avg << endl
         << "# Projection power stddev:  " << power_stddev << endl
         << "# Projection percentil  2.5%: " << hist_proj.percentil(2.5) << endl
         << "# Projection percentil 97.5%: " << hist_proj.percentil(97.5) << endl
         << hist_proj;
-        proj_area.compute_stats(area_avg, area_stddev, dummy, dummy);
+        proj_area.computeStats(area_avg, area_stddev, dummy, dummy);
         cout << "# Projection area average: " << area_avg << endl
         << "# Projection area stddev:  " << area_stddev << endl
         << "# Area percentil  2.5%:    " << hist_area.percentil(2.5) << endl

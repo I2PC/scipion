@@ -35,8 +35,8 @@ SimpleGrid::SimpleGrid()
 {
     basis.init_identity(3);
     inv_basis.init_identity(3);
-    origin        = vector_R3(0., 0., 0.);
-    lowest        = vector_R3(-5., -5., -5.);
+    origin        = vectorR3(0., 0., 0.);
+    lowest        = vectorR3(-5., -5., -5.);
     highest       = -lowest;
     relative_size = 1;
     R2            = -1;
@@ -96,7 +96,7 @@ int SimpleGrid::get_number_of_samples() const
     if (R2 == -1)
     {
         int Zdim, Ydim, Xdim;
-        get_size(Zdim, Ydim, Xdim);
+        getSize(Zdim, Ydim, Xdim);
         return Zdim*Ydim*Xdim;
     }
     else
@@ -253,10 +253,10 @@ Grid Create_CC_grid(double relative_size, int Zdim, int Ydim, int Xdim)
     SimpleGrid      aux_grid;
 
     Matrix1D<double> origin =
-        vector_R3((double)FLOOR(Xdim / 2.0), (double)FLOOR(Ydim / 2.0),
+        vectorR3((double)FLOOR(Xdim / 2.0), (double)FLOOR(Ydim / 2.0),
                   (double)FLOOR(Zdim / 2.0));
     aux_grid = Create_CC_grid(relative_size, -origin,
-                              vector_R3((double)Xdim, (double)Ydim, (double)Zdim) - origin - 1, origin);
+                              vectorR3((double)Xdim, (double)Ydim, (double)Zdim) - origin - 1, origin);
     result.add_grid(aux_grid);
 
     return result;
@@ -310,7 +310,7 @@ Grid Create_BCC_grid(double relative_size, const Matrix1D<double> &corner1,
     result.add_grid(aux_grid);
 
     // Grid B
-    origin = origin + relative_size / 2 * vector_R3(1., 1., 1.);
+    origin = origin + relative_size / 2 * vectorR3(1., 1., 1.);
     aux_grid = Create_CC_grid(relative_size, corner1, corner2, origin);
     result.add_grid(aux_grid);
 
@@ -367,18 +367,18 @@ Grid Create_FCC_grid(double relative_size, const Matrix1D<double> &corner1,
     aux_grid = Create_CC_grid(relative_size, corner1, corner2, origin);
     result.add_grid(aux_grid);
     // Grid D
-    aux_origin = origin + relative_size / 2 * vector_R3(0., 1., 1.);
+    aux_origin = origin + relative_size / 2 * vectorR3(0., 1., 1.);
     aux_grid = Create_CC_grid(relative_size, corner1, corner2, aux_origin);
     result.add_grid(aux_grid);
     // Grid C
-    aux_origin = origin + relative_size / 2 * vector_R3(1., 0., 1.);
+    aux_origin = origin + relative_size / 2 * vectorR3(1., 0., 1.);
     aux_grid = Create_CC_grid(relative_size, corner1, corner2, aux_origin);
     result.add_grid(aux_grid);
     // Grid B
     cornerb = corner2;
     cornerb(0) = cornerb(0) - 1;
     cornerb(1) = cornerb(1) - 1;
-    aux_origin = origin + relative_size / 2 * vector_R3(1., 1., 0.);
+    aux_origin = origin + relative_size / 2 * vectorR3(1., 1., 0.);
     aux_grid = Create_CC_grid(relative_size, corner1, cornerb, aux_origin);
     result.add_grid(aux_grid);
 

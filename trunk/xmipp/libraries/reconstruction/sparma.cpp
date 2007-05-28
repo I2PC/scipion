@@ -137,7 +137,7 @@ double CausalARMA(matrix2D<double> &Img, int N_AR, int M_AR,
     // Calculate the autocorrelation matrix
     matrix2D<double> R;
     auto_correlation_matrix(Img, R);
-    R.set_Xmipp_origin();
+    R.setXmippOrigin();
 
     /**********************************************************************/
     // Set equation system for AR part of the model

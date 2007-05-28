@@ -65,7 +65,7 @@ void Prog_Break_Sym_prm::read(int argc, char **argv)
     while ((!SFvol.eof()))
     {
         vol.read(SFvol.NextImg());
-        vol().set_Xmipp_origin();
+        vol().setXmippOrigin();
         vols.push_back(vol());
         Nvols++;
     }
@@ -167,12 +167,12 @@ void Prog_Break_Sym_prm::process_one_image(ImageXmipp &img, int &opt_vol,
     if (fn_mask != "")
     {
         project_Volume(mask(), projmask, dim, dim, rot, tilt, psi);
-        projmask().set_Xmipp_origin();
+        projmask().setXmippOrigin();
     }
     else
     {
         projmask().resize(dim, dim);
-        projmask().set_Xmipp_origin();
+        projmask().setXmippOrigin();
         projmask().init_constant(1.);
     }
 
@@ -193,7 +193,7 @@ void Prog_Break_Sym_prm::process_one_image(ImageXmipp &img, int &opt_vol,
     {
 
         project_Volume(vols[volno], proj, dim, dim, rot, tilt, psi);
-        proj().set_Xmipp_origin();
+        proj().setXmippOrigin();
         corr = Asq = 0.;
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(proj())
         {
@@ -228,7 +228,7 @@ void Prog_Break_Sym_prm::process_one_image(ImageXmipp &img, int &opt_vol,
             R.resize(3, 3);
             Euler_apply_transf(L, R, rot, tilt, psi, newrot, newtilt, newpsi);
             project_Volume(vols[volno], proj, dim, dim, newrot, newtilt, newpsi);
-            proj().set_Xmipp_origin();
+            proj().setXmippOrigin();
             if (verb > 1)
             {
                 Itmp() = proj();
@@ -299,7 +299,7 @@ void Prog_Break_Sym_prm::process_selfile(SelFile &SF, vector<SelFile> &SFout, do
         fn_img = SF.NextImg();
         // read image, only applying the shifts
         img.read(fn_img, false, false, false, true);
-        img().set_Xmipp_origin();
+        img().setXmippOrigin();
 
         process_one_image(img, opt_vol, opt_sym, maxcorr);
         SFout[opt_vol].insert(fn_img, SelLine::ACTIVE);

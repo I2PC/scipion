@@ -62,17 +62,17 @@ public:
 bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 {
     Flip_parameters *eprm = (Flip_parameters *) prm;
-    if (eprm->flipX) img().self_reverseX();
-    if (eprm->flipY) img().self_reverseY();
+    if (eprm->flipX) img().selfReverseX();
+    if (eprm->flipY) img().selfReverseY();
     return true;
 }
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
     Flip_parameters *eprm = (Flip_parameters *) prm;
-    if (eprm->flipX) vol().self_reverseX();
-    if (eprm->flipY) vol().self_reverseY();
-    if (eprm->flipZ) vol().self_reverseZ();
+    if (eprm->flipX) vol().selfReverseX();
+    if (eprm->flipY) vol().selfReverseY();
+    if (eprm->flipZ) vol().selfReverseZ();
     return true;
 }
 

@@ -53,7 +53,7 @@ public:
 
     /** Add one grid point place it at XYZ
       */
-    void Add_Item(const Matrix1D<double> XYZ = vector_R3(0., 0., 0.));
+    void Add_Item(const Matrix1D<double> XYZ = vectorR3(0., 0., 0.));
     /** write a footer and Close file, also write the total number of elements
         */
     ~openDX();

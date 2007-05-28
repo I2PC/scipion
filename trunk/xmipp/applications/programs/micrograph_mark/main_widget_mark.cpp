@@ -389,7 +389,7 @@ void QtMainWidgetMark::compute_gamma()
                   Mu->coord(j).Y - Mu->coord(i).Y);
         VECTOR_R2(iku, Mu->coord(k).X - Mu->coord(i).X,
                   Mu->coord(k).Y - Mu->coord(i).Y);
-        double untilted_area = ABS(dot_product(iju, iku)/*/2*/);
+        double untilted_area = ABS(dotProduct(iju, iku)/*/2*/);
         if (untilted_area < MIN_AREA) continue; // For numerical stability
 
         // Compute area of the same triangle in the tilted micrograph
@@ -397,7 +397,7 @@ void QtMainWidgetMark::compute_gamma()
                   Mu->coord(j).Y - Mu->coord(i).Y);
         VECTOR_R2(ikt, Mt->coord(k).X - Mt->coord(i).X,
                   Mt->coord(k).Y - Mt->coord(i).Y);
-        double tilted_area = ABS(dot_product(ijt, ikt)/*/2*/);
+        double tilted_area = ABS(dotProduct(ijt, ikt)/*/2*/);
         if (tilted_area < MIN_AREA) continue; // For numerical stability
         if (tilted_area > MAX_AREA) continue; // micrograph are not perfect
         // sheets so avoid
@@ -450,7 +450,7 @@ void QtMainWidgetMark::compute_alphas()
     pair_tilt = __gamma;
 
     // Coarse search
-    double *aux = angles.adapt_for_numerical_recipes();
+    double *aux = angles.adaptForNumericalRecipes();
     double best_alpha_u = 0, best_alpha_t = 0, best_fit = 1e8;
     for (aux[1] = 0; aux[1] < 180; aux[1] += 10)
         for (aux[2] = 0; aux[2] < 180; aux[2] += 10)
@@ -463,12 +463,12 @@ void QtMainWidgetMark::compute_alphas()
                 best_alpha_t = aux[2];
             }
         }
-    angles.kill_adaptation_for_numerical_recipes(aux);
+    angles.killAdaptationForNumericalRecipes(aux);
     angles(0) = best_alpha_u;
     angles(1) = best_alpha_t;
 
     // Fine search
-    Powell_optimizer(angles, 1, 2, &matrix_fitness,
+    powellOptimizer(angles, 1, 2, &matrix_fitness,
                      0.001, fitness, iter, steps, false);
     __alpha_u = angles(0);
     __alpha_t = angles(1);

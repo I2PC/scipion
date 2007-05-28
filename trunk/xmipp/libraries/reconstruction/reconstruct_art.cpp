@@ -253,7 +253,7 @@ void ART_single_step(
         // Enlarge footprint, bigger than necessary to avoid
         // aliasing
         *footprint = prm.basis.blobprint;
-        (*footprint)().set_Xmipp_origin();
+        (*footprint)().setXmippOrigin();
         double blob_radius = prm.basis.blob.radius;
         int finalsize = 2 * CEIL(30 + blob_radius) + 1;
         footprint->window(
@@ -304,7 +304,7 @@ void ART_single_step(
     {
         cout << "Equation system (Ax=b) ----------------------\n";
         cout << "Size: ";
-        A->print_shape();
+        A->printShape();
         cout << endl;
         for (int i = 0; i < YSIZE(*A); i++)
         {

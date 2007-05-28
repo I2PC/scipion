@@ -76,7 +76,7 @@ public:
     matrix2D<double> periodic_table;
 
     // Protein geometry
-    Matrix1D<double> center_of_mass, limit;
+    Matrix1D<double> centerOfMass, limit;
 
     /* Volume at a high sampling rate */
     VolumeXmipp Vhigh;

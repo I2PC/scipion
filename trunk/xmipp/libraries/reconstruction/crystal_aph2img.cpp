@@ -432,9 +432,9 @@ void ROUT_RealSpace2Spots(RealSpace2Spots2D_Parameters &prm,
         // compute intersecci�n central plane with drid line
 //tenemos que calcular los vectores de red en espacio real y quitar  el 128
 //  DoesIntersect=line_plane_intersection(normal_plane,
-//                           vector_R3(0.,0.,1.),
+//                           vectorR3(0.,0.,1.),
 //                           intersection_point,
-//                           vector_R3((double)tmp_spot.h/128.,
+//                           vectorR3((double)tmp_spot.h/128.,
 //      (double)tmp_spot.k/128.,0.),
 //      0.
 //      );
@@ -444,7 +444,7 @@ void ROUT_RealSpace2Spots(RealSpace2Spots2D_Parameters &prm,
 //      exit(1);
 //      }
 //         tmp_spot.zstar      = ZZ(intersection_point);
-        aux_vector = vector_R3((double)tmp_spot.h,
+        aux_vector = vectorR3((double)tmp_spot.h,
                                (double)tmp_spot.k, 0.);//h
         Vp.resize(3, 3);
         tmp_spot.zstar = ZZ((E.inv()) * Vp * aux_vector);
@@ -570,7 +570,7 @@ void DFT(const matrix2D<double> &I, matrix2D< complex<double> > &FT)
     int ydim = I.RowNo();
     double myreal, myimag;
     FT.initZeros(ydim, xdim);
-    FT.set_Xmipp_origin();
+    FT.setXmippOrigin();
 
     time_config();
     init_progress_bar(YSIZE(I));

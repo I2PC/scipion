@@ -135,7 +135,7 @@ void Normalize_parameters::produce_side_info()
         if (!enable_mask)
         {
             bg_mask.resize(Ydim, Xdim);
-            bg_mask.set_Xmipp_origin();
+            bg_mask.setXmippOrigin();
 
             switch (background_mode)
             {
@@ -271,7 +271,7 @@ void Normalize_parameters::apply(Image* img)
     if (remove_black_dust || remove_white_dust)
     {
         double avg, stddev, min, max, zz;
-        (*img)().compute_stats(avg, stddev, min, max);
+        (*img)().computeStats(avg, stddev, min, max);
 
         if ((min - avg) / stddev < thresh_black_dust && remove_black_dust)
         {

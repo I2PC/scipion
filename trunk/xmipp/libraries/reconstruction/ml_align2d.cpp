@@ -590,7 +590,7 @@ void Prog_MLalign2D_prm::produce_Side_info()
                 else dMij(Maux, i, j) = dMij(ctfmask, i, j).real();
             }
             CenterFFT(Maux, true);
-            Maux.set_Xmipp_origin();
+            Maux.setXmippOrigin();
             center.initZeros();
             rmean_ctf.initZeros();
             radial_average(Maux, center, rmean_ctf, radial_count, true);
@@ -606,7 +606,7 @@ void Prog_MLalign2D_prm::produce_Side_info()
         // Get a resolution pointer in Fourier-space
         Mresol.resize(dim, dim);
         Maux.resize(dim, dim);
-        Maux.set_Xmipp_origin();
+        Maux.setXmippOrigin();
         FOR_ALL_ELEMENTS_IN_MATRIX2D(Maux)
         {
             MAT_ELEM(Maux, i, j) = MIN((double)hdim - 1, sqrt((double)(i * i + j * j)));
@@ -630,7 +630,7 @@ void Prog_MLalign2D_prm::produce_Side_info()
     {
         nr_trans = 0;
         Maux.resize(dim, dim);
-        Maux.set_Xmipp_origin();
+        Maux.setXmippOrigin();
         FOR_ALL_ELEMENTS_IN_MATRIX2D(Maux)
         {
             double rr = (double)i * i + (double)j * j;
@@ -686,9 +686,9 @@ void Prog_MLalign2D_prm::estimate_initial_sigma2()
         FOR_ALL_DEFOCUS_GROUPS()
         {
             Msigma2[ifocus].initZeros(dim, dim);
-            Msigma2[ifocus].set_Xmipp_origin();
+            Msigma2[ifocus].setXmippOrigin();
             Mave[ifocus].initZeros(dim, dim);
-            Mave[ifocus].set_Xmipp_origin();
+            Mave[ifocus].setXmippOrigin();
         }
         Maux.initZeros(dim, dim);
         SF.go_beginning();
@@ -698,10 +698,10 @@ void Prog_MLalign2D_prm::estimate_initial_sigma2()
             SL = SF.current();
             focus = SL.get_number() - 1;
             img.read(SF.NextImg(), false, false, false, false);
-            img().set_Xmipp_origin();
+            img().setXmippOrigin();
             FourierTransform(img(), Fimg);
             FFT_magnitude(Fimg, Maux);
-            Maux.set_Xmipp_origin();
+            Maux.setXmippOrigin();
             Maux *= Maux;
             Msigma2[focus] += Maux;
             Mave[focus] += img();
@@ -716,7 +716,7 @@ void Prog_MLalign2D_prm::estimate_initial_sigma2()
             Mave[ifocus] /= count_defocus[ifocus];
             FourierTransform(Mave[ifocus], Fave);
             FFT_magnitude(Fave, Maux);
-            Maux.set_Xmipp_origin();
+            Maux.setXmippOrigin();
             Maux *= Maux;
             CenterFFT(Maux, true);
             rmean_signal.initZeros();
@@ -890,7 +890,7 @@ void Prog_MLalign2D_prm::calculate_wiener_defocus_series(Matrix1D<double> &spect
     // Pixel use in weighted sums of images: pointer_ctf
     // And pointers to the original i and j coordinates
     Maux.initZeros(dim, dim);
-    Maux.set_Xmipp_origin();
+    Maux.setXmippOrigin();
     FourierTransformHalf(Maux, Faux);
     highres_limit = maxres + increase_highres_limit;
     highres_limit = MIN(highres_limit, hdim);
@@ -1020,7 +1020,7 @@ void Prog_MLalign2D_prm::produce_Side_info2(int nr_vols)
     while ((!SFr.eof()))
     {
         img.read(SFr.NextImg(), false, false, true, false);
-        img().set_Xmipp_origin();
+        img().setXmippOrigin();
         Iref.push_back(img);
         if (!save_mem3) Iold.push_back(img);
         if (fourier_mode) Ictf.push_back(img);
@@ -1150,7 +1150,7 @@ void Prog_MLalign2D_prm::produce_Side_info2(int nr_vols)
                 CenterFFT(Maux, true);
                 Maux *= Maux;
                 Maux *= alpha_k[refno] * (double)nr_exp_images;
-                Maux.set_Xmipp_origin();
+                Maux.setXmippOrigin();
                 rmean_signal2.initZeros();
                 radial_average(Maux, center, rmean_signal2, radial_count, true);
                 if (c == 0) spectral_signal = rmean_signal2;
@@ -1279,9 +1279,9 @@ void Prog_MLalign2D_prm::calculate_pdf_phi()
 
     double r2, pdfpix, sum;
     P_phi.resize(dim, dim);
-    P_phi.set_Xmipp_origin();
+    P_phi.setXmippOrigin();
     Mr2.resize(dim, dim);
-    Mr2.set_Xmipp_origin();
+    Mr2.setXmippOrigin();
 
     sum=0.;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(P_phi)
@@ -1323,24 +1323,24 @@ void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,
     matrix2D<double> cmask;
 
     Maux.initZeros(dim, dim);
-    Maux.set_Xmipp_origin();
+    Maux.setXmippOrigin();
     Fref.clear();
     Mref.clear();
     A2.clear();
 
     // prepare masks
     mask.resize(dim, dim);
-    mask.set_Xmipp_origin();
+    mask.setXmippOrigin();
     BinaryCircularMask(mask, hdim, INNER_MASK);
     omask.resize(dim, dim);
-    omask.set_Xmipp_origin();
+    omask.setXmippOrigin();
     BinaryCircularMask(omask, hdim, OUTSIDE_MASK);
 
     FOR_ALL_MODELS()
     {
         Mref.push_back(dumM);
         Fref.push_back(dumF);
-        if (!fourier_mode) compute_stats_within_binary_mask(omask, Iref[refno](), dum, dum, avg, dum);
+        if (!fourier_mode) computeStats_within_binary_mask(omask, Iref[refno](), dum, dum, avg, dum);
         FOR_ALL_ROTATIONS()
         {
             // Add arbitrary number (small_angle) to avoid 0-degree rotation (lacking interpolation)
@@ -1359,7 +1359,7 @@ void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,
             // Subtract mean_ref from image prior to FFT for maxCC
             if (maxCC_rather_than_ML)
             {
-                Maux.compute_stats(mean_ref, stddev_ref, dummy, dummy);
+                Maux.computeStats(mean_ref, stddev_ref, dummy, dummy);
                 Maux -= mean_ref;
                 if (ipsi == 0) A2[refno] = stddev_ref;
             }
@@ -1402,15 +1402,15 @@ void Prog_MLalign2D_prm::reverse_rotate_reference(
     matrix2D<int> mask, omask;
     Maux.resize(dim, dim);
     Maux2.resize(dim, dim);
-    Maux.set_Xmipp_origin();
-    Maux2.set_Xmipp_origin();
+    Maux.setXmippOrigin();
+    Maux2.setXmippOrigin();
 
     Mnew.clear();
     mask.resize(dim, dim);
-    mask.set_Xmipp_origin();
+    mask.setXmippOrigin();
     BinaryCircularMask(mask, hdim, INNER_MASK);
     omask.resize(dim, dim);
-    omask.set_Xmipp_origin();
+    omask.setXmippOrigin();
     BinaryCircularMask(omask, hdim, OUTSIDE_MASK);
 
     FOR_ALL_MODELS()
@@ -1434,7 +1434,7 @@ void Prog_MLalign2D_prm::reverse_rotate_reference(
                     CenterFFT(Maux, true);
                 }
             }
-            if (!fourier_mode) compute_stats_within_binary_mask(omask, Maux, dum, dum, avg, dum);
+            if (!fourier_mode) computeStats_within_binary_mask(omask, Maux, dum, dum, avg, dum);
             Maux2 = Maux.rotate_Bspline(3, -psi, WRAP);
             if (!fourier_mode) apply_binary_mask(mask, Maux2, Maux2, avg);
             Mnew[refno] += Maux2;
@@ -1469,7 +1469,7 @@ void Prog_MLalign2D_prm::preselect_directions(float &phi, float &theta,
             Euler_direction(phi_ref, theta_ref, 0., v);
             u.normalize();
             v.normalize();
-            angle = RAD2DEG(acos(dot_product(u, v)));
+            angle = RAD2DEG(acos(dotProduct(u, v)));
             angle = fabs(realWRAP(angle, -180, 180));
             // also check mirror
             angle2 = 180. + angle;
@@ -1502,9 +1502,9 @@ void Prog_MLalign2D_prm::preselect_significant_model_phi(
     vector<matrix2D<double> > Mrot;
 
     Maux.resize(dim, dim);
-    Maux.set_Xmipp_origin();
+    Maux.setXmippOrigin();
     Maux2.resize(dim, dim);
-    Maux2.set_Xmipp_origin();
+    Maux2.setXmippOrigin();
     sigma_noise2 = sigma_noise * sigma_noise;
     Xi2 = Mimg.sum2();
     Msignificant.initZeros();
@@ -1660,16 +1660,16 @@ void Prog_MLalign2D_prm::calculate_fourier_offsets(matrix2D<double> &Mimg, int f
     matrix2D<double> Maux2, Maux;
 
     Moffsets.resize(dim, dim);
-    Moffsets.set_Xmipp_origin();
+    Moffsets.setXmippOrigin();
     Moffsets.init_constant(-1);
     Moffsets_mirror.resize(dim, dim);
-    Moffsets_mirror.set_Xmipp_origin();
+    Moffsets_mirror.setXmippOrigin();
     Moffsets_mirror.init_constant(-1);
 
     Maux.resize(dim, dim);
-    Maux.set_Xmipp_origin();
+    Maux.setXmippOrigin();
     Maux2.resize(dim, dim);
-    Maux2.set_Xmipp_origin();
+    Maux2.setXmippOrigin();
 
     Fimg_trans.clear();
 
@@ -1679,7 +1679,7 @@ void Prog_MLalign2D_prm::calculate_fourier_offsets(matrix2D<double> &Mimg, int f
     // Flip images and precalculate their Fourier Transform
     FOR_ALL_FLIPS()
     {
-        Maux.set_Xmipp_origin();
+        Maux.setXmippOrigin();
         apply_geom(Maux, F[iflip], Mimg, IS_INV, WRAP);
         FourierTransformHalf(Maux, Fimg);
         Fimg_flip.push_back(Fimg);
@@ -1710,7 +1710,7 @@ void Prog_MLalign2D_prm::calculate_fourier_offsets(matrix2D<double> &Mimg, int f
                         }
                         InverseFourierTransformHalf(Fimg, Maux, dim);
                         CenterFFT(Maux, true);
-                        Maux.max_index(iy, ix);
+                        Maux.maxIndex(iy, ix);
                         CC = MAT_ELEM(Maux, iy, ix);
                         if (CC > maxCC)
                         {
@@ -1810,20 +1810,20 @@ void Prog_MLalign2D_prm::calculate_realspace_offsets(
     else nr_mir = 1;
 
     Moffsets.resize(dim, dim);
-    Moffsets.set_Xmipp_origin();
+    Moffsets.setXmippOrigin();
     Moffsets.init_constant(-1);
     Moffsets_mirror.resize(dim, dim);
-    Moffsets_mirror.set_Xmipp_origin();
+    Moffsets_mirror.setXmippOrigin();
     Moffsets_mirror.init_constant(-1);
     Maux.resize(dim, dim);
-    Maux.set_Xmipp_origin();
+    Maux.setXmippOrigin();
     Mimg_trans.clear();
 
     // Pre-calculate flipped image matrices
     Mflip.clear();
     FOR_ALL_FLIPS()
     {
-        Maux.set_Xmipp_origin();
+        Maux.setXmippOrigin();
         apply_geom(Maux, F[iflip], Mimg, IS_INV, WRAP);
         Mflip.push_back(Maux);
     }
@@ -2312,7 +2312,7 @@ void Prog_MLalign2D_prm::ML_integrate_locally(
     matrix2D<double> Maux, Mdzero, Mtrans;
     vector<matrix2D<double> > Mflip;
     Maux.resize(dim, dim);
-    Maux.set_Xmipp_origin();
+    Maux.setXmippOrigin();
     Mtrans.resize(Maux);
     matrix2D<int> Moffsets, Moffsets_mirror;
     vector<vector<matrix2D<double> > > Mimg_trans;
@@ -2612,7 +2612,7 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
         }
     }
     Maux.resize(dim, dim);
-    Maux.set_Xmipp_origin();
+    Maux.setXmippOrigin();
     Fimg_flip.clear();
     Mweight.clear();
     sigma_noise2 = sigma_noise * sigma_noise;
@@ -2621,7 +2621,7 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
     // Flip images and calculate correlation matrices and maximum correlation
     FOR_ALL_FLIPS()
     {
-        Maux.set_Xmipp_origin();
+        Maux.setXmippOrigin();
         apply_geom(Maux, F[iflip], Mimg, IS_INV, WRAP);
         FourierTransformHalf(Maux, Fimg);
         Fimg *= dim * dim;
@@ -2643,7 +2643,7 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
                         CenterFFT(Maux, true);
                         Mweight[refno].push_back(Mdzero);
                         Mweight[refno][irot].resize(sigdim, sigdim);
-                        Mweight[refno][irot].set_Xmipp_origin();
+                        Mweight[refno][irot].setXmippOrigin();
                         FOR_ALL_ELEMENTS_IN_MATRIX2D(Mweight[refno][irot])
                         {
                             MAT_ELEM(Mweight[refno][irot], i, j) = A2_plus_Xi2 - MAT_ELEM(Maux, i, j);
@@ -2690,7 +2690,7 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
                         }
                         if (iflip < nr_nomirror_flips) refw[refno] += sum;
                         else refw_mirror[refno] += sum;
-                        Mweight[refno][irot].max_index(ymax, xmax);
+                        Mweight[refno][irot].maxIndex(ymax, xmax);
                         maxw = MAT_ELEM(Mweight[refno][irot], ymax, xmax);
                         if (maxw > maxweight)
                         {
@@ -2798,9 +2798,9 @@ void Prog_MLalign2D_prm::maxCC_search_complete(matrix2D<double> &Mimg,
 
     maxCC = -99.e99;
     Maux.resize(dim, dim);
-    Maux.set_Xmipp_origin();
+    Maux.setXmippOrigin();
     Maux2.resize(dim, dim);
-    Maux2.set_Xmipp_origin();
+    Maux2.setXmippOrigin();
     Faux.resize(hdim + 1, dim);
     sigma_noise2 = sigma_noise * sigma_noise;
     matrix2D<int> shiftmask;
@@ -2808,11 +2808,11 @@ void Prog_MLalign2D_prm::maxCC_search_complete(matrix2D<double> &Mimg,
     if (search_shift > 0.)
     {
         shiftmask.resize(dim, dim);
-        shiftmask.set_Xmipp_origin();
+        shiftmask.setXmippOrigin();
         BinaryCircularMask(shiftmask, search_shift, INNER_MASK);
     }
 
-    Mimg.compute_stats(mean_img, stddev_img, dummy, dummy);
+    Mimg.computeStats(mean_img, stddev_img, dummy, dummy);
     Maux2 = Mimg;
     Maux2 -= mean_img;
 
@@ -2839,7 +2839,7 @@ void Prog_MLalign2D_prm::maxCC_search_complete(matrix2D<double> &Mimg,
                         Maux /= dim * dim;
                         CenterFFT(Maux, true);
                         apply_binary_mask(shiftmask, Maux, Maux, 0.);
-                        Maux.max_index(ymax, xmax);
+                        Maux.maxIndex(ymax, xmax);
                         CC = MAT_ELEM(Maux, ymax, xmax);
                     }
                     else
@@ -2950,7 +2950,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
     sumw_mirror.clear();
     Fdzero.resize(hdim + 1, dim);
     Mdzero.resize(dim, dim);
-    Mdzero.set_Xmipp_origin();
+    Mdzero.setXmippOrigin();
     LL = 0.;
     wsum_sigma_noise = 0.;
     if (fourier_mode)
@@ -3004,7 +3004,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
         fn_trans = fn_root + "_offsets/" + fn_trans + ".off";
 
         img.read(fn_img, false, false, false, false);
-        img().set_Xmipp_origin();
+        img().setXmippOrigin();
         if (fn_doc != "")
         {
             trans(0) = (double)ROUND(imgs_oldxoff[imgno]);
@@ -3240,7 +3240,7 @@ void Prog_MLalign2D_prm::update_parameters(vector<matrix2D<double> > &wsum_Mref,
                 Half2Whole(Faux, Faux2, dim);
                 FFT_magnitude(Faux2, Maux);
                 CenterFFT(Maux, true);
-                Maux.set_Xmipp_origin();
+                Maux.setXmippOrigin();
                 center.initZeros();
                 rmean_sigma2.initZeros();
                 radial_average(Maux, center, rmean_sigma2, radial_count, true);
@@ -3266,7 +3266,7 @@ void Prog_MLalign2D_prm::update_parameters(vector<matrix2D<double> > &wsum_Mref,
                 CenterFFT(Maux, true);
                 Maux *= Maux;
                 Maux *= sumw[refno];
-                Maux.set_Xmipp_origin();
+                Maux.setXmippOrigin();
                 center.initZeros();
                 rmean_signal2.initZeros();
                 radial_average(Maux, center, rmean_signal2, radial_count, true);
@@ -3294,7 +3294,7 @@ bool Prog_MLalign2D_prm::check_convergence(vector<double> &conv)
     matrix2D<double> Maux;
 
     Maux.resize(dim, dim);
-    Maux.set_Xmipp_origin();
+    Maux.setXmippOrigin();
 
     conv.clear();
     FOR_ALL_MODELS()

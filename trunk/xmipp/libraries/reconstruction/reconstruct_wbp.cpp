@@ -379,7 +379,7 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
     Mask_Params       mask_prm;
 
     vol().resize(dim, dim, dim);
-    vol().set_Xmipp_origin();
+    vol().setXmippOrigin();
     vol().initZeros();
     count_thr = 0;
 
@@ -396,7 +396,7 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
     while (!SF.eof())
     {
         proj.read(SF.NextImg(), apply_shifts);
-        proj().set_Xmipp_origin();
+        proj().setXmippOrigin();
         if (do_weights)  proj() *= proj.weight();
         rot = proj.rot();
         tilt = proj.tilt();

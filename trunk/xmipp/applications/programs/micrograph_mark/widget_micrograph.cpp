@@ -630,7 +630,7 @@ void QtWidgetMicrograph::createMask()
     __mask.R1 = radius;
     __mask.resize(xsize, ysize);
     __mask.generate_2Dmask();
-    __mask.get_binary_mask2D().set_Xmipp_origin();
+    __mask.get_binary_mask2D().setXmippOrigin();
 
     classifyMask();
 }
@@ -655,7 +655,7 @@ void QtWidgetMicrograph::classifyMask()
     double radial_step = (max_radius - 6) / __radial_bins;
 
     matrix2D<int> *classif1 = new matrix2D<int>;
-    classif1->copy_shape(mask);
+    classif1->copyShape(mask);
     classif1->init_constant(-1);
     Matrix1D<int> Nrad(__radial_bins);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
@@ -1023,7 +1023,7 @@ bool QtWidgetMicrograph::prepare_piece()
     Filter.FilterBand = HIGHPASS;
     Filter.w1 = __highpass_cutoff;
     Filter.raised_w = MIN(0.02, __highpass_cutoff);
-    __piece.set_Xmipp_origin();
+    __piece.setXmippOrigin();
     Filter.generate_mask(__piece);
     Filter.apply_mask_Space(__piece);
     STARTINGX(__piece) = STARTINGY(__piece) = 0;
@@ -1367,7 +1367,7 @@ void QtWidgetMicrograph::loadModels()
     __mask.type = READ_MASK;
     __mask.fn_mask = fn_root + ".mask";
     __mask.generate_2Dmask();
-    __mask.get_binary_mask2D().set_Xmipp_origin();
+    __mask.get_binary_mask2D().setXmippOrigin();
     __mask_size = XSIZE(__mask.get_binary_mask2D()) * __reduction;
     classifyMask();
 

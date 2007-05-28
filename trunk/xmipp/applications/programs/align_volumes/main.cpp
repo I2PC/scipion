@@ -111,9 +111,9 @@ int main(int argc, char **argv)
     try
     {
         VolumeXmipp V1(fn1);
-        V1().set_Xmipp_origin();
+        V1().setXmippOrigin();
         VolumeXmipp V2(fn2);
-        V2().set_Xmipp_origin();
+        V2().setXmippOrigin();
         double mean_1 = V1().compute_avg();
         double mean_2 = V2().compute_avg();
         matrix3D<double> *V, Vaux;
@@ -209,9 +209,9 @@ int main(int argc, char **argv)
                                         if (mean_in_mask && mask_enabled)
                                         {
                                             double dummy;
-                                            compute_stats_within_binary_mask(*mask_ptr,
+                                            computeStats_within_binary_mask(*mask_ptr,
                                                                              *V, dummy, dummy, mean_2, dummy);
-                                            compute_stats_within_binary_mask(*mask_ptr,
+                                            computeStats_within_binary_mask(*mask_ptr,
                                                                              V1(), dummy, dummy, mean_1, dummy);
                                         }
 
@@ -273,7 +273,7 @@ int main(int argc, char **argv)
             A.resize(4, 4);
             A(3, 3) = 1;
             A = A * translation3D_matrix(best_r);
-            A = A * scale3D_matrix(vector_R3(best_sc, best_sc, best_sc));
+            A = A * scale3D_matrix(vectorR3(best_sc, best_sc, best_sc));
             V2() *= best_grey;
             apply_geom_Bspline(Vaux, A, V2(), 3, IS_NOT_INV, WRAP);
             V2() = Vaux;

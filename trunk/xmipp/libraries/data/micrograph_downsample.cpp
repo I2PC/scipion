@@ -159,13 +159,13 @@ void Prog_downsample_prm::generate_kernel()
         break;
     case KER_CIRCLE:
         ikernel.resize(CEIL(2*r) + 1, CEIL(2*r) + 1);
-        ikernel.set_Xmipp_origin();
+        ikernel.setXmippOrigin();
         BinaryCircularMask(ikernel, r);
         type_cast(ikernel, kernel);
         break;
     case KER_GAUSSIAN:
         kernel.resize(CEIL(2*r) + 1, CEIL(2*r) + 1);
-        kernel.set_Xmipp_origin();
+        kernel.setXmippOrigin();
         GaussianMask(kernel, sigma);
         break;
     case KER_PICK:
@@ -177,7 +177,7 @@ void Prog_downsample_prm::generate_kernel()
                                 delta, Deltaw);
         break;
     }
-    kernel.set_Xmipp_origin();
+    kernel.setXmippOrigin();
     // Keep energy constant
     // kernel /=sqrt(kernel.sum2());
     // Keep average value constant

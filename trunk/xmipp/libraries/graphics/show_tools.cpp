@@ -309,7 +309,7 @@ void xmipp2Qt(Image& _ximage, QImage &_qimage, int _min_scale,
     int xdim = XSIZE(xmatrix);
     int ydim = YSIZE(xmatrix);
     double min_val, max_val;
-    if (_m == 0 && _M == 0) xmatrix.compute_double_minmax(min_val, max_val);
+    if (_m == 0 && _M == 0) xmatrix.computeDoubleMinMax(min_val, max_val);
     else
     {
         min_val = _m;

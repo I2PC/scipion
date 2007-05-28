@@ -1679,7 +1679,7 @@ public:
         if (close_polygon) return;
         old_top_left_corner = top_left_corner;
         old_bottom_right_corner = bottom_right_corner;
-        list_of_points.push_back(vector_R2(x, y));
+        list_of_points.push_back(vectorR2(x, y));
         if (list_of_points.size() > 1)
         {
             XX(top_left_corner) = MIN(XX(top_left_corner), x);
@@ -1689,8 +1689,8 @@ public:
         }
         else
         {
-            top_left_corner = vector_R2(x, y);
-            bottom_right_corner = vector_R2(x, y);
+            top_left_corner = vectorR2(x, y);
+            bottom_right_corner = vectorR2(x, y);
             old_top_left_corner = top_left_corner;
             old_bottom_right_corner = bottom_right_corner;
         }
@@ -1785,7 +1785,7 @@ public:
     virtual bool isIn(int _cx, int _cy)
     {
         if (!close_polygon) return false;
-        else return point_inside_polygon(list_of_points, vector_R2(_cx, _cy));
+        else return point_inside_polygon(list_of_points, vectorR2(_cx, _cy));
     };
 
     /** Prints mask parameters (virtual)*/

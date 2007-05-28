@@ -30,7 +30,7 @@
 void Projection::reset(int Ydim, int Xdim)
 {
     img.initZeros(Ydim, Xdim);
-    move_origin_to_center();
+    moveOriginTo_center();
 }
 
 /* Set angles ============================================================== */
@@ -40,7 +40,7 @@ void Projection::set_angles(double _rot, double _tilt, double _psi)
     Euler_angles2matrix(_rot, _tilt, _psi, euler);
     eulert = euler.transpose();
     euler.getRow(2, direction);
-    direction.self_transpose();
+    direction.selfTranspose();
 }
 
 /* Read ==================================================================== */
@@ -50,7 +50,7 @@ void Projection::read(const FileName &fn, const bool &apply_shifts)
     Euler_angles2matrix(rot(), tilt(), psi(), euler);
     eulert = euler.transpose();
     euler.getRow(2, direction);
-    direction.self_transpose();
+    direction.selfTranspose();
 }
 
 /* Assignment ============================================================== */

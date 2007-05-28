@@ -166,7 +166,7 @@ void SF_main(int argc, char **argv,
         if (Is_ImageXmipp(prm->fn_in))
         {
             img.read(prm->fn_in, false, false, prm->apply_geo);
-            img().set_Xmipp_origin();
+            img().setXmippOrigin();
             switch (operation_mode)
             {
             case IMAGE2IMAGE:
@@ -197,7 +197,7 @@ void SF_main(int argc, char **argv,
         else if (Is_VolumeXmipp(prm->fn_in))
         {
             vol.read(prm->fn_in);
-            vol().set_Xmipp_origin();
+            vol().setXmippOrigin();
             switch (operation_mode)
             {
             case IMAGE2IMAGE:
@@ -222,7 +222,7 @@ void SF_main(int argc, char **argv,
         else if (Is_FourierImageXmipp(prm->fn_in))
         {
             IMG.read(prm->fn_in);
-            IMG().set_Xmipp_origin();
+            IMG().setXmippOrigin();
             switch (operation_mode)
             {
             case FOURIER2FOURIER:
@@ -243,7 +243,7 @@ void SF_main(int argc, char **argv,
         else if (Is_FourierVolumeXmipp(prm->fn_in))
         {
             VOL.read(prm->fn_in);
-            VOL().set_Xmipp_origin();
+            VOL().setXmippOrigin();
             switch (operation_mode)
             {
             case FOURIER2FOURIER:
@@ -303,7 +303,7 @@ void SF_main(int argc, char **argv,
                 if (Is_ImageXmipp(fn_read))
                 {
                     img.read(fn_read, false, false, prm->apply_geo);
-                    img().set_Xmipp_origin();
+                    img().setXmippOrigin();
                     switch (operation_mode)
                     {
                     case IMAGE2IMAGE:
@@ -335,7 +335,7 @@ void SF_main(int argc, char **argv,
                 else if (Is_VolumeXmipp(fn_read))
                 {
                     vol.read(fn_read);
-                    vol().set_Xmipp_origin();
+                    vol().setXmippOrigin();
                     switch (operation_mode)
                     {
                     case IMAGE2IMAGE:
@@ -359,7 +359,7 @@ void SF_main(int argc, char **argv,
                 else if (Is_FourierImageXmipp(fn_read))
                 {
                     IMG.read(fn_read);
-                    IMG().set_Xmipp_origin();
+                    IMG().setXmippOrigin();
                     switch (operation_mode)
                     {
                     case FOURIER2FOURIER:
@@ -379,7 +379,7 @@ void SF_main(int argc, char **argv,
                 else if (Is_FourierVolumeXmipp(fn_read))
                 {
                     VOL.read(fn_read);
-                    VOL().set_Xmipp_origin();
+                    VOL().setXmippOrigin();
                     switch (operation_mode)
                     {
                     case FOURIER2FOURIER:

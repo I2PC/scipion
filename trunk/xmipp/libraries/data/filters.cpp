@@ -264,7 +264,7 @@ void keep_biggest_component(matrix2D<double> &I, double percentage,
             continue;
         nlabel(idx)++;
     }
-    Matrix1D<int> best = nlabel.index_sort();
+    Matrix1D<int> best = nlabel.indexSort();
     best -= 1;
     int nbest = XSIZE(best) - 1;
     double total = nlabel.sum();
@@ -331,7 +331,7 @@ void best_shift(const matrix2D<double> &I1, const matrix2D<double> &I2,
         }
         else
         {
-            compute_stats_within_binary_mask(*mask, Mcorr, dummy, dummy, avecorr, stdcorr);
+            computeStats_within_binary_mask(*mask, Mcorr, dummy, dummy, avecorr, stdcorr);
             FOR_ALL_ELEMENTS_IN_MATRIX2D(Mcorr)
             if (MAT_ELEM(*mask, i, j))
                 MAT_ELEM(Mcorr, i, j) = (MAT_ELEM(Mcorr, i, j) - avecorr) / stdcorr;
@@ -341,7 +341,7 @@ void best_shift(const matrix2D<double> &I1, const matrix2D<double> &I2,
     }
     else
         Mcorr.statistics_adjust(0, 1);
-    Mcorr.max_index(imax, jmax);
+    Mcorr.maxIndex(imax, jmax);
     max = MAT_ELEM(Mcorr, imax, jmax);
 
     while (neighbourhood)
@@ -901,7 +901,7 @@ void local_thresholding(matrix2D<double> &img, double C, double dimLocal,
     }
 
     // Substract the original from the convolved image and threshold
-    result.copy_shape(img);
+    result.copyShape(img);
     result.initZeros();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(convolved)
     {

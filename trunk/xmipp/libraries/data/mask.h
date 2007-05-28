@@ -1174,7 +1174,7 @@ public:
  * image for those the mask is not 0 are computed.
  */
 template<typename T>
-void compute_stats_within_binary_mask(const matrix2D< int >& mask,
+void computeStats_within_binary_mask(const matrix2D< int >& mask,
                                       const matrix2D< T >& m, T& min_val,
                                       T& max_val, double& avg, double& stddev)
 {
@@ -1326,7 +1326,7 @@ void apply_cont_mask(const matrix2D< double >& mask, const matrix2D< T >& m_in,
  * volume for those the mask is not 0 are computed.
  */
 template<typename T>
-void compute_stats_within_binary_mask(const matrix3D< int >& mask,
+void computeStats_within_binary_mask(const matrix3D< int >& mask,
                                       const matrix3D< T >& m, T& min_val,
                                       T& max_val,
                                       double& avg, double& stddev)
@@ -1430,7 +1430,7 @@ void compute_hist_within_binary_mask(const matrix2D< int >& mask,
     T min_val, max_val;
     double avg, stddev;
 
-    compute_stats_within_binary_mask(mask, v, min_val, max_val, avg, stddev);
+    computeStats_within_binary_mask(mask, v, min_val, max_val, avg, stddev);
     compute_hist_within_binary_mask(mask, v, hist, min_val, max_val, no_steps);
 }
 
@@ -1472,7 +1472,7 @@ void compute_hist_within_binary_mask(const matrix3D< int >& mask,
     T min_val, max_val;
     double avg, stddev;
 
-    compute_stats_within_binary_mask(mask, v, min_val, max_val, avg, stddev);
+    computeStats_within_binary_mask(mask, v, min_val, max_val, avg, stddev);
     compute_hist_within_binary_mask(mask, v, hist, min_val, max_val, no_steps);
 }
 

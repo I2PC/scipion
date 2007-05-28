@@ -65,7 +65,7 @@ int main(int argc, char **argv)
     try
     {
         Maux.resize(prm.dim, prm.dim, prm.dim);
-        Maux.set_Xmipp_origin();
+        Maux.setXmippOrigin();
         DFo.reserve(2*prm.SF.ImgNo() + 1);
         DFf.reserve(2*prm.SFr.ImgNo() + 4);
         SFa.reserve(prm.Niter*prm.nr_ref);

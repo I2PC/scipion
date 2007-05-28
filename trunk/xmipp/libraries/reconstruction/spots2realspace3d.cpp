@@ -273,7 +273,7 @@ void ROUT_Spots2RealSpace_3D(Spot2RealSpace3D_Parameters &prm,
     V1().initZeros(ZZ(prm.Celldim),
                     YY(prm.Celldim),
                     XX(prm.Celldim));
-    V1().set_Xmipp_origin();
+    V1().setXmippOrigin();
 
 
     IDFT_3D(FT, V1());

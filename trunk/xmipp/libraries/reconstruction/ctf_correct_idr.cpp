@@ -43,7 +43,7 @@ void Prog_IDR_ART_Parameters::produce_side_info()
         REPORT_ERROR(1, "Prog_IDR_ART_Parameters: The number of images in "
                      "the ctf and original selfiles do not match");
     V.read(fn_vol);
-    V().set_Xmipp_origin();
+    V().setXmippOrigin();
 }
 
 void Prog_IDR_ART_Parameters::show()
@@ -97,7 +97,7 @@ void Prog_IDR_ART_Parameters::IDR_correction()
         Itheo_CTF() = Itheo();
         int Ydim = YSIZE(Itheo());
         int Xdim = XSIZE(Itheo());
-        Itheo_CTF().set_Xmipp_origin();
+        Itheo_CTF().setXmippOrigin();
         Itheo_CTF().window(FIRST_XMIPP_INDEX(2*Ydim), FIRST_XMIPP_INDEX(2*Xdim),
                            LAST_XMIPP_INDEX(2*Ydim), LAST_XMIPP_INDEX(2*Xdim));
 
@@ -115,14 +115,14 @@ void Prog_IDR_ART_Parameters::IDR_correction()
                            LAST_XMIPP_INDEX(Ydim), LAST_XMIPP_INDEX(Xdim));
 
         // Center the all images
-        Ireal().set_Xmipp_origin();
-        Itheo().set_Xmipp_origin();
+        Ireal().setXmippOrigin();
+        Itheo().setXmippOrigin();
 
         // If adjust gray levels
         if (adjust_gray_levels)
         {
             double avg, stddev, min_val, max_val;
-            Ireal().compute_stats(avg, stddev, min_val, max_val);
+            Ireal().computeStats(avg, stddev, min_val, max_val);
             Itheo().statistics_adjust(avg, stddev);
         }
 

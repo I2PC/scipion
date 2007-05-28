@@ -219,14 +219,14 @@ void EVALUATE_Side_Info::produce_Side_Info(
     // Read reconstruction ..................................................
     fn_root = prm.fn_recons.without_extension();
     vol_recons.read(prm.fn_recons);
-    vol_recons.move_origin_to_center();
+    vol_recons.moveOriginTo_center();
 
     // Read phantom and label ...............................................
     if (Is_VolumeXmipp(prm.fn_phantom))
     {
         descr_mode = XMIPP_PHANTOM;
         vol_phantom.read(prm.fn_phantom);
-        vol_phantom.move_origin_to_center();
+        vol_phantom.moveOriginTo_center();
         vol_label().resize(vol_phantom());
         vol_label().init_constant(1);
         num_feat = 0;
@@ -252,11 +252,11 @@ void EVALUATE_Side_Info::produce_Side_Info(
         cout << "Reconstruction: " << vol_recons().SliNo() << " x " <<
         vol_recons().RowNo() << " x " << vol_recons().ColNo() << endl;
 
-        cut_to_common_size(vol_phantom(), vol_recons());
+        cutToCommonSize(vol_phantom(), vol_recons());
         cout << "Cutting to common size " << vol_phantom().SliNo() << " x " <<
         vol_phantom().RowNo() << " x " << vol_phantom().ColNo() << endl;
 
-        cut_to_common_size(vol_label(), vol_recons());
+        cutToCommonSize(vol_label(), vol_recons());
     }
 
     // Generate global mask .................................................
@@ -265,7 +265,7 @@ void EVALUATE_Side_Info::produce_Side_Info(
     {
         vol_mask.read(prm.fn_mask);
         invert_binary_mask(vol_mask());
-        vol_mask().set_Xmipp_origin();
+        vol_mask().setXmippOrigin();
 
         // Find minimum and maximum plane used for the surface
         int ztop = STARTINGZ(vol_mask());
@@ -480,13 +480,13 @@ void show_FOMs(const Prog_Evaluate_Parameters &prm,
 
     // Show volume statistics ...............................................
     double avg, stddev, min, max;
-    side.vol_phantom().compute_stats(avg, stddev, min, max);
+    side.vol_phantom().computeStats(avg, stddev, min, max);
     cout << "Phantom Stats: \n";
     cout << "   ";
     side.vol_phantom().print_stats();
     cout << endl;
     cout << "    range=" << max - min << endl;
-    side.vol_recons().compute_stats(avg, stddev, min, max);
+    side.vol_recons().computeStats(avg, stddev, min, max);
     cout << "Recons  Stats: \n";
     cout << "   ";
     side.vol_recons().print_stats();

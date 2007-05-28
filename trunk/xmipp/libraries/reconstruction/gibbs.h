@@ -256,18 +256,18 @@ public:
         //#define PLOT_SINGLEPOINT
 #ifdef SINGLEPOINT
         {
-            Matrix1D<double> XYZ = vector_R3(0., 0., 0.);
+            Matrix1D<double> XYZ = vectorR3(0., 0., 0.);
             //               z y x
             cout << "SINGLEPOINT_DEBUG" << endl;
             VOLVOXEL((*_FCC), 0, 0, 2) = 0x1;
             cout << "(z,y,x)=0,0,2" << endl;
-            FCC_grid(0).grid2universe(vector_R3(0., 0., 2.), XYZ);
+            FCC_grid(0).grid2universe(vectorR3(0., 0., 2.), XYZ);
             cout << XYZ.transpose() << endl;
         }
 #ifdef PLOT_SINGLEPOINT
         {
             //print neigh positions and create and openddx file
-            Matrix1D<double> XYZ = vector_R3(0., 0., 0.);
+            Matrix1D<double> XYZ = vectorR3(0., 0., 0.);
             cout << "\n\tPLOT_SINGLEPOINT enabled\n";
             openDX DX_r, DX_g, DX_b;
             DX_r.openDXFile((string) "SINGLEPOINT_DEBUG_red.dx");
@@ -281,7 +281,7 @@ public:
                 if (VOLVOXEL((*_FCC), k, i, j) == 0)
                     //x,y,z
                 {
-                    FCC_grid(0).grid2universe(vector_R3((double)j,
+                    FCC_grid(0).grid2universe(vectorR3((double)j,
                                                         (double)i,
                                                         (double)k),
                                               XYZ);
@@ -294,7 +294,7 @@ public:
                 if (VOLVOXEL((*_FCC), k, i, j) == 1)
                     //x,y,z
                 {
-                    FCC_grid(0).grid2universe(vector_R3((double)j,
+                    FCC_grid(0).grid2universe(vectorR3((double)j,
                                                         (double)i,
                                                         (double)k),
                                               XYZ);
@@ -311,24 +311,24 @@ public:
         /**/
         //VOLVOXEL((*FCC_Gibs<T>::_FCC0),0,0,0) = 0;
         { Matrix1D<double> aux_matrix, aux_matrix2;
-            double _dot_product;
+            double _dotProduct;
 
             aux_matrix.resize(3);
             aux_matrix2.resize(3);
-            aux_matrix2 = vector_R3(0., 1., 1.);//one vector
+            aux_matrix2 = vectorR3(0., 1., 1.);//one vector
             //            _FCC  = &gridvolume(0);
             FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*_FCC))
             {
-                gridvolume.grid(jj).grid2universe(vector_R3((double)j,
+                gridvolume.grid(jj).grid2universe(vectorR3((double)j,
                                                   (double)i,
                                                   (double)k),
                                                   aux_matrix);
-                _dot_product =
-                    dot_product(aux_matrix2, aux_matrix);
-                if (_dot_product > ( + 0.1))// should be integer except
+                _dotProduct =
+                    dotProduct(aux_matrix2, aux_matrix);
+                if (_dotProduct > ( + 0.1))// should be integer except
                     // for rounding errors
                     VOLVOXEL((*_FCC), k, i, j) = 0x0;
-                //cout << "(x,y,z)= " << j << " " << i << " " << k << " "  << _dot_product << endl;
+                //cout << "(x,y,z)= " << j << " " << i << " " << k << " "  << _dotProduct << endl;
                 //cout << aux_matrix.transpose() << aux_matrix2.transpose()<<endl <<endl;
             }
         }
@@ -343,8 +343,8 @@ public:
         //#define BORDERCLICK_DEBGU
 #ifdef BORDERCLICK_DEBGU
         {
-            Matrix1D<int> XYZ = vector_R3(0, 0, 0);
-            Matrix1D<int> point = vector_R3(1, 0, 0);
+            Matrix1D<int> XYZ = vectorR3(0, 0, 0);
+            Matrix1D<int> point = vectorR3(1, 0, 0);
             cout << "BORDERCLICK_DEBGU" << endl;
 
             XYZ = point + FCC_Vectors[0x0];
@@ -400,7 +400,7 @@ public:
           */
     void GenerateValidClicks(void)
     {
-        double _dot_product;
+        double _dotProduct;
         int valid_hh_10, valid_hh_1;
 
         for (int hh = DIF_CONF_EXT; hh < DIF_CONF ; hh++)
@@ -417,15 +417,15 @@ public:
                 valid_hh_1 = 0; // counter for points with dot product equal to zero
                 for (int jj = 0; jj < FCC_NEIGHBORS; jj++)
                 {
-                    _dot_product = dot_product(FCC_Vectors_RS[ii], FCC_Vectors_RS[jj]);
+                    _dotProduct = dot_product(FCC_Vectors_RS[ii], FCC_Vectors_RS[jj]);
 
-                    if (_dot_product > XMIPP_EQUAL_ACCURACY)
+                    if (_dotProduct > XMIPP_EQUAL_ACCURACY)
                     {
                         if (((hh & (1 << jj)) == 0 && (hh & (1 << ii)) == 0) ||
                             ((hh & (1 << jj)) != 0 && (hh & (1 << ii)) != 0))
                             valid_hh_10++;
                     }
-                    else if (_dot_product > -XMIPP_EQUAL_ACCURACY)
+                    else if (_dotProduct > -XMIPP_EQUAL_ACCURACY)
                     {
                         if ((hh & (1 << jj)) == 0 && (center_hh == 0) ||
                             (hh & (1 << jj)) != 0 && (center_hh != 0))
@@ -466,7 +466,7 @@ public:
 
             char fh_FileName[32];
             Matrix1D<double>  type_cast_matrix;
-            Matrix1D<double> RGB = vector_R3(1., 0., 0.);
+            Matrix1D<double> RGB = vectorR3(1., 0., 0.);
             Matrix1D<double> XYZ;
             int ii;
 
@@ -476,8 +476,8 @@ public:
                 if (Click_Table[hh] == FCC_Gibs<T>::NON_VALID)   continue;
                 sprintf(fh_FileName, "klick_%04x.wrl", hh);
                 VrmlFile  *_VRML = new VrmlFile((string)fh_FileName);
-                RGB = vector_R3(1., 0., 0.);
-                XYZ = vector_R3(0., 0., 0.);
+                RGB = vectorR3(1., 0., 0.);
+                XYZ = vectorR3(0., 0., 0.);
                 _VRML->Sphere(XYZ, RGB, 0.05);
                 for (int jj = 0; jj < NEIGHBORS_IN ; jj++)
                 {
@@ -488,7 +488,7 @@ public:
                     }
                     else ii = jj;
                 }
-                RGB = vector_R3(0., 0., 1.);
+                RGB = vectorR3(0., 0., 1.);
                 if (ii != -1)
                 {
                     type_cast(FCC_Vectors[ii], XYZ);
@@ -503,8 +503,8 @@ public:
                     }
                 }
                 //mark center
-                RGB = vector_R3(0., 1., 0.);
-                XYZ = vector_R3(0., 0., 0.08);
+                RGB = vectorR3(0., 1., 0.);
+                XYZ = vectorR3(0., 0., 0.08);
                 _VRML->Sphere(XYZ, RGB, 0.02);
                 delete _VRML;
             }
@@ -530,7 +530,7 @@ public:
         FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*_FCC))
         {
             //x,y,z
-            FCC_grid(0).grid2universe(vector_R3((double)j,
+            FCC_grid(0).grid2universe(vectorR3((double)j,
                                                 (double)i,
                                                 (double)k),
                                       distance_vector);
@@ -572,8 +572,8 @@ public:
         {
             //print neigh positions and create and wrl
             cout << "\n\tCreateMask_DEBUG enabled\n";
-            Matrix1D<double> RGB = vector_R3(0., 0., 1.);
-            Matrix1D<double> XYZ = vector_R3(0., 0., 0.);
+            Matrix1D<double> RGB = vectorR3(0., 0., 1.);
+            Matrix1D<double> XYZ = vectorR3(0., 0., 0.);
 
             VrmlFile _VRML((string) "CreateMask_DEBUG.wrl");
             //print grid in blue
@@ -583,22 +583,22 @@ public:
                 if ((VOLVOXEL((*_FCC), k, i, j) & MASKBIT) == 0)
                     continue;
                 //x,y,z
-                FCC_grid(0).grid2universe(vector_R3((double)j,
+                FCC_grid(0).grid2universe(vectorR3((double)j,
                                                     (double)i,
                                                     (double)k),
                                           XYZ);
-                //       cout << XYZ.transpose() << " " <<vector_R3(j,i,k).transpose() << endl;
+                //       cout << XYZ.transpose() << " " <<vectorR3(j,i,k).transpose() << endl;
                 _VRML.Add_sphere(XYZ);
             }//FOR_ALL_ELEMENTS_IN_MATRIX3D
-            RGB = vector_R3(1., 0., 0.);
-            XYZ = vector_R3(0., 0., 0.);//reset
+            RGB = vectorR3(1., 0., 0.);
+            XYZ = vectorR3(0., 0., 0.);//reset
             _VRML.Sphere(XYZ, RGB, 0.05);
             FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*_FCC))
             {
                 if ((VOLVOXEL((*_FCC), k, i, j) & MASKBIT) == 0)
                 {
                     //x,y,z
-                    FCC_grid(0).grid2universe(vector_R3((double)j,
+                    FCC_grid(0).grid2universe(vectorR3((double)j,
                                                         (double)i,
                                                         (double)k),
                                               XYZ);
@@ -607,8 +607,8 @@ public:
 
             }//FOR_ALL_ELEMENTS_IN_MATRIX3D
             //mark center with grey sphere
-            //   RGB=vector_R3(.2,.2,.2);
-            //   XYZ=vector_R3(0.0,0.,0.);
+            //   RGB=vectorR3(.2,.2,.2);
+            //   XYZ=vectorR3(0.0,0.,0.);
             //   _VRML.Trans_Sphere( XYZ,RGB, 2.0);
             _VRML.Axis(2., 0.01);
 
@@ -634,7 +634,7 @@ public:
         {
             for (int ii = 0; ii < FCC_NEIGHBORS + 1; ii++)
             {
-                FCC_grid(0).grid2universe(vector_R3((double)j,
+                FCC_grid(0).grid2universe(vectorR3((double)j,
                                                     (double)i,
                                                     (double)k),
                                           distance_vector);
@@ -662,8 +662,8 @@ public:
             //print neigh positions and create and wrl
             cout << "\n\tSecondMask_DEBUG enabled\n";
             VrmlFile _VRML((string) "SecondMask_DEBUG.wrl");
-            Matrix1D<double> RGB = vector_R3(0., 0., 1.);
-            Matrix1D<double> XYZ = vector_R3(0., 0., 0.);
+            Matrix1D<double> RGB = vectorR3(0., 0., 1.);
+            Matrix1D<double> XYZ = vectorR3(0., 0., 0.);
 
             //print grid in blue
             _VRML.Sphere(XYZ, RGB, 0.05);
@@ -672,15 +672,15 @@ public:
                 if ((VOLVOXEL((*_FCC), k, i, j) & MASKBIT) == MASKBIT)
                     //x,y,z
                 {
-                    FCC_grid(0).grid2universe(vector_R3((double)j,
+                    FCC_grid(0).grid2universe(vectorR3((double)j,
                                                         (double)i,
                                                         (double)k),
                                               XYZ);
                     _VRML.Add_sphere(XYZ);
                 }
             }//FOR_ALL_ELEMENTS_IN_MATRIX3D
-            RGB = vector_R3(0., 1., 0.);
-            XYZ = vector_R3(0., 0., 0.);//reset
+            RGB = vectorR3(0., 1., 0.);
+            XYZ = vectorR3(0., 0., 0.);//reset
             _VRML.Sphere(XYZ, RGB, 0.05);
             FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*_FCC))
             {
@@ -688,15 +688,15 @@ public:
                     && (VOLVOXEL((*_FCC), k, i, j) & MASKBIT) != MASKBIT)
                     //x,y,z
                 {
-                    FCC_grid(0).grid2universe(vector_R3((double)j,
+                    FCC_grid(0).grid2universe(vectorR3((double)j,
                                                         (double)i,
                                                         (double)k),
                                               XYZ);
                     _VRML.Add_sphere(XYZ);
                 }
             }//FOR_ALL_ELEMENTS_IN_MATRIX3D
-            RGB = vector_R3(1., 0., 0.);
-            XYZ = vector_R3(0., 0., 0.);//reset
+            RGB = vectorR3(1., 0., 0.);
+            XYZ = vectorR3(0., 0., 0.);//reset
             _VRML.Sphere(XYZ, RGB, 0.05);
             FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*_FCC))
             {
@@ -704,7 +704,7 @@ public:
                     && (VOLVOXEL((*_FCC), k, i, j) & REMASKBIT) == 0)
                 {
                     //x,y,z
-                    FCC_grid(0).grid2universe(vector_R3((double)j,
+                    FCC_grid(0).grid2universe(vectorR3((double)j,
                                                         (double)i,
                                                         (double)k),
                                               XYZ);
@@ -722,7 +722,7 @@ public:
 #ifdef SecondMask_DX_DEBUG
         {
             //print neigh positions and create and openddx file
-            Matrix1D<double> XYZ = vector_R3(0., 0., 0.);
+            Matrix1D<double> XYZ = vectorR3(0., 0., 0.);
             cout << "\n\tSecondMask_DX_DEBUG enabled\n";
             openDX DX_r, DX_g, DX_b;
             DX_r.openDXFile((string) "SecondMask_DX_DEBUG_red.dx");
@@ -735,7 +735,7 @@ public:
                 if ((VOLVOXEL((*_FCC), k, i, j) & MASKBIT) == MASKBIT)
                     //x,y,z
                 {
-                    FCC_grid(0).grid2universe(vector_R3((double)j,
+                    FCC_grid(0).grid2universe(vectorR3((double)j,
                                                         (double)i,
                                                         (double)k),
                                               XYZ);
@@ -751,7 +751,7 @@ public:
                     && (VOLVOXEL((*_FCC), k, i, j) & MASKBIT) != MASKBIT)
                     //x,y,z
                 {
-                    FCC_grid(0).grid2universe(vector_R3((double)j,
+                    FCC_grid(0).grid2universe(vectorR3((double)j,
                                                         (double)i,
                                                         (double)k),
                                               XYZ);
@@ -764,7 +764,7 @@ public:
                     && (VOLVOXEL((*_FCC), k, i, j) & REMASKBIT) == 0)
                 {
                     //x,y,z
-                    FCC_grid(0).grid2universe(vector_R3((double)j,
+                    FCC_grid(0).grid2universe(vectorR3((double)j,
                                                         (double)i,
                                                         (double)k),
                                               XYZ);
@@ -861,7 +861,7 @@ public:
 #ifdef Alloc_and_Fill_valid_coordinates_vector_after_DX
         {
             //print neigh positions and create and openddx file
-            Matrix1D<double> XYZ = vector_R3(0., 0., 0.);
+            Matrix1D<double> XYZ = vectorR3(0., 0., 0.);
             cout << "\nAlloc_and_Fill_valid_coordinates_vector_after_DX enabled\n";
             openDX DX_r, DX_g, DX_b;
             DX_r.openDXFile((string) "alloc_and_fill.dx");
@@ -870,7 +870,7 @@ public:
             for (int ii = 0; ii < iNumber_of_points_inside_sphere; ii++)
             {
                 //x,y,z
-                FCC_grid(0).grid2universe(vector_R3(
+                FCC_grid(0).grid2universe(vectorR3(
                                               (double)valid_coordinates[3*ii+2],
                                               (double)valid_coordinates[3*ii+1],
                                               (double)valid_coordinates[3*ii+0]),
@@ -1007,7 +1007,7 @@ public:
 #ifdef FillauxGridVolumewithClicks_DEBUG
         {
             //print neigh positions and create and openddx file
-            Matrix1D<double> XYZ = vector_R3(0., 0., 0.);
+            Matrix1D<double> XYZ = vectorR3(0., 0., 0.);
             cout << "\n\tFillauxGridVolumewithClicks_DEBUG enabled\n";
             openDX DX_r, DX_g, DX_b;
             DX_r.openDXFile((string) "FillauxGridVolumewithClicks_DEBUG_red.dx");
@@ -1019,7 +1019,7 @@ public:
                 if (VOLVOXEL((*_FCC_Click), k, i, j) != 0x2000)
                     //x,y,z
                 {
-                    FCC_grid(0).grid2universe(vector_R3((double)j,
+                    FCC_grid(0).grid2universe(vectorR3((double)j,
                                                         (double)i,
                                                         (double)k),
                                               XYZ);
@@ -1034,7 +1034,7 @@ public:
                 if (VOLVOXEL((*_FCC_Click), k, i, j) == 0x2000)
                     //x,y,z
                 {
-                    FCC_grid(0).grid2universe(vector_R3((double)j,
+                    FCC_grid(0).grid2universe(vectorR3((double)j,
                                                         (double)i,
                                                         (double)k),
                                               XYZ);
@@ -1403,22 +1403,22 @@ private:
         // just in case I did not make myself clear  DO NOT CHANGE THE ORDER!!!!!!!!!
         // rmember order here is x,y,z but in volumes is z,y,x
         //x,y,z
-        FCC_Vectors[0x0]  = vector_R3( + 0, + 0, + 1);
-        FCC_Vectors[0x1]  = vector_R3( + 0, + 0, -1);
-        FCC_Vectors[0x2]  = vector_R3( + 1, -1, + 0);
-        FCC_Vectors[0x3]  = vector_R3(-1, + 1, + 0);
+        FCC_Vectors[0x0]  = vectorR3( + 0, + 0, + 1);
+        FCC_Vectors[0x1]  = vectorR3( + 0, + 0, -1);
+        FCC_Vectors[0x2]  = vectorR3( + 1, -1, + 0);
+        FCC_Vectors[0x3]  = vectorR3(-1, + 1, + 0);
 
-        FCC_Vectors[0x4]  = vector_R3(-1, + 0, + 1);
-        FCC_Vectors[0x5]  = vector_R3( + 1, + 0, -1);
-        FCC_Vectors[0x6]  = vector_R3( + 0, -1, + 0);
-        FCC_Vectors[0x7]  = vector_R3( + 0, + 1, + 0);
+        FCC_Vectors[0x4]  = vectorR3(-1, + 0, + 1);
+        FCC_Vectors[0x5]  = vectorR3( + 1, + 0, -1);
+        FCC_Vectors[0x6]  = vectorR3( + 0, -1, + 0);
+        FCC_Vectors[0x7]  = vectorR3( + 0, + 1, + 0);
 
-        FCC_Vectors[0x8]  = vector_R3( + 0, -1, + 1);
-        FCC_Vectors[0x9]  = vector_R3( + 0, + 1, -1);
-        FCC_Vectors[0xa]  = vector_R3(-1, + 0, + 0);
-        FCC_Vectors[0xb]  = vector_R3( + 1, + 0, + 0);
+        FCC_Vectors[0x8]  = vectorR3( + 0, -1, + 1);
+        FCC_Vectors[0x9]  = vectorR3( + 0, + 1, -1);
+        FCC_Vectors[0xa]  = vectorR3(-1, + 0, + 0);
+        FCC_Vectors[0xb]  = vectorR3( + 1, + 0, + 0);
 
-        FCC_Vectors[0xc]  = vector_R3( + 0, + 0, + 0);
+        FCC_Vectors[0xc]  = vectorR3( + 0, + 0, + 0);
 
         for (int ii = 0; ii < FCC_NEIGHBORS + 1; ii++)
         {
@@ -1436,7 +1436,7 @@ private:
             Matrix1D<double>  matrix_aux;
             type_cast(FCC_Vectors[0], type_cast_matrix);
             FCC_grid(0).grid2universe(type_cast_matrix, matrix_aux);
-            Matrix1D<double> RGB = vector_R3(0., 0., 1.);
+            Matrix1D<double> RGB = vectorR3(0., 0., 1.);
             Matrix1D<double> XYZ = matrix_aux;
             cout << "\n\tInitNeighVector_DEBUG1 enabled\n";
 
@@ -1452,8 +1452,8 @@ private:
                 _VRML.Add_sphere(matrix_aux);
             }//for(int ii=0; ii< FCC_NEIGHBORS; ii++)
             //mark center
-            RGB = vector_R3(1., 0., 0.);
-            XYZ = vector_R3(0., 0., 0.08);
+            RGB = vectorR3(1., 0., 0.);
+            XYZ = vectorR3(0., 0., 0.08);
             _VRML.Sphere(XYZ, RGB, 0.02);
         }
 #endif
@@ -1468,19 +1468,19 @@ private:
                 cout << FCC_Gibs<T>::FCC_Vectors_RS[ii].transpose() << endl;
 
             Matrix1D<double>  matrix_aux;
-            Matrix1D<double> RGB = vector_R3(1., 0., 0.);
+            Matrix1D<double> RGB = vectorR3(1., 0., 0.);
             Matrix1D<double> XYZ = matrix_aux;
             VrmlFile _VRML((string) "InitNeighVector_DEBUG2.wrl");
-            RGB = vector_R3(1., 0., 0.);
-            XYZ = vector_R3(0., 0., 0.);
+            RGB = vectorR3(1., 0., 0.);
+            XYZ = vectorR3(0., 0., 0.);
             _VRML.Sphere(XYZ, RGB, 0.05);
             for (int ii = 0; ii < FCC_NEIGHBORS + 1; ii++)
             {
                 _VRML.Add_sphere(FCC_Vectors_RS[ii]);
             }//for(int ii=0; ii< FCC_NEIGHBORS_RS; ii++)
             //mark center
-            RGB = vector_R3(0., 0., 1.);
-            XYZ = vector_R3(0., 0., 0.08);
+            RGB = vectorR3(0., 0., 1.);
+            XYZ = vectorR3(0., 0., 0.08);
             _VRML.Sphere(XYZ, RGB, 0.02);
 
         }

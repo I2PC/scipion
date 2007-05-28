@@ -90,7 +90,7 @@ int main(int argc, char **argv)
         // Compute histogram ----------------------------------------------------
         if (image_mode)
         {
-            I.set_Xmipp_origin();
+            I.setXmippOrigin();
             mask_prm.generate_2Dmask(I);
             const matrix2D<int> & mask2D = mask_prm.get_binary_mask2D();
             if (automatic_range)
@@ -100,7 +100,7 @@ int main(int argc, char **argv)
         }
         else
         {
-            V.set_Xmipp_origin();
+            V.setXmippOrigin();
             mask_prm.generate_3Dmask(V);
             const matrix3D<int> & mask3D = mask_prm.get_binary_mask3D();
             if (automatic_range)

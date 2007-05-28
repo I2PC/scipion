@@ -86,7 +86,7 @@ void FFT_idx2digfreq(T& v, const Matrix1D< int >& idx, Matrix1D< double >& freq)
     freq.resize(XSIZE(idx));
 
     int size[3];
-    v.get_size(size);
+    v.getSize(size);
 
     FOR_ALL_ELEMENTS_IN_MATRIX1D(idx)
     FFT_IDX2DIGFREQ(VEC_ELEM(idx, i), size[i], VEC_ELEM(freq, i));
@@ -109,7 +109,7 @@ void digfreq2FFT_idx(T& v, const Matrix1D< double >& freq, Matrix1D< int >& idx)
     idx.resize(XSIZE(freq));
 
     int size[3];
-    v.get_size(size);
+    v.getSize(size);
 
     FOR_ALL_ELEMENTS_IN_MATRIX1D(idx)
     DIGFREQ2FFT_IDX(VEC_ELEM(freq, i), size[i], VEC_ELEM(idx, i));
@@ -573,7 +573,7 @@ void fourier_ring_correlation(matrix2D< T > const & m1,
                               Matrix1D< double >& frc,
                               Matrix1D< double >& frc_noise)
 {
-    if (!m1.same_shape(m2))
+    if (!m1.sameShape(m2))
         REPORT_ERROR(1,
                      "Fourier_ring_correlation: matrices have different shapes!");
 
@@ -637,7 +637,7 @@ void fourier_ring_correlation(matrix3D< T > const & m1,
                               Matrix1D< double >& frc,
                               Matrix1D< double >& frc_noise)
 {
-    if (!m1.same_shape(m2))
+    if (!m1.sameShape(m2))
         REPORT_ERROR(1,
                      "Fourier_ring_correlation: matrices have different shapes!");
 
@@ -706,7 +706,7 @@ void differential_phase_residual(matrix2D< T > const & m1,
                                  Matrix1D< double >& freq,
                                  Matrix1D< double >& dpr)
 {
-    if (!m1.same_shape(m2))
+    if (!m1.sameShape(m2))
         REPORT_ERROR(1,
                      "Differential phase residual: matrices have different shapes!");
 
@@ -771,7 +771,7 @@ void differential_phase_residual(matrix3D< T > const & m1,
                                  Matrix1D< double >& freq,
                                  Matrix1D< double >& dpr)
 {
-    if (!m1.same_shape(m2))
+    if (!m1.sameShape(m2))
         REPORT_ERROR(1,
                      "Differential phase residual: matrices have different shapes!");
 
@@ -947,8 +947,8 @@ void series_convolution(Matrix1D< T >& series1,
                         bool FullConvolution = false)
 {
     // Store dimension of series
-    int dim1 = series1.get_dim();
-    int dim2 = series2.get_dim();
+    int dim1 = series1.getDimension();
+    int dim2 = series2.getDimension();
 
     // Resize series to the size of the resulting series
     // (Zeros are stored in the expanded values)
@@ -983,7 +983,7 @@ void series_convolution(Matrix1D< T >& series1,
         int dim = MAX(dim1, dim2);
 
         // Determine the number of values to discard
-        int discard = result.get_dim() - dim;
+        int discard = result.getDimension() - dim;
 
         // Divide it by two as we have to discard them in both sides of the
         // vector

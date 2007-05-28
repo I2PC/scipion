@@ -196,7 +196,7 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
 
             // Select the maximum
             int jmax;
-            err.max_index(jmax);
+            err.maxIndex(jmax);
             idx_out.push_back(jmax);
 
             // Initialize Hm, the current orthogonalised design matrix
@@ -263,7 +263,7 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
 
             // Select the maximum
             int jmax;
-            err.max_index(jmax);
+            err.maxIndex(jmax);
             idx_out.push_back(jmax);
 #ifdef DEBUG
             cout << "j=" << jmax + 1 << endl;
@@ -455,7 +455,7 @@ istream & operator >> (istream &in, xmippRBF &rbf)
     getline(in, read_line);
     sscanf(read_line.c_str(), "Weights:");
     in >> rbf.w;
-    rbf.w.self_transpose();
+    rbf.w.selfTranspose();
     getline(in, read_line);
     sscanf(read_line.c_str(), "Centers:");
     in >> rbf.C;

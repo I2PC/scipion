@@ -107,8 +107,8 @@ int main(int argc, char **argv)
             ImageXmipp image(image_name, apply_geo);     // reads image
 
             // Extract the data
-            image().set_Xmipp_origin();  // sets origin at the center of the image.
-            mask().set_Xmipp_origin();   // sets origin at the center of the mask.
+            image().setXmippOrigin();  // sets origin at the center of the image.
+            mask().setXmippOrigin();   // sets origin at the center of the mask.
 
             // Generates coordinates (data points)
             vector<float> imagePoints;

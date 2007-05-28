@@ -270,7 +270,7 @@ void integrand(const int *ndim, const double xx[],
 
 @code
 #include <data/integration.hh>
-cout << multidimensionalIntegral(vector_R2(0,0),vector_R2(10,10),
+cout << multidimensionalIntegral(vectorR2(0,0),vector_R2(10,10),
             &integrand) << endl;
 @endcode
  */

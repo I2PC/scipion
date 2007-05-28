@@ -691,7 +691,7 @@ void CTFViewer::setImageViewer()
     // Load the CTF in image I
     I.read(fn_root + ".ctfmodel");
     CenterFFT(I(), true);
-    I().set_Xmipp_origin();
+    I().setXmippOrigin();
 
     // Recompute curves since the experimental curve has changed
     recomputeCurves();

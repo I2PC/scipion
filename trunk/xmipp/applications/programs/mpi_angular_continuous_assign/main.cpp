@@ -104,7 +104,7 @@ int main(int argc, char **argv)
                 // Read image and estimate angular parameters
                 ImageXmipp I;
                 I.read(SF_in.NextImg(), false, false, false);
-                I().set_Xmipp_origin();
+                I().setXmippOrigin();
                 double shiftX, shiftY, psi, rot, tilt;
                 rot    = prm.DF_initial(i + 1, 0);
                 tilt   = prm.DF_initial(i + 1, 1);

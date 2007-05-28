@@ -486,7 +486,7 @@ void single_measure_on_FOM(Recons_test_Parameters &prm,
             {
                 Matrix1D<double> aux = training_FOMs;
                 aux.window(0, k);
-                aux.compute_stats(training_avg, training_stddev, min, max);
+                aux.computeStats(training_avg, training_stddev, min, max);
                 double t = student_outside_probb(prm.unluckiness, k + 1);
                 double estimated_sample_size =
                     t * training_stddev / (prm.accuracy / 100 * training_avg);
@@ -503,7 +503,7 @@ void single_measure_on_FOM(Recons_test_Parameters &prm,
     }
     if (prm.evaluate)
     {
-        training_FOMs.compute_stats(training_avg, training_stddev, min, max);
+        training_FOMs.computeStats(training_avg, training_stddev, min, max);
         training_N = sample_size;
     }
 }
@@ -569,7 +569,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
     if (prm.enable_segmented_surface || prm.start_from_phantom)
         if (prm.fn_random_phantom != "") realization.draw_in(&vol_phantom);
         else                           vol_phantom.read(fn_phantom);
-    vol_phantom().set_Xmipp_origin();
+    vol_phantom().setXmippOrigin();
 
 // Generate projections ----------------------------------------------------
     Projection Proj;
@@ -619,7 +619,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
             FileName fn_proj = SF.NextImg();
             ImageXmipp I;
             I.read(fn_proj);
-            I().set_Xmipp_origin();
+            I().setXmippOrigin();
 
             prm_micro.apply(I());
 
@@ -648,7 +648,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
             FileName fn_proj = SF.NextImg();
             ImageXmipp I;
             I.read(fn_proj);
-            I().set_Xmipp_origin();
+            I().setXmippOrigin();
 
             if (first)
             {
@@ -683,7 +683,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
             FileName fn_proj = SF.NextImg();
             ImageXmipp I;
             I.read(fn_proj);
-            I().set_Xmipp_origin();
+            I().setXmippOrigin();
 
             double a = rnd_gaus(prm.a_avg, prm.a_stddev);
             double b = rnd_gaus(prm.b_avg, prm.b_stddev);
@@ -976,8 +976,8 @@ void single_recons_test(const Recons_test_Parameters &prm,
             vol_recons.read(fn_recons_root + ".vol");
             VolumeXmipp V_smooth_mask;
             V_smooth_mask.read(prm.fn_smooth_evaluation_mask);
-            V_smooth_mask().set_Xmipp_origin();
-            vol_recons().set_Xmipp_origin();
+            V_smooth_mask().setXmippOrigin();
+            vol_recons().setXmippOrigin();
             vol_recons() *= V_smooth_mask();
             vol_recons.write(fn_recons_root + "_smoothed.vol");
             eval_prm.fn_recons = fn_recons_root + "_smoothed.vol";

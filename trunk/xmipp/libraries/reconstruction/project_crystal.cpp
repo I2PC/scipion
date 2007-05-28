@@ -236,7 +236,7 @@ void project_crystal(Phantom &phantom, Projection &P,
     //#define DEBUG
 #ifdef DEBUG
     cout << "P shape ";
-    P().print_shape();
+    P().printShape();
     cout << endl;
     cout << "P.euler " << P.euler;
     cout << endl;
@@ -320,14 +320,14 @@ void project_crystal(Phantom &phantom, Projection &P,
         //these experimental shift are in phantom
         //coordinates, not into the projection
         //plane, so before adding them we need to project
-        temp_vect = AE * vector_R3(exp_shifts_matrix_X(i, j),
+        temp_vect = AE * vectorR3(exp_shifts_matrix_X(i, j),
                                    exp_shifts_matrix_Y(i, j),
                                    exp_shifts_matrix_Z(i, j));
         //#define DEBUG5
 #ifdef DEBUG5
         if (i > 0) exp_shifts_matrix_Z(i, j) = 65;
         else  exp_shifts_matrix_Z(i, j) = 0;
-        temp_vect = AE * vector_R3(exp_shifts_matrix_X(i, j),
+        temp_vect = AE * vectorR3(exp_shifts_matrix_X(i, j),
                                    exp_shifts_matrix_Y(i, j),
                                    exp_shifts_matrix_Z(i, j));
 #endif
@@ -344,7 +344,7 @@ void project_crystal(Phantom &phantom, Projection &P,
     //#define DEBUG
 #ifdef DEBUG
     cout << "Cell inside shape ";
-    cell_inside.print_shape();
+    cell_inside.printShape();
     cout << endl;
     cout << "Cell inside\n" << cell_inside << endl;
     cout << "Cell shiftX\n" << cell_shiftX << endl;
@@ -359,7 +359,7 @@ void project_crystal(Phantom &phantom, Projection &P,
         // Remember to compute de density factor
         Matrix1D<double> projection_direction(3);
         (P.euler).getCol(2, projection_direction);
-        projection_direction.self_transpose();
+        projection_direction.selfTranspose();
         density_factor = (projection_direction * Dinv).module();
 #ifdef DEBUG
         cout << "projection_direction" << projection_direction << endl;
@@ -367,10 +367,10 @@ void project_crystal(Phantom &phantom, Projection &P,
 #endif
     }
 #ifdef DEBUG
-    cout << "X proyectado=" << (AE*vector_R3(1.0, 0.0, 0.0)).transpose() << endl;
-    cout << "Y proyectado=" << (AE*vector_R3(0.0, 1.0, 0.0)).transpose() << endl;
+    cout << "X proyectado=" << (AE*vectorR3(1.0, 0.0, 0.0)).transpose() << endl;
+    cout << "Y proyectado=" << (AE*vectorR3(0.0, 1.0, 0.0)).transpose() << endl;
     cout << "P.euler_shape=" << endl;
-    (P.euler).print_shape();
+    (P.euler).printShape();
     cout << "P.euler="      << P.euler << endl;
     cout << "AE="           << AE << endl;
     cout << "AEinv="        << AEinv << endl;
@@ -671,12 +671,12 @@ void fill_cell_positions(Projection &P,
 
     // Compute crystal limits
     int iamin, iamax, ibmin, ibmax;
-    find_crystal_limits(vector_R2(STARTINGX(P()), STARTINGY(P())),
-                        vector_R2(FINISHINGX(P()), FINISHINGY(P())),
+    find_crystal_limits(vectorR2(STARTINGX(P()), STARTINGY(P())),
+                        vectorR2(FINISHINGX(P()), FINISHINGY(P())),
                         corner1, corner2, aprojd, bprojd, iamin, iamax, ibmin, ibmax);
 
 #ifdef DEBUG
-    P().print_shape();
+    P().printShape();
     cout << endl;
     cout << "aprojd=" << aproj.transpose() << endl;
     cout << "bprojd=" << bproj.transpose() << endl;
@@ -713,13 +713,13 @@ void fill_cell_positions(Projection &P,
 #ifdef DEBUG
     cout << "weight=" << weight;
     cout << "cell_shiftX shape ";
-    cell_shiftX.print_shape();
+    cell_shiftX.printShape();
     cout << endl;
     cout << "cell_inside shape ";
-    cell_inside.print_shape();
+    cell_inside.printShape();
     cout << endl;
     cout << "visited shape ";
-    visited.print_shape();
+    visited.printShape();
     cout << endl;
 #endif
 
@@ -794,7 +794,7 @@ void fill_cell_positions(Projection &P,
 #ifdef DEBUG
             cout << "(i,j)=(" << i << "," << j << ")\n";
             cout << "   Projection shape ";
-            P().print_shape();
+            P().printShape();
             cout << endl;
             cout << "   AuxCorner1 " << auxcorner1.transpose() << endl
             << "   Origin     " << cell_shiftX(i, j) << " "
@@ -840,7 +840,7 @@ void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal,
 #ifdef DEBUG2
     cout << aux_DF_shift;
     cout << "exp_shifts_matrix_X shape" << endl;
-    exp_shifts_matrix_X.print_shape();
+    exp_shifts_matrix_X.printShape();
     cout << endl;
 #endif
 #undef DEBUG2

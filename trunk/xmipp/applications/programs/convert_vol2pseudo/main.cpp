@@ -132,12 +132,12 @@ int main(int argc, char **argv)
 
     // Extract the data
 
-    V().set_Xmipp_origin();          // sets origin at the center of the volume.
-    mask().set_Xmipp_origin();       // sets origin at the center of the mask.
+    V().setXmippOrigin();          // sets origin at the center of the volume.
+    mask().setXmippOrigin();       // sets origin at the center of the mask.
     VolumeXmipp vol_mask(V);
 
 //  vol_mask().resize(V());       // Resizes volumen_mask.
-    vol_mask().set_Xmipp_origin();   // sets origin at the center of the volumen mask.
+    vol_mask().setXmippOrigin();   // sets origin at the center of the volumen mask.
 
 
     cout << endl << "Finding minimum and maximum......" << endl;

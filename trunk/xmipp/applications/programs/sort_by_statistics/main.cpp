@@ -85,7 +85,7 @@ public:
 
         SF.ImgSize(dim, dim);
         Mrad.resize(dim, dim);
-        Mrad.set_Xmipp_origin();
+        Mrad.setXmippOrigin();
         FOR_ALL_ELEMENTS_IN_MATRIX2D(Mrad)
         {
             Mrad(i, j) = sqrt((double)(i * i + j * j));
@@ -117,10 +117,10 @@ public:
         {
             fn = SF.NextImg();
             img.read(fn);
-            img().set_Xmipp_origin();
+            img().setXmippOrigin();
 
             // Overall statistics
-            img().compute_stats(mean, stddev, minval, maxval);
+            img().computeStats(mean, stddev, minval, maxval);
 
             // Number of low or high-valued pixels
             nhighpix = nlowpix = 0.;
@@ -297,7 +297,7 @@ public:
         YY(corner1) = STARTINGY(img());
         XX(corner2) = 0;
         YY(corner2) = 0;
-        img().compute_stats(mean, stddev, minval, maxval, corner1, corner2);
+        img().computeStats(mean, stddev, minval, maxval, corner1, corner2);
         sum2_quadmean += mean * mean;
         sum_quadmean += mean;
         sum2_quadsig += stddev * stddev;
@@ -306,7 +306,7 @@ public:
         YY(corner1) = 0;
         XX(corner2) = 0;
         YY(corner2) = FINISHINGY(img());
-        img().compute_stats(mean, stddev, minval, maxval, corner1, corner2);
+        img().computeStats(mean, stddev, minval, maxval, corner1, corner2);
         sum2_quadmean += mean * mean;
         sum_quadmean += mean;
         sum2_quadsig += stddev * stddev;
@@ -315,7 +315,7 @@ public:
         YY(corner1) = STARTINGY(img());
         XX(corner2) = FINISHINGX(img());
         YY(corner2) = 0;
-        img().compute_stats(mean, stddev, minval, maxval, corner1, corner2);
+        img().computeStats(mean, stddev, minval, maxval, corner1, corner2);
         sum2_quadmean += mean * mean;
         sum_quadmean += mean;
         sum2_quadsig += stddev * stddev;
@@ -324,7 +324,7 @@ public:
         YY(corner1) = 0;
         XX(corner2) = FINISHINGX(img());
         YY(corner2) = FINISHINGX(img());
-        img().compute_stats(mean, stddev, minval, maxval, corner1, corner2);
+        img().computeStats(mean, stddev, minval, maxval, corner1, corner2);
         sum2_quadmean += mean * mean;
         sum_quadmean += mean;
         sum2_quadsig += stddev * stddev;
@@ -383,7 +383,7 @@ int main(int argc, char **argv)
 
     fh_zsum.open((prm.fn_out + ".sumZ").c_str(), ios::out);
     fh_zind.open((prm.fn_out + ".indZ").c_str(), ios::out);
-    sorted = prm.zscore.index_sort();
+    sorted = prm.zscore.indexSort();
     SFout.clear();
     fh_zind << "image : avg, stddev, min, max, nhighpix, nlowpix, nradhigh, nradlow, quadsig, quadmean, ampl2_1, ampl2_2, ampl2_3, ampl2_4 " << endl;
     for (imgno = 0; imgno < nr_imgs; imgno++)

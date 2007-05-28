@@ -540,7 +540,7 @@ void adaptive_soft_thresholding_block(matrix2D<double> &I, int scale,
     SelectDWTBlock(scale, I, quadrant,
                    XX(corner1), XX(corner2), YY(corner1), YY(corner2));
     double dummy, avg, stddev;
-    I.compute_stats(avg, stddev, dummy, dummy, corner1, corner2);
+    I.computeStats(avg, stddev, dummy, dummy, corner1, corner2);
 
     // Now denoise
     double th = sigma * sigma / stddev;
@@ -562,7 +562,7 @@ double compute_noise_power(matrix2D<double> &I)
     // at scale=0
     histogram1D hist;
     double avg, stddev, min_val, max_val;
-    I.compute_stats(avg, stddev, min_val, max_val);
+    I.computeStats(avg, stddev, min_val, max_val);
     hist.init(0, MAX(ABS(min_val), ABS(max_val)), 100);
 
     Matrix1D<int> corner1(2), corner2(2);
@@ -810,7 +810,7 @@ Matrix1D<double> bayesian_wiener_filtering(matrix2D<double> &WI, int allowed_sca
 
     /*Number of pixels and some constraints on SNR*/
     int Ydim = 0, Xdim = 0;
-    WI.get_dim(Ydim, Xdim);
+    WI.getDimension(Ydim, Xdim);
     int Ncoef_total = Ydim * Xdim;
     int max_scale = ROUND(log(double(Xdim)) / log(2.0));
 
@@ -828,7 +828,7 @@ Matrix1D<double> bayesian_wiener_filtering(matrix2D<double> &WI, int allowed_sca
     //init the scale vector
     Matrix1D<int> scale(MIN(allowed_scale + 1, max_scale - 1));
     FOR_ALL_ELEMENTS_IN_MATRIX1D(scale) scale(i) = i;
-    int scale_dim = scale.get_dim();
+    int scale_dim = scale.getDimension();
 
     //define some vectors
     Matrix1D<double> power(scale_dim), average(scale_dim), Ncoefs(scale_dim);
@@ -837,7 +837,7 @@ Matrix1D<double> bayesian_wiener_filtering(matrix2D<double> &WI, int allowed_sca
     orientation.push_back("01");
     orientation.push_back("10");
     orientation.push_back("11");
-    for (int j = 0;j < scale.get_dim();j++)
+    for (int j = 0;j < scale.getDimension();j++)
     {
         for (int k = 0; k < orientation.size(); k++)
         {
@@ -929,7 +929,7 @@ Matrix1D<double> bayesian_wiener_filtering(matrix3D<double> &WI, int allowed_sca
 
     /*Number of pixels and some constraints on SNR*/
     int Zdim, Ydim, Xdim;
-    WI.get_dim(Zdim, Ydim, Xdim);
+    WI.getDimension(Zdim, Ydim, Xdim);
     int Ncoef_total = Zdim * Ydim * Xdim;
     int max_scale = ROUND(log(double(Xdim)) / log(2.0));
 
@@ -947,7 +947,7 @@ Matrix1D<double> bayesian_wiener_filtering(matrix3D<double> &WI, int allowed_sca
     //init the scale vector
     Matrix1D<int> scale(allowed_scale + 1);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(scale) scale(i) = i;
-    int scale_dim = scale.get_dim();
+    int scale_dim = scale.getDimension();
 
     //define some vectors
     Matrix1D<double> power(scale_dim), average(scale_dim), Ncoefs(scale_dim);
@@ -960,7 +960,7 @@ Matrix1D<double> bayesian_wiener_filtering(matrix3D<double> &WI, int allowed_sca
     orientation.push_back("101");
     orientation.push_back("110");
     orientation.push_back("111");
-    for (int j = 0;j < scale.get_dim();j++)
+    for (int j = 0;j < scale.getDimension();j++)
     {
         for (int k = 0; k < orientation.size(); k++)
         {

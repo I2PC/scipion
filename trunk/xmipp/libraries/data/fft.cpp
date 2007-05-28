@@ -199,7 +199,7 @@ void InverseFourierTransformHalf(const matrix2D< complex<double> > &in,
     matrix2D< complex<double> > aux;
     Half2Whole(in, aux, oriydim);
     InverseFourierTransform(aux, out);
-    out.set_Xmipp_origin();
+    out.setXmippOrigin();
 }
 
 /* FFT shifts ------------------------------------------------------------ */
@@ -427,7 +427,7 @@ void numerical_derivative(matrix2D<double> &M, matrix2D<double> &D,
 {
 
     // Set D to be a copy in shape of M
-    D.copy_shape(M);
+    D.copyShape(M);
 
     Matrix1D<double> v, rotated;
     Matrix1D<double> ans; // To obtain results
@@ -436,9 +436,9 @@ void numerical_derivative(matrix2D<double> &M, matrix2D<double> &D,
     int dim = 2 * window_size + 1;
     rotated.resize(dim);
 
-    double *pans = ans.adapt_for_numerical_recipes();
-    double *pv = v.adapt_for_numerical_recipes();
-    double *protated = rotated.adapt_for_numerical_recipes();
+    double *pans = ans.adaptForNumericalRecipes();
+    double *pv = v.adaptForNumericalRecipes();
+    double *protated = rotated.adaptForNumericalRecipes();
 
     // Calculate the Savitzky-Golay filter coeficients
     savgol(protated, 2*window_size + 1, window_size,

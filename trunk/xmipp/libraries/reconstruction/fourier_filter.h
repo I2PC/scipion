@@ -44,7 +44,7 @@
       Filter.FilterBand=HIGHPASS;
       Filter.w1=w_cutoff;
       Filter.raised_w=slope;
-      I().set_Xmipp_origin();
+      I().setXmippOrigin();
       Filter.generate_mask(I());
       Filter.apply_mask_Space(I());
       I.write("filtered_image.xmp");
@@ -53,7 +53,7 @@
    Example of use reading a mask from file
    \begin{verbatim}
       ImageXmipp I("image.xmp");
-      I().set_Xmipp_origin();
+      I().setXmippOrigin();
       FourierMask Filter;
       Filter.read_mask("mask.fft");
       Filter.apply_mask_Space(I());

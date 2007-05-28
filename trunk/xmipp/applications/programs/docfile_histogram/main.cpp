@@ -103,11 +103,11 @@ int main(int argc, char *argv[])
         if (col2 == -1)
         {
             C = DF.col(col);
-            if (automatic_range) C.compute_double_minmax(m, M);
+            if (automatic_range) C.computeDoubleMinMax(m, M);
             compute_hist(C, hist, m, M, StepsNo);
             cerr << "Min: " << m << " max: " << M
             << " Steps: " << StepsNo << endl;
-            C.compute_stats(avg, stddev, dummy, dummy);
+            C.computeStats(avg, stddev, dummy, dummy);
             cerr << "Mean: " << avg << " Stddev: " << stddev << endl;
             cerr << "Percentil (" << percentil << "): "
             << hist.percentil(percentil) << endl;
@@ -122,17 +122,17 @@ int main(int argc, char *argv[])
             C2 = DF.col(col2);
             if (automatic_range)
             {
-                C.compute_double_minmax(m, M);
-                C2.compute_double_minmax(m2, M2);
+                C.computeDoubleMinMax(m, M);
+                C2.computeDoubleMinMax(m2, M2);
             }
             compute_hist(C, C2, hist2, m, M, m2, M2, StepsNo, StepsNo2);
             cerr << "Min1: "   << m        << " max1: " << M
             << " Steps1: " << StepsNo  << endl;
-            C.compute_stats(avg, stddev, dummy, dummy);
+            C.computeStats(avg, stddev, dummy, dummy);
             cerr << "Mean: " << avg << " Stddev: " << stddev << endl;
             cerr << "Min2: "   << m2       << " max2: " << M2
             << " Steps2: " << StepsNo2 << endl;
-            C2.compute_stats(avg, stddev, dummy, dummy);
+            C2.computeStats(avg, stddev, dummy, dummy);
             cerr << "Mean: " << avg << " Stddev: " << stddev << endl;
             if (fn_out != "") hist2.write(fn_out);
             else            cout << hist2;

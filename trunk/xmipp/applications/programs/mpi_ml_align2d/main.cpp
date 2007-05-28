@@ -119,7 +119,7 @@ int main(int argc, char **argv)
     try
     {
         Maux.resize(prm.dim, prm.dim);
-        Maux.set_Xmipp_origin();
+        Maux.setXmippOrigin();
 
         // Loop over all iterations
         for (int iter = prm.istart; iter <= prm.Niter; iter++)

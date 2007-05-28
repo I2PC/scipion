@@ -568,7 +568,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                                         if (M != NULL)
                                         {
                                             int py, px;
-                                            proj().logical2physical(y, x, py, px);
+                                            proj().toPhysical(y, x, py, px);
                                             int number_of_pixel = py * XSIZE(proj()) + px;
                                             (*M)(number_of_pixel, number_of_basis) = a;
                                         }
@@ -688,7 +688,7 @@ void project_Volume(
     {
         proj.reset(Ydim, Xdim);
         proj.set_angles(rot, tilt, psi);
-        norm_proj().copy_shape(proj());
+        norm_proj().copyShape(proj());
         norm_proj().initZeros();
     }
 

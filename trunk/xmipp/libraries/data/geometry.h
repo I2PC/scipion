@@ -55,7 +55,7 @@
  * the result in Pp (belonging to R3), the result is obviously Pp=(1,1,0).
  *
  * @code
- * Matrix1D< double > Z = vector_R3(0, 0, 1), P = vector_R3(1, 1, 1), Pp(3);
+ * Matrix1D< double > Z = vectorR3(0, 0, 1), P = vector_R3(1, 1, 1), Pp(3);
  * Uproject_to_plane(P,Z,0,Pp);
  * cout << "After projecting: Pp=" << Pp.transpose() << endl;
  * @endcode
@@ -92,7 +92,7 @@ void Uproject_to_plane(const Matrix1D< double >& point,
  * the result in Pp (belonging to R3), the result is obviously Pp=(1,1,0).
  *
  * @code
- * Matrix1D< double > P = vector_R3(1, 1, 1), Pp(3);
+ * Matrix1D< double > P = vectorR3(1, 1, 1), Pp(3);
  * Uproject_to_plane(P, 0, 0, 0, Pp);
  * cout << "After projecting: Pp=" << Pp.transpose() << endl;
  * @endcode
@@ -130,7 +130,7 @@ void Uproject_to_plane(const Matrix1D< double >& r,
  * the result in Pp (belonging to R3), the result is obviously Pp=(1,1,0).
  *
  * @code
- * Matrix1D< double > P = vector_R3(1, 1, 1), Pp(3);
+ * Matrix1D< double > P = vectorR3(1, 1, 1), Pp(3);
  * matrix2D< double > euler = Euler_angles2matrix(0, 0, 0);
  * Uproject_to_plane(P, euler, Pp);
  * cout << "After projecting: Pp=" << Pp.transpose() << endl;
@@ -178,7 +178,7 @@ inline double point_plane_distance_3D(const Matrix1D< double >& p,
     static Matrix1D< double > p_a(3);
 
     V3_MINUS_V3(p_a, p, a);
-    return (dot_product(p_a, v) / v.module());
+    return (dotProduct(p_a, v) / v.module());
 }
 
 /** Structure of the points to do model fitting

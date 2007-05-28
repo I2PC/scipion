@@ -67,7 +67,7 @@ public:
             if (check_param(argc, argv, "-axis"))
                 axis = get_vector_param(argc, argv, "-axis", 3);
             else
-                axis = vector_R3(0., 0., 1.);
+                axis = vectorR3(0., 0., 1.);
             ang = AtoF(get_param(argc, argv, "-ang"));
             A3D = rot3D_matrix(ang, axis);
             A2D = A3D;

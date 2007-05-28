@@ -142,7 +142,7 @@ void Prog_PDBPhantom_Parameters::show()
 void Prog_PDBPhantom_Parameters::compute_protein_geometry()
 {
     // Initialization
-    center_of_mass.initZeros(3);
+    centerOfMass.initZeros(3);
     Matrix1D<double> limit0(3), limitF(3);
     limit0.init_constant(1e30);
     limitF.init_constant(-1e30);
@@ -187,15 +187,15 @@ void Prog_PDBPhantom_Parameters::compute_protein_geometry()
         double weight, radius;
         atom_description(atom_type, weight, radius);
         total_mass += weight;
-        XX(center_of_mass) += weight * x;
-        YY(center_of_mass) += weight * y;
-        ZZ(center_of_mass) += weight * z;
+        XX(centerOfMass) += weight * x;
+        YY(centerOfMass) += weight * y;
+        ZZ(centerOfMass) += weight * z;
     }
 
     // Finish calculations
-    center_of_mass /= total_mass;
-    limit0 -= center_of_mass;
-    limitF -= center_of_mass;
+    centerOfMass /= total_mass;
+    limit0 -= centerOfMass;
+    limitF -= centerOfMass;
     limit.resize(3);
     XX(limit) = MAX(ABS(XX(limit0)), ABS(XX(limitF)));
     YY(limit) = MAX(ABS(YY(limit0)), ABS(YY(limitF)));
@@ -221,7 +221,7 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
     Vhigh().initZeros((int)NEXT_POWER_OF_2(output_dim / highTs),
                        (int)NEXT_POWER_OF_2(output_dim / highTs),
                        (int)NEXT_POWER_OF_2(output_dim / highTs));
-    Vhigh().set_Xmipp_origin();
+    Vhigh().setXmippOrigin();
     cout << "The highly sampled volume is of size " << XSIZE(Vhigh()) << endl;
 
     // Fill the volume with the different atoms
@@ -256,7 +256,7 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
         // Correct position
         Matrix1D<double> r(3);
         VECTOR_R3(r, x, y, z);
-        r -= center_of_mass;
+        r -= centerOfMass;
         r /= highTs;
 
         // Characterize atom
@@ -318,7 +318,7 @@ void Prog_PDBPhantom_Parameters::create_protein_at_low_sampling_rate()
         if (freq_module > freq_c) FFTVlow(k, i, j) = 0;
     }
     InverseFourierTransform(FFTVlow, Vlow());
-    Vlow().set_Xmipp_origin();
+    Vlow().setXmippOrigin();
     Vlow.write("PPPlow_after_filtering.vol");
 #endif
 
@@ -327,7 +327,7 @@ void Prog_PDBPhantom_Parameters::create_protein_at_low_sampling_rate()
     Vlow().scale_to_size_Bspline(3, new_output_dim, new_output_dim, new_output_dim,
                                  Vhigh());
     Vlow() = Vhigh();
-    Vlow().set_Xmipp_origin();
+    Vlow().setXmippOrigin();
 
     // Return to the desired size
     Vlow().window(FIRST_XMIPP_INDEX(output_dim), FIRST_XMIPP_INDEX(output_dim),
@@ -357,7 +357,7 @@ void Prog_PDBPhantom_Parameters::blob_properties() const
 void Prog_PDBPhantom_Parameters::run()
 {
     compute_protein_geometry();
-    cout << "Center of mass: " << center_of_mass.transpose() << endl
+    cout << "Center of mass: " << centerOfMass.transpose() << endl
     << "Limits: " << limit.transpose() << endl;
     create_protein_at_high_sampling_rate();
     create_protein_at_low_sampling_rate();

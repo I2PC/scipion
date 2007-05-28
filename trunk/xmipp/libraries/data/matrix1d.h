@@ -81,7 +81,7 @@ std::string floatToString(float val, int width, int prec);
 /** Access to X dimension (size)
  * @ingroup VectorsSizeShape
  *
- * This is a macro equivalent to get_dim() or ColNo()
+ * This is a macro equivalent to getDimension() or ColNo()
  *
  * @code
  * //  Set to 0 1 element out of 2
@@ -139,8 +139,8 @@ std::string floatToString(float val, int width, int prec);
  *
  * @code
  * matrix2D< double > v1(10), v2(20);
- * v1.set_Xmipp_origin();
- * v2.set_Xmipp_origin();
+ * v1.setXmippOrigin();
+ * v2.setXmippOrigin();
  *
  * FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX1D(v1, v2)
  * {
@@ -464,7 +464,7 @@ public:
     Matrix1D(bool column = true)
     {
         core_init();
-        init_shape(column);
+        initShape(column);
         dimension = 1;
     }
 
@@ -488,7 +488,7 @@ public:
     Matrix1D(int dim, bool column = true)
     {
         core_init();
-        init_shape(column);
+        initShape(column);
         data = new T[dim];
         if (data == NULL)
             REPORT_ERROR(1001, "Resize: no memory left");
@@ -511,7 +511,7 @@ public:
     Matrix1D(const vT& v)
     {
         core_init();
-        init_shape();
+        initShape();
         *this = v;
     }
 
@@ -619,7 +619,7 @@ public:
      * xdim=0, startingx=0. The column or row mode is set according to input
      * argument
      */
-    void init_shape(bool column = true)
+    void initShape(bool column = true)
     {
         xinit = 0;
         xdim = 0;
@@ -632,7 +632,7 @@ public:
      * Copy shape variables from a pattern AND THE ARRAY IS RESIZED
      */
     template<typename T1>
-    void copy_shape(const maT1& v)
+    void copyShape(const maT1& v)
     {
         if (xdim != v.xdim)
             resize(v.xdim);
@@ -694,7 +694,7 @@ public:
      * but with the indexes changed.
      *
      */
-    T* adapt_for_numerical_recipes() const
+    T* adaptForNumericalRecipes() const
     {
         return data - 1;
     }
@@ -704,7 +704,7 @@ public:
      *
      * Nothing needs to be done in fact.
      */
-    void kill_adaptation_for_numerical_recipes(T* m) const
+    void killAdaptationForNumericalRecipes(T* m) const
         {}
 
     /** Intersects
@@ -738,10 +738,10 @@ public:
      * FIRST_XMIPP_INDEX
      *
      * @code
-     * v1.set_Xmipp_origin();
+     * v1.setXmippOrigin();
      * @endcode
      */
-    void set_Xmipp_origin()
+    void setXmippOrigin()
     {
         xinit = FIRST_XMIPP_INDEX(xdim);
     }
@@ -757,7 +757,7 @@ public:
      *
      * See FIRST_XMIPP_INDEX
      */
-    void move_origin_to(int i)
+    void moveOriginTo(int i)
     {
         STARTINGX(*this) = i + FIRST_XMIPP_INDEX(xdim);
     }
@@ -781,7 +781,7 @@ public:
     /** Another function for sets the origin
      * @ingroup VectorsSize
      */
-    void set_startingX(int _xinit)
+    void setStartingX(int _xinit)
     {
         xinit = _xinit;
     }
@@ -814,10 +814,10 @@ public:
      * @ingroup VectorsSize
      *
      * @code
-     * int dim = v.get_dim();
+     * int dim = v.getDimension();
      * @endcode
      */
-    int get_dim() const
+    int getDimension() const
     {
         return xdim;
     }
@@ -827,10 +827,10 @@ public:
      *
      * @code
      * int dim;
-     * v.get_dim(dim);
+     * v.getDimension(dim);
      * @endcode
      */
-    void get_dim(int& d) const
+    void getDimension(int& d) const
     {
         d = xdim;
     }
@@ -891,7 +891,7 @@ public:
      * Returns true if this object has got the same shape (origin and size) than
      * the argument
      */
-    bool same_shape(const maT& op) const
+    bool sameShape(const maT& op) const
     {
         return xdim == op.xdim && xinit == op.xinit;
     }
@@ -923,7 +923,7 @@ public:
     /** Get element at i (logical access)
      * @ingroup VectorsMemory
      */
-    T get_elem(int i) const
+    T getElement(int i) const
     {
         return (*this)(i);
     }
@@ -931,7 +931,7 @@ public:
     /** Set element at i (logical access)
      * @ingroup VectorsMemory
      */
-    void set_elem(int i, T val)
+    void setElement(int i, T val)
     {
         (*this)(i) = val;
     }
@@ -1029,10 +1029,10 @@ public:
      * This function returns the physical position of a logical one.
      *
      * @code
-     * v.logical2physical(i_log, i_phys);
+     * v.toPhysical(i_log, i_phys);
      * @endcode
      */
-    void logical2physical(int i_log, int& i_phys) const
+    void toPhysical(int i_log, int& i_phys) const
     {
         i_phys = i_log - STARTINGX(*this);
     }
@@ -1043,10 +1043,10 @@ public:
      * This function returns the logical position of a physical one.
      *
      * @code
-     * v.physical2logical(i_phys, i_log);
+     * v.toLogical(i_phys, i_log);
      * @endcode
      */
-    void physical2logical(int i_phys, int& i_log) const
+    void toLogical(int i_phys, int& i_log) const
     {
         i_log = i_phys + STARTINGX(*this);
     }
@@ -1067,10 +1067,10 @@ public:
      * Matrix2D, for which the multiplication is not a component by component
      * multiplication but an algebraic one.
      */
-    friend void array_by_array(const maT& op1, const maT& op2, maT& result,
+    friend void arrayByArray(const maT& op1, const maT& op2, maT& result,
                                char operation)
     {
-        if (!op1.same_shape(op2))
+        if (!op1.sameShape(op2))
             REPORT_ERROR(1007, (string) "Array_by_array: different shapes (" +
                          operation + ")");
 
@@ -1078,7 +1078,7 @@ public:
             operation = '*';
 
         result.resize(op1);
-        core_array_by_array(op1, op2, result, operation);
+        core_arrayByArray(op1, op2, result, operation);
     }
 
     /** Vector by matrix
@@ -1102,7 +1102,7 @@ public:
     vT transpose() const
     {
         vT temp(*this);
-        temp.self_transpose();
+        temp.selfTranspose();
         return temp;
     }
 
@@ -1111,7 +1111,7 @@ public:
      *
      * The same as before but the result is stored in this same object.
      */
-    void self_transpose()
+    void selfTranspose()
     {
         row = !row;
     }
@@ -1131,14 +1131,14 @@ public:
     vT reverse() const
     {
         vT temp(*this);
-        temp.self_reverse();
+        temp.selfReverse();
         return temp;
     }
 
     /** Reverse vector values, keep in this object
      * @ingroup VectorsUtilities
      */
-    void self_reverse()
+    void selfReverse()
     {
         int imax = (int)(xdim - 1) / 2;
         for (int i = 0; i <= imax; i++)
@@ -1188,14 +1188,14 @@ public:
     vT normalize() const
     {
         vT temp(*this);
-        temp.self_normalize();
+        temp.selfNormalize();
         return temp;
     }
 
     /** Normalize this vector, store the result here
      * @ingroup VectorsUtilities
      */
-    void self_normalize()
+    void selfNormalize()
     {
         double m = module();
         if (ABS(m) > XMIPP_EQUAL_ACCURACY)
@@ -1226,7 +1226,7 @@ public:
         type_cast(*this, aux);
 
         // Sort
-        double * aux_array = aux.adapt_for_numerical_recipes();
+        double * aux_array = aux.adaptForNumericalRecipes();
         qcksrt(xdim, aux_array);
 
         type_cast(aux, temp);
@@ -1242,10 +1242,10 @@ public:
      * is at index 2, then comes the element at index 3, ...
      *
      * @code
-     * v2 = v1.index_sort();
+     * v2 = v1.indexSort();
      * @endcode
      */
-    Matrix1D< int > index_sort() const
+    Matrix1D< int > indexSort() const
     {
         Matrix1D< int >   indx;
         Matrix1D< double > temp;
@@ -1265,8 +1265,8 @@ public:
         type_cast(*this, temp);
 
         // Sort indexes
-        double* temp_array = temp.adapt_for_numerical_recipes();
-        int* indx_array = indx.adapt_for_numerical_recipes();
+        double* temp_array = temp.adaptForNumericalRecipes();
+        int* indx_array = indx.adaptForNumericalRecipes();
         indexx(xdim, temp_array, indx_array);
 
         return indx;
@@ -1307,7 +1307,7 @@ public:
      * This function returns the index of the maximum element of an array.
      * Returns -1 if the array is empty.
      */
-    void max_index(int& imax) const
+    void maxIndex(int& imax) const
     {
         if (xdim == 0)
         {
@@ -1332,7 +1332,7 @@ public:
      * This function returns the index of the minimum element of an array.
      * Returns -1 if the array is empty.
      */
-    void min_index(int& imin) const
+    void minIndex(int& imin) const
     {
         if (xdim == 0)
         {
@@ -1357,7 +1357,7 @@ public:
      * This function uses gnuplot to plot this vector. You must supply the
      * xlabel, ylabel, and title.
      */
-    void show_with_gnuplot(const string& xlabel, const string& title)
+    void showWithGnuPlot(const string& xlabel, const string& title)
     {
         FileName fn_tmp;
         fn_tmp.init_random(10);
@@ -1367,7 +1367,7 @@ public:
         fh_gplot.open(((string) "PPP" + fn_tmp + ".gpl").c_str());
         if (!fh_gplot)
             REPORT_ERROR(1,
-                         (string) "vector::show_with_gnuplot: Cannot open PPP" + fn_tmp +
+                         (string) "vector::showWithGnuPlot: Cannot open PPP" + fn_tmp +
                          ".gpl for output");
         fh_gplot << "set xlabel \"" + xlabel + "\"\n";
         fh_gplot << "plot \"PPP" + fn_tmp + ".txt\" title \"" + title +
@@ -1397,10 +1397,10 @@ public:
  * After this function the vector is (x,y) in R2.
  *
  * @code
- * Matrix1D< double > v = vector_R2(1, 2);
+ * Matrix1D< double > v = vectorR2(1, 2);
  * @endcode
  */
-Matrix1D< double > vector_R2(double x, double y);
+Matrix1D< double > vectorR2(double x, double y);
 
 /** Creates vector in R3
  * @ingroup VectorsGeom
@@ -1408,15 +1408,15 @@ Matrix1D< double > vector_R2(double x, double y);
  * After this function the vector is (x,y,z) in R3.
  *
  * @code
- * Matrix1D< double > v = vector_R2(1, 2, 1);
+ * Matrix1D< double > v = vectorR2(1, 2, 1);
  * @endcode
  */
-Matrix1D< double > vector_R3(double x, double y, double z);
+Matrix1D< double > vectorR3(double x, double y, double z);
 
 /** Creates an integer vector in Z3
  * @ingroup VectorsGeom
  */
-Matrix1D< int > vector_R3(int x, int y, int z);
+Matrix1D< int > vectorR3(int x, int y, int z);
 
 /** Dot product.
  * @ingroup VectorsGeom
@@ -1433,13 +1433,13 @@ Matrix1D< int > vector_R3(int x, int y, int z);
  * Matrix1D< double > v1(1000);
  * v1.init_random(0, 10, "gaussian");
  * cout << "The power of this vector should be 100 and is " <<
- *     dot_product(v1, v1) << endl;
+ *     dotProduct(v1, v1) << endl;
  * @endcode
  */
 template<typename T>
-T dot_product(const Matrix1D< T >& v1, const Matrix1D< T >& v2)
+T dotProduct(const Matrix1D< T >& v1, const Matrix1D< T >& v2)
 {
-    if (!v1.same_shape(v2))
+    if (!v1.sameShape(v2))
         REPORT_ERROR(1002, "Dot product: vectors of different size or shape");
 
     T accumulate = 0;
@@ -1459,12 +1459,12 @@ T dot_product(const Matrix1D< T >& v1, const Matrix1D< T >& v2)
  * or they don't belong to R3.
  *
  * @code
- * Matrix1D< T > X = vector_R3(1, 0, 0), Y = vector_R3(0, 1, 0);
- * cout << "X*Y=Z=" << vector_product(X,Y).transpose() << endl;
+ * Matrix1D< T > X = vectorR3(1, 0, 0), Y = vector_R3(0, 1, 0);
+ * cout << "X*Y=Z=" << vectorProduct(X,Y).transpose() << endl;
  * @endcode
  */
 template<typename T>
-Matrix1D< T > vector_product(const Matrix1D< T >& v1, const Matrix1D< T >& v2)
+Matrix1D< T > vectorProduct(const Matrix1D< T >& v1, const Matrix1D< T >& v2)
 {
     if (v1.xdim != 3 || v2.xdim != 3)
         REPORT_ERROR(1002, "Vector_product: vectors are not in R3");
@@ -1488,14 +1488,15 @@ Matrix1D< T > vector_product(const Matrix1D< T >& v1, const Matrix1D< T >& v2)
  * R3, but not if they don't have the same shape.
  *
  * @code
- * Matrix1D< double > X = vector_R3(1, 0, 0), Y = vector_R3(0, 1, 0),
- *     Z = vector_R3(0, 0, 1);
- * if (are_orthogonal(X, Y, Z))
+ * Matrix1D< double > X = vectorR3(1, 0, 0), Y = vector_R3(0, 1, 0),
+ *     Z = vectorR3(0, 0, 1);
+ * if (areOrthogonal(X, Y, Z))
  *     cout << "Of course, they are orthogonal\n";
  * @endcode
  */
-int are_orthogonal(Matrix1D< double >& v1, Matrix1D< double >& v2,
-                   Matrix1D< double >& v3);
+int areOrthogonal(Matrix1D< double >& v1,
+                  Matrix1D< double >& v2,
+                  Matrix1D< double >& v3);
 
 /** True if the three R3 vectors form a coordinate system
  * @ingroup VectorsUtilities
@@ -1507,16 +1508,17 @@ int are_orthogonal(Matrix1D< double >& v1, Matrix1D< double >& v2,
  * if the vectors do not belong to R3.
  *
  * @code
- * Matrix1D< double > X = vector_R3(1, 0, 0), Y = vector_R3(0, 1, 0),
- *     Z = vector_R3(0, 0, 1);
- * if (are_system(X,Y,Z))
+ * Matrix1D< double > X = vectorR3(1, 0, 0), Y = vector_R3(0, 1, 0),
+ *     Z = vectorR3(0, 0, 1);
+ * if (areSystem(X,Y,Z))
  *     cout << "Of course, they are a system\n";
- * if (!are_system(-X, Y, Z))
+ * if (!areSystem(-X, Y, Z))
  *     cout << "But not in this case even if they are orthogonal\n";
  * @endcode
  */
-int are_system(Matrix1D< double >& v1, Matrix1D< double >& v2,
-               Matrix1D< double >& v3);
+int areSystem(Matrix1D< double >& v1,
+              Matrix1D< double >& v2,
+              Matrix1D< double >& v3);
 
 /// @defgroup VectorsMiscellaneous Miscellaneous
 /// @ingroup VectorsRelated
@@ -1535,12 +1537,12 @@ int are_system(Matrix1D< double >& v1, Matrix1D< double >& v2,
  * Matrix1D< double > v2(4);
  * v2.startingX() = 0;
  *
- * cut_to_common_size(v1, v2);
+ * cutToCommonSize(v1, v2);
  * // v1 and v2 range from 0 to 2
  * @endcode
  */
 template<typename T>
-void cut_to_common_size(vT& V1, vT& V2)
+void cutToCommonSize(vT& V1, vT& V2)
 {
     int x0 = MAX(STARTINGX(V1), STARTINGX(V2));
     int xF = MIN(FINISHINGX(V1), FINISHINGX(V2));
@@ -1562,12 +1564,12 @@ void cut_to_common_size(vT& V1, vT& V2)
  * corner1 to corner2) loop.
  */
 template<typename T>
-void sort_two_vectors(vT& v1, vT& v2)
+void sortTwoVectors(vT& v1, vT& v2)
 {
     T temp;
     if (v1.xdim != v2.xdim || STARTINGX(v1) != STARTINGX(v2))
         REPORT_ERROR(1007,
-                     "sort_two_vectors: vectors are not of the same shape");
+                     "sortTwoVectors: vectors are not of the same shape");
 
     FOR_ALL_ELEMENTS_IN_MATRIX1D(v1)
     {
@@ -1601,14 +1603,18 @@ void sort_two_vectors(vT& v1, vT& v2)
   *
   * The option show forces the routine to show the convergence path
   */
-void Powell_optimizer(Matrix1D< double >& p, int i0, int n,
-                      double(*f)(double* x), double ftol, double& fret,
-                      int& iter, const Matrix1D< double >& steps,
-                      bool show = false);
+void powellOptimizer(Matrix1D< double >& p,
+                     int i0, int n,
+                     double(*f)(double* x),
+                     double ftol,
+                     double& fret,
+                     int& iter,
+                     const Matrix1D< double >& steps,
+                     bool show = false);
 
 // TODO Document
 template<typename T>
-void vT::print_shape(ostream& out) const
+void vT::printShape(ostream& out) const
 {
     out << "Size: " << xdim
     << "i=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
@@ -1616,7 +1622,7 @@ void vT::print_shape(ostream& out) const
 
 // TODO Document
 template<typename T>
-void vT::get_size(int* size) const
+void vT::getSize(int* size) const
 {
     size[0] = xdim;
     size[1] = 1;
@@ -1756,7 +1762,7 @@ std::ostream& operator<<(std::ostream& out, const vT& v)
 
 // TODO Document
 template<typename T>
-void vT::compute_stats(double& avg, double& stddev, T& min_val, T& max_val,
+void vT::computeStats(double& avg, double& stddev, T& min_val, T& max_val,
                        const Matrix1D< double >& corner1,
                        const Matrix1D< double >& corner2) const
 {
@@ -1789,7 +1795,7 @@ void vT::compute_stats(double& avg, double& stddev, T& min_val, T& max_val,
 
 // TODO Document
 template<typename T>
-void vT::compute_double_minmax(double& min_val, double& max_val,
+void vT::computeDoubleMinMax(double& min_val, double& max_val,
                                const Matrix1D< double >& corner1,
                                const Matrix1D< double >& corner2) const
 {
@@ -1807,7 +1813,7 @@ void vT::compute_double_minmax(double& min_val, double& max_val,
 
 // TODO Document
 template<typename T>
-void vT::center_of_mass(Matrix1D< double >& center, void* mask)
+void vT::centerOfMass(Matrix1D< double >& center, void* mask)
 {
     center.initZeros(1);
     double mass = 0;

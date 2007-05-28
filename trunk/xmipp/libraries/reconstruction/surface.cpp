@@ -144,12 +144,12 @@ void ROUT_surface(Prog_Surface_Parameters &prm)
         if (prm.fn_top != "")
         {
             top_surface.read(prm.fn_top);
-            top_surface().set_Xmipp_origin();
+            top_surface().setXmippOrigin();
         }
         if (prm.fn_bottom != "")
         {
             bottom_surface.read(prm.fn_bottom);
-            bottom_surface().set_Xmipp_origin();
+            bottom_surface().setXmippOrigin();
         }
     }
 

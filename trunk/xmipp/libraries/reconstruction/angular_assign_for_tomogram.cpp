@@ -94,7 +94,7 @@ void Prog_angular_predict_tomography_prm::usage()
 void Prog_angular_predict_tomography_prm::produce_side_info()
 {
     V.read(fn_ref);
-    V().set_Xmipp_origin();
+    V().setXmippOrigin();
 }
 
 // Predict shift and psi -----------------------------------------------------
@@ -114,7 +114,7 @@ double Prog_angular_predict_tomography_prm::predict_angles(ImageXmipp &I,
             Projection theo;
             project_Volume(V(), theo, YSIZE(V()), XSIZE(V()), rot, tilt, 0);
             double theo_avg, theo_stddev, min_val, max_val;
-            theo().compute_stats(theo_avg, theo_stddev, min_val, max_val);
+            theo().computeStats(theo_avg, theo_stddev, min_val, max_val);
             theo() -= theo_avg;
 
             // Compare it to all possible rotations and shifts of the experimental
@@ -163,7 +163,7 @@ double Prog_angular_predict_tomography_prm::predict_angles(ImageXmipp &I,
 
                         // Compute the correlation index
                         double read_avg, read_stddev;
-                        Ip().compute_stats(read_avg, read_stddev, min_val, max_val);
+                        Ip().computeStats(read_avg, read_stddev, min_val, max_val);
                         double correlation_index = 0;
                         FOR_ALL_ELEMENTS_IN_MATRIX2D(Ip())
                         correlation_index += (Ip(i, j) - read_avg) * theo(i, j);

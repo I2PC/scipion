@@ -60,8 +60,8 @@ void Prog_Draw_Surface_Parameters::produce_Side_Info()
     surface.read(fn_surf);
     if (enable_adjust)
         surface().range_adjust(ztop, zbottom);
-    vol().set_Xmipp_origin();
-    surface().set_Xmipp_origin();
+    vol().setXmippOrigin();
+    surface().setXmippOrigin();
 }
 
 /* Draw surface in volume -------------------------------------------------- */

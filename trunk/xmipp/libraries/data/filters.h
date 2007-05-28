@@ -158,7 +158,7 @@ double correlation(const Matrix1D< T >& x,
     int i, ip; // indexes
     int Rows; // of the matrices
 
-    Rows = x.get_dim();
+    Rows = x.getDimension();
     for (i = 0; i < Rows; i++)
     {
         ip = i - l;
@@ -277,8 +277,8 @@ double correlation_index(const Matrix1D< T >& x, const Matrix1D< T >& y)
     T dummy;
     long n = 0;
 
-    x.compute_stats(mean_x, stddev_x, dummy, dummy);
-    y.compute_stats(mean_y, stddev_y, dummy, dummy);
+    x.computeStats(mean_x, stddev_x, dummy, dummy);
+    y.computeStats(mean_y, stddev_y, dummy, dummy);
 
     FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX1D(x, y)
     {
@@ -311,14 +311,14 @@ double correlation_index(const matrix2D< T >& x,
 
     if (mask == NULL)
     {
-        x.compute_stats(mean_x, stddev_x, dummy, dummy);
-        y.compute_stats(mean_y, stddev_y, dummy, dummy);
+        x.computeStats(mean_x, stddev_x, dummy, dummy);
+        y.computeStats(mean_y, stddev_y, dummy, dummy);
     }
     else
     {
-        compute_stats_within_binary_mask(*mask, x, dummy, dummy, mean_x,
+        computeStats_within_binary_mask(*mask, x, dummy, dummy, mean_x,
                                          stddev_x);
-        compute_stats_within_binary_mask(*mask, y, dummy, dummy, mean_y,
+        computeStats_within_binary_mask(*mask, y, dummy, dummy, mean_y,
                                          stddev_y);
     }
 
@@ -383,14 +383,14 @@ double correlation_index(const matrix3D< T >& x,
 
     if (mask == NULL)
     {
-        x.compute_stats(mean_x, stddev_x, dummy, dummy);
-        y.compute_stats(mean_y, stddev_y, dummy, dummy);
+        x.computeStats(mean_x, stddev_x, dummy, dummy);
+        y.computeStats(mean_y, stddev_y, dummy, dummy);
     }
     else
     {
-        compute_stats_within_binary_mask(*mask, x, dummy, dummy, mean_x,
+        computeStats_within_binary_mask(*mask, x, dummy, dummy, mean_x,
                                          stddev_x);
-        compute_stats_within_binary_mask(*mask, y, dummy, dummy, mean_y,
+        computeStats_within_binary_mask(*mask, y, dummy, dummy, mean_y,
                                          stddev_y);
     }
 
@@ -641,9 +641,9 @@ double mutual_information(const matrix2D< T >& x,
     int xdim, ydim;
     double retval = 0.0;
 
-    x.get_dim(xdim, ydim);
+    x.getDimension(xdim, ydim);
     aux_x.resize(xdim * ydim);
-    y.get_dim(xdim, ydim);
+    y.getDimension(xdim, ydim);
     aux_y.resize(xdim * ydim);
 
     FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(x, y)
@@ -718,9 +718,9 @@ double mutual_information(const matrix3D< T >& x,
     int xdim, ydim, zdim;
     double retval = 0.0;
 
-    x.get_dim(ydim, xdim, zdim);
+    x.getDimension(ydim, xdim, zdim);
     aux_x.resize(xdim * ydim * zdim);
-    y.get_dim(ydim, xdim, zdim);
+    y.getDimension(ydim, xdim, zdim);
     aux_y.resize(xdim * ydim * zdim);
 
     FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(x, y)

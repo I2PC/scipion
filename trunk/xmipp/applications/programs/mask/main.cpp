@@ -123,7 +123,7 @@ int main(int argc, char **argv)
         if (Is_ImageXmipp(fn_input))
         {
             image.read(fn_input);
-            image().set_Xmipp_origin();
+            image().setXmippOrigin();
             if (apply_geo)
             {
                 if (mask_prm.x0 + mask_prm.y0 != 0.)
@@ -164,7 +164,7 @@ int main(int argc, char **argv)
         else if (Is_VolumeXmipp(fn_input))
         {
             volume.read(fn_input);
-            volume().set_Xmipp_origin();
+            volume().setXmippOrigin();
             mask_prm.generate_3Dmask(V);
             if (!create_mask)
             {
@@ -223,7 +223,7 @@ int main(int argc, char **argv)
                 if (Is_ImageXmipp(fn_in))
                 {
                     image.read(fn_in);
-                    image().set_Xmipp_origin();
+                    image().setXmippOrigin();
                     if (apply_geo)
                     {
                         if (mask_prm.x0 + mask_prm.y0 != 0.)
@@ -256,7 +256,7 @@ int main(int argc, char **argv)
                 else if (Is_VolumeXmipp(fn_in))
                 {
                     volume.read(fn_in);
-                    volume().set_Xmipp_origin();
+                    volume().setXmippOrigin();
                     mask_prm.generate_3Dmask(V);
                     SET_SUBS_VAL(V);
                     mask_prm.apply_mask(V, V, subs_val);

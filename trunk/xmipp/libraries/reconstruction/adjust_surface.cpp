@@ -152,9 +152,9 @@ void Prog_Adjust_Surface_Parameters::usage() const
 void Prog_Adjust_Surface_Parameters::produce_Side_Info()
 {
     surface.read(fn_in_surface);
-    surface().set_Xmipp_origin();
+    surface().setXmippOrigin();
     V.read(fn_vol);
-    V().set_Xmipp_origin();
+    V().setXmippOrigin();
     if (!given_ztop)
     {
         ztop0    = STARTINGZ(V());
@@ -198,7 +198,7 @@ void Prog_Adjust_Surface_Parameters::produce_Side_Info()
 
     // Compute valid shift range
     shift_mask.resize(2*CEIL(shift_dist) + 1, 2*CEIL(shift_dist) + 1);
-    shift_mask.set_Xmipp_origin();
+    shift_mask.setXmippOrigin();
     STARTINGX(shift_mask) += ROUND(shiftX0);
     STARTINGY(shift_mask) += ROUND(shiftY0);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(shift_mask)
@@ -432,8 +432,8 @@ double correlate_surface_and_volume_gradients(const Image *surf,
             {
                 V_grad.vector_at(k, i, j, grad_in_V);
                 Vsurf_grad.vector_at(k, i, j, grad_in_Vsurf);
-                //grad_in_Vsurf.self_normalize();
-                retval += ABS(dot_product(grad_in_V, grad_in_Vsurf));
+                //grad_in_Vsurf.selfNormalize();
+                retval += ABS(dotProduct(grad_in_V, grad_in_Vsurf));
 #ifdef DEBUG
                 cout << "(" << k << "," << i << "," << j << ") in V="
                 << grad_in_V.transpose() << " in surf "
@@ -535,7 +535,7 @@ void ROUT_adjust_surface(Prog_Adjust_Surface_Parameters &prm)
     cerr << "Correlating surface and volume ...\n";
     if (prm.exhaustive)
     {
-        double *p_aux = prm.p.adapt_for_numerical_recipes();
+        double *p_aux = prm.p.adaptForNumericalRecipes();
         cout << "# shiftx shifty angle ktop kbottom corr\n";
         int act_corr = 0;
         for (prm.p(1) = STARTINGY(prm.shift_mask); prm.p(1) <= FINISHINGY(prm.shift_mask); prm.p(1) += prm.shift_step)
@@ -592,7 +592,7 @@ void ROUT_adjust_surface(Prog_Adjust_Surface_Parameters &prm)
                                     }
                                 }
             }
-        prm.p.kill_adaptation_for_numerical_recipes(p_aux);
+        prm.p.killAdaptationForNumericalRecipes(p_aux);
     }
     else
     {
@@ -608,7 +608,7 @@ void ROUT_adjust_surface(Prog_Adjust_Surface_Parameters &prm)
         Matrix1D<double> steps(7);
         steps.init_constant(1);
         int iter = 0;
-        Powell_optimizer(prm.p, 1, 7, &eval_surface,
+        powellOptimizer(prm.p, 1, 7, &eval_surface,
                          0.01, corr, iter, steps, true);
         best_corr = corr;
         best_ktop = ROUND(prm.p(3));
@@ -638,7 +638,7 @@ void ROUT_adjust_surface(Prog_Adjust_Surface_Parameters &prm)
         else                                sij = ZDIM;
         if (best_ang != 0) prm.wsurface().rotate(best_ang, WRAP);
         if (best_shiftx != 0 || best_shifty != 0)
-            prm.wsurface().translate(vector_R2(best_shiftx, best_shifty), WRAP);
+            prm.wsurface().translate(vectorR2(best_shiftx, best_shifty), WRAP);
         if (best_scaleX != 0 || best_scaleY != 0)
         {
             matrix2D<double> scale_m;

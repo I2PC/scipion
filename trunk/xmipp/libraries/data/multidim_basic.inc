@@ -84,7 +84,7 @@ void core_scalar_by_array< complex< double > >(const complex< double >& op1,
 /** Array by array specialization.
  */
 template <>
-void core_array_by_array< complex< double > >(const maTC& op1,
+void core_arrayByArray< complex< double > >(const maTC& op1,
                                               const maTC& op2,
                                               maTC& result,
                                               char operation)

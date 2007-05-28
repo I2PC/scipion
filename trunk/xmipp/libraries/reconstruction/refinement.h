@@ -68,14 +68,14 @@ void calculate_and_find_correlation_max_mat(matrix2D<T> const &mat1,
 
     //calculate correlation matrix
     correlation_matrix(mat1, mat2, mat_temp);
-    mat_temp.set_Xmipp_origin();
+    mat_temp.setXmippOrigin();
 
     //search for the maximun inside window "window"
     int max_step_int = (int)ROUND(max_step);
     int imax, jmax;
 
     matrix2D<int> window(2*max_step_int + 1, 2*max_step_int + 1);
-    window.set_Xmipp_origin();
+    window.setXmippOrigin();
 
     T temp_max = -100000000;
     SPEED_UP_temps;//speedup temporal variables

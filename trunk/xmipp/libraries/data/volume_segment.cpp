@@ -150,7 +150,7 @@ double segment_threshold(const Volume *V_in, Volume *V_out,
     // Pick the maximum
     count(0) = 0; // We don't want to pick the background
     int imax;
-    count.max_index(imax);
+    count.maxIndex(imax);
 
     // Select the mask with only that piece
     FOR_ALL_ELEMENTS_IN_MATRIX3D((*V_out)())
@@ -214,8 +214,8 @@ void probabilistic_solvent(Volume *V_in, Volume *V_out)
     double avgp, sigp, avgs, sigs, aux, solv_frac, prot_frac;
     double p_prot, p_solv;
 
-    (*V_in)().set_Xmipp_origin();
-    (*V_out)().set_Xmipp_origin();
+    (*V_in)().setXmippOrigin();
+    (*V_out)().setXmippOrigin();
 
     Np = sump = sum2p = Ns = sums = sum2s = 0.;
     FOR_ALL_ELEMENTS_IN_MATRIX3D((*V_in)())
@@ -265,7 +265,7 @@ void probabilistic_solvent(Volume *V_in, Volume *V_out)
 void Prog_segment_prm::segment(VolumeXmipp &mask)
 {
     double th_min, th_max, val_min, val_max;
-    V().compute_double_minmax(val_min, val_max);
+    V().computeDoubleMinMax(val_min, val_max);
     th_min = val_min;
     th_max = val_max;
     double mass_min = MULTIDIM_SIZE(V());

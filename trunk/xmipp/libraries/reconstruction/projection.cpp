@@ -516,13 +516,13 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
     cout << "A\n" << A << endl;
     cout << "Ainv\n" << Ainv << endl;
     cout << "Check that A*prjaint=(Xdim,0)    "
-    << (A*vector_R2(XX(prjaint), YY(prjaint))).transpose() << endl;
+    << (A*vectorR2(XX(prjaint), YY(prjaint))).transpose() << endl;
     cout << "Check that A*prjbint=(0,Ydim)    "
-    << (A*vector_R2(XX(prjbint), YY(prjbint))).transpose() << endl;
+    << (A*vectorR2(XX(prjbint), YY(prjbint))).transpose() << endl;
     cout << "Check that Ainv*(Xdim,0)=prjaint "
-    << (Ainv*vector_R2(xDim, 0)).transpose() << endl;
+    << (Ainv*vectorR2(xDim, 0)).transpose() << endl;
     cout << "Check that Ainv*(0,Ydim)=prjbint "
-    << (Ainv*vector_R2(0, yDim)).transpose() << endl;
+    << (Ainv*vectorR2(0, yDim)).transpose() << endl;
     cout.flush();
 #endif
 
@@ -576,22 +576,22 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
 #ifdef DEBUG_LITTLE
     cout << "BeginZ     " << beginZ.transpose()             << endl;
     cout << "Mask       ";
-    mask.print_shape();
+    mask.printShape();
     cout << endl;
     cout << "Vol        ";
-    vol().print_shape();
+    vol().printShape();
     cout << endl;
     cout << "Proj       ";
-    proj().print_shape();
+    proj().printShape();
     cout << endl;
     cout << "Norm Proj  ";
-    norm_proj().print_shape();
+    norm_proj().printShape();
     cout << endl;
     cout << "Footprint  ";
-    footprint().print_shape();
+    footprint().printShape();
     cout << endl;
     cout << "Footprint2 ";
-    footprint2().print_shape();
+    footprint2().printShape();
     cout << endl;
 #endif
     Matrix1D<double> grid_index(3);

@@ -120,7 +120,7 @@ bool Prog_centilt_prm::center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It,
             if (j != 0) MAT_ELEM(Mcorr, i, j) = 0.;
         }
     }
-    Mcorr.max_index(imax, jmax);
+    Mcorr.maxIndex(imax, jmax);
     maxcorr = MAT_ELEM(Mcorr, imax, jmax);
 
     while (neighbourhood)
@@ -164,7 +164,7 @@ bool Prog_centilt_prm::center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It,
     A(0, 2) = -xshift;
     A(1, 2) = -yshift;
     apply_geom(Maux, A, Maux, IS_INV, DONT_WRAP);
-    Maux.set_Xmipp_origin();
+    Maux.setXmippOrigin();
     ccf = correlation_index(Iu(), Maux);
 
     if (do_stretch) xshift *= COSD(It.Theta());
@@ -218,7 +218,7 @@ void Prog_centilt_prm::centilt()
         SFt.jump(imgno - n_discarded);
         // Read in untilted image and apply shifts (center) and Phi (align tilt-axis with y-axis)
         Iu.read(SFu.get_current_file());
-        Iu().set_Xmipp_origin();
+        Iu().setXmippOrigin();
         Euler_angles2matrix(Iu.Phi(), 0., 0., A);
         A(0, 2) = -Iu.Xoff();
         A(1, 2) = -Iu.Yoff();
@@ -234,7 +234,7 @@ void Prog_centilt_prm::centilt()
         A(1, 2) = -It.Yoff();
         outside = dMij(It(), 0, 0);
         It().self_apply_geom(A, IS_INV, DONT_WRAP, outside);
-        It().set_Xmipp_origin();
+        It().setXmippOrigin();
 
         if (do_center) OK = center_tilted_image(Iu, It, ccf);
         else

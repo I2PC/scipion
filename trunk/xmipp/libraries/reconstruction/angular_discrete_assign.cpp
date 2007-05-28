@@ -807,7 +807,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
                     Ip().self_rotate(-2, WRAP);
 
                     // Mirror the image if necessary
-                    if (mirror) Ip().self_reverseY();
+                    if (mirror) Ip().selfReverseY();
 
 #ifdef DEBUG
                     Ip.write("PPPbefore_denoising.xmp");
@@ -966,7 +966,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
     Matrix1D<double> score(jmax);
 //   for (int j=0; j<jmax; j++) score(j)=candidate_rate[j];
     for (int j = 0; j < jmax; j++) score(j) = vscore[candidate_local_maxima[j]];
-    Matrix1D<int> idx_score = score.index_sort();
+    Matrix1D<int> idx_score = score.indexSort();
 
     if (tell & (TELL_PSI_SHIFT | TELL_OPTIONS))
     {
@@ -1035,7 +1035,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
     {
         ImageXmipp Iref;
         Iref.read(library_name[vref_idx[ibest]]);
-        Iref().set_Xmipp_origin();
+        Iref().setXmippOrigin();
         if (Xoff == 0 && Yoff == 0) Ip() = I();
         else
         {

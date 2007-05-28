@@ -58,7 +58,7 @@ public:
 
     /** Add one grid point
       */
-    void Add_Item(const Matrix1D<double> RotTiltPsi = vector_R3(0., 0., 0.));
+    void Add_Item(const Matrix1D<double> RotTiltPsi = vectorR3(0., 0., 0.));
     /** write a footer and Close file, also write the total number of elements
         */
     ~openDXang();

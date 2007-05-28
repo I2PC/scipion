@@ -1242,7 +1242,7 @@ void DocFile::setCol(int c, Matrix1D< double >& v)
     }
     renum();
 
-    if (v.get_dim() < m.size())
+    if (v.getDimension() < m.size())
         REPORT_ERROR(1605, "DocFile::setCol(): Column assignment not complete");
 }
 

@@ -146,7 +146,7 @@ int main(int argc, char **argv)
                         {
                             VolumeXmipp V(fn);
                             double maux, Maux;
-                            V().compute_double_minmax(maux, Maux);
+                            V().computeDoubleMinMax(maux, Maux);
                             if (i == ifirst + 1)
                             {
                                 m = maux;
@@ -166,7 +166,7 @@ int main(int argc, char **argv)
                     {
                         ImageXmipp I(argv[i]);
                         double maux, Maux;
-                        I().compute_double_minmax(maux, Maux);
+                        I().computeDoubleMinMax(maux, Maux);
                         if (i == ifirst + 1)
                         {
                             m = maux;
@@ -186,7 +186,7 @@ int main(int argc, char **argv)
                     {
                         VolumeXmipp V(argv[i]);
                         double maux, Maux;
-                        V().compute_double_minmax(maux, Maux);
+                        V().computeDoubleMinMax(maux, Maux);
                         if (i == ifirst + 1)
                         {
                             m = maux;

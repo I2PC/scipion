@@ -331,7 +331,7 @@ public:
     }
 
     /** Micrograph max min*/
-    void compute_double_minmax(double &Dmin, double &Dmax) const
+    void computeDoubleMinMax(double &Dmin, double &Dmax) const
     {
         if (__depth == 8)
         {

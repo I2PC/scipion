@@ -84,12 +84,12 @@ public:
             if (check_param(argc, argv, "-shift"))
             {
                 shift = get_vector_param(argc, argv, "-shift", -1);
-                my_dim = shift.get_dim();
+                my_dim = shift.getDimension();
             }
             if (check_param(argc, argv, "-scale"))
             {
                 scale = get_vector_param(argc, argv, "-scale", -1);
-                my_dim = scale.get_dim();
+                my_dim = scale.getDimension();
             }
 
             if (!check_param(argc, argv, "-shift") && !center_mass)
@@ -111,14 +111,14 @@ public:
         else      cout << "Not wrapping image/volume\n";
         if (store_in_header) cout << "Storing the shift in header\n";
         else                 cout << "Shifting image/volume\n";
-        if (shift.get_dim() > 1)
+        if (shift.getDimension() > 1)
             cout << "Shift: " << shift.transpose() << endl;
         else if (DF_shifts.name() != "")
         {
             cout << "Shift docfile: " << DF_shifts.name() << endl;
             cout << "colX_shift:  " << colX_shift << endl;
         }
-        if (scale.get_dim() > 1)
+        if (scale.getDimension() > 1)
             cout << "Scale: " << scale.transpose() << endl;
         else if (DF_scales.name() != "")
         {
@@ -167,7 +167,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
     }
     else if (eprm->center_mass)
     {
-        img().center_of_mass(eprm->shift);
+        img().centerOfMass(eprm->shift);
         eprm->shift = -eprm->shift;
     }
 
@@ -216,7 +216,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
     A(0, 3) = XX(eprm->shift);
     A(1, 3) = YY(eprm->shift);
     A(2, 3) = ZZ(eprm->shift);
-//   if(eprm->scale.get_dim()>1)
+//   if(eprm->scale.getDimension()>1)
 //      ;//scale already filled
 //   else
     if (eprm->DF_scales.name() != "")

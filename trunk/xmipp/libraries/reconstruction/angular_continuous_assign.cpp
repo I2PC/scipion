@@ -125,7 +125,7 @@ void Prog_angular_predict_continuous_prm::produce_side_info()
     // Read the reference volume
     VolumeXmipp V;
     V.read(fn_ref);
-    V().set_Xmipp_origin();
+    V().setXmippOrigin();
 
     // Resize the predicted vectors
     int number_of_images = get_images_to_process();

@@ -1086,7 +1086,7 @@ void Feature::project_to(Projection &P, const matrix2D<double> &VP,
     Matrix1D<double> origin(3);
     Matrix1D<double> direction;
     VP.getRow(2, direction);
-    direction.self_transpose();
+    direction.selfTranspose();
     Matrix1D<double> corner1(3), corner2(3);
     Matrix1D<double> act(3);
     SPEED_UP_temps;
@@ -1165,7 +1165,7 @@ void Feature::project_to(Projection &P, const matrix2D<double> &VP,
     corner2.resize(2);
 
     // Clip to image size
-    sort_two_vectors(corner1, corner2);
+    sortTwoVectors(corner1, corner2);
     XX(corner1) = CLIP(ROUND(XX(corner1)), STARTINGX(P()), FINISHINGX(P()));
     YY(corner1) = CLIP(ROUND(YY(corner1)), STARTINGY(P()), FINISHINGY(P()));
     XX(corner2) = CLIP(ROUND(XX(corner2)), STARTINGX(P()), FINISHINGX(P()));
