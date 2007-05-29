@@ -62,6 +62,7 @@ class visualize_particles_class:
             visualization.visualize_images(ShowSelfiles,True)
         # rest of stuff remains in WorkingDir!!
         os.chdir(protocol.WorkingDir)
+        ShowSelfiles=[]
         if (DoShowSortedParticles):
             ShowSelfiles.append('sort_junk.sel')
             visualization.visualize_images(ShowSelfiles,True)
