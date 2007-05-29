@@ -264,7 +264,7 @@ class preprocess_particles_class:
 
 
     def check_file_exists(self,name):
-        import os
+        import os,sys
         if not os.path.exists(name):
             message='Error: File '+name+' does not exist, exiting...'
             print '*',message
