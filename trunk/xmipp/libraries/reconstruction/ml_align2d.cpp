@@ -162,6 +162,7 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     anneal = AtoF(get_param(argc, argv, "-anneal", "1"));
     anneal_step = AtoF(get_param(argc, argv, "-anneal_step", "1"));
     do_write_offsets = !check_param(argc, argv, "-dont_write_offsets");
+    fn_scratch = get_param(argc, argv, "-scratch", "");
     zero_offsets = check_param(argc, argv, "-zero_offsets");
 
     //only for interaction with Refine3D:
@@ -1034,6 +1035,16 @@ void Prog_MLalign2D_prm::produce_Side_info2(int nr_vols)
         refno++;
     }
 
+    // Make scratch directory for the temporary origin offsets
+    if (fn_scratch!="")
+    {
+        fn_scratch += "/ml_align2d_offsets";
+	// Clean it if already existing
+    	system(((string)"rm -rf "+fn_scratch).c_str());
+ 	// Generate new one
+    	system(((string)"mkdir -p " + fn_scratch).c_str());
+    }
+
     // Read optimal origin offsets from fn_doc
     if (fn_doc != "")
     {
@@ -1207,6 +1218,12 @@ void Prog_MLalign2D_prm::write_offsets(FileName fn, vector<double> &data)
     ofstream fh;
     int itot;
 
+    if (fn_scratch!="")
+    {
+    	// Write to scratch disc
+    	fn = fn_scratch + "/" + fn;
+    }
+
     fh.open((fn).c_str(), ios::out);
     if (!fh)
     {
@@ -1239,6 +1256,12 @@ bool Prog_MLalign2D_prm::read_offsets(FileName fn, vector<double> &data)
     int ii, itot, nr_off, itoth, nr_offh;
     double remain;
     vector<double> data1;
+
+    if (fn_scratch!="")
+    {
+    	// Read from scratch disc
+    	fn = fn_scratch + "/" + fn;
+    }
 
     if (!exists(fn)) return false;
     else
@@ -3360,6 +3383,15 @@ void Prog_MLalign2D_prm::write_output_files(const int iter, DocFile &DFo,
     {
         fn_base += "_it";
         fn_base.compose(fn_base, iter, "");
+    }
+    else
+    {
+    	if (fn_scratch!="") 
+	{
+	    // Clean scrath disc
+	    system(((string)"rm -rf "+fn_scratch).c_str());
+	}
+    
     }
 
     // Write out current reference images and fill sel & log-file
