@@ -17,11 +17,11 @@ DoShowParticles=True
 # Visualize the individual particles, sorted by statistics?
 """ Most common particles will be displayed at the top, and outliers will be displayed at the bottom of the selection file
 """
-DoShowSortedParticles=True
+DoShowSortedParticles=False
 # Visualize the Z-score used for particles sorting?
 """ Particles will be sorted from low Z-scores (common particles) to high Z-scores (strange particles)
 """
-DoShowZscore=True
+DoShowZscore=False
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
@@ -46,23 +46,30 @@ class visualize_particles_class:
         pardir=os.path.abspath(os.getcwd())
         shutil.copy(ProtocolName,'protocol.py')
         import protocol
-        self.WorkingDir=protocol.WorkingDir
-        os.chdir(self.WorkingDir)
         
+        # all_images.sel is in ProjectDir!!
         ShowSelfiles=[]
         if (DoShowParticles):
             selfile=protocol.ProjectDir+ '/' + \
                      protocol.OutSelFile
-            ShowSelfiles.append(selfile)
+            if protocol.IsPairList:
+                selfile1=selfile.replace('.sel','_untilted.sel')
+                selfile2=selfile.replace('.sel','_tilted.sel')
+                ShowSelfiles.append(selfile1)
+                ShowSelfiles.append(selfile2)
+            else:
+                ShowSelfiles.append(selfile)
+            visualization.visualize_images(ShowSelfiles,True)
+        # rest of stuff remains in WorkingDir!!
+        os.chdir(protocol.WorkingDir)
         if (DoShowSortedParticles):
             ShowSelfiles.append('sort_junk.sel')
+            visualization.visualize_images(ShowSelfiles,True)
         if (DoShowZscore):
             self.show_z_score()
-
-        visualization.visualize_images(ShowSelfiles,True)
+        os.chdir(pardir)
 
         # Return to parent dir and remove protocol.py(c)
-        os.chdir(pardir)
         if (os.path.exists('protocol.py')):
             os.remove('protocol.py')
         if (os.path.exists('protocol.pyc')):

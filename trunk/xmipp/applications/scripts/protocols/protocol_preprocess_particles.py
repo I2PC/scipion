@@ -264,7 +264,7 @@ class preprocess_particles_class:
 
 
     def check_file_exists(self,name):
-        import os,sys
+        import os
         if not os.path.exists(name):
             message='Error: File '+name+' does not exist, exiting...'
             print '*',message
@@ -289,7 +289,7 @@ class preprocess_particles_class:
         imgsubdir=self.ProjectDir+'/'+self.ImagesDir+'/'+self.shortname
         imgsubdir2=self.ProjectDir+'/'+self.ImagesDir+'/'+self.shortname2
         rootname=imgsubdir+'/'+self.shortname+'_' 
-        rootname2=imgsubdir+'/'+self.shortname2+'_'
+        rootname2=imgsubdir2+'/'+self.shortname2+'_'
         selname=self.downname+'.raw.sel' 
         selname2=self.downname2+'.raw.sel' 
         selnameb=self.shortname+'/'+self.downname+'.raw.sel' 
