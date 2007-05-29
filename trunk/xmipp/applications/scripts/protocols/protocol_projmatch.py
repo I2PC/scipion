@@ -17,8 +17,8 @@
 SelFileName='all_images.sel'
 
 # {file} Initial 3D reference map:
-#ReferenceFileName=' '
-ReferenceFileName='init_reference/LTA_rot_0.1_norm.vol'
+ReferenceFileName=' '
+#ReferenceFileName='init_reference/LTA_rot_0.1_norm.vol'
 
 # Working subdirectory: 
 WorkDirectory='ProjMatch/Test'
