@@ -389,8 +389,8 @@ void sort_perpendicular(int numIMG, Recons_info *IMG_Inf,
     // chosen
     double min_prod;
     int   min_prod_proj;
-    matrix2D<double> v(numIMG, 3);
-    matrix2D<double> euler;
+    Matrix2D<double> v(numIMG, 3);
+    Matrix2D<double> euler;
     Matrix1D<double> product(numIMG);
 
     // Initialisation

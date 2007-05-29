@@ -116,7 +116,7 @@ double Prog_Adjust_Volume_Parameters::mismatching(double a, double b)
                        I.rot(), I.tilt(), I.psi());
 
         // Compute the difference
-        matrix2D<double> diff;
+        Matrix2D<double> diff;
         diff = I() - P();
         retval += diff.sum2();
 

@@ -230,7 +230,7 @@ void DocFile::assign(const DocFile& doc)
     *this = doc;
 }
 
-DocFile& DocFile::operator=(const matrix2D< double >& A)
+DocFile& DocFile::operator=(const Matrix2D< double >& A)
 {
     clear();
     DocLine temp;
@@ -248,14 +248,14 @@ DocFile& DocFile::operator=(const matrix2D< double >& A)
     }
 
     fn_doc = "";
-    no_lines = A.RowNo();
+    no_lines = A.rowNumber();
     renum();
     go_beginning();
 
     return *this;
 }
 
-void DocFile::assign(const matrix2D< double >& mat)
+void DocFile::assign(const Matrix2D< double >& mat)
 {
     // Call the previous one, as in this->operator=(mat)
     *this = mat;
@@ -535,7 +535,7 @@ void DocFile::locate(int k)
     }
 }
 
-int DocFile::FirstLine_ColNo()
+int DocFile::FirstLine_colNumber()
 {
     std::vector< DocLine >::iterator aux = current_line;
     go_first_data_line();

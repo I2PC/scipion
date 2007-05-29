@@ -112,11 +112,11 @@ public:
     /** SelFile images (working, test and reference set) */
     SelFile SF, SFr;
     /** vector for flipping (i.e. 90/180-degree rotations) matrices */
-    vector<matrix2D<double> > F;
+    vector<Matrix2D<double> > F;
     /** Vector for images to hold references (new & old) */
     vector <ImageXmipp> Iref, Iold, Ictf;
     /** Matrices for calculating PDF of (in-plane) translations */
-    matrix2D<double> P_phi, Mr2;
+    Matrix2D<double> P_phi, Mr2;
     /** Fast mode */
     bool fast_mode;
     /** Fast mode */
@@ -166,7 +166,7 @@ public:
     /** Flag whether the phases of the experimental images are flipped already */
     bool phase_flipped;
     /** Matrix with resolution value at each Fourier pixel */
-    matrix2D<int> Mresol;
+    Matrix2D<int> Mresol;
     /** Vectors with sigma2 (for each defocus group) */
     vector<Matrix1D<double> > Vsig, Vctf, Vdec;
     /** pointers for the different ctf-matrices */
@@ -239,13 +239,13 @@ public:
     void rotate_reference(vector<ImageXmipp> &Iref,
                           bool fill_real_space,
                           bool fill_fourier_space,
-                          vector <vector< matrix2D<double> > > &Mref,
-                          vector <vector< matrix2D<complex<double> > > > &Fref);
+                          vector <vector< Matrix2D<double> > > &Mref,
+                          vector <vector< Matrix2D<complex<double> > > > &Fref);
 
     /// Apply reverse rotations to all matrices in vector and fill new matrix with their sum
-    void reverse_rotate_reference(vector <vector< matrix2D<complex<double> > > > &Fnew,
-                                  vector <vector< matrix2D<double> > > &Mnew, bool real_space,
-                                  vector<matrix2D<double> > &Mref);
+    void reverse_rotate_reference(vector <vector< Matrix2D<complex<double> > > > &Fnew,
+                                  vector <vector< Matrix2D<double> > > &Mnew, bool real_space,
+                                  vector<Matrix2D<double> > &Mref);
 
     /// Calculate which references have projection directions close to
     /// phi and theta
@@ -254,39 +254,39 @@ public:
 
     /// Pre-calculate which model and phi have significant probabilities
     /// without taking translations into account!
-    void preselect_significant_model_phi(matrix2D<double> &Mimg, vector<double> &offsets,
-                                         vector <vector< matrix2D<double > > > &Mref,
-                                         matrix2D<int> &Msignificant,
+    void preselect_significant_model_phi(Matrix2D<double> &Mimg, vector<double> &offsets,
+                                         vector <vector< Matrix2D<double > > > &Mref,
+                                         Matrix2D<int> &Msignificant,
                                          vector<double > &pdf_directions);
 
     // Calculate the FT of a translated matrix using a phase shift in
     // Fourier space
-    void Fourier_translate2D(const matrix2D<complex<double> > &Fimg,
+    void Fourier_translate2D(const Matrix2D<complex<double> > &Fimg,
                              int focus, Matrix1D<double> &trans,
-                             matrix2D<complex<double> > &Fimg_shift);
+                             Matrix2D<complex<double> > &Fimg_shift);
 
     // If not determined yet: search optimal offsets using maxCC
     // Then for all optimal translations, calculate all translated FTs
     // for each of the flipped variants
-    void calculate_fourier_offsets(matrix2D<double> &Mimg, int focus,
-                                   vector <vector< matrix2D<complex<double> > > > &Fref,
-                                   matrix2D<double> &ctf, vector<double> &offsets,
-                                   vector<vector<matrix2D<complex<double> > > > &Fimg_trans,
-                                   matrix2D<int> &Moffsets, matrix2D<int> &Moffsets_mirror);
+    void calculate_fourier_offsets(Matrix2D<double> &Mimg, int focus,
+                                   vector <vector< Matrix2D<complex<double> > > > &Fref,
+                                   Matrix2D<double> &ctf, vector<double> &offsets,
+                                   vector<vector<Matrix2D<complex<double> > > > &Fimg_trans,
+                                   Matrix2D<int> &Moffsets, Matrix2D<int> &Moffsets_mirror);
 
     // Calculate translated matrices for all limited translations
     // for each of the flipped variants
-    void calculate_realspace_offsets(matrix2D<double> &Mimg, vector<double > &offsets,
+    void calculate_realspace_offsets(Matrix2D<double> &Mimg, vector<double > &offsets,
                                      vector<double > &pdf_directions,
-                                     vector<vector<matrix2D<double> > > &Mimg_trans,
-                                     matrix2D<int> &Moffsets, matrix2D<int> &Moffsets_mirror);
+                                     vector<vector<Matrix2D<double> > > &Mimg_trans,
+                                     Matrix2D<int> &Moffsets, Matrix2D<int> &Moffsets_mirror);
 
     /// fast MLF integration...
-    void MLF_integrate_locally(matrix2D<double> &Mimg, int focus, bool apply_ctf,
-                               vector<vector<matrix2D<complex<double> > > > &Fref,
-                               vector <vector< matrix2D<complex<double> > > > &Fwsum_imgs,
-                               vector <vector< matrix2D<complex<double> > > > &Fwsum_ctfimgs,
-                               matrix2D<double> &Mwsum_sigma2,
+    void MLF_integrate_locally(Matrix2D<double> &Mimg, int focus, bool apply_ctf,
+                               vector<vector<Matrix2D<complex<double> > > > &Fref,
+                               vector <vector< Matrix2D<complex<double> > > > &Fwsum_imgs,
+                               vector <vector< Matrix2D<complex<double> > > > &Fwsum_ctfimgs,
+                               Matrix2D<double> &Mwsum_sigma2,
                                double &wsum_sigma_offset, vector<double> &sumw,
                                vector<double> &sumw_mirror,
                                double &LL, double &LL_old, double &fracweight, 
@@ -297,9 +297,9 @@ public:
 
     // ML-integration over limited translations,
     // and with -fast way of selection significant rotations
-    void ML_integrate_locally(matrix2D<double> &Mimg,
-                              vector <vector< matrix2D<double> > > &Mref,
-                              vector <vector< matrix2D<double> > > &Mwsum_imgs,
+    void ML_integrate_locally(Matrix2D<double> &Mimg,
+                              vector <vector< Matrix2D<double> > > &Mref,
+                              vector <vector< Matrix2D<double> > > &Mwsum_imgs,
                               double &wsum_sigma_noise, double &wsum_sigma_offset,
                               vector<double> &sumw, vector<double> &sumw_mirror,
                               double &LL, double &fracweight,
@@ -309,10 +309,10 @@ public:
                               vector<double> &pdf_directions);
 
     /// ML-integration over all (or -fast) translations
-    void ML_integrate_complete(matrix2D<double> &Mimg,
-                               vector <vector< matrix2D<complex<double> > > > &Fref,
-                               matrix2D<int> &Msignificant,
-                               vector <vector< matrix2D<complex<double> > > > &Fwsum_imgs,
+    void ML_integrate_complete(Matrix2D<double> &Mimg,
+                               vector <vector< Matrix2D<complex<double> > > > &Fref,
+                               Matrix2D<int> &Msignificant,
+                               vector <vector< Matrix2D<complex<double> > > > &Fwsum_imgs,
                                double &wsum_sigma_noise, double &wsum_sigma_offset,
                                vector<double> &sumw, vector<double> &sumw_mirror,
                                double &LL, double &fracweight,
@@ -321,11 +321,11 @@ public:
                                vector<double > &pdf_directions);
 
     /// Calculate maxCC averages for new model and new model parameters
-    void maxCC_search_complete(matrix2D<double> &Mimg,
-                               vector <vector< matrix2D<complex<double> > > > &Fref,
-                               vector <vector< matrix2D<double> > > &Mref,
+    void maxCC_search_complete(Matrix2D<double> &Mimg,
+                               vector <vector< Matrix2D<complex<double> > > > &Fref,
+                               vector <vector< Matrix2D<double> > > &Mref,
                                double &max_shift,
-                               vector <vector< matrix2D<double> > > &Msum_imgs,
+                               vector <vector< Matrix2D<double> > > &Msum_imgs,
                                vector<double> &sumw, vector<double> &sumw_mirror,
                                double &minSQ, int &opt_refno, double &opt_psi,
                                Matrix1D<double> &opt_offsets,
@@ -334,16 +334,16 @@ public:
     /// Integrate over all experimental images
     void ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> &Iref, int iter,
                                 double &LL, double &LL_old, double &sumcorr, DocFile &DFo,
-                                vector<matrix2D<double> > &wsum_Mref,
-                                vector<matrix2D<double> > &wsum_ctfMref,
-                                double &wsum_sigma_noise, vector<matrix2D<double> > &Mwsum_sigma2,
+                                vector<Matrix2D<double> > &wsum_Mref,
+                                vector<Matrix2D<double> > &wsum_ctfMref,
+                                double &wsum_sigma_noise, vector<Matrix2D<double> > &Mwsum_sigma2,
                                 double &wsum_sigma_offset,
                                 vector<double> &sumw, vector<double> &sumw_mirror);
 
     /// Update all model parameters
-    void update_parameters(vector<matrix2D<double> > &wsum_Mref,
-                           vector<matrix2D<double> > &wsum_ctfMref,
-                           double &wsum_sigma_noise, vector<matrix2D<double> > &Mwsum_sigma2,
+    void update_parameters(vector<Matrix2D<double> > &wsum_Mref,
+                           vector<Matrix2D<double> > &wsum_ctfMref,
+                           double &wsum_sigma_noise, vector<Matrix2D<double> > &Mwsum_sigma2,
                            double &wsum_sigma_offset, vector<double> &sumw,
                            vector<double> &sumw_mirror,
                            double &sumcorr, double &sumw_allrefs,

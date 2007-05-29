@@ -329,7 +329,7 @@ void multiplication(int operand_type1, int operand_type2, FileName &fn_1, FileNa
         ImageXmipp Op1, out;
         Op1.read(fn_1, false, false, true);
         out.read(fn_2, false, false, true);
-        mul_elements(Op1(), out(), out());
+        multiplyElements(Op1(), out(), out());
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
         out.write(fn_out);
@@ -487,7 +487,7 @@ void extract_slice(int operand_type1, int operand_type2, FileName &fn_1, FileNam
         if (number2 >= STARTINGZ(Op1()) && number2 <= FINISHINGZ(Op1()))
         {
             // Resize image
-            out().resize(Op1().RowNo(), Op1().ColNo());
+            out().resize(Op1().rowNumber(), Op1().colNumber());
             // Copy
             for (int i = STARTINGY(Op1());i <= FINISHINGY(Op1());i++)
                 for (int j = STARTINGX(Op1());j <= FINISHINGX(Op1());j++)
@@ -510,7 +510,7 @@ void extract_column(int operand_type1, int operand_type2, FileName &fn_1, FileNa
         if (number2 >= STARTINGX(Op1()) && number2 <= FINISHINGX(Op1()))
         {
             // Resize image
-            out().resize(Op1().SliNo(), Op1().RowNo());
+            out().resize(Op1().SliNo(), Op1().rowNumber());
             // Copy
             for (int k = STARTINGZ(Op1());k <= FINISHINGZ(Op1());k++)
                 for (int i = STARTINGY(Op1());i <= FINISHINGY(Op1());i++)
@@ -529,7 +529,7 @@ void extract_column(int operand_type1, int operand_type2, FileName &fn_1, FileNa
         if (number2 >= STARTINGX(Op1()) && number2 <= FINISHINGX(Op1()))
         {
             // Resize image
-            out().resize(Op1().RowNo(), 1);
+            out().resize(Op1().rowNumber(), 1);
             // Copy
             for (int i = STARTINGY(Op1());i <= FINISHINGY(Op1());i++)
                 out(i, 0) = Op1(i, number2);
@@ -552,7 +552,7 @@ void extract_row(int operand_type1, int operand_type2, FileName &fn_1, FileName 
         if (number2 >= STARTINGY(Op1()) && number2 <= FINISHINGY(Op1()))
         {
             // Resize image
-            out().resize(Op1().SliNo(), Op1().ColNo());
+            out().resize(Op1().SliNo(), Op1().colNumber());
             // Copy
             for (int k = STARTINGZ(Op1());k <= FINISHINGZ(Op1());k++)
                 for (int j = STARTINGX(Op1());j <= FINISHINGX(Op1());j++)
@@ -571,7 +571,7 @@ void extract_row(int operand_type1, int operand_type2, FileName &fn_1, FileName 
         if (number2 >= STARTINGY(Op1()) && number2 <= FINISHINGY(Op1()))
         {
             // Resize image
-            out().resize(1, Op1().ColNo());
+            out().resize(1, Op1().colNumber());
             // Copy
             for (int j = STARTINGX(Op1());j <= FINISHINGX(Op1());j++)
                 out(0, j) = Op1(number2, j);
@@ -592,7 +592,7 @@ void radial_avg(int operand_type1, FileName &fn_1, FileName &fn_out)
         center.initZeros();
         Matrix1D<double> radial_mean;
         Matrix1D<int> radial_count;
-        radial_average(input(), center, radial_mean, radial_count);
+        radialAverage(input(), center, radial_mean, radial_count);
         radial_mean.write(fn_out);
 
 
@@ -615,7 +615,7 @@ void radial_avg(int operand_type1, FileName &fn_1, FileName &fn_out)
         center.initZeros();
         Matrix1D<double> radial_mean;
         Matrix1D<int> radial_count;
-        radial_average(input(), center, radial_mean, radial_count);
+        radialAverage(input(), center, radial_mean, radial_count);
         radial_mean.write(fn_out);
 
         int my_rad;

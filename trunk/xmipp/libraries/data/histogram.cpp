@@ -93,7 +93,7 @@ void histogram1D::insert_value(double val)
 /* cout << hist ------------------------------------------------------------ */
 ostream& operator << (ostream &o, const histogram1D &hist)
 {
-    matrix2D<double> aux(hist.stepNo(), 2);
+    Matrix2D<double> aux(hist.stepNo(), 2);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(hist)
     {
         hist.index2val(i, MAT_ELEM(aux, i, 0));
@@ -263,7 +263,7 @@ void histogram2D::clear()
     jmax = 0;
     jstep_size = 0;
     no_samples = 0;
-    matrix2D<double>::clear();
+    Matrix2D<double>::clear();
 }
 
 /* Assignment -------------------------------------------------------------- */
@@ -271,7 +271,7 @@ histogram2D & histogram2D::operator = (const histogram2D &H)
 {
     if (this != &H)
     {
-        this->matrix2D<double>::operator =(H);
+        this->Matrix2D<double>::operator =(H);
         imin        = H.imin;
         imax        = H.imax;
         istep_size  = H.istep_size;
@@ -323,7 +323,7 @@ void histogram2D::insert_value(double v, double u)
 /* cout << hist ------------------------------------------------------------ */
 ostream& operator << (ostream &o, const histogram2D &hist)
 {
-    matrix2D<double> aux(hist.IstepNo()*hist.JstepNo(), 3);
+    Matrix2D<double> aux(hist.IstepNo()*hist.JstepNo(), 3);
     int n = 0;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(hist)
     {

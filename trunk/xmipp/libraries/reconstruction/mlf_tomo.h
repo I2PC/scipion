@@ -160,7 +160,7 @@ public:
     void calculate_pdf_trans();
 
     /// parameters using fourier-space likelihood functions
-    void MLF_integrate(matrix3D<double> Mimg, matrix2D<double> A_img, int iwedge,
+    void MLF_integrate(matrix3D<double> Mimg, Matrix2D<double> A_img, int iwedge,
                        vector<matrix3D<double> > &wsum_Fimgs,
                        vector<matrix3D<double> > &wsum_Fweds,
                        vector<double> &wsum_sigma2, double &wsum_sigma_offset,

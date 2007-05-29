@@ -577,7 +577,7 @@ void CTFViewer::refreshCurves()
 void CTFViewer::recomputeCurves()
 {
     int angle = spinBoxAngle->value();
-    matrix2D<double> data;
+    Matrix2D<double> data;
     getCTFcurve("pure", angle, data);
     plotter.setCurveData(1, data);
     getCTFcurve("damping", angle, data);
@@ -644,7 +644,7 @@ void CTFViewer::setPlotSettings()
 
 // Get CTF curve -----------------------------------------------------------
 void CTFViewer::getCTFcurve(const string &type, int angle,
-                            matrix2D<double> &data, int Nsamples)
+                            Matrix2D<double> &data, int Nsamples)
 {
     double sampling_rate = ctf.Tm; // in Angstroms/pixel
     double fmax = 1.0 / (2.0 * sampling_rate);
@@ -698,7 +698,7 @@ void CTFViewer::setImageViewer()
 }
 
 // Get experimental curve --------------------------------------------------
-void CTFViewer::getExperimentalCurve(int angle, matrix2D<double> &data,
+void CTFViewer::getExperimentalCurve(int angle, Matrix2D<double> &data,
                                      int Nsamples)
 {
     double angle_rad = DEG2RAD(angle + 180.0);
@@ -714,7 +714,7 @@ void CTFViewer::getExperimentalCurve(int angle, matrix2D<double> &data,
     for (double t = 0; t < t_max; t += Ts, i++)
     {
         data(i, 0) = t * 1.0 / (XSIZE(I()) * sampling_rate);
-        data(i, 1) = I().interpolated_elem(t * cos_ang, t * sin_ang);
+        data(i, 1) = I().interpolatedElement(t * cos_ang, t * sin_ang);
         if (TenLog->isOn()) data(i, 1) = 10 * log10(data(i, 1));
         if (i == Nmax) break;
     }
@@ -734,7 +734,7 @@ void CTFViewer::generate_ctfmodel()
     // Now read the .psd and rescale it to the size of the ctfmodel
     // Remove artifactual (due to interpolation) negative values
     model.read(fn_root + ".psd");
-    model().self_scale_to_size_Bspline(3, Ydim, Xdim);
+    model().selfScaleToSizeBSpline(3, Ydim, Xdim);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(model())
     if (model(i, j) < 0) model(i, j) = 0;
 

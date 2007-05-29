@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     int rank, size, num_img_tot;
 
     double                        aux, sumCC;
-    matrix2D<double>              Maux;
+    Matrix2D<double>              Maux;
     FileName                      fn_img, fn_tmp, fn_base;
     DocFile                       DFo;
     SelFile                       SFo;

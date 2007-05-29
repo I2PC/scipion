@@ -92,7 +92,7 @@ void Prog_centilt_prm::usage()
 bool Prog_centilt_prm::center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It, double &ccf)
 {
 
-    matrix2D<double> A(3, 3), Maux(It()), Mcorr(It());
+    Matrix2D<double> A(3, 3), Maux(It()), Mcorr(It());
     int              n_max = -1;
     bool             neighbourhood = true;
     int              imax, jmax, i_actual, j_actual, x_zero = 1;
@@ -102,10 +102,10 @@ bool Prog_centilt_prm::center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It,
     if (do_stretch)
     {
         // Cosine stretching, store stretched image in Maux
-        A.init_identity();
+        A.initIdentity();
         A(0, 0) = COSD(It.Theta());
         Maux.initZeros();
-        apply_geom(Maux, A, It(), IS_INV, DONT_WRAP);
+        applyGeometry(Maux, A, It(), IS_INV, DONT_WRAP);
     }
     else Maux = It();
 
@@ -160,10 +160,10 @@ bool Prog_centilt_prm::center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It,
     yshift = (float) - ymax;
 
     // Calculate correlation coefficient
-    A.init_identity();
+    A.initIdentity();
     A(0, 2) = -xshift;
     A(1, 2) = -yshift;
-    apply_geom(Maux, A, Maux, IS_INV, DONT_WRAP);
+    applyGeometry(Maux, A, Maux, IS_INV, DONT_WRAP);
     Maux.setXmippOrigin();
     ccf = correlation_index(Iu(), Maux);
 
@@ -191,7 +191,7 @@ void Prog_centilt_prm::centilt()
     DocFile           DFo;
     FileName          fn_img;
     ImageXmipp        Iu, It;
-    matrix2D<double>  Maux, A(3, 3);
+    Matrix2D<double>  Maux, A(3, 3);
     Matrix1D<double>  dataline(6);
     double            ccf, outside;
     bool              OK;
@@ -223,7 +223,7 @@ void Prog_centilt_prm::centilt()
         A(0, 2) = -Iu.Xoff();
         A(1, 2) = -Iu.Yoff();
         outside = dMij(Iu(), 0, 0);
-        Iu().self_apply_geom(A, IS_INV, DONT_WRAP, outside);
+        Iu().self_applyGeometry(A, IS_INV, DONT_WRAP, outside);
         // Read in tilted image and apply Psi (align tilt-axis with y-axis) and shifts if present
         It.read(SFt.get_current_file());
         // Store original matrix for later output
@@ -233,7 +233,7 @@ void Prog_centilt_prm::centilt()
         A(0, 2) = -It.Xoff();
         A(1, 2) = -It.Yoff();
         outside = dMij(It(), 0, 0);
-        It().self_apply_geom(A, IS_INV, DONT_WRAP, outside);
+        It().self_applyGeometry(A, IS_INV, DONT_WRAP, outside);
         It().setXmippOrigin();
 
         if (do_center) OK = center_tilted_image(Iu, It, ccf);

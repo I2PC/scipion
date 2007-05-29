@@ -50,17 +50,17 @@ double CTF_fitness(double *);
 /* Global variables -------------------------------------------------------- */
 // Some aliases
 Adjust_CTF_Parameters *global_prm;
-matrix2D<double>      *f;               // The CTF to model
+Matrix2D<double>      *f;               // The CTF to model
 Matrix1D<double>      *global_adjust;   // Current theoretical adjustment
 
 // Frequency of each point in digital units
-matrix2D<double>       global_x_digfreq;
-matrix2D<double>       global_y_digfreq;
-matrix2D<double>       global_w_digfreq;
-matrix2D<double>       global_x_contfreq;
-matrix2D<double>       global_y_contfreq;
-matrix2D<double>       global_w_contfreq;
-matrix2D<double>       global_mask;
+Matrix2D<double>       global_x_digfreq;
+Matrix2D<double>       global_y_digfreq;
+Matrix2D<double>       global_w_digfreq;
+Matrix2D<double>       global_x_contfreq;
+Matrix2D<double>       global_y_contfreq;
+Matrix2D<double>       global_w_contfreq;
+Matrix2D<double>       global_mask;
 Matrix1D<double>       global_w_count;
 
 // Penalization for forbidden values of the parameters
@@ -705,7 +705,7 @@ void Adjust_CTF_Parameters::produce_side_info()
     double min_val = enhanced_ctftomodel().compute_min();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(global_mask)
     if (!global_mask(i, j)) enhanced_ctftomodel(i, j) = min_val;
-    matrix2D<double> aux;
+    Matrix2D<double> aux;
     median_filter3x3(enhanced_ctftomodel(), aux);
     enhanced_ctftomodel() = aux;
     enhanced_ctftomodel().range_adjust(0, enhanced_weight);
@@ -856,7 +856,7 @@ void save_intermediate_results(const FileName &fn_root, bool
 
 /* Generate model at a given size ------------------------------------------ */
 void Adjust_CTF_Parameters::generate_model_quadrant(int Ydim, int Xdim,
-        matrix2D<double> &model)
+        Matrix2D<double> &model)
 {
     Matrix1D<int>    idx(2);  // Indexes for Fourier plane
     Matrix1D<double> freq(2); // Frequencies for Fourier plane
@@ -865,7 +865,7 @@ void Adjust_CTF_Parameters::generate_model_quadrant(int Ydim, int Xdim,
     model = global_prm->enhanced_ctftomodel_fullsize();
 
     // Scale and remove negative values because of the interpolation
-    model.self_scale_to_size_Bspline(3, Ydim, Xdim);
+    model.selfScaleToSizeBSpline(3, Ydim, Xdim);
     model.range_adjust(0, 1);
 
     // Generate the CTF model
@@ -903,7 +903,7 @@ void Adjust_CTF_Parameters::generate_model_quadrant(int Ydim, int Xdim,
 }
 
 void Adjust_CTF_Parameters::generate_model_halfplane(int Ydim, int Xdim,
-        matrix2D<double> &model)
+        Matrix2D<double> &model)
 {
     Matrix1D<int>    idx(2);  // Indexes for Fourier plane
     Matrix1D<double> freq(2); // Frequencies for Fourier plane
@@ -912,7 +912,7 @@ void Adjust_CTF_Parameters::generate_model_halfplane(int Ydim, int Xdim,
     model = global_prm->enhanced_ctftomodel_fullsize();
 
     // Scale and remove negative values because of the interpolation
-    model.self_scale_to_size_Bspline(3, Ydim, Xdim);
+    model.selfScaleToSizeBSpline(3, Ydim, Xdim);
     model.range_adjust(0, 1);
 
     // The left part is the CTF model
@@ -1286,7 +1286,7 @@ void estimate_background_sqrt_parameters()
     global_ctfmodel.base_line = base_line / N;
 
     // Find the linear least squares solution for the sqrt part
-    matrix2D<double> A(2, 2);
+    Matrix2D<double> A(2, 2);
     A.initZeros();
     Matrix1D<double> b(2);
     b.initZeros();
@@ -1493,7 +1493,7 @@ void estimate_background_gauss_parameters()
 #endif
 
     // Find the linear least squares solution for the gauss part
-    matrix2D<double> A(2, 2);
+    Matrix2D<double> A(2, 2);
     A.initZeros();
     Matrix1D<double> b(2);
     b.initZeros();
@@ -1607,7 +1607,7 @@ void estimate_background_gauss_parameters2()
 #endif
 
     // Find the linear least squares solution for the gauss part
-    matrix2D<double> A(2, 2);
+    Matrix2D<double> A(2, 2);
     A.initZeros();
     Matrix1D<double> b(2);
     b.initZeros();
@@ -1796,7 +1796,7 @@ void estimate_defoci()
     double defocusV0 = -1e3, defocusU0 = -1e3;
     double defocusVF = -100e3, defocusUF = -100e3;
     double initial_defocusStep = 8e3;
-    matrix2D<double> error;
+    Matrix2D<double> error;
 
     // Check if there is no initial guess
     double min_allowed_defocusU = -100e3, max_allowed_defocusU = -1e3;

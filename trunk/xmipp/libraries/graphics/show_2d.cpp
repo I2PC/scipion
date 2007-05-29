@@ -185,9 +185,9 @@ ImageViewer::ImageViewer(FourierImageXmipp *_FFTimage, const char *name)
     if (xmipp2Qt(I)) showImage();
 }
 
-void ImageViewer::generateFFTImage(matrix2D<double> &out)
+void ImageViewer::generateFFTImage(Matrix2D<double> &out)
 {
-    matrix2D<int> Isubs;
+    Matrix2D<int> Isubs;
     Isubs.initZeros(YSIZE(xmippImageFourier), XSIZE(xmippImageFourier));
     out.initZeros(YSIZE(xmippImageFourier), XSIZE(xmippImageFourier));
     double min_positive;
@@ -286,7 +286,7 @@ void ImageViewer::doOption(int item)
     {
         Matrix1D<double> radial_profile;
         Matrix1D<int> center_of_rot(2), radial_count;
-        radial_average(xmippImage(), center_of_rot, radial_profile, radial_count);
+        radialAverage(xmippImage(), center_of_rot, radial_profile, radial_count);
         radial_profile.showWithGnuPlot("Radius", "Radial average");
         radial_profile.edit();
     }
@@ -741,7 +741,7 @@ bool ImageViewer::loadImage(const char *fileName,
     return ok;
 }
 
-bool ImageViewer::loadMatrix(matrix2D<double> &_matrix,
+bool ImageViewer::loadMatrix(Matrix2D<double> &_matrix,
                              double _minGray, double _maxGray, TLoadMode _load_mode)
 {
     load_mode = _load_mode;
@@ -986,7 +986,7 @@ void ImageViewer::keyPressEvent(QKeyEvent* e)
     case Key_N:    // Natural size (original size)
         if (e->state() == ControlButton)
         { // If 'Ctrol N' key,
-            resize(xmippImage().ColNo(), xmippImage().RowNo() + status->height());
+            resize(xmippImage().colNumber(), xmippImage().rowNumber() + status->height());
         }
         break;
     case Key_M:
@@ -994,7 +994,7 @@ void ImageViewer::keyPressEvent(QKeyEvent* e)
         if (e->state() == ControlButton)
         { // If 'Ctrol-' key,
             // Aspect ratio of the original image
-            double ratio_original = (double)xmippImage().ColNo() / xmippImage().RowNo();
+            double ratio_original = (double)xmippImage().colNumber() / xmippImage().rowNumber();
             int new_width = width() / 2;
             int new_height = ROUND(new_width / ratio_original);
             resize(new_width, new_height + status->height());
@@ -1004,7 +1004,7 @@ void ImageViewer::keyPressEvent(QKeyEvent* e)
     case Key_Plus:    // Double size
         if (e->state() == ControlButton)
         { // If 'Ctrol+' key,
-            double ratio_original = (double)xmippImage().ColNo() / xmippImage().RowNo();
+            double ratio_original = (double)xmippImage().colNumber() / xmippImage().rowNumber();
             int new_width = width() * 2;
             int new_height = ROUND(new_width / ratio_original);
             resize(new_width, new_height + status->height());
@@ -1013,7 +1013,7 @@ void ImageViewer::keyPressEvent(QKeyEvent* e)
     case Key_A:        // Aspect ratio
         if (e->state() == ControlButton)
         { // If 'Ctrol+' key,
-            double ratio = (double) xmippImage().ColNo() / (double) xmippImage().RowNo();
+            double ratio = (double) xmippImage().colNumber() / (double) xmippImage().rowNumber();
             resize(width(), (int)(width() / ratio + status->height()));
         }
         break;

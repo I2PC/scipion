@@ -105,7 +105,7 @@ void Prog_Sampling_Parameters::run()
         double rot,  tilt,  psi;
         double rotp, tiltp, psip;
         Matrix1D<double>  row(3);
-        matrix2D<double>  L(4, 4), R(4, 4);
+        Matrix2D<double>  L(4, 4), R(4, 4);
         //cerr << "mysampling.SL.SymsNo():" << mysampling.SL.SymsNo() << endl;
         for (int i = 0; i < mysampling.no_redundant_sampling_points_vector.size(); i++)
         {

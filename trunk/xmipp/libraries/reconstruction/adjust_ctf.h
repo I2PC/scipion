@@ -93,11 +93,11 @@ public:
 
     /** Generate half-plane model at a given size.
         It is assumed that ROUT_Adjust_CTF has been already run */
-    void generate_model_halfplane(int Ydim, int Xdim, matrix2D<double> &model);
+    void generate_model_halfplane(int Ydim, int Xdim, Matrix2D<double> &model);
 
     /** Generate quadrant model at a given size.
         It is assumed that ROUT_Adjust_CTF has been already run */
-    void generate_model_quadrant(int Ydim, int Xdim, matrix2D<double> &model);
+    void generate_model_quadrant(int Ydim, int Xdim, Matrix2D<double> &model);
 };
 
 /** Core of the Adjust CTF routine.

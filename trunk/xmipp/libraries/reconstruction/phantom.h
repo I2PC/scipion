@@ -137,11 +137,11 @@ public:
     /** Rotate the whole feature.
         Rotate this feature using a rotation matrix. The center as well as
         the feature itself is rotated. */
-    virtual void rotate(const matrix2D<double> &E);
+    virtual void rotate(const Matrix2D<double> &E);
 
     /** Rotate only the center.
         Rotate the center of this feature only around the phantom center*/
-    virtual void rotate_center(const matrix2D<double> &E);
+    virtual void rotate_center(const Matrix2D<double> &E);
 
     /* Inside ------------------------------------------------------------------ */
     /**@name Inside */
@@ -316,8 +316,8 @@ public:
         universal coordinate to the projection plane. So a point ru in the
         universal coordinate system, projects to VP*r. PV must be the inverse
         of the forwarding projection matrix. */
-    void project_to(Projection &P, const matrix2D<double> &VP,
-                    const matrix2D<double> &PV) const;
+    void project_to(Projection &P, const Matrix2D<double> &VP,
+                    const Matrix2D<double> &PV) const;
 
     /** Define 3D corners for a feature.
         This function returns two Z3 points where the feature is confined.
@@ -381,12 +381,12 @@ public:
         defined by a 4x4 matrix that can be generated using the geometric functions
         in xmippGeometry or xmippMatrix2D. The matrix must be the desired
         transformation (i.e., new coordinate=A*old_coordinate.
-        Don't worry because the self_apply_geom of Phantom take
+        Don't worry because the self_applyGeometry of Phantom take
         cares of passing to this function the apropriate matrix. No check is done
         about the size of A.
 
         Only the center is transformed, the feature will keep the same size.*/
-    void self_apply_geom(const matrix2D<double> &A);
+    void self_applyGeometry(const Matrix2D<double> &A);
 //@}
 
     /**@name I/O */
@@ -440,10 +440,10 @@ public:
     double             psi;
 
     /// Euler matrix
-    matrix2D<double>   euler;
+    Matrix2D<double>   euler;
 
     /// Inverse Euler matrix
-    matrix2D<double>   eulert;
+    Matrix2D<double>   eulert;
 public:
     virtual ~Oriented_Feature()
     {}
@@ -464,7 +464,7 @@ public:
     /** Rotate.
         Rotate this feature. The center as well as the feature itself are
         rotated. */
-    virtual void rotate(const matrix2D<double> &E);
+    virtual void rotate(const Matrix2D<double> &E);
 };
 
 /* SPHERES ================================================================= */
@@ -1507,7 +1507,7 @@ public:
 
     /** Rotate.
         Rotate a phantom after a given 3D rotation. */
-    void rotate(const matrix2D<double> &E);
+    void rotate(const Matrix2D<double> &E);
 
     /** Apply a general geometric transformation.
         The transformation must be defined by a 4x4 matrix that can be
@@ -1517,7 +1517,7 @@ public:
         are not INV.
 
         An exception is thrown if the matrix A is not valid.*/
-    void self_apply_geom(const matrix2D<double> &A, int inv);
+    void self_applyGeometry(const Matrix2D<double> &A, int inv);
 
     /** Project phantom from a direction.
         The direction is specified by the 3 Euler angles (as usual, rot=1st,
@@ -1531,14 +1531,14 @@ public:
         deformed position=A*undeformed position
         \end{verbatim}*/
     void project_to(Projection &P, int Ydim, int Xdim,
-                    double rot, double tilt, double psi, const matrix2D<double> *A = NULL) const;
+                    double rot, double tilt, double psi, const Matrix2D<double> *A = NULL) const;
 
     /** Project phantom from a direction.
         The same as before but this time the projection is supposed to be
         already resized and with the right center. The phantom projection
         is added to the already drawn projection. */
     void project_to(Projection &P,
-                    double rot, double tilt, double psi, const matrix2D<double> *A = NULL) const;
+                    double rot, double tilt, double psi, const Matrix2D<double> *A = NULL) const;
 
     /** Project phantom using a conversion matrix.
         The same as before but this time the projection is supposed to be
@@ -1551,7 +1551,7 @@ public:
         then the ith phantom feature is skiped with a provability =
         1-disappearing_th*/
 
-    void project_to(Projection &P, const matrix2D<double> &VP, double    disappearing_th = 1.0) const;
+    void project_to(Projection &P, const Matrix2D<double> &VP, double    disappearing_th = 1.0) const;
 
 #define POS_NEG 1
 #define NEG_POS 2

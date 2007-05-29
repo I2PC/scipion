@@ -61,7 +61,7 @@ void process_correction(Projection &corr_proj)
     denoiser.scale = 3;
     denoiser.output_scale = 0;
     denoiser.produce_side_info();
-    matrix2D<double> denoised = corr_proj();
+    Matrix2D<double> denoised = corr_proj();
     denoiser.denoise(denoised);
 #ifdef DEBUG
     ImageXmipp save;
@@ -93,9 +93,9 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
     double           sqrtweight, dim2, norma, normb, apply_kappa;
     ImageOver        *footprint = (ImageOver *) & prm.basis.blobprint;
     ImageOver        *footprint2 = (ImageOver *) & prm.basis.blobprint2;
-    matrix2D<double> *A = NULL;
-    vector<matrix2D<double> > newres_imgs;
-    matrix2D<int>    mask;
+    Matrix2D<double> *A = NULL;
+    vector<Matrix2D<double> > newres_imgs;
+    Matrix2D<int>    mask;
 
     residual_vol.resize(vol_basis);
     residual_vol.initZeros();
@@ -285,8 +285,8 @@ void ART_single_step(
 // Project structure .......................................................
     // The correction image is reused in this call to store the normalising
     // projection, ie, the projection of an all-1 volume
-    matrix2D<double> *A = NULL;
-    if (prm.print_system_matrix) A = new matrix2D<double>;
+    Matrix2D<double> *A = NULL;
+    if (prm.print_system_matrix) A = new Matrix2D<double>;
     corr_proj().initZeros();
     project_Volume(vol_in, prm.basis, theo_proj,
                    corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),

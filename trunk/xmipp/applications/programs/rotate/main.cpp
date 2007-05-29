@@ -38,7 +38,7 @@ public:
     double ang;
     bool wrap;
 
-    matrix2D<double> A3D, A2D;
+    Matrix2D<double> A3D, A2D;
 
     void read(int argc, char **argv)
     {
@@ -53,13 +53,13 @@ public:
             rot  = AtoF(argv[i+1]);
             tilt = AtoF(argv[i+2]);
             psi  = AtoF(argv[i+3]);
-            A3D = Euler_rot3D_matrix(rot, tilt, psi);
+            A3D = Euler_rotation3DMatrix(rot, tilt, psi);
         }
-        else if (check_param(argc, argv, "-align_with_Z"))
+        else if (check_param(argc, argv, "-alignWithZ"))
         {
             Align_mode = true;
-            axis = get_vector_param(argc, argv, "-align_with_Z", 3);
-            A3D = align_with_Z(axis);
+            axis = get_vector_param(argc, argv, "-alignWithZ", 3);
+            A3D = alignWithZ(axis);
         }
         else
         {
@@ -69,7 +69,7 @@ public:
             else
                 axis = vectorR3(0., 0., 1.);
             ang = AtoF(get_param(argc, argv, "-ang"));
-            A3D = rot3D_matrix(ang, axis);
+            A3D = rotation3DMatrix(ang, axis);
             A2D = A3D;
             A2D.window(0, 0, 2, 2);
         }
@@ -93,7 +93,7 @@ public:
     {
         Prog_parameters::usage();
         cerr << "  [-euler <rot> <tilt> <psi>        : Rotate with these Euler angles\n"
-        << "  [-align_with_Z \"[<x>,<y>,<z>]\"]   : Align (x,y,z) with Z\n"
+        << "  [-alignWithZ \"[<x>,<y>,<z>]\"]   : Align (x,y,z) with Z\n"
         << "                                      Notice that brackets for the\n"
         << "                                      vector must be written and do not\n"
         << "                                      represent optional parameters\n"
@@ -109,7 +109,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
     Image img_out;
     if (XSIZE(eprm->A2D) != 0)
     {
-        apply_geom_Bspline(img_out(), eprm->A2D, img(), 3, IS_NOT_INV, eprm->wrap);
+        applyGeometryBSpline(img_out(), eprm->A2D, img(), 3, IS_NOT_INV, eprm->wrap);
         img() = img_out();
     }
     return true;
@@ -119,7 +119,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
     Rotate_parameters *eprm = (Rotate_parameters *) prm;
     Volume vol_out;
-    apply_geom_Bspline(vol_out(), eprm->A3D, vol(), 3, IS_NOT_INV, eprm->wrap);
+    applyGeometryBSpline(vol_out(), eprm->A3D, vol(), 3, IS_NOT_INV, eprm->wrap);
     vol() = vol_out();
     return true;
 }
@@ -141,7 +141,7 @@ int main(int argc, char **argv)
                #include "prog_line.mnu"
                $ROTATION_METHOD
                [-euler $ROT $TILT $PSI]
-               [-align_with_Z] [-axis]["["$X","$Y","$Z"]"]
+               [-alignWithZ] [-axis]["["$X","$Y","$Z"]"]
                [-ang $ANG]
                [-dont_wrap]
       }
@@ -150,11 +150,11 @@ int main(int argc, char **argv)
         $ROTATION_METHOD {
            label="Rotation action";
            type=list {
-              "Euler rotation" {OPT(-euler)=1; OPT(-align_with_Z)=0;
+              "Euler rotation" {OPT(-euler)=1; OPT(-alignWithZ)=0;
                                 OPT(-axis)=0; OPT($X)=0;}
-              "Align with Z"   {OPT(-euler)=0; OPT(-align_with_Z)=1;
+              "Align with Z"   {OPT(-euler)=0; OPT(-alignWithZ)=1;
                                 OPT(-axis)=0; OPT($X)=1;}
-              "Around an axis" {OPT(-euler)=0; OPT(-align_with_Z)=0;
+              "Around an axis" {OPT(-euler)=0; OPT(-alignWithZ)=0;
                                 OPT(-axis)=1; OPT($X)=1;}
            };
         }
@@ -162,7 +162,7 @@ int main(int argc, char **argv)
            $ROT  {type=float; label="Rotational angle";}
            $TILT {type=float; label="Tilting angle";}
            $PSI  {type=float; label="In-plane rotation";}
-        OPT(-align_with_Z) {label="Align with Z";}
+        OPT(-alignWithZ) {label="Align with Z";}
         OPT($X) {label="Axis";}
            $Z  {type=float; label="Z ";}
            $Y  {type=float; label="Y ";}
@@ -178,7 +178,7 @@ int main(int argc, char **argv)
       "Rotation parameters"
       $ROTATION_METHOD
       OPT(-euler)
-      OPT(-align_with_Z)
+      OPT(-alignWithZ)
       OPT(-axis)
       OPT($X)
       OPT($ANG)

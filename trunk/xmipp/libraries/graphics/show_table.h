@@ -200,7 +200,7 @@ protected:
     virtual void producePixmapAt(int i) = 0;
     /* Scale to currScale and produce the output minGray and maxGray
        for an ImageXmipp. This function is used by producePixmapAt.*/
-    virtual void scale_and_normalize(matrix2D<double> &I, bool normalize,
+    virtual void scale_and_normalize(Matrix2D<double> &I, bool normalize,
                                      int &minGray, int &maxGray);
     /* How to check if the pixmap is old or not */
     virtual void insert_content_in_queue(int i)

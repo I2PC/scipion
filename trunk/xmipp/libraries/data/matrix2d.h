@@ -44,20 +44,20 @@
 #include <external/bilib/headers/pyramidtools.h>
 
 // TODO Remove this..
-#define maT  matrix2D< T >
-#define maT1 matrix2D< T1 >
+#define maT  Matrix2D< T >
+#define maT1 Matrix2D< T1 >
 #undef  maTC
-#define maTC matrix2D< complex< double > >
+#define maTC Matrix2D< complex< double > >
 
 #include "multidim_friends.inc"
 
 // TODO Document
 template<typename T>
-mT mul_elements(const mT& op1, const mT& op2);
+mT multiplyElements(const mT& op1, const mT& op2);
 
 // TODO Document
 template<typename T>
-void mul_matrix(const mT& op1, const mT& op2, mT& result);
+void multiplyMatrix(const mT& op1, const mT& op2, mT& result);
 
 // TODO Document
 template<typename T>
@@ -73,10 +73,10 @@ void solve(const mT& A, const mT& b, mT& result);
  * (But it's slower)
  */
 template<typename T>
-void solve_by_svd(const mT& A,
-                  const vT& b,
-                  Matrix1D< double >& result,
-                  double tolerance);
+void solveBySVD(const mT& A,
+                const vT& b,
+                Matrix1D< double >& result,
+                double tolerance);
 
 // TODO Document
 template<typename T>
@@ -88,22 +88,22 @@ void lubksb(const mT& LU, Matrix1D< int >& indx, vT& b);
 
 // TODO Document
 template<typename T>
-void svdcmp(const matrix2D< T >& a,
-            matrix2D< double >& u,
+void svdcmp(const Matrix2D< T >& a,
+            Matrix2D< double >& u,
             Matrix1D< double >& w,
-            matrix2D< double >& v);
+            Matrix2D< double >& v);
 
 // TODO Document
-void svbksb(matrix2D< double >& u,
+void svbksb(Matrix2D< double >& u,
             Matrix1D< double >& w,
-            matrix2D< double >& v,
+            Matrix2D< double >& v,
             Matrix1D< double >& b,
             Matrix1D< double >& x);
 
 // TODO Document
 template<typename T>
-void apply_geom(mT& m2,
-                matrix2D< double > A,
+void applyGeometry(mT& m2,
+                Matrix2D< double > A,
                 const mT& m1,
                 bool inv,
                 bool wrap,
@@ -111,8 +111,8 @@ void apply_geom(mT& m2,
 
 // TODO Document
 template<typename T>
-void apply_geom_Bspline(mT& m2,
-                        matrix2D< double > A,
+void applyGeometryBSpline(mT& m2,
+                        Matrix2D< double > A,
                         const mT& m1,
                         int Splinedegree,
                         bool inv,
@@ -120,13 +120,13 @@ void apply_geom_Bspline(mT& m2,
                         T outside = (T) 0);
 
 // TODO Document
-matrix2D< double > rot2D_matrix(double ang);
+Matrix2D< double > rotation2DMatrix(double ang);
 
 // TODO Document
-matrix2D< double > translation2D_matrix(const Matrix1D< double > v);
+Matrix2D< double > translation2DMatrix(const Matrix1D< double > v);
 
 // TODO Document
-int best_prec(float F, int _width);
+int bestPrecision(float F, int _width);
 
 /// @defgroup Matrices Xmipp Matrices
 
@@ -183,7 +183,7 @@ int best_prec(float F, int _width);
 /** Access to Y dimension (size)
  * @ingroup MatricesSizeShape
  *
- * This is a macro equivalent to RowNo()
+ * This is a macro equivalent to rowNumber()
  *
  * @code
  * // Set to 0 1 element out of 4
@@ -251,7 +251,7 @@ int best_prec(float F, int _width);
  * SPEED_UP_temps.
  *
  * @code
- * matrix2D< double > m1(10, 10), m2(20, 20);
+ * Matrix2D< double > m1(10, 10), m2(20, 20);
  * m1.setXmippOrigin();
  * m2.setXmippOrigin();
  *
@@ -358,7 +358,7 @@ int best_prec(float F, int _width);
  *     SPEED_UP_temps;
  *
  *     Matrix1D< double > a(3), b(3);
- *     matrix2D< double > M(3, 3);
+ *     Matrix2D< double > M(3, 3);
  *
  *     M.init_random(0, 1);
  *     b.init_random(0, 1);
@@ -428,7 +428,7 @@ int best_prec(float F, int _width);
  *     SPEED_UP_temps;
  *
  *     Matrix1D< double > a(2), b(2);
- *     matrix2D< double > M(2, 2);
+ *     Matrix2D< double > M(2, 2);
  *
  *     M.init_random(0, 1);
  *     b.init_random(0, 1);
@@ -500,7 +500,7 @@ int best_prec(float F, int _width);
 /// Template class for Xmipp matrices
 /// @ingroup Matrices
 template<typename T>
-class matrix2D
+class Matrix2D
 {
 // FIXME ...
 #include "multidim_basic.h"
@@ -514,7 +514,7 @@ public:
 
 protected:
     /// Matrix multiplication in a algebraic way
-    friend void mul_matrix<>(const mT& op1, const mT& op2, mT& result);
+    friend void multiplyMatrix<>(const mT& op1, const mT& op2, mT& result);
 
     /** The following functions are directly an interface to the Numerical
      * Recipes ones with the same name, but with a better interface LU
@@ -536,10 +536,10 @@ public:
      * origin=0, size=0, no statistics, ...
      *
      * @code
-     * matrix2D< double > m1;
+     * Matrix2D< double > m1;
      * @endcode
      */
-    matrix2D()
+    Matrix2D()
     {
         core_init();
         initShape();
@@ -555,10 +555,10 @@ public:
      * rows), and the second the X dimension (number of columns).
      *
      * @code
-     * matrix2D< double > v1(6, 3);
+     * Matrix2D< double > v1(6, 3);
      * @endcode
      */
-    matrix2D(int Ydim, int Xdim)
+    Matrix2D(int Ydim, int Xdim)
     {
         core_init();
         initShape();
@@ -583,10 +583,10 @@ public:
      * different memory assignment.
      *
      * @code
-     * matrix2D< double > m2(m1);
+     * Matrix2D< double > m2(m1);
      * @endcode
      */
-    matrix2D(const mT& v)
+    Matrix2D(const mT& v)
     {
         core_init();
         initShape();
@@ -595,7 +595,7 @@ public:
 
     /// Destructor
     /// @ingroup MatricesConstructors
-    ~matrix2D()
+    ~Matrix2D()
     {
         core_deallocate();
     }
@@ -610,12 +610,12 @@ public:
      * generated of size (Xdim x Xdim).
      *
      * @code
-     * m.init_identity();
+     * m.initIdentity();
      * @endcode
      */
-    void init_identity()
+    void initIdentity()
     {
-        init_identity(XSIZE(*this));
+        initIdentity(XSIZE(*this));
     }
 
     /** Identity matrix of a given size
@@ -624,12 +624,12 @@ public:
      * A (dim x dim) identity matrix is generated.
      *
      * @code
-     * m.init_identity(3);
+     * m.initIdentity(3);
      * @endcode
      */
-    void init_identity(int dim)
+    void initIdentity(int dim)
     {
-        init_identity(dim, dim);
+        initIdentity(dim, dim);
     }
 
     /** Identity matrix of a given size
@@ -639,10 +639,10 @@ public:
      * of the matrix such that i = j is equal to 1.
      *
      * @code
-     * m.init_identity(2, 3);
+     * m.initIdentity(2, 3);
      * @endcode
      */
-    void init_identity(int Ydim, int Xdim)
+    void initIdentity(int Ydim, int Xdim)
     {
         if (Xdim == 0 || Ydim == 0)
         {
@@ -679,10 +679,10 @@ public:
      * according to the shape.
      *
      * @code
-     * matrix2D< double > m = from_vector(v);
+     * Matrix2D< double > m = fromVector(v);
      * @endcode
      */
-    void from_vector(const vT& op1)
+    void fromVector(const vT& op1)
     {
         // Null vector => Null matrix
         if (XSIZE(op1) == 0)
@@ -723,10 +723,10 @@ public:
      *
      * @code
      * Matrix1D< double > v;
-     * m.to_vector(v);
+     * m.toVector(v);
      * @endcode
      */
-    void to_vector(vT& op1) const
+    void toVector(vT& op1) const
     {
         // Null matrix => Null vector
         if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
@@ -910,7 +910,7 @@ public:
     /** Load from numerical recipes result.
      * @ingroup MatricesSize
      */
-    void load_from_numerical_recipes(T** m, int Ydim, int Xdim)
+    void loadFromNumericalRecipes(T** m, int Ydim, int Xdim)
     {
         resize(Ydim, Xdim);
 
@@ -1010,7 +1010,7 @@ public:
     /** Another function for setting the Y origin
      * @ingroup MatricesSize
      */
-    void set_startingY(int _yinit)
+    void setStartingY(int _yinit)
     {
         yinit = _yinit;
     }
@@ -1102,10 +1102,10 @@ public:
      * @ingroup MatricesSize
      *
      * @code
-     * int Ydim = m.RowNo();
+     * int Ydim = m.rowNumber();
      * @endcode
      */
-    int RowNo() const
+    int rowNumber() const
     {
         return ydim;
     }
@@ -1114,10 +1114,10 @@ public:
      * @ingroup MatricesSize
      *
      * @code
-     * int Xdim = m.ColNo();
+     * int Xdim = m.colNumber();
      * @endcode
      */
-    int ColNo() const
+    int colNumber() const
     {
         return xdim;
     }
@@ -1169,7 +1169,7 @@ public:
      *
      * Logical access
      */
-    T get_pixel(int i, int j) const
+    T getPixel(int i, int j) const
     {
         return (*this)(i, j);
     }
@@ -1179,7 +1179,7 @@ public:
      *
      * Logical access
      */
-    void set_pixel(int i, int j, T val)
+    void setPixel(int i, int j, T val)
     {
         (*this)(i, j) = val;
     }
@@ -1218,7 +1218,7 @@ public:
      *
      * Bilinear interpolation. (x,y) are in logical coordinates.
      */
-    T interpolated_elem(double x, double y, T outside_value = (T) 0) const
+    T interpolatedElement(double x, double y, T outside_value = (T) 0) const
     {
         int x0 = FLOOR(x);
         double fx = x - x0;
@@ -1248,13 +1248,13 @@ public:
      * splines would be:
      *
      * @code
-     * matrix2D< double > Bspline_coeffs;
-     * myImage.produce_spline_coeffs(Bspline_coeffs, 3);
-     * interpolated_value = Bspline_coeffs.interpolated_elem_as_Bspline(0.5,
+     * Matrix2D< double > Bspline_coeffs;
+     * myImage.produceSplineCoefficients(Bspline_coeffs, 3);
+     * interpolated_value = Bspline_coeffs.interpolatedElementBSpline(0.5,
      * 0.5,3);
      * @endcode
      */
-    T interpolated_elem_as_Bspline(double x, double y, int SplineDegree = 3) const
+    T interpolatedElementBSpline(double x, double y, int SplineDegree = 3) const
     {
         int SplineDegree_1 = SplineDegree - 1;
 
@@ -1370,7 +1370,7 @@ public:
 
         for (int i = 0; i < N; i++)
         {
-            profile(i) = interpolated_elem(tx, ty);
+            profile(i) = interpolatedElement(tx, ty);
             tx += tx_step;
             ty += ty_step;
         }
@@ -1572,7 +1572,7 @@ public:
                                char operation)
     {
         if (operation == '*')
-            mul_matrix(op1, op2, result);
+            multiplyMatrix(op1, op2, result);
         else
         {
             if (operation == 'x')
@@ -1584,7 +1584,7 @@ public:
                              operation + ")");
 
             result.resize(op1);
-            core_arrayByArray(op1, op2, result, operation);
+            coreArrayByArray(op1, op2, result, operation);
         }
     }
 
@@ -1742,7 +1742,7 @@ public:
      * pseudoinverse is returned.
      *
      * @code
-     * matrix2D< double > m1_inv;
+     * Matrix2D< double > m1_inv;
      * m1.inv(m1_inv);
      * @endcode
      */
@@ -1752,7 +1752,7 @@ public:
             REPORT_ERROR(1108, "Inverse: Matrix is empty");
 
         // Perform SVD decomposition
-        matrix2D< double > u, v;
+        Matrix2D< double > u, v;
         Matrix1D< double > w;
         svdcmp(*this, u, w, v); // *this = U * W * V^t
 
@@ -1907,24 +1907,24 @@ public:
      * The inverse mode and wrapping mode should be taken by default by the
      * routine, g++ seems to have problems with template functions outside a
      * class with default parameters. So, I'm sorry, you will have to put them
-     * always. The usual combination is apply_geom(..., IS_NOT_INV, DONT_WRAP).
+     * always. The usual combination is applyGeometry(..., IS_NOT_INV, DONT_WRAP).
      * Although you can also use the constants IS_INV, or WRAP.
      *
      * m2 cannot be the same matrix as m1.
      *
      * @code
-     * matrix2D< double > A(3, 3);
-     * A.init_identity;
-     * apply_geom(m2, A, m1);
+     * Matrix2D< double > A(3, 3);
+     * A.initIdentity;
+     * applyGeometry(m2, A, m1);
      * @endcode
      */
-    friend void apply_geom<>(mT& m2, matrix2D< double > A,
+    friend void applyGeometry<>(mT& m2, Matrix2D< double > A,
                              const mT& m1, bool inv, bool wrap, T outside);
 
     /** Apply geom with B-spline interpolation
      * @ingroup MatricesGeometrical
      */
-    friend void apply_geom_Bspline<>(mT& m2, matrix2D< double > A,
+    friend void applyGeometryBSpline<>(mT& m2, Matrix2D< double > A,
                                      const mT& m1, int Splinedegree, bool inv,
                                      bool wrap, T outside);
 
@@ -1933,11 +1933,11 @@ public:
      *
      * Same as the previous one, but the result is kept in this object
      */
-    void self_apply_geom(matrix2D< double > A, bool inv, bool wrap,
+    void self_applyGeometry(Matrix2D< double > A, bool inv, bool wrap,
                          T outside = (T) 0)
     {
         mT aux;
-        apply_geom(aux, A, *this, inv, wrap, outside);
+        applyGeometry(aux, A, *this, inv, wrap, outside);
 
         *this = aux;
     }
@@ -1945,11 +1945,11 @@ public:
     /** Self apply geom with Bspline interpolation
      *@ingroup MatricesGeometrical
      */
-    void self_apply_geom_Bspline(matrix2D< double > A, int SplineDegree,
+    void selfApplyGeometryBSpline(Matrix2D< double > A, int SplineDegree,
                                  bool inv, bool wrap, T outside = (T) 0)
     {
         mT aux;
-        apply_geom_Bspline(aux, A, *this, SplineDegree, inv, wrap, outside);
+        applyGeometryBSpline(aux, A, *this, SplineDegree, inv, wrap, outside);
 
         *this = aux;
     }
@@ -1970,8 +1970,8 @@ public:
      */
     void rotate(double ang, mT& result, bool wrap = DONT_WRAP) const
     {
-        matrix2D< double > temp = rot2D_matrix(ang);
-        apply_geom(result, temp, *this, IS_NOT_INV, wrap);
+        Matrix2D< double > temp = rotation2DMatrix(ang);
+        applyGeometry(result, temp, *this, IS_NOT_INV, wrap);
     }
 
     /** Rotate matrix
@@ -1992,7 +1992,7 @@ public:
      *
      * Same as the previous one, but the result is kept in this object
      */
-    void self_rotate(double ang, bool wrap = DONT_WRAP)
+    void selfRotate(double ang, bool wrap = DONT_WRAP)
     {
         mT aux;
         rotate(ang, aux, wrap);
@@ -2009,11 +2009,11 @@ public:
      * m1.rotate(60, m2);
      * @endcode
      */
-    void rotate_Bspline(int Splinedegree,
+    void rotateBSpline(int Splinedegree,
                         double ang, mT& result, bool wrap = DONT_WRAP) const
     {
-        matrix2D< double > temp = rot2D_matrix(ang);
-        apply_geom_Bspline(result, temp, *this, Splinedegree, IS_NOT_INV, wrap);
+        Matrix2D< double > temp = rotation2DMatrix(ang);
+        applyGeometryBSpline(result, temp, *this, Splinedegree, IS_NOT_INV, wrap);
     }
 
     /** Rotate matrix (using Bspline interpolation)
@@ -2021,10 +2021,10 @@ public:
      *
      * Same as the previous one.
      */
-    mT rotate_Bspline(int Splinedegree, double ang, bool wrap = DONT_WRAP) const
+    mT rotateBSpline(int Splinedegree, double ang, bool wrap = DONT_WRAP) const
     {
         mT aux;
-        rotate_Bspline(Splinedegree, ang, aux, wrap);
+        rotateBSpline(Splinedegree, ang, aux, wrap);
 
         return aux;
     }
@@ -2034,10 +2034,10 @@ public:
      *
      * Same as the previous one, but the result is kept in this object
      */
-    void self_rotate_Bspline(int Splinedegree, double ang, bool wrap = DONT_WRAP)
+    void selfRotateBSpline(int Splinedegree, double ang, bool wrap = DONT_WRAP)
     {
         mT aux;
-        rotate_Bspline(Splinedegree, ang, aux, wrap);
+        rotateBSpline(Splinedegree, ang, aux, wrap);
 
         *this = aux;
     }
@@ -2056,8 +2056,8 @@ public:
     void translate(const Matrix1D< double >& v, mT& result,
                    bool wrap = WRAP) const
     {
-        matrix2D< double > temp = translation2D_matrix(v);
-        apply_geom(result, temp, *this, IS_NOT_INV, wrap);
+        Matrix2D< double > temp = translation2DMatrix(v);
+        applyGeometry(result, temp, *this, IS_NOT_INV, wrap);
     }
 
     /** Translate matrix
@@ -2078,7 +2078,7 @@ public:
      *
      * Same as the previous one, but the result is kept in this object
      */
-    void self_translate(const Matrix1D< double >& v, bool wrap = WRAP)
+    void selfTranslate(const Matrix1D< double >& v, bool wrap = WRAP)
     {
         mT aux;
         translate(v, aux, wrap);
@@ -2097,12 +2097,12 @@ public:
      * m2 = m1.translate(vectorR2(0, 2));
      * @endcode
      */
-    void translate_Bspline(int Splinedegree,
+    void translateBSpline(int Splinedegree,
                            const Matrix1D< double >& v, mT& result,
                            bool wrap = WRAP) const
     {
-        matrix2D< double > temp = translation2D_matrix(v);
-        apply_geom_Bspline(result, temp, *this, Splinedegree, IS_NOT_INV, wrap);
+        Matrix2D< double > temp = translation2DMatrix(v);
+        applyGeometryBSpline(result, temp, *this, Splinedegree, IS_NOT_INV, wrap);
     }
 
     /** Translate matrix (using Bspline interpolation)
@@ -2110,11 +2110,11 @@ public:
      *
      * Same as the previous one.
      */
-    mT translate_Bspline(int Splinedegree,
+    mT translateBSpline(int Splinedegree,
                          const Matrix1D< double >& v, bool wrap = WRAP) const
     {
         mT aux;
-        translate_Bspline(Splinedegree, v, aux, wrap);
+        translateBSpline(Splinedegree, v, aux, wrap);
 
         return aux;
     }
@@ -2124,11 +2124,11 @@ public:
      *
      * Same as the previous one, but the result is kept in this object
      */
-    void self_translate_Bspline(int Splinedegree,
+    void selfTranslateBSpline(int Splinedegree,
                                 const Matrix1D< double >& v, bool wrap = WRAP)
     {
         mT aux;
-        translate_Bspline(Splinedegree, v, aux, wrap);
+        translateBSpline(Splinedegree, v, aux, wrap);
 
         *this = aux;
     }
@@ -2139,13 +2139,13 @@ public:
      * If the input has very high values, it is better to rescale it to be
      * between 0 and 1.
      */
-    void self_translate_centerOfMass_to_center(bool wrap = WRAP)
+    void selfTranslateCenterOfMassToCenter(bool wrap = WRAP)
     {
         setXmippOrigin();
         Matrix1D< double > center;
         centerOfMass(center);
         center *= -1;
-        self_translate(center, wrap);
+        selfTranslate(center, wrap);
     }
 
     /** Translate center of mass to center (using Bspline interpolation)
@@ -2154,14 +2154,14 @@ public:
      * If the input has very high values, it is better to rescale it to be
      * between 0 and 1.
      */
-    void self_translate_centerOfMass_to_center_Bspline(
+    void selfTranslateCenterOfMassToCenterBSpline(
         int Splinedegree, bool wrap = WRAP)
     {
         setXmippOrigin();
         Matrix1D< double > center;
         centerOfMass(center);
         center *= -1;
-        self_translate_Bspline(Splinedegree, center, wrap);
+        selfTranslateBSpline(Splinedegree, center, wrap);
     }
 
     /** Scales to a new size
@@ -2172,19 +2172,19 @@ public:
      * the actual one. But the result matrix cannot be this object.
      *
      * @code
-     * m1.scale_to_size(128, 128);
+     * m1.scaleToSize(128, 128);
      * @endcode
      */
-    void scale_to_size(int Ydim, int Xdim, mT& result) const
+    void scaleToSize(int Ydim, int Xdim, mT& result) const
     {
-        matrix2D< double > temp(3, 3);
+        Matrix2D< double > temp(3, 3);
         result.resize(Ydim, Xdim);
-        temp.init_identity();
+        temp.initIdentity();
 
         DIRECT_MAT_ELEM(temp, 0, 0) = (double) Xdim / (double) XSIZE(*this);
         DIRECT_MAT_ELEM(temp, 1, 1) = (double) Ydim / (double) YSIZE(*this);
 
-        apply_geom(result, temp, *this, IS_NOT_INV, WRAP);
+        applyGeometry(result, temp, *this, IS_NOT_INV, WRAP);
     }
 
     /** Scales to a new size
@@ -2192,10 +2192,10 @@ public:
      *
      * Same as the previous one.
      */
-    mT scale_to_size(int Ydim, int Xdim) const
+    mT scaleToSize(int Ydim, int Xdim) const
     {
         mT aux;
-        scale_to_size(Ydim, Xdim, aux);
+        scaleToSize(Ydim, Xdim, aux);
 
         return aux;
     }
@@ -2205,10 +2205,10 @@ public:
      *
      * Same as the previous one, but the result is kept in this object.
      */
-    void self_scale_to_size(int Ydim, int Xdim)
+    void selfScaleToSize(int Ydim, int Xdim)
     {
         mT aux;
-        scale_to_size(Ydim, Xdim, aux);
+        scaleToSize(Ydim, Xdim, aux);
 
         *this = aux;
     }
@@ -2221,20 +2221,20 @@ public:
      * the actual one. But the result matrix cannot be this object.
      *
      * @code
-     * m1.scale_to_size(128, 128);
+     * m1.scaleToSize(128, 128);
      * @endcode
      */
-    void scale_to_size_Bspline(int Splinedegree,
+    void scaleToSizeBSpline(int Splinedegree,
                                int Ydim, int Xdim, mT& result) const
     {
-        matrix2D< double > temp(3, 3);
+        Matrix2D< double > temp(3, 3);
         result.resize(Ydim, Xdim);
-        temp.init_identity();
+        temp.initIdentity();
 
         DIRECT_MAT_ELEM(temp, 0, 0) = (double) Xdim / (double) XSIZE(*this);
         DIRECT_MAT_ELEM(temp, 1, 1) = (double) Ydim / (double) YSIZE(*this);
 
-        apply_geom_Bspline(result, temp, *this, Splinedegree, IS_NOT_INV, WRAP);
+        applyGeometryBSpline(result, temp, *this, Splinedegree, IS_NOT_INV, WRAP);
     }
 
     /** Scales to a new size (using Bspline interpolation)
@@ -2242,10 +2242,10 @@ public:
      *
      * Same as the previous one.
      */
-    mT scale_to_size_Bspline(int Splinedegree, int Ydim, int Xdim) const
+    mT scaleToSizeBSpline(int Splinedegree, int Ydim, int Xdim) const
     {
         mT aux;
-        scale_to_size_Bspline(Splinedegree, Ydim, Xdim, aux);
+        scaleToSizeBSpline(Splinedegree, Ydim, Xdim, aux);
 
         return aux;
     }
@@ -2255,10 +2255,10 @@ public:
      *
      * Same as the previous one, but the result is kept in this object.
      */
-    void self_scale_to_size_Bspline(int Splinedegree, int Ydim, int Xdim)
+    void selfScaleToSizeBSpline(int Splinedegree, int Ydim, int Xdim)
     {
         mT aux;
-        scale_to_size_Bspline(Splinedegree, Ydim, Xdim, aux);
+        scaleToSizeBSpline(Splinedegree, Ydim, Xdim, aux);
 
         *this = aux;
     }
@@ -2270,7 +2270,7 @@ public:
      * given size. The last columns and rows are removed if the size of the
      * original image is not an exact multiple of the given superpixel size
      */
-    void superpixel_reduce(mT& result, int size = 2) const
+    void superpixelReduce(mT& result, int size = 2) const
     {
         result.initZeros(YSIZE(*this) / size, XSIZE(*this) / size);
         int size2 = size * size;
@@ -2292,7 +2292,7 @@ public:
      * This function copies each pixel to a new image as many times as the size
      * of the superpixel.
      */
-    void superpixel_expand(mT& result, int size = 2) const
+    void superpixelExpand(mT& result, int size = 2) const
     {
         result.initZeros(YSIZE(*this) * size, XSIZE(*this) * size);
 
@@ -2308,36 +2308,36 @@ public:
     /** Reduce the image by 2 using a BSpline pyramid
      * @ingroup MatricesGeometrical
      */
-    void pyramid_reduce(matrix2D< double >& result, int levels = 1) const
+    void pyramidReduce(Matrix2D< double >& result, int levels = 1) const
     {
-        matrix2D< double > aux, aux2;
-        produce_spline_coeffs(aux, 3);
+        Matrix2D< double > aux, aux2;
+        produceSplineCoefficients(aux, 3);
 
         for (int i = 0; i < levels; i++)
         {
-            aux.reduce_Bspline(aux2, 3);
+            aux.reduceBSpline(aux2, 3);
             aux = aux2;
         }
 
-        aux2.produce_image_from_spline_coeffs(result, 3);
+        aux2.produceImageFromSplineCoefficients(result, 3);
     }
 
     /** Expand the image by 2 using a BSpline pyramid
      * @ingroup MatricesGeometrical
      */
-    void pyramid_expand(matrix2D< double >& result, int levels = 1) const
+    void pyramidExpand(Matrix2D< double >& result, int levels = 1) const
     {
-        matrix2D< double > aux, aux2;
-        produce_spline_coeffs(aux, 3);
+        Matrix2D< double > aux, aux2;
+        produceSplineCoefficients(aux, 3);
         cout << levels << endl;
 
         for (int i = 0; i < levels; i++)
         {
-            aux.expand_Bspline(aux2, 3);
+            aux.expandBSpline(aux2, 3);
             aux = aux2;
         }
 
-        aux2.produce_image_from_spline_coeffs(result, 3);
+        aux2.produceImageFromSplineCoefficients(result, 3);
     }
 
 #ifndef DBL_EPSILON
@@ -2350,9 +2350,9 @@ public:
      * This function produces a set of Bspline coefficients that interpolate
      * well this matrix. The coefficients have the same shape as this matrix. To
      * use the coefficients for interpolation see the function
-     * interpolated_elem_as_Bspline.
+     * interpolatedElementBSpline.
      */
-    void produce_spline_coeffs(matrix2D< double >& coeffs,
+    void produceSplineCoefficients(Matrix2D< double >& coeffs,
                                int SplineDegree = 3) const
     {
         coeffs.initZeros(YSIZE(*this), XSIZE(*this));
@@ -2361,7 +2361,7 @@ public:
         STARTINGY(coeffs) = STARTINGY(*this);
 
         int Status;
-        matrix2D< double > aux;
+        Matrix2D< double > aux;
         type_cast(*this, aux);
 
         ChangeBasisVolume(MULTIDIM_ARRAY(aux), MULTIDIM_ARRAY(coeffs),
@@ -2369,25 +2369,25 @@ public:
                           CardinalSpline, BasicSpline, SplineDegree,
                           MirrorOffBounds, DBL_EPSILON, &Status);
         if (Status)
-            REPORT_ERROR(1, "matrix2D::produce_spline_coeffs: Error");
+            REPORT_ERROR(1, "Matrix2D::produceSplineCoefficients: Error");
     }
 
     /** Produce image from B-spline coefficients. */
-    void produce_image_from_spline_coeffs(
-        matrix2D<double> &img, int SplineDegree = 3) const
+    void produceImageFromSplineCoefficients(
+        Matrix2D<double> &img, int SplineDegree = 3) const
     {
         img.initZeros(YSIZE(*this), XSIZE(*this));
         STARTINGX(img) = STARTINGX(*this);
         STARTINGY(img) = STARTINGY(*this);
         int Status;
-        matrix2D<double> aux;
+        Matrix2D<double> aux;
         type_cast(*this, aux);
         ChangeBasisVolume(MULTIDIM_ARRAY(aux), MULTIDIM_ARRAY(img),
                           XSIZE(*this), YSIZE(*this), 1,
                           BasicSpline, CardinalSpline, SplineDegree,
                           MirrorOnBounds, DBL_EPSILON, &Status);
         if (Status)
-            REPORT_ERROR(1, "matrix2D::produce_spline_img: Error");
+            REPORT_ERROR(1, "Matrix2D::produce_spline_img: Error");
     }
 
 #undef DBL_EPSILON
@@ -2398,7 +2398,7 @@ public:
      * Knowing that this matrix is a set of B-spline coefficients, produce the
      * expanded set of B-spline coefficients using the two-scale relationship.
      */
-    void expand_Bspline(matrix2D< double >& expanded, int SplineDegree = 3) const
+    void expandBSpline(Matrix2D< double >& expanded, int SplineDegree = 3) const
     {
         double g[200]; // Coefficients of the reduce filter
         long ng; // Number of coefficients of the reduce filter
@@ -2411,7 +2411,7 @@ public:
                              g, &ng, h, &nh, &IsCentered))
             REPORT_ERROR(1, "Unable to load the filter coefficients");
 
-        matrix2D< double > aux;
+        Matrix2D< double > aux;
         type_cast(*this, aux);
         expanded.resize(2 * YSIZE(aux), 2 * XSIZE(aux));
 
@@ -2425,7 +2425,7 @@ public:
      * Knowing that this matrix is a set of B-spline coefficients, produce the
      * reduced set of B-spline coefficients using the two-scale relationship.
      */
-    void reduce_Bspline(matrix2D< double >& reduced, int SplineDegree = 3) const
+    void reduceBSpline(Matrix2D< double >& reduced, int SplineDegree = 3) const
     {
         double g[200]; // Coefficients of the reduce filter
         long ng; // Number of coefficients of the reduce filter
@@ -2438,7 +2438,7 @@ public:
                              g, &ng, h, &nh, &IsCentered))
             REPORT_ERROR(1, "Unable to load the filter coefficients");
 
-        matrix2D< double>  aux;
+        Matrix2D< double>  aux;
         type_cast(*this, aux);
 
         if (XSIZE(aux) % 2 != 0 && YSIZE(aux) % 2 != 0)
@@ -2469,10 +2469,10 @@ public:
      *     return v.sum();
      * }
      *
-     * v1 = m.for_all_rows(&vector_sum);
+     * v1 = m.forAllRows(&vector_sum);
      * @endcode
      */
-    vT for_all_rows(T(*f)(vT&)) const
+    vT forAllRows(T(*f)(vT&)) const
     {
         vT temp;
         if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
@@ -2504,10 +2504,10 @@ public:
      *     return v.sum();
      * }
      *
-     * v1 = m.for_all_cols(&vector_sum);
+     * v1 = m.forAllCols(&vector_sum);
      * @endcode
      */
-    vT for_all_cols(T(*f)(vT&)) const
+    vT forAllCols(T(*f)(vT&)) const
     {
         vT temp;
         if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
@@ -2540,13 +2540,13 @@ public:
      *     return v.normalize();
      * }
      *
-     * m2 = m.for_all_rows(&vector_norm);
+     * m2 = m.forAllRows(&vector_norm);
      * @endcode
      */
-    mT for_all_rows(vT(*f)(vT&)) const
+    mT forAllRows(vT(*f)(vT&)) const
     {
         mT aux(*this);
-        aux.for_all_rows(f);
+        aux.forAllRows(f);
 
         return aux;
     }
@@ -2554,7 +2554,7 @@ public:
     /** Apply a vectorial function to all rows, keep in this object.
      * @ingroup MatricesIterators
      */
-    void for_all_rows(vT(*f)(vT&))
+    void forAllRows(vT(*f)(vT&))
     {
         if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
             return;
@@ -2580,13 +2580,13 @@ public:
      *     return v.normalize();
      * }
      *
-     * m2 = m.for_all_cols(&vector_norm);
+     * m2 = m.forAllCols(&vector_norm);
      * @endcode
      */
-    mT for_all_cols(vT(*f)(vT&)) const
+    mT forAllCols(vT(*f)(vT&)) const
     {
         mT aux(*this);
-        aux.for_all_cols(f);
+        aux.forAllCols(f);
 
         return aux;
     }
@@ -2594,7 +2594,7 @@ public:
     /** Apply a vectorial function to all rows, keep in this object
      * @ingroup MatricesIterators
      */
-    void for_all_cols(vT(*f)(vT&))
+    void forAllCols(vT(*f)(vT&))
     {
         if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
             return;
@@ -2613,17 +2613,17 @@ public:
      * NOTICE!!!: the matrix by matrix multiplier operator (*) has been
      * redefined in this class and it represents the true matrix by matrix
      * algebraic multiplication, if you want an element-wise multiplication you
-     * have to use the function defined in this section "mul_elements"
+     * have to use the function defined in this section "multiplyElements"
      */
 
     /** Matrix multiplication element by element
      * @ingroup MatricesAlgebraic
      *
      * @code
-     * m3 = mul_elements(m1, m2);
+     * m3 = multiplyElements(m1, m2);
      * @endcode
      */
-    friend void mul_elements(const mT& op1, const mT& op2, mT& result)
+    friend void multiplyElements(const mT& op1, const mT& op2, mT& result)
     {
         arrayByArray(op1, op2, result, 'x');
     }
@@ -2631,10 +2631,10 @@ public:
     /** The same as before but the result is returned
      * @ingroup MatricesAlgebraic
      */
-    friend mT mul_elements(const mT& op1, const mT& op2)
+    friend mT multiplyElements(const mT& op1, const mT& op2)
     {
         mT temp;
-        mul_elements(op1, op2, temp);
+        multiplyElements(op1, op2, temp);
 
         return temp;
     }
@@ -2676,11 +2676,11 @@ public:
      * @ingroup MatricesTypes
      *
      * @code
-     * if (m.IsVector())
+     * if (m.isVector())
      *     cout << "The matrix is like a vector\n";
      * @endcode
      */
-    bool IsVector() const
+    bool isVector() const
     {
         return (XSIZE(*this) == 1) || (YSIZE(*this) == 1);
     }
@@ -2689,11 +2689,11 @@ public:
      * @ingroup MatricesTypes
      *
      * @code
-     * if (m.IsSquare())
+     * if (m.isSquare())
      *     cout << "The matrix is square\n";
      * @endcode
      */
-    bool IsSquare() const
+    bool isSquare() const
     {
         return (XSIZE(*this) == YSIZE(*this));
     }
@@ -2702,11 +2702,11 @@ public:
      * @ingroup MatricesTypes
      *
      * @code
-     * if (m.IsSingular())
+     * if (m.isSingular())
      *     cout << "The matrix is singular\n";
      * @endcode
      */
-    bool IsSingular() const
+    bool isSingular() const
     {
         return ABS(det()) < XMIPP_EQUAL_ACCURACY;
     }
@@ -2715,11 +2715,11 @@ public:
      * @ingroup MatricesTypes
      *
      * @code
-     * if (m.IsDiagonal())
+     * if (m.isDiagonal())
      *     cout << "The matrix is diagonal\n";
      * @endcode
      */
-    bool IsDiagonal() const
+    bool isDiagonal() const
     {
         if (XSIZE(*this) != YSIZE(*this))
             return false;
@@ -2738,9 +2738,9 @@ public:
      * A scalar matrix is diagonal and all the values at the diagonal are the
      * same
      */
-    bool IsScalar() const
+    bool isScalar() const
     {
-        if (!IsDiagonal())
+        if (!isDiagonal())
             return false;
 
         for (int i = 1; i < YSIZE(*this); i++)
@@ -2755,11 +2755,11 @@ public:
      * @ingroup MatricesTypes
      *
      * @code
-     * if (m.IsSymmetric())
+     * if (m.isSymmetric())
      *     cout << "The matrix is symmetric\n";
      * @endcode
      */
-    bool IsSymmetric() const
+    bool isSymmetric() const
     {
         if (XSIZE(*this) != YSIZE(*this))
             return false;
@@ -2777,11 +2777,11 @@ public:
      * @ingroup MatricesTypes
      *
      * @code
-     * if (m.IsSkewSymmetric())
+     * if (m.isSkewSymmetric())
      *     cout << "The matrix is skewsymmetric\n";
      * @endcode
      */
-    bool IsSkewSymmetric() const
+    bool isSkewSymmetric() const
     {
         if (XSIZE(*this) != YSIZE(*this))
             return false;
@@ -2799,11 +2799,11 @@ public:
      * @ingroup MatricesTypes
      *
      * @code
-     * if (m.IsUpperTriangular())
+     * if (m.isUpperTriangular())
      *     cout << "The matrix is upper triangular\n";
      * @endcode
      */
-    bool IsUpperTriangular() const
+    bool isUpperTriangular() const
     {
         if (XSIZE(*this) != YSIZE(*this))
             return false;
@@ -2818,11 +2818,11 @@ public:
      * @ingroup MatricesTypes
      *
      * @code
-     * if (m.IsLowerTriangular())
+     * if (m.isLowerTriangular())
      *     cout << "The matrix is lower triangular\n";
      * @endcode
      */
-    bool IsLowerTriangular() const
+    bool isLowerTriangular() const
     {
         if (XSIZE(*this) != YSIZE(*this))
             return false;
@@ -2839,13 +2839,13 @@ public:
      * @ingroup MatricesTypes
      *
      * @code
-     * if (m.IsIdent())
+     * if (m.isIdentity())
      *     cout << "The matrix is identity\n";
      * @endcode
      */
-    bool IsIdent() const
+    bool isIdentity() const
     {
-        return IsScalar() &&
+        return isScalar() &&
                ABS(DIRECT_MAT_ELEM(*this, 0, 0) - (T) 1) < XMIPP_EQUAL_ACCURACY;
     }
 
@@ -2853,13 +2853,13 @@ public:
      * @ingroup MatricesTypes
      *
      * @code
-     * if (m.IsZero())
+     * if (m.isZero())
      *     cout << "The matrix is null\n";
      * @endcode
      */
-    bool IsZero() const
+    bool isZero() const
     {
-        return IsScalar() &&
+        return isScalar() &&
                ABS(DIRECT_MAT_ELEM(*this, 0, 0) - (T) 0) < XMIPP_EQUAL_ACCURACY;
     }
 
@@ -2921,24 +2921,24 @@ public:
 
 // Specializations case for complex numbers
 template<>
-complex< double > matrix2D< complex< double > >::interpolated_elem(
+complex< double > Matrix2D< complex< double > >::interpolatedElement(
     double x, double y, complex< double > outside_value) const;
 
 template<>
-void core_array_by_scalar< complex< double > > (const maTC& op1,
+void coreArrayByScalar< complex< double > > (const maTC& op1,
         const complex< double >& op2, maTC& result, char operation);
 
 template<>
-void core_scalar_by_array< complex< double > > (const complex< double >& op1,
+void coreScalarByArray< complex< double > > (const complex< double >& op1,
         const maTC& op2, maTC& result, char operation);
 
 template<>
-void core_arrayByArray< complex< double > > (const maTC& op1, const maTC& op2,
+void coreArrayByArray< complex< double > > (const maTC& op1, const maTC& op2,
         maTC& result, char operation);
 
 template<>
-inline void matrix2D< complex< double > >::produce_spline_coeffs(
-    matrix2D< double >& coeffs, int SplineDegree) const
+inline void Matrix2D< complex< double > >::produceSplineCoefficients(
+    Matrix2D< double >& coeffs, int SplineDegree) const
 {
     // TODO Implement
     cerr << "Spline coefficients of a complex matrix is not implemented\n";
@@ -2947,7 +2947,7 @@ inline void matrix2D< complex< double > >::produce_spline_coeffs(
 /** @defgroup MatricesRelated Related functions
  * @ingroup Matrices
  *
- * These functions are not methods of matrix2D
+ * These functions are not methods of Matrix2D
  */
 
 /// @defgroup MatricesGeometry Geometry with matrices
@@ -2959,10 +2959,10 @@ inline void matrix2D< complex< double > >::produce_spline_coeffs(
  * The rotation angle is in degrees.
  *
  * @code
- * m = rot2D_matrix(60);
+ * m = rotation2DMatrix(60);
  * @endcode
  */
-matrix2D< double > rot2D_matrix(double ang);
+Matrix2D< double > rotation2DMatrix(double ang);
 
 /** Creates a translational matrix (3x3) for images
  * @ingroup MatricesGeometry
@@ -2972,10 +2972,10 @@ matrix2D< double > rot2D_matrix(double ang);
  *
  * @code
  * // Displacement of 1 pixel to the right
- * m = translation2D_matrix(vectorR2(1, 0));
+ * m = translation2DMatrix(vectorR2(1, 0));
  * @endcode
  */
-matrix2D< double > translation2D_matrix(const Matrix1D< double > v);
+Matrix2D< double > translation2DMatrix(const Matrix1D< double > v);
 
 /** Creates a rotational matrix (4x4) for volumes around system axis
  * @ingroup MatricesGeometry
@@ -3006,10 +3006,10 @@ matrix2D< double > translation2D_matrix(const Matrix1D< double > v);
  * @endcode
  *
  * @code
- * m = rot3D_matrix(60, 'X');
+ * m = rotation3DMatrix(60, 'X');
  * @endcode
  */
-matrix2D< double > rot3D_matrix(double ang, char axis);
+Matrix2D< double > rotation3DMatrix(double ang, char axis);
 
 /** Creates a rotational matrix (4x4) for volumes around any axis
  * @ingroup MatricesGeometry
@@ -3019,10 +3019,10 @@ matrix2D< double > rot3D_matrix(double ang, char axis);
  * not to be unitary.
  *
  * @code
- * m = rot3D_matrix(60, vectorR3(1, 1, 1));
+ * m = rotation3DMatrix(60, vectorR3(1, 1, 1));
  * @endcode
  */
-matrix2D< double > rot3D_matrix(double ang, const Matrix1D< double >& axis);
+Matrix2D< double > rotation3DMatrix(double ang, const Matrix1D< double >& axis);
 
 /** Matrix which transforms the given axis into Z
  * @ingroup MatricesGeometry
@@ -3032,14 +3032,14 @@ matrix2D< double > rot3D_matrix(double ang, const Matrix1D< double >& axis);
  * order to produce rotational matrices, for instance, around any axis.
  *
  * @code
- * matrix2D< double > A = align_with_Z(axis);
- * return A.transpose() * rot3D_matrix(ang, 'Z') * A;
+ * Matrix2D< double > A = alignWithZ(axis);
+ * return A.transpose() * rotation3DMatrix(ang, 'Z') * A;
  * @endcode
  *
  * The returned matrix is such that A*axis=Z, where Z and axis are column
  * vectors.
  */
-matrix2D< double > align_with_Z(const Matrix1D< double >& axis);
+Matrix2D< double > alignWithZ(const Matrix1D< double >& axis);
 
 /** Creates a translational matrix (4x4) for volumes
  * @ingroup MatricesGeometry
@@ -3049,10 +3049,10 @@ matrix2D< double > align_with_Z(const Matrix1D< double >& axis);
  *
  * @code
  * // Displacement of 2 pixels down
- * m = translation3D_matrix(vectorR3(0, 0, 2));
+ * m = translation3DMatrix(vectorR3(0, 0, 2));
  * @endcode
  */
-matrix2D< double > translation3D_matrix(const Matrix1D< double >& v);
+Matrix2D< double > translation3DMatrix(const Matrix1D< double >& v);
 
 /** Creates a scaling matrix (4x4) for volumes
  * @ingroup MatricesGeometry
@@ -3060,7 +3060,7 @@ matrix2D< double > translation3D_matrix(const Matrix1D< double >& v);
  * The scaling factors for the different axis must be given as a vector. So
  * that, XX(sc)=scale for X axis, YY(sc)=...
  */
-matrix2D< double > scale3D_matrix(const Matrix1D< double >& sc);
+Matrix2D< double > scale3DMatrix(const Matrix1D< double >& sc);
 
 /// @defgroup MatricesMisc Miscellaneous
 /// @ingroup MatricesRelated
@@ -3073,11 +3073,11 @@ matrix2D< double > scale3D_matrix(const Matrix1D< double >& sc);
  * computed.
  *
  * @code
- * matrix2D< double > m1(5, 3);
+ * Matrix2D< double > m1(5, 3);
  * m1.startingX() = -2;
  * m1.startingY() = -2;
  *
- * matrix2D< double > m2(4, 4);
+ * Matrix2D< double > m2(4, 4);
  * m2.startingX() = 0;
  * m2.startingY() = 0;
  * cutToCommonSize(m1, m2);
@@ -3116,7 +3116,7 @@ void cutToCommonSize(mT& m1, mT& m2)
  * - and so on.
  */
 template<typename T>
-void radial_average(const matrix2D< T >& m,
+void radialAverage(const Matrix2D< T >& m,
                     const Matrix1D< int >& center_of_rot,
                     Matrix1D< T >& radial_mean,
                     Matrix1D< int >& radial_count,
@@ -3191,7 +3191,7 @@ void radial_average(const matrix2D< T >& m,
  *
  * The norm of the vector Ax-b is returned.
  */
-double solve_nonneg(const matrix2D< double >& A, const Matrix1D< double >& b,
+double solveNonNegative(const Matrix2D< double >& A, const Matrix1D< double >& b,
                     Matrix1D< double >& result);
 
 /** Solve equation system, symmetric positive-definite matrix
@@ -3201,7 +3201,7 @@ double solve_nonneg(const matrix2D< double >& A, const Matrix1D< double >& b,
  * only be applied if A is positive-definite matrix and symmetric. It applies a
  * Cholesky factorization and backsubstitution (see Numerical Recipes).
  */
-void solve_via_Cholesky(const matrix2D< double >& A,
+void solveViaCholesky(const Matrix2D< double >& A,
                         const Matrix1D< double >& b,
                         Matrix1D< double >& result);
 
@@ -3215,8 +3215,8 @@ void solve_via_Cholesky(const matrix2D< double >& A,
  * Exceptions are thrown if the vectors and matrices do not have consistent
  * dimensions.
  */
-void eval_quadratic(const Matrix1D< double >& x, const Matrix1D< double >& c,
-                    const matrix2D< double >& H, double& val,
+void evaluateQuadratic(const Matrix1D< double >& x, const Matrix1D< double >& c,
+                    const Matrix2D< double >& H, double& val,
                     Matrix1D< double >& grad);
 
 /** Solves Quadratic programming subproblem
@@ -3228,9 +3228,9 @@ void eval_quadratic(const Matrix1D< double >& x, const Matrix1D< double >& c,
  *                                   bl<=x<=bu
  * @endcode
  */
-void quadprog(const matrix2D< double >& C, const Matrix1D< double >& d,
-              const matrix2D< double >& A, const Matrix1D< double >& b,
-              const matrix2D< double >& Aeq, const Matrix1D< double >& beq,
+void quadraticProgramming(const Matrix2D< double >& C, const Matrix1D< double >& d,
+              const Matrix2D< double >& A, const Matrix1D< double >& b,
+              const Matrix2D< double >& Aeq, const Matrix1D< double >& beq,
               Matrix1D< double >& bl, Matrix1D< double >& bu,
               Matrix1D< double >& x);
 
@@ -3244,9 +3244,9 @@ void quadprog(const matrix2D< double >& C, const Matrix1D< double >& d,
  *                                      bl<=x<=bu
  * @endcode
  */
-void lsqlin(const matrix2D< double >& C, const Matrix1D< double >& d,
-            const matrix2D< double >& A, const Matrix1D< double >& b,
-            const matrix2D< double >& Aeq, const Matrix1D< double >& beq,
+void leastSquare(const Matrix2D< double >& C, const Matrix1D< double >& d,
+            const Matrix2D< double >& A, const Matrix1D< double >& b,
+            const Matrix2D< double >& Aeq, const Matrix1D< double >& beq,
             Matrix1D< double >& bl, Matrix1D< double >& bu,
             Matrix1D< double >& x);
 
@@ -3447,7 +3447,7 @@ void mT::centerOfMass(Matrix1D< double >& center, void* mask)
 {
     center.initZeros(2);
     double mass = 0;
-    matrix2D< int>* imask = (matrix2D< int >*) mask;
+    Matrix2D< int>* imask = (Matrix2D< int >*) mask;
 
     FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
     {
@@ -3478,7 +3478,7 @@ ostream& operator<<(ostream& ostrm, const mT& v)
         FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v)
         max_val = MAX(max_val, ABS(MULTIDIM_ELEM(v, i)));
 
-        int prec = best_prec(max_val, 10);
+        int prec = bestPrecision(max_val, 10);
 
         for (int i = STARTINGY(v); i <= FINISHINGY(v); i++)
         {
@@ -3521,7 +3521,7 @@ void solve(const mT& A, const vT& b, vT& result)
 
 // TODO Document
 template<typename T>
-void solve_by_svd(const matrix2D< T >& A, const Matrix1D< T >& b,
+void solveBySVD(const Matrix2D< T >& A, const Matrix1D< T >& b,
                   Matrix1D< double >& result, double tolerance)
 {
     if (A.xdim == 0)
@@ -3538,7 +3538,7 @@ void solve_by_svd(const matrix2D< T >& A, const Matrix1D< T >& b,
 
     // First perform de single value decomposition
     // Xmipp interface that calls to svdcmp of numerical recipes
-    matrix2D< double > u, v;
+    Matrix2D< double > u, v;
     Matrix1D< double > w;
     svdcmp(A, u, w, v);
 
@@ -3600,20 +3600,22 @@ void lubksb(const mT& LU, Matrix1D< int >& indx, vT& b)
 // TODO Document
 #define VIA_BILIB
 template<typename T>
-void svdcmp(const matrix2D< T >& a, matrix2D< double >& u,
-            Matrix1D< double >& w, matrix2D< double >& v)
+void svdcmp(const Matrix2D< T >& a,
+            Matrix2D< double >& u,
+            Matrix1D< double >& w,
+            Matrix2D< double >& v)
 {
     // svdcmp only works with double
     type_cast(a, u);
 
     // Set size of matrices
-    w.initZeros(u.ColNo());
-    v.initZeros(u.ColNo(), u.ColNo());
+    w.initZeros(u.colNumber());
+    v.initZeros(u.colNumber(), u.colNumber());
 
     // Call to the numerical recipes routine
 #ifdef VIA_NR
     svdcmp(MULTIDIM_ARRAY(u),
-           u.RowNo(), u.ColNo(),
+           u.rowNumber(), u.colNumber(),
            MULTIDIM_ARRAY(w),
            MULTIDIM_ARRAY(v));
 #endif
@@ -3621,7 +3623,7 @@ void svdcmp(const matrix2D< T >& a, matrix2D< double >& u,
 #ifdef VIA_BILIB
     int status;
     SingularValueDecomposition(MULTIDIM_ARRAY(u),
-                               u.RowNo(), u.ColNo(),
+                               u.rowNumber(), u.colNumber(),
                                MULTIDIM_ARRAY(w),
                                MULTIDIM_ARRAY(v),
                                5000, &status);
@@ -3634,7 +3636,7 @@ void svdcmp(const matrix2D< T >& a, matrix2D< double >& u,
 // TODO Document
 //#define DEBUG_APPLYGEO
 template<typename T>
-void apply_geom(mT& M2, matrix2D< double > A, const mT& M1, bool inv,
+void applyGeometry(mT& M2, Matrix2D< double > A, const mT& M1, bool inv,
                 bool wrap, T outside)
 {
     int m1, n1, m2, n2;
@@ -3647,7 +3649,7 @@ void apply_geom(mT& M2, matrix2D< double > A, const mT& M1, bool inv,
     if ((XSIZE(A) != 3) || (YSIZE(A) != 3))
         REPORT_ERROR(1102, "Apply_geom: geometrical transformation is not 3x3");
 
-    if (A.IsIdent())
+    if (A.isIdentity())
     {
         M2 = M1;
         return;
@@ -3830,7 +3832,7 @@ void apply_geom(mT& M2, matrix2D< double > A, const mT& M1, bool inv,
 // TODO Document
 //#define DEBUG
 template<typename T>
-void apply_geom_Bspline(mT& M2, matrix2D< double > A, const mT& M1,
+void applyGeometryBSpline(mT& M2, Matrix2D< double > A, const mT& M1,
                         int Splinedegree, bool inv, bool wrap, T outside)
 {
     int m1, n1, m2, n2;
@@ -3841,7 +3843,7 @@ void apply_geom_Bspline(mT& M2, matrix2D< double > A, const mT& M1,
     if ((XSIZE(A) != 3) || (YSIZE(A) != 3))
         REPORT_ERROR(1102, "Apply_geom: geometrical transformation is not 3x3");
 
-    if (A.IsIdent())
+    if (A.isIdentity())
     {
         M2 = M1;
         return;
@@ -3879,8 +3881,8 @@ void apply_geom_Bspline(mT& M2, matrix2D< double > A, const mT& M1,
     maxyp  = YSIZE(M1) - cen_yp - 1;
 
     // Build the B-spline coefficients
-    matrix2D< double > Bcoeffs;
-    M1.produce_spline_coeffs(Bcoeffs, Splinedegree);
+    Matrix2D< double > Bcoeffs;
+    M1.produceSplineCoefficients(Bcoeffs, Splinedegree);
     STARTINGX(Bcoeffs) = (int) minxp;
     STARTINGY(Bcoeffs) = (int) minyp;
 
@@ -3946,7 +3948,7 @@ void apply_geom_Bspline(mT& M2, matrix2D< double > A, const mT& M1,
 
             if (interp)
             {
-                dMij(M2, i, j) = (T) Bcoeffs.interpolated_elem_as_Bspline(
+                dMij(M2, i, j) = (T) Bcoeffs.interpolatedElementBSpline(
                                      xp, yp, Splinedegree);
 
 #ifdef DEBUG_APPLYGEO
@@ -3966,11 +3968,11 @@ void apply_geom_Bspline(mT& M2, matrix2D< double > A, const mT& M1,
 
 // TODO Document
 template<>
-inline void matrix2D< complex< double > >::scale_to_size_Bspline(
+inline void Matrix2D< complex< double > >::scaleToSizeBSpline(
     int Splinedegree, int Ydim, int Xdim,
-    matrix2D< complex< double > > & result) const
+    Matrix2D< complex< double > > & result) const
 {
-    matrix2D< double > re, im, scre, scim;
+    Matrix2D< double > re, im, scre, scim;
 
     re.resize(YSIZE(*this), XSIZE(*this));
     im.resize(YSIZE(*this), XSIZE(*this));
@@ -3979,8 +3981,8 @@ inline void matrix2D< complex< double > >::scale_to_size_Bspline(
                      MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
                      MULTIDIM_SIZE(*this));
 
-    re.scale_to_size_Bspline(Splinedegree, Ydim, Xdim, scre);
-    im.scale_to_size_Bspline(Splinedegree, Ydim, Xdim, scim);
+    re.scaleToSizeBSpline(Splinedegree, Ydim, Xdim, scre);
+    im.scaleToSizeBSpline(Splinedegree, Ydim, Xdim, scim);
 
     result.resize(Ydim, Xdim);
 
@@ -3990,31 +3992,31 @@ inline void matrix2D< complex< double > >::scale_to_size_Bspline(
 
 // TODO Document
 template<>
-bool matrix2D< complex< double > >::IsDiagonal() const;
+bool Matrix2D< complex< double > >::isDiagonal() const;
 
 // TODO Document
 template<>
-bool matrix2D< complex<double> >::IsScalar() const;
+bool Matrix2D< complex<double> >::isScalar() const;
 
 // TODO Document
 template<>
-bool matrix2D< complex< double > >::IsSymmetric() const;
+bool Matrix2D< complex< double > >::isSymmetric() const;
 
 // TODO Document
 template<>
-bool matrix2D< complex< double > >::IsSkewSymmetric() const;
+bool Matrix2D< complex< double > >::isSkewSymmetric() const;
 
 // TODO Document
 template<>
-bool matrix2D< complex< double > >::IsUpperTriangular() const;
+bool Matrix2D< complex< double > >::isUpperTriangular() const;
 
 // TODO Document
 template<>
-bool matrix2D< complex< double > >::IsLowerTriangular() const;
+bool Matrix2D< complex< double > >::isLowerTriangular() const;
 
 // TODO Document
 template<typename T>
-void mul_matrix(const mT& op1, const mT& op2, mT& result)
+void multiplyMatrix(const mT& op1, const mT& op2, mT& result)
 {
     if (XSIZE(op1) != YSIZE(op2))
         REPORT_ERROR(1102, "Not compatible sizes in matrix multiplication");

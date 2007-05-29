@@ -161,7 +161,7 @@ void Prog_SSNR_prm::produce_side_info()
 
 // Estimate SSNR ----------------------------------------------------------
 //#define DEBUG
-void Prog_SSNR_prm::Estimate_SSNR(int dim, matrix2D<double> &output)
+void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
 {
     // These vectors are for 1D
     Matrix1D<double> S_S21D((int)(XSIZE(S()) / 2 - ring_width)),
@@ -216,10 +216,10 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, matrix2D<double> &output)
         Is() -= Iths();
         In() -= Ithn();
 
-        matrix2D< complex<double> > FFT_Is;   FourierTransform(Is(), FFT_Is);
-        matrix2D< complex<double> > FFT_Iths; FourierTransform(Iths(), FFT_Iths);
-        matrix2D< complex<double> > FFT_In;   FourierTransform(In(), FFT_In);
-        matrix2D< complex<double> > FFT_Ithn; FourierTransform(Ithn(), FFT_Ithn);
+        Matrix2D< complex<double> > FFT_Is;   FourierTransform(Is(), FFT_Is);
+        Matrix2D< complex<double> > FFT_Iths; FourierTransform(Iths(), FFT_Iths);
+        Matrix2D< complex<double> > FFT_In;   FourierTransform(In(), FFT_In);
+        Matrix2D< complex<double> > FFT_Ithn; FourierTransform(Ithn(), FFT_Ithn);
 
 #ifdef DEBUG
         ImageXmippT < complex<double> > savec;
@@ -360,7 +360,7 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, matrix2D<double> &output)
 #undef DEBUG
 
 // Estimate radial average ---------------------------------------------------
-void Prog_SSNR_prm::Radial_average(matrix2D<double> &output)
+void Prog_SSNR_prm::Radial_average(Matrix2D<double> &output)
 {
     // Compute the radial average ...........................................
     Matrix1D<double> VSSNR_avg((int)(XSIZE(VSSNR()) / 2 - ring_width));
@@ -407,7 +407,7 @@ void Prog_SSNR_prm::Radial_average(matrix2D<double> &output)
 }
 
 // Main --------------------------------------------------------------------
-void ROUT_SSNR(Prog_SSNR_prm &prm, matrix2D<double> &output)
+void ROUT_SSNR(Prog_SSNR_prm &prm, Matrix2D<double> &output)
 {
     cout << prm;
     prm.produce_side_info();

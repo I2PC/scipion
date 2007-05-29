@@ -79,7 +79,7 @@ void Uproject_to_plane(const Matrix1D< double >& point,
  * is defined by its 3 Euler angles). Then, the coordinate system associated to
  * the 3 Euler angles (let's call its vectors X',Y',Z') defines a projection
  * plane where Z' is the direction vector, and X'Y' are in-plane vectors.
- * Actually, X' coincides with the X vector in the matrix2D definition and Y'
+ * Actually, X' coincides with the X vector in the Matrix2D definition and Y'
  * with the Y vector.
  *
  * The resulting vector is in R3, and the function has been optimized for speed,
@@ -117,7 +117,7 @@ void Uproject_to_plane(const Matrix1D< double >& r,
  * its 3 Euler angles). Then, the coordinate system associated to the 3 Euler
  * angles (let's call its vectors X',Y',Z') defines a projection plane where Z'
  * is the direction vector, and X'Y' are in-plane vectors. Actually, X'
- * coincides with the X vector in the matrix2D definition and Y' with the Y
+ * coincides with the X vector in the Matrix2D definition and Y' with the Y
  * vector.
  *
  * The resulting vector is in R3, and the function has been optimized for speed,
@@ -131,7 +131,7 @@ void Uproject_to_plane(const Matrix1D< double >& r,
  *
  * @code
  * Matrix1D< double > P = vectorR3(1, 1, 1), Pp(3);
- * matrix2D< double > euler = Euler_angles2matrix(0, 0, 0);
+ * Matrix2D< double > euler = Euler_angles2matrix(0, 0, 0);
  * Uproject_to_plane(P, euler, Pp);
  * cout << "After projecting: Pp=" << Pp.transpose() << endl;
  * @endcode
@@ -142,7 +142,7 @@ void Uproject_to_plane(const Matrix1D< double >& r,
  * The result and point vectors can be the same one.
  */
 void Uproject_to_plane(const Matrix1D< double >& r,
-                       const matrix2D< double >& euler,
+                       const Matrix2D< double >& euler,
                        Matrix1D< double >& result);
 
 /** Spherical distance
@@ -261,7 +261,7 @@ public:
      *
      * The logical indexes of this matrix go from Y=[m0...mF] and X=[l0...lF]
      */
-    matrix2D< double > c_ml;
+    Matrix2D< double > c_ml;
 
     /// Evaluate the model at the point (x,y)
     inline double evaluate(double x, double y) const
@@ -389,7 +389,7 @@ void Bspline_model_fitting(const vector< fit_point >& IN_points,
  */
 void rectangle_enclosing(const Matrix1D< double >& v0,
                          const Matrix1D< double >& vF,
-                         const matrix2D< double >& V,
+                         const Matrix2D< double >& V,
                          Matrix1D< double >& corner1,
                          Matrix1D< double >& corner2);
 
@@ -408,7 +408,7 @@ void rectangle_enclosing(const Matrix1D< double >& v0,
  */
 void box_enclosing(const Matrix1D< double >& v0,
                    const Matrix1D< double >& vF,
-                   const matrix2D< double >& V,
+                   const Matrix2D< double >& V,
                    Matrix1D< double >& corner1,
                    Matrix1D< double >& corner2);
 
@@ -533,9 +533,9 @@ int line_plane_intersection(const Matrix1D< double > normal_plane,
  * Euler angles (in degrees).
  *
  * As an implementation note you might like to know that this function calls
- * always to matrix2D::resize
+ * always to Matrix2D::resize
  */
-void Euler_angles2matrix(double a, double b, double g, matrix2D< double >& A);
+void Euler_angles2matrix(double a, double b, double g, Matrix2D< double >& A);
 
 /** Angles after compresion
  * @ingroup EulerOperations
@@ -552,7 +552,7 @@ void Euler_Angles_after_compresion(const double rot,
                                    double& new_rot,
                                    double& new_tilt,
                                    double& new_psi,
-                                   matrix2D< double >& D);
+                                   Matrix2D< double >& D);
 
 /** Euler direction
  * @ingroup EulerOperations
@@ -591,7 +591,7 @@ void Euler_direction2angles(Matrix1D< double >& v,
  * Euler_matrix2angles(Euler, alpha, beta, gamma);
  * @endcode
  */
-void Euler_matrix2angles(matrix2D< double >& A,
+void Euler_matrix2angles(Matrix2D< double >& A,
                          double& alpha,
                          double& beta,
                          double& gamma);
@@ -773,15 +773,15 @@ void Euler_mirrorXY(double rot,
  * system.
  *
  * @code
- * matrix2D< double > R60 = rot3D_matrix(60, 'Z');
+ * Matrix2D< double > R60 = rotation3DMatrix(60, 'Z');
  * R60.resize(3, 3); // Get rid of homogeneous part
- * matrix2D< double > I(3, 3);
- * I.init_identity();
+ * Matrix2D< double > I(3, 3);
+ * I.initIdentity();
  * Euler_apply_transf(L, rot, tilt, psi, newrot, newtilt, newpsi);
  * @endcode
  */
-void Euler_apply_transf(const matrix2D< double >& L,
-                        const matrix2D< double >& R,
+void Euler_apply_transf(const Matrix2D< double >& L,
+                        const Matrix2D< double >& R,
                         double rot,
                         double tilt,
                         double psi,
@@ -794,13 +794,13 @@ void Euler_apply_transf(const matrix2D< double >& L,
  *
  * Creates a rotational matrix (4x4) for volumes around the combination of the 3
  * rotations around ZYZ. All angles are in degrees. You must use it with
- * IS_NOT_INV in apply_geom.
+ * IS_NOT_INV in applyGeometry.
  *
  * @code
- * matrix2D< float > euler = Euler_rot3D_matrix(60, 30, 60);
+ * Matrix2D< float > euler = Euler_rotation3DMatrix(60, 30, 60);
  * @endcode
  */
-matrix2D< double > Euler_rot3D_matrix(double rot, double tilt, double psi);
+Matrix2D< double > Euler_rotation3DMatrix(double rot, double tilt, double psi);
 
 /** Rotate a volume after 3 Euler angles
  * @ingroup EulerOperations

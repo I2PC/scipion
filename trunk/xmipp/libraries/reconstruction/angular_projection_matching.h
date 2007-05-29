@@ -50,8 +50,8 @@ public:
   /** Selfile with experimental images */
   SelFile SF;
   /** Vector with reference library projections */
-  vector<matrix2D<double> > ref_img;
-  vector<matrix2D<double> >::iterator idirno;
+  vector<Matrix2D<double> > ref_img;
+  vector<Matrix2D<double> >::iterator idirno;
   /** Vectors for standard deviation and mean of reference library projections */
   double * ref_stddev, * ref_mean;
   /** Vector with reference library angles */
@@ -79,7 +79,7 @@ public:
   /** Maximum allowed angular search ranges for rot and tilt */
   double ang_search;
   /** Mask for shifts */
-  matrix2D<int> rotmask;
+  Matrix2D<int> rotmask;
   /** Number of white pixels in rotmask */
   int nr_pixels_rotmask;
   /** Inner and outer radii to limit the rotational search */
@@ -108,7 +108,7 @@ public:
   void produce_Side_info();
 
   /** Actual projection matching for one image */
-  void PM_process_one_image(matrix2D<double> &Mexp,
+  void PM_process_one_image(Matrix2D<double> &Mexp,
 			    float &img_rot, float &img_tilt, float &img_psi,
 			    int &opt_dirno, double &opt_psi,
 			    double &opt_xoff, double &opt_yoff,

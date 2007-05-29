@@ -376,7 +376,7 @@ void APHFile2D::generate_symmetrical_reflections(int symmetry_group)
     background.window(new_kmin, new_hmin, new_kmax, new_hmax);
     CTF       .window(new_kmin, new_hmin, new_kmax, new_hmax);
 
-    matrix2D<int> visited;
+    Matrix2D<int> visited;
     visited.initZeros(YSIZE(spots_abs), XSIZE(spots_abs));
     STARTINGY(visited) = STARTINGY(spots_abs);
     STARTINGX(visited) = STARTINGX(spots_abs);

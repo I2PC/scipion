@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
             DF.dataLineNo())
             REPORT_ERROR(1, "Select images: SelFile and DocFile do not have the "
                          "same number of lines");
-        if (col >= DF.FirstLine_ColNo())
+        if (col >= DF.FirstLine_colNumber())
             REPORT_ERROR(1, "Select images: Column not valid for this DocFile");
         select_images(DF, SF, col, en_limit0, limit0, en_limitF, limitF);
 

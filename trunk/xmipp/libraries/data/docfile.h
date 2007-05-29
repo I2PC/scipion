@@ -326,17 +326,17 @@ public:
      * The old information in the document file is lost.
      *
      * @code
-     * matrix2D< double > A(30, 3);
+     * Matrix2D< double > A(30, 3);
      * A.init_random(0, 180);
      * DF = A;
      * @endcode
      */
-    DocFile& operator=(const matrix2D< double >& A);
+    DocFile& operator=(const Matrix2D< double >& A);
 
     /** Another function for assignment from matrix.
      * @ingroup DocFileCOprator
      */
-    void assign(const matrix2D< double >& A);
+    void assign(const Matrix2D< double >& A);
 
     /** Show a document file.
      * @ingroup DocFileOperator
@@ -622,7 +622,7 @@ public:
      *
      * The current line "pointer" is not modified.
      */
-    int FirstLine_ColNo();
+    int FirstLine_colNumber();
 
     /** Number of data lines inside a document file.
      * @ingroup DocFileInfo

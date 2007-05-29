@@ -69,7 +69,7 @@ public:
      *
      * The input image is modified.
      */
-    void apply(matrix2D< double >& I);
+    void apply(Matrix2D< double >& I);
 
     /** Range adjust of a volume.
      *

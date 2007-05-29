@@ -294,8 +294,8 @@ void CCP4::fill_header_from_xmippimage(ImageXmipp I, bool reversed,
     (my_mrc_header.map)[3] = ' ';
     if (reversed == false)
     {
-        my_mrc_header.xlen = my_mrc_header.nx = my_mrc_header.mx = I().ColNo();
-        my_mrc_header.ylen = my_mrc_header.ny = my_mrc_header.my = I().RowNo();
+        my_mrc_header.xlen = my_mrc_header.nx = my_mrc_header.mx = I().colNumber();
+        my_mrc_header.ylen = my_mrc_header.ny = my_mrc_header.my = I().rowNumber();
         my_mrc_header.zlen = my_mrc_header.nz = my_mrc_header.mz = 1;
         if (x_length != 0) my_mrc_header.xlen = x_length;
         if (y_length != 0) my_mrc_header.ylen = y_length;
@@ -314,11 +314,11 @@ void CCP4::fill_header_from_xmippimage(ImageXmipp I, bool reversed,
     }
     else
     {
-        my_mrc_header.nx    = I().ColNo();
+        my_mrc_header.nx    = I().colNumber();
         little22bigendian(my_mrc_header.nx);
         my_mrc_header.xlen = my_mrc_header.mx = my_mrc_header.nx;
 
-        my_mrc_header.ny    = I().RowNo();
+        my_mrc_header.ny    = I().rowNumber();
         little22bigendian(my_mrc_header.ny);
         my_mrc_header.ylen = my_mrc_header.my = my_mrc_header.ny;
 
@@ -382,8 +382,8 @@ void CCP4::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed,
     (my_mrc_header.map)[3] = ' ';
     if (reversed == false)
     {
-        my_mrc_header.xlen = my_mrc_header.nx = my_mrc_header.mx = V().ColNo();
-        my_mrc_header.ylen = my_mrc_header.ny = my_mrc_header.my = V().RowNo();
+        my_mrc_header.xlen = my_mrc_header.nx = my_mrc_header.mx = V().colNumber();
+        my_mrc_header.ylen = my_mrc_header.ny = my_mrc_header.my = V().rowNumber();
         my_mrc_header.zlen = my_mrc_header.nz = my_mrc_header.mz = V().SliNo();
         if (x_length != 0) my_mrc_header.xlen = x_length;
         if (y_length != 0) my_mrc_header.ylen = y_length;
@@ -418,11 +418,11 @@ void CCP4::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed,
     }
     else
     {
-        my_mrc_header.nx    = V().ColNo();
+        my_mrc_header.nx    = V().colNumber();
         little22bigendian(my_mrc_header.nx);
         my_mrc_header.xlen = my_mrc_header.mx = my_mrc_header.nx;
 
-        my_mrc_header.ny    = V().RowNo();
+        my_mrc_header.ny    = V().rowNumber();
         little22bigendian(my_mrc_header.ny);
         my_mrc_header.ylen = my_mrc_header.my = my_mrc_header.ny;
 

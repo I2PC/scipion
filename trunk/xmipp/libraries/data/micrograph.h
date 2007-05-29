@@ -525,7 +525,7 @@ public:
     different bit size, then the range is scaled by the bit difference, ie,
     if the input ranges 0-255, the output will range between 0 and 65535 */
 void downsample(const Micrograph &M, int Xstep, int Ystep,
-                const matrix2D<double> &kernel, Micrograph &Mp);
+                const Matrix2D<double> &kernel, Micrograph &Mp);
 
 /**@name Normalization
    This functions implement the normalization of a single image. They should
@@ -573,7 +573,7 @@ void normalize_OldXmipp(Image *I);
    \end{verbatim}
    Comments: it's not bad but positivity constraints cannot be imposed
 */
-void normalize_Near_OldXmipp(Image *I, const matrix2D<int> &bg_mask);
+void normalize_Near_OldXmipp(Image *I, const Matrix2D<int> &bg_mask);
 
 /** OldXmipp decomposition.
    Formula:
@@ -592,7 +592,7 @@ void normalize_Near_OldXmipp(Image *I, const matrix2D<int> &bg_mask);
       of the OldXmipp method in two steps.
 */
 void normalize_OldXmipp_decomposition(Image *I,
-                                      const matrix2D<int> &bg_mask, const matrix2D<double> *mask = NULL);
+                                      const Matrix2D<int> &bg_mask, const Matrix2D<double> *mask = NULL);
 
 /** Michael's normalization.
    Formula:
@@ -607,7 +607,7 @@ void normalize_OldXmipp_decomposition(Image *I,
    Comments: it's not bad but positivity constraints cannot be imposed and
       the statistical properties are not so good.
 */
-void normalize_Michael(Image *I, const matrix2D<int> &bg_mask);
+void normalize_Michael(Image *I, const Matrix2D<int> &bg_mask);
 
 /** NewXmipp's normalization.
    Formula:
@@ -627,7 +627,7 @@ void normalize_Michael(Image *I, const matrix2D<int> &bg_mask);
 disabled. However, a positivity constraint can be applied on the 3D
 volume.
 */
-void normalize_NewXmipp(Image *I, const matrix2D<int> &bg_mask);
+void normalize_NewXmipp(Image *I, const Matrix2D<int> &bg_mask);
 
 /** NewXmipp 2's normalization.
    Formula:
@@ -644,13 +644,13 @@ void normalize_NewXmipp(Image *I, const matrix2D<int> &bg_mask);
 disabled. However, a positivity constraint can be applied on the 3D
 volume.
 */
-void normalize_NewXmipp2(Image *I, const matrix2D<int> &bg_mask);
+void normalize_NewXmipp2(Image *I, const Matrix2D<int> &bg_mask);
 
 /** Removal of inclined background densities (ramps):
     fitting of a least squares plane throught the pixels in the
     bg_mask, then subtraction of the plane, and division by the
     standard deviation of the pixels in the bg_mask */
-void normalize_ramp(Image *I, const matrix2D<int> &bg_mask);
+void normalize_ramp(Image *I, const Matrix2D<int> &bg_mask);
 
 //@}
 //@}

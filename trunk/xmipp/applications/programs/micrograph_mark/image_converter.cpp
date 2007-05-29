@@ -45,7 +45,7 @@ Image *QtImageConverter::qt2xmipp(QImage *qtImg)
 /* xmipp to qt converter --------------------------------------------------- */
 QImage *QtImageConverter::xmipp2qt(Image *xmippImg)
 {
-    QImage *qtImg = new QImage((*xmippImg)().ColNo(), (*xmippImg)().RowNo(),
+    QImage *qtImg = new QImage((*xmippImg)().colNumber(), (*xmippImg)().rowNumber(),
                                8, 256);
 
     for (int i = 0; i < 256; i++) qtImg->setColor(i, qRgb(i, i, i));

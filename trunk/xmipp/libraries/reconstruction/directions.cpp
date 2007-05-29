@@ -35,7 +35,7 @@ bool directions_are_unique(double rot,  double tilt,
     bool are_unique = true;
     double rot2p, tilt2p, psi2p, psi2 = 0.;
     double diff_rot, diff_tilt;
-    matrix2D<double>  L(4, 4), R(4, 4);
+    Matrix2D<double>  L(4, 4), R(4, 4);
 
     for (int isym = 0; isym <= SL.SymsNo(); isym++)
     {
@@ -189,7 +189,7 @@ int find_nearest_direction(double rot1, double tilt1,
     int               dir, optdir;
     double            dist, mindist;
     double            newrot, newtilt, newpsi;
-    matrix2D<double>  L(4, 4), R(4, 4);
+    Matrix2D<double>  L(4, 4), R(4, 4);
 
     DFlib.go_first_data_line();
     optdir = dir = 1;

@@ -255,7 +255,7 @@ void FourierMask::write_amplitude(const FileName &fn, int dim,
                                   bool do_not_center)
 {
     Matrix1D< complex<double> > aux1D;
-    matrix2D< complex<double> > aux2D;
+    Matrix2D< complex<double> > aux2D;
     matrix3D< complex<double> > aux3D;
     switch (dim)
     {
@@ -335,7 +335,7 @@ void FourierMask::apply_mask_Fourier(Matrix1D< complex<double> > &v)
 {
     v *= mask1D;
 }
-void FourierMask::apply_mask_Fourier(matrix2D< complex<double> > &v)
+void FourierMask::apply_mask_Fourier(Matrix2D< complex<double> > &v)
 {
     v *= mask2D;
 }
@@ -351,9 +351,9 @@ void FourierMask::apply_mask_Space(Matrix1D<double> &v)
     aux1D *= mask1D;
     InverseFourierTransform(aux1D, v);
 }
-void FourierMask::apply_mask_Space(matrix2D<double> &v)
+void FourierMask::apply_mask_Space(Matrix2D<double> &v)
 {
-    matrix2D< complex<double> > aux2D;
+    Matrix2D< complex<double> > aux2D;
     FourierTransform(v, aux2D);
     if (XSIZE(mask2D) == 0) generate_mask(v);
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(aux2D)
@@ -372,11 +372,11 @@ void FourierMask::apply_mask_Space(matrix3D<double> &v)
 /* Resize ------------------------------------------------------------------ */
 void FourierMask::resize_mask(int Ydim, int Xdim)
 {
-    mask2D.self_scale_to_size(Ydim, Xdim);
+    mask2D.selfScaleToSize(Ydim, Xdim);
 }
 void FourierMask::resize_mask(int Zdim, int Ydim, int Xdim)
 {
-    mask3D.self_scale_to_size(Zdim, Ydim, Xdim);
+    mask3D.selfScaleToSize(Zdim, Ydim, Xdim);
 }
 
 /* Mask power -------------------------------------------------------------- */

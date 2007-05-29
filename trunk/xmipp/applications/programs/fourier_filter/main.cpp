@@ -68,7 +68,7 @@ public:
 bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 {
     FourierFilter_parameters *eprm = (FourierFilter_parameters *) prm;
-    matrix2D< complex<double> > fft;
+    Matrix2D< complex<double> > fft;
     FourierTransform(img(), fft);
     if (eprm->first)
     {

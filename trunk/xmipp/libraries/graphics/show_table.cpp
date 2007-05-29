@@ -331,12 +331,12 @@ void ShowTable::drawFrameAndLabel(QPainter *p, int row, int col, int i,
 }
 
 /* Scale and normalize an image -------------------------------------------- */
-void ShowTable::scale_and_normalize(matrix2D<double> &I, bool normalize,
+void ShowTable::scale_and_normalize(Matrix2D<double> &I, bool normalize,
                                     int &minGray, int &maxGray)
 {
     // Care about size
     if (currScale != 100)
-        I.self_scale_to_size((int)(currScale / 100*projYdim),
+        I.selfScaleToSize((int)(currScale / 100*projYdim),
                              (int)(currScale / 100*projXdim));
 
     // Care about the normalization

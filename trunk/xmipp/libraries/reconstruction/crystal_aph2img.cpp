@@ -229,7 +229,7 @@ ostream& operator << (ostream &o, const Spot2RealSpace2D_Parameters &prm)
 }
 
 /* DFT^-1 ------------------------------------------------------------------ */
-void IDFT(const matrix2D< complex<double> > &FT, matrix2D<double> &I,
+void IDFT(const Matrix2D< complex<double> > &FT, Matrix2D<double> &I,
           int ydim, int xdim)
 {
     I.initZeros(ydim, xdim);
@@ -323,7 +323,7 @@ void ROUT_Spots2RealSpace(Spot2RealSpace2D_Parameters &prm,
 
     //When data is copied to FT move it from degrees to radians.
     //It is done inside the polar function
-    matrix2D< complex<double> > FT;
+    Matrix2D< complex<double> > FT;
     FT.initZeros(2*ksize + 1, 2*hsize + 1);
     STARTINGY(FT) = -ksize;
     STARTINGX(FT) = -hsize;
@@ -375,7 +375,7 @@ void ROUT_RealSpace2Spots(RealSpace2Spots2D_Parameters &prm,
     //show parameters
     cout << prm;
     //loop through the sel file
-    matrix2D< complex<double> > FT;
+    Matrix2D< complex<double> > FT;
     // CALL DFT
     prj.read(prm.fn_in);
 //   #define DEBUG
@@ -396,9 +396,9 @@ void ROUT_RealSpace2Spots(RealSpace2Spots2D_Parameters &prm,
     Matrix1D<double> aux_vector(3);
     int DoesIntersect;
     Matrix1D<double> intersection_point;
-    matrix2D<double>  A(3, 3);
+    Matrix2D<double>  A(3, 3);
 //     double mrc_tilt, mrc_taxa;
-    matrix2D<double> E, E2D, vp(2, 2), Vp(2, 2), v(2, 2);
+    Matrix2D<double> E, E2D, vp(2, 2), Vp(2, 2), v(2, 2);
     //compute a* and b* in projection coordinate system
     //we will call them ap* and bp*
     Euler_angles2matrix(prm.taxa, prm.mrc_tilt, 0., E);
@@ -560,14 +560,14 @@ ostream& operator << (ostream &o, const RealSpace2Spots2D_Parameters &prm)
     return o;
 }
 /* DFT ------------------------------------------------------------------ */
-void DFT(const matrix2D<double> &I, matrix2D< complex<double> > &FT)
+void DFT(const Matrix2D<double> &I, Matrix2D< complex<double> > &FT)
 {
-//   matrix2D<double> I; I.resize(3,3);
+//   Matrix2D<double> I; I.resize(3,3);
 //   I(0,0)=1;I(0,1)=2;I(0,2)=3;
 //   I(1,0)=4;I(1,1)=5;I(1,2)=6;
 //   I(2,0)=7;I(2,1)=8;I(2,2)=9;
-    int xdim = I.ColNo();
-    int ydim = I.RowNo();
+    int xdim = I.colNumber();
+    int ydim = I.rowNumber();
     double myreal, myimag;
     FT.initZeros(ydim, xdim);
     FT.setXmippOrigin();

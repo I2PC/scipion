@@ -29,7 +29,7 @@
 #include <vector>
 
 /* Dilate/Erode 2D steps --------------------------------------------------- */
-void dilate2D_step(const matrix2D<double> &in, matrix2D<double> &out, int neig,
+void dilate2D_step(const Matrix2D<double> &in, Matrix2D<double> &out, int neig,
                    int count)
 {
     int sum = 0;
@@ -62,7 +62,7 @@ void dilate2D_step(const matrix2D<double> &in, matrix2D<double> &out, int neig,
         }
 }
 
-void erode2D_step(const matrix2D<double> &in, matrix2D<double> &out, int neig,
+void erode2D_step(const Matrix2D<double> &in, Matrix2D<double> &out, int neig,
                   int count)
 {
     int sum = 0;
@@ -96,10 +96,10 @@ void erode2D_step(const matrix2D<double> &in, matrix2D<double> &out, int neig,
 }
 
 /* Dilate/Erode 2D --------------------------------------------------------- */
-void dilate2D(const matrix2D<double> &in, matrix2D<double> &out, int neig, int count,
+void dilate2D(const Matrix2D<double> &in, Matrix2D<double> &out, int neig, int count,
               int size)
 {
-    matrix2D<double> tmp;
+    Matrix2D<double> tmp;
     int i;
     tmp.resize(in);
     tmp = in;
@@ -110,10 +110,10 @@ void dilate2D(const matrix2D<double> &in, matrix2D<double> &out, int neig, int c
     }
 }
 
-void erode2D(const matrix2D<double> &in, matrix2D<double> &out, int neig, int count,
+void erode2D(const Matrix2D<double> &in, Matrix2D<double> &out, int neig, int count,
              int size)
 {
-    matrix2D<double> tmp;
+    Matrix2D<double> tmp;
     int i;
     tmp.resize(in);
     tmp = in;
@@ -125,10 +125,10 @@ void erode2D(const matrix2D<double> &in, matrix2D<double> &out, int neig, int co
 }
 
 /* Opening and closing 2D -------------------------------------------------- */
-void closing2D(const matrix2D<double> &in, matrix2D<double> &out, int neig,
+void closing2D(const Matrix2D<double> &in, Matrix2D<double> &out, int neig,
                int count, int size)
 {
-    matrix2D<double> tmp;
+    Matrix2D<double> tmp;
     int i;
     tmp.resize(in);
     tmp = in;
@@ -144,10 +144,10 @@ void closing2D(const matrix2D<double> &in, matrix2D<double> &out, int neig,
     }
 }
 
-void opening2D(const matrix2D<double> &in, matrix2D<double> &out, int neig,
+void opening2D(const Matrix2D<double> &in, Matrix2D<double> &out, int neig,
                int count, int size)
 {
-    matrix2D<double> tmp;
+    Matrix2D<double> tmp;
     int i;
     tmp.resize(in);
     tmp = in;
@@ -164,7 +164,7 @@ void opening2D(const matrix2D<double> &in, matrix2D<double> &out, int neig,
 }
 
 /* Border ------------------------------------------------------------------ */
-void border(const matrix2D<double> &img, matrix2D<double> &border)
+void border(const Matrix2D<double> &img, Matrix2D<double> &border)
 {
     /*
     border.initZeros(img);
@@ -193,10 +193,10 @@ void border(const matrix2D<double> &img, matrix2D<double> &border)
 }
 
 /* Simplified Border ------------------------------------------------------- */
-void simplify_border(const matrix2D<double> &border,
-                     matrix2D<double> &simplified_border)
+void simplify_border(const Matrix2D<double> &border,
+                     Matrix2D<double> &simplified_border)
 {
-    matrix2D<double> aux;
+    Matrix2D<double> aux;
     aux.initZeros(border);
     for (int i = STARTINGY(border) + 1; i <= FINISHINGY(border) - 1; i++)
         for (int j = STARTINGX(border) + 1; j <= FINISHINGX(border) - 1; j++)
@@ -238,7 +238,7 @@ void simplify_border(const matrix2D<double> &border,
 }
 
 /* Random convex hull ------------------------------------------------------ */
-void random_convex_hull(const matrix2D<double> &img, matrix2D<double> &hull,
+void random_convex_hull(const Matrix2D<double> &img, Matrix2D<double> &hull,
                         long N)
 {
     hull = img;
@@ -276,7 +276,7 @@ void random_convex_hull(const matrix2D<double> &img, matrix2D<double> &hull,
         fill_triangle(hull, tx, ty, 1);
     }
     /*
-    matrix2D<double> aux;
+    Matrix2D<double> aux;
     aux.initZeros(hull);
     closing2D(hull,aux,8,0,1);
     hull=aux;

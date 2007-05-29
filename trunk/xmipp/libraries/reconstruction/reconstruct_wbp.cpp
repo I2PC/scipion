@@ -138,8 +138,8 @@ void Prog_WBP_prm::get_sampled_matrices(SelFile &SF)
 
     DocFile           DFlib, DFcp;
     headerXmipp       head;
-    matrix2D<double>  A(3, 3);
-    matrix2D<double>  L(4, 4), R(4, 4);
+    Matrix2D<double>  A(3, 3);
+    Matrix2D<double>  L(4, 4), R(4, 4);
     double            newrot, newtilt, newpsi, rot, tilt, psi, totimgs = 0.;
     int               NN, dir, optdir;
     vector<double>    count_imgs;
@@ -208,8 +208,8 @@ void Prog_WBP_prm::get_all_matrices(SelFile &SF)
 {
 
     headerXmipp      head;
-    matrix2D<double> A(3, 3);
-    matrix2D<double> L(4, 4), R(4, 4);
+    Matrix2D<double> A(3, 3);
+    Matrix2D<double> L(4, 4), R(4, 4);
     double           newrot, newtilt, newpsi, totimgs = 0.;
     int              NN;
 
@@ -259,7 +259,7 @@ void Prog_WBP_prm::simple_backprojection(Projection &img, VolumeXmipp &vol,
         int diameter)
 {
     int i, j, k, l, m;
-    matrix2D<double> A(3, 3);
+    Matrix2D<double> A(3, 3);
     float dim2, x, y, z, xp, yp;
     float value1, value2, scalex, scaley, scale1, value;
     float radius2, x2, y2, z2, z2_plus_y2;
@@ -314,7 +314,7 @@ void Prog_WBP_prm::simple_backprojection(Projection &img, VolumeXmipp &vol,
 void Prog_WBP_prm::filter_one_image(Projection &proj)
 {
     FourierImageXmipp IMG;
-    matrix2D<double>  A(3, 3);
+    Matrix2D<double>  A(3, 3);
     float             factor, argum, weight, x, y;
 
     factor = (float)diameter;
@@ -375,7 +375,7 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
     int               c, nn, imgno;
     double            rot, tilt, psi, newrot, newtilt, newpsi, weight;
     Projection        proj;
-    matrix2D<double>  L(4, 4), R(4, 4);
+    Matrix2D<double>  L(4, 4), R(4, 4);
     Mask_Params       mask_prm;
 
     vol().resize(dim, dim, dim);

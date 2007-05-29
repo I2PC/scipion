@@ -73,7 +73,7 @@ void Prog_Microscope_Parameters::produce_side_info()
 {
     int Zdim;
     get_input_size(Zdim, Ydim, Xdim);
-    matrix2D<double> aux;
+    Matrix2D<double> aux;
 
     double before_power = 0, after_power = 0;
 
@@ -134,14 +134,14 @@ void Prog_Microscope_Parameters::produce_side_info()
 
 /* Apply ------------------------------------------------------------------- */
 //#define DEBUG
-void Prog_Microscope_Parameters::apply(matrix2D<double> &I)
+void Prog_Microscope_Parameters::apply(Matrix2D<double> &I)
 {
     I.setXmippOrigin();
     I.window(FIRST_XMIPP_INDEX(2*Ydim), FIRST_XMIPP_INDEX(2*Xdim),
              LAST_XMIPP_INDEX(2*Ydim), LAST_XMIPP_INDEX(2*Xdim));
 
     // Add noise before CTF
-    matrix2D<double> noisy;
+    Matrix2D<double> noisy;
     noisy.resize(I);
     noisy.init_random(0, sigma_before_CTF, "gaussian");
     if (low_pass_before_CTF != 0) lowpass.apply_mask_Space(noisy);
@@ -153,7 +153,7 @@ void Prog_Microscope_Parameters::apply(matrix2D<double> &I)
     {
         double old_DefocusU = ctf.ctf.DeltafU;
         double old_DefocusV = ctf.ctf.DeltafV;
-        matrix2D<double> aux;
+        Matrix2D<double> aux;
         ctf.ctf.DeltafU *= rnd_unif(1 - defocus_change / 100, 1 + defocus_change / 100);
         ctf.ctf.DeltafV *= rnd_unif(1 - defocus_change / 100, 1 + defocus_change / 100);
         aux.initZeros(2*Ydim, 2*Xdim);

@@ -91,11 +91,11 @@ public:
     /** This image APH */
     APHFileorigmerg       aph_file;
     /** Matrix that stores the number of spots for a given (k,h) */
-    matrix2D<int> Counter;
+    Matrix2D<int> Counter;
     /** Lattice vectors in the volume */
-    matrix2D<double> vol_latt_vec;
+    Matrix2D<double> vol_latt_vec;
     /** Lattice vectors in the volume */
-    matrix2D<double> proj_latt_vec;
+    Matrix2D<double> proj_latt_vec;
     /** Rotational angle */
     double          rot;
     /** Tilt angle */
@@ -199,11 +199,11 @@ void ROUT_RealSpace2Spots(RealSpace2Spots2D_Parameters &prm,
 //@}
 /** Discrete inverse, but not fast Fourier transform
 */
-void IDFT(const matrix2D< complex<double> > &FT, matrix2D<double> &I,
+void IDFT(const Matrix2D< complex<double> > &FT, Matrix2D<double> &I,
           int ydim, int xdim);
 
 /** Discrete direct, but not fast Fourier transform
 */
-void DFT(const matrix2D<double> &I,  matrix2D< complex<double> > &FT);
+void DFT(const Matrix2D<double> &I,  Matrix2D< complex<double> > &FT);
 
 #endif

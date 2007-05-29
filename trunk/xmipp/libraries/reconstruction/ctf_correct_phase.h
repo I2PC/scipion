@@ -80,7 +80,7 @@ public:
     /** Correct phase of an image.
         An exception is thrown if the input image is not of the same size
         as the ctf or if the CTF is not real */
-    void correct(matrix2D< complex<double> > &v);
+    void correct(Matrix2D< complex<double> > &v);
 
     /** Correct phase of a set of images.*/
     void correct(SelFile &SF);

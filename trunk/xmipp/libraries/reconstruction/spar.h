@@ -68,8 +68,8 @@
 
    DATE:        19-1-2001
 */
-double CausalAR(matrix2D<double> &Img,
-                int orderR, int orderC, matrix2D<double> &ARParameters);
+double CausalAR(Matrix2D<double> &Img,
+                int orderR, int orderC, Matrix2D<double> &ARParameters);
 
 /** NonCausalAR.
 
@@ -95,8 +95,8 @@ double CausalAR(matrix2D<double> &Img,
 
    DATE:          21-2-2001
 */
-double NonCausalAR(matrix2D<double> &Img,
-                   int orderR, int orderC, matrix2D<double> &ARParameters);
+double NonCausalAR(Matrix2D<double> &Img,
+                   int orderR, int orderC, Matrix2D<double> &ARParameters);
 
 /** ARFilter.
    This function returns the AR Filter associated to an AR model.
@@ -112,8 +112,8 @@ double NonCausalAR(matrix2D<double> &Img,
 
    DATE:        6-1-2001
 */
-void ARFilter(matrix2D<double> &Img, matrix2D< complex<double> > &Filter,
-              matrix2D<double> &ARParameters);
+void ARFilter(Matrix2D<double> &Img, Matrix2D< complex<double> > &Filter,
+              Matrix2D<double> &ARParameters);
 
 /** Combine AR Filters.
 
@@ -134,9 +134,9 @@ void ARFilter(matrix2D<double> &Img, matrix2D< complex<double> > &Filter,
 
    DATE:        6-1-2001
 */
-void combineARFilters(const matrix2D< complex<double> > &Filter1,
-                      const matrix2D< complex<double> > &Filter2,
-                      matrix2D< complex<double> > &Filter,
+void combineARFilters(const Matrix2D< complex<double> > &Filter1,
+                      const Matrix2D< complex<double> > &Filter2,
+                      Matrix2D< complex<double> > &Filter,
                       const string &method);
 
 //@}

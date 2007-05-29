@@ -127,8 +127,8 @@ public:
 double CSTSplineAssignment(
     matrix3D<double> &ReDFTVolume,
     matrix3D<double> &ImDFTVolume,
-    matrix2D<double> &image,
-    matrix2D<double> &weight,
+    Matrix2D<double> &image,
+    Matrix2D<double> &weight,
     Matrix1D<double> &pose_parameters,
     int               max_no_iter = 60
 );

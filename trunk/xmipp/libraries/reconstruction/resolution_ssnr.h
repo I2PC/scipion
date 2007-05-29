@@ -113,7 +113,7 @@ public:
     /** Estimate SSNR 2D.
         Generate images with the particular SSNR. The output filename
         is used as a rootname */
-    void Estimate_SSNR(int dim, matrix2D<double> &output);
+    void Estimate_SSNR(int dim, Matrix2D<double> &output);
 
     /** Radial average of a Volumetric SSNR.
         The Volumetric SSNR is stored as 10*log10(VSSNR+1). To perform
@@ -125,12 +125,12 @@ public:
         Column 1: corresponding frequency in continuous freq (1/A),
         Column 2: corrected radial_avg
     */
-    void Radial_average(matrix2D<double> &output);
+    void Radial_average(Matrix2D<double> &output);
 };
 
 /** Perform all the work.
     For the meaning of the output matrix look at the documentation
     of the function Estimate_SSNR_1D of the class Prog_SSNR_prm. */
-void ROUT_SSNR(Prog_SSNR_prm &prm, matrix2D<double> &output);
+void ROUT_SSNR(Prog_SSNR_prm &prm, Matrix2D<double> &output);
 //@}
 #endif

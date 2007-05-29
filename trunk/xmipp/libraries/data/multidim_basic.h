@@ -416,7 +416,7 @@ void statistics_adjust(double avgF, double stddevF)
  *
  * It assumes that the result is already resized.
  */
-friend void core_arrayByArray<>(const maT& op1,
+friend void coreArrayByArray<>(const maT& op1,
                                   const maT& op2,
                                   maT& result,
                                   char operation);
@@ -538,7 +538,7 @@ friend void array_by_scalar(const maT& op1,
                             char operation)
 {
     result.resize(op1);
-    core_array_by_scalar(op1, op2, result, operation);
+    coreArrayByScalar(op1, op2, result, operation);
 }
 
 /** Core array by scalar operation.
@@ -546,7 +546,7 @@ friend void array_by_scalar(const maT& op1,
  *
  * It assumes that the result is already resized.
  */
-friend void core_array_by_scalar<>(const maT& op1,
+friend void coreArrayByScalar<>(const maT& op1,
                                    const T& op2,
                                    maT& result,
                                    char operation);
@@ -669,7 +669,7 @@ friend void scalar_by_array(T op1,
                             char operation)
 {
     result.resize(op2);
-    core_scalar_by_array(op1, op2, result, operation);
+    coreScalarByArray(op1, op2, result, operation);
 }
 
 /** Core array by scalar operation.
@@ -677,7 +677,7 @@ friend void scalar_by_array(T op1,
  *
  * It assumes that the result is already resized.
  */
-friend void core_scalar_by_array<>(const T& op1,
+friend void coreScalarByArray<>(const T& op1,
                                    const maT& op2,
                                    maT& result,
                                    char operation);
@@ -1758,7 +1758,7 @@ friend maT log10(const maT& a)
  * @ingroup Utilities
  *
  * If a mask is provided it must be of the same dimension of the object
- * and of type int (i.e., matrix2D<int> *). Only those logical indexes
+ * and of type int (i.e., Matrix2D<int> *). Only those logical indexes
  * within the object whose mask value is 1 (also in logical indexes)
  * are taken into account.
  */

@@ -66,7 +66,7 @@ public:
     /** Number of projection directions */
     int nr_dir;
     /** Vector with reference library projections */
-    vector<matrix2D<double> > ref_img;
+    vector<Matrix2D<double> > ref_img;
     /** Vectors for standard deviation and mean of reference library projections */
     double * ref_stddev, * ref_mean;
     /** Vector with reference library angles */
@@ -78,7 +78,7 @@ public:
     /** Flag whether to store optimal transformations in the image headers */
     bool modify_header;
 #ifdef NEVERDEFINE
-    vector<matrix2D<double> >::iterator idirno;
+    vector<Matrix2D<double> >::iterator idirno;
     /** Number of steps to sample in-plane rotation in 90 degrees */
     int nr_psi;
     /** Verbose level:
@@ -93,7 +93,7 @@ public:
     /** Angular sampling rate */
     double sampling;
     /** Mask for shifts */
-    matrix2D<int> rotmask;
+    Matrix2D<int> rotmask;
     /** Number of white pixels in rotmask */
     int nr_pixels_rotmask;
     /** Inner and outer radii to limit the rotational search */
@@ -111,7 +111,7 @@ public:
 
 public:
     /** Actual projection matching for one image */
-    void PM_process_one_image(matrix2D<double> &Mexp,
+    void PM_process_one_image(Matrix2D<double> &Mexp,
                               float img_rot, float img_tilt, float img_psi,
                               float scale,
                               int &opt_dirno, double &opt_psi, double &opt_scale,

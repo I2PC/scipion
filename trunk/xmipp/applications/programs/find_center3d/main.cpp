@@ -104,14 +104,14 @@ int main(int argc, char **argv)
         cout << "Center of mass (X,Y,Z)= " << centerOfMass.transpose() << endl;
 
         // Move origin to that center of mass
-        volume().self_translate(-centerOfMass, DONT_WRAP);
+        volume().selfTranslate(-centerOfMass, DONT_WRAP);
         if (centerVolume) volume.write();
 
         // Look for the rotational symmetry axis
         if (rot_sym > 1)
         {
             double best_corr = 0, best_rot = rot0 - step_rot, best_tilt = tilt0 - step_tilt;
-            matrix2D<double> Euler;
+            Matrix2D<double> Euler;
             Matrix1D<double> sym_axis(3);
             int maxsteps = FLOOR((rotF - rot0) / step_rot) * FLOOR((tiltF - tilt0) / step_tilt);
             cerr << "Searching symmetry axis ...\n";
@@ -121,7 +121,7 @@ int main(int argc, char **argv)
                 for (double tilt = tilt0; tilt <= tiltF; tilt += step_tilt)
                 {
                     // Compute symmetry axis
-                    matrix2D<double> Euler;
+                    Matrix2D<double> Euler;
                     Euler_angles2matrix(rot, tilt, 0, Euler);
                     Matrix1D<double> sym_axis(3);
                     Euler.getRow(2, sym_axis);
@@ -131,9 +131,9 @@ int main(int argc, char **argv)
                     volume_sym() = volume();
                     for (int n = 1; n < rot_sym; n++)
                     {
-                        matrix2D<double> sym_matrix;
-                        sym_matrix = rot3D_matrix(360.0 / rot_sym * n, sym_axis);
-                        apply_geom(volume_aux(), sym_matrix, volume(), IS_NOT_INV,
+                        Matrix2D<double> sym_matrix;
+                        sym_matrix = rotation3DMatrix(360.0 / rot_sym * n, sym_axis);
+                        applyGeometry(volume_aux(), sym_matrix, volume(), IS_NOT_INV,
                                    DONT_WRAP);
                         volume_sym() += volume_aux();
                     }

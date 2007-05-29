@@ -102,7 +102,7 @@ void GetXmippImageSize(const FileName &fn, int &Ydim, int &Xdim)
 void ImageXmipp_to_FourierImageXmipp(ImageXmipp &I, FourierImageXmipp &F)
 {
     // Adjust the size of the Fourier Image
-    F().resize(I().RowNo(), I().ColNo());
+    F().resize(I().rowNumber(), I().colNumber());
     // And copy
     FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
     {
@@ -115,7 +115,7 @@ void ImageXmipp_to_FourierImageXmipp(ImageXmipp &I, FourierImageXmipp &F)
 void FourierImageXmipp_to_ImageXmipp(FourierImageXmipp &F, ImageXmipp &I)
 {
     // Adjust the size of the Fourier Image
-    I().resize(F().RowNo(), F().ColNo());
+    I().resize(F().rowNumber(), F().colNumber());
     // And copy
     FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
     {

@@ -417,8 +417,8 @@ void QtMainWidgetMark::compute_gamma()
 
 /* Compute alphas ---------------------------------------------------------- */
 double pair_tilt;
-matrix2D<double> *pair_Put;
-matrix2D<double> pair_E;
+Matrix2D<double> *pair_Put;
+Matrix2D<double> pair_E;
 
 double matrix_fitness(double *p)
 {

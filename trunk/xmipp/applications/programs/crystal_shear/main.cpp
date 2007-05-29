@@ -38,7 +38,7 @@ int main(int argc, char **argv)
     double d00, d01, d10, d11;
 
     VolumeXmipp    V_in, V_out;
-    matrix2D<double> D(4, 4);
+    Matrix2D<double> D(4, 4);
 
     D.initZeros();
     D(0, 0) = D(1, 1) = D(2, 2) = D(3, 3) = 1.0f;
@@ -70,7 +70,7 @@ int main(int argc, char **argv)
     }
     V_in.read(fn_in);
 
-    apply_geom(V_out.img, D, V_in.img, IS_INV, DONT_WRAP);
+    applyGeometry(V_out.img, D, V_in.img, IS_INV, DONT_WRAP);
     V_out.write(fn_out);
     exit(0);
 }

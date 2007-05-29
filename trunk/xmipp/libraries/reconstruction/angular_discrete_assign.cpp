@@ -305,7 +305,7 @@ void Prog_angular_predict_prm::produce_library()
     Matrix1D<int> SBidx(SBNo);
     for (int m = 0; m < SBNo; m++)
     {
-        matrix2D<double> *subband = new matrix2D<double>;
+        Matrix2D<double> *subband = new Matrix2D<double>;
         subband->resize(number_of_imgs, SBsize(m));
         library.push_back(subband);
     }
@@ -380,7 +380,7 @@ void Prog_angular_predict_prm::refine_candidate_list_with_correlation(
 
     int dimp = SBsize(m);
     int imax = candidate_list.size();
-    matrix2D<double> *library_m = library[m];
+    Matrix2D<double> *library_m = library[m];
     for (int i = 0; i < imax; i++)
     {
         if (candidate_list[i])
@@ -803,8 +803,8 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
                     // Rotate image if necessary
                     // Adding 2 is a trick to avoid that the 0, 90, 180 and 270
                     // are treated in a different way
-                    Ip().self_rotate(psi + 2, WRAP);
-                    Ip().self_rotate(-2, WRAP);
+                    Ip().selfRotate(psi + 2, WRAP);
+                    Ip().selfRotate(-2, WRAP);
 
                     // Mirror the image if necessary
                     if (mirror) Ip().selfReverseY();
@@ -1152,7 +1152,7 @@ void Prog_angular_predict_prm::produceSummary()
         ImageXmipp I;
         I.read(SFin.NextImg(), true);
         referenceWeight[predicted_reference[n]].push_back(I.name());
-        I().self_rotate(I.psi());
+        I().selfRotate(I.psi());
         assignedAvg[predicted_reference[n]]() += I();
     }
     for (int l = 0; l < L; l++)

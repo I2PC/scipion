@@ -70,7 +70,7 @@ ostream & operator << (ostream &out, const Symmetrize_Parameters &prm)
 void symmetrize(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
                 bool wrap, bool show_progress)
 {
-    matrix2D<double> L(4, 4), R(4, 4); // A matrix from the list
+    Matrix2D<double> L(4, 4), R(4, 4); // A matrix from the list
     VolumeXmipp V_aux, V_aux2;
     Matrix1D<double> sh(3);
     V_out = V_in;
@@ -85,20 +85,20 @@ void symmetrize(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
         SL.get_matrices(i, L, R);
 
         SL.get_shift(i, sh);
-        R(3, 0) = sh(0) * V_aux().ColNo();
-        R(3, 1) = sh(1) * V_aux().RowNo();
+        R(3, 0) = sh(0) * V_aux().colNumber();
+        R(3, 1) = sh(1) * V_aux().rowNumber();
         R(3, 2) = sh(2) * V_aux().SliNo();
 
         /* *** CO: I don't know why the compiler doesn't allow me
            to reuse V_in !!!, this is very memory wasting */
-        apply_geom(V_aux(), R.transpose(), V_in(), IS_NOT_INV, wrap);
+        applyGeometry(V_aux(), R.transpose(), V_in(), IS_NOT_INV, wrap);
 #ifdef DEBUG
         V_aux.write((string)"PPPsym_" + ItoA(i) + ".vol");
 #endif
 
         /* *** CO: I am not very sure about the reason for this, but it
            seems to work */
-        // apply_geom(V_aux2(),L,V_aux(),IS_NOT_INV,prm.wrap);
+        // applyGeometry(V_aux2(),L,V_aux(),IS_NOT_INV,prm.wrap);
         arrayByArray(V_out(), V_aux(), V_out(), '+');
         if (show_progress) progress_bar(i);
     }
@@ -113,7 +113,7 @@ void symmetrize_Bspline(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out
                         int Splinedegree, bool wrap, bool do_outside_avg)
 {
 
-    matrix2D<double> L(4, 4), R(4, 4); // A matrix from the list
+    Matrix2D<double> L(4, 4), R(4, 4); // A matrix from the list
     VolumeXmipp V_aux, V_aux2;
     Matrix1D<double> sh(3);
     double dum, avg = 0.;
@@ -124,7 +124,7 @@ void symmetrize_Bspline(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out
         int rad;
         mask.resize(V_in());
         mask.setXmippOrigin();
-        rad = MIN(V_in().RowNo(), V_in().ColNo());
+        rad = MIN(V_in().rowNumber(), V_in().colNumber());
         rad = MIN(rad, V_in().SliNo());
         BinarySphericalMask(mask, rad / 2, OUTSIDE_MASK);
         computeStats_within_binary_mask(mask, V_in(), dum, dum, avg, dum);
@@ -137,11 +137,11 @@ void symmetrize_Bspline(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out
         SL.get_matrices(i, L, R);
 
         SL.get_shift(i, sh);
-        R(3, 0) = sh(0) * V_aux().ColNo();
-        R(3, 1) = sh(1) * V_aux().RowNo();
+        R(3, 0) = sh(0) * V_aux().colNumber();
+        R(3, 1) = sh(1) * V_aux().rowNumber();
         R(3, 2) = sh(2) * V_aux().SliNo();
 
-        apply_geom_Bspline(V_aux(), R.transpose(), V_in(), Splinedegree, IS_NOT_INV, wrap, avg);
+        applyGeometryBSpline(V_aux(), R.transpose(), V_in(), Splinedegree, IS_NOT_INV, wrap, avg);
         arrayByArray(V_out(), V_aux(), V_out(), '+');
 
 #ifdef DEBUG

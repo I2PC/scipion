@@ -29,7 +29,7 @@
 
 // Design Matrix -----------------------------------------------------------
 void RBF_design_matrix(xmippCTVectors &C, Matrix1D<double> &r,
-                       xmippCTVectors &X, matrix2D<double> &H)
+                       xmippCTVectors &X, Matrix2D<double> &H)
 {
     int p = X.size(); // Number of points to evaluate
     int m = C.size(); // Number of centers
@@ -147,7 +147,7 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
     r_out *= scale; // Multiply input radii
 
     // Compute design matrix
-    matrix2D<double> F;
+    Matrix2D<double> F;
     RBF_design_matrix(C, r_out, X, F);
 
     // Some initialisation
@@ -159,7 +159,7 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
     idx_out.clear();
     double lam = 1e-9;
 
-    matrix2D<double> Hm, Hn, Fm, U;
+    Matrix2D<double> Hm, Hn, Fm, U;
     Matrix1D<double> Hy, FmFm, Fty, err, hh, aux1D;
     double fy, ff, msc, min_msc;
     int age;
@@ -422,7 +422,7 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
 void RBF_predict(xmippRBF &RBF,  xmippCTVectors &X,
                  vector<double> &y_predicted)
 {
-    matrix2D<double> H;
+    Matrix2D<double> H;
     RBF_design_matrix(RBF.C, RBF.r, X, H);
     int p = X.size();
     y_predicted.resize(p);

@@ -150,8 +150,8 @@ public:
 bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 {
     Shift_Scale_parameters *eprm = (Shift_Scale_parameters *) prm;
-    matrix2D<double> A(3, 3);
-    A.init_identity();
+    Matrix2D<double> A(3, 3);
+    A.initIdentity();
 
     if (eprm->DF_shifts.name() != "")
     {
@@ -187,15 +187,15 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
     }
     A(0, 0) = XX(eprm->scale);
     A(1, 1) = YY(eprm->scale);
-    if (!eprm->store_in_header) img().self_apply_geom_Bspline(A, 3, IS_NOT_INV, eprm->wrap);
+    if (!eprm->store_in_header) img().selfApplyGeometryBSpline(A, 3, IS_NOT_INV, eprm->wrap);
     else                        img.set_originOffsets(XX(eprm->shift), YY(eprm->shift));
     return true;
 }
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
-    matrix2D<double> A(4, 4);
-    A.init_identity();
+    Matrix2D<double> A(4, 4);
+    A.initIdentity();
     Shift_Scale_parameters *eprm = (Shift_Scale_parameters *) prm;
 //   if (eprm->DF_shifts.name()=="")
 //        ;//shift is already filled
@@ -235,7 +235,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
     A(0, 0) = XX(eprm->scale);
     A(1, 1) = YY(eprm->scale);
     A(2, 2) = ZZ(eprm->scale);
-    vol().self_apply_geom_Bspline(A, 3, IS_NOT_INV, eprm->wrap);
+    vol().selfApplyGeometryBSpline(A, 3, IS_NOT_INV, eprm->wrap);
     return true;
 }
 

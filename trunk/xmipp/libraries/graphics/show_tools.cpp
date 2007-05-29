@@ -295,7 +295,7 @@ void xmipp2Qt(Image& _ximage, QImage &_qimage, int _min_scale,
               int _max_scale, double _m, double _M)
 {
     // Creates a Qt Image to hold Xmipp Image
-    _qimage.create(_ximage().ColNo(), _ximage().RowNo(), 8, 256);
+    _qimage.create(_ximage().colNumber(), _ximage().rowNumber(), 8, 256);
 
     // Sets Graylevel Palette.
     for (int i = 0; i < 256; i++)
@@ -305,7 +305,7 @@ void xmipp2Qt(Image& _ximage, QImage &_qimage, int _min_scale,
         _qimage.setColor(i, c.rgb());
     }
 
-    const matrix2D<double> &xmatrix = _ximage();
+    const Matrix2D<double> &xmatrix = _ximage();
     int xdim = XSIZE(xmatrix);
     int ydim = YSIZE(xmatrix);
     double min_val, max_val;
@@ -340,7 +340,7 @@ void xmipp2Pixmap(Image &xmippImage, QPixmap* pixmap,
 }
 
 /* Xmipp image -> Xmipp PSD ------------------------------------------------ */
-void xmipp2PSD(const matrix2D<double> &input, matrix2D<double> &output)
+void xmipp2PSD(const Matrix2D<double> &input, Matrix2D<double> &output)
 {
     output = input;
     CenterFFT(output, true);
@@ -355,7 +355,7 @@ void xmipp2PSD(const matrix2D<double> &input, matrix2D<double> &output)
 }
 
 /* Xmipp image -> Xmipp CTF ------------------------------------------------ */
-void xmipp2CTF(const matrix2D<double> &input, matrix2D<double> &output)
+void xmipp2CTF(const Matrix2D<double> &input, Matrix2D<double> &output)
 {
     output = input;
     CenterFFT(output, true);
@@ -380,7 +380,7 @@ void xmipp2CTF(const matrix2D<double> &input, matrix2D<double> &output)
             }
         }
     }
-    matrix2D<double> left(YSIZE(output), XSIZE(output));
+    Matrix2D<double> left(YSIZE(output), XSIZE(output));
     min_val = 10 * log10(min_val);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(output)
     {

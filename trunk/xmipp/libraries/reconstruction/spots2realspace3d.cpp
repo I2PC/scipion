@@ -135,8 +135,8 @@ void IDFT_3D(const matrix3D< complex<double> > &FT, matrix3D<double> &V1)
     e_kx = FT.finishingX();
 
     z_dim = (double)V1.SliNo();
-    y_dim = (double)V1.RowNo();
-    x_dim = (double)V1.ColNo();
+    y_dim = (double)V1.rowNumber();
+    x_dim = (double)V1.colNumber();
 
     time_config();
     init_progress_bar(-s_iz + e_iz + 1);

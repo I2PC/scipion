@@ -56,7 +56,7 @@ public:
 bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 {
     Prog_CorrectPhase_Params *eprm = (Prog_CorrectPhase_Params *) prm;
-    matrix2D< complex<double> > fft;
+    Matrix2D< complex<double> > fft;
     FileName       fn_ctf;
     if (eprm->cpprm.multiple_CTFs)
     {

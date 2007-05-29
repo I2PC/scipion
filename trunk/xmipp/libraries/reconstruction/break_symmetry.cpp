@@ -153,7 +153,7 @@ void Prog_Break_Sym_prm::process_one_image(ImageXmipp &img, int &opt_vol,
     double Xsq, Asq, corr;
     double opt_rot, opt_tilt, opt_psi;
     Projection proj, projmask;
-    matrix2D<double> L(4, 4), R(4, 4);
+    Matrix2D<double> L(4, 4), R(4, 4);
 
     rot = img.rot();
     tilt = img.tilt();

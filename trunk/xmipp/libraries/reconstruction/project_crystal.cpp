@@ -189,7 +189,7 @@ void project_crystal(Phantom &phantom, Projection &P,
     // Check if orthogonal projections
     // (projXdim,0)'=A*aproj
     // (0,projYdim)'=A*bproj
-    matrix2D<double> Ainv, A, D, Dinv, AuxMat;
+    Matrix2D<double> Ainv, A, D, Dinv, AuxMat;
     if (prm_crystal.orthogonal)
     {
         A.resize(2, 2);
@@ -230,8 +230,8 @@ void project_crystal(Phantom &phantom, Projection &P,
     }
     else
     {
-        A.init_identity(3);
-        Ainv.init_identity(3);
+        A.initIdentity(3);
+        Ainv.initIdentity(3);
     }
     //#define DEBUG
 #ifdef DEBUG
@@ -262,7 +262,7 @@ void project_crystal(Phantom &phantom, Projection &P,
 #endif
 
     // Get rid of all unnecessary components
-    matrix2D<double> A2D = A;
+    Matrix2D<double> A2D = A;
     A2D.resize(2, 2);
     proja.resize(2);
     projb.resize(2);
@@ -287,14 +287,14 @@ void project_crystal(Phantom &phantom, Projection &P,
     cout << "corner2 after deformation " << corner2.transpose() << endl;
 #endif
 
-    matrix2D<double> cell_shiftX, cell_shiftY, cell_shiftZ;
-    matrix2D<int>    cell_inside;
-    matrix2D<double> exp_shifts_matrix_X;
-    matrix2D<double> exp_shifts_matrix_Y;
-    matrix2D<double> exp_shifts_matrix_Z;
-    matrix2D<double> exp_normal_shifts_matrix_X;
-    matrix2D<double> exp_normal_shifts_matrix_Y;
-    matrix2D<double> exp_normal_shifts_matrix_Z;
+    Matrix2D<double> cell_shiftX, cell_shiftY, cell_shiftZ;
+    Matrix2D<int>    cell_inside;
+    Matrix2D<double> exp_shifts_matrix_X;
+    Matrix2D<double> exp_shifts_matrix_Y;
+    Matrix2D<double> exp_shifts_matrix_Z;
+    Matrix2D<double> exp_normal_shifts_matrix_X;
+    Matrix2D<double> exp_normal_shifts_matrix_Y;
+    Matrix2D<double> exp_normal_shifts_matrix_Z;
 
     fill_cell_positions(P, proja, projb, aprojd, bprojd, corner1, corner2,
                         prm_crystal, cell_shiftX, cell_shiftY, cell_shiftZ, cell_inside,
@@ -310,8 +310,8 @@ void project_crystal(Phantom &phantom, Projection &P,
                       phantom.phantom_scale);
 
     // Prepare matrices to go from uncompressed space to deformed projection
-    matrix2D<double> AE = A * P.euler;   // From uncompressed to deformed
-    matrix2D<double> AEinv = AE.inv(); // From deformed to uncompressed
+    Matrix2D<double> AE = A * P.euler;   // From uncompressed to deformed
+    Matrix2D<double> AEinv = AE.inv(); // From deformed to uncompressed
     // add the shifts to the already compute values
     Matrix1D<double> temp_vect(3);
 
@@ -413,9 +413,9 @@ void project_crystal(Phantom &phantom, Projection &P,
         Matrix1D<double> normal_vector(3);
         double alpha, beta, gamma;
         double rota, tilta, psia;
-        matrix2D<double> angles_matrix, inverse_angles_matrix;
-        matrix2D<double> def_cyl_angles_matrix;
-        matrix2D<double> cyl_angles_matrix;
+        Matrix2D<double> angles_matrix, inverse_angles_matrix;
+        Matrix2D<double> def_cyl_angles_matrix;
+        Matrix2D<double> cyl_angles_matrix;
 
         // the phantom is rotated only when there exists a shifts file
         if (prm_crystal.DF_shift_bool)
@@ -482,7 +482,7 @@ void find_crystal_limits(
 
     // Initialize
     SPEED_UP_temps;
-    matrix2D<double> A(2, 2), Ainv(2, 2);
+    Matrix2D<double> A(2, 2), Ainv(2, 2);
     A.setCol(0, a);
     A.setCol(1, b);
     M2x2_INV(Ainv, A);
@@ -529,7 +529,7 @@ void find_crystal_limits(
 
    This function supposes that r is inside the matrix
 */
-void move_following_spiral(Matrix1D<double> &r, const matrix2D<int> &visited)
+void move_following_spiral(Matrix1D<double> &r, const Matrix2D<int> &visited)
 {
     int r1 = 0, r2 = 0, r3 = 0, c1 = 0, c2 = 0, c3 = 0;
 
@@ -660,13 +660,13 @@ void fill_cell_positions(Projection &P,
                          Matrix1D<double> &aprojd,  Matrix1D<double> &bprojd,
                          Matrix1D<double> &corner1, Matrix1D<double> &corner2,
                          const Crystal_Projection_Parameters &prm_crystal,
-                         matrix2D<double> &cell_shiftX,
-                         matrix2D<double> &cell_shiftY,
-                         matrix2D<double> &cell_shiftZ,
-                         matrix2D<int>    &cell_inside,
-                         matrix2D<double> &exp_shifts_matrix_X,
-                         matrix2D<double> &exp_shifts_matrix_Y,
-                         matrix2D<double> &exp_shifts_matrix_Z)
+                         Matrix2D<double> &cell_shiftX,
+                         Matrix2D<double> &cell_shiftY,
+                         Matrix2D<double> &cell_shiftZ,
+                         Matrix2D<int>    &cell_inside,
+                         Matrix2D<double> &exp_shifts_matrix_X,
+                         Matrix2D<double> &exp_shifts_matrix_Y,
+                         Matrix2D<double> &exp_shifts_matrix_Z)
 {
 
     // Compute crystal limits
@@ -684,7 +684,7 @@ void fill_cell_positions(Projection &P,
 #endif
 
     // Compute weight table in the undeformed space
-    matrix2D<double> weight(3, 3);
+    Matrix2D<double> weight(3, 3);
     STARTINGX(weight) = -1;
     STARTINGY(weight) = -1;
     weight(0, 0) = 0;
@@ -705,7 +705,7 @@ void fill_cell_positions(Projection &P,
     STARTINGY(cell_inside) = ibmin;
 
     // Visited has got one cell more than the rest in all directions
-    matrix2D<int> visited;
+    Matrix2D<int> visited;
     int visited_size = MAX(iamax - iamin + 1, ibmax - ibmin + 1) + 2;
     visited.initZeros(visited_size, visited_size);
     STARTINGX(visited) = iamin - (visited_size - (iamax - iamin + 1) + 1) / 2;
@@ -811,13 +811,13 @@ void fill_cell_positions(Projection &P,
    projection********************************************************/
 
 void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal,
-                       matrix2D<int>    &cell_inside,
-                       matrix2D<double> &exp_shifts_matrix_X,
-                       matrix2D<double> &exp_shifts_matrix_Y,
-                       matrix2D<double> &exp_shifts_matrix_Z,
-                       matrix2D<double> &exp_normal_shifts_matrix_X,
-                       matrix2D<double> &exp_normal_shifts_matrix_Y,
-                       matrix2D<double> &exp_normal_shifts_matrix_Z,
+                       Matrix2D<int>    &cell_inside,
+                       Matrix2D<double> &exp_shifts_matrix_X,
+                       Matrix2D<double> &exp_shifts_matrix_Y,
+                       Matrix2D<double> &exp_shifts_matrix_Z,
+                       Matrix2D<double> &exp_normal_shifts_matrix_X,
+                       Matrix2D<double> &exp_normal_shifts_matrix_Y,
+                       Matrix2D<double> &exp_normal_shifts_matrix_Z,
                        double phantom_scale)
 {
     DocFile        aux_DF_shift;//crystal_param is cont

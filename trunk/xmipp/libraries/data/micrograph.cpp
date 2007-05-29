@@ -566,7 +566,7 @@ void Micrograph::move_last_coord_to(int x, int y)
 
 /* Downsample -------------------------------------------------------------- */
 void downsample(const Micrograph &M, int Xstep, int Ystep,
-                const matrix2D<double> &kernel, Micrograph &Mp)
+                const Matrix2D<double> &kernel, Micrograph &Mp)
 {
     // Find first and last indexes in each direction
     // it is assumed that (0,0) is within the kernel
@@ -692,7 +692,7 @@ void normalize_OldXmipp(Image *I)
     (*I)() /= stddev;
 }
 
-void normalize_Near_OldXmipp(Image *I, const matrix2D<int> &bg_mask)
+void normalize_Near_OldXmipp(Image *I, const Matrix2D<int> &bg_mask)
 {
     double avg, stddev, min, max;
     double avgbg, stddevbg, minbg, maxbg;
@@ -703,8 +703,8 @@ void normalize_Near_OldXmipp(Image *I, const matrix2D<int> &bg_mask)
     (*I)() /= stddevbg;
 }
 
-void normalize_Oldmipp_decomposition(Image *I, const matrix2D<int> &bg_mask,
-                                     const matrix2D<double> *mask)
+void normalize_Oldmipp_decomposition(Image *I, const Matrix2D<int> &bg_mask,
+                                     const Matrix2D<double> *mask)
 {
     double avgbg, stddevbg, minbg, maxbg;
     computeStats_within_binary_mask(bg_mask, (*I)(), minbg, maxbg, avgbg,
@@ -716,7 +716,7 @@ void normalize_Oldmipp_decomposition(Image *I, const matrix2D<int> &bg_mask,
     normalize_OldXmipp(I);
 }
 
-void normalize_Michael(Image *I, const matrix2D<int> &bg_mask)
+void normalize_Michael(Image *I, const Matrix2D<int> &bg_mask)
 {
     double avg, stddev, min, max;
     double avgbg, stddevbg, minbg, maxbg;
@@ -735,7 +735,7 @@ void normalize_Michael(Image *I, const matrix2D<int> &bg_mask)
     }
 }
 
-void normalize_NewXmipp(Image *I, const matrix2D<int> &bg_mask)
+void normalize_NewXmipp(Image *I, const Matrix2D<int> &bg_mask)
 {
     double avgbg, stddevbg, minbg, maxbg;
     computeStats_within_binary_mask(bg_mask, (*I)(), minbg, maxbg, avgbg,
@@ -744,7 +744,7 @@ void normalize_NewXmipp(Image *I, const matrix2D<int> &bg_mask)
     (*I)() /= stddevbg;
 }
 
-void normalize_NewXmipp2(Image *I, const matrix2D<int> &bg_mask)
+void normalize_NewXmipp2(Image *I, const Matrix2D<int> &bg_mask)
 {
     double avg, stddev, min, max;
     double avgbg, stddevbg, minbg, maxbg;
@@ -755,7 +755,7 @@ void normalize_NewXmipp2(Image *I, const matrix2D<int> &bg_mask)
     (*I)() /= ABS(avg - avgbg);
 }
 
-void normalize_ramp(Image *I, const matrix2D<int> &bg_mask)
+void normalize_ramp(Image *I, const Matrix2D<int> &bg_mask)
 {
     fit_point          onepoint;
     vector<fit_point>  allpoints;
@@ -791,7 +791,7 @@ void normalize_ramp(Image *I, const matrix2D<int> &bg_mask)
 
 #ifdef NEVER_DEFINED
 // This version doesn't work because of the high variance of avg-avg_bg
-void normalize_NewXmipp(Image *I, const matrix2D<int> &bg_mask)
+void normalize_NewXmipp(Image *I, const Matrix2D<int> &bg_mask)
 {
     double avg, stddev, min, max;
     double avgbg, stddevbg, minbg, maxbg;

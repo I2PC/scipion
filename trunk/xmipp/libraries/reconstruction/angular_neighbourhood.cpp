@@ -42,7 +42,7 @@ void Prog_projection_neighbourhood_prm::read(int argc, char **argv)
     if (fn_sym != "") SL.read_sym_file(fn_sym);
     DF2.read(fn_ref);
     SF1.read(fn_sel);
-    if (DF2.FirstLine_ColNo() < 2)
+    if (DF2.FirstLine_colNumber() < 2)
     {
         REPORT_ERROR(1, "Projection Neighbourhood: Neighbourhoods docfile has less than 2 columns.");
     }
@@ -97,7 +97,7 @@ double Prog_projection_neighbourhood_prm::check_symmetries(double rot1, double t
 {
 
     int imax = SL.SymsNo() + 1;
-    matrix2D<double>  L(4, 4), R(4, 4);  // A matrix from the list
+    Matrix2D<double>  L(4, 4), R(4, 4);  // A matrix from the list
     double best_ang_dist = 9999;
     double best_rot2, best_tilt2, diff_rot, diff_tilt;
     double ang_dist;

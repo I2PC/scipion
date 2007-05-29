@@ -69,7 +69,7 @@ public:
     vector<float> current_prm;
 
     // Backup of the original image
-    matrix2D<double> xmippImage_backup;
+    Matrix2D<double> xmippImage_backup;
 public slots:
     // Set a new set of parameters
     void set_prm(vector<float> new_prm);

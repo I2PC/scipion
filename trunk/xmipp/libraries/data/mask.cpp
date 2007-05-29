@@ -68,7 +68,7 @@ void RaisedCrownMask(Matrix1D<double> &mask,
 /*---------------------------------------------------------------------------*/
 /* 2D Masks                                                                  */
 /*---------------------------------------------------------------------------*/
-void BinaryCircularMask(matrix2D<int> &mask,
+void BinaryCircularMask(Matrix2D<int> &mask,
                         double radius, int mode, double x0, double y0)
 {
     mask.initZeros();
@@ -93,7 +93,7 @@ void BinaryCircularMask(matrix2D<int> &mask,
                   (YY(r)-YY(center))*(YY(r)-YY(center)); \
         MAT_ELEM(mask,YY(r),XX(r))=(r2<=radius2); \
     }
-void BinaryDWTCircularMask(matrix2D<int> &mask, double radius,
+void BinaryDWTCircularMask(Matrix2D<int> &mask, double radius,
                            int smin, int smax, const string &quadrant)
 {
     double radius2 = radius * radius / (4 * (smin + 1));
@@ -114,7 +114,7 @@ void BinaryDWTCircularMask(matrix2D<int> &mask, double radius,
     }
 }
 
-void BinaryCrownMask(matrix2D<int> &mask,
+void BinaryCrownMask(Matrix2D<int> &mask,
                      double R1, double R2, int mode, double x0, double y0)
 {
     mask.initZeros();
@@ -131,7 +131,7 @@ void BinaryCrownMask(matrix2D<int> &mask,
     }
 }
 
-void BinaryFrameMask(matrix2D<int> &mask,
+void BinaryFrameMask(Matrix2D<int> &mask,
                      int Xrect, int Yrect, int mode, double x0, double y0)
 {
     mask.initZeros();
@@ -147,7 +147,7 @@ void BinaryFrameMask(matrix2D<int> &mask,
     }
 }
 
-void GaussianMask(matrix2D<double> &mask,
+void GaussianMask(Matrix2D<double> &mask,
                   double sigma, int mode, double x0, double y0)
 {
     double sigma2 = sigma * sigma;
@@ -161,7 +161,7 @@ void GaussianMask(matrix2D<double> &mask,
     }
 }
 
-void RaisedCosineMask(matrix2D<double> &mask,
+void RaisedCosineMask(Matrix2D<double> &mask,
                       double r1, double r2, int mode, double x0, double y0)
 {
     double k = PI / (r2 - r1);
@@ -179,11 +179,11 @@ void RaisedCosineMask(matrix2D<double> &mask,
     }
 }
 
-void RaisedCrownMask(matrix2D<double> &mask,
+void RaisedCrownMask(Matrix2D<double> &mask,
                      double r1, double r2, double pix_width, int mode, double x0, double y0)
 {
     RaisedCosineMask(mask, r1 - pix_width, r1 + pix_width, OUTSIDE_MASK, x0, y0);
-    matrix2D<double> aux;
+    Matrix2D<double> aux;
     aux.resize(mask);
     RaisedCosineMask(aux, r2 - pix_width, r2 + pix_width, INNER_MASK, x0, y0);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
@@ -194,7 +194,7 @@ void RaisedCrownMask(matrix2D<double> &mask,
     }
 }
 
-void BlackmanMask(matrix2D<double> &mask, int mode, double x0, double y0)
+void BlackmanMask(Matrix2D<double> &mask, int mode, double x0, double y0)
 {
     double Xdim2 = (XSIZE(mask) - 1) * (XSIZE(mask) - 1);
     double Ydim2 = (YSIZE(mask) - 1) * (YSIZE(mask) - 1);
@@ -210,7 +210,7 @@ void BlackmanMask(matrix2D<double> &mask, int mode, double x0, double y0)
     }
 }
 
-void KaiserMask(matrix2D<double> &mask, double delta, double Deltaw)
+void KaiserMask(Matrix2D<double> &mask, double delta, double Deltaw)
 {
     // Convert Deltaw from a frequency normalized to 1, to a freq. normalized to PI
     Deltaw *= PI;
@@ -238,7 +238,7 @@ void KaiserMask(matrix2D<double> &mask, double delta, double Deltaw)
     }
 }
 
-void SincMask(matrix2D<double> &mask,
+void SincMask(Matrix2D<double> &mask,
               double omega, int mode, double x0, double y0)
 {
     FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
@@ -250,10 +250,10 @@ void SincMask(matrix2D<double> &mask,
     }
 }
 
-void SincBlackmanMask(matrix2D<double> &mask,
+void SincBlackmanMask(Matrix2D<double> &mask,
                       double omega, double power_percentage, int mode, double x0, double y0)
 {
-    matrix2D<double> blackman;
+    Matrix2D<double> blackman;
 
 #define EVALUATE_POWER_OF_SINCBLACKMAN2D(N,P) \
     mask.resize(N,N); mask.setXmippOrigin(); \
@@ -311,10 +311,10 @@ void SincBlackmanMask(matrix2D<double> &mask,
     EVALUATE_POWER_OF_SINCBLACKMAN2D(N12, P12);
 }
 
-void SincKaiserMask(matrix2D<double> &mask,
+void SincKaiserMask(Matrix2D<double> &mask,
                     double omega, double delta, double Deltaw)
 {
-    matrix2D<double> kaiser;
+    Matrix2D<double> kaiser;
     KaiserMask(kaiser, delta, Deltaw);
     mask.resize(kaiser);
     mask.setXmippOrigin();
@@ -322,7 +322,7 @@ void SincKaiserMask(matrix2D<double> &mask,
     mask *= kaiser;
 }
 
-void SeparableSincKaiserMask(matrix2D<double> &mask,
+void SeparableSincKaiserMask(Matrix2D<double> &mask,
                              double omega, double delta, double Deltaw)
 {
     // Convert Deltaw from a frequency normalized to 1, to a freq. normalized to PI
@@ -351,7 +351,7 @@ void SeparableSincKaiserMask(matrix2D<double> &mask,
     }
 }
 
-void mask2D_4neig(matrix2D<int> &mask, int value, int center)
+void mask2D_4neig(Matrix2D<int> &mask, int value, int center)
 {
     mask.resize(3, 3);
     mask.initZeros();
@@ -359,7 +359,7 @@ void mask2D_4neig(matrix2D<int> &mask, int value, int center)
     mask(1, 1) = center;
 
 }
-void mask2D_8neig(matrix2D<int> &mask, int value1, int value2, int center)
+void mask2D_8neig(Matrix2D<int> &mask, int value1, int value2, int center)
 {
     mask.resize(3, 3);
     mask.initZeros();
@@ -492,7 +492,7 @@ void BinaryConeMask(matrix3D<int> &mask, double theta, int mode)
 }
 
 void BinaryWedgeMask(matrix3D<double> &mask, double theta0, double thetaF,
-                     matrix2D<double> A)
+                     Matrix2D<double> A)
 {
 
     double xp, yp, zp;
@@ -1221,8 +1221,8 @@ void Mask_Params::generate_2Dmask()
 void Mask_Params::generate_3Dmask()
 {
     VolumeXmipp V;
-    matrix2D<double> AA(4, 4);
-    AA.init_identity();
+    Matrix2D<double> AA(4, 4);
+    AA.initIdentity();
     switch (type)
     {
     case NO_MASK:
@@ -1280,28 +1280,30 @@ void Mask_Params::generate_3Dmask()
 /*---------------------------------------------------------------------------*/
 
 // Apply geometric transformation to a binary mask ========================
-void apply_geo_binary_2D_mask(matrix2D<int> &mask, const matrix2D<double> &A)
+void apply_geo_binary_2D_mask(Matrix2D<int> &mask,
+                              const Matrix2D<double> &A)
 {
-    matrix2D<double> tmp;
+    Matrix2D<double> tmp;
     tmp.resize(mask);
     type_cast(mask, tmp);
     double outside = DIRECT_MAT_ELEM(tmp, 0, 0);
     // Instead of IS_INV for images use IS_NOT_INV for masks!
-    tmp.self_apply_geom(A, IS_NOT_INV, DONT_WRAP, outside);
+    tmp.self_applyGeometry(A, IS_NOT_INV, DONT_WRAP, outside);
     type_cast(tmp, mask);
 }
 
 // Apply geometric transformation to a continuous mask =====================
-void apply_geo_cont_2D_mask(matrix2D<double> &mask, const matrix2D<double> &A)
+void apply_geo_cont_2D_mask(Matrix2D<double> &mask,
+                            const Matrix2D<double> &A)
 {
     double outside = DIRECT_MAT_ELEM(mask, 0, 0);
     // Instead of IS_INV for images use IS_NOT_INV for masks!
-    mask.self_apply_geom(A, IS_NOT_INV, DONT_WRAP, outside);
+    mask.self_applyGeometry(A, IS_NOT_INV, DONT_WRAP, outside);
 }
 
 // Count with mask =========================================================
-int count_with_mask(const matrix2D<int> &mask,
-                    const matrix2D< complex<double> > &m, int mode, double th1, double th2)
+int count_with_mask(const Matrix2D<int> &mask,
+                    const Matrix2D< complex<double> > &m, int mode, double th1, double th2)
 {
     SPEED_UP_temps;
     int N = 0;
@@ -1351,10 +1353,11 @@ int count_with_mask(const matrix3D<int> &mask,
 }
 
 /* Range adjust ------------------------------------------------------------ */
-void range_adjust_within_mask(const matrix2D<double> *mask,
-                              const matrix2D<double> &m1, matrix2D<double> &m2)
+void range_adjust_within_mask(const Matrix2D<double> *mask,
+                              const Matrix2D<double> &m1,
+                              Matrix2D<double> &m2)
 {
-    matrix2D<double> A(2, 2);
+    Matrix2D<double> A(2, 2);
     A.initZeros();
     Matrix1D<double> b(2);
     b.initZeros();
@@ -1396,7 +1399,7 @@ void range_adjust_within_mask(const matrix2D<double> *mask,
 void range_adjust_within_mask(const matrix3D<double> *mask,
                               const matrix3D<double> &m1, matrix3D<double> &m2)
 {
-    matrix2D<double> A(2, 2);
+    Matrix2D<double> A(2, 2);
     A.initZeros();
     Matrix1D<double> b(2);
     b.initZeros();

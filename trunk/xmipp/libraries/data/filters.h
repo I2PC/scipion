@@ -62,8 +62,8 @@ void contrast_enhancement(Image* I);
  *
  * Valid neighbourhoods are 4 or 8.
  */
-void region_growing(const matrix2D< double >& I_in,
-                    matrix2D< double >& I_out,
+void region_growing(const Matrix2D< double >& I_in,
+                    Matrix2D< double >& I_out,
                     int i,
                     int j,
                     float stop_colour = 1,
@@ -98,8 +98,8 @@ void region_growing(const matrix3D< double >& V_in,
  * components. The background is labeled as 0, and the components as 1, 2, 3
  * ...
  */
-int label_image(const matrix2D< double >& I,
-                matrix2D< double >& label,
+int label_image(const Matrix2D< double >& I,
+                Matrix2D< double >& label,
                 int neighbourhood = 8);
 
 /** Label a binary volume
@@ -116,7 +116,7 @@ int label_volume(const matrix3D< double >& V, matrix3D< double >& label);
  *
  * Remove connected components smaller than a given size. They are set to 0.
  */
-void remove_small_components(matrix2D< double >& I,
+void remove_small_components(Matrix2D< double >& I,
                              int size,
                              int neighbourhood = 8);
 
@@ -126,7 +126,7 @@ void remove_small_components(matrix2D< double >& I,
  * If the biggest component does not cover the percentage required (by default,
  * 0), more big components are taken until this is accomplished.
  */
-void keep_biggest_component(matrix2D< double >& I,
+void keep_biggest_component(Matrix2D< double >& I,
                             double percentage = 0,
                             int neighbourhood = 8);
 
@@ -135,7 +135,7 @@ void keep_biggest_component(matrix2D< double >& I,
  *
  * Everything that is not background is assumed to be object.
  */
-void fill_binary_object(matrix2D< double >&I, int neighbourhood = 8);
+void fill_binary_object(Matrix2D< double >&I, int neighbourhood = 8);
 
 /** Correlation 1D
  * @ingroup Filters
@@ -179,9 +179,9 @@ double correlation(const Matrix1D< T >& x,
  * @ingroup Filters
  */
 template <typename T>
-double correlation(const matrix2D< T >& x,
-                   const matrix2D< T >& y,
-                   const matrix2D< int >* mask = NULL,
+double correlation(const Matrix2D< T >& x,
+                   const Matrix2D< T >& y,
+                   const Matrix2D< int >* mask = NULL,
                    int l = 0, int m = 0)
 {
     /* Note: l index is for rows and m index for columns */
@@ -193,8 +193,8 @@ double correlation(const matrix2D< T >& x,
     int Rows, Cols; // of the matrices
 
     // do the computation
-    Cols = x.ColNo();
-    Rows = x.RowNo();
+    Cols = x.colNumber();
+    Rows = x.rowNumber();
 
     for (i = 0; i < Rows; i++)
         for (j = 0; j < Cols; j++)
@@ -231,8 +231,8 @@ double correlation(const matrix3D< T >& x,
     int Rows, Cols, Slices; // of the volumes
 
     // do the computation
-    Cols = x.ColNo();
-    Rows = x.RowNo();
+    Cols = x.colNumber();
+    Rows = x.rowNumber();
     Slices = x.SliNo();
 
     long N = 0;
@@ -296,10 +296,10 @@ double correlation_index(const Matrix1D< T >& x, const Matrix1D< T >& y)
  * @ingroup Filters
  */
 template <typename T>
-double correlation_index(const matrix2D< T >& x,
-                         const matrix2D< T >&y,
-                         const matrix2D< int >* mask = NULL,
-                         matrix2D< double >* Contributions = NULL)
+double correlation_index(const Matrix2D< T >& x,
+                         const Matrix2D< T >&y,
+                         const Matrix2D< int >* mask = NULL,
+                         Matrix2D< double >* Contributions = NULL)
 {
     SPEED_UP_temps;
 
@@ -441,11 +441,11 @@ double correlation_index(const matrix3D< T >& x,
  * images. You can restrict the shift to a region defined by a mask (the maximum
  * will be sought where the mask is 1).
  */
-void best_shift(const matrix2D< double >& I1,
-                const matrix2D< double >& I2,
+void best_shift(const Matrix2D< double >& I1,
+                const Matrix2D< double >& I2,
                 double& shiftX,
                 double& shiftY,
-                const matrix2D< int >* mask = NULL);
+                const Matrix2D< int >* mask = NULL);
 
 /** euclidian_distance 1D
  * @ingroup Filters
@@ -478,9 +478,9 @@ double euclidian_distance(const Matrix1D< T >& x, const Matrix1D< T >& y)
  *
  */
 template <typename T>
-double euclidian_distance(const matrix2D< T >& x,
-                          const matrix2D< T >& y,
-                          const matrix2D< int >* mask = NULL)
+double euclidian_distance(const Matrix2D< T >& x,
+                          const Matrix2D< T >& y,
+                          const Matrix2D< int >* mask = NULL)
 {
     SPEED_UP_temps;
 
@@ -563,7 +563,7 @@ double mutual_information(const Matrix1D< T >& x,
     histogram2D histxy;
     Matrix1D< T > aux_x, aux_y;
     Matrix1D< double > mx, my;
-    matrix2D< double > mxy;
+    Matrix2D< double > mxy;
     int xdim, ydim;
     double MI = 0.0;
     double HAB = 0.0;
@@ -624,11 +624,11 @@ double mutual_information(const Matrix1D< T >& x,
  * @ingroup Filters
  */
 template <typename T>
-double mutual_information(const matrix2D< T >& x,
-                          const matrix2D< T >& y,
+double mutual_information(const Matrix2D< T >& x,
+                          const Matrix2D< T >& y,
                           int nx = 0,
                           int ny = 0,
-                          const matrix2D< int >* mask = NULL)
+                          const Matrix2D< int >* mask = NULL)
 {
     SPEED_UP_temps;
 
@@ -637,7 +637,7 @@ double mutual_information(const matrix2D< T >& x,
     histogram2D histxy;
     Matrix1D< T > aux_x, aux_y;
     Matrix1D< double > mx, my;
-    matrix2D< double > mxy;
+    Matrix2D< double > mxy;
     int xdim, ydim;
     double retval = 0.0;
 
@@ -714,7 +714,7 @@ double mutual_information(const matrix3D< T >& x,
     histogram2D histxy;
     Matrix1D< T > aux_x, aux_y;
     Matrix1D< double > mx, my;
-    matrix2D< double > mxy;
+    Matrix2D< double > mxy;
     int xdim, ydim, zdim;
     double retval = 0.0;
 
@@ -833,10 +833,10 @@ double rms(const Matrix1D< T >& x,
  * @ingroup Filters
  */
 template <typename T>
-double rms(const matrix2D< T >& x,
-           const matrix2D< T >& y,
-           const matrix2D< int >* mask = NULL,
-           matrix2D< double >* Contributions = NULL)
+double rms(const Matrix2D< T >& x,
+           const Matrix2D< T >& y,
+           const Matrix2D< int >* mask = NULL,
+           Matrix2D< double >* Contributions = NULL)
 {
     SPEED_UP_temps;
 
@@ -947,8 +947,8 @@ double rms(const matrix3D< T >& x,
  * shape, and the image logical origin is used for the decomposition.
  * k1 and k2 determines the harmonic coefficients to be computed.
  */
-void Fourier_Bessel_decomposition(const matrix2D< double >& img_in,
-                                  matrix2D< double >& m_out,
+void Fourier_Bessel_decomposition(const Matrix2D< double >& img_in,
+                                  Matrix2D< double >& m_out,
                                   double r1,
                                   double r2,
                                   int k1,
@@ -957,7 +957,7 @@ void Fourier_Bessel_decomposition(const matrix2D< double >& img_in,
 /** Harmonic decomposition
  * @ingroup Filters
  */
-void harmonic_decomposition(const matrix2D< double >& img_in,
+void harmonic_decomposition(const Matrix2D< double >& img_in,
                             Matrix1D< double >& v_out);
 
 // TODO Document, check indentation
@@ -1248,7 +1248,7 @@ void median(Matrix1D< T >& x, Matrix1D< T >& y, T& m)
  * @ingroup Filters
  */
 template <typename T>
-void median_filter3x3(matrix2D< T >&m, matrix2D< T >& out)
+void median_filter3x3(Matrix2D< T >&m, Matrix2D< T >& out)
 {
     int backup_startingx = STARTINGX(m);
     int backup_startingy = STARTINGY(m);
@@ -1262,8 +1262,8 @@ void median_filter3x3(matrix2D< T >&m, matrix2D< T >& out)
 
     // Set the initial and final matrix indices to explore
     int initialY = 1, initialX = 1;
-    int finalY = m.RowNo() - 2;
-    int finalX = m.ColNo() - 2;
+    int finalY = m.rowNumber() - 2;
+    int finalX = m.colNumber() - 2;
 
     // For every row
     for (int i = initialY; i <= finalY; i++)
@@ -1342,9 +1342,9 @@ void median_filter3x3(matrix2D< T >&m, matrix2D< T >& out)
  *
  * Paper: Teboul, et al. IEEE-Trans. on Image Proc. Vol. 7, 387-397.
  */
-void Smoothing_Shah(matrix2D< double >& img,
-                    matrix2D< double >& surface_strength,
-                    matrix2D< double >& edge_strength,
+void Smoothing_Shah(Matrix2D< double >& img,
+                    Matrix2D< double >& surface_strength,
+                    Matrix2D< double >& edge_strength,
                     const Matrix1D< double >& W,
                     int OuterLoops,
                     int InnerLoops,
@@ -1361,8 +1361,8 @@ void Smoothing_Shah(matrix2D< double >& img,
  * These moments have been taken from
  * http://www.cs.cf.ac.uk/Dave/Vision_lecture/node36.html (moments 1 to 5).
  */
-void rotational_invariant_moments(const matrix2D< double >& img,
-                                  const matrix2D< int >* mask,
+void rotational_invariant_moments(const Matrix2D< double >& img,
+                                  const Matrix2D< int >* mask,
                                   Matrix1D< double >& v_out);
 
 /** Inertia moments
@@ -1373,10 +1373,10 @@ void rotational_invariant_moments(const matrix2D< double >& img,
  * moments. v_out contains the inertia moments while the columns of u contain
  * the directions of the principal axes.
  */
-void inertia_moments(const matrix2D< double >& img,
-                     const matrix2D< int >* mask,
+void inertia_moments(const Matrix2D< double >& img,
+                     const Matrix2D< int >* mask,
                      Matrix1D< double >& v_out,
-                     matrix2D< double >& u);
+                     Matrix2D< double >& u);
 
 /** Fill a triangle defined by three points
  * @ingroup Filters
@@ -1384,7 +1384,7 @@ void inertia_moments(const matrix2D< double >& img,
  * The points are supplied as a pointer to three integer positions. They can be
  * negative
  */
-void fill_triangle(matrix2D< double >&img, int* tx, int* ty, double color);
+void fill_triangle(Matrix2D< double >&img, int* tx, int* ty, double color);
 
 /** Local thresholding
  * @ingroup Filters
@@ -1400,10 +1400,10 @@ void fill_triangle(matrix2D< double >&img, int* tx, int* ty, double color);
  * - Thresholding the difference image with C.
  * - Inverting the thresholded image.
  */
-void local_thresholding(matrix2D< double >& img,
+void local_thresholding(Matrix2D< double >& img,
                         double C,
                         double dimLocal,
-                        matrix2D< int >& result,
-                        matrix2D< int >* mask = NULL);
+                        Matrix2D< int >& result,
+                        Matrix2D< int >* mask = NULL);
 
 #endif

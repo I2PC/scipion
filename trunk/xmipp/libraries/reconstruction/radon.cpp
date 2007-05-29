@@ -83,10 +83,10 @@ void Local_Radon_Transform(Volume *vol, double rot, double tilt,
 }
 
 /* Radon Transform of an image --------------------------------------------- */
-void Radon_Transform(const matrix2D<double> &I, double rot_step,
-                     matrix2D<double> &RT)
+void Radon_Transform(const Matrix2D<double> &I, double rot_step,
+                     Matrix2D<double> &RT)
 {
-    matrix2D<double> rot_I;
+    Matrix2D<double> rot_I;
     RT.initZeros(CEIL(360.0 / rot_step), XSIZE(I));
     STARTINGX(RT) = STARTINGX(I);
     int l = 0;

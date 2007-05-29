@@ -136,7 +136,7 @@ double kaiser_Fourier_value(double w, double a, double alpha, int m)
 // Computes sum of the values of a unitary blob on grid points. The blob is
 // supposed to be at the origin of the absolute coordinate system
 double sum_blob_SimpleGrid(const struct blobtype &blob, const SimpleGrid &grid,
-                           const matrix2D<double> *D)
+                           const Matrix2D<double> *D)
 {
     SPEED_UP_temps;
     Matrix1D<double> gr(3), ur(3), corner1(3), corner2(3);
@@ -269,7 +269,7 @@ double inph_zeroarg(int n)
 
 /* Sum a blob on a complex grid -------------------------------------------- */
 double sum_blob_Grid(const struct blobtype &blob, const Grid &grid,
-                     const matrix2D<double> *D)
+                     const Matrix2D<double> *D)
 {
     double sum = 0;
     for (int i = 0; i < grid.GridsNo(); i++)
@@ -392,11 +392,11 @@ void footprint_blob(
 #define DEFORM_BLOB_WHEN_IN_CRYSTAL
 void blobs2voxels_SimpleGrid(const matrix3D<double> &vol_blobs,
                              const SimpleGrid &grid, const struct blobtype &blob,
-                             matrix3D<double> *vol_voxels, const matrix2D<double> *D = NULL, int istep = 50,
+                             matrix3D<double> *vol_voxels, const Matrix2D<double> *D = NULL, int istep = 50,
                              matrix3D<double> *vol_corr = NULL, const matrix3D<double> *vol_mask = NULL,
                              bool FORW = true, int eq_mode = VARTK)
 {
-    matrix2D<double> Dinv;                   // Inverse of D
+    Matrix2D<double> Dinv;                   // Inverse of D
     Matrix1D<double> act_coord(3);           // Coord: Actual position inside
     // the voxel volume without deforming
     Matrix1D<double> real_position(3);       // Coord: actual position after
@@ -691,7 +691,7 @@ void blobs2voxels_SimpleGrid(const matrix3D<double> &vol_blobs,
 /* Voxel volume shape ------------------------------------------------------ */
 //#define DEBUG
 void voxel_volume_shape(const GridVolume &vol_blobs,
-                        const struct blobtype &blob, const matrix2D<double> *D,
+                        const struct blobtype &blob, const Matrix2D<double> *D,
                         Matrix1D<int> &corner1, Matrix1D<int> &size)
 {
     Matrix1D<double>  Gcorner1(3),  Gcorner2(3);     // lowest and highest coord.
@@ -760,7 +760,7 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
 //#define DEBUG
 void blobs2voxels(const GridVolume &vol_blobs,
                   const struct blobtype &blob, matrix3D<double> *vol_voxels,
-                  const matrix2D<double> *D, int Zdim, int Ydim, int Xdim)
+                  const Matrix2D<double> *D, int Zdim, int Ydim, int Xdim)
 {
 
     // Resize and set starting corner .......................................
@@ -889,7 +889,7 @@ void ART_voxels2blobs_single_step(
     GridVolume *vol_out,                // Output solution, might be the same
     // as the input one
     const struct blobtype &blob,        // blob
-    const matrix2D<double> *D,          // deformation matrix
+    const Matrix2D<double> *D,          // deformation matrix
     double lambda,                      // ART lambda
     matrix3D<double> *theo_vol,         // Theoretical volume
     const matrix3D<double> *read_vol,   // Volume we want to translate to blobs
@@ -1035,7 +1035,7 @@ void voxels2blobs(const matrix3D<double> *vol_voxels,
                   const struct blobtype &blob,
                   GridVolume &vol_blobs, int grid_type, double grid_relative_size,
                   double lambda, const matrix3D<double> *vol_mask,
-                  const matrix2D<double> *D, double final_error_change,
+                  const Matrix2D<double> *D, double final_error_change,
                   int tell, double R)
 {
     VolumeXmipp theo_vol, corr_vol;

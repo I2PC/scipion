@@ -73,7 +73,7 @@ public:
 
     /* periodic_table(i,0)=radius
        periodic_table(i,1)=atomic weight */
-    matrix2D<double> periodic_table;
+    Matrix2D<double> periodic_table;
 
     // Protein geometry
     Matrix1D<double> centerOfMass, limit;

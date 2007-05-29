@@ -119,8 +119,8 @@ int main(int argc, char **argv)
     if ((!noBB) && (!nomask))
     {
         cout << endl << "Calculating the mask's minimum bounding box...." << endl;
-        for (int y = 0; y < mask().RowNo(); y++)
-            for (int x = 0; x < mask().ColNo(); x++)
+        for (int y = 0; y < mask().rowNumber(); y++)
+            for (int x = 0; x < mask().colNumber(); x++)
             {
                 // Checks if pixel is zero (it's outside the binary mask)
                 if (mask(y, x) != 0)

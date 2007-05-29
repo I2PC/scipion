@@ -243,18 +243,18 @@ void EVALUATE_Side_Info::produce_Side_Info(
 
     // Check that both dimensions are equal .................................
     if ((vol_phantom().SliNo() != vol_recons().SliNo()) ||
-        (vol_phantom().RowNo() != vol_recons().RowNo()) ||
-        (vol_phantom().ColNo() != vol_recons().ColNo()))
+        (vol_phantom().rowNumber() != vol_recons().rowNumber()) ||
+        (vol_phantom().colNumber() != vol_recons().colNumber()))
     {
         cout << "Be careful!!!, volumes with different sizes\n";
         cout << "Phantom:        " << vol_phantom().SliNo() << " x " <<
-        vol_phantom().RowNo() << " x " << vol_phantom().ColNo() << endl;
+        vol_phantom().rowNumber() << " x " << vol_phantom().colNumber() << endl;
         cout << "Reconstruction: " << vol_recons().SliNo() << " x " <<
-        vol_recons().RowNo() << " x " << vol_recons().ColNo() << endl;
+        vol_recons().rowNumber() << " x " << vol_recons().colNumber() << endl;
 
         cutToCommonSize(vol_phantom(), vol_recons());
         cout << "Cutting to common size " << vol_phantom().SliNo() << " x " <<
-        vol_phantom().RowNo() << " x " << vol_phantom().ColNo() << endl;
+        vol_phantom().rowNumber() << " x " << vol_phantom().colNumber() << endl;
 
         cutToCommonSize(vol_label(), vol_recons());
     }
@@ -572,7 +572,7 @@ void show_FOMs(const Prog_Evaluate_Parameters &prm,
         save() = error() = error() * error();
         if (side.descr_mode == MATH_PHANTOM) side.phantom_descr.sketch_in(&save);
         cerr << "Saving quadratic errors ...\n";
-        save.write(side.fn_root + "_eval_quadratic_map.vol");
+        save.write(side.fn_root + "_evaluateQuadratic_map.vol");
 
         // Save a absolute difference map
         save() = ABSnD(side.vol_phantom() - side.vol_recons());

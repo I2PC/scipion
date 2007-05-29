@@ -41,7 +41,7 @@ void ROUT_EULER(const double rot,
     Matrix1D<double> w(3);
     Matrix1D<double> new_w(3);
     Matrix1D<double> D_1byw(3);
-    matrix2D<double> D(3, 3), D_1(3, 3);
+    Matrix2D<double> D(3, 3), D_1(3, 3);
     double module;
     double newrot, newtilt, newpsi;
     Matrix1D<double> fw(3);

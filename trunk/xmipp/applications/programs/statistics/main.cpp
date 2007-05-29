@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     int             repair;           // True if headers are initialized
     bool            show_angles;      // True if angles are to be shown in stats
     bool            apply_geo;        // True if the header must be taken into account
-    matrix2D<int>   mask2D;
+    Matrix2D<int>   mask2D;
     matrix3D<int>   mask3D;
     int             volume_type;
     // Read arguments --------------------------------------------------------
@@ -172,7 +172,7 @@ int main(int argc, char **argv)
 
                 // Generate mask if necessary
                 mask_prm.generate_2Dmask(I);
-                const matrix2D<int> &mask2D = mask_prm.get_binary_mask2D();
+                const Matrix2D<int> &mask2D = mask_prm.get_binary_mask2D();
 
                 // Compute statistics
                 computeStats_within_binary_mask(mask2D, I, min_val, max_val,

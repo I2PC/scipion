@@ -444,7 +444,7 @@ void Prog_mlf_tomo_prm::produce_Side_info2()
     if (fn_misalign != "")
     {
         double rot, tilt, psi, mis_rot, mis_tilt, mis_psi, mis_xoff, mis_yoff, mis_zoff;
-        matrix2D<double> A_img(4, 4), A_mis(4, 4);
+        Matrix2D<double> A_img(4, 4), A_mis(4, 4);
         DocFile DFmis;
 
         DFmis.read(fn_misalign);
@@ -467,8 +467,8 @@ void Prog_mlf_tomo_prm::produce_Side_info2()
                 cerr << "ERROR% " << fn_vol << " not found in misalignment document file" << endl;
                 exit(0);
             }
-            A_img = Euler_rot3D_matrix(img_rot[imgno], img_tilt[imgno], img_psi[imgno]);
-            A_mis = Euler_rot3D_matrix(mis_rot, mis_tilt, mis_psi);
+            A_img = Euler_rotation3DMatrix(img_rot[imgno], img_tilt[imgno], img_psi[imgno]);
+            A_mis = Euler_rotation3DMatrix(mis_rot, mis_tilt, mis_psi);
             A_img = A_mis * A_img;
             A_img.resize(3, 3);
             Euler_matrix2angles(A_img, mis_rot, mis_tilt, mis_psi);
@@ -625,7 +625,7 @@ void Prog_mlf_tomo_prm::update_pointers()
     // MODIFY THIS TO BE ABLE TO CONTROL LOW AND HIGHRES PER ITERATION
     // Then make some SSNR, and a "significant-pointer" as well...
 
-    matrix2D<double> I(4, 4);
+    Matrix2D<double> I(4, 4);
     matrix3D<double> Mwedge, Maux;
     vector<int> dum;
     vector<double> dum2;
@@ -645,7 +645,7 @@ void Prog_mlf_tomo_prm::update_pointers()
     nonzero_pixels.clear();
     Mwedge.resize(dim, dim, dim);
     Mwedge.setXmippOrigin();
-    I.init_identity();
+    I.initIdentity();
 
     // Get a resolution pointer in Fourier-space
     Mresol.resize(dim, dim, dim);
@@ -727,7 +727,7 @@ void Prog_mlf_tomo_prm::update_pointers()
 
 // Here perform the main probability-weighted integration over all
 // rotations, translations and classes of the given image
-void Prog_mlf_tomo_prm::MLF_integrate(matrix3D<double> Mimg, matrix2D<double> A_img, int iwedge,
+void Prog_mlf_tomo_prm::MLF_integrate(matrix3D<double> Mimg, Matrix2D<double> A_img, int iwedge,
                                       vector<matrix3D<double> > &wsum_Fimgs,
                                       vector<matrix3D<double> > &wsum_Fweds,
                                       vector<double> &wsum_sigma2, double &wsum_sigma_offset,
@@ -742,7 +742,7 @@ void Prog_mlf_tomo_prm::MLF_integrate(matrix3D<double> Mimg, matrix2D<double> A_
     vector<matrix3D<double> > dum;
     vector<double> Vweight;
     matrix3D<complex<double> > Fimg, Faux;
-    matrix2D<double> A(4, 4), A_rot(4, 4), I(4, 4);
+    Matrix2D<double> A(4, 4), A_rot(4, 4), I(4, 4);
     Matrix1D<double> offsets(3);
     vector<double> radavg_sigma2(resol_max);
     vector<vector<double> > Vwsum_sigma2;
@@ -751,7 +751,7 @@ void Prog_mlf_tomo_prm::MLF_integrate(matrix3D<double> Mimg, matrix2D<double> A_
     int iweight, ioptx, iopty, ioptz, xmax, ymax, zmax, opt_itrans, ii, ires;
     double rot, tilt, psi, rot_sam, diff, sumweight, maxw, sum, aux, weight;
     double tmpr, tmpi, tmpd;
-    I.init_identity();
+    I.initIdentity();
 
     VolumeXmipp Vt;
     FileName fnt;
@@ -801,15 +801,15 @@ void Prog_mlf_tomo_prm::MLF_integrate(matrix3D<double> Mimg, matrix2D<double> A_
             for (int ipsi = 0; ipsi < nr_psi; ipsi++)
             {
                 psi = -rot + psi0 + (double)ipsi * psi_step;
-                A_rot = Euler_rot3D_matrix(rot, tilt, psi);
+                A_rot = Euler_rotation3DMatrix(rot, tilt, psi);
                 A = A_rot * A_img;
                 for (int refno = 0;refno < nr_ref; refno++)
                 {
                     if (alpha_k[refno] > 0.)
                     {
                         refw[refno] = 0.;
-                        apply_geom_Bspline(Frotref_real, A, Fref_trans[refno][2*zero_trans], 3, IS_INV, DONT_WRAP);
-                        apply_geom_Bspline(Frotref_imag, A, Fref_trans[refno][2*zero_trans+1], 3, IS_INV, DONT_WRAP);
+                        applyGeometryBSpline(Frotref_real, A, Fref_trans[refno][2*zero_trans], 3, IS_INV, DONT_WRAP);
+                        applyGeometryBSpline(Frotref_imag, A, Fref_trans[refno][2*zero_trans+1], 3, IS_INV, DONT_WRAP);
                         if (debug)
                         {
                             RealImag2Complex(Frotref_real, Frotref_imag, Faux);
@@ -929,7 +929,7 @@ void Prog_mlf_tomo_prm::MLF_integrate(matrix3D<double> Mimg, matrix2D<double> A_
             for (int ipsi = 0; ipsi < nr_psi; ipsi++)
             {
                 psi = -rot + psi0 + (double)ipsi * psi_step;
-                A_rot = Euler_rot3D_matrix(rot, tilt, psi);
+                A_rot = Euler_rotation3DMatrix(rot, tilt, psi);
                 A = A_rot * A_img;
                 for (int refno = 0;refno < nr_ref; refno++)
                 {
@@ -954,8 +954,8 @@ void Prog_mlf_tomo_prm::MLF_integrate(matrix3D<double> Mimg, matrix2D<double> A_
                                     (Fimg_trans[2*itrans+1]).data[ii] = (Fref_trans[refno][2*itrans+1]).data[ii];
                                 }
                                 // weighted sum of rotated and translated images
-                                apply_geom_Bspline(Frotimg_real, A, Fimg_trans[2*itrans], 3, IS_NOT_INV, DONT_WRAP);
-                                apply_geom_Bspline(Frotimg_imag, A, Fimg_trans[2*itrans+1], 3, IS_NOT_INV, DONT_WRAP);
+                                applyGeometryBSpline(Frotimg_real, A, Fimg_trans[2*itrans], 3, IS_NOT_INV, DONT_WRAP);
+                                applyGeometryBSpline(Frotimg_imag, A, Fimg_trans[2*itrans+1], 3, IS_NOT_INV, DONT_WRAP);
                                 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Frotimg_real)
                                 {
                                     dVkij(wsum_Fimgs[2*refno], k, i, j) += weight * dVkij(Frotimg_real, k, i, j);
@@ -980,7 +980,7 @@ void Prog_mlf_tomo_prm::MLF_integrate(matrix3D<double> Mimg, matrix2D<double> A_
     }
 
     // Save the optimal (combined) angles and origin offsets
-    A_rot = Euler_rot3D_matrix(opt_rot, opt_tilt, opt_psi);
+    A_rot = Euler_rotation3DMatrix(opt_rot, opt_tilt, opt_psi);
     A = A_rot * A_img;
     A.resize(3, 3);
     Euler_matrix2angles(A, opt_rot, opt_tilt, opt_psi);
@@ -1002,7 +1002,7 @@ void Prog_mlf_tomo_prm::sum_over_all_images(SelFile &SF,
 
     matrix3D<double> Mdzero;
     Matrix1D<double> dataline(9), opt_offsets(3), mis_offsets(3);
-    matrix2D<double> A_img(4, 4);
+    Matrix2D<double> A_img(4, 4);
     VolumeXmipp      img;
     FileName         fn_img;
     double           th0, thF, opt_rot, opt_tilt, opt_psi, maxcorr;
@@ -1052,10 +1052,10 @@ void Prog_mlf_tomo_prm::sum_over_all_images(SelFile &SF,
         opt_offsets(0) = (double)ROUND(img_xoff[imgno]);
         opt_offsets(1) = (double)ROUND(img_yoff[imgno]);
         opt_offsets(2) = (double)ROUND(img_zoff[imgno]);
-        img().self_translate(opt_offsets, WRAP);
+        img().selfTranslate(opt_offsets, WRAP);
 
         // Get optimal orientation and wedge information
-        A_img = Euler_rot3D_matrix(img_rot[imgno], img_tilt[imgno], img_psi[imgno]);
+        A_img = Euler_rotation3DMatrix(img_rot[imgno], img_tilt[imgno], img_psi[imgno]);
         th0 = img_th0[imgno];
         thF = img_thF[imgno];
         iwedge = (int)img_wednr[imgno] - 1;

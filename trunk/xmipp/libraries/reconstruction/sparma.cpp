@@ -87,7 +87,7 @@ void ARMA_parameters::write(const FileName &fn_prm, bool rewrite)
 }
 
 // First quadrant neighbours -----------------------------------------------
-void First_Quadrant_Neighbors(int N, int M, matrix2D<double> &Neighbors)
+void First_Quadrant_Neighbors(int N, int M, Matrix2D<double> &Neighbors)
 {
     long NumberOfPoints = (N + 1) * M;
     int n;
@@ -107,7 +107,7 @@ void First_Quadrant_Neighbors(int N, int M, matrix2D<double> &Neighbors)
 }
 
 // Second quadrant neighbours ----------------------------------------------
-void Second_Quadrant_Neighbors(int N, int M, matrix2D<double> &Neighbors)
+void Second_Quadrant_Neighbors(int N, int M, Matrix2D<double> &Neighbors)
 {
     long NumberOfPoints = N * (M + 1);
     int n;
@@ -128,23 +128,23 @@ void Second_Quadrant_Neighbors(int N, int M, matrix2D<double> &Neighbors)
 
 
 // Compute ARMA model ------------------------------------------------------
-double CausalARMA(matrix2D<double> &Img, int N_AR, int M_AR,
-                  int N_MA, int M_MA, matrix2D<double> &ARParameters,
-                  matrix2D<double> &MAParameters)
+double CausalARMA(Matrix2D<double> &Img, int N_AR, int M_AR,
+                  int N_MA, int M_MA, Matrix2D<double> &ARParameters,
+                  Matrix2D<double> &MAParameters)
 {
     double dSigma; // To store de sigma coeficient of the model
 
     // Calculate the autocorrelation matrix
-    matrix2D<double> R;
+    Matrix2D<double> R;
     auto_correlation_matrix(Img, R);
     R.setXmippOrigin();
 
     /**********************************************************************/
     // Set equation system for AR part of the model
     /**********************************************************************/
-    matrix2D<double> Coeficients;
+    Matrix2D<double> Coeficients;
     Matrix1D<double> Indep_terms, ARcoeficients;
-    matrix2D<double> N3;
+    Matrix2D<double> N3;
 
     // Assign the support region for the AR part of the model (N1)
     First_Quadrant_Neighbors(N_AR, M_AR, ARParameters);
@@ -154,8 +154,8 @@ double CausalARMA(matrix2D<double> &Img, int N_AR, int M_AR,
     // Here is the same of N1, but it hasn�t to be
     First_Quadrant_Neighbors(N_AR, M_AR, N3);
 
-    long NumberOfARParameters = ARParameters.RowNo();
-    long NumberOfMAParameters = MAParameters.RowNo();
+    long NumberOfARParameters = ARParameters.rowNumber();
+    long NumberOfMAParameters = MAParameters.rowNumber();
 
     Coeficients.resize(NumberOfARParameters, NumberOfARParameters);
     STARTINGX(Coeficients) = 0;
@@ -191,7 +191,7 @@ double CausalARMA(matrix2D<double> &Img, int N_AR, int M_AR,
     /**********************************************************************/
     // Solve the equation system to determine the AR model coeficients and sigma.
     /**********************************************************************/
-    solve_via_Cholesky(Coeficients, Indep_terms, ARcoeficients);
+    solveViaCholesky(Coeficients, Indep_terms, ARcoeficients);
 
     // Assign the results to the matrix given as parameter
     for (long n = 0 ; n < NumberOfARParameters; n++)
@@ -244,24 +244,24 @@ double CausalARMA(matrix2D<double> &Img, int N_AR, int M_AR,
 }
 
 // Compute the ARMA Filter -------------------------------------------------
-void ARMAFilter(matrix2D<double> &Img, matrix2D< double > &Filter,
-                matrix2D<double> &ARParameters, matrix2D<double> &MAParameters,
+void ARMAFilter(Matrix2D<double> &Img, Matrix2D< double > &Filter,
+                Matrix2D<double> &ARParameters, Matrix2D<double> &MAParameters,
                 double dSigma)
 {
     bool apply_final_median_filter = false;
     Matrix1D<double> dDigitalFreq(2);
 
     // Resize de Filter to the image dimensions
-    Filter.resize(Img.RowNo(), Img.ColNo());
+    Filter.resize(Img.rowNumber(), Img.colNumber());
     Filter.initZeros();
 
     // Compute the filter (only half the values are computed)
     // The other half is computed based in symmetry.
-    int sizeX = Img.ColNo();
-    int sizeY = Img.RowNo();
-    long NumberOfMAParameters = MAParameters.RowNo();
-    long NumberOfARParameters = ARParameters.RowNo();
-    matrix2D<int> iMAParameters(NumberOfMAParameters, 2),
+    int sizeX = Img.colNumber();
+    int sizeY = Img.rowNumber();
+    long NumberOfMAParameters = MAParameters.rowNumber();
+    long NumberOfARParameters = ARParameters.rowNumber();
+    Matrix2D<int> iMAParameters(NumberOfMAParameters, 2),
     iARParameters(NumberOfARParameters, 2);
     for (long n = 0 ; n < NumberOfMAParameters; n++)
     {
@@ -319,7 +319,7 @@ void ARMAFilter(matrix2D<double> &Img, matrix2D< double > &Filter,
     // Apply final median filter
     if (apply_final_median_filter)
     {
-        matrix2D<double> aux;
+        Matrix2D<double> aux;
         median_filter3x3(Filter, aux);
         // Copy all but the borders
         for (int i = 1; i < YSIZE(Filter) - 1; i++)

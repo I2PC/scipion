@@ -122,7 +122,7 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
        *prm.fh_hist << "Sort with last " << prm.sort_last_N << " images\n";
    *prm.fh_hist << " Variability analysis: " << prm.variability_analysis << endl;
    if (prm.SL.SymsNo()!=0) {
-      matrix2D<double> L(4,4),R(4,4); // A matrix from the list
+      Matrix2D<double> L(4,4),R(4,4); // A matrix from the list
       *prm.fh_hist << "Symmetry matrices -------\n";
       for (int j=0; j<prm.SL.SymsNo(); j++) {
          prm.SL.get_matrices(j,L,R);

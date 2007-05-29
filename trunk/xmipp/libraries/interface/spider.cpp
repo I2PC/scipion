@@ -120,36 +120,36 @@ void write_angles(SelFile &SF_in, DocFile &DF_in,
                   const string &ang3 = "psi")
 {
     double rot, tilt, psi;
-    int FirstLine_ColNo;
+    int FirstLine_colNumber;
 
     check_angle_descr(ang1);
     check_angle_descr(ang2);
     check_angle_descr(ang3);
 
-//   cout << "FirstLine_ColNo" << DF_in.FirstLine_ColNo();
+//   cout << "FirstLine_colNumber" << DF_in.FirstLine_colNumber();
 
     int i = 0;
     time_config();
     cerr << "Writting new headers ...\n";
     init_progress_bar(SF_in.ImgNo());
-    FirstLine_ColNo = DF_in.FirstLine_ColNo();
+    FirstLine_colNumber = DF_in.FirstLine_colNumber();
     while (!SF_in.eof())
     {
         // Read image
         ImageXmipp P;
         P.read(SF_in.NextImg());
         P.clear_fFlag_flag();
-        if (FirstLine_ColNo >= 3)
+        if (FirstLine_colNumber >= 3)
         {
             DF_in.get_angles(i + 1, rot, tilt, psi, ang1, ang2, ang3);
             P.set_eulerAngles(rot, tilt, psi);
         }
-        if (FirstLine_ColNo >= 6)
+        if (FirstLine_colNumber >= 6)
         {
             DF_in.get_angles1(i + 1, rot, tilt, psi, ang1, ang2, ang3);
             P.set_eulerAngles1(rot, tilt, psi);
         }
-        if (FirstLine_ColNo >= 9)
+        if (FirstLine_colNumber >= 9)
         {
             DF_in.get_angles2(i + 1, rot, tilt, psi, ang1, ang2, ang3);
             P.set_eulerAngles2(rot, tilt, psi);

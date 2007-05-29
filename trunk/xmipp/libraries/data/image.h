@@ -72,7 +72,7 @@ Image_Type;
  * @ingroup Images
  *
  * The image class is a general class which only contains the image itself and a
- * filename for it. It has got a "float" matrix2D as member, and basically all
+ * filename for it. It has got a "float" Matrix2D as member, and basically all
  * operations between images are based on that class.
  *
  * This class is the usual one when you want to operate images in memory. Images
@@ -90,7 +90,7 @@ protected:
     FileName fn_img; // name of the image
 
 public:
-    matrix2D< T > img; // matrix with the image
+    Matrix2D< T > img; // matrix with the image
 
 public:
     /// @defgroup ImageConstructors Image constructors
@@ -182,9 +182,9 @@ public:
      * @ingroup ImageOperations
      */
     template<typename T1>
-    ImageT& operator=(const matrix2D< T1 >& m)
+    ImageT& operator=(const Matrix2D< T1 >& m)
     {
-        if (&img != (matrix2D< T >*) &m)
+        if (&img != (Matrix2D< T >*) &m)
         {
             fn_img = "";
             type_cast(m, img);
@@ -196,7 +196,7 @@ public:
      * @ingroup ImageOperations
      */
     template<typename T1>
-    void assign(const matrix2D< T1 >& m)
+    void assign(const Matrix2D< T1 >& m)
     {
         *this = m;
     }
@@ -273,7 +273,7 @@ public:
      * @ingroup ImageAccess
      *
      * This operator can be used to access the matrix, and the matrix operations
-     * defined in matrix2D. In this way we could resize an image just by
+     * defined in Matrix2D. In this way we could resize an image just by
      * resizing its associated matrix or we could add two images by adding their
      * matrices.
      *
@@ -282,12 +282,12 @@ public:
      * I2() = I1() + I2();
      * @endcode
      */
-    virtual matrix2D< T >&  operator()()
+    virtual Matrix2D< T >&  operator()()
     {
         return img;
     }
 
-    virtual const matrix2D< T >&  operator()() const
+    virtual const Matrix2D< T >&  operator()() const
     {
         return img;
     }
@@ -295,7 +295,7 @@ public:
     /** Another function for 2D Matrix access
      * @ingroup ImageAccess
      */
-    virtual void get_matrix2D(matrix2D< T >& m)
+    virtual void get_Matrix2D(Matrix2D< T >& m)
     {
         m = img;
     }
@@ -303,7 +303,7 @@ public:
     /** Another function for 2D Matrix access
      * @ingroup ImageAccess
      */
-    virtual void set_matrix2D(const matrix2D< T >& m)
+    virtual void set_Matrix2D(const Matrix2D< T >& m)
     {
         img = m;
     }
@@ -330,7 +330,7 @@ public:
     /** Another function for pixel access
      * @ingroup ImageAccess
      */
-    T get_pixel(int i, int j) const
+    T getPixel(int i, int j) const
     {
         return img(i, j);
     }
@@ -338,7 +338,7 @@ public:
     /** Another function for pixel access
      * @ingroup ImageAccess
      */
-    void set_pixel(int i, int j, T val)
+    void setPixel(int i, int j, T val)
     {
         img(i, j) = val;
     }
@@ -366,7 +366,7 @@ public:
     friend ostream& operator<<(ostream& out, const ImageT& I)
     {
         out << "Image Name   : " << I.fn_img << endl
-        << "dimensions   : " << I.img.RowNo() << " x " << I.img.ColNo()
+        << "dimensions   : " << I.img.rowNumber() << " x " << I.img.colNumber()
         << "  (rows x columns)" << endl;
 
         return out;
@@ -854,13 +854,13 @@ public:
      * The Euler angles are set to 0 and the image filename is set to "".
      *
      * @code
-     * matrix2D< int > m;
+     * Matrix2D< int > m;
      * ImageXmipp IX;
      * IX = m;
      * @endcode
      */
     template<typename T1>
-    ImageXmippT< T >& operator=(const matrix2D< T1 >& op1)
+    ImageXmippT< T >& operator=(const Matrix2D< T1 >& op1)
     {
         this->ImageT< T >::operator=(op1);
         clear_header();
@@ -871,7 +871,7 @@ public:
     /** Another function for assignment from a matrix
      */
     template<typename T1>
-    void assign(const matrix2D< T1 >& op1)
+    void assign(const Matrix2D< T1 >& op1)
     {
         *this = op1;
     }
@@ -937,12 +937,12 @@ public:
                 // Apply the geometric transformations in the header to the
                 // loaded image. Transform image without wrapping, set new
                 // values to first element in the matrix
-                matrix2D< double > A =
+                Matrix2D< double > A =
                     ImageXmippT< T >::get_transformation_matrix(
                         only_apply_shifts);
 
-                if (!A.IsIdent())
-                    ImageT< T >::img.self_apply_geom_Bspline(A, 3, IS_INV,
+                if (!A.isIdentity())
+                    ImageT< T >::img.selfApplyGeometryBSpline(A, 3, IS_INV,
                             WRAP);
             }
 //scale value in header is not reliable, do not use it
@@ -955,7 +955,7 @@ public:
                 header.set_dimension(header.Ydim() * header.Scale(),
                                      header.Xdim() * header.Scale());
 
-                ImageT< T >::img.self_scale_to_size_Bspline(3, header.iYdim(),
+                ImageT< T >::img.selfScaleToSizeBSpline(3, header.iYdim(),
                         header.iXdim());
             }
 
@@ -1050,13 +1050,13 @@ public:
 
     /** Get geometric transformation matrix from 2D-image header
      */
-    matrix2D< double > get_transformation_matrix(bool only_apply_shifts = false)
+    Matrix2D< double > get_transformation_matrix(bool only_apply_shifts = false)
     {
-        matrix2D< double > A(3, 3);
+        Matrix2D< double > A(3, 3);
         double psi = realWRAP(header.Psi(), -180, 180);
         double theta = realWRAP(header.Theta(), -180, 180);
 
-        A.init_identity();
+        A.initIdentity();
 
         // This is to be compatible with old Xmipp images, that store image
         // translations in another position of the header
@@ -1111,7 +1111,7 @@ public:
         {
             // Might be oldXmipp image header
             float ang = header.old_rot();
-            matrix2D< double > mat = header.fGeo_matrix();
+            Matrix2D< double > mat = header.fGeo_matrix();
             if (ABS(mat(0, 0) - COSD(ang)) < XMIPP_EQUAL_ACCURACY &&
                 ABS(mat(1, 1) - COSD(ang)) < XMIPP_EQUAL_ACCURACY &&
                 ABS(mat(0, 1) - SIND(ang)) < XMIPP_EQUAL_ACCURACY &&
@@ -2222,19 +2222,19 @@ public:
 
     /** Matrix access
      *
-     * This function allows you to access the matrix2D over which the complex
+     * This function allows you to access the Matrix2D over which the complex
      * data type is based.
      *
      * @code
      * cout << IO();
      * @endcode
      */
-    matrix2D< double >& operator()()
+    Matrix2D< double >& operator()()
     {
         return img;
     }
 
-    const matrix2D< double >& operator()() const
+    const Matrix2D< double >& operator()() const
     {
         return img;
     }
@@ -2483,9 +2483,9 @@ public:
     /** Assignment operator
      */
     template<typename T1>
-    ImageImagicT< T >& operator=(const matrix2D< T1 >& m)
+    ImageImagicT< T >& operator=(const Matrix2D< T1 >& m)
     {
-        if (&ImageT< T >::img != (matrix2D< T >*)& m)
+        if (&ImageT< T >::img != (Matrix2D< T >*)& m)
         {
             this->ImageT< T >::operator=(m);
             name_parsed = false;

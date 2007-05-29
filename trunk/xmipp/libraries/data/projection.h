@@ -64,7 +64,7 @@ public:
      * Rp = euler * Ru
      * @endcode
      */
-    matrix2D< double > euler;
+    Matrix2D< double > euler;
 
     /** Just the opposite.
      *
@@ -72,7 +72,7 @@ public:
      * Ru = eulert * Rp.
      * @endcode
      */
-    matrix2D< double > eulert;
+    Matrix2D< double > eulert;
 
     /** Init_zeros and move origin to center.
      *

@@ -77,7 +77,7 @@ void Prog_Surface_Parameters::produce_Side_Info()
 void create_surface_mask(const Image *top, const Image *bottom, int zdim,
                          Volume *V)
 {
-    const matrix2D<double> *surf;
+    const Matrix2D<double> *surf;
     if (top != NULL && bottom != NULL)
     {
         if (!SAME_SHAPE2D((*top)(), (*bottom)()))

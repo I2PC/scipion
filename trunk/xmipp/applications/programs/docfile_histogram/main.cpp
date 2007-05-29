@@ -76,9 +76,9 @@ int main(int argc, char *argv[])
         else automatic_range2 = true;
 
         // Check columns are possible
-        if (col < 0 || col >= DF.FirstLine_ColNo())
+        if (col < 0 || col >= DF.FirstLine_colNumber())
             EXIT_ERROR(1, "DocFile Histogram: Column for histogram not valid");
-        if ((col2 < 0 || col2 >= DF.FirstLine_ColNo()) && col2 != -1)
+        if ((col2 < 0 || col2 >= DF.FirstLine_colNumber()) && col2 != -1)
             EXIT_ERROR(1, "DocFile Histogram: Column 2 for histogram not valid");
 
         // Check if the 2D histogram must be an image

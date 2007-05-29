@@ -81,7 +81,7 @@ public:
     /** Apply to a single image. The image is modified.
         If the CTF is randomly selected then a new CTF is generated
         for each image */
-    void apply(matrix2D<double> &I);
+    void apply(Matrix2D<double> &I);
 };
 //@}
 #endif

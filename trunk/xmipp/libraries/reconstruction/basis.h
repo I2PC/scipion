@@ -58,7 +58,7 @@ public:
 
     /** Volume deformation matrix.
         See the documentation of Basic_ART_Parameters for further explanation. */
-    matrix2D<double> *D;
+    Matrix2D<double> *D;
 public:
     /// Empty constructor. By default, blobs
     Basis()
@@ -95,7 +95,7 @@ public:
 
     /** Set D.
         D is the deformation matrix used for crystals. */
-    void set_D(matrix2D<double> *_D)
+    void set_D(Matrix2D<double> *_D)
     {
         D = _D;
     }
@@ -136,7 +136,7 @@ public:
     void changeFromVoxels(const matrix3D<double> &vol_voxels,
                           GridVolume &vol_basis, int grid_type, double grid_relative_size,
                           const matrix3D<double> *vol_mask,
-                          const matrix2D<double> *D, double R) const;
+                          const Matrix2D<double> *D, double R) const;
 
     /** Basis value at a given point. */
     double value_at(const Matrix1D<double> &r) const

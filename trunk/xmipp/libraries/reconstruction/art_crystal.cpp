@@ -108,7 +108,7 @@ void compute_integer_lattice(const Matrix1D<double> &a,
                              double ang_a2b_deg,
                              Matrix1D<double> &aint,
                              Matrix1D<double> &bint,
-                             matrix2D<double> &D,
+                             Matrix2D<double> &D,
                              int space_group)
 {
 
@@ -182,7 +182,7 @@ void compute_integer_lattice(const Matrix1D<double> &a,
     // Converting matrix
     // a=D*aint
     // b=D*bint
-    matrix2D<double> L(2, 2), LI(2, 2);
+    Matrix2D<double> L(2, 2), LI(2, 2);
 
     L .setCol(0, a);
     L .setCol(1, b);
@@ -219,7 +219,7 @@ void Crystal_ART_Parameters::produce_Side_Info(
         space_group = sym_P1;
 
     // Integer lattice vectors ----------------------------------------------
-    matrix2D<double> D;
+    Matrix2D<double> D;
     compute_integer_lattice(a, b, a_mag / prm.grid_relative_size,
                             b_mag / prm.grid_relative_size,
                             ang_a2b_deg, aint, bint, D,
@@ -229,11 +229,11 @@ void Crystal_ART_Parameters::produce_Side_Info(
     bi = bint / 2;
 
     // Set general deformation pointer to this matrix
-    prm.D = new matrix2D<double>;
+    prm.D = new Matrix2D<double>;
     *(prm.D) = D;
     prm.D->resize(3, 3);
     MAT_ELEM(*(prm.D), 2, 2) = 1;
-    prm.Dinv = new matrix2D<double>;
+    prm.Dinv = new Matrix2D<double>;
     *(prm.Dinv) = prm.D->inv();
     prm.basis.set_D(prm.D);
 
@@ -401,15 +401,15 @@ void ART_single_step(
 
 //   #define DEBUG_SHIFT
 #ifdef DEBUG_SHIFT
-    matrix2D<double> A(3, 3);
-    A.init_identity();
+    Matrix2D<double> A(3, 3);
+    A.initIdentity();
     dMij(A, 0, 2) =  8;
     dMij(A, 1, 2) =  -5;
     cout << "A" << A;
     //move read_proj
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(theo_proj())
     dMij(theo_proj(), i, j) = dMij(read_proj(), i, j);
-    apply_geom(IMGMATRIX(read_proj), A, IMGMATRIX(theo_proj), IS_NOT_INV, WRAP);
+    applyGeometry(IMGMATRIX(read_proj), A, IMGMATRIX(theo_proj), IS_NOT_INV, WRAP);
 #endif
 #undef DEBUG_SHIFT
     if (prm.ref_trans_after != -1    &&
@@ -423,16 +423,16 @@ void ART_single_step(
                                                 imagen_no);
 
         // Apply correction
-        matrix2D<double> Correction(3, 3);
+        Matrix2D<double> Correction(3, 3);
         alig_proj().resize(read_proj());
-        Correction.init_identity();
+        Correction.initIdentity();
 
         dMij(Correction, 0, 2) =  - shift_X;
         dMij(Correction, 1, 2) =  - shift_Y;
         //copy theo_proj to a temporal matrix
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(theo_proj())
         dMij(alig_proj(), i, j) = dMij(read_proj(), i, j);
-        apply_geom(IMGMATRIX(read_proj), Correction, IMGMATRIX(alig_proj), IS_NOT_INV, WRAP);
+        applyGeometry(IMGMATRIX(read_proj), Correction, IMGMATRIX(alig_proj), IS_NOT_INV, WRAP);
     }
 // Now compute differences .................................................
     double applied_lambda = lambda / numIMG; // In ART mode, numIMG=1

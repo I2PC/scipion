@@ -36,10 +36,10 @@ int main(int argc, char **argv)
     double LL, LL_old, sumw_allrefs, convv, sumcorr;
     vector<double> conv;
     double aux, wsum_sigma_noise, wsum_sigma_offset;
-    vector<matrix2D<double > > wsum_Mref, wsum_ctfMref;
+    vector<Matrix2D<double > > wsum_Mref, wsum_ctfMref;
     vector<double> sumw, sumw_mirror;
-    matrix2D<double> P_phi, Mr2, Maux, Maux2;
-    vector<matrix2D<double> > Mwsum_sigma2;
+    Matrix2D<double> P_phi, Mr2, Maux, Maux2;
+    vector<Matrix2D<double> > Mwsum_sigma2;
     vector<Matrix1D<double> > spectral_snr;
     FileName fn_img, fn_tmp;
     Matrix1D<double> oneline(0), spectral_signal;

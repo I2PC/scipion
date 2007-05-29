@@ -90,7 +90,7 @@ public:
 
     /** Load matrix.
         Load the image from a matrix provided */
-    bool loadMatrix(matrix2D<double> &_matrix,
+    bool loadMatrix(Matrix2D<double> &_matrix,
                     double _minGray = 0, double _maxGray = 0,
                     TLoadMode load_mode = ImageViewer::Normal_mode);
 
@@ -134,7 +134,7 @@ protected:
     bool convertEvent(QMouseEvent* e, int& x, int& y);
     const char* filename;
     Image xmippImage;  // Xmipp Image
-    matrix2D< complex<double> > xmippImageFourier; // Fourier image
+    Matrix2D< complex<double> > xmippImageFourier; // Fourier image
     double      minGray;                // Minimum value of the image
     double      maxGray;                // Maximum value of the image
     QImage image;   // the loaded image
@@ -167,7 +167,7 @@ protected:
     bool  xmipp2Qt(Image& _image);
     bool  Qt2xmipp(QImage &_image);
     bool  showImage();
-    void  generateFFTImage(matrix2D<double> &out);
+    void  generateFFTImage(Matrix2D<double> &out);
     void updateStatus();
     bool  reconvertImage();
     void        refineProfileLine();

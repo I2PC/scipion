@@ -96,7 +96,7 @@ void RBF_predict(xmippRBF &RBF,  xmippCTVectors &X, vector<double> &y_predicted)
 
     Look the Mark Orr's function rbf_dm */
 void RBF_design_matrix(xmippCTVectors &C, Matrix1D<double> &r,
-                       xmippCTVectors &X, matrix2D<double> &H);
+                       xmippCTVectors &X, Matrix2D<double> &H);
 
 /** Compute model given a certain scale.
     The selected centers are chosen via the index_out variable.

@@ -442,13 +442,13 @@ public:
     void zero(int n, const Matrix1D<double> &u, Matrix1D<double> &freq) const;
 
     /// Apply CTF to an image
-    void Apply_CTF(matrix2D < complex<double> > &FFTI) const;
+    void Apply_CTF(Matrix2D < complex<double> > &FFTI) const;
 
     /** Generate CTF image.
         The sample image is used only to take its dimensions. */
     template <class T>
-    void Generate_CTF(const matrix2D<T> &sample_image,
-                      matrix2D < complex<double> > &CTF) const
+    void Generate_CTF(const Matrix2D<T> &sample_image,
+                      Matrix2D < complex<double> > &CTF) const
     {
         Generate_CTF(YSIZE(sample_image), XSIZE(sample_image), CTF);
         STARTINGX(CTF) = STARTINGX(sample_image);
@@ -457,7 +457,7 @@ public:
 
     /// Generate CTF image.
     void Generate_CTF(int Ydim, int Xdim,
-                      matrix2D < complex<double> > &CTF) const;
+                      Matrix2D < complex<double> > &CTF) const;
 
     /** Check physical meaning.
         true if the CTF parameters have physical meaning.

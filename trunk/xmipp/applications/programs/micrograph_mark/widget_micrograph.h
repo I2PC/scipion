@@ -77,9 +77,9 @@ public:
     // Average of the model
     Matrix1D<double>           __avg;
     // Covariance of the model
-    matrix2D<double>           __sigma;
+    Matrix2D<double>           __sigma;
     // Inverse of sigma
-    matrix2D<double>           __sigma_inv;
+    Matrix2D<double>           __sigma_inv;
     // Example vectors
     vector< Particle >         __training_particle;
     // largest distance in the example set
@@ -164,7 +164,7 @@ private:
     bool                       __learn_particles_done;
     bool                       __autoselection_done;
     Mask_Params                __mask;
-    vector < matrix2D<int> * > __mask_classification;
+    vector < Matrix2D<int> * > __mask_classification;
     bool                       __use_background;
     vector < Matrix1D<int> * > __radial_val;
     Classification_model       __training_model;
@@ -177,7 +177,7 @@ private:
     bool                       __use_euclidean_distance_for_errors;
     int                        __auto_label;
     vector<int>                __error_index;
-    matrix2D<double>           __piece;
+    Matrix2D<double>           __piece;
     int                        __gray_bins;
     int                        __radial_bins;
     double                     __keep;

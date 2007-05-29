@@ -756,7 +756,7 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
         {
             project_Volume(side.phantom_vol(), proj, prm.proj_Ydim, prm.proj_Xdim,
                            rot, tilt, psi);
-            IMGMATRIX(proj).self_translate(vectorR2(shiftX, shiftY));
+            IMGMATRIX(proj).selfTranslate(vectorR2(shiftX, shiftY));
         }
         else
         {

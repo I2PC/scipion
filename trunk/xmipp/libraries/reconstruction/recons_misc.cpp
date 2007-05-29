@@ -35,7 +35,7 @@ void build_recons_info(SelFile &selfile, SelFile &selctf,
                        const FileName &fn_ctf, const SymList &SL,
                        Recons_info * &IMG_Inf, bool do_not_use_symproj)
 {
-    matrix2D<double>  L(4, 4), R(4, 4);  // A matrix from the list
+    Matrix2D<double>  L(4, 4), R(4, 4);  // A matrix from the list
     FileName          fn_proj;
     FileName          fn_ctf1;
     Projection        read_proj;
@@ -190,7 +190,7 @@ void VariabilityClass::finishAnalysis()
 
     // Coocurrence matrix
     int nmax = VA.size();
-    matrix2D<int> coocurrence(nmax, nmax);
+    Matrix2D<int> coocurrence(nmax, nmax);
 
     // Study each voxel
     VolumeXmipp SignificantT2, SignificantMaxRatio, SignificantMinRatio;
@@ -278,7 +278,7 @@ void VariabilityClass::finishAnalysis()
         system("xmipp_fcmeans -din PPP.dat -cout PPP -c 2 -saveclusters > /dev/null");
 
         // Pick up results
-        matrix2D<double> aux;
+        Matrix2D<double> aux;
         int n_previous;
 #define GET_RESULTS(fh,fn,avg,cov,N,idx) \
     fh.open(fn);\
@@ -292,19 +292,19 @@ void VariabilityClass::finishAnalysis()
             n_previous=n; N++; \
             idx(n)=1; \
             avg+=v[n]; \
-            aux.from_vector(v[n]); \
+            aux.fromVector(v[n]); \
             cov+=aux*aux.transpose(); \
         }\
     } \
     avg/=N; \
     cov/=N; \
-    aux.from_vector(avg); \
+    aux.fromVector(avg); \
     cov-=aux*aux.transpose();
 
         ifstream fh_0;
         Matrix1D<double> avg0(NFEATURES);
         Matrix1D<int>    idx0(nmax);
-        matrix2D<double> covariance0(NFEATURES, NFEATURES);
+        Matrix2D<double> covariance0(NFEATURES, NFEATURES);
         int N0 = 0;
         GET_RESULTS(fh_0, "PPP.0", avg0, covariance0, N0, idx0);
 #ifdef DEBUG
@@ -322,7 +322,7 @@ void VariabilityClass::finishAnalysis()
         ifstream fh_1;
         Matrix1D<double> avg1(NFEATURES);
         Matrix1D<int>    idx1(nmax);
-        matrix2D<double> covariance1(NFEATURES, NFEATURES);
+        Matrix2D<double> covariance1(NFEATURES, NFEATURES);
         int N1 = 0;
         GET_RESULTS(fh_1, "PPP.1", avg1, covariance1, N1, idx1);
 #ifdef DEBUG
@@ -337,7 +337,7 @@ void VariabilityClass::finishAnalysis()
         }
 #endif
 
-        matrix2D<double> T2, covariance;
+        Matrix2D<double> T2, covariance;
         if (NFEATURES > 1)
         {
             // Perform T2-Hotelling test
@@ -345,7 +345,7 @@ void VariabilityClass::finishAnalysis()
             covariance = 1.0 / (N0 + N1 - 2) *
                          ((N0 - 1) * covariance0 + (N1 - 1) * covariance1);
             covariance *= (1.0 / N0 + 1.0 / N1);
-            aux.from_vector(avg_diff);
+            aux.fromVector(avg_diff);
             T2 = (double)(N0 + N1 - XSIZE(avg_diff) - 1) /
                  ((N0 + N1 - 2) * XSIZE(avg_diff)) *
                  aux.transpose() * covariance.inv() * aux;
@@ -364,7 +364,7 @@ void VariabilityClass::finishAnalysis()
         Matrix1D<double> eigenvalues;
         if (NFEATURES > 1)
         {
-            matrix2D<double> U, V;
+            Matrix2D<double> U, V;
             svdcmp(covariance, U, eigenvalues, V);
         }
 

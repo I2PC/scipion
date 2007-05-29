@@ -89,7 +89,7 @@ public:
         (a-b)/2, (a+b)/2. The reconstruction will be only performed for
         the basis inside this mask. Be careful that this is a 2D mask for a 3D
         reconstruction. */
-    matrix2D<int> unit_cell_mask;
+    Matrix2D<int> unit_cell_mask;
     //@}
 public:
     /// cout << crystal_prm;
@@ -131,7 +131,7 @@ void compute_integer_lattice(const Matrix1D<double> &a,
                              double ang_a2b_deg,
                              Matrix1D<double> &aint,
                              Matrix1D<double> &bint,
-                             matrix2D<double> &V,
+                             Matrix2D<double> &V,
                              int space_group);
 
 /** Run a single step of ART.

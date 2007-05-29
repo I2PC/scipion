@@ -30,7 +30,7 @@
 /* Substract background ---------------------------------------------------- */
 void substract_background_plane(Image *I)
 {
-    matrix2D<double> A(3, 3);
+    Matrix2D<double> A(3, 3);
     Matrix1D<double> x(3), b(3);
 
     // Solve the plane 'x'
@@ -65,7 +65,7 @@ void contrast_enhancement(Image *I)
 }
 
 /* Region growing for images ----------------------------------------------- */
-void region_growing(const matrix2D<double> &I_in, matrix2D<double> &I_out,
+void region_growing(const Matrix2D<double> &I_in, Matrix2D<double> &I_out,
                     int i, int j,
                     float stop_colour, float filling_colour, bool less, int neighbourhood)
 {
@@ -199,7 +199,7 @@ void region_growing(const matrix3D<double> &V_in, matrix3D<double> &V_out,
 }
 
 /* Label image ------------------------------------------------------------ */
-int label_image(const matrix2D<double> &I, matrix2D<double> &label,
+int label_image(const Matrix2D<double> &I, Matrix2D<double> &label,
                 int neighbourhood)
 {
     label = I;
@@ -238,10 +238,10 @@ int label_volume(const matrix3D<double> &V, matrix3D<double> &label)
 }
 
 /* Remove small components ------------------------------------------------- */
-void remove_small_components(matrix2D<double> &I, int size,
+void remove_small_components(Matrix2D<double> &I, int size,
                              int neighbourhood)
 {
-    matrix2D<double> label;
+    Matrix2D<double> label;
     int imax = label_image(I, label, neighbourhood);
     Matrix1D<int> nlabel(imax + 1);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(label) nlabel((int)(label(i, j)))++;
@@ -251,10 +251,10 @@ void remove_small_components(matrix2D<double> &I, int size,
 }
 
 /* Keep biggest component -------------------------------------------------- */
-void keep_biggest_component(matrix2D<double> &I, double percentage,
+void keep_biggest_component(Matrix2D<double> &I, double percentage,
                             int neighbourhood)
 {
-    matrix2D<double> label;
+    Matrix2D<double> label;
     int imax = label_image(I, label, neighbourhood);
     Matrix1D<int> nlabel(imax + 1);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(label)
@@ -290,9 +290,9 @@ void keep_biggest_component(matrix2D<double> &I, double percentage,
 }
 
 /* Fill object ------------------------------------------------------------- */
-void fill_binary_object(matrix2D<double> &I, int neighbourhood)
+void fill_binary_object(Matrix2D<double> &I, int neighbourhood)
 {
-    matrix2D<double> label;
+    Matrix2D<double> label;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(I) I(i, j) = 1 - I(i, j);
     int imax = label_image(I, label, neighbourhood);
     double l0 = label(STARTINGY(I), STARTINGX(I));
@@ -304,15 +304,15 @@ void fill_binary_object(matrix2D<double> &I, int neighbourhood)
 }
 
 /* Best shift -------------------------------------------------------------- */
-void best_shift(const matrix2D<double> &I1, const matrix2D<double> &I2,
-                double &shiftX, double &shiftY, const matrix2D<int> *mask)
+void best_shift(const Matrix2D<double> &I1, const Matrix2D<double> &I2,
+                double &shiftX, double &shiftY, const Matrix2D<int> *mask)
 {
     int              imax, jmax, i_actual, j_actual;
     double           max, xmax, ymax, sumcorr, avecorr, stdcorr, dummy;
     float            xshift, yshift, shift;
     int              n_max = -1;
     bool             neighbourhood = true;
-    matrix2D<double> Mcorr;
+    Matrix2D<double> Mcorr;
 
     correlation_matrix(I1, I2, Mcorr);
 
@@ -380,8 +380,8 @@ void best_shift(const matrix2D<double> &I1, const matrix2D<double> &I2,
 }
 
 /* Fourier-Bessel decomposition. ------------------------------------------- */
-void Fourier_Bessel_decomposition(const matrix2D<double> &img_in,
-                                  matrix2D<double> &m_out, double r1, double r2, int k1, int k2)
+void Fourier_Bessel_decomposition(const Matrix2D<double> &img_in,
+                                  Matrix2D<double> &m_out, double r1, double r2, int k1, int k2)
 {
     for (int k = k1; k <= k2; k++)
     {
@@ -430,15 +430,15 @@ void Fourier_Bessel_decomposition(const matrix2D<double> &img_in,
 }
 
 /* Harmonic decomposition. ------------------------------------------------- */
-void harmonic_decomposition(const matrix2D<double> &img_in,
+void harmonic_decomposition(const Matrix2D<double> &img_in,
                             Matrix1D<double> &v_out)
 {}
 
 /* Shah energy ------------------------------------------------------------- */
 /* This function computes the current functional energy */
-double Shah_energy(const matrix2D<double> &img,
-                   const matrix2D<double> &surface_strength,
-                   const matrix2D<double> &edge_strength,
+double Shah_energy(const Matrix2D<double> &img,
+                   const Matrix2D<double> &surface_strength,
+                   const Matrix2D<double> &edge_strength,
                    double K, const Matrix1D<double> &W)
 {
     int Ydim1 = YSIZE(img) - 1;
@@ -475,8 +475,9 @@ double Shah_energy(const matrix2D<double> &img,
    on a finite differences solution to the following equation:
        0 = dE/df = dF/df - d(dF/dfx)/dx - d(dF/dfy)/dy
            + dd(dF/dfxx)/dxx + dd(dF/dfxy)/dxy + dd(dF/dfyy)/dyy */
-double Update_surface_Shah(matrix2D<double> &img,
-                           matrix2D<double> &surface_strength, matrix2D<double> &edge_strength,
+double Update_surface_Shah(Matrix2D<double> &img,
+                           Matrix2D<double> &surface_strength,
+                           Matrix2D<double> &edge_strength,
                            const Matrix1D<double> &W)
 {
     double Diff = 0.0, Norm = 0.0;
@@ -533,9 +534,11 @@ double Update_surface_Shah(matrix2D<double> &img,
 /* This routine performs one update to the edge estimate based
    on a finite differences solution to the following equation:
    0 = dE/ds = dF/ds - d(dF/dsx)/dx - d(dF/dsy)/dy */
-double Update_edge_Shah(matrix2D<double> &img,
-                        matrix2D<double> &surface_strength, matrix2D<double> &edge_strength,
-                        double K, const Matrix1D<double> &W)
+double Update_edge_Shah(Matrix2D<double> &img,
+                        Matrix2D<double> &surface_strength,
+                        Matrix2D<double> &edge_strength,
+                        double K,
+                        const Matrix1D<double> &W)
 {
     double Diff = 0.0, Norm = 0.0;
 
@@ -577,10 +580,14 @@ double Update_edge_Shah(matrix2D<double> &img,
 
 /* Smoothing Shah ---------------------------------------------------------- */
 #define SHAH_CONVERGENCE_THRESHOLD  0.0001
-void Smoothing_Shah(matrix2D<double> &img,
-                    matrix2D<double> &surface_strength, matrix2D<double> &edge_strength,
-                    const Matrix1D<double> &W, int OuterLoops, int InnerLoops,
-                    int RefinementLoops, bool adjust_range)
+void Smoothing_Shah(Matrix2D<double> &img,
+                    Matrix2D<double> &surface_strength,
+                    Matrix2D<double> &edge_strength,
+                    const Matrix1D<double> &W,
+                    int OuterLoops,
+                    int InnerLoops,
+                    int RefinementLoops,
+                    bool adjust_range)
 {
 
     type_cast(img, surface_strength);
@@ -621,8 +628,8 @@ void Smoothing_Shah(matrix2D<double> &img,
 }
 
 /* Rotational invariant moments -------------------------------------------- */
-void rotational_invariant_moments(const matrix2D<double> &img,
-                                  const matrix2D<int> *mask,
+void rotational_invariant_moments(const Matrix2D<double> &img,
+                                  const Matrix2D<int> *mask,
                                   Matrix1D<double> &v_out)
 {
     // Prepare some variables
@@ -682,9 +689,10 @@ void rotational_invariant_moments(const matrix2D<double> &img,
 }
 
 /* Inertia moments --------------------------------------------------------- */
-void inertia_moments(const matrix2D<double> &img,
-                     const matrix2D<int> *mask,
-                     Matrix1D<double> &v_out, matrix2D<double> &u)
+void inertia_moments(const Matrix2D<double> &img,
+                     const Matrix2D<int> *mask,
+                     Matrix1D<double> &v_out,
+                     Matrix2D<double> &u)
 {
     // Prepare some variables
     double m_11 = 0, m_02 = 0, m_20 = 0;
@@ -710,17 +718,17 @@ void inertia_moments(const matrix2D<double> &img,
     // Compute the eigen values of the inertia matrix
     // [m_02 m_11
     //  m_11 m_20]
-    matrix2D<double> A(2, 2);
+    Matrix2D<double> A(2, 2);
     A(0, 0) = m_02;
     A(0, 1) = A(1, 0) = m_11;
     A(1, 1) = m_20;
-    matrix2D<double> v;
+    Matrix2D<double> v;
     svdcmp(A, u, v_out, v);
     v_out = v_out.sort();
 }
 
 /* Fill triangle ----------------------------------------------------------- */
-void fill_triangle(matrix2D<double> &img, int *tx, int *ty, double color)
+void fill_triangle(Matrix2D<double> &img, int *tx, int *ty, double color)
 {
     /*
      * Order in y values
@@ -866,11 +874,14 @@ void fill_triangle(matrix2D<double> &img, int *tx, int *ty, double color)
 }
 
 /* Local thresholding ------------------------------------------------------ */
-void local_thresholding(matrix2D<double> &img, double C, double dimLocal,
-                        matrix2D<int> &result, matrix2D<int> *mask)
+void local_thresholding(Matrix2D<double> &img,
+                        double C,
+                        double dimLocal,
+                        Matrix2D<int> &result,
+                        Matrix2D<int> *mask)
 {
     // Convolve the input image with the kernel
-    matrix2D<double> convolved;
+    Matrix2D<double> convolved;
     convolved.initZeros(img);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(convolved)
     {

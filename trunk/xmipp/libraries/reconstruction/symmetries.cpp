@@ -37,7 +37,7 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
     char *auxstr;
     double ang_incr, rot_ang;
     int  fold;
-    matrix2D<double> L(4, 4), R(4, 4);
+    Matrix2D<double> L(4, 4), R(4, 4);
     Matrix1D<double> axis(3), shift(3);
 
     // Open file ---------------------------------------------------------
@@ -114,10 +114,10 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
             auxstr = next_token();
             axis.Z() = AtoF(auxstr);
             ang_incr = 360. / fold;
-            L.init_identity();
+            L.initIdentity();
             for (j = 1, rot_ang = ang_incr; j < fold; j++, rot_ang += ang_incr)
             {
-                R = rot3D_matrix(rot_ang, axis);
+                R = rotation3DMatrix(rot_ang, axis);
                 set_shift(i, shift);
                 set_matrices(i++, L, R.transpose());
             }
@@ -126,9 +126,9 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
         }
         else if (strcmp(auxstr, "inversion") == 0)
         {
-            L.init_identity();
+            L.initIdentity();
             L(2, 2) = -1;
-            R.init_identity();
+            R.initIdentity();
             R(0, 0) = -1.;
             R(1, 1) = -1.;
             R(2, 2) = -1.;
@@ -145,9 +145,9 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
             axis.Y() = AtoF(auxstr);
             auxstr = next_token();
             axis.Z() = AtoF(auxstr);
-            L.init_identity();
+            L.initIdentity();
             L(2, 2) = -1;
-            matrix2D<double> A = align_with_Z(axis);
+            Matrix2D<double> A = alignWithZ(axis);
             A = A.transpose();
             R = A * L * A.inv();
             set_shift(i, shift);
@@ -159,7 +159,7 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
         {
             space_group = sym_P42_12;
             accuracy = -1; // Do not compute subgroup
-            L.init_identity();
+            L.initIdentity();
 
             // With 0 shift
             R.initZeros();
@@ -213,7 +213,7 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
         {
             space_group = sym_P2_122;
             accuracy = -1; // Do not compute subgroup
-            L.init_identity();
+            L.initIdentity();
 
             // With 0 shift
             R.initZeros();
@@ -246,7 +246,7 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
         {
             space_group = sym_P22_12;
             accuracy = -1; // Do not compute subgroup
-            L.init_identity();
+            L.initIdentity();
 
             // With 0 shift
             R.initZeros();
@@ -316,7 +316,7 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
 }
 
 // Get matrix ==============================================================
-void SymList::get_matrices(int i, matrix2D<double> &L, matrix2D<double> &R)
+void SymList::get_matrices(int i, Matrix2D<double> &L, Matrix2D<double> &R)
 const
 {
     int k, l;
@@ -331,8 +331,8 @@ const
 }
 
 // Set matrix ==============================================================
-void SymList::set_matrices(int i, const matrix2D<double> &L,
-                           const matrix2D<double> &R)
+void SymList::set_matrices(int i, const Matrix2D<double> &L,
+                           const Matrix2D<double> &R)
 {
     int k, l;
     for (k = 4 * i; k < 4*i + 4; k++)
@@ -371,7 +371,7 @@ void SymList::add_shift(const Matrix1D<double> &shift)
 }
 
 // Add matrix ==============================================================
-void SymList::add_matrices(const matrix2D<double> &L, const matrix2D<double> &R,
+void SymList::add_matrices(const Matrix2D<double> &L, const Matrix2D<double> &R,
                            int chain_length)
 {
     if (XSIZE(L) != 4 || YSIZE(L) != 4 || XSIZE(R) != 4 || YSIZE(R) != 4)
@@ -389,7 +389,7 @@ void SymList::add_matrices(const matrix2D<double> &L, const matrix2D<double> &R,
 }
 
 // Compute subgroup ========================================================
-bool found_not_tried(const matrix2D<int> &tried, int &i, int &j,
+bool found_not_tried(const Matrix2D<int> &tried, int &i, int &j,
                      int true_symNo)
 {
     i = j = 0;
@@ -421,10 +421,10 @@ bool found_not_tried(const matrix2D<int> &tried, int &i, int &j,
 //#define DEBUG
 void SymList::compute_subgroup(double accuracy)
 {
-    matrix2D<double> I(4, 4);
-    I.init_identity();
-    matrix2D<double> L1(4, 4), R1(4, 4), L2(4, 4), R2(4, 4), newL(4, 4), newR(4, 4);
-    matrix2D<int>    tried(true_symNo, true_symNo);
+    Matrix2D<double> I(4, 4);
+    I.initIdentity();
+    Matrix2D<double> L1(4, 4), R1(4, 4), L2(4, 4), R2(4, 4), newL(4, 4), newR(4, 4);
+    Matrix2D<int>    tried(true_symNo, true_symNo);
     Matrix1D<double> shift(3);
     shift.initZeros();
     int i, j;
@@ -442,7 +442,7 @@ void SymList::compute_subgroup(double accuracy)
         newR = R1 * R2;
         new_chain_length = __chain_length(i) + __chain_length(j);
 
-        if (newL.IsIdent() && newR.IsIdent()) continue;
+        if (newL.isIdentity() && newR.isIdentity()) continue;
 
         // Try to find it in current ones
         bool found;
@@ -783,7 +783,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
                                const Matrix1D<double> &eprm_aint,
                                const Matrix1D<double> &eprm_bint,
                                int eprm_space_group,
-                               const matrix2D<int> &mask, int grid_type)
+                               const Matrix2D<int> &mask, int grid_type)
 {
 //SO FAR ONLY THE GRID CENTERED IN 0,0,0 IS SYMMETRIZED, THE OTHER
 //ONE SINCE REQUIRE INTERPOLATION IS IGNORED
@@ -847,7 +847,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
                      const Matrix1D<double> &eprm_aint,
                      const Matrix1D<double> &eprm_bint,
-                     const matrix2D<int> &mask, int volume_no,
+                     const Matrix2D<int> &mask, int volume_no,
                      int grid_type)
 {
 
@@ -1067,7 +1067,7 @@ void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
 void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
                      const Matrix1D<double> &eprm_aint,
                      const Matrix1D<double> &eprm_bint,
-                     const matrix2D<int> &mask, int volume_no,
+                     const Matrix2D<int> &mask, int volume_no,
                      int grid_type)
 {
 
@@ -1286,7 +1286,7 @@ void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
 void symmetry_P4(Volume &vol, const SimpleGrid &grid,
                  const Matrix1D<double> &eprm_aint,
                  const Matrix1D<double> &eprm_bint,
-                 const matrix2D<int> &mask, int volume_no, int grid_type)
+                 const Matrix2D<int> &mask, int volume_no, int grid_type)
 {
     int ZZ_lowest = (int) ZZ(grid.lowest);
     int YY_lowest = STARTINGY(mask);
@@ -1479,7 +1479,7 @@ void symmetry_P4(Volume &vol, const SimpleGrid &grid,
 void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
                      const Matrix1D<double> &eprm_aint,
                      const Matrix1D<double> &eprm_bint,
-                     const matrix2D<int> &mask, int volume_no,
+                     const Matrix2D<int> &mask, int volume_no,
                      int grid_type)
 {
 
@@ -1795,7 +1795,7 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
 void symmetry_P6(Volume &vol, const SimpleGrid &grid,
                  const Matrix1D<double> &eprm_aint,
                  const Matrix1D<double> &eprm_bint,
-                 const matrix2D<int> &mask, int volume_no,
+                 const Matrix2D<int> &mask, int volume_no,
                  int grid_type)
 {
 

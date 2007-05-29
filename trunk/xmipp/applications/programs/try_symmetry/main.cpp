@@ -53,9 +53,9 @@ public:
 bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 {
     Markhan_parameters *eprm = (Markhan_parameters *) prm;
-    matrix2D<double> aux = img();
+    Matrix2D<double> aux = img();
     for (int i = 1; i < eprm->symmetry; i++)
-        aux += img().rotate_Bspline(3, 360.0 / eprm->symmetry * i);
+        aux += img().rotateBSpline(3, 360.0 / eprm->symmetry * i);
     aux /= eprm->symmetry;
     img() = aux;
     return true;

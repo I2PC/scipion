@@ -69,7 +69,7 @@ int main(int argc, char **argv)
     try
     {
         double gamma;
-        matrix2D<double> E2D, vp(2, 2), Vp(2, 2), v(2, 2);
+        Matrix2D<double> E2D, vp(2, 2), Vp(2, 2), v(2, 2);
         double x, y;
         /* compute projection crystal vectors in projection coordinate system
            Solve system of equations:

@@ -63,13 +63,13 @@ void QtWidgetPSD::set_assign_CTF_file(Micrograph &m,
         {
             if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
                 fn_avg = fn_root + "_ARMAavg.psd";
-            else fn_avg = fn_root + "_Periodogramavg.psd";
+            else fn_avg = fn_root + "_Pwithoutogramavg.psd";
         }
         else
         {
             if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
                 fn_avg = fn_root + "_ARMAavg.ctfmodel";
-            else fn_avg = fn_root + "_Periodogramavg.ctfmodel";
+            else fn_avg = fn_root + "_Pwithoutogramavg.ctfmodel";
         }
         system(((string)"xmipp_do_selfile " + fn_avg + " > " + fn_random).c_str());
         div_NumberX = div_NumberY = 1;
@@ -80,7 +80,7 @@ void QtWidgetPSD::set_assign_CTF_file(Micrograph &m,
         FileName PSDfn_root;
         if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
             PSDfn_root = fn_root + "_ARMA";
-        else PSDfn_root = fn_root + "_Periodogram";
+        else PSDfn_root = fn_root + "_Pwithoutogram";
         string command;
         if (!ctf_mode)
             command = (string)"xmipp_do_selfile \"" + PSDfn_root + "?????.psd\" > " + fn_random;

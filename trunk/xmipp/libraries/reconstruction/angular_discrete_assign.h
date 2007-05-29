@@ -111,15 +111,15 @@ public:
     SelFile SF_ref;
     // Mask disitribution of DWT coefficients.
     // It is created when the training sets
-    matrix2D<int> Mask_no;
+    Matrix2D<int> Mask_no;
     // Vector with all the DWT coefficients of the
     // library
-    vector<matrix2D<double> * > library;
+    vector<Matrix2D<double> * > library;
     // Vector with all the names of the library images
     vector<FileName> library_name;
     // Power of the library images at different
     // subbands
-    matrix2D<double> library_power;
+    Matrix2D<double> library_power;
     // Vector with the rotational angles of the library
     vector<double> rot;
     // Vector with the tilting angles of the library

@@ -81,7 +81,7 @@ void Prog_Enhance_PSD_Parameters::show()
 
 /* Apply ------------------------------------------------------------------- */
 //#define DEBUG
-void Prog_Enhance_PSD_Parameters::apply(matrix2D<double> &PSD)
+void Prog_Enhance_PSD_Parameters::apply(Matrix2D<double> &PSD)
 {
     // Take the logarithm
     if (take_log)
@@ -90,7 +90,7 @@ void Prog_Enhance_PSD_Parameters::apply(matrix2D<double> &PSD)
 
     // Remove single outliers
     if (center) CenterFFT(PSD, true);
-    matrix2D<double> aux;
+    Matrix2D<double> aux;
     median_filter3x3(PSD, aux);
     PSD = aux;
     CenterFFT(PSD, false);
@@ -113,7 +113,7 @@ void Prog_Enhance_PSD_Parameters::apply(matrix2D<double> &PSD)
     CenterFFT(PSD, false);
 
     // Mask the input PSD
-    matrix2D<int> mask;
+    Matrix2D<int> mask;
     mask.resize(PSD);
     Matrix1D<int>    idx(2);  // Indexes for Fourier plane
     Matrix1D<double> freq(2); // Frequencies for Fourier plane

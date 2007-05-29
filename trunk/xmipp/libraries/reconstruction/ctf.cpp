@@ -319,7 +319,7 @@ void XmippCTF::zero(int n, const Matrix1D<double> &u, Matrix1D<double> &freq) co
 #undef DEBUG
 
 /* Apply the CTF to an image ----------------------------------------------- */
-void XmippCTF::Apply_CTF(matrix2D < complex<double> > &FFTI) const
+void XmippCTF::Apply_CTF(Matrix2D < complex<double> > &FFTI) const
 {
     Matrix1D<int>    idx(2);
     Matrix1D<double> freq(2);
@@ -336,7 +336,7 @@ void XmippCTF::Apply_CTF(matrix2D < complex<double> > &FFTI) const
 /* Generate CTF Image ------------------------------------------------------ */
 //#define DEBUG
 void XmippCTF::Generate_CTF(int Ydim, int Xdim,
-                            matrix2D < complex<double> > &CTF) const
+                            Matrix2D < complex<double> > &CTF) const
 {
     Matrix1D<int>    idx(2);
     Matrix1D<double> freq(2);

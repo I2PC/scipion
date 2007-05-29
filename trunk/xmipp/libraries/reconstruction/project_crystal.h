@@ -130,7 +130,7 @@ void find_crystal_limits(
 
    r is the actual position in the matrix.
 */
-void move_following_spiral(Matrix1D<double> &r, const matrix2D<int> &visited);
+void move_following_spiral(Matrix1D<double> &r, const Matrix2D<int> &visited);
 
 /** Fill cell positions.
     This function returns the random shifts corresponding to all cells that
@@ -147,24 +147,24 @@ void fill_cell_positions(Projection &P,
                          Matrix1D<double> &aprojd,  Matrix1D<double> &bprojd,
                          Matrix1D<double> &corner1, Matrix1D<double> &corner2,
                          const Crystal_Projection_Parameters &prm_crystal,
-                         matrix2D<double> &cell_shiftX, matrix2D<double> &cell_shiftY,
-                         matrix2D<double> &cell_shiftZ,
-                         matrix2D<int> &cell_inside,   matrix2D<double> &exp_shifts_matrix_X,
-                         matrix2D<double> &exp_shifts_matrix_Y,
-                         matrix2D<double> &exp_shifts_matrix_Z);
+                         Matrix2D<double> &cell_shiftX, Matrix2D<double> &cell_shiftY,
+                         Matrix2D<double> &cell_shiftZ,
+                         Matrix2D<int> &cell_inside,   Matrix2D<double> &exp_shifts_matrix_X,
+                         Matrix2D<double> &exp_shifts_matrix_Y,
+                         Matrix2D<double> &exp_shifts_matrix_Z);
 /** Fill auxiliary matrix with experimental shifts.
     the values 3D shifts stored in the doc file DF_shift are
     transfer to two 2D matrices
 
 */
 void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal,
-                       matrix2D<int>    &cell_inside,
-                       matrix2D<double> &exp_shifts_matrix_X,
-                       matrix2D<double> &exp_shifts_matrix_Y,
-                       matrix2D<double> &exp_shifts_matrix_Z,
-                       matrix2D<double> &exp_normal_shifts_matrix_X,
-                       matrix2D<double> &exp_normal_shifts_matrix_Y,
-                       matrix2D<double> &exp_normal_shifts_matrix_Z,
+                       Matrix2D<int>    &cell_inside,
+                       Matrix2D<double> &exp_shifts_matrix_X,
+                       Matrix2D<double> &exp_shifts_matrix_Y,
+                       Matrix2D<double> &exp_shifts_matrix_Z,
+                       Matrix2D<double> &exp_normal_shifts_matrix_X,
+                       Matrix2D<double> &exp_normal_shifts_matrix_Y,
+                       Matrix2D<double> &exp_normal_shifts_matrix_Z,
                        double param_file_scale);
 
 //@}

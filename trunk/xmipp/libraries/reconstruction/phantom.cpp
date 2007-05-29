@@ -220,20 +220,20 @@ void Cone::assign(const Cone &F)
 /* ------------------------------------------------------------------------- */
 /* Rotation                                                                  */
 /* ------------------------------------------------------------------------- */
-void Feature::rotate_center(const matrix2D<double> &E)
+void Feature::rotate_center(const Matrix2D<double> &E)
 {
-    matrix2D<double> inverse_angles_matrix;
+    Matrix2D<double> inverse_angles_matrix;
     inverse_angles_matrix = E.inv();
     Center = inverse_angles_matrix * Center;
     //Center=E*Center;
 }
 
-void Feature::rotate(const matrix2D<double> &E)
+void Feature::rotate(const Matrix2D<double> &E)
 {
     rotate_center(E);
 }
 
-void Oriented_Feature::rotate(const matrix2D<double> &E)
+void Oriented_Feature::rotate(const Matrix2D<double> &E)
 {
     rotate_center(E);
     prepare();
@@ -859,7 +859,7 @@ void Feature::shift(double shiftX, double shiftY, double shiftZ)
 }
 
 /* Apply a general transformation to a feature ------------------------------ */
-void Feature::self_apply_geom(const matrix2D<double> &A)
+void Feature::self_applyGeometry(const Matrix2D<double> &A)
 {
     Matrix1D<double> r(4);
     XX(r) = XX(Center);
@@ -1075,8 +1075,8 @@ double Cone::intersection(
 //#define DEBUG_LITTLE
 //#define DEBUG
 //#define DEBUG_EVEN_MORE
-void Feature::project_to(Projection &P, const matrix2D<double> &VP,
-                         const matrix2D<double> &PV) const
+void Feature::project_to(Projection &P, const Matrix2D<double> &VP,
+                         const Matrix2D<double> &PV) const
 {
 #define SUBSAMPLING 2                  // for every measure 2x2 line
     // integrals will be taken to
@@ -2046,28 +2046,28 @@ void Phantom::shift(double shiftX, double shiftY, double shiftZ)
 }
 
 /* Rotate a phantom -------------------------------------------------------- */
-void Phantom::rotate(const matrix2D<double> &E)
+void Phantom::rotate(const Matrix2D<double> &E)
 {
     for (int i = 0; i < VF.size(); i++) VF[i]->rotate(E);
 }
 
 /* Apply geometrical transformatio to a phantom ---------------------------- */
-void Phantom::self_apply_geom(const matrix2D<double> &A, int inv)
+void Phantom::self_applyGeometry(const Matrix2D<double> &A, int inv)
 {
     if ((XSIZE(A) != 4) || (YSIZE(A) != 4))
         REPORT_ERROR(1102, "Apply_geom3D: geometrical transformation is not 4x4");
-    if (A.IsIdent()) return;
-    matrix2D<double> T;
+    if (A.isIdentity()) return;
+    Matrix2D<double> T;
     if (inv == IS_INV) T = A.inv();
     else             T = A;
 
-    for (int i = 0; i < VF.size(); i++) VF[i]->self_apply_geom(T);
+    for (int i = 0; i < VF.size(); i++) VF[i]->self_applyGeometry(T);
 }
 
 /* Projecting a phantom ---------------------------------------------------- */
 //#define DEBUG
 void Phantom::project_to(Projection &P, int Ydim, int Xdim,
-                         double rot, double tilt, double psi, const matrix2D<double> *A) const
+                         double rot, double tilt, double psi, const Matrix2D<double> *A) const
 {
 #ifdef DEBUG
     cout << "Ydim=" << Ydim << " Xdim=" << Xdim << endl
@@ -2079,31 +2079,31 @@ void Phantom::project_to(Projection &P, int Ydim, int Xdim,
     P.set_angles(rot, tilt, psi);
 
     // Compute volume to Projection matrix
-    matrix2D<double> VP = P.euler;
+    Matrix2D<double> VP = P.euler;
     if (A != NULL) VP = (*A) * VP;
-    matrix2D<double> PV = VP.inv();
+    Matrix2D<double> PV = VP.inv();
     // Project all features
     for (int i = 0; i < VF.size(); i++) VF[i]->project_to(P, VP, PV);
 }
 #undef DEBUG
 
 void Phantom::project_to(Projection &P,
-                         double rot, double tilt, double psi, const matrix2D<double> *A) const
+                         double rot, double tilt, double psi, const Matrix2D<double> *A) const
 {
     P.set_angles(rot, tilt, psi);
 
     // Compute volume to Projection matrix
-    matrix2D<double> VP = P.euler;
+    Matrix2D<double> VP = P.euler;
     if (A != NULL) VP = (*A) * VP;
-    matrix2D<double> PV = VP.inv();
+    Matrix2D<double> PV = VP.inv();
 
     // Project all features
     for (int i = 0; i < VF.size(); i++) VF[i]->project_to(P, VP, PV);
 }
 
-void Phantom::project_to(Projection &P, const matrix2D<double> &VP, double    disappearing_th) const
+void Phantom::project_to(Projection &P, const Matrix2D<double> &VP, double    disappearing_th) const
 {
-    matrix2D<double> PV = VP.inv();
+    Matrix2D<double> PV = VP.inv();
 
     // Project all features
     for (int i = 0; i < VF.size(); i++)

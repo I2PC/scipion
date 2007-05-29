@@ -354,7 +354,7 @@ public:
     {
         out << "Volume Name   : " << V.fn_img << std::endl
         << "dimensions   : " << V.img.SliNo() << " x "
-        << V.img.RowNo() << " x " << V.img.ColNo()
+        << V.img.rowNumber() << " x " << V.img.colNumber()
         << "  (slices x rows x columns)" << std::endl;
 
         return out;

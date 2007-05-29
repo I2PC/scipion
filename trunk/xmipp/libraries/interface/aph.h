@@ -72,16 +72,16 @@ public:
     /** Sampling rate */
     double sampling_rate;
     /** Matrices with the FT spots. */
-    matrix2D<double> spots_abs;
-    matrix2D<double> spots_arg;
+    Matrix2D<double> spots_abs;
+    Matrix2D<double> spots_arg;
     /** Matrix with the spots IQ. */
-    matrix2D<int> IQ;
+    Matrix2D<int> IQ;
     /** Matrix with the  spots Background. */
-    matrix2D<double> background;
+    Matrix2D<double> background;
     /** Matrix with the  spots CTF. */
-    matrix2D<double> CTF;
+    Matrix2D<double> CTF;
     /** Matrix with the  spots height (l, z*). */
-    matrix2D<double> spots_l;
+    Matrix2D<double> spots_l;
 public:
     // l is present in the read file
     bool l_is_present;

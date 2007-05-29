@@ -88,9 +88,9 @@
 
    DATE:        26-3-2001
 */
-double CausalARMA(matrix2D<double> &Img, int N_AR, int M_AR,
-                  int N_MA, int M_MA, matrix2D<double> &ARParameters,
-                  matrix2D<double> &MAParameters);
+double CausalARMA(Matrix2D<double> &Img, int N_AR, int M_AR,
+                  int N_MA, int M_MA, Matrix2D<double> &ARParameters,
+                  Matrix2D<double> &MAParameters);
 
 
 /** ARMAFilter.
@@ -111,8 +111,8 @@ double CausalARMA(matrix2D<double> &Img, int N_AR, int M_AR,
 
    DATE:        26-3-2001
 */
-void ARMAFilter(matrix2D<double> &Img, matrix2D< double > &Filter,
-                matrix2D<double> &ARParameters, matrix2D<double> &MAParameters,
+void ARMAFilter(Matrix2D<double> &Img, Matrix2D< double > &Filter,
+                Matrix2D<double> &ARParameters, Matrix2D<double> &MAParameters,
                 double dSigma);
 //@}
 

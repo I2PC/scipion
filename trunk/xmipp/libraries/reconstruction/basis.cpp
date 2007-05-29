@@ -191,7 +191,7 @@ void Basis::changeToVoxels(GridVolume &vol_basis, matrix3D<double> *vol_voxels,
 void Basis::changeFromVoxels(const matrix3D<double> &vol_voxels,
                              GridVolume &vol_basis, int grid_type, double grid_relative_size,
                              const matrix3D<double> *vol_mask,
-                             const matrix2D<double> *D, double R) const
+                             const Matrix2D<double> *D, double R) const
 {
     Grid grid;
     Matrix1D<double> corner1(3), corner2(3);

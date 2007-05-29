@@ -149,7 +149,7 @@ string Prog_downsample_prm::command_line() const
 void Prog_downsample_prm::generate_kernel()
 {
     // Integer Kernel
-    matrix2D<int>    ikernel;
+    Matrix2D<int>    ikernel;
 
     switch (kernel_mode)
     {

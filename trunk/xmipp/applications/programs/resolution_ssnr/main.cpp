@@ -41,7 +41,7 @@ int main(int argc, char **argv)
 
     try
     {
-        matrix2D<double> output;
+        Matrix2D<double> output;
         ROUT_SSNR(prm, output);
     }
     catch (Xmipp_error XE)

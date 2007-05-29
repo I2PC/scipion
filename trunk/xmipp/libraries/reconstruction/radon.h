@@ -60,6 +60,6 @@ void Local_Radon_Transform(Volume *vol, double rot, double tilt,
                            Matrix1D<double> &RT_n);
 
 /** Radon transform of an image. */
-void Radon_Transform(const matrix2D<double> &I, double rot_step,
-                     matrix2D<double> &RT);
+void Radon_Transform(const Matrix2D<double> &I, double rot_step,
+                     Matrix2D<double> &RT);
 #endif

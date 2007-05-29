@@ -162,7 +162,7 @@ void Prog_projection_matching_crystal_prm::produce_Side_info()
 
 
 
-void Prog_projection_matching_crystal_prm::PM_process_one_image(matrix2D<double> &Mexp,
+void Prog_projection_matching_crystal_prm::PM_process_one_image(Matrix2D<double> &Mexp,
         float img_rot,
         float img_tilt,
         float img_psi,
@@ -177,12 +177,12 @@ void Prog_projection_matching_crystal_prm::PM_process_one_image(matrix2D<double>
 
 
     // Rotational search ====================================================
-    matrix2D<double> Mimg, Mref, Maux, Mcorr;
+    Matrix2D<double> Mimg, Mref, Maux, Mcorr;
     double act_rot_range, psi, thisCC, oldCC, aveCC = 0., varCC = 0.;
     double stddev_img, mean_img, dummy, xmax, ymax;
     int c = 0, ioptpsi = 0, ioptflip = 0;
     bool search;
-    vector<matrix2D<double> >::iterator ipp;
+    vector<Matrix2D<double> >::iterator ipp;
 
     maxCC = -99.e99;
     Mimg.resize(dim, dim);
@@ -209,13 +209,13 @@ void Prog_projection_matching_crystal_prm::PM_process_one_image(matrix2D<double>
     if (scale_sampling == 1) increment_scale = 0;
     else increment_scale = 2 * scale_distance / (scale_sampling - 1);
     double dim2 = dim * dim;
-    matrix2D<double> my_geom_mat, shift_mat;
+    Matrix2D<double> my_geom_mat, shift_mat;
     //PSI LOOP
     for (int ipsi = 0; ipsi < psi_sampling; ipsi++)
     {
         my_psi = min_psi + increment_psi * (double)ipsi;
         Euler_angles2matrix(0., 0., my_psi, my_geom_mat);
-        //my_geom_mat=rot2D_matrix(my_psi);
+        //my_geom_mat=rotation2DMatrix(my_psi);
         //Mimg=Maux.rotate(my_psi,WRAP);
         //SHIFT LOOP
         for (int ishift = 0; ishift < shift_vector.size(); ishift++)
@@ -227,7 +227,7 @@ void Prog_projection_matching_crystal_prm::PM_process_one_image(matrix2D<double>
             {
                 my_scale = min_scale + increment_scale * (double)iscale;
                 my_geom_mat *= my_scale;
-                apply_geom_Bspline(Mimg, my_geom_mat, Maux, 3, IS_INV, true, (double)0.);
+                applyGeometryBSpline(Mimg, my_geom_mat, Maux, 3, IS_INV, true, (double)0.);
                 ipp = ref_img.begin();
                 //ROT-TILT LOOP (ref projections)
                 for (int dir_counter = 0; dir_counter < nr_dir; dir_counter++)

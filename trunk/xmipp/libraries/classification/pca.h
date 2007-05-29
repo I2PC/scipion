@@ -238,7 +238,7 @@ public:
 
     /** Current estimate of the eigenvectors.
         Each column is an eigenvector. */
-    matrix2D<double> eigenvectors;
+    Matrix2D<double> eigenvectors;
 
     /** Constructor.
         J is the number of eigenvectors to compute. d is the

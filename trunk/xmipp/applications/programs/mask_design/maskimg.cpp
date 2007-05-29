@@ -424,15 +424,15 @@ void maskImg::saveImage(int item)
         {
             // Creates a Xmipp temporal Image
 
-            ImageXmipp tmpImage(xmippImage().RowNo(), xmippImage().ColNo());
+            ImageXmipp tmpImage(xmippImage().rowNumber(), xmippImage().colNumber());
 
             // Writes pixels.
-            for (int y = 0; y < tmpImage().RowNo(); y++)
-                for (int x = 0; x < tmpImage().ColNo(); x++)
+            for (int y = 0; y < tmpImage().rowNumber(); y++)
+                for (int x = 0; x < tmpImage().colNumber(); x++)
                 {
                     int phy_x, phy_y;
-                    phy_x = (int)((float)(x * pmScaled.width()) / (float)xmippImage().ColNo());
-                    phy_y = (int)((float)(y * pmScaled.height()) / (float)xmippImage().RowNo());
+                    phy_x = (int)((float)(x * pmScaled.width()) / (float)xmippImage().colNumber());
+                    phy_y = (int)((float)(y * pmScaled.height()) / (float)xmippImage().rowNumber());
                     if (theMaskFigure->isIn(phy_x, phy_y))
                         tmpImage(y, x) = (float) 1.0;
                     else
@@ -443,8 +443,8 @@ void maskImg::saveImage(int item)
             tmpImage.rename((string)((const  char *)savefilename));
             tmpImage.write();
             // print parameters
-            theMaskFigure->print(pmScaled.width() / (float)xmippImage().ColNo(),
-                                 pmScaled.height() / (float)xmippImage().RowNo());
+            theMaskFigure->print(pmScaled.width() / (float)xmippImage().colNumber(),
+                                 pmScaled.height() / (float)xmippImage().rowNumber());
         }
         catch (Xmipp_error)
         {
@@ -523,7 +523,7 @@ bool maskImg::xmipp2Qt(Image &_image)
     {
         xmippImage = _image;
         // Creates a Qt Image to hold Xmipp Image
-        QImage tmpImage(_image().ColNo(), _image().RowNo(), 8, 256);
+        QImage tmpImage(_image().colNumber(), _image().rowNumber(), 8, 256);
         _image().range_adjust(0, 255);
 
         // Sets Graylevel Palette.
@@ -534,8 +534,8 @@ bool maskImg::xmipp2Qt(Image &_image)
             tmpImage.setColor(i, c.rgb());
         }
         // Reads pixels.
-        for (int y = 0; y < _image().RowNo(); y++)
-            for (int x = 0; x < _image().ColNo(); x++)
+        for (int y = 0; y < _image().rowNumber(); y++)
+            for (int x = 0; x < _image().colNumber(); x++)
                 tmpImage.setPixel(x, y, ((uint) _image(y, x)));
 
         image = tmpImage;
@@ -863,7 +863,7 @@ void maskImg::keyPressEvent(QKeyEvent* e)
     case Key_N:    // Natural size (original size)
         if (e->state() == ControlButton)
         { // If 'Ctrol N' key,
-            resize(xmippImage().ColNo(), xmippImage().RowNo() + status->height());
+            resize(xmippImage().colNumber(), xmippImage().rowNumber() + status->height());
         }
         break;
     case Key_M:
@@ -892,7 +892,7 @@ void maskImg::keyPressEvent(QKeyEvent* e)
     case Key_A:        // Aspect ratio
         if (e->state() == ControlButton)
         { // If 'Ctrol+' key,
-            double ratio = (double) xmippImage().ColNo() / (double) xmippImage().RowNo();
+            double ratio = (double) xmippImage().colNumber() / (double) xmippImage().rowNumber();
             resize((int)width(), (int)(width() / ratio + status->height()));
         }
         break;

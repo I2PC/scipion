@@ -258,7 +258,7 @@ void footprint_blob(ImageOver &blobprint, const struct blobtype &blob,
    D*(i,j,k)'.
 */
 double sum_blob_Grid(const struct blobtype &blob, const Grid &grid,
-                     const matrix2D<double> *D = NULL);
+                     const Matrix2D<double> *D = NULL);
 
 
 /** Voxel shape for a blob volume.
@@ -266,7 +266,7 @@ double sum_blob_Grid(const struct blobtype &blob, const Grid &grid,
     size for the minimum voxel volume which holds it. See \Ref{blobs2voxels}
     for an explanation of the limit and V parameters.*/
 void voxel_volume_shape(const GridVolume &vol_blobs,
-                        const struct blobtype &blob, const matrix2D<double> *D,
+                        const struct blobtype &blob, const Matrix2D<double> *D,
                         Matrix1D<int> &corner1, Matrix1D<int> &size);
 
 /** Blobs ---> Voxels.
@@ -303,7 +303,7 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
 */
 void blobs2voxels(const GridVolume &vol_blobs,
                   const struct blobtype &blob, matrix3D<double> *vol_voxels,
-                  const matrix2D<double> *D = NULL, int Zdim = 0, int Ydim = 0, int Xdim = 0);
+                  const Matrix2D<double> *D = NULL, int Zdim = 0, int Ydim = 0, int Xdim = 0);
 
 /** Blob coefficients as a voxel volume.
     This function returns a volume with the blob coefficients in their right position
@@ -333,7 +333,7 @@ void voxels2blobs(const matrix3D<double> *vol_voxels,
                   const struct blobtype &blob, GridVolume &vol_blobs,
                   int grid_type, double grid_relative_size,
                   double lambda, const matrix3D<double> *vol_mask = NULL,
-                  const matrix2D<double> *D = NULL,
+                  const Matrix2D<double> *D = NULL,
                   double final_error_change = 0.01, int tell = 0, double R = -1);
 
 #define VARTK 1
@@ -363,7 +363,7 @@ void voxels2blobs(const matrix3D<double> *vol_voxels,
      \\VMAXARTK:  update with the maximum update.*/
 void ART_voxels2blobs_single_step(
     GridVolume &vol_in, GridVolume *vol_out, const struct blobtype &blob,
-    const matrix2D<double> *D, double lambda, matrix3D<double> *theo_vol,
+    const Matrix2D<double> *D, double lambda, matrix3D<double> *theo_vol,
     const matrix3D<double> *read_vol, matrix3D<double> *corr_vol,
     const matrix3D<double> *mask_vol,
     double &mean_error, double &max_error, int eq_mode = VARTK);

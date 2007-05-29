@@ -222,7 +222,7 @@ int main(int argc, char *argv[])
     x=300.0f+tmp*250.0f/60;
 
             Matrix1D<double> p0(4), p1(4), p2(4), p3(4), origin(3);
-            matrix2D<double> A, euler_view;
+            Matrix2D<double> A, euler_view;
             Euler_angles2matrix(rot_view, tilt_view, 0.0f, euler_view);
             origin.initZeros();
             double tmp;

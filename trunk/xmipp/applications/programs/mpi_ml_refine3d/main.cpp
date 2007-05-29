@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     int                         c, iter, volno, converged = 0;
     double                      LL, LL_old, sumw_allrefs, convv, sumcorr, wsum_sigma_noise, wsum_sigma_offset;
     vector<double>              conv;
-    vector<matrix2D<double> >   wsum_Mref, wsum_ctfMref, Mwsum_sigma2;
+    vector<Matrix2D<double> >   wsum_Mref, wsum_ctfMref, Mwsum_sigma2;
     vector<double>              sumw, sumw_cv, sumw_mirror;
     Matrix1D<double>            spectral_signal;
     DocFile                     DFo;
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
     // For parallelization
     int rank, size, num_img_tot;
     double                      aux;
-    matrix2D<double>            Maux;
+    Matrix2D<double>            Maux;
     FileName                    fn_tmp;
     SelFile                     SFo;
 

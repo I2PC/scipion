@@ -67,7 +67,7 @@ int main(int argc, char **argv)
     ImageXmipp      image;
     VolumeXmipp     volume;
     Mask_Params     mask_prm;
-    matrix2D<int>   mask2D;
+    Matrix2D<int>   mask2D;
     matrix3D<int>   mask3D;
     int             save_mask;
     int             create_mask;
@@ -152,7 +152,7 @@ int main(int argc, char **argv)
             {
                 if (mask_prm.datatype() == INT_MASK)
                 {
-                    const matrix2D<int> &mask2D = mask_prm.get_binary_mask2D();
+                    const Matrix2D<int> &mask2D = mask_prm.get_binary_mask2D();
                     COUNT_ELEMENTS(mask2D, I, "pixels");
                 }
                 else
@@ -244,7 +244,7 @@ int main(int argc, char **argv)
                     {
                         if (mask_prm.datatype() == INT_MASK)
                         {
-                            const matrix2D<int> &mask2D = mask_prm.get_binary_mask2D();
+                            const Matrix2D<int> &mask2D = mask_prm.get_binary_mask2D();
                             COUNT_ELEMENTS(mask2D, I, "pixels");
                         }
                         else

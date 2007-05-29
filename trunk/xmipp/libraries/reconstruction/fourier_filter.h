@@ -100,7 +100,7 @@ public:
     Matrix1D< complex<double> > mask1D;
 
     /** Mask2D */
-    matrix2D< complex<double> > mask2D;
+    Matrix2D< complex<double> > mask2D;
 
     /** Mask3D */
     matrix3D< complex<double> > mask3D;
@@ -292,7 +292,7 @@ public:
     void apply_mask_Fourier(Matrix1D< complex<double> > &v);
 
     /** Apply mask in 2D. */
-    void apply_mask_Fourier(matrix2D< complex<double> > &v);
+    void apply_mask_Fourier(Matrix2D< complex<double> > &v);
 
     /** Apply mask in 3D. */
     void apply_mask_Fourier(matrix3D< complex<double> > &v);
@@ -304,7 +304,7 @@ public:
     void apply_mask_Space(Matrix1D<double> &v);
 
     /** Apply mask in 2D. */
-    void apply_mask_Space(matrix2D<double> &v);
+    void apply_mask_Space(Matrix2D<double> &v);
 
     /** Apply mask in 3D. */
     void apply_mask_Space(matrix3D<double> &v);

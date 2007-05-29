@@ -1,7 +1,7 @@
 /** Core array by scalar.
  */
 template<typename T>
-void core_array_by_scalar(const maT& op1,
+void coreArrayByScalar(const maT& op1,
                           const T& op2,
                           maT& result,
                           char operation)
@@ -31,7 +31,7 @@ void core_array_by_scalar(const maT& op1,
 /** Scalar by array.
  */
 template<typename T>
-void core_scalar_by_array(const T& op1,
+void coreScalarByArray(const T& op1,
                           const maT& op2,
                           maT& result,
                           char operation)
@@ -61,7 +61,7 @@ void core_scalar_by_array(const T& op1,
 /** Array by array.
  */
 template<typename T>
-void core_arrayByArray(const maT& op1,
+void coreArrayByArray(const maT& op1,
                          const maT& op2,
                          maT& result,
                          char operation)

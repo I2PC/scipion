@@ -35,7 +35,7 @@ template <class T>
 void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                         const Basis &basis,
                         Projection &proj, Projection &norm_proj, int FORW, int eq_mode,
-                        const VolumeT<int> *VNeq, matrix2D<double> *M,
+                        const VolumeT<int> *VNeq, Matrix2D<double> *M,
                         double ray_length = -1.0);
 
 
@@ -84,7 +84,7 @@ template <class T>
 void project_Volume(GridVolumeT<T> &vol, const Basis &basis,
                     Projection &proj, Projection &norm_proj, int Ydim, int Xdim,
                     double rot, double tilt, double psi, int FORW, int eq_mode = ARTK,
-                    GridVolumeT<int> *GVNeq = NULL, matrix2D<double> *M = NULL,
+                    GridVolumeT<int> *GVNeq = NULL, Matrix2D<double> *M = NULL,
                     double ray_length = -1);
 
 /** From voxel volumes.
@@ -134,8 +134,8 @@ void project_Crystal_Volume(GridVolume &vol, const Basis &basis,
                             int Ydim, int Xdim,
                             double rot, double tilt, double psi, const Matrix1D<double> &shift,
                             const Matrix1D<double> &aint, const Matrix1D<double> &bint,
-                            const matrix2D<double> &D, const matrix2D<double> &Dinv,
-                            const matrix2D<int> &mask, int FORW, int eq_mode = ARTK);
+                            const Matrix2D<double> &D, const Matrix2D<double> &Dinv,
+                            const Matrix2D<int> &mask, int FORW, int eq_mode = ARTK);
 //@}
 
 //@}
@@ -191,7 +191,7 @@ template <class T>
 void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                         const Basis &basis,
                         Projection &proj, Projection &norm_proj, int FORW, int eq_mode,
-                        const VolumeT<int> *VNeq, matrix2D<double> *M,
+                        const VolumeT<int> *VNeq, Matrix2D<double> *M,
                         double ray_length)
 {
     Matrix1D<double> zero(3);                // Origin (0,0,0)
@@ -342,7 +342,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
 #endif
 
     // Compute the grid lattice vectors in space ............................
-    static matrix2D<double> grid_basis(3, 3);
+    static Matrix2D<double> grid_basis(3, 3);
     grid_basis = grid.basis * grid.relative_size;
     static Matrix1D<double> gridX(3);  // Direction of the grid lattice vectors
     static Matrix1D<double> gridY(3);  // in universal coordinates
@@ -680,7 +680,7 @@ void project_Volume(
     //   norm_proj must be valid
     int              eq_mode,             // ARTK, CAVARTK, CAVK or CAV
     GridVolumeT<int> *GVNeq,              // Number of equations per blob
-    matrix2D<double> *M,                  // System matrix
+    Matrix2D<double> *M,                  // System matrix
     double            ray_length)         // Ray length of the projection
 {
     // If projecting forward initialise projections

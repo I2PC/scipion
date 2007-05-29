@@ -148,14 +148,14 @@ inline void contfreq2digfreq(const Matrix1D< double >& contfreq,
 /** Conversion from whole -> half 2D
  * @ingroup FourierFormat
  */
-void Whole2Half(const matrix2D< complex < double > > & in,
-                matrix2D< complex < double > > & out);
+void Whole2Half(const Matrix2D< complex < double > > & in,
+                Matrix2D< complex < double > > & out);
 
 /** Conversion from half -> whole 2D
  * @ingroup FourierFormat
  */
-void Half2Whole(const matrix2D< complex < double > > & in,
-                matrix2D< complex< double > > & out,
+void Half2Whole(const Matrix2D< complex < double > > & in,
+                Matrix2D< complex< double > > & out,
                 int oriydim);
 
 /** Conversion from complex -> real,imag 3D
@@ -185,8 +185,8 @@ void FourierTransform(const Matrix1D< double >& in,
 /** Direct Fourier Transform 2D
  * @ingroup FourierTransforms
  */
-void FourierTransform(const matrix2D< double >& in,
-                      matrix2D< complex< double > > & out);
+void FourierTransform(const Matrix2D< double >& in,
+                      Matrix2D< complex< double > > & out);
 
 /** Direct Fourier Transform 3D
  * @ingroup FourierTransforms
@@ -203,8 +203,8 @@ void InverseFourierTransform(const Matrix1D< complex< double > > & in,
 /** Inverse Fourier Transform 2D
  * @ingroup FourierTransforms
  */
-void InverseFourierTransform(const matrix2D< complex< double > > & in,
-                             matrix2D< double >& out);
+void InverseFourierTransform(const Matrix2D< complex< double > > & in,
+                             Matrix2D< double >& out);
 
 /** Inverse Fourier Transform 3D
  * @ingroup FourierTransforms
@@ -215,14 +215,14 @@ void InverseFourierTransform(const matrix3D< complex< double > > & in,
 /** Direct Fourier Transform 2D, output half of (centro-symmetric) transform
  * @ingroup FourierTransforms
  */
-void FourierTransformHalf(const matrix2D< double >& in,
-                          matrix2D< complex< double > > & out);
+void FourierTransformHalf(const Matrix2D< double >& in,
+                          Matrix2D< complex< double > > & out);
 
 /** Inverse Fourier Transform 2D, input half of (centro-symmetric) transform
  * @ingroup FourierTransforms
  */
-void InverseFourierTransformHalf(const matrix2D< complex< double > > & in,
-                                 matrix2D< double >& out,
+void InverseFourierTransformHalf(const Matrix2D< complex< double > > & in,
+                                 Matrix2D< double >& out,
                                  int oriydim);
 
 /** @defgroup FourierOperations Operations with the Fourier Transforms
@@ -267,7 +267,7 @@ void CenterFFT(Matrix1D< T >& v, bool forward)
  * @ingroup FourierOperations
  */
 template <typename T>
-void CenterFFT(matrix2D< T >& v, bool forward)
+void CenterFFT(Matrix2D< T >& v, bool forward)
 {
     Matrix1D< T > aux;
     int l, shift;
@@ -439,7 +439,7 @@ void ShiftFFT(Matrix1D< complex< double > > & v, double xshift);
  * Calculates the Fourier Transform of the shifted real-space vector
  * by phase shifts in Fourier space
  */
-void ShiftFFT(matrix2D< complex< double > > & v, double xshift, double yshift);
+void ShiftFFT(Matrix2D< complex< double > > & v, double xshift, double yshift);
 
 /** FFT shift 3D
  * @ingroup FourierOperations
@@ -464,7 +464,7 @@ void CenterOriginFFT(Matrix1D< complex< double > > & v, bool forward);
  *
  * Changes the real and the fourier space origin
  */
-void CenterOriginFFT(matrix2D< complex< double > > & v, bool forward);
+void CenterOriginFFT(Matrix2D< complex< double > > & v, bool forward);
 
 /** Place the origin of the 3D FFT at the center of the volume and back
  * @ingroup FourierOperations
@@ -482,8 +482,8 @@ void FFT_magnitude(const Matrix1D< complex< double > > & v,
 /** FFT Magnitude 2D
  * @ingroup FourierOperations
  */
-void FFT_magnitude(const matrix2D< complex< double > > & v,
-                   matrix2D< double >& mag);
+void FFT_magnitude(const Matrix2D< complex< double > > & v,
+                   Matrix2D< double >& mag);
 
 /** FFT Magnitude 3D
  * @ingroup FourierOperations
@@ -500,8 +500,8 @@ void FFT_phase(const Matrix1D< complex< double > > & v,
 /** FFT Phase 2D
  * @ingroup FourierOperations
  */
-void FFT_phase(const matrix2D< complex< double > > & v,
-               matrix2D< double >& phase);
+void FFT_phase(const Matrix2D< complex< double > > & v,
+               Matrix2D< double >& phase);
 
 /** FFT Phase 3D
  * @ingroup FourierOperations
@@ -516,10 +516,10 @@ void FFT_phase(const matrix3D< complex< double > > & v,
  * Fourier Transform. (Using the correlation theorem)
  */
 template <typename T>
-void auto_correlation_matrix(matrix2D< T > const & Img, matrix2D< double >& R)
+void auto_correlation_matrix(Matrix2D< T > const & Img, Matrix2D< double >& R)
 {
     // Compute the Fourier Transform
-    matrix2D< complex< double > > FFT1;
+    Matrix2D< complex< double > > FFT1;
     FourierTransform(Img, FFT1);
 
     // Multiply FFT1 * FFT1'
@@ -541,14 +541,14 @@ void auto_correlation_matrix(matrix2D< T > const & Img, matrix2D< double >& R)
  * resized
  */
 template <typename T>
-void correlation_matrix(matrix2D< T > const & m1,
-                        matrix2D< T > const & m2,
-                        matrix2D< double >& R)
+void correlation_matrix(Matrix2D< T > const & m1,
+                        Matrix2D< T > const & m2,
+                        Matrix2D< double >& R)
 {
     // Compute the Fourier Transforms
-    matrix2D< complex< double > > FFT1;
+    Matrix2D< complex< double > > FFT1;
     FourierTransform(m1, FFT1);
-    matrix2D< complex< double > > FFT2;
+    Matrix2D< complex< double > > FFT2;
     FourierTransform(m2, FFT2);
 
     // Multiply FFT1 * FFT2'
@@ -566,8 +566,8 @@ void correlation_matrix(matrix2D< T > const & m1,
  * @ingroup FourierOperations
  */
 template <typename T>
-void fourier_ring_correlation(matrix2D< T > const & m1,
-                              matrix2D< T > const & m2,
+void fourier_ring_correlation(Matrix2D< T > const & m1,
+                              Matrix2D< T > const & m2,
                               double sampling_rate,
                               Matrix1D< double >& freq,
                               Matrix1D< double >& frc,
@@ -577,20 +577,20 @@ void fourier_ring_correlation(matrix2D< T > const & m1,
         REPORT_ERROR(1,
                      "Fourier_ring_correlation: matrices have different shapes!");
 
-    matrix2D< T > aux(m1);
+    Matrix2D< T > aux(m1);
     Matrix1D< int > origin(3), radial_count;
     Matrix1D< double > tmp1, tmp2;
-    matrix2D< complex< double > > FT1;
+    Matrix2D< complex< double > > FT1;
 
     FourierTransform(m1, FT1);
     CenterFFT(FT1, true);
 
-    matrix2D< complex< double > > FT2;
+    Matrix2D< complex< double > > FT2;
     FourierTransform(m2, FT2);
     CenterFFT(FT2, true);
-    matrix2D< double > realFT1;
+    Matrix2D< double > realFT1;
     realFT1.resize(FT1);
-    int dim = (int) FT1.RowNo() / 2;
+    int dim = (int) FT1.rowNumber() / 2;
     origin.initZeros();
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(aux)
@@ -598,21 +598,21 @@ void fourier_ring_correlation(matrix2D< T > const & m1,
         dMij(aux, i, j) = abs(dMij(FT1, i, j)) * abs(dMij(FT1, i, j));
     }
     tmp1.initZeros();
-    radial_average(aux, origin, tmp1, radial_count, true);
+    radialAverage(aux, origin, tmp1, radial_count, true);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(aux)
     {
         dMij(aux, i, j) = abs(dMij(FT2, i, j)) * abs(dMij(FT2, i, j));
     }
     tmp2.initZeros();
-    radial_average(aux, origin, tmp2, radial_count, true);
+    radialAverage(aux, origin, tmp2, radial_count, true);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(FT1)
     {
         dMij(realFT1, i, j) = real(conj(dMij(FT1, i, j)) * dMij(FT2, i, j));
     }
     frc.initZeros();
-    radial_average(realFT1, origin, frc, radial_count, true);
+    radialAverage(realFT1, origin, frc, radial_count, true);
     frc.resize(dim);
     frc_noise.resize(dim);
     freq.resize(dim);
@@ -655,7 +655,7 @@ void fourier_ring_correlation(matrix3D< T > const & m1,
 
     matrix3D< double > realFT1;
     realFT1.resize(FT1);
-    int dim = (int) FT1.RowNo() / 2;
+    int dim = (int) FT1.rowNumber() / 2;
     origin.initZeros();
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(aux)
@@ -664,7 +664,7 @@ void fourier_ring_correlation(matrix3D< T > const & m1,
                               abs(dVkij(FT1, k, i, j));
     }
     tmp1.initZeros();
-    radial_average(aux, origin, tmp1, radial_count, true);
+    radialAverage(aux, origin, tmp1, radial_count, true);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(aux)
     {
@@ -672,7 +672,7 @@ void fourier_ring_correlation(matrix3D< T > const & m1,
                               abs(dVkij(FT2, k, i, j));
     }
     tmp2.initZeros();
-    radial_average(aux, origin, tmp2, radial_count, true);
+    radialAverage(aux, origin, tmp2, radial_count, true);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(FT1)
     {
@@ -680,7 +680,7 @@ void fourier_ring_correlation(matrix3D< T > const & m1,
                                        dVkij(FT2, k, i, j));
     }
     frc.initZeros();
-    radial_average(realFT1, origin, frc, radial_count, true);
+    radialAverage(realFT1, origin, frc, radial_count, true);
     frc.resize(dim);
     frc_noise.resize(dim);
     freq.resize(dim);
@@ -700,8 +700,8 @@ void fourier_ring_correlation(matrix3D< T > const & m1,
  * between two 2D-matrices using Fast Fourier Transform
  */
 template <typename T>
-void differential_phase_residual(matrix2D< T > const & m1,
-                                 matrix2D< T > const & m2,
+void differential_phase_residual(Matrix2D< T > const & m1,
+                                 Matrix2D< T > const & m2,
                                  double sampling_rate,
                                  Matrix1D< double >& freq,
                                  Matrix1D< double >& dpr)
@@ -710,20 +710,20 @@ void differential_phase_residual(matrix2D< T > const & m1,
         REPORT_ERROR(1,
                      "Differential phase residual: matrices have different shapes!");
 
-    matrix2D< T > aux(m1);
+    Matrix2D< T > aux(m1);
     Matrix1D< int > origin(3), radial_count;
     Matrix1D< double > tmp1, tmp2;
     Matrix1D< complex< double > > tmp3;
 
-    matrix2D< complex< double > > FT1;
+    Matrix2D< complex< double > > FT1;
     FourierTransform(m1, FT1);
     CenterFFT(FT1, true);
 
-    matrix2D< complex< double > > FT2;
+    Matrix2D< complex< double > > FT2;
     FourierTransform(m2, FT2);
     CenterFFT(FT2, true);
 
-    int dim = (int) FT1.RowNo() / 2;
+    int dim = (int) FT1.rowNumber() / 2;
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(aux)
     {
@@ -731,7 +731,7 @@ void differential_phase_residual(matrix2D< T > const & m1,
     }
 
     tmp1.initZeros();
-    radial_average(aux, origin, tmp1, radial_count, true);
+    radialAverage(aux, origin, tmp1, radial_count, true);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(aux)
     {
@@ -747,7 +747,7 @@ void differential_phase_residual(matrix2D< T > const & m1,
     }
 
     tmp2.initZeros();
-    radial_average(aux, origin, tmp2, radial_count, true);
+    radialAverage(aux, origin, tmp2, radial_count, true);
     dpr = tmp2 / tmp1;
     dpr = SQRTnD(dpr);
     dpr.resize(dim);
@@ -788,7 +788,7 @@ void differential_phase_residual(matrix3D< T > const & m1,
     FourierTransform(m2, FT2);
     CenterFFT(FT2, true);
 
-    int dim = (int) FT1.RowNo() / 2;
+    int dim = (int) FT1.rowNumber() / 2;
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(aux)
     {
@@ -797,7 +797,7 @@ void differential_phase_residual(matrix3D< T > const & m1,
     }
 
     tmp1.initZeros();
-    radial_average(aux, origin, tmp1, radial_count, true);
+    radialAverage(aux, origin, tmp1, radial_count, true);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(aux)
     {
@@ -812,7 +812,7 @@ void differential_phase_residual(matrix3D< T > const & m1,
     }
 
     tmp2.initZeros();
-    radial_average(aux, origin, tmp2, radial_count, true);
+    radialAverage(aux, origin, tmp2, radial_count, true);
     dpr = tmp2 / tmp1;
     dpr = SQRTnD(dpr);
     dpr.resize(dim);
@@ -831,8 +831,8 @@ void differential_phase_residual(matrix3D< T > const & m1,
  * Signal to noise ratio for 2D, process one image. freq and ssnr must have
  * correct size
  */
-void my_ssnr_step(matrix2D< complex< double > > const & AverageImage,
-                  matrix2D< complex< double> > const & FTaverageSubGroup,
+void my_ssnr_step(Matrix2D< complex< double > > const & AverageImage,
+                  Matrix2D< complex< double> > const & FTaverageSubGroup,
                   Matrix1D< double >& ssnr,
                   Matrix1D< double >& pixel,
                   int n);
@@ -842,7 +842,7 @@ void my_ssnr_step(matrix2D< complex< double > > const & AverageImage,
  */
 #define NGRUPOS 20
 template <typename T>
-void my_ssnr(matrix2D< T > const & AverageImage,
+void my_ssnr(Matrix2D< T > const & AverageImage,
              SelFile& SF_sel,
              double sampling_rate,
              Matrix1D< double >& freq,
@@ -892,14 +892,14 @@ void my_ssnr(matrix2D< T > const & AverageImage,
     }
 
     // alloc memory for results
-    int dim = (int) AverageImage.RowNo() / 2;
+    int dim = (int) AverageImage.rowNumber() / 2;
     ssnr.resize(dim);
     pixel.resize(dim);
     freq.resize(dim);
 
     // compute average and fft
     // fft radial averaged image
-    matrix2D< complex< double > > FTAverageImage, FTaverageSubGroup;
+    Matrix2D< complex< double > > FTAverageImage, FTaverageSubGroup;
 
     FourierTransform(AverageImage, FTAverageImage);
     CenterFFT(FTAverageImage, true);
@@ -916,7 +916,7 @@ void my_ssnr(matrix2D< T > const & AverageImage,
                      SF_vector[i].ImgNo());
     }
 
-    int dim2 = (int) AverageImage.RowNo();
+    int dim2 = (int) AverageImage.rowNumber();
 
     FOR_ALL_ELEMENTS_IN_MATRIX1D(ssnr)
     {
@@ -1022,8 +1022,8 @@ void series_convolution(Matrix1D< T >& series1,
  * filtering and the less the precission of the derivatives, and the greater the
  * order of the polynomial, the greater the precision.
  */
-void numerical_derivative(matrix2D< double >& M,
-                          matrix2D< double >& D,
+void numerical_derivative(Matrix2D< double >& M,
+                          Matrix2D< double >& D,
                           char direction,
                           int order,
                           int window_size = 2,

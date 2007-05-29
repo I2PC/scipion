@@ -75,7 +75,7 @@
  * @code
  * // Variable definition
  * histogram1D hist;
- * matrix2D A(50, 50);
+ * Matrix2D A(50, 50);
  * double min_val, max_val;
  * double eff0, effF;
  *
@@ -381,7 +381,7 @@ void compute_hist(const T& v, histogram1D& hist,
  * The region is defined by its corners
  */
 template<typename T>
-void compute_hist(const matrix2D< T >& v, histogram1D& hist,
+void compute_hist(const Matrix2D< T >& v, histogram1D& hist,
                   const Matrix1D< int >& corner1,
                   const Matrix1D< int >& corner2,
                   int no_steps = 100)
@@ -567,7 +567,7 @@ void histogram_equalization(T& v, int bins = 8)
  * histograms 1D.
  *
  */
-class histogram2D : public matrix2D< double >
+class histogram2D : public Matrix2D< double >
 {
 public:
     // Structure

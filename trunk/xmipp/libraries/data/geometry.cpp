@@ -52,14 +52,14 @@ void Uproject_to_plane(const Matrix1D<double> &point,
 void Uproject_to_plane(const Matrix1D<double> &r,
                        double rot, double tilt, double psi, Matrix1D<double> &result)
 {
-    static matrix2D<double> euler(3, 3);
+    static Matrix2D<double> euler(3, 3);
     Euler_angles2matrix(rot, tilt, psi, euler);
     Uproject_to_plane(r, euler, result);
 }
 
 /* Project a point to a plane ---------------------------------------------- */
 void Uproject_to_plane(const Matrix1D<double> &r,
-                       const matrix2D<double> &euler, Matrix1D<double> &result)
+                       const Matrix2D<double> &euler, Matrix1D<double> &result)
 {
     SPEED_UP_temps;
     if (XSIZE(result) != 3)
@@ -208,7 +208,7 @@ void Bspline_model_fitting(const vector<fit_point> &IN_points,
     // x=B-spline coefficients
     // B=vector of measured values
     int Ncoeff = YSIZE(result.c_ml) * XSIZE(result.c_ml);
-    matrix2D<double> A(Npoints, Ncoeff);
+    Matrix2D<double> A(Npoints, Ncoeff);
     Matrix1D<double> B(Npoints);
     for (int i = 0; i < Npoints; ++i)
     {
@@ -258,7 +258,7 @@ void Bspline_model_fitting(const vector<fit_point> &IN_points,
 
 /* Rectangle enclosing ----------------------------------------------------- */
 void rectangle_enclosing(const Matrix1D<double> &v0, const Matrix1D<double> &vF,
-                         const matrix2D<double> &V, Matrix1D<double> &corner1,
+                         const Matrix2D<double> &V, Matrix1D<double> &corner1,
                          Matrix1D<double> &corner2)
 {
     SPEED_UP_temps;
@@ -294,7 +294,7 @@ void rectangle_enclosing(const Matrix1D<double> &v0, const Matrix1D<double> &vF,
 
 /* Rectangle enclosing ----------------------------------------------------- */
 void box_enclosing(const Matrix1D<double> &v0, const Matrix1D<double> &vF,
-                   const matrix2D<double> &V, Matrix1D<double> &corner1,
+                   const Matrix2D<double> &V, Matrix1D<double> &corner1,
                    Matrix1D<double> &corner2)
 {
     SPEED_UP_temps;
@@ -466,7 +466,7 @@ int line_plane_intersection(const Matrix1D<double> normal_plane,
 
 /* Euler angles --> matrix ------------------------------------------------- */
 void Euler_angles2matrix(double alpha, double beta, double gamma,
-                         matrix2D<double> &A)
+                         Matrix2D<double> &A)
 {
     double ca, sa, cb, sb, cg, sg;
     double cc, cs, sc, ss;
@@ -619,7 +619,7 @@ void Euler_direction2angles(Matrix1D<double> &v0,
 /* Matrix --> Euler angles ------------------------------------------------- */
 #define CHECK
 //#define DEBUG
-void Euler_matrix2angles(matrix2D<double> &A, double &alpha, double &beta,
+void Euler_matrix2angles(Matrix2D<double> &A, double &alpha, double &beta,
                          double &gamma)
 {
     double abs_sb, sign_sb;
@@ -663,7 +663,7 @@ void Euler_matrix2angles(matrix2D<double> &A, double &alpha, double &beta,
 
 #ifdef double
 
-    matrix2D<double> Ap;
+    Matrix2D<double> Ap;
     Euler_angles2matrix(alpha, beta, gamma, Ap);
     if (A != Ap)
     {
@@ -693,7 +693,7 @@ void Euler_matrix2angles(matrix2D<double> &A, double &alpha, double &beta,
 
 #ifdef NEVERDEFINED
 // Michael's method
-void Euler_matrix2angles(matrix2D<double> A, double *alpha, double *beta,
+void Euler_matrix2angles(Matrix2D<double> A, double *alpha, double *beta,
                          double *gamma)
 {
     double abs_sb;
@@ -732,12 +732,12 @@ void Euler_matrix2angles(matrix2D<double> A, double *alpha, double *beta,
 }
 #endif
 void Euler_Angles_after_compresion(const double rot, double tilt, double psi,
-                                   double &new_rot, double &new_tilt, double &new_psi,  matrix2D<double> &D)
+                                   double &new_rot, double &new_tilt, double &new_psi,  Matrix2D<double> &D)
 {
     int i;
     Matrix1D<double> w(3);
     Matrix1D<double> new_w(3);
-    matrix2D<double> D_1(3, 3);
+    Matrix2D<double> D_1(3, 3);
 
     double module;
     double newrot, newtilt, newpsi;
@@ -826,21 +826,26 @@ void Euler_mirrorXY(double rot, double tilt, double psi,
 }
 
 /* Apply a transformation matrix to Euler angles --------------------------- */
-void Euler_apply_transf(const matrix2D<double> &L, const matrix2D<double> &R,
-                        double rot,     double tilt, double psi,
-                        double &newrot, double &newtilt, double &newpsi)
+void Euler_apply_transf(const Matrix2D<double> &L,
+                        const Matrix2D<double> &R,
+                        double rot,
+                        double tilt,
+                        double psi,
+                        double &newrot,
+                        double &newtilt,
+                        double &newpsi)
 {
 
-    matrix2D<double> euler(3, 3), temp;
+    Matrix2D<double> euler(3, 3), temp;
     Euler_angles2matrix(rot, tilt, psi, euler);
     temp = L * euler * R;
     Euler_matrix2angles(temp, newrot, newtilt, newpsi);
 }
 
 /* Rotate matrix3D with 3 Euler angles ------------------------------------- */
-matrix2D<double> Euler_rot3D_matrix(double rot, double tilt, double psi)
+Matrix2D<double> Euler_rotation3DMatrix(double rot, double tilt, double psi)
 {
-    matrix2D<double> temp;
+    Matrix2D<double> temp;
     // Sjors 4aug05: this minus sign seems very odd....
     //Euler_angles2matrix(rot,-tilt,psi,temp);
     Euler_angles2matrix(rot, tilt, psi, temp);
@@ -852,7 +857,7 @@ matrix2D<double> Euler_rot3D_matrix(double rot, double tilt, double psi)
 void Euler_rotate(const matrix3D<double> &V, double rot, double tilt, double psi,
                   matrix3D<double> &result)
 {
-    apply_geom(result, Euler_rot3D_matrix(rot, tilt, psi), V, IS_NOT_INV, DONT_WRAP);
+    applyGeometry(result, Euler_rotation3DMatrix(rot, tilt, psi), V, IS_NOT_INV, DONT_WRAP);
 }
 
 matrix3D<double> Euler_rotate(const matrix3D<double> &V,

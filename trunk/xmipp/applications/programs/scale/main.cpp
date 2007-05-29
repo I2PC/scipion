@@ -66,7 +66,7 @@ int main(int argc, char **argv)
         if (Is_ImageXmipp(fn_input))
         {
             image.read(fn_input);
-            image().self_scale_to_size_Bspline(3, ydim, xdim);
+            image().selfScaleToSizeBSpline(3, ydim, xdim);
             if (fn_out == "") image.write(fn_input);
             else            image.write(fn_out);
 
@@ -75,7 +75,7 @@ int main(int argc, char **argv)
         else if (Is_VolumeXmipp(fn_input))
         {
             volume.read(fn_input);
-            volume().self_scale_to_size_Bspline(3, zdim, ydim, xdim);
+            volume().selfScaleToSizeBSpline(3, zdim, ydim, xdim);
             if (fn_out == "") volume.write(fn_input);
             else            volume.write(fn_out);
 
@@ -98,14 +98,14 @@ int main(int argc, char **argv)
                 if (Is_ImageXmipp(fn_in))
                 {
                     image.read(fn_in);
-                    image().self_scale_to_size_Bspline(3, ydim, xdim);
+                    image().selfScaleToSizeBSpline(3, ydim, xdim);
                     image.write(fn_out);
                     // Process a volume ...............................................
                 }
                 else if (Is_VolumeXmipp(fn_in))
                 {
                     volume.read(fn_in);
-                    volume().self_scale_to_size_Bspline(3, zdim, ydim, xdim);
+                    volume().selfScaleToSizeBSpline(3, zdim, ydim, xdim);
                     volume.write(fn_out);
                     // Not a Spider file ..............................................
                 }

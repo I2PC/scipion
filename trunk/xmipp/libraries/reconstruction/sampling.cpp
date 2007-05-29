@@ -434,8 +434,8 @@ void XmippSampling::fill_distance(Matrix1D<double> starting_point,
 void XmippSampling::remove_redundant_points(string symmetry,
         int sym_order)
 {
-    matrix2D<double>  L(4, 4), R(4, 4);
-    matrix2D<double>  aux(3, 3);
+    Matrix2D<double>  L(4, 4), R(4, 4);
+    Matrix2D<double>  aux(3, 3);
     Matrix1D<double>  row1(3), row2(3);
     bool valid = true;
     double rot, tilt, psi = 0;
@@ -883,7 +883,7 @@ void XmippSampling::compute_neighbors(void)
     double rotp, tiltp, psip;
     double my_dotProduct;
     Matrix1D<double>  row(3);
-    matrix2D<double>  L(4, 4), R(4, 4);
+    Matrix2D<double>  L(4, 4), R(4, 4);
     vector<int>  aux_neighbors;
     vector<double> aux_neighbors_psi;
     for (int i = 0; i < no_redundant_sampling_points_vector.size(); i++)

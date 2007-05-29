@@ -118,7 +118,7 @@ int main(int argc, char **argv)
         double mean_2 = V2().compute_avg();
         matrix3D<double> *V, Vaux;
         Matrix1D<double> r(3), sc(3);
-        matrix2D<double> A;
+        Matrix2D<double> A;
 
         // Initialize best_fit
         double best_rot, best_tilt, best_psi;
@@ -172,23 +172,23 @@ int main(int argc, char **argv)
                                             A.resize(4, 4);
                                             A(3, 3) = 1;
                                         }
-                                        else A.init_identity(4);
+                                        else A.initIdentity(4);
 
                                         // Translate?
                                         if (XX(r) != 0 || YY(r) != 0 || ZZ(r) != 0)
-                                            A = A * translation3D_matrix(r);
+                                            A = A * translation3DMatrix(r);
 
                                         // Scale?
                                         if (XX(sc) != 1)
                                         {
                                             YY(sc) = ZZ(sc) = XX(sc);
-                                            A = A * scale3D_matrix(sc);
+                                            A = A * scale3DMatrix(sc);
                                         }
 
                                         // Apply geometrical transformation
-                                        if (!A.IsIdent())
+                                        if (!A.isIdentity())
                                         {
-                                            apply_geom_Bspline(Vaux, A, V2(), 3, IS_NOT_INV, WRAP);
+                                            applyGeometryBSpline(Vaux, A, V2(), 3, IS_NOT_INV, WRAP);
                                             V = &Vaux;
                                         }
                                         else V = &(V2());
@@ -272,10 +272,10 @@ int main(int argc, char **argv)
             Euler_angles2matrix(best_rot, best_tilt, best_psi, A);
             A.resize(4, 4);
             A(3, 3) = 1;
-            A = A * translation3D_matrix(best_r);
-            A = A * scale3D_matrix(vectorR3(best_sc, best_sc, best_sc));
+            A = A * translation3DMatrix(best_r);
+            A = A * scale3DMatrix(vectorR3(best_sc, best_sc, best_sc));
             V2() *= best_grey;
-            apply_geom_Bspline(Vaux, A, V2(), 3, IS_NOT_INV, WRAP);
+            applyGeometryBSpline(Vaux, A, V2(), 3, IS_NOT_INV, WRAP);
             V2() = Vaux;
             V2.write();
         }

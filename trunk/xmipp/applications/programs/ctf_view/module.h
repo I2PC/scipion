@@ -126,10 +126,10 @@ public:
 private:
     // Function to create a Curve for CTF
     // Valid types are "pure", "damping", "noise"
-    void getCTFcurve(const string &type, int angle, matrix2D<double> &curve,
+    void getCTFcurve(const string &type, int angle, Matrix2D<double> &curve,
                      int Nsamples = 200);
     // Function to create the curve for the experimental curve
-    void getExperimentalCurve(int angle, matrix2D<double> &curve,
+    void getExperimentalCurve(int angle, Matrix2D<double> &curve,
                               int Nsamples = 200);
     // Function to make the CTFModel of the image,
     // used when any Variable change. It regenerates the curves

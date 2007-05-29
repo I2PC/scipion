@@ -108,7 +108,7 @@
  *         out << std::endl;
  *
  *     T aux = ABSnD(val);
- *     int prec = best_prec(aux.max(), 10);
+ *     int prec = bestPrecision(aux.max(), 10);
  *
  *     for (i=STARTINGY(val); i<=FINISHINGY(val); i++)
  *     {
@@ -124,7 +124,7 @@
  *
  * @endcode
  */
-int best_prec(float F, int _width);
+int bestPrecision(float F, int _width);
 
 /** String (char*) to double conversion.
  * @ingroup TypeConversions

@@ -41,7 +41,7 @@ public:
     Matrix1D<double> shift;
     Matrix1D<double> scale;
 
-    matrix2D<double> A3D;
+    Matrix2D<double> A3D;
 
     void read(int argc, char **argv)
     {
@@ -57,23 +57,23 @@ public:
             rot  = AtoF(argv[i+1]);
             tilt = AtoF(argv[i+2]);
             psi  = AtoF(argv[i+3]);
-            A3D = Euler_rot3D_matrix(rot, tilt, psi);
+            A3D = Euler_rotation3DMatrix(rot, tilt, psi);
         }
-        else if (check_param(argc, argv, "-align_with_Z"))
+        else if (check_param(argc, argv, "-alignWithZ"))
         {
             Align_mode = true;
-            axis = get_vector_param(argc, argv, "-align_with_Z", 3);
-            A3D = align_with_Z(axis);
+            axis = get_vector_param(argc, argv, "-alignWithZ", 3);
+            A3D = alignWithZ(axis);
         }
         else if (check_param(argc, argv, "-axis"))
         {
             Axis_mode = true;
             axis = get_vector_param(argc, argv, "-axis", 3);
             ang = AtoF(get_param(argc, argv, "-ang"));
-            A3D = rot3D_matrix(ang, axis);
+            A3D = rotation3DMatrix(ang, axis);
         }
         else
-            A3D.init_identity(4);
+            A3D.initIdentity(4);
         if (check_param(argc, argv, "-shift"))
             shift = get_vector_param(argc, argv, "-shift", 3);
         else shift.initZeros(3);
@@ -122,7 +122,7 @@ public:
         << "   -i <input filename>              : Phantom description file\n"
         << "   -o <output filename>             : Phantom description file\n";
         cerr << "  [-euler <rot> <tilt> <psi>        : Rotate with these Euler angles\n"
-        << "  [-align_with_Z [<x>,<y>,<z>]]     : Align (x,y,z) with Z\n"
+        << "  [-alignWithZ [<x>,<y>,<z>]]     : Align (x,y,z) with Z\n"
         << "                                      Notice that brackets for the\n"
         << "                                      vector must be written and do not\n"
         << "                                      represent optional parameters\n"
@@ -139,7 +139,7 @@ bool process_phantom(const FileName &fn_in, const FileName &fn_out,
 {
     Phantom P;
     P.read(fn_in, false); // Read phantom without applying scale
-    P.self_apply_geom(prm->A3D, IS_NOT_INV);
+    P.self_applyGeometry(prm->A3D, IS_NOT_INV);
     P.write(fn_out);
     return true;
 }

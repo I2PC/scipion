@@ -157,8 +157,8 @@ double Prog_angular_predict_tomography_prm::predict_angles(ImageXmipp &I,
                         // are treated in a different way
                         if (psi != 0)
                         {
-                            Ip().self_rotate(psi + 2, DONT_WRAP);
-                            Ip().self_rotate(-2, DONT_WRAP);
+                            Ip().selfRotate(psi + 2, DONT_WRAP);
+                            Ip().selfRotate(-2, DONT_WRAP);
                         }
 
                         // Compute the correlation index
@@ -192,7 +192,7 @@ double Prog_angular_predict_tomography_prm::predict_angles(ImageXmipp &I,
                         save.write("PPPtheo.xmp");
                         save() = Ip() - read_avg;
                         save.write("PPPexp.xmp");
-                        mul_elements((theo() - theo_avg), (Ip() - read_avg), save());
+                        multiplyElements((theo() - theo_avg), (Ip() - read_avg), save());
                         save.write("PPPprod.xmp");
                         char c;
                         cin >> c;

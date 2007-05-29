@@ -253,14 +253,14 @@ void Normalize_parameters::usage()
 
 void Normalize_parameters::apply_geo_mask(ImageXmipp& img)
 {
-    matrix2D< double > tmp;
+    Matrix2D< double > tmp;
     tmp.resize(bg_mask);
     type_cast(bg_mask, tmp);
 
     double outside = DIRECT_MAT_ELEM(tmp, 0, 0);
 
     // Instead of IS_INV for images use IS_NOT_INV for masks!
-    tmp.self_apply_geom_Bspline(img.get_transformation_matrix(), 3, IS_NOT_INV,
+    tmp.selfApplyGeometryBSpline(img.get_transformation_matrix(), 3, IS_NOT_INV,
                                 DONT_WRAP, outside);
     type_cast(tmp, bg_mask);
 }

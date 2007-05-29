@@ -63,7 +63,7 @@ ostream& operator << (ostream& ostrm, const matrix3D< complex<double> > & v)
 
 /* Interpolated element ---------------------------------------------------- */
 template <>
-complex<double> matrix3D< complex<double> >::interpolated_elem(
+complex<double> matrix3D< complex<double> >::interpolatedElement(
     double x, double y, double z, complex<double> outside_value)
 {
     int x0 = FLOOR(x);
@@ -97,9 +97,9 @@ complex<double> matrix3D< complex<double> >::interpolated_elem(
 
 // Apply geom --------------------------------------------------------------
 template <>
-void apply_geom_Bspline(matrix3D< complex<double> > &M2,
-                        matrix2D<double> A, const matrix3D< complex<double> > &M1,
+void applyGeometryBSpline(matrix3D< complex<double> > &M2,
+                        Matrix2D<double> A, const matrix3D< complex<double> > &M1,
                         int Splinedegree, bool inv, bool wrap, complex<double> outside)
 {
-    REPORT_ERROR(1, "apply_geom_Bspline: Not yet implemented for complex matrices\n");
+    REPORT_ERROR(1, "applyGeometryBSpline: Not yet implemented for complex matrices\n");
 }

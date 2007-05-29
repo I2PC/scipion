@@ -397,7 +397,7 @@ public:
         return header.fLenbyt;
     }
 
-    matrix2D< double > fGeo_matrix();
+    Matrix2D< double > fGeo_matrix();
 
     // Origin offsets
     void set_originOffsets(float Xoff, float Yoff);

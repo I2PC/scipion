@@ -73,10 +73,10 @@ public:
                                     const Cylindrical_Wave_Decomposition& _cwd);
 
     /// Interpolate image value (bilinear)
-    double interpolate(matrix2D< double >& img, double y, double x);
+    double interpolate(Matrix2D< double >& img, double y, double x);
 
     /// Compute the Cylindrical Wave decomposition of an image
-    void compute_cwd(matrix2D< double >& img);
+    void compute_cwd(Matrix2D< double >& img);
 };
 
 /** Rotational spectrum.
@@ -155,7 +155,7 @@ public:
      * radius. xdr the increment, and xr the length of integration. Usually,
      * xr=xr2-xr1.
      */
-    void compute_rotational_spectrum(matrix2D< double >& img,
+    void compute_rotational_spectrum(Matrix2D< double >& img,
                                      double xr1,
                                      double xr2,
                                      double xdr,

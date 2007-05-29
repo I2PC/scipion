@@ -127,13 +127,13 @@ public:
     void unasymmetrization(const double a_mag,   const  double b_mag,
                            const double mrc_taxa, const  double mrc_tilt,
                            const double a_b_ang, const  int symmetry_group,
-                           matrix2D<int> &Counter);
+                           Matrix2D<int> &Counter);
     /** Unsymmetrice for P222_1 symmetry, should be called only by
     unasymmetrization*/
     void unsymmetrice_P222_1(const double a_mag,    const double b_mag,
                              const double mrc_taxa, const double mrc_tilt,
                              const double a_b_ang,  const int symmetry_group,
-                             matrix2D<int> &Counter);
+                             Matrix2D<int> &Counter);
     /** Compute value of Z coordinate for a given taxa,tilt pair
         */
     void compute_Z(double a_mag, double b_mag,

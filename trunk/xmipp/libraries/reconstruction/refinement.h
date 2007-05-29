@@ -57,9 +57,9 @@ void calculate_and_find_correlation_max_proj(Projection const &proj1,
    {\bf Note:} The neighborhood is circular
 */
 template <class T>
-void calculate_and_find_correlation_max_mat(matrix2D<T> const &mat1,
-        matrix2D<T> const &mat2,
-        matrix2D<T> & mat_temp,
+void calculate_and_find_correlation_max_mat(Matrix2D<T> const &mat1,
+        Matrix2D<T> const &mat2,
+        Matrix2D<T> & mat_temp,
         double &shift_X, double &shift_Y,
         double const max_step)
 {
@@ -74,7 +74,7 @@ void calculate_and_find_correlation_max_mat(matrix2D<T> const &mat1,
     int max_step_int = (int)ROUND(max_step);
     int imax, jmax;
 
-    matrix2D<int> window(2*max_step_int + 1, 2*max_step_int + 1);
+    Matrix2D<int> window(2*max_step_int + 1, 2*max_step_int + 1);
     window.setXmippOrigin();
 
     T temp_max = -100000000;

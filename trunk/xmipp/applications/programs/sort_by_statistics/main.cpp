@@ -72,8 +72,8 @@ public:
         double sum_quadsig, sum2_quadsig, sum_quadmean, sum2_quadmean;
         double ampl2_1, ampl2_2, ampl2_3, ampl2_4;
         vector<double> dum;
-        matrix2D<double> Mrad, ampl2;
-        matrix2D<complex<double> > IMG;
+        Matrix2D<double> Mrad, ampl2;
+        Matrix2D<complex<double> > IMG;
         Matrix1D<int> radial_count, center(2);
         Matrix1D<double> rmean_ampl2;
         center.initZeros();
@@ -142,7 +142,7 @@ public:
             CenterFFT(ampl2, true);
             ampl2 *= ampl2;
             rmean_ampl2.initZeros();
-            radial_average(ampl2, center, rmean_ampl2, radial_count);
+            radialAverage(ampl2, center, rmean_ampl2, radial_count);
             ampl2_1 = dVi(rmean_ampl2, 1);
             ampl2_2 = dVi(rmean_ampl2, 2);
             ampl2_3 = dVi(rmean_ampl2, 3);

@@ -94,7 +94,7 @@ public:
            \begin{verbatim}
            w0001_eval_phantom.vol
            w0001_eval_label.vol
-           w0001_eval_quadratic_map.vol
+           w0001_evaluateQuadratic_map.vol
            w0001_eval_difference_map.vol
            w0001_eval_absolute_map.vol
            w0001_eval_distance_map.vol

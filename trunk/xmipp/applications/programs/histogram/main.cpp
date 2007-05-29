@@ -92,7 +92,7 @@ int main(int argc, char **argv)
         {
             I.setXmippOrigin();
             mask_prm.generate_2Dmask(I);
-            const matrix2D<int> & mask2D = mask_prm.get_binary_mask2D();
+            const Matrix2D<int> & mask2D = mask_prm.get_binary_mask2D();
             if (automatic_range)
                 compute_hist_within_binary_mask(mask2D, I, hist, StepsNo);
             else

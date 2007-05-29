@@ -66,7 +66,7 @@ void project_Volume(matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
     double half_y_sign = 0.5 * y_sign;
     double half_z_sign = 0.5 * z_sign;
 
-    matrix2D<double> &mP = P();
+    Matrix2D<double> &mP = P();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(mP)
     {
         Matrix1D<double> r_p(3); // r_p are the coordinates of the
@@ -250,7 +250,7 @@ void singleWBP(matrix3D<double> &V, Projection &P)
     double half_y_sign = 0.5 * y_sign;
     double half_z_sign = 0.5 * z_sign;
 
-    matrix2D<double> &mP = P();
+    Matrix2D<double> &mP = P();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(mP)
     {
         Matrix1D<double> r_p(3); // r_p are the coordinates of the
@@ -390,8 +390,8 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
                                 Projection &proj, Projection &norm_proj,
                                 const Matrix1D<double> &shift,
                                 const Matrix1D<double> &aint, const Matrix1D<double> &bint,
-                                const matrix2D<double> &D,  const matrix2D<double> &Dinv,
-                                const matrix2D<int> &mask, int FORW, int eq_mode)
+                                const Matrix2D<double> &D,  const Matrix2D<double> &Dinv,
+                                const Matrix2D<int> &mask, int FORW, int eq_mode)
 {
     Matrix1D<double> prjX(3);                // Coordinate: Projection of the
     Matrix1D<double> prjY(3);                // 3 grid vectors
@@ -446,7 +446,7 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
                      "blob volumes");
 
     // Compute the deformed direction of projection .........................
-    matrix2D<double> Eulerg;
+    Matrix2D<double> Eulerg;
     Eulerg = proj.euler * D;
 
     // Compute deformation in the projection space ..........................
@@ -503,7 +503,7 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
     // A is a matrix such that
     // A*prjaint=(Xdim,0)'
     // A*prjbint=(0,Ydim)'
-    matrix2D<double> A(2, 2), Ainv(2, 2);
+    Matrix2D<double> A(2, 2), Ainv(2, 2);
     A(0, 0) = YY(prjbint) * xDim;
     A(0, 1) = -XX(prjbint) * xDim;
     A(1, 0) = -YY(prjaint) * yDim;
@@ -752,9 +752,9 @@ void project_Crystal_Volume(
     const Matrix1D<double> &shift,        // Shift to apply to projections
     const Matrix1D<double> &aint,         // First lattice vector (2x1) in voxels
     const Matrix1D<double> &bint,         // Second lattice vector (2x1) in voxels
-    const matrix2D<double> &D,            // volume deformation matrix
-    const matrix2D<double> &Dinv,         // volume deformation matrix
-    const matrix2D<int>   &mask,          // volume mask
+    const Matrix2D<double> &D,            // volume deformation matrix
+    const Matrix2D<double> &Dinv,         // volume deformation matrix
+    const Matrix2D<int>   &mask,          // volume mask
     int              FORW,                // 1 if we are projecting a volume
     //   norm_proj is calculated
     // 0 if we are backprojecting

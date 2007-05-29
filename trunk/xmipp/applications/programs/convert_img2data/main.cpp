@@ -140,7 +140,7 @@ int main(int argc, char **argv)
                 VECTOR_R2(center_of_rot, 0, 0);
                 Matrix1D<int> radial_count;
                 Matrix1D<double> radial_mean;
-                radial_average(image(), center_of_rot, radial_mean, radial_count);
+                radialAverage(image(), center_of_rot, radial_mean, radial_count);
 
                 // Copy radial_mean to vector<float>
                 FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_mean)

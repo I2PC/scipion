@@ -368,7 +368,7 @@ void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank)
             // In parallel case: only master actually projects and writes to disc
             if (rank == 0)
             {
-                project_Volume(vol(), proj, vol().RowNo(), vol().ColNo(), rot, tilt, psi);
+                project_Volume(vol(), proj, vol().rowNumber(), vol().colNumber(), rot, tilt, psi);
                 proj.set_eulerAngles(rot, tilt, psi);
                 proj.write(fn_proj);
             }
@@ -542,12 +542,12 @@ void Prog_Refine3d_prm::calculate_3DSSNR(Matrix1D<double> &spectral_signal, int 
 {
 
     SelFile                     SFnoise;
-    matrix2D<complex<double> >  Faux;
+    Matrix2D<complex<double> >  Faux;
     headerXmipp                 head;
     VolumeXmipp                 vol, nvol;
     FileName                    fn_tmp, fn_tmp2;
     Matrix1D<double>            alpha_signal, alpha_noise, input_signal, avg_alphaS, avg_alphaN;
-    matrix2D<double>            alpha_T, alpha_N, Msignal, Maux, Mone, mask;
+    Matrix2D<double>            alpha_T, alpha_N, Msignal, Maux, Mone, mask;
     Projection                  proj;
     int                         c, dim;
     double                      ssnr, issnr, alpha, resol, volweight, sum;
@@ -634,9 +634,9 @@ void Prog_Refine3d_prm::calculate_3DSSNR(Matrix1D<double> &spectral_signal, int 
         alpha_signal.initZeros();
         alpha_noise.initZeros();
         input_signal.initZeros();
-        radial_average(alpha_T, center, alpha_signal, radial_count, true);
-        radial_average(alpha_N, center, alpha_noise, radial_count, true);
-        radial_average(Msignal, center, input_signal, radial_count, true);
+        radialAverage(alpha_T, center, alpha_signal, radial_count, true);
+        radialAverage(alpha_N, center, alpha_noise, radial_count, true);
+        radialAverage(Msignal, center, input_signal, radial_count, true);
         input_signal /= volweight;
 
         // Calculate spectral_signal =input_signal/alpha!!
@@ -826,7 +826,7 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv)
             fn_vol = SFvol.NextImg();
             vol.read(fn_vol);
             vol().setXmippOrigin();
-            dim = vol().RowNo();
+            dim = vol().rowNumber();
             // Store the original volume on disc
             fn_tmp = fn_vol + ".original";
             vol.write(fn_tmp);
@@ -1006,7 +1006,7 @@ bool Prog_Refine3d_prm::check_convergence(int iter)
         else fn_vol += ".vol";
         vol.read(fn_vol);
         vol().setXmippOrigin();
-        dim = vol().RowNo();
+        dim = vol().rowNumber();
         old_vol().initZeros(vol());
         diff_vol().initZeros(vol());
 

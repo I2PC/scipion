@@ -43,7 +43,7 @@
    DATE:        26-1-2001
 
 /**************************************************************************/
-double ComputeTermA(Matrix1D<double> &dDigitalFreq, matrix2D<double> &ARParameters)
+double ComputeTermA(Matrix1D<double> &dDigitalFreq, Matrix2D<double> &ARParameters)
 {
     double A = 0;
 
@@ -80,7 +80,7 @@ double ComputeTermA(Matrix1D<double> &dDigitalFreq, matrix2D<double> &ARParamete
    DATE:        26-1-2001
 
 /**************************************************************************/
-double ComputeTermB(Matrix1D<double> &dDigitalFreq, matrix2D<double> &ARParameters)
+double ComputeTermB(Matrix1D<double> &dDigitalFreq, Matrix2D<double> &ARParameters)
 {
     double B = 0;
 
@@ -143,8 +143,8 @@ double ComputeTermB(Matrix1D<double> &dDigitalFreq, matrix2D<double> &ARParamete
 
 /**************************************************************************/
 // #define DEBUG
-double CausalAR(matrix2D<double> &Img,
-                int orderR, int orderC, matrix2D<double> &ARParameters)
+double CausalAR(Matrix2D<double> &Img,
+                int orderR, int orderC, Matrix2D<double> &ARParameters)
 {
 
     int l0;  // initial Rows coeficient for correlations
@@ -185,7 +185,7 @@ double CausalAR(matrix2D<double> &Img,
     int eq, co; // auxiliary indexes for equation and coeficient
 
     // Compute correlation matrix (we'll name it R)
-    matrix2D<double> R((lF - p0) - (l0 - pF) + 1, (mF - q0) - (m0 - qF) + 1);
+    Matrix2D<double> R((lF - p0) - (l0 - pF) + 1, (mF - q0) - (m0 - qF) + 1);
     R.initZeros();
     STARTINGY(R) = l0 - pF;
     STARTINGX(R) = m0 - qF;
@@ -194,7 +194,7 @@ double CausalAR(matrix2D<double> &Img,
     MAT_ELEM(R, i, j) = correlation(Img, Img, NULL, i, j);
 
     // Set equation system for AR model
-    matrix2D<double> Coeficients;
+    Matrix2D<double> Coeficients;
     Matrix1D<double> Indep_terms, ARcoeficients;
 
     Coeficients.resize((lF - l0 + 1)*(mF - m0 + 1) - mF, (lF - l0 + 1)*(mF - m0 + 1) - mF);
@@ -305,8 +305,8 @@ double CausalAR(matrix2D<double> &Img,
 #undef DEBUG
 
 /* Non causal AR ----------------------------------------------------------- */
-double NonCausalAR(matrix2D<double> &Img,
-                   int orderR, int orderC, matrix2D<double> &ARParameters)
+double NonCausalAR(Matrix2D<double> &Img,
+                   int orderR, int orderC, Matrix2D<double> &ARParameters)
 {
 
     int l0;  // initial Rows coeficient for correlations
@@ -330,7 +330,7 @@ double NonCausalAR(matrix2D<double> &Img,
     int eq, co; // auxiliary indexes for equation and coeficient
 
     // Compute correlation matrix (we'll name it R)
-    matrix2D<double> R((lF - p0) - (l0 - pF) + 1, (mF - q0) - (m0 - qF) + 1);
+    Matrix2D<double> R((lF - p0) - (l0 - pF) + 1, (mF - q0) - (m0 - qF) + 1);
     R.initZeros();
     STARTINGY(R) = l0 - pF;
     STARTINGX(R) = m0 - qF;
@@ -339,7 +339,7 @@ double NonCausalAR(matrix2D<double> &Img,
     MAT_ELEM(R, i, j) = correlation(Img, Img, NULL, i, j);
 
     // Set equation system for AR model
-    matrix2D<double> Coeficients;
+    Matrix2D<double> Coeficients;
     Matrix1D<double> Indep_terms, ARcoeficients;
 
     Coeficients.resize((lF - l0 + 1)*(mF - m0 + 1), (lF - l0 + 1)*(mF - m0 + 1));
@@ -421,8 +421,8 @@ double NonCausalAR(matrix2D<double> &Img,
 
 /* AR Filter --------------------------------------------------------------- */
 #define DEBUG
-void ARFilter(matrix2D<double> &Img, matrix2D< complex<double> > &Filter,
-              matrix2D<double> &ARParameters)
+void ARFilter(Matrix2D<double> &Img, Matrix2D< complex<double> > &Filter,
+              Matrix2D<double> &ARParameters)
 {
 
     double A, B;  /* Two Terms involved in calculation
@@ -467,9 +467,9 @@ void ARFilter(matrix2D<double> &Img, matrix2D< complex<double> > &Filter,
 #undef DEBUG
 
 /* Combine AR filters ------------------------------------------------------ */
-void combineARFilters(const matrix2D< complex<double> > &Filter1,
-                      const matrix2D< complex<double> > &Filter2,
-                      matrix2D< complex<double> > &Filter,
+void combineARFilters(const Matrix2D< complex<double> > &Filter1,
+                      const Matrix2D< complex<double> > &Filter2,
+                      Matrix2D< complex<double> > &Filter,
                       const string &method)
 {
     Filter.resize(Filter1);

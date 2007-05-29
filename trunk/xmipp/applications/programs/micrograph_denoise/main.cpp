@@ -105,7 +105,7 @@ int main(int argc, char **argv)
         int Xpieces = CEIL((double)Xdim / (window_size - overlapping));
         int Ypieces = CEIL((double)Ydim / (window_size - overlapping));
 
-        matrix2D<double> img;
+        Matrix2D<double> img;
         cerr << "Denoising micrograph ...\n";
         init_progress_bar(Ypieces*Xpieces);
         int N = 0;

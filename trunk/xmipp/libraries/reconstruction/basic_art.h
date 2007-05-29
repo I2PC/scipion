@@ -313,9 +313,9 @@ public:
         bint = Dinv*b; b=D*bint;
         \end{verbatim}
         */
-    matrix2D<double> *D;
+    Matrix2D<double> *D;
     /// Just the inverse of D
-    matrix2D<double> *Dinv;
+    Matrix2D<double> *Dinv;
 
     /** Surface mask.
         The volume is supposed to be 0 where the mask is 1. */

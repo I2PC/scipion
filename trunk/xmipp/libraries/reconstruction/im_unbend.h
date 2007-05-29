@@ -431,12 +431,12 @@ public:
 ///////////////////////////// Interpolation
 
     /** Shifts Interpolation from Regular grid*/
-    void ShiftsInterpReg(matrix2D <double> & , matrix2D <double> & , LatPoint &);
+    void ShiftsInterpReg(Matrix2D <double> & , Matrix2D <double> & , LatPoint &);
     /** 2D Interpolation on Square acoording to InterpModel*/
     void Interp2D(float Tx, float Ty, float Ti, float Tj, float TiM, float TjM, float * ACoeff);
 
     /**Linear Interpolation from scattered data set to regular grid*/
-    void Scattered2Regular(matrix2D <double> & , matrix2D <double> & , vector <ITRIANGLE> &);
+    void Scattered2Regular(Matrix2D <double> & , Matrix2D <double> & , vector <ITRIANGLE> &);
     /**Displacement Interpolation from Triangulation of Irregular Grid*/
     void ShiftsInterp(LatPoint &, vector <ITRIANGLE> &);
 

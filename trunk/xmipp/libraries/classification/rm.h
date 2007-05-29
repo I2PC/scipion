@@ -85,7 +85,7 @@ public:
 
 private:
     string matdist; // Matrix distribution (sparse or gaussian)
-    matrix2D<double> RM;
+    Matrix2D<double> RM;
     xmippBaseListener* listener;   // Listener class
 
 

@@ -205,7 +205,7 @@ void Plotter::zoomIn()
 /* Set curve --------------------------------------------------------------- */
 void Plotter::setCurveData(int id, const Matrix1D<double> &Y)
 {
-    matrix2D<double> data(XSIZE(Y), 2);
+    Matrix2D<double> data(XSIZE(Y), 2);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(Y)
     {
         data(i, 0) = i;
@@ -219,7 +219,7 @@ void Plotter::setCurveData(int id, const Matrix1D<double> &X,
 {
     if (XSIZE(X) != XSIZE(Y))
         REPORT_ERROR(1, "Plotter::setCurveData: X and Y have different sizes");
-    matrix2D<double> data(XSIZE(Y), 2);
+    Matrix2D<double> data(XSIZE(Y), 2);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(Y)
     {
         data(i, 0) = X(i);
@@ -228,7 +228,7 @@ void Plotter::setCurveData(int id, const Matrix1D<double> &X,
     setCurveData(id, data);
 }
 
-void Plotter::setCurveData(int id, const matrix2D<double> &data)
+void Plotter::setCurveData(int id, const Matrix2D<double> &data)
 {
     curveMap[id] = data;
     curveActive[id] = true;
@@ -623,14 +623,14 @@ void Plotter::drawCurves(QPainter *painter)
     QRect rect(Margin , Margin , width() - 2 *Margin, height() - 2*Margin);
     painter->setClipRect(rect.x() + 1, rect.y() + 1, rect.width() - 2, rect.height() - 2);
 
-    map <int, matrix2D<double> > ::const_iterator it = curveMap.begin();
+    map <int, Matrix2D<double> > ::const_iterator it = curveMap.begin();
     while (it != curveMap.end())
     {
         // The first member of the it value gives us the ID
         int id = (*it).first;
         if (curveActive[id])
         {
-            const matrix2D<double> &data = (*it).second;
+            const Matrix2D<double> &data = (*it).second;
             int numPoints = 0;
             int maxPoints = YSIZE(data);
             QPointArray points(maxPoints);

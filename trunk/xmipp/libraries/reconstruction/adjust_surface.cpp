@@ -485,12 +485,12 @@ double eval_surface(double *p)
         gasprm->wsurface().translate(shift, WRAP);
     if (p[6] != 0 || p[7] != 0)
     {
-        matrix2D<double> scale_m;
-        scale_m.init_identity(3);
-        matrix2D<double> aux;
+        Matrix2D<double> scale_m;
+        scale_m.initIdentity(3);
+        Matrix2D<double> aux;
         scale_m(0, 0) = p[6];
         scale_m(1, 1) = p[7];
-        apply_geom(aux, scale_m, gasprm->wsurface(), IS_NOT_INV, WRAP);
+        applyGeometry(aux, scale_m, gasprm->wsurface(), IS_NOT_INV, WRAP);
         gasprm->wsurface() = aux;
     }
 
@@ -641,12 +641,12 @@ void ROUT_adjust_surface(Prog_Adjust_Surface_Parameters &prm)
             prm.wsurface().translate(vectorR2(best_shiftx, best_shifty), WRAP);
         if (best_scaleX != 0 || best_scaleY != 0)
         {
-            matrix2D<double> scale_m;
-            scale_m.init_identity(3);
-            matrix2D<double> aux;
+            Matrix2D<double> scale_m;
+            scale_m.initIdentity(3);
+            Matrix2D<double> aux;
             scale_m(0, 0) = best_scaleX;
             scale_m(1, 1) = best_scaleY;
-            apply_geom(aux, scale_m, prm.wsurface(), IS_NOT_INV, WRAP);
+            applyGeometry(aux, scale_m, prm.wsurface(), IS_NOT_INV, WRAP);
             prm.wsurface() = aux;
         }
 

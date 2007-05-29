@@ -136,7 +136,7 @@ long long AtoLL(const char* str, int _errno, std::string errmsg, int exit)
     return 0;
 }
 
-int best_prec(float F, int _width)
+int bestPrecision(float F, int _width)
 {
     // If it is 0
     if (F == 0)
@@ -179,7 +179,7 @@ std::string floatToString(float F, int _width, int _prec)
         outs.width(_width);
 
     if (_prec == 0)
-        _prec = best_prec(F, _width);
+        _prec = bestPrecision(F, _width);
 
     if (_prec == -1 && _width > 7)
     {

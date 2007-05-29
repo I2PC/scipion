@@ -31,27 +31,27 @@
 /* ************************************************************************* */
 /* IMPLEMENTATIONS                                                           */
 /* ************************************************************************* */
-#define maT matrix2D<T>
-#define ma  matrix2D
+#define maT Matrix2D<T>
+#define ma  Matrix2D
 #include "multidim_basic.inc"
 #undef ma
 #undef maT
 
 /* Interface to numerical recipes: svbksb ---------------------------------- */
-void svbksb(matrix2D<double> &u, Matrix1D<double> &w, matrix2D<double> &v,
+void svbksb(Matrix2D<double> &u, Matrix1D<double> &w, Matrix2D<double> &v,
             Matrix1D<double> &b, Matrix1D<double> &x)
 {
     // Call to the numerical recipes routine. Results will be stored in X
     svbksb(u.adaptForNumericalRecipes2(),
            w.adaptForNumericalRecipes(),
            v.adaptForNumericalRecipes2(),
-           u.RowNo(), u.ColNo(),
+           u.rowNumber(), u.colNumber(),
            b.adaptForNumericalRecipes(),
            x.adaptForNumericalRecipes());
 }
 
 /* Solve Cx=d, nonnegative x */
-double solve_nonneg(const matrix2D<double> &C, const Matrix1D<double> &d,
+double solveNonNegative(const Matrix2D<double> &C, const Matrix1D<double> &d,
                     Matrix1D<double> &result)
 {
     if (C.xdim == 0)
@@ -61,7 +61,7 @@ double solve_nonneg(const matrix2D<double> &C, const Matrix1D<double> &d,
     if (d.isRow())
         REPORT_ERROR(1107, "Solve_nonneg: Not correct vector shape");
 
-    matrix2D<double> Ct(XSIZE(C), YSIZE(C)); // Ct=C^t
+    Matrix2D<double> Ct(XSIZE(C), YSIZE(C)); // Ct=C^t
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Ct)
     DIRECT_MAT_ELEM(Ct, i, j) = DIRECT_MAT_ELEM(C, j, i);
 
@@ -81,10 +81,10 @@ double solve_nonneg(const matrix2D<double> &C, const Matrix1D<double> &d,
 }
 
 /* Solve Ax=b, A definite positive and symmetric --------------------------- */
-void solve_via_Cholesky(const matrix2D<double> &A, const Matrix1D<double> &b,
+void solveViaCholesky(const Matrix2D<double> &A, const Matrix1D<double> &b,
                         Matrix1D<double> &result)
 {
-    matrix2D<double> Ap = A;
+    Matrix2D<double> Ap = A;
     Matrix1D<double> p(XSIZE(A));
     result.resize(XSIZE(A));
     choldc(Ap.adaptForNumericalRecipes2(), XSIZE(A),
@@ -96,11 +96,11 @@ void solve_via_Cholesky(const matrix2D<double> &A, const Matrix1D<double> &b,
 
 // Special case for complex numbers
 template <>
-void apply_geom_Bspline(matrix2D< complex<double> > &M2,
-                        matrix2D<double> A, const matrix2D< complex<double> > &M1,
+void applyGeometryBSpline(Matrix2D< complex<double> > &M2,
+                        Matrix2D<double> A, const Matrix2D< complex<double> > &M1,
                         int Splinedegree, bool inv, bool wrap, complex<double> outside)
 {
-    matrix2D<double> re, im, rotre, rotim;
+    Matrix2D<double> re, im, rotre, rotim;
     double outre, outim;
     re.resize(YSIZE(M1), XSIZE(M1));
     im.resize(YSIZE(M1), XSIZE(M1));
@@ -108,8 +108,8 @@ void apply_geom_Bspline(matrix2D< complex<double> > &M2,
     outim = outside.imag();
     Complex2RealImag(MULTIDIM_ARRAY(M1),
                      MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im), MULTIDIM_SIZE(M1));
-    apply_geom_Bspline(rotre, A, re, Splinedegree, inv, wrap, outre);
-    apply_geom_Bspline(rotim, A, im, Splinedegree, inv, wrap, outim);
+    applyGeometryBSpline(rotre, A, re, Splinedegree, inv, wrap, outre);
+    applyGeometryBSpline(rotim, A, im, Splinedegree, inv, wrap, outim);
     M2.resize(M1);
     RealImag2Complex(MULTIDIM_ARRAY(rotre), MULTIDIM_ARRAY(rotim),
                      MULTIDIM_ARRAY(M2), MULTIDIM_SIZE(re));
@@ -118,7 +118,7 @@ void apply_geom_Bspline(matrix2D< complex<double> > &M2,
 
 /* Is diagonal ------------------------------------------------------------- */
 template <>
-bool matrix2D< complex<double> >::IsDiagonal() const
+bool Matrix2D< complex<double> >::isDiagonal() const
 {
     if (XSIZE(*this) != YSIZE(*this))
         return false;
@@ -130,9 +130,9 @@ bool matrix2D< complex<double> >::IsDiagonal() const
 
 /* Is Scalar --------------------------------------------------------------- */
 template <>
-bool matrix2D< complex<double> >::IsScalar() const
+bool Matrix2D< complex<double> >::isScalar() const
 {
-    if (!IsDiagonal())
+    if (!isDiagonal())
         return false;
     for (int i = 1; i < YSIZE(*this); i++)
         if (abs(DIRECT_MAT_ELEM(*this, i, i) - DIRECT_MAT_ELEM(*this, 0, 0)) >
@@ -143,7 +143,7 @@ bool matrix2D< complex<double> >::IsScalar() const
 
 /* Is Symmetric ------------------------------------------------------------ */
 template <>
-bool matrix2D< complex<double> >::IsSymmetric() const
+bool Matrix2D< complex<double> >::isSymmetric() const
 {
     if (XSIZE(*this) != YSIZE(*this))
         return false;
@@ -157,7 +157,7 @@ bool matrix2D< complex<double> >::IsSymmetric() const
 
 /* Is Skew symmetric ------------------------------------------------------- */
 template <>
-bool matrix2D< complex<double> >::IsSkewSymmetric() const
+bool Matrix2D< complex<double> >::isSkewSymmetric() const
 {
     if (XSIZE(*this) != YSIZE(*this))
         return false;
@@ -171,7 +171,7 @@ bool matrix2D< complex<double> >::IsSkewSymmetric() const
 
 /* Is Upper triangular ----------------------------------------------------- */
 template <>
-bool matrix2D< complex<double> >::IsUpperTriangular() const
+bool Matrix2D< complex<double> >::isUpperTriangular() const
 {
     if (XSIZE(*this) != YSIZE(*this))
         return false;
@@ -184,7 +184,7 @@ bool matrix2D< complex<double> >::IsUpperTriangular() const
 
 /* Is Lower triangular ----------------------------------------------------- */
 template <>
-bool matrix2D< complex<double> >::IsLowerTriangular() const
+bool Matrix2D< complex<double> >::isLowerTriangular() const
 {
     if (XSIZE(*this) != YSIZE(*this))
         return false;
@@ -196,9 +196,9 @@ bool matrix2D< complex<double> >::IsLowerTriangular() const
 }
 
 /* Rotation 2D ------------------------------------------------------------- */
-matrix2D<double> rot2D_matrix(double ang)
+Matrix2D<double> rotation2DMatrix(double ang)
 {
-    matrix2D<double> result(3, 3);
+    Matrix2D<double> result(3, 3);
     double cosine, sine;
 
     ang = DEG2RAD(ang);
@@ -221,14 +221,14 @@ matrix2D<double> rot2D_matrix(double ang)
 }
 
 /* Translation 2D ---------------------------------------------------------- */
-matrix2D<double> translation2D_matrix(Matrix1D<double> v)
+Matrix2D<double> translation2DMatrix(Matrix1D<double> v)
 {
     if (v.getDimension() != 2)
         REPORT_ERROR(1002, "Translation2D_matrix: vector is not in R2");
 
-    matrix2D<double> result(3, 3);
+    Matrix2D<double> result(3, 3);
 
-    result.init_identity();
+    result.initIdentity();
     DIRECT_MAT_ELEM(result, 0, 2) = XX(v);
     DIRECT_MAT_ELEM(result, 1, 2) = YY(v);
 
@@ -236,9 +236,9 @@ matrix2D<double> translation2D_matrix(Matrix1D<double> v)
 }
 
 /* Rotation 3D around the system axes -------------------------------------- */
-matrix2D<double> rot3D_matrix(double ang, char axis)
+Matrix2D<double> rotation3DMatrix(double ang, char axis)
 {
-    matrix2D<double> result(4, 4);
+    Matrix2D<double> result(4, 4);
     double cosine, sine;
 
     ang = DEG2RAD(ang);
@@ -271,19 +271,19 @@ matrix2D<double> rot3D_matrix(double ang, char axis)
         DIRECT_MAT_ELEM(result, 0, 0) = 1;
         break;
     default:
-        REPORT_ERROR(1105, "rot3D_matrix: Unknown axis");
+        REPORT_ERROR(1105, "rotation3DMatrix: Unknown axis");
     }
     return result;
 }
 
 /* Align a vector with Z axis */
-matrix2D<double> align_with_Z(const Matrix1D<double> &axis)
+Matrix2D<double> alignWithZ(const Matrix1D<double> &axis)
 {
     Matrix1D<double>  Axis;
-    matrix2D<double>  A(4, 4);
+    Matrix2D<double>  A(4, 4);
 
     if (axis.getDimension() != 3)
-        REPORT_ERROR(1002, "align_with_Z: Axis is not in R3");
+        REPORT_ERROR(1002, "alignWithZ: Axis is not in R3");
 
     // Copy axis and compute length of the projection on YZ plane
     Axis = axis.normalize();
@@ -320,23 +320,23 @@ matrix2D<double> align_with_Z(const Matrix1D<double> &axis)
 }
 
 /* Rotation 3D around any axis -------------------------------------------- */
-matrix2D<double> rot3D_matrix(double ang, const Matrix1D<double> &axis)
+Matrix2D<double> rotation3DMatrix(double ang, const Matrix1D<double> &axis)
 {
     // Compute a matrix which makes the turning axis coincident with Z
     // And turn around this axis
-    matrix2D<double> A = align_with_Z(axis);
-    return A.transpose() * rot3D_matrix(ang, 'Z') * A;
+    Matrix2D<double> A = alignWithZ(axis);
+    return A.transpose() * rotation3DMatrix(ang, 'Z') * A;
 }
 
 /* Translation 3D ---------------------------------------------------------- */
-matrix2D<double> translation3D_matrix(const Matrix1D<double> &v)
+Matrix2D<double> translation3DMatrix(const Matrix1D<double> &v)
 {
     if (XSIZE(v) != 3)
         REPORT_ERROR(1002, "Translation3D_matrix: vector is not in R3");
 
-    matrix2D<double> result(4, 4);
+    Matrix2D<double> result(4, 4);
 
-    result.init_identity();
+    result.initIdentity();
     DIRECT_MAT_ELEM(result, 0, 3) = XX(v);
     DIRECT_MAT_ELEM(result, 1, 3) = YY(v);
     DIRECT_MAT_ELEM(result, 2, 3) = ZZ(v);
@@ -345,14 +345,14 @@ matrix2D<double> translation3D_matrix(const Matrix1D<double> &v)
 }
 
 /* Scale 3D ---------------------------------------------------------------- */
-matrix2D<double> scale3D_matrix(const Matrix1D<double> &sc)
+Matrix2D<double> scale3DMatrix(const Matrix1D<double> &sc)
 {
     if (XSIZE(sc) != 3)
         REPORT_ERROR(1002, "Scale3D_matrix: vector is not in R3");
 
-    matrix2D<double> result(4, 4);
+    Matrix2D<double> result(4, 4);
 
-    result.init_identity();
+    result.initIdentity();
     DIRECT_MAT_ELEM(result, 0, 0) = XX(sc);
     DIRECT_MAT_ELEM(result, 1, 1) = YY(sc);
     DIRECT_MAT_ELEM(result, 2, 2) = ZZ(sc);
@@ -361,8 +361,8 @@ matrix2D<double> scale3D_matrix(const Matrix1D<double> &sc)
 }
 
 /* Quadratic form ---------------------------------------------------------- */
-void eval_quadratic(const Matrix1D<double> &x, const Matrix1D<double> &c,
-                    const matrix2D<double> &H, double &val, Matrix1D<double> &grad)
+void evaluateQuadratic(const Matrix1D<double> &x, const Matrix1D<double> &c,
+                    const Matrix2D<double> &H, double &val, Matrix1D<double> &grad)
 {
     if (XSIZE(x) != XSIZE(c))
         REPORT_ERROR(1102, "Eval_quadratic: Not compatible sizes in x and c");
@@ -394,26 +394,26 @@ void eval_quadratic(const Matrix1D<double> &x, const Matrix1D<double> &c,
 /* Structure to pass the objective function and constraints to cfsqp*/
 typedef struct
 {
-    matrix2D<double> C;
-    matrix2D<double> D;
-    matrix2D<double> A;
-    matrix2D<double> B;
+    Matrix2D<double> C;
+    Matrix2D<double> D;
+    Matrix2D<double> A;
+    Matrix2D<double> B;
 }
 CDAB;
 
 /*/////////////////////////////////////////////////////////////////////////
-      Internal functions used by the quadprog function
+      Internal functions used by the quadraticProgramming function
 /////////////////////////////////////////////////////////////////////////*/
 /* To calculate the value of the objective function */
-void quadprog_obj32(int nparam, int j, double* x, double* fj, void* cd)
+void quadraticProgramming_obj32(int nparam, int j, double* x, double* fj, void* cd)
 {
     CDAB* in = (CDAB *)cd;
-    matrix2D<double> X;
+    Matrix2D<double> X;
     XSIZE(X) = 1;
     YSIZE(X) = nparam;
     MULTIDIM_ARRAY(X) = x;
 
-    matrix2D<double> result;
+    Matrix2D<double> result;
     result = 0.5 * X.transpose() * in->C * X + in->D.transpose() * X;
 
     *fj = result(0, 0);
@@ -423,7 +423,7 @@ void quadprog_obj32(int nparam, int j, double* x, double* fj, void* cd)
 }
 
 /* To calculate the value of the jth constraint */
-void quadprog_cntr32(int nparam, int j, double* x, double* gj, void* cd)
+void quadraticProgramming_cntr32(int nparam, int j, double* x, double* gj, void* cd)
 {
     CDAB* in = (CDAB *)cd;
     *gj = 0;
@@ -435,15 +435,15 @@ void quadprog_cntr32(int nparam, int j, double* x, double* gj, void* cd)
 }
 
 /* To calculate the value of the derivative of objective function */
-void quadprog_grob32(int nparam, int j, double* x, double* gradfj, void(*mydummy)(int, int, double*, double*, void*), void *cd)
+void quadraticProgramming_grob32(int nparam, int j, double* x, double* gradfj, void(*mydummy)(int, int, double*, double*, void*), void *cd)
 {
     CDAB* in = (CDAB *)cd;
-    matrix2D<double> X;
+    Matrix2D<double> X;
     XSIZE(X) = 1;
     YSIZE(X) = nparam;
     MULTIDIM_ARRAY(X) = x;
 
-    matrix2D<double> gradient;
+    Matrix2D<double> gradient;
     gradient = in->C * X + in->D;
     for (int k = 0; k < nparam; k++)
         gradfj[k] = gradient(k, 0);
@@ -454,7 +454,7 @@ void quadprog_grob32(int nparam, int j, double* x, double* gradfj, void(*mydummy
 }
 
 /* To calculate the value of the derivative of jth constraint */
-void quadprog_grcn32(int nparam, int j, double *x, double *gradgj, void(*mydummy)(int, int, double*, double*, void*), void *cd)
+void quadraticProgramming_grcn32(int nparam, int j, double *x, double *gradgj, void(*mydummy)(int, int, double*, double*, void*), void *cd)
 {
     CDAB* in = (CDAB *)cd;
     for (int k = 0; k < nparam; k++)
@@ -471,15 +471,15 @@ void quadprog_grcn32(int nparam, int j, double *x, double *gradgj, void(*mydummy
                                 bl<=x<=bu
 
 **************************************************************************/
-void quadprog(const matrix2D<double> &C, const Matrix1D<double> &d,
-              const matrix2D<double> &A,   const Matrix1D<double> &b,
-              const matrix2D<double> &Aeq, const Matrix1D<double> &beq,
+void quadraticProgramming(const Matrix2D<double> &C, const Matrix1D<double> &d,
+              const Matrix2D<double> &A,   const Matrix1D<double> &b,
+              const Matrix2D<double> &Aeq, const Matrix1D<double> &beq,
               Matrix1D<double> &bl,        Matrix1D<double> &bu,
               Matrix1D<double> &x)
 {
     CDAB prm;
     prm.C = C;
-    prm.D.from_vector(d);
+    prm.D.fromVector(d);
     prm.A.initZeros(YSIZE(A) + YSIZE(Aeq), XSIZE(A));
     prm.B.initZeros(YSIZE(prm.A), 1);
 
@@ -541,8 +541,8 @@ void quadprog(const matrix2D<double> &C, const Matrix1D<double> &d,
           MULTIDIM_ARRAY(x),
           MULTIDIM_ARRAY(f), MULTIDIM_ARRAY(g),
           MULTIDIM_ARRAY(lambda),
-          //  quadprog_obj32,quadprog_cntr32,quadprog_grob32,quadprog_grcn32,
-          quadprog_obj32, quadprog_cntr32, grobfd, grcnfd,
+          //  quadprg_obj32,quadprog_cntr32,quadprog_grob32,quadprog_grcn32,
+          quadraticProgramming_obj32, quadraticProgramming_cntr32, grobfd, grcnfd,
           (void*)&prm);
 
 #ifdef DEBUG
@@ -568,22 +568,22 @@ void quadprog(const matrix2D<double> &C, const Matrix1D<double> &d,
    x                                Aeq*x=beq
                                 bl<=x<=bu
 **************************************************************************/
-void lsqlin(const matrix2D<double> &C, const Matrix1D<double> &d,
-            const matrix2D<double> &A,   const Matrix1D<double> &b,
-            const matrix2D<double> &Aeq, const Matrix1D<double> &beq,
+void leastSquare(const Matrix2D<double> &C, const Matrix1D<double> &d,
+            const Matrix2D<double> &A,   const Matrix1D<double> &b,
+            const Matrix2D<double> &Aeq, const Matrix1D<double> &beq,
             Matrix1D<double> &bl,        Matrix1D<double> &bu,
             Matrix1D<double> &x)
 {
 
-    // Convert d to matrix2D for multiplication
-    matrix2D<double> P;
-    P.from_vector(d);
+    // Convert d to Matrix2D for multiplication
+    Matrix2D<double> P;
+    P.fromVector(d);
     P = -2 * P.transpose() * C;
     P = P.transpose();
 
-    //Convert back to vector for passing it to quadprog
+    //Convert back to vector for passing it to quadraticProgramming
     Matrix1D<double> newd;
-    P.to_vector(newd);
+    P.toVector(newd);
 
-    quadprog(C.transpose()*C, newd, A, b, Aeq, beq, bl, bu, x);
+    quadraticProgramming(C.transpose()*C, newd, A, b, Aeq, beq, bl, bu, x);
 }

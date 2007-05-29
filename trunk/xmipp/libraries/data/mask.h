@@ -30,10 +30,10 @@
 #include "matrix3d.h"
 #include "histogram.h"
 
-void apply_geo_binary_2D_mask(matrix2D< int > &mask,
-                              const matrix2D< double >& A);
-void apply_geo_cont_2D_mask(matrix2D< double >& mask,
-                            const matrix2D< double >& A);
+void apply_geo_binary_2D_mask(Matrix2D< int > &mask,
+                              const Matrix2D< double >& A);
+void apply_geo_cont_2D_mask(Matrix2D< double >& mask,
+                            const Matrix2D< double >& A);
 
 /// @defgroup Masks Masks
 
@@ -85,7 +85,7 @@ void RaisedCrownMask(Matrix1D< double >& mask,
  * OUTSIDE_MASK. When entering the mask is initialiazed to 0 and then the mask
  * is created.
  */
-void BinaryCircularMask(matrix2D< int >& mask,
+void BinaryCircularMask(Matrix2D< int >& mask,
                         double radius, int mode = INNER_MASK, double x0 = 0, double y0 = 0);
 
 /** Creates a 2D DWT circular for already sized masks
@@ -98,7 +98,7 @@ void BinaryCircularMask(matrix2D< int >& mask,
  *
  * If the quadrant="xx" then 01, 10 and 11 are generated together
  */
-void BinaryDWTCircularMask(matrix2D< int >& mask,
+void BinaryDWTCircularMask(Matrix2D< int >& mask,
                            double radius, int smin, int smax,
                            const string& quadrant);
 
@@ -113,7 +113,7 @@ void BinaryDWTCircularMask(matrix2D< int >& mask,
  *
  * When entering the mask is initialiazed to 0 and then the mask is created.
  */
-void BinaryCrownMask(matrix2D< int >& mask,
+void BinaryCrownMask(Matrix2D< int >& mask,
                      double R1, double R2, int mode = INNER_MASK, double x0 = 0,
                      double y0 = 0);
 
@@ -128,7 +128,7 @@ void BinaryCrownMask(matrix2D< int >& mask,
  *
  * When entering the mask is initialiazed to 0 and then the mask is created.
  */
-void BinaryFrameMask(matrix2D< int >& mask,
+void BinaryFrameMask(Matrix2D< int >& mask,
                      int Xrect, int Yrect, int mode = INNER_MASK, double x0 = 0,
                      double y0 = 0);
 
@@ -143,7 +143,7 @@ void BinaryFrameMask(matrix2D< int >& mask,
  *
  * When entering the mask is initialiazed to 0 and then the mask is created.
  */
-void GaussianMask(matrix2D< double >& mask,
+void GaussianMask(Matrix2D< double >& mask,
                   double sigma, int mode = INNER_MASK, double x0 = 0, double y0 = 0);
 
 /** Creates a 2D RaisedCosine mask for already sized masks
@@ -157,7 +157,7 @@ void GaussianMask(matrix2D< double >& mask,
  *
  * When entering, the mask is initialiazed to 0 and then the mask is created.
  */
-void RaisedCosineMask(matrix2D< double >& mask,
+void RaisedCosineMask(Matrix2D< double >& mask,
                       double r1, double r2, int mode = INNER_MASK, double x0 = 0,
                       double y0 = 0);
 
@@ -172,7 +172,7 @@ void RaisedCosineMask(matrix2D< double >& mask,
  *
  * When entering, the mask is initialiazed to 0 and then the mask is created.
  */
-void RaisedCrownMask(matrix2D< double >& mask,
+void RaisedCrownMask(Matrix2D< double >& mask,
                      double r1, double r2, double pix_width,
                      int mode = INNER_MASK, double x0 = 0, double y0 = 0);
 
@@ -181,7 +181,7 @@ void RaisedCrownMask(matrix2D< double >& mask,
  *
  * It receives no parameter.
  */
-void BlackmanMask(matrix2D< double >& mask, int mode = INNER_MASK,
+void BlackmanMask(Matrix2D< double >& mask, int mode = INNER_MASK,
                   double x0 = 0, double y0 = 0);
 
 /** 2D Kaiser window
@@ -190,7 +190,7 @@ void BlackmanMask(matrix2D< double >& mask, int mode = INNER_MASK,
  *  delta=ripple (in natural units) in the pass band.
  *  Deltaw=transition bandwidth (normalized to 1.0).
  */
-void KaiserMask(matrix2D<double> &mask, double delta = 0.01,
+void KaiserMask(Matrix2D<double> &mask, double delta = 0.01,
                 double Deltaw = 1.0 / 12.0);
 
 /** Creates a 2D sinc mask for already sized masks
@@ -205,7 +205,7 @@ void KaiserMask(matrix2D<double> &mask, double delta = 0.01,
  *
  * Remind that sinc(w*n) is zero at n=1/w;
  */
-void SincMask(matrix2D< double >& mask,
+void SincMask(Matrix2D< double >& mask,
               double omega, int mode = INNER_MASK, double x0 = 0, double y0 = 0);
 
 /** Creates a 2D sinc-blackman mask, the mask is resized
@@ -214,7 +214,7 @@ void SincMask(matrix2D< double >& mask,
  * This function returns a sinc mask windowed by a Blackman window. The window
  * is designed to cover a certain power of the sinc
  */
-void SincBlackmanMask(matrix2D< double >& mask,
+void SincBlackmanMask(Matrix2D< double >& mask,
                       double omega, double power_percentage,
                       int mode = INNER_MASK, double x0 = 0, double y0 = 0);
 
@@ -224,7 +224,7 @@ void SincBlackmanMask(matrix2D< double >& mask,
  *  delta=ripple (in natural units) in the pass band.
  *  Deltaw=transition bandwidth (normalized to 1).
  */
-void SincKaiserMask(matrix2D<double> &mask,
+void SincKaiserMask(Matrix2D<double> &mask,
                     double omega, double delta = 0.01, double Deltaw = 1.0 / 12.0);
 
 /** Creates a 2D separable-sinc-kaiser mask, the mask is resized.
@@ -233,7 +233,7 @@ void SincKaiserMask(matrix2D<double> &mask,
  *  delta=ripple (in natural units) in the pass band.
  *  Deltaw=transition bandwidth (normalized to 1).
  */
-void SeparableSincKaiserMask(matrix2D<double> &mask,
+void SeparableSincKaiserMask(Matrix2D<double> &mask,
                              double omega, double delta = 0.01,
                              double Deltaw = 1.0 / 12.0);
 
@@ -243,7 +243,7 @@ void SeparableSincKaiserMask(matrix2D<double> &mask,
  *
  * The parameter center controls whether the center pixel is set to 1 or not
  */
-void mask2D_4neig(matrix2D< int >& mask, int value = 1, int center = NO_ACTIVATE);
+void mask2D_4neig(Matrix2D< int >& mask, int value = 1, int center = NO_ACTIVATE);
 
 /** Creates a 3x3 mask with value1 for those 4-neighbors of the central point
  * and value2 for the 8 neighbours.
@@ -251,7 +251,7 @@ void mask2D_4neig(matrix2D< int >& mask, int value = 1, int center = NO_ACTIVATE
  *
  * The parameter center controls whether the center pixel is set to 1 or not
  */
-void mask2D_8neig(matrix2D< int >& mask, int value1 = 1, int value2 = 1,
+void mask2D_8neig(Matrix2D< int >& mask, int value1 = 1, int value2 = 1,
                   int center = NO_ACTIVATE);
 
 /// @defgroup Masks3D 3D masks
@@ -349,7 +349,7 @@ void BinaryConeMask(matrix3D< int >& mask,
  * (x0,y0,z0), and rotated with respect to euler angle matrix A.
  */
 void BinaryWedgeMask(matrix3D< double >& mask, double theta0, double thetaF,
-                     matrix2D< double > A);
+                     Matrix2D< double > A);
 
 /** Creates a 3D gaussian mask for already sized masks
  * @ingroup Masks3D
@@ -473,7 +473,7 @@ void mask3D_26neig(matrix3D< int >& mask, int value1 = 1, int value2 = 1,
  * Mask.fn_mask = "...";
  * Mask.generate_2Dmask();
  *
- * Mask.apply(input_matrix2D, output_matrix2D);
+ * Mask.apply(input_Matrix2D, output_Matrix2D);
  * @endcode
  *
  * To generate a geometric mask within a program do the following:
@@ -488,13 +488,13 @@ void mask3D_26neig(matrix3D< int >& mask, int value1 = 1, int value2 = 1,
  * Mask.R1 = 32;
  *
  * // resize the mask after this pattern
- * Mask.resize(input_matrix2D);
+ * Mask.resize(input_Matrix2D);
  *
  * // Really generate the mask. It is stored internally
  * Mask.generate_2Dmask();
  *
  * // Apply the mask to some image
- * Mask.apply_mask(input_matrix2D, output_matrix2D);
+ * Mask.apply_mask(input_Matrix2D, output_Matrix2D);
  * @endcode
  *
  * To read a mask from the command line:
@@ -504,7 +504,7 @@ void mask3D_26neig(matrix3D< int >& mask, int value1 = 1, int value2 = 1,
  * mask.read(argc, argv);
  * mask.resize(Ydim, Xdim);
  * mask.generate_2Dmask();
- * Mask.apply_mask(input_matrix2D, output_matrix2D);
+ * Mask.apply_mask(input_Matrix2D, output_Matrix2D);
  * @endcode
  */
 class Mask_Params
@@ -614,7 +614,7 @@ public:
 
     /** Geometrix transformation matrix for the mask
      */
-    matrix2D< double > mask_geo;
+    Matrix2D< double > mask_geo;
 
     /** Allowed data types.
      */
@@ -626,7 +626,7 @@ public:
 
     /** 2D integer mask
      */
-    matrix2D< int > imask2D;
+    Matrix2D< int > imask2D;
 
     /** 3D integer mask
      */
@@ -638,7 +638,7 @@ public:
 
     /** 2D double mask
      */
-    matrix2D< double > dmask2D;
+    Matrix2D< double > dmask2D;
 
     /** 3D double mask
      */
@@ -735,7 +735,7 @@ public:
     /** Resize after a pattern
      */
     template<typename T>
-    void resize(const matrix2D< T >& m)
+    void resize(const Matrix2D< T >& m)
     {
         switch (datatype())
         {
@@ -806,7 +806,7 @@ public:
     /** Generate mask for an image following a pattern
      */
     template<typename T>
-    void generate_2Dmask(const matrix2D< T >& m)
+    void generate_2Dmask(const Matrix2D< T >& m)
     {
         resize(m);
         generate_2Dmask();
@@ -858,7 +858,7 @@ public:
      * subs_val is the substitute value in case of binary masks
      */
     template<typename T>
-    void apply_mask(const matrix2D< T >& I, matrix2D< T >& result,
+    void apply_mask(const Matrix2D< T >& I, Matrix2D< T >& result,
                     T subs_val = 0, const bool& apply_geo = false)
     {
         switch (datatype())
@@ -955,7 +955,7 @@ public:
      * existing mask.
      */
     template<typename T>
-    void produce_vector(const matrix2D< T >& I, Matrix1D< T >& result)
+    void produce_vector(const Matrix2D< T >& I, Matrix1D< T >& result)
     {
         // Resize the output vector
         if (XSIZE(result) == 0)
@@ -1073,28 +1073,28 @@ public:
 
     /** Get binary 2D mask
      */
-    matrix2D< int >& get_binary_mask2D()
+    Matrix2D< int >& get_binary_mask2D()
     {
         return imask2D;
     }
 
     /** Set binary 2D mask
      */
-    void set_binary_mask2D(matrix2D< int >& _imask2D)
+    void set_binary_mask2D(Matrix2D< int >& _imask2D)
     {
         imask2D = _imask2D;
     }
 
     /** Get continuous 2D mask
      */
-    matrix2D< double >& get_cont_mask2D()
+    Matrix2D< double >& get_cont_mask2D()
     {
         return dmask2D;
     }
 
     /** Set continuous 2D mask
      */
-    void set_cont_mask2D(matrix2D< double >& _dmask2D)
+    void set_cont_mask2D(Matrix2D< double >& _dmask2D)
     {
         dmask2D = _dmask2D;
     }
@@ -1174,8 +1174,8 @@ public:
  * image for those the mask is not 0 are computed.
  */
 template<typename T>
-void computeStats_within_binary_mask(const matrix2D< int >& mask,
-                                      const matrix2D< T >& m, T& min_val,
+void computeStats_within_binary_mask(const Matrix2D< int >& mask,
+                                      const Matrix2D< T >& m, T& min_val,
                                       T& max_val, double& avg, double& stddev)
 {
     SPEED_UP_temps;
@@ -1215,14 +1215,14 @@ void computeStats_within_binary_mask(const matrix2D< int >& mask,
 /** Apply geometric transformation to a binary mask
  * @ingroup MasksTools
  */
-void apply_geo_binary_2D_mask(matrix2D< int >& mask,
-                              const matrix2D< double >& A);
+void apply_geo_binary_2D_mask(Matrix2D< int >& mask,
+                              const Matrix2D< double >& A);
 
 /** Apply geometric transformation to a continuous mask
  * @ingroup MasksTools
  */
-void apply_geo_cont_2D_mask(matrix2D< double >& mask,
-                            const matrix2D< double >& A);
+void apply_geo_cont_2D_mask(Matrix2D< double >& mask,
+                            const Matrix2D< double >& A);
 
 /** Apply binary mask to an image (1D)
  * @ingroup MasksTools
@@ -1279,8 +1279,8 @@ void apply_cont_mask(const Matrix1D< double >& mask, const Matrix1D< T >& m_in,
  * are affected by the mask
  */
 template<typename T>
-void apply_binary_mask(const matrix2D< int >& mask, const matrix2D< T >& m_in,
-                       matrix2D< T >& m_out, T subs_val = (T) 0)
+void apply_binary_mask(const Matrix2D< int >& mask, const Matrix2D< T >& m_in,
+                       Matrix2D< T >& m_out, T subs_val = (T) 0)
 {
     m_out.resize(m_in);
 
@@ -1304,8 +1304,8 @@ void apply_binary_mask(const matrix2D< int >& mask, const matrix2D< T >& m_in,
  * same ones. Only the overlapping values are affected by the mask.
   */
 template<typename T>
-void apply_cont_mask(const matrix2D< double >& mask, const matrix2D< T >& m_in,
-                     matrix2D< T >& m_out)
+void apply_cont_mask(const Matrix2D< double >& mask, const Matrix2D< T >& m_in,
+                     Matrix2D< T >& m_out)
 {
     m_out.resize(m_in);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(m_out)
@@ -1423,8 +1423,8 @@ void apply_cont_mask(const matrix3D< double >& mask, const matrix3D< T >& m_in,
  * int, int, double, ...). The number of steps must always be given.
  */
 template<typename T>
-void compute_hist_within_binary_mask(const matrix2D< int >& mask,
-                                     matrix2D< T >& v, histogram1D& hist,
+void compute_hist_within_binary_mask(const Matrix2D< int >& mask,
+                                     Matrix2D< T >& v, histogram1D& hist,
                                      int no_steps)
 {
     T min_val, max_val;
@@ -1444,8 +1444,8 @@ void compute_hist_within_binary_mask(const matrix2D< int >& mask,
  * (short int, int, double, ...). The number of steps must always be given.
  */
 template<typename T>
-void compute_hist_within_binary_mask(const matrix2D< int >& mask,
-                                     const matrix2D< T >& v, histogram1D &hist,
+void compute_hist_within_binary_mask(const Matrix2D< int >& mask,
+                                     const Matrix2D< T >& v, histogram1D &hist,
                                      T min, T max, int no_steps)
 {
     SPEED_UP_temps;
@@ -1542,8 +1542,8 @@ void compute_hist_within_binary_mask(const matrix3D< int >& mask,
  * For complex matrices the absolute value is compared.
  */
 template<typename T>
-int count_with_mask(const matrix2D< int >& mask,
-                    const matrix2D< T >& m, int mode, double th1, double th2)
+int count_with_mask(const Matrix2D< int >& mask,
+                    const Matrix2D< T >& m, int mode, double th1, double th2)
 {
     SPEED_UP_temps;
     int N = 0;
@@ -1569,8 +1569,8 @@ int count_with_mask(const matrix2D< int >& mask,
     return N;
 }
 
-int count_with_mask(const matrix2D< int >& mask,
-                    const matrix2D< complex< double > > & m, int mode,
+int count_with_mask(const Matrix2D< int >& mask,
+                    const Matrix2D< complex< double > > & m, int mode,
                     double th1, double th2);
 
 /** Count voxels with mask and threshold
@@ -1623,7 +1623,7 @@ int count_with_mask(const matrix3D< int >& mask,
  * 0's are converted in 1's and viceversa
  */
 template<typename T>
-void invert_binary_mask(matrix2D< T >& mask)
+void invert_binary_mask(Matrix2D< T >& mask)
 {
     FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(mask)
     MULTIDIM_ELEM(mask, i) = (MULTIDIM_ELEM(mask, i) == 1) ? 0 : 1;
@@ -1648,9 +1648,9 @@ void invert_binary_mask(matrix3D< T >& mask)
  * voxels within the mask are used to compute the linear transformation. If no
  * mask is provided then all voxels are used.
  */
-void range_adjust_within_mask(const matrix2D< double >* mask,
-                              const matrix2D< double >& m1,
-                              matrix2D< double >& m2);
+void range_adjust_within_mask(const Matrix2D< double >* mask,
+                              const Matrix2D< double >& m1,
+                              Matrix2D< double >& m2);
 
 /** Range adjust within binary mask
  * @ingroup MasksTools

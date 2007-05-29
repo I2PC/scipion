@@ -196,11 +196,11 @@ void xmipp2Pixmap(Image &xmippImage, QPixmap* pixmap,
 
 /** Xmipp image -> Xmipp PSD.
     The log10 is taken, outliers rejected and the image is reorganized. */
-void xmipp2PSD(const matrix2D<double> &input, matrix2D<double> &output);
+void xmipp2PSD(const Matrix2D<double> &input, Matrix2D<double> &output);
 
 /** Xmipp image -> Xmipp CTF.
     The log10 is taken, outliers rejected and the image is reorganized. */
-void xmipp2CTF(const matrix2D<double> &input, matrix2D<double> &output);
+void xmipp2CTF(const Matrix2D<double> &input, Matrix2D<double> &output);
 //@}
 
 /**@name Misc */

@@ -91,7 +91,7 @@ void CorrectPhase_Params::produce_side_info()
 
 /* Correct a single image -------------------------------------------------- */
 //#define DEBUG
-void CorrectPhase_Params::correct(matrix2D< complex<double> > &v)
+void CorrectPhase_Params::correct(Matrix2D< complex<double> > &v)
 {
     if (XSIZE(ctf.mask2D) == 0 || multiple_CTFs)
         ctf.generate_mask(v);
@@ -132,7 +132,7 @@ void CorrectPhase_Params::correct(matrix2D< complex<double> > &v)
 /* Correct a set of images ------------------------------------------------- */
 void CorrectPhase_Params::correct(SelFile &SF)
 {
-    matrix2D< complex<double> > fft;
+    Matrix2D< complex<double> > fft;
     SF.go_first_ACTIVE();
     cerr << "Correcting CTF phase ...\n";
     int istep = CEIL((double)SF.ImgNo() / 60.0);

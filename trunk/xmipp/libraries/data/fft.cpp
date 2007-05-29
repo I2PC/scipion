@@ -29,7 +29,8 @@
 
 /* Format conversions ------------------------------------------------------ */
 /** Convert whole -> half of (centro-symmetric) Fourier transforms 2D. -- */
-void Whole2Half(const matrix2D<complex<double> > &in, matrix2D<complex<double> > &out)
+void Whole2Half(const Matrix2D<complex<double> > &in,
+                Matrix2D<complex<double> > &out)
 {
 
     // This assumes squared images...
@@ -47,7 +48,7 @@ void Whole2Half(const matrix2D<complex<double> > &in, matrix2D<complex<double> >
 }
 
 /** Convert half -> whole of (centro-symmetric) Fourier transforms 2D. -- */
-void Half2Whole(const matrix2D<complex<double> > &in, matrix2D<complex<double> > &out, int oriydim)
+void Half2Whole(const Matrix2D<complex<double> > &in, Matrix2D<complex<double> > &out, int oriydim)
 {
 
     out.resize(oriydim, XSIZE(in));
@@ -109,11 +110,11 @@ void FourierTransform(const Matrix1D<double> &in,
 }
 
 /** Direct Fourier Transform 2D. ------------------------------------------ */
-void FourierTransform(const matrix2D<double> &in,
-                      matrix2D< complex<double> > &out)
+void FourierTransform(const Matrix2D<double> &in,
+                      Matrix2D< complex<double> > &out)
 {
     int Status;
-    matrix2D<double> re(in), im;
+    Matrix2D<double> re(in), im;
     im.resize(in);
     out.resize(in);
     VolumeDftRealToRealImaginary(MULTIDIM_ARRAY(re),
@@ -152,11 +153,11 @@ void InverseFourierTransform(const Matrix1D< complex<double> > &in,
 }
 
 /** Inverse Fourier Transform 2D. ----------------------------------------- */
-void InverseFourierTransform(const matrix2D< complex<double> > &in,
-                             matrix2D<double> &out)
+void InverseFourierTransform(const Matrix2D< complex<double> > &in,
+                             Matrix2D<double> &out)
 {
     int Status;
-    matrix2D<double> im;
+    Matrix2D<double> im;
     out.resize(in);
     im.resize(in);
     Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(out),
@@ -181,22 +182,22 @@ void InverseFourierTransform(const matrix3D< complex<double> > &in,
 
 
 /** Direct Fourier Transform 2D, output half of (centro-symmetric) transform ---- */
-void FourierTransformHalf(const matrix2D<double> &in,
-                          matrix2D< complex<double> > &out)
+void FourierTransformHalf(const Matrix2D<double> &in,
+                          Matrix2D< complex<double> > &out)
 {
 
-    matrix2D<complex <double> > aux;
+    Matrix2D<complex <double> > aux;
     FourierTransform(in, aux);
     Whole2Half(aux, out);
 
 }
 
 /** Inverse Fourier Transform 2D, input half of (centro-symmetric) transform ---- */
-void InverseFourierTransformHalf(const matrix2D< complex<double> > &in,
-                                 matrix2D<double> &out, int oriydim)
+void InverseFourierTransformHalf(const Matrix2D< complex<double> > &in,
+                                 Matrix2D<double> &out, int oriydim)
 {
 
-    matrix2D< complex<double> > aux;
+    Matrix2D< complex<double> > aux;
     Half2Whole(in, aux, oriydim);
     InverseFourierTransform(aux, out);
     out.setXmippOrigin();
@@ -222,7 +223,7 @@ void ShiftFFT(Matrix1D< complex< double > > & v,
     }
 }
 
-void ShiftFFT(matrix2D< complex< double > > & v,
+void ShiftFFT(Matrix2D< complex< double > > & v,
               double xshift, double yshift)
 {
     double dotp, a, b, c, d, ac, bd, ab_cd;
@@ -288,7 +289,7 @@ void CenterOriginFFT(Matrix1D< complex< double > > & v, bool forward)
     }
 }
 
-void CenterOriginFFT(matrix2D< complex< double > > & v, bool forward)
+void CenterOriginFFT(Matrix2D< complex< double > > & v, bool forward)
 {
     double xshift = -(double)(int)(XSIZE(v) / 2);
     double yshift = -(double)(int)(YSIZE(v) / 2);
@@ -329,8 +330,8 @@ void FFT_magnitude(const Matrix1D< complex<double> > &v,
     FOR_ALL_ELEMENTS_IN_MATRIX1D(v) mag(i) = abs(v(i));
 }
 
-void FFT_magnitude(const matrix2D< complex<double> > &v,
-                   matrix2D<double> &mag)
+void FFT_magnitude(const Matrix2D< complex<double> > &v,
+                   Matrix2D<double> &mag)
 {
     mag.resize(v);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(v) mag(i, j) = abs(v(i, j));
@@ -351,8 +352,8 @@ void FFT_phase(const Matrix1D< complex<double> > &v,
     FOR_ALL_ELEMENTS_IN_MATRIX1D(v) phase(i) = atan2(v(i).imag(), v(i).real());
 }
 
-void FFT_phase(const matrix2D< complex<double> > &v,
-               matrix2D<double> &phase)
+void FFT_phase(const Matrix2D< complex<double> > &v,
+               Matrix2D<double> &phase)
 {
     phase.resize(v);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(v) phase(i, j) = atan2(v(i, j).imag(), v(i, j).real());
@@ -380,9 +381,11 @@ double distancia2(int x, int y, int m)
 }
 
 /* SSNR process single image */
-void my_ssnr_step(const matrix2D< complex<double> > &FTAverageImage,
-                  const matrix2D< complex<double> > &FTaverageSubGroup,
-                  Matrix1D<double> &ssnr, Matrix1D<double> &pixel, int z)
+void my_ssnr_step(const Matrix2D< complex<double> > &FTAverageImage,
+                  const Matrix2D< complex<double> > &FTaverageSubGroup,
+                  Matrix1D<double> &ssnr,
+                  Matrix1D<double> &pixel,
+                  int z)
 {
     //n -> number of images in the subset
     int top, cont;
@@ -392,8 +395,8 @@ void my_ssnr_step(const matrix2D< complex<double> > &FTAverageImage,
     float resta_real, resta_imag;
     float mod2_diferencia, mod2_media;
 
-    //   int dim (int)FTAverageImage.RowNo()/2;
-    int n = (int)FTAverageImage.RowNo();
+    //   int dim (int)FTAverageImage.rowNumber()/2;
+    int n = (int)FTAverageImage.rowNumber();
     top = (int)(n / 2);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(ssnr)
     {
@@ -422,7 +425,7 @@ void my_ssnr_step(const matrix2D< complex<double> > &FTAverageImage,
 }
 
 /* Numerical derivative of a matrix ----------------------------- */
-void numerical_derivative(matrix2D<double> &M, matrix2D<double> &D,
+void numerical_derivative(Matrix2D<double> &M, Matrix2D<double> &D,
                           char direction, int order, int window_size, int polynomial_order)
 {
 

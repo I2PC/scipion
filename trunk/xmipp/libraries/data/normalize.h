@@ -99,7 +99,7 @@ public:
     double thresh_black_dust;
     double thresh_white_dust;
 
-    matrix2D< int  > bg_mask;
+    Matrix2D< int  > bg_mask;
     bool apply_geo;
     bool enable_mask;
     Mask_Params mask_prm;

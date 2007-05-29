@@ -361,7 +361,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
 }
 
 
-void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
+void Prog_projection_matching_prm::PM_process_one_image(Matrix2D<double> &Mexp,
 							float &img_rot, float &img_tilt, float &img_psi,
 							int &opt_dirno, double &opt_psi,
 							double &opt_xoff, double &opt_yoff,
@@ -369,12 +369,12 @@ void Prog_projection_matching_prm::PM_process_one_image(matrix2D<double> &Mexp,
 
 
   // Rotational search ====================================================
-  matrix2D<double> Mimg,Mref,Maux,Mcorr;
+  Matrix2D<double> Mimg,Mref,Maux,Mcorr;
   double act_rot_range,psi,thisCC,oldCC,aveCC=0.,varCC=0.;
   double stddev_img,mean_img,dummy,xmax,ymax;
   int c=0,ioptpsi=0,ioptflip=0;
   bool search;
-  vector<matrix2D<double> >::iterator ipp;
+  vector<Matrix2D<double> >::iterator ipp;
 
   maxCC=-99.e99;
   Mimg.resize(dim,dim);
@@ -461,7 +461,7 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
   ImageXmipp img;
   FileName fn_img;
   Matrix1D<double> dataline(8);
-  matrix2D<double> A(3,3);
+  Matrix2D<double> A(3,3);
   double opt_psi,opt_xoff,opt_yoff,maxCC,Zscore;
   int c,nn,imgno,opt_dirno;
 
@@ -516,7 +516,7 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
 	img.read(fn_img);
 	img.set_eulerAngles(ref_rot[opt_dirno],ref_tilt[opt_dirno],opt_psi);
 	img.set_originOffsets(opt_xoff,opt_yoff);
-	img().self_apply_geom_Bspline(img.get_transformation_matrix(),3,IS_INV,WRAP);
+	img().selfApplyGeometryBSpline(img.get_transformation_matrix(),3,IS_INV,WRAP);
 	class_avgs[opt_dirno]()+=img();
 	class_avgs[opt_dirno].weight()+=1.;
 	class_selfiles[opt_dirno].insert(img.name());

@@ -134,19 +134,19 @@ void Prog_align2d_prm::usage()
 }
 
 // Rotational alignment ========================================================
-bool Prog_align2d_prm::align_rot(ImageXmipp &img, const matrix2D<double> &Mref,
+bool Prog_align2d_prm::align_rot(ImageXmipp &img, const Matrix2D<double> &Mref,
                                  const float &max_rot, const float &Rin, const float &Rout, const double &outside)
 {
 
-    matrix2D<double> Mimg, Maux, A;
+    Matrix2D<double> Mimg, Maux, A;
     Matrix1D<double> corr;
-    matrix2D<int>    mask;
+    Matrix2D<int>    mask;
     int nstep;
     int i, i_maxcorr, avewidth;
     double psi_actual, psi_max_coarse, psi_max_fine, sumcorr, psi_coarse_step = 15.;
     float psi;
 
-    mask.resize(img().RowNo(), img().ColNo());
+    mask.resize(img().rowNumber(), img().colNumber());
     mask.setXmippOrigin();
     if (Rout <= Rin)  REPORT_ERROR(1, "Align2d_rot: Rout <= Rin");
     BinaryCrownMask(mask, Rin, Rout, INNER_MASK);
@@ -154,7 +154,7 @@ bool Prog_align2d_prm::align_rot(ImageXmipp &img, const matrix2D<double> &Mref,
     Mimg.resize(img());
     Mimg.setXmippOrigin();
     A = img.get_transformation_matrix();
-    apply_geom(Mimg, A, img(), IS_INV, DONT_WRAP, outside);
+    applyGeometry(Mimg, A, img(), IS_INV, DONT_WRAP, outside);
     Maux.resize(Mimg);
     Maux.setXmippOrigin();
 
@@ -216,18 +216,18 @@ bool Prog_align2d_prm::align_rot(ImageXmipp &img, const matrix2D<double> &Mref,
 }
 
 // translational alignment =====================================================
-bool Prog_align2d_prm::align_trans(ImageXmipp &img, const matrix2D<double> &Mref, const float &max_shift,
+bool Prog_align2d_prm::align_trans(ImageXmipp &img, const Matrix2D<double> &Mref, const float &max_shift,
                                    const double &outside)
 {
 
-    matrix2D<double> Maux, Mcorr, A;
+    Matrix2D<double> Maux, Mcorr, A;
     int              dim, imax, jmax, i_actual, j_actual, dim2;
     double           max, xmax, ymax, sumcorr;
     float            xshift, yshift, shift;
 
     xshift = 0.;
     yshift = 0.;
-    dim = img().RowNo();
+    dim = img().rowNumber();
     Maux.resize(img());
     Maux.setXmippOrigin();
     Mcorr.resize(img());
@@ -235,7 +235,7 @@ bool Prog_align2d_prm::align_trans(ImageXmipp &img, const matrix2D<double> &Mref
 
     // Apply transformation already present in its header
     A = img.get_transformation_matrix();
-    apply_geom(Maux, A, img(), IS_INV, DONT_WRAP, outside);
+    applyGeometry(Maux, A, img(), IS_INV, DONT_WRAP, outside);
 
     // Calculate cross-correlation
     correlation_matrix(Maux, Mref, Mcorr);
@@ -299,18 +299,18 @@ bool Prog_align2d_prm::align_trans(ImageXmipp &img, const matrix2D<double> &Mref
 }
 
 // Complete search alignment ========================================================
-bool Prog_align2d_prm::align_complete_search(ImageXmipp &img, const matrix2D<double> &Mref,
+bool Prog_align2d_prm::align_complete_search(ImageXmipp &img, const Matrix2D<double> &Mref,
         const float &max_shift, const float &max_rot, const float &psi_interval,
         const float &Rin, const float &Rout, const double &outside)
 {
 
-    matrix2D<double> Mimg, Maux, Mcorr, Mref2, A;
-    matrix2D<int>    mask;
+    Matrix2D<double> Mimg, Maux, Mcorr, Mref2, A;
+    Matrix2D<int>    mask;
     int dim, nstep, imax, jmax;
     double psi_actual, corr, maxcorr, xshift, yshift, shift, psi_max;
     bool OK;
 
-    dim = img().RowNo();
+    dim = img().rowNumber();
     mask.resize(dim, dim);
     Mref2 = Mref;
     Maux.resize(Mimg);
@@ -324,7 +324,7 @@ bool Prog_align2d_prm::align_complete_search(ImageXmipp &img, const matrix2D<dou
     Mcorr.setXmippOrigin();
 
     A = img.get_transformation_matrix();
-    apply_geom(Mimg, A, img(), IS_INV, DONT_WRAP, outside);
+    applyGeometry(Mimg, A, img(), IS_INV, DONT_WRAP, outside);
 
     if (Rout <= Rin)  REPORT_ERROR(1, "Align2d: Rout <= Rin");
     BinaryCrownMask(mask, Rin, Rout, INNER_MASK);
@@ -380,8 +380,8 @@ void Prog_align2d_prm::do_pspc()
 
     int               barf, imgno, nlev, n_piram, nlevimgs;
     float             xshift, yshift, psi, zero = 0.;
-    matrix2D<double>  Mref, Maux;
-    matrix2D<int>     mask;
+    Matrix2D<double>  Mref, Maux;
+    Matrix2D<int>     mask;
 
     // Set-up matrices, etc.
     Mref.resize(images[0]());
@@ -422,7 +422,7 @@ void Prog_align2d_prm::do_pspc()
         for (int j = 0; j < nlevimgs / 2; j++)
         {
 
-            apply_geom(Mref, imgpspc[2*j].get_transformation_matrix(), imgpspc[2*j](), IS_INV, DONT_WRAP);
+            applyGeometry(Mref, imgpspc[2*j].get_transformation_matrix(), imgpspc[2*j](), IS_INV, DONT_WRAP);
             Mref.setXmippOrigin();
 
             if (do_complete)
@@ -440,7 +440,7 @@ void Prog_align2d_prm::do_pspc()
             }
 
             // Re-calculate average image
-            apply_geom(Maux, imgpspc[2*j+1].get_transformation_matrix(), imgpspc[2*j+1](), IS_INV, DONT_WRAP);
+            applyGeometry(Maux, imgpspc[2*j+1].get_transformation_matrix(), imgpspc[2*j+1](), IS_INV, DONT_WRAP);
             Maux.setXmippOrigin();
             Mref = (Mref + Maux) / 2;
             imgpspc[j]() = Mref;
@@ -459,14 +459,14 @@ void Prog_align2d_prm::do_pspc()
 
     // Center pspc reference wrt to average image
     Matrix1D<double> center(2);
-    matrix2D<double> Mcorr;
+    Matrix2D<double> Mcorr;
     Mcorr.resize(Mref);
     int imax, jmax;
     correlation_matrix(Mref, med(), Mcorr);
     Mcorr.maxIndex(imax, jmax);
     XX(center) = -jmax;
     YY(center) = -imax;
-    Mref.self_translate(center);
+    Mref.selfTranslate(center);
 
     // Write out inter-mediate reference
     Iref() = Mref;
@@ -487,11 +487,11 @@ void Prog_align2d_prm::refinement()
     int               dim, n_refined, barf;
     float             curr_max_shift, curr_max_rot, xshift, yshift, psi, zero = 0.;
     double            outside, dummy;
-    matrix2D<double>  Mref, Maux, Msum;
-    matrix2D<int>     mask;
+    Matrix2D<double>  Mref, Maux, Msum;
+    Matrix2D<int>     mask;
 
     // Set-up matrices, etc.
-    dim = Iref().ColNo();
+    dim = Iref().colNumber();
     mask.resize(dim, dim);
     BinaryCircularMask(mask, (int)dim / 2, OUTSIDE_MASK);
     Mref = Iref();
@@ -530,7 +530,7 @@ void Prog_align2d_prm::refinement()
             if (iter != 0)
             {
                 // Subtract current image from the reference
-                apply_geom(Maux, images[imgno].get_transformation_matrix(), images[imgno](), IS_INV, DONT_WRAP, outside);
+                applyGeometry(Maux, images[imgno].get_transformation_matrix(), images[imgno](), IS_INV, DONT_WRAP, outside);
                 Maux.setXmippOrigin();
                 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mref)
                 {
@@ -562,7 +562,7 @@ void Prog_align2d_prm::refinement()
                 {
                     // Add refined images to form a new reference
                     n_refined++;
-                    apply_geom(Maux, images[imgno].get_transformation_matrix(), images[imgno](), IS_INV, DONT_WRAP, outside);
+                    applyGeometry(Maux, images[imgno].get_transformation_matrix(), images[imgno](), IS_INV, DONT_WRAP, outside);
                     Maux.setXmippOrigin();
                     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Msum)
                     {
@@ -572,7 +572,7 @@ void Prog_align2d_prm::refinement()
                 else
                 {
                     // Add refined image to reference again
-                    apply_geom(Maux, images[imgno].get_transformation_matrix(), images[imgno](), IS_INV, DONT_WRAP, outside);
+                    applyGeometry(Maux, images[imgno].get_transformation_matrix(), images[imgno](), IS_INV, DONT_WRAP, outside);
                     Maux.setXmippOrigin();
                     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mref)
                     {
@@ -606,12 +606,12 @@ void Prog_align2d_prm::refinement()
 }
 
 // Write out results  ========================================================
-void Prog_align2d_prm::calc_correlation(const matrix2D<double> &Mref, const float &Rin, const float &Rout)
+void Prog_align2d_prm::calc_correlation(const Matrix2D<double> &Mref, const float &Rin, const float &Rout)
 {
 
-    matrix2D<double> Maux, Mimg;
-    matrix2D<int>    mask;
-    int dim = Mref.RowNo();
+    Matrix2D<double> Maux, Mimg;
+    Matrix2D<int>    mask;
+    int dim = Mref.rowNumber();
     int nstep = (int)(360 / psi_interval);
     Matrix1D<double> ccf;
     double psi_actual;
@@ -629,7 +629,7 @@ void Prog_align2d_prm::calc_correlation(const matrix2D<double> &Mref, const floa
 
     for (int imgno = 0; imgno < n_images; imgno++)
     {
-        apply_geom(Mimg, images[imgno].get_transformation_matrix(), images[imgno](), IS_INV, DONT_WRAP);
+        applyGeometry(Mimg, images[imgno].get_transformation_matrix(), images[imgno](), IS_INV, DONT_WRAP);
         Mimg.setXmippOrigin();
         corr[imgno] = correlation_index(Mref, Mimg, &mask);
 
@@ -689,7 +689,7 @@ void Prog_align2d_prm::align2d()
         fmask.raised_w = 0.1;
         fmask.FilterShape = RAISED_COSINE;
         fmask.FilterBand = LOWPASS;
-        matrix2D< complex<double> > fft;
+        Matrix2D< complex<double> > fft;
         FourierTransform(images[0](), fft);
         fmask.generate_mask(fft);
         for (int imgno = 0;imgno < n_images;imgno++)
@@ -708,10 +708,10 @@ void Prog_align2d_prm::align2d()
     else do_pspc();
 
     // Circular mask around reference image
-    matrix2D<int> mask;
-    mask.resize(Iref().RowNo(), Iref().ColNo());
+    Matrix2D<int> mask;
+    mask.resize(Iref().rowNumber(), Iref().colNumber());
     mask.setXmippOrigin();
-    BinaryCrownMask(mask, 0, (int)(Iref().ColNo() / 2), INNER_MASK);
+    BinaryCrownMask(mask, 0, (int)(Iref().colNumber() / 2), INNER_MASK);
     Iref().setXmippOrigin();
     apply_binary_mask(mask, Iref(), Iref());
 
@@ -755,9 +755,9 @@ void Prog_align2d_prm::align2d()
     }
     else
     {
-        med().resize(Iref().RowNo(), Iref().ColNo());
+        med().resize(Iref().rowNumber(), Iref().colNumber());
         med().initZeros();
-        sig().resize(Iref().RowNo(), Iref().ColNo());
+        sig().resize(Iref().rowNumber(), Iref().colNumber());
         sig().initZeros();
     }
     fn_img = fn_sel.without_extension() + ".xmp";

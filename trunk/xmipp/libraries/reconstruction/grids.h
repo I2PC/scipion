@@ -142,12 +142,12 @@ class SimpleGrid
 {
     /* Structure --------------------------------------------------------------- */
 public:
-    matrix2D<double> basis;                // These are the 3 unitary vectors
+    Matrix2D<double> basis;                // These are the 3 unitary vectors
     // which define the grid. First
     // column is vector X, second
     // column is vector Y, and the third
     // is Z
-    matrix2D<double> inv_basis;            // Inverse matrix of the basis
+    Matrix2D<double> inv_basis;            // Inverse matrix of the basis
     // It is used to save computation
     // time
     /** Lowest index inside the grid coordinate system.
@@ -413,11 +413,11 @@ public:
         information.
         \\ Ex:
         \begin{verbatim}
-        matrix2D<double> euler; Euler_angles2matrix(45,45,60,euler);
+        Matrix2D<double> euler; Euler_angles2matrix(45,45,60,euler);
         Matrix1D<double> up=sg.Gproject_to_plane(vectorR3(1,0,0),euler);
         \end{verbatim} */
     void Gproject_to_plane(const Matrix1D<double> &gr,
-                           const matrix2D<double> &euler, Matrix1D<double> &result) const
+                           const Matrix2D<double> &euler, Matrix1D<double> &result) const
     {
         grid2universe(gr, result);
         Uproject_to_plane(result, euler, result);
@@ -464,7 +464,7 @@ public:
         See \URL[Uproject_to_plane]{Uproject_to_plane.3.html} for more
         information about the projecting process. */
     void Gdir_project_to_plane(const Matrix1D<double> &gr,
-                               const matrix2D<double> &euler, Matrix1D<double> &result) const
+                               const Matrix2D<double> &euler, Matrix1D<double> &result) const
     {
         grid2universe(gr, result);
         V3_MINUS_V3(result, result, origin);
@@ -594,7 +594,7 @@ public:
         The returned vectors Gcorner1 and Gcorner2 enclose this grid.
         You can supply a deformation matrix (see \ref{blobs2voxels})*/
     void voxel_corners(Matrix1D<double> &Gcorner1, Matrix1D<double> &Gcorner2,
-                       const matrix2D<double> *V = NULL) const;
+                       const Matrix2D<double> *V = NULL) const;
 };
 
 /*****************************************************************************/

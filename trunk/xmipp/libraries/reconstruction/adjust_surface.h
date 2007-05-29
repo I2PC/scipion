@@ -111,7 +111,7 @@ public:
     /// Max surface value
     double max_val;
     /// Shift mask
-    matrix2D<int> shift_mask;
+    Matrix2D<int> shift_mask;
 
     /// Gradient of input volume
     Vectorial_matrix3D V_grad;

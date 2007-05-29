@@ -35,7 +35,7 @@ public:
     ImageXmipp  refI, MI;
     VolumeXmipp refV, MV;
     matrix3D<int> mask3D;
-    matrix2D<int> mask2D;
+    Matrix2D<int> mask2D;
     bool usemask, docc, doeu, domi, doco;
 
 public:

@@ -199,7 +199,7 @@ void Denoising_parameters::usage_specific()
 }
 
 // Denoise image -----------------------------------------------------------
-void Denoising_parameters::denoise(matrix2D<double> &img)
+void Denoising_parameters::denoise(Matrix2D<double> &img)
 {
     if (denoising_type == BAYESIAN && adjust_range)
         img.range_adjust(0, 1);
@@ -214,7 +214,7 @@ void Denoising_parameters::denoise(matrix2D<double> &img)
         DWT(img, img);
     }
     double th;
-    matrix2D<double> surface_strength, edge_strength;
+    Matrix2D<double> surface_strength, edge_strength;
     histogram1D hist;
     switch (denoising_type)
     {

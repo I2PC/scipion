@@ -117,12 +117,12 @@ void Prog_assign_CTF_prm::write(const FileName &fn_prm,
 }
 
 /* Compute PSD by piece averaging ========================================== */
-void Prog_assign_CTF_prm::PSD_piece_by_averaging(matrix2D<double> &piece,
-        matrix2D<double> &psd)
+void Prog_assign_CTF_prm::PSD_piece_by_averaging(Matrix2D<double> &piece,
+        Matrix2D<double> &psd)
 {
     int small_Ydim = 2 * YSIZE(piece) / Nside_piece;
     int small_Xdim = 2 * XSIZE(piece) / Nside_piece;
-    matrix2D<double> small_piece(small_Ydim, small_Xdim);
+    Matrix2D<double> small_piece(small_Ydim, small_Xdim);
 
     int Xstep = (XSIZE(piece) - small_Xdim) / (Nside_piece - 1);
     int Ystep = (YSIZE(piece) - small_Ydim) / (Nside_piece - 1);
@@ -141,12 +141,12 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(matrix2D<double> &piece,
                         DIRECT_MAT_ELEM(piece, ib, jb);
 
             // Compute the PSD of the small piece
-            matrix2D<double> small_psd;
+            Matrix2D<double> small_psd;
             small_psd.initZeros(small_piece);
             if (PSD_mode == ARMA)
             {
                 // Compute the ARMA model
-                matrix2D<double> ARParameters, MAParameters;
+                Matrix2D<double> ARParameters, MAParameters;
                 double dSigma = CausalARMA(small_piece, ARMA_prm.N_AR, ARMA_prm.M_AR,
                                            ARMA_prm.N_MA, ARMA_prm.M_MA, ARParameters, MAParameters);
                 ARMAFilter(small_piece, small_psd, ARParameters, MAParameters, dSigma);
@@ -154,7 +154,7 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(matrix2D<double> &piece,
             else
             {
                 // Compute the periodogram
-                matrix2D< complex<double> > Periodogram;
+                Matrix2D< complex<double> > Periodogram;
                 FourierTransform(small_piece, Periodogram);
                 FFT_magnitude(Periodogram, small_psd);
                 small_psd *= small_psd;
@@ -168,7 +168,7 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(matrix2D<double> &piece,
     // Compute the average of all the small pieces and enlarge
     psd /= (Nside_piece * Nside_piece);
     CenterFFT(piece, true);
-    psd.self_scale_to_size_Bspline(3, YSIZE(piece), XSIZE(piece));
+    psd.selfScaleToSizeBSpline(3, YSIZE(piece), XSIZE(piece));
     CenterFFT(piece, false);
     psd.threshold("below", 0, 0);
 }
@@ -317,7 +317,7 @@ void Prog_assign_CTF_prm::process()
         }
 
         // Extract micrograph piece ..........................................
-        matrix2D<double> piece(N_vertical, N_horizontal);
+        Matrix2D<double> piece(N_vertical, N_horizontal);
         if (!selfile_mode)
         {
             for (int k = 0; k < YSIZE(piece); k++)
@@ -339,7 +339,7 @@ void Prog_assign_CTF_prm::process()
             if (PSD_mode == ARMA)
             {
                 // Compute the ARMA model
-                matrix2D<double> ARParameters, MAParameters;
+                Matrix2D<double> ARParameters, MAParameters;
                 double dSigma = CausalARMA(piece, ARMA_prm.N_AR, ARMA_prm.M_AR,
                                            ARMA_prm.N_MA, ARMA_prm.M_MA, ARParameters, MAParameters);
                 ARMAFilter(piece, psd(), ARParameters, MAParameters, dSigma);
@@ -347,7 +347,7 @@ void Prog_assign_CTF_prm::process()
             else
             {
                 // Compute the periodogram
-                matrix2D< complex<double> > Periodogram;
+                Matrix2D< complex<double> > Periodogram;
                 FourierTransform(piece, Periodogram);
                 FFT_magnitude(Periodogram, psd());
                 psd() *= psd();

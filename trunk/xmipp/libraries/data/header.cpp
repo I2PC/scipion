@@ -611,9 +611,9 @@ void headerXmipp::get_originOffsets(float &Xoff, float &Yoff) const
     Yoff =  header.fYoff;
 }
 
-matrix2D<double> headerXmipp::fGeo_matrix()
+Matrix2D<double> headerXmipp::fGeo_matrix()
 {
-    matrix2D<double> retval(3, 3);
+    Matrix2D<double> retval(3, 3);
     retval(0, 0) = header.fGeo_matrix[0][0];
     retval(0, 1) = header.fGeo_matrix[0][1];
     retval(0, 2) = header.fGeo_matrix[0][2];

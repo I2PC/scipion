@@ -349,7 +349,7 @@ void ShowSel::producePixmapAt(int i)
 
     // If PSD mode, make the full window fit the current size
     if (load_mode == PSD_mode || load_mode == CTF_mode)
-        I().self_scale_to_size(rowHeight(0), columnWidth(0));
+        I().selfScaleToSize(rowHeight(0), columnWidth(0));
 
     // Convert Xmipp image to Pixmap
     content[i] = new QPixmap;

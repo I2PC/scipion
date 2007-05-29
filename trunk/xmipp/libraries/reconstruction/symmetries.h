@@ -111,8 +111,8 @@ private:
     int  space_group;
 public:
     // L and R matrices
-    matrix2D<double> __L, __R;
-    matrix2D<double> __shift;  // It is used for crystallographic symmetries
+    Matrix2D<double> __L, __R;
+    Matrix2D<double> __shift;  // It is used for crystallographic symmetries
     Matrix1D<int>    __chain_length;
 
     // As the symmetry elements form a subgroup, this is the number of
@@ -153,7 +153,7 @@ public:
                ...
            }
         \end{verbatim} */
-    void get_matrices(int i, matrix2D<double> &L, matrix2D<double> &R) const;
+    void get_matrices(int i, Matrix2D<double> &L, Matrix2D<double> &R) const;
 
     /** Set a couple of matrices in the symmetry list.
         The number of matrices inside the list is given by \Ref{SymsNo}.
@@ -167,8 +167,8 @@ public:
                ...
            }
         \end{verbatim} */
-    void set_matrices(int i, const matrix2D<double> &L,
-                      const matrix2D<double> &R);
+    void set_matrices(int i, const Matrix2D<double> &L,
+                      const Matrix2D<double> &R);
 
     /** Get shift.
         Returns the shift associated to a certain symmetry. */
@@ -199,7 +199,7 @@ public:
 
         The chain length is the number of single matrices multiplication of
         which the inserted one is compound.*/
-    void add_matrices(const matrix2D<double> &L, const matrix2D<double> &R,
+    void add_matrices(const Matrix2D<double> &L, const Matrix2D<double> &R,
                       int chain_length);
 
     /** Compute subgroup for this structure.
@@ -276,7 +276,7 @@ void symmetrize_crystal_vectors(Matrix1D<double> &aint,
 void symmetrize_crystal_volume(GridVolume &vol,
                                const Matrix1D<double> &eprm_aint,
                                const Matrix1D<double> &eprm_bint,
-                               int eprm_space_group, const matrix2D<int> &mask,
+                               int eprm_space_group, const Matrix2D<int> &mask,
                                int grid_type);
 
 /** Symmetrizes a simple grid with P2_122  symmetry
@@ -284,35 +284,35 @@ void symmetrize_crystal_volume(GridVolume &vol,
 void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
                      const Matrix1D<double> &eprm_aint,
                      const Matrix1D<double> &eprm_bint,
-                     const matrix2D<int> &mask, int volume_no,
+                     const Matrix2D<int> &mask, int volume_no,
                      int grid_type);
 /** Symmetrizes a simple grid with P22_12  symmetry
 */
 void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
                      const Matrix1D<double> &eprm_aint,
                      const Matrix1D<double> &eprm_bint,
-                     const matrix2D<int> &mask, int volume_no,
+                     const Matrix2D<int> &mask, int volume_no,
                      int grid_type);
 /** Symmetrizes a simple grid with P4  symmetry
 */
 void symmetry_P4(Volume &vol, const SimpleGrid &grid,
                  const Matrix1D<double> &eprm_aint,
                  const Matrix1D<double> &eprm_bint,
-                 const matrix2D<int> &mask, int volume_no,
+                 const Matrix2D<int> &mask, int volume_no,
                  int grid_type);
 /** Symmetrizes a simple grid with P4212 symmetry
 */
 void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
                      const Matrix1D<double> &eprm_aint,
                      const Matrix1D<double> &eprm_bint,
-                     const matrix2D<int> &mask, int volume_no,
+                     const Matrix2D<int> &mask, int volume_no,
                      int grid_type);
 /** Symmetrizes a simple grid with P6 symmetry
 */
 void symmetry_P6(Volume &vol, const SimpleGrid &grid,
                  const Matrix1D<double> &eprm_aint,
                  const Matrix1D<double> &eprm_bint,
-                 const matrix2D<int> &mask, int volume_no,
+                 const Matrix2D<int> &mask, int volume_no,
                  int grid_type);
 
 //@}

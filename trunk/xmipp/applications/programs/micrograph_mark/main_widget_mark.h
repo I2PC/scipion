@@ -55,10 +55,10 @@ private:
     QtFiltersController *__filtersController;
 
     // For tilted-untilted correspondance
-    matrix2D<double>    __Au;     // Untilted "positions"
-    matrix2D<double>    __Bt;     // Tilted   "positions"
-    matrix2D<double>    __Put;    // Passing matrix from untilted to tilted
-    matrix2D<double>    __Ptu;    // Passing matrix from tilted to untilted
+    Matrix2D<double>    __Au;     // Untilted "positions"
+    Matrix2D<double>    __Bt;     // Tilted   "positions"
+    Matrix2D<double>    __Put;    // Passing matrix from untilted to tilted
+    Matrix2D<double>    __Ptu;    // Passing matrix from tilted to untilted
     int                 __Nu;     // Number of points in matrices
     double              __gamma;  // Tilting angle in radians
     double              __alpha_u;// Angle of axis with X axis in radians

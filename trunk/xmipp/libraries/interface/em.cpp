@@ -191,15 +191,15 @@ void EM::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed)
         my_em_header.machine = 3;
     if (reversed == false)
     {
-        my_em_header.nx = V().ColNo();
-        my_em_header.ny = V().RowNo();
+        my_em_header.nx = V().colNumber();
+        my_em_header.ny = V().rowNumber();
         my_em_header.nz = V().SliNo();
     }
     else
     {
-        my_em_header.nx    = V().ColNo();
+        my_em_header.nx    = V().colNumber();
         little22bigendian(my_em_header.nx);
-        my_em_header.ny    = V().RowNo();
+        my_em_header.ny    = V().rowNumber();
         little22bigendian(my_em_header.ny);
         my_em_header.nz = V().SliNo();
         little22bigendian(my_em_header.nz);

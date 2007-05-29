@@ -33,8 +33,8 @@
 // Constructor -------------------------------------------------------------
 SimpleGrid::SimpleGrid()
 {
-    basis.init_identity(3);
-    inv_basis.init_identity(3);
+    basis.initIdentity(3);
+    inv_basis.initIdentity(3);
     origin        = vectorR3(0., 0., 0.);
     lowest        = vectorR3(-5., -5., -5.);
     highest       = -lowest;
@@ -140,7 +140,7 @@ void SimpleGrid::prepare_grid()
 
 // Minimum size ------------------------------------------------------------
 void Grid::voxel_corners(Matrix1D<double> &Gcorner1, Matrix1D<double> &Gcorner2,
-                         const matrix2D<double> *V) const
+                         const Matrix2D<double> *V) const
 {
     Matrix1D<double> SGcorner1(3), SGcorner2(3);     // Subgrid corners
     SPEED_UP_temps;

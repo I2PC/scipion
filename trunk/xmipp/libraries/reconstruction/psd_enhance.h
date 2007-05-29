@@ -71,7 +71,7 @@ public:
     /** Apply to a single PSD.
         The steps are basically: outlier removal, band pass filtration, masking
         and normalization. */
-    void apply(matrix2D<double> &PSD);
+    void apply(Matrix2D<double> &PSD);
 };
 //@}
 #endif

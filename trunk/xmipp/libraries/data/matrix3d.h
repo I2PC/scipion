@@ -52,12 +52,12 @@
 
 // TODO Document
 template<class T>
-void apply_geom(VT& V2, matrix2D< double > A, const VT& V1, bool inv,
+void applyGeometry(VT& V2, Matrix2D< double > A, const VT& V1, bool inv,
                 bool wrap);
 
 // TODO Document
 template<class T>
-void apply_geom_Bspline(VT& V2, matrix2D< double > A, const VT& V1,
+void applyGeometryBSpline(VT& V2, Matrix2D< double > A, const VT& V1,
                         int Splinedegree, bool inv, bool wrap, T outside = 0);
 
 /// @defgroup Volumes Volumes.
@@ -78,7 +78,7 @@ void apply_geom_Bspline(VT& V2, matrix2D< double > A, const VT& V1,
  * @ingroup VolumesSpeedUp
  *
  * Although they are not defined here you can also use STARTINGX and FINISHINGX
- * (defined for Matrix1D), or STARTINGY and FINISHINGY (defined for matrix2D)
+ * (defined for Matrix1D), or STARTINGY and FINISHINGY (defined for Matrix2D)
  */
 
 /** TRUE if both arrays have the same shape.
@@ -690,7 +690,7 @@ public:
     /** Another function for setting the Y origin.
      * @ingroup VolumesSizeShape
      */
-    void set_startingY(int _yinit)
+    void setStartingY(int _yinit)
     {
         yinit = _yinit;
     }
@@ -799,10 +799,10 @@ public:
      * @ingroup VolumesSizeShape
      *
      * @code
-     * int Ydim = V.RowNo();
+     * int Ydim = V.rowNumber();
      * @endcode
      */
-    int RowNo() const
+    int rowNumber() const
     {
         return ydim;
     }
@@ -811,10 +811,10 @@ public:
      * @ingroup VolumesSizeShape
      *
      * @code
-     * int Xdim = V.ColNo();
+     * int Xdim = V.colNumber();
      * @endcode
      */
-    int ColNo() const
+    int colNumber() const
     {
         return xdim;
     }
@@ -916,7 +916,7 @@ public:
      *
      * (x,y,z) are in logical coordinates.
      */
-    T interpolated_elem(double x, double y, double z, T outside_value = (T) 0)
+    T interpolatedElement(double x, double y, double z, T outside_value = (T) 0)
     {
         int x0 = FLOOR(x);
         double fx = x - x0;
@@ -955,7 +955,7 @@ public:
      *
      * (x,y,z) are in logical coordinates.
      */
-    T interpolated_elem_as_Bspline(double x, double y, double z,
+    T interpolatedElementBSpline(double x, double y, double z,
                                    int SplineDegree = 3)
     {
         int SplineDegree_1 = SplineDegree - 1;
@@ -1135,7 +1135,7 @@ public:
      * @endcode
      *
      * @code
-     * matrix2D< doubl e> m = V.slice(0);
+     * Matrix2D< doubl e> m = V.slice(0);
      * @endcode
      */
     mT getSlice(int i, char axis = 'Z') const
@@ -1230,7 +1230,7 @@ public:
             REPORT_ERROR(1203,
                          "setSlice: matrix3D subscript (k) out of range");
 
-        if (v.RowNo() != ydim || v.ColNo() != xdim)
+        if (v.rowNumber() != ydim || v.colNumber() != xdim)
             REPORT_ERROR(1202,
                          "setSlice: matrix3D dimensions different from the matrix ones");
 
@@ -1269,7 +1269,7 @@ public:
             operation = '*';
 
         result.resize(op1);
-        core_arrayByArray(op1, op2, result, operation);
+        coreArrayByArray(op1, op2, result, operation);
     }
 
     /** Reverse volume values over X axis.
@@ -1537,23 +1537,23 @@ public:
      * a class with default parameters. So, I'm sorry, you will have to
      * put them always. The usual combination is
      *
-     * apply_geom(..., IS_NOT_INV, DONT_WRAP).
+     * applyGeometry(..., IS_NOT_INV, DONT_WRAP).
      *
      * Although you can also use the constants IS_INV, or WRAP.
      *
      * @code
-     * matrix2D< double > A(4,4);
-     * A.init_identity;
-     * apply_geom(V2, A, V1);
+     * Matrix2D< double > A(4,4);
+     * A.initIdentity;
+     * applyGeometry(V2, A, V1);
      * @endcode
      */
-    friend void apply_geom<>(VT& V2, matrix2D< double > A,
+    friend void applyGeometry<>(VT& V2, Matrix2D< double > A,
                              const VT& V1, bool inv, bool wrap);
 
     /** Apply geom with B-spline interpolation.
      * @ingroup VolumesGeometrical
      */
-    friend void apply_geom_Bspline<>(VT& V2, matrix2D< double > A,
+    friend void applyGeometryBSpline<>(VT& V2, Matrix2D< double > A,
                                      const VT& V1, int Splinedegree,
                                      bool inv, bool wrap, T outside);
 
@@ -1562,21 +1562,21 @@ public:
      *
      * As apply geometry, but the result is kept in this object
      */
-    void self_apply_geom(matrix2D< double > A, bool inv, bool wrap)
+    void self_applyGeometry(Matrix2D< double > A, bool inv, bool wrap)
     {
         VT aux;
-        apply_geom(aux, A, *this, inv, wrap);
+        applyGeometry(aux, A, *this, inv, wrap);
         *this = aux;
     }
 
     /** Self apply geom Bspline.
      * @ingroup VolumesGeometrical
      */
-    void self_apply_geom_Bspline(matrix2D< double > A, int SplineDegree,
+    void selfApplyGeometryBSpline(Matrix2D< double > A, int SplineDegree,
                                  bool inv, bool wrap, T outside = 0)
     {
         VT aux;
-        apply_geom_Bspline(aux, A, *this, SplineDegree, inv, wrap, outside);
+        applyGeometryBSpline(aux, A, *this, SplineDegree, inv, wrap, outside);
         *this = aux;
     }
 
@@ -1593,18 +1593,18 @@ public:
      */
     void rotate(double ang, char axis, VT& result, bool wrap = DONT_WRAP) const
     {
-        matrix2D< double > tmp = rot3D_matrix(ang, axis);
-        apply_geom(result, tmp, *this, IS_NOT_INV, wrap);
+        Matrix2D< double > tmp = rotation3DMatrix(ang, axis);
+        applyGeometry(result, tmp, *this, IS_NOT_INV, wrap);
     }
 
     /** Rotate a volume arounf system axis (BSpline).
      * @ingroup VolumesGeometrical
      */
-    void rotate_Bspline(int Splinedegree, double ang, char axis, VT& result,
+    void rotateBSpline(int Splinedegree, double ang, char axis, VT& result,
                         bool wrap = DONT_WRAP, T outside = 0) const
     {
-        matrix2D< double > temp = rot3D_matrix(ang, axis);
-        apply_geom_Bspline(result, temp, *this, IS_NOT_INV, wrap, outside);
+        Matrix2D< double > temp = rotation3DMatrix(ang, axis);
+        applyGeometryBSpline(result, temp, *this, IS_NOT_INV, wrap, outside);
     }
 
     /** Rotate a volume around system axis, return result.
@@ -1620,18 +1620,18 @@ public:
     /** Rotate a volume around system axis, return result (Bspline).
      * @ingroup VolumesGeometrical
      */
-    VT rotate_Bspline(int Splinedegree, double ang, char axis,
+    VT rotateBSpline(int Splinedegree, double ang, char axis,
                       bool wrap = DONT_WRAP) const
     {
         VT aux;
-        rotate_Bspline(Splinedegree, ang, axis, aux, wrap);
+        rotateBSpline(Splinedegree, ang, axis, aux, wrap);
         return aux;
     }
 
     /** Rotate a volume around system axis, keep in this object.
      * @ingroup VolumesGeometrical
      */
-    void self_rotate(double ang, char axis, bool wrap = DONT_WRAP)
+    void selfRotate(double ang, char axis, bool wrap = DONT_WRAP)
     {
         VT aux;
         rotate(ang, axis, aux, wrap);
@@ -1641,11 +1641,11 @@ public:
     /** Rotate a volume around system axis, keep in this object (Bspline).
      * @ingroup VolumesGeometrical
      */
-    void self_rotate_Bspline(int Splinedegree, double ang, char axis,
+    void selfRotateBSpline(int Splinedegree, double ang, char axis,
                              bool wrap = DONT_WRAP)
     {
         VT aux;
-        rotate_Bspline(Splinedegree, ang, axis, aux, wrap);
+        rotateBSpline(Splinedegree, ang, axis, aux, wrap);
         *this = aux;
     }
 
@@ -1663,19 +1663,19 @@ public:
     void rotate(double ang, const Matrix1D< double >& axis, VT& result,
                 bool wrap = DONT_WRAP) const
     {
-        matrix2D< double > tmp = rot3D_matrix(ang, axis);
-        apply_geom(result, tmp, *this, IS_NOT_INV, wrap);
+        Matrix2D< double > tmp = rotation3DMatrix(ang, axis);
+        applyGeometry(result, tmp, *this, IS_NOT_INV, wrap);
     }
 
     /** Rotate a volume around any axis (Bspline).
      * @ingroup VolumesGeometrical
      */
-    void rotate_Bspline(int Splinedegree, double ang,
+    void rotateBSpline(int Splinedegree, double ang,
                         const Matrix1D< double >& axis, VT& result,
                         bool wrap = DONT_WRAP, T outside = 0) const
     {
-        matrix2D< double > tmp = rot3D_matrix(ang, axis);
-        apply_geom_Bspline(result, tmp, *this, Splinedegree, IS_NOT_INV,
+        Matrix2D< double > tmp = rotation3DMatrix(ang, axis);
+        applyGeometryBSpline(result, tmp, *this, Splinedegree, IS_NOT_INV,
                            wrap, outside);
     }
 
@@ -1692,18 +1692,18 @@ public:
     /** Rotate a volume around any axis, return result (Bspline).
      * @ingroup VolumesGeometrical
      */
-    VT rotate_Bspline(int Splinedegree, double ang, const Matrix1D< double > v,
+    VT rotateBSpline(int Splinedegree, double ang, const Matrix1D< double > v,
                       bool wrap = DONT_WRAP) const
     {
         VT aux;
-        rotate_Bspline(Splinedegree, ang, v, aux, wrap);
+        rotateBSpline(Splinedegree, ang, v, aux, wrap);
         return aux;
     }
 
     /** Rotate a volume around any axis, keep in this object.
      * @ingroup VolumesGeometrical
      */
-    void self_rotate(double ang, const Matrix1D< double >& v,
+    void selfRotate(double ang, const Matrix1D< double >& v,
                      bool wrap = DONT_WRAP)
     {
         VT aux;
@@ -1714,11 +1714,11 @@ public:
     /** Rotate a volume around any axis, keep in this object (Bspline).
      * @ingroup VolumesGeometrical
      */
-    void self_rotate_Bspline(int Splinedegree, double ang,
+    void selfRotateBSpline(int Splinedegree, double ang,
                              const Matrix1D< double >& v, bool wrap = DONT_WRAP)
     {
         VT aux;
-        rotate_Bspline(Splinedegree, ang, v, aux, wrap);
+        rotateBSpline(Splinedegree, ang, v, aux, wrap);
         *this = aux;
     }
 
@@ -1736,18 +1736,18 @@ public:
     void translate(const Matrix1D< double >& v, VT& result, bool wrap = WRAP)
     const
     {
-        matrix2D< double > tmp = translation3D_matrix(v);
-        apply_geom(result, tmp, *this, IS_NOT_INV, wrap);
+        Matrix2D< double > tmp = translation3DMatrix(v);
+        applyGeometry(result, tmp, *this, IS_NOT_INV, wrap);
     }
 
     /** Translate a volume (Bspline).
      * @ingroup VolumesGeometrical
      */
-    void translate_Bspline(int Splinedegree, const Matrix1D< double >& v,
+    void translateBSpline(int Splinedegree, const Matrix1D< double >& v,
                            VT& result, bool wrap = WRAP) const
     {
-        matrix2D< double > tmp = translation3D_matrix(v);
-        apply_geom(result, tmp, *this, IS_NOT_INV, wrap);
+        Matrix2D< double > tmp = translation3DMatrix(v);
+        applyGeometry(result, tmp, *this, IS_NOT_INV, wrap);
     }
 
     /** Translate a volume, return result.
@@ -1763,18 +1763,18 @@ public:
     /** Translate a volume, return result (Bspline).
      * @ingroup VolumesGeometrical
      */
-    VT translate_Bspline(int Splinedegree, const Matrix1D< double >& v,
+    VT translateBSpline(int Splinedegree, const Matrix1D< double >& v,
                          bool wrap = WRAP) const
     {
         VT aux;
-        translate_Bspline(Splinedegree, v, aux, wrap);
+        translateBSpline(Splinedegree, v, aux, wrap);
         return aux;
     }
 
     /** Translate a volume, keep in this object.
      * @ingroup VolumesGeometrical
      */
-    void self_translate(const Matrix1D< double >& v, bool wrap = WRAP)
+    void selfTranslate(const Matrix1D< double >& v, bool wrap = WRAP)
     {
         VT aux;
         translate(v, aux, wrap);
@@ -1784,11 +1784,11 @@ public:
     /** Translate a volume, keep in this object (Bspline).
      * @ingroup VolumesGeometrical
      */
-    void self_translate_Bspline(int Splinedegree, const Matrix1D< double >& v,
+    void selfTranslateBSpline(int Splinedegree, const Matrix1D< double >& v,
                                 bool wrap = WRAP)
     {
         VT aux;
-        translate_Bspline(Splinedegree, v, aux, wrap);
+        translateBSpline(Splinedegree, v, aux, wrap);
         *this = aux;
     }
 
@@ -1798,26 +1798,26 @@ public:
      * If the input has very high values, sometimes it is better to rescale it
      * to be between 0 and 1.
      */
-    void self_translate_centerOfMass_to_center(bool wrap = WRAP)
+    void selfTranslateCenterOfMassToCenter(bool wrap = WRAP)
     {
         setXmippOrigin();
         Matrix1D< double > center;
         centerOfMass(center);
         center *= -1;
-        self_translate(center, wrap);
+        selfTranslate(center, wrap);
     }
 
     /** Translate center of mass to center (Bspline).
      * @ingroup VolumesGeometrical
      */
-    void self_translate_centerOfMass_to_center_Bspline(
+    void selfTranslateCenterOfMassToCenterBSpline(
         int Splinedegree, bool wrap = WRAP)
     {
         setXmippOrigin();
         Matrix1D< double > center;
         centerOfMass(center);
         center *= -1;
-        self_translate_Bspline(Splinedegree, center, wrap);
+        selfTranslateBSpline(Splinedegree, center, wrap);
     }
 
     /** Scales to a new size.
@@ -1828,13 +1828,13 @@ public:
      * than the actual one.
      *
      * @code
-     * V2 = V1.scale_to_size(128, 128, 128);
+     * V2 = V1.scaleToSize(128, 128, 128);
      * @endcode
      */
-    void scale_to_size(int Zdim, int Ydim, int Xdim, VT& result) const
+    void scaleToSize(int Zdim, int Ydim, int Xdim, VT& result) const
     {
-        matrix2D< double > tmp(4, 4);
-        tmp.init_identity();
+        Matrix2D< double > tmp(4, 4);
+        tmp.initIdentity();
 
         DIRECT_MAT_ELEM(tmp, 0, 0) = (double) Xdim / (double) xdim;
         DIRECT_MAT_ELEM(tmp, 1, 1) = (double) Ydim / (double) ydim;
@@ -1842,17 +1842,17 @@ public:
 
         result.resize(Zdim, Ydim, Xdim);
 
-        apply_geom(result, tmp, *this, IS_NOT_INV, WRAP);
+        applyGeometry(result, tmp, *this, IS_NOT_INV, WRAP);
     }
 
     /** Scales to a new size (Bspline).
      * @ingroup VolumesGeometrical
      */
-    void scale_to_size_Bspline(int Splinedegree, int Zdim, int Ydim, int Xdim,
+    void scaleToSizeBSpline(int Splinedegree, int Zdim, int Ydim, int Xdim,
                                VT& result) const
     {
-        matrix2D< double > tmp(4, 4);
-        tmp.init_identity();
+        Matrix2D< double > tmp(4, 4);
+        tmp.initIdentity();
 
         DIRECT_MAT_ELEM(tmp, 0, 0) = (double) Xdim / (double) xdim;
         DIRECT_MAT_ELEM(tmp, 1, 1) = (double) Ydim / (double) ydim;
@@ -1860,83 +1860,83 @@ public:
 
         result.resize(Zdim, Ydim, Xdim);
 
-        apply_geom_Bspline(result, tmp, *this, Splinedegree, IS_NOT_INV, WRAP);
+        applyGeometryBSpline(result, tmp, *this, Splinedegree, IS_NOT_INV, WRAP);
     }
 
     /** Scales to a new size, return result
      * @ingroup VolumesGeometrical
      */
-    VT scale_to_size(int Zdim, int Ydim, int Xdim) const
+    VT scaleToSize(int Zdim, int Ydim, int Xdim) const
     {
         VT aux;
-        scale_to_size(Zdim, Ydim, Xdim, aux);
+        scaleToSize(Zdim, Ydim, Xdim, aux);
         return aux;
     }
 
     /** Scales to a new size, return result (Bspline).
      * @ingroup VolumesGeometrical
      */
-    VT scale_to_size_Bspline(int Splinedegree, int Zdim, int Ydim,
+    VT scaleToSizeBSpline(int Splinedegree, int Zdim, int Ydim,
                              int Xdim) const
     {
         VT aux;
-        scale_to_size_Bspline(Splinedegree, Zdim, Ydim, Xdim, aux);
+        scaleToSizeBSpline(Splinedegree, Zdim, Ydim, Xdim, aux);
         return aux;
     }
 
     /** Scales to a new size, keep in this object.
      * @ingroup VolumesGeometrical
      */
-    void self_scale_to_size(int Zdim, int Ydim, int Xdim)
+    void selfScaleToSize(int Zdim, int Ydim, int Xdim)
     {
         VT aux;
-        scale_to_size(Zdim, Ydim, Xdim, aux);
+        scaleToSize(Zdim, Ydim, Xdim, aux);
         *this = aux;
     }
 
     /** Scales to a new size, keep in this object (Bspline).
      * @ingroup VolumesGeometrical
      */
-    void self_scale_to_size_Bspline(int Splinedegree,
+    void selfScaleToSizeBSpline(int Splinedegree,
                                     int Zdim, int Ydim, int Xdim)
     {
         VT aux;
-        scale_to_size_Bspline(Splinedegree, Zdim, Ydim, Xdim, aux);
+        scaleToSizeBSpline(Splinedegree, Zdim, Ydim, Xdim, aux);
         *this = aux;
     }
 
     /** Reduce the image by 2 using a BSpline pyramid.
      * @ingroup VolumesGeometrical
      */
-    void pyramid_reduce(matrix3D< double >& result, int levels = 1) const
+    void pyramidReduce(matrix3D< double >& result, int levels = 1) const
     {
         matrix3D< double > aux, aux2;
-        produce_spline_coeffs(aux, 3);
+        produceSplineCoefficients(aux, 3);
 
         for (int i = 0; i < levels; i++)
         {
-            aux.reduce_Bspline(aux2, 3);
+            aux.reduceBSpline(aux2, 3);
             aux = aux2;
         }
 
-        aux2.produce_image_from_spline_coeffs(result, 3);
+        aux2.produceImageFromSplineCoefficients(result, 3);
     }
 
     /** Expand the image by 2 using a BSpline pyramid.
      * @ingroup VolumesGeometrical
      */
-    void pyramid_expand(matrix3D< double >& result, int levels = 1) const
+    void pyramidExpand(matrix3D< double >& result, int levels = 1) const
     {
         matrix3D< double > aux, aux2;
-        produce_spline_coeffs(aux, 3);
+        produceSplineCoefficients(aux, 3);
 
         for (int i = 0; i < levels; i++)
         {
-            aux.expand_Bspline(aux2, 3);
+            aux.expandBSpline(aux2, 3);
             aux = aux2;
         }
 
-        aux2.produce_image_from_spline_coeffs(result, 3);
+        aux2.produceImageFromSplineCoefficients(result, 3);
     }
 
     /** Produce spline coefficients.
@@ -1945,7 +1945,7 @@ public:
 #ifndef DBL_EPSILON
 #define DBL_EPSILON 1e-50
 #endif
-    void produce_spline_coeffs(matrix3D< double >& coeffs, int SplineDegree = 3)
+    void produceSplineCoefficients(matrix3D< double >& coeffs, int SplineDegree = 3)
     const
     {
         coeffs.initZeros(ZSIZE(*this), YSIZE(*this), XSIZE(*this));
@@ -1961,13 +1961,13 @@ public:
                           CardinalSpline, BasicSpline, SplineDegree,
                           MirrorOffBounds, DBL_EPSILON, &Status);
         if (Status)
-            REPORT_ERROR(1, "matrix3D::produce_spline_coeffs: Error");
+            REPORT_ERROR(1, "matrix3D::produceSplineCoefficients: Error");
     }
 
     /** Produce image from B-spline coefficients.
      * @ingroup VolumesGeometrical
      */
-    void produce_image_from_spline_coeffs(
+    void produceImageFromSplineCoefficients(
         matrix3D< double >& img, int SplineDegree = 3) const
     {
         img.initZeros(ZSIZE(*this), YSIZE(*this), XSIZE(*this));
@@ -1993,7 +1993,7 @@ public:
      * Knowing that this matrix is a set of B-spline coefficients, produce the
      * expanded set of B-spline coefficients using the two-scale relationship.
      */
-    void expand_Bspline(matrix3D< double >& expanded, int SplineDegree = 3) const
+    void expandBSpline(matrix3D< double >& expanded, int SplineDegree = 3) const
     {
         double g[200]; // Coefficients of the reduce filter
         long ng; // Number of coefficients of the reduce filter
@@ -2019,7 +2019,7 @@ public:
      * Knowing that this matrix is a set of B-spline coefficients, produce the
      * reduced set of B-spline coefficients using the two-scale relationship.
      */
-    void reduce_Bspline(matrix3D< double >& reduced, int SplineDegree = 3) const
+    void reduceBSpline(matrix3D< double >& reduced, int SplineDegree = 3) const
     {
         double g[200]; // Coefficients of the reduce filter
         long ng; // Number of coefficients of the reduce filter
@@ -2193,17 +2193,17 @@ public:
 
 // TODO Document
 template<>
-void core_array_by_scalar< complex< double > > (const maTC& op1,
+void coreArrayByScalar< complex< double > > (const maTC& op1,
         const complex< double >& op2, maTC& result, char operation);
 
 // TODO Document
 template<>
-void core_scalar_by_array< complex< double > > (const complex< double >& op1,
+void coreScalarByArray< complex< double > > (const complex< double >& op1,
         const maTC& op2, maTC& result, char operation);
 
 // TODO Document
 template<>
-void core_arrayByArray< complex< double> > (const maTC& op1, const maTC& op2,
+void coreArrayByArray< complex< double> > (const maTC& op1, const maTC& op2,
         maTC& result, char operation);
 
 /** @defgroup VolumesRelated Related functions
@@ -2274,7 +2274,7 @@ void cutToCommonSize(VT& V1, VT& V2)
  * - and so on.
  */
 template<typename T>
-void radial_average(const matrix3D< T >& m,
+void radialAverage(const matrix3D< T >& m,
                     const Matrix1D< int >& center_of_rot,
                     Matrix1D< T >& radial_mean,
                     Matrix1D< int >& radial_count,
@@ -2525,7 +2525,7 @@ std::ostream& operator<<(std::ostream& ostrm, const VT& v)
     FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v)
     max_val = MAX(max_val, ABS(MULTIDIM_ELEM(v, i)));
 
-    int prec = best_prec(max_val, 10);
+    int prec = bestPrecision(max_val, 10);
 
     for (int k = STARTINGZ(v); k <= FINISHINGZ(v); k++)
     {
@@ -2546,7 +2546,7 @@ std::ostream& operator<<(std::ostream& ostrm, const VT& v)
 // TODO Document
 //#define DEBUG
 template<typename T>
-void apply_geom(VT& V2, matrix2D< double > A, const VT& V1, bool inv,
+void applyGeometry(VT& V2, Matrix2D< double > A, const VT& V1, bool inv,
                 bool wrap)
 {
     int m1, n1, o1, m2, n2, o2;
@@ -2561,7 +2561,7 @@ void apply_geom(VT& V2, matrix2D< double > A, const VT& V1, bool inv,
         REPORT_ERROR(1102,
                      "Apply_geom3D: geometrical transformation is not 4x4");
 
-    if (A.IsIdent())
+    if (A.isIdentity())
     {
         V2 = V1;
         return;
@@ -2802,7 +2802,7 @@ void apply_geom(VT& V2, matrix2D< double > A, const VT& V1, bool inv,
 // TODO Document
 //#define DEBUG
 template<typename T>
-void apply_geom_Bspline(VT& V2, matrix2D< double > A, const VT& V1,
+void applyGeometryBSpline(VT& V2, Matrix2D< double > A, const VT& V1,
                         int Splinedegree, bool inv, bool wrap, T outside)
 {
     int m1, n1, o1, m2, n2, o2;
@@ -2813,7 +2813,7 @@ void apply_geom_Bspline(VT& V2, matrix2D< double > A, const VT& V1,
     if ((XSIZE(A) != 4) || (YSIZE(A) != 4))
         REPORT_ERROR(1102, "Apply_geom3D: geometrical transformation is not 4x4");
 
-    if (A.IsIdent())
+    if (A.isIdentity())
     {
         V2 = V1;
         return;
@@ -2864,7 +2864,7 @@ void apply_geom_Bspline(VT& V2, matrix2D< double > A, const VT& V1,
 
     // Build the B-spline coefficients
     matrix3D< double > Bcoeffs;
-    V1.produce_spline_coeffs(Bcoeffs, Splinedegree);
+    V1.produceSplineCoefficients(Bcoeffs, Splinedegree);
     STARTINGX(Bcoeffs) = (int) minxp;
     STARTINGY(Bcoeffs) = (int) minyp;
     STARTINGZ(Bcoeffs) = (int) minzp;
@@ -2947,7 +2947,7 @@ void apply_geom_Bspline(VT& V2, matrix2D< double > A, const VT& V1,
                 if (interp)
                 {
                     dVkij(V2, k, i, j) =
-                        (T) Bcoeffs.interpolated_elem_as_Bspline(xp, yp, zp,
+                        (T) Bcoeffs.interpolatedElementBSpline(xp, yp, zp,
                                 Splinedegree);
                 }
                 else
@@ -3039,7 +3039,7 @@ void VT::centerOfMass(Matrix1D< double >& center, void* mask)
 
 // TODO Document
 template<>
-complex<double> matrix3D< complex< double> >::interpolated_elem(double x,
+complex<double> matrix3D< complex< double> >::interpolatedElement(double x,
         double y, double z, complex< double > outside_value);
 
 #endif

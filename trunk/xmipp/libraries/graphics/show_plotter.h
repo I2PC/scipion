@@ -99,7 +99,7 @@ public:
 };
 
 /** Class to represent pairs of values.
-    It may receive a matrix2D object or two matrices 1D;
+    It may receive a Matrix2D object or two matrices 1D;
     It has some utilities like ZoomIn & Out, move through it, save plotter as
     .png image.
 
@@ -149,7 +149,7 @@ public:
         The first column is assumed to be the X axis and the second column
         the Y axis.
     */
-    void setCurveData(int id, const matrix2D<double> &data);
+    void setCurveData(int id, const Matrix2D<double> &data);
 
     /** Delete a curve from our plotter. */
     void deleteCurve(int id);
@@ -215,7 +215,7 @@ public:
     QRect rubberBandRect;
 
     // Data to plot
-    std::map<int, matrix2D<double> > curveMap;
+    std::map<int, Matrix2D<double> > curveMap;
     std::map<int, bool > curveActive;
 };
 //@}

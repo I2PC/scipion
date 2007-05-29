@@ -33,10 +33,10 @@ int main(int argc, char **argv)
     bool converged;
     vector<double> conv;
     double aux, wsum_sigma_noise, wsum_sigma_offset;
-    vector<matrix2D<double > > wsum_Mref, wsum_ctfMref;
+    vector<Matrix2D<double > > wsum_Mref, wsum_ctfMref;
     vector<double> sumw, sumw_mirror;
-    matrix2D<double> P_phi, Mr2, Maux;
-    vector<matrix2D<double> > Mwsum_sigma2;
+    Matrix2D<double> P_phi, Mr2, Maux;
+    vector<Matrix2D<double> > Mwsum_sigma2;
     FileName fn_img, fn_tmp;
     Matrix1D<double> oneline(0), spectral_signal;
     DocFile DFo;

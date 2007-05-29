@@ -253,8 +253,8 @@ void Prog_angular_predict_continuous_prm::finish_processing()
 double CSTSplineAssignment(
     matrix3D<double> &ReDFTVolume,
     matrix3D<double> &ImDFTVolume,
-    matrix2D<double> &image,
-    matrix2D<double> &weight,
+    Matrix2D<double> &image,
+    Matrix2D<double> &weight,
     Matrix1D<double> &pose_parameters,
     int               max_no_iter
 )
@@ -275,7 +275,7 @@ double CSTSplineAssignment(
 
     // Perform the DFT of the input image
     int Status;
-    matrix2D<double> realImg(image), imagImg;
+    Matrix2D<double> realImg(image), imagImg;
     CenterFFT(realImg, false);
     imagImg.resize(image);
     VolumeDftRealToRealImaginary(MULTIDIM_ARRAY(realImg),
@@ -310,7 +310,7 @@ double CSTSplineAssignment(
     Data.nx_Parameters  = 5;
 
     // Set the final pose parameters.
-    matrix2D<double> output_pose(5, max_no_iter + 1);
+    Matrix2D<double> output_pose(5, max_no_iter + 1);
     Data.OutputParameters = MULTIDIM_ARRAY(output_pose);
     Data.nx_OutputParameters = max_no_iter + 1;
     Data.ny_OutputParameters = 5;

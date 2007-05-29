@@ -175,7 +175,7 @@ public:
 
     /** Denoise an image.
      */
-    void denoise(matrix2D< double >& img);
+    void denoise(Matrix2D< double >& img);
 
     /** Denoise a volume.
      */

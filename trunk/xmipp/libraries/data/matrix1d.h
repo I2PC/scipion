@@ -81,7 +81,7 @@ std::string floatToString(float val, int width, int prec);
 /** Access to X dimension (size)
  * @ingroup VectorsSizeShape
  *
- * This is a macro equivalent to getDimension() or ColNo()
+ * This is a macro equivalent to getDimension() or colNumber()
  *
  * @code
  * //  Set to 0 1 element out of 2
@@ -138,7 +138,7 @@ std::string floatToString(float val, int width, int prec);
  * (included limits) respectively. You need to define SPEED_UP_temps.
  *
  * @code
- * matrix2D< double > v1(10), v2(20);
+ * Matrix2D< double > v1(10), v2(20);
  * v1.setXmippOrigin();
  * v2.setXmippOrigin();
  *
@@ -1078,7 +1078,7 @@ public:
             operation = '*';
 
         result.resize(op1);
-        core_arrayByArray(op1, op2, result, operation);
+        coreArrayByArray(op1, op2, result, operation);
     }
 
     /** Vector by matrix
@@ -1746,7 +1746,7 @@ std::ostream& operator<<(std::ostream& out, const vT& v)
         // Look for the exponent
         vT aux(v);
         aux.ABSnD();
-        int prec = best_prec(aux.compute_max(), 10);
+        int prec = bestPrecision(aux.compute_max(), 10);
 
         FOR_ALL_ELEMENTS_IN_MATRIX1D(v)
         {

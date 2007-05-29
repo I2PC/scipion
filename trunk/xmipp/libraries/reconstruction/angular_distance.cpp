@@ -106,7 +106,7 @@ double Prog_angular_distance_prm::second_angle_set(double rot1, double tilt1,
     }
 
     // Distance based on Euler axes
-    matrix2D<double> E1, E2;
+    Matrix2D<double> E1, E2;
     Euler_angles2matrix(rot1, tilt1, psi1, E1);
     Euler_angles2matrix(rot2, tilt2, psi2, E2);
     Matrix1D<double> v1, v2;
@@ -146,7 +146,7 @@ double Prog_angular_distance_prm::check_symmetries(double rot1, double tilt1,
 #endif
 
     int imax = SL.SymsNo() + 1;
-    matrix2D<double>  L(4, 4), R(4, 4);  // A matrix from the list
+    Matrix2D<double>  L(4, 4), R(4, 4);  // A matrix from the list
     double best_ang_dist = 3600;
     double best_rot2, best_tilt2, best_psi2;
 
@@ -215,7 +215,7 @@ double Prog_angular_distance_prm::compute_distance()
     DF2.go_first_data_line();
     DF_out.reserve(DF1.dataLineNo());
 
-    int dim = DF1.FirstLine_ColNo();
+    int dim = DF1.FirstLine_colNumber();
     Matrix1D<double> aux(16);
     Matrix1D<double> rot_diff, tilt_diff, psi_diff, vec_diff, X_diff, Y_diff;
     rot_diff.resize(DF1.dataLineNo());

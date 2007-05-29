@@ -181,7 +181,7 @@ void APHFileorigmerg::clear()
 void APHFileorigmerg::unasymmetrization(const double a_mag, const  double b_mag,
                                         const double mrc_taxa, const  double mrc_tilt,
                                         const double a_b_ang, const  int symmetry_group,
-                                        matrix2D<int> &Counter)
+                                        Matrix2D<int> &Counter)
 {
     int ksize = MAX(ABS(min_k), ABS(max_k));
     int hsize = MAX(ABS(min_h), ABS(max_h));
@@ -238,7 +238,7 @@ R1.R2.R3:[-1 0 0  1  1 0 -180 -1] -> (-h, k, l)=conj(h,k,l)*(-1)^k
 void APHFileorigmerg::unsymmetrice_P222_1(const double a_mag, const  double b_mag,
         const double mrc_taxa, const  double mrc_tilt,
         const double a_b_ang, const  int symmetry_group,
-        matrix2D<int> &Counter)
+        Matrix2D<int> &Counter)
 {
     // Go through all the points and compute the three alternatives
     spot first, second, third, fourth;

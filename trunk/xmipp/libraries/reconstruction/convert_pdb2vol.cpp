@@ -296,7 +296,7 @@ void Prog_PDBPhantom_Parameters::create_protein_at_low_sampling_rate()
 
     // Use Bsplines pyramid if possible
     int levels = FLOOR(log10((double)M) / log10(2.0) + XMIPP_EQUAL_ACCURACY);
-    Vhigh().pyramid_reduce(Vlow(), levels);
+    Vhigh().pyramidReduce(Vlow(), levels);
     current_Ts *= pow(2.0, levels);
     Vhigh.clear();
 
@@ -324,7 +324,7 @@ void Prog_PDBPhantom_Parameters::create_protein_at_low_sampling_rate()
 
     // Now scale using Bsplines
     int new_output_dim = CEIL(XSIZE(Vlow()) * current_Ts / Ts);
-    Vlow().scale_to_size_Bspline(3, new_output_dim, new_output_dim, new_output_dim,
+    Vlow().scaleToSizeBSpline(3, new_output_dim, new_output_dim, new_output_dim,
                                  Vhigh());
     Vlow() = Vhigh();
     Vlow().setXmippOrigin();

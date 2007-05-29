@@ -137,8 +137,8 @@ void ImUmbend::UnBending()
     }
     //xmipp coordinates in image
     //inIm().setXmippOrigin();
-    O[1] = inIm().ColNo() * 0.5;
-    O[2] = inIm().RowNo() * 0.5;
+    O[1] = inIm().colNumber() * 0.5;
+    O[2] = inIm().rowNumber() * 0.5;
     outIm().resize(inIm());
 
     //Lattice Triangulation (MRC coordinates)
@@ -152,14 +152,14 @@ void ImUmbend::UnBending()
     int Nh, Nk;
     Nk = (int)ceil(min(abs(ExpLat.dim[0] / ExpLat.a(0)), abs(ExpLat.dim[0] / ExpLat.b(0))));
     Nh = (int)ceil(min(abs(ExpLat.dim[1] / ExpLat.a(1)), abs(ExpLat.dim[1] / ExpLat.b(1))));
-    matrix2D <double> MatIncrX, MatIncrY;
+    Matrix2D <double> MatIncrX, MatIncrY;
     MatIncrX.initZeros(Nh, Nk);
     MatIncrY.initZeros(Nh, Nk);
 
 #undef DEBUG
     //   #define DEBUG
 #ifdef DEBUG
-    cout <<  MatIncrX.RowNo() << " " << MatIncrX.ColNo() << endl;
+    cout <<  MatIncrX.rowNumber() << " " << MatIncrX.colNumber() << endl;
 #endif
 #undef DEBUG
 
@@ -243,7 +243,7 @@ void ImUmbend::UnBending()
 ////////////////////////// INTERPOLATION
 
 //Shifts Interpolation from Regular grid
-void ImUmbend::ShiftsInterpReg(matrix2D <double> & MatIncrX, matrix2D <double> & MatIncrY, LatPoint &TargetPt)
+void ImUmbend::ShiftsInterpReg(Matrix2D <double> & MatIncrX, Matrix2D <double> & MatIncrY, LatPoint &TargetPt)
 {
     int i, j;
     float det;
@@ -386,7 +386,7 @@ void ImUmbend::Interp2D(float Tx, float Ty, float Ti, float Tj, float TiM, float
 
 ///////////////////////////////////////////////////////////////////////////
 //Linear Interpolation from scattered data set to regular grid
-void ImUmbend::Scattered2Regular(matrix2D <double> & MatIncrX, matrix2D <double> & MatIncrY, vector <ITRIANGLE> &LatTri)
+void ImUmbend::Scattered2Regular(Matrix2D <double> & MatIncrX, Matrix2D <double> & MatIncrY, vector <ITRIANGLE> &LatTri)
 {
 
     int k;

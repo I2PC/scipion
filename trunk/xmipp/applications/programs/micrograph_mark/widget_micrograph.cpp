@@ -101,7 +101,7 @@ void Classification_model::build_model()
     if (N == 1)
     {
         __avg = __training_particle.at(0).vec;
-        __sigma.init_identity(XSIZE(__avg));
+        __sigma.initIdentity(XSIZE(__avg));
         __sigma_inv = __sigma;
         __training_particle.at(0).dist = 0;
         return;
@@ -116,8 +116,8 @@ void Classification_model::build_model()
     __sigma.initZeros(XSIZE(__avg), XSIZE(__avg));
     for (int i = 0;i < N;i++)
     {
-        matrix2D<double> X;
-        X.from_vector(__training_particle.at(i).vec - __avg);
+        Matrix2D<double> X;
+        X.fromVector(__training_particle.at(i).vec - __avg);
         __sigma += (X * X.transpose());
     }
     __sigma /= N - 1;
@@ -146,8 +146,8 @@ double Classification_model::distance(const Matrix1D<double> &X,
                                       const Matrix1D<double> &Y)
 {
     if (XSIZE(__sigma_inv) == 0) return 1e30;
-    matrix2D<double> dif;
-    dif.from_vector(X - Y);
+    Matrix2D<double> dif;
+    dif.fromVector(X - Y);
     double dist2;
     dist2 = (dif.transpose() * __sigma_inv * dif)(0, 0);
     return sqrt(dist2);
@@ -413,7 +413,7 @@ void QtWidgetMicrograph::automaticallySelectParticles()
     if (XSIZE(__selection_model.__sigma_inv) == 0) return;
     cerr << "------------------Automatic Phase---------------------------" << endl;
 
-    const matrix2D<int> &mask = __mask.get_binary_mask2D();
+    const Matrix2D<int> &mask = __mask.get_binary_mask2D();
 
     //get the threshold distance
     double threshold = __selection_model.__largest_distance;
@@ -639,7 +639,7 @@ void QtWidgetMicrograph::createMask()
 //#define DEBUG
 void QtWidgetMicrograph::classifyMask()
 {
-    const matrix2D<int> &mask = __mask.get_binary_mask2D();
+    const Matrix2D<int> &mask = __mask.get_binary_mask2D();
     if (XSIZE(mask) == 0) return;
     double max_radius_particle = __particle_radius / __reduction;
 
@@ -654,7 +654,7 @@ void QtWidgetMicrograph::classifyMask()
     // 6 is the minimum radius to be informative
     double radial_step = (max_radius - 6) / __radial_bins;
 
-    matrix2D<int> *classif1 = new matrix2D<int>;
+    Matrix2D<int> *classif1 = new Matrix2D<int>;
     classif1->copyShape(mask);
     classif1->init_constant(-1);
     Matrix1D<int> Nrad(__radial_bins);
@@ -776,7 +776,7 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
     // Third part is the radial mass distribution
     // The input image is supposed to be between 0 and bins-1
     _result.initZeros(__radial_bins*(__gray_bins - 1) + (__numax - __numin + 1));
-    const matrix2D<int> &mask = __mask.get_binary_mask2D();
+    const Matrix2D<int> &mask = __mask.get_binary_mask2D();
 
     if (STARTINGX(mask) + _x < STARTINGX(__piece)) return false;
     if (STARTINGY(mask) + _y < STARTINGY(__piece)) return false;
@@ -802,7 +802,7 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
 #endif
 
     Matrix1D<int> radial_idx(__radial_bins);
-    matrix2D<double> particle;
+    Matrix2D<double> particle;
     particle.initZeros(YSIZE(mask), XSIZE(mask));
     STARTINGY(particle) = STARTINGY(mask);
     STARTINGX(particle) = STARTINGX(mask);
@@ -923,7 +923,7 @@ bool QtWidgetMicrograph::get_corner_piece(
     int _top, int _left, int _skip_y,
     int &_next_skip_x, int &_next_skip_y, int &_next_top, int &_next_left)
 {
-    const matrix2D<int> &mask = __mask.get_binary_mask2D();
+    const Matrix2D<int> &mask = __mask.get_binary_mask2D();
     int maxx, maxy;
     __m->size(maxx, maxy);
 
@@ -1054,7 +1054,7 @@ void QtWidgetMicrograph::find_nbr(vector<int> &_idx, int _index, int _x, int _y,
 {
     int piece_xsize = XSIZE(__piece);
     int piece_ysize = YSIZE(__piece);
-    const matrix2D<int> &mask = __mask.get_binary_mask2D();
+    const Matrix2D<int> &mask = __mask.get_binary_mask2D();
 
     //if all the particles are visited
     if (_visited.sum() == XSIZE(_visited)) return;
@@ -1100,7 +1100,7 @@ void QtWidgetMicrograph::find_nbr(vector<int> &_idx, int _index, int _x, int _y,
 bool QtWidgetMicrograph::get_next_scanning_pos(
     int &_x, int &_y, int _skip_x, int _skip_y)
 {
-    const matrix2D<int> &mask = __mask.get_binary_mask2D();
+    const Matrix2D<int> &mask = __mask.get_binary_mask2D();
     if (_x + XSIZE(mask) / 2 >= XSIZE(__piece) ||
         _y + YSIZE(mask) / 2 >= YSIZE(__piece)) return false;
 
@@ -1192,7 +1192,7 @@ void QtWidgetMicrograph::refine_center(Particle &my_P)
     Matrix1D<double> current_vec;
     double current_dist = my_P.dist;
     int    current_x = my_P.x, current_y = my_P.y;
-    const matrix2D<int> &mask = __mask.get_binary_mask2D();
+    const Matrix2D<int> &mask = __mask.get_binary_mask2D();
     bool success;
     do
     {

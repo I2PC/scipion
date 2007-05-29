@@ -83,7 +83,7 @@ public:
 bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 {
     FFT_parameters *eprm = (FFT_parameters *) prm;
-    matrix2D< complex<double> > fftI;
+    Matrix2D< complex<double> > fftI;
     FourierTransform(img(), fftI);
     switch (eprm->FFT_mode)
     {
