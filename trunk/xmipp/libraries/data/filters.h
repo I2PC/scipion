@@ -82,8 +82,8 @@ void region_growing(const Matrix2D< double >& I_in,
  * border are greater than the region voxels. If less is false the region is
  * grown so that all voxels on its border are smaller than the region voxels.
  */
-void region_growing(const matrix3D< double >& V_in,
-                    matrix3D< double >& V_out,
+void region_growing(const Matrix3D< double >& V_in,
+                    Matrix3D< double >& V_out,
                     int k,
                     int i,
                     int j,
@@ -109,7 +109,7 @@ int label_image(const Matrix2D< double >& I,
  * components. The background is labeled as 0, and the components as 1, 2, 3
  * ...
  */
-int label_volume(const matrix3D< double >& V, matrix3D< double >& label);
+int label_volume(const Matrix3D< double >& V, Matrix3D< double >& label);
 
 /** Remove connected components
  * @ingroup Filters
@@ -217,9 +217,9 @@ double correlation(const Matrix2D< T >& x,
  * @ingroup Filters
  */
 template <typename T>
-double correlation(const matrix3D< T >& x,
-                   const matrix3D< T >& y,
-                   const matrix3D< int >* mask = NULL,
+double correlation(const Matrix3D< T >& x,
+                   const Matrix3D< T >& y,
+                   const Matrix3D< int >* mask = NULL,
                    int l = 0,
                    int m = 0,
                    int q = 0)
@@ -233,7 +233,7 @@ double correlation(const matrix3D< T >& x,
     // do the computation
     Cols = x.colNumber();
     Rows = x.rowNumber();
-    Slices = x.SliNo();
+    Slices = x.sliceNumber();
 
     long N = 0;
     for (k = 0; k < Slices; k++)
@@ -367,10 +367,10 @@ double correlation_index(const Matrix2D< T >& x,
  * @ingroup Filters
  */
 template <typename T>
-double correlation_index(const matrix3D< T >& x,
-                         const matrix3D< T >& y,
-                         const matrix3D< int >* mask = NULL,
-                         matrix3D< double >* Contributions = NULL)
+double correlation_index(const Matrix3D< T >& x,
+                         const Matrix3D< T >& y,
+                         const Matrix3D< int >* mask = NULL,
+                         Matrix3D< double >* Contributions = NULL)
 {
     SPEED_UP_temps;
 
@@ -508,9 +508,9 @@ double euclidian_distance(const Matrix2D< T >& x,
  * @ingroup Filters
  */
 template <typename T>
-double euclidian_distance(const matrix3D< T >& x,
-                          const matrix3D< T >& y,
-                          const matrix3D< int >* mask = NULL)
+double euclidian_distance(const Matrix3D< T >& x,
+                          const Matrix3D< T >& y,
+                          const Matrix3D< int >* mask = NULL)
 {
     SPEED_UP_temps;
 
@@ -701,11 +701,11 @@ double mutual_information(const Matrix2D< T >& x,
  * @ingroup Filters
  */
 template <typename T>
-double mutual_information(const matrix3D< T >& x,
-                          const matrix3D< T >& y,
+double mutual_information(const Matrix3D< T >& x,
+                          const Matrix3D< T >& y,
                           int nx = 0,
                           int ny = 0,
-                          const matrix3D< int >* mask = NULL)
+                          const Matrix3D< int >* mask = NULL)
 {
     SPEED_UP_temps;
 
@@ -888,10 +888,10 @@ double rms(const Matrix2D< T >& x,
  * @ingroup Filters
  */
 template <typename T>
-double rms(const matrix3D< T >& x,
-           const matrix3D< T >& y,
-           const matrix3D< int >* mask = NULL,
-           matrix3D< double >* Contributions = NULL)
+double rms(const Matrix3D< T >& x,
+           const Matrix3D< T >& y,
+           const Matrix3D< int >* mask = NULL,
+           Matrix3D< double >* Contributions = NULL)
 {
     SPEED_UP_temps;
 

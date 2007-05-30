@@ -384,7 +384,7 @@ void CCP4::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed,
     {
         my_mrc_header.xlen = my_mrc_header.nx = my_mrc_header.mx = V().colNumber();
         my_mrc_header.ylen = my_mrc_header.ny = my_mrc_header.my = V().rowNumber();
-        my_mrc_header.zlen = my_mrc_header.nz = my_mrc_header.mz = V().SliNo();
+        my_mrc_header.zlen = my_mrc_header.nz = my_mrc_header.mz = V().sliceNumber();
         if (x_length != 0) my_mrc_header.xlen = x_length;
         if (y_length != 0) my_mrc_header.ylen = y_length;
         if (z_length != 0) my_mrc_header.zlen = z_length;
@@ -426,7 +426,7 @@ void CCP4::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed,
         little22bigendian(my_mrc_header.ny);
         my_mrc_header.ylen = my_mrc_header.my = my_mrc_header.ny;
 
-        my_mrc_header.nz = V().SliNo();
+        my_mrc_header.nz = V().sliceNumber();
         little22bigendian(my_mrc_header.nz);
         my_mrc_header.zlen = my_mrc_header.mz = my_mrc_header.nz;
 

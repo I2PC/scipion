@@ -126,16 +126,16 @@ public:
         and translates it into voxels of the given size. If the volume is
         already in voxels a padding is done so that the output is of the given
         size and the basis volume is in the center. */
-    void changeToVoxels(GridVolume &vol_basis, matrix3D<double> *vol_voxels,
+    void changeToVoxels(GridVolume &vol_basis, Matrix3D<double> *vol_voxels,
                         int Zdim, int Ydim, int Xdim) const;
 
     /** Change basis from voxels.
         A voxel volume is provided, then the output vol_basis will be shaped
         to represent this voxel volume. If the volume is already in voxels, then
         the mask and the radius mask are applied. */
-    void changeFromVoxels(const matrix3D<double> &vol_voxels,
+    void changeFromVoxels(const Matrix3D<double> &vol_voxels,
                           GridVolume &vol_basis, int grid_type, double grid_relative_size,
-                          const matrix3D<double> *vol_mask,
+                          const Matrix3D<double> *vol_mask,
                           const Matrix2D<double> *D, double R) const;
 
     /** Basis value at a given point. */

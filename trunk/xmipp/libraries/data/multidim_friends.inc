@@ -6,12 +6,12 @@ template<typename T>
 class Matrix2D;
 
 template<typename T>
-class matrix3D;
+class Matrix3D;
 
 // FIXME Remove this... bad practice
 #define vT Matrix1D< T >
 #define mT Matrix2D< T >
-#define VT matrix3D< T >
+#define VT Matrix3D< T >
 
 template<typename T>
 std::ostream& operator<<(std::ostream& o, const maT& v);

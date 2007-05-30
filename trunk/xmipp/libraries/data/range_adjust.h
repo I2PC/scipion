@@ -75,7 +75,7 @@ public:
      *
      * The input volume is modified.
      */
-    void apply(matrix3D< double >& V);
+    void apply(Matrix3D< double >& V);
 };
 
 #endif

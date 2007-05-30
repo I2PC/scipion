@@ -114,14 +114,14 @@ public:
     Matrix2D<int> shift_mask;
 
     /// Gradient of input volume
-    Vectorial_matrix3D V_grad;
+    Vectorial_Matrix3D V_grad;
 
     /// Working surface volume
     VolumeXmipp Vsurf;
     /// Working surface image
     ImageXmipp wsurface;
     /// Working gradient volume
-    Vectorial_matrix3D Vsurf_grad;
+    Vectorial_Matrix3D Vsurf_grad;
     /// Working best combination
     Matrix1D<double> p;
     //@}
@@ -186,7 +186,7 @@ double correlate_surface_and_volume_2D(const Image *surf, const Volume *V,
     The same as above but this time the correlation is perfomed attending
     to the gradient at surface positions inside the volume. */
 double correlate_surface_and_volume_gradients(const Image *surf,
-        const Vectorial_matrix3D &V_grad, Vectorial_matrix3D & Vsurf_grad,
+        const Vectorial_Matrix3D &V_grad, Vectorial_Matrix3D & Vsurf_grad,
         int ktop, int kbottom, int direction, int tell = 0)
 ;
 

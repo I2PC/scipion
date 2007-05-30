@@ -89,19 +89,19 @@ public:
     SelFile SF, SFr, SFw;
     // Vector for volumes to hold the real and imag parts of Fref and
     // the sum of all wedges for each reference
-    vector<vector <matrix3D<double> > > Fref_trans;
+    vector<vector <Matrix3D<double> > > Fref_trans;
     // For all tomograms: angles, offsets and wedge parameters
     vector<double> img_rot, img_tilt, img_psi, img_xoff, img_yoff, img_zoff, img_th0, img_thF, img_wednr;
     // Matrices for calculating PDF of (in-plane) translations
-    matrix3D<double> pdf_trans, Mr2;
+    Matrix3D<double> pdf_trans, Mr2;
     /** Number for which limited translation is zero */
     int zero_trans;
     /** Vector for Fourier-space sigma2-values  */
     vector<double> Vsigma2;
     /** number of different wedges */
     int nr_wedge;
-    matrix3D<double> smooth_edge_mask, corr_mask;
-    matrix3D<int> outside_mask, mask, resmask, resmask2;
+    Matrix3D<double> smooth_edge_mask, corr_mask;
+    Matrix3D<int> outside_mask, mask, resmask, resmask2;
     /* wedgelist */
     vector<wedgelist> wedges;
     /* Symmetry information */
@@ -121,7 +121,7 @@ public:
     /* Integer high/low resolution limits*/
     int resol_max, resol_min;
     /* resolution pointer */
-    matrix3D<int> Mresol;
+    Matrix3D<int> Mresol;
     /* Maximum number of pixels to search offsets */
     double search_shift;
     /* Vector for nonzero pixels of each wedge */
@@ -160,9 +160,9 @@ public:
     void calculate_pdf_trans();
 
     /// parameters using fourier-space likelihood functions
-    void MLF_integrate(matrix3D<double> Mimg, Matrix2D<double> A_img, int iwedge,
-                       vector<matrix3D<double> > &wsum_Fimgs,
-                       vector<matrix3D<double> > &wsum_Fweds,
+    void MLF_integrate(Matrix3D<double> Mimg, Matrix2D<double> A_img, int iwedge,
+                       vector<Matrix3D<double> > &wsum_Fimgs,
+                       vector<Matrix3D<double> > &wsum_Fweds,
                        vector<double> &wsum_sigma2, double &wsum_sigma_offset,
                        vector<double> &sumw, double &LL, double &fracweight,
                        int &opt_refno, double &opt_rot, double &opt_tilt, double &opt_psi,
@@ -170,30 +170,30 @@ public:
 
     /// Integrate over all experimental images
     void sum_over_all_images(SelFile &SF,
-                             vector<matrix3D<double> > &wsum_Fimgs,
-                             vector<matrix3D<double> > &wsum_Fweds,
+                             vector<Matrix3D<double> > &wsum_Fimgs,
+                             vector<Matrix3D<double> > &wsum_Fweds,
                              vector<double> &sum_nonzero_pixels,
                              vector<double> &wsum_sigma2, double &wsum_sigma_offset,
                              vector<double> &sumw, double &LL,
                              double &sumcorr, DocFile &DFo);
 
     /// Update all model parameters
-    void update_parameters(vector<matrix3D<double> > &wsum_Fimgs,
-                           vector<matrix3D<double> > &wsum_Fweds,
+    void update_parameters(vector<Matrix3D<double> > &wsum_Fimgs,
+                           vector<Matrix3D<double> > &wsum_Fweds,
                            vector<double> &sum_nonzero_pixels,
                            vector<double> &wsum_sigma2, double &wsum_sigma_offset,
                            vector<double> &sumw, double &sumcorr,
                            double &sumw_allrefs, int iter);
 
     // Post-processing on (real-space) reference maps
-    void post_process_references(vector<matrix3D<double> > &Mref);
+    void post_process_references(vector<Matrix3D<double> > &Mref);
 
     // Solvent flattening
-    void solvent_flattening(vector<matrix3D<double> > &Mref, FileName &fn_solvent);
+    void solvent_flattening(vector<Matrix3D<double> > &Mref, FileName &fn_solvent);
 
     /// Write out reference images, selfile and logfile
     void write_output_files(const int iter, SelFile &SF, DocFile &DF,
-                            vector<matrix3D<double> > &Mref,
+                            vector<Matrix3D<double> > &Mref,
                             double &sumw_allrefs, vector<double> &sumw,
                             double &LL, double &avecorr);
 

@@ -102,7 +102,7 @@ int main(int argc, char **argv)
         {
             V.setXmippOrigin();
             mask_prm.generate_3Dmask(V);
-            const matrix3D<int> & mask3D = mask_prm.get_binary_mask3D();
+            const Matrix3D<int> & mask3D = mask_prm.get_binary_mask3D();
             if (automatic_range)
                 compute_hist_within_binary_mask(mask3D, V, hist, StepsNo);
             else

@@ -67,8 +67,8 @@ void Bilib_DWT(const Matrix2D< double >& input,
 /** B-spline Wavelet transform of a matrix.
  * @ingroup WaveletsBilib
  */
-void Bilib_DWT(const matrix3D< double >& input,
-               matrix3D< double >& result,
+void Bilib_DWT(const Matrix3D< double >& input,
+               Matrix3D< double >& result,
                int iterations,
                int isign = 1);
 
@@ -130,7 +130,7 @@ void DWT(const Matrix2D< T >& v, Matrix2D< double >& result, int isign = 1)
  * if isign=-1 the inverse DWT is done.
  */
 template<typename T>
-void DWT(const matrix3D< T >& v, matrix3D< double >& result, int isign = 1)
+void DWT(const Matrix3D< T >& v, Matrix3D< double >& result, int isign = 1)
 {
     unsigned long int nn[2];
     unsigned long int *ptr_nn = nn - 1;
@@ -165,7 +165,7 @@ void IDWT(const Matrix2D< double >& v, Matrix2D< double >& result);
  * The output volume can be the same as the input one. Previously the type of
  * DWT must be set with set_DWT_type.
  */
-void IDWT(const matrix3D< double >& v, matrix3D< double >& result);
+void IDWT(const Matrix3D< double >& v, Matrix3D< double >& result);
 
 /** DWT Low pass versions.
  * @ingroup WaveletsRecipes
@@ -239,7 +239,7 @@ void SelectDWTBlock(int scale,
  */
 template<typename T>
 void SelectDWTBlock(int scale,
-                    const matrix3D< T >& I,
+                    const Matrix3D< T >& I,
                     const std::string& quadrant,
                     int& x1,
                     int& x2,
@@ -337,7 +337,7 @@ void clean_quadrant(Matrix2D< double >& I,
 /** Remove all information within a quadrant and scale.
  * @ingroup WaveletsDenoising
  */
-void clean_quadrant(matrix3D< double >& I,
+void clean_quadrant(Matrix3D< double >& I,
                     int scale,
                     const std::string& quadrant);
 
@@ -355,7 +355,7 @@ void soft_thresholding(Matrix2D< double >& I, double th);
  * Substract a value from all coefficients, if the the value is greater than
  * the absolute value of the coefficient, that coefficient is set to 0.
  */
-void soft_thresholding(matrix3D< double >& I, double th);
+void soft_thresholding(Matrix3D< double >& I, double th);
 
 /** Adaptive soft thresholding 2D.
  * @ingroup WaveletsDenoising
@@ -410,7 +410,7 @@ void bayesian_wiener_filtering(Matrix2D< double >& WI,
  * If denoise is set to false, then S and N coefficients are estimated but they
  * are not applied to the image.
  */
-Matrix1D< double > bayesian_wiener_filtering(matrix3D< double >& WI,
+Matrix1D< double > bayesian_wiener_filtering(Matrix3D< double >& WI,
         int allowed_scale,
         double SNR0 = 0.1,
         double SNRF = 0.2,
@@ -423,7 +423,7 @@ Matrix1D< double > bayesian_wiener_filtering(matrix3D< double >& WI,
  *
  * This is the function that really denoise.
  */
-void bayesian_wiener_filtering(matrix3D< double >& WI,
+void bayesian_wiener_filtering(Matrix3D< double >& WI,
                                int allowed_scale,
                                Matrix1D< double >& estimatedS);
 

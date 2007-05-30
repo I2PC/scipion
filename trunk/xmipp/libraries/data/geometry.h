@@ -807,7 +807,7 @@ Matrix2D< double > Euler_rotation3DMatrix(double rot, double tilt, double psi);
  *
  * The following prototype of the function is faster.
  */
-matrix3D< double > Euler_rotate(const matrix3D< double >& V,
+Matrix3D< double > Euler_rotate(const Matrix3D< double >& V,
                                 double rot,
                                 double tilt,
                                 double psi);
@@ -817,11 +817,11 @@ matrix3D< double > Euler_rotate(const matrix3D< double >& V,
  *
  * Input and output volumes cannot be the same one.
  */
-void Euler_rotate(const matrix3D< double >& V,
+void Euler_rotate(const Matrix3D< double >& V,
                   double rot,
                   double tilt,
                   double psi,
-                  matrix3D< double >& result);
+                  Matrix3D< double >& result);
 
 /// @defgroup Intersections Intersections
 /// @ingroup Geometry

@@ -285,7 +285,7 @@ void random_convex_hull(const Matrix2D<double> &img, Matrix2D<double> &hull,
 }
 
 /* Dilate/erode 3D steps --------------------------------------------------- */
-void dilate3D_step(const matrix3D<double> &in, matrix3D<double> &out, int neig,
+void dilate3D_step(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
                    int count)
 {
     int sum = 0;
@@ -334,7 +334,7 @@ void dilate3D_step(const matrix3D<double> &in, matrix3D<double> &out, int neig,
             }
 }
 
-void erode3D_step(const matrix3D<double> &in, matrix3D<double> &out, int neig,
+void erode3D_step(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
                   int count)
 {
     int sum = 0;
@@ -390,10 +390,10 @@ void erode3D_step(const matrix3D<double> &in, matrix3D<double> &out, int neig,
 }
 
 /* Dilate/Erode 3D --------------------------------------------------------- */
-void dilate3D(const matrix3D<double> &in, matrix3D<double> &out, int neig, int count,
+void dilate3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig, int count,
               int size)
 {
-    matrix3D<double> tmp;
+    Matrix3D<double> tmp;
     int i;
     tmp.resize(in);
     tmp = in;
@@ -404,10 +404,10 @@ void dilate3D(const matrix3D<double> &in, matrix3D<double> &out, int neig, int c
     }
 }
 
-void erode3D(const matrix3D<double> &in, matrix3D<double> &out, int neig, int count,
+void erode3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig, int count,
              int size)
 {
-    matrix3D<double> tmp;
+    Matrix3D<double> tmp;
     int i;
     tmp.resize(in);
     tmp = in;
@@ -420,10 +420,10 @@ void erode3D(const matrix3D<double> &in, matrix3D<double> &out, int neig, int co
 }
 
 /* Opening/Closing 3D ------------------------------------------------------ */
-void closing3D(const matrix3D<double> &in, matrix3D<double> &out, int neig,
+void closing3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
                int count, int size)
 {
-    matrix3D<double> tmp;
+    Matrix3D<double> tmp;
     int i;
     tmp.resize(in);
     tmp = in;
@@ -439,10 +439,10 @@ void closing3D(const matrix3D<double> &in, matrix3D<double> &out, int neig,
     }
 }
 
-void opening3D(const matrix3D<double> &in, matrix3D<double> &out, int neig,
+void opening3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
                int count, int size)
 {
-    matrix3D<double> tmp;
+    Matrix3D<double> tmp;
     int i;
     tmp.resize(in);
     tmp = in;

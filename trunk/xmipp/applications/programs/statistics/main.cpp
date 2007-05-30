@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     bool            show_angles;      // True if angles are to be shown in stats
     bool            apply_geo;        // True if the header must be taken into account
     Matrix2D<int>   mask2D;
-    matrix3D<int>   mask3D;
+    Matrix3D<int>   mask3D;
     int             volume_type;
     // Read arguments --------------------------------------------------------
     try
@@ -124,7 +124,7 @@ int main(int argc, char **argv)
 
                 // Generate mask if necessary
                 mask_prm.generate_3Dmask(V);
-                const matrix3D<int> &mask3D = mask_prm.get_binary_mask3D();
+                const Matrix3D<int> &mask3D = mask_prm.get_binary_mask3D();
 
                 if (volume_type == headerXmipp::VOL_XMIPP)
                     computeStats_within_binary_mask(mask3D, V, min_val, max_val,

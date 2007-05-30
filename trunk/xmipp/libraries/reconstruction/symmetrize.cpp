@@ -87,7 +87,7 @@ void symmetrize(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
         SL.get_shift(i, sh);
         R(3, 0) = sh(0) * V_aux().colNumber();
         R(3, 1) = sh(1) * V_aux().rowNumber();
-        R(3, 2) = sh(2) * V_aux().SliNo();
+        R(3, 2) = sh(2) * V_aux().sliceNumber();
 
         /* *** CO: I don't know why the compiler doesn't allow me
            to reuse V_in !!!, this is very memory wasting */
@@ -120,12 +120,12 @@ void symmetrize_Bspline(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out
 
     if (do_outside_avg)
     {
-        matrix3D<int> mask;
+        Matrix3D<int> mask;
         int rad;
         mask.resize(V_in());
         mask.setXmippOrigin();
         rad = MIN(V_in().rowNumber(), V_in().colNumber());
-        rad = MIN(rad, V_in().SliNo());
+        rad = MIN(rad, V_in().sliceNumber());
         BinarySphericalMask(mask, rad / 2, OUTSIDE_MASK);
         computeStats_within_binary_mask(mask, V_in(), dum, dum, avg, dum);
     }
@@ -139,7 +139,7 @@ void symmetrize_Bspline(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out
         SL.get_shift(i, sh);
         R(3, 0) = sh(0) * V_aux().colNumber();
         R(3, 1) = sh(1) * V_aux().rowNumber();
-        R(3, 2) = sh(2) * V_aux().SliNo();
+        R(3, 2) = sh(2) * V_aux().sliceNumber();
 
         applyGeometryBSpline(V_aux(), R.transpose(), V_in(), Splinedegree, IS_NOT_INV, wrap, avg);
         arrayByArray(V_out(), V_aux(), V_out(), '+');

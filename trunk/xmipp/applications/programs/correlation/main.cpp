@@ -34,7 +34,7 @@ public:
     FileName    fn_ref, fn_msk;
     ImageXmipp  refI, MI;
     VolumeXmipp refV, MV;
-    matrix3D<int> mask3D;
+    Matrix3D<int> mask3D;
     Matrix2D<int> mask2D;
     bool usemask, docc, doeu, domi, doco;
 

@@ -390,10 +390,10 @@ void footprint_blob(
 // This function will construct a table of blob values (something like the
 // footprint)
 #define DEFORM_BLOB_WHEN_IN_CRYSTAL
-void blobs2voxels_SimpleGrid(const matrix3D<double> &vol_blobs,
+void blobs2voxels_SimpleGrid(const Matrix3D<double> &vol_blobs,
                              const SimpleGrid &grid, const struct blobtype &blob,
-                             matrix3D<double> *vol_voxels, const Matrix2D<double> *D = NULL, int istep = 50,
-                             matrix3D<double> *vol_corr = NULL, const matrix3D<double> *vol_mask = NULL,
+                             Matrix3D<double> *vol_voxels, const Matrix2D<double> *D = NULL, int istep = 50,
+                             Matrix3D<double> *vol_corr = NULL, const Matrix3D<double> *vol_mask = NULL,
                              bool FORW = true, int eq_mode = VARTK)
 {
     Matrix2D<double> Dinv;                   // Inverse of D
@@ -759,7 +759,7 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
 /* Blobs -> Voxels for a Grid ---------------------------------------------- */
 //#define DEBUG
 void blobs2voxels(const GridVolume &vol_blobs,
-                  const struct blobtype &blob, matrix3D<double> *vol_voxels,
+                  const struct blobtype &blob, Matrix3D<double> *vol_voxels,
                   const Matrix2D<double> *D, int Zdim, int Ydim, int Xdim)
 {
 
@@ -826,7 +826,7 @@ void blobs2voxels(const GridVolume &vol_blobs,
 /* Blobs -> Coefs ---------------------------------------------------------- */
 //#define DEBUG
 void blobs2space_coefficients(const GridVolume &vol_blobs,
-                              const struct blobtype &blob, matrix3D<double> *vol_coefs)
+                              const struct blobtype &blob, Matrix3D<double> *vol_coefs)
 {
 
     // Compute vol_coefs shape
@@ -891,10 +891,10 @@ void ART_voxels2blobs_single_step(
     const struct blobtype &blob,        // blob
     const Matrix2D<double> *D,          // deformation matrix
     double lambda,                      // ART lambda
-    matrix3D<double> *theo_vol,         // Theoretical volume
-    const matrix3D<double> *read_vol,   // Volume we want to translate to blobs
-    matrix3D<double> *corr_vol,         // Normalizing volume
-    const matrix3D<double> *mask_vol,   // Mask volume, 1 if that voxel must
+    Matrix3D<double> *theo_vol,         // Theoretical volume
+    const Matrix3D<double> *read_vol,   // Volume we want to translate to blobs
+    Matrix3D<double> *corr_vol,         // Normalizing volume
+    const Matrix3D<double> *mask_vol,   // Mask volume, 1 if that voxel must
     // be counted as a true equation
     double &mean_error,                 // Output mean error
     double &max_error,                  // Output maximum error in a voxel
@@ -1031,10 +1031,10 @@ void ART_voxels2blobs_single_step(
 #undef DEBUG
 
 //#define DEBUG
-void voxels2blobs(const matrix3D<double> *vol_voxels,
+void voxels2blobs(const Matrix3D<double> *vol_voxels,
                   const struct blobtype &blob,
                   GridVolume &vol_blobs, int grid_type, double grid_relative_size,
-                  double lambda, const matrix3D<double> *vol_mask,
+                  double lambda, const Matrix3D<double> *vol_mask,
                   const Matrix2D<double> *D, double final_error_change,
                   int tell, double R)
 {

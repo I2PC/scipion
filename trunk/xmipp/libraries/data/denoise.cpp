@@ -259,7 +259,7 @@ void Denoising_parameters::denoise(Matrix2D<double> &img)
 }
 
 // Denoise volume ----------------------------------------------------------
-void Denoising_parameters::denoise(matrix3D<double> &vol)
+void Denoising_parameters::denoise(Matrix3D<double> &vol)
 {
     if (denoising_type == SHAH)
     {
@@ -317,7 +317,7 @@ void Denoising_parameters::denoise(matrix3D<double> &vol)
     IDWT(vol, vol);
 }
 
-void Denoising_parameters::denoise_avg_bayesian(matrix3D<double> &vol)
+void Denoising_parameters::denoise_avg_bayesian(Matrix3D<double> &vol)
 {
     DWT(vol, vol);
     bayesian_wiener_filtering(vol, scale, estimatedS);

@@ -576,7 +576,7 @@ public:
     Basic_ART_Parameters *prm;
 
     /// Vector of training vectors
-    vector < matrix3D<double> > VA;
+    vector < Matrix3D<double> > VA;
 
     /// Number of updates so far
     int N;

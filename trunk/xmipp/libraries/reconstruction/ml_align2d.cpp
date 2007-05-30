@@ -1933,7 +1933,7 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
     vector<double > &pdf_directions)
 {
 
-    matrix3D<double>                             Mweight;
+    Matrix3D<double>                             Mweight;
     Matrix2D<double>                             sigma2, ctf, decctf,logsigma2,Mll,Mll_old;
     Matrix2D<int>                                Moffsets, Moffsets_mirror;
     vector<vector<Matrix2D<complex<double> > > > Fimg_trans;
@@ -2331,7 +2331,7 @@ void Prog_MLalign2D_prm::ML_integrate_locally(
     vector<double> &pdf_directions)
 {
 
-    matrix3D<double> Mweight;
+    Matrix3D<double> Mweight;
     Matrix2D<double> Maux, Mdzero, Mtrans;
     vector<Matrix2D<double> > Mflip;
     Maux.resize(dim, dim);

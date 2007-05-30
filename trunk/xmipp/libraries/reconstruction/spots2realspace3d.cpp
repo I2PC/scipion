@@ -108,7 +108,7 @@ ostream& operator << (ostream &o, const Spot2RealSpace3D_Parameters &prm)
 }
 
 /* DFT^-1 ------------------------------------------------------------------ */
-void IDFT_3D(const matrix3D< complex<double> > &FT, matrix3D<double> &V1)
+void IDFT_3D(const Matrix3D< complex<double> > &FT, Matrix3D<double> &V1)
 {
     double x, y, z;
     int s_iz, s_iy, s_ix, e_iz, e_iy, e_ix;
@@ -134,7 +134,7 @@ void IDFT_3D(const matrix3D< complex<double> > &FT, matrix3D<double> &V1)
     e_ky = FT.finishingY();
     e_kx = FT.finishingX();
 
-    z_dim = (double)V1.SliNo();
+    z_dim = (double)V1.sliceNumber();
     y_dim = (double)V1.rowNumber();
     x_dim = (double)V1.colNumber();
 
@@ -235,7 +235,7 @@ void ROUT_Spots2RealSpace_3D(Spot2RealSpace3D_Parameters &prm,
     int ksize = MAX(ABS(kmin), ABS(kmax));
     int hsize = MAX(ABS(hmin), ABS(hmax));
 
-    matrix3D< complex<double> > FT;
+    Matrix3D< complex<double> > FT;
     FT.initZeros(2*lsize + 1, 2*ksize + 1, 2*hsize + 1);
     STARTINGZ(FT) = -lsize;
     STARTINGY(FT) = -ksize;
@@ -311,7 +311,7 @@ void ROUT_Spots2RealSpace_3D(Spot2RealSpace3D_Parameters &prm,
 
 }
 
-void symmetrize_P1(matrix3D< complex<double> > &FT,
+void symmetrize_P1(Matrix3D< complex<double> > &FT,
                    Spot2RealSpace3D_Parameters &prm)
 {
     FOR_ALL_ELEMENTS_IN_MATRIX3D(prm.aph_file.spots_abs)
@@ -321,7 +321,7 @@ void symmetrize_P1(matrix3D< complex<double> > &FT,
         VOL_ELEM(FT, -k, -i, -j) = conj(VOL_ELEM(FT, k, i, j));
     }
 }
-void symmetrize_P4212(matrix3D< complex<double> > &FT,
+void symmetrize_P4212(Matrix3D< complex<double> > &FT,
                       Spot2RealSpace3D_Parameters &prm)
 {
     int asymmh, asymmk, asymml;   /* Reflection equivalent in the asymm. unit. */

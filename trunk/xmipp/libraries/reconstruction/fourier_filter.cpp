@@ -256,7 +256,7 @@ void FourierMask::write_amplitude(const FileName &fn, int dim,
 {
     Matrix1D< complex<double> > aux1D;
     Matrix2D< complex<double> > aux2D;
-    matrix3D< complex<double> > aux3D;
+    Matrix3D< complex<double> > aux3D;
     switch (dim)
     {
     case 1:
@@ -339,7 +339,7 @@ void FourierMask::apply_mask_Fourier(Matrix2D< complex<double> > &v)
 {
     v *= mask2D;
 }
-void FourierMask::apply_mask_Fourier(matrix3D< complex<double> > &v)
+void FourierMask::apply_mask_Fourier(Matrix3D< complex<double> > &v)
 {
     v *= mask3D;
 }
@@ -360,9 +360,9 @@ void FourierMask::apply_mask_Space(Matrix2D<double> &v)
     DIRECT_MAT_ELEM(aux2D, i, j) *= DIRECT_MAT_ELEM(mask2D, i, j);
     InverseFourierTransform(aux2D, v);
 }
-void FourierMask::apply_mask_Space(matrix3D<double> &v)
+void FourierMask::apply_mask_Space(Matrix3D<double> &v)
 {
-    matrix3D< complex<double> > aux3D;
+    Matrix3D< complex<double> > aux3D;
     FourierTransform(v, aux3D);
     if (XSIZE(mask3D) == 0) generate_mask(v);
     aux3D *= mask3D;

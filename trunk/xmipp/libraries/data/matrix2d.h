@@ -1933,7 +1933,7 @@ public:
      *
      * Same as the previous one, but the result is kept in this object
      */
-    void self_applyGeometry(Matrix2D< double > A, bool inv, bool wrap,
+    void selfApplyGeometry(Matrix2D< double > A, bool inv, bool wrap,
                          T outside = (T) 0)
     {
         mT aux;

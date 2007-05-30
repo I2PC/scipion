@@ -302,14 +302,14 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
    D*(i,j,k)'.
 */
 void blobs2voxels(const GridVolume &vol_blobs,
-                  const struct blobtype &blob, matrix3D<double> *vol_voxels,
+                  const struct blobtype &blob, Matrix3D<double> *vol_voxels,
                   const Matrix2D<double> *D = NULL, int Zdim = 0, int Ydim = 0, int Xdim = 0);
 
 /** Blob coefficients as a voxel volume.
     This function returns a volume with the blob coefficients in their right position
     in space. The voxel size is g/2 */
 void blobs2space_coefficients(const GridVolume &vol_blobs, const struct blobtype &blob,
-                              matrix3D<double> *vol_coefs);
+                              Matrix3D<double> *vol_coefs);
 
 #define SHOW_CONVERSION 1
 /** Voxels ---> Blobs.
@@ -329,10 +329,10 @@ void blobs2space_coefficients(const GridVolume &vol_blobs, const struct blobtype
     otherwise a single grid with tilted axis is.
 
     Valid grid types are defined in \Ref{Some useful grids}*/
-void voxels2blobs(const matrix3D<double> *vol_voxels,
+void voxels2blobs(const Matrix3D<double> *vol_voxels,
                   const struct blobtype &blob, GridVolume &vol_blobs,
                   int grid_type, double grid_relative_size,
-                  double lambda, const matrix3D<double> *vol_mask = NULL,
+                  double lambda, const Matrix3D<double> *vol_mask = NULL,
                   const Matrix2D<double> *D = NULL,
                   double final_error_change = 0.01, int tell = 0, double R = -1);
 
@@ -363,9 +363,9 @@ void voxels2blobs(const matrix3D<double> *vol_voxels,
      \\VMAXARTK:  update with the maximum update.*/
 void ART_voxels2blobs_single_step(
     GridVolume &vol_in, GridVolume *vol_out, const struct blobtype &blob,
-    const Matrix2D<double> *D, double lambda, matrix3D<double> *theo_vol,
-    const matrix3D<double> *read_vol, matrix3D<double> *corr_vol,
-    const matrix3D<double> *mask_vol,
+    const Matrix2D<double> *D, double lambda, Matrix3D<double> *theo_vol,
+    const Matrix3D<double> *read_vol, Matrix3D<double> *corr_vol,
+    const Matrix3D<double> *mask_vol,
     double &mean_error, double &max_error, int eq_mode = VARTK);
 //@}
 #endif

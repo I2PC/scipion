@@ -88,17 +88,17 @@ void random_convex_hull(const Matrix2D<double> &img, Matrix2D<double> &hull,
 //@{
 /** Dilate.
     See the group documentation for the parameter meanings */
-void dilate3D(const matrix3D<double> &in, matrix3D<double> &out, int neig,
+void dilate3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
               int count, int size);
 /** Erode.
     See the group documentation for the parameter meanings */
-void erode3D(const matrix3D<double> &in, matrix3D<double> &out, int neig,
+void erode3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
              int count, int size);
 /** Closing=Dilation+Erosion */
-void closing3D(const matrix3D<double> &in, matrix3D<double> &out, int neig,
+void closing3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
                int count, int size);
 /** Opening=Erosion+Dilation */
-void opening3D(const matrix3D<double> &in, matrix3D<double> &out, int neig,
+void opening3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
                int count, int size);
 //@}
 //@}

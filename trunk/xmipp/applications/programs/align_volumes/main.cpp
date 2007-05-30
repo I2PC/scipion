@@ -116,7 +116,7 @@ int main(int argc, char **argv)
         V2().setXmippOrigin();
         double mean_1 = V1().compute_avg();
         double mean_2 = V2().compute_avg();
-        matrix3D<double> *V, Vaux;
+        Matrix3D<double> *V, Vaux;
         Matrix1D<double> r(3), sc(3);
         Matrix2D<double> A;
 
@@ -127,7 +127,7 @@ int main(int argc, char **argv)
         bool first = true;
 
         // Generate mask
-        const matrix3D<int> *mask_ptr;
+        const Matrix3D<int> *mask_ptr;
         if (mask_enabled)
         {
             mask.generate_3Dmask(V1());

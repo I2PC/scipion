@@ -223,7 +223,7 @@ void Prog_centilt_prm::centilt()
         A(0, 2) = -Iu.Xoff();
         A(1, 2) = -Iu.Yoff();
         outside = dMij(Iu(), 0, 0);
-        Iu().self_applyGeometry(A, IS_INV, DONT_WRAP, outside);
+        Iu().selfApplyGeometry(A, IS_INV, DONT_WRAP, outside);
         // Read in tilted image and apply Psi (align tilt-axis with y-axis) and shifts if present
         It.read(SFt.get_current_file());
         // Store original matrix for later output
@@ -233,7 +233,7 @@ void Prog_centilt_prm::centilt()
         A(0, 2) = -It.Xoff();
         A(1, 2) = -It.Yoff();
         outside = dMij(It(), 0, 0);
-        It().self_applyGeometry(A, IS_INV, DONT_WRAP, outside);
+        It().selfApplyGeometry(A, IS_INV, DONT_WRAP, outside);
         It().setXmippOrigin();
 
         if (do_center) OK = center_tilted_image(Iu, It, ccf);

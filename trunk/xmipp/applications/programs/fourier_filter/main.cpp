@@ -84,7 +84,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
     FourierFilter_parameters *eprm = (FourierFilter_parameters *) prm;
-    matrix3D< complex<double> > fft;
+    Matrix3D< complex<double> > fft;
     FourierTransform(vol(), fft);
     if (eprm->first)
     {

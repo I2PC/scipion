@@ -159,7 +159,7 @@ ostream & operator << (ostream & out, const Basis &basis)
 }
 
 // Change to voxels --------------------------------------------------------
-void Basis::changeToVoxels(GridVolume &vol_basis, matrix3D<double> *vol_voxels,
+void Basis::changeToVoxels(GridVolume &vol_basis, Matrix3D<double> *vol_voxels,
                            int Zdim, int Ydim, int Xdim) const
 {
     int xdiff, ydiff, zdiff;
@@ -188,9 +188,9 @@ void Basis::changeToVoxels(GridVolume &vol_basis, matrix3D<double> *vol_voxels,
 }
 
 // Change from voxels ------------------------------------------------------
-void Basis::changeFromVoxels(const matrix3D<double> &vol_voxels,
+void Basis::changeFromVoxels(const Matrix3D<double> &vol_voxels,
                              GridVolume &vol_basis, int grid_type, double grid_relative_size,
-                             const matrix3D<double> *vol_mask,
+                             const Matrix3D<double> *vol_mask,
                              const Matrix2D<double> *D, double R) const
 {
     Grid grid;

@@ -510,7 +510,7 @@ void extract_column(int operand_type1, int operand_type2, FileName &fn_1, FileNa
         if (number2 >= STARTINGX(Op1()) && number2 <= FINISHINGX(Op1()))
         {
             // Resize image
-            out().resize(Op1().SliNo(), Op1().rowNumber());
+            out().resize(Op1().sliceNumber(), Op1().rowNumber());
             // Copy
             for (int k = STARTINGZ(Op1());k <= FINISHINGZ(Op1());k++)
                 for (int i = STARTINGY(Op1());i <= FINISHINGY(Op1());i++)
@@ -552,7 +552,7 @@ void extract_row(int operand_type1, int operand_type2, FileName &fn_1, FileName 
         if (number2 >= STARTINGY(Op1()) && number2 <= FINISHINGY(Op1()))
         {
             // Resize image
-            out().resize(Op1().SliNo(), Op1().colNumber());
+            out().resize(Op1().sliceNumber(), Op1().colNumber());
             // Copy
             for (int k = STARTINGZ(Op1());k <= FINISHINGZ(Op1());k++)
                 for (int j = STARTINGX(Op1());j <= FINISHINGX(Op1());j++)

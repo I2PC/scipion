@@ -859,7 +859,7 @@ void Feature::shift(double shiftX, double shiftY, double shiftZ)
 }
 
 /* Apply a general transformation to a feature ------------------------------ */
-void Feature::self_applyGeometry(const Matrix2D<double> &A)
+void Feature::selfApplyGeometry(const Matrix2D<double> &A)
 {
     Matrix1D<double> r(4);
     XX(r) = XX(Center);
@@ -2052,7 +2052,7 @@ void Phantom::rotate(const Matrix2D<double> &E)
 }
 
 /* Apply geometrical transformatio to a phantom ---------------------------- */
-void Phantom::self_applyGeometry(const Matrix2D<double> &A, int inv)
+void Phantom::selfApplyGeometry(const Matrix2D<double> &A, int inv)
 {
     if ((XSIZE(A) != 4) || (YSIZE(A) != 4))
         REPORT_ERROR(1102, "Apply_geom3D: geometrical transformation is not 4x4");
@@ -2061,7 +2061,7 @@ void Phantom::self_applyGeometry(const Matrix2D<double> &A, int inv)
     if (inv == IS_INV) T = A.inv();
     else             T = A;
 
-    for (int i = 0; i < VF.size(); i++) VF[i]->self_applyGeometry(T);
+    for (int i = 0; i < VF.size(); i++) VF[i]->selfApplyGeometry(T);
 }
 
 /* Projecting a phantom ---------------------------------------------------- */

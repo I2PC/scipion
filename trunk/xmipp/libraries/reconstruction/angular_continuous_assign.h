@@ -57,9 +57,9 @@ public:
     bool     dont_modify_header;
 public:
     // Real part of the Fourier transform
-    matrix3D<double> reDFTVolume;
+    Matrix3D<double> reDFTVolume;
     // Imaginary part of the Fourier transform
-    matrix3D<double> imDFTVolume;
+    Matrix3D<double> imDFTVolume;
     // DocFile with the initial guess
     DocFile          DF_initial;
     // Weighting mask in Fourier space
@@ -125,8 +125,8 @@ public:
     by CST Spline Assignment. The maximum number of iterations
     controls the optimization process. */
 double CSTSplineAssignment(
-    matrix3D<double> &ReDFTVolume,
-    matrix3D<double> &ImDFTVolume,
+    Matrix3D<double> &ReDFTVolume,
+    Matrix3D<double> &ImDFTVolume,
     Matrix2D<double> &image,
     Matrix2D<double> &weight,
     Matrix1D<double> &pose_parameters,

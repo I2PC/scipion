@@ -105,7 +105,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
     FFT_parameters *eprm = (FFT_parameters *) prm;
-    matrix3D< complex<double> > fftV;
+    Matrix3D< complex<double> > fftV;
     FourierTransform(vol(), fftV);
     switch (eprm->FFT_mode)
     {

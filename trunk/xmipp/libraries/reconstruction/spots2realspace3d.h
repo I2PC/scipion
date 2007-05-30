@@ -63,12 +63,12 @@ public:
     friend ostream& operator << (ostream &o, const Spot2RealSpace3D_Parameters &prm);
 };
 /** Inverse Fourier trnsform */
-void IDFT_3D(const matrix3D< complex<double> > &FT, matrix3D<double> &I);
+void IDFT_3D(const Matrix3D< complex<double> > &FT, Matrix3D<double> &I);
 void ROUT_Spots2RealSpace_3D(Spot2RealSpace3D_Parameters &prm,
                              VolumeXmipp &V1);
 
 /** Computing remaining reflections from those of asymmetric unit (P1). */
-void symmetrize_P1(matrix3D< complex<double> > &FT,
+void symmetrize_P1(Matrix3D< complex<double> > &FT,
                    Spot2RealSpace3D_Parameters &prm);
 
 /** Computing remaining reflections from those of asymmetric unit. The
@@ -89,7 +89,7 @@ void symmetrize_P1(matrix3D< complex<double> > &FT,
 
  */
 
-void symmetrize_P4212(matrix3D< complex<double> > &FT,
+void symmetrize_P4212(Matrix3D< complex<double> > &FT,
                       Spot2RealSpace3D_Parameters &prm);
 
 /** Brings the input reflection  H K L into the asymmetric unit according to

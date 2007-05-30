@@ -161,16 +161,16 @@ void Half2Whole(const Matrix2D< complex < double > > & in,
 /** Conversion from complex -> real,imag 3D
  * @ingroup FourierFormat
  */
-void Complex2RealImag(const matrix3D< complex < double > > & in,
-                      matrix3D< double > & real,
-                      matrix3D< double > & imag);
+void Complex2RealImag(const Matrix3D< complex < double > > & in,
+                      Matrix3D< double > & real,
+                      Matrix3D< double > & imag);
 
 /** Conversion from real,imag -> complex 3D
  * @ingroup FourierFormat
  */
-void RealImag2Complex(const matrix3D< double > & real,
-                      const matrix3D< double > & imag,
-                      matrix3D< complex < double > > & out);
+void RealImag2Complex(const Matrix3D< double > & real,
+                      const Matrix3D< double > & imag,
+                      Matrix3D< complex < double > > & out);
 
 /** @defgroup FourierTransforms Fourier Transforms
  * @ingroup Fourier
@@ -191,8 +191,8 @@ void FourierTransform(const Matrix2D< double >& in,
 /** Direct Fourier Transform 3D
  * @ingroup FourierTransforms
  */
-void FourierTransform(const matrix3D< double >& in,
-                      matrix3D< complex< double > > & out);
+void FourierTransform(const Matrix3D< double >& in,
+                      Matrix3D< complex< double > > & out);
 
 /** Inverse Fourier Transform 1D
  * @ingroup FourierTransforms
@@ -209,8 +209,8 @@ void InverseFourierTransform(const Matrix2D< complex< double > > & in,
 /** Inverse Fourier Transform 3D
  * @ingroup FourierTransforms
  */
-void InverseFourierTransform(const matrix3D< complex< double > > & in,
-                             matrix3D< double >& out);
+void InverseFourierTransform(const Matrix3D< complex< double > > & in,
+                             Matrix3D< double >& out);
 
 /** Direct Fourier Transform 2D, output half of (centro-symmetric) transform
  * @ingroup FourierTransforms
@@ -333,7 +333,7 @@ void CenterFFT(Matrix2D< T >& v, bool forward)
  * @ingroup FourierOperations
  */
 template <class T>
-void CenterFFT(matrix3D< T >& v, bool forward)
+void CenterFFT(Matrix3D< T >& v, bool forward)
 {
     Matrix1D< T > aux;
     int l, shift;
@@ -447,7 +447,7 @@ void ShiftFFT(Matrix2D< complex< double > > & v, double xshift, double yshift);
  * Calculates the Fourier Transform of the shifted real-space vector
  * by phase shifts in Fourier space
  */
-void ShiftFFT(matrix3D< complex< double > > & v,
+void ShiftFFT(Matrix3D< complex< double > > & v,
               double xshift,
               double yshift,
               double zshift);
@@ -471,7 +471,7 @@ void CenterOriginFFT(Matrix2D< complex< double > > & v, bool forward);
  *
  * Changes the real and the fourier space origin
  */
-void CenterOriginFFT(matrix3D< complex< double > > & v, bool forward);
+void CenterOriginFFT(Matrix3D< complex< double > > & v, bool forward);
 
 /** FFT Magnitude 1D
  * @ingroup FourierOperations
@@ -488,8 +488,8 @@ void FFT_magnitude(const Matrix2D< complex< double > > & v,
 /** FFT Magnitude 3D
  * @ingroup FourierOperations
  */
-void FFT_magnitude(const matrix3D< complex< double > > & v,
-                   matrix3D< double >& mag);
+void FFT_magnitude(const Matrix3D< complex< double > > & v,
+                   Matrix3D< double >& mag);
 
 /** FFT Phase 1D
  * @ingroup FourierOperations
@@ -506,8 +506,8 @@ void FFT_phase(const Matrix2D< complex< double > > & v,
 /** FFT Phase 3D
  * @ingroup FourierOperations
  */
-void FFT_phase(const matrix3D< complex< double > > & v,
-               matrix3D< double >& phase);
+void FFT_phase(const Matrix3D< complex< double > > & v,
+               Matrix3D< double >& phase);
 
 /** Autocorrelation function of an Xmipp matrix
  * @ingroup FourierOperations
@@ -631,8 +631,8 @@ void fourier_ring_correlation(Matrix2D< T > const & m1,
  * @ingroup FourierOperations
  */
 template <typename T>
-void fourier_ring_correlation(matrix3D< T > const & m1,
-                              matrix3D< T > const & m2, double sampling_rate,
+void fourier_ring_correlation(Matrix3D< T > const & m1,
+                              Matrix3D< T > const & m2, double sampling_rate,
                               Matrix1D< double >& freq,
                               Matrix1D< double >& frc,
                               Matrix1D< double >& frc_noise)
@@ -641,19 +641,19 @@ void fourier_ring_correlation(matrix3D< T > const & m1,
         REPORT_ERROR(1,
                      "Fourier_ring_correlation: matrices have different shapes!");
 
-    matrix3D< T > aux(m1);
+    Matrix3D< T > aux(m1);
     Matrix1D< int > origin(3), radial_count;
     Matrix1D< double > tmp1, tmp2;
 
-    matrix3D< complex< double > > FT1;
+    Matrix3D< complex< double > > FT1;
     FourierTransform(m1, FT1);
     CenterFFT(FT1, true);
 
-    matrix3D< complex< double > > FT2;
+    Matrix3D< complex< double > > FT2;
     FourierTransform(m2, FT2);
     CenterFFT(FT2, true);
 
-    matrix3D< double > realFT1;
+    Matrix3D< double > realFT1;
     realFT1.resize(FT1);
     int dim = (int) FT1.rowNumber() / 2;
     origin.initZeros();
@@ -765,8 +765,8 @@ void differential_phase_residual(Matrix2D< T > const & m1,
  * Between two 3D-matrices using Fast Fourier Transform
  */
 template <typename T>
-void differential_phase_residual(matrix3D< T > const & m1,
-                                 matrix3D< T > const & m2,
+void differential_phase_residual(Matrix3D< T > const & m1,
+                                 Matrix3D< T > const & m2,
                                  double sampling_rate,
                                  Matrix1D< double >& freq,
                                  Matrix1D< double >& dpr)
@@ -775,16 +775,16 @@ void differential_phase_residual(matrix3D< T > const & m1,
         REPORT_ERROR(1,
                      "Differential phase residual: matrices have different shapes!");
 
-    matrix3D< T > aux(m1);
+    Matrix3D< T > aux(m1);
     Matrix1D< int > origin(3), radial_count;
     Matrix1D< double > tmp1, tmp2;
     Matrix1D< complex< double > > tmp3;
 
-    matrix3D< complex< double > > FT1;
+    Matrix3D< complex< double > > FT1;
     FourierTransform(m1, FT1);
     CenterFFT(FT1, true);
 
-    matrix3D< complex< double > > FT2;
+    Matrix3D< complex< double > > FT2;
     FourierTransform(m2, FT2);
     CenterFFT(FT2, true);
 

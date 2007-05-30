@@ -242,18 +242,18 @@ void EVALUATE_Side_Info::produce_Side_Info(
     }
 
     // Check that both dimensions are equal .................................
-    if ((vol_phantom().SliNo() != vol_recons().SliNo()) ||
+    if ((vol_phantom().sliceNumber() != vol_recons().sliceNumber()) ||
         (vol_phantom().rowNumber() != vol_recons().rowNumber()) ||
         (vol_phantom().colNumber() != vol_recons().colNumber()))
     {
         cout << "Be careful!!!, volumes with different sizes\n";
-        cout << "Phantom:        " << vol_phantom().SliNo() << " x " <<
+        cout << "Phantom:        " << vol_phantom().sliceNumber() << " x " <<
         vol_phantom().rowNumber() << " x " << vol_phantom().colNumber() << endl;
-        cout << "Reconstruction: " << vol_recons().SliNo() << " x " <<
+        cout << "Reconstruction: " << vol_recons().sliceNumber() << " x " <<
         vol_recons().rowNumber() << " x " << vol_recons().colNumber() << endl;
 
         cutToCommonSize(vol_phantom(), vol_recons());
-        cout << "Cutting to common size " << vol_phantom().SliNo() << " x " <<
+        cout << "Cutting to common size " << vol_phantom().sliceNumber() << " x " <<
         vol_phantom().rowNumber() << " x " << vol_phantom().colNumber() << endl;
 
         cutToCommonSize(vol_label(), vol_recons());

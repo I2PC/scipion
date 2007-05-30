@@ -53,7 +53,7 @@
 /** Vectorial volume.
  * @ingroup Vectorial
  *
- * A vectorial volume is a "normal" matrix3D whose elements are vectors
+ * A vectorial volume is a "normal" Matrix3D whose elements are vectors
  * instead of single elements are doubles, floats, ... You can access
  * independently to any of the three components as a whole volume, ie, a
  * volume with all the X components, another with all Y components, ... or
@@ -64,12 +64,12 @@
  * You can perform arithmetic operations on these vectors, and other common
  * operations such as resize, printShape, ...
  */
-class Vectorial_matrix3D
+class Vectorial_Matrix3D
 {
     // The 3 components
-    matrix3D< double > __X;
-    matrix3D< double > __Y;
-    matrix3D< double > __Z;
+    Matrix3D< double > __X;
+    Matrix3D< double > __Y;
+    Matrix3D< double > __Z;
 
 public:
     /// @defgroup VectorialShape Shape.
@@ -88,7 +88,7 @@ public:
     /** Resize with pattern.
      * @ingroup VectorialShape
      */
-    void resize(const matrix3D< double >& V)
+    void resize(const Matrix3D< double >& V)
     {
         __X.resize(V);
         __Y.resize(V);
@@ -140,7 +140,7 @@ public:
      * @ingroup VectorialAccess
      *
      * The returned vector is a column 3x1 vector. The integer position are
-     * logical indexes inside the matrix3D.
+     * logical indexes inside the Matrix3D.
      */
     Matrix1D< double > vector_at(int k, int i, int j) const
     {
@@ -165,9 +165,9 @@ public:
     /** Constant access to X component.
      * @ingroup VectorialAccess
      *
-     * X components are a matrix3D.
+     * X components are a Matrix3D.
      */
-    const matrix3D< double >& X() const
+    const Matrix3D< double >& X() const
     {
         return __X;
     }
@@ -175,7 +175,7 @@ public:
     /** Access to X components.
      * @ingroup VectorialAccess
      */
-    matrix3D< double >& X()
+    Matrix3D< double >& X()
     {
         return __X;
     }
@@ -183,7 +183,7 @@ public:
     /** Get the X components.
      * @ingroup VectorialAccess
      */
-    void get_X(matrix3D< double >& _XXX)
+    void get_X(Matrix3D< double >& _XXX)
     {
         _XXX = __X;
     }
@@ -191,7 +191,7 @@ public:
     /** Set the X components.
      * @ingroup VectorialAccess
      */
-    void set_X(const matrix3D< double >& _XXX)
+    void set_X(const Matrix3D< double >& _XXX)
     {
         __X = _XXX;
     }
@@ -199,7 +199,7 @@ public:
     /** Constant access to Y component.
      * @ingroup VectorialAccess
      */
-    const matrix3D< double >& Y() const
+    const Matrix3D< double >& Y() const
     {
         return __Y;
     }
@@ -207,7 +207,7 @@ public:
     /** Access to Y components.
      * @ingroup VectorialAccess
      */
-    matrix3D< double >& Y()
+    Matrix3D< double >& Y()
     {
         return __Y;
     }
@@ -215,7 +215,7 @@ public:
     /** Get the Y components.
      * @ingroup VectorialAccess
      */
-    void get_Y(matrix3D< double >& _Y)
+    void get_Y(Matrix3D< double >& _Y)
     {
         _Y = __Y;
     }
@@ -223,7 +223,7 @@ public:
     /** Set the Y components.
      * @ingroup VectorialAccess
      */
-    void set_Y(const matrix3D< double >& _Y)
+    void set_Y(const Matrix3D< double >& _Y)
     {
         __Y = _Y;
     }
@@ -231,7 +231,7 @@ public:
     /** Constant access to Z component.
      * @ingroup VectorialAccess
      */
-    const matrix3D< double >& Z() const
+    const Matrix3D< double >& Z() const
     {
         return __Z;
     }
@@ -239,7 +239,7 @@ public:
     /** Access to Z components.
      * @ingroup VectorialAccess
      */
-    matrix3D< double >& Z()
+    Matrix3D< double >& Z()
     {
         return __Z;
     }
@@ -247,7 +247,7 @@ public:
     /** Get the Z components.
      * @ingroup VectorialAccess
      */
-    void get_Z(matrix3D< double >& _Z)
+    void get_Z(Matrix3D< double >& _Z)
     {
         _Z = __Z;
     }
@@ -255,7 +255,7 @@ public:
     /** Set the Z components.
      * @ingroup VectorialAccess
      */
-    void set_Z(const matrix3D< double >& _Z)
+    void set_Z(const Matrix3D< double >& _Z)
     {
         __Z = _Z;
     }
@@ -426,7 +426,7 @@ public:
      *
      * A volume with all vector modules at each position is returned.
      */
-    void module(matrix3D< double >& result) const
+    void module(Matrix3D< double >& result) const
     {
         result.resize(__X);
 
@@ -456,7 +456,7 @@ public:
     /// @defgroup VectorialArithmetic Arithmetic operations
     /// @ingroup Vectorial
 
-#define maT Vectorial_matrix3D
+#define maT Vectorial_Matrix3D
 
 #define OPERATION(func, arg1, arg2, result, op) \
     func((arg1).__X, (arg2).__X, (result).__X, op); \

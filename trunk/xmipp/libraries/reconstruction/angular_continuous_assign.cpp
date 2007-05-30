@@ -251,8 +251,8 @@ void Prog_angular_predict_continuous_prm::finish_processing()
 /* Interface to Slavica's routines                                           */
 /* ------------------------------------------------------------------------- */
 double CSTSplineAssignment(
-    matrix3D<double> &ReDFTVolume,
-    matrix3D<double> &ImDFTVolume,
+    Matrix3D<double> &ReDFTVolume,
+    Matrix3D<double> &ImDFTVolume,
     Matrix2D<double> &image,
     Matrix2D<double> &weight,
     Matrix1D<double> &pose_parameters,
@@ -331,7 +331,7 @@ double CSTSplineAssignment(
     Data.nx_Failures         = max_no_iter + 1;
 
     // Set the parameters for the extracted central slice
-    matrix3D<double> dftProj(2, YSIZE(image), XSIZE(image));
+    Matrix3D<double> dftProj(2, YSIZE(image), XSIZE(image));
     Data.dftProj          = MULTIDIM_ARRAY(dftProj);
     Data.nx_dftProj       = XSIZE(image);
     Data.ny_dftProj       = YSIZE(image);

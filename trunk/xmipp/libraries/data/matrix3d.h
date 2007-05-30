@@ -41,11 +41,11 @@
 #include "funcs.h"
 #include "args.h"
 
-#define maT  matrix3D< T >
-#define maT1 matrix3D< T1 >
+#define maT  Matrix3D< T >
+#define maT1 Matrix3D< T1 >
 
 #undef  maTC
-#define maTC matrix3D< complex< double > >
+#define maTC Matrix3D< complex< double > >
 
 // FIXME remove this
 #include "multidim_friends.inc"
@@ -116,7 +116,7 @@ void applyGeometryBSpline(VT& V2, Matrix2D< double > A, const VT& V1,
 /** Access to Z dimension (size).
  * @ingroup VolumesSizeShape
  *
- * This is a macro equivalent to SliNo()
+ * This is a macro equivalent to sliceNumber()
  *
  * @code
  * // Set to 0 1 element out of 8
@@ -198,7 +198,7 @@ void applyGeometryBSpline(VT& V2, Matrix2D< double > A, const VT& V1,
  * (included limits) respectively. You need to define SPEED_UP_temps.
  *
  * @code
- * matrix3D< double > V1(10, 10, 10), V2(20, 20, 20);
+ * Matrix3D< double > V1(10, 10, 10), V2(20, 20, 20);
  * V1.setXmippOrigin();
  * V2.setXmippOrigin();
  *
@@ -293,7 +293,7 @@ void applyGeometryBSpline(VT& V2, Matrix2D< double > A, const VT& V1,
 /** Template class for Xmipp volumes
  */
 template<typename T>
-class matrix3D
+class Matrix3D
 {
 
 #include "multidim_basic.h"
@@ -329,10 +329,10 @@ public:
      * origin=0, size=0, no statistics, ...
      *
      * @code
-     * matrix3D< double > V1;
+     * Matrix3D< double > V1;
      * @endcode
      */
-    matrix3D()
+    Matrix3D()
     {
         core_init();
         initShape();
@@ -351,10 +351,10 @@ public:
      * of columns).
      *
      * @code
-     * matrix3D< double > V1(3, 6, 3);
+     * Matrix3D< double > V1(3, 6, 3);
      * @endcode
      */
-    matrix3D(int Zdim, int Ydim, int Xdim)
+    Matrix3D(int Zdim, int Ydim, int Xdim)
     {
         core_init();
         initShape();
@@ -369,10 +369,10 @@ public:
      * different memory assignment.
      *
      * @code
-     * matrix3D< double > V2(V1);
+     * Matrix3D< double > V2(V1);
      * @endcode
      */
-    matrix3D(const VT& V)
+    Matrix3D(const VT& V)
     {
         core_init();
         initShape();
@@ -382,7 +382,7 @@ public:
     /** Destructor.
      * @ingroup VolumesConstructors
      */
-    ~matrix3D()
+    ~Matrix3D()
     {
         core_deallocate();
     }
@@ -642,7 +642,7 @@ public:
     /** Another function for setting the Z origin.
      * @ingroup VolumeSizeShape
      */
-    void set_startingZ(int _zinit)
+    void setStartingZ(int _zinit)
     {
         zinit = _zinit;
     }
@@ -787,10 +787,10 @@ public:
      * @ingroup VolumesSizeShape
      *
      * @code
-     * int Zdim = V.SliNo();
+     * int Zdim = V.sliceNumber();
      * @endcode
      */
-    int SliNo() const
+    int sliceNumber() const
     {
         return zdim;
     }
@@ -868,7 +868,7 @@ public:
     /** Get the voxel at (k,i,j) (logical access).
      * @ingroup VolumesMemory
      */
-    T get_voxel(int k, int i , int j) const
+    T getVoxel(int k, int i , int j) const
     {
         return (*this)(k, i, j);
     }
@@ -876,7 +876,7 @@ public:
     /** Set the voxel at (k,i,j) (logical access).
      * @ingroup VolumesMemory
      */
-    void set_voxel(int k, int i, int j, T val)
+    void setVoxel(int k, int i, int j, T val)
     {
         (*this)(k, i, j) = val;
     }
@@ -1171,7 +1171,7 @@ public:
         case 'Z':
             if (k < zinit || k >= zinit + zdim)
                 REPORT_ERROR(1203,
-                             "Slice: matrix3D subscript (k) out of range");
+                             "Slice: Matrix3D subscript (k) out of range");
 
             k = k - zinit;
             M.resize(ydim, xdim);
@@ -1183,7 +1183,7 @@ public:
         case 'Y':
             if (k < yinit || k >= yinit + ydim)
                 REPORT_ERROR(1203,
-                             "Slice: matrix3D subscript (i) out of range");
+                             "Slice: Matrix3D subscript (i) out of range");
 
             k = k - yinit;
             M.resize(zdim, xdim);
@@ -1195,7 +1195,7 @@ public:
         case 'X':
             if (k < xinit || k >= xinit + xdim)
                 REPORT_ERROR(1203,
-                             "Slice: matrix3D subscript (j) out of range");
+                             "Slice: Matrix3D subscript (j) out of range");
 
             k = k - xinit;
             M.resize(zdim, ydim);
@@ -1228,11 +1228,11 @@ public:
 
         if (k < zinit || k >= zinit + zdim)
             REPORT_ERROR(1203,
-                         "setSlice: matrix3D subscript (k) out of range");
+                         "setSlice: Matrix3D subscript (k) out of range");
 
         if (v.rowNumber() != ydim || v.colNumber() != xdim)
             REPORT_ERROR(1202,
-                         "setSlice: matrix3D dimensions different from the matrix ones");
+                         "setSlice: Matrix3D dimensions different from the matrix ones");
 
         k = k - zinit;
 
@@ -1562,7 +1562,7 @@ public:
      *
      * As apply geometry, but the result is kept in this object
      */
-    void self_applyGeometry(Matrix2D< double > A, bool inv, bool wrap)
+    void selfApplyGeometry(Matrix2D< double > A, bool inv, bool wrap)
     {
         VT aux;
         applyGeometry(aux, A, *this, inv, wrap);
@@ -1908,9 +1908,9 @@ public:
     /** Reduce the image by 2 using a BSpline pyramid.
      * @ingroup VolumesGeometrical
      */
-    void pyramidReduce(matrix3D< double >& result, int levels = 1) const
+    void pyramidReduce(Matrix3D< double >& result, int levels = 1) const
     {
-        matrix3D< double > aux, aux2;
+        Matrix3D< double > aux, aux2;
         produceSplineCoefficients(aux, 3);
 
         for (int i = 0; i < levels; i++)
@@ -1925,9 +1925,9 @@ public:
     /** Expand the image by 2 using a BSpline pyramid.
      * @ingroup VolumesGeometrical
      */
-    void pyramidExpand(matrix3D< double >& result, int levels = 1) const
+    void pyramidExpand(Matrix3D< double >& result, int levels = 1) const
     {
-        matrix3D< double > aux, aux2;
+        Matrix3D< double > aux, aux2;
         produceSplineCoefficients(aux, 3);
 
         for (int i = 0; i < levels; i++)
@@ -1945,7 +1945,7 @@ public:
 #ifndef DBL_EPSILON
 #define DBL_EPSILON 1e-50
 #endif
-    void produceSplineCoefficients(matrix3D< double >& coeffs, int SplineDegree = 3)
+    void produceSplineCoefficients(Matrix3D< double >& coeffs, int SplineDegree = 3)
     const
     {
         coeffs.initZeros(ZSIZE(*this), YSIZE(*this), XSIZE(*this));
@@ -1954,21 +1954,21 @@ public:
         STARTINGZ(coeffs) = STARTINGZ(*this);
 
         int Status;
-        matrix3D< double > aux;
+        Matrix3D< double > aux;
         type_cast(*this, aux);
         ChangeBasisVolume(MULTIDIM_ARRAY(aux), MULTIDIM_ARRAY(coeffs),
                           XSIZE(*this), YSIZE(*this), ZSIZE(*this),
                           CardinalSpline, BasicSpline, SplineDegree,
                           MirrorOffBounds, DBL_EPSILON, &Status);
         if (Status)
-            REPORT_ERROR(1, "matrix3D::produceSplineCoefficients: Error");
+            REPORT_ERROR(1, "Matrix3D::produceSplineCoefficients: Error");
     }
 
     /** Produce image from B-spline coefficients.
      * @ingroup VolumesGeometrical
      */
     void produceImageFromSplineCoefficients(
-        matrix3D< double >& img, int SplineDegree = 3) const
+        Matrix3D< double >& img, int SplineDegree = 3) const
     {
         img.initZeros(ZSIZE(*this), YSIZE(*this), XSIZE(*this));
         STARTINGX(img) = STARTINGX(*this);
@@ -1976,14 +1976,14 @@ public:
         STARTINGZ(img) = STARTINGZ(*this);
 
         int Status;
-        matrix3D< double > aux;
+        Matrix3D< double > aux;
         type_cast(*this, aux);
         ChangeBasisVolume(MULTIDIM_ARRAY(aux), MULTIDIM_ARRAY(img),
                           XSIZE(*this), YSIZE(*this), ZSIZE(*this),
                           BasicSpline, CardinalSpline, SplineDegree,
                           MirrorOnBounds, DBL_EPSILON, &Status);
         if (Status)
-            REPORT_ERROR(1, "matrix3D::produce_spline_img: Error");
+            REPORT_ERROR(1, "Matrix3D::produce_spline_img: Error");
     }
 #undef DBL_EPSILON
 
@@ -1993,7 +1993,7 @@ public:
      * Knowing that this matrix is a set of B-spline coefficients, produce the
      * expanded set of B-spline coefficients using the two-scale relationship.
      */
-    void expandBSpline(matrix3D< double >& expanded, int SplineDegree = 3) const
+    void expandBSpline(Matrix3D< double >& expanded, int SplineDegree = 3) const
     {
         double g[200]; // Coefficients of the reduce filter
         long ng; // Number of coefficients of the reduce filter
@@ -2006,7 +2006,7 @@ public:
                              &IsCentered))
             REPORT_ERROR(1, "Unable to load the filter coefficients");
 
-        matrix3D< double > aux;
+        Matrix3D< double > aux;
         type_cast(*this, aux);
         expanded.resize(2 * ZSIZE(aux), 2 * YSIZE(aux), 2 * XSIZE(aux));
         Expand_3D(MULTIDIM_ARRAY(aux), XSIZE(aux), YSIZE(aux), ZSIZE(aux),
@@ -2019,7 +2019,7 @@ public:
      * Knowing that this matrix is a set of B-spline coefficients, produce the
      * reduced set of B-spline coefficients using the two-scale relationship.
      */
-    void reduceBSpline(matrix3D< double >& reduced, int SplineDegree = 3) const
+    void reduceBSpline(Matrix3D< double >& reduced, int SplineDegree = 3) const
     {
         double g[200]; // Coefficients of the reduce filter
         long ng; // Number of coefficients of the reduce filter
@@ -2032,7 +2032,7 @@ public:
                              &IsCentered))
             REPORT_ERROR(1, "Unable to load the filter coefficients");
 
-        matrix3D< double > aux;
+        Matrix3D< double > aux;
         type_cast(*this, aux);
 
         if (XSIZE(aux) % 2 != 0 && YSIZE(aux) % 2 != 0 && ZSIZE(aux) % 2 != 0)
@@ -2128,10 +2128,10 @@ public:
      *
      * @code
      * T matrix_sum(mT& m) { return m.sum(); }
-     * v1 = V.for_all_slices(&matrix_sum);
+     * v1 = V.forAllSlices(&matrix_sum);
      * @endcode
      */
-    vT for_all_slices(T(*f)(mT&)) const
+    vT forAllSlices(T(*f)(mT&)) const
     {
         vT tmp;
 
@@ -2163,10 +2163,10 @@ public:
      *
      * @code
      * mT matrix_norm(mT& m) { return m/m.sum();  }
-     * V2 = V.for_all_slices(&matrix_norm);
+     * V2 = V.forAllSlices(&matrix_norm);
      * @endcode
      */
-    VT for_all_slices(mT(*f)(mT&)) const
+    VT forAllSlices(mT(*f)(mT&)) const
     {
         VT tmp;
 
@@ -2224,12 +2224,12 @@ void coreArrayByArray< complex< double> > (const maTC& op1, const maTC& op2,
  * computed.
  *
  * @code
- * matrix3D< double > V1(4, 5, 3);
+ * Matrix3D< double > V1(4, 5, 3);
  * V1.startingX() = -2;
  * V1.startingY() = -2;
  * V1.startingZ() = -2;
  *
- * matrix3D< double > V2(4, 2, 3);
+ * Matrix3D< double > V2(4, 2, 3);
  * V2.startingX() = 0;
  * V2.startingY() = 0;
  * V2.startingZ() = 0;
@@ -2274,7 +2274,7 @@ void cutToCommonSize(VT& V1, VT& V2)
  * - and so on.
  */
 template<typename T>
-void radialAverage(const matrix3D< T >& m,
+void radialAverage(const Matrix3D< T >& m,
                     const Matrix1D< int >& center_of_rot,
                     Matrix1D< T >& radial_mean,
                     Matrix1D< int >& radial_count,
@@ -2516,7 +2516,7 @@ template<typename T>
 std::ostream& operator<<(std::ostream& ostrm, const VT& v)
 {
     if (v.xdim == 0)
-        ostrm << "NULL matrix3D\n";
+        ostrm << "NULL Matrix3D\n";
     else
         ostrm << std::endl;
 
@@ -2585,7 +2585,7 @@ void applyGeometry(VT& V2, Matrix2D< double > A, const VT& V1, bool inv,
     if (XSIZE(V2) == 0)
         V2.resize(V1);
 
-    // Find center of matrix3D
+    // Find center of Matrix3D
     cen_z = (int)(V2.zdim / 2);
     cen_y = (int)(V2.ydim / 2);
     cen_x = (int)(V2.xdim / 2);
@@ -2612,9 +2612,9 @@ void applyGeometry(VT& V2, Matrix2D< double > A, const VT& V1, bool inv,
     ;
 #endif
 
-    // Now we go from the output matrix3D to the input matrix3D, ie, for any
-    // voxel in the output matrix3D we calculate which are the corresponding
-    // ones in the original matrix3D, make an interpolation with them and put
+    // Now we go from the output Matrix3D to the input Matrix3D, ie, for any
+    // voxel in the output Matrix3D we calculate which are the corresponding
+    // ones in the original Matrix3D, make an interpolation with them and put
     // this value at the output voxel
 
     // V2 is not initialised to 0 because all its pixels are rewritten
@@ -2622,7 +2622,7 @@ void applyGeometry(VT& V2, Matrix2D< double > A, const VT& V1, bool inv,
         for (int i = 0; i < V2.ydim; i++)
         {
             // Calculate position of the beginning of the row in the output
-            // matrix3D
+            // Matrix3D
             x = -cen_x;
             y = i - cen_y;
             z = k - cen_z;
@@ -2837,7 +2837,7 @@ void applyGeometryBSpline(VT& V2, Matrix2D< double > A, const VT& V1,
     if (XSIZE(V2) == 0)
         V2.resize(V1);
 
-    // Find center of matrix3D
+    // Find center of Matrix3D
     cen_z = (int)(V2.zdim / 2);
     cen_y = (int)(V2.ydim / 2);
     cen_x = (int)(V2.xdim / 2);
@@ -2863,15 +2863,15 @@ void applyGeometryBSpline(VT& V2, Matrix2D< double > A, const VT& V1,
 #endif
 
     // Build the B-spline coefficients
-    matrix3D< double > Bcoeffs;
+    Matrix3D< double > Bcoeffs;
     V1.produceSplineCoefficients(Bcoeffs, Splinedegree);
     STARTINGX(Bcoeffs) = (int) minxp;
     STARTINGY(Bcoeffs) = (int) minyp;
     STARTINGZ(Bcoeffs) = (int) minzp;
 
-    // Now we go from the output matrix3D to the input matrix3D, ie, for any
-    // voxel in the output matrix3D we calculate which are the corresponding
-    // ones in the original matrix3D, make an interpolation with them and put
+    // Now we go from the output Matrix3D to the input Matrix3D, ie, for any
+    // voxel in the output Matrix3D we calculate which are the corresponding
+    // ones in the original Matrix3D, make an interpolation with them and put
     // this value at the output voxel
 
     // V2 is not initialised to 0 because all its pixels are rewritten
@@ -2879,7 +2879,7 @@ void applyGeometryBSpline(VT& V2, Matrix2D< double > A, const VT& V1,
         for (int i = 0; i < V2.ydim; i++)
         {
             // Calculate position of the beginning of the row in the output
-            // matrix3D
+            // Matrix3D
             x = -cen_x;
             y = i - cen_y;
             z = k - cen_z;
@@ -3018,7 +3018,7 @@ void VT::centerOfMass(Matrix1D< double >& center, void* mask)
 {
     center.initZeros(3);
     double mass = 0;
-    matrix3D< int >* imask = (matrix3D< int >*) mask;
+    Matrix3D< int >* imask = (Matrix3D< int >*) mask;
 
     FOR_ALL_ELEMENTS_IN_MATRIX3D(*this)
     {
@@ -3039,7 +3039,7 @@ void VT::centerOfMass(Matrix1D< double >& center, void* mask)
 
 // TODO Document
 template<>
-complex<double> matrix3D< complex< double> >::interpolatedElement(double x,
+complex<double> Matrix3D< complex< double> >::interpolatedElement(double x,
         double y, double z, complex< double > outside_value);
 
 #endif

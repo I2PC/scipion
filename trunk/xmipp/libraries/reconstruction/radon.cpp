@@ -30,7 +30,7 @@
 void Radon_Transform(Volume *vol, double rot, double tilt,
                      Matrix1D<double> &RT)
 {
-    matrix3D<double>   Rvol;
+    Matrix3D<double>   Rvol;
 
     // Align the Radon direction with the Z axis
     if (rot != 0 || tilt != 0) Euler_rotate(VOLMATRIX(*vol), rot, tilt, 0.0F, Rvol);
@@ -52,8 +52,8 @@ void Local_Radon_Transform(Volume *vol, double rot, double tilt,
                            int label, Volume *vol_label, Matrix1D<double> &RT,
                            Matrix1D<double> &RT_n)
 {
-    matrix3D<double>   Rvol;
-    matrix3D<double>   Lvol;
+    Matrix3D<double>   Rvol;
+    Matrix3D<double>   Lvol;
 
     // Align the Radon direction with the Z axis
     if (rot != 0 || tilt != 0)

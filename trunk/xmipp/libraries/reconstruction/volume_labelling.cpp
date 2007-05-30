@@ -48,7 +48,7 @@ int Labels_from_growing(Volume *phantom, Volume *vol_label)
 /* ------------------------------------------------------------------------- */
 /* Label by growing voxels                                                   */
 /* ------------------------------------------------------------------------- */
-void Labels_from_growing(matrix3D<float> *vol, matrix3D<short> *vol_label,
+void Labels_from_growing(Matrix3D<float> *vol, Matrix3D<short> *vol_label,
                          short max_feat, short *num_feat)
 {
 
@@ -90,7 +90,7 @@ void Labels_from_growing(matrix3D<float> *vol, matrix3D<short> *vol_label,
 /* *** LA FUNCION ESTA HECHA COMO RECURSIVA, SE GANARIA MUCHO EN VELOCIDAD
    Y ESPACIO DE CALCULO SI SE HICIERA CON UNA COLA *** */
 
-void grow_voxel(matrix3D<short> *vol_label, matrix3D<float> *vol_phantom,
+void grow_voxel(Matrix3D<short> *vol_label, Matrix3D<float> *vol_phantom,
                 int k0, int j0, int i0, short label, short level)
 {
 

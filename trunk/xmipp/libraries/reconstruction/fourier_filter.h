@@ -103,7 +103,7 @@ public:
     Matrix2D< complex<double> > mask2D;
 
     /** Mask3D */
-    matrix3D< complex<double> > mask3D;
+    Matrix3D< complex<double> > mask3D;
 public:
     /** Empty constructor */
     FourierMask()
@@ -295,7 +295,7 @@ public:
     void apply_mask_Fourier(Matrix2D< complex<double> > &v);
 
     /** Apply mask in 3D. */
-    void apply_mask_Fourier(matrix3D< complex<double> > &v);
+    void apply_mask_Fourier(Matrix3D< complex<double> > &v);
 
     /** Apply mask (argument is in real space)..
         It doesn't need to have a mask already generated. If the mask is equal
@@ -307,7 +307,7 @@ public:
     void apply_mask_Space(Matrix2D<double> &v);
 
     /** Apply mask in 3D. */
-    void apply_mask_Space(matrix3D<double> &v);
+    void apply_mask_Space(Matrix3D<double> &v);
 
     /** Resize fourier mask to a desired scale. */
     void resize_mask(int Ydim, int Xdim);

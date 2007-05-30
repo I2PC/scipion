@@ -193,7 +193,7 @@ void EM::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed)
     {
         my_em_header.nx = V().colNumber();
         my_em_header.ny = V().rowNumber();
-        my_em_header.nz = V().SliNo();
+        my_em_header.nz = V().sliceNumber();
     }
     else
     {
@@ -201,7 +201,7 @@ void EM::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed)
         little22bigendian(my_em_header.nx);
         my_em_header.ny    = V().rowNumber();
         little22bigendian(my_em_header.ny);
-        my_em_header.nz = V().SliNo();
+        my_em_header.nz = V().sliceNumber();
         little22bigendian(my_em_header.nz);
     }
 }

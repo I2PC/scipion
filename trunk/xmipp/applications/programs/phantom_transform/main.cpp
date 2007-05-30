@@ -139,7 +139,7 @@ bool process_phantom(const FileName &fn_in, const FileName &fn_out,
 {
     Phantom P;
     P.read(fn_in, false); // Read phantom without applying scale
-    P.self_applyGeometry(prm->A3D, IS_NOT_INV);
+    P.selfApplyGeometry(prm->A3D, IS_NOT_INV);
     P.write(fn_out);
     return true;
 }

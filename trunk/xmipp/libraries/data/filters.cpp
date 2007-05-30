@@ -121,7 +121,7 @@ void region_growing(const Matrix2D<double> &I_in, Matrix2D<double> &I_out,
 }
 
 /* Region growing for volumes ----------------------------------------------- */
-void region_growing(const matrix3D<double> &V_in, matrix3D<double> &V_out,
+void region_growing(const Matrix3D<double> &V_in, Matrix3D<double> &V_out,
                     int k, int i, int j,
                     float stop_colour, float filling_colour, bool less)
 {
@@ -219,7 +219,7 @@ int label_image(const Matrix2D<double> &I, Matrix2D<double> &label,
 }
 
 /* Label volume ------------------------------------------------------------ */
-int label_volume(const matrix3D<double> &V, matrix3D<double> &label)
+int label_volume(const Matrix3D<double> &V, Matrix3D<double> &label)
 {
     label = V;
     int colour = 32000;

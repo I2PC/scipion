@@ -157,9 +157,9 @@ void Prog_mlf_tomo_prm::produce_Side_info()
     FileName fn_vol, fn_tmp;
     VolumeXmipp vol;
     headerXmipp head;
-    matrix3D<double> Maux, Faux_real, Faux_imag;
-    vector<matrix3D<double> > Vdum;
-    matrix3D<complex<double> > Faux, Fref;
+    Matrix3D<double> Maux, Faux_real, Faux_imag;
+    vector<Matrix3D<double> > Vdum;
+    Matrix3D<complex<double> > Faux, Fref;
     int xdim, ydim, zdim, c, iaux, ifound, refno = 0;
     float xx, yy;
     double dum, avg;
@@ -337,7 +337,7 @@ void Prog_mlf_tomo_prm::produce_Side_info()
     resmask = resmask2 - resmask;
 
     // Initialize Vsigma2
-    matrix3D<double> Mwedge(dim, dim, dim);
+    Matrix3D<double> Mwedge(dim, dim, dim);
     Mwedge.setXmippOrigin();
     Vsigma2.clear();
     for (int i = 0; i < resol_max; i++)
@@ -489,7 +489,7 @@ void Prog_mlf_tomo_prm::estimate_initial_sigma2()
 {
 
     VolumeXmipp      vol;
-    matrix3D<complex<double> > Faux;
+    Matrix3D<complex<double> > Faux;
     DocFile          DF;
     FileName         fn_vol, fn_out;
     int              ii, ires, iwedge, imgno, c, nn;
@@ -626,7 +626,7 @@ void Prog_mlf_tomo_prm::update_pointers()
     // Then make some SSNR, and a "significant-pointer" as well...
 
     Matrix2D<double> I(4, 4);
-    matrix3D<double> Mwedge, Maux;
+    Matrix3D<double> Mwedge, Maux;
     vector<int> dum;
     vector<double> dum2;
     int iaux;
@@ -727,21 +727,21 @@ void Prog_mlf_tomo_prm::update_pointers()
 
 // Here perform the main probability-weighted integration over all
 // rotations, translations and classes of the given image
-void Prog_mlf_tomo_prm::MLF_integrate(matrix3D<double> Mimg, Matrix2D<double> A_img, int iwedge,
-                                      vector<matrix3D<double> > &wsum_Fimgs,
-                                      vector<matrix3D<double> > &wsum_Fweds,
+void Prog_mlf_tomo_prm::MLF_integrate(Matrix3D<double> Mimg, Matrix2D<double> A_img, int iwedge,
+                                      vector<Matrix3D<double> > &wsum_Fimgs,
+                                      vector<Matrix3D<double> > &wsum_Fweds,
                                       vector<double> &wsum_sigma2, double &wsum_sigma_offset,
                                       vector<double> &sumw, double &LL, double &fracweight,
                                       int &opt_refno, double &opt_rot, double &opt_tilt, double &opt_psi,
                                       double &opt_xoff, double &opt_yoff, double &opt_zoff)
 {
 
-    matrix3D<double> Mrotwedge, Frotref_real, Frotref_imag, Frotimg_real, Frotimg_imag;
-    matrix3D<double> Faux_real, Faux_imag;
-    vector<matrix3D<double> > Fimg_trans;
-    vector<matrix3D<double> > dum;
+    Matrix3D<double> Mrotwedge, Frotref_real, Frotref_imag, Frotimg_real, Frotimg_imag;
+    Matrix3D<double> Faux_real, Faux_imag;
+    vector<Matrix3D<double> > Fimg_trans;
+    vector<Matrix3D<double> > dum;
     vector<double> Vweight;
-    matrix3D<complex<double> > Fimg, Faux;
+    Matrix3D<complex<double> > Fimg, Faux;
     Matrix2D<double> A(4, 4), A_rot(4, 4), I(4, 4);
     Matrix1D<double> offsets(3);
     vector<double> radavg_sigma2(resol_max);
@@ -993,14 +993,14 @@ void Prog_mlf_tomo_prm::MLF_integrate(matrix3D<double> Mimg, Matrix2D<double> A_
 
 
 void Prog_mlf_tomo_prm::sum_over_all_images(SelFile &SF,
-        vector<matrix3D<double> > &wsum_Fimgs,
-        vector<matrix3D<double> > &wsum_Fweds,
+        vector<Matrix3D<double> > &wsum_Fimgs,
+        vector<Matrix3D<double> > &wsum_Fweds,
         vector<double> &sum_nonzero_pixels,
         vector<double> &wsum_sigma2, double &wsum_sigma_offset,
         vector<double> &sumw, double &LL, double &sumcorr, DocFile &DFo)
 {
 
-    matrix3D<double> Mdzero;
+    Matrix3D<double> Mdzero;
     Matrix1D<double> dataline(9), opt_offsets(3), mis_offsets(3);
     Matrix2D<double> A_img(4, 4);
     VolumeXmipp      img;
@@ -1101,8 +1101,8 @@ void Prog_mlf_tomo_prm::sum_over_all_images(SelFile &SF,
 }
 
 // Update all model parameters
-void Prog_mlf_tomo_prm::update_parameters(vector<matrix3D<double> > &wsum_Fimgs,
-        vector<matrix3D<double> > &wsum_Fweds,
+void Prog_mlf_tomo_prm::update_parameters(vector<Matrix3D<double> > &wsum_Fimgs,
+        vector<Matrix3D<double> > &wsum_Fweds,
         vector<double> &sum_nonzero_pixels,
         vector<double> &wsum_sigma2, double &wsum_sigma_offset,
         vector<double> &sumw, double &sumcorr,
@@ -1112,8 +1112,8 @@ void Prog_mlf_tomo_prm::update_parameters(vector<matrix3D<double> > &wsum_Fimgs,
     VolumeXmipp Vaux, Vaux2;
     Matrix1D<double> rmean_sigma2;
     Matrix1D<int> center(3), radial_count;
-    matrix3D<complex<double> > Faux, Fsum;
-    matrix3D<double> Maux, Msum, Faux_real, Faux_imag;
+    Matrix3D<complex<double> > Faux, Fsum;
+    Matrix3D<double> Maux, Msum, Faux_real, Faux_imag;
     double rr, dum, avg, theta_corr, sum_ref = 0.;
 
     // Pre-calculate sumw_allrefs
@@ -1243,7 +1243,7 @@ void Prog_mlf_tomo_prm::update_parameters(vector<matrix3D<double> > &wsum_Fimgs,
             int ires;
             double tmpr,tmpi;
             vector<double> diff2_ref;
-            vector<matrix3D<complex<double> > > Fref;
+            vector<Matrix3D<complex<double> > > Fref;
             Fref.clear();
             for (int i=0; i<resol_max; i++) 
          diff2_ref.push_back(0.);
@@ -1292,11 +1292,11 @@ void Prog_mlf_tomo_prm::update_parameters(vector<matrix3D<double> > &wsum_Fimgs,
 }
 
 // Post-process reference volumes =================================================
-void Prog_mlf_tomo_prm::post_process_references(vector<matrix3D<double> > &Mref)
+void Prog_mlf_tomo_prm::post_process_references(vector<Matrix3D<double> > &Mref)
 {
 
-    matrix3D<complex<double> > Faux;
-    matrix3D<double> Faux_real, Faux_imag, Maux;
+    Matrix3D<complex<double> > Faux;
+    Matrix3D<double> Faux_real, Faux_imag, Maux;
     bool changed = false;
     double cutoff = 0.1;
 
@@ -1342,7 +1342,7 @@ void Prog_mlf_tomo_prm::post_process_references(vector<matrix3D<double> > &Mref)
 }
 
 // Modify reference volumes ======================================================
-void Prog_mlf_tomo_prm::solvent_flattening(vector<matrix3D<double> > &Mref, FileName &fn_solvent)
+void Prog_mlf_tomo_prm::solvent_flattening(vector<Matrix3D<double> > &Mref, FileName &fn_solvent)
 {
 
     VolumeXmipp solv;
@@ -1374,7 +1374,7 @@ void Prog_mlf_tomo_prm::solvent_flattening(vector<matrix3D<double> > &Mref, File
 }
 
 void Prog_mlf_tomo_prm::write_output_files(const int iter, SelFile &SF, DocFile &DF,
-        vector<matrix3D<double> > &Mref,
+        vector<Matrix3D<double> > &Mref,
         double &sumw_allrefs, vector<double> &sumw,
         double &LL, double &avecorr)
 {

@@ -68,7 +68,7 @@ int main(int argc, char **argv)
     VolumeXmipp     volume;
     Mask_Params     mask_prm;
     Matrix2D<int>   mask2D;
-    matrix3D<int>   mask3D;
+    Matrix3D<int>   mask3D;
     int             save_mask;
     int             create_mask;
     int             count_above;
@@ -181,7 +181,7 @@ int main(int argc, char **argv)
             {
                 if (mask_prm.datatype() == INT_MASK)
                 {
-                    const matrix3D<int> &mask3D = mask_prm.get_binary_mask3D();
+                    const Matrix3D<int> &mask3D = mask_prm.get_binary_mask3D();
                     COUNT_ELEMENTS(mask3D, V, "voxels");
                 }
                 else
@@ -265,7 +265,7 @@ int main(int argc, char **argv)
                     {
                         if (mask_prm.datatype() == INT_MASK)
                         {
-                            const matrix3D<int> &mask3D = mask_prm.get_binary_mask3D();
+                            const Matrix3D<int> &mask3D = mask_prm.get_binary_mask3D();
                             COUNT_ELEMENTS(mask3D, V, "voxels");
                         }
                         else

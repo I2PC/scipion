@@ -303,7 +303,7 @@ void Prog_PDBPhantom_Parameters::create_protein_at_low_sampling_rate()
 #ifdef NEVER_DEFINED
     // Filter Vlow before downsampling
     Vlow.write("PPPlow_before_filtering.vol");
-    matrix3D<complex<double> > FFTVlow;
+    Matrix3D<complex<double> > FFTVlow;
     FourierTransform(Vlow(), FFTVlow);
     STARTINGX(FFTVlow) = STARTINGY(FFTVlow) = STARTINGZ(FFTVlow) = 0;
     Matrix1D<double> dig_freq(3);

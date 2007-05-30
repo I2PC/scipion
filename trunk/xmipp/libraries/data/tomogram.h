@@ -228,7 +228,7 @@ public:
      */
     void get_piece(Matrix1D< int >& r0,
                    Matrix1D< int >& length,
-                   matrix3D< double >& piece);
+                   Matrix3D< double >& piece);
 
     /** Set piece in tomogram.
      *
@@ -238,7 +238,7 @@ public:
      */
     void set_piece(Matrix1D< int >& r0,
                    Matrix1D< int >& length,
-                   matrix3D< double >& piece);
+                   Matrix3D< double >& piece);
 };
 
 #endif

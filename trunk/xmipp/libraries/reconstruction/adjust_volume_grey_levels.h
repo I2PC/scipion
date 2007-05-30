@@ -49,7 +49,7 @@ public:
     double probb_eval;
 public:
     // Input volume
-    matrix3D<double> V;
+    Matrix3D<double> V;
     // SelFile
     SelFile SF;
 public:
@@ -77,7 +77,7 @@ public:
 
     /** Apply.
         This is the function that really does the job */
-    void apply(matrix3D<double> &output_volume);
+    void apply(Matrix3D<double> &output_volume);
 
     /** Run.
         Calls apply and save the result. */

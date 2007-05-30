@@ -204,10 +204,10 @@ double spatial_Bspline03_proj(
 #undef DEBUG
 
 /* Splines -> Voxels for a SimpleGrid -------------------------------------- */
-void spatial_Bspline032voxels_SimpleGrid(const matrix3D<double> &vol_splines,
+void spatial_Bspline032voxels_SimpleGrid(const Matrix3D<double> &vol_splines,
         const SimpleGrid &grid,
-        matrix3D<double> *vol_voxels,
-        const matrix3D<double> *vol_mask = NULL)
+        Matrix3D<double> *vol_voxels,
+        const Matrix3D<double> *vol_mask = NULL)
 {
     Matrix1D<double> act_coord(3);           // Coord: Actual position inside
     // the voxel volume without deforming
@@ -382,7 +382,7 @@ void spatial_Bspline032voxels_SimpleGrid(const matrix3D<double> &vol_splines,
 /* Splines -> Voxels for a Grid -------------------------------------------- */
 //#define DEBUG
 void spatial_Bspline032voxels(const GridVolume &vol_splines,
-                              matrix3D<double> *vol_voxels, int Zdim, int Ydim, int Xdim)
+                              Matrix3D<double> *vol_voxels, int Zdim, int Ydim, int Xdim)
 {
     // Resize and set starting corner .......................................
     if (Zdim == 0 || Ydim == 0 || Xdim == 0)

@@ -89,7 +89,7 @@ double Prog_Adjust_Volume_Parameters::mismatching(double a, double b)
     if (a <= 0) return 1e38;
 
     // Transform the volume
-    matrix3D<double> aux = V;
+    Matrix3D<double> aux = V;
     FOR_ALL_ELEMENTS_IN_MATRIX3D(aux) aux(k, i, j) = a * aux(k, i, j) + b;
 
     // Compute the mismatching
@@ -135,7 +135,7 @@ double Prog_Adjust_Volume_Parameters::mismatching(double a, double b)
 #undef DEBUG
 
 /* Apply ------------------------------------------------------------------- */
-void Prog_Adjust_Volume_Parameters::apply(matrix3D<double> &out)
+void Prog_Adjust_Volume_Parameters::apply(Matrix3D<double> &out)
 {
     // Compute the average power and average value of all the projections
     double sum = 0, sum2 = 0, N = 0;

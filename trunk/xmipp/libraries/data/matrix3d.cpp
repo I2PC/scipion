@@ -31,17 +31,17 @@
 /* ************************************************************************* */
 /* IMPLEMENTATIONS                                                           */
 /* ************************************************************************* */
-#define maT matrix3D<T>
-#define ma  matrix3D
+#define maT Matrix3D<T>
+#define ma  Matrix3D
 #include "multidim_basic.inc"
 #undef ma
 #undef maT
 
 template <>
-ostream& operator << (ostream& ostrm, const matrix3D< complex<double> > & v)
+ostream& operator << (ostream& ostrm, const Matrix3D< complex<double> > & v)
 {
     if (v.xdim == 0)
-        ostrm << "NULL matrix3D\n";
+        ostrm << "NULL Matrix3D\n";
     else
         ostrm << endl;
 
@@ -63,7 +63,7 @@ ostream& operator << (ostream& ostrm, const matrix3D< complex<double> > & v)
 
 /* Interpolated element ---------------------------------------------------- */
 template <>
-complex<double> matrix3D< complex<double> >::interpolatedElement(
+complex<double> Matrix3D< complex<double> >::interpolatedElement(
     double x, double y, double z, complex<double> outside_value)
 {
     int x0 = FLOOR(x);
@@ -97,8 +97,8 @@ complex<double> matrix3D< complex<double> >::interpolatedElement(
 
 // Apply geom --------------------------------------------------------------
 template <>
-void applyGeometryBSpline(matrix3D< complex<double> > &M2,
-                        Matrix2D<double> A, const matrix3D< complex<double> > &M1,
+void applyGeometryBSpline(Matrix3D< complex<double> > &M2,
+                        Matrix2D<double> A, const Matrix3D< complex<double> > &M1,
                         int Splinedegree, bool inv, bool wrap, complex<double> outside)
 {
     REPORT_ERROR(1, "applyGeometryBSpline: Not yet implemented for complex matrices\n");

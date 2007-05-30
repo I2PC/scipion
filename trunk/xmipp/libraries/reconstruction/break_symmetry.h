@@ -68,7 +68,7 @@ public:
     // File handler for the history file
     ofstream fh_hist;
     // Reference volumes
-    vector<matrix3D<double> > vols;
+    vector<Matrix3D<double> > vols;
     // Mask
     VolumeXmipp mask;
 

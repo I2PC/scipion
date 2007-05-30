@@ -842,7 +842,7 @@ void Euler_apply_transf(const Matrix2D<double> &L,
     Euler_matrix2angles(temp, newrot, newtilt, newpsi);
 }
 
-/* Rotate matrix3D with 3 Euler angles ------------------------------------- */
+/* Rotate Matrix3D with 3 Euler angles ------------------------------------- */
 Matrix2D<double> Euler_rotation3DMatrix(double rot, double tilt, double psi)
 {
     Matrix2D<double> temp;
@@ -854,16 +854,16 @@ Matrix2D<double> Euler_rotation3DMatrix(double rot, double tilt, double psi)
     return temp;
 }
 
-void Euler_rotate(const matrix3D<double> &V, double rot, double tilt, double psi,
-                  matrix3D<double> &result)
+void Euler_rotate(const Matrix3D<double> &V, double rot, double tilt, double psi,
+                  Matrix3D<double> &result)
 {
     applyGeometry(result, Euler_rotation3DMatrix(rot, tilt, psi), V, IS_NOT_INV, DONT_WRAP);
 }
 
-matrix3D<double> Euler_rotate(const matrix3D<double> &V,
+Matrix3D<double> Euler_rotate(const Matrix3D<double> &V,
                               double rot, double tilt, double psi)
 {
-    matrix3D<double> aux;
+    Matrix3D<double> aux;
     Euler_rotate(V, rot, tilt, psi, aux);
     return aux;
 }

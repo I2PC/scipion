@@ -401,7 +401,7 @@ void compute_hist(const Matrix2D< T >& v, histogram1D& hist,
  * The region is defined by the corners (k0, i0, j0) and (kF, iF, jF).
  */
 template<typename T>
-void compute_hist(const matrix3D< T >& v, histogram1D& hist,
+void compute_hist(const Matrix3D< T >& v, histogram1D& hist,
                   const Matrix1D< int >& corner1,
                   const Matrix1D< int >& corner2,
                   int no_steps = 100)

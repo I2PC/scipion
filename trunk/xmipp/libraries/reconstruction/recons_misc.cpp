@@ -153,7 +153,7 @@ void VariabilityClass::newUpdateVolume(GridVolume *ptr_vol_out,
     N++;
 
     // Make the DWT
-    matrix3D<double> DWTV;
+    Matrix3D<double> DWTV;
 #ifdef MODE7
     int DWT_iterations = 2;
     int keep_from_iteration = 0;
@@ -493,7 +493,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
         if (prm->known_volume != -1)
         {
             histogram1D hist;
-            matrix3D<int> aux_mask;
+            Matrix3D<int> aux_mask;
             aux_mask.resize(vol_POCS());
             FOR_ALL_ELEMENTS_IN_MATRIX3D(aux_mask)
             aux_mask(k, i, j) = 1 - (int)vol_POCS(k, i, j);

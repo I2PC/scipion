@@ -35,7 +35,7 @@
 // Projection from a voxel volume ==========================================
 /* Project a voxel volume -------------------------------------------------- */
 //#define DEBUG
-void project_Volume(matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
+void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
                     double rot, double tilt, double psi)
 {
     SPEED_UP_temps;
@@ -224,7 +224,7 @@ void project_Volume(matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
 
 // Sjors, 16 May 2005
 // This routine may give volumes with spurious high frequencies.....
-void singleWBP(matrix3D<double> &V, Projection &P)
+void singleWBP(Matrix3D<double> &V, Projection &P)
 {
     SPEED_UP_temps;
 

@@ -41,12 +41,12 @@
     Valid derivative types are "X", "Y", "Z", "XX", "XY", ... "ZZZ".
     Values in the output volume are the corresponding derivatives at
     each volume position*/
-void compute_derivative(const matrix3D<double> &in_vol,
-                        matrix3D<double> &out_vol, char *type, double sigma = 1);
+void compute_derivative(const Matrix3D<double> &in_vol,
+                        Matrix3D<double> &out_vol, char *type, double sigma = 1);
 
 /** Gradient of a volume */
-void compute_gradient(const matrix3D<double> &in_vol,
-                      Vectorial_matrix3D &out_vol, double sigma = 1);
+void compute_gradient(const Matrix3D<double> &in_vol,
+                      Vectorial_Matrix3D &out_vol, double sigma = 1);
 //@}
 
 //@}

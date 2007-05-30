@@ -381,12 +381,12 @@ public:
         defined by a 4x4 matrix that can be generated using the geometric functions
         in xmippGeometry or xmippMatrix2D. The matrix must be the desired
         transformation (i.e., new coordinate=A*old_coordinate.
-        Don't worry because the self_applyGeometry of Phantom take
+        Don't worry because the selfApplyGeometry of Phantom take
         cares of passing to this function the apropriate matrix. No check is done
         about the size of A.
 
         Only the center is transformed, the feature will keep the same size.*/
-    void self_applyGeometry(const Matrix2D<double> &A);
+    void selfApplyGeometry(const Matrix2D<double> &A);
 //@}
 
     /**@name I/O */
@@ -1517,7 +1517,7 @@ public:
         are not INV.
 
         An exception is thrown if the matrix A is not valid.*/
-    void self_applyGeometry(const Matrix2D<double> &A, int inv);
+    void selfApplyGeometry(const Matrix2D<double> &A, int inv);
 
     /** Project phantom from a direction.
         The direction is specified by the 3 Euler angles (as usual, rot=1st,

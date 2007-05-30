@@ -179,12 +179,12 @@ public:
 
     /** Denoise a volume.
      */
-    void denoise(matrix3D< double >& vol);
+    void denoise(Matrix3D< double >& vol);
 
     /** Denoise a volume using a precalculated estimate of the bayesian
      * parameters.
      */
-    void denoise_avg_bayesian(matrix3D< double >& vol);
+    void denoise_avg_bayesian(Matrix3D< double >& vol);
 };
 
 #endif

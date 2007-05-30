@@ -71,9 +71,9 @@ void Half2Whole(const Matrix2D<complex<double> > &in, Matrix2D<complex<double> >
 
 
 /** Convert complex -> real,imag Fourier transforms 3D. -- */
-void Complex2RealImag(const matrix3D< complex < double > > & in,
-                      matrix3D< double > & real,
-                      matrix3D< double > & imag)
+void Complex2RealImag(const Matrix3D< complex < double > > & in,
+                      Matrix3D< double > & real,
+                      Matrix3D< double > & imag)
 {
 
     real.resize(in);
@@ -84,9 +84,9 @@ void Complex2RealImag(const matrix3D< complex < double > > & in,
 }
 
 /** Convert real,imag -> complex Fourier transforms 3D. -- */
-void RealImag2Complex(const matrix3D< double > & real,
-                      const matrix3D< double > & imag,
-                      matrix3D< complex < double > > & out)
+void RealImag2Complex(const Matrix3D< double > & real,
+                      const Matrix3D< double > & imag,
+                      Matrix3D< complex < double > > & out)
 {
     out.resize(real);
     RealImag2Complex(MULTIDIM_ARRAY(real), MULTIDIM_ARRAY(imag),
@@ -124,11 +124,11 @@ void FourierTransform(const Matrix2D<double> &in,
 }
 
 /** Direct Fourier Transform 3D. ------------------------------------------ */
-void FourierTransform(const matrix3D<double> &in,
-                      matrix3D< complex<double> > &out)
+void FourierTransform(const Matrix3D<double> &in,
+                      Matrix3D< complex<double> > &out)
 {
     int Status;
-    matrix3D<double> re(in), im;
+    Matrix3D<double> re(in), im;
     im.resize(in);
     out.resize(in);
     VolumeDftRealToRealImaginary(MULTIDIM_ARRAY(re),
@@ -167,11 +167,11 @@ void InverseFourierTransform(const Matrix2D< complex<double> > &in,
 }
 
 /** Inverse Fourier Transform 3D. ----------------------------------------- */
-void InverseFourierTransform(const matrix3D< complex<double> > &in,
-                             matrix3D<double> &out)
+void InverseFourierTransform(const Matrix3D< complex<double> > &in,
+                             Matrix3D<double> &out)
 {
     int Status;
-    matrix3D<double> im;
+    Matrix3D<double> im;
     out.resize(in);
     im.resize(in);
     Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(out),
@@ -246,7 +246,7 @@ void ShiftFFT(Matrix2D< complex< double > > & v,
     }
 }
 
-void ShiftFFT(matrix3D< complex< double > > & v,
+void ShiftFFT(Matrix3D< complex< double > > & v,
               double xshift, double yshift, double zshift)
 {
     double dotp, a, b, c, d, ac, bd, ab_cd;
@@ -305,7 +305,7 @@ void CenterOriginFFT(Matrix2D< complex< double > > & v, bool forward)
     }
 }
 
-void CenterOriginFFT(matrix3D< complex< double > > & v, bool forward)
+void CenterOriginFFT(Matrix3D< complex< double > > & v, bool forward)
 {
     double xshift = -(double)(int)(XSIZE(v) / 2);
     double yshift = -(double)(int)(YSIZE(v) / 2);
@@ -337,8 +337,8 @@ void FFT_magnitude(const Matrix2D< complex<double> > &v,
     FOR_ALL_ELEMENTS_IN_MATRIX2D(v) mag(i, j) = abs(v(i, j));
 }
 
-void FFT_magnitude(const matrix3D< complex<double> > &v,
-                   matrix3D<double> &mag)
+void FFT_magnitude(const Matrix3D< complex<double> > &v,
+                   Matrix3D<double> &mag)
 {
     mag.resize(v);
     FOR_ALL_ELEMENTS_IN_MATRIX3D(v) mag(k, i, j) = abs(v(k, i, j));
@@ -359,8 +359,8 @@ void FFT_phase(const Matrix2D< complex<double> > &v,
     FOR_ALL_ELEMENTS_IN_MATRIX2D(v) phase(i, j) = atan2(v(i, j).imag(), v(i, j).real());
 }
 
-void FFT_phase(const matrix3D< complex<double> > &v,
-               matrix3D<double> &phase)
+void FFT_phase(const Matrix3D< complex<double> > &v,
+               Matrix3D<double> &phase)
 {
     phase.resize(v);
     FOR_ALL_ELEMENTS_IN_MATRIX3D(v) phase(k, i, j) = atan2(v(k, i, j).imag(),

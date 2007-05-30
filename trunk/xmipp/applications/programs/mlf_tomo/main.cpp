@@ -33,10 +33,10 @@ int main(int argc, char **argv)
     int c, nn, imgno, opt_refno;
     double LL, sumw_allrefs, sumcorr;
     double aux, wsum_sigma_offset, wsum_sigma_noise2;
-    vector<matrix3D<double > > wsum_Mref, Mref;
-    vector<matrix3D<double > > wsum_Mwedge;
+    vector<Matrix3D<double > > wsum_Mref, Mref;
+    vector<Matrix3D<double > > wsum_Mwedge;
     vector<double> sumw, wsum_sigma2, sum_nonzero_pixels;
-    matrix3D<double> Maux;
+    Matrix3D<double> Maux;
     vector<int> count_defocus;
     FileName fn_img, fn_tmp;
     Matrix1D<double> oneline(0);

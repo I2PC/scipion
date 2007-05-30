@@ -51,7 +51,7 @@ typedef enum
  * @ingroup Volumes
  *
  * The volume class is a general class which only contains the volume itself
- * and a filename for it. It has got a float matrix3D as member, and basically
+ * and a filename for it. It has got a float Matrix3D as member, and basically
  * all operations between volumes are based on that class.
  *
  * This class is the usual one when you want to operate volumes in memory.
@@ -67,7 +67,7 @@ class VolumeT
 {
 public:
     FileName fn_img; // name of the image
-    matrix3D< T > img; // 3D matrix with the image
+    Matrix3D< T > img; // 3D matrix with the image
 
     /// @defgroup VolumesConstructors Constructors
     /// @ingroup Volumes
@@ -161,14 +161,14 @@ public:
         *this = v;
     }
 
-    /** Assignment from matrix3D.
+    /** Assignment from Matrix3D.
      * @ingroup VolumesOperations
      */
     template<typename T2>
-    VolumeT& operator=(const matrix3D< T2 >& m)
+    VolumeT& operator=(const Matrix3D< T2 >& m)
     {
         // FIXME dangerous cast
-        if (&img != (matrix3D< T >*)(&m));
+        if (&img != (Matrix3D< T >*)(&m));
         {
             fn_img = "";
             type_cast(m, img);
@@ -177,11 +177,11 @@ public:
         return *this;
     }
 
-    /** Another function for assigment from matrix3D.
+    /** Another function for assigment from Matrix3D.
      * @ingroup VolumesOperations
      */
     template<typename T2>
-    void assign(const matrix3D< T2 >& m)
+    void assign(const Matrix3D< T2 >& m)
     {
         *this = m;
     }
@@ -259,7 +259,7 @@ public:
      * @ingroup VolumesAccess
      *
      * This operator can be used to access the 3D matrix, and the matrix
-     * operations defined in matrix3D. In this way we could resize a Volume
+     * operations defined in Matrix3D. In this way we could resize a Volume
      * just by resizing its associated 3D matrix or we could add two Volumes
      * by adding their 3D matrices.
      *
@@ -269,28 +269,28 @@ public:
      * vol2() = vol1() + vol2();
      * @endcode
      */
-    matrix3D< T >&  operator()()
+    Matrix3D< T >&  operator()()
     {
         return img;
     }
 
-    const matrix3D< T >&  operator()() const
+    const Matrix3D< T >&  operator()() const
     {
         return img;
     }
 
-    /** Get matrix3D.
+    /** Get Matrix3D.
      * @ingroup VolumesAccess
      */
-    void get_matrix3D(matrix3D< T >& m)
+    void get_Matrix3D(Matrix3D< T >& m)
     {
         m = img;
     }
 
-    /** Set matrix3D.
+    /** Set Matrix3D.
      * @ingroup VolumesAccess
      */
-    void set_matrix3D(const matrix3D< T >& m)
+    void set_Matrix3D(const Matrix3D< T >& m)
     {
         img = m;
     }
@@ -317,7 +317,7 @@ public:
     /** Get voxel.
      * @ingroup VolumesAccess
      */
-    T get_voxel(int z, int y, int x) const
+    T getVoxel(int z, int y, int x) const
     {
         return img(z, y, x);
     }
@@ -325,7 +325,7 @@ public:
     /** Set voxel.
      * @ingroup VolumesAccess
      */
-    void set_voxel(int z, int y, int x, T val)
+    void setVoxel(int z, int y, int x, T val)
     {
         img(z, y, x) = val;
     }
@@ -353,7 +353,7 @@ public:
     friend std::ostream& operator<<(std::ostream& out, const VolumeT< T >& V)
     {
         out << "Volume Name   : " << V.fn_img << std::endl
-        << "dimensions   : " << V.img.SliNo() << " x "
+        << "dimensions   : " << V.img.sliceNumber() << " x "
         << V.img.rowNumber() << " x " << V.img.colNumber()
         << "  (slices x rows x columns)" << std::endl;
 
@@ -835,13 +835,13 @@ public:
      * @ingroup VolumesOperations
      *
      * @code
-     * matrix3D< float > m;
+     * Matrix3D< float > m;
      * VolumeXmipp vol;
      * vol = m;
      * @endcode
      */
     template<typename T2>
-    VolumeXmippT& operator=(const matrix3D< T2>& op1)
+    VolumeXmippT& operator=(const Matrix3D< T2>& op1)
     {
         this->VolumeT< T >::operator=(op1);
         clear_header();

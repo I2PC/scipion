@@ -386,7 +386,7 @@ double correlate_surface_and_volume_2D(const Image *surf, const Volume *V,
 //#define DEBUG
 double correlate_surface_and_volume_gradients(const Image *surf,
         const Volume *V, Volume *Vsurf,
-        const Vectorial_matrix3D &V_grad, Vectorial_matrix3D & Vsurf_grad,
+        const Vectorial_Matrix3D &V_grad, Vectorial_Matrix3D & Vsurf_grad,
         int ktop, int kbottom, int direction, int tell)
 {
     double retval = 0;

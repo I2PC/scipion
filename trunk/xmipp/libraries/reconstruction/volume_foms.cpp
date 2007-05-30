@@ -680,7 +680,7 @@ void compute_dr_FOMs(const Volume *vol_phantom, const Volume *vol_recons,
 {
 
     // Auxiliar variables ...................................................
-    matrix3D<double> rot_phantom, rot_recons, rot_mask;
+    Matrix3D<double> rot_phantom, rot_recons, rot_mask;
     Matrix1D<double> RT_phantom, RT_recons, RTno;
     histogram1D      hist_recons;
 
@@ -700,12 +700,12 @@ void compute_dr_FOMs(const Volume *vol_phantom, const Volume *vol_recons,
     }
 
     // Initialise output image and Radon Transform ..........................
-    (*img_histog)().resize(rot_recons.SliNo(), no_steps);
+    (*img_histog)().resize(rot_recons.sliceNumber(), no_steps);
     (*img_histog)().startingY() = rot_recons.startingZ();
     compute_hist(rot_recons, hist_recons, max_background,
                  rot_recons.compute_max(), no_steps);
 
-    RT_recons.resize(rot_recons.SliNo());
+    RT_recons.resize(rot_recons.sliceNumber());
     RT_recons.startingX() = rot_recons.startingZ();
     RT_phantom = RT_recons;
     RTno.initZeros(RT_recons);

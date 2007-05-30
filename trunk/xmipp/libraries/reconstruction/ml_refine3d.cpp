@@ -811,7 +811,7 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv)
     FileName               fn_vol, fn_tmp;
     VolumeXmipp            vol, Vaux, Vsymmask, Vsolv;
     SymList                SL;
-    matrix3D<int>          mask3D;
+    Matrix3D<int>          mask3D;
     double                 avg, dummy, in, out;
     int                    dim;
 
@@ -986,7 +986,7 @@ bool Prog_Refine3d_prm::check_convergence(int iter)
     VolumeXmipp            vol, old_vol, diff_vol;
     FileName               fn_tmp;
     Mask_Params            mask_prm;
-    matrix3D<int>          mask3D;
+    Matrix3D<int>          mask3D;
     double                 signal, change;
     int                    dim;
     bool                   converged = true;
