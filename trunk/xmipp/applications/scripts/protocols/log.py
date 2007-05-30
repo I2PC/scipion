@@ -25,7 +25,12 @@ def init_log_system(projectdir,logdir,scriptname,WorkDirectory):
     http://webmaster.iu.edu/tool_guide_info/python/lib/module-logging.html
     """
 
-    LogName = projectdir + '/' + logdir + '/'
+    if logdir[0]=='/':
+       LogName = logdir
+    else:
+       LogName = projectdir + '/' + logdir
+    if not LogName[-1]=='/':
+       LogName+='/'
     if not os.path.exists(LogName):
         os.makedirs(LogName)
     scriptname=os.path.basename(scriptname)
