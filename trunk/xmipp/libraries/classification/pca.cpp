@@ -262,7 +262,7 @@ void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
         listener->OnProgress(50);
 
 
-    throw Xmipp_error(1, "too many Jacobi iterations");
+    REPORT_ERROR(1, "too many Jacobi iterations");
 }
 
 /* Prepare for correlation ------------------------------------------------- */
