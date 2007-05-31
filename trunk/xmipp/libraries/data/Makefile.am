@@ -6,6 +6,7 @@ libXmippData_la_SOURCES = \
 	denoise.cpp \
 	de_solver.cpp \
 	docfile.cpp \
+	error.cpp \
 	fft.cpp \
 	filters.cpp \
 	funcs.cpp \
