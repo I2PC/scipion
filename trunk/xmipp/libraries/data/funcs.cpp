@@ -299,30 +299,6 @@ float rnd_log(float a, float b)
         return exp(rnd_unif(log(a), log(b)));
 }
 
-
-/* Exception handling ------------------------------------------------------ */
-void _Xmipp_error(const int nerr, const string &what)
-{
-    cout << nerr << ": " << what << endl;
-    exit(nerr);
-}
-#ifndef _NO_EXCEPTION
-// Object Constructor
-Xmipp_error::Xmipp_error(const int nerr, const string &what)
-{
-    __errno = nerr;
-    msg = what;
-}
-
-// Show message
-ostream& operator << (ostream& o, Xmipp_error &XE)
-{
-    o << XE.__errno << ":" << XE.msg << endl;
-    return o;
-}
-#endif
-
-
 /* Handling with filenames ------------------------------------------------- */
 int exists(const FileName &fn)
 {
