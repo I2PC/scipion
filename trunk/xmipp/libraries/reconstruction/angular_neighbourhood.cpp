@@ -34,11 +34,11 @@
 void Prog_projection_neighbourhood_prm::read(int argc, char **argv)
 {
     int i, maxcol;
-    fn_sel = get_param(argc, argv, "-i");
-    fn_ref = get_param(argc, argv, "-nbh");
-    fn_root_out = get_param(argc, argv, "-oroot", "nbhood");
-    maxdist = AtoF(get_param(argc, argv, "-dist", "10"));
-    fn_sym = get_param(argc, argv, "-sym", "");
+    fn_sel = getParameter(argc, argv, "-i");
+    fn_ref = getParameter(argc, argv, "-nbh");
+    fn_root_out = getParameter(argc, argv, "-oroot", "nbhood");
+    maxdist = AtoF(getParameter(argc, argv, "-dist", "10"));
+    fn_sym = getParameter(argc, argv, "-sym", "");
     if (fn_sym != "") SL.read_sym_file(fn_sym);
     DF2.read(fn_ref);
     SF1.read(fn_sel);

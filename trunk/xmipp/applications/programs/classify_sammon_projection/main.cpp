@@ -62,27 +62,27 @@ int main(int argc, char** argv)
     try
     {
 
-        if (check_param(argc, argv, "-i"))
-            fn_in = get_param(argc, argv, "-i");
+        if (checkParameter(argc, argv, "-i"))
+            fn_in = getParameter(argc, argv, "-i");
         else
         {
             Usage(argv);
             exit(EXIT_FAILURE);
         }
 
-        if (check_param(argc, argv, "-o"))
-            fn_out = get_param(argc, argv, "-o");
+        if (checkParameter(argc, argv, "-o"))
+            fn_out = getParameter(argc, argv, "-o");
         else
         {
             Usage(argv);
             exit(EXIT_FAILURE);
         }
 
-        dim = AtoI(get_param(argc, argv, "-dim", "2"));
-        iter = AtoI(get_param(argc, argv, "-iter", "100000"));
-        verb = AtoI(get_param(argc, argv, "-verb", "0"));
+        dim = AtoI(getParameter(argc, argv, "-dim", "2"));
+        iter = AtoI(getParameter(argc, argv, "-iter", "100000"));
+        verb = AtoI(getParameter(argc, argv, "-verb", "0"));
 
-        if (check_param(argc, argv, "-norm"))
+        if (checkParameter(argc, argv, "-norm"))
             norm = true;
         else
             norm = false;

@@ -71,73 +71,73 @@ main(int argc, char** argv)
     try
     {
 
-        if (check_param(argc, argv, "-i"))
-            fn_in = get_param(argc, argv, "-i");
+        if (checkParameter(argc, argv, "-i"))
+            fn_in = getParameter(argc, argv, "-i");
         else
         {
             Usage(argv);
             exit(EXIT_FAILURE);
         }
 
-        if (check_param(argc, argv, "-o"))
-            fn_out = get_param(argc, argv, "-o");
+        if (checkParameter(argc, argv, "-o"))
+            fn_out = getParameter(argc, argv, "-o");
         else
         {
             Usage(argv);
             exit(EXIT_FAILURE);
         }
 
-        if (check_param(argc, argv, "-cvin"))
-            cb_in = get_param(argc, argv, "-cvin");
+        if (checkParameter(argc, argv, "-cvin"))
+            cb_in = getParameter(argc, argv, "-cvin");
 
 
-        if (check_param(argc, argv, "-xdim"))
-            xdim = AtoI(get_param(argc, argv, "-xdim"));
+        if (checkParameter(argc, argv, "-xdim"))
+            xdim = AtoI(getParameter(argc, argv, "-xdim"));
         else
         {
             Usage(argv);
             exit(EXIT_FAILURE);
         }
 
-        if (check_param(argc, argv, "-ydim"))
-            ydim = AtoI(get_param(argc, argv, "-ydim"));
+        if (checkParameter(argc, argv, "-ydim"))
+            ydim = AtoI(getParameter(argc, argv, "-ydim"));
         else
         {
             Usage(argv);
             exit(EXIT_FAILURE);
         }
 
-        if (check_param(argc, argv, "-hexa"))
+        if (checkParameter(argc, argv, "-hexa"))
         {
-            if (check_param(argc, argv, "-rect"))
+            if (checkParameter(argc, argv, "-rect"))
             {
                 cout << "Error: you can not define two topologies" << endl;
                 exit(EXIT_FAILURE);
             }
             layout = "HEXA";
         }
-        else if (check_param(argc, argv, "-rect"))
+        else if (checkParameter(argc, argv, "-rect"))
             layout = "RECT";
 
-        m0 =  AtoF(get_param(argc, argv, "-m0", "2.0"));
-        m1 =  AtoF(get_param(argc, argv, "-m1", "1.01"));
-        reg =  AtoF(get_param(argc, argv, "-reg", "0.5"));
+        m0 =  AtoF(getParameter(argc, argv, "-m0", "2.0"));
+        m1 =  AtoF(getParameter(argc, argv, "-m1", "1.01"));
+        reg =  AtoF(getParameter(argc, argv, "-reg", "0.5"));
 
-        eps = AtoF(get_param(argc, argv, "-eps", "1e-7"));
-        iter = AtoI(get_param(argc, argv, "-iter", "1000"));
-        verb = AtoI(get_param(argc, argv, "-verb", "0"));
+        eps = AtoF(getParameter(argc, argv, "-eps", "1e-7"));
+        iter = AtoI(getParameter(argc, argv, "-iter", "1000"));
+        verb = AtoI(getParameter(argc, argv, "-verb", "0"));
 
-        if (check_param(argc, argv, "-norm"))
+        if (checkParameter(argc, argv, "-norm"))
             norm = true;
         else norm = false;
 
-        annSteps = AtoI(get_param(argc, argv, "-steps", "1000"));
+        annSteps = AtoI(getParameter(argc, argv, "-steps", "1000"));
 
-        if (check_param(argc, argv, "-saveclusters"))
+        if (checkParameter(argc, argv, "-saveclusters"))
             saveClusters = true;
         else saveClusters = false;
 
-        if (check_param(argc, argv, "-randomcodevectors"))
+        if (checkParameter(argc, argv, "-randomcodevectors"))
             use_rand_cvs = true;
         else use_rand_cvs = false;
 

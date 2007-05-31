@@ -104,12 +104,12 @@ void Prog_PDBPhantom_Parameters::atom_description(const string &_element,
 /* Read parameters --------------------------------------------------------- */
 void Prog_PDBPhantom_Parameters::read(int argc, char **argv)
 {
-    fn_pdb = get_param(argc, argv, "-i");
-    fn_out = get_param(argc, argv, "-o", "");
+    fn_pdb = getParameter(argc, argv, "-i");
+    fn_out = getParameter(argc, argv, "-o", "");
     if (fn_out == "") fn_out = fn_pdb.without_extension();
-    Ts = AtoF(get_param(argc, argv, "-sampling_rate", "1"));
-    highTs = AtoF(get_param(argc, argv, "-high_sampling_rate", "0.1"));
-    output_dim = AtoI(get_param(argc, argv, "-output_dim", "-1"));
+    Ts = AtoF(getParameter(argc, argv, "-sampling_rate", "1"));
+    highTs = AtoF(getParameter(argc, argv, "-high_sampling_rate", "0.1"));
+    output_dim = AtoI(getParameter(argc, argv, "-output_dim", "-1"));
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -162,20 +162,20 @@ void Prog_PDBPhantom_Parameters::compute_protein_geometry()
         string line;
         getline(fh_pdb, line);
         if (line == "") continue;
-        string kind = first_token(line);
+        string kind = firstToken(line);
         if (kind != "ATOM") continue;
 
         // Extract atom type and position
         // Typical line:
         // ATOM    909  CA  ALA A 161      58.775  31.984 111.803  1.00 34.78
-        string dummy = next_token();
-        string atom_type = next_token();
-        dummy = next_token();
-        dummy = next_token();
-        dummy = next_token();
-        double x = AtoF(next_token());
-        double y = AtoF(next_token());
-        double z = AtoF(next_token());
+        string dummy = nextToken();
+        string atom_type = nextToken();
+        dummy = nextToken();
+        dummy = nextToken();
+        dummy = nextToken();
+        double x = AtoF(nextToken());
+        double y = AtoF(nextToken());
+        double z = AtoF(nextToken());
 
         // Update center of mass and limits
         if (x < XX(limit0)) XX(limit0) = x;
@@ -238,20 +238,20 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
         string line;
         getline(fh_pdb, line);
         if (line == "") continue;
-        string kind = first_token(line);
+        string kind = firstToken(line);
         if (kind != "ATOM") continue;
 
         // Extract atom type and position
         // Typical line:
         // ATOM    909  CA  ALA A 161      58.775  31.984 111.803  1.00 34.78
-        string dummy = next_token();
-        string atom_type = next_token();
-        dummy = next_token();
-        dummy = next_token();
-        dummy = next_token();
-        double x = AtoF(next_token());
-        double y = AtoF(next_token());
-        double z = AtoF(next_token());
+        string dummy = nextToken();
+        string atom_type = nextToken();
+        dummy = nextToken();
+        dummy = nextToken();
+        dummy = nextToken();
+        double x = AtoF(nextToken());
+        double y = AtoF(nextToken());
+        double z = AtoF(nextToken());
 
         // Correct position
         Matrix1D<double> r(3);

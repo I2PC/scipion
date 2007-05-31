@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     try
     {
         // Read the file with all the program parameters
-        prm.read(get_param(argc, argv, "-i"));
+        prm.read(getParameter(argc, argv, "-i"));
     }
     catch (Xmipp_error &XE)
     {

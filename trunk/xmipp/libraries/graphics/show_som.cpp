@@ -182,7 +182,7 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root)
                 fh_class >> col >> row >> tmp;
                 getline(fh_class, line);
                 int i = row * NumCols + col;
-                SFcv[i].insert(first_token(line), SelLine::ACTIVE);
+                SFcv[i].insert(firstToken(line), SelLine::ACTIVE);
             }
         }
         fh_class.close();

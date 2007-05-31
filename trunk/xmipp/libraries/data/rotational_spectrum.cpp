@@ -379,13 +379,13 @@ void Rotational_Spectrum::compute_rotational_spectrum(Matrix2D<double> &img,
 // Read arguments ----------------------------------------------------------
 void Rotational_Spectrum::read(int argc, char **argv)
 {
-    rl = AtoI(get_param(argc, argv, "-r1"));
-    rh = AtoI(get_param(argc, argv, "-r2"));
-    dr = AtoI(get_param(argc, argv, "-rInc", "1"));
-    x0 = AtoF(get_param(argc, argv, "-x0", "-1"));
-    y0 = AtoF(get_param(argc, argv, "-y0", "-1"));
-    numin = AtoI(get_param(argc, argv, "-low", "1"));
-    numax = AtoI(get_param(argc, argv, "-high", "15"));
+    rl = AtoI(getParameter(argc, argv, "-r1"));
+    rh = AtoI(getParameter(argc, argv, "-r2"));
+    dr = AtoI(getParameter(argc, argv, "-rInc", "1"));
+    x0 = AtoF(getParameter(argc, argv, "-x0", "-1"));
+    y0 = AtoF(getParameter(argc, argv, "-y0", "-1"));
+    numin = AtoI(getParameter(argc, argv, "-low", "1"));
+    numax = AtoI(getParameter(argc, argv, "-high", "15"));
 }
 
 // Usage -------------------------------------------------------------------

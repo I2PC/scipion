@@ -41,7 +41,7 @@ int main(int argc, char **argv)
     // Read arguments --------------------------------------------------------
     try
     {
-        fn_input = get_param(argc, argv, "-i");
+        fn_input = getParameter(argc, argv, "-i");
         if (Is_VolumeXmipp(fn_input) || Is_ImageXmipp(fn_input) ||
             Is_FourierVolumeXmipp(fn_input) || Is_FourierImageXmipp(fn_input))
         {
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
         else
             SF.read(fn_input);
 
-        show_old_rot = check_param(argc, argv, "-show_old_rot");
+        show_old_rot = checkParameter(argc, argv, "-show_old_rot");
     }
     catch (Xmipp_error XE)
     {

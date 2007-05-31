@@ -29,26 +29,26 @@
 void Prog_projection_matching_prm::read(int argc, char **argv)  {
 
   // Read command line
-  if (check_param(argc,argv,"-show_all_options")) { usage(); extended_usage();}
-  fn_vol=get_param(argc,argv,"-vol","");
-  SF.read(get_param(argc,argv,"-i"));
+  if (checkParameter(argc,argv,"-show_all_options")) { usage(); extended_usage();}
+  fn_vol=getParameter(argc,argv,"-vol","");
+  SF.read(getParameter(argc,argv,"-i"));
   SF.ImgSize(dim,dim);
-  fn_root=get_param(argc,argv,"-o","out");
-  sampling=AtoF(get_param(argc,argv,"-sam","10"));
-  max_shift=AtoF(get_param(argc,argv,"-max_shift","5"));
+  fn_root=getParameter(argc,argv,"-o","out");
+  sampling=AtoF(getParameter(argc,argv,"-sam","10"));
+  max_shift=AtoF(getParameter(argc,argv,"-max_shift","5"));
 
   // Additional commands
-  ang_search=AtoF(get_param(argc,argv,"-ang_search","-1"));
-  Ri=AtoF(get_param(argc,argv,"-Ri","-1"));
-  Ro=AtoF(get_param(argc,argv,"-Ro","-1"));
-  fn_sym=get_param(argc,argv,"-sym","");
-  fn_ang=get_param(argc,argv,"-ang","");
-  output_refs=check_param(argc,argv,"-output_refs");
-  modify_header=!check_param(argc,argv,"-dont_modify_header");
-  fn_ref=get_param(argc,argv,"-ref","");
-  output_classes=check_param(argc,argv,"-output_classes");
-  tilt_range0=AtoF(get_param(argc,argv,"-tilt0","0."));
-  tilt_rangeF=AtoF(get_param(argc,argv,"-tiltF","180."));
+  ang_search=AtoF(getParameter(argc,argv,"-ang_search","-1"));
+  Ri=AtoF(getParameter(argc,argv,"-Ri","-1"));
+  Ro=AtoF(getParameter(argc,argv,"-Ro","-1"));
+  fn_sym=getParameter(argc,argv,"-sym","");
+  fn_ang=getParameter(argc,argv,"-ang","");
+  output_refs=checkParameter(argc,argv,"-output_refs");
+  modify_header=!checkParameter(argc,argv,"-dont_modify_header");
+  fn_ref=getParameter(argc,argv,"-ref","");
+  output_classes=checkParameter(argc,argv,"-output_classes");
+  tilt_range0=AtoF(getParameter(argc,argv,"-tilt0","0."));
+  tilt_rangeF=AtoF(getParameter(argc,argv,"-tiltF","180."));
 
   // Checks
   if (fn_ref=="" && fn_vol=="")
@@ -57,7 +57,7 @@ void Prog_projection_matching_prm::read(int argc, char **argv)  {
     REPORT_ERROR(1," option -ang and -ang_search are incompatible!");
 
   // Hidden stuff
-  verb=AtoI(get_param(argc,argv,"-verb","1"));
+  verb=AtoI(getParameter(argc,argv,"-verb","1"));
 
 }
 

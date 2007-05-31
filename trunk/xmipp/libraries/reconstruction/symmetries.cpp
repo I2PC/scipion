@@ -57,7 +57,7 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
     while (fgets(line, 79, fpoii) != NULL)
     {
         if (line[0] == ';' || line[0] == '#' || line[0] == '\0') continue;
-        auxstr = first_token(line);
+        auxstr = firstToken(line);
         if (auxstr == NULL)
         {
             cout << line;
@@ -66,7 +66,7 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
         }
         if (strcmp(auxstr, "rot_axis") == 0)
         {
-            auxstr = next_token();
+            auxstr = nextToken();
             fold = AtoI(auxstr);
             true_symNo += (fold - 1);
             no_axis++;
@@ -101,17 +101,17 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
     while (fgets(line, 79, fpoii) != NULL)
     {
         if (line[0] == ';' || line[0] == '#' || line[0] == '\0') continue;
-        auxstr = first_token(line);
+        auxstr = firstToken(line);
         // Rotational axis ---------------------------------------------------
         if (strcmp(auxstr, "rot_axis") == 0)
         {
-            auxstr = next_token();
+            auxstr = nextToken();
             fold = AtoI(auxstr);
-            auxstr = next_token();
+            auxstr = nextToken();
             axis.X() = AtoF(auxstr);
-            auxstr = next_token();
+            auxstr = nextToken();
             axis.Y() = AtoF(auxstr);
-            auxstr = next_token();
+            auxstr = nextToken();
             axis.Z() = AtoF(auxstr);
             ang_incr = 360. / fold;
             L.initIdentity();
@@ -139,11 +139,11 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
         }
         else if (strcmp(auxstr, "mirror_plane") == 0)
         {
-            auxstr = next_token();
+            auxstr = nextToken();
             axis.X() = AtoF(auxstr);
-            auxstr = next_token();
+            auxstr = nextToken();
             axis.Y() = AtoF(auxstr);
-            auxstr = next_token();
+            auxstr = nextToken();
             axis.Z() = AtoF(auxstr);
             L.initIdentity();
             L(2, 2) = -1;

@@ -58,43 +58,43 @@ main(int argc, char** argv)
     try
     {
 
-        if (check_param(argc, argv, "-i"))
-            fn_in = get_param(argc, argv, "-i");
+        if (checkParameter(argc, argv, "-i"))
+            fn_in = getParameter(argc, argv, "-i");
         else
         {
             Usage(argv);
             exit(EXIT_FAILURE);
         }
 
-        if (check_param(argc, argv, "-o"))
-            fn_out = get_param(argc, argv, "-o");
+        if (checkParameter(argc, argv, "-o"))
+            fn_out = getParameter(argc, argv, "-o");
         else
         {
             Usage(argv);
             exit(EXIT_FAILURE);
         }
 
-        if (check_param(argc, argv, "-cvin"))
-            cb_in = get_param(argc, argv, "-cvin");
+        if (checkParameter(argc, argv, "-cvin"))
+            cb_in = getParameter(argc, argv, "-cvin");
 
-        if (check_param(argc, argv, "-c"))
-            c = AtoI(get_param(argc, argv, "-c"));
+        if (checkParameter(argc, argv, "-c"))
+            c = AtoI(getParameter(argc, argv, "-c"));
         else
         {
             Usage(argv);
             exit(EXIT_FAILURE);
         }
 
-        if (check_param(argc, argv, "-saveclusters"))
+        if (checkParameter(argc, argv, "-saveclusters"))
             saveClusters = true;
         else saveClusters = false;
 
-        m = AtoF(get_param(argc, argv, "-m", "2.0"));
-        eps = AtoF(get_param(argc, argv, "-eps", "1e-7"));
-        iter = AtoI(get_param(argc, argv, "-iter", "1000"));
-        verb = AtoI(get_param(argc, argv, "-verb", "0"));
+        m = AtoF(getParameter(argc, argv, "-m", "2.0"));
+        eps = AtoF(getParameter(argc, argv, "-eps", "1e-7"));
+        iter = AtoI(getParameter(argc, argv, "-iter", "1000"));
+        verb = AtoI(getParameter(argc, argv, "-verb", "0"));
 
-        if (check_param(argc, argv, "-norm"))
+        if (checkParameter(argc, argv, "-norm"))
             norm = true;
         else
             norm = false;

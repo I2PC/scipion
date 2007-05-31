@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 
         // Read MLalign2D-stuff
         ML2D_prm.read(argc, argv, true);
-        if (!check_param(argc, argv, "-psi_step")) ML2D_prm.psi_step = prm.angular;
+        if (!checkParameter(argc, argv, "-psi_step")) ML2D_prm.psi_step = prm.angular;
         ML2D_prm.fn_root = prm.fn_root;
         ML2D_prm.fast_mode = true;
         ML2D_prm.do_mirror = true;

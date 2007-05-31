@@ -51,10 +51,10 @@ int main(int argc, char **argv)
     // Get command line parameters ------------------------------------------
     try
     {
-        filein  = get_param(argc, argv, "-i");
-        fileout = get_param(argc, argv, "-o");
-        AngSystem = get_param(argc, argv, "-ang_syst", "Euler");
-        Space = get_param(argc, argv, "-space", "Real");
+        filein  = getParameter(argc, argv, "-i");
+        fileout = getParameter(argc, argv, "-o");
+        AngSystem = getParameter(argc, argv, "-ang_syst", "Euler");
+        Space = getParameter(argc, argv, "-space", "Real");
 
     }
     catch (Xmipp_error XE)

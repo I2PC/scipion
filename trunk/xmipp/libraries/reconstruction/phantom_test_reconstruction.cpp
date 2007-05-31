@@ -65,7 +65,7 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
     try
     {
         // Reconstruction method
-        str = get_param(fh_param, "reconstruction method", 0, NULL,
+        str = getParameter(fh_param, "reconstruction method", 0, NULL,
                         3007, "Recons_test_Parameters::read: Reconstruction method not found");
         if (str == "ART")         recons_method = use_ART;
         else if (str == "SIRT")        recons_method = use_SIRT;
@@ -74,44 +74,44 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
         else
             REPORT_ERROR(3007, (string)"Recons_test_Parameters::read: "
                          "reconstruction mode " + str + " not supported");
-        random_sort = check_param(fh_param, "random sort");
-        sort_last_N = AtoI(get_param(fh_param, "sort last", 0, "2"));
+        random_sort = checkParameter(fh_param, "random sort");
+        sort_last_N = AtoI(getParameter(fh_param, "sort last", 0, "2"));
 
         // Several filenames and parameters
-        fn_random_phantom = get_param(fh_param, "phantom family", 0, "",
+        fn_random_phantom = getParameter(fh_param, "phantom family", 0, "",
                                       3007, "Recons_test_Parameters::read: Random Phantom filename not found");
-        fn_proj_params = get_param(fh_param, "projection parameters", 0, NULL,
+        fn_proj_params = getParameter(fh_param, "projection parameters", 0, NULL,
                                    3007, "Recons_test_Parameters::read: Projection parameters "
                                    "filename not found");
-        fn_voxel_phantom = get_param(fh_param, "voxel phantom", 0, "");
-        fn_crystal = get_param(fh_param, "crystal parameters", 0, "");
-        fn_sym    = get_param(fh_param, "symmetry file", 0, "");
-        force_sym = AtoI(get_param(fh_param, "force symmetry", 0, "0"));
-        do_not_use_symproj = check_param(fh_param, "no projsym");
-        fn_final_sym = get_param(fh_param, "final symmetry file", 0, "");
-        fn_CTF = get_param(fh_param, "CTF", 0, "");
-        defocus_change = AtoF(get_param(fh_param, "defocus change", 0, "0"));
-        sigma = AtoF(get_param(fh_param, "noise stddev", 0, "0"));
-        low_pass_before_CTF = AtoF(get_param(fh_param, "noise lowpass before CTF", 0, "0"));
+        fn_voxel_phantom = getParameter(fh_param, "voxel phantom", 0, "");
+        fn_crystal = getParameter(fh_param, "crystal parameters", 0, "");
+        fn_sym    = getParameter(fh_param, "symmetry file", 0, "");
+        force_sym = AtoI(getParameter(fh_param, "force symmetry", 0, "0"));
+        do_not_use_symproj = checkParameter(fh_param, "no projsym");
+        fn_final_sym = getParameter(fh_param, "final symmetry file", 0, "");
+        fn_CTF = getParameter(fh_param, "CTF", 0, "");
+        defocus_change = AtoF(getParameter(fh_param, "defocus change", 0, "0"));
+        sigma = AtoF(getParameter(fh_param, "noise stddev", 0, "0"));
+        low_pass_before_CTF = AtoF(getParameter(fh_param, "noise lowpass before CTF", 0, "0"));
 
-        w_hp = AtoF(get_param(fh_param, "highpass cutoff", 0, "0"));
+        w_hp = AtoF(getParameter(fh_param, "highpass cutoff", 0, "0"));
         if (w_hp < 0 || w_hp > 0.5) w_hp = 0;
 
-        MeasNo = AtoI(get_param(fh_param, "measurement number", 0, "-1"));
-        accuracy = AtoF(get_param(fh_param, "accuracy", 0, "-1"));
-        unluckiness = AtoF(get_param(fh_param, "unluckiness", 0, "0.01"));
-        global_radius = AtoF(get_param(fh_param, "global radius", 0, "-1"));
-        max_resolution = AtoF(get_param(fh_param, "max resolution", 0, "-1"));
+        MeasNo = AtoI(getParameter(fh_param, "measurement number", 0, "-1"));
+        accuracy = AtoF(getParameter(fh_param, "accuracy", 0, "-1"));
+        unluckiness = AtoF(getParameter(fh_param, "unluckiness", 0, "0.01"));
+        global_radius = AtoF(getParameter(fh_param, "global radius", 0, "-1"));
+        max_resolution = AtoF(getParameter(fh_param, "max resolution", 0, "-1"));
 
         // Surface mask
-        probe_radius = AtoF(get_param(fh_param, "surface top", 0, "0.5"));
-        str = get_param(fh_param, "surface top", 0, "");
+        probe_radius = AtoF(getParameter(fh_param, "surface top", 0, "0.5"));
+        str = getParameter(fh_param, "surface top", 0, "");
         if (str != "")
         {
             enable_top_surface = true;
-            top0 = AtoF(first_word(str), 3007,
+            top0 = AtoF(firstWord(str), 3007,
                         "Recons_test_Parameters::read: top0 is not a true number");
-            auxstr = next_token();
+            auxstr = nextToken();
             // Is it a range?
             if (auxstr == NULL) topF = top0;
             else
@@ -120,13 +120,13 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
         }
         else enable_top_surface = false;
 
-        str = get_param(fh_param, "surface bottom", 0, "");
+        str = getParameter(fh_param, "surface bottom", 0, "");
         if (str != "")
         {
             enable_bottom_surface = true;
-            bottom0 = AtoF(first_word(str), 3007,
+            bottom0 = AtoF(firstWord(str), 3007,
                            "Recons_test_Parameters::read: bottom0 is not a true number");
-            auxstr = next_token();
+            auxstr = nextToken();
             // Is it a range?
             if (auxstr == NULL) bottomF = bottom0;
             else
@@ -135,17 +135,17 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
         }
         else enable_bottom_surface = false;
 
-        run_also_without_constraints = check_param(fh_param, "run also without constraints");
+        run_also_without_constraints = checkParameter(fh_param, "run also without constraints");
 
         // Normalization
-        enable_normalization = check_param(fh_param, "enable normalization");
+        enable_normalization = checkParameter(fh_param, "enable normalization");
         if (enable_normalization)
         {
-            a_avg = AtoF(get_param(fh_param, "a avg"));
-            a_stddev = AtoF(get_param(fh_param, "a stddev"));
-            b_avg = AtoF(get_param(fh_param, "b avg"));
-            b_stddev = AtoF(get_param(fh_param, "b stddev"));
-            str = get_param(fh_param, "normalizing method");
+            a_avg = AtoF(getParameter(fh_param, "a avg"));
+            a_stddev = AtoF(getParameter(fh_param, "a stddev"));
+            b_avg = AtoF(getParameter(fh_param, "b avg"));
+            b_stddev = AtoF(getParameter(fh_param, "b stddev"));
+            str = getParameter(fh_param, "normalizing method");
             if (str == "OldXmipp")      normalizing_method = OLDXMIPP;
             else if (str == "Near_OldXmipp") normalizing_method = NEAR_OLDXMIPP;
             else if (str == "NewXmipp")      normalizing_method = NEWXMIPP;
@@ -153,49 +153,49 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
             else if (str == "Michael")       normalizing_method = MICHAEL;
             else if (str == "None")          normalizing_method = NONE;
             else REPORT_ERROR(1, "Normalize: Unknown normalizing method");
-            bg_radius = AtoI(get_param(fh_param, "background radius", 0, "0"));
+            bg_radius = AtoI(getParameter(fh_param, "background radius", 0, "0"));
         }
 
         // CTF correction
-        correct_phase = check_param(fh_param, "correct CTF phase");
-        str = get_param(fh_param, "CTF phase method", 0, "leave");
+        correct_phase = checkParameter(fh_param, "correct CTF phase");
+        str = getParameter(fh_param, "CTF phase method", 0, "leave");
         if (str == "remove")           phase_correction_method = CORRECT_SETTING_SMALL_TO_ZERO;
         else if (str == "leave" || str == "") phase_correction_method = CORRECT_LEAVING_SMALL;
         else if (str == "divide")           phase_correction_method = CORRECT_AMPLIFYING_NOT_SMALL;
-        phase_correction_param = AtoF(get_param(fh_param, "CTF phase small", 0, "0"));
-        correct_amplitude = check_param(fh_param, "correct CTF amplitude");
-        mu = AtoF(get_param(fh_param, "mu", 0, "1.8"));
-        unmatched = check_param(fh_param, "unmatched");
+        phase_correction_param = AtoF(getParameter(fh_param, "CTF phase small", 0, "0"));
+        correct_amplitude = checkParameter(fh_param, "correct CTF amplitude");
+        mu = AtoF(getParameter(fh_param, "mu", 0, "1.8"));
+        unmatched = checkParameter(fh_param, "unmatched");
 
         // Only valid for ART and SIRT
-        str = get_param(fh_param, "blob type", 0, "big");
+        str = getParameter(fh_param, "blob type", 0, "big");
         if (str == "big")    blob_type = BIG_BLOB;
         else if (str == "small")  blob_type = SMALL_BLOB;
         else if (str == "visual") blob_type = VISUAL_BLOB;
         else    REPORT_ERROR(3007,
                                  "Recons_test_Parameters::read: unknown blob type, valid types big or small");
-        voxel_basis = check_param(fh_param, "voxel basis");
-        stop_at = AtoI(get_param(fh_param, "stop at", 0, "0"));
-        succesive_params = check_param(fh_param, "succesive parameters");
-        POCS_positivity = check_param(fh_param, "POCS positivity");
-        reconstruction_radius = AtoF(get_param(fh_param, "reconstruction radius", 0, "-1"));
+        voxel_basis = checkParameter(fh_param, "voxel basis");
+        stop_at = AtoI(getParameter(fh_param, "stop at", 0, "0"));
+        succesive_params = checkParameter(fh_param, "succesive parameters");
+        POCS_positivity = checkParameter(fh_param, "POCS positivity");
+        reconstruction_radius = AtoF(getParameter(fh_param, "reconstruction radius", 0, "-1"));
 
         // Segmented surface
-        enable_segmented_surface = check_param(fh_param, "segmented surface");
+        enable_segmented_surface = checkParameter(fh_param, "segmented surface");
         if (enable_segmented_surface)
-            threshold_surface_segment = AtoF(get_param(fh_param, "segmented surface", 0));
+            threshold_surface_segment = AtoF(getParameter(fh_param, "segmented surface", 0));
 
         // Starting volume
-        start_from_phantom = check_param(fh_param, "start from phantom");
+        start_from_phantom = checkParameter(fh_param, "start from phantom");
         if (start_from_phantom)
         {
-            starting_low_pass = AtoF(get_param(fh_param, "starting lowpass", 0, "",
+            starting_low_pass = AtoF(getParameter(fh_param, "starting lowpass", 0, "",
                                                3007, "Recons_test_Parameters::read: starting lowpass is missing"));
-            starting_noise = AtoF(get_param(fh_param, "starting noise", 0, "0"));
+            starting_noise = AtoF(getParameter(fh_param, "starting noise", 0, "0"));
         }
 
-        segmented_dilation = AtoI(get_param(fh_param, "segmented dilation", 0, "0"));
-        mass = AtoF(get_param(fh_param, "mass", 0, "-1"));
+        segmented_dilation = AtoI(getParameter(fh_param, "segmented dilation", 0, "0"));
+        mass = AtoF(getParameter(fh_param, "mass", 0, "-1"));
 
         // If ART ..., read Iterative parameters
         if (recons_method == use_ART || recons_method == use_SIRT ||
@@ -204,16 +204,16 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
             int skip = 0;
             do
             {
-                str = get_param(fh_param, "iterative parameters", skip, "");
+                str = getParameter(fh_param, "iterative parameters", skip, "");
                 if (str != "")
                 {
-                    lambda0.push_back(AtoF(first_word(str), 3007,
+                    lambda0.push_back(AtoF(firstWord(str), 3007,
                                            "Recons_test_Parameters::read: lambda0 is not a true number"));
-                    auxstr = next_word(3007, "Recons_test_Parameters::read: "
+                    auxstr = nextWord(3007, "Recons_test_Parameters::read: "
                                        "number of iterations not found");
                     no_it0.push_back(AtoI(auxstr, 3007,
                                           "Recons_test_Parameters::read: no_it0 is not a true number"));
-                    auxstr = next_token();
+                    auxstr = nextToken();
                     // Is it a range?
                     if (auxstr == NULL)
                     {
@@ -224,7 +224,7 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
                     {
                         lambdaF.push_back(AtoF(auxstr, 3007,
                                                "Recons_test_Parameters::read: lambdaF is not a true number"));
-                        auxstr = next_word(3007, "Recons_test_Parameters::read: "
+                        auxstr = nextWord(3007, "Recons_test_Parameters::read: "
                                            "number of iterations not found");
                         no_itF.push_back(AtoI(auxstr, 3007,
                                               "Recons_test_Parameters::read: no_itF is not a true number"));
@@ -245,10 +245,10 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
             int skip = 0;
             do
             {
-                str = get_param(fh_param, "threshold", skip, "");
+                str = getParameter(fh_param, "threshold", skip, "");
                 if (str != "")
                 {
-                    WBP_threshold.push_back(AtoF(first_word(str), 3007,
+                    WBP_threshold.push_back(AtoF(firstWord(str), 3007,
                                                  "Recons_test_Parameters::read: WBP threshold is not a true number"));
                     skip++;
                 }
@@ -261,14 +261,14 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
         }
 
         // Tomography
-        tomography = check_param(fh_param, "tomography");
+        tomography = checkParameter(fh_param, "tomography");
 
         // Evaluate
-        evaluate = !check_param(fh_param, "dont evaluate");
-        only_structural = check_param(fh_param, "only structural");
-        fn_alternative_evaluation_phantom = get_param(fh_param,
+        evaluate = !checkParameter(fh_param, "dont evaluate");
+        only_structural = checkParameter(fh_param, "only structural");
+        fn_alternative_evaluation_phantom = getParameter(fh_param,
                                             "alternative evaluation phantom", 0, "");
-        fn_smooth_evaluation_mask = get_param(fh_param,
+        fn_smooth_evaluation_mask = getParameter(fh_param,
                                               "smooth evaluation mask", 0, "");
     }
     catch (Xmipp_error XE)

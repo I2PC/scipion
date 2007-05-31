@@ -55,20 +55,20 @@ int main(int argc, char **argv)
     // Get parameters =======================================================
     try
     {
-        fn1 = get_param(argc, argv, "-i1");
-        fn2 = get_param(argc, argv, "-i2");
-        get_3_double_params(argc, argv, "-rot", rot0, rotF, step_rot, 0, 0, 1);
-        get_3_double_params(argc, argv, "-tilt", tilt0, tiltF, step_tilt, 0, 0, 1);
-        get_3_double_params(argc, argv, "-psi", psi0, psiF, step_psi, 0, 0, 1);
-        get_3_double_params(argc, argv, "-scale", scale0, scaleF, step_scale, 1, 1, 1);
-        get_3_double_params(argc, argv, "-grey_scale", grey_scale0, grey_scaleF,
+        fn1 = getParameter(argc, argv, "-i1");
+        fn2 = getParameter(argc, argv, "-i2");
+        getThreeDoubleParams(argc, argv, "-rot", rot0, rotF, step_rot, 0, 0, 1);
+        getThreeDoubleParams(argc, argv, "-tilt", tilt0, tiltF, step_tilt, 0, 0, 1);
+        getThreeDoubleParams(argc, argv, "-psi", psi0, psiF, step_psi, 0, 0, 1);
+        getThreeDoubleParams(argc, argv, "-scale", scale0, scaleF, step_scale, 1, 1, 1);
+        getThreeDoubleParams(argc, argv, "-grey_scale", grey_scale0, grey_scaleF,
                             step_grey, 1, 1, 1);
-        get_3_double_params(argc, argv, "-z", z0, zF, step_z, 0, 0, 1);
-        get_3_double_params(argc, argv, "-y", y0, yF, step_y, 0, 0, 1);
-        get_3_double_params(argc, argv, "-x", x0, xF, step_x, 0, 0, 1);
+        getThreeDoubleParams(argc, argv, "-z", z0, zF, step_z, 0, 0, 1);
+        getThreeDoubleParams(argc, argv, "-y", y0, yF, step_y, 0, 0, 1);
+        getThreeDoubleParams(argc, argv, "-x", x0, xF, step_x, 0, 0, 1);
 
-        mask_enabled = check_param(argc, argv, "-mask");
-        mean_in_mask = check_param(argc, argv, "-mean_in_mask");
+        mask_enabled = checkParameter(argc, argv, "-mask");
+        mean_in_mask = checkParameter(argc, argv, "-mean_in_mask");
         if (mask_enabled)
             mask.read(argc, argv);
 
@@ -80,15 +80,15 @@ int main(int argc, char **argv)
         if (step_z    == 0) step_z    = 1;
         if (step_y    == 0) step_y    = 1;
         if (step_x    == 0) step_x    = 1;
-        tell = check_param(argc, argv, "-show_fit");
-        apply = check_param(argc, argv, "-apply");
+        tell = checkParameter(argc, argv, "-show_fit");
+        apply = checkParameter(argc, argv, "-apply");
 
-        if (check_param(argc, argv, "-covariance"))
+        if (checkParameter(argc, argv, "-covariance"))
         {
             alignment_method = COVARIANCE;
             optimize_criterion = MAXIMUM;
         }
-        else if (check_param(argc, argv, "-least_squares"))
+        else if (checkParameter(argc, argv, "-least_squares"))
         {
             alignment_method = LEAST_SQUARES;
             optimize_criterion = MINIMUM;

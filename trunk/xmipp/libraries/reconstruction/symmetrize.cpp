@@ -30,11 +30,11 @@
 /* Read parameters --------------------------------------------------------- */
 void Symmetrize_Parameters::read(int argc, char **argv)
 {
-    fn_in  = get_param(argc, argv, "-i");
-    fn_out = get_param(argc, argv, "-o", "");
-    fn_sym = get_param(argc, argv, "-sym");
-    do_not_generate_subgroup = check_param(argc, argv, "-no_group");
-    wrap = !check_param(argc, argv, "-dont_wrap");
+    fn_in  = getParameter(argc, argv, "-i");
+    fn_out = getParameter(argc, argv, "-o", "");
+    fn_sym = getParameter(argc, argv, "-sym");
+    do_not_generate_subgroup = checkParameter(argc, argv, "-no_group");
+    wrap = !checkParameter(argc, argv, "-dont_wrap");
 }
 
 /* Usage ------------------------------------------------------------------- */

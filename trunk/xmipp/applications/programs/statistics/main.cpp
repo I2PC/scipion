@@ -55,7 +55,7 @@ int main(int argc, char **argv)
     // Read arguments --------------------------------------------------------
     try
     {
-        fn_input = get_param(argc, argv, "-i");
+        fn_input = getParameter(argc, argv, "-i");
         if (Is_VolumeXmipp(fn_input) || Is_ImageXmipp(fn_input))
         {
             SF.insert(fn_input, SelLine::ACTIVE);
@@ -64,11 +64,11 @@ int main(int argc, char **argv)
             SF.read(fn_input);
 
         mask_prm.read(argc, argv);
-        fn_stats     = get_param(argc, argv, "-o", "");
-        short_format = check_param(argc, argv, "-short_format");
-        save_mask    = check_param(argc, argv, "-save_mask");
-        show_angles  = check_param(argc, argv, "-show_angles");
-        apply_geo    = !check_param(argc, argv, "-dont_apply_geo");
+        fn_stats     = getParameter(argc, argv, "-o", "");
+        short_format = checkParameter(argc, argv, "-short_format");
+        save_mask    = checkParameter(argc, argv, "-save_mask");
+        show_angles  = checkParameter(argc, argv, "-show_angles");
+        apply_geo    = !checkParameter(argc, argv, "-dont_apply_geo");
     }
     catch (Xmipp_error XE)
     {

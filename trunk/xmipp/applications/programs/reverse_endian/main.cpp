@@ -42,10 +42,10 @@ int main(int argc, char **argv)
     // Read arguments --------------------------------------------------------
     try
     {
-        fn_input = get_param(argc, argv, "-i", NULL, 1, "Reverse endian: Input file not found");
-        fn_out   = get_param(argc, argv, "-o", "");
-        fn_oext  = get_param(argc, argv, "-oext", "");
-        if (check_param(argc, argv, "-force"))
+        fn_input = getParameter(argc, argv, "-i", NULL, 1, "Reverse endian: Input file not found");
+        fn_out   = getParameter(argc, argv, "-o", "");
+        fn_oext  = getParameter(argc, argv, "-oext", "");
+        if (checkParameter(argc, argv, "-force"))
             Force_Reverse_Flag = true;
         else Force_Reverse_Flag = false;
         if (Is_ImageXmipp(fn_input) ||

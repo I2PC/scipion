@@ -57,7 +57,7 @@ int check_comm(char **arv)
         return 0;
     }
 
-    if (tolower(*arv[2]) != 't' && tolower(*arv[2]) != 'u')
+    if (toLower(*arv[2]) != 't' && tolower(*arv[2]) != 'u')
     {
         printf("Error in the arguments ( %s )", arv[0]);
         puts(" t|u must be 't' or 'u'");

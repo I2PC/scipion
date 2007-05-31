@@ -31,10 +31,10 @@ void Prog_Break_Sym_prm::read(int argc, char **argv)
 {
 
     //Read Break_Sym parameters
-    fn_sel = get_param(argc, argv, "-i");
-    fn_root = get_param(argc, argv, "-o", "breaksym");
-    fn_vol = get_param(argc, argv, "-vol");
-    fn_mask = get_param(argc, argv, "-mask", "");
+    fn_sel = getParameter(argc, argv, "-i");
+    fn_root = getParameter(argc, argv, "-o", "breaksym");
+    fn_vol = getParameter(argc, argv, "-vol");
+    fn_mask = getParameter(argc, argv, "-mask", "");
     // Fill volume selfile
     if (Is_VolumeXmipp(fn_vol))
     {
@@ -47,13 +47,13 @@ void Prog_Break_Sym_prm::read(int argc, char **argv)
     }
     Nvols = SFvol.ImgNo();
 
-    fn_sym = get_param(argc, argv, "-sym");
-    mask_radius = AtoF(get_param(argc, argv, "-mask_radius", "-1"));
-    eps = AtoF(get_param(argc, argv, "-eps", "5e-5"));
-    verb = AtoI(get_param(argc, argv, "-verb", "1"));
-    Niter = AtoI(get_param(argc, argv, "-iter", "100"));
+    fn_sym = getParameter(argc, argv, "-sym");
+    mask_radius = AtoF(getParameter(argc, argv, "-mask_radius", "-1"));
+    eps = AtoF(getParameter(argc, argv, "-eps", "5e-5"));
+    verb = AtoI(getParameter(argc, argv, "-verb", "1"));
+    Niter = AtoI(getParameter(argc, argv, "-iter", "100"));
     // Hidden
-    istart = AtoI(get_param(argc, argv, "-istart", "1"));
+    istart = AtoI(getParameter(argc, argv, "-istart", "1"));
 
     // Read stuff into memory
     SF.read(fn_sel);

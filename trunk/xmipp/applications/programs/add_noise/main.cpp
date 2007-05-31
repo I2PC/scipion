@@ -37,10 +37,10 @@ public:
     {
         Prog_parameters::read(argc, argv);
         gaussian = uniform = false;
-        if (check_param(argc, argv, "-gaussian"))
+        if (checkParameter(argc, argv, "-gaussian"))
         {
             gaussian = true;
-            int i = position_param(argc, argv, "-gaussian");
+            int i = paremeterPosition(argc, argv, "-gaussian");
             if (i + 1 >= argc) REPORT_ERROR(1, "Not enough parameters after -gaussian");
             noise_stddev = AtoF(argv[i+1]);
             if (i + 2 < argc)
@@ -49,10 +49,10 @@ public:
             }
             else noise_avg = 0;
         }
-        else if (check_param(argc, argv, "-uniform"))
+        else if (checkParameter(argc, argv, "-uniform"))
         {
             uniform = true;
-            int i = position_param(argc, argv, "-uniform");
+            int i = paremeterPosition(argc, argv, "-uniform");
             if (i + 2 >= argc) REPORT_ERROR(1, "Not enough parameters after -uniform");
             noise_min = AtoF(argv[i+1]);
             noise_max = AtoF(argv[i+2]);

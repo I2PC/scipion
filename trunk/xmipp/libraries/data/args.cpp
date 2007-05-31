@@ -284,7 +284,7 @@ string AtoA(const std::string& str, int _width)
     return aux.append(_width - str.length(), ' ');
 }
 
-void check_angle_descr(const std::string& str)
+void checkAngle(const std::string& str)
 {
     if (str == "rot")
         return;
@@ -297,10 +297,10 @@ void check_angle_descr(const std::string& str)
 
     REPORT_ERROR(1,
                  static_cast< std::string >(
-                     "check_angle_descr: Not recognized angle type: " + str));
+                     "checkAngle: Not recognized angle type: " + str));
 }
 
-std::string remove_spaces(const std::string& _str)
+std::string removeSpaces(const std::string& _str)
 {
     std::string retval;
     int first = _str.find_first_not_of("\n \t");
@@ -328,7 +328,7 @@ std::string remove_spaces(const std::string& _str)
 }
 
 // Remove quotes ===========================================================
-void remove_quotes(char **_str)
+void removeQuotes(char **_str)
 {
     string retval = *_str;
     if (retval.length() == 0)
@@ -397,7 +397,7 @@ int splitString(const std::string& input,
 }
 
 // To lower ================================================================
-void tolower(char *_str)
+void toLower(char *_str)
 {
     int i = 0;
     while (_str[i] != '\0')
@@ -408,7 +408,7 @@ void tolower(char *_str)
     }
 }
 
-void tolower(string &_str)
+void toLower(string &_str)
 {
     int i = 0;
     while (_str[i] != '\0')
@@ -420,7 +420,7 @@ void tolower(string &_str)
 }
 
 // Next token ==============================================================
-string next_token(const string &str, int &i)
+string nextToken(const string &str, int &i)
 {
     string retval;
     if (i >= str.length())
@@ -437,15 +437,15 @@ string next_token(const string &str, int &i)
 }
 
 // Get word ================================================================
-char *first_word(char *str, int _errno, string errmsg, int exit)
+char *firstWord(char *str, int _errno, string errmsg, int exit)
 {
     char *token;
 
     // Get token
     if (str != NULL)
-        token = first_token(str);
+        token = firstToken(str);
     else
-        token = next_token();
+        token = nextToken();
 
     // Check that there is something
     if (token == NULL)
@@ -479,7 +479,7 @@ void tokenize(const string& str, vector<string>& tokens,
 }
 
 // Get parameters from the command line ====================================
-char *get_param(int argc, char **argv, const char *param,
+char *getParameter(int argc, char **argv, const char *param,
                 const char *option, int _errno, string errmsg, int exit)
 {
     int i = 0;
@@ -506,12 +506,12 @@ char *get_param(int argc, char **argv, const char *param,
 }
 
 // Get 2 parameters ========================================================
-bool get_2_double_params(int argc, char **argv, const char *param,
+bool getTwoDoubleParams(int argc, char **argv, const char *param,
                          double &v1, double &v2, double v1_def, double v2_def,
                          int _errno, string errmsg, int exit)
 {
     bool retval;
-    int i = position_param(argc, argv, param);
+    int i = paremeterPosition(argc, argv, param);
     if (i != -1)
     {
         if (i + 2 >= argc)
@@ -540,13 +540,13 @@ bool get_2_double_params(int argc, char **argv, const char *param,
 }
 
 // Get 3 parameters ========================================================
-bool get_3_double_params(int argc, char **argv, const char *param,
+bool getThreeDoubleParams(int argc, char **argv, const char *param,
                          double &v1, double &v2, double &v3,
                          double v1_def, double v2_def, double v3_def,
                          int _errno, string errmsg, int exit)
 {
     bool retval;
-    int i = position_param(argc, argv, param);
+    int i = paremeterPosition(argc, argv, param);
     if (i != -1)
     {
         if (i + 3 >= argc)
@@ -577,7 +577,7 @@ bool get_3_double_params(int argc, char **argv, const char *param,
 }
 
 // Checks if a boolean parameter was included the command line =============
-bool check_param(int argc, char **argv, const char *param)
+bool checkParameter(int argc, char **argv, const char *param)
 {
     int i = 0;
 
@@ -591,7 +591,7 @@ bool check_param(int argc, char **argv, const char *param)
 }
 
 // Position of a parameter in the command line =============================
-int position_param(int argc, char **argv, const char *param)
+int paremeterPosition(int argc, char **argv, const char *param)
 {
     int i = 0;
 
@@ -605,7 +605,7 @@ int position_param(int argc, char **argv, const char *param)
 }
 
 // Number of components ====================================================
-int component_no(const string &str)
+int numComponents(const string &str)
 {
     int imax = str.length();
     int retval = 0;
@@ -618,7 +618,7 @@ int component_no(const string &str)
 }
 
 // Get float vector ========================================================
-Matrix1D<double> get_vector_param(int argc, char **argv, const char *param,
+Matrix1D<double> getVectorParameter(int argc, char **argv, const char *param,
                                   int dim, int _errno,
                                   string errmsg,
                                   int exit)
@@ -627,7 +627,7 @@ Matrix1D<double> get_vector_param(int argc, char **argv, const char *param,
     bool count_dimensionality = (dim == -1);
 
     // Find and form vector
-    int pos = position_param(argc, argv, param);
+    int pos = paremeterPosition(argc, argv, param);
     if (pos == -1 || pos + 1 == argc)
         if (count_dimensionality)
             return aux;
@@ -732,7 +732,7 @@ Matrix1D<double> get_vector_param(int argc, char **argv, const char *param,
 }
 
 // Specific command line ===================================================
-void specific_command_line(const string &prog_name, int argc, char **argv,
+void specificCommandLine(const string &prog_name, int argc, char **argv,
                            int &argcp, char ***argvp)
 {
     int i = 1;
@@ -789,7 +789,7 @@ void specific_command_line(const string &prog_name, int argc, char **argv,
 // Generate command line ===================================================
 #define INSIDE_WORD  1
 #define OUTSIDE_WORD 2
-void generate_command_line(const string &command_line, int &argcp,
+void generateCommandLine(const string &command_line, int &argcp,
                            char ** &argvp, char* &copy)
 {
     int L = command_line.length();
@@ -883,7 +883,7 @@ void generate_command_line(const string &command_line, int &argcp,
 }
 
 // Generate command line from file =========================================
-bool generate_command_line(FILE *fh, const char *param, int &argcp,
+bool generateCommandLine(FILE *fh, const char *param, int &argcp,
                            char ** &argvp, char* &copy)
 {
     long actual_pos = ftell(fh);
@@ -925,12 +925,12 @@ bool generate_command_line(FILE *fh, const char *param, int &argcp,
 
     string artificial_line;
     artificial_line = (string)"-" + param + " " + retval;
-    generate_command_line(artificial_line, argcp, argvp, copy);
+    generateCommandLine(artificial_line, argcp, argvp, copy);
     return true;
 }
 
 // Get "parameter" from file ===============================================
-string get_param(FILE *fh, const char *param, int skip, const char *option,
+string getParameter(FILE *fh, const char *param, int skip, const char *option,
                  int _errno, string errmsg, int exit)
 {
     long actual_pos = ftell(fh);
@@ -992,12 +992,12 @@ string get_param(FILE *fh, const char *param, int skip, const char *option,
         else
             return option;
     else
-        return remove_spaces(retval);
+        return removeSpaces(retval);
     return "";
 }
 
 // Check "parameter" from file =============================================
-bool check_param(FILE *fh, const char *param)
+bool checkParameter(FILE *fh, const char *param)
 {
     long actual_pos = ftell(fh);
     fseek(fh, 0, SEEK_SET);
@@ -1035,14 +1035,14 @@ bool check_param(FILE *fh, const char *param)
 }
 
 // Get vector param from file ==============================================
-Matrix1D<double> get_vector_param(FILE *fh, const char *param,
+Matrix1D<double> getVectorParameter(FILE *fh, const char *param,
                                   int dim, int _errno,  string errmsg, int exit)
 {
     int    argcp;
     char **argvp = NULL;
     char  *copy = NULL;
     Matrix1D<double> retval;
-    if (!generate_command_line(fh, param, argcp, argvp, copy))
+    if (!generateCommandLine(fh, param, argcp, argvp, copy))
         if (dim == -1)
             return retval;
         else if (exit)
@@ -1051,7 +1051,7 @@ Matrix1D<double> get_vector_param(FILE *fh, const char *param,
             REPORT_ERROR(_errno, errmsg);
     else
     {
-        retval = get_vector_param(argcp, argvp, ((string)"-" + param).c_str(), dim,
+        retval = getVectorParameter(argcp, argvp, ((string)"-" + param).c_str(), dim,
                                   _errno, errmsg, exit);
         delete copy;
         return retval;

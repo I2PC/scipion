@@ -31,12 +31,12 @@
 /* Read from command line ================================================== */
 void Prog_Project_Parameters::read(int argc, char **argv)
 {
-    fn_proj_param = get_param(argc, argv, "-i");
-    fn_sel_file   = get_param(argc, argv, "-o", "");
-    fn_crystal    = get_param(argc, argv, "-crystal", "");
-    fn_sym        = get_param(argc, argv, "-sym", "");
-    only_create_angles = check_param(argc, argv, "-only_create_angles");
-    if (check_param(argc, argv, "-show_angles"))
+    fn_proj_param = getParameter(argc, argv, "-i");
+    fn_sel_file   = getParameter(argc, argv, "-o", "");
+    fn_crystal    = getParameter(argc, argv, "-crystal", "");
+    fn_sym        = getParameter(argc, argv, "-sym", "");
+    only_create_angles = checkParameter(argc, argv, "-only_create_angles");
+    if (checkParameter(argc, argv, "-show_angles"))
         tell |= TELL_SHOW_ANGLES;
 }
 
@@ -99,45 +99,45 @@ void Projection_Parameters::read(FileName fn_proj_param)
         switch (lineNo)
         {
         case 0:
-            fn_phantom = first_word(line, 3007,
+            fn_phantom = firstWord(line, 3007,
                                     "Prog_Project_Parameters::read: Phantom name not found");
             lineNo = 1;
             break;
         case 1:
             fn_projection_seed =
-                first_word(line, 3007,
+                firstWord(line, 3007,
                            "Prog_Project_Parameters::read: Error in Projection seed");
             // Next two parameters are optional
-            auxstr = next_token();
+            auxstr = nextToken();
             if (auxstr != NULL) starting =
                     AtoI(auxstr, 3007,
                          "Prog_Project_Parameters::read: Error in First "
                          "projection number");
-            fn_projection_extension = next_token();
+            fn_projection_extension = nextToken();
             lineNo = 2;
             break;
         case 2:
-            proj_Xdim = AtoI(first_token(line), 3007,
+            proj_Xdim = AtoI(firstToken(line), 3007,
                              "Prog_Project_Parameters::read: Error in X dimension");
-            proj_Ydim = AtoI(next_token(), 3007,
+            proj_Ydim = AtoI(nextToken(), 3007,
                              "Prog_Project_Parameters::read: Error in Y dimension");
             lineNo = 3;
             break;
         case 3:
             // Angle file
-            fn_angle = first_word(line);
+            fn_angle = firstWord(line);
             if (fn_angle == "NULL") ;
             else if (exists(fn_angle))
             {
                 // Angle source file
                 try
                 {
-                    ang1 = next_word();
-                    check_angle_descr(ang1);
-                    ang2 = next_word();
-                    check_angle_descr(ang2);
-                    ang3 = next_word();
-                    check_angle_descr(ang3);
+                    ang1 = nextWord();
+                    checkAngle(ang1);
+                    ang2 = nextWord();
+                    checkAngle(ang2);
+                    ang3 = nextWord();
+                    checkAngle(ang3);
                 }
                 catch (Xmipp_error XE)
                 {
@@ -153,13 +153,13 @@ void Projection_Parameters::read(FileName fn_proj_param)
             break;
         case 4:
             // theta init
-            auxstr = first_word(line);
+            auxstr = firstWord(line);
             if (strcmp(auxstr, "NULL") != 0)
             {
                 enable_angle_range = 1;
                 rot_range.ang0 = AtoF(auxstr, 3007,
                                       "Prog_Project_Parameters::read: Error in Rotational Init");
-                auxstr = next_token();
+                auxstr = nextToken();
                 if (auxstr == NULL)
                 {
                     // Fixed mode
@@ -171,11 +171,11 @@ void Projection_Parameters::read(FileName fn_proj_param)
                 {
                     rot_range.angF = AtoF(auxstr, 3007,
                                           "Prog_Project_Parameters::read: Error in Rotational Final");
-                    rot_range.samples = AtoI(next_token(), 3007,
+                    rot_range.samples = AtoI(nextToken(), 3007,
                                              "Prog_Project_Parameters::read: Error in Rotational "
                                              "Samples");
                     if (rot_range.ang0 == rot_range.angF) rot_range.samples = 1;
-                    rot_range.randomness = translate_randomness(next_token());
+                    rot_range.randomness = translate_randomness(nextToken());
                 }
                 lineNo = 5;
             }
@@ -186,9 +186,9 @@ void Projection_Parameters::read(FileName fn_proj_param)
             }
             break;
         case 5:
-            tilt_range.ang0 = AtoF(first_token(line), 3007,
+            tilt_range.ang0 = AtoF(firstToken(line), 3007,
                                    "Prog_Project_Parameters::read: Error in Tilting Init");
-            auxstr = next_token();
+            auxstr = nextToken();
             if (auxstr == NULL)
             {
                 // Fixed mode
@@ -200,17 +200,17 @@ void Projection_Parameters::read(FileName fn_proj_param)
             {
                 tilt_range.angF = AtoF(auxstr, 3007,
                                        "Prog_Project_Parameters::read: Error in Tilting Final");
-                tilt_range.samples = AtoI(next_token(), 3007,
+                tilt_range.samples = AtoI(nextToken(), 3007,
                                           "Prog_Project_Parameters::read: Error in Tilting Samples");
                 if (tilt_range.ang0 == tilt_range.angF) tilt_range.samples = 1;
-                tilt_range.randomness = translate_randomness(next_token());
+                tilt_range.randomness = translate_randomness(nextToken());
             }
             lineNo = 6;
             break;
         case 6:
-            psi_range.ang0 = AtoF(first_token(line), 3007,
+            psi_range.ang0 = AtoF(firstToken(line), 3007,
                                   "Prog_Project_Parameters::read: Error in Psi Init");
-            auxstr = next_token();
+            auxstr = nextToken();
             if (auxstr == NULL)
             {
                 // Fixed mode
@@ -222,17 +222,17 @@ void Projection_Parameters::read(FileName fn_proj_param)
             {
                 psi_range.angF = AtoF(auxstr, 3007,
                                       "Prog_Project_Parameters::read: Error in Psi Final");
-                psi_range.samples = AtoI(next_token(), 3007,
+                psi_range.samples = AtoI(nextToken(), 3007,
                                          "Prog_Project_Parameters::read: Error in Psi Samples");
                 if (psi_range.ang0 == psi_range.angF) psi_range.samples = 1;
-                psi_range.randomness = translate_randomness(next_token());
+                psi_range.randomness = translate_randomness(nextToken());
             }
             lineNo = 7;
             break;
         case 7:
-            rot_range.Ndev = AtoF(first_word(line), 3007,
+            rot_range.Ndev = AtoF(firstWord(line), 3007,
                                   "Prog_Project_Parameters::read: Error in Rotational noise");
-            auxstr = next_token();
+            auxstr = nextToken();
             if (auxstr != NULL)
                 rot_range.Navg = AtoF(auxstr, 3007,
                                       "Prog_Project_Parameters::read: Error in Rotational bias");
@@ -240,9 +240,9 @@ void Projection_Parameters::read(FileName fn_proj_param)
             lineNo = 8;
             break;
         case 8:
-            tilt_range.Ndev = AtoF(first_word(line), 3007,
+            tilt_range.Ndev = AtoF(firstWord(line), 3007,
                                    "Prog_Project_Parameters::read: Error in tilting noise");
-            auxstr = next_token();
+            auxstr = nextToken();
             if (auxstr != NULL)
                 tilt_range.Navg = AtoF(auxstr, 3007,
                                        "Prog_Project_Parameters::read: Error in tilting bias");
@@ -250,9 +250,9 @@ void Projection_Parameters::read(FileName fn_proj_param)
             lineNo = 9;
             break;
         case 9:
-            psi_range.Ndev = AtoF(first_word(line), 3007,
+            psi_range.Ndev = AtoF(firstWord(line), 3007,
                                   "Prog_Project_Parameters::read: Error in psi noise");
-            auxstr = next_token();
+            auxstr = nextToken();
             if (auxstr != NULL)
                 psi_range.Navg = AtoF(auxstr, 3007,
                                       "Prog_Project_Parameters::read: Error in psi bias");
@@ -260,9 +260,9 @@ void Projection_Parameters::read(FileName fn_proj_param)
             lineNo = 10;
             break;
         case 10:
-            Npixel_dev = AtoF(first_word(line), 3007,
+            Npixel_dev = AtoF(firstWord(line), 3007,
                               "Prog_Project_Parameters::read: Error in pixel noise");
-            auxstr = next_token();
+            auxstr = nextToken();
             if (auxstr != NULL)
                 Npixel_avg = AtoF(auxstr, 3007,
                                   "Prog_Project_Parameters::read: Error in pixel bias");
@@ -270,9 +270,9 @@ void Projection_Parameters::read(FileName fn_proj_param)
             lineNo = 11;
             break;
         case 11:
-            Ncenter_dev = AtoF(first_word(line), 3007,
+            Ncenter_dev = AtoF(firstWord(line), 3007,
                                "Prog_Project_Parameters::read: Error in center noise");
-            auxstr = next_token();
+            auxstr = nextToken();
             if (auxstr != NULL)
                 Ncenter_avg = AtoF(auxstr, 3007,
                                    "Prog_Project_Parameters::read: Error in center bias");

@@ -29,9 +29,9 @@ int main(int argc, char ** argv)
 
     try
     {
-        ifirst = position_param(argc, argv, "-i");
+        ifirst = paremeterPosition(argc, argv, "-i");
         if (ifirst == -1 && argc != 1) REPORT_ERROR(1, "Edit: Cannot find -i");
-        remove = check_param(argc, argv, "-remove");
+        remove = checkParameter(argc, argv, "-remove");
     }
     catch (Xmipp_error XE)
     {

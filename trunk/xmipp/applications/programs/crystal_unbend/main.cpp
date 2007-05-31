@@ -38,11 +38,11 @@ int main(int argc, char **argv)
     // Get command line parameters ------------------------------------------
     try
     {
-        prm.inImfile  = get_param(argc, argv, "-i");
-        prm.outImfile = get_param(argc, argv, "-o");
-        prm.FN_Correlation = get_param(argc, argv, "-cor");
-        prm.cc_peak_factor =  AtoF(get_param(argc, argv, "-cc_peak_factor", "0.0"));
-        prm.InterpModel = get_param(argc, argv, "-interp_model", "Linear");
+        prm.inImfile  = getParameter(argc, argv, "-i");
+        prm.outImfile = getParameter(argc, argv, "-o");
+        prm.FN_Correlation = getParameter(argc, argv, "-cor");
+        prm.cc_peak_factor =  AtoF(getParameter(argc, argv, "-cc_peak_factor", "0.0"));
+        prm.InterpModel = getParameter(argc, argv, "-interp_model", "Linear");
 
     }
     catch (Xmipp_error XE)

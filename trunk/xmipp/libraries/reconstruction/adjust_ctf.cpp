@@ -519,17 +519,17 @@ void Adjust_CTF_Parameters::read(const FileName &fn_param)
         REPORT_ERROR(1, (string)"Prog_Adjust_CTF::read: There is a problem "
                      "opening the file " + fn_param);
 
-    fn_ctf = get_param(fh_param, "ctf", 0, "");
-    fn_similar_model = get_param(fh_param, "similar_model", 0, "");
+    fn_ctf = getParameter(fh_param, "ctf", 0, "");
+    fn_similar_model = getParameter(fh_param, "similar_model", 0, "");
 
-    show_optimization = check_param(fh_param, "show_optimization");
-    min_freq = AtoF(get_param(fh_param, "min_freq", 0, "0.03"));
-    max_freq = AtoF(get_param(fh_param, "max_freq", 0, "0.35"));
-    astigmatic_noise = !check_param(fh_param, "radial_noise");
-    defocus_range = AtoF(get_param(fh_param, "defocus_range", 0, "8000"));
-    initial_Ca = AtoF(get_param(fh_param, "initial_Ca", 0, "2"));
+    show_optimization = checkParameter(fh_param, "show_optimization");
+    min_freq = AtoF(getParameter(fh_param, "min_freq", 0, "0.03"));
+    max_freq = AtoF(getParameter(fh_param, "max_freq", 0, "0.35"));
+    astigmatic_noise = !checkParameter(fh_param, "radial_noise");
+    defocus_range = AtoF(getParameter(fh_param, "defocus_range", 0, "8000"));
+    initial_Ca = AtoF(getParameter(fh_param, "initial_Ca", 0, "2"));
 
-    ctfmodelSize = AtoI(get_param(fh_param, "ctfmodelSize", 0, "128"));
+    ctfmodelSize = AtoI(getParameter(fh_param, "ctfmodelSize", 0, "128"));
 
     adjust.resize(ALL_CTF_PARAMETERS);
     initial_ctfmodel.enable_CTF = initial_ctfmodel.enable_CTFnoise = true;
@@ -551,9 +551,9 @@ void Adjust_CTF_Parameters::read(const FileName &fn_param)
         default_f1 = "0.02";
         default_f2 = "0.15";
     }
-    f1 = AtoF(get_param(fh_param, "enhance_min_freq", 0, default_f1.c_str()));
-    f2 = AtoF(get_param(fh_param, "enhance_max_freq", 0, default_f2.c_str()));
-    enhanced_weight = AtoF(get_param(fh_param, "enhance_weight", 0, "5"));
+    f1 = AtoF(getParameter(fh_param, "enhance_min_freq", 0, default_f1.c_str()));
+    f2 = AtoF(getParameter(fh_param, "enhance_max_freq", 0, default_f2.c_str()));
+    enhanced_weight = AtoF(getParameter(fh_param, "enhance_weight", 0, "5"));
 }
 
 /* Write to a file --------------------------------------------------------- */

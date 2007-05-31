@@ -36,12 +36,12 @@ void Spot2RealSpace3D_Parameters::read_from_file(const FileName &fnprm)
                      "opening the file " + fnprm);
     try
     {
-        fnaph_in = get_param(fh_param, "APH file", 0, NULL,
+        fnaph_in = getParameter(fh_param, "APH file", 0, NULL,
                              3007, "Spot2RealSpace3D_Parameters::read: APH File not found");
-        fn_out = get_param(fh_param, "Output file", 0, NULL,
+        fn_out = getParameter(fh_param, "Output file", 0, NULL,
                            3007, "Spot2RealSpace3D_Parameters::read: Output File not found");
         NoCells.resize(3);
-        string aux_str = get_param(fh_param, "Output cells no", 0, "1 1 1");
+        string aux_str = getParameter(fh_param, "Output cells no", 0, "1 1 1");
         istrstream *is = NULL;
         is = new istrstream(aux_str.c_str());
         try
@@ -55,7 +55,7 @@ void Spot2RealSpace3D_Parameters::read_from_file(const FileName &fnprm)
         }
 
         Phase_Shift.resize(3);
-        aux_str = get_param(fh_param, "Phase Shift", 0, "0.0 0.0 0.0");
+        aux_str = getParameter(fh_param, "Phase Shift", 0, "0.0 0.0 0.0");
         delete is;
         is = new istrstream(aux_str.c_str());
         try
@@ -68,9 +68,9 @@ void Spot2RealSpace3D_Parameters::read_from_file(const FileName &fnprm)
                          "Spot2RealSpace3D_Parameters::read: Cannot read Phase Shift");
         }
 
-        KeepContrast = AtoI(get_param(fh_param, "Keep Contrast", 0, "1"));
+        KeepContrast = AtoI(getParameter(fh_param, "Keep Contrast", 0, "1"));
         Celldim.resize(3);
-        aux_str = get_param(fh_param, "Cell Size");
+        aux_str = getParameter(fh_param, "Cell Size");
         delete is;
         is = new istrstream(aux_str.c_str());
         try
@@ -83,7 +83,7 @@ void Spot2RealSpace3D_Parameters::read_from_file(const FileName &fnprm)
                          "Spot2RealSpace3D_Parameters::read: Cannot read Cell Size");
         }
         delete is;
-//      Scale_Factor=AtoF(get_param(fh_param,"Scale Factor",0,"-1"));
+//      Scale_Factor=AtoF(getParameter(fh_param,"Scale Factor",0,"-1"));
     }
     catch (Xmipp_error XE)
     {

@@ -37,7 +37,7 @@ void Normalize_parameters::read(int argc, char** argv)
 
     // Get normalizing method
     std::string aux;
-    aux = get_param(argc, argv, "-method", "NewXmipp");
+    aux = getParameter(argc, argv, "-method", "NewXmipp");
 
     if (aux == "OldXmipp")
         method = OLDXMIPP;
@@ -59,13 +59,13 @@ void Normalize_parameters::read(int argc, char** argv)
         REPORT_ERROR(1, "Normalize: Unknown normalizing method");
 
     // Normalizing a volume
-    volume = check_param(argc, argv, "-vol");
+    volume = checkParameter(argc, argv, "-vol");
 
     // Remove dust particles?
-    remove_black_dust = check_param(argc, argv, "-remove_black_dust");
-    remove_white_dust = check_param(argc, argv, "-remove_white_dust");
-    thresh_black_dust = AtoF(get_param(argc, argv, "-thr_black_dust", "-3.5"));
-    thresh_white_dust = AtoF(get_param(argc, argv, "-thr_white_dust", "3.5"));
+    remove_black_dust = checkParameter(argc, argv, "-remove_black_dust");
+    remove_white_dust = checkParameter(argc, argv, "-remove_white_dust");
+    thresh_black_dust = AtoF(getParameter(argc, argv, "-thr_black_dust", "-3.5"));
+    thresh_white_dust = AtoF(getParameter(argc, argv, "-thr_white_dust", "3.5"));
 
     apply_geo = false;
 
@@ -75,7 +75,7 @@ void Normalize_parameters::read(int argc, char** argv)
         if (method == NEWXMIPP || method == NEWXMIPP2 || method == MICHAEL ||
             method == NEAR_OLDXMIPP || method == RAMP)
         {
-            enable_mask = check_param(argc, argv, "-mask");
+            enable_mask = checkParameter(argc, argv, "-mask");
             if (enable_mask)
             {
                 mask_prm.allowed_data_types = INT_MASK;
@@ -84,7 +84,7 @@ void Normalize_parameters::read(int argc, char** argv)
             else
             {
                 enable_mask = false;
-                int i = position_param(argc, argv, "-background");
+                int i = paremeterPosition(argc, argv, "-background");
                 if (i + 2 >= argc)
                     REPORT_ERROR(1,
                                  "Normalize: Not enough parameters after -background");
@@ -103,14 +103,14 @@ void Normalize_parameters::read(int argc, char** argv)
             produce_side_info();
 
             // Default is NOT to apply inverse transformation from image header to the mask
-            apply_geo = check_param(argc, argv, "-apply_geo");
+            apply_geo = checkParameter(argc, argv, "-apply_geo");
         }
         else
             background_mode = NONE;
 
         if (method == RANDOM)
         {
-            int i = position_param(argc, argv, "-prm");
+            int i = paremeterPosition(argc, argv, "-prm");
             if (i + 4 >= argc)
                 REPORT_ERROR(1,
                              "Normalize_parameters::read: Not enough parameters after -prm");

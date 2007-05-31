@@ -31,11 +31,11 @@
 // Read arguments ==========================================================
 void Prog_angular_distance_prm::read(int argc, char **argv)
 {
-    fn_ang1 = get_param(argc, argv, "-ang1");
-    fn_ang2 = get_param(argc, argv, "-ang2");
-    fn_ang_out = get_param(argc, argv, "-o", "");
-    fn_sym = get_param(argc, argv, "-sym", "");
-    check_mirrors = check_param(argc, argv, "-check_mirrors");
+    fn_ang1 = getParameter(argc, argv, "-ang1");
+    fn_ang2 = getParameter(argc, argv, "-ang2");
+    fn_ang_out = getParameter(argc, argv, "-o", "");
+    fn_sym = getParameter(argc, argv, "-sym", "");
+    check_mirrors = checkParameter(argc, argv, "-check_mirrors");
 }
 
 // Show ====================================================================

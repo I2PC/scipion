@@ -53,19 +53,19 @@ int main(int argc, char **argv)
     // Read arguments --------------------------------------------------------
     try
     {
-        fn_in      = get_param(argc, argv, "-i");
-        fn_out     = get_param(argc, argv, "-o", fn_in.c_str());
-        fn_dist    = get_param(argc, argv, "-dist", "");
-        fn_label   = get_param(argc, argv, "-label", "");
-        if ((enable_th_below = check_param(argc, argv, "-below")))
-            th_below = AtoF(get_param(argc, argv, "-below"));
-        if ((enable_th_above = check_param(argc, argv, "-above")))
-            th_above = AtoF(get_param(argc, argv, "-above"));
-        if ((enable_dmin = check_param(argc, argv, "-dmin")))
-            dmin = AtoF(get_param(argc, argv, "-dmin"));
-        if ((enable_dmax = check_param(argc, argv, "-dmax")))
-            dmax = AtoF(get_param(argc, argv, "-dmax"));
-        binarize = check_param(argc, argv, "-binarize");
+        fn_in      = getParameter(argc, argv, "-i");
+        fn_out     = getParameter(argc, argv, "-o", fn_in.c_str());
+        fn_dist    = getParameter(argc, argv, "-dist", "");
+        fn_label   = getParameter(argc, argv, "-label", "");
+        if ((enable_th_below = checkParameter(argc, argv, "-below")))
+            th_below = AtoF(getParameter(argc, argv, "-below"));
+        if ((enable_th_above = checkParameter(argc, argv, "-above")))
+            th_above = AtoF(getParameter(argc, argv, "-above"));
+        if ((enable_dmin = checkParameter(argc, argv, "-dmin")))
+            dmin = AtoF(getParameter(argc, argv, "-dmin"));
+        if ((enable_dmax = checkParameter(argc, argv, "-dmax")))
+            dmax = AtoF(getParameter(argc, argv, "-dmax"));
+        binarize = checkParameter(argc, argv, "-binarize");
         if (binarize)
         {
             if (enable_th_above) th = th_above;
@@ -73,14 +73,14 @@ int main(int argc, char **argv)
             else                      th = 0;
         }
         int i;
-        if ((i = position_param(argc, argv, "-substitute")) != -1)
+        if ((i = paremeterPosition(argc, argv, "-substitute")) != -1)
         {
             enable_substitute = true;
             if (i + 2 >= argc)
                 EXIT_ERROR(1, "Threshold: Not enough parameters behind -substitute\n");
             str_old_val = argv[i+1];
             str_new_val = argv[i+2];
-            accuracy = AtoF(get_param(argc, argv, "-accuracy", "0"));
+            accuracy = AtoF(getParameter(argc, argv, "-accuracy", "0"));
         }
         else enable_substitute = false;
     }

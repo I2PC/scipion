@@ -41,27 +41,27 @@ int main(int argc, char **argv)
     bool     pair_mode;
     try
     {
-        fn_micrograph = get_param(argc, argv, "-i");
-        pair_mode = check_param(argc, argv, "-tilted");
-        fn_root       = get_param(argc, argv, "-root");
-        Xdim          = AtoI(get_param(argc, argv, "-Xdim"));
-        if (check_param(argc, argv, "-Ydim"))
-            Ydim       = AtoI(get_param(argc, argv, "-Ydim"));
+        fn_micrograph = getParameter(argc, argv, "-i");
+        pair_mode = checkParameter(argc, argv, "-tilted");
+        fn_root       = getParameter(argc, argv, "-root");
+        Xdim          = AtoI(getParameter(argc, argv, "-Xdim"));
+        if (checkParameter(argc, argv, "-Ydim"))
+            Ydim       = AtoI(getParameter(argc, argv, "-Ydim"));
         else Ydim = Xdim;
-        startN        = AtoI(get_param(argc, argv, "-start", "1"));
-        reverse_endian = check_param(argc, argv, "-reverse_endian");
-        compute_inverse = check_param(argc, argv, "-invert");
-        compute_transmitance = check_param(argc, argv, "-log");
+        startN        = AtoI(getParameter(argc, argv, "-start", "1"));
+        reverse_endian = checkParameter(argc, argv, "-reverse_endian");
+        compute_inverse = checkParameter(argc, argv, "-invert");
+        compute_transmitance = checkParameter(argc, argv, "-log");
         if (!pair_mode)
         {
-            fn_pos        = get_param(argc, argv, "-pos");
-            fn_orig       = get_param(argc, argv, "-orig", "");
-            alpha         = AtoF(get_param(argc, argv, "-alpha", "0"));
+            fn_pos        = getParameter(argc, argv, "-pos");
+            fn_orig       = getParameter(argc, argv, "-orig", "");
+            alpha         = AtoF(getParameter(argc, argv, "-alpha", "0"));
         }
         else
         {
-            fn_root_tilted = get_param(argc, argv, "-root_tilted");
-            fn_tilted     = get_param(argc, argv, "-tilted");
+            fn_root_tilted = getParameter(argc, argv, "-root_tilted");
+            fn_tilted     = getParameter(argc, argv, "-tilted");
         }
     }
     catch (Xmipp_error XE)

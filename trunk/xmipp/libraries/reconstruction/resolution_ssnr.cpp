@@ -34,26 +34,26 @@
 // Read parameters from command line ---------------------------------------
 void Prog_SSNR_prm::read(int argc, char **argv)
 {
-    radial_avg = check_param(argc, argv, "-radial_avg");
+    radial_avg = checkParameter(argc, argv, "-radial_avg");
     if (!radial_avg)
     {
-        fn_S = get_param(argc, argv, "-S");
-        fn_N = get_param(argc, argv, "-N");
-        fn_Ssel = get_param(argc, argv, "-selS");
-        fn_Nsel = get_param(argc, argv, "-selN");
-        generate_VSSNR = check_param(argc, argv, "-generate_VSSNR");
+        fn_S = getParameter(argc, argv, "-S");
+        fn_N = getParameter(argc, argv, "-N");
+        fn_Ssel = getParameter(argc, argv, "-selS");
+        fn_Nsel = getParameter(argc, argv, "-selN");
+        generate_VSSNR = checkParameter(argc, argv, "-generate_VSSNR");
         if (generate_VSSNR)
         {
-            fn_VSSNR = get_param(argc, argv, "-VSSNR");
-            fn_out_images = get_param(argc, argv, "-oimages", "");
+            fn_VSSNR = getParameter(argc, argv, "-VSSNR");
+            fn_out_images = getParameter(argc, argv, "-oimages", "");
         }
     }
     else
-        fn_VSSNR = get_param(argc, argv, "-VSSNR");
-    ring_width = AtoF(get_param(argc, argv, "-ring", "4"));
-    Tm = AtoF(get_param(argc, argv, "-sampling_rate", "1"));
-    min_power = AtoF(get_param(argc, argv, "-min_power", "1e-10"));
-    fn_out = get_param(argc, argv, "-o", "");
+        fn_VSSNR = getParameter(argc, argv, "-VSSNR");
+    ring_width = AtoF(getParameter(argc, argv, "-ring", "4"));
+    Tm = AtoF(getParameter(argc, argv, "-sampling_rate", "1"));
+    min_power = AtoF(getParameter(argc, argv, "-min_power", "1e-10"));
+    fn_out = getParameter(argc, argv, "-o", "");
 }
 
 // Show parameters ---------------------------------------------------------

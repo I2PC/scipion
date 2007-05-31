@@ -64,9 +64,9 @@ void Crystal_Projection_Parameters::read(FileName fn_crystal, double scale)
         switch (lineNo)
         {
         case 0:
-            crystal_Xdim = AtoI(first_token(line), 3007,
+            crystal_Xdim = AtoI(firstToken(line), 3007,
                                 "Prog_Project_Crystal::read: Error in Crystal X dimension");
-            crystal_Ydim = AtoI(next_token(), 3007,
+            crystal_Ydim = AtoI(nextToken(), 3007,
                                 "Prog_Project_Crystal::read: Error in Crystal Y dimension");
             lineNo++;
             crystal_Xdim = ROUND(scale * crystal_Xdim);
@@ -74,26 +74,26 @@ void Crystal_Projection_Parameters::read(FileName fn_crystal, double scale)
             break;
         case 1:
             a.resize(3);
-            XX(a) = scale * AtoF(first_token(line), 3007,
+            XX(a) = scale * AtoF(firstToken(line), 3007,
                                  "Prog_Project_Crystal::read: Error in X component of a");
-            YY(a) = scale * AtoF(next_token(), 3007,
+            YY(a) = scale * AtoF(nextToken(), 3007,
                                  "Prog_Project_Crystal::read: Error in Y component of a");
             ZZ(a) = 0;
             lineNo++;
             break;
         case 2:
             b.resize(3);
-            XX(b) = scale * AtoF(first_token(line), 3007,
+            XX(b) = scale * AtoF(firstToken(line), 3007,
                                  "Prog_Project_Crystal::read: Error in X component of b");
-            YY(b) = scale * AtoF(next_token(), 3007,
+            YY(b) = scale * AtoF(nextToken(), 3007,
                                  "Prog_Project_Crystal::read: Error in Y component of b");
             ZZ(b) = 0;
             lineNo++;
             break;
         case 3:
-            Nshift_dev = scale * AtoF(first_word(line), 3007,
+            Nshift_dev = scale * AtoF(firstWord(line), 3007,
                                       "Prog_Project_Parameters::read: Error in magnitude shift noise");
-            auxstr = next_token();
+            auxstr = nextToken();
             if (auxstr != NULL)
                 Nshift_avg = scale * AtoF(auxstr, 3007,
                                           "Prog_Project_Parameters::read: Error in magnitude shift bias");
@@ -101,18 +101,18 @@ void Crystal_Projection_Parameters::read(FileName fn_crystal, double scale)
             lineNo++;
             break;
         case 4:
-            disappearing_th = AtoF(first_token(line), 3007,
+            disappearing_th = AtoF(firstToken(line), 3007,
                                    "Prog_Project_Crystal::read: Error in disappearing threshold");
             lineNo++;
             break;
         case 5:
-            orthogonal = (strcmp(first_token(line), "Yes") == 0);
+            orthogonal = (strcmp(firstToken(line), "Yes") == 0);
             lineNo++;
             break;
         case 6:
             // shift file
             // DF_shift_bool is true when there is a shift file
-            fn_shift = first_word(line);
+            fn_shift = firstWord(line);
             if (strcmp(fn_shift.c_str(), "NULL"))
                 DF_shift_bool = true;
             lineNo++;

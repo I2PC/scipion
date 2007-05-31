@@ -78,21 +78,21 @@ void CCLattice_IO::read(const FileName &fn)
     try
     {
         getline(fh_cor, line);
-        dim[0] = AtoI(first_token(line));
-        dim[1] = AtoI(next_token());
-        O[0] = AtoD(next_token());
-        O[1] = AtoD(next_token());
-        a(0) = AtoD(next_token());
-        a(1) = AtoD(next_token());
+        dim[0] = AtoI(firstToken(line));
+        dim[1] = AtoI(nextToken());
+        O[0] = AtoD(nextToken());
+        O[1] = AtoD(nextToken());
+        a(0) = AtoD(nextToken());
+        a(1) = AtoD(nextToken());
         getline(fh_cor, line);
-        b(0) = AtoD(first_token(line));
-        b(1) = AtoD(next_token());
-        min_i = AtoI(next_token());
-        max_i = AtoI(next_token());
-        min_j = AtoI(next_token());
-        max_j = AtoI(next_token());
+        b(0) = AtoD(firstToken(line));
+        b(1) = AtoD(nextToken());
+        min_i = AtoI(nextToken());
+        max_i = AtoI(nextToken());
+        min_j = AtoI(nextToken());
+        max_j = AtoI(nextToken());
         getline(fh_cor, line);
-        cc_max = AtoD(first_token(line));
+        cc_max = AtoD(firstToken(line));
     }
     catch (...)
     {
@@ -126,9 +126,9 @@ void CCLattice_IO::read(const FileName &fn)
                 getline(fh_cor, line);
                 if (line.length() != 0)
                 {
-                    auxX = AtoD(first_token(line));
-                    auxY = AtoD(next_token());
-                    auxCCcoeff = AtoD(next_token());
+                    auxX = AtoD(firstToken(line));
+                    auxY = AtoD(nextToken());
+                    auxCCcoeff = AtoD(nextToken());
                     if (auxX != 0 && auxY != 0)
                     {
                         MRC_Xcoord.push_back(auxX);

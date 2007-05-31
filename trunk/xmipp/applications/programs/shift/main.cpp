@@ -46,22 +46,22 @@ public:
     void read(int argc, char **argv)
     {
         Prog_parameters::read(argc, argv);
-        int i_shift = position_param(argc, argv, "-shift");
-        int i_scale = position_param(argc, argv, "-scale");
-        center_mass = check_param(argc, argv, "-center_mass");
+        int i_shift = paremeterPosition(argc, argv, "-shift");
+        int i_scale = paremeterPosition(argc, argv, "-scale");
+        center_mass = checkParameter(argc, argv, "-center_mass");
 
         if (i_shift == -1 && i_scale == -1 && !center_mass)
             REPORT_ERROR(1, "Shift_Scale:: Cannot find -shift or -scale");
         else if (ABS(i_shift - i_scale) <= 1 && !center_mass)
             REPORT_ERROR(1, "Shift_cale: Not enough parameters after -shift or -scale");
-        Docfile = check_param(argc, argv, "-colX_shift") ||
-                  check_param(argc, argv, "-colX_scale");
+        Docfile = checkParameter(argc, argv, "-colX_shift") ||
+                  checkParameter(argc, argv, "-colX_scale");
         if (Docfile)
         {
             if (i_shift > 0)
             {
                 DF_shifts.read(argv[i_shift+1]);
-                colX_shift = AtoI(get_param(argc, argv, "-colX_shift"));
+                colX_shift = AtoI(getParameter(argc, argv, "-colX_shift"));
                 // colX_shift -=3;
                 // if(colX_shift<0)
                 //   REPORT_ERROR(1,"colX_shift must be no less than 3");
@@ -71,7 +71,7 @@ public:
             if (i_scale > 0)
             {
                 DF_scales.read(argv[i_scale+1]);
-                colX_scale = AtoI(get_param(argc, argv, "-colX_scale", "5"));
+                colX_scale = AtoI(getParameter(argc, argv, "-colX_scale", "5"));
                 colX_scale -= 3;
                 if (colX_scale < 0)
                     REPORT_ERROR(1, "colX_scale must be no less than 3");
@@ -81,27 +81,27 @@ public:
         else
         {
             int my_dim;
-            if (check_param(argc, argv, "-shift"))
+            if (checkParameter(argc, argv, "-shift"))
             {
-                shift = get_vector_param(argc, argv, "-shift", -1);
+                shift = getVectorParameter(argc, argv, "-shift", -1);
                 my_dim = shift.getDimension();
             }
-            if (check_param(argc, argv, "-scale"))
+            if (checkParameter(argc, argv, "-scale"))
             {
-                scale = get_vector_param(argc, argv, "-scale", -1);
+                scale = getVectorParameter(argc, argv, "-scale", -1);
                 my_dim = scale.getDimension();
             }
 
-            if (!check_param(argc, argv, "-shift") && !center_mass)
+            if (!checkParameter(argc, argv, "-shift") && !center_mass)
                 shift.initZeros(my_dim);
-            if (!check_param(argc, argv, "-scale"))
+            if (!checkParameter(argc, argv, "-scale"))
             {
                 scale.resize(my_dim);
                 scale.init_constant(1);
             }
         }
-        wrap = !check_param(argc, argv, "-dont_wrap");
-        store_in_header = check_param(argc, argv, "-store_in_header");
+        wrap = !checkParameter(argc, argv, "-dont_wrap");
+        store_in_header = checkParameter(argc, argv, "-store_in_header");
     }
 
     void show()

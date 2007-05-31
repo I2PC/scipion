@@ -56,13 +56,13 @@ Prog_angular_predict_continuous_prm::Prog_angular_predict_continuous_prm()
 void Prog_angular_predict_continuous_prm::read(int argc, char **argv)
 {
     Prog_parameters::read(argc, argv);
-    fn_ref = get_param(argc, argv, "-ref");
-    fn_ang = get_param(argc, argv, "-ang", "");
-    fn_out_ang = get_param(argc, argv, "-oang");
-    gaussian_DFT_sigma = AtoF(get_param(argc, argv, "-gaussian_Fourier", "0.5"));
-    gaussian_Real_sigma = AtoF(get_param(argc, argv, "-gaussian_Real", "0.5"));
-    max_no_iter = AtoI(get_param(argc, argv, "-max_iter", "60"));
-    dont_modify_header = check_param(argc, argv, "-dont_modify_header");
+    fn_ref = getParameter(argc, argv, "-ref");
+    fn_ang = getParameter(argc, argv, "-ang", "");
+    fn_out_ang = getParameter(argc, argv, "-oang");
+    gaussian_DFT_sigma = AtoF(getParameter(argc, argv, "-gaussian_Fourier", "0.5"));
+    gaussian_Real_sigma = AtoF(getParameter(argc, argv, "-gaussian_Real", "0.5"));
+    max_no_iter = AtoI(getParameter(argc, argv, "-max_iter", "60"));
+    dont_modify_header = checkParameter(argc, argv, "-dont_modify_header");
     produce_side_info();
 }
 

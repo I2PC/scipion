@@ -55,20 +55,20 @@ int main(int argc, char **argv)
 
     try
     {
-        vname = get_param(argc, argv, "-vname");
-        T = AtoF(get_param(argc, argv, "-T", "2"));
-        fname = get_param(argc, argv, "-fname", "out.dat");
-        bmname = get_param(argc, argv, "-bmname", "mask.spi");
-        vmname = get_param(argc, argv, "-vmname", "vol_mask.spi");
-        minCoord = AtoF(get_param(argc, argv, "-minCoord", "0"));
-        maxCoord = AtoF(get_param(argc, argv, "-maxCoord", "10"));
-        if (!check_param(argc, argv, "-sampling"))
+        vname = getParameter(argc, argv, "-vname");
+        T = AtoF(getParameter(argc, argv, "-T", "2"));
+        fname = getParameter(argc, argv, "-fname", "out.dat");
+        bmname = getParameter(argc, argv, "-bmname", "mask.spi");
+        vmname = getParameter(argc, argv, "-vmname", "vol_mask.spi");
+        minCoord = AtoF(getParameter(argc, argv, "-minCoord", "0"));
+        maxCoord = AtoF(getParameter(argc, argv, "-maxCoord", "10"));
+        if (!checkParameter(argc, argv, "-sampling"))
             sampling = false;
-        if (check_param(argc, argv, "-nomask"))
+        if (checkParameter(argc, argv, "-nomask"))
             nomask = true;
-        if (check_param(argc, argv, "-4"))
+        if (checkParameter(argc, argv, "-4"))
             FourD = true;
-        npoints = AtoI(get_param(argc, argv, "-npoints", "100000"));
+        npoints = AtoI(getParameter(argc, argv, "-npoints", "100000"));
     }
     catch (Xmipp_error)
     {

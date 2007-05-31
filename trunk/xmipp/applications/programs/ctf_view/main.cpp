@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     FileName fn_ctf;
     try
     {
-        fn_ctf = get_param(argc, argv, "-i", "");
+        fn_ctf = getParameter(argc, argv, "-i", "");
     }
     catch (Xmipp_error XE)
     {

@@ -40,8 +40,8 @@ int main(int argc, char **argv)
     try
     {
         prm.read(argc, argv);
-        smooth         = check_param(argc, argv, "-smooth");
-        reversed       = check_param(argc, argv, "-reverse_endian");
+        smooth         = checkParameter(argc, argv, "-smooth");
+        reversed       = checkParameter(argc, argv, "-reverse_endian");
     }
     catch (Xmipp_error XE)
     {

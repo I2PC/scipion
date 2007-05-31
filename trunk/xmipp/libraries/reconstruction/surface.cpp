@@ -28,16 +28,16 @@
 /* Read from command line ================================================== */
 void Prog_Surface_Parameters::read(int argc, char **argv)
 {
-    fn_phantom     = get_param(argc, argv, "-i", "");
-    probe_radius   = AtoF(get_param(argc, argv, "-r", "0.5"));
-    fn_top         = get_param(argc, argv, "-top", "");
-    fn_bottom      = get_param(argc, argv, "-bottom", "");
-    fn_mask        = get_param(argc, argv, "-o", "");
-    enable_ztop    = check_param(argc, argv, "-ztop");
-    if (enable_ztop) ztop = AtoF(get_param(argc, argv, "-ztop"));
-    enable_zbottom = check_param(argc, argv, "-zbottom");
-    if (enable_zbottom) zbottom = AtoF(get_param(argc, argv, "-zbottom"));
-    zdim           = AtoI(get_param(argc, argv, "-zdim", "0"));
+    fn_phantom     = getParameter(argc, argv, "-i", "");
+    probe_radius   = AtoF(getParameter(argc, argv, "-r", "0.5"));
+    fn_top         = getParameter(argc, argv, "-top", "");
+    fn_bottom      = getParameter(argc, argv, "-bottom", "");
+    fn_mask        = getParameter(argc, argv, "-o", "");
+    enable_ztop    = checkParameter(argc, argv, "-ztop");
+    if (enable_ztop) ztop = AtoF(getParameter(argc, argv, "-ztop"));
+    enable_zbottom = checkParameter(argc, argv, "-zbottom");
+    if (enable_zbottom) zbottom = AtoF(getParameter(argc, argv, "-zbottom"));
+    zdim           = AtoI(getParameter(argc, argv, "-zdim", "0"));
 
     if (fn_top == "" && fn_bottom == "")
         REPORT_ERROR(1, "Prog_Surface_Parameters::read: No surface given!!!");

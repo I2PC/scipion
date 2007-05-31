@@ -44,10 +44,10 @@ public:
     {
         Prog_parameters::read(argc, argv);
         Euler_mode = Align_mode = Axis_mode = false;
-        if (check_param(argc, argv, "-euler"))
+        if (checkParameter(argc, argv, "-euler"))
         {
             Euler_mode = true;
-            int i = position_param(argc, argv, "-euler");
+            int i = paremeterPosition(argc, argv, "-euler");
             if (i + 3 >= argc)
                 REPORT_ERROR(1, "Not enough parameters after -euler");
             rot  = AtoF(argv[i+1]);
@@ -55,25 +55,25 @@ public:
             psi  = AtoF(argv[i+3]);
             A3D = Euler_rotation3DMatrix(rot, tilt, psi);
         }
-        else if (check_param(argc, argv, "-alignWithZ"))
+        else if (checkParameter(argc, argv, "-alignWithZ"))
         {
             Align_mode = true;
-            axis = get_vector_param(argc, argv, "-alignWithZ", 3);
+            axis = getVectorParameter(argc, argv, "-alignWithZ", 3);
             A3D = alignWithZ(axis);
         }
         else
         {
             Axis_mode = true;
-            if (check_param(argc, argv, "-axis"))
-                axis = get_vector_param(argc, argv, "-axis", 3);
+            if (checkParameter(argc, argv, "-axis"))
+                axis = getVectorParameter(argc, argv, "-axis", 3);
             else
                 axis = vectorR3(0., 0., 1.);
-            ang = AtoF(get_param(argc, argv, "-ang"));
+            ang = AtoF(getParameter(argc, argv, "-ang"));
             A3D = rotation3DMatrix(ang, axis);
             A2D = A3D;
             A2D.window(0, 0, 2, 2);
         }
-        wrap = !check_param(argc, argv, "-dont_wrap");
+        wrap = !checkParameter(argc, argv, "-dont_wrap");
     }
 
     void show()

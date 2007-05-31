@@ -42,8 +42,8 @@ public:
     void read(int argc, char **argv)
     {
         Prog_parameters::read(argc, argv);
-        fn_ref = get_param(argc, argv, "-ref");
-        sam = AtoF(get_param(argc, argv, "-sam"));
+        fn_ref = getParameter(argc, argv, "-ref");
+        sam = AtoF(getParameter(argc, argv, "-sam"));
         if (Is_ImageXmipp(fn_ref))
         {
             refI.read(fn_ref, false, false, apply_geo);
@@ -158,7 +158,7 @@ void process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 
 int main(int argc, char **argv)
 {
-    if (!check_param(argc, argv, "-set_of_images"))
+    if (!checkParameter(argc, argv, "-set_of_images"))
     {
 
         Resolution_parameters prm;
@@ -180,10 +180,10 @@ int main(int argc, char **argv)
 
         try
         {
-            fn_sel = get_param(argc, argv, "-set_of_images");
+            fn_sel = getParameter(argc, argv, "-set_of_images");
             SF.read(fn_sel);
-            sam = AtoF(get_param(argc, argv, "-sam"));
-            apply_geo = !check_param(argc, argv, "-dont_apply_geo");
+            sam = AtoF(getParameter(argc, argv, "-sam"));
+            apply_geo = !checkParameter(argc, argv, "-dont_apply_geo");
             SF.split_in_two(SF1, SF2);
             SF.get_statistics(It, Id, dummy, dummy, apply_geo);
             SF1.get_statistics(I1, Id, dummy, dummy, apply_geo);

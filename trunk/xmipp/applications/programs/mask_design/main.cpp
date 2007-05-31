@@ -52,14 +52,14 @@ int main(int argc, char **argv)
 
     try
     {
-        if (check_param(argc, argv, "-sel"))
-            selname = get_param(argc, argv, "-sel");
+        if (checkParameter(argc, argv, "-sel"))
+            selname = getParameter(argc, argv, "-sel");
         else
-            imgname = get_param(argc, argv, "-img");
-        saveasname = get_param(argc, argv, "-save_as", "");
-        if (check_param(argc, argv, "-sd"))
+            imgname = getParameter(argc, argv, "-img");
+        saveasname = getParameter(argc, argv, "-save_as", "");
+        if (checkParameter(argc, argv, "-sd"))
             sdflag = true;
-        apply_geo = !check_param(argc, argv, "-dont_apply_geo");
+        apply_geo = !checkParameter(argc, argv, "-dont_apply_geo");
     }
     catch (Xmipp_error)
     {

@@ -98,8 +98,8 @@ main(int argc, char **argv)
      }
     */
 
-    if (check_param(argc, argv, "-img"))
-        ent = (char*) get_param(argc, argv, "-img", "");
+    if (checkParameter(argc, argv, "-img"))
+        ent = (char*) getParameter(argc, argv, "-img", "");
     else
     {
         printf("Error in the arguments");
@@ -112,8 +112,8 @@ main(int argc, char **argv)
 //xc0=atof(argv[2]);    /* Initial coordinates of the centre */
 //yc0=atof(argv[3]);
 
-    if (check_param(argc, argv, "-x0"))
-        tmp = (char*) get_param(argc, argv, "-x0", "");
+    if (checkParameter(argc, argv, "-x0"))
+        tmp = (char*) getParameter(argc, argv, "-x0", "");
     else
     {
         printf("Error in the arguments");
@@ -122,8 +122,8 @@ main(int argc, char **argv)
     }
     xc0 = atof(tmp);
 
-    if (check_param(argc, argv, "-y0"))
-        tmp = (char*) get_param(argc, argv, "-y0", "");
+    if (checkParameter(argc, argv, "-y0"))
+        tmp = (char*) getParameter(argc, argv, "-y0", "");
     else
     {
         printf("Error in the arguments");
@@ -135,8 +135,8 @@ main(int argc, char **argv)
     xc0++;
     yc0++;
 
-    if (check_param(argc, argv, "-low"))
-        tmp = (char*) get_param(argc, argv, "-low", "");
+    if (checkParameter(argc, argv, "-low"))
+        tmp = (char*) getParameter(argc, argv, "-low", "");
     else
     {
         printf("Error in the arguments");
@@ -144,8 +144,8 @@ main(int argc, char **argv)
         exit(1);
     }
     rbajo = atof(tmp);
-    if (check_param(argc, argv, "-high"))
-        tmp = (char*) get_param(argc, argv, "-high", "");
+    if (checkParameter(argc, argv, "-high"))
+        tmp = (char*) getParameter(argc, argv, "-high", "");
     else
     {
         printf("Error in the arguments");
@@ -157,8 +157,8 @@ main(int argc, char **argv)
 //rbajo=atof(argv[4]);  /* Smothing radius (low, high) */
 //ralto=atof(argv[5]);
 
-    if (check_param(argc, argv, "-r1"))
-        tmp = (char*) get_param(argc, argv, "-r1", "");
+    if (checkParameter(argc, argv, "-r1"))
+        tmp = (char*) getParameter(argc, argv, "-r1", "");
     else
     {
         printf("Error in the arguments");
@@ -167,8 +167,8 @@ main(int argc, char **argv)
     }
     r1 = atof(tmp);
 
-    if (check_param(argc, argv, "-r2"))
-        tmp = (char*) get_param(argc, argv, "-r2", "");
+    if (checkParameter(argc, argv, "-r2"))
+        tmp = (char*) getParameter(argc, argv, "-r2", "");
     else
     {
         printf("Error in the arguments");
@@ -177,7 +177,7 @@ main(int argc, char **argv)
     }
     r2 = atof(tmp);
 
-    tmp = (char*) get_param(argc, argv, "-rinc", "1");
+    tmp = (char*) getParameter(argc, argv, "-rinc", "1");
     r3 = atof(tmp);
 
 
@@ -185,9 +185,9 @@ main(int argc, char **argv)
 //r2=atof(argv[7]);
 //r3=atof(argv[8]);
 
-    tmp = (char*) get_param(argc, argv, "-harm", "1");
+    tmp = (char*) getParameter(argc, argv, "-harm", "1");
     ncic = atoi(tmp);
-    tmp = (char*) get_param(argc, argv, "-opt", "-1");
+    tmp = (char*) getParameter(argc, argv, "-opt", "-1");
     indmul = atoi(tmp);
 
 //ncic=atoi(argv[9]);    /* Harmonic to optimize */

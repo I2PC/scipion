@@ -29,15 +29,15 @@
 /* Common functions -------------------------------------------------------- */
 void Prog_parameters::read(int argc, char **argv)
 {
-    fn_in  = get_param(argc, argv, "-i");
-    fn_out = get_param(argc, argv, "-o", "");
-    oext   = get_param(argc, argv, "-oext", "");
-    oroot  = get_param(argc, argv, "-oroot", "");
+    fn_in  = getParameter(argc, argv, "-i");
+    fn_out = getParameter(argc, argv, "-o", "");
+    oext   = getParameter(argc, argv, "-oext", "");
+    oroot  = getParameter(argc, argv, "-oroot", "");
     // For each_image_produces_an_output there exists no possibility to apply_geo
     // This because it would require a back-transformation, which deteriorates the images
     if (!each_image_produces_an_output)
     {
-        apply_geo = !check_param(argc, argv, "-dont_apply_geo");
+        apply_geo = !checkParameter(argc, argv, "-dont_apply_geo");
     }
 }
 

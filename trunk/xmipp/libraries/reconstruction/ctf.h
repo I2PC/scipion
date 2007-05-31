@@ -71,9 +71,9 @@
          FileName fn_ctf, fn_root;
          int Xdim;
          try {
-            fn_ctf=get_param(argc,argv,"-i");
-            fn_root=get_param(argc,argv,"-o");
-            Xdim=AtoI(get_param(argc,argv,"-xdim"));
+            fn_ctf=getParameter(argc,argv,"-i");
+            fn_root=getParameter(argc,argv,"-o");
+            Xdim=AtoI(getParameter(argc,argv,"-xdim"));
          } catch (Xmipp_error XE) {
             cerr << XE << endl
                  << "Usage: produce_imgs \n"

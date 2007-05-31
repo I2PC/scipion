@@ -33,13 +33,13 @@
 /* Read parameters from command line --------------------------------------- */
 void ARMA_parameters::read(int argc, char **argv)
 {
-    fn_in     = get_param(argc, argv, "-i");
-    fn_filter = get_param(argc, argv, "-o");
-    N_AR         = AtoI(get_param(argc, argv, "-N_AR", "24"));
-    M_AR         = AtoI(get_param(argc, argv, "-M_AR", "0"));
+    fn_in     = getParameter(argc, argv, "-i");
+    fn_filter = getParameter(argc, argv, "-o");
+    N_AR         = AtoI(getParameter(argc, argv, "-N_AR", "24"));
+    M_AR         = AtoI(getParameter(argc, argv, "-M_AR", "0"));
     if (M_AR == 0) M_AR = N_AR;
-    N_MA         = AtoI(get_param(argc, argv, "-N_MA", "20"));
-    M_MA         = AtoI(get_param(argc, argv, "-M_MA", "0"));
+    N_MA         = AtoI(getParameter(argc, argv, "-N_MA", "20"));
+    M_MA         = AtoI(getParameter(argc, argv, "-M_MA", "0"));
     if (M_MA == 0) M_MA = N_MA;
 }
 
@@ -52,13 +52,13 @@ void ARMA_parameters::read(const FileName &InputFile)
         REPORT_ERROR(1, (string)"ARMA_parameters::read: There is a problem "
                      "opening the file " + InputFile);
 
-    fn_in        = get_param(file, "image", 0, "");
-    fn_filter    = get_param(file, "ARMAfile", 0, "");
-    N_AR         = AtoI(get_param(file, "N_AR", 0, "24"));
-    M_AR         = AtoI(get_param(file, "M_AR", 0, "0"));
+    fn_in        = getParameter(file, "image", 0, "");
+    fn_filter    = getParameter(file, "ARMAfile", 0, "");
+    N_AR         = AtoI(getParameter(file, "N_AR", 0, "24"));
+    M_AR         = AtoI(getParameter(file, "M_AR", 0, "0"));
     if (M_AR == 0) M_AR = N_AR;
-    N_MA         = AtoI(get_param(file, "N_MA", 0, "20"));
-    M_MA         = AtoI(get_param(file, "M_MA", 0, "0"));
+    N_MA         = AtoI(getParameter(file, "N_MA", 0, "20"));
+    M_MA         = AtoI(getParameter(file, "M_MA", 0, "0"));
     if (M_MA == 0) M_MA = N_MA;
     fclose(file);
 }

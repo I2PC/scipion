@@ -57,16 +57,16 @@ int main(int argc, char *argv[])
     try
     {
 
-        round_shifts = check_param(argc, argv, "-round_shifts");
-        levels = AtoI(get_param(argc, argv, "-levels", "0"));
+        round_shifts = checkParameter(argc, argv, "-round_shifts");
+        levels = AtoI(getParameter(argc, argv, "-levels", "0"));
 
-        DF.read(get_param(argc, argv, "-i"));
-        fn_out = get_param(argc, argv, "-o", "");
-        verb = check_param(argc, argv, "-verb");
-        force = check_param(argc, argv, "-force");
+        DF.read(getParameter(argc, argv, "-i"));
+        fn_out = getParameter(argc, argv, "-o", "");
+        verb = checkParameter(argc, argv, "-verb");
+        force = checkParameter(argc, argv, "-force");
 
         // Columns numbers
-        if ((i = position_param(argc, argv, "-columns")) != -1)
+        if ((i = paremeterPosition(argc, argv, "-columns")) != -1)
         {
             if (i + 5 >= argc)
             {
@@ -89,16 +89,16 @@ int main(int argc, char *argv[])
 
         // Also assign weights or mirror flags?
         ncol = 5;
-        do_weights = check_param(argc, argv, "-weight");
+        do_weights = checkParameter(argc, argv, "-weight");
         if (do_weights)
         {
-            col_weight = AtoI(get_param(argc, argv, "-weight", "6"));
+            col_weight = AtoI(getParameter(argc, argv, "-weight", "6"));
             ncol++;
         }
-        do_mirrors = check_param(argc, argv, "-mirror");
+        do_mirrors = checkParameter(argc, argv, "-mirror");
         if (do_mirrors)
         {
-            col_mirror = AtoI(get_param(argc, argv, "-mirror", "7"));
+            col_mirror = AtoI(getParameter(argc, argv, "-mirror", "7"));
             ncol++;
         }
 

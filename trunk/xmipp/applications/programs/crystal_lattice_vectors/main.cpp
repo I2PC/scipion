@@ -39,11 +39,11 @@ int main(int argc, char **argv)
     // Get parameters .......................................................
     try
     {
-        a = get_vector_param(argc, argv, "-lattice_a");
-        b = get_vector_param(argc, argv, "-lattice_b");
-        crystal_size = AtoF(get_param(argc, argv, "-crystal_size", "1024"));
-//      taya = AtoF(get_param(argc,argv,"-taya","0"));
-        int i = position_param(argc, argv, "-ang");
+        a = getVectorParameter(argc, argv, "-lattice_a");
+        b = getVectorParameter(argc, argv, "-lattice_b");
+        crystal_size = AtoF(getParameter(argc, argv, "-crystal_size", "1024"));
+//      taya = AtoF(getParameter(argc,argv,"-taya","0"));
+        int i = paremeterPosition(argc, argv, "-ang");
         if (i == -1)
         {
             rot = tilt = psi = 0;
@@ -55,8 +55,8 @@ int main(int argc, char **argv)
             tilt = AtoF(argv[i+2]);
             psi  = AtoF(argv[i+3]);
         }
-        op = get_param(argc, argv, "-op", "RF");
-//      MRC = check_param(argc,argv,"-MRC");
+        op = getParameter(argc, argv, "-op", "RF");
+//      MRC = checkParameter(argc,argv,"-MRC");
     }
     catch (Xmipp_error XE)
     {

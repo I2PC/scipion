@@ -42,13 +42,13 @@ int main(int argc, char *argv[])
     {
         art_prm.read(argc, argv);
         // Crystal
-        crystal_mode = check_param(argc, argv, "-crystal");
+        crystal_mode = checkParameter(argc, argv, "-crystal");
         if (crystal_mode) crystal_art_prm.read(argc, argv, art_prm);
     }
     catch (Xmipp_error &XE)
     {
         cout << XE;
-        bool usage_more = check_param(argc, argv, "-more_help");
+        bool usage_more = checkParameter(argc, argv, "-more_help");
         if (usage_more)
         {
             art_prm.usage_more();

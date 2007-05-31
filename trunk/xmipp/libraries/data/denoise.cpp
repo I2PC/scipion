@@ -59,8 +59,8 @@ Denoising_parameters::Denoising_parameters(): Prog_parameters()
 void Denoising_parameters::read(int argc, char **argv)
 {
     Prog_parameters::read(argc, argv);
-    DWT_type = get_param(argc, argv, "-type", "DAUB12");
-    string aux = get_param(argc, argv, "-denoising", "remove_scales");
+    DWT_type = getParameter(argc, argv, "-type", "DAUB12");
+    string aux = getParameter(argc, argv, "-denoising", "remove_scales");
     if (aux == "remove_scales")
         denoising_type = REMOVE_SCALE;
     else if (aux == "soft_thresholding")
@@ -75,26 +75,26 @@ void Denoising_parameters::read(int argc, char **argv)
         denoising_type = SHAH;
     else
         denoising_type = REMOVE_SCALE;
-    scale = AtoI(get_param(argc, argv, "-scale", "0"));
-    output_scale = AtoI(get_param(argc, argv, "-output_scale", "0"));
-    threshold = AtoF(get_param(argc, argv, "-th", "50"));
-    R = AtoI(get_param(argc, argv, "-R", "-1"));
-    SNR0 = AtoF(get_param(argc, argv, "-SNR0", "0.1"));
-    SNRF = AtoF(get_param(argc, argv, "-SNRF", "0.2"));
-    white_noise = check_param(argc, argv, "-white_noise");
-    Shah_outer = AtoI(get_param(argc, argv, "-outer", "10"));
-    Shah_inner = AtoI(get_param(argc, argv, "-inner", "1"));
-    Shah_refinement = AtoI(get_param(argc, argv, "-refinement", "1"));
-    if (check_param(argc, argv, "-Shah_weight"))
-        Shah_weight = get_vector_param(argc, argv, "-Shah_weight", 4);
+    scale = AtoI(getParameter(argc, argv, "-scale", "0"));
+    output_scale = AtoI(getParameter(argc, argv, "-output_scale", "0"));
+    threshold = AtoF(getParameter(argc, argv, "-th", "50"));
+    R = AtoI(getParameter(argc, argv, "-R", "-1"));
+    SNR0 = AtoF(getParameter(argc, argv, "-SNR0", "0.1"));
+    SNRF = AtoF(getParameter(argc, argv, "-SNRF", "0.2"));
+    white_noise = checkParameter(argc, argv, "-white_noise");
+    Shah_outer = AtoI(getParameter(argc, argv, "-outer", "10"));
+    Shah_inner = AtoI(getParameter(argc, argv, "-inner", "1"));
+    Shah_refinement = AtoI(getParameter(argc, argv, "-refinement", "1"));
+    if (checkParameter(argc, argv, "-Shah_weight"))
+        Shah_weight = getVectorParameter(argc, argv, "-Shah_weight", 4);
     else
     {
         Shah_weight.initZeros(4);
         Shah_weight(1) = Shah_weight(2) = 50;
         Shah_weight(3) = 0.02;
     }
-    Shah_edge = check_param(argc, argv, "-only_edge");
-    if (check_param(argc, argv, "-show"))
+    Shah_edge = checkParameter(argc, argv, "-only_edge");
+    if (checkParameter(argc, argv, "-show"))
         tell = 1;
 
     produce_side_info();

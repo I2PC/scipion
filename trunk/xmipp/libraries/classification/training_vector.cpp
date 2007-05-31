@@ -161,7 +161,7 @@ void xmippCTVectors::readSelf(istream& _is)
             }
             getline(_is, line);
             theItems[i] = v;
-            theTargets[i] = remove_spaces(line);
+            theTargets[i] = removeSpaces(line);
         }
 
 #ifndef _NO_EXCEPTION

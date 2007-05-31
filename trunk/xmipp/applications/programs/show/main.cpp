@@ -55,67 +55,67 @@ int main(int argc, char **argv)
 
     try
     {
-        if (check_param(argc, argv, "-img"))
+        if (checkParameter(argc, argv, "-img"))
         {
             mode = MODE_IMG;
-            ifirst = position_param(argc, argv, "-img");
+            ifirst = paremeterPosition(argc, argv, "-img");
         }
-        else if (check_param(argc, argv, "-psdsel"))
+        else if (checkParameter(argc, argv, "-psdsel"))
         {
             mode = MODE_PSDSEL;
-            ifirst = position_param(argc, argv, "-psdsel");
+            ifirst = paremeterPosition(argc, argv, "-psdsel");
         }
-        else if (check_param(argc, argv, "-ctfsel"))
+        else if (checkParameter(argc, argv, "-ctfsel"))
         {
             mode = MODE_CTFSEL;
-            ifirst = position_param(argc, argv, "-ctfsel");
-            fn_assign = get_param(argc, argv, "-assign", "");
-            fn_assignsel = get_param(argc, argv, "-assignsel", "");
+            ifirst = paremeterPosition(argc, argv, "-ctfsel");
+            fn_assign = getParameter(argc, argv, "-assign", "");
+            fn_assignsel = getParameter(argc, argv, "-assignsel", "");
         }
-        else if (check_param(argc, argv, "-sel"))
+        else if (checkParameter(argc, argv, "-sel"))
         {
             mode = MODE_SEL;
-            ifirst = position_param(argc, argv, "-sel");
+            ifirst = paremeterPosition(argc, argv, "-sel");
         }
-        else if (check_param(argc, argv, "-vol"))
+        else if (checkParameter(argc, argv, "-vol"))
         {
             mode = MODE_VOL;
-            ifirst = position_param(argc, argv, "-vol");
+            ifirst = paremeterPosition(argc, argv, "-vol");
         }
-        else if (check_param(argc, argv, "-spect"))
+        else if (checkParameter(argc, argv, "-spect"))
         {
             mode = MODE_SPECT;
-            ifirst = position_param(argc, argv, "-spect");
+            ifirst = paremeterPosition(argc, argv, "-spect");
         }
-        else if (check_param(argc, argv, "-som"))
+        else if (checkParameter(argc, argv, "-som"))
         {
             mode = MODE_SOM;
-            ifirst = position_param(argc, argv, "-som");
+            ifirst = paremeterPosition(argc, argv, "-som");
         }
-        else if (check_param(argc, argv, "-psd"))
+        else if (checkParameter(argc, argv, "-psd"))
         {
             mode = MODE_PSD;
-            ifirst = position_param(argc, argv, "-psd");
+            ifirst = paremeterPosition(argc, argv, "-psd");
         }
-        else if (check_param(argc, argv, "-ctf"))
+        else if (checkParameter(argc, argv, "-ctf"))
         {
             mode = MODE_CTF;
-            ifirst = position_param(argc, argv, "-ctf");
-            fn_assign = get_param(argc, argv, "-assign", "");
+            ifirst = paremeterPosition(argc, argv, "-ctf");
+            fn_assign = getParameter(argc, argv, "-assign", "");
         }
-        else if (check_param(argc, argv, "-spectsom"))
+        else if (checkParameter(argc, argv, "-spectsom"))
         {
             mode = MODE_SPECTSOM;
-            ifirst = position_param(argc, argv, "-spectsom");
-            fn_dat = get_param(argc, argv, "-din");
+            ifirst = paremeterPosition(argc, argv, "-spectsom");
+            fn_dat = getParameter(argc, argv, "-din");
         }
         else
             REPORT_ERROR(1, "No mode (img/sel/vol) supplied");
-        numCols = AtoI(get_param(argc, argv, "-w", "-1"));
-        numRows = AtoI(get_param(argc, argv, "-h", "-1"));
-        apply_geo = !check_param(argc, argv, "-dont_apply_geo");
-        poll = check_param(argc, argv, "-poll");
-        common_normalization = check_param(argc, argv, "-common_norm");
+        numCols = AtoI(getParameter(argc, argv, "-w", "-1"));
+        numRows = AtoI(getParameter(argc, argv, "-h", "-1"));
+        apply_geo = !checkParameter(argc, argv, "-dont_apply_geo");
+        poll = checkParameter(argc, argv, "-poll");
+        common_normalization = checkParameter(argc, argv, "-common_norm");
     }
     catch (Xmipp_error)
     {
@@ -296,7 +296,7 @@ int main(int argc, char **argv)
             {
                 ShowSel *showsel = new ShowSel;
                 showsel->apply_geo = apply_geo;
-                showsel->showonlyactive = !check_param(argc, argv, "-showall");
+                showsel->showonlyactive = !checkParameter(argc, argv, "-showall");
                 showsel->initWithFile(numRows, numCols, argv[i]);
                 showsel->show();
                 shown++;

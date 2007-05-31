@@ -50,12 +50,12 @@ int main(int argc, char **argv)
 
     try
     {
-        selname = get_param(argc, argv, "-sel");
-        fname = get_param(argc, argv, "-fname", "out.dat");
-        bmname = get_param(argc, argv, "-mname", "mask.spi");
-        if (check_param(argc, argv, "-nomask"))
+        selname = getParameter(argc, argv, "-sel");
+        fname = getParameter(argc, argv, "-fname", "out.dat");
+        bmname = getParameter(argc, argv, "-mname", "mask.spi");
+        if (checkParameter(argc, argv, "-nomask"))
             nomask = true;
-        if (check_param(argc, argv, "-verb"))
+        if (checkParameter(argc, argv, "-verb"))
             verb = true;
     }
     catch (Xmipp_error)

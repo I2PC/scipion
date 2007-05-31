@@ -31,9 +31,9 @@ int main(int argc, char **argv)
     FileName fn1, fn2, fn_out;
     try
     {
-        fn1    = get_param(argc, argv, "-i1");
-        fn2    = get_param(argc, argv, "-i2");
-        fn_out = get_param(argc, argv, "-o");
+        fn1    = getParameter(argc, argv, "-i1");
+        fn2    = getParameter(argc, argv, "-i2");
+        fn_out = getParameter(argc, argv, "-o");
     }
     catch (Xmipp_error XE)
     {

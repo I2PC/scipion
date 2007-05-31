@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 
     try
     {
-        fn_input = get_param(argc, argv, "-i");
+        fn_input = getParameter(argc, argv, "-i");
         if (Is_ImageXmipp(fn_input))
         {
             SF.insert(fn_input, SelLine::ACTIVE);

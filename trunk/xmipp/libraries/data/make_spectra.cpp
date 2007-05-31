@@ -37,7 +37,7 @@ Prog_make_spectra_prm::Prog_make_spectra_prm(): Prog_parameters()
 void Prog_make_spectra_prm::read(int argc, char **argv)
 {
     Prog_parameters::read(argc, argv);
-    fn_out = get_param(argc, argv, "-o");
+    fn_out = getParameter(argc, argv, "-o");
     rot_spt.read(argc, argv);
     produce_side_info();
 }

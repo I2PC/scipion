@@ -41,14 +41,14 @@ int main(int argc, char **argv)
     // Read arguments --------------------------------------------------------
     try
     {
-        fn_input = get_param(argc, argv, "-i", NULL, 1, "Scale: Input file not found");
-        fn_out   = get_param(argc, argv, "-o", "");
-        fn_oext  = get_param(argc, argv, "-oext", "");
+        fn_input = getParameter(argc, argv, "-i", NULL, 1, "Scale: Input file not found");
+        fn_out   = getParameter(argc, argv, "-o", "");
+        fn_oext  = getParameter(argc, argv, "-oext", "");
         if (!Is_ImageXmipp(fn_input) && !Is_VolumeXmipp(fn_input))
             SF.read(fn_input);
-        zdim = AtoI(get_param(argc, argv, "-zdim", "0"));
-        ydim = AtoI(get_param(argc, argv, "-ydim", "0"));
-        xdim = AtoI(get_param(argc, argv, "-xdim"));
+        zdim = AtoI(getParameter(argc, argv, "-zdim", "0"));
+        ydim = AtoI(getParameter(argc, argv, "-ydim", "0"));
+        xdim = AtoI(getParameter(argc, argv, "-xdim"));
 
         if (ydim == 0) ydim = xdim;
         if (zdim == 0) zdim = xdim;

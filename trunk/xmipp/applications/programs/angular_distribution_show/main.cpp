@@ -51,24 +51,24 @@ int main(int argc, char *argv[])
 // Check the command line ==================================================
     try
     {
-        fn_sel = get_param(argc, argv, "-sel", "");
-        fn_ang = get_param(argc, argv, "-ang", "");
-        fn_hist = get_param(argc, argv, "-hist", "");
-        fn_ps = get_param(argc, argv, "-ps", "");
-        fn_DX = get_param(argc, argv, "-DX", "");
-        steps = AtoI(get_param(argc, argv, "-steps", "100"));
-        tell = check_param(argc, argv, "-show_process");
-        R = AtoF(get_param(argc, argv, "-R", "60"));
-        rmax = AtoF(get_param(argc, argv, "-r", "1.5"));
-        rot_view = AtoF(get_param(argc, argv, "-rot_view",  "0"));
-        tilt_view = AtoF(get_param(argc, argv, "-tilt_view", "30"));
-        up_down_correction = check_param(argc, argv, "-up_down_correction");
-        solid_sphere = check_param(argc, argv, "-solid_sphere");
-        colw = AtoI(get_param(argc, argv, "-wcol", "-1"));
+        fn_sel = getParameter(argc, argv, "-sel", "");
+        fn_ang = getParameter(argc, argv, "-ang", "");
+        fn_hist = getParameter(argc, argv, "-hist", "");
+        fn_ps = getParameter(argc, argv, "-ps", "");
+        fn_DX = getParameter(argc, argv, "-DX", "");
+        steps = AtoI(getParameter(argc, argv, "-steps", "100"));
+        tell = checkParameter(argc, argv, "-show_process");
+        R = AtoF(getParameter(argc, argv, "-R", "60"));
+        rmax = AtoF(getParameter(argc, argv, "-r", "1.5"));
+        rot_view = AtoF(getParameter(argc, argv, "-rot_view",  "0"));
+        tilt_view = AtoF(getParameter(argc, argv, "-tilt_view", "30"));
+        up_down_correction = checkParameter(argc, argv, "-up_down_correction");
+        solid_sphere = checkParameter(argc, argv, "-solid_sphere");
+        colw = AtoI(getParameter(argc, argv, "-wcol", "-1"));
 
         // Angle order
         int i;
-        if ((i = position_param(argc, argv, "-order")) != -1)
+        if ((i = paremeterPosition(argc, argv, "-order")) != -1)
         {
             if (i + 3 >= argc)
             {
@@ -82,9 +82,9 @@ int main(int argc, char *argv[])
         }
 
         // Check they are "rot", "tilt", and "psi"
-        check_angle_descr(ang1);
-        check_angle_descr(ang2);
-        check_angle_descr(ang3);
+        checkAngle(ang1);
+        checkAngle(ang2);
+        checkAngle(ang3);
         if (ang1[1] == ang2[1] || ang1[1] == ang3[1] || ang2[1] == ang3[1])
             REPORT_ERROR(1, "Angular distribution: There is an angle twice in the angle order");
 

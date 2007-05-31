@@ -45,13 +45,13 @@ public:
 
     void read(int argc, char **argv)
     {
-        fn_in = get_param(argc, argv, "-i");
-        fn_out = get_param(argc, argv, "-o");
+        fn_in = getParameter(argc, argv, "-i");
+        fn_out = getParameter(argc, argv, "-o");
         Euler_mode = Align_mode = Axis_mode = false;
-        if (check_param(argc, argv, "-euler"))
+        if (checkParameter(argc, argv, "-euler"))
         {
             Euler_mode = true;
-            int i = position_param(argc, argv, "-euler");
+            int i = paremeterPosition(argc, argv, "-euler");
             if (i + 3 >= argc)
                 REPORT_ERROR(1, "Not enough parameters after -euler");
             rot  = AtoF(argv[i+1]);
@@ -59,26 +59,26 @@ public:
             psi  = AtoF(argv[i+3]);
             A3D = Euler_rotation3DMatrix(rot, tilt, psi);
         }
-        else if (check_param(argc, argv, "-alignWithZ"))
+        else if (checkParameter(argc, argv, "-alignWithZ"))
         {
             Align_mode = true;
-            axis = get_vector_param(argc, argv, "-alignWithZ", 3);
+            axis = getVectorParameter(argc, argv, "-alignWithZ", 3);
             A3D = alignWithZ(axis);
         }
-        else if (check_param(argc, argv, "-axis"))
+        else if (checkParameter(argc, argv, "-axis"))
         {
             Axis_mode = true;
-            axis = get_vector_param(argc, argv, "-axis", 3);
-            ang = AtoF(get_param(argc, argv, "-ang"));
+            axis = getVectorParameter(argc, argv, "-axis", 3);
+            ang = AtoF(getParameter(argc, argv, "-ang"));
             A3D = rotation3DMatrix(ang, axis);
         }
         else
             A3D.initIdentity(4);
-        if (check_param(argc, argv, "-shift"))
-            shift = get_vector_param(argc, argv, "-shift", 3);
+        if (checkParameter(argc, argv, "-shift"))
+            shift = getVectorParameter(argc, argv, "-shift", 3);
         else shift.initZeros(3);
-        if (check_param(argc, argv, "-scale"))
-            scale = get_vector_param(argc, argv, "-scale", 3);
+        if (checkParameter(argc, argv, "-scale"))
+            scale = getVectorParameter(argc, argv, "-scale", 3);
         else
         {
             scale.resize(3);

@@ -37,11 +37,11 @@ Prog_Sampling_Parameters::Prog_Sampling_Parameters()
 /* Read parameters --------------------------------------------------------- */
 void Prog_Sampling_Parameters::read(int argc, char **argv)
 {
-    sampling_file_root = get_param(argc, argv, "-o");
-    symmetry = get_param(argc, argv, "-symmetry", "cn");
-    sym_order = AtoI(get_param(argc, argv, "-sym_order", "1"));
-    sampling = AtoF(get_param(argc, argv, "-sampling_rate", "5"));
-    neighborhood = AtoF(get_param(argc, argv, "-neighborhood", "1"));
+    sampling_file_root = getParameter(argc, argv, "-o");
+    symmetry = getParameter(argc, argv, "-symmetry", "cn");
+    sym_order = AtoI(getParameter(argc, argv, "-sym_order", "1"));
+    sampling = AtoF(getParameter(argc, argv, "-sampling_rate", "5"));
+    neighborhood = AtoF(getParameter(argc, argv, "-neighborhood", "1"));
 }
 
 /* Usage ------------------------------------------------------------------- */

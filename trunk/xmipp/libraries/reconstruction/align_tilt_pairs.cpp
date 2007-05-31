@@ -31,25 +31,25 @@ void Prog_centilt_prm::read(int argc, char **argv)
     FileName fn_sel;
 
     // Selfile with untilted images
-    fn_sel = get_param(argc, argv, "-u");
+    fn_sel = getParameter(argc, argv, "-u");
     SFu.read(fn_sel);
     // Selfile with tilted images
-    fn_sel = get_param(argc, argv, "-t");
+    fn_sel = getParameter(argc, argv, "-t");
     SFt.read(fn_sel);
     if (SFu.ImgNo() != SFt.ImgNo())
         REPORT_ERROR(1, "Unequal number of active images in untilted and tilted selfiles");
     // Extension if not to overwrite input images
-    oext = get_param(argc, argv, "-oext", "");
+    oext = getParameter(argc, argv, "-oext", "");
     // Write out document file?
-    fn_doc = get_param(argc, argv, "-doc", "");
+    fn_doc = getParameter(argc, argv, "-doc", "");
     // Maximum shift (discard images that shift more in last iteration)
-    max_shift = AtoF(get_param(argc, argv, "-max_shift", "0"));
+    max_shift = AtoF(getParameter(argc, argv, "-max_shift", "0"));
     // Force x-shift to be zero?
-    force_x_zero = check_param(argc, argv, "-force_x_zero");
+    force_x_zero = checkParameter(argc, argv, "-force_x_zero");
     // Perform centering?
-    do_center = !check_param(argc, argv, "-skip_centering");
+    do_center = !checkParameter(argc, argv, "-skip_centering");
     // Perform cosine stretching?
-    do_stretch = !check_param(argc, argv, "-skip_stretching");
+    do_stretch = !checkParameter(argc, argv, "-skip_stretching");
 }
 
 // Show ====================================================================

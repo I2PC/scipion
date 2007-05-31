@@ -50,7 +50,7 @@ Prog_MPI_Run_Parameters::Prog_MPI_Run_Parameters(int argc, char **argv)
 /* Read parameters --------------------------------------------------------- */
 void Prog_MPI_Run_Parameters::read(int argc, char **argv)
 {
-    fn_commands = get_param(argc, argv, "-i");
+    fn_commands = getParameter(argc, argv, "-i");
 }
 
 /* Usage ------------------------------------------------------------------- */

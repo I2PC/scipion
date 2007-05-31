@@ -29,9 +29,9 @@
 /* Read parameters --------------------------------------------------------- */
 void Prog_Range_adjust_Parameters::read(int argc, char **argv)
 {
-    min_val = AtoF(get_param(argc, argv, "-min"));
-    max_val = AtoF(get_param(argc, argv, "-max"));
-    sigma = AtoF(get_param(argc, argv, "-noise", "0"));
+    min_val = AtoF(getParameter(argc, argv, "-min"));
+    max_val = AtoF(getParameter(argc, argv, "-max"));
+    sigma = AtoF(getParameter(argc, argv, "-noise", "0"));
     randomize_random_generator();
 }
 

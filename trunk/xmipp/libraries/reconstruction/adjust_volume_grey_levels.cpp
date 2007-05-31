@@ -31,11 +31,11 @@
 /* Read parameters --------------------------------------------------------- */
 void Prog_Adjust_Volume_Parameters::read(int argc, char **argv)
 {
-    fn_vol = get_param(argc, argv, "-i");
-    fn_sel = get_param(argc, argv, "-sel");
-    fn_out = get_param(argc, argv, "-o", "");
-    optimize = check_param(argc, argv, "-optimize");
-    probb_eval = AtoF(get_param(argc, argv, "-probb_eval", "0.2"));
+    fn_vol = getParameter(argc, argv, "-i");
+    fn_sel = getParameter(argc, argv, "-sel");
+    fn_out = getParameter(argc, argv, "-o", "");
+    optimize = checkParameter(argc, argv, "-optimize");
+    probb_eval = AtoF(getParameter(argc, argv, "-probb_eval", "0.2"));
     produce_side_info();
 }
 

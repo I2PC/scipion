@@ -53,19 +53,19 @@ int main(int argc, char **argv)
 
     try
     {
-        selname = get_param(argc, argv, "-sel");
-        fname = get_param(argc, argv, "-iname", "out.dat");
-        imgName = get_param(argc, argv, "-imgName", "img");
-        ext = get_param(argc, argv, "-ext", "spi");
-        bmname = get_param(argc, argv, "-mname", "mask.spi");
-        if (check_param(argc, argv, "-nomask"))
+        selname = getParameter(argc, argv, "-sel");
+        fname = getParameter(argc, argv, "-iname", "out.dat");
+        imgName = getParameter(argc, argv, "-imgName", "img");
+        ext = getParameter(argc, argv, "-ext", "spi");
+        bmname = getParameter(argc, argv, "-mname", "mask.spi");
+        if (checkParameter(argc, argv, "-nomask"))
         {
             nomask = true;
-            rows = AtoI(get_param(argc, argv, "-rows"));
-            cols = AtoI(get_param(argc, argv, "-cols"));
-            planes = AtoI(get_param(argc, argv, "-planes"));
+            rows = AtoI(getParameter(argc, argv, "-rows"));
+            cols = AtoI(getParameter(argc, argv, "-cols"));
+            planes = AtoI(getParameter(argc, argv, "-planes"));
         }
-        if (check_param(argc, argv, "-noBB"))
+        if (checkParameter(argc, argv, "-noBB"))
             noBB = true;
     }
     catch (Xmipp_error)

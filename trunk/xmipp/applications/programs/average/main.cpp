@@ -44,10 +44,10 @@ public:
 
     void read(int argc, char **argv)
     {
-        more_options = check_param(argc, argv, "-more_options");
+        more_options = checkParameter(argc, argv, "-more_options");
         Prog_parameters::read(argc, argv);
-        set_weight = check_param(argc, argv, "-set_weight");
-        weighted_avg = check_param(argc, argv, "-weighted_avg");
+        set_weight = checkParameter(argc, argv, "-set_weight");
+        weighted_avg = checkParameter(argc, argv, "-weighted_avg");
         sumweight = 0.;
     }
 

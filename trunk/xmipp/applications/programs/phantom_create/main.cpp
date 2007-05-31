@@ -37,8 +37,8 @@ int main(int argc, char *argv[])
     // Read Parameters ......................................................
     try
     {
-        fn_phantom = get_param(argc, argv, "-i");
-        fn_vol     = get_param(argc, argv, "-o");
+        fn_phantom = getParameter(argc, argv, "-i");
+        fn_vol     = getParameter(argc, argv, "-o");
     }
     catch (Xmipp_error XE)
     {

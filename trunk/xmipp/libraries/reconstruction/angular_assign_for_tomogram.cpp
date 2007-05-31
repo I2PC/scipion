@@ -41,18 +41,18 @@ Prog_angular_predict_tomography_prm::Prog_angular_predict_tomography_prm()
 void Prog_angular_predict_tomography_prm::read(int argc, char **argv)
 {
     Prog_parameters::read(argc, argv);
-    fn_ref = get_param(argc, argv, "-ref");
-    fn_out_ang = get_param(argc, argv, "-oang");
-    max_rot_change = AtoF(get_param(argc, argv, "-max_rot_change", "5"));
-    max_tilt_change = AtoF(get_param(argc, argv, "-max_tilt_change", "2"));
-    max_psi_change = AtoF(get_param(argc, argv, "-max_psi_change", "5"));
-    rot_step = AtoF(get_param(argc, argv, "-rot_step", "1"));
-    tilt_step = AtoF(get_param(argc, argv, "-tilt_step", "1"));
-    psi_step = AtoF(get_param(argc, argv, "-psi_step", "1"));
-    max_shift_change = AtoF(get_param(argc, argv, "-max_shift_change", "3"));
-    shift_step = AtoF(get_param(argc, argv, "-shift_step", "1"));
-    onlyX = check_param(argc, argv, "-onlyX");
-    onlyY = check_param(argc, argv, "-onlyY");
+    fn_ref = getParameter(argc, argv, "-ref");
+    fn_out_ang = getParameter(argc, argv, "-oang");
+    max_rot_change = AtoF(getParameter(argc, argv, "-max_rot_change", "5"));
+    max_tilt_change = AtoF(getParameter(argc, argv, "-max_tilt_change", "2"));
+    max_psi_change = AtoF(getParameter(argc, argv, "-max_psi_change", "5"));
+    rot_step = AtoF(getParameter(argc, argv, "-rot_step", "1"));
+    tilt_step = AtoF(getParameter(argc, argv, "-tilt_step", "1"));
+    psi_step = AtoF(getParameter(argc, argv, "-psi_step", "1"));
+    max_shift_change = AtoF(getParameter(argc, argv, "-max_shift_change", "3"));
+    shift_step = AtoF(getParameter(argc, argv, "-shift_step", "1"));
+    onlyX = checkParameter(argc, argv, "-onlyX");
+    onlyY = checkParameter(argc, argv, "-onlyY");
     produce_side_info();
 }
 

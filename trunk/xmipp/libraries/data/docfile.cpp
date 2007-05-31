@@ -168,15 +168,15 @@ void DocLine::read(std::istream& in)
         text = "";
         int i = 0;
 
-        key = AtoI(next_token(line, i), 1602, "Error reading key");
-        param_no = AtoI(next_token(line, i), 1602,
+        key = AtoI(nextToken(line, i), 1602, "Error reading key");
+        param_no = AtoI(nextToken(line, i), 1602,
                         "Error reading number parameters");
         std::string auxline = line;
 
         try
         {
             // Try unfixed mode first
-            read_float_list(line, i, param_no, data, 1602,
+            readFloatList(line, i, param_no, data, 1602,
                             "Error reading doc file line");
         }
         catch (Xmipp_error e)

@@ -34,19 +34,19 @@
 /* Read Evaluate parameters from command line ============================== */
 void Prog_Evaluate_FSCs_Parameters::read(int argc, char **argv)
 {
-    fn_phantom       = get_param(argc, argv, "-p");
-    fn_recons        = get_param(argc, argv, "-r");
-    fn_out           = get_param(argc, argv, "-o", "");
-    sampling_rate    = AtoF(get_param(argc, argv, "-sampling_rate", "1"));
+    fn_phantom       = getParameter(argc, argv, "-p");
+    fn_recons        = getParameter(argc, argv, "-r");
+    fn_out           = getParameter(argc, argv, "-o", "");
+    sampling_rate    = AtoF(getParameter(argc, argv, "-sampling_rate", "1"));
     action           = ESTIMATE_SINGLE_FSC;
-    if (check_param(argc, argv, "-estimate_average_resolution"))
+    if (checkParameter(argc, argv, "-estimate_average_resolution"))
         action = ESTIMATE_AVERAGE_RESOLUTION;
-    else if (check_param(argc, argv, "-estimate_average_FSC"))
+    else if (checkParameter(argc, argv, "-estimate_average_FSC"))
         action = ESTIMATE_AVERAGE_FSC;
-    else if (check_param(argc, argv, "-compare_two_sets"))
+    else if (checkParameter(argc, argv, "-compare_two_sets"))
     {
         action = COMPARE_TWO_SETS;
-        fn_recons2 = get_param(argc, argv, "-compare_two_sets");
+        fn_recons2 = getParameter(argc, argv, "-compare_two_sets");
     }
 }
 

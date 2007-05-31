@@ -44,14 +44,14 @@ int main(int argc, char **argv)
     // Get input parameters .................................................
     try
     {
-        fnRaw         = get_param(argc, argv, "-i");
-        fnRawTilted   = get_param(argc, argv, "-tilted", "");
-        reversed      = check_param(argc, argv, "-reverse_endian");
-        fn_assign_CTF = get_param(argc, argv, "-psd", "");
-        if (check_param(argc, argv, "-ctf"))
+        fnRaw         = getParameter(argc, argv, "-i");
+        fnRawTilted   = getParameter(argc, argv, "-tilted", "");
+        reversed      = checkParameter(argc, argv, "-reverse_endian");
+        fn_assign_CTF = getParameter(argc, argv, "-psd", "");
+        if (checkParameter(argc, argv, "-ctf"))
         {
             ctf_mode = true;
-            fn_assign_CTF = get_param(argc, argv, "-ctf");
+            fn_assign_CTF = getParameter(argc, argv, "-ctf");
         }
     }
     catch (Xmipp_error XE)

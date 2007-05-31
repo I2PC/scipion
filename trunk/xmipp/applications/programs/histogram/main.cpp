@@ -48,12 +48,12 @@ int main(int argc, char **argv)
     // Read arguments --------------------------------------------------------
     try
     {
-        fn_in      = get_param(argc, argv, "-i");
-        fn_out     = get_param(argc, argv, "-o", "");
+        fn_in      = getParameter(argc, argv, "-i");
+        fn_out     = getParameter(argc, argv, "-o", "");
 
-        StepsNo = AtoI(get_param(argc, argv, "-steps", "100"));
+        StepsNo = AtoI(getParameter(argc, argv, "-steps", "100"));
         int i;
-        if ((i = position_param(argc, argv, "-range")) != -1)
+        if ((i = paremeterPosition(argc, argv, "-range")) != -1)
         {
             if (i + 2 >= argc)
                 EXIT_ERROR(1, "Histogram: Not enough parameters behind -range\n");

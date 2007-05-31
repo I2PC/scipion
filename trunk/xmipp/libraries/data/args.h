@@ -61,9 +61,9 @@
  * {
  * #endif
  *
- * key = AtoF(first_token(line), 1602, "Error reading key");
- * param_no = CtoI(next_token(), 1602, "Error reading number parameters");
- * read_float_list(NULL, param_no, data, 1602, "Error reading doc file line");
+ * key = AtoF(firstToken(line), 1602, "Error reading key");
+ * param_no = CtoI(nextToken(), 1602, "Error reading number parameters");
+ * readFloatList(NULL, param_no, data, 1602, "Error reading doc file line");
  *
  * #ifndef _NO_EXCEPTION
  * }
@@ -130,7 +130,7 @@ int bestPrecision(float F, int _width);
  * @ingroup TypeConversions
  *
  * @code
- * double key = AtoD(first_token(line), 1602, "Error reading key");
+ * double key = AtoD(firstToken(line), 1602, "Error reading key");
  * @endcode
  */
 double AtoD(const char* str,
@@ -142,7 +142,7 @@ double AtoD(const char* str,
  * @ingroup TypeConversions
  *
  * @code
- * float key = AtoF(first_token(line), 1602, "Error reading key");
+ * float key = AtoF(firstToken(line), 1602, "Error reading key");
  * @endcode
  */
 float AtoF(const char* str,
@@ -169,7 +169,7 @@ inline float AtoF(const std::string str,
  * @ingroup TypeConversions
  *
  * @code
- * int param_no = AtoI(next_token(), 1602, "Error reading number parameters")
+ * int param_no = AtoI(nextToken(), 1602, "Error reading number parameters")
  * @endcode
  */
 int AtoI(const char* str,
@@ -196,7 +196,7 @@ inline int AtoI(const std::string str,
  * @ingroup TypeConversions
  *
  * @code
- * long long param_no = AtoLL(next_token(), 1602, "Error reading number
+ * long long param_no = AtoLL(nextToken(), 1602, "Error reading number
  *     parameters")
  * @endcode
  */
@@ -264,7 +264,7 @@ std::string AtoA(const std::string& str, int _width = 0);
  *
  * If the argument is not "rot", "tilt" nor "psi" an exception is thrown
  */
-void check_angle_descr(const std::string& str);
+void checkAngle(const std::string& str);
 
 /** To lower.
  * @ingroup TypeConversions
@@ -272,12 +272,12 @@ void check_angle_descr(const std::string& str);
  * All characters between A-Z are brought to a-z. Result is rewritten on input
  * string
  */
-void tolower(char* _str);
+void toLower(char* _str);
 
 /** To lower, for STL strings.
  * @ingroup TypeConversions
  */
-void tolower(std::string& _str);
+void toLower(std::string& _str);
 
 /** Remove consecutive spaces.
  * @ingroup TypeConversions
@@ -285,7 +285,7 @@ void tolower(std::string& _str);
  * All consecutive spaces are replaced by a single one and starting and
  * finishing spaces are removed
  */
-std::string remove_spaces(const std::string& _str);
+std::string removeSpaces(const std::string& _str);
 
 /** Remove quotes.
  * @ingroup TypeConversions
@@ -295,10 +295,10 @@ std::string remove_spaces(const std::string& _str);
  *
  * @code
  * char str[10] = "\"Hello\"";
- * remove_quotes(&str);
+ * (&str);
  * @endcode
  */
-void remove_quotes(char** _str);
+void removeQuotes(char** _str);
 
 /** @defgroup Tokenization Tokenization.
  * @ingroup Arguments
@@ -313,9 +313,9 @@ void remove_quotes(char** _str);
  *
  * @code
  * std::cout << "Whole  line: " << line << std::endl;
- * std::cout << "First  word: " << first_token(line) << std::endl;
- * std::cout << "Second word: " << next_token() << std::endl;
- * std::cout << "Third  word: " << next_token() << std::endl;
+ * std::cout << "First  word: " << firstToken(line) << std::endl;
+ * std::cout << "Second word: " << nextToken() << std::endl;
+ * std::cout << "Third  word: " << nextToken() << std::endl;
  * ...
  * @endcode
  *
@@ -344,10 +344,10 @@ int splitString(const std::string& input,
  * @code
  * char line[80];
  *
- * std::cout << "First  word: " << first_token(line) << std::endl;
+ * std::cout << "First  word: " << firstToken(line) << std::endl;
  * @endcode
  */
-inline char* first_token(const char* str)
+inline char* firstToken(const char* str)
 {
     return strtok((char*) str, " \n");
 }
@@ -358,10 +358,10 @@ inline char* first_token(const char* str)
  * @code
  * std::string line;
  *
- * std::cout << "First  word: " << first_token(line) << std::endl;
+ * std::cout << "First  word: " << firstToken(line) << std::endl;
  * @endcode
  */
-inline char* first_token(const std::string& str)
+inline char* firstToken(const std::string& str)
 {
     // FIXME C-style cast
     return strtok((char*) str.c_str(), " \n");
@@ -371,21 +371,21 @@ inline char* first_token(const std::string& str)
  * @ingroup Tokenization
  *
  * This functions returns the next word of the line we have given last as
- * parameter to first_token.
+ * parameter to firstToken.
  *
  * @code
  * char line[80];
  * ...
- * first_token(line);
- * std::cout << "Second  word: " << next_token(line) << std::endl;
+ * firstToken(line);
+ * std::cout << "Second  word: " << nextToken(line) << std::endl;
  *
  * stf::string line;
  * ...
- * first_token(line);
- * std::cout << "Second  word: " << next_token(line) << std::endl;
+ * firstToken(line);
+ * std::cout << "Second  word: " << nextToken(line) << std::endl;
  * @endcode
  */
-inline char* next_token()
+inline char* nextToken()
 {
     // FIXME C-style cast
     return strtok((char*) NULL, " \n");
@@ -397,7 +397,7 @@ inline char* next_token()
  * It reads from position i. Returns (in i) the following position to search on.
  * When there are no more tokens. It returns "".
  */
-std::string next_token(const std::string& str, int& i);
+std::string nextToken(const std::string& str, int& i);
 
 /** Get non empty string (char*).
  * @ingroup Tokenization
@@ -405,10 +405,10 @@ std::string next_token(const std::string& str, int& i);
  * This function returns the first word found in the given line disregarding the
  * leading blanks. If no word is found then an exception or an exit error is
  * produced. After calling this function the first blank character after the
- * word is substituted by a NULL character (as it uses the function first_token.
- * Further word readings should use the function read_next_word
+ * word is substituted by a NULL character (as it uses the function firstToken.
+ * Further word readings should use the function read_nextWord
  */
-char* first_word(char* str,
+char* firstWord(char* str,
                  int _errno = 2106,
                  std::string errmsg = "first word: String not found",
                  int exit = 0);
@@ -418,27 +418,27 @@ char* first_word(char* str,
  *
  * Same as the previous function but for STL strings
  */
-inline char* first_word(std::string& str,
+inline char* firstWord(std::string& str,
                         int _errno = 2106,
                         std::string errmsg = "first word: String not found",
                         int exit = 0)
 {
     // FIXME C-style cast
-    return first_word((char*) str.c_str(), _errno, errmsg, exit);
+    return firstWord((char*) str.c_str(), _errno, errmsg, exit);
 }
 
 /** Get next non empty string.
  * @ingroup Tokenization
  *
- * This is the same as the next_token, but an exception is thrown or an exit
+ * This is the same as the nextToken, but an exception is thrown or an exit
  * error produced if the word is empty
  */
-inline char* next_word(int _errno = 2106,
+inline char* nextWord(int _errno = 2106,
                        std::string errmsg = "next word: String not found",
                        int exit = 0)
 {
     // FIXME C-style cast
-    return first_word((char*) NULL, _errno, errmsg, exit);
+    return firstWord((char*) NULL, _errno, errmsg, exit);
 }
 
 // TODO Document
@@ -470,8 +470,8 @@ void tokenize(const std::string& str,
  *
  * @code
  * getline(in_stream, line);
- * read_float_list(line, 10, v1); // Read 10 values from line in v1
- * read_float_list(NULL, 10, v2); // Read NEXT!! 10 values in v2
+ * readFloatList(line, 10, v1); // Read 10 values from line in v1
+ * readFloatList(NULL, 10, v2); // Read NEXT!! 10 values in v2
  * @endcode
  */
 
@@ -479,7 +479,7 @@ void tokenize(const std::string& str,
  * @ingroup ReadLists
  */
 template <typename T>
-void read_float_list(const char* str,
+void readFloatList(const char* str,
                      int N, std::vector< T >& v,
                      int _errno = 2105,
                      std::string errmsg = "Error reading list",
@@ -488,7 +488,7 @@ void read_float_list(const char* str,
     T valueF;
     char* token;
 
-    token = first_token(str);
+    token = firstToken(str);
     for (int i = 0; i < N; i++)
     {
         if (token == NULL)
@@ -511,7 +511,7 @@ void read_float_list(const char* str,
         v.push_back(valueF);
 
         if (i != N - 1)
-            token = next_token();
+            token = nextToken();
     }
 }
 
@@ -519,7 +519,7 @@ void read_float_list(const char* str,
  * @ingroup ReadLists
  */
 template <typename T>
-void read_float_list(const std::string& str,
+void readFloatList(const std::string& str,
                      int& i,
                      int N,
                      std::vector< T >& v,
@@ -530,7 +530,7 @@ void read_float_list(const std::string& str,
     T valueF;
     std::string token;
 
-    token = next_token(str, i);
+    token = nextToken(str, i);
     for (int j = 0; j < N; j++)
     {
         if (token == "")
@@ -553,7 +553,7 @@ void read_float_list(const std::string& str,
         v.push_back(valueF);
 
         if (j != N - 1)
-            token = next_token(str, i);
+            token = nextToken(str, i);
     }
 }
 
@@ -561,7 +561,7 @@ void read_float_list(const std::string& str,
  * @ingroup ReadLists
  */
 template <typename T>
-void read_float_list(const char* str,
+void readFloatList(const char* str,
                      int N,
                      Matrix1D< T >& v,
                      int _errno = 2105,
@@ -571,7 +571,7 @@ void read_float_list(const char* str,
     T valueF;
     char* token;
 
-    token = first_token(str);
+    token = firstToken(str);
     for (int i = 0; i < N; i++)
     {
         if (token == NULL)
@@ -593,7 +593,7 @@ void read_float_list(const char* str,
 
         DIRECT_VEC_ELEM(v, i) = valueF;
         if (i != N - 1)
-            token = next_token();
+            token = nextToken();
     }
 }
 
@@ -617,13 +617,13 @@ void read_float_list(const char* str,
  * the program to abort (use the exit variable).
  *
  * @code
- * m_param = AtoF(get_param(argc, argv, "-m"));
+ * m_param = AtoF(getParameter(argc, argv, "-m"));
  *
  * // Get compulsory parameter "-m"
- * m_param = AtoF(get_param(argc, argv, "-m","2.65"));
+ * m_param = AtoF(getParameter(argc, argv, "-m","2.65"));
  *
  * // Optional parameter, if no parameter is given it takes 2.65 by default
- * m_param = AtoF(get_param(argc, argv, "-m", NULL, 6001, "-m parameter not \
+ * m_param = AtoF(getParameter(argc, argv, "-m", NULL, 6001, "-m parameter not \
  *     found. I'm going out", TRUE);
  *
  * // Compulsory parameter, if not found give an special error message and exit
@@ -631,7 +631,7 @@ void read_float_list(const char* str,
  *
  * @endcode
  */
-char* get_param(int argc,
+char* getParameter(int argc,
                 char** argv,
                 const char* param,
                 const char* option = NULL,
@@ -647,7 +647,7 @@ char* get_param(int argc,
  * default values must be provided. TRUE is returned if the two values have been
  * found
  */
-bool get_2_double_params(int argc,
+bool getTwoDoubleParams(int argc,
                          char** argv,
                          const char* param,
                          double& v1,
@@ -666,7 +666,7 @@ bool get_2_double_params(int argc,
  * default values must be provided. TRUE is returned if the two values have been
  * found
  */
-bool get_3_double_params(int argc,
+bool getThreeDoubleParams(int argc,
                          char** argv,
                          const char* param,
                          double& v1,
@@ -690,13 +690,13 @@ bool get_3_double_params(int argc,
  *     -verbose means that verbose functionality is set (TRUE)
  *
  * @code
- * verbose = check_param(argc, argv, "-verbose"));
+ * verbose = checkParameter(argc, argv, "-verbose"));
  *
  * // checks if "-verbose" was supplied in the command line. If -verbose was
  * // supplied the function returns TRUE (1), otherwise returns FALSE (0)
  * @endcode
  */
-bool check_param(int argc, char** argv, const char* param);
+bool checkParameter(int argc, char** argv, const char* param);
 
 /** Returns the position where the given parameter is in the command line.
  * @ingroup CommandLineFunctions
@@ -710,7 +710,7 @@ bool check_param(int argc, char** argv, const char* param);
  *     -ang rot tilt psi
  *
  * @code
- * i = position_param(argc, argv, "-ang"));
+ * i = paremeterPosition(argc, argv, "-ang"));
  *
  * // This condition checks if 3 arguments where introduced after -ang parameter
  * // (assuming that the -ang argument is the last one in the string)
@@ -722,7 +722,7 @@ bool check_param(int argc, char** argv, const char* param);
  * ang3 = argv[i+3];
  * @endcode
  */
-int position_param(int argc, char** argv, const char* param);
+int paremeterPosition(int argc, char** argv, const char* param);
 
 
 /** Return the number of components of a vector argument.
@@ -731,7 +731,7 @@ int position_param(int argc, char** argv, const char* param);
  * A vector argument is defined as [x,y,z,...]. It returns 0 if the string does
  * not contain a vector
  */
-int component_no(const std::string& str);
+int numComponents(const std::string& str);
 
 /** Get float vector.
  * @ingroup CommandLineFunctions
@@ -740,7 +740,7 @@ int component_no(const std::string& str);
  * vectors are read). The vector must not contain blank spaces.
  *
  * @code
- * a = get_vector_param(argc, argv, "-a", 3); // a 3D vector called "-a".
+ * a = getVectorParameter(argc, argv, "-a", 3); // a 3D vector called "-a".
  * @endcode
  *
  * The vector is internally resized properly. If the dimension is -1 then all
@@ -750,7 +750,7 @@ int component_no(const std::string& str);
  * is thrown. If there is no dimensionality and a single parameter is behind the
  * flag then no brackets are needed
  */
-Matrix1D< double > get_vector_param(int argc,
+Matrix1D< double > getVectorParameter(int argc,
                                     char** argv,
                                     const char* param,
                                     int dim = 2,
@@ -781,7 +781,7 @@ Matrix1D< double > get_vector_param(int argc,
  * int argcp;
  * char** argvp;
  *
- * specific_command_line("prog1", argc, argv, argcp, &argvp);
+ * specificCommandLine("prog1", argc, argv, argcp, &argvp);
  *
  * if (argcp == 0)
  *     EXIT_ERROR(1, "No parameters for prog1");
@@ -791,7 +791,7 @@ Matrix1D< double > get_vector_param(int argc,
  *
  * If the program name is not found or the corresponding brackets then argcp==0
  */
-void specific_command_line(const std::string& prog_name,
+void specificCommandLine(const std::string& prog_name,
                            int argc,
                            char** argv,
                            int& argcp,
@@ -827,13 +827,13 @@ void specific_command_line(const std::string& prog_name,
  *
  * string command_line = "-i input_file -o output_file";
  *
- * generate_command_line(command_line, argcp, &argvp, &copy);
+ * generateCommandLine(command_line, argcp, &argvp, &copy);
  *
  * if (argcp != 0)
  *     read_parameters(argcp, argvp);
  * @endcode
  */
-void generate_command_line(const std::string& command_line,
+void generateCommandLine(const std::string& command_line,
                            int& argcp,
                            char**& argvp,
                            char*& copy);
@@ -847,7 +847,7 @@ void generate_command_line(const std::string& command_line,
  *
  * Returns TRUE if the parameter is found in the file, and FALSE if it is not
  */
-bool generate_command_line(FILE* fh,
+bool generateCommandLine(FILE* fh,
                            const char* param,
                            int& argcp,
                            char**& argvp,
@@ -871,9 +871,9 @@ bool generate_command_line(FILE* fh,
  * skip=1, ...
  *
  * The meaning and use of the exit, errors and optional value is the same as in
- * the command line get_param
+ * the command line getParameter
  */
-std::string get_param(FILE* fh,
+std::string getParameter(FILE* fh,
                       const char* param,
                       int skip = 0,
                       const char* option = NULL,
@@ -889,14 +889,14 @@ std::string get_param(FILE* fh,
  * defined as "parameter=". If after the parameter, "no" comes then this
  * function returns FALSE
  */
-bool check_param(FILE* fh, const char* param);
+bool checkParameter(FILE* fh, const char* param);
 
 /** Get float vector from a file.
  * @ingroup CommandLineFunctions
  *
  * The same as before but reading is done from a file
  */
-Matrix1D< double > get_vector_param(FILE* fh,
+Matrix1D< double > getVectorParameter(FILE* fh,
                                     const char* param,
                                     int dim = 2,
                                     int _errno = -1,

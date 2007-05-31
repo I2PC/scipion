@@ -40,12 +40,12 @@ public:
     void read(int argc, char **argv)
     {
         Prog_parameters::read(argc, argv);
-        if (check_param(argc, argv, "-phase"))      FFT_mode = ONLY_PHASE;
-        else if (check_param(argc, argv, "-amplitudes")) FFT_mode = ONLY_AMPLITUDES;
+        if (checkParameter(argc, argv, "-phase"))      FFT_mode = ONLY_PHASE;
+        else if (checkParameter(argc, argv, "-amplitudes")) FFT_mode = ONLY_AMPLITUDES;
         else                                           FFT_mode = COMPLETE_FFT;
-        apply_log = check_param(argc, argv, "-log10");
-        squared = check_param(argc, argv, "-squared");
-        do_not_center = check_param(argc, argv, "-do_not_center");
+        apply_log = checkParameter(argc, argv, "-log10");
+        squared = checkParameter(argc, argv, "-squared");
+        do_not_center = checkParameter(argc, argv, "-do_not_center");
     }
 
     void show()

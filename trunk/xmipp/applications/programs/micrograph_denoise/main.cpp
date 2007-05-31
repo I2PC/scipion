@@ -40,10 +40,10 @@ int main(int argc, char **argv)
     // Get command line parameters ------------------------------------------
     try
     {
-        fn_in       = get_param(argc, argv, "-i");
-        fn_out      = get_param(argc, argv, "-o");
-        window_size = AtoI(get_param(argc, argv, "-window_size", "128"));
-        reversed    = check_param(argc, argv, "-reverse_endian");
+        fn_in       = getParameter(argc, argv, "-i");
+        fn_out      = getParameter(argc, argv, "-o");
+        window_size = AtoI(getParameter(argc, argv, "-window_size", "128"));
+        reversed    = checkParameter(argc, argv, "-reverse_endian");
         prm.read(argc, argv);
         prm.adjust_range = false;
         prm.produce_side_info();

@@ -46,12 +46,12 @@ int main(int argc, char **argv)
     // Get command line parameters ------------------------------------------
     try
     {
-        D(0, 0) = AtoF(get_param(argc, argv, "-d00", "1.0"));
-        D(0, 1) = AtoF(get_param(argc, argv, "-d01", "0.0"));
-        D(1, 0) = AtoF(get_param(argc, argv, "-d10", "0.0"));
-        D(1, 1) = AtoF(get_param(argc, argv, "-d11", "1.0"));
-        fn_in  = get_param(argc, argv, "-i");
-        fn_out = get_param(argc, argv, "-o");
+        D(0, 0) = AtoF(getParameter(argc, argv, "-d00", "1.0"));
+        D(0, 1) = AtoF(getParameter(argc, argv, "-d01", "0.0"));
+        D(1, 0) = AtoF(getParameter(argc, argv, "-d10", "0.0"));
+        D(1, 1) = AtoF(getParameter(argc, argv, "-d11", "1.0"));
+        fn_in  = getParameter(argc, argv, "-i");
+        fn_out = getParameter(argc, argv, "-o");
     }
     catch (Xmipp_error XE)
     {

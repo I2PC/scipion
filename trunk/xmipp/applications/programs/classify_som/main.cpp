@@ -70,38 +70,38 @@ main(int argc, char** argv)
     try
     {
 
-        fn_in = get_param(argc, argv, "-i");
+        fn_in = getParameter(argc, argv, "-i");
 
-        if (check_param(argc, argv, "-o"))
-            fn_out = get_param(argc, argv, "-o");
+        if (checkParameter(argc, argv, "-o"))
+            fn_out = getParameter(argc, argv, "-o");
         else
         {
             Usage(argv);
             exit(EXIT_FAILURE);
         }
 
-        if (check_param(argc, argv, "-cvin"))
-            cb_in = get_param(argc, argv, "-cvin");
+        if (checkParameter(argc, argv, "-cvin"))
+            cb_in = getParameter(argc, argv, "-cvin");
 
-        ydim = AtoI(get_param(argc, argv, "-ydim", "5"));
-        xdim = AtoI(get_param(argc, argv, "-xdim", "10"));
+        ydim = AtoI(getParameter(argc, argv, "-ydim", "5"));
+        xdim = AtoI(getParameter(argc, argv, "-xdim", "10"));
 
-        if (check_param(argc, argv, "-hexa"))
+        if (checkParameter(argc, argv, "-hexa"))
         {
-            if (check_param(argc, argv, "-rect"))
+            if (checkParameter(argc, argv, "-rect"))
             {
                 cout << "Error: you can not define two topologies" << endl;
                 exit(EXIT_FAILURE);
             }
             layout = "HEXA";
         }
-        else if (check_param(argc, argv, "-rect"))
+        else if (checkParameter(argc, argv, "-rect"))
             layout = "RECT";
 
 
-        if (check_param(argc, argv, "-gaussian"))
+        if (checkParameter(argc, argv, "-gaussian"))
         {
-            if (check_param(argc, argv, "-bubble"))
+            if (checkParameter(argc, argv, "-bubble"))
             {
                 cout << "Error: you can not define two kernels" << endl;
                 exit(EXIT_FAILURE);
@@ -109,35 +109,35 @@ main(int argc, char** argv)
             gaussian = true;
             bubble = false;
         }
-        else if (check_param(argc, argv, "-bubble"))
+        else if (checkParameter(argc, argv, "-bubble"))
         {
             bubble = true;
             gaussian = false;
         }
 
 
-        alpha_0 = AtoF(get_param(argc, argv, "-alpha", "0.1"));
+        alpha_0 = AtoF(getParameter(argc, argv, "-alpha", "0.1"));
 
-        if (check_param(argc, argv, "-radius"))
-            radius_0 = AtoF(get_param(argc, argv, "-radius"));
+        if (checkParameter(argc, argv, "-radius"))
+            radius_0 = AtoF(getParameter(argc, argv, "-radius"));
         else
             if (xdim > ydim)
                 radius_0 = xdim;
             else
                 radius_0 = ydim;
 
-        iter = AtoI(get_param(argc, argv, "-iter", "10000"));
-        verb = AtoI(get_param(argc, argv, "-verb", "0"));
+        iter = AtoI(getParameter(argc, argv, "-iter", "10000"));
+        verb = AtoI(getParameter(argc, argv, "-verb", "0"));
 
-        if (check_param(argc, argv, "-norm"))
+        if (checkParameter(argc, argv, "-norm"))
             norm = true;
         else norm = false;
 
-        if (check_param(argc, argv, "-saveclusters"))
+        if (checkParameter(argc, argv, "-saveclusters"))
             saveClusters = true;
         else saveClusters = false;
 
-        if (check_param(argc, argv, "-randomcodevectors"))
+        if (checkParameter(argc, argv, "-randomcodevectors"))
             use_rand_cvs = true;
         else use_rand_cvs = false;
 

@@ -57,42 +57,42 @@ main(int argc, char** argv)
     try
     {
 
-        fn_in = get_param(argc, argv, "-i");
-        fn_ein = get_param(argc, argv, "-ein");
-        fn_evin = get_param(argc, argv, "-evin");
+        fn_in = getParameter(argc, argv, "-i");
+        fn_ein = getParameter(argc, argv, "-ein");
+        fn_evin = getParameter(argc, argv, "-evin");
 
-        if (check_param(argc, argv, "-o"))
-            fn_out = get_param(argc, argv, "-o");
+        if (checkParameter(argc, argv, "-o"))
+            fn_out = getParameter(argc, argv, "-o");
         else
         {
             Usage(argv);
             exit(EXIT_FAILURE);
         }
 
-        if (check_param(argc, argv, "-recon"))
+        if (checkParameter(argc, argv, "-recon"))
             recon = true;
         else
             recon = false;
 
-        if (check_param(argc, argv, "-k"))
+        if (checkParameter(argc, argv, "-k"))
         {
-            if (check_param(argc, argv, "-p"))
+            if (checkParameter(argc, argv, "-p"))
             {
                 cerr << argv[0] << ": Invalid option. You can not select number of dimensions and percent at the same time" << endl;
                 exit(EXIT_FAILURE);
             }
-            k = AtoI(get_param(argc, argv, "-k"));
+            k = AtoI(getParameter(argc, argv, "-k"));
             met = true;
         }
 
-        if (check_param(argc, argv, "-p"))
+        if (checkParameter(argc, argv, "-p"))
         {
-            if (check_param(argc, argv, "-k"))
+            if (checkParameter(argc, argv, "-k"))
             {
                 cerr << argv[0] << ": Invalid option. You can not select number of dimensions and percent at the same time" << endl;
                 exit(EXIT_FAILURE);
             }
-            p = AtoF(get_param(argc, argv, "-p"));
+            p = AtoF(getParameter(argc, argv, "-p"));
             met = false;
         }
 

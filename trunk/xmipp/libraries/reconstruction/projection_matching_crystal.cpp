@@ -30,24 +30,24 @@ void Prog_projection_matching_crystal_prm::read(int argc, char **argv)
 {
 
     // Read command line
-    SFref.read(get_param(argc, argv, "-ref"));
+    SFref.read(getParameter(argc, argv, "-ref"));
     SFref.ImgSize(dim, dim);
-    SFexp.read(get_param(argc, argv, "-exp"));
-    fn_root = get_param(argc, argv, "-o", "out");
-    psi_distance  = AtoF(get_param(argc, argv,   "-psi_distance", "0."));
-    rot_distance  = AtoF(get_param(argc, argv,   "-rot_distance", "0."));
-    tilt_distance = AtoF(get_param(argc, argv,   "-tilt_distance", "0."));
-    shift_distance  = AtoF(get_param(argc, argv, "-shift_distance", "0."));
-    scale_distance  = AtoF(get_param(argc, argv, "-scale_distance", "0."));
-    psi_sampling  = AtoF(get_param(argc, argv,   "-psi_sam", "1."));
+    SFexp.read(getParameter(argc, argv, "-exp"));
+    fn_root = getParameter(argc, argv, "-o", "out");
+    psi_distance  = AtoF(getParameter(argc, argv,   "-psi_distance", "0."));
+    rot_distance  = AtoF(getParameter(argc, argv,   "-rot_distance", "0."));
+    tilt_distance = AtoF(getParameter(argc, argv,   "-tilt_distance", "0."));
+    shift_distance  = AtoF(getParameter(argc, argv, "-shift_distance", "0."));
+    scale_distance  = AtoF(getParameter(argc, argv, "-scale_distance", "0."));
+    psi_sampling  = AtoF(getParameter(argc, argv,   "-psi_sam", "1."));
     if (shift_sampling == 0.)
         REPORT_ERROR(1, " shift_sampling must be inizialized!");
     if (psi_sampling == 0.)
         REPORT_ERROR(1, " psi_sampling must be inizialized!");
-    max_shift  = AtoF(get_param(argc, argv, "-max_shift", "0."));
-    shift_sampling  = AtoF(get_param(argc, argv, "-shift_sam", "1."));
-    scale_sampling  = AtoF(get_param(argc, argv, "-scale_sam", "1."));
-    modify_header   = !check_param(argc, argv, "-dont_modify_header");
+    max_shift  = AtoF(getParameter(argc, argv, "-max_shift", "0."));
+    shift_sampling  = AtoF(getParameter(argc, argv, "-shift_sam", "1."));
+    scale_sampling  = AtoF(getParameter(argc, argv, "-scale_sam", "1."));
+    modify_header   = !checkParameter(argc, argv, "-dont_modify_header");
 
 }
 

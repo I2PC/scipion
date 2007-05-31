@@ -44,32 +44,32 @@ Prog_angular_predict_prm::Prog_angular_predict_prm()
 // Read arguments ==========================================================
 void Prog_angular_predict_prm::read(int argc, char **argv)
 {
-    extended_usage = check_param(argc, argv, "-more_help");
+    extended_usage = checkParameter(argc, argv, "-more_help");
     if (extended_usage) REPORT_ERROR(1, "");
     Prog_parameters::read(argc, argv);
-    fn_ref = get_param(argc, argv, "-ref");
-    fn_ang = get_param(argc, argv, "-ang", "");
-    fn_out_ang = get_param(argc, argv, "-oang");
-    fn_sym = get_param(argc, argv, "-sym", "");
-    max_proj_change = AtoF(get_param(argc, argv, "-max_proj_change", "-1"));
-    max_psi_change = AtoF(get_param(argc, argv, "-max_psi_change", "-1"));
-    max_shift_change = AtoF(get_param(argc, argv, "-max_shift_change", "0"));
-    psi_step = AtoF(get_param(argc, argv, "-psi_step", "5"));
-    shift_step = AtoF(get_param(argc, argv, "-shift_step", "1"));
-    th_discard = AtoF(get_param(argc, argv, "-keep", "50"));
-    smin = AtoI(get_param(argc, argv, "-smin", "1"));
-    smax = AtoI(get_param(argc, argv, "-smax", "-1"));
-    check_mirrors = !check_param(argc, argv, "-do_not_check_mirrors");
-    pick = AtoI(get_param(argc, argv, "-pick", "1"));
-    dont_apply_geo = check_param(argc, argv, "-dont_apply_geo");
-    dont_modify_header = check_param(argc, argv, "-dont_modify_header");
-    proj_step = AtoF(get_param(argc, argv, "-proj_step", "5"));
+    fn_ref = getParameter(argc, argv, "-ref");
+    fn_ang = getParameter(argc, argv, "-ang", "");
+    fn_out_ang = getParameter(argc, argv, "-oang");
+    fn_sym = getParameter(argc, argv, "-sym", "");
+    max_proj_change = AtoF(getParameter(argc, argv, "-max_proj_change", "-1"));
+    max_psi_change = AtoF(getParameter(argc, argv, "-max_psi_change", "-1"));
+    max_shift_change = AtoF(getParameter(argc, argv, "-max_shift_change", "0"));
+    psi_step = AtoF(getParameter(argc, argv, "-psi_step", "5"));
+    shift_step = AtoF(getParameter(argc, argv, "-shift_step", "1"));
+    th_discard = AtoF(getParameter(argc, argv, "-keep", "50"));
+    smin = AtoI(getParameter(argc, argv, "-smin", "1"));
+    smax = AtoI(getParameter(argc, argv, "-smax", "-1"));
+    check_mirrors = !checkParameter(argc, argv, "-do_not_check_mirrors");
+    pick = AtoI(getParameter(argc, argv, "-pick", "1"));
+    dont_apply_geo = checkParameter(argc, argv, "-dont_apply_geo");
+    dont_modify_header = checkParameter(argc, argv, "-dont_modify_header");
+    proj_step = AtoF(getParameter(argc, argv, "-proj_step", "5"));
     tell = 0;
-    if (check_param(argc, argv, "-show_rot_tilt")) tell |= TELL_ROT_TILT;
-    if (check_param(argc, argv, "-show_psi_shift")) tell |= TELL_PSI_SHIFT;
-    if (check_param(argc, argv, "-show_options")) tell |= TELL_OPTIONS;
-    search5D = check_param(argc, argv, "-5D");
-    summaryRootname = get_param(argc, argv, "-summary", "");
+    if (checkParameter(argc, argv, "-show_rot_tilt")) tell |= TELL_ROT_TILT;
+    if (checkParameter(argc, argv, "-show_psi_shift")) tell |= TELL_PSI_SHIFT;
+    if (checkParameter(argc, argv, "-show_options")) tell |= TELL_OPTIONS;
+    search5D = checkParameter(argc, argv, "-5D");
+    summaryRootname = getParameter(argc, argv, "-summary", "");
     if (!MPIversion) produce_side_info();
 }
 

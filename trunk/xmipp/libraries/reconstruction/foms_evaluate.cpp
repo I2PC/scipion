@@ -100,28 +100,28 @@ void Prog_Evaluate_Parameters::read(int argc, char **argv)
     default_values();
 
     // Read from command line
-    fn_phantom       = get_param(argc, argv, "-p", "");
-    if (check_param(argc, argv, "-sel"))
-        fn_sel = get_param(argc, argv, "-sel");
+    fn_phantom       = getParameter(argc, argv, "-p", "");
+    if (checkParameter(argc, argv, "-sel"))
+        fn_sel = getParameter(argc, argv, "-sel");
     else
     {
-        fn_recons        =      get_param(argc, argv,  "-r");
+        fn_recons        =      getParameter(argc, argv,  "-r");
     }
-    percent_mass     = AtoF(get_param(argc, argv,  "-mass"       , "99"));
-    global_radius    = AtoF(get_param(argc, argv,  "-R"          , "0"));
-    fn_mask          = get_param(argc, argv, "-mask", "");
-    fit_gray_scales  = check_param(argc, argv, "-fit_gray");
-    if (check_param(argc, argv, "-back_radius"))
+    percent_mass     = AtoF(getParameter(argc, argv,  "-mass"       , "99"));
+    global_radius    = AtoF(getParameter(argc, argv,  "-R"          , "0"));
+    fn_mask          = getParameter(argc, argv, "-mask", "");
+    fit_gray_scales  = checkParameter(argc, argv, "-fit_gray");
+    if (checkParameter(argc, argv, "-back_radius"))
     {
-        back_radius   = AtoF(get_param(argc, argv,  "-back_radius"));
+        back_radius   = AtoF(getParameter(argc, argv,  "-back_radius"));
         back_mode = SPHERE_MODE;
     }
-    if (check_param(argc, argv, "-back_factor"))
+    if (checkParameter(argc, argv, "-back_factor"))
     {
-        back_factor   = AtoF(get_param(argc, argv,  "-back_factor"));
+        back_factor   = AtoF(getParameter(argc, argv,  "-back_factor"));
         back_mode = ENLARGE_MODE;
     }
-    if ((i = position_param(argc, argv, "-dir")) != -1)
+    if ((i = paremeterPosition(argc, argv, "-dir")) != -1)
     {
         if ((++i) < argc)
         {
@@ -147,11 +147,11 @@ void Prog_Evaluate_Parameters::read(int argc, char **argv)
             }
         }
     }
-    if (check_param(argc, argv, "-save_maps"))       tell |= SAVE_MAPS;
-    if (check_param(argc, argv, "-show_values"))     tell |= SHOW_VALUES;
-    if (check_param(argc, argv, "-show_process"))    tell |= SHOW_PROCESS;
-    if (check_param(argc, argv, "-save_histograms")) tell |= SAVE_HISTOGRAMS;
-    if (check_param(argc, argv, "-only_structural")) tell |= ONLY_STRUCTURAL;
+    if (checkParameter(argc, argv, "-save_maps"))       tell |= SAVE_MAPS;
+    if (checkParameter(argc, argv, "-show_values"))     tell |= SHOW_VALUES;
+    if (checkParameter(argc, argv, "-show_process"))    tell |= SHOW_PROCESS;
+    if (checkParameter(argc, argv, "-save_histograms")) tell |= SAVE_HISTOGRAMS;
+    if (checkParameter(argc, argv, "-only_structural")) tell |= ONLY_STRUCTURAL;
 }
 
 /* Evaluate usage ========================================================== */

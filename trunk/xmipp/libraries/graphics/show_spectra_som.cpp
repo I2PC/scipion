@@ -188,7 +188,7 @@ void ShowSpectraSOM::readSOMFiles(const FileName &_fn_root)
                 fh_class >> col >> row >> tmp;
                 getline(fh_class, line);
                 int i = row * NumCols + col;
-                SFcv[i].push_back(first_token(line));
+                SFcv[i].push_back(firstToken(line));
                 SFcvs[i].push_back(j);
                 j++;
             }

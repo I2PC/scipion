@@ -29,42 +29,42 @@ void Prog_mlf_tomo_prm::read(int argc, char **argv)
 {
 
     // Read command line
-    if (check_param(argc, argv, "-more_options"))
+    if (checkParameter(argc, argv, "-more_options"))
     {
         usage();
         extended_usage();
     }
-    fn_ref = get_param(argc, argv, "-ref");
-    fn_wed = get_param(argc, argv, "-sumwedge", "");
-    fn_wlist = get_param(argc, argv, "-wedgelist", "");
-    SF.read(get_param(argc, argv, "-i"));
+    fn_ref = getParameter(argc, argv, "-ref");
+    fn_wed = getParameter(argc, argv, "-sumwedge", "");
+    fn_wlist = getParameter(argc, argv, "-wedgelist", "");
+    SF.read(getParameter(argc, argv, "-i"));
     nr_img = SF.ImgNo();
-    fn_root = get_param(argc, argv, "-o", "mlf_tomo");
-    Niter = AtoI(get_param(argc, argv, "-iter", "100"));
-    fn_frac = get_param(argc, argv, "-frac", "");
-    fix_fractions = check_param(argc, argv, "-fix_fractions");
-    fix_sigma_noise = check_param(argc, argv, "-fix_sigma_noise");
-    fix_sigma_offset = check_param(argc, argv, "-fix_sigma_offset");
-    verb = AtoI(get_param(argc, argv, "-verb", "1"));
-    istart = AtoI(get_param(argc, argv, "-istart", "1"));
-    get_3_double_params(argc, argv, "-rot", rot0, rotF, rot_step, 0, 0, 1);
-    get_3_double_params(argc, argv, "-tilt", tilt0, tiltF, tilt_step, 0, 0, 1);
-    get_3_double_params(argc, argv, "-psi", psi0, psiF, psi_step, 0, 0, 1);
-    sigma_offset = AtoF(get_param(argc, argv, "-offset", "3"));
-    fn_doc = get_param(argc, argv, "-doc", "");
-    fn_sym = get_param(argc, argv, "-sym", "");
-    search_shift = AtoF(get_param(argc, argv, "-search_shift", "0"));
-    highres = AtoF(get_param(argc, argv, "-highres", "-1"));
-    lowres = AtoF(get_param(argc, argv, "-lowres", "-1"));
-    fn_sig = get_param(argc, argv, "-noise", "");
-    fn_solv = get_param(argc, argv, "-solvent", "");
-    fn_solv2 = get_param(argc, argv, "-solvent2", "");
-    theta = AtoF(get_param(argc, argv, "-theta", "0"));
-    theta0 = AtoF(get_param(argc, argv, "-theta0", "0"));
-    theta_step = AtoF(get_param(argc, argv, "-theta_step", "0"));
-    fn_misalign = get_param(argc, argv, "-misalign", "");
-    fn_mask = get_param(argc, argv, "-mask", "");
-    debug = check_param(argc, argv, "-debug");
+    fn_root = getParameter(argc, argv, "-o", "mlf_tomo");
+    Niter = AtoI(getParameter(argc, argv, "-iter", "100"));
+    fn_frac = getParameter(argc, argv, "-frac", "");
+    fix_fractions = checkParameter(argc, argv, "-fix_fractions");
+    fix_sigma_noise = checkParameter(argc, argv, "-fix_sigma_noise");
+    fix_sigma_offset = checkParameter(argc, argv, "-fix_sigma_offset");
+    verb = AtoI(getParameter(argc, argv, "-verb", "1"));
+    istart = AtoI(getParameter(argc, argv, "-istart", "1"));
+    getThreeDoubleParams(argc, argv, "-rot", rot0, rotF, rot_step, 0, 0, 1);
+    getThreeDoubleParams(argc, argv, "-tilt", tilt0, tiltF, tilt_step, 0, 0, 1);
+    getThreeDoubleParams(argc, argv, "-psi", psi0, psiF, psi_step, 0, 0, 1);
+    sigma_offset = AtoF(getParameter(argc, argv, "-offset", "3"));
+    fn_doc = getParameter(argc, argv, "-doc", "");
+    fn_sym = getParameter(argc, argv, "-sym", "");
+    search_shift = AtoF(getParameter(argc, argv, "-search_shift", "0"));
+    highres = AtoF(getParameter(argc, argv, "-highres", "-1"));
+    lowres = AtoF(getParameter(argc, argv, "-lowres", "-1"));
+    fn_sig = getParameter(argc, argv, "-noise", "");
+    fn_solv = getParameter(argc, argv, "-solvent", "");
+    fn_solv2 = getParameter(argc, argv, "-solvent2", "");
+    theta = AtoF(getParameter(argc, argv, "-theta", "0"));
+    theta0 = AtoF(getParameter(argc, argv, "-theta0", "0"));
+    theta_step = AtoF(getParameter(argc, argv, "-theta_step", "0"));
+    fn_misalign = getParameter(argc, argv, "-misalign", "");
+    fn_mask = getParameter(argc, argv, "-mask", "");
+    debug = checkParameter(argc, argv, "-debug");
 
 }
 

@@ -75,7 +75,7 @@ void FourierMask::read(int argc, char **argv)
     clear();
 
     // Filter shape .........................................................
-    int i = position_param(argc, argv, "-fourier_mask");
+    int i = paremeterPosition(argc, argv, "-fourier_mask");
     if (i + 1 >= argc) REPORT_ERROR(3000, "FourierMask: -fourier_mask with no mask_type");
     if (i == -1)
     {
@@ -122,31 +122,31 @@ void FourierMask::read(int argc, char **argv)
     }
 
     // Filter band ..........................................................
-    if (check_param(argc, argv, "-low_pass"))
+    if (checkParameter(argc, argv, "-low_pass"))
     {
-        w1 = AtoF(get_param(argc, argv, "-low_pass"));
+        w1 = AtoF(getParameter(argc, argv, "-low_pass"));
         FilterBand = LOWPASS;
     }
-    else if (check_param(argc, argv, "-high_pass"))
+    else if (checkParameter(argc, argv, "-high_pass"))
     {
-        w1 = AtoF(get_param(argc, argv, "-high_pass"));
+        w1 = AtoF(getParameter(argc, argv, "-high_pass"));
         FilterBand = HIGHPASS;
     }
-    else if (check_param(argc, argv, "-band_pass"))
+    else if (checkParameter(argc, argv, "-band_pass"))
     {
-        if (!get_2_double_params(argc, argv, "-band_pass", w1, w2, 0, 0))
+        if (!getTwoDoubleParams(argc, argv, "-band_pass", w1, w2, 0, 0))
             REPORT_ERROR(3000, "FourierMask: Not enough parameters after -band_pass");
         FilterBand = BANDPASS;
     }
-    else if (check_param(argc, argv, "-stop_band"))
+    else if (checkParameter(argc, argv, "-stop_band"))
     {
-        if (!get_2_double_params(argc, argv, "-stop_band", w1, w2, 0, 0))
+        if (!getTwoDoubleParams(argc, argv, "-stop_band", w1, w2, 0, 0))
             REPORT_ERROR(3000, "FourierMask: Not enough parameters after -stop_band");
         FilterBand = STOPBAND;
     }
-    if (check_param(argc, argv, "-sampling"))
+    if (checkParameter(argc, argv, "-sampling"))
     {
-        double sampling_rate = AtoF(get_param(argc, argv, "-sampling"));
+        double sampling_rate = AtoF(getParameter(argc, argv, "-sampling"));
         if (w1 != 0)       w1 = sampling_rate / w1;
         if (w2 != 0)       w2 = sampling_rate / w2;
         /*CO: I think it is more confusing */

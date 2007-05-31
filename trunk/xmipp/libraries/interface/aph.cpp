@@ -91,8 +91,8 @@ void APHFile2D::read(const FileName &fn)
             getline(fh_aph, line);
             if (line.length() != 0)
             {
-                int h = AtoI(first_token(line));
-                int k = AtoI(next_token());
+                int h = AtoI(firstToken(line));
+                int k = AtoI(nextToken());
                 hmax = MAX(hmax, h);
                 kmax = MAX(kmax, k);
                 hmin = MIN(hmin, h);
@@ -146,16 +146,16 @@ void APHFile2D::read(const FileName &fn)
             if (line.length() != 0)
             {
                 int i = 0;
-                int   h         = AtoI(next_token(line, i));
-                int   k         = AtoI(next_token(line, i));
+                int   h         = AtoI(nextToken(line, i));
+                int   k         = AtoI(nextToken(line, i));
                 double a1, a2, a3, a4, a5, a6;
-                a1 = AtoF(next_token(line, i));
-                a2 = AtoF(next_token(line, i));
-                a3 = AtoF(next_token(line, i));
-                a4 = AtoF(next_token(line, i));
-                a5 = AtoF(next_token(line, i));
+                a1 = AtoF(nextToken(line, i));
+                a2 = AtoF(nextToken(line, i));
+                a3 = AtoF(nextToken(line, i));
+                a4 = AtoF(nextToken(line, i));
+                a5 = AtoF(nextToken(line, i));
                 string aux;
-                aux = next_token(line, i);
+                aux = nextToken(line, i);
                 if (first)
                 {
                     l_is_present = (aux != "");

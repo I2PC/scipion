@@ -70,59 +70,59 @@ main(int argc, char** argv)
     try
     {
 
-        fn_in = get_param(argc, argv, "-i");
+        fn_in = getParameter(argc, argv, "-i");
 
-        if (check_param(argc, argv, "-o"))
-            fn_out = get_param(argc, argv, "-o");
+        if (checkParameter(argc, argv, "-o"))
+            fn_out = getParameter(argc, argv, "-o");
         else
         {
             Usage(argv);
             exit(EXIT_FAILURE);
         }
 
-        if (check_param(argc, argv, "-cvin"))
+        if (checkParameter(argc, argv, "-cvin"))
         {
-            if (check_param(argc, argv, "-cbin"))
+            if (checkParameter(argc, argv, "-cbin"))
             {
                 cout << "Error: you can not use two code vectors files" << endl;
                 exit(EXIT_FAILURE);
             }
-            cb_in = get_param(argc, argv, "-cvin");
+            cb_in = getParameter(argc, argv, "-cvin");
             useCBook = false;
         }
 
 
-        if (check_param(argc, argv, "-cbin"))
+        if (checkParameter(argc, argv, "-cbin"))
         {
-            if (check_param(argc, argv, "-cvin"))
+            if (checkParameter(argc, argv, "-cvin"))
             {
                 cout << "Error: you can not use two code vectors files" << endl;
                 exit(EXIT_FAILURE);
             }
-            cb_in = get_param(argc, argv, "-cbin");
+            cb_in = getParameter(argc, argv, "-cbin");
             useCBook = true;
         }
 
 
-        ydim = AtoI(get_param(argc, argv, "-ydim", "5"));
-        xdim = AtoI(get_param(argc, argv, "-xdim", "10"));
+        ydim = AtoI(getParameter(argc, argv, "-ydim", "5"));
+        xdim = AtoI(getParameter(argc, argv, "-xdim", "10"));
 
 
-        if (check_param(argc, argv, "-hexa"))
+        if (checkParameter(argc, argv, "-hexa"))
         {
-            if (check_param(argc, argv, "-rect"))
+            if (checkParameter(argc, argv, "-rect"))
             {
                 cout << "Error: you can not define two topologies" << endl;
                 exit(EXIT_FAILURE);
             }
             layout = "HEXA";
         }
-        else if (check_param(argc, argv, "-rect"))
+        else if (checkParameter(argc, argv, "-rect"))
             layout = "RECT";
 
-        if (check_param(argc, argv, "-gaussian"))
+        if (checkParameter(argc, argv, "-gaussian"))
         {
-            if (check_param(argc, argv, "-tStudent"))
+            if (checkParameter(argc, argv, "-tStudent"))
             {
                 cout << "Error: you can not define two kernels functions" << endl;
                 exit(EXIT_FAILURE);
@@ -130,35 +130,35 @@ main(int argc, char** argv)
             gaussian = true;
             tStudent = false;
         }
-        else if (check_param(argc, argv, "-tStudent"))
+        else if (checkParameter(argc, argv, "-tStudent"))
         {
             gaussian = false;
             tStudent = true;
         }
 
-        reg0 = AtoF(get_param(argc, argv, "-reg0", "1000.0"));
-        reg1 = AtoF(get_param(argc, argv, "-reg1", "100.0"));
-        df = (int) AtoI(get_param(argc, argv, "-df", "3"));
+        reg0 = AtoF(getParameter(argc, argv, "-reg0", "1000.0"));
+        reg1 = AtoF(getParameter(argc, argv, "-reg1", "100.0"));
+        df = (int) AtoI(getParameter(argc, argv, "-df", "3"));
 
-        fn_algo_in = get_param(argc, argv, "-ain", "");
+        fn_algo_in = getParameter(argc, argv, "-ain", "");
 
-        eps = AtoF(get_param(argc, argv, "-eps", "1e-7"));
-        iter = AtoI(get_param(argc, argv, "-iter", "200"));
-        verb = AtoI(get_param(argc, argv, "-verb", "0"));
+        eps = AtoF(getParameter(argc, argv, "-eps", "1e-7"));
+        iter = AtoI(getParameter(argc, argv, "-iter", "200"));
+        verb = AtoI(getParameter(argc, argv, "-verb", "0"));
 
-        if (check_param(argc, argv, "-norm"))
+        if (checkParameter(argc, argv, "-norm"))
             norm = true;
         else norm = false;
 
-        if (check_param(argc, argv, "-saveclusters"))
+        if (checkParameter(argc, argv, "-saveclusters"))
             saveClusters = true;
         else saveClusters = false;
 
-        if (check_param(argc, argv, "-savecodebook"))
+        if (checkParameter(argc, argv, "-savecodebook"))
             saveCodebook = true;
         else saveCodebook = false;
 
-        annSteps = AtoI(get_param(argc, argv, "-steps", "10"));
+        annSteps = AtoI(getParameter(argc, argv, "-steps", "10"));
 
         if (argc == 1)
         {

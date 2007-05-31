@@ -55,20 +55,20 @@ int main(int argc, char **argv)
     try
     {
 
-        fname = get_param(argc, argv, "-i");
+        fname = getParameter(argc, argv, "-i");
         basename = fname.get_baseName();
         selname = basename + (string) ".sel";
-        selname = get_param(argc, argv, "-o", selname.c_str());
-        imgName = get_param(argc, argv, "-imgName", basename.c_str());
-        ext = get_param(argc, argv, "-ext", "spi");
-        bmname = get_param(argc, argv, "-mask", "mask.spi");
-        if (check_param(argc, argv, "-nomask"))
+        selname = getParameter(argc, argv, "-o", selname.c_str());
+        imgName = getParameter(argc, argv, "-imgName", basename.c_str());
+        ext = getParameter(argc, argv, "-ext", "spi");
+        bmname = getParameter(argc, argv, "-mask", "mask.spi");
+        if (checkParameter(argc, argv, "-nomask"))
         {
             nomask = true;
-            rows = AtoI(get_param(argc, argv, "-rows"));
-            cols = AtoI(get_param(argc, argv, "-cols"));
+            rows = AtoI(getParameter(argc, argv, "-rows"));
+            cols = AtoI(getParameter(argc, argv, "-cols"));
         }
-        if (check_param(argc, argv, "-noBB"))
+        if (checkParameter(argc, argv, "-noBB"))
             noBB = true;
     }
     catch (Xmipp_error)

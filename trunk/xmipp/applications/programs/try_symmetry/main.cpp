@@ -34,7 +34,7 @@ public:
     void read(int argc, char **argv)
     {
         Prog_parameters::read(argc, argv);
-        symmetry = AtoI(get_param(argc, argv, "-symorder"));
+        symmetry = AtoI(getParameter(argc, argv, "-symorder"));
     }
 
     void show()

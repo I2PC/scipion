@@ -42,9 +42,9 @@ public:
     {
         fmask.read(argc, argv);
         Prog_parameters::read(argc, argv);
-        fn_mask = get_param(argc, argv, "-save_mask", "");
-        fn_amplitude = get_param(argc, argv, "-save_amplitude", "");
-        do_not_center = check_param(argc, argv, "-do_not_center");
+        fn_mask = getParameter(argc, argv, "-save_mask", "");
+        fn_amplitude = getParameter(argc, argv, "-save_amplitude", "");
+        do_not_center = checkParameter(argc, argv, "-do_not_center");
 
         first = true;
     }

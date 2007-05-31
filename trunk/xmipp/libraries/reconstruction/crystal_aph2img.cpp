@@ -53,15 +53,15 @@ void Spot2RealSpace2D_Parameters::read_from_file(const FileName &fnprm)
     try
     {
 #ifdef REMOVE
-        fnaph_ref = get_param(fh_param, "APH Ref file", 0, "",
+        fnaph_ref = getParameter(fh_param, "APH Ref file", 0, "",
                               3007, "Spot2RealSpace2D_Parameters::: APH Ref File not found");
 #endif
-        fnaph_in = get_param(fh_param, "APH file", 0, NULL,
+        fnaph_in = getParameter(fh_param, "APH file", 0, NULL,
                              3007, "Spot2RealSpace2D_Parameters::read: APH File not found");
-        fn_out = get_param(fh_param, "Output file", 0, NULL,
+        fn_out = getParameter(fh_param, "Output file", 0, NULL,
                            3007, "Spot2RealSpace2D_Parameters::read: Output File not found");
-        maxIQ = AtoI(get_param(fh_param, "maxIQ", 0, "6"));
-        string aux_str = get_param(fh_param, "Output cells no", 0, "1 1");
+        maxIQ = AtoI(getParameter(fh_param, "maxIQ", 0, "6"));
+        string aux_str = getParameter(fh_param, "Output cells no", 0, "1 1");
 #if GCC_VERSION < 30300
         istrstream *is = NULL;
         is = new istrstream(aux_str.c_str());
@@ -78,20 +78,20 @@ void Spot2RealSpace2D_Parameters::read_from_file(const FileName &fnprm)
             REPORT_ERROR(3007,
                          "Spot2RealSpace2D_Parameters::read: Cannot read Output Cell no");
         }
-        a_mag = AtoF(get_param(fh_param, "a_mag", 0, NULL,
+        a_mag = AtoF(getParameter(fh_param, "a_mag", 0, NULL,
                                3007, "Spot2RealSpace2D_Parameters::read: a_mag not found"));
-        b_mag = AtoF(get_param(fh_param, "b_mag", 0, NULL,
+        b_mag = AtoF(getParameter(fh_param, "b_mag", 0, NULL,
                                3007, "Spot2RealSpace2D_Parameters::read: b_mag not found"));
-        a_b_ang = DEG2RAD(AtoF(get_param(fh_param, "a_b_ang", 0, NULL,
+        a_b_ang = DEG2RAD(AtoF(getParameter(fh_param, "a_b_ang", 0, NULL,
                                          3007, "Spot2RealSpace2D_Parameters::read: a_b_ang not found")));
-        taxa = DEG2RAD(AtoF(get_param(fh_param, "taxa", 0, NULL,
+        taxa = DEG2RAD(AtoF(getParameter(fh_param, "taxa", 0, NULL,
                                       3007, "Spot2RealSpace2D_Parameters::read: Taxa not found")));
-        mrc_tilt = DEG2RAD(AtoF(get_param(fh_param, "tilt", 0, NULL,
+        mrc_tilt = DEG2RAD(AtoF(getParameter(fh_param, "tilt", 0, NULL,
                                           3007, "Spot2RealSpace2D_Parameters::read: tilt not found")));
-        SamplingRate = AtoF(get_param(fh_param, "sampling rate", 0, NULL,
+        SamplingRate = AtoF(getParameter(fh_param, "sampling rate", 0, NULL,
                                       3007, "Spot2RealSpace2D_Parameters::read: sampling rate not found"));
         Phase_Shift.resize(2);
-        aux_str = get_param(fh_param, "Phase Shift", 0, "180.0 180.0");
+        aux_str = getParameter(fh_param, "Phase Shift", 0, "180.0 180.0");
         delete is;
 #if GCC_VERSION < 30300
         is = new istrstream(aux_str.c_str());
@@ -107,9 +107,9 @@ void Spot2RealSpace2D_Parameters::read_from_file(const FileName &fnprm)
             REPORT_ERROR(3007,
                          "Spot2RealSpace2D_Parameters::read: Cannot read Phase Shift");
         }
-        mrc_label = AtoI(get_param(fh_param, "mrc_label", 0, "-1"));
-        KeepContrast = AtoI(get_param(fh_param, "Keep Contrast", 0, "1"));
-        aux_str = get_param(fh_param, "Cell Size");
+        mrc_label = AtoI(getParameter(fh_param, "mrc_label", 0, "-1"));
+        KeepContrast = AtoI(getParameter(fh_param, "Keep Contrast", 0, "1"));
+        aux_str = getParameter(fh_param, "Cell Size");
         delete is;
 #if GCC_VERSION < 30300
         is = new istrstream(aux_str.c_str());
@@ -126,12 +126,12 @@ void Spot2RealSpace2D_Parameters::read_from_file(const FileName &fnprm)
                          "Spot2RealSpace2D_Parameters::read: Cannot read Cell Size");
         }
         delete is;
-        Scale_Factor = AtoF(get_param(fh_param, "Scale Factor", 0, "-1"));
+        Scale_Factor = AtoF(getParameter(fh_param, "Scale Factor", 0, "-1"));
         generate_symmetrical_reflections =
-            check_param(fh_param, "Generate symmetrical reflections");
+            checkParameter(fh_param, "Generate symmetrical reflections");
         str_symmetry_group =
-            get_param(fh_param, "Symmetry group", 0, "P1");
-//      align_a_axis_with_x=check_param(fh_param,"Align A axis");
+            getParameter(fh_param, "Symmetry group", 0, "P1");
+//      align_a_axis_with_x=checkParameter(fh_param,"Align A axis");
     }
     catch (Xmipp_error XE)
     {
@@ -484,12 +484,12 @@ void RealSpace2Spots2D_Parameters::read_from_file(const FileName &fnprm)
 
     try
     {
-        fn_in = get_param(fh_param, "INput file", 0, NULL,
+        fn_in = getParameter(fh_param, "INput file", 0, NULL,
                           3007, "RealSpace2Spots2D_Parameters::read: Input File not found");
-        fnaph_out = get_param(fh_param, "APH file", 0, NULL,
+        fnaph_out = getParameter(fh_param, "APH file", 0, NULL,
                               3007, "RealSpace2Spots2D_Parameters::read: Output File not found");
         {
-            string aux_str = get_param(fh_param, "lattice_a", 0, NULL,
+            string aux_str = getParameter(fh_param, "lattice_a", 0, NULL,
                                        3007, "RealSpace2Spots2D_Parameters::read: crystal vector a not found");
 #if GCC_VERSION < 30300
             istrstream *is = NULL;
@@ -510,7 +510,7 @@ void RealSpace2Spots2D_Parameters::read_from_file(const FileName &fnprm)
             delete is;
         }
         {
-            string aux_str = get_param(fh_param, "lattice_b", 0, NULL,
+            string aux_str = getParameter(fh_param, "lattice_b", 0, NULL,
                                        3007, "RealSpace2Spots2D_Parameters::read: crystal vector b not found");
 #if GCC_VERSION < 30300
             istrstream *is = NULL;
@@ -530,10 +530,10 @@ void RealSpace2Spots2D_Parameters::read_from_file(const FileName &fnprm)
             }
             delete is;
         }
-        mrc_label = AtoI(get_param(fh_param, "mrc_label", 0, "-1"));
-        taxa = (AtoF(get_param(fh_param, "taxa", 0, NULL,
+        mrc_label = AtoI(getParameter(fh_param, "mrc_label", 0, "-1"));
+        taxa = (AtoF(getParameter(fh_param, "taxa", 0, NULL,
                                3007, "Spot2RealSpace2D_Parameters::read: Taxa not found")));
-        mrc_tilt = (AtoF(get_param(fh_param, "tilt", 0, NULL,
+        mrc_tilt = (AtoF(getParameter(fh_param, "tilt", 0, NULL,
                                    3007, "Spot2RealSpace2D_Parameters::read: tilt not found")));
     }
     catch (Xmipp_error XE)

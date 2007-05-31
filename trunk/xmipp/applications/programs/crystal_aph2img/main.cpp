@@ -37,7 +37,7 @@ int main(int argc, char **argv)
     // Get command line parameters ------------------------------------------
     try
     {
-        fn_prm = get_param(argc, argv, "-i");
+        fn_prm = getParameter(argc, argv, "-i");
         prm.read_from_file(fn_prm);
     }
     catch (Xmipp_error XE)

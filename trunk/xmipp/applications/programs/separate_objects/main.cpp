@@ -43,10 +43,10 @@ int main(int argc, char *argv[])
     // Get input parameters .................................................
     try
     {
-        fn_in   = get_param(argc, argv, "-i");
-        fn_root = get_param(argc, argv, "-o", "");
-        invert  = check_param(argc, argv, "-invert");
-        min_size  = AtoF(get_param(argc, argv, "-min_size", "0"));
+        fn_in   = getParameter(argc, argv, "-i");
+        fn_root = getParameter(argc, argv, "-o", "");
+        invert  = checkParameter(argc, argv, "-invert");
+        min_size  = AtoF(getParameter(argc, argv, "-min_size", "0"));
         if (fn_root == "") fn_root = fn_in.get_root();
     }
     catch (Xmipp_error XE)

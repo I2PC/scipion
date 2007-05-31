@@ -369,7 +369,7 @@ void xmippMap::readSelf(istream& _is)
     string layout, str;
     _is >> dim;
     _is >> layout;
-    tolower(layout);
+    toLower(layout);
 
     if (layout == "hexa")
     {

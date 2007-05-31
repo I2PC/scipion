@@ -118,9 +118,9 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
                 continue;
             else if (string::npos != line.find("MKLCF FILE COMPLETED"))
                 break;
-            h = AtoI(first_token(line));
-            k = AtoI(next_token());
-            l = AtoI(next_token());
+            h = AtoI(firstToken(line));
+            k = AtoI(nextToken());
+            l = AtoI(nextToken());
             hmax = MAX(hmax, h);
             kmax = MAX(kmax, k);
             lmax = MAX(lmax, l);
@@ -208,12 +208,12 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
                 continue;
             else if (string::npos != line.find("MKLCF FILE COMPLETED"))
                 break;
-            h     = AtoI(first_token(line));
-            k     = AtoI(next_token());
-            l     = AtoI(next_token());
-            spots_abs(l, k, h)  = AtoF(next_token());
-            spots_arg(l, k, h)  = AtoF(next_token());
-            FOM(l, k, h)       = AtoI(next_token());
+            h     = AtoI(firstToken(line));
+            k     = AtoI(nextToken());
+            l     = AtoI(nextToken());
+            spots_abs(l, k, h)  = AtoF(nextToken());
+            spots_arg(l, k, h)  = AtoF(nextToken());
+            FOM(l, k, h)       = AtoI(nextToken());
             switch (Space_Group)
             {
             case(1):

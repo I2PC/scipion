@@ -81,7 +81,7 @@ int main(int argc, char **argv)
     try
     {
         // Read the output image filename
-        fn_out  = get_param(argc, argv, "-o");
+        fn_out  = getParameter(argc, argv, "-o");
         // Check for #, which indicates a binary operation
         check_for_operation(argc, argv, "-i", fn_1, operand_type1);
 
@@ -90,12 +90,12 @@ int main(int argc, char **argv)
         else if (check_for_operation(argc, argv, "-minus", fn_2, operand_type2)) operation = OPERATE_MINUS;
         else if (check_for_operation(argc, argv, "-mult", fn_2, operand_type2)) operation = MULTIPLICATION;
         else if (check_for_operation(argc, argv, "-divide", fn_2, operand_type2)) operation = DIVISION;
-        else if (check_param(argc, argv, "-log10")) operation = LOG10;
-        else if (check_param(argc, argv, "-sqrt")) operation = SQRT;
+        else if (checkParameter(argc, argv, "-log10")) operation = LOG10;
+        else if (checkParameter(argc, argv, "-sqrt")) operation = SQRT;
         else if (check_for_operation(argc, argv, "-slice", fn_2, operand_type2)) operation = SLICE;
         else if (check_for_operation(argc, argv, "-column", fn_2, operand_type2)) operation = COLUMN;
         else if (check_for_operation(argc, argv, "-row", fn_2, operand_type2)) operation = ROW;
-        else if (check_param(argc, argv, "-radial_avg")) operation = RADIAL_AVG;
+        else if (checkParameter(argc, argv, "-radial_avg")) operation = RADIAL_AVG;
         else
             REPORT_ERROR(1, "No valid operation specified");
 
@@ -115,9 +115,9 @@ int main(int argc, char **argv)
 bool check_for_operation(int argc, char **argv, char *operation, FileName &fn, int &operand_type)
 {
 
-    if (check_param(argc, argv, operation))
+    if (checkParameter(argc, argv, operation))
     {
-        fn  = get_param(argc, argv, operation);
+        fn  = getParameter(argc, argv, operation);
         // If the file exist, tell if it is an image or a volume
         if (exists(fn))
         {

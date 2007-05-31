@@ -356,13 +356,13 @@ int main(int argc, char **argv)
 
     try
     {
-        fn = get_param(argc, argv, "-i");
+        fn = getParameter(argc, argv, "-i");
         SF.read(fn);
         nr_imgs = SF.ImgNo();
-        prm.fn_out = get_param(argc, argv, "-o", "sort_junk");
-        fn_train = get_param(argc, argv, "-train", "");
+        prm.fn_out = getParameter(argc, argv, "-o", "sort_junk");
+        fn_train = getParameter(argc, argv, "-train", "");
         if (fn_train != "") SFtrain.read(fn_train);
-        prm.cutoff = AtoF(get_param(argc, argv, "-zcut", "1"));
+        prm.cutoff = AtoF(getParameter(argc, argv, "-zcut", "1"));
     }
     catch (Xmipp_error XE)
     {

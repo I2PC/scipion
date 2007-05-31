@@ -30,16 +30,16 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
 
     // This flag is set with scripts, so that for the user the
     // mlf_align2d and the ml_align2d are distinct programs
-    fourier_mode = check_param(argc, argv, "-MLF");
+    fourier_mode = checkParameter(argc, argv, "-MLF");
 
     // Generate new command line for restart procedure
     cline = "";
-    if (check_param(argc, argv, "-restart"))
+    if (checkParameter(argc, argv, "-restart"))
     {
         string comment;
         FileName fn_sel;
         DocFile DFi;
-        DFi.read(get_param(argc, argv, "-restart"));
+        DFi.read(getParameter(argc, argv, "-restart"));
         DFi.go_beginning();
         comment = (DFi.get_current_line()).get_text();
         if (strstr(comment.c_str(), "MLalign2D-logfile") == NULL)
@@ -66,7 +66,7 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
             DFi.next();
             cline = (DFi.get_current_line()).get_text();
             comment = comment + cline;
-            generate_command_line(comment, argc, argv, copy);
+            generateCommandLine(comment, argc, argv, copy);
             if (!ML3D)
             {
                 // Read images names from restart file
@@ -95,7 +95,7 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     }
 
     // Read command line
-    if (check_param(argc, argv, "-more_options"))
+    if (checkParameter(argc, argv, "-more_options"))
     {
         if (fourier_mode)
         {
@@ -108,65 +108,65 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
             extended_usage();
         }
     }
-    n_ref = AtoI(get_param(argc, argv, "-nref", "0"));
-    fn_ref = get_param(argc, argv, "-ref", "");
-    fn_sel = get_param(argc, argv, "-i");
-    fn_root = get_param(argc, argv, "-o", "ml2d");
-    psi_step = AtoF(get_param(argc, argv, "-psi_step", "5"));
-    Niter = AtoI(get_param(argc, argv, "-iter", "100"));
-    istart = AtoI(get_param(argc, argv, "-istart", "1"));
-    sigma_noise = AtoF(get_param(argc, argv, "-noise", "1"));
-    sigma_offset = AtoF(get_param(argc, argv, "-offset", "3"));
-    do_mirror = check_param(argc, argv, "-mirror");
-    eps = AtoF(get_param(argc, argv, "-eps", "5e-5"));
-    fn_frac = get_param(argc, argv, "-frac", "");
-    write_docfile = !check_param(argc, argv, "-dont_output_docfile");
-    write_selfiles = !check_param(argc, argv, "-dont_output_selfiles");
-    write_intermediate = !check_param(argc, argv, "-dont_output_intermediate");
-    fix_fractions = check_param(argc, argv, "-fix_fractions");
-    fix_sigma_offset = check_param(argc, argv, "-fix_sigma_offset");
-    fix_sigma_noise = check_param(argc, argv, "-fix_sigma_noise");
-    verb = AtoI(get_param(argc, argv, "-verb", "1"));
-    maxCC_rather_than_ML = check_param(argc, argv, "-maxCC");
-    fast_mode = check_param(argc, argv, "-fast");
-    C_fast = AtoF(get_param(argc, argv, "-C", "1e-12"));
-    max_shift = AtoF(get_param(argc, argv, "-max_shift", "-1"));
-    save_mem1 = check_param(argc, argv, "-save_memA");
-    save_mem2 = check_param(argc, argv, "-save_memB");
-    save_mem3 = check_param(argc, argv, "-save_memC");
-    search_shift = AtoF(get_param(argc, argv, "-search_shift", "999."));
-    fn_doc = get_param(argc, argv, "-doc", "");
+    n_ref = AtoI(getParameter(argc, argv, "-nref", "0"));
+    fn_ref = getParameter(argc, argv, "-ref", "");
+    fn_sel = getParameter(argc, argv, "-i");
+    fn_root = getParameter(argc, argv, "-o", "ml2d");
+    psi_step = AtoF(getParameter(argc, argv, "-psi_step", "5"));
+    Niter = AtoI(getParameter(argc, argv, "-iter", "100"));
+    istart = AtoI(getParameter(argc, argv, "-istart", "1"));
+    sigma_noise = AtoF(getParameter(argc, argv, "-noise", "1"));
+    sigma_offset = AtoF(getParameter(argc, argv, "-offset", "3"));
+    do_mirror = checkParameter(argc, argv, "-mirror");
+    eps = AtoF(getParameter(argc, argv, "-eps", "5e-5"));
+    fn_frac = getParameter(argc, argv, "-frac", "");
+    write_docfile = !checkParameter(argc, argv, "-dont_output_docfile");
+    write_selfiles = !checkParameter(argc, argv, "-dont_output_selfiles");
+    write_intermediate = !checkParameter(argc, argv, "-dont_output_intermediate");
+    fix_fractions = checkParameter(argc, argv, "-fix_fractions");
+    fix_sigma_offset = checkParameter(argc, argv, "-fix_sigma_offset");
+    fix_sigma_noise = checkParameter(argc, argv, "-fix_sigma_noise");
+    verb = AtoI(getParameter(argc, argv, "-verb", "1"));
+    maxCC_rather_than_ML = checkParameter(argc, argv, "-maxCC");
+    fast_mode = checkParameter(argc, argv, "-fast");
+    C_fast = AtoF(getParameter(argc, argv, "-C", "1e-12"));
+    max_shift = AtoF(getParameter(argc, argv, "-max_shift", "-1"));
+    save_mem1 = checkParameter(argc, argv, "-save_memA");
+    save_mem2 = checkParameter(argc, argv, "-save_memB");
+    save_mem3 = checkParameter(argc, argv, "-save_memC");
+    search_shift = AtoF(getParameter(argc, argv, "-search_shift", "999."));
+    fn_doc = getParameter(argc, argv, "-doc", "");
     do_ML3D = ML3D;
 
     // Fourier mode specific stuff
     if (fourier_mode)
     {
-        fn_ctf = get_param(argc, argv, "-ctfs");
-        fn_root = get_param(argc, argv, "-o", "mlf2d");
-        search_shift = AtoF(get_param(argc, argv, "-search_shift", "3"));
-        lowres_limit = AtoI(get_param(argc, argv, "-low", "0"));
-        ini_highres_limit = AtoI(get_param(argc, argv, "-ini_high", "-1"));
-        phase_flipped = !check_param(argc, argv, "-not_phase_flipped");
-        reduce_snr = AtoF(get_param(argc, argv, "-reduce_snr", "1"));
-        first_iter_noctf = check_param(argc, argv, "-ctf_affected_refs");
-        increase_highres_limit = AtoI(get_param(argc, argv, "-increase_highres", "5"));
+        fn_ctf = getParameter(argc, argv, "-ctfs");
+        fn_root = getParameter(argc, argv, "-o", "mlf2d");
+        search_shift = AtoF(getParameter(argc, argv, "-search_shift", "3"));
+        lowres_limit = AtoI(getParameter(argc, argv, "-low", "0"));
+        ini_highres_limit = AtoI(getParameter(argc, argv, "-ini_high", "-1"));
+        phase_flipped = !checkParameter(argc, argv, "-not_phase_flipped");
+        reduce_snr = AtoF(getParameter(argc, argv, "-reduce_snr", "1"));
+        first_iter_noctf = checkParameter(argc, argv, "-ctf_affected_refs");
+        increase_highres_limit = AtoI(getParameter(argc, argv, "-increase_highres", "5"));
         if (reduce_snr > 1.)
         {
             cerr << "WARNING%% With reduce_snr>1 you may overfit the noise!" << endl;
         }
-	do_output_MLF_LL=check_param(argc,argv,"-output_MLF_LL");
+	do_output_MLF_LL=checkParameter(argc,argv,"-output_MLF_LL");
     }
 
     // Hidden arguments
-    do_esthetics = check_param(argc, argv, "-esthetics");
-    anneal = AtoF(get_param(argc, argv, "-anneal", "1"));
-    anneal_step = AtoF(get_param(argc, argv, "-anneal_step", "1"));
-    do_write_offsets = !check_param(argc, argv, "-dont_write_offsets");
-    fn_scratch = get_param(argc, argv, "-scratch", "");
-    zero_offsets = check_param(argc, argv, "-zero_offsets");
+    do_esthetics = checkParameter(argc, argv, "-esthetics");
+    anneal = AtoF(getParameter(argc, argv, "-anneal", "1"));
+    anneal_step = AtoF(getParameter(argc, argv, "-anneal_step", "1"));
+    do_write_offsets = !checkParameter(argc, argv, "-dont_write_offsets");
+    fn_scratch = getParameter(argc, argv, "-scratch", "");
+    zero_offsets = checkParameter(argc, argv, "-zero_offsets");
 
     //only for interaction with Refine3D:
-    search_rot = AtoF(get_param(argc, argv, "-search_rot", "999."));
+    search_rot = AtoF(getParameter(argc, argv, "-search_rot", "999."));
 
 }
 

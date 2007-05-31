@@ -30,16 +30,16 @@
 /* Read from command line -------------------------------------------------- */
 void Prog_Draw_Surface_Parameters::read(int argc, char **argv)
 {
-    fn_in   = get_param(argc, argv, "-i");
-    fn_surf = get_param(argc, argv, "-s");
-    fn_out  = get_param(argc, argv, "-o", "");
-    enable_adjust = check_param(argc, argv, "-ztop");
+    fn_in   = getParameter(argc, argv, "-i");
+    fn_surf = getParameter(argc, argv, "-s");
+    fn_out  = getParameter(argc, argv, "-o", "");
+    enable_adjust = checkParameter(argc, argv, "-ztop");
     if (enable_adjust)
     {
-        ztop = AtoI(get_param(argc, argv, "-ztop"));
-        zbottom = AtoI(get_param(argc, argv, "-zbottom"));
+        ztop = AtoI(getParameter(argc, argv, "-ztop"));
+        zbottom = AtoI(getParameter(argc, argv, "-zbottom"));
     }
-    color = AtoF(get_param(argc, argv, "-color", "2"));
+    color = AtoF(getParameter(argc, argv, "-color", "2"));
 }
 
 /* Usage ------------------------------------------------------------------- */

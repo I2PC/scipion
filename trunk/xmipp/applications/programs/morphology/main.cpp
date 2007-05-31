@@ -44,14 +44,14 @@ public:
     void read(int argc, char **argv)
     {
         Prog_parameters::read(argc, argv);
-        if (check_param(argc, argv, "-dil"))      operation = DILATION;
-        if (check_param(argc, argv, "-ero"))      operation = EROSION;
-        if (check_param(argc, argv, "-clo"))      operation = CLOSING;
-        if (check_param(argc, argv, "-ope"))      operation = OPENING;
+        if (checkParameter(argc, argv, "-dil"))      operation = DILATION;
+        if (checkParameter(argc, argv, "-ero"))      operation = EROSION;
+        if (checkParameter(argc, argv, "-clo"))      operation = CLOSING;
+        if (checkParameter(argc, argv, "-ope"))      operation = OPENING;
 
-        size = AtoI(get_param(argc, argv, "-size", "1"));
-        neig = AtoI(get_param(argc, argv, "-neig", "-1"));
-        count = AtoI(get_param(argc, argv, "-count", "0"));
+        size = AtoI(getParameter(argc, argv, "-size", "1"));
+        neig = AtoI(getParameter(argc, argv, "-neig", "-1"));
+        count = AtoI(getParameter(argc, argv, "-count", "0"));
     }
 
     void show()

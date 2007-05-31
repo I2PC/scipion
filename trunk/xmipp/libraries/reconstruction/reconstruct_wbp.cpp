@@ -29,17 +29,17 @@
 void Prog_WBP_prm::read(int argc, char **argv)
 {
 
-    fn_sel = get_param(argc, argv, "-i");
-    apply_shifts = !check_param(argc, argv, "-dont_apply_shifts");
-    fn_out =  get_param(argc, argv, "-o", "wbp.vol");
-    fn_sym =  get_param(argc, argv, "-sym", "");
-    threshold = AtoF(get_param(argc, argv, "-threshold", "0.005"));
-    diameter = 2 * AtoI(get_param(argc, argv, "-radius", "0"));
-    sampling = AtoF(get_param(argc, argv, "-filsam", "5"));
-    do_all_matrices = check_param(argc, argv, "-use_each_image");
+    fn_sel = getParameter(argc, argv, "-i");
+    apply_shifts = !checkParameter(argc, argv, "-dont_apply_shifts");
+    fn_out =  getParameter(argc, argv, "-o", "wbp.vol");
+    fn_sym =  getParameter(argc, argv, "-sym", "");
+    threshold = AtoF(getParameter(argc, argv, "-threshold", "0.005"));
+    diameter = 2 * AtoI(getParameter(argc, argv, "-radius", "0"));
+    sampling = AtoF(getParameter(argc, argv, "-filsam", "5"));
+    do_all_matrices = checkParameter(argc, argv, "-use_each_image");
     // Hidden
-    verb = AtoI(get_param(argc, argv, "-verb", "1"));
-    do_weights = check_param(argc, argv, "-weight");
+    verb = AtoI(getParameter(argc, argv, "-verb", "1"));
+    do_weights = checkParameter(argc, argv, "-weight");
 
 }
 

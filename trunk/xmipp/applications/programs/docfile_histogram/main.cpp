@@ -47,14 +47,14 @@ int main(int argc, char *argv[])
     try
     {
         int i;
-        DF.read(get_param(argc, argv, "-i"));
-        fn_out = get_param(argc, argv, "-o", "");
-        percentil = AtoF(get_param(argc, argv, "-percentil", "50"));
-        col = AtoI(get_param(argc, argv, "-col", "0"));
-        col2 = AtoI(get_param(argc, argv, "-col2", "-1"));
+        DF.read(getParameter(argc, argv, "-i"));
+        fn_out = getParameter(argc, argv, "-o", "");
+        percentil = AtoF(getParameter(argc, argv, "-percentil", "50"));
+        col = AtoI(getParameter(argc, argv, "-col", "0"));
+        col2 = AtoI(getParameter(argc, argv, "-col2", "-1"));
 
-        StepsNo = AtoI(get_param(argc, argv, "-steps", "100"));
-        if ((i = position_param(argc, argv, "-range")) != -1)
+        StepsNo = AtoI(getParameter(argc, argv, "-steps", "100"));
+        if ((i = paremeterPosition(argc, argv, "-range")) != -1)
         {
             if (i + 2 >= argc)
                 EXIT_ERROR(1, "DocFile Histogram: Not enough parameters behind -range\n");
@@ -64,8 +64,8 @@ int main(int argc, char *argv[])
         }
         else automatic_range = true;
 
-        StepsNo2 = AtoI(get_param(argc, argv, "-steps2", "100"));
-        if ((i = position_param(argc, argv, "-range2")) != -1)
+        StepsNo2 = AtoI(getParameter(argc, argv, "-steps2", "100"));
+        if ((i = paremeterPosition(argc, argv, "-range2")) != -1)
         {
             if (i + 2 >= argc)
                 EXIT_ERROR(1, "DocFile Histogram: Not enough parameters behind -range2\n");
@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
         // Check if the 2D histogram must be an image
         if (col2 != -1)
         {
-            fn_img = get_param(argc, argv, "-img", "");
+            fn_img = getParameter(argc, argv, "-img", "");
             generate_img = (fn_img != "");
         }
     }

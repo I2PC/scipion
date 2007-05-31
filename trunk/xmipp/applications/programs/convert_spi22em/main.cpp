@@ -42,9 +42,9 @@ int main(int argc, char *argv[])
     /* Parameters ============================================================== */
     try
     {
-        fn_in  = get_param(argc, argv, "-i");
-        fn_out = get_param(argc, argv, "-o");
-        reverse_endian = check_param(argc, argv, "-reverse_endian");
+        fn_in  = getParameter(argc, argv, "-i");
+        fn_out = getParameter(argc, argv, "-o");
+        reverse_endian = checkParameter(argc, argv, "-reverse_endian");
     }
     catch (Xmipp_error XE)
     {

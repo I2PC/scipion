@@ -37,9 +37,9 @@ public:
     void read(int argc, char **argv)
     {
         Prog_parameters::read(argc, argv);
-        flipX = check_param(argc, argv, "-flipX");
-        flipY = check_param(argc, argv, "-flipY");
-        flipZ = check_param(argc, argv, "-flipZ");
+        flipX = checkParameter(argc, argv, "-flipX");
+        flipY = checkParameter(argc, argv, "-flipY");
+        flipZ = checkParameter(argc, argv, "-flipZ");
     }
 
     void show()

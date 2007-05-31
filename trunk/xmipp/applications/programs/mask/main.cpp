@@ -86,26 +86,26 @@ int main(int argc, char **argv)
     // Read arguments --------------------------------------------------------
     try
     {
-        fn_input     = get_param(argc, argv, "-i", NULL, 1, "Mask: Input file not found");
-        fn_out       = get_param(argc, argv, "-o", "");
-        oext         = get_param(argc, argv, "-oext", "");
-        save_mask    = check_param(argc, argv, "-save_mask");
-        count_above  = check_param(argc, argv, "-count_above");
-        apply_geo    = !check_param(argc, argv, "-dont_apply_geo");
+        fn_input     = getParameter(argc, argv, "-i", NULL, 1, "Mask: Input file not found");
+        fn_out       = getParameter(argc, argv, "-o", "");
+        oext         = getParameter(argc, argv, "-oext", "");
+        save_mask    = checkParameter(argc, argv, "-save_mask");
+        count_above  = checkParameter(argc, argv, "-count_above");
+        apply_geo    = !checkParameter(argc, argv, "-dont_apply_geo");
         if (count_above)
-            th_above  = AtoF(get_param(argc, argv, "-count_above"));
-        count_below  = check_param(argc, argv, "-count_below");
+            th_above  = AtoF(getParameter(argc, argv, "-count_above"));
+        count_below  = checkParameter(argc, argv, "-count_below");
         if (count_below)
-            th_below  = AtoF(get_param(argc, argv, "-count_below"));
-        create_mask  = check_param(argc, argv, "-create_mask");
+            th_below  = AtoF(getParameter(argc, argv, "-count_below"));
+        create_mask  = checkParameter(argc, argv, "-create_mask");
         if (create_mask)
         {
-            fn_mask  = get_param(argc, argv, "-create_mask");
+            fn_mask  = getParameter(argc, argv, "-create_mask");
             if (fn_mask[0] == '-')
                 REPORT_ERROR(1, "Mask: the output mask filename is missing");
         }
         mask_prm.read(argc, argv);
-        str_subs_val = get_param(argc, argv, "-substitute", "0");
+        str_subs_val = getParameter(argc, argv, "-substitute", "0");
 
         count = count_below || count_above;
     }

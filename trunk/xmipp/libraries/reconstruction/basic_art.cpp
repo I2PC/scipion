@@ -95,13 +95,13 @@ void Basic_ART_Parameters::default_values()
 
 /* Read ART parameters ===================================================== */
 #define GET_PARAM_WITH_DEF(flag,default_value) \
-    get_param(argc,argv,"-"flag,default_value)
+    getParameter(argc,argv,"-"flag,default_value)
 #define GET_PARAM(flag) \
-    get_param(argc,argv,"-"flag)
+    getParameter(argc,argv,"-"flag)
 #define CHECK_PARAM(flag) \
-    check_param(argc,argv,"-"flag)
+    checkParameter(argc,argv,"-"flag)
 #define GET_VECTOR_PARAM(flag,length) \
-    get_vector_param(argc, argv, "-"flag,length)
+    getVectorParameter(argc, argv, "-"flag,length)
 
 #define GET_ART_PARAMS \
     default_values(); \
@@ -217,7 +217,7 @@ void Basic_ART_Parameters::read(int argc, char **argv)
     }
     if (CHECK_PARAM("output_size"))
     {
-        int i = position_param(argc, argv, "-output_size");
+        int i = paremeterPosition(argc, argv, "-output_size");
         if (i + 3 >= argc)
             REPORT_ERROR(1, "Not enough parameters after -output_size");
         Zoutput_volume_size = AtoI(argv[i+1]);
@@ -231,13 +231,13 @@ void Basic_ART_Parameters::read(int argc, char **argv)
 #undef GET_VECTOR_PARAM
 
 #define GET_PARAM_WITH_DEF(flag,default_value) \
-    get_param(fh,flag,0,default_value)
+    getParameter(fh,flag,0,default_value)
 #define GET_PARAM(flag) \
-    get_param(fh,flag,0)
+    getParameter(fh,flag,0)
 #define CHECK_PARAM(flag) \
-    check_param(fh,flag)
+    checkParameter(fh,flag)
 #define GET_VECTOR_PARAM(flag,length) \
-    get_vector_param(fh,flag,length)
+    getVectorParameter(fh,flag,length)
 // Read from file
 void Basic_ART_Parameters::read(const FileName &fn)
 {
@@ -252,8 +252,8 @@ void Basic_ART_Parameters::read(const FileName &fn)
     {
         int argcp;
         char **argvp = NULL, *copy = NULL;
-        generate_command_line(fh, "output_size", argcp, argvp, copy);
-        int i = position_param(argcp, argvp, "-output_size");
+        generateCommandLine(fh, "output_size", argcp, argvp, copy);
+        int i = paremeterPosition(argcp, argvp, "-output_size");
         if (i + 3 >= argcp)
             REPORT_ERROR(1, "Not enough parameters after -output_size");
         Zoutput_volume_size = AtoI(argvp[i+1]);

@@ -37,11 +37,11 @@ int main(int argc, char **argv)
     // Read parameters
     try
     {
-        fn_ctf = get_param(argc, argv, "-i");
-        if (check_param(argc, argv, "-dir"))
-            w_dir = get_vector_param(argc, argv, "-w_dim", 2);
+        fn_ctf = getParameter(argc, argv, "-i");
+        if (checkParameter(argc, argv, "-dir"))
+            w_dir = getVectorParameter(argc, argv, "-w_dim", 2);
         else w_dir = vectorR2(1, 0);
-        w_step = AtoF(get_param(argc, argv, "-w_step", "0.001"));
+        w_step = AtoF(getParameter(argc, argv, "-w_step", "0.001"));
     }
     catch (Xmipp_error XE)
     {

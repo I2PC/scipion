@@ -48,58 +48,58 @@ int main(int argc, char *argv[])
     /* Parameters ============================================================== */
     try
     {
-        if (check_param(argc, argv, "-i"))
+        if (checkParameter(argc, argv, "-i"))
         {
-            fn_in = get_param(argc, argv, "-i");
-            if (check_param(argc, argv, "-sel") || check_param(argc, argv, "-oext"))
+            fn_in = getParameter(argc, argv, "-i");
+            if (checkParameter(argc, argv, "-sel") || checkParameter(argc, argv, "-oext"))
             {
                 EXIT_ERROR(1, "Raw22spi: -i option is not compatible with -sel or -oext");
             }
         }
-        if (check_param(argc, argv, "-o"))
+        if (checkParameter(argc, argv, "-o"))
         {
-            fn_out = get_param(argc, argv, "-o");
-            if (check_param(argc, argv, "-sel") || check_param(argc, argv, "-oext"))
+            fn_out = getParameter(argc, argv, "-o");
+            if (checkParameter(argc, argv, "-sel") || checkParameter(argc, argv, "-oext"))
             {
                 EXIT_ERROR(1, "Raw22spi: -o option is not compatible with -sel or -oext");
             }
         }
-        if (check_param(argc, argv, "-sel"))
+        if (checkParameter(argc, argv, "-sel"))
         {
-            sel_file = get_param(argc, argv, "-sel");
-            sel_ext  = get_param(argc, argv, "-oext");
-            if (check_param(argc, argv, "-i") || check_param(argc, argv, "-o"))
+            sel_file = getParameter(argc, argv, "-sel");
+            sel_ext  = getParameter(argc, argv, "-oext");
+            if (checkParameter(argc, argv, "-i") || checkParameter(argc, argv, "-o"))
             {
                 /*error cause -sel is not compatible with -i -o*/
                 EXIT_ERROR(1, "Raw22spi: -sel option is not compatible with -i or -o");
             }
         }
 
-        if (check_param(argc, argv, "-f"))  raw_type = 'f';
-        if (check_param(argc, argv, "-16")) raw_type = 'h';
+        if (checkParameter(argc, argv, "-f"))  raw_type = 'f';
+        if (checkParameter(argc, argv, "-16")) raw_type = 'h';
 
-        if (check_param(argc, argv, "-s"))
+        if (checkParameter(argc, argv, "-s"))
         {
-            size_arg = position_param(argc, argv, "-s");
+            size_arg = paremeterPosition(argc, argv, "-s");
             if (size_arg + 3 >= argc) EXIT_ERROR(1, "Not enough parameters behind -s");
             Zdim = AtoI(argv[size_arg+1]);
             Ydim = AtoI(argv[size_arg+2]);
             Xdim = AtoI(argv[size_arg+3]);
         }
-        generate_inf = check_param(argc, argv, "-generate_inf");
-        reverse_endian = check_param(argc, argv, "-reverse_endian");
-        if (check_param(argc, argv, "-is_micrograph"))
+        generate_inf = checkParameter(argc, argv, "-generate_inf");
+        reverse_endian = checkParameter(argc, argv, "-reverse_endian");
+        if (checkParameter(argc, argv, "-is_micrograph"))
         {
             FileName fn_inf = fn_in + ".inf";
             FILE *fh_inf = fopen(fn_inf.c_str(), "r");
             if (!fh_inf)
                 REPORT_ERROR(1, (string)"Raw22Spi:Cannot find " + fn_inf);
             Zdim = 1;
-            Ydim = AtoI(get_param(fh_inf, "Ydim"));
-            Xdim = AtoI(get_param(fh_inf, "Xdim"));
+            Ydim = AtoI(getParameter(fh_inf, "Ydim"));
+            Xdim = AtoI(getParameter(fh_inf, "Xdim"));
             fclose(fh_inf);
         }
-        header_size = AtoI(get_param(argc, argv, "-header", "0"));
+        header_size = AtoI(getParameter(argc, argv, "-header", "0"));
         if (argc == 1)
         {
             Usage(argv);
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
         /* Perform conversion ====================================================== */
 
         /* input is a sel file*/
-        if (check_param(argc, argv, "-sel") && check_param(argc, argv, "-oext"))
+        if (checkParameter(argc, argv, "-sel") && checkParameter(argc, argv, "-oext"))
         {
             SelFile SF(sel_file);
             FileName SF_out_name;
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
         }
 //input/output are single files
 
-        else if (check_param(argc, argv, "-i") && check_param(argc, argv, "-o"))
+        else if (checkParameter(argc, argv, "-i") && checkParameter(argc, argv, "-o"))
         {
             raw22spi(fn_in, fn_out, raw_type, header_size, Zdim, Ydim, Xdim, generate_inf,
                      reverse_endian);

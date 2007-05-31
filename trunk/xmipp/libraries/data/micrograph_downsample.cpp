@@ -32,22 +32,22 @@ void Prog_downsample_prm::read(int argc, char **argv, bool do_not_read_files)
 {
     if (!do_not_read_files)
     {
-        fn_micrograph  = get_param(argc, argv, "-i");
-        fn_downsampled = get_param(argc, argv, "-o");
+        fn_micrograph  = getParameter(argc, argv, "-i");
+        fn_downsampled = getParameter(argc, argv, "-o");
     }
-    bitsMp         = AtoI(get_param(argc, argv, "-output_bits", "32"));
+    bitsMp         = AtoI(getParameter(argc, argv, "-output_bits", "32"));
     if (bitsMp != 8 && bitsMp != 16 && bitsMp != 32)
         REPORT_ERROR(1, "Downsample: you must specify 8, 16 or 32 bits only");
-    Xstep          = AtoI(get_param(argc, argv, "-Xstep"));
-    if (check_param(argc, argv, "-Ystep"))
-        Ystep     = AtoI(get_param(argc, argv, "-Ystep"));
+    Xstep          = AtoI(getParameter(argc, argv, "-Xstep"));
+    if (checkParameter(argc, argv, "-Ystep"))
+        Ystep     = AtoI(getParameter(argc, argv, "-Ystep"));
     else
         Ystep     = Xstep;
 
-    if (check_param(argc, argv, "-kernel"))
+    if (checkParameter(argc, argv, "-kernel"))
     {
-        string aux = get_param(argc, argv, "-kernel");
-        int i = position_param(argc, argv, "-kernel");
+        string aux = getParameter(argc, argv, "-kernel");
+        int i = paremeterPosition(argc, argv, "-kernel");
         if (aux == "rectangle")
         {
             kernel_mode = KER_RECTANGLE;
@@ -96,7 +96,7 @@ void Prog_downsample_prm::read(int argc, char **argv, bool do_not_read_files)
         delta = 0.02;
         Deltaw = 1.0 / 10.0;
     }
-    reversed = check_param(argc, argv, "-reverse_endian");
+    reversed = checkParameter(argc, argv, "-reverse_endian");
 }
 
 // Usage -------------------------------------------------------------------

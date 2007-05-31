@@ -50,12 +50,12 @@ public:
             docc = true;
             doeu = true;
             domi = true;
-            fn_ref = get_param(argc, argv, "-ref");
+            fn_ref = getParameter(argc, argv, "-ref");
             if (Is_ImageXmipp(fn_ref))
             {
                 refI.read(fn_ref, false, false, apply_geo);
                 refI().setXmippOrigin();
-                fn_msk = get_param(argc, argv, "-mask", "");
+                fn_msk = getParameter(argc, argv, "-mask", "");
                 if (fn_msk != "")
                 {
                     usemask = true;
@@ -73,7 +73,7 @@ public:
             {
                 refV.read(fn_ref);
                 refV().setXmippOrigin();
-                fn_msk = get_param(argc, argv, "-mask", "");
+                fn_msk = getParameter(argc, argv, "-mask", "");
                 if (fn_msk != "")
                 {
                     usemask = true;
@@ -88,25 +88,25 @@ public:
                 }
             }
             else REPORT_ERROR(1, "Reference is not an image or a volume");
-            if (check_param(argc, argv, "-co"))
+            if (checkParameter(argc, argv, "-co"))
             {
                 domi = false;
                 doeu = false;
                 docc = false;
             }
-            if (check_param(argc, argv, "-cc"))
+            if (checkParameter(argc, argv, "-cc"))
             {
                 domi = false;
                 doeu = false;
                 doco = false;
             }
-            if (check_param(argc, argv, "-mi"))
+            if (checkParameter(argc, argv, "-mi"))
             {
                 docc = false;
                 doeu = false;
                 doco = false;
             }
-            if (check_param(argc, argv, "-eu"))
+            if (checkParameter(argc, argv, "-eu"))
             {
                 domi = false;
                 docc = false;

@@ -32,11 +32,11 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)
 
     // This flag is set with scripts, so that for the user the
     // mlf_align2d and the ml_align2d are distinct programs
-    fourier_mode = check_param(argc, argv, "-MLF");
+    fourier_mode = checkParameter(argc, argv, "-MLF");
 
     bool do_restart = false;
 
-    if (check_param(argc, argv, "-more_options"))
+    if (checkParameter(argc, argv, "-more_options"))
     {
         if (fourier_mode)
         {
@@ -49,12 +49,12 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)
             extended_usage();
         }
     }
-    if (check_param(argc, argv, "-show_all_ML_options"))
+    if (checkParameter(argc, argv, "-show_all_ML_options"))
     {
         Prog_MLalign2D_prm ML_prm;
         ML_prm.extended_usage(true);
     }
-    if (check_param(argc, argv, "-show_all_ART_options"))
+    if (checkParameter(argc, argv, "-show_all_ART_options"))
     {
         Basic_ART_Parameters   art_prm;
         art_prm.usage_more();
@@ -62,14 +62,14 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)
     }
 
     // Generate new command line for restart procedure
-    if (check_param(argc, argv, "-restart"))
+    if (checkParameter(argc, argv, "-restart"))
     {
         string   comment, cline = "";
         DocFile  DFi;
         FileName fn_tmp;
 
         do_restart = true;
-        DFi.read(get_param(argc, argv, "-restart"));
+        DFi.read(getParameter(argc, argv, "-restart"));
         DFi.go_beginning();
         comment = (DFi.get_current_line()).get_text();
         if (strstr(comment.c_str(), "MLalign2D-logfile") == NULL)
@@ -89,12 +89,12 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)
             cline = (DFi.get_current_line()).get_text();
             comment = comment + cline;
             // regenerate command line
-            generate_command_line(comment, argc, argv, copy);
+            generateCommandLine(comment, argc, argv, copy);
             // Get number of volumes and names to generate SFvol
-            if (fourier_mode) fn_root = get_param(argc, argv, "-o", "mlf3d");
-            else fn_root = get_param(argc, argv, "-o", "ml3d");
-            fn_vol = get_param(argc, argv, "-vol");
-            istart = AtoI(get_param(argc, argv, "-istart"));
+            if (fourier_mode) fn_root = getParameter(argc, argv, "-o", "mlf3d");
+            else fn_root = getParameter(argc, argv, "-o", "ml3d");
+            fn_vol = getParameter(argc, argv, "-vol");
+            istart = AtoI(getParameter(argc, argv, "-istart"));
             if (Is_VolumeXmipp(fn_vol))
             {
                 SFvol.reserve(1);
@@ -127,12 +127,12 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)
     }
 
     //Read Refine3d parameters
-    fn_sel = get_param(argc, argv, "-i");
-    fn_root = get_param(argc, argv, "-o", "MLrefine3D");
+    fn_sel = getParameter(argc, argv, "-i");
+    fn_root = getParameter(argc, argv, "-o", "MLrefine3D");
     if (!do_restart)
     {
         // Fill volume selfile
-        fn_vol = get_param(argc, argv, "-vol");
+        fn_vol = getParameter(argc, argv, "-vol");
         if (Is_VolumeXmipp(fn_vol))
         {
             SFvol.reserve(1);
@@ -145,25 +145,25 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)
         Nvols = SFvol.ImgNo();
     }
 
-    angular = AtoF(get_param(argc, argv, "-ang", "10"));
-    fn_sym = get_param(argc, argv, "-sym", "");
-    eps = AtoF(get_param(argc, argv, "-eps", "5e-5"));
-    verb = AtoI(get_param(argc, argv, "-verb", "1"));
-    Niter = AtoI(get_param(argc, argv, "-iter", "100"));
-    istart = AtoI(get_param(argc, argv, "-istart", "1"));
-    tilt_range0 = AtoF(get_param(argc, argv, "-tilt0", "0."));
-    tilt_rangeF = AtoF(get_param(argc, argv, "-tiltF", "90."));
-    fn_symmask = get_param(argc, argv, "-sym_mask", "");
-    lowpass = AtoF(get_param(argc, argv, "-filter", "-1"));
-    wlsart_no_start = check_param(argc, argv, "-nostart");
+    angular = AtoF(getParameter(argc, argv, "-ang", "10"));
+    fn_sym = getParameter(argc, argv, "-sym", "");
+    eps = AtoF(getParameter(argc, argv, "-eps", "5e-5"));
+    verb = AtoI(getParameter(argc, argv, "-verb", "1"));
+    Niter = AtoI(getParameter(argc, argv, "-iter", "100"));
+    istart = AtoI(getParameter(argc, argv, "-istart", "1"));
+    tilt_range0 = AtoF(getParameter(argc, argv, "-tilt0", "0."));
+    tilt_rangeF = AtoF(getParameter(argc, argv, "-tiltF", "90."));
+    fn_symmask = getParameter(argc, argv, "-sym_mask", "");
+    lowpass = AtoF(getParameter(argc, argv, "-filter", "-1"));
+    wlsart_no_start = checkParameter(argc, argv, "-nostart");
 
     // Hidden for now
-    fn_solv = get_param(argc, argv, "-solvent", "");
-    do_wbp = check_param(argc, argv, "-WBP");
-    do_prob_solvent = check_param(argc, argv, "-prob_solvent");
-    threshold_solvent = AtoF(get_param(argc, argv, "-threshold_solvent", "999"));
-    do_deblob_solvent = check_param(argc, argv, "-deblob_solvent");
-    dilate_solvent = AtoI(get_param(argc, argv, "-dilate_solvent", "0"));
+    fn_solv = getParameter(argc, argv, "-solvent", "");
+    do_wbp = checkParameter(argc, argv, "-WBP");
+    do_prob_solvent = checkParameter(argc, argv, "-prob_solvent");
+    threshold_solvent = AtoF(getParameter(argc, argv, "-threshold_solvent", "999"));
+    do_deblob_solvent = checkParameter(argc, argv, "-deblob_solvent");
+    dilate_solvent = AtoI(getParameter(argc, argv, "-dilate_solvent", "0"));
 
     // Checks
     if (lowpass > 0.5) REPORT_ERROR(1, "Digital frequency for low-pass filter should be smaller than 0.5");
@@ -487,14 +487,14 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
         art_prm.read(argc, argv);
         art_prm.WLS = true;
         if (fn_symmask != "") art_prm.fn_sym = "";
-        if (!check_param(argc, argv, "-n"))
+        if (!checkParameter(argc, argv, "-n"))
             art_prm.no_it = 10;
-        if (!check_param(argc, argv, "-l"))
+        if (!checkParameter(argc, argv, "-l"))
         {
             art_prm.lambda_list.resize(1);
             art_prm.lambda_list.init_constant(0.2);
         }
-        if (!check_param(argc, argv, "-k"))
+        if (!checkParameter(argc, argv, "-k"))
         {
             art_prm.kappa_list.resize(1);
             art_prm.kappa_list.init_constant(0.5);

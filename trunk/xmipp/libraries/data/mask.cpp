@@ -738,7 +738,7 @@ void Mask_Params::resize(int Zdim, int Ydim, int Xdim)
 // Read from command lines -------------------------------------------------
 void Mask_Params::read(int argc, char **argv)
 {
-    int i = position_param(argc, argv, "-center");
+    int i = paremeterPosition(argc, argv, "-center");
     if (i != -1)
     {
         if (i + 3 >= argc)
@@ -752,7 +752,7 @@ void Mask_Params::read(int argc, char **argv)
         x0 = y0 = z0 = 0;
     }
 
-    i = position_param(argc, argv, "-mask");
+    i = paremeterPosition(argc, argv, "-mask");
     if (i == -1)
     {
         clear();

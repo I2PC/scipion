@@ -79,9 +79,9 @@ void extract_angles(SelFile &SF_in, DocFile &DF_out,
                     const string &ang3)
 {
 
-    check_angle_descr(ang1);
-    check_angle_descr(ang2);
-    check_angle_descr(ang3);
+    checkAngle(ang1);
+    checkAngle(ang2);
+    checkAngle(ang3);
 
     DF_out.clear();
     DF_out.append_comment((string)"Angles for " + SF_in.name() +
@@ -122,9 +122,9 @@ void write_angles(SelFile &SF_in, DocFile &DF_in,
     double rot, tilt, psi;
     int FirstLine_colNumber;
 
-    check_angle_descr(ang1);
-    check_angle_descr(ang2);
-    check_angle_descr(ang3);
+    checkAngle(ang1);
+    checkAngle(ang2);
+    checkAngle(ang3);
 
 //   cout << "FirstLine_colNumber" << DF_in.FirstLine_colNumber();
 

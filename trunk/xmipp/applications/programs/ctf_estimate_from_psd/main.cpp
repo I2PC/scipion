@@ -32,7 +32,7 @@ int main (int argc,char *argv[]) {
 
    try 
    {
-       fn_in=get_param(argc,argv,"-i");
+       fn_in=getParameter(argc,argv,"-i");
        prog_prm.read(fn_in);
    }
    catch (Xmipp_error &XE)

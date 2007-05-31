@@ -49,18 +49,18 @@ int main(int argc, char *argv[])
     /* Parameters ============================================================== */
     try
     {
-        fn_in  = get_param(argc, argv, "-i");
-        fn_out = get_param(argc, argv, "-o");
-        if (check_param(argc, argv, "-x_length"))
+        fn_in  = getParameter(argc, argv, "-i");
+        fn_out = getParameter(argc, argv, "-o");
+        if (checkParameter(argc, argv, "-x_length"))
         {
-            y_length = x_length = AtoF(get_param(argc, argv, "-x_length"));
+            y_length = x_length = AtoF(getParameter(argc, argv, "-x_length"));
             z_length = 1;
         }
-        if (check_param(argc, argv, "-y_length"))
-            y_length = AtoF(get_param(argc, argv, "-y_length"));
-        if (check_param(argc, argv, "-z_length"))
-            z_length = AtoF(get_param(argc, argv, "-z_length"));
-        reverse_endian = check_param(argc, argv, "-reverse_endian");
+        if (checkParameter(argc, argv, "-y_length"))
+            y_length = AtoF(getParameter(argc, argv, "-y_length"));
+        if (checkParameter(argc, argv, "-z_length"))
+            z_length = AtoF(getParameter(argc, argv, "-z_length"));
+        reverse_endian = checkParameter(argc, argv, "-reverse_endian");
     }
     catch (Xmipp_error XE)
     {

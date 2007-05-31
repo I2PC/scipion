@@ -49,18 +49,18 @@ public:
 
         Prog_parameters::read(argc, argv);
 
-        if (check_param(argc, argv, "-pad_value"))
+        if (checkParameter(argc, argv, "-pad_value"))
         {
-            init_value = AtoF(get_param(argc, argv, "-pad_value"));
+            init_value = AtoF(getParameter(argc, argv, "-pad_value"));
             wrong_parameters = 1;
         }
-        if (check_param(argc, argv, "-corner_pad_value"))
+        if (checkParameter(argc, argv, "-corner_pad_value"))
         {
             corner_pad = true;
             if (wrong_parameters > 0)  wrong_parameters = -1;
             else  wrong_parameters = 1;
         }
-        if (check_param(argc, argv, "-average_pad_value"))
+        if (checkParameter(argc, argv, "-average_pad_value"))
         {
             average_pad = true;
             if (wrong_parameters > 0)  wrong_parameters = -1;
@@ -69,10 +69,10 @@ public:
         if (wrong_parameters == -1)
             REPORT_ERROR(1, "incompatible options");
 
-        if (check_param(argc, argv, "-size"))
+        if (checkParameter(argc, argv, "-size"))
         {
             size_mode = true;
-            int i = position_param(argc, argv, "-size");
+            int i = paremeterPosition(argc, argv, "-size");
             if (i + 2 >= argc)
             {
                 sizeZ = sizeY = sizeX = AtoI(argv[i+1]);
@@ -98,11 +98,11 @@ public:
             zF = LAST_XMIPP_INDEX(sizeZ);
             physical_coords = false;
         }
-        else if (check_param(argc, argv, "-r0"))
+        else if (checkParameter(argc, argv, "-r0"))
         {
             size_mode = false;
             // Get r0
-            int i = position_param(argc, argv, "-r0");
+            int i = paremeterPosition(argc, argv, "-r0");
             if (i + 2 >= argc) REPORT_ERROR(1, "Not enough parameters after -r0");
             else
             {
@@ -120,7 +120,7 @@ public:
                 }
 
             // Get rF
-            i = position_param(argc, argv, "-rF");
+            i = paremeterPosition(argc, argv, "-rF");
             if (i == -1) REPORT_ERROR(1, "-rF not present");
             if (i + 2 >= argc) REPORT_ERROR(1, "Not enough parameters after -rF");
             else
@@ -138,7 +138,7 @@ public:
                     zF = 1;
                 }
 
-            physical_coords = check_param(argc, argv, "-physical");
+            physical_coords = checkParameter(argc, argv, "-physical");
         }
         else
             REPORT_ERROR(1, "Unknown windowing type");

@@ -30,11 +30,11 @@
 /* Read parameters from command line. -------------------------------------- */
 void CorrectPhase_Params::read(int argc, char **argv)
 {
-    fn_ctf = get_param(argc, argv, "-ctf");
+    fn_ctf = getParameter(argc, argv, "-ctf");
 
-    epsilon = AtoF(get_param(argc, argv, "-small", "0"));
+    epsilon = AtoF(getParameter(argc, argv, "-small", "0"));
     string aux;
-    aux = get_param(argc, argv, "-method", "");
+    aux = getParameter(argc, argv, "-method", "");
     if (aux == "remove")           method = CORRECT_SETTING_SMALL_TO_ZERO;
     else if (aux == "leave" || aux == "") method = CORRECT_LEAVING_SMALL;
     else if (aux == "divide")           method = CORRECT_AMPLIFYING_NOT_SMALL;

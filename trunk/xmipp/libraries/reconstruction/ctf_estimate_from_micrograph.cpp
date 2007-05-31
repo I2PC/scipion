@@ -43,28 +43,28 @@ void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files)
         REPORT_ERROR(1, (string)"assign_CTF: There is a problem "
                      "opening the file " + fn_prm);
 
-    reversed          = check_param(fh_param, "reverse endian");
-    N_horizontal      = AtoI(get_param(fh_param, "N_horizontal", 0));
-    N_vertical        = AtoI(get_param(fh_param, "N_vertical", 0, "-1"));
+    reversed          = checkParameter(fh_param, "reverse endian");
+    N_horizontal      = AtoI(getParameter(fh_param, "N_horizontal", 0));
+    N_vertical        = AtoI(getParameter(fh_param, "N_vertical", 0, "-1"));
     if (N_vertical == -1) N_vertical = N_horizontal;
 
-    compute_at_particle  = check_param(fh_param, "compute_at_particle");
-    micrograph_averaging = check_param(fh_param, "micrograph_averaging");
-    piece_averaging      = check_param(fh_param, "piece_averaging");
-    Nside_piece          = AtoI(get_param(fh_param, "Nside_piece", 0, "5"));
-    if (check_param(fh_param, "periodogram"))
+    compute_at_particle  = checkParameter(fh_param, "compute_at_particle");
+    micrograph_averaging = checkParameter(fh_param, "micrograph_averaging");
+    piece_averaging      = checkParameter(fh_param, "piece_averaging");
+    Nside_piece          = AtoI(getParameter(fh_param, "Nside_piece", 0, "5"));
+    if (checkParameter(fh_param, "periodogram"))
         PSD_mode = Periodogram;
     else PSD_mode = ARMA;
-    dont_adjust_CTF      = check_param(fh_param, "dont_adjust_CTF");
+    dont_adjust_CTF      = checkParameter(fh_param, "dont_adjust_CTF");
 
     if (!do_not_read_files)
     {
-        image_fn          = get_param(fh_param, "image", 0, "");
+        image_fn          = getParameter(fh_param, "image", 0, "");
         selfile_mode = image_fn == "";
         if (selfile_mode) micrograph_averaging = true;
-        if (selfile_mode) selfile_fn = get_param(fh_param, "selfile", 0);
-        else              selfile_fn = get_param(fh_param, "selfile", 0, "");
-        picked_fn         = get_param(fh_param, "picked", 0, "");
+        if (selfile_mode) selfile_fn = getParameter(fh_param, "selfile", 0);
+        else              selfile_fn = getParameter(fh_param, "selfile", 0, "");
+        picked_fn         = getParameter(fh_param, "picked", 0, "");
         FileName fn_root  = image_fn.without_extension();
         if (PSD_mode == ARMA) PSDfn_root = fn_root + "_ARMA";
         else                PSDfn_root = fn_root + "_Periodogram";

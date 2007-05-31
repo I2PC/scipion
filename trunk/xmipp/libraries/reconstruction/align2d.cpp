@@ -35,41 +35,41 @@
 void Prog_align2d_prm::read(int argc, char **argv)
 {
 
-    fn_sel = get_param(argc, argv, "-i");
+    fn_sel = getParameter(argc, argv, "-i");
     SF.read(fn_sel);
     // Filename for output reference
     fn_ave = fn_sel.without_extension() + ".xmp";
     fn_ave = fn_ave.insert_before_extension(".ref");
     // Reference image
-    fn_ref = get_param(argc, argv, "-ref", "");
+    fn_ref = getParameter(argc, argv, "-ref", "");
     // Extension for output images (overwrite input if none)
-    oext = get_param(argc, argv, "-oext", "");
+    oext = getParameter(argc, argv, "-oext", "");
     // Write out document file?
-    fn_doc = get_param(argc, argv, "-doc", "");
+    fn_doc = getParameter(argc, argv, "-doc", "");
     // Maximum shift (discard images that shift more in last iteration)
-    max_shift = AtoF(get_param(argc, argv, "-max_shift", "0"));
+    max_shift = AtoF(getParameter(argc, argv, "-max_shift", "0"));
     // Maximum rotational change (discard images that rotate more in last iteration)
-    max_rot = AtoF(get_param(argc, argv, "-max_rot", "0"));
+    max_rot = AtoF(getParameter(argc, argv, "-max_rot", "0"));
     // Inner and outer radii for rotational correlation
-    Ri = AtoI(get_param(argc, argv, "-Ri", "0"));
-    Ro = AtoI(get_param(argc, argv, "-Ro", "0"));
+    Ri = AtoI(getParameter(argc, argv, "-Ri", "0"));
+    Ro = AtoI(getParameter(argc, argv, "-Ro", "0"));
     int dim;
     SF.ImgSize(dim, dim);
     if (Ro == 0) Ro = (int)dim / 2;
     if (Ro <= Ri) REPORT_ERROR(1, "Align2D: Rout should be larger than Rin");
     // Expected resolution and sampling rate (for filtering)
-    if (do_filter = check_param(argc, argv, "-filter"))
+    if (do_filter = checkParameter(argc, argv, "-filter"))
     {
-        resol = AtoF(get_param(argc, argv, "-filter"));
-        sam = AtoF(get_param(argc, argv, "-sampling"));
+        resol = AtoF(getParameter(argc, argv, "-filter"));
+        sam = AtoF(getParameter(argc, argv, "-sampling"));
     }
     // Number of iterations
-    Niter = AtoI(get_param(argc, argv, "-iter", "1"));
+    Niter = AtoI(getParameter(argc, argv, "-iter", "1"));
     // Only translational/rotational
-    do_rot = !check_param(argc, argv, "-only_trans");
-    do_trans = !check_param(argc, argv, "-only_rot");
-    do_complete = check_param(argc, argv, "-complete");
-    psi_interval = AtoF(get_param(argc, argv, "-psi_step", "10"));
+    do_rot = !checkParameter(argc, argv, "-only_trans");
+    do_trans = !checkParameter(argc, argv, "-only_rot");
+    do_complete = checkParameter(argc, argv, "-complete");
+    psi_interval = AtoF(getParameter(argc, argv, "-psi_step", "10"));
 }
 
 // Show ====================================================================

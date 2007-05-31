@@ -45,10 +45,10 @@ int main(int argc, char *argv[])
 // Check the command line ..................................................
     try
     {
-        fn_test_params = get_param(argc, argv, "-i");
-        only_training  = check_param(argc, argv, "-training");
-        training_FOM   = get_param(argc, argv, "-training", "scL21");
-        dont_rewrite   = check_param(argc, argv, "-dont_rewrite");
+        fn_test_params = getParameter(argc, argv, "-i");
+        only_training  = checkParameter(argc, argv, "-training");
+        training_FOM   = getParameter(argc, argv, "-training", "scL21");
+        dont_rewrite   = checkParameter(argc, argv, "-dont_rewrite");
 
         recons_prm.read(fn_test_params);
 

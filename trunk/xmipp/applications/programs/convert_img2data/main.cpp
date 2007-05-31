@@ -49,15 +49,15 @@ int main(int argc, char **argv)
     // Read arguments
     try
     {
-        selname = get_param(argc, argv, "-i");
-        bmname = get_param(argc, argv, "-mask", "mask.spi");
-        fname = get_param(argc, argv, "-o", "out.dat");
-        if (check_param(argc, argv, "-nomask"))
+        selname = getParameter(argc, argv, "-i");
+        bmname = getParameter(argc, argv, "-mask", "mask.spi");
+        fname = getParameter(argc, argv, "-o", "out.dat");
+        if (checkParameter(argc, argv, "-nomask"))
             nomask = true;
-        if (check_param(argc, argv, "-verb"))
+        if (checkParameter(argc, argv, "-verb"))
             verb = true;
-        apply_geo = !check_param(argc, argv, "-dont_apply_geo");
-        radial_avg = check_param(argc, argv, "-radial_avg");
+        apply_geo = !checkParameter(argc, argv, "-dont_apply_geo");
+        radial_avg = checkParameter(argc, argv, "-radial_avg");
     }
     catch (Xmipp_error)
     {

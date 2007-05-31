@@ -61,11 +61,11 @@ int main(int argc, char **argv)
     // Get command line parameters ------------------------------------------
     try
     {
-        fn_input     = get_param(argc, argv, "-i", "");
-        fn_out       = get_param(argc, argv, "-o", "");
-        gamma        = AtoF(get_param(argc, argv, "-gamma"));
-        minz        = AtoI(get_param(argc, argv, "-zmin"));
-        maxz        = AtoI(get_param(argc, argv, "-zmax"));
+        fn_input     = getParameter(argc, argv, "-i", "");
+        fn_out       = getParameter(argc, argv, "-o", "");
+        gamma        = AtoF(getParameter(argc, argv, "-gamma"));
+        minz        = AtoI(getParameter(argc, argv, "-zmin"));
+        maxz        = AtoI(getParameter(argc, argv, "-zmax"));
     }
     catch (Xmipp_error XE)
     {

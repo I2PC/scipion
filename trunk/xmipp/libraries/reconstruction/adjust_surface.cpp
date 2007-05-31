@@ -33,34 +33,34 @@
 void Prog_Adjust_Surface_Parameters::read(int argc, char **argv)
 {
     tell = 0;
-    fn_in_surface  = get_param(argc, argv, "-i");
-    fn_out_surface = get_param(argc, argv, "-o", "");
-    fn_vol         = get_param(argc, argv, "-vol");
-    exhaustive     = check_param(argc, argv, "-exhaustive");
-    apply          = check_param(argc, argv, "-apply");
-    given_ztop     = check_param(argc, argv, "-ztop");
+    fn_in_surface  = getParameter(argc, argv, "-i");
+    fn_out_surface = getParameter(argc, argv, "-o", "");
+    fn_vol         = getParameter(argc, argv, "-vol");
+    exhaustive     = checkParameter(argc, argv, "-exhaustive");
+    apply          = checkParameter(argc, argv, "-apply");
+    given_ztop     = checkParameter(argc, argv, "-ztop");
     if (given_ztop)
     {
-        int i = position_param(argc, argv, "-ztop");
+        int i = paremeterPosition(argc, argv, "-ztop");
         if (i + 3 >= argc) REPORT_ERROR(1, "Prog_Adjust_Surface_Parameters::read:"
                                             " Not enough parameters behind -ztop");
         ztop0 = AtoI(argv[i+1]);
         ztopF = AtoI(argv[i+2]);
         ztop_step = AtoI(argv[i+3]);
     }
-    given_zbottom  = check_param(argc, argv, "-zbottom");
+    given_zbottom  = checkParameter(argc, argv, "-zbottom");
     if (given_zbottom)
     {
-        int i = position_param(argc, argv, "-zbottom");
+        int i = paremeterPosition(argc, argv, "-zbottom");
         if (i + 3 >= argc) REPORT_ERROR(1, "Prog_Adjust_Surface_Parameters::read:"
                                             " Not enough parameters behind -zbottom");
         zbottom0 = AtoI(argv[i+1]);
         zbottomF = AtoI(argv[i+2]);
         zbottom_step = AtoI(argv[i+3]);
     }
-    if (check_param(argc, argv, "-ang"))
+    if (checkParameter(argc, argv, "-ang"))
     {
-        int i = position_param(argc, argv, "-ang");
+        int i = paremeterPosition(argc, argv, "-ang");
         if (i + 3 >= argc) REPORT_ERROR(1, "Prog_Adjust_Surface_Parameters::read:"
                                             " Not enough parameters behind -ang");
         angle0 = AtoF(argv[i+1]);
@@ -72,9 +72,9 @@ void Prog_Adjust_Surface_Parameters::read(int argc, char **argv)
         angle0 = angleF = 0;
         angle_step = 1;
     }
-    if (check_param(argc, argv, "-shift"))
+    if (checkParameter(argc, argv, "-shift"))
     {
-        int i = position_param(argc, argv, "-shift");
+        int i = paremeterPosition(argc, argv, "-shift");
         if (i + 4 >= argc) REPORT_ERROR(1, "Prog_Adjust_Surface_Parameters::read:"
                                             " Not enough parameters behind -shift");
         shiftX0 = AtoF(argv[i+1]);
@@ -87,9 +87,9 @@ void Prog_Adjust_Surface_Parameters::read(int argc, char **argv)
         shiftX0 = shiftY0 = shift_dist = 0;
         shift_step = 1;
     }
-    if (check_param(argc, argv, "-scaleX"))
+    if (checkParameter(argc, argv, "-scaleX"))
     {
-        int i = position_param(argc, argv, "-scaleX");
+        int i = paremeterPosition(argc, argv, "-scaleX");
         if (i + 3 >= argc) REPORT_ERROR(1, "Prog_Adjust_Surface_Parameters::read:"
                                             " Not enough parameters behind -scaleX");
         scaleX0 = AtoF(argv[i+1]);
@@ -101,9 +101,9 @@ void Prog_Adjust_Surface_Parameters::read(int argc, char **argv)
         scaleX0 = scaleXF = 1;
         scaleX_step = 1;
     }
-    if (check_param(argc, argv, "-scaleY"))
+    if (checkParameter(argc, argv, "-scaleY"))
     {
-        int i = position_param(argc, argv, "-scaleY");
+        int i = paremeterPosition(argc, argv, "-scaleY");
         if (i + 3 >= argc) REPORT_ERROR(1, "Prog_Adjust_Surface_Parameters::read:"
                                             " Not enough parameters behind -scaleY");
         scaleY0 = AtoF(argv[i+1]);
@@ -115,12 +115,12 @@ void Prog_Adjust_Surface_Parameters::read(int argc, char **argv)
         scaleY0 = scaleYF = 1;
         scaleY_step = 1;
     }
-    if (check_param(argc, argv, "-bottom_surface")) direction = BOTTOM2TOP;
+    if (checkParameter(argc, argv, "-bottom_surface")) direction = BOTTOM2TOP;
     else direction = TOP2BOTTOM;
-    if (check_param(argc, argv, "-corr_2D"))      tell |= CORR_2D;
-    if (check_param(argc, argv, "-corr_grad"))    tell |= CORR_GRAD;
-    if (check_param(argc, argv, "-manual_order")) tell |= MANUAL_ORDER;
-    phantom = check_param(argc, argv, "-phantom");
+    if (checkParameter(argc, argv, "-corr_2D"))      tell |= CORR_2D;
+    if (checkParameter(argc, argv, "-corr_grad"))    tell |= CORR_GRAD;
+    if (checkParameter(argc, argv, "-manual_order")) tell |= MANUAL_ORDER;
+    phantom = checkParameter(argc, argv, "-phantom");
 }
 
 /* Usage =================================================================== */

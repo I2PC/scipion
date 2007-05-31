@@ -27,12 +27,12 @@
 
 void Prog_IDR_ART_Parameters::read(int argc, char **argv)
 {
-    fn_exp = get_param(argc, argv, "-exp");
-    fn_vol = get_param(argc, argv, "-vol");
-    fn_ctf = get_param(argc, argv, "-ctf");
-    fn_root = get_param(argc, argv, "-o");
-    mu = AtoF(get_param(argc, argv, "-mu", "1.8"));
-    adjust_gray_levels = check_param(argc, argv, "-adjust_gray_levels");
+    fn_exp = getParameter(argc, argv, "-exp");
+    fn_vol = getParameter(argc, argv, "-vol");
+    fn_ctf = getParameter(argc, argv, "-ctf");
+    fn_root = getParameter(argc, argv, "-o");
+    mu = AtoF(getParameter(argc, argv, "-mu", "1.8"));
+    adjust_gray_levels = checkParameter(argc, argv, "-adjust_gray_levels");
 }
 
 void Prog_IDR_ART_Parameters::produce_side_info()

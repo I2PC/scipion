@@ -38,18 +38,18 @@ int main(int argc, char *argv[])
     // Get input parameters .................................................
     try
     {
-        fn_DF     = get_param(argc, argv, "-doc");
-        fn_SF     = get_param(argc, argv, "-sel", "");
-        fn_SF_out = get_param(argc, argv, "-o", "");
-        col       = AtoI(get_param(argc, argv, "-col", "1"));
+        fn_DF     = getParameter(argc, argv, "-doc");
+        fn_SF     = getParameter(argc, argv, "-sel", "");
+        fn_SF_out = getParameter(argc, argv, "-o", "");
+        col       = AtoI(getParameter(argc, argv, "-col", "1"));
         col--;
-        en_limit0 = check_param(argc, argv, "-limit0");
+        en_limit0 = checkParameter(argc, argv, "-limit0");
         if (en_limit0)
-            limit0 = AtoF(get_param(argc, argv, "-limit0"));
-        en_limitF = check_param(argc, argv, "-limitF");
+            limit0 = AtoF(getParameter(argc, argv, "-limit0"));
+        en_limitF = checkParameter(argc, argv, "-limitF");
         if (en_limitF)
-            limitF = AtoF(get_param(argc, argv, "-limitF"));
-        do_clean = check_param(argc, argv, "-clean");
+            limitF = AtoF(getParameter(argc, argv, "-limitF"));
+        do_clean = checkParameter(argc, argv, "-clean");
 
     }
     catch (Xmipp_error XE)

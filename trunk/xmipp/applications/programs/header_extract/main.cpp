@@ -45,9 +45,9 @@ int main(int argc, char *argv[])
     try
     {
 
-        SF.read(get_param(argc, argv, "-i"));
-        fn_out = get_param(argc, argv, "-o");
-        round_shifts = check_param(argc, argv, "-round_shifts");
+        SF.read(getParameter(argc, argv, "-i"));
+        fn_out = getParameter(argc, argv, "-o");
+        round_shifts = checkParameter(argc, argv, "-round_shifts");
 
     }
     catch (Xmipp_error XE)

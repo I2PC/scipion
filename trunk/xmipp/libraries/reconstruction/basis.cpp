@@ -40,9 +40,9 @@ void Basis::set_default()
 
 // Read params -------------------------------------------------------------
 #define GET_PARAM_WITH_DEF(flag,default_value) \
-    get_param(argc,argv,"-"flag,default_value)
+    getParameter(argc,argv,"-"flag,default_value)
 #define CHECK_PARAM(flag) \
-    check_param(argc,argv,"-"flag)
+    checkParameter(argc,argv,"-"flag)
 
 #define GET_BASIS_PARAMS \
     blob.radius        = AtoF(GET_PARAM_WITH_DEF("r",         "2"         )); \
@@ -68,9 +68,9 @@ void Basis::read(int argc, char **argv)
 #undef CHECK_PARAM
 
 #define GET_PARAM_WITH_DEF(flag,default_value) \
-    get_param(fh,flag,0,default_value)
+    getParameter(fh,flag,0,default_value)
 #define CHECK_PARAM(flag) \
-    check_param(fh,flag)
+    checkParameter(fh,flag)
 void Basis::read(const FileName &fn)
 {
     FILE *fh;

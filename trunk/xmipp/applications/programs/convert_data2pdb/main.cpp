@@ -39,12 +39,12 @@ int main(int argc, char **argv)
 
     try
     {
-        iname = get_param(argc, argv, "-iname");
-        oname = get_param(argc, argv, "-oname");
-        vsize = (double) AtoF(get_param(argc, argv, "-vsize", "1"));
-        offX = AtoF(get_param(argc, argv, "-offX", "0"));
-        offY = AtoF(get_param(argc, argv, "-offY", floatToString(offX).c_str()));
-        offZ = AtoF(get_param(argc, argv, "-offZ", floatToString(offX).c_str()));
+        iname = getParameter(argc, argv, "-iname");
+        oname = getParameter(argc, argv, "-oname");
+        vsize = (double) AtoF(getParameter(argc, argv, "-vsize", "1"));
+        offX = AtoF(getParameter(argc, argv, "-offX", "0"));
+        offY = AtoF(getParameter(argc, argv, "-offY", floatToString(offX).c_str()));
+        offZ = AtoF(getParameter(argc, argv, "-offZ", floatToString(offX).c_str()));
     }
     catch (Xmipp_error)
     {

@@ -52,17 +52,17 @@ main(int argc, char** argv)
     try
     {
 
-        fn_in = get_param(argc, argv, "-i");
+        fn_in = getParameter(argc, argv, "-i");
 
-        if (check_param(argc, argv, "-o"))
-            fn_out = get_param(argc, argv, "-o");
+        if (checkParameter(argc, argv, "-o"))
+            fn_out = getParameter(argc, argv, "-o");
         else
         {
             Usage(argv);
             exit(EXIT_FAILURE);
         }
 
-        verb = AtoI(get_param(argc, argv, "-verb", "1"));
+        verb = AtoI(getParameter(argc, argv, "-verb", "1"));
 
 
         if (argc == 1)
