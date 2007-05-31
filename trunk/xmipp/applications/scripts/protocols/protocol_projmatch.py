@@ -17,14 +17,14 @@
 SelFileName='all_images.sel'
 
 # {file} Initial 3D reference map:
-ReferenceFileName=' '
-#ReferenceFileName='init_reference/LTA_rot_0.1_norm.vol'
+#ReferenceFileName='reference.vol'
+ReferenceFileName='init_reference/LTA_rot_0.1_norm.vol'
 
 # Working subdirectory: 
-WorkDirectory='ProjMatch/Test'
+WorkDirectory='ProjMatch/Test1'
 
 # Delete working subdirectory if it already exists?
-DoDeleteWorkingDir=False
+DoDeleteWorkingDir=True
 
 # Number of iterations to perform
 NumberofIterations=4
@@ -39,10 +39,11 @@ ContinueAtIteration=1
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir="/home/roberto2/trunk/xmipp/applications/scripts/protocols"
+#ProjectDir='/home2/bioinfo/rafa/Protocol/BC/PARA_Roberto'
+ProjectDir='/home/roberto2/Test/PARA_Roberto'
 
 # {expert} Directory name for logfiles:
-LogDir="Logs"
+LogDir='Logs'
 
 #-----------------------------------------------------------------------------
 # {section} Mask
@@ -57,11 +58,11 @@ DoMask=True
 # Show masked volume
 """ Masked volume will be shown. Do not set ths option to true for non iterative processing (jobs sent to queues)
 """
-DisplayMask=False
+DisplayMask=True
 
 # {file} Binary mask-file used to mask the reference volume
+#MaskFileName='mask.vol'
 MaskFileName='circular_mask.msk'
-
 #-----------------------------------------------------------------------------
 # {section} Projection Matching
 #-----------------------------------------------------------------------------
@@ -71,10 +72,10 @@ MaskFileName='circular_mask.msk'
 """
 DoProjectionMatching=True
 
-# Show projection maching library and classes
+# {expert} Show projection maching library and classes
 """ Show average of projections. Do not set ths option to true for non iterative processing (jobs sent to queues)
 """
-DisplayProjectionMatching=False
+DisplayProjectionMatching=True
 
 # Angular sampling rate (in degrees)
 """Angular distance between neighboring projection  points
@@ -87,7 +88,7 @@ DisplayProjectionMatching=False
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-AngSamplingRateDeg='10 10 2x5'
+AngSamplingRateDeg='3x15 3x10 4x5'
 
 # {expert} Angular Search 
 """Maximum change in rot & tilt  (+/- degrees)
@@ -100,7 +101,7 @@ AngSamplingRateDeg='10 10 2x5'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-MaxChangeInAngles='2x1000 10 5'
+MaxChangeInAngles='5x1000 5x20 '
 
 # {expert} Maximum change in origin offset (+/- pixels)
 """Maximum change in shift  (+/- pixels)
@@ -113,10 +114,10 @@ MaxChangeInAngles='2x1000 10 5'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-MaxChangeOffset='2x1000 2x10'
+MaxChangeOffset='8x1000 2x10'
 
 # Restrict tilt angle search?
-DoRetricSearchbyTiltAngle=False
+DoRetricSearchbyTiltAngle=True
 
 # Lower-value for restricted tilt angle search
 Tilt0=40
@@ -152,7 +153,7 @@ DoAlign2D=True
 # Display 2D alignment results
 """ Show aligned classes. Do not set ths option to true for non iterative processing (jobs sent to queues)
 """
-DisplayAlign2D=False
+DisplayAlign2D=True
 
 # Inner radius for rotational correlation:
 """ In pixels from the image center
@@ -180,7 +181,7 @@ Align2DIterNr=4
   consider filtering the images with \"-filter 10 -sampling 2\"
   See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Align2d for details
 """
-Align2DExtraCommand='-max_shift 4'
+Align2DExtraCommand='-max_shift 15'
 
 #-----------------------------------------------------------------------------
 # {section} 3D Reconstruction
@@ -194,7 +195,7 @@ Align2DExtraCommand='-max_shift 4'
 DoReconstruction=True
 
 # Display reconstructed volume?
-DisplayReconstruction=False
+DisplayReconstruction=True
 
 # Reconstructiom method
 """ Choose between wbp or art
@@ -207,7 +208,7 @@ DisplayReconstruction=False
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-ReconstructionMethod='3xwbp art'
+ReconstructionMethod='9xwbp art'
 #ReconstructionMethod='3xart wbp'
 
 # {expert} Values of lambda for art
@@ -252,7 +253,7 @@ DoComputeResolution=True
 # Pixel size (in Ang.)
 """ This will make that the X-axis in the resolution plots has units 1/Angstrom
 """
-ResolSam=1.
+ResolSam=3.
 
 # Display resolution?
 DisplayResolution=False
@@ -288,7 +289,7 @@ SetResolutiontoZero=False
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-ConstantToAddToFiltration='2x.15 2x.1'
+ConstantToAddToFiltration='8x.15 2x.1'
 
 #-----------------------------------------------------------------------------
 # {section} Cleaning temporal files and Reseting original data
@@ -322,7 +323,8 @@ NumberOfCPUs=2
 """ Depending on your system, your standard script to launch MPI-jobs may require this
     if your queueing system using an environment variable, give it here (with the leading $, e.g. $PBS_NODEFILE
 """
-MachineFile='/home/roberto2/bin/machines.dat'
+#MachineFile='../../../machines.dat'
+MachineFile='../../bin/machines.dat'
 
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
@@ -341,7 +343,13 @@ multi_align2d_sel="multi_align2d.sel"
 align2d_sel="align2d.sel"
 align2d_doc="align2d.doc"
 docfile_with_original_angles='docfile_with_original_angles.doc'
+#directory to copy images
 images_dir='images'
+#inpu/output of mask/fourier_filtering
+Filtered_Image="filtered_reconstruction"
+#inpu/output of mask/fourier_filtering
+ReconstrucedVolume="reconstruction"
+
 
 class projection_matching_class:
 
@@ -488,6 +496,7 @@ class projection_matching_class:
        
        
        #change to working dir
+       # WorkDirectory='ProjMatch/Test1'
        os.chdir(self._WorkDirectory)
        self._SelFileName=self._WorkDirectory+'/'+\
                          str(os.path.basename(self._SelFileName))
@@ -497,20 +506,26 @@ class projection_matching_class:
        ##
        #output of reconstruction cicle
        #first value given by user
+       #this names are the input of the mask program
+       #in general is the output of the reconstruction plus filtration
+       self._ReconstructedVolume=[]
+       fill_name_vector("",
+                        self._ReconstructedVolume,
+                        _NumberofIterations,
+                        ReconstrucedVolume)
+                        
        self._ReconstructedandfilteredVolume=[]
-       self._ReconstructedandfilteredVolume.append("dummy")
-       self._ReconstructedandfilteredVolume.append(self._user_suplied_ReferenceVolume)
-       for _iteration_number in range(1, _NumberofIterations):
-           self._ReconstructedandfilteredVolume.append("../"+'Iter_'+\
-                                      str(_iteration_number)+'/'+
-                                      "reconstruction.vol")
+       fill_name_vector(self._user_suplied_ReferenceVolume,
+                        self._ReconstructedandfilteredVolume,
+                        _NumberofIterations,
+                        Filtered_Image)
+
        #reconstructed and filtered volume of n-1 after masking
+       #called reference volume
        self._ReferenceVolume=[]
-       self._ReferenceVolume.append("dummy")
-       for _iteration_number in range(1, _NumberofIterations):
-           self._ReferenceVolume.append("../"+'Iter_'+\
-                                      str(_iteration_number)+'/'+
-                                      ReferenceVolume)
+       fill_name_vector("",self._ReferenceVolume,_NumberofIterations,
+                        ReferenceVolume)
+
        for _iteration_number in range(_ContinueAtIteration, _NumberofIterations):
           debug_string =  "ITERATION: " +  str(_iteration_number)
           print "*", debug_string
@@ -544,7 +559,6 @@ class projection_matching_class:
                        self._DisplayMask,
                        _iteration_number,
                        self._ReferenceVolume[_iteration_number])#out
-
           #parameters for projection matching
           self._AngSamplingRateDeg=arg.getComponentFromVector(_AngSamplingRateDeg,\
                                                         _iteration_number-1)
@@ -562,7 +576,7 @@ class projection_matching_class:
                                                            _iteration_number-1)
              execute_projection_matching(self._mylog,
                                          self._ProjectDir,
-                                         self._ReferenceVolume[_iteration_number],
+                                         self._ReferenceVolume[_iteration_number],#in
                                          self._MaskFileName,
                                          self._SelFileName,
                                          self._Proj_Maching_Output_Root_Name, 
@@ -629,9 +643,12 @@ class projection_matching_class:
                                     self._ReconstructionMethod,
                                     self._ARTLambda,
                                     self._align2d_sel,
-                                    self._Symfile)
+                                    self._Symfile,
+                                    self._ReconstructedVolume[_iteration_number]
+                                    )
           else:
              self._mylog.info("Skipped Reconstruction") 
+          exit(1)
           
           if (_DoComputeResolution):
               filter_frequence=execute_resolution(self._mylog,
@@ -660,7 +677,9 @@ class projection_matching_class:
                                      _iteration_number,
                                      self._SetResolutiontoZero,
                                      self._ConstantToAddToFiltration,
-                                     filter_frequence
+                                     filter_frequence,
+                                     self._ReconstructedandfilteredVolume[_iteration_number]+\
+                            ".vol",
                                     )
 
 
@@ -980,7 +999,8 @@ def execute_reconstruction(_mylog,
                            _ReconstructionMethod,
                            _ARTLambda,
                            _align2d_sel,
-                           _Symfile):
+                           _Symfile,
+                           _ReconstructedandfilteredVolume):
    import os,shutil
    _mylog.debug("execute_reconstruction")
 
@@ -988,11 +1008,12 @@ def execute_reconstruction(_mylog,
    #the user should be able to delete images
    #this is dirty but what else can I do
    reconstruction_sel=_align2d_sel;
+   Outputvolume  =_ReconstructedandfilteredVolume
 
    print '*********************************************************************'
    print '* Reconstruct volume using '
    if _ReconstructionMethod=='wbp':
-      Outputvolume  ="reconstruction.vol"
+      Outputvolume  =Outputvolume+".vol"
       program = 'xmipp_reconstruct_wbp'
       mpi_program = 'xmipp_mpi_reconstruct_wbp'
       parameters= ' -i '    + reconstruction_sel + \
@@ -1003,7 +1024,6 @@ def execute_reconstruction(_mylog,
       parameters = parameters + _WBPReconstructionExtraCommand
               
    elif _ReconstructionMethod=='art':
-      Outputvolume  ="reconstruction"
       program = 'xmipp_reconstruct_art'
       mpi_program = 'NULL'
       _DoParallel=False
@@ -1036,8 +1056,7 @@ def execute_reconstruction(_mylog,
 
    #_mylog.info(command+ ' ' + parameters)
    if _DisplayReconstruction==True:
-      command='xmipp_show -vol '+ "../"+'Iter_'+\
-                   str(_iteration_number) +'/'+ Outputvolume + '&'
+      command='xmipp_show -vol '+ Outputvolume + '&'
       print '*********************************************************************'
       print '* ',command
       _mylog.info(command)
@@ -1177,11 +1196,12 @@ def filter_at_given_resolution(_DoComputeResolution,
                                _iteration_number,
                                _SetResolutiontoZero,
                                _ConstantToAddToFiltration,
-                               _filter_frequence
+                               _filter_frequence,
+                               _ReconstructedandfilteredVolume
                                ):
 
     import os,shutil
-    Inputvolume   ="reconstruction.vol"
+    Inputvolume   =_ReconstructedandfilteredVolume
     Outputvolume  ="filtered_reconstruction.vol"
     filter_in_pixels_at = float(_filter_frequence) +\
                           float(_ConstantToAddToFiltration)
@@ -1198,6 +1218,20 @@ def filter_at_given_resolution(_DoComputeResolution,
         print '* ',command
         os.system(command)
     _mylog.info(command)
+
+
+def  fill_name_vector(_user_suplied_name,
+                      _volume_name_list,
+                      _NumberofIterations,
+                      _root_name):
+     _volume_name_list.append("dummy")
+     if (len(_user_suplied_name)>1):
+        _volume_name_list.append(_user_suplied_name)
+     for _iteration_number in range(1, _NumberofIterations):
+         _volume_name_list.append("../"+'Iter_'+\
+                                   str(_iteration_number)+'/'+ 'Iter_'+\
+                                   str(_iteration_number)+'_'+\
+                                   _root_name)
                   
 #
 # main
