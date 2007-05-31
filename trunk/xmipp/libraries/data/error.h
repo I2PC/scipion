@@ -94,6 +94,17 @@
 /** Show message and exit
  * @ingroup ErrorHandling
  *
+ * This is an internal function (not to be used by programmers)
+ * that shows the given message and exits with the error code.
+ * This function is called when no exceptions are allowed.
+ *
+ */
+void _Xmipp_error(const int nerr, const std::string& what,
+    const std::string &file, const long line);
+
+/** Show message and exit
+ * @ingroup ErrorHandling
+ *
  * This macro shows the given message and exits with the error code.
  *
  * @code
@@ -101,12 +112,19 @@
  *     EXIT_ERROR(1, "Error 1");
  * @endcode
  */
-#define EXIT_ERROR(nerr, ErrormMsg) _Xmipp_error(nerr, ErrormMsg)
+#define EXIT_ERROR(nerr, ErrormMsg) _Xmipp_error(nerr, ErrormMsg, __FILE__, __LINE__)
 
-// TODO Document
-void _Xmipp_error(const int nerr, const std::string& what);
-
-#define REPORT_ERROR(nerr, ErrormMsg) throw Xmipp_error(nerr, ErrormMsg)
+/** Show message and throw exception
+ * @ingroup ErrorHandling
+ *
+ * This macro shows the given message and exits with the error code.
+ *
+ * @code
+ * if (...)
+ *     REPORT_ERROR(1, "Error 1");
+ * @endcode
+ */
+#define REPORT_ERROR(nerr, ErrormMsg) throw Xmipp_error(nerr, ErrormMsg, __FILE__, __LINE__)
 
 /** Exception class
  * @ingroup ErrorHandling
@@ -125,7 +143,14 @@ public:
     /** Message shown */
     std::string msg;
 
-    Xmipp_error(const int nerr, const std::string& what);
+    /** File producing the error */
+    std::string file;
+
+    /** Line number */
+    long line;
+
+    Xmipp_error(const int nerr, const std::string& what,
+        const std::string &fileArg, const long lineArg);
     friend std::ostream& operator<<(std::ostream& o, Xmipp_error& XE);
 };
 
