@@ -26,6 +26,15 @@ class spiderheader:
    def check_endianess(self):
       if(self.mode==1 or self.mode==2 or self.mode==3): return 1
       return 0
+   #set header position "position" with value "value" for
+   #file   filename 
+
+def set_header_position(filename,position=260,value=1):
+         import struct 
+         myfile = open(filename,'rb+')
+         myfile.seek(position)
+         myfile.write(struct.pack('f',value))
+         myfile.close()
 
 if __name__ == '__main__':
    myheader=spiderheader('../imagenes/imau08078.raw')
