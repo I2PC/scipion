@@ -72,7 +72,7 @@ MaskFileName='circular_mask.msk'
 """
 DoProjectionMatching=True
 
-# {expert} Show projection maching library and classes
+#  Show projection maching library and classes
 """ Show average of projections. Do not set ths option to true for non iterative processing (jobs sent to queues)
 """
 DisplayProjectionMatching=True
@@ -616,16 +616,17 @@ class projection_matching_class:
                              )
           else:
              self._mylog.info("Skipped Align2D") 
-          command='cat ' + self._multi_align2d_sel \
-                         + ' | grep  \.med\.xmp  ' \
-                         + ' | grep -v \ -1 >' \
-                         + self._align2d_sel
-          self._mylog.info(command)
-          os.system(command)
-          command='xmipp_header_extract -i ' + self._align2d_sel +\
-                                      ' -o ' + self._align2d_doc
-          self._mylog.info(command)
-          os.system(command)
+          if (_DoAlign2D):
+             command='cat ' + self._multi_align2d_sel \
+                            + ' | grep  \.med\.xmp  ' \
+                            + ' | grep -v \ -1 >' \
+                            + self._align2d_sel
+             self._mylog.info(command)
+             os.system(command)
+             command='xmipp_header_extract -i ' + self._align2d_sel +\
+                                         ' -o ' + self._align2d_doc
+             self._mylog.info(command)
+             os.system(command)
 
           self._ReconstructionMethod=arg.getComponentFromVector(_ReconstructionMethod,\
                                                         _iteration_number-1)
@@ -648,7 +649,6 @@ class projection_matching_class:
                                     )
           else:
              self._mylog.info("Skipped Reconstruction") 
-          exit(1)
           
           if (_DoComputeResolution):
               filter_frequence=execute_resolution(self._mylog,
@@ -673,15 +673,14 @@ class projection_matching_class:
                                                ConstantToAddToFiltration,\
                                                         _iteration_number-1)
           filter_at_given_resolution(_DoComputeResolution,
-                                     self._mylog, 
-                                     _iteration_number,
-                                     self._SetResolutiontoZero,
-                                     self._ConstantToAddToFiltration,
-                                     filter_frequence,
-                                     self._ReconstructedandfilteredVolume[_iteration_number]+\
-                            ".vol",
-                                    )
-
+                                  self._mylog, 
+                                  _iteration_number,
+                                  self._SetResolutiontoZero,
+                                  self._ConstantToAddToFiltration,
+                                  filter_frequence,
+                                  self._ReconstructedVolume[_iteration_number],
+                                  self._ReconstructedandfilteredVolume[1+_iteration_number]
+                                 )
 
 
 #------------------------------------------------------------------------
@@ -747,8 +746,11 @@ def execute_mask(_DoMask,
                  _ReferenceVolume):
    import os,shutil
    _mylog.debug("execute_mask")
-
-   InPutVolume=_ReferenceFileName
+   if(_iteration_number==1):
+      InPutVolume=_ReferenceFileName
+   else:   
+      InPutVolume=_ReferenceFileName+".vol"
+   ##InPutVolume=InPutVolume.replace(".vol.vol",".vol")
    if (_DoMask):
        MaskVolume =_MaskFileName
        MaskedVolume=_ReferenceVolume
@@ -879,7 +881,9 @@ def execute_align2d(_mylog,
                     ):
                     
    #if secuential execute orden if not store it in a file
-   import tempfile
+   import tempfile,shutil
+   import spider_header 
+   one = 1. 
    tmp_file_name = _Proj_Maching_Output_Root_Name +".tmp"
    if _DoParallel:
         fh = open(tmp_file_name,'w')
@@ -898,6 +902,8 @@ def execute_align2d(_mylog,
       lib_file_name = lib_file_name.replace('.sel','.proj') 
       class_file_name = class_selfile.replace('.sel','.xmp') 
       #first line in sel must be active
+      
+      set_header_position
       align2d_sel.insert(lib_file_name,str(1))
       align2d_sel.insert(class_file_name,str(-1))
       aligned_file_name = class_selfile.replace('.sel','.med.xmp')
@@ -905,6 +911,14 @@ def execute_align2d(_mylog,
       if (aux_sel_file.length()<1):
          command="xmipp_operate -i " + \
                   class_file_name + " -mult 0 -o " + aligned_file_name +"\n"
+      elif (aux_sel_file.length()==1):
+         _mylog.info("cp "+aux_sel_file.sellines[0][0]+" "+aligned_file_name) 
+         shutil.copy(aux_sel_file.sellines[0][0],aligned_file_name)
+         # this images must  weight one
+         spider_header.set_header_position(aligned_file_name,
+                                           260,
+                                           one
+                                           )
       else:
          print '*********************************************************************'
          print '* Aligning translationally each class'
@@ -1197,12 +1211,13 @@ def filter_at_given_resolution(_DoComputeResolution,
                                _SetResolutiontoZero,
                                _ConstantToAddToFiltration,
                                _filter_frequence,
+                               _ReconstructedVolume,
                                _ReconstructedandfilteredVolume
                                ):
 
     import os,shutil
-    Inputvolume   =_ReconstructedandfilteredVolume
-    Outputvolume  ="filtered_reconstruction.vol"
+    Inputvolume   =_ReconstructedVolume+'.vol'
+    Outputvolume  =_ReconstructedandfilteredVolume+'.vol'
     filter_in_pixels_at = float(_filter_frequence) +\
                           float(_ConstantToAddToFiltration)
                           
