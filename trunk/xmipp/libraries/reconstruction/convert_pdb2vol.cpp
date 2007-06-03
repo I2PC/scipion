@@ -94,7 +94,7 @@ void Prog_PDBPhantom_Parameters::atom_description(const string &_element,
         idx = 5;
         break;
     default:
-        cout << "Unknown :" << _element << endl;
+        std::cout << "Unknown :" << _element << std::endl;
         return;
     }
     radius = periodic_table(idx, 0);
@@ -115,26 +115,26 @@ void Prog_PDBPhantom_Parameters::read(int argc, char **argv)
 /* Usage ------------------------------------------------------------------- */
 void Prog_PDBPhantom_Parameters::usage()
 {
-    cerr << "PDBphantom\n"
-    << "   -i <pdb file>                    : File to process\n"
-    << "  [-o <fn_root>]                    : Root name for output\n"
-    << "  [-sampling_rate <Ts=1>]           : Sampling rate (Angstroms/pixel)\n"
-    << "  [-high_sampling_rate <highTs=0.1>]: Sampling rate before downsampling\n"
-    << "  [-size <output_dim>]              : Final size in pixels (must be a power of 2)\n"
-    << "\n"
-    << "Example of use: Sample at 1.6A and limit the frequency to 10A\n"
-    << "   xmipp_pdbphantom -i 1o7d.pdb -sampling_rate 1.6\n"
-    << "   xmipp_fourierfilter -i 1o7d.vol -o 1o7d_filtered.vol -low_pass 10 -sampling 1.6 -fourier_mask raised_cosine 0.1\n"
+    std::cerr << "convert_pdb2vol\n"
+	      << "   -i <pdb file>		      : File to process\n"
+	      << "  [-o <fn_root>]		      : Root name for output\n"
+	      << "  [-sampling_rate <Ts=1>]	      : Sampling rate (Angstroms/pixel)\n"
+	      << "  [-high_sampling_rate <highTs=0.1>]: Sampling rate before downsampling\n"
+	      << "  [-size <output_dim>]	      : Final size in pixels (must be a power of 2)\n"
+	      << "\n"
+	      << "Example of use: Sample at 1.6A and limit the frequency to 10A\n"
+	      << "   xmipp_convert_pdb2vol -i 1o7d.pdb -sampling_rate 1.6\n"
+	      << "   xmipp_fourier_filter -i 1o7d.vol -o 1o7d_filtered.vol -low_pass 10 -sampling 1.6 -fourier_mask raised_cosine 0.1\n"
     ;
 }
 
 /* Show -------------------------------------------------------------------- */
 void Prog_PDBPhantom_Parameters::show()
 {
-    cout << "PDB file:           " << fn_pdb << endl
-    << "Sampling rate:      " << Ts     << endl
-    << "High sampling rate: " << highTs << endl
-    << "Size:               " << output_dim << endl
+    std::cout << "PDB file:           " << fn_pdb     << std::endl
+              << "Sampling rate:      " << Ts         << std::endl
+              << "High sampling rate: " << highTs     << std::endl
+              << "Size:               " << output_dim << std::endl
     ;
 }
 
@@ -149,7 +149,7 @@ void Prog_PDBPhantom_Parameters::compute_protein_geometry()
     double total_mass = 0;
 
     // Open the file
-    ifstream fh_pdb;
+    std::ifstream fh_pdb;
     fh_pdb.open(fn_pdb.c_str());
     if (!fh_pdb)
         REPORT_ERROR(1, (string)"Prog_PDBPhantom_Parameters::protein_geometry:"
@@ -207,7 +207,7 @@ void Prog_PDBPhantom_Parameters::compute_protein_geometry()
         int max_dim = MAX(CEIL(ZZ(limit) * 2 / Ts) + 5, CEIL(YY(limit) * 2 / Ts) + 5);
         max_dim = MAX(max_dim, CEIL(XX(limit) * 2 / Ts) + 5);
         output_dim = (int)NEXT_POWER_OF_2(max_dim);
-        cout << "Setting output_dim to " << output_dim << endl;
+        std::cout << "Setting output_dim to " << output_dim << std::endl;
     }
 
     // Close file
@@ -219,13 +219,14 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
 {
     // Create an empty volume to hold the protein
     Vhigh().initZeros((int)NEXT_POWER_OF_2(output_dim / highTs),
-                       (int)NEXT_POWER_OF_2(output_dim / highTs),
-                       (int)NEXT_POWER_OF_2(output_dim / highTs));
+                      (int)NEXT_POWER_OF_2(output_dim / highTs),
+                      (int)NEXT_POWER_OF_2(output_dim / highTs));
     Vhigh().setXmippOrigin();
-    cout << "The highly sampled volume is of size " << XSIZE(Vhigh()) << endl;
+    std::cout << "The highly sampled volume is of size " << XSIZE(Vhigh())
+              << std::endl;
 
     // Fill the volume with the different atoms
-    ifstream fh_pdb;
+    std::ifstream fh_pdb;
     fh_pdb.open(fn_pdb.c_str());
     if (!fh_pdb)
         REPORT_ERROR(1, (string)"Prog_PDBPhantom_Parameters::protein_geometry:"
@@ -308,7 +309,7 @@ void Prog_PDBPhantom_Parameters::create_protein_at_low_sampling_rate()
     STARTINGX(FFTVlow) = STARTINGY(FFTVlow) = STARTINGZ(FFTVlow) = 0;
     Matrix1D<double> dig_freq(3);
     double freq_c = current_Ts / (2 * Ts);
-    cout << "Filtering at " << freq_c << endl;
+    std::cout << "Filtering at " << freq_c << std::endl;
     FOR_ALL_ELEMENTS_IN_MATRIX3D(FFTVlow)
     {
         FFT_IDX2DIGFREQ(i, XSIZE(FFTVlow), XX(dig_freq));
@@ -338,7 +339,7 @@ void Prog_PDBPhantom_Parameters::create_protein_at_low_sampling_rate()
 /* Blob properties --------------------------------------------------------- */
 void Prog_PDBPhantom_Parameters::blob_properties() const
 {
-    ofstream fh_out;
+    std::ofstream fh_out;
     fh_out.open((fn_out + "_Fourier_profile.txt").c_str());
     if (!fh_out)
         REPORT_ERROR(1, (string)"Prog_PDBPhantom_Parameters::blob_properties:"
@@ -357,8 +358,8 @@ void Prog_PDBPhantom_Parameters::blob_properties() const
 void Prog_PDBPhantom_Parameters::run()
 {
     compute_protein_geometry();
-    cout << "Center of mass: " << centerOfMass.transpose() << endl
-    << "Limits: " << limit.transpose() << endl;
+    std::cout << "Center of mass: " << centerOfMass.transpose() << std::endl
+              << "Limits: " << limit.transpose() << std::endl;
     create_protein_at_high_sampling_rate();
     create_protein_at_low_sampling_rate();
     blob_properties();
