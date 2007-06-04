@@ -135,6 +135,9 @@ Symfile='c6.sym'
 # {expert} Additional options for Projection_Matching
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Projection_matching and
         http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_projection_matching for details
+    try -Ri xx -Ro yy for restricting angular search (xx and yy are
+    the particle inner and outter radius)
+    
 """
 ProjMatchingExtra=''
 
@@ -171,17 +174,43 @@ OuterRadius=18
 """
 Align2DIterNr=4
 
+# {expert} Maximum change in origin offset (+/- pixels)
+"""Maximum change in shift  (+/- pixels)
+    You must specify this option for each iteration. 
+    This can be done by a sequence of numbers (for instance, "1000 1000 10 10 " 
+    specifies 4 iterations, the first two set the value to 1000 (no restriction)
+    and the last two to 10degrees. An alternative compact notation 
+    is ("2x1000 2x10", i.e.,
+    2 iterations with value 1000, and 2 with value 10).
+    Note: if there are less values than iterations the last value is reused
+    Note: if there are more values than iterations the extra value are ignored
+"""
+Align2dMaxChangeOffset='2x15 2x10'
+
+# {expert} Maximum change in rotation (+/- degrees)
+"""Maximum change in shift  (+/- pixels)
+    You must specify this option for each iteration. 
+    This can be done by a sequence of numbers (for instance, "1000 1000 10 10 " 
+    specifies 4 iterations, the first two set the value to 1000 (no restriction)
+    and the last two to 10degrees. An alternative compact notation 
+    is ("2x1000 2x10", i.e.,
+    2 iterations with value 1000, and 2 with value 10).
+    Note: if there are less values than iterations the last value is reused
+    Note: if there are more values than iterations the extra value are ignored
+"""
+Align2dMaxChangeRot='2x1000 2x10'
+
 # {expert} Additional align2d parameters
 """ For a complete description, see http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Align2d
 
   Examples:
-  Align2DExtraCommand=\"-trans_only  -filter 10 -sampling 2 -max_shift 2 -max_rot 3\"
+  Align2DExtraCommand=\"-trans_only  -filter 10 -sampling 2\"
   Align2DExtraCommand=\"-max_shift 2 -max_rot 3\"
 
   consider filtering the images with \"-filter 10 -sampling 2\"
   See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Align2d for details
 """
-Align2DExtraCommand='-max_shift 15'
+Align2DExtraCommand='-filter 10 -sampling 2'
 
 #-----------------------------------------------------------------------------
 # {section} 3D Reconstruction
@@ -377,6 +406,8 @@ class projection_matching_class:
                 _Align2DIterNr,
                 _DisplayAlign2D,
                 _Align2DExtraCommand,
+                _Align2dMaxChangeOffset,
+                _Align2dMaxChangeRot,
                 _DisplayReconstruction,
                 _DisplayResolution,
                 _DoReconstruction,
@@ -435,6 +466,8 @@ class projection_matching_class:
        self._Align2DIterNr=_Align2DIterNr
        self._DisplayAlign2D=_DisplayAlign2D
        self._Align2DExtraCommand=_Align2DExtraCommand
+       #self._Align2dMaxChangeOffset=_Align2dMaxChangeOffset
+       #self._Align2dMaxChangeRot=_Align2dMaxChangeRot
        self._DisplayReconstruction=_DisplayReconstruction
        self._DisplayResolution=_DisplayResolution
        self._DoReconstruction=_DoReconstruction
@@ -601,11 +634,17 @@ class projection_matching_class:
           else:
              self._mylog.info("Skipped ProjectionMatching") 
           if (_DoAlign2D):
+             self._Align2dMaxChangeOffset=arg.getComponentFromVector(_Align2dMaxChangeOffset,\
+                                                           _iteration_number-1)
+             self._Align2dMaxChangeRot=arg.getComponentFromVector(_Align2dMaxChangeRot,\
+                                                           _iteration_number-1)
              execute_align2d(self._mylog,
                              self._InnerRadius,
                              self._OuterRadius,
                              self._Align2DIterNr,
                              self._Align2DExtraCommand,
+                             self._Align2dMaxChangeOffset,
+                             self._Align2dMaxChangeRot,
                              self._Proj_Maching_Output_Root_Name,
                              _iteration_number,
                              self._DoParallel,
@@ -719,6 +758,7 @@ def copy_images_to_local_disk(_mylog,_SelFileName,_WorkDirectory,images_dir):
       mysel.read(_SelFileName)
       newsel=mysel.copy_sel(_WorkDirectory+'/'+images_dir)
       newsel.write(_WorkDirectory+'/'+_SelFileName)
+      newsel.make_abspath()
       _mylog.info("copy files to local directory")
 
 #------------------------------------------------------------------------
@@ -843,15 +883,18 @@ def execute_projection_matching(_mylog,
                        _MyNumberOfCPUs,
                        _MyMachineFile,
                        RunInBackground)
+   #make absolute path so visualization protocol can be run from
+   #the same directory
    
+   classes_sel_file=selfile.selfile()
+   classes_sel_file.read(_Proj_Maching_Output_Root_Name+'_classes.sel')
+   library_sel_file=selfile.selfile()
+   library_sel_file.read(_Proj_Maching_Output_Root_Name+'_lib.sel')
+   newsel=library_sel_file.intercalate_union(classes_sel_file)
+   compare_sel_file=_Proj_Maching_Output_Root_Name+'_compare.sel'
+   newsel=newsel.make_abspath()
+   newsel.write(compare_sel_file)
    if _DisplayProjectionMatching==True:
-      classes_sel_file=selfile.selfile()
-      classes_sel_file.read(_Proj_Maching_Output_Root_Name+'_classes.sel')
-      library_sel_file=selfile.selfile()
-      library_sel_file.read(_Proj_Maching_Output_Root_Name+'_lib.sel')
-      newsel=library_sel_file.intercalate_union(classes_sel_file)
-      compare_sel_file=_Proj_Maching_Output_Root_Name+'_compare.sel'
-      newsel.write(compare_sel_file)
       command='xmipp_show -sel '+ "../"+'Iter_'+\
                    str(_iteration_number) +'/'+ compare_sel_file +' -w 10 &'
       #NOTE, selection will be made in next showsel
@@ -871,6 +914,8 @@ def execute_align2d(_mylog,
                     _OuterRadius,
                     _Align2DIterNr,
                     _Align2DExtraCommand,
+                    _Align2dMaxChangeOffset,
+                    _Align2dMaxChangeRot,
                     _Proj_Maching_Output_Root_Name,
                     _iteration_number,
                     _DoParallel,
@@ -903,7 +948,6 @@ def execute_align2d(_mylog,
       class_file_name = class_selfile.replace('.sel','.xmp') 
       #first line in sel must be active
       
-      set_header_position
       align2d_sel.insert(lib_file_name,str(1))
       align2d_sel.insert(class_file_name,str(-1))
       aligned_file_name = class_selfile.replace('.sel','.med.xmp')
@@ -911,6 +955,7 @@ def execute_align2d(_mylog,
       if (aux_sel_file.length()<1):
          command="xmipp_operate -i " + \
                   class_file_name + " -mult 0 -o " + aligned_file_name +"\n"
+         print '* ',command
       elif (aux_sel_file.length()==1):
          _mylog.info("cp "+aux_sel_file.sellines[0][0]+" "+aligned_file_name) 
          shutil.copy(aux_sel_file.sellines[0][0],aligned_file_name)
@@ -919,6 +964,7 @@ def execute_align2d(_mylog,
                                            260,
                                            one
                                            )
+         command=""                                  
       else:
          print '*********************************************************************'
          print '* Aligning translationally each class'
@@ -927,16 +973,22 @@ def execute_align2d(_mylog,
                  ' -Ri ' +   str(_InnerRadius) + \
                  ' -Ro ' +   str(_OuterRadius) +\
                  ' -iter ' + str(_Align2DIterNr) +\
-                 ' -ref ' + reference +\
-                 ' '  + _Align2DExtraCommand
-      print '* ',command
-      if _DoParallel:
-         fh.writelines(command+"\n")
-         _mylog.debug(command)
-      else:  
-         os.system(command)
-         _mylog.info(command)
-            
+                 ' -ref ' + reference
+         if  len(_Align2dMaxChangeOffset)>1 :     
+           command +=' -max_shift '  + _Align2dMaxChangeOffset
+         if  len(_Align2dMaxChangeRot)>1 :     
+           command +=' -max_rot '  + _Align2dMaxChangeRot
+         if  len(_Align2DExtraCommand)>1 :     
+           command += ' '  + _Align2DExtraCommand
+         print '* ',command
+      if (len(command)>2):
+         if _DoParallel:
+            fh.writelines(command+"\n")
+            _mylog.debug(command)
+         else:  
+            os.system(command)
+            _mylog.info(command)
+   align2d_sel=align2d_sel.make_abspath()         
    align2d_sel.write(_multi_align2d_sel);
    if _DoParallel:
        fh.close();
@@ -1278,7 +1330,9 @@ if __name__ == '__main__':
                 OuterRadius,                    
                 Align2DIterNr,                  
                 DisplayAlign2D,                 
-                Align2DExtraCommand,            
+                Align2DExtraCommand,
+                Align2dMaxChangeOffset,
+                Align2dMaxChangeRot,            
                 DisplayReconstruction,
                 DisplayResolution,          
                 DoReconstruction,
