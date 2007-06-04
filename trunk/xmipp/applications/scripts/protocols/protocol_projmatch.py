@@ -17,8 +17,8 @@
 SelFileName='all_images.sel'
 
 # {file} Initial 3D reference map:
-#ReferenceFileName='reference.vol'
-ReferenceFileName='init_reference/LTA_rot_0.1_norm.vol'
+ReferenceFileName='reference.vol'
+#ReferenceFileName='init_reference/LTA_rot_0.1_norm.vol'
 
 # Working subdirectory: 
 WorkDirectory='ProjMatch/Test1'
@@ -39,8 +39,8 @@ ContinueAtIteration=1
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-#ProjectDir='/home2/bioinfo/rafa/Protocol/BC/PARA_Roberto'
-ProjectDir='/home/roberto2/Test/PARA_Roberto'
+ProjectDir='/home2/bioinfo/rafa/Protocol/BC/PARA_Roberto'
+#ProjectDir='/home/roberto2/Test/PARA_Roberto'
 
 # {expert} Directory name for logfiles:
 LogDir='Logs'
@@ -61,8 +61,8 @@ DoMask=True
 DisplayMask=True
 
 # {file} Binary mask-file used to mask the reference volume
-#MaskFileName='mask.vol'
-MaskFileName='circular_mask.msk'
+MaskFileName='mask.vol'
+#MaskFileName='circular_mask.msk'
 #-----------------------------------------------------------------------------
 # {section} Projection Matching
 #-----------------------------------------------------------------------------
