@@ -14,11 +14,11 @@
 # {section} Global parameters
 #-----------------------------------------------------------------------------
 # {file} Selfile with the input images:
-SelFileName='all_images.sel'
+SelFileName='all.sel'
 
 # {file} Initial 3D reference map:
-ReferenceFileName='reference.vol'
-#ReferenceFileName='init_reference/LTA_rot_0.1_norm.vol'
+#ReferenceFileName='reference.vol'
+ReferenceFileName='init_reference/LTA_rot_0.1_norm.vol'
 
 # Working subdirectory: 
 WorkDirectory='ProjMatch/Test1'
@@ -39,8 +39,8 @@ ContinueAtIteration=1
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/home2/bioinfo/rafa/Protocol/BC/PARA_Roberto'
-#ProjectDir='/home/roberto2/Test/PARA_Roberto'
+#ProjectDir='/home2/bioinfo/rafa/Protocol/BC/PARA_Roberto'
+ProjectDir='/home/roberto2/Test/PARA_Roberto'
 
 # {expert} Directory name for logfiles:
 LogDir='Logs'
@@ -61,8 +61,8 @@ DoMask=True
 DisplayMask=True
 
 # {file} Binary mask-file used to mask the reference volume
-MaskFileName='mask.vol'
-#MaskFileName='circular_mask.msk'
+#MaskFileName='mask.vol'
+MaskFileName='circular_mask.msk'
 #-----------------------------------------------------------------------------
 # {section} Projection Matching
 #-----------------------------------------------------------------------------
@@ -169,6 +169,11 @@ InnerRadius=0
 OuterRadius=18
 #set default OuterRadius=dim/2
 
+#Use Class as reference
+""" Use Class image as reference (True) versus use average of assigned
+    images to that class (False)
+"""
+AlignWithClassReference=False
 # {expert} Number of align2d iterations:
 """ Use at least 3
 """
@@ -428,6 +433,7 @@ class projection_matching_class:
                 _ReferenceVolume,
                 _Proj_Maching_Output_Root_Name,
                 _multi_align2d_sel,
+                _AlignWithClassReference,
                 _align2d_sel,
                 _align2d_doc,
                 _ResetImageHeader,
@@ -489,6 +495,7 @@ class projection_matching_class:
        self._user_suplied_ReferenceVolume=self._ReferenceFileName
        self._Proj_Maching_Output_Root_Name=_Proj_Maching_Output_Root_Name
        self._multi_align2d_sel=_multi_align2d_sel
+       self._AlignWithClassReference=_AlignWithClassReference
        self._align2d_sel=_align2d_sel
        self._align2d_doc=_align2d_doc
        #name of the masked volume
@@ -651,7 +658,8 @@ class projection_matching_class:
                              self._MyNumberOfCPUs,
                              self._MyMachineFile,
                              self._DisplayAlign2D,
-                             self._multi_align2d_sel
+                             self._multi_align2d_sel,
+                             self._AlignWithClassReference
                              )
           else:
              self._mylog.info("Skipped Align2D") 
@@ -666,7 +674,8 @@ class projection_matching_class:
                                          ' -o ' + self._align2d_doc
              self._mylog.info(command)
              os.system(command)
-
+          #else:
+          
           self._ReconstructionMethod=arg.getComponentFromVector(_ReconstructionMethod,\
                                                         _iteration_number-1)
           self._ARTLambda=arg.getComponentFromVector(_ARTLambda,\
@@ -922,7 +931,8 @@ def execute_align2d(_mylog,
                     _MyNumberOfCPUs,
                     _MyMachineFile,
                     _DisplayAlign2D,
-                    _multi_align2d_sel
+                    _multi_align2d_sel,
+                    _AlignWithClassReference
                     ):
                     
    #if secuential execute orden if not store it in a file
@@ -941,11 +951,14 @@ def execute_align2d(_mylog,
    align2d_sel=selfile.selfile()
    #create compare sel 
    for class_selfile in glob.glob(class_sel_pattern):
-      reference=class_selfile.replace('.sel','.xmp')
-      aux_sel_file.read(class_selfile)
       lib_file_name = class_selfile.replace('class','lib')
       lib_file_name = lib_file_name.replace('.sel','.proj') 
       class_file_name = class_selfile.replace('.sel','.xmp') 
+      if(_AlignWithClassReference):
+         reference=lib_file_name
+      else:  
+         reference=class_file_name
+      aux_sel_file.read(class_selfile)
       #first line in sel must be active
       
       align2d_sel.insert(lib_file_name,str(1))
@@ -1352,7 +1365,8 @@ if __name__ == '__main__':
                 Symfile,                        
                 ReferenceVolume,                
                 Proj_Maching_Output_Root_Name,  
-                multi_align2d_sel,              
+                multi_align2d_sel, 
+                AlignWithClassReference,             
                 align2d_sel,                    
                 align2d_doc,                    
                 ResetImageHeader,
