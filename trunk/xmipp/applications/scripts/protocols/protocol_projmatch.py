@@ -158,9 +158,10 @@ ProjMatchingExtra=''
     2 iterations with value 1, and 2 with value 0).
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
-    
+    IMPORTANT: if you set this variable to 0 the output  of the projection
+    muching step will be copied as output of align2d
 """
-DoAlign2D='0 1 0 0'
+DoAlign2D='1 1 0 0'
 
 # Display 2D alignment results
 """ Show aligned classes. Do not set ths option to true for non iterative processing (jobs sent to queues)
