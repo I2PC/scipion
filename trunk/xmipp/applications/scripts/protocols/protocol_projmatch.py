@@ -183,7 +183,7 @@ OuterRadius=18
 """ Use Class image as reference (True) versus use average of assigned
     images to that class (False)
 """
-AlignWithClassReference=False
+AlignWithClassReference=True
 # {expert} Number of align2d iterations:
 """ Use at least 3
 """
@@ -1059,6 +1059,7 @@ def execute_align2d(_mylog,
                                             )
           
           lib_file_name = class_selfile.replace('class','lib')
+          lib_file_name = lib_file_name.replace('.sel','.proj') 
           align2d_sel.insert(lib_file_name,str(1))
           align2d_sel.insert(inputfile,str(-1))
           align2d_sel.insert(outputfile,str(1))
