@@ -29,7 +29,7 @@ class spiderheader:
    #set header position "position" with value "value" for
    #file   filename 
 
-def set_header_position(filename,position=260,value=1):
+def set_header_position(filename,position=260,value=1.):
          import struct 
          myfile = open(filename,'rb+')
          myfile.seek(position)
