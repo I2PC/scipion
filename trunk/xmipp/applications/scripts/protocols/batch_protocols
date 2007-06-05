@@ -1,4 +1,4 @@
-#!/bin/csh
+#!/usr/bin/env csh
 if (!(-e protocol_setup.py)) then
   echo " + Xmipp_protocols was never executed before in this directory."
   echo " + Make sure you run xmipp_protocols only in your project directory."
