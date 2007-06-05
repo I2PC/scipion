@@ -14,7 +14,7 @@
 # {section} Global parameters
 #-----------------------------------------------------------------------------
 # {file} Selfile with the input images:
-SelFileName='all.sel'
+SelFileName='all_images.sel'
 
 # {file} Initial 3D reference map:
 #ReferenceFileName='reference.vol'
@@ -58,7 +58,7 @@ DoMask=True
 # Show masked volume
 """ Masked volume will be shown. Do not set ths option to true for non iterative processing (jobs sent to queues)
 """
-DisplayMask=True
+DisplayMask=False
 
 # {file} Binary mask-file used to mask the reference volume
 #MaskFileName='mask.vol'
@@ -150,8 +150,17 @@ ProjMatchingExtra=''
     re-aligned using a 2D-alignment protocol.
     This may serve to remove model bias.
     See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Align2d for details
+    You may specify this option for each iteration. 
+    This can be done by a sequence of 0 or 1 numbers (for instance, "1 1 0 0" 
+    specifies 4 iterations, the first two applied alig2d while the last 2
+    dont. an alternative compact notation is 
+    is ("2x1 2x0", i.e.,
+    2 iterations with value 1, and 2 with value 0).
+    Note: if there are less values than iterations the last value is reused
+    Note: if there are more values than iterations the extra value are ignored
+    
 """
-DoAlign2D=True
+DoAlign2D='0 1 0 0'
 
 # Display 2D alignment results
 """ Show aligned classes. Do not set ths option to true for non iterative processing (jobs sent to queues)
@@ -348,7 +357,7 @@ ResetImageHeader='1 3x0'
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
 # Use multiple processors in parallel?
-DoParallel=True
+DoParallel=False
 
 # Number of processors to use:
 NumberOfCPUs=2
@@ -466,7 +475,7 @@ class projection_matching_class:
        self._DisplayMask=_DisplayMask
        #absolute path to main project dir
        self._ProjectDir=_ProjectDir
-       self._DoAlign2D=_DoAlign2D
+       #self._DoAlign2D=_DoAlign2D
        self._InnerRadius=_InnerRadius
        self._OuterRadius=_OuterRadius
        self._Align2DIterNr=_Align2DIterNr
@@ -510,8 +519,8 @@ class projection_matching_class:
                                        _WorkDirectory)
                                       
        #uncomment next line to get Degub level logging
-       #self._mylog.setLevel(logging.DEBUG)
-       #self._mylog.debug("Debug level logging enabled")
+       self._mylog.setLevel(logging.DEBUG)
+       self._mylog.debug("Debug level logging enabled")
                                       
        #_ContinueAtIteration-=1;
        _NumberofIterations +=1;
@@ -630,7 +639,6 @@ class projection_matching_class:
                                          self._MaxChangeInAngles,  
                                          self._ProjMatchingExtra,
                                          self._DisplayProjectionMatching,
-                                         self._DoAlign2D,
                                          self._DoParallel,
                                          self._MyNumberOfCPUs,
                                          self._MyMachineFile,
@@ -640,12 +648,14 @@ class projection_matching_class:
                                          )
           else:
              self._mylog.info("Skipped ProjectionMatching") 
-          if (_DoAlign2D):
-             self._Align2dMaxChangeOffset=arg.getComponentFromVector(_Align2dMaxChangeOffset,\
+          #if (_DoAlign2D):
+          self._Align2dMaxChangeOffset=arg.getComponentFromVector(_Align2dMaxChangeOffset,\
+                                                        _iteration_number-1)
+          self._Align2dMaxChangeRot=arg.getComponentFromVector(_Align2dMaxChangeRot,\
+                                                        _iteration_number-1)
+          self._DoAlign2D=arg.getComponentFromVector(_DoAlign2D,\
                                                            _iteration_number-1)
-             self._Align2dMaxChangeRot=arg.getComponentFromVector(_Align2dMaxChangeRot,\
-                                                           _iteration_number-1)
-             execute_align2d(self._mylog,
+          execute_align2d(self._mylog,
                              self._InnerRadius,
                              self._OuterRadius,
                              self._Align2DIterNr,
@@ -659,21 +669,22 @@ class projection_matching_class:
                              self._MyMachineFile,
                              self._DisplayAlign2D,
                              self._multi_align2d_sel,
-                             self._AlignWithClassReference
+                             self._AlignWithClassReference,
+                             self._DoAlign2D
                              )
-          else:
-             self._mylog.info("Skipped Align2D") 
-          if (_DoAlign2D):
-             command='cat ' + self._multi_align2d_sel \
-                            + ' | grep  \.med\.xmp  ' \
-                            + ' | grep -v \ -1 >' \
-                            + self._align2d_sel
-             self._mylog.info(command)
-             os.system(command)
-             command='xmipp_header_extract -i ' + self._align2d_sel +\
-                                         ' -o ' + self._align2d_doc
-             self._mylog.info(command)
-             os.system(command)
+          #else:
+             #self._mylog.info("Skipped Align2D") 
+          #if (_DoAlign2D):
+          command='cat ' + self._multi_align2d_sel \
+                         + ' | grep  \.med\.xmp  ' \
+                         + ' | grep -v \ -1 >' \
+                         + self._align2d_sel
+          self._mylog.info(command)
+          os.system(command)
+          command='xmipp_header_extract -i ' + self._align2d_sel +\
+                                      ' -o ' + self._align2d_doc
+          self._mylog.info(command)
+          os.system(command)
           #else:
           
           self._ReconstructionMethod=arg.getComponentFromVector(_ReconstructionMethod,\
@@ -847,7 +858,6 @@ def execute_projection_matching(_mylog,
                                 _MaxChangeInAngles,   
                                 _ProjMatchingExtra,
                                 _DisplayProjectionMatching,
-                                _DoAlign2D,
                                 _DoParallel,
                                 _MyNumberOfCPUs,
                                 _MyMachineFile,
@@ -932,9 +942,20 @@ def execute_align2d(_mylog,
                     _MyMachineFile,
                     _DisplayAlign2D,
                     _multi_align2d_sel,
-                    _AlignWithClassReference
+                    _AlignWithClassReference,
+                    _DoAlign2D
                     ):
-                    
+   #proj_match_class00001.corr
+   #proj_match_class00001.med.xmp --> average class projection AFTER alig2d
+   #                                  has weight *
+   #proj_match_class00001.sig.xmp    standard deviation
+   #proj_match_class00001.ref.xmp --> teporal file produed by alig2d
+   #                                   with iteration reference
+   #                                   this image is filtered so may lok nicer 
+   #                                   than true average
+   #proj_match_class00001.sel  -- > particles asigned to reference 00001
+   #proj_match_class00001.xmp -- > average class projection BEFORE align *
+   #proj_match_lib00001.proj -- > gallery of projections*
    #if secuential execute orden if not store it in a file
    import tempfile,shutil
    import spider_header 
@@ -944,80 +965,105 @@ def execute_align2d(_mylog,
         fh = open(tmp_file_name,'w')
       
    _mylog.debug("execute_align2d")
+   _mylog.debug("_DoAlign2D " + _DoAlign2D)
    import os,selfile, glob,shutil
    class_sel_pattern = _Proj_Maching_Output_Root_Name+'_class[0-9]*.sel'
    _mylog.debug("class_sel_pattern: " + class_sel_pattern)
    aux_sel_file=selfile.selfile()
    align2d_sel=selfile.selfile()
    #create compare sel 
-   for class_selfile in glob.glob(class_sel_pattern):
-      lib_file_name = class_selfile.replace('class','lib')
-      lib_file_name = lib_file_name.replace('.sel','.proj') 
-      class_file_name = class_selfile.replace('.sel','.xmp') 
-      if(_AlignWithClassReference):
-         reference=lib_file_name
-      else:  
-         reference=class_file_name
-      aux_sel_file.read(class_selfile)
-      #first line in sel must be active
-      
-      align2d_sel.insert(lib_file_name,str(1))
-      align2d_sel.insert(class_file_name,str(-1))
-      aligned_file_name = class_selfile.replace('.sel','.med.xmp')
-      align2d_sel.insert(aligned_file_name,str(1))
-      if (aux_sel_file.length()<1):
-         command="xmipp_operate -i " + \
-                  class_file_name + " -mult 0 -o " + aligned_file_name +"\n"
-         print '* ',command
-      elif (aux_sel_file.length()==1):
-         _mylog.info("cp "+aux_sel_file.sellines[0][0]+" "+aligned_file_name) 
-         shutil.copy(aux_sel_file.sellines[0][0],aligned_file_name)
-         # this images must  weight one
-         spider_header.set_header_position(aligned_file_name,
-                                           260,
-                                           one
-                                           )
-         command=""                                  
-      else:
-         print '*********************************************************************'
-         print '* Aligning translationally each class'
-         command='xmipp_align2d'+ \
-                 ' -i '  + class_selfile + \
-                 ' -Ri ' +   str(_InnerRadius) + \
-                 ' -Ro ' +   str(_OuterRadius) +\
-                 ' -iter ' + str(_Align2DIterNr) +\
-                 ' -ref ' + reference
-         if  len(_Align2dMaxChangeOffset)>1 :     
-           command +=' -max_shift '  + _Align2dMaxChangeOffset
-         if  len(_Align2dMaxChangeRot)>1 :     
-           command +=' -max_rot '  + _Align2dMaxChangeRot
-         if  len(_Align2DExtraCommand)>1 :     
-           command += ' '  + _Align2DExtraCommand
-         print '* ',command
-      if (len(command)>2):
-         if _DoParallel:
-            fh.writelines(command+"\n")
-            _mylog.debug(command)
-         else:  
-            os.system(command)
-            _mylog.info(command)
-   align2d_sel=align2d_sel.make_abspath()         
-   align2d_sel.write(_multi_align2d_sel);
-   if _DoParallel:
-       fh.close();
-       parameters="-i " +  tmp_file_name
-       _mylog.info("xmipp_mpi_run " + parameters)
-       import launch_parallel_job
-       RunInBackground=False
-       launch_parallel_job.launch_parallel_job(
-                           'xmipp_mpi_run',
-                           parameters,
-                           _mylog,
-                           _MyNumberOfCPUs,
-                           _MyMachineFile,
-                           RunInBackground)
-       os.remove(tmp_file_name)
-       
+   if(_DoAlign2D=='1'): 
+       for class_selfile in glob.glob(class_sel_pattern):
+          lib_file_name = class_selfile.replace('class','lib')
+          lib_file_name = lib_file_name.replace('.sel','.proj') 
+          class_file_name = class_selfile.replace('.sel','.xmp')
+          if(_AlignWithClassReference):
+             reference=lib_file_name
+          else:  
+             reference=class_file_name
+          aux_sel_file.read(class_selfile)
+          #first line in sel must be active
+
+          align2d_sel.insert(lib_file_name,str(1))
+          align2d_sel.insert(class_file_name,str(-1))
+          aligned_file_name = class_selfile.replace('.sel','.med.xmp')
+          align2d_sel.insert(aligned_file_name,str(1))
+          if (aux_sel_file.length()<1):
+             command="xmipp_operate -i " + \
+                      class_file_name + " -mult 0 -o " + aligned_file_name +"\n"
+             print '* ',command
+          elif (aux_sel_file.length()==1):
+             _mylog.info("cp "+aux_sel_file.sellines[0][0]+" "+aligned_file_name) 
+             shutil.copy(aux_sel_file.sellines[0][0],aligned_file_name)
+             # this images must  weight one
+             spider_header.set_header_position(aligned_file_name,
+                                               260,
+                                               one
+                                               )
+             command=""                                  
+          else:
+             print '*********************************************************************'
+             print '* Aligning translationally each class'
+             command='xmipp_align2d'+ \
+                     ' -i '  + class_selfile + \
+                     ' -Ri ' +   str(_InnerRadius) + \
+                     ' -Ro ' +   str(_OuterRadius) +\
+                     ' -iter ' + str(_Align2DIterNr) +\
+                     ' -ref ' + reference
+             if  len(_Align2dMaxChangeOffset)>1 :     
+               command +=' -max_shift '  + _Align2dMaxChangeOffset
+             if  len(_Align2dMaxChangeRot)>1 :     
+               command +=' -max_rot '  + _Align2dMaxChangeRot
+             if  len(_Align2DExtraCommand)>1 :     
+               command += ' '  + _Align2DExtraCommand
+             print '* ',command
+          if (len(command)>2):
+             if _DoParallel:
+                fh.writelines(command+"\n")
+                _mylog.debug(command)
+             else:  
+                os.system(command)
+                _mylog.info(command)
+       align2d_sel=align2d_sel.make_abspath()         
+       align2d_sel.write(_multi_align2d_sel);
+       if _DoParallel:
+           fh.close();
+           parameters="-i " +  tmp_file_name
+           _mylog.info("xmipp_mpi_run " + parameters)
+           import launch_parallel_job
+           RunInBackground=False
+           launch_parallel_job.launch_parallel_job(
+                               'xmipp_mpi_run',
+                               parameters,
+                               _mylog,
+                               _MyNumberOfCPUs,
+                               _MyMachineFile,
+                               RunInBackground)
+           #os.remove(tmp_file_name)
+   else:
+       for class_selfile in glob.glob(class_sel_pattern):
+          #projection matching average
+          inputfile  = class_selfile.replace('.sel','.xmp')
+          #alig2n2d output
+          outputfile = class_selfile.replace('.sel','.med.xmp')
+          shutil.copy(inputfile,outputfile)
+          aux_sel_file.read(class_selfile)
+          weight=aux_sel_file.length()
+          print "weight", weight
+          _mylog.info("cp "+inputfile+" "+outputfile+", weight="+str(weight)) 
+          # this images must  weight one
+          spider_header.set_header_position(outputfile,
+                                            260,
+                                            weight
+                                            )
+          
+          lib_file_name = class_selfile.replace('class','lib')
+          align2d_sel.insert(lib_file_name,str(1))
+          align2d_sel.insert(inputfile,str(-1))
+          align2d_sel.insert(outputfile,str(1))
+       align2d_sel=align2d_sel.make_abspath()         
+       align2d_sel.write(_multi_align2d_sel);
+
 #   #if a sel file is empty copy reference class
 #   for class_selfile in glob.glob(class_sel_pattern):
 #      aux_sel_file.read(class_selfile)
