@@ -61,6 +61,9 @@ void Normalize_parameters::read(int argc, char** argv)
     // Normalizing a volume
     volume = checkParameter(argc, argv, "-vol");
 
+    // Invert contrast?
+    invert_contrast = checkParameter(argc, argv, "-invert");
+
     // Remove dust particles?
     remove_black_dust = checkParameter(argc, argv, "-remove_black_dust");
     remove_white_dust = checkParameter(argc, argv, "-remove_white_dust");
@@ -214,6 +217,9 @@ void Normalize_parameters::show()
             }
         }
 
+        if (invert_contrast)
+            std::cout << "Invert contrast "<< std::endl;
+
         if (remove_black_dust)
             std::cout << "Remove black dust particles, using threshold " <<
             floatToString(thresh_black_dust) << std::endl;
@@ -244,6 +250,7 @@ void Normalize_parameters::usage()
     << "   -background circle <r> | : Circular background outside radius=r\n"
     << "   -mask <options>]           Use an alternative type of background mask\n"
     << "                               (see xmipp_mask for options) \n"
+    << "  [-invert]                 : Invert contrast \n"
     << "  [-remove_black_dust]      : Remove black dust particles \n"
     << "  [-remove_white_dust]      : Remove white dust particles \n"
     << "  [-thr_black_dust=-3.5]    : Sigma threshold for black dust particles \n"
@@ -268,6 +275,9 @@ void Normalize_parameters::apply_geo_mask(ImageXmipp& img)
 void Normalize_parameters::apply(Image* img)
 {
     double a, b;
+    if (invert_contrast)
+	(*img)() *= -1.;
+    
     if (remove_black_dust || remove_white_dust)
     {
         double avg, stddev, min, max, zz;
@@ -279,7 +289,7 @@ void Normalize_parameters::apply(Image* img)
             {
                 zz = (dMij((*img)(), i, j) - avg) / stddev;
                 if (zz < thresh_black_dust)
-                    dMij((*img)(), i, j) = avg;
+                    dMij((*img)(), i, j) = rnd_gaus(avg,stddev);
             }
         }
 
@@ -289,7 +299,7 @@ void Normalize_parameters::apply(Image* img)
             {
                 zz = (dMij((*img)(), i, j) - avg) / stddev;
                 if (zz > thresh_white_dust)
-                    dMij((*img)(), i, j) = avg;
+                    dMij((*img)(), i, j) = rnd_gaus(avg,stddev);
             }
         }
     }

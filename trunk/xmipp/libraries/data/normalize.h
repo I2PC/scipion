@@ -89,6 +89,10 @@ public:
      */
     double b0;
 
+    /** Flag for inverting contrast
+     */
+    bool invert_contrast;
+
     /** Flags for remving balck/white spots due to dust.
      */
     bool remove_black_dust;
