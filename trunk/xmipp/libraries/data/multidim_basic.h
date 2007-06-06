@@ -1382,7 +1382,10 @@ friend double dissimilarity(maT& op1, maT& op2, double percentil_out)
  * // will be substituted by its nearest border
  * @endcode
  */
-void threshold(const std::string& type, T a, T b)
+void threshold(const std::string& type, 
+	       T a, 
+	       T b,
+	       int * mask = NULL )
 {
     int mode;
 
@@ -1402,31 +1405,36 @@ void threshold(const std::string& type, T a, T b)
                                                 type + ")"));
 
     for (int i = 0; i < size; i++)
-        switch (mode)
-        {
-        case 1:
-            if (ABS(data[i]) > a)
-                data[i] = SGN(data[i]) * b;
-            break;
-        case 2:
-            if (ABS(data[i]) < a)
-                data[i] = SGN(data[i]) * b;
-            break;
-        case 3:
-            if (data[i] > a)
-                data[i] = b;
-            break;
-        case 4:
-            if (data[i] < a)
-                data[i] = b;
-            break;
-        case 5:
-            if (data[i] < a)
-                data[i] = a;
-            else if (data[i] > b)
-                data[i] = b;
-            break;
-        }
+    {
+	if (mask == NULL || mask[i] > 0 )
+	{
+	    switch (mode)
+	    {
+	    case 1:
+		if (ABS(data[i]) > a)
+		    data[i] = SGN(data[i]) * b;
+		break;
+	    case 2:
+		if (ABS(data[i]) < a)
+		    data[i] = SGN(data[i]) * b;
+		break;
+	    case 3:
+		if (data[i] > a)
+		    data[i] = b;
+		break;
+	    case 4:
+		if (data[i] < a)
+		    data[i] = b;
+		break;
+	    case 5:
+		if (data[i] < a)
+		    data[i] = a;
+		else if (data[i] > b)
+		    data[i] = b;
+		break;
+	    }
+	}
+    }
 }
 
 /** Count with threshold.
@@ -1435,7 +1443,10 @@ void threshold(const std::string& type, T a, T b)
  * This function returns the number of elements meeting the threshold
  * condition.
  */
-long count_threshold(const std::string& type, T a, T b)
+long count_threshold(const std::string& type, 
+		     T a, 
+		     T b,
+		     int * mask = NULL )
 {
     int mode;
 
@@ -1457,30 +1468,32 @@ long count_threshold(const std::string& type, T a, T b)
     long ret = 0;
 
     for (int i = 0; i < size; i++)
-        switch (mode)
-        {
-        case 1:
-            if (ABS(data[i]) > a)
-                ret++;
-            break;
-        case 2:
-            if (ABS(data[i]) < a)
-                ret++;
-            break;
-        case 3:
-            if (data[i] > a)
-                ret++;
-            break;
-        case 4:
-            if (data[i] < a)
-                ret++;
-            break;
-        case 5:
-            if (data[i] >= a && data[i] <= b)
-                ret++;
-            break;
-        }
-
+	if (mask == NULL || mask[i] > 0 )
+	{
+	    switch (mode)
+	    {
+	    case 1:
+		if (ABS(data[i]) > a)
+		    ret++;
+		break;
+	    case 2:
+		if (ABS(data[i]) < a)
+		    ret++;
+		break;
+	    case 3:
+		if (data[i] > a)
+		    ret++;
+		break;
+	    case 4:
+		if (data[i] < a)
+		    ret++;
+		break;
+	    case 5:
+		if (data[i] >= a && data[i] <= b)
+		    ret++;
+		break;
+	    }
+	}
     return ret;
 }
 
@@ -1493,11 +1506,34 @@ long count_threshold(const std::string& type, T a, T b)
  */
 void substitute(T oldv,
                 T newv,
-                double accuracy = XMIPP_EQUAL_ACCURACY)
+                double accuracy = XMIPP_EQUAL_ACCURACY,
+		int * mask = NULL )
 {
     for (int i = 0; i < size; i++)
-        if (ABS(data[i] - oldv) <= accuracy)
-            data[i] = newv;
+	if (mask == NULL || mask[i] > 0 )
+	    if (ABS(data[i] - oldv) <= accuracy)
+		data[i] = newv;
+
+}
+
+/** Substitute a given value by a sample from a Gaussian distribution.
+ * @ingroup Utilities
+ *
+ * Substitute  a given value by a sample from a Gaussian distribution.
+ * The accuracy is used to say if the value in the array is equal 
+ * to the old value.  Set it to 0 for perfect accuracy.
+ */
+void random_substitute(T oldv,
+		       T avgv,
+		       T sigv,
+		       double accuracy = XMIPP_EQUAL_ACCURACY,
+		       int * mask = NULL )
+{
+    for (int i = 0; i < size; i++)
+	if (mask == NULL || mask[i] > 0 )
+	    if (ABS(data[i] - oldv) <= accuracy)
+		data[i] = rnd_gaus(avgv, sigv);
+
 }
 
 /** Binarize.
@@ -1507,13 +1543,17 @@ void substitute(T oldv,
  * than val+accuracy by 1 and the rest are set to 0. Use threshold to get a
  * very powerful binarization.
  */
-void binarize(double val = 0, double accuracy = XMIPP_EQUAL_ACCURACY)
+void binarize(double val = 0, 
+	      double accuracy = XMIPP_EQUAL_ACCURACY,
+	      int * mask = NULL )
 {
     for (int i = 0; i < size; i++)
-        if (data[i] <= val + accuracy)
-            data[i] = 0;
-        else
-            data[i] = 1;
+	if (mask == NULL || mask[i] > 0 )
+	    if (data[i] <= val + accuracy)
+		data[i] = 0;
+	    else
+		data[i] = 1;
+
 }
 
 /** ROUND n-dimensional.
