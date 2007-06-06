@@ -25,6 +25,7 @@
 
 #include <data/volume.h>
 #include <data/image.h>
+#include <data/mask.h>
 #include <data/args.h>
 
 void Usage();
@@ -41,14 +42,18 @@ int main(int argc, char **argv)
     bool            image_mode;
     FileName        fn_in, fn_out, fn_dist, fn_label;
     double          th_below, th_above, th;
-    double          dmin,     dmax;
+    double          dmin, dmax;
     int             enable_th_below, enable_th_above;
-    int             enable_dmin,     enable_dmax;
+    int             enable_dmin, enable_dmax;
     int             binarize;
     bool            enable_substitute;
-    double          new_val,     old_val;
+    bool            enable_random_substitute;
+    double          new_val, old_val, avg_val, sig_val;
     string          str_new_val, str_old_val;
     double          accuracy;
+    Mask_Params     mask_prm(INT_MASK);
+    Matrix2D<int>   * mask2D;
+    Matrix3D<int>   * mask3D;
 
     // Read arguments --------------------------------------------------------
     try
@@ -83,11 +88,25 @@ int main(int argc, char **argv)
             accuracy = AtoF(getParameter(argc, argv, "-accuracy", "0"));
         }
         else enable_substitute = false;
+        if ((i = paremeterPosition(argc, argv, "-random_substitute")) != -1)
+        {
+            enable_random_substitute = true;
+            if (i + 3 >= argc)
+                EXIT_ERROR(1, "Threshold: Not enough parameters behind -substitute\n");
+            old_val = AtoF(argv[i+1]);
+            avg_val = AtoF(argv[i+2]);
+            sig_val = AtoF(argv[i+3]);
+            accuracy = AtoF(getParameter(argc, argv, "-accuracy", "0"));
+        }
+        else enable_random_substitute = false;
+	// Read mask stuff
+        mask_prm.read(argc, argv);
     }
     catch (Xmipp_error Xe)
     {
         cout << Xe;
         Usage();
+        mask_prm.usage();
         exit(1);
     }
 
@@ -97,13 +116,29 @@ int main(int argc, char **argv)
         {
             image_mode = true;
             I.read(fn_in);
+	    mask_prm.generate_2Dmask(I());
+	    mask2D = & (mask_prm.get_binary_mask2D());
         }
         else if (Is_VolumeXmipp(fn_in))
         {
             image_mode = false;
             V.read(fn_in);
+	    mask_prm.generate_3Dmask(V());
+	    mask3D = & (mask_prm.get_binary_mask3D());
         }
         else EXIT_ERROR(1, "Threshold: Input file is not an image nor a volume");
+
+       // Apply density restrictions -------------------------------------------
+        if (image_mode)
+        {
+            if (enable_th_below) I().threshold("below", th_below, th_below, mask2D->data);
+            if (enable_th_above) I().threshold("above", th_above, th_above, mask2D->data);
+        }
+        else
+        {
+            if (enable_th_below) V().threshold("below", th_below, th_below, mask3D->data);
+            if (enable_th_above) V().threshold("above", th_above, th_above, mask3D->data);
+        }
 
         // Apply substitution ---------------------------------------------------
         if (enable_substitute)
@@ -111,28 +146,23 @@ int main(int argc, char **argv)
             {
                 SET_SUBS_VAL(I(), new_val, str_new_val);
                 SET_SUBS_VAL(I(), old_val, str_old_val);
-                I().substitute(old_val, new_val, accuracy);
+                I().substitute(old_val, new_val, accuracy, mask2D->data);
             }
             else
             {
                 SET_SUBS_VAL(V(), new_val, str_new_val);
                 SET_SUBS_VAL(V(), old_val, str_old_val);
-                V().substitute(old_val, new_val, accuracy);
+                V().substitute(old_val, new_val, accuracy, mask3D->data);
             }
 
-        // Apply density restrictions -------------------------------------------
-        if (image_mode)
-        {
-            if (enable_th_below) I().threshold("below", th_below, th_below);
-            if (enable_th_above) I().threshold("above", th_above, th_above);
-        }
-        else
-        {
-            if (enable_th_below) V().threshold("below", th_below, th_below);
-            if (enable_th_above) V().threshold("above", th_above, th_above);
-        }
+        // Apply random substitution --------------------------------------------
+        if (enable_random_substitute)
+            if (image_mode)
+                I().random_substitute(old_val, avg_val, sig_val, accuracy, mask2D->data);
+            else
+                V().random_substitute(old_val, avg_val, sig_val, accuracy, mask3D->data);
 
-        // Apply distance restrictions ------------------------------------------
+         // Apply distance restrictions ------------------------------------------
         if (!image_mode && fn_dist != "")
         {
             Vdist.read(fn_dist);
@@ -178,6 +208,8 @@ void Usage()
     << "  [-binarize]]                    : binarize output\n"
     << "  [-substitute <old_val> <new_val>: where a value can be\n"
     << "                                    (<val>|min|max)\n"
+    << "  [-random_substitute <old_val> <avg_val> <std_val>: where avg_val and sig_val \n"
+    << "                                    are the mean and stddev of a Gaussian distribution \n"
     << "    [-accuracy <accuracy=0>]]     : when substituting this value\n"
     << "                                    determines if two values are the same\n";
 }
