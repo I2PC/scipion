@@ -1289,7 +1289,11 @@ void apply_geo_binary_2D_mask(Matrix2D<int> &mask,
     double outside = DIRECT_MAT_ELEM(tmp, 0, 0);
     // Instead of IS_INV for images use IS_NOT_INV for masks!
     tmp.selfApplyGeometry(A, IS_NOT_INV, DONT_WRAP, outside);
-    type_cast(tmp, mask);
+    // The type cast gives strange results here, using round instead
+    //type_cast(tmp, mask);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(mask) {
+      dMij(mask,i,j)=ROUND(dMij(tmp,i,j));
+    }
 }
 
 // Apply geometric transformation to a continuous mask =====================
@@ -1299,7 +1303,7 @@ void apply_geo_cont_2D_mask(Matrix2D<double> &mask,
     double outside = DIRECT_MAT_ELEM(mask, 0, 0);
     // Instead of IS_INV for images use IS_NOT_INV for masks!
     mask.selfApplyGeometry(A, IS_NOT_INV, DONT_WRAP, outside);
-}
+ }
 
 // Count with mask =========================================================
 int count_with_mask(const Matrix2D<int> &mask,
