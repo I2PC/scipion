@@ -1168,7 +1168,7 @@ void Mask_Params::generate_1Dmask()
 }
 
 // Generate 2D mask --------------------------------------------------------
-void Mask_Params::generate_2Dmask()
+void Mask_Params::generate_2Dmask(const bool& apply_geo)
 {
     ImageXmipp I;
     switch (type)
@@ -1214,6 +1214,19 @@ void Mask_Params::generate_2Dmask()
     default:
         REPORT_ERROR(3000, "Mask_Params::generate_mask: Unknown mask type :"
                      + ItoA(type));
+    }
+
+    if (apply_geo)
+    {
+        switch (datatype())
+        {
+        case INT_MASK:
+	    apply_geo_binary_2D_mask(imask2D, mask_geo);
+            break;
+        case DOUBLE_MASK:
+	    apply_geo_cont_2D_mask(dmask2D, mask_geo);
+            break;
+        }
     }
 }
 

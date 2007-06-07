@@ -793,23 +793,23 @@ public:
      * It is supposed that the image is already resized and with its logical
      * origin set
      */
-    void generate_2Dmask();
+    void generate_2Dmask(const bool& apply_geo = false );
 
     /** Generate mask for an empty image
      */
-    void generate_2Dmask(int Ydim, int Xdim)
+    void generate_2Dmask(int Ydim, int Xdim, const bool& apply_geo = false)
     {
         resize(Ydim, Xdim);
-        generate_2Dmask();
+        generate_2Dmask(apply_geo);
     }
 
     /** Generate mask for an image following a pattern
      */
     template<typename T>
-    void generate_2Dmask(const Matrix2D< T >& m)
+    void generate_2Dmask(const Matrix2D< T >& m, const bool& apply_geo = false)
     {
         resize(m);
-        generate_2Dmask();
+        generate_2Dmask(apply_geo);
     }
 
     /** Generate mask for a resized volume
