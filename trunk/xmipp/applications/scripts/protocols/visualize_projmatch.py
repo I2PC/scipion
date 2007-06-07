@@ -144,7 +144,7 @@ class visualize_projmatch_class:
         self._DisplayFilteredReconstruction_list=[]
          
         self._mylog.debug ("_DisplayIterationsNo " + _DisplayIterationsNo)
-        for self._iteration_number in _DisplayIterationsNo:
+        for self._iteration_number in self._DisplayIterationsNo:
            if self._iteration_number==' ':
               continue
 
