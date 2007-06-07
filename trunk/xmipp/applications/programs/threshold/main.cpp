@@ -48,6 +48,7 @@ int main(int argc, char **argv)
     int             binarize;
     bool            enable_substitute;
     bool            enable_random_substitute;
+    bool            apply_geo;
     double          new_val, old_val, avg_val, sig_val;
     string          str_new_val, str_old_val;
     double          accuracy;
@@ -101,7 +102,10 @@ int main(int argc, char **argv)
         else enable_random_substitute = false;
 	// Read mask stuff
         mask_prm.read(argc, argv);
+	apply_geo = !checkParameter(argc, argv, "-dont_apply_geo");
+
     }
+
     catch (Xmipp_error Xe)
     {
         cout << Xe;
@@ -116,7 +120,8 @@ int main(int argc, char **argv)
         {
             image_mode = true;
             I.read(fn_in);
-	    mask_prm.generate_2Dmask(I());
+	    mask_prm.mask_geo = I.get_transformation_matrix();
+	    mask_prm.generate_2Dmask(I(),apply_geo);
 	    mask2D = & (mask_prm.get_binary_mask2D());
         }
         else if (Is_VolumeXmipp(fn_in))
@@ -211,7 +216,9 @@ void Usage()
     << "  [-random_substitute <old_val> <avg_val> <std_val>: where avg_val and sig_val \n"
     << "                                    are the mean and stddev of a Gaussian distribution \n"
     << "    [-accuracy <accuracy=0>]]     : when substituting this value\n"
-    << "                                    determines if two values are the same\n";
+    << "                                    determines if two values are the same\n"
+    << "  [-dont_apply_geo]               : dont apply (opposite) header transformation to mask\n";
+
 }
 
 /* Menus ------------------------------------------------------------------- */
