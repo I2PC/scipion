@@ -39,7 +39,7 @@ MatrixWidth=9
 #display reference volume
 """ Volume after filtration and masking
 """
-DisplayReference=True
+DisplayReference=False
 #display angular distribution after projection matching
 DisplayAngularDistribution=False
 #Show projection maching library and aligned classes
@@ -53,9 +53,11 @@ DisplayReconstruction=False
 #display reconstructed volume after filtration
 """ Volume after filtration
 """
-DisplayFilteredReconstruction=True
+DisplayFilteredReconstruction=False
 #display resolution plots (FSC)
-DisplayResolutionPlots=True
+DisplayResolutionPlots=False
+#print number of particles used in the reconstruction
+PrintParticlesReconstruction=True
 
 
 #------------------------------------------------------------------------------------------------
@@ -75,6 +77,7 @@ class visualize_projmatch_class:
                 _DisplayIterationsNo,
                 _DisplayReference,
                 _DisplayProjectionMatchingAlign2d,
+                _PrintParticlesReconstruction,
                 _DisplayReconstruction,
                 _DisplayFilteredReconstruction,
                 _DisplayResolutionPlots,
@@ -101,7 +104,6 @@ class visualize_projmatch_class:
         self._ProjectDir=protocol.ProjectDir
         self._multi_align2d_sel=protocol.multi_align2d_sel
         self._align2d_sel=protocol.align2d_sel
-        self._align2d_doc=protocol.align2d_doc
         self._align2d_doc=protocol.align2d_doc
         self._SelFileName=self._ProjectDir+'/'+str(protocol.SelFileName)
         self._Filtered_Image=protocol.Filtered_Image
@@ -142,7 +144,8 @@ class visualize_projmatch_class:
         self._DisplayResolutionPlots_list=[]
         self._TitleResolution=[]
         self._DisplayFilteredReconstruction_list=[]
-         
+        self._PrintParticlesReconstruction=[]
+        
         self._mylog.debug ("_DisplayIterationsNo " + _DisplayIterationsNo)
         for self._iteration_number in self._DisplayIterationsNo:
            if self._iteration_number==' ':
@@ -190,6 +193,12 @@ class visualize_projmatch_class:
            if (_DisplayFilteredReconstruction):
               self._DisplayFilteredReconstruction_list.append(
                           self._Filtered_Image[int(self._iteration_number)]+'.vol')
+
+           if (_PrintParticlesReconstruction):
+              self._PrintParticlesReconstruction.append('..'+'/Iter_'+\
+                                      str(self._iteration_number)+
+                                      '/'+\
+                                       self._align2d_doc)
 
 
         #NAMES ARE RELATIVE TO iTER DIRECTORY  
@@ -255,6 +264,9 @@ class visualize_projmatch_class:
                                            _VisualizeVolY,
                                            _VisualizeVolChimera)
 
+        if (_PrintParticlesReconstruction):
+            plot_number_particles(self._PrintParticlesReconstruction)
+
     def close(self):
         message='Done!'
         print '*',message
@@ -306,6 +318,22 @@ def show_plots(_ShowPlots,_iteration_number,_title,_mylog):
            else:
               plot.send(" replot '" + _ShowPlots[i] + "' using "+str(X_col)+":"+str(Y_col)+" with lines")   
 
+def plot_number_particles(_PrintParticlesReconstruction):
+        import os
+        import docfiles
+        import visualization
+        plot=visualization.gnuplot()
+        plot.prepare_empty_plot("",
+                                "Iteration",
+                                "Number of particles")
+        plot.send('plot "-" using 1:2 with lines')   
+        for i in range(len(_PrintParticlesReconstruction)):
+             doc=docfiles.docfile(_PrintParticlesReconstruction[i])
+             no_particles=doc.sum_of_column(7)
+             print str(i+1)+' '+str(no_particles)
+             plot.send(str(i+1)+' '+str(no_particles))   
+        plot.send('e')   
+            
 
 #		
 # Main
@@ -323,6 +351,7 @@ if __name__ == '__main__':
                                                   DisplayIterationsNo,
                                                   DisplayReference,
                                                   DisplayProjectionMatchingAlign2d,
+                                                  PrintParticlesReconstruction,
                                                   DisplayReconstruction,
                                                   DisplayFilteredReconstruction,
                                                   DisplayResolutionPlots,
