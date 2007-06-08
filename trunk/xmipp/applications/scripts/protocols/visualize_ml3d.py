@@ -153,6 +153,7 @@ class visualize_ML3D_class:
     def visualize_seed_generation(self):
         import glob
         seeddirs=glob.glob('GenerateSeed_*/')
+        seeddirs.sort()
         for i in range(len(seeddirs)):
             dirname=seeddirs[i]
             outname='seeds_split_'+str(i+1)
@@ -172,6 +173,7 @@ class visualize_ML3D_class:
         iters=self.SelectIterations.split(',')
         for iter in iters:
             selfiles=glob.glob('RunML3D/ml3d_it'+str(iter).zfill(5)+'_vol?????.sel')
+            selfiles.sort()
             if (self.VisualizeML3DAvgs):
                 for selfile in selfiles:
                     self.ShowSelfiles.append(selfile)
@@ -188,6 +190,7 @@ class visualize_ML3D_class:
 
             if (self.VisualizeML3DReferences):
                 volumes=glob.glob('RunML3D/ml3d_it'+str(iter).zfill(5)+'_vol?????.vol')
+                volumes.sort()
                 for volume in volumes:
                     self.ShowVolumes.append(volume)
 
@@ -200,6 +203,7 @@ class visualize_ML3D_class:
     def visualize_matrix_last_iter(self):
         import os,glob
         selfiles=glob.glob('RunML3D/ml3d_it?????.sel')
+        selfiles.sort()
         if len(selfiles)==0:
             print "No selfiles yet. Visualize only after job completion..."
         else:
@@ -268,6 +272,7 @@ class visualize_ML3D_class:
         import os,glob
         import visualization
         logfiles=glob.glob('RunML3D/ml3d_it?????.log')
+        logfiles.sort()
         if len(logfiles)==0:
             print "No logfiles yet. Visualize after job completion..."
         else: 

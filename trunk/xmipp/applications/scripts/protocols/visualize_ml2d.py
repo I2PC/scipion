@@ -70,6 +70,7 @@ class visualize_ML2D_class:
         import selfile
         
         selfiles=glob.glob('*_it?????.sel')
+        selfiles.sort()
         if len(selfiles)==0:
             print "No selfiles yet. Visualize after job completion..."
         else:
@@ -93,6 +94,7 @@ class visualize_ML2D_class:
         import visualization
         import docfiles
         logfiles=glob.glob('*_it?????.log')
+        logfiles.sort()
         if len(logfiles)==0:
             print "No logfiles yet. Visualize after job completion..."
         else: 
@@ -158,6 +160,7 @@ class visualize_ML2D_class:
         import visualization
         import docfiles
         logfiles=glob.glob('*_it?????.log')
+        logfiles.sort()
         if len(logfiles)==0:
             print "No logfiles yet. Visualize after job completion..."
         else:
@@ -184,6 +187,7 @@ class visualize_ML2D_class:
         # Visualize class averages:
         import os,glob
         logfiles=glob.glob('*_it?????.log')
+        logfiles.sort()
         if len(logfiles)==0:
             print "No logfiles yet. Visualize after job completion..."
         else:
