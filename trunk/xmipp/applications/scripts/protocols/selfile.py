@@ -84,7 +84,9 @@ class selfile:
        import os
        newlines=[]
        for name,state in self.sellines:
-           name=os.path.abspath(name)
+           # Only make abspath if not already abspath
+           if not (name[0]=="/"):
+               name=os.path.abspath(name)
            newlines.append([name,state])
        newsel=selfile()
        newsel.set(newlines)
