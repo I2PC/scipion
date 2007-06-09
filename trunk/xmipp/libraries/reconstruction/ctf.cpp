@@ -569,3 +569,101 @@ void XmippCTF::force_physical_meaning()
     }
 }
 #undef DEBUG
+
+/* CTFDat functions -------------------------------------------------------- */
+const FileName & CTFDat::getCTF(const FileName &fnProjection,
+    bool& searchOK) const
+{
+    int imax=fnProjectionList.size();
+    for (int i=0; i<imax; ++i)
+    {
+       if (fnProjectionList[i]==fnProjection) {
+          searchOK=true;
+	  return fnCTFList[i];
+       }
+    }
+    searchOK=false;
+    return "";
+}
+
+void CTFDat::setCTF(const FileName &fnProjection,
+    const FileName &fnCTF)
+{
+    int imax=fnProjectionList.size();
+    for (int i=0; i<imax; ++i)
+    {
+       if (fnProjectionList[i]==fnProjection) {
+          fnCTFList[i]=fnCTF;
+       }
+    }
+    fnProjectionList.push_back(fnProjection);
+    fnCTFList.push_back(fnCTF);
+}
+
+void CTFDat::append(const FileName &fnProjection, const FileName &fnCtf)
+{
+    fnProjectionList.push_back(fnProjection);
+    fnCTFList.push_back(fnCtf);
+}
+
+void CTFDat::read(const FileName &fnCTFdat)
+{
+    std::ifstream fhCtfdat;
+    fhCtfdat.open(fnCTFdat.c_str());
+    if (!fhCtfdat)
+        REPORT_ERROR(1, (std::string)"CTFDat::read: Cannot open " + fnCTFdat
+	    +" for input");
+    while (!fhCtfdat.eof())
+    {
+        FileName fnProjection, fnCTF;
+        fhCtfdat >> fnProjection >> fnCTF;
+	append(fnProjection,fnCTF);
+    } 
+    fhCtfdat.close();
+}
+
+void CTFDat::write(const FileName &fnCTFdat) const
+{
+    std::ofstream fhCtfdat;
+    fhCtfdat.open(fnCTFdat.c_str());
+    if (!fhCtfdat)
+        REPORT_ERROR(1, (std::string)"CTFDat::write: Cannot open " + fnCTFdat
+	    +" for output");
+    int imax=fnProjectionList.size();
+    for (int i=0; i<imax; ++i)
+        fhCtfdat << fnProjectionList[i] << " " << fnCTFList[i] << std::endl;
+    fhCtfdat.close();
+}
+
+void CTFDat::goFirstLine()
+{
+    current=0;
+}
+   
+void CTFDat::nextLine()
+{
+    ++current;
+}
+
+bool CTFDat::eof() const
+{
+    return current==fnProjectionList.size();
+}
+
+int CTFDat::lineNo() const
+{
+    return fnProjectionList.size();
+}
+
+void CTFDat::getCurrentLine(FileName& fnProjection, FileName& fnCTF)
+{
+    fnProjection=fnProjectionList[current];
+    fnCTF=fnCTFList[current];
+}
+
+void CTFDat::createFromSelfileAndSingleCTF(SelFile &SF, const FileName &fnCtf)
+{
+    SF.go_first_ACTIVE();
+    while (!SF.eof())
+    	append(SF.NextImg(),fnCtf);
+}

@@ -27,6 +27,8 @@
 #define _CTF_HH
 
 #include <data/image.h>
+#include <data/selfile.h>
+#include <map>
 
 /**@name CTF Correction */
 //@{
@@ -466,6 +468,80 @@ public:
 
     /** Force physical meaning.*/
     void force_physical_meaning();
+};
+
+/** CTF Data file.
+    CTF Data files are text files with two columns: the first column
+    is the name of a projection image, the second column is the
+    name of the corresponding ctfparam file.
+    
+    Example of use:
+    \begin{verbatim}
+        CTFDat ctfdat;
+	ctfdat.read("ctfdat.txt");
+	ctfdat.goFirstLine();
+	cerr << "Correcting CTF phase ...\n";
+	int istep = CEIL((double)ctfdat.lineNo() / 60.0);
+	init_progress_bar(ctfdat.lineNo());
+	int i = 0;
+	while (!ctfdat.eof())
+	{
+            FileName fnProjection, fnCTF;
+	    ctfdat.getCurrentLine(fnProjection,fnCTF);
+            ...
+            if (i++ % istep == 0) progress_bar(i);
+	    ctfdat.nextLine();
+	}
+	progress_bar(ctfdat.lineNo());
+    \end{verbatim}
+*/
+class CTFDat {
+public:
+    /// List with the projection files
+    std::vector< FileName > fnProjectionList;
+
+    /// List with the ctfparam files
+    std::vector< FileName > fnCTFList;
+
+    /// Iterator for going over the file
+    int current;
+
+    /** Get the CTF file for a given key.
+       searchOK is true if the the key is found. If the key is not found,
+       searchOK is false and the returned value is empty. */
+    const FileName & getCTF(const FileName &fnProjection,
+      bool& searchOK) const;
+
+    /// Set the CTF file for a given key
+    void setCTF(const FileName &fnProjection, const FileName &fnCtf);
+
+    /// Append a CTF
+    void append(const FileName &fnProjection, const FileName &fnCtf);
+
+    /// Read the CTFDat from a file
+    void read(const FileName &fnCtfdat); 
+
+    /// Write the CTFDat to a file
+    void write(const FileName &fnCtfdat) const;
+
+    /// Move iterator to the file beginning
+    void goFirstLine();
+
+    /// Move iterator to the next image
+    void nextLine();
+
+    /// Check if at the endo of file
+    bool eof() const;
+
+    /// Returns the number of lines in the file
+    int lineNo() const;
+
+    /// Get current line
+    void getCurrentLine(FileName& fnProjection, FileName& fnCtf);
+    
+    /// Creates a CTFDat with a selfile for which there is a single CTF
+    void createFromSelfileAndSingleCTF(SelFile &SF,
+       const FileName &fnCtf);
 };
 //@}
 #endif
