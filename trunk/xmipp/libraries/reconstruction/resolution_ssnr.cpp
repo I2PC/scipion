@@ -427,6 +427,6 @@ void ROUT_SSNR(Prog_SSNR_prm &prm, Matrix2D<double> &output)
     {
         prm.Radial_average(output);
         if (prm.fn_out != "") output.write(prm.fn_out);
-        else                output.write(prm.fn_VSSNR.insert_before_extension("_radial_avg"));
+        else                  output.write(prm.fn_VSSNR.insert_before_extension("_radial_avg"));
     }
 }
