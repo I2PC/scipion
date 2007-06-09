@@ -299,7 +299,7 @@ float rnd_log(float a, float b)
         return exp(rnd_unif(log(a), log(b)));
 }
 
-/* Handling with filenames ------------------------------------------------- */
+/* Check if a file exists -------------------------------------------------- */
 int exists(const FileName &fn)
 {
     FILE *aux;
