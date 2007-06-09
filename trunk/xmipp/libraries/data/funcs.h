@@ -786,6 +786,22 @@ public:
     FileName remove_directories(int keep = 0) const;
 };
 
+/** This class is used for comparin filenames.
+ * @ingroup Filenames
+ *
+ * Example: "g0ta00001.xmp" is less than "g0ta00002.xmp"
+ *
+ * This class is needed to define a std::map as
+ * map<FileName,FileName,FileNameComparison> myMap;
+ */
+class FileNameComparison {
+public:
+    bool operator ()(const FileName &fn1, const FileName &fn2)
+    {
+    	return fn1<fn2;
+    }
+};
+
 /** True if the file exists in the current directory
  * @ingroup Filenames
  *
