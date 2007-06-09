@@ -969,118 +969,123 @@ public:
         int mmax = YSIZE(*this);
         int nmax = ZSIZE(*this);
 
-        int l1 = CLIP(CEIL(x - SplineDegree_1), 0, XSIZE(*this) - 1);
-        int l2 = CLIP(l1 + SplineDegree, 0, XSIZE(*this) - 1);
+        int l1 = CEIL(x - SplineDegree_1);
+        int l2 = l1 + SplineDegree;
 
-        int m1 = CLIP(CEIL(y - SplineDegree_1), 0, YSIZE(*this) - 1);
-        int m2 = CLIP(m1 + SplineDegree, 0, YSIZE(*this) - 1);
+        int m1 = CEIL(y - SplineDegree_1);
+        int m2 = m1 + SplineDegree;
 
-        int n1 = CLIP(CEIL(z - SplineDegree_1), 0, ZSIZE(*this) - 1);
-        int n2 = CLIP(n1 + SplineDegree, 0, ZSIZE(*this) - 1);
+        int n1 = CEIL(z - SplineDegree_1);
+        int n2 = n1 + SplineDegree;
 
         double zyxsum = 0.0;
-        for (int n = n1; n <= n2; n++)
-            if (n < nmax && n >= -1L)
-            {
-                int plane_n = YSIZE(*this) * XSIZE(*this) * n;
-                double yxsum = 0.0;
-                for (int m = m1; m <= m2; m++)
-                    if (m < mmax && m > -1L)
+        for (int n = n1; n <= n2; n++) {
+	    int equivalent_n=n;
+	    if      (n<0)             equivalent_n=-n-1;
+	    else if (n>=ZSIZE(*this)) equivalent_n=2*ZSIZE(*this)-n-1;
+            int plane_n = YSIZE(*this) * XSIZE(*this) * equivalent_n;
+            double yxsum = 0.0;
+            for (int m = m1; m <= m2; m++) {
+		int equivalent_m=m;
+		if      (m<0)             equivalent_m=-m-1;
+		else if (m>=YSIZE(*this)) equivalent_m=2*YSIZE(*this)-m-1;
+                int row_m = plane_n + XSIZE(*this) * equivalent_m;
+                double xsum = 0.0;
+                for (int l = l1; l <= l2; l++)
+                {
+                    double xminusl = x - (double) l;
+		    int equivalent_l=l;
+		    if      (l<0)             equivalent_l=-l-1;
+		    else if (l>=XSIZE(*this)) equivalent_l=2*XSIZE(*this)-l-1;
+                    double Coeff = (double) data[row_m + equivalent_l];
+                    switch (SplineDegree)
                     {
-                        int row_m = plane_n + XSIZE(*this) * m;
-                        double xsum = 0.0;
-                        for (int l = l1; l <= l2; l++)
-                        {
-                            double xminusl = x - (double) l;
-                            double Coeff = (double) data[row_m + l];
-                            switch (SplineDegree)
-                            {
-                            case 2:
-                                xsum += Coeff * Bspline02(xminusl);
-                                break;
-                            case 3:
-                                xsum += Coeff * Bspline03(xminusl);
-                                break;
-                            case 4:
-                                xsum += Coeff * Bspline04(xminusl);
-                                break;
-                            case 5:
-                                xsum += Coeff * Bspline05(xminusl);
-                                break;
-                            case 6:
-                                xsum += Coeff * Bspline06(xminusl);
-                                break;
-                            case 7:
-                                xsum += Coeff * Bspline07(xminusl);
-                                break;
-                            case 8:
-                                xsum += Coeff * Bspline08(xminusl);
-                                break;
-                            case 9:
-                                xsum += Coeff * Bspline09(xminusl);
-                                break;
-                            }
-                        }
-
-                        double yminusm = y - (double) m;
-                        switch (SplineDegree)
-                        {
-                        case 2:
-                            yxsum += xsum * Bspline02(yminusm);
-                            break;
-                        case 3:
-                            yxsum += xsum * Bspline03(yminusm);
-                            break;
-                        case 4:
-                            yxsum += xsum * Bspline04(yminusm);
-                            break;
-                        case 5:
-                            yxsum += xsum * Bspline05(yminusm);
-                            break;
-                        case 6:
-                            yxsum += xsum * Bspline06(yminusm);
-                            break;
-                        case 7:
-                            yxsum += xsum * Bspline07(yminusm);
-                            break;
-                        case 8:
-                            yxsum += xsum * Bspline08(yminusm);
-                            break;
-                        case 9:
-                            yxsum += xsum * Bspline09(yminusm);
-                            break;
-                        }
+                    case 2:
+                        xsum += Coeff * Bspline02(xminusl);
+                        break;
+                    case 3:
+                        xsum += Coeff * Bspline03(xminusl);
+                        break;
+                    case 4:
+                        xsum += Coeff * Bspline04(xminusl);
+                        break;
+                    case 5:
+                        xsum += Coeff * Bspline05(xminusl);
+                        break;
+                    case 6:
+                        xsum += Coeff * Bspline06(xminusl);
+                        break;
+                    case 7:
+                        xsum += Coeff * Bspline07(xminusl);
+                        break;
+                    case 8:
+                        xsum += Coeff * Bspline08(xminusl);
+                        break;
+                    case 9:
+                        xsum += Coeff * Bspline09(xminusl);
+                        break;
                     }
+                }
 
-                double zminusn = z - (double) n;
+                double yminusm = y - (double) m;
                 switch (SplineDegree)
                 {
                 case 2:
-                    zyxsum += yxsum * Bspline02(zminusn);
+                    yxsum += xsum * Bspline02(yminusm);
                     break;
                 case 3:
-                    zyxsum += yxsum * Bspline03(zminusn);
+                    yxsum += xsum * Bspline03(yminusm);
                     break;
                 case 4:
-                    zyxsum += yxsum * Bspline04(zminusn);
+                    yxsum += xsum * Bspline04(yminusm);
                     break;
                 case 5:
-                    zyxsum += yxsum * Bspline05(zminusn);
+                    yxsum += xsum * Bspline05(yminusm);
                     break;
                 case 6:
-                    zyxsum += yxsum * Bspline06(zminusn);
+                    yxsum += xsum * Bspline06(yminusm);
                     break;
                 case 7:
-                    zyxsum += yxsum * Bspline07(zminusn);
+                    yxsum += xsum * Bspline07(yminusm);
                     break;
                 case 8:
-                    zyxsum += yxsum * Bspline08(zminusn);
+                    yxsum += xsum * Bspline08(yminusm);
                     break;
                 case 9:
-                    zyxsum += yxsum * Bspline09(zminusn);
+                    yxsum += xsum * Bspline09(yminusm);
                     break;
                 }
+	    }
+
+            double zminusn = z - (double) n;
+            switch (SplineDegree)
+            {
+            case 2:
+                zyxsum += yxsum * Bspline02(zminusn);
+                break;
+            case 3:
+                zyxsum += yxsum * Bspline03(zminusn);
+                break;
+            case 4:
+                zyxsum += yxsum * Bspline04(zminusn);
+                break;
+            case 5:
+                zyxsum += yxsum * Bspline05(zminusn);
+                break;
+            case 6:
+                zyxsum += yxsum * Bspline06(zminusn);
+                break;
+            case 7:
+                zyxsum += yxsum * Bspline07(zminusn);
+                break;
+            case 8:
+                zyxsum += yxsum * Bspline08(zminusn);
+                break;
+            case 9:
+                zyxsum += yxsum * Bspline09(zminusn);
+                break;
             }
+	}
 
         return (T) zyxsum;
     }

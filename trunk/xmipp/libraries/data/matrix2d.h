@@ -1264,20 +1264,26 @@ public:
 
         int lmax = XSIZE(*this);
         int mmax = YSIZE(*this);
-        int l1 = CLIP(CEIL(x - SplineDegree_1), 0, lmax - 1);
-        int l2 = CLIP(l1 + SplineDegree, 0, lmax - 1);
-        int m1 = CLIP(CEIL(y - SplineDegree_1), 0, mmax - 1);
-        int m2 = CLIP(m1 + SplineDegree, 0, mmax - 1);
+        int l1 = CEIL(x - SplineDegree_1);
+        int l2 = l1 + SplineDegree;
+        int m1 = CEIL(y - SplineDegree_1);
+        int m2 = m1 + SplineDegree;
 
         double columns = 0.0;
         for (int m = m1; m <= m2; m++)
         {
-            int row_m = XSIZE(*this) * m;
+	    int equivalent_m=m;
+	    if      (m<0)             equivalent_m=-m-1;
+	    else if (m>=YSIZE(*this)) equivalent_m=2*YSIZE(*this)-m-1;
+            int row_m = XSIZE(*this) * equivalent_m;
             double rows = 0.0;
             for (int l = l1; l <= l2; l++)
             {
                 double xminusl = x - (double) l;
-                double Coeff = (double) data[row_m + l];
+		int equivalent_l=l;
+		if      (l<0)             equivalent_l=-l-1;
+		else if (l>=XSIZE(*this)) equivalent_l=2*XSIZE(*this)-l-1;
+                double Coeff = (double) data[row_m + equivalent_l];
                 switch (SplineDegree)
                 {
                 case 2:
@@ -3952,7 +3958,7 @@ void applyGeometryBSpline(mT& M2, Matrix2D< double > A, const mT& M1,
                                      xp, yp, Splinedegree);
 
 #ifdef DEBUG_APPLYGEO
-                cout << "   val= " << tmp << endl;
+                cout << "   val= " << dMij(M2, i, j) << endl;
 #endif
 
             }
