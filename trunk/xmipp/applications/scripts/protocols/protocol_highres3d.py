@@ -8,14 +8,14 @@
 # Example use:
 # ./protocol_highres3d.py
 #
-# Author: Carlos Oscar Sanchez Sorzano, April 2007
+# Author: Carlos Oscar Sanchez Sorzano, June 2007
 #
 #-----------------------------------------------------------------------------
 # {section} Global parameters
 #-----------------------------------------------------------------------------
 
 # {file} Selfile with the input images:
-SelFileName='imgs.sel'
+SelFileName='imgsCTF.sel'
 
 # {file} Initial 3D reference map:
 ReferenceFileName='Src/initial_reference.vol'
@@ -34,12 +34,12 @@ NumberofIterations=50
     Set to 1 to start a new run 
     Note: Do NOT delete working directory if this option is not set to 1
 """
-ResumeIteration=1
+ResumeIteration=5
 
 # {expert} {dir} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/shared/Data/COSS/TestSencillo'
+ProjectDir='/media/usb_linux/Experiments/TestSencilloCTF'
 
 # {expert} {dir} Directory name for logfiles:
 LogDir='Logs'
@@ -48,7 +48,7 @@ LogDir='Logs'
 # {section} Particle description
 #-----------------------------------------------------------------------------
 # Particle radius (pixels)
-ParticleRadius=30
+ParticleRadius=32
 
 # Particle mass (Daltons)
 ParticleMass=800000
@@ -58,10 +58,10 @@ ParticleMass=800000
     for a description of the symmetry file format
     dont give anything, if no symmetry is present
 """
-SymmetryFile=''
+SymmetryFile='Src/symmetry.sym'
 
 # Sampling rate (Angstrom/pixel)
-SamplingRate=1
+SamplingRate=4.2
 
 #-----------------------------------------------------------------------------
 # {section} Iteration parameters
@@ -80,7 +80,7 @@ SamplingRate=1
     Scaling is done via spline pyramids, please visit:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Pyramid
 """
-PyramidLevels='35x1 15x0'
+PyramidLevels='50x0'
 
 # Angular steps
 """ Angular steps for each of the iterations. This parameter is used to build
@@ -91,17 +91,20 @@ PyramidLevels='35x1 15x0'
     The discrete angular assignment is done with xmipp_angular_predict:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Angular_predict
 """
-AngularSteps='10x8 20x5 20x2'
+AngularSteps='10x5 20x2'
 
-# {expert} Use ART for reconstruction instead of WBP
-""" Vector specifying if ART should be used instead of WBP at each iteration
- 
-    For more information about art, visit:
-    http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Art
-
-    For more information about wbp, visit:
-    http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Wbp"""
-UseART='50x0'
+# {expert} Reconstruction method
+""" Choose between wbp or art
+    You must specify this option for each iteration. 
+    This can be done by a sequence of numbers (for instance, "wbp wbp wbp art " 
+    specifies 4 iterations, the first three set the value to wbp (no restriction)
+    and the last  to art. An alternative compact notation 
+    is ("3xwbp 1xart", i.e.,
+    3 iterations with wbp, and 1 with art).
+    Note: if there are less values than iterations the last value is reused
+    Note: if there are more values than iterations the extra value are ignored
+"""
+ReconstructionMethod='50xwbp'
 
 # {expert} Serial ART
 """ Do serial ART even if parallel execution is available. This parameter
@@ -142,13 +145,13 @@ DiscreteAssignment='50x1'
     The discrete angular assignment is done with xmipp_angular_predict:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Angular_predict_continuous
 """
-ContinuousAssignment='7x0 1'
+ContinuousAssignment='20x0 1'
 
 # {expert} Compute resolution
 """ Computation of the spectral signal-to-noise ratio is slow, do not abuse it.
     The resolution is always computed in the last iteration
 """
-ComputeResolution=''
+DoComputeResolution='0'
 
 #-----------------------------------------------------------------------------
 # {section} CTF Amplitude Correction (assuming previous phase correction)
@@ -156,13 +159,18 @@ ComputeResolution=''
 # {expert} CTF dat file
 """ This file specify the CTF parameters for each image
 """
-CTFDat=''
+CTFDat='CTF.dat'
+
+# {expert} Phase correction
+""" Specify whether a phase correction must be done or not.
+"""
+PhaseCorrection=True
 
 # {expert} Amplitude correction
 """ Specify whether amplitude correction is performed or not at each
     iteration.
 """
-AmplitudeCorrection='50x0'
+AmplitudeCorrection='4x0 1'
 
 #-----------------------------------------------------------------------------
 # {section} Post-processing
@@ -178,7 +186,7 @@ AmplitudeCorrection='50x0'
 DoReferenceMask='50x1'
 
 # {file} Initial Reference Mask Volume
-InitialReferenceMask=''
+InitialReferenceMask='Src/initial_mask.vol'
 
 # {expert} Reference Lowpass filter (Normalized digital freq.)
 """ This vector specifies the frequency at which each reference volume
@@ -205,7 +213,7 @@ SegmentUsingMass='50x0'
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
 # Use multiple processors in parallel?
-DoParallel=True
+DoParallel=False
 
 # Number of processors to use:
 MyNumberOfCPUs=10
@@ -236,9 +244,10 @@ import sys
 
 scriptdir=os.path.expanduser('~')+'/scripts'
 sys.path.append(scriptdir) # add default search path
+import ctfdat
+import launch_parallel_job
 import log
 import selfile
-import launch_parallel_job
 
 class HighRes3DClass:
    #------------------------------------------------------------------------
@@ -260,15 +269,16 @@ class HighRes3DClass:
 		
 		_PyramidLevels,
 		_AngularSteps,
-		_UseART,
+		_ReconstructionMethod,
 		_SerialART,
 		_ARTLambda,
 		_DiscreteAssignment,
 		_ContinuousAssignment,
-		_ComputeResolution,
+		_DoComputeResolution,
 		_ResumeIteration,
 		
 		_CTFDat,
+		_PhaseCorrection,
 		_AmplitudeCorrection,
 		
 		_DoReferenceMask,
@@ -288,6 +298,7 @@ class HighRes3DClass:
        self.referenceFileName=os.path.abspath(_ReferenceFileName)
        self.workDirectory=os.path.abspath(_WorkDirectory)
        self.doDeleteWorkingDir=_DoDeleteWorkingDir
+       self.numberOfIterations=_NumberofIterations
        self.logDir=os.path.abspath(_LogDir)
 		
        self.particleRadius=_ParticleRadius
@@ -300,15 +311,16 @@ class HighRes3DClass:
 
        self.pyramidLevels="0 "+_PyramidLevels
        self.angularSteps="0 "+_AngularSteps
-       self.useART="0 "+_UseART
+       self.reconstructionMethod="null "+_ReconstructionMethod
        self.serialART="0 "+_SerialART
        self.ARTLambda="0 "+_ARTLambda
        self.discreteAssignment="0 "+_DiscreteAssignment
        self.continuousAssignment="0 "+_ContinuousAssignment
-       self.computeResolution="0 "+_ComputeResolution
+       self.doComputeResolution="0 "+_DoComputeResolution
        self.resumeIteration=_ResumeIteration
 
        self.CTFDat=os.path.abspath(_CTFDat)
+       self.phaseCorrection=_PhaseCorrection
        self.amplitudeCorrection="0 "+_AmplitudeCorrection
 		
        self.doReferenceMask="0 "+_DoReferenceMask
@@ -476,6 +488,107 @@ class HighRes3DClass:
        os.chdir(_directory)
 
    #------------------------------------------------------------------------
+   # Compute resolution
+   #------------------------------------------------------------------------
+   def computeResolution(self,_iteration):
+       self.log("# Computing resolution ------------------------------------------------")
+       
+       # FSC ...............................................................
+       # Split the data in two halves
+       self.execute("xmipp_selfile_split -i preproc_recons.sel -n 2 -o preproc_recons")
+
+       # Make the two reconstructions
+       self.runReconstructionAlgorithm(_iteration,"preproc_recons_1.sel",
+	  self.getReconstructionRootname(_iteration)+"_1",False)
+       self.runReconstructionAlgorithm(_iteration,"preproc_recons_2.sel",
+	  self.getReconstructionRootname(_iteration)+"_2",False)
+
+       # Compute the FSC
+       self.execute("xmipp_resolution_fsc "+\
+          "-ref "+self.getReconstructionRootname(_iteration)+"_1.vol "+\
+          "-i "+self.getReconstructionRootname(_iteration)+"_2.vol "+\
+	  "-sam "+str(self.workingSamplingRate*
+	              pow(2,int(self.getPyramidLevel(_iteration)))))
+       
+       # Remove unnecessary files
+       self.execute("rm -f preproc_recons_?.sel")
+
+       # SSNR ..............................................................
+       # Reconstruct the signal volume
+       self.copySelFile("preproc_assign.sel","preproc_signal")
+       self.execute("xmipp_header_assign -i "+\
+                    self.getAlignmentFilename(_iteration)+\
+		    " -o preproc_signal.sel -force")
+       self.runReconstructionAlgorithm(_iteration,"preproc_signal.sel",
+	  self.getReconstructionRootname(_iteration)+"_signal",False)
+
+       # Reconstruct the noise volume
+       self.copySelFile("preproc_signal.sel","preproc_noise")
+       self.execute("xmipp_mask -i preproc_noise.sel -mask circular "+\
+          str(self.workXDim))
+       self.execute("xmipp_add_noise -i preproc_noise.sel -gaussian 1")
+       self.runReconstructionAlgorithm(_iteration,"preproc_noise.sel",
+	  self.getReconstructionRootname(_iteration)+"_noise",False)
+
+       # Compute the SSNR
+       self.execute("xmipp_ssnr "+\
+          "-S "+self.getReconstructionRootname(_iteration)+"_signal.vol "+\
+          "-N "+self.getReconstructionRootname(_iteration)+"_noise.vol "+\
+	  "-selS preproc_signal.sel -selN preproc_noise.sel "+\
+	  "-sampling_rate "+str(self.workingSamplingRate*
+	     pow(2,int(self.getPyramidLevel(_iteration))))+" "+\
+	  "-o "+self.getReconstructionRootname(_iteration)+".vol.ssnr")
+       
+       # Remove unnecessary files
+       self.execute("rm -rf preproc_signal* preproc_noise*")
+
+   #------------------------------------------------------------------------
+   # Copy CTFs
+   #------------------------------------------------------------------------
+   def copyCTFs(self):
+       if self.CTFDat=="":
+          return
+       self.log("Adapting the CTFs",'info',True)
+       self.changeDirectory(self.workDirectory)
+       self.createDirectory("ScaledCTFs")
+       CTFs=ctfdat.ctfdat()
+       CTFs.read(self.CTFDat)
+       self.scaledCTFs=ctfdat.ctfdat()
+       for line in CTFs.lines:
+           # Read a line from the ctfdat
+           aux=line.split()
+	   fnProjection=aux[0]
+	   fnCTF=aux[1]
+           splitFnProjection=fnProjection.split('/')
+           splitFnCTF=fnCTF.split('/')
+	   
+	   # Copy the CTF file to ScaledCTFs
+	   if not os.path.exists("ScaledCTFs/"+splitFnCTF[-1]):
+	       if fnCTF[0]=='/':
+        	   self.copyFile(fnCTF,"ScaledCTFs/"+splitFnCTF[-1])
+	       else:
+        	   self.copyFile(self.projectDir+'/'+fnCTF,
+	              "ScaledCTFs/"+splitFnCTF[-1])
+
+    	       # Change the sampling rate
+	       if not self.xDim==self.workXDim:
+		   self.execute("grep -v sampling_rate ScaledCTFs/"+\
+	              splitFnCTF[-1]+" > inter.txt")
+		   self.execute("echo sampling_rate="+\
+	              str(self.samplingRate*self.xDim/self.workXDim)+\
+		      " > ScaledCTFs/"+splitFnCTF[-1])
+		   self.execute("cat inter.txt >> ScaledCTFs/"+splitFnCTF[-1])
+		   self.execute("rm -f inter.txt")
+
+	   # Create corresponding line in the scaled ctfdat file
+	   self.scaledCTFs.append("ScaledImgs/"+splitFnProjection[-1],
+	      "ScaledCTFs/"+splitFnCTF[-1])
+
+       # Write the scaled ctfdat file
+       self.log("Creating file ctfdat.txt")
+       self.scaledCTFs.write("ctfdat.txt")
+       
+   #------------------------------------------------------------------------
    # Copy file
    #------------------------------------------------------------------------
    def copyFile(self,_source,_target):
@@ -589,49 +702,55 @@ class HighRes3DClass:
    #------------------------------------------------------------------------
    def generateImagesForThisIteration(self,_iteration):
        self.log("# Generating images for this iteration --------------------------------")
+       factor=pow(2,-int(self.getPyramidLevel(_iteration)))
 
-       if not os.path.exists("preproc_recons.sel") \
-          or _iteration==self.resumeIteration \
-          or not self.getPyramidLevel(_iteration)==self.getPyramidLevel(_iteration-1) \
-          or self.getAmplitudeCorrection(_iteration)=="1" \
-	  or True:
-          
-          # Generate plain set of images
-          self.deleteDirectory("preproc")
-	  self.copySelFile("../imgs.sel","preproc","preproc.sel",
-	                   self.workDirectory+"/Results","..")
+       # Generate plain set of images
+       self.deleteDirectory("preproc")
+       self.copySelFile("../imgs.sel","preproc","preproc.sel",
+        		self.workDirectory+"/Results","..")
 
-          # Correct for the amplitude
-          if self.getAmplitudeCorrection(_iteration)=="1" \
-	     and self.getPyramidLevel(_iteration)=="0":
-	     self.execute("xmipp_header_assign -i "+\
-	                  self.getAlignmentFFilename(_iteration)+" -o preproc.sel"+\
-		          " -force")
-	     self.execute("xmipp_ctf_correct_idr -exp preproc.sel -vol "+\
-	                  self.getModelFilename(_iteration)+" -ctf "+\
-		          self.CTFDat+\
-		          " -oroot preproc/preproc -adjust_gray_levels")
-	     # COSS: *** IDR no funciona con el tipo de ficheros que estoy pasando
+       # Produce a set of suitable CTFs
+       if self.phaseCorrection or \
+          (self.getAmplitudeCorrection(_iteration)=="1" \
+           and self.getPyramidLevel(_iteration)=="0"):
+	  CTFs=ctfdat.ctfdat()
+	  CTFs.read("../ctfdat.txt")
+	  preprocCTFs=CTFs.changeDirectory("preproc","../ScaledCTFs")
+	  self.log("# Creating a ctfdat file for preproc")
+          preprocCTFs.write("preproc_ctfdat.txt")
 
-          # Generate images for assignment
-	  factor=pow(2,-int(self.getPyramidLevel(_iteration)))
-          self.copySelFile("preproc.sel","preproc_assign")
-          if not self.getPyramidLevel(_iteration)=="0":
-	     self.execute("xmipp_scale_pyramid -i preproc_assign.sel -reduce -levels "+\
-	                  str(self.getPyramidLevel(_iteration)))
-          self.execute("xmipp_normalize -i preproc_assign.sel -method NewXmipp -background circle "+\
-	               str(math.ceil(self.particleWorkingRadius*1.1*factor)))
+       # Correct for the phase
+       if self.phaseCorrection:
+           self.execute("xmipp_ctf_correct_phase -ctfdat preproc_ctfdat.txt")
 
-          # Remove useless images
-          self.execute("xmipp_selfile_delete preproc.sel")
-	  self.execute("rmdir preproc")
+       # Correct for the amplitude
+       if self.getAmplitudeCorrection(_iteration)=="1" \
+          and self.getPyramidLevel(_iteration)=="0":
+          self.execute("xmipp_header_assign -i "+\
+        	       self.getAlignmentFFilename(_iteration)+" -o preproc.sel"+\
+        	       " -force")
+          self.execute("xmipp_ctf_correct_idr -vol "+\
+        	       self.getModelFFilename(_iteration)+\
+		       " -ctfdat preproc_ctfdat.txt")
 
-          # Generate images for reconstruction
-	  self.copySelFile("preproc_assign.sel","preproc_recons")
-          self.execute("xmipp_mask -i preproc_recons.sel -mask raised_cosine "+\
-	               str(-(math.ceil(self.particleWorkingRadius*factor)))+" "+\
-		       str(-(math.ceil(self.particleWorkingRadius*1.1*factor))))
-	  
+       # Generate images for assignment
+       self.copySelFile("preproc.sel","preproc_assign")
+       if not self.getPyramidLevel(_iteration)=="0":
+          self.execute("xmipp_scale_pyramid -i preproc_assign.sel -reduce -levels "+\
+        	       str(self.getPyramidLevel(_iteration)))
+       self.execute("xmipp_normalize -i preproc_assign.sel -method NewXmipp -background circle "+\
+        	    str(math.ceil(self.particleWorkingRadius*1.1*factor)))
+
+       # Remove useless images
+       self.execute("xmipp_selfile_delete preproc.sel")
+       self.execute("rmdir -rf preproc")
+
+       # Generate images for reconstruction
+       self.copySelFile("preproc_assign.sel","preproc_recons")
+       self.execute("xmipp_mask -i preproc_recons.sel -mask raised_cosine "+\
+        	    str(-(math.ceil(self.particleWorkingRadius*factor)))+" "+\
+        	    str(-(math.ceil(self.particleWorkingRadius*1.1*factor))))
+        
    #------------------------------------------------------------------------
    # Generate Next Reference
    #------------------------------------------------------------------------
@@ -684,7 +803,7 @@ class HighRes3DClass:
    def getARTLambda(self,_iteration):
       return getComponentFromVector(self.ARTLambda,_iteration)
    def getComputeResolution(self,_iteration):
-      return getComponentFromVector(self.computeResolution,_iteration)
+      return getComponentFromVector(self.doComputeResolution,_iteration)
    def getContinuousAnglesFilename(self,_iteration):
       return self.getAlignmentFilename(_iteration)
    def getContinuousAssignment(self,_iteration):
@@ -715,8 +834,8 @@ class HighRes3DClass:
       return getComponentFromVector(self.segmentUsingMass,_iteration)
    def getSerialART(self,_iteration):
       return getComponentFromVector(self.serialART,_iteration)
-   def getUseART(self,_iteration):
-      return getComponentFromVector(self.useART,_iteration)
+   def getReconstructionMethod(self,_iteration):
+      return getComponentFromVector(self.reconstructionMethod,_iteration)
 
    #------------------------------------------------------------------------
    # Get image size
@@ -791,19 +910,12 @@ class HighRes3DClass:
        if not os.path.exists(self.workDirectory+"/Src/prealignment.txt"):
           self.changeDirectory(self.workDirectory+"/Results")
 	  self.copySelFile("../imgs.sel","preproc","preproc.sel",
-	     self.workDirectory+"/Results","..");
-	  params="-i preproc.sel -nref 1 -output_docfile -fast -iter 4"
-	  launch_parallel_job.launch_job(self.doParallel,
-        			       "xmipp_ml_align2d",
-        			       "xmipp_mpi_ml_align2d",
-        			       params,
-        			       self.mylog,
-        			       self.myNumberOfCPUs,
-        			       self.myMachineFile,
-        			       False)
-          ml2dFiles=glob.glob("ml2d_it?????.doc")
-	  self.copyFile(ml2dFiles[-1],"../Src/prealignment.txt")
-	  self.execute("rm -rf MLalign2D_* ml2d* preproc*")
+	     self.workDirectory+"/Results","..")
+	  self.execute("xmipp_average -i preproc.sel")
+	  self.execute("xmipp_align2d -i preproc.sel -ref preproc.med.xmp "+\
+	               "-iter 4 -only_trans")
+	  self.execute("xmipp_header_extract -i preproc.sel -o ../Src/prealignment.txt")
+	  self.execute("rm -rf preproc*")
 
    #------------------------------------------------------------------------
    # Prepare for first iteration
@@ -837,56 +949,8 @@ class HighRes3DClass:
                     self.getAlignmentFilename(_iteration)+\
 		    " -o preproc_recons.sel -force")
        
-       # Reconstruct
-       if self.getUseART(_iteration)=="1":
-          params="-i preproc_recons.sel "+\
-	         "-o "+self.getReconstructionRootname(_iteration)+" "+\
-		 "-l "+self.getARTLambda(_iteration)+" "+\
-		 "-sym "+self.symmetryFile+" "+\
-		 "-R "+str(math.ceil(self.particleWorkingRadius*1.1))
-	  doParallel=self.doParallel
-	  if self.getSerialART(_iteration)=="1":
-	     doParallel=False
-	  launch_parallel_job.launch_job(doParallel,
-        			       "xmipp_reconstruct_art",
-        			       "xmipp_mpi_reconstruct_art",
-        			       params,
-        			       self.mylog,
-        			       self.myNumberOfCPUs,
-        			       self.myMachineFile,
-        			       False)
-	  self.deleteFile(self.getReconstructionRootname(_iteration)+".hist")
-       else:
-          params="-i preproc_recons.sel "+\
-	         "-o "+self.getReconstructionRootname(_iteration)+".vol "+\
-		 "-sym "+self.symmetryFile+" "+\
-		 "-use_each_image"
-	  launch_parallel_job.launch_job(self.doParallel,
-        			       "xmipp_reconstruct_wbp",
-        			       "xmipp_mpi_reconstruct_wbp",
-        			       params,
-        			       self.mylog,
-        			       self.myNumberOfCPUs,
-        			       self.myMachineFile,
-        			       False)
-       if not os.path.exists(self.getReconstructionRootname(_iteration)+".vol"):
-	  raise RuntimeError,"There is a problem when reconstructing"
-       
-       # Apply raised cosine mask
-       self.execute("xmipp_mask -i "+self.getReconstructionRootname(_iteration)+\
-                    ".vol -mask raised_cosine "+str(-self.particleWorkingRadius)+\
-		    " "+str(-math.ceil(self.particleWorkingRadius*1.1)))
-       
-       # Symmetrize volume
-       self.execute("xmipp_symmetrize -i "+\
-                    self.getReconstructionRootname(_iteration)+".vol "+\
-		    "-sym "+self.symmetryFile)
-      
-       # Mask volume
-       if not self.initialReferenceMask=="":
-          self.execute("xmipp_mask -i "+\
-                       self.getReconstructionRootname(_iteration)+".vol "+\
-	               "-mask "+self.getMaskFilename(_iteration))
+       self.runReconstructionAlgorithm(_iteration,"preproc_recons.sel",
+	         self.getReconstructionRootname(_iteration),True)
 
    #------------------------------------------------------------------------
    # Reconstruction iteration
@@ -898,6 +962,8 @@ class HighRes3DClass:
       self.generateImagesForThisIteration(_iteration)
       self.angularAssignment(_iteration)
       self.reconstruct(_iteration)
+      if self.getComputeResolution(_iteration)=="1":
+         self.computeResolution(_iteration)
       
    #------------------------------------------------------------------------
    # Run
@@ -905,14 +971,81 @@ class HighRes3DClass:
    def run(self):
        self.initDirectories()
        self.generateImagesPower2()
+       self.copyCTFs()
        self.prealignment()
        self.prepareForFirstIteration()
-       for it in range(len(getListFromVector(self.pyramidLevels))):
+       for it in range(self.numberOfIterations):
            if it>=self.resumeIteration:
               self.log("Iteration "+str(it),'info',True)
 	      self.reconstructionIteration(it)
 	      self.generateNextReference(it)
+       if not self.getComputeResolution(self.numberOfIterations-1)=="1":
+          self.computeResolution(self.numberOfIterations-1)
        
+   #------------------------------------------------------------------------
+   # Run Reconstruction Algorithm
+   #------------------------------------------------------------------------
+   def runReconstructionAlgorithm(self,_iteration,_selfile,_outputRootName,
+       _applyMasks):
+
+       # Reconstruct
+       if self.getReconstructionMethod(_iteration)=="art":
+          params="-i "+_selfile+" "+\
+	         "-o "+_outputRootName+" "+\
+		 "-l "+self.getARTLambda(_iteration)+" "+\
+		 "-sym "+self.symmetryFile+" "
+	  if _applyMasks:
+	     params+="-R "+str(math.ceil(self.particleWorkingRadius*1.1))
+	  doParallel=self.doParallel
+	  if self.getSerialART(_iteration)=="1":
+	     doParallel=False
+	  launch_parallel_job.launch_job(doParallel,
+        			       "xmipp_reconstruct_art",
+        			       "xmipp_mpi_reconstruct_art",
+        			       params,
+        			       self.mylog,
+        			       self.myNumberOfCPUs,
+        			       self.myMachineFile,
+        			       False)
+	  self.deleteFile(_outputRootName+".hist")
+       elif self.getReconstructionMethod(_iteration)=="wbp":
+          params="-i "+_selfile+" "+\
+	         "-o "+_outputRootName+".vol "+\
+		 "-sym "+self.symmetryFile+" "+\
+		 "-use_each_image"
+	  if not _applyMasks:
+	     params+=" -radius "+str(0.5*math.floor(math.sqrt(2.0)*
+	        self.workXDim/
+	        math.pow(2.0,int(self.getPyramidLevel(_iteration)))))
+	  launch_parallel_job.launch_job(self.doParallel,
+        			       "xmipp_reconstruct_wbp",
+        			       "xmipp_mpi_reconstruct_wbp",
+        			       params,
+        			       self.mylog,
+        			       self.myNumberOfCPUs,
+        			       self.myMachineFile,
+        			       False)
+       else:
+          raise RuntimeError,"Unknown reconstruction method"+\
+	        self.getReconstructionMethod(_iteration)
+       if not os.path.exists(_outputRootName+".vol"):
+	  raise RuntimeError,"There is a problem when reconstructing"
+       
+       # Apply raised cosine mask
+       if _applyMasks:
+          self.execute("xmipp_mask -i "+_outputRootName+".vol "\
+                       "-mask raised_cosine "+str(-self.particleWorkingRadius)+\
+	               " "+str(-math.ceil(self.particleWorkingRadius*1.1)))
+       
+       # Symmetrize volume
+       self.execute("xmipp_symmetrize -i "+_outputRootName+".vol "+\
+		    "-sym "+self.symmetryFile)
+      
+       # Mask volume
+       if (not self.initialReferenceMask=="") and _applyMasks:
+          self.execute("xmipp_mask -i "+_outputRootName+".vol "+\
+	               "-mask "+self.getMaskFilename(_iteration))
+
    #------------------------------------------------------------------------
    # Touch file
    #------------------------------------------------------------------------
@@ -985,15 +1118,16 @@ if __name__ == '__main__':
 		
 		PyramidLevels,
 		AngularSteps,
-		UseART,
+		ReconstructionMethod,
 		SerialART,
 		ARTLambda,
 		DiscreteAssignment,
 		ContinuousAssignment,
-		ComputeResolution,
+		DoComputeResolution,
 		ResumeIteration,
 		
 		CTFDat,
+		PhaseCorrection,
 		AmplitudeCorrection,
 		
 		DoReferenceMask,
