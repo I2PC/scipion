@@ -39,6 +39,10 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     firstSettings = plotter.zoomStack[plotter.curZoom];
     ctf.clear();
     ctf_valid = false;
+    
+    // Connect plotter resize to recompute curves
+    connect(&plotter, SIGNAL(resizeDone()),
+            this, SLOT(recomputeCurves()));
 
     // Initialize geometry
     this->setGeometry(0, 0, 280, 500);
@@ -144,6 +148,7 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     lineEditVar->show();
     lineEditVar->setEnabled(false);
     connect(lineEditVar, SIGNAL(returnPressed()), this, SLOT(changeVar()));
+    connect(lineEditVar, SIGNAL(lostFocus()), this, SLOT(changeVar()));
 
     // Plot settings
     QGroupBox *GroupSet = new QGroupBox("Plot Settings", this);
@@ -162,6 +167,8 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     lineEditMaxX->setEnabled(false);
     QObject::connect(lineEditMaxX, SIGNAL(returnPressed()),
                      this, SLOT(setPlotSettings()));
+    QObject::connect(lineEditMaxX, SIGNAL(lostFocus()),
+                     this, SLOT(setPlotSettings()));
 
     QLabel *ValueMaxY = new QLabel("Max Y", GroupSet);
     ValueMaxY->setGeometry(125, 20, 40, 20);
@@ -173,6 +180,8 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     lineEditMaxY->setGeometry(170, 25, 60, 20);
     lineEditMaxY->setEnabled(false);
     QObject::connect(lineEditMaxY, SIGNAL(returnPressed()),
+                     this, SLOT(setPlotSettings()));
+    QObject::connect(lineEditMaxY, SIGNAL(lostFocus()),
                      this, SLOT(setPlotSettings()));
 
     QLabel *ValueXTicks = new QLabel("XTicks", GroupSet);
@@ -186,6 +195,8 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     lineEditXTicks->setEnabled(false);
     QObject::connect(lineEditXTicks, SIGNAL(returnPressed()),
                      this, SLOT(setPlotSettings()));
+    QObject::connect(lineEditXTicks, SIGNAL(lostFocus()),
+                     this, SLOT(setPlotSettings()));
 
     QLabel *ValueYTicks = new QLabel("YTicks", GroupSet);
     ValueYTicks->setGeometry(125, 60, 40, 20);
@@ -197,6 +208,8 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     lineEditYTicks->setGeometry(170, 60, 60, 20);
     lineEditYTicks->setEnabled(false);
     QObject::connect(lineEditYTicks, SIGNAL(returnPressed()),
+                     this, SLOT(setPlotSettings()));
+    QObject::connect(lineEditYTicks, SIGNAL(lostFocus()),
                      this, SLOT(setPlotSettings()));
 
     QLabel *ValueMinX = new QLabel("MinX", GroupSet);
@@ -210,6 +223,8 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     lineEditMinX->setEnabled(false);
     QObject::connect(lineEditMinX, SIGNAL(returnPressed()),
                      this, SLOT(setPlotSettings()));
+    QObject::connect(lineEditMinX, SIGNAL(lostFocus()),
+                     this, SLOT(setPlotSettings()));
 
     QLabel *ValueMinY = new QLabel("MinY", GroupSet);
     ValueMinY->setGeometry(125, 100, 40, 20);
@@ -221,6 +236,8 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     lineEditMinY->setGeometry(170, 100, 60, 20);
     lineEditMinY->setEnabled(false);
     QObject::connect(lineEditMinY, SIGNAL(returnPressed()),
+                     this, SLOT(setPlotSettings()));
+    QObject::connect(lineEditMinY, SIGNAL(lostFocus()),
                      this, SLOT(setPlotSettings()));
 
     // Radio buttons
@@ -250,7 +267,7 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     connect(ShowCTF, SIGNAL(clicked()), this, SLOT(refreshCurves()));
 
     QLabel *ValueAngle = new QLabel("Angle (In Degrees)", GroupRadio);
-    ValueAngle->setGeometry(60, 80, 100, 20);
+    ValueAngle->setGeometry(60, 80, 110, 20);
     ValueAngle->show();
 
     spinBoxAngle = new QSpinBox(GroupRadio);
@@ -586,6 +603,7 @@ void CTFViewer::recomputeCurves()
     plotter.setCurveData(3, data);
     getExperimentalCurve(angle, data);
     plotter.setCurveData(4, data);
+    setPlotSettings();
     refreshCurves();
 }
 
@@ -682,14 +700,14 @@ void CTFViewer::getCTFcurve(const string &type, int angle,
 void CTFViewer::setImageViewer()
 {
     // Show the CTFmodel
-    imageViewer = new ImageViewer((fn_root + ".ctfmodel").c_str() , false);
+    imageViewer = new ImageViewer((fn_root + ".ctfmodel_halfplane").c_str() , false);
     imageViewer->apply_geo = false;
-    imageViewer->loadImage((fn_root + ".ctfmodel").c_str(), 0, 0,
+    imageViewer->loadImage((fn_root + ".ctfmodel_halfplane").c_str(), 0, 0,
                            ImageViewer::CTF_mode);
     imageViewer->show();
 
     // Load the CTF in image I
-    I.read(fn_root + ".ctfmodel");
+    I.read(fn_root + ".psd");
     CenterFFT(I(), true);
     I().setXmippOrigin();
 
@@ -727,28 +745,28 @@ void CTFViewer::generate_ctfmodel()
 
     // Get the image size from the .ctfmodel
     ImageXmipp model;
-    model.read(fn_root + ".ctfmodel");
+    model.read(fn_root + ".ctfmodel_halfplane");
     int Ydim = YSIZE(model());
     int Xdim = XSIZE(model());
 
-    // Now read the .psd and rescale it to the size of the ctfmodel
-    // Remove artifactual (due to interpolation) negative values
-    model.read(fn_root + ".psd");
-    model().selfScaleToSizeBSpline(3, Ydim, Xdim);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(model())
-    if (model(i, j) < 0) model(i, j) = 0;
-
     // Substitute the left part by the CTF model
-    Matrix1D<int>    idx(2);  // Indexes for Fourier plane
     Matrix1D<double> freq(2); // Frequencies for Fourier plane
+    double minval=1e38, maxval=-1e38;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(model())
     {
-        if (j > Xdim / 2) continue;
-        XX(idx) = j;
-        YY(idx) = i;
-        FFT_idx2digfreq(model(), idx, freq);
+        if (j < Xdim / 2) continue;
+        XX(freq) = ((double)j-Xdim/2.0)/Xdim;
+        YY(freq) = ((double)i-Ydim/2.0)/Xdim;
         digfreq2contfreq(freq, freq, ctf.Tm);
         model(i, j) = ctf.CTFpure_at(XX(freq), YY(freq));
+	model(i,j)*=model(i,j);
+    	minval=MIN(minval,model(i,j));
+    	maxval=MAX(maxval,model(i,j));
+    }
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(model())
+    {
+        if (j < Xdim / 2) continue;
+	model(i,j)=(model(i,j)-minval)/(maxval-minval);
     }
 
     // Recompute curves
