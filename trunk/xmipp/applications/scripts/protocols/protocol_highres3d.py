@@ -34,7 +34,7 @@ NumberofIterations=50
     Set to 1 to start a new run 
     Note: Do NOT delete working directory if this option is not set to 1
 """
-ResumeIteration=5
+ResumeIteration=1
 
 # {expert} {dir} Root directory name for this project:
 """ Absolute path to the root directory for this project
@@ -91,7 +91,7 @@ PyramidLevels='50x0'
     The discrete angular assignment is done with xmipp_angular_predict:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Angular_predict
 """
-AngularSteps='10x5 20x2'
+AngularSteps='10x7 20x2'
 
 # {expert} Reconstruction method
 """ Choose between wbp or art
@@ -104,7 +104,7 @@ AngularSteps='10x5 20x2'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-ReconstructionMethod='50xwbp'
+ReconstructionMethod='50xart'
 
 # {expert} Serial ART
 """ Do serial ART even if parallel execution is available. This parameter
@@ -123,7 +123,7 @@ SerialART='50x1'
     For more information about art, visit:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Art
 """
-ARTLambda='20x0.001 15x0.001 15x0.0005'
+ARTLambda='50x0.01'
 
 # {expert} Discrete angular assignment
 """ Especify for each iteration whether there is discrete assignment
@@ -151,7 +151,7 @@ ContinuousAssignment='20x0 1'
 """ Computation of the spectral signal-to-noise ratio is slow, do not abuse it.
     The resolution is always computed in the last iteration
 """
-DoComputeResolution='0'
+DoComputeResolution='3x0 1 0'
 
 #-----------------------------------------------------------------------------
 # {section} CTF Amplitude Correction (assuming previous phase correction)
@@ -395,24 +395,24 @@ class HighRes3DClass:
 	    self.linkFile(self.getAlignmentFilename(_iteration-1),
 	                  self.getAlignmentFFilename(_iteration))
 	 
-	 # Check that the corresponding mask exists
-	 if not self.initialReferenceMask=="":
-	    if not os.path.exists(self.getMaskFilename(_iteration)):
-	       if not currentPyramidLevel==0:
-                  self.execute("xmipp_scale_pyramid -i ../Src/referenceScaledMask.vol -o "+\
-	                       self.getMaskFilename(_iteration)+\
-	        	       " -reduce -levels "+\
-			       str(currentPyramidLevel))
-	       else:
-	          self.linkFile("referenceScaledMask.vol",self.getMaskFilename(_iteration))
-	       if not os.path.exists(self.getMaskFilename(_iteration)):
-	          raise RuntimeError,"Cannot create "+self.getMaskFilename(_iteration)
+      # Check that the corresponding mask exists
+      if not self.initialReferenceMask=="":
+         if not os.path.exists(self.getMaskFilename(_iteration)):
+            if not currentPyramidLevel==0:
+               self.execute("xmipp_scale_pyramid -i ../Src/referenceScaledMask.vol -o "+\
+        		    self.getMaskFilename(_iteration)+\
+        		    " -reduce -levels "+\
+	     		    str(currentPyramidLevel))
 	       self.execute("xmipp_threshold -i "+
-	                    self.getMaskFilename(_iteration)+" -binarize -below 0.5")
+        		    self.getMaskFilename(_iteration)+" -binarize -below 0.5")
 	       self.execute("xmipp_morphology -i "+
-	                    self.getMaskFilename(_iteration)+" -ope")
+        		    self.getMaskFilename(_iteration)+" -ope")
 	       self.execute("xmipp_morphology -i "+
-	                    self.getMaskFilename(_iteration)+" -clo")
+        		    self.getMaskFilename(_iteration)+" -clo")
+            else:
+               self.linkFile("referenceScaledMask.vol",self.getMaskFilename(_iteration))
+            if not os.path.exists(self.getMaskFilename(_iteration)):
+               raise RuntimeError,"Cannot create "+self.getMaskFilename(_iteration)
 
    #------------------------------------------------------------------------
    # Angular assignment
@@ -729,9 +729,12 @@ class HighRes3DClass:
           self.execute("xmipp_header_assign -i "+\
         	       self.getAlignmentFFilename(_iteration)+" -o preproc.sel"+\
         	       " -force")
-          self.execute("xmipp_ctf_correct_idr -vol "+\
+	  command="xmipp_ctf_correct_idr -vol "+\
         	       self.getModelFFilename(_iteration)+\
-		       " -ctfdat preproc_ctfdat.txt")
+		       " -ctfdat preproc_ctfdat.txt"
+	  if self.getReconstructionMethod(_iteration-1)=="wbp":
+             command+=" -adjust_gray_levels"
+          self.execute(command)
 
        # Generate images for assignment
        self.copySelFile("preproc.sel","preproc_assign")
