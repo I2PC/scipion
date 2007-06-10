@@ -464,7 +464,8 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
             << " current rot="  << I.rot()
             << " current tilt=" << I.tilt() << endl;
         refine_candidate_list_with_correlation(m, *(Idwt[m]),
-                                               candidate_list, cumulative_corr, x_power, sumxy, th_discard);
+                                               candidate_list, cumulative_corr,
+					       x_power, sumxy, th_discard);
     }
 
     // Select the maximum
