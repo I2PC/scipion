@@ -116,7 +116,10 @@ void Prog_IDR_ART_Parameters::IDR_correction()
             {
         	double avg, stddev, min_val, max_val;
         	Ireal().computeStats(avg, stddev, min_val, max_val);
-        	Itheo().statistics_adjust(avg, stddev);
+        	double avgt, stddevt, min_valt, max_valt;
+        	Itheo_CTF().computeStats(avgt, stddevt, min_valt, max_valt);
+		Itheo_CTF()*=stddev/stddevt;
+		Itheo()*=stddev/stddevt;
             }
 
             // Apply IDR process
