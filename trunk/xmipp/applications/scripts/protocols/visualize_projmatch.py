@@ -272,7 +272,7 @@ class visualize_projmatch_class:
         print '*',message
         print '*********************************************************************'
 
-def show_ang_distribution(_ShowPlots,_iteration_number,_title,_mylog):
+def show_ang_distribution(_ShowPlots,_iteration_number,_title,_mylog=""):
         import os
         import docfiles
         import visualization
@@ -282,7 +282,8 @@ def show_ang_distribution(_ShowPlots,_iteration_number,_title,_mylog):
             doc.check_angle_range()
             mini=doc.minimum_of_column(7)
             maxi=doc.maximum_of_column(7)
-            _mylog.debug("mini "+ str(mini) +" maxi "+ str(maxi))
+	    if not _mylog=="":
+               _mylog.debug("mini "+ str(mini) +" maxi "+ str(maxi))
             if mini==0:
                mini=1
             if maxi<mini:
