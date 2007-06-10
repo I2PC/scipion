@@ -111,7 +111,7 @@ Plotter::Plotter(QWidget *parent, const char *name) : QMainWindow(parent, name)
 
     // Add XmippGraphics/images to the MIME Path
     QMimeSourceFactory::defaultFactory()->addFilePath(
-        (xmippBaseDir() + "/Lib/XmippGraphics/images").c_str());
+        (xmippBaseDir() + "/libraries/graphics/images").c_str());
 
     // Initialize save button
     saveButton = new QToolButton(this);
@@ -319,6 +319,7 @@ void Plotter::resizeEvent(QResizeEvent *)
     //the buttons are separated by a 5 pixel gap and with 5 pixel offset
     // from the rop and right edges
     refreshCurves();
+    emit resizeDone();
 }
 
 /* Mouse press event ------------------------------------------------------- */

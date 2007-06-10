@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Author:     Javier Rodr�guez Fern�ndez (javrodri@gmail.com)
+ * Author:     Javier Rodriguez Fernandez (javrodri@gmail.com)
  *             Carlos Oscar S. Sorzano (coss@cnb.uam.es)
  *
  * Universidad San Pablo CEU (Monteprincipe, Madrid)
@@ -168,6 +168,9 @@ public:
 
     /** Copy from another Plotter */
     void copy(const Plotter &plotter);
+signals:
+    void resizeDone();
+
 public slots:
     void zoomIn();
     void zoomOut();
