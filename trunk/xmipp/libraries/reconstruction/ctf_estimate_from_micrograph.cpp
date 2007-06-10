@@ -192,7 +192,7 @@ void Prog_assign_CTF_prm::process()
     else               fn_root = selfile_fn.remove_all_extensions();
     ofstream OutputFile_ctf;
     if (selfile_fn != "") OutputFile_ctf.open(
-            (selfile_fn.without_extension() + ".ctf.sel").c_str());
+            (selfile_fn.without_extension() + ".ctfdat").c_str());
 
     // Open the micograph
     Micrograph M_in;
@@ -263,7 +263,7 @@ void Prog_assign_CTF_prm::process()
 
     // Prepare these filenames in case they are needed
     FileName fn_avg, fn_avg_model;
-    if (micrograph_averaging && PSD_mode == ARMA)        fn_avg = fn_root + "_ARMAavg.psd";
+    if (micrograph_averaging && PSD_mode == ARMA) fn_avg = fn_root + "_ARMAavg.psd";
     else if (micrograph_averaging && PSD_mode == Periodogram) fn_avg = fn_root + "_Periodogramavg.psd";
     int N = 1;    // Index of current piece
     int i = 0, j = 0; // top-left corner of the current piece
@@ -371,11 +371,11 @@ void Prog_assign_CTF_prm::process()
         // Compute the theoretical model if not averaging ....................
         if (!micrograph_averaging)
         {
-            FileName piece_fn_root;
+            FileName piece_fn, piece_fn_root;
             if (compute_at_particle)
             {
-                piece_fn_root = SF.get_current_file();
-                piece_fn_root = piece_fn_root.get_baseName();
+                piece_fn = SF.get_current_file();
+                piece_fn_root = piece_fn.get_baseName();
                 SF.next();
             }
             else
@@ -391,7 +391,8 @@ void Prog_assign_CTF_prm::process()
                 {
                     double fitting_error = ROUT_Adjust_CTF(adjust_CTF_prm, false);
                     if (compute_at_particle)
-                        OutputFile_ctf << piece_fn_root + ".ctfmodel_halfplane" << " 1\n";
+                        OutputFile_ctf << piece_fn << " "
+			               << piece_fn_root+".psd\n";
                 }
             }
         }
@@ -433,6 +434,7 @@ void Prog_assign_CTF_prm::process()
         }
         while (!SF.eof())
         {
+	    FileName fn_img=SF.NextImg();
             if (!selfile_mode)
             {
                 string line;
@@ -452,20 +454,19 @@ void Prog_assign_CTF_prm::process()
                         int idx_X = FLOOR((double)X / N_horizontal);
                         int idx_Y = FLOOR((double)Y / N_vertical);
                         int idx_piece = idx_Y * div_NumberX + idx_X + 1;
-                        OutputFile_ctf << PSDfn_root + ItoA(idx_piece, 5) + ".ctfmodel_halfplane"
-                        << " 1\n";
+                        OutputFile_ctf << fn_img << " "
+			               << PSDfn_root + ItoA(idx_piece, 5) + ".psd\n";
                     }
                     else
-                        OutputFile_ctf << fn_avg.without_extension() + ".ctfmodel_halfplane"
-                        << " 1\n";
+                        OutputFile_ctf << fn_img << " "
+			               << fn_avg.without_extension() + ".psd\n";
                 }
             }
             else
             {
-                OutputFile_ctf << fn_avg.without_extension() + ".ctfmodel_halfplane"
-                << " 1\n";
+                OutputFile_ctf << fn_img << " "
+		               << fn_avg.without_extension() + ".psd\n";
             }
-            SF.next();
         }
     }
     if (selfile_fn != "") OutputFile_ctf.close();
