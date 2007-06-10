@@ -12,7 +12,7 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # Iterations
-Iterations='1-2'
+Iterations='1'
 # Show reconstructed volume
 DoShowVolume=False
 # Show model
@@ -22,7 +22,24 @@ DoShowAngleConvergence=False
 # Show vector difference
 DoShowVectorDifferences=False
 # Show discrete angular assignment summary
-DoShowDiscreteSummary=True
+DoShowDiscreteSummary=False
+# Show resolution
+DoShowResolution=True
+#------------------------------------------------------------------------------------------------
+# {section} Volume visualization
+#------------------------------------------------------------------------------------------------
+# Visualize volumes in slices along Z?
+VisualizeVolZ=True
+# Visualize volumes in slices along X?
+VisualizeVolX=False
+# Visualize volumes in slices along Y?
+VisualizeVolY=False
+# Visualize volumes in UCSF Chimera?
+""" For this to work, you need to have chimera installed!
+"""
+VisualizeVolChimera=False
+# {expert} Width of xmipp_show (multiple of 3!):
+MatrixWidth=9
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
@@ -32,6 +49,10 @@ import os
 import shutil
 import string
 import sys
+
+scriptdir=os.path.expanduser('~')+'/scripts/'
+sys.path.append(scriptdir) # add default search path
+import visualization
 
 #===========================================================================
 # Beginning of the protocol
@@ -47,6 +68,12 @@ class VisualizeHighres3DClass:
                 _DoShowAngleConvergence,
                 _DoShowVectorDifferences,
                 _DoShowDiscreteSummary,
+		_DoShowResolution,
+		_VisualizeVolZ,
+		_VisualizeVolX,
+		_VisualizeVolY,
+		_VisualizeVolChimera,
+		_MatrixWidth,
                 _ProtocolName):
 
        self.iterations=_Iterations
@@ -55,51 +82,51 @@ class VisualizeHighres3DClass:
        self.doShowAngleConvergence=_DoShowAngleConvergence
        self.doShowVectorDifferences=_DoShowVectorDifferences
        self.doShowDiscreteSummary=DoShowDiscreteSummary
+       self.doShowResolution=_DoShowResolution
+       self.visualizeVolZ=_VisualizeVolZ
+       self.visualizeVolX=_VisualizeVolX
+       self.visualizeVolY=_VisualizeVolY
+       self.visualizeVolChimera=_VisualizeVolChimera
+       self.matrixWidth=_MatrixWidth
 
        # Import the corresponding protocol
-       pardir=os.path.abspath(os.getcwd())
-       shutil.copy(ProtocolName,'protocol.py')
-       import protocol
+       import protocol_highres3d
 
        # Produce side info
-       self.myHighRes3D=protocol.HighRes3DClass(
-      	        protocol.SelFileName,
-		protocol.ReferenceFileName,
-		protocol.WorkDirectory,
-		protocol.DoDeleteWorkingDir,
-		protocol.NumberofIterations,
-		protocol.ProjectDir,
-		protocol.LogDir,
-		protocol.ParticleRadius,
-		protocol.ParticleMass,
-		protocol.SymmetryFile,
-		protocol.SamplingRate,
-		protocol.PyramidLevels,
-		protocol.AngularSteps,
-		protocol.UseART,
-		protocol.SerialART,
-		protocol.ARTLambda,
-		protocol.DiscreteAssignment,
-		protocol.ContinuousAssignment,
-		protocol.ComputeResolution,
-		protocol.ResumeIteration,
-		protocol.CTFDat,
-		protocol.AmplitudeCorrection,
-		protocol.DoReferenceMask,
-		protocol.InitialReferenceMask,
-		protocol.FilterReference,
-		protocol.SegmentUsingMass,
-		protocol.DoParallel,
-		protocol.MyNumberOfCPUs,
-		protocol.MyMachineFile,
+       self.myHighRes3D=protocol_highres3d.HighRes3DClass(
+      	        protocol_highres3d.SelFileName,
+		protocol_highres3d.ReferenceFileName,
+		protocol_highres3d.WorkDirectory,
+		protocol_highres3d.DoDeleteWorkingDir,
+		protocol_highres3d.NumberofIterations,
+		protocol_highres3d.ProjectDir,
+		protocol_highres3d.LogDir,
+		protocol_highres3d.ParticleRadius,
+		protocol_highres3d.ParticleMass,
+		protocol_highres3d.SymmetryFile,
+		protocol_highres3d.SamplingRate,
+		protocol_highres3d.PyramidLevels,
+		protocol_highres3d.AngularSteps,
+		protocol_highres3d.ReconstructionMethod,
+		protocol_highres3d.SerialART,
+		protocol_highres3d.ARTLambda,
+		protocol_highres3d.DiscreteAssignment,
+		protocol_highres3d.ContinuousAssignment,
+		protocol_highres3d.DoComputeResolution,
+		protocol_highres3d.ResumeIteration,
+		protocol_highres3d.CTFDat,
+		protocol_highres3d.PhaseCorrection,
+		protocol_highres3d.AmplitudeCorrection,
+		protocol_highres3d.DoReferenceMask,
+		protocol_highres3d.InitialReferenceMask,
+		protocol_highres3d.FilterReference,
+		protocol_highres3d.SegmentUsingMass,
+		protocol_highres3d.DoParallel,
+		protocol_highres3d.MyNumberOfCPUs,
+		protocol_highres3d.MyMachineFile,
 		
 		False
               )
-       # Remove protocol.py(c)
-       if (os.path.exists('protocol.py')):
-           os.remove('protocol.py')
-       if (os.path.exists('protocol.pyc')):
-           os.remove('protocol.pyc')
 
        os.chdir(self.myHighRes3D.workDirectory+"/Results")
        self.expandIterations()
@@ -154,6 +181,7 @@ class VisualizeHighres3DClass:
        if self.doShowAngleConvergence: self.showAngleConvergence()
        if self.doShowVectorDifferences: self.showVectorDifferences()
        if self.doShowDiscreteSummary: self.showDiscreteSummary()
+       if self.doShowResolution: self.showResolution()
 
    #------------------------------------------------------------------------
    # Show Angle Convergence
@@ -173,11 +201,11 @@ class VisualizeHighres3DClass:
               ShowPlots=[]
 	      ShowPlots.append(self.myHighRes3D.getDiscreteAnglesSummaryDir(
  	         self.iterationList[i])+"/summary_summary.doc")
-	      title='Angular distribution for iteration '+\
-        	     str(self.iterationList[i])
+	      title=[]
+	      title.append('Angular distribution for iteration '+\
+        	 str(self.iterationList[i]))
       	      visualize_projmatch.show_ang_distribution(
 	         ShowPlots,self.iterationList[i],title)
-	      print "Calling",i
 
 	  for i in range(len(self.iterationList)):
               command="( cd "+self.myHighRes3D.workDirectory+"/Results/"+\
@@ -191,13 +219,60 @@ class VisualizeHighres3DClass:
    #------------------------------------------------------------------------
    def showModels(self):
        if not len(self.iterationList)==0:
-          command="xmipp_show -vol "
+          volumeList=[]
 	  for i in range(len(self.iterationList)):
-	      command+=self.myHighRes3D.getModelFilename(
-	         self.iterationList[i])+" "
-	  command+="&"
-	  self.execute(command)
+	      volumeList.append(self.myHighRes3D.getModelFilename(
+	         self.iterationList[i]))
+          visualization.visualize_volumes(volumeList,
+                                          self.visualizeVolZ,
+                                          self.visualizeVolX,
+                                          self.visualizeVolY,
+                                          self.visualizeVolChimera)
 	     
+   #------------------------------------------------------------------------
+   # Show Resolution
+   #------------------------------------------------------------------------
+   def showResolution(self):
+       if not len(self.iterationList)==0:
+          launchGnuplot=False
+          command="echo plot "
+	  for i in range(len(self.iterationList)):
+	      if os.path.exists(self.myHighRes3D.getReconstructionRootname(
+	         self.iterationList[i])+"_2.vol.frc"):
+		 if launchGnuplot: command+=", "
+         	 command+="\\\""+self.myHighRes3D.getReconstructionRootname(
+	                  self.iterationList[i])+\
+			  '_2.vol.frc\\\" u 1:2 title \\"FSC iteration '+\
+			  str(self.iterationList[i])+'\\" w l'
+		 if not launchGnuplot:
+		    command+=", \\\""+self.myHighRes3D.getReconstructionRootname(
+                             self.iterationList[i])+\
+		             '_2.vol.frc\\\" u 1:3 title \\"Noise threshold\\" w l'
+		 launchGnuplot=True
+    	  if launchGnuplot:
+             command+=" \; set xlabel \\\"1/Angstrom\\\" \; replot \; "+\
+	              "pause 300 | gnuplot &"
+	     self.execute(command)
+
+       if not len(self.iterationList)==0:
+          launchGnuplot=False
+          command="echo plot "
+	  for i in range(len(self.iterationList)):
+	      if os.path.exists(self.myHighRes3D.getReconstructionRootname(
+	         self.iterationList[i])+".vol.ssnr"):
+		 if launchGnuplot: command+=", "
+         	 command+="\\\""+self.myHighRes3D.getReconstructionRootname(
+	                  self.iterationList[i])+\
+			  '.vol.ssnr\\\" u 2:3 title \\"SSNR iteration '+\
+			  str(self.iterationList[i])+'\\" w l'
+		 if not launchGnuplot:
+		    command+=", 0"
+		 launchGnuplot=True
+    	  if launchGnuplot:
+             command+=" \; set xlabel \\\"1/Angstrom\\\" \; "+\
+	              "set yrange [-5:30] \; replot \; pause 300 | gnuplot &"
+	     self.execute(command)
+
    #------------------------------------------------------------------------
    # Show Vector Differences
    #------------------------------------------------------------------------
@@ -218,12 +293,15 @@ class VisualizeHighres3DClass:
    #------------------------------------------------------------------------
    def showVolumes(self):
        if not len(self.iterationList)==0:
-          command="xmipp_show -vol "
+          volumeList=[]
 	  for i in range(len(self.iterationList)):
-	      command+=self.myHighRes3D.getReconstructionRootname(
-	         self.iterationList[i])+".vol "
-	  command+="&"
-	  self.execute(command)
+	      volumeList.append(self.myHighRes3D.getReconstructionRootname(
+	         self.iterationList[i])+".vol")
+          visualization.visualize_volumes(volumeList,
+                                          self.visualizeVolZ,
+                                          self.visualizeVolX,
+                                          self.visualizeVolY,
+                                          self.visualizeVolChimera)
 	     
 #---------------------------------------------------------------------------
 # itoa
@@ -240,12 +318,17 @@ if __name__ == '__main__':
     ProtocolName=sys.argv[1]
 
     visualizeHighres3D=VisualizeHighres3DClass(Iterations,
-                                               DoShowVolume,
-                                               DoShowModel,
-                                               DoShowAngleConvergence,
-                                               DoShowVectorDifferences,
-                                               DoShowDiscreteSummary,
-                                               ProtocolName)
+                			       DoShowVolume,
+                			       DoShowModel,
+                			       DoShowAngleConvergence,
+                			       DoShowVectorDifferences,
+                			       DoShowDiscreteSummary,
+					       DoShowResolution,
+					       VisualizeVolZ,
+					       VisualizeVolX,
+					       VisualizeVolY,
+					       VisualizeVolChimera,
+					       MatrixWidth,
+                			       ProtocolName)
 
     visualizeHighres3D.run()
-
