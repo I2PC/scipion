@@ -760,7 +760,6 @@ bool ImageViewer::loadMatrix(Matrix2D<double> &_matrix,
     else if (load_mode == ImageViewer::CTF_mode)
     {
         // It is ARMA and CTF together
-        xmipp2CTF(_matrix, _matrix);
         options->setItemEnabled(editctfmodel, true);
     }
     tmpImage() = _matrix;
