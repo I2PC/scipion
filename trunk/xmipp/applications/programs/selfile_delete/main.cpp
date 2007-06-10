@@ -92,9 +92,6 @@ int main(int argc, char *argv[])
             {   //The SelLine is not a comment
                 FileName in_name = line.get_text();
                 comStr = "rm -f " + org_path + in_name;
-
-                if (!system(comStr.c_str()))
-                    cout << " file " << org_path << in_name << " removed " << endl;
             }
             SF.next();
         }  // while
@@ -103,7 +100,6 @@ int main(int argc, char *argv[])
         // now remove sel file
         comStr = "rm -f " + sel_file;
         system(comStr.c_str());
-
     }
     catch (Xmipp_error XE)
     {
