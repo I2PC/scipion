@@ -28,75 +28,68 @@
 #include <data/args.h>
 
 /* Read parameters from command line. -------------------------------------- */
-void CorrectPhase_Params::read(int argc, char **argv)
+void CorrectPhaseParams::read(int argc, char **argv)
 {
-    fn_ctf = getParameter(argc, argv, "-ctf");
-
+    fnCtfdat = getParameter(argc, argv, "-ctfdat");
     epsilon = AtoF(getParameter(argc, argv, "-small", "0"));
-    string aux;
+    std::string aux;
     aux = getParameter(argc, argv, "-method", "");
-    if (aux == "remove")           method = CORRECT_SETTING_SMALL_TO_ZERO;
+    if (aux == "remove")                  method = CORRECT_SETTING_SMALL_TO_ZERO;
     else if (aux == "leave" || aux == "") method = CORRECT_LEAVING_SMALL;
-    else if (aux == "divide")           method = CORRECT_AMPLIFYING_NOT_SMALL;
-    multiple_CTFs = fn_ctf.get_extension() == "sel";
-    cout << fn_ctf << " " << fn_ctf.get_extension() << endl;
+    else if (aux == "divide")             method = CORRECT_AMPLIFYING_NOT_SMALL;
 }
 
 /* Show -------------------------------------------------------------------- */
-void CorrectPhase_Params::show()
+void CorrectPhaseParams::show()
 {
-    cout << "CTF: " << fn_ctf << endl
-    << "Small is under " << epsilon << endl;
-    cout << "Correcting method: ";
+    std::cout << "ctfdat: " << fnCtfdat << std::endl
+              << "Small is under " << epsilon << std::endl
+              << "Correcting method: ";
     switch (method)
     {
     case CORRECT_SETTING_SMALL_TO_ZERO:
-        cout << "Set small values to 0\n";
+        std::cout << "Set small values to 0\n";
         break;
     case CORRECT_LEAVING_SMALL:
-        cout << "Leave small values as they are\n";
+        std::cout << "Leave small values as they are\n";
         break;
     case CORRECT_AMPLIFYING_NOT_SMALL:
-        cout << "Correct amplitude except for the small values\n";
+        std::cout << "Correct amplitude except for the small values\n";
         break;
     }
 }
 
 /* Usage ------------------------------------------------------------------- */
-void CorrectPhase_Params::usage()
+void CorrectPhaseParams::usage()
 {
-    cerr << "   -ctf <CTF descr file or selfile> : It must not be centered\n"
-    << "  [-small <epsilon=0>]              : Values under epsilon are small\n"
-    << "  [-method <mth=leave>]             : Valid methods are: remove, leave\n"
-    << "                                      divide\n";
+    std::cerr << "   -ctfdat <CTF descr file or selfile> : It must not be centered\n"
+              << "  [-small <epsilon=0>]                 : Values under epsilon are small\n"
+              << "  [-method <mth=leave>]                : Valid methods are: remove, leave\n"
+              << "                                         divide\n";
     ;
 }
 
 /* Produce Side information ------------------------------------------------ */
-void CorrectPhase_Params::produce_side_info()
+void CorrectPhaseParams::produceSideInfo()
+{
+    ctfdat.read(fnCtfdat);
+}
+
+void CorrectPhaseParams::readCTF(const FileName &fnCTF)
 {
     ctf.FilterBand = CTF;
     ctf.ctf.enable_CTFnoise = false;
-    if (multiple_CTFs)
-    {
-        SF_CTF.read(fn_ctf);
-        SF_CTF.go_first_ACTIVE();
-    }
-    else
-    {
-        ctf.ctf.read(fn_ctf);
-        ctf.ctf.Produce_Side_Info();
-    }
+    ctf.ctf.read(fnCTF);
+    ctf.ctf.Produce_Side_Info();
 }
 
 /* Correct a single image -------------------------------------------------- */
 //#define DEBUG
-void CorrectPhase_Params::correct(Matrix2D< complex<double> > &v)
+void CorrectPhaseParams::correct(Matrix2D< complex<double> > &v)
 {
-    if (XSIZE(ctf.mask2D) == 0 || multiple_CTFs)
-        ctf.generate_mask(v);
+    ctf.generate_mask(v);
 #ifdef DEBUG
-    cout << "New image ----------------------------\n";
+    std::cout << "New image ----------------------------\n";
 #endif
 
     FOR_ALL_ELEMENTS_IN_MATRIX2D(v)
@@ -105,15 +98,15 @@ void CorrectPhase_Params::correct(Matrix2D< complex<double> > &v)
         if (m.imag() != 0)
             REPORT_ERROR(1, "CorrectPhase::correct: CTF is not real\n");
 #ifdef DEBUG
-        cout << "CTF at (" << j << "," << i << ")="
-        << m << " Value there " << v(i, j);
+        std::cout << "CTF at (" << j << "," << i << ")="
+                  << m << " Value there " << v(i, j);
 #endif
         switch (method)
         {
         case CORRECT_SETTING_SMALL_TO_ZERO:
             if (m.real() < 0)
                 if (v(i, j).real() < -epsilon) v(i, j) *= -1;
-                else                        v(i, j) = 0;
+                else                           v(i, j) = 0;
             break;
         case CORRECT_LEAVING_SMALL:
             if (m.real() < -epsilon) v(i, j) *= -1;
@@ -123,30 +116,36 @@ void CorrectPhase_Params::correct(Matrix2D< complex<double> > &v)
             break;
         }
 #ifdef DEBUG
-        cout << " Final value " << v(i, j) << endl;
+        std::cout << " Final value " << v(i, j) << std::endl;
 #endif
     }
 }
 #undef DEBUG
 
 /* Correct a set of images ------------------------------------------------- */
-void CorrectPhase_Params::correct(SelFile &SF)
+void CorrectPhaseParams::run()
 {
     Matrix2D< complex<double> > fft;
-    SF.go_first_ACTIVE();
+    ctfdat.goFirstLine();
     cerr << "Correcting CTF phase ...\n";
-    int istep = CEIL((double)SF.ImgNo() / 60.0);
-    init_progress_bar(SF.ImgNo());
+    int istep = CEIL((double)ctfdat.lineNo() / 60.0);
+    init_progress_bar(ctfdat.lineNo());
     int i = 0;
-    while (!SF.eof())
+    while (!ctfdat.eof())
     {
-        ImageXmipp I;
-        I.read(SF.NextImg());
-        FourierTransform(I(), fft);
-        correct(fft);
-        InverseFourierTransform(fft, I());
-        I.write();
+        FileName fnProjection, fnCTF;
+	ctfdat.getCurrentLine(fnProjection,fnCTF);
+	if (fnProjection!="") {
+            ImageXmipp I;
+            I.read(fnProjection);
+            FourierTransform(I(), fft);
+	    readCTF(fnCTF);
+            correct(fft);
+            InverseFourierTransform(fft, I());
+            I.write();
+	}
         if (i++ % istep == 0) progress_bar(i);
+	ctfdat.nextLine();
     }
-    progress_bar(SF.ImgNo());
+    progress_bar(ctfdat.lineNo());
 }

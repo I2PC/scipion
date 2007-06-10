@@ -33,11 +33,11 @@
 /**@name Correct Phase */
 //@{
 /// Correct Phase parameters
-class CorrectPhase_Params
+class CorrectPhaseParams
 {
 public:
-    /// Name of the CTF file
-    FileName fn_ctf;
+    /// ctfdat
+    FileName fnCtfdat;
 
     /// Epsilon=minimum CTF value to correct
     double epsilon;
@@ -57,11 +57,12 @@ public:
 
     /// Side Info: CTF
     FourierMask ctf;
-    bool        multiple_CTFs;
-    SelFile     SF_CTF; // In case of multiple CTFs
+    
+    /// Side Info: ctfdat
+    CTFDat ctfdat;
 public:
     /** Empty constructor */
-    CorrectPhase_Params(): epsilon(0), method(0)
+    CorrectPhaseParams(): epsilon(0), method(0)
     {}
 
     /** Read parameters from command line. */
@@ -74,16 +75,20 @@ public:
     void usage();
 
     /** Produce side information.
-        The CTF file is read. */
-    void produce_side_info();
+        The CTFdat is read. */
+    void produceSideInfo();
 
+    /** Read a CTF.. */
+    void readCTF(const FileName &fnCTF);
+
+    /** Correct phase of the images in the ctfdat.*/
+    void run();
+
+private:
     /** Correct phase of an image.
         An exception is thrown if the input image is not of the same size
         as the ctf or if the CTF is not real */
     void correct(Matrix2D< complex<double> > &v);
-
-    /** Correct phase of a set of images.*/
-    void correct(SelFile &SF);
 };
 //@}
 #endif
