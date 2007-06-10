@@ -25,9 +25,9 @@
 #ifndef _PROG_IDR_ART_HH
 #  define _PROG_IDR_ART_HH
 
-#include "basic_art.h"
-#include "reconstruct_art.h"
+#include "ctf.h"
 #include "fourier_filter.h"
+#include <data/volume.h>
 
 /**@name IDR */
 //@{
@@ -36,29 +36,19 @@
 class Prog_IDR_ART_Parameters
 {
 public:
-    /// Selfile with experimental images
-    FileName fn_exp;
     /// Reference volume
     FileName fn_vol;
-    /// Selfile with CTFs
-    FileName fn_ctf;
-    /// File output rootname
-    FileName fn_root;
+    /// CTFdat file
+    FileName fn_ctfdat;
     /// Relaxation factor
     double mu;
     /// Adjust gray levels
     bool adjust_gray_levels;
 
-    /// Side Info: CTF
-    FourierMask          ctf;
-    /// Side info: Original set of images
-    SelFile              SF_exp;
-    /// Side info: New set of images
-    SelFile              SF_new;
-    /// Side info: set of CTFs (maybe it is not necessary)
-    SelFile              SF_ctf;
     /// Side Info: volume
-    VolumeXmipp          V;
+    VolumeXmipp V;
+    /// Side Info: ctfdat
+    CTFDat ctfdat;
 public:
     /// Read parameters from the command line
     void read(int argc, char **argv);
