@@ -701,17 +701,20 @@ void single_recons_test(const Recons_test_Parameters &prm,
 
 // Correct phase -----------------------------------------------------------
     FileName fn_applied_CTF;
-    FourierMask ctf;
     if (prm.correct_phase)
     {
-        CorrectPhase_Params correct;
-        correct.fn_ctf = prm.fn_CTF;
-        correct.multiple_CTFs = false;
+        CTFDat ctfdat;
+	ctfdat.createFromSelfileAndSingleCTF(SF,prm.fn_CTF);
+	ctfdat.write(prm.fn_CTF+"_ctfdat");
+    
+        CorrectPhaseParams correct;
+        correct.fnCtfdat = prm.fn_CTF;
         correct.method = prm.phase_correction_method;
         correct.epsilon = prm.phase_correction_param;
-        correct.produce_side_info();
-        ctf = correct.ctf;
-        correct.correct(SF);
+        correct.produceSideInfo();
+        correct.run();
+	
+	system(((std::string)"rm "+prm.fn_CTF+"_ctfdat").c_str());
     }
     fn_applied_CTF = prm.fn_CTF;
 
@@ -882,26 +885,20 @@ void single_recons_test(const Recons_test_Parameters &prm,
             Basic_ROUT_Art(art_prm, plain_art_prm, vol_recons, vol_basis);
         else
         {
-            // Generate a selfile with the applied CTF
-            SelFile SF_ctf;
-            SF.go_first_ACTIVE();
-            while (!SF.eof())
-            {
-                SF_ctf.insert(fn_applied_CTF);
-                SF.NextImg();
-            }
-            SF.go_first_ACTIVE();
-            SF_ctf.write(fn_root + "_ctf.sel");
-
             // Apply IDR
+            CTFDat ctfdat;
+	    ctfdat.createFromSelfileAndSingleCTF(SF,fn_applied_CTF);
+	    ctfdat.write(fn_applied_CTF+"_ctfdat");
+
             Prog_IDR_ART_Parameters idr_prm;
             idr_prm.mu = prm.mu;
-            idr_prm.fn_ctf = fn_root + "_ctf.sel";
-            idr_prm.fn_exp = Prog_proj_prm.fn_sel_file;
+            idr_prm.fn_ctfdat = fn_applied_CTF +"_ctfdat";
             idr_prm.fn_vol = vol_recons.name();
-            idr_prm.fn_root = fn_root + "_idr";
             idr_prm.produce_side_info();
             idr_prm.IDR_correction();
+	    
+	    // COSS: This should be further tested since idr rewrites
+	    //       the input images
 
             fn_recons_root = vol_recons.name().without_extension();
         }
