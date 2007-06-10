@@ -8,7 +8,7 @@ class selfile:
    def __init__(self):
        self.sellines=[]
 
-   # Reads selfile from disc
+   # Reads selfile from disk
    def read(self,selfilename):
        self.selfilename=selfilename
        fh=open(self.selfilename,'r')
