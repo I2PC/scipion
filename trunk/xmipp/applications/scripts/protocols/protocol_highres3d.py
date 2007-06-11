@@ -39,7 +39,7 @@ ResumeIteration=1
 # {expert} {dir} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/media/usb_linux/Experiments/TestSencilloCTF'
+ProjectDir='/home/bioing/COSS/Experiments/TestSencilloCTF'
 
 # {expert} {dir} Directory name for logfiles:
 LogDir='Logs'
@@ -91,7 +91,7 @@ PyramidLevels='50x0'
     The discrete angular assignment is done with xmipp_angular_predict:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Angular_predict
 """
-AngularSteps='10x7 20x2'
+AngularSteps='10x5'
 
 # {expert} Reconstruction method
 """ Choose between wbp or art
@@ -104,7 +104,7 @@ AngularSteps='10x7 20x2'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-ReconstructionMethod='50xart'
+ReconstructionMethod='50xwbp'
 
 # {expert} Serial ART
 """ Do serial ART even if parallel execution is available. This parameter
@@ -145,19 +145,26 @@ DiscreteAssignment='50x1'
     The discrete angular assignment is done with xmipp_angular_predict:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Angular_predict_continuous
 """
-ContinuousAssignment='20x0 1'
+ContinuousAssignment='4x0 1'
 
 # {expert} Compute resolution
 """ Computation of the spectral signal-to-noise ratio is slow, do not abuse it.
     The resolution is always computed in the last iteration
 """
-DoComputeResolution='3x0 1 0'
+DoComputeResolution='0'
 
 #-----------------------------------------------------------------------------
 # {section} CTF Amplitude Correction (assuming previous phase correction)
 #-----------------------------------------------------------------------------
 # {expert} CTF dat file
-""" This file specify the CTF parameters for each image
+""" This file specify the CTF parameters for each image.
+    The file is a two-column text file: the first column corresponds to
+    the filename of a projection, and the second column is the
+    corresponding CTF file.
+    
+    This is the format output by the preprocessing protocol so that
+    if you have run this other protocol, you simply have to provide
+    the name generated at that stage.
 """
 CTFDat='CTF.dat'
 
@@ -709,6 +716,10 @@ class HighRes3DClass:
        self.copySelFile("../imgs.sel","preproc","preproc.sel",
         		self.workDirectory+"/Results","..")
 
+       # Normalize images
+       self.execute("xmipp_normalize -i preproc.sel -method NewXmipp -background circle "+\
+        	    str(math.ceil(self.particleWorkingRadius*1.1)))
+
        # Produce a set of suitable CTFs
        if self.phaseCorrection or \
           (self.getAmplitudeCorrection(_iteration)=="1" \
@@ -729,20 +740,17 @@ class HighRes3DClass:
           self.execute("xmipp_header_assign -i "+\
         	       self.getAlignmentFFilename(_iteration)+" -o preproc.sel"+\
         	       " -force")
-	  command="xmipp_ctf_correct_idr -vol "+\
+          self.execute("xmipp_ctf_correct_idr -vol "+\
         	       self.getModelFFilename(_iteration)+\
-		       " -ctfdat preproc_ctfdat.txt"
-	  if self.getReconstructionMethod(_iteration-1)=="wbp":
-             command+=" -adjust_gray_levels"
-          self.execute(command)
+		       " -ctfdat preproc_ctfdat.txt")
 
        # Generate images for assignment
        self.copySelFile("preproc.sel","preproc_assign")
        if not self.getPyramidLevel(_iteration)=="0":
           self.execute("xmipp_scale_pyramid -i preproc_assign.sel -reduce -levels "+\
         	       str(self.getPyramidLevel(_iteration)))
-       self.execute("xmipp_normalize -i preproc_assign.sel -method NewXmipp -background circle "+\
-        	    str(math.ceil(self.particleWorkingRadius*1.1*factor)))
+          self.execute("xmipp_normalize -i preproc_assign.sel -method NewXmipp -background circle "+\
+        	       str(math.ceil(self.particleWorkingRadius*1.1*factor)))
 
        # Remove useless images
        self.execute("xmipp_selfile_delete preproc.sel")
@@ -1033,7 +1041,7 @@ class HighRes3DClass:
 	        self.getReconstructionMethod(_iteration)
        if not os.path.exists(_outputRootName+".vol"):
 	  raise RuntimeError,"There is a problem when reconstructing"
-       
+
        # Apply raised cosine mask
        if _applyMasks:
           self.execute("xmipp_mask -i "+_outputRootName+".vol "\
