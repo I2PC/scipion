@@ -80,6 +80,7 @@ void Prog_IDR_ART_Parameters::IDR_correction()
 	{
             // Read current input image
             Ireal.read(fn_img);
+	    Ireal().selfTranslateBSpline(3,vectorR2(Ireal.Xoff(),Ireal.Yoff()));
 
             // Project the volume in the same direction
             project_Volume(V(), Itheo, YSIZE(Ireal()), XSIZE(Ireal()),
@@ -116,10 +117,14 @@ void Prog_IDR_ART_Parameters::IDR_correction()
             {
         	double avg, stddev, min_val, max_val;
         	Ireal().computeStats(avg, stddev, min_val, max_val);
+		Ireal()-=avg;
+		Ireal()/=stddev;
         	double avgt, stddevt, min_valt, max_valt;
         	Itheo_CTF().computeStats(avgt, stddevt, min_valt, max_valt);
-		Itheo_CTF()*=stddev/stddevt;
-		Itheo()*=stddev/stddevt;
+		Itheo_CTF()-=avgt;
+		Itheo_CTF()/=stddevt;
+		Itheo()-=avgt;
+		Itheo()/=stddevt;
             }
 
             // Apply IDR process
@@ -132,12 +137,12 @@ void Prog_IDR_ART_Parameters::IDR_correction()
 
 //#define DEBUG
 #ifdef DEBUG
-            Itheo.write(fn_out.add_prefix("PPPtheo_") + ".xmp");
-            Itheo_CTF.write(fn_out.add_prefix("PPPtheo_CTF_") + ".xmp");
-            Ireal.write(fn_out.add_prefix("PPPreal_") + ".xmp");
+            Itheo.write(fn_img.add_prefix("PPPtheo_") + ".xmp");
+            Itheo_CTF.write(fn_img.add_prefix("PPPtheo_CTF_") + ".xmp");
+            Ireal.write(fn_img.add_prefix("PPPreal_") + ".xmp");
             ImageXmipp save;
             save() = Itheo() - mu * Itheo_CTF();
-            save.write(fn_out.add_prefix("PPPdiff_") + ".xmp");
+            save.write(fn_img.add_prefix("PPPdiff_") + ".xmp");
             cout << "Press any key to continue\n";
             char c;
             cin >> c;
