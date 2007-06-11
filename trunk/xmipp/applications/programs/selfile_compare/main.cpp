@@ -28,27 +28,41 @@
 
 int main(int argc, char **argv)
 {
-    FileName fn1, fn2, fn_out;
+    int mode
+    FileName fn1, fn2, fn_out, fn_meth;
     try
     {
         fn1   = getParameter(argc, argv, "-i1");
         fn2   = getParameter(argc, argv, "-i2");
         fn_out = getParameter(argc, argv, "-o");
+	fn_meth = getParameter(argc, argv, "-method","");
+	if (fn_meth == "both")
+	    mode = 0;
+	else if (fn_meth == "file1")
+	    mode = 1;
+	else if (fn_meth == "file2")
+	    mode = 2;
+	else 
+	    mode = -1;
+
     }
     catch (Xmipp_error XE)
     {
         cout << XE;
         cout << "Usage: compare_selfiles\n"
-        << "   -i1 <selfile1>      : First  selfile to compare\n"
-        << "   -i2 <selfile2>      : Second selfile to compare\n"
-        << "   -o  <selfile_out>   : Output selfile to compare\n"
+	     << "   -i1 <selfile1>      : First  selfile to compare\n"
+	     << "   -i2 <selfile2>      : Second selfile to compare\n"
+	     << "   -o  <selfile_out>   : Output selfile to compare\n"
+	     << "  [-method both]       : Output selfile with images that occur in both files\n"
+	     << "  [-method file1]      : Output selfile with images that only occur in file 1\n"
+	     << "  [-method file2]      : Output selfile with images that only occur in file 2\n"
         ;
     }
 
     try
     {
         SelFile SF1(fn1), SF2(fn2);
-        SelFile SFout = compare(SF1, SF2);
+        SelFile SFout = compare(SF1, SF2, mode);
         SFout.write(fn_out);
     }
     catch (Xmipp_error XE)
