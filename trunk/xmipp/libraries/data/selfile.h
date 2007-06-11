@@ -177,8 +177,12 @@ public:
 
     /** Compare two SelFiles.
      * @ingroup SelFilesOperations
+     * if mode<0, output file will contain all information
+     * if mode=0, output will be selfile with overlapping images
+     * if mode=1, output will be selfile with images only in file 1
+     * if mode=2, output will be selfile with images only in file 2
      */
-    friend SelFile compare(SelFile& SF1, SelFile& SF2);
+    friend SelFile compare(SelFile& SF1, SelFile& SF2, const int mode);
 
     /** Find an image inside a list.
      * @ingroup SelFilesOperations
@@ -900,11 +904,16 @@ public:
      * in a file and discarded in the other, then it is said to match and it is
      * kept as active, a preceeding comment warns of this situation.
      *
+     * if mode<0, output file will contain all information
+     * if mode=0, output will be selfile with overlapping images
+     * if mode=1, output will be selfile with images only in file 1
+     * if mode=2, output will be selfile with images only in file 2
+     *
      * @code
      * sel3 = compare(sel1, sel2);
      * @endcode
      */
-    friend SelFile compare(SelFile& SF1, SelFile& SF2);
+    friend SelFile compare(SelFile& SF1, SelFile& SF2, const int mode);
 
     /** Apply a function to all images with a certain label.
      * @ingroup SelFilesHelpful

@@ -963,7 +963,7 @@ SelFile SelFile::random_discard(int N)
 
 /* Compare ----------------------------------------------------------------- */
 // Only img_files with the active label are considered
-SelFile compare(SelFile &SF1, SelFile &SF2)
+SelFile compare(SelFile &SF1, SelFile &SF2, const int mode)
 {
     vector<SelLine>     only_in_SF1;
     vector<SelLine>     only_in_SF2;
@@ -1037,69 +1037,92 @@ SelFile compare(SelFile &SF1, SelFile &SF2)
     }
 
     // Write Statistics
-    temp.line_type = SelLine::COMMENT;
-    temp.label = SelLine::DISCARDED;
-    temp.text = "# Statistics of comparison";
-    result.text_line.push_back(temp);
-    temp.text = "# -------------------------------------------------------------";
-    result.text_line.push_back(temp);
-    sprintf(str, "%6d", SF1.no_imgs);
-    temp.text = "# File 1: " + SF1.fn_sel + "(VALID: " + str;
-    sprintf(str, "%6d", SF1_discarded);
-    temp.text += (string) " DISCARDED: " + str + ")";
-    result.text_line.push_back(temp);
-    sprintf(str, "%6d", SF2.no_imgs);
-    temp.text = "# File 2: " + SF2.fn_sel + "(VALID: " + str;
-    sprintf(str, "%6d", SF2_discarded);
-    temp.text += (string) " DISCARDED: " + str + ")";
-    result.text_line.push_back(temp);
-    temp.text = "";
-    result.text_line.push_back(temp);
-    sprintf(str, "%6d", in_both.size());
-    temp.text = (string)"# Matching Files: " + str;
-    result.text_line.push_back(temp);
-    sprintf(str, "%6d", only_in_SF1.size());
-    temp.text = (string)"# Only in file 1: " + str;
-    result.text_line.push_back(temp);
-    sprintf(str, "%6d", only_in_SF2.size());
-    temp.text = (string)"# Only in file 2: " + str;
-    result.text_line.push_back(temp);
-    temp.text = "# -------------------------------------------------------------";
-    result.text_line.push_back(temp);
+    if (mode < 0)
+    {
+	temp.line_type = SelLine::COMMENT;
+	temp.label = SelLine::DISCARDED;
+	temp.text = "# Statistics of comparison";
+	result.text_line.push_back(temp);
+	temp.text = "# -------------------------------------------------------------";
+	result.text_line.push_back(temp);
+	sprintf(str, "%6d", SF1.no_imgs);
+	temp.text = "# File 1: " + SF1.fn_sel + "(VALID: " + str;
+	sprintf(str, "%6d", SF1_discarded);
+	temp.text += (string) " DISCARDED: " + str + ")";
+	result.text_line.push_back(temp);
+	sprintf(str, "%6d", SF2.no_imgs);
+	temp.text = "# File 2: " + SF2.fn_sel + "(VALID: " + str;
+	sprintf(str, "%6d", SF2_discarded);
+	temp.text += (string) " DISCARDED: " + str + ")";
+	result.text_line.push_back(temp);
+	temp.text = "";
+	result.text_line.push_back(temp);
+	sprintf(str, "%6d", in_both.size());
+	temp.text = (string)"# Matching Files: " + str;
+	result.text_line.push_back(temp);
+	sprintf(str, "%6d", only_in_SF1.size());
+	temp.text = (string)"# Only in file 1: " + str;
+	result.text_line.push_back(temp);
+	sprintf(str, "%6d", only_in_SF2.size());
+	temp.text = (string)"# Only in file 2: " + str;
+	result.text_line.push_back(temp);
+	temp.text = "# -------------------------------------------------------------";
+	result.text_line.push_back(temp);
 
-    // Write files in both
-    temp.text = "";
-    result.text_line.push_back(temp);
-    temp.text = "# Files in both .sel files";
-    result.text_line.push_back(temp);
-    current = in_both.begin();
-    last    = in_both.end();
-    while (current != last)
-        result.text_line.push_back(*current++);
+	// Write files in both
+	temp.text = "";
+	result.text_line.push_back(temp);
+	temp.text = "# Files in both .sel files";
+	result.text_line.push_back(temp);
+    }
+    if (mode<0 || mode==0) 
+    {
+	current = in_both.begin();
+	last    = in_both.end();
+	while (current != last)
+	    result.text_line.push_back(*current++);
+    }
 
-    // Write files only in Sel File 1
-    temp.text = "";
-    result.text_line.push_back(temp);
-    temp.text = "# Files only in the first file";
-    result.text_line.push_back(temp);
-    current = only_in_SF1.begin();
-    last    = only_in_SF1.end();
-    while (current != last)
-        result.text_line.push_back(*current++);
+    if (mode<0)
+    {
+	// Write files only in Sel File 1
+	temp.text = "";
+	result.text_line.push_back(temp);
+	temp.text = "# Files only in the first file";
+	result.text_line.push_back(temp);
+    }
+    if (mode<0 || mode==1) 
+    {
+	current = only_in_SF1.begin();
+	last    = only_in_SF1.end();
+	while (current != last)
+	    result.text_line.push_back(*current++);
+    }
 
-    // Write files only in Sel File 2
-    temp.text = "";
-    result.text_line.push_back(temp);
-    temp.text = "# Files only in the second file";
-    result.text_line.push_back(temp);
-    current = only_in_SF2.begin();
-    last    = only_in_SF2.end();
-    while (current != last)
-        result.text_line.push_back(*current++);
-
+    if (mode<0)
+    {
+	// Write files only in Sel File 2
+	temp.text = "";
+	result.text_line.push_back(temp);
+	temp.text = "# Files only in the second file";
+	result.text_line.push_back(temp);
+    }
+    if (mode<0 || mode==2) 
+    {
+	current = only_in_SF2.begin();
+	last    = only_in_SF2.end();
+	while (current != last)
+	    result.text_line.push_back(*current++);
+    }
     // Adjust the remaining fields
-    result.no_imgs = in_both.size() +
-                     only_in_SF1.size() + only_in_SF2.size();
+    if (mode<0) 
+	result.no_imgs = in_both.size() + only_in_SF1.size() + only_in_SF2.size();
+    else if (mode==0) 
+	result.no_imgs = in_both.size();
+    else if (mode==1)
+	result.no_imgs = only_in_SF1.size();
+    else if (mode==2)
+	result.no_imgs = only_in_SF2.size();
     result.current_line = result.text_line.begin();
 
     return result;
