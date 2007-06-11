@@ -362,7 +362,7 @@ int main(int argc, char **argv)
         prm.fn_out = getParameter(argc, argv, "-o", "sort_junk");
         fn_train = getParameter(argc, argv, "-train", "");
         if (fn_train != "") SFtrain.read(fn_train);
-        prm.cutoff = AtoF(getParameter(argc, argv, "-zcut", "1"));
+        prm.cutoff = textToFloat(getParameter(argc, argv, "-zcut", "1"));
     }
     catch (Xmipp_error XE)
     {

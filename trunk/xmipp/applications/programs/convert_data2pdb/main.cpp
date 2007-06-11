@@ -41,10 +41,10 @@ int main(int argc, char **argv)
     {
         iname = getParameter(argc, argv, "-iname");
         oname = getParameter(argc, argv, "-oname");
-        vsize = (double) AtoF(getParameter(argc, argv, "-vsize", "1"));
-        offX = AtoF(getParameter(argc, argv, "-offX", "0"));
-        offY = AtoF(getParameter(argc, argv, "-offY", floatToString(offX).c_str()));
-        offZ = AtoF(getParameter(argc, argv, "-offZ", floatToString(offX).c_str()));
+        vsize = (double) textToFloat(getParameter(argc, argv, "-vsize", "1"));
+        offX = textToFloat(getParameter(argc, argv, "-offX", "0"));
+        offY = textToFloat(getParameter(argc, argv, "-offY", floatToString(offX).c_str()));
+        offZ = textToFloat(getParameter(argc, argv, "-offZ", floatToString(offX).c_str()));
     }
     catch (Xmipp_error)
     {

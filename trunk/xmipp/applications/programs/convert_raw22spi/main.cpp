@@ -82,9 +82,9 @@ int main(int argc, char *argv[])
         {
             size_arg = paremeterPosition(argc, argv, "-s");
             if (size_arg + 3 >= argc) EXIT_ERROR(1, "Not enough parameters behind -s");
-            Zdim = AtoI(argv[size_arg+1]);
-            Ydim = AtoI(argv[size_arg+2]);
-            Xdim = AtoI(argv[size_arg+3]);
+            Zdim = textToInteger(argv[size_arg+1]);
+            Ydim = textToInteger(argv[size_arg+2]);
+            Xdim = textToInteger(argv[size_arg+3]);
         }
         generate_inf = checkParameter(argc, argv, "-generate_inf");
         reverse_endian = checkParameter(argc, argv, "-reverse_endian");
@@ -95,11 +95,11 @@ int main(int argc, char *argv[])
             if (!fh_inf)
                 REPORT_ERROR(1, (string)"Raw22Spi:Cannot find " + fn_inf);
             Zdim = 1;
-            Ydim = AtoI(getParameter(fh_inf, "Ydim"));
-            Xdim = AtoI(getParameter(fh_inf, "Xdim"));
+            Ydim = textToInteger(getParameter(fh_inf, "Ydim"));
+            Xdim = textToInteger(getParameter(fh_inf, "Xdim"));
             fclose(fh_inf);
         }
-        header_size = AtoI(getParameter(argc, argv, "-header", "0"));
+        header_size = textToInteger(getParameter(argc, argv, "-header", "0"));
         if (argc == 1)
         {
             Usage(argv);

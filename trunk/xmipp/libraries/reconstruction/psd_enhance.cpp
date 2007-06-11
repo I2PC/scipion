@@ -42,11 +42,11 @@ void Prog_Enhance_PSD_Parameters::read(int argc, char **argv)
     Prog_parameters::read(argc, argv);
     center = !checkParameter(argc, argv, "-dont_center");
     take_log = !checkParameter(argc, argv, "-dont_log");
-    filter_w1 = AtoF(getParameter(argc, argv, "-f1", "0.05"));
-    filter_w2 = AtoF(getParameter(argc, argv, "-f2", "0.2"));
-    decay_width = AtoF(getParameter(argc, argv, "-decay", "0.02"));
-    mask_w1 = AtoF(getParameter(argc, argv, "-m1", "0.025"));
-    mask_w2 = AtoF(getParameter(argc, argv, "-m2", "0.2"));
+    filter_w1 = textToFloat(getParameter(argc, argv, "-f1", "0.05"));
+    filter_w2 = textToFloat(getParameter(argc, argv, "-f2", "0.2"));
+    decay_width = textToFloat(getParameter(argc, argv, "-decay", "0.02"));
+    mask_w1 = textToFloat(getParameter(argc, argv, "-m1", "0.025"));
+    mask_w2 = textToFloat(getParameter(argc, argv, "-m2", "0.2"));
 }
 
 /* Usage ------------------------------------------------------------------- */

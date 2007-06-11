@@ -41,8 +41,8 @@ int main(int argc, char **argv)
     {
         a = getVectorParameter(argc, argv, "-lattice_a");
         b = getVectorParameter(argc, argv, "-lattice_b");
-        crystal_size = AtoF(getParameter(argc, argv, "-crystal_size", "1024"));
-//      taya = AtoF(getParameter(argc,argv,"-taya","0"));
+        crystal_size = textToFloat(getParameter(argc, argv, "-crystal_size", "1024"));
+//      taya = textToFloat(getParameter(argc,argv,"-taya","0"));
         int i = paremeterPosition(argc, argv, "-ang");
         if (i == -1)
         {
@@ -51,9 +51,9 @@ int main(int argc, char **argv)
         else
         {
             if (i + 3 >= argc) REPORT_ERROR(1, "Not enough parameters after -ang");
-            rot  = AtoF(argv[i+1]);
-            tilt = AtoF(argv[i+2]);
-            psi  = AtoF(argv[i+3]);
+            rot  = textToFloat(argv[i+1]);
+            tilt = textToFloat(argv[i+2]);
+            psi  = textToFloat(argv[i+3]);
         }
         op = getParameter(argc, argv, "-op", "RF");
 //      MRC = checkParameter(argc,argv,"-MRC");

@@ -36,10 +36,10 @@ void Prog_Draw_Surface_Parameters::read(int argc, char **argv)
     enable_adjust = checkParameter(argc, argv, "-ztop");
     if (enable_adjust)
     {
-        ztop = AtoI(getParameter(argc, argv, "-ztop"));
-        zbottom = AtoI(getParameter(argc, argv, "-zbottom"));
+        ztop = textToInteger(getParameter(argc, argv, "-ztop"));
+        zbottom = textToInteger(getParameter(argc, argv, "-zbottom"));
     }
-    color = AtoF(getParameter(argc, argv, "-color", "2"));
+    color = textToFloat(getParameter(argc, argv, "-color", "2"));
 }
 
 /* Usage ------------------------------------------------------------------- */

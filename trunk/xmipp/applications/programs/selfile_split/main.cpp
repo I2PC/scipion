@@ -39,7 +39,7 @@ int main(int argc, char **argv)
     try
     {
         fn_in = getParameter(argc, argv, "-i");
-        N = AtoI(getParameter(argc, argv, "-n", "2"));
+        N = textToInteger(getParameter(argc, argv, "-n", "2"));
         fn_root = getParameter(argc, argv, "-o", "");
         dont_randomize = checkParameter(argc, argv, "-dont_randomize");
         if (fn_root == "") fn_root = fn_in.without_extension();

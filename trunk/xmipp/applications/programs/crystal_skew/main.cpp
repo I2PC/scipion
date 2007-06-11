@@ -63,9 +63,9 @@ int main(int argc, char **argv)
     {
         fn_input     = getParameter(argc, argv, "-i", "");
         fn_out       = getParameter(argc, argv, "-o", "");
-        gamma        = AtoF(getParameter(argc, argv, "-gamma"));
-        minz        = AtoI(getParameter(argc, argv, "-zmin"));
-        maxz        = AtoI(getParameter(argc, argv, "-zmax"));
+        gamma        = textToFloat(getParameter(argc, argv, "-gamma"));
+        minz        = textToInteger(getParameter(argc, argv, "-zmin"));
+        maxz        = textToInteger(getParameter(argc, argv, "-zmax"));
     }
     catch (Xmipp_error XE)
     {

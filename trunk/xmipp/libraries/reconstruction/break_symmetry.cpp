@@ -48,12 +48,12 @@ void Prog_Break_Sym_prm::read(int argc, char **argv)
     Nvols = SFvol.ImgNo();
 
     fn_sym = getParameter(argc, argv, "-sym");
-    mask_radius = AtoF(getParameter(argc, argv, "-mask_radius", "-1"));
-    eps = AtoF(getParameter(argc, argv, "-eps", "5e-5"));
-    verb = AtoI(getParameter(argc, argv, "-verb", "1"));
-    Niter = AtoI(getParameter(argc, argv, "-iter", "100"));
+    mask_radius = textToFloat(getParameter(argc, argv, "-mask_radius", "-1"));
+    eps = textToFloat(getParameter(argc, argv, "-eps", "5e-5"));
+    verb = textToInteger(getParameter(argc, argv, "-verb", "1"));
+    Niter = textToInteger(getParameter(argc, argv, "-iter", "100"));
     // Hidden
-    istart = AtoI(getParameter(argc, argv, "-istart", "1"));
+    istart = textToInteger(getParameter(argc, argv, "-istart", "1"));
 
     // Read stuff into memory
     SF.read(fn_sel);

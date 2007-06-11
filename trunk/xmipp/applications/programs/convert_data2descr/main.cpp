@@ -42,14 +42,14 @@ int main(int argc, char **argv)
     {
         iname = getParameter(argc, argv, "-iname");
         oname = getParameter(argc, argv, "-oname");
-        radius = (double) AtoF(getParameter(argc, argv, "-radius", "0"));
-        vsize = (double) AtoF(getParameter(argc, argv, "-vsize", "1"));
-        dimX = AtoI(getParameter(argc, argv, "-dimX", "60"));
-        dimY = AtoI(getParameter(argc, argv, "-dimY", floatToString(dimX).c_str()));
-        dimZ = AtoI(getParameter(argc, argv, "-dimZ", floatToString(dimX).c_str()));
-        offX = AtoF(getParameter(argc, argv, "-offX", "0"));
-        offY = AtoF(getParameter(argc, argv, "-offY", floatToString(offX).c_str()));
-        offZ = AtoF(getParameter(argc, argv, "-offZ", floatToString(offX).c_str()));
+        radius = (double) textToFloat(getParameter(argc, argv, "-radius", "0"));
+        vsize = (double) textToFloat(getParameter(argc, argv, "-vsize", "1"));
+        dimX = textToInteger(getParameter(argc, argv, "-dimX", "60"));
+        dimY = textToInteger(getParameter(argc, argv, "-dimY", floatToString(dimX).c_str()));
+        dimZ = textToInteger(getParameter(argc, argv, "-dimZ", floatToString(dimX).c_str()));
+        offX = textToFloat(getParameter(argc, argv, "-offX", "0"));
+        offY = textToFloat(getParameter(argc, argv, "-offY", floatToString(offX).c_str()));
+        offZ = textToFloat(getParameter(argc, argv, "-offZ", floatToString(offX).c_str()));
     }
     catch (Xmipp_error)
     {

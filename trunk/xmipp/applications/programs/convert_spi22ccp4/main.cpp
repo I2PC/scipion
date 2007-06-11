@@ -53,13 +53,13 @@ int main(int argc, char *argv[])
         fn_out = getParameter(argc, argv, "-o");
         if (checkParameter(argc, argv, "-x_length"))
         {
-            y_length = x_length = AtoF(getParameter(argc, argv, "-x_length"));
+            y_length = x_length = textToFloat(getParameter(argc, argv, "-x_length"));
             z_length = 1;
         }
         if (checkParameter(argc, argv, "-y_length"))
-            y_length = AtoF(getParameter(argc, argv, "-y_length"));
+            y_length = textToFloat(getParameter(argc, argv, "-y_length"));
         if (checkParameter(argc, argv, "-z_length"))
-            z_length = AtoF(getParameter(argc, argv, "-z_length"));
+            z_length = textToFloat(getParameter(argc, argv, "-z_length"));
         reverse_endian = checkParameter(argc, argv, "-reverse_endian");
     }
     catch (Xmipp_error XE)

@@ -110,16 +110,16 @@ void Projection_Parameters::read(FileName fn_proj_param)
             // Next two parameters are optional
             auxstr = nextToken();
             if (auxstr != NULL) starting =
-                    AtoI(auxstr, 3007,
+                    textToInteger(auxstr, 3007,
                          "Prog_Project_Parameters::read: Error in First "
                          "projection number");
             fn_projection_extension = nextToken();
             lineNo = 2;
             break;
         case 2:
-            proj_Xdim = AtoI(firstToken(line), 3007,
+            proj_Xdim = textToInteger(firstToken(line), 3007,
                              "Prog_Project_Parameters::read: Error in X dimension");
-            proj_Ydim = AtoI(nextToken(), 3007,
+            proj_Ydim = textToInteger(nextToken(), 3007,
                              "Prog_Project_Parameters::read: Error in Y dimension");
             lineNo = 3;
             break;
@@ -157,7 +157,7 @@ void Projection_Parameters::read(FileName fn_proj_param)
             if (strcmp(auxstr, "NULL") != 0)
             {
                 enable_angle_range = 1;
-                rot_range.ang0 = AtoF(auxstr, 3007,
+                rot_range.ang0 = textToFloat(auxstr, 3007,
                                       "Prog_Project_Parameters::read: Error in Rotational Init");
                 auxstr = nextToken();
                 if (auxstr == NULL)
@@ -169,9 +169,9 @@ void Projection_Parameters::read(FileName fn_proj_param)
                 }
                 else
                 {
-                    rot_range.angF = AtoF(auxstr, 3007,
+                    rot_range.angF = textToFloat(auxstr, 3007,
                                           "Prog_Project_Parameters::read: Error in Rotational Final");
-                    rot_range.samples = AtoI(nextToken(), 3007,
+                    rot_range.samples = textToInteger(nextToken(), 3007,
                                              "Prog_Project_Parameters::read: Error in Rotational "
                                              "Samples");
                     if (rot_range.ang0 == rot_range.angF) rot_range.samples = 1;
@@ -186,7 +186,7 @@ void Projection_Parameters::read(FileName fn_proj_param)
             }
             break;
         case 5:
-            tilt_range.ang0 = AtoF(firstToken(line), 3007,
+            tilt_range.ang0 = textToFloat(firstToken(line), 3007,
                                    "Prog_Project_Parameters::read: Error in Tilting Init");
             auxstr = nextToken();
             if (auxstr == NULL)
@@ -198,9 +198,9 @@ void Projection_Parameters::read(FileName fn_proj_param)
             }
             else
             {
-                tilt_range.angF = AtoF(auxstr, 3007,
+                tilt_range.angF = textToFloat(auxstr, 3007,
                                        "Prog_Project_Parameters::read: Error in Tilting Final");
-                tilt_range.samples = AtoI(nextToken(), 3007,
+                tilt_range.samples = textToInteger(nextToken(), 3007,
                                           "Prog_Project_Parameters::read: Error in Tilting Samples");
                 if (tilt_range.ang0 == tilt_range.angF) tilt_range.samples = 1;
                 tilt_range.randomness = translate_randomness(nextToken());
@@ -208,7 +208,7 @@ void Projection_Parameters::read(FileName fn_proj_param)
             lineNo = 6;
             break;
         case 6:
-            psi_range.ang0 = AtoF(firstToken(line), 3007,
+            psi_range.ang0 = textToFloat(firstToken(line), 3007,
                                   "Prog_Project_Parameters::read: Error in Psi Init");
             auxstr = nextToken();
             if (auxstr == NULL)
@@ -220,9 +220,9 @@ void Projection_Parameters::read(FileName fn_proj_param)
             }
             else
             {
-                psi_range.angF = AtoF(auxstr, 3007,
+                psi_range.angF = textToFloat(auxstr, 3007,
                                       "Prog_Project_Parameters::read: Error in Psi Final");
-                psi_range.samples = AtoI(nextToken(), 3007,
+                psi_range.samples = textToInteger(nextToken(), 3007,
                                          "Prog_Project_Parameters::read: Error in Psi Samples");
                 if (psi_range.ang0 == psi_range.angF) psi_range.samples = 1;
                 psi_range.randomness = translate_randomness(nextToken());
@@ -230,51 +230,51 @@ void Projection_Parameters::read(FileName fn_proj_param)
             lineNo = 7;
             break;
         case 7:
-            rot_range.Ndev = AtoF(firstWord(line), 3007,
+            rot_range.Ndev = textToFloat(firstWord(line), 3007,
                                   "Prog_Project_Parameters::read: Error in Rotational noise");
             auxstr = nextToken();
             if (auxstr != NULL)
-                rot_range.Navg = AtoF(auxstr, 3007,
+                rot_range.Navg = textToFloat(auxstr, 3007,
                                       "Prog_Project_Parameters::read: Error in Rotational bias");
             else rot_range.Navg = 0;
             lineNo = 8;
             break;
         case 8:
-            tilt_range.Ndev = AtoF(firstWord(line), 3007,
+            tilt_range.Ndev = textToFloat(firstWord(line), 3007,
                                    "Prog_Project_Parameters::read: Error in tilting noise");
             auxstr = nextToken();
             if (auxstr != NULL)
-                tilt_range.Navg = AtoF(auxstr, 3007,
+                tilt_range.Navg = textToFloat(auxstr, 3007,
                                        "Prog_Project_Parameters::read: Error in tilting bias");
             else tilt_range.Navg = 0;
             lineNo = 9;
             break;
         case 9:
-            psi_range.Ndev = AtoF(firstWord(line), 3007,
+            psi_range.Ndev = textToFloat(firstWord(line), 3007,
                                   "Prog_Project_Parameters::read: Error in psi noise");
             auxstr = nextToken();
             if (auxstr != NULL)
-                psi_range.Navg = AtoF(auxstr, 3007,
+                psi_range.Navg = textToFloat(auxstr, 3007,
                                       "Prog_Project_Parameters::read: Error in psi bias");
             else psi_range.Navg = 0;
             lineNo = 10;
             break;
         case 10:
-            Npixel_dev = AtoF(firstWord(line), 3007,
+            Npixel_dev = textToFloat(firstWord(line), 3007,
                               "Prog_Project_Parameters::read: Error in pixel noise");
             auxstr = nextToken();
             if (auxstr != NULL)
-                Npixel_avg = AtoF(auxstr, 3007,
+                Npixel_avg = textToFloat(auxstr, 3007,
                                   "Prog_Project_Parameters::read: Error in pixel bias");
             else Npixel_avg = 0;
             lineNo = 11;
             break;
         case 11:
-            Ncenter_dev = AtoF(firstWord(line), 3007,
+            Ncenter_dev = textToFloat(firstWord(line), 3007,
                                "Prog_Project_Parameters::read: Error in center noise");
             auxstr = nextToken();
             if (auxstr != NULL)
-                Ncenter_avg = AtoF(auxstr, 3007,
+                Ncenter_avg = textToFloat(auxstr, 3007,
                                    "Prog_Project_Parameters::read: Error in center bias");
             else Ncenter_avg = 0;
             lineNo = 12;

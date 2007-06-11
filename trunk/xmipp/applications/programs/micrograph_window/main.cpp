@@ -43,15 +43,15 @@ int main(int argc, char **argv)
             REPORT_ERROR(1, "-size is missing");
         if (i + 2 >= argc)
             REPORT_ERROR(1, "Not enough parameters after -size");
-        Xpdim = AtoI(argv[i+1]);
-        Ypdim = AtoI(argv[i+2]);
+        Xpdim = textToInteger(argv[i+1]);
+        Ypdim = textToInteger(argv[i+2]);
         i = paremeterPosition(argc, argv, "-top_left_corner");
         if (i + 2 >= argc)
             REPORT_ERROR(1, "Not enough parameters after -top_left_corner");
         if (i != -1)
         {
-            j0 = AtoI(argv[i+1]);
-            i0 = AtoI(argv[i+2]);
+            j0 = textToInteger(argv[i+1]);
+            i0 = textToInteger(argv[i+2]);
         }
         else i0 = j0 = 0;
         fn_in  = getParameter(argc, argv, "-i");

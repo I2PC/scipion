@@ -32,17 +32,17 @@
 void Prog_segment_prm::read(int argc, char **argv)
 {
     fn_vol = getParameter(argc, argv, "-i");
-    voxel_mass = AtoF(getParameter(argc, argv, "-voxel_mass", "-1"));
-    dalton_mass = AtoF(getParameter(argc, argv, "-dalton_mass", "-1"));
-    aa_mass = AtoF(getParameter(argc, argv, "-aa_mass", "-1"));
-    sampling_rate = AtoF(getParameter(argc, argv, "-sampling_rate", "-1"));
+    voxel_mass = textToFloat(getParameter(argc, argv, "-voxel_mass", "-1"));
+    dalton_mass = textToFloat(getParameter(argc, argv, "-dalton_mass", "-1"));
+    aa_mass = textToFloat(getParameter(argc, argv, "-aa_mass", "-1"));
+    sampling_rate = textToFloat(getParameter(argc, argv, "-sampling_rate", "-1"));
     fn_mask = getParameter(argc, argv, "-o", "");
     en_threshold = checkParameter(argc, argv, "-threshold");
     if (en_threshold)
-        threshold = AtoF(getParameter(argc, argv, "-threshold"));
+        threshold = textToFloat(getParameter(argc, argv, "-threshold"));
 
     //Sjors
-    wang_radius = AtoI(getParameter(argc, argv, "-wang", "3."));
+    wang_radius = textToInteger(getParameter(argc, argv, "-wang", "3."));
     do_prob = checkParameter(argc, argv, "-prob");
 
 }

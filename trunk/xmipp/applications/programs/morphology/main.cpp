@@ -49,9 +49,9 @@ public:
         if (checkParameter(argc, argv, "-clo"))      operation = CLOSING;
         if (checkParameter(argc, argv, "-ope"))      operation = OPENING;
 
-        size = AtoI(getParameter(argc, argv, "-size", "1"));
-        neig = AtoI(getParameter(argc, argv, "-neig", "-1"));
-        count = AtoI(getParameter(argc, argv, "-count", "0"));
+        size = textToInteger(getParameter(argc, argv, "-size", "1"));
+        neig = textToInteger(getParameter(argc, argv, "-neig", "-1"));
+        count = textToInteger(getParameter(argc, argv, "-count", "0"));
     }
 
     void show()

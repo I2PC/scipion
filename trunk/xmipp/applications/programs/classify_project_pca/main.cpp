@@ -81,7 +81,7 @@ main(int argc, char** argv)
                 cerr << argv[0] << ": Invalid option. You can not select number of dimensions and percent at the same time" << endl;
                 exit(EXIT_FAILURE);
             }
-            k = AtoI(getParameter(argc, argv, "-k"));
+            k = textToInteger(getParameter(argc, argv, "-k"));
             met = true;
         }
 
@@ -92,7 +92,7 @@ main(int argc, char** argv)
                 cerr << argv[0] << ": Invalid option. You can not select number of dimensions and percent at the same time" << endl;
                 exit(EXIT_FAILURE);
             }
-            p = AtoF(getParameter(argc, argv, "-p"));
+            p = textToFloat(getParameter(argc, argv, "-p"));
             met = false;
         }
 

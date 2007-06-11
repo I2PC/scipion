@@ -56,15 +56,15 @@ int main(int argc, char *argv[])
         fn_hist = getParameter(argc, argv, "-hist", "");
         fn_ps = getParameter(argc, argv, "-ps", "");
         fn_DX = getParameter(argc, argv, "-DX", "");
-        steps = AtoI(getParameter(argc, argv, "-steps", "100"));
+        steps = textToInteger(getParameter(argc, argv, "-steps", "100"));
         tell = checkParameter(argc, argv, "-show_process");
-        R = AtoF(getParameter(argc, argv, "-R", "60"));
-        rmax = AtoF(getParameter(argc, argv, "-r", "1.5"));
-        rot_view = AtoF(getParameter(argc, argv, "-rot_view",  "0"));
-        tilt_view = AtoF(getParameter(argc, argv, "-tilt_view", "30"));
+        R = textToFloat(getParameter(argc, argv, "-R", "60"));
+        rmax = textToFloat(getParameter(argc, argv, "-r", "1.5"));
+        rot_view = textToFloat(getParameter(argc, argv, "-rot_view",  "0"));
+        tilt_view = textToFloat(getParameter(argc, argv, "-tilt_view", "30"));
         up_down_correction = checkParameter(argc, argv, "-up_down_correction");
         solid_sphere = checkParameter(argc, argv, "-solid_sphere");
-        colw = AtoI(getParameter(argc, argv, "-wcol", "-1"));
+        colw = textToInteger(getParameter(argc, argv, "-wcol", "-1"));
 
         // Angle order
         int i;

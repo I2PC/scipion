@@ -43,17 +43,17 @@ Prog_Random_Phantom_Parameters::Prog_Random_Phantom_Parameters()
 /* Read Random Phantom parameters ========================================== */
 void Prog_Random_Phantom_Parameters::read(int argc, char **argv)
 {
-    min_vol       = AtoF(getParameter(argc, argv, "-min_volume", "0"));
+    min_vol       = textToFloat(getParameter(argc, argv, "-min_volume", "0"));
     discrete      =    checkParameter(argc, argv, "-discrete");
-    RPP_distance  = AtoF(getParameter(argc, argv, "-distance" , "-1."));
-    RPP_radius    = AtoF(getParameter(argc, argv, "-radius"   , "-1."));
+    RPP_distance  = textToFloat(getParameter(argc, argv, "-distance" , "-1."));
+    RPP_radius    = textToFloat(getParameter(argc, argv, "-radius"   , "-1."));
     fn_random     =      getParameter(argc, argv, "-i");
     fn_output     =      getParameter(argc, argv, "-o", "");
-    N_stats       = AtoI(getParameter(argc, argv, "-stats",      "-1"));
+    N_stats       = textToInteger(getParameter(argc, argv, "-stats",      "-1"));
     fn_CTF        =      getParameter(argc, argv, "-ctf", "");
-    Xdim          = AtoI(getParameter(argc, argv, "-Xdim",       "-1"));
-    Ydim          = AtoI(getParameter(argc, argv, "-Ydim",       "-1"));
-    target_SNR    = AtoF(getParameter(argc, argv, "-target_SNR", "-1."));
+    Xdim          = textToInteger(getParameter(argc, argv, "-Xdim",       "-1"));
+    Ydim          = textToInteger(getParameter(argc, argv, "-Ydim",       "-1"));
+    target_SNR    = textToFloat(getParameter(argc, argv, "-target_SNR", "-1."));
 }
 
 /* Usage =================================================================== */

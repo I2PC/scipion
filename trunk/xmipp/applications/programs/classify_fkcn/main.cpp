@@ -78,7 +78,7 @@ main(int argc, char** argv)
             cb_in = getParameter(argc, argv, "-cvin");
 
         if (checkParameter(argc, argv, "-c"))
-            c = AtoI(getParameter(argc, argv, "-c"));
+            c = textToInteger(getParameter(argc, argv, "-c"));
         else
         {
             Usage(argv);
@@ -89,10 +89,10 @@ main(int argc, char** argv)
             saveClusters = true;
         else saveClusters = false;
 
-        m = AtoF(getParameter(argc, argv, "-m", "2.0"));
-        eps = AtoF(getParameter(argc, argv, "-eps", "1e-7"));
-        iter = AtoI(getParameter(argc, argv, "-iter", "1000"));
-        verb = AtoI(getParameter(argc, argv, "-verb", "0"));
+        m = textToFloat(getParameter(argc, argv, "-m", "2.0"));
+        eps = textToFloat(getParameter(argc, argv, "-eps", "1e-7"));
+        iter = textToInteger(getParameter(argc, argv, "-iter", "1000"));
+        verb = textToInteger(getParameter(argc, argv, "-verb", "0"));
 
         if (checkParameter(argc, argv, "-norm"))
             norm = true;

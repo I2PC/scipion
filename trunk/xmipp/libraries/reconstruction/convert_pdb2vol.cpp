@@ -107,9 +107,9 @@ void Prog_PDBPhantom_Parameters::read(int argc, char **argv)
     fn_pdb = getParameter(argc, argv, "-i");
     fn_out = getParameter(argc, argv, "-o", "");
     if (fn_out == "") fn_out = fn_pdb.without_extension();
-    Ts = AtoF(getParameter(argc, argv, "-sampling_rate", "1"));
-    highTs = AtoF(getParameter(argc, argv, "-high_sampling_rate", "0.1"));
-    output_dim = AtoI(getParameter(argc, argv, "-output_dim", "-1"));
+    Ts = textToFloat(getParameter(argc, argv, "-sampling_rate", "1"));
+    highTs = textToFloat(getParameter(argc, argv, "-high_sampling_rate", "0.1"));
+    output_dim = textToInteger(getParameter(argc, argv, "-output_dim", "-1"));
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -173,9 +173,9 @@ void Prog_PDBPhantom_Parameters::compute_protein_geometry()
         dummy = nextToken();
         dummy = nextToken();
         dummy = nextToken();
-        double x = AtoF(nextToken());
-        double y = AtoF(nextToken());
-        double z = AtoF(nextToken());
+        double x = textToFloat(nextToken());
+        double y = textToFloat(nextToken());
+        double z = textToFloat(nextToken());
 
         // Update center of mass and limits
         if (x < XX(limit0)) XX(limit0) = x;
@@ -250,9 +250,9 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
         dummy = nextToken();
         dummy = nextToken();
         dummy = nextToken();
-        double x = AtoF(nextToken());
-        double y = AtoF(nextToken());
-        double z = AtoF(nextToken());
+        double x = textToFloat(nextToken());
+        double y = textToFloat(nextToken());
+        double z = textToFloat(nextToken());
 
         // Correct position
         Matrix1D<double> r(3);

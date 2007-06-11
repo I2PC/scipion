@@ -91,11 +91,11 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
         if (!fh_inf)
             REPORT_ERROR(1, (string)"Micrograph::open_micrograph: Cannot find " +
                          fn_inf);
-        Xdim = AtoI(getParameter(fh_inf, "Xdim"));
-        Ydim = AtoI(getParameter(fh_inf, "Ydim"));
-        __depth = AtoI(getParameter(fh_inf, "bitspersample"));
+        Xdim = textToInteger(getParameter(fh_inf, "Xdim"));
+        Ydim = textToInteger(getParameter(fh_inf, "Ydim"));
+        __depth = textToInteger(getParameter(fh_inf, "bitspersample"));
         if (checkParameter(fh_inf, "offset"))
-            __offset = AtoI(getParameter(fh_inf, "offset"));
+            __offset = textToInteger(getParameter(fh_inf, "offset"));
         else
             __offset = 0;
         if (checkParameter(fh_inf, "is_signed"))

@@ -43,7 +43,7 @@ void Prog_centilt_prm::read(int argc, char **argv)
     // Write out document file?
     fn_doc = getParameter(argc, argv, "-doc", "");
     // Maximum shift (discard images that shift more in last iteration)
-    max_shift = AtoF(getParameter(argc, argv, "-max_shift", "0"));
+    max_shift = textToFloat(getParameter(argc, argv, "-max_shift", "0"));
     // Force x-shift to be zero?
     force_x_zero = checkParameter(argc, argv, "-force_x_zero");
     // Perform centering?

@@ -41,7 +41,7 @@
 
 /* NOTE: not a very safe implemenation but standard c functions do not retrieve
  * more than 6 significative digits */
-double AtoD(const char* str, int _errno, std::string errmsg, int exit)
+double textToDouble(const char* str, int _errno, std::string errmsg, int exit)
 {
     double retval;
     int ok;
@@ -65,7 +65,7 @@ double AtoD(const char* str, int _errno, std::string errmsg, int exit)
     return 0;
 }
 
-float AtoF(const char* str, int _errno, std::string errmsg, int exit)
+float textToFloat(const char* str, int _errno, std::string errmsg, int exit)
 {
     float retval;
     int ok;
@@ -89,7 +89,7 @@ float AtoF(const char* str, int _errno, std::string errmsg, int exit)
     return 0;
 }
 
-int AtoI(const char* str, int _errno, std::string errmsg, int exit)
+int textToInteger(const char* str, int _errno, std::string errmsg, int exit)
 {
     int retval;
     int ok;
@@ -113,7 +113,7 @@ int AtoI(const char* str, int _errno, std::string errmsg, int exit)
     return 0;
 }
 
-long long AtoLL(const char* str, int _errno, std::string errmsg, int exit)
+long long textToLongLong(const char* str, int _errno, std::string errmsg, int exit)
 {
     long long int retval;
     int ok;
@@ -526,8 +526,8 @@ bool getTwoDoubleParams(int argc, char **argv, const char *param,
             else
                 REPORT_ERROR(_errno, errmsg);
         }
-        v1 = AtoF(argv[i+1]);
-        v2 = AtoF(argv[i+2]);
+        v1 = textToFloat(argv[i+1]);
+        v2 = textToFloat(argv[i+2]);
         retval = true;
     }
     else
@@ -561,9 +561,9 @@ bool getThreeDoubleParams(int argc, char **argv, const char *param,
             else
                 REPORT_ERROR(_errno, errmsg);
         }
-        v1 = AtoF(argv[i+1]);
-        v2 = AtoF(argv[i+2]);
-        v3 = AtoF(argv[i+3]);
+        v1 = textToFloat(argv[i+1]);
+        v2 = textToFloat(argv[i+2]);
+        v3 = textToFloat(argv[i+3]);
         retval = true;
     }
     else
@@ -648,7 +648,7 @@ Matrix1D<double> getVectorParameter(int argc, char **argv, const char *param,
     {
         try
         {
-            double d = AtoF(argv[pos]);
+            double d = textToFloat(argv[pos]);
             aux.resize(1);
             aux(0) = d;
             return aux;
@@ -718,7 +718,7 @@ Matrix1D<double> getVectorParameter(int argc, char **argv, const char *param,
         // Find colon
         end_copy = vector.find(',', start_copy);
         // Store number
-        aux(i) = AtoF(vector.substr(start_copy, end_copy));
+        aux(i) = textToFloat(vector.substr(start_copy, end_copy));
 
         // Prepare for next iteration
         i++;
@@ -726,7 +726,7 @@ Matrix1D<double> getVectorParameter(int argc, char **argv, const char *param,
     }
 
     // Copy last element
-    aux(i) = AtoF(vector.substr(start_copy, vector.length()));
+    aux(i) = textToFloat(vector.substr(start_copy, vector.length()));
 
     return aux;
 }

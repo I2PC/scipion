@@ -91,8 +91,8 @@ void APHFile2D::read(const FileName &fn)
             getline(fh_aph, line);
             if (line.length() != 0)
             {
-                int h = AtoI(firstToken(line));
-                int k = AtoI(nextToken());
+                int h = textToInteger(firstToken(line));
+                int k = textToInteger(nextToken());
                 hmax = MAX(hmax, h);
                 kmax = MAX(kmax, k);
                 hmin = MIN(hmin, h);
@@ -146,14 +146,14 @@ void APHFile2D::read(const FileName &fn)
             if (line.length() != 0)
             {
                 int i = 0;
-                int   h         = AtoI(nextToken(line, i));
-                int   k         = AtoI(nextToken(line, i));
+                int   h         = textToInteger(nextToken(line, i));
+                int   k         = textToInteger(nextToken(line, i));
                 double a1, a2, a3, a4, a5, a6;
-                a1 = AtoF(nextToken(line, i));
-                a2 = AtoF(nextToken(line, i));
-                a3 = AtoF(nextToken(line, i));
-                a4 = AtoF(nextToken(line, i));
-                a5 = AtoF(nextToken(line, i));
+                a1 = textToFloat(nextToken(line, i));
+                a2 = textToFloat(nextToken(line, i));
+                a3 = textToFloat(nextToken(line, i));
+                a4 = textToFloat(nextToken(line, i));
+                a5 = textToFloat(nextToken(line, i));
                 string aux;
                 aux = nextToken(line, i);
                 if (first)
@@ -164,7 +164,7 @@ void APHFile2D::read(const FileName &fn)
 
                 if (l_is_present)
                 {
-                    a6 = AtoF(aux);
+                    a6 = textToFloat(aux);
                     spots_l(k, h)    = a1;
                     spots_abs(k, h)  = a2;
                     spots_arg(k, h)  = a3;

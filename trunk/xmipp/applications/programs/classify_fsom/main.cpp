@@ -92,7 +92,7 @@ main(int argc, char** argv)
 
 
         if (checkParameter(argc, argv, "-xdim"))
-            xdim = AtoI(getParameter(argc, argv, "-xdim"));
+            xdim = textToInteger(getParameter(argc, argv, "-xdim"));
         else
         {
             Usage(argv);
@@ -100,7 +100,7 @@ main(int argc, char** argv)
         }
 
         if (checkParameter(argc, argv, "-ydim"))
-            ydim = AtoI(getParameter(argc, argv, "-ydim"));
+            ydim = textToInteger(getParameter(argc, argv, "-ydim"));
         else
         {
             Usage(argv);
@@ -119,19 +119,19 @@ main(int argc, char** argv)
         else if (checkParameter(argc, argv, "-rect"))
             layout = "RECT";
 
-        m0 =  AtoF(getParameter(argc, argv, "-m0", "2.0"));
-        m1 =  AtoF(getParameter(argc, argv, "-m1", "1.01"));
-        reg =  AtoF(getParameter(argc, argv, "-reg", "0.5"));
+        m0 =  textToFloat(getParameter(argc, argv, "-m0", "2.0"));
+        m1 =  textToFloat(getParameter(argc, argv, "-m1", "1.01"));
+        reg =  textToFloat(getParameter(argc, argv, "-reg", "0.5"));
 
-        eps = AtoF(getParameter(argc, argv, "-eps", "1e-7"));
-        iter = AtoI(getParameter(argc, argv, "-iter", "1000"));
-        verb = AtoI(getParameter(argc, argv, "-verb", "0"));
+        eps = textToFloat(getParameter(argc, argv, "-eps", "1e-7"));
+        iter = textToInteger(getParameter(argc, argv, "-iter", "1000"));
+        verb = textToInteger(getParameter(argc, argv, "-verb", "0"));
 
         if (checkParameter(argc, argv, "-norm"))
             norm = true;
         else norm = false;
 
-        annSteps = AtoI(getParameter(argc, argv, "-steps", "1000"));
+        annSteps = textToInteger(getParameter(argc, argv, "-steps", "1000"));
 
         if (checkParameter(argc, argv, "-saveclusters"))
             saveClusters = true;

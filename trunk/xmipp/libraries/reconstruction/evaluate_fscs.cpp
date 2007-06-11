@@ -37,7 +37,7 @@ void Prog_Evaluate_FSCs_Parameters::read(int argc, char **argv)
     fn_phantom       = getParameter(argc, argv, "-p");
     fn_recons        = getParameter(argc, argv, "-r");
     fn_out           = getParameter(argc, argv, "-o", "");
-    sampling_rate    = AtoF(getParameter(argc, argv, "-sampling_rate", "1"));
+    sampling_rate    = textToFloat(getParameter(argc, argv, "-sampling_rate", "1"));
     action           = ESTIMATE_SINGLE_FSC;
     if (checkParameter(argc, argv, "-estimate_average_resolution"))
         action = ESTIMATE_AVERAGE_RESOLUTION;

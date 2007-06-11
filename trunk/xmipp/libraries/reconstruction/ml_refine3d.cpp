@@ -94,7 +94,7 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)
             if (fourier_mode) fn_root = getParameter(argc, argv, "-o", "mlf3d");
             else fn_root = getParameter(argc, argv, "-o", "ml3d");
             fn_vol = getParameter(argc, argv, "-vol");
-            istart = AtoI(getParameter(argc, argv, "-istart"));
+            istart = textToInteger(getParameter(argc, argv, "-istart"));
             if (Is_VolumeXmipp(fn_vol))
             {
                 SFvol.reserve(1);
@@ -145,25 +145,25 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)
         Nvols = SFvol.ImgNo();
     }
 
-    angular = AtoF(getParameter(argc, argv, "-ang", "10"));
+    angular = textToFloat(getParameter(argc, argv, "-ang", "10"));
     fn_sym = getParameter(argc, argv, "-sym", "");
-    eps = AtoF(getParameter(argc, argv, "-eps", "5e-5"));
-    verb = AtoI(getParameter(argc, argv, "-verb", "1"));
-    Niter = AtoI(getParameter(argc, argv, "-iter", "100"));
-    istart = AtoI(getParameter(argc, argv, "-istart", "1"));
-    tilt_range0 = AtoF(getParameter(argc, argv, "-tilt0", "0."));
-    tilt_rangeF = AtoF(getParameter(argc, argv, "-tiltF", "90."));
+    eps = textToFloat(getParameter(argc, argv, "-eps", "5e-5"));
+    verb = textToInteger(getParameter(argc, argv, "-verb", "1"));
+    Niter = textToInteger(getParameter(argc, argv, "-iter", "100"));
+    istart = textToInteger(getParameter(argc, argv, "-istart", "1"));
+    tilt_range0 = textToFloat(getParameter(argc, argv, "-tilt0", "0."));
+    tilt_rangeF = textToFloat(getParameter(argc, argv, "-tiltF", "90."));
     fn_symmask = getParameter(argc, argv, "-sym_mask", "");
-    lowpass = AtoF(getParameter(argc, argv, "-filter", "-1"));
+    lowpass = textToFloat(getParameter(argc, argv, "-filter", "-1"));
     wlsart_no_start = checkParameter(argc, argv, "-nostart");
 
     // Hidden for now
     fn_solv = getParameter(argc, argv, "-solvent", "");
     do_wbp = checkParameter(argc, argv, "-WBP");
     do_prob_solvent = checkParameter(argc, argv, "-prob_solvent");
-    threshold_solvent = AtoF(getParameter(argc, argv, "-threshold_solvent", "999"));
+    threshold_solvent = textToFloat(getParameter(argc, argv, "-threshold_solvent", "999"));
     do_deblob_solvent = checkParameter(argc, argv, "-deblob_solvent");
-    dilate_solvent = AtoI(getParameter(argc, argv, "-dilate_solvent", "0"));
+    dilate_solvent = textToInteger(getParameter(argc, argv, "-dilate_solvent", "0"));
 
     // Checks
     if (lowpass > 0.5) REPORT_ERROR(1, "Digital frequency for low-pass filter should be smaller than 0.5");

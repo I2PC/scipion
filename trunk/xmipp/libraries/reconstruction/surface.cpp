@@ -29,15 +29,15 @@
 void Prog_Surface_Parameters::read(int argc, char **argv)
 {
     fn_phantom     = getParameter(argc, argv, "-i", "");
-    probe_radius   = AtoF(getParameter(argc, argv, "-r", "0.5"));
+    probe_radius   = textToFloat(getParameter(argc, argv, "-r", "0.5"));
     fn_top         = getParameter(argc, argv, "-top", "");
     fn_bottom      = getParameter(argc, argv, "-bottom", "");
     fn_mask        = getParameter(argc, argv, "-o", "");
     enable_ztop    = checkParameter(argc, argv, "-ztop");
-    if (enable_ztop) ztop = AtoF(getParameter(argc, argv, "-ztop"));
+    if (enable_ztop) ztop = textToFloat(getParameter(argc, argv, "-ztop"));
     enable_zbottom = checkParameter(argc, argv, "-zbottom");
-    if (enable_zbottom) zbottom = AtoF(getParameter(argc, argv, "-zbottom"));
-    zdim           = AtoI(getParameter(argc, argv, "-zdim", "0"));
+    if (enable_zbottom) zbottom = textToFloat(getParameter(argc, argv, "-zbottom"));
+    zdim           = textToInteger(getParameter(argc, argv, "-zdim", "0"));
 
     if (fn_top == "" && fn_bottom == "")
         REPORT_ERROR(1, "Prog_Surface_Parameters::read: No surface given!!!");

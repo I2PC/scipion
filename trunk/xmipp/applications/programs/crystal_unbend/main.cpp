@@ -41,7 +41,7 @@ int main(int argc, char **argv)
         prm.inImfile  = getParameter(argc, argv, "-i");
         prm.outImfile = getParameter(argc, argv, "-o");
         prm.FN_Correlation = getParameter(argc, argv, "-cor");
-        prm.cc_peak_factor =  AtoF(getParameter(argc, argv, "-cc_peak_factor", "0.0"));
+        prm.cc_peak_factor =  textToFloat(getParameter(argc, argv, "-cc_peak_factor", "0.0"));
         prm.InterpModel = getParameter(argc, argv, "-interp_model", "Linear");
 
     }

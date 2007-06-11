@@ -51,7 +51,7 @@ public:
 
         if (checkParameter(argc, argv, "-pad_value"))
         {
-            init_value = AtoF(getParameter(argc, argv, "-pad_value"));
+            init_value = textToFloat(getParameter(argc, argv, "-pad_value"));
             wrong_parameters = 1;
         }
         if (checkParameter(argc, argv, "-corner_pad_value"))
@@ -75,18 +75,18 @@ public:
             int i = paremeterPosition(argc, argv, "-size");
             if (i + 2 >= argc)
             {
-                sizeZ = sizeY = sizeX = AtoI(argv[i+1]);
+                sizeZ = sizeY = sizeX = textToInteger(argv[i+1]);
             }
             else if (i + 3 >= argc)
             {
-                sizeZ = sizeY = AtoI(argv[i+2]);
-                sizeX = AtoI(argv[i+1]);
+                sizeZ = sizeY = textToInteger(argv[i+2]);
+                sizeX = textToInteger(argv[i+1]);
             }
             else if (i + 4 >= argc)
             {
-                sizeZ = AtoI(argv[i+3]);
-                sizeY = AtoI(argv[i+2]);
-                sizeX = AtoI(argv[i+1]);
+                sizeZ = textToInteger(argv[i+3]);
+                sizeY = textToInteger(argv[i+2]);
+                sizeX = textToInteger(argv[i+1]);
             }
             else REPORT_ERROR(1, "Not enough parameters after -size");
 
@@ -106,13 +106,13 @@ public:
             if (i + 2 >= argc) REPORT_ERROR(1, "Not enough parameters after -r0");
             else
             {
-                x0 = AtoI(argv[i+1]);
-                y0 = AtoI(argv[i+2]);
+                x0 = textToInteger(argv[i+1]);
+                y0 = textToInteger(argv[i+2]);
             }
             if (i + 3 < argc)
                 try
                 {
-                    z0 = AtoI(argv[i+3]);
+                    z0 = textToInteger(argv[i+3]);
                 }
                 catch (Xmipp_error XE)
                 {
@@ -125,13 +125,13 @@ public:
             if (i + 2 >= argc) REPORT_ERROR(1, "Not enough parameters after -rF");
             else
             {
-                xF = AtoI(argv[i+1]);
-                yF = AtoI(argv[i+2]);
+                xF = textToInteger(argv[i+1]);
+                yF = textToInteger(argv[i+2]);
             }
             if (i + 3 < argc)
                 try
                 {
-                    zF = AtoI(argv[i+3]);
+                    zF = textToInteger(argv[i+3]);
                 }
                 catch (Xmipp_error XE)
                 {

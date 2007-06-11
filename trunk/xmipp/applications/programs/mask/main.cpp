@@ -57,7 +57,7 @@ void Usage();
     if      (str_subs_val=="min") subs_val=I.compute_min(); \
     else if (str_subs_val=="max") subs_val=I.compute_max(); \
     else if (str_subs_val=="avg") subs_val=I.compute_avg(); \
-    else                          subs_val=AtoF(str_subs_val);
+    else                          subs_val=textToFloat(str_subs_val);
 
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char **argv)
@@ -93,10 +93,10 @@ int main(int argc, char **argv)
         count_above  = checkParameter(argc, argv, "-count_above");
         apply_geo    = !checkParameter(argc, argv, "-dont_apply_geo");
         if (count_above)
-            th_above  = AtoF(getParameter(argc, argv, "-count_above"));
+            th_above  = textToFloat(getParameter(argc, argv, "-count_above"));
         count_below  = checkParameter(argc, argv, "-count_below");
         if (count_below)
-            th_below  = AtoF(getParameter(argc, argv, "-count_below"));
+            th_below  = textToFloat(getParameter(argc, argv, "-count_below"));
         create_mask  = checkParameter(argc, argv, "-create_mask");
         if (create_mask)
         {

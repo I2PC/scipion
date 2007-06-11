@@ -46,9 +46,9 @@ int main(int argc, char **argv)
         fn_oext  = getParameter(argc, argv, "-oext", "");
         if (!Is_ImageXmipp(fn_input) && !Is_VolumeXmipp(fn_input))
             SF.read(fn_input);
-        zdim = AtoI(getParameter(argc, argv, "-zdim", "0"));
-        ydim = AtoI(getParameter(argc, argv, "-ydim", "0"));
-        xdim = AtoI(getParameter(argc, argv, "-xdim"));
+        zdim = textToInteger(getParameter(argc, argv, "-zdim", "0"));
+        ydim = textToInteger(getParameter(argc, argv, "-ydim", "0"));
+        xdim = textToInteger(getParameter(argc, argv, "-xdim"));
 
         if (ydim == 0) ydim = xdim;
         if (zdim == 0) zdim = xdim;

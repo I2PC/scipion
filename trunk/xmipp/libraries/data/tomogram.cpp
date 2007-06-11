@@ -81,12 +81,12 @@ void Tomogram::open_tomogram(const FileName &_fn_tomogram,
         if (!fh_inf)
             REPORT_ERROR(1, (string)"Tomogram::open_tomogram: Cannot find " +
                          fn_inf);
-        Xdim = AtoI(getParameter(fh_inf, "Xdim"));
-        Ydim = AtoI(getParameter(fh_inf, "Ydim"));
-        Zdim = AtoI(getParameter(fh_inf, "Zdim"));
-        __depth = AtoI(getParameter(fh_inf, "bitspersample"));
+        Xdim = textToInteger(getParameter(fh_inf, "Xdim"));
+        Ydim = textToInteger(getParameter(fh_inf, "Ydim"));
+        Zdim = textToInteger(getParameter(fh_inf, "Zdim"));
+        __depth = textToInteger(getParameter(fh_inf, "bitspersample"));
         if (checkParameter(fh_inf, "offset"))
-            __offset = AtoI(getParameter(fh_inf, "offset"));
+            __offset = textToInteger(getParameter(fh_inf, "offset"));
         else
             __offset = 0;
         if (checkParameter(fh_inf, "is_signed"))

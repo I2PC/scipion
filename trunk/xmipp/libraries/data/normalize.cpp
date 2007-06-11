@@ -67,8 +67,8 @@ void Normalize_parameters::read(int argc, char** argv)
     // Remove dust particles?
     remove_black_dust = checkParameter(argc, argv, "-remove_black_dust");
     remove_white_dust = checkParameter(argc, argv, "-remove_white_dust");
-    thresh_black_dust = AtoF(getParameter(argc, argv, "-thr_black_dust", "-3.5"));
-    thresh_white_dust = AtoF(getParameter(argc, argv, "-thr_white_dust", "3.5"));
+    thresh_black_dust = textToFloat(getParameter(argc, argv, "-thr_black_dust", "-3.5"));
+    thresh_white_dust = textToFloat(getParameter(argc, argv, "-thr_white_dust", "3.5"));
 
     apply_geo = false;
 
@@ -93,7 +93,7 @@ void Normalize_parameters::read(int argc, char** argv)
                                  "Normalize: Not enough parameters after -background");
 
                 aux = argv[i + 1];
-                r  = AtoI(argv[i + 2]);
+                r  = textToInteger(argv[i + 2]);
 
                 if (aux == "frame")
                     background_mode = FRAME;
@@ -118,10 +118,10 @@ void Normalize_parameters::read(int argc, char** argv)
                 REPORT_ERROR(1,
                              "Normalize_parameters::read: Not enough parameters after -prm");
 
-            a0 = AtoF(argv[i + 1]);
-            aF = AtoF(argv[i + 2]);
-            b0 = AtoF(argv[i + 3]);
-            bF = AtoF(argv[i + 4]);
+            a0 = textToFloat(argv[i + 1]);
+            aF = textToFloat(argv[i + 2]);
+            b0 = textToFloat(argv[i + 3]);
+            bF = textToFloat(argv[i + 4]);
         }
     }
 }

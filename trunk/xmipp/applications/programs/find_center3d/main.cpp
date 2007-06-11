@@ -48,16 +48,16 @@ int main(int argc, char **argv)
     try
     {
         fn_input = getParameter(argc, argv, "-i");
-        rot_sym = AtoI(getParameter(argc, argv, "-rot_sym", "0"));
+        rot_sym = textToInteger(getParameter(argc, argv, "-rot_sym", "0"));
         centerVolume = checkParameter(argc, argv, "-center_volume");
         int i;
         if ((i = paremeterPosition(argc, argv, "-rot")) != -1)
         {
             if (i + 3 >= argc)
                 REPORT_ERROR(1, "findcenter3D: Not enough parameters behind -rot");
-            rot0    = AtoF(argv[i+1]);
-            rotF    = AtoF(argv[i+2]);
-            step_rot = AtoF(argv[i+3]);
+            rot0    = textToFloat(argv[i+1]);
+            rotF    = textToFloat(argv[i+2]);
+            step_rot = textToFloat(argv[i+3]);
         }
         else
         {
@@ -69,9 +69,9 @@ int main(int argc, char **argv)
         {
             if (i + 3 >= argc)
                 REPORT_ERROR(1, "findcenter3D: Not enough parameters behind -tilt");
-            tilt0    = AtoF(argv[i+1]);
-            tiltF    = AtoF(argv[i+2]);
-            step_tilt = AtoF(argv[i+3]);
+            tilt0    = textToFloat(argv[i+1]);
+            tiltF    = textToFloat(argv[i+2]);
+            step_tilt = textToFloat(argv[i+3]);
         }
         else
         {

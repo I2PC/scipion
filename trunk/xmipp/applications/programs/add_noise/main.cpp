@@ -42,10 +42,10 @@ public:
             gaussian = true;
             int i = paremeterPosition(argc, argv, "-gaussian");
             if (i + 1 >= argc) REPORT_ERROR(1, "Not enough parameters after -gaussian");
-            noise_stddev = AtoF(argv[i+1]);
+            noise_stddev = textToFloat(argv[i+1]);
             if (i + 2 < argc)
             {
-                noise_avg = AtoF(argv[i+2]);
+                noise_avg = textToFloat(argv[i+2]);
             }
             else noise_avg = 0;
         }
@@ -54,8 +54,8 @@ public:
             uniform = true;
             int i = paremeterPosition(argc, argv, "-uniform");
             if (i + 2 >= argc) REPORT_ERROR(1, "Not enough parameters after -uniform");
-            noise_min = AtoF(argv[i+1]);
-            noise_max = AtoF(argv[i+2]);
+            noise_min = textToFloat(argv[i+1]);
+            noise_max = textToFloat(argv[i+2]);
         }
         else
             REPORT_ERROR(1, "Unknown noise type");

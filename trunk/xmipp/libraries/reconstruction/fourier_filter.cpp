@@ -87,15 +87,15 @@ void FourierMask::read(int argc, char **argv)
     {
         if (i + 2 >= argc)
             REPORT_ERROR(3000, "FourierMask: Raised cosine needs a number of pixels");
-        raised_w = AtoF(argv[i+2]);
+        raised_w = textToFloat(argv[i+2]);
         FilterShape = RAISED_COSINE;
     }
     else if (strcmp(argv[i+1], "wedge") == 0)
     {
         if (i + 3 >= argc)
             REPORT_ERROR(3000, "FourierMask: Wedge needs two angle parameters");
-        w1 = AtoF(argv[i+2]);
-        w2 = AtoF(argv[i+3]);
+        w1 = textToFloat(argv[i+2]);
+        w2 = textToFloat(argv[i+3]);
         FilterShape = WEDGE;
         FilterBand = LOWPASS;
     }
@@ -124,12 +124,12 @@ void FourierMask::read(int argc, char **argv)
     // Filter band ..........................................................
     if (checkParameter(argc, argv, "-low_pass"))
     {
-        w1 = AtoF(getParameter(argc, argv, "-low_pass"));
+        w1 = textToFloat(getParameter(argc, argv, "-low_pass"));
         FilterBand = LOWPASS;
     }
     else if (checkParameter(argc, argv, "-high_pass"))
     {
-        w1 = AtoF(getParameter(argc, argv, "-high_pass"));
+        w1 = textToFloat(getParameter(argc, argv, "-high_pass"));
         FilterBand = HIGHPASS;
     }
     else if (checkParameter(argc, argv, "-band_pass"))
@@ -146,7 +146,7 @@ void FourierMask::read(int argc, char **argv)
     }
     if (checkParameter(argc, argv, "-sampling"))
     {
-        double sampling_rate = AtoF(getParameter(argc, argv, "-sampling"));
+        double sampling_rate = textToFloat(getParameter(argc, argv, "-sampling"));
         if (w1 != 0)       w1 = sampling_rate / w1;
         if (w2 != 0)       w2 = sampling_rate / w2;
         /*CO: I think it is more confusing */

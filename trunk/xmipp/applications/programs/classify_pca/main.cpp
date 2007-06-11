@@ -62,7 +62,7 @@ main(int argc, char** argv)
             exit(EXIT_FAILURE);
         }
 
-        verb = AtoI(getParameter(argc, argv, "-verb", "1"));
+        verb = textToInteger(getParameter(argc, argv, "-verb", "1"));
 
 
         if (argc == 1)

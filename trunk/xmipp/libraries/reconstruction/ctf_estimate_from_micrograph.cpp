@@ -44,14 +44,14 @@ void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files)
                      "opening the file " + fn_prm);
 
     reversed          = checkParameter(fh_param, "reverse endian");
-    N_horizontal      = AtoI(getParameter(fh_param, "N_horizontal", 0));
-    N_vertical        = AtoI(getParameter(fh_param, "N_vertical", 0, "-1"));
+    N_horizontal      = textToInteger(getParameter(fh_param, "N_horizontal", 0));
+    N_vertical        = textToInteger(getParameter(fh_param, "N_vertical", 0, "-1"));
     if (N_vertical == -1) N_vertical = N_horizontal;
 
     compute_at_particle  = checkParameter(fh_param, "compute_at_particle");
     micrograph_averaging = checkParameter(fh_param, "micrograph_averaging");
     piece_averaging      = checkParameter(fh_param, "piece_averaging");
-    Nside_piece          = AtoI(getParameter(fh_param, "Nside_piece", 0, "5"));
+    Nside_piece          = textToInteger(getParameter(fh_param, "Nside_piece", 0, "5"));
     if (checkParameter(fh_param, "periodogram"))
         PSD_mode = Periodogram;
     else PSD_mode = ARMA;

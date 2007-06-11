@@ -35,7 +35,7 @@ void Prog_Adjust_Volume_Parameters::read(int argc, char **argv)
     fn_sel = getParameter(argc, argv, "-sel");
     fn_out = getParameter(argc, argv, "-o", "");
     optimize = checkParameter(argc, argv, "-optimize");
-    probb_eval = AtoF(getParameter(argc, argv, "-probb_eval", "0.2"));
+    probb_eval = textToFloat(getParameter(argc, argv, "-probb_eval", "0.2"));
     produce_side_info();
 }
 

@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     {
         fn_in       = getParameter(argc, argv, "-i");
         fn_out      = getParameter(argc, argv, "-o");
-        window_size = AtoI(getParameter(argc, argv, "-window_size", "128"));
+        window_size = textToInteger(getParameter(argc, argv, "-window_size", "128"));
         reversed    = checkParameter(argc, argv, "-reverse_endian");
         prm.read(argc, argv);
         prm.adjust_range = false;

@@ -41,7 +41,7 @@ int main(int argc, char **argv)
         if (checkParameter(argc, argv, "-dir"))
             w_dir = getVectorParameter(argc, argv, "-w_dim", 2);
         else w_dir = vectorR2(1, 0);
-        w_step = AtoF(getParameter(argc, argv, "-w_step", "0.001"));
+        w_step = textToFloat(getParameter(argc, argv, "-w_step", "0.001"));
     }
     catch (Xmipp_error XE)
     {

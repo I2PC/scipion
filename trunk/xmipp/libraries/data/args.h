@@ -61,7 +61,7 @@
  * {
  * #endif
  *
- * key = AtoF(firstToken(line), 1602, "Error reading key");
+ * key = textToFloat(firstToken(line), 1602, "Error reading key");
  * param_no = CtoI(nextToken(), 1602, "Error reading number parameters");
  * readFloatList(NULL, param_no, data, 1602, "Error reading doc file line");
  *
@@ -130,77 +130,77 @@ int bestPrecision(float F, int _width);
  * @ingroup TypeConversions
  *
  * @code
- * double key = AtoD(firstToken(line), 1602, "Error reading key");
+ * double key = textToDouble(firstToken(line), 1602, "Error reading key");
  * @endcode
  */
-double AtoD(const char* str,
+double textToDouble(const char* str,
             int _errno = 2101,
-            std::string errmsg = "Error in AtoD",
+            std::string errmsg = "Error in textToDouble",
             int exit = 0);
 
 /** String (char*) to float conversion.
  * @ingroup TypeConversions
  *
  * @code
- * float key = AtoF(firstToken(line), 1602, "Error reading key");
+ * float key = textToFloat(firstToken(line), 1602, "Error reading key");
  * @endcode
  */
-float AtoF(const char* str,
+float textToFloat(const char* str,
            int _errno = 2101,
-           std::string errmsg = "Error in AtoF",
+           std::string errmsg = "Error in textToFloat",
            int exit = 0);
 
 /** String (STL) to float conversion.
  * @ingroup TypeConversions
  *
  * @code
- * float key = AtoF(str, 1602, "Error reading key");
+ * float key = textToFloat(str, 1602, "Error reading key");
  * @endcode
  */
-inline float AtoF(const std::string str,
+inline float textToFloat(const std::string str,
                   int _errno = 2101,
-                  std::string errmsg = "Error in AtoF",
+                  std::string errmsg = "Error in textToFloat",
                   int exit = 0)
 {
-    return AtoF(str.c_str(), _errno, errmsg, exit);
+    return textToFloat(str.c_str(), _errno, errmsg, exit);
 }
 
 /** String (char*) to integer conversion.
  * @ingroup TypeConversions
  *
  * @code
- * int param_no = AtoI(nextToken(), 1602, "Error reading number parameters")
+ * int param_no = textToInteger(nextToken(), 1602, "Error reading number parameters")
  * @endcode
  */
-int AtoI(const char* str,
+int textToInteger(const char* str,
          int _errno = 2102,
-         std::string errmsg = "Error in AtoI",
+         std::string errmsg = "Error in textToInteger",
          int exit = 0);
 
 /** String (STL) to integer conversion.
  * @ingroup TypeConversions
  *
  * @code
- * int param_no = AtoI(str, 1602, "Error reading number parameters")
+ * int param_no = textToInteger(str, 1602, "Error reading number parameters")
  * @endcode
  */
-inline int AtoI(const std::string str,
+inline int textToInteger(const std::string str,
                 int _errno = 2102,
-                std::string errmsg = "Error in AtoI",
+                std::string errmsg = "Error in textToInteger",
                 int exit = 0)
 {
-    return AtoI(str.c_str(), _errno, errmsg, exit);
+    return textToInteger(str.c_str(), _errno, errmsg, exit);
 }
 
 /** String (char*) to long long integer conversion.
  * @ingroup TypeConversions
  *
  * @code
- * long long param_no = AtoLL(nextToken(), 1602, "Error reading number
+ * long long param_no = textToLongLong(nextToken(), 1602, "Error reading number
  *     parameters")
  * @endcode
  */
-long long AtoLL(const char* str,
+long long textToLongLong(const char* str,
                 int _errno = 2102,
                 std::string errmsg = "Error in AtoL",
                 int exit = 0);
@@ -501,7 +501,7 @@ void readFloatList(const char* str,
 
         try
         {
-            valueF = (T) AtoF(token);
+            valueF = (T) textToFloat(token);
         }
         catch (Xmipp_error)
         {
@@ -543,7 +543,7 @@ void readFloatList(const std::string& str,
 
         try
         {
-            valueF = (T) AtoF(token.c_str());
+            valueF = (T) textToFloat(token.c_str());
         }
         catch (Xmipp_error)
         {
@@ -584,7 +584,7 @@ void readFloatList(const char* str,
 
         try
         {
-            valueF = (T) AtoF(token);
+            valueF = (T) textToFloat(token);
         }
         catch (Xmipp_error)
         {
@@ -617,13 +617,13 @@ void readFloatList(const char* str,
  * the program to abort (use the exit variable).
  *
  * @code
- * m_param = AtoF(getParameter(argc, argv, "-m"));
+ * m_param = textToFloat(getParameter(argc, argv, "-m"));
  *
  * // Get compulsory parameter "-m"
- * m_param = AtoF(getParameter(argc, argv, "-m","2.65"));
+ * m_param = textToFloat(getParameter(argc, argv, "-m","2.65"));
  *
  * // Optional parameter, if no parameter is given it takes 2.65 by default
- * m_param = AtoF(getParameter(argc, argv, "-m", NULL, 6001, "-m parameter not \
+ * m_param = textToFloat(getParameter(argc, argv, "-m", NULL, 6001, "-m parameter not \
  *     found. I'm going out", TRUE);
  *
  * // Compulsory parameter, if not found give an special error message and exit

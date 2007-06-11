@@ -67,7 +67,7 @@
    struct blobtype blob;                  // Definition of the blob
    blob.radius = 2;                       // Blob radius in voxels
    blob.order  = 2;                       // Order of the Bessel function
-   blob.alpha  = AtoF(argv[1]);           // Smoothness parameter
+   blob.alpha  = textToFloat(argv[1]);           // Smoothness parameter
 
 
    double M=blob_Fourier_val (0, blob);

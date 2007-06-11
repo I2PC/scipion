@@ -51,14 +51,14 @@ int main(int argc, char **argv)
         fn_in      = getParameter(argc, argv, "-i");
         fn_out     = getParameter(argc, argv, "-o", "");
 
-        StepsNo = AtoI(getParameter(argc, argv, "-steps", "100"));
+        StepsNo = textToInteger(getParameter(argc, argv, "-steps", "100"));
         int i;
         if ((i = paremeterPosition(argc, argv, "-range")) != -1)
         {
             if (i + 2 >= argc)
                 EXIT_ERROR(1, "Histogram: Not enough parameters behind -range\n");
-            m = AtoF(argv[i+1]);
-            M = AtoF(argv[i+2]);
+            m = textToFloat(argv[i+1]);
+            M = textToFloat(argv[i+2]);
             automatic_range = false;
         }
         else automatic_range = true;

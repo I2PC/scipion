@@ -75,16 +75,16 @@ void APHFileorigmerg::read(const FileName &fn,
             line_no++;
             getline(fh_aph, line);
             if (line.size() == 0) continue;
-            h = tmp_spot.h       = AtoI(firstToken(line));
-            k = tmp_spot.k       = AtoI(nextToken());
-            tmp_spot.zstar       = AtoF(nextToken());
-            tmp_spot.amp       = AtoF(nextToken());
-            tmp_spot.phase       = AtoF(nextToken());
-            FILM = tmp_spot.FILM  = AtoI(nextToken());
-            tmp_spot.IQ       = AtoI(nextToken());
-            tmp_spot.FLMWGT      = AtoF(nextToken());
-            tmp_spot.BACK       = AtoF(nextToken());
-            tmp_spot.myCTF       = AtoF(nextToken());
+            h = tmp_spot.h       = textToInteger(firstToken(line));
+            k = tmp_spot.k       = textToInteger(nextToken());
+            tmp_spot.zstar       = textToFloat(nextToken());
+            tmp_spot.amp       = textToFloat(nextToken());
+            tmp_spot.phase       = textToFloat(nextToken());
+            FILM = tmp_spot.FILM  = textToInteger(nextToken());
+            tmp_spot.IQ       = textToInteger(nextToken());
+            tmp_spot.FLMWGT      = textToFloat(nextToken());
+            tmp_spot.BACK       = textToFloat(nextToken());
+            tmp_spot.myCTF       = textToFloat(nextToken());
             if (mrc_label >= 0 && (FILM != mrc_label))
                 continue;
             aph_data_vector.push_back(tmp_spot);

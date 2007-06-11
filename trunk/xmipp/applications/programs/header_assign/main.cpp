@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
     {
 
         round_shifts = checkParameter(argc, argv, "-round_shifts");
-        levels = AtoI(getParameter(argc, argv, "-levels", "0"));
+        levels = textToInteger(getParameter(argc, argv, "-levels", "0"));
 
         DF.read(getParameter(argc, argv, "-i"));
         fn_out = getParameter(argc, argv, "-o", "");
@@ -72,11 +72,11 @@ int main(int argc, char *argv[])
             {
                 REPORT_ERROR(1, "Not enough integers after -columns");
             }
-            col_rot = AtoI(argv[i+1]);
-            col_tilt = AtoI(argv[i+2]);
-            col_psi = AtoI(argv[i+3]);
-            col_xshift = AtoI(argv[i+4]);
-            col_yshift = AtoI(argv[i+5]);
+            col_rot = textToInteger(argv[i+1]);
+            col_tilt = textToInteger(argv[i+2]);
+            col_psi = textToInteger(argv[i+3]);
+            col_xshift = textToInteger(argv[i+4]);
+            col_yshift = textToInteger(argv[i+5]);
 
             // Check colum signs
             if (col_rot < 0) sign_rot = MINUS;
@@ -92,13 +92,13 @@ int main(int argc, char *argv[])
         do_weights = checkParameter(argc, argv, "-weight");
         if (do_weights)
         {
-            col_weight = AtoI(getParameter(argc, argv, "-weight", "6"));
+            col_weight = textToInteger(getParameter(argc, argv, "-weight", "6"));
             ncol++;
         }
         do_mirrors = checkParameter(argc, argv, "-mirror");
         if (do_mirrors)
         {
-            col_mirror = AtoI(getParameter(argc, argv, "-mirror", "7"));
+            col_mirror = textToInteger(getParameter(argc, argv, "-mirror", "7"));
             ncol++;
         }
 

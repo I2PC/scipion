@@ -83,8 +83,8 @@ main(int argc, char** argv)
         if (checkParameter(argc, argv, "-cvin"))
             cb_in = getParameter(argc, argv, "-cvin");
 
-        ydim = AtoI(getParameter(argc, argv, "-ydim", "5"));
-        xdim = AtoI(getParameter(argc, argv, "-xdim", "10"));
+        ydim = textToInteger(getParameter(argc, argv, "-ydim", "5"));
+        xdim = textToInteger(getParameter(argc, argv, "-xdim", "10"));
 
         if (checkParameter(argc, argv, "-hexa"))
         {
@@ -116,18 +116,18 @@ main(int argc, char** argv)
         }
 
 
-        alpha_0 = AtoF(getParameter(argc, argv, "-alpha", "0.1"));
+        alpha_0 = textToFloat(getParameter(argc, argv, "-alpha", "0.1"));
 
         if (checkParameter(argc, argv, "-radius"))
-            radius_0 = AtoF(getParameter(argc, argv, "-radius"));
+            radius_0 = textToFloat(getParameter(argc, argv, "-radius"));
         else
             if (xdim > ydim)
                 radius_0 = xdim;
             else
                 radius_0 = ydim;
 
-        iter = AtoI(getParameter(argc, argv, "-iter", "10000"));
-        verb = AtoI(getParameter(argc, argv, "-verb", "0"));
+        iter = textToInteger(getParameter(argc, argv, "-iter", "10000"));
+        verb = textToInteger(getParameter(argc, argv, "-verb", "0"));
 
         if (checkParameter(argc, argv, "-norm"))
             norm = true;

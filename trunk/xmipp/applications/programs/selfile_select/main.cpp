@@ -41,14 +41,14 @@ int main(int argc, char *argv[])
         fn_DF     = getParameter(argc, argv, "-doc");
         fn_SF     = getParameter(argc, argv, "-sel", "");
         fn_SF_out = getParameter(argc, argv, "-o", "");
-        col       = AtoI(getParameter(argc, argv, "-col", "1"));
+        col       = textToInteger(getParameter(argc, argv, "-col", "1"));
         col--;
         en_limit0 = checkParameter(argc, argv, "-limit0");
         if (en_limit0)
-            limit0 = AtoF(getParameter(argc, argv, "-limit0"));
+            limit0 = textToFloat(getParameter(argc, argv, "-limit0"));
         en_limitF = checkParameter(argc, argv, "-limitF");
         if (en_limitF)
-            limitF = AtoF(getParameter(argc, argv, "-limitF"));
+            limitF = textToFloat(getParameter(argc, argv, "-limitF"));
         do_clean = checkParameter(argc, argv, "-clean");
 
     }

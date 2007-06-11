@@ -33,12 +33,12 @@ void Prog_WBP_prm::read(int argc, char **argv)
     apply_shifts = !checkParameter(argc, argv, "-dont_apply_shifts");
     fn_out =  getParameter(argc, argv, "-o", "wbp.vol");
     fn_sym =  getParameter(argc, argv, "-sym", "");
-    threshold = AtoF(getParameter(argc, argv, "-threshold", "0.005"));
-    diameter = 2 * AtoI(getParameter(argc, argv, "-radius", "0"));
-    sampling = AtoF(getParameter(argc, argv, "-filsam", "5"));
+    threshold = textToFloat(getParameter(argc, argv, "-threshold", "0.005"));
+    diameter = 2 * textToInteger(getParameter(argc, argv, "-radius", "0"));
+    sampling = textToFloat(getParameter(argc, argv, "-filsam", "5"));
     do_all_matrices = checkParameter(argc, argv, "-use_each_image");
     // Hidden
-    verb = AtoI(getParameter(argc, argv, "-verb", "1"));
+    verb = textToInteger(getParameter(argc, argv, "-verb", "1"));
     do_weights = checkParameter(argc, argv, "-weight");
 
 }

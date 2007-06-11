@@ -53,9 +53,9 @@ void VirusEulerMatrices::read(const FileName &fn)
             if (line[0] == '#')  continue;
             if (line[0] == '\n') continue;
 
-            E_Matrices[(int)(line_no/3)](line_no % 3, 0) = AtoF(firstToken(line));
-            E_Matrices[(int)(line_no/3)](line_no % 3, 1) = AtoF(nextToken());
-            E_Matrices[(int)(line_no/3)](line_no % 3, 2) = AtoF(nextToken());
+            E_Matrices[(int)(line_no/3)](line_no % 3, 0) = textToFloat(firstToken(line));
+            E_Matrices[(int)(line_no/3)](line_no % 3, 1) = textToFloat(nextToken());
+            E_Matrices[(int)(line_no/3)](line_no % 3, 2) = textToFloat(nextToken());
 //cout<<line<<endl;
         }
         catch (Xmipp_error)

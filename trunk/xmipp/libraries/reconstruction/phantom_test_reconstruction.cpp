@@ -75,7 +75,7 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
             REPORT_ERROR(3007, (string)"Recons_test_Parameters::read: "
                          "reconstruction mode " + str + " not supported");
         random_sort = checkParameter(fh_param, "random sort");
-        sort_last_N = AtoI(getParameter(fh_param, "sort last", 0, "2"));
+        sort_last_N = textToInteger(getParameter(fh_param, "sort last", 0, "2"));
 
         // Several filenames and parameters
         fn_random_phantom = getParameter(fh_param, "phantom family", 0, "",
@@ -86,36 +86,36 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
         fn_voxel_phantom = getParameter(fh_param, "voxel phantom", 0, "");
         fn_crystal = getParameter(fh_param, "crystal parameters", 0, "");
         fn_sym    = getParameter(fh_param, "symmetry file", 0, "");
-        force_sym = AtoI(getParameter(fh_param, "force symmetry", 0, "0"));
+        force_sym = textToInteger(getParameter(fh_param, "force symmetry", 0, "0"));
         do_not_use_symproj = checkParameter(fh_param, "no projsym");
         fn_final_sym = getParameter(fh_param, "final symmetry file", 0, "");
         fn_CTF = getParameter(fh_param, "CTF", 0, "");
-        defocus_change = AtoF(getParameter(fh_param, "defocus change", 0, "0"));
-        sigma = AtoF(getParameter(fh_param, "noise stddev", 0, "0"));
-        low_pass_before_CTF = AtoF(getParameter(fh_param, "noise lowpass before CTF", 0, "0"));
+        defocus_change = textToFloat(getParameter(fh_param, "defocus change", 0, "0"));
+        sigma = textToFloat(getParameter(fh_param, "noise stddev", 0, "0"));
+        low_pass_before_CTF = textToFloat(getParameter(fh_param, "noise lowpass before CTF", 0, "0"));
 
-        w_hp = AtoF(getParameter(fh_param, "highpass cutoff", 0, "0"));
+        w_hp = textToFloat(getParameter(fh_param, "highpass cutoff", 0, "0"));
         if (w_hp < 0 || w_hp > 0.5) w_hp = 0;
 
-        MeasNo = AtoI(getParameter(fh_param, "measurement number", 0, "-1"));
-        accuracy = AtoF(getParameter(fh_param, "accuracy", 0, "-1"));
-        unluckiness = AtoF(getParameter(fh_param, "unluckiness", 0, "0.01"));
-        global_radius = AtoF(getParameter(fh_param, "global radius", 0, "-1"));
-        max_resolution = AtoF(getParameter(fh_param, "max resolution", 0, "-1"));
+        MeasNo = textToInteger(getParameter(fh_param, "measurement number", 0, "-1"));
+        accuracy = textToFloat(getParameter(fh_param, "accuracy", 0, "-1"));
+        unluckiness = textToFloat(getParameter(fh_param, "unluckiness", 0, "0.01"));
+        global_radius = textToFloat(getParameter(fh_param, "global radius", 0, "-1"));
+        max_resolution = textToFloat(getParameter(fh_param, "max resolution", 0, "-1"));
 
         // Surface mask
-        probe_radius = AtoF(getParameter(fh_param, "surface top", 0, "0.5"));
+        probe_radius = textToFloat(getParameter(fh_param, "surface top", 0, "0.5"));
         str = getParameter(fh_param, "surface top", 0, "");
         if (str != "")
         {
             enable_top_surface = true;
-            top0 = AtoF(firstWord(str), 3007,
+            top0 = textToFloat(firstWord(str), 3007,
                         "Recons_test_Parameters::read: top0 is not a true number");
             auxstr = nextToken();
             // Is it a range?
             if (auxstr == NULL) topF = top0;
             else
-                topF = AtoF(auxstr, 3007,
+                topF = textToFloat(auxstr, 3007,
                             "Recons_test_Parameters::read: topF is not a true number");
         }
         else enable_top_surface = false;
@@ -124,13 +124,13 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
         if (str != "")
         {
             enable_bottom_surface = true;
-            bottom0 = AtoF(firstWord(str), 3007,
+            bottom0 = textToFloat(firstWord(str), 3007,
                            "Recons_test_Parameters::read: bottom0 is not a true number");
             auxstr = nextToken();
             // Is it a range?
             if (auxstr == NULL) bottomF = bottom0;
             else
-                bottomF = AtoF(auxstr, 3007,
+                bottomF = textToFloat(auxstr, 3007,
                                "Recons_test_Parameters::read: bottomF is not a true number");
         }
         else enable_bottom_surface = false;
@@ -141,10 +141,10 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
         enable_normalization = checkParameter(fh_param, "enable normalization");
         if (enable_normalization)
         {
-            a_avg = AtoF(getParameter(fh_param, "a avg"));
-            a_stddev = AtoF(getParameter(fh_param, "a stddev"));
-            b_avg = AtoF(getParameter(fh_param, "b avg"));
-            b_stddev = AtoF(getParameter(fh_param, "b stddev"));
+            a_avg = textToFloat(getParameter(fh_param, "a avg"));
+            a_stddev = textToFloat(getParameter(fh_param, "a stddev"));
+            b_avg = textToFloat(getParameter(fh_param, "b avg"));
+            b_stddev = textToFloat(getParameter(fh_param, "b stddev"));
             str = getParameter(fh_param, "normalizing method");
             if (str == "OldXmipp")      normalizing_method = OLDXMIPP;
             else if (str == "Near_OldXmipp") normalizing_method = NEAR_OLDXMIPP;
@@ -153,7 +153,7 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
             else if (str == "Michael")       normalizing_method = MICHAEL;
             else if (str == "None")          normalizing_method = NONE;
             else REPORT_ERROR(1, "Normalize: Unknown normalizing method");
-            bg_radius = AtoI(getParameter(fh_param, "background radius", 0, "0"));
+            bg_radius = textToInteger(getParameter(fh_param, "background radius", 0, "0"));
         }
 
         // CTF correction
@@ -162,9 +162,9 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
         if (str == "remove")           phase_correction_method = CORRECT_SETTING_SMALL_TO_ZERO;
         else if (str == "leave" || str == "") phase_correction_method = CORRECT_LEAVING_SMALL;
         else if (str == "divide")           phase_correction_method = CORRECT_AMPLIFYING_NOT_SMALL;
-        phase_correction_param = AtoF(getParameter(fh_param, "CTF phase small", 0, "0"));
+        phase_correction_param = textToFloat(getParameter(fh_param, "CTF phase small", 0, "0"));
         correct_amplitude = checkParameter(fh_param, "correct CTF amplitude");
-        mu = AtoF(getParameter(fh_param, "mu", 0, "1.8"));
+        mu = textToFloat(getParameter(fh_param, "mu", 0, "1.8"));
         unmatched = checkParameter(fh_param, "unmatched");
 
         // Only valid for ART and SIRT
@@ -175,27 +175,27 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
         else    REPORT_ERROR(3007,
                                  "Recons_test_Parameters::read: unknown blob type, valid types big or small");
         voxel_basis = checkParameter(fh_param, "voxel basis");
-        stop_at = AtoI(getParameter(fh_param, "stop at", 0, "0"));
+        stop_at = textToInteger(getParameter(fh_param, "stop at", 0, "0"));
         succesive_params = checkParameter(fh_param, "succesive parameters");
         POCS_positivity = checkParameter(fh_param, "POCS positivity");
-        reconstruction_radius = AtoF(getParameter(fh_param, "reconstruction radius", 0, "-1"));
+        reconstruction_radius = textToFloat(getParameter(fh_param, "reconstruction radius", 0, "-1"));
 
         // Segmented surface
         enable_segmented_surface = checkParameter(fh_param, "segmented surface");
         if (enable_segmented_surface)
-            threshold_surface_segment = AtoF(getParameter(fh_param, "segmented surface", 0));
+            threshold_surface_segment = textToFloat(getParameter(fh_param, "segmented surface", 0));
 
         // Starting volume
         start_from_phantom = checkParameter(fh_param, "start from phantom");
         if (start_from_phantom)
         {
-            starting_low_pass = AtoF(getParameter(fh_param, "starting lowpass", 0, "",
+            starting_low_pass = textToFloat(getParameter(fh_param, "starting lowpass", 0, "",
                                                3007, "Recons_test_Parameters::read: starting lowpass is missing"));
-            starting_noise = AtoF(getParameter(fh_param, "starting noise", 0, "0"));
+            starting_noise = textToFloat(getParameter(fh_param, "starting noise", 0, "0"));
         }
 
-        segmented_dilation = AtoI(getParameter(fh_param, "segmented dilation", 0, "0"));
-        mass = AtoF(getParameter(fh_param, "mass", 0, "-1"));
+        segmented_dilation = textToInteger(getParameter(fh_param, "segmented dilation", 0, "0"));
+        mass = textToFloat(getParameter(fh_param, "mass", 0, "-1"));
 
         // If ART ..., read Iterative parameters
         if (recons_method == use_ART || recons_method == use_SIRT ||
@@ -207,11 +207,11 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
                 str = getParameter(fh_param, "iterative parameters", skip, "");
                 if (str != "")
                 {
-                    lambda0.push_back(AtoF(firstWord(str), 3007,
+                    lambda0.push_back(textToFloat(firstWord(str), 3007,
                                            "Recons_test_Parameters::read: lambda0 is not a true number"));
                     auxstr = nextWord(3007, "Recons_test_Parameters::read: "
                                        "number of iterations not found");
-                    no_it0.push_back(AtoI(auxstr, 3007,
+                    no_it0.push_back(textToInteger(auxstr, 3007,
                                           "Recons_test_Parameters::read: no_it0 is not a true number"));
                     auxstr = nextToken();
                     // Is it a range?
@@ -222,11 +222,11 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
                     }
                     else
                     {
-                        lambdaF.push_back(AtoF(auxstr, 3007,
+                        lambdaF.push_back(textToFloat(auxstr, 3007,
                                                "Recons_test_Parameters::read: lambdaF is not a true number"));
                         auxstr = nextWord(3007, "Recons_test_Parameters::read: "
                                            "number of iterations not found");
-                        no_itF.push_back(AtoI(auxstr, 3007,
+                        no_itF.push_back(textToInteger(auxstr, 3007,
                                               "Recons_test_Parameters::read: no_itF is not a true number"));
                     }
                     skip++;
@@ -248,7 +248,7 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
                 str = getParameter(fh_param, "threshold", skip, "");
                 if (str != "")
                 {
-                    WBP_threshold.push_back(AtoF(firstWord(str), 3007,
+                    WBP_threshold.push_back(textToFloat(firstWord(str), 3007,
                                                  "Recons_test_Parameters::read: WBP threshold is not a true number"));
                     skip++;
                 }

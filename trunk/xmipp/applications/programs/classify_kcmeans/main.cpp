@@ -99,7 +99,7 @@ main(int argc, char** argv)
         }
 
 
-        c = AtoI(getParameter(argc, argv, "-c"));
+        c = textToInteger(getParameter(argc, argv, "-c"));
 
         if (checkParameter(argc, argv, "-gaussian"))
         {
@@ -117,11 +117,11 @@ main(int argc, char** argv)
             tStudent = true;
         }
 
-        df = (int) AtoI(getParameter(argc, argv, "-df", "3"));
+        df = (int) textToInteger(getParameter(argc, argv, "-df", "3"));
 
-        eps = AtoF(getParameter(argc, argv, "-eps", "1e-7"));
-        iter = AtoI(getParameter(argc, argv, "-iter", "200"));
-        verb = AtoI(getParameter(argc, argv, "-verb", "0"));
+        eps = textToFloat(getParameter(argc, argv, "-eps", "1e-7"));
+        iter = textToInteger(getParameter(argc, argv, "-iter", "200"));
+        verb = textToInteger(getParameter(argc, argv, "-verb", "0"));
 
         if (checkParameter(argc, argv, "-norm"))
             norm = true;

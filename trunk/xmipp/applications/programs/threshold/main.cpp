@@ -33,7 +33,7 @@ void Usage();
 #define SET_SUBS_VAL(I, subs_val, str_subs_val) \
     if      (str_subs_val=="min") subs_val=I.compute_min(); \
     else if (str_subs_val=="max") subs_val=I.compute_max(); \
-    else                          subs_val=AtoF(str_subs_val);
+    else                          subs_val=textToFloat(str_subs_val);
 
 int main(int argc, char **argv)
 {
@@ -64,13 +64,13 @@ int main(int argc, char **argv)
         fn_dist    = getParameter(argc, argv, "-dist", "");
         fn_label   = getParameter(argc, argv, "-label", "");
         if ((enable_th_below = checkParameter(argc, argv, "-below")))
-            th_below = AtoF(getParameter(argc, argv, "-below"));
+            th_below = textToFloat(getParameter(argc, argv, "-below"));
         if ((enable_th_above = checkParameter(argc, argv, "-above")))
-            th_above = AtoF(getParameter(argc, argv, "-above"));
+            th_above = textToFloat(getParameter(argc, argv, "-above"));
         if ((enable_dmin = checkParameter(argc, argv, "-dmin")))
-            dmin = AtoF(getParameter(argc, argv, "-dmin"));
+            dmin = textToFloat(getParameter(argc, argv, "-dmin"));
         if ((enable_dmax = checkParameter(argc, argv, "-dmax")))
-            dmax = AtoF(getParameter(argc, argv, "-dmax"));
+            dmax = textToFloat(getParameter(argc, argv, "-dmax"));
         binarize = checkParameter(argc, argv, "-binarize");
         if (binarize)
         {
@@ -86,7 +86,7 @@ int main(int argc, char **argv)
                 EXIT_ERROR(1, "Threshold: Not enough parameters behind -substitute\n");
             str_old_val = argv[i+1];
             str_new_val = argv[i+2];
-            accuracy = AtoF(getParameter(argc, argv, "-accuracy", "0"));
+            accuracy = textToFloat(getParameter(argc, argv, "-accuracy", "0"));
         }
         else enable_substitute = false;
         if ((i = paremeterPosition(argc, argv, "-random_substitute")) != -1)
@@ -94,10 +94,10 @@ int main(int argc, char **argv)
             enable_random_substitute = true;
             if (i + 3 >= argc)
                 EXIT_ERROR(1, "Threshold: Not enough parameters behind -substitute\n");
-            old_val = AtoF(argv[i+1]);
-            avg_val = AtoF(argv[i+2]);
-            sig_val = AtoF(argv[i+3]);
-            accuracy = AtoF(getParameter(argc, argv, "-accuracy", "0"));
+            old_val = textToFloat(argv[i+1]);
+            avg_val = textToFloat(argv[i+2]);
+            sig_val = textToFloat(argv[i+3]);
+            accuracy = textToFloat(getParameter(argc, argv, "-accuracy", "0"));
         }
         else enable_random_substitute = false;
 	// Read mask stuff

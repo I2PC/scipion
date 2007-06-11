@@ -78,9 +78,9 @@ int main(int argc, char** argv)
             exit(EXIT_FAILURE);
         }
 
-        dim = AtoI(getParameter(argc, argv, "-dim", "2"));
-        iter = AtoI(getParameter(argc, argv, "-iter", "100000"));
-        verb = AtoI(getParameter(argc, argv, "-verb", "0"));
+        dim = textToInteger(getParameter(argc, argv, "-dim", "2"));
+        iter = textToInteger(getParameter(argc, argv, "-iter", "100000"));
+        verb = textToInteger(getParameter(argc, argv, "-verb", "0"));
 
         if (checkParameter(argc, argv, "-norm"))
             norm = true;

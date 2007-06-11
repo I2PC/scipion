@@ -111,8 +111,8 @@ int main(int argc, char **argv)
         }
         else
             REPORT_ERROR(1, "No mode (img/sel/vol) supplied");
-        numCols = AtoI(getParameter(argc, argv, "-w", "-1"));
-        numRows = AtoI(getParameter(argc, argv, "-h", "-1"));
+        numCols = textToInteger(getParameter(argc, argv, "-w", "-1"));
+        numRows = textToInteger(getParameter(argc, argv, "-h", "-1"));
         apply_geo = !checkParameter(argc, argv, "-dont_apply_geo");
         poll = checkParameter(argc, argv, "-poll");
         common_normalization = checkParameter(argc, argv, "-common_norm");

@@ -61,7 +61,7 @@ int main(int argc, char **argv)
         if (rank == 0)
         {
             prm.produce_side_info(0);
-            fn_random = AtoI(prm.fn_random);
+            fn_random = textToInteger(prm.fn_random);
         }
         MPI_Bcast(&fn_random, 1, MPI_INT, 0, MPI_COMM_WORLD);
 

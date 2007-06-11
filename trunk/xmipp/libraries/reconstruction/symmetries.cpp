@@ -67,7 +67,7 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
         if (strcmp(auxstr, "rot_axis") == 0)
         {
             auxstr = nextToken();
-            fold = AtoI(auxstr);
+            fold = textToInteger(auxstr);
             true_symNo += (fold - 1);
             no_axis++;
         }
@@ -106,13 +106,13 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
         if (strcmp(auxstr, "rot_axis") == 0)
         {
             auxstr = nextToken();
-            fold = AtoI(auxstr);
+            fold = textToInteger(auxstr);
             auxstr = nextToken();
-            axis.X() = AtoF(auxstr);
+            axis.X() = textToFloat(auxstr);
             auxstr = nextToken();
-            axis.Y() = AtoF(auxstr);
+            axis.Y() = textToFloat(auxstr);
             auxstr = nextToken();
-            axis.Z() = AtoF(auxstr);
+            axis.Z() = textToFloat(auxstr);
             ang_incr = 360. / fold;
             L.initIdentity();
             for (j = 1, rot_ang = ang_incr; j < fold; j++, rot_ang += ang_incr)
@@ -140,11 +140,11 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
         else if (strcmp(auxstr, "mirror_plane") == 0)
         {
             auxstr = nextToken();
-            axis.X() = AtoF(auxstr);
+            axis.X() = textToFloat(auxstr);
             auxstr = nextToken();
-            axis.Y() = AtoF(auxstr);
+            axis.Y() = textToFloat(auxstr);
             auxstr = nextToken();
-            axis.Z() = AtoF(auxstr);
+            axis.Z() = textToFloat(auxstr);
             L.initIdentity();
             L(2, 2) = -1;
             Matrix2D<double> A = alignWithZ(axis);

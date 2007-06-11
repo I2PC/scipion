@@ -45,9 +45,9 @@ void Basis::set_default()
     checkParameter(argc,argv,"-"flag)
 
 #define GET_BASIS_PARAMS \
-    blob.radius        = AtoF(GET_PARAM_WITH_DEF("r",         "2"         )); \
-    blob.order         = AtoI(GET_PARAM_WITH_DEF("m",         "2"         )); \
-    blob.alpha         = AtoF(GET_PARAM_WITH_DEF("a",         "10.4"      )); \
+    blob.radius        = textToFloat(GET_PARAM_WITH_DEF("r",         "2"         )); \
+    blob.order         = textToInteger(GET_PARAM_WITH_DEF("m",         "2"         )); \
+    blob.alpha         = textToFloat(GET_PARAM_WITH_DEF("a",         "10.4"      )); \
     if (CHECK_PARAM("voxels")) type=voxels; \
     if (CHECK_PARAM("splines")) type=splines; \
     if (CHECK_PARAM("small_blobs")) { \

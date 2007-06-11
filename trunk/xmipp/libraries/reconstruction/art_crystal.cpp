@@ -36,12 +36,12 @@ void Crystal_ART_Parameters::read(int argc, char **argv,
     try
     {
         prm.is_crystal = true;
-        a_mag = AtoF(getParameter(argc, argv, "-mag_a"));
+        a_mag = textToFloat(getParameter(argc, argv, "-mag_a"));
         a_mag /= prm.sampling;
-        b_mag = AtoF(getParameter(argc, argv, "-mag_b"));
+        b_mag = textToFloat(getParameter(argc, argv, "-mag_b"));
         b_mag /= prm.sampling;
-        ang_a2b_deg = AtoF(getParameter(argc, argv, "-ang_a2b_deg"));
-        ang_x2a_deg = AtoF(getParameter(argc, argv, "-ang_x2a_deg", 0));
+        ang_a2b_deg = textToFloat(getParameter(argc, argv, "-ang_a2b_deg"));
+        ang_x2a_deg = textToFloat(getParameter(argc, argv, "-ang_x2a_deg", 0));
         fill_space = checkParameter(argc, argv, "-fill_space");
         avox.resize(2);
         bvox.resize(2);

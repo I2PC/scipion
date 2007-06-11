@@ -131,9 +131,9 @@ bool check_for_operation(int argc, char **argv, char *operation, FileName &fn, i
         // In other case check if it's a number
         else
         {
-            // check if we have a number using AtoF
-            // If a problem exist, AtoF will throw an exception, catched by the main function
-            double dummy = AtoF(fn, 2101, "One of the parameters is neither a number nor a file\n\n");
+            // check if we have a number using textToFloat
+            // If a problem exist, textToFloat will throw an exception, catched by the main function
+            double dummy = textToFloat(fn, 2101, "One of the parameters is neither a number nor a file\n\n");
             operand_type = NUMBER;
         }
 
@@ -188,7 +188,7 @@ void operate_plus(int operand_type1, int operand_type2, FileName &fn_1, FileName
     {
         ImageXmipp out;
         out.read(fn_2, false, false, true);
-        double number1 = AtoF(fn_1);
+        double number1 = textToFloat(fn_1);
         out() = out() + number1;
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
@@ -198,7 +198,7 @@ void operate_plus(int operand_type1, int operand_type2, FileName &fn_1, FileName
     {
         ImageXmipp out;
         out.read(fn_1, false, false, true);
-        double number2 = AtoF(fn_2);
+        double number2 = textToFloat(fn_2);
         out() = out() + number2;
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
@@ -218,7 +218,7 @@ void operate_plus(int operand_type1, int operand_type2, FileName &fn_1, FileName
     {
         VolumeXmipp out;
         out.read(fn_2);
-        double number1 = AtoF(fn_1);
+        double number1 = textToFloat(fn_1);
         out() = out() + number1;
         out.write(fn_out);
     }
@@ -226,7 +226,7 @@ void operate_plus(int operand_type1, int operand_type2, FileName &fn_1, FileName
     {
         VolumeXmipp out;
         out.read(fn_1);
-        double number2 = AtoF(fn_2);
+        double number2 = textToFloat(fn_2);
         out() = out() + number2;
         out.write(fn_out);
     }
@@ -247,7 +247,7 @@ void operate_minus(int operand_type1, int operand_type2, FileName &fn_1, FileNam
     {
         ImageXmipp out;
         out.read(fn_2, false, false, true);
-        double number1 = AtoF(fn_1);
+        double number1 = textToFloat(fn_1);
         out() = number1 - out();
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
@@ -257,7 +257,7 @@ void operate_minus(int operand_type1, int operand_type2, FileName &fn_1, FileNam
     {
         ImageXmipp out;
         out.read(fn_1, false, false, true);
-        double number2 = AtoF(fn_2);
+        double number2 = textToFloat(fn_2);
         out() = out() - number2;
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
@@ -277,7 +277,7 @@ void operate_minus(int operand_type1, int operand_type2, FileName &fn_1, FileNam
     {
         VolumeXmipp out;
         out.read(fn_2);
-        double number1 = AtoF(fn_1);
+        double number1 = textToFloat(fn_1);
         out() = out() - number1;
         out.write(fn_out);
     }
@@ -285,7 +285,7 @@ void operate_minus(int operand_type1, int operand_type2, FileName &fn_1, FileNam
     {
         VolumeXmipp out;
         out.read(fn_1);
-        double number2 = AtoF(fn_2);
+        double number2 = textToFloat(fn_2);
         out() = out() - number2;
         out.write(fn_out);
     }
@@ -306,7 +306,7 @@ void multiplication(int operand_type1, int operand_type2, FileName &fn_1, FileNa
     {
         ImageXmipp out;
         out.read(fn_2, false, false, true);
-        double number1 = AtoF(fn_1);
+        double number1 = textToFloat(fn_1);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
         out(i, j) *= number1;
         out.set_originOffsets(0., 0.);
@@ -317,7 +317,7 @@ void multiplication(int operand_type1, int operand_type2, FileName &fn_1, FileNa
     {
         ImageXmipp out;
         out.read(fn_1, false, false, true);
-        double number2 = AtoF(fn_2);
+        double number2 = textToFloat(fn_2);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
         out(i, j) *= number2;
         out.set_originOffsets(0., 0.);
@@ -338,7 +338,7 @@ void multiplication(int operand_type1, int operand_type2, FileName &fn_1, FileNa
     {
         VolumeXmipp out;
         out.read(fn_2);
-        double number1 = AtoF(fn_1);
+        double number1 = textToFloat(fn_1);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
         out(k, i, j) *= number1;
         out.write(fn_out);
@@ -347,7 +347,7 @@ void multiplication(int operand_type1, int operand_type2, FileName &fn_1, FileNa
     {
         VolumeXmipp out;
         out.read(fn_1);
-        double number2 = AtoF(fn_2);
+        double number2 = textToFloat(fn_2);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
         out(k, i, j) *= number2;
         out.write(fn_out);
@@ -370,7 +370,7 @@ void division(int operand_type1, int operand_type2, FileName &fn_1, FileName &fn
     {
         ImageXmipp out;
         out.read(fn_2, false, false, true);
-        double number1 = AtoF(fn_1);
+        double number1 = textToFloat(fn_1);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
         out(i, j) = number1 / out(i, j);
         out.set_originOffsets(0., 0.);
@@ -381,7 +381,7 @@ void division(int operand_type1, int operand_type2, FileName &fn_1, FileName &fn
     {
         ImageXmipp out;
         out.read(fn_1, false, false, true);
-        double number2 = AtoF(fn_2);
+        double number2 = textToFloat(fn_2);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
         out(i, j) = out(i, j) / number2;
         out.set_originOffsets(0., 0.);
@@ -403,7 +403,7 @@ void division(int operand_type1, int operand_type2, FileName &fn_1, FileName &fn
     {
         VolumeXmipp out;
         out.read(fn_2);
-        double number1 = AtoF(fn_1);
+        double number1 = textToFloat(fn_1);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
         out(k, i, j) = number1 / out(k, i, j);
         out.write(fn_out);
@@ -412,7 +412,7 @@ void division(int operand_type1, int operand_type2, FileName &fn_1, FileName &fn
     {
         VolumeXmipp out;
         out.read(fn_1);
-        double number2 = AtoF(fn_2);
+        double number2 = textToFloat(fn_2);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
         out(k, i, j) = out(k, i, j) / number2;
         out.write(fn_out);
@@ -482,7 +482,7 @@ void extract_slice(int operand_type1, int operand_type2, FileName &fn_1, FileNam
         VolumeXmipp Op1;
         ImageXmipp  out;
         Op1.read(fn_1);
-        int number2 = AtoI(fn_2);
+        int number2 = textToInteger(fn_2);
         // If the slice requested exists
         if (number2 >= STARTINGZ(Op1()) && number2 <= FINISHINGZ(Op1()))
         {
@@ -505,7 +505,7 @@ void extract_column(int operand_type1, int operand_type2, FileName &fn_1, FileNa
         VolumeXmipp Op1;
         ImageXmipp  out;
         Op1.read(fn_1);
-        int number2 = AtoI(fn_2);
+        int number2 = textToInteger(fn_2);
         // If the column requested exists
         if (number2 >= STARTINGX(Op1()) && number2 <= FINISHINGX(Op1()))
         {
@@ -524,7 +524,7 @@ void extract_column(int operand_type1, int operand_type2, FileName &fn_1, FileNa
         ImageXmipp  Op1;
         ImageXmipp  out;
         Op1.read(fn_1, false, false, true);
-        int number2 = AtoI(fn_2);
+        int number2 = textToInteger(fn_2);
         // If the column requested exists
         if (number2 >= STARTINGX(Op1()) && number2 <= FINISHINGX(Op1()))
         {
@@ -547,7 +547,7 @@ void extract_row(int operand_type1, int operand_type2, FileName &fn_1, FileName 
         VolumeXmipp Op1;
         ImageXmipp  out;
         Op1.read(fn_1);
-        int number2 = AtoI(fn_2);
+        int number2 = textToInteger(fn_2);
         // If the column requested exists
         if (number2 >= STARTINGY(Op1()) && number2 <= FINISHINGY(Op1()))
         {
@@ -566,7 +566,7 @@ void extract_row(int operand_type1, int operand_type2, FileName &fn_1, FileName 
         ImageXmipp  Op1;
         ImageXmipp  out;
         Op1.read(fn_1, false, false, true);
-        int number2 = AtoI(fn_2);
+        int number2 = textToInteger(fn_2);
         // If the column requested exists
         if (number2 >= STARTINGY(Op1()) && number2 <= FINISHINGY(Op1()))
         {

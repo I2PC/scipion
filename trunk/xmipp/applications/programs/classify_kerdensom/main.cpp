@@ -104,8 +104,8 @@ main(int argc, char** argv)
         }
 
 
-        ydim = AtoI(getParameter(argc, argv, "-ydim", "5"));
-        xdim = AtoI(getParameter(argc, argv, "-xdim", "10"));
+        ydim = textToInteger(getParameter(argc, argv, "-ydim", "5"));
+        xdim = textToInteger(getParameter(argc, argv, "-xdim", "10"));
 
 
         if (checkParameter(argc, argv, "-hexa"))
@@ -136,15 +136,15 @@ main(int argc, char** argv)
             tStudent = true;
         }
 
-        reg0 = AtoF(getParameter(argc, argv, "-reg0", "1000.0"));
-        reg1 = AtoF(getParameter(argc, argv, "-reg1", "100.0"));
-        df = (int) AtoI(getParameter(argc, argv, "-df", "3"));
+        reg0 = textToFloat(getParameter(argc, argv, "-reg0", "1000.0"));
+        reg1 = textToFloat(getParameter(argc, argv, "-reg1", "100.0"));
+        df = (int) textToInteger(getParameter(argc, argv, "-df", "3"));
 
         fn_algo_in = getParameter(argc, argv, "-ain", "");
 
-        eps = AtoF(getParameter(argc, argv, "-eps", "1e-7"));
-        iter = AtoI(getParameter(argc, argv, "-iter", "200"));
-        verb = AtoI(getParameter(argc, argv, "-verb", "0"));
+        eps = textToFloat(getParameter(argc, argv, "-eps", "1e-7"));
+        iter = textToInteger(getParameter(argc, argv, "-iter", "200"));
+        verb = textToInteger(getParameter(argc, argv, "-verb", "0"));
 
         if (checkParameter(argc, argv, "-norm"))
             norm = true;
@@ -158,7 +158,7 @@ main(int argc, char** argv)
             saveCodebook = true;
         else saveCodebook = false;
 
-        annSteps = AtoI(getParameter(argc, argv, "-steps", "10"));
+        annSteps = textToInteger(getParameter(argc, argv, "-steps", "10"));
 
         if (argc == 1)
         {

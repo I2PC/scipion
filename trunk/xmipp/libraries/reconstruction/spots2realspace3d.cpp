@@ -68,7 +68,7 @@ void Spot2RealSpace3D_Parameters::read_from_file(const FileName &fnprm)
                          "Spot2RealSpace3D_Parameters::read: Cannot read Phase Shift");
         }
 
-        KeepContrast = AtoI(getParameter(fh_param, "Keep Contrast", 0, "1"));
+        KeepContrast = textToInteger(getParameter(fh_param, "Keep Contrast", 0, "1"));
         Celldim.resize(3);
         aux_str = getParameter(fh_param, "Cell Size");
         delete is;
@@ -83,7 +83,7 @@ void Spot2RealSpace3D_Parameters::read_from_file(const FileName &fnprm)
                          "Spot2RealSpace3D_Parameters::read: Cannot read Cell Size");
         }
         delete is;
-//      Scale_Factor=AtoF(getParameter(fh_param,"Scale Factor",0,"-1"));
+//      Scale_Factor=textToFloat(getParameter(fh_param,"Scale Factor",0,"-1"));
     }
     catch (Xmipp_error XE)
     {

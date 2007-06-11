@@ -61,7 +61,7 @@ public:
             if (i_shift > 0)
             {
                 DF_shifts.read(argv[i_shift+1]);
-                colX_shift = AtoI(getParameter(argc, argv, "-colX_shift"));
+                colX_shift = textToInteger(getParameter(argc, argv, "-colX_shift"));
                 // colX_shift -=3;
                 // if(colX_shift<0)
                 //   REPORT_ERROR(1,"colX_shift must be no less than 3");
@@ -71,7 +71,7 @@ public:
             if (i_scale > 0)
             {
                 DF_scales.read(argv[i_scale+1]);
-                colX_scale = AtoI(getParameter(argc, argv, "-colX_scale", "5"));
+                colX_scale = textToInteger(getParameter(argc, argv, "-colX_scale", "5"));
                 colX_scale -= 3;
                 if (colX_scale < 0)
                     REPORT_ERROR(1, "colX_scale must be no less than 3");

@@ -31,7 +31,7 @@
 void CorrectPhaseParams::read(int argc, char **argv)
 {
     fnCtfdat = getParameter(argc, argv, "-ctfdat");
-    epsilon = AtoF(getParameter(argc, argv, "-small", "0"));
+    epsilon = textToFloat(getParameter(argc, argv, "-small", "0"));
     std::string aux;
     aux = getParameter(argc, argv, "-method", "");
     if (aux == "remove")                  method = CORRECT_SETTING_SMALL_TO_ZERO;

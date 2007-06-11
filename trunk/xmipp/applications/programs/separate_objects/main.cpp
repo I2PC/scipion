@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
         fn_in   = getParameter(argc, argv, "-i");
         fn_root = getParameter(argc, argv, "-o", "");
         invert  = checkParameter(argc, argv, "-invert");
-        min_size  = AtoF(getParameter(argc, argv, "-min_size", "0"));
+        min_size  = textToFloat(getParameter(argc, argv, "-min_size", "0"));
         if (fn_root == "") fn_root = fn_in.get_root();
     }
     catch (Xmipp_error XE)

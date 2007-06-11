@@ -75,7 +75,7 @@
          try {
             fn_ctf=getParameter(argc,argv,"-i");
             fn_root=getParameter(argc,argv,"-o");
-            Xdim=AtoI(getParameter(argc,argv,"-xdim"));
+            Xdim=textToInteger(getParameter(argc,argv,"-xdim"));
          } catch (Xmipp_error XE) {
             cerr << XE << endl
                  << "Usage: produce_imgs \n"

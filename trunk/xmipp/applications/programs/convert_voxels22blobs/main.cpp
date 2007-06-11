@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
         {
             voxels_to_blobs = true;
             fn_in = getParameter(argc, argv, "-voxels");
-            grid_relative_size = AtoF(getParameter(argc, argv, "-g", "1.41"));
+            grid_relative_size = textToFloat(getParameter(argc, argv, "-g", "1.41"));
             if (checkParameter(argc, argv, "-FCC")) grid_type = FCC;
             else if (checkParameter(argc, argv, "-CC"))  grid_type = CC;
             else                                      grid_type = BCC;
@@ -62,12 +62,12 @@ int main(int argc, char *argv[])
         else
             REPORT_ERROR(1, "Voxels22blobs: Not recognised input file type");
         fn_out = getParameter(argc, argv, "-o");
-        lambda             = AtoF(getParameter(argc, argv, "-l",    "0.05"));
-        final_error        = AtoF(getParameter(argc, argv, "-final_error", "0.01"));
-        blob.radius        = AtoF(getParameter(argc, argv, "-r",    "2"));
-        blob.order         = AtoI(getParameter(argc, argv, "-m",    "2"));
-        blob.alpha         = AtoF(getParameter(argc, argv, "-a",    "10.4"));
-        R                  = AtoF(getParameter(argc, argv, "-R",    "-1"));
+        lambda             = textToFloat(getParameter(argc, argv, "-l",    "0.05"));
+        final_error        = textToFloat(getParameter(argc, argv, "-final_error", "0.01"));
+        blob.radius        = textToFloat(getParameter(argc, argv, "-r",    "2"));
+        blob.order         = textToInteger(getParameter(argc, argv, "-m",    "2"));
+        blob.alpha         = textToFloat(getParameter(argc, argv, "-a",    "10.4"));
+        R                  = textToFloat(getParameter(argc, argv, "-R",    "-1"));
     }
     catch (Xmipp_error &XE)
     {

@@ -59,9 +59,9 @@ void Prog_angular_predict_continuous_prm::read(int argc, char **argv)
     fn_ref = getParameter(argc, argv, "-ref");
     fn_ang = getParameter(argc, argv, "-ang", "");
     fn_out_ang = getParameter(argc, argv, "-oang");
-    gaussian_DFT_sigma = AtoF(getParameter(argc, argv, "-gaussian_Fourier", "0.5"));
-    gaussian_Real_sigma = AtoF(getParameter(argc, argv, "-gaussian_Real", "0.5"));
-    max_no_iter = AtoI(getParameter(argc, argv, "-max_iter", "60"));
+    gaussian_DFT_sigma = textToFloat(getParameter(argc, argv, "-gaussian_Fourier", "0.5"));
+    gaussian_Real_sigma = textToFloat(getParameter(argc, argv, "-gaussian_Real", "0.5"));
+    max_no_iter = textToInteger(getParameter(argc, argv, "-max_iter", "60"));
     dont_modify_header = checkParameter(argc, argv, "-dont_modify_header");
     produce_side_info();
 }

@@ -49,28 +49,28 @@ int main(int argc, char *argv[])
         int i;
         DF.read(getParameter(argc, argv, "-i"));
         fn_out = getParameter(argc, argv, "-o", "");
-        percentil = AtoF(getParameter(argc, argv, "-percentil", "50"));
-        col = AtoI(getParameter(argc, argv, "-col", "0"));
-        col2 = AtoI(getParameter(argc, argv, "-col2", "-1"));
+        percentil = textToFloat(getParameter(argc, argv, "-percentil", "50"));
+        col = textToInteger(getParameter(argc, argv, "-col", "0"));
+        col2 = textToInteger(getParameter(argc, argv, "-col2", "-1"));
 
-        StepsNo = AtoI(getParameter(argc, argv, "-steps", "100"));
+        StepsNo = textToInteger(getParameter(argc, argv, "-steps", "100"));
         if ((i = paremeterPosition(argc, argv, "-range")) != -1)
         {
             if (i + 2 >= argc)
                 EXIT_ERROR(1, "DocFile Histogram: Not enough parameters behind -range\n");
-            m = AtoF(argv[i+1]);
-            M = AtoF(argv[i+2]);
+            m = textToFloat(argv[i+1]);
+            M = textToFloat(argv[i+2]);
             automatic_range = false;
         }
         else automatic_range = true;
 
-        StepsNo2 = AtoI(getParameter(argc, argv, "-steps2", "100"));
+        StepsNo2 = textToInteger(getParameter(argc, argv, "-steps2", "100"));
         if ((i = paremeterPosition(argc, argv, "-range2")) != -1)
         {
             if (i + 2 >= argc)
                 EXIT_ERROR(1, "DocFile Histogram: Not enough parameters behind -range2\n");
-            m2 = AtoF(argv[i+1]);
-            M2 = AtoF(argv[i+2]);
+            m2 = textToFloat(argv[i+1]);
+            M2 = textToFloat(argv[i+2]);
             automatic_range2 = false;
         }
         else automatic_range2 = true;

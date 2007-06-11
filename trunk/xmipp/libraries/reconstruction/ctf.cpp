@@ -39,59 +39,59 @@ void XmippCTF::read(const FileName &fn, bool disable_if_not_K)
 
     try
     {
-        Tm = AtoF(getParameter(fh_param, "sampling_rate", 0, "1"));
+        Tm = textToFloat(getParameter(fh_param, "sampling_rate", 0, "1"));
         if (enable_CTF)
         {
-            DeltafU = AtoF(getParameter(fh_param, "defocusU", 0, "0"));
+            DeltafU = textToFloat(getParameter(fh_param, "defocusU", 0, "0"));
             if (checkParameter(fh_param, "defocusV"))
-                DeltafV = AtoF(getParameter(fh_param, "defocusV", 0));
+                DeltafV = textToFloat(getParameter(fh_param, "defocusV", 0));
             else DeltafV = DeltafU;
-            azimuthal_angle = AtoF(getParameter(fh_param, "azimuthal_angle", 0, "0"));
-            kV = AtoF(getParameter(fh_param, "voltage", 0, "100"));
-            Cs = AtoF(getParameter(fh_param, "spherical_aberration", 0, "0"));
-            Ca = AtoF(getParameter(fh_param, "chromatic_aberration", 0, "0"));
-            espr = AtoF(getParameter(fh_param, "energy_loss", 0, "0"));
-            ispr = AtoF(getParameter(fh_param, "lens_stability", 0, "0"));
-            alpha = AtoF(getParameter(fh_param, "convergence_cone", 0, "0"));
-            DeltaF = AtoF(getParameter(fh_param, "longitudinal_displace", 0, "0"));
-            DeltaR = AtoF(getParameter(fh_param, "transversal_displace", 0, "0"));
-            Q0 = AtoF(getParameter(fh_param, "Q0", 0, "0"));
-            K = AtoF(getParameter(fh_param, "K", 0, "0"));
+            azimuthal_angle = textToFloat(getParameter(fh_param, "azimuthal_angle", 0, "0"));
+            kV = textToFloat(getParameter(fh_param, "voltage", 0, "100"));
+            Cs = textToFloat(getParameter(fh_param, "spherical_aberration", 0, "0"));
+            Ca = textToFloat(getParameter(fh_param, "chromatic_aberration", 0, "0"));
+            espr = textToFloat(getParameter(fh_param, "energy_loss", 0, "0"));
+            ispr = textToFloat(getParameter(fh_param, "lens_stability", 0, "0"));
+            alpha = textToFloat(getParameter(fh_param, "convergence_cone", 0, "0"));
+            DeltaF = textToFloat(getParameter(fh_param, "longitudinal_displace", 0, "0"));
+            DeltaR = textToFloat(getParameter(fh_param, "transversal_displace", 0, "0"));
+            Q0 = textToFloat(getParameter(fh_param, "Q0", 0, "0"));
+            K = textToFloat(getParameter(fh_param, "K", 0, "0"));
             if (K == 0 && disable_if_not_K) enable_CTF = false;
         }
 
         if (enable_CTFnoise)
         {
-            base_line     = AtoF(getParameter(fh_param, "base_line", 0, "0"));
+            base_line     = textToFloat(getParameter(fh_param, "base_line", 0, "0"));
 
-            gaussian_K    = AtoF(getParameter(fh_param, "gaussian_K", 0, "0"));
-            sigmaU        = AtoF(getParameter(fh_param, "sigmaU", 0, "0"));
+            gaussian_K    = textToFloat(getParameter(fh_param, "gaussian_K", 0, "0"));
+            sigmaU        = textToFloat(getParameter(fh_param, "sigmaU", 0, "0"));
             if (checkParameter(fh_param, "sigmaV"))
-                sigmaV     = AtoF(getParameter(fh_param, "sigmaV", 0));
+                sigmaV     = textToFloat(getParameter(fh_param, "sigmaV", 0));
             else sigmaV   = sigmaU;
-            cU            = AtoF(getParameter(fh_param, "cU", 0, "0"));
+            cU            = textToFloat(getParameter(fh_param, "cU", 0, "0"));
             if (checkParameter(fh_param, "cV"))
-                cV         = AtoF(getParameter(fh_param, "cV", 0));
+                cV         = textToFloat(getParameter(fh_param, "cV", 0));
             else cV       = cU;
-            gaussian_angle = AtoF(getParameter(fh_param, "gaussian_angle", 0, "0"));
+            gaussian_angle = textToFloat(getParameter(fh_param, "gaussian_angle", 0, "0"));
 
-            sqU           = AtoF(getParameter(fh_param, "sqU", 0, "0"));
+            sqU           = textToFloat(getParameter(fh_param, "sqU", 0, "0"));
             if (checkParameter(fh_param, "sqV"))
-                sqV        = AtoF(getParameter(fh_param, "sqV", 0));
+                sqV        = textToFloat(getParameter(fh_param, "sqV", 0));
             else sqV      = sqU;
-            sqrt_angle = AtoF(getParameter(fh_param, "sqrt_angle", 0, "0"));
-            sqrt_K        = AtoF(getParameter(fh_param, "sqrt_K", 0, "0"));
+            sqrt_angle = textToFloat(getParameter(fh_param, "sqrt_angle", 0, "0"));
+            sqrt_K        = textToFloat(getParameter(fh_param, "sqrt_K", 0, "0"));
 
-            gaussian_K2    = AtoF(getParameter(fh_param, "gaussian_K2", 0, "0"));
-            sigmaU2        = AtoF(getParameter(fh_param, "sigmaU2", 0, "0"));
+            gaussian_K2    = textToFloat(getParameter(fh_param, "gaussian_K2", 0, "0"));
+            sigmaU2        = textToFloat(getParameter(fh_param, "sigmaU2", 0, "0"));
             if (checkParameter(fh_param, "sigmaV2"))
-                sigmaV2     = AtoF(getParameter(fh_param, "sigmaV2", 0));
+                sigmaV2     = textToFloat(getParameter(fh_param, "sigmaV2", 0));
             else sigmaV2   = sigmaU2;
-            cU2            = AtoF(getParameter(fh_param, "cU2", 0, "0"));
+            cU2            = textToFloat(getParameter(fh_param, "cU2", 0, "0"));
             if (checkParameter(fh_param, "cV2"))
-                cV2         = AtoF(getParameter(fh_param, "cV2", 0));
+                cV2         = textToFloat(getParameter(fh_param, "cV2", 0));
             else cV2       = cU2;
-            gaussian_angle2 = AtoF(getParameter(fh_param, "gaussian_angle2", 0, "0"));
+            gaussian_angle2 = textToFloat(getParameter(fh_param, "gaussian_angle2", 0, "0"));
 
             if (gaussian_K == 0 && sqrt_K == 0 && base_line == 0 && gaussian_K2 == 0 &&
                 disable_if_not_K)

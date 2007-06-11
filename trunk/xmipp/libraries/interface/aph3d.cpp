@@ -59,19 +59,19 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
     try
     {
         getline(fh_aph, line);
-        Reduce_phase_accuracy = AtoF(line.c_str() + 47);
+        Reduce_phase_accuracy = textToFloat(line.c_str() + 47);
         getline(fh_aph, line);
-        a = AtoF(line.c_str() + 47);
+        a = textToFloat(line.c_str() + 47);
         getline(fh_aph, line);
-        b = AtoF(line.c_str() + 47);
+        b = textToFloat(line.c_str() + 47);
         getline(fh_aph, line);
-        gamma = AtoF(line.c_str() + 47);
+        gamma = textToFloat(line.c_str() + 47);
         getline(fh_aph, line);
-        c = AtoF(line.c_str() + 47);
+        c = textToFloat(line.c_str() + 47);
         getline(fh_aph, line);
-        resolution = AtoF(line.c_str() + 47);
+        resolution = textToFloat(line.c_str() + 47);
         getline(fh_aph, line);
-        Amp_Scale = AtoF(line.c_str() + 47);
+        Amp_Scale = textToFloat(line.c_str() + 47);
     }
     catch (...)
     {
@@ -118,9 +118,9 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
                 continue;
             else if (string::npos != line.find("MKLCF FILE COMPLETED"))
                 break;
-            h = AtoI(firstToken(line));
-            k = AtoI(nextToken());
-            l = AtoI(nextToken());
+            h = textToInteger(firstToken(line));
+            k = textToInteger(nextToken());
+            l = textToInteger(nextToken());
             hmax = MAX(hmax, h);
             kmax = MAX(kmax, k);
             lmax = MAX(lmax, l);
@@ -144,7 +144,7 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
             if (string::npos !=
                 line.find(" * Space Group ="))
             {
-                Space_Group = AtoI(line.c_str() + 16);
+                Space_Group = textToInteger(line.c_str() + 16);
                 break;
             }
         }
@@ -208,12 +208,12 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
                 continue;
             else if (string::npos != line.find("MKLCF FILE COMPLETED"))
                 break;
-            h     = AtoI(firstToken(line));
-            k     = AtoI(nextToken());
-            l     = AtoI(nextToken());
-            spots_abs(l, k, h)  = AtoF(nextToken());
-            spots_arg(l, k, h)  = AtoF(nextToken());
-            FOM(l, k, h)       = AtoI(nextToken());
+            h     = textToInteger(firstToken(line));
+            k     = textToInteger(nextToken());
+            l     = textToInteger(nextToken());
+            spots_abs(l, k, h)  = textToFloat(nextToken());
+            spots_arg(l, k, h)  = textToFloat(nextToken());
+            FOM(l, k, h)       = textToInteger(nextToken());
             switch (Space_Group)
             {
             case(1):

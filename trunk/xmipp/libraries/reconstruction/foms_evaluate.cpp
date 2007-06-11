@@ -107,18 +107,18 @@ void Prog_Evaluate_Parameters::read(int argc, char **argv)
     {
         fn_recons        =      getParameter(argc, argv,  "-r");
     }
-    percent_mass     = AtoF(getParameter(argc, argv,  "-mass"       , "99"));
-    global_radius    = AtoF(getParameter(argc, argv,  "-R"          , "0"));
+    percent_mass     = textToFloat(getParameter(argc, argv,  "-mass"       , "99"));
+    global_radius    = textToFloat(getParameter(argc, argv,  "-R"          , "0"));
     fn_mask          = getParameter(argc, argv, "-mask", "");
     fit_gray_scales  = checkParameter(argc, argv, "-fit_gray");
     if (checkParameter(argc, argv, "-back_radius"))
     {
-        back_radius   = AtoF(getParameter(argc, argv,  "-back_radius"));
+        back_radius   = textToFloat(getParameter(argc, argv,  "-back_radius"));
         back_mode = SPHERE_MODE;
     }
     if (checkParameter(argc, argv, "-back_factor"))
     {
-        back_factor   = AtoF(getParameter(argc, argv,  "-back_factor"));
+        back_factor   = textToFloat(getParameter(argc, argv,  "-back_factor"));
         back_mode = ENLARGE_MODE;
     }
     if ((i = paremeterPosition(argc, argv, "-dir")) != -1)
@@ -142,8 +142,8 @@ void Prog_Evaluate_Parameters::read(int argc, char **argv)
             }
             else
             {
-                RSrot = AtoF(argv[i]);
-                if ((++i) < argc) RStilt = AtoF(argv[i]);
+                RSrot = textToFloat(argv[i]);
+                if ((++i) < argc) RStilt = textToFloat(argv[i]);
             }
         }
     }

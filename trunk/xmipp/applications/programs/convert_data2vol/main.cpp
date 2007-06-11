@@ -61,9 +61,9 @@ int main(int argc, char **argv)
         if (checkParameter(argc, argv, "-nomask"))
         {
             nomask = true;
-            rows = AtoI(getParameter(argc, argv, "-rows"));
-            cols = AtoI(getParameter(argc, argv, "-cols"));
-            planes = AtoI(getParameter(argc, argv, "-planes"));
+            rows = textToInteger(getParameter(argc, argv, "-rows"));
+            cols = textToInteger(getParameter(argc, argv, "-cols"));
+            planes = textToInteger(getParameter(argc, argv, "-planes"));
         }
         if (checkParameter(argc, argv, "-noBB"))
             noBB = true;

@@ -37,7 +37,7 @@ void Prog_projection_neighbourhood_prm::read(int argc, char **argv)
     fn_sel = getParameter(argc, argv, "-i");
     fn_ref = getParameter(argc, argv, "-nbh");
     fn_root_out = getParameter(argc, argv, "-oroot", "nbhood");
-    maxdist = AtoF(getParameter(argc, argv, "-dist", "10"));
+    maxdist = textToFloat(getParameter(argc, argv, "-dist", "10"));
     fn_sym = getParameter(argc, argv, "-sym", "");
     if (fn_sym != "") SL.read_sym_file(fn_sym);
     DF2.read(fn_ref);

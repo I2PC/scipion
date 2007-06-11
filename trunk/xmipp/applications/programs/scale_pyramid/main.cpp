@@ -36,7 +36,7 @@ public:
     void read(int argc, char **argv)
     {
         Prog_parameters::read(argc, argv);
-        levels = AtoI(getParameter(argc, argv, "-levels", "1"));
+        levels = textToInteger(getParameter(argc, argv, "-levels", "1"));
         if (checkParameter(argc, argv, "-expand")) operation = Expand;
         else if (checkParameter(argc, argv, "-reduce")) operation = Reduce;
         else                                       operation = None;

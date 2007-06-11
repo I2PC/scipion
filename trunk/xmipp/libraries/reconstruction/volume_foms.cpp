@@ -1101,8 +1101,8 @@ double compute_FSC(VolumeXmipp &vol_phantom,
 
             // It is a valid line
             tokenize(line, tokens);
-            double f  = AtoF(tokens[1]);
-            double fsc = AtoF(tokens[4]);
+            double f  = textToFloat(tokens[1]);
+            double fsc = textToFloat(tokens[4]);
             auxfreq.push_back(f);
             auxFSC. push_back(fsc);
             if (resolution == -1 && fsc < 0.5) resolution = f;
@@ -1174,8 +1174,8 @@ double compute_FSC(VolumeXmipp &vol_phantom,
         while (getline(fh_resol, line))
         {
             tokenize(line, tokens);
-            double f  = AtoF(tokens[0]);
-            double fsc = AtoF(tokens[1]);
+            double f  = textToFloat(tokens[0]);
+            double fsc = textToFloat(tokens[1]);
             auxfreq.push_back(f);
             auxFSC. push_back(fsc);
             if (resolution == -1 && fsc < 0.5) resolution = f;

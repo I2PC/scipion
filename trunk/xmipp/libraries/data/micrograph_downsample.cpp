@@ -35,12 +35,12 @@ void Prog_downsample_prm::read(int argc, char **argv, bool do_not_read_files)
         fn_micrograph  = getParameter(argc, argv, "-i");
         fn_downsampled = getParameter(argc, argv, "-o");
     }
-    bitsMp         = AtoI(getParameter(argc, argv, "-output_bits", "32"));
+    bitsMp         = textToInteger(getParameter(argc, argv, "-output_bits", "32"));
     if (bitsMp != 8 && bitsMp != 16 && bitsMp != 32)
         REPORT_ERROR(1, "Downsample: you must specify 8, 16 or 32 bits only");
-    Xstep          = AtoI(getParameter(argc, argv, "-Xstep"));
+    Xstep          = textToInteger(getParameter(argc, argv, "-Xstep"));
     if (checkParameter(argc, argv, "-Ystep"))
-        Ystep     = AtoI(getParameter(argc, argv, "-Ystep"));
+        Ystep     = textToInteger(getParameter(argc, argv, "-Ystep"));
     else
         Ystep     = Xstep;
 
@@ -53,15 +53,15 @@ void Prog_downsample_prm::read(int argc, char **argv, bool do_not_read_files)
             kernel_mode = KER_RECTANGLE;
             if (i + 2 >= argc)
                 REPORT_ERROR(1, "Downsample: Not enough parameters after rectangle");
-            Yrect = AtoI(argv[i+2]);
-            Xrect = AtoI(argv[i+3]);
+            Yrect = textToInteger(argv[i+2]);
+            Xrect = textToInteger(argv[i+3]);
         }
         else if (aux == "circle")
         {
             kernel_mode = KER_CIRCLE;
             if (i + 2 >= argc)
                 REPORT_ERROR(1, "Downsample: Not enough parameters after circle");
-            r = AtoF(argv[i+2]);
+            r = textToFloat(argv[i+2]);
         }
         else if (aux == "gaussian")
         {
@@ -70,8 +70,8 @@ void Prog_downsample_prm::read(int argc, char **argv, bool do_not_read_files)
                 REPORT_ERROR(1, "Downsample: Not enough parameters after gaussian");
             if (Xstep != Ystep)
                 REPORT_ERROR(1, "Downsample: You cannot apply different steps in this mode");
-            r = AtoF(argv[i+2]);
-            sigma = AtoF(argv[i+3]);
+            r = textToFloat(argv[i+2]);
+            sigma = textToFloat(argv[i+3]);
         }
         else if (aux == "pick")
         {
@@ -84,8 +84,8 @@ void Prog_downsample_prm::read(int argc, char **argv, bool do_not_read_files)
                 REPORT_ERROR(1, "Downsample: Not enough parameters after sinc");
             if (Xstep != Ystep)
                 REPORT_ERROR(1, "Downsample: You cannot apply different steps in this mode");
-            delta = AtoF(argv[i+2]);
-            Deltaw = AtoF(argv[i+3]);
+            delta = textToFloat(argv[i+2]);
+            Deltaw = textToFloat(argv[i+3]);
         }
         else
             REPORT_ERROR(1, "Downsample: Unknown kernel mode");

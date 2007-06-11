@@ -54,9 +54,9 @@ public:
             int i = paremeterPosition(argc, argv, "-euler");
             if (i + 3 >= argc)
                 REPORT_ERROR(1, "Not enough parameters after -euler");
-            rot  = AtoF(argv[i+1]);
-            tilt = AtoF(argv[i+2]);
-            psi  = AtoF(argv[i+3]);
+            rot  = textToFloat(argv[i+1]);
+            tilt = textToFloat(argv[i+2]);
+            psi  = textToFloat(argv[i+3]);
             A3D = Euler_rotation3DMatrix(rot, tilt, psi);
         }
         else if (checkParameter(argc, argv, "-alignWithZ"))
@@ -69,7 +69,7 @@ public:
         {
             Axis_mode = true;
             axis = getVectorParameter(argc, argv, "-axis", 3);
-            ang = AtoF(getParameter(argc, argv, "-ang"));
+            ang = textToFloat(getParameter(argc, argv, "-ang"));
             A3D = rotation3DMatrix(ang, axis);
         }
         else

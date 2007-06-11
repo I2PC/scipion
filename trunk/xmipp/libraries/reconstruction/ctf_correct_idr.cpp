@@ -30,7 +30,7 @@ void Prog_IDR_ART_Parameters::read(int argc, char **argv)
 {
     fn_vol = getParameter(argc, argv, "-vol");
     fn_ctfdat = getParameter(argc, argv, "-ctfdat");
-    mu = AtoF(getParameter(argc, argv, "-mu", "1.8"));
+    mu = textToFloat(getParameter(argc, argv, "-mu", "1.8"));
     adjust_gray_levels = checkParameter(argc, argv, "-adjust_gray_levels");
 }
 

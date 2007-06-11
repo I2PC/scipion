@@ -121,34 +121,34 @@ void Basic_ART_Parameters::default_values()
     else if (CHECK_PARAM("pAVSP"))  parallel_mode=pAVSP; \
     else if (CHECK_PARAM("pCAV"))   parallel_mode=pCAV; \
     else                            parallel_mode=ART; \
-    ray_length         = AtoI(GET_PARAM_WITH_DEF("ray_length","-1"      )); \
-    block_size        = AtoI(GET_PARAM_WITH_DEF("block_size","1" )); \
+    ray_length         = textToInteger(GET_PARAM_WITH_DEF("ray_length","-1"      )); \
+    block_size        = textToInteger(GET_PARAM_WITH_DEF("block_size","1" )); \
     fn_sym             =      GET_PARAM_WITH_DEF("sym",       ""        );  \
-    force_sym          = AtoI(GET_PARAM_WITH_DEF("force_sym","0"        )); \
+    force_sym          = textToInteger(GET_PARAM_WITH_DEF("force_sym","0"        )); \
     do_not_generate_subgroup= CHECK_PARAM(       "no_group"             );  \
     do_not_use_symproj = CHECK_PARAM(       "no_symproj"             );  \
     fn_surface_mask    =      GET_PARAM_WITH_DEF("surface",   ""        );  \
     random_sort        =      CHECK_PARAM(       "random_sort"          );  \
     dont_sort          =      CHECK_PARAM(       "no_sort"          );  \
-    sort_last_N        = AtoI(GET_PARAM_WITH_DEF("sort_last", "2"       )); \
+    sort_last_N        = textToInteger(GET_PARAM_WITH_DEF("sort_last", "2"       )); \
     WLS                = CHECK_PARAM("WLS"); \
     kappa_list  =  GET_VECTOR_PARAM("k",-1); \
     if (XSIZE(kappa_list)==0)                                              \
     {kappa_list.resize(1); kappa_list.init_constant(0.5);}               \
-    no_it              = AtoI(GET_PARAM_WITH_DEF("n",         "1"       )); \
-    stop_at            = AtoI(GET_PARAM_WITH_DEF("stop_at",   "0"       )); \
+    no_it              = textToInteger(GET_PARAM_WITH_DEF("n",         "1"       )); \
+    stop_at            = textToInteger(GET_PARAM_WITH_DEF("stop_at",   "0"       )); \
     lambda_list        =        GET_VECTOR_PARAM("l",         -1);          \
     if (XSIZE(lambda_list)==0)                                              \
     {lambda_list.resize(1); lambda_list.init_constant(0.01);}               \
-    sampling           = AtoF(GET_PARAM_WITH_DEF("sampling",  "1."        )); \
-    sym_each           = AtoI(GET_PARAM_WITH_DEF("sym_each",  "0"         )); \
-    max_tilt           = AtoF(GET_PARAM_WITH_DEF("max_tilt",  "10E6"      )); \
-    ref_trans_after    = AtoI(GET_PARAM_WITH_DEF("ref_trans_after", "-1"  )); \
-    ref_trans_step     = AtoF(GET_PARAM_WITH_DEF("ref_trans_step", "-1"    )); \
-    grid_relative_size = AtoF(GET_PARAM_WITH_DEF("g",         "1.41"      )); \
-    R                  = AtoF(GET_PARAM_WITH_DEF("R",         "-1"        )); \
-    POCS_freq          = AtoI(GET_PARAM_WITH_DEF("POCS_freq", "1"         )); \
-    known_volume       = AtoF(GET_PARAM_WITH_DEF("known_volume","-1"      )); \
+    sampling           = textToFloat(GET_PARAM_WITH_DEF("sampling",  "1."        )); \
+    sym_each           = textToInteger(GET_PARAM_WITH_DEF("sym_each",  "0"         )); \
+    max_tilt           = textToFloat(GET_PARAM_WITH_DEF("max_tilt",  "10E6"      )); \
+    ref_trans_after    = textToInteger(GET_PARAM_WITH_DEF("ref_trans_after", "-1"  )); \
+    ref_trans_step     = textToFloat(GET_PARAM_WITH_DEF("ref_trans_step", "-1"    )); \
+    grid_relative_size = textToFloat(GET_PARAM_WITH_DEF("g",         "1.41"      )); \
+    R                  = textToFloat(GET_PARAM_WITH_DEF("R",         "-1"        )); \
+    POCS_freq          = textToInteger(GET_PARAM_WITH_DEF("POCS_freq", "1"         )); \
+    known_volume       = textToFloat(GET_PARAM_WITH_DEF("known_volume","-1"      )); \
     positivity         = CHECK_PARAM("POCS_positivity"); \
     apply_shifts       = !CHECK_PARAM("dont_apply_shifts"); \
     if      (grid_relative_size == -1)  grid_relative_size = sqrt (2.0); \
@@ -162,7 +162,7 @@ void Basic_ART_Parameters::default_values()
     if      (CHECK_PARAM("FCC")) grid_type=FCC; \
     else if (CHECK_PARAM("CC"))  grid_type=CC; \
     else                         grid_type=BCC; \
-    proj_ext           = AtoI(GET_PARAM_WITH_DEF("ext",       "0"    )); \
+    proj_ext           = textToInteger(GET_PARAM_WITH_DEF("ext",       "0"    )); \
     \
     if (CHECK_PARAM("small_blobs"))  grid_relative_size=1.41; \
     if (CHECK_PARAM("big_blobs"))    grid_relative_size=2.26; \
@@ -185,11 +185,11 @@ void Basic_ART_Parameters::default_values()
     if (CHECK_PARAM("show_stats"))        tell |= TELL_STATS; \
     if (CHECK_PARAM("save_intermidiate")) {\
         tell |= TELL_SAVE_INTERMIDIATE; \
-        save_intermidiate_every=AtoI(GET_PARAM_WITH_DEF("save_intermidiate","0")); \
+        save_intermidiate_every=textToInteger(GET_PARAM_WITH_DEF("save_intermidiate","0")); \
     } \
     if (CHECK_PARAM("show_iv")) {\
         tell |= TELL_IV; \
-        save_intermidiate_every=AtoI(GET_PARAM_WITH_DEF("show_iv","10")); \
+        save_intermidiate_every=textToInteger(GET_PARAM_WITH_DEF("show_iv","10")); \
     } \
     if (CHECK_PARAM("variability")) {\
         variability_analysis=true; \
@@ -220,9 +220,9 @@ void Basic_ART_Parameters::read(int argc, char **argv)
         int i = paremeterPosition(argc, argv, "-output_size");
         if (i + 3 >= argc)
             REPORT_ERROR(1, "Not enough parameters after -output_size");
-        Zoutput_volume_size = AtoI(argv[i+1]);
-        Youtput_volume_size = AtoI(argv[i+2]);
-        Xoutput_volume_size = AtoI(argv[i+3]);
+        Zoutput_volume_size = textToInteger(argv[i+1]);
+        Youtput_volume_size = textToInteger(argv[i+2]);
+        Xoutput_volume_size = textToInteger(argv[i+3]);
     }
 }
 #undef GET_PARAM_WITH_DEF
@@ -256,9 +256,9 @@ void Basic_ART_Parameters::read(const FileName &fn)
         int i = paremeterPosition(argcp, argvp, "-output_size");
         if (i + 3 >= argcp)
             REPORT_ERROR(1, "Not enough parameters after -output_size");
-        Zoutput_volume_size = AtoI(argvp[i+1]);
-        Youtput_volume_size = AtoI(argvp[i+2]);
-        Xoutput_volume_size = AtoI(argvp[i+3]);
+        Zoutput_volume_size = textToInteger(argvp[i+1]);
+        Youtput_volume_size = textToInteger(argvp[i+2]);
+        Xoutput_volume_size = textToInteger(argvp[i+3]);
     }
     fclose(fh);
     basis.read(fn);

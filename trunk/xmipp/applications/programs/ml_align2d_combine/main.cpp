@@ -156,7 +156,7 @@ int main(int argc, char **argv)
                 copyp = NULL;
                 argvp = NULL;
                 generateCommandLine(line, argcp, argvp, copyp);
-                weight = AtoI(getParameter(argcp, argvp, "images=", ""));
+                weight = textToInteger(getParameter(argcp, argvp, "images=", ""));
                 sumweight += weight;
                 allDFs[n].go_beginning();
                 for (int mm = 0;mm < m;mm++) allDFs[n].next();
@@ -202,16 +202,16 @@ int main(int argc, char **argv)
             copyp = NULL;
             argvp = NULL;
             generateCommandLine(line, argcp, argvp, copyp);
-            LL += AtoF(getParameter(argcp, argvp, "LL=", ""));
-            weight = AtoI(getParameter(argcp, argvp, "images=", ""));
-            R += weight * AtoF(getParameter(argcp, argvp, "R=", "0"));
+            LL += textToFloat(getParameter(argcp, argvp, "LL=", ""));
+            weight = textToInteger(getParameter(argcp, argvp, "images=", ""));
+            R += weight * textToFloat(getParameter(argcp, argvp, "R=", "0"));
             allDFs[n].next();
             if (allDFs[n].get_current_line().Is_comment()) line = ((allDFs[n].get_current_line()).get_text()).erase(0, 3);
             else REPORT_ERROR(1, "MLalign2D-log files does not have expected format");
             generateCommandLine(line, argcp, argvp, copyp);
-            noise += weight * AtoF(getParameter(argcp, argvp, "-noise")) * AtoF(getParameter(argcp, argvp, "-noise"));
-            offset += weight * AtoF(getParameter(argcp, argvp, "-offset")) * AtoF(getParameter(argcp, argvp, "-offset"));
-            istart = AtoI(getParameter(argcp, argvp, "-istart"));
+            noise += weight * textToFloat(getParameter(argcp, argvp, "-noise")) * textToFloat(getParameter(argcp, argvp, "-noise"));
+            offset += weight * textToFloat(getParameter(argcp, argvp, "-offset")) * textToFloat(getParameter(argcp, argvp, "-offset"));
+            istart = textToInteger(getParameter(argcp, argvp, "-istart"));
         }
         noise /= sumweight;
         noise = sqrt(noise);

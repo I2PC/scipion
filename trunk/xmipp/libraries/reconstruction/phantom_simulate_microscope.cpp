@@ -32,10 +32,10 @@ void Prog_Microscope_Parameters::read(int argc, char **argv)
 {
     Prog_parameters::read(argc, argv);
     fn_ctf = getParameter(argc, argv, "-ctf", "");
-    sigma = AtoF(getParameter(argc, argv, "-noise", "0"));
-    low_pass_before_CTF = AtoF(getParameter(argc, argv, "-low_pass", "0"));
+    sigma = textToFloat(getParameter(argc, argv, "-noise", "0"));
+    low_pass_before_CTF = textToFloat(getParameter(argc, argv, "-low_pass", "0"));
     after_ctf_noise = checkParameter(argc, argv, "-after_ctf_noise");
-    defocus_change = AtoF(getParameter(argc, argv, "-defocus_change", "0"));
+    defocus_change = textToFloat(getParameter(argc, argv, "-defocus_change", "0"));
 
     produce_side_info();
 }

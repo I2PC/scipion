@@ -47,12 +47,12 @@ void Prog_align2d_prm::read(int argc, char **argv)
     // Write out document file?
     fn_doc = getParameter(argc, argv, "-doc", "");
     // Maximum shift (discard images that shift more in last iteration)
-    max_shift = AtoF(getParameter(argc, argv, "-max_shift", "0"));
+    max_shift = textToFloat(getParameter(argc, argv, "-max_shift", "0"));
     // Maximum rotational change (discard images that rotate more in last iteration)
-    max_rot = AtoF(getParameter(argc, argv, "-max_rot", "0"));
+    max_rot = textToFloat(getParameter(argc, argv, "-max_rot", "0"));
     // Inner and outer radii for rotational correlation
-    Ri = AtoI(getParameter(argc, argv, "-Ri", "0"));
-    Ro = AtoI(getParameter(argc, argv, "-Ro", "0"));
+    Ri = textToInteger(getParameter(argc, argv, "-Ri", "0"));
+    Ro = textToInteger(getParameter(argc, argv, "-Ro", "0"));
     int dim;
     SF.ImgSize(dim, dim);
     if (Ro == 0) Ro = (int)dim / 2;
@@ -60,16 +60,16 @@ void Prog_align2d_prm::read(int argc, char **argv)
     // Expected resolution and sampling rate (for filtering)
     if (do_filter = checkParameter(argc, argv, "-filter"))
     {
-        resol = AtoF(getParameter(argc, argv, "-filter"));
-        sam = AtoF(getParameter(argc, argv, "-sampling"));
+        resol = textToFloat(getParameter(argc, argv, "-filter"));
+        sam = textToFloat(getParameter(argc, argv, "-sampling"));
     }
     // Number of iterations
-    Niter = AtoI(getParameter(argc, argv, "-iter", "1"));
+    Niter = textToInteger(getParameter(argc, argv, "-iter", "1"));
     // Only translational/rotational
     do_rot = !checkParameter(argc, argv, "-only_trans");
     do_trans = !checkParameter(argc, argv, "-only_rot");
     do_complete = checkParameter(argc, argv, "-complete");
-    psi_interval = AtoF(getParameter(argc, argv, "-psi_step", "10"));
+    psi_interval = textToFloat(getParameter(argc, argv, "-psi_step", "10"));
 }
 
 // Show ====================================================================

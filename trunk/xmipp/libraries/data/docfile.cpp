@@ -168,8 +168,8 @@ void DocLine::read(std::istream& in)
         text = "";
         int i = 0;
 
-        key = AtoI(nextToken(line, i), 1602, "Error reading key");
-        param_no = AtoI(nextToken(line, i), 1602,
+        key = textToInteger(nextToken(line, i), 1602, "Error reading key");
+        param_no = textToInteger(nextToken(line, i), 1602,
                         "Error reading number parameters");
         std::string auxline = line;
 
@@ -186,7 +186,7 @@ void DocLine::read(std::istream& in)
             data.reserve(param_no);
             for (int i = 0; i < param_no; i++)
             {
-                data.push_back(AtoF(line.substr(8 + i*12, 12)));
+                data.push_back(textToFloat(line.substr(8 + i*12, 12)));
             }
         }
     }

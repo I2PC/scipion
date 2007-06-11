@@ -50,9 +50,9 @@ void Prog_SSNR_prm::read(int argc, char **argv)
     }
     else
         fn_VSSNR = getParameter(argc, argv, "-VSSNR");
-    ring_width = AtoF(getParameter(argc, argv, "-ring", "4"));
-    Tm = AtoF(getParameter(argc, argv, "-sampling_rate", "1"));
-    min_power = AtoF(getParameter(argc, argv, "-min_power", "1e-10"));
+    ring_width = textToFloat(getParameter(argc, argv, "-ring", "4"));
+    Tm = textToFloat(getParameter(argc, argv, "-sampling_rate", "1"));
+    min_power = textToFloat(getParameter(argc, argv, "-min_power", "1e-10"));
     fn_out = getParameter(argc, argv, "-o", "");
 }
 

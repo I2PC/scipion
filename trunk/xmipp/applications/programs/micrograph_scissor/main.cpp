@@ -44,11 +44,11 @@ int main(int argc, char **argv)
         fn_micrograph = getParameter(argc, argv, "-i");
         pair_mode = checkParameter(argc, argv, "-tilted");
         fn_root       = getParameter(argc, argv, "-root");
-        Xdim          = AtoI(getParameter(argc, argv, "-Xdim"));
+        Xdim          = textToInteger(getParameter(argc, argv, "-Xdim"));
         if (checkParameter(argc, argv, "-Ydim"))
-            Ydim       = AtoI(getParameter(argc, argv, "-Ydim"));
+            Ydim       = textToInteger(getParameter(argc, argv, "-Ydim"));
         else Ydim = Xdim;
-        startN        = AtoI(getParameter(argc, argv, "-start", "1"));
+        startN        = textToInteger(getParameter(argc, argv, "-start", "1"));
         reverse_endian = checkParameter(argc, argv, "-reverse_endian");
         compute_inverse = checkParameter(argc, argv, "-invert");
         compute_transmitance = checkParameter(argc, argv, "-log");
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
         {
             fn_pos        = getParameter(argc, argv, "-pos");
             fn_orig       = getParameter(argc, argv, "-orig", "");
-            alpha         = AtoF(getParameter(argc, argv, "-alpha", "0"));
+            alpha         = textToFloat(getParameter(argc, argv, "-alpha", "0"));
         }
         else
         {

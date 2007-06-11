@@ -43,7 +43,7 @@ public:
     {
         Prog_parameters::read(argc, argv);
         fn_ref = getParameter(argc, argv, "-ref");
-        sam = AtoF(getParameter(argc, argv, "-sam"));
+        sam = textToFloat(getParameter(argc, argv, "-sam"));
         if (Is_ImageXmipp(fn_ref))
         {
             refI.read(fn_ref, false, false, apply_geo);
@@ -182,7 +182,7 @@ int main(int argc, char **argv)
         {
             fn_sel = getParameter(argc, argv, "-set_of_images");
             SF.read(fn_sel);
-            sam = AtoF(getParameter(argc, argv, "-sam"));
+            sam = textToFloat(getParameter(argc, argv, "-sam"));
             apply_geo = !checkParameter(argc, argv, "-dont_apply_geo");
             SF.split_in_two(SF1, SF2);
             SF.get_statistics(It, Id, dummy, dummy, apply_geo);

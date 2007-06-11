@@ -523,13 +523,13 @@ void Adjust_CTF_Parameters::read(const FileName &fn_param)
     fn_similar_model = getParameter(fh_param, "similar_model", 0, "");
 
     show_optimization = checkParameter(fh_param, "show_optimization");
-    min_freq = AtoF(getParameter(fh_param, "min_freq", 0, "0.03"));
-    max_freq = AtoF(getParameter(fh_param, "max_freq", 0, "0.35"));
+    min_freq = textToFloat(getParameter(fh_param, "min_freq", 0, "0.03"));
+    max_freq = textToFloat(getParameter(fh_param, "max_freq", 0, "0.35"));
     astigmatic_noise = !checkParameter(fh_param, "radial_noise");
-    defocus_range = AtoF(getParameter(fh_param, "defocus_range", 0, "8000"));
-    initial_Ca = AtoF(getParameter(fh_param, "initial_Ca", 0, "2"));
+    defocus_range = textToFloat(getParameter(fh_param, "defocus_range", 0, "8000"));
+    initial_Ca = textToFloat(getParameter(fh_param, "initial_Ca", 0, "2"));
 
-    ctfmodelSize = AtoI(getParameter(fh_param, "ctfmodelSize", 0, "128"));
+    ctfmodelSize = textToInteger(getParameter(fh_param, "ctfmodelSize", 0, "128"));
 
     adjust.resize(ALL_CTF_PARAMETERS);
     initial_ctfmodel.enable_CTF = initial_ctfmodel.enable_CTFnoise = true;
@@ -551,9 +551,9 @@ void Adjust_CTF_Parameters::read(const FileName &fn_param)
         default_f1 = "0.02";
         default_f2 = "0.15";
     }
-    f1 = AtoF(getParameter(fh_param, "enhance_min_freq", 0, default_f1.c_str()));
-    f2 = AtoF(getParameter(fh_param, "enhance_max_freq", 0, default_f2.c_str()));
-    enhanced_weight = AtoF(getParameter(fh_param, "enhance_weight", 0, "5"));
+    f1 = textToFloat(getParameter(fh_param, "enhance_min_freq", 0, default_f1.c_str()));
+    f2 = textToFloat(getParameter(fh_param, "enhance_max_freq", 0, default_f2.c_str()));
+    enhanced_weight = textToFloat(getParameter(fh_param, "enhance_weight", 0, "5"));
 }
 
 /* Write to a file --------------------------------------------------------- */

@@ -83,30 +83,30 @@ void Prog_create_surface::read_input_file()
         switch (lineNo)
         {
         case 0:
-            a.X() = AtoF(firstToken(line), 3007,
+            a.X() = textToFloat(firstToken(line), 3007,
                          "Prog_Project_Parameters::read: Error in lattice vector a");
-            a.Y() = AtoF(nextToken(), 3007,
+            a.Y() = textToFloat(nextToken(), 3007,
                          "Prog_Project_Parameters::read: Error in lattice vector a");
             lineNo = 1;
             break;
         case 1:
-            b.X() = AtoF(firstToken(line), 3007,
+            b.X() = textToFloat(firstToken(line), 3007,
                          "Prog_Project_Parameters::read: Error in lattice vector b");
-            b.Y() = AtoF(nextToken(), 3007,
+            b.Y() = textToFloat(nextToken(), 3007,
                          "Prog_Project_Parameters::read: Error in lattice vector b");
             lineNo = 2;
             break;
         case 2:
-            hmin = AtoI(firstToken(line), 3007,
+            hmin = textToInteger(firstToken(line), 3007,
                         "Prog_Project_Parameters::read: Error in the index hmax of the lattice");
-            hmax = AtoI(nextToken(), 3007,
+            hmax = textToInteger(nextToken(), 3007,
                         "Prog_Project_Parameters::read: Error in the index hmin of the lattice");
             lineNo = 3;
             break;
         case 3:
-            kmin = AtoI(firstToken(line), 3007,
+            kmin = textToInteger(firstToken(line), 3007,
                         "Prog_Project_Parameters::read: Error in the index kmax of the lattice");
-            kmax = AtoI(nextToken(), 3007,
+            kmax = textToInteger(nextToken(), 3007,
                         "Prog_Project_Parameters::read: Error in the index kmin of the lattice");
             lineNo = 4;
             break;

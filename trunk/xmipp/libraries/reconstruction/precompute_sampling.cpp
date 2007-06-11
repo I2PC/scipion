@@ -39,9 +39,9 @@ void Prog_Sampling_Parameters::read(int argc, char **argv)
 {
     sampling_file_root = getParameter(argc, argv, "-o");
     symmetry = getParameter(argc, argv, "-symmetry", "cn");
-    sym_order = AtoI(getParameter(argc, argv, "-sym_order", "1"));
-    sampling = AtoF(getParameter(argc, argv, "-sampling_rate", "5"));
-    neighborhood = AtoF(getParameter(argc, argv, "-neighborhood", "1"));
+    sym_order = textToInteger(getParameter(argc, argv, "-sym_order", "1"));
+    sampling = textToFloat(getParameter(argc, argv, "-sampling_rate", "5"));
+    neighborhood = textToFloat(getParameter(argc, argv, "-neighborhood", "1"));
 }
 
 /* Usage ------------------------------------------------------------------- */

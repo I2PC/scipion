@@ -34,21 +34,21 @@ void Prog_projection_matching_prm::read(int argc, char **argv)  {
   SF.read(getParameter(argc,argv,"-i"));
   SF.ImgSize(dim,dim);
   fn_root=getParameter(argc,argv,"-o","out");
-  sampling=AtoF(getParameter(argc,argv,"-sam","10"));
-  max_shift=AtoF(getParameter(argc,argv,"-max_shift","5"));
+  sampling=textToFloat(getParameter(argc,argv,"-sam","10"));
+  max_shift=textToFloat(getParameter(argc,argv,"-max_shift","5"));
 
   // Additional commands
-  ang_search=AtoF(getParameter(argc,argv,"-ang_search","-1"));
-  Ri=AtoF(getParameter(argc,argv,"-Ri","-1"));
-  Ro=AtoF(getParameter(argc,argv,"-Ro","-1"));
+  ang_search=textToFloat(getParameter(argc,argv,"-ang_search","-1"));
+  Ri=textToFloat(getParameter(argc,argv,"-Ri","-1"));
+  Ro=textToFloat(getParameter(argc,argv,"-Ro","-1"));
   fn_sym=getParameter(argc,argv,"-sym","");
   fn_ang=getParameter(argc,argv,"-ang","");
   output_refs=checkParameter(argc,argv,"-output_refs");
   modify_header=!checkParameter(argc,argv,"-dont_modify_header");
   fn_ref=getParameter(argc,argv,"-ref","");
   output_classes=checkParameter(argc,argv,"-output_classes");
-  tilt_range0=AtoF(getParameter(argc,argv,"-tilt0","0."));
-  tilt_rangeF=AtoF(getParameter(argc,argv,"-tiltF","180."));
+  tilt_range0=textToFloat(getParameter(argc,argv,"-tilt0","0."));
+  tilt_rangeF=textToFloat(getParameter(argc,argv,"-tiltF","180."));
 
   // Checks
   if (fn_ref=="" && fn_vol=="")
@@ -57,7 +57,7 @@ void Prog_projection_matching_prm::read(int argc, char **argv)  {
     REPORT_ERROR(1," option -ang and -ang_search are incompatible!");
 
   // Hidden stuff
-  verb=AtoI(getParameter(argc,argv,"-verb","1"));
+  verb=textToInteger(getParameter(argc,argv,"-verb","1"));
 
 }
 
