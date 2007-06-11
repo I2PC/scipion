@@ -28,7 +28,7 @@
 
 int main(int argc, char **argv)
 {
-    int mode
+    int mode;
     FileName fn1, fn2, fn_out, fn_meth;
     try
     {
