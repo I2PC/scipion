@@ -110,7 +110,7 @@ class kerdensom_class:
         self.ML2DWorkingDir=os.path.abspath(_ML2DWorkingDir)
         self.ML2DReferenceNr=_ML2DReferenceNr
         self.DoXmask=_DoXmask
-        self.MaskFileName=_MaskFileName
+        self.MaskFileName=os.path.abspath(_MaskFileName)
         self.DoSOM=_DoSOM
         self.SomName=_SomName
         self.SomXdim=_SomXdim
