@@ -55,7 +55,7 @@ double& DocLine::operator[](int i)
 {
     if (i+1 > data.size())
         REPORT_ERROR(1604, "Trying to access to non-existing element " +
-                     ItoA(i) + " of a document line");
+                     integerToString(i) + " of a document line");
 
     return data[i];
 }
@@ -64,7 +64,7 @@ double DocLine::operator[](int i) const
 {
     if (i+1 > data.size())
         REPORT_ERROR(1604, "Trying to access to non-existing element " +
-                     ItoA(i) + " of a document line");
+                     integerToString(i) + " of a document line");
 
     return data[i];
 }
@@ -569,7 +569,7 @@ double DocFile::operator()(int k, int i)
     std::vector< DocLine >::iterator aux = find(k);
 
     if (aux == m.end())
-        REPORT_ERROR(1604, "DocFile::operator(): The given key (" + ItoA(k)
+        REPORT_ERROR(1604, "DocFile::operator(): The given key (" + integerToString(k)
                      + ") is not in the file");
 
     return (*aux)[i];
@@ -581,7 +581,7 @@ void DocFile::get_angles(int k, double& rot, double& tilt, double& psi,
     std::vector< DocLine >::iterator it = find(k);
 
     if (it == m.end())
-        REPORT_ERROR(1604, "DocFile::get_angles(): The given key (" + ItoA(k)
+        REPORT_ERROR(1604, "DocFile::get_angles(): The given key (" + integerToString(k)
                      + ") is not in the file");
 
     switch (ang1[0])
@@ -637,7 +637,7 @@ void DocFile::get_angles1(int k, double& rot, double& tilt, double& psi,
 
     if (it == m.end())
         REPORT_ERROR(1604, "DocFile::get_angles1(): The given key (" +
-                     ItoA(k) + ") is not in the file");
+                     integerToString(k) + ") is not in the file");
 
     switch (ang1[0])
     {
@@ -690,7 +690,7 @@ void DocFile::get_angles2(int k, double& rot, double& tilt, double &psi,
 {
     std::vector< DocLine >::iterator it = find(k);
     if (it == m.end())
-        REPORT_ERROR(1604, "DocFile::get_angles2(): The given key (" + ItoA(k)
+        REPORT_ERROR(1604, "DocFile::get_angles2(): The given key (" + integerToString(k)
                      + ") is not in the file");
 
     switch (ang1[0])
@@ -745,7 +745,7 @@ void DocFile::set_angles(int k, double rot, double tilt, double psi,
     std::vector< DocLine >::iterator it = find(k);
     if (it == m.end())
         REPORT_ERROR(1604, "DocFile::set_angles(): The given key (" +
-                     ItoA(k) + ") is not in the file");
+                     integerToString(k) + ") is not in the file");
 
     switch (ang1[0])
     {
@@ -812,7 +812,7 @@ void DocFile::set(int k, int i, double val)
 {
     std::vector< DocLine >::iterator it = find(k);
     if (it == m.end())
-        REPORT_ERROR(1604, "DocFile::set(): The given key (" + ItoA(k)
+        REPORT_ERROR(1604, "DocFile::set(): The given key (" + integerToString(k)
                      + ") is not in the file");
 
     it->set(i, val);

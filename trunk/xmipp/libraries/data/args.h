@@ -62,7 +62,7 @@
  * #endif
  *
  * key = textToFloat(firstToken(line), 1602, "Error reading key");
- * param_no = CtoI(nextToken(), 1602, "Error reading number parameters");
+ * param_no = textToInt(nextToken(), 1602, "Error reading number parameters");
  * readFloatList(NULL, param_no, data, 1602, "Error reading doc file line");
  *
  * #ifndef _NO_EXCEPTION
@@ -227,10 +227,10 @@ std::string floatToString(float F, int _width = 8, int _prec = 0);
  * positions.
  *
  * @code
- * REPORT_ERROR(1602, "Error reading key " + ItoA(key));
+ * REPORT_ERROR(1602, "Error reading key " + integerToString(key));
  * @endcode
  */
-std::string ItoA(int I, int _width = 0, char fill_with = '0');
+std::string integerToString(int I, int _width = 0, char fill_with = '0');
 
 /** Character to integer conversion.
  * @ingroup TypeConversions
@@ -241,12 +241,12 @@ std::string ItoA(int I, int _width = 0, char fill_with = '0');
  * numbers greater than 9 in a single character.
  *
  * @code
- * int param_no = CtoI(token, 1602, "Error reading number parameters");
+ * int param_no = textToInt(token, 1602, "Error reading number parameters");
  * @endcode
  */
-int CtoI(const char* str,
+int textToInt(const char* str,
          int _errno = 2103,
-         std::string errmsg = "Error in CtoI",
+         std::string errmsg = "Error in textToInt",
          int exit = 0);
 
 /** String to string with given length conversion.
@@ -257,7 +257,7 @@ int CtoI(const char* str,
  * truncated and if it is greater the string is right padded with spaces. If
  * width==0 then the same string is returned.
  */
-std::string AtoA(const std::string& str, int _width = 0);
+std::string stringToString(const std::string& str, int _width = 0);
 
 /** Check angle.
  * @ingroup TypeConversions

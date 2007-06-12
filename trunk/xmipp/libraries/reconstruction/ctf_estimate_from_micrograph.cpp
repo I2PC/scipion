@@ -379,7 +379,7 @@ void Prog_assign_CTF_prm::process()
                 SF.next();
             }
             else
-                piece_fn_root = PSDfn_root + ItoA(N, 5);
+                piece_fn_root = PSDfn_root + integerToString(N, 5);
 
             psd.write(piece_fn_root + ".psd");
 
@@ -455,7 +455,7 @@ void Prog_assign_CTF_prm::process()
                         int idx_Y = FLOOR((double)Y / N_vertical);
                         int idx_piece = idx_Y * div_NumberX + idx_X + 1;
                         OutputFile_ctf << fn_img << " "
-			               << PSDfn_root + ItoA(idx_piece, 5) + ".psd\n";
+			               << PSDfn_root + integerToString(idx_piece, 5) + ".psd\n";
                     }
                     else
                         OutputFile_ctf << fn_img << " "

@@ -361,7 +361,7 @@ main(int argc, char** argv)
             cout << "Saving neurons assigments ....." << endl;
             for (unsigned i = 0; i < myMap->size(); i++)
             {
-                tmpN = fn_out.c_str() + (string) "."  + ItoA(i);
+                tmpN = fn_out.c_str() + (string) "."  + integerToString(i);
                 ofstream cStream(tmpN.c_str());
                 for (int j = 0; j < myMap->classifAt(i).size(); j++)
                     cStream << myMap->classifAt(i)[j] << endl;

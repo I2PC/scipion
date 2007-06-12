@@ -644,7 +644,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
             read_proj().initZeros();
             fn_resi+="."+fn_root+"_residual";
             if (IMG_Inf[iact_proj].sym>-1)
-            fn_resi+=ItoA(IMG_Inf[iact_proj].sym);
+            fn_resi+=integerToString(IMG_Inf[iact_proj].sym);
             read_proj.write(fn_resi);
             */
         }

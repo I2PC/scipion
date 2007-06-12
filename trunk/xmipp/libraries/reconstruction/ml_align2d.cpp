@@ -3354,7 +3354,7 @@ void Prog_MLalign2D_prm::output_to_screen(int &iter, double &sumcorr, double &LL
             cout << "  Model  fraction  mirror-fraction " << endl;
             FOR_ALL_MODELS()
             {
-                cout << "  " << ItoA(refno + 1, 5) << " " << floatToString(alpha_k[refno], 10, 7) << " " << floatToString(mirror_fraction[refno], 10, 7) << endl;
+                cout << "  " << integerToString(refno + 1, 5) << " " << floatToString(alpha_k[refno], 10, 7) << " " << floatToString(mirror_fraction[refno], 10, 7) << endl;
             }
         }
     }
@@ -3438,7 +3438,7 @@ void Prog_MLalign2D_prm::write_output_files(const int iter, DocFile &DFo,
 	LL_prev_iter = LL;
         comment += " LL= " + floatToString(dLL, 10, 5) + " <Pmax/sumP>= " + floatToString(avecorr, 10, 5);
         DFl.insert_comment(comment);
-        comment = "-noise " + floatToString(sigma_noise, 15, 12) + " -offset " + floatToString(sigma_offset, 15, 12) + " -istart " + ItoA(iter + 1);
+        comment = "-noise " + floatToString(sigma_noise, 15, 12) + " -offset " + floatToString(sigma_offset, 15, 12) + " -istart " + integerToString(iter + 1);
         if (anneal > 1.) comment += " -anneal " + floatToString(anneal, 10, 7);
     }
     DFl.insert_comment(comment);

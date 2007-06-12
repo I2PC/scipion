@@ -219,7 +219,7 @@ public:
         if (_i >= size())
         {
             string msg;
-            msg = "Out of range. No target at position " + ItoA(_i);
+            msg = "Out of range. No target at position " + integerToString(_i);
             throw out_of_range(msg);
         }
 
@@ -237,7 +237,7 @@ public:
         if (_i >= size())
         {
             string msg;
-            msg = "Out of range. No target at position " + ItoA(_i);
+            msg = "Out of range. No target at position " + integerToString(_i);
             throw out_of_range(msg);
         }
 
@@ -256,7 +256,7 @@ public:
         if (_i >= size())
         {
             string msg;
-            msg = "Out of range. No item at position " + ItoA(_i);
+            msg = "Out of range. No item at position " + integerToString(_i);
             throw out_of_range(msg);
         }
 
@@ -276,7 +276,7 @@ public:
         if (_i >= size())
         {
             string msg;
-            msg = "Out of range. No item at position " + ItoA(_i);
+            msg = "Out of range. No item at position " + integerToString(_i);
             throw out_of_range(msg);
         }
 

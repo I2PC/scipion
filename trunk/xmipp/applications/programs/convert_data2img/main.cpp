@@ -203,7 +203,7 @@ int main(int argc, char **argv)
                 } // for x
         } // if nomask.
 
-        tmpN = (string) imgName + ItoA(i) + (string) "." + (string) ext;
+        tmpN = (string) imgName + integerToString(i) + (string) "." + (string) ext;
         image.write(tmpN);
         fprintf(fout, "%s 1 \n", tmpN.c_str());
     }

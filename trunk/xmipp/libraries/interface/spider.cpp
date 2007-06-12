@@ -36,7 +36,7 @@ void generate_Spider_count(int imax, DocFile &DF_out)
     Matrix1D<double>   aux(1);
 
     DF_out.clear();
-    DF_out.append_comment((string)"Count for Spider up to " + ItoA(imax));
+    DF_out.append_comment((string)"Count for Spider up to " + integerToString(imax));
 
     for (aux(0) = 1; aux(0) <= imax; aux(0)++)
         DF_out.append_data_line(aux);
@@ -174,7 +174,7 @@ void rename_for_Spider(SelFile &SF_in, SelFile &SF_out, const FileName &fn_root,
     while (!SF_in.eof())
     {
         fn_in = SF_in.NextImg();
-        fn_out = fn_root + ItoA(counter, 5);
+        fn_out = fn_root + integerToString(counter, 5);
         if (out_ext == "") fn_out = fn_out.add_extension(fn_in.get_extension());
         else             fn_out = fn_out.add_extension(out_ext);
         SF_out.insert(fn_out);

@@ -1403,10 +1403,10 @@ void QtWidgetMicrograph::loadModels()
     __use_euclidean_distance_for_errors = false;
     for (int i = 0; i < __Nerror_models; i++)
     {
-        fh_error.open((fn_root + ".error" + ItoA(i, 1)).c_str());
+        fh_error.open((fn_root + ".error" + integerToString(i, 1)).c_str());
         if (!fh_error)
             REPORT_ERROR(1, (string)"QtWidgetMicrograph::write: Cannot open file " +
-                         fn_root + ".error" + ItoA(i, 1) + " for input");
+                         fn_root + ".error" + integerToString(i, 1) + " for input");
         fh_error >> __error_model.at(i);
         fh_error.close();
         __error_model.at(i).build_model();
@@ -1607,10 +1607,10 @@ void QtWidgetMicrograph::write()
     ofstream fh_error;
     for (int i = 0; i < __Nerror_models; i++)
     {
-        fh_error.open((fn_root + ".error" + ItoA(i, 1)).c_str());
+        fh_error.open((fn_root + ".error" + integerToString(i, 1)).c_str());
         if (!fh_error)
             REPORT_ERROR(1, (string)"QtWidgetMicrograph::write: Cannot open file " +
-                         fn_root + ".error" + ItoA(i, 1) + " for output");
+                         fn_root + ".error" + integerToString(i, 1) + " for output");
         fh_error << __error_model.at(i) << endl;
         fh_error.close();
     }
@@ -1627,15 +1627,15 @@ void QtWidgetMicrograph::configure_auto()
 
     QLabel    lpiecexsize("Piece X size: ", &qgrid);
     QLineEdit piece_xsize(&qgrid);
-    piece_xsize.setText(ItoA(__piece_xsize).c_str());
+    piece_xsize.setText(integerToString(__piece_xsize).c_str());
 
     QLabel    lpieceysize("Piece Y size: ", &qgrid);
     QLineEdit piece_ysize(&qgrid);
-    piece_ysize.setText(ItoA(__piece_ysize).c_str());
+    piece_ysize.setText(integerToString(__piece_ysize).c_str());
 
     QLabel    lpiece_overlap("Piece overlap: ", &qgrid);
     QLineEdit piece_overlap(&qgrid);
-    piece_overlap.setText(ItoA(__piece_overlap).c_str());
+    piece_overlap.setText(integerToString(__piece_overlap).c_str());
 
     QLabel    lcutoff("High pass cut-off: ", &qgrid);
     QLineEdit cutoff(&qgrid);
@@ -1643,39 +1643,39 @@ void QtWidgetMicrograph::configure_auto()
 
     QLabel    loutput_scale("Output scale: ", &qgrid);
     QLineEdit output_scale(&qgrid);
-    output_scale.setText(ItoA(__output_scale).c_str());
+    output_scale.setText(integerToString(__output_scale).c_str());
 
     QLabel    lmask_size("Mask size: ", &qgrid);
     QLineEdit mask_size(&qgrid);
-    mask_size.setText(ItoA(__mask_size).c_str());
+    mask_size.setText(integerToString(__mask_size).c_str());
 
     QLabel    lgraybins("Gray bins: ", &qgrid);
     QLineEdit graybins(&qgrid);
-    graybins.setText(ItoA(__gray_bins).c_str());
+    graybins.setText(integerToString(__gray_bins).c_str());
 
     QLabel    lradialbins("Radial bins: ", &qgrid);
     QLineEdit radialbins(&qgrid);
-    radialbins.setText(ItoA(__radial_bins).c_str());
+    radialbins.setText(integerToString(__radial_bins).c_str());
 
     QLabel    lparticle_radius("Particle radius: ", &qgrid);
     QLineEdit particle_radius(&qgrid);
-    particle_radius.setText(ItoA(__particle_radius).c_str());
+    particle_radius.setText(integerToString(__particle_radius).c_str());
 
     QLabel    lmask_overlap("Mask overlap: ", &qgrid);
     QLineEdit mask_overlap(&qgrid);
-    mask_overlap.setText(ItoA(__particle_overlap).c_str());
+    mask_overlap.setText(integerToString(__particle_overlap).c_str());
 
     QLabel    lnumin("Min. Harmonic: ", &qgrid);
     QLineEdit numin(&qgrid);
-    numin.setText(ItoA(__numin).c_str());
+    numin.setText(integerToString(__numin).c_str());
 
     QLabel    lnumax("Max. Harmonic: ", &qgrid);
     QLineEdit numax(&qgrid);
-    numax.setText(ItoA(__numax).c_str());
+    numax.setText(integerToString(__numax).c_str());
 
     QLabel    lmin_dist("Min. Distance: ", &qgrid);
     QLineEdit min_dist(&qgrid);
-    min_dist.setText(ItoA(__min_distance_between_particles).c_str());
+    min_dist.setText(integerToString(__min_distance_between_particles).c_str());
 
     QLabel    lkeep("Keep: ", &qgrid);
     QLineEdit keep(&qgrid);
@@ -1683,7 +1683,7 @@ void QtWidgetMicrograph::configure_auto()
 
     QLabel    lNerror_models("#Error models: ", &qgrid);
     QLineEdit Nerror_models(&qgrid);
-    Nerror_models.setText(ItoA(__Nerror_models).c_str());
+    Nerror_models.setText(integerToString(__Nerror_models).c_str());
 
     QPushButton okButton("Ok", &qgrid);
     QPushButton cancelButton("Cancel", &qgrid);
@@ -1838,7 +1838,7 @@ AdjustContrastWidget::AdjustContrastWidget(int min, int max, float gamma,
 
     __label_min = new QLabel(this, "label");
     __label_min->setFont(QFont("courier", 14));
-    __label_min->setText(ItoA(min, 3).c_str());
+    __label_min->setText(integerToString(min, 3).c_str());
     __label_min->setFixedSize(__label_min->sizeHint());
     grid->addWidget(__label_min, 0, 2, AlignCenter);
 
@@ -1859,7 +1859,7 @@ AdjustContrastWidget::AdjustContrastWidget(int min, int max, float gamma,
 
     __label_max = new QLabel(this, "label");
     __label_max->setFont(QFont("courier", 14));
-    __label_max->setText(ItoA(max, 3).c_str());
+    __label_max->setText(integerToString(max, 3).c_str());
     __label_max->setFixedSize(__label_max->sizeHint());
     grid->addWidget(__label_max, 1, 2, AlignCenter);
 
@@ -1889,8 +1889,8 @@ AdjustContrastWidget::AdjustContrastWidget(int min, int max, float gamma,
 // One of the sliders changed ----------------------------------------------
 void AdjustContrastWidget::scrollValueChanged(int new_val)
 {
-    __label_min  ->setText(ItoA(__scroll_min  ->value(), 3).c_str());
-    __label_max  ->setText(ItoA(__scroll_max  ->value(), 3).c_str());
+    __label_min  ->setText(integerToString(__scroll_min  ->value(), 3).c_str());
+    __label_max  ->setText(integerToString(__scroll_max  ->value(), 3).c_str());
     __label_gamma->setText(floatToString((__scroll_gamma->value()) / 10.0, 3, 2).c_str());
     __qtwidgetmicrograph->changeContrast(__scroll_min->value(),
                                          __scroll_max->value(), __scroll_gamma->value() / 10.0);
@@ -2055,8 +2055,8 @@ void CropWidget::accept()
     string command = (string)"xmipp_window_micrograph " +
                      "-i " + __qtwidgetmicrograph->getMicrograph()->micrograph_name() +
                      " -o " + fn_out +
-                     " -size " + ItoA(w, 0) + " " + ItoA(h, 0) +
-                     " -top_left_corner " + ItoA(value[0], 0) + " " + ItoA(value[1], 0);
+                     " -size " + integerToString(w, 0) + " " + integerToString(h, 0) +
+                     " -top_left_corner " + integerToString(value[0], 0) + " " + integerToString(value[1], 0);
     cout << "Executing:\n" << command << endl;
     system(command.c_str());
 
@@ -2107,13 +2107,13 @@ AdjustCircleRadiustWidget::AdjustCircleRadiustWidget(int min, int max,
 
     __label_radius = new QLabel(this, "label");
     __label_radius->setFont(QFont("courier", 14));
-    __label_radius->setText(ItoA(start_with, 3).c_str());
+    __label_radius->setText(integerToString(start_with, 3).c_str());
     __label_radius->setFixedSize(__scroll_radius->sizeHint());
     grid->addWidget(__label_radius, 0, 2, AlignCenter);
 }
 
 void AdjustCircleRadiustWidget::scrollValueChanged(int new_val)
 {
-    __label_radius  ->setText(ItoA(__scroll_radius  ->value(), 3).c_str());
+    __label_radius  ->setText(integerToString(__scroll_radius  ->value(), 3).c_str());
     __qtwidgetmicrograph->changeCircleRadius(__scroll_radius->value());
 }

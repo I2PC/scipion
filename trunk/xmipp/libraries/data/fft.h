@@ -858,7 +858,7 @@ void my_ssnr(Matrix2D< T > const & AverageImage,
 
     if (SF_sel.ImgNo(SelLine::ACTIVE) < NGRUPOS)
         REPORT_ERROR(1, (string) "FFT::my_ssnr: my_ssnr I need more than " +
-                     ItoA(SF_sel.ImgNo(SelLine::ACTIVE)) + " images in file " +
+                     integerToString(SF_sel.ImgNo(SelLine::ACTIVE)) + " images in file " +
                      SF_sel.name());
 
     int contImg = SF_sel.ImgNo();

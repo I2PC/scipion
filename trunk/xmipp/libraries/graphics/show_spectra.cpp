@@ -509,7 +509,7 @@ SpectraFilter::SpectraFilter(int min, int max,
         // Label
         __label_min[i] = new QLabel(this, "label");
         __label_min[i]->setFont(QFont("courier", 14));
-        __label_min[i]->setText(ItoA(min, 3).c_str());
+        __label_min[i]->setText(integerToString(min, 3).c_str());
         __label_min[i]->setFixedSize(__label_min[i]->sizeHint());
         grid->addWidget(__label_min[i], i + 1, 0, AlignCenter);
 
@@ -525,7 +525,7 @@ SpectraFilter::SpectraFilter(int min, int max,
         // Label
         QLabel     *label = new QLabel(this, "label");
         label->setFont(QFont("times", 12));
-        label->setText(((string)"Harmonic " + ItoA(i + 1, 2)).c_str());
+        label->setText(((string)"Harmonic " + integerToString(i + 1, 2)).c_str());
         label->setFixedSize(label->sizeHint());
         grid->addWidget(label, i + 1, 2, AlignCenter);
 
@@ -541,7 +541,7 @@ SpectraFilter::SpectraFilter(int min, int max,
         // Label
         __label_max[i] = new QLabel(this, "label");
         __label_max[i]->setFont(QFont("courier", 14));
-        __label_max[i]->setText(ItoA(max, 3).c_str());
+        __label_max[i]->setText(integerToString(max, 3).c_str());
         __label_max[i]->setFixedSize(__label_max[i]->sizeHint());
         grid->addWidget(__label_max[i], i + 1, 4, AlignCenter);
 
@@ -574,8 +574,8 @@ void SpectraFilter::scrollValueChanged(int new_val)
     // Read all sliders
     for (int i = 0; i < __N; i++)
     {
-        __label_min[i]->setText((ItoA(__scroll_min[i]->value(), 3)).c_str());
-        __label_max[i]->setText((ItoA(__scroll_max[i]->value(), 3)).c_str());
+        __label_min[i]->setText((integerToString(__scroll_min[i]->value(), 3)).c_str());
+        __label_max[i]->setText((integerToString(__scroll_max[i]->value(), 3)).c_str());
     }
 }
 

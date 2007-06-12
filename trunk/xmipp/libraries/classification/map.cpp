@@ -384,9 +384,9 @@ void xmippMap::readSelf(istream& _is)
     _is >> somWidth;
     _is >> somHeight;
     /* IT DOESN'T WORK PROPERLY
-    str = ItoA(dim);
+    str = integerToString(dim);
     str += " ";
-    str += ItoA(somWidth*somHeight);
+    str += integerToString(somWidth*somHeight);
     str += " ";
     for (int i = str.size() - 1; i >= 0; i--)
     if (_is) _is.putback((char) str[i]);
@@ -1087,9 +1087,9 @@ void xmippFuzzyMap::readSelf(istream& _is, const unsigned _size)
     }
     _is >> somWidth;
     _is >> somHeight;
-    str = ItoA(dim);
+    str = integerToString(dim);
     str += " ";
-    str += ItoA(somWidth * somHeight);
+    str += integerToString(somWidth * somHeight);
     str += " ";
     for (int i = str.size() - 1; i >= 0; i--)
         if (_is) _is.putback((char) str[i]);

@@ -291,9 +291,9 @@ const char * ShowSel::cellLabel(int i) const
         {
             XmippCTF ctf;
             ctf.read(fn_param, false);
-            string defocus_val = ItoA(ROUND(MIN(ctf.DeltafU, ctf.DeltafV)), 6) + " " +
-                                 ItoA(ROUND(MAX(ctf.DeltafU, ctf.DeltafV)), 6) + " " +
-                                 ItoA(ABS(ROUND(ctf.DeltafU - ctf.DeltafV)));
+            string defocus_val = integerToString(ROUND(MIN(ctf.DeltafU, ctf.DeltafV)), 6) + " " +
+                                 integerToString(ROUND(MAX(ctf.DeltafU, ctf.DeltafV)), 6) + " " +
+                                 integerToString(ABS(ROUND(ctf.DeltafU - ctf.DeltafV)));
             return defocus_val.c_str();
         }
         catch (Xmipp_error XE)
@@ -666,7 +666,7 @@ void ShowSel::editCTFmodel()
             else fn_param = fn_root + "_Periodogram";
             // Get the piece to edit
             int i = indexOf(currentRow(), currentColumn()) + 1;
-            fn_param += ItoA(i, 5);
+            fn_param += integerToString(i, 5);
             fn_param += ".ctfparam";
         }
     }
@@ -750,7 +750,7 @@ void ShowSel::recomputeCTFmodel()
             else fn_psd = fn_root + "_Periodogram";
             // Get the piece to recompute
             int i = indexOf(currentRow(), currentColumn()) + 1;
-            fn_psd += ItoA(i, 5);
+            fn_psd += integerToString(i, 5);
             fn_psd += ".psd";
 	}
     }

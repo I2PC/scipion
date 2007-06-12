@@ -159,15 +159,15 @@ void ShowSpectraSOM::readSOMFiles(const FileName &_fn_root)
             {
                 infStr = "Kohonen SOM algorithm\n\n";
                 infStr += "Number of variables: ";
-                line = ItoA(dim);
+                line = integerToString(dim);
                 infStr += line.c_str();
                 infStr += "\n";
                 infStr += "Horizontal dimension (Xdim): ";
-                line = ItoA(NumCols);
+                line = integerToString(NumCols);
                 infStr += line.c_str();
                 infStr += "\n";
                 infStr += "Vertical dimension (Ydim): ";
-                line = ItoA(NumRows);
+                line = integerToString(NumRows);
                 infStr += line.c_str();
                 infStr += "\n";
                 infStr += "Topology : ";

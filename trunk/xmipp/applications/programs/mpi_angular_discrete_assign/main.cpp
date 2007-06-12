@@ -68,8 +68,8 @@ int main(int argc, char **argv)
         // Now all the ranks except 0 produce their own info
         if (rank != 0)
         {
-            prm.fn_ref = (string)"ref" + ItoA(fn_random, 4) + ".sel";
-            prm.fn_ang = (string)"reference" + ItoA(fn_random, 4) + "__movements.txt";
+            prm.fn_ref = (string)"ref" + integerToString(fn_random, 4) + ".sel";
+            prm.fn_ang = (string)"reference" + integerToString(fn_random, 4) + "__movements.txt";
             prm.produce_side_info(rank);
         }
 

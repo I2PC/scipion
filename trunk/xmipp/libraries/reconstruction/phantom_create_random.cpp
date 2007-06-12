@@ -106,11 +106,11 @@ void Random_Phantom_Side_Info::produce_Side_Info(
         for (int i = 1; i <= Random.FeatNo(); i += 2)
         {
             if (Random(i)->Type != Random(i + 1)->Type)
-                EXIT_ERROR(1, (string)"Random_phantom: Feature number " + ItoA(i) +
-                           " is not of the same type as " + ItoA(i + 1));
+                EXIT_ERROR(1, (string)"Random_phantom: Feature number " + integerToString(i) +
+                           " is not of the same type as " + integerToString(i + 1));
             if (Random(i)->Add_Assign != Random(i + 1)->Add_Assign)
-                EXIT_ERROR(1, (string)"Random_phantom: Feature number " + ItoA(i) +
-                           " is not of the same +/= behaviour as " + ItoA(i + 1));
+                EXIT_ERROR(1, (string)"Random_phantom: Feature number " + integerToString(i) +
+                           " is not of the same +/= behaviour as " + integerToString(i + 1));
         }
     }
 }

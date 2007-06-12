@@ -1435,7 +1435,7 @@ void Prog_mlf_tomo_prm::write_output_files(const int iter, SelFile &SF, DocFile 
     comment = "mlf_tomo-logfile: Number of images= " + floatToString(sumw_allrefs);
     comment += " LL= " + floatToString(LL, 10, 5) + " <Pmax/sumP>= " + floatToString(avecorr, 10, 5);
     DF.insert_comment(comment);
-    comment = "-noise " + fn_base + "_sigma2.dat -offset " + floatToString(sigma_offset, 10, 7) + " -istart " + ItoA(iter + 1);
+    comment = "-noise " + fn_base + "_sigma2.dat -offset " + floatToString(sigma_offset, 10, 7) + " -istart " + integerToString(iter + 1);
     if (theta > 0) comment += " -theta " + floatToString(theta, 6, 3) + " -theta_step " + floatToString(theta_step, 6, 3);
     DF.insert_comment(comment);
     DF.insert_comment("columns: model fraction (1); ");

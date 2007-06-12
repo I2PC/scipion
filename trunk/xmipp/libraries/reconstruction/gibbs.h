@@ -1309,7 +1309,7 @@ public:
         static int priv_counter = 0;
 //    Copy_to_Gridvolume_debug_and_Remove_Mask();
         Copy_to_Gridvolume_debug();
-        gridvolume_debug.write((fn_out_seed + ItoA(priv_counter++, 4) + ".fcc").c_str());
+        gridvolume_debug.write((fn_out_seed + integerToString(priv_counter++, 4) + ".fcc").c_str());
     }
 
     /** Get Total Energy */

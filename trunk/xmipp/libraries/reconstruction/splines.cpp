@@ -415,7 +415,7 @@ void spatial_Bspline032voxels(const GridVolume &vol_splines,
         cout << endl;
         VolumeXmipp save;
         save() = *vol_voxels;
-        save.write((string)"PPPvoxels" + ItoA(i));
+        save.write((string)"PPPvoxels" + integerToString(i));
 #endif
     }
 

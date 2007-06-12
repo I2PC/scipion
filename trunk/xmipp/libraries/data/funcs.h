@@ -502,7 +502,7 @@ float rnd_log(float a, float b);
  *
  * // Write volume at iteration 1, with a name in the fashion
  * // "art_it1_00001.voxels"
- * vol_voxels.write(fn_root.get_root() + "_it" + ItoA(1) + "_" +
+ * vol_voxels.write(fn_root.get_root() + "_it" + integerToString(1) + "_" +
  * fn_root.get_number() + ".voxels");
  * @endcode
  */

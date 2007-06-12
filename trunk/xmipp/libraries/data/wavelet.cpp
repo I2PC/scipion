@@ -49,7 +49,7 @@ void Bilib_DWT(const Matrix1D<double> &input,
     if (XSIZE(input) % size_multiple != 0)
         REPORT_ERROR(1,
                      (string)"Bilib_DWT 1D: Xsize must be a multiple of " +
-                     ItoA(size_multiple));
+                     integerToString(size_multiple));
 
     result.initZeros(input);
     TWaveletStruct TW;
@@ -143,11 +143,11 @@ void Bilib_DWT(const Matrix2D<double> &input,
     if (XSIZE(input) % size_multiple != 0)
         REPORT_ERROR(1,
                      (string)"Bilib_DWT 2D: Xsize must be a multiple of " +
-                     ItoA(size_multiple));
+                     integerToString(size_multiple));
     if (YSIZE(input) % size_multiple != 0)
         REPORT_ERROR(1,
                      (string)"Bilib_DWT 2D: Ysize must be a multiple of " +
-                     ItoA(size_multiple));
+                     integerToString(size_multiple));
 
     result.initZeros(input);
     TWaveletStruct TW;
@@ -243,15 +243,15 @@ void Bilib_DWT(const Matrix3D<double> &input,
     if (XSIZE(input) % size_multiple != 0)
         REPORT_ERROR(1,
                      (string)"Bilib_DWT 3D: Xsize must be a multiple of " +
-                     ItoA(size_multiple));
+                     integerToString(size_multiple));
     if (YSIZE(input) % size_multiple != 0)
         REPORT_ERROR(1,
                      (string)"Bilib_DWT 3D: Ysize must be a multiple of " +
-                     ItoA(size_multiple));
+                     integerToString(size_multiple));
     if (ZSIZE(input) % size_multiple != 0)
         REPORT_ERROR(1,
                      (string)"Bilib_DWT 3D: Zsize must be a multiple of " +
-                     ItoA(size_multiple));
+                     integerToString(size_multiple));
 
     result.initZeros(input);
     TWaveletStruct TW;

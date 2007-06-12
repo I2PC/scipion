@@ -249,7 +249,7 @@ main(int argc, char** argv)
             cout << "Saving clusters assigments ....." << endl;
             for (unsigned i = 0; i < thisFCB->size(); i++)
             {
-                tmpN = fn_out.c_str() + (string) "."  + ItoA(i);
+                tmpN = fn_out.c_str() + (string) "."  + integerToString(i);
                 ofstream cStream(tmpN.c_str());
                 for (int j = 0; j < thisFCB->classifAt(i).size(); j++)
                     cStream << thisFCB->classifAt(i)[j] << endl;

@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
         // so we add the id number to the root filename
         FileName aux = art_prm.fn_root;
 
-        art_prm.fn_root = art_prm.fn_root + ItoA(rank);
+        art_prm.fn_root = art_prm.fn_root + integerToString(rank);
         art_prm.produce_Side_Info(vol_basis, FULL, rank);
 
         // Restore original filename.
@@ -521,7 +521,7 @@ int main(int argc, char *argv[])
             if (i < num_iter - 1)
             {
                 if ((art_prm.tell&TELL_SAVE_BASIS) && (i < num_iter - 1))
-                    vol_basis.write(art_prm.fn_root + "it" + ItoA(i + 1) + ".basis");
+                    vol_basis.write(art_prm.fn_root + "it" + integerToString(i + 1) + ".basis");
             }
         }
     }

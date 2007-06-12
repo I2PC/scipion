@@ -168,7 +168,7 @@ void Prog_angular_predict_prm::produce_side_info(int rank)
         // Generate the reference projections internally
         FileName fn_proj_param;
         randomize_random_generator();
-        fn_random = ItoA(ROUND(10000 * rnd_unif()));
+        fn_random = integerToString(ROUND(10000 * rnd_unif()));
         fn_proj_param = (string)"proj" + fn_random + ".param";
         ofstream fh_proj_param;
         fh_proj_param.open(fn_proj_param.c_str());
@@ -847,7 +847,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
 
 #ifdef DEBUG
                     Ip.write("PPPafter_denoising.xmp");
-                    ImageXmipp Iref((string)"g0tb" + ItoA(best_ref_idx + 1, 5) + ".xmp");
+                    ImageXmipp Iref((string)"g0tb" + integerToString(best_ref_idx + 1, 5) + ".xmp");
                     Iref.write("PPPref.xmp");
                     cerr << "Press any key\n";
                     char c;
@@ -1170,8 +1170,8 @@ void Prog_angular_predict_prm::produceSummary()
     for (int l = 0; l < L; l++)
     {
         // Write the reference and assigned reference
-        FileName fn_refl = summaryRootname + "_ref" + ItoA(l, 5) + ".xmp";
-        FileName fn_avgl = summaryRootname + "_avg" + ItoA(l, 5) + ".xmp";
+        FileName fn_refl = summaryRootname + "_ref" + integerToString(l, 5) + ".xmp";
+        FileName fn_avgl = summaryRootname + "_avg" + integerToString(l, 5) + ".xmp";
         ImageXmipp I;
         I.read(library_name[l]);
         I.write(fn_refl);

@@ -227,7 +227,7 @@ int main(int argc, char **argv)
         DFo.insert_comment(line);
         DFo.remove_current();
         DFo.previous();
-        line = "-noise " + floatToString(noise, 10, 7) + " -offset " + floatToString(offset, 10, 7) + " -istart " + ItoA(istart);
+        line = "-noise " + floatToString(noise, 10, 7) + " -offset " + floatToString(offset, 10, 7) + " -istart " + integerToString(istart);
         DFo.insert_comment(line);
         DFo.write(fn_oroot + ".log");
 

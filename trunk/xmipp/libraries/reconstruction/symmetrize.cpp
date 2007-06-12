@@ -93,7 +93,7 @@ void symmetrize(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
            to reuse V_in !!!, this is very memory wasting */
         applyGeometry(V_aux(), R.transpose(), V_in(), IS_NOT_INV, wrap);
 #ifdef DEBUG
-        V_aux.write((string)"PPPsym_" + ItoA(i) + ".vol");
+        V_aux.write((string)"PPPsym_" + integerToString(i) + ".vol");
 #endif
 
         /* *** CO: I am not very sure about the reason for this, but it
@@ -145,7 +145,7 @@ void symmetrize_Bspline(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out
         arrayByArray(V_out(), V_aux(), V_out(), '+');
 
 #ifdef DEBUG
-        V_aux.write((string)"PPPsym_" + ItoA(i) + ".vol");
+        V_aux.write((string)"PPPsym_" + integerToString(i) + ".vol");
 #endif
 
     }

@@ -171,7 +171,7 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
         new_proj() *= sqrtweight * kappa;
 
         /*
-        fn_tmp="residual_"+ItoA(iact_proj);
+        fn_tmp="residual_"+integerToString(iact_proj);
         dummy_proj()=1000*prm.residual_imgs[iact_proj]();
         dummy_proj.write(fn_tmp+".old");
         */
@@ -317,7 +317,7 @@ void ART_single_step(
                 }
             if (!null_row)
             {
-                cout << "pixel=" << ItoA(i, 3) << " --> "
+                cout << "pixel=" << integerToString(i, 3) << " --> "
                 << MULTIDIM_ELEM(read_proj(), i) << " = ";
                 for (int j = 0; j < XSIZE(*A); j++)
                     cout << DIRECT_MAT_ELEM(*A, i, j) << " ";

@@ -37,15 +37,15 @@ void Usage();
     { \
         int count; \
         if      (count_above && !count_below) {\
-            cout << AtoA(fn_in,max_length) \
+            cout << stringToString(fn_in,max_length) \
             << " number of " << elem_type << " above " << th_above; \
             count=count_with_mask_above(mask,m,th_above); \
         } else if (count_below && !count_above) {\
-            cout << AtoA(fn_in,max_length) \
+            cout << stringToString(fn_in,max_length) \
             << " number of " << elem_type << " below " << th_below; \
             count=count_with_mask_below(mask,m,th_below); \
         } else if (count_below && count_above) {\
-            cout << AtoA(fn_in,max_length) \
+            cout << stringToString(fn_in,max_length) \
             << " number of " << elem_type << " above " << th_above \
             << " and below " << th_below << " = "; \
             count=count_with_mask_between(mask,m,th_above,th_below); \

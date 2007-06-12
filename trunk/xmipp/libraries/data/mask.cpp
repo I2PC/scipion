@@ -1163,7 +1163,7 @@ void Mask_Params::generate_1Dmask()
         break;
     default:
         REPORT_ERROR(3000, "Mask_Params::generate_mask: Non implemented or "
-                     "unknown mask type :" + ItoA(type));
+                     "unknown mask type :" + integerToString(type));
     }
 }
 
@@ -1213,7 +1213,7 @@ void Mask_Params::generate_2Dmask(const bool& apply_geo)
         break;
     default:
         REPORT_ERROR(3000, "Mask_Params::generate_mask: Unknown mask type :"
-                     + ItoA(type));
+                     + integerToString(type));
     }
 
     if (apply_geo)
@@ -1284,7 +1284,7 @@ void Mask_Params::generate_3Dmask()
         break;
     default:
         REPORT_ERROR(3000, "Mask_Params::generate_mask: Unknown mask type :"
-                     + ItoA(type));
+                     + integerToString(type));
     }
 }
 

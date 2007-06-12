@@ -1124,7 +1124,7 @@ public:
         } catch (Xmipp_error XE) {\
             cout << XE; \
             REPORT_ERROR(3004,(string)"GridVolume::"+op+": Different shape of volume " +\
-                         ItoA(i)); \
+                         integerToString(i)); \
         } \
     } \
     \
@@ -1180,7 +1180,7 @@ public:
         } catch (Xmipp_error XE) {\
             cout << XE; \
             REPORT_ERROR(3004,(string)"GridVolume::"+op+"=: Different shape of volume " +\
-                         ItoA(i)); \
+                         integerToString(i)); \
         } \
     }
 

@@ -267,7 +267,7 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
             SSNR2D.psi() = Is.psi();
 
             // Save image
-            FileName fn_img_out = fn_out_images + ItoA(Is.name().get_number(), 5) + ".xmp";
+            FileName fn_img_out = fn_out_images + integerToString(Is.name().get_number(), 5) + ".xmp";
             SSNR2D.write(fn_img_out);
             SF_individual.insert(fn_img_out);
         }
@@ -353,7 +353,7 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
         cerr << "Interpolating the VSSNR ...\n";
         SF_individual.write(fn_out_images + ".sel");
         system(((string)"xmipp_art -i " + fn_out_images + ".sel -o " + fn_VSSNR +
-                " -l 0.1 -R " + ItoA(ROUND(XSIZE(S()) / 3)) + " -ray_length 1 -n 5").c_str());
+                " -l 0.1 -R " + integerToString(ROUND(XSIZE(S()) / 3)) + " -ray_length 1 -n 5").c_str());
         system(((string)"xmipp_rmsel " + fn_out_images + ".sel ").c_str());
     }
 }

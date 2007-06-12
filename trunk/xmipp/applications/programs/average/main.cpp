@@ -119,7 +119,7 @@ void Statis_parameters::final_process()
         else if (set_weight)
         {
             sumI.weight() = (double)nI;
-            cerr << " Setting weight in the header of the average image to " << ItoA(nI) << endl;
+            cerr << " Setting weight in the header of the average image to " << integerToString(nI) << endl;
         }
         sumI.write(fn_root + ".med.xmp");
         sumI2.write(fn_root + ".sig.xmp");

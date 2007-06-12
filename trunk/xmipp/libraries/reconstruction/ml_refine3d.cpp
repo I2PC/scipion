@@ -674,7 +674,7 @@ void Prog_Refine3d_prm::calculate_3DSSNR(Matrix1D<double> &spectral_signal, int 
             if (i > 0 && i < dim / 2)
             {
                 out.width(5);
-                out  << ItoA(i);
+                out  << integerToString(i);
                 out.width(10);
                 out <<  floatToString(VEC_ELEM(spectral_signal, i));
                 out.width(10);

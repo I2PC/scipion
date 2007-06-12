@@ -148,7 +148,7 @@ void xmippGaussianKerDenSOM::train(xmippFuzzyMap& _som, TS& _examples, FileName&
             }
 
             // Saves each codebook (for all iterations)
-            tmpN = _fn.c_str() + (string) "_" + ItoA(iter) + (string) ".cod";
+            tmpN = _fn.c_str() + (string) "_" + integerToString(iter) + (string) ".cod";
             if (verbosity)
                 listener->OnReportOperation((string) "Saving code vectors....\n");
             ofstream codS(tmpN.c_str());
@@ -158,7 +158,7 @@ void xmippGaussianKerDenSOM::train(xmippFuzzyMap& _som, TS& _examples, FileName&
             // save .his file (Histogram)
             if (verbosity)
                 listener->OnReportOperation((string) "Saving histogram file....\n");
-            tmpN = _fn.c_str() + (string) "_" + ItoA(iter) + (string) ".his";
+            tmpN = _fn.c_str() + (string) "_" + integerToString(iter) + (string) ".his";
             ofstream hisStream(tmpN.c_str());
             _som.printHistogram(hisStream);
             hisStream.flush();
@@ -166,7 +166,7 @@ void xmippGaussianKerDenSOM::train(xmippFuzzyMap& _som, TS& _examples, FileName&
             // save .err file (Average Quantization Error)
             if (verbosity)
                 listener->OnReportOperation((string) "Saving Average Quantization Error file....\n");
-            tmpN = _fn.c_str() + (string) "_" + ItoA(iter) + (string) ".err";
+            tmpN = _fn.c_str() + (string) "_" + integerToString(iter) + (string) ".err";
             ofstream errStream(tmpN.c_str());
             _som.printQuantError(errStream);
             errStream.flush();
@@ -174,7 +174,7 @@ void xmippGaussianKerDenSOM::train(xmippFuzzyMap& _som, TS& _examples, FileName&
             // save .vs file to be compatible with SOM_PAK
             if (verbosity)
                 listener->OnReportOperation((string) "Saving visual file....\n");
-            tmpN = _fn.c_str() + (string) "_" + ItoA(iter) + (string) ".vs";
+            tmpN = _fn.c_str() + (string) "_" + integerToString(iter) + (string) ".vs";
             ofstream vsStream(tmpN.c_str());
             vsStream << _examples.theItems[0].size() << " " << _som.layout() << " " << _som.width() << " " << _som.height() << " gaussian" << endl;
             for (int i = 0; i < _examples.size(); i++)
@@ -187,7 +187,7 @@ void xmippGaussianKerDenSOM::train(xmippFuzzyMap& _som, TS& _examples, FileName&
             // save .inf file
             if (verbosity)
                 listener->OnReportOperation((string) "Saving inf file....\n");
-            tmpN = _fn.c_str() + (string) "_" + ItoA(iter) + (string) ".inf";
+            tmpN = _fn.c_str() + (string) "_" + integerToString(iter) + (string) ".inf";
             ofstream infS(tmpN.c_str());
             infS << "Kernel Probability Density Estimator SOM algorithm" << endl << endl;
             infS << "Deterministic annealing step " << iter + 1 << " out of " << annSteps << endl;

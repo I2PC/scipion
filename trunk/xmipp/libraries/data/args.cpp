@@ -208,7 +208,7 @@ std::string floatToString(float F, int _width, int _prec)
 #endif
 }
 
-std::string ItoA(int I, int _width, char fill_with)
+std::string integerToString(int I, int _width, char fill_with)
 {
     char aux[15];
 
@@ -248,7 +248,7 @@ std::string ItoA(int I, int _width, char fill_with)
         return static_cast< std::string >(aux);
 }
 
-int CtoI(const char* str, int _errno, std::string errmsg, int exit)
+int textToInt(const char* str, int _errno, std::string errmsg, int exit)
 {
     char readval;
     int ok;
@@ -272,7 +272,7 @@ int CtoI(const char* str, int _errno, std::string errmsg, int exit)
     return 0;
 }
 
-string AtoA(const std::string& str, int _width)
+string stringToString(const std::string& str, int _width)
 {
     if (_width == 0)
         return str;

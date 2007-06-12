@@ -120,14 +120,14 @@ string Prog_downsample_prm::command_line() const
     string retval;
     retval += (string)"-i " + fn_micrograph + " ";
     retval += (string)"-o " + fn_downsampled + " ";
-    retval += (string)"-output_bits " + ItoA(bitsMp) + " ";
-    retval += (string)"-Xstep " + ItoA(Xstep) + " ";
-    retval += (string)"-Ystep " + ItoA(Ystep) + " ";
+    retval += (string)"-output_bits " + integerToString(bitsMp) + " ";
+    retval += (string)"-Xstep " + integerToString(Xstep) + " ";
+    retval += (string)"-Ystep " + integerToString(Ystep) + " ";
     retval += (string)"-kernel ";
     switch (kernel_mode)
     {
     case KER_RECTANGLE:
-        retval += (string)"rectangle" + ItoA(Yrect) + " " + ItoA(Xrect) + " ";
+        retval += (string)"rectangle" + integerToString(Yrect) + " " + integerToString(Xrect) + " ";
         break;
     case KER_CIRCLE:
         retval += (string)"circle" + floatToString(r) + " ";

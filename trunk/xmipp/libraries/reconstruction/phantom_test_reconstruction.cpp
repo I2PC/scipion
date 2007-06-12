@@ -543,7 +543,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
     if (prm.fn_crystal != "") crystal_proj_prm.read(prm.fn_crystal);
     FileName fn_root, fn_recons_root;
     fn_root = proj_prm.fn_projection_seed;
-    if (nvol != -1) fn_recons_root = fn_root + "exp" + ItoA(nvol, 2);
+    if (nvol != -1) fn_recons_root = fn_root + "exp" + integerToString(nvol, 2);
     else          fn_recons_root = fn_root;
     FileName fn_ext = proj_prm.fn_projection_extension;
 
@@ -907,7 +907,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
     {
         string command_line = (string)"xmipp_wbp -i " + Prog_proj_prm.fn_sel_file +
                               " -o " + fn_recons_root + ".vol " +
-                              " -radius " + ItoA((int)(proj_prm.proj_Xdim / 2)) +
+                              " -radius " + integerToString((int)(proj_prm.proj_Xdim / 2)) +
                               " -threshold " + floatToString(prm.WBP_threshold[i], 0);
         cerr << "Reconstructing with WBP ...\n";
         system(command_line.c_str());

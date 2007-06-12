@@ -134,10 +134,10 @@ int main(int argc, char **argv)
                                                      max_val_int, avg, stddev);
 
                 // Show information
-                cout << AtoA(file_name, max_length + 1);
-                cout << ItoA(ZSIZE(V), 4, ' ') << 'x'
-                << ItoA(YSIZE(V), 4, ' ') << 'x'
-                << ItoA(XSIZE(V), 4, ' ') << ' ';
+                cout << stringToString(file_name, max_length + 1);
+                cout << integerToString(ZSIZE(V), 4, ' ') << 'x'
+                << integerToString(YSIZE(V), 4, ' ') << 'x'
+                << integerToString(XSIZE(V), 4, ' ') << ' ';
                 if (!short_format)
                     cout << "min= "    << floatToString(min_val, 10) << ' '
                     << "max= "    << floatToString(max_val, 10) << ' '
@@ -179,10 +179,10 @@ int main(int argc, char **argv)
                                                  avg, stddev);
 
                 // Show information
-                cout << AtoA(file_name, max_length + 1);
+                cout << stringToString(file_name, max_length + 1);
                 cout << "    "; // Stands for the ZSIZE in volumes
-                cout << ItoA(YSIZE(I), 4, ' ') << 'x'
-                << ItoA(XSIZE(I), 4, ' ') << ' ';
+                cout << integerToString(YSIZE(I), 4, ' ') << 'x'
+                << integerToString(XSIZE(I), 4, ' ') << ' ';
                 if (!short_format)
                 {
                     cout << "min= "    << floatToString(min_val, 10) << ' '
@@ -261,7 +261,7 @@ int main(int argc, char **argv)
             mean_avg     /= N;
             mean_stddev  /= N;
 
-            cout << AtoA(" ", max_length + 13);
+            cout << stringToString(" ", max_length + 13);
             if (!short_format)
                 cout << "min= "    << floatToString(mean_min_val, 10) << ' '
                 << "max= "    << floatToString(mean_max_val, 10) << ' '

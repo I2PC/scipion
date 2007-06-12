@@ -322,7 +322,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
              noisy_projection.psi ()=prm.IMG_Inf[iact_proj].psi;
 	     if (prm.IMG_Inf[iact_proj].sym==-1 && it==0) {
 	        FileName fn_noise=prm.fn_root+"_noise_proj"+
-		   ItoA(read_proj.name().get_number(),5)+".xmp";
+		   integerToString(read_proj.name().get_number(),5)+".xmp";
 	        noisy_projection.write(fn_noise);
 	        SF_noise.insert(fn_noise);
 		SF_signal.insert(read_proj.name());
@@ -468,8 +468,8 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
             prm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
                Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
       	    if (prm.tell&TELL_SAVE_INTERMIDIATE)
-               vol_voxels.write(prm.fn_root+"it"+ItoA(it)+"proj"+
-		  ItoA(act_proj,5)+".vol");
+               vol_voxels.write(prm.fn_root+"it"+integerToString(it)+"proj"+
+		  integerToString(act_proj,5)+".vol");
 	    else
                vol_voxels.write("PPPvol.vol");
 
@@ -538,10 +538,10 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
          if (rank==-1) cerr << "Converting basis volume to voxels ...\n";
          prm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
             Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
-         vol_voxels.write(prm.fn_root+"it"+ItoA(it)+".vol");
+         vol_voxels.write(prm.fn_root+"it"+integerToString(it)+".vol");
 
          if (prm.tell&TELL_SAVE_BASIS)
-            vol_basis.write(prm.fn_root+"it"+ItoA(it)+".basis");
+            vol_basis.write(prm.fn_root+"it"+integerToString(it)+".basis");
       }
 
       // Check if algorithm must stop via stop_at

@@ -88,7 +88,7 @@ int main(int argc, char **argv)
             }
             SFtmp2 = SFout.sort_by_filenames();
             SFout = SFtmp2;
-            string num = "_" + ItoA(i + 1);
+            string num = "_" + integerToString(i + 1);
             fn_out = fn_root + num;
             fn_out += ".sel";
             SFout.write(fn_out);
