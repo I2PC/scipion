@@ -42,8 +42,6 @@ public:
     FileName fn_ctfdat;
     /// Relaxation factor
     double mu;
-    /// Adjust gray levels
-    bool adjust_gray_levels;
 
     /// Side Info: volume
     VolumeXmipp V;

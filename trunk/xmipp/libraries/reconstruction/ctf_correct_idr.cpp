@@ -31,7 +31,6 @@ void Prog_IDR_ART_Parameters::read(int argc, char **argv)
     fn_vol = getParameter(argc, argv, "-vol");
     fn_ctfdat = getParameter(argc, argv, "-ctfdat");
     mu = textToFloat(getParameter(argc, argv, "-mu", "1.8"));
-    adjust_gray_levels = checkParameter(argc, argv, "-adjust_gray_levels");
 }
 
 void Prog_IDR_ART_Parameters::produce_side_info()
@@ -46,7 +45,6 @@ void Prog_IDR_ART_Parameters::show()
     std::cout << "Input volume: " << fn_vol << std::endl
 	      << "CTFDat: " << fn_ctfdat << std::endl
 	      << "Relaxation factor: " << mu << std::endl
-	      << "Adjust gray levels: " << adjust_gray_levels << std::endl
     ;
 
 }
@@ -57,7 +55,6 @@ void Prog_IDR_ART_Parameters::Usage()
 	      << "   -vol <volume>	  : Voxel volume with the current reconstruction\n"
 	      << "   -ctfdat <ctfdat>	  : List of projections and CTFs\n"
 	      << "  [-mu <mu=1.8>]	  : Relaxation factor\n"
-	      << "  [-adjust_gray_levels] : Adjust gray levels\n"
     ;
 }
 
@@ -111,21 +108,11 @@ void Prog_IDR_ART_Parameters::IDR_correction()
             // Center the all images
             Ireal().setXmippOrigin();
             Itheo().setXmippOrigin();
-
-            // If adjust gray levels
-            if (adjust_gray_levels)
-            {
-        	double avg, stddev, min_val, max_val;
-        	Ireal().computeStats(avg, stddev, min_val, max_val);
-		Ireal()-=avg;
-		Ireal()/=stddev;
-        	double avgt, stddevt, min_valt, max_valt;
-        	Itheo_CTF().computeStats(avgt, stddevt, min_valt, max_valt);
-		Itheo_CTF()-=avgt;
-		Itheo_CTF()/=stddevt;
-		Itheo()-=avgt;
-		Itheo()/=stddevt;
-            }
+#ifdef DEBUG
+            Itheo.write("PPPtheo.xmp");
+            Itheo_CTF.write("PPPtheo_CTF.xmp");
+            Ireal.write("PPPreal.xmp");
+#endif
 
             // Apply IDR process
             FOR_ALL_ELEMENTS_IN_MATRIX2D(Ireal())
@@ -135,14 +122,11 @@ void Prog_IDR_ART_Parameters::IDR_correction()
             // Save output image
             Itheo.write(fn_img);
 
-//#define DEBUG
 #ifdef DEBUG
-            Itheo.write(fn_img.add_prefix("PPPtheo_") + ".xmp");
-            Itheo_CTF.write(fn_img.add_prefix("PPPtheo_CTF_") + ".xmp");
-            Ireal.write(fn_img.add_prefix("PPPreal_") + ".xmp");
             ImageXmipp save;
             save() = Itheo() - mu * Itheo_CTF();
-            save.write(fn_img.add_prefix("PPPdiff_") + ".xmp");
+            save.write("PPPdiff.xmp");
+            Itheo.write("PPPidr.xmp");
             cout << "Press any key to continue\n";
             char c;
             cin >> c;
