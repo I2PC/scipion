@@ -39,7 +39,7 @@ ResumeIteration=1
 # {expert} {dir} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/home/bioing/COSS/Experiments/TestSencilloCTF'
+ProjectDir='/home2/bioinfo/coss/TestSencilloCTF'
 
 # {expert} {dir} Directory name for logfiles:
 LogDir='Logs'
@@ -220,7 +220,7 @@ SegmentUsingMass='50x0'
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
 # Use multiple processors in parallel?
-DoParallel=False
+DoParallel=True
 
 # Number of processors to use:
 MyNumberOfCPUs=10
@@ -229,7 +229,7 @@ MyNumberOfCPUs=10
 """ Depending on your system, your standard script to launch MPI-jobs may require this
     if your queueing system using an environment variable, give it here (with the leading $, e.g. $PBS_NODEFILE
 """
-MyMachineFile='../machinefile'
+MyMachineFile='/home2/bioinfo/coss/machines.dat'
 
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
@@ -341,7 +341,10 @@ class HighRes3DClass:
 
        self.doParallel=_DoParallel
        self.myNumberOfCPUs=_MyNumberOfCPUs
-       self.myMachineFile=os.path.abspath(self.projectDir+"/"+_MyMachineFile)
+       if _MyMachineFile[0]=='/':
+          self.myMachineFile=os.path.abspath(_MyMachineFile)
+       else:
+          self.myMachineFile=os.path.abspath(self.projectDir+"/"+_MyMachineFile)
 
        self.verbose=_Verbose
        if self.verbose:
