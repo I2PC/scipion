@@ -79,6 +79,8 @@ public:
     ImageViewer *imageViewer;
     // Filename root of the model being visualized
     FileName fn_root;
+    // PSD present
+    bool psdPresent;
 
     // First settings setted when loaded the File,
     // used when button reset is pressed

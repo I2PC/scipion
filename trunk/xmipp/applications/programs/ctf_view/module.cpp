@@ -39,6 +39,7 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     firstSettings = plotter.zoomStack[plotter.curZoom];
     ctf.clear();
     ctf_valid = false;
+    psdPresent = false;
     
     // Connect plotter resize to recompute curves
     connect(&plotter, SIGNAL(resizeDone()),
@@ -586,7 +587,8 @@ void CTFViewer::refreshCurves()
     plotter.setActiveState(1, ShowCTF->isOn());
     plotter.setActiveState(2, ShowDamping->isOn());
     plotter.setActiveState(3, ShowBackground->isOn());
-    plotter.setActiveState(4, ShowExperimental->isOn());
+    if (psdPresent)
+        plotter.setActiveState(4, ShowExperimental->isOn());
     plotter.refreshPixmap();
 }
 
@@ -601,8 +603,11 @@ void CTFViewer::recomputeCurves()
     plotter.setCurveData(2, data);
     getCTFcurve("background", angle, data);
     plotter.setCurveData(3, data);
-    getExperimentalCurve(angle, data);
-    plotter.setCurveData(4, data);
+    if (psdPresent)
+    {
+        getExperimentalCurve(angle, data);
+        plotter.setCurveData(4, data);
+    }
     setPlotSettings();
     refreshCurves();
 }
@@ -707,18 +712,28 @@ void CTFViewer::setImageViewer()
     imageViewer->show();
 
     // Load the CTF in image I
-    I.read(fn_root + ".psd");
-    CenterFFT(I(), true);
-    I().setXmippOrigin();
+    try {
+       I.read(fn_root + ".psd");
+       CenterFFT(I(), true);
+       I().setXmippOrigin();
+       psdPresent = true;
 
-    // Recompute curves since the experimental curve has changed
-    recomputeCurves();
+       // Recompute curves since the experimental curve has changed
+       recomputeCurves();
+    } catch (Xmipp_error XE) {
+       I.clear();
+       psdPresent = false;
+       ShowExperimental->setChecked(true);
+       ShowExperimental->setEnabled(false);
+    }
 }
 
 // Get experimental curve --------------------------------------------------
 void CTFViewer::getExperimentalCurve(int angle, Matrix2D<double> &data,
                                      int Nsamples)
 {
+    if (!psdPresent) return;
+
     double angle_rad = DEG2RAD(angle + 180.0);
     double cos_ang = cos(angle_rad);
     double sin_ang = sin(angle_rad);
@@ -728,14 +743,14 @@ void CTFViewer::getExperimentalCurve(int angle, Matrix2D<double> &data,
 
     int Nmax = CEIL(t_max / Ts);
     data.resize(Nmax, 2);
-    int i = 0;
-    for (double t = 0; t < t_max; t += Ts, i++)
-    {
-        data(i, 0) = t * 1.0 / (XSIZE(I()) * sampling_rate);
-        data(i, 1) = I().interpolatedElement(t * cos_ang, t * sin_ang);
-        if (TenLog->isOn()) data(i, 1) = 10 * log10(data(i, 1));
-        if (i == Nmax) break;
-    }
+     int i = 0;
+     for (double t = 0; t < t_max; t += Ts, i++)
+     {
+         data(i, 0) = t * 1.0 / (XSIZE(I()) * sampling_rate);
+         data(i, 1) = I().interpolatedElement(t * cos_ang, t * sin_ang);
+         if (TenLog->isOn()) data(i, 1) = 10 * log10(data(i, 1));
+         if (i == Nmax) break;
+     }
 }
 
 // Generate CTF model ------------------------------------------------------
