@@ -757,7 +757,7 @@ class HighRes3DClass:
 
        # Remove useless images
        self.execute("xmipp_selfile_delete preproc.sel")
-       self.execute("rmdir -rf preproc")
+       self.execute("rm -rf preproc")
 
        # Generate images for reconstruction
        self.copySelFile("preproc_assign.sel","preproc_recons")
