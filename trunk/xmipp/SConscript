@@ -336,6 +336,7 @@ ReconsSources = [
     'angular_distance.cpp',
     'angular_neighbourhood.cpp',
     'angular_projection_matching.cpp',
+    'crystal_angular_projection_matching.cpp',
     'art_crystal.cpp',
     'basic_art.cpp',
     'basis.cpp',
@@ -396,8 +397,7 @@ AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
            ReconsInterfaceSources, ['#libraries', '#external', '#'])
 
 # Common unused sources for the three libraries
-Recons_unused = ['Gibbs.cc', 'Prog_projection_matching_crystal.cc',
-    'Prog_Spots2RealSpace3D.cc']
+Recons_unused = ['Gibbs.cc', 'Prog_Spots2RealSpace3D.cc']
 
 # ReconstrunctionMPI
 if int(env['mpi']):
