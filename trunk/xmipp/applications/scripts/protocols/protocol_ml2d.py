@@ -102,7 +102,10 @@ class ML2D_class:
         self.ExtraParamsMLalign2D=ExtraParamsMLalign2D
         self.DoParallel=DoParallel
         self.MyNumberOfCPUs=MyNumberOfCPUs
-        self.MyMachineFile=os.path.abspath(MyMachineFile)
+        if (MyMachineFile[0]=="$"):
+            self.MyMachineFile=MyMachineFile
+        else:
+            self.MyMachineFile=os.path.abspath(MyMachineFile)
         
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,

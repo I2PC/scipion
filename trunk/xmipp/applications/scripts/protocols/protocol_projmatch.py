@@ -491,7 +491,6 @@ class projection_matching_class:
        self._ResolSam=_ResolSam
        self._DoParallel=_DoParallel
        self._MyNumberOfCPUs=_MyNumberOfCPUs
-       self._MyMachineFile=os.path.abspath(_MyMachineFile)
        self._Symfile=os.path.abspath(str(_Symfile))
        #self._iteration_number=1
        #self._ARTLambda=_ARTLambda
@@ -500,7 +499,10 @@ class projection_matching_class:
        #self._ReconstructionMethod=_ReconstructionMethod
        self._SetResolutiontoZero=_SetResolutiontoZero
        #self._ConstantToAddToFiltration=_ConstantToAddToFiltration
-
+       if (_MyMachineFile[0]=="$"):
+            self.MyMachineFile=_MyMachineFile
+        else:
+            self.MyMachineFile=os.path.abspath(_MyMachineFile)
        
        self._user_suplied_ReferenceVolume=self._ReferenceFileName
        self._Proj_Maching_Output_Root_Name=_Proj_Maching_Output_Root_Name

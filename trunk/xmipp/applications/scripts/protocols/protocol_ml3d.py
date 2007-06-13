@@ -159,7 +159,10 @@ class ML3D_class:
         self.WbpThreshold=WbpThreshold
         self.DoParallel=DoParallel
         self.MyNumberOfCPUs=MyNumberOfCPUs
-        self.MyMachineFile=os.path.abspath(MyMachineFile)
+        if (MyMachineFile[0]=="$"):
+            self.MyMachineFile=MyMachineFile
+        else:
+            self.MyMachineFile=os.path.abspath(MyMachineFile)
 
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,

@@ -343,6 +343,8 @@ class HighRes3DClass:
        self.myNumberOfCPUs=_MyNumberOfCPUs
        if _MyMachineFile[0]=='/':
           self.myMachineFile=os.path.abspath(_MyMachineFile)
+       elif _MyMachineFile[0]=='$':
+          self.myMachineFile=_MyMachineFile
        else:
           self.myMachineFile=os.path.abspath(self.projectDir+"/"+_MyMachineFile)
 
