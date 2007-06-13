@@ -41,10 +41,6 @@ SelectClasses="1,2"
 #------------------------------------------------------------------------------------------------
 # {section} Prepare image headers
 #------------------------------------------------------------------------------------------------
-# Set angles and offsets to headers of untilted images?
-DoSetHeadersUntilted=True
-# Set angles and offsets to headers of tilted images?
-DoSetHeadersTilted=True
 # Perform centering of the tilted particles?
 DoCenterTilted=True
 # Maximum allowed shift for tilted particles (in pixels):
@@ -98,8 +94,6 @@ class RCT_class:
                  LogDir,
                  PreviousDirML2D,
                  SelectClasses,
-                 DoSetHeadersUntilted,
-                 DoSetHeadersTilted,
                  DoCenterTilted,
                  CenterMaxShift,
                  DoUseCosineStretching,
@@ -159,12 +153,8 @@ class RCT_class:
         os.chdir(self.WorkingDir)
 
         self.prepare_classes()
-            
-        if (DoSetHeadersUntilted):
-            self.set_headers_untilted()
-
-        if (DoSetHeadersTilted):
-            self.set_headers_tilted()
+        self.set_headers_untilted()
+        self.set_headers_tilted()
 
         if (DoArtReconstruct):
             self.execute_art()
@@ -340,8 +330,6 @@ if __name__ == '__main__':
                   LogDir,
                   PreviousDirML2D,
                   SelectClasses,
-                  DoSetHeadersUntilted,
-                  DoSetHeadersTilted,
                   DoCenterTilted,
                   CenterMaxShift,
                   DoUseCosineStretching,
