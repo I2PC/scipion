@@ -185,6 +185,7 @@ class selfile:
                if (name1==name):
                    name2,state2=pattern2.sellines[i]
                    newlines.append([name2,state])
+                   break
        newsel=selfile()
        newsel.set(newlines)
        return newsel
