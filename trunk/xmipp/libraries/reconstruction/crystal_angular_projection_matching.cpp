@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "projection_matching_crystal.h"
+#include "crystal_angular_projection_matching.h"
 
 // Read arguments ==========================================================
 void Prog_projection_matching_crystal_prm::read(int argc, char **argv)
