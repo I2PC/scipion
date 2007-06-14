@@ -91,7 +91,7 @@ def AddMPIProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
         LIBS = libs + [env['LIBS']] + [env['MPI_LIB']],
         CXXFLAGS = cxxflags + [env['CXXFLAGS']],
         LINKFLAGS = linkflags + [env['LINKFLAGS']],
-        LINK = env['LINKERFORPROGRAMS']
+        LINK = env['MPI_LINKERFORPROGRAMS']
         )
 
     # alias
