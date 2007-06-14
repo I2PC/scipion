@@ -87,6 +87,7 @@ if (ARGUMENTS['mode']=='configure'):
 
 	# TODO Replace() also here?
 	context.env.Append(LIBS = mpi_lib, LIBPATH = mpi_libpath, CPPPATH = mpi_inc)
+	context.env.Append(LINK = context.env['LINKERFORPROGRAMS'])
 	context.env.Replace(CC = mpi_cc, CXX = mpi_cxx)
 
 	# We only need c++ to compile mpi programs
@@ -148,6 +149,7 @@ if (ARGUMENTS['mode']=='configure'):
 
             # FIXME Copy() does not work well (adds twice the library, 'qt' ...)
             envQT.Replace(QT_LIB = env['QT_LIB'])
+            envQT.Append(LINK = env['LINKERFORPROGRAMS'])
 
             confQT = Configure(envQT, {}, config_dir, config_log)
 
