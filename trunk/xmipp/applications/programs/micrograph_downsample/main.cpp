@@ -25,8 +25,7 @@
 
 #include <data/micrograph_downsample.h>
 #include <data/args.h>
-
-#include "xvsmooth.h"
+#include <data/xvsmooth.h>
 
 void Usage(const Prog_downsample_prm &prm);
 

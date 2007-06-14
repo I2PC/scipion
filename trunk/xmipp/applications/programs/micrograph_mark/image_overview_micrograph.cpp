@@ -28,7 +28,7 @@
 #include "color_label.h"
 
 #include <data/micrograph.h>
-#include <xvsmooth.h>
+#include <data/xvsmooth.h>
 
 #include <qpainter.h>
 
