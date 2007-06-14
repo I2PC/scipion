@@ -28,7 +28,9 @@ DirMicrographs='Micrographs'
     But any wildcard is possible, e.g. *3[1,2].tif
 """
 ExtMicrographs='*.tif'
-# {expert} Name for the output micrograph selfile:
+# Name for the output micrograph selfile:
+""" Be aware that this file will be overwritten if it already exists!
+"""
 MicrographSelfile='all_micrographs.sel'
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
