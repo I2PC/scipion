@@ -283,7 +283,7 @@ void Prog_angular_predict_prm::produce_side_info(int rank)
     }
 
     // Produce library
-    produce_library();
+    produce_library(rank);
 
     // Save a little space
     SF_ref.clear();
@@ -294,7 +294,7 @@ void Prog_angular_predict_prm::produce_side_info(int rank)
 }
 
 // Produce library -----------------------------------------------------------
-void Prog_angular_predict_prm::produce_library()
+void Prog_angular_predict_prm::produce_library(int rank)
 {
     ImageXmipp I;
     int number_of_imgs = SF_ref.ImgNo();
@@ -311,8 +311,10 @@ void Prog_angular_predict_prm::produce_library()
     }
     library_power.initZeros(number_of_imgs, SBNo);
 
-    cerr << "Generating reference library ...\n";
-    init_progress_bar(number_of_imgs);
+    if (rank==0) {
+       cerr << "Generating reference library ...\n";
+       init_progress_bar(number_of_imgs);
+    }
     int n = 0, nstep = MAX(1, number_of_imgs / 60); // For progress bar
     while (!SF_ref.eof())
     {
@@ -335,9 +337,9 @@ void Prog_angular_predict_prm::produce_library()
         }
 
         // Prepare for next iteration
-        if (++n % nstep == 0) progress_bar(n);
+        if (++n % nstep == 0 && rank==0) progress_bar(n);
     }
-    progress_bar(SF_ref.ImgNo());
+    if (rank==0) progress_bar(SF_ref.ImgNo());
 }
 
 // Build candidate list ------------------------------------------------------

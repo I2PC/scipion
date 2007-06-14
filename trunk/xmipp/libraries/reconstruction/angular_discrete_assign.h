@@ -166,7 +166,7 @@ public:
     void produce_side_info(int rank = 0);
 
     /** Produce library.*/
-    void produce_library();
+    void produce_library(int rank = 0);
 
     /** Build candidate list.
         Build a candidate list with all possible reference projections
