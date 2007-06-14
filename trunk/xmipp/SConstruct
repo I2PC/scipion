@@ -24,6 +24,7 @@ else:
 
 opts.Add('CC', 'The C compiler', 'gcc')
 opts.Add('CXX', 'The C++ compiler', 'g++')
+opts.Add('LINKERFORPROGRAMS', 'Linker for programs', 'g++')
 
 # FIXME With ARGUMENTS these should be read...
 #opts.Add('CCFLAGS', 'The C compiler flags', None)

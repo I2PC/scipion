@@ -210,6 +210,7 @@ double *my_vector(int nl, int nh)
 
 
 // Multidimensional integration --------------------------------------------
+#ifndef __INTEL_COMPILER
 Matrix1D<double>  cuhreX0;
 Matrix1D<double>  cuhreXX;
 Matrix1D<double>  cuhreRange;
@@ -223,7 +224,6 @@ void scaledIntegrand(const int *ndim, const double xx[],
     (*cuhreIntegrand)(ndim, MULTIDIM_ARRAY(cuhreXX), ncomp, ff);
 }
 
-#ifdef __GNUC__
 double multidimensionalIntegral(const Matrix1D<double> &x0,
                                 const Matrix1D<double> &xF, integrand_t integrand)
 {

@@ -61,7 +61,8 @@ def AddProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
         LIBPATH = libpath + [env['LIBPATH']],
         LIBS = libs + [env['LIBS']],
         CXXFLAGS = cxxflags + [env['CXXFLAGS']],
-        LINKFLAGS = linkflags + [env['LINKFLAGS']]
+        LINKFLAGS = linkflags + [env['LINKFLAGS']],
+        LINK=env['LINKERFORPROGRAMS']
         )
 
     # alias

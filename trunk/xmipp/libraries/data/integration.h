@@ -33,7 +33,9 @@ using namespace std;
 #include <cmath>
 #include <cstdio>
 #include <iostream>
+#ifndef __INTEL_COMPILER
 #include <external/cuba/cuba.h>
+#endif
 #include "matrix1d.h"
 
 /** @defgroup NumericalIntegration Numerical integration.
@@ -236,7 +238,7 @@ public:
     double midpnt(int n);
 };
 
-#ifdef __GNUC__
+#ifndef __INTEL_COMPILER
 /** Multidimensional integration
     @ingroup Numerical_interation
     Compute the double, triple, ... integral of a function. For instance
