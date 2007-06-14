@@ -90,7 +90,8 @@ def AddMPIProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
         LIBPATH = libpath + [env['LIBPATH']] + [env['MPI_LIBDIR']],
         LIBS = libs + [env['LIBS']] + [env['MPI_LIB']],
         CXXFLAGS = cxxflags + [env['CXXFLAGS']],
-        LINKFLAGS = linkflags + [env['LINKFLAGS']]
+        LINKFLAGS = linkflags + [env['LINKFLAGS']],
+        LINK = env['LINKERFORPROGRAMS']
         )
 
     # alias
@@ -185,7 +186,8 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[]):
     basedir = AddLastSlash(basedir)
     libprefix = os.path.join(env['prefix'], 'lib')
     for x in sources:
-        sources[sources.index(x)] = basedir + x
+        if x.find(basedir)==-1:
+            sources[sources.index(x)] = basedir + x
 
     # separate local and global includes
     for x in includes:
@@ -226,55 +228,10 @@ CubaSources = [
     'cuba/src/cuhre/Cuhre.c']
 
 # Bilib
-BilibSources = [
-    'bilib/sources/changebasis.cc',
-    'bilib/sources/convert.cc',
-    'bilib/sources/dft.cc',
-    'bilib/sources/dht.cc',
-    'bilib/sources/findroot.cc',
-    'bilib/sources/firconvolve.cc',
-    'bilib/sources/flip.cc',
-    'bilib/sources/fold.cc',
-    'bilib/sources/fourierconvolve.cc',
-    'bilib/sources/geometry.cc',
-    'bilib/sources/getpoles.cc',
-    'bilib/sources/getput.cc',
-    'bilib/sources/getputd.cc',
-    'bilib/sources/gradient.cc',
-    'bilib/sources/histogram.cc',
-    'bilib/sources/iirconvolve.cc',
-    'bilib/sources/interpolate.cc',
-    'bilib/sources/kernel.cc',
-    'bilib/sources/kerneldiff1.cc',
-    'bilib/sources/kerneldiff2.cc',
-    'bilib/sources/kerneldiff.cc',
-    'bilib/sources/kernelintegrate.cc',
-    'bilib/sources/linearalgebra.cc',
-    'bilib/sources/minmax.cc',
-    'bilib/sources/morphology.cc',
-    'bilib/sources/movingaverage.cc',
-    'bilib/sources/polynomial.cc',
-    'bilib/sources/positivepower.cc',
-    'bilib/sources/pyramidfilters.cc',
-    'bilib/sources/pyramidtools.cc',
-    'bilib/sources/round.cc',
-    'bilib/sources/swap.cc',
-    'bilib/sources/timestamp.cc',
-    'bilib/sources/traceline.cc',
-    'bilib/sources/window.cc',
-    'bilib/sources/messagedisplay.cc',
-    'bilib/sources/wavelet.cc',
-    'bilib/sources/waveletfiltersfract.cc',
-    'bilib/sources/waveletfilters.cc',
-    'bilib/sources/wavelettools.cc']
+BilibSources = Glob('external/bilib/sources','*.cc',[])
 
 # INRIA
-INRIASources = [
-    'inria/convert.cc',
-    'inria/curvature.cc',
-    'inria/extrema.cc',
-    'inria/recbuffer.cc',
-    'inria/recline.cc']
+INRIASources = Glob('external/inria','*.cc',[])
 
 if env['CC']=='gcc':
    AddLibrary('XmippExternal', 'external',
@@ -286,43 +243,8 @@ else:
       ['bilib', 'bilib/headers', 'bilib/types'])
 
 # XmippData
-DataSources = [
-    'args.cpp',
-    'del_triang.cpp',
-    'denoise.cpp',
-    'de_solver.cpp',
-    'docfile.cpp',
-    'error.cpp',
-    'fft.cpp',
-    'filters.cpp',
-    'funcs.cpp',
-    'geometry.cpp',
-    'header.cpp',
-    'histogram.cpp',
-    'image.cpp',
-    'integration.cpp',
-    'make_spectra.cpp',
-    'mask.cpp',
-    'matrix1d.cpp',
-    'matrix2d.cpp',
-    'matrix3d.cpp',
-    'micrograph.cpp',
-    'micrograph_downsample.cpp',
-    'morphology.cpp',
-    'normalize.cpp',
-    'numerical_recipes.cpp',
-    'progs.cpp',
-    'projection.cpp',
-    'range_adjust.cpp',
-    'rotational_spectrum.cpp',
-    'selfile.cpp',
-    'tomogram.cpp',
-    'volume.cpp',
-    'volume_segment.cpp',
-    'wavelet.cpp']
-
+DataSources = Glob('libraries/data','*.cpp',[])
 AddLibrary('XmippData', 'libraries/data', DataSources, ['#'])
-# FIXME link or not against Bilib?         ['external/bilib'], 'Bilib')
 
 # Reconstruction
 ReconsSources = [
@@ -397,9 +319,6 @@ ReconsInterfaceSources = [
 AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
            ReconsInterfaceSources, ['#libraries', '#external', '#'])
 
-# Common unused sources for the three libraries
-Recons_unused = ['Gibbs.cc', 'Prog_Spots2RealSpace3D.cc']
-
 # ReconstrunctionMPI
 if int(env['mpi']):
     ReconstructionMPISources = ['mpi_run.cpp']
@@ -407,67 +326,18 @@ if int(env['mpi']):
         ReconstructionMPISources, ['#libraries'])
 
 # Classification
-ClassificationSources = [
-    'batch_som.cpp',
-    'code_book.cpp',
-    'distance.cpp',
-    'fcmeans.cpp',
-    'fkcn.cpp',
-    'fuzzy_code_book.cpp',
-    'fuzzy_som.cpp',
-    'gaussian_kerdensom.cpp',
-    'kerdensom.cpp',
-    'map.cpp',
-    'pca.cpp',
-    'plane.cpp',
-    'rbf.cpp',
-    'rm.cpp',
-    'sammon.cpp',
-    'som.cpp',
-    'training_vector.cpp',
-    'tstudent_kerdensom.cpp',
-    'umatrix.cpp']
-
+ClassificationSources = Glob('libraries/classification','*.cpp',[])
 AddLibrary('XmippClassif', 'libraries/classification', ClassificationSources,
     ['#libraries',  '#'])
 
 # Interface
-InterfaceSources = [
-    'aph3d.cpp',
-    'aph.cpp',
-    'aph_origmerg.cpp',
-    'cc_lattice_io.cpp',
-    'ccp4.cpp',
-    'crisp.cpp',
-    'em.cpp',
-    'inria.cpp',
-    'jdl.cpp',
-    'opendxang.cpp',
-    'opendx.cpp',
-    'spider.cpp',
-    'virus.cpp',
-    'vrml.cpp']
-
+InterfaceSources = Glob('libraries/interface','*.cpp',[])
 AddLibrary('XmippInterface', 'libraries/interface', InterfaceSources,
     ['#libraries', '#external', '#'])
 
 # OldXmipp
-OldXmippSources = [
-    'allfft.cpp',
-    'cabecero.cpp',
-    'dimension.cpp',
-    'fft.cpp',
-    'fftmod.cpp',
-    'fftn.cpp',
-    'filtros.cpp',
-    'floatnat.cpp',
-    'iocabecero.cpp',
-    'specmod.cpp',
-    'varios2.cpp',
-    'varios3.cpp',
-    'varios.cpp']
-
-AddLibrary('OldXmipp', 'libraries/legacy', OldXmippSources, [])
+OldXmippSources = Glob('libraries/legacy','*.cpp',[])
+AddLibrary('OldXmipp', 'libraries/legacy', OldXmippSources,[])
 
 # --- Programs
 
@@ -548,13 +418,6 @@ AddXmippProgram('make_spectra')
 AddXmippProgram('mask')
 AddXmippProgram('micrograph_denoise')
 AddXmippProgram('micrograph_downsample')
-# FIXME This hack is required for program Mark
-if int(env['gui']):
-    # object file needed by two targets
-    if int(env['static']):
-        obj_DownSample = StaticObject('applications/programs/micrograph_downsample/xvsmooth.cpp')
-    else:
-        obj_DownSample = SharedObject('applications/programs/micrograph_downsample/xvsmooth.cpp')
 AddXmippProgram('micrograph_scissor')
 AddXmippProgram('micrograph_window')
 AddXmippProgram('mirror')
@@ -768,7 +631,8 @@ if int(env['gui']):
             LIBPATH = envQT['LIBPATH'] + libpath + [env['LIBPATH']],
             LIBS = envQT['LIBS'] + libs + [env['LIBS']],
             CXXFLAGS = cxxflags + [env['CXXFLAGS']],
-            LINKFLAGS = linkflags + [env['LINKFLAGS']]
+            LINKFLAGS = linkflags + [env['LINKFLAGS']],
+            LINK = env['LINKERFORPROGRAMS']
             )
 
         # alias
@@ -823,39 +687,6 @@ if int(env['gui']):
 
     AddXmippQtProgram('edit')
     AddXmippQtProgram('ctf_view', [], ['XmippRecons'])
-
-    # FIXME obj_DownSample is required. cannot use AddQtProgram
-    mark_basedir = AddLastSlash('applications/programs/micrograph_mark')
-    mark_sources = Glob(mark_basedir, '*.cpp', [])
-    mark_mocs = []
-    mark_mocs.append(envQT.Moc(mark_basedir + 'popup_menu_mark.h'))
-
-    mark_objects = []
-    for i in mark_sources:
-        mark_objects.append(i)
-
-    mark_cpppath = envQT['CPPPATH'] + ['libraries', '#',
-        '#applications/programs/micrograph_downsample']
-    mark_libpath = envQT['LIBPATH'] + ['libraries/interface', 'libraries/graphics'
-        , 'libraries/reconstruction', 'libraries/classification', 'libraries/data',
-        'external']
-
-    mark_libs = envQT['LIBS'] + ['XmippInterface', 'XmippGraphics',
-        'XmippRecons', 'XmippClassif', 'XmippData', 'XmippExternal']
-
-    mark_prog = envQT.Program(
-        mark_basedir + env['prepend'] + 'micrograph_mark',
-        mark_objects + mark_mocs + obj_DownSample,
-        CPPPATH = mark_cpppath,
-        LIBPATH = mark_libpath,
-        LIBS = mark_libs
-        )
-
-    mark_alias = env.Alias(env['prepend'] + 'micrograph_mark', mark_prog)
-    mark_install = env.Install(os.path.join(env['prefix'],
-        'bin'), mark_prog)
-    env.Alias(env['prepend'] + 'micrograph_mark', mark_install)
-    env.Default(mark_alias)
-
+    AddXmippQtProgram('micrograph_mark',['popup_menu_mark.h'])
     AddXmippQtProgram('show',[],['XmippClassif', 'XmippRecons'])
     AddXmippQtProgram('mask_design',[],['XmippClassif'])
