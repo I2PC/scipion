@@ -789,6 +789,86 @@ void normalize_ramp(Image *I, const Matrix2D<int> &bg_mask)
 
 }
 
+void normalize_remove_neighbours(Image *I, 
+				 const Matrix2D<int> &bg_mask,
+                                 const double &threshold)
+{
+    fit_point          onepoint;
+    vector<fit_point>  allpoints;
+    double             pA, pB, pC;
+    double             avgbg, stddevbg, minbg, maxbg, aux, newstddev;
+    double             sum1 = 0.;
+    double             sum2 = 0;
+    int                N = 0;
+
+    // Fit a least squares plane through the background pixels
+    allpoints.clear();
+    (*I)().setXmippOrigin();
+    
+    // Get initial statistics
+    computeStats_within_binary_mask(bg_mask, (*I)(), minbg, maxbg, avgbg,stddevbg);
+
+    // Fit plane through those pixels within +/- threshold*sigma
+    FOR_ALL_ELEMENTS_IN_MATRIX2D((*I)())
+    {
+        if (MAT_ELEM(bg_mask, i, j))
+        {
+	    if ( ABS(avgbg - MAT_ELEM((*I)(), i, j)) < threshold * stddevbg)
+	    {
+		onepoint.x = j;
+		onepoint.y = i;
+		onepoint.z = MAT_ELEM((*I)(), i, j);
+		onepoint.w = 1.;
+		allpoints.push_back(onepoint);
+	    }
+	}
+    }
+    least_squares_plane_fit(allpoints, pA, pB, pC);
+
+    // Substract the plane from the image
+    FOR_ALL_ELEMENTS_IN_MATRIX2D((*I)())
+    {
+        MAT_ELEM((*I)(), i, j) -= pA * j + pB * i + pC;
+    }
+
+    // Get std.dev. of the background pixels within +/- threshold*sigma 
+    FOR_ALL_ELEMENTS_IN_MATRIX2D((*I)())
+    {
+        if (MAT_ELEM(bg_mask, i, j))
+        {
+	    if ( ABS(MAT_ELEM((*I)(), i, j)) < threshold * stddevbg)
+	    {
+		N++;
+		sum1 +=  (double) MAT_ELEM((*I)(), i, j);
+		sum2 += ((double) MAT_ELEM((*I)(), i, j)) * 
+		    ((double) MAT_ELEM((*I)(), i, j));
+	    }
+	}
+    }
+    // average and standard deviation
+    aux = sum1 / (double) N;
+    newstddev = sqrt(ABS(sum2 / N - aux*aux) * N / (N - 1));
+
+    // Replace pixels outside +/- threshold*sigma by samples from 
+    // a gaussian with avg-plane and newstddev
+    FOR_ALL_ELEMENTS_IN_MATRIX2D((*I)())
+    {
+        if (MAT_ELEM(bg_mask, i, j))
+        {
+	    if ( ABS(MAT_ELEM((*I)(), i, j)) > threshold * stddevbg)
+	    {
+		// get local average
+		aux = pA * j + pB * i + pC;
+		MAT_ELEM((*I)(), i, j)=rnd_gaus(aux, newstddev );
+	    }
+	}
+    }
+
+    // Divide the entire image by the new background
+    (*I)() /= newstddev;
+
+}
+
 #ifdef NEVER_DEFINED
 // This version doesn't work because of the high variance of avg-avg_bg
 void normalize_NewXmipp(Image *I, const Matrix2D<int> &bg_mask)

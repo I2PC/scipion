@@ -48,6 +48,7 @@ public:
 #define NEWXMIPP2 5
 #define RANDOM 6
 #define RAMP 7
+#define NEIGHBOUR 8
 
     /** Normalizing method.
      * Valid methods are OLDXMIPP, NEAR_OLDXMIPP, NEWXMIPP, NEWXMIPP2, MICHAEL,
@@ -103,7 +104,11 @@ public:
     double thresh_black_dust;
     double thresh_white_dust;
 
-    Matrix2D< int  > bg_mask;
+    /** Sigma threshold for neighbour removal.
+     */
+    double thresh_neigh;
+
+    Matrix2D< int  > bg_mask, bg_mask_bck;
     bool apply_geo;
     bool enable_mask;
     Mask_Params mask_prm;

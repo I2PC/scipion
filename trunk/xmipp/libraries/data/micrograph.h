@@ -652,6 +652,12 @@ void normalize_NewXmipp2(Image *I, const Matrix2D<int> &bg_mask);
     standard deviation of the pixels in the bg_mask */
 void normalize_ramp(Image *I, const Matrix2D<int> &bg_mask);
 
+/** Removal of neighbouring particles
+    .... */
+void normalize_remove_neighbours(Image *I, 
+				 const Matrix2D<int> &bg_mask,
+                                 const double &threshold);
+
 //@}
 //@}
 #endif

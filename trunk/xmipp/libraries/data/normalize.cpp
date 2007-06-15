@@ -55,6 +55,8 @@ void Normalize_parameters::read(int argc, char** argv)
         method = NONE;
     else if (aux == "Ramp")
         method = RAMP;
+    else if (aux == "Neighbour")
+        method = NEIGHBOUR;
     else
         REPORT_ERROR(1, "Normalize: Unknown normalizing method");
 
@@ -69,6 +71,7 @@ void Normalize_parameters::read(int argc, char** argv)
     remove_white_dust = checkParameter(argc, argv, "-remove_white_dust");
     thresh_black_dust = textToFloat(getParameter(argc, argv, "-thr_black_dust", "-3.5"));
     thresh_white_dust = textToFloat(getParameter(argc, argv, "-thr_white_dust", "3.5"));
+    thresh_neigh      = textToFloat(getParameter(argc, argv, "-thr_neigh", "1.2"));
 
     apply_geo = false;
 
@@ -76,7 +79,7 @@ void Normalize_parameters::read(int argc, char** argv)
     if (!volume)
     {
         if (method == NEWXMIPP || method == NEWXMIPP2 || method == MICHAEL ||
-            method == NEAR_OLDXMIPP || method == RAMP)
+            method == NEAR_OLDXMIPP || method == RAMP || method == NEIGHBOUR)
         {
             enable_mask = checkParameter(argc, argv, "-mask");
             if (enable_mask)
@@ -155,6 +158,8 @@ void Normalize_parameters::produce_side_info()
         {
             mask_prm.generate_2Dmask(Ydim, Xdim);
             bg_mask = mask_prm.imask2D;
+	    // backup a copy of the mask for apply_geo mode
+	    bg_mask_bck = bg_mask;
         }
     }
 }
@@ -189,6 +194,9 @@ void Normalize_parameters::show()
         case RAMP:
             std::cout << "Ramp\n";
             break;
+        case NEIGHBOUR:
+            std::cout << "Neighbour\n";
+            break;
         case RANDOM:
             std::cout << "Random a=[" << a0 << "," << aF << "], " << "b=[" <<
             b0 << "," << bF << "]\n";
@@ -196,7 +204,8 @@ void Normalize_parameters::show()
         }
 
         if (method == NEWXMIPP || method == NEWXMIPP2 ||
-            method == NEAR_OLDXMIPP || method == MICHAEL || method == RAMP)
+            method == NEAR_OLDXMIPP || method == MICHAEL || 
+	    method == RAMP || method == NEIGHBOUR)
         {
             std::cout << "Background mode: ";
             switch (background_mode)
@@ -243,7 +252,7 @@ void Normalize_parameters::usage()
     std::cerr << "NORMALIZATION OF IMAGES\n"
     << "  [-method <mth=NewXmipp>   : Normalizing method. Valid ones are:\n"
     << "                              OldXmipp, Near_OldXmipp, NewXmipp\n"
-    << "                              NewXmipp2, Michael, None, Random, Ramp\n"
+    << "                              NewXmipp2, Michael, None, Random, Ramp, Neighbour\n"
     << "                              Methods NewXmipp, Michael, Near_OldXmipp\n"
     << "                              and Ramp need a background mask:\n"
     << "  [-background frame <r>  | : Rectangular background of r pixels\n"
@@ -255,21 +264,27 @@ void Normalize_parameters::usage()
     << "  [-remove_white_dust]      : Remove white dust particles \n"
     << "  [-thr_black_dust=-3.5]    : Sigma threshold for black dust particles \n"
     << "  [-thr_white_dust=3.5]     : Sigma threshold for white dust particles \n"
+    << "  [-thr_neigh]              : Sigma threshold for neighbour removal \n"
     << "  [-prm a0 aF b0 bF]        : Only in random mode. y=ax+b\n";
 }
 
 void Normalize_parameters::apply_geo_mask(ImageXmipp& img)
 {
     Matrix2D< double > tmp;
-    tmp.resize(bg_mask);
-    type_cast(bg_mask, tmp);
+    // get copy of the mask 
+    tmp.resize(bg_mask_bck);
+    type_cast(bg_mask_bck, tmp);
 
     double outside = DIRECT_MAT_ELEM(tmp, 0, 0);
 
     // Instead of IS_INV for images use IS_NOT_INV for masks!
     tmp.selfApplyGeometryBSpline(img.get_transformation_matrix(), 3, IS_NOT_INV,
                                 DONT_WRAP, outside);
-    type_cast(tmp, bg_mask);
+    // The type cast gives strange results here, using round instead
+    //type_cast(tmp, bg_mask);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(bg_mask) {
+      dMij(bg_mask,i,j)=ROUND(dMij(tmp,i,j));
+    }
 }
 
 void Normalize_parameters::apply(Image* img)
@@ -320,6 +335,9 @@ void Normalize_parameters::apply(Image* img)
         break;
     case RAMP:
         normalize_ramp(img, bg_mask);
+        break;
+    case NEIGHBOUR:
+        normalize_remove_neighbours(img, bg_mask, thresh_neigh);
         break;
     case MICHAEL:
         normalize_Michael(img, bg_mask);
