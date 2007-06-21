@@ -341,7 +341,7 @@ void randomize_random_generator();
  * @code
  * cout << "This random number should be between 0 and 1: " << rnd_unif()
  * << endl;
- * @endcodde
+ * @endcode
  */
 float rnd_unif();
 
@@ -703,6 +703,7 @@ public:
      *
      * fn_proj = "g1ta00001";
      * fn_proj = fn_proj.without_root(); // fn_proj == "00001"
+     * @endcode
      */
     FileName without_root() const;
 
