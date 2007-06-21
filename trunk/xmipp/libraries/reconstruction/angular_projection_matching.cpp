@@ -318,6 +318,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	fn_refs=fn_root+"_lib";
 	DF.adjust_to_data_line();
 	nr_dir=0;
+	proj.clear_header();
 	while (!DF.eof())
 	{
 	    ref_rot[nr_dir]=DF(0);
