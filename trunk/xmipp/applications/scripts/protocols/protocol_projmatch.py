@@ -491,7 +491,10 @@ class projection_matching_class:
        self._ResolSam=_ResolSam
        self._DoParallel=_DoParallel
        self._MyNumberOfCPUs=_MyNumberOfCPUs
-       self._Symfile=os.path.abspath(str(_Symfile))
+       if (len(self._Symfile)>0):
+           self._Symfile=os.path.abspath(str(_Symfile))
+       else:
+           self._Symfile=_Symfile
        #self._iteration_number=1
        #self._ARTLambda=_ARTLambda
        self._ARTReconstructionExtraCommand=_ARTReconstructionExtraCommand
@@ -1312,9 +1315,9 @@ def  execute_resolution(_mylog,
 
 
     f.close()
-    print '* maximun resolution (A^-1): ', filter_frequence
-    filter_frequence /= _ResolSam
-    print '* maximun resolution (px^-1): ', filter_frequence
+    print '* maximum resolution (A^-1): ', filter_frequence
+    filter_frequence *= _ResolSam
+    print '* maximum resolution (px^-1): ', filter_frequence
     return filter_frequence
 
 #------------------------------------------------------------------------
