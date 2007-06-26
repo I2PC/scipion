@@ -17,8 +17,8 @@
 SelFileName='all_images.sel'
 
 # {file} Initial 3D reference map:
-#ReferenceFileName='reference.vol'
-ReferenceFileName='init_reference/LTA_rot_0.1_norm.vol'
+ReferenceFileName='reference.vol'
+#ReferenceFileName='init_reference/LTA_rot_0.1_norm.vol'
 
 # Working subdirectory: 
 WorkDirectory='ProjMatch/Test1'
@@ -39,8 +39,8 @@ ContinueAtIteration=1
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-#ProjectDir='/home2/bioinfo/rafa/Protocol/BC/PARA_Roberto'
-ProjectDir='/home/roberto2/Test/PARA_Roberto'
+ProjectDir='/home2/bioinfo/rafa/Protocol/BC/PARA_Roberto'
+#ProjectDir='/home/roberto2/Test/PARA_Roberto'
 
 # {expert} Directory name for logfiles:
 LogDir='Logs'
@@ -61,8 +61,8 @@ DoMask=True
 DisplayMask=False
 
 # {file} Binary mask-file used to mask the reference volume
-#MaskFileName='mask.vol'
-MaskFileName='circular_mask.msk'
+MaskFileName='mask.vol'
+#MaskFileName='circular_mask.msk'
 #-----------------------------------------------------------------------------
 # {section} Projection Matching
 #-----------------------------------------------------------------------------
@@ -367,8 +367,8 @@ NumberOfCPUs=2
 """ Depending on your system, your standard script to launch MPI-jobs may require this
     if your queueing system using an environment variable, give it here (with the leading $, e.g. $PBS_NODEFILE
 """
-#MachineFile='../../../machines.dat'
-MachineFile='../../bin/machines.dat'
+MachineFile='../../../machines.dat'
+#MachineFile='../../bin/machines.dat'
 
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
@@ -491,7 +491,7 @@ class projection_matching_class:
        self._ResolSam=_ResolSam
        self._DoParallel=_DoParallel
        self._MyNumberOfCPUs=_MyNumberOfCPUs
-       if (len(self._Symfile)>0):
+       if (len(_Symfile)>0):
            self._Symfile=os.path.abspath(str(_Symfile))
        else:
            self._Symfile=_Symfile
