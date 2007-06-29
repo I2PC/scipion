@@ -15,10 +15,10 @@
 #-----------------------------------------------------------------------------
 
 # {file} Selfile with the input images:
-SelFileName='imgsCTF.sel'
+SelFileName='noefg_noPath.sel'
 
 # {file} Initial 3D reference map:
-ReferenceFileName='Src/initial_reference.vol'
+ReferenceFileName='noefg_sc64_norm_004.vol'
 
 # {dir} Working subdirectory: 
 WorkDirectory='HighRes3D/test1'
@@ -39,7 +39,7 @@ ResumeIteration=1
 # {expert} {dir} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/home2/bioinfo/coss/TestSencilloCTF'
+ProjectDir='/home2/bioinfo/coss/Ribosome'
 
 # {expert} {dir} Directory name for logfiles:
 LogDir='Logs'
@@ -51,17 +51,17 @@ LogDir='Logs'
 ParticleRadius=32
 
 # Particle mass (Daltons)
-ParticleMass=800000
+ParticleMass=2000000
 
 # {file} Symmetry file
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
     for a description of the symmetry file format
     dont give anything, if no symmetry is present
 """
-SymmetryFile='Src/symmetry.sym'
+SymmetryFile=''
 
 # Sampling rate (Angstrom/pixel)
-SamplingRate=4.2
+SamplingRate=5
 
 #-----------------------------------------------------------------------------
 # {section} Iteration parameters
@@ -91,7 +91,7 @@ PyramidLevels='50x0'
     The discrete angular assignment is done with xmipp_angular_predict:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Angular_predict
 """
-AngularSteps='10x5'
+AngularSteps='10x15 10x10'
 
 # {expert} Reconstruction method
 """ Choose between wbp or art
@@ -104,7 +104,7 @@ AngularSteps='10x5'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-ReconstructionMethod='50xwbp'
+ReconstructionMethod='19xwbp art'
 
 # {expert} Serial ART
 """ Do serial ART even if parallel execution is available. This parameter
@@ -166,7 +166,7 @@ DoComputeResolution='0'
     if you have run this other protocol, you simply have to provide
     the name generated at that stage.
 """
-CTFDat='CTF.dat'
+CTFDat=''
 
 # {expert} Phase correction
 """ Specify whether a phase correction must be done or not.
@@ -193,7 +193,7 @@ AmplitudeCorrection='4x0 1'
 DoReferenceMask='50x1'
 
 # {file} Initial Reference Mask Volume
-InitialReferenceMask='Src/initial_mask.vol'
+InitialReferenceMask='circular_mask.msk'
 
 # {expert} Reference Lowpass filter (Normalized digital freq.)
 """ This vector specifies the frequency at which each reference volume
@@ -857,7 +857,11 @@ class HighRes3DClass:
    # Get image size
    #------------------------------------------------------------------------
    def getImageSize(self):
-      SFaux=self.SF.add_1directory_begin(self.projectDir)
+      [name,state]=self.SF.find_first_active_image()
+      if name[0]=='/':
+         SFaux=self.SF
+      else:
+         SFaux=self.SF.add_1directory_begin(self.projectDir)
       self.xDim,self.yDim=SFaux.imgSize()
       self.workXDim=pow(2.0,math.ceil(math.log10(self.xDim)/math.log10(2.0)));
       self.workingSamplingRate=self.samplingRate*self.xDim/self.workXDim
