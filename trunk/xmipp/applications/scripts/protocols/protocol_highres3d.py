@@ -156,7 +156,7 @@ DoComputeResolution='0'
 #-----------------------------------------------------------------------------
 # {section} CTF Amplitude Correction (assuming previous phase correction)
 #-----------------------------------------------------------------------------
-# {expert} CTF dat file
+# {expert} {file} CTF dat file
 """ This file specify the CTF parameters for each image.
     The file is a two-column text file: the first column corresponds to
     the filename of a projection, and the second column is the
@@ -326,7 +326,10 @@ class HighRes3DClass:
        self.doComputeResolution="0 "+_DoComputeResolution
        self.resumeIteration=_ResumeIteration
 
-       self.CTFDat=os.path.abspath(_CTFDat)
+       if _CTFDat!="":
+          self.CTFDat=os.path.abspath(_CTFDat)
+       else:
+          self.CTFDat=""
        self.phaseCorrection=_PhaseCorrection
        self.amplitudeCorrection="0 "+_AmplitudeCorrection
 		
