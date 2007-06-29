@@ -59,6 +59,12 @@ class selfile:
        for args in self.sellines:
            print args
 
+   def __str__(self):
+       retval=""
+       for name,state in self.sellines:
+           retval+=name+" "+state+"\n"
+       return retval
+
    # Writes selfile to disc
    def write(self,selfilename):
        lines=[]
