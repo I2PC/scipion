@@ -13,9 +13,11 @@
 #------------------------------------------------------------------------------------------------
 # Iterations
 Iterations='1'
+# Show model for angular assignment
+DoShowModelF=False
 # Show reconstructed volume
 DoShowVolume=False
-# Show model
+# Show model after postprocessing
 DoShowModel=False
 # Show angle convergence
 DoShowAngleConvergence=False
@@ -63,6 +65,7 @@ class VisualizeHighres3DClass:
    #------------------------------------------------------------------------
    def __init__(self,
                 _Iterations,
+                _DoShowModelF,
                 _DoShowVolume,
                 _DoShowModel,
                 _DoShowAngleConvergence,
@@ -77,6 +80,7 @@ class VisualizeHighres3DClass:
                 _ProtocolName):
 
        self.iterations=_Iterations
+       self.doShowModelF=_DoShowModelF
        self.doShowVolume=_DoShowVolume
        self.doShowModel=_DoShowModel
        self.doShowAngleConvergence=_DoShowAngleConvergence
@@ -176,6 +180,7 @@ class VisualizeHighres3DClass:
    # Run
    #------------------------------------------------------------------------
    def run(self):
+       if self.doShowModelF: self.showModelsF()
        if self.doShowVolume: self.showVolumes()
        if self.doShowModel:  self.showModels()
        if self.doShowAngleConvergence: self.showAngleConvergence()
@@ -222,6 +227,21 @@ class VisualizeHighres3DClass:
           volumeList=[]
 	  for i in range(len(self.iterationList)):
 	      volumeList.append(self.myHighRes3D.getModelFilename(
+	         self.iterationList[i]))
+          visualization.visualize_volumes(volumeList,
+                                          self.visualizeVolZ,
+                                          self.visualizeVolX,
+                                          self.visualizeVolY,
+                                          self.visualizeVolChimera)
+	     
+   #------------------------------------------------------------------------
+   # Show ModelsF
+   #------------------------------------------------------------------------
+   def showModelsF(self):
+       if not len(self.iterationList)==0:
+          volumeList=[]
+	  for i in range(len(self.iterationList)):
+	      volumeList.append(self.myHighRes3D.getModelFFilename(
 	         self.iterationList[i]))
           visualization.visualize_volumes(volumeList,
                                           self.visualizeVolZ,
@@ -318,6 +338,7 @@ if __name__ == '__main__':
     ProtocolName=sys.argv[1]
 
     visualizeHighres3D=VisualizeHighres3DClass(Iterations,
+                			       DoShowModelF,
                 			       DoShowVolume,
                 			       DoShowModel,
                 			       DoShowAngleConvergence,
