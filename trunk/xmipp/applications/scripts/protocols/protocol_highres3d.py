@@ -80,7 +80,7 @@ SamplingRate=5
     Scaling is done via spline pyramids, please visit:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Pyramid
 """
-PyramidLevels='50x0'
+PyramidLevels='20x1 30x0'
 
 # Angular steps
 """ Angular steps for each of the iterations. This parameter is used to build
@@ -91,7 +91,7 @@ PyramidLevels='50x0'
     The discrete angular assignment is done with xmipp_angular_predict:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Angular_predict
 """
-AngularSteps='10x15 10x10'
+AngularSteps='10x8 10x5 30x2'
 
 # {expert} Reconstruction method
 """ Choose between wbp or art
@@ -104,7 +104,7 @@ AngularSteps='10x15 10x10'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-ReconstructionMethod='19xwbp art'
+ReconstructionMethod='49xwbp art'
 
 # {expert} Serial ART
 """ Do serial ART even if parallel execution is available. This parameter
@@ -145,7 +145,7 @@ DiscreteAssignment='50x1'
     The discrete angular assignment is done with xmipp_angular_predict:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Angular_predict_continuous
 """
-ContinuousAssignment='4x0 1'
+ContinuousAssignment='7x0 1'
 
 # {expert} Compute resolution
 """ Computation of the spectral signal-to-noise ratio is slow, do not abuse it.
@@ -177,7 +177,7 @@ PhaseCorrection=True
 """ Specify whether amplitude correction is performed or not at each
     iteration.
 """
-AmplitudeCorrection='4x0 1'
+AmplitudeCorrection='0'
 
 #-----------------------------------------------------------------------------
 # {section} Post-processing
@@ -729,28 +729,29 @@ class HighRes3DClass:
         	    str(math.ceil(self.particleWorkingRadius*1.1)))
 
        # Produce a set of suitable CTFs
-       if self.phaseCorrection or \
-          (self.getAmplitudeCorrection(_iteration)=="1" \
-           and self.getPyramidLevel(_iteration)=="0"):
-	  CTFs=ctfdat.ctfdat()
-	  CTFs.read("../ctfdat.txt")
-	  preprocCTFs=CTFs.changeDirectory("preproc","../ScaledCTFs")
-	  self.log("# Creating a ctfdat file for preproc")
-          preprocCTFs.write("preproc_ctfdat.txt")
+       if self.CTFDat!="":
+	  if self.phaseCorrection or \
+             (self.getAmplitudeCorrection(_iteration)=="1" \
+              and self.getPyramidLevel(_iteration)=="0"):
+	     CTFs=ctfdat.ctfdat()
+	     CTFs.read("../ctfdat.txt")
+	     preprocCTFs=CTFs.changeDirectory("preproc","../ScaledCTFs")
+	     self.log("# Creating a ctfdat file for preproc")
+             preprocCTFs.write("preproc_ctfdat.txt")
 
-       # Correct for the phase
-       if self.phaseCorrection:
-           self.execute("xmipp_ctf_correct_phase -ctfdat preproc_ctfdat.txt")
+	  # Correct for the phase
+	  if self.phaseCorrection:
+              self.execute("xmipp_ctf_correct_phase -ctfdat preproc_ctfdat.txt")
 
-       # Correct for the amplitude
-       if self.getAmplitudeCorrection(_iteration)=="1" \
-          and self.getPyramidLevel(_iteration)=="0":
-          self.execute("xmipp_header_assign -i "+\
-        	       self.getAlignmentFFilename(_iteration)+" -o preproc.sel"+\
-        	       " -force")
-          self.execute("xmipp_ctf_correct_idr -vol "+\
-        	       self.getModelFFilename(_iteration)+\
-		       " -ctfdat preproc_ctfdat.txt")
+	  # Correct for the amplitude
+	  if self.getAmplitudeCorrection(_iteration)=="1" \
+             and self.getPyramidLevel(_iteration)=="0":
+             self.execute("xmipp_header_assign -i "+\
+        		  self.getAlignmentFFilename(_iteration)+" -o preproc.sel"+\
+        		  " -force")
+             self.execute("xmipp_ctf_correct_idr -vol "+\
+        		  self.getModelFFilename(_iteration)+\
+			  " -ctfdat preproc_ctfdat.txt")
 
        # Generate images for assignment
        self.copySelFile("preproc.sel","preproc_assign")
