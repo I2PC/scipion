@@ -148,12 +148,18 @@ class ML3D_class:
         self.NumberOfReferences=NumberOfReferences
         self.DoGenerateSeeds=DoGenerateSeeds
         self.InitialReference=os.path.abspath(InitialReference)
-        self.SeedsSelfile=os.path.abspath(SeedsSelfile)
+        if (len(SeedsSelfile)>0):
+            self.SeedsSelfile=os.path.abspath(SeedsSelfile)
+        else:
+            self.SeedsSelfile=SeedsSelfile
         self.AngularSampling=AngularSampling
         self.LowPassFilter=LowPassFilter
         self.PixelSize=PixelSize
         self.NumberOfIterations=NumberOfIterations
-        self.SymmetryFile=os.path.abspath(SymmetryFile)
+        if (len(SymmetryFile)>0):
+            self.SymmetryFile=os.path.abspath(SymmetryFile)
+        else:
+            self.SymmetryFile=SymmetryFile
         self.ExtraParamsMLrefine3D=ExtraParamsMLrefine3D
         self.ProjMatchSampling=ProjMatchSampling
         self.WbpThreshold=WbpThreshold
