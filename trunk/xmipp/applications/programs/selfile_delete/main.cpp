@@ -92,6 +92,7 @@ int main(int argc, char *argv[])
             {   //The SelLine is not a comment
                 FileName in_name = line.get_text();
                 comStr = "rm -f " + org_path + in_name;
+                system(comStr.c_str());
             }
             SF.next();
         }  // while
