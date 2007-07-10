@@ -616,8 +616,12 @@ void CTFDat::read(const FileName &fnCTFdat)
     while (!fhCtfdat.eof())
     {
         FileName fnProjection, fnCTF;
-        fhCtfdat >> fnProjection >> fnCTF;
-	append(fnProjection,fnCTF);
+	fhCtfdat >> fnProjection >> fnCTF;
+	// Sjors 10 jul 2007: this seems to be necessary...
+	if (fnProjection!="")
+	{
+	    append(fnProjection,fnCTF);
+	}
     } 
     fhCtfdat.close();
 }
