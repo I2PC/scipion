@@ -65,10 +65,10 @@ void CorrectAmplitude3DParams::usage()
 {
     std::cerr << "   -ctfdat <CTF datfile>               : 2-column ASCII file with name of volume and CTF param for each defocus group\n"
 	      << "   -nr_imgs <docfile>                  : Docfile with number of images in each defocus group\n"
-              << "  [-o \"wiener\"]                     : Output rootname \n"
-              << "  [-minres <Ang>]                     : Apply Wiener filter only beyond this resolution (in Angstrom)\n"
-              << "  [-phase_flipped]                    : Use this if the maps were reconstructed from phase corrected images \n"
-              << "  [-wc <0.05>]                         : Wiener constant to prevent boosting of noise \n"
+              << "  [-o \"wiener\"]                        : Output rootname \n"
+              << "  [-minres <Ang>]                      : Apply Wiener filter only beyond this resolution (in Angstrom)\n"
+              << "  [-phase_flipped]                     : Use this if the maps were reconstructed from phase corrected images \n"
+              << "  [-wc <0.05>]                         : Wiener constant (to be multiplied by the total number of images) \n"
 //              << "  [-env <selfile>]                     : selfile to ASCII files with envelope for each defocus group\n"
     ;
 }
