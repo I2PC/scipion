@@ -269,6 +269,7 @@ ReconsSources = [
     'crystal_create_surface.cpp',
     'ctf_correct_idr.cpp',
     'ctf_correct_phase.cpp',
+    'ctf_correct_amplitude3d.cpp',
     'ctf.cpp',
     'ctf_estimate_from_micrograph.cpp',
     'directions.cpp',
@@ -398,6 +399,7 @@ AddXmippProgram('crystal_skew',              	['XmippRecons'])
 AddXmippProgram('crystal_unbend',             	['XmippRecons','XmippRecons_Interface'])
 AddXmippProgram('ctf_correct_idr',           	['XmippRecons'])
 AddXmippProgram('ctf_correct_phase',         	['XmippRecons'])
+AddXmippProgram('ctf_correct_amplitude3d',  	['XmippRecons'])
 AddXmippProgram('ctf_estimate_from_micrograph', ['XmippRecons'])
 AddXmippProgram('ctf_estimate_from_psd',        ['XmippRecons'])
 AddXmippProgram('ctf_profile',               	['XmippRecons'])
