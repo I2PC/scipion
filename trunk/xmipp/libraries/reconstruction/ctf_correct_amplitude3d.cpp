@@ -219,7 +219,10 @@ void CorrectAmplitude3DParams::generateWienerFilters()
 	{
 	    res = (step * sqrt(3.) ) / 
 		(OVERSAMPLE * sqrt( (double) (Zdim*Zdim + Ydim*Ydim + Xdim*Xdim) ) );
-	    fh << res << " " << Vwien1D[ii](step) << " " << Vctfs1D[ii](step) << "\n";
+	    if (res<=0.5)
+	    {
+		fh << res << " " << Vwien1D[ii](step) << " " << Vctfs1D[ii](step) << "\n";
+	    }
 	}
 	fh.close();
     }
