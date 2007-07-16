@@ -141,7 +141,7 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     // Fourier mode specific stuff
     if (fourier_mode)
     {
-        fn_ctf = getParameter(argc, argv, "-ctfs");
+        fn_ctf = getParameter(argc, argv, "-ctfs","");
         fn_root = getParameter(argc, argv, "-o", "mlf2d");
         search_shift = textToFloat(getParameter(argc, argv, "-search_shift", "3"));
         lowres_limit = textToInteger(getParameter(argc, argv, "-low", "0"));
@@ -213,7 +213,11 @@ void Prog_MLalign2D_prm::show(bool ML3D)
             cerr << "  Initial model fractions : " << fn_frac << endl;
         if (fourier_mode)
         {
-            cerr << "  -> Use a coloured noise model, with CTF-restoration " << endl;
+            cerr << "  -> Use a coloured noise model " << endl;
+            if (fn_ctf=="")
+                cerr << "    + Ignoring CTF-effects! (provide -ctfs to include these)"<<endl;
+	    else
+		cerr << "    + Correcting for CTF-effects. "<<endl;
             if (reduce_snr < 1.)
                 cerr << "    + Multiply estimated SNR by " << reduce_snr << endl;
         }
@@ -557,52 +561,74 @@ void Prog_MLalign2D_prm::produce_Side_info()
         Vctf.clear();
         Vdec.clear();
         Vsig.clear();
-        SFtmp.read(fn_ctf);
-        if (SFtmp.ImgNo() != nr_focus)
-            REPORT_ERROR(1, "Prog_MLalign2D: Different number of CTFs in -ctfs and in -i");
-        SFtmp.go_beginning();
-        FOR_ALL_DEFOCUS_GROUPS()
-        {
-            Vctf.push_back(dum);
-            Vdec.push_back(dum);
-            Vsig.push_back(dum);
-            ctf.read(SFtmp.NextImg());
-            ctf.DeltafV = ctf.DeltafU;
-            ctf.K = 1.;
-            ctf.enable_CTF = true;
-            ctf.Produce_Side_Info();
-            ctf.Generate_CTF(dim, dim, ctfmask);
-            if (ifocus == 0)
-            {
-                sampling = ctf.Tm;
-                Q0 = ctf.Q0;
-            }
-            else
-            {
-                if (sampling != ctf.Tm)
-                    REPORT_ERROR(1, "Prog_MLalign2D-ERROR%% Different sampling rates in CTF parameter files!");
-                if ((Q0 != ctf.Q0) && (verb > 0))
-                    cerr << "WARNING%% You may want to avoid different Q0 values in the CTF parameter files";
-            }
-            Maux.resize(dim, dim);
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Maux)
-            {
-                if (phase_flipped) dMij(Maux, i, j) = fabs(dMij(ctfmask, i, j).real());
-                else dMij(Maux, i, j) = dMij(ctfmask, i, j).real();
-            }
-            CenterFFT(Maux, true);
-            Maux.setXmippOrigin();
-            center.initZeros();
-            rmean_ctf.initZeros();
-            radialAverage(Maux, center, rmean_ctf, radial_count, true);
-            Vctf[ifocus].resize(hdim);
-            for (int irr = 0; irr < hdim; irr++)
-            {
-                dVi(Vctf[ifocus], irr) = dVi(rmean_ctf, irr);
-            }
-            Vdec[ifocus].resize(Vctf[ifocus]);
-            Vsig[ifocus].resize(Vctf[ifocus]);
-        }
+
+	if (fn_ctf!="")
+	{
+	    SFtmp.read(fn_ctf);
+	    if (SFtmp.ImgNo() != nr_focus)
+		REPORT_ERROR(1, "Prog_MLalign2D: Different number of CTFs in -ctfs and in -i");
+	    SFtmp.go_beginning();
+	    FOR_ALL_DEFOCUS_GROUPS()
+	    {
+		Vctf.push_back(dum);
+		Vdec.push_back(dum);
+		Vsig.push_back(dum);
+		ctf.read(SFtmp.NextImg());
+		ctf.DeltafV = ctf.DeltafU;
+		ctf.K = 1.;
+		ctf.enable_CTF = true;
+		ctf.Produce_Side_Info();
+		ctf.Generate_CTF(dim, dim, ctfmask);
+		if (ifocus == 0)
+		{
+		    sampling = ctf.Tm;
+		    Q0 = ctf.Q0;
+		}
+		else
+		{
+		    if (sampling != ctf.Tm)
+			REPORT_ERROR(1, "Prog_MLalign2D-ERROR%% Different sampling rates in CTF parameter files!");
+		    if ((Q0 != ctf.Q0) && (verb > 0))
+			cerr << "WARNING%% You may want to avoid different Q0 values in the CTF parameter files";
+		}
+		Maux.resize(dim, dim);
+		FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Maux)
+		    {
+			if (phase_flipped) dMij(Maux, i, j) = fabs(dMij(ctfmask, i, j).real());
+			else dMij(Maux, i, j) = dMij(ctfmask, i, j).real();
+		    }
+		CenterFFT(Maux, true);
+		Maux.setXmippOrigin();
+		center.initZeros();
+		rmean_ctf.initZeros();
+		radialAverage(Maux, center, rmean_ctf, radial_count, true);
+		Vctf[ifocus].resize(hdim);
+		for (int irr = 0; irr < hdim; irr++)
+		{
+		    dVi(Vctf[ifocus], irr) = dVi(rmean_ctf, irr);
+		}
+		Vdec[ifocus].resize(Vctf[ifocus]);
+		Vsig[ifocus].resize(Vctf[ifocus]);
+	    }
+	}
+	else
+	{
+	    // No CTFs: set Vctf to all-1
+	    sampling=1.;
+	    FOR_ALL_DEFOCUS_GROUPS()
+	    {
+		Vctf.push_back(dum);
+		Vdec.push_back(dum);
+		Vsig.push_back(dum);
+		Vctf[ifocus].resize(hdim);
+		Vdec[ifocus].resize(hdim);
+		Vsig[ifocus].resize(hdim);
+		for (int irr = 0; irr < hdim; irr++)
+		{
+		    dVi(Vctf[ifocus], irr) = 1.;
+		}
+	    }
+	}
 
         // Get a resolution pointer in Fourier-space
         Mresol.resize(dim, dim);
@@ -791,33 +817,45 @@ void Prog_MLalign2D_prm::calculate_wiener_defocus_series(Matrix1D<double> &spect
     // group with its CTF^2 and divide by the average CTF^2
     FOR_ALL_DEFOCUS_GROUPS()
     {
-        for (int irr = 0; irr < hdim; irr++)
-        {
-            noise = 2. * dVi(Vsig[ifocus], irr) * (double)count_defocus[ifocus];
-            noise /= (double)(count_defocus[ifocus] - 1);
-            if (noise < 1e-20) dVi(Vsnr[ifocus], irr) = 0.;
-            else
-            {
-                if (dVi(Vavgctf2, irr) > 0.)
-                {
-                    dVi(Vsnr[ifocus], irr) = reduce_snr * dVi(Vctf[ifocus], irr) * dVi(Vctf[ifocus], irr) *
-                                             dVi(spectral_signal, irr) / (dVi(Vavgctf2, irr) * noise);
-                }
-                else dVi(Vsnr[ifocus], irr) = 0.;
-            }
-            // For start from already CTF-deconvoluted references:
-            if ((iter == istart - 1) && !first_iter_noctf)
-                dVi(Vsnr[ifocus], irr) *= dVi(Vavgctf2, irr);
-            // Take ini_highres_limit into account
-            if ((iter == istart - 1) && (ini_highres_limit > 0) && (irr > ini_highres_limit))
-                dVi(Vsnr[ifocus], irr) = 0.;
-            // Subtract 1 according Unser et al.
-            dVi(Vsnr[ifocus], irr) = MAX(0., dVi(Vsnr[ifocus], irr) - 1.);
-            // Prevent spurious high-frequency significant SNRs from random averages
-            if (iter == 0 && do_generate_refs)
-                dVi(Vsnr[ifocus], irr) = MAX(0., dVi(Vsnr[ifocus], irr) - 2.);
-            if (dVi(Vsnr[ifocus], irr) > 0. && irr > maxres) maxres = irr;
-        }
+	if (fn_ctf!="")
+	{
+	    for (int irr = 0; irr < hdim; irr++)
+	    {
+		noise = 2. * dVi(Vsig[ifocus], irr) * (double)count_defocus[ifocus];
+		noise /= (double)(count_defocus[ifocus] - 1);
+		if (noise < 1e-20) dVi(Vsnr[ifocus], irr) = 0.;
+		else
+		{
+		    if (dVi(Vavgctf2, irr) > 0.)
+		    {
+			dVi(Vsnr[ifocus], irr) = reduce_snr * dVi(Vctf[ifocus], irr) * dVi(Vctf[ifocus], irr) *
+			    dVi(spectral_signal, irr) / (dVi(Vavgctf2, irr) * noise);
+		    }
+		    else dVi(Vsnr[ifocus], irr) = 0.;
+		}
+		// For start from already CTF-deconvoluted references:
+		if ((iter == istart - 1) && !first_iter_noctf)
+		    dVi(Vsnr[ifocus], irr) *= dVi(Vavgctf2, irr);
+		// Take ini_highres_limit into account
+		if ((iter == istart - 1) && (ini_highres_limit > 0) && (irr > ini_highres_limit))
+		    dVi(Vsnr[ifocus], irr) = 0.;
+		// Subtract 1 according Unser et al.
+		dVi(Vsnr[ifocus], irr) = MAX(0., dVi(Vsnr[ifocus], irr) - 1.);
+		// Prevent spurious high-frequency significant SNRs from random averages
+		if (iter == 0 && do_generate_refs)
+		    dVi(Vsnr[ifocus], irr) = MAX(0., dVi(Vsnr[ifocus], irr) - 2.);
+		if (dVi(Vsnr[ifocus], irr) > 0. && irr > maxres) maxres = irr;
+	    }
+	}
+	else
+	{
+	    // without CTFs: just integrate over all frequencies
+	    for (int irr = 0; irr < hdim; irr++)
+	    {
+		dVi(Vsnr[ifocus], irr) = 100.;
+	    }
+	    maxres=hdim;
+	}
     }
 
     // Pre-calculate denominator of eq 2.32b of Frank's book (2nd ed.)
@@ -1174,6 +1212,8 @@ void Prog_MLalign2D_prm::produce_Side_info2(int nr_vols)
             // Divide by the number of reference volumes
             // But I don't know alpha (from 3DSSNR) yet:
             // Introduce a fudge-factor of 2 to prevent over-estimation ...
+	    // I think this is irrelevant, as the spectral_signal is
+	    // re-calculated in ml_refine3d.cpp
             spectral_signal /= (double)nr_vols * 2.;
         }
         else
@@ -2528,7 +2568,11 @@ void Prog_MLalign2D_prm::ML_integrate_locally(
     // Update the optimal origin in-plane transformations
     opt_offsets(0) = opt_offsets_ref[2*opt_irefmir] + Vtrans[opt_itrans](0);
     opt_offsets(1) = opt_offsets_ref[2*opt_irefmir+1] + Vtrans[opt_itrans](1);
-    opt_psi = -psi_step * (opt_iflip * nr_psi + opt_ipsi) - SMALLANGLE;
+    // Sjors 16jul07: repaired bug for -save_memC?
+    if (save_mem3)
+        opt_psi = -opt_iflip * 360. / nr_flip - SMALLANGLE;
+    else
+	opt_psi = -psi_step * (opt_iflip * nr_psi + opt_ipsi) - SMALLANGLE;
     fracweight = maxweight / sum_refw;
 
     if (do_mirror) nr_mir = 2;
@@ -2792,7 +2836,12 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
                      (double)iopty * DIRECT_MAT_ELEM(F[ioptflip], 0, 1);
     opt_offsets(1) = -(double)ioptx * DIRECT_MAT_ELEM(F[ioptflip], 1, 0) -
                      (double)iopty * DIRECT_MAT_ELEM(F[ioptflip], 1, 1);
-    opt_psi = -psi_step * (ioptflip * nr_psi + ioptpsi) - SMALLANGLE;
+
+    // Sjors 16jul07: repaired bug for -save_memC?
+    if (save_mem3)
+        opt_psi = -ioptflip * 360. / nr_flip - SMALLANGLE;
+    else
+	opt_psi = -psi_step * (ioptflip * nr_psi + ioptpsi) - SMALLANGLE;
     fracweight = maxweight / sum_refw;
 
     // Compute Log Likelihood
