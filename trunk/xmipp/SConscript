@@ -45,13 +45,19 @@ def AddBatch(name, basedir, extension = ''):
 
 # FIXME default parameters' order, to save writing []
 def AddProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
-    includes = [], libpath = [], libs = [], cxxflags = [], linkflags = []):
+               includes = [], libpath = [], libs = [], cxxflags = [],
+               linkflags = []):
     ''' add a new program to the build list '''
     # setup
     basedir = AddLastSlash(basedir)
     fullname = env['prepend'] + name
     sources = Glob(basedir, sources_pattern, skip_list)
     binprefix = os.path.join(env['prefix'], 'bin')
+
+    # FIXME fix for static executables
+    if env['static']:
+        cxxflags += [env['STATIC_FLAG']]
+        linkflags += [env['STATIC_FLAG']]
 
     # action
     program = env.Program(
@@ -62,7 +68,7 @@ def AddProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
         LIBS = libs + [env['LIBS']],
         CXXFLAGS = cxxflags + [env['CXXFLAGS']],
         LINKFLAGS = linkflags + [env['LINKFLAGS']],
-        LINK=env['LINKERFORPROGRAMS']
+        LINK = env['LINKERFORPROGRAMS']
         )
 
     # alias
@@ -72,13 +78,19 @@ def AddProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
     env.Default(alias)
 
 def AddMPIProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
-    includes = [], libpath = [], libs = [], cxxflags = [], linkflags = []):
+                  includes = [], libpath = [], libs = [], cxxflags = [],
+                  linkflags = []):
 
     # setup
     basedir = AddLastSlash(basedir)
     fullname = env['prepend'] + name
     sources = Glob(basedir, sources_pattern, skip_list)
     binprefix = os.path.join(env['prefix'], 'bin')
+
+    # FIXME fix for static executables
+    if env['static']:
+        cxxflags += [env['STATIC_FLAG']]
+        linkflags += [env['STATIC_FLAG']]
 
     # action
     program = env.Program(
@@ -101,40 +113,40 @@ def AddMPIProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
     env.Default(alias)
 
 # Add a program integrated in the Xmipp structure
-def AddXmippProgram(name,libs=[]):
-    finalLibPath=['libraries/data', 'external']
-    finalIncludePath=['libraries','#']
-    finalLibs=['XmippData', 'XmippExternal']+libs
+def AddXmippProgram(name, libs=[]):
+    finalLibPath = ['libraries/data', 'external']
+    finalIncludePath = ['libraries','#']
+    finalLibs = libs + ['XmippData', 'XmippExternal']
     for i in range(len(libs)):
-       if libs[i]=='XmippRecons':
-          finalLibPath+=['libraries/reconstruction']
-       elif libs[i]=='XmippInterface':
-          finalLibPath+=['libraries/interface']
-       elif libs[i]=='XmippRecons_Interface':
-          finalLibPath+=['libraries/interface']
-	  finalLibs+=['XmippInterface']
-       elif libs[i]=='XmippClassif':
-          finalLibPath+=['libraries/classification']
-    AddProgram(name, 'applications/programs/'+name, '*.cpp', [],
+       if libs[i] == 'XmippRecons':
+          finalLibPath += ['libraries/reconstruction']
+       elif libs[i] == 'XmippInterface':
+          finalLibPath += ['libraries/interface']
+       elif libs[i] == 'XmippRecons_Interface':
+          finalLibPath += ['libraries/interface']
+	  finalLibs += ['XmippInterface']
+       elif libs[i] == 'XmippClassif':
+          finalLibPath += ['libraries/classification']
+    AddProgram(name, 'applications/programs/' + name, '*.cpp', [],
         finalIncludePath, finalLibPath, finalLibs, [], [])
 
-def AddXmippMPIProgram(name,libs=[]):
-    finalLibPath=['libraries/data', 'external']
-    finalIncludePath=['libraries','#']
-    finalLibs=['XmippData', 'XmippExternal']+libs
+def AddXmippMPIProgram(name, libs=[]):
+    finalLibPath = ['libraries/data', 'external']
+    finalIncludePath = ['libraries','#']
+    finalLibs = libs + ['XmippData', 'XmippExternal']
     for i in range(len(libs)):
-       if libs[i]=='XmippRecons':
-          finalLibPath+=['libraries/reconstruction']
-       elif libs[i]=='XmippInterface':
-          finalLibPath+=['libraries/interface']
-       elif libs[i]=='XmippRecons_Interface':
-          finalLibPath+=['libraries/interface']
-	  finalLibs+=['XmippInterface']
-       elif libs[i]=='XmippReconsMPI':
-          finalLibPath+=['libraries/reconstruction_mpi']
-       elif libs[i]=='XmippClassif':
-          finalLibPath+=['libraries/classification']
-    AddMPIProgram(name, 'applications/programs/'+name, '*.cpp', [],
+       if libs[i] == 'XmippRecons':
+          finalLibPath += ['libraries/reconstruction']
+       elif libs[i] == 'XmippInterface':
+          finalLibPath += ['libraries/interface']
+       elif libs[i] == 'XmippRecons_Interface':
+          finalLibPath += ['libraries/interface']
+	  finalLibs += ['XmippInterface']
+       elif libs[i] == 'XmippReconsMPI':
+          finalLibPath += ['libraries/reconstruction_mpi']
+       elif libs[i] == 'XmippClassif':
+          finalLibPath += ['libraries/classification']
+    AddMPIProgram(name, 'applications/programs/' + name, '*.cpp', [],
         finalIncludePath, finalLibPath, finalLibs, [], [])
 
 # For Roberto's new lib
@@ -202,7 +214,8 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[]):
             sources,
             CPPPATH = includes + [env['CPPPATH']],
             LIBPATH = libpath,
-            LIBS = libs            )
+            LIBS = libs
+            )
     else:
         library = env.SharedLibrary(
             basedir + name,
@@ -228,18 +241,18 @@ CubaSources = [
     'cuba/src/cuhre/Cuhre.c']
 
 # Bilib
-BilibSources = Glob('external/bilib/sources','*.cc',[])
+BilibSources = Glob('external/bilib/sources', '*.cc', [])
 
 # INRIA
-INRIASources = Glob('external/inria','*.cc',[])
+INRIASources = Glob('external/inria', '*.cc', [])
 
-if env['CC']=='gcc':
+if env['CC'] == 'gcc':
    AddLibrary('XmippExternal', 'external',
-      INRIASources+BilibSources+CubaSources,
+      INRIASources + BilibSources + CubaSources,
       ['bilib', 'bilib/headers', 'bilib/types', 'cuba/src/common'])
 else:
    AddLibrary('XmippExternal', 'external',
-      INRIASources+BilibSources,
+      INRIASources + BilibSources,
       ['bilib', 'bilib/headers', 'bilib/types'])
 
 # XmippData
@@ -327,17 +340,17 @@ if int(env['mpi']):
         ReconstructionMPISources, ['#libraries'])
 
 # Classification
-ClassificationSources = Glob('libraries/classification','*.cpp',[])
+ClassificationSources = Glob('libraries/classification', '*.cpp', [])
 AddLibrary('XmippClassif', 'libraries/classification', ClassificationSources,
     ['#libraries',  '#'])
 
 # Interface
-InterfaceSources = Glob('libraries/interface','*.cpp',[])
+InterfaceSources = Glob('libraries/interface', '*.cpp', [])
 AddLibrary('XmippInterface', 'libraries/interface', InterfaceSources,
     ['#libraries', '#external', '#'])
 
 # OldXmipp
-OldXmippSources = Glob('libraries/legacy','*.cpp',[])
+OldXmippSources = Glob('libraries/legacy', '*.cpp',[])
 AddLibrary('OldXmipp', 'libraries/legacy', OldXmippSources,[])
 
 # --- Programs
@@ -350,65 +363,63 @@ AddProgram('find_center2d', 'applications/legacy/find_center2d', '*.cpp', [],
 # Src (apps)
 
 AddXmippProgram('add_noise')
-AddXmippProgram('adjust_volume_grey_levels',  	['XmippRecons'])
-AddXmippProgram('align2d',                    	['XmippRecons'])
-AddXmippProgram('align_tilt_pairs',             ['XmippRecons'])
+AddXmippProgram('adjust_volume_grey_levels', ['XmippRecons'])
+AddXmippProgram('align2d', ['XmippRecons'])
+AddXmippProgram('align_tilt_pairs', ['XmippRecons'])
 AddXmippProgram('align_volumes')
-AddXmippProgram('angular_assign_for_tomogram',	['XmippRecons'])
-AddXmippProgram('angular_continuous_assign',  	['XmippRecons'])
-AddXmippProgram('angular_discrete_assign',    	['XmippRecons'])
-AddXmippProgram('angular_distance',           	['XmippRecons'])
-AddXmippProgram('angular_distribution_show',  	['XmippInterface'])
-AddXmippProgram('angular_neighbourhood',      	['XmippRecons'])
-AddXmippProgram('angular_projection_matching',	['XmippRecons'])
+AddXmippProgram('angular_assign_for_tomogram', ['XmippRecons'])
+AddXmippProgram('angular_continuous_assign', ['XmippRecons'])
+AddXmippProgram('angular_discrete_assign', ['XmippRecons'])
+AddXmippProgram('angular_distance', ['XmippRecons'])
+AddXmippProgram('angular_distribution_show', ['XmippInterface'])
+AddXmippProgram('angular_neighbourhood', ['XmippRecons'])
+AddXmippProgram('angular_projection_matching', ['XmippRecons'])
 AddXmippProgram('average')
 AddXmippProgram('break_symmetry',               ['XmippRecons'])
-
 # FIXME -Wno-deprecated
-AddXmippProgram('classify_batch_som',           ['XmippClassif'])
-AddXmippProgram('classify_fcmeans',          	['XmippClassif'])
-AddXmippProgram('classify_fkcn',             	['XmippClassif'])
-AddXmippProgram('classify_fsom',              	['XmippClassif'])
-AddXmippProgram('classify_kcmeans',          	['XmippClassif'])
-AddXmippProgram('classify_kerdensom',        	['XmippClassif'])
-AddXmippProgram('classify_pca',	             	['XmippClassif'])
-AddXmippProgram('classify_project_pca',      	['XmippClassif'])
-AddXmippProgram('classify_sammon_projection', 	['XmippClassif'])
-AddXmippProgram('classify_som',              	['XmippClassif'])
-
-AddXmippProgram('convert_data2descr',         	['XmippClassif'])
-AddXmippProgram('convert_data2img',           	['XmippClassif'])
-AddXmippProgram('convert_data2pdb',           	['XmippClassif'])
-AddXmippProgram('convert_data2vol',          	['XmippClassif'])
+AddXmippProgram('classify_batch_som', ['XmippClassif'])
+AddXmippProgram('classify_fcmeans', ['XmippClassif'])
+AddXmippProgram('classify_fkcn', ['XmippClassif'])
+AddXmippProgram('classify_fsom',  ['XmippClassif'])
+AddXmippProgram('classify_kcmeans', ['XmippClassif'])
+AddXmippProgram('classify_kerdensom', ['XmippClassif'])
+AddXmippProgram('classify_pca', ['XmippClassif'])
+AddXmippProgram('classify_project_pca', ['XmippClassif'])
+AddXmippProgram('classify_sammon_projection', ['XmippClassif'])
+AddXmippProgram('classify_som',['XmippClassif'])
+AddXmippProgram('convert_data2descr', ['XmippClassif'])
+AddXmippProgram('convert_data2img', ['XmippClassif'])
+AddXmippProgram('convert_data2pdb', ['XmippClassif'])
+AddXmippProgram('convert_data2vol', ['XmippClassif'])
 AddXmippProgram('convert_img2data')
-AddXmippProgram('convert_pdb2vol',              ['XmippRecons'])
+AddXmippProgram('convert_pdb2vol', ['XmippRecons'])
 AddXmippProgram('convert_raw22spi')
-AddXmippProgram('convert_spi22em',           	['XmippRecons','XmippRecons_Interface'])
-AddXmippProgram('convert_spi22ccp4',         	['XmippRecons','XmippRecons_Interface'])
+AddXmippProgram('convert_spi22em', ['XmippRecons','XmippRecons_Interface'])
+AddXmippProgram('convert_spi22ccp4', ['XmippRecons','XmippRecons_Interface'])
 AddXmippProgram('convert_vol2data')
 AddXmippProgram('convert_vol2pseudo')
 AddXmippProgram('convert_voxels22blobs',      	['XmippRecons'])
-AddXmippProgram('correlation',                  ['XmippRecons','XmippInterface'])
+AddXmippProgram('correlation', ['XmippRecons','XmippInterface'])
 AddXmippProgram('crystal_angular_projection_matching',	['XmippRecons'])
-AddXmippProgram('crystal_aph2img',           	['XmippRecons','XmippRecons_Interface'])
-AddXmippProgram('crystal_create_surface',    	['XmippRecons'])
-AddXmippProgram('crystal_euler2mrc',         	['XmippRecons','XmippRecons_Interface'])
+AddXmippProgram('crystal_aph2img', ['XmippRecons','XmippRecons_Interface'])
+AddXmippProgram('crystal_create_surface', ['XmippRecons'])
+AddXmippProgram('crystal_euler2mrc', ['XmippRecons','XmippRecons_Interface'])
 AddXmippProgram('crystal_lattice_vectors')
-AddXmippProgram('crystal_shear',             	['XmippRecons','XmippInterface'])
-AddXmippProgram('crystal_skew',              	['XmippRecons'])
-AddXmippProgram('crystal_unbend',             	['XmippRecons','XmippRecons_Interface'])
-AddXmippProgram('ctf_correct_idr',           	['XmippRecons'])
-AddXmippProgram('ctf_correct_phase',         	['XmippRecons'])
-AddXmippProgram('ctf_correct_amplitude3d',  	['XmippRecons'])
+AddXmippProgram('crystal_shear', ['XmippRecons','XmippInterface'])
+AddXmippProgram('crystal_skew', ['XmippRecons'])
+AddXmippProgram('crystal_unbend', ['XmippRecons', 'XmippRecons_Interface'])
+AddXmippProgram('ctf_correct_idr', ['XmippRecons'])
+AddXmippProgram('ctf_correct_phase', ['XmippRecons'])
+AddXmippProgram('ctf_correct_amplitude3d', ['XmippRecons'])
 AddXmippProgram('ctf_estimate_from_micrograph', ['XmippRecons'])
-AddXmippProgram('ctf_estimate_from_psd',        ['XmippRecons'])
-AddXmippProgram('ctf_profile',               	['XmippRecons'])
+AddXmippProgram('ctf_estimate_from_psd', ['XmippRecons'])
+AddXmippProgram('ctf_profile', ['XmippRecons'])
 AddXmippProgram('denoise')
 AddXmippProgram('docfile_append')
 AddXmippProgram('docfile_histogram')
 AddXmippProgram('find_center3d')
-AddXmippProgram('foms_evaluate',              	['XmippRecons'])
-AddXmippProgram('fourier_filter',             	['XmippRecons'])
+AddXmippProgram('foms_evaluate', ['XmippRecons'])
+AddXmippProgram('fourier_filter', ['XmippRecons'])
 AddXmippProgram('fourier_transform')
 AddXmippProgram('header_apply')
 AddXmippProgram('header_assign')
@@ -423,25 +434,26 @@ AddXmippProgram('micrograph_downsample')
 AddXmippProgram('micrograph_scissor')
 AddXmippProgram('micrograph_window')
 AddXmippProgram('mirror')
-AddXmippProgram('ml_align2d', 	             	['XmippRecons'])
-AddXmippProgram('ml_align2d_combine',        	['XmippRecons'])
-AddXmippProgram('ml_refine3d', 	             	['XmippRecons'])
-AddXmippProgram('mlf_tomo',   	             	['XmippRecons'])
+AddXmippProgram('ml_align2d', ['XmippRecons'])
+AddXmippProgram('ml_align2d_combine', ['XmippRecons'])
+AddXmippProgram('ml_refine3d', ['XmippRecons'])
+AddXmippProgram('mlf_tomo', ['XmippRecons'])
 AddXmippProgram('morphology')
 AddXmippProgram('normalize')
 AddXmippProgram('operate')
-AddXmippProgram('phantom_create',            	['XmippRecons'])
-AddXmippProgram('phantom_create_random',     	['XmippRecons'])
-AddXmippProgram('phantom_simulate_microscope',	['XmippRecons'])
-AddXmippProgram('phantom_test_reconstruction',	['XmippRecons', 'XmippRecons_Interface'])
-AddXmippProgram('phantom_transform',         	['XmippRecons'])
-AddXmippProgram('project',     	             	['XmippRecons'])
-AddXmippProgram('psd_enhance',               	['XmippRecons'])
+AddXmippProgram('phantom_create', ['XmippRecons'])
+AddXmippProgram('phantom_create_random', ['XmippRecons'])
+AddXmippProgram('phantom_simulate_microscope', ['XmippRecons'])
+AddXmippProgram('phantom_test_reconstruction', ['XmippRecons_Interface',
+    'XmippRecons'])
+AddXmippProgram('phantom_transform', ['XmippRecons'])
+AddXmippProgram('project', ['XmippRecons'])
+AddXmippProgram('psd_enhance', ['XmippRecons'])
 AddXmippProgram('range_adjust')
-AddXmippProgram('reconstruct_art',           	['XmippRecons'])
-AddXmippProgram('reconstruct_wbp',            	['XmippRecons'])
+AddXmippProgram('reconstruct_art', ['XmippRecons'])
+AddXmippProgram('reconstruct_wbp', ['XmippRecons'])
 AddXmippProgram('resolution_fsc')
-AddXmippProgram('resolution_ssnr',           	['XmippRecons'])
+AddXmippProgram('resolution_ssnr', ['XmippRecons'])
 AddXmippProgram('reverse_endian')
 AddXmippProgram('rotate')
 AddXmippProgram('scale')
@@ -457,7 +469,7 @@ AddXmippProgram('separate_objects')
 AddXmippProgram('shift')
 AddXmippProgram('sort_by_statistics')
 AddXmippProgram('statistics')
-AddXmippProgram('symmetrize',  	             	['XmippRecons'])
+AddXmippProgram('symmetrize', ['XmippRecons'])
 AddXmippProgram('threshold')
 AddXmippProgram('try_symmetry')
 AddXmippProgram('volume_segment')
@@ -469,7 +481,8 @@ AddXmippProgram('window')
 # NOTE PDBsidechain is in the only one in perl
 AddBatch('selfile_create', 'applications/scripts/selfile_create')
 AddBatch('convert_pdb2descr', 'applications/scripts/convert_pdb2descr')
-AddBatch('extract_sidechain_from_pdb', 'applications/scripts/extract_sidechain_from_pdb', '.pl')
+AddBatch('extract_sidechain_from_pdb',
+    'applications/scripts/extract_sidechain_from_pdb', '.pl')
 AddBatch('convert_pdb2surface', 'applications/scripts/convert_pdb2surface')
 AddBatch('mlf_align2d', 'applications/scripts/mlf_align2d')
 AddBatch('mlf_refine3d', 'applications/scripts/mlf_refine3d')
@@ -584,21 +597,22 @@ for b in BackwardsBatches:
 
 # MPI
 if int(env['mpi']):
-    AddXmippMPIProgram('mpi_angular_discrete_assign', 	 ['XmippRecons'])
-    AddXmippMPIProgram('mpi_angular_continuous_assign',  ['XmippRecons'])
-    AddXmippMPIProgram('mpi_angular_projection_matching',['XmippRecons'])
-    AddXmippMPIProgram('mpi_ml_align2d',     	      	 ['XmippRecons'])
-    AddXmippMPIProgram('mpi_ml_refine3d',    	      	 ['XmippRecons'])
-    AddXmippMPIProgram('mpi_reconstruct_art',         	 ['XmippRecons'])
-    AddXmippMPIProgram('mpi_reconstruct_wbp', 	      	 ['XmippRecons'])
-    AddXmippMPIProgram('mpi_run',            	      	 ['XmippReconsMPI'])
+    AddXmippMPIProgram('mpi_angular_discrete_assign', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_ml_align2d', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_ml_refine3d', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_reconstruct_art', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_reconstruct_wbp', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_run', ['XmippReconsMPI'])
 
 # TIFF
 # Tiff2Raw
+# FIXME m jpeg and z really required?
 if int(env['tiff']):
     AddProgram('convert_tiff2raw', 'applications/programs/convert_tiff2raw',
         '*.cpp', [], ['libraries', env['TIFF_INCLUDE']],
-        [env['TIFF_LIBDIR']], ['tiff'])
+        [env['TIFF_LIBDIR']], ['tiff', 'm', 'jpeg', 'z'])
 
 # QT
 if int(env['gui']):
@@ -674,21 +688,24 @@ if int(env['gui']):
     env.Default(graphics_alias)
 
     # Add a program integrated in the Xmipp structure
-    def AddXmippQtProgram(name,mocs=[],libs=[]):
-        finalLibPath=['libraries/data', 'libraries/graphics', 'libraries/classification', 'libraries/reconstruction', 'external']
-        finalIncludePath=['libraries','#']
-        finalLibs=['XmippData', 'XmippExternal', 'XmippGraphics', 'XmippRecons', 'XmippClassif']+libs
+    def AddXmippQtProgram(name, mocs=[], libs=[]):
+        finalLibPath = ['libraries/data', 'libraries/graphics',
+            'libraries/classification', 'libraries/reconstruction', 'external']
+        finalIncludePath = ['libraries','#']
+        finalLibs = ['XmippData', 'XmippExternal', 'XmippGraphics',
+            'XmippRecons', 'XmippClassif']+libs
         for i in range(len(libs)):
-           if libs[i]=='XmippInterface':
-    	      finalLibPath+=['libraries/interface']
-           elif libs[i]=='XmippRecons_Interface':
-    	      finalLibPath+=['libraries/interface']
-              finalLibs+=['XmippInterface']
-        AddQtProgram(name, 'applications/programs/'+name, '*.cpp', [], mocs,
+           if libs[i] == 'XmippInterface':
+    	      finalLibPath += ['libraries/interface']
+           elif libs[i] == 'XmippRecons_Interface':
+    	      finalLibPath += ['libraries/interface']
+              finalLibs += ['XmippInterface']
+        AddQtProgram(name, 'applications/programs/' + name, '*.cpp', [], mocs,
     	    finalIncludePath, finalLibPath, finalLibs, [], [])
 
     AddXmippQtProgram('edit')
     AddXmippQtProgram('ctf_view', [], ['XmippRecons'])
-    AddXmippQtProgram('micrograph_mark',['popup_menu_mark.h'])
-    AddXmippQtProgram('show',[],['XmippClassif', 'XmippRecons'])
-    AddXmippQtProgram('mask_design',[],['XmippClassif'])
+    AddXmippQtProgram('micrograph_mark', ['popup_menu_mark.h'])
+    AddXmippQtProgram('show', [], ['XmippClassif', 'XmippRecons'])
+    AddXmippQtProgram('mask_design', [], ['XmippClassif'])
+

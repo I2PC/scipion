@@ -12,21 +12,20 @@ if not os.path.exists(base_dir):
     Execute(Mkdir(base_dir))
 base_dir +=  '/'
 
-
 # use only one signature file
 env.SConsignFile(base_dir + 'SCons.dblite')
 
-if (ARGUMENTS['mode']=='configure'):
+# read -or not- the cached options
+if (ARGUMENTS['mode'] == 'configure'):
     opts = Options(None, ARGUMENTS)
 else:
     opts = Options('options.cache', ARGUMENTS)
-
 
 opts.Add('CC', 'The C compiler', 'gcc')
 opts.Add('CXX', 'The C++ compiler', 'g++')
 opts.Add('LINKERFORPROGRAMS', 'Linker for programs', 'g++')
 
-# FIXME With ARGUMENTS these should be read...
+# FIXME With ARGUMENTS these should be read... right?
 #opts.Add('CCFLAGS', 'The C compiler flags', None)
 opts.Add('CXXFLAGS', 'The C++ compiler flags', None)
 
@@ -73,76 +72,85 @@ env.SetDefault(LIBS = '')
 env.SetDefault(LIBPATH = '')
 env.SetDefault(CPPPATH = '')
 
-if (ARGUMENTS['mode']=='configure'):
+# This is required for both modes
+env['STATIC_FLAG'] = '-static'
+
+if (ARGUMENTS['mode'] == 'configure'):
     # --- This is the configure mode
 
     # Custom tests
     def CheckMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx):
-	context.Message('Checking for MPI ... ')
+        context.Message('Checking for MPI ... ')
 
-	lastLIBS = context.env['LIBS']
-	lastLIBPATH = context.env['LIBPATH']
-	lastCPPPATH = context.env['CPPPATH']
-	lastCC = context.env['CC']
-	lastCXX = context.env['CXX']
+        lastLIBS = context.env['LIBS']
+        lastLIBPATH = context.env['LIBPATH']
+        lastCPPPATH = context.env['CPPPATH']
+        lastCC = context.env['CC']
+        lastCXX = context.env['CXX']
 
-	# TODO Replace() also here?
-	context.env.Append(LIBS = mpi_lib, LIBPATH = mpi_libpath, CPPPATH = mpi_inc)
-	context.env.Replace(LINK = context.env['MPI_LINKERFORPROGRAMS'])
-	context.env.Replace(CC = mpi_cc, CXX = mpi_cxx)
+        # TODO Replace() also here?
+        context.env.Append(LIBS = mpi_lib, LIBPATH = mpi_libpath,
+                           CPPPATH = mpi_inc)
+        context.env.Replace(LINK = context.env['MPI_LINKERFORPROGRAMS'])
+        context.env.Replace(CC = mpi_cc, CXX = mpi_cxx)
 
-	# We only need c++ to compile mpi programs
-	ret = context.TryLink('''
-	#include <mpi.h>
-	int main(int argc, char** argv)
-	{
+        # Test only C++ mpi compiler
+        ret = context.TryLink('''
+        #include <mpi.h>
+        int main(int argc, char** argv)
+        {
             MPI_Init(0, 0);
             MPI_Finalize();
             return 0;
-	}
-	''', '.cpp')
+        }
+        ''', '.cpp')
 
-	# NOTE: We don't want MPI flags for not-mpi programs (always revert)
-	# env['mpi'] remains 1 so those can be enabled again when needed
+        # NOTE: We don't want MPI flags for not-mpi programs (always revert)
+        # env['mpi'] remains 1 so those can be enabled again when needed
 
-	context.env.Replace(LIBS = lastLIBS)
-	context.env.Replace(LIBPATH = lastLIBPATH)
-	context.env.Replace(CPPPATH = lastCPPPATH)
-	context.env.Replace(CC = lastCC)
-	context.env.Replace(CXX = lastCXX)
+        context.env.Replace(LIBS = lastLIBS)
+        context.env.Replace(LIBPATH = lastLIBPATH)
+        context.env.Replace(CPPPATH = lastCPPPATH)
+        context.env.Replace(CC = lastCC)
+        context.env.Replace(CXX = lastCXX)
 
-	context.Result(ret)
-	return ret
+        context.Result(ret)
+        return ret
 
-    # Configuration
+    # Configuration or cleaning
     if env.GetOption('clean'):
-	print '* Cleaning  ...'
-	if 'distclean' in COMMAND_LINE_TARGETS:
+        print '* Cleaning  ...'
+        if 'distclean' in COMMAND_LINE_TARGETS:
             print '* Deleting configuration ...'
             Execute(Delete(base_dir))
             Execute(Delete(env['prefix']))
     else:
-	print '* Configuring  ...'
-	config_dir = base_dir + 'config.tests'
-	config_log = base_dir + 'config.log'
+        print '* Configuring  ...'
+        config_dir = base_dir + 'config.tests'
+        config_log = base_dir + 'config.log'
 
-	# QT
-	if int(env['gui']):
-            if ARGUMENTS.get('QTDIR'):
-        	print '* Trying user-supplied QTDIR: ' + ARGUMENTS.get('QTDIR')
-        	env['QTDIR'] = ARGUMENTS.get('QTDIR')
+    # static?
+    if int(env['static']):
+        env.Append(CCFLAGS = '$STATIC_FLAG')
+        env.Append(LINKFLAGS = '$STATIC_FLAG')
+
+    # QT
+    if int(env['gui']):
+        if ARGUMENTS.get('QTDIR'):
+            print '* Trying user-supplied QTDIR: ' + ARGUMENTS.get('QTDIR')
+            env['QTDIR'] = ARGUMENTS.get('QTDIR')
+        else:
+            print '* Trying environment\'s $QTDIR'
+            if os.environ.has_key('QTDIR'):
+                env['QTDIR'] = os.environ['QTDIR']
             else:
-        	print '* Trying environment\'s $QTDIR'
-        	if os.environ.has_key('QTDIR'):
-                    env['QTDIR'] = os.environ['QTDIR']
-        	else:
-                    print '* QTDIR not in environment nor supplied' \
-                	' (default value won\'t probably work)'
-                    print '  Please set it correctly, i.e.: export ' \
-                	'QTDIR=/path/to/qt'
-                    print '  or specify one directly in command line: '\
-                	'QTDIR=/path/to/qt'
-                    print '* Trying default value: ' + env['QTDIR']
+                print '* QTDIR not in environment nor supplied' \
+                      ' (default value won\'t probably work)'
+                print '  Please set it correctly, i.e.: export ' \
+                      'QTDIR=/path/to/qt'
+                print '  or specify one directly in command line: '\
+                      'QTDIR=/path/to/qt'
+                print '* Trying default value: ' + env['QTDIR']
 
             # Create a new environment with Qt tool enabled to see if it works
             envQT = env.Copy()
@@ -154,44 +162,44 @@ if (ARGUMENTS['mode']=='configure'):
 
             confQT = Configure(envQT, {}, config_dir, config_log)
 
-            if not confQT.CheckLibWithHeader(env['QT_LIB'], 'qapplication.h', 'c++',
-                                             'QApplication qapp(0,0);', 0):
-        	print '* Did not find QT. Disabling ...'
-        	env['gui'] = 0
+            if not confQT.CheckLibWithHeader(env['QT_LIB'], 'qapplication.h',
+                                             'c++', 'QApplication qapp(0,0);',
+                                             0):
+                print '* Did not find QT. Disabling ...'
+                env['gui'] = 0
 
             envQT = confQT.Finish()
 
-	# Non-GUI configuration environment
-	conf = Configure(env, {'CheckMPI' : CheckMPI}, config_dir, config_log)
+    # Non-GUI configuration environment
+    conf = Configure(env, {'CheckMPI' : CheckMPI}, config_dir, config_log)
 
-	# TIFF
-	if int(env['tiff']):
-            # Temporarily add Tiff headers/libraries
-            lastLIBPATH = env['LIBPATH']
-            lastCPPPATH = env['CPPPATH']
-            env.Append(LIBPATH = env['TIFF_LIBDIR'], CPPPATH = env['TIFF_INCLUDE'])
+    # TIFF
+    if int(env['tiff']):
+        # Temporarily add Tiff headers/libraries
+        lastLIBPATH = env['LIBPATH']
+        lastCPPPATH = env['CPPPATH']
+        env.Append(LIBPATH = env['TIFF_LIBDIR'], CPPPATH = env['TIFF_INCLUDE'])
 
-            if not conf.CheckLibWithHeader('tiff', 'tiff.h', 'c',
-                                	   'TIFFGetVersion();', 0):
-        	print '* Did not find TIFF library. Disabling ...'
-        	env['tiff'] = 0
+        if not conf.CheckLibWithHeader('tiff', 'tiff.h', 'c',
+                                       'TIFFGetVersion();', 0):
+            print '* Did not find TIFF library. Disabling ...'
+            env['tiff'] = 0
 
-            # Restore previous conditions
-            env.Replace(LIBPATH = lastLIBPATH)
-            env.Replace(CPPPATH = lastCPPPATH)
+        # Restore previous conditions
+        env.Replace(LIBPATH = lastLIBPATH)
+        env.Replace(CPPPATH = lastCPPPATH)
 
-	# MPI
-	if int(env['mpi']):
-            if not conf.CheckMPI(env['MPI_INCLUDE'], env['MPI_LIBDIR'],
-                        	 env['MPI_LIB'], env['MPI_CC'], env['MPI_CXX']):
-        	print '* Did not find MPI library. Disabling ...'
-        	env['mpi'] = 0
+    # MPI
+    if int(env['mpi']):
+        if not conf.CheckMPI(env['MPI_INCLUDE'], env['MPI_LIBDIR'],
+                             env['MPI_LIB'], env['MPI_CC'], env['MPI_CXX']):
+            print '* Did not find MPI library. Disabling ...'
+            env['mpi'] = 0
 
-	env = conf.Finish()
-
+    env = conf.Finish()
     opts.Save('options.cache', env)
     
-elif (ARGUMENTS['mode']=='compile'):
+elif (ARGUMENTS['mode'] == 'compile'):
     # --- This is the compilation mode
 
     # add separator to prepend (not shown in help)
@@ -199,52 +207,49 @@ elif (ARGUMENTS['mode']=='compile'):
 
     # debug?
     if int(env['debug']):
-	env.Append(CXXFLAGS = ['-g'])
-	if int(env['strip']):
+        env.Append(CXXFLAGS = ['-g'])
+    
+        if int(env['strip']):
             print '* WARNING: Debugging is impossible if strip is used.' \
-    	    ' Disabling stripping..'
+                  ' Disabling stripping..'
             env['strip'] = 0
     else:
-	# "safe" optimization
-	env.Append(CXXFLAGS = ['-O2'])
+        # "safe" optimization
+        env.Append(CXXFLAGS = ['-O2'])
 
     # strip?
     if int(env['strip']):
-	env.Append(LINKFLAGS = ['-s'])
+        env.Append(LINKFLAGS = ['-s'])
 
     # warnings?
     if int(env['warn']):
-	env.Append(CXXFLAGS = ['-Wall'])
+        env.Append(CXXFLAGS = ['-Wall'])
     else:
-	env.Append(CXXFLAGS = ['-w'])
-	# TODO suppress linker warnings too, what's the flag?
-	# env.Append(LINKFLAGS = ['-Wl,'])
+        env.Append(CXXFLAGS = ['-w'])
+        # TODO suppress linker warnings too... what's the flag?
+        # env.Append(LINKFLAGS = ['-Wl,???'])
 
     # fast?
+    # COSS' work. I dont like this (asolano)
     if int(env['fast']):
-	env.Append(CXXFLAGS = ['-O3','-fomit-frame-pointer','-ffast-math','-finline-functions','-funroll-loops'])
-
-    # static?
-    env['STATIC_FLAG'] = '-static'
-    if int(env['static']):
-	env.Append(CXXFLAGS = '$STATIC_FLAG')
-	env.Append(LINKFLAGS = '$STATIC_FLAG')
+        env.Append(CXXFLAGS = ['-O3', '-fomit-frame-pointer', '-ffast-math',
+                   '-finline-functions', '-funroll-loops'])
 
     # verbosity (for $SCONS_VERSION < 0.96.2 option has no effect)
     if int(env['quiet']):
-	env['CCCOMSTR'] = 'Compiling $SOURCE'
-	env['CXXCOMSTR'] = 'Compiling $SOURCE'
-	env['SHCXXCOMSTR'] = 'Compiling $SOURCE'
-	env['SHCCCOMSTR'] = 'Compiling $SOURCE'
-	env['LINKCOMSTR'] = 'Linking $SOURCE'
-	env['ARCOMSTR'] = 'Archiving $TARGET'
-	env['SHLINKCOMSTR'] = 'Linking $TARGET'
-	env['RANLIBCOMSTR'] = 'Indexing $TARGET'
-	env['QT_UICCOMSTR'] = 'UICing $SOURCE'
-	env['QT_MOCFROMHCOMSTR'] = 'MOCing header $SOURCE'
-	env['QT_MOCFROMCXXCOMSTR'] = 'MOCing source $SOURCE'
-	env['TARCOMSTR'] = 'Archiving $TARGET'
-	env['INSTALLSTR'] = 'Installing $TARGET'
+        env['CCCOMSTR'] = 'Compiling $SOURCE'
+        env['CXXCOMSTR'] = 'Compiling $SOURCE'
+        env['SHCXXCOMSTR'] = 'Compiling $SOURCE'
+        env['SHCCCOMSTR'] = 'Compiling $SOURCE'
+        env['LINKCOMSTR'] = 'Linking $SOURCE'
+        env['ARCOMSTR'] = 'Archiving $TARGET'
+        env['SHLINKCOMSTR'] = 'Linking $TARGET'
+        env['RANLIBCOMSTR'] = 'Indexing $TARGET'
+        env['QT_UICCOMSTR'] = 'UICing $SOURCE'
+        env['QT_MOCFROMHCOMSTR'] = 'MOCing header $SOURCE'
+        env['QT_MOCFROMCXXCOMSTR'] = 'MOCing source $SOURCE'
+        env['TARCOMSTR'] = 'Archiving $TARGET'
+        env['INSTALLSTR'] = 'Installing $TARGET'
 
 
     Export('env')
