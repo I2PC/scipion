@@ -126,7 +126,7 @@ class visualize_ML2D_class:
                 newlines1.append(str(iter)+' '+words1[7]+'\n')
                 newlines2.append(str(iter)+' '+words1[9]+'\n')
                 newlines3.append(str(iter)+' '+str(eps)+'\n')
-            fh=open('alliter_dLL.dat','w')
+            fh=open('alliter_LL.dat','w')
             fh.writelines(newlines1)
             fh.close();
             fh=open('alliter_Pmax.dat','w')
@@ -136,11 +136,10 @@ class visualize_ML2D_class:
             fh.writelines(newlines3)
             fh.close();
             plot1=visualization.gnuplot()
-            plot1.plot_xy_file('alliter_dLL.dat',
-                              'Log-likelihood gain (should be positive, converges to zero)',
+            plot1.plot_xy_file('alliter_LL.dat',
+                              'Log-likelihood (should increase)',
                               'iterations',
-                              'dLL')
-            plot1.send('replot 0')
+                              'LL')
             plot2=visualization.gnuplot()
             plot2.plot_xy_file('alliter_Pmax.dat',
                               'The width of the probability distributions (often goes to one i.e. delta-functions)',
