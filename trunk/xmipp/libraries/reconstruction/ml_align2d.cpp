@@ -154,7 +154,8 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
         {
             cerr << "WARNING%% With reduce_snr>1 you may overfit the noise!" << endl;
         }
-	do_output_MLF_LL=checkParameter(argc,argv,"-output_MLF_LL");
+	do_include_allfreqs=checkParameter(argc,argv,"-include_allfreqs");
+	do_divide_ctf=checkParameter(argc,argv,"-divide_ctf");
     }
 
     // Hidden arguments
@@ -164,6 +165,7 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     do_write_offsets = !checkParameter(argc, argv, "-dont_write_offsets");
     fn_scratch = getParameter(argc, argv, "-scratch", "");
     zero_offsets = checkParameter(argc, argv, "-zero_offsets");
+    debug = checkParameter(argc, argv, "-debug");
 
     //only for interaction with Refine3D:
     search_rot = textToFloat(getParameter(argc, argv, "-search_rot", "999."));
@@ -260,10 +262,6 @@ void Prog_MLalign2D_prm::show(bool ML3D)
         {
             cerr << "  -> Do not update sigma-estimate of noise." << endl;
         }
-	if (do_output_MLF_LL) 
-	{
-	    cerr << "  -> Output LL for MLF mode"<<endl;
-	}
         if (do_esthetics)
         {
             cerr << "  -> Perform esthetics on (0,0)-pixel artifacts" << endl;
@@ -781,6 +779,92 @@ void Prog_MLalign2D_prm::estimate_initial_sigma2()
 
 }
 
+void Prog_MLalign2D_prm::calculate_division_ctf()
+{
+    int                        maxres = hdim;
+    bool                       past_first_peak;
+    double                     prev;
+    Matrix2D<double>           Maux;
+    Matrix2D<complex<double> > Faux;
+
+    // Calculate resolution of first zero
+    FOR_ALL_DEFOCUS_GROUPS()
+    {
+	past_first_peak=false;
+	prev=0.;
+        for (int irr = 0; irr < hdim; irr++)
+        {
+	    if (abs(dVi(Vctf[ifocus], irr)) < prev) 
+	    { 
+		past_first_peak = true;
+	    }
+	    prev=abs(dVi(Vctf[ifocus], irr));
+	    if ( past_first_peak && abs(dVi(Vctf[ifocus], irr)) < 0.2 )
+	    {
+		maxres=MIN(maxres,irr);
+		break;
+	    }
+        }
+    }
+    cerr <<" Maximum resolution = "<<maxres<<endl;
+
+    // Now fill the Wiener filter vectors with 1/CTF until maxres
+    // (and zero beyond maxres)
+    FOR_ALL_DEFOCUS_GROUPS()
+    {
+        for (int irr = 0; irr < hdim; irr++)
+        {
+	    if (irr <= maxres)
+	    {
+		dVi(Vdec[ifocus], irr) = 1. / dVi(Vctf[ifocus], irr);
+	    }
+	    else
+	    {
+		dVi(Vdec[ifocus], irr) = 0.;
+            }
+        }
+    }
+    
+    // Fill the pointer vectors
+    Maux.initZeros(dim, dim);
+    Maux.setXmippOrigin();
+    FourierTransformHalf(Maux, Faux);
+    pointer_ctf.clear();
+    pointer_sigctf.clear();
+    pointer_i.clear();
+    pointer_j.clear();
+    nr_pointer_ctf = 0;
+    nr_pointer_sigctf = 0;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
+    {
+        int resol = dMij(Mresol, i, j);
+	if (// exclude pixels above highres_limit
+            resol <= maxres
+            // exclude first half row because of FourierTransformHalf
+            && !(i == 0 && j > hdim)
+        )
+        {
+            pointer_ctf.push_back(i*XSIZE(Maux) + j);
+            pointer_i.push_back(i);
+            pointer_j.push_back(j);
+            nr_pointer_ctf++;
+
+            // For probability calculations
+            if (// exclude pixels below lowres_limit
+                resol > lowres_limit
+                // exclude pixels above maxres
+                && resol <= maxres)
+            {
+                pointer_sigctf.push_back(i*XSIZE(Maux) + j);
+                nr_pointer_sigctf++;
+            }
+
+        }
+    }
+    
+
+}
+
 void Prog_MLalign2D_prm::calculate_wiener_defocus_series(Matrix1D<double> &spectral_signal,
         int iter)
 {
@@ -928,26 +1012,13 @@ void Prog_MLalign2D_prm::calculate_wiener_defocus_series(Matrix1D<double> &spect
     // Pixel use in probability calculations: pointer_sigctf
     // Pixel use in weighted sums of images: pointer_ctf
     // And pointers to the original i and j coordinates
+
+    if (do_include_allfreqs) maxres=hdim;
     Maux.initZeros(dim, dim);
     Maux.setXmippOrigin();
     FourierTransformHalf(Maux, Faux);
     highres_limit = maxres + increase_highres_limit;
     highres_limit = MIN(highres_limit, hdim);
-    // Store the pointers from the previous iteration
-    if (iter==istart-1) 
-    {
-	nr_pointer_old=0;
-	pointer_old.clear();
-	pointer_i_old.clear();
-	pointer_j_old.clear();
-    }
-    else
-    {
-	nr_pointer_old=nr_pointer_sigctf;
-	pointer_old=pointer_sigctf;
-	pointer_i_old=pointer_i;
-	pointer_j_old=pointer_j;
-    }
     pointer_ctf.clear();
     pointer_sigctf.clear();
     pointer_i.clear();
@@ -957,7 +1028,7 @@ void Prog_MLalign2D_prm::calculate_wiener_defocus_series(Matrix1D<double> &spect
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
     {
         int resol = dMij(Mresol, i, j);
-        if (// exclude pixels above highres_limit
+	if (// exclude pixels above highres_limit
             resol <= highres_limit
             // exclude first half row because of FourierTransformHalf
             && !(i == 0 && j > hdim)
@@ -1245,9 +1316,16 @@ void Prog_MLalign2D_prm::produce_Side_info2(int nr_vols)
             fh.close();
         }
 
-        // Calculate all Wiener filters
-        calculate_wiener_defocus_series(spectral_signal, istart - 1);
-
+	if (do_divide_ctf)
+	{
+	    // Just divide by CTF up till first zero
+	    calculate_division_ctf();
+	}
+	else
+	{
+	    // Calculate all Wiener filters
+	    calculate_wiener_defocus_series(spectral_signal, istart - 1);
+	}
     }
 
 }
@@ -1967,14 +2045,14 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
     Matrix2D<double> &Mwsum_sigma2,
     double &wsum_sigma_offset, vector<double> &sumw,
     vector<double> &sumw_mirror,
-    double &LL, double &LL_old, double &fracweight, 
+    double &LL, double &fracweight, 
     int &opt_refno, double &opt_psi,
     Matrix1D<double> &opt_offsets, vector<double> &opt_offsets_ref,
     vector<double > &pdf_directions)
 {
 
     Matrix3D<double>                             Mweight;
-    Matrix2D<double>                             sigma2, ctf, decctf,logsigma2,Mll,Mll_old;
+    Matrix2D<double>                             sigma2, ctf, decctf;
     Matrix2D<int>                                Moffsets, Moffsets_mirror;
     vector<vector<Matrix2D<complex<double> > > > Fimg_trans;
     vector<Matrix2D<complex<double> > >          dum;
@@ -1982,38 +2060,39 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
     vector<Matrix1D<double> >                    uniq_offsets;
 
     vector<double> refw(n_ref), refw_mirror(n_ref), Pmax_refmir(2*n_ref);
-    double sigma_noise2, XiA, Xi2, aux, fracpdf, pdf, opt_pdf, weight;
-    double tmpr, tmpi;
-    double sum_refw = 0.;
-    double sum_refw_forLL = 0.;
-    double sum_refw_forLL_old = 0.;
-    double diff, diffb, diffb_old, maxweight = -99.e99, mindiff2 = 99.e99;
-    double mindiff2_forLL=99.e99, mindiff2_forLL_old=99.e99;
+    double sigma_noise2, XiA, Xi2, aux, fracpdf, pdf, weight;
+    double tmpr, tmpi, sum_refw = 0.;
+    double diff, maxweight = -99.e99, mindiff2 = 99.e99;
+    double logsigma2;
     int    irot, opt_ipsi, opt_iflip, opt_irot, irefmir, opt_irefmir, ix, iy, ii;
     int    nr_uniq, point_trans, zscore;
     int    opt_itrans, iflip_start, iflip_stop, nr_mir;
 
     // Calculate 2D matrices with values for ctf, decctf and sigma2 from 1D-vectors
     sigma2.resize(dim, dim);
-    logsigma2.resize(dim,dim);
     ctf.resize(dim, dim);
     decctf.resize(dim, dim);
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(sigma2)
     {
         ii = dMij(Mresol, i, j);
-        dMij(sigma2, i, j) = Vsig[focus].data[ii];
-        dMij(logsigma2,i,j) = -log(2.*PI*Vsig[focus].data[ii]);
+        dMij(sigma2, i, j) = 2.* Vsig[focus].data[ii];
         dMij(ctf, i, j) = Vctf[focus].data[ii];
         dMij(decctf, i, j) = Vdec[focus].data[ii];
     }
     if (!apply_ctf) ctf.init_constant(1.);
 
+    // Precalculate normalization constant
+    logsigma2 = 0.;
+    for (int ipoint = 0; ipoint < nr_pointer_sigctf; ipoint++)
+    {
+	ii = pointer_sigctf[ipoint];
+	logsigma2 += log(PI*(sigma2).data[ii]);
+    }
+
     // Precalculate Fimg_trans, on pruned and expanded offset list
     calculate_fourier_offsets(Mimg, focus, Fref, ctf, opt_offsets_ref, Fimg_trans, Moffsets, Moffsets_mirror);
 
     Mweight.initZeros(nr_trans, n_ref, nr_flip*nr_psi);
-    Mll.initZeros(n_ref,nr_flip*nr_psi);
-    Mll_old.initZeros(n_ref,nr_flip*nr_psi);
     FOR_ALL_MODELS()
     {
         if (!limit_rot || pdf_directions[refno] > 0.)
@@ -2031,7 +2110,7 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
                 FOR_ALL_ROTATIONS()
                 {
                     irot = iflip * nr_psi + ipsi;
-                    diff = diffb = 0.;
+                    diff = 0.;
                     for (int ipoint = 0; ipoint < nr_pointer_sigctf; ipoint++)
                     {
                         ii = pointer_sigctf[ipoint];
@@ -2039,19 +2118,11 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
                                ctf.data[ii] * (double)((Fref[refno][ipsi]).data[ii]).real();
                         tmpi = (double)((Fimg_trans[point_trans][iflip%nr_nomirror_flips]).data[ii]).imag() -
                                ctf.data[ii] * (double)((Fref[refno][ipsi]).data[ii]).imag();
-                        tmpr = (tmpr * tmpr + tmpi * tmpi) / (anneal * 2. * (sigma2).data[ii]);
+                        tmpr = (tmpr * tmpr + tmpi * tmpi) / (anneal * (sigma2).data[ii]);
                         diff += tmpr;
-			// 14may2007: for writing out LL the following line is
-			// needed. Note that there is no difference in
-			// alignment/classification behaviour, as the log-term is
-			// the same for all orientations and classes.
-			diffb+=tmpr - (logsigma2).data[ii];
                     }
 
                     dVkij(Mweight, zero_trans, refno, irot) = diff;
-		    dMij(Mll,refno,irot) = diffb;
-		    if (diffb<mindiff2_forLL) 
-			mindiff2_forLL = diffb;
                     if (diff < mindiff2)
                     {
                         mindiff2 = diff;
@@ -2060,28 +2131,7 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
                         opt_iflip = iflip;
                         opt_itrans = zero_trans;
                         opt_irefmir = irefmir;
-                        opt_pdf = pdf;
                     }
-
-		    // For LL_old, integrate over all Fourier pixels
-		    // of the previous iteration as well
-		    if (do_output_MLF_LL) 
-		    {
-			diffb_old=0.;
-			for (int ipoint = 0 ; ipoint < nr_pointer_old ; ipoint++) 
-			{
-			    ii = pointer_old[ipoint];
-			    tmpr = (double)((Fimg_trans[point_trans][iflip%nr_nomirror_flips]).data[ii]).real() -
-				ctf.data[ii]*(double)((Fref[refno][ipsi]).data[ii]).real();
-			    tmpi = (double)((Fimg_trans[point_trans][iflip%nr_nomirror_flips]).data[ii]).imag() -
-				ctf.data[ii]*(double)((Fref[refno][ipsi]).data[ii]).imag();
-			    tmpr = (tmpr*tmpr+tmpi*tmpi)/(anneal*2.*(sigma2).data[ii]);
-			    diffb_old+= tmpr - (logsigma2).data[ii];
-			}
-			dMij(Mll_old,refno,irot) = diffb_old;
-		      if (diffb_old<mindiff2_forLL_old) 
-			  mindiff2_forLL_old = diffb_old;
-		    }
                 }
             }
         }
@@ -2118,17 +2168,7 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
                         opt_iflip = iflip;
                         opt_itrans = zero_trans;
                         opt_irefmir = irefmir;
-                        opt_pdf = pdf;
                     }
-		    if (do_output_MLF_LL) 
-		    {
-			aux = dMij(Mll,refno,irot) - mindiff2_forLL;
-			if (aux < 1000.) 
-			    sum_refw_forLL+= exp(-aux) * pdf;
-			aux = dMij(Mll_old,refno,irot) - mindiff2_forLL_old;
-			if (aux < 1000.) 
-			    sum_refw_forLL_old+= exp(-aux) * pdf;
-		    }
                 }
             }
         }
@@ -2164,7 +2204,7 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
                                 pdf = fracpdf * MAT_ELEM(P_phi, iy, ix);
                                 if (pdf > 0)
                                 {
-                                    diff = diffb = 0.;
+                                    diff = 0.;
                                     for (int ipoint = 0; ipoint < nr_pointer_sigctf; ipoint++)
                                     {
                                         ii = pointer_sigctf[ipoint];
@@ -2172,9 +2212,8 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
                                                ctf.data[ii] * (double)((Fref[refno][ipsi]).data[ii]).real();
                                         tmpi = (double)((Fimg_trans[point_trans][iflip%nr_nomirror_flips]).data[ii]).imag() -
                                                ctf.data[ii] * (double)((Fref[refno][ipsi]).data[ii]).imag();
-                                        tmpr = (tmpr * tmpr + tmpi * tmpi) / (anneal * 2 * (sigma2).data[ii]);
+                                        tmpr = (tmpr * tmpr + tmpi * tmpi) / (anneal * (sigma2).data[ii]);
                                         diff += tmpr;
-					diffb += tmpr - (logsigma2).data[ii];
                                     }
                                     aux = diff - mindiff2;
                                     // next line because of numerical precision of exp-function
@@ -2190,33 +2229,6 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
                                         opt_itrans = itrans;
                                         opt_irefmir = irefmir;
                                     }
-
-				    // For LL & LL_old output
-				    if (do_output_MLF_LL) 
-				    {
-					// new LL
-					aux = diffb - mindiff2_forLL;
-					if (aux < 1000.)
-					    sum_refw_forLL += exp(-aux) * pdf;
-
-					// old LL
-					diffb_old = 0.;
-					for (int ipoint = 0; ipoint < nr_pointer_old; ipoint++) 
-					{
-					    ii = pointer_old[ipoint];
-					    tmpr = (double)((Fimg_trans[point_trans][iflip%nr_nomirror_flips])\
-							    .data[ii]).real() -
-						ctf.data[ii] * (double)((Fref[refno][ipsi]).data[ii]).real();
-					    tmpi = (double)((Fimg_trans[point_trans][iflip%nr_nomirror_flips])\
-							    .data[ii]).imag() -
-						ctf.data[ii] * (double)((Fref[refno][ipsi]).data[ii]).imag();
-					    tmpr = (tmpr * tmpr + tmpi * tmpi) / (anneal * 2. * (sigma2).data[ii]);
-					    diffb_old += tmpr - (logsigma2).data[ii];
-				      }	  
-				      aux = diffb_old - mindiff2_forLL_old;
-				      if (aux < 1000.)
-					  sum_refw_forLL_old += exp(-aux) * pdf;
-				    }
                                 }
                                 else dVkij(Mweight, itrans, refno, irot) = 0.;
                             }
@@ -2231,7 +2243,7 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
     opt_offsets(1) = opt_offsets_ref[2*opt_irefmir+1] + Vtrans[opt_itrans](1);
     opt_psi = -psi_step * (opt_iflip * nr_psi + opt_ipsi) - SMALLANGLE;
 
-    // Determine the sums over all weights
+    // Now that we have maxweight, determine the sums over all weights
     FOR_ALL_MODELS()
     {
         if (!limit_rot || pdf_directions[refno] > 0.)
@@ -2351,12 +2363,9 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
 
     // Compute Log Likelihood
     // 1st term: log(refw_i)
-    // 2nd term: for subtracting mindiff2 is missing
-    if (do_output_MLF_LL)
-    {
-	LL += log(sum_refw_forLL) - mindiff2_forLL;
-	LL_old += log(sum_refw_forLL_old) - mindiff2_forLL_old;
-    }
+    // 2nd term: for subtracting mindiff2
+    // 3rd term: for missing normalization constant
+    LL += log(sum_refw) - mindiff2 - logsigma2;
 
 }
 
@@ -2959,7 +2968,7 @@ void Prog_MLalign2D_prm::maxCC_search_complete(Matrix2D<double> &Mimg,
 
 
 void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> &Iref, int iter,
-        double &LL, double &LL_old, double &sumcorr, DocFile &DFo,
+        double &LL, double &sumcorr, DocFile &DFo,
         vector<Matrix2D<double> > &wsum_Mref,
         vector<Matrix2D<double> > &wsum_ctfMref,
         double &wsum_sigma_noise, vector<Matrix2D<double> > &Mwsum_sigma2,
@@ -2986,6 +2995,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
     int c, nn, imgno, opt_refno, focus;
     bool fill_real_space, fill_fourier_space, apply_ctf;
 
+
     // Generate (FT of) each rotated version of all references
     if (fourier_mode)
     {
@@ -3011,7 +3021,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
     rotate_reference(Iref, fill_real_space, fill_fourier_space, Mref, Fref);
 
     // Initialize
-    LL = LL_old=0.;
+    LL = 0.;
     nn = SF.ImgNo();
     if (verb > 0) init_progress_bar(nn);
     c = MAX(1, nn / 60);
@@ -3133,7 +3143,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
             else apply_ctf = true;
             MLF_integrate_locally(img(), focus, apply_ctf, Fref,
                                   Fwsum_imgs, Fwsum_ctfimgs, Mwsum_sigma2[focus], wsum_sigma_offset,
-                                  sumw, sumw_mirror, LL, LL_old, maxcorr,
+                                  sumw, sumw_mirror, LL, maxcorr,
                                   opt_refno, opt_psi, opt_offsets,
                                   allref_offsets, pdf_directions);
 
@@ -3317,7 +3327,13 @@ void Prog_MLalign2D_prm::update_parameters(vector<Matrix2D<double> > &wsum_Mref,
                 rmean_sigma2.initZeros();
                 radialAverage(Maux, center, rmean_sigma2, radial_count, true);
                 // Factor 2 here, because the Gaussian distribution is 2D!
-                Vsig[ifocus] = rmean_sigma2 / (double)(2 * count_defocus[ifocus]);
+		for (int irr=0; irr<hdim; irr++)
+		{
+		    aux = dVi(rmean_sigma2, irr) / (double)(2 * count_defocus[ifocus]);
+		    if (aux > 0.)
+			dVi(Vsig[ifocus], irr) = aux;
+		    //Vsig[ifocus] = rmean_sigma2 / (double)(2 * count_defocus[ifocus]);
+		}
             }
         }
         else
@@ -3411,7 +3427,7 @@ void Prog_MLalign2D_prm::output_to_screen(int &iter, double &sumcorr, double &LL
 }
 
 void Prog_MLalign2D_prm::write_output_files(const int iter, DocFile &DFo,
-        double &sumw_allrefs, double &LL, double &LL_old, double &avecorr,
+        double &sumw_allrefs, double &LL, double &avecorr,
         vector<double> &conv)
 {
 
@@ -3421,7 +3437,6 @@ void Prog_MLalign2D_prm::write_output_files(const int iter, DocFile &DFo,
     DocFile           DFl;
     string            comment;
     ofstream          fh;
-    double            dLL;
 
     DFl.clear();
     SFo.clear();
@@ -3480,12 +3495,7 @@ void Prog_MLalign2D_prm::write_output_files(const int iter, DocFile &DFo,
     if (maxCC_rather_than_ML) comment += " <CC>= " + floatToString(avecorr, 10, 5);
     else
     {
-	if (do_output_MLF_LL)
-	    dLL = LL_old - LL_prev_iter;
-	else
-	    dLL = LL - LL_prev_iter;
-	LL_prev_iter = LL;
-        comment += " LL= " + floatToString(dLL, 10, 5) + " <Pmax/sumP>= " + floatToString(avecorr, 10, 5);
+        comment += " LL= " + floatToString(LL, 15, 10) + " <Pmax/sumP>= " + floatToString(avecorr, 10, 5);
         DFl.insert_comment(comment);
         comment = "-noise " + floatToString(sigma_noise, 15, 12) + " -offset " + floatToString(sigma_offset, 15, 12) + " -istart " + integerToString(iter + 1);
         if (anneal > 1.) comment += " -anneal " + floatToString(anneal, 10, 7);

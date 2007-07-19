@@ -31,7 +31,7 @@ int main(int argc, char **argv)
 {
 
     int                         c, iter, volno, converged = 0;
-    double                      LL, LL_old, sumw_allrefs, convv, sumcorr, wsum_sigma_noise, wsum_sigma_offset;
+    double                      LL, sumw_allrefs, convv, sumcorr, wsum_sigma_noise, wsum_sigma_offset;
     vector<double>              conv;
     vector<Matrix2D<double> >   wsum_Mref, wsum_ctfMref, Mwsum_sigma2;
     vector<double>              sumw, sumw_cv, sumw_mirror;
@@ -155,7 +155,7 @@ int main(int argc, char **argv)
 
             // Integrate over all images
             ML2D_prm.ML_sum_over_all_images(ML2D_prm.SF, ML2D_prm.Iref, iter,
-                                            LL, LL_old, sumcorr, DFo, wsum_Mref, wsum_ctfMref,
+                                            LL, sumcorr, DFo, wsum_Mref, wsum_ctfMref,
                                             wsum_sigma_noise, Mwsum_sigma2,
                                             wsum_sigma_offset, sumw, sumw_mirror);
 
@@ -164,8 +164,6 @@ int main(int argc, char **argv)
             // sigma_noise etc. for the next iteration!
             MPI_Allreduce(&LL, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             LL = aux;
-            MPI_Allreduce(&LL_old, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-            LL_old = aux;
             MPI_Allreduce(&sumcorr, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             sumcorr = aux;
             MPI_Allreduce(&wsum_sigma_noise, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -223,7 +221,7 @@ int main(int argc, char **argv)
                     DFo.remove_current();
                     system(((string)"rm -f " + fn_tmp).c_str());
                 }
-                ML2D_prm.write_output_files(iter, DFo, sumw_allrefs, LL, LL_old, sumcorr, conv);
+                ML2D_prm.write_output_files(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
                 prm.concatenate_selfiles(iter);
 
                 // Write noise images to disc
@@ -272,7 +270,7 @@ int main(int argc, char **argv)
 
             // Update filenames in SFvol (now without noise volumes!)
             prm.remake_SFvol(iter, false, false);
-            if (ML2D_prm.fourier_mode)
+            if (ML2D_prm.fourier_mode && !ML2D_prm.do_divide_ctf)
                 ML2D_prm.calculate_wiener_defocus_series(spectral_signal, iter);
 
             if (!converged && iter + 1 <= prm.Niter)
@@ -293,7 +291,7 @@ int main(int argc, char **argv)
             iter++;
         } // end loop iterations
 	if (rank == 0)
-	    ML2D_prm.write_output_files(-1, DFo, sumw_allrefs, LL, LL_old, sumcorr, conv);
+	    ML2D_prm.write_output_files(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
 
         if (!converged && prm.verb > 0)
             cerr << "--> Optimization was stopped before convergence was reached!" << endl;

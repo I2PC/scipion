@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     Prog_MLalign2D_prm prm;
 
     int c, nn, imgno, opt_refno, iaux;
-    double LL, LL_old, sumw_allrefs, convv, sumcorr;
+    double LL, sumw_allrefs, convv, sumcorr;
     vector<double> conv;
     double aux, wsum_sigma_noise, wsum_sigma_offset;
     vector<Matrix2D<double > > wsum_Mref, wsum_ctfMref;
@@ -144,15 +144,13 @@ int main(int argc, char **argv)
 
             // Integrate over all images
             prm.ML_sum_over_all_images(prm.SF, prm.Iref, iter,
-                                       LL, LL_old, sumcorr, DFo, wsum_Mref, wsum_ctfMref,
+                                       LL, sumcorr, DFo, wsum_Mref, wsum_ctfMref,
                                        wsum_sigma_noise, Mwsum_sigma2,
                                        wsum_sigma_offset, sumw, sumw_mirror);
 
             // Here MPI_allreduce of all wsums,LL and sumcorr !!!
             MPI_Allreduce(&LL, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             LL = aux;
-            MPI_Allreduce(&LL_old, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-            LL_old = aux;
             MPI_Allreduce(&sumcorr, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             sumcorr = aux;
             MPI_Allreduce(&wsum_sigma_noise, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -223,14 +221,15 @@ int main(int argc, char **argv)
                             system(((string)"rm -f " + fn_img).c_str());
                         }
                     }
-                    prm.write_output_files(iter, DFo, sumw_allrefs, LL, LL_old, sumcorr, conv);
+                    prm.write_output_files(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
                 }
                 else prm.output_to_screen(iter, sumcorr, LL);
             }
             MPI_Barrier(MPI_COMM_WORLD);
 
             // Calculate new wiener filters
-            if (prm.fourier_mode) prm.calculate_wiener_defocus_series(spectral_signal, iter);
+            if (prm.fourier_mode && !prm.do_divide_ctf) 
+		prm.calculate_wiener_defocus_series(spectral_signal, iter);
 
             if (converged)
             {
@@ -241,7 +240,7 @@ int main(int argc, char **argv)
 
         } // end loop iterations
 	if (rank == 0)  
-	    prm.write_output_files(-1, DFo, sumw_allrefs, LL, LL_old, sumcorr, conv);
+	    prm.write_output_files(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
 
     }
     catch (Xmipp_error XE)
