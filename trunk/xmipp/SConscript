@@ -333,11 +333,12 @@ ReconsInterfaceSources = [
 AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
            ReconsInterfaceSources, ['#libraries', '#external', '#'])
 
+#remove dinamic mpi library since it is very problematic
 # ReconstrunctionMPI
-if int(env['mpi']):
-    ReconstructionMPISources = ['mpi_run.cpp']
-    AddMPILibrary('XmippReconsMPI', '#libraries/reconstruction_mpi',
-        ReconstructionMPISources, ['#libraries'])
+#if int(env['mpi']):
+#    ReconstructionMPISources = ['mpi_run.cpp']
+#    AddMPILibrary('XmippReconsMPI', '#libraries/reconstruction_mpi',
+#        ReconstructionMPISources, ['#libraries'])
 
 # Classification
 ClassificationSources = Glob('libraries/classification', '*.cpp', [])
@@ -410,7 +411,7 @@ AddXmippProgram('crystal_skew', ['XmippRecons'])
 AddXmippProgram('crystal_unbend', ['XmippRecons', 'XmippRecons_Interface'])
 AddXmippProgram('ctf_correct_idr', ['XmippRecons'])
 AddXmippProgram('ctf_correct_phase', ['XmippRecons'])
-AddXmippProgram('ctf_correct_amplitude3d', ['XmippRecons'])
+#AddXmippProgram('ctf_correct_amplitude3d', ['XmippRecons'])
 AddXmippProgram('ctf_estimate_from_micrograph', ['XmippRecons'])
 AddXmippProgram('ctf_estimate_from_psd', ['XmippRecons'])
 AddXmippProgram('ctf_profile', ['XmippRecons'])
@@ -604,7 +605,7 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_ml_refine3d', ['XmippRecons'])
     AddXmippMPIProgram('mpi_reconstruct_art', ['XmippRecons'])
     AddXmippMPIProgram('mpi_reconstruct_wbp', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_run', ['XmippReconsMPI'])
+    AddXmippMPIProgram('mpi_run', ['XmippRecons'])
 
 # TIFF
 # Tiff2Raw
