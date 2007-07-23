@@ -30,6 +30,9 @@
 #include <data/mask.h>
 #include <data/args.h>
 #include <data/funcs.h>
+#ifdef isnan
+#include <cmath>
+#endif
 
 // Read arguments ==========================================================
 void Prog_align2d_prm::read(int argc, char **argv)
@@ -276,11 +279,35 @@ bool Prog_align2d_prm::align_trans(ImageXmipp &img, const Matrix2D<double> &Mref
                 sumcorr += MAT_ELEM(Mcorr, i_actual, j_actual);
             }
         }
+    
+    //if  (sumcorr  !=  sumcorr)
     xmax /= sumcorr;
     ymax /= sumcorr;
     xshift = (float) - xmax;
     yshift = (float) - ymax;
-
+    //Protect shifts from wrong calculation of correlation maxima
+    //I do not know why this happends, but when many-may particles
+    //are selected and many iterations performed sooner or later
+    //a NAN appears.
+    if(sumcorr==0)
+    {
+        yshift=xshift=0.f;
+    }
+    //The following code is not portable but 
+    // I do not know a better why to detect nans
+#ifdef isnan
+    if (!isnormal(xmax) || !isnormal(ymax))
+    {
+        xshift = 0.f;
+        yshift = 0.f;
+    }
+#else
+    if((xshift>(float)dim && xshift<(float)dim) ||
+       (yshift>(float)dim && yshift<(float)dim))
+    {
+        yshift=xshift=0.f;
+    }   
+#endif    
     Maux.core_deallocate();
     Mcorr.core_deallocate();
 
