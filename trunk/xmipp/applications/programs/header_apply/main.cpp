@@ -33,8 +33,10 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
     img.Xoff() = 0.;
     img.Yoff() = 0.;
     img.psi() = 0.;
-    if (img.tilt() == 0) img.rot() = 0;
     //set angles to zero
+    if (img.tilt() == 0) img.rot() = 0;
+    // set mirror flag to zero
+    img.flip() = 0.;
 
     return true;
 }//images end
