@@ -93,13 +93,13 @@ public:
 
 public:
   /// Read arguments from command line
-  void read(int argc, char **argv);
+  virtual void read(int argc, char **argv);
 
   /// Show
-  void show();
+  virtual void show();
 
   /// Usage
-  void usage();
+  virtual void usage();
 
   /// Extended Usage
   void extended_usage();
