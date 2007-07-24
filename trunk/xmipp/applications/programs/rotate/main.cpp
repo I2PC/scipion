@@ -26,6 +26,7 @@
 #include <data/progs.h>
 #include <data/args.h>
 #include <data/geometry.h>
+#include <data/gridding.h>
 
 class Rotate_parameters: public Prog_parameters
 {
@@ -37,6 +38,7 @@ public:
     Matrix1D<double> axis;
     double ang;
     bool wrap;
+    bool gridding;
 
     Matrix2D<double> A3D, A2D;
 
@@ -74,6 +76,8 @@ public:
             A2D.window(0, 0, 2, 2);
         }
         wrap = !checkParameter(argc, argv, "-dont_wrap");
+        gridding = checkParameter(argc, argv, "-gridding");
+
     }
 
     void show()
@@ -86,7 +90,9 @@ public:
             cout << "Aligning " << axis.transpose() << " with Z\n";
         else if (Axis_mode)
             cout << "Rotating " << ang << " degrees around " << axis.transpose()
-            << endl;
+		 << endl;
+       if (gridding)
+	   cout << "Use reverse gridding for interpolation."<<endl;
     }
 
     void usage()
@@ -99,7 +105,8 @@ public:
         << "                                      represent optional parameters\n"
         << "  [-axis \"[<x>,<y>,<z>]\" -ang <ang>]: Rotate <ang> degrees around (x,y,z),\n"
         << "                                      by default (0,0,1)\n"
-        << "  [-dont_wrap]                      : By default, the volume is wrapped\n";
+        << "  [-dont_wrap]                      : By default, the image/volume is wrapped\n"
+	<< "  [-gridding]                       : Use reverse gridding for interpolation\n";
     }
 };
 
@@ -109,8 +116,17 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
     Image img_out;
     if (XSIZE(eprm->A2D) != 0)
     {
-        applyGeometryBSpline(img_out(), eprm->A2D, img(), 3, IS_NOT_INV, eprm->wrap);
-        img() = img_out();
+	if (eprm->gridding)
+	{
+	    KaiserBessel kb;
+	    produceGriddingImage(img(),img_out(),kb);
+	    applyGeometryGridding(img(), eprm->A2D, img_out(), kb, IS_NOT_INV, eprm->wrap);
+	}
+	else
+	{
+	    applyGeometryBSpline(img_out(), eprm->A2D, img(), 3, IS_NOT_INV, eprm->wrap);
+	    img() = img_out();
+	}
     }
     return true;
 }
@@ -119,8 +135,17 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
     Rotate_parameters *eprm = (Rotate_parameters *) prm;
     Volume vol_out;
-    applyGeometryBSpline(vol_out(), eprm->A3D, vol(), 3, IS_NOT_INV, eprm->wrap);
-    vol() = vol_out();
+    if (eprm->gridding)
+    {
+	KaiserBessel kb;
+	produceGriddingVolume(vol(),vol_out(),kb);
+	applyGeometryGridding(vol(), eprm->A3D, vol_out(), kb, IS_NOT_INV, eprm->wrap);
+    }
+    else
+    {
+	applyGeometryBSpline(vol_out(), eprm->A3D, vol(), 3, IS_NOT_INV, eprm->wrap);
+	vol() = vol_out();
+    }
     return true;
 }
 
