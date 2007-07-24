@@ -26,30 +26,74 @@
 #include <data/progs.h>
 #include <data/args.h>
 #include <data/geometry.h>
+#include <data/gridding.h>
+
+class Headerapply_parameters: public Prog_parameters
+{
+public:
+
+    bool gridding;
+    bool wrap;
+
+    void read(int argc, char **argv)
+    {
+        Prog_parameters::read(argc, argv);
+        gridding = checkParameter(argc, argv, "-gridding");
+        wrap = !checkParameter(argc, argv, "-dont_wrap");
+    }
+
+    void usage()
+    {
+        Prog_parameters::usage();
+        cerr << "  [-dont_wrap]              : By default, the image is wrapped\n"
+	     << "  [-gridding]               : Use reverse gridding for interpolation\n";
+    }
+
+    void show()
+    {
+        Prog_parameters::show();
+        if (!wrap)
+            cout << "Do not wrap"<<endl;
+        if (gridding)
+            cout << "Use reverse gridding interpolation"<<endl;
+    }
+};
 
 bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 {
-    //set shifts to zero
+    Headerapply_parameters *eprm = (Headerapply_parameters *) prm;
+    Matrix2D<double> Maux;
+    if (eprm->gridding)
+    {
+	KaiserBessel kb;
+	produceGriddingMatrix2D(img(),Maux,kb);
+	applyGeometryGridding(img(), img.get_transformation_matrix(), Maux, kb, IS_INV, eprm->wrap);
+    }
+    else
+    {
+	applyGeometryBSpline(Maux, img.get_transformation_matrix(), img(), 3, IS_INV, eprm->wrap);
+	img()=Maux;
+    }
+
+    //Reset in-plane transformations of the header
     img.Xoff() = 0.;
     img.Yoff() = 0.;
     img.psi() = 0.;
-    //set angles to zero
     if (img.tilt() == 0) img.rot() = 0;
-    // set mirror flag to zero
     img.flip() = 0.;
 
     return true;
-}//images end
+}
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
-    cerr << "Applygeo does not work with volumes\n";
-    return true;
-}//volume end
+    cerr << "Error: applygeo does not work with volumes\n";
+    exit(0);
+    return false;
+}
 
 int main(int argc, char **argv)
 {
-    Prog_parameters prm;
-    prm.apply_geo = true;
+    Headerapply_parameters prm;
     SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
 }
