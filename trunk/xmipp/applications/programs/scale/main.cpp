@@ -59,11 +59,6 @@ int main(int argc, char **argv)
         if (ydim == 0) ydim = xdim;
         if (zdim == 0) zdim = xdim;
 
-	if ( gridding && (xdim != ydim) || (xdim!=ydim) || (zdim!=ydim) )
-	{
-	    REPORT_ERROR(1, "Reverse gridding interpolation only allows xdim=ydim=zdim");
-	}
-
     }
     catch (Xmipp_error XE)
     {

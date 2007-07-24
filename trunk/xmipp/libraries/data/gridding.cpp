@@ -46,15 +46,16 @@ void produceGriddingFourierMatrix2D(const Matrix2D< double > &in,
 				    KaiserBessel &kb)
 {
     // 1. Set up constants and Kaiser-Bessel object
-    int N = XSIZE(in) * GRIDDING_NPAD;
+    int Nx = XSIZE(in) * GRIDDING_NPAD;
+    int Ny = YSIZE(in) * GRIDDING_NPAD;
     float r = XSIZE(in) / 2.;
-    float v = GRIDDING_K/(2.*N);
-    kb = KaiserBessel(GRIDDING_ALPHA, GRIDDING_K, r, v , N);
+    float v = GRIDDING_K / (2. * Nx);
+    kb = KaiserBessel(GRIDDING_ALPHA, GRIDDING_K, r, v , Nx);
 
     // 2. iFFT, pad with zeros and divide in real space by a sinhwin
     Matrix2D<double> aux2;
     double wx, wy;
-    aux2.resize(N,N);
+    aux2.resize(Ny,Nx);
     aux2.setXmippOrigin();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(in) {
 	wy=kb.sinhwin(i);
@@ -74,10 +75,11 @@ void produceGriddingMatrix2D(const Matrix2D< double > &in,
 			     KaiserBessel &kb)
 {
     // 1. Set up constants and Kaiser-Bessel object
-    int N = XSIZE(in) * GRIDDING_NPAD;
+    int Nx = XSIZE(in) * GRIDDING_NPAD;
+    int Ny = YSIZE(in) * GRIDDING_NPAD;
     float r = XSIZE(in) / 2.;
-    float v = GRIDDING_K/(2.*N);
-    kb = KaiserBessel(GRIDDING_ALPHA, GRIDDING_K, r, v , N);
+    float v = GRIDDING_K / (2. * Nx);
+    kb = KaiserBessel(GRIDDING_ALPHA, GRIDDING_K, r, v , Nx);
     
     // 2. FFT, pad with zeros and divide in Fourier space by a sinhwin
     Matrix2D<complex<double> > aux,aux2;
@@ -85,7 +87,7 @@ void produceGriddingMatrix2D(const Matrix2D< double > &in,
     FourierTransform(in,aux);
     CenterFFT(aux,true);
     aux.setXmippOrigin();
-    aux2.resize(N,N);
+    aux2.resize(Ny,Nx);
     aux2.setXmippOrigin();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(aux) {
 	wy=kb.sinhwin(i);
@@ -116,15 +118,17 @@ void produceGriddingFourierMatrix3D(const Matrix3D< double > &in,
 				    KaiserBessel &kb)
 {
     // 1. Set up constants and Kaiser-Bessel object
-    int N = XSIZE(in) * GRIDDING_NPAD;
+    int Nx = XSIZE(in) * GRIDDING_NPAD;
+    int Ny = YSIZE(in) * GRIDDING_NPAD;
+    int Nz = ZSIZE(in) * GRIDDING_NPAD;
     float r = XSIZE(in) / 2.;
-    float v = GRIDDING_K/(2.*N);
-    kb = KaiserBessel(GRIDDING_ALPHA, GRIDDING_K, r, v , N);
+    float v = GRIDDING_K / (2. * Nx);
+    kb = KaiserBessel(GRIDDING_ALPHA, GRIDDING_K, r, v , Nx);
 
     // 2. iFFT, pad with zeros and divide in real space by a sinhwin
     Matrix3D<double> aux2;
     double wx, wy, wz;
-    aux2.resize(N,N,N);
+    aux2.resize(Nz,Ny,Nx);
     aux2.setXmippOrigin();
     FOR_ALL_ELEMENTS_IN_MATRIX3D(in) {
 	wz=kb.sinhwin(k);
@@ -145,10 +149,12 @@ void produceGriddingMatrix3D(const Matrix3D< double > &in,
 			     KaiserBessel &kb)
 {
     // 1. Set up constants and Kaiser-Bessel object
-    int N = XSIZE(in) * GRIDDING_NPAD;
+    int Nx = XSIZE(in) * GRIDDING_NPAD;
+    int Ny = YSIZE(in) * GRIDDING_NPAD;
+    int Nz = ZSIZE(in) * GRIDDING_NPAD;
     float r = XSIZE(in) / 2.;
-    float v = GRIDDING_K/(2.*N);
-    kb = KaiserBessel(GRIDDING_ALPHA, GRIDDING_K, r, v , N);
+    float v = GRIDDING_K / (2. * Nx);
+    kb = KaiserBessel(GRIDDING_ALPHA, GRIDDING_K, r, v , Nx);
     
     // 2. Center FFT and divide in Fourier space by a sinhwin
     Matrix3D<complex<double> > aux,aux2;
@@ -156,7 +162,7 @@ void produceGriddingMatrix3D(const Matrix3D< double > &in,
     FourierTransform(in,aux);
     CenterFFT(aux,true);
     aux.setXmippOrigin();
-    aux2.resize(N,N,N);
+    aux2.resize(Nz,Ny,Nx);
     aux2.setXmippOrigin();
     FOR_ALL_ELEMENTS_IN_MATRIX3D(aux) {
 	wz=kb.sinhwin(k);
