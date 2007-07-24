@@ -151,7 +151,6 @@ void produceGriddingMatrix3D(const Matrix3D< double > &in,
     kb = KaiserBessel(GRIDDING_ALPHA, GRIDDING_K, r, v , N);
     
     // 2. Center FFT and divide in Fourier space by a sinhwin
-    // I could actually pre-calculate the sinhwin for all images!!
     Matrix3D<complex<double> > aux,aux2;
     double wx, wy, wz;
     FourierTransform(in,aux);

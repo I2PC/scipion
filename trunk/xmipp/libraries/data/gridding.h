@@ -90,6 +90,9 @@ void produceGriddingMatrix3D(const Matrix3D< double > &in,
  *
  * A is a 3x3 transformation matrix.
  *
+ * Note that the output dimensions should be given if a different
+ * scale is to be applied.
+ *
  * To interpolate using gridding you must prepare the image first!
  * An example to apply a gridding-based transformation would be:
  *
@@ -103,8 +106,9 @@ void produceGriddingMatrix3D(const Matrix3D< double > &in,
  */
 template<typename T>
 void applyGeometryGridding(Matrix2D<T> &M2, Matrix2D< double > A, 
-			   const Matrix2D<T> &M1, KaiserBessel &kb, 
-			   bool inv, bool wrap, T outside = (T) 0)
+			   const Matrix2D<T> &M1, 
+			   KaiserBessel &kb, bool inv, bool wrap, 
+			   int nx = 0, int ny = 0, T outside = (T) 0)
 {
     int m1, n1, m2, n2;
     double x, y, xp, yp;
@@ -120,8 +124,13 @@ void applyGeometryGridding(Matrix2D<T> &M2, Matrix2D< double > A,
         return;
     }
 
-    // Smaller size output image for gridding!
-    M2.resize(XSIZE(M1) / GRIDDING_NPAD, YSIZE(M1) / GRIDDING_NPAD);
+    // For scalings the output matrix is explicitly resized to the final size 
+    // Otherwise, just take half the size of the gridding image
+    if (nx == 0) 
+	nx = XSIZE(M1) / GRIDDING_NPAD;
+    if (ny == 0) 
+	ny = XSIZE(M1) / GRIDDING_NPAD;
+    M2.resize(ny, nx);
     M2.setXmippOrigin();
 
     if (!inv)
@@ -130,10 +139,11 @@ void applyGeometryGridding(Matrix2D<T> &M2, Matrix2D< double > A,
     // Find center and limits of image
     cen_y  = (int)(YSIZE(M2) / 2);
     cen_x  = (int)(XSIZE(M2) / 2);
-    minxp  = -cen_x;
-    minyp  = -cen_y;
-    maxxp  = XSIZE(M2) - cen_x - 1;
-    maxyp  = YSIZE(M2) - cen_y - 1;
+    // Take 2x oversize M1 dims into account for calculating the limits 
+    minxp  = FIRST_XMIPP_INDEX(XSIZE(M1)/2);
+    minyp  = FIRST_XMIPP_INDEX(YSIZE(M1)/2);
+    maxxp  = LAST_XMIPP_INDEX(XSIZE(M1)/2);
+    maxyp  = LAST_XMIPP_INDEX(YSIZE(M1)/2);
 
     // Now we go from the output image to the input image, ie, for any pixel
     // in the output image we calculate which are the corresponding ones in
@@ -213,7 +223,8 @@ void applyGeometryGridding(Matrix2D<T> &M2, Matrix2D< double > A,
 template<typename T>
 void applyGeometryGridding(Matrix3D<T> &V2, Matrix2D< double > A, 
 			   const Matrix3D<T> &V1, KaiserBessel &kb, 
-			   bool inv, bool wrap, T outside = (T) 0)
+			   bool inv, bool wrap, 
+			   int nx = 0, int ny = 0, int nz = 0, T outside = (T) 0)
 {
     int m1, n1, o1, m2, n2, o2;
     double x, y, z, xp, yp, zp;
@@ -229,8 +240,15 @@ void applyGeometryGridding(Matrix3D<T> &V2, Matrix2D< double > A,
         return;
     }
 
-    // Smaller size output image for gridding!
-    V2.resize(XSIZE(V1) / GRIDDING_NPAD, YSIZE(V1) / GRIDDING_NPAD, ZSIZE(V1) / GRIDDING_NPAD);
+    // For scalings the output matrix is explicitly resized to the final size 
+    // Otherwise, just take half the size of the gridding image
+    if (nx == 0) 
+	nx = XSIZE(V1) / GRIDDING_NPAD;
+    if (ny == 0) 
+	ny = XSIZE(V1) / GRIDDING_NPAD;
+    if (nz == 0) 
+	nz = ZSIZE(V1) / GRIDDING_NPAD;
+    V2.resize(nz, ny, nx);
     V2.setXmippOrigin();
 
     if (!inv)
@@ -240,12 +258,13 @@ void applyGeometryGridding(Matrix3D<T> &V2, Matrix2D< double > A,
     cen_z = (int)(V2.zdim / 2);
     cen_y = (int)(V2.ydim / 2);
     cen_x = (int)(V2.xdim / 2);
-    minxp = -cen_x;
-    minyp = -cen_y;
-    minzp = -cen_z;
-    maxxp = V2.xdim - cen_x - 1;
-    maxyp = V2.ydim - cen_y - 1;
-    maxzp = V2.zdim - cen_z - 1;
+    // Take 2x oversize M1 dims into account for calculating the limits 
+    minxp  = FIRST_XMIPP_INDEX(XSIZE(V1)/2);
+    minyp  = FIRST_XMIPP_INDEX(YSIZE(V1)/2);
+    minzp  = FIRST_XMIPP_INDEX(ZSIZE(V1)/2);
+    maxxp  = LAST_XMIPP_INDEX(XSIZE(V1)/2);
+    maxyp  = LAST_XMIPP_INDEX(YSIZE(V1)/2);
+    maxzp  = LAST_XMIPP_INDEX(ZSIZE(V1)/2);
 
     // Now we go from the output Matrix3D to the input Matrix3D, ie, for any
     // voxel in the output Matrix3D we calculate which are the corresponding
