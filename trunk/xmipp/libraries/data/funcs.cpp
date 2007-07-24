@@ -37,6 +37,100 @@
 using namespace std;
 
 /* Numerical functions ----------------------------------------------------- */
+// Kaiser-Bessel constructor
+KaiserBessel::KaiserBessel(float alpha_, int K_, float r_, float v_,
+			   int N_, float vtable_, int ntable_) 
+    : alpha(alpha_), v(v_), r(r_), N(N_), K(K_), vtable(vtable_), 
+      ntable(ntable_) 
+{
+    // Default values are alpha=1.25, K=6, r=0.5, v = K/2
+    if (0.f == v) v = float(K)/2;
+    if (0.f == vtable) vtable = v;
+    alphar = alpha*r;
+    fac = static_cast<float>(2.*PI)*alphar*v;
+    vadjust = 1.0f*v;
+    facadj = static_cast<float>(2.*PI)*alphar*vadjust;
+    build_I0table();
+}
+
+// Kaiser-Bessel I0 window function
+float KaiserBessel::i0win(float x) const 
+{
+    float val0 = float(bessi0(facadj));
+    float absx = fabs(x);
+    if (absx > vadjust) return 0.f;
+    float rt = sqrt(1.f - pow(absx/vadjust, 2));
+    float res = bessi0(facadj*rt)/val0;
+    return res;
+}
+
+// Tabulate I0 window for speed
+void KaiserBessel::build_I0table() 
+{
+    i0table.resize(ntable+1); // i0table[0:ntable]
+    int ltab = int(round(float(ntable)/1.25f));
+    fltb = float(ltab)/(K/2);
+    //float val0 = gsl_sf_bessel_I0(facadj);
+    float val0 = bessi0(facadj);
+    for (int i=ltab+1; i <= ntable; i++) 
+	i0table[i] = 0.f;
+    for (int i=0; i <= ltab; i++) 
+    {
+	float s = float(i)/fltb/N;
+	if (s < vadjust) {
+	    float rt = sqrt(1.f - pow(s/vadjust, 2));
+	    //i0table[i] = gsl_sf_bessel_I0(facadj*rt)/val0;
+	    i0table[i] = bessi0(facadj*rt)/val0;
+	} else {
+	    i0table[i] = 0.f;
+	}
+    }
+}
+
+// Compute the maximum error in the table 
+float KaiserBessel::I0table_maxerror() 
+{
+    float maxdiff = 0.f;
+    for (int i = 1; i <= ntable; i++) 
+    {
+	float diff = fabs(i0table[i] - i0table[i-1]);
+	if (diff > maxdiff) 
+	    maxdiff = diff;
+    }
+    return maxdiff;
+}
+
+// Kaiser-Bessel Sinh window function
+float KaiserBessel::sinhwin(float x) const 
+{
+    float val0 = sinh(fac)/fac;
+    float absx = fabs(x);
+    if (0.0 == x) 
+    {
+	float res = 1.0f;
+	return res;
+    } 
+    else if (absx == alphar) 
+    {
+	return 1.0f/val0;
+    } 
+    else if (absx < alphar) 
+    {
+	float rt = sqrt(1.0f - pow((x/alphar), 2));
+	float facrt = fac*rt;
+	float res = (sinh(facrt)/facrt)/val0;
+	return res;
+    } 
+    else 
+    {
+	float rt = sqrt(pow((x/alphar),2) - 1.f);
+	float facrt = fac*rt;
+	float res = (sin(facrt)/facrt)/val0;
+	return res;
+    }
+}
+
+
 // Solve second degree equation. ax^2+bx+c=0 -------------------------------
 int solve_2nd_degree_eq(float a, float b, float c, float &x1, float &x2,
                         float prec)

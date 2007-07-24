@@ -38,6 +38,7 @@ using namespace std;
 #include <string>
 #include <climits>
 #include <algorithm>
+#include <vector>
 
 // For timing functions
 #include <unistd.h>
@@ -112,6 +113,119 @@ public:
             tabulatedsinc[i] = sin(xx) / xx;
         }
     }
+};
+
+/** Kaiser-Bessel function
+ * @ingroup NumericalFunctions
+ *
+ *  This code was modified from SPARX and originally written by Pawel
+ *  Penczek at the University of Texas - Houston Medical School
+ *
+ *  see P. A. Penczek, R. Renka, and H. Schomberg,
+ *      J. Opt. Soc. Am. _21_, 449 (2004)
+ *
+ *  The I0 version can be tabulated and interpolated upon
+ *  demand, but the max error needs to be checked.  The 
+ *  "vtable" parameter corresponds to the maximum value of x
+ *  for which the I0 window is non-zero.  Setting "vtable"
+ *  different from "v" corresponds to a change in units of x.
+ *  In practice, it is often handy to replace x in some sort
+ *  of absolute units with x described in terms of grid
+ *  intervals.
+ *
+ *  The get_kbsinh_win and get_kbi0_win functions return
+ *  single-argument function objects, which is what a 
+ *  generic routine is likely to want.
+ *
+ * @code
+ *  kb = KaiserBessel(alpha, K, r, v , N);
+ *  float wx = kb.sinhwin(32);
+ *  float tablex1 = kb.i0win_tab(delx-inxold+3);
+ * @endcode
+ */
+class KaiserBessel 
+{
+protected:
+    float alpha, v, r; /** Kaiser-Bessel parameters */
+    int N; /** size in Ix-space */
+    int K; /** I0 window size */
+    float vtable; /** table I0 non-zero domain maximum */
+    int ntable;
+    vector<float> i0table;
+    float dtable; /** table spacing */
+    float alphar; /** alpha*r */
+    float fac; /** 2*pi*alpha*r*v */
+    float vadjust; 
+    float facadj; /** 2*pi*alpha*r*vadjust */
+    virtual void build_I0table(); /** Tabulate I0 window for speed */
+    float fltb;
+
+public:
+    /** Empty constructor */
+    KaiserBessel() { }
+
+    /** Constructor with parameters */
+    KaiserBessel(float alpha_, int K, float r_,
+		 float v_, int N_, float vtable_=0.f, 
+		 int ntable_ = 5999);
+
+    /** Destructor */
+    virtual ~KaiserBessel() {};
+
+    /** Compute the maximum error in the table */
+    float I0table_maxerror();
+    vector<float> dump_table() {
+	return i0table;
+    }
+
+    /** Kaiser-Bessel Sinh window function */
+    virtual float sinhwin(float x) const;
+
+    /** Kaiser-Bessel I0 window function */
+    virtual float i0win(float x) const;
+
+    /** Kaiser-Bessel I0 window function (uses table lookup) */
+    inline float i0win_tab(float x) const {
+	float xt;
+	if(x<0.f) xt = -x*fltb+0.5f; else xt = x*fltb+0.5f;
+	return i0table[ (int) xt];
+    }
+
+    /** Return the size of the I0 window */
+    int get_window_size() const { return K; }
+
+    /** Sinh window function object */
+    class kbsinh_win {
+	KaiserBessel& kb;
+    public:
+	kbsinh_win(KaiserBessel& kb_) : kb(kb_) {}
+	float operator()(float x) const {
+	    return kb.sinhwin(x);
+	}
+	int get_window_size() const {return kb.get_window_size();}
+    };
+
+    /** Sinh window function object factory */
+    kbsinh_win get_kbsinh_win() { 
+	return kbsinh_win(*this);
+    }
+
+    /** I0 window function object */
+    class kbi0_win {
+	KaiserBessel& kb;
+    public:
+	kbi0_win(KaiserBessel& kb_) : kb(kb_) {}
+	float operator()(float x) const {
+	    return kb.i0win(x);
+	}
+	int get_window_size() const {return kb.get_window_size();}
+    };
+
+    /** I0 window function object factory */
+    kbi0_win get_kbi0_win() { 
+	return kbi0_win(*this);
+    }
+
 };
 
 /** Solve second degree equation
