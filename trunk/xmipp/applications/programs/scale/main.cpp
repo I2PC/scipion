@@ -27,6 +27,7 @@
 #include <data/image.h>
 #include <data/args.h>
 #include <data/selfile.h>
+#include <data/gridding.h>
 
 void Usage();
 
@@ -37,6 +38,8 @@ int main(int argc, char **argv)
     ImageXmipp      image;
     VolumeXmipp     volume;
     int             zdim, ydim, xdim;
+    bool            gridding;
+    Matrix2D< double > A(3, 3);
 
     // Read arguments --------------------------------------------------------
     try
@@ -49,6 +52,7 @@ int main(int argc, char **argv)
         zdim = textToInteger(getParameter(argc, argv, "-zdim", "0"));
         ydim = textToInteger(getParameter(argc, argv, "-ydim", "0"));
         xdim = textToInteger(getParameter(argc, argv, "-xdim"));
+        gridding = checkParameter(argc, argv, "-gridding");
 
         if (ydim == 0) ydim = xdim;
         if (zdim == 0) zdim = xdim;
@@ -66,7 +70,20 @@ int main(int argc, char **argv)
         if (Is_ImageXmipp(fn_input))
         {
             image.read(fn_input);
-            image().selfScaleToSizeBSpline(3, ydim, xdim);
+	    if (gridding)
+	    {
+		KaiserBessel kb;
+		Matrix2D<double> Maux, A(3,3);
+		produceGriddingMatrix2D(image(),Maux,kb);
+		A.initIdentity();
+		DIRECT_MAT_ELEM(A, 0, 0) = (double) xdim / (double) XSIZE(image());
+		DIRECT_MAT_ELEM(A, 1, 1) = (double) ydim / (double) YSIZE(image());
+		applyGeometryGridding(image(), A, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim, 0.);
+	    }
+	    else
+	    {
+		image().selfScaleToSizeBSpline(3, ydim, xdim);
+	    }
             if (fn_out == "") image.write(fn_input);
             else            image.write(fn_out);
 
@@ -79,7 +96,7 @@ int main(int argc, char **argv)
             if (fn_out == "") volume.write(fn_input);
             else            volume.write(fn_out);
 
-            // Mask a selection file ------------------------------------------------
+            // Scale a selection file ------------------------------------------------
         }
         else
         {
@@ -135,7 +152,8 @@ void Usage()
     << "   -i <selfile> [-oext <output extension>]\n"
     << "   -xdim <new x dimension>\n"
     << "  [-ydim <new y dimension=new x dimension>\n"
-    << "  [-zdim <new z dimension=new x dimension>\n";
+    << "  [-zdim <new z dimension=new x dimension>\n"
+    << "  [-gridding]       : Use reverse gridding for interpolation\n";
 }
 
 /* Menus ------------------------------------------------------------------- */

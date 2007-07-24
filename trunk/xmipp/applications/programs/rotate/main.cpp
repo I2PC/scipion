@@ -91,6 +91,8 @@ public:
         else if (Axis_mode)
             cout << "Rotating " << ang << " degrees around " << axis.transpose()
 		 << endl;
+       if (!wrap)
+	   cout << "Do not wrap."<<endl;
        if (gridding)
 	   cout << "Use reverse gridding for interpolation."<<endl;
     }
