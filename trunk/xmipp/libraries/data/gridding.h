@@ -109,7 +109,7 @@ void applyGeometryGridding(Matrix2D<T> &M2, Matrix2D< double > A,
     int m1, n1, m2, n2;
     double x, y, xp, yp;
     double minxp, minyp, maxxp, maxyp;
-    int cen_x, cen_y, cen_xp, cen_yp;
+    int cen_x, cen_y;
 
     if ((XSIZE(A) != 3) || (YSIZE(A) != 3))
         REPORT_ERROR(1102, "Apply_geom: geometrical transformation is not 3x3");
@@ -130,12 +130,10 @@ void applyGeometryGridding(Matrix2D<T> &M2, Matrix2D< double > A,
     // Find center and limits of image
     cen_y  = (int)(YSIZE(M2) / 2);
     cen_x  = (int)(XSIZE(M2) / 2);
-    cen_yp = (int)(YSIZE(M1) / 2);
-    cen_xp = (int)(XSIZE(M1) / 2);
-    minxp  = -cen_xp;
-    minyp  = -cen_yp;
-    maxxp  = XSIZE(M1) - cen_xp - 1;
-    maxyp  = YSIZE(M1) - cen_yp - 1;
+    minxp  = -cen_x;
+    minyp  = -cen_y;
+    maxxp  = XSIZE(M2) - cen_x - 1;
+    maxyp  = YSIZE(M2) - cen_y - 1;
 
     // Now we go from the output image to the input image, ie, for any pixel
     // in the output image we calculate which are the corresponding ones in
@@ -220,7 +218,7 @@ void applyGeometryGridding(Matrix3D<T> &V2, Matrix2D< double > A,
     int m1, n1, o1, m2, n2, o2;
     double x, y, z, xp, yp, zp;
     double minxp, minyp, maxxp, maxyp, minzp, maxzp;
-    int   cen_x, cen_y, cen_z, cen_xp, cen_yp, cen_zp;
+    int   cen_x, cen_y, cen_z;
 
     if ((XSIZE(A) != 4) || (YSIZE(A) != 4))
         REPORT_ERROR(1102, "Apply_geom3D: geometrical transformation is not 4x4");
@@ -242,15 +240,12 @@ void applyGeometryGridding(Matrix3D<T> &V2, Matrix2D< double > A,
     cen_z = (int)(V2.zdim / 2);
     cen_y = (int)(V2.ydim / 2);
     cen_x = (int)(V2.xdim / 2);
-    cen_zp = (int)(V1.zdim / 2);
-    cen_yp = (int)(V1.ydim / 2);
-    cen_xp = (int)(V1.xdim / 2);
-    minxp = -cen_xp;
-    minyp = -cen_yp;
-    minzp = -cen_zp;
-    maxxp = V1.xdim - cen_xp - 1;
-    maxyp = V1.ydim - cen_yp - 1;
-    maxzp = V1.zdim - cen_zp - 1;
+    minxp = -cen_x;
+    minyp = -cen_y;
+    minzp = -cen_z;
+    maxxp = V2.xdim - cen_x - 1;
+    maxyp = V2.ydim - cen_y - 1;
+    maxzp = V2.zdim - cen_z - 1;
 
     // Now we go from the output Matrix3D to the input Matrix3D, ie, for any
     // voxel in the output Matrix3D we calculate which are the corresponding
