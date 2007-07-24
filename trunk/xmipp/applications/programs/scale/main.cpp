@@ -39,7 +39,9 @@ int main(int argc, char **argv)
     VolumeXmipp     volume;
     int             zdim, ydim, xdim;
     bool            gridding;
-    Matrix2D< double > A(3, 3);
+    Matrix2D< double > A(3, 3), B(4, 4);
+    A.initIdentity();
+    B.initIdentity();
 
     // Read arguments --------------------------------------------------------
     try
@@ -56,6 +58,12 @@ int main(int argc, char **argv)
 
         if (ydim == 0) ydim = xdim;
         if (zdim == 0) zdim = xdim;
+
+	if ( gridding && (xdim != ydim) || (xdim!=ydim) || (zdim!=ydim) )
+	{
+	    REPORT_ERROR(1, "Reverse gridding interpolation only allows xdim=ydim=zdim");
+	}
+
     }
     catch (Xmipp_error XE)
     {
@@ -73,12 +81,11 @@ int main(int argc, char **argv)
 	    if (gridding)
 	    {
 		KaiserBessel kb;
-		Matrix2D<double> Maux, A(3,3);
+		Matrix2D<double> Maux;
 		produceGriddingMatrix2D(image(),Maux,kb);
-		A.initIdentity();
 		DIRECT_MAT_ELEM(A, 0, 0) = (double) xdim / (double) XSIZE(image());
 		DIRECT_MAT_ELEM(A, 1, 1) = (double) ydim / (double) YSIZE(image());
-		applyGeometryGridding(image(), A, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim, 0.);
+		applyGeometryGridding(image(), A, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim);
 	    }
 	    else
 	    {
@@ -92,12 +99,25 @@ int main(int argc, char **argv)
         else if (Is_VolumeXmipp(fn_input))
         {
             volume.read(fn_input);
-            volume().selfScaleToSizeBSpline(3, zdim, ydim, xdim);
+	    if (gridding)
+	    {
+		KaiserBessel kb;
+		Matrix3D<double> Maux;
+		produceGriddingMatrix3D(volume(),Maux,kb);
+		DIRECT_MAT_ELEM(B, 0, 0) = (double) xdim / (double) XSIZE(volume());
+		DIRECT_MAT_ELEM(B, 1, 1) = (double) ydim / (double) YSIZE(volume());
+		DIRECT_MAT_ELEM(B, 2, 2) = (double) zdim / (double) ZSIZE(volume());
+		applyGeometryGridding(volume(), B, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim, zdim);
+	    }
+	    else
+	    {
+		volume().selfScaleToSizeBSpline(3, zdim, ydim, xdim);
+	    }
             if (fn_out == "") volume.write(fn_input);
             else            volume.write(fn_out);
 
-            // Scale a selection file ------------------------------------------------
         }
+	// Scale a selection file ------------------------------------------------
         else
         {
             SF.read(fn_input);
@@ -115,14 +135,39 @@ int main(int argc, char **argv)
                 if (Is_ImageXmipp(fn_in))
                 {
                     image.read(fn_in);
-                    image().selfScaleToSizeBSpline(3, ydim, xdim);
+		    if (gridding)
+		    {
+			KaiserBessel kb;
+			Matrix2D<double> Maux;
+			produceGriddingMatrix2D(image(),Maux,kb);
+			DIRECT_MAT_ELEM(A, 0, 0) = (double) xdim / (double) XSIZE(image());
+			DIRECT_MAT_ELEM(A, 1, 1) = (double) ydim / (double) YSIZE(image());
+			applyGeometryGridding(image(), A, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim);
+		    }
+		    else
+		    {
+			image().selfScaleToSizeBSpline(3, ydim, xdim);
+		    }
                     image.write(fn_out);
                     // Process a volume ...............................................
                 }
                 else if (Is_VolumeXmipp(fn_in))
                 {
                     volume.read(fn_in);
-                    volume().selfScaleToSizeBSpline(3, zdim, ydim, xdim);
+		    if (gridding)
+		    {
+			KaiserBessel kb;
+			Matrix3D<double> Maux;
+			produceGriddingMatrix3D(volume(),Maux,kb);
+			DIRECT_MAT_ELEM(B, 0, 0) = (double) xdim / (double) XSIZE(volume());
+			DIRECT_MAT_ELEM(B, 1, 1) = (double) ydim / (double) YSIZE(volume());
+			DIRECT_MAT_ELEM(B, 2, 2) = (double) zdim / (double) ZSIZE(volume());
+			applyGeometryGridding(volume(), B, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim, zdim);
+		    }
+		    else
+		    {
+			volume().selfScaleToSizeBSpline(3, zdim, ydim, xdim);
+		    }
                     volume.write(fn_out);
                     // Not a Spider file ..............................................
                 }
