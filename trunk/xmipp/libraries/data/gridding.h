@@ -40,27 +40,47 @@
 #define GRIDDING_NPAD 2
 #define GRIDDING_K 6
 
-/**  Produces a 2D Fourier-space image for reverse-gridding interpolation
+/**  Produces a 2D Fourier-space matrix2d for reverse-gridding
+ *  interpolation from a Fourier-space matrix2d
  */
-void produceGriddingImage(const Matrix2D< complex < double> > &in, 
-			  Matrix2D< complex < double > > &out,
-			  KaiserBessel &kb);
+void produceGriddingFourierMatrix2D(const Matrix2D< complex < double> > &in, 
+				    Matrix2D< complex < double > > &out,
+				    KaiserBessel &kb);
 
-/**  Produces a 2D real-space image for reverse-gridding interpolation
+/**  Produces a 2D Fourier-space matrix2d for reverse-gridding
+ *  interpolation from a real-space matrix2d 
+ *  This real-space matrix2d should have the Xmipp origin set!
  */
-void produceGriddingImage(const Matrix2D< double > &in, 
+void produceGriddingFourierMatrix2D(const Matrix2D< double > &in, 
+				    Matrix2D< complex< double > > &out,
+				    KaiserBessel &kb);
+
+/**  Produces a 2D real-space matrix2d for reverse-gridding interpolation
+ *  from a real-space matrix2d
+ */
+void produceGriddingMatrix2D(const Matrix2D< double > &in, 
 			  Matrix2D< double > &out,
 			  KaiserBessel &kb);
 
-/**  Produces a 3D Fourier-space volume for reverse-gridding interpolation
+/**  Produces a 3D Fourier-space matrix3d for reverse-gridding
+ *  interpolation from a Fourier-space matrix3d
  */
-void produceGriddingVolume(const Matrix3D< complex < double > > &in, 
-			   Matrix3D< complex < double > > &out,
-			   KaiserBessel &kb);
+void produceGriddingFourierMatrix3D(const Matrix3D< complex < double > > &in, 
+				  Matrix3D< complex < double > > &out,
+				  KaiserBessel &kb);
 
-/**  Produces a 3D real-space volume for reverse-gridding interpolation
+/**  Produces a 3D Fourier-space matrix3d for reverse-gridding
+ *  interpolation from a real-space matrix3d 
+ *  This real-space matrix3d should have the Xmipp origin set!
  */
-void produceGriddingVolume(const Matrix3D< double > &in, 
+void produceGriddingFourierMatrix3D(const Matrix3D< double > &in, 
+				    Matrix3D< complex< double > > &out,
+				    KaiserBessel &kb);
+
+/**  Produces a 3D real-space matrix3d for reverse-gridding
+ *  interpolation from a real-space matrix3d
+ */
+void produceGriddingMatrix3D(const Matrix3D< double > &in, 
 			   Matrix3D< double > &out,
 			   KaiserBessel &kb);
 
@@ -76,7 +96,7 @@ void produceGriddingVolume(const Matrix3D< double > &in,
  * @code
  * KaiserBessel kb;
  * matrix2D<double> Maux,out;
- * produceGriddingImage(img(),Maux,kb);
+ * produceGriddingMatrix2D(img(),Maux,kb);
  * Matrix2D<double> A = rotation2DMatrix(63.1);
  * applyGeometryGridding(out,A,Maux,IS_NOT_INV,DONT_WRAP,kb);
  * @endcode
@@ -181,13 +201,13 @@ void applyGeometryGridding(Matrix2D<T> &M2, Matrix2D< double > A,
  *
  * A is a 3x3 transformation matrix.
  *
- * To interpolate using gridding you must prepare the volume first!
+ * To interpolate using gridding you must prepare the matrix3d first!
  * An example to apply a gridding-based transformation would be:
  *
  * @code
  * KaiserBessel kb;
  * matrix3D<double> Maux,out;
- * produceGriddingVolume(vol(),Maux,kb);
+ * produceGriddingMatrix3D(vol(),Maux,kb);
  * Matrix2D<double> A = rotation2DMatrix(63.1);
  * applyGeometryGridding(out,A,Maux,IS_NOT_INV,DONT_WRAP,kb);
  * @endcode
@@ -319,7 +339,7 @@ void applyGeometryGridding(Matrix3D<T> &V2, Matrix2D< double > A,
  * @code
  * KaiserBessel kb;
  * matrix2D<double> Maux;
- * produceGriddingImage(img(),Maux,kb);
+ * produceGriddingMatrix2D(img(),Maux,kb);
  * interpolated_value = interpolatedElementGridding(Maux,0.5,0.5,kb);
  * @endcode
  */
@@ -448,7 +468,7 @@ T interpolatedElementGridding(const Matrix2D<T> &in, float x, float y, KaiserBes
  * @code
  * KaiserBessel kb;
  * matrix3D<double> Maux;
- * produceGriddingVolume(vol(),Maux,kb);
+ * produceGriddingMatrix3D(vol(),Maux,kb);
  * interpolated_value = interpolatedElementGridding(Maux,0.5,0.5,0.5,kb);
  * @endcode
  */

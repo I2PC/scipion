@@ -99,7 +99,7 @@ public:
     {
         Prog_parameters::usage();
         cerr << "  [-euler <rot> <tilt> <psi>        : Rotate with these Euler angles\n"
-        << "  [-alignWithZ \"[<x>,<y>,<z>]\"]   : Align (x,y,z) with Z\n"
+        << "  [-alignWithZ \"[<x>,<y>,<z>]\"]     : Align (x,y,z) with Z\n"
         << "                                      Notice that brackets for the\n"
         << "                                      vector must be written and do not\n"
         << "                                      represent optional parameters\n"
@@ -119,7 +119,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 	if (eprm->gridding)
 	{
 	    KaiserBessel kb;
-	    produceGriddingImage(img(),img_out(),kb);
+	    produceGriddingMatrix2D(img(),img_out(),kb);
 	    applyGeometryGridding(img(), eprm->A2D, img_out(), kb, IS_NOT_INV, eprm->wrap);
 	}
 	else
@@ -138,7 +138,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
     if (eprm->gridding)
     {
 	KaiserBessel kb;
-	produceGriddingVolume(vol(),vol_out(),kb);
+	produceGriddingMatrix3D(vol(),vol_out(),kb);
 	applyGeometryGridding(vol(), eprm->A3D, vol_out(), kb, IS_NOT_INV, eprm->wrap);
     }
     else

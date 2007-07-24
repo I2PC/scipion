@@ -31,10 +31,19 @@
  ***************************************************************************/
 #include "gridding.h"
 
-// Prepare a 2D Fourier-space image for gridding
-void produceGriddingImage(const Matrix2D< complex< double> > &in, 
-			  Matrix2D< complex< double > > &out,
-			  KaiserBessel &kb)
+void produceGriddingFourierMatrix2D(const Matrix2D< complex< double > > &in, 
+				    Matrix2D< complex< double > > &out,
+				    KaiserBessel &kb)
+{
+    Matrix2D<double> aux;
+    InverseFourierTransform(in,aux);
+    aux.setXmippOrigin();
+    produceGriddingFourierMatrix2D(aux,out,kb);
+}
+
+void produceGriddingFourierMatrix2D(const Matrix2D< double > &in, 
+				    Matrix2D< complex< double > > &out,
+				    KaiserBessel &kb)
 {
     // 1. Set up constants and Kaiser-Bessel object
     int N = XSIZE(in) * GRIDDING_NPAD;
@@ -43,16 +52,14 @@ void produceGriddingImage(const Matrix2D< complex< double> > &in,
     kb = KaiserBessel(GRIDDING_ALPHA, GRIDDING_K, r, v , N);
 
     // 2. iFFT, pad with zeros and divide in real space by a sinhwin
-    Matrix2D<double> aux,aux2;
+    Matrix2D<double> aux2;
     double wx, wy;
-    InverseFourierTransform(in,aux);
-    aux.setXmippOrigin();
     aux2.resize(N,N);
     aux2.setXmippOrigin();
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(aux) {
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(in) {
 	wy=kb.sinhwin(i);
 	wx=kb.sinhwin(j);
-	MAT_ELEM(aux2,i,j) = MAT_ELEM(aux,i,j) / (wx * wy);
+	MAT_ELEM(aux2,i,j) = MAT_ELEM(in,i,j) / (wx * wy);
     }
     
     // 3. FFT & (forward) centering
@@ -62,9 +69,9 @@ void produceGriddingImage(const Matrix2D< complex< double> > &in,
 }
 
 // Prepare a 2D real-space image for gridding
-void produceGriddingImage(const Matrix2D< double > &in, 
-			  Matrix2D< double > &out,
-			  KaiserBessel &kb)
+void produceGriddingMatrix2D(const Matrix2D< double > &in, 
+			     Matrix2D< double > &out,
+			     KaiserBessel &kb)
 {
     // 1. Set up constants and Kaiser-Bessel object
     int N = XSIZE(in) * GRIDDING_NPAD;
@@ -94,9 +101,19 @@ void produceGriddingImage(const Matrix2D< double > &in,
 }
 
 // Prepare a 3D Fourier-space volume for gridding
-void produceGriddingVolume(const Matrix3D<complex< double> > &in, 
-			   Matrix3D< complex< double > > &out,
-			   KaiserBessel &kb)
+void produceGriddingFourierMatrix3D(const Matrix3D< complex< double > > &in, 
+				    Matrix3D< complex< double > > &out,
+				    KaiserBessel &kb)
+{
+    Matrix3D<double> aux;
+    InverseFourierTransform(in,aux);
+    aux.setXmippOrigin();
+    produceGriddingFourierMatrix3D(aux,out,kb);
+}
+
+void produceGriddingFourierMatrix3D(const Matrix3D< double > &in, 
+				    Matrix3D< complex< double > > &out,
+				    KaiserBessel &kb)
 {
     // 1. Set up constants and Kaiser-Bessel object
     int N = XSIZE(in) * GRIDDING_NPAD;
@@ -105,17 +122,15 @@ void produceGriddingVolume(const Matrix3D<complex< double> > &in,
     kb = KaiserBessel(GRIDDING_ALPHA, GRIDDING_K, r, v , N);
 
     // 2. iFFT, pad with zeros and divide in real space by a sinhwin
-    Matrix3D<double> aux,aux2;
+    Matrix3D<double> aux2;
     double wx, wy, wz;
-    InverseFourierTransform(in,aux);
-    aux.setXmippOrigin();
     aux2.resize(N,N,N);
     aux2.setXmippOrigin();
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(aux) {
+    FOR_ALL_ELEMENTS_IN_MATRIX3D(in) {
 	wz=kb.sinhwin(k);
 	wy=kb.sinhwin(i);
 	wx=kb.sinhwin(j);
-	VOL_ELEM(aux2,k,i,j) = VOL_ELEM(aux,k,i,j) / (wx * wy * wz);
+	VOL_ELEM(aux2,k,i,j) = VOL_ELEM(in,k,i,j) / (wx * wy * wz);
     }
     
     // 3. FFT & (forward) centering
@@ -125,9 +140,9 @@ void produceGriddingVolume(const Matrix3D<complex< double> > &in,
 }
 
 // Prepare a 3D real-space volume for gridding
-void produceGriddingVolume(const Matrix3D< double > &in, 
-			   Matrix3D< double > &out,
-			   KaiserBessel &kb)
+void produceGriddingMatrix3D(const Matrix3D< double > &in, 
+			     Matrix3D< double > &out,
+			     KaiserBessel &kb)
 {
     // 1. Set up constants and Kaiser-Bessel object
     int N = XSIZE(in) * GRIDDING_NPAD;
@@ -157,64 +172,4 @@ void produceGriddingVolume(const Matrix3D< double > &in,
     out.setXmippOrigin();
 
 }
-
-/*
-void griddingRotateShiftScale(const Matrix2D<double> &in,
-			      Matrix2D<double> &out,
-			      float ang, float delx, float dely, 
-			      KaiserBessel &kb, float scale_input)
-{
-	int nx, ny, nxn, nyn;
-
-	if (scale_input == 0.0f) scale_input = 1.0f;
-	float  scale = 0.5*scale_input;
-
-	nx = XSIZE(in);
-	ny = YSIZE(in);
-	nxn = nx/2; nyn = ny/2;
-	out.resize(nxn,nyn);
-
-	if(delx >= 0.0f) { delx = fmod(delx, float(nx));} else {delx = -fmod(-delx, float(nx));}
-	if(dely >= 0.0f) { dely = fmod(dely, float(ny));} else {dely = -fmod(-dely, float(ny));}
-	// center of big image,
-	int xc = nxn;
-	int ixs = nxn%2;  // extra shift on account of odd-sized images
-	int yc = nyn;
-	int iys = nyn%2;
-	// center of small image
-	int xcn = nxn/2;
-	int ycn = nyn/2;
-	// shifted center for rotation
-	float shiftxc = xcn + delx;
-	float shiftyc = ycn + dely;
-	// bounds if origin at center
-	float ymin = -ny/2.0f;
-	float xmin = -nx/2.0f;
-	float ymax = -ymin;
-	float xmax = -xmin;
-	if (0 == nx%2) xmax--;
-	if (0 == ny%2) ymax--;
-	
-	// trig
-	float cang = cos(ang);
-	float sang = sin(ang);
-	for (int iy = 0; iy < nyn; iy++) {
-		float y = float(iy) - shiftyc;
-		float ycang = y*cang/scale + yc;
-		float ysang = -y*sang/scale + xc;
-		for (int ix = 0; ix < nxn; ix++) {
-			float x = float(ix) - shiftxc;
-			float xold = x*cang/scale + ysang-ixs;// have to add the fraction on account on odd-sized images for which Fourier zero-padding changes the center location 
-			float yold = x*sang/scale + ycang-iys;
-			
-			xold = xold/2.0;
-			yold = yold/2.0;
-			cerr<<"xp,yp= "<<xold<<" "<<yold<<" x,y= "<<ix<<" "<<iy<<endl;
-			dMij(out,iy,ix) = get_new_pixel_conv2D(nx,ny,xold,yold,in.data,kb);
-			
-		}
-	}
-
-}
-*/
 
