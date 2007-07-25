@@ -139,55 +139,55 @@ public:
  *
  * @code
  *  kb = KaiserBessel(alpha, K, r, v , N);
- *  float wx = kb.sinhwin(32);
- *  float tablex1 = kb.i0win_tab(delx-inxold+3);
+ *  double wx = kb.sinhwin(32);
+ *  double tablex1 = kb.i0win_tab(delx-inxold+3);
  * @endcode
  */
 class KaiserBessel 
 {
 protected:
-    float alpha, v, r; /** Kaiser-Bessel parameters */
+    double alpha, v, r; /** Kaiser-Bessel parameters */
     int N; /** size in Ix-space */
     int K; /** I0 window size */
-    float vtable; /** table I0 non-zero domain maximum */
+    double vtable; /** table I0 non-zero domain maximum */
     int ntable;
-    vector<float> i0table;
-    float dtable; /** table spacing */
-    float alphar; /** alpha*r */
-    float fac; /** 2*pi*alpha*r*v */
-    float vadjust; 
-    float facadj; /** 2*pi*alpha*r*vadjust */
+    vector<double> i0table;
+    double dtable; /** table spacing */
+    double alphar; /** alpha*r */
+    double fac; /** 2*pi*alpha*r*v */
+    double vadjust; 
+    double facadj; /** 2*pi*alpha*r*vadjust */
     virtual void build_I0table(); /** Tabulate I0 window for speed */
-    float fltb;
+    double fltb;
 
 public:
     /** Empty constructor */
     KaiserBessel() { }
 
     /** Constructor with parameters */
-    KaiserBessel(float alpha_, int K, float r_,
-		 float v_, int N_, float vtable_=0.f, 
+    KaiserBessel(double alpha_, int K, double r_,
+		 double v_, int N_, double vtable_=0., 
 		 int ntable_ = 5999);
 
     /** Destructor */
     virtual ~KaiserBessel() {};
 
     /** Compute the maximum error in the table */
-    float I0table_maxerror();
-    vector<float> dump_table() {
+    double I0table_maxerror();
+    vector<double> dump_table() {
 	return i0table;
     }
 
     /** Kaiser-Bessel Sinh window function */
-    virtual float sinhwin(float x) const;
+    virtual double sinhwin(double x) const;
 
     /** Kaiser-Bessel I0 window function */
-    virtual float i0win(float x) const;
+    virtual double i0win(double x) const;
 
     /** Kaiser-Bessel I0 window function (uses table lookup) */
-    inline float i0win_tab(float x) const {
-	float xt;
-	if(x<0.f) xt = -x*fltb+0.5f; else xt = x*fltb+0.5f;
+    inline double i0win_tab(double x) const {
+	double xt;
+	if(x<0.) xt = -x*fltb+0.5; else xt = x*fltb+0.5;
 	return i0table[ (int) xt];
     }
 
@@ -199,7 +199,7 @@ public:
 	KaiserBessel& kb;
     public:
 	kbsinh_win(KaiserBessel& kb_) : kb(kb_) {}
-	float operator()(float x) const {
+	double operator()(double x) const {
 	    return kb.sinhwin(x);
 	}
 	int get_window_size() const {return kb.get_window_size();}
@@ -215,7 +215,7 @@ public:
 	KaiserBessel& kb;
     public:
 	kbi0_win(KaiserBessel& kb_) : kb(kb_) {}
-	float operator()(float x) const {
+	double operator()(double x) const {
 	    return kb.i0win(x);
 	}
 	int get_window_size() const {return kb.get_window_size();}

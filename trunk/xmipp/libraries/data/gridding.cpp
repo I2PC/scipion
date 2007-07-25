@@ -48,8 +48,8 @@ void produceGriddingFourierMatrix2D(const Matrix2D< double > &in,
     // 1. Set up constants and Kaiser-Bessel object
     int Nx = XSIZE(in) * GRIDDING_NPAD;
     int Ny = YSIZE(in) * GRIDDING_NPAD;
-    float r = XSIZE(in) / 2.;
-    float v = GRIDDING_K / (2. * Nx);
+    double r = XSIZE(in) / 2.;
+    double v = GRIDDING_K / (2. * Nx);
     kb = KaiserBessel(GRIDDING_ALPHA, GRIDDING_K, r, v , Nx);
 
     // 2. iFFT, pad with zeros and divide in real space by a sinhwin
@@ -77,8 +77,8 @@ void produceGriddingMatrix2D(const Matrix2D< double > &in,
     // 1. Set up constants and Kaiser-Bessel object
     int Nx = XSIZE(in) * GRIDDING_NPAD;
     int Ny = YSIZE(in) * GRIDDING_NPAD;
-    float r = XSIZE(in) / 2.;
-    float v = GRIDDING_K / (2. * Nx);
+    double r = XSIZE(in) / 2.;
+    double v = GRIDDING_K / (2. * Nx);
     kb = KaiserBessel(GRIDDING_ALPHA, GRIDDING_K, r, v , Nx);
     
     // 2. FFT, pad with zeros and divide in Fourier space by a sinhwin
@@ -121,8 +121,8 @@ void produceGriddingFourierMatrix3D(const Matrix3D< double > &in,
     int Nx = XSIZE(in) * GRIDDING_NPAD;
     int Ny = YSIZE(in) * GRIDDING_NPAD;
     int Nz = ZSIZE(in) * GRIDDING_NPAD;
-    float r = XSIZE(in) / 2.;
-    float v = GRIDDING_K / (2. * Nx);
+    double r = XSIZE(in) / 2.;
+    double v = GRIDDING_K / (2. * Nx);
     kb = KaiserBessel(GRIDDING_ALPHA, GRIDDING_K, r, v , Nx);
 
     // 2. iFFT, pad with zeros and divide in real space by a sinhwin
@@ -152,8 +152,8 @@ void produceGriddingMatrix3D(const Matrix3D< double > &in,
     int Nx = XSIZE(in) * GRIDDING_NPAD;
     int Ny = YSIZE(in) * GRIDDING_NPAD;
     int Nz = ZSIZE(in) * GRIDDING_NPAD;
-    float r = XSIZE(in) / 2.;
-    float v = GRIDDING_K / (2. * Nx);
+    double r = XSIZE(in) / 2.;
+    double v = GRIDDING_K / (2. * Nx);
     kb = KaiserBessel(GRIDDING_ALPHA, GRIDDING_K, r, v , Nx);
     
     // 2. Center FFT and divide in Fourier space by a sinhwin

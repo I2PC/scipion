@@ -38,29 +38,29 @@ using namespace std;
 
 /* Numerical functions ----------------------------------------------------- */
 // Kaiser-Bessel constructor
-KaiserBessel::KaiserBessel(float alpha_, int K_, float r_, float v_,
-			   int N_, float vtable_, int ntable_) 
+KaiserBessel::KaiserBessel(double alpha_, int K_, double r_, double v_,
+			   int N_, double vtable_, int ntable_) 
     : alpha(alpha_), v(v_), r(r_), N(N_), K(K_), vtable(vtable_), 
       ntable(ntable_) 
 {
     // Default values are alpha=1.25, K=6, r=0.5, v = K/2
-    if (0.f == v) v = float(K)/2;
+    if (0.f == v) v = double(K)/2;
     if (0.f == vtable) vtable = v;
     alphar = alpha*r;
-    fac = static_cast<float>(2.*PI)*alphar*v;
+    fac = static_cast<double>(2.*PI)*alphar*v;
     vadjust = 1.0f*v;
-    facadj = static_cast<float>(2.*PI)*alphar*vadjust;
+    facadj = static_cast<double>(2.*PI)*alphar*vadjust;
     build_I0table();
 }
 
 // Kaiser-Bessel I0 window function
-float KaiserBessel::i0win(float x) const 
+double KaiserBessel::i0win(double x) const 
 {
-    float val0 = float(bessi0(facadj));
-    float absx = fabs(x);
+    double val0 = double(bessi0(facadj));
+    double absx = fabs(x);
     if (absx > vadjust) return 0.f;
-    float rt = sqrt(1.f - pow(absx/vadjust, 2));
-    float res = bessi0(facadj*rt)/val0;
+    double rt = sqrt(1.f - pow(absx/vadjust, 2));
+    double res = bessi0(facadj*rt)/val0;
     return res;
 }
 
@@ -68,17 +68,17 @@ float KaiserBessel::i0win(float x) const
 void KaiserBessel::build_I0table() 
 {
     i0table.resize(ntable+1); // i0table[0:ntable]
-    int ltab = int(round(float(ntable)/1.25f));
-    fltb = float(ltab)/(K/2);
-    //float val0 = gsl_sf_bessel_I0(facadj);
-    float val0 = bessi0(facadj);
+    int ltab = int(round(double(ntable)/1.25f));
+    fltb = double(ltab)/(K/2);
+    //double val0 = gsl_sf_bessel_I0(facadj);
+    double val0 = bessi0(facadj);
     for (int i=ltab+1; i <= ntable; i++) 
 	i0table[i] = 0.f;
     for (int i=0; i <= ltab; i++) 
     {
-	float s = float(i)/fltb/N;
+	double s = double(i)/fltb/N;
 	if (s < vadjust) {
-	    float rt = sqrt(1.f - pow(s/vadjust, 2));
+	    double rt = sqrt(1.f - pow(s/vadjust, 2));
 	    //i0table[i] = gsl_sf_bessel_I0(facadj*rt)/val0;
 	    i0table[i] = bessi0(facadj*rt)/val0;
 	} else {
@@ -88,12 +88,12 @@ void KaiserBessel::build_I0table()
 }
 
 // Compute the maximum error in the table 
-float KaiserBessel::I0table_maxerror() 
+double KaiserBessel::I0table_maxerror() 
 {
-    float maxdiff = 0.f;
+    double maxdiff = 0.f;
     for (int i = 1; i <= ntable; i++) 
     {
-	float diff = fabs(i0table[i] - i0table[i-1]);
+	double diff = fabs(i0table[i] - i0table[i-1]);
 	if (diff > maxdiff) 
 	    maxdiff = diff;
     }
@@ -101,13 +101,13 @@ float KaiserBessel::I0table_maxerror()
 }
 
 // Kaiser-Bessel Sinh window function
-float KaiserBessel::sinhwin(float x) const 
+double KaiserBessel::sinhwin(double x) const 
 {
-    float val0 = sinh(fac)/fac;
-    float absx = fabs(x);
+    double val0 = sinh(fac)/fac;
+    double absx = fabs(x);
     if (0.0 == x) 
     {
-	float res = 1.0f;
+	double res = 1.0f;
 	return res;
     } 
     else if (absx == alphar) 
@@ -116,16 +116,16 @@ float KaiserBessel::sinhwin(float x) const
     } 
     else if (absx < alphar) 
     {
-	float rt = sqrt(1.0f - pow((x/alphar), 2));
-	float facrt = fac*rt;
-	float res = (sinh(facrt)/facrt)/val0;
+	double rt = sqrt(1.0f - pow((x/alphar), 2));
+	double facrt = fac*rt;
+	double res = (sinh(facrt)/facrt)/val0;
 	return res;
     } 
     else 
     {
-	float rt = sqrt(pow((x/alphar),2) - 1.f);
-	float facrt = fac*rt;
-	float res = (sin(facrt)/facrt)/val0;
+	double rt = sqrt(pow((x/alphar),2) - 1.f);
+	double facrt = fac*rt;
+	double res = (sin(facrt)/facrt)/val0;
 	return res;
     }
 }

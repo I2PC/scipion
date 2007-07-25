@@ -358,7 +358,7 @@ void applyGeometryGridding(Matrix3D<T> &V2, Matrix2D< double > A,
  * @endcode
  */
 template <typename T>
-T interpolatedElementGridding(const Matrix2D<T> &in, float x, float y, KaiserBessel &kb)
+T interpolatedElementGridding(const Matrix2D<T> &in, double x, double y, KaiserBessel &kb)
 {
     // size of this image:
     int nx = XSIZE(in);
@@ -373,29 +373,29 @@ T interpolatedElementGridding(const Matrix2D<T> &in, float x, float y, KaiserBes
     int kbmin = -K/2;
     int kbmax = -kbmin;
     int kbc = kbmax+1;
-    float pixel =0.0f;
-    float w=0.0f;
+    double pixel =0.;
+    double w=0.;
     
-    x = fmod(2*x, float(nx));
-    y = fmod(2*y, float(ny));
+    x = fmod(2*x, double(nx));
+    y = fmod(2*y, double(ny));
     int inxold = int(round(x));
     int inyold = int(round(y));
     
-    float tablex1 = kb.i0win_tab(x-inxold+3);
-    float tablex2 = kb.i0win_tab(x-inxold+2);
-    float tablex3 = kb.i0win_tab(x-inxold+1);
-    float tablex4 = kb.i0win_tab(x-inxold);
-    float tablex5 = kb.i0win_tab(x-inxold-1);
-    float tablex6 = kb.i0win_tab(x-inxold-2);
-    float tablex7 = kb.i0win_tab(x-inxold-3);
+    double tablex1 = kb.i0win_tab(x-inxold+3);
+    double tablex2 = kb.i0win_tab(x-inxold+2);
+    double tablex3 = kb.i0win_tab(x-inxold+1);
+    double tablex4 = kb.i0win_tab(x-inxold);
+    double tablex5 = kb.i0win_tab(x-inxold-1);
+    double tablex6 = kb.i0win_tab(x-inxold-2);
+    double tablex7 = kb.i0win_tab(x-inxold-3);
 
-    float tabley1 = kb.i0win_tab(y-inyold+3);
-    float tabley2 = kb.i0win_tab(y-inyold+2);
-    float tabley3 = kb.i0win_tab(y-inyold+1);
-    float tabley4 = kb.i0win_tab(y-inyold);
-    float tabley5 = kb.i0win_tab(y-inyold-1);
-    float tabley6 = kb.i0win_tab(y-inyold-2);
-    float tabley7 = kb.i0win_tab(y-inyold-3); 
+    double tabley1 = kb.i0win_tab(y-inyold+3);
+    double tabley2 = kb.i0win_tab(y-inyold+2);
+    double tabley3 = kb.i0win_tab(y-inyold+1);
+    double tabley4 = kb.i0win_tab(y-inyold);
+    double tabley5 = kb.i0win_tab(y-inyold-1);
+    double tabley6 = kb.i0win_tab(y-inyold-2);
+    double tabley7 = kb.i0win_tab(y-inyold-3); 
 	
     int x1, x2, x3, x4, x5, x6, x7, y1, y2, y3, y4, y5, y6, y7;
 	
@@ -487,7 +487,7 @@ T interpolatedElementGridding(const Matrix2D<T> &in, float x, float y, KaiserBes
  * @endcode
  */
 template <typename T>
-T interpolatedElementGridding(const Matrix3D<T> &in, float x, float y, float z, KaiserBessel &kb)
+T interpolatedElementGridding(const Matrix3D<T> &in, double x, double y, double z, KaiserBessel &kb)
 {
     // size of this image:
     int nx = XSIZE(in);
@@ -504,39 +504,39 @@ T interpolatedElementGridding(const Matrix3D<T> &in, float x, float y, float z, 
     int kbmin = -K/2;
     int kbmax = -kbmin;
     int kbc = kbmax+1;
-    float pixel =0.0f;
-    float w=0.0f;
+    double pixel =0.;
+    double w=0.;
     
-    x = fmod(2*x, float(nx));
-    y = fmod(2*y, float(ny));
-    z = fmod(2*z, float(nz));
+    x = fmod(2*x, double(nx));
+    y = fmod(2*y, double(ny));
+    z = fmod(2*z, double(nz));
     int inxold = int(round(x));
     int inyold = int(round(y));
     int inzold = int(round(z));
     
-    float tablex1 = kb.i0win_tab(x-inxold+3);
-    float tablex2 = kb.i0win_tab(x-inxold+2);
-    float tablex3 = kb.i0win_tab(x-inxold+1);
-    float tablex4 = kb.i0win_tab(x-inxold);
-    float tablex5 = kb.i0win_tab(x-inxold-1);
-    float tablex6 = kb.i0win_tab(x-inxold-2);
-    float tablex7 = kb.i0win_tab(x-inxold-3);
+    double tablex1 = kb.i0win_tab(x-inxold+3);
+    double tablex2 = kb.i0win_tab(x-inxold+2);
+    double tablex3 = kb.i0win_tab(x-inxold+1);
+    double tablex4 = kb.i0win_tab(x-inxold);
+    double tablex5 = kb.i0win_tab(x-inxold-1);
+    double tablex6 = kb.i0win_tab(x-inxold-2);
+    double tablex7 = kb.i0win_tab(x-inxold-3);
 
-    float tabley1 = kb.i0win_tab(y-inyold+3);
-    float tabley2 = kb.i0win_tab(y-inyold+2);
-    float tabley3 = kb.i0win_tab(y-inyold+1);
-    float tabley4 = kb.i0win_tab(y-inyold);
-    float tabley5 = kb.i0win_tab(y-inyold-1);
-    float tabley6 = kb.i0win_tab(y-inyold-2);
-    float tabley7 = kb.i0win_tab(y-inyold-3); 
+    double tabley1 = kb.i0win_tab(y-inyold+3);
+    double tabley2 = kb.i0win_tab(y-inyold+2);
+    double tabley3 = kb.i0win_tab(y-inyold+1);
+    double tabley4 = kb.i0win_tab(y-inyold);
+    double tabley5 = kb.i0win_tab(y-inyold-1);
+    double tabley6 = kb.i0win_tab(y-inyold-2);
+    double tabley7 = kb.i0win_tab(y-inyold-3); 
 	
-    float tablez1 = kb.i0win_tab(z-inzold+3);
-    float tablez2 = kb.i0win_tab(z-inzold+2);
-    float tablez3 = kb.i0win_tab(z-inzold+1);
-    float tablez4 = kb.i0win_tab(z-inzold);
-    float tablez5 = kb.i0win_tab(z-inzold-1);
-    float tablez6 = kb.i0win_tab(z-inzold-2);
-    float tablez7 = kb.i0win_tab(z-inzold-3); 
+    double tablez1 = kb.i0win_tab(z-inzold+3);
+    double tablez2 = kb.i0win_tab(z-inzold+2);
+    double tablez3 = kb.i0win_tab(z-inzold+1);
+    double tablez4 = kb.i0win_tab(z-inzold);
+    double tablez5 = kb.i0win_tab(z-inzold-1);
+    double tablez6 = kb.i0win_tab(z-inzold-2);
+    double tablez7 = kb.i0win_tab(z-inzold-3); 
 
     int x1, x2, x3, x4, x5, x6, x7, y1, y2, y3, y4, y5, y6, y7, z1, z2, z3, z4, z5, z6, z7;
 	
