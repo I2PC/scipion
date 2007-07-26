@@ -373,8 +373,8 @@ T interpolatedElementGridding(const Matrix2D<T> &in, double x, double y, KaiserB
     int kbmin = -K/2;
     int kbmax = -kbmin;
     int kbc = kbmax+1;
-    double pixel =0.;
-    double w=0.;
+    T pixel = 0.;
+    double w = 0.;
     
     x = fmod(2*x, double(nx));
     y = fmod(2*y, double(ny));
