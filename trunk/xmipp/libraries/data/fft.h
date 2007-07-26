@@ -145,6 +145,19 @@ inline void contfreq2digfreq(const Matrix1D< double >& contfreq,
  * @ingroup Fourier
  */
 
+/** Conversion from whole -> half 1D
+ * @ingroup FourierFormat
+ */
+void Whole2Half(const Matrix1D< complex < double > > & in,
+                Matrix1D< complex < double > > & out);
+
+/** Conversion from half -> whole 1D
+ * @ingroup FourierFormat
+ */
+void Half2Whole(const Matrix1D< complex < double > > & in,
+                Matrix1D< complex< double > > & out,
+                int orixdim);
+
 /** Conversion from whole -> half 2D
  * @ingroup FourierFormat
  */

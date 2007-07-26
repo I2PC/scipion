@@ -28,6 +28,29 @@
 #include "external/bilib/headers/dft.h"
 
 /* Format conversions ------------------------------------------------------ */
+/** Convert whole -> half of (centro-symmetric) Fourier transforms 1D. -- */
+void Whole2Half(const Matrix1D<complex<double> > &in,
+                Matrix1D<complex<double> > &out)
+{
+    int ldim = (int)(XSIZE(in) / 2) + 1;
+    out.resize(ldim);
+    for (int j = 0; j < ldim; j++)
+	out(j) = in(j);
+
+}
+
+/** Convert half -> whole of (centro-symmetric) Fourier transforms 2D. -- */
+void Half2Whole(const Matrix1D<complex<double> > &in, 
+		Matrix1D<complex<double> > &out, int orixdim)
+{
+    out.resize(orixdim);
+    for (int j = 0; j < XSIZE(in); j++)
+	out(j) = in(j);
+    for (int j = XSIZE(in); j < orixdim; j++)
+	out(j) = conj(in(j));
+    
+}
+
 /** Convert whole -> half of (centro-symmetric) Fourier transforms 2D. -- */
 void Whole2Half(const Matrix2D<complex<double> > &in,
                 Matrix2D<complex<double> > &out)
