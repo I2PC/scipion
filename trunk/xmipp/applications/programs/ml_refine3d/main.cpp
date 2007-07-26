@@ -121,6 +121,11 @@ int main(int argc, char **argv)
             ML2D_prm.write_output_files(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
             prm.concatenate_selfiles(iter);
 
+	    // Jump out before 3D reconstruction 
+	    // (Useful for some parallelization protocols)
+	    if (prm.skip_reconstruction)
+		exit(1);
+
             // Write noise images to disc
             if (ML2D_prm.fourier_mode) prm.make_noise_images(ML2D_prm.Iref);
 

@@ -91,6 +91,8 @@ public:
     int dilate_solvent;
     // Use MLF mode
     bool fourier_mode;
+    // Flag to skip reconstruction
+    bool skip_reconstruction;
 
 public:
 

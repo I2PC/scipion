@@ -164,6 +164,7 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)
     threshold_solvent = textToFloat(getParameter(argc, argv, "-threshold_solvent", "999"));
     do_deblob_solvent = checkParameter(argc, argv, "-deblob_solvent");
     dilate_solvent = textToInteger(getParameter(argc, argv, "-dilate_solvent", "0"));
+    skip_reconstruction = checkParameter(argc, argv, "-skip_reconstruction");
 
     // Checks
     if (lowpass > 0.5) REPORT_ERROR(1, "Digital frequency for low-pass filter should be smaller than 0.5");
