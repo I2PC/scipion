@@ -393,16 +393,28 @@ public:
  * These functions are not methods of Polar
  */
 
-/** Rotational Cross-Correlation funtion
+/** Real-space rotational Cross-Correlation Funtion
  * @ingroup PolarRelated
  *
- *  This function returns the rotational cross-correlation function of
- *  two Polars M1 and M2 in Fourier-space, using the cross-correlation
- *  convolution theorem. M2 is assumed to be the complex conjugated.
+ *  This function returns the real-space rotational cross-correlation
+ *  function of two Polars M1 and M2 in Fourier-space, using the
+ *  cross-correlation convolution theorem. 
  *
+ *  M2 is assumed to be the complex conjugated.
  */
 void rotationalCrossCorrelation(const Polar<complex<double> > &M1,
 				const Polar<complex<double> > &M2,
 				Matrix1D<double> &angles, Matrix1D<double> &corr);
     
+/** Fourier-space rotational Cross-Correlation Funtion
+ * @ingroup PolarRelated
+ *
+ *  This function returns the Fourier-space rotational cross-correlation
+ *  function of two Polars M1 and M2 in real-space, using the
+ *  cross-correlation convolution theorem. 
+ *
+ */
+void rotationalCrossCorrelation(const Polar<double> &M1,
+				const Polar<double> &M2,
+				Matrix1D<double> &angles, Matrix1D<complex<double> > &corr);
 #endif
