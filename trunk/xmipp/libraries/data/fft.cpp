@@ -47,7 +47,7 @@ void Half2Whole(const Matrix1D<complex<double> > &in,
     for (int j = 0; j < XSIZE(in); j++)
 	out(j) = in(j);
     for (int j = XSIZE(in); j < orixdim; j++)
-	out(j) = conj(in(j));
+	out(j) = conj(in(orixdim - j));
     
 }
 
