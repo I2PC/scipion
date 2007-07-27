@@ -42,11 +42,11 @@ template<typename T>
 class Polar
 {
 protected:
-    FileName fn_pol; // name of the polar
+    FileName              fn_pol;      // name of the polar
 public:
-    int                   mode; // Use full or half circles
+    int                   mode;        // Use full or half circles
     vector<double>        ring_radius; // radius of each ring
-    vector<Matrix1D<T> >  rings; //vector with all rings
+    vector<Matrix1D<T> >  rings;       // vector with all rings
 public:
     /// @defgroup PolarConstructors Polar constructors
     /// @ingroup Polars
@@ -313,7 +313,8 @@ public:
     void getPolarFromCartesian(const Matrix2D<T> &M1, KaiserBessel &kb, 
 			       int first_ring, int last_ring, 
 			       int step = 1, int mode1 = FULL_CIRCLES, 
-			       double xoff = 0., double yoff = 0.)
+			       double xoff = 0., double yoff = 0.,
+			       bool const_sam = false)
     {
 	int nsam;
 	int nring = last_ring - first_ring + 1;
@@ -337,11 +338,15 @@ public:
 	else
 	    REPORT_ERROR(1,"Incorrect mode for getPolarWeights2D!");
 
+	if (const_sam)
+	{
+	    nsam = (int)twopi *XSIZE(M1)/2;
+	}
 	for (int iring = first_ring; iring <= last_ring; iring++)
 	{
 	    radius = (double) iring;
 	    // Oversample each ring twice (don't sample origin)
-	    nsam = (int)twopi * iring * 2;
+	    if (!const_sam) nsam = (int)twopi * iring * 2;
 	    dphi = twopi / (double)nsam;
 	    Mring.resize(nsam);
 	    for (int iphi = 0; iphi < nsam; iphi++)
@@ -365,6 +370,7 @@ public:
      * @ingroup PolarFunctions
      *
      * 1D Fourier transform of all rings
+     * Only the assymetric half is stored
      *
      * @code
      * Polar<double> P;
@@ -382,8 +388,9 @@ public:
      * @ingroup PolarFunctions
      *
      * 1D inverse Fourier transform of all rings
+     * Assumedly the input FT contains only the assymetric half
      */
-    Polar<double> inverseFourierTransformRings();
+    Polar<double> inverseFourierTransformRings(bool conjugated = false, bool pad = false);
 
 };
 
@@ -402,9 +409,9 @@ public:
  *
  *  M2 is assumed to be the complex conjugated.
  */
-void rotationalCrossCorrelation(const Polar<complex<double> > &M1,
-				const Polar<complex<double> > &M2,
-				Matrix1D<double> &angles, Matrix1D<double> &corr);
+void rotationalCorrelationRealSpace(const Polar<complex<double> > &M1,
+				    const Polar<complex<double> > &M2,
+				    Matrix1D<double> &angles, Matrix1D<double> &corr);
     
 /** Fourier-space rotational Cross-Correlation Funtion
  * @ingroup PolarRelated
@@ -414,7 +421,8 @@ void rotationalCrossCorrelation(const Polar<complex<double> > &M1,
  *  cross-correlation convolution theorem. 
  *
  */
-void rotationalCrossCorrelation(const Polar<double> &M1,
-				const Polar<double> &M2,
-				Matrix1D<double> &angles, Matrix1D<complex<double> > &corr);
+void rotationalCorrelationFourierSpace(const Polar<double> &M1,
+				       const Polar<double> &M2,
+				       Matrix1D<double> &angles, 
+				       Matrix1D<complex<double> > &corr);
 #endif

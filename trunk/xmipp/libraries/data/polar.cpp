@@ -32,6 +32,7 @@
 #include "polar.h"
 
 // Calculate 1D FFTs of all rings
+template <>
 Polar<complex<double> > Polar<double>::fourierTransformRings(bool conjugated)
 {
     Polar<complex<double> > out;
@@ -56,19 +57,38 @@ Polar<complex<double> > Polar<double>::fourierTransformRings(bool conjugated)
 }
 
 // Calculate 1D inverse FFTs of all rings
-Polar<double> Polar<complex<double> >::inverseFourierTransformRings()
+template <>
+Polar<double> Polar<complex<double> >::inverseFourierTransformRings(bool conjugated, bool pad)
 {
     Polar<double> out;
     Matrix1D<double> Mring;
     Matrix1D<complex<double> > Faux;
     out.clear();
+    int nsam_last = (*this).getSampleNo(rings.size() - 1);
+    int orixdim = 2 *(nsam_last - 1);
+
     for (int iring = 0; iring < rings.size(); iring++)
     { 
-	// Resize to full-length Fourier Transform
-	// Original NSAM is always even!!
-	int orixdim = 2 * ((int)ring_radius[iring] - 1);
-	Half2Whole(rings[iring],Faux,orixdim);
+	// pad in fourier-space to have equal sampling in real-space
+	if (pad)
+	{
+	    rings[iring].resize(nsam_last); 
+	    Half2Whole(rings[iring],Faux,orixdim);
+	}
+	else
+	{
+	    // Resize to full-length Fourier Transform
+	    // Assume that original NSAM is always even!!
+	    orixdim = 2 * ((*this).getSampleNo(iring) - 1);
+	    Half2Whole(rings[iring],Faux,orixdim);
+	}
 	InverseFourierTransform(Faux,Mring);
+	if (conjugated)
+	{
+	    // A translation in one space is a phase shift in the other!
+	    for (int i = 0; i < XSIZE(Mring); i++)
+		if (i%2 == 1) Mring(i) *= -1.;
+	}
 	out.rings.push_back(Mring);
     }
     out.mode = mode;
@@ -77,11 +97,11 @@ Polar<double> Polar<complex<double> >::inverseFourierTransformRings()
 }
 
 // Calculate real-space rotational cross-correlation via convolution theorem
-void rotationalCrossCorrelation(const Polar<complex<double> > &M1,
-				const Polar<complex<double> > &M2,
-				Matrix1D<double> &angles, Matrix1D<double> &corr)
+void rotationalCorrelationRealSpace(const Polar<complex<double> > &M1,
+				    const Polar<complex<double> > &M2,
+				    Matrix1D<double> &angles, Matrix1D<double> &corr)
 {
-    Matrix1D<complex<double> > Fsum;
+    Matrix1D<complex<double> > Fsum,Faux;
     complex<double> aux;
 
     int nrings = M1.getRingNo();
@@ -104,7 +124,9 @@ void rotationalCrossCorrelation(const Polar<complex<double> > &M1,
     }
 
     // Inverse FFT to get real-space correlations
-    InverseFourierTransform(Fsum,corr);
+    nsam_last = 2 * (M1.getSampleNo(nrings - 1) - 1);
+    Half2Whole(Fsum,Faux,nsam_last);
+    InverseFourierTransform(Faux,corr);
     angles.resize(nsam_last);
     for (int i = 0; i < nsam_last; i++)
 	angles(i)=(double)i*360./(nsam_last);
@@ -113,11 +135,12 @@ void rotationalCrossCorrelation(const Polar<complex<double> > &M1,
 
 
 // Calculate Fourier-space rotational cross-correlation via convolution theorem
-void rotationalCrossCorrelation(const Polar<double> &M1,
-				const Polar<double> &M2,
-				Matrix1D<double> &angles, Matrix1D<complex<double> > &corr)
+void rotationalCorrelationFourierSpace(const Polar<double> &M1,
+				       const Polar<double> &M2,
+				       Matrix1D<double> &angles, Matrix1D<complex<double> > &corr)
 {
-    Matrix1D<double> Fsum;
+    Matrix1D<double> Msum;
+    Matrix1D<complex<double> > Fcorr;
     double aux;
 
     int nrings = M1.getRingNo();
@@ -125,8 +148,8 @@ void rotationalCrossCorrelation(const Polar<double> &M1,
 	REPORT_ERROR(1,"getBestAnglePolarGridding: polar structures have unequal number of rings!");
     int nsam_last = M1.getSampleNo(nrings - 1);
 
-    // Multiply M1 and M2 over all rings and sum
-    Fsum.resize(nsam_last);
+    // Multiply M1 and M2 over all rings, FT and sum FTs
+    Msum.resize(nsam_last);
     for (int iring = 0; iring < nrings; iring++)
     { 
 	int nsam = M1.getSampleNo(iring);
@@ -135,12 +158,11 @@ void rotationalCrossCorrelation(const Polar<double> &M1,
 	    // Multiply M1 with M2.
 	    aux = M1(iring,i) * M2(iring,i);
 	    // Apply weights for distinct sizes of the rings
-	    Fsum(i) += (double)nsam * aux; 
+	    Msum(i) += (double)nsam * aux; 
 	}
     }
 
-    // Inverse FFT to get real-space correlations
-    FourierTransform(Fsum,corr);
+    FourierTransform(Msum,corr);
     angles.resize(nsam_last);
     for (int i = 0; i < nsam_last; i++)
 	angles(i)=(double)i*360./nsam_last;
