@@ -371,6 +371,8 @@ public:
      *
      * 1D Fourier transform of all rings
      * Only the assymetric half is stored
+     * 
+     * Note that both complex and real signals can be Fourier transformed!
      *
      * @code
      * Polar<double> P;
@@ -382,15 +384,28 @@ public:
      * Pf = P.fourierTransformRings();
      * @endcode
      */
-    Polar<complex<double> > fourierTransformRings(bool conjugated = false);
+    Polar<complex<double> > fourierTransformRings(bool conjugated)
+    {
+	Polar<complex<double> > out;
+	Matrix1D<complex<double> > Fring, Faux;
+	out.clear();
+	for (int iring = 0; iring < rings.size(); iring++)
+	{ 
+	    FourierTransform(rings[iring],Faux);
+	    // Store only asymmetric half of the Fourier Transform
+	    Whole2Half(Faux, Fring);
+	    if (conjugated)
+	    {
+		for (int i = 0; i < XSIZE(Fring); i++)
+		    Fring(i)=conj(Fring(i));
+	    }
+	    out.rings.push_back(Fring);
+	}
 
-    /** inverse Fourier transform all rings
-     * @ingroup PolarFunctions
-     *
-     * 1D inverse Fourier transform of all rings
-     * Assumedly the input FT contains only the assymetric half
-     */
-    Polar<double> inverseFourierTransformRings(bool conjugated = false, bool pad = false);
+	out.mode = mode;
+	out.ring_radius = ring_radius;
+	return out;
+    }
 
 };
 
@@ -400,29 +415,56 @@ public:
  * These functions are not methods of Polar
  */
 
-/** Real-space rotational Cross-Correlation Funtion
- * @ingroup PolarRelated
- *
- *  This function returns the real-space rotational cross-correlation
- *  function of two Polars M1 and M2 in Fourier-space, using the
- *  cross-correlation convolution theorem. 
- *
- *  M2 is assumed to be the complex conjugated.
- */
-void rotationalCorrelationRealSpace(const Polar<complex<double> > &M1,
-				    const Polar<complex<double> > &M2,
-				    Matrix1D<double> &angles, Matrix1D<double> &corr);
-    
 /** Fourier-space rotational Cross-Correlation Funtion
  * @ingroup PolarRelated
  *
- *  This function returns the Fourier-space rotational cross-correlation
- *  function of two Polars M1 and M2 in real-space, using the
+ *  This function returns the rotational cross-correlation
+ *  function of two Polars M1 and M2 using the
  *  cross-correlation convolution theorem. 
  *
+ *  M2 is assumed to be the complex conjugated.
+ *
+ * Note that this function can be used for real-space and
+ * fourier-space correlations!!
+ *
  */
-void rotationalCorrelationFourierSpace(const Polar<double> &M1,
-				       const Polar<double> &M2,
-				       Matrix1D<double> &angles, 
-				       Matrix1D<complex<double> > &corr);
+template<typename T>
+void rotationalCorrelation(const Polar<complex<double> > &M1,
+			   const Polar<complex<double> > &M2,
+			   Matrix1D<double> &angles, 
+			   Matrix1D<T > &corr)
+{
+
+    Matrix1D<complex<double> > Fsum, Faux;
+    complex<double> aux;
+
+    int nrings = M1.getRingNo();
+    if (nrings != M2.getRingNo())
+	REPORT_ERROR(1,"getBestAnglePolarGridding: polar structures have unequal number of rings!");
+    int nsam_last = M1.getSampleNo(nrings - 1);
+
+    // Multiply M1 and M2 over all rings and sum
+    Fsum.resize(nsam_last);
+    for (int iring = 0; iring < nrings; iring++)
+    { 
+	int nsam = M1.getSampleNo(iring);
+	for (int i = 0; i < nsam; i++)
+	{
+	    // Multiply M1 with M2. Assume M2 is already complex conjugated!
+	    aux = M1(iring,i) * M2(iring,i);
+	    // Apply weights for distinct sizes of the rings
+	    Fsum(i) += (double)nsam * aux; 
+	}
+    }
+
+    // Inverse FFT to get real-space correlations
+    nsam_last = 2 * (nsam_last - 1);
+    Half2Whole(Fsum,Faux,nsam_last);
+    InverseFourierTransform(Faux,corr);
+    angles.resize(nsam_last);
+    for (int i = 0; i < nsam_last; i++)
+	angles(i)=(double)i*360./(nsam_last);
+
+}
+
 #endif
