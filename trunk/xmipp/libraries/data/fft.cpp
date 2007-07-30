@@ -204,6 +204,42 @@ void InverseFourierTransform(const Matrix3D< complex<double> > &in,
 }
 
 
+/** Complex Direct Fourier Transform 1D ------------------------------------------- */
+void FourierTransform(const Matrix1D<complex<double> > &in,
+		      Matrix1D< complex<double> > &out)
+{
+    int N = XSIZE(in);
+    Matrix1D<double> re(N), tmpre(N), tmpim(N), im(N), cas(N);
+    out.resize(N);
+
+    GetCaS(MULTIDIM_ARRAY(cas), N);
+    Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(re), 
+		     MULTIDIM_ARRAY(im), N);
+    DftRealImaginaryToRealImaginary(MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
+				    MULTIDIM_ARRAY(tmpre), MULTIDIM_ARRAY(tmpim), 
+				    MULTIDIM_ARRAY(cas), N);
+    RealImag2Complex(MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
+                     MULTIDIM_ARRAY(out), N);
+}
+
+/** Complex Inverse Fourier Transform 1D. ----------------------------------------- */
+void InverseFourierTransform(const Matrix1D< complex<double> > &in,
+			     Matrix1D<complex<double> > &out)
+{
+    int N = XSIZE(in);
+    Matrix1D<double> tmpre(N), tmpim(N), re(N), im(N), cas(N);
+    out.resize(N);
+
+    GetCaS(MULTIDIM_ARRAY(cas), N);
+    Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(re), 
+		     MULTIDIM_ARRAY(im), N);
+    InvDftRealImaginaryToRealImaginary(MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
+				       MULTIDIM_ARRAY(tmpre), MULTIDIM_ARRAY(tmpim), 
+				       MULTIDIM_ARRAY(cas), N);
+    RealImag2Complex(MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
+                     MULTIDIM_ARRAY(out), N);
+}
+
 /** Direct Fourier Transform 2D, output half of (centro-symmetric) transform ---- */
 void FourierTransformHalf(const Matrix2D<double> &in,
                           Matrix2D< complex<double> > &out)

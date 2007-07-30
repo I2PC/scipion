@@ -238,6 +238,24 @@ void InverseFourierTransformHalf(const Matrix2D< complex< double > > & in,
                                  Matrix2D< double >& out,
                                  int oriydim);
 
+/** @defgroup ComplexFourierTransforms Complex Fourier Transforms
+ * @ingroup Fourier
+ */
+
+/** Complex Direct Fourier Transform 1D
+ * @ingroup ComplexFourierTransforms
+ */
+void FourierTransform(const Matrix1D< complex< double > >& in,
+                      Matrix1D< complex< double > > & out);
+
+/** Complex Inverse Fourier Transform 1D
+ * @ingroup ComplexFourierTransforms
+ */
+void InverseFourierTransform(const Matrix1D< complex< double > > & in,
+                             Matrix1D< complex< double > >& out);
+
+
+
 /** @defgroup FourierOperations Operations with the Fourier Transforms
  * @ingroup Fourier
  */
