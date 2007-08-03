@@ -65,6 +65,56 @@ void RaisedCrownMask(Matrix1D<double> &mask,
     }
 }
 
+void KaiserMask(Matrix1D<double> &mask, double delta, double Deltaw)
+{
+    // Convert Deltaw from a frequency normalized to 1, to a freq. normalized to PI
+    Deltaw *= PI;
+
+    // Design Kaiser window
+    double A = -20 * log10(delta);
+    int    M = CEIL((A - 8) / (2.285 * Deltaw));
+    double beta;
+    if (A > 50)
+        beta = 0.1102 * (A - 8.7);
+    else if (A >= 21)
+        beta = 0.5842 * pow(A - 21, 0.4) + 0.07886 * (A - 21);
+    else
+        beta = 0;
+
+    // "Draw" Kaiser window
+    mask.resize(2*M + 1);
+    mask.setXmippOrigin();
+    double iI0Beta = 1.0 / bessi0(beta);
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(mask)
+    {
+        if (ABS(i)<=M)
+            mask(i) = bessi0(beta * sqrt(1 - (i / M) * (i / M))) * iI0Beta;
+    }
+}
+
+void SincMask(Matrix1D<double> &mask,
+              double omega, int mode, double x0)
+{
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(mask)
+    {
+        double r = ABS(i - x0);
+        VEC_ELEM(mask, i) = omega/PI * SINC(omega/PI * r);
+        if (mode == OUTSIDE_MASK)
+            VEC_ELEM(mask, i) = 1 - VEC_ELEM(mask, i);
+    }
+}
+
+void SincKaiserMask(Matrix1D<double> &mask,
+                    double omega, double delta, double Deltaw)
+{
+    Matrix1D<double> kaiser;
+    KaiserMask(kaiser, delta, Deltaw);
+    mask.resize(kaiser);
+    mask.setXmippOrigin();
+    SincMask(mask, omega, INNER_MASK, 0);
+    mask *= kaiser;
+}
+
 /*---------------------------------------------------------------------------*/
 /* 2D Masks                                                                  */
 /*---------------------------------------------------------------------------*/
@@ -244,7 +294,7 @@ void SincMask(Matrix2D<double> &mask,
     FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
     {
         double r = sqrt((i - y0) * (i - y0) + (j - x0) * (j - x0));
-        MAT_ELEM(mask, i, j) = SINC(omega * r);
+        MAT_ELEM(mask, i, j) = omega/PI * SINC(omega/PI * r);;
         if (mode == OUTSIDE_MASK)
             MAT_ELEM(mask, i, j) = 1 - MAT_ELEM(mask, i, j);
     }
@@ -345,7 +395,7 @@ void SeparableSincKaiserMask(Matrix2D<double> &mask,
     double iI0Beta = 1.0 / bessi0(beta);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
     {
-        mask(i, j) = SINC(omega * i) * SINC(omega * j) *
+        mask(i, j) = omega/PI * SINC(omega/PI * i) * omega/PI * SINC(omega/PI * j) *
                      bessi0(beta * sqrt((double)(1 - (i / M) * (i / M)))) * iI0Beta *
                      bessi0(beta * sqrt((double)(1 - (j / M) * (j / M)))) * iI0Beta;
     }
@@ -595,7 +645,7 @@ void SincMask(Matrix3D<double> &mask,
     FOR_ALL_ELEMENTS_IN_MATRIX3D(mask)
     {
         double r = sqrt((k - z0) * (k - z0) + (i - y0) * (i - y0) + (j - x0) * (j - x0));
-        VOL_ELEM(mask, k, i, j) = SINC(omega * r);
+        VOL_ELEM(mask, k, i, j) = omega/PI * SINC(omega/PI * r);;
         if (mode == OUTSIDE_MASK)
             VOL_ELEM(mask, k, i, j) = 1 - VOL_ELEM(mask, k, i, j);
     }

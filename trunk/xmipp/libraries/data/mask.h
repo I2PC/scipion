@@ -73,6 +73,39 @@ void RaisedCrownMask(Matrix1D< double >& mask,
                      int mode = INNER_MASK,
                      double x0 = 0);
 
+/** 1D Kaiser window
+ * @ingroup Masks1D
+ *  The mask is resized.
+ *  delta=ripple (in natural units) in the pass band.
+ *  Deltaw=transition bandwidth (normalized to 1.0).
+ */
+void KaiserMask(Matrix1D<double> &mask, double delta = 0.01,
+                double Deltaw = 1.0 / 12.0);
+
+/** Creates a 1D sinc mask for already sized masks
+ * @ingroup Masks1D
+ *
+ * The mask is supposed to be resized and with its logical origin already set. A
+ * circle placed logically at (x0), by default (0), is created with the
+ * radius indicated. The only two valid modes are INNER_MASK (by default) or
+ * OUTSIDE_MASK. Inner mask are normal sincs, and outside masks are 1 -
+ * sinc. When entering the mask is initialiazed to 0 and then the mask is
+ * created.
+ *
+ * Remind that sinc(w*n) is zero at n=1/w;
+ */
+void SincMask(Matrix1D< double >& mask,
+              double omega, int mode = INNER_MASK, double x0 = 0);
+
+/** Creates a 1D radial-sinc-kaiser mask, the mask is resized.
+ * @ingroup Masks1D
+ *  This function returns a sinc mask windowed by a Kaiser window.
+ *  delta=ripple (in natural units) in the pass band.
+ *  Deltaw=transition bandwidth (normalized to 1).
+ */
+void SincKaiserMask(Matrix1D<double> &mask,
+                    double omega, double delta = 0.01, double Deltaw = 1.0 / 12.0);
+
 /// @defgroup Masks2D 2D masks
 /// @ingroup Masks
 
@@ -138,7 +171,7 @@ void BinaryFrameMask(Matrix2D< int >& mask,
  * The mask is supposed to be resized and with its logical origin already set. A
  * circle placed logically at (x0,y0), by default (0,0), is created with the
  * radius indicated. The only two valid modes are INNER_MASK (by default) or
- * OUTSIDE_MASK. Inner mask are normal gaussians, and outside masks are 1 -
+ * OUTSIDE_MASK. Inner mask are normal sincs, and outside masks are 1 -
  * gaussian.
  *
  * When entering the mask is initialiazed to 0 and then the mask is created.
