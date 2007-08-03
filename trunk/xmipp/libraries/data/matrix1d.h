@@ -32,6 +32,12 @@
 
 #include "funcs.h"
 
+#include <external/bilib/types/tsplinebasis.h>
+#include <external/bilib/types/tboundaryconvention.h>
+#include <external/bilib/headers/linearalgebra.h>
+#include <external/bilib/headers/changebasis.h>
+#include <external/bilib/headers/kernel.h>
+
 // TODO Remove this ASAP
 #define maT Matrix1D< T >
 #define maT1 Matrix1D< T1 >
@@ -920,6 +926,79 @@ public:
         return MULTIDIM_ELEM(*this, i - STARTINGX(*this));
     }
 
+    /** Interpolates the value of the 1D vector M at the point (x) knowing
+     * that this vector is a set of B-spline coefficients
+     * @ingroup VectorsMemory
+     *
+     * (x) is in logical coordinates
+     *
+     * To interpolate using splines you must first produce the Bspline
+     * coefficients. An example to interpolate a vector at (0.5) using
+     * splines would be:
+     *
+     * @code
+     * Matrix1D< double > Bspline_coeffs;
+     * myVector.produceSplineCoefficients(Bspline_coeffs, 3);
+     * interpolated_value = Bspline_coeffs.interpolatedElementBSpline(0.5,3);
+     * @endcode
+     */
+    T interpolatedElementBSpline(double x, int SplineDegree = 3) const
+    {
+        int SplineDegree_1 = SplineDegree - 1;
+
+        // Logical to physical
+        x -= STARTINGX(*this);
+
+        int lmax = XSIZE(*this);
+        int l1 = CEIL(x - SplineDegree_1);
+        int l2 = l1 + SplineDegree;
+
+        double sum = 0.0;
+        for (int l = l1; l <= l2; l++)
+        {
+            double xminusl = x - (double) l;
+	    int equivalent_l=l;
+	    if      (l<0)             equivalent_l=-l-1;
+	    else if (l>=XSIZE(*this)) equivalent_l=2*XSIZE(*this)-l-1;
+            double Coeff = (double) data[equivalent_l];
+            switch (SplineDegree)
+            {
+            case 2:
+                sum += Coeff * Bspline02(xminusl);
+                break;
+
+            case 3:
+                sum += Coeff * Bspline03(xminusl);
+                break;
+
+            case 4:
+                sum += Coeff * Bspline04(xminusl);
+                break;
+
+            case 5:
+                sum += Coeff * Bspline05(xminusl);
+                break;
+
+            case 6:
+                sum += Coeff * Bspline06(xminusl);
+                break;
+
+            case 7:
+                sum += Coeff * Bspline07(xminusl);
+                break;
+
+            case 8:
+                sum += Coeff * Bspline08(xminusl);
+                break;
+
+            case 9:
+                sum += Coeff * Bspline09(xminusl);
+                break;
+            }
+        }
+        return (T) sum;
+    }
+
     /** Get element at i (logical access)
      * @ingroup VectorsMemory
      */
@@ -1376,6 +1455,33 @@ public:
         fh_gplot.close();
         system(((string) "(gnuplot PPP" + fn_tmp + ".gpl; rm PPP" + fn_tmp +
                 ".txt PPP" + fn_tmp + ".gpl) &").c_str());
+    }
+
+    /** Produce spline coefficients
+     * @ingroup VectorsUtilities
+     *
+     * This function produces a set of Bspline coefficients that interpolate
+     * well this vector. The coefficients have the same shape as this matrix. T
+     * use the coefficients for interpolation see the function
+     * interpolatedElementBSpline.
+     */
+    void produceSplineCoefficients(Matrix1D< double >& coeffs,
+                               int SplineDegree = 3) const
+    {
+        coeffs.initZeros(XSIZE(*this));
+
+        STARTINGX(coeffs) = STARTINGX(*this);
+
+        int Status;
+        Matrix1D< double > aux;
+        type_cast(*this, aux);
+
+        ChangeBasisVolume(MULTIDIM_ARRAY(aux), MULTIDIM_ARRAY(coeffs),
+                          XSIZE(*this), 1, 1,
+                          CardinalSpline, BasicSpline, SplineDegree,
+                          MirrorOffBounds, DBL_EPSILON, &Status);
+        if (Status)
+            REPORT_ERROR(1, "Matrix1D::produceSplineCoefficients: Error");
     }
 };
 
