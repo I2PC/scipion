@@ -278,7 +278,6 @@ ReconsSources = [
     'basis.cpp',
     'blobs.cpp',
     'break_symmetry.cpp',
-    'convert_pdb2vol.cpp',
     'crystal_create_surface.cpp',
     'ctf_correct_idr.cpp',
     'ctf_correct_phase.cpp',
@@ -324,6 +323,7 @@ AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
 
 # ReconsInterface
 ReconsInterfaceSources = [
+    'convert_pdb2vol.cpp',
     'crystal_aph2img.cpp',
     'crystal_unbend.cpp',
     'im_unbend.cpp',
@@ -393,7 +393,7 @@ AddXmippProgram('convert_data2img', ['XmippClassif'])
 AddXmippProgram('convert_data2pdb', ['XmippClassif'])
 AddXmippProgram('convert_data2vol', ['XmippClassif'])
 AddXmippProgram('convert_img2data')
-AddXmippProgram('convert_pdb2vol', ['XmippRecons'])
+AddXmippProgram('convert_pdb2vol', ['XmippRecons','XmippRecons_Interface'])
 AddXmippProgram('convert_raw22spi')
 AddXmippProgram('convert_spi22em', ['XmippRecons','XmippRecons_Interface'])
 AddXmippProgram('convert_spi22ccp4', ['XmippRecons','XmippRecons_Interface'])
@@ -447,7 +447,7 @@ AddXmippProgram('phantom_create_random', ['XmippRecons'])
 AddXmippProgram('phantom_simulate_microscope', ['XmippRecons'])
 AddXmippProgram('phantom_test_reconstruction', ['XmippRecons_Interface',
     'XmippRecons'])
-AddXmippProgram('phantom_transform', ['XmippRecons'])
+AddXmippProgram('phantom_transform', ['XmippRecons','XmippRecons_Interface'])
 AddXmippProgram('project', ['XmippRecons'])
 AddXmippProgram('psd_enhance', ['XmippRecons'])
 AddXmippProgram('range_adjust')

@@ -30,6 +30,7 @@
 
 #include <data/args.h>
 #include <data/fft.h>
+#include <interface/pdb.h>
 
 #include <fstream>
 
@@ -47,20 +48,20 @@ Prog_PDBPhantom_Parameters::Prog_PDBPhantom_Parameters()
 
     // Periodic table for the blobs
     periodicTable.resize(7, 2);
-    periodicTable(0, 0) = 0.25;
-    periodicTable(0, 1) = 1;  // Hydrogen
-    periodicTable(1, 0) = 0.70;
-    periodicTable(1, 1) = 6; // Carbon
-    periodicTable(2, 0) = 0.65;
-    periodicTable(2, 1) = 7; // Nitrogen
-    periodicTable(3, 0) = 0.60;
-    periodicTable(3, 1) = 8; // Oxygen
-    periodicTable(4, 0) = 1.00;
-    periodicTable(4, 1) = 15; // Phosphorus
-    periodicTable(5, 0) = 1.00;
-    periodicTable(5, 1) = 16; // Sulfur
-    periodicTable(6, 0) = 1.40;
-    periodicTable(6, 1) = 26; // Iron
+    periodicTable(0, 0) = atomRadius("H");
+    periodicTable(0, 1) = atomCharge("H");
+    periodicTable(1, 0) = atomRadius("C");
+    periodicTable(1, 1) = atomCharge("C");
+    periodicTable(2, 0) = atomRadius("N");
+    periodicTable(2, 1) = atomCharge("N");
+    periodicTable(3, 0) = atomRadius("O");
+    periodicTable(3, 1) = atomCharge("O");
+    periodicTable(4, 0) = atomRadius("P");
+    periodicTable(4, 1) = atomCharge("P");
+    periodicTable(5, 0) = atomRadius("S");
+    periodicTable(5, 1) = atomCharge("S");
+    periodicTable(6, 0) = atomRadius("Fe");
+    periodicTable(6, 1) = atomCharge("Fe");
     // Correct the atom weights by the blob weight
     for (int i = 0; i < YSIZE(periodicTable); i++)
     {
@@ -176,61 +177,8 @@ void Prog_PDBPhantom_Parameters::show()
 /* Compute protein geometry ------------------------------------------------ */
 void Prog_PDBPhantom_Parameters::compute_protein_geometry()
 {
-    // Initialization
-    centerOfMass.initZeros(3);
     Matrix1D<double> limit0(3), limitF(3);
-    limit0.init_constant(1e30);
-    limitF.init_constant(-1e30);
-    double total_mass = 0;
-
-    // Open the file
-    std::ifstream fh_pdb;
-    fh_pdb.open(fn_pdb.c_str());
-    if (!fh_pdb)
-        REPORT_ERROR(1, (string)"Prog_PDBPhantom_Parameters::protein_geometry:"
-                     "Cannot open " + fn_pdb + " for reading");
-
-    // Process all lines of the file�
-    while (!fh_pdb.eof())
-    {
-        // Read a ATOM line
-        string line;
-        getline(fh_pdb, line);
-        if (line == "") continue;
-        string kind = firstToken(line);
-        if (kind != "ATOM") continue;
-
-        // Extract atom type and position
-        // Typical line:
-        // ATOM    909  CA  ALA A 161      58.775  31.984 111.803  1.00 34.78
-        string dummy = nextToken();
-        string atom_type = nextToken();
-        dummy = nextToken();
-        dummy = nextToken();
-        dummy = nextToken();
-        double x = textToFloat(nextToken());
-        double y = textToFloat(nextToken());
-        double z = textToFloat(nextToken());
-
-        // Update center of mass and limits
-        if (x < XX(limit0)) XX(limit0) = x;
-        else if (x > XX(limitF)) XX(limitF) = x;
-        if (y < YY(limit0)) YY(limit0) = y;
-        else if (y > YY(limitF)) YY(limitF) = y;
-        if (z < ZZ(limit0)) ZZ(limit0) = z;
-        else if (z > ZZ(limitF)) ZZ(limitF) = z;
-        double weight, radius;
-        atomBlobDescription(atom_type, weight, radius);
-        total_mass += weight;
-        XX(centerOfMass) += weight * x;
-        YY(centerOfMass) += weight * y;
-        ZZ(centerOfMass) += weight * z;
-    }
-
-    // Finish calculations
-    centerOfMass /= total_mass;
-    limit0 -= centerOfMass;
-    limitF -= centerOfMass;
+    computePDBgeometry(fn_pdb, centerOfMass, limit0, limitF);
     limit.resize(3);
     XX(limit) = MAX(ABS(XX(limit0)), ABS(XX(limitF)));
     YY(limit) = MAX(ABS(YY(limit0)), ABS(YY(limitF)));
@@ -244,9 +192,6 @@ void Prog_PDBPhantom_Parameters::compute_protein_geometry()
         output_dim = (int)NEXT_POWER_OF_2(max_dim);
         std::cout << "Setting output_dim to " << output_dim << std::endl;
     }
-
-    // Close file
-    fh_pdb.close();
 }
 
 /* Create protein at a high sampling rate ---------------------------------- */
