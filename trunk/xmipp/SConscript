@@ -358,7 +358,7 @@ AddLibrary('OldXmipp', 'libraries/legacy', OldXmippSources,[])
 
 # FindSCenter
 AddProgram('find_center2d', 'applications/legacy/find_center2d', '*.cpp', [],
-    ['libraries'], ['libraries/data', 'libraries/legacy', 'external'],
+    ['libraries', '#'], ['libraries/data', 'libraries/legacy', 'external'],
     ['XmippData', 'OldXmipp', 'XmippExternal'], [], [])
 
 # Src (apps)
