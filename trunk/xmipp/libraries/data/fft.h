@@ -187,6 +187,76 @@ void RealImag2Complex(const Matrix3D< double > & real,
 
 /** @defgroup FourierTransforms Fourier Transforms
  * @ingroup Fourier
+ *
+ *  The theoretical relationship between the Fourier transform of a discrete
+ *  signal and the Fourier transform of the continuous signal is
+ *  
+ *  X(e^jw)=1/T*X_c(jw/T)
+ *  
+ *  Xmipp is not computing X(e^jw) but samples from it so that
+ *  
+ *  X(e^jw)=N*X_XMIPP[k]
+ *  
+ *  where N is the length of the signal being transformed and X_XMIPP[k]
+ *  is the k-th sample.
+ *
+ *  The following program illustrates how the continuous, discrete and
+ *  Xmipp Fourier transform relate
+ *
+ * @code
+ * #include <data/matrix1d.h>
+ * #include <data/fft.h>
+ * 
+ * double discreteTransform(double w, int N1) {
+ *    if (w==0) return 2*N1+1;
+ *    else return sin(w*(N1+0.5))/sin(0.5*w);
+ * }
+ * 
+ * double continuousTransform(double W, double T1) {
+ *    if (W==0) return 2*T1;
+ *    else return 2*sin(W*T1)/W;
+ * }
+ * 
+ * int main() {
+ *     try {
+ *     	 Matrix1D<double> x(65);
+ * 	 x.setXmippOrigin();
+ * 	 double T=0.5;
+ * 	 double T1=6;
+ * 	 int N1=(int)CEIL(T1/T);
+ * 
+ * 	 // Fill x with a pulse from -N1 to N1 (-T1 to T1 in continuous)
+ * 	 FOR_ALL_ELEMENTS_IN_MATRIX1D(x)
+ * 	    if (ABS(i)<=N1) x(i)=1;
+ * 
+ * 	 // Compute the Fourier transform
+ * 	 Matrix1D< complex<double> > X;
+ * 	 Matrix1D<double> Xmag;
+ * 	 FourierTransform(x,X);
+ * 	 FFT_magnitude(X,Xmag);
+ * 
+ * 	 // Compute the frequency axes
+ * 	 Matrix1D<double> contfreq(XSIZE(X)), digfreq(XSIZE(X));
+ *          FOR_ALL_ELEMENTS_IN_MATRIX1D(X)
+ *              FFT_IDX2DIGFREQ(i,XSIZE(X),digfreq(i));
+ * 	 digfreq*=2*PI;
+ * 	 contfreq=digfreq/T;
+ * 
+ * 	 // Show all Fourier transforms
+ * 	 FOR_ALL_ELEMENTS_IN_MATRIX1D(X) {
+ * 	     if (digfreq(i)>=0)
+ *                 std::cout << digfreq(i) << " " << contfreq(i) << " "
+ * 		          << XSIZE(X)*Xmag(i) << " "
+ * 			  << ABS(discreteTransform(digfreq(i),N1)) << " "
+ * 			  << ABS(continuousTransform(contfreq(i),T1)/T)
+ * 			  << std::endl;
+ * 	 }
+ *     } catch (Xmipp_error XE) {
+ *     	   std::cout << XE << std::endl;
+ *     }
+ *     return 0;
+ * }
+ * @endcode
  */
 
 /** Direct Fourier Transform 1D
