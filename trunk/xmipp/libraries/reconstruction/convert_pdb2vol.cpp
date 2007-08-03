@@ -141,7 +141,7 @@ void Prog_PDBPhantom_Parameters::read(int argc, char **argv)
     if (fn_out == "") fn_out = fn_pdb.without_extension();
     Ts = textToFloat(getParameter(argc, argv, "-sampling_rate", "1"));
     highTs = textToFloat(getParameter(argc, argv, "-high_sampling_rate", "0.08333333"));
-    output_dim = textToInteger(getParameter(argc, argv, "-output_dim", "-1"));
+    output_dim = textToInteger(getParameter(argc, argv, "-size", "-1"));
     useBlobs = checkParameter(argc, argv, "-blobs");
 }
 
