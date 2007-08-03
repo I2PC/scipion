@@ -48,6 +48,9 @@ public:
 
     /** Final size in pixels */
     int output_dim;
+    
+    /** Use blobs instead of scattering factors */
+    bool useBlobs;
 public:
     /** Empty constructor */
     Prog_PDBPhantom_Parameters();
@@ -57,6 +60,10 @@ public:
         this would mean that there is an error in the command line and you
         might show a usage message. */
     void read(int argc, char **argv);
+
+    /** Produce side information.
+        Produce the atomic profiles. */
+    void produceSideInfo();
 
     /** Usage message.
         This function shows the way of introducing this parameters. */
@@ -68,12 +75,18 @@ public:
     /** Run. */
     void run();
 public:
+    /* Downsampling factor */
+    int M;
+
     /* Sampling rate used for highly sampled volumes */
     double highTs;
 
     /* periodic_table(i,0)=radius
        periodic_table(i,1)=atomic weight */
-    Matrix2D<double> periodic_table;
+    Matrix2D<double> periodicTable;
+
+    /* Atom profiles. */
+    vector< Matrix1D<double> *> atomProfiles;
 
     // Protein geometry
     Matrix1D<double> centerOfMass, limit;
@@ -84,12 +97,15 @@ public:
     /* Volume at a low sampling rate */
     VolumeXmipp Vlow;
 
+    /* Produce atom profile for a single atom */
+    void produceSideInfoAtom(const string &atom);
+    
     /* Blob properties at the high sampling rate */
     void blob_properties() const;
 
     /* Atom weight and radius */
-    void atom_description(const string &_element, double &weight, double &radius)
-    const;
+    void atomBlobDescription(const string &_element,
+        double &weight, double &radius) const;
 
     /* Protein geometry */
     void compute_protein_geometry();
@@ -99,6 +115,42 @@ public:
 
     /* Create protein at a low sampling rate */
     void create_protein_at_low_sampling_rate();
+
+    /* Create protein using scattering profiles */
+    void create_protein_using_scattering_profiles();
 };
+
+/** Description of the electron scattering factors.
+    The returned descriptor is descriptor(0)=Z (number of electrons of the
+    atom), descriptor(1-5)=a1-5, descriptor(6-10)=b1-5.
+    The electron scattering factor at a frequency f (Angstroms^-1)
+    is computed as f_el(f)=sum_i(ai exp(-bi*x^2)). Use the function
+    electronFormFactorFourier or 
+    
+    See Peng, Ren, Dudarev, Whelan. Robust parameterization of elastic and
+    absorptive electron atomic scattering factors. Acta Cryst. A52: 257-276
+    (1996). Table 3 and equation 3.*/
+void atomDescriptors(const std::string &atom, Matrix1D<double> &descriptors);
+
+/** Compute the electron Form Factor in Fourier space.
+    The electron scattering factor at a frequency f (Angstroms^-1)
+    is computed as f_el(f)=sum_i(ai exp(-bi*x^2)). */
+double electronFormFactorFourier(double f,
+    const Matrix1D<double> &descriptors);
+
+/** Compute the electron Form Factor in Real space.
+    Konwing the electron form factor in Fourier space is easy to make an
+    inverse Fourier transform and express it in real space. r is the
+    distance to the center of the atom in Angstroms. */
+double electronFormFactorRealSpace(double r,
+    const Matrix1D<double> &descriptors);
+
+/** Atom radial profile.
+    Returns the radial profile of a given atom, i.e., the electron scattering
+    factor convolved with a suitable low pass filter for sampling the volume
+    at a sampling rate M*T. The radial profile is sampled at T Angstroms/pixel.
+*/
+void atomRadialProfile(int M, double T, const string &atom,
+    Matrix1D<double> &profile);
 //@}
 #endif
