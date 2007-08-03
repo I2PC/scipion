@@ -49,7 +49,7 @@ public:
         fn_in = getParameter(argc, argv, "-i");
         fn_out = getParameter(argc, argv, "-o");
 	PDBmode=checkParameter(argc, argv, "-pdb");
-	centerPDB=checkParameter(argc,argv, "-centerPDB");
+	centerPDB=checkParameter(argc,argv, "-center_pdb");
         Euler_mode = Align_mode = Axis_mode = false;
         if (checkParameter(argc, argv, "-euler"))
         {
