@@ -179,14 +179,15 @@ void applyGeometry(const string &fn_in, const string &fn_out,
     while (!fh_in.eof())
     {
         // Read a ATOM line
-        std::string line;
+        std::string line, auxLine;
         getline(fh_in, line);
         if (line == "") 
 	{
 	    fh_out << "\n";
 	    continue;
 	}
-        std::string kind = firstToken(line);
+	auxLine=line.c_str();
+        std::string kind = firstToken(auxLine);
         if (kind != "ATOM") 
 	{
 	    fh_out << line << std::endl;
@@ -207,10 +208,19 @@ void applyGeometry(const string &fn_in, const string &fn_out,
         std::string t6 = nextToken();
         std::string t7 = nextToken();
 
-    	Matrix1D<double> v(3);
-	VECTOR_R3(v,x,y,z);
+    	Matrix1D<double> v(4);
+        if (centerPDB)
+	{
+	    VECTOR_R3(v,x-XX(centerOfMass),
+		y-YY(centerOfMass),z-ZZ(centerOfMass));
+	}
+	else
+	{
+    	    VECTOR_R3(v,x,y,z);
+	}
+	v(3)=1;
 	v=A*v;
-	fh_out << t1 << " " << t2 << " " << t3 << " " << t4 << " " 
+	fh_out << "ATOM " << t1 << " " << t2 << " " << t3 << " " << t4 << " " 
 	       << t5 << " " << XX(v) << " " << YY(v) << " " 
 	       << ZZ(v) << " " << t6 << " " << t7 << std::endl;
     }
