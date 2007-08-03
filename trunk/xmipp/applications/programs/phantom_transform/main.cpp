@@ -27,12 +27,13 @@
 #include <data/args.h>
 #include <data/geometry.h>
 #include <reconstruction/phantom.h>
+#include <interface/pdb.h>
 
 class Phantom_transform_parameters
 {
 public:
     FileName fn_in, fn_out;
-    bool Euler_mode;
+    bool Euler_mode, PDBmode, centerPDB;
     double rot, tilt, psi;
     bool Align_mode;
     bool Axis_mode;
@@ -47,6 +48,8 @@ public:
     {
         fn_in = getParameter(argc, argv, "-i");
         fn_out = getParameter(argc, argv, "-o");
+	PDBmode=checkParameter(argc, argv, "-pdb");
+	centerPDB=checkParameter(argc,argv, "-centerPDB");
         Euler_mode = Align_mode = Axis_mode = false;
         if (checkParameter(argc, argv, "-euler"))
         {
@@ -104,32 +107,35 @@ public:
 
     void show()
     {
-        cout << "Input file : " << fn_in  << endl
-        << "Output file: " << fn_out << endl;
+        std::cout << "Input file : " << fn_in  << std::endl
+                  << "Output file: " << fn_out << std::endl;
+	if (PDBmode) std::cout << "Input file is PDB\n";
         if (Euler_mode)
-            cout << "Euler angles (rot, tilt, psi): " << rot << " " << tilt
-            << " " << psi << endl;
+            std::cout << "Euler angles (rot, tilt, psi): " << rot << " " << tilt
+                      << " " << psi << std::endl;
         else if (Align_mode)
-            cout << "Aligning " << axis.transpose() << " with Z\n";
+            std::cout << "Aligning " << axis.transpose() << " with Z\n";
         else if (Axis_mode)
-            cout << "Rotating " << ang << " degrees around " << axis.transpose()
-            << endl;
+            std::cout << "Rotating " << ang << " degrees around "
+	              << axis.transpose() << std::endl;
     }
 
     void usage()
     {
-        cerr << "Usage: phantom_transform [Options]\n"
-        << "   -i <input filename>              : Phantom description file\n"
-        << "   -o <output filename>             : Phantom description file\n";
-        cerr << "  [-euler <rot> <tilt> <psi>        : Rotate with these Euler angles\n"
-        << "  [-alignWithZ [<x>,<y>,<z>]]     : Align (x,y,z) with Z\n"
-        << "                                      Notice that brackets for the\n"
-        << "                                      vector must be written and do not\n"
-        << "                                      represent optional parameters\n"
-        << "  [-axis [<x>,<y>,<z>] -ang <ang>]  : Rotate <ang> degrees around (x,y,z),\n"
-        << "                                      by default (0,0,1)\n"
-        << "  [-shift [<x>,<y>,<z>]             : Shift vector\n"
-        << "  [-scale [<x>,<y>,<z>]             : Scale vector\n"
+        std::cerr << "Usage: phantom_transform [Options]\n"
+        	  << "   -i <input filename>              : Phantom description file\n"
+        	  << "   -o <output filename>             : Phantom description file\n"
+		  << "  [-pdb]                            : Use PDBs instead of phantom descriptions\n"
+		  << "  [-center_pdb]                     : Substract the center of mass from coordinates\n"
+        	  << "  [-euler <rot> <tilt> <psi>        : Rotate with these Euler angles\n"
+        	  << "  [-alignWithZ [<x>,<y>,<z>]]     : Align (x,y,z) with Z\n"
+        	  << "                                      Notice that brackets for the\n"
+        	  << "                                      vector must be written and do not\n"
+        	  << "                                      represent optional parameters\n"
+        	  << "  [-axis [<x>,<y>,<z>] -ang <ang>]  : Rotate <ang> degrees around (x,y,z),\n"
+        	  << "                                      by default (0,0,1)\n"
+        	  << "  [-shift [<x>,<y>,<z>]             : Shift vector\n"
+         	  << "  [-scale [<x>,<y>,<z>]             : Scale vector\n"
         ;
     }
 };
@@ -153,17 +159,21 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         prm.usage();
         exit(1);
     }
     try
     {
         prm.show();
-        process_phantom(prm.fn_in, prm.fn_out, &prm);
+	if (prm.PDBmode)
+	    applyGeometry(prm.fn_in, prm.fn_out, prm.A3D, prm.centerPDB);
+	else
+            process_phantom(prm.fn_in, prm.fn_out, &prm);
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE << std::endl;
     }
+    return 0;
 }
