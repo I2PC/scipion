@@ -72,7 +72,7 @@ void KaiserMask(Matrix1D<double> &mask, double delta, double Deltaw)
 
     // Design Kaiser window
     double A = -20 * log10(delta);
-    int    M = CEIL((A - 8) / (2.285 * Deltaw));
+    double M = CEIL((A - 8) / (2.285 * Deltaw));
     double beta;
     if (A > 50)
         beta = 0.1102 * (A - 8.7);
@@ -380,7 +380,7 @@ void SeparableSincKaiserMask(Matrix2D<double> &mask,
 
     // Design Kaiser window
     double A = -20 * log10(delta);
-    int    M = CEIL((A - 8) / (2.285 * Deltaw));
+    double M = CEIL((A - 8) / (2.285 * Deltaw));
     double beta;
     if (A > 50)
         beta = 0.1102 * (A - 8.7);
