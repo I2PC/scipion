@@ -416,13 +416,12 @@ void QtMainWidgetMark::compute_gamma()
 }
 
 /* Compute alphas ---------------------------------------------------------- */
-double pair_tilt;
 Matrix2D<double> *pair_Put;
 Matrix2D<double> pair_E;
 
 double matrix_fitness(double *p)
 {
-    Euler_angles2matrix(p[1], pair_tilt, -p[2], pair_E);
+    Euler_angles2matrix(p[1], p[3], -p[2], pair_E);
     double retval = 0;
     for (int i = 0; i < 2; i++)
         for (int j = 0; j < 2; j++)
@@ -439,19 +438,16 @@ void QtMainWidgetMark::compute_alphas()
     // If there is no tilted image there is nothing to do
     if (__mTiltedWidget == NULL) return;
 
-
-    Matrix1D<double> angles(2);
+    Matrix1D<double> angles(3);
     angles.initZeros();
-    Matrix1D<double> steps(2);
-    steps.init_constant(1);
     double fitness;
     int iter;
     pair_Put = &__Put;
-    pair_tilt = __gamma;
 
     // Coarse search
     double *aux = angles.adaptForNumericalRecipes();
     double best_alpha_u = 0, best_alpha_t = 0, best_fit = 1e8;
+    aux[3] = __gamma;
     for (aux[1] = 0; aux[1] < 180; aux[1] += 10)
         for (aux[2] = 0; aux[2] < 180; aux[2] += 10)
         {
@@ -466,12 +462,16 @@ void QtMainWidgetMark::compute_alphas()
     angles.killAdaptationForNumericalRecipes(aux);
     angles(0) = best_alpha_u;
     angles(1) = best_alpha_t;
+    angles(2) = __gamma;
 
     // Fine search
-    powellOptimizer(angles, 1, 2, &matrix_fitness,
+    Matrix1D<double> steps(3);
+    steps.init_constant(1);
+    powellOptimizer(angles, 1, 3, &matrix_fitness,
                      0.001, fitness, iter, steps, false);
     __alpha_u = angles(0);
     __alpha_t = angles(1);
+    __gamma = angles(2);
 }
 
 /* Write angles in file ---------------------------------------------------- */
