@@ -25,7 +25,7 @@
 
 #include "integration.h"
 
-#define JMAXP 14
+#define JMAXP 30
 #define K 5
 
 //**********************************************************
