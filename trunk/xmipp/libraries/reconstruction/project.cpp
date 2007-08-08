@@ -35,6 +35,8 @@ void Prog_Project_Parameters::read(int argc, char **argv)
     fn_sel_file   = getParameter(argc, argv, "-o", "");
     fn_crystal    = getParameter(argc, argv, "-crystal", "");
     fn_sym        = getParameter(argc, argv, "-sym", "");
+    samplingRate  = textToDouble(
+    	    	    	getParameter(argc, argv, "-sampling_rate", "1"));
     only_create_angles = checkParameter(argc, argv, "-only_create_angles");
     if (checkParameter(argc, argv, "-show_angles"))
         tell |= TELL_SHOW_ANGLES;
@@ -48,6 +50,7 @@ void Prog_Project_Parameters::usage()
            "       [-o <sel_file>]\n"
            "       [-show_angles]\n"
            "       [-sym <sym_file>]\n"
+	   "       [-sampling_rate <Ts=1>\n"
            "       [-only_create_angles]\n"
            "       [-crystal <crystal_parameters_file>]\n");
     printf(
@@ -58,6 +61,8 @@ void Prog_Project_Parameters::usage()
         "\t                    projections\n");
     printf(
         "\t<sym_file>:         This is a symmetry description file\n");
+    printf(
+    	"\t<Ts>:    	       It is only used for PDB projections\n");
 }
 
 /* Projection parameters from program parameters =========================== */
@@ -80,7 +85,7 @@ int translate_randomness(char * str)
                  + str);
 }
 
-void Projection_Parameters::read(FileName fn_proj_param)
+void Projection_Parameters::read(const FileName &fn_proj_param)
 {
     FILE    *fh_param;
     char    line[201];
@@ -99,12 +104,12 @@ void Projection_Parameters::read(FileName fn_proj_param)
         switch (lineNo)
         {
         case 0:
-            fn_phantom = firstWord(line, 3007,
+            fnPhantom = firstWord(line, 3007,
                                     "Prog_Project_Parameters::read: Phantom name not found");
             lineNo = 1;
             break;
         case 1:
-            fn_projection_seed =
+            fnProjectionSeed =
                 firstWord(line, 3007,
                            "Prog_Project_Parameters::read: Error in Projection seed");
             // Next two parameters are optional
@@ -288,7 +293,7 @@ void Projection_Parameters::read(FileName fn_proj_param)
 }
 
 /* Write =================================================================== */
-void Projection_Parameters::write(FileName fn_proj_param)
+void Projection_Parameters::write(const FileName &fn_proj_param) const
 {
     FILE *fh_param;
 
@@ -302,11 +307,11 @@ void Projection_Parameters::write(FileName fn_proj_param)
     fprintf(fh_param,
             "# volume description file or volume file\n");
     fprintf(fh_param,
-            "%s\n", fn_phantom.c_str());
+            "%s\n", fnPhantom.c_str());
     fprintf(fh_param,
             "# projection seed, first projection number (by default, 1) and extension\n");
     fprintf(fh_param,
-            "%s %d %s\n", fn_projection_seed.c_str(), starting,
+            "%s %d %s\n", fnProjectionSeed.c_str(), starting,
             fn_projection_extension.c_str());
     fprintf(fh_param,
             "# Y and X projection dimensions\n");
@@ -702,26 +707,33 @@ void PROJECT_Side_Info::produce_Side_Info(const Projection_Parameters &prm,
     Assign_angles(DF, prm, prog_prm.fn_sym);
 
 // Load Phantom and set working mode
-    if (Is_VolumeXmipp(prm.fn_phantom))
+    if (Is_VolumeXmipp(prm.fnPhantom))
     {
-        phantom_vol.read(prm.fn_phantom);
-        phantom_vol().setXmippOrigin();
-        voxel_mode = 1;
+        phantomVol.read(prm.fnPhantom);
+        phantomVol().setXmippOrigin();
+        phantomMode = VOXEL;
+    }
+    else if (prm.fnPhantom.get_extension()=="pdb")
+    {
+    	phantomPDB.read(prm.fnPhantom);
+	const double highTs=1.0/12.0;
+	int M=ROUND(prog_prm.samplingRate/highTs);
+	interpolator.setup(M,prog_prm.samplingRate/M,true);
+    	phantomMode = PDB;
     }
     else
     {
-        phantom_descr.read(prm.fn_phantom);
-        voxel_mode = 0;
+        phantomDescr.read(prm.fnPhantom);
+        phantomMode = XMIPP;
     }
 }
 
 /* Effectively project ===================================================== */
 int PROJECT_Effectively_project(const Projection_Parameters &prm,
-                                PROJECT_Side_Info &side, const Crystal_Projection_Parameters &prm_crystal,
+                                PROJECT_Side_Info &side,
+				const Crystal_Projection_Parameters &prm_crystal,
                                 Projection &proj, SelFile &SF)
 {
-
-
     int NumProjs = 0;
     SF.clear();
     cerr << "Projecting ...\n";
@@ -735,7 +747,7 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
     {
         double rot, tilt, psi;         // Actual projecting angles
         FileName fn_proj;              // Projection name
-        fn_proj.compose(prm.fn_projection_seed, side.DF.get_current_key(),
+        fn_proj.compose(prm.fnProjectionSeed, side.DF.get_current_key(),
                         prm.fn_projection_extension);
 
         // Choose angles .....................................................
@@ -752,16 +764,25 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
         movements(7) = shiftY;
 
         // Really project ....................................................
-        if (side.voxel_mode)
+        if (side.phantomMode==PROJECT_Side_Info::VOXEL)
         {
-            project_Volume(side.phantom_vol(), proj, prm.proj_Ydim, prm.proj_Xdim,
+            project_Volume(side.phantomVol(), proj, prm.proj_Ydim, prm.proj_Xdim,
                            rot, tilt, psi);
             IMGMATRIX(proj).selfTranslate(vectorR2(shiftX, shiftY));
         }
-        else
+	else if (side.phantomMode==PROJECT_Side_Info::PDB)
+	{
+	    PDBPhantom aux;
+	    aux=side.phantomPDB;
+	    aux.shift(shiftX,shiftY,0);
+	    projectPDB(side.phantomPDB, side.interpolator,
+	               proj, prm.proj_Ydim, prm.proj_Xdim,
+                       rot, tilt, psi);
+        }
+	else if (side.phantomMode==PROJECT_Side_Info::XMIPP)
         {
             Phantom aux;
-            aux = side.phantom_descr;
+            aux = side.phantomDescr;
             aux.shift(shiftX, shiftY, 0);
             if (prm_crystal.crystal_Xdim == 0)
             {
@@ -796,7 +817,7 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
     }
     if (!(prm.tell&TELL_SHOW_ANGLES)) progress_bar(side.DF.dataLineNo());
 
-    DF_movements.write(prm.fn_projection_seed + "_movements.txt");
+    DF_movements.write(prm.fnProjectionSeed + "_movements.txt");
     return NumProjs;
 }
 
@@ -814,14 +835,14 @@ int ROUT_project(Prog_Project_Parameters &prm, Projection &proj, SelFile &SF)
     if (prm.fn_crystal != "")
     {
         crystal_proj_prm.read(prm.fn_crystal,
-                              (side.phantom_descr).phantom_scale);
+                              (side.phantomDescr).phantom_scale);
 
         // if not null read doc file with unitcell shift
         // format h, k, shift_X shift_Y shift_Z
         if (crystal_proj_prm.DF_shift_bool == true)
             crystal_proj_prm.DF_shift.read(crystal_proj_prm.fn_shift);
         (crystal_proj_prm.DF_shift).go_first_data_line();
-        double my_scale = (side.phantom_descr).phantom_scale;
+        double my_scale = (side.phantomDescr).phantom_scale;
         double my_aux;
         while (!(crystal_proj_prm.DF_shift).eof())
         {

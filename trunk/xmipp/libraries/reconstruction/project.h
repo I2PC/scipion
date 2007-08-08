@@ -29,6 +29,7 @@
 #include <data/docfile.h>
 #include <data/selfile.h>
 #include <data/projection.h>
+#include <interface/pdb.h>
 
 #include "phantom.h"
 #include "projection.h"
@@ -50,6 +51,8 @@ public:
     FileName fn_crystal;
     /// Symmetry file
     FileName fn_sym;
+    /// Sampling rate: Only used for PDB projections
+    double samplingRate;
     /// Only create angles, do not project
     bool only_create_angles;
 
@@ -134,9 +137,9 @@ public:
     //@{
     /** Phantom filename.
         It can be a Xmipp volume or a mathematically defined phantom. */
-    FileName fn_phantom;
+    FileName fnPhantom;
     /// Starting name for all projections
-    string   fn_projection_seed;
+    string   fnProjectionSeed;
     /// First projection number. By default, 1.
     int      starting;
     /// Extension for projection filenames. This is optional
@@ -199,13 +202,13 @@ public:
     /** Read projection parameters from a file.
         An exception is thrown if the file is not found or any of the
         parameters is not found in the right place.*/
-    void read(FileName fn_proj_param);
+    void read(const FileName &fn_proj_param);
 
     /** Write projection parameters to a file.
         The projection parameters are written into a file wth the same
         structure as always. If the file cannot be openned for output
         an exception is thrown. */
-    void write(FileName fn_proj_param);
+    void write(const FileName &fn_proj_param) const;
 };
 
 /** Project program Side information.
@@ -218,12 +221,18 @@ class PROJECT_Side_Info
 public:
     /// Document File for the projecting angles. Order: rot, tilt, psi
     DocFile        DF;
-    /// Projecting from a voxel volume?
-    int            voxel_mode;
+    /// Types of phantom: voxel, Xmipp, PDB
+    enum PhantomType {VOXEL, XMIPP, PDB};
+    /// Projecting from a voxel volume, Xmipp description or PDB?
+    PhantomType    phantomMode;
     /// Phantom Xmipp volume
-    VolumeXmipp    phantom_vol;
+    VolumeXmipp    phantomVol;
     /// Phantom mathematical description
-    Phantom        phantom_descr;
+    Phantom        phantomDescr;
+    /// Phantom PDB
+    PDBPhantom     phantomPDB;
+    /// Atom interpolator
+    AtomInterpolator interpolator;
 public:
     /** Produce Project Side information.
         This function produce the side information from the project
