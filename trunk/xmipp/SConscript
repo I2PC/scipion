@@ -298,7 +298,6 @@ ReconsSources = [
     'phantom_create_random.cpp',
     'phantom_simulate_microscope.cpp',
     'precompute_sampling.cpp',
-    'project.cpp',
     'project_crystal.cpp',
     'projection.cpp',
     'psd_enhance.cpp',
@@ -328,6 +327,7 @@ ReconsInterfaceSources = [
     'crystal_unbend.cpp',
     'im_unbend.cpp',
     'phantom_test_reconstruction.cpp',
+    'project.cpp',
     'recons_spider.cpp']
 
 AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
@@ -448,7 +448,7 @@ AddXmippProgram('phantom_simulate_microscope', ['XmippRecons'])
 AddXmippProgram('phantom_test_reconstruction', ['XmippRecons_Interface',
     'XmippRecons'])
 AddXmippProgram('phantom_transform', ['XmippRecons','XmippRecons_Interface'])
-AddXmippProgram('project', ['XmippRecons'])
+AddXmippProgram('project', ['XmippRecons','XmippRecons_Interface'])
 AddXmippProgram('psd_enhance', ['XmippRecons'])
 AddXmippProgram('range_adjust')
 AddXmippProgram('reconstruct_art', ['XmippRecons'])
