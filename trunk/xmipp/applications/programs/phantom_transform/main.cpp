@@ -110,6 +110,7 @@ public:
         std::cout << "Input file : " << fn_in  << std::endl
                   << "Output file: " << fn_out << std::endl;
 	if (PDBmode) std::cout << "Input file is PDB\n";
+	if (centerPDB) std::cout << "Centering PDB\n";
         if (Euler_mode)
             std::cout << "Euler angles (rot, tilt, psi): " << rot << " " << tilt
                       << " " << psi << std::endl;
