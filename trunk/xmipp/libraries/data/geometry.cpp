@@ -76,8 +76,8 @@ double spherical_distance(const Matrix1D<double> &r1, const Matrix1D<double> &r2
     double ang = acos(r1r2 / (R1 * R2));
     return ang*R1;
 }
-/* Point to line distance -------------------------------------------------- */
 
+/* Point to line distance -------------------------------------------------- */
 double point_line_distance_3D(const Matrix1D<double> &p,
                               const Matrix1D<double> &a,
                               const Matrix1D<double> &v)
