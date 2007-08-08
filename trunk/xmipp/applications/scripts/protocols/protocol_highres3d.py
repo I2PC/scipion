@@ -344,7 +344,9 @@ class HighRes3DClass:
 
        self.doParallel=_DoParallel
        self.myNumberOfCPUs=_MyNumberOfCPUs
-       if _MyMachineFile[0]=='/':
+       if _MyMachineFile=='':
+          self.myMachineFile=''
+       elif _MyMachineFile[0]=='/':
           self.myMachineFile=os.path.abspath(_MyMachineFile)
        elif _MyMachineFile[0]=='$':
           self.myMachineFile=_MyMachineFile
