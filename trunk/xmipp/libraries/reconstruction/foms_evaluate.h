@@ -41,7 +41,7 @@ public:
     FileName fn_sel;
 
     /// Phantom filename: either Xmipp volume or phantom description
-    FileName fn_phantom;
+    FileName fnPhantom;
     /// Reconstruction filename (Xmipp volume)
     FileName fn_recons;
     /** Percent of mass to be left out in slice histograms.

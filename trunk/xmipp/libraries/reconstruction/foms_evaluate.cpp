@@ -81,7 +81,7 @@ void Prog_Evaluate_Parameters::default_values()
     back_mode      = ENLARGE_MODE;
     tell           = 0;
     fn_sel         = "";
-    fn_phantom     = "";
+    fnPhantom     = "";
     fn_recons      = "";
     percent_mass   = 99;
     global_radius  = 0;
@@ -100,7 +100,7 @@ void Prog_Evaluate_Parameters::read(int argc, char **argv)
     default_values();
 
     // Read from command line
-    fn_phantom       = getParameter(argc, argv, "-p", "");
+    fnPhantom       = getParameter(argc, argv, "-p", "");
     if (checkParameter(argc, argv, "-sel"))
         fn_sel = getParameter(argc, argv, "-sel");
     else
@@ -192,7 +192,7 @@ void Prog_Evaluate_Parameters::usage()
 ostream & operator << (ostream &out, const Prog_Evaluate_Parameters &prm)
 {
     out << "Evaluating parameters ----------------------\n";
-    out << "Phantom         : " << prm.fn_phantom        << endl;
+    out << "Phantom         : " << prm.fnPhantom        << endl;
     out << "Reconstruction  : " << prm.fn_recons         << endl;
     out << "Percent mass    : " << prm.percent_mass      << endl;
     out << "RSrot           : " << prm.RSrot             << endl;
@@ -222,10 +222,10 @@ void EVALUATE_Side_Info::produce_Side_Info(
     vol_recons.moveOriginTo_center();
 
     // Read phantom and label ...............................................
-    if (Is_VolumeXmipp(prm.fn_phantom))
+    if (Is_VolumeXmipp(prm.fnPhantom))
     {
         descr_mode = XMIPP_PHANTOM;
-        vol_phantom.read(prm.fn_phantom);
+        vol_phantom.read(prm.fnPhantom);
         vol_phantom.moveOriginTo_center();
         vol_label().resize(vol_phantom());
         vol_label().init_constant(1);
@@ -234,7 +234,7 @@ void EVALUATE_Side_Info::produce_Side_Info(
     else
     {
         cerr << "Generating phantom ...\n";
-        phantom_descr.read(prm.fn_phantom);
+        phantom_descr.read(prm.fnPhantom);
         phantom_descr.draw_in(&vol_phantom);
         phantom_descr.label(&vol_label);
         num_feat = phantom_descr.FeatNo();
@@ -451,7 +451,7 @@ void show_FOMs(const Prog_Evaluate_Parameters &prm,
 
     // Show Parameters ......................................................
     cout << endl;
-    cout << "PHANTOM FILE      : " << prm.fn_phantom << endl;
+    cout << "PHANTOM FILE      : " << prm.fnPhantom << endl;
     cout << "RECONSTRUCTED FILE: " << prm.fn_recons  << endl;
     if (!(prm.tell&ONLY_STRUCTURAL))
     {
@@ -673,14 +673,14 @@ void ROUT_Evaluate(Prog_Evaluate_Parameters &prm,
         {
             cerr << "Perfoming measure for test number " << k << endl;
             prm.fn_recons = SF.NextImg();
-            if (prm.fn_phantom == "")
+            if (prm.fnPhantom == "")
             {
                 mathematical_phantom = true;
-                prm.fn_phantom = prm.fn_recons.without_extension();
-                prm.fn_phantom = prm.fn_phantom.without("_wos");
-                int i = prm.fn_phantom.find("_idr");
-                if (i != -1) prm.fn_phantom = prm.fn_phantom.replace(i, 6, "");
-                prm.fn_phantom += ".descr";
+                prm.fnPhantom = prm.fn_recons.without_extension();
+                prm.fnPhantom = prm.fnPhantom.without("_wos");
+                int i = prm.fnPhantom.find("_idr");
+                if (i != -1) prm.fnPhantom = prm.fnPhantom.replace(i, 6, "");
+                prm.fnPhantom += ".descr";
             }
             else mathematical_phantom = false;
             if (!SFmask.eof()) prm.fn_mask = SFmask.NextImg();
@@ -690,7 +690,7 @@ void ROUT_Evaluate(Prog_Evaluate_Parameters &prm,
             k++;
             if (mathematical_phantom)
             {
-                prm.fn_phantom = "";
+                prm.fnPhantom = "";
                 mathematical_phantom = false;
             }
         }

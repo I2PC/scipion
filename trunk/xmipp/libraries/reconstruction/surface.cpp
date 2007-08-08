@@ -28,7 +28,7 @@
 /* Read from command line ================================================== */
 void Prog_Surface_Parameters::read(int argc, char **argv)
 {
-    fn_phantom     = getParameter(argc, argv, "-i", "");
+    fnPhantom     = getParameter(argc, argv, "-i", "");
     probe_radius   = textToFloat(getParameter(argc, argv, "-r", "0.5"));
     fn_top         = getParameter(argc, argv, "-top", "");
     fn_bottom      = getParameter(argc, argv, "-bottom", "");
@@ -41,7 +41,7 @@ void Prog_Surface_Parameters::read(int argc, char **argv)
 
     if (fn_top == "" && fn_bottom == "")
         REPORT_ERROR(1, "Prog_Surface_Parameters::read: No surface given!!!");
-    if (fn_phantom == "" && zdim <= 0)
+    if (fnPhantom == "" && zdim <= 0)
         REPORT_ERROR(1, "Prog_Surface_Parameters::read: No valid Z dimension");
 }
 
@@ -63,9 +63,9 @@ void Prog_Surface_Parameters::usage() const
 /* Produce side information ================================================ */
 void Prog_Surface_Parameters::produce_Side_Info()
 {
-    if (fn_phantom != "")
+    if (fnPhantom != "")
     {
-        phantom.read(fn_phantom);
+        phantom.read(fnPhantom);
         if (zdim == 0)         zdim   = phantom.zdim;
         if (!enable_ztop)    ztop   = phantom.zdim;
         if (!enable_zbottom) zbottom = phantom.zdim;
@@ -118,7 +118,7 @@ void ROUT_surface(Prog_Surface_Parameters &prm)
     ImageXmipp top_surface, bottom_surface;
 
     // Create surfaces from a phantom ---------------------------------------
-    if (prm.fn_phantom != "")
+    if (prm.fnPhantom != "")
     {
         // Create top surface
         if (prm.fn_top != "")

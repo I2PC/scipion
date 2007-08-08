@@ -36,7 +36,7 @@ class Prog_Surface_Parameters
 {
 public:
     /// Filename with the \Ref{Phantom}.
-    FileName fn_phantom;
+    FileName fnPhantom;
     /// Probe radius
     double probe_radius;
     /// Enable ztop mode

@@ -542,7 +542,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
     proj_prm.from_prog_params(Prog_proj_prm);
     if (prm.fn_crystal != "") crystal_proj_prm.read(prm.fn_crystal);
     FileName fn_root, fn_recons_root;
-    fn_root = proj_prm.fn_projection_seed;
+    fn_root = proj_prm.fnProjectionSeed;
     if (nvol != -1) fn_recons_root = fn_root + "exp" + integerToString(nvol, 2);
     else          fn_recons_root = fn_root;
     FileName fn_ext = proj_prm.fn_projection_extension;
@@ -551,24 +551,24 @@ void single_recons_test(const Recons_test_Parameters &prm,
 // Generate random phantom -------------------------------------------------
     Prog_Random_Phantom_Parameters rp_prm;
     Phantom realization;
-    FileName fn_phantom;
+    FileName fnPhantom;
 
     if (prm.fn_random_phantom != "")
     {
         rp_prm.fn_random = prm.fn_random_phantom;
-        fn_phantom = rp_prm.fn_output = fn_recons_root + ".descr";
+        fnPhantom = rp_prm.fn_output = fn_recons_root + ".descr";
         rp_prm.min_vol = 0;
 
         ROUT_random_phantom(rp_prm, realization);
     }
     else
-        fn_phantom = prm.fn_voxel_phantom;
+        fnPhantom = prm.fn_voxel_phantom;
 
 // Read phantom in memory? -------------------------------------------------
     VolumeXmipp vol_phantom;
     if (prm.enable_segmented_surface || prm.start_from_phantom)
         if (prm.fn_random_phantom != "") realization.draw_in(&vol_phantom);
-        else                           vol_phantom.read(fn_phantom);
+        else                           vol_phantom.read(fnPhantom);
     vol_phantom().setXmippOrigin();
 
 // Generate projections ----------------------------------------------------
@@ -579,8 +579,8 @@ void single_recons_test(const Recons_test_Parameters &prm,
 
     // Read projection parameters and produce side information
     proj_prm.from_prog_params(Prog_proj_prm);
-    if (prm.fn_random_phantom != "") proj_prm.fn_phantom = fn_phantom;
-    proj_prm.fn_projection_seed = fn_root;
+    if (prm.fn_random_phantom != "") proj_prm.fnPhantom = fnPhantom;
+    proj_prm.fnProjectionSeed = fn_root;
     proj_prm.tell = 0;
     if (prm.tomography)
     {
@@ -730,7 +730,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
                          "Recons_test: Cannot use surface option without a mathematical phantom");
         cerr << "Generating surface ...\n";
         prm_surface.probe_radius = prm.probe_radius;
-        prm_surface.fn_phantom = fn_phantom;
+        prm_surface.fnPhantom = fnPhantom;
         prm_surface.phantom = realization;
         prm_surface.zdim = realization.zdim;
         if (prm.enable_top_surface)
@@ -957,15 +957,15 @@ void single_recons_test(const Recons_test_Parameters &prm,
         if (prm.fn_alternative_evaluation_phantom == "")
         {
             if (prm.fn_random_phantom != "")
-                eval_prm.fn_phantom = fn_phantom;
+                eval_prm.fnPhantom = fnPhantom;
             else
             {
-                eval_prm.fn_phantom = proj_prm.fn_phantom;
+                eval_prm.fnPhantom = proj_prm.fnPhantom;
                 eval_prm.tell = ONLY_STRUCTURAL;
             }
         }
         else
-            eval_prm.fn_phantom = prm.fn_alternative_evaluation_phantom;
+            eval_prm.fnPhantom = prm.fn_alternative_evaluation_phantom;
         if (prm.fn_smooth_evaluation_mask == "")
             eval_prm.fn_recons = fn_recons_root + ".vol";
         else
