@@ -31,6 +31,7 @@
 
 #include <string>
 #include <data/matrix1d.h>
+#include <reconstruction/projection.h>
 
 /**@name PDB */
 //@{
@@ -59,5 +60,175 @@ void computePDBgeometry(const std::string &fnPDB,
     after centering the PDB. */
 void applyGeometry(const string &fn_in, const string &fn_out,
     const Matrix2D<double> &A, bool centerPDB=true);
+
+/** Atom class. */
+class Atom
+{
+public:
+    /// Type
+    char atomType;
+    
+    /// Position X
+    double x;
+
+    /// Position Y
+    double y;
+
+    /// Position Z
+    double z;
+};
+
+/** Phantom description using atoms. */
+class PDBPhantom
+{
+public:
+    /// List of atoms
+    vector<Atom> atomList;
+    
+    /// Add Atom
+    void addAtom(const Atom &atom)
+    {
+    	atomList.push_back(atom);
+    }
+    
+    /// Get Atom at position i
+    const Atom& getAtom(int i) const
+    {
+    	return atomList[i];	    	
+    }
+    
+    /// Get number of atoms
+    int getNumberOfAtoms() const
+    {
+    	return atomList.size();
+    }
+    
+    /// Read from PDB file
+    void read(const FileName &fnPDB);
+    
+    /// Apply a shift to all atoms
+    void shift(double x, double y, double z);
+
+    /** Produce side info.
+        The side info produces the radial profiles of each atom
+	and its projections.
+    */
+    void produceSideInfo();
+};
+
+/** Description of the electron scattering factors.
+    The returned descriptor is descriptor(0)=Z (number of electrons of the
+    atom), descriptor(1-5)=a1-5, descriptor(6-10)=b1-5.
+    The electron scattering factor at a frequency f (Angstroms^-1)
+    is computed as f_el(f)=sum_i(ai exp(-bi*x^2)). Use the function
+    electronFormFactorFourier or 
+    
+    See Peng, Ren, Dudarev, Whelan. Robust parameterization of elastic and
+    absorptive electron atomic scattering factors. Acta Cryst. A52: 257-276
+    (1996). Table 3 and equation 3.*/
+void atomDescriptors(const std::string &atom, Matrix1D<double> &descriptors);
+
+/** Compute the electron Form Factor in Fourier space.
+    The electron scattering factor at a frequency f (Angstroms^-1)
+    is computed as f_el(f)=sum_i(ai exp(-bi*x^2)). */
+double electronFormFactorFourier(double f,
+    const Matrix1D<double> &descriptors);
+
+/** Compute the electron Form Factor in Real space.
+    Konwing the electron form factor in Fourier space is easy to make an
+    inverse Fourier transform and express it in real space. r is the
+    distance to the center of the atom in Angstroms. */
+double electronFormFactorRealSpace(double r,
+    const Matrix1D<double> &descriptors);
+
+/** Atom radial profile.
+    Returns the radial profile of a given atom, i.e., the electron scattering
+    factor convolved with a suitable low pass filter for sampling the volume
+    at a sampling rate M*T. The radial profile is sampled at T Angstroms/pixel.
+*/
+void atomRadialProfile(int M, double T, const string &atom,
+    Matrix1D<double> &profile);
+
+/** Atom projection radial profile.
+    Returns the radial profile of the atom described by its profileCoefficients
+    (Bspline coefficients). */
+void atomProjectionRadialProfile(int M,
+    const Matrix1D<double> &profileCoefficients,
+    Matrix1D<double> &projectionProfile);
+
+/** Class for Atom interpolations. */
+class AtomInterpolator
+{
+public:
+    // Vector of radial volume profiles
+    vector< Matrix1D<double> > volumeProfileCoefficients;
+    // Vector of radial projection profiles
+    vector< Matrix1D<double> > projectionProfileCoefficients;
+    // Vector of atom radii
+    vector<double> radii;
+    // Downsampling factor
+    int M;
+    // Fine sampling rate
+    double highTs;
+    
+    /** Setup.
+        HighTs is a fine sampling rate, M is an integer number so that
+	the final sampling rate is Ts=M*highTs; */
+    void setup(int m, double hights, bool computeProjection=false);
+    
+    /// Add atom
+    void addAtom(const std::string &atomType, bool computeProjection=false);
+
+    /// Get atom index
+    int getAtomIndex(char atom) const
+    {
+    	int idx=-1;
+	switch (atom) {
+	   case 'H': idx=0; break;
+	   case 'C': idx=1; break;
+	   case 'N': idx=2; break;
+	   case 'O': idx=3; break;
+	   case 'P': idx=4; break;
+	   case 'S': idx=5; break;
+	   case 'F': idx=6; break;
+	   default:
+	    	REPORT_ERROR(1,(std::string)
+		   "AtomInterpolator::getAtomIndex: Atom "+atom+" unknown");
+	}
+	return idx;
+    }
+
+    /** Radius of an atom in the final sampling rate M*highTs. */
+    double atomRadius(char atom) const
+    {
+	return radii[getAtomIndex(atom)];
+    }
+
+    /** Volume value at a distance r of the atom whose first letter
+        is the one provided as atom. */
+    double volumeAtDistance(char atom, double r) const
+    {
+    	int idx=getAtomIndex(atom);
+	if (r>radii[idx]) return 0;
+	else return volumeProfileCoefficients[idx].
+	    	       interpolatedElementBSpline(r*M,3);
+    }
+
+    /** Projection value at a distance r of the atom whose first letter
+        is the one provided as atom. */
+    double projectionAtDistance(char atom, double r) const
+    {
+    	int idx=getAtomIndex(atom);
+	if (r>radii[idx]) return 0;
+	else return projectionProfileCoefficients[idx].
+	    	       interpolatedElementBSpline(r*M,3);
+    }
+};
+
+/** Project PDB.
+    Project the PDB following a certain projection direction. */
+    void projectPDB(const PDBPhantom &phantomPDB, 
+        const AtomInterpolator &interpolator, Projection &proj,
+    	int Ydim, int Xdim, double rot, double tilt, double psi);
 //@}
 #endif
