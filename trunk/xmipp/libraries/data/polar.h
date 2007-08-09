@@ -602,7 +602,7 @@ public:
      * Pf = P.fourierTransformRings();
      * @endcode
      */
-    Polar<complex<double> > fourierTransformRings(bool conjugated=false) const
+    Polar<complex<double> > fourierTransformRings(bool conjugated = DONT_CONJUGATE) const
     {
 	Polar<complex<double> > out;
 	Matrix1D<complex<double> > Fring;
