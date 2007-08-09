@@ -84,6 +84,28 @@ void produceGriddingMatrix3D(const Matrix3D< double > &in,
 			   Matrix3D< double > &out,
 			   KaiserBessel &kb);
 
+/** Extracts a plane from a volume using gridding interpolation,
+ * knowing that this volume has been processed for gridding.
+ *
+ * rot, tilt and psi and the respective Euler angles
+ *
+ * To interpolate using gridding you must prepare the volume first!
+ * An example to extract a Fourier-plane, i.e. to calculate a
+ * real-space projection, would be:
+ *
+ * @code
+ * KaiserBessel kb;
+ * matrix3D<complex<double> > Faux;
+ * TODO!!!!
+ * produceGriddingFourierMatrix3D(vol(),Maux,kb);
+ * Matrix2D<double> A = rotation2DMatrix(63.1);
+ * applyGeometryGridding(out,A,Maux,IS_NOT_INV,DONT_WRAP,kb);
+ * @endcode
+ */
+
+
+
+
 /** Applies a geometric transformation to a 2D matrix with
  * gridding-based interpolation, knowing that this image has been
  * processed for gridding.
