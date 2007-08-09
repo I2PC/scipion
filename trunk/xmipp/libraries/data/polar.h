@@ -37,16 +37,20 @@
 
 #define FULL_CIRCLES 0
 #define HALF_CIRCLES 1
+#define DONT_AVERAGE false
+#define AVERAGE true
+#define DONT_CONJUGATE false
+#define CONJUGATE true
 
 template<typename T>
 class Polar
 {
 protected:
-    FileName              fn_pol;      // name of the polar
+    FileName              fn_pol;       // name of the polar
 public:
-    int                   mode;        // Use full or half circles
-    vector<double>        ring_radius; // radius of each ring
-    vector<Matrix1D<T> >  rings;       // vector with all rings
+    int                   mode;         // Use full or half circles
+    vector<double>        ring_radius;  // radius of each ring
+    vector<Matrix1D<T> >  rings;        // vector with all rings
 public:
     /// @defgroup PolarConstructors Polar constructors
     /// @ingroup Polars
@@ -100,6 +104,142 @@ public:
         return *this;
     }
   
+    /** Subtract a constant pixel-by-pixel
+     * @ingroup PolarOperations
+     */
+    Polar& operator-(const T val) const
+    {
+	Polar<T> result;
+	result = *(this);
+	for (int i = 0; i < rings.size(); i++)
+	    for (int j = 0; j < XSIZE(rings[i]); j++)
+		result(i,j) -= val;
+
+        return result;
+    }
+
+    /** Add a constant pixel-by-pixel
+     * @ingroup PolarOperations
+     */
+    Polar& operator+(const T val)
+    {
+	Polar<T> result;
+	result = *(this);
+	for (int i = 0; i < rings.size(); i++)
+	    for (int j = 0; j < XSIZE(rings[i]); j++)
+		result(i,j) += val;
+
+        return result;
+    }
+
+    /** Multiply by a constant pixel-by-pixel
+     * @ingroup PolarOperations
+     */
+    Polar& operator*(const T val)
+    {
+	Polar<T> result;
+	result = *(this);
+	for (int i = 0; i < rings.size(); i++)
+	    for (int j = 0; j < XSIZE(rings[i]); j++)
+		result(i,j) *= val;
+
+        return result;
+    }
+
+    /** Divide by a constant pixel-by-pixel
+     * @ingroup PolarOperations
+     */
+    Polar& operator/(const T val)
+    {
+	Polar<T> result;
+	result = *(this);
+	for (int i = 0; i < rings.size(); i++)
+	    for (int j = 0; j < XSIZE(rings[i]); j++)
+		result(i,j) /= val;
+
+        return result;
+    }
+
+    /** Subtract a constant pixel-by-pixel
+     * @ingroup PolarOperations
+     */
+    void operator-=(const T val)
+    {
+	for (int i = 0; i < rings.size(); i++)
+	    for (int j = 0; j < XSIZE(rings[i]); j++)
+		(*(this))(i,j) -= val;
+    }
+
+    /** Add a constant pixel-by-pixel
+     * @ingroup PolarOperations
+     */
+    void operator+=(const T val)
+    {
+	for (int i = 0; i < rings.size(); i++)
+	    for (int j = 0; j < XSIZE(rings[i]); j++)
+		(*(this))(i,j) += val;
+    }
+
+    /** Multiply by a constant pixel-by-pixel
+     * @ingroup PolarOperations
+     */
+    void operator*=(const T val)
+    {
+	for (int i = 0; i < rings.size(); i++)
+	    for (int j = 0; j < XSIZE(rings[i]); j++)
+		(*(this))(i,j) *= val;
+    }
+
+    /** Divide by a constant pixel-by-pixel
+     * @ingroup PolarOperations
+     */
+    void operator/=(const T val)
+    {
+	for (int i = 0; i < rings.size(); i++)
+	    for (int j = 0; j < XSIZE(rings[i]); j++)
+		(*(this))(i,j) /= val;
+    }
+
+    /** Subtract two polars pixel-by-pixel
+     * @ingroup PolarOperations
+     */
+    Polar& operator-=(const Polar<T> in)
+    {
+	for (int i = 0; i < rings.size(); i++)
+	    for (int j = 0; j < XSIZE(rings[i]); j++)
+		(*(this))(i,j) -= in(i,j);
+    }
+
+     /** Add two polars pixel-by-pixel
+     * @ingroup PolarOperations
+     */
+    Polar& operator+=(const Polar<T> in)
+    {
+	for (int i = 0; i < rings.size(); i++)
+	    for (int j = 0; j < XSIZE(rings[i]); j++)
+		(*(this))(i,j) += in(i,j);
+    }
+
+     /** Multiply two polars pixel-by-pixel
+     * @ingroup PolarOperations
+     */
+    Polar& operator*=(const Polar<T> in)
+    {
+	for (int i = 0; i < rings.size(); i++)
+	    for (int j = 0; j < XSIZE(rings[i]); j++)
+		(*(this))(i,j) *= in(i,j);
+    }
+
+     /** Divide two polars pixel-by-pixel
+     * @ingroup PolarOperations
+     */
+    Polar& operator/=(const Polar<T> in)
+    {
+	for (int i = 0; i < rings.size(); i++)
+	    for (int j = 0; j < XSIZE(rings[i]); j++)
+		(*(this))(i,j) /= in(i,j);
+
+    }
     /** Rename polar
      * @ingroup PolarOperations
      *
@@ -296,6 +436,73 @@ public:
     }
 
 
+    /** Compute sum or average of all pixels in polar rings.
+     * @ingroup PolarFunctions
+     *
+     */
+    T computeSum(bool average = DONT_AVERAGE, int mode = FULL_CIRCLES) const
+    {
+	T aux, sum = 0.;
+	double twopi, w, N = 0;
+
+	if (mode == FULL_CIRCLES)
+	    twopi = 2.*PI;
+	else if (mode == HALF_CIRCLES)
+	    twopi = PI;
+	else
+	    REPORT_ERROR(1,"Incorrect mode for computeSum");
+
+	for (int i = 0; i < rings.size(); i++)
+	{
+	    // take varying sampling into account
+	    w = (twopi * ring_radius[i]) / (double) XSIZE(rings[i]);
+	    for (int j = 0; j < XSIZE(rings[i]); j++)
+	    {
+		aux = rings[i](j);
+		sum += w * aux;
+		N += w;
+	    }
+	}
+	if (N != 0. && average)
+	    sum = sum / N;
+
+	return sum;
+    }
+ 
+    /** Compute squared-sum or average squared-sum of all pixels in polar rings.
+     * @ingroup PolarFunctions
+     *
+     */
+    T computeSum2(bool average = DONT_AVERAGE, int mode = FULL_CIRCLES) const
+    {
+	T aux, sum2 = 0.;
+	double twopi, w, N = 0;
+
+	if (mode == FULL_CIRCLES)
+	    twopi = 2.*PI;
+	else if (mode == HALF_CIRCLES)
+	    twopi = PI;
+	else
+	    REPORT_ERROR(1,"Incorrect mode for computeSum2");
+
+	for (int i = 0; i < rings.size(); i++)
+	{
+	    // take varying sampling into account
+	    w = (twopi * ring_radius[i]) / (double) XSIZE(rings[i]);
+	    for (int j = 0; j < XSIZE(rings[i]); j++)
+	    {
+		aux = rings[i](j) * rings[i](j);
+		sum2 += w * aux;
+		N += w;
+	    }
+	}
+	if (N != 0. && average)
+	    sum2 = sum2 / N;
+
+	// Return half the sum2 because we oversample twice...
+	return sum2;
+    }
+ 
     /** Convert cartesian Matrix2D to Polar
      * @ingroup PolarFunctions
      *
@@ -312,11 +519,11 @@ public:
      */
     void getPolarFromCartesian(const Matrix2D<T> &M1, KaiserBessel &kb, 
 			       int first_ring, int last_ring, 
-			       int step = 1, int mode1 = FULL_CIRCLES, 
+			       int ring_step = 1, double psi_step = -1., int mode1 = FULL_CIRCLES, 
 			       double xoff = 0., double yoff = 0.,
 			       bool const_sam = false)
     {
-	int nsam;
+	int nsam, half_nsam_last;
 	int nring = last_ring - first_ring + 1;
 	double radius, twopi, dphi, phi; 
 	double xp, yp;
@@ -332,21 +539,32 @@ public:
 	    REPORT_ERROR(1,"polarCoordinatesGridding: last ring falls outside image");
 
 	if (mode == FULL_CIRCLES)
-	    twopi = 2*PI;
+	    twopi = 2.*PI;
 	else if (mode == HALF_CIRCLES)
 	    twopi = PI;
 	else
-	    REPORT_ERROR(1,"Incorrect mode for getPolarWeights2D!");
+	    REPORT_ERROR(1,"Incorrect mode for getPolarFromCartesian");
+	
+	// Determine angular sampling of the last ring in degrees
+	// Use half_sam_last to always have even number of sample
+	// points (which is convenient for Half2Whole of FTs)
+	
+	if (psi_step < 0.)
+	    // Oversample twice 
+	    half_nsam_last = (int)( twopi * (double)last_ring );
+	else 
+	    // User-defined sampling
+	    half_nsam_last = (int)( 0.5 * twopi / DEG2RAD(psi_step) );
 
-	if (const_sam)
-	{
-	    nsam = (int)twopi *XSIZE(M1)/2;
-	}
-	for (int iring = first_ring; iring <= last_ring; iring++)
+	for (int iring = first_ring; iring <= last_ring; iring+= ring_step)
 	{
 	    radius = (double) iring;
-	    // Oversample each ring twice (don't sample origin)
-	    if (!const_sam) nsam = (int)twopi * iring * 2;
+
+	    if (const_sam)
+		nsam = 2 * half_nsam_last;
+	    else
+		nsam = 2 * ( MAX(1,(int)(half_nsam_last * (double)iring / (double)last_ring)) );
+
 	    dphi = twopi / (double)nsam;
 	    Mring.resize(nsam);
 	    for (int iphi = 0; iphi < nsam; iphi++)
@@ -384,20 +602,18 @@ public:
      * Pf = P.fourierTransformRings();
      * @endcode
      */
-    Polar<complex<double> > fourierTransformRings(bool conjugated)
+    Polar<complex<double> > fourierTransformRings(bool conjugated=false) const
     {
 	Polar<complex<double> > out;
-	Matrix1D<complex<double> > Fring, Faux;
+	Matrix1D<complex<double> > Fring;
 	out.clear();
 	for (int iring = 0; iring < rings.size(); iring++)
 	{ 
-	    FourierTransform(rings[iring],Faux);
-	    // Store only asymmetric half of the Fourier Transform
-	    Whole2Half(Faux, Fring);
+	    FourierTransformHalf(rings[iring],Fring);
 	    if (conjugated)
 	    {
 		for (int i = 0; i < XSIZE(Fring); i++)
-		    Fring(i)=conj(Fring(i));
+		    Fring(i) = conj(Fring(i));
 	    }
 	    out.rings.push_back(Fring);
 	}
@@ -441,30 +657,39 @@ void rotationalCorrelation(const Polar<complex<double> > &M1,
     int nrings = M1.getRingNo();
     if (nrings != M2.getRingNo())
 	REPORT_ERROR(1,"getBestAnglePolarGridding: polar structures have unequal number of rings!");
+
+    // Resize Fsum to the size of the last ring
     int nsam_last = M1.getSampleNo(nrings - 1);
+    Fsum.resize(nsam_last);
 
     // Multiply M1 and M2 over all rings and sum
-    Fsum.resize(nsam_last);
+    // Assume M2 is already complex conjugated!
     for (int iring = 0; iring < nrings; iring++)
     { 
 	int nsam = M1.getSampleNo(iring);
+	// Penczeks weights is more-or-less 1/2piR, mine is reverse
+	// because it depends whether the FFT results X or X/nsam
+	double w = (2.* PI * M1.ring_radius[iring]);
 	for (int i = 0; i < nsam; i++)
 	{
-	    // Multiply M1 with M2. Assume M2 is already complex conjugated!
 	    aux = M1(iring,i) * M2(iring,i);
-	    // Apply weights for distinct sizes of the rings
-	    Fsum(i) += (double)nsam * aux; 
+	    Fsum(i) += w * aux; 
 	}
     }
 
     // Inverse FFT to get real-space correlations
+    // As only half the FTs are stored, the original number of
+    // sampling points was 2 * (nsam - 1). Note that the latter is
+    // only true for even-valued whole-sizes!
     nsam_last = 2 * (nsam_last - 1);
-    Half2Whole(Fsum,Faux,nsam_last);
-    InverseFourierTransform(Faux,corr);
+    InverseFourierTransformHalf(Fsum,corr,nsam_last);
+    corr.setStartingX(0);
     angles.resize(nsam_last);
     for (int i = 0; i < nsam_last; i++)
 	angles(i)=(double)i*360./(nsam_last);
 
 }
 
+void inverseFourierTransformRings(const Polar<complex<double> > & in, 
+				  Polar<double> & out, bool conjugated = false);
 #endif

@@ -30,3 +30,30 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #include "polar.h"
+
+// inverse FFT of real signal
+
+void inverseFourierTransformRings(const Polar<complex<double> > & in, 
+				  Polar<double> &out, bool conjugated)
+{
+    Matrix1D<double> Maux;
+    Matrix1D<complex<double> > Faux, Faux2;
+    out.clear();
+
+    for (int iring = 0; iring < in.rings.size(); iring++)
+    { 
+	Faux2 = in.rings[iring];
+	if (conjugated)
+	    for (int j = 0; j < XSIZE(Faux2); j++)
+		Faux2(j) = conj( Faux2(j) );
+	int oridim = 2 * (XSIZE(Faux2) - 1);
+	InverseFourierTransformHalf(Faux,Maux,oridim);
+	Maux.setStartingX(0);
+	out.rings.push_back(Maux);
+    }
+
+    out.mode = in.mode;
+    out.ring_radius = in.ring_radius;
+
+}
+
