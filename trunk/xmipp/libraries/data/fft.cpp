@@ -204,6 +204,52 @@ void InverseFourierTransform(const Matrix3D< complex<double> > &in,
 }
 
 
+/** Direct Fourier Transform 1D, output half of (centro-symmetric) transform ---- */
+void FourierTransformHalf(const Matrix1D<double> &in,
+                          Matrix1D< complex<double> > &out)
+{
+
+    Matrix1D<complex <double> > aux;
+    FourierTransform(in, aux);
+    Whole2Half(aux, out);
+
+}
+
+/** Direct Fourier Transform 2D, output half of (centro-symmetric) transform ---- */
+void FourierTransformHalf(const Matrix2D<double> &in,
+                          Matrix2D< complex<double> > &out)
+{
+
+    Matrix2D<complex <double> > aux;
+    FourierTransform(in, aux);
+    Whole2Half(aux, out);
+
+}
+
+/** Inverse Fourier Transform 1D, input half of (centro-symmetric) transform ---- */
+void InverseFourierTransformHalf(const Matrix1D< complex<double> > &in,
+                                 Matrix1D<double> &out, int orixdim)
+{
+
+    Matrix1D< complex<double> > aux;
+    Half2Whole(in, aux, orixdim);
+    InverseFourierTransform(aux, out);
+    out.setXmippOrigin();
+}
+
+/** Inverse Fourier Transform 2D, input half of (centro-symmetric) transform ---- */
+void InverseFourierTransformHalf(const Matrix2D< complex<double> > &in,
+                                 Matrix2D<double> &out, int oriydim)
+{
+
+    Matrix2D< complex<double> > aux;
+    Half2Whole(in, aux, oriydim);
+    InverseFourierTransform(aux, out);
+    out.setXmippOrigin();
+}
+
+/* Complex Fourier Transform ------------------------------------------------------ */
+
 /** Complex Direct Fourier Transform 1D ------------------------------------------- */
 void FourierTransform(const Matrix1D<complex<double> > &in,
 		      Matrix1D< complex<double> > &out)
@@ -240,24 +286,24 @@ void InverseFourierTransform(const Matrix1D< complex<double> > &in,
                      MULTIDIM_ARRAY(out), N);
 }
 
-/** Direct Fourier Transform 2D, output half of (centro-symmetric) transform ---- */
-void FourierTransformHalf(const Matrix2D<double> &in,
-                          Matrix2D< complex<double> > &out)
+/** Complex Fourier Transform 1D, output half of (centro-symmetric) transform ---- */
+void FourierTransformHalf(const Matrix1D<complex<double> > &in,
+                          Matrix1D< complex<double> > &out)
 {
 
-    Matrix2D<complex <double> > aux;
+    Matrix1D<complex <double> > aux;
     FourierTransform(in, aux);
     Whole2Half(aux, out);
 
 }
 
-/** Inverse Fourier Transform 2D, input half of (centro-symmetric) transform ---- */
-void InverseFourierTransformHalf(const Matrix2D< complex<double> > &in,
-                                 Matrix2D<double> &out, int oriydim)
+/** Complex Inverse Fourier Transform 1D, input half of (centro-symmetric) transform ---- */
+void InverseFourierTransformHalf(const Matrix1D< complex<double> > &in,
+                                 Matrix1D<complex<double> > &out, int orixdim)
 {
 
-    Matrix2D< complex<double> > aux;
-    Half2Whole(in, aux, oriydim);
+    Matrix1D< complex<double> > aux;
+    Half2Whole(in, aux, orixdim);
     InverseFourierTransform(aux, out);
     out.setXmippOrigin();
 }

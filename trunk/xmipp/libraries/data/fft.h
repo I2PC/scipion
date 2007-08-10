@@ -295,11 +295,25 @@ void InverseFourierTransform(const Matrix2D< complex< double > > & in,
 void InverseFourierTransform(const Matrix3D< complex< double > > & in,
                              Matrix3D< double >& out);
 
+/** Direct Fourier Transform 1D, output half of (centro-symmetric) transform
+ * @ingroup FourierTransforms
+ */
+void FourierTransformHalf(const Matrix1D< double >& in,
+                          Matrix1D< complex< double > > & out);
+
 /** Direct Fourier Transform 2D, output half of (centro-symmetric) transform
  * @ingroup FourierTransforms
  */
 void FourierTransformHalf(const Matrix2D< double >& in,
                           Matrix2D< complex< double > > & out);
+
+/** Inverse Fourier Transform 1D, input half of (centro-symmetric) transform
+ * @ingroup FourierTransforms
+ */
+void InverseFourierTransformHalf(const Matrix1D< complex< double > > & in,
+                                 Matrix1D< double >& out,
+                                 int orixdim);
+
 
 /** Inverse Fourier Transform 2D, input half of (centro-symmetric) transform
  * @ingroup FourierTransforms
@@ -324,6 +338,18 @@ void FourierTransform(const Matrix1D< complex< double > >& in,
 void InverseFourierTransform(const Matrix1D< complex< double > > & in,
                              Matrix1D< complex< double > >& out);
 
+/** Complex Direct Fourier Transform 1D, output half of (centro-symmetric) transform
+ * @ingroup ComplexFourierTransforms
+ */
+void FourierTransformHalf(const Matrix1D<complex<double> > &in,
+                          Matrix1D< complex<double> > &out);
+
+/** Complex Inverse Fourier Transform 1D, input half of (centro-symmetric) transform
+ * @ingroup ComplexFourierTransforms
+ */
+void InverseFourierTransformHalf(const Matrix1D< complex<double> > &in,
+                                 Matrix1D<complex<double> > &out, 
+				 int orixdim);
 
 
 /** @defgroup FourierOperations Operations with the Fourier Transforms
