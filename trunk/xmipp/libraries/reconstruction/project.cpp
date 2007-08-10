@@ -60,9 +60,10 @@ void Prog_Project_Parameters::usage()
         "\t<sel_file>:         This is a selection file with all the generated\n"
         "\t                    projections\n");
     printf(
-        "\t<sym_file>:         This is a symmetry description file\n");
+        "\t<sym_file>:         This is a symmetry description file, used\n"
+	"\t                    for computing the assymetric projection unit\n");
     printf(
-    	"\t<Ts>:    	       It is only used for PDB projections\n");
+    	"\t<Ts>:               It is only used for PDB projections\n");
 }
 
 /* Projection parameters from program parameters =========================== */
