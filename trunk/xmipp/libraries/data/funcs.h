@@ -194,38 +194,6 @@ public:
     /** Return the size of the I0 window */
     int get_window_size() const { return K; }
 
-    /** Sinh window function object */
-    class kbsinh_win {
-	KaiserBessel& kb;
-    public:
-	kbsinh_win(KaiserBessel& kb_) : kb(kb_) {}
-	double operator()(double x) const {
-	    return kb.sinhwin(x);
-	}
-	int get_window_size() const {return kb.get_window_size();}
-    };
-
-    /** Sinh window function object factory */
-    kbsinh_win get_kbsinh_win() { 
-	return kbsinh_win(*this);
-    }
-
-    /** I0 window function object */
-    class kbi0_win {
-	KaiserBessel& kb;
-    public:
-	kbi0_win(KaiserBessel& kb_) : kb(kb_) {}
-	double operator()(double x) const {
-	    return kb.i0win(x);
-	}
-	int get_window_size() const {return kb.get_window_size();}
-    };
-
-    /** I0 window function object factory */
-    kbi0_win get_kbi0_win() { 
-	return kbi0_win(*this);
-    }
-
 };
 
 /** Solve second degree equation
