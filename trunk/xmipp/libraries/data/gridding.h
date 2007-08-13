@@ -400,8 +400,8 @@ T interpolatedElementGridding(const Matrix2D<T> &in, double x, double y, KaiserB
     
     x = fmod(2*x, double(nx));
     y = fmod(2*y, double(ny));
-    int inxold = int(round(x));
-    int inyold = int(round(y));
+    int inxold = int(ROUND(x));
+    int inyold = int(ROUND(y));
     
     double tablex1 = kb.i0win_tab(x-inxold+3);
     double tablex2 = kb.i0win_tab(x-inxold+2);
@@ -532,9 +532,9 @@ T interpolatedElementGridding(const Matrix3D<T> &in, double x, double y, double 
     x = fmod(2*x, double(nx));
     y = fmod(2*y, double(ny));
     z = fmod(2*z, double(nz));
-    int inxold = int(round(x));
-    int inyold = int(round(y));
-    int inzold = int(round(z));
+    int inxold = int(ROUND(x));
+    int inyold = int(ROUND(y));
+    int inzold = int(ROUND(z));
     
     double tablex1 = kb.i0win_tab(x-inxold+3);
     double tablex2 = kb.i0win_tab(x-inxold+2);
