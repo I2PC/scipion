@@ -1457,6 +1457,10 @@ public:
                 ".txt PPP" + fn_tmp + ".gpl) &").c_str());
     }
 
+#ifndef DBL_EPSILON
+#define DBL_EPSILON 1e-50
+#endif
+
     /** Produce spline coefficients
      * @ingroup VectorsUtilities
      *
@@ -1484,6 +1488,8 @@ public:
             REPORT_ERROR(1, "Matrix1D::produceSplineCoefficients: Error");
     }
 };
+
+#undef DBL_EPSILON
 
 // FIXME Oh, my my...
 #include "multidim_friends_implementation.h"
