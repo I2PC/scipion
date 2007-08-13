@@ -68,7 +68,7 @@ double KaiserBessel::i0win(double x) const
 void KaiserBessel::build_I0table() 
 {
     i0table.resize(ntable+1); // i0table[0:ntable]
-    int ltab = int(round(double(ntable)/1.25f));
+    int ltab = int(ROUND(double(ntable)/1.25f));
     fltb = double(ltab)/(K/2);
     //double val0 = gsl_sf_bessel_I0(facadj);
     double val0 = bessi0(facadj);
