@@ -534,8 +534,8 @@ public:
 	mode = mode1;
 
 	// Check that no pixel falls outside the image
-	if ((int)ABS(xoff) + last_ring > XSIZE(M1)/4 || 
-	    (int)ABS(yoff) + last_ring > YSIZE(M1)/4)
+	if ((int)ABS(xoff) + last_ring + 1 > XSIZE(M1)/4 || 
+	    (int)ABS(yoff) + last_ring + 1 > YSIZE(M1)/4)
 	    REPORT_ERROR(1,"polarCoordinatesGridding: last ring falls outside image");
 
 	if (mode == FULL_CIRCLES)
@@ -623,6 +623,49 @@ public:
 	return out;
     }
 
+    /** Convert to a single vector
+     * @ingroup PolarFunctions
+     *
+     * Convert Polar structure to a single vector
+     * This may be useful for parallelization purposes.
+     * 
+     */
+    vector<T> convertToSingleVector() const
+    {
+	vector<T> result;
+	for (int iring = 0; iring < rings.size(); iring++)
+	{ 
+	    for (int i = 0; i < XSIZE(Fring); i++)
+	    {
+		result.push_back(rings[iring](i));
+	    }
+	}
+	return result;
+    }
+
+    /** Convert back from a single vector to a polar structure
+     * @ingroup PolarFunctions
+     *
+     * Convert back from a single vector to a polar structure.
+     * This may be useful for parallelization purposes.
+     * The structure of the polar should be the correct one already
+     * 
+     */
+    void convertFromSingleVector(const vector<T> &in) const
+    {
+	int c = 0;
+	for (int iring = 0; iring < rings.size(); iring++)
+	{ 
+	    for (int i = 0; i < XSIZE(Fring); i++)
+	    {
+		rings(irings,i) = in[c];
+		c++;
+	    }
+	}
+	if (c != in.size()) 
+	    REPORT_ERROR(1,"convertFromSingleVector: incorrect vector size for this template");
+
+    }
 };
 
 /** @defgroup PolarRelated Polar Related functions
