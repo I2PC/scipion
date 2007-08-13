@@ -652,6 +652,7 @@ public:
     {
 	int c = 0;
 	for (int i = 0; i < rings.size(); i++)
+	{
 	    for (int j = 0; j < XSIZE(rings[i]); j++)
 	    {
 		rings[i](j) = in[c];
