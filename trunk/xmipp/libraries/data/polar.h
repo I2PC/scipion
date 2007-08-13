@@ -633,13 +633,10 @@ public:
     vector<T> convertToSingleVector() const
     {
 	vector<T> result;
-	for (int iring = 0; iring < rings.size(); iring++)
-	{ 
-	    for (int i = 0; i < XSIZE(Fring); i++)
-	    {
-		result.push_back(rings[iring](i));
-	    }
-	}
+	for (int i = 0; i < rings.size(); i++)
+	    for (int j = 0; j < XSIZE(rings[i]); j++)
+		result.push_back(rings[i](j));
+
 	return result;
     }
 
@@ -654,11 +651,10 @@ public:
     void convertFromSingleVector(const vector<T> &in) const
     {
 	int c = 0;
-	for (int iring = 0; iring < rings.size(); iring++)
-	{ 
-	    for (int i = 0; i < XSIZE(Fring); i++)
+	for (int i = 0; i < rings.size(); i++)
+	    for (int j = 0; j < XSIZE(rings[i]); j++)
 	    {
-		rings(iring,i) = in[c];
+		rings[i](j) = in[c];
 		c++;
 	    }
 	}
