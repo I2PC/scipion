@@ -658,7 +658,7 @@ public:
 	{ 
 	    for (int i = 0; i < XSIZE(Fring); i++)
 	    {
-		rings(irings,i) = in[c];
+		rings(iring,i) = in[c];
 		c++;
 	    }
 	}
