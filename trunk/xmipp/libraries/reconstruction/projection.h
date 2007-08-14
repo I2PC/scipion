@@ -93,9 +93,37 @@ void project_Volume(GridVolumeT<T> &vol, const Basis &basis,
     (rot, tilt, psi) (1st, 2nd and 3rd Euler angles) . The projection
     is previously is resized to Ydim x Xdim and initialized to 0.
     The projection itself, from now on, will keep the Euler angles.
+    
+    The offset is a 3D vector specifying the offset that must be applied
+    when going from the projection space to the universal space
+    
+    rproj=E*r+roffset => r=E^t (rproj-roffset)
+    
+    Set it to NULL if you don't want to use it
  */
 void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
-                    double rot, double tilt, double psi);
+                    double rot, double tilt, double psi,
+		    const Matrix1D<double> *roffset=NULL);
+
+/** From voxel volumes, off-centered tilt axis.
+    This routine projects a volume that is rotating <angle> degrees
+    around the axis defined by the two angles <axisRot,axisTilt> and
+    that passes through the point raxis. The projection can be futher
+    inplane rotated and shifted through the parameters
+    <inplaneRot> and <rinplane>.
+    
+    All vectors involved must be 3D.
+    
+    The projection model is rproj=H Rinplane Raxis r + 
+                                  Rinplane (I-Raxis) raxis + rinplane
+				  
+    Where Raxis is the 3D rotation matrix given by the axis and
+    the angle.
+*/
+void project_Volume_offCentered(Matrix3D<double> &V, Projection &P,
+   int Ydim, int Xdim, double axisRot, double axisTilt,
+   const Matrix1D<double> &raxis, double angle, double inplaneRot,
+   const Matrix1D<double> &rinplane);
 
 /** Projects a single particle into a voxels volume by updating its components this way:
 
@@ -107,8 +135,6 @@ void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
  - Pixel( y,z ) is the value of the pixel where the ray departs from.
  - Distance is the distance the ray goes through the Voxel.
 */
-
-
 void singleWBP(Matrix3D<double> &V, Projection &P);
 
 /** Count equations in volume.

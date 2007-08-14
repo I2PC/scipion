@@ -36,7 +36,8 @@
 /* Project a voxel volume -------------------------------------------------- */
 //#define DEBUG
 void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
-                    double rot, double tilt, double psi)
+                    double rot, double tilt, double psi,
+		    const Matrix1D<double> *roffset)
 {
     SPEED_UP_temps;
 
@@ -98,6 +99,7 @@ void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
             }
 
             // Express r_p in the universal coordinate system
+	    if (roffset!=NULL) r_p-=*roffset;
             M3x3_BY_V3x1(p1, P.eulert, r_p);
 
             // Compute the minimum and maximum alpha for the ray
@@ -118,20 +120,20 @@ void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
             if (alpha_max - alpha_min < XMIPP_EQUAL_ACCURACY) continue;
 
 #ifdef DEBUG
-            cout << "Pixel:  " << r_p.transpose() << endl
-            << "Univ:   " << p1.transpose() << endl
-            << "Dir:    " << P.direction.transpose() << endl
-            << "Alpha x:" << alpha_xmin << " " << alpha_xmax << endl
-            << "        " << (p1 + alpha_xmin*P.direction).transpose() << endl
-            << "        " << (p1 + alpha_xmax*P.direction).transpose() << endl
-            << "Alpha y:" << alpha_ymin << " " << alpha_ymax << endl
-            << "        " << (p1 + alpha_ymin*P.direction).transpose() << endl
-            << "        " << (p1 + alpha_ymax*P.direction).transpose() << endl
-            << "Alpha z:" << alpha_zmin << " " << alpha_zmax << endl
-            << "        " << (p1 + alpha_zmin*P.direction).transpose() << endl
-            << "        " << (p1 + alpha_zmax*P.direction).transpose() << endl
-            << "alpha  :" << alpha_min  << " " << alpha_max  << endl
-            << endl;
+            std::cout << "Pixel:  " << r_p.transpose() << std::endl
+        	      << "Univ:   " << p1.transpose() << std::endl
+        	      << "Dir:    " << P.direction.transpose() << std::endl
+        	      << "Alpha x:" << alpha_xmin << " " << alpha_xmax << std::endl
+        	      << "	  " << (p1 + alpha_xmin*P.direction).transpose() << std::endl
+        	      << "	  " << (p1 + alpha_xmax*P.direction).transpose() << std::endl
+        	      << "Alpha y:" << alpha_ymin << " " << alpha_ymax << std::endl
+        	      << "	  " << (p1 + alpha_ymin*P.direction).transpose() << std::endl
+        	      << "	  " << (p1 + alpha_ymax*P.direction).transpose() << std::endl
+        	      << "Alpha z:" << alpha_zmin << " " << alpha_zmax << std::endl
+        	      << "	  " << (p1 + alpha_zmin*P.direction).transpose() << std::endl
+        	      << "	  " << (p1 + alpha_zmax*P.direction).transpose() << std::endl
+        	      << "alpha  :" << alpha_min  << " " << alpha_max  << std::endl
+        	      << std::endl;
 #endif
 
             // Compute the first point in the volume intersecting the ray
@@ -147,9 +149,9 @@ void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
 
 
 #ifdef DEBUG
-            cout << "First voxel: " << v.transpose() << endl;
-            cout << "   First index: " << idx.transpose() << endl;
-            cout << "   Alpha_min: " << alpha_min << endl;
+            std::cout << "First voxel: " << v.transpose() << std::endl;
+            std::cout << "   First index: " << idx.transpose() << std::endl;
+            std::cout << "   Alpha_min: " << alpha_min << std::endl;
 #endif
 
             // Follow the ray
@@ -157,7 +159,7 @@ void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
             do
             {
 #ifdef DEBUG
-                cout << " \n\nCurrent Value: " << V(ZZ(idx), YY(idx), XX(idx)) << endl;
+                std::cout << " \n\nCurrent Value: " << V(ZZ(idx), YY(idx), XX(idx)) << std::endl;
 #endif
 
                 double alpha_x = (XX(idx) + half_x_sign - XX(p1)) / XX(P.direction);
@@ -191,20 +193,19 @@ void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
                 }
 
 #ifdef DEBUG
-                cout << "Alpha x,y,z: " << alpha_x << " " << alpha_y
-                << " " << alpha_z << " ---> " << alpha << endl;
+                std::cout << "Alpha x,y,z: " << alpha_x << " " << alpha_y
+                          << " " << alpha_z << " ---> " << alpha << std::endl;
 
                 XX(v) += diff_alpha * XX(P.direction);
                 YY(v) += diff_alpha * YY(P.direction);
                 ZZ(v) += diff_alpha * ZZ(P.direction);
 
-                cout << "    Next entry point: " << v.transpose() << endl
-                << "    Index: " << idx.transpose() << endl
-                << "    diff_alpha: " << diff_alpha << endl
-                << "    ray_sum: " << ray_sum << endl
-                << "    Alfa tot: " << alpha << "alpha_max: " << alpha_max <<
-                endl;
-
+                std::cout << "    Next entry point: " << v.transpose() << std::endl
+                	  << "    Index: " << idx.transpose() << std::endl
+                	  << "    diff_alpha: " << diff_alpha << std::endl
+                	  << "    ray_sum: " << ray_sum << std::endl
+                	  << "    Alfa tot: " << alpha << "alpha_max: " << alpha_max <<
+                	  std::endl;
 #endif
             }
             while ((alpha_max - alpha) > XMIPP_EQUAL_ACCURACY);
@@ -212,14 +213,52 @@ void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
 
         P(i, j) = ray_sum * 0.25;
 #ifdef DEBUG
-        cout << "Assigning P(" << i << "," << j << ")=" << ray_sum << endl;
+        std::cout << "Assigning P(" << i << "," << j << ")=" << ray_sum << std::endl;
 #endif
     }
 }
 #undef DEBUG
 
-// Projection from a voxel volume ==========================================
-/* Project a voxel volume -------------------------------------------------- */
+/* Project a voxel volume with respect to an offcentered axis -------------- */
+//#define DEBUG
+void project_Volume_offCentered(Matrix3D<double> &V, Projection &P,
+   int Ydim, int Xdim, double axisRot, double axisTilt,
+   const Matrix1D<double> &raxis, double angle, double inplaneRot,
+   const Matrix1D<double> &rinplane)
+{
+    // Find Euler rotation matrix
+    Matrix1D<double> axis;
+    Euler_direction(axisRot,axisTilt,0,axis);
+    Matrix2D<double> Raxis=rotation3DMatrix(angle,axis);
+    Raxis.resize(3,3);
+    Matrix2D<double> Rinplane=rotation3DMatrix(inplaneRot,'Z');
+    Rinplane.resize(3,3);
+    double rot, tilt, psi;
+    Euler_matrix2angles(Rinplane*Raxis, rot, tilt, psi);
+    
+    // Find displacement because of axis offset and inplane shift
+    Matrix1D<double> roffset=Rinplane*(raxis-Raxis*raxis)+rinplane;
+
+    #ifdef DEBUG
+    	std::cout << "axisRot=" << axisRot << " axisTilt=" << axisTilt
+	          << " axis=" << axis.transpose() << std::endl
+		  << "angle=" << angle << std::endl 
+		  << "Raxis\n" << Raxis
+		  << "Rinplane\n" << Rinplane
+		  << "Raxis*Rinplane\n" << Raxis*Rinplane
+		  << "rot=" << rot << " tilt=" << tilt << " psi=" << psi
+		  << std::endl;
+	Matrix2D<double> E;
+	Euler_angles2matrix(rot,tilt,psi,E);
+	std::cout << "E\n" << E << std::endl;
+    #endif
+
+    project_Volume(V, P, Ydim, Xdim, rot, tilt, psi, &roffset);
+}
+#undef DEBUG
+
+// Perform a backprojection ================================================
+/* Backproject a single projection ----------------------------------------- */
 //#define DEBUG
 
 // Sjors, 16 May 2005
@@ -297,9 +336,9 @@ void singleWBP(Matrix3D<double> &V, Projection &P)
 
 
 #ifdef DEBUG
-        cout << "First voxel: " << v.transpose() << endl;
-        cout << "   First index: " << idx.transpose() << endl;
-        cout << "   Alpha_min: " << alpha_min << endl;
+        std::cout << "First voxel: " << v.transpose() << std::endl;
+        std::cout << "   First index: " << idx.transpose() << std::endl;
+        std::cout << "   Alpha_min: " << alpha_min << std::endl;
 #endif
 
         // Follow the ray
@@ -307,7 +346,7 @@ void singleWBP(Matrix3D<double> &V, Projection &P)
         do
         {
 #ifdef DEBUG
-            cout << " \n\nCurrent Value: " << V(ZZ(idx), YY(idx), XX(idx)) << endl;
+            std::cout << " \n\nCurrent Value: " << V(ZZ(idx), YY(idx), XX(idx)) << std::endl;
 #endif
 
             double alpha_x = (XX(idx) + half_x_sign - XX(p1)) / XX(P.direction);
@@ -343,7 +382,7 @@ void singleWBP(Matrix3D<double> &V, Projection &P)
         }
         while ((alpha_max - alpha) > XMIPP_EQUAL_ACCURACY);
 #ifdef DEBUG
-        cout << "Assigning P(" << i << "," << j << ")=" << ray_sum << endl;
+        std::cout << "Assigning P(" << i << "," << j << ")=" << ray_sum << std::endl;
 #endif
     }
 }
@@ -458,16 +497,16 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
 #ifdef DEBUG_LITTLE
     double rot, tilt, psi;
     Euler_matrix2angles(proj.euler, rot, tilt, psi);
-    cout << "rot= "  << rot << " tilt= " << tilt
-    << " psi= " << psi << endl;
-    cout << "D\n" << D << endl;
-    cout << "Eulerf\n" << proj.euler << endl;
-    cout << "Eulerg\n" << Eulerg << endl;
-    cout << "aint    " << aint.transpose() << endl;
-    cout << "bint    " << bint.transpose() << endl;
-    cout << "prjaint " << prjaint.transpose() << endl;
-    cout << "prjbint " << prjbint.transpose() << endl;
-    cout.flush();
+    std::cout << "rot= "  << rot << " tilt= " << tilt
+    	      << " psi= " << psi << std::endl;
+    std::cout << "D\n" << D << std::endl;
+    std::cout << "Eulerf\n" << proj.euler << std::endl;
+    std::cout << "Eulerg\n" << Eulerg << std::endl;
+    std::cout << "aint    " << aint.transpose() << std::endl;
+    std::cout << "bint    " << bint.transpose() << std::endl;
+    std::cout << "prjaint " << prjaint.transpose() << std::endl;
+    std::cout << "prjbint " << prjbint.transpose() << std::endl;
+    std::cout.flush();
 #endif
     // Project grid axis ....................................................
     // These vectors ((1,0,0),(0,1,0),...) are referred to the grid
@@ -492,11 +531,11 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
     prjOrigin += XX(shift) * prjaint + YY(shift) * prjbint;
 
 #ifdef DEBUG_LITTLE
-    cout << "prjX      " << prjX.transpose() << endl;
-    cout << "prjY      " << prjY.transpose() << endl;
-    cout << "prjZ      " << prjZ.transpose() << endl;
-    cout << "prjOrigin " << prjOrigin.transpose() << endl;
-    cout.flush();
+    std::cout << "prjX      " << prjX.transpose() << std::endl;
+    std::cout << "prjY      " << prjY.transpose() << std::endl;
+    std::cout << "prjZ      " << prjZ.transpose() << std::endl;
+    std::cout << "prjOrigin " << prjOrigin.transpose() << std::endl;
+    std::cout.flush();
 #endif
 
     // Now I will impose that prja becomes (Xdim,0) and prjb, (0,Ydim)
@@ -513,17 +552,17 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
     M2x2_INV(Ainv, A);
 
 #ifdef DEBUG_LITTLE
-    cout << "A\n" << A << endl;
-    cout << "Ainv\n" << Ainv << endl;
-    cout << "Check that A*prjaint=(Xdim,0)    "
-    << (A*vectorR2(XX(prjaint), YY(prjaint))).transpose() << endl;
-    cout << "Check that A*prjbint=(0,Ydim)    "
-    << (A*vectorR2(XX(prjbint), YY(prjbint))).transpose() << endl;
-    cout << "Check that Ainv*(Xdim,0)=prjaint "
-    << (Ainv*vectorR2(xDim, 0)).transpose() << endl;
-    cout << "Check that Ainv*(0,Ydim)=prjbint "
-    << (Ainv*vectorR2(0, yDim)).transpose() << endl;
-    cout.flush();
+    std::cout << "A\n" << A << std::endl;
+    std::cout << "Ainv\n" << Ainv << std::endl;
+    std::cout << "Check that A*prjaint=(Xdim,0)    "
+              << (A*vectorR2(XX(prjaint), YY(prjaint))).transpose() << std::endl;
+    std::cout << "Check that A*prjbint=(0,Ydim)    "
+              << (A*vectorR2(XX(prjbint), YY(prjbint))).transpose() << std::endl;
+    std::cout << "Check that Ainv*(Xdim,0)=prjaint "
+              << (Ainv*vectorR2(xDim, 0)).transpose() << std::endl;
+    std::cout << "Check that Ainv*(0,Ydim)=prjbint "
+              << (Ainv*vectorR2(0, yDim)).transpose() << std::endl;
+    std::cout.flush();
 #endif
 
     // Footprint size .......................................................
@@ -546,12 +585,12 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
     YY(deffootprint_size) = MAX(ABS(YY(c1)), ABS(YY(c2)));
 
 #ifdef DEBUG_LITTLE
-    cout << "Footprint_size " << footprint_size.transpose() << endl;
-    cout << "c1: " << c1.transpose() << endl;
-    cout << "c2: " << c2.transpose() << endl;
-    cout << "Deformed Footprint_size " << deffootprint_size.transpose()
-    << endl;
-    cout.flush();
+    std::cout << "Footprint_size " << footprint_size.transpose() << std::endl;
+    std::cout << "c1: " << c1.transpose() << std::endl;
+    std::cout << "c2: " << c2.transpose() << std::endl;
+    std::cout << "Deformed Footprint_size " << deffootprint_size.transpose()
+              << std::endl;
+    std::cout.flush();
 #endif
 
     // This type conversion gives more speed
@@ -574,25 +613,25 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
     beginZ = XX_lowest * prjX + YY_lowest * prjY + ZZ_lowest * prjZ + prjOrigin;
 
 #ifdef DEBUG_LITTLE
-    cout << "BeginZ     " << beginZ.transpose()             << endl;
-    cout << "Mask       ";
+    std::cout << "BeginZ     " << beginZ.transpose()             << std::endl;
+    std::cout << "Mask       ";
     mask.printShape();
-    cout << endl;
-    cout << "Vol        ";
+    std::cout << std::endl;
+    std::cout << "Vol        ";
     vol().printShape();
-    cout << endl;
-    cout << "Proj       ";
+    std::cout << std::endl;
+    std::cout << "Proj       ";
     proj().printShape();
-    cout << endl;
-    cout << "Norm Proj  ";
+    std::cout << std::endl;
+    std::cout << "Norm Proj  ";
     norm_proj().printShape();
-    cout << endl;
-    cout << "Footprint  ";
+    std::cout << std::endl;
+    std::cout << "Footprint  ";
     footprint().printShape();
-    cout << endl;
-    cout << "Footprint2 ";
+    std::cout << std::endl;
+    std::cout << "Footprint2 ";
     footprint2().printShape();
-    cout << endl;
+    std::cout << std::endl;
 #endif
     Matrix1D<double> grid_index(3);
     for (k = ZZ_lowest; k <= ZZ_highest; k++)
@@ -607,7 +646,7 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
             {
                 VECTOR_R3(grid_index, j, i, k);
 #ifdef DEBUG
-                cout << "Visiting " << i << " " << j << endl;
+                std::cout << "Visiting " << i << " " << j << std::endl;
 #endif
 
                 // Be careful that you cannot skip any blob, although its
@@ -625,12 +664,12 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
                     YY_corner2 = FLOOR(YY(defactprj) + YY(deffootprint_size));
 
 #ifdef DEBUG
-                    cout << "  k= " << k << " i= " << i << " j= " << j << endl;
-                    cout << "  Actual position: " << actprj.transpose() << endl;
-                    cout << "  Deformed position: " << defactprj.transpose() << endl;
-                    cout << "  Blob corners: (" << XX_corner1 << "," << YY_corner1
-                    << ") (" << XX_corner2 << "," << YY_corner2 << ")\n";
-                    cout.flush();
+                    std::cout << "  k= " << k << " i= " << i << " j= " << j << std::endl;
+                    std::cout << "  Actual position: " << actprj.transpose() << std::endl;
+                    std::cout << "  Deformed position: " << defactprj.transpose() << std::endl;
+                    std::cout << "  Blob corners: (" << XX_corner1 << "," << YY_corner1
+                              << ") (" << XX_corner2 << "," << YY_corner2 << ")\n";
+                    std::cout.flush();
 #endif
 
                     // Now there is no way that both corners collapse into a line,
@@ -657,12 +696,12 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
                                      foot_V, foot_U);
 
 #ifdef DEBUG
-                            cout << "    Studying: " << r.transpose()
-                            << "--> " << rc.transpose()
-                            << "dist (" << xc - XX(actprj)
-                            << "," << yc - YY(actprj) << ") --> "
-                            << foot_U << " " << foot_V << endl;
-                            cout.flush();
+                            std::cout << "    Studying: " << r.transpose()
+                        	      << "--> " << rc.transpose()
+                        	      << "dist (" << xc - XX(actprj)
+                        	      << "," << yc - YY(actprj) << ") --> "
+                        	      << foot_U << " " << foot_V << std::endl;
+                            std::cout.flush();
 #endif
                             if (IMGMATRIX(basis.blobprint).outside(foot_V, foot_U)) continue;
 
@@ -670,13 +709,13 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
                             int yw, xw;
                             wrap_as_Crystal(x, y, xw, yw);
 #ifdef DEBUG
-                            cout << "      After wrapping " << xw << " " << yw << endl;
-                            cout << "      Value added = " << VOLVOXEL(vol, k, i, j) *
+                            std::cout << "      After wrapping " << xw << " " << yw << std::endl;
+                            std::cout << "      Value added = " << VOLVOXEL(vol, k, i, j) *
                             IMGPIXEL(basis.blobprint, foot_V, foot_U) << " Blob value = "
                             << IMGPIXEL(basis.blobprint, foot_V, foot_U)
                             << " Blob^2 " << IMGPIXEL(basis.blobprint2, foot_V, foot_U)
-                            << endl;
-                            cout.flush();
+                            << std::endl;
+                            std::cout.flush();
 #endif
                             if (FORW)
                             {
@@ -702,9 +741,9 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
 #ifdef DEBUG_INTERMIDIATE
                     proj.write("inter.xmp");
                     norm_proj.write("inter_norm.xmp");
-                    cout << "Press any key\n";
+                    std::cout << "Press any key\n";
                     char c;
-                    cin >> c;
+                    std::cin >> c;
 #endif
 
                     if (!FORW)
@@ -730,9 +769,9 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
 #ifdef DEBUG_AT_THE_END
     proj.write("inter.xmp");
     norm_proj.write("inter_norm.xmp");
-    cout << "Press any key\n";
+    std::cout << "Press any key\n";
     char c;
-    cin >> c;
+    std::cin >> c;
 #endif
 }
 #undef DEBUG
