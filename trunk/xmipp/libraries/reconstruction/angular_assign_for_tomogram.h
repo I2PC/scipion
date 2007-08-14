@@ -43,7 +43,7 @@ public:
     friend ostream & operator << (ostream &out, const Alignment &A)
     {
         out << A.rot << "\t" << A.tilt << "\t" << A.psi << "\t" << A.x
-        << "\t" << A.y << "\t" << A.corr << endl;
+            << "\t" << A.y << "\t" << A.corr << std::endl;
         return out;
     }
     bool operator < (const Alignment &rhs) const
