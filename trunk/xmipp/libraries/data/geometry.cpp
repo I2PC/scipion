@@ -619,8 +619,8 @@ void Euler_direction2angles(Matrix1D<double> &v0,
 /* Matrix --> Euler angles ------------------------------------------------- */
 #define CHECK
 //#define DEBUG
-void Euler_matrix2angles(Matrix2D<double> &A, double &alpha, double &beta,
-                         double &gamma)
+void Euler_matrix2angles(const Matrix2D<double> &A, double &alpha,
+    	    	    	 double &beta, double &gamma)
 {
     double abs_sb, sign_sb;
 

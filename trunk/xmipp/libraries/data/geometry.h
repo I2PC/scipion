@@ -591,7 +591,7 @@ void Euler_direction2angles(Matrix1D< double >& v,
  * Euler_matrix2angles(Euler, alpha, beta, gamma);
  * @endcode
  */
-void Euler_matrix2angles(Matrix2D< double >& A,
+void Euler_matrix2angles(const Matrix2D< double >& A,
                          double& alpha,
                          double& beta,
                          double& gamma);
