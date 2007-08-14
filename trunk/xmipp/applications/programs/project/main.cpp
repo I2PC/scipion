@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error &XE)
     {
-        cout << XE;
+        std::cout << XE;
         prog_prm.usage();
         exit(1);
     }
@@ -50,52 +50,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
-
+    return 0;
 }
-
-/* Menus ------------------------------------------------------------------- */
-/*Colimate:
-   PROGRAM Project {
-      url="http://www.cnb.uam.es/~bioinfo/NewXmipp/Applications/Src/Project/Help/project.html";
-      help="Project a volume along the desired directions";
-      OPEN MENU menu_project;
-      COMMAND LINES {
- + usual: project -i $FILE_IN [-o $SEL_OUT] [-show_angles]
-                         [-crystal $CRYSTAL_PRM]
-      }
-      PARAMETER DEFINITIONS {
-        $FILE_IN {
-    label="Projection Parameters file";
-    help="This file has got a complex structure, better see
-                 the Web help";
-    type=file existing;
- }
-        $SEL_OUT {
-    label="Output sel file";
-    help="If not given, there is no output selfile";
-    type=file;
- }
-        OPT(-show_angles) {
-           label="Show angles in screen";
-           help="The angle order is rot, tilt, psi";
-        }
-        $CRYSTAL_PRM {
-    label="Crystal parameters";
-           help="This file has got a complex structure, better see
-                 the Web help";
-    type=file;
- }
-      }
-   }
-
-   MENU menu_project {
-      "I/O parameters"
-      $FILE_IN
-      OPT(-o)
-      "Options"
-      OPT(-show_angles)
-      OPT(-crystal)
-   }
-*/
