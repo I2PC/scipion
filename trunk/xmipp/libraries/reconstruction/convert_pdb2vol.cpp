@@ -134,7 +134,7 @@ void Prog_PDBPhantom_Parameters::usage()
 	      << "  [-o <fn_root>]		       : Root name for output\n"
 	      << "  [-sampling_rate <Ts=1>]	       : Sampling rate (Angstroms/pixel)\n"
 	      << "  [-high_sampling_rate <highTs=1/12>]: Sampling rate before downsampling\n"
-	      << "  [-size <output_dim>]	       : Final size in pixels (must be a power of 2)\n"
+	      << "  [-size <output_dim>]	       : Final size in pixels (must be a power of 2, if blobs are used)\n"
 	      << "  [-blobs]                           : Use blobs instead of scattering factors\n"
 	      << "\n"
 	      << "Example of use: Sample at 1.6A and limit the frequency to 10A\n"
@@ -169,7 +169,7 @@ void Prog_PDBPhantom_Parameters::compute_protein_geometry()
     {
         int max_dim = MAX(CEIL(ZZ(limit) * 2 / Ts) + 5, CEIL(YY(limit) * 2 / Ts) + 5);
         max_dim = MAX(max_dim, CEIL(XX(limit) * 2 / Ts) + 5);
-        output_dim = (int)NEXT_POWER_OF_2(max_dim);
+        if (useBlobs) output_dim = (int)NEXT_POWER_OF_2(max_dim);
         std::cout << "Setting output_dim to " << output_dim << std::endl;
     }
 }
