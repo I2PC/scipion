@@ -116,7 +116,7 @@
                // CTF
                Ictf(i,j)=CTF.CTFpure_at(XX(freq),YY(freq));
 
-               // Power spectru density
+               // Power spectrum density
                Ipsd(i,j)=Ibg(i,j)+Ictf(i,j)*Ictf(i,j);
             }
 
