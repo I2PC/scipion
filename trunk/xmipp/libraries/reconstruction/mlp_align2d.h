@@ -53,6 +53,8 @@ public:
     string cline;
     /** Sigma value for expected pixel noise */
     double sigma_noise;
+    /** Sigma value for expected origin offsets */
+    double sigma_offset;
     /** Vector containing estimated fraction for each model */
     vector<double> alpha_k;
     /** Vector containing estimated fraction for mirror of each model */
@@ -63,6 +65,8 @@ public:
     bool fix_fractions;
     /** Flag whether to fix estimate for sigma of noise */
     bool fix_sigma_noise;
+    /** Flag whether to fix estimate for sigma the offsets */
+    bool fix_sigma_offset;
     /** Starting iteration */
     int istart;
     /** Number of iterations to be performed */
@@ -98,8 +102,8 @@ public:
     int nr_trans;
     /** pointers to original x and y translations */
     vector<double> Vxtrans, Vytrans;
-    /** pointer to mirror-related translations */
-    vector<int> Vmtrans;
+    /** Matrices for calculating PDF of (in-plane) translations */
+    Matrix2D<double> Mpdf_trans, Mr2;
     /** Limited search range for origin offsets */
     double search_shift;
     /** Limit orientational searches */
@@ -118,7 +122,6 @@ public:
     int Ri, Ro;
     /** One common kb object for all images! */
     KaiserBessel kb;
-    
 
 public:
     /// Read arguments from command line
@@ -147,6 +150,9 @@ public:
     /// phi and theta
     void preselectDirections(float &phi, float &theta,
 			     vector<double> &pdf_directions);
+
+    // Update the pdf of the translations
+    void updatePdfTranslations();
 
     /// @defgroup MLPfunctions Functionsfor MLPalign2D class
     /// @ingroup MLPalign2D
@@ -189,7 +195,7 @@ public:
 			 const vector < double > &sum2_refs,
 			 const vector < double > &pdf_directions,
 			 vector < Polar <complex <double> > > &fP_wsum_imgs,
-			 double &wsum_sigma_noise, 
+			 double &wsum_sigma_noise, double &wsum_sigma_offset, 
 			 vector < double > &sumw, vector < double > &sumw_mirror,
 			 double &LL, double &fracweight,
 			 int &opt_refno, double &opt_psi, double &opt_flip, 
@@ -202,7 +208,7 @@ public:
     void sumOverAllImages(SelFile &SF, const vector<ImageXmipp> &Iref,
 			  double &LL, double &sumcorr, DocFile &DFo,
 			  vector < Polar <complex <double> > > &fP_wsum_imgs,
-			  double &wsum_sigma_noise,
+			  double &wsum_sigma_noise, double &wsum_sigma_offset, 
 			  vector <double> &sumw, vector <double> &sumw_mirror);
 
     /** Update all model parameters
@@ -212,7 +218,7 @@ public:
      *
      */
     void updateParameters(vector < Polar <complex <double> > > &fP_wsum_imgs,
-			  double &wsum_sigma_noise,
+			  double &wsum_sigma_noise, double &wsum_sigma_offset, 
 			  vector <double> &sumw, vector <double> &sumw_mirror,
 			  double &sumcorr, double &sumw_allrefs);
 

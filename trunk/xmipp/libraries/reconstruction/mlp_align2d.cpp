@@ -103,23 +103,25 @@ void Prog_MLPalign2D_prm::read(int argc, char **argv, bool ML3D)
     Niter = textToInteger(getParameter(argc, argv, "-iter", "100"));
     istart = textToInteger(getParameter(argc, argv, "-istart", "1"));
     sigma_noise = textToFloat(getParameter(argc, argv, "-noise", "1"));
+    sigma_offset = textToFloat(getParameter(argc, argv, "-offset", "1"));
     do_mirror = checkParameter(argc, argv, "-mirror");
     eps = textToFloat(getParameter(argc, argv, "-eps", "5e-5"));
     fn_frac = getParameter(argc, argv, "-frac", "");
     fix_fractions = checkParameter(argc, argv, "-fix_fractions");
     fix_sigma_noise = checkParameter(argc, argv, "-fix_sigma_noise");
+    fix_sigma_offset = checkParameter(argc, argv, "-fix_sigma_offset");
     verb = textToInteger(getParameter(argc, argv, "-verb", "1"));
     search_shift = textToFloat(getParameter(argc, argv, "-search_shift", "3."));
     fn_doc = getParameter(argc, argv, "-doc", "");
     Ri = textToInteger(getParameter(argc,argv,"-Ri","-1"));
     Ro = textToInteger(getParameter(argc,argv,"-Ro","-1"));
-    psi_step = textToInteger(getParameter(argc,argv,"-psi_step","-1"));
+    psi_step = textToFloat(getParameter(argc,argv,"-psi_step","-1"));
     do_ML3D = ML3D;
 
     // Hidden arguments
     debug = checkParameter(argc, argv, "-debug");
 
-    //only for interaction with Refine3D:
+    // Only for interaction with refine3D:
     search_rot = textToFloat(getParameter(argc, argv, "-search_rot", "999."));
 
 }
@@ -157,6 +159,11 @@ void Prog_MLPalign2D_prm::show(bool ML3D)
             cerr << "  Check mirrors           : false" << endl;
         if (fn_frac != "")
             cerr << "  Initial model fractions : " << fn_frac << endl;
+
+	cerr << "    + Limit polar coordinates to radii between "<<Ri<<" and "<<Ro<<" pixels"<<endl; 
+	if (psi_step > 0.)
+            cerr << "    + Limit in-plane rotational sampling to " << psi_step << " degrees" << endl;
+
         if (search_shift < 999.)
             cerr << "    + Limit translational search to +/- " << search_shift << " pixels" << endl;
         if (search_rot < 180.)
@@ -261,9 +268,14 @@ void Prog_MLPalign2D_prm::produceSideInfo()
     {
 	for (int iy = -search_shift; iy <= search_shift; iy++)
 	{
-	    Vxtrans.push_back((double)ix);
-	    Vytrans.push_back((double)iy);
-	    nr_trans++;
+	    double x = (double)ix;
+	    double y = (double)iy;
+	    if (x*x + y*y <= search_shift * search_shift)
+	    {
+		Vxtrans.push_back(x);
+		Vytrans.push_back(y);
+		nr_trans++;
+	    }
 	}
     }
 
@@ -361,6 +373,37 @@ void Prog_MLPalign2D_prm::produceSideInfo2(int nr_vols)
 
     // Calculate FT of rings of polars for all references
     calculateFtRingsAllRefs(Iref,fP_refs,fP_zero,sum2_refs,Ri,Ro);
+
+
+    //debug stuff
+    /*
+    double Rop = Ro + 0.5;
+    double Rip = Ri - 0.5;
+    double nr_pixels = PI * (Rop * Rop - Rip * Rip);
+    cerr<<"nr_pixels area= "<<nr_pixels;
+    Polar <double> P;
+    Polar <complex<double> > fP, fP2;
+    Matrix2D<double> Maux,Mone;
+    Mone.resize(Iref[0]());
+    Mone.init_constant(1.);
+    produceGriddingMatrix2D(Mone,Maux,kb);
+    P.getPolarFromCartesian(Maux,kb,Ri,Ro,1,psi_step);
+    cerr<<" P.sum_one= "<<P.computeSum();
+    // Store complex conjugated
+    fP = P.fourierTransformRings(false); 
+    fP2 = P.fourierTransformRings(true); 
+    Matrix1D<double> ang,corr;
+    rotationalCorrelation(fP,fP2,ang,corr);
+    cerr<<" corr(0)= "<<corr(0)<<endl;
+    produceGriddingMatrix2D(Iref[0](),Maux,kb);
+    P.getPolarFromCartesian(Maux,kb,Ri,Ro,1,psi_step);
+    cerr<<" A2: P.sum2= "<<P.computeSum2();
+    // Store complex conjugated
+    fP = P.fourierTransformRings(false); 
+    fP2 = P.fourierTransformRings(true); 
+    rotationalCorrelation(fP,fP2,ang,corr);
+    cerr<<" corr(0)= "<<corr(0)<<endl;
+    */
 
     // Read optimal origin offsets from fn_doc
     if (fn_doc != "")
@@ -461,6 +504,37 @@ void Prog_MLPalign2D_prm::preselectDirections(float &phi, float &theta,
 
 }
 
+void Prog_MLPalign2D_prm::updatePdfTranslations()
+{
+    double r2, pdfpix, sum;
+    Mpdf_trans.resize(dim, dim);
+    Mpdf_trans.setXmippOrigin();
+    Mr2.resize(dim, dim);
+    Mr2.setXmippOrigin();
+
+    sum=0.;
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(Mpdf_trans)
+    {
+        r2 = (double)(j * j + i * i);
+        if (sigma_offset > 0.)
+        {
+            pdfpix = exp(-r2 / (2 * sigma_offset * sigma_offset));
+        }
+        else
+        {
+            if (j == 0 && i == 0) pdfpix = 1.;
+            else pdfpix = 0.;
+        }
+        MAT_ELEM(Mpdf_trans, i, j) = pdfpix;
+        MAT_ELEM(Mr2, i, j) = (double)r2;
+	sum += pdfpix;
+    }
+
+    // Normalization (for limited searches this is not completely correct!)
+    Mpdf_trans /= sum;
+
+}
+
 void Prog_MLPalign2D_prm::calculateFtRingsAllRefs(const vector<ImageXmipp> &Iref,
 						  vector< Polar< complex <double> > > &fP_refs,
 						  Polar< complex <double> > &fP_zero,
@@ -520,9 +594,11 @@ void Prog_MLPalign2D_prm::calculateFtRingsAllTransImg(const ImageXmipp &img,
     {
 	P.getPolarFromCartesian(Maux,kb,first,last,1,psi_step,FULL_CIRCLES,
 				Vxtrans[itrans],Vytrans[itrans]);
-	sum2_trans.push_back(P.computeSum2());
+
+
 	fP = P.fourierTransformRings(false);
 	fP_trans.push_back(fP);
+	sum2_trans.push_back(P.computeSum2());
 	if (do_mirror)
 	{
 	    fP = P.fourierTransformRings(true);
@@ -537,7 +613,7 @@ void Prog_MLPalign2D_prm::processOneImage(const ImageXmipp &img,
 					  const vector < double > &sum2_refs,
 					  const vector < double > &pdf_directions,
 					  vector < Polar <complex <double> > > &fP_wsum_imgs,
-					  double &wsum_sigma_noise, 
+					  double &wsum_sigma_noise, double &wsum_sigma_offset, 
 					  vector < double > &sumw, vector < double > &sumw_mirror,
 					  double &LL, double &fracweight,
 					  int &opt_iref, double &opt_psi, double &opt_flip, 
@@ -549,12 +625,13 @@ void Prog_MLPalign2D_prm::processOneImage(const ImageXmipp &img,
     vector< Polar< complex <double> > > fP_trans, fPm_trans;
     double                              A2, Xi2, A2_plus_Xi2;
     double                              aux, weight, maxweight, diff2, mindiff2;
-    double                              wsum_corr, pdf, pdfm, sumw_allrefs;
+    double                              wsum_corr, pdf, pdfm, pdft, sumw_allrefs;
     int                                 ipos;
     double                              sigma_noise2 = sigma_noise * sigma_noise;
     int                                 opt_ipsi, opt_ipos, opt_itrans, nr_pos;
     Matrix1D<double>                    Mweight(nr_psi);
     Matrix1D<complex <double> >         Fweight(nr_psi);
+    vector<int>                         img_xoffs, img_yoffs;
 
     // reserve memory for the weights vector
     nr_pos = nr_trans * nr_ref * dnr_psi;
@@ -563,7 +640,16 @@ void Prog_MLPalign2D_prm::processOneImage(const ImageXmipp &img,
     // Calculate all FT-rings for all translated images
     calculateFtRingsAllTransImg(img,fP_trans,fPm_trans,sum2_trans,Ri,Ro);
 
-    // Search over all references
+    // Store actual offsets for pdf calculations
+    img_xoffs.clear();
+    img_yoffs.clear();
+    for (int itrans = 0; itrans < nr_trans; itrans++)
+    {
+	img_xoffs.push_back(img.Xoff() - Vxtrans[itrans]);
+	img_yoffs.push_back(img.Yoff() - Vytrans[itrans]);
+    }
+
+   // Search over all references
     mindiff2 = 99.e99;
     ipos = 0;
     for (int iref = 0; iref < nr_ref; iref++)
@@ -586,6 +672,10 @@ void Prog_MLPalign2D_prm::processOneImage(const ImageXmipp &img,
 		    diff2 = A2_plus_Xi2 - corr(ipsi);
 		    weights.push_back(diff2);
                     if (diff2 < mindiff2) mindiff2 = diff2;
+		    if (debug) 
+		    {
+			cout<<ang(ipsi)<<" "<<diff2<<" "<<A2_plus_Xi2<<" "<<Vxtrans[itrans]<<" "<<Vytrans[itrans]<<endl;
+		    }
 		}
 
 		// B. Check mirror image
@@ -619,6 +709,7 @@ void Prog_MLPalign2D_prm::processOneImage(const ImageXmipp &img,
 	{
 	    for (int itrans = 0; itrans < nr_trans; itrans++)
 	    {
+		pdft = MAT_ELEM(Mpdf_trans, img_yoffs[itrans], img_xoffs[itrans]);
 		for (int ipsi = 0; ipsi < dnr_psi; ipsi++)
 		{
 		    ipos++;
@@ -630,12 +721,12 @@ void Prog_MLPalign2D_prm::processOneImage(const ImageXmipp &img,
 		    {
 			if (ipsi<nr_psi) 
 			{   // straight image
-			    weight = exp(-aux) * pdf;
+			    weight = exp(-aux) * pdf * pdft;
 			    refw[iref] += weight;
 			}
 			else
 			{   // mirror image
-			    weight = exp(-aux) * pdfm;
+			    weight = exp(-aux) * pdfm * pdft;
 			    refw_mirror[iref] += weight;
 			}
 		    }
@@ -657,7 +748,7 @@ void Prog_MLPalign2D_prm::processOneImage(const ImageXmipp &img,
     
     // Normalize all weighted sums by sumw such that sum over all weights is one!
     // And accumulate all weighted sums
-    wsum_sigma_noise += (2 * wsum_corr / sumw_allrefs);
+    wsum_sigma_noise += (2. * wsum_corr / sumw_allrefs);
     ipos = 0;
     for (int iref = 0; iref < nr_ref; iref++)
     {
@@ -675,18 +766,11 @@ void Prog_MLPalign2D_prm::processOneImage(const ImageXmipp &img,
 		    weight = weights[ipos - 1] / sumw_allrefs;
 		    Mweight(ipsi) = weight;
 		    if (weight > aux) aux = weight; 
+		    wsum_sigma_offset += weight * MAT_ELEM(Mr2, img_yoffs[itrans], img_xoffs[itrans]); 
 		}
 		// Only store sum for non-zero weights
 		if (aux > SIGNIFICANT_WEIGHT_LOW*maxweight)
 		{
-		    if (debug) 
-		    {
-			for (int ipsi = 0; ipsi < nr_psi; ipsi++)
-			{
-			    if (Mweight(ipsi)>SIGNIFICANT_WEIGHT_LOW*maxweight)
-				cout<<ang(ipsi)<<" "<<Mweight(ipsi)<<" "<<Vxtrans[itrans]<<" "<<Vytrans[itrans]<<endl;
-			}
-		    }
 		    FourierTransformHalf(Mweight,Fweight);
 		    for (int iring = 0; iring < fP_wsum_imgs[iref].getRingNo(); iring++)
 			for (int iphi = 0; iphi < fP_wsum_imgs[iref].getSampleNo(iring); iphi++)
@@ -703,6 +787,7 @@ void Prog_MLPalign2D_prm::processOneImage(const ImageXmipp &img,
 			weight = weights[ipos - 1] / sumw_allrefs;
 			Mweight(ipsi) = weight;
 			if (weight > aux) aux = weight; 
+			wsum_sigma_offset += weight * MAT_ELEM(Mr2, img_yoffs[itrans], img_xoffs[itrans]); 
 		    }
 		    if (aux > SIGNIFICANT_WEIGHT_LOW*maxweight)
 		    {
@@ -725,9 +810,9 @@ void Prog_MLPalign2D_prm::processOneImage(const ImageXmipp &img,
 
     // Return values
     fracweight = maxweight / sumw_allrefs;
-    opt_xoff = -Vxtrans[opt_itrans]; 
-    opt_yoff = -Vytrans[opt_itrans];
-    if (opt_ipsi>nr_psi)
+    opt_xoff = - Vxtrans[opt_itrans];
+    opt_yoff = - Vytrans[opt_itrans];
+    if (opt_ipsi>nr_psi-1)
     {
 	opt_flip = 1.;
 	opt_psi = ang(opt_ipsi-nr_psi);
@@ -744,7 +829,7 @@ void Prog_MLPalign2D_prm::processOneImage(const ImageXmipp &img,
 void Prog_MLPalign2D_prm::sumOverAllImages(SelFile &SF, const vector<ImageXmipp> &Iref,
 					   double &LL, double &sumcorr, DocFile &DFo,
 					   vector < Polar <complex <double> > > &fP_wsum_imgs,
-					   double &wsum_sigma_noise, 
+					   double &wsum_sigma_noise, double &wsum_sigma_offset,  
 					   vector<double> &sumw, vector<double> &sumw_mirror)
 {
 
@@ -771,6 +856,7 @@ void Prog_MLPalign2D_prm::sumOverAllImages(SelFile &SF, const vector<ImageXmipp>
     sumw_mirror.clear();
     LL = 0.;
     wsum_sigma_noise = 0.;
+    wsum_sigma_offset = 0.;
     sumcorr = 0.;
     trans.initZeros();
     fP_wsum_imgs.clear();
@@ -789,12 +875,11 @@ void Prog_MLPalign2D_prm::sumOverAllImages(SelFile &SF, const vector<ImageXmipp>
         fn_img = SF.NextImg();
         img.read(fn_img, false, false, false, false);
         img().setXmippOrigin();
-        if (fn_doc != "")
-        {
-            trans(0) = (double)ROUND(imgs_oldxoff[imgno]);
-            trans(1) = (double)ROUND(imgs_oldyoff[imgno]);
-            img().selfTranslate(trans, true);
-        }
+
+	// Set Xoff and Yoff from docfile or previous iteration
+	img.Xoff() = trans(0) = (double)ROUND(imgs_oldxoff[imgno]);
+	img.Yoff() = trans(1) = (double)ROUND(imgs_oldyoff[imgno]);
+	img().selfTranslate(trans, true);
 	
        // Read optimal orientations from memory
         if (limit_rot)
@@ -808,7 +893,7 @@ void Prog_MLPalign2D_prm::sumOverAllImages(SelFile &SF, const vector<ImageXmipp>
 	
 	// Perform the actual expectation step for the current image
 	processOneImage(img, fP_refs, sum2_refs, pdf_directions, fP_wsum_imgs, 
-			wsum_sigma_noise, sumw, sumw_mirror, LL, maxcorr,
+			wsum_sigma_noise, wsum_sigma_offset, sumw, sumw_mirror, LL, maxcorr,
 			opt_iref, opt_psi, opt_flip, opt_xoff, opt_yoff);
 	
         // Store optimal position in memory
@@ -843,7 +928,7 @@ void Prog_MLPalign2D_prm::sumOverAllImages(SelFile &SF, const vector<ImageXmipp>
 
 // Update all model parameters
 void Prog_MLPalign2D_prm::updateParameters(vector < Polar <complex <double> > > &fP_wsum_imgs,
-					   double &wsum_sigma_noise,
+					   double &wsum_sigma_noise, double &wsum_sigma_offset,
 					   vector<double> &sumw, vector<double> &sumw_mirror,
 					   double &sumcorr, double &sumw_allrefs)
 {
@@ -853,6 +938,7 @@ void Prog_MLPalign2D_prm::updateParameters(vector < Polar <complex <double> > > 
     for (int iref = 0; iref < nr_ref; iref++)
 	sumw_allrefs += sumw[iref];
 
+    // Average corr/fracweight
     sumcorr /= sumw_allrefs;
 
     // Update the reference images
@@ -873,7 +959,7 @@ void Prog_MLPalign2D_prm::updateParameters(vector < Polar <complex <double> > > 
 	    // STILL RETHINK THIS ONE!! GRIDDING REVERSAL!
             //Iref[iref]() = wsum_Mref[iref];
             //Iref[iref]() /= sumw[iref];
-            Iref[iref].weight() = sumw[iref];
+            //Iref[iref].weight() = sumw[iref];
        }
         else
         {
@@ -882,6 +968,9 @@ void Prog_MLPalign2D_prm::updateParameters(vector < Polar <complex <double> > > 
 	    Iref[iref].weight() = 0.;
         }
     }
+
+    // Update sigma of the origin offsets
+    if (!fix_sigma_offset) sigma_offset = sqrt(wsum_sigma_offset / (2. * sumw_allrefs));
 
     // Update the model fractions
     if (!fix_fractions)
@@ -904,9 +993,12 @@ void Prog_MLPalign2D_prm::updateParameters(vector < Polar <complex <double> > > 
     // Update the noise parameters
     if (!fix_sigma_noise)
     {
-	// RECHECK THE DIVISION TERM HERE!!!!
-	double nr_pixels = (PI * Ro * Ro) - (PI * Ri * Ri);
+	double Rop = Ro + 0.5;
+	double Rip = Ri - 0.5;
+	double nr_pixels = PI * (Rop * Rop - Rip * Rip);
 	sigma_noise = sqrt(wsum_sigma_noise / (sumw_allrefs * nr_pixels));
+	// prevent division by zero
+	sigma_noise = MAX(sigma_noise, SIGNIFICANT_WEIGHT_LOW);
     }
 
 }
@@ -990,7 +1082,7 @@ void Prog_MLPalign2D_prm::writeOutputFiles(const int iter, DocFile &DFo,
     comment = "MLPalign2D-logfile: Number of images= " + floatToString(sumw_allrefs);
     comment += " LL= " + floatToString(LL, 15, 10) + " <Pmax/sumP>= " + floatToString(avecorr, 10, 5);
     DFl.insert_comment(comment);
-    comment = "-noise " + floatToString(sigma_noise, 15, 12) + " -istart " + integerToString(iter + 1);
+    comment = "-noise " + floatToString(sigma_noise, 15, 12) + " -offset " + floatToString(sigma_offset, 15, 12) + " -istart " + integerToString(iter + 1);
 
     DFl.insert_comment(comment);
     DFl.insert_comment(cline);
@@ -1015,7 +1107,7 @@ void Prog_MLPalign2D_prm::writeOutputFiles(const int iter, DocFile &DFo,
 	    DFo.adjust_to_data_line();
 	    if ((iref + 1) == (int)DFo(5)) SFo.insert(fn_tmp, SelLine::ACTIVE);
 	}
-	fn_tmp = fn_root + "_ref";
+	fn_tmp = fn_base + "_ref";
 	fn_tmp.compose(fn_tmp, iref + 1, "sel");
 	SFo.write(fn_tmp);
     }
