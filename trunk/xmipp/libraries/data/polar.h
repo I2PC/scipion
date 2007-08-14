@@ -499,7 +499,6 @@ public:
 	if (N != 0. && average)
 	    sum2 = sum2 / N;
 
-	// Return half the sum2 because we oversample twice...
 	return sum2;
     }
  
@@ -550,8 +549,10 @@ public:
 	// points (which is convenient for Half2Whole of FTs)
 	
 	if (psi_step < 0.)
-	    // Oversample twice 
+	    // Oversample twice
 	    half_nsam_last = (int)( twopi * (double)last_ring );
+	    // Do no longer oversample twice ...
+	    // half_nsam_last = (int)( 0.5 * twopi * (double)last_ring );
 	else 
 	    // User-defined sampling
 	    half_nsam_last = (int)( 0.5 * twopi / DEG2RAD(psi_step) );
