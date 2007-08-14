@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Javier Angel Velazquez Muriel (javi@cnb.uam.es)
- *              Carlos Oscar S�nchez Sorzano (coss@cnb.uam.es)
+ *              Carlos Oscar Sanchez Sorzano (coss@cnb.uam.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -519,7 +519,7 @@ void Adjust_CTF_Parameters::read(const FileName &fn_param)
         REPORT_ERROR(1, (string)"Prog_Adjust_CTF::read: There is a problem "
                      "opening the file " + fn_param);
 
-    fn_ctf = getParameter(fh_param, "ctf", 0, "");
+    fn_psd = getParameter(fh_param, "psd", 0, "");
     fn_similar_model = getParameter(fh_param, "similar_model", 0, "");
 
     show_optimization = checkParameter(fh_param, "show_optimization");
@@ -566,8 +566,8 @@ void Adjust_CTF_Parameters::write(const FileName &fn_prm, bool rewrite)
         REPORT_ERROR(1, (string)"Adjust_CTF_Parameters::write: There is a problem "
                      "opening the file " + fn_prm);
     fh_param << "# Adjust CTF parameters\n";
-    if (fn_ctf != "")
-        fh_param << "ctf="               << fn_ctf                  << endl;
+    if (fn_psd != "")
+        fh_param << "psd="               << fn_psd                  << endl;
     if (fn_similar_model != "")
         fh_param << "similar_model="     << fn_similar_model        << endl;
     fh_param << "min_freq="             << min_freq                << endl
@@ -588,18 +588,18 @@ void Adjust_CTF_Parameters::write(const FileName &fn_prm, bool rewrite)
 /* Show -------------------------------------------------------------------- */
 void Adjust_CTF_Parameters::show()
 {
-    cout << "CTF file:           " << fn_ctf              << endl
-    << "Similar model:      " << fn_similar_model    << endl
-    << "Min Freq.:          " << min_freq            << endl
-    << "Max Freq.:          " << max_freq            << endl
-    << "Sampling:           " << Tm                  << endl
-    << "Radial noise:       " << !astigmatic_noise   << endl
-    << "Defocus range:      " << defocus_range       << endl
-    << "Initial Ca:         " << initial_Ca          << endl
-    << "ctfmodelSize:       " << ctfmodelSize        << endl
-    << "Enhance min freq:   " << f1                  << endl
-    << "Enhance max freq:   " << f2                  << endl
-    << "Starting:\n"          << initial_ctfmodel    << endl
+    cout << "CTF file:           " << fn_psd              << endl
+	 << "Similar model:      " << fn_similar_model    << endl
+	 << "Min Freq.:          " << min_freq            << endl
+	 << "Max Freq.:          " << max_freq            << endl
+	 << "Sampling:           " << Tm                  << endl
+	 << "Radial noise:       " << !astigmatic_noise   << endl
+	 << "Defocus range:      " << defocus_range       << endl
+	 << "Initial Ca:         " << initial_Ca          << endl
+	 << "ctfmodelSize:       " << ctfmodelSize        << endl
+	 << "Enhance min freq:   " << f1                  << endl
+ 	 << "Enhance max freq:   " << f2                  << endl
+	 << "Starting:\n"          << initial_ctfmodel    << endl
     ;
 }
 
@@ -607,10 +607,10 @@ void Adjust_CTF_Parameters::show()
 void Adjust_CTF_Parameters::Usage()
 {
     cerr << "This program tries to adjust a parametric model to a CTF file.\n"
-    << "Usage: adjust_ctf -i <parameters file>\n"
+    << "Usage: ctf_estimate_from_psd -i <parameters file>\n"
     << "   Where the parameters file may contain the description of a\n"
     << "      CTF and CTFnoise plus any of the following parameters\n"
-    << "   [ctf=<Fourier Xmipp Image>] : CTF file\n"
+    << "   [psd=<PSD file>]            : PSD file\n"
     << "   [similar_model=<CTF and CTFnoisemodel>]: If known\n"
     << "   [show_optimization=yes]     : Show optimization process\n"
     << "   [min_freq=<f=0.05>]         : Minimum digital frequency to use in adjust. Its value\n"
@@ -632,7 +632,7 @@ void Adjust_CTF_Parameters::Usage()
 void Adjust_CTF_Parameters::produce_side_info()
 {
     // Read the CTF file, supposed to be the uncentered squared amplitudes
-    ctftomodel.read(fn_ctf);
+    ctftomodel.read(fn_psd);
     f = &(ctftomodel());
 
     // Resize the frequency
@@ -2179,7 +2179,7 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, bool standalone)
     /************************************************************************
       STEP 12:  Produce output
     /************************************************************************/
-    FileName fn_root = prm.fn_ctf.without_extension();
+    FileName fn_root = prm.fn_psd.without_extension();
     global_action = 6;
     save_intermediate_results(fn_root, false);
     global_ctfmodel.write(fn_root + ".ctfparam");

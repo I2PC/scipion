@@ -36,7 +36,7 @@ class Adjust_CTF_Parameters
 {
 public:
     /// CTF filename
-    FileName             fn_ctf;
+    FileName             fn_psd;
     /// Model to which the current one must be similar
     FileName             fn_similar_model;
     /// CTF amplitude to model
