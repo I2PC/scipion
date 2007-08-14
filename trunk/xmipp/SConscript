@@ -298,6 +298,7 @@ ReconsSources = [
     'phantom_create_random.cpp',
     'phantom_simulate_microscope.cpp',
     'precompute_sampling.cpp',
+    'projectTomography.cpp',
     'project_crystal.cpp',
     'projection.cpp',
     'psd_enhance.cpp',
@@ -449,6 +450,7 @@ AddXmippProgram('phantom_test_reconstruction', ['XmippRecons_Interface',
     'XmippRecons'])
 AddXmippProgram('phantom_transform', ['XmippRecons','XmippRecons_Interface'])
 AddXmippProgram('project', ['XmippRecons','XmippRecons_Interface'])
+AddXmippProgram('project_tomography', ['XmippRecons'])
 AddXmippProgram('psd_enhance', ['XmippRecons'])
 AddXmippProgram('range_adjust')
 AddXmippProgram('reconstruct_art', ['XmippRecons'])
