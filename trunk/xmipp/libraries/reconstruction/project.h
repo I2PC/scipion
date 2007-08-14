@@ -157,7 +157,7 @@ public:
     /**@name Angle Mode: Giving ranges */
     //@{
     /// Enable angle range mode (0 or 1)
-    int enable_angle_range;
+    bool enable_angle_range;
     /// Rotational angle range
     Angle_range rot_range;
     /// Tilting angle range
@@ -237,11 +237,8 @@ public:
     /** Produce Project Side information.
         This function produce the side information from the project
         program parameters. Basically it loads the phantom, sets
-        the phantom mode to voxel or mathemattical description and
-        generates or read the projection angles.
-
-        Projection from voxel volumes is not implemented yet and
-        an exception is thrown. */
+        the phantom mode to voxel or mathematical description and
+        generates or read the projection angles.*/
     void produce_Side_Info(const Projection_Parameters &prm,
                            const Prog_Project_Parameters &prog_prm);
 };

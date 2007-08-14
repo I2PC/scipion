@@ -162,7 +162,7 @@ void Projection_Parameters::read(const FileName &fn_proj_param)
             auxstr = firstWord(line);
             if (strcmp(auxstr, "NULL") != 0)
             {
-                enable_angle_range = 1;
+                enable_angle_range = true;
                 rot_range.ang0 = textToFloat(auxstr, 3007,
                                       "Prog_Project_Parameters::read: Error in Rotational Init");
                 auxstr = nextToken();
@@ -187,7 +187,7 @@ void Projection_Parameters::read(const FileName &fn_proj_param)
             }
             else
             {
-                enable_angle_range = 0;
+                enable_angle_range = false;
                 lineNo = 7;
             }
             break;
