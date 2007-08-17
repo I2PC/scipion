@@ -179,8 +179,7 @@ public:
     void calculateFtRingsAllTransImg(const ImageXmipp &Iexp,
 				     vector< Polar< complex <double> > > &fP_trans,
 				     vector< Polar< complex <double> > > &fPm_trans,
-				     vector< double > &sum2_trans,
-				     const int &first, const int &last);
+				     double &Xi2, const int &first, const int &last);
 
 
     /** MLP integration over all refs, rots and trans

@@ -232,11 +232,11 @@ void Prog_MLPalign2D_prm::produceSideInfo()
 
     // Automatically set maximum ring radii
     if (Ri<0) Ri=1;
-    if (Ro<0) Ro=(dim/2) - search_shift - 1;
+    if (Ro<0) Ro=(dim/2)-1;
 
-    // Radii limits: between 1 and half dimension minus search range
+    // Radii limits: between 1 and half dimension
     Ri=MAX(1.,Ri);
-    Ro=MIN((dim/2) - search_shift - 1., Ro);
+    Ro=MIN((dim/2)-1, Ro);
 
     // Get number of references
     if (do_ML3D)
@@ -579,8 +579,7 @@ void Prog_MLPalign2D_prm::calculateFtRingsAllRefs(const vector<ImageXmipp> &Iref
 void Prog_MLPalign2D_prm::calculateFtRingsAllTransImg(const ImageXmipp &img,
 						      vector< Polar< complex <double> > > &fP_trans,
 						      vector< Polar< complex <double> > > &fPm_trans,
-						      vector< double > &sum2_trans,
-						      const int &first, const int &last)
+						      double &Xi2, const int &first, const int &last)
 {
     Matrix2D<double>         Maux;
     Polar<double>            P;
@@ -589,16 +588,17 @@ void Prog_MLPalign2D_prm::calculateFtRingsAllTransImg(const ImageXmipp &img,
     produceGriddingMatrix2D(img(),Maux,kb);
     fP_trans.clear();
     fPm_trans.clear();
-    sum2_trans.clear();
     for (int itrans = 0; itrans < nr_trans; itrans++)
     {
 	P.getPolarFromCartesian(Maux,kb,first,last,1,psi_step,FULL_CIRCLES,
 				Vxtrans[itrans],Vytrans[itrans]);
 
-
 	fP = P.fourierTransformRings(false);
 	fP_trans.push_back(fP);
-	sum2_trans.push_back(P.computeSum2());
+	if (ABS(Vxtrans[itrans]) < XMIPP_EQUAL_ACCURACY &&
+	    ABS(Vytrans[itrans]) < XMIPP_EQUAL_ACCURACY)
+	    Xi2 = P.computeSum2();
+	
 	if (do_mirror)
 	{
 	    fP = P.fourierTransformRings(true);
@@ -620,7 +620,7 @@ void Prog_MLPalign2D_prm::processOneImage(const ImageXmipp &img,
 					  double &opt_xoff, double &opt_yoff)
 {
 
-    vector<double>                      sum2_trans, refw, refw_mirror;
+    vector<double>                      refw, refw_mirror;
     Matrix1D<double>                    ang,corr;
     vector< Polar< complex <double> > > fP_trans, fPm_trans;
     double                              A2, Xi2, A2_plus_Xi2;
@@ -638,7 +638,7 @@ void Prog_MLPalign2D_prm::processOneImage(const ImageXmipp &img,
     vector<double> weights;
 
     // Calculate all FT-rings for all translated images
-    calculateFtRingsAllTransImg(img,fP_trans,fPm_trans,sum2_trans,Ri,Ro);
+    calculateFtRingsAllTransImg(img,fP_trans,fPm_trans,Xi2,Ri,Ro);
 
     // Store actual offsets for pdf calculations
     img_xoffs.clear();
@@ -661,7 +661,6 @@ void Prog_MLPalign2D_prm::processOneImage(const ImageXmipp &img,
 	    // Search over all translations
 	    for (int itrans = 0; itrans < nr_trans; itrans++)
 	    {
-		Xi2 = sum2_trans[itrans];
 		A2_plus_Xi2 = 0.5 * (A2 + Xi2);
 		// A. Check straight image
 		// Search all in-plane rotations via convolution theorem
@@ -674,7 +673,7 @@ void Prog_MLPalign2D_prm::processOneImage(const ImageXmipp &img,
                     if (diff2 < mindiff2) mindiff2 = diff2;
 		    if (debug) 
 		    {
-			cout<<ang(ipsi)<<" "<<diff2<<" "<<A2_plus_Xi2<<" "<<Vxtrans[itrans]<<" "<<Vytrans[itrans]<<endl;
+			cout<<ang(ipsi)<<" "<<diff2<<" "<<A2_plus_Xi2<<" "<<diff2-A2_plus_Xi2<<" "<<A2<<" "<<Xi2<<" "<<Vxtrans[itrans]<<" "<<Vytrans[itrans]<<endl;
 		    }
 		}
 
