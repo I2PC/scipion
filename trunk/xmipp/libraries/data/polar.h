@@ -525,17 +525,12 @@ public:
 	int nsam, half_nsam_last;
 	int nring = last_ring - first_ring + 1;
 	double radius, twopi, dphi, phi; 
-	double xp, yp;
+	double xp, yp, minxp, maxxp, minyp, maxyp;
 
 	Matrix1D<T> Mring;
 	rings.clear();
 	ring_radius.clear();
 	mode = mode1;
-
-	// Check that no pixel falls outside the image
-	if ((int)ABS(xoff) + last_ring + 1 > XSIZE(M1)/4 || 
-	    (int)ABS(yoff) + last_ring + 1 > YSIZE(M1)/4)
-	    REPORT_ERROR(1,"polarCoordinatesGridding: last ring falls outside image");
 
 	if (mode == FULL_CIRCLES)
 	    twopi = 2.*PI;
@@ -547,20 +542,23 @@ public:
 	// Determine angular sampling of the last ring in degrees
 	// Use half_sam_last to always have even number of sample
 	// points (which is convenient for Half2Whole of FTs)
-	
 	if (psi_step < 0.)
 	    // Oversample twice
 	    half_nsam_last = (int)( twopi * (double)last_ring );
-	    // Do no longer oversample twice ...
-	    // half_nsam_last = (int)( 0.5 * twopi * (double)last_ring );
 	else 
 	    // User-defined sampling
 	    half_nsam_last = (int)( 0.5 * twopi / DEG2RAD(psi_step) );
 
+	// Take 2x oversize M1 dims into account for calculating the limits 
+	minxp = FIRST_XMIPP_INDEX(XSIZE(M1)/2);
+	minyp = FIRST_XMIPP_INDEX(YSIZE(M1)/2);
+	maxxp = LAST_XMIPP_INDEX(XSIZE(M1)/2);
+	maxyp = LAST_XMIPP_INDEX(YSIZE(M1)/2);
+
+	// Loop over all polar coordinates
 	for (int iring = first_ring; iring <= last_ring; iring+= ring_step)
 	{
 	    radius = (double) iring;
-
 	    if (const_sam)
 		nsam = 2 * half_nsam_last;
 	    else
@@ -570,13 +568,24 @@ public:
 	    Mring.resize(nsam);
 	    for (int iphi = 0; iphi < nsam; iphi++)
 	    {
-		// polar coordinates
+		// from polar to original cartesian coordinates
 		phi = iphi * dphi;
 		xp = sin(phi) * radius;
 		yp = cos(phi) * radius;
+
 		// Origin offsets
 		xp += xoff;
 		yp += yoff; 
+
+		// Wrap coordinates
+                if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
+                    xp > maxxp + XMIPP_EQUAL_ACCURACY)
+                    xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
+                if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
+                    yp > maxyp + XMIPP_EQUAL_ACCURACY)
+                    yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
+
+		// Perform the convolution interpolation
 		Mring(iphi) = (T) interpolatedElementGridding(M1,xp,yp,kb);
 	    }
 	    rings.push_back(Mring);
