@@ -207,7 +207,8 @@ elif (ARGUMENTS['mode'] == 'compile'):
 
     # debug?
     if int(env['debug']):
-        env.Append(CXXFLAGS = ['-g'])
+        env.Append(CXXFLAGS = ['-g -pg'])
+        env.Append(LINKFLAGS = ['-pg'])
     
         if int(env['strip']):
             print '* WARNING: Debugging is impossible if strip is used.' \
