@@ -279,6 +279,8 @@ double correlation_index(const Matrix1D< T >& x, const Matrix1D< T >& y)
 
     x.computeStats(mean_x, stddev_x, dummy, dummy);
     y.computeStats(mean_y, stddev_y, dummy, dummy);
+    if (ABS(stddev_x)<XMIPP_EQUAL_ACCURACY ||
+        ABS(stddev_y)<XMIPP_EQUAL_ACCURACY) return 0;
 
     FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX1D(x, y)
     {
@@ -321,6 +323,8 @@ double correlation_index(const Matrix2D< T >& x,
         computeStats_within_binary_mask(*mask, y, dummy, dummy, mean_y,
                                          stddev_y);
     }
+    if (ABS(stddev_x)<XMIPP_EQUAL_ACCURACY ||
+        ABS(stddev_y)<XMIPP_EQUAL_ACCURACY) return 0;
 
     // If contributions are desired. Please, be careful interpreting individual
     // contributions to the covariance! One pixel value afect others.
@@ -393,6 +397,8 @@ double correlation_index(const Matrix3D< T >& x,
         computeStats_within_binary_mask(*mask, y, dummy, dummy, mean_y,
                                          stddev_y);
     }
+    if (ABS(stddev_x)<XMIPP_EQUAL_ACCURACY ||
+        ABS(stddev_y)<XMIPP_EQUAL_ACCURACY) return 0;
 
     // If contributions are desired. Please, be careful interpreting individual
     // contributions to the covariance! One pixel value afect others.
