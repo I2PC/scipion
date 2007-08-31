@@ -531,13 +531,10 @@ void Adjust_CTF_Parameters::read(const FileName &fn_param)
 
     ctfmodelSize = textToInteger(getParameter(fh_param, "ctfmodelSize", 0, "128"));
 
-    adjust.resize(ALL_CTF_PARAMETERS);
     initial_ctfmodel.enable_CTF = initial_ctfmodel.enable_CTFnoise = true;
     if (fn_similar_model == "") initial_ctfmodel.read(fn_param, false);
     else                      initial_ctfmodel.read(fn_similar_model, false);
     Tm = initial_ctfmodel.Tm;
-    assign_parameters_from_CTF(initial_ctfmodel, VEC_ARRAY(adjust), 0,
-                               ALL_CTF_PARAMETERS, true);
 
     // Enhance parameters
     string default_f1, default_f2;
@@ -631,8 +628,12 @@ void Adjust_CTF_Parameters::Usage()
 /* Produce side information ------------------------------------------------ */
 void Adjust_CTF_Parameters::produce_side_info()
 {
+    adjust.resize(ALL_CTF_PARAMETERS);
+    assign_parameters_from_CTF(initial_ctfmodel, VEC_ARRAY(adjust), 0,
+                               ALL_CTF_PARAMETERS, true);
+
     // Read the CTF file, supposed to be the uncentered squared amplitudes
-    ctftomodel.read(fn_psd);
+    if (fn_psd!="") ctftomodel.read(fn_psd);
     f = &(ctftomodel());
 
     // Resize the frequency
@@ -2004,7 +2005,8 @@ void estimate_defoci()
 
 /* Main routine ------------------------------------------------------------ */
 //#define DEBUG
-double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, bool standalone)
+double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, XmippCTF &output_ctfmodel,
+    bool standalone)
 {
     global_prm = &prm;
     if (standalone || prm.show_optimization) prm.show();
@@ -2179,10 +2181,14 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, bool standalone)
     /************************************************************************
       STEP 12:  Produce output
     /************************************************************************/
-    FileName fn_root = prm.fn_psd.without_extension();
-    global_action = 6;
-    save_intermediate_results(fn_root, false);
-    global_ctfmodel.write(fn_root + ".ctfparam");
+    if (prm.fn_psd!="")
+    {
+        FileName fn_root = prm.fn_psd.without_extension();
+        global_action = 6;
+        save_intermediate_results(fn_root, false);
+        global_ctfmodel.write(fn_root + ".ctfparam");
+    }
+    output_ctfmodel=global_ctfmodel;
 
     return 0.0;
 }
