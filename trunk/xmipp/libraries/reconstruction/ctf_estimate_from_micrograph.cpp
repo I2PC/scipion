@@ -389,7 +389,9 @@ void Prog_assign_CTF_prm::process()
                 adjust_CTF_prm.fn_psd = piece_fn_root + ".psd";
                 if (!dont_adjust_CTF)
                 {
-                    double fitting_error = ROUT_Adjust_CTF(adjust_CTF_prm, false);
+                    XmippCTF ctfmodel;
+                    double fitting_error = ROUT_Adjust_CTF(adjust_CTF_prm,
+                        ctfmodel, false);
                     if (compute_at_particle)
                         OutputFile_ctf << piece_fn << " "
 			               << piece_fn_root+".psd\n";
@@ -415,7 +417,9 @@ void Prog_assign_CTF_prm::process()
             // Estimate the CTF parameters
             cerr << "Adjusting CTF model to the PSD ...\n";
             adjust_CTF_prm.fn_psd = fn_avg;
-            double fitting_error = ROUT_Adjust_CTF(adjust_CTF_prm, false);
+            XmippCTF ctfmodel;
+            double fitting_error = ROUT_Adjust_CTF(adjust_CTF_prm,
+                ctfmodel, false);
         }
     }
 
