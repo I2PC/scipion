@@ -72,6 +72,17 @@ WbpThreshold=0.02
 """
 WbpAdditionalParams=""
 #------------------------------------------------------------------------------------------------
+# {section} Low-pass filter reconstructions
+#------------------------------------------------------------------------------------------------
+# Low-pass filter the reconstructed volumes?
+""" Filtering may be useful to remove noise, especially when few particles contribute to the reconstruction.
+"""
+DoLowPassFilter=True
+# Resolution of the low-pass filter (in Angstroms):
+LowPassFilter=50
+# Pixel size (in Angstroms):
+PixelSize=5.6
+#------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
 """ This variable serves only for GUI-assisted visualization of the results
 """
@@ -102,7 +113,10 @@ class RCT_class:
                  ArtAdditionalParams,
                  DoWbpReconstruct,
                  WbpThreshold,
-                 WbpAdditionalParams):
+                 WbpAdditionalParams,
+                 DoLowPassFilter,
+                 LowPassFilter,
+                 PixelSize):
 	     
         import os,sys,shutil
         scriptdir=os.path.expanduser('~')+'/scripts/'
@@ -121,7 +135,9 @@ class RCT_class:
         self.ArtAdditionalParams=ArtAdditionalParams
         self.WbpThreshold=WbpThreshold
         self.WbpAdditionalParams=WbpAdditionalParams
-
+        self.LowPassFilter=LowPassFilter
+        self.PixelSize=PixelSize
+        
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
                                      LogDir,
@@ -157,10 +173,10 @@ class RCT_class:
         self.set_headers_tilted()
 
         if (DoArtReconstruct):
-            self.execute_art()
+            self.execute_art(DoLowPassFilter)
 
         if (DoWbpReconstruct):
-            self.execute_wbp()
+            self.execute_wbp(DoLowPassFilter)
 
         # Return to parent dir
         os.chdir(os.pardir)
@@ -294,8 +310,17 @@ class RCT_class:
             print '* ',command
             self.log.info(command)
             os.system(command)
+            if (do_filter):
+                filname=outname.replace('.vol','_filtered.vol')
+                command='xmipp_fourier_filter -o ' + filname + \
+                 ' -i ' + outname  + \
+                 ' -sampling ' + str(self.PixelSize) + \
+                 ' -low_pass ' + str(self.LowPassFilter)
+                print '* ',command
+                self.log.info(command)
+                os.system(command)
 
-    def execute_wbp(self):
+    def execute_wbp(self, do_filter):
         import os
         for ref in self.untiltclasslist:
             til_selfile=self.untiltclasslist[ref][2]
@@ -310,6 +335,16 @@ class RCT_class:
             print '* ',command
             self.log.info(command)
             os.system(command)
+            if (do_filter):
+                filname=outname.replace('.vol','_filtered.vol')
+                command='xmipp_fourier_filter -o ' + filname + \
+                 ' -i ' + outname  + \
+                 ' -sampling ' + str(self.PixelSize) + \
+                 ' -low_pass ' + str(self.LowPassFilter)
+                print '* ',command
+                self.log.info(command)
+                os.system(command)
+
 
     def close(self):
         message='Done!'

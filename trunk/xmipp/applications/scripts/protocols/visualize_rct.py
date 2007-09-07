@@ -39,6 +39,10 @@ VisualizeTiltedImages=True
 VisualizeArtVols=True
 # Visualize WBP reconstructions?
 VisualizeWbpVols=True
+# Visualize filtered ART reconstructions?
+VisualizeFilteredArtVols=True
+# Visualize filtered WBP reconstructions?
+VisualizeFilteredWbpVols=True
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
@@ -61,6 +65,8 @@ class visualize_RCT_class:
                  VisualizeTiltedImages,
                  VisualizeArtVols,
                  VisualizeWbpVols,
+                 VisualizeFilteredArtVols,
+                 VisualizeFilteredWbpVols,
                  ProtocolName):
 	     
         import os,sys,shutil
@@ -97,6 +103,12 @@ class visualize_RCT_class:
 
             if VisualizeWbpVols:
                 ShowVolumes.append('wbp_'+basename+'_tilted.vol')
+
+            if VisualizeFilteredArtVols:
+                ShowVolumes.append('art_'+basename+'_tilted_filtered.vol')
+
+            if VisualizeFilteredWbpVols:
+                ShowVolumes.append('wbp_'+basename+'_tilted_filtered.vol')
 
         visualization.visualize_volumes(ShowVolumes,
                                         VisualizeVolZ,
