@@ -31,6 +31,73 @@
 
 void Usage(const Mask_Params &m);
 
+// Alignment parameters needed by fitness ----------------------------------
+class AlignParams
+{
+    public:
+#define COVARIANCE       1
+#define LEAST_SQUARES    2
+       int alignment_method;
+       
+       VolumeXmipp V1;
+       VolumeXmipp V2;
+       VolumeXmipp Vaux;
+       const Matrix3D<int> *mask_ptr;
+};
+
+// Global parameters needed by fitness ------------------------------------
+AlignParams prm;
+
+// Apply transformation ---------------------------------------------------
+void applyTransformation(const Matrix3D<double> &V2, Matrix3D<double> &Vaux,
+   double *p) 
+{
+    Matrix1D<double> r(3);
+    Matrix2D<double> A;
+
+    double grey  = p[0];
+    double rot   = p[1];
+    double tilt  = p[2];
+    double psi   = p[3];
+    double scale = p[4];
+    ZZ(r)        = p[5];
+    YY(r)        = p[6];
+    XX(r)        = p[7];
+
+    Euler_angles2matrix(rot, tilt, psi, A);
+    A.resize(4, 4);
+    A(3, 3) = 1;
+    A = A * translation3DMatrix(r);
+    A = A * scale3DMatrix(vectorR3(scale, scale, scale));
+    
+    applyGeometryBSpline(Vaux, A, V2, 3, IS_NOT_INV, WRAP);
+    Vaux*=grey;
+}
+
+// Fitness between two volumes --------------------------------------------
+double fitness(double *p) 
+{
+    applyTransformation(prm.V2(),prm.Vaux(),p);
+
+    // Correlate
+    double fit;
+    switch (prm.alignment_method)
+    {
+    case (COVARIANCE):
+    	fit = -correlation_index(prm.V1(), prm.Vaux(), prm.mask_ptr);
+        break;
+    case (LEAST_SQUARES):
+        fit = rms(prm.V1(), prm.Vaux(), prm.mask_ptr);
+        break;
+    }
+    return fit;
+}
+
+double wrapperFitness(double *p)
+{
+    return fitness(p+1);
+}
+
 int main(int argc, char **argv)
 {
     FileName fn1, fn2;
@@ -41,16 +108,9 @@ int main(int argc, char **argv)
     double   grey_scale0, grey_scaleF, step_grey;
     int      tell;
     bool     apply;
-    Mask_Params mask(INT_MASK);
     bool     mask_enabled, mean_in_mask;
-
-#define COVARIANCE       1
-#define LEAST_SQUARES    2
-    int alignment_method;
-
-#define MINIMUM          1
-#define MAXIMUM          2
-    int optimize_criterion;
+    bool     usePowell;
+    Mask_Params mask(INT_MASK);
 
     // Get parameters =======================================================
     try
@@ -72,36 +132,35 @@ int main(int argc, char **argv)
         if (mask_enabled)
             mask.read(argc, argv);
 
-        if (step_rot  == 0) step_rot  = 1;
-        if (step_tilt == 0) step_tilt = 1;
-        if (step_psi  == 0) step_psi  = 1;
+	usePowell = checkParameter(argc, argv, "-local");
+
+        if (step_rot   == 0) step_rot	= 1;
+        if (step_tilt  == 0) step_tilt  = 1;
+        if (step_psi   == 0) step_psi	= 1;
         if (step_scale == 0) step_scale = 1;
-        if (step_grey == 0) step_grey = 1;
-        if (step_z    == 0) step_z    = 1;
-        if (step_y    == 0) step_y    = 1;
-        if (step_x    == 0) step_x    = 1;
+        if (step_grey  == 0) step_grey  = 1;
+        if (step_z     == 0) step_z	= 1;
+        if (step_y     == 0) step_y	= 1;
+        if (step_x     == 0) step_x	= 1;
         tell = checkParameter(argc, argv, "-show_fit");
         apply = checkParameter(argc, argv, "-apply");
 
         if (checkParameter(argc, argv, "-covariance"))
         {
-            alignment_method = COVARIANCE;
-            optimize_criterion = MAXIMUM;
+            prm.alignment_method = COVARIANCE;
         }
         else if (checkParameter(argc, argv, "-least_squares"))
         {
-            alignment_method = LEAST_SQUARES;
-            optimize_criterion = MINIMUM;
+            prm.alignment_method = LEAST_SQUARES;
         }
         else
         {
-            alignment_method = COVARIANCE;
-            optimize_criterion = MAXIMUM;
+            prm.alignment_method = COVARIANCE;
         }
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE << std::endl;
         Usage(mask);
         exit(1);
     }
@@ -110,297 +169,159 @@ int main(int argc, char **argv)
     //#define DEBUG
     try
     {
-        VolumeXmipp V1(fn1);
-        V1().setXmippOrigin();
-        VolumeXmipp V2(fn2);
-        V2().setXmippOrigin();
-        double mean_1 = V1().compute_avg();
-        double mean_2 = V2().compute_avg();
-        Matrix3D<double> *V, Vaux;
-        Matrix1D<double> r(3), sc(3);
-        Matrix2D<double> A;
+        prm.V1.read(fn1);
+        prm.V1().setXmippOrigin();
+        prm.V2.read(fn2);
+        prm.V2().setXmippOrigin();
 
         // Initialize best_fit
-        double best_rot, best_tilt, best_psi;
-        double best_sc, best_grey, best_fit, fit;
-        Matrix1D<double> best_r(3);
+        double best_fit;
+        Matrix1D<double> best_align(8);
         bool first = true;
 
         // Generate mask
-        const Matrix3D<int> *mask_ptr;
         if (mask_enabled)
         {
-            mask.generate_3Dmask(V1());
-            mask_ptr = &(mask.get_binary_mask3D());
+            mask.generate_3Dmask(prm.V1());
+            prm.mask_ptr = &(mask.get_binary_mask3D());
         }
-        else mask_ptr = NULL;
+        else prm.mask_ptr = NULL;
 
-        // Count number of iterations
-        int times = 1;
-        if (!tell)
-        {
-            if (grey_scale0 != grey_scaleF)
-                times *= FLOOR(1 + (grey_scaleF - grey_scale0) / step_grey);
-            if (rot0 != rotF) times *= FLOOR(1 + (rotF - rot0) / step_rot);
-            if (tilt0 != tiltF) times *= FLOOR(1 + (tiltF - tilt0) / step_tilt);
-            if (psi0 != psiF) times *= FLOOR(1 + (psiF - psi0) / step_psi);
-            if (scale0 != scaleF) times *= FLOOR(1 + (scaleF - scale0) / step_scale);
-            if (z0 != zF) times *= FLOOR(1 + (zF - z0) / step_z);
-            if (y0 != yF) times *= FLOOR(1 + (yF - y0) / step_y);
-            if (x0 != xF) times *= FLOOR(1 + (xF - x0) / step_x);
-            init_progress_bar(times);
-        }
-        else
-            cout << "#Scale Z Y X rot tilt psi grey_factor fitness\n";
+        // Exhaustive search
+    	if (!usePowell)
+	{
+            // Count number of iterations
+            int times = 1;
+            if (!tell)
+            {
+        	if (grey_scale0 != grey_scaleF)
+                    times *= FLOOR(1 + (grey_scaleF - grey_scale0) / step_grey);
+        	if (rot0 != rotF) times *= FLOOR(1 + (rotF - rot0) / step_rot);
+        	if (tilt0 != tiltF) times *= FLOOR(1 + (tiltF - tilt0) / step_tilt);
+        	if (psi0 != psiF) times *= FLOOR(1 + (psiF - psi0) / step_psi);
+        	if (scale0 != scaleF) times *= FLOOR(1 + (scaleF - scale0) / step_scale);
+        	if (z0 != zF) times *= FLOOR(1 + (zF - z0) / step_z);
+        	if (y0 != yF) times *= FLOOR(1 + (yF - y0) / step_y);
+        	if (x0 != xF) times *= FLOOR(1 + (xF - x0) / step_x);
+        	init_progress_bar(times);
+            }
+            else
+        	std::cout << "#grey_factor rot tilt psi scale z y x fitness\n";
 
-        // Iterate
-        int itime = 0;
-        int step_time = CEIL((double)times / 60.0);
-        for (double grey = grey_scale0; grey <= grey_scaleF ; grey += step_grey)
-            for (double rot = rot0; rot <= rotF ; rot += step_rot)
-                for (double tilt = tilt0; tilt <= tiltF ; tilt += step_tilt)
-                    for (double psi = psi0; psi <= psiF ; psi += step_psi)
-                        for (XX(sc) = scale0; XX(sc) <= scaleF ; XX(sc) += step_scale)
-                            for (ZZ(r) = z0; ZZ(r) <= zF ; ZZ(r) += step_z)
-                                for (YY(r) = y0; YY(r) <= yF ; YY(r) += step_y)
-                                    for (XX(r) = x0; XX(r) <= xF ; XX(r) += step_x)
-                                    {
-                                        // Rotate?
-                                        if (rot != 0 || tilt != 0 || psi != 0)
-                                        {
-                                            Euler_angles2matrix(rot, tilt, psi, A);
-                                            A.resize(4, 4);
-                                            A(3, 3) = 1;
-                                        }
-                                        else A.initIdentity(4);
+            // Iterate
+            int itime = 0;
+            int step_time = CEIL((double)times / 60.0);
+	    Matrix1D<double> r(3);
+            for (double grey = grey_scale0; grey <= grey_scaleF ; grey += step_grey)
+        	for (double rot = rot0; rot <= rotF ; rot += step_rot)
+                    for (double tilt = tilt0; tilt <= tiltF ; tilt += step_tilt)
+                	for (double psi = psi0; psi <= psiF ; psi += step_psi)
+                            for (double scale = scale0; scale <= scaleF ; scale += step_scale)
+                        	for (ZZ(r) = z0; ZZ(r) <= zF ; ZZ(r) += step_z)
+                                    for (YY(r) = y0; YY(r) <= yF ; YY(r) += step_y)
+                                	for (XX(r) = x0; XX(r) <= xF ; XX(r) += step_x)
+                                	{
+					    // Form trial vector
+					    Matrix1D<double> trial(8);
+					    trial(0) = grey;
+					    trial(1) = rot;
+					    trial(2) = tilt;
+					    trial(3) = psi;
+					    trial(4) = scale;
+					    trial(5) = ZZ(r);
+					    trial(6) = YY(r);
+					    trial(7) = XX(r);
+					    
+					    // Evaluate
+					    double fit =
+					       fitness(MULTIDIM_ARRAY(trial));
 
-                                        // Translate?
-                                        if (XX(r) != 0 || YY(r) != 0 || ZZ(r) != 0)
-                                            A = A * translation3DMatrix(r);
-
-                                        // Scale?
-                                        if (XX(sc) != 1)
-                                        {
-                                            YY(sc) = ZZ(sc) = XX(sc);
-                                            A = A * scale3DMatrix(sc);
-                                        }
-
-                                        // Apply geometrical transformation
-                                        if (!A.isIdentity())
-                                        {
-                                            applyGeometryBSpline(Vaux, A, V2(), 3, IS_NOT_INV, WRAP);
-                                            V = &Vaux;
-                                        }
-                                        else V = &(V2());
-
-                                        // Scale grey level?
-                                        if (grey != 1)
-                                        {
-                                            if (V == &Vaux) Vaux *= grey;
-                                            else
+                                            // The best?
+                                            if (fit < best_fit || first)
                                             {
-                                                array_by_scalar(V2(), grey, Vaux, '*');
-                                                V = &Vaux;
+                                        	best_fit = fit;
+						best_align = trial;
+                                        	first = false;
                                             }
-                                            mean_2 = Vaux.compute_avg();
-                                        }
 
-                                        // Only within mask?
-                                        if (mean_in_mask && mask_enabled)
-                                        {
-                                            double dummy;
-                                            computeStats_within_binary_mask(*mask_ptr,
-                                                                             *V, dummy, dummy, mean_2, dummy);
-                                            computeStats_within_binary_mask(*mask_ptr,
-                                                                             V1(), dummy, dummy, mean_1, dummy);
-                                        }
+                                            // Show fit
+                                            if (tell)
+                                        	std::cout << trial.transpose()
+                                        	          << fit << std::endl;
+                                            else
+                                        	if (++itime % step_time == 0)
+						    progress_bar(itime);
+                                	}
+            if (!tell) progress_bar(times);
+	}
+	else
+	{
+	    // Use Powell optimization
+	    Matrix1D<double> x(8), steps(8);
+	    double fitness;
+	    int iter;
+	    steps.init_constant(1);
+	    x(0)=(grey_scale0+grey_scaleF)/2;
+	    x(1)=(rot0+rotF)/2;
+	    x(2)=(tilt0+tiltF)/2;
+	    x(3)=(psi0+psiF)/2;
+	    x(4)=(scale0+scaleF)/2;
+	    x(5)=(z0+zF)/2;
+	    x(6)=(y0+yF)/2;
+	    x(7)=(x0+xF)/2;
+	    
+	    powellOptimizer(x,1,8,&wrapperFitness,0.01,fitness,iter,steps,true);
+	    best_align=x;
+	}
 
-                                        // Correlate
-                                        switch (alignment_method)
-                                        {
-                                        case (COVARIANCE):
-                                                        fit = correlation_index(V1(), *V, mask_ptr);
-                                            break;
-                                        case (LEAST_SQUARES):
-                                                        fit = rms(V1(), *V, mask_ptr);
-                                            break;
-                                        }
-#ifdef DEBUG
-                                        VolumeXmipp save;
-                                        save() = *V;
-                                        save.write("PPPV.vol");
-                                        char c;
-                                        cout << "Press any key\n";
-                                        cin >> c;
-#endif
-
-                                        // The best?
-                                        if ((fit > best_fit && optimize_criterion == MAXIMUM) ||
-                                            (fit < best_fit && optimize_criterion == MINIMUM) ||
-                                            first)
-                                {
-                                            best_fit = fit;
-                                            best_sc = XX(sc);
-                                            best_r = r;
-                                            best_rot = rot;
-                                            best_tilt = tilt;
-                                            best_psi = psi;
-                                            best_grey = grey;
-                                            first = false;
-                                        }
-
-                                        // Show fit
-                                        if (tell)
-                                            cout << XX(sc) << " " << r.transpose() << " "
-                                            << rot << " " << tilt << " " << psi << " "
-                                            << grey << " "
-                                            << fit << endl;
-                                        else
-                                            if (++itime % step_time == 0) progress_bar(itime);
-                                    }
-        if (!tell) progress_bar(times);
         if (!first)
-            cout << "The best correlation is for\n"
-            << "Scale                  : " << best_sc << endl
-            << "Translation (X,Y,Z)    : " << best_r.transpose() << endl
-            << "Rotation (rot,tilt,psi): "
-            << best_rot << " " << best_tilt << " " << best_psi << endl
-            << "Best grey factor       : " << best_grey << endl
-            << "Fitness value          : " << best_fit << endl;
+            std:: cout << "The best correlation is for\n"
+                       << "Scale                  : " << best_align(4) << std::endl
+                       << "Translation (X,Y,Z)    : " << best_align(7)
+		       << " " << best_align(6) << " " << best_align(5)
+		       << std::endl
+            	       << "Rotation (rot,tilt,psi): "
+            	       << best_align(1) << " " << best_align(2) << " "
+		       << best_align(3) << std::endl
+            	       << "Best grey factor       : " << best_align(0) << std::endl
+            	       << "Fitness value          : " << best_fit << std::endl;
         if (apply)
         {
-            Euler_angles2matrix(best_rot, best_tilt, best_psi, A);
-            A.resize(4, 4);
-            A(3, 3) = 1;
-            A = A * translation3DMatrix(best_r);
-            A = A * scale3DMatrix(vectorR3(best_sc, best_sc, best_sc));
-            V2() *= best_grey;
-            applyGeometryBSpline(Vaux, A, V2(), 3, IS_NOT_INV, WRAP);
-            V2() = Vaux;
-            V2.write();
+	    applyTransformation(prm.V2(),prm.Vaux(),MULTIDIM_ARRAY(best_align));
+	    prm.V2()=prm.Vaux();
+            prm.V2.write();
         }
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE << std::endl;
+	return 1;
     }
+    return 0;
 }
 
 void Usage(const Mask_Params &m)
 {
-    cerr << "Purpose: Align two volumes varying orientation, position and scale\n";
-    cerr << "Usage: align3D [options]\n"
-    << "   -i1 <volume1>                           : the first volume to align\n"
-    << "   -i2 <volume2>                           : the second one\n"
-    << "  [-rot        <rot0>  <rotF>  <step_rot>  : in degrees\n"
-    << "  [-tilt       <tilt0> <tiltF> <step_tilt> : in degrees\n"
-    << "  [-psi        <psi0>  <psiF>  <step_psi>  : in degrees\n"
-    << "  [-scale      <sc0>   <scF>   <step_sc>   : size scale margin\n"
-    << "  [-grey_scale <sc0>   <scF>   <step_sc>   : grey scale margin\n"
-    << "  [-z          <z0>    <zF>    <step_z>    : Z position in pixels\n"
-    << "  [-y          <y0>    <yF>    <step_y>    : Y position in pixels\n"
-    << "  [-x          <x0>    <xF>    <step_x>    : X position in pixels\n"
-    << "  [-show_fit]                              : Show fitness values\n"
-    << "  [-apply]                                 : Apply best movement to -i2\n"
-    << "  [-mean_in_mask]                          : Use the means within the mask\n"
-    << "  [-covariance]                            : Covariance fitness criterion\n"
-    << "  [-least_squares]                         : LS fitness criterion\n"
+    std::cerr << "Purpose: Align two volumes varying orientation, position and scale\n"
+    	      << "Usage: align3D [options]\n"
+	      << "   -i1 <volume1>			     : the first volume to align\n"
+	      << "   -i2 <volume2>			     : the second one\n"
+	      << "  [-rot	 <rot0>  <rotF>  <step_rot>  : in degrees\n"
+	      << "  [-tilt	 <tilt0> <tiltF> <step_tilt> : in degrees\n"
+	      << "  [-psi	 <psi0>  <psiF>  <step_psi>  : in degrees\n"
+	      << "  [-scale	 <sc0>   <scF>   <step_sc>   : size scale margin\n"
+	      << "  [-grey_scale <sc0>   <scF>   <step_sc>   : grey scale margin\n"
+	      << "  [-z 	 <z0>	 <zF>	 <step_z>    : Z position in pixels\n"
+	      << "  [-y 	 <y0>	 <yF>	 <step_y>    : Y position in pixels\n"
+	      << "  [-x 	 <x0>	 <xF>	 <step_x>    : X position in pixels\n"
+	      << "  [-show_fit] 			     : Show fitness values\n"
+	      << "  [-apply]				     : Apply best movement to -i2\n"
+	      << "  [-mean_in_mask]			     : Use the means within the mask\n"
+	      << "  [-covariance]			     : Covariance fitness criterion\n"
+	      << "  [-least_squares]			     : LS fitness criterion\n"
+	      << "  [-local]                                 : Use local optimizer instead of\n"
+	      << "                                             exhaustive search\n"
     ;
     m.usage();
-    cout << endl;
+    std::cout << std::endl;
 }
-
-/* Menus ------------------------------------------------------------------- */
-/*Colimate:
-   PROGRAM Align3D {
-      url="http://www.cnb.uam.es/~bioinfo/NewXmipp/Applications/Src/Align3D/Help/align3D.html";
-      help="Align two volumes";
-      OPEN MENU menu_align3D;
-      COMMAND LINES {
- + usual: align3D -i1 $FILE1 -i2 $FILE2
-                       [-rot        $ROT0  $ROTF  $STEP_ROT]
-                       [-tilt       $TILT0 $TILTF $STEP_TILT]
-                       [-psi        $PSI0  $PSIF  $STEP_PSI]
-                       [-scale      $SC0   $SCF   $STEP_SC]
-                       [-grey_scale $GREY0 $GREYF $STEP_GREY]
-                       [-z          $Z0    $ZF    $STEP_Z]
-                       [-y          $Y0    $YF    $STEP_Y]
-                       [-x          $X0    $XF    $STEP_X]
-                       [-show_fit] [-apply] [-mean_in_mask]
-                       [$FIT_MEASURE]
-      }
-      PARAMETER DEFINITIONS {
-        $FILE1 {
-    label="Input file 1";
-    type=file existing;
- }
-        $FILE2 {
-    label="Input file 2";
-    type=file existing;
- }
-        OPT(-rot) {label="Rotational angle";}
-           $ROT0     {type=float; label="Initial"; by default=0;}
-           $ROTF     {type=float; label="Final"; by default=0;}
-           $STEP_ROT {type=float; label="Step"; by default=1;}
-        OPT(-tilt) {label="Tilting angle";}
-           $TILT0     {type=float; label="Initial"; by default=0;}
-           $TILTF     {type=float; label="Final"; by default=0;}
-           $STEP_TILT {type=float; label="Step"; by default=1;}
-        OPT(-psi) {label="In-plane rotational angle";}
-           $PSI0     {type=float; label="Initial"; by default=0;}
-           $PSIF     {type=float; label="Final"; by default=0;}
-           $STEP_PSI {type=float; label="Step"; by default=1;}
-        OPT(-scale) {label="Size scale";}
-           $SC0     {type=float; label="Initial"; by default=1;}
-           $SCF     {type=float; label="Final"; by default=1;}
-           $STEP_SC {type=float; label="Step"; by default=1;}
-        OPT(-grey_scale) {label="Grey scale";}
-           $GREY0     {type=float; label="Initial"; by default=1;}
-           $GREYF     {type=float; label="Final"; by default=1;}
-           $STEP_GREY {type=float; label="Step"; by default=1;}
-        OPT(-z) {label="Z position";}
-           $Z0     {type=float; label="Initial"; by default=0;}
-           $ZF     {type=float; label="Final"; by default=0;}
-           $STEP_Z {type=float; label="Step"; by default=1;}
-        OPT(-y) {label="Y position";}
-           $Y0     {type=float; label="Initial"; by default=0;}
-           $YF     {type=float; label="Final"; by default=0;}
-           $STEP_Y {type=float; label="Step"; by default=1;}
-        OPT(-x) {label="X position";}
-           $X0     {type=float; label="Initial"; by default=0;}
-           $XF     {type=float; label="Final"; by default=0;}
-           $STEP_X {type=float; label="Step"; by default=1;}
-        OPT(-show_fit) {label="Show fitness values";}
-        OPT(-apply) {label="Apply best fit to volume 2";}
-        OPT(-mean_in_mask) {label="use the mean within a mask for covariance";}
-        $FIT_MEASURE {
-           label="Fitness method";
-           type=Exclusion {
-              "Covariance" {-covariance}
-              "Least squares" {-least_squares}
-           };
-        }
-      }
-   }
-
-   MENU menu_align3D {
-      "I/O parameters"
-      $FILE1
-      $FILE2
-      OPT($FIT_MEASURE)
-      "Aligning parameters"
-      OPT(-rot)
-      OPT(-tilt)
-      OPT(-psi)
-      OPT(-scale)
-      OPT(-grey_scale)
-      OPT(-z)
-      OPT(-y)
-      OPT(-x)
-      "Miscellaneaous"
-      OPT(-show_fit)
-      OPT(-apply)
-      "Mask"
-      OPT(-mean_in_mask)
-   }
-*/
