@@ -1,6 +1,6 @@
 class ctfdat:
    """ handle ctfdat files
-       Authors: Carlos Oscar Sánchez Sorzano
+       Authors: Carlos Oscar Sanchez Sorzano
        May 2007
    """
 
