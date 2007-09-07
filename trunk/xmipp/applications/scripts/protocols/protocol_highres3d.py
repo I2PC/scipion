@@ -893,8 +893,7 @@ class HighRes3DClass:
              self.touchFile(self.symmetryFile)
 
        # Backup the protocol
-       print self.workDirectory
-       log.make_backup_of_script_file(self.projectDir+"/"+sys.argv[0],
+       log.make_backup_of_script_file(sys.argv[0],
                                       os.path.abspath(self.workDirectory))
 
    #------------------------------------------------------------------------
