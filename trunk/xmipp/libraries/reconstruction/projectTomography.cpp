@@ -215,7 +215,7 @@ int PROJECT_Tomography_Effectively_project(
         movements(4)=rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
         movements(5)=rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
         proj.set_eulerAngles(movements(0)+movements(3),
-	    movements(1)+movements(4),movements(5));
+	    movements(1)+movements(4),movements(2)+movements(5));
         IMGMATRIX(proj).add_noise(prm.Npixel_avg, prm.Npixel_dev, "gaussian");
 
         // Save ..............................................................
