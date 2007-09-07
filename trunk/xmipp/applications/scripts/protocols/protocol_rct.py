@@ -41,7 +41,12 @@ SelectClasses="1,2"
 #------------------------------------------------------------------------------------------------
 # {section} Prepare image headers
 #------------------------------------------------------------------------------------------------
-# Perform centering of the tilted particles?
+# Perform image preparation?
+""" This will make local copies of all images and generate corresponding selfiles.
+    It will also re-align the untilted and center the tilted particles, thereby preparing all headers for reconstruction
+"""
+DoImagePreparation=True
+# Center the tilted particles?
 DoCenterTilted=True
 # Maximum allowed shift for tilted particles (in pixels):
 """ Particles that shift more will be discarded
@@ -105,6 +110,7 @@ class RCT_class:
                  LogDir,
                  PreviousDirML2D,
                  SelectClasses,
+                 DoImagePreparation,
                  DoCenterTilted,
                  CenterMaxShift,
                  DoUseCosineStretching,
@@ -168,15 +174,22 @@ class RCT_class:
                                        os.path.abspath(self.WorkingDir))
         os.chdir(self.WorkingDir)
 
-        self.prepare_classes()
-        self.set_headers_untilted()
-        self.set_headers_tilted()
+        # Always prepare the library with all filenames
+        self.prepare_name_library()
+        
+        if (DoImagePreparation):
+            self.make_local_copies()
+            self.set_headers_untilted()
+            self.set_headers_tilted()
 
         if (DoArtReconstruct):
-            self.execute_art(DoLowPassFilter)
+            self.execute_art()
 
         if (DoWbpReconstruct):
-            self.execute_wbp(DoLowPassFilter)
+            self.execute_wbp()
+
+        if (DoLowPassFilter):
+            self.execute_filter()
 
         # Return to parent dir
         os.chdir(os.pardir)
@@ -184,8 +197,8 @@ class RCT_class:
 
     # Make a libray of untilted selfiles and averages for all selected classes
     # And make the corresponding tilted selfile
-    def prepare_classes(self):
-        import os,sys,glob,shutil
+    def prepare_name_library(self):
+        import os,sys,glob
         import selfile
         self.untiltclasslist={}
 
@@ -222,29 +235,46 @@ class RCT_class:
                 # Copy selfile and average image of ML2DDir to WorkingDir
                 unt_selfile=ml2d_abs_rootname+'_ref'+str(ref).zfill(5)+'.sel'
                 local_unt_selfile='rct_ref'+str(ref).zfill(5)+'_untilted.sel'
+                local_til_selfile='rct_ref'+str(ref).zfill(5)+'_tilted.sel'
                 refavg=lastitername+'_ref'+str(ref).zfill(5)+'.xmp'
                 local_refavg='rct_ref'+str(ref).zfill(5)+'_untilted_avg.xmp'
-                shutil.copy(unt_selfile,local_unt_selfile)
-                shutil.copy(refavg,local_refavg)
-                local_til_selfile=self.make_tilted_selfile(local_unt_selfile)
                 self.untiltclasslist[ref]=[local_unt_selfile,]
                 self.untiltclasslist[ref].append(local_refavg)
                 self.untiltclasslist[ref].append(local_til_selfile)
-                # Make a local copy of the images
-                message='Making a local copy of the images in '+local_unt_selfile+' and '+local_til_selfile
-                print '* ',message
-                self.log.info(message)
-                mysel=selfile.selfile()
-                mysel.read(local_unt_selfile)
-                newsel=mysel.copy_sel('local_untilted_images')
-                newsel.write(local_unt_selfile)
-                mysel.read(local_til_selfile)
-                newsel=mysel.copy_sel('local_tilted_images')
-                newsel.write(local_til_selfile)
-                 
+                self.untiltclasslist[ref].append(unt_selfile)
+                self.untiltclasslist[ref].append(refavg)
+
+    def make_local_copies(self):
+        import os,shutil
+        import selfile
+        # Loop over all selected untilted classes
+        for ref in self.untiltclasslist:
+            local_unt_selfile=self.untiltclasslist[ref][0]
+            local_refavg=self.untiltclasslist[ref][1]
+            local_til_selfile=self.untiltclasslist[ref][2]
+            unt_selfile=self.untiltclasslist[ref][3]
+            refavg=self.untiltclasslist[ref][4]
+            # Copy selfiles and average of untilted images
+            shutil.copy(unt_selfile,local_unt_selfile)
+            shutil.copy(refavg,local_refavg)
+            # Generate corresponding tilted selfile
+            self.make_tilted_selfile(local_unt_selfile,local_til_selfile)
+            # Make a local copy of the images
+            message='Making a local copy of the images in '+local_unt_selfile+' and '+local_til_selfile
+            print '* ',message
+            self.log.info(message)
+            mysel=selfile.selfile()
+            mysel.read(local_unt_selfile)
+            newsel=mysel.copy_sel('local_untilted_images')
+            newsel.write(local_unt_selfile)
+            mysel.read(local_til_selfile)
+            newsel=mysel.copy_sel('local_tilted_images')
+            newsel.write(local_til_selfile)
+ 
+            
     # This routine makes the corresponding selfile of the subset with tilted images
     # using the subset selfile of untilted images, and the original UntiltedSelFile & TiltedSelFile
-    def make_tilted_selfile(self,name_unt_sel):
+    def make_tilted_selfile(self,name_unt_sel,name_til_sel):
         import selfile
         unt=selfile.selfile()
         pat1=selfile.selfile()
@@ -253,9 +283,7 @@ class RCT_class:
         pat2.read(self.TiltedSelFile)
         unt.read(name_unt_sel)
         til=unt.make_corresponding_subset(pat1,pat2)
-        name_til_sel=name_unt_sel.replace('_untilted.sel','_tilted.sel')
         til.write(name_til_sel)
-        return name_til_sel
         
     def set_headers_untilted(self):
         import os
@@ -310,17 +338,8 @@ class RCT_class:
             print '* ',command
             self.log.info(command)
             os.system(command)
-            if (do_filter):
-                filname=outname.replace('.vol','_filtered.vol')
-                command='xmipp_fourier_filter -o ' + filname + \
-                 ' -i ' + outname  + \
-                 ' -sampling ' + str(self.PixelSize) + \
-                 ' -low_pass ' + str(self.LowPassFilter)
-                print '* ',command
-                self.log.info(command)
-                os.system(command)
 
-    def execute_wbp(self, do_filter):
+    def execute_wbp(self):
         import os
         for ref in self.untiltclasslist:
             til_selfile=self.untiltclasslist[ref][2]
@@ -335,16 +354,32 @@ class RCT_class:
             print '* ',command
             self.log.info(command)
             os.system(command)
-            if (do_filter):
-                filname=outname.replace('.vol','_filtered.vol')
+
+    def execute_filter(self):
+        import os
+        for ref in self.untiltclasslist:
+            til_selfile=self.untiltclasslist[ref][2]
+            volname=til_selfile.replace('.sel','.vol')
+            wbpname='wbp_'+volname
+            artname='art_'+volname
+            if os.path.exists(wbpname):
+                filname=wbpname.replace('.vol','_filtered.vol')
                 command='xmipp_fourier_filter -o ' + filname + \
-                 ' -i ' + outname  + \
+                 ' -i ' + wbpname  + \
                  ' -sampling ' + str(self.PixelSize) + \
                  ' -low_pass ' + str(self.LowPassFilter)
                 print '* ',command
                 self.log.info(command)
                 os.system(command)
-
+            if os.path.exists(artname):
+                filname=wbpname.replace('.vol','_filtered.vol')
+                command='xmipp_fourier_filter -o ' + filname + \
+                 ' -i ' + artname  + \
+                 ' -sampling ' + str(self.PixelSize) + \
+                 ' -low_pass ' + str(self.LowPassFilter)
+                print '* ',command
+                self.log.info(command)
+                os.system(command)
 
     def close(self):
         message='Done!'
@@ -365,6 +400,7 @@ if __name__ == '__main__':
                   LogDir,
                   PreviousDirML2D,
                   SelectClasses,
+                  DoImagePreparation,
                   DoCenterTilted,
                   CenterMaxShift,
                   DoUseCosineStretching,
@@ -373,7 +409,10 @@ if __name__ == '__main__':
                   ArtAdditionalParams,
                   DoWbpReconstruct,
                   WbpThreshold,
-                  WbpAdditionalParams)
+                  WbpAdditionalParams,
+                  DoLowPassFilter,
+                  LowPassFilter,
+                  PixelSize)
 
     # close 
     RCT.close()

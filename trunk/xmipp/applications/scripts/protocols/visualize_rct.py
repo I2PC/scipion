@@ -161,5 +161,7 @@ if __name__ == '__main__':
                                       VisualizeTiltedImages,
                                       VisualizeArtVols,
                                       VisualizeWbpVols,
+                                      VisualizeFilteredArtVols,
+                                      VisualizeFilteredWbpVols,
                                       ProtocolName)
     visualize_RCT.close()
