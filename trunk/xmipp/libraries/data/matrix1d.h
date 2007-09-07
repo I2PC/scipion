@@ -1714,6 +1714,18 @@ void sortTwoVectors(vT& v1, vT& v2)
   * examples above).
   *
   * The option show forces the routine to show the convergence path
+  *
+  * Example of use:
+  *
+  * @code
+  * Matrix1D<double> x(8), steps(8);
+  * double fitness;
+  * int iter;
+  * steps.init_constant(1);
+  * x,init_zeros();
+  * powellOptimizer(x,1,8,&wrapperFitness,0.01,fitness,iter,steps,true);
+  * @endcode
+  *
   */
 void powellOptimizer(Matrix1D< double >& p,
                      int i0, int n,
