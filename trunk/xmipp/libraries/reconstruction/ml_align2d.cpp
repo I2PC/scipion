@@ -28,7 +28,7 @@
 void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
 {
 
-    // This flag is set with scripts, so that for the user the
+   // This flag is set with scripts, so that for the user the
     // mlf_align2d and the ml_align2d are distinct programs
     fourier_mode = checkParameter(argc, argv, "-MLF");
 
@@ -141,7 +141,7 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     // Fourier mode specific stuff
     if (fourier_mode)
     {
-        fn_ctf = getParameter(argc, argv, "-ctfs","");
+        fn_ctfdat = getParameter(argc, argv, "-ctfdat","");
         fn_root = getParameter(argc, argv, "-o", "mlf2d");
         search_shift = textToFloat(getParameter(argc, argv, "-search_shift", "3"));
         lowres_limit = textToInteger(getParameter(argc, argv, "-low", "0"));
@@ -149,7 +149,6 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
         phase_flipped = !checkParameter(argc, argv, "-not_phase_flipped");
         reduce_snr = textToFloat(getParameter(argc, argv, "-reduce_snr", "1"));
         first_iter_noctf = checkParameter(argc, argv, "-ctf_affected_refs");
-        increase_highres_limit = textToInteger(getParameter(argc, argv, "-increase_highres", "5"));
         if (reduce_snr > 1.)
         {
             cerr << "WARNING%% With reduce_snr>1 you may overfit the noise!" << endl;
@@ -215,11 +214,11 @@ void Prog_MLalign2D_prm::show(bool ML3D)
             cerr << "  Initial model fractions : " << fn_frac << endl;
         if (fourier_mode)
         {
-            cerr << "  -> Use a coloured noise model " << endl;
-            if (fn_ctf=="")
-                cerr << "    + Ignoring CTF-effects! (provide -ctfs to include these)"<<endl;
-	    else
-		cerr << "    + Correcting for CTF-effects. "<<endl;
+            cerr << "  -> Use a coloured noise model and CTF correction" << endl;
+	    FOR_ALL_DEFOCUS_GROUPS()
+	    {
+		cerr << "    + defocus group "<<ifocus+1<<" contains "<<count_defocus[ifocus]<<" images"<<endl;
+	    }
             if (reduce_snr < 1.)
                 cerr << "    + Multiply estimated SNR by " << reduce_snr << endl;
         }
@@ -289,8 +288,8 @@ void Prog_MLalign2D_prm::usage()
 void Prog_MLalign2D_prm::MLF_usage()
 {
     cerr << "Usage:  mlf_align2d [options] " << endl;
-    cerr << "   -i <selfile>                : Selfile of selfiles with input images per defocus group \n";
-    cerr << "   -ctfs <selfile>             : Selfile of CTF parameters files for each defocus group \n";
+    cerr << "   -i <selfile>                : Selfile with all input images \n";
+    cerr << "   -ctfdat <ctfdatfile>        : Two-column ASCII file with filenames and CTF parameter files of all images \n";
     cerr << "   -ref <selfile/image>        : Selfile with initial references/single reference image \n";
     cerr << "      OR -nref <int>               OR number of references to generate automatically (bias-free)\n";
     cerr << " [ -o <rootname> ]             : Output rootname (default = \"mlf2d\")\n";
@@ -354,48 +353,8 @@ void Prog_MLalign2D_prm::produce_Side_info()
     double                      av, psi, aux, Q0;
     int                         im, jm;
 
-
     // Read selfile with experimental images
-    if (!fourier_mode)
-    {
-        SF.read(fn_sel);
-    }
-    else
-    {
-        // For fourier_mode: convert input selfile of selfiles
-        // and fill count_defocus vectors
-        SF.clear();
-        count_defocus.clear();
-        SFtmp.read(fn_sel);
-        SFtmp.go_beginning();
-        if (Is_ImageXmipp(SFtmp.NextImg()))
-        {
-            nr_focus = 1;
-            count_defocus.push_back(SFtmp.ImgNo());
-            SF = SFtmp;
-        }
-        else
-        {
-            nr_focus = SFtmp.ImgNo();
-            count_defocus.resize(nr_focus);
-            SFtmp.go_beginning();
-            FOR_ALL_DEFOCUS_GROUPS()
-            {
-                SFpart.read(SFtmp.NextImg());
-                count_defocus[ifocus] = SFpart.ImgNo();
-                if (count_defocus[ifocus] < 50 && verb > 0)
-                    cerr << "WARNING%% CTF group " << ifocus + 1 << " contains less than 50 images!" << endl;
-                SFpart.go_beginning();
-                while (!SFpart.eof())
-                {
-                    SFpart.get_current(SL);
-                    SL.set_number(ifocus + 1);
-                    SF.insert(SL);
-                    SFpart.NextImg();
-                }
-            }
-        }
-    }
+    SF.read(fn_sel);
 
     // Get image sizes and total number of images
     SF.ImgSize(dim, dim);
@@ -550,83 +509,126 @@ void Prog_MLalign2D_prm::produce_Side_info()
     // Fourier-mode stuff
     if (fourier_mode)
     {
+	FileName fnt_img, fnt_ctf, fnt;
+	vector<FileName> all_fn_ctfs;
+	bool found, is_unique;
+	int iifocus;
+
+        // For fourier_mode: read ctfdat
+        // and determine the number of CTF groups
+	nr_focus = 0;
+        count_defocus.clear();
+	all_fn_ctfs.clear();
+	ctfdat.read(fn_ctfdat);
+	ctfdat.goFirstLine();
+	while (!ctfdat.eof())
+	{
+	    ctfdat.getCurrentLine(fnt_img,fnt_ctf);
+	    is_unique=true;
+	    for (int i = 0; i< all_fn_ctfs.size(); i++)
+	    {
+		if (fnt_ctf == all_fn_ctfs[i])
+		{
+		    is_unique=false;
+		    break;
+		}
+	    }
+	    if (is_unique)
+	    {
+		all_fn_ctfs.push_back(fnt_ctf);
+		count_defocus.push_back(0);
+		nr_focus++;
+	    }
+	    ctfdat.nextLine();
+	}
+	
+        // Fill count_defocus vectors and add CTF-group labels to selfile
+	SF.go_beginning();
+	SFtmp.clear();
+	while (!SF.eof())
+	{
+	    SL=SF.current();
+	    fnt=SF.NextImg();
+	    // Find which CTF group it belongs to
+	    found = false;
+	    ctfdat.goFirstLine();
+	    while (!ctfdat.eof())
+	    {
+		ctfdat.getCurrentLine(fnt_img,fnt_ctf);
+		if (fnt_img == fnt)
+		{
+		    found = true;
+		    for (iifocus = 0; iifocus< all_fn_ctfs.size(); iifocus++)
+			if (fnt_ctf == all_fn_ctfs[iifocus])
+			    break;
+		    break;
+		}
+		ctfdat.nextLine();
+	    }
+	    if (!found)
+		REPORT_ERROR(1, "Prog_MLalign2D_prm: Did not find image "+fnt+" in the CTFdat file");
+	    count_defocus[iifocus]++;
+	    SL.set_number(iifocus + 1);
+	    SFtmp.insert(SL);
+	}
+
+	// Check the number of images in each defocus group
+	// and read CTF-parameters from disc
+        Vctf.clear();
+        Vdec.clear();
+        Vsig.clear();
+	FOR_ALL_DEFOCUS_GROUPS()
+	{
+	    if (count_defocus[ifocus] < 50 && verb > 0)
+		cerr << "WARNING%% CTF group " << ifocus + 1 << " contains less than 50 images!" << endl;
+
+	    Vctf.push_back(dum);
+	    Vdec.push_back(dum);
+	    Vsig.push_back(dum);
+	    ctf.read(all_fn_ctfs[ifocus]);
+	    if (ABS(ctf.DeltafV - ctf.DeltafU) >1.) 
+	    {
+		REPORT_ERROR(1, "Prog_MLalign2D-ERROR%% Only non-astigmatic CTFs are allowed!");
+	    }
+	    ctf.K = 1.;
+	    ctf.enable_CTF = true;
+	    ctf.Produce_Side_Info();
+	    ctf.Generate_CTF(dim, dim, ctfmask);
+	    if (ifocus == 0)
+	    {
+		sampling = ctf.Tm;
+		Q0 = ctf.Q0;
+	    }
+	    else
+	    {
+		if (sampling != ctf.Tm)
+		    REPORT_ERROR(1, "Prog_MLalign2D-ERROR%% Different sampling rates in CTF parameter files!");
+		if (Q0 != ctf.Q0 )
+		    REPORT_ERROR(1, "Prog_MLalign2D-ERROR%% Avoid different Q0 values in the CTF parameter files!");
+	    }
+	    Maux.resize(dim, dim);
+	    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Maux)
+	    {
+		if (phase_flipped) dMij(Maux, i, j) = fabs(dMij(ctfmask, i, j).real());
+		else dMij(Maux, i, j) = dMij(ctfmask, i, j).real();
+	    }
+	    CenterFFT(Maux, true);
+	    Maux.setXmippOrigin();
+	    center.initZeros();
+	    rmean_ctf.initZeros();
+	    radialAverage(Maux, center, rmean_ctf, radial_count, true);
+	    Vctf[ifocus].resize(hdim);
+	    for (int irr = 0; irr < hdim; irr++)
+	    {
+		dVi(Vctf[ifocus], irr) = dVi(rmean_ctf, irr);
+	    }
+	    Vdec[ifocus].resize(Vctf[ifocus]);
+	    Vsig[ifocus].resize(Vctf[ifocus]);
+	}
 
         // Check that search_shift is set
         if (search_shift > hdim)
             REPORT_ERROR(1, (string)"Prog_MLalign2D_prm: coloured noise model (-FS) requires limited search_shift!");
-
-        // Read CTF-parameters from disc
-        Vctf.clear();
-        Vdec.clear();
-        Vsig.clear();
-
-	if (fn_ctf!="")
-	{
-	    SFtmp.read(fn_ctf);
-	    if (SFtmp.ImgNo() != nr_focus)
-		REPORT_ERROR(1, "Prog_MLalign2D: Different number of CTFs in -ctfs and in -i");
-	    SFtmp.go_beginning();
-	    FOR_ALL_DEFOCUS_GROUPS()
-	    {
-		Vctf.push_back(dum);
-		Vdec.push_back(dum);
-		Vsig.push_back(dum);
-		ctf.read(SFtmp.NextImg());
-		ctf.DeltafV = ctf.DeltafU;
-		ctf.K = 1.;
-		ctf.enable_CTF = true;
-		ctf.Produce_Side_Info();
-		ctf.Generate_CTF(dim, dim, ctfmask);
-		if (ifocus == 0)
-		{
-		    sampling = ctf.Tm;
-		    Q0 = ctf.Q0;
-		}
-		else
-		{
-		    if (sampling != ctf.Tm)
-			REPORT_ERROR(1, "Prog_MLalign2D-ERROR%% Different sampling rates in CTF parameter files!");
-		    if ((Q0 != ctf.Q0) && (verb > 0))
-			cerr << "WARNING%% You may want to avoid different Q0 values in the CTF parameter files";
-		}
-		Maux.resize(dim, dim);
-		FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Maux)
-		    {
-			if (phase_flipped) dMij(Maux, i, j) = fabs(dMij(ctfmask, i, j).real());
-			else dMij(Maux, i, j) = dMij(ctfmask, i, j).real();
-		    }
-		CenterFFT(Maux, true);
-		Maux.setXmippOrigin();
-		center.initZeros();
-		rmean_ctf.initZeros();
-		radialAverage(Maux, center, rmean_ctf, radial_count, true);
-		Vctf[ifocus].resize(hdim);
-		for (int irr = 0; irr < hdim; irr++)
-		{
-		    dVi(Vctf[ifocus], irr) = dVi(rmean_ctf, irr);
-		}
-		Vdec[ifocus].resize(Vctf[ifocus]);
-		Vsig[ifocus].resize(Vctf[ifocus]);
-	    }
-	}
-	else
-	{
-	    // No CTFs: set Vctf to all-1
-	    sampling=1.;
-	    FOR_ALL_DEFOCUS_GROUPS()
-	    {
-		Vctf.push_back(dum);
-		Vdec.push_back(dum);
-		Vsig.push_back(dum);
-		Vctf[ifocus].resize(hdim);
-		Vdec[ifocus].resize(hdim);
-		Vsig[ifocus].resize(hdim);
-		for (int irr = 0; irr < hdim; irr++)
-		{
-		    dVi(Vctf[ifocus], irr) = 1.;
-		}
-	    }
-	}
 
         // Get a resolution pointer in Fourier-space
         Mresol.resize(dim, dim);
@@ -901,44 +903,32 @@ void Prog_MLalign2D_prm::calculate_wiener_defocus_series(Matrix1D<double> &spect
     // group with its CTF^2 and divide by the average CTF^2
     FOR_ALL_DEFOCUS_GROUPS()
     {
-	if (fn_ctf!="")
+	for (int irr = 0; irr < hdim; irr++)
 	{
-	    for (int irr = 0; irr < hdim; irr++)
+	    noise = 2. * dVi(Vsig[ifocus], irr) * (double)count_defocus[ifocus];
+	    noise /= (double)(count_defocus[ifocus] - 1);
+	    if (noise < 1e-20) dVi(Vsnr[ifocus], irr) = 0.;
+	    else
 	    {
-		noise = 2. * dVi(Vsig[ifocus], irr) * (double)count_defocus[ifocus];
-		noise /= (double)(count_defocus[ifocus] - 1);
-		if (noise < 1e-20) dVi(Vsnr[ifocus], irr) = 0.;
-		else
+		if (dVi(Vavgctf2, irr) > 0.)
 		{
-		    if (dVi(Vavgctf2, irr) > 0.)
-		    {
-			dVi(Vsnr[ifocus], irr) = reduce_snr * dVi(Vctf[ifocus], irr) * dVi(Vctf[ifocus], irr) *
-			    dVi(spectral_signal, irr) / (dVi(Vavgctf2, irr) * noise);
-		    }
-		    else dVi(Vsnr[ifocus], irr) = 0.;
+		    dVi(Vsnr[ifocus], irr) = reduce_snr * dVi(Vctf[ifocus], irr) * dVi(Vctf[ifocus], irr) *
+			dVi(spectral_signal, irr) / (dVi(Vavgctf2, irr) * noise);
 		}
-		// For start from already CTF-deconvoluted references:
-		if ((iter == istart - 1) && !first_iter_noctf)
-		    dVi(Vsnr[ifocus], irr) *= dVi(Vavgctf2, irr);
-		// Take ini_highres_limit into account
-		if ((iter == istart - 1) && (ini_highres_limit > 0) && (irr > ini_highres_limit))
-		    dVi(Vsnr[ifocus], irr) = 0.;
-		// Subtract 1 according Unser et al.
-		dVi(Vsnr[ifocus], irr) = MAX(0., dVi(Vsnr[ifocus], irr) - 1.);
-		// Prevent spurious high-frequency significant SNRs from random averages
-		if (iter == 0 && do_generate_refs)
-		    dVi(Vsnr[ifocus], irr) = MAX(0., dVi(Vsnr[ifocus], irr) - 2.);
-		if (dVi(Vsnr[ifocus], irr) > 0. && irr > maxres) maxres = irr;
+		else dVi(Vsnr[ifocus], irr) = 0.;
 	    }
-	}
-	else
-	{
-	    // without CTFs: just integrate over all frequencies
-	    for (int irr = 0; irr < hdim; irr++)
-	    {
-		dVi(Vsnr[ifocus], irr) = 100.;
-	    }
-	    maxres=hdim;
+	    // For start from already CTF-deconvoluted references:
+	    if ((iter == istart - 1) && !first_iter_noctf)
+		dVi(Vsnr[ifocus], irr) *= dVi(Vavgctf2, irr);
+	    // Take ini_highres_limit into account
+	    if ((iter == istart - 1) && (ini_highres_limit > 0) && (irr > ini_highres_limit))
+		dVi(Vsnr[ifocus], irr) = 0.;
+	    // Subtract 1 according Unser et al.
+	    dVi(Vsnr[ifocus], irr) = MAX(0., dVi(Vsnr[ifocus], irr) - 1.);
+	    // Prevent spurious high-frequency significant SNRs from random averages
+	    if (iter == 0 && do_generate_refs)
+		dVi(Vsnr[ifocus], irr) = MAX(0., dVi(Vsnr[ifocus], irr) - 2.);
+	    if (dVi(Vsnr[ifocus], irr) > 0. && irr > maxres) maxres = irr;
 	}
     }
 
@@ -1017,7 +1007,7 @@ void Prog_MLalign2D_prm::calculate_wiener_defocus_series(Matrix1D<double> &spect
     Maux.initZeros(dim, dim);
     Maux.setXmippOrigin();
     FourierTransformHalf(Maux, Faux);
-    highres_limit = maxres + increase_highres_limit;
+    highres_limit = maxres + 5; // hard-code increase_highres_limit to 5
     highres_limit = MIN(highres_limit, hdim);
     pointer_ctf.clear();
     pointer_sigctf.clear();
@@ -2428,6 +2418,9 @@ void Prog_MLalign2D_prm::ML_integrate_locally(
                         diff -= (Maux).data[ii] * (Mtrans).data[ii];
                     }
                     dVkij(Mweight, zero_trans, refno, irot) = diff;
+		    if (debug) {
+			cout << 360. + (-psi_step * (iflip * nr_psi + ipsi) - SMALLANGLE)<<" "<<diff<<" "<<A2_plus_Xi2<<" "<<diff-A2_plus_Xi2<<" "<<A2[refno]<<" "<<Xi2<<" "<<-ixx<<" "<< -iyy<<endl;
+		    }
                     if (diff < mindiff2) mindiff2 = diff;
                 }
             }
@@ -2531,6 +2524,9 @@ void Prog_MLalign2D_prm::ML_integrate_locally(
                                 if (iflip < nr_nomirror_flips) refw[refno] += weight;
                                 else refw_mirror[refno] += weight;
                                 sum_refw += weight;
+				if (debug) {
+				    cout << 360. + (-psi_step * (iflip * nr_psi + ipsi) - SMALLANGLE)<<" "<<diff<<" "<<A2_plus_Xi2<<" "<<diff-A2_plus_Xi2<<" "<<A2[refno]<<" "<<Xi2<<" "<<-ixx<<" "<< -iyy<<endl;
+				}
                             }
                         }
                     }

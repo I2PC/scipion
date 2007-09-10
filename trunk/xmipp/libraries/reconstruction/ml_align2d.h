@@ -53,7 +53,7 @@ class Prog_MLalign2D_prm
 {
 public:
     /** Filenames reference selfile/image, fraction docfile & output rootname */
-    FileName fn_sel, fn_ref, fn_root, fn_frac, fn_sig, fn_doc, fn_ctf, fn_oext, fn_scratch;
+    FileName fn_sel, fn_ref, fn_root, fn_frac, fn_sig, fn_doc, fn_ctfdat, fn_oext, fn_scratch;
     /** If true: use maximum cross-correlation instead of maximum likelihood target */
     bool maxCC_rather_than_ML;
     /** Command line */
@@ -159,6 +159,8 @@ public:
     /// FOR FOURIER_MODE
     /** If true: use fourier instead of real space maximum likelihood target */
     bool fourier_mode;
+    /** CTFDat file for all images */
+    CTFDat ctfdat;
     /** Pixel size in Angstroms */
     double sampling;
     /** Vector with number of images per defocuss group (fourier_mode) */
@@ -179,8 +181,6 @@ public:
     int nr_focus;
     /** low and high resolution cutoffs for fourier-mode (in Fourier pixels) */
     int lowres_limit, highres_limit, ini_highres_limit;
-    /** Number of Fourier rings to include above SNR<1 */
-    int increase_highres_limit;
     /** Do not multiply signal with CTF in the first iteration */
     bool first_iter_noctf;
     /** Divide by CTF (until first zero) instead of wiener filter */
