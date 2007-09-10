@@ -1,4 +1,0 @@
-#!/bin/sh
-xmipp_MLrefine3D -MLF "$@"
-
-
