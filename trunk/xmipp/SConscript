@@ -292,7 +292,9 @@ ReconsSources = [
     'fourier_filter.cpp',
     'grids.cpp',
     'ml_align2d.cpp',
+    'mlf_align2d.cpp',
     'ml_refine3d.cpp',
+    'mlf_refine3d.cpp',
     'mlf_tomo.cpp',
     'phantom.cpp',
     'phantom_create_random.cpp',
@@ -487,10 +489,6 @@ AddBatch('convert_pdb2descr', 'applications/scripts/convert_pdb2descr')
 AddBatch('extract_sidechain_from_pdb',
     'applications/scripts/extract_sidechain_from_pdb', '.pl')
 AddBatch('convert_pdb2surface', 'applications/scripts/convert_pdb2surface')
-AddBatch('mlf_align2d', 'applications/scripts/mlf_align2d')
-AddBatch('mlf_refine3d', 'applications/scripts/mlf_refine3d')
-AddBatch('mpi_mlf_align2d', 'applications/scripts/mpi_mlf_align2d')
-AddBatch('mpi_mlf_refine3d', 'applications/scripts/mpi_mlf_refine3d')
 AddBatch('protocols', 'applications/scripts/protocols')
 
 # FIXME Protocols?
@@ -604,7 +602,9 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ml_align2d', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_mlf_align2d', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ml_refine3d', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_mlf_refine3d', ['XmippRecons'])
     AddXmippMPIProgram('mpi_reconstruct_art', ['XmippRecons'])
     AddXmippMPIProgram('mpi_reconstruct_wbp', ['XmippRecons'])
     AddXmippMPIProgram('mpi_run', ['XmippRecons'])
