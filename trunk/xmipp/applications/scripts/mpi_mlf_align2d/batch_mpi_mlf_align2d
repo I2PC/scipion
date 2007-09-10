@@ -1,4 +1,0 @@
-#!/bin/sh
-xmipp_mpi_MLalign2D -MLF "$@"
-
-
