@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:    Sjors Scheres           scheres@cnb.uam.es (2004)
+ * Authors:    Sjors Scheres           scheres@cnb.uam.es (2007)
  *
  * Unidad de Bioinformatica del Centro Nacional de Biotecnologia , CSIC
  *
@@ -28,7 +28,7 @@
 void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
 {
 
-   // This flag is set with scripts, so that for the user the
+    // This flag is set with scripts, so that for the user the
     // mlf_align2d and the ml_align2d are distinct programs
     fourier_mode = checkParameter(argc, argv, "-MLF");
 
@@ -280,7 +280,8 @@ void Prog_MLalign2D_prm::usage()
     cerr << "      OR -nref <int>               OR number of references to generate automatically (bias-free)\n";
     cerr << " [ -o <rootname> ]             : Output rootname (default = \"ml2d\")\n";
     cerr << " [ -mirror ]                   : Also check mirror image of each reference \n";
-    cerr << " [ -fast ]                     : Use pre-centered images to pre-calculate significant orientations\n";
+    if (!fourier_mode)
+	cerr << " [ -fast ]                     : Use pre-centered images to pre-calculate significant orientations\n";
     cerr << " [ -more_options ]             : Show all possible input parameters \n";
 }
 
@@ -295,6 +296,7 @@ void Prog_MLalign2D_prm::MLF_usage()
     cerr << " [ -o <rootname> ]             : Output rootname (default = \"mlf2d\")\n";
     cerr << " [ -mirror ]                   : Also check mirror image of each reference \n";
     cerr << " [ -search_shift <float=3>]    : Limited translational searches (in pixels) \n";
+    cerr << " [ -reduce_noise <factor=1> ]  : Use a value smaller than one to decrease the estimated SSNRs \n";
     cerr << " [ -not_phase_flipped ]        : Use this if the experimental images have not been phase flipped \n";
     cerr << " [ -ctf_affected_refs ]        : Use this if the references (-ref) are not CTF-deconvoluted \n";
     cerr << " [ -low <pix=0> ]              : Exclude lowest freq. Fourier pixels from P-calculations (in pixels) \n";
