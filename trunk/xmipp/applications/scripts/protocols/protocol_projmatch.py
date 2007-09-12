@@ -1336,9 +1336,11 @@ def filter_at_given_resolution(_DoComputeResolution,
     import os,shutil
     Inputvolume   =_ReconstructedVolume+'.vol'
     Outputvolume  =_ReconstructedandfilteredVolume+'.vol'
-    filter_in_pixels_at = float(_filter_frequence) +\
-                          float(_ConstantToAddToFiltration)
-                          
+    if (_SetResolutiontoZero):
+       filter_in_pixels_at = float(_ConstantToAddToFiltration)
+    else:
+       filter_in_pixels_at = float(_filter_frequence) +\
+                             float(_ConstantToAddToFiltration)
     print '**************************************************************'
     print '* Filter reconstruction ' 
     if (_ConstantToAddToFiltration<0.5 or (not _DoComputeResolution)):
