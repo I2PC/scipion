@@ -539,8 +539,9 @@ class projection_matching_class:
        else:
           self._mylog.info("Skipped DoDeleteWorkingDir") 
        create_working_directory(self._mylog,self._WorkDirectory)
-       #made backup of this script
+       #made backup of this script and visualize
        log.make_backup_of_script_file(sys.argv[0],self._WorkDirectory)
+       log.make_backup_of_script_file(AnalysisScript,self._WorkDirectory)
        
        #copy files to local directory
        if _ContinueAtIteration==1:
