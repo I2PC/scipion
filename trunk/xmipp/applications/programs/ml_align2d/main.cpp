@@ -43,6 +43,9 @@ int main(int argc, char **argv)
 
     Prog_MLalign2D_prm prm;
 
+    // Set to true for MLF!
+    prm.fourier_mode = false;
+
     // Get input parameters
     try
     {
