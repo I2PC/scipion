@@ -292,7 +292,6 @@ ReconsSources = [
     'fourier_filter.cpp',
     'grids.cpp',
     'ml_align2d.cpp',
-    'mlf_align2d.cpp',
     'ml_refine3d.cpp',
     'mlf_refine3d.cpp',
     'mlf_tomo.cpp',
