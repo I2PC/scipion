@@ -154,7 +154,8 @@ void CorrectAmplitude3DParams::generateWienerFilters()
     double minwien=99.e99;
     double maxwien=0.;
     // Oversample the 1D CTF and Wiener filter vectors OVERSAMPLE times
-    double nr_steps= CEIL(OVERSAMPLE * 0.5 * sqrt((double)(Zdim*Zdim + Ydim*Ydim + Xdim*Xdim)));
+    // Use 0.55*sqrt(3) to make sure all pixels fit in...
+    double nr_steps= CEIL(OVERSAMPLE * 0.55 * sqrt((double)(Zdim*Zdim + Ydim*Ydim + Xdim*Xdim)));
 
     Vctfs1D.clear();
     Vwien1D.clear();
