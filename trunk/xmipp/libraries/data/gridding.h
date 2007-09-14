@@ -129,7 +129,7 @@ void produceGriddingMatrix3D(const Matrix3D< double > &in,
 template<typename T>
 void applyGeometryGridding(Matrix2D<T> &M2, Matrix2D< double > A, 
 			   const Matrix2D<T> &M1, 
-			   KaiserBessel &kb, bool inv, bool wrap, 
+			   const KaiserBessel &kb, bool inv, bool wrap, 
 			   int nx = 0, int ny = 0, T outside = (T) 0)
 {
     int m1, n1, m2, n2;
@@ -244,7 +244,7 @@ void applyGeometryGridding(Matrix2D<T> &M2, Matrix2D< double > A,
  */
 template<typename T>
 void applyGeometryGridding(Matrix3D<T> &V2, Matrix2D< double > A, 
-			   const Matrix3D<T> &V1, KaiserBessel &kb, 
+			   const Matrix3D<T> &V1, const KaiserBessel &kb, 
 			   bool inv, bool wrap, 
 			   int nx = 0, int ny = 0, int nz = 0, T outside = (T) 0)
 {
@@ -380,7 +380,7 @@ void applyGeometryGridding(Matrix3D<T> &V2, Matrix2D< double > A,
  * @endcode
  */
 template <typename T>
-T interpolatedElementGridding(const Matrix2D<T> &in, double x, double y, KaiserBessel &kb)
+T interpolatedElementGridding(const Matrix2D<T> &in, double x, double y, const KaiserBessel &kb)
 {
     // size of this image:
     int nx = XSIZE(in);
@@ -509,7 +509,7 @@ T interpolatedElementGridding(const Matrix2D<T> &in, double x, double y, KaiserB
  * @endcode
  */
 template <typename T>
-T interpolatedElementGridding(const Matrix3D<T> &in, double x, double y, double z, KaiserBessel &kb)
+T interpolatedElementGridding(const Matrix3D<T> &in, double x, double y, double z, const KaiserBessel &kb)
 {
     // size of this image:
     int nx = XSIZE(in);
@@ -776,5 +776,22 @@ T interpolatedElementGridding(const Matrix3D<T> &in, double x, double y, double 
     return pixel/w;
 
 }
+
+/** Calculate Voronoi area for a set of 2D points, 
+ *
+ */
+void approximateVoronoiArea(vector<double> &voronoi_area,
+			    const vector<double> &xin, const vector<double> &yin, 
+			    const double oversample = 10.);
+
+/** Calculate Cartesian coordinates from any irregularly sampled grid
+ *  The voronoi areas of the irregularly sampled coordinates have to
+ *  be provided!
+ *
+ */
+void getCartesianFromAnyCoordinates(Matrix2D<double> &result,
+				    const vector<double> &xin, const vector<double> &yin,
+				    const vector<double> &data, const vector<double> &voronoi_area,
+				    const KaiserBessel &kb);
 
 #endif

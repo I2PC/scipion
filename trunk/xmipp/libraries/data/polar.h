@@ -502,6 +502,75 @@ public:
 	return sum2;
     }
  
+   /** Get Cartesian Coordinates of the Polar sampling
+     * @ingroup PolarFunctions
+     *
+     * The output of this function can be used to calculate Voronoi
+     * areas, lists of neighbours etc.
+     *
+     * To deal with the borders of the polar structure (a maximum of)
+     * "extra_shell" extra rings are calculated on the inside and outside
+     * of the polar structure. 
+     *
+     */
+    void getCartesianCoordinates(vector<double> &x,
+				 vector<double> &y,
+				 vector<double> &data,
+				 const double extra_shell = GRIDDING_K/2)
+    {
+	double                     twopi, dphi,radius;
+	int                        nsam;
+
+	// Only for full circles for now!
+	if (mode != FULL_CIRCLES)
+	    REPORT_ERROR(1,"VoronoiArea only implemented for FULL_CIRCLES mode of Polar");
+	else
+	    twopi = 2.*PI;
+
+	// First fill the vector with the originally sampled coordinates
+	x.clear();
+	y.clear();
+	data.clear();
+	for (int i = 0; i < rings.size(); i++)
+	{
+	    nsam = XSIZE(rings[i]);
+	    dphi = twopi/(double)nsam;
+	    radius = ring_radius[i];
+	    for (int j = 0; j < nsam; j++)
+	    {
+		x.push_back(radius*sin(j*dphi));
+		y.push_back(radius*cos(j*dphi));
+		data.push_back(rings[i](j));
+	    }
+	}
+
+	// Add additional points on the inside and outside of the rings
+	// Add a maximum of "extra_shell" rings
+	// Set data to zero here
+	int half_nsam_last = nsam / 2;
+	double first_ring  = ring_radius[0];
+	double last_ring   = ring_radius[rings.size()-1];
+	double ring_step   = ring_radius[1] - ring_radius[0];
+	double outer       = last_ring + extra_shell;
+	double inner       = MAX(0.,first_ring - extra_shell);
+	for (radius = 0.; radius < outer; radius += ring_step)
+	{
+	    if ( (radius >= inner && radius < first_ring) ||
+		 ( radius <= outer && radius > last_ring) )
+	    {
+		nsam = 2 * ( MAX(1,(int)(half_nsam_last * radius / last_ring)) );
+		dphi = twopi / (double)nsam;
+		for (int j = 0; j < nsam; j++)
+		{
+		    x.push_back(radius*sin(j*dphi));
+		    y.push_back(radius*cos(j*dphi));
+		    data.push_back(0.);
+		}
+	    }
+	}
+
+    }
+
     /** Convert cartesian Matrix2D to Polar
      * @ingroup PolarFunctions
      *
@@ -519,8 +588,7 @@ public:
     void getPolarFromCartesian(const Matrix2D<T> &M1, KaiserBessel &kb, 
 			       int first_ring, int last_ring, 
 			       int ring_step = 1, double psi_step = -1., int mode1 = FULL_CIRCLES, 
-			       double xoff = 0., double yoff = 0.,
-			       bool const_sam = false)
+			       double xoff = 0., double yoff = 0.)
     {
 	int nsam, half_nsam_last;
 	int nring = last_ring - first_ring + 1;
@@ -559,10 +627,8 @@ public:
 	for (int iring = first_ring; iring <= last_ring; iring+= ring_step)
 	{
 	    radius = (double) iring;
-	    if (const_sam)
-		nsam = 2 * half_nsam_last;
-	    else
-		nsam = 2 * ( MAX(1,(int)(half_nsam_last * (double)iring / (double)last_ring)) );
+	    // Non-constant sampling
+	    nsam = 2 * ( MAX(1,(int)(half_nsam_last * (double)iring / (double)last_ring)) );
 
 	    dphi = twopi / (double)nsam;
 	    Mring.resize(nsam);
@@ -742,4 +808,6 @@ void rotationalCorrelation(const Polar<complex<double> > &M1,
 
 void inverseFourierTransformRings(const Polar<complex<double> > & in, 
 				  Polar<double> & out, bool conjugated = false);
+
+
 #endif

@@ -178,3 +178,121 @@ void produceGriddingMatrix3D(const Matrix3D< double > &in,
 
 }
 
+void approximateVoronoiArea(vector<double> &voronoi_area,
+			    const vector<double> &xin, const vector<double> &yin, 
+			    const double oversample)
+{
+
+    double dfine,dfine2,dmin2,r2,dim2;
+    double minx,miny,maxx,maxy,fx,fy,dx,dy;
+    int imin;
+ 
+    // Initialize voronoi_area vector and find limits of coordinates
+    voronoi_area.clear();
+    minx = miny = MAXFLOAT;
+    maxx = maxy = MINFLOAT;
+    for (int i = 0; i < xin.size(); i++)
+    {
+	voronoi_area.push_back(0.);
+	if (xin[i] < minx) minx = xin[i];
+	if (xin[i] > maxx) maxx = xin[i];
+	if (yin[i] < miny) miny = yin[i];
+	if (yin[i] > maxy) maxy = yin[i];
+    }
+
+    // Loop over all oversampled points and find nearest sampled input point
+    dfine = 1./oversample;
+    dfine2 = dfine * dfine;
+    minx -= dfine;
+    miny -= dfine;
+    maxx += dfine;
+    maxy += dfine;
+    for (fx = minx; fx <= maxx; fx += dfine)
+    {
+	for (fy = miny; fy <= maxy; fy += dfine)
+	{
+	    dmin2 = MAXFLOAT;
+	    for (int i = 0; i < xin.size(); i++)
+	    {
+		dx = xin[i] - fx;
+		dy = yin[i] - fy;
+		r2 = dx*dx + dy*dy;
+		if ( r2 < dmin2 )
+		{
+		    dmin2 = r2;
+		    imin = i;
+		}
+	    }
+	    voronoi_area[imin] += dfine2;
+	}
+    }
+
+}
+
+void getCartesianFromAnyCoordinates(Matrix2D<double> &result,
+				    const vector<double> &xin, const vector<double> &yin,
+				    const vector<double> &data, const vector<double> &voronoi_area,
+				    const KaiserBessel &kb)
+{
+
+    double wx,wy, xx, yy, dx, dy, r, w, sumw;
+    int xdim,ydim;
+
+    // Oversample result GRIDDING_NPAD times
+    xdim = XSIZE(result); 
+    ydim = YSIZE(result); 
+    result.resize(GRIDDING_NPAD*xdim, GRIDDING_NPAD*ydim);
+    result.initZeros();
+    result.setXmippOrigin();
+    
+    // 1. Convolution interpolation
+    // Loop over all cartesian coordinates: add all sampled points
+    // within the window in x or y to the result, multiplied with the
+    // corresponding gridding weights
+    double window_size = (double)(kb.get_window_size()/2);
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(result)
+    {
+	xx = (double) j;
+	yy = (double) i;
+	sumw = 0.;
+	for (int ii = 0; ii < xin.size(); ii++)
+	{
+	    dx = GRIDDING_NPAD*xin[ii] - xx;
+	    if (ABS(dx) < window_size)
+	    { 		
+		dy = GRIDDING_NPAD*yin[ii] - yy;
+		if (ABS(dy) < window_size)
+		{
+		    // Gridding weight
+		    w = voronoi_area[ii] * kb.i0win_tab(dx) *  kb.i0win_tab(dy);
+		    MAT_ELEM(result,i,j) += data[ii] * w;
+		    sumw += w;
+		}
+	    }
+	}
+	if (sumw > 0.) 
+	    MAT_ELEM(result,i,j) /= sumw;
+    }
+
+    // 2. FFT and divide in Fourier space by the corresponding sinhwin
+    Matrix2D<complex<double> > aux, aux2;
+    FourierTransform(result,aux);
+    CenterFFT(aux,true);
+    aux.setXmippOrigin();
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(aux) {
+	wy=kb.sinhwin(i);
+	wx=kb.sinhwin(j);
+	MAT_ELEM(aux,i,j) = MAT_ELEM(aux,i,j) / (wx * wy);
+    }
+ 
+    // 3. resize to single dim, (backward) centering and IFFT
+    aux2.resize(xdim,ydim);
+    aux2.setXmippOrigin();
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(aux2)
+    {
+	MAT_ELEM(aux2,i,j) = MAT_ELEM(aux,i,j);
+    }
+    CenterFFT(aux2,false);
+    InverseFourierTransform(aux2,result);
+    result.setXmippOrigin();
+}
