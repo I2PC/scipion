@@ -121,8 +121,8 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 	if (eprm->gridding)
 	{
 	    KaiserBessel kb;
-	    produceGriddingMatrix2D(img(),img_out(),kb);
-	    applyGeometryGridding(img(), eprm->A2D, img_out(), kb, IS_NOT_INV, eprm->wrap);
+	    produceReverseGriddingMatrix2D(img(),img_out(),kb);
+	    applyGeometryReverseGridding(img(), eprm->A2D, img_out(), kb, IS_NOT_INV, eprm->wrap);
 	}
 	else
 	{
@@ -140,8 +140,8 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
     if (eprm->gridding)
     {
 	KaiserBessel kb;
-	produceGriddingMatrix3D(vol(),vol_out(),kb);
-	applyGeometryGridding(vol(), eprm->A3D, vol_out(), kb, IS_NOT_INV, eprm->wrap);
+	produceReverseGriddingMatrix3D(vol(),vol_out(),kb);
+	applyGeometryReverseGridding(vol(), eprm->A3D, vol_out(), kb, IS_NOT_INV, eprm->wrap);
     }
     else
     {

@@ -66,8 +66,8 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
     if (eprm->gridding)
     {
 	KaiserBessel kb;
-	produceGriddingMatrix2D(img(),Maux,kb);
-	applyGeometryGridding(img(), img.get_transformation_matrix(), Maux, kb, IS_INV, eprm->wrap);
+	produceReverseGriddingMatrix2D(img(),Maux,kb);
+	applyGeometryReverseGridding(img(), img.get_transformation_matrix(), Maux, kb, IS_INV, eprm->wrap);
     }
     else
     {

@@ -77,10 +77,10 @@ int main(int argc, char **argv)
 	    {
 		KaiserBessel kb;
 		Matrix2D<double> Maux;
-		produceGriddingMatrix2D(image(),Maux,kb);
+		produceReverseGriddingMatrix2D(image(),Maux,kb);
 		DIRECT_MAT_ELEM(A, 0, 0) = (double) xdim / (double) XSIZE(image());
 		DIRECT_MAT_ELEM(A, 1, 1) = (double) ydim / (double) YSIZE(image());
-		applyGeometryGridding(image(), A, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim);
+		applyGeometryReverseGridding(image(), A, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim);
 	    }
 	    else
 	    {
@@ -98,11 +98,11 @@ int main(int argc, char **argv)
 	    {
 		KaiserBessel kb;
 		Matrix3D<double> Maux;
-		produceGriddingMatrix3D(volume(),Maux,kb);
+		produceReverseGriddingMatrix3D(volume(),Maux,kb);
 		DIRECT_MAT_ELEM(B, 0, 0) = (double) xdim / (double) XSIZE(volume());
 		DIRECT_MAT_ELEM(B, 1, 1) = (double) ydim / (double) YSIZE(volume());
 		DIRECT_MAT_ELEM(B, 2, 2) = (double) zdim / (double) ZSIZE(volume());
-		applyGeometryGridding(volume(), B, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim, zdim);
+		applyGeometryReverseGridding(volume(), B, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim, zdim);
 	    }
 	    else
 	    {
@@ -134,10 +134,10 @@ int main(int argc, char **argv)
 		    {
 			KaiserBessel kb;
 			Matrix2D<double> Maux;
-			produceGriddingMatrix2D(image(),Maux,kb);
+			produceReverseGriddingMatrix2D(image(),Maux,kb);
 			DIRECT_MAT_ELEM(A, 0, 0) = (double) xdim / (double) XSIZE(image());
 			DIRECT_MAT_ELEM(A, 1, 1) = (double) ydim / (double) YSIZE(image());
-			applyGeometryGridding(image(), A, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim);
+			applyGeometryReverseGridding(image(), A, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim);
 		    }
 		    else
 		    {
@@ -153,11 +153,11 @@ int main(int argc, char **argv)
 		    {
 			KaiserBessel kb;
 			Matrix3D<double> Maux;
-			produceGriddingMatrix3D(volume(),Maux,kb);
+			produceReverseGriddingMatrix3D(volume(),Maux,kb);
 			DIRECT_MAT_ELEM(B, 0, 0) = (double) xdim / (double) XSIZE(volume());
 			DIRECT_MAT_ELEM(B, 1, 1) = (double) ydim / (double) YSIZE(volume());
 			DIRECT_MAT_ELEM(B, 2, 2) = (double) zdim / (double) ZSIZE(volume());
-			applyGeometryGridding(volume(), B, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim, zdim);
+			applyGeometryReverseGridding(volume(), B, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim, zdim);
 		    }
 		    else
 		    {
