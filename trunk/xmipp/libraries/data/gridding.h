@@ -40,14 +40,28 @@
 #define GRIDDING_NPAD 2
 #define GRIDDING_K 6
 
-/**  Produces a 2D Fourier-space matrix2d for reverse-gridding
+/// @defgroup Gridding Gridding
+/// @defgroup ReverseGridding Reverse Gridding
+/// @ingroup Gridding
+
+// ***************************************************************************
+// ************************ Reverse Gridding *********************************
+// ***************************************************************************
+
+/** Produce a complex Matrix2D for reverse gridding from a complex Matrix2D
+ * @ingroup ReverseGridding
+ *
+ *  Produces a 2D Fourier-space matrix2d for reverse-gridding
  *  interpolation from a Fourier-space matrix2d
  */
 void produceReverseGriddingFourierMatrix2D(const Matrix2D< complex < double> > &in, 
 					   Matrix2D< complex < double > > &out,
 					   KaiserBessel &kb);
 
-/**  Produces a 2D Fourier-space matrix2d for reverse-gridding
+/** Produce a complex Matrix2D for reverse gridding from a real Matrix2D
+ * @ingroup ReverseGridding
+ *
+ *  Produces a 2D Fourier-space matrix2d for reverse-gridding
  *  interpolation from a real-space matrix2d 
  *  This real-space matrix2d should have the Xmipp origin set!
  */
@@ -55,21 +69,30 @@ void produceReverseGriddingFourierMatrix2D(const Matrix2D< double > &in,
 					   Matrix2D< complex< double > > &out,
 					   KaiserBessel &kb);
 
-/**  Produces a 2D real-space matrix2d for reverse-gridding interpolation
+/** Produce a real Matrix2D for reverse gridding from a real Matrix2D
+ * @ingroup ReverseGridding
+ *
+ *  Produces a 2D real-space matrix2d for reverse-gridding interpolation
  *  from a real-space matrix2d
  */
 void produceReverseGriddingMatrix2D(const Matrix2D< double > &in, 
 				    Matrix2D< double > &out,
 				    KaiserBessel &kb);
 
-/**  Produces a 3D Fourier-space matrix3d for reverse-gridding
+/** Produce a complex Matrix3D for reverse gridding from a complex Matrix2D
+ * @ingroup ReverseGridding
+ *
+ *  Produces a 3D Fourier-space matrix3d for reverse-gridding
  *  interpolation from a Fourier-space matrix3d
  */
 void produceReverseGriddingFourierMatrix3D(const Matrix3D< complex < double > > &in, 
 					   Matrix3D< complex < double > > &out,
 					   KaiserBessel &kb);
 
-/**  Produces a 3D Fourier-space matrix3d for reverse-gridding
+/** Produce a complex Matrix3D for reverse gridding from a real Matrix2D
+ * @ingroup ReverseGridding
+ *
+ *  Produces a 3D Fourier-space matrix3d for reverse-gridding
  *  interpolation from a real-space matrix3d 
  *  This real-space matrix3d should have the Xmipp origin set!
  */
@@ -77,14 +100,20 @@ void produceReverseGriddingFourierMatrix3D(const Matrix3D< double > &in,
 					   Matrix3D< complex< double > > &out,
 					   KaiserBessel &kb);
 
-/**  Produces a 3D real-space matrix3d for reverse-gridding
+/** Produce a real Matrix3D for reverse gridding from a real Matrix2D
+ * @ingroup ReverseGridding
+ *
+ *  Produces a 3D real-space matrix3d for reverse-gridding
  *  interpolation from a real-space matrix3d
  */
 void produceReverseGriddingMatrix3D(const Matrix3D< double > &in, 
 				    Matrix3D< double > &out,
 				    KaiserBessel &kb);
 
-/** Extracts a plane from a volume using reverse-gridding interpolation,
+/** Reverse-gridding based 2D projection operation
+ * @ingroup ReverseGridding
+ *
+ * Extracts a plane from a volume using reverse-gridding interpolation,
  * knowing that this volume has been processed for gridding.
  *
  * rot, tilt and psi and the respective Euler angles
@@ -103,7 +132,10 @@ void produceReverseGriddingMatrix3D(const Matrix3D< double > &in,
 
 
 
-/** Applies a geometric transformation to a 2D matrix with
+/** Reverse-gridding based geometric transformation on a 2D matrix
+ * @ingroup ReverseGridding
+ *
+ * Applies a geometric transformation to a 2D matrix with
  * reverse-gridding-based interpolation, knowing that this image has been
  * processed for gridding.
  *
@@ -222,7 +254,10 @@ void applyGeometryReverseGridding(Matrix2D<T> &M2, Matrix2D< double > A,
     }
 }
 
-/** Applies a geometric transformation to a 3D matrix with
+/** Reverse-gridding based geometric transformation on a 3D matrix
+ * @ingroup ReverseGridding
+ *
+ * Applies a geometric transformation to a 3D matrix with
  * reverse-gridding-based interpolation, knowing that this image has been
  * processed for gridding.
  *
@@ -360,7 +395,10 @@ void applyGeometryReverseGridding(Matrix3D<T> &V2, Matrix2D< double > A,
         }
 }
 
-/** Interpolates the value of the 2D matrix M at the point (x,y) knowing
+/** Reverse-gridding based interpolation in a 2D matrix
+ * @ingroup ReverseGridding
+ *
+ * Interpolates the value of the 2D matrix M at the point (x,y) knowing
  * that this image has been processed for reverse-gridding
  *
  * (x,y) are in logical coordinates
@@ -489,7 +527,10 @@ T interpolatedElementReverseGridding(const Matrix2D<T> &in, double x, double y, 
 
 }
 
-/** Interpolates the value of the 3D matrix M at the point (x,y,z) knowing
+/** Reverse-gridding based interpolation in a 3D matrix
+ * @ingroup ReverseGridding
+ *
+ * Interpolates the value of the 3D matrix M at the point (x,y,z) knowing
  * that this matrix has been processed for reverse-gridding
  *
  * (x,y,z) are in logical coordinates
@@ -774,34 +815,63 @@ T interpolatedElementReverseGridding(const Matrix3D<T> &in, double x, double y, 
 
 }
 
-/** Calculate Voronoi area for a set of 2D points, 
+/// @defgroup ForwardGridding Forward Gridding
+/// @ingroup Gridding
+
+// ***************************************************************************
+// ************************ Reverse Gridding *********************************
+// ***************************************************************************
+
+/** Numerically approximate the voronoi area for a set of 2D points
+ * @ingroup ForwardGridding
+ *
+ *  Calculate the Voronoi area for a set of 2D points. The borders are
+ *  set to a rectangle from min_x,min_y to max_x, max_y.
+ *  Therefore, border effects should be taken care of in the
+ *  generation of the x and y coordinates
  *
  */
 void approximateVoronoiArea(vector<double> &voronoi_area,
 			    const vector<double> &xin, const vector<double> &yin, 
 			    const double oversample = 10.);
 
-/** Calculate Cartesian coordinates from any irregularly sampled grid
- *  using (forward) gridding.
- *  The voronoi areas of the irregularly sampled coordinates have to
- *  be provided!
+/** Interpolate Cartesian coordinates from any irregularly sampled grid
+ * @ingroup ForwardGridding
+ *
+ *  Interpolate Cartesian coordinates from any irregularly sampled grid
+ *  using (forward) gridding. Note that the voronoi areas of the
+ *  irregularly sampled coordinates have to be provided, and that the
+ *  output of this routine needs to be passed through
+ *  produceGriddingMatrix2D or produceGriddingFourierMatrix2D!
+ *  The dimensions of the result matrix should be the ones without
+ *  oversampling! 
+ *
+ * @code
+ * KaiserBessel kb;
+ * vector<double> x,y,data,voronoi_area;
+ * matrix2D<double> Maux;
+ *
+ * P.getCartesianCoordinates(x,y,data); // (P is a Polar<double>)
+ * approximateVoronoiArea(voronoi_area,x,y);
+ * Maux = interpolateCartesianFromAnyCoordinates(64,64,x,y,data,voronoi_area,kb);
+ * produceForwardGriddingMatrix2D(Maux,Maux2,kb);
+ * @endcode
  *
  */
 template <typename T>
-void getCartesianFromAnyCoordinates(Matrix2D<T> &result,
-				    const vector<double> &xin, const vector<double> &yin,
-				    const vector<double> &data, const vector<double> &voronoi_area,
-				    const KaiserBessel &kb)
+Matrix2D<T> interpolateCartesianFromAnyCoordinates(const int xdim, const int ydim,
+						   const vector<double> &xin, 
+						   const vector<double> &yin,
+						   const vector<T> &data, 
+						   const vector<double> &voronoi_area,
+						   const KaiserBessel &kb)
 {
 
     double wx,wy, xx, yy, dx, dy, r, w, sumw;
-    int xdim,ydim;
+    Matrix2D<T> result;
 
     // Oversample result GRIDDING_NPAD times
-    xdim = XSIZE(result); 
-    ydim = YSIZE(result); 
-    result.resize(GRIDDING_NPAD*xdim, GRIDDING_NPAD*ydim);
-    result.initZeros();
+    result.initZeros(GRIDDING_NPAD*xdim, GRIDDING_NPAD*ydim);
     result.setXmippOrigin();
     
     // 1. Convolution interpolation
@@ -833,8 +903,41 @@ void getCartesianFromAnyCoordinates(Matrix2D<T> &result,
 	    MAT_ELEM(result,i,j) /= sumw;
     }
 
+    return result;
+
 }
 
+/** Finish forward gridding after interpolateCartesianFromAnyCoordinates
+ * @ingroup ForwardGridding
+ *
+ *  Produces a 2D real-space matrix2d after having performed 
+ *  interpolateCartesianFromAnyCoordinates for real-space coordinates.
+ */
+void produceForwardGriddingMatrix2D(const Matrix2D< double > &in, 
+				    Matrix2D< double > &out,
+				    KaiserBessel &kb);
+
+/** Finish forward gridding after interpolateCartesianFromAnyCoordinates
+ * @ingroup ForwardGridding
+ *
+ *  Produces a 2D real-space matrix2d after having performed
+ *  interpolateCartesianFromAnyCoordinates for fourier-space coordinates.
+ */
+void produceForwardGriddingMatrix2D(const Matrix2D< complex<double > > &in, 
+				    Matrix2D< double > &out,
+				    KaiserBessel &kb,
+				    bool is_centered = true);
+
+/** Finish forward gridding after interpolateCartesianFromAnyCoordinates
+ * @ingroup ForwardGridding
+ *
+ *  Produces a 2D fourier-space matrix2d after having performed
+ *  interpolateCartesianFromAnyCoordinates for fourier-space coordinates.
+ */
+void produceForwardGriddingFourierMatrix2D(const Matrix2D< complex<double > > &in, 
+					   Matrix2D< complex<double > > &out,
+					   KaiserBessel &kb,
+					   bool is_centered = true);
 
 
 #endif

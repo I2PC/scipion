@@ -52,7 +52,7 @@ void produceReverseGriddingFourierMatrix2D(const Matrix2D< double > &in,
     double v = GRIDDING_K / (2. * Nx);
     kb = KaiserBessel(GRIDDING_ALPHA, GRIDDING_K, r, v , Nx);
 
-    // 2. iFFT, pad with zeros and divide in real space by a sinhwin
+    // 2. Divide in real space by a sinhwin
     Matrix2D<double> aux2;
     double wx, wy;
     aux2.resize(Ny,Nx);
@@ -229,54 +229,21 @@ void approximateVoronoiArea(vector<double> &voronoi_area,
 
 }
 
-void getCartesianFromAnyCoordinates(Matrix2D<double> &result,
-				    const vector<double> &xin, const vector<double> &yin,
-				    const vector<double> &data, const vector<double> &voronoi_area,
-				    const KaiserBessel &kb)
+void produceForwardGriddingMatrix2D(const Matrix2D< double > &in, 
+				    Matrix2D< double > &out,
+				    KaiserBessel &kb)
 {
 
-    double wx,wy, xx, yy, dx, dy, r, w, sumw;
-    int xdim,ydim;
-
-    // Oversample result GRIDDING_NPAD times
-    xdim = XSIZE(result); 
-    ydim = YSIZE(result); 
-    result.resize(GRIDDING_NPAD*xdim, GRIDDING_NPAD*ydim);
-    result.initZeros();
-    result.setXmippOrigin();
-    
-    // 1. Convolution interpolation
-    // Loop over all cartesian coordinates: add all sampled points
-    // within the window in x or y to the result, multiplied with the
-    // corresponding gridding weights
-    double window_size = (double)(kb.get_window_size()/2);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(result)
-    {
-	xx = (double) j;
-	yy = (double) i;
-	sumw = 0.;
-	for (int ii = 0; ii < xin.size(); ii++)
-	{
-	    dx = GRIDDING_NPAD*xin[ii] - xx;
-	    if (ABS(dx) < window_size)
-	    { 		
-		dy = GRIDDING_NPAD*yin[ii] - yy;
-		if (ABS(dy) < window_size)
-		{
-		    // Gridding weight
-		    w = voronoi_area[ii] * kb.i0win_tab(dx) *  kb.i0win_tab(dy);
-		    MAT_ELEM(result,i,j) += data[ii] * w;
-		    sumw += w;
-		}
-	    }
-	}
-	if (sumw > 0.) 
-	    MAT_ELEM(result,i,j) /= sumw;
-    }
-
-    // 2. FFT and divide in Fourier space by the corresponding sinhwin
     Matrix2D<complex<double> > aux, aux2;
-    FourierTransform(result,aux);
+    int xdim,ydim;
+    double wx, wy;
+
+    // Downsample result GRIDDING_NPAD times
+    xdim = XSIZE(in)/GRIDDING_NPAD; 
+    ydim = YSIZE(in)/GRIDDING_NPAD; 
+
+    // FFT and divide in Fourier space by the corresponding sinhwin
+    FourierTransform(in,aux);
     CenterFFT(aux,true);
     aux.setXmippOrigin();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(aux) {
@@ -285,7 +252,7 @@ void getCartesianFromAnyCoordinates(Matrix2D<double> &result,
 	MAT_ELEM(aux,i,j) = MAT_ELEM(aux,i,j) / (wx * wy);
     }
  
-    // 3. resize to single dim, (backward) centering and IFFT
+    // Resize to single dim, (backward) centering and IFFT
     aux2.resize(xdim,ydim);
     aux2.setXmippOrigin();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(aux2)
@@ -293,6 +260,48 @@ void getCartesianFromAnyCoordinates(Matrix2D<double> &result,
 	MAT_ELEM(aux2,i,j) = MAT_ELEM(aux,i,j);
     }
     CenterFFT(aux2,false);
-    InverseFourierTransform(aux2,result);
-    result.setXmippOrigin();
+    InverseFourierTransform(aux2,out);
+    out.setXmippOrigin();
+
+}
+
+void produceForwardGriddingMatrix2D(const Matrix2D< complex<double > > &in, 
+				    Matrix2D< double > &out,
+				    KaiserBessel &kb, bool is_centered)
+{
+    Matrix2D<double> aux;
+    int xdim, ydim;
+    double wx, wy;
+
+    // Downsample result GRIDDING_NPAD times
+    xdim = XSIZE(in)/GRIDDING_NPAD; 
+    ydim = YSIZE(in)/GRIDDING_NPAD; 
+    out.resize(xdim,ydim);
+    out.setXmippOrigin();
+
+    // IFFT and divide in real space by the corresponding sinhwin
+    if (is_centered)
+    {
+	CenterFFT(aux,false);
+    }
+    InverseFourierTransform(in,aux);
+    aux.setXmippOrigin();
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(out) {
+	wy=kb.sinhwin(i);
+	wx=kb.sinhwin(j);
+	MAT_ELEM(out,i,j) = MAT_ELEM(aux,i,j) / (wx * wy);
+    }
+
+}
+
+void produceForwardGriddingFourierMatrix2D(const Matrix2D< complex<double > > &in, 
+					   Matrix2D< complex<double > > &out,
+					   KaiserBessel &kb, bool is_centered)
+{
+    Matrix2D<double> aux;
+
+    produceForwardGriddingMatrix2D(in,aux,kb,is_centered);
+    FourierTransform(aux,out);
+    CenterFFT(out,true);
+
 }

@@ -83,7 +83,7 @@ void convertPolarToSingleVector(const Polar<double > & in,
 }
 
 // conversion for complex polar
-void convertSingleVectortoPolar(const vector<double> & in, 
+void convertSingleVectorToPolar(const vector<double> & in, 
 				Polar<complex<double> > & out)
 {
     int c = 0;
@@ -102,7 +102,7 @@ void convertSingleVectortoPolar(const vector<double> & in,
 }
 
 // conversion for real polar
-void convertSingleVectortoPolar(const vector<double> & in, 
+void convertSingleVectorToPolar(const vector<double> & in, 
 				Polar<double> & out)
 {
     int c = 0;

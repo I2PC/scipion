@@ -52,6 +52,7 @@ public:
     vector<double>        ring_radius;  // radius of each ring
     vector<Matrix1D<T> >  rings;        // vector with all rings
 public:
+    /// @defgroup Polars Polar coordinate structures
     /// @defgroup PolarConstructors Polar constructors
     /// @ingroup Polars
 
