@@ -52,7 +52,6 @@ public:
     vector<double>        ring_radius;  // radius of each ring
     vector<Matrix1D<T> >  rings;        // vector with all rings
 public:
-    /// @defgroup Polars Polar coordinate structures
     /// @defgroup PolarConstructors Polar constructors
     /// @ingroup Polars
 
@@ -781,8 +780,8 @@ void inverseFourierTransformRings(const Polar<complex<double> > & in,
  * This may be useful for parallelization purposes.
  * 
  */
-void convertPolarToSingleVector(const Polar<complex<double> > & in, 
-				vector<double> & out);
+void convertPolarToSingleArray(const Polar<complex<double> > & in, 
+			       Matrix1D<double> & out);
 
 /** Convert to a single vector
  * @ingroup PolarRelated
@@ -791,8 +790,8 @@ void convertPolarToSingleVector(const Polar<complex<double> > & in,
  * This may be useful for parallelization purposes.
  * 
  */
-void convertPolarToSingleVector(const Polar<double> & in, 
-				    vector<double> & out);
+void convertPolarToSingleArray(const Polar<double> & in, 
+			       Matrix1D<double> & out);
 
 /** Convert back from a single vector to a complex polar structure
  * @ingroup PolarRelated
@@ -802,8 +801,8 @@ void convertPolarToSingleVector(const Polar<double> & in,
  * The structure of the polar should be the correct one already
  * 
  */
-void convertSingleVectorToPolar(const vector<double> & in, 
-				Polar<complex<double> > & out);
+void convertSingleArrayToPolar(const Matrix1D<double> & in,
+			       Polar<complex<double> > & out);
 
 /** Convert back from a single vector to a real polar structure
  * @ingroup PolarRelated
@@ -813,8 +812,8 @@ void convertSingleVectorToPolar(const vector<double> & in,
  * The structure of the polar should be the correct one already
  * 
  */
-void convertSingleVectorToPolar(const vector<double> & in, 
-				Polar<double> & out);
+void convertSingleArrayToPolar(const Matrix1D<double> & in,
+			       Polar<double> & out);
 
 
 #endif

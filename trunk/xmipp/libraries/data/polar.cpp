@@ -58,65 +58,81 @@ void inverseFourierTransformRings(const Polar<complex<double> > & in,
 }
 
 // conversion for complex polar
-void convertPolarToSingleVector(const Polar<complex<double> > & in, 
-			   vector<double> & out)
+void convertPolarToSingleArray(const Polar<complex<double> > & in, 
+			       Matrix1D<double> & out)
 {
+    int size = 0;
+    for (int i = 0; i < in.rings.size(); i++)
+	for (int j = 0; j < XSIZE(in.rings[i]); j++)
+	    size+=2;
+
     out.clear();
+    out.resize(size);
+
+    int c = 0;
     for (int i = 0; i < in.rings.size(); i++)
 	for (int j = 0; j < XSIZE(in.rings[i]); j++)
 	{
-	    out.push_back((in.rings[i](j)).real());
-	    out.push_back((in.rings[i](j)).imag());
+	    out(2*c)   = (in.rings[i](j)).real();
+	    out(2*c+1) = (in.rings[i](j)).imag();
+	    c++;
 	}
 }
 
 // conversion for real polar
-void convertPolarToSingleVector(const Polar<double > & in, 
-			   vector<double> & out)
+void convertPolarToSingleArray(const Polar<double> & in, 
+			       Matrix1D<double> & out)
 {
+    int size = 0;
+    for (int i = 0; i < in.rings.size(); i++)
+	for (int j = 0; j < XSIZE(in.rings[i]); j++)
+	    size++;
+
     out.clear();
+    out.resize(size);
+
+    int c = 0;
     for (int i = 0; i < in.rings.size(); i++)
 	for (int j = 0; j < XSIZE(in.rings[i]); j++)
 	{
-	    out.push_back(in.rings[i](j));
+	    out(c) = in.rings[i](j);
+	    c++;
 	}
 }
 
 // conversion for complex polar
-void convertSingleVectorToPolar(const vector<double> & in, 
-				Polar<complex<double> > & out)
+void convertSingleArrayToPolar(const Matrix1D<double> & in,
+			       Polar<complex<double> > & out)
 {
     int c = 0;
     for (int i = 0; i < out.rings.size(); i++)
-    {
 	for (int j = 0; j < XSIZE(out.rings[i]); j++)
 	{
-	    out.rings[i](j) = complex<double>(in[2*c],in[2*c+1]);
+	    out.rings[i](j) = complex<double>(in(2*c), in(2*c+1));
 	    c++;
 	}
-    }
 
-    if (2*c != in.size()) 
-	REPORT_ERROR(1,"convertFromSingleVector: incorrect vector size for this template");
+    if (2*c != XSIZE(in))
+	REPORT_ERROR(1,"convertSingleArrayToPolar: incorrect vector size for this template");
 
 }
 
 // conversion for real polar
-void convertSingleVectorToPolar(const vector<double> & in, 
-				Polar<double> & out)
+void convertSingleArrayToPolar(const Matrix1D<double> & in,
+			       Polar<double> & out)
 {
     int c = 0;
     for (int i = 0; i < out.rings.size(); i++)
     {
 	for (int j = 0; j < XSIZE(out.rings[i]); j++)
 	{
-	    out.rings[i](j) = in[c];
+	    out.rings[i](j) = in(c);
 	    c++;
 	}
     }
 
-    if (c != in.size()) 
-	REPORT_ERROR(1,"convertFromSingleVector: incorrect vector size for this template");
+    if (c != XSIZE(in)) 
+	REPORT_ERROR(1,"convertSingleArrayToPolar: incorrect vector size for this template");
 
 }
 

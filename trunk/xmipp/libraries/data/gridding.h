@@ -110,291 +110,6 @@ void produceReverseGriddingMatrix3D(const Matrix3D< double > &in,
 				    Matrix3D< double > &out,
 				    KaiserBessel &kb);
 
-/** Reverse-gridding based 2D projection operation
- * @ingroup ReverseGridding
- *
- * Extracts a plane from a volume using reverse-gridding interpolation,
- * knowing that this volume has been processed for gridding.
- *
- * rot, tilt and psi and the respective Euler angles
- *
- * To interpolate using gridding you must prepare the volume first!
- * An example to extract a Fourier-plane, i.e. to calculate a
- * real-space projection, would be:
- *
- * @code
- * KaiserBessel kb;
- * matrix3D<complex<double> > Faux;
- * TODO!!!!
- * @endcode
- */
-
-
-
-
-/** Reverse-gridding based geometric transformation on a 2D matrix
- * @ingroup ReverseGridding
- *
- * Applies a geometric transformation to a 2D matrix with
- * reverse-gridding-based interpolation, knowing that this image has been
- * processed for gridding.
- *
- * A is a 3x3 transformation matrix.
- *
- * Note that the output dimensions should be given if a different
- * scale is to be applied.
- *
- * To interpolate using gridding you must prepare the image first!
- * An example to apply a gridding-based transformation would be:
- *
- * @code
- * KaiserBessel kb;
- * matrix2D<double> Maux,out;
- * produceReverseGriddingMatrix2D(img(),Maux,kb);
- * Matrix2D<double> A = rotation2DMatrix(63.1);
- * applyGeometryReverseGridding(out,A,Maux,IS_NOT_INV,DONT_WRAP,kb);
- * @endcode
- */
-template<typename T>
-void applyGeometryReverseGridding(Matrix2D<T> &M2, Matrix2D< double > A, 
-				  const Matrix2D<T> &M1, 
-				  const KaiserBessel &kb, bool inv, bool wrap, 
-				  int nx = 0, int ny = 0, T outside = (T) 0)
-{
-    int m1, n1, m2, n2;
-    double x, y, xp, yp;
-    double minxp, minyp, maxxp, maxyp;
-    int cen_x, cen_y;
-
-    if ((XSIZE(A) != 3) || (YSIZE(A) != 3))
-        REPORT_ERROR(1102, "Apply_geom: geometrical transformation is not 3x3");
-
-    if (XSIZE(M1) == 0)
-    {
-        M2.clear();
-        return;
-    }
-
-    // For scalings the output matrix is explicitly resized to the final size 
-    // Otherwise, just take half the size of the gridding image
-    if (nx == 0) 
-	nx = XSIZE(M1) / GRIDDING_NPAD;
-    if (ny == 0) 
-	ny = XSIZE(M1) / GRIDDING_NPAD;
-    M2.resize(ny, nx);
-    M2.setXmippOrigin();
-
-    if (!inv)
-        A = A.inv();
-
-    // Find center and limits of image
-    cen_y  = (int)(YSIZE(M2) / 2);
-    cen_x  = (int)(XSIZE(M2) / 2);
-    // Take 2x oversize M1 dims into account for calculating the limits 
-    minxp  = FIRST_XMIPP_INDEX(XSIZE(M1)/2);
-    minyp  = FIRST_XMIPP_INDEX(YSIZE(M1)/2);
-    maxxp  = LAST_XMIPP_INDEX(XSIZE(M1)/2);
-    maxyp  = LAST_XMIPP_INDEX(YSIZE(M1)/2);
-
-    // Now we go from the output image to the input image, ie, for any pixel
-    // in the output image we calculate which are the corresponding ones in
-    // the original image, make an interpolation with them and put this value
-    // at the output pixel
-    for (int i = 0; i < YSIZE(M2); i++)
-    {
-        // Calculate position of the beginning of the row in the output image
-        x = -cen_x;
-        y = i - cen_y;
-
-        // Calculate this position in the input image according to the
-        // geometrical transformation
-        // they are related by
-        // coords_output(=x,y) = A * coords_input (=xp,yp)
-        xp = x * dMij(A, 0, 0) + y * dMij(A, 0, 1) + dMij(A, 0, 2);
-        yp = x * dMij(A, 1, 0) + y * dMij(A, 1, 1) + dMij(A, 1, 2);
-
-        for (int j = 0; j < XSIZE(M2); j++)
-        {
-            bool interp;
-
-            // If the point is outside the image, apply a periodic extension
-            // of the image, what exits by one side enters by the other
-            interp = true;
-
-            if (wrap)
-            {
-                if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
-                    xp > maxxp + XMIPP_EQUAL_ACCURACY)
-                    xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
-
-                if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
-                    yp > maxyp + XMIPP_EQUAL_ACCURACY)
-                    yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
-            }
-            else
-            {
-                if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
-                    xp > maxxp + XMIPP_EQUAL_ACCURACY)
-                    interp = false;
-
-                if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
-                    yp > maxyp + XMIPP_EQUAL_ACCURACY)
-                    interp = false;
-            }
-
-            if (interp)
-                dMij(M2, i, j) = interpolatedElementReverseGridding(M1,xp,yp,kb);
-	    else
-		dMij(M2, i, j) = outside;
-
-          // Compute new point inside input image
-            xp += dMij(A, 0, 0);
-            yp += dMij(A, 1, 0);
-        }
-    }
-}
-
-/** Reverse-gridding based geometric transformation on a 3D matrix
- * @ingroup ReverseGridding
- *
- * Applies a geometric transformation to a 3D matrix with
- * reverse-gridding-based interpolation, knowing that this image has been
- * processed for gridding.
- *
- * A is a 3x3 transformation matrix.
- *
- * To interpolate using gridding you must prepare the matrix3d first!
- * An example to apply a gridding-based transformation would be:
- *
- * @code
- * KaiserBessel kb;
- * matrix3D<double> Maux,out;
- * produceReverseGriddingMatrix3D(vol(),Maux,kb);
- * Matrix2D<double> A = rotation2DMatrix(63.1);
- * applyGeometryReverseGridding(out,A,Maux,IS_NOT_INV,DONT_WRAP,kb);
- * @endcode
- */
-template<typename T>
-void applyGeometryReverseGridding(Matrix3D<T> &V2, Matrix2D< double > A, 
-				  const Matrix3D<T> &V1, const KaiserBessel &kb, 
-				  bool inv, bool wrap, 
-				  int nx = 0, int ny = 0, int nz = 0, T outside = (T) 0)
-{
-    int m1, n1, o1, m2, n2, o2;
-    double x, y, z, xp, yp, zp;
-    double minxp, minyp, maxxp, maxyp, minzp, maxzp;
-    int   cen_x, cen_y, cen_z;
-
-    if ((XSIZE(A) != 4) || (YSIZE(A) != 4))
-        REPORT_ERROR(1102, "Apply_geom3D: geometrical transformation is not 4x4");
-
-    if (XSIZE(V1) == 0)
-    {
-        V2.clear();
-        return;
-    }
-
-    // For scalings the output matrix is explicitly resized to the final size 
-    // Otherwise, just take half the size of the gridding image
-    if (nx == 0) 
-	nx = XSIZE(V1) / GRIDDING_NPAD;
-    if (ny == 0) 
-	ny = XSIZE(V1) / GRIDDING_NPAD;
-    if (nz == 0) 
-	nz = ZSIZE(V1) / GRIDDING_NPAD;
-    V2.resize(nz, ny, nx);
-    V2.setXmippOrigin();
-
-    if (!inv)
-        A = A.inv();
-
-    // Find center of Matrix3D
-    cen_z = (int)(V2.zdim / 2);
-    cen_y = (int)(V2.ydim / 2);
-    cen_x = (int)(V2.xdim / 2);
-    // Take 2x oversize M1 dims into account for calculating the limits 
-    minxp  = FIRST_XMIPP_INDEX(XSIZE(V1)/2);
-    minyp  = FIRST_XMIPP_INDEX(YSIZE(V1)/2);
-    minzp  = FIRST_XMIPP_INDEX(ZSIZE(V1)/2);
-    maxxp  = LAST_XMIPP_INDEX(XSIZE(V1)/2);
-    maxyp  = LAST_XMIPP_INDEX(YSIZE(V1)/2);
-    maxzp  = LAST_XMIPP_INDEX(ZSIZE(V1)/2);
-
-    // Now we go from the output Matrix3D to the input Matrix3D, ie, for any
-    // voxel in the output Matrix3D we calculate which are the corresponding
-    // ones in the original Matrix3D, make an interpolation with them and put
-    // this value at the output voxel
-
-    // V2 is not initialised to 0 because all its pixels are rewritten
-    for (int k = 0; k < V2.zdim; k++)
-        for (int i = 0; i < V2.ydim; i++)
-        {
-            // Calculate position of the beginning of the row in the output
-            // Matrix3D
-            x = -cen_x;
-            y = i - cen_y;
-            z = k - cen_z;
-
-            // Calculate this position in the input image according to the
-            // geometrical transformation they are related by
-            // coords_output(=x,y) = A * coords_input (=xp,yp)
-            xp = x * dMij(A, 0, 0) + y * dMij(A, 0, 1) + z * dMij(A, 0, 2)
-                 + dMij(A, 0, 3);
-            yp = x * dMij(A, 1, 0) + y * dMij(A, 1, 1) + z * dMij(A, 1, 2)
-                 + dMij(A, 1, 3);
-            zp = x * dMij(A, 2, 0) + y * dMij(A, 2, 1) + z * dMij(A, 2, 2)
-                 + dMij(A, 2, 3);
-
-            for (int j = 0; j < V2.xdim; j++)
-            {
-                bool interp;
-
-                // If the point is outside the volume, apply a periodic
-                // extension of the volume, what exits by one side enters by
-                // the other
-                interp = true;
-                if (wrap)
-                {
-                    if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
-                        xp > maxxp + XMIPP_EQUAL_ACCURACY)
-                        xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
-
-                    if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
-                        yp > maxyp + XMIPP_EQUAL_ACCURACY)
-                        yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
-
-                    if (zp < minzp - XMIPP_EQUAL_ACCURACY ||
-                        zp > maxzp + XMIPP_EQUAL_ACCURACY)
-                        zp = realWRAP(zp, minzp - 0.5, maxzp + 0.5);
-                }
-                else
-                {
-                    if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
-                        xp > maxxp + XMIPP_EQUAL_ACCURACY)
-                        interp = false;
-
-                    if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
-                        yp > maxyp + XMIPP_EQUAL_ACCURACY)
-                        interp = false;
-
-                    if (zp < minzp - XMIPP_EQUAL_ACCURACY ||
-                        zp > maxzp + XMIPP_EQUAL_ACCURACY)
-                        interp = false;
-                }
-
-                if (interp)
-                    dVkij(V2, k, i, j) = (T) interpolatedElementReverseGridding(V1,xp,yp,zp,kb);
-                else
-                    dVkij(V2, k, i, j) = outside;
-
-                // Compute new point inside input image
-                xp += dMij(A, 0, 0);
-                yp += dMij(A, 1, 0);
-                zp += dMij(A, 2, 0);
-            }
-        }
-}
-
 /** Reverse-gridding based interpolation in a 2D matrix
  * @ingroup ReverseGridding
  *
@@ -815,6 +530,291 @@ T interpolatedElementReverseGridding(const Matrix3D<T> &in, double x, double y, 
 
 }
 
+/// @defgroup ReverseGriddingRelated Reverse Gridding Related Functions
+
+/** Reverse-gridding based 2D projection operation
+ * @ingroup ReverseGriddingRelated
+ *
+ * Extracts a plane from a volume using reverse-gridding interpolation,
+ * knowing that this volume has been processed for gridding.
+ *
+ * rot, tilt and psi and the respective Euler angles
+ *
+ * To interpolate using gridding you must prepare the volume first!
+ * An example to extract a Fourier-plane, i.e. to calculate a
+ * real-space projection, would be:
+ *
+ * @code
+ * KaiserBessel kb;
+ * matrix3D<complex<double> > Faux;
+ * TODO!!!!
+ * @endcode
+ */
+
+
+/** Reverse-gridding based geometric transformation on a 2D matrix
+ * @ingroup ReverseGriddingRelated
+ *
+ * Applies a geometric transformation to a 2D matrix with
+ * reverse-gridding-based interpolation, knowing that this image has been
+ * processed for gridding.
+ *
+ * A is a 3x3 transformation matrix.
+ *
+ * Note that the output dimensions should be given if a different
+ * scale is to be applied.
+ *
+ * To interpolate using gridding you must prepare the image first!
+ * An example to apply a gridding-based transformation would be:
+ *
+ * @code
+ * KaiserBessel kb;
+ * matrix2D<double> Maux,out;
+ * produceReverseGriddingMatrix2D(img(),Maux,kb);
+ * Matrix2D<double> A = rotation2DMatrix(63.1);
+ * applyGeometryReverseGridding(out,A,Maux,IS_NOT_INV,DONT_WRAP,kb);
+ * @endcode
+ */
+template<typename T>
+void applyGeometryReverseGridding(Matrix2D<T> &M2, Matrix2D< double > A, 
+				  const Matrix2D<T> &M1, 
+				  const KaiserBessel &kb, bool inv, bool wrap, 
+				  int nx = 0, int ny = 0, T outside = (T) 0)
+{
+    int m1, n1, m2, n2;
+    double x, y, xp, yp;
+    double minxp, minyp, maxxp, maxyp;
+    int cen_x, cen_y;
+
+    if ((XSIZE(A) != 3) || (YSIZE(A) != 3))
+        REPORT_ERROR(1102, "Apply_geom: geometrical transformation is not 3x3");
+
+    if (XSIZE(M1) == 0)
+    {
+        M2.clear();
+        return;
+    }
+
+    // For scalings the output matrix is explicitly resized to the final size 
+    // Otherwise, just take half the size of the gridding image
+    if (nx == 0) 
+	nx = XSIZE(M1) / GRIDDING_NPAD;
+    if (ny == 0) 
+	ny = XSIZE(M1) / GRIDDING_NPAD;
+    M2.resize(ny, nx);
+    M2.setXmippOrigin();
+
+    if (!inv)
+        A = A.inv();
+
+    // Find center and limits of image
+    cen_y  = (int)(YSIZE(M2) / 2);
+    cen_x  = (int)(XSIZE(M2) / 2);
+    // Take 2x oversize M1 dims into account for calculating the limits 
+    minxp  = FIRST_XMIPP_INDEX(XSIZE(M1)/2);
+    minyp  = FIRST_XMIPP_INDEX(YSIZE(M1)/2);
+    maxxp  = LAST_XMIPP_INDEX(XSIZE(M1)/2);
+    maxyp  = LAST_XMIPP_INDEX(YSIZE(M1)/2);
+
+    // Now we go from the output image to the input image, ie, for any pixel
+    // in the output image we calculate which are the corresponding ones in
+    // the original image, make an interpolation with them and put this value
+    // at the output pixel
+    for (int i = 0; i < YSIZE(M2); i++)
+    {
+        // Calculate position of the beginning of the row in the output image
+        x = -cen_x;
+        y = i - cen_y;
+
+        // Calculate this position in the input image according to the
+        // geometrical transformation
+        // they are related by
+        // coords_output(=x,y) = A * coords_input (=xp,yp)
+        xp = x * dMij(A, 0, 0) + y * dMij(A, 0, 1) + dMij(A, 0, 2);
+        yp = x * dMij(A, 1, 0) + y * dMij(A, 1, 1) + dMij(A, 1, 2);
+
+        for (int j = 0; j < XSIZE(M2); j++)
+        {
+            bool interp;
+
+            // If the point is outside the image, apply a periodic extension
+            // of the image, what exits by one side enters by the other
+            interp = true;
+
+            if (wrap)
+            {
+                if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
+                    xp > maxxp + XMIPP_EQUAL_ACCURACY)
+                    xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
+
+                if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
+                    yp > maxyp + XMIPP_EQUAL_ACCURACY)
+                    yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
+            }
+            else
+            {
+                if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
+                    xp > maxxp + XMIPP_EQUAL_ACCURACY)
+                    interp = false;
+
+                if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
+                    yp > maxyp + XMIPP_EQUAL_ACCURACY)
+                    interp = false;
+            }
+
+            if (interp)
+                dMij(M2, i, j) = interpolatedElementReverseGridding(M1,xp,yp,kb);
+	    else
+		dMij(M2, i, j) = outside;
+
+          // Compute new point inside input image
+            xp += dMij(A, 0, 0);
+            yp += dMij(A, 1, 0);
+        }
+    }
+}
+
+/** Reverse-gridding based geometric transformation on a 3D matrix
+ * @ingroup ReverseGriddingRelated
+ *
+ * Applies a geometric transformation to a 3D matrix with
+ * reverse-gridding-based interpolation, knowing that this image has been
+ * processed for gridding.
+ *
+ * A is a 3x3 transformation matrix.
+ *
+ * To interpolate using gridding you must prepare the matrix3d first!
+ * An example to apply a gridding-based transformation would be:
+ *
+ * @code
+ * KaiserBessel kb;
+ * matrix3D<double> Maux,out;
+ * produceReverseGriddingMatrix3D(vol(),Maux,kb);
+ * Matrix2D<double> A = rotation2DMatrix(63.1);
+ * applyGeometryReverseGridding(out,A,Maux,IS_NOT_INV,DONT_WRAP,kb);
+ * @endcode
+ */
+template<typename T>
+void applyGeometryReverseGridding(Matrix3D<T> &V2, Matrix2D< double > A, 
+				  const Matrix3D<T> &V1, const KaiserBessel &kb, 
+				  bool inv, bool wrap, 
+				  int nx = 0, int ny = 0, int nz = 0, T outside = (T) 0)
+{
+    int m1, n1, o1, m2, n2, o2;
+    double x, y, z, xp, yp, zp;
+    double minxp, minyp, maxxp, maxyp, minzp, maxzp;
+    int   cen_x, cen_y, cen_z;
+
+    if ((XSIZE(A) != 4) || (YSIZE(A) != 4))
+        REPORT_ERROR(1102, "Apply_geom3D: geometrical transformation is not 4x4");
+
+    if (XSIZE(V1) == 0)
+    {
+        V2.clear();
+        return;
+    }
+
+    // For scalings the output matrix is explicitly resized to the final size 
+    // Otherwise, just take half the size of the gridding image
+    if (nx == 0) 
+	nx = XSIZE(V1) / GRIDDING_NPAD;
+    if (ny == 0) 
+	ny = XSIZE(V1) / GRIDDING_NPAD;
+    if (nz == 0) 
+	nz = ZSIZE(V1) / GRIDDING_NPAD;
+    V2.resize(nz, ny, nx);
+    V2.setXmippOrigin();
+
+    if (!inv)
+        A = A.inv();
+
+    // Find center of Matrix3D
+    cen_z = (int)(V2.zdim / 2);
+    cen_y = (int)(V2.ydim / 2);
+    cen_x = (int)(V2.xdim / 2);
+    // Take 2x oversize M1 dims into account for calculating the limits 
+    minxp  = FIRST_XMIPP_INDEX(XSIZE(V1)/2);
+    minyp  = FIRST_XMIPP_INDEX(YSIZE(V1)/2);
+    minzp  = FIRST_XMIPP_INDEX(ZSIZE(V1)/2);
+    maxxp  = LAST_XMIPP_INDEX(XSIZE(V1)/2);
+    maxyp  = LAST_XMIPP_INDEX(YSIZE(V1)/2);
+    maxzp  = LAST_XMIPP_INDEX(ZSIZE(V1)/2);
+
+    // Now we go from the output Matrix3D to the input Matrix3D, ie, for any
+    // voxel in the output Matrix3D we calculate which are the corresponding
+    // ones in the original Matrix3D, make an interpolation with them and put
+    // this value at the output voxel
+
+    // V2 is not initialised to 0 because all its pixels are rewritten
+    for (int k = 0; k < V2.zdim; k++)
+        for (int i = 0; i < V2.ydim; i++)
+        {
+            // Calculate position of the beginning of the row in the output
+            // Matrix3D
+            x = -cen_x;
+            y = i - cen_y;
+            z = k - cen_z;
+
+            // Calculate this position in the input image according to the
+            // geometrical transformation they are related by
+            // coords_output(=x,y) = A * coords_input (=xp,yp)
+            xp = x * dMij(A, 0, 0) + y * dMij(A, 0, 1) + z * dMij(A, 0, 2)
+                 + dMij(A, 0, 3);
+            yp = x * dMij(A, 1, 0) + y * dMij(A, 1, 1) + z * dMij(A, 1, 2)
+                 + dMij(A, 1, 3);
+            zp = x * dMij(A, 2, 0) + y * dMij(A, 2, 1) + z * dMij(A, 2, 2)
+                 + dMij(A, 2, 3);
+
+            for (int j = 0; j < V2.xdim; j++)
+            {
+                bool interp;
+
+                // If the point is outside the volume, apply a periodic
+                // extension of the volume, what exits by one side enters by
+                // the other
+                interp = true;
+                if (wrap)
+                {
+                    if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
+                        xp > maxxp + XMIPP_EQUAL_ACCURACY)
+                        xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
+
+                    if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
+                        yp > maxyp + XMIPP_EQUAL_ACCURACY)
+                        yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
+
+                    if (zp < minzp - XMIPP_EQUAL_ACCURACY ||
+                        zp > maxzp + XMIPP_EQUAL_ACCURACY)
+                        zp = realWRAP(zp, minzp - 0.5, maxzp + 0.5);
+                }
+                else
+                {
+                    if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
+                        xp > maxxp + XMIPP_EQUAL_ACCURACY)
+                        interp = false;
+
+                    if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
+                        yp > maxyp + XMIPP_EQUAL_ACCURACY)
+                        interp = false;
+
+                    if (zp < minzp - XMIPP_EQUAL_ACCURACY ||
+                        zp > maxzp + XMIPP_EQUAL_ACCURACY)
+                        interp = false;
+                }
+
+                if (interp)
+                    dVkij(V2, k, i, j) = (T) interpolatedElementReverseGridding(V1,xp,yp,zp,kb);
+                else
+                    dVkij(V2, k, i, j) = outside;
+
+                // Compute new point inside input image
+                xp += dMij(A, 0, 0);
+                yp += dMij(A, 1, 0);
+                zp += dMij(A, 2, 0);
+            }
+        }
+}
+
 /// @defgroup ForwardGridding Forward Gridding
 /// @ingroup Gridding
 
@@ -853,18 +853,18 @@ void approximateVoronoiArea(vector<double> &voronoi_area,
  *
  * P.getCartesianCoordinates(x,y,data); // (P is a Polar<double>)
  * approximateVoronoiArea(voronoi_area,x,y);
- * Maux = interpolateCartesianFromAnyCoordinates(64,64,x,y,data,voronoi_area,kb);
+ * Maux = interpolateCartesianFromArbitrarySampling(64,64,x,y,data,voronoi_area,kb);
  * produceForwardGriddingMatrix2D(Maux,Maux2,kb);
  * @endcode
  *
  */
 template <typename T>
-Matrix2D<T> interpolateCartesianFromAnyCoordinates(const int xdim, const int ydim,
-						   const vector<double> &xin, 
-						   const vector<double> &yin,
-						   const vector<T> &data, 
-						   const vector<double> &voronoi_area,
-						   const KaiserBessel &kb)
+Matrix2D<T> interpolateCartesianFromArbitrarySampling(const int xdim, const int ydim,
+						      const vector<double> &xin, 
+						      const vector<double> &yin,
+						      const vector<T> &data, 
+						      const vector<double> &voronoi_area,
+						      const KaiserBessel &kb)
 {
 
     double wx,wy, xx, yy, dx, dy, r, w, sumw;
@@ -907,32 +907,32 @@ Matrix2D<T> interpolateCartesianFromAnyCoordinates(const int xdim, const int ydi
 
 }
 
-/** Finish forward gridding after interpolateCartesianFromAnyCoordinates
+/** Finish forward gridding after interpolateCartesianFromArbitrarySampling
  * @ingroup ForwardGridding
  *
  *  Produces a 2D real-space matrix2d after having performed 
- *  interpolateCartesianFromAnyCoordinates for real-space coordinates.
+ *  interpolateCartesianFromArbitrarySampling for real-space coordinates.
  */
 void produceForwardGriddingMatrix2D(const Matrix2D< double > &in, 
 				    Matrix2D< double > &out,
 				    KaiserBessel &kb);
 
-/** Finish forward gridding after interpolateCartesianFromAnyCoordinates
+/** Finish forward gridding after interpolateCartesianFromArbitrarySampling
  * @ingroup ForwardGridding
  *
  *  Produces a 2D real-space matrix2d after having performed
- *  interpolateCartesianFromAnyCoordinates for fourier-space coordinates.
+ *  interpolateCartesianFromArbitrarySampling for fourier-space coordinates.
  */
 void produceForwardGriddingMatrix2D(const Matrix2D< complex<double > > &in, 
 				    Matrix2D< double > &out,
 				    KaiserBessel &kb,
 				    bool is_centered = true);
 
-/** Finish forward gridding after interpolateCartesianFromAnyCoordinates
+/** Finish forward gridding after interpolateCartesianFromArbitrarySampling
  * @ingroup ForwardGridding
  *
  *  Produces a 2D fourier-space matrix2d after having performed
- *  interpolateCartesianFromAnyCoordinates for fourier-space coordinates.
+ *  interpolateCartesianFromArbitrarySampling for fourier-space coordinates.
  */
 void produceForwardGriddingFourierMatrix2D(const Matrix2D< complex<double > > &in, 
 					   Matrix2D< complex<double > > &out,
