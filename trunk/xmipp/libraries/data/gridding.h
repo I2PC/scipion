@@ -2,7 +2,7 @@
  *
  * Authors: Sjors H.W. Scheres (scheres@cnb.uam.es)
  *
- *  This code is strongly based on ideas by Pawel Penczek & Zhengfan
+ *  Part of this code is strongly based on ideas by Pawel Penczek & Zhengfan
  *  Yang as implemented in SPARX at the University of Texas - Houston 
  *  Medical School
  *
@@ -43,48 +43,48 @@
 /**  Produces a 2D Fourier-space matrix2d for reverse-gridding
  *  interpolation from a Fourier-space matrix2d
  */
-void produceGriddingFourierMatrix2D(const Matrix2D< complex < double> > &in, 
-				    Matrix2D< complex < double > > &out,
-				    KaiserBessel &kb);
+void produceReverseGriddingFourierMatrix2D(const Matrix2D< complex < double> > &in, 
+					   Matrix2D< complex < double > > &out,
+					   KaiserBessel &kb);
 
 /**  Produces a 2D Fourier-space matrix2d for reverse-gridding
  *  interpolation from a real-space matrix2d 
  *  This real-space matrix2d should have the Xmipp origin set!
  */
-void produceGriddingFourierMatrix2D(const Matrix2D< double > &in, 
-				    Matrix2D< complex< double > > &out,
-				    KaiserBessel &kb);
+void produceReverseGriddingFourierMatrix2D(const Matrix2D< double > &in, 
+					   Matrix2D< complex< double > > &out,
+					   KaiserBessel &kb);
 
 /**  Produces a 2D real-space matrix2d for reverse-gridding interpolation
  *  from a real-space matrix2d
  */
-void produceGriddingMatrix2D(const Matrix2D< double > &in, 
-			  Matrix2D< double > &out,
-			  KaiserBessel &kb);
+void produceReverseGriddingMatrix2D(const Matrix2D< double > &in, 
+				    Matrix2D< double > &out,
+				    KaiserBessel &kb);
 
 /**  Produces a 3D Fourier-space matrix3d for reverse-gridding
  *  interpolation from a Fourier-space matrix3d
  */
-void produceGriddingFourierMatrix3D(const Matrix3D< complex < double > > &in, 
-				  Matrix3D< complex < double > > &out,
-				  KaiserBessel &kb);
+void produceReverseGriddingFourierMatrix3D(const Matrix3D< complex < double > > &in, 
+					   Matrix3D< complex < double > > &out,
+					   KaiserBessel &kb);
 
 /**  Produces a 3D Fourier-space matrix3d for reverse-gridding
  *  interpolation from a real-space matrix3d 
  *  This real-space matrix3d should have the Xmipp origin set!
  */
-void produceGriddingFourierMatrix3D(const Matrix3D< double > &in, 
-				    Matrix3D< complex< double > > &out,
-				    KaiserBessel &kb);
+void produceReverseGriddingFourierMatrix3D(const Matrix3D< double > &in, 
+					   Matrix3D< complex< double > > &out,
+					   KaiserBessel &kb);
 
 /**  Produces a 3D real-space matrix3d for reverse-gridding
  *  interpolation from a real-space matrix3d
  */
-void produceGriddingMatrix3D(const Matrix3D< double > &in, 
-			   Matrix3D< double > &out,
-			   KaiserBessel &kb);
+void produceReverseGriddingMatrix3D(const Matrix3D< double > &in, 
+				    Matrix3D< double > &out,
+				    KaiserBessel &kb);
 
-/** Extracts a plane from a volume using gridding interpolation,
+/** Extracts a plane from a volume using reverse-gridding interpolation,
  * knowing that this volume has been processed for gridding.
  *
  * rot, tilt and psi and the respective Euler angles
@@ -97,9 +97,6 @@ void produceGriddingMatrix3D(const Matrix3D< double > &in,
  * KaiserBessel kb;
  * matrix3D<complex<double> > Faux;
  * TODO!!!!
- * produceGriddingFourierMatrix3D(vol(),Maux,kb);
- * Matrix2D<double> A = rotation2DMatrix(63.1);
- * applyGeometryGridding(out,A,Maux,IS_NOT_INV,DONT_WRAP,kb);
  * @endcode
  */
 
@@ -107,7 +104,7 @@ void produceGriddingMatrix3D(const Matrix3D< double > &in,
 
 
 /** Applies a geometric transformation to a 2D matrix with
- * gridding-based interpolation, knowing that this image has been
+ * reverse-gridding-based interpolation, knowing that this image has been
  * processed for gridding.
  *
  * A is a 3x3 transformation matrix.
@@ -121,16 +118,16 @@ void produceGriddingMatrix3D(const Matrix3D< double > &in,
  * @code
  * KaiserBessel kb;
  * matrix2D<double> Maux,out;
- * produceGriddingMatrix2D(img(),Maux,kb);
+ * produceReverseGriddingMatrix2D(img(),Maux,kb);
  * Matrix2D<double> A = rotation2DMatrix(63.1);
- * applyGeometryGridding(out,A,Maux,IS_NOT_INV,DONT_WRAP,kb);
+ * applyGeometryReverseGridding(out,A,Maux,IS_NOT_INV,DONT_WRAP,kb);
  * @endcode
  */
 template<typename T>
-void applyGeometryGridding(Matrix2D<T> &M2, Matrix2D< double > A, 
-			   const Matrix2D<T> &M1, 
-			   const KaiserBessel &kb, bool inv, bool wrap, 
-			   int nx = 0, int ny = 0, T outside = (T) 0)
+void applyGeometryReverseGridding(Matrix2D<T> &M2, Matrix2D< double > A, 
+				  const Matrix2D<T> &M1, 
+				  const KaiserBessel &kb, bool inv, bool wrap, 
+				  int nx = 0, int ny = 0, T outside = (T) 0)
 {
     int m1, n1, m2, n2;
     double x, y, xp, yp;
@@ -214,7 +211,7 @@ void applyGeometryGridding(Matrix2D<T> &M2, Matrix2D< double > A,
             }
 
             if (interp)
-                dMij(M2, i, j) = interpolatedElementGridding(M1,xp,yp,kb);
+                dMij(M2, i, j) = interpolatedElementReverseGridding(M1,xp,yp,kb);
 	    else
 		dMij(M2, i, j) = outside;
 
@@ -226,7 +223,7 @@ void applyGeometryGridding(Matrix2D<T> &M2, Matrix2D< double > A,
 }
 
 /** Applies a geometric transformation to a 3D matrix with
- * gridding-based interpolation, knowing that this image has been
+ * reverse-gridding-based interpolation, knowing that this image has been
  * processed for gridding.
  *
  * A is a 3x3 transformation matrix.
@@ -237,16 +234,16 @@ void applyGeometryGridding(Matrix2D<T> &M2, Matrix2D< double > A,
  * @code
  * KaiserBessel kb;
  * matrix3D<double> Maux,out;
- * produceGriddingMatrix3D(vol(),Maux,kb);
+ * produceReverseGriddingMatrix3D(vol(),Maux,kb);
  * Matrix2D<double> A = rotation2DMatrix(63.1);
- * applyGeometryGridding(out,A,Maux,IS_NOT_INV,DONT_WRAP,kb);
+ * applyGeometryReverseGridding(out,A,Maux,IS_NOT_INV,DONT_WRAP,kb);
  * @endcode
  */
 template<typename T>
-void applyGeometryGridding(Matrix3D<T> &V2, Matrix2D< double > A, 
-			   const Matrix3D<T> &V1, const KaiserBessel &kb, 
-			   bool inv, bool wrap, 
-			   int nx = 0, int ny = 0, int nz = 0, T outside = (T) 0)
+void applyGeometryReverseGridding(Matrix3D<T> &V2, Matrix2D< double > A, 
+				  const Matrix3D<T> &V1, const KaiserBessel &kb, 
+				  bool inv, bool wrap, 
+				  int nx = 0, int ny = 0, int nz = 0, T outside = (T) 0)
 {
     int m1, n1, o1, m2, n2, o2;
     double x, y, z, xp, yp, zp;
@@ -351,7 +348,7 @@ void applyGeometryGridding(Matrix3D<T> &V2, Matrix2D< double > A,
                 }
 
                 if (interp)
-                    dVkij(V2, k, i, j) = (T) interpolatedElementGridding(V1,xp,yp,zp,kb);
+                    dVkij(V2, k, i, j) = (T) interpolatedElementReverseGridding(V1,xp,yp,zp,kb);
                 else
                     dVkij(V2, k, i, j) = outside;
 
@@ -364,7 +361,7 @@ void applyGeometryGridding(Matrix3D<T> &V2, Matrix2D< double > A,
 }
 
 /** Interpolates the value of the 2D matrix M at the point (x,y) knowing
- * that this image has been processed for gridding
+ * that this image has been processed for reverse-gridding
  *
  * (x,y) are in logical coordinates
  *
@@ -375,12 +372,12 @@ void applyGeometryGridding(Matrix3D<T> &V2, Matrix2D< double > A,
  * @code
  * KaiserBessel kb;
  * matrix2D<double> Maux;
- * produceGriddingMatrix2D(img(),Maux,kb);
- * interpolated_value = interpolatedElementGridding(Maux,0.5,0.5,kb);
+ * produceReverseGriddingMatrix2D(img(),Maux,kb);
+ * interpolated_value = interpolatedElementReverseGridding(Maux,0.5,0.5,kb);
  * @endcode
  */
 template <typename T>
-T interpolatedElementGridding(const Matrix2D<T> &in, double x, double y, const KaiserBessel &kb)
+T interpolatedElementReverseGridding(const Matrix2D<T> &in, double x, double y, const KaiserBessel &kb)
 {
     // size of this image:
     int nx = XSIZE(in);
@@ -493,7 +490,7 @@ T interpolatedElementGridding(const Matrix2D<T> &in, double x, double y, const K
 }
 
 /** Interpolates the value of the 3D matrix M at the point (x,y,z) knowing
- * that this matrix has been processed for gridding
+ * that this matrix has been processed for reverse-gridding
  *
  * (x,y,z) are in logical coordinates
  *
@@ -504,12 +501,12 @@ T interpolatedElementGridding(const Matrix2D<T> &in, double x, double y, const K
  * @code
  * KaiserBessel kb;
  * matrix3D<double> Maux;
- * produceGriddingMatrix3D(vol(),Maux,kb);
- * interpolated_value = interpolatedElementGridding(Maux,0.5,0.5,0.5,kb);
+ * produceReverseGriddingMatrix3D(vol(),Maux,kb);
+ * interpolated_value = interpolatedElementReverseGridding(Maux,0.5,0.5,0.5,kb);
  * @endcode
  */
 template <typename T>
-T interpolatedElementGridding(const Matrix3D<T> &in, double x, double y, double z, const KaiserBessel &kb)
+T interpolatedElementReverseGridding(const Matrix3D<T> &in, double x, double y, double z, const KaiserBessel &kb)
 {
     // size of this image:
     int nx = XSIZE(in);
@@ -785,13 +782,59 @@ void approximateVoronoiArea(vector<double> &voronoi_area,
 			    const double oversample = 10.);
 
 /** Calculate Cartesian coordinates from any irregularly sampled grid
+ *  using (forward) gridding.
  *  The voronoi areas of the irregularly sampled coordinates have to
  *  be provided!
  *
  */
-void getCartesianFromAnyCoordinates(Matrix2D<double> &result,
+template <typename T>
+void getCartesianFromAnyCoordinates(Matrix2D<T> &result,
 				    const vector<double> &xin, const vector<double> &yin,
 				    const vector<double> &data, const vector<double> &voronoi_area,
-				    const KaiserBessel &kb);
+				    const KaiserBessel &kb)
+{
+
+    double wx,wy, xx, yy, dx, dy, r, w, sumw;
+    int xdim,ydim;
+
+    // Oversample result GRIDDING_NPAD times
+    xdim = XSIZE(result); 
+    ydim = YSIZE(result); 
+    result.resize(GRIDDING_NPAD*xdim, GRIDDING_NPAD*ydim);
+    result.initZeros();
+    result.setXmippOrigin();
+    
+    // 1. Convolution interpolation
+    // Loop over all cartesian coordinates: add all sampled points
+    // within the window in x or y to the result, multiplied with the
+    // corresponding gridding weights
+    double window_size = (double)(kb.get_window_size()/2);
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(result)
+    {
+	xx = (double) j;
+	yy = (double) i;
+	sumw = 0.;
+	for (int ii = 0; ii < xin.size(); ii++)
+	{
+	    dx = GRIDDING_NPAD*xin[ii] - xx;
+	    if (ABS(dx) < window_size)
+	    { 		
+		dy = GRIDDING_NPAD*yin[ii] - yy;
+		if (ABS(dy) < window_size)
+		{
+		    // Gridding weight
+		    w = voronoi_area[ii] * kb.i0win_tab(dx) *  kb.i0win_tab(dy);
+		    MAT_ELEM(result,i,j) += data[ii] * w;
+		    sumw += w;
+		}
+	    }
+	}
+	if (sumw > 0.) 
+	    MAT_ELEM(result,i,j) /= sumw;
+    }
+
+}
+
+
 
 #endif

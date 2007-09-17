@@ -37,16 +37,16 @@ void inverseFourierTransformRings(const Polar<complex<double> > & in,
 				  Polar<double> &out, bool conjugated)
 {
     Matrix1D<double> Maux;
-    Matrix1D<complex<double> > Faux, Faux2;
+    Matrix1D<complex<double> > Faux;
     out.clear();
 
     for (int iring = 0; iring < in.rings.size(); iring++)
     { 
-	Faux2 = in.rings[iring];
+	Faux = in.rings[iring];
 	if (conjugated)
-	    for (int j = 0; j < XSIZE(Faux2); j++)
-		Faux2(j) = conj( Faux2(j) );
-	int oridim = 2 * (XSIZE(Faux2) - 1);
+	    for (int j = 0; j < XSIZE(Faux); j++)
+		Faux(j) = conj( Faux(j) );
+	int oridim = 2 * (XSIZE(Faux) - 1);
 	InverseFourierTransformHalf(Faux,Maux,oridim);
 	Maux.setStartingX(0);
 	out.rings.push_back(Maux);
@@ -54,6 +54,69 @@ void inverseFourierTransformRings(const Polar<complex<double> > & in,
 
     out.mode = in.mode;
     out.ring_radius = in.ring_radius;
+
+}
+
+// conversion for complex polar
+void convertPolarToSingleVector(const Polar<complex<double> > & in, 
+			   vector<double> & out)
+{
+    out.clear();
+    for (int i = 0; i < in.rings.size(); i++)
+	for (int j = 0; j < XSIZE(in.rings[i]); j++)
+	{
+	    out.push_back((in.rings[i](j)).real());
+	    out.push_back((in.rings[i](j)).imag());
+	}
+}
+
+// conversion for real polar
+void convertPolarToSingleVector(const Polar<double > & in, 
+			   vector<double> & out)
+{
+    out.clear();
+    for (int i = 0; i < in.rings.size(); i++)
+	for (int j = 0; j < XSIZE(in.rings[i]); j++)
+	{
+	    out.push_back(in.rings[i](j));
+	}
+}
+
+// conversion for complex polar
+void convertSingleVectortoPolar(const vector<double> & in, 
+				Polar<complex<double> > & out)
+{
+    int c = 0;
+    for (int i = 0; i < out.rings.size(); i++)
+    {
+	for (int j = 0; j < XSIZE(out.rings[i]); j++)
+	{
+	    out.rings[i](j) = complex<double>(in[2*c],in[2*c+1]);
+	    c++;
+	}
+    }
+
+    if (2*c != in.size()) 
+	REPORT_ERROR(1,"convertFromSingleVector: incorrect vector size for this template");
+
+}
+
+// conversion for real polar
+void convertSingleVectortoPolar(const vector<double> & in, 
+				Polar<double> & out)
+{
+    int c = 0;
+    for (int i = 0; i < out.rings.size(); i++)
+    {
+	for (int j = 0; j < XSIZE(out.rings[i]); j++)
+	{
+	    out.rings[i](j) = in[c];
+	    c++;
+	}
+    }
+
+    if (c != in.size()) 
+	REPORT_ERROR(1,"convertFromSingleVector: incorrect vector size for this template");
 
 }
 

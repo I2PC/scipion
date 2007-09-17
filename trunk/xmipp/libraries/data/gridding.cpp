@@ -31,19 +31,19 @@
  ***************************************************************************/
 #include "gridding.h"
 
-void produceGriddingFourierMatrix2D(const Matrix2D< complex< double > > &in, 
-				    Matrix2D< complex< double > > &out,
-				    KaiserBessel &kb)
+void produceReverseGriddingFourierMatrix2D(const Matrix2D< complex< double > > &in, 
+					   Matrix2D< complex< double > > &out,
+					   KaiserBessel &kb)
 {
     Matrix2D<double> aux;
     InverseFourierTransform(in,aux);
     aux.setXmippOrigin();
-    produceGriddingFourierMatrix2D(aux,out,kb);
+    produceReverseGriddingFourierMatrix2D(aux,out,kb);
 }
 
-void produceGriddingFourierMatrix2D(const Matrix2D< double > &in, 
-				    Matrix2D< complex< double > > &out,
-				    KaiserBessel &kb)
+void produceReverseGriddingFourierMatrix2D(const Matrix2D< double > &in, 
+					   Matrix2D< complex< double > > &out,
+					   KaiserBessel &kb)
 {
     // 1. Set up constants and Kaiser-Bessel object
     int Nx = XSIZE(in) * GRIDDING_NPAD;
@@ -70,9 +70,9 @@ void produceGriddingFourierMatrix2D(const Matrix2D< double > &in,
 }
 
 // Prepare a 2D real-space image for gridding
-void produceGriddingMatrix2D(const Matrix2D< double > &in, 
-			     Matrix2D< double > &out,
-			     KaiserBessel &kb)
+void produceReverseGriddingMatrix2D(const Matrix2D< double > &in, 
+				    Matrix2D< double > &out,
+				    KaiserBessel &kb)
 {
     // 1. Set up constants and Kaiser-Bessel object
     int Nx = XSIZE(in) * GRIDDING_NPAD;
@@ -103,19 +103,19 @@ void produceGriddingMatrix2D(const Matrix2D< double > &in,
 }
 
 // Prepare a 3D Fourier-space volume for gridding
-void produceGriddingFourierMatrix3D(const Matrix3D< complex< double > > &in, 
-				    Matrix3D< complex< double > > &out,
-				    KaiserBessel &kb)
+void produceReverseGriddingFourierMatrix3D(const Matrix3D< complex< double > > &in, 
+					   Matrix3D< complex< double > > &out,
+					   KaiserBessel &kb)
 {
     Matrix3D<double> aux;
     InverseFourierTransform(in,aux);
     aux.setXmippOrigin();
-    produceGriddingFourierMatrix3D(aux,out,kb);
+    produceReverseGriddingFourierMatrix3D(aux,out,kb);
 }
 
-void produceGriddingFourierMatrix3D(const Matrix3D< double > &in, 
-				    Matrix3D< complex< double > > &out,
-				    KaiserBessel &kb)
+void produceReverseGriddingFourierMatrix3D(const Matrix3D< double > &in, 
+					   Matrix3D< complex< double > > &out,
+					   KaiserBessel &kb)
 {
     // 1. Set up constants and Kaiser-Bessel object
     int Nx = XSIZE(in) * GRIDDING_NPAD;
@@ -144,9 +144,9 @@ void produceGriddingFourierMatrix3D(const Matrix3D< double > &in,
 }
 
 // Prepare a 3D real-space volume for gridding
-void produceGriddingMatrix3D(const Matrix3D< double > &in, 
-			     Matrix3D< double > &out,
-			     KaiserBessel &kb)
+void produceReverseGriddingMatrix3D(const Matrix3D< double > &in, 
+				    Matrix3D< double > &out,
+				    KaiserBessel &kb)
 {
     // 1. Set up constants and Kaiser-Bessel object
     int Nx = XSIZE(in) * GRIDDING_NPAD;

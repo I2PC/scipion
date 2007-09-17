@@ -515,7 +515,7 @@ public:
      */
     void getCartesianCoordinates(vector<double> &x,
 				 vector<double> &y,
-				 vector<double> &data,
+				 vector<T> &data,
 				 const double extra_shell = GRIDDING_K/2)
     {
 	double                     twopi, dphi,radius;
@@ -581,7 +581,7 @@ public:
      * Polar P;
      * KaiserBessel kb;
      * Matrix2D<double> Maux;
-     * produceGriddingMatrix2D(img(),Maux,kb);
+     * produceReverseGriddingMatrix2D(img(),Maux,kb);
      * P.getPolarFromCartesian(Maux,kb,1,15);
      * @endcode
      */
@@ -652,7 +652,7 @@ public:
                     yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
 
 		// Perform the convolution interpolation
-		Mring(iphi) = (T) interpolatedElementGridding(M1,xp,yp,kb);
+		Mring(iphi) = (T) interpolatedElementReverseGridding(M1,xp,yp,kb);
 	    }
 	    rings.push_back(Mring);
 	    ring_radius.push_back(radius);
@@ -673,7 +673,7 @@ public:
      * Polar<complex<double> > Pf;
      * KaiserBessel kb;
      * Matrix2D<double> Maux;
-     * produceGriddingMatrix2D(img(),Maux,kb);
+     * produceReverseGriddingMatrix2D(img(),Maux,kb);
      * P.getPolarFromCartesian(Maux,kb,1,15);
      * Pf = P.fourierTransformRings();
      * @endcode
@@ -699,46 +699,6 @@ public:
 	return out;
     }
 
-    /** Convert to a single vector
-     * @ingroup PolarFunctions
-     *
-     * Convert Polar structure to a single vector
-     * This may be useful for parallelization purposes.
-     * 
-     */
-    vector<T> convertToSingleVector() const
-    {
-	vector<T> result;
-	for (int i = 0; i < rings.size(); i++)
-	    for (int j = 0; j < XSIZE(rings[i]); j++)
-		result.push_back(rings[i](j));
-
-	return result;
-    }
-
-    /** Convert back from a single vector to a polar structure
-     * @ingroup PolarFunctions
-     *
-     * Convert back from a single vector to a polar structure.
-     * This may be useful for parallelization purposes.
-     * The structure of the polar should be the correct one already
-     * 
-     */
-    void convertFromSingleVector(const vector<T> &in) const
-    {
-	int c = 0;
-	for (int i = 0; i < rings.size(); i++)
-	{
-	    for (int j = 0; j < XSIZE(rings[i]); j++)
-	    {
-		rings[i](j) = in[c];
-		c++;
-	    }
-	}
-	if (c != in.size()) 
-	    REPORT_ERROR(1,"convertFromSingleVector: incorrect vector size for this template");
-
-    }
 };
 
 /** @defgroup PolarRelated Polar Related functions
@@ -772,7 +732,7 @@ void rotationalCorrelation(const Polar<complex<double> > &M1,
 
     int nrings = M1.getRingNo();
     if (nrings != M2.getRingNo())
-	REPORT_ERROR(1,"getBestAnglePolarGridding: polar structures have unequal number of rings!");
+	REPORT_ERROR(1,"rotationalCorrelation: polar structures have unequal number of rings!");
 
     // Resize Fsum to the size of the last ring
     int nsam_last = M1.getSampleNo(nrings - 1);
@@ -806,8 +766,54 @@ void rotationalCorrelation(const Polar<complex<double> > &M1,
 
 }
 
+/** Inverse Fourier Transform of all rings
+ * @ingroup PolarRelated
+ *
+ */
 void inverseFourierTransformRings(const Polar<complex<double> > & in, 
 				  Polar<double> & out, bool conjugated = false);
+
+/** Convert to a single vector
+ * @ingroup PolarRelated
+ *
+ * Convert complex Polar structure to a single vector
+ * This may be useful for parallelization purposes.
+ * 
+ */
+void convertPolarToSingleVector(const Polar<complex<double> > & in, 
+				vector<double> & out);
+
+/** Convert to a single vector
+ * @ingroup PolarRelated
+ *
+ * Convert real Polar structure to a single vector
+ * This may be useful for parallelization purposes.
+ * 
+ */
+void convertPolarToSingleVector(const Polar<double> & in, 
+				    vector<double> & out);
+
+/** Convert back from a single vector to a complex polar structure
+ * @ingroup PolarRelated
+ *
+ * Convert back from a single vector to a complex polar structure.
+ * This may be useful for parallelization purposes.
+ * The structure of the polar should be the correct one already
+ * 
+ */
+void convertSingleVectorToPolar(const vector<double> & in, 
+				Polar<complex<double> > & out);
+
+/** Convert back from a single vector to a real polar structure
+ * @ingroup PolarRelated
+ *
+ * Convert back from a single vector to a real polar structure.
+ * This may be useful for parallelization purposes.
+ * The structure of the polar should be the correct one already
+ * 
+ */
+void convertSingleVectorToPolar(const vector<double> & in, 
+				Polar<double> & out);
 
 
 #endif
