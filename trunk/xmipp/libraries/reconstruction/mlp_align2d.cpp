@@ -187,7 +187,7 @@ void Prog_MLPalign2D_prm::show(bool ML3D)
 // Usage ===================================================================
 void Prog_MLPalign2D_prm::usage()
 {
-    cerr << "Usage:  ml_align2d [options] " << endl;
+    cerr << "Usage:  mlp_align2d [options] " << endl;
     cerr << "   -i <selfile>                : Selfile with input images \n";
     cerr << "   -ref <selfile/image>        : Selfile with initial references/single reference image \n";
     cerr << "      OR -nref <int>               OR number of references to generate automatically (bias-free)\n";
@@ -374,37 +374,6 @@ void Prog_MLPalign2D_prm::produceSideInfo2(int nr_vols)
     // Calculate FT of rings of polars for all references
     calculateFtRingsAllRefs(Iref,fP_refs,fP_zero,sum2_refs,Ri,Ro);
 
-
-    //debug stuff
-    /*
-    double Rop = Ro + 0.5;
-    double Rip = Ri - 0.5;
-    double nr_pixels = PI * (Rop * Rop - Rip * Rip);
-    cerr<<"nr_pixels area= "<<nr_pixels;
-    Polar <double> P;
-    Polar <complex<double> > fP, fP2;
-    Matrix2D<double> Maux,Mone;
-    Mone.resize(Iref[0]());
-    Mone.init_constant(1.);
-    produceGriddingMatrix2D(Mone,Maux,kb);
-    P.getPolarFromCartesian(Maux,kb,Ri,Ro,1,psi_step);
-    cerr<<" P.sum_one= "<<P.computeSum();
-    // Store complex conjugated
-    fP = P.fourierTransformRings(false); 
-    fP2 = P.fourierTransformRings(true); 
-    Matrix1D<double> ang,corr;
-    rotationalCorrelation(fP,fP2,ang,corr);
-    cerr<<" corr(0)= "<<corr(0)<<endl;
-    produceGriddingMatrix2D(Iref[0](),Maux,kb);
-    P.getPolarFromCartesian(Maux,kb,Ri,Ro,1,psi_step);
-    cerr<<" A2: P.sum2= "<<P.computeSum2();
-    // Store complex conjugated
-    fP = P.fourierTransformRings(false); 
-    fP2 = P.fourierTransformRings(true); 
-    rotationalCorrelation(fP,fP2,ang,corr);
-    cerr<<" corr(0)= "<<corr(0)<<endl;
-    */
-
     // Read optimal origin offsets from fn_doc
     if (fn_doc != "")
         DF.read(fn_doc);
@@ -544,14 +513,21 @@ void Prog_MLPalign2D_prm::calculateFtRingsAllRefs(const vector<ImageXmipp> &Iref
 	Matrix2D<double>         Maux;
 	Polar<double>            P;
 	Polar<complex <double> > fP;
+	vector<double>           x,y,data;
 
 	fP_refs.clear();
 	sum2_refs.clear();
 	for (int iref = 0; iref < nr_ref; iref++)
 	{
 	    // Calculate polars using gridding interpolation
-	    produceGriddingMatrix2D(Iref[iref](),Maux,kb);
+	    produceReverseGriddingMatrix2D(Iref[iref](),Maux,kb);
 	    P.getPolarFromCartesian(Maux,kb,first,last,1,psi_step);
+	    if (iref == 0)
+	    {
+		// Pre-calculate voronoi weights for the polar structure
+		P.getCartesianCoordinates(x,y,data);
+		approximateVoronoiArea(voronoi_area,x,y);
+	    }
 	    // Store complex conjugated
 	    fP = P.fourierTransformRings(true); 
 	    fP_refs.push_back(fP);
@@ -585,7 +561,7 @@ void Prog_MLPalign2D_prm::calculateFtRingsAllTransImg(const ImageXmipp &img,
     Polar<double>            P;
     Polar<complex <double> > fP;
 
-    produceGriddingMatrix2D(img(),Maux,kb);
+    produceReverseGriddingMatrix2D(img(),Maux,kb);
     fP_trans.clear();
     fPm_trans.clear();
     for (int itrans = 0; itrans < nr_trans; itrans++)
@@ -932,6 +908,7 @@ void Prog_MLPalign2D_prm::updateParameters(vector < Polar <complex <double> > > 
 					   double &sumcorr, double &sumw_allrefs)
 {
 
+
     // Pre-calculate sumw_allrefs & average Pmax/sumP or cross-correlation
     sumw_allrefs = 0.;
     for (int iref = 0; iref < nr_ref; iref++)
@@ -941,6 +918,9 @@ void Prog_MLPalign2D_prm::updateParameters(vector < Polar <complex <double> > > 
     sumcorr /= sumw_allrefs;
 
     // Update the reference images
+    Polar<double> P;
+    vector<double> x, y, data;
+    Matrix2D<double> Maux;
     for (int iref = 0; iref < nr_ref; iref++)
     {
         if (sumw[iref] > 0.)
@@ -955,15 +935,18 @@ void Prog_MLPalign2D_prm::updateParameters(vector < Polar <complex <double> > > 
 		}
 	    }
 	    fP_refs[iref] /= sumw[iref];
-	    // STILL RETHINK THIS ONE!! GRIDDING REVERSAL!
-            //Iref[iref]() = wsum_Mref[iref];
-            //Iref[iref]() /= sumw[iref];
-            //Iref[iref].weight() = sumw[iref];
-       }
+
+	    // Gridding to get back to cartesian coordinates
+	    inverseFourierTransformRings(fP_refs[iref],P,true);
+	    P.getCartesianCoordinates(x,y,data);
+	    Maux = interpolateCartesianFromArbitrarySampling(dim,dim,x,y,data,voronoi_area,kb);
+	    produceForwardGriddingMatrix2D(Maux,Iref[iref](),kb);
+            Iref[iref].weight() = sumw[iref];
+	}
         else
         {
             fP_refs[iref] *= 0.;
-            //Iref[iref]().initZeros(dim, dim);	    
+            Iref[iref]().initZeros(dim, dim);	    
 	    Iref[iref].weight() = 0.;
         }
     }
@@ -1068,13 +1051,13 @@ void Prog_MLPalign2D_prm::writeOutputFiles(const int iter, DocFile &DFo,
         SFo.insert(fn_tmp, SelLine::ACTIVE);
         fracline(0) = alpha_k[iref];
         fracline(1) = mirror_fraction[iref];
-        //fracline(2) = 1000 * conv[iref]; // Output 1000x the change for precision
+        fracline(2) = 1000 * conv[iref]; // Output 1000x the change for precision
         DFl.insert_comment(fn_tmp);
         DFl.insert_data_line(fracline);
     }
 
     // Write out sel & log-file
-    fn_tmp = fn_base + ".sel";
+    fn_tmp = fn_root + ".sel";
     SFo.write(fn_tmp);
 
     DFl.go_beginning();

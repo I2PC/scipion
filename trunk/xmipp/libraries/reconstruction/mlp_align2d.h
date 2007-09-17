@@ -34,9 +34,6 @@
 #include <data/mask.h>
 #include <data/gridding.h>
 #include <data/polar.h>
-
-#include "ctf.h"
-
 #include <vector>
 
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
@@ -122,6 +119,8 @@ public:
     int Ri, Ro;
     /** One common kb object for all images! */
     KaiserBessel kb;
+    /** Precalculated Voronoi areas for the polar structure*/
+    vector<double> voronoi_area;
 
 public:
     /// Read arguments from command line
