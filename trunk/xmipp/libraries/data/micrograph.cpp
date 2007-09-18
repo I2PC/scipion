@@ -83,6 +83,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
         __offset = header.get_header_size();
         __depth = 32;
         reversed = header.reversed();
+//cerr << "I am in  Is_ImageXmipp, dim " <<  Xdim   <<   " " <<  Ydim << endl;
     }
     else
     {
@@ -283,13 +284,12 @@ void Micrograph::compute_8_bit_scaling()
             */
         }
     }
-
     // Compute output range
     float minF, maxF;
     if (minval < 0)
     {
         minF = 0;
-        maxF = MIN(255, maxval + minval);
+        maxF = MIN(255, maxval - minval);
     }
     else if (maxval > 255)
     {
@@ -311,6 +311,8 @@ void Micrograph::compute_8_bit_scaling()
     __a = (maxF - minF) / (maxval - minval);
     __b = minF - __a * minval;
     __scaling_valid = true;
+cerr <<  "__a  " << __a  << "__b" << __b << endl;
+
 }
 
 /* Save coordinates to disk ------------------------------------------------ */
