@@ -49,6 +49,7 @@ protected:
     FileName              fn_pol;       // name of the polar
 public:
     int                   mode;         // Use full or half circles
+    double                oversample;
     vector<double>        ring_radius;  // radius of each ring
     vector<Matrix1D<T> >  rings;        // vector with all rings
 public:
@@ -70,6 +71,7 @@ public:
 	ring_radius.clear();
 	rings.clear();
 	mode = FULL_CIRCLES;
+	oversample = 1.;
     }
     
     /** Copy constructor
@@ -85,6 +87,7 @@ public:
         fn_pol = P.fn_pol;
 	ring_radius = P.ring_radius;
 	mode = P.mode;
+	oversample = P.oversample;
     }
 
     /// @defgroup PolarOperations Some operations
@@ -100,6 +103,7 @@ public:
             rings = P.rings;
 	    ring_radius = P.ring_radius;
 	    mode = P.mode;
+	    oversample = P.oversample;
         }
         return *this;
     }
@@ -270,6 +274,7 @@ public:
         rings.clear();
 	ring_radius.clear();
 	mode = FULL_CIRCLES;
+	oversample = 1.;
     }
 
     /// @defgroup PolarAccess Polar access
@@ -320,6 +325,24 @@ public:
     const int getMode() const
     {
         return mode;
+    }
+
+    /** Oversample access
+     * @ingroup PolarAccess
+     *
+     * This function is used to know the oversampling factor of the polar. 
+     *
+     * Oversample = 1 means there is no oversampling
+     * Oversample > 1 means oversampling
+     * Oversampling < 1 means undersampling
+     *
+     * @code
+     * cout << "Oversample: " << P.getOversample() << endl;
+     * @endcode
+     */
+    const double getOversample() const
+    {
+        return oversample;
     }
 
     /** Number of samples in each ring access
@@ -547,18 +570,17 @@ public:
 	// Add additional points on the inside and outside of the rings
 	// Add a maximum of "extra_shell" rings
 	// Set data to zero here
-	int half_nsam_last = nsam / 2;
 	double first_ring  = ring_radius[0];
 	double last_ring   = ring_radius[rings.size()-1];
-	double ring_step   = ring_radius[1] - ring_radius[0];
 	double outer       = last_ring + extra_shell;
 	double inner       = MAX(0.,first_ring - extra_shell);
-	for (radius = 0.; radius < outer; radius += ring_step)
+	for (radius = 0.; radius < outer; radius +=1.)
 	{
 	    if ( (radius >= inner && radius < first_ring) ||
 		 ( radius <= outer && radius > last_ring) )
 	    {
-		nsam = 2 * ( MAX(1,(int)(half_nsam_last * radius / last_ring)) );
+		nsam = 2 * (int)( 0.5 * oversample * twopi * radius );
+		nsam = MAX(1, nsam);
 		dphi = twopi / (double)nsam;
 		for (int j = 0; j < nsam; j++)
 		{
@@ -587,10 +609,10 @@ public:
      */
     void getPolarFromCartesian(const Matrix2D<T> &M1, KaiserBessel &kb, 
 			       int first_ring, int last_ring, 
-			       int ring_step = 1, double psi_step = -1., int mode1 = FULL_CIRCLES, 
-			       double xoff = 0., double yoff = 0.)
+			       double xoff = 0., double yoff = 0.,
+			       double oversample1 = 1., int mode1 = FULL_CIRCLES)
     {
-	int nsam, half_nsam_last;
+	int nsam;
 	int nring = last_ring - first_ring + 1;
 	double radius, twopi, dphi, phi; 
 	double xp, yp, minxp, maxxp, minyp, maxyp;
@@ -599,6 +621,7 @@ public:
 	rings.clear();
 	ring_radius.clear();
 	mode = mode1;
+	oversample = oversample1;
 
 	if (mode == FULL_CIRCLES)
 	    twopi = 2.*PI;
@@ -607,16 +630,6 @@ public:
 	else
 	    REPORT_ERROR(1,"Incorrect mode for getPolarFromCartesian");
 	
-	// Determine angular sampling of the last ring in degrees
-	// Use half_sam_last to always have even number of sample
-	// points (which is convenient for Half2Whole of FTs)
-	if (psi_step < 0.)
-	    // Oversample twice
-	    half_nsam_last = (int)( twopi * (double)last_ring );
-	else 
-	    // User-defined sampling
-	    half_nsam_last = (int)( 0.5 * twopi / DEG2RAD(psi_step) );
-
 	// Take 2x oversize M1 dims into account for calculating the limits 
 	minxp = FIRST_XMIPP_INDEX(XSIZE(M1)/2);
 	minyp = FIRST_XMIPP_INDEX(YSIZE(M1)/2);
@@ -624,12 +637,12 @@ public:
 	maxyp = LAST_XMIPP_INDEX(YSIZE(M1)/2);
 
 	// Loop over all polar coordinates
-	for (int iring = first_ring; iring <= last_ring; iring+= ring_step)
+	for (int iring = first_ring; iring <= last_ring; iring++)
 	{
 	    radius = (double) iring;
-	    // Non-constant sampling
-	    nsam = 2 * ( MAX(1,(int)(half_nsam_last * (double)iring / (double)last_ring)) );
-
+	    // Non-constant sampling!! (always even for convenient Half2Whole of FTs)
+	    nsam = 2 * (int)( 0.5 * oversample * twopi * radius );
+	    nsam = MAX(1, nsam);
 	    dphi = twopi / (double)nsam;
 	    Mring.resize(nsam);
 	    for (int iphi = 0; iphi < nsam; iphi++)
