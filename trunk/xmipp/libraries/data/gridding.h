@@ -838,13 +838,12 @@ void approximateVoronoiArea(vector<double> &voronoi_area,
 /** Interpolate Cartesian coordinates from any irregularly sampled grid
  * @ingroup ForwardGridding
  *
- *  Interpolate Cartesian coordinates from any irregularly sampled grid
+ *  Interpolate Cartesian coordinates from an arbitrarily sampled grid
  *  using (forward) gridding. Note that the voronoi areas of the
  *  irregularly sampled coordinates have to be provided, and that the
  *  output of this routine needs to be passed through
- *  produceGriddingMatrix2D or produceGriddingFourierMatrix2D!
- *  The dimensions of the result matrix should be the ones without
- *  oversampling! 
+ *  produceForwardGriddingMatrix2D or produceForwardGriddingFourierMatrix2D!
+ *  The dimensions of the resulting matrix should be given.
  *
  * @code
  * KaiserBessel kb;
