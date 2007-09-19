@@ -38,9 +38,9 @@ void Prog_MLPalign2D_prm::read(int argc, char **argv, bool ML3D)
         DFi.read(getParameter(argc, argv, "-restart"));
         DFi.go_beginning();
         comment = (DFi.get_current_line()).get_text();
-        if (strstr(comment.c_str(), "MLPalign2D-logfile") == NULL)
+        if (strstr(comment.c_str(), "MLalign2D-logfile") == NULL)
         {
-            cerr << "Error!! Docfile is not of MLPalign2D-logfile type. " << endl;
+            cerr << "Error!! Docfile is not of MLalign2D-logfile type. " << endl;
             exit(1);
         }
         else
@@ -115,7 +115,6 @@ void Prog_MLPalign2D_prm::read(int argc, char **argv, bool ML3D)
     fn_doc = getParameter(argc, argv, "-doc", "");
     Ri = textToInteger(getParameter(argc,argv,"-Ri","-1"));
     Ro = textToInteger(getParameter(argc,argv,"-Ro","-1"));
-    psi_step = textToFloat(getParameter(argc,argv,"-psi_step","-1"));
     do_ML3D = ML3D;
 
     // Hidden arguments
@@ -153,6 +152,7 @@ void Prog_MLPalign2D_prm::show(bool ML3D)
         cerr << "  Output rootname         : " << fn_root << endl;
         cerr << "  Stopping criterium      : " << eps << endl;
         cerr << "  initial sigma noise     : " << sigma_noise << endl;
+        cerr << "  initial sigma offset    : " << sigma_offset << endl;
         if (do_mirror)
             cerr << "  Check mirrors           : true" << endl;
         else
@@ -161,9 +161,6 @@ void Prog_MLPalign2D_prm::show(bool ML3D)
             cerr << "  Initial model fractions : " << fn_frac << endl;
 
 	cerr << "    + Limit polar coordinates to radii between "<<Ri<<" and "<<Ro<<" pixels"<<endl; 
-	if (psi_step > 0.)
-            cerr << "    + Limit in-plane rotational sampling to " << psi_step << " degrees" << endl;
-
         if (search_shift < 999.)
             cerr << "    + Limit translational search to +/- " << search_shift << " pixels" << endl;
         if (search_rot < 180.)
@@ -226,8 +223,6 @@ void Prog_MLPalign2D_prm::produceSideInfo()
     SF.read(fn_sel);
     // Get image sizes and total number of images
     SF.ImgSize(dim, dim);
-    hdim = dim / 2;
-    dim2 = (double) dim * dim;
     nr_exp_images = SF.ImgNo();
 
     // Automatically set maximum ring radii
@@ -1062,11 +1057,11 @@ void Prog_MLPalign2D_prm::writeOutputFiles(const int iter, DocFile &DFo,
     }
 
     // Write out sel & log-file
-    fn_tmp = fn_root + ".sel";
+    fn_tmp = fn_base + ".sel";
     SFo.write(fn_tmp);
 
     DFl.go_beginning();
-    comment = "MLPalign2D-logfile: Number of images= " + floatToString(sumw_allrefs);
+    comment = "MLalign2D-logfile: Number of images= " + floatToString(sumw_allrefs);
     comment += " LL= " + floatToString(LL, 15, 10) + " <Pmax/sumP>= " + floatToString(avecorr, 10, 5);
     DFl.insert_comment(comment);
     comment = "-noise " + floatToString(sigma_noise, 15, 12) + " -offset " + floatToString(sigma_offset, 15, 12) + " -istart " + integerToString(iter + 1);
@@ -1094,7 +1089,7 @@ void Prog_MLPalign2D_prm::writeOutputFiles(const int iter, DocFile &DFo,
 	    DFo.adjust_to_data_line();
 	    if ((iref + 1) == (int)DFo(5)) SFo.insert(fn_tmp, SelLine::ACTIVE);
 	}
-	fn_tmp = fn_base + "_ref";
+	fn_tmp = fn_root + "_ref";
 	fn_tmp.compose(fn_tmp, iref + 1, "sel");
 	SFo.write(fn_tmp);
     }

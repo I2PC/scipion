@@ -69,14 +69,11 @@ public:
     /** Number of iterations to be performed */
     int Niter;
     /** dimension of the images */
-    int dim, hdim;
-    double dim2;
+    int dim;
     /** Number of reference images */
     int nr_ref;
     /** Number of in-plane rotation samples */
     int nr_psi, dnr_psi;
-    /** Psi sampling step */
-    double psi_step;
     /** Total number of experimental images */
     int nr_exp_images;
     /** Verbose level:
@@ -115,7 +112,7 @@ public:
     bool do_generate_refs;
     /** debug flag */
     bool debug;
-    /** Inner and outer radii to limit the rotational search */
+    /** Inner and outer radii for polar coordinates */
     int Ri, Ro;
     /** One common kb object for all images! */
     KaiserBessel kb;
@@ -123,44 +120,80 @@ public:
     vector<double> voronoi_area;
 
 public:
-    /// Read arguments from command line
+    /// @defgroup MLPfunctions Functions for MLPalign2D class
+    /// @ingroup MLPalign2D
+    
+    /** Read command line
+     * @ingroup MLPfunctions
+     *
+     * Read arguments from command line
+     */
     void read(int argc, char **argv, bool ML3D = false);
 
-    /// Show
+    /** Show input information
+     * @ingroup MLPfunctions
+     *
+     * Summarize input information
+     */
     void show(bool ML3D = false);
 
-    /// Usage for ML mode
+
+    /** Usage
+     * @ingroup MLPfunctions
+     *
+     * Standard usage
+     */
     void usage();
 
-    /// Extended Usage
+    /** Extended Usage
+     * @ingroup MLPfunctions
+     *
+     * Extended Usage
+     */
     void extendedUsage(bool ML3D = false);
 
-    /// Setup lots of stuff
+    /** Produce side info
+     * @ingroup MLPfunctions
+     *
+     * Setup lots of (selfile-independent) stuff
+     */
     void produceSideInfo();
 
-    /// Generate initial references from random subset averages
+    /** Generate initial reference
+     * @ingroup MLPfunctions
+     *
+     * Generate references from averages of random subsets
+     */
     void generateInitialReferences();
 
-    /// Read reference images in memory
-    /// (This produce_side_info is Selfile-dependent!)
+    /** Produce side info2
+     * @ingroup MLPfunctions
+     *
+     * Setup lots of (selfile-dependent) stuff
+     */
     void produceSideInfo2(int nr_vols = 1);
 
-    /// Calculate which references have projection directions close to
-    /// phi and theta
+    /** Preselect directions
+     * @ingroup MLPfunctions
+     *
+     * Calculate which references have projection directions close to
+     * phi and theta
+     */
     void preselectDirections(float &phi, float &theta,
 			     vector<double> &pdf_directions);
 
-    // Update the pdf of the translations
+    /** Update PDF of the translation
+     * @ingroup MLPfunctions
+     *
+     * Calculate prior probabilities of the translations
+     */
     void updatePdfTranslations();
 
-    /// @defgroup MLPfunctions Functionsfor MLPalign2D class
-    /// @ingroup MLPalign2D
-    
     /** Prepare references
      * @ingroup MLPfunctions
      *
      * Calculate Fourier-transforms of all rings of all references
-     * (interpolation based on gridding)
+     * (interpolation based on reverse gridding)
      */
     void calculateFtRingsAllRefs(const vector<ImageXmipp> &Iref,
 				 vector< Polar< complex <double> > > &fP_refs,
@@ -173,7 +206,7 @@ public:
      *
      * Calculate Fourier-transforms of all rings of all translated
      * version of the experimental image
-     * (interpolation based on gridding)
+     * (interpolation based on reverse gridding)
      */
     void calculateFtRingsAllTransImg(const ImageXmipp &Iexp,
 				     vector< Polar< complex <double> > > &fP_trans,
@@ -220,10 +253,20 @@ public:
 			  vector <double> &sumw, vector <double> &sumw_mirror,
 			  double &sumcorr, double &sumw_allrefs);
 
-    /// check convergence
+    /** Convergence check
+     * @ingroup MLPfunctions
+     *
+     * Convergence is based on signal change in the cartesian-sampled images
+     *
+     */
     bool checkConvergence(vector<double> &conv);
 
-    /// Write out reference images, selfile and logfile
+    /** Write output files
+     * @ingroup MLPfunctions
+     *
+     *  Write out reference images, selfile and logfile
+     *
+     */
     void writeOutputFiles(const int iter, DocFile &DFo,
                             double &sumw_allrefs, double &LL, double &avecorr,
                             vector<double> &conv);
