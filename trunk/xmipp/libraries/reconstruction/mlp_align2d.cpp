@@ -103,7 +103,7 @@ void Prog_MLPalign2D_prm::read(int argc, char **argv, bool ML3D)
     Niter = textToInteger(getParameter(argc, argv, "-iter", "100"));
     istart = textToInteger(getParameter(argc, argv, "-istart", "1"));
     sigma_noise = textToFloat(getParameter(argc, argv, "-noise", "1"));
-    sigma_offset = textToFloat(getParameter(argc, argv, "-offset", "1"));
+    sigma_offset = textToFloat(getParameter(argc, argv, "-offset", "3"));
     do_mirror = checkParameter(argc, argv, "-mirror");
     eps = textToFloat(getParameter(argc, argv, "-eps", "5e-5"));
     fn_frac = getParameter(argc, argv, "-frac", "");
@@ -521,7 +521,7 @@ void Prog_MLPalign2D_prm::calculateFtRingsAllRefs(const vector<ImageXmipp> &Iref
 	{
 	    // Calculate polars using gridding interpolation
 	    produceReverseGriddingMatrix2D(Iref[iref](),Maux,kb);
-	    P.getPolarFromCartesian(Maux,kb,first,last,1,psi_step);
+	    P.getPolarFromCartesian(Maux,kb,first,last);
 	    if (iref == 0)
 	    {
 		// Pre-calculate voronoi weights for the polar structure
@@ -566,9 +566,7 @@ void Prog_MLPalign2D_prm::calculateFtRingsAllTransImg(const ImageXmipp &img,
     fPm_trans.clear();
     for (int itrans = 0; itrans < nr_trans; itrans++)
     {
-	P.getPolarFromCartesian(Maux,kb,first,last,1,psi_step,FULL_CIRCLES,
-				Vxtrans[itrans],Vytrans[itrans]);
-
+	P.getPolarFromCartesian(Maux,kb,first,last,Vxtrans[itrans],Vytrans[itrans]);
 	fP = P.fourierTransformRings(false);
 	fP_trans.push_back(fP);
 	if (ABS(Vxtrans[itrans]) < XMIPP_EQUAL_ACCURACY &&
@@ -609,12 +607,18 @@ void Prog_MLPalign2D_prm::processOneImage(const ImageXmipp &img,
     Matrix1D<complex <double> >         Fweight(nr_psi);
     vector<int>                         img_xoffs, img_yoffs;
 
+    //TimeStamp t0,t1; 
+    //time_config();
+    //annotate_time(&t0);
+
     // reserve memory for the weights vector
     nr_pos = nr_trans * nr_ref * dnr_psi;
     vector<double> weights;
 
     // Calculate all FT-rings for all translated images
     calculateFtRingsAllTransImg(img,fP_trans,fPm_trans,Xi2,Ri,Ro);
+    //cerr<<"generate polars: "; print_elapsed_time(t0);
+    //annotate_time(&t1);
 
     // Store actual offsets for pdf calculations
     img_xoffs.clear();
@@ -797,6 +801,7 @@ void Prog_MLPalign2D_prm::processOneImage(const ImageXmipp &img,
 	opt_flip = 0.;
 	opt_psi = ang(opt_ipsi);
     }
+    //cerr<<"all the rest: "; print_elapsed_time(t1);
 
 }
 
