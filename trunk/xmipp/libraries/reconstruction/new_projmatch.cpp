@@ -204,7 +204,7 @@ void Prog_new_projection_matching_prm::produce_Side_info() {
 	Matrix2D<double>         Maux;
 	Polar<double>            P;
 	Polar<complex <double> > fP;
-	produceGriddingMatrix2D(proj(),Maux,kb);
+	produceReverseGriddingMatrix2D(proj(),Maux,kb);
 	P.getPolarFromCartesian(Maux,kb,Ri,Ro);
 	mean = P.computeSum(true);
 	stddev = P.computeSum2(true);
@@ -249,7 +249,7 @@ void Prog_new_projection_matching_prm::rotationally_align_one_image(const Matrix
     double                   mean;
 
     // Calculate polar coordinates using gridding
-    produceGriddingMatrix2D(img,Maux,kb);
+    produceReverseGriddingMatrix2D(img,Maux,kb);
     P.getPolarFromCartesian(Maux,kb,Ri,Ro);
     mean = P.computeSum(true);
     P -= mean; // for normalized cross-correlation coefficient
