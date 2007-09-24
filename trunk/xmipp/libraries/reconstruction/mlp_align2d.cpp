@@ -117,9 +117,6 @@ void Prog_MLPalign2D_prm::read(int argc, char **argv, bool ML3D)
     Ro = textToInteger(getParameter(argc,argv,"-Ro","-1"));
     do_ML3D = ML3D;
 
-    // Hidden arguments
-    debug = checkParameter(argc, argv, "-debug");
-
     // Only for interaction with refine3D:
     search_rot = textToFloat(getParameter(argc, argv, "-search_rot", "999."));
 
@@ -610,11 +607,6 @@ void Prog_MLPalign2D_prm::processOneImage(const ImageXmipp &img,
     nr_pos = nr_trans * nr_ref * dnr_psi;
     vector<double> weights;
 
-    // Calculate all FT-rings for all translated images
-    calculateFtRingsAllTransImg(img,fP_trans,fPm_trans,Xi2,Ri,Ro);
-    //cerr<<"generate polars: "; print_elapsed_time(t0);
-    //annotate_time(&t1);
-
     // Store actual offsets for pdf calculations
     img_xoffs.clear();
     img_yoffs.clear();
@@ -623,6 +615,11 @@ void Prog_MLPalign2D_prm::processOneImage(const ImageXmipp &img,
 	img_xoffs.push_back(img.Xoff() - Vxtrans[itrans]);
 	img_yoffs.push_back(img.Yoff() - Vytrans[itrans]);
     }
+
+    // Calculate all FT-rings for all translated images
+    calculateFtRingsAllTransImg(img,fP_trans,fPm_trans,Xi2,Ri,Ro);
+    //cerr<<"generate polars: "; print_elapsed_time(t0);
+    //annotate_time(&t1);
 
    // Search over all references
     mindiff2 = 99.e99;
@@ -646,12 +643,7 @@ void Prog_MLPalign2D_prm::processOneImage(const ImageXmipp &img,
 		    diff2 = A2_plus_Xi2 - corr(ipsi);
 		    weights.push_back(diff2);
                     if (diff2 < mindiff2) mindiff2 = diff2;
-		    if (debug) 
-		    {
-			cout<<ang(ipsi)<<" "<<diff2<<" "<<A2_plus_Xi2<<" "<<diff2-A2_plus_Xi2<<" "<<A2<<" "<<Xi2<<" "<<Vxtrans[itrans]<<" "<<Vytrans[itrans]<<endl;
-		    }
 		}
-
 		// B. Check mirror image
 		if (do_mirror) 
 		{
@@ -936,8 +928,10 @@ void Prog_MLPalign2D_prm::updateParameters(vector < Polar <complex <double> > > 
 	    }
 	    fP_refs[iref] /= sumw[iref];
 
-	    // Gridding to get back to cartesian coordinates
 	    inverseFourierTransformRings(fP_refs[iref],P,true);
+	    // Store updated A2 (power of the reference)
+	    sum2_refs[iref] = P.computeSum2();
+	    // Gridding to get back to cartesian coordinates
 	    P.getCartesianCoordinates(x,y,data);
 	    Maux = interpolateCartesianFromArbitrarySampling(dim,dim,x,y,data,voronoi_area,kb);
 	    produceForwardGriddingMatrix2D(Maux,Iref[iref](),kb);
@@ -975,8 +969,8 @@ void Prog_MLPalign2D_prm::updateParameters(vector < Polar <complex <double> > > 
     // Update the noise parameters
     if (!fix_sigma_noise)
     {
-	double Rop = Ro + 0.5;
-	double Rip = Ri - 0.5;
+	double Rop = MIN(dim/2., Ro + 0.5);
+	double Rip = MAX(0.,     Ri - 0.5);
 	double nr_pixels = PI * (Rop * Rop - Rip * Rip);
 	sigma_noise = sqrt(wsum_sigma_noise / (sumw_allrefs * nr_pixels));
 	// prevent division by zero
