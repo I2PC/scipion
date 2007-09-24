@@ -39,6 +39,7 @@ void inverseFourierTransformRings(const Polar<complex<double> > & in,
     Matrix1D<double> Maux;
     Matrix1D<complex<double> > Faux;
     out.clear();
+    int oridim;
 
     for (int iring = 0; iring < in.rings.size(); iring++)
     { 
@@ -46,7 +47,11 @@ void inverseFourierTransformRings(const Polar<complex<double> > & in,
 	if (conjugated)
 	    for (int j = 0; j < XSIZE(Faux); j++)
 		Faux(j) = conj( Faux(j) );
-	int oridim = 2 * (XSIZE(Faux) - 1);
+
+	if (XSIZE(Faux) == 1)
+	    oridim = 1;
+	else
+	    oridim = 2 * (XSIZE(Faux) - 1);
 	InverseFourierTransformHalf(Faux,Maux,oridim);
 	Maux.setStartingX(0);
 	out.rings.push_back(Maux);
