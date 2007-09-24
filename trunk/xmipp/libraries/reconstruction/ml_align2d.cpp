@@ -184,7 +184,7 @@ void Prog_MLalign2D_prm::show(bool ML3D)
             cerr << " | Read more about this program in the following publications:   |" << endl;
             if (fourier_mode)
             {
-                cerr << " |  Scheres ea. (2007) in preparation                            |" << endl;
+                cerr << " |  Scheres ea. (2007) Structure, accepted                   |" << endl;
             }
             else
             {
