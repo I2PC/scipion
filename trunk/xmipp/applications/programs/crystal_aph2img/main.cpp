@@ -70,26 +70,3 @@ void Usage(char *argv[])
 
 }
 
-/* Menu -------------------------------------------------------------------- */
-/*Colimate:
-   PROGRAM Spots2RealSpace2D {
-      url="http://www.cnb.uam.es/~bioinfo/NewXmipp/Applications/Src/Spots2RealSpace2D/Help/spots2realspace2D.html";
-      help="Generate an image suitable for ART+crystals starting from
-            a set of amplitudes and phases provided by MRC";
-      OPEN MENU Spots2RealSpace2D;
-      COMMAND LINES {
-         + usual: spots2realspace2D $FILE_IN
-      }
-      PARAMETER DEFINITIONS {
-         $FILE_IN {
-            label="Input File";
-            help="File with a complex structure, better see Web help";
-            type=FILE EXISTING;
-         }
-      }
-   }
-   MENU Spots2RealSpace2D {
-      "I/O Parameters"
-      $FILE_IN
-   }
-*/
