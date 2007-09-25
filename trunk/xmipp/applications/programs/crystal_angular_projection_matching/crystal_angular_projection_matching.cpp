@@ -40,7 +40,6 @@ int main(int argc, char **argv) {
     // Read command line & produce side info
     prm.read(argc,argv);
     prm.show();
-
     // Project reference volume etc.
     prm.produce_Side_info();
 
