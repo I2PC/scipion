@@ -50,6 +50,7 @@ public:
         If FALSE then the image is contrast is reversed.
     */
     int             KeepContrast;
+	int             SpaceGroup;
     /** number of samples in Real space  (X,Y,Z)
     */
     Matrix1D<int>             Celldim;
@@ -105,6 +106,10 @@ void symmetrize_P4212(Matrix3D< complex<double> > &FT,
 
                                                                            */
 
+void symmetrize_P4(Matrix3D< complex<double> > &FT,
+                      Spot2RealSpace3D_Parameters &prm);
+					  
+
 void AsymmUnitP4212(int *ih, int *ik, int *il, int *ip1, int *ip2,
                     int *spec, int *iptest);
 /**
@@ -121,6 +126,12 @@ void AsymmUnitP4212(int *ih, int *ik, int *il, int *ip1, int *ip2,
           0     0     0     0    A[7]
 
    for all cases.*/
+
+void AsymmUnitP4(int *ih, int *ik, int *il, int *ip1, int *ip2,
+                    int *spec, int *iptest);
+
+
+
 
 void MatrixMult(int A[], int *ih, int *ik, int *il, int *ip1, int *ip2);
 /**
@@ -152,7 +163,9 @@ void MatrixMult(int A[], int *ih, int *ik, int *il, int *ip1, int *ip2);
                                                                               */
 
 
-void CheckSpec(int ih, int ik, int il, int *spec, int *iptest);
+void CheckSpecP4212(int ih, int ik, int il, int *spec, int *iptest);
+void CheckSpecP4(int ih, int ik, int il, int *spec, int *iptest);
+
 
 //@}
 #endif
