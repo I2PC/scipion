@@ -38,6 +38,7 @@ void Spot2RealSpace3D_Parameters::read_from_file(const FileName &fnprm)
     {
         fnaph_in = getParameter(fh_param, "APH file", 0, NULL,
                              3007, "Spot2RealSpace3D_Parameters::read: APH File not found");
+							 
         fn_out = getParameter(fh_param, "Output file", 0, NULL,
                            3007, "Spot2RealSpace3D_Parameters::read: Output File not found");
         NoCells.resize(3);
@@ -53,7 +54,6 @@ void Spot2RealSpace3D_Parameters::read_from_file(const FileName &fnprm)
             REPORT_ERROR(3007,
                          "Spot2RealSpace3D_Parameters::read: Cannot read Output cells no");
         }
-
         Phase_Shift.resize(3);
         aux_str = getParameter(fh_param, "Phase Shift", 0, "0.0 0.0 0.0");
         delete is;
@@ -67,12 +67,18 @@ void Spot2RealSpace3D_Parameters::read_from_file(const FileName &fnprm)
             REPORT_ERROR(3007,
                          "Spot2RealSpace3D_Parameters::read: Cannot read Phase Shift");
         }
-
         KeepContrast = textToInteger(getParameter(fh_param, "Keep Contrast", 0, "1"));
         Celldim.resize(3);
         aux_str = getParameter(fh_param, "Cell Size");
         delete is;
         is = new istrstream(aux_str.c_str());
+        SpaceGroup = textToInteger(getParameter(fh_param, "Space Group", 0, "1"));
+		
+		cout << " fnaph_in: "<<fnaph_in<< " \n"<<endl;
+		cout << " fn_out  : "<<fn_out<< " \n"<<endl;
+		cout << " KeepContrast: "<<KeepContrast<< " \n"<<endl;
+		cout << " Space Group: "<<SpaceGroup<< " \n"<<endl;
+		
         try
         {
             *is >> XX(Celldim) >> YY(Celldim) >> ZZ(Celldim);
@@ -87,6 +93,7 @@ void Spot2RealSpace3D_Parameters::read_from_file(const FileName &fnprm)
     }
     catch (Xmipp_error XE)
     {
+		cout << " se va por aqui 1 \n"<<endl;
         cout << XE << endl;
         REPORT_ERROR(3007, (string)"There is an error reading " + fnprm);
     }
@@ -241,12 +248,18 @@ void ROUT_Spots2RealSpace_3D(Spot2RealSpace3D_Parameters &prm,
     STARTINGY(FT) = -ksize;
     STARTINGX(FT) = -hsize;
 
-    switch (prm.aph_file.Space_Group)
+//  switch (prm.aph_file.Space_Group)
+	switch (prm.SpaceGroup)	
     {
     case(1):
                     cout << "Detected P1 symmetry" << endl;
         symmetrize_P1(FT, prm);
         break;
+    case(75)://P4
+                    cout << "Detected P4 symmetry" << endl;
+        symmetrize_P4(FT, prm);
+        break;
+		
     case(90)://P4212
                     cout << "Detected P4212 symmetry" << endl;
         symmetrize_P4212(FT, prm);
@@ -321,6 +334,55 @@ void symmetrize_P1(Matrix3D< complex<double> > &FT,
         VOL_ELEM(FT, -k, -i, -j) = conj(VOL_ELEM(FT, k, i, j));
     }
 }
+
+void symmetrize_P4(Matrix3D< complex<double> > &FT,
+                   Spot2RealSpace3D_Parameters &prm)
+{
+    int asymmh, asymmk, asymml;   /* Reflection equivalent in the asymm. unit. */
+    int ip1, ip2;              /* To bring the phase from the asymmetric unit. */
+    int spec;                       /* Indicates if the reflection is special. */
+    int  iptest;/* Indicates the phase of reflection in case of being special. */
+    double phase, amplitude;
+    int horder = STARTINGX(FT);
+    int korder  = STARTINGY(FT);
+    int lorder  = STARTINGZ(FT);
+    for (int l = lorder; l <= -lorder; l++)
+    {
+        for (int k = korder; k <= -korder; k++)
+        {
+            for (int h = horder; h <= -horder; h++)
+            {
+                asymmh = h;
+                asymmk = k;
+                asymml = l;
+//	cout << " .. Entra a P4 y hace sus cositas: \n"<<endl;
+                /* Computing the reflection equivalent in the asymmetric unit. */
+                AsymmUnitP4(&asymmh, &asymmk, &asymml, &ip1, &ip2, &spec, &iptest);
+//cout << "\n (" << l <<"," << k << "," << h <<")->";
+//cout << " (" << asymml <<"," << asymmk << "," << asymmh <<")= ";
+
+                if (VOL_ELEM(prm.aph_file.spots_abs, asymml, asymmk, asymmh) == 0)
+                    continue;
+                /* The amplitude is the same. */
+                amplitude = VOL_ELEM(prm.aph_file.spots_abs, asymml, asymmk, asymmh);
+                /* Bringing the phase from the asymmetric unit. */
+                phase = VOL_ELEM(prm.aph_file.spots_arg, asymml, asymmk, asymmh) * ip1 - ip2;
+                phase = fmod(phase, 360.0);
+                if (phase > 180.0)  phase -= 360.0;
+                if (phase < -180.0) phase += 360.0;
+                /* Imposing phase from the symmetry. */
+                // This line is for imposing the symmetry. I am going to keep it
+                // commented since the simmetry should has been imposed before.
+                // if(impose && spec) refptr->ap.phs = iptest;
+
+                VOL_ELEM(FT, l, k, h) = polar(amplitude, DEG2RAD(phase));
+//cout << "FT" <<VOL_ELEM(FT, l,k,h);
+            }//for h
+        }//for k
+    }//for l
+
+}
+
 void symmetrize_P4212(Matrix3D< complex<double> > &FT,
                       Spot2RealSpace3D_Parameters &prm)
 {
@@ -341,6 +403,7 @@ void symmetrize_P4212(Matrix3D< complex<double> > &FT,
                 asymmh = h;
                 asymmk = k;
                 asymml = l;
+//	cout << " .. Entra a P4212 y hace sus cositas: \n"<<endl;
                 /* Computing the reflection equivalent in the asymmetric unit. */
                 AsymmUnitP4212(&asymmh, &asymmk, &asymml, &ip1, &ip2, &spec, &iptest);
 //cout << "\n (" << l <<"," << k << "," << h <<")->";
@@ -377,18 +440,86 @@ void symmetrize_P4212(Matrix3D< complex<double> > &FT,
     The asymmetric unit in P4212 involves H,K,Z >=0 and H <= K. When H < 0,
     or H==0 and K < 0, or H==K==0 and Z < 0 the Conjugate Symmetry Property
     of the DFT is applied in order to bring the reflection into the H,K >= 0
-    and make easier the subsequent processes.
-
+    and make easier the subsequent processes.  
                                                                               */
+																			  
+																			  
+																			  
+																			  
+
+void AsymmUnitP4(int *ih, int *ik, int *il, int *ip1, int *ip2,
+                    int *spec, int *iptest)
+
+{
+static int matrix[4][8]={
+           { -1,  0,  0, -1, -1,  0,  0, -1},
+           {  0, -1,  1,  0,  1,  0,  0,  1},
+           {  1,  0,  0,  1, -1,  0,  0, -1},
+           {  0,  1, -1,  0,  1,  0,  0,  1}};
+
+static int gomatrix[3] = {1, 2, 1};
+
+int pass, index;
+//	cout << " .. Entra a AsymunitP4 y sigue haciendo sus cositas: \n"<<endl;
+
+/* Initialization of ip1 and ip2. */
+*ip1 = 1; *ip2 = 0;
+
+/* The asymmetric unit in P4 involves H,K,Z >=0. In the cases in which H<0 the
+   program generates the corresponding reflection by applying the Conjugate 
+   Symmetry. This is got by multiplying by matrix[0]. */
+if(*ih < 0)                                                          /* H < 0 */
+    MatrixMult(matrix[0], ih, ik, il, ip1, ip2);
+                                                                              
+/* Bringing the current reflection into the asymmetric unit. */
+for(pass=0; pass<2;){
+    index = 0;
+    if(*ik >= 0) index ++;
+    if(*il >= 0) index += 2;
+    
+    /* <index> classifies the reflection by its indices.
+       <gomatrix> indicates which matrix will bring the reflection into the
+       unique asymmetric unit for a given index.
+       
+                   index      K>=0      Z>=0
+                   --------------------------
+                     0         NO        NO  
+                     1         YES       NO  
+                     2         NO        YES 
+                     3         YES       YES 
+                            
+                                                                              */
+    
+    if(index < 3) {
+        MatrixMult(matrix[gomatrix[index]], ih, ik, il, ip1, ip2);
+
+        if(gomatrix[index] < 3) continue;
+        }
+        
+    if(*ih == 0 && *ik < 0)
+        MatrixMult(matrix[0], ih, ik, il, ip1, ip2);
+        
+    if(*ih == 0)
+        MatrixMult(matrix[3], ih, ik, il, ip1, ip2);
+            
+    pass++;
+    }
+
+/* After reflections have been placed into the asymmetric unit they are 
+   examined to see if they are special reflections, ones whose phase must 
+   be either real (0 or PI) or imaginary (PI/2 or 3*PI/2). */
+CheckSpecP4(*ih, *ik, *il, spec, iptest);
+}
+
+																			  
+																			  
 void AsymmUnitP4212(int *ih, int *ik, int *il, int *ip1, int *ip2,
                     int *spec, int *iptest)
 
 {
     static int matrix[4][8] =
         {
-            {
-                -1, 0, 0, -1, -1,   0,   0, -1
-            },
+            {-1, 0, 0, -1, -1,   0,   0, -1},
             { 1, 0, 0, -1,  1, 180, 180, -1},
             { 0, 1, 1,  0, -1,   0,   0,  1},
             { 0, 1, 1,  0,  1,   0,   0, -1}
@@ -400,6 +531,7 @@ void AsymmUnitP4212(int *ih, int *ik, int *il, int *ip1, int *ip2,
         };
 
     int pass, index;
+//	cout << " .. Entra a AsymunitP4212 y sigue haciendo sus cositas: \n"<<endl;
 
     /* Initialization of ip1 and ip2. */
     *ip1 = 1;
@@ -457,11 +589,48 @@ void AsymmUnitP4212(int *ih, int *ik, int *il, int *ip1, int *ip2,
     /* After reflections have been placed into the asymmetric unit they are
        examined to see if they are special reflections, ones whose phase must
        be either real (0 or PI) or imaginary (PI/2 or 3*PI/2). */
-    CheckSpec(*ih, *ik, *il, spec, iptest);
-
+    CheckSpecP4212(*ih, *ik, *il, spec, iptest);
 }
+
+
 /*----------------------------------------------------------------------------*/
-void CheckSpec(int ih, int ik, int il, int *spec, int *iptest)
+void CheckSpecP4(int ih, int ik, int il, int *spec, int *iptest)
+
+/*
+   Checks if the current reflection (H K L) is a special reflection, i.e.,
+   whose phase must be either real (0 or PI) or imaginary (PI/2 or 3*PI/2).
+   
+   It returns spec=1 if the reflection is special. Otherwise, 0.
+   It returns in iptest 0 if real and 90 is imaginary.
+   
+   Conditions checked are:
+   
+      - Z=0 ... reflection is real.
+      
+      Summary of special reflections.
+      
+                 Real               Imaginary
+                ------             -----------
+                (H,K,0)
+                                                                              */
+
+{
+/* Initialization of values to return. */
+*spec = 0;
+*iptest = 0;
+
+/* Checking the conditions. */
+if(il == 0) (*spec)++;                                               /* Real. */
+
+return;
+}
+
+/*----------------------------------------------------------------------------*/
+
+
+
+/*----------------------------------------------------------------------------*/
+void CheckSpecP4212(int ih, int ik, int il, int *spec, int *iptest)
 
 /*
    Checks if the current reflection (H K L) is a special reflection, i.e.,
