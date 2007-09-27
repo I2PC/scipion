@@ -7,8 +7,8 @@
 #  - 2D image alignment and classification (by ML2D & kerdenSOM)
 #  - 2D image analysis by classification of rotational spectra
 #  - 3D classification by ml3D
-#  - 3D refinement by standard projection matching
-#  - 3D high resolution reconstruction
+#  - 3D projection matching refinement 
+#  - 3D multi-resolution refinement
 #
 # Example use:
 # ./setup_protocols.py
@@ -31,14 +31,14 @@ SetupML2D=False
 SetupKerdensom=False
 # {setup-2d} Rotational spectra classification
 SetupRotSpectra=False
-# {setup-3d} Random Conical Tilt
+# {setup-3d} Random conical tilt
 SetupRCT=False
 # {setup-3d} ML3D classification
 SetupML3D=False
 # {setup-3d} Projection matching refinement
 SetupProjMatch=False
-# {setup-3d} High Resolution reconstruction
-SetupHighRes3d=False
+# {setup-3d} Multi-resolution refinement
+SetupMultiRes=False
 #------------------------------------------------------------------------
 # {section} Global Parameters
 #------------------------------------------------------------------------
@@ -65,7 +65,7 @@ class setup_protocols_class:
                      SetupRCT,
                      SetupML3D,
                      SetupProjMatch,
-                     SetupHighRes3d,
+                     SetupMultiRes,
                      ProjectDir,
                      LogDir,
                      AutoLaunch):
@@ -81,7 +81,7 @@ class setup_protocols_class:
             self.SetupRCT=SetupRCT
             self.SetupML3D=SetupML3D
             self.SetupProjMatch=SetupProjMatch
-            self.SetupHighRes3d=SetupHighRes3d
+            self.SetupMultiRes=SetupMultiRes
 
             self.ProjectDir=ProjectDir
             self.LogDir=LogDir
@@ -111,7 +111,7 @@ class setup_protocols_class:
                                         ['protocol_ml3d.py','visualize_ml3d.py']]
             self.library['SetupProjMatch']=[self.SetupProjMatch,
                                         ['protocol_projmatch.py','visualize_projmatch.py']]
-            self.library['SetupHighRes3d']=[self.SetupHighRes3d,
+            self.library['SetupMultiRes']=[self.SetupMultiRes,
                                         ['protocol_highres3d.py','visualize_highres3d.py']]
 
             # For automated editing of default directories in protocols
@@ -216,7 +216,7 @@ if __name__ == '__main__':
                                 SetupRCT,
                                 SetupML3D,
                                 SetupProjMatch,
-                                SetupHighRes3d,
+                                SetupMultiRes,
                                 ProjectDir,
                                 LogDir,
                                 AutoLaunch)
