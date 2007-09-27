@@ -7,8 +7,8 @@
 #  - 2D image alignment and classification (by ML2D & kerdenSOM)
 #  - 2D image analysis by classification of rotational spectra
 #  - 3D classification by ml3D
-#  - 3D projection matching refinement 
-#  - 3D multi-resolution refinement
+#  - 3D projection matching refinement
+#  - 3D high resolution refinement
 #
 # Example use:
 # ./setup_protocols.py
@@ -37,8 +37,8 @@ SetupRCT=False
 SetupML3D=False
 # {setup-3d} Projection matching refinement
 SetupProjMatch=False
-# {setup-3d} Multi-resolution refinement
-SetupMultiRes=False
+# {setup-3d} High resolution refinement
+SetupHighRes3d=False
 #------------------------------------------------------------------------
 # {section} Global Parameters
 #------------------------------------------------------------------------
@@ -65,7 +65,7 @@ class setup_protocols_class:
                      SetupRCT,
                      SetupML3D,
                      SetupProjMatch,
-                     SetupMultiRes,
+                     SetupHighRes3d,
                      ProjectDir,
                      LogDir,
                      AutoLaunch):
@@ -81,7 +81,7 @@ class setup_protocols_class:
             self.SetupRCT=SetupRCT
             self.SetupML3D=SetupML3D
             self.SetupProjMatch=SetupProjMatch
-            self.SetupMultiRes=SetupMultiRes
+            self.SetupHighRes3d=SetupHighRes3d
 
             self.ProjectDir=ProjectDir
             self.LogDir=LogDir
@@ -111,7 +111,7 @@ class setup_protocols_class:
                                         ['protocol_ml3d.py','visualize_ml3d.py']]
             self.library['SetupProjMatch']=[self.SetupProjMatch,
                                         ['protocol_projmatch.py','visualize_projmatch.py']]
-            self.library['SetupMultiRes']=[self.SetupMultiRes,
+            self.library['SetupHighRes3d']=[self.SetupHighRes3d,
                                         ['protocol_highres3d.py','visualize_highres3d.py']]
 
             # For automated editing of default directories in protocols
@@ -216,7 +216,7 @@ if __name__ == '__main__':
                                 SetupRCT,
                                 SetupML3D,
                                 SetupProjMatch,
-                                SetupMultiRes,
+                                SetupHighRes3d,
                                 ProjectDir,
                                 LogDir,
                                 AutoLaunch)
