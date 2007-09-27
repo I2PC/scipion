@@ -37,8 +37,8 @@ SetupRCT=False
 SetupML3D=False
 # {setup-3d} Projection matching refinement
 SetupProjMatch=False
-# {setup-3d} High resolution refinement
-SetupHighRes3d=False
+# {setup-3d} Multi-resolution refinement
+SetupMultiRes=False
 #------------------------------------------------------------------------
 # {section} Global Parameters
 #------------------------------------------------------------------------
@@ -65,7 +65,7 @@ class setup_protocols_class:
                      SetupRCT,
                      SetupML3D,
                      SetupProjMatch,
-                     SetupHighRes3d,
+                     SetupMultiRes,
                      ProjectDir,
                      LogDir,
                      AutoLaunch):
@@ -81,7 +81,7 @@ class setup_protocols_class:
             self.SetupRCT=SetupRCT
             self.SetupML3D=SetupML3D
             self.SetupProjMatch=SetupProjMatch
-            self.SetupHighRes3d=SetupHighRes3d
+            self.SetupMultiRes=SetupMultiRes
 
             self.ProjectDir=ProjectDir
             self.LogDir=LogDir
@@ -111,7 +111,7 @@ class setup_protocols_class:
                                         ['protocol_ml3d.py','visualize_ml3d.py']]
             self.library['SetupProjMatch']=[self.SetupProjMatch,
                                         ['protocol_projmatch.py','visualize_projmatch.py']]
-            self.library['SetupHighRes3d']=[self.SetupHighRes3d,
+            self.library['SetupMultiRes']=[self.SetupMultiRes,
                                         ['protocol_highres3d.py','visualize_highres3d.py']]
 
             # For automated editing of default directories in protocols
@@ -216,7 +216,7 @@ if __name__ == '__main__':
                                 SetupRCT,
                                 SetupML3D,
                                 SetupProjMatch,
-                                SetupHighRes3d,
+                                SetupMultiRes,
                                 ProjectDir,
                                 LogDir,
                                 AutoLaunch)
