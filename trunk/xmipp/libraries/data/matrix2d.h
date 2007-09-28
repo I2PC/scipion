@@ -2335,7 +2335,6 @@ public:
     {
         Matrix2D< double > aux, aux2;
         produceSplineCoefficients(aux, 3);
-        cout << levels << endl;
 
         for (int i = 0; i < levels; i++)
         {
