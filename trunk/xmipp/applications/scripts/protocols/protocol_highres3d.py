@@ -548,7 +548,7 @@ class HighRes3DClass:
 	  self.getReconstructionRootname(_iteration)+"_noise",False)
 
        # Compute the SSNR
-       self.execute("xmipp_ssnr "+\
+       self.execute("xmipp_resolution_ssnr "+\
           "-S "+self.getReconstructionRootname(_iteration)+"_signal.vol "+\
           "-N "+self.getReconstructionRootname(_iteration)+"_noise.vol "+\
 	  "-selS preproc_signal.sel -selN preproc_noise.sel "+\
@@ -893,6 +893,7 @@ class HighRes3DClass:
              self.touchFile(self.symmetryFile)
 
        # Backup the protocol
+       self.changeDirectory(self.projectDir)
        log.make_backup_of_script_file(sys.argv[0],
                                       os.path.abspath(self.workDirectory))
 
