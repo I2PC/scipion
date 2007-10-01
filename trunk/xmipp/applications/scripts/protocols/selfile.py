@@ -14,10 +14,17 @@ class selfile:
        fh=open(self.selfilename,'r')
        lines=fh.readlines()
        self.sellines=[]
+       imgNames=dict()
        for line in lines:
            args=line.split()
            if (len(args)>1):
+               filename=(args[0].split('/'))[-1]
+               if filename in imgNames:
+                    raise RuntimeError, """ There are two images with the same
+                       filename, although they may be in different directories.
+                       This cannot be handled by the protocols."""
                self.sellines.append([args[0],args[1]])
+               imgNames[filename]=1
        fh.close()
 
    # Fills selfile content
@@ -171,10 +178,10 @@ class selfile:
        if not os.path.exists(directory):
            os.makedirs(directory)
        for name,state in self.sellines:
-           shutil.copy(name,directory)
            parts=name.split('/')
-           name=directory+'/'+parts[-1]
-           newlines.append([name,state])
+           newname=directory+'/'+parts[-1]
+           shutil.copy(name,directory)
+           newlines.append([newname,state])
        newsel=selfile()
        newsel.set(newlines)
        return newsel
