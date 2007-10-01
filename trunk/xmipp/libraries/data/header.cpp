@@ -166,15 +166,17 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
         float         f;
     } file_type;
 
+    long int currentPosition=ftell(fp);
+
     if (!skip_type_check)
     {
         // Read file type
-        fseek(fp, 16, SEEK_SET);
+        fseek(fp, currentPosition+16, SEEK_SET);
         for (int i = 0; i < 4; i++)
         {
             fread(&(file_type.c[i]), sizeof(unsigned char), 1, fp);
         }
-        fseek(fp,  0, SEEK_SET);
+        fseek(fp,  currentPosition+0, SEEK_SET);
         // Select type
         int correct_type = 0;
         __reversed = false;
@@ -231,18 +233,19 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
     unsigned long usfNrow = (unsigned long) header.fNrow;
     unsigned long usfNslice = (unsigned long) header.fNslice;
     unsigned long usfHeader = (unsigned long) get_header_size();
-#ifdef DEBUG
 
+#ifdef DEBUG
     cout << "Getting Status information\n";
 #endif
-
     if (fstat(fileno(fp), &info))
         return false;
 #ifdef DEBUG
-
     cout << "OK\n";
 #endif
 
+#ifdef DEBUG
+    cout << "Checking if aberrant image\n";
+#endif
     // CO: Check if it is an "aberrant" image
     if (im == IMG_XMIPP || header.fIform == 1)
         if (usfNcol*usfNrow*sizeof(float) == info.st_size)
@@ -250,6 +253,9 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
             usfNrow = (unsigned long)(--header.fNrow);
             --header.fNrec;
         }
+#ifdef DEBUG
+    cout << "OK\n";
+#endif
 
     // Extra checkings
     if (!skip_extra_checkings)
@@ -262,14 +268,14 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
         {
         case IMG_XMIPP:
             size = usfHeader + usfNcol * usfNrow * sizeof(float);
-#ifdef DEBUG
 
+#ifdef DEBUG
             cout << "usfHeader=    " << usfHeader     << endl
-            << "usfNcol=      " << usfNcol       << endl
-            << "usfNrow=      " << usfNrow       << endl
-            << "computed size=" << size          << endl
-            << "file size=    " << info.st_size  << endl
-            << "header.fIform=" << header.fIform << endl
+                 << "usfNcol=      " << usfNcol       << endl
+                 << "usfNrow=      " << usfNrow       << endl
+                 << "computed size=" << size          << endl
+                 << "file size=    " << info.st_size  << endl
+                 << "header.fIform=" << header.fIform << endl
             ;
 #endif
 
@@ -344,6 +350,9 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
        cols*rows*sizeof(float).
     */
 
+#ifdef DEBUG
+    cout << "About to read the header content\n";
+#endif
     // Now read and throw empty filling space
     //  header.fLabrec = (float) ceil((float) 256/header.fNcol);
     tmpSize = (int)(header.fNcol * header.fLabrec * 4); //Size of whole header
