@@ -30,6 +30,8 @@
  ***************************************************************************/
 
 #include "image.h"
+#include "selfile.h"
+#include "volume.h"
 
 /* Is Xmipp image? --------------------------------------------------------- */
 int Is_ImageXmipp(const FileName &fn, bool skip_type_check,
@@ -121,6 +123,103 @@ void FourierImageXmipp_to_ImageXmipp(FourierImageXmipp &F, ImageXmipp &I)
     {
         I(i, j) = F(i, j).real();
     }
+}
+
+// Read stack from stack file ----------------------------------------------
+bool ImageXmippStack::readFromStack(const FileName& name,
+    bool reversed, bool apply_geo, bool only_apply_shifts)
+{
+    headerXmipp header;
+    FILE* fp;
+    bool ret;
+
+    fn=name;
+    if ((fp = fopen(name.c_str(), "rb")) == NULL)
+        REPORT_ERROR(1501, (string) "ImageXmippStack::read: File " +
+                     name + " not found");
+
+    // Read header
+    if (!header.read(fp, false, reversed))
+        REPORT_ERROR(1502, "ImageXmippStack::read: File " + name +
+                     " is not a valid Xmipp file");
+
+    // Compute the number of images in the stack.
+    long int headerSize = header.get_header_size();
+    fseek(fp, 0, SEEK_END);
+    long int fileSize = ftell(fp);
+    long int imageSize = header.Ydim() * header.Xdim() * 4;
+    int Nimgs = (fileSize-headerSize)/(imageSize+headerSize);    
+
+    // Read all images
+    fseek(fp,headerSize,SEEK_SET);
+    for (int i=0; i<Nimgs; i++) 
+    {
+        ImageXmipp I;
+        if (!I.getHeader().read(fp, true, reversed, true))
+            REPORT_ERROR(1502,
+                (string)"ImageXmippStack::readFromStack: Cannot read image "+
+                integerToString(i));
+        if (!I.readImageContent(fp, apply_geo, only_apply_shifts))
+            REPORT_ERROR(1502,
+                (string)"ImageXmippStack::readFromStack: Cannot read (2) image "
+                +integerToString(i));
+        I.rename(name.insert_before_extension(integerToString(i,5)));
+        stack.push_back(I);
+    }
+
+    // Close file
+    fclose(fp);
+    return (ret);
+}
+    
+// Write as stack file.-----------------------------------------------------
+void ImageXmippStack::writeAsStack(const FileName& name, bool force_reversed)
+{
+    FILE* fp;
+    if (name != "")
+        fn=name;
+
+    if ((fp = fopen(fn.c_str(), "wb")) == NULL)
+        REPORT_ERROR(1503, (string) "ImageXmippStack::write: File " + fn +
+                     " cannot be written");
+
+    getImage(0).adjust_header();
+    bool reversed = (force_reversed) ?
+        !getImage(0).getHeader().reversed():getImage(0).getHeader().reversed();
+    getImage(0).getHeader().write(fp, force_reversed);
+    for (int i=0; i<ImgNo(); i++)
+    {
+        getImage(i).write(fp, reversed);
+    }
+    
+    fclose(fp);
+}
+    
+// Write as selfile --------------------------------------------------------
+void ImageXmippStack::writeAsSelFile(const FileName& rootname,
+    bool force_reversed)
+{
+    SelFile SF;
+    for (int i=0; i<ImgNo(); i++)
+    {
+        ImageXmipp I=getImage(i);
+        I.rename(rootname+integerToString(i+1,5)+".xmp");
+        I.write();
+        SF.insert(I.name());
+    }
+    SF.write(rootname+".sel");
+}
+
+// Write as volume ---------------------------------------------------------
+void ImageXmippStack::writeAsVolume(const FileName& name, bool force_reversed)
+{
+    VolumeXmipp V;
+    V().resize(ImgNo(), YSIZE(getImage(0)()), XSIZE(getImage(0)()));
+    for (int i=0; i<ImgNo(); i++)
+    {
+        V().setSlice(i,getImage(i)());
+    }
+    V.write(name,force_reversed);
 }
 
 // Initialise an oversampled image (ready for work) ------------------------

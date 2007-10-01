@@ -770,6 +770,13 @@ public:
         header = I.header;
     }
 
+    /** Get access to header.
+     */
+    headerXmipp& getHeader()
+    {
+        return header;
+    }
+
     /** Empty image
      *
      * All information is cleared.
@@ -916,19 +923,40 @@ public:
                       bool only_apply_shifts = false)
     {
         FILE* fp;
-        bool ret;
 
         ImageXmippT< T >::rename(name);
         if ((fp = fopen(ImageT< T >::fn_img.c_str(), "rb")) == NULL)
             REPORT_ERROR(1501, (string) "ImageXmipp::read: File " +
                          ImageT<T>::fn_img + " not found");
 
+        bool ret=readImageHeaderAndContent(fp, skip_type_check, reversed,
+            apply_geo, only_apply_shifts);
+
+        fclose(fp);
+        return (ret);
+    }
+
+    /** Read image (header+content) from the current position in the file.
+        Returns true if the image could be read. */
+    bool readImageHeaderAndContent(FILE *fp, bool skip_type_check,
+        bool reversed, bool apply_geo, bool only_apply_shifts)
+    {
         // Read header
         if (!header.read(fp, skip_type_check, reversed))
             REPORT_ERROR(1502, "ImageXmipp::read: File " + ImageT< T >::fn_img +
                          " is not a valid Xmipp file");
 
         // Read whole image and close file
+        bool ret=readImageContent(fp, apply_geo, only_apply_shifts);
+        return ret;
+    }
+
+    /** Read image content from the current position in the file.
+        Returns true if the image could be read. */
+    bool readImageContent(FILE *fp, bool apply_geo,
+        bool only_apply_shifts)
+    {
+        bool ret;
         if ((ret = ImageT< T >::read(fp, header.fIform(), header.iYdim(),
                                      header.iXdim(), header.reversed(), IFLOAT)))
         {
@@ -962,9 +990,7 @@ public:
             header.set_header(); // Set header in a Xmipp consistent state
 #endif
         }
-
-        fclose(fp);
-        return (ret);
+        return ret;
     }
 
     /** Write Xmipp image to disk
@@ -990,11 +1016,17 @@ public:
             REPORT_ERROR(1503, (string) "ImageXmipp::write: File " + name +
                          " cannot be written");
 
+        write(fp,force_reversed);
+        fclose(fp);
+    }
+    
+    /** Write Xmipp image to disk given a file pointer. */
+    virtual void write(FILE *fp, bool force_reversed = false)
+    {
         adjust_header();
         bool reversed = (force_reversed) ? !header.reversed() : header.reversed();
         header.write(fp, force_reversed);
         ImageT< T >::write(fp, reversed, IFLOAT);
-        fclose(fp);
     }
 
     /** Resets header
@@ -1963,6 +1995,48 @@ void ImageXmipp_to_FourierImageXmipp(ImageXmipp& I, FourierImageXmipp& F);
  */
 void FourierImageXmipp_to_ImageXmipp(FourierImageXmipp& F, ImageXmipp& I);
 
+/** Image stack.
+*/
+class ImageXmippStack {
+public:
+    /** Filename. */
+    FileName fn;
+
+    /** Stack of images. Where the true data is.
+     */
+    vector< ImageXmipp > stack;
+public:
+    /** Read from stack file.
+     */
+    bool readFromStack(const FileName& name,
+              bool reversed = false, bool apply_geo = false,
+              bool only_apply_shifts = false);
+    
+    /** Number of images in the stack. */
+    int ImgNo() const {return stack.size();}
+
+    /** Get image i. */
+    ImageXmipp& getImage(int i) {return stack[i];}
+
+    /** Set image i. */
+    void setImage(int i, const ImageXmipp &I) {stack[i]=I;}
+
+    /** Append image. */
+    void appendImage(const ImageXmipp &I) {stack.push_back(I);}
+
+    /** Write as stack file.
+    */
+    void writeAsStack(const FileName& name = "", bool force_reversed = false);
+    
+    /** Write as selfile.
+        All the images are numbered as 1, 2, ...
+        At the end a selfile called "rootname.sel" is written.
+    */
+    void writeAsSelFile(const FileName& rootname, bool force_reversed = false);
+    
+    /** Write as volume. */
+    void writeAsVolume(const FileName& name="", bool force_reversed = false);
+};
 
 /** Oversampled images
  *
