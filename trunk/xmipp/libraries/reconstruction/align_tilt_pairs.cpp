@@ -111,7 +111,16 @@ bool Prog_centilt_prm::center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It,
 
     // Calculate cross-correlation
     correlation_matrix(Maux, Iu(), Mcorr);
-    Mcorr.statistics_adjust(0., 1.);
+    if (force_x_zero)
+    {
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(Mcorr)
+        {
+            if (j != 0) MAT_ELEM(Mcorr, i, j) = 0.;
+        }
+    }
+    Mcorr.maxIndex(imax, jmax);
+    maxcorr = MAT_ELEM(Mcorr, imax, jmax);
+
     if (force_x_zero)
     {
         x_zero = 0;
@@ -122,58 +131,26 @@ bool Prog_centilt_prm::center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It,
     }
     Mcorr.maxIndex(imax, jmax);
     maxcorr = MAT_ELEM(Mcorr, imax, jmax);
-
-    while (neighbourhood)
-    {
-        n_max ++;
-        for (int i = -n_max; i <= n_max; i++)
-            for (int j = -n_max * x_zero; j <= n_max*x_zero; j++)
-            {
-                i_actual = i + imax;
-                j_actual = j + jmax;
-                if (i_actual < Mcorr.startingY()  || j_actual < Mcorr.startingX() &&
-                    i_actual > Mcorr.finishingY() || j_actual > Mcorr.finishingX())
-                    neighbourhood = false;
-                else if (maxcorr / 1.414 > MAT_ELEM(Mcorr, i_actual, j_actual))
-                    neighbourhood = false;
-            }
-    }
-
-    // We have the neighbourhood => looking for the gravity centre
-    xmax = ymax = sumcorr = 0.;
-    for (int i = -n_max; i <= n_max; i++)
-        for (int j = -n_max; j <= n_max; j++)
-        {
-            i_actual = i + imax;
-            j_actual = j + jmax;
-            if (i_actual >= Mcorr.startingY()  && j_actual >= Mcorr.startingX() &&
-                i_actual <= Mcorr.finishingY() && j_actual <= Mcorr.finishingX())
-            {
-                ymax += i_actual * MAT_ELEM(Mcorr, i_actual, j_actual);
-                xmax += j_actual * MAT_ELEM(Mcorr, i_actual, j_actual);
-                sumcorr += MAT_ELEM(Mcorr, i_actual, j_actual);
-            }
-        }
-    xmax /= sumcorr;
-    ymax /= sumcorr;
-    xshift = (float) - xmax;
-    yshift = (float) - ymax;
+    xshift = (float) jmax;
+    yshift = (float) imax;
 
     // Calculate correlation coefficient
     A.initIdentity();
-    A(0, 2) = -xshift;
-    A(1, 2) = -yshift;
-    applyGeometry(Maux, A, Maux, IS_INV, DONT_WRAP);
+    A(0, 2) = xshift;
+    A(1, 2) = yshift;
+    Maux.selfApplyGeometry(A, IS_INV, DONT_WRAP);
     Maux.setXmippOrigin();
     ccf = correlation_index(Iu(), Maux);
 
     if (do_stretch) xshift *= COSD(It.Theta());
     shift = sqrt(xshift * xshift + yshift * yshift);
+    
     if ((max_shift < XMIPP_EQUAL_ACCURACY) || (shift < max_shift))
     {
         // Store shift in the header of the image
-        It.Xoff() += xshift;
-        It.Yoff() += yshift;
+	// Take rotation into account for shifts
+	It.Xoff() = -xshift*COSD(It.Psi()) - yshift*SIND(It.Psi());
+	It.Yoff() = xshift*SIND(It.Psi()) - yshift*COSD(It.Psi());
         It.Phi() = Iu.Psi();
         return true;
     }
@@ -209,6 +186,7 @@ void Prog_centilt_prm::centilt()
     init_progress_bar(n_images);
     barf = MAX(1, (int)(1 + (n_images / 60)));
     imgno = 0;
+
     while (imgno < n_images)
     {
 
@@ -224,14 +202,13 @@ void Prog_centilt_prm::centilt()
         A(1, 2) = -Iu.Yoff();
         outside = dMij(Iu(), 0, 0);
         Iu().selfApplyGeometry(A, IS_INV, DONT_WRAP, outside);
+
         // Read in tilted image and apply Psi (align tilt-axis with y-axis) and shifts if present
         It.read(SFt.get_current_file());
         // Store original matrix for later output
         Maux.resize(It());
         Maux = It();
-        Euler_angles2matrix(It.Psi(), 0., 0., A);
-        A(0, 2) = -It.Xoff();
-        A(1, 2) = -It.Yoff();
+        Euler_angles2matrix(0., 0., It.Psi(), A);
         outside = dMij(It(), 0, 0);
         It().selfApplyGeometry(A, IS_INV, DONT_WRAP, outside);
         It().setXmippOrigin();
