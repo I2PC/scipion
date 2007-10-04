@@ -111,7 +111,7 @@ void SincKaiserMask(Matrix1D<double> &mask,
     KaiserMask(kaiser, delta, Deltaw);
     mask.resize(kaiser);
     mask.setXmippOrigin();
-    SincMask(mask, omega, INNER_MASK, 0);
+    SincMask(mask, omega*PI, INNER_MASK, 0);
     mask *= kaiser;
 }
 
@@ -368,7 +368,7 @@ void SincKaiserMask(Matrix2D<double> &mask,
     KaiserMask(kaiser, delta, Deltaw);
     mask.resize(kaiser);
     mask.setXmippOrigin();
-    SincMask(mask, omega, INNER_MASK, 0, 0);
+    SincMask(mask, omega*PI, INNER_MASK, 0, 0);
     mask *= kaiser;
 }
 
@@ -377,6 +377,7 @@ void SeparableSincKaiserMask(Matrix2D<double> &mask,
 {
     // Convert Deltaw from a frequency normalized to 1, to a freq. normalized to PI
     Deltaw *= PI;
+    omega *= PI;
 
     // Design Kaiser window
     double A = -20 * log10(delta);

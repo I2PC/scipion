@@ -102,6 +102,7 @@ void SincMask(Matrix1D< double >& mask,
  *  This function returns a sinc mask windowed by a Kaiser window.
  *  delta=ripple (in natural units) in the pass band.
  *  Deltaw=transition bandwidth (normalized to 1).
+ *  omega=low pass frequency (normalized to 1).
  */
 void SincKaiserMask(Matrix1D<double> &mask,
                     double omega, double delta = 0.01, double Deltaw = 1.0 / 12.0);
@@ -256,6 +257,7 @@ void SincBlackmanMask(Matrix2D< double >& mask,
  *  This function returns a sinc mask windowed by a Kaiser window.
  *  delta=ripple (in natural units) in the pass band.
  *  Deltaw=transition bandwidth (normalized to 1).
+ *  omega=low pass frequency (normalized to 1).
  */
 void SincKaiserMask(Matrix2D<double> &mask,
                     double omega, double delta = 0.01, double Deltaw = 1.0 / 12.0);
@@ -265,6 +267,7 @@ void SincKaiserMask(Matrix2D<double> &mask,
  *  This function returns a sinc mask windowed by a Kaiser window.
  *  delta=ripple (in natural units) in the pass band.
  *  Deltaw=transition bandwidth (normalized to 1).
+ *  omega=low pass frequency (normalized to 1).
  */
 void SeparableSincKaiserMask(Matrix2D<double> &mask,
                              double omega, double delta = 0.01,
