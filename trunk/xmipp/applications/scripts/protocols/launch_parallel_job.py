@@ -44,8 +44,7 @@ def launch_parallel_job(mpiprogramname,
                         RunInBackground):
 
     import os
-
-    if (MyMachineFile[0-8]=="USE_SLURM"):
+    if (MyMachineFile.find('USE_SLURM') > -1):
         command = 'srun `which '+ str(mpiprogramname) +'` ' + params
     else:
         if (len(MyMachineFile)==0):
