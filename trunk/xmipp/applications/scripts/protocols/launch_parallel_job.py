@@ -45,30 +45,33 @@ def launch_parallel_job(mpiprogramname,
 
     import os
 
-    if (len(MyMachineFile)==0):
-        machineParam=""
-	nr_cpus=MyNumberOfCPUs
+    if (MyMachineFile[0-8]=="USE_SLURM"):
+        command = 'srun `which '+ str(mpiprogramname) +'` ' + params
     else:
-        if (MyMachineFile[0]=="$"):
-            machinefile= os.environ.get(MyMachineFile[1:])
-        else:
-            machinefile= MyMachineFile
-        machineParam=' -machinefile ' +  machinefile
-        if (MyNumberOfCPUs<0):
-            # use the number of entries in the machinefile
-            fh = open(machinefile)
-            lines = fh.readlines()
-            fh.close()
-            nr_cpus=len(lines)
-        else:
+        if (len(MyMachineFile)==0):
+            machineParam=""
             nr_cpus=MyNumberOfCPUs
+        else:
+            if (MyMachineFile[0]=="$"):
+                machinefile= os.environ.get(MyMachineFile[1:])
+            else:
+                machinefile= MyMachineFile
+            machineParam=' -machinefile ' +  machinefile
 
-    command='mpirun -np ' + str(nr_cpus)+machineParam
-    command+=' `which '+ str(mpiprogramname) +'` ' + params
+            if (MyNumberOfCPUs<0):
+                # use the number of entries in the machinefile
+                fh = open(machinefile)
+                lines = fh.readlines()
+                fh.close()
+                nr_cpus=len(lines)
+            else:
+                nr_cpus=MyNumberOfCPUs
 
-    if RunInBackground==True:
+        command='mpirun -np ' + str(nr_cpus)+machineParam
+        command+=' `which '+ str(mpiprogramname) +'` ' + params
+
+    if (RunInBackground==True):
         command = command + ' &'
-    command = command
 
     print '* ',command,'\n'
     log.info(command)
