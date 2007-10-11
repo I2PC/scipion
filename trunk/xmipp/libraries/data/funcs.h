@@ -913,8 +913,8 @@ void wait_until_stable_size(const FileName& fn,
  * An exception is thrown if any error happens
  */
 void create_empty_file(const FileName& fn,
-                       size_t size,
-                       size_t block_size = 102400);
+                       unsigned long long size,
+                       unsigned long long block_size = 102400);
 
 /** Returns the base directory of the Xmipp installation
  * @ingroup Filenames

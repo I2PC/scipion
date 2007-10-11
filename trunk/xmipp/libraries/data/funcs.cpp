@@ -430,8 +430,8 @@ void wait_until_stable_size(const FileName &fn,
 }
 
 /* Create empty file ------------------------------------------------------- */
-void create_empty_file(const FileName &fn, size_t size,
-                       size_t block_size)
+void create_empty_file(const FileName &fn, unsigned long long size,
+                       unsigned long long block_size)
 {
     unsigned char * buffer = (unsigned char*) calloc(sizeof(unsigned char),
                              block_size);
@@ -440,7 +440,7 @@ void create_empty_file(const FileName &fn, size_t size,
     FILE * fd = fopen(fn.c_str(), "w");
     if (fd == NULL)
         REPORT_ERROR(1, (string)"create_empty_file: Cannot open file" + fn);
-    for (size_t i = 0; i < size / block_size; i++)
+    for (unsigned long i = 0; i < size / block_size; i++)
         fwrite(buffer, sizeof(unsigned char), block_size, fd);
     fwrite(buffer, sizeof(unsigned char), size % block_size, fd);
     fclose(fd);

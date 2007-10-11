@@ -193,7 +193,8 @@ void Prog_downsample_prm::create_empty_output_file()
     cerr << "Creating empty downsampled file ...\n";
     Ypdim = FLOOR(Ydim / Ystep);
     Xpdim = FLOOR(Xdim / Xstep);
-    create_empty_file(fn_downsampled, Ypdim*Xpdim*bitsMp / 8);
+    create_empty_file(fn_downsampled, ((unsigned long long)Ypdim)*
+      	 Xpdim*bitsMp / 8);
 
     ofstream fh_downsample_inf;
     fh_downsample_inf.open((fn_downsampled + ".inf").c_str());
