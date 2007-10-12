@@ -506,6 +506,36 @@ void SelFile::mpi_select_part(int rank, int size, int &num_img_tot)
     *this = SFpart;
 
 }
+/* Select only part of the selfile for parallel MPI-runs ------------------ */
+void SelFile::mpi_select_part2(int jobNumber, 
+                               int numberJobs, 
+                               int &totalNumImg,
+                               int mpi_job_size)
+{   // jobNumber process number
+    // total number of processes
+    // total number of images
+
+    (*this).clean_comments();
+    (*this).clean();
+    totalNumImg = (*this).ImgNo();
+    int myFirst = jobNumber * mpi_job_size;
+    int myLast  = myFirst + mpi_job_size-1;
+    if (myLast > totalNumImg)
+    {
+        myLast = totalNumImg-1;
+    }
+    // Now discard all images in Selfile that are outside myFirst-myLast
+    (*this).go_beginning();
+    SelFile  SFpart = *this;
+    SFpart.clear();
+    for (int nr = myFirst; nr <= myLast; nr++)
+    {
+        (*this).go_beginning();
+        (*this).jump_lines(nr);
+        SFpart.insert((*this).current());
+    }
+    *this = SFpart;
+}
 
 /* Adjust to label --------------------------------------------------------- */
 void SelFile::adjust_to_label(SelLine::Label label)

@@ -401,6 +401,13 @@ public:
      */
     void mpi_select_part(int rank, int size, int& num_img_tot);
 
+    /** For MPI-parallelized runs: select relevant part of selfile for that
+     * rank. 
+     * I just do not undertand the previous function
+     * @ingroup SelFilesDisk
+     */
+    void mpi_select_part2(int rank, int size, int& num_img_tot,int mpi_job_size);
+
     /** Write a selection file to disk.
      * @ingroup SelFilesDisk
      *
