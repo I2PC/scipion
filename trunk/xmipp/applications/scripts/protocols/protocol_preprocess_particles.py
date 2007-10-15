@@ -323,32 +323,22 @@ class preprocess_particles_class:
         os.rename(selname2,selnameb2)
 
         # Remove pairs with one image near the border
-        self.remove_empty_images_pairs(posname,posname2,selnameb,selnameb2)
+        self.remove_empty_images_pairs(selnameb,selnameb2)
         
 
-    def remove_empty_images_pairs(self,posname,posname2,selname,selname2):
+    def remove_empty_images_pairs(self,selname,selname2):
         import os
         newsel=[]
-        newpos=[]
         newsel2=[]
-        newpos2=[]
 
         count = 0
-        # read old selfile and posfile
-        fh  = open(posname,"r")
-        pos = fh.readlines()
-        fh.close()
-        fh   = open(posname2,"r")
-        pos2 = fh.readlines()
-        fh.close()
+        # read old selfile
         fh  = open(selname,"r")
         sel = fh.readlines()
         fh.close()
         fh   = open(selname2,"r")
         sel2 = fh.readlines()
         fh.close()
-        newpos.append(pos[0]) # append header line
-        newpos2.append(pos2[0]) # append header line
         for i in range(len(sel)):
             args=sel[i].split()
             args2=sel2[i].split()
@@ -360,29 +350,21 @@ class preprocess_particles_class:
                     os.remove(args2[0])
                 count += 1
             else:
-                # or append to new selfile and posfile
+                # or append to new selfile
                 newsel.append(sel[i])
                 newsel2.append(sel2[i])
-                newpos.append(pos[i+1])
-                newpos2.append(pos2[i+1])
                 # For allselfiles, use relative paths wrt ProjectDir
                 name= self.ImagesDir+'/'+self.shortname +'/'+os.path.basename(args[0]) +" 1\n"
                 name2=self.ImagesDir+'/'+self.shortname2+'/'+os.path.basename(args2[0])+" 1\n"
                 self.allselfile.append(name)
                 self.allselfile2.append(name2)
 
-        # write new selfiles and posfiles
+        # write new selfiles
         fh=open(selname, 'w')
         fh.writelines(newsel)
         fh.close()
         fh=open(selname2, 'w')
         fh.writelines(newsel2)
-        fh.close()
-        fh=open(posname, 'w')
-        fh.writelines(newpos)
-        fh.close()
-        fh=open(posname2, 'w')
-        fh.writelines(newpos2)
         fh.close()
         # Update allselfiles
         outselfname=self.ProjectDir+'/'+self.OutSelFile.replace('.sel','_untilted.sel')
@@ -430,22 +412,17 @@ class preprocess_particles_class:
         os.rename(selname,selnameb)
 
         # Remove particles near the border:
-        self.remove_empty_images(posname,selnameb)
+        self.remove_empty_images(selnameb)
 
-    def remove_empty_images(self,posname,selname):
+    def remove_empty_images(self,selname):
         import os
         newsel=[]
-        newpos=[]
         count = 0
 
-        # read old selfile and posfile
-        fh  = open(posname,"r")
-        pos = fh.readlines()
-        fh.close()
+        # read old selfile
         fh  = open(selname,"r")
         sel = fh.readlines()
         fh.close()
-        newpos.append(pos[0])
         for i in range(len(sel)):
             args=sel[i].split()
             if (args[1].find('-1') > -1):
@@ -453,9 +430,8 @@ class preprocess_particles_class:
                 os.remove(args[0])
                 count += 1
             else:
-                # or append to new selfile and posfile
+                # or append to new selfile
                 newsel.append(sel[i])
-                newpos.append(pos[i+1])
                 # Update all_images.sel     (relative paths wrt ProjectDir)
                 name=self.ImagesDir+'/'+self.shortname+'/'+os.path.basename(args[0])
                 self.allselfile.append(name+" 1\n")
@@ -465,12 +441,9 @@ class preprocess_particles_class:
                                           self.shortname + '/' + \
                                           self.downname + '_Periodogramavg.ctfparam\n')
 
-        # write new selfile and posfile
+        # write new selfile
         fh=open(selname, 'w')
         fh.writelines(newsel)
-        fh.close()
-        fh=open(posname, 'w')
-        fh.writelines(newpos)
         fh.close()
         
         # Write updated all_images selfile
