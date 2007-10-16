@@ -573,6 +573,7 @@ void Prog_MLalign2D_prm::produce_Side_info()
 	    SL.set_number(iifocus + 1);
 	    SFtmp.insert(SL);
 	}
+	SF=SFtmp;
 
 	// Check the number of images in each defocus group
 	// and read CTF-parameters from disc
@@ -2114,6 +2115,10 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
                         diff += tmpr;
                     }
 
+		    if (debug)
+		    {
+			cout <<360. - psi_step*(iflip*nr_psi+ipsi) - SMALLANGLE<<" "<<diff<<endl;
+		    }
                     dVkij(Mweight, zero_trans, refno, irot) = diff;
                     if (diff < mindiff2)
                     {
@@ -2127,6 +2132,10 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
                 }
             }
         }
+    }
+    if (debug)
+    {
+	exit(0);
     }
 
     // Now that we have mindiff2 calculate all weights and maxweight
