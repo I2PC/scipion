@@ -520,7 +520,7 @@ void SelFile::mpi_select_part2(int jobNumber,
     totalNumImg = (*this).ImgNo();
     int myFirst = jobNumber * mpi_job_size;
     int myLast  = myFirst + mpi_job_size-1;
-    if (myLast > totalNumImg)
+    while ((myLast+1) > totalNumImg)
     {
         myLast = totalNumImg-1;
     }
