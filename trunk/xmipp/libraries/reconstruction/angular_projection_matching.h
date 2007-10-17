@@ -66,6 +66,12 @@ public:
       1: gives progress bar (=default)
       0: gives no output to screen at all */
   int verb;
+  /** Create Projections
+      1 yes
+      0 no
+   **/
+  int create_proyections;
+   
   /** Flag whether to store optimal transformations in the image headers */
   bool modify_header;
   /** Flag whether to output reference projections, selfile and docfile */
