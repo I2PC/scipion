@@ -192,7 +192,7 @@ public:
     /// Deterministic annealing
     double anneal, anneal_step;
     /** debug flag */
-    bool debug;
+    int debug;
 
 public:
     /// Read arguments from command line

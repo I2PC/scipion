@@ -145,6 +145,7 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
         fn_root = getParameter(argc, argv, "-o", "mlf2d");
         search_shift = textToFloat(getParameter(argc, argv, "-search_shift", "3"));
         lowres_limit = textToInteger(getParameter(argc, argv, "-low", "0"));
+        highres_limit = textToInteger(getParameter(argc, argv, "-high", "9999"));
         ini_highres_limit = textToInteger(getParameter(argc, argv, "-ini_high", "-1"));
         phase_flipped = !checkParameter(argc, argv, "-not_phase_flipped");
         reduce_snr = textToFloat(getParameter(argc, argv, "-reduce_snr", "1"));
@@ -164,7 +165,7 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     do_write_offsets = !checkParameter(argc, argv, "-dont_write_offsets");
     fn_scratch = getParameter(argc, argv, "-scratch", "");
     zero_offsets = checkParameter(argc, argv, "-zero_offsets");
-    debug = checkParameter(argc, argv, "-debug");
+    debug = textToInteger(getParameter(argc, argv, "-debug","0"));
 
     //only for interaction with Refine3D:
     search_rot = textToFloat(getParameter(argc, argv, "-search_rot", "999."));
@@ -883,7 +884,7 @@ void Prog_MLalign2D_prm::calculate_wiener_defocus_series(Matrix1D<double> &spect
     Matrix2D<complex<double> > Faux;
     ofstream                   fh;
     int                        maxres = 0;
-    double                     noise, ssnr;
+    double                     noise, ssnr, current_highres_limit;
     FileName                   fn_base, fn_tmp;
 
     // Pre-calculate average CTF^2 and initialize Vsnr
@@ -1010,8 +1011,12 @@ void Prog_MLalign2D_prm::calculate_wiener_defocus_series(Matrix1D<double> &spect
     Maux.initZeros(dim, dim);
     Maux.setXmippOrigin();
     FourierTransformHalf(Maux, Faux);
-    highres_limit = maxres + 5; // hard-code increase_highres_limit to 5
-    highres_limit = MIN(highres_limit, hdim);
+    
+    current_highres_limit = maxres + 5; // hard-code increase_highres_limit to 5
+    current_highres_limit = MIN(current_highres_limit, highres_limit);
+    current_highres_limit = MIN(current_highres_limit, hdim);
+    maxres = MIN(maxres, highres_limit);
+    maxres = MIN(maxres, hdim);
     pointer_ctf.clear();
     pointer_sigctf.clear();
     pointer_i.clear();
@@ -1022,7 +1027,7 @@ void Prog_MLalign2D_prm::calculate_wiener_defocus_series(Matrix1D<double> &spect
     {
         int resol = dMij(Mresol, i, j);
 	if (// exclude pixels above highres_limit
-            resol <= highres_limit
+            resol <= current_highres_limit
             // exclude first half row because of FourierTransformHalf
             && !(i == 0 && j > hdim)
         )
@@ -2061,6 +2066,11 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
     int    nr_uniq, point_trans, zscore;
     int    opt_itrans, iflip_start, iflip_stop, nr_mir;
 
+    TimeStamp t0; 
+    time_config();
+
+    annotate_time(&t0);
+
     // Calculate 2D matrices with values for ctf, decctf and sigma2 from 1D-vectors
     sigma2.resize(dim, dim);
     ctf.resize(dim, dim);
@@ -2084,6 +2094,8 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
 
     // Precalculate Fimg_trans, on pruned and expanded offset list
     calculate_fourier_offsets(Mimg, focus, Fref, ctf, opt_offsets_ref, Fimg_trans, Moffsets, Moffsets_mirror);
+
+    if (debug==1) {cout<<"processOneImage 1 "; print_elapsed_time(t0); annotate_time(&t0);}
 
     Mweight.initZeros(nr_trans, n_ref, nr_flip*nr_psi);
     FOR_ALL_MODELS()
@@ -2115,7 +2127,7 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
                         diff += tmpr;
                     }
 
-		    if (debug)
+		    if (debug==9)
 		    {
 			cout <<360. - psi_step*(iflip*nr_psi+ipsi) - SMALLANGLE<<" "<<diff<<endl;
 		    }
@@ -2132,10 +2144,6 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
                 }
             }
         }
-    }
-    if (debug)
-    {
-	exit(0);
     }
 
     // Now that we have mindiff2 calculate all weights and maxweight
@@ -2174,6 +2182,8 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
             }
         }
     }
+
+    if (debug==1) {cout<<"processOneImage 2 "; print_elapsed_time(t0); annotate_time(&t0);}
 
     // Now for all irefmir, check significant rotations...
     // and calculate their limited_translations probabilities
@@ -2282,6 +2292,8 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
         }
     }
     
+    if (debug==1) {cout<<"processOneImage 3 "; print_elapsed_time(t0); annotate_time(&t0);}
+
     // Acummulate all weighted sums
     // and normalize them by sum_refw, such that sum over all weights is one!
     FOR_ALL_MODELS()
@@ -2361,6 +2373,8 @@ void Prog_MLalign2D_prm::MLF_integrate_locally(
             }
         }
     }
+
+    if (debug==1) {cout<<"processOneImage 4 "; print_elapsed_time(t0); annotate_time(&t0);}
 
     // Compute Log Likelihood
     // 1st term: log(refw_i)
