@@ -225,9 +225,6 @@ class kerdensom_class:
         fh.writelines(newdoc)
         fh.close()
 
-    def prepare_data_without_ml2d(self):
-        
-        
     def assign_header(self):
         import os
         import glob
