@@ -68,8 +68,8 @@ void QtWidgetPSD::set_assign_CTF_file(Micrograph &m,
         else
         {
             if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
-                fn_avg = fn_root + "_ARMAavg.ctfmodel";
-            else fn_avg = fn_root + "_Periodogramavg.ctfmodel";
+                fn_avg = fn_root + "_ARMAavg.ctfmodel_halfplane";
+            else fn_avg = fn_root + "_Periodogramavg.ctfmodel_halfplane";
         }
         system(((string)"xmipp_do_selfile " + fn_avg + " > " + fn_random).c_str());
         div_NumberX = div_NumberY = 1;
@@ -85,7 +85,7 @@ void QtWidgetPSD::set_assign_CTF_file(Micrograph &m,
         if (!ctf_mode)
             command = (string)"xmipp_do_selfile \"" + PSDfn_root + "?????.psd\" > " + fn_random;
         else
-            command = (string)"xmipp_do_selfile \"" + PSDfn_root + "?????.ctfmodel\" > " + fn_random;
+            command = (string)"xmipp_do_selfile \"" + PSDfn_root + "?????.ctfmodel_halfplane\" > " + fn_random;
         system(command.c_str());
 
         int Ydim, Xdim;
