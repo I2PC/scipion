@@ -353,7 +353,7 @@ AddLibrary('XmippInterface', 'libraries/interface', InterfaceSources,
 
 # OldXmipp
 OldXmippSources = Glob('libraries/legacy', '*.cpp',[])
-AddLibrary('OldXmipp', 'libraries/legacy', OldXmippSources,[])
+AddLibrary('OldXmipp', 'libraries/legacy', OldXmippSources,['#libraries'])
 
 # --- Programs
 
