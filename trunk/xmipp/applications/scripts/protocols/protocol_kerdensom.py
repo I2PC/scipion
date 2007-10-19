@@ -111,12 +111,11 @@ class kerdensom_class:
         import os,sys,shutil
         scriptdir=os.path.expanduser('~')+'/scripts/'
         sys.path.append(scriptdir) # add default search path
-        import log
+        import log,selfile
 
         self.WorkingDir=_WorkingDir
         self.ProjectDir=_ProjectDir
         self.DoUseML2D=_DoUseML2D
-        self.NoML2DSelFile=_NoML2DSelFile
         self.ML2DWorkingDir=os.path.abspath(_ML2DWorkingDir)
         self.ML2DReferenceNr=_ML2DReferenceNr
         self.DoXmask=_DoXmask
@@ -146,14 +145,25 @@ class kerdensom_class:
         # Backup script
         log.make_backup_of_script_file(sys.argv[0],
                                        os.path.abspath(self.WorkingDir))
-        os.chdir(self.WorkingDir)
 
-        # Check whether ML2D subdirectory exists
-        if not os.path.exists(self.ML2DWorkingDir):
-            message=" Error: ML2D directory "+self.ML2DWorkingDir+" does not exists!"
-            print '* '+message
-            self.log.error(message)
-            sys.exit()
+        # Preparation
+        if (self.DoUseML2D):
+            # Check whether ML2D subdirectory exists
+            if not os.path.exists(self.ML2DWorkingDir):
+                message=" Error: ML2D directory "+self.ML2DWorkingDir+" does not exists!"
+                print '* '+message
+                self.log.error(message)
+                sys.exit()
+        else:
+            # Create a selfile with absolute pathname in the WorkingDir
+            mysel=selfile.selfile()
+            mysel.read(_NoML2DSelFile)
+            newsel=mysel.make_abspath()
+            self.NoML2DSelFile=os.path.abspath(self.WorkingDir + '/' + _NoML2DSelFile)
+            newsel.write(self.NoML2DSelFile)
+
+        # Change to the working directory
+        os.chdir(self.WorkingDir)
             
         # Execute kerdensom protocol in the working directory
         self.execute_whole_protocol()
@@ -310,7 +320,7 @@ class kerdensom_class:
             self.make_local_copy_of_images()
             self.assign_header()
         else:
-            self.classselfile = self.noML2DSelFile
+            self.classselfile = self.NoML2DSelFile
       
         if (self.DoXmask):
             self.execute_xmask(self.classselfile)
