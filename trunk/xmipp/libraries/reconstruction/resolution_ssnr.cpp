@@ -252,7 +252,7 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
                 double ISSNR = 0, alpha = 0, SSNR = 0;
                 if (N2s(i, j) > min_power) ISSNR = S2s(i, j) / N2s(i, j);
                 if (N2n(i, j) > min_power) alpha = S2n(i, j) / N2n(i, j);
-                if (alpha   > min_power) SSNR = MAX(ISSNR / alpha - 1, 0);
+                if (alpha   > min_power) SSNR = XMIPP_MAX(ISSNR / alpha - 1, 0);
                 if (SSNR    > min_power) SSNR2D(i, j) = 10 * log10(SSNR + 1);
             }
             CenterFFT(SSNR2D(), true);
@@ -291,7 +291,7 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
             double w = freq.module();
             double widx = w * XSIZE(S());
             if (widx >= XSIZE(S_S21D)) continue;
-            int l0 = MAX(0, CEIL(widx - ring_width));
+            int l0 = XMIPP_MAX(0, CEIL(widx - ring_width));
             int lF = FLOOR(widx);
 
             double S_signal = S2s(i, j);
@@ -377,7 +377,7 @@ void Prog_SSNR_prm::Radial_average(Matrix2D<double> &output)
         double w = freq.module();
         double widx = w * XSIZE(VSSNR());
         if (widx >= XSIZE(VSSNR_avg)) continue;
-        int l0 = MAX(0, CEIL(widx - ring_width));
+        int l0 = XMIPP_MAX(0, CEIL(widx - ring_width));
         int lF = FLOOR(widx);
 
         double VSSNRkij = pow(10, VSSNR(k, i, j) / 10) - 1;

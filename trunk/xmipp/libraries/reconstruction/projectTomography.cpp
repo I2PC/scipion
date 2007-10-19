@@ -222,7 +222,7 @@ int PROJECT_Tomography_Effectively_project(
         if (prm.tell&TELL_SHOW_ANGLES)
 	    std::cout << idx << "\t" << movements(0) << "\t"
 	    	      << movements(1) << "\t" << movements(2) << std::endl;
-        else if ((expectedNumProjs % MAX(1, numProjs / 60)) == 0)
+        else if ((expectedNumProjs % XMIPP_MAX(1, numProjs / 60)) == 0)
             progress_bar(numProjs);
         proj.write(fn_proj);
         numProjs++;

@@ -315,7 +315,7 @@ void Prog_angular_predict_prm::produce_library(int rank)
        cerr << "Generating reference library ...\n";
        init_progress_bar(number_of_imgs);
     }
-    int n = 0, nstep = MAX(1, number_of_imgs / 60); // For progress bar
+    int n = 0, nstep = XMIPP_MAX(1, number_of_imgs / 60); // For progress bar
     while (!SF_ref.eof())
     {
         I.read(SF_ref.NextImg(), false, false, true, true);

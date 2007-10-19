@@ -752,7 +752,7 @@ void Basic_ART_Parameters::compute_CAV_weights(GridVolume &vol_basis0,
         count_eqs_in_projection(*GVNeq, basis, read_proj);
 
         if (debug_level > 0 &&
-            act_proj % MAX(1, numIMG / 60) == 0) progress_bar(act_proj);
+            act_proj % XMIPP_MAX(1, numIMG / 60) == 0) progress_bar(act_proj);
     }
     if (debug_level > 0)
     {

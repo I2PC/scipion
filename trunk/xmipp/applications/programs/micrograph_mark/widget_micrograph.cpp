@@ -668,7 +668,7 @@ void QtWidgetMicrograph::classifyMask()
         if (radius < max_radius)
         {
             int radius_idx;
-            if (radius > 6) radius_idx = MIN(__radial_bins - 1, 1 + FLOOR((radius - 6) / radial_step));
+            if (radius > 6) radius_idx = XMIPP_MIN(__radial_bins - 1, 1 + FLOOR((radius - 6) / radial_step));
             else          radius_idx = 0;
             (*classif1)(i, j) = radius_idx;
             Nrad(radius_idx)++;
@@ -1022,7 +1022,7 @@ bool QtWidgetMicrograph::prepare_piece()
     Filter.FilterShape = RAISED_COSINE;
     Filter.FilterBand = HIGHPASS;
     Filter.w1 = __highpass_cutoff;
-    Filter.raised_w = MIN(0.02, __highpass_cutoff);
+    Filter.raised_w = XMIPP_MIN(0.02, __highpass_cutoff);
     __piece.setXmippOrigin();
     Filter.generate_mask(__piece);
     Filter.apply_mask_Space(__piece);
@@ -2016,10 +2016,10 @@ void CropWidget::scrollValueChanged(int new_val)
     }
 
     // Check value validity
-    value[0] = MIN(value[0], value[2]);
-    value[2] = MAX(value[0], value[2]);
-    value[1] = MIN(value[1], value[3]);
-    value[3] = MAX(value[1], value[3]);
+    value[0] = XMIPP_MIN(value[0], value[2]);
+    value[2] = XMIPP_MAX(value[0], value[2]);
+    value[1] = XMIPP_MIN(value[1], value[3]);
+    value[3] = XMIPP_MAX(value[1], value[3]);
 
     // Set these values
     for (int i = 0; i < __label.size(); i++)

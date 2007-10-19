@@ -68,7 +68,7 @@ QtMainWidgetMark::QtMainWidgetMark(Micrograph *_m, Micrograph *_mTilted)
         {
             int suggested_YU = (int)(400 * maspect_ratio);
             int suggested_YT = (int)(400 * taspect_ratio);
-            suggested_Y = MAX(suggested_YU, suggested_YT);
+            suggested_Y = XMIPP_MAX(suggested_YU, suggested_YT);
         }
         setMinimumSize(suggested_X, suggested_Y);
         QRect G = geometry();

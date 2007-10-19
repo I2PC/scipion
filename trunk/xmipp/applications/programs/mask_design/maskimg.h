@@ -1682,10 +1682,10 @@ public:
         list_of_points.push_back(vectorR2(x, y));
         if (list_of_points.size() > 1)
         {
-            XX(top_left_corner) = MIN(XX(top_left_corner), x);
-            YY(top_left_corner) = MIN(YY(top_left_corner), y);
-            XX(bottom_right_corner) = MAX(XX(bottom_right_corner), x);
-            YY(bottom_right_corner) = MAX(YY(bottom_right_corner), y);
+            XX(top_left_corner) = XMIPP_MIN(XX(top_left_corner), x);
+            YY(top_left_corner) = XMIPP_MIN(YY(top_left_corner), y);
+            XX(bottom_right_corner) = XMIPP_MAX(XX(bottom_right_corner), x);
+            YY(bottom_right_corner) = XMIPP_MAX(YY(bottom_right_corner), y);
         }
         else
         {
@@ -1714,10 +1714,10 @@ public:
         int imax = list_of_points.size();
         XX(list_of_points[imax-1]) = x;
         YY(list_of_points[imax-1]) = y;
-        XX(top_left_corner) = MIN(XX(top_left_corner), x);
-        YY(top_left_corner) = MIN(YY(top_left_corner), y);
-        XX(bottom_right_corner) = MAX(XX(bottom_right_corner), x);
-        YY(bottom_right_corner) = MAX(YY(bottom_right_corner), y);
+        XX(top_left_corner) = XMIPP_MIN(XX(top_left_corner), x);
+        YY(top_left_corner) = XMIPP_MIN(YY(top_left_corner), y);
+        XX(bottom_right_corner) = XMIPP_MAX(XX(bottom_right_corner), x);
+        YY(bottom_right_corner) = XMIPP_MAX(YY(bottom_right_corner), y);
         paint();
     }
 

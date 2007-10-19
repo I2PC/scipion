@@ -210,9 +210,9 @@ double detectability_error(const histogram1D &h1, const histogram1D &h2)
     double p1, p2;                 // Probability associated
 
     // Find global range
-    hmin = MAX(h1.hmin, h2.hmin);
-    hmax = MIN(h1.hmax, h2.hmax);
-    step = MIN(h1.step_size, h2.step_size) / 2;
+    hmin = XMIPP_MAX(h1.hmin, h2.hmin);
+    hmax = XMIPP_MIN(h1.hmax, h2.hmax);
+    step = XMIPP_MIN(h1.step_size, h2.step_size) / 2;
 
     // Go over the range computing the errors
     v = hmin;

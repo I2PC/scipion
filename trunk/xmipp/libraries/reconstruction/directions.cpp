@@ -94,19 +94,19 @@ double distance_directions(double rot1, double tilt1,
     Euler_another_set(rot2, tilt2, 0., rot2p, tilt2p, psi2p);
     diff_rot = ABS(realWRAP(rot1 - rot2p, -180, 180));
     diff_tilt = ABS(realWRAP(tilt1 - tilt2p, -180, 180));
-    dist = MIN(dist, sqrt((diff_rot * diff_rot) + (diff_tilt * diff_tilt)));
+    dist = XMIPP_MIN(dist, sqrt((diff_rot * diff_rot) + (diff_tilt * diff_tilt)));
 
     if (include_mirrors)
     {
         Euler_up_down(rot2, tilt2, 0., rot2p, tilt2p, psi2p);
         diff_rot = ABS(realWRAP(rot1 - rot2p, -180, 180));
         diff_tilt = ABS(realWRAP(tilt1 - tilt2p, -180, 180));
-        dist = MIN(dist, sqrt((diff_rot * diff_rot) + (diff_tilt * diff_tilt)));
+        dist = XMIPP_MIN(dist, sqrt((diff_rot * diff_rot) + (diff_tilt * diff_tilt)));
 
         Euler_another_set(rot2p, tilt2p, 0., rot2p, tilt2p, psi2p);
         diff_rot = ABS(realWRAP(rot1 - rot2p, -180, 180));
         diff_tilt = ABS(realWRAP(tilt1 - tilt2p, -180, 180));
-        dist = MIN(dist, sqrt((diff_rot * diff_rot) + (diff_tilt * diff_tilt)));
+        dist = XMIPP_MIN(dist, sqrt((diff_rot * diff_rot) + (diff_tilt * diff_tilt)));
     }
 
     return dist;

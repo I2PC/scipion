@@ -176,10 +176,10 @@ void compute_sc_FOMs(
             recons_sum2  += ri * ri;
             phantom_recons_sum += pi * ri;
             no_samples++;
-            Mp = MAX(Mp, pi);
-            Mr = MAX(Mr, ri);
-            mp = MIN(mp, pi);
-            mr = MIN(mr, ri);
+            Mp = XMIPP_MAX(Mp, pi);
+            Mr = XMIPP_MAX(Mr, ri);
+            mp = XMIPP_MIN(mp, pi);
+            mr = XMIPP_MIN(mr, ri);
         }
     }
     double phantom_avg    = (no_samples > 0) ? phantom_sum / no_samples : 0;

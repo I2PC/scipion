@@ -405,10 +405,10 @@ bool XmippCTF::physical_meaning()
     bool retval2;
     if (enable_CTFnoise)
     {
-        double min_sigma = MIN(sigmaU, sigmaV);
-        double min_c = MIN(cU, cV);
-        double min_sigma2 = MIN(sigmaU2, sigmaV2);
-        double min_c2 = MIN(cU2, cV2);
+        double min_sigma = XMIPP_MIN(sigmaU, sigmaV);
+        double min_c = XMIPP_MIN(cU, cV);
+        double min_sigma2 = XMIPP_MIN(sigmaU2, sigmaV2);
+        double min_c2 = XMIPP_MIN(cU2, cV2);
         retval2 =
             base_line >= 0       &&
             gaussian_K >= 0      &&
@@ -504,10 +504,10 @@ void XmippCTF::force_physical_meaning()
     }
     if (enable_CTFnoise)
     {
-        double min_sigma = MIN(sigmaU, sigmaV);
-        double min_c = MIN(cU, cV);
-        double min_sigma2 = MIN(sigmaU2, sigmaV2);
-        double min_c2 = MIN(cU2, cV2);
+        double min_sigma = XMIPP_MIN(sigmaU, sigmaV);
+        double min_c = XMIPP_MIN(cU, cV);
+        double min_sigma2 = XMIPP_MIN(sigmaU2, sigmaV2);
+        double min_c2 = XMIPP_MIN(cU2, cV2);
         if (base_line < 0)        base_line = 0;
         if (gaussian_K < 0)       gaussian_K = 0;
         if (sigmaU < 0)           sigmaU = 0;

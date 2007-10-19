@@ -812,7 +812,7 @@ void blobs2voxels(const GridVolume &vol_blobs,
         double min_val = VOL_ELEM(*vol_voxels, 0, 0, 0);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(*vol_voxels)
         if (j*j + i*i + k*k <= R2 - 4)
-            min_val = MIN(min_val, VOL_ELEM(*vol_voxels, k, i, j));
+            min_val = XMIPP_MIN(min_val, VOL_ELEM(*vol_voxels, k, i, j));
 
         // Substitute minimum value
         R2 = (R - 2) * (R - 2);
@@ -979,7 +979,7 @@ void ART_voxels2blobs_single_step(
             else
                 diff = 0;
 
-        max_error = MAX(max_error, ABS(diff));
+        max_error = XMIPP_MAX(max_error, ABS(diff));
         mean_error += diff * diff;
 #ifdef DEBUG
         save(k, i, j) = diff;
@@ -1009,7 +1009,7 @@ void ART_voxels2blobs_single_step(
     cout << endl;
 #endif
 
-    mean_error /= MAX(N, 1); // At worst, divided by 1
+    mean_error /= XMIPP_MAX(N, 1); // At worst, divided by 1
 
     // Backprojection of correction volume ..................................
     for (int i = 0; i < vol_in.VolumesNo(); i++)

@@ -762,7 +762,7 @@ int SelFile::MaxFileNameLength()
     while (!eof())
     {
         FileName fn = NextImg();
-        max_length = MAX(max_length, fn.length());
+        max_length = XMIPP_MAX(max_length, fn.length());
     }
     current_line = aux;
     return max_length;

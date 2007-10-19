@@ -93,10 +93,10 @@ void APHFile2D::read(const FileName &fn)
             {
                 int h = textToInteger(firstToken(line));
                 int k = textToInteger(nextToken());
-                hmax = MAX(hmax, h);
-                kmax = MAX(kmax, k);
-                hmin = MIN(hmin, h);
-                kmin = MIN(kmin, k);
+                hmax = XMIPP_MAX(hmax, h);
+                kmax = XMIPP_MAX(kmax, k);
+                hmin = XMIPP_MIN(hmin, h);
+                kmin = XMIPP_MIN(kmin, k);
             }
         }
         catch (Xmipp_error)

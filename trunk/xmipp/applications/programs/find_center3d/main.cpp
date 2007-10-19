@@ -149,7 +149,7 @@ int main(int argc, char **argv)
                     }
 
                     // progress bar
-                    if ((i++) % MAX(maxsteps / 60, 1) == 0) progress_bar(i);
+                    if ((i++) % XMIPP_MAX(maxsteps / 60, 1) == 0) progress_bar(i);
                 }
             progress_bar(maxsteps);
             cout << "Symmetry axis (rot,tilt)= " << best_rot << " "

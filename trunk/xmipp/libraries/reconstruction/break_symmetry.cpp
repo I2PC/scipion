@@ -283,7 +283,7 @@ void Prog_Break_Sym_prm::process_selfile(SelFile &SF, vector<SelFile> &SFout, do
     // Initialize
     nn = SF.ImgNo();
     if (verb > 0) init_progress_bar(nn);
-    c = MAX(1, nn / 60);
+    c = XMIPP_MAX(1, nn / 60);
 
     SFout.clear();
     for (int volno = 0; volno < Nvols; volno++)

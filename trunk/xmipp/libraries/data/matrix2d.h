@@ -262,10 +262,10 @@ int bestPrecision(float F, int _width);
  * @endcode
  */
 #define FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(m1, m2) \
-    ispduptmp2 = MAX(STARTINGY(m1), STARTINGY(m2)); \
-    ispduptmp3 = MIN(FINISHINGY(m1), FINISHINGY(m2)); \
-    ispduptmp4 = MAX(STARTINGX(m1), STARTINGX(m2)); \
-    ispduptmp5 = MIN(FINISHINGX(m1), FINISHINGX(m2)); \
+    ispduptmp2 = XMIPP_MAX(STARTINGY(m1), STARTINGY(m2)); \
+    ispduptmp3 = XMIPP_MIN(FINISHINGY(m1), FINISHINGY(m2)); \
+    ispduptmp4 = XMIPP_MAX(STARTINGX(m1), STARTINGX(m2)); \
+    ispduptmp5 = XMIPP_MIN(FINISHINGX(m1), FINISHINGX(m2)); \
     for (int i=ispduptmp2; i<=ispduptmp3; i++) \
         for (int j=ispduptmp4; j<=ispduptmp5; j++)
 
@@ -1762,7 +1762,7 @@ public:
         Matrix1D< double > w;
         svdcmp(*this, u, w, v); // *this = U * W * V^t
 
-        double tol = compute_max() * MAX(XSIZE(*this), YSIZE(*this)) * 1e-14;
+        double tol = compute_max() * XMIPP_MAX(XSIZE(*this), YSIZE(*this)) * 1e-14;
         result.initZeros(XSIZE(*this), YSIZE(*this));
 
         // Compute W^-1
@@ -3092,10 +3092,10 @@ Matrix2D< double > scale3DMatrix(const Matrix1D< double >& sc);
 template<typename T>
 void cutToCommonSize(mT& m1, mT& m2)
 {
-    int y0 = MAX(STARTINGY(m1), STARTINGY(m2));
-    int yF = MIN(FINISHINGY(m1), FINISHINGY(m2));
-    int x0 = MAX(STARTINGX(m1), STARTINGX(m2));
-    int xF = MIN(FINISHINGX(m1), FINISHINGX(m2));
+    int y0 = XMIPP_MAX(STARTINGY(m1), STARTINGY(m2));
+    int yF = XMIPP_MIN(FINISHINGY(m1), FINISHINGY(m2));
+    int x0 = XMIPP_MAX(STARTINGX(m1), STARTINGX(m2));
+    int xF = XMIPP_MIN(FINISHINGX(m1), FINISHINGX(m2));
 
     m1.window(y0, x0, yF, xF);
     m2.window(y0, x0, yF, xF);
@@ -3317,14 +3317,14 @@ bool mT::intersects(double x0, double y0, double xdim, double ydim) const
 {
     SPEED_UP_temps;
 
-    spduptmp0 = MAX(STARTINGY(*this), y0);
-    spduptmp1 = MIN(FINISHINGY(*this), y0 + ydim);
+    spduptmp0 = XMIPP_MAX(STARTINGY(*this), y0);
+    spduptmp1 = XMIPP_MIN(FINISHINGY(*this), y0 + ydim);
 
     if (spduptmp0 > spduptmp1)
         return false;
 
-    spduptmp0 = MAX(STARTINGX(*this), x0);
-    spduptmp1 = MIN(FINISHINGX(*this), x0 + xdim);
+    spduptmp0 = XMIPP_MAX(STARTINGX(*this), x0);
+    spduptmp1 = XMIPP_MIN(FINISHINGX(*this), x0 + xdim);
 
     if (spduptmp0 > spduptmp1)
         return false;
@@ -3481,7 +3481,7 @@ ostream& operator<<(ostream& ostrm, const mT& v)
         double max_val = ABS(MULTIDIM_ELEM(v, 0));
 
         FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v)
-        max_val = MAX(max_val, ABS(MULTIDIM_ELEM(v, i)));
+        max_val = XMIPP_MAX(max_val, ABS(MULTIDIM_ELEM(v, i)));
 
         int prec = bestPrecision(max_val, 10);
 

@@ -1262,8 +1262,8 @@ public:
         {
             const VolumeT<T> & this_vol = (*this)(v);
             Zdim += ZSIZE(this_vol());
-            Ydim = MAX(Ydim, YSIZE(this_vol()));
-            Xdim = MAX(Xdim, XSIZE(this_vol()));
+            Ydim = XMIPP_MAX(Ydim, YSIZE(this_vol()));
+            Xdim = XMIPP_MAX(Xdim, XSIZE(this_vol()));
         }
 
         // Check if there is enough space for the control slice

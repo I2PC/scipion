@@ -209,12 +209,12 @@ void applyGeometryBSpline(VT& V2, Matrix2D< double > A, const VT& V1,
  * @endcode
  */
 #define FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(V1, V2) \
-    ispduptmp0 = MAX(STARTINGZ(V1), STARTINGZ(V2)); \
-    ispduptmp1 = MIN(FINISHINGZ(V1),FINISHINGZ(V2)); \
-    ispduptmp2 = MAX(STARTINGY(V1), STARTINGY(V2)); \
-    ispduptmp3 = MIN(FINISHINGY(V1),FINISHINGY(V2)); \
-    ispduptmp4 = MAX(STARTINGX(V1), STARTINGX(V2)); \
-    ispduptmp5 = MIN(FINISHINGX(V1),FINISHINGX(V2)); \
+    ispduptmp0 = XMIPP_MAX(STARTINGZ(V1), STARTINGZ(V2)); \
+    ispduptmp1 = XMIPP_MIN(FINISHINGZ(V1),FINISHINGZ(V2)); \
+    ispduptmp2 = XMIPP_MAX(STARTINGY(V1), STARTINGY(V2)); \
+    ispduptmp3 = XMIPP_MIN(FINISHINGY(V1),FINISHINGY(V2)); \
+    ispduptmp4 = XMIPP_MAX(STARTINGX(V1), STARTINGX(V2)); \
+    ispduptmp5 = XMIPP_MIN(FINISHINGX(V1),FINISHINGX(V2)); \
     for (int k=ispduptmp0; k<=ispduptmp1; k++) \
         for (int i=ispduptmp2; i<=ispduptmp3; i++) \
             for (int j=ispduptmp4; j<=ispduptmp5; j++)
@@ -2246,12 +2246,12 @@ void coreArrayByArray< complex< double> > (const maTC& op1, const maTC& op2,
 template<typename T>
 void cutToCommonSize(VT& V1, VT& V2)
 {
-    int z0 = MAX(STARTINGZ(V1), STARTINGZ(V2));
-    int zF = MIN(FINISHINGZ(V1), FINISHINGZ(V2));
-    int y0 = MAX(STARTINGY(V1), STARTINGY(V2));
-    int yF = MIN(FINISHINGY(V1), FINISHINGY(V2));
-    int x0 = MAX(STARTINGX(V1), STARTINGX(V2));
-    int xF = MIN(FINISHINGX(V1), FINISHINGX(V2));
+    int z0 = XMIPP_MAX(STARTINGZ(V1), STARTINGZ(V2));
+    int zF = XMIPP_MIN(FINISHINGZ(V1), FINISHINGZ(V2));
+    int y0 = XMIPP_MAX(STARTINGY(V1), STARTINGY(V2));
+    int yF = XMIPP_MIN(FINISHINGY(V1), FINISHINGY(V2));
+    int x0 = XMIPP_MAX(STARTINGX(V1), STARTINGX(V2));
+    int xF = XMIPP_MIN(FINISHINGX(V1), FINISHINGX(V2));
 
     V1.window(z0, y0, x0, zF, yF, xF);
     V2.window(z0, y0, x0, zF, yF, xF);

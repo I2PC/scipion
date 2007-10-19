@@ -75,6 +75,7 @@
 
 #include "spider.h"
 #include "groe.h"
+#include <data/macros.h>
 
 /***************************************************************************/
 
@@ -885,7 +886,7 @@ int vfft_pow2(float ***vol, int sli, int row, int col, int kind)
 
     /******************* Get some tiny bytes of memory *************************/
 
-    max_dim = max(sli, max(row, col));
+    max_dim = XMIPP_MAX(sli, XMIPP_MAX(row, col));
 
     if ((x = (float *) malloc((max_dim + 2) * sizeof(float))) == NULL)
     {

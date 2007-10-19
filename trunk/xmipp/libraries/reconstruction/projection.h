@@ -422,10 +422,10 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
 #endif
 
                     // Search for integer corners for this basis
-                    XX_corner1 = CEIL(MAX(x0, XX(actprj) - XX_footprint_size));
-                    YY_corner1 = CEIL(MAX(y0, YY(actprj) - YY_footprint_size));
-                    XX_corner2 = FLOOR(MIN(xF, XX(actprj) + XX_footprint_size));
-                    YY_corner2 = FLOOR(MIN(yF, YY(actprj) + YY_footprint_size));
+                    XX_corner1 = CEIL(XMIPP_MAX(x0, XX(actprj) - XX_footprint_size));
+                    YY_corner1 = CEIL(XMIPP_MAX(y0, YY(actprj) - YY_footprint_size));
+                    XX_corner2 = FLOOR(XMIPP_MIN(xF, XX(actprj) + XX_footprint_size));
+                    YY_corner2 = FLOOR(XMIPP_MIN(yF, YY(actprj) + YY_footprint_size));
 
 #ifdef DEBUG
                     if (condition)

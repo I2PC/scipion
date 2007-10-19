@@ -753,7 +753,7 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
 
         // Choose angles .....................................................
         if (prm.tell&TELL_SHOW_ANGLES) side.DF.show_line(cout);
-        else if ((NumProjs % MAX(1, side.DF.dataLineNo() / 60)) == 0)
+        else if ((NumProjs % XMIPP_MAX(1, side.DF.dataLineNo() / 60)) == 0)
             progress_bar(NumProjs);
         movements(0) = rot  = side.DF(0);
         movements(1) = tilt = side.DF(1);

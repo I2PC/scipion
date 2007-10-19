@@ -160,15 +160,15 @@ void Prog_PDBPhantom_Parameters::compute_protein_geometry()
     Matrix1D<double> limit0(3), limitF(3);
     computePDBgeometry(fn_pdb, centerOfMass, limit0, limitF);
     limit.resize(3);
-    XX(limit) = MAX(ABS(XX(limit0)), ABS(XX(limitF)));
-    YY(limit) = MAX(ABS(YY(limit0)), ABS(YY(limitF)));
-    ZZ(limit) = MAX(ABS(ZZ(limit0)), ABS(ZZ(limitF)));
+    XX(limit) = XMIPP_MAX(ABS(XX(limit0)), ABS(XX(limitF)));
+    YY(limit) = XMIPP_MAX(ABS(YY(limit0)), ABS(YY(limitF)));
+    ZZ(limit) = XMIPP_MAX(ABS(ZZ(limit0)), ABS(ZZ(limitF)));
 
     // Update output size if necessary
     if (output_dim == -1)
     {
-        int max_dim = MAX(CEIL(ZZ(limit) * 2 / Ts) + 5, CEIL(YY(limit) * 2 / Ts) + 5);
-        max_dim = MAX(max_dim, CEIL(XX(limit) * 2 / Ts) + 5);
+        int max_dim = XMIPP_MAX(CEIL(ZZ(limit) * 2 / Ts) + 5, CEIL(YY(limit) * 2 / Ts) + 5);
+        max_dim = XMIPP_MAX(max_dim, CEIL(XX(limit) * 2 / Ts) + 5);
         if (useBlobs) output_dim = (int)NEXT_POWER_OF_2(max_dim);
         std::cout << "Setting output_dim to " << output_dim << std::endl;
     }
@@ -222,12 +222,12 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
         blob.radius = radius;
 
         // Find the part of the volume that must be updated
-        int k0 = MAX(FLOOR(ZZ(r) - radius), STARTINGZ(Vhigh()));
-        int kF = MIN(CEIL(ZZ(r) + radius), FINISHINGZ(Vhigh()));
-        int i0 = MAX(FLOOR(YY(r) - radius), STARTINGY(Vhigh()));
-        int iF = MIN(CEIL(YY(r) + radius), FINISHINGY(Vhigh()));
-        int j0 = MAX(FLOOR(XX(r) - radius), STARTINGX(Vhigh()));
-        int jF = MIN(CEIL(XX(r) + radius), FINISHINGX(Vhigh()));
+        int k0 = XMIPP_MAX(FLOOR(ZZ(r) - radius), STARTINGZ(Vhigh()));
+        int kF = XMIPP_MIN(CEIL(ZZ(r) + radius), FINISHINGZ(Vhigh()));
+        int i0 = XMIPP_MAX(FLOOR(YY(r) - radius), STARTINGY(Vhigh()));
+        int iF = XMIPP_MIN(CEIL(YY(r) + radius), FINISHINGY(Vhigh()));
+        int j0 = XMIPP_MAX(FLOOR(XX(r) - radius), STARTINGX(Vhigh()));
+        int jF = XMIPP_MIN(CEIL(XX(r) + radius), FINISHINGX(Vhigh()));
 
         // Fill the volume with this atom
         for (int k = k0; k <= kF; k++)
@@ -330,12 +330,12 @@ void Prog_PDBPhantom_Parameters::create_protein_using_scattering_profiles() {
 	    double radius=atomProfiles.atomRadius(atom_type[0]);
 
             // Find the part of the volume that must be updated
-            int k0 = MAX(FLOOR(ZZ(r) - radius), STARTINGZ(Vlow()));
-            int kF = MIN(CEIL(ZZ(r) + radius), FINISHINGZ(Vlow()));
-            int i0 = MAX(FLOOR(YY(r) - radius), STARTINGY(Vlow()));
-            int iF = MIN(CEIL(YY(r) + radius), FINISHINGY(Vlow()));
-            int j0 = MAX(FLOOR(XX(r) - radius), STARTINGX(Vlow()));
-            int jF = MIN(CEIL(XX(r) + radius), FINISHINGX(Vlow()));
+            int k0 = XMIPP_MAX(FLOOR(ZZ(r) - radius), STARTINGZ(Vlow()));
+            int kF = XMIPP_MIN(CEIL(ZZ(r) + radius), FINISHINGZ(Vlow()));
+            int i0 = XMIPP_MAX(FLOOR(YY(r) - radius), STARTINGY(Vlow()));
+            int iF = XMIPP_MIN(CEIL(YY(r) + radius), FINISHINGY(Vlow()));
+            int j0 = XMIPP_MAX(FLOOR(XX(r) - radius), STARTINGX(Vlow()));
+            int jF = XMIPP_MIN(CEIL(XX(r) + radius), FINISHINGX(Vlow()));
 
             // Fill the volume with this atom
             for (int k = k0; k <= kF; k++)

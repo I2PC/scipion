@@ -136,11 +136,11 @@ void ShowSel::readObject(SelFile &SF, double _minGray, double _maxGray)
     if (load_mode == PSD_mode && NumRows != -1 && NumCols != -1)
     {
         // Scale to make the images fit into a reasonable window
-        double suggested_Xdim = MIN(900.0 / NumCols, projXdim);
-        double suggested_Ydim = MIN(700.0 / NumRows, projYdim);
+        double suggested_Xdim = XMIPP_MIN(900.0 / NumCols, projXdim);
+        double suggested_Ydim = XMIPP_MIN(700.0 / NumRows, projYdim);
         double scale_X = suggested_Xdim / projXdim;
         double scale_Y = suggested_Ydim / projYdim;
-        double scale = MIN(scale_X, scale_Y);
+        double scale = XMIPP_MIN(scale_X, scale_Y);
         projYdim = FLOOR(scale * projYdim);
         projXdim = FLOOR(scale * projXdim);
     }
@@ -291,8 +291,8 @@ const char * ShowSel::cellLabel(int i) const
         {
             XmippCTF ctf;
             ctf.read(fn_param, false);
-            string defocus_val = integerToString(ROUND(MIN(ctf.DeltafU, ctf.DeltafV)), 6) + " " +
-                                 integerToString(ROUND(MAX(ctf.DeltafU, ctf.DeltafV)), 6) + " " +
+            string defocus_val = integerToString(ROUND(XMIPP_MIN(ctf.DeltafU, ctf.DeltafV)), 6) + " " +
+                                 integerToString(ROUND(XMIPP_MAX(ctf.DeltafU, ctf.DeltafV)), 6) + " " +
                                  integerToString(ABS(ROUND(ctf.DeltafU - ctf.DeltafV)));
             return defocus_val.c_str();
         }

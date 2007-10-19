@@ -281,8 +281,10 @@ void rectangle_enclosing(const Matrix1D<double> &v0, const Matrix1D<double> &vF,
 
 #define DEFORM_AND_CHOOSE_CORNERS2D \
     M2x2_BY_V2x1(v,V,v); \
-    XX(corner1)=MIN(XX(corner1),XX(v)); XX(corner2)=MAX(XX(corner2),XX(v)); \
-    YY(corner1)=MIN(YY(corner1),YY(v)); YY(corner2)=MAX(YY(corner2),YY(v));
+    XX(corner1)=XMIPP_MIN(XX(corner1),XX(v)); \
+    XX(corner2)=XMIPP_MAX(XX(corner2),XX(v)); \
+    YY(corner1)=XMIPP_MIN(YY(corner1),YY(v)); \
+    YY(corner2)=XMIPP_MAX(YY(corner2),YY(v));
 
     VECTOR_R2(v, XX_vF, YY_v0);
     DEFORM_AND_CHOOSE_CORNERS2D;
@@ -321,9 +323,12 @@ void box_enclosing(const Matrix1D<double> &v0, const Matrix1D<double> &vF,
 
 #define DEFORM_AND_CHOOSE_CORNERS3D \
     M3x3_BY_V3x1(v,V,v); \
-    XX(corner1)=MIN(XX(corner1),XX(v)); XX(corner2)=MAX(XX(corner2),XX(v)); \
-    YY(corner1)=MIN(YY(corner1),YY(v)); YY(corner2)=MAX(YY(corner2),YY(v)); \
-    ZZ(corner1)=MIN(ZZ(corner1),ZZ(v)); ZZ(corner2)=MAX(ZZ(corner2),ZZ(v));
+    XX(corner1)=XMIPP_MIN(XX(corner1),XX(v)); \
+    XX(corner2)=XMIPP_MAX(XX(corner2),XX(v)); \
+    YY(corner1)=XMIPP_MIN(YY(corner1),YY(v)); \
+    YY(corner2)=XMIPP_MAX(YY(corner2),YY(v)); \
+    ZZ(corner1)=XMIPP_MIN(ZZ(corner1),ZZ(v)); \
+    ZZ(corner2)=XMIPP_MAX(ZZ(corner2),ZZ(v));
 
     VECTOR_R3(v, XX_vF, YY_v0, ZZ_v0);
     DEFORM_AND_CHOOSE_CORNERS3D;

@@ -504,7 +504,7 @@ void Prog_mlf_tomo_prm::estimate_initial_sigma2()
             cerr << "  Estimating initial noise models from average power spectra" << endl;
             nn = SF.ImgNo();
             init_progress_bar(nn);
-            c = MAX(1, nn / 60);
+            c = XMIPP_MAX(1, nn / 60);
         }
 
         Vsigma2.clear();

@@ -420,7 +420,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
              if (POCS.apply_POCS)
                 cout        << "\tPOCS:" << POCS.POCS_mean_error;
              cout << endl;
-          } else if (act_proj%MAX(1,prm.numIMG/60)==0) progress_bar(act_proj);
+          } else if (act_proj%XMIPP_MAX(1,prm.numIMG/60)==0) progress_bar(act_proj);
 
           if (prm.tell&TELL_STATS) {
              cout << "   read      ";   read_proj().print_stats();

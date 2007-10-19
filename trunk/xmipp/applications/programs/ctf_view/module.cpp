@@ -775,8 +775,8 @@ void CTFViewer::generate_ctfmodel()
         digfreq2contfreq(freq, freq, ctf.Tm);
         model(i, j) = ctf.CTFpure_at(XX(freq), YY(freq));
 	model(i,j)*=model(i,j);
-    	minval=MIN(minval,model(i,j));
-    	maxval=MAX(maxval,model(i,j));
+    	minval=XMIPP_MIN(minval,model(i,j));
+    	maxval=XMIPP_MAX(maxval,model(i,j));
     }
     FOR_ALL_ELEMENTS_IN_MATRIX2D(model())
     {

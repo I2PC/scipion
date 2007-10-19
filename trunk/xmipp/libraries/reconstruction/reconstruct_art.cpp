@@ -50,7 +50,7 @@ ostream & operator << (ostream &o, const Plain_ART_Parameters &eprm)
 void process_correction(Projection &corr_proj)
 {
     // Mask correction
-    int Rmin = CEIL(MIN(XSIZE(corr_proj()), YSIZE(corr_proj())) / 2);
+    int Rmin = CEIL(XMIPP_MIN(XSIZE(corr_proj()), YSIZE(corr_proj())) / 2);
     int R2 = Rmin * Rmin;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(corr_proj())
     if (i*i + j*j > R2) corr_proj(i, j) = 0;
@@ -124,7 +124,7 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
                        prm.GVNeq, NULL, prm.ray_length);
 
         if (!(prm.tell&TELL_SHOW_ERROR))
-            if (iact_proj % MAX(1, prm.numIMG / 60) == 0) progress_bar(iact_proj);
+            if (iact_proj % XMIPP_MAX(1, prm.numIMG / 60) == 0) progress_bar(iact_proj);
     }
     if (!(prm.tell&TELL_SHOW_ERROR)) progress_bar(prm.numIMG);
 
@@ -165,7 +165,7 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
         // Next lines like normalization in [EHL] (2.18)?
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(new_proj())
         {
-            dMij(dummy_proj(), i, j) = MAX(1., dMij(dummy_proj(), i, j)); // to avoid division by zero
+            dMij(dummy_proj(), i, j) = XMIPP_MAX(1., dMij(dummy_proj(), i, j)); // to avoid division by zero
             dMij(new_proj(), i, j) /= dMij(dummy_proj(), i, j);
         }
         new_proj() *= sqrtweight * kappa;
@@ -190,7 +190,7 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
         */
 
         if (!(prm.tell&TELL_SHOW_ERROR))
-            if (iact_proj % MAX(1, prm.numIMG / 60) == 0) progress_bar(iact_proj);
+            if (iact_proj % XMIPP_MAX(1, prm.numIMG / 60) == 0) progress_bar(iact_proj);
     }
 
     pow_residual_imgs /= dim2;
@@ -370,7 +370,7 @@ void ART_single_step(
             mean_error += IMGPIXEL(diff_proj, i, j) * IMGPIXEL(diff_proj, i, j);
 
             // Compute the correction image
-            IMGPIXEL(corr_proj, i, j) = MAX(IMGPIXEL(corr_proj, i, j), 1);
+            IMGPIXEL(corr_proj, i, j) = XMIPP_MAX(IMGPIXEL(corr_proj, i, j), 1);
             IMGPIXEL(corr_proj, i, j) =
                 applied_lambda * IMGPIXEL(diff_proj, i, j) / IMGPIXEL(corr_proj, i, j);
         }

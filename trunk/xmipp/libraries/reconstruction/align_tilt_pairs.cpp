@@ -184,7 +184,7 @@ void Prog_centilt_prm::centilt()
     n_discarded = 0;
     cerr << "  Centering of " << n_images << " tilted images" << endl;
     init_progress_bar(n_images);
-    barf = MAX(1, (int)(1 + (n_images / 60)));
+    barf = XMIPP_MAX(1, (int)(1 + (n_images / 60)));
     imgno = 0;
 
     while (imgno < n_images)

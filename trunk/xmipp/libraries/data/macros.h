@@ -112,11 +112,11 @@
  * Valid for any kind of numbers (int, short, float, etc).
  *
  * @code
- * min_val = MIN(x, y);
+ * min_val = XMIPP_MIN(x, y);
  * @endcode
  */
-#ifndef MIN
-#define MIN(x, y) (((x) >= (y)) ? (y) : (x))
+#ifndef XMIPP_MIN
+#define XMIPP_MIN(x, y) (((x) >= (y)) ? (y) : (x))
 #endif
 
 /** Maximum
@@ -125,11 +125,11 @@
  * Valid for any kind of numbers (int, short, float, etc).
  *
  * @code
- * max_val = MAX(x, y);
+ * max_val = XMIPP_MAX(x, y);
  * @endcode
  */
-#ifndef MAX
-#define MAX(x,y) (((x)>=(y))?(x):(y))
+#ifndef XMIPP_MAX
+#define XMIPP_MAX(x,y) (((x)>=(y))?(x):(y))
 #endif
 
 /** Round to next integer

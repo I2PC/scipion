@@ -64,7 +64,7 @@ void stats__1(const Matrix1D<double> &v, double &avg, double &stddev)
     if (N != 0)
     {
         avg /= N;
-        stddev = sqrt(MAX(0, stddev / N - avg * avg));
+        stddev = sqrt(XMIPP_MAX(0, stddev / N - avg * avg));
     }
     else
     {
@@ -279,12 +279,12 @@ void EVALUATE_Side_Info::produce_Side_Info(
                 {
                     if (state == 0 && VOLVOXEL(vol_mask, k, i, j) == 1)
                     {
-                        ztop = MAX(ztop, k);
+                        ztop = XMIPP_MAX(ztop, k);
                         state = 1;
                     }
                     else if (state == 1 && VOLVOXEL(vol_mask, k, i, j) == 0)
                     {
-                        zbottom = MIN(zbottom, k);
+                        zbottom = XMIPP_MIN(zbottom, k);
                         state = 2;
                     }
                 }

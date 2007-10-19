@@ -42,7 +42,10 @@ int atomCharge(const string &atom);
 
 /** Returns the radius of an atom.
     Returns 0 if the atom is not within the short list (H, C, N, O, S, P, Fe)
-    of valid atoms. */
+    of valid atoms.
+    
+    The radius data is taken from http://www.webelements.com as the empirical
+    radius. */
 double atomRadius(const string &atom);
 
 /** Compute the center of mass and limits of a PDB file.

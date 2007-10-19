@@ -245,7 +245,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	    {
 		nn=DF.dataLineNo();
 		init_progress_bar(nn);
-		c=MAX(1,nn/60);
+		c=XMIPP_MAX(1,nn/60);
 	    }
 	    DF.go_first_data_line();
 	    int ii=0;
@@ -357,7 +357,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	    ref_mean[nr_dir]=mean_ref;
 	    DF.next_data_line();
 	    nr_dir++;
-	    if (verb>0 && (nr_dir%MAX(1,nl/60)==0)) progress_bar(nr_dir);
+	    if (verb>0 && (nr_dir%XMIPP_MAX(1,nl/60)==0)) progress_bar(nr_dir);
 	    
         }
         //at least do not save projections to disk
@@ -486,7 +486,7 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
   // Initialize
   nn=SF.ImgNo();
   if (verb>0) init_progress_bar(nn);
-  c=MAX(1,nn/60);
+  c=XMIPP_MAX(1,nn/60);
 
   // Loop over all images
   sumCC=0.;

@@ -1107,7 +1107,7 @@ void series_convolution(Matrix1D< T >& series1,
     {
         // First get the maximum dimension of the series, which is the dimension
         // of the result
-        int dim = MAX(dim1, dim2);
+        int dim = XMIPP_MAX(dim1, dim2);
 
         // Determine the number of values to discard
         int discard = result.getDimension() - dim;

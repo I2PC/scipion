@@ -887,8 +887,8 @@ void Adjust_CTF_Parameters::generate_model_quadrant(int Ydim, int Xdim,
 
             model(i, j) = global_ctfmodel.CTFpure_at(XX(freq), YY(freq));
             model(i, j) *= model(i, j);
-            minval = MIN(minval, model(i, j));
-            maxval = MAX(maxval, model(i, j));
+            minval = XMIPP_MIN(minval, model(i, j));
+            maxval = XMIPP_MAX(maxval, model(i, j));
         }
     }
 
@@ -934,8 +934,8 @@ void Adjust_CTF_Parameters::generate_model_halfplane(int Ydim, int Xdim,
 
         model(i, j) = global_ctfmodel.CTFpure_at(XX(freq), YY(freq));
         model(i, j) *= model(i, j);
-        minval = MIN(minval, model(i, j));
-        maxval = MAX(maxval, model(i, j));
+        minval = XMIPP_MIN(minval, model(i, j));
+        maxval = XMIPP_MAX(maxval, model(i, j));
     }
 
     FOR_ALL_ELEMENTS_IN_MATRIX2D(model)
@@ -1207,7 +1207,7 @@ void compute_central_region(double &w1, double &w2, double ang)
         double w;
         if (XX(dir) > 0.1) w = XX(freq) / XX(dir);
         else w = YY(freq) / YY(dir);
-        w1 = MAX(global_min_freq, MIN(w1, w));
+        w1 = XMIPP_MAX(global_min_freq, XMIPP_MIN(w1, w));
     }
 
     // Detect fifth zero
@@ -1219,7 +1219,7 @@ void compute_central_region(double &w1, double &w2, double ang)
         contfreq2digfreq(freq, freq, global_prm->Tm);
         if (XX(dir) > 0.1) w = XX(freq) / XX(dir);
         else w = YY(freq) / YY(dir);
-        w2 = MIN(global_max_freq, MAX(w2, w));
+        w2 = XMIPP_MIN(global_max_freq, XMIPP_MAX(w2, w));
     }
 }
 
@@ -1238,10 +1238,10 @@ void center_optimization_focus(bool adjust_freq, bool adjust_th,
         double w1U, w2U, w1V, w2V;
         compute_central_region(w1U, w2U, global_ctfmodel.azimuthal_angle);
         compute_central_region(w1V, w2V, global_ctfmodel.azimuthal_angle + 90);
-        w1 = MIN(w1U, w1V);
-        w2 = MAX(w2U, w2V);
-        global_min_freq = MAX(global_min_freq, w1 - 0.05);
-        global_max_freq = MIN(global_max_freq, w2 + 0.01);
+        w1 = XMIPP_MIN(w1U, w1V);
+        w2 = XMIPP_MAX(w2U, w2V);
+        global_min_freq = XMIPP_MAX(global_min_freq, w1 - 0.05);
+        global_max_freq = XMIPP_MIN(global_max_freq, w2 + 0.01);
     }
 
     // Compute maximum value within central region
@@ -1254,10 +1254,10 @@ void center_optimization_focus(bool adjust_freq, bool adjust_th,
         {
             double w = global_w_digfreq(i, j);
             if (w >= w1 && w <= w2)
-                max_val = MAX(max_val, save(i, j));
+                max_val = XMIPP_MAX(max_val, save(i, j));
         }
         if (global_value_th != -1)
-            global_value_th = MIN(global_value_th, max_val * margin);
+            global_value_th = XMIPP_MIN(global_value_th, max_val * margin);
         else global_value_th = max_val * margin;
     }
 
@@ -1361,7 +1361,7 @@ void estimate_background_sqrt_parameters()
                          SQRT_CTF_PARAMETERS, &CTF_fitness,
                          0.05, fitness, iter, steps, global_prm->show_optimization);
         global_current_penalty *= 2;
-        global_current_penalty = MIN(global_current_penalty, global_penalty);
+        global_current_penalty = XMIPP_MIN(global_current_penalty, global_penalty);
     }
     // Keep the result in global_prm->adjust
     global_ctfmodel.force_physical_meaning();
@@ -1522,8 +1522,8 @@ void estimate_background_gauss_parameters()
     }
     A(1, 0) = A(0, 1);
     b = A.inv() * b;
-    global_ctfmodel.sigmaU = MIN(ABS(b(1)), 95e3); // This value should be
-    global_ctfmodel.sigmaV = MIN(ABS(b(1)), 95e3); // conformant with the physical
+    global_ctfmodel.sigmaU = XMIPP_MIN(ABS(b(1)), 95e3); // This value should be
+    global_ctfmodel.sigmaV = XMIPP_MIN(ABS(b(1)), 95e3); // conformant with the physical
     // meaning routine in CTF.cc
     global_ctfmodel.gaussian_K = exp(b(0));
 
@@ -1654,8 +1654,8 @@ void estimate_background_gauss_parameters2()
     {
         A(1, 0) = A(0, 1);
         b = A.inv() * b;
-        global_ctfmodel.sigmaU2 = MIN(ABS(b(1)), 95e3); // This value should be
-        global_ctfmodel.sigmaV2 = MIN(ABS(b(1)), 95e3); // conformant with the physical
+        global_ctfmodel.sigmaU2 = XMIPP_MIN(ABS(b(1)), 95e3); // This value should be
+        global_ctfmodel.sigmaV2 = XMIPP_MIN(ABS(b(1)), 95e3); // conformant with the physical
         // meaning routine in CTF.cc
         global_ctfmodel.gaussian_K2 = exp(b(0));
     }
@@ -1768,7 +1768,7 @@ void estimate_envelope_parameters()
                          ENVELOPE_PARAMETERS, &CTF_fitness,
                          0.05, fitness, iter, steps, global_prm->show_optimization);
         global_current_penalty *= 2;
-        global_current_penalty = MIN(global_current_penalty, global_penalty);
+        global_current_penalty = XMIPP_MIN(global_current_penalty, global_penalty);
     }
     // Keep the result in global_prm->adjust
     global_ctfmodel.force_physical_meaning();
@@ -1806,9 +1806,9 @@ void estimate_defoci()
     {
         initial_defocusStep = global_prm->defocus_range;
         max_allowed_defocusU = defocusU0 =
-                                   MIN(-1000, global_prm->initial_ctfmodel.DeltafU + global_prm->defocus_range);
+            XMIPP_MIN(-1000, global_prm->initial_ctfmodel.DeltafU + global_prm->defocus_range);
         min_allowed_defocusU = defocusUF =
-                                   MAX(-100000, global_prm->initial_ctfmodel.DeltafU - global_prm->defocus_range);
+            XMIPP_MAX(-100000, global_prm->initial_ctfmodel.DeltafU - global_prm->defocus_range);
         if (global_prm->initial_ctfmodel.DeltafV == 0)
         {
             defocusV0 = defocusU0;
@@ -1819,9 +1819,9 @@ void estimate_defoci()
         else
         {
             max_allowed_defocusV = defocusV0 =
-                                       MIN(-1000, global_prm->initial_ctfmodel.DeltafV + global_prm->defocus_range);
+                XMIPP_MIN(-1000, global_prm->initial_ctfmodel.DeltafV + global_prm->defocus_range);
             min_allowed_defocusV = defocusVF =
-                                       MAX(-100000, global_prm->initial_ctfmodel.DeltafV - global_prm->defocus_range);
+                XMIPP_MAX(-100000, global_prm->initial_ctfmodel.DeltafV - global_prm->defocus_range);
         }
     }
 
@@ -1830,7 +1830,7 @@ void estimate_defoci()
     steps.init_constant(1);
     steps(3) = 0; // Do not optimize kV
     steps(4) = 0; // Do not optimize K
-    for (double defocusStep = initial_defocusStep; defocusStep >= MIN(8000, global_prm->defocus_range); defocusStep /= 2)
+    for (double defocusStep = initial_defocusStep; defocusStep >= XMIPP_MIN(8000, global_prm->defocus_range); defocusStep /= 2)
     {
         error.resize(CEIL((defocusV0 - defocusVF) / defocusStep + 1),
                      CEIL((defocusU0 - defocusUF) / defocusStep + 1));
@@ -1951,10 +1951,10 @@ void estimate_defoci()
             }
         }
 
-        defocusVF = MAX(min_allowed_defocusV, best_defocusVmin - defocusStep);
-        defocusV0 = MIN(max_allowed_defocusV, best_defocusVmax + defocusStep);
-        defocusUF = MAX(min_allowed_defocusU, best_defocusUmin - defocusStep);
-        defocusU0 = MIN(max_allowed_defocusU, best_defocusUmax + defocusStep);
+        defocusVF = XMIPP_MAX(min_allowed_defocusV, best_defocusVmin - defocusStep);
+        defocusV0 = XMIPP_MIN(max_allowed_defocusV, best_defocusVmax + defocusStep);
+        defocusUF = XMIPP_MAX(min_allowed_defocusU, best_defocusUmin - defocusStep);
+        defocusU0 = XMIPP_MIN(max_allowed_defocusU, best_defocusUmax + defocusStep);
         i = j = 0;
         if (global_show >= 2)
         {

@@ -548,9 +548,9 @@ bool ImageViewer::showImage()
         }
         else if (w > 900 || h > 650)
         {
-            double suggested_X = MIN(w, 900.0);
-            double suggested_Y = MIN(h, 650.0);
-            double scale = MIN(suggested_X / w, suggested_Y / h);
+            double suggested_X = XMIPP_MIN(w, 900.0);
+            double suggested_Y = XMIPP_MIN(h, 650.0);
+            double scale = XMIPP_MIN(suggested_X / w, suggested_Y / h);
             w = ROUND(scale * w);
             h = ROUND(scale * h);
         }

@@ -88,10 +88,10 @@ void APHFileorigmerg::read(const FileName &fn,
             if (mrc_label >= 0 && (FILM != mrc_label))
                 continue;
             aph_data_vector.push_back(tmp_spot);
-            max_h = MAX(max_h, h);
-            max_k = MAX(max_k, k);
-            min_h = MIN(min_h, h);
-            min_k = MIN(min_k, k);
+            max_h = XMIPP_MAX(max_h, h);
+            max_k = XMIPP_MAX(max_k, k);
+            min_h = XMIPP_MIN(min_h, h);
+            min_k = XMIPP_MIN(min_k, k);
         }
         catch (Xmipp_error)
         {
@@ -183,8 +183,8 @@ void APHFileorigmerg::unasymmetrization(const double a_mag, const  double b_mag,
                                         const double a_b_ang, const  int symmetry_group,
                                         Matrix2D<int> &Counter)
 {
-    int ksize = MAX(ABS(min_k), ABS(max_k));
-    int hsize = MAX(ABS(min_h), ABS(max_h));
+    int ksize = XMIPP_MAX(ABS(min_k), ABS(max_k));
+    int hsize = XMIPP_MAX(ABS(min_h), ABS(max_h));
     Counter.initZeros(2*ksize + 1, 2*hsize + 1);
     STARTINGY(Counter) = -ksize;
     STARTINGX(Counter) = -hsize;

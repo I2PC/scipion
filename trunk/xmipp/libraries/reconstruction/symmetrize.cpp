@@ -124,8 +124,8 @@ void symmetrize_Bspline(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out
         int rad;
         mask.resize(V_in());
         mask.setXmippOrigin();
-        rad = MIN(V_in().rowNumber(), V_in().colNumber());
-        rad = MIN(rad, V_in().sliceNumber());
+        rad = XMIPP_MIN(V_in().rowNumber(), V_in().colNumber());
+        rad = XMIPP_MIN(rad, V_in().sliceNumber());
         BinarySphericalMask(mask, rad / 2, OUTSIDE_MASK);
         computeStats_within_binary_mask(mask, V_in(), dum, dum, avg, dum);
     }

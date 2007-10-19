@@ -318,8 +318,8 @@ void ROUT_Spots2RealSpace(Spot2RealSpace2D_Parameters &prm,
     cout << "prm.symmetry_group: " << prm.symmetry_group    << endl;
 #endif
 #undef DEBUG
-    int ksize = MAX(ABS((prm.aph_file).min_k), ABS((prm.aph_file).max_k));
-    int hsize = MAX(ABS((prm.aph_file).min_h), ABS((prm.aph_file).max_h));
+    int ksize = XMIPP_MAX(ABS((prm.aph_file).min_k), ABS((prm.aph_file).max_k));
+    int hsize = XMIPP_MAX(ABS((prm.aph_file).min_h), ABS((prm.aph_file).max_h));
 
     //When data is copied to FT move it from degrees to radians.
     //It is done inside the polar function

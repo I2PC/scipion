@@ -127,12 +127,12 @@ double spatial_Bspline03_proj(
     double alpha_zmin = (-2 - ZZ(r)) / ZZ(ur);
     double alpha_zmax = (2 - ZZ(r)) / ZZ(ur);
 
-    double alpha_min = MAX(MIN(alpha_xmin, alpha_xmax),
-                           MIN(alpha_ymin, alpha_ymax));
-    alpha_min = MAX(alpha_min, MIN(alpha_zmin, alpha_zmax));
-    double alpha_max = MIN(MAX(alpha_xmin, alpha_xmax),
-                           MAX(alpha_ymin, alpha_ymax));
-    alpha_max = MIN(alpha_max, MAX(alpha_zmin, alpha_zmax));
+    double alpha_min = XMIPP_MAX(XMIPP_MIN(alpha_xmin, alpha_xmax),
+                           XMIPP_MIN(alpha_ymin, alpha_ymax));
+    alpha_min = XMIPP_MAX(alpha_min, XMIPP_MIN(alpha_zmin, alpha_zmax));
+    double alpha_max = XMIPP_MIN(XMIPP_MAX(alpha_xmin, alpha_xmax),
+                           XMIPP_MAX(alpha_ymin, alpha_ymax));
+    alpha_max = XMIPP_MIN(alpha_max, XMIPP_MAX(alpha_zmin, alpha_zmax));
     if (alpha_max - alpha_min < XMIPP_EQUAL_ACCURACY) return 0.0;
 
 #ifdef DEBUG
@@ -175,7 +175,7 @@ double spatial_Bspline03_proj(
         double diffx = ABS(alpha - alpha_x);
         double diffy = ABS(alpha - alpha_y);
         double diffz = ABS(alpha - alpha_z);
-        double diff_alpha = MIN(MIN(diffx, diffy), diffz);
+        double diff_alpha = XMIPP_MIN(XMIPP_MIN(diffx, diffy), diffz);
         ray_sum += spatial_Bspline03_integral(r, ur, alpha, alpha + diff_alpha);
 
         // Update alpha and the next entry point
@@ -434,7 +434,7 @@ void spatial_Bspline032voxels(const GridVolume &vol_splines,
         double min_val = VOL_ELEM(*vol_voxels, 0, 0, 0);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(*vol_voxels)
         if (j*j + i*i + k*k <= R2 - 4)
-            min_val = MIN(min_val, VOL_ELEM(*vol_voxels, k, i, j));
+            min_val = XMIPP_MIN(min_val, VOL_ELEM(*vol_voxels, k, i, j));
 
         // Substitute minimum value
         R2 = (R - 2) * (R - 2);

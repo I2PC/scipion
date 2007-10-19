@@ -461,7 +461,7 @@ void Get_Scale_Quadrant(int size_x, int size_y, int x, int y,
     quadrant = "xy";
     double scalex = DWT_Scale(x, Nx);
     double scaley = DWT_Scale(y, Ny);
-    scale = (int)(MIN(scalex, scaley));
+    scale = (int)(XMIPP_MIN(scalex, scaley));
     quadrant[1] = DWT_QuadrantnD(y, scaley, scale, Ny);
     quadrant[0] = DWT_QuadrantnD(x, scalex, scale, Nx);
 }
@@ -477,7 +477,7 @@ void Get_Scale_Quadrant(int size_x, int size_y, int size_z,
     double scalex = DWT_Scale(x, Nx);
     double scaley = DWT_Scale(y, Ny);
     double scalez = DWT_Scale(z, Nz);
-    scale = (int)(MIN(scalez, MIN(scalex, scaley)));
+    scale = (int)(XMIPP_MIN(scalez, XMIPP_MIN(scalex, scaley)));
     quadrant[2] = DWT_QuadrantnD(z, scalez, scale, Nz);
     quadrant[1] = DWT_QuadrantnD(y, scaley, scale, Ny);
     quadrant[0] = DWT_QuadrantnD(x, scalex, scale, Nx);
@@ -563,7 +563,7 @@ double compute_noise_power(Matrix2D<double> &I)
     histogram1D hist;
     double avg, stddev, min_val, max_val;
     I.computeStats(avg, stddev, min_val, max_val);
-    hist.init(0, MAX(ABS(min_val), ABS(max_val)), 100);
+    hist.init(0, XMIPP_MAX(ABS(min_val), ABS(max_val)), 100);
 
     Matrix1D<int> corner1(2), corner2(2);
     Matrix1D<double> r(2);
@@ -826,7 +826,7 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix2D<double> &WI, int allowed_sca
 
     /*Calculate the power at each band*/
     //init the scale vector
-    Matrix1D<int> scale(MIN(allowed_scale + 1, max_scale - 1));
+    Matrix1D<int> scale(XMIPP_MIN(allowed_scale + 1, max_scale - 1));
     FOR_ALL_ELEMENTS_IN_MATRIX1D(scale) scale(i) = i;
     int scale_dim = scale.getDimension();
 
@@ -908,7 +908,7 @@ void bayesian_wiener_filtering(Matrix2D<double> &WI,
     orientation.push_back("11");
 
     int max_scale = ROUND(log(double(XSIZE(WI))) / log(2.0));
-    Matrix1D<int> scale(MIN(allowed_scale + 1, max_scale - 1));
+    Matrix1D<int> scale(XMIPP_MIN(allowed_scale + 1, max_scale - 1));
     FOR_ALL_ELEMENTS_IN_MATRIX1D(scale) scale(i) = i;
 
     for (int i = 0;i < XSIZE(scale);i++)
@@ -1034,7 +1034,7 @@ void bayesian_wiener_filtering(Matrix3D<double> &WI,
     orientation.push_back("111");
 
     int max_scale = ROUND(log(double(XSIZE(WI))) / log(2.0));
-    Matrix1D<int> scale(MIN(allowed_scale + 1, max_scale - 1));
+    Matrix1D<int> scale(XMIPP_MIN(allowed_scale + 1, max_scale - 1));
     FOR_ALL_ELEMENTS_IN_MATRIX1D(scale) scale(i) = i;
 
     for (int i = 0;i < XSIZE(scale);i++)

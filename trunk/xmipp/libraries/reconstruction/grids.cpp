@@ -167,13 +167,13 @@ void Grid::voxel_corners(Matrix1D<double> &Gcorner1, Matrix1D<double> &Gcorner2,
                     if (!LG[n].is_interesting(univ_position)) continue;
                     if (!first)
                     {
-                        XX(SGcorner1) = MIN(XX(SGcorner1), XX(univ_position));
-                        YY(SGcorner1) = MIN(YY(SGcorner1), YY(univ_position));
-                        ZZ(SGcorner1) = MIN(ZZ(SGcorner1), ZZ(univ_position));
+                        XX(SGcorner1) = XMIPP_MIN(XX(SGcorner1), XX(univ_position));
+                        YY(SGcorner1) = XMIPP_MIN(YY(SGcorner1), YY(univ_position));
+                        ZZ(SGcorner1) = XMIPP_MIN(ZZ(SGcorner1), ZZ(univ_position));
 
-                        XX(SGcorner2) = MAX(XX(SGcorner2), XX(univ_position));
-                        YY(SGcorner2) = MAX(YY(SGcorner2), YY(univ_position));
-                        ZZ(SGcorner2) = MAX(ZZ(SGcorner2), ZZ(univ_position));
+                        XX(SGcorner2) = XMIPP_MAX(XX(SGcorner2), XX(univ_position));
+                        YY(SGcorner2) = XMIPP_MAX(YY(SGcorner2), YY(univ_position));
+                        ZZ(SGcorner2) = XMIPP_MAX(ZZ(SGcorner2), ZZ(univ_position));
                     }
                     else
                     {
@@ -185,13 +185,13 @@ void Grid::voxel_corners(Matrix1D<double> &Gcorner1, Matrix1D<double> &Gcorner2,
         // Compare with the rest of the grids
         if (n != 0)
         {
-            XX(Gcorner1) = MIN(XX(Gcorner1), XX(SGcorner1));
-            YY(Gcorner1) = MIN(YY(Gcorner1), YY(SGcorner1));
-            ZZ(Gcorner1) = MIN(ZZ(Gcorner1), ZZ(SGcorner1));
+            XX(Gcorner1) = XMIPP_MIN(XX(Gcorner1), XX(SGcorner1));
+            YY(Gcorner1) = XMIPP_MIN(YY(Gcorner1), YY(SGcorner1));
+            ZZ(Gcorner1) = XMIPP_MIN(ZZ(Gcorner1), ZZ(SGcorner1));
 
-            XX(Gcorner2) = MAX(XX(Gcorner2), XX(SGcorner2));
-            YY(Gcorner2) = MAX(YY(Gcorner2), YY(SGcorner2));
-            ZZ(Gcorner2) = MAX(ZZ(Gcorner2), ZZ(SGcorner2));
+            XX(Gcorner2) = XMIPP_MAX(XX(Gcorner2), XX(SGcorner2));
+            YY(Gcorner2) = XMIPP_MAX(YY(Gcorner2), YY(SGcorner2));
+            ZZ(Gcorner2) = XMIPP_MAX(ZZ(Gcorner2), ZZ(SGcorner2));
         }
         else
         {
@@ -416,12 +416,12 @@ SimpleGrid Create_grid_within_sphere(double relative_size,
                 VECTOR_R3(univ_position, j, i, k);
                 if (univ_position.module() > R) continue;
                 grid.universe2grid(univ_position, grid_position);
-                XX(grid.lowest) = MIN(XX(grid.lowest), FLOOR(XX(grid_position)));
-                YY(grid.lowest) = MIN(YY(grid.lowest), FLOOR(YY(grid_position)));
-                ZZ(grid.lowest) = MIN(ZZ(grid.lowest), FLOOR(ZZ(grid_position)));
-                XX(grid.highest) = MAX(XX(grid.highest), CEIL(XX(grid_position)));
-                YY(grid.highest) = MAX(YY(grid.highest), CEIL(YY(grid_position)));
-                ZZ(grid.highest) = MAX(ZZ(grid.highest), CEIL(ZZ(grid_position)));
+                XX(grid.lowest) = XMIPP_MIN(XX(grid.lowest), FLOOR(XX(grid_position)));
+                YY(grid.lowest) = XMIPP_MIN(YY(grid.lowest), FLOOR(YY(grid_position)));
+                ZZ(grid.lowest) = XMIPP_MIN(ZZ(grid.lowest), FLOOR(ZZ(grid_position)));
+                XX(grid.highest) = XMIPP_MAX(XX(grid.highest), CEIL(XX(grid_position)));
+                YY(grid.highest) = XMIPP_MAX(YY(grid.highest), CEIL(YY(grid_position)));
+                ZZ(grid.highest) = XMIPP_MAX(ZZ(grid.highest), CEIL(ZZ(grid_position)));
             }
 
 #ifdef DEBUG

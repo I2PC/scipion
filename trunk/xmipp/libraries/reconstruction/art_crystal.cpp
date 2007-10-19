@@ -249,8 +249,8 @@ void Crystal_ART_Parameters::produce_Side_Info(
     // Resize unit cell mask
     // The unit mask is a little bigger to avoid the possibility of losing
     // any basis due to a too tight mask.
-    int mask_xdim = CEIL(MAX(ABS(XX(c1c3)), ABS(XX(c2c4)))) + 3;
-    int mask_ydim = CEIL(MAX(ABS(YY(c1c3)), ABS(YY(c2c4)))) + 3;
+    int mask_xdim = CEIL(XMIPP_MAX(ABS(XX(c1c3)), ABS(XX(c2c4)))) + 3;
+    int mask_ydim = CEIL(XMIPP_MAX(ABS(YY(c1c3)), ABS(YY(c2c4)))) + 3;
     unit_cell_mask.initZeros(mask_ydim, mask_xdim);
     unit_cell_mask.setXmippOrigin();
 
@@ -259,8 +259,8 @@ void Crystal_ART_Parameters::produce_Side_Info(
     for (int n = 0; n < vol_basis0.VolumesNo(); n++)
     {
         Volume &V = vol_basis0(n);
-        ZZ(r1) = MIN(ZZ(r1), STARTINGZ(V()));
-        ZZ(r2) = MAX(ZZ(r2), FINISHINGZ(V()));
+        ZZ(r1) = XMIPP_MIN(ZZ(r1), STARTINGZ(V()));
+        ZZ(r2) = XMIPP_MAX(ZZ(r2), FINISHINGZ(V()));
     }
     XX(r1) = STARTINGX(unit_cell_mask);
     YY(r1) = STARTINGY(unit_cell_mask);

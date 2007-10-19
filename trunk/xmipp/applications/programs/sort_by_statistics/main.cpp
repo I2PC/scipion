@@ -92,7 +92,7 @@ public:
         }
         nr_imgs = SF.ImgNo();
         init_progress_bar(nr_imgs);
-        int c = MAX(1, nr_imgs / 60);
+        int c = XMIPP_MAX(1, nr_imgs / 60);
 
         if (do_means)
         {

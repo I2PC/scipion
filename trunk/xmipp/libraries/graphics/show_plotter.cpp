@@ -239,10 +239,10 @@ void Plotter::setCurveData(int id, const Matrix2D<double> &data)
     data_minY = data_maxY = data(0, 1);
     for (int i = 1; i < YSIZE(data); i++)
     {
-        data_minX = MIN(data_minX, data(i, 0));
-        data_maxX = MAX(data_minX, data(i, 0));
-        data_minY = MIN(data_minY, data(i, 1));
-        data_maxY = MAX(data_minY, data(i, 1));
+        data_minX = XMIPP_MIN(data_minX, data(i, 0));
+        data_maxX = XMIPP_MAX(data_minX, data(i, 0));
+        data_minY = XMIPP_MIN(data_minY, data(i, 1));
+        data_maxY = XMIPP_MAX(data_minY, data(i, 1));
     }
 
     if (id == 0)
@@ -254,10 +254,10 @@ void Plotter::setCurveData(int id, const Matrix2D<double> &data)
     }
     else
     {
-        zoomStack[curZoom].minX = MIN(zoomStack[curZoom].minX, data_minX);
-        zoomStack[curZoom].maxX = MAX(zoomStack[curZoom].maxX, data_maxX);
-        zoomStack[curZoom].minY = MIN(zoomStack[curZoom].minY, data_minY);
-        zoomStack[curZoom].maxY = MAX(zoomStack[curZoom].maxY, data_maxY);
+        zoomStack[curZoom].minX = XMIPP_MIN(zoomStack[curZoom].minX, data_minX);
+        zoomStack[curZoom].maxX = XMIPP_MAX(zoomStack[curZoom].maxX, data_maxX);
+        zoomStack[curZoom].minY = XMIPP_MIN(zoomStack[curZoom].minY, data_minY);
+        zoomStack[curZoom].maxY = XMIPP_MAX(zoomStack[curZoom].maxY, data_maxY);
     }
     zoomStack[curZoom].adjust();
 

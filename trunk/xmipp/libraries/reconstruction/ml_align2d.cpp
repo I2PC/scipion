@@ -640,7 +640,7 @@ void Prog_MLalign2D_prm::produce_Side_info()
         Maux.setXmippOrigin();
         FOR_ALL_ELEMENTS_IN_MATRIX2D(Maux)
         {
-            MAT_ELEM(Maux, i, j) = MIN((double)hdim - 1, sqrt((double)(i * i + j * j)));
+            MAT_ELEM(Maux, i, j) = XMIPP_MIN((double)hdim - 1, sqrt((double)(i * i + j * j)));
         }
         CenterFFT(Maux, false);
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mresol)
@@ -708,7 +708,7 @@ void Prog_MLalign2D_prm::estimate_initial_sigma2()
         {
             nn = SF.ImgNo();
             init_progress_bar(nn);
-            c = MAX(1, nn / 60);
+            c = XMIPP_MAX(1, nn / 60);
         }
         Msigma2.clear();
         Msigma2.resize(nr_focus);
@@ -807,7 +807,7 @@ void Prog_MLalign2D_prm::calculate_division_ctf()
 	    prev=abs(dVi(Vctf[ifocus], irr));
 	    if ( past_first_peak && abs(dVi(Vctf[ifocus], irr)) < 0.2 )
 	    {
-		maxres=MIN(maxres,irr);
+		maxres=XMIPP_MIN(maxres,irr);
 		break;
 	    }
         }
@@ -928,10 +928,10 @@ void Prog_MLalign2D_prm::calculate_wiener_defocus_series(Matrix1D<double> &spect
 	    if ((iter == istart - 1) && (ini_highres_limit > 0) && (irr > ini_highres_limit))
 		dVi(Vsnr[ifocus], irr) = 0.;
 	    // Subtract 1 according Unser et al.
-	    dVi(Vsnr[ifocus], irr) = MAX(0., dVi(Vsnr[ifocus], irr) - 1.);
+	    dVi(Vsnr[ifocus], irr) = XMIPP_MAX(0., dVi(Vsnr[ifocus], irr) - 1.);
 	    // Prevent spurious high-frequency significant SNRs from random averages
 	    if (iter == 0 && do_generate_refs)
-		dVi(Vsnr[ifocus], irr) = MAX(0., dVi(Vsnr[ifocus], irr) - 2.);
+		dVi(Vsnr[ifocus], irr) = XMIPP_MAX(0., dVi(Vsnr[ifocus], irr) - 2.);
 	    if (dVi(Vsnr[ifocus], irr) > 0. && irr > maxres) maxres = irr;
 	}
     }
@@ -989,7 +989,7 @@ void Prog_MLalign2D_prm::calculate_wiener_defocus_series(Matrix1D<double> &spect
                 fh.width(10);
                 fh << floatToString(dVi(Vctf[ifocus], irr));
                 fh.width(10);
-                fh << floatToString(MIN(25., dVi(Vsnr[ifocus], irr)));
+                fh << floatToString(XMIPP_MIN(25., dVi(Vsnr[ifocus], irr)));
                 fh.width(10);
                 fh << floatToString(dVi(spectral_signal, irr));
                 fh.width(10);
@@ -1013,10 +1013,10 @@ void Prog_MLalign2D_prm::calculate_wiener_defocus_series(Matrix1D<double> &spect
     FourierTransformHalf(Maux, Faux);
     
     current_highres_limit = maxres + 5; // hard-code increase_highres_limit to 5
-    current_highres_limit = MIN(current_highres_limit, highres_limit);
-    current_highres_limit = MIN(current_highres_limit, hdim);
-    maxres = MIN(maxres, highres_limit);
-    maxres = MIN(maxres, hdim);
+    current_highres_limit = XMIPP_MIN(current_highres_limit, highres_limit);
+    current_highres_limit = XMIPP_MIN(current_highres_limit, hdim);
+    maxres = XMIPP_MIN(maxres, highres_limit);
+    maxres = XMIPP_MIN(maxres, hdim);
     pointer_ctf.clear();
     pointer_sigctf.clear();
     pointer_i.clear();
@@ -1613,7 +1613,7 @@ void Prog_MLalign2D_prm::preselect_directions(float &phi, float &theta,
             // also check mirror
             angle2 = 180. + angle;
             angle2 = fabs(realWRAP(angle2, -180, 180));
-            angle = MIN(angle, angle2);
+            angle = XMIPP_MIN(angle, angle2);
             if (fabs(angle) > search_rot) pdf_directions[refno] = 0.;
             else pdf_directions[refno] = 1.;
         }
@@ -2696,7 +2696,7 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
     if (save_mem2) sigdim = 2 * CEIL(sigma_offset * 3);
     else sigdim = 2 * CEIL(sigma_offset * 6);
     sigdim++; // (to get uneven number)
-    sigdim = MIN(dim, sigdim);
+    sigdim = XMIPP_MIN(dim, sigdim);
 
     if (fast_mode)
     {
@@ -3045,7 +3045,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> 
     LL = 0.;
     nn = SF.ImgNo();
     if (verb > 0) init_progress_bar(nn);
-    c = MAX(1, nn / 60);
+    c = XMIPP_MAX(1, nn / 60);
     Fwsum_imgs.clear();
     Fwsum_ctfimgs.clear();
     Msum_imgs.clear();

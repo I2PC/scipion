@@ -44,6 +44,7 @@
 #include <cstdlib>
 #endif
 
+#include <data/macros.h>
 #include "groe.h"
 
 #define MAX_HARMONIC 51   /* Max. no of harmonics accepted */
@@ -162,7 +163,7 @@ void spectro_m(char *nom, float xr1, float xr2, float xdr, float xr,
     ir1 = (int)((xr1 - rl) / dr + 1);
     if (ir1 < 1)
         ir1 = 1;
-    ir2 = (int)((min(xr2, rh) - rl) / dr + 1);
+    ir2 = (int)((XMIPP_MIN(xr2, rh) - rl) / dr + 1);
     if (ir2 < ir1)
         ir2 = ir1;
     ndr = (int)(xdr / dr);
@@ -172,7 +173,7 @@ void spectro_m(char *nom, float xr1, float xr2, float xdr, float xr,
         nr = m;
     else
         nr = (int)(xr / dr + 1);
-    ir2 = min(ir2, m);
+    ir2 = XMIPP_MIN(ir2, m);
     ncol = ir2 - nr + 1 - ir1;
     if (ncol < 0)
         ncol = 0;
@@ -241,7 +242,7 @@ void spectro_m(char *nom, float xr1, float xr2, float xdr, float xr,
     for (k = 1; k <= nvez; k++)
     {
         k1 = 13 * (k - 1) + 1;
-        k2 = min(ncol, 13 * k);
+        k2 = XMIPP_MIN(ncol, 13 * k);
         if (iflag == 1)
         {
             fprintf(prt, "\n#Rotational Energy");

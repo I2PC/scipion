@@ -767,8 +767,8 @@ void fill_triangle(Matrix2D<double> &img, int *tx, int *ty, double color)
     int iy1 = ABS(dy1);
     int iy2 = ABS(dy2);
 
-    int inc1 = MAX(ix1, iy1);
-    int inc2 = MAX(ix2, iy2);
+    int inc1 = XMIPP_MAX(ix1, iy1);
+    int inc2 = XMIPP_MAX(ix2, iy2);
 
     int x1, x2, y2, xl, xr;
     x1 = x2 = y1 = y2 = 0;
@@ -826,7 +826,7 @@ void fill_triangle(Matrix2D<double> &img, int *tx, int *ty, double color)
     ix1 = ABS(dx1);
     iy1 = ABS(dy1);
 
-    inc1 = MAX(ix1, iy1);
+    inc1 = XMIPP_MAX(ix1, iy1);
     xl = tx[1];
     x1 = 0;
 
@@ -888,10 +888,10 @@ void local_thresholding(Matrix2D<double> &img,
         if (mask != NULL)
             if (!(*mask)(i, j))
                 continue;
-        int ii0 = MAX(STARTINGY(convolved), FLOOR(i - dimLocal));
-        int jj0 = MAX(STARTINGX(convolved), FLOOR(j - dimLocal));
-        int iiF = MIN(FINISHINGY(convolved), CEIL(i + dimLocal));
-        int jjF = MIN(FINISHINGX(convolved), CEIL(j + dimLocal));
+        int ii0 = XMIPP_MAX(STARTINGY(convolved), FLOOR(i - dimLocal));
+        int jj0 = XMIPP_MAX(STARTINGX(convolved), FLOOR(j - dimLocal));
+        int iiF = XMIPP_MIN(FINISHINGY(convolved), CEIL(i + dimLocal));
+        int jjF = XMIPP_MIN(FINISHINGX(convolved), CEIL(j + dimLocal));
         double N = 0;
         for (int ii = ii0; ii <= iiF; ii++)
             for (int jj = jj0; jj <= jjF; jj++)

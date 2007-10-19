@@ -387,7 +387,7 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
     if (verb > 0) cerr << "--> Back-projecting ..." << endl;
     nn = SF.ImgNo();
     if (verb > 0) init_progress_bar(nn);
-    c = MAX(1, nn / 60);
+    c = XMIPP_MAX(1, nn / 60);
 
     mat_f = (column*)malloc(no_mats * sizeof(column));
 

@@ -187,7 +187,7 @@ void wang_smoothing(const Volume *V_in, Volume *V_out, int radius)
                                 if ((r2 < radius2) && (VOL_ELEM((*V_in)(), kp, ip, jp) > 0.))
                                 {
                                     weight = 1. - sqrt((double)(r2 / radius2));
-                                    VOL_ELEM((*V_out)(), k, i, j) += weight * MAX(0., VOL_ELEM((*V_in)(), kp, ip, jp));
+                                    VOL_ELEM((*V_out)(), k, i, j) += weight * XMIPP_MAX(0., VOL_ELEM((*V_in)(), kp, ip, jp));
                                     sumw += weight;
                                 }
                             }

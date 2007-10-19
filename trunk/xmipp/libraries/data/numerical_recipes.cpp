@@ -399,7 +399,7 @@ void bessjy(double x, double xnu, double *rj, double *ry, double *rjp, double *r
 
     if (x <= 0.0 || xnu < 0.0)
         nrerror("bad arguments in bessjy");
-    nl = (x < XMIN ? (int)(xnu + 0.5) : MAX(0, (int)(xnu - x + 1.5)));
+    nl = (x < XMIN ? (int)(xnu + 0.5) : XMIPP_MAX(0, (int)(xnu - x + 1.5)));
     xmu = xnu - nl;
     xmu2 = xmu * xmu;
     xi = 1.0 / x;
@@ -1895,7 +1895,7 @@ void savgol(double *c, int np, int nl, int nr, int ld, int m)
             sum += pow((double)k, (double)ipj);
         for (k = 1;k <= nl;k++)
             sum += pow((double) - k, (double)ipj);
-        mm = MIN(ipj, 2 * m - ipj);
+        mm = XMIPP_MIN(ipj, 2 * m - ipj);
         for (imj = -mm;imj <= mm;imj += 2)
             a[(1+(ipj+imj)/2)*(m+1)+1+(ipj-imj)/2] = sum;
     }

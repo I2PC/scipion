@@ -1685,8 +1685,8 @@ void sortTwoVectors(vT& v1, vT& v2)
 
     FOR_ALL_ELEMENTS_IN_MATRIX1D(v1)
     {
-        temp = MIN(VEC_ELEM(v1, i), VEC_ELEM(v2, i));
-        VEC_ELEM(v2, i) = MAX(VEC_ELEM(v1, i), VEC_ELEM(v2, i));
+        temp = XMIPP_MIN(VEC_ELEM(v1, i), VEC_ELEM(v2, i));
+        VEC_ELEM(v2, i) = XMIPP_MAX(VEC_ELEM(v1, i), VEC_ELEM(v2, i));
         VEC_ELEM(v1, i) = temp;
     }
 }

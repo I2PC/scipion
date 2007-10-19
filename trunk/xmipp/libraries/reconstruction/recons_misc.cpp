@@ -501,7 +501,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
             compute_hist_within_binary_mask(
                 aux_mask, vol_voxels(), hist, 300);
             double known_percentage;
-            known_percentage = MIN(100, 100 * prm->known_volume / mask_voxels);
+            known_percentage = XMIPP_MIN(100, 100 * prm->known_volume / mask_voxels);
             double threshold;
             threshold = hist.percentil(100 - known_percentage);
             FOR_ALL_ELEMENTS_IN_MATRIX3D(vol_voxels())

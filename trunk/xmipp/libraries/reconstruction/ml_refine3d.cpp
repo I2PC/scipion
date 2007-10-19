@@ -376,7 +376,7 @@ void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank)
             SFlib.insert(fn_proj, SelLine::ACTIVE);
             DFlib.next_data_line();
             nr_dir++;
-            if (verb > 0  && rank == 0 && (nr_dir % MAX(1, nl / 60) == 0)) progress_bar(nr_dir);
+            if (verb > 0  && rank == 0 && (nr_dir % XMIPP_MAX(1, nl / 60) == 0)) progress_bar(nr_dir);
         }
         eachvol_end.push_back(nr_dir - 1);
         nvol++;
@@ -626,7 +626,7 @@ void Prog_Refine3d_prm::calculate_3DSSNR(Matrix1D<double> &spectral_signal, int 
             else Msignal += Maux * head.Weight();
             volweight += head.Weight();
             c++;
-            if (c % MAX(1, SFnoise.ImgNo() / 60) == 0 && verb > 0) progress_bar(c);
+            if (c % XMIPP_MAX(1, SFnoise.ImgNo() / 60) == 0 && verb > 0) progress_bar(c);
         }
 
         alpha_T.setXmippOrigin();

@@ -111,12 +111,12 @@ void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
             double alpha_zmin = (z_0 - 0.5 - ZZ(p1)) / ZZ(P.direction);
             double alpha_zmax = (z_F + 0.5 - ZZ(p1)) / ZZ(P.direction);
 
-            double alpha_min = MAX(MIN(alpha_xmin, alpha_xmax),
-                                   MIN(alpha_ymin, alpha_ymax));
-            alpha_min = MAX(alpha_min, MIN(alpha_zmin, alpha_zmax));
-            double alpha_max = MIN(MAX(alpha_xmin, alpha_xmax),
-                                   MAX(alpha_ymin, alpha_ymax));
-            alpha_max = MIN(alpha_max, MAX(alpha_zmin, alpha_zmax));
+            double alpha_min = XMIPP_MAX(XMIPP_MIN(alpha_xmin, alpha_xmax),
+                                   XMIPP_MIN(alpha_ymin, alpha_ymax));
+            alpha_min = XMIPP_MAX(alpha_min, XMIPP_MIN(alpha_zmin, alpha_zmax));
+            double alpha_max = XMIPP_MIN(XMIPP_MAX(alpha_xmin, alpha_xmax),
+                                   XMIPP_MAX(alpha_ymin, alpha_ymax));
+            alpha_max = XMIPP_MIN(alpha_max, XMIPP_MAX(alpha_zmin, alpha_zmax));
             if (alpha_max - alpha_min < XMIPP_EQUAL_ACCURACY) continue;
 
 #ifdef DEBUG
@@ -172,7 +172,7 @@ void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
                 double diffy = ABS(alpha - alpha_y);
                 double diffz = ABS(alpha - alpha_z);
 
-                double diff_alpha = MIN(MIN(diffx, diffy), diffz);
+                double diff_alpha = XMIPP_MIN(XMIPP_MIN(diffx, diffy), diffz);
 
                 ray_sum += diff_alpha * V(ZZ(idx), YY(idx), XX(idx));
 
@@ -315,12 +315,12 @@ void singleWBP(Matrix3D<double> &V, Projection &P)
         double alpha_zmin = (z_0 - 0.5 - ZZ(p1)) / ZZ(P.direction);
         double alpha_zmax = (z_F + 0.5 - ZZ(p1)) / ZZ(P.direction);
 
-        double alpha_min = MAX(MIN(alpha_xmin, alpha_xmax),
-                               MIN(alpha_ymin, alpha_ymax));
-        alpha_min = MAX(alpha_min, MIN(alpha_zmin, alpha_zmax));
-        double alpha_max = MIN(MAX(alpha_xmin, alpha_xmax),
-                               MAX(alpha_ymin, alpha_ymax));
-        alpha_max = MIN(alpha_max, MAX(alpha_zmin, alpha_zmax));
+        double alpha_min = XMIPP_MAX(XMIPP_MIN(alpha_xmin, alpha_xmax),
+                               XMIPP_MIN(alpha_ymin, alpha_ymax));
+        alpha_min = XMIPP_MAX(alpha_min, XMIPP_MIN(alpha_zmin, alpha_zmax));
+        double alpha_max = XMIPP_MIN(XMIPP_MAX(alpha_xmin, alpha_xmax),
+                               XMIPP_MAX(alpha_ymin, alpha_ymax));
+        alpha_max = XMIPP_MIN(alpha_max, XMIPP_MAX(alpha_zmin, alpha_zmax));
         if (alpha_max - alpha_min < XMIPP_EQUAL_ACCURACY) continue;
 
         // Compute the first point in the volume intersecting the ray
@@ -359,7 +359,7 @@ void singleWBP(Matrix3D<double> &V, Projection &P)
             double diffy = ABS(alpha - alpha_y);
             double diffz = ABS(alpha - alpha_z);
 
-            double diff_alpha = MIN(MIN(diffx, diffy), diffz);
+            double diff_alpha = XMIPP_MIN(XMIPP_MIN(diffx, diffy), diffz);
 
             V(ZZ(idx), YY(idx), XX(idx)) += diff_alpha * P(i, j);
 
@@ -581,8 +581,8 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
     YY(c2)           = YY(c1);
     M2x2_BY_V2x1(c1, A, c1);
     M2x2_BY_V2x1(c2, A, c2);
-    XX(deffootprint_size) = MAX(ABS(XX(c1)), ABS(XX(c2)));
-    YY(deffootprint_size) = MAX(ABS(YY(c1)), ABS(YY(c2)));
+    XX(deffootprint_size) = XMIPP_MAX(ABS(XX(c1)), ABS(XX(c2)));
+    YY(deffootprint_size) = XMIPP_MAX(ABS(YY(c1)), ABS(YY(c2)));
 
 #ifdef DEBUG_LITTLE
     std::cout << "Footprint_size " << footprint_size.transpose() << std::endl;
@@ -595,11 +595,11 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
 
     // This type conversion gives more speed
     int ZZ_lowest = (int) ZZ(grid.lowest);
-    int YY_lowest = MAX((int) YY(grid.lowest), STARTINGY(mask));
-    int XX_lowest = MAX((int) XX(grid.lowest), STARTINGX(mask));
+    int YY_lowest = XMIPP_MAX((int) YY(grid.lowest), STARTINGY(mask));
+    int XX_lowest = XMIPP_MAX((int) XX(grid.lowest), STARTINGX(mask));
     int ZZ_highest = (int) ZZ(grid.highest);
-    int YY_highest = MIN((int) YY(grid.highest), FINISHINGY(mask));
-    int XX_highest = MIN((int) XX(grid.highest), FINISHINGX(mask));
+    int YY_highest = XMIPP_MIN((int) YY(grid.highest), FINISHINGY(mask));
+    int XX_highest = XMIPP_MIN((int) XX(grid.highest), FINISHINGX(mask));
 
     // Project the whole grid ...............................................
     // Corner of the plane defined by Z. These coordinates try to be within

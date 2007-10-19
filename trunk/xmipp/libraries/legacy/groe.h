@@ -82,12 +82,6 @@ typedef unsigned long  ULONG;
 
 #define PI 3.141592654f                 /* Guess what?                  */
 
-/******************* Macro definitions *********************************/
-
-#define max(x, y)     ((x)>(y)?(x):(y))
-#define min(x, y)     ((x)<(y)?(x):(y))
-/*#define abs(x)        ((x)<0?(-(x)):(x))*//*esta ya definido*/
-
 /******************* Type declarations *********************************/
 
 typedef BYTE           ** byte_image;

@@ -498,8 +498,8 @@ void find_crystal_limits(
 
 #define CHANGE_COORDS_AND_CHOOSE_CORNERS2D \
     M2x2_BY_V2x1(r,Ainv,r); \
-    iamin=MIN(FLOOR(XX(r)),iamin); iamax=MAX(CEIL(XX(r)),iamax); \
-    ibmin=MIN(FLOOR(YY(r)),ibmin); ibmax=MAX(CEIL(YY(r)),ibmax);
+    iamin=XMIPP_MIN(FLOOR(XX(r)),iamin); iamax=XMIPP_MAX(CEIL(XX(r)),iamax); \
+    ibmin=XMIPP_MIN(FLOOR(YY(r)),ibmin); ibmax=XMIPP_MAX(CEIL(YY(r)),ibmax);
 
     VECTOR_R2(r, x0, yF);
     CHANGE_COORDS_AND_CHOOSE_CORNERS2D;
@@ -706,7 +706,7 @@ void fill_cell_positions(Projection &P,
 
     // Visited has got one cell more than the rest in all directions
     Matrix2D<int> visited;
-    int visited_size = MAX(iamax - iamin + 1, ibmax - ibmin + 1) + 2;
+    int visited_size = XMIPP_MAX(iamax - iamin + 1, ibmax - ibmin + 1) + 2;
     visited.initZeros(visited_size, visited_size);
     STARTINGX(visited) = iamin - (visited_size - (iamax - iamin + 1) + 1) / 2;
     STARTINGY(visited) = ibmin - (visited_size - (ibmax - ibmin + 1) + 1) / 2;

@@ -289,11 +289,11 @@ void Micrograph::compute_8_bit_scaling()
     if (minval < 0)
     {
         minF = 0;
-        maxF = MIN(255, maxval - minval);
+        maxF = XMIPP_MIN(255, maxval - minval);
     }
     else if (maxval > 255)
     {
-        minF = MAX(0, minval - (maxval - 255));
+        minF = XMIPP_MAX(0, minval - (maxval - 255));
         maxF = 255;
     }
     else if (maxval - minval < 32)
@@ -617,8 +617,8 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
                     }
                     else
                     {
-                        imin = MIN(imin, M(j2, i2));
-                        imax = MAX(imax, M(j2, i2));
+                        imin = XMIPP_MIN(imin, M(j2, i2));
+                        imax = XMIPP_MAX(imax, M(j2, i2));
                     }
                     pixval += kernel(i, j) * M(j2, i2);
                 }
@@ -632,8 +632,8 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
                     }
                     else
                     {
-                        omin = MIN(omin, pixval);
-                        omax = MAX(omax, pixval);
+                        omin = XMIPP_MIN(omin, pixval);
+                        omax = XMIPP_MAX(omax, pixval);
                     }
                 }
             }

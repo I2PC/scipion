@@ -40,8 +40,8 @@ void ShowVol::initWithFile(int _numRows, int _numCols,
     }
     else
     {
-        NumCols = MIN(10, FLOOR(900.0 / XSIZE(V())));
-        NumRows = MIN(10, FLOOR(700.0 / YSIZE(V())));
+        NumCols = XMIPP_MIN(10, FLOOR(900.0 / XSIZE(V())));
+        NumRows = XMIPP_MIN(10, FLOOR(700.0 / YSIZE(V())));
     }
     initTable();
     initRightclickMenubar();

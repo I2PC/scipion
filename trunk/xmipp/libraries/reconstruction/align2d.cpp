@@ -188,7 +188,7 @@ bool Prog_align2d_prm::align_rot(ImageXmipp &img, const Matrix2D<double> &Mref,
     psi = 0.;
     sumcorr = 0.;
     // Weighted average over neighbours
-    avewidth = MIN(i_maxcorr, nstep - i_maxcorr);
+    avewidth = XMIPP_MIN(i_maxcorr, nstep - i_maxcorr);
     if (avewidth > 0)
     {
         for (i = i_maxcorr - avewidth + 1; i < i_maxcorr + avewidth; i++)
@@ -439,7 +439,7 @@ void Prog_align2d_prm::do_pspc()
 
     cerr << "  Piramidal combination of " << n_piram << " images" << endl;
     init_progress_bar(n_piram);
-    barf = MAX(1, (int)(1 + (n_piram / 60)));
+    barf = XMIPP_MAX(1, (int)(1 + (n_piram / 60)));
 
     imgno = 0;
     for (int lev = nlev; lev > 0; lev--)
@@ -528,7 +528,7 @@ void Prog_align2d_prm::refinement()
     Maux.setXmippOrigin();
     Msum.setXmippOrigin();
     Msum.initZeros();
-    barf = MAX(1, (int)(1 + (n_images / 60)));
+    barf = XMIPP_MAX(1, (int)(1 + (n_images / 60)));
 
     n_refined = 0;
     cerr << "  Alignment:  iteration " << 1 << " of " << Niter << " (with " << n_images << " images)" << endl;

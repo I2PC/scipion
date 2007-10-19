@@ -154,8 +154,8 @@ int main(int argc, char **argv)
                             }
                             else
                             {
-                                m = MIN(m, maux);
-                                M = MAX(M, Maux);
+                                m = XMIPP_MIN(m, maux);
+                                M = XMIPP_MAX(M, Maux);
                             }
                         }
                     }
@@ -174,8 +174,8 @@ int main(int argc, char **argv)
                         }
                         else
                         {
-                            m = MIN(m, maux);
-                            M = MAX(M, Maux);
+                            m = XMIPP_MIN(m, maux);
+                            M = XMIPP_MAX(M, Maux);
                         }
                     }
                     else if (mode == MODE_SEL)
@@ -194,8 +194,8 @@ int main(int argc, char **argv)
                         }
                         else
                         {
-                            m = MIN(m, maux);
-                            M = MAX(M, Maux);
+                            m = XMIPP_MIN(m, maux);
+                            M = XMIPP_MAX(M, Maux);
                         }
                     }
                     else if (mode == MODE_SPECT)

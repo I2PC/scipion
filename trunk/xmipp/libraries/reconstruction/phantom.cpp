@@ -52,7 +52,7 @@ void Blob::prepare()
 void Cylinder::prepare()
 {
     prepare_Euler();
-    max_distance = sqrt(height * height / 4 + MAX(xradius * xradius, yradius * yradius));
+    max_distance = sqrt(height * height / 4 + XMIPP_MAX(xradius * xradius, yradius * yradius));
 }
 
 void DCylinder::prepare()
@@ -70,7 +70,7 @@ void Cube::prepare()
 void Ellipsoid::prepare()
 {
     prepare_Euler();
-    max_distance = MAX(MAX(xradius, yradius), zradius);
+    max_distance = XMIPP_MAX(XMIPP_MAX(xradius, yradius), zradius);
 }
 
 void Cone::prepare()
@@ -756,24 +756,24 @@ void Feature::corners(const Volume *V, Matrix1D<double> &corner1,
 {
     corner1.resize(3);
     corner2.resize(3);
-    XX(corner1) = MAX(FLOOR(XX(Center) - max_distance), STARTINGX(VOLMATRIX(*V)));
-    YY(corner1) = MAX(FLOOR(YY(Center) - max_distance), STARTINGY(VOLMATRIX(*V)));
-    ZZ(corner1) = MAX(FLOOR(ZZ(Center) - max_distance), STARTINGZ(VOLMATRIX(*V)));
-    XX(corner2) = MIN(CEIL(XX(Center) + max_distance), FINISHINGX(VOLMATRIX(*V)));
-    YY(corner2) = MIN(CEIL(YY(Center) + max_distance), FINISHINGY(VOLMATRIX(*V)));
-    ZZ(corner2) = MIN(CEIL(ZZ(Center) + max_distance), FINISHINGZ(VOLMATRIX(*V)));
+    XX(corner1) = XMIPP_MAX(FLOOR(XX(Center) - max_distance), STARTINGX(VOLMATRIX(*V)));
+    YY(corner1) = XMIPP_MAX(FLOOR(YY(Center) - max_distance), STARTINGY(VOLMATRIX(*V)));
+    ZZ(corner1) = XMIPP_MAX(FLOOR(ZZ(Center) - max_distance), STARTINGZ(VOLMATRIX(*V)));
+    XX(corner2) = XMIPP_MIN(CEIL(XX(Center) + max_distance), FINISHINGX(VOLMATRIX(*V)));
+    YY(corner2) = XMIPP_MIN(CEIL(YY(Center) + max_distance), FINISHINGY(VOLMATRIX(*V)));
+    ZZ(corner2) = XMIPP_MIN(CEIL(ZZ(Center) + max_distance), FINISHINGZ(VOLMATRIX(*V)));
 
 #ifdef PORSI
     array_by_scalar(Center, max_distance, corner1, '-');
     array_by_scalar(Center, max_distance, corner2, '+');
     corner1 = FLOORnD(corner1);
     corner2 = CEILnD(corner2);
-    XX(corner1) = MAX(XX(corner1), STARTINGX(VOLMATRIX(*V)));
-    YY(corner1) = MAX(YY(corner1), STARTINGY(VOLMATRIX(*V)));
-    ZZ(corner1) = MAX(ZZ(corner1), STARTINGZ(VOLMATRIX(*V)));
-    XX(corner2) = MIN(XX(corner2), FINISHINGX(VOLMATRIX(*V)));
-    YY(corner2) = MIN(YY(corner2), FINISHINGY(VOLMATRIX(*V)));
-    ZZ(corner2) = MIN(ZZ(corner2), FINISHINGZ(VOLMATRIX(*V)));
+    XX(corner1) = XMIPP_MAX(XX(corner1), STARTINGX(VOLMATRIX(*V)));
+    YY(corner1) = XMIPP_MAX(YY(corner1), STARTINGY(VOLMATRIX(*V)));
+    ZZ(corner1) = XMIPP_MAX(ZZ(corner1), STARTINGZ(VOLMATRIX(*V)));
+    XX(corner2) = XMIPP_MIN(XX(corner2), FINISHINGX(VOLMATRIX(*V)));
+    YY(corner2) = XMIPP_MIN(YY(corner2), FINISHINGY(VOLMATRIX(*V)));
+    ZZ(corner2) = XMIPP_MIN(ZZ(corner2), FINISHINGZ(VOLMATRIX(*V)));
 #endif
 }
 
@@ -821,7 +821,7 @@ void Feature::draw_in(Volume *V, int colour_mode, double colour)
         {
             double drawing_colour = final_colour * inside / 8;
             if (add) Vr += drawing_colour;
-            else     Vr  = MAX(drawing_colour, Vr);
+            else     Vr  = XMIPP_MAX(drawing_colour, Vr);
 #ifdef DEBUG
             if (condition)
                 cout << "   V(r)=" << VOLVOXEL((*V), (int)ZZ(r), (int)YY(r), (int)XX(r));
@@ -1510,7 +1510,7 @@ void Cylinder::init_rnd(
     Euler_angles2matrix(rot, tilt, psi, euler);
     eulert = euler.transpose();
 
-    max_distance   = sqrt(height * height + MAX(xradius * xradius, yradius * yradius));
+    max_distance   = sqrt(height * height + XMIPP_MAX(xradius * xradius, yradius * yradius));
 }
 
 void DCylinder::init_rnd(
@@ -1621,7 +1621,7 @@ void Ellipsoid::init_rnd(
     Euler_angles2matrix(rot, tilt, psi, euler);
     eulert = euler.transpose();
 
-    max_distance   = MAX(MAX(xradius, yradius), zradius);
+    max_distance   = XMIPP_MAX(XMIPP_MAX(xradius, yradius), zradius);
 }
 
 void Cone::init_rnd(
@@ -1653,7 +1653,7 @@ void Cone::init_rnd(
     Euler_angles2matrix(rot, tilt, psi, euler);
     eulert = euler.transpose();
 
-    max_distance   = MAX(radius, height);
+    max_distance   = XMIPP_MAX(radius, height);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -1786,7 +1786,7 @@ double Phantom::max_distance() const
 {
     double retval = 0;
     for (int i = 0; i < VF.size(); i++)
-        retval = MAX(retval, VF[i]->max_distance + VF[i]->Center.module());
+        retval = XMIPP_MAX(retval, VF[i]->max_distance + VF[i]->Center.module());
     return retval;
 }
 

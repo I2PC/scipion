@@ -82,8 +82,8 @@ void RBF_train_best_scale(xmippCTVectors &candidate_C,  xmippCTVectors &X,
     for (int i = 0; i < p; i++)
         for (int l = 0; l < vsize; l++)
         {
-            maxX(l) = MAX(maxX(l), Vij(X, i, l));
-            minX(l) = MIN(minX(l), Vij(X, i, l));
+            maxX(l) = XMIPP_MAX(maxX(l), Vij(X, i, l));
+            minX(l) = XMIPP_MIN(minX(l), Vij(X, i, l));
         }
     RBF.r = maxX - minX;
 

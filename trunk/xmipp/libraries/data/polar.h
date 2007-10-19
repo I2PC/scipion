@@ -573,14 +573,14 @@ public:
 	double first_ring  = ring_radius[0];
 	double last_ring   = ring_radius[rings.size()-1];
 	double outer       = last_ring + extra_shell;
-	double inner       = MAX(0.,first_ring - extra_shell);
+	double inner       = XMIPP_MAX(0.,first_ring - extra_shell);
 	for (radius = 0.; radius < outer; radius +=1.)
 	{
 	    if ( (radius >= inner && radius < first_ring) ||
 		 ( radius <= outer && radius > last_ring) )
 	    {
 		nsam = 2 * (int)( 0.5 * oversample * twopi * radius );
-		nsam = MAX(1, nsam);
+		nsam = XMIPP_MAX(1, nsam);
 		dphi = twopi / (double)nsam;
 		for (int j = 0; j < nsam; j++)
 		{
@@ -642,7 +642,7 @@ public:
 	    radius = (double) iring;
 	    // Non-constant sampling!! (always even for convenient Half2Whole of FTs)
 	    nsam = 2 * (int)( 0.5 * oversample * twopi * radius );
-	    nsam = MAX(1, nsam);
+	    nsam = XMIPP_MAX(1, nsam);
 	    dphi = twopi / (double)nsam;
 	    Mring.resize(nsam);
 	    for (int iphi = 0; iphi < nsam; iphi++)

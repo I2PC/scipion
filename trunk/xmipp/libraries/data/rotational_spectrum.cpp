@@ -69,10 +69,10 @@ void Cylindrical_Wave_Decomposition::compute_cwd(Matrix2D<double> &img)
     int ir, ind, i1c, i1s, i2c, i2s;
     int jr, k, kk, ntot, my, my2, my3, my4, my5, i, j, numin1, numax1;
 
-    rh = MIN(r2, x0 - 4.);
-    rh = MIN(rh, y0 - 4.);
-    rh = MIN(rh, YSIZE(img) - x0 - 3.);
-    rh = MIN(rh, XSIZE(img) - y0 - 3.);
+    rh = XMIPP_MIN(r2, x0 - 4.);
+    rh = XMIPP_MIN(rh, y0 - 4.);
+    rh = XMIPP_MIN(rh, YSIZE(img) - x0 - 3.);
+    rh = XMIPP_MIN(rh, XSIZE(img) - y0 - 3.);
 
     ir = (int)((rh - r1) / r3 + 1);
     ind = 0;
@@ -286,7 +286,7 @@ void Rotational_Spectrum::compute_rotational_spectrum(
     ir1 = (int)((xr1 - rl) / dr + 1);
     if (ir1 < 1)
         ir1 = 1;
-    ir2 = (int)((MIN(xr2, rh) - rl) / dr + 1);
+    ir2 = (int)((XMIPP_MIN(xr2, rh) - rl) / dr + 1);
     if (ir2 < ir1)
         ir2 = ir1;
     ndr = (int)(xdr / dr);
@@ -296,7 +296,7 @@ void Rotational_Spectrum::compute_rotational_spectrum(
         nr = m;
     else
         nr = (int)(xr / dr + 1);
-    ir2 = MIN(ir2, m);
+    ir2 = XMIPP_MIN(ir2, m);
     ncol = ir2 - nr + 1 - ir1;
     if (ncol < 0)
         ncol = 0;
@@ -336,7 +336,7 @@ void Rotational_Spectrum::compute_rotational_spectrum(
     for (k = 1; k <= nvez; k++)
     {
         k1 = 13 * (k - 1) + 1;
-        k2 = MIN(ncol, 13 * k);
+        k2 = XMIPP_MIN(ncol, 13 * k);
         for (i = j1; i <= n; i++)
             rot_spectrum(i - j1) = erp[i][k1] / 10000;
     }

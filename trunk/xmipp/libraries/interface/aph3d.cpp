@@ -121,12 +121,12 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
             h = textToInteger(firstToken(line));
             k = textToInteger(nextToken());
             l = textToInteger(nextToken());
-            hmax = MAX(hmax, h);
-            kmax = MAX(kmax, k);
-            lmax = MAX(lmax, l);
-            hmin = MIN(hmin, h);
-            kmin = MIN(kmin, k);
-            lmin = MIN(lmin, l);
+            hmax = XMIPP_MAX(hmax, h);
+            kmax = XMIPP_MAX(kmax, k);
+            lmax = XMIPP_MAX(lmax, l);
+            hmin = XMIPP_MIN(hmin, h);
+            kmin = XMIPP_MIN(kmin, k);
+            lmin = XMIPP_MIN(lmin, l);
         }
         catch (Xmipp_error)
         {
