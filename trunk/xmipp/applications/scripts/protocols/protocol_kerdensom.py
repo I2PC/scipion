@@ -26,6 +26,12 @@ LogDir="Logs"
 #------------------------------------------------------------------------------------------------
 # {section} ml_align2d parameters
 #------------------------------------------------------------------------------------------------
+# Use a previous ML2D run to get the alignment parameters?
+""" If set to False, use the expert option for the selfile of the input images. Note that the images in this selfile are assumed to be aligned!
+"""
+DoUseML2D=True
+# {expert} Selfile with the input images
+NoML2DSelFile=""
 # {dir} Directory where you have previously ran ML2D classification:
 ML2DWorkingDir="ML2D/ML2ref"
 # The number of the class to use:
@@ -87,6 +93,8 @@ class kerdensom_class:
                  _DoDeleteWorkingDir,
                  _ProjectDir,
                  _LogDir,
+                 _DoUseML2D,
+                 _NoML2DSelFile,
                  _ML2DWorkingDir,
                  _ML2DReferenceNr,
                  _DoXmask,
@@ -107,6 +115,8 @@ class kerdensom_class:
 
         self.WorkingDir=_WorkingDir
         self.ProjectDir=_ProjectDir
+        self.DoUseML2D=_DoUseML2D
+        self.NoML2DSelFile=_NoML2DSelFile
         self.ML2DWorkingDir=os.path.abspath(_ML2DWorkingDir)
         self.ML2DReferenceNr=_ML2DReferenceNr
         self.DoXmask=_DoXmask
@@ -215,6 +225,9 @@ class kerdensom_class:
         fh.writelines(newdoc)
         fh.close()
 
+    def prepare_data_without_ml2d(self):
+        
+        
     def assign_header(self):
         import os
         import glob
@@ -296,8 +309,11 @@ class kerdensom_class:
         
         import os,glob
 
-        self.make_local_copy_of_images()
-        self.assign_header()
+        if (self.DoUseML2D):
+            self.make_local_copy_of_images()
+            self.assign_header()
+        else:
+            self.classselfile = self.noML2DSelFile
       
         if (self.DoXmask):
             self.execute_xmask(self.classselfile)
@@ -324,6 +340,8 @@ if __name__ == '__main__':
                               DoDeleteWorkingDir,
                               ProjectDir,
                               LogDir,
+                              DoUseML2D,
+                              NoML2DSelFile,
                               ML2DWorkingDir,
                               ML2DReferenceNr,
                               DoXmask,
