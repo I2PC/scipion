@@ -474,6 +474,8 @@ cerr << "Ms_w sent TAG_STOP to worker" << status.MPI_SOURCE << endl;
         //create empty extra sel files     
         for (int dirno = selData.size();  dirno < nr_dir; dirno++)
              {
+             fn_xmp.compose(fn_base,dirno+1,"xmp");
+             SFClass.insert(fn_xmp);
              fn_sel.compose(fn_base,dirno+1,"sel");
              mySelFile.open (fn_sel.c_str());
              mySelFile.close();
