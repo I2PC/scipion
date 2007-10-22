@@ -101,10 +101,18 @@ public:
     /** symmetry information **/
     SymList  SL;
 
+    /* Docfile with proyection directions as coordinates */
+    DocFile           DFvectors;
+    
+    /* Docfile with proyection directions as euler angles */
+    DocFile           DFangles;
+
     /** Compuute edge sampling points
         if you are looking only for directtions set only_half_sphere = true
     */
-    void Compute_sampling_points(bool only_half_sphere = true);
+    void Compute_sampling_points(bool only_half_sphere = true,
+                                 double max_tilt= +91.,
+                                 double min_tilt= -91.);
     /** fill edge */
     void fill_edge(Matrix1D<double> starting_point,
                    Matrix1D<double> ending_point,
@@ -116,7 +124,9 @@ public:
                        Matrix1D<double> ending_point,
                        vector <Matrix1D<double> > &edge_vector,
                        int number,
-                       bool only_half_sphere
+                       bool only_half_spheree,
+                       double min_z= -10.,
+                       double max_z= +10.
                       );
     /** set sampling rate */
     void SetSampling(double sampling);
