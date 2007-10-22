@@ -459,12 +459,14 @@ void SymList::compute_subgroup(double accuracy)
 
         if (!found)
         {
+#define DEBUG        
 #ifdef DEBUG
             cout << "Matrix size " << XSIZE(tried) << " "
             << "trying " << i << " " << j << " "
             << "chain length=" << new_chain_length << endl;
             cout << "Result R\n" << newR;
 #endif
+#undef DEBUG
             add_matrices(newL, newR, new_chain_length);
             add_shift(shift);
             tried.resize(YSIZE(tried) + 1, XSIZE(tried) + 1);
