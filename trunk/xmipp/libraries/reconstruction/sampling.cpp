@@ -105,8 +105,9 @@ void XmippSampling::SetNeighborhoodRadius(double neighborhood)
 }
 
 /* Compute edge sampling points using Baumgardner  1995 */
-//ADD MIN AND MAX TILT
-void XmippSampling::Compute_sampling_points(bool only_half_sphere)
+void XmippSampling::Compute_sampling_points(bool only_half_sphere,
+                                            double max_tilt,
+                                            double min_tilt)
 {
     /** vector to decimate the triangles */
     vector <Matrix1D<double> > edge_vector_start;
@@ -114,6 +115,18 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere)
     vector <Matrix1D<double> > edge_vector_end;
     // I need 10 auxiliary vector for edges
     Matrix1D<double> starting_point, ending_point;
+    double max_z;
+    double min_z;
+
+    if(max_tilt >= 90.)
+       max_z=10.;
+    else
+       max_z=sin(PI * max_tilt / 180.);   
+    if(min_tilt <= -90.)
+       min_z= -10.;
+    else
+       min_z=sin(PI * min_tilt / 180.);  
+
     //01a
     starting_point = vertices_vectors[0]; ending_point = vertices_vectors[1];
     fill_edge(starting_point, ending_point, edge_vector_start, false);
@@ -240,7 +253,11 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere)
          i < vertices_vectors.size();
          i++)
     {
-        if (only_half_sphere && ZZ(vertices_vectors[i]) < 0.0)
+        if (   (only_half_sphere && ZZ(vertices_vectors[i]) < 0.0)
+           || ZZ(vertices_vectors[i]) < min_z
+           || ZZ(vertices_vectors[i]) > max_z
+           )
+        //if (only_half_sphere && ZZ(vertices_vectors[i]) < 0.0)
             continue;
         else
             sampling_points_vector.push_back(vertices_vectors[i]);
@@ -252,19 +269,37 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere)
     {
         if (i < number_of_samples * 10 - 15)
         {
-            if (only_half_sphere && ZZ(edge_vector_start[i]) < 0.0)
+            if (   (only_half_sphere && ZZ(edge_vector_start[i]) < 0.0)
+               || ZZ(edge_vector_start[i]) < min_z
+               || ZZ(edge_vector_start[i]) > max_z
+               )
+            //if (only_half_sphere && ZZ(edge_vector_start[i]) < 0.0)
                 continue;
             else
                 sampling_points_vector.push_back(edge_vector_start[i]);
         }
         else
         {
-            if (only_half_sphere && ZZ(edge_vector_end[i]) < 0.0)
+            if (   (only_half_sphere && ZZ(edge_vector_end[i]) < 0.0)
+               || ZZ(edge_vector_end[i]) < min_z
+               || ZZ(edge_vector_end[i]) > max_z
+               )
+            //if (only_half_sphere && ZZ(edge_vector_end[i]) < 0.0)
                 continue;
             else
                 sampling_points_vector.push_back(edge_vector_end[i]);
         }
     }
+//#define DEBUG3
+#ifdef  DEBUG3
+    for (int i = 0;
+         i < sampling_points_vector.size();
+         i++)
+    {
+        cout  <<  sampling_points_vector[i].transpose()  << " 1 1 " << endl;
+    }
+#endif
+#undef DEBUG3
     // add in between points
     int j = 0;
     bool j_flag = false;
@@ -286,10 +321,10 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere)
                       edge_vector_end[i],
                       sampling_points_vector,
                       (j + 1) % number_of_samples,
-                      only_half_sphere);
+                      only_half_sphere,min_z,max_z);
         j++;
     }
-    //#define DEBUG3
+//#define DEBUG3
 #ifdef  DEBUG3
     for (int i = 0;
          i < sampling_points_vector.size();
@@ -407,7 +442,9 @@ void XmippSampling::fill_distance(Matrix1D<double> starting_point,
                                   vector <Matrix1D<double> > &
                                   sampling_points_vector,
                                   int my_number_of_samples,
-                                  bool only_half_sphere
+                                  bool only_half_sphere,
+                                  double min_z,
+                                  double max_z
                                  )
 {
     Matrix1D<double> v_aux(3);
@@ -417,6 +454,12 @@ void XmippSampling::fill_distance(Matrix1D<double> starting_point,
     double gamma;
     // skip first corener, already computed;
     double upsilon = acos(dotProduct(starting_point, ending_point));
+/*
+    //we need to remove projections with tilt angle not
+    //in between min_tilt-max_tilt
+    int auxCounter;
+    auxCounter=sampling_points_vector.size();
+*/
     for (int i1 = 1; i1 < my_number_of_samples; i1++)
     {
         gamma  = (double)i1 / (my_number_of_samples);
@@ -424,11 +467,27 @@ void XmippSampling::fill_distance(Matrix1D<double> starting_point,
         beta   = sin(gamma * upsilon) / sin(upsilon);
         v_aux = alpha * starting_point + beta * ending_point;
         v_aux = v_aux.normalize();
-        if (only_half_sphere && ZZ(v_aux) < 0.0)
+        if (   (only_half_sphere && ZZ(v_aux) < 0.0)
+           || ZZ(v_aux) < min_z
+           || ZZ(v_aux) > max_z
+           )
+        //if (only_half_sphere && ZZ(v_aux) < 0.0)
             continue;
         else
             sampling_points_vector.push_back(v_aux);
     }
+/*    
+    //Remove points not in tilt range, check only the edges
+    for (int i = 0;
+         i < auxCounter;
+         i++)
+    {
+        if (  ZZ(sampling_points_vector[i]) < min_z
+           || ZZ(sampling_points_vector[i]) > max_z
+           )
+        sampling_points_vector[i].remove();
+    }
+*/
 }
 
 void XmippSampling::remove_redundant_points(string symmetry,
