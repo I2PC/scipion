@@ -64,6 +64,14 @@ public:
 
     /** fil vector with symmetry axis */
     // vector <Matrix1D<double> > symmetry_vectors;
+
+    /** maximun tilt angle */
+    double max_tilt_angle;
+    
+    /** minimum tilt angle */
+    double min_tilt_angle;
+
+
 public:
     /** Empty constructor */
     Prog_Sampling_Parameters();

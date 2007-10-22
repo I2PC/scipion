@@ -42,6 +42,8 @@ void Prog_Sampling_Parameters::read(int argc, char **argv)
     sym_order = textToInteger(getParameter(argc, argv, "-sym_order", "1"));
     sampling = textToFloat(getParameter(argc, argv, "-sampling_rate", "5"));
     neighborhood = textToFloat(getParameter(argc, argv, "-neighborhood", "1"));
+    max_tilt_angle = textToFloat(getParameter(argc, argv, "-max_tilt_angle","91"));
+    min_tilt_angle = textToFloat(getParameter(argc, argv, "-min_tilt_angle","-91"));
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -55,11 +57,14 @@ void Prog_Sampling_Parameters::usage()
     << "  [-sym_order 1]               : For infinite groups symmetry order\n"
     << "  [-sampling_rate 5]           : Distance in degrees between sampling points\n"
     << "  [-neighborhood 1]            : A sampling point is neighbor if closer than this value in degrees\n"
+    << "  [-max_tilt_angle  91]        : maximum tilt angle in degrees\n"
+    << "  [-min_tilt_angle -91]        : minimum tilt angle in degrees\n"
     << "\n"
     << "Example of use: Sample at 2degres and compute neighboor at "
     << " 5 degrees for c6 symmetry\n"
     << "   xmipp_precompute_sampling -o out -symmetry c6 "
-    << " -sampling_rate 2 -neighborhood 5\n"
+    << " -sampling_rate 2 -neighborhood 5 -max_tilt_angle 70 "
+    << " -min_tilt_angle 50 \n"
     ;
 }
 
@@ -72,6 +77,8 @@ void Prog_Sampling_Parameters::show()
     << "symmetry group:     " << symmetry << endl
     << "symmetry order:     " << sym_order << endl
     << "neighborhood:       " << neighborhood << endl
+    << "max_tilt_angle:     " << max_tilt_angle << endl
+    << "min_tilt_angle:     " << min_tilt_angle << endl
     ;
 }
 
@@ -83,7 +90,8 @@ void Prog_Sampling_Parameters::run()
     show();
     mysampling.SetSampling(sampling);
     mysampling.SetNeighborhoodRadius(neighborhood);
-    mysampling.Compute_sampling_points(false);
+    mysampling.Compute_sampling_points(false,max_tilt_angle,min_tilt_angle);
+    //mysampling.Compute_sampling_points(false);
     mysampling.create_sym_file(symmetry, sym_order);
     mysampling.remove_redundant_points(symmetry, sym_order);
     mysampling.create_asym_unit_file(sampling_file_root);
