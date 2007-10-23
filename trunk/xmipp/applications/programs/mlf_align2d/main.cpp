@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <reconstruction/ml_align2d.h>
+#include <reconstruction/mlf_align2d.h>
 
 int main(int argc, char **argv)
 {
@@ -36,45 +36,37 @@ int main(int argc, char **argv)
     vector<Matrix2D<double > > wsum_Mref, wsum_ctfMref;
     vector<double> sumw, sumw_mirror;
     Matrix2D<double> P_phi, Mr2, Maux;
-    vector<Matrix2D<double> > Mwsum_sigma2;
+    vector<vector<double> > Mwsum_sigma2;
     FileName fn_img, fn_tmp;
     Matrix1D<double> oneline(0), spectral_signal;
     DocFile DFo;
 
-    Prog_MLalign2D_prm prm;
-
-    // Set to true for MLF!
-    prm.fourier_mode = true;
+    Prog_MLFalign2D_prm prm;
 
     // Get input parameters
     try
     {
         prm.read(argc, argv);
-        prm.produce_Side_info();
+        prm.produceSideInfo();
         prm.show();
-
-        if (prm.fourier_mode) prm.estimate_initial_sigma2();
-
+        prm.estimateInitialNoiseSpectra();
         if (prm.fn_ref == "")
         {
             if (prm.n_ref != 0)
             {
-                prm.generate_initial_references();
+                prm.generateInitialReferences();
             }
             else
             {
                 REPORT_ERROR(1, "Please provide -ref or -nref");
             }
         }
-
-        prm.produce_Side_info2();
-
+        prm.produceSideInfo2();
     }
     catch (Xmipp_error XE)
     {
         cout << XE;
-        if (prm.fourier_mode) prm.MLF_usage();
-        else prm.usage();
+        prm.usage();
         exit(0);
     }
 
@@ -92,62 +84,46 @@ int main(int argc, char **argv)
             for (int refno = 0;refno < prm.n_ref; refno++) prm.Iold[refno]() = prm.Iref[refno]();
 
             DFo.clear();
-            if (prm.maxCC_rather_than_ML)
-                DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Corr (8)");
-            else
-                DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8)");
+	    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8)");
 
             // Pre-calculate pdfs
-            if (!prm.maxCC_rather_than_ML) prm.calculate_pdf_phi();
+            prm.calculateInPlanePDF();
 
             // Integrate over all images
-            prm.ML_sum_over_all_images(prm.SF, prm.Iref, iter,
-                                       LL, sumcorr, DFo, wsum_Mref, wsum_ctfMref,
-                                       wsum_sigma_noise, Mwsum_sigma2,
-                                       wsum_sigma_offset, sumw, sumw_mirror);
+            prm.sumOverAllImages(prm.SF, prm.Iref, iter,
+				 LL, sumcorr, DFo, wsum_Mref, wsum_ctfMref,
+				 Mwsum_sigma2, wsum_sigma_offset, 
+				 sumw, sumw_mirror);
 
             // Update model parameters
-            prm.update_parameters(wsum_Mref, wsum_ctfMref,
-                                  wsum_sigma_noise, Mwsum_sigma2,
-                                  wsum_sigma_offset, sumw,
-                                  sumw_mirror, sumcorr, sumw_allrefs,
+            prm.updateParameters(wsum_Mref, wsum_ctfMref,
+                                  Mwsum_sigma2,wsum_sigma_offset, 
+                                  sumw, sumw_mirror, 
+                                  sumcorr, sumw_allrefs,
                                   spectral_signal);
 
             // Check convergence
-            converged = prm.check_convergence(conv);
+            converged = prm.checkConvergence(conv);
 
-            if (prm.write_intermediate)
-                prm.write_output_files(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
-            else prm.output_to_screen(iter, sumcorr, LL);
+            prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
 
             // Calculate new wiener filters
-            if (prm.fourier_mode && !prm.do_divide_ctf) 
-		prm.calculate_wiener_defocus_series(spectral_signal, iter);
+	    prm.updateWienerFilters(spectral_signal, iter);
 
             if (converged)
             {
-                if (prm.anneal - 1. < 1e-5)
-                {
-                    if (prm.verb > 0) cerr << " Optimization converged!" << endl;
-                    break;
-                }
-                else
-                {
-                    prm.anneal -= prm.anneal_step;
-                    if (prm.verb > 0) cerr << " Lowering annealing parameter to " << prm.anneal << endl;
-                }
-
-            }
+		if (prm.verb > 0) cerr << " Optimization converged!" << endl;
+		break;
+	    }
 
         } // end loop iterations
-        prm.write_output_files(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
+        prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
 
     }
     catch (Xmipp_error XE)
     {
         cout << XE;
-        if (prm.fourier_mode) prm.MLF_usage();
-        else prm.usage();
+        prm.usage();
         exit(0);
     }
 
