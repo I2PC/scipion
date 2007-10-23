@@ -60,7 +60,28 @@ public:
     /** root for output files */
     FileName output_file_root;
 
-    /** Symmetry. One of the 17 possible symmetries in
+    /** docfile with experimental images angles. 
+        This information is used to generate only angles close to experimental
+        images */
+    DocFile DFexperimentalImages;
+
+    /** vector with valid proyection directions after looking for 
+        directions close to experimental data. 
+         */
+    vector <Matrix1D<double> > close_points_angles;
+
+    /** filename with experimental images angles. 
+        This information is used to generate only angles close to experimental
+        images */
+    FileName FnexperimentalImages;
+    
+    /** enabled angular_distance */
+    bool angular_distance_bool;
+   
+    /** enabled angular_distance */
+    double angular_distance;
+
+   /** Symmetry. One of the 17 possible symmetries in
        single particle electron microscopy.
        See details at url
        Possible values are: c1, ci, cs, cn, cnv, cnh, sn,
@@ -109,6 +130,9 @@ public:
 
     /** Project in all the directions between indexes init and end*/
     void project_angle_vector(int my_init, int my_end);
+
+    /** Remove projection points no closer to experimetal data than*/
+    void remove_points_not_close_to_experimental_points(void);
 };
 //@}
 #endif
