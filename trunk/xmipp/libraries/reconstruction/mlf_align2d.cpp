@@ -969,11 +969,11 @@ void Prog_MLFalign2D_prm::setCurrentSamplingRates(double current_probres_limit)
 	Vtrans.clear();
 	// Lets sample the in-plane translations 4x the current resolution
 	int trans_step = ROUND(current_probres_limit/(4.*sampling));
+	trans_step = XMIPP_MAX(1,trans_step);
 	if (verb>0)
 	{
 	    cerr<<" Current resolution= "<<current_probres_limit<<" Ang; current trans_step = "<<trans_step<<endl;
 	}    
-	trans_step = XMIPP_MAX(1,trans_step);
 	for (int ix = -search_shift*trans_step; ix <= search_shift*trans_step; ix+=trans_step)
 	{
 	    for (int iy = -search_shift*trans_step; iy <= search_shift*trans_step; iy+=trans_step)
@@ -983,7 +983,6 @@ void Prog_MLFalign2D_prm::setCurrentSamplingRates(double current_probres_limit)
 		{
 		    offsets(0) = ix;
 		    offsets(1) = iy;
-		    cerr<<"trans: "<<ix<<" "<<iy<<endl;
 		    Vtrans.push_back(offsets);
 		    if (ix == 0 && iy == 0) zero_trans = nr_trans;
 		    nr_trans++;
