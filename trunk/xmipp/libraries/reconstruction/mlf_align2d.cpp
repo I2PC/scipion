@@ -945,6 +945,8 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
 // Vary psi_step and trans_step with resolution =============================================
 void Prog_MLFalign2D_prm::setCurrentSamplingRates(double current_probres_limit)
 {
+    
+    int trans_step;
 
     if (do_variable_psi)
     {
@@ -956,10 +958,6 @@ void Prog_MLFalign2D_prm::setCurrentSamplingRates(double current_probres_limit)
 	nr_psi = CEIL(psi_max / psi_step);
 	nr_psi = XMIPP_MIN(nr_psi, max_nr_psi);
 	psi_step = psi_max / nr_psi;
-	if (verb>0)
-	{
-	    cerr<<" Current resolution= "<<current_probres_limit<<" Ang; current psi_step = "<<psi_step<<endl;
-	}    
     }
 
     if (do_variable_trans)
@@ -968,18 +966,14 @@ void Prog_MLFalign2D_prm::setCurrentSamplingRates(double current_probres_limit)
 	nr_trans = 0;
 	Vtrans.clear();
 	// Lets sample the in-plane translations 4x the current resolution
-	int trans_step = ROUND(current_probres_limit/(4.*sampling));
+	trans_step = ROUND(current_probres_limit/(4.*sampling));
 	trans_step = XMIPP_MAX(1,trans_step);
-	if (verb>0)
-	{
-	    cerr<<" Current resolution= "<<current_probres_limit<<" Ang; current trans_step = "<<trans_step<<endl;
-	}    
 	for (int ix = -search_shift*trans_step; ix <= search_shift*trans_step; ix+=trans_step)
 	{
 	    for (int iy = -search_shift*trans_step; iy <= search_shift*trans_step; iy+=trans_step)
 	    {
-		double rr = (double)ix * ix + (double)iy * iy;
-		if (rr <= (double)trans_step*trans_step*search_shift*search_shift)
+		double rr = sqrt((double)(ix * ix + iy * iy));
+		if (rr <= (double)trans_step*search_shift)
 		{
 		    offsets(0) = ix;
 		    offsets(1) = iy;
@@ -990,7 +984,11 @@ void Prog_MLFalign2D_prm::setCurrentSamplingRates(double current_probres_limit)
 	    }
 	}
     }
+    if (verb > 0 && (do_variable_psi || do_variable_trans))
+    {
+	cerr<<" Current resolution= "<<current_probres_limit<<" Ang; current psi_step = "<<psi_step<<" current trans_step = "<<trans_step<<endl;
 
+    }
 }
 
 // Generate initial references =============================================
