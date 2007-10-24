@@ -30,15 +30,14 @@
 int main(int argc, char **argv)
 {
 
-    int c, nn, imgno, opt_refno, iaux;
+    int c, nn, imgno, opt_refno;
     double LL, sumw_allrefs, convv, sumcorr;
     vector<double> conv;
     double aux, wsum_sigma_noise, wsum_sigma_offset;
     vector<Matrix2D<double > > wsum_Mref, wsum_ctfMref;
-    vector<double> sumw, sumw_mirror, Vaux;
-    Matrix2D<double> P_phi, Mr2, Maux, Maux2;
+    vector<double> sumw, sumw_mirror;
+    Matrix2D<double> P_phi, Mr2, Maux;
     vector<vector<double> > Mwsum_sigma2;
-    vector<Matrix1D<double> > spectral_snr;
     FileName fn_img, fn_tmp;
     Matrix1D<double> oneline(0), spectral_signal;
     DocFile DFo;
@@ -164,16 +163,13 @@ int main(int argc, char **argv)
                 MPI_Allreduce(&sumw_mirror[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 sumw_mirror[refno] = aux;
             }
-	    Vaux.clear();
-	    for (int ii = 0; ii <  Mwsum_sigma2[0].size(); ii++) 
-	    {
-		Vaux.push_back(0.);
-	    }
 	    for (int ifocus = 0;ifocus < prm.nr_focus;ifocus++)
 	    {
-		MPI_Allreduce(&Mwsum_sigma2[ifocus], &Vaux, Mwsum_sigma2[ifocus].size(),
-			      MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-		Mwsum_sigma2[ifocus] = Vaux;
+		for (int ii = 0; ii <  Mwsum_sigma2[ifocus].size(); ii++) 
+		{
+		    MPI_Allreduce(&Mwsum_sigma2[ifocus][ii], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+		    Mwsum_sigma2[ifocus][ii] = aux;
+		}
 	    }
 
             // Update model parameters
