@@ -39,7 +39,7 @@ int main(int argc, char **argv)
     DocFile                     DFo;
 
     Prog_Refine3d_prm           prm;
-    Prog_MLalign2D_prm          ML2D_prm;
+    Prog_MLFalign2D_prm         ML2D_prm;
 
     // Set to true for MLF!
     prm.fourier_mode = true;
