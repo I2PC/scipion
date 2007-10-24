@@ -111,7 +111,7 @@ void Prog_MLFalign2D_prm::read(int argc, char **argv, bool ML3D)
 	sampling = textToFloat(getParameter(argc, argv, "-pixel_size","1"));
     }
     fn_root = getParameter(argc, argv, "-o", "mlf2d");
-    search_shift = textToFloat(getParameter(argc, argv, "-search_shift", "3"));
+    search_shift = textToInteger(getParameter(argc, argv, "-search_shift", "3"));
     psi_step = textToFloat(getParameter(argc, argv, "-psi_step", "5"));
     do_mirror = checkParameter(argc, argv, "-mirror");
     lowres_limit = textToInteger(getParameter(argc, argv, "-low", "999"));
@@ -145,7 +145,8 @@ void Prog_MLFalign2D_prm::read(int argc, char **argv, bool ML3D)
     do_write_offsets = checkParameter(argc, argv, "write_offsets");
     fn_scratch = getParameter(argc, argv, "-scratch", "");
     debug = textToInteger(getParameter(argc, argv, "-debug","0"));
-
+    do_variable_psi = checkParameter(argc, argv, "var_psi");
+    do_variable_trans = checkParameter(argc, argv, "var_trans");
 }
 
 // Show ====================================================================
@@ -164,7 +165,8 @@ void Prog_MLFalign2D_prm::show(bool ML3D)
             cerr << " |   *** Please cite it if this program is of use to you! ***    |" << endl;
             cerr << " -----------------------------------------------------------------" << endl;
         }
-        cerr << "--> Maximum-likelihood in Fourier-space (MLF) multi-reference refinement " << endl;
+        cerr << "--> Multi-reference refinement " << endl;
+        cerr << "--> using a maximum-likelihood in Fourier-space (MLF) target " <<endl;
 	if (do_ctf_correction)
 	{
 	    cerr << "--> with CTF correction "<<endl;
@@ -251,7 +253,7 @@ void Prog_MLFalign2D_prm::usage()
     cerr << "      OR -nref <int>               OR number of references to generate automatically (bias-free)\n";
     cerr << " [ -o <rootname> ]             : Output rootname (default = \"mlf2d\")\n";
     cerr << " [ -mirror ]                   : Also check mirror image of each reference \n";
-    cerr << " [ -search_shift <float=3>]    : Limited translational searches (in pixels) \n";
+    cerr << " [ -search_shift <int=3>]      : Limited translational searches (in pixels) \n";
     cerr << " [ -reduce_noise <factor=1> ]  : Use a value smaller than one to decrease the estimated SSNRs \n";
     cerr << " [ -not_phase_flipped ]        : Use this if the experimental images have not been phase flipped \n";
     cerr << " [ -ctf_affected_refs ]        : Use this if the references (-ref) are not CTF-deconvoluted \n";
@@ -419,16 +421,16 @@ void Prog_MLFalign2D_prm::produceSideInfo()
     // Set limit_rot & limit_trans
     if (search_rot < 180.) limit_rot = true;
     else limit_rot = false;
+    
 
     // Fill limited translation shift-vectors
-    // TODO: MAYBE MAKE THIS RESOLUTION-DEPENDENT?
     nr_trans = 0;
     Maux.resize(dim, dim);
     Maux.setXmippOrigin();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(Maux)
     {
 	double rr = (double)i * i + (double)j * j;
-	if (rr <= search_shift*search_shift)
+	if (rr <= (double)search_shift*search_shift)
 	{
 	    offsets(0) = (double)j;
 	    offsets(1) = (double)i;
@@ -438,7 +440,6 @@ void Prog_MLFalign2D_prm::produceSideInfo()
 	}
     }
 
-    
     FileName fnt_img, fnt_ctf, fnt;
     vector<FileName> all_fn_ctfs;
     bool found, is_unique;
@@ -455,10 +456,10 @@ void Prog_MLFalign2D_prm::produceSideInfo()
 	Vctf.push_back(dum);
 	Vdec.push_back(dum);
 	Vsig.push_back(dum);
-	Vctf[0].resize(dim);
-	Vsig[0].resize(dim);
-	Vdec[0].resize(dim);
-	for (int irr = 0; irr < dim; irr++)
+	Vctf[0].resize(hdim);
+	Vsig[0].resize(hdim);
+	Vdec[0].resize(hdim);
+	for (int irr = 0; irr < hdim; irr++)
 	{
 	    dVi(Vctf[0], irr) = 1.;
 	    dVi(Vdec[0], irr) = 1.;
@@ -563,11 +564,10 @@ void Prog_MLFalign2D_prm::produceSideInfo()
 	    CenterFFT(Maux, true);
 	    center.initZeros();
 	    rmean_ctf.initZeros();
-	    Maux.selfScaleToSize(2*dim,2*dim); // use 2x oversize for radial average
 	    Maux.setXmippOrigin();
 	    radialAverage(Maux, center, rmean_ctf, radial_count, true);
-	    Vctf[ifocus].resize(dim);
-	    for (int irr = 0; irr < dim; irr++)
+	    Vctf[ifocus].resize(hdim);
+	    for (int irr = 0; irr < hdim; irr++)
 	    {
 		dVi(Vctf[ifocus], irr) = dVi(rmean_ctf, irr);
 	    }
@@ -576,10 +576,6 @@ void Prog_MLFalign2D_prm::produceSideInfo()
 	}
     }
 
-    // Check that search_shift is set
-    if (search_shift > hdim)
-	REPORT_ERROR(1, (string)"Prog_MLFalign2D_prm: coloured noise model (-FS) requires limited search_shift!");
-    
     // Get a resolution pointer in Fourier-space
     Mresol.resize(dim, dim);
     Mresol.setXmippOrigin();
@@ -587,7 +583,7 @@ void Prog_MLFalign2D_prm::produceSideInfo()
     Maux.setXmippOrigin();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(Mresol)
     {
-	MAT_ELEM(Maux, i, j) = MIN((double)dim, 2.*sqrt((double)(i * i + j * j)));
+	MAT_ELEM(Maux, i, j) = XMIPP_MIN((double)hdim, sqrt((double)(i * i + j * j)));
 	if (i==0 && j==0) 
 	{
 	    MAT_ELEM(Mresol, i, j) = 99999.;
@@ -636,7 +632,7 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
         {
             nn = SF.ImgNo();
             init_progress_bar(nn);
-            c = MAX(1, nn / 60);
+            c = XMIPP_MAX(1, nn / 60);
         }
         Msigma2.clear();
         Msigma2.resize(nr_focus);
@@ -677,19 +673,17 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
             FFT_magnitude(Fave, Maux);
             Maux *= Maux;
             CenterFFT(Maux, true);
-	    Maux.selfScaleToSize(2*dim,2*dim); // use 2x oversize for radial average
 	    Maux.setXmippOrigin();
             rmean_signal.initZeros();
             radialAverage(Maux, center, rmean_signal, radial_count, true);
             CenterFFT(Msigma2[ifocus], true);
-	    Msigma2[ifocus].selfScaleToSize(2*dim,2*dim); // use 2x oversize for radial average
 	    Msigma2[ifocus].setXmippOrigin();
             rmean_noise.initZeros();
             radialAverage(Msigma2[ifocus], center, rmean_noise, radial_count, true);
             rmean_noise /= count_defocus[ifocus];
             // Subtract signal terms
             // Divide by factor 2 because of the 2D-Gaussian distribution!
-            for (int irr = 0; irr < dim; irr++)
+            for (int irr = 0; irr < hdim; irr++)
             {
                 dVi(Vsig[ifocus], irr) = (dVi(rmean_noise, irr) - dVi(rmean_signal, irr)) / 2.;
             }
@@ -702,9 +696,9 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
             fn_tmp += ".dat";
             fh.open((fn_tmp).c_str(), ios::out);
             if (!fh) REPORT_ERROR(1, (string)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
-            for (int irr = 0; irr < dim; irr++)
+	    for (int irr = 0; irr < hdim; irr++)
             {
-                fh << (double)irr/(sampling*2*dim) << " " << dVi(Vsig[ifocus], irr) << "\n";
+                fh << (double)irr/(sampling*dim) << " " << dVi(Vsig[ifocus], irr) << "\n";
             }
             fh.close();
         }
@@ -728,17 +722,17 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
     Matrix2D<double>           Maux;
     Matrix2D<complex<double> > Faux;
     ofstream                   fh;
-    int                        maxres = 0, ddim = 2 * dim;
+    int                        maxres = 0;
     double                     noise, ssnr, current_probres_limit, current_highres_limit;
     FileName                   fn_base, fn_tmp;
 
     // Pre-calculate average CTF^2 and initialize Vsnr
-    Vavgctf2.initZeros(dim);
-    Vzero.initZeros(dim);
+    Vavgctf2.initZeros(hdim);
+    Vzero.initZeros(hdim);
     FOR_ALL_DEFOCUS_GROUPS()
     {
         Vsnr.push_back(Vzero);
-        for (int irr = 0; irr < dim; irr++)
+        for (int irr = 0; irr < hdim; irr++)
         {
             dVi(Vavgctf2, irr) += dVi(Vctf[ifocus], irr) * dVi(Vctf[ifocus], irr) * count_defocus[ifocus];
         }
@@ -752,7 +746,7 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
     // group with its CTF^2 and divide by the average CTF^2
     FOR_ALL_DEFOCUS_GROUPS()
     {
-	for (int irr = 0; irr < dim; irr++)
+	for (int irr = 0; irr < hdim; irr++)
 	{
 	    noise = 2. * dVi(Vsig[ifocus], irr) * (double)count_defocus[ifocus];
 	    noise /= (double)(count_defocus[ifocus] - 1);
@@ -773,16 +767,16 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
 	    }
 	    // Take ini_highres_limit into account
 	    if ( iter == istart - 1 && ini_highres_limit > 0. 
-		&& sampling*ddim/(double)irr < ini_highres_limit )
+		&& sampling*dim/(double)irr < ini_highres_limit )
 	    {
 		dVi(Vsnr[ifocus], irr) = 0.;
 	    }
 	    // Subtract 1 according Unser et al.
-	    dVi(Vsnr[ifocus], irr) = MAX(0., dVi(Vsnr[ifocus], irr) - 1.);
+	    dVi(Vsnr[ifocus], irr) = XMIPP_MAX(0., dVi(Vsnr[ifocus], irr) - 1.);
 	    // Prevent spurious high-frequency significant SNRs from random averages
 	    if (iter == 0 && do_generate_refs)
 	    {
-		dVi(Vsnr[ifocus], irr) = MAX(0., dVi(Vsnr[ifocus], irr) - 2.);
+		dVi(Vsnr[ifocus], irr) = XMIPP_MAX(0., dVi(Vsnr[ifocus], irr) - 2.);
 	    }
 	    if (dVi(Vsnr[ifocus], irr) > 0. && irr > maxres) 
 	    {
@@ -798,8 +792,8 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
     if (do_ctf_correction)
     {
 	// Pre-calculate denominator of eq 2.32b of Frank's book (2nd ed.)
-	Vdenom.initZeros(dim);
-	for (int irr = 0; irr < dim; irr++)
+	Vdenom.initZeros(hdim);
+	for (int irr = 0; irr < hdim; irr++)
 	{
 	    FOR_ALL_DEFOCUS_GROUPS()
 	    {
@@ -813,13 +807,13 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
 	// Calculate Wiener filters
 	FOR_ALL_DEFOCUS_GROUPS()
 	{
-	    for (int irr = 0; irr < dim; irr++)
+	    for (int irr = 0; irr < hdim; irr++)
 	    {
 		if (dVi(Vsnr[ifocus], irr) > 0.)
 		{
 		    dVi(Vdec[ifocus], irr) = dVi(Vsnr[ifocus], irr) * dVi(Vctf[ifocus], irr) / dVi(Vdenom, irr);
 		    // Prevent too strong Wiener filter artefacts
-		    dVi(Vdec[ifocus], irr) = MIN(10.,dVi(Vdec[ifocus], irr) );
+		    dVi(Vdec[ifocus], irr) = XMIPP_MIN(10.,dVi(Vdec[ifocus], irr) );
 		}
 		else
 		{
@@ -844,16 +838,16 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
             fh.open((fn_tmp).c_str(), ios::out);
             if (!fh)
                 REPORT_ERROR(3008, (string)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
-            fh  << "#  Resol    Wiener       CTF      SSNR    signal     noise       Ang" << endl;
-            for (int irr = 0; irr < dim; irr++)
+            fh  << "#  Resol      SSNR       CTF    Wiener    signal     noise       Ang" << endl;
+            for (int irr = 0; irr < hdim; irr++)
             {
-                fh << floatToString((double)irr / (sampling*ddim));
+                fh << floatToString((double)irr / (sampling*dim));
                 fh.width(10);
-                fh << floatToString(dVi(Vdec[ifocus], irr));
+                fh << floatToString(XMIPP_MIN(25., dVi(Vsnr[ifocus], irr)));
                 fh.width(10);
                 fh << floatToString(dVi(Vctf[ifocus], irr));
                 fh.width(10);
-                fh << floatToString(MIN(25., dVi(Vsnr[ifocus], irr)));
+                fh << floatToString(dVi(Vdec[ifocus], irr));
                 fh.width(10);
                 fh << floatToString(dVi(spectral_signal, irr));
                 fh.width(10);
@@ -863,7 +857,7 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
 		fh.width(10);
                 if (irr>0) 
 		{
-		    fh << floatToString((sampling*ddim)/(double)irr);
+		    fh << floatToString((sampling*dim)/(double)irr);
 		}
 		else
 		{
@@ -878,22 +872,22 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
     // Set the current resolution limits
     if (do_include_allfreqs) 
     {
-	maxres = dim;
+	maxres = hdim;
 	current_highres_shell = maxres;
-	current_probres_limit = sampling * ddim / maxres;
-	current_highres_limit = sampling * ddim / maxres;
+	current_probres_limit = sampling * dim / maxres;
+	current_highres_limit = sampling * dim / maxres;
     }
     else
     {
-	maxres = MIN(maxres, dim);
-	current_probres_limit = sampling * ddim / maxres;
+	maxres = XMIPP_MIN(maxres, hdim);
+	current_probres_limit = sampling * dim / maxres;
 	maxres += 5; // hard-code increase_highres_limit to 5
-	maxres = MIN(maxres, dim);
+	maxres = XMIPP_MIN(maxres, hdim);
 	current_highres_shell = maxres;
- 	current_highres_limit = sampling * ddim / maxres;
+ 	current_highres_limit = sampling * dim / maxres;
     }
-    current_probres_limit = MAX(current_probres_limit, highres_limit);
-    current_highres_limit = MAX(current_highres_limit, highres_limit);
+    current_probres_limit = XMIPP_MAX(current_probres_limit, highres_limit);
+    current_highres_limit = XMIPP_MAX(current_highres_limit, highres_limit);
 
     if (debug) cerr<<"resolution limits: low= "<<lowres_limit<<" prob= "<<current_probres_limit
 		   <<" high= "<<current_highres_limit<<" overall high= "<<highres_limit<<" Ang"<<endl;
@@ -940,23 +934,61 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
     dnr_points_2d = 2 * nr_points_2d;
     if (debug) cerr<<"nr_points_2d= "<<nr_points_2d<<" nr_points_prob= "<<nr_points_prob<<endl;
 
-    // Let's try a resolution-dependent in-plane rotational sampling
-    // 2x oversmaple for current_probres_limit
-    // Use user-provided psi_step as minimum sampling
-    // SIND(0.5*psi_step) = D / dim;
-    psi_step = ASIND(current_probres_limit/(dim*sampling));
-    nr_psi = CEIL(psi_max / psi_step);
-    if (verb>0)
-    {
-	cerr<<" Current resolution= "<<current_probres_limit<<" Ang; current psi_step = "<<psi_step<<endl;
-    }    
-
-    nr_psi = MIN(nr_psi, max_nr_psi);
-    psi_step = psi_max / nr_psi;
-
-
+    setCurrentSamplingRates(current_probres_limit);
 }
 
+
+// Vary psi_step and trans_step with resolution =============================================
+void Prog_MLFalign2D_prm::setCurrentSamplingRates(double current_probres_limit)
+{
+
+    if (do_variable_psi)
+    {
+	// Let's try a resolution-dependent in-plane rotational sampling
+	// 2x oversample for current_probres_limit
+	// Use user-provided psi_step as minimum sampling
+	// SIND(0.5*psi_step) = D / dim;
+	psi_step = ASIND(current_probres_limit/(dim*sampling));
+	nr_psi = CEIL(psi_max / psi_step);
+	if (verb>0)
+	{
+	    cerr<<" Current resolution= "<<current_probres_limit<<" Ang; current psi_step = "<<psi_step<<endl;
+	}    
+	nr_psi = XMIPP_MIN(nr_psi, max_nr_psi);
+	psi_step = psi_max / nr_psi;
+    }
+
+    if (do_variable_trans)
+    {
+	Matrix1D<double>  offsets(2);   
+	nr_trans = 0;
+	Vtrans.clear();
+	// Lets sample the in-plane translations 4x the current resolution
+	int trans_step = ROUND(current_probres_limit/4.*sampling);
+	if (verb>0)
+	{
+	    cerr<<" Current resolution= "<<current_probres_limit<<" Ang; current trans_step = "<<trans_step<<endl;
+	}    
+	trans_step = XMIPP_MAX(1,trans_step);
+	for (int ix = -search_shift*trans_step; ix <= search_shift*trans_step; ix+=trans_step)
+	{
+	    for (int iy = -search_shift*trans_step; iy <= search_shift*trans_step; iy+=trans_step)
+	    {
+		double rr = (double)ix * ix + (double)iy * iy;
+		if (rr <= (double)trans_step*trans_step*search_shift*search_shift)
+		{
+		    offsets(0) = ix;
+		    offsets(1) = iy;
+		    cerr<<"trans: "<<ix<<" "<<iy<<endl;
+		    Vtrans.push_back(offsets);
+		    if (ix == 0 && iy == 0) zero_trans = nr_trans;
+		    nr_trans++;
+		}
+	    }
+	}
+    }
+
+}
 
 // Generate initial references =============================================
 void Prog_MLFalign2D_prm::generateInitialReferences()
@@ -1081,10 +1113,9 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols)
     }
 
     // If we don't write offsets to disc, fill imgs_offsets vectors
+    // with zeros
     if (!do_write_offsets)
     {
-        if (zero_offsets) offx = 0.;
-        else offx = -999.;
         if (do_mirror) idum = 4 * n_ref;
         else idum = 2 * n_ref;
         for (int imgno = 0; imgno < SF.ImgNo(); imgno++)
@@ -1092,7 +1123,7 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols)
             imgs_offsets.push_back(Vdum);
             for (int refno = 0; refno < idum; refno++)
             {
-                imgs_offsets[imgno].push_back(offx);
+                imgs_offsets[imgno].push_back(0.);
             }
         }
     }
@@ -1173,11 +1204,9 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols)
 	    CenterFFT(Maux, true);
 	    Maux *= Maux;
 	    Maux *= alpha_k[refno] * (double)nr_exp_images;
-	    Maux.selfScaleToSize(2*dim,2*dim); // use 2x oversize for radial average
 	    Maux.setXmippOrigin();
 	    rmean_signal2.initZeros();
 	    radialAverage(Maux, center, rmean_signal2, radial_count, true);
-	    Maux.resize(dim,dim);
 	    if (c == 0) spectral_signal = rmean_signal2;
 	    else spectral_signal += rmean_signal2;
 	    c++;
@@ -1210,11 +1239,12 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols)
 	if (!fh) REPORT_ERROR(1, (string)"Prog_MLFalign2D_prm: Cannot read file: " + fn_tmp);
 	else
 	{
-	    for (int irr = 0; irr < dim; irr++)
+	    for (int irr = 0; irr < hdim; irr++)
 	    {
 		fh >> aux;
-		if (ABS(aux - ((double)irr/(sampling*2.*dim)) ) > 0.01 ) 
+		if (ABS(aux - ((double)irr/(sampling*dim)) ) > 0.01 ) 
 		{
+		    cerr<<"aux= "<<aux<<" resol= "<<(double)irr/(sampling*dim)<<endl;
 		    REPORT_ERROR(1, (string)"Prog_MLFalign2D_prm: Wrong format: " + fn_tmp);
 		}
 		fh >> aux;
@@ -1490,7 +1520,7 @@ void Prog_MLFalign2D_prm::preselectDirections(float &phi, float &theta,
             // also check mirror
             angle2 = 180. + angle;
             angle2 = fabs(realWRAP(angle2, -180, 180));
-            angle = MIN(angle, angle2);
+            angle = XMIPP_MIN(angle, angle2);
             if (fabs(angle) > search_rot) pdf_directions[refno] = 0.;
             else pdf_directions[refno] = 1.;
         }
@@ -1699,6 +1729,11 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 		{
 		    point_trans = MAT_ELEM(Moffsets_mirror, iy, ix);
 		}
+		if (point_trans < 0 || point_trans > dim2)
+		{
+		    cerr<<"point_trans = "<<point_trans<<" ix= "<<ix<<" iy= "<<iy<<endl;
+		    REPORT_ERROR(1,"mlf_align2d BUG: point_trans < 0");
+		}
                 if (iflip < nr_nomirror_flips) 
 		{
 		    pdf = alpha_k[refno] * (1. - mirror_fraction[refno]) * MAT_ELEM(P_phi, iy, ix);
@@ -1736,6 +1771,10 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 			}
 		    }
                     dVkij(Mweight, zero_trans, refno, irot) = diff;
+		    if (debug == 9)
+		    {
+			cerr<<"refno= "<<refno<<" irot= "<<irot<<" diff= "<<diff<<" mindiff2= "<<mindiff2<<endl;
+		    }
                     if (diff < mindiff2)
                     {
                         mindiff2 = diff;
@@ -1824,7 +1863,12 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                                 iy = intWRAP(iy, Moffsets.startingY(), Moffsets.finishingY());
                                 if (iflip < nr_nomirror_flips) point_trans = MAT_ELEM(Moffsets, iy, ix);
                                 else point_trans = MAT_ELEM(Moffsets_mirror, iy, ix);
-                                pdf = fracpdf * MAT_ELEM(P_phi, iy, ix);
+				if (point_trans < 0 || point_trans > dim2)
+				{
+				    cerr<<"point_trans = "<<point_trans<<" ix= "<<ix<<" iy= "<<iy<<endl;
+				    REPORT_ERROR(1,"mlf_align2d BUG: point_trans < 0");
+				}
+				pdf = fracpdf * MAT_ELEM(P_phi, iy, ix);
                                 if (pdf > 0)
                                 {
 				    // get the starting point in the Fimg_trans vector
@@ -1866,6 +1910,10 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                                     }
                                 }
                                 else dVkij(Mweight, itrans, refno, irot) = 0.;
+				if (debug == 9)
+				{
+				    cerr<<"refno= "<<refno<<" irot= "<<irot<<" itrans= "<<itrans<<" weight= "<<dVkij(Mweight, itrans, refno, irot)<<" maxweight= "<<maxweight<<endl;
+				}
                             }
                         }
                     }
@@ -2046,14 +2094,13 @@ void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, vector<ImageXmipp> &Iref
     int c, nn, imgno, opt_refno, focus;
     bool apply_ctf;
 
-
     // Generate (FT of) each rotated version of all references
     rotateReference(Fref);
 
     // Initialize
     nn = SF.ImgNo();
     if (verb > 0) init_progress_bar(nn);
-    c = MAX(1, nn / 60);
+    c = XMIPP_MAX(1, nn / 60);
     trans.initZeros();
 
     // Set all weighted sums to zero
@@ -2062,7 +2109,6 @@ void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, vector<ImageXmipp> &Iref
     Mwsum_sigma2.clear();
     Fwsum_imgs.clear();
     Fwsum_ctfimgs.clear();
-
     LL = 0.;
     wsum_sigma_offset = 0.;
     sumcorr = 0.;
@@ -2093,7 +2139,6 @@ void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, vector<ImageXmipp> &Iref
     SF.go_beginning();
     while ((!SF.eof()))
     {
-
         // For defocus-groups in Fourier-mode
         line = SF.current();
         focus = line.get_number() - 1;
@@ -2277,15 +2322,13 @@ void Prog_MLFalign2D_prm::updateParameters(vector<Matrix2D<double> > &wsum_Mref,
 	    Half2Whole(Faux, Faux2, dim);
 	    FFT_magnitude(Faux2, Maux);
 	    CenterFFT(Maux, true);
-	    Maux.selfScaleToSize(2*dim,2*dim);
 	    Maux.setXmippOrigin();
 	    center.initZeros();
 	    rmean_sigma2.initZeros();
 	    radialAverage(Maux, center, rmean_sigma2, radial_count, true);
 	    // Factor 2 here, because the Gaussian distribution is 2D!
 	    // Use current_highres_shell-1 to prevent artefacts from
-	    // radialAverage in 2x oversized image...
-	    for (int irr = 0; irr < current_highres_shell-1; irr++)
+	    for (int irr = 0; irr < current_highres_shell; irr++)
 	    {
 		dVi(Vsig[ifocus], irr) = dVi(rmean_sigma2, irr) / (double)(2 * count_defocus[ifocus]);
 	    }
@@ -2305,7 +2348,6 @@ void Prog_MLFalign2D_prm::updateParameters(vector<Matrix2D<double> > &wsum_Mref,
 	    Maux *= sumw[refno];
 	    center.initZeros();
 	    rmean_signal2.initZeros();
-	    Maux.selfScaleToSize(2*dim,2*dim);
 	    Maux.setXmippOrigin();
 	    radialAverage(Maux, center, rmean_signal2, radial_count, true);
 	    if (c == 0) spectral_signal = rmean_signal2;
@@ -2457,25 +2499,13 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, DocFile &DFo,
 	    fn_tmp += ".dat";
 	    fh.open((fn_tmp).c_str(), ios::out);
 	    if (!fh) REPORT_ERROR(1, (string)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
-            for (int irr = 0; irr < dim; irr++)
+            for (int irr = 0; irr < hdim; irr++)
             {
-                fh << irr/(sampling*2.*dim) << " " << dVi(Vsig[ifocus], irr) << "\n";
+                fh << irr/(sampling*dim) << " " << dVi(Vsig[ifocus], irr) << "\n";
             }
 	    fh.close();
 	}
     }
 
 }
-
-
-//////////////////////////////////////////////////
-//////////////////////////////////////////////////
-
-
-
-
-
-
-
-
 

@@ -84,6 +84,8 @@ public:
     float psi_step;
     /** Total degrees in FOR_ALL_ROTATIONS */
     double psi_max;
+    /** Vary psi and translational sampling with resolution */
+    bool do_variable_psi, do_variable_trans;
     /** Total number of no-mirror rotations in FOR_ALL_FLIPS */
     int nr_nomirror_flips;
     /** Number of reference images */
@@ -121,10 +123,8 @@ public:
     int zero_trans;
     /** Offsets for limited translations */
     vector<Matrix1D<double> > Vtrans;
-    /** Start all optimal offsets from zero values */
-    bool zero_offsets;
     /** Limited search range for origin offsets */
-    double search_shift;
+    int search_shift;
     /** Limit orientational searches */
     bool limit_rot;
     /** Limited search range for projection directions */
@@ -202,6 +202,9 @@ public:
     /// Calculate Wiener filter for defocus series as defined by Frank
     /// (2nd ed. formula 2.32b on p.60)
     void updateWienerFilters(Matrix1D<double> &spectral_signal, int iter);
+
+    /// Vary in-plane and translational sampling rates with resolution
+    void setCurrentSamplingRates(double current_probres_limit);
 
     /// Generate initial references from random subset averages
     void generateInitialReferences();
