@@ -32,7 +32,7 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)
 
     // This flag is set with scripts, so that for the user the
     // mlf_align2d and the ml_align2d are distinct programs
-    fourier_mode = checkParameter(argc, argv, "-MLF");
+    //fourier_mode = checkParameter(argc, argv, "-MLF");
 
     bool do_restart = false;
 
@@ -51,8 +51,17 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)
     }
     if (checkParameter(argc, argv, "-show_all_ML_options"))
     {
-        Prog_MLalign2D_prm ML_prm;
-        ML_prm.extended_usage(true);
+	if (fourier_mode)
+
+	{
+	    Prog_MLFalign2D_prm MLF_prm;
+	    MLF_prm.extendedUsage(true);
+	}
+	else
+	{
+	    Prog_MLalign2D_prm ML_prm;
+	    ML_prm.extended_usage(true);
+	}
     }
     if (checkParameter(argc, argv, "-show_all_ART_options"))
     {
@@ -189,18 +198,22 @@ void Prog_Refine3d_prm::usage()
 void Prog_Refine3d_prm::MLF_usage()
 {
     cerr << "Usage:  mlf_refine3d [options] " << endl;
-    cerr << "   -i <selfile>                : Selfile of selfiles with input images per defocus group \n"
-    << "   -ctfs <selfile>             : Selfile of CTF parameters files for each defocus group \n"
-    << "   -vol <volume/selfile>       : Initial reference volume \n"
-    << "                               :  OR selfile with multiple reference volumes\n"
-    << " [ -o <root=\"mlf\"> ]           : Output rootname \n"
-    << " [ -ang <float=10> ]           : Angular sampling (degrees) \n"
-    << " [ -iter <int=100> ]           : Maximum number of iterations \n"
-    << " [ -search_shift <float=3>]    : Limited translational searches (in pixels) \n"
-    << " [ -not_phase_flipped ]        : Use this if the experimental images have not been phase flipped \n"
-    << " [ -ctf_affected_refs ]        : Use this if the references are not CTF-deconvoluted \n"
-    << " [ -low <pix=0> ]              : Exclude lowest freq. Fourier pixels from P-calculations (in pixels) \n"
-    << " [ -more_options ]             : Show additional parameters for 3D-refinement\n";
+    cerr << "   -i <selfile>                : Selfile with all input images \n";
+    cerr << "   -ctfdat <ctfdatfile>        : Two-column ASCII file with filenames and CTF parameter files of all images \n";
+    cerr << "      OR -no_ctf                   OR do not use any CTF correction \n";
+    cerr << "   -vol <volume/selfile>        : Initial reference volume \n";
+    cerr << "                               :  OR selfile with multiple reference volumes\n";
+    cerr << " [ -o <rootname> ]             : Output rootname (default = \"mlf2d\")\n";
+    cerr << " [ -mirror ]                   : Also check mirror image of each reference \n";
+    cerr << " [ -search_shift <float=3>]    : Limited translational searches (in pixels) \n";
+    cerr << " [ -reduce_noise <factor=1> ]  : Use a value smaller than one to decrease the estimated SSNRs \n";
+    cerr << " [ -not_phase_flipped ]        : Use this if the experimental images have not been phase flipped \n";
+    cerr << " [ -ctf_affected_refs ]        : Use this if the references (-ref) are not CTF-deconvoluted \n";
+    cerr << " [ -low <Ang=999> ]            : Exclude lowest frequencies from P-calculations (in Ang) \n";
+    cerr << " [ -high <Ang=0> ]             : Exclude highest frequencies from P-calculations (in Ang) \n";
+    cerr << " [ -ini_high <Ang=0> ]         : Exclude highest frequencies during first iteration (in Ang) \n";
+    cerr << " [ -pixel_size <Ang=1> ]       : Pixel size in Angstrom (only necessary for -no_ctf mode) \n";
+    cerr << " [ -more_options ]             : Show additional parameters for 3D-refinement \n";
 
 }
 
@@ -233,7 +246,7 @@ void Prog_Refine3d_prm::show()
         cerr << " -----------------------------------------------------------------" << endl;
         cerr << " | Read more about this program in the following publication:    |" << endl;
         if (fourier_mode)
-            cerr << " |  Scheres ea. (2007)  in preparation                           |" << endl;
+            cerr << " |  Scheres ea. (2007)  Structure, 15, 1167-1177                 |" << endl;
         else
             cerr << " |  Scheres ea. (2007)  Nature Methods, 4, 27-29                 |" << endl;
         cerr << " |                                                               |" << endl;
@@ -275,7 +288,7 @@ void Prog_Refine3d_prm::show()
         fh_hist << " -----------------------------------------------------------------" << endl;
         fh_hist << " | Read more about this program in the following publication:    |" << endl;
         if (fourier_mode)
-            fh_hist << " |  Scheres ea. (2007)  in preparation                           |" << endl;
+            fh_hist << " |  Scheres ea. (2007)  Structure, 15, 1167-1177                 |" << endl;
         else
             fh_hist << " |  Scheres ea. (2007)  Nature Methods, 4, 27-29                 |" << endl;
         fh_hist << " |                                                               |" << endl;

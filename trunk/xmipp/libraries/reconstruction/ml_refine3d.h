@@ -42,6 +42,7 @@
 #include "reconstruct_art.h"
 #include "reconstruct_wbp.h"
 #include "ml_align2d.h"
+#include "mlf_align2d.h"
 #include "symmetrize.h"
 
 #include <vector>
