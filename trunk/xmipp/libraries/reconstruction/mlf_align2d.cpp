@@ -378,8 +378,8 @@ void Prog_MLFalign2D_prm::produceSideInfo()
 
     psi_max = 90.;
     nr_psi = CEIL(psi_max / psi_step);
-    max_nr_psi = nr_psi;
     psi_step = psi_max / nr_psi;
+    max_nr_psi = nr_psi;
     nr_flip = nr_nomirror_flips = 4;
     // 0, 90, 180 & 270 degree flipping, as well as mirror
     A.initIdentity();
@@ -946,16 +946,15 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
 void Prog_MLFalign2D_prm::setCurrentSamplingRates(double current_probres_limit)
 {
     
-    int trans_step;
+    int trans_step = 1;
 
     if (do_variable_psi)
     {
-	// Let's try a resolution-dependent in-plane rotational sampling
-	// 2x oversample for current_probres_limit
-	// Use user-provided psi_step as minimum sampling
-	// SIND(0.5*psi_step) = D / dim;
-	psi_step = ASIND(current_probres_limit/(dim*sampling));
+	// Sample the in-plane rotations 3x the current resolution
+	// Note that SIND(0.5*psi_step) = Delta / dim;
+	psi_step = (2.* ASIND(current_probres_limit/(dim*sampling))) / 3.;
 	nr_psi = CEIL(psi_max / psi_step);
+	// Use user-provided psi_step as minimum sampling
 	nr_psi = XMIPP_MIN(nr_psi, max_nr_psi);
 	psi_step = psi_max / nr_psi;
     }
@@ -965,8 +964,9 @@ void Prog_MLFalign2D_prm::setCurrentSamplingRates(double current_probres_limit)
 	Matrix1D<double>  offsets(2);   
 	nr_trans = 0;
 	Vtrans.clear();
-	// Lets sample the in-plane translations 4x the current resolution
-	trans_step = ROUND(current_probres_limit/(4.*sampling));
+	// Sample the in-plane translations 3x the current resolution
+	trans_step = ROUND(current_probres_limit/(3.*sampling));
+	// Use trans_step=1 as minimum sampling
 	trans_step = XMIPP_MAX(1,trans_step);
 	for (int ix = -search_shift*trans_step; ix <= search_shift*trans_step; ix+=trans_step)
 	{
@@ -978,8 +978,22 @@ void Prog_MLFalign2D_prm::setCurrentSamplingRates(double current_probres_limit)
 		    offsets(0) = ix;
 		    offsets(1) = iy;
 		    Vtrans.push_back(offsets);
-		    if (ix == 0 && iy == 0) zero_trans = nr_trans;
 		    nr_trans++;
+		    if (ix == 0 && iy == 0) {
+			zero_trans = nr_trans;
+			// For coarser samplings, always add (-1,0) (1,0) (0,-1) and (0,1) 
+			if (trans_step > 1)
+			{
+			    offsets(0) = 1; offsets(1) = 0;
+			    Vtrans.push_back(offsets); nr_trans++;
+			    offsets(0) = -1; offsets(1) = 0;
+			    Vtrans.push_back(offsets); nr_trans++;
+			    offsets(0) = 0; offsets(1) = 1;
+			    Vtrans.push_back(offsets); nr_trans++;
+			    offsets(0) = 0; offsets(1) = -1;
+			    Vtrans.push_back(offsets); nr_trans++;
+			}
+		    }
 		}
 	    }
 	}
@@ -2234,7 +2248,10 @@ void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, vector<ImageXmipp> &Iref
     }
     if (verb > 0) progress_bar(nn);
 
-    if (do_ctf_correction) reverseRotateReference(Fwsum_ctfimgs,wsum_ctfMref);
+    if (do_ctf_correction) 
+    {
+	reverseRotateReference(Fwsum_ctfimgs,wsum_ctfMref);
+    }
     reverseRotateReference(Fwsum_imgs,wsum_Mref);
 
 }
