@@ -209,6 +209,10 @@ void Prog_MLFalign2D_prm::show(bool ML3D)
             cerr << "  Initial model fractions : " << fn_frac << endl;
 	if (do_ctf_correction)
 	{
+	    if (phase_flipped)
+		cerr << "    + Assuming images have been phase flipped " << endl;
+	    else
+		cerr << "    + Assuming images have not been phase flipped " << endl;
 	    FOR_ALL_DEFOCUS_GROUPS()
 	    {
 		cerr << "    + defocus group "<<ifocus+1<<" contains "<<count_defocus[ifocus]<<" images"<<endl;
@@ -219,9 +223,9 @@ void Prog_MLFalign2D_prm::show(bool ML3D)
         if (search_rot < 180.)
             cerr << "    + Limit orientational search to +/- " << search_rot << " degrees" << endl;
 	if (do_variable_psi)
-            cerr << "    + Vary in-plane rotation angle sampling with resolution " << endl;
+            cerr << "    + Vary in-plane rotational sampling with resolution " << endl;
 	if (do_variable_trans)
-            cerr << "    + Vary in-plane translation sampling with resolution " << endl;
+            cerr << "    + Vary in-plane translational sampling with resolution " << endl;
 
         // Hidden stuff
         if (fix_fractions)
@@ -950,12 +954,12 @@ void Prog_MLFalign2D_prm::setCurrentSamplingRates(double current_probres_limit)
 	// SIND(0.5*psi_step) = D / dim;
 	psi_step = ASIND(current_probres_limit/(dim*sampling));
 	nr_psi = CEIL(psi_max / psi_step);
+	nr_psi = XMIPP_MIN(nr_psi, max_nr_psi);
+	psi_step = psi_max / nr_psi;
 	if (verb>0)
 	{
 	    cerr<<" Current resolution= "<<current_probres_limit<<" Ang; current psi_step = "<<psi_step<<endl;
 	}    
-	nr_psi = XMIPP_MIN(nr_psi, max_nr_psi);
-	psi_step = psi_max / nr_psi;
     }
 
     if (do_variable_trans)
@@ -964,7 +968,7 @@ void Prog_MLFalign2D_prm::setCurrentSamplingRates(double current_probres_limit)
 	nr_trans = 0;
 	Vtrans.clear();
 	// Lets sample the in-plane translations 4x the current resolution
-	int trans_step = ROUND(current_probres_limit/4.*sampling);
+	int trans_step = ROUND(current_probres_limit/(4.*sampling));
 	if (verb>0)
 	{
 	    cerr<<" Current resolution= "<<current_probres_limit<<" Ang; current trans_step = "<<trans_step<<endl;
