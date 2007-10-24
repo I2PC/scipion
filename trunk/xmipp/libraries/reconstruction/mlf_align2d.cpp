@@ -145,8 +145,8 @@ void Prog_MLFalign2D_prm::read(int argc, char **argv, bool ML3D)
     do_write_offsets = checkParameter(argc, argv, "write_offsets");
     fn_scratch = getParameter(argc, argv, "-scratch", "");
     debug = textToInteger(getParameter(argc, argv, "-debug","0"));
-    do_variable_psi = checkParameter(argc, argv, "var_psi");
-    do_variable_trans = checkParameter(argc, argv, "var_trans");
+    do_variable_psi = checkParameter(argc, argv, "-var_psi");
+    do_variable_trans = checkParameter(argc, argv, "-var_trans");
 }
 
 // Show ====================================================================
@@ -207,11 +207,7 @@ void Prog_MLFalign2D_prm::show(bool ML3D)
             cerr << "  Check mirrors           : false" << endl;
         if (fn_frac != "")
             cerr << "  Initial model fractions : " << fn_frac << endl;
-	if (!do_ctf_correction)
-	{
-	    cerr << "    + Do not apply any CTF correction"<<endl;
-	}
-	else
+	if (do_ctf_correction)
 	{
 	    FOR_ALL_DEFOCUS_GROUPS()
 	    {
@@ -222,6 +218,10 @@ void Prog_MLFalign2D_prm::show(bool ML3D)
 	    cerr << "    + High resolution limit for 1st iteration set to " << highres_limit << "Ang"<<endl;
         if (search_rot < 180.)
             cerr << "    + Limit orientational search to +/- " << search_rot << " degrees" << endl;
+	if (do_variable_psi)
+            cerr << "    + Vary in-plane rotation angle sampling with resolution " << endl;
+	if (do_variable_trans)
+            cerr << "    + Vary in-plane translation sampling with resolution " << endl;
 
         // Hidden stuff
         if (fix_fractions)
