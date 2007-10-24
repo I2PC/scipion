@@ -86,9 +86,7 @@ int main(int argc, char **argv)
         ML2D_prm.fn_ref = prm.fn_root + "_lib.sel";
 
         // Check that there are enough computing nodes
-        if (prm.Nvols > size)
-            REPORT_ERROR(1, "mpi_MLrefine3D requires that you use more CPUs than reference volumes");
-        if (ML2D_prm.fourier_mode && 3*prm.Nvols > size)
+        if (3*prm.Nvols > size)
             REPORT_ERROR(1, "mpi_mlf_refine3d requires that you use three times more CPUs than reference volumes");
 
         // Project the reference volume
@@ -167,9 +165,9 @@ int main(int argc, char **argv)
             sumcorr = aux;
             MPI_Allreduce(&wsum_sigma_offset, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             wsum_sigma_offset = aux;
-	    for (int ifocus = 0;ifocus < ML2D_prm.nr_focus;ifocus++)
+	    for (int ifocus = 0; ifocus < ML2D_prm.nr_focus; ifocus++)
 	    {
-		for (int ii = 0; ii <  Mwsum_sigma2[ifocus].size(); ii++) Vaux.push_back(0.);
+		for (int ii = 0; ii <  Mwsum_sigma2[ifocus].size(); ii++)
 		{
 		    MPI_Allreduce(&Mwsum_sigma2[ifocus][ii], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 		    Mwsum_sigma2[ifocus][ii] = aux;
@@ -241,7 +239,7 @@ int main(int argc, char **argv)
             {
 
                 // Solvent flattening and/or symmetrization (if requested)
-                prm.remake_SFvol(iter, false, ML2D_prm.fourier_mode);
+                prm.remake_SFvol(iter, false, true);
                 prm.post_process_volumes(argc, argv);
 
                 // Calculate 3D-SSNR
