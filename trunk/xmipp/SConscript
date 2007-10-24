@@ -293,8 +293,9 @@ ReconsSources = [
     'fourier_filter.cpp',
     'grids.cpp',
     'ml_align2d.cpp',
+    'mlf_align2d.cpp',
     'ml_refine3d.cpp',
-    'mlf_tomo.cpp',
+#    'mlf_tomo.cpp',
     'phantom.cpp',
     'phantom_create_random.cpp',
     'phantom_simulate_microscope.cpp',
@@ -439,9 +440,11 @@ AddXmippProgram('micrograph_scissor')
 AddXmippProgram('micrograph_window')
 AddXmippProgram('mirror')
 AddXmippProgram('ml_align2d', ['XmippRecons'])
+AddXmippProgram('mlf_align2d', ['XmippRecons'])
 AddXmippProgram('ml_align2d_combine', ['XmippRecons'])
 AddXmippProgram('ml_refine3d', ['XmippRecons'])
-AddXmippProgram('mlf_tomo', ['XmippRecons'])
+AddXmippProgram('mlf_refine3d', ['XmippRecons'])
+#AddXmippProgram('mlf_tomo', ['XmippRecons'])
 AddXmippProgram('morphology')
 AddXmippProgram('normalize')
 AddXmippProgram('operate')
