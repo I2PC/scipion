@@ -2348,7 +2348,11 @@ void Prog_MLFalign2D_prm::updateParameters(vector<Matrix2D<double> > &wsum_Mref,
 	    // Use current_highres_shell-1 to prevent artefacts from
 	    for (int irr = 0; irr < current_highres_shell; irr++)
 	    {
-		dVi(Vsig[ifocus], irr) = dVi(rmean_sigma2, irr) / (double)(2 * count_defocus[ifocus]);
+		aux = dVi(rmean_sigma2, irr) / (double)(2 * count_defocus[ifocus]);
+		if (aux > 0.)
+		{
+		    dVi(Vsig[ifocus], irr) = aux;
+		}
 	    }
 	}
     }
