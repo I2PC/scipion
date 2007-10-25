@@ -129,7 +129,7 @@ public:
     void get_sym_vectors(vector< Matrix1D<double > > &sym_points);
 
     /** Project in all the directions between indexes init and end*/
-    void project_angle_vector(int my_init, int my_end);
+    void project_angle_vector(int my_init, int my_end, bool verbose = true);
 
     /** Remove projection points no closer to experimetal data than*/
     void remove_points_not_close_to_experimental_points(void);

@@ -104,7 +104,9 @@ void Prog_Angular_Projection_Matching_Project_Parameters::show()
 
 
 
-void Prog_Angular_Projection_Matching_Project_Parameters::project_angle_vector(int my_init, int my_end)
+void
+Prog_Angular_Projection_Matching_Project_Parameters::project_angle_vector(int
+my_init, int my_end, bool verbose)
 {
     Projection P;
     FileName fn_proj;
@@ -113,13 +115,19 @@ void Prog_Angular_Projection_Matching_Project_Parameters::project_angle_vector(i
     mySize=my_end-my_init+1;
     if(psi_sampling < 360)
        mySize *= (int) (359.99999/psi_sampling);
-    init_progress_bar(mySize);
+    if(verbose)
+       init_progress_bar(mySize);
     int myCounter=0;
+    for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
+       for (int i=0;i<my_init;i++)
+         myCounter++;
+         
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
     {
        for (int i=my_init;i<=my_end;i++)
        {    
-           progress_bar(i-my_init);
+           if(verbose)
+               progress_bar(i-my_init);
            psi= mypsi+ZZ(close_points_angles[i]);
            tilt=      YY(close_points_angles[i]);
            rot=       XX(close_points_angles[i]);
@@ -131,7 +139,8 @@ void Prog_Angular_Projection_Matching_Project_Parameters::project_angle_vector(i
            P.write(fn_proj);
        }
     }
-    progress_bar(mySize);
+    if(verbose)
+        progress_bar(mySize);
 
 }
 
