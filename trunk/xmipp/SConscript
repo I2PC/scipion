@@ -606,6 +606,7 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_angular_discrete_assign', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_angular_projection_matching_project', ['XmippRecons'])    AddXmippMPIProgram('mpi_ml_align2d', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ml_align2d', ['XmippRecons'])
     AddXmippMPIProgram('mpi_mlf_align2d', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ml_refine3d', ['XmippRecons'])
