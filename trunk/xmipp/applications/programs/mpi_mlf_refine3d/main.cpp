@@ -175,9 +175,12 @@ int main(int argc, char **argv)
 	    }
 	    for (int refno = 0;refno < ML2D_prm.n_ref; refno++)
 	    {
-		MPI_Allreduce(MULTIDIM_ARRAY(wsum_ctfMref[refno]), MULTIDIM_ARRAY(Maux),
-			      MULTIDIM_SIZE(wsum_ctfMref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-		wsum_ctfMref[refno] = Maux;
+		if (ML2D_prm.do_ctf_correction)
+		{
+		    MPI_Allreduce(MULTIDIM_ARRAY(wsum_ctfMref[refno]), MULTIDIM_ARRAY(Maux),
+				  MULTIDIM_SIZE(wsum_ctfMref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+		    wsum_ctfMref[refno] = Maux;
+		}
                 MPI_Allreduce(MULTIDIM_ARRAY(wsum_Mref[refno]), MULTIDIM_ARRAY(Maux),
                               MULTIDIM_SIZE(wsum_Mref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 wsum_Mref[refno] = Maux;
