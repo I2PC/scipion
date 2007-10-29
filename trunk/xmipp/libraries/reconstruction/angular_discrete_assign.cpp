@@ -1153,7 +1153,7 @@ void Prog_angular_predict_prm::produceSummary()
     for (int n = 0; n < N; n++)
     {
         ImageXmipp I;
-        I.read(SFin.NextImg(), true);
+        I.read(SFin.NextImg(), false, false, true);
         referenceWeight[predicted_reference[n]].push_back(I.name());
         I().selfRotate(I.psi());
         assignedAvg[predicted_reference[n]]() += I();
