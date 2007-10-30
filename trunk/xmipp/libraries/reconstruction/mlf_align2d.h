@@ -23,6 +23,9 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
+#ifndef MLFALIGN2D_H
+#define MLFALIGN2D_H
+
 #include <data/fft.h>
 #include <data/args.h>
 #include <data/funcs.h>
@@ -32,10 +35,9 @@
 #include <data/geometry.h>
 #include <data/filters.h>
 #include <data/mask.h>
-
 #include "ctf.h"
-
 #include <vector>
+#include <numeric>
 
 #define FOR_ALL_MODELS() for (int refno=0;refno<n_ref; refno++)
 #define FOR_ALL_ROTATIONS() for (int ipsi=0; ipsi<nr_psi; ipsi++ )
@@ -152,8 +154,7 @@ public:
     vector<int> count_defocus;
     /** Flag whether the phases of the experimental images are flipped already */
     bool phase_flipped;
-    /** Matrix with resolution value (in Ang) at each Fourier pixel */
-    Matrix2D<double> Mresol;
+    /** Matrix with resolution shell at each Fourier pixel */
     Matrix2D<int> Mresol_int;
     /** Vectors with sigma2 (for each defocus group) */
     vector<Matrix1D<double> > Vsig, Vctf, Vdec;
@@ -173,13 +174,14 @@ public:
     vector<int> pointer_2d, pointer_i, pointer_j;
     int nr_points_prob, nr_points_2d, dnr_points_2d;
     /** Current highest resolution shell */
-    int current_highres_shell;
+    int current_highres_limit;
 
     /// IN DEVELOPMENT
     /** debug flag */
     int debug;
 
 public:
+
     /// Read arguments from command line
     void read(int argc, char **argv, bool ML3D = false);
 
@@ -312,3 +314,5 @@ public:
 
 };
 //@}
+
+#endif
