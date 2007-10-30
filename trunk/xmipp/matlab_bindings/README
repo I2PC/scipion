@@ -1,0 +1,4 @@
+These are bindings for xmipp functions to be used in Matlab without the need of writing and reading doc/sel/spi files. To compile add this directory to the MATLAB path, cd into this directory and execute tom_mex_xmipp_bindings('/path/to/xmip') .
+
+For more information about the TOM toolbox, see http>//www.biochem.mpg.de/tom
+
