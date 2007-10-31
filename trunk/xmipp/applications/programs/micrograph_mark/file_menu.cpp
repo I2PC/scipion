@@ -46,6 +46,12 @@ QtFileMenu::QtFileMenu(QtWidgetMicrograph* _parent) :
 {
     __coordinates_are_saved = TRUE;
 
+    insertItem("Load coords", this, SLOT(slotLoadCoords()));
+    insertItem("Save coords", this, SLOT(slotSaveCoords()));
+    insertItem("Save angles", this, SLOT(slotSaveAngles()));
+    insertItem("Generate images", this, SLOT(slotGenerateImages()));
+
+    insertSeparator();
     options =  new QPopupMenu();
     insertItem("Change mark type", options);
     circle = options->insertItem("Circle");
@@ -54,12 +60,9 @@ QtFileMenu::QtFileMenu(QtWidgetMicrograph* _parent) :
     connect(options, SIGNAL(activated(int)), this, SLOT(doOption(int)));
     setMouseTracking(TRUE);
     options->setItemChecked(circle, true);
-
     insertItem("Change mark radius", this, SLOT(slotChangeCircleRadius()));
-    insertItem("Load coords", this, SLOT(slotLoadCoords()));
-    insertItem("Save coords", this, SLOT(slotSaveCoords()));
-    insertItem("Save angles", this, SLOT(slotSaveAngles()));
-    insertItem("Generate images", this, SLOT(slotGenerateImages()));
+    insertSeparator();
+
     insertItem("Quit", this, SLOT(slotQuit()));
 }
 

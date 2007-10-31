@@ -143,7 +143,7 @@ QtMainWidgetMark::QtMainWidgetMark(Micrograph *_m, Micrograph *_mTilted)
         connect((QObject*)__mWidget->image(),
                 SIGNAL(signalAddCoordOther(int, int, int)),
                 this,
-                SLOT(slotAddCoordTilted(int, int, int, int)));
+                SLOT(slotAddCoordTilted(int, int, int)));
         /* connect( (QObject*)__mTiltedWidget->image(),
                  SIGNAL(signalAddCoordOther(int,int,int)),
                  this,
