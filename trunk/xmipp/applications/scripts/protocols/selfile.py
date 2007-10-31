@@ -72,6 +72,16 @@ class selfile:
            retval+=name+" "+state+"\n"
        return retval
 
+   # Writes ctfdatfile to disc with given param file
+   def write_ctfdat(self,ctfdatfilename,paramfile):
+       lines=[]
+       for name,state in self.sellines:
+           newline=name+' '+paramfile+'\n'
+           lines.append(newline)
+       fh=open(ctfdatfilename,'w')
+       fh.writelines(lines)
+       fh.close()
+
    # Writes selfile to disc
    def write(self,selfilename):
        lines=[]
