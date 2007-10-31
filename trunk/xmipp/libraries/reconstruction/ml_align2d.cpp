@@ -185,7 +185,7 @@ void Prog_MLalign2D_prm::show(bool ML3D)
             cerr << " | Read more about this program in the following publications:   |" << endl;
             if (fourier_mode)
             {
-                cerr << " |  Scheres ea. (2007) Structure, accepted                   |" << endl;
+	        cerr << " |  Scheres ea. (2007) Structure, 15, 1167-1177                  |" << endl;
             }
             else
             {
@@ -867,7 +867,6 @@ void Prog_MLalign2D_prm::calculate_division_ctf()
 
         }
     }
-    
 
 }
 
@@ -1046,6 +1045,11 @@ void Prog_MLalign2D_prm::calculate_wiener_defocus_series(Matrix1D<double> &spect
                 nr_pointer_sigctf++;
             }
         }
+    }
+    if (debug>0) 
+    {
+	cerr<<"nr_pointer_ctf= "<<nr_pointer_ctf<<" nr_pointer_sigctf= "<<nr_pointer_sigctf<<endl;
+	cerr<<" lowres_limit= "<<lowres_limit<<" maxres= "<<maxres<<" current_highres_limit= "<<current_highres_limit<<endl;
     }
 
 }
