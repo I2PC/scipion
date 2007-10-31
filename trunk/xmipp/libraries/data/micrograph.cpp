@@ -311,7 +311,7 @@ void Micrograph::compute_8_bit_scaling()
     __a = (maxF - minF) / (maxval - minval);
     __b = minF - __a * minval;
     __scaling_valid = true;
-cerr <<  "__a  " << __a  << "__b" << __b << endl;
+    //cerr <<  "__a  " << __a  << "__b" << __b << endl;
 
 }
 
