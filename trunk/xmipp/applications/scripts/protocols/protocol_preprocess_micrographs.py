@@ -21,11 +21,11 @@
 WorkingDir='Preprocessing'
 # Delete working subdirectory if it already exists?
 DoDeleteWorkingDir=False
-# {dir} Directory name from where to process all *.tif files
+# {dir} Directory name from where to process all scanned micrographs
 DirMicrographs='Micrographs'
 # Which files in this directory to process
-""" This is typically *.tif
-    But any wildcard is possible, e.g. *3[1,2].tif
+""" This is typically *.tif, but may also be *.mrc or *.spi (see the expert options)
+    Note that any wildcard is possible, e.g. *3[1,2].tif
 """
 ExtMicrographs='*.tif'
 # Name for the output micrograph selfile:
@@ -39,10 +39,16 @@ ProjectDir='/home2/bioinfo/scheres/work/protocols'
 # {expert} Directory name for logfiles:
 LogDir='Logs'
 #------------------------------------------------------------------------------------------------
-# {section} Tiff2Raw
+# {section} Initial conversion to raw
 #------------------------------------------------------------------------------------------------
-# Perform tiff2raw conversion?
+# Perform tiff to raw conversion?
+""" Some TIF formats are not recognized. In that case, save your micrographs as spider or mrc and see the expert options of this protocol to convert these to Xmipp-style raw.
+"""
 DoTif2Raw=True
+# {expert} Or perform mrc to raw conversion?
+DoMrc2Raw=False
+# {expert} Or perform spider to raw conversion?
+DoSpi2Raw=False
 #------------------------------------------------------------------------------------------------
 # {section} Downsampling
 #------------------------------------------------------------------------------------------------
@@ -139,6 +145,8 @@ class preprocess_A_class:
                  ProjectDir,
                  LogDir,
                  DoTif2Raw,
+                 DoMrc2Raw,
+                 DoSpi2Raw,
                  DoDownSample,
                  Down,
                  DoCtfEstimate,
@@ -171,6 +179,8 @@ class preprocess_A_class:
         self.ProjectDir=os.path.abspath(ProjectDir)
         self.LogDir=LogDir
         self.DoTif2Raw=DoTif2Raw
+        self.DoMrc2Raw=DoMrc2Raw
+        self.DoSpi2Raw=DoSpi2Raw
         self.DoDownSample=DoDownSample
         self.Down=Down
         self.DoCtfEstimate=DoCtfEstimate
@@ -231,14 +241,28 @@ class preprocess_A_class:
         self.micselfile = []
         for self.filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
             (self.filepath, self.name) = os.path.split(self.filename)
-            self.shortname=self.name.replace ( '.tif', '' )
+            (self.shortname,extension) = os.path.splitext(self.name)
             self.downname='down'+str(self.Down)+'_'+self.shortname
 
             if not os.path.exists(self.shortname):
                 os.makedirs(self.shortname)
 
             if (self.DoTif2Raw):
+                if (self.DoMrc2Raw or self.DoSpi2Raw):
+                    message='ERRROR: select either tif2raw, spi2raw or mrc2raw conversion! '
+                    print '*',message
+                    self.log.error(message)
+                    exit();
                 self.perform_tif2raw()
+            elif (self.DoMrc2Raw):
+                if (self.DoSpi2Raw):
+                    message='ERRROR: select either tif2raw, spi2raw or mrc2raw conversion! '
+                    print '*',message
+                    self.log.error(message)
+                    exit();
+                self.perform_mrc2raw()
+            elif (self.DoSpi2Raw): 
+                self.perform_spi2raw()
 
             if (self.DoDownSample):
                 self.perform_downsample()
@@ -263,6 +287,32 @@ class preprocess_A_class:
         print '*********************************************************************'
         print '*  Generating RAW for micrograph: '+self.name
         command='xmipp_convert_tiff2raw '+self.filename+' '+oname
+        print '* ',command
+        self.log.info(command)
+        os.system(command)
+
+    def perform_mrc2raw(self):
+        import os
+        oname=self.shortname+'/'+self.shortname+'.raw'
+        tname=self.shortname+'/'+self.shortname+'.spi'
+        print '*********************************************************************'
+        print '*  Generating RAW for micrograph: '+self.name
+        command='xmipp_convert_spi22ccp4 -i '+self.filename+' -o '+tname
+        print '* ',command
+        self.log.info(command)
+        os.system(command)
+        command='xmipp_convert_raw22spi -generate_inf -f -i '+tname+' -o '+oname
+        print '* ',command
+        self.log.info(command)
+        os.system(command)
+        os.remove(tname)
+        
+    def perform_spi2raw(self):
+        import os
+        oname=self.shortname+'/'+self.shortname+'.raw'
+        print '*********************************************************************'
+        print '*  Generating RAW for micrograph: '+self.name
+        command='xmipp_convert_raw22spi -generate_inf -f -i '+self.filename+' -o '+oname
         print '* ',command
         self.log.info(command)
         os.system(command)
@@ -489,6 +539,8 @@ if __name__ == '__main__':
                                    ProjectDir,
                                    LogDir,
                                    DoTif2Raw,
+                                   DoMrc2Raw,
+                                   DoSpi2Raw,
                                    DoDownSample,
                                    Down,
                                    DoCtfEstimate,
