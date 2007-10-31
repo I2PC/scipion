@@ -224,9 +224,10 @@ class rotational_spectra_class:
           self.execute_findcenter()
        
        if (_DoMakeSpectra):
-           if(self.true_if_file_is_NOT_in_native_endian()):
-              self.execute_reverse_endian()
-           self.execute_apply_geo()
+           //makespectra now applies geo and understands both endians
+           #if(self.true_if_file_is_NOT_in_native_endian()):
+           #   self.execute_reverse_endian()
+           #   self.execute_apply_geo()
            self.execute_spectra()
        if (_DoKerdensom):
            self.delete_existing_som()
