@@ -41,7 +41,10 @@ public:
 
 
 public slots:
-    // Load coords
+    // Change circle radius
+    void slotChangeCircleRadius();
+
+     // Load coords
     void slotLoadCoords();
 
     // Save coords

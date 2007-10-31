@@ -45,11 +45,21 @@ QtFileMenu::QtFileMenu(QtWidgetMicrograph* _parent) :
         QtPopupMenuMark(_parent)
 {
     __coordinates_are_saved = TRUE;
+    insertItem("Change circle radius", this, SLOT(slotChangeCircleRadius()));
     insertItem("Load coords", this, SLOT(slotLoadCoords()));
     insertItem("Save coords", this, SLOT(slotSaveCoords()));
     insertItem("Save angles", this, SLOT(slotSaveAngles()));
     insertItem("Generate images", this, SLOT(slotGenerateImages()));
     insertItem("Quit", this, SLOT(slotQuit()));
+}
+
+/* Change circle radius ---------------------------------------------------- */
+void QtFileMenu::slotChangeCircleRadius()
+{
+    Micrograph *m = ((QtWidgetMicrograph*)parentWidget())->getMicrograph();
+    if (m == NULL) return;
+    ((QtWidgetMicrograph*)parentWidget())->slotChangeCircleRadius();
+    ((QtWidgetMicrograph*)parentWidget())->repaint();
 }
 
 /* Load coordinates -------------------------------------------------------- */
