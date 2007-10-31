@@ -59,7 +59,6 @@ void QtFileMenu::slotChangeCircleRadius()
     Micrograph *m = ((QtWidgetMicrograph*)parentWidget())->getMicrograph();
     if (m == NULL) return;
     ((QtWidgetMicrograph*)parentWidget())->slotChangeCircleRadius();
-    ((QtWidgetMicrograph*)parentWidget())->repaint();
 }
 
 /* Load coordinates -------------------------------------------------------- */

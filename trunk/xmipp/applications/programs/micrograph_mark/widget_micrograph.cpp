@@ -346,7 +346,9 @@ void QtWidgetMicrograph::openMenus()
 
     addMenuItem("&File", (QtPopupMenuMark *)(__file_menu));
     addMenuItem("F&ilters", (QtPopupMenuMark *)(filterMenu));
-    addMenuItem("&AutoSelection", (QtPopupMenuMark *)(autoMenu));
+    // Sjors 31oct07: because this only gives core dumps, remove the
+    // menu for now (just until it works)
+    //addMenuItem("&AutoSelection", (QtPopupMenuMark *)(autoMenu));
 
     connect(__file_menu, SIGNAL(signalAddFamily(const char *)),
             this, SLOT(slotAddFamily(const char*)));
@@ -1727,6 +1729,7 @@ void QtWidgetMicrograph::changeCircleRadius(float _circle_radius)
 {
     __ellipse_radius = _circle_radius;
     __mImage->__ellipse_radius = __ellipse_radius;
+    __mImage->repaint(FALSE);
 
 }
 
