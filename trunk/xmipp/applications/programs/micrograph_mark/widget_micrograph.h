@@ -160,6 +160,7 @@ private:
     int                        __maxgray;
     float                      __gamma;
     float                      __ellipse_radius;
+    int                        __ellipse_type;
 
     bool                       __learn_particles_done;
     bool                       __autoselection_done;
@@ -279,7 +280,10 @@ public:
     // Change contrast
     void changeContrast(int _mingray, int _maxgray, float _gamma);
 
-    // Change contrast
+    // Change mark type
+    void changeMarkType(int _type);
+
+    // Change circle radius
     void changeCircleRadius(float _circle_radius);
 
     // Repaint

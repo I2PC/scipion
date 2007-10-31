@@ -20,6 +20,9 @@
 #ifndef __QT_FILE_MENU_HH__
 #define __QT_FILE_MENU_HH__
 
+#define MARK_CIRCLE 0
+#define MARK_SQUARE 1
+
 #include "popup_menu_mark.h"
 
 #include <qradiobutton.h>
@@ -33,6 +36,10 @@ class QtFileMenu : public QtPopupMenuMark
     // For accepting signals and slots
     Q_OBJECT
 
+    // For changing mark type 
+    QPopupMenu *options;
+    int circle, square;
+
     // Coordinates have been saved
     bool __coordinates_are_saved;
 public:
@@ -41,6 +48,10 @@ public:
 
 
 public slots:
+
+    // Change mark type
+    void doOption(int item);
+
     // Change circle radius
     void slotChangeCircleRadius();
 

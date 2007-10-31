@@ -272,6 +272,7 @@ QtWidgetMicrograph::QtWidgetMicrograph(QtMainWidgetMark *_mainWidget,
     __mImageOverview->setWidgetMicrograph(this);
     __file_menu      = NULL;
     __ellipse_radius = 5;
+    __ellipse_type   = MARK_CIRCLE;
 
     __mImage->setFiltersController(_f);
     __mImageOverview->setFiltersController(_f);
@@ -1725,6 +1726,13 @@ void QtWidgetMicrograph::changeContrast(int _mingray, int _maxgray, float _gamma
     __mImageOverview->changeContrast(_mingray, _maxgray, _gamma);
 }
 
+void QtWidgetMicrograph::changeMarkType(int _type)
+{
+    __ellipse_type = _type;
+    __mImage->__ellipse_type = __ellipse_type;
+    __mImage->repaint(FALSE);
+}
+
 void QtWidgetMicrograph::changeCircleRadius(float _circle_radius)
 {
     __ellipse_radius = _circle_radius;
@@ -1740,15 +1748,15 @@ void QtWidgetMicrograph::repaint(int t)
 
 void QtWidgetMicrograph::slotDrawEllipse(int _x, int _y, int _f)
 {
-    __mImage->drawEllipse(_x, _y, _f, __ellipse_radius);
+    __mImage->drawEllipse(_x, _y, _f, __ellipse_radius, __ellipse_type);
     __mImageOverview->drawEllipse(_x, _y, _f);
 }
 
 void QtWidgetMicrograph::slotDrawLastEllipse(int _x, int _y, int _f)
 {
-    __mImage->drawEllipse(_x, _y, _f, __ellipse_radius);
+    __mImage->drawEllipse(_x, _y, _f, __ellipse_radius, __ellipse_type);
     __mImageOverview->drawEllipse(_x, _y, _f);
-    __mImage->drawLastEllipse(_x, _y, _f, __ellipse_radius);
+    __mImage->drawLastEllipse(_x, _y, _f, __ellipse_radius, __ellipse_type);
 }
 
 /* Active family ----------------------------------------------------------- */

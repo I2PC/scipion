@@ -46,6 +46,7 @@ QtImageMicrograph::QtImageMicrograph(QWidget *_parent,
     __movingMark = -1;
     __tilted     = false;
     __ellipse_radius = 5;
+    __ellipse_type   = MARK_CIRCLE;
 
     emit signalSetWidthHeight(image()->width(), image()->height());
 }
@@ -125,7 +126,7 @@ void QtImageMicrograph::loadImage()
 }
 
 /* Draw ellipse ------------------------------------------------------------ */
-void QtImageMicrograph::drawEllipse(int _x, int _y, int _color, float _ellipse_radius)
+void QtImageMicrograph::drawEllipse(int _x, int _y, int _color, float _ellipse_radius, int _type)
 {
     int mX, mY;
     micrographToImage(_x, _y, mX, mY);
@@ -134,16 +135,29 @@ void QtImageMicrograph::drawEllipse(int _x, int _y, int _color, float _ellipse_r
     {
         QPen pen(__col.col(_color), 2);
         __paint->setPen(pen);
-        __paint->drawEllipse(ROUND(mX - _ellipse_radius / __zoom),
-                             ROUND(mY - _ellipse_radius / __zoom),
-                             ROUND(2*_ellipse_radius / __zoom), ROUND(2*_ellipse_radius / __zoom));
+	if (_type == MARK_CIRCLE) 
+	{
+	    __paint->drawEllipse(ROUND(mX - _ellipse_radius / __zoom),
+				 ROUND(mY - _ellipse_radius / __zoom),
+				 ROUND(2*_ellipse_radius / __zoom), ROUND(2*_ellipse_radius / __zoom));
+	}
+	else if (_type == MARK_SQUARE)
+	{
+	    __paint->drawRect(ROUND(mX - _ellipse_radius / __zoom),
+			      ROUND(mY - _ellipse_radius / __zoom),
+			      ROUND(2*_ellipse_radius / __zoom), ROUND(2*_ellipse_radius / __zoom));
+	}
+	else
+	{
+            REPORT_ERROR(1, "QtImageMicrograph::drawEllipse: unrecognized type");
+	}
         __paint->flush();
     }
 }
 
-void QtImageMicrograph::drawLastEllipse(int _x, int _y, int _color, float _ellipse_radius)
+void QtImageMicrograph::drawLastEllipse(int _x, int _y, int _color, float _ellipse_radius, int _type)
 {
-    drawEllipse(_x, _y, _color, 5. + _ellipse_radius);
+    drawEllipse(_x, _y, _color, 5. + _ellipse_radius, _type);
 }
 
 /* Load Symbols ------------------------------------------------------------ */
@@ -155,7 +169,7 @@ void QtImageMicrograph::loadSymbols()
         if (!getMicrograph()->coord(i).valid) continue;
         drawEllipse(getMicrograph()->coord(i).X,
                     getMicrograph()->coord(i).Y, getMicrograph()->coord(i).label,
-                    __ellipse_radius);
+                    __ellipse_radius, __ellipse_type);
     }
 }
 

@@ -20,6 +20,9 @@
 #ifndef __QT_IMAGE_MICROGRAPH_HH__
 #define __QT_IMAGE_MICROGRAPH_HH__
 
+#define MARK_CIRCLE 0
+#define MARK_SQUARE 1
+
 #include "image.h"
 
 /* Forward declarations ---------------------------------------------------- */
@@ -31,6 +34,7 @@ class QtImageMicrograph : public QtImage
     Q_OBJECT
 public:
     float   __ellipse_radius;
+    int     __ellipse_type;
 private:
     bool    __pressed;
     int     __movingMark;
@@ -54,8 +58,8 @@ public:
     {
         __movingMark = _coord;
     }
-    void drawEllipse(int _x, int _y, int _color, float _ellipse_radius = 5.0);
-    void drawLastEllipse(int _x, int _y, int _color, float _ellipse_radius = 5.0);
+    void drawEllipse(int _x, int _y, int _color, float _ellipse_radius = 5.0, int _type = MARK_CIRCLE);
+    void drawLastEllipse(int _x, int _y, int _color, float _ellipse_radius = 5.0, int _type = MARK_CIRCLE);
 
 protected:
     void loadImage();

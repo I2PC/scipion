@@ -45,12 +45,46 @@ QtFileMenu::QtFileMenu(QtWidgetMicrograph* _parent) :
         QtPopupMenuMark(_parent)
 {
     __coordinates_are_saved = TRUE;
-    insertItem("Change circle radius", this, SLOT(slotChangeCircleRadius()));
+
+    options =  new QPopupMenu();
+    insertItem("Change mark type", options);
+    circle = options->insertItem("Circle");
+    square = options->insertItem("Square");
+    options->setCheckable(TRUE);
+    connect(options, SIGNAL(activated(int)), this, SLOT(doOption(int)));
+    setMouseTracking(TRUE);
+    options->setItemChecked(circle, true);
+
+    insertItem("Change mark radius", this, SLOT(slotChangeCircleRadius()));
     insertItem("Load coords", this, SLOT(slotLoadCoords()));
     insertItem("Save coords", this, SLOT(slotSaveCoords()));
     insertItem("Save angles", this, SLOT(slotSaveAngles()));
     insertItem("Generate images", this, SLOT(slotGenerateImages()));
     insertItem("Quit", this, SLOT(slotQuit()));
+}
+
+
+/* Change mark type -------------------------------------------------------- */
+void QtFileMenu::doOption(int item)
+{
+
+    Micrograph *m = ((QtWidgetMicrograph*)parentWidget())->getMicrograph();
+    if (m == NULL) return;
+
+    if (options->isItemChecked(item)) return;     // They are all radio buttons
+
+    if (item == circle)
+    {
+        options->setItemChecked(circle, true);
+        options->setItemChecked(square, false);
+	((QtWidgetMicrograph*)parentWidget())->changeMarkType(MARK_CIRCLE);
+    }
+    else if (item == square)
+    {
+        options->setItemChecked(circle, false);
+        options->setItemChecked(square, true);
+	((QtWidgetMicrograph*)parentWidget())->changeMarkType(MARK_SQUARE);
+    }
 }
 
 /* Change circle radius ---------------------------------------------------- */
