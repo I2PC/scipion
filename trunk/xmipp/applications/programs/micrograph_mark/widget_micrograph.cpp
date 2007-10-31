@@ -1730,7 +1730,6 @@ void QtWidgetMicrograph::changeCircleRadius(float _circle_radius)
     __ellipse_radius = _circle_radius;
     __mImage->__ellipse_radius = __ellipse_radius;
     __mImage->repaint(FALSE);
-
 }
 
 void QtWidgetMicrograph::repaint(int t)
