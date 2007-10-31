@@ -182,9 +182,9 @@ void Prog_downsample_prm::generate_kernel()
     // kernel /=sqrt(kernel.sum2());
     // Keep average value constant
     kernel /= kernel.sum();
-    ImageXmipp save;
-    save() = kernel;
-    save.write("PPPkernel.xmp");
+    //ImageXmipp save;
+    //save() = kernel;
+    //save.write("PPPkernel.xmp");
 }
 
 // Create output inf file --------------------------------------------------
