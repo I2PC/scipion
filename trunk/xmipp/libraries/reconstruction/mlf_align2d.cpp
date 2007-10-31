@@ -258,7 +258,7 @@ void Prog_MLFalign2D_prm::usage()
     cerr << " [ -o <rootname> ]             : Output rootname (default = \"mlf2d\")\n";
     cerr << " [ -mirror ]                   : Also check mirror image of each reference \n";
     cerr << " [ -search_shift <int=3>]      : Limited translational searches (in pixels) \n";
-    cerr << " [ -reduce_noise <factor=1> ]  : Use a value smaller than one to decrease the estimated SSNRs \n";
+    cerr << " [ -reduce_snr <factor=1> ]    : Use a value smaller than one to decrease the estimated SSNRs \n";
     cerr << " [ -not_phase_flipped ]        : Use this if the experimental images have not been phase flipped \n";
     cerr << " [ -ctf_affected_refs ]        : Use this if the references (-ref) are not CTF-deconvoluted \n";
     cerr << " [ -low <Ang=999> ]            : Exclude lowest frequencies from P-calculations (in Ang) \n";
