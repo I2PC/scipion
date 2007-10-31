@@ -203,7 +203,7 @@ class preprocess_particles_class:
             os.makedirs(dirname)
 
         self.allselfile = []
-        self.allctfselfile = []
+        self.allctfdatfile = []
 
         mysel=selfile.selfile()
         mysel.read(self.MicrographSelfile)
@@ -436,7 +436,7 @@ class preprocess_particles_class:
                 name=self.ImagesDir+'/'+self.shortname+'/'+os.path.basename(args[0])
                 self.allselfile.append(name+" 1\n")
                 # Update all_images_ctf.dat (relative paths from ProjectDir)
-                self.allctfselfile.append(name + ' ' + \
+                self.allctfdatfile.append(name + ' ' + \
                                           self.WorkingDir + '/' + \
                                           self.shortname + '/' + \
                                           self.downname + '_Periodogramavg.ctfparam\n')
@@ -453,10 +453,9 @@ class preprocess_particles_class:
         fh.close()
 
         # Write updated all_images_ctf.dat
-        ctfselname=self.ProjectDir+'/'+self.OutSelFile.replace('.sel','')
-        ctfselname+='_ctf.dat'
-        fh=open(ctfselname,'w')
-        fh.writelines(self.allctfselfile)
+        ctfdatname=self.ProjectDir+'/'+self.OutSelFile.replace('.sel','.ctfdat')
+        fh=open(ctfdatname,'w')
+        fh.writelines(self.allctfdatfile)
         fh.close()
 
         # Output to screen
@@ -484,7 +483,8 @@ class preprocess_particles_class:
 
     def perform_phaseflip(self):
         import os
-        import spider_header
+        import spider_header, selfile
+
         selname=self.shortname+'/'+self.downname+'.raw.sel' 
         ctfparam=self.shortname+'/'+self.downname+'_Periodogramavg.ctfparam'
 
@@ -498,10 +498,16 @@ class preprocess_particles_class:
             self.perform_extract(True)
             self.perform_normalize(self.shortname+'/'+self.downname+'.raw.sel')
             
+        # Make ctfdat file for this micrograph
+        mysel=selfile.selfile()
+        mysel.read(selname)
+        ctfdatname=selname.replace('.sel','.ctfdat')
+        mysel.write_ctfdat(ctfdatname,ctfparam)
+        
         # Perform phase flipping operation
         print '*********************************************************************'
-        print '*  Flipping phases for images in: '+selname
-        command='xmipp_ctf_correct_phase -i '+selname+' -ctf '+ctfparam
+        print '*  Flipping phases for images in: '+ctfdatname
+        command='xmipp_ctf_correct_phase -ctfdat '+ctfdatname
         print '* ',command
         self.log.info(command)
         os.system(command)
@@ -515,11 +521,13 @@ class preprocess_particles_class:
     def perform_sort_junk(self):
         import os
         print '*********************************************************************'
-        print '*  Sorting images to identify junk particles in: '+self.OutSelFile
-        command='xmipp_sort_by_statistics -i '+self.ProjectDir+'/'+self.OutSelFile
+        print '*  Sorting images by statistics in: '+self.OutSelFile
+        os.chdir(self.ProjectDir)
+        command='xmipp_sort_by_statistics -i '+self.OutSelFile
         print '* ',command
         self.log.info(command)
         os.system(command)
+        os.chdir(os.pardir)
 
     def close(self):
         message=" Done pre-processing all"
