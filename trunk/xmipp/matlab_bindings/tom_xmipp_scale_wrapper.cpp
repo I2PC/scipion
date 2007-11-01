@@ -55,10 +55,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
             A.initIdentity();
             KaiserBessel kb;
             Matrix2D<double> Maux;
-            produceGriddingMatrix2D(image(),Maux,kb);
+            produceReverseGriddingMatrix2D(image(),Maux,kb);
             DIRECT_MAT_ELEM(A, 0, 0) = (double) outsize[0] / (double) XSIZE(image());
             DIRECT_MAT_ELEM(A, 1, 1) = (double) outsize[1] / (double) YSIZE(image());
-            applyGeometryGridding(image(), A, Maux, kb, IS_NOT_INV, WRAP, outsize[0], outsize[1]);
+            applyGeometryReverseGridding(image(), A, Maux, kb, IS_NOT_INV, WRAP, outsize[0], outsize[1]);
         }
         else
         {
@@ -77,11 +77,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
             B.initIdentity();
             KaiserBessel kb;
             Matrix3D<double> Maux;
-            produceGriddingMatrix3D(volume(),Maux,kb);
+            produceReverseGriddingMatrix3D(volume(),Maux,kb);
             DIRECT_MAT_ELEM(B, 0, 0) = (double) outsize[0] / (double) XSIZE(volume());
             DIRECT_MAT_ELEM(B, 1, 1) = (double) outsize[1] / (double) YSIZE(volume());
             DIRECT_MAT_ELEM(B, 2, 2) = (double) outsize[2] / (double) ZSIZE(volume());
-            applyGeometryGridding(volume(), B, Maux, kb, IS_NOT_INV, WRAP, outsize[0], outsize[1], outsize[2]);
+            applyGeometryReverseGridding(volume(), B, Maux, kb, IS_NOT_INV, WRAP, outsize[0], outsize[1], outsize[2]);
         }
         else
         {

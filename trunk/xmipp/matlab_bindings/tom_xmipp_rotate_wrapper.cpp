@@ -79,8 +79,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
             if (gridding)
             {
                 KaiserBessel kb;
-                produceGriddingMatrix2D(img(),img_out(),kb);
-                applyGeometryGridding(img(), A2D, img_out(), kb, IS_NOT_INV, wrap);
+                produceReverseGriddingMatrix2D(img(),img_out(),kb);
+                applyGeometryReverseGridding(img(), A2D, img_out(), kb, IS_NOT_INV, wrap);
                 setMatrix2D(img(),plhs[0]);
             }
             else
@@ -101,8 +101,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
         if (gridding)
         {
             KaiserBessel kb;
-            produceGriddingMatrix3D(vol(),vol_out(),kb);
-            applyGeometryGridding(vol(), A3D, vol_out(), kb, IS_NOT_INV, wrap);
+            produceReverseGriddingMatrix3D(vol(),vol_out(),kb);
+            applyGeometryReverseGridding(vol(), A3D, vol_out(), kb, IS_NOT_INV, wrap);
             setMatrix3D(vol(),plhs[0]);
         }
         else

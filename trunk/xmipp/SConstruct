@@ -58,6 +58,9 @@ opts.Add('MPI_LIB', 'MPI library', 'mpich')
 
 opts.Add('prefix', 'Base installation directory', Dir('.').abspath)
 
+opts.Add(BoolOption('matlab', 'Build the Matlab bindings?', 'yes'))
+opts.Add('MATLAB_DIR', 'Matlab installation dir', '/usr/local/matlab')
+
 opts.Update(env)
 
 # generate help for options
@@ -195,6 +198,17 @@ if (ARGUMENTS['mode'] == 'configure'):
                              env['MPI_LIB'], env['MPI_CC'], env['MPI_CXX']):
             print '* Did not find MPI library. Disabling ...'
             env['mpi'] = 0
+
+    #MATLAB
+    if int(env['matlab']):
+	print 'Checking for Matlab ... ',
+	if not os.path.exists(env['MATLAB_DIR'] + '/bin/matlab'):
+	    print 'no'
+	    print '* Did not find Matlab. Disabling ...'
+            env['matlab'] = 0
+	else:
+	    print 'yes'
+	     
 
     env = conf.Finish()
     opts.Save('options.cache', env)
