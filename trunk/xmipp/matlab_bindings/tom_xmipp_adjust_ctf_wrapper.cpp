@@ -26,10 +26,6 @@
 #include "adjust_ctf.h"
 #include "tom_xmipp_helpers.h"
 
-/*Matlab includes*/
-#include "mex.h"
-#include "matrix.h"
-
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {
 
@@ -58,28 +54,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     adjustParams.enhanced_weight=(double) mxGetScalar(prhs[11]);
 
     XmippCTF ctfmodel;
-    ROUT_Adjust_CTF(adjustParams,ctfmodel,false);
+    try 
+    {
+        ROUT_Adjust_CTF(adjustParams,ctfmodel,false);
+    }
+    catch (Xmipp_error Xe)
+    {
+        mexErrMsgTxt(Xe.msg.c_str());
+    }
     
-//     struct v {
-//         const char *name;
-//         double *ptr;
-//     }
-//     std::vector<struct v> fields;
-//     fields.push(struct v("DeltafU", &ctfmodel.DeltafU));
-//     for (i=0; i<fields.length(); i++) {
-//         mxArray *field1 = mxCreateDoubleMatrix(1,1,mxREAL);
-//         *mxGetPr(field1) = ctfmodel.DeltafU;
-//         mxSetField(plhs[0],0,"DeltafU",field1);
-//     }
-//     #define nfield_names 15
     const char *field_names[] = {"DeltafU","DeltafV","AzimuthalAngle",
        "kV","K","Cs","Ca","espr","ispr","alpha","DeltaF","DeltaR","Q0",
        "base_line","sqrt_K","sqU","sqV","sqrt_angle","gaussian_K",
        "sigmaU","sigmaV","gaussian_angle","cU","cV","gaussian_K2",
        "sigmaU2","sigmaV2","gaussian_angle2","cU2","cV2",
        "CTFmodelhalf","CTFmodelquadrant","zeros","Tm"};
-//     const double *fsf = {&ctfmodel.DeltafU, }
-    
+
     mwSize dims[2] = {1, 1};
     plhs[0] = mxCreateStructArray(2, dims, NUMBER_OF_FIELDS, field_names);
     

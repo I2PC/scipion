@@ -28,10 +28,6 @@
 #include "tom_xmipp_helpers.h"
 #include "gridding.h"
 
-/*Matlab includes*/
-#include "mex.h"
-#include "matrix.h"
-
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {
     

@@ -28,10 +28,6 @@
 #include "fft.h"
 #include "tom_xmipp_helpers.h"
 
-/*Matlab includes*/
-#include "mex.h"
-#include "matrix.h"
-
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {
  
@@ -39,24 +35,30 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 
     float sam = (float) mxGetScalar(prhs[2]);
     mwSize ndims = mxGetNumberOfDimensions(prhs[0]);
+    try
+    {
+        if (ndims == 2)
+        {
+            Image img, ref;
+            getMatrix2D(prhs[0],img());
+            getMatrix2D(prhs[1],ref());
+            fourier_ring_correlation(ref(), img(), sam, freq, frc, frc_noise);
+            differential_phase_residual(ref(), img(), sam, freq, dpr);
+        }
+        else
+        {
+            Volume img, ref;
+            getMatrix3D(prhs[0],img());
+            getMatrix3D(prhs[1],ref());
+            fourier_ring_correlation(ref(), img(), sam, freq, frc, frc_noise);
+            differential_phase_residual(ref(), img(), sam, freq, dpr);
+        }
+    }
+    catch (Xmipp_error Xe)
+    {
+        mexErrMsgTxt(Xe.msg.c_str());
+    }
     
-    if (ndims == 2)
-    {
-        Image img, ref;
-        getMatrix2D(prhs[0],img());
-        getMatrix2D(prhs[1],ref());
-        fourier_ring_correlation(ref(), img(), sam, freq, frc, frc_noise);
-        differential_phase_residual(ref(), img(), sam, freq, dpr);
-    }
-    else
-    {
-        Volume img, ref;
-        getMatrix3D(prhs[0],img());
-        getMatrix3D(prhs[1],ref());
-        fourier_ring_correlation(ref(), img(), sam, freq, frc, frc_noise);
-        differential_phase_residual(ref(), img(), sam, freq, dpr);
-    }
-
     const char *field_names[] = {"freq","dpr","frc","frc_noise"};
     mwSize dims[2] = {1, 1};
     plhs[0] = mxCreateStructArray(2, dims, NUMBER_OF_FIELDS, field_names);

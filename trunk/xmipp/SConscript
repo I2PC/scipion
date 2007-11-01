@@ -731,7 +731,7 @@ if int(env['matlab']):
 
     bindings = ['adjust_ctf','align2d','ctf_correct_phase',
         'mask','mirror','morphology','normalize','psd_enhance',
-        'resolution','rotate','scale','scale_pyramid']
+        'resolution','rotate','scale','scale_pyramid','volume_segment']
     
     for i in range(len(bindings)):
        AddMatlabBinding(bindings[i])

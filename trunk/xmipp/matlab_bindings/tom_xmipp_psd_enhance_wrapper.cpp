@@ -26,12 +26,6 @@
 #include "psd_enhance.h"
 #include "tom_xmipp_helpers.h"
 
-/*Matlab includes*/
-#include "mex.h"
-#include "matrix.h"
-
-
-
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {
 
@@ -61,8 +55,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     
     /*mask_w2 (High freq. for mask, max 0.5)*/
     psdParams.mask_w2 = (float) mxGetScalar(prhs[7]);
-       
-    psdParams.apply(image);
+    
+    try
+    {
+        psdParams.apply(image);
+    }
+    catch (Xmipp_error Xe)
+    {
+        mexErrMsgTxt(Xe.msg.c_str());
+    }
     
     setMatrix2D(image, plhs[0]);
        

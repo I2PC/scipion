@@ -27,12 +27,6 @@
 #include "tom_xmipp_helpers.h"
 #include "reconstruction/align2d.h"
 
-/*Matlab includes*/
-#include "mex.h"
-#include "matrix.h"
-
-#define NUMBER_OF_FIELDS (sizeof(field_names)/sizeof(*field_names))
-
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {
     
@@ -55,17 +49,23 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     
     bool success;
     /*mode: 1: only trans, 2:only rot, 3:complete*/
-    switch (mode)
+    try {
+        switch (mode)
+        {
+            case 1:
+                success = alignParams.align_trans(image,ref,max_shift,outside);            
+                break;
+            case 2:
+                success = alignParams.align_rot(image,ref,max_rot,Rin,Rout,outside);
+                break;
+            case 3:
+                success = alignParams.align_complete_search(image,ref,max_shift,max_rot,psi_interval,Rin,Rout,outside);
+                break;            
+        }
+    }
+    catch (Xmipp_error Xe)
     {
-        case 1:
-            success = alignParams.align_trans(image,ref,max_shift,outside);            
-            break;
-        case 2:
-            success = alignParams.align_rot(image,ref,max_rot,Rin,Rout,outside);
-            break;
-        case 3:
-            success = alignParams.align_complete_search(image,ref,max_shift,max_rot,psi_interval,Rin,Rout,outside);
-            break;            
+        mexErrMsgTxt(Xe.msg.c_str());
     }
     
     /*fetch the results*/

@@ -28,10 +28,6 @@
 #include "morphology.h"
 #include "tom_xmipp_helpers.h"
 
-/*Matlab includes*/
-#include "mex.h"
-#include "matrix.h"
-
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {
     #define DILATION 1

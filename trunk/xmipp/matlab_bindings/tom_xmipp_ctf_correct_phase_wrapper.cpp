@@ -26,16 +26,10 @@
 #include "ctf_correct_phase.h"
 #include "tom_xmipp_helpers.h"
 
-/*Matlab includes*/
-#include "mex.h"
-#include "matrix.h"
-
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {
     Matrix2D<double> I;
     getMatrix2D(prhs[0],I);
-    Matrix2D< complex<double> > fft;
-    FourierTransform(I, fft);
     
     CorrectPhaseParams prm;
     prm.epsilon = (double) mxGetScalar(prhs[2]);
@@ -58,8 +52,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     prm.ctf.ctf.DeltaF = (double) mxGetScalar(prhs[14]);
     prm.ctf.ctf.DeltaR = (double) mxGetScalar(prhs[15]);
     prm.ctf.ctf.Q0 = (double) mxGetScalar(prhs[16]);
-    prm.ctf.ctf.Produce_Side_Info();
-    prm.correct(fft);
-    InverseFourierTransform(fft, I);
+    try 
+    {
+        Matrix2D< complex<double> > fft;
+        FourierTransform(I, fft);
+        prm.ctf.ctf.Produce_Side_Info();
+        prm.correct(fft);
+        InverseFourierTransform(fft, I);
+    }
+    catch (Xmipp_error Xe)
+    {
+        mexErrMsgTxt(Xe.msg.c_str());
+    }
+
     setMatrix2D(I,plhs[0]);
 }	
