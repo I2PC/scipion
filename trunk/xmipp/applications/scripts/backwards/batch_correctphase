@@ -1,7 +1,7 @@
 #!/bin/sh
 
 VERSION=1.2
-NEW_NAME=xmipp_correct_phase
+NEW_NAME=xmipp_ctf_correct_phase
 
 # Warn user
 echo "** Warning! This program name is deprecated as of Xmipp version" $VERSION
