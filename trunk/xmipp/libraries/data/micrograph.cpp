@@ -666,11 +666,14 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
         for (jj = 0, x = x0; x < xF; x += Xstep, jj++)
         {
             pixval = 0;
-            FOR_ALL_ELEMENTS_IN_MATRIX2D(kernel)
+            for (int i=STARTINGY(kernel); i<=FINISHINGY(kernel); i++)
             {
-                int j2 = intWRAP(j + x, 0, xF - 1);
                 int i2 = intWRAP(i + y, 0, yF - 1);
-                pixval += kernel(i, j) * M(j2, i2);
+                for (int j=STARTINGX(kernel); j<=FINISHINGX(kernel); j++)
+                {
+                    int j2 = intWRAP(j + x, 0, xF - 1);
+                    pixval += kernel(i, j) * M(j2, i2);
+                }
             }
 
             if (ii < Ypdim && jj < Xpdim)
