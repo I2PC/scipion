@@ -52,6 +52,9 @@ public:
     
     /** Use blobs instead of scattering factors */
     bool useBlobs;
+
+    /** Use poor Gaussian instead of scattering factors */
+    bool usePoorGaussian;
 public:
     /** Empty constructor */
     Prog_PDBPhantom_Parameters();

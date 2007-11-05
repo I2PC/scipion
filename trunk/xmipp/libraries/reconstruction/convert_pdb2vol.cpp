@@ -41,6 +41,7 @@ Prog_PDBPhantom_Parameters::Prog_PDBPhantom_Parameters()
     Ts = 1;
     highTs = 1.0/12.0;
     useBlobs=false;
+    usePoorGaussian=false;
 
     // Periodic table for the blobs
     periodicTable.resize(7, 2);
@@ -68,7 +69,7 @@ Prog_PDBPhantom_Parameters::Prog_PDBPhantom_Parameters()
 
 /* Produce Side Info ------------------------------------------------------- */
 void Prog_PDBPhantom_Parameters::produceSideInfo() {
-    if (!useBlobs) {
+    if (!useBlobs && !usePoorGaussian) {
 	// Compute the downsampling factor
 	M=(int)ROUND(Ts/highTs);
 
@@ -124,6 +125,7 @@ void Prog_PDBPhantom_Parameters::read(int argc, char **argv)
     highTs = textToFloat(getParameter(argc, argv, "-high_sampling_rate", "0.08333333"));
     output_dim = textToInteger(getParameter(argc, argv, "-size", "-1"));
     useBlobs = checkParameter(argc, argv, "-blobs");
+    usePoorGaussian = checkParameter(argc, argv, "-poor_Gaussian");
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -146,11 +148,12 @@ void Prog_PDBPhantom_Parameters::usage()
 /* Show -------------------------------------------------------------------- */
 void Prog_PDBPhantom_Parameters::show()
 {
-    std::cout << "PDB file:           " << fn_pdb     << std::endl
-              << "Sampling rate:      " << Ts         << std::endl
-              << "High sampling rate: " << highTs     << std::endl
-              << "Size:               " << output_dim << std::endl
-	      << "Use blobs:          " << useBlobs   << std::endl
+    std::cout << "PDB file:           " << fn_pdb          << std::endl
+              << "Sampling rate:      " << Ts              << std::endl
+              << "High sampling rate: " << highTs          << std::endl
+              << "Size:               " << output_dim      << std::endl
+	      << "Use blobs:          " << useBlobs        << std::endl
+	      << "Use poor Gaussian:  " << usePoorGaussian << std::endl
     ;
 }
 
@@ -169,7 +172,8 @@ void Prog_PDBPhantom_Parameters::compute_protein_geometry()
     {
         int max_dim = XMIPP_MAX(CEIL(ZZ(limit) * 2 / Ts) + 5, CEIL(YY(limit) * 2 / Ts) + 5);
         max_dim = XMIPP_MAX(max_dim, CEIL(XX(limit) * 2 / Ts) + 5);
-        if (useBlobs) output_dim = (int)NEXT_POWER_OF_2(max_dim);
+        if (useBlobs || usePoorGaussian)
+            output_dim = (int)NEXT_POWER_OF_2(max_dim);
         std::cout << "Setting output_dim to " << output_dim << std::endl;
     }
 }
@@ -220,6 +224,10 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
         double weight, radius;
         atomBlobDescription(atom_type, weight, radius);
         blob.radius = radius;
+        if (usePoorGaussian) radius=XMIPP_MAX(radius/Ts,4.5);
+        double GaussianSigma2=(radius/(3*sqrt(2.0)));
+        GaussianSigma2*=GaussianSigma2;
+        double GaussianNormalization = 1.0/pow(2*PI*GaussianSigma2,1.5);
 
         // Find the part of the volume that must be updated
         int k0 = XMIPP_MAX(FLOOR(ZZ(r) - radius), STARTINGZ(Vhigh()));
@@ -236,7 +244,13 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
                 {
                     Matrix1D<double> rdiff(3);
                     VECTOR_R3(rdiff, XX(r) - j, YY(r) - i, ZZ(r) - k);
-                    Vhigh(k, i, j) += weight * blob_val(rdiff.module(), blob);
+                    rdiff*=highTs;
+                    if (useBlobs)
+                       Vhigh(k, i, j) += weight * blob_val(rdiff.module(), blob);
+                    else if (usePoorGaussian)
+                       Vhigh(k, i, j) += weight * 
+                          exp(-rdiff.module()*rdiff.module()/(2*GaussianSigma2))*
+                          GaussianNormalization;
                 }
     }
 
@@ -369,6 +383,11 @@ void Prog_PDBPhantom_Parameters::run()
 	create_protein_at_high_sampling_rate();
 	create_protein_at_low_sampling_rate();
 	blob_properties();
+    } else if (usePoorGaussian) {
+        highTs=Ts;
+	create_protein_at_high_sampling_rate();
+        Vlow=Vhigh;
+        Vhigh.clear();
     } else {
     	create_protein_using_scattering_profiles();
     }
