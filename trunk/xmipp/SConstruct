@@ -3,6 +3,7 @@
 
 # basic setup, import all environment and custom tools
 import os
+import distutils.sysconfig
 env = Environment(ENV = os.environ, tools = ['default', 'disttar'], toolpath =
                   ['scons/ToolsFromWiki'])
 
@@ -56,9 +57,12 @@ opts.Add('MPI_INCLUDE', 'MPI headers dir ', '/usr/include')
 opts.Add('MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib')
 opts.Add('MPI_LIB', 'MPI library', 'mpich')
 
+opts.Add(BoolOption('swig', 'Build the Xmipp pythonization?', 'no'))
+opts.Add('SWIG', 'SWIG compiler', 'swig')
+
 opts.Add('prefix', 'Base installation directory', Dir('.').abspath)
 
-opts.Add(BoolOption('matlab', 'Build the Matlab bindings?', 'yes'))
+opts.Add(BoolOption('matlab', 'Build the Matlab bindings?', 'no'))
 opts.Add('MATLAB_DIR', 'Matlab installation dir', '/usr/local/matlab')
 
 opts.Update(env)
@@ -266,6 +270,10 @@ elif (ARGUMENTS['mode'] == 'compile'):
         env['TARCOMSTR'] = 'Archiving $TARGET'
         env['INSTALLSTR'] = 'Installing $TARGET'
 
+    # SWIG
+    if int(env['swig']):
+        env.Append(SWIGFLAGS=["-python","-c++"])
+        env.Append(SWIGCPPPATH=[distutils.sysconfig.get_python_inc()]);
 
     Export('env')
     env.SConscript('SConscript')
