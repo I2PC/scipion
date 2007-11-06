@@ -2549,9 +2549,9 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, DocFile &DFo,
     {
 	FOR_ALL_DEFOCUS_GROUPS()
         {
-	    fn_tmp = fn_base + "_sig";
+	    fn_tmp = fn_base + "_ctf";
 	    if (nr_focus > 1) fn_tmp.compose(fn_tmp, ifocus + 1, "");
-	    fn_tmp += ".dat";
+	    fn_tmp += ".noise";
 	    fh.open((fn_tmp).c_str(), ios::out);
 	    if (!fh) REPORT_ERROR(1, (string)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
             for (int irr = 0; irr < hdim; irr++)
