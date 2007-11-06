@@ -305,6 +305,20 @@ int main(int argc, char *argv[])
     TIFFGetField(tif, TIFFTAG_IMAGEWIDTH,      &imageWidth);
     TIFFGetField(tif, TIFFTAG_IMAGELENGTH,     &imageLength);
     TIFFGetField(tif, TIFFTAG_SAMPLEFORMAT,    &imageSampleFormat);
+
+    // Sjors 6nov07: some scanners set samplesPerPixel to a very high value
+    // If this happens, set to 1 and write a warning message...
+    // Greyscale images are usually samplesPerPixel=1
+    // RGB images are usually samplesPerPixel=3
+    if (samplesPerPixel != 1)
+    {
+      cerr <<"WARNING! This tif has a value for samplesPerPixel larger than 1 (i.e. "<<samplesPerPixel<<")"<<endl;
+      cerr <<"         This could mean you are saving colour images (e.g. samplesPerPixel= 3)"<<endl;
+      cerr <<"         or that your tiff file header is not correctly set"<<endl;
+      cerr <<"         Setting samplePerPixel to 1 and continuing execution ... "<<endl;
+      samplesPerPixel = 1;      
+    }
+
     if (TIFFIsTiled(tif))
     {
         TIFFGetField(tif, TIFFTAG_TILEWIDTH,       &tileWidth);
