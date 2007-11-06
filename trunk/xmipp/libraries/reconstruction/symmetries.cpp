@@ -39,11 +39,25 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
     int  fold;
     Matrix2D<double> L(4, 4), R(4, 4);
     Matrix1D<double> axis(3), shift(3);
-
+    int pgGroup, pgOrder;
+    
+    //check if reserved word
+    
     // Open file ---------------------------------------------------------
     if ((fpoii = fopen(fn_sym.c_str(), "r")) == NULL)
-        REPORT_ERROR(3005, (string)"SymList::read_sym_file:Can't open file: "
-                     + fn_sym);
+    {
+        //check if reserved word and return group and order
+        if (isSymmetryGroup(fn_sym, pgGroup, pgOrder))
+        {   //create symmetry file that will be read
+           create_sym_file(fn_sym, pgGroup, pgOrder);
+           if ((fpoii = fopen(fn_sym.c_str(), "r")) == NULL)
+            REPORT_ERROR(3005, (string)"SymList::read_sym_file:Can't open file: "
+                     +  fn_sym);
+        }
+        else
+            REPORT_ERROR(3005, (string)"SymList::read_sym_file:Can't open file: "
+                     + " or do not recognize symmetry group" + fn_sym);
+    }
     //reset space_group
     space_group = 0;
     // Count the number of symmetries ------------------------------------
@@ -135,7 +149,7 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
             set_shift(i, shift);
             set_matrices(i++, L, R);
             __sym_elements++;
-            // P4212 -------------------------------------------------------------
+            // mirror plane -------------------------------------------------------------
         }
         else if (strcmp(auxstr, "mirror_plane") == 0)
         {
@@ -459,7 +473,7 @@ void SymList::compute_subgroup(double accuracy)
 
         if (!found)
         {
-#define DEBUG        
+//#define DEBUG        
 #ifdef DEBUG
             cout << "Matrix size " << XSIZE(tried) << " "
             << "trying " << i << " " << j << " "
@@ -2033,3 +2047,401 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
 }
 #undef wrap_as_Crystal
 #undef DEBUG
+    /** translate string fn_sym to symmetry group, return false
+        is translation is not possible. See URL
+        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
+         for details  */
+
+bool SymList::isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder)
+{
+   char G1,G2,G3,G4;
+   char auxChar[3];
+   //each case check lenght, check first letter, second, is number
+   //Non a point group 
+   int mySize=fn_sym.size();
+   bool return_true;
+   return_true=false;
+   auxChar[2]='\0';
+   if(mySize>4 || mySize<1)
+   {
+      pgGroup=-1;
+      pgOrder=-1;
+      return false;
+   }   
+   //get the group character by character
+   G1=toupper((fn_sym.c_str())[0]);
+   G2=toupper((fn_sym.c_str())[1]);
+   if (mySize > 2)
+   {   G3=toupper((fn_sym.c_str())[2]);
+       if(mySize > 3)
+           G4=toupper((fn_sym.c_str())[3]);
+   }
+   else
+       G4='\0';    
+   //CN
+   if (mySize==2 && G1=='C' && isdigit(G2))
+   {
+       pgGroup=pg_CN;
+       pgOrder=int(G2)-48;
+       return_true=true;
+   }
+   if (mySize==3 && G1=='C' && isdigit(G2) && isdigit(G3))
+   {
+       pgGroup=pg_CN;
+       auxChar[0]=G2;
+       auxChar[1]=G3;
+       pgOrder=atoi(auxChar);
+       return_true=true;
+   }
+   //CI
+   else if (mySize==2 && G1=='C' && G2=='I')
+   {
+       pgGroup=pg_CI;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //CS
+   else if (mySize==2 && G1=='C' && G2=='S')
+   {
+       pgGroup=pg_CS;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //CNH
+   else if (mySize==3 && G1=='C' && isdigit(G2) && G3=='H')
+   {
+       pgGroup=pg_CNH;
+       pgOrder=int(G2)-48;
+       return_true=true;
+   }
+   else if (mySize==4 && G1=='C' && isdigit(G2) && isdigit(G3) && G4=='H')
+   {
+       pgGroup=pg_CNH;
+       auxChar[0]=G2;
+       auxChar[1]=G3;
+       pgOrder=atoi(auxChar);
+       return_true=true;
+   }
+   //CNV
+   else if (mySize==3 && G1=='C' && isdigit(G2) && G3=='V')
+   {
+       pgGroup=pg_CNV;
+       pgOrder=int(G2)-48;
+       return_true=true;
+   }
+   else if (mySize==4 && G1=='C' && isdigit(G2) && isdigit(G3) && G4=='V')
+   {
+       pgGroup=pg_CNV;
+       auxChar[0]=G2;
+       auxChar[1]=G3;
+       pgOrder=atoi(auxChar);
+       return_true=true;
+   }
+   //SN
+   else if (mySize==2 && G1=='S' && isdigit(G2) )
+   {
+       pgGroup=pg_SN;
+       pgOrder=int(G2)-48;
+       return_true=true;
+   }
+   else if (mySize==3 && G1=='S' && isdigit(G2) && isdigit(G3) )
+   {
+       pgGroup=pg_SN;
+       auxChar[0]=G2;
+       auxChar[1]=G3;
+       pgOrder=atoi(auxChar);
+       return_true=true;
+   }
+   //DN
+   else if (mySize==2 && G1=='D' && isdigit(G2) )
+   {
+       pgGroup=pg_DN;
+       pgOrder=int(G2)-48;
+       return_true=true;
+   }
+   if (mySize==3 && G1=='D' && isdigit(G2) && isdigit(G3))
+   {
+       pgGroup=pg_DN;
+       auxChar[0]=G2;
+       auxChar[1]=G3;
+       pgOrder=atoi(auxChar);
+       return_true=true;
+   }
+   //DNV
+   else if (mySize==3 && G1=='D' && isdigit(G2) && G3=='V')
+   {
+       pgGroup=pg_DNV;
+       pgOrder=int(G2)-48;
+       return_true=true;
+   }
+   else if (mySize==4 && G1=='D' && isdigit(G2) && isdigit(G3) && G4=='V')
+   {
+       pgGroup=pg_DNV;
+       auxChar[0]=G2;
+       auxChar[1]=G3;
+       pgOrder=atoi(auxChar);
+       return_true=true;
+   }
+   //DNH
+   else if (mySize==3 && G1=='D' && isdigit(G2) && G3=='H')
+   {
+       pgGroup=pg_DNH;
+       pgOrder=int(G2)-48;
+       return_true=true;
+   }
+   else if (mySize==4 && G1=='D' && isdigit(G2) && isdigit(G3) && G4=='H')
+   {
+       pgGroup=pg_DNH;
+       auxChar[0]=G2;
+       auxChar[1]=G3;
+       pgOrder=atoi(auxChar);
+       return_true=true;
+   }
+   //T
+   else if (mySize==1 && G1=='T')
+   {
+       pgGroup=pg_T;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //TD
+   else if (mySize==2 && G1=='T' && G2=='D')
+   {
+       pgGroup=pg_TD;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //TH
+   else if (mySize==2 && G1=='T' && G2=='H')
+   {
+       pgGroup=pg_TH;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //O
+   else if (mySize==1 && G1=='O')
+   {
+       pgGroup=pg_O;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //OH
+   else if (mySize==2 && G1=='O'&& G2=='H')
+   {
+       pgGroup=pg_OH;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //I
+   else if (mySize==1 && G1=='I')
+   {
+       pgGroup=pg_I;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //IH
+   else if (mySize==2 && G1=='I'&& G2=='H')
+   {
+       pgGroup=pg_IH;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //I1
+   else if (mySize==2 && G1=='I'&& G2=='1')
+   {
+       pgGroup=pg_I1;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //I2
+   else if (mySize==2 && G1=='I'&& G2=='2')
+   {
+       pgGroup=pg_I2;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //I3
+   else if (mySize==2 && G1=='I'&& G2=='3')
+   {
+       pgGroup=pg_I3;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //I4
+   else if (mySize==2 && G1=='I'&& G2=='4')
+   {
+       pgGroup=pg_I4;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //I5
+   else if (mySize==2 && G1=='I'&& G2=='5')
+   {
+       pgGroup=pg_I5;
+       pgOrder=-1;
+       return_true=true;
+   }
+ 
+   
+   return return_true;
+}
+void SymList::create_sym_file(FileName &symmetry, int pgGroup, int pgOrder)
+{   
+    symmetry = symmetry + ".sym";
+    ofstream SymFile;
+    SymFile.open(symmetry.c_str(), ios::out);
+    if (pgGroup == pg_CN)
+    {
+        SymFile << "rot_axis " << pgOrder << " 0 0 1";
+    }
+    else if (pgGroup == pg_CI)
+    {
+        SymFile << "inversion ";
+    }
+    else if (pgGroup == pg_CS)
+    {
+        SymFile << "mirror_plane 0 0 1";
+    }
+    else if (pgGroup == pg_CNV)
+    {
+        SymFile << "rot_axis " << pgOrder << " 0 0 1";
+        SymFile << endl;
+        SymFile << "mirror_plane 0 1 0";
+    }
+    else if (pgGroup == pg_CNH)
+    {
+        SymFile << "rot_axis " << pgOrder << " 0 0 1";
+        SymFile << endl;
+        SymFile << "mirror_plane 0 0 1";
+    }
+    else if (pgGroup == pg_SN)
+    {
+        int order = pgOrder / 2;
+        SymFile << "rot_axis " << order << " 0 0 1";
+        SymFile << endl;
+        SymFile << "inversion ";
+    }
+    else if (pgGroup == pg_DN)
+    {
+        SymFile << "rot_axis " << pgOrder << " 0 0 1";
+        SymFile << endl;
+        SymFile << "rot_axis " << "2" << " 0 1 0";
+    }
+    else if (pgGroup == pg_DNV)
+    {
+        SymFile << "rot_axis " << pgOrder << " 0 0 1";
+        SymFile << endl;
+        SymFile << "rot_axis " << "2" << " 0 1 0";
+        SymFile << endl;
+        SymFile << "mirror_plane 0 1 0";
+    }
+    else if (pgGroup == pg_DNH)
+    {
+        SymFile << "rot_axis " << pgOrder << " 0 0 1";
+        SymFile << endl;
+        SymFile << "rot_axis " << "2" << " 1 0 0";
+        SymFile << endl;
+        SymFile << "mirror_plane 0 0 1";
+    }
+    else if (pgGroup == pg_T)
+    {
+        SymFile << "rot_axis " << "3" << "  0. 0. 1.";
+        SymFile << endl;
+        SymFile << "rot_axis " << "2" << " 0. 0.816496 0.577350";
+    }
+    else if (pgGroup == pg_TD)
+    {
+        SymFile << "rot_axis " << "3" << "  0. 0. 1.";
+        SymFile << endl;
+        SymFile << "rot_axis " << "2" << " 0. 0.816496 0.577350";
+        SymFile << endl;
+        SymFile << "mirror_plane 1.4142136 2.4494897 0.0000000";
+    }
+    else if (pgGroup == pg_TH)
+    {
+        SymFile << "rot_axis " << "3" << "  0. 0. 1.";
+        SymFile << endl;
+        SymFile << "rot_axis " << "2" << " 0. -0.816496 -0.577350";
+        SymFile << endl;
+        SymFile << "inversion";
+    }
+    else if (pgGroup == pg_O)
+    {
+        SymFile << "rot_axis " << "3" << "  .5773502  .5773502 .5773502";
+        SymFile << endl;
+        SymFile << "rot_axis " << "4" << " 0 0 1";
+    }
+    else if (pgGroup == pg_OH)
+    {
+        SymFile << "rot_axis " << "3" << "  .5773502  .5773502 .5773502";
+        SymFile << endl;
+        SymFile << "rot_axis " << "4" << " 0 0 1";
+        SymFile << endl;
+        SymFile << "mirror_plane 0 1 1";
+    }
+    else if (pgGroup == pg_I)
+    {
+        SymFile << "rot_axis 2  0             1           0";
+        SymFile << endl;
+        SymFile << "rot_axis 5 -0.85065080702670 0 0.5257311142635";
+        SymFile << endl;
+        SymFile << "rot_axis 3 -0.9341723640 0.3568220765 0";
+    }
+    else if (pgGroup == pg_IH)
+    {
+        SymFile << "rot_axis 2  0             1           0";
+        SymFile << endl;
+        SymFile << "rot_axis 5 -0.85065080702670 0 0.5257311142635";
+        SymFile << endl;
+        SymFile << "rot_axis 3 -0.9341723640 0.3568220765 0";
+        SymFile << endl;
+        SymFile << "mirror_plane 1 0 0";
+    }
+    else if (pgGroup == pg_I1)
+    {
+        SymFile << "rot_axis 2  0             1           0";
+        SymFile << endl;
+        SymFile << "rot_axis 5 -0.85065080702670 0 0.5257311142635";
+        SymFile << endl;
+        SymFile << "rot_axis 3 -0.9341723640 0.3568220765 0";
+    }
+    else if (pgGroup == pg_I2)
+    {
+        SymFile << "rot_axis 2  0             0          1";
+        SymFile << endl;
+        SymFile << "rot_axis 5 -1.618033989  -1           0";
+        SymFile << endl;
+        SymFile << "rot_axis 3 -0.53934467   -1.4120227   0";
+    }
+    else if (pgGroup == pg_I3)
+    {
+        SymFile << "rot_axis 2  -0.5257311143 0 0.8506508070";
+        SymFile << endl;
+        SymFile << "rot_axis 3  -0.9822469432 0 -0.1875924905";
+        SymFile << endl;
+        SymFile << "rot_axis 5  -0.7236067955 -0.5257311143 -0.4472135966";
+    }
+    else if (pgGroup == pg_I4)
+    {
+        SymFile << "rot_axis 2  0.5257311143 0 0.8506508070";
+        SymFile << endl;
+        SymFile << "rot_axis 3  0.9822469432 0 -0.1875924905";
+        SymFile << endl;
+        SymFile << "rot_axis 5  0.7236067955 0.5257311143 -0.4472135966";
+    }
+    else if (pgGroup == pg_I5)
+    {
+        SymFile << "rot_axis 2 0.5257311143 0.8506508070 0";
+        SymFile << endl;
+        SymFile << "rot_axis 3  0.9822469432 -0.1875924905 0";
+        SymFile << endl;
+        SymFile << "rot_axis 5  0.7236067955 -0.4472135966 0.5257311143";
+    }
+    else
+    {
+        cerr << "ERROR: Symmetry " << symmetry  << "is not known" << endl;
+        exit(0);
+    }
+    SymFile.close();
+
+}
