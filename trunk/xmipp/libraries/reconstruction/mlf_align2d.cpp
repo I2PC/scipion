@@ -609,7 +609,7 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
     ImageXmipp                  img;
     FileName                    fn_tmp;
     SelLine                     SL;
-    int                         focus, c, nn;
+    int                         focus = 0, c, nn;
     ofstream                    fh;
 
     center.initZeros();
@@ -643,8 +643,11 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
         int imgno = 0;
         while (!SF.eof())
         {
-            SL = SF.current();
-            focus = SL.get_number() - 1;
+	    if (do_ctf_correction)
+	    {
+		SL = SF.current();
+		focus = SL.get_number() - 1;
+	    }
             img.read(SF.NextImg(), false, false, false, false);
             img().setXmippOrigin();
             FourierTransform(img(), Fimg);
@@ -2130,7 +2133,7 @@ void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, vector<ImageXmipp> &Iref
     float old_phi = -999., old_theta = -999.;
     double opt_psi, opt_flip, maxcorr;
     double opt_xoff, opt_yoff;
-    int c, nn, imgno, opt_refno, focus;
+    int c, nn, imgno, opt_refno, focus = 0;
     bool apply_ctf;
 
     // Generate (FT of) each rotated version of all references
@@ -2178,13 +2181,20 @@ void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, vector<ImageXmipp> &Iref
     SF.go_beginning();
     while ((!SF.eof()))
     {
-        // For defocus-groups in Fourier-mode
-        line = SF.current();
-        focus = line.get_number() - 1;
-
+        // Get defocus-group
+	if (do_ctf_correction)
+	{
+	    line = SF.current();
+	    focus = line.get_number() - 1;
+	}
         fn_img = SF.NextImg();
         fn_trans = fn_img.remove_directories(offsets_keepdir);
         fn_trans = fn_root + "_offsets/" + fn_trans + ".off";
+
+	if (debug==2)
+	{
+	    cerr<<fn_img<<" "<<focus +1 <<endl;
+	}
 
         img.read(fn_img, false, false, false, false);
         img().setXmippOrigin();
