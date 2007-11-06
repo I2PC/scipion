@@ -50,6 +50,29 @@
 // This constant is obsolete and should be revised with the use of
 // matrix euality accuracy
 #define SYM_ACCURACY 1e-6
+//point group symmetries
+#define pg_CI  200
+#define pg_CS  201
+#define pg_CN  202
+#define pg_CNV 203
+#define pg_CNH 204
+#define pg_SN  205
+#define pg_DN  206
+#define pg_DNV 207
+#define pg_DNH 208
+#define pg_T   209
+#define pg_TD  210
+#define pg_TH  211
+#define pg_O   212
+#define pg_OH  213
+#define pg_I   214  //default xmipp icosahedaral symmetry
+#define pg_IH  215
+
+#define pg_I1   216 //no crowther 222
+#define pg_I2   217 //crowther 222-> default in xmipp
+#define pg_I3   218 //52 as used by spider
+#define pg_I4   219 //another 52
+#define pg_I5   220 //another another 52 (used by EMBL-matfb)
 
 #include <data/matrix2d.h>
 #include <data/funcs.h>
@@ -132,6 +155,15 @@ public:
         __sym_elements = true_symNo = space_group = 0;
     }
 
+    /** translate string fn_sym to symmetry group, return false
+        is translation is not possible. See URL
+        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
+         for details. It also fill the symmetry information  */
+    bool isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder);
+
+    /** create symmetry file */
+    void  create_sym_file(FileName &symmetry, int pgGroup, int pgOrder);
+    
     /** Create Symmetry List from a Symmetry file.
         All the subgroup elements are computed automatically.
         \\ Ex: SymList SL("sym.txt"); */
@@ -314,6 +346,7 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
                  const Matrix1D<double> &eprm_bint,
                  const Matrix2D<int> &mask, int volume_no,
                  int grid_type);
+
 
 //@}
 
