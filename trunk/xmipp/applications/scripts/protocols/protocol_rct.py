@@ -42,8 +42,7 @@ SelectClasses="1,2"
 # {section} Prepare images
 #------------------------------------------------------------------------------------------------
 # Prepare local copies of all images?
-""" This will make local copies of all untilted images and generate corresponding selfiles.
-    This has to be done at least once.
+""" This will make local copies of all untilted images and generate corresponding selfiles. This has to be done at least once.
 """
 DoImagePreparation=True
 # Set untilted image headers?
