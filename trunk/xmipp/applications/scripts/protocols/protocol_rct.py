@@ -17,7 +17,7 @@ TiltedSelFile="all_images_tilted.sel"
 # Working subdirectory:
 WorkingDir="RCT/test1"
 # Delete working subdirectory if it already exists?
-DoDeleteWorkingDir=True
+DoDeleteWorkingDir=False
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
@@ -39,21 +39,32 @@ PreviousML2DRoot=""
 # Which of these classes do you want to reconstruct? (Separate numbers by comma's)
 SelectClasses="1,2"
 #------------------------------------------------------------------------------------------------
-# {section} Prepare image headers
+# {section} Prepare images
 #------------------------------------------------------------------------------------------------
-# Perform image preparation?
-""" This will make local copies of all images and generate corresponding selfiles.
-    It will also re-align the untilted and center the tilted particles, thereby preparing all headers for reconstruction
+# Prepare local copies of all images?
+""" This will make local copies of all untilted images and generate corresponding selfiles.
+    This has to be done at least once.
 """
 DoImagePreparation=True
-# Center the tilted particles?
-DoCenterTilted=True
-# Maximum allowed shift for tilted particles (in pixels):
-""" Particles that shift more will be discarded
+# Set untilted image headers?
+""" This will re-align the untilted particles and set the RCT angles correctly
 """
-CenterMaxShift=10
-# Use cosine stretching in the centering of the tilted particles?
-DoUseCosineStretching=True
+DoUntiltedHeaders=True
+# Set tilted image headers?
+""" This will center the tilted particles and set the RCT angles correctly
+"""
+DoTiltedHeaders=True
+# Maximum allowed shift for tilted particles (in pixels):
+""" Particles that shift more will be discarded. A value larger than the image size will not discard any particle
+"""
+CenterMaxShift=999
+# {expert} Additional parameters for the align_tilt_pairs program
+"""  For example:
+    -skip_stretching will skip the cosine-stretching prior to centering
+    -skip_centering  will skip the entire centering, so that only the RCT angles will be set.
+    -force_x_zero    will force the shift in the X direction to be zero, and will only center in the Y direction
+"""
+AlignTiltPairsAdditionalParams=""
 #------------------------------------------------------------------------------------------------
 # {section} Reconstruction for each of the classes
 #------------------------------------------------------------------------------------------------
@@ -111,9 +122,10 @@ class RCT_class:
                  PreviousDirML2D,
                  SelectClasses,
                  DoImagePreparation,
-                 DoCenterTilted,
+                 DoUntiltedHeaders,
+                 DoTiltedHeaders,
                  CenterMaxShift,
-                 DoUseCosineStretching,
+                 AlignTiltPairsAdditionalParams,
                  DoArtReconstruct,
                  ArtLambda,
                  ArtAdditionalParams,
@@ -134,9 +146,8 @@ class RCT_class:
         self.PreviousDirML2D=os.path.abspath(PreviousDirML2D)
         self.PreviousML2DRoot=PreviousML2DRoot
         self.SelectClasses=SelectClasses
-        self.DoCenterTilted=DoCenterTilted
         self.CenterMaxShift=CenterMaxShift
-        self.DoUseCosineStretching=DoUseCosineStretching
+        self.AlignTiltPairsAdditionalParams=AlignTiltPairsAdditionalParams
         self.ArtLambda=ArtLambda
         self.ArtAdditionalParams=ArtAdditionalParams
         self.WbpThreshold=WbpThreshold
@@ -179,7 +190,9 @@ class RCT_class:
         
         if (DoImagePreparation):
             self.make_local_copies()
+        if (DoUntiltedHeaders):
             self.set_headers_untilted()
+        if (DoTiltedHeaders):
             self.set_headers_tilted()
 
         if (DoArtReconstruct):
@@ -270,7 +283,9 @@ class RCT_class:
             mysel.read(local_til_selfile)
             newsel=mysel.copy_sel('local_tilted_images')
             newsel.write(local_til_selfile)
- 
+            ori_local_til_selfile=local_til_selfile.replace('.sel','_all.sel')
+            shutil.copy(local_til_selfile,ori_local_til_selfile)
+
             
     # This routine makes the corresponding selfile of the subset with tilted images
     # using the subset selfile of untilted images, and the original UntiltedSelFile & TiltedSelFile
@@ -303,7 +318,7 @@ class RCT_class:
             os.system(command)
 
     def set_headers_tilted(self):
-        import os
+        import os,shutil
         print '*********************************************************************'
         print '*  Setting image headers of tilted images of each class'
         # Loop over all selected untilted classes
@@ -311,14 +326,13 @@ class RCT_class:
             unt_selfile=self.untiltclasslist[ref][0]
             til_selfile=self.untiltclasslist[ref][2]
             docfile=til_selfile.replace('.sel','.doc')
+            ori_til_selfile=til_selfile.replace('.sel','_all.sel')
+            shutil.copy(ori_til_selfile,til_selfile)
             command = 'xmipp_align_tilt_pairs -u ' + unt_selfile + \
                       ' -t '+til_selfile + \
                       ' -doc '+docfile + \
                       ' -max_shift ' + str(self.CenterMaxShift)
-            if not self.DoCenterTilted:
-                command+=' -skip_centering'
-            if not self.DoUseCosineStretching:
-                command+=' -skip_stretching'
+            command += self.AlignTiltPairsAdditionalParams
             print '* ',command
             self.log.info(command)
             os.system(command)
@@ -401,9 +415,10 @@ if __name__ == '__main__':
                   PreviousDirML2D,
                   SelectClasses,
                   DoImagePreparation,
-                  DoCenterTilted,
+                  DoUntiltedHeaders,
+                  DoTiltedHeaders,
                   CenterMaxShift,
-                  DoUseCosineStretching,
+                  AlignTiltPairsAdditionalParams,
                   DoArtReconstruct,
                   ArtLambda,
                   ArtAdditionalParams,
