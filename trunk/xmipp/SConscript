@@ -232,6 +232,53 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[]):
     env.Alias(name, install)
     env.Default(alias)
 
+def AddSwigLibrary(name, basedir, sourceList, includes, libpath=[], libs=[]):
+    if not int(env['swig']):
+        return
+
+    # setup
+    basedir = AddLastSlash(basedir+"/swig")
+    libprefix = os.path.join(env['prefix'], 'lib')
+    for x in sourceList:
+        if x.find(basedir)==-1:
+            sourceList[sourceList.index(x)] = basedir + x
+
+    # separate local and global includes
+    for x in includes:
+        if x[0] != '#':
+            includes[includes.index(x)] = basedir + x
+
+    # action
+    # FIXME Exclusive may not be what users want
+    if int(env['static']):
+        library = env.StaticLibrary(
+            target=basedir + name + "Swig",
+            source=sourceList,
+            CPPPATH = includes + [env['CPPPATH']] + [env['SWIGCPPPATH']],
+            LIBPATH = libpath+["lib"],
+            LIBS = libs+["XmippExternal"],
+            SWIGFLAGS = [env['SWIGFLAGS']]
+            )
+    else:
+        print basedir + name + "Swig"
+        library = env.SharedLibrary(
+            target=basedir + name + "Swig",
+            source=sourceList,
+            CPPPATH = includes + [env['CPPPATH']] + [env['SWIGCPPPATH']],
+            LIBPATH = libpath+["lib"],
+            LIBS = libs+["XmippExternal"],
+            SWIGFLAGS = [env['SWIGFLAGS']]
+            )
+
+    # alias
+    alias = env.Alias(name, library)
+    install = env.InstallAs(target=[libprefix+"/_"+name+".so",
+                                    libprefix+"/"+name+".py"],
+        source=[basedir + "lib"+ name + "Swig.so",
+                basedir + name + ".py"])
+    env.Alias(name, install)
+    env.Default(alias)
+
 # --- Libraries
 
 # Cuba
