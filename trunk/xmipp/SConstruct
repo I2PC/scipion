@@ -4,6 +4,7 @@
 # basic setup, import all environment and custom tools
 import os
 import distutils.sysconfig
+import SCons.Script
 env = Environment(ENV = os.environ, tools = ['default', 'disttar'], toolpath =
                   ['scons/ToolsFromWiki'])
 
@@ -272,6 +273,13 @@ elif (ARGUMENTS['mode'] == 'compile'):
 
     # SWIG
     if int(env['swig']):
+        SWIGScanner = SCons.Scanner.ClassicCPP(
+            "SWIGScan",
+            ".i",
+            "CPPPATH",
+            '^[ \t]*[%,#][ \t]*(?:include|import)[ \t]*(<|")([^>"]+)(>|")'
+        )
+        env.Prepend(SCANNERS=[SWIGScanner])
         env.Append(SWIGFLAGS=["-python","-c++"])
         env.Append(SWIGCPPPATH=[distutils.sysconfig.get_python_inc()]);
 
