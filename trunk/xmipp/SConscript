@@ -306,7 +306,10 @@ else:
 # XmippData
 DataSources = Glob('libraries/data','*.cpp',[])
 AddLibrary('XmippData', 'libraries/data', DataSources, ['#'])
-
+SwigDataSources = ['libraries/data/swig/swigXmippData.i'] 	 
+AddSwigLibrary('XmippData', 'libraries/data', SwigDataSources, ['#'], 	 
+    [], ['XmippData'])
+            
 # Reconstruction
 ReconsSources = [
     'adjust_ctf.cpp',
