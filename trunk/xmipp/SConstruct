@@ -35,8 +35,6 @@ opts.Add(BoolOption('debug', 'Build debug version?', 'no'))
 opts.Add(BoolOption('strip', 'Strip binaries?', 'yes'))
 opts.Add(BoolOption('warn', 'Show warnings?', 'no'))
 opts.Add(BoolOption('fast', 'Fast?', 'no'))
-# TODO  No real Doxygen support yet
-# opts.Add(BoolOption('docs', 'Create Doxygen documentation?', 'no'))
 opts.Add(BoolOption('static', 'Prevent dynamic linking?', 'no'))
 
 opts.Add(BoolOption('gui', 'Build the GUI programs?', 'yes'))
@@ -286,12 +284,11 @@ elif (ARGUMENTS['mode'] == 'compile'):
     Export('env')
     env.SConscript('SConscript')
 
-# TODO: make specific modes for generation of docs and dist
+elif (ARGUMENTS['mode'] == 'docs'):
+    action = env.Action("doxygen")
+    env.Execute(action)
 
-# documentation
-"""if int(env['docs']):
-    env.Doxygen('Doxyfile')
-"""
+# TODO: make specific modes for generation of dist
 
 # distribution
 """ FIXME Testing, not ready for production
