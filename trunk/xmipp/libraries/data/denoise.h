@@ -30,7 +30,8 @@
 
 #include "progs.h"
 
-/// @defgroup Denoise
+/// @defgroup Denoise Image denoising
+/// @ingroup DataLibraryPrograms
 
 /// Parameters for denoise program
 /// @ingroup Denoise

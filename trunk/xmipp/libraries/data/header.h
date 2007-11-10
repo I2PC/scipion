@@ -23,41 +23,6 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-/* @defgroup HeaderOperations
- *
- * Valid operations:
- *
- * @code
- * headerXMipp A(IMG_XMIPP); // Creates an XMipp Image header
- * headerXMipp A(VOL_XMIPP); // Creates an XMipp volume header
- *
- * A.rename("newName"); // Renames the header title
- *
- * A.write(fp); // Writes current header to disk
- * A.read(fp); // Loads a header from disk
- *
- * A.clear(); // Clears the header
- *
- * cout << A; // Prints information in the header
- *
- * set_eulerAngles(25, 40, 50); // Sets Euler Angles
- * get_eulerAngles(Phi, Theta, Psi); // Gets Euler Angles
- *
- * // Gets Euler Angles stored in alternate location 1
- * get_eulerAngles1(Phi1, Theta1, Psi1);
- *
- * // Gets Euler Angles stored in alternate location 2
- * get_eulerAngles2(Phi2, Theta2, Psi2);
- *
- * clear_fFlag_flag(); // Clears fFlag flag
- *
- * rotAngle() = 30; // Sets Rotation Angle to 30
- * get_title(); // Gets the title
- * get_time(); // Gets the time of creation
- * get_date(); // Gets the date of creation
- *
- */
-
 #ifndef HEADER_H
 #define HEADER_H
 
@@ -66,6 +31,10 @@
 
 #include "funcs.h"
 #include "matrix2d.h"
+
+/** @defgroup HeaderOperations Spider header operations
+ *  @ingroup DataLibrary
+ */
 
 /** Header
  * @ingroup HeaderOperations

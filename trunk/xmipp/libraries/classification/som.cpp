@@ -32,7 +32,7 @@
 
 /**
  * Construct a SOM from the code vectors in a stream
- * @param _is  The stream
+ * Parameter: _is  The stream
  */
 xmippSOM::xmippSOM(istream& _is): xmippBaseAlgo<xmippMap>()
 {
@@ -42,7 +42,7 @@ xmippSOM::xmippSOM(istream& _is): xmippBaseAlgo<xmippMap>()
 
 /**
  * Sets the alpha function
- * @param _alpha  alpha(t)
+ * Parameter: _alpha  alpha(t)
  */
 void xmippSOM::alpha(Descent _alpha)
 {
@@ -51,7 +51,7 @@ void xmippSOM::alpha(Descent _alpha)
 
 /**
  * Sets the radius function
- * @param _radius  radius(t)
+ * Parameter: _radius  radius(t)
  */
 void xmippSOM::radius(Descent _radius)
 {
@@ -60,7 +60,7 @@ void xmippSOM::radius(Descent _radius)
 
 /**
  * Sets the number of training steps
- * @param _nSteps  Number of training steps
+ * Parameter: _nSteps  Number of training steps
  */
 void xmippSOM::nSteps(const unsigned long& _nSteps)
 {
@@ -70,8 +70,8 @@ void xmippSOM::nSteps(const unsigned long& _nSteps)
 
 /**
  * Trains the SOM
- * @param _som  The som to train
- * @param _ts   The training set
+ * Parameter: _som  The som to train
+ * Parameter: _ts   The training set
  */
 void xmippSOM::train(xmippMap& _som, xmippCTVectors& _ts) const
 {
@@ -139,8 +139,8 @@ void xmippSOM::train(xmippMap& _som, xmippCTVectors& _ts) const
 
 /**
  * Tests the SOM
- * @param _som        The som to test
- * @param _examples   The training set of examples
+ * Parameter: _som        The som to test
+ * Parameter: _examples   The training set of examples
  */
 double xmippSOM::test(const xmippMap& _som, const TS& _examples) const
 {
@@ -187,7 +187,7 @@ void xmippSOM::clear()
 
 /**
 * Standard output for a SOM algorithm
-* @param _os The output stream
+* Parameter: _os The output stream
 */
 void xmippSOM::printSelf(ostream& _os) const
 {
@@ -199,7 +199,7 @@ void xmippSOM::printSelf(ostream& _os) const
 
 /**
 * Standard input for a som algorithm
-* @param _is The input stream
+* Parameter: _is The input stream
 */
 void xmippSOM::readSelf(istream& _is)
 {
@@ -227,7 +227,7 @@ void xmippSOM::readSelf(istream& _is)
 /**
  * Saves the xmippSOM class into a stream.
  * this method can be used to save the status of the class.
- * @param _os The output stream
+ * Parameter: _os The output stream
  */
 void xmippSOM::saveObject(ostream& _os) const
 {
@@ -238,7 +238,7 @@ void xmippSOM::saveObject(ostream& _os) const
 /**
  * Loads the xmippSOM class from a stream.
  * this method can be used to load the status of the class.
- * @param _is The output stream
+ * Parameter: _is The output stream
  */
 void xmippSOM::loadObject(istream& _is)
 {
@@ -251,13 +251,11 @@ void xmippSOM::loadObject(istream& _is)
 //---------------------------------------------------------------------------
 // Class Descent
 //---------------------------------------------------------------------------
-
-
 /**
  * Returns the function value associated a step if the transition from
  * the initial value to the final value es made in _nSteps steps
- * @param _step    The actual step
- * @param _nsteps  The number of steps to reach the final val from the
+ * Parameter: _step    The actual step
+ * Parameter: _nsteps  The number of steps to reach the final val from the
  *       initial one
  */
 double Descent::operator()(const unsigned _step, const unsigned _nSteps) const
@@ -272,7 +270,7 @@ double Descent::operator()(const unsigned _step, const unsigned _nSteps) const
 
 /**
 * Standard output for a Descent class
-* @param _os The output stream
+* Parameter: _os The output stream
 */
 void Descent::printSelf(ostream& _os) const
 {
@@ -282,7 +280,7 @@ void Descent::printSelf(ostream& _os) const
 
 /**
 * Standard input for a Descent class
-* @param _is The input stream
+* Parameter: _is The input stream
 */
 void Descent::readSelf(istream& _is)
 {
@@ -306,7 +304,7 @@ void Descent::readSelf(istream& _is)
 /**
  * Saves the Descent class into a stream.
  * this method can be used to save the status of the class.
- * @param _os The output stream
+ * Parameter: _os The output stream
  */
 void Descent::saveObject(ostream& _os) const
 {
@@ -317,7 +315,7 @@ void Descent::saveObject(ostream& _os) const
 /**
  * Loads the Descent class from a stream.
  * this method can be used to load the status of the class.
- * @param _is The output stream
+ * Parameter: _is The output stream
  */
 void Descent::loadObject(istream& _is)
 {

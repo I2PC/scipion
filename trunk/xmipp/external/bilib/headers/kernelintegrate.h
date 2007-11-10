@@ -1,4 +1,5 @@
-/**@name Kernel integrals */
+/**@defgroup BilibKernelIntegrals Kernel integrals
+   @ingroup BilibLibrary */
 //@{
 /*--------------------------------------------------------------------------*/
 /** Computes the integral(-Infinity, Argument) for a Blu interpolant function.

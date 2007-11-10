@@ -32,7 +32,7 @@
 #include <data/integration.h>
 
 /* Atom charge ------------------------------------------------------------- */
-int atomCharge(const string &atom)
+int atomCharge(const std::string &atom)
 {
     switch (atom[0])
     {
@@ -63,7 +63,7 @@ int atomCharge(const string &atom)
 }
 
 /* Atom radius ------------------------------------------------------------- */
-double atomRadius(const string &atom)
+double atomRadius(const std::string &atom)
 {
     switch (atom[0])
     {
@@ -110,7 +110,7 @@ void computePDBgeometry(const std::string &fnPDB,
     std::ifstream fh_pdb;
     fh_pdb.open(fnPDB.c_str());
     if (!fh_pdb)
-        REPORT_ERROR(1, (string)"computePDBgeometry:"
+        REPORT_ERROR(1, (std::string)"computePDBgeometry:"
                      "Cannot open " + fnPDB + " for reading");
 
     // Process all lines of the file
@@ -155,7 +155,7 @@ void computePDBgeometry(const std::string &fnPDB,
 }
 
 /* Apply geometry ---------------------------------------------------------- */
-void applyGeometry(const string &fn_in, const string &fn_out,
+void applyGeometry(const std::string &fn_in, const std::string &fn_out,
     const Matrix2D<double> &A, bool centerPDB)
 {
     Matrix1D<double> centerOfMass, limit0, limitF;
@@ -668,7 +668,7 @@ void AtomInterpolator::setup(int m, double hights, bool computeProjection)
     addAtom("Fe",computeProjection);
 }
 
-void AtomInterpolator::addAtom(const string &atom, bool computeProjection)
+void AtomInterpolator::addAtom(const std::string &atom, bool computeProjection)
 {
     Matrix1D<double> profile;
     Matrix1D<double> splineCoeffs;

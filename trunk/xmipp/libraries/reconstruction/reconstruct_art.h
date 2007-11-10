@@ -23,13 +23,14 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _PROG_ART_HH
-#  define _PROG_ART_HH
+#define _PROG_ART_HH
 
 #include <iostream>
 
 #include "basic_art.h"
 
-/**@name Plain ART
+/**@defgroup PlainART Basic ART stuff
+   @ingroup ReconsLibrary 
    This module provides the Extra paramter structure (empty in fact)
    to run the ART process with single particles. The main function of this
    module is the single step ART process.
@@ -85,7 +86,7 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
 void finish_ART_iterations(const Basic_ART_Parameters &prm,
                            const Plain_ART_Parameters &eprm, GridVolume &vol_basis);
 
-/** Force the {\it trial} volume to be symmetric. So far only implemented
+/** Force the trial volume to be symmetric. So far only implemented
     for crystals.*/
 void apply_symmetry(GridVolume &vol_in, GridVolume *vol_out,
                     const Plain_ART_Parameters &eprm,

@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _PROG_RECONS_TEST_HH
-#  define _PROG_RECONS_TEST_HH
+#define _PROG_RECONS_TEST_HH
 
 #include <vector>
 
@@ -31,7 +31,8 @@
 
 #include "foms_evaluate.h"
 
-/**@name Recons_test program */
+/**@defgroup Recons_test phantom_test_reconstruction (Test of the full reconstruction process)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /* Test parameters --------------------------------------------------------- */
 /// Recons_test Parameters
@@ -203,7 +204,7 @@ public:
     double b_avg;
     /// Stddev of b in y=ax+b
     double b_stddev;
-    /// Normalizing method. See \Ref{Normalize_parameters}
+    /// Normalizing method. See \ref Normalize_parameters 
     int normalizing_method;
     /// Background radius
     int bg_radius;
@@ -241,7 +242,7 @@ public:
 };
 
 /** Single measure on a FOM.
-    A measure is compound of \Ref{Recons_test_Parameters::MeasNo} tests.
+    A measure is compound of \ref Recons_test_Parameters::MeasNo tests.
     This function returns the mean and standard deviation of all tests
     on the selected FOM. Parameter i is the
     index to bu used inside the (lambda, no_it) list, i can be 0 if
@@ -264,7 +265,7 @@ void single_measure_on_FOM(Recons_test_Parameters &prm,
                            EVALUATE_results &results, const string &training_FOM);
 
 /** Single measure on all FOMs.
-    A measure is compound of \Ref{Recons_test_Parameters::MeasNo} tests.
+    A measure is compound of \ref Recons_test_Parameters::MeasNo tests.
     This function returns the mean and standard deviation of all tests
     over all FOMs. Parameter i is the
     index to bu used inside the (lambda, no_it) list, i can be 0 if
@@ -274,9 +275,7 @@ void single_measure_on_FOM(Recons_test_Parameters &prm,
     for different experiments. It must start with value 1 and internally
     is increased. If you set it to -1 then this option is not used and
     volumes from different experiments are all written with the same
-    name.
-
-    See \Ref{FOM_ARGS} */
+    name.*/
 void single_measure_on_all_FOMs(Recons_test_Parameters &prm, int i,
                                 int &nvol, FOMs &foms_mean, FOMs &foms_stddev, EVALUATE_results &results);
 
@@ -290,25 +289,24 @@ void single_measure_on_all_FOMs(Recons_test_Parameters &prm, int i,
 
     If the projection root name is g0tA, this function generates the
     following files and using nvol:
-    \begin{verbatim}
+    @code
     g0tAexp<nvol>_.descr --> Random phantom generated
     g0tAexp<nvol>_*      --> Projections
     g0tAexp<nvol>_.sel   --> Selection file for the projections
     g0tAexp<nvol>_.vol   --> reconstruction
-    \end{verbatim}
+    @endcode
     and without using nvol:
-    \begin{verbatim}
+    @code
     g0tA.descr           --> Random phantom generated
     g0tA*                --> Projections
     g0tA.sel             --> Selection file for the projections
     g0tA.vol             --> reconstruction
-    \end{verbatim}
+    @endcode
 
     In the case of SIRT of Spider a Spider batch file (b73.xmp) is created,
     and the convention of names are
     */
 void single_recons_test(const Recons_test_Parameters &prm,
                         int i, int nvol, EVALUATE_results &results);
-
 //@}
 #endif

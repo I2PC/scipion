@@ -1,4 +1,5 @@
-/**@name Poles of B-spline and Omom */
+/**@defgroup BsplinePoles Poles of B-spline and Omom
+   @ingroup BilibLibrary */
 //@{
 /*--------------------------------------------------------------------------*/
 /** Get poles of B-spline.

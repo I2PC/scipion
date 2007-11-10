@@ -34,7 +34,8 @@
 /* ========================================================================= */
 /* BLOBS                                                                     */
 /* ========================================================================= */
-/**@name Blobs */
+/**@defgroup Blobs Blobs
+   @ingroup ReconsLibrary */
 //@{
 // Blob structure ----------------------------------------------------------
 /** Blob definition.
@@ -48,18 +49,18 @@
     time.
 
     The common way of defining a blob is as follows:
-    \begin{verbatim}
+    @code
     struct blobtype blob;                  // Definition of the blob
     blob.radius = 2;                       // Blob radius in voxels
     blob.order  = 2;                       // Order of the Bessel function
     blob.alpha  = 3.6;                     // Smoothness parameter
-    \end{verbatim}
+    @endcode
 
     Sometimes it is useful to plot any quantity related to the blobs. In the
     following example you have how to plot their Fourier transform in the
     continuous frequency space.
 
-    \begin{verbatim}
+    @code
       #include <Reconstruction/blobs.hh>
       #include <XmippData/xmippArgs.hh>
 
@@ -76,11 +77,11 @@
 
    return 0;
       }
-    \end{verbatim}
+    @endcode
 */
 struct blobtype
 {
-    /// Spatial radius in \Ref{Universal System} units
+    /// Spatial radius in Universal System units
     double radius;
 
     /// Derivation order and Bessel function order
@@ -93,25 +94,25 @@ struct blobtype
 // Blob value --------------------------------------------------------------
 /** Blob value.
     This function returns the value of a blob at a given distance from its
-    center (in \Ref{Universal System} units). The distance must be
+    center (in Universal System units). The distance must be
     always positive. Remember that a blob is spherically symmetrycal so
     the only parameter to know the blob value at a point is its distance
     to the center of the blob. It doesn't matter if this distance is
     larger than the real blob spatial extension, in this case the function
     returns 0 as blob value.
     \\ Ex:
-    \begin{verbatim}
+    @code
     struct blobtype blob; blob.radius = 2; blob.order = 2; blob.alpha = 3.6;
     Matrix1D<double> v=vectorR3(1,1,1);
     cout << "Blob value at (1,1,1) = " << blob_val(v.mod(),blob) << endl;
-    \end{verbatim} */
+    @endcode */
 #define blob_val(r, blob) kaiser_value(r, blob.radius, blob.alpha, blob.order)
 double kaiser_value(double r, double a, double alpha, int m);
 
 // Blob projection ---------------------------------------------------------
 /** Blob projection.
     This function returns the value of the blob line integral through a
-    straight line which passes at a distance 'r' (in \Ref{Universal System}
+    straight line which passes at a distance 'r' (in Universal System
     units) from the center of the
     blob. Remember that a blob is spherically symmetrycal so
     the only parameter to know this blob line integral is its distance
@@ -119,12 +120,12 @@ double kaiser_value(double r, double a, double alpha, int m);
     larger than the real blob spatial extension, in this case the function
     returns 0.
     \\ Ex:
-    \begin{verbatim}
+    @code
     struct blobtype blob; blob.radius = 2; blob.order = 2; blob.alpha = 3.6;
     Matrix1D<double> v=vectorR3(1,1,1);
     cout << "Blob line integral through (1,1,1) = " << blob_proj(v.mod(),blob)
          << endl;
-    \end{verbatim} */
+    @endcode */
 #define blob_proj(r, blob) kaiser_proj(r, blob.radius, blob.alpha, blob.order)
 double kaiser_proj(double r, double a, double alpha, int m);
 
@@ -215,14 +216,14 @@ blobtype best_blob(double alpha_0, double alpha_F, double inc_alpha,
     of the computation which divides the whole image by the sum of the whole
     image.
     \\ Ex:
-    \begin{verbatim}
+    @code
     ImageOver             blobprint;
     struct blobtype       blob;
     blob.radius = 1.7;
     blob.order  = 2;
     blob.alpha  = 3.6;
     footprint_blob(blobprint, blob);
-    \end{verbatim}
+    @endcode
     As the blob radius is
     1.7, the function will create a normalised footprint of logical corners
     (-2,-2) to (2,2) (in the universal coord. system) (this size is the minimum
@@ -238,7 +239,7 @@ void footprint_blob(ImageOver &blobprint, const struct blobtype &blob,
     and sums all the blob values at points of the grid which are inside the
     blob. It doesn't matter if the grid is compound or not.
     \\ Ex:
-    \begin{verbatim}
+    @code
     // Blob definition
     struct blobtype       blob;
     blob.radius = 2;
@@ -251,7 +252,7 @@ void footprint_blob(ImageOver &blobprint, const struct blobtype &blob,
 
     cout << "The sum of a single blob over the grid is " <<
          << sum_blob_grid(blob, BCCgrid);
-    \end{verbatim}
+    @endcode
 
    D is a 3x3 matrix specifying a volume deformation. It means that the
    sample at logical position (i,j,k) is really placed at space position
@@ -263,7 +264,7 @@ double sum_blob_Grid(const struct blobtype &blob, const Grid &grid,
 
 /** Voxel shape for a blob volume.
     Given a blob volume this function returns the logical origin and
-    size for the minimum voxel volume which holds it. See \Ref{blobs2voxels}
+    size for the minimum voxel volume which holds it. See \ref blobs2voxels
     for an explanation of the limit and V parameters.*/
 void voxel_volume_shape(const GridVolume &vol_blobs,
                         const struct blobtype &blob, const Matrix2D<double> *D,
@@ -272,7 +273,7 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
 /** Blobs ---> Voxels.
     The voxel size is defined between two coordinates (Gcorner1 and Gcorner2)
     which accomplish
-    \begin{verbatim}
+    @code
        XX(Gcorner1)=MIN(XX(SGcorner1(i)));
        YY(Gcorner1)=MIN(YY(SGcorner1(i)));
        ZZ(Gcorner1)=MIN(ZZ(SGcorner1(i)));
@@ -280,7 +281,7 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
        XX(Gcorner2)=MAX(XX(SGcorner2(i)));
        YY(Gcorner2)=MAX(YY(SGcorner2(i)));
        ZZ(Gcorner2)=MAX(ZZ(SGcorner2(i)));
-    \end{verbatim}
+    @endcode
     where SGcorner1(i) and SGcorner2(i) are the lowest and highest corners
     of each subgrid. These corners are expressed in Universal coordinates.
 
@@ -288,10 +289,10 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
    into account that the former computed Gcorner1 and 2 are the furthest
    centers of blobs, ie, there will be voxels even further affected by these
    blobs.
-   \begin{verbatim}
+   @code
    Gcorner1 = CEILnD (Gcorner1 - blob.radius);
    Gcorner2 = FLOORnD(Gcorner2 + blob.radius);
-   \end{verbatim}
+   @endcode
 
    However, you might give a size, usually set to 0, i.e., no external size.
    If no size is provided a size is produced such that all blob centers
@@ -328,7 +329,7 @@ void blobs2space_coefficients(const GridVolume &vol_blobs, const struct blobtype
     R is the interest radius. If it is -1 two superimposed grids are created,
     otherwise a single grid with tilted axis is.
 
-    Valid grid types are defined in \Ref{Some useful grids}*/
+    Valid grid types are defined in Some useful grids*/
 void voxels2blobs(const Matrix3D<double> *vol_voxels,
                   const struct blobtype &blob, GridVolume &vol_blobs,
                   int grid_type, double grid_relative_size,

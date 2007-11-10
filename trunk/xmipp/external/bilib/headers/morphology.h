@@ -1,4 +1,5 @@
-/**@name Morphology */
+/**@defgroup BilibMorphology Morphology
+   @ingroup BilibLibrary */
 //@{
 /*--------------------------------------------------------------------------*/
 /** Perform the grey-scale morphological operation known as bright top hat.

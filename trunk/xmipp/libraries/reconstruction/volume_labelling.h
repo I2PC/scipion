@@ -25,7 +25,8 @@
 #ifndef _VOLUME_LABELLING_HH
 #define _VOLUME_LABELLING_HH
 
-/**@name Volume labelling */
+/**@defgroup VolumeLabelling Volume labelling
+   @ingroup ReconsLibrary */
 //@{
 /** Labels from mathematical description.
     Label a volume from a mathematical description. */

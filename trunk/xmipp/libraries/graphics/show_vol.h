@@ -31,16 +31,17 @@
 
 #include <data/volume.h>
 
-/**@name Show Volumes */
+/**@defgroup ShowVolumes Show Volumes
+   @ingroup GraphicsLibrary */
 //@{
 /** Class to show volumes.
     Example of use:
-    \begin{verbatim}
+    @code
        ShowVol *showvol = new ShowVol;
        if (poll) showvol->setPoll();
        showvol->initWithFile(numRows, numCols, argv[i]);
        showvol->show();
-    \end{verbatim}
+    @endcode
 */
 class ShowVol: public ShowTable
 {

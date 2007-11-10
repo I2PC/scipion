@@ -35,7 +35,8 @@
 #define Vir_Eq_Views 60
 #define Vir_Com_Lin_Pairs 37
 
-/**@name Virus */
+/**@defgroup VirusInterface Virus
+   @ingroup InterfaceLibrary */
 //@{
 /** Virus Euler Files.
     This is a class to read the Euler matrices used by the icosahedral virus recon programs.

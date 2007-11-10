@@ -34,7 +34,8 @@
 
 #include <vector>
 
-/**@name Align2D */
+/**@defgroup Align2DProgram align2d (Align a set of 2D images)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /** Align2D parameters. */
 class Prog_align2d_prm
@@ -104,14 +105,14 @@ public:
     void usage();
 
     /// Rotational alignment of an image
-    bool align_rot(ImageXmipp &img, const Matrix2D<double> &Mref,
+    bool align_rot(ImageXmippT<double> &img, const Matrix2D<double> &Mref,
                    const float &max_rot, const float &Rin, const float &Rout, const double &outside = 0.);
 
     /// Translational alignment of an image
-    bool align_trans(ImageXmipp &img, const Matrix2D<double> &Mref, const float &max_shift, const double &outside = 0.);
+    bool align_trans(ImageXmippT<double> &img, const Matrix2D<double> &Mref, const float &max_shift, const double &outside = 0.);
 
     /// Alignment by complete search of rotations and translations
-    bool align_complete_search(ImageXmipp &img, const Matrix2D<double> &Mref,
+    bool align_complete_search(ImageXmippT<double> &img, const Matrix2D<double> &Mref,
                                const float &max_shift, const float &max_rot, const float &psi_interval,
                                const float &Rin, const float &Rout, const double &outside = 0.);
 

@@ -34,7 +34,8 @@
 #include "base_algorithm.h"
 #include "map.h"
 
-/**@name Smoothly Distributed Fuzzy c-means Self-Organizing Map algorithm*/
+/**@defgroup SmoothFuzzyCmeans Smoothly Distributed Fuzzy c-means Self-Organizing Map algorithm
+   @ingroup ClassificationLibrary */
 //@{
 /**
  * This class trains a Smoothly Distributed Fuzzy c-Means Self Organizing Map
@@ -45,12 +46,12 @@ public:
 
     /**
      * Constructs the algorithm
-     * @param _m0         Initial Fuzzy Membership constant
-     * @param _m1         Final Fuzzy Membership constant
-     * @param _annSteps   Number of steps in deterministic annealing
-     * @param _reg        Regularization constant
-     * @param _epsilon    Stopping criterion
-     * @param _nSteps     Number of training steps
+     * Parameter: _m0         Initial Fuzzy Membership constant
+     * Parameter: _m1         Final Fuzzy Membership constant
+     * Parameter: _annSteps   Number of steps in deterministic annealing
+     * Parameter: _reg        Regularization constant
+     * Parameter: _epsilon    Stopping criterion
+     * Parameter: _nSteps     Number of training steps
      */
     xmippFuzzySOM(double _m0, double _m1, unsigned long _annSteps,
                   double _reg, double _epsilon, unsigned long _nSteps)
@@ -66,27 +67,27 @@ public:
 
     /**
      * Sets the number of training steps
-     * @param _nSteps  Number of training steps
+     * Parameter: _nSteps  Number of training steps
      */
     void nSteps(const unsigned long& _nSteps);
 
     /**
      * Sets the Initial Fuzzy membership
-     * @param _m0
+     * Parameter: _m0
      */
     void initialFuzzzyMembership(const double& _m0);
 
 
     /**
      * Sets the Final Fuzzy membership
-     * @param _m1
+     * Parameter: _m1
      */
     void finalFuzzzyMembership(const double& _m1);
 
 
     /**
      * Sets the number of deterministic annealing training steps
-     * @param _annSteps  Number of steps
+     * Parameter: _annSteps  Number of steps
      */
     void setAnnSteps(const unsigned long& _annSteps);
 
@@ -94,22 +95,22 @@ public:
 
     /**
      * Sets the Regularization Constant
-     * @param _reg
+     * Parameter: _reg
      */
     void regularization(const double& _reg);
 
 
     /**
      * Trains the Fuzzy SOM
-     * @param _som  The som to train
-     * @param _examples   The training set
+     * Parameter: _som  The som to train
+     * Parameter: _examples   The training set
      */
     virtual void train(xmippFuzzyMap& _som, const TS& _examples);
 
     /**
      * Tests the Fuzzy SOM
-     * @param _som        The fuzzy som to test
-     * @param _examples   The training set of examples
+     * Parameter: _som        The fuzzy som to test
+     * Parameter: _examples   The training set of examples
      */
     virtual double test(const xmippFuzzyMap& _som, const TS& _examples) const;
 
@@ -158,7 +159,4 @@ private:
 
 };
 //@}
-
-
-
 #endif

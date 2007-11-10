@@ -31,16 +31,15 @@
 
 #include "phantom.h"
 
-#define MAX_LOOP_NUMBER 10000
-
-/**@name Random Phantom program */
+/**@defgroup RandomPhantom phantom_create_random (Generate phantoms randomly)
+   @ingroup ReconsLibraryPrograms */
 //@{
 
 /* Random Phantom parameters ----------------------------------------------- */
 /** Random Phantom program parameters.
     This class contains all information needed about the Random phantom
     genration  process.
-    See \URL[Random_phantom]{../../../Applications/Src/Random_phantom/Help/random_phantom.html}
+    See the user help on Random Phantom Creation 
     for more information. */
 class Prog_Random_Phantom_Parameters
 {
@@ -102,9 +101,8 @@ public:
         This function loads the phantom specification defined in the
         Random Phantom parameters. It also check that the phantom file meets
         the conditions to be a Random Phantom specification (see
-        \URL[Random_phantom]
-        {../../../Applications/Src/Random_phantom/Help/random_phantom.html}
-        for more information. */
+        the user help on random phantom creation
+        for more information). */
     void produce_Side_Info(const Prog_Random_Phantom_Parameters &prm);
 };
 

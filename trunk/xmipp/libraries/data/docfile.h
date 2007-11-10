@@ -36,9 +36,10 @@
 // Forward declaration
 class DocFile;
 
-/// @defgroup DocFiles Document Files.
+/// @defgroup DocFiles Document Files (Docfiles)
+/// @ingroup DataLibrary
 
-/// @defgroup DocLines Document Lines.
+/// @defgroup DocLines Document Lines
 /// @ingroup DocFiles
 
 /** DocFile Line.
@@ -72,7 +73,7 @@ private:
     friend class DocFile; ///< Document file can access anything in this class
 
 public:
-    /// @defgroup DocLineConstructors Constructors for Document Lines.
+    /// @defgroup DocLineConstructors Constructors for Document Lines
     /// @ingroup DocLines
 
     /** Empty Constructor.
@@ -135,7 +136,7 @@ public:
      */
     void set(const Matrix1D< double >& v);
 
-    /// @defgroup DocLineStructure Structure information.
+    /// @defgroup DocLineStructure Structure information
     /// @ingroup DocLines
 
     /** Get text of this line.
@@ -205,7 +206,7 @@ public:
     /** Show a Document Line.
      * TODO document
      */
-    friend ostream& operator<<(ostream& o, const DocLine& DL);
+    friend std::ostream& operator<<(std::ostream& o, const DocLine& DL);
 
     /** Read a Document Line.
      * TODO document
@@ -213,7 +214,7 @@ public:
      * specifications. First the line is read in a C way, if it fails then the
      * exact Fortran output is tried.
      */
-    void read(istream& i);
+    void read(std::istream& i);
 };
 
 /** Document Files.
@@ -244,7 +245,7 @@ class DocFile
     std::vector< DocLine >::iterator find(int _key);
 
 public:
-    /// @defgroup DocFileConstructor DocFile constructors.
+    /// @defgroup DocFileConstructor DocFile constructors
     /// @ingroup DocFiles
 
     /** Empty constructor.
@@ -303,7 +304,7 @@ public:
         current_line = m.begin();
     }
 
-    /// @defgroup DocFileOperator DocFile operators.
+    /// @defgroup DocFileOperator DocFile operators
     /// @ingroup DocFiles
 
     /** Assignment
@@ -347,7 +348,7 @@ public:
      * std::cout << DF;
      * @endcode
      */
-    friend ostream& operator<<(ostream& o, const DocFile& DF);
+    friend std::ostream& operator<<(std::ostream& o, const DocFile& DF);
 
     /** Show a given line.
      * @ingroup DocFileOperator
@@ -361,14 +362,14 @@ public:
      * DF.show_line(3);  // Show line with key=3
      * @endcode
      */
-    void show_line(ostream& o, int key = -1);
+    void show_line(std::ostream& o, int key = -1);
 
     /** Show everything in a document file.
      * @ingroup DocFileOperator
      */
     void debug();
 
-    /// @defgroup DocFileDisk Managing files in disk.
+    /// @defgroup DocFileDisk Managing files in disk
     /// @ingroup DocFiles
 
     /** Read a file from disk.
@@ -418,7 +419,7 @@ public:
      */
     void write(FileName _name = "");
 
-    /// @defgroup DocFilePointer Moving the current line pointer.
+    /// @defgroup DocFilePointer Moving the current line pointer
     /// @ingroup DocFiles
 
     /** Go to the beginning of the file.
@@ -591,7 +592,7 @@ public:
         return current_line == m.end();
     }
 
-    /// @defgroup DocFileInfo Getting information.
+    /// @defgroup DocFileInfo Getting information
     /// @ingroup DocFiles
 
     /** Returns the name of the file
@@ -865,7 +866,7 @@ public:
         return *current_line;
     }
 
-    /// @defgroup DocFileModify Modifying the document file.
+    /// @defgroup DocFileModify Modifying the document file
     /// @ingroup DocFiles
 
     /** Renumerate keys
@@ -948,7 +949,7 @@ public:
      * Matrix1D< double > proj_angles(3);
      * ...
      * new_key = DF.insert_data_line(proj_angles);
-     * @encode
+     * @endcode
      */
     int insert_data_line(const Matrix1D< double >& v);
 
@@ -1097,7 +1098,7 @@ public:
      */
     void clean_comments();
 
-    /// @defgroup DocFileHelpul Helpful functions.
+    /// @defgroup DocFileHelpul Helpful functions
     /// @ingroup DocFiles
 
     /** Alter order in document file.

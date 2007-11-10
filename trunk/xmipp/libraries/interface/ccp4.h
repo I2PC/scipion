@@ -39,7 +39,8 @@
 
 #include <sys/stat.h>
 
-/**@name cp4 Files */
+/**@defgroup CCP4 CCP4 Files
+   @ingroup InterfaceLibrary */
 //@{
 /** CCP$ Files.
     This is a class to read/write ccp4 files as produced by MRC rograms
@@ -195,10 +196,5 @@ public:
         */
     bool read_header_from_file(const FileName &fn_in, bool reversed = false);
 };
-
-
-
 //@}
-
-
 #endif

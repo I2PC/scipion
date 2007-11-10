@@ -32,7 +32,7 @@
 #pragma warning(disable:4786)
 
 /**  Ctor from stream
- * @param _is Must have the parameters in the same order than the previous ctor.
+ * Parameter: _is Must have the parameters in the same order than the previous ctor.
    ****** check out this ************
  */
 /*xmippFCMeans::xmippFCMeans( istream& _is )
@@ -45,8 +45,8 @@
 
 /**
  * Trains the Algorithm
- * @param _xmippDS Data structure to train, a codeBook in this case
- * @param _examples  A training set with the training examples
+ * Parameter: _xmippDS Data structure to train, a codeBook in this case
+ * Parameter: _examples  A training set with the training examples
  */
 
 void xmippFCMeans::train(xmippFCB& _xmippDS, TS& _examples) const
@@ -178,7 +178,7 @@ void xmippFCMeans::train(xmippFCB& _xmippDS, TS& _examples) const
 
 /**
  * Test the Algorithm in a conventional way
- * @param _examples  A training set with the training examples
+ * Parameter: _examples  A training set with the training examples
  */
 
 double xmippFCMeans::test(const xmippFCB& _xmippDS,
@@ -212,7 +212,7 @@ double xmippFCMeans::test(const xmippFCB& _xmippDS,
 
 /**
  * Tests with the training set using for training.
- * @param _examples  The training set
+ * Parameter: _examples  The training set
  */
 
 double xmippFCMeans::fuzzyTest(const xmippFCB& _xmippDS,
@@ -244,7 +244,7 @@ double xmippFCMeans::fuzzyTest(const xmippFCB& _xmippDS,
 
 /**
  * Calculates Partition Coefficient (F) validity functional
- * @param _xmippDS Data structure to train, a codeBook in this case
+ * Parameter: _xmippDS Data structure to train, a codeBook in this case
  *
  * Notes on F:  For U in Mfc (fuzzy partition space)
  *              1/C <= F <= 1
@@ -270,7 +270,7 @@ double xmippFCMeans::F(const xmippFCB& _xmippDS) const
 
 /**
  * Calculates Partition Entropy (H) validity functional
- * @param _xmippDS Data structure to train, a codeBook in this case
+ * Parameter: _xmippDS Data structure to train, a codeBook in this case
  *
  * Notes on H:  For U in Mfc
  *              0 <= H <= log(C)
@@ -299,7 +299,7 @@ double xmippFCMeans::H(const xmippFCB& _xmippDS) const
 
 /**
  * Calculates Non-fuzzy index (NFI) validity functional
- * @param _xmippDS Data structure to train, a codeBook in this case
+ * Parameter: _xmippDS Data structure to train, a codeBook in this case
  *
  * (max)
  *
@@ -323,8 +323,8 @@ double xmippFCMeans::NFI(const xmippFCB& _xmippDS) const
 
 /**
  * Calculates Compactness and separation index (S) validity functional
- * @param _xmippDS Data structure to train, a codeBook in this case
- * @param _examples  A training set with the training examples
+ * Parameter: _xmippDS Data structure to train, a codeBook in this case
+ * Parameter: _examples  A training set with the training examples
  *
  * (min)
  *

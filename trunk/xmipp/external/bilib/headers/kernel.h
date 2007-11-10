@@ -1,6 +1,7 @@
 #ifndef _BILIBKERNEL
 #define _BILIBKERNEL
-/**@name Kernel definition */
+/**@defgroup KernelDefinition Kernel definition
+   @ingroup BilibLibrary */
 //@{
 /*--------------------------------------------------------------------------*/
 /** Computes a Blu interpolant function.

@@ -31,7 +31,8 @@
 
 #include "symmetries.h"
 
-/**@name Projection Neighbourhood */
+/**@defgroup ProjectionNeighbourhood angular_neighbourhood (Projection neighbourhood)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /** Projection Neighbourhood parameters. */
 class Prog_projection_neighbourhood_prm

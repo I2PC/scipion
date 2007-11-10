@@ -33,8 +33,8 @@
 
 /**
  * Euclidean distance.
- * @param _v1  First argument
- * @param _v2  Second argument
+ * Parameter: _v1  First argument
+ * Parameter: _v2  Second argument
  * @exception DifferentSize if _v1 and _v2  hasn't the same size
  */
 xmippFeature eDist(const xmippVector& _v1, const xmippVector& _v2)
@@ -57,8 +57,8 @@ xmippFeature eDist(const xmippVector& _v1, const xmippVector& _v2)
 
 /**
  * Manhattan distance.
- * @param _v1  First argument
- * @param _v2  Second argument
+ * Parameter: _v1  First argument
+ * Parameter: _v2  Second argument
  * @exception DifferentSize if _v1 and _v2  hasn't the same size
  */
 xmippFeature mDist(const xmippVector& _v1, const xmippVector& _v2)

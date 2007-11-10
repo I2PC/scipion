@@ -116,6 +116,7 @@ void Random_Phantom_Side_Info::produce_Side_Info(
 }
 
 /* Generate a realization of the random phantom  --------------------------- */
+#define MAX_LOOP_NUMBER 10000
 void generate_realization_of_random_phantom(
     const Prog_Random_Phantom_Parameters &prm,
     Random_Phantom_Side_Info &side, Phantom &Realization)

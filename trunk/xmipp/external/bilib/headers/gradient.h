@@ -1,4 +1,5 @@
-/**@name Gradient */
+/**@defgroup BilibGradient Gradient
+   @ingroup BilibLibrary */
 //@{
 /*--------------------------------------------------------------------------*/
 /** Compute the gradient of 1D data.

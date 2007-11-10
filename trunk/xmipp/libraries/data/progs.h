@@ -29,7 +29,8 @@
 #include "image.h"
 #include "volume.h"
 
-/** @defgroup Programs Programs.
+/** @defgroup Programs Basic structure for programs using selfiles
+ *  @ingroup DataLibrary
  *
  * General program routines.
  *

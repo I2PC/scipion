@@ -30,6 +30,7 @@
 #include <iostream>
 
 /** @defgroup ErrorHandling Error handling
+ *  @ingroup DataLibrary
  *
  * The error handling is performed in two different ways depending on the
  * configuration selected for Xmipp in the file xmippConfiguration: a simple

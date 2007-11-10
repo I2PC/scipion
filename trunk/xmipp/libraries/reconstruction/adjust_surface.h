@@ -30,7 +30,8 @@
 #include <data/funcs.h>
 #include <data/vectorial.h>
 
-/**@name Adjust Surface program */
+/**@defgroup AdjustSurfaceProgram adjust_surface (Adjust a surface to a volume)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /* Adjust Surface Program Parameters --------------------------------------- */
 /** Parameter class for the project program */
@@ -100,8 +101,6 @@ public:
 #define MANUAL_ORDER 0x8
     /// Tell
     int tell;
-    /**@name Side parameters */
-    //@{
     /// Input volume
     VolumeXmipp V;
     /// Surface to adjust
@@ -124,7 +123,6 @@ public:
     Vectorial_Matrix3D Vsurf_grad;
     /// Working best combination
     Matrix1D<double> p;
-    //@}
 public:
     /** Read from a command line.
         An exception might be thrown by any of the internal conversions,

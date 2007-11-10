@@ -35,7 +35,8 @@
 #include <vector>
 #include <iostream>
 
-/// @defgroup Geometry
+/// @defgroup Geometry Geometry
+/// @ingroup DataLibrary
 
 /// @defgroup GeometricalOperations Geometrical operations
 /// @ingroup Geometry
@@ -580,7 +581,7 @@ void Euler_direction2angles(Matrix1D< double >& v,
  * @ingroup EulerOperations
  *
  * This function compute a set of Euler angles which result in an "Euler" matrix
- * as the one given. See \Ref{Euler_angles2matrix} to know more about how this
+ * as the one given. See \ref Euler_angles2matrix to know more about how this
  * matrix is computed and what each row means. The result angles are in degrees.
  * Alpha, beta and gamma are respectively the first, second and third rotation
  * angles. If the input matrix is not 3x3 then an exception is thrown, the

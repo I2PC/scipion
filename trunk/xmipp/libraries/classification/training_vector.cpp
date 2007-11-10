@@ -39,7 +39,7 @@
 
 /**
  * Constructs a training set given a stream
- * @param _is  The input stream
+ * Parameter: _is  The input stream
  * @exception  runtime_error  If there are problems with the stream
  */
 xmippCTVectors::xmippCTVectors(istream & _is)
@@ -61,7 +61,7 @@ xmippCTVectors::xmippCTVectors(istream & _is)
 
 /**
  * Copy Constructor. Useful when returning a xmippCTVectors Class.
- * @param op1 xmippCTVectors
+ * Parameter: op1 xmippCTVectors
  */
 xmippCTVectors::xmippCTVectors(const xmippCTVectors &op1)
 {
@@ -109,8 +109,8 @@ void xmippCTVectors::clear()
 
 /**
  * Standard output for a training set
- * @param _os The output stream
- * @param _ts  The training set to be printed
+ * Parameter: _os The output stream
+ * Parameter: _ts  The training set to be printed
  */
 void xmippCTVectors::printSelf(ostream& _os) const
 {
@@ -120,8 +120,8 @@ void xmippCTVectors::printSelf(ostream& _os) const
 
 /**
  * Standard input for a training set
- * @param _is The input stream
- * @param _ts  The training set to be read
+ * Parameter: _is The input stream
+ * Parameter: _ts  The training set to be read
  * @exception  runtime_error  If there are problems with the stream
  */
 void xmippCTVectors::readSelf(istream& _is)
@@ -179,7 +179,7 @@ void xmippCTVectors::readSelf(istream& _is)
 /**
  * Saves the class into a stream.
  * this method can be used to save the status of the class.
- * @param _os The output stream
+ * Parameter: _os The output stream
  */
 void xmippCTVectors::saveObject(ostream& _os) const
 {
@@ -198,7 +198,7 @@ void xmippCTVectors::saveObject(ostream& _os) const
 /**
  * Loads the class from a stream.
  * this method can be used to load the status of the class.
- * @param _is The output stream
+ * Parameter: _is The output stream
  */
 void xmippCTVectors::loadObject(istream& _is)
 {
@@ -221,7 +221,7 @@ void xmippCTVectors::loadObject(istream& _is)
 
 /**
  * Deletes variable from Training set
- * @param _var variable index
+ * Parameter: _var variable index
  */
 
 void xmippCTVectors::deleteVariable(int _var)
@@ -233,7 +233,7 @@ void xmippCTVectors::deleteVariable(int _var)
 
 /**
  * Operator "="
- * @param op1 xmippCTVectors
+ * Parameter: op1 xmippCTVectors
  */
 xmippCTVectors& xmippCTVectors::operator= (const xmippCTVectors &op1)
 {
@@ -258,7 +258,7 @@ xmippCTVectors& xmippCTVectors::operator= (const xmippCTVectors &op1)
 
 
 /** Copy the structure from another TS but leave it empty.
-* @param _ts xmippCTVectors
+* Parameter: _ts xmippCTVectors
 * @note  Just the structure is copied, not the items or targets.
 */
 
@@ -275,8 +275,8 @@ bool xmippCTVectors::copyStructure(xmippCTVectors& _ts)
 }
 
 /** Copy a row from an identical TS.
-* @param _ts xmippCTVectors
-* @param _idx   row to be copied
+* Parameter: _ts xmippCTVectors
+* Parameter: _idx   row to be copied
 * @note  No complete validation is done.
 */
 
@@ -298,7 +298,7 @@ bool xmippCTVectors::insertRowFrom(xmippCTVectors& _ts, unsigned int _idx)
 }
 
 /** Delete a row from a TS.
-* @param _idx   row to be deleted
+* Parameter: _idx   row to be deleted
 */
 bool xmippCTVectors::deleteRow(unsigned int _idx)
 {
@@ -308,7 +308,7 @@ bool xmippCTVectors::deleteRow(unsigned int _idx)
 
 /**
  * Normalize all features in the training set
- * @param _i  The index to the feature
+ * Parameter: _i  The index to the feature
  */
 void xmippCTVectors::normalizeFeature(unsigned _i)
 {
@@ -446,7 +446,7 @@ bool xmippCTVectors::isNormalized() const
 
 /**
  * Calcualtes the average and SD of a feature in the training set
- * @param _i  The index to the feature
+ * Parameter: _i  The index to the feature
  */
 void xmippCTVectors::getFeatureStats(unsigned _i, xmippFeature& _mean, xmippFeature& _sd)
 {

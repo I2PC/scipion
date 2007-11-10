@@ -34,7 +34,8 @@
          been capable of writing a class derived from ShowSOM and ShowSpectra.
 */
 
-/*@name Show Spectra SOM. */
+/*defgroup ShowSpectraSom Show Spectra SOM
+   @ingroup GraphicsLibrary */
 //@{
 /** Class to show Spectra SOM. */
 class ShowSpectraSOM: public ShowSpectra

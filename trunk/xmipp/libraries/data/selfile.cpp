@@ -93,7 +93,7 @@ ostream& operator << (ostream& o, const SelLine &SFL)
 
 istream& operator >> (istream& o, SelLine &SFL)
 {
-    string   line;
+    std::string line;
     char     img_name[1024];
     int      no_elements_read;
     int      label;
@@ -264,7 +264,7 @@ void SelFile::read(const FileName &sel_name, int overriding)
         // Read normal selfile
         fh_sel.open(sel_name.c_str(), ios::in);
         if (!fh_sel)
-            REPORT_ERROR(1551, (string)"SelFile::read: File " + sel_name + " not found");
+            REPORT_ERROR(1551, (std::string)"SelFile::read: File " + sel_name + " not found");
 
         // Read each line and keep it in the list of the SelFile object
         fh_sel.peek();
@@ -440,7 +440,7 @@ void SelFile::split_in_two(SelFile &SF1, SelFile &SF2)
 }
 
 /* Split randomly in N equally large selfiles ------------------------------ */
-void SelFile::split_in_N(int N, vector<SelFile> &SF)
+void SelFile::split_in_N(int N, std::vector<SelFile> &SF)
 {
     // Randomize input data
     SelFile  SFtmp, SFrnd;
@@ -552,7 +552,7 @@ void SelFile::adjust_to_label(SelLine::Label label)
 }
 
 /* Next Image with a certain label ----------------------------------------- */
-string SelFile::NextImg(SelLine::Label label)
+const std::string& SelFile::NextImg(SelLine::Label label)
 {
     adjust_to_label(label);
     if (current_line != text_line.end())
@@ -588,7 +588,7 @@ void SelFile::jump(int how_many, SelLine::Label label)
 
 /* Find an image (inside the list) ----------------------------------------- */
 // It returns a pointer to past-last element if the image is not inside
-vector<SelLine>::iterator find(vector<SelLine> &text, string &img_name)
+vector<SelLine>::iterator find(vector<SelLine> &text, const std::string &img_name)
 {
     vector<SelLine>::iterator current = text.begin();
     vector<SelLine>::iterator last    = text.end();
@@ -606,7 +606,7 @@ vector<SelLine>::iterator find(vector<SelLine> &text, string &img_name)
 /* Find an image (inside the Sel File) ------------------------------------- */
 // It returns a pointer to past-last element if the image is not inside
 // *** THIS SHOULD USE THE PREVIOUS FUNCTION BUT I CANNOT MAKE IT TO COMPILE
-vector<SelLine>::iterator SelFile::find(string img_name)
+vector<SelLine>::iterator SelFile::find(const std::string &img_name)
 {
     vector<SelLine>::iterator current = text_line.begin();
     vector<SelLine>::iterator last    = text_line.end();
@@ -708,7 +708,7 @@ void SelFile::get_statistics(Image& _ave, Image& _sd, double& _min,
     go_beginning();
     while ((!eof()))
     {
-        string image_name = NextImg();
+        std::string image_name = NextImg();
         if (image_name == "")
             continue;
         Image *image = Image::LoadImage(image_name, apply_geo); // reads image
@@ -738,7 +738,7 @@ void SelFile::get_statistics(Image& _ave, Image& _sd, double& _min,
     go_beginning();
     while ((!eof()))
     {
-        string image_name = NextImg();
+        std::string image_name = NextImg();
         if (image_name == "")
             continue;
         Image *image = Image::LoadImage(image_name, apply_geo); // reads image
@@ -769,7 +769,7 @@ int SelFile::MaxFileNameLength()
 }
 
 /* Get current filename ---------------------------------------------------- */
-string SelFile::get_current_file()
+const std::string& SelFile::get_current_file()
 {
     if (current_line == text_line.end())
         return "";
@@ -779,7 +779,7 @@ string SelFile::get_current_file()
 }
 
 /* Get filename number i --------------------------------------------------- */
-string SelFile::get_file_number(int i)
+const std::string& SelFile::get_file_number(int i)
 {
     if (i < 0)
         return "";
@@ -800,7 +800,7 @@ string SelFile::get_file_number(int i)
 }
 
 /* Remove a certain file --------------------------------------------------- */
-void SelFile::remove(string img_name)
+void SelFile::remove(const std::string &img_name)
 {
     vector<SelLine>::iterator aux = find(img_name);
     vector<SelLine>::iterator temp;
@@ -836,7 +836,7 @@ void SelFile::remove_current()
 }
 
 /* Append a file or change label ------------------------------------------- */
-void SelFile::set(string img_name, SelLine::Label label)
+void SelFile::set(const std::string& img_name, SelLine::Label label)
 {
     SelLine temp;
     vector<SelLine>::iterator aux = find(img_name);
@@ -881,7 +881,7 @@ void SelFile::set_current_filename(const FileName &fn_new)
 }
 
 /* Insert image before current line ---------------------------------------- */
-void SelFile::insert(string img_name, SelLine::Label label)
+void SelFile::insert(const std::string& img_name, SelLine::Label label)
 {
     SelLine temp;
     temp.line_type = SelLine::DATALINE;
@@ -916,7 +916,7 @@ void SelFile::insert(const SelLine &_selline)
 }
 
 /* Insert a comment before current line ------------------------------------ */
-void SelFile::insert_comment(string comment)
+void SelFile::insert_comment(const std::string& comment)
 {
     SelLine temp;
     temp.line_type = SelLine::COMMENT;
@@ -1078,23 +1078,23 @@ SelFile compare(SelFile &SF1, SelFile &SF2, const int mode)
 	sprintf(str, "%6d", SF1.no_imgs);
 	temp.text = "# File 1: " + SF1.fn_sel + "(VALID: " + str;
 	sprintf(str, "%6d", SF1_discarded);
-	temp.text += (string) " DISCARDED: " + str + ")";
+	temp.text += (std::string) " DISCARDED: " + str + ")";
 	result.text_line.push_back(temp);
 	sprintf(str, "%6d", SF2.no_imgs);
 	temp.text = "# File 2: " + SF2.fn_sel + "(VALID: " + str;
 	sprintf(str, "%6d", SF2_discarded);
-	temp.text += (string) " DISCARDED: " + str + ")";
+	temp.text += (std::string) " DISCARDED: " + str + ")";
 	result.text_line.push_back(temp);
 	temp.text = "";
 	result.text_line.push_back(temp);
 	sprintf(str, "%6d", in_both.size());
-	temp.text = (string)"# Matching Files: " + str;
+	temp.text = (std::string)"# Matching Files: " + str;
 	result.text_line.push_back(temp);
 	sprintf(str, "%6d", only_in_SF1.size());
-	temp.text = (string)"# Only in file 1: " + str;
+	temp.text = (std::string)"# Only in file 1: " + str;
 	result.text_line.push_back(temp);
 	sprintf(str, "%6d", only_in_SF2.size());
-	temp.text = (string)"# Only in file 2: " + str;
+	temp.text = (std::string)"# Only in file 2: " + str;
 	result.text_line.push_back(temp);
 	temp.text = "# -------------------------------------------------------------";
 	result.text_line.push_back(temp);
@@ -1159,7 +1159,7 @@ SelFile compare(SelFile &SF1, SelFile &SF2, const int mode)
 }
 
 /* For all ----------------------------------------------------------------- */
-void SelFile::for_all(void(*f)(FileName, FileName), string _ext,
+void SelFile::for_all(void(*f)(FileName, FileName), const std::string& _ext,
                       SelLine::Label _label)
 {
     vector<SelLine>::iterator current = text_line.begin();

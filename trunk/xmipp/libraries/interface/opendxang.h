@@ -34,13 +34,14 @@
 #include <data/matrix1d.h>
 #include <data/geometry.h>
 
-/**@name openDXang */
+/**@defgroup openDXAng OpenDX Angle
+   @ingroup InterfaceLibrary */
 //@{
-/**  openDXang:
-      This is a class to show grid point using openDXang(tm) (It is usefull to
-      view Euler angles. Use the networks for these purpose
-      \URL[distance.net]{../Extra_Docs/distances.net}. (To measuure distances select: Options->viewcontrol and then mode->pick, click in teh image select picks->pick_2 and pick again in the image.)
-    */
+
+/**  openDXang: This is a class to show grid point using openDXang(tm) (It is
+    usefull to view Euler angles. Use the networks for these purpose. (To
+    measuure distances select: Options->viewcontrol and then mode->pick, click
+    in teh image select picks->pick_2 and pick again in the image.) */
 
 class openDXang
 {

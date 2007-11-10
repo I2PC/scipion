@@ -35,7 +35,7 @@
 
 /**
  * Sets the number of training steps
- * @param _nSteps  Number of training steps
+ * Parameter: _nSteps  Number of training steps
  */
 void xmippKerDenSOM::nSteps(const unsigned long& _nSteps)
 {
@@ -55,7 +55,7 @@ double xmippKerDenSOM::getSigma()
 
 /**
  * Sets the number of deterministic annealing training steps
- * @param _annSteps  Number of steps
+ * Parameter: _annSteps  Number of steps
  */
 void xmippKerDenSOM::setAnnSteps(const unsigned long& _annSteps)
 {
@@ -67,8 +67,8 @@ void xmippKerDenSOM::setAnnSteps(const unsigned long& _annSteps)
 
 /**
  * Tests the KerDenSOM
- * @param _som        The KerDenSom to test
- * @param _examples   The training set of examples
+ * Parameter: _som        The KerDenSom to test
+ * Parameter: _examples   The training set of examples
  */
 double xmippKerDenSOM::test(const xmippFuzzyMap& _som, const TS& _examples) const
 {

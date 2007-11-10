@@ -39,8 +39,10 @@
 
 #include <data/funcs.h>
 
+/**@defgroup BaseAlgorithm Base Algorithm
+   @ingroup ClassificationLibrary */
+//@{
 //-----------------------------------------------------------------------------
-
 /**
  * This is the parent class for all algorithms that can be trained and applied
  * in order to classify a set of data.
@@ -48,7 +50,6 @@
  * 1) a train method that accepts a set of examples
  * 2) an apply method that accepts an example and classifies it
  */
-
 template<class DSClass>
 class xmippBaseAlgo
 {
@@ -59,7 +60,7 @@ public:
 
     /**
      * Constructor.
-     * @param _ID an ID string unique for each algorithm class
+     * Parameter: _ID an ID string unique for each algorithm class
      */
     xmippBaseAlgo(const string& _ID = ""): ID(_ID)
     {};
@@ -74,8 +75,8 @@ public:
     /**
      * Method to train the algorithm.
      * Note that this method is pure virtual, so it ust be defined in every xmipp descendant class.
-     * @param _ds Data structure to train
-     * @param _examples  A training set with the training examples.
+     * Parameter: _ds Data structure to train
+     * Parameter: _examples  A training set with the training examples.
      */
     virtual void train(DS& _ds, const TS& _examples) const
         {};
@@ -83,8 +84,8 @@ public:
     /**
      * Method to train the algorithm.
      * Note that this method is pure virtual, so it ust be defined in every xmipp descendant class.
-     * @param _ds Data structure to train
-     * @param _examples  A training set with the training examples.
+     * Parameter: _ds Data structure to train
+     * Parameter: _examples  A training set with the training examples.
      */
     virtual void train(DS& _ds, TS& _examples) const
         {};
@@ -92,8 +93,8 @@ public:
     /**
      * Method to test the algorithm.
      * Note that this method is pure virtual, so it must be defined in every xmipp descendant class.
-     * @param _ds Data structure to train. Const because its not affected by test
-     * @param _examples  A training set with the training examples.
+     * Parameter: _ds Data structure to train. Const because its not affected by test
+     * Parameter: _examples  A training set with the training examples.
      * @return The test error, that is, error obtained for the test file. Might be
      * MSE error, or success in classification error, or whatever; just be consistent
      * for each algorithm
@@ -136,7 +137,6 @@ protected:
 
 };
 
-
 //-----------------------------------------------------------------------------
 template<class DS>
 ostream& operator << (ostream& _os, const xmippBaseAlgo<DS>& _algo)
@@ -144,5 +144,5 @@ ostream& operator << (ostream& _os, const xmippBaseAlgo<DS>& _algo)
     _algo.printSelf(_os);
     return _os;
 };
-
+//@}
 #endif//XMIPPBASEALGO_H

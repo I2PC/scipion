@@ -30,9 +30,9 @@
 
 /** getPlane: gets the "plane" (a map representing the effect of the
 *   given variable.
-*   @param _in: input SOM
-*   @param _out: output plane
-*   @param _plane: variable
+*   Parameter: _in: input SOM
+*   Parameter: _out: output plane
+*   Parameter: _plane: variable
 */
 
 void xmippPlanes::getPlane(const In& _in, Out& _out, unsigned _plane) const

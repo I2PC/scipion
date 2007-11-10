@@ -22,8 +22,8 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#ifndef _PROG_PDBPHANTOM_HH
-#define _PROG_PDBPHANTOM_HH
+#ifndef _PRECOMPUTE_SAMPLING_H
+#define _PRECOMPUTE_SAMPLING_H
 
 #include "sampling.h"
 #include <reconstruction/symmetries.h>
@@ -32,7 +32,8 @@
 #include <iostream>
 #include <string>
 
-/**@name PDB Phantom program */
+/**@defgroup precomputeSampling precompute_sampling (Precompute samplin points in the projection sphere)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /* PDB Phantom Program Parameters ------------------------------------------ */
 /** Parameter class for the PDB Phantom program */

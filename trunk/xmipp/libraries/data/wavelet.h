@@ -32,6 +32,7 @@
 #include "numerical_recipes.h"
 
 /// @defgroup Wavelets Wavelets
+/// @ingroup DataLibrary
 
 #define DAUB4 4
 #define DAUB12 12
@@ -72,7 +73,7 @@ void Bilib_DWT(const Matrix3D< double >& input,
                int iterations,
                int isign = 1);
 
-/// @defgroup WaveletsRecipes Numerical recipes wavelets.
+/// @defgroup WaveletsRecipes Numerical recipes wavelets
 /// @ingroup Wavelets
 
 /** Set DWT type.
@@ -167,8 +168,11 @@ void IDWT(const Matrix2D< double >& v, Matrix2D< double >& result);
  */
 void IDWT(const Matrix3D< double >& v, Matrix3D< double >& result);
 
+/// @defgroup WaveletRelated Wavelet related functions
+/// @ingroup Wavelets
+
 /** DWT Low pass versions.
- * @ingroup WaveletsRecipes
+ * @ingroup WaveletRelated
  *
  * This function returns the low pass versions at different scales. The low
  * pass version of the image at scale s is stored in the 01 quadrant of that
@@ -182,7 +186,7 @@ void DWT_lowpass(const Matrix2D< double >& v, Matrix2D< double >& result);
         pow(2.0, smax - s - 1) - 1 : pow(2.0, smax - s) - 1))
 
 /** Select Block 1D.
- * @ingroup Wavelets
+ * @ingroup WaveletRelated
  *
  * Given the scale (s=0 is the finest) and the quadrant "0" (Lower frequencies)
  * or "1"(Higher frequencies) this routine returns the indices that should be
@@ -201,7 +205,7 @@ void SelectDWTBlock(int scale,
 }
 
 /** Select Block 2D.
- * @ingroup Wavelets
+ * @ingroup WaveletRelated
  *
  * Given the scale (s=0 is the finest) and the quadrant "xy"="00" (Upper left),
  * "01" (Upper right), "10" (Lower left), "11" (Lower right). This routine
@@ -230,7 +234,7 @@ void SelectDWTBlock(int scale,
 }
 
 /** Select Block 3D.
- * @ingroup Wavelets
+ * @ingroup WaveletRelated
  *
  * Given the scale (s=0 is the finest) and the quadrant "xyz"="000", "001",
  * "010", "011", "100", "101", "110", "111". This routine returns the indices
@@ -264,7 +268,7 @@ void SelectDWTBlock(int scale,
 }
 
 /** Get maximum scale.
- * @ingroup Wavelets
+ * @ingroup WaveletRelated
  *
  * This function returns the maximum scale achievable by the DWT transform of
  * a given size.
@@ -275,21 +279,21 @@ inline int Get_Max_Scale(int size)
 }
 
 /** Given a quadrant number it returns the string associated to it.
- * @ingroup Wavelets
+ * @ingroup WaveletRelated
  *
  * That is nothing more than its corresponding binary representation.
  */
 std::string Quadrant2D(int q);
 
 /** Given a quadrant number it returns the string associated to it.
- * @ingroup Wavelets
+ * @ingroup WaveletRelated
  *
  * That is nothing more than its corresponding binary representation.
  */
 std::string Quadrant3D(int q);
 
 /** Get scale and quadrant 1D.
- * @ingroup Wavelets
+ * @ingroup WaveletRelated
  *
  * Given a point and the maximum size of the image, this routine returns the
  * scale and quadrant it belongs.
@@ -297,7 +301,7 @@ std::string Quadrant3D(int q);
 void Get_Scale_Quadrant(int size_x, int x, int& scale, std::string& quadrant);
 
 /** Get scale and quadrant 2D.
- * @ingroup Wavelets
+ * @ingroup WaveletRelated
  *
  * Given a point and the maximum size of the image, this routine returns the
  * scale and quadrant it belongs.
@@ -310,7 +314,7 @@ void Get_Scale_Quadrant(int size_x,
                         std::string& quadrant);
 
 /** Get scale and quadrant 3D.
- * @ingroup Wavelets
+ * @ingroup WaveletRelated
  *
  * Given a point and the maximum size of the image, this routine returns the
  * scale and quadrant it belongs.

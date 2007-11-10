@@ -40,7 +40,8 @@
 #include <vector>
 #include <string>
 
-/**@name ShowTools */
+/**@defgroup ShowTools ShowTools
+   @ingroup GraphicsLibrary */
 //@{
 
 /**Scroll param class.
@@ -49,7 +50,7 @@
     digits used by the mantise)
 
     An example of use of this class with a single parameter is
-    \begin{verbatim}
+    @code
       // Create window
       ScrollParam* param_window;
       param_window = new ScrollParam(min, max, spacing, "Set spacing", "Spacing",
@@ -62,10 +63,10 @@
       // Show
       param_window->setFixedSize(250,150);
       param_window->show();
-    \end{verbatim}
+    @endcode
 
     With two parameters
-    \begin{verbatim}
+    @code
       // Create window
       ScrollParam* param_window;
       vector<float> min; min.push_back(1); min.push_back(1);
@@ -86,7 +87,7 @@
       // Show
       param_window->setFixedSize(200,175);
       param_window->show();
-    \end{verbatim}
+    @endcode
 */
 class ScrollParam : public QWidget
 {
@@ -140,7 +141,7 @@ signals:
     It emits a signal called new_value(int) with the selected value
 
     An example of use of this class is
-    \begin{verbatim}
+    @code
        vector<string> list_values;
        list_values.push_back("Option 1");
        list_values.push_back("Option 2");
@@ -156,7 +157,7 @@ signals:
       // Show
       param_window->setFixedSize(250,200);
       param_window->show();
-    \end{verbatim}
+    @endcode
 */
 class ExclusiveParam : public QWidget
 {
@@ -181,7 +182,7 @@ signals:
     void new_value(int);
 };
 
-/**@name Image conversions */
+/** Image conversions */
 //@{
 /** Xmipp -> QImage.*/
 void xmipp2Qt(Image& _ximage, QImage &_qimage,
@@ -203,7 +204,7 @@ void xmipp2PSD(const Matrix2D<double> &input, Matrix2D<double> &output);
 void xmipp2CTF(const Matrix2D<double> &input, Matrix2D<double> &output);
 //@}
 
-/**@name Misc */
+/** Miscellanea */
 //@{
 /** Return a QPixmap with the file provided.
     Function taken from qt/src/kernel/qpixmap.cpp for compatibility reasons. */

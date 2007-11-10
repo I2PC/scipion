@@ -38,7 +38,9 @@
  * all libraries
  */
 
-
+/// @defgroup MultidimBasic Common data for all multidimensional arrays
+/// @ingroup MultidimensionalArrays
+//@{
 public:
 // The array itself
 T* data;
@@ -48,9 +50,10 @@ int size;
 
 // Dimension (1 for vectors, 2 for matrices..)
 int dimension;
+//@}
 
-/// @defgroup Statistics Statistics functions.
-
+/// @defgroup Statistics Statistics functions
+/// @ingroup MultidimensionalArrays
 /** Print statistics in current line.
  * @ingroup Statistics
  *
@@ -394,7 +397,8 @@ void statistics_adjust(double avgF, double stddevF)
         data[i] = static_cast< T >(a * static_cast< double >(data[i] + b));
 }
 
-/// @defgroup Arithmethic Arithmethic operations.
+/// @defgroup Arithmethic Arithmethic operations
+/// @ingroup MultidimensionalArrays
 
 /** @defgroup ArrayByArray Array "by" array operations.
  * @ingroup Arithmethic
@@ -511,7 +515,7 @@ void operator^=(const maT& op1)
     arrayByArray(*this, op1, *this, '^');
 }
 
-/** @defgroup ArrayByScalar Array "by" scalar operations.
+/** @defgroup ArrayByScalar Array "by" scalar operations
  * @ingroup Arithmethic
  *
  * These operations are between an array and a scalar (of the same type as
@@ -641,7 +645,7 @@ void operator^=(const T& op1)
     array_by_scalar(*this, op1, *this, '^');
 }
 
-/** @defgroup ScalarByArray Scalar "by" array operations.
+/** @defgroup ScalarByArray Scalar "by" array operations
  * @ingroup Arithmethic
  *
  * These operations are between a scalar (of the same type as the array)
@@ -733,6 +737,7 @@ friend maT operator^(T op1, const maT& op2)
 }
 
 /// @defgroup Size Size management
+/// @ingroup MultidimensionalArrays
 
 /** Core initialize.
  * @ingroup Size
@@ -893,7 +898,7 @@ bool isBorder(const Matrix1D< int >& v);
 void patch(const maT& patch, char operation = '=');
 
 /// @defgroup Initialization Initialization
-
+/// @ingroup MultidimensionalArrays
 
 /** Same value in all components.
  * @ingroup Initialization
@@ -1020,6 +1025,7 @@ void add_noise(double op1,
 
 
 /// @defgroup Operators Operators
+/// @ingroup MultidimensionalArrays
 
 /** Assignment.
  * @ingroup Operators
@@ -1266,90 +1272,15 @@ void edit()
 }
 
 
-/** @defgroup Iterators Iterators.
- *
- * Iterators are functions which could be applied to all elements, or
- * all columns, or whatever in an array. There is only one iterator that
- * can be applied to any kind of array.
- */
-
-/** Apply function to each element.
- * @ingroup Iterators
- *
- * You can define a function and apply it to each element of the array.
- * A new array with the same shape as the input one is generated and the
- * old one is not modified. The function applied must take an argument
- * of type T and return a result of type T.
- *
- * @code
- * v2 = v1.for_all(&sin);
- * // If v1 and v2 are double arrays, then v2 is a version of v1 where
- * // all values of v1 have been substituted by their respective sines
- * @endcode
- */
-maT for_all(T(*f)(T)) const
-{
-    maT tmp;
-    tmp.resize(*this);
-
-    for (int i = 0; i < size; i++)
-        data[i] = (*f)(data[i]);
-
-    return tmp;
-}
-
-/** Apply a function to each element and store in this same object.
- * @ingroup Iterators
- */
-void for_all(T(*f)(T))
-{
-    for (int i = 0; i < size; i++)
-        data[i] = (*f)(data[i]);
-}
-
-/** @defgroup Utilities Utilities.
+/** @defgroup MultidimUtilities Utilities
+ *  @ingroup MultidimensionalArrays
  *
  * Here you have several easy functions to manage the values of
  * the array.
  */
 
-/** Dissimilarity.
- * @ingroup Utilities
- *
- * It returns the effective maximum absolute difference between 2 arrays,
- * ie, compute the absolute value of the difference of the arrays, then
- * the histogram of the differences is computed and that value for which
- * the number of higher values is less than the percentil out is returned.
- * By default, only the 0.25% of the highest values are rejected as
- * outliers, although this value could be increased as the number of
- * samples in the array decreases.
- *
- * @code
- * if (dissimilarity(v1, v2) < 1e-6)
- *     std::cout << "v1 and v2 are more or less the same";
- * // the default 0.25% value is used
- *
- * if (dissimilarity(v1, v2, 1) < 1e-6)
- *     ...
- * // Now the 1% of the highest values are rejected to compute the
- * // effective range
- * @endcode
- */
-friend double dissimilarity(maT& op1, maT& op2, double percentil_out)
-{
-    maT diff;
-    arrayByArray(op1, op2, diff, '-');
-    diff.ABSnD();
-
-    // FIXME
-    //*** histogram1D hist; compute_hist(diff,hist,200);
-    // return hist.percentil(100-percentil_out);
-
-    return 1;
-}
-
 /** Several thresholding.
- * @ingroup Utilities
+ * @ingroup MultidimUtilities
  *
  * Apply a threshold to the array, the object is modified itself. There
  * are several kinds of thresholding and you must specify it, the values
@@ -1438,7 +1369,7 @@ void threshold(const std::string& type,
 }
 
 /** Count with threshold.
- * @ingroup Utilities
+ * @ingroup MultidimUtilities
  *
  * This function returns the number of elements meeting the threshold
  * condition.
@@ -1498,7 +1429,7 @@ long count_threshold(const std::string& type,
 }
 
 /** Substitute a value by another.
- * @ingroup Utilities
+ * @ingroup MultidimUtilities
  *
  * Substitute an old value by a new one. The accuracy is used to say if
  * the value in the array is equal to the old value. Set it to 0 for
@@ -1517,7 +1448,7 @@ void substitute(T oldv,
 }
 
 /** Substitute a given value by a sample from a Gaussian distribution.
- * @ingroup Utilities
+ * @ingroup MultidimUtilities
  *
  * Substitute  a given value by a sample from a Gaussian distribution.
  * The accuracy is used to say if the value in the array is equal 
@@ -1537,7 +1468,7 @@ void random_substitute(T oldv,
 }
 
 /** Binarize.
- * @ingroup Utilities
+ * @ingroup MultidimUtilities
  *
  * This functions substitutes all values in a volume which are greater
  * than val+accuracy by 1 and the rest are set to 0. Use threshold to get a
@@ -1557,7 +1488,7 @@ void binarize(double val = 0,
 }
 
 /** ROUND n-dimensional.
- * @ingroup Utilities
+ * @ingroup MultidimUtilities
  *
  * Applies a ROUND (look for the nearest integer) to each array element.
  */
@@ -1568,7 +1499,7 @@ void ROUNDnD()
 }
 
 /** ROUND n-dimensional.
- * @ingroup Utilities
+ * @ingroup MultidimUtilities
  *
  * The same as before but the result is returned.
  */
@@ -1580,7 +1511,7 @@ friend maT ROUNDnD(const maT& a)
 }
 
 /** CEILING n-dimensional.
- * @ingroup Utilities
+ * @ingroup MultidimUtilities
  *
  * Applies a CEILING (look for the nearest larger integer) to each
  * array element.
@@ -1592,7 +1523,7 @@ void CEILnD()
 }
 
 /** CEILING n-dimensional.
- * @ingroup Utilities
+ * @ingroup MultidimUtilities
  *
  * The same as before but the result is returned.
  */
@@ -1604,7 +1535,7 @@ friend maT CEILnD(const maT& a)
 }
 
 /** FLOOR n-dimensional.
- * @ingroup Utilities
+ * @ingroup MultidimUtilities
  *
  * Applies a FLOOR (look for the nearest larger integer) to each
  * array element.
@@ -1616,7 +1547,7 @@ void FLOORnD()
 }
 
 /** FLOOR n-dimensional.
- * @ingroup Utilities
+ * @ingroup MultidimUtilities
  *
  * The same as before but the result is returned.
  */
@@ -1628,7 +1559,7 @@ friend maT FLOORnD(const maT& a)
 }
 
 /** ABS n-dimensional.
- * @ingroup Utilities
+ * @ingroup MultidimUtilities
  *
  * Applies an ABS (absolute value) to each array element.
  */
@@ -1639,7 +1570,7 @@ void ABSnD()
 }
 
 /** ABS n-dimensional.
- * @ingroup Utilities
+ * @ingroup MultidimUtilities
  *
  * The same as before but the result is returned.
  */
@@ -1651,7 +1582,7 @@ friend maT ABSnD(const maT& a)
 }
 
 /** MAX n-dimensional.
- * @ingroup Utilities
+ * @ingroup MultidimUtilities
  *
  * Each component of the result is the maximum of the correspoing
  * components of the two input arrays. They must have the same shape, if
@@ -1668,7 +1599,7 @@ friend void MAXnD(const maT& v1, const maT& v2, maT& result)
 }
 
 /** MAX n-dimensional.
- * @ingroup Utilities
+ * @ingroup MultidimUtilities
  *
  * The same as before but the result is returned.
  */
@@ -1680,7 +1611,7 @@ friend maT MAXnD(const maT& v1, const maT& v2)
 }
 
 /** MIN n-dimensional.
- * @ingroup Utilities
+ * @ingroup MultidimUtilities
  *
  * Each component of the result is the minimum of the correspoing
  * components of the two input arrays. They must have the same shape, if
@@ -1697,7 +1628,7 @@ friend void MINnD(const maT& v1, const maT& v2, maT& result)
 }
 
 /** MIN n-dimensional.
- * @ingroup Utilities
+ * @ingroup MultidimUtilities
  *
  * The same as before but the result is returned.
  */
@@ -1709,7 +1640,7 @@ friend maT MINnD(const maT& v1, const maT& v2)
 }
 
 /** Sqrt.
- * @ingroup Utilities
+ * @ingroup MultidimUtilities
  *
  * Each component of the result is the square root of the original
  * component.
@@ -1721,7 +1652,7 @@ void SQRTnD()
 }
 
 /** Sqrt n-dimensional.
- * @ingroup Utilities
+ * @ingroup MultidimUtilities
  *
  * The same as before but the result is returned.
  */
@@ -1733,7 +1664,7 @@ friend maT SQRTnD(const maT& a)
 }
 
 /** Sum of matrix values.
- * @ingroup Utilities
+ * @ingroup MultidimUtilities
  *
  * This function returns the sum of all internal values.
  *
@@ -1752,7 +1683,7 @@ double sum() const
 }
 
 /** Sum of squared vector values.
- * @ingroup Utilities
+ * @ingroup MultidimUtilities
  *
  * This function returns the sum of all internal values to the second
  * power.
@@ -1772,7 +1703,7 @@ double sum2() const
 }
 
 /** Log10.
- * @ingroup Utilities
+ * @ingroup MultidimUtilities
  *
  * Each component of the result is the log10 of the original components.
  */
@@ -1783,7 +1714,7 @@ void self_log10()
 }
 
 /** Log10 n-dimensional.
- * @ingroup Utilities
+ * @ingroup MultidimUtilities
  *
  * The same as before but the result is returned.
  */
@@ -1795,7 +1726,7 @@ friend maT log10(const maT& a)
 }
 
 /** Compute center of mass.
- * @ingroup Utilities
+ * @ingroup MultidimUtilities
  *
  * If a mask is provided it must be of the same dimension of the object
  * and of type int (i.e., Matrix2D<int> *). Only those logical indexes

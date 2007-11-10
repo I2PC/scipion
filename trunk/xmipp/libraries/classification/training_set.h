@@ -42,7 +42,8 @@
 
 #include <data/args.h>
 
-/**@name Training Sets*/
+/**@defgroup TrainingSets Training Sets
+   @ingroup ClassificationLibrary */
 //@{
 /**
  * Generic training sets.
@@ -78,8 +79,8 @@ public:
 
     /**
      * Default constructor
-     * @param _calib: True if the trainign set is calibrated (labeled)
-     * @param _n: Number of items that the trained set should contain
+     * Parameter: _calib: True if the trainign set is calibrated (labeled)
+     * Parameter: _n: Number of items that the trained set should contain
      */
     xmippCTSet(const bool& _calib = true, unsigned _n = 0)
             :/* splitTrainingSet(), */theItems(_n), /*theTargets(_n), */isCalibrated(_calib), nTargets(0)
@@ -87,7 +88,7 @@ public:
 
     /**
      * Constructs a training set given a stream
-     * @param _is  The input stream
+     * Parameter: _is  The input stream
      */
 
     xmippCTSet(istream & _is) :  splitTrainingSet(), theItems(), theTargets(), isCalibrated(false)
@@ -106,8 +107,8 @@ public:
         creates the map. Used for split-sample training and
         validation. Parameters must be between 0 and 1 and must add to
         less than 1; the rest will be used for testing
-        @param _tp proportion over 1 of samples devoted to training
-        @param _vp proportion over 1 of samples devoted to validation
+        Parameter: _tp proportion over 1 of samples devoted to training
+        Parameter: _vp proportion over 1 of samples devoted to validation
      */
     void setSplit(float _tp, float _vp)
     {
@@ -138,7 +139,7 @@ public:
 
 
     /** Returns an iterator to the begining of the subset
-        @param _um is the mode: training, testing or validation
+        Parameter: _um is the mode: training, testing or validation
         @return an iterator to the begining of the subset;
     */
     splitIt beginSubset(unsigned _um)
@@ -155,8 +156,8 @@ public:
 
     /**
      * Adds an item to the training set
-     * @param _i   The item
-     * @param _tg  The target (Used only if the TS is calibrated).
+     * Parameter: _i   The item
+     * Parameter: _tg  The target (Used only if the TS is calibrated).
      */
     virtual void add(const Item& _i, const Target& _tg/* = Target()*/)
     {
@@ -168,7 +169,7 @@ public:
 
     /**
      * Adds an item to a non calibrated training set
-     * @param _i   The item
+     * Parameter: _i   The item
      */
     virtual void add(const Item& _i)
     {
@@ -178,7 +179,7 @@ public:
 
     /**
      * Deletes an item from the training set
-     * @param _idx   The index
+     * Parameter: _idx   The index
      */
     virtual bool remove(unsigned int _idx)
     {
@@ -205,7 +206,7 @@ public:
 
     /**
      * Returns a const reference to the specified target
-     * @param _i  The index
+     * Parameter: _i  The index
      * @exception out_of_range   If _i is out of range
      */
     const Target& targetAt(unsigned _i) const
@@ -229,7 +230,7 @@ public:
 
     /**
      * Returns a reference to a target.
-     * @param _i  The index
+     * Parameter: _i  The index
      * @exception out_of_range   If _i is out of range
      */
     Target& targetAt(unsigned _i)
@@ -248,7 +249,7 @@ public:
 
     /**
      * Returns a const reference to the specified item
-     * @param _i  The index
+     * Parameter: _i  The index
      * @exception out_of_range If _i is out of range
      */
     const Item& itemAt(unsigned _i) const
@@ -267,8 +268,8 @@ public:
 
     /**
      * Returns a recerence to an item.
-     * @param _i     The index
-     * @param _item  The item
+     * Parameter: _i     The index
+     * Parameter: _item  The item
      * @exception out_of_range If _i is out of range
      */
     Item& itemAt(unsigned _i)
@@ -315,7 +316,7 @@ public:
 
     /**
      * Standard output for a training set
-     * @param _os The output stream
+     * Parameter: _os The output stream
      */
     virtual void printSelf(ostream& _os) const
     {
@@ -324,7 +325,7 @@ public:
 
     /**
      * Standard input for a training set
-     * @param _is The input stream
+     * Parameter: _is The input stream
      * @exception  runtime_error  If there are problems with the stream
      * NOTE: This method is empty, it should be defined.
      */
@@ -335,7 +336,7 @@ public:
     /**
      * Saves the class into a stream.
      * this method can be used to save the status of the class.
-     * @param _os The output stream
+     * Parameter: _os The output stream
      */
     virtual void saveObject(ostream& _os) const
     {
@@ -347,7 +348,7 @@ public:
     /**
      * Loads the class from a stream.
      * this method can be used to load the status of the class.
-     * @param _is The output stream
+     * Parameter: _is The output stream
      */
     virtual void loadObject(istream& _is)
     {
@@ -388,8 +389,8 @@ public:
 
 
     /** Standard output for a training set
-      * @param _os The output stream
-      * @param _ts  The training set to be printed
+      * Parameter: _os The output stream
+      * Parameter: _ts  The training set to be printed
       */
     friend ostream& operator << (ostream& _os, const xmippCTSet& _ts)
     {
@@ -399,8 +400,8 @@ public:
 
     /**
      * Standard input for a training set
-     * @param _is The input stream
-     * @param _ts  The training set to be read
+     * Parameter: _is The input stream
+     * Parameter: _ts  The training set to be read
      * @exception  runtime_error  If there are problems with the stream
      */
     friend istream& operator >> (istream& _is, xmippCTSet& _ts)
@@ -434,7 +435,7 @@ protected:
 
     /**
      * Checks if the training set is calibrated or not
-     * @param _is  The input stream
+     * Parameter: _is  The input stream
      * @exception  runtime_error  If there are problems with the stream
      */
     void checkCalibrated(istream& _is)
@@ -473,7 +474,7 @@ protected:
 
     /**
     * Read the items
-    * @param _is  The input stream
+    * Parameter: _is  The input stream
     * @exception  runtime_error  If there are problems with the stream
     */
     void readItems(istream& _is)
@@ -542,7 +543,7 @@ protected:
 
     /**
      * Writes if the training set is calibrated or not
-     * @param _os  The output stream
+     * Parameter: _os  The output stream
      */
     void writeCalibrated(ostream& _os) const
     {
@@ -553,8 +554,8 @@ protected:
 
     /**
      * Writes the items
-     * @param _os  The output stream
-     * @param _delim Flag to use "<" delimiters (false by default)
+     * Parameter: _os  The output stream
+     * Parameter: _delim Flag to use "<" delimiters (false by default)
      */
     void writeItems(ostream& _os, bool _delim = false) const
     {
@@ -591,7 +592,7 @@ protected:
 
     /**
      * Skip the comments if the stream
-     * @param _is  The input stream
+     * Parameter: _is  The input stream
      */
     void skipComments(istream& _is) const
     {
@@ -661,5 +662,4 @@ protected:
     unsigned nTargets;  // Number of targets in the training set
 };
 //@}
-
 #endif

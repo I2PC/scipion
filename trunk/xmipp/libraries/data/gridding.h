@@ -41,6 +41,8 @@
 #define GRIDDING_K 6
 
 /// @defgroup Gridding Gridding
+/// @ingroup DataLibrary
+
 /// @defgroup ReverseGridding Reverse Gridding
 /// @ingroup Gridding
 
@@ -531,6 +533,7 @@ T interpolatedElementReverseGridding(const Matrix3D<T> &in, double x, double y, 
 }
 
 /// @defgroup ReverseGriddingRelated Reverse Gridding Related Functions
+/// @ingroup ReverseGridding
 
 /** Reverse-gridding based 2D projection operation
  * @ingroup ReverseGriddingRelated

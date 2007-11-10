@@ -37,7 +37,8 @@
 
 #include "fcmeans.h"
 
-/**@name Fuzzy Kohonen Clustering Network algorithm*/
+/**@defgroup FuzzyKohonen Fuzzy Kohonen Clustering Network algorithm
+   @ingroup ClassificationLibrary */
 //@{
 /** This class implements Fuzzy Kohonen Clustering Network Algorithm (Bezdeck)
  *  an unsupervised clustering algorithm that is a combination of Fuzzy c-means
@@ -50,9 +51,9 @@ public:
 
 
     /**  Big mega ctor. Creates a Fuzzy codebook, and initializes it
-     * @param _m   Fuzzy constant
-     * @param _epsilon  Stopping criterion
-     * @param _epochs Number of epochs or iterations
+     * Parameter: _m   Fuzzy constant
+     * Parameter: _epsilon  Stopping criterion
+     * Parameter: _epochs Number of epochs or iterations
     */
     xmippFKCN(double _m, double _epsilon, unsigned _epochs)
             : xmippFCMeans(_m, _epsilon, _epochs)
@@ -65,17 +66,14 @@ public:
     virtual ~xmippFKCN()
     {};
 
-
     /**
      * Trains the Algorithm
-     * @param _xmippDS Data structure to train, a codeBook in this case
-     * @param _examples  A training set with the training examples
+     * Parameter: _xmippDS Data structure to train, a codeBook in this case
+     * Parameter: _examples  A training set with the training examples
      */
     virtual void train(xmippFCB& _xmippDS,
                        const TS& _examples) const;
 
 };
-
 //@}
-
 #endif//_XMIPPFKCN_H

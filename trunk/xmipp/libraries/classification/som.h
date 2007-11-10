@@ -37,22 +37,21 @@
 //---------------------------------------------------------------------------
 // Class Descent
 //---------------------------------------------------------------------------
-
-/**@name Descent class*/
+/**@defgroup Kohonen Kohonen Self Organizing Maps
+   @ingroup ClassificationLibrary */
 //@{
 /**
  * This class implements a descent from an initial value to a final one in a
  * number of steps. The transition is linear by default. It's used to
  * decrease alpha and the radius of neighborhood during training of SOM.
  */
-
 class Descent
 {
 public:
     /**
      * Constructor
-     * @param _initial
-     * @param _final
+     * Parameter: _initial
+     * Parameter: _final
      */
     Descent(const double _initial = 1, const double _final = 0)
             : initial(_initial), final(_final)
@@ -61,8 +60,8 @@ public:
     /**
      * Returns the function value associated a step if the transition from
      * the initial value to the final value es made in _nSteps steps
-     * @param _step    The actual step
-     * @param _nsteps  The number of steps to reach the final val from the
+     * Parameter: _step    The actual step
+     * Parameter: _nsteps  The number of steps to reach the final val from the
      *                 initial one
      */
     virtual double operator()(const unsigned _step, const unsigned _nSteps)
@@ -71,20 +70,20 @@ public:
 
     /**
     * Standard output for a Descent class
-    * @param _os The output stream
+    * Parameter: _os The output stream
     */
     virtual void printSelf(ostream& _os) const;
 
     /**
     * Standard input for a Descent class
-    * @param _is The input stream
+    * Parameter: _is The input stream
     */
     virtual void readSelf(istream& _is);
 
     /**
      * Saves the Descent class into a stream.
      * this method can be used to save the status of the class.
-     * @param _os The output stream
+     * Parameter: _os The output stream
      */
     virtual void saveObject(ostream& _os) const;
 
@@ -92,15 +91,15 @@ public:
     /**
      * Loads the Descent class from a stream.
      * this method can be used to load the status of the class.
-     * @param _is The output stream
+     * Parameter: _is The output stream
      */
     virtual void loadObject(istream& _is);
 
 
     /**
     * Standard output for a Descent class
-    * @param _os   The output stream
-    * @param _desc  The class
+    * Parameter: _os   The output stream
+    * Parameter: _desc  The class
     */
     friend ostream& operator << (ostream& _os, const Descent& _desc)
     {
@@ -110,8 +109,8 @@ public:
 
     /**
     * Standard input for a Descent class
-    * @param _is The input stream
-    * @param _desc The class
+    * Parameter: _is The input stream
+    * Parameter: _desc The class
     */
     friend istream& operator >> (istream& _is, Descent& _desc)
     {
@@ -125,12 +124,8 @@ protected:
     double final;
 };
 
-//@}
-
 //---------------------------------------------------------------------------
 
-/**@name Kohonen Self-Organizing Feature Map (SOM)*/
-//@{
 /**
  * This class trains a Kohonen's Self Organizing Feature Map
  */
@@ -142,11 +137,11 @@ public:
 
     /**
      * Constructs the algorithm
-     * @param _alpha      How is gonna decrease alpha
-     * @param _radius     How is gonna decrease the radius of neighborhood
-     * @param _radius     How is gonna decrease the radius of neighborhood
-       @param _neighType  Type of neighborhood function
-     * @param _nSteps     Number of training steps
+     * Parameter: _alpha      How is gonna decrease alpha
+     * Parameter: _radius     How is gonna decrease the radius of neighborhood
+     * Parameter: _radius     How is gonna decrease the radius of neighborhood
+       Parameter: _neighType  Type of neighborhood function
+     * Parameter: _nSteps     Number of training steps
      */
     xmippSOM(Descent& _alpha, Descent& _radius,  neighType _neighType, unsigned long _nSteps)
             : xmippBaseAlgo<xmippMap>(), somAlpha(_alpha), somRadius(_radius), somNeigh(_neighType), somNSteps(_nSteps)
@@ -154,7 +149,7 @@ public:
 
     /**
      * Construct a SOM from the code vectors in a stream
-     * @param _is  The stream
+     * Parameter: _is  The stream
      */
     xmippSOM(istream& _is);
 
@@ -167,34 +162,34 @@ public:
 
     /**
      * Sets the alpha descent function
-     * @param _alpha  alpha(t)
+     * Parameter: _alpha  alpha(t)
      */
     void alpha(Descent _alpha);
 
     /**
      * Sets the radius descent function
-     * @param _radius  radius(t)
+     * Parameter: _radius  radius(t)
      */
     void radius(Descent _radius);
 
     /**
      * Sets the number of training steps
-     * @param _nSteps  Number of training steps
+     * Parameter: _nSteps  Number of training steps
      */
     void nSteps(const unsigned long& _nSteps);
 
 
     /**
      * Trains the SOM
-     * @param _som  The som to train
-     * @param _ts   The training set
+     * Parameter: _som  The som to train
+     * Parameter: _ts   The training set
      */
     virtual void train(xmippMap& _som, xmippCTVectors& _ts) const;
 
     /**
      * Tests the SOM
-     * @param _som        The som to test
-     * @param _examples   The training set of examples
+     * Parameter: _som        The som to test
+     * Parameter: _examples   The training set of examples
      * returns the quantization error
      */
     virtual double test(const xmippMap& _som, const TS& _examples) const;
@@ -208,20 +203,20 @@ public:
 
     /**
     * Standard output for a SOM algorithm
-    * @param _os The output stream
+    * Parameter: _os The output stream
     */
     virtual void printSelf(ostream& _os) const;
 
     /**
     * Standard input for a SOM algorithm
-    * @param _is The input stream
+    * Parameter: _is The input stream
     */
     virtual void readSelf(istream& _is);
 
     /**
      * Saves the xmippSOM class into a stream.
      * this method can be used to save the status of the class.
-     * @param _os The output stream
+     * Parameter: _os The output stream
      */
     virtual void saveObject(ostream& _os) const;
 
@@ -229,14 +224,14 @@ public:
     /**
      * Loads the xmippSOM class from a stream.
      * this method can be used to load the status of the class.
-     * @param _is The output stream
+     * Parameter: _is The output stream
      */
     virtual void loadObject(istream& _is);
 
     /**
     * Standard output for a som algorithm
-    * @param _os   The output stream
-    * @param _som  The som algorithm to be printed
+    * Parameter: _os   The output stream
+    * Parameter: _som  The som algorithm to be printed
     */
     friend ostream& operator << (ostream& _os, const xmippSOM& _som)
     {
@@ -246,8 +241,8 @@ public:
 
     /**
     * Standard input for a som algorithm
-    * @param _is The input stream
-    * @param _som The som algorithm
+    * Parameter: _is The input stream
+    * Parameter: _som The som algorithm
     */
     friend istream& operator >> (istream& _is, xmippSOM& _som)
     {
@@ -258,7 +253,7 @@ public:
 
     /**
     * Operator "="
-    * @param op1 xmippSOM
+    * Parameter: op1 xmippSOM
     */
     xmippSOM& operator= (const xmippSOM &op1)
     {
@@ -280,16 +275,13 @@ protected:
 private:
     /*
       * Trains the SOM (never used)
-      * @param _som  The som to train
-      * @param _ts   The training set
+      * Parameter: _som  The som to train
+      * Parameter: _ts   The training set
       */
     virtual void train(xmippMap& _som, const TS& _ts) const
         {};
 
 
 };
-
 //@}
-
-
 #endif

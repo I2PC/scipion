@@ -44,7 +44,8 @@
 /* ************************************************************************* */
 /* MICROGRAPHY                                                               */
 /* ************************************************************************* */
-/**@name Micrographs*/
+/// @defgroup Micrographs Micrographs
+/// @ingroup DataLibrary
 //@{
 /** Particle coordinates.
     This structure stores the X,Y position of the particle. */
@@ -215,7 +216,7 @@ public:
     /** Scissor.
         The single particle is selected by an index within the particle
         coordinate list. If the index is beyond the number of particles
-        \Ref{ParticleNo}, or the window size is not set (\Ref{set_window_size})
+        \ref ParticleNo , or the window size is not set (\ref set_window_size )
         an exception is thrown.
 
         Make sure that index n represents a valid particle before cutting it
@@ -230,7 +231,7 @@ public:
         trnasmitance
 
         Returns 0 if an error ocurred and 1 if everything is all right*/
-    int scissor(const Particle_coords &P, Image &result,
+    int scissor(const Particle_coords &P, ImageT<double> &result,
                 double Dmin, double Dmax,
                 double scaleX = 1, double scaleY = 1, bool only_check = false);
 
@@ -283,7 +284,7 @@ public:
     }
 
     /** Pixel access for reading.
-        These coordinates follow the physical Xmipp \URL[convention]
+        These coordinates follow the physical Xmipp convention
         {../../../Extra_Docs/Conventions.html} for coordinates */
     float operator()(int x, int y) const
     {
@@ -526,8 +527,10 @@ public:
     if the input ranges 0-255, the output will range between 0 and 65535 */
 void downsample(const Micrograph &M, int Xstep, int Ystep,
                 const Matrix2D<double> &kernel, Micrograph &Mp);
+//@}
 
-/**@name Normalization
+/**@defgroup Normalization Image normalization
+   @ingroup DataLibrary
    This functions implement the normalization of a single image. They should
    be called with all images in the corresponding SelFile. In the
    following documentation m(x) is the mean of x, v(x) is the variance,
@@ -549,44 +552,44 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
 //@{
 /** OldXmipp normalization.
    Formula:
-   \begin{verbatim}
+   @code
    I'=(I-m(I))/sqrt(v(I))
-   \end{verbatim}
+   @endcode
    Properties:
-   \begin{verbatim}
+   @code
    m(I')=0                             m(bg(I'))=-m(x)/sqrt((v(X)+v(n)))
    v(I')=1                             v(bg(I'))=v(n)/(v(X)+v(n))
-   \end{verbatim}
+   @endcode
    Comments: it's not bad but positivity constraints cannot be imposed
 */
 void normalize_OldXmipp(Image *I);
 
 /** Near_OldXmipp normalization.
    Formula:
-   \begin{verbatim}
+   @code
    I'=(I-m(I))/a*v(n)
-   \end{verbatim}
+   @endcode
    Properties:
-   \begin{verbatim}
+   @code
    m(I')=0                             m(bg(I'))=-m(x)/sqrt(v(n))
    v(I')=(v(X)+v(n))/v(n)              v(bg(I'))=1
-   \end{verbatim}
+   @endcode
    Comments: it's not bad but positivity constraints cannot be imposed
 */
 void normalize_Near_OldXmipp(Image *I, const Matrix2D<int> &bg_mask);
 
 /** OldXmipp decomposition.
    Formula:
-   \begin{verbatim}
+   @code
    I'=(I-b)/a*sqrt(v(n))
    I''=I'*mask
    I'''=(I''-m(I''))/sqrt(v(I''))
-   \end{verbatim}
+   @endcode
    Properties:
-   \begin{verbatim}
+   @code
    m(I')=m(X)/sqrt(v(n))               m(bg(I'))=0
    v(I')=(v(X)+v(n))/v(n)              v(bg(I'))=1
-   \end{verbatim}
+   @endcode
    Comments: it's not bad but positivity constraints cannot be imposed.
       If no mask is applied, then this formula is a beautiful decomposition
       of the OldXmipp method in two steps.
@@ -596,14 +599,14 @@ void normalize_OldXmipp_decomposition(Image *I,
 
 /** Michael's normalization.
    Formula:
-   \begin{verbatim}
+   @code
    I'=(I-b)/b
-   \end{verbatim}
+   @endcode
    Properties:
-   \begin{verbatim}
+   @code
    m(I')=0                             m(bg(I'))=-a*m(x)/b
    v(I')=a^2*(v(X)+v(n))/b^2           v(bg(I'))=a^2*v(n)/b^2
-   \end{verbatim}
+   @endcode
    Comments: it's not bad but positivity constraints cannot be imposed and
       the statistical properties are not so good.
 */
@@ -611,17 +614,17 @@ void normalize_Michael(Image *I, const Matrix2D<int> &bg_mask);
 
 /** NewXmipp's normalization.
    Formula:
-   \begin{verbatim}
+   @code
    I'=(I-b)/a*sqrt(v(n))
    // I''=(I'>0)? I':0
    // I'''=I''-a*sqrt(v(n)/2*PI)
    I''''=I'''*mask
-   \end{verbatim}
+   @endcode
    Properties:
-   \begin{verbatim}
+   @code
    m(I')=m(X)/sqrt(v(n))               m(bg(I'))=0
    v(I')=(v(X)+v(n))/v(n)              v(bg(I'))=1
-   \end{verbatim}
+   @endcode
    Comments: In general, we cannot assure that mass projects into positive
       numbers, so the "denoising" capability directly on the images is
 disabled. However, a positivity constraint can be applied on the 3D
@@ -631,14 +634,14 @@ void normalize_NewXmipp(Image *I, const Matrix2D<int> &bg_mask);
 
 /** NewXmipp 2's normalization.
    Formula:
-   \begin{verbatim}
+   @code
    I'=(I-m(bg))/(m(I)-m(bg))
-   \end{verbatim}
+   @endcode
    Properties:
-   \begin{verbatim}
+   @code
    m(I')=m(X)/sqrt(v(n))               m(bg(I'))=0
    v(I')=(v(X)+v(n))/v(n)              v(bg(I'))=1
-   \end{verbatim}
+   @endcode
    Comments: In general, we cannot assure that mass projects into positive
       numbers, so the "denoising" capability directly on the images is
 disabled. However, a positivity constraint can be applied on the 3D
@@ -658,6 +661,5 @@ void normalize_remove_neighbours(Image *I,
 				 const Matrix2D<int> &bg_mask,
                                  const double &threshold);
 
-//@}
 //@}
 #endif

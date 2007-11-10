@@ -167,13 +167,13 @@ void APHFileorigmerg::clear()
 
     Generate symmetrical points:
     Symmetrical points are generated through the multiplication
-    \begin{verbatim}
+    @code
          [R[0] R[2]  0    0 R[5]]
          [R[1] R[3]  0    0 R[6]]
     [h' k' l' A' ph']=[h k l A ph][ 0  0   R[4]  0  0  ]
          [ 0  0    0    1  0  ]
          [ 0  0    0    0 R[7]]
-    \end{verbatim}
+    @endcode
 
     These R matrices are obtained for each crystallographic group
     They can be easily obtaine from  origtiltd.for (MRC source code)

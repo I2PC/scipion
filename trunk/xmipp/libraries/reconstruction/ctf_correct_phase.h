@@ -30,7 +30,8 @@
 
 #include <data/selfile.h>
 
-/**@name Correct Phase */
+/**@defgroup CorrectPhase ctf_correct_phase (CTF Phase correction)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /// Correct Phase parameters
 class CorrectPhaseParams

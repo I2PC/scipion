@@ -45,11 +45,12 @@
 /*                         allocated                                         */
 
 #ifndef _RADON_HH
-#   define _RADON_HH
+#define _RADON_HH
 
 #include <data/volume.h>
 
-/**@name Radon Transform */
+/**@defgroup RadonTransform radon (Radon transform)
+   @ingroup ReconsLibraryPrograms */
 /** Radon transform of a volume along a direction */
 void Radon_Transform(Volume *vol, double rot, double psi,
                      Matrix1D<double> &RT);

@@ -39,7 +39,8 @@
 #include "base_algorithm.h"
 #include "fuzzy_code_book.h"
 
-/**@name Fuzzy c-means clustering algorithm*/
+/**@defgroup FuzzyCMeans Fuzzy c-means clustering algorithm
+   @ingroup ClassificationLibrary */
 //@{
 /**
  *  This class implements Fuzzy c-means clustering method (Bezdeck)
@@ -52,9 +53,9 @@ public:
 
     /**
      * Big mega ctor. Creates a Fuzzy c-means codebook, and initializes it
-     * @param _m   Fuzzy constant
-     * @param _epsilon  Stopping criterion
-     * @param _epochs Number of epochs or iterations
+     * Parameter: _m   Fuzzy constant
+     * Parameter: _epsilon  Stopping criterion
+     * Parameter: _epochs Number of epochs or iterations
     */
     xmippFCMeans(double _m, double _epsilon, unsigned _epochs)
             : xmippBaseAlgo< xmippFCB >("xmippFCMeans"),
@@ -65,7 +66,7 @@ public:
 
     /*
      * Ctor from stream
-     * @param _is Must have the parameters in the same order than the previous ctor.
+     * Parameter: _is Must have the parameters in the same order than the previous ctor.
      */
 //  xmippFCMeans( istream& _is );
 
@@ -79,8 +80,8 @@ public:
 
     /**
      * Trains the Algorithm
-     * @param _xmippDS Data structure to train, a codeBook in this case
-     * @param _examples  A training set with the training examples
+     * Parameter: _xmippDS Data structure to train, a codeBook in this case
+     * Parameter: _examples  A training set with the training examples
      */
     virtual void train(xmippFCB& _xmippDS,
                        TS& _examples) const;
@@ -89,8 +90,8 @@ public:
     /**
      * Tests with the training set using for training.
      * Fuzzy membership is used for testing
-     * @param _xmippDS Data structure to train, a codeBook in this case
-     * @param _examples  The training set
+     * Parameter: _xmippDS Data structure to train, a codeBook in this case
+     * Parameter: _examples  The training set
      * returns the quantization error
      */
     virtual double fuzzyTest(const xmippFCB& _xmippDS,
@@ -99,8 +100,8 @@ public:
 
     /**
      * Tests the Algorithm in a conventional way.
-     * @param _xmippDS Data structure to train, a codeBook in this case
-     * @param _examples  A training set with the training examples
+     * Parameter: _xmippDS Data structure to train, a codeBook in this case
+     * Parameter: _examples  A training set with the training examples
      */
     virtual double test(const xmippFCB& _xmippDS,
                         const TS& _examples) const;
@@ -108,7 +109,7 @@ public:
 
     /**
      * Calculates Partition Coefficient (F) validity functional
-     * @param _xmippDS Data structure to train, a codeBook in this case
+     * Parameter: _xmippDS Data structure to train, a codeBook in this case
      * (It should be maximum)
      * For more information see:
      *     J.C. Bezdek, "Pattern Recognition with Fuzzy Objective
@@ -119,7 +120,7 @@ public:
 
     /**
      * Calculates Partition Entropy (H) validity functional
-     * @param _xmippDS Data structure to train, a codeBook in this case
+     * Parameter: _xmippDS Data structure to train, a codeBook in this case
      * (It should be minimum)
      * For more information see:
      *     J.C. Bezdek, "Pattern Recognition with Fuzzy Objective
@@ -132,7 +133,7 @@ public:
 
     /**
      * Calculates Non-fuzzy index (NFI) validity functional
-     * @param _xmippDS Data structure to train, a codeBook in this case
+     * Parameter: _xmippDS Data structure to train, a codeBook in this case
      * (It should be maximum)
      * For more information see:
      *     M. Roubens, "Pattern Classification Problems and Fuzzy Sets",
@@ -142,11 +143,10 @@ public:
 
     double NFI(const xmippFCB& _xmippDS) const;
 
-
     /**
      * Calculates Compactness and separation index (S) validity functional
-     * @param _xmippDS Data structure to train, a codeBook in this case
-     * @param _examples  A training set with the training examples
+     * Parameter: _xmippDS Data structure to train, a codeBook in this case
+     * Parameter: _examples  A training set with the training examples
      * (It should be minimum)
      * For more information see:
      *     X.L. Xie and G. Beni, "A Validity Measure for Fuzzy Clustering",
@@ -164,7 +164,5 @@ protected:
     double epsilon;      // Stopping criterion Error < epsilon
     unsigned epochs;                  // Number of presentations of the whole sample
 };
-
 //@}
-
 #endif//_XMIPPFCMEANS_H

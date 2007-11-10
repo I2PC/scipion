@@ -1,4 +1,5 @@
-/**@name Signal processing windows */
+/**@defgroup SignalProcWindows Signal processing windows
+   @ingroup BilibLibrary */
 //@{
 /*--------------------------------------------------------------------------*/
 /** Returns the value of a Bartlet (triangular) window evaluated at Argument.

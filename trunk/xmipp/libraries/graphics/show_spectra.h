@@ -34,7 +34,8 @@
 #include <qscrollbar.h>
 #include <qlabel.h>
 
-/**@name Show Spectra Data. */
+/**@defgroup ShowSpectra Show Spectra Data
+   @ingroup GraphicsLibrary */
 //@{
 /** Class to show spectra.
 */

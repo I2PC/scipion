@@ -32,7 +32,8 @@
 #include <data/selfile.h>
 #include <data/funcs.h>
 
-/**@name Interaction with Spider */
+/**@defgroup SpiderRecons Interaction with Spider 
+   @ingroup ReconsLibrary */
 //@{
 /** Call SIRT in Spider.
     The batch file for Spider is called fn_batch+"."+fn_ext. The output
@@ -43,7 +44,7 @@
     rot) instead of the usual (rot, tilt, psi).
     All LOG and results file from Spider are not
     removed. The batch file generated is the following:
-    \begin{verbatim}
+    @code
       bp rp
       <first file in SF>
       <fn_root>sel.<fn_ext>
@@ -56,7 +57,7 @@
       (0.,2.)
       (0.95*1/(1+6*<lambda>))
       en
-    \end{verbatim}
+    @endcode
     The actual process status is written to cerr.
 */
 void SIRT_Spider(SelFile &SF, double lambda, double no_it, int radius,

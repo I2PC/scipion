@@ -26,8 +26,26 @@
 /* SYMMETRIES                                                                */
 /* ------------------------------------------------------------------------- */
 #ifndef _SYMMETRIES_HH
-#  define _SYMMETRIES_HH
+#define _SYMMETRIES_HH
 
+#include <data/matrix2d.h>
+#include <data/funcs.h>
+#include <data/volume.h>
+#include <data/args.h>
+#include <reconstruction/grids.h>
+
+/**@defgroup SymmetryLists Symmetry handling
+   @ingroup ReconsLibrary 
+    The symmetry lists are, simply, lists of 2D matrices. It's the way of
+    taking symmetry into account in the reconstruction programs. The
+    symmetry list must contain matrices which express equivalent views to
+    the actual one due to the underlying volume symmetry. The identity matrix
+    is not within the list. You know that symmetry matrices should form
+    a subgroup, when reading a file the subgroup is automatically computed
+    and, when you add or remove a new matrix, the subgroup must be
+    manually computed.
+*/
+//@{
 //define the  crystallographic groups
 //symmetry matices from http://cci.lbl.gov/asu_gallery/
 #define sym_undefined    -1
@@ -74,23 +92,6 @@
 #define pg_I4   219 //another 52
 #define pg_I5   220 //another another 52 (used by EMBL-matfb)
 
-#include <data/matrix2d.h>
-#include <data/funcs.h>
-#include <data/volume.h>
-#include <data/args.h>
-#include <reconstruction/grids.h>
-
-/**@name Symmetry lists
-    The symmetry lists are, simply, lists of 2D matrices. It's the way of
-    taking symmetry into account in the reconstruction programs. The
-    symmetry list must contain matrices which express equivalent views to
-    the actual one due to the underlying volume symmetry. The identity matrix
-    is not within the list. You know that symmetry matrices should form
-    a subgroup, when reading a file the subgroup is automatically computed
-    and, when you add or remove a new matrix, the subgroup must be
-    manually computed.
-*/
-//@{
 /** Number of an image in the reconstruction list.
     This macro returns the index of a symmetry image (after the symmetry matrix
     number sym_no) within a list where the first images are true images and the
@@ -114,7 +115,7 @@
     do nothing else but reading matrices from it.
 
     The symmetry file format is
-    \begin{verbatim}
+    @code
     #This is a comment
     # The following line is a 6-fold rotational symmetry axis along Z-axis.
     # The fold is the number of times that the volume can be rotated along
@@ -124,7 +125,7 @@
     # mirror_plane         <X0> <Y0> <Z0>
     rot_axis      6 0 0 1
     mirror_plane    0 0 1
-    \end{verbatim}
+    @endcode
 */
 class SymList
 {
@@ -156,7 +157,7 @@ public:
     }
 
     /** translate string fn_sym to symmetry group, return false
-        is translation is not possible. See URL
+        is translation is not possible. See 
         http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
          for details. It also fill the symmetry information  */
     bool isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder);
@@ -173,32 +174,32 @@ public:
     }
 
     /** Get matrices from the symmetry list.
-        The number of matrices inside the list is given by \Ref{SymsNo}.
+        The number of matrices inside the list is given by SymsNo.
         This function return the 4x4 transformation matrices associated to
         the one in the list which occupies the position 'i'. The matrix
         numbering within the list starts at 0. The output transformation
         matrices is given as a pointer to gain speed.
         \\ Ex:
-        \begin{verbatim}
+        @code
            for (i=0; i<SL.SymsNo; i++) {
                SL.get_matrices(i,L,R);
                ...
            }
-        \end{verbatim} */
+        @endcode */
     void get_matrices(int i, Matrix2D<double> &L, Matrix2D<double> &R) const;
 
     /** Set a couple of matrices in the symmetry list.
-        The number of matrices inside the list is given by \Ref{SymsNo}.
+        The number of matrices inside the list is given by SymsNo.
         This function sets the 4x4 transformation matrices associated to
         the one in the list which occupies the position 'i'. The matrix
         numbering within the list starts at 0.
         \\ Ex:
-        \begin{verbatim}
+        @code
            for (i=0; i<SL.SymsNo; i++) {
                SL.set_matrix(i,L,R);
                ...
            }
-        \end{verbatim} */
+        @endcode */
     void set_matrices(int i, const Matrix2D<double> &L,
                       const Matrix2D<double> &R);
 
@@ -226,7 +227,7 @@ public:
         The given matrix must specify a point of view equivalent to the
         actual point of view. The matrices are added to the subgroup generator
         but the subgroup is not updated, you must do it manually using
-        \Ref{compute_subgroup}. What is more, the subgroup after the insertion
+        compute_subgroup. What is more, the subgroup after the insertion
         is corrupted.
 
         The chain length is the number of single matrices multiplication of
@@ -247,12 +248,12 @@ public:
     /** Number of symmetry matrices inside the structure.
         This is the number of all the matrices inside the subgroup.
         \\ Ex:
-        \begin{verbatim}
+        @code
            for (i=0; i<SL.SymsNo; i++) {
                SL.get_matrix(i,A);
                ...
            }
-        \end{verbatim} */
+        @endcode */
     int SymsNo() const
     {
         return __L.ydim / 4;
@@ -268,8 +269,8 @@ public:
     }
 
     /** Guess Crystallographic space group.
-        Return the  \URL[space group]{
-        http://www.cryst.ehu.es/cgi-bin/cryst/programs/nph-getgen} number. So
+        Return the 
+        http://www.cryst.ehu.es/cgi-bin/cryst/programs/nph-getgen number. So
         far it has only been implemented for P1 (1), P2122 & P2212 (17), P4 (75),
         P4212 (90) and P6 (168).
 
@@ -349,5 +350,4 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
 
 
 //@}
-
 #endif

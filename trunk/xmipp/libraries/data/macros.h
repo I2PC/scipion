@@ -41,7 +41,8 @@
 #define MAXFLOAT  1e30
 #endif
 
-/// @defgroup Macros
+/// @defgroup Macros Macros
+/// @ingroup DataLibrary
 
 /// @defgroup MacrosConstants Constants
 /// @ingroup Macros
@@ -160,6 +161,7 @@
  * a = CEIL(-0.2); // a = 0
  * a = CEIL(0.2); // a = 1
  * a = CEIL(0.8); // a = 1
+ * @endcode
  */
 #define CEIL(x) (((x) == (int)(x)) ? (int)(x):(((x) > 0) ? (int)((x) + 1) : \
                  (int)(x)))
@@ -346,7 +348,7 @@
     ispduptmp3, ispduptmp4, ispduptmp5;
 
 /** Swap two values
- * @igroup MacrosMisc
+ * @ingroup MacrosMisc
  *
  * It uses a temporal variable which must be of the same type as the two
  * parameters

@@ -38,14 +38,22 @@ using namespace std;
 #endif
 #include "matrix1d.h"
 
-/** @defgroup NumericalIntegration Numerical integration.
+/** @defgroup NumericalIntegration Numerical integration
+ *  @ingroup DataLibrary
  *
  * This code performs numeric integrations as described in the Numerical Recipes
  * Book, in particular it implements the "trapezoidal" (Trapeze) and the Romberg
  * integration. Both are designed for smoothly variant functions.
-
-   This module can also perform multidimensional integration.
+ *
+ * This module can also perform multidimensional integration.
  */
+
+/** Integrate a function using Newton-Cotes formula
+ * @ingroup NumericalIntegration
+ *
+ * Estimate the integral of a function between a and b using N points.
+ */
+double integrateNewtonCotes(double(*f)(double), double a, double b, int N);
 
 /** A double-returning function.
  * @ingroup NumericalIntegration
@@ -111,10 +119,10 @@ public:
     virtual double operator()();
 
     /** With parameters.
-     * @param min Integration lower limit
-     * @param max Integration upper limit
-     * @param precision Maximum error allowed
-     * @param max_iter Maximum number of iterations
+     * Parameter: min Integration lower limit
+     * Parameter: max Integration upper limit
+     * Parameter: precision Maximum error allowed
+     * Parameter: max_iter Maximum number of iterations
      */
     double operator()(double min, double max,
                       double precision = 1.0e-7, int max_iter = 20)
@@ -128,12 +136,12 @@ public:
 
     /** Constructor.
      *
-     * @param f Pointer to function to be integrated
-     * @param var Integration variable
-     * @param min Integration lower limit
-     * @param max Integration upper limit
-     * @param precision Maximum error allowed
-     * @param max_iter Maximum number of iterations
+     * Parameter: f Pointer to function to be integrated
+     * Parameter: var Integration variable
+     * Parameter: min Integration lower limit
+     * Parameter: max Integration upper limit
+     * Parameter: precision Maximum error allowed
+     * Parameter: max_iter Maximum number of iterations
      */
     Trapeze(doubleFunction& f, double& Var, double min, double max,
             double precision = 1.0e-7, int max_iter = 20) : func(f), x(Var)
@@ -203,10 +211,10 @@ public:
 
     /** With parameters.
      *
-     * @param min Integration lower limit
-     * @param max Integration upper limit
-     * @param precision Maximum error allowed
-     * @param max_iter Maximum number of iterations
+     * Parameter: min Integration lower limit
+     * Parameter: max Integration upper limit
+     * Parameter: precision Maximum error allowed
+     * Parameter: max_iter Maximum number of iterations
      */
     double operator()(double min, double max, double precision = 1.0e-7)
     {
@@ -218,12 +226,12 @@ public:
 
     /** Constructor.
      *
-     * @param f Pointer to function to be integrated
-     * @param var Integration variable
-     * @param min Integration lower limit
-     * @param max Integration upper limit
-     * @param precision Maximum error allowed
-     * @param max_iter Maximum number of iterations
+     * Parameter: f Pointer to function to be integrated
+     * Parameter: var Integration variable
+     * Parameter: min Integration lower limit
+     * Parameter: max Integration upper limit
+     * Parameter: precision Maximum error allowed
+     * Parameter: max_iter Maximum number of iterations
      */
     Romberg(doubleFunction& f, double& Var, double min, double max,
             double precision = 1.0e-7) : func(f), x(Var)
@@ -279,14 +287,5 @@ cout << multidimensionalIntegral(vectorR2(0,0),vector_R2(10,10),
 double multidimensionalIntegral(const Matrix1D<double> &x0,
                                 const Matrix1D<double> &xF, integrand_t integrand);
 #endif
-
-// TODO Document
-void polint(double xa[], double ya[], int n, double x, double& y, double& dy);
-
-// TODO Document
-double* my_vector(int nl, int nh);
-
-// TODO Document
-void error(const char* s);
 
 #endif

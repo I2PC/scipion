@@ -33,9 +33,8 @@
 #include <data/matrix3d.h>
 #include <data/vectorial.h>
 
-/**@name INRIA Library */
-//@{
-/**@name Derivatives and gradients */
+/**@defgroup INRIA INRIA Library
+   @ingroup InterfaceLibrary */
 //@{
 /** Compute derivative along a certain direction.
     Valid derivative types are "X", "Y", "Z", "XX", "XY", ... "ZZZ".
@@ -47,8 +46,6 @@ void compute_derivative(const Matrix3D<double> &in_vol,
 /** Gradient of a volume */
 void compute_gradient(const Matrix3D<double> &in_vol,
                       Vectorial_Matrix3D &out_vol, double sigma = 1);
-//@}
-
 //@}
 #endif
 #endif

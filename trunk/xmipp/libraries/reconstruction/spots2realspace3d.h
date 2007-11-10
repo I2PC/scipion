@@ -24,7 +24,8 @@
 #include <data/volume.h>
 #include <data/types.h>
 
-/**@name 3DSpots-->Real Space 3D program */
+/**@defgroup spots2realspace3d spots2realspace3d (Convert crystal 3DSpots to Real Space volume)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /* Spot(3D)-->Real Space Program Parameters ------------------------------------ */
 /** Spot(3D) --> Real Space parameters.
@@ -86,7 +87,7 @@ void symmetrize_P1(Matrix3D< complex<double> > &FT,
               (H,K,0)
               (H,H,L)
 
- This is enabled/disabled by means of the argument <impose>.
+ This is enabled/disabled by means of the argument (impose).
 
  */
 
@@ -126,14 +127,11 @@ void AsymmUnitP4212(int *ih, int *ik, int *il, int *ip1, int *ip2,
           0     0     0     0    A[7]
 
    for all cases.*/
-
 void AsymmUnitP4(int *ih, int *ik, int *il, int *ip1, int *ip2,
                     int *spec, int *iptest);
 
-
-
-
 void MatrixMult(int A[], int *ih, int *ik, int *il, int *ip1, int *ip2);
+
 /**
    Checks if the current reflection (H K L) is a special reflection, i.e.,
    whose phase must be either real (0 or PI) or imaginary (PI/2 or 3*PI/2).
@@ -161,11 +159,7 @@ void MatrixMult(int A[], int *ih, int *ik, int *il, int *ip1, int *ip2);
                 (H,K,0)
                 (H,H,L)
                                                                               */
-
-
 void CheckSpecP4212(int ih, int ik, int il, int *spec, int *iptest);
 void CheckSpecP4(int ih, int ik, int il, int *spec, int *iptest);
-
-
 //@}
 #endif

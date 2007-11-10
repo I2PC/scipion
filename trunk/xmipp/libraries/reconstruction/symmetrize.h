@@ -31,7 +31,8 @@
 
 #include "symmetries.h"
 
-/**@name Symmetrize Program */
+/**@defgroup SymmetrizeProgram symmetrize (Symmetrize a volume)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /* Test parameters --------------------------------------------------------- */
 /// Symmetrize Parameters

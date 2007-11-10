@@ -383,7 +383,7 @@ void Micrograph::read_coordinates(int label, const FileName &_fn_coords)
 }
 
 /* Scissor ----------------------------------------------------------------- */
-int Micrograph::scissor(const Particle_coords &P, Image &result,
+int Micrograph::scissor(const Particle_coords &P, ImageT<double> &result,
                         double Dmin, double Dmax, double scaleX, double scaleY,
                         bool only_check)
 {

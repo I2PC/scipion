@@ -33,6 +33,7 @@
 #include "mask.h"
 
 /// @defgroup Filters Filters
+/// @ingroup DataLibrary
 
 /** Substract background
  * @ingroup Filters

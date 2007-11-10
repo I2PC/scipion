@@ -31,7 +31,8 @@
 #include <data/volume.h>
 #include <data/selfile.h>
 
-/**@name Spectral Signal to Noise Ratio */
+/**@defgroup SSNR resolution_ssnr (Spectral Signal to Noise Ratio)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /** SSNR parameters. */
 class Prog_SSNR_prm

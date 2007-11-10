@@ -36,6 +36,9 @@
 #include <reconstruction/directions.h>
 #include <reconstruction/symmetrize.h>
 
+/**@defgroup WBP reconstruct_wbp (Weighted Back Projection)
+   @ingroup ReconsLibraryPrograms */
+//@{
 typedef struct Column
 {
     double zero;
@@ -45,8 +48,6 @@ typedef struct Column
 }
 column;
 
-/**@name WBP */
-//@{
 /** WBP parameters. */
 class Prog_WBP_prm
 {

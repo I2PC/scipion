@@ -1,4 +1,5 @@
-/**@name Fourier Transform */
+/**@defgroup BilibFourierTransform Fourier Transform
+   @ingroup BilibLibrary */
 //@{
 
 /*--------------------------------------------------------------------------*/

@@ -32,15 +32,16 @@
 #include <data/selfile.h>
 #include <data/fft.h>
 
-/**@name Show Selection File. */
+/**@defgroup ShowSelfile Show Selection File
+   @ingroup GraphicsLibrary */
 //@{
 /** Class to show selfiles.
     Example of use:
-    \begin{verbatim}
+    @code
        ShowSel *showsel = new ShowSel;
        showsel->initWithFile(numRows, numCols, argv[i]);
        showsel->show();
-    \end{verbatim}
+    @endcode
 */
 class ShowSel: public ShowTable
 {

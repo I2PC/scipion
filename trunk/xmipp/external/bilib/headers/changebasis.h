@@ -1,7 +1,8 @@
 #ifndef _CHANGEBASIS
 #define _CHANGEBASIS
 /*--------------------------------------------------------------------------*/
-/**@name Spline transform */
+/**@defgroup SplineTransform Spline transform
+   @ingroup BilibLibrary */
 //@{
 
 /** Spline transform 1D.

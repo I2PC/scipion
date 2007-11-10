@@ -29,8 +29,10 @@
 #include <data/progs.h>
 #include <data/selfile.h>
 
-/**@name Angular Predict Tomography*/
+/**@defgroup AngularPredictTomography angular_assign_for_tomogram (Discrete angular assignment for tomography)
+   @ingroup ReconsLibraryPrograms */
 //@{
+/** Alignment structure */
 class Alignment
 {
 public:

@@ -1450,7 +1450,7 @@ void Prog_MLalign2D_prm::calculate_pdf_phi()
 }
 
 // Rotate reference for all models and rotations and fill Fref vectors =============
-void Prog_MLalign2D_prm::rotate_reference(vector<ImageXmipp> &Iref,
+void Prog_MLalign2D_prm::rotate_reference(vector< ImageXmippT<double> > &Iref,
         bool fill_real_space,
         bool fill_fourier_space,
         vector <vector< Matrix2D<double> > > &Mref,
@@ -2992,7 +2992,7 @@ void Prog_MLalign2D_prm::maxCC_search_complete(Matrix2D<double> &Mimg,
 }
 
 
-void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> &Iref, int iter,
+void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector< ImageXmippT<double> > &Iref, int iter,
         double &LL, double &sumcorr, DocFile &DFo,
         vector<Matrix2D<double> > &wsum_Mref,
         vector<Matrix2D<double> > &wsum_ctfMref,

@@ -44,7 +44,8 @@ GridVolumeT<T> operator /(T f, const GridVolumeT<T> &GV);
 template <class T>
 ostream& operator << (ostream &o, const GridVolumeT<T> &GV);
 
-/**@name Grids
+/**@defgroup Grids Grids
+   @ingroup ReconsLibrary
     The grids are one of the most basic things in the reconstruction
     process, since the reconstructed volumes are expressed as a linear
     combination of a volume basis function weighted and shifted to all
@@ -60,7 +61,6 @@ ostream& operator << (ostream &o, const GridVolumeT<T> &GV);
     the reconstruction algorithms independent from the underlying
     grid, incrementing the reusability of the code.
 */
-//@{
 
 /*****************************************************************************/
 /* Simple Grids                                                              */
@@ -82,8 +82,8 @@ ostream& operator << (ostream &o, const GridVolumeT<T> &GV);
     not by the Universal axes.
 
     So to define the simple grid you must address the following topics:
-    \begin{description}
-    \item[Coordinate system]
+    <ul>
+    <li>Coordinate system:
        The coordinate system is defined by three R3 vectors, called
        X, Y and Z. They must form a true three dimensional coordinate
        system, ie, must not be linearly dependent, but they are not
@@ -103,7 +103,7 @@ ostream& operator << (ostream &o, const GridVolumeT<T> &GV);
        The origin of the grid is the position in the Universal coordinate
        system of the (0,0,0) sample inside the grid, ie, where is the
        grid sample (0,0,0) in the universal coordinate system?
-    \item[Measuring unit]
+    <li> Measuring unit:
        The measuring unit is the distance between two samples in the
        grid lattice, and in the direction of the grid axes. Suppose
        we have a sample at position (-1,1,2) but the measuring
@@ -111,8 +111,8 @@ ostream& operator << (ostream &o, const GridVolumeT<T> &GV);
        2(-X+Y+2Z)+origin in the Universal Coordinate System.
 
        This measuring unit is controlled in the class by the public
-       variable \Ref{relative_size}.
-    \item[Size]
+       variable \ref relative_size .
+    <li>Size:
        Again the size is given again in the grid system units and it
        expresses which the minimum and maximum indexes will be in the
        grid coordinate system. This means that if the lowest and highest
@@ -120,22 +120,22 @@ ostream& operator << (ostream &o, const GridVolumeT<T> &GV);
        for each direction are -1, 0 and 1. The grid is defined in the
        Universal Coordinate System between
        (-X-Y-Z)*relative_size to (X+Y+Z)*relative_size.
-    \end{description}
+    </ul>
 
     This is the default grid after creation:
-    \begin{verbatim}
+    @code
        (e1,e2,e3) vectors
        grid relative_size = 1
        origin    = ( 0, 0, 0)
        lowest    = (-5,-5,-5)
        highest   = ( 5, 5, 5)
-    \end{verbatim}
+    @endcode
 
     It should be convenient that you modify these parameters at your
     convinience. And after setting them PREPARE!! the grid to be used
-    with the function \Ref{SimpleGrid::prepare_grid}. There are several public
-    variables which you might directly modify, namely, \Ref{origin},
-    \Ref{relative_size}, \Ref{lowest}, and \Ref{highest}.
+    with the function \ref SimpleGrid::prepare_grid . There are several public
+    variables which you might directly modify, namely, \ref origin ,
+    \ref relative_size , \ref lowest , and \ref highest .
 
 */
 class SimpleGrid
@@ -168,8 +168,6 @@ public:
 
     /* Protoypes --------------------------------------------------------------- */
 public:
-    /**@name Constructors */
-    //@{
     /** Default constructor.
         Be careful that this is not an empty constructor as usual but it
         sets a grid by default (see the class documentation to see exactly
@@ -181,10 +179,7 @@ public:
         This constructor builds an exact copy of the simple grid.
         \\ Ex: SimpleGrid sg2(sg1); */
     SimpleGrid(const SimpleGrid &SG);
-    //@}
 
-    /**@name Some basic operators */
-    //@{
     /** Show a Simple grid.
         Shows all information about the simple grid.
         \\Ex: cout << sg; */
@@ -196,10 +191,7 @@ public:
 
     /** Another function for assigment.*/
     void assign(const SimpleGrid &SG);
-    //@}
 
-    /**@name Grid structure */
-    //@{
     /** Set X vector of the grid.
         \\Ex: Matrix1D<double> X=vectorR3(1,0,0); sg.set_X(X); */
     void set_X(const Matrix1D<double> &v)
@@ -248,13 +240,13 @@ public:
         hold a grid like this one. The number of samples is computed as
         highest-lowest+1.
         \\ Ex: Build a volume able to hold this grid
-        \begin{verbatim}
+        @code
         grid.getSize(Zdim,Ydim,Xdim);
         vol().resize(Zdim,Ydim,Xdim);
         STARTINGX(Vol_aux())=(int) XX(grid.lowest);
         STARTINGY(Vol_aux())=(int) YY(grid.lowest);
         STARTINGZ(Vol_aux())=(int) ZZ(grid.lowest);
-        \end{verbatim}
+        @endcode
     */
     void getSize(int &Zdim, int &Ydim, int &Xdim) const
     {
@@ -295,12 +287,6 @@ public:
         return (relative_size);
     }
 
-    //@}
-
-    /**@name Grid Tools */
-    //@{
-    /**@name Initialisation */
-    //@{
     /** Prepare grid for work.
         This function MUST BE CALLED before working with a simple grid
         which is not the default one. What it actually does is to check
@@ -309,16 +295,13 @@ public:
         from the grid to the universal system (called basis) and viceversa
         (called inv_basis).
         \\ Ex:
-        \begin{verbatim}
+        @code
         SimpleGrid sg;
         sg.set_Z(vectorR3(1,1,1)); --> Change grid vectors
         sg.prepare_grid();          --> Now the grid is ready to work
-        \end{verbatim} */
+        @endcode */
     void prepare_grid();
-    //@}
 
-    /**@name System coordinate translation */
-    //@{
     /** Grid --> Universe.
         This function transforms a vector in the grid coordinate system
         to the universal one. For example the sample at grid coordinate
@@ -326,13 +309,13 @@ public:
         that usually this operation is performed with "integer" grid
         vectors giving "float" universal vectors.
         The operation performed exactly is
-        \begin{verbatim}
+        @code
         return origin+basis*gv*relative_size;
-        \end{verbatim}
+        @endcode
         or what is the same:
-        \begin{verbatim}
+        @code
         return origin+(XX(gv)*X+YY(gv)*Y+ZZ(gv)*Z)*relative_size;
-        \end{verbatim}
+        @endcode
         \\Ex: Matrix1D<double> uv; sg.grid2universe(vectorR3(-1,2,1),uv); */
     void grid2universe(const Matrix1D<double> &gv, Matrix1D<double> &uv) const
     {
@@ -350,21 +333,21 @@ public:
         grid needs not to be "integer".
 
         The operation performed is
-        \begin{verbatim}
+        @code
         return inv_basis*(uv-origin)/relative_size;
-        \end{verbatim}
+        @endcode
         where inv_basis is an internal matrix which contains information
         about the X, Y and Z vectors. In fact is the inverse of the
-        matrix formed by X, Y and Z. See \Ref{grid2universe}.
+        matrix formed by X, Y and Z. See \ref grid2universe .
 
         Next example should give (0,0,0) as result.
         \\Ex:
-        \begin{verbatim}
+        @code
            SimpleGrid sg;
            sg.origin=vectorR3(10,10,10);
            cout << "What is the position within the grid of the origin? "
                 << sg.universe2grid(sg.origin);
-        \end{verbatim} */
+        @endcode */
     void universe2grid(const Matrix1D<double> &uv, Matrix1D<double> &gv) const
     {
         SPEED_UP_temps;
@@ -382,10 +365,7 @@ public:
         if (R2 == -1) return true;
         else return XX(uv)*XX(uv) + YY(uv)*YY(uv) + ZZ(uv)*ZZ(uv) < R2;
     }
-    //@}
 
-    /**@name Projections */
-    //@{
     /** Project a grid vector onto a plane (Euler angles).
         This function projects a vector defined in the Grid coordinate
         system onto a plane defined by its three Euler angles (measured
@@ -395,7 +375,7 @@ public:
         a certain direction (the 3 Euler angles in the universal system).
         Notice that this function only tells you where a given point in
         the volume is projecting, but it doesn't tell you the value.
-        See \URL[Uproject_to_plane]{Uproject_to_plane.2.html} for more
+        See \ref Uproject_to_plane for more
         information.
         \\ Ex: Matrix1D<double> up=sg.Gproject_to_plane(vectorR3(1,0,0),45,45,60); */
     void Gproject_to_plane(const Matrix1D<double> &gr,
@@ -409,13 +389,13 @@ public:
         This function does the same as the preceeding one, but it accepts
         an Euler matrix, this might help you to save time when making
         the projection of a whole volume.
-        See \URL[Uproject_to_plane]{Uproject_to_plane.3.html} for more
+        See \ref Uproject_to_plane for more
         information.
         \\ Ex:
-        \begin{verbatim}
+        @code
         Matrix2D<double> euler; Euler_angles2matrix(45,45,60,euler);
         Matrix1D<double> up=sg.Gproject_to_plane(vectorR3(1,0,0),euler);
-        \end{verbatim} */
+        @endcode */
     void Gproject_to_plane(const Matrix1D<double> &gr,
                            const Matrix2D<double> &euler, Matrix1D<double> &result) const
     {
@@ -434,7 +414,7 @@ public:
         indicates a direction in the grid system, then this same direction
         is expressed in the universal coordinate system. And then this
         direction is projected onto the given plane. See
-        \URL[Uproject_to_plane]{Uproject_to_plane.2.html} for more
+        \ref Uproject_to_plane for more
         information about the projection process.
 
         The direction can be seen then as the free vector associated to
@@ -443,9 +423,9 @@ public:
         grid origin is moved to the Universe origin.
         A pseudocode to get the direction of a given grid vector (gr) is the
         following
-        \begin{verbatim}
+        @code
         Udirection=grid2universe(gr)-origin;
-        \end{verbatim}
+        @endcode
 
         This function can be used, for instance, to compute the projections
         of the grid axes onto the projection plane. */
@@ -461,7 +441,7 @@ public:
         This function does the same as the preceeding one, but it accepts
         an Euler matrix, this might help you to save time when making
         the projection of a whole volume.
-        See \URL[Uproject_to_plane]{Uproject_to_plane.3.html} for more
+        See \ref Uproject_to_plane for more
         information about the projecting process. */
     void Gdir_project_to_plane(const Matrix1D<double> &gr,
                                const Matrix2D<double> &euler, Matrix1D<double> &result) const
@@ -470,8 +450,6 @@ public:
         V3_MINUS_V3(result, result, origin);
         Uproject_to_plane(result, euler, result);
     }
-    //@}
-    //@}
 };
 
 /*****************************************************************************/
@@ -482,20 +460,20 @@ public:
     stored. A complex grid is nothing else than a list of Simple Grids, and
     this is so because a complex grid is supposed to be the superposition
     of several simple grids, each one with all the information that a
-    \Ref{SimpleGrid} has got.
+    \ref SimpleGrid has got.
     When projecting the volume or whatever what you must do is to project
     each simple grid, or apply the function you want to each simple grid.
     For instance, here you have a function to show a complex grid
-    \begin{verbatim}
+    @code
        ostream& operator << (ostream& o, Grid &grid) {
           o << "Complex Grid -------------------------------------\n";
           for (int i=0; i<grid.GridsNo(); i++) o << grid(i);
           return o;
        }
-    \end{verbatim}
+    @endcode
 
     Initially the complex grid is empty, and you must fill it adding new
-    simple grids to it with the function \Ref{Grid::add_grid}. The simple
+    simple grids to it with the function \ref Grid::add_grid . The simple
     grids must be prepared to work before entering into the complex one.
 */
 class Grid
@@ -508,7 +486,7 @@ public:
         The complex grid is a list of simple grids, use this function to
         add a simple grid to the complex one, remember that before using
         this function the simple grid must have been prepared to work
-        (see \Ref{SimpleGrid::prepare_grid}). See class documentation for
+        (see \ref SimpleGrid::prepare_grid ). See class documentation for
         an example of use. */
     void add_grid(const SimpleGrid &SG)
     {
@@ -592,7 +570,7 @@ public:
 
     /** Minimum size for a voxel volume if it is to hold the whole grid.
         The returned vectors Gcorner1 and Gcorner2 enclose this grid.
-        You can supply a deformation matrix (see \ref{blobs2voxels})*/
+        You can supply a deformation matrix (see \ref blobs2voxels )*/
     void voxel_corners(Matrix1D<double> &Gcorner1, Matrix1D<double> &Gcorner2,
                        const Matrix2D<double> *V = NULL) const;
 };
@@ -600,7 +578,8 @@ public:
 /*****************************************************************************/
 /* Some useful Grids                                                         */
 /*****************************************************************************/
-/**@name Some useful grids
+/**@defgroup UsefulGrids Some useful grids
+   @ingroup Grids
     These are already-built grids to make your task easier. You can
     find here Simple Cubic (CC), Face-Centered (FCC) and Body-Centered
     Cubic (BCC) grids. Most of them are supposed to have its origin in
@@ -609,7 +588,6 @@ public:
     indexes inside the grid respectively. The difference is that the
     corners are given ALWAYS in the universal coordinate system while
     the lowest and highest are vectors in the grid coordinate system */
-//@{
 
 /// CC identifier
 #define  CC 0
@@ -618,17 +596,18 @@ public:
 /// BCC identifier
 #define BCC 2
 
-/**@name Grids as superposition of orthogonal CC grids. */
+/**@defgroup CCGrids Grids as superposition of orthogonal CC grids.
+   @ingroup UsefulGrids */
 //@{
 /** Create a CC grid as a Simple grid.
     The parameters of the CC grid are:
-    \begin{verbatim}
+    @code
     axes:            (1,0,0),(0,1,0),(0,0,1)
     lowest:          FLOORnD(grid.universe2grid(corner1))
     highest:         CEILnD (grid.universe2grid(corner2))
     relative_size:   specified
     origin:          specified
-    \end{verbatim}
+    @endcode
     where the specified means that it has been specified as a parameter of
     the function. The resulting grid is ready to work.
     There are two roundings for the lowest and highest indexes, they are
@@ -646,33 +625,35 @@ public:
     the resulting CC grid is the smallest one which includes the given corners.
 */
 SimpleGrid Create_CC_grid(double relative_size,
-                          const Matrix1D<double> &corner1, const Matrix1D<double> &corner2,
+                          const Matrix1D<double> &corner1,
+                          const Matrix1D<double> &corner2,
                           const Matrix1D<double> &origin);
 
 /** Create a CC grid as a Complex grid (two corners).
     This function makes a call to the previous one with
-    \begin{verbatim}
+    @code
     corner1:         specified
     corner2:         specified
     relative_size:   specified
     origin:          ROUNDnD((corner1+corner2)/2)
-    \end{verbatim}
+    @endcode
 
     That is to say, the origin of the grid is at its center, lowest and
     highest indexes are nearly symmetrical (lowest=-highest). The possible
     asymetries come from the ROUNDnD in the origin calculation.
 */
 Grid Create_CC_grid(double relative_size,
-                    const Matrix1D<double> &corner1, const Matrix1D<double> &corner2);
+                    const Matrix1D<double> &corner1,
+                    const Matrix1D<double> &corner2);
 
 /** Create a CC grid as a Complex grid (size).
     This function makes a call to the previous one with
-    \begin{verbatim}
+    @code
     corner1:         -origin
     corner2:         vectorR3(Xdim,Ydim,Zdim)-origin-1
     relative_size:   specified
     origin:          vectorR3((int)(Xdim/2.0),(int)(Ydim/2.0),(int)(Zdim/2.0))
-    \end{verbatim}
+    @endcode
 
     That is to say, the origin of the grid is at its center, corner1
     and corner2 are chosen such that from corner1 to corner2 (both included)
@@ -686,7 +667,7 @@ Grid Create_CC_grid(double relative_size,
 /** Create a BCC grid as a Complex grid (two corners).
     This function constructs two CC Simple grids with the following
     parameters
-    \begin{verbatim}
+    @code
     Grid(0) -------------------------------------
     corner1:         specified
     corner2:         specified
@@ -698,7 +679,7 @@ Grid Create_CC_grid(double relative_size,
     corner2:         specified
     relative_size:   specified
     origin:          ROUNDnD((corner1+corner2)/2)+relative_size/2*vectorR3(1,1,1)
-    \end{verbatim}
+    @endcode
 
     As you see the BCC grid is the superposition of 2 CC grids one shifted
     with the other by (0.5,0.5,0.5) units in the grid coordinate system.
@@ -710,7 +691,7 @@ Grid Create_BCC_grid(double relative_size,
     This function constructs four CC Simple grids with the following
     parameters
 
-    \begin{verbatim}
+    @code
     origin:          ROUNDnD((corner1+corner2)/2)
 
     Grid(0) -------------------------------------
@@ -736,23 +717,24 @@ Grid Create_BCC_grid(double relative_size,
     corner2:         specified
     relative_size:   specified
     origin:          origin+relative_size/2*vectorR3(1,1,0)
-    \end{verbatim}
+    @endcode
 */
 Grid Create_FCC_grid(double relative_size,
                      const Matrix1D<double> &corner1, const Matrix1D<double> &corner2);
 //@}
 
-/**@name Grids as a single nont orthogonal CC grid. */
+/**@defgroup NonCCGrids Grids as a single non orthogonal CC grid.
+   @ingroup UsefulGrids */
 //@{
 /** Create a simple grid fitting the given sphere.
     Not all index combinations are within the sphere, so attention
     must be  paid whether a certain point is within it or not.
 
     The formula for the grid limits are computed as
-    \begin{verbatim}
+    @code
        XX(highest)=CEIL((R/relative_size)/X.module());
        XX(lowest)=-XX(highest);
-    \end{verbatim}*/
+    @endcode*/
 SimpleGrid Create_grid_within_sphere(double relative_size,
                                      const Matrix1D<double> &origin,
                                      const Matrix1D<double> &X, const Matrix1D<double> &Y,
@@ -760,43 +742,43 @@ SimpleGrid Create_grid_within_sphere(double relative_size,
 
 /** Create a CC grid such that a sphere of radius R and centered
     at the origin is inside.
-    \begin{verbatim}
+    @code
     origin=(0,0,0);
     x=(1,0,0);
     y=(0,1,0);
     z=(0,0,1);
-    \end{verbatim}*/
+    @endcode*/
 Grid Create_CC_grid(double relative_size, double R);
 
 /** Create a BCC grid such that a sphere of radius R and centered
     at the origin is inside.
-    \begin{verbatim}
+    @code
     origin=(0,0,0);
     x=(0.5,0.5,-0.5);
     y=(0.5,-0.5,0.5);
     z=(-0.5,0.5,0.5);
-    \end{verbatim}*/
+    @endcode*/
 Grid Create_BCC_grid(double relative_size, double R);
 
 /** Create a FCC grid such that a sphere of radius R and centered
     at the origin is inside.
-    \begin{verbatim}
+    @code
     origin=(0,0,0);
     x=(0.5,0.5,0);
     y=(0.5,0,0.5);
     z=(0,0.5,0.5);
-    \end{verbatim}*/
+    @endcode*/
 Grid Create_FCC_grid(double relative_size, double R);
-//@}
 //@}
 
 /*****************************************************************************/
 /* Grid Volumes                                                              */
 /*****************************************************************************/
 /** Grid Volume class.
+  @ingroup Grids
     The grid volumes are a special kind of volumes used in reconstructions
     where the volumes are understood as a 3D matrix of coefficients placed
-    at the points defined by a \Ref{Grid} (BCC, FCC, ...) Remember that
+    at the points defined by a \ref Grid (BCC, FCC, ...) Remember that
     a complex grid like these ones are seen as lists of simpler grids. That
     is why this Grid Volumes are compound of a list of volumes. The first
     volume of the grid volume should contain the coefficients for the first
@@ -811,8 +793,6 @@ template <class T> class GridVolumeT
 
 public:
 // Protoypes ---------------------------------------------------------------
-    /**@name Constructors */
-    //@{
     /** Empty constructor.
         The volume list is empty, and the grid is also empty */
     GridVolumeT()
@@ -829,7 +809,7 @@ public:
 
     /** Create using a grid as pattern and basis.
         Create the grid volume using this grid as pattern. This function calls
-        \Ref{adapt_to_grid}, so look at there to know exactly what is
+        \ref adapt_to_grid , so look at there to know exactly what is
         performed */
     GridVolumeT(const Grid &_grid)
     {
@@ -864,16 +844,13 @@ public:
     {
         clear();
     }
-    //@}
 
-    /**@name Initialisation */
-    //@{
     /** Reset current volume and use the given grid as pattern.
         The current grid volume is cleared. Then the given grid is taken
         as the grid for this grid volume. Zero-valued volumes are added
         to the volume list according to the number of grids inside the complex
         grid. The size and starting point of the volumes added are
-        fixed by the lowest and highest fields of each \Ref{SimpleGrid}. */
+        fixed by the lowest and highest fields of each \ref SimpleGrid . */
     void adapt_to_grid(const Grid &_grid)
     {
         // Clear old list of volumes
@@ -978,10 +955,7 @@ public:
         LV.clear();
         G.clear();
     }
-    //@}
 
-    /**@name Structure access */
-    //@{
     /** Access to one of the volumes in the list.
         The first volume is the number 0. */
     VolumeT<T> & operator()(int n)
@@ -1007,8 +981,8 @@ public:
     }
 
     /** Constant access to a simple grid.
-        The grid is the \Ref{SimpleGrid} associated to the volume which
-        occupies position \it{n} in the volume list. */
+        The grid is the \ref SimpleGrid  associated to the volume which
+        occupies position n in the volume list. */
     const SimpleGrid & grid(int n) const
     {
         return G(n);
@@ -1021,7 +995,7 @@ public:
     }
 
     /** Constant access to the whole grid.
-        The grid is the whole \Ref{Grid} associated to the volume. */
+        The grid is the whole \ref Grid  associated to the volume. */
     const Grid & grid() const
     {
         return G;
@@ -1038,11 +1012,7 @@ public:
     {
         return LV.size();
     }
-    //@}
 
-    /**@name Arithmethic operations */
-    //@{
-    /**@name Volume by constant */
 #define GRIDVOLUME_BY_SCALAR(op) \
     GridVolumeT<T> result; \
     result.G = G; \
@@ -1051,7 +1021,6 @@ public:
         array_by_scalar((*this)(i)(),f,result(i)(),op); \
     return result;
 
-    //@{
     /** Sum a constant.
         The constant is added to all simple volumes.
         \\Ex: V2=V1+6; */
@@ -1083,10 +1052,7 @@ public:
     {
         GRIDVOLUME_BY_SCALAR('/');
     }
-    //@}
 
-    /**@name Constant by volume */
-    //@{
     /** Sum a constant.
         The constant is added to all simple volumes.
         \\Ex: V2=6+V1; */
@@ -1102,10 +1068,7 @@ public:
     {
         return GV*f;
     }
-    //@}
 
-    /**@name Volume by volume */
-    //@{
 #define GRIDVOL_BY_GRIDVOL(op) \
     GridVolumeT<T> result; \
     VolumeT<T> * Vol_aux; \
@@ -1207,22 +1170,18 @@ public:
     {
         GRIDVOL_BY_GRIDVOLASSIG('/');
     }
-    //@}
-    //@}
 
-    /**@name I/O
+    /** Grids I/O
        The reconstructing volume is stored in the
-       \URL[Xmipp format]{../../../Extra_Docs/FileFormats.html}. Although it
+       Xmipp format. Although it
        is not a true volume some special structure is used to store each
        subgrid and subvolume.
-       \begin{itemize}
-       \item a first slice contains control information about the subvolume
+       - a first slice contains control information about the subvolume
              which is behind
-       \item the subvolume is stored after its control information and it can
+       - the subvolume is stored after its control information and it can
              be represented by a volume viewer.
-       \end{itemize}
        The structure inside the control slice is the following:
-       \begin{verbatim}
+       @code
        * Subgrid information: (19 doubles)
             - basis               9 doubles
             - lowest              3 doubles
@@ -1232,7 +1191,7 @@ public:
        * Subvolume information (6 doubles)
             - Zdim, Ydim, Xdim    3 doubles
             - Zinit, Yinit, Xinit 3 doubles
-       \end{verbatim}
+       @endcode
 
        With respect to the volume structure, if the volume is smaller
        (Ydim,Xdim) than the size assigned to the file then the data is right
@@ -1360,7 +1319,7 @@ public:
     /** Read grid volume.
         The volume is read from a Xmipp volume with a special structure
         at several slices. An exception might be thrown by the
-        \Ref{VolumeXmipp::read} routine. */
+        \ref VolumeXmipp::read routine. */
     void read(const FileName &fn)
     {
         VolumeXmippT<T>    V;
@@ -1506,11 +1465,12 @@ public:
     friend ostream& operator <<< > (ostream &o, const GridVolumeT &GV);
     //@}
 };
-//@}
 
 typedef GridVolumeT<double> GridVolume;
 
 // Show a grid volume ------------------------------------------------------
+/** Show a grid.
+  @ingroup Grids */
 template <class T>
 ostream& operator << (ostream &o, const GridVolumeT<T> &GV)
 {

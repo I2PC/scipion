@@ -23,6 +23,9 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
+#ifndef _MLP_ALIGN2D_H
+#define _MLP_ALIGN2D_H
+
 #include <data/fft.h>
 #include <data/args.h>
 #include <data/funcs.h>
@@ -36,9 +39,10 @@
 #include <data/polar.h>
 #include <vector>
 
+/**@defgroup MLPalign2D mlp_align2d (Maximum likelihood in polar coordinates for 2D images)
+   @ingroup ReconsLibraryPrograms */
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
 
-/**@name MLPalign2D */
 //@{
 /** MLPalign2D parameters. */
 class Prog_MLPalign2D_prm
@@ -85,7 +89,7 @@ public:
     /** SelFile images (working, test and reference set) */
     SelFile SF, SFr;
     /** Vector for images to hold references (new & old) */
-    vector <ImageXmipp> Iref, Iold;
+    vector < ImageXmippT<double> > Iref, Iold;
     /** Vector for FT rings for all references */
     vector <Polar <complex <double> > > fP_refs;
     /** Vector for sum2 for all references */
@@ -120,18 +124,13 @@ public:
     vector<double> voronoi_area;
 
 public:
-    /// @defgroup MLPfunctions Functions for MLPalign2D class
-    /// @ingroup MLPalign2D
-    
     /** Read command line
-     * @ingroup MLPfunctions
      *
      * Read arguments from command line
      */
     void read(int argc, char **argv, bool ML3D = false);
 
     /** Show input information
-     * @ingroup MLPfunctions
      *
      * Summarize input information
      */
@@ -139,42 +138,36 @@ public:
 
 
     /** Usage
-     * @ingroup MLPfunctions
      *
      * Standard usage
      */
     void usage();
 
     /** Extended Usage
-     * @ingroup MLPfunctions
      *
      * Extended Usage
      */
     void extendedUsage(bool ML3D = false);
 
     /** Produce side info
-     * @ingroup MLPfunctions
      *
      * Setup lots of (selfile-independent) stuff
      */
     void produceSideInfo();
 
     /** Generate initial reference
-     * @ingroup MLPfunctions
      *
      * Generate references from averages of random subsets
      */
     void generateInitialReferences();
 
     /** Produce side info2
-     * @ingroup MLPfunctions
      *
      * Setup lots of (selfile-dependent) stuff
      */
     void produceSideInfo2(int nr_vols = 1);
 
     /** Preselect directions
-     * @ingroup MLPfunctions
      *
      * Calculate which references have projection directions close to
      * phi and theta
@@ -183,45 +176,41 @@ public:
 			     vector<double> &pdf_directions);
 
     /** Update PDF of the translation
-     * @ingroup MLPfunctions
      *
      * Calculate prior probabilities of the translations
      */
     void updatePdfTranslations();
 
     /** Prepare references
-     * @ingroup MLPfunctions
      *
      * Calculate Fourier-transforms of all rings of all references
      * (interpolation based on reverse gridding)
      */
-    void calculateFtRingsAllRefs(const vector<ImageXmipp> &Iref,
+    void calculateFtRingsAllRefs(const vector< ImageXmippT<double> > &Iref,
 				 vector< Polar< complex <double> > > &fP_refs,
 				 Polar< complex <double> > &fP_zero,
 				 vector< double > &sum2_refs,
 				 const int &first, const int &last);
 
     /** Prepare experimental image
-     * @ingroup MLPfunctions
      *
      * Calculate Fourier-transforms of all rings of all translated
      * version of the experimental image
      * (interpolation based on reverse gridding)
      */
-    void calculateFtRingsAllTransImg(const ImageXmipp &Iexp,
+    void calculateFtRingsAllTransImg(const  ImageXmippT<double>  &Iexp,
 				     vector< Polar< complex <double> > > &fP_trans,
 				     vector< Polar< complex <double> > > &fPm_trans,
 				     double &Xi2, const int &first, const int &last);
 
 
     /** MLP integration over all refs, rots and trans
-     * @ingroup MLPfunctions
      *
      * Here the expectation step of the EM-algorithm is performed.
      * and the weighted sums for each image are stored on-the-fly
      *
      */
-    void processOneImage(const ImageXmipp &img,
+    void processOneImage(const ImageXmippT<double> &img,
 			 const vector < Polar <complex <double> >  > &fP_refs,
 			 const vector < double > &sum2_refs,
 			 const vector < double > &pdf_directions,
@@ -233,18 +222,14 @@ public:
 			 double &opt_xoff, double &opt_yoff);
 
     /** The actual loop over all images
-     * @ingroup MLPfunctions
-     *
      */
-    void sumOverAllImages(SelFile &SF, const vector<ImageXmipp> &Iref,
+    void sumOverAllImages(SelFile &SF, const vector< ImageXmippT<double> > &Iref,
 			  double &LL, double &sumcorr, DocFile &DFo,
 			  vector < Polar <complex <double> > > &fP_wsum_imgs,
 			  double &wsum_sigma_noise, double &wsum_sigma_offset, 
 			  vector <double> &sumw, vector <double> &sumw_mirror);
 
     /** Update all model parameters
-     * @ingroup MLPfunctions
-     *
      * Here the maximization step of the EM-algorithm is performed.
      *
      */
@@ -254,16 +239,12 @@ public:
 			  double &sumcorr, double &sumw_allrefs);
 
     /** Convergence check
-     * @ingroup MLPfunctions
-     *
      * Convergence is based on signal change in the cartesian-sampled images
      *
      */
     bool checkConvergence(vector<double> &conv);
 
     /** Write output files
-     * @ingroup MLPfunctions
-     *
      *  Write out reference images, selfile and logfile
      *
      */
@@ -273,3 +254,4 @@ public:
 
 };
 //@}
+#endif

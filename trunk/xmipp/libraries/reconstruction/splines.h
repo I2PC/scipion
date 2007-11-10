@@ -33,7 +33,8 @@
 /* ========================================================================= */
 /* SPLINES                                                                   */
 /* ========================================================================= */
-/**@name Splines */
+/**@defgroup Splines Splines as basis functions
+   @ingroup ReconsLibrary */
 //@{
 // Spline value ------------------------------------------------------------
 /** Spline value.
@@ -72,7 +73,7 @@ inline double spatial_Bspline03LUT(const Matrix1D<double> &r)
 */
 double sum_spatial_Bspline03_Grid(const Grid &grid);
 
-// Blob projection ---------------------------------------------------------
+// Spline projection -------------------------------------------------------
 /** Spline projection.
     This function returns the value of the spline line integral through a
     straight line which passes through the point r with direction u*/

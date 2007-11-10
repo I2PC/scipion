@@ -46,7 +46,8 @@
 // xmippSammon: Sammon Maps
 //-----------------------------------------------------------------------------
 
-/**@name Sammon Projection*/
+/**@defgroup Sammon Sammon Projection
+   @ingroup ClassificationLibrary */
 //@{
 /**
  * This class implements the Sammon non-linear projection algorithm
@@ -62,9 +63,9 @@ public:
 
     /**
      * Constructs the algorithm
-     * @param _mapped     the dimension of the output space
-     * @param _num_iterations Number of iterations to be used
-     * @param _learning_rate "Magic number"
+     * Parameter: _mapped     the dimension of the output space
+     * Parameter: _num_iterations Number of iterations to be used
+     * Parameter: _learning_rate "Magic number"
      */
     xmippSammon(const unsigned _mapped = 2,
                 const unsigned _num_iterations = 100,
@@ -73,8 +74,8 @@ public:
 
     /**
      * () operator that trains the algorithm.
-     * @param in Input features vector (in N-dimmensional space)
-     * @param out Output  vector (in _mapped-dimmensional space)
+     * Parameter: in Input features vector (in N-dimmensional space)
+     * Parameter: out Output  vector (in _mapped-dimmensional space)
      */
     void operator()(const In& in, Out& out);
 
@@ -109,6 +110,4 @@ private:
 };
 
 //@}
-
-
 #endif//XMIPPSAMMON_H

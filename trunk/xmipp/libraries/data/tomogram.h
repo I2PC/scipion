@@ -29,7 +29,8 @@
 #include "funcs.h"
 #include "matrix3d.h"
 
-/// @defgroup Tomograms Tomograms.
+/// @defgroup Tomograms Tomograms
+/// @ingroup DataLibrary
 
 /** Tomogram class.
  * @ingroup Tomograms

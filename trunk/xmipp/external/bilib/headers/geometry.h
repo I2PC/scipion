@@ -1,4 +1,5 @@
-/**@name Bilib Geometry */
+/**@defgroup BilibGeometry Bilib Geometry
+   @ingroup BilibLibrary */
 //@{
 /*--------------------------------------------------------------------------*/
 /** Affine -> Rotation matrix.

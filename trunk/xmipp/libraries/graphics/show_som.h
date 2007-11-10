@@ -29,7 +29,8 @@
 
 #include "show_selfile.h"
 
-/*@name Show SOM images. */
+/*@defgroup ShowSOM Show SOM images
+   @ingroup GraphicsLibrary */
 //@{
 /** Class to show SOM images. */
 class ShowSOM: public ShowSel

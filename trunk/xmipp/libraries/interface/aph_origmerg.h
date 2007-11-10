@@ -38,6 +38,10 @@
 #include <iostream>
 #include <algorithm>
 
+/**@defgroup APHOrig APH origmerg
+   @ingroup InterfaceLibrary */
+//@{
+/// Spot structure
 struct spot
 {
     int h;
@@ -63,6 +67,7 @@ struct spot
 
 };
 
+/// Show a spot
 ostream &operator<<(ostream &os, const spot &s);
 
 // function for sorting elements in ascending order
@@ -73,18 +78,16 @@ ostream &operator<<(ostream &os, const spot &s);
 //       return FALSE;
 //  }
 
-/**@name APH2D Files */
-//@{
-/** APH2D Files.
+/** APH Origmerg Files.
     This is a class to read APH files  produced by the MRC's program
     origtiltd.
-    \begin{verbatim}
+    @code
          1
     0   1 -0.0018    1916.8 -163.6      5  1 1.00000      67.7  0.000
     0   2 -0.0036    1095.9 -147.0      5  1 1.00000      24.2  0.000
     0   3 -0.0054    1933.1   50.2      5  1 1.00000      46.0  0.000
     H,  K, ZSTAR,    AMP,PHS,FILM,IQwithSIGN,FLMWGT,   BACKground,CTF
-    \end{verbatim}
+    @endcode
 
     First line is ignored
     */

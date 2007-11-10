@@ -39,6 +39,10 @@
 #include <vector>
 #include <numeric>
 
+/**@defgroup MLFalign2D mlf_align2d (Maximum likelihood in 2D in Fourier space)
+   @ingroup ReconsLibraryPrograms */
+//@{
+
 #define FOR_ALL_MODELS() for (int refno=0;refno<n_ref; refno++)
 #define FOR_ALL_ROTATIONS() for (int ipsi=0; ipsi<nr_psi; ipsi++ )
 #define FOR_ALL_FLIPS() for (int iflip=0; iflip<nr_flip; iflip++)
@@ -48,8 +52,6 @@
 #define SMALLVALUE 1e-4
 #define SMALLANGLE 1.75
 
-/**@name MLFalign2D */
-//@{
 /** MLFalign2D parameters. */
 class Prog_MLFalign2D_prm
 {
@@ -110,7 +112,7 @@ public:
     /** vector for flipping (i.e. 90/180-degree rotations) matrices */
     vector<Matrix2D<double> > F;
     /** Vector for images to hold references (new & old) */
-    vector<ImageXmipp> Iref, Iold, Ictf;
+    vector< ImageXmippT<double> > Iref, Iold, Ictf;
     /** Matrices for calculating PDF of (in-plane) translations */
     Matrix2D<double> P_phi, Mr2;
     /** Fast mode */
@@ -285,7 +287,7 @@ public:
 			 vector<double > &pdf_directions);
 
     /// Integrate over all experimental images
-    void sumOverAllImages(SelFile &SF, vector<ImageXmipp> &Iref, int iter,
+    void sumOverAllImages(SelFile &SF, vector< ImageXmippT<double> > &Iref, int iter,
 			  double &LL, double &sumcorr, DocFile &DFo,
 			  vector<Matrix2D<double> > &wsum_Mref,
 			  vector<Matrix2D<double> > &wsum_ctfMref,

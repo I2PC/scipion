@@ -32,7 +32,7 @@
 
 /**
 * Calculate the Random matrix
-* @param ts The vectors.
+* Parameter: ts The vectors.
 */
 void xmippRM::calculateRM(xmippCTVectors const &ts, int _k)
 {

@@ -36,7 +36,8 @@
 #include <map>
 #include <algorithm>
 
-/**@name Angular Predict */
+/**@defgroup AngularPredict angular_discrete_assign (Discrete angular assignment)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /** Angular Predict parameters. */
 class Prog_angular_predict_prm: public Prog_parameters

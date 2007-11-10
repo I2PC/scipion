@@ -28,7 +28,8 @@ using namespace std;
 #include <data/funcs.h>
 #include <data/matrix2d.h>
 
-/**@name RM classes*/
+/**@defgroup RMClasess RM classes
+   @ingroup ClassificationLibrary */
 //@{
 /** Basic RM class */
 class xmippRM
@@ -46,7 +47,7 @@ public:
     /**
     * Sets the matrix distribution:
     * "gaussian" or "sparse"
-    * @param _type The type of the matrix distribution
+    * Parameter: _type The type of the matrix distribution
     */
     void setRMDistribution(string _type)
     {
@@ -56,8 +57,8 @@ public:
 
     /**
     * Calculate the Random matrix
-    * @param ts The vectors.
-    * @param k Number of components
+    * Parameter: ts The vectors.
+    * Parameter: k Number of components
     */
     void calculateRM(xmippCTVectors const &ts, int _k);
 
@@ -90,8 +91,6 @@ private:
 
 
 };
-
-
 //@}
 #endif
 

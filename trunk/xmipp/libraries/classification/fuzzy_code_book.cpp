@@ -32,9 +32,9 @@
 /**
  * Constructor.
  * Constructs a codebook with initial code vectors filled with zero.
- * @param _n       Number of vectors (clusters)
- * @param _size    Size of code vectors
- * @param _cal     Calibrated or not, that is, a CB with class labels or not
+ * Parameter: _n       Number of vectors (clusters)
+ * Parameter: _size    Size of code vectors
+ * Parameter: _cal     Calibrated or not, that is, a CB with class labels or not
    It calls Base Class constructor (xmippCB)
  */
 
@@ -60,11 +60,11 @@ xmippFCB::xmippFCB(unsigned _n, unsigned _size, unsigned _data,
 /**
  * Constructor.
  * Constructs a codebook with random initial code vectors.
- * @param _n       Number of vectors
- * @param _size    Size of code vectors
- * @param _lower   Lower value for random elements
- * @param _upper   Upper value for random elements
- * @param _cal     Calibrated or not, that is, a CB with class labels or not
+ * Parameter: _n       Number of vectors
+ * Parameter: _size    Size of code vectors
+ * Parameter: _lower   Lower value for random elements
+ * Parameter: _upper   Upper value for random elements
+ * Parameter: _cal     Calibrated or not, that is, a CB with class labels or not
    It calls Base Class constructor (xmippCB)
  */
 
@@ -91,9 +91,9 @@ xmippFCB::xmippFCB(unsigned _n, unsigned _size, unsigned _data, double _lower, d
  * Constructor.
  * Constructs a codebook with initial code vectors taken randomly from
  * the training file.
- * @param _n       Number of vectors
- * @param _ts      Training set; will be used to get initial values
- * @param _use_rand_cvs  Use random code vectors (inherited from base class)
+ * Parameter: _n       Number of vectors
+ * Parameter: _ts      Training set; will be used to get initial values
+ * Parameter: _use_rand_cvs  Use random code vectors (inherited from base class)
    It calls Base Class constructor (xmippCB)
  */
 
@@ -122,8 +122,8 @@ xmippFCB::xmippFCB(unsigned _n, const xmippCTVectors& _ts, const bool _use_rand_
 
 /**
  * Constructs a fuzzy code book given a stream
- * @param _is  The input stream
- * @param _size Size of code vectors (number of data points)
+ * Parameter: _is  The input stream
+ * Parameter: _size Size of code vectors (number of data points)
  * @exception  runtime_error  If there are problems with the stream
  */
 xmippFCB::xmippFCB(istream& _is, const unsigned _size)
@@ -149,8 +149,8 @@ xmippFCB::xmippFCB(istream& _is, const unsigned _size)
 
 /**
  * Returns a const reference to the specified item
- * @param _ci  cluster index
- * @param _di  data index
+ * Parameter: _ci  cluster index
+ * Parameter: _di  data index
  * @exception out_of_range If _i is out of range
  */
 xmippFeature xmippFCB::membAt(unsigned _di, unsigned _ci) const
@@ -167,8 +167,8 @@ xmippFeature xmippFCB::membAt(unsigned _di, unsigned _ci) const
 
 /**
  * Returns a  reference to the specified item
- * @param _ci  cluster index
- * @param _di  data index
+ * Parameter: _ci  cluster index
+ * Parameter: _di  data index
  * @exception out_of_range If _i is out of range
  */
 xmippFeature& xmippFCB::membAt(unsigned _di, unsigned _ci)
@@ -200,7 +200,7 @@ unsigned xmippFCB::membVectors() const
 
 /**
  * Returns the code vector that represents the input in the codebook
- * @param _in  Sample to classify
+ * Parameter: _in  Sample to classify
    Note: The difference between Fuzzy codevector and non-Fuzzy
    codevector is that the best (winner) is estimated using the
    fuzzy membership matrix.
@@ -225,7 +225,7 @@ xmippVector& xmippFCB::fuzzyTest(unsigned _in) const
 
 /**
  * Returns the index to the code vector that represents the input in the codebook
- * @param _in  Sample to classify
+ * Parameter: _in  Sample to classify
    Note: The difference between Fuzzy codevector and non-Fuzzy
    codevector is that the best (winner) is estimated using the
    fuzzy membership matrix.
@@ -249,7 +249,7 @@ unsigned xmippFCB::fuzzyTestIndex(unsigned _in) const
 
 /**
  * Returns the label associated to an input
- * @param _in  Index to the sample to be classified
+ * Parameter: _in  Index to the sample to be classified
  */
 xmippLabel xmippFCB::fuzzyApply(unsigned _in) const
 {
@@ -258,8 +258,8 @@ xmippLabel xmippFCB::fuzzyApply(unsigned _in) const
 
 /**
  * Calibrates the code book
- * @param _ts   The calibrated training set
- * @param _def  Default target for non-calibrated vectors
+ * Parameter: _ts   The calibrated training set
+ * Parameter: _def  Default target for non-calibrated vectors
  * @exception runtime_error  If the training set is not calibrated
  */
 void xmippFCB::fuzzyCalibrate(xmippCTVectors& _ts, xmippLabel _def)
@@ -282,7 +282,7 @@ void xmippFCB::fuzzyCalibrate(xmippCTVectors& _ts, xmippLabel _def)
 /**
  * Returns the index of the codevector closest to an input.
  * This is the method used to classify inputs
- * @param _in  Index to the Sample to be classified
+ * Parameter: _in  Index to the Sample to be classified
  */
 unsigned xmippFCB::fuzzyWinner(unsigned _in) const
 {
@@ -292,7 +292,7 @@ unsigned xmippFCB::fuzzyWinner(unsigned _in) const
 /**
 * Returns the index of the codevector closest to an input.
 * This is the method used to classify inputs
-* @param _in  Index to the Sample to be classified
+* Parameter: _in  Index to the Sample to be classified
 */
 unsigned xmippFCB::fuzzyOutput(unsigned _in) const
 {
@@ -303,7 +303,7 @@ unsigned xmippFCB::fuzzyOutput(unsigned _in) const
 /**
  * Fills the classifVectors with the list of the best input vectors associated to it.
  * In this case, it uses the Fuzzy Memberships to make the assignments
- * @param _ts  Sample list to classify
+ * Parameter: _ts  Sample list to classify
  */
 void xmippFCB::classify(const xmippCTVectors* _ts)
 {
@@ -359,9 +359,9 @@ void xmippFCB::hardPartition()
 
 /**
  * Returns the alpha-core set (also called alpha-level set or simply "core")
- * @param _ts       The training set
- * @param _alpha    A threshold to identify the core.
- * @param _cluster  The cluster or partition
+ * Parameter: _ts       The training set
+ * Parameter: _alpha    A threshold to identify the core.
+ * Parameter: _cluster  The cluster or partition
  */
 
 xmippFCB::TS xmippFCB::alphaCore(TS _ts, double _alpha, unsigned _cluster) const
@@ -413,7 +413,7 @@ xmippFCB::TS xmippFCB::alphaCore(TS _ts, double _alpha, unsigned _cluster) const
 
 /**
  * Writes the membership values
- * @param _os  The output stream
+ * Parameter: _os  The output stream
  */
 void xmippFCB::writeMembership(ostream& _os) const
 {
@@ -425,7 +425,7 @@ void xmippFCB::writeMembership(ostream& _os) const
 
 /**
  * Reads the membership values
- * @param _is  The input stream
+ * Parameter: _is  The input stream
  */
 void xmippFCB::readMembership(istream& _is)
 {
@@ -440,7 +440,7 @@ void xmippFCB::readMembership(istream& _is)
 /**
  * Saves the xmippFCB class into a stream.
  * this method can be used to save the status of the class.
- * @param _os The output stream
+ * Parameter: _os The output stream
  */
 void xmippFCB::saveObject(ostream& _os) const
 {
@@ -451,8 +451,8 @@ void xmippFCB::saveObject(ostream& _os) const
 
 /**
  * Constructs a fuzzy code book given a stream
- * @param _is  The input stream
- * @param _size Size of code vectors (number of data points)
+ * Parameter: _is  The input stream
+ * Parameter: _size Size of code vectors (number of data points)
  * @exception  runtime_error  If there are problems with the stream
  */
 void xmippFCB::readSelf(istream& _is, const unsigned _size)
@@ -476,7 +476,7 @@ void xmippFCB::readSelf(istream& _is, const unsigned _size)
 /**
  * Loads the xmippFCB class from a stream.
  * this method can be used to load the status of the class.
- * @param _is The output stream
+ * Parameter: _is The output stream
  */
 void xmippFCB::loadObject(istream& _is)
 {
@@ -488,7 +488,7 @@ void xmippFCB::loadObject(istream& _is)
 
 /**
  * Prints the density values of each Fuzzy codevector.
- * @param _os  The the output stream
+ * Parameter: _os  The the output stream
  */
 void xmippFCB::printDensity(ostream& _os) const
 {

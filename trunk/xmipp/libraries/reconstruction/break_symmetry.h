@@ -40,7 +40,8 @@
 
 #include <vector>
 
-/**@name Break_Sym */
+/**@defgroup BreakSym break_symmetry (Break symmetry of a set of reference volumes)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /** Break_Sym parameters. */
 class Prog_Break_Sym_prm

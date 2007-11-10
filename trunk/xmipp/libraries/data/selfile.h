@@ -34,8 +34,12 @@
 // Forward declaration
 class SelFile;
 
-/// @defgroup SelFiles Selection files.
+/// @defgroup SelFiles Selection files (Selfiles)
+/// @ingroup DataLibrary
 
+/// @defgroup SelLines Selection lines
+/// @ingroup SelFiles
+//@{
 /** Line of a selection file.
  * @ingroup SelFiles
  *
@@ -73,11 +77,7 @@ private:
     friend class SelFile;
 
 public:
-    /// @defgroup SelFilesConstructors Constructors.
-    /// @ingroup SelFiles
-
     /** Empty Constructor.
-     * @ingroup SelFilesConstructors
      *
      * The selection line is created with no type (neither comment or data).
      * You must use the function @p set_type to assign a type.
@@ -86,33 +86,25 @@ public:
     {}
 
     /** Copy constructor.
-     * @ingroup SelFilesConstructors
      */
     SelLine(const SelLine& line);
 
     /** Assignment.
-     * @ingroup SelFilesConstructors
      */
     SelLine& operator=(const SelLine& line);
 
     /** Another function for assigment.
-     * @ingroup SelFilesConstructors
      */
     void assign(const SelLine& line);
 
-    /// @defgroup SelFilesStructure Structure information
-    /// @ingroup SelFiles
-
     /** Get text of this line.
-     * @ingroup SelFilesStructure
      */
-    std::string get_text()
+    const std::string& get_text()
     {
         return text;
     }
 
     /** Get label of this line.
-     * @ingroup SelFilesStructure
      */
     short get_label()
     {
@@ -120,7 +112,6 @@ public:
     }
 
     /** Get number of this line.
-     * @ingroup SelFilesStructure
      */
     int get_number()
     {
@@ -128,7 +119,6 @@ public:
     }
 
     /** True if current line is a comment.
-     * @ingroup SelFilesStructure
      */
     int Is_comment()
     {
@@ -136,7 +126,6 @@ public:
     }
 
     /** True if current line is data.
-     * @ingroup SelFilesStructure
      */
     int Is_data()
     {
@@ -144,8 +133,6 @@ public:
     }
 
     /** Set type.
-     * @ingroup SelFilesStructure
-     *
      * Only the comment flag is set, the possible data is not lost. The comment
      * text is not touched. The valid types are DATALINE, COMMENT, NOT_ASSIGNED,
      * and NOT_CONSIDERED.
@@ -156,58 +143,37 @@ public:
     }
 
     /** Set number of this line.
-     * @ingroup SelFilesStructure
      */
     void set_number(int n)
     {
         number = n;
     }
 
-    /// @defgroup SelFilesOperations Useful operations.
-    /// @ingroup SelFiles
-
     /** Lesser than.
-     * @ingroup SelFilesOperations
-     *
      * l1 is lesser than l2 if line_type(l1)<line_type(l2) or if they are equal
      * if the text of l1 is lesser than the text of l2. The order of the line
      * types are NOT_CONSIDERED, NOT_ASSIGNED, DATALINE, COMMENT
      */
     friend bool operator<(const SelLine& l1, const SelLine& l2);
 
-    /** Compare two SelFiles.
-     * @ingroup SelFilesOperations
-     * if mode<0, output file will contain all information
-     * if mode=0, output will be selfile with overlapping images
-     * if mode=1, output will be selfile with images only in file 1
-     * if mode=2, output will be selfile with images only in file 2
-     */
     friend SelFile compare(SelFile& SF1, SelFile& SF2, const int mode);
-
-    /** Find an image inside a list.
-     * @ingroup SelFilesOperations
-     */
     friend std::vector< SelLine >::iterator find(std::vector< SelLine >& text,
-            std::string& img_name);
-
-    /// @defgroup SelFilesIO I/O.
-    /// @ingroup SelFiles
+            const std::string& img_name);
 
     /** Show a SelLine.
-     * @ingroup SelFilesIO
      */
     friend std::ostream& operator<<(std::ostream& o, const SelLine& line);
 
     /** Read a Selection Line.
-     * @ingroup SelFilesIO
      *
      * An exception is thrown if the line doesn't meet the SelFile
      * specifications.
      */
     friend std::istream& operator>>(std::istream& i, SelLine& lin);
 };
+//@}
 
-/** Selection File.
+/** Selection File
  * @ingroup SelFiles
  *
  * The SelFile is an object which keeps in memory all the information
@@ -227,11 +193,15 @@ class SelFile
     // Pointer to current line
     std::vector< SelLine >::iterator current_line;
 
-    std::vector< SelLine >::iterator find(std::string img_name);
+    // Find a specific image name in a list of sellines
+    std::vector< SelLine >::iterator find(const std::string& img_name);
+    
+    // Move the current_line to the next line with this label
     void adjust_to_label(SelLine::Label label);
-
 public:
-
+    // @defgroup SelFilesConstructors Selfile constructors
+    // @ingroup SelFiles
+    
     /** Empty constructor.
      * @ingroup SelFilesConstructors
      *
@@ -305,7 +275,6 @@ public:
     void assign(const SelFile& sel);
 
     /** Show a selection file.
-     * @ingroup SelFilesOperators
      *
      * Shows all the lines either they are comments, active images or discarded
      * images. A new line is printed at the end.
@@ -316,7 +285,7 @@ public:
      */
     friend std::ostream& operator<<(std::ostream& o, const SelFile& sel);
 
-    /// @defgroup SelFilesDisk Managing files in disk.
+    /// @defgroup SelFilesDisk Managing files in disk
     /// @ingroup SelFiles
 
     /** Read a file from disk.
@@ -421,7 +390,7 @@ public:
      */
     void write(const FileName& sel_name = "");
 
-    /// @defgroup SelFilesPointer  Moving the current line "pointer".
+    /// @defgroup SelFilesPointer  Moving the current line pointer
     /// @ingroup SelFiles
 
     /** Go to the beginning of the file.
@@ -470,7 +439,7 @@ public:
      * name = sel.NextImg(SelLine::DISCARDED); // Next discarded image
      * @endcode
      */
-    std::string NextImg(SelLine::Label label = SelLine::ACTIVE);
+    const std::string& NextImg(SelLine::Label label = SelLine::ACTIVE);
 
     /** Move the current pointer to the next image, disregarding its label.
      * @ingroup SelFilesPointer
@@ -519,6 +488,7 @@ public:
     bool jump_lines(int count);
 
     /** Move "pointer" to a certain image filename.
+     * @ingroup SelFilesPointer
      *
      * This function searches for an image name within the file, and locate
      * the current line "pointer" pointing to that line. If the image name is
@@ -533,12 +503,13 @@ public:
      * sel.search("g1ta0001");
      * @endcode
      */
-    void search(std::string img_name)
+    void search(const std::string& img_name)
     {
         current_line = find(img_name);
     }
 
     /** True if current line "pointer" is at the end of file.
+     * @ingroup SelFilesPointer
      *
      * @code
      * if (sel.eof())
@@ -550,7 +521,7 @@ public:
         return current_line == text_line.end();
     }
 
-    /// @defgroup SelFilesInfo Getting information.
+    /// @defgroup SelFilesInfo Getting information
     /// @ingroup SelFiles
 
     /** Returns the name of the file.
@@ -615,7 +586,7 @@ public:
      *     std::cout << "g1ta0001 exists in the selection file\n";
      * @endcode
      */
-    int exists(std::string img_name)
+    int exists(const std::string& img_name)
     {
         return find(img_name) != text_line.end();
     }
@@ -689,7 +660,7 @@ public:
      * fn = sel.get_current_file();
      * @endcode
      */
-    std::string get_current_file();
+    const std::string& get_current_file();
 
     /** Get current line.
      * @ingroup SelFilesInfo
@@ -709,7 +680,7 @@ public:
      * fn = sel.get_file_number(i);
      * @endcode
      */
-    std::string get_file_number(int i);
+    const std::string& get_file_number(int i);
 
     /** Gets statistics of the active images in the selfile.
      * @ingroup SelFilesInfo
@@ -726,7 +697,7 @@ public:
                         double& _max,
                         bool apply_geo = false);
 
-    /// @defgroup SelFilesModify Modifying the selection file.
+    /// @defgroup SelFilesModify Modifying the selection file
     /// @ingroup SelFiles
 
     /** Removes an image from the selection file.
@@ -741,7 +712,7 @@ public:
      * sel.remove("g1ta0001");
      * @endcode
      */
-    void remove(std::string img_name);
+    void remove(const std::string& img_name);
 
     /** Removes actual line.
      * @ingroup SelFilesModify
@@ -768,7 +739,7 @@ public:
      * sel.set("g1ta0001", SelLine::ACTIVE);
      * @endcode
      */
-    void set(std::string img_name, SelLine::Label label);
+    void set(const std::string& img_name, SelLine::Label label);
 
     /** Set the label of the current file.
      * @ingroup SelFilesModify
@@ -798,7 +769,7 @@ public:
      * sel.insert("g1ta0000", SelLine::DISCARDED);
      * @endcode
      */
-    void insert(std::string img_name, SelLine::Label label = SelLine::ACTIVE);
+    void insert(const std::string& img_name, SelLine::Label label = SelLine::ACTIVE);
 
     /** Insert line before current line.
      * @ingroup SelFilesModify
@@ -824,7 +795,7 @@ public:
      * sel.insert_comment("This is a comment");
      * @endcode
      */
-    void insert_comment(std::string comment);
+    void insert_comment(const std::string& comment);
 
     /** Deletes all DISCARDED images from the selection file.
      * @ingroup SelFilesModify
@@ -848,7 +819,7 @@ public:
      */
     void clean_comments();
 
-    /// @defgroup SelFilesHelpful Helpful procedures.
+    /// @defgroup SelFilesHelpful Helpful procedures
     /// @ingroup SelFiles
 
 
@@ -897,7 +868,6 @@ public:
     SelFile random_discard(int N);
 
     /** Compare two selection files.
-     * @ingroup SelFilesHelpful
      *
      * The result is another selection file. At the beginning of it there is
      * information about the number of active and discarded images on both
@@ -953,7 +923,7 @@ public:
      * @endcode
      */
     void for_all(void(*f)(FileName, FileName),
-                 std::string _ext = "",
+                 const std::string& _ext = "",
                  SelLine::Label _label = SelLine::ACTIVE);
 };
 

@@ -32,7 +32,8 @@
 #include <data/funcs.h>
 #include <data/volume.h>
 
-/**@name Crisp */
+/**@defgroup Crisp Crisp
+   @ingroup InterfaceLibrary */
 //@{
 /** Crisp volumes */
 class CrispVolume

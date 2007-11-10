@@ -1,6 +1,7 @@
 #ifndef _LINEARALGEBRA
 #define _LINEARALGEBRA
-/**@name Linear algebra */
+/**@defgroup BilibLinearAlgebra Linear algebra
+   @ingroup BilibLibrary */
 //@{
 /*--------------------------------------------------------------------------*/
 extern int  AllocateMatrix

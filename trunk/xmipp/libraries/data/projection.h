@@ -28,7 +28,8 @@
 
 #include "image.h"
 
-/// @defgroup Projections Projections.
+/// @defgroup Projections Projections (ImageXmipp + Euler angles)
+/// @ingroup DataLibrary
 
 /** Projection class.
  * @ingroup Projections

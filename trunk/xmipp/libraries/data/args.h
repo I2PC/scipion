@@ -33,7 +33,8 @@
 #include "funcs.h"
 #include "matrix1d.h"
 
-/** @defgroup Arguments Arguments parsing.
+/** @defgroup Arguments Arguments parsing
+ *  @ingroup DataLibrary
  *
  * This set of functions are designed for make easier checking and reading
  * parameters from a string. The single value readings don't modify the value of
@@ -78,7 +79,7 @@
  * @endcode
  */
 
-/** @defgroup TypeConversions Type conversions.
+/** @defgroup TypeConversions Type conversions
  * @ingroup Arguments
  *
  * All these functions try to produce a value of the desired type from the given
@@ -300,7 +301,7 @@ std::string removeSpaces(const std::string& _str);
  */
 void removeQuotes(char** _str);
 
-/** @defgroup Tokenization Tokenization.
+/** @defgroup Tokenization Tokenization
  * @ingroup Arguments
  *
  * These functions allow to split a string into small pieces separated by blank
@@ -447,7 +448,7 @@ void tokenize(const std::string& str,
               std::vector< std::string >& tokens,
               const std::string& delimiters = " \t");
 
-/** @defgroup ReadLists Read lists.
+/** @defgroup ReadLists Read lists
  * @ingroup Arguments
  *
  * These functions try to read N values of the desired type into the given
@@ -597,7 +598,7 @@ void readFloatList(const char* str,
     }
 }
 
-/** @defgroup CommandLineFunctions Command line functions.
+/** @defgroup CommandLineFunctions Functions for parsing the command line
  * @ingroup Arguments
  *
  * These functions help you to manage the command line parameters

@@ -1,4 +1,5 @@
-/**@name Swap axes in a volume */
+/**@defgroup SwapAxes Swap axes in a volume
+   @ingroup BilibLibrary */
 //@{
 /*--------------------------------------------------------------------------*/
 /** Swap the x-axis and the y-axis of a volume.

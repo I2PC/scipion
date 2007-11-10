@@ -33,12 +33,15 @@
 #include <data/funcs.h>
 #include <data/matrix1d.h>
 
-/**@name OpenDX */
+/**@defgroup OpenDX OpenDX
+   @ingroup InterfaceLibrary */
 //@{
-/**  OpenDX:
-      This is a class to show grid point using openDX(tm) (It is usefull to
-      meassure distances between points. Use the networks for these purpose
-      \URL[distance.net]{../Extra_Docs/distances.net}. (To measuure distances select: Options->viewcontrol and then mode->pick, click in teh image select picks->pick_2 and pick again in the image.)
+
+/**  OpenDX: This is a class to show grid point using openDX(tm) (It is usefull
+    to meassure distances between points. Use the networks for these purpose.
+    (To measuure distances select: Options->viewcontrol and then mode->pick,
+    click in the image select picks->pick_2 and pick again in the image.)
+    
     */
 
 class openDX

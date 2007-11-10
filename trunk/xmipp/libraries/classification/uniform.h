@@ -37,7 +37,8 @@
 // uniform return values uniformly distributed over the interval [min, max)
 //-----------------------------------------------------------------------------
 
-/**@name Uniform random generator*/
+/**@defgroup UniformRandomGenerator Uniform random generator
+   @ingroup ClassificationLibrary */
 //@{
 /**
 * Template class for uniform random number generation
@@ -47,8 +48,8 @@ template<class T> class xmippUniform
 public:
     /**
     * Constructor
-    * @param _min   minimum value for the generated ramdom number
-    * @param _max   maximum value for the generated ramdom number
+    * Parameter: _min   minimum value for the generated ramdom number
+    * Parameter: _max   maximum value for the generated ramdom number
     */
     xmippUniform(T _min = 0, T _max = 1): thisMin(_min), diff(_max - _min)
     {
@@ -71,7 +72,4 @@ private:
 };
 
 //@}
-
-//-----------------------------------------------------------------------------
-
 #endif//XMIPP_UNIFORM_H

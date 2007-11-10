@@ -29,7 +29,8 @@
 
 #include "fourier_filter.h"
 
-/**@name Adjust parametric CTF */
+/**@defgroup AdjustParametricCTF adjust_ctf (Adjust CTF parameters to PSD)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /** Adjust CTF parameters. */
 class Adjust_CTF_Parameters

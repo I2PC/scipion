@@ -31,7 +31,8 @@
 #include "matrix2d.h"
 #include "matrix3d.h"
 
-/// @defgroup Histograms
+/// @defgroup Histograms Histograms
+/// @ingroup DataLibrary
 
 /** Histograms with 1 parameter
  * @ingroup Histograms
@@ -222,16 +223,7 @@ public:
      */
     void write(const FileName& fn);
 
-    /** @defgroup HistogramAccess Access functions
-     * @ingroup Histograms
-     *
-     * This functions are not very common to use, and they allow access to the
-     * histogram elements or the histogram itself as a vector of doubles which
-     * we can work with.
-     */
-
     /** Value --> Index
-     * @ingroup HistogramAccess
      *
      * Given a value it returns the code of the interval where it should be
      * counted. If it is outside the global range of the histogram it returns
@@ -253,7 +245,6 @@ public:
     }
 
     /** Index --> Value
-     * @ingroup HistogramAccess
      *
      * Given the code of one interval, this function returns the value of its
      * starting point (its left border point). If the intervals are defined as
@@ -269,7 +260,6 @@ public:
     }
 
     /** Minimum value where the histogram is defined
-     * @ingroup HistogramAccess
      *
      * @code
      * cout << "Minimum value for histogram " << hist.min() << endl;
@@ -281,7 +271,6 @@ public:
     }
 
     /** Maximum value where the histogram is defined
-     * @ingroup HistogramAccess
      *
      * @code
      * cout << "Maximum value for histogram " << hist.max() << endl;
@@ -293,7 +282,6 @@ public:
     }
 
     /** Step size for the histogram
-     * @ingroup HistogramAccess
      *
      * @code
      * cout << "Step size of the histogram " << hist.step() << endl;
@@ -305,7 +293,6 @@ public:
     }
 
     /** Number of steps in the histogram
-     * @ingroup HistogramAccess
      *
      * @code
      * cout << "No. Steps in the histogram " << hist.stepNo() << endl;
@@ -317,7 +304,6 @@ public:
     }
 
     /** Number of samples introduced in the histogram
-     * @ingroup HistogramAccess
      *
      * @code
      * cout << "No. Samples in the histogram " << hist.sampleNo() << endl;
@@ -365,6 +351,7 @@ void compute_hist(T& array, histogram1D& hist, int no_steps)
  * @code
  * histogram1D hist;
  * compute_hist(v, hist, 0, 1, 100);
+ * @endcode
  */
 template<typename T>
 void compute_hist(const T& v, histogram1D& hist,
@@ -668,16 +655,7 @@ public:
      */
     void write(const FileName& fn);
 
-    /** @defgroup HistogramAccess Access functions
-     * @ingroup Histograms
-     *
-     * This functions are not very common to use, and they allow access to the
-     * histogram elements or the histogram itself as a matrix of doubles which
-     * we can work with.
-     */
-
     /** Value --> Index
-     * @ingroup HistogramAccess
      *
      * Given two values for the two variables it returns the code of the
      * interval where it should be counted. If it is outside the global range of
@@ -710,7 +688,6 @@ public:
     }
 
     /** Index --> Value
-     * @ingroup HistogramAccess
      *
      * Given the code of one interval, this function returns the value of its
      * starting point (its left-top border point, ie, its lowest corner). If the
@@ -728,7 +705,6 @@ public:
     }
 
     /** Minimum i value where the histogram is defined
-     * @ingroup HistogramAccess
      *
      * @code
      * cout << "Minimum value for histogram " << hist.Imin() << endl;
@@ -740,7 +716,6 @@ public:
     }
 
     /** Maximum i value where the histogram is defined
-     * @ingroup HistogramAccess
      *
      * @code
      * cout << "Maximum value for histogram " << hist.Imax() << endl;
@@ -752,7 +727,6 @@ public:
     }
 
     /** Step size in i for the histogram
-     * @ingroup HistogramAccess
      *
      * @code
      * cout << "Step size of the histogram " << hist.Istep() << endl;
@@ -764,7 +738,6 @@ public:
     }
 
     /** Number of steps in i in the histogram
-     * @ingroup HistogramAccess
      *
      * @code
      * cout << "No. Steps in the histogram " << hist.IstepNo() << endl;
@@ -776,7 +749,6 @@ public:
     }
 
     /** Minimum j value where the histogram is defined
-     * @ingroup HistogramAccess
      *
      * @code
      * cout << "Minimum value for histogram " << hist.Jmin() << endl;
@@ -788,7 +760,6 @@ public:
     }
 
     /** Maximum j value where the histogram is defined
-     * @ingroup HistogramAccess
      *
      * @code
      * cout << "Maximum value for histogram " << hist.Jmax() << endl;
@@ -800,7 +771,6 @@ public:
     }
 
     /** Step size in j for the histogram
-     * @ingroup HistogramAccess
      *
      * @code
      * cout << "Step size of the histogram " << hist.Jstep() << endl;
@@ -812,7 +782,6 @@ public:
     }
 
     /** Number of steps in j in the histogram
-     * @ingroup HistogramAccess
      *
      * @code
      * cout << "No. Steps in the histogram " << hist.JstepNo() << endl;
@@ -824,7 +793,6 @@ public:
     }
 
     /** Number of samples introduced in the histogram
-     * @ingroup HistogramAccess
      *
      * @code
      * cout << "No. Samples in the histogram " << hist.sampleNo() << endl;

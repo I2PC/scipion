@@ -32,7 +32,8 @@
 
 #include <data/matrix2d.h>
 
-/**@name Spectrum modelling by ARMA filters */
+/**@defgroup SpARMA Spectrum modelling by ARMA filters
+   @ingroup ReconsLibrary */
 //@{
 /** CausalARMA.
 
@@ -116,11 +117,15 @@ void ARMAFilter(Matrix2D<double> &Img, Matrix2D< double > &Filter,
                 double dSigma);
 //@}
 
+/**@defgroup SpARMAProg sparma (Spectrum modelling by ARMA filters)
+   @ingroup ReconsLibraryPrograms */
+//@{
+/** Class to perform the ARMA estimate of the PSD from the command line */
 class ARMA_parameters
 {
 public:
-    FileName  fn_in;      // Name of input image
-    FileName     fn_filter;          // Name of filter image
+    FileName  fn_in;              // Name of input image
+    FileName  fn_filter;          // Name of filter image
     int       N_AR;               // order in the Rows direction of the AR part of the model
     int       M_AR;               // order in the Cols direction of the AR part of the model
     int       N_MA;               // order in the Rows direction of the MA part of the model
@@ -134,5 +139,7 @@ public:
     /// Write to a file
     void write(const FileName &fn, bool rewrite = true);
 };
+
+//@}
 
 #endif

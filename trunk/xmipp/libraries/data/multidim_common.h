@@ -1,4 +1,5 @@
 /** @defgroup MultidimMacros Macros for all multidimensional arrays
+ *  @ingroup MultidimensionalArrays
  *
  * This macros are defined to allow high speed in critical parts of your
  * program. They shouldn't be used systematically as usually there is no
@@ -90,9 +91,10 @@
 #endif
 
 /// @defgroup MultidimFunctions Functions for all multidimensional arrays
+/// @ingroup MultidimensionalArrays
 
 /** Conversion from one type to another.
- * @ingroup MultidimFunctions
+ * @ingroup MultidimensionalArrays
  *
  * If we have an integer vector and we need a double one, we can use this
  * function. The conversion is done through a type casting of each element

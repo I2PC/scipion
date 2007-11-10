@@ -1,4 +1,5 @@
-/**@name IIR Convolve */
+/**@defgroup IIRConvolve IIR Convolve
+   @ingroup BilibLibrary */
 //@{
 /*--------------------------------------------------------------------------*/
 /** Canonic progressive.

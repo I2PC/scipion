@@ -34,7 +34,8 @@
 #include <data/mask.h>
 #include <data/docfile.h>
 
-/**@name Angular Predict Continuous */
+/**@defgroup AngularPredictContinuous angular_continuous_assign (Continuous angular assignment)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /** Predict Continuous Parameters. */
 class Prog_angular_predict_continuous_prm: public Prog_parameters

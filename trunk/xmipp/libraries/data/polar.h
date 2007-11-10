@@ -42,6 +42,11 @@
 #define DONT_CONJUGATE false
 #define CONJUGATE true
 
+/// @defgroup Polar Polar coordinates 
+/// @ingroup DataLibrary
+//@{
+
+/** Class for polar coodinates */
 template<typename T>
 class Polar
 {
@@ -53,11 +58,7 @@ public:
     vector<double>        ring_radius;  // radius of each ring
     vector<Matrix1D<T> >  rings;        // vector with all rings
 public:
-    /// @defgroup PolarConstructors Polar constructors
-    /// @ingroup Polars
-
     /** Empty constructor
-     * @ingroup PolarConstructors
      *
      * An empty image with size 0x0 is created.
      *
@@ -75,7 +76,6 @@ public:
     }
     
     /** Copy constructor
-     * @ingroup PolarConstructors
      *
      * @code
      * Polar P2(P1);
@@ -90,10 +90,7 @@ public:
 	oversample = P.oversample;
     }
 
-    /// @defgroup PolarOperations Some operations
-    /// @ingroup Polars
     /** Assignment
-     * @ingroup PolarOperations
      */
     Polar& operator=(const Polar& P)
     {
@@ -109,7 +106,6 @@ public:
     }
   
     /** Subtract a constant pixel-by-pixel
-     * @ingroup PolarOperations
      */
     Polar& operator-(const T val) const
     {
@@ -123,7 +119,6 @@ public:
     }
 
     /** Add a constant pixel-by-pixel
-     * @ingroup PolarOperations
      */
     Polar& operator+(const T val)
     {
@@ -137,7 +132,6 @@ public:
     }
 
     /** Multiply by a constant pixel-by-pixel
-     * @ingroup PolarOperations
      */
     Polar& operator*(const T val)
     {
@@ -151,7 +145,6 @@ public:
     }
 
     /** Divide by a constant pixel-by-pixel
-     * @ingroup PolarOperations
      */
     Polar& operator/(const T val)
     {
@@ -165,7 +158,6 @@ public:
     }
 
     /** Subtract a constant pixel-by-pixel
-     * @ingroup PolarOperations
      */
     void operator-=(const T val)
     {
@@ -175,7 +167,6 @@ public:
     }
 
     /** Add a constant pixel-by-pixel
-     * @ingroup PolarOperations
      */
     void operator+=(const T val)
     {
@@ -185,7 +176,6 @@ public:
     }
 
     /** Multiply by a constant pixel-by-pixel
-     * @ingroup PolarOperations
      */
     void operator*=(const T val)
     {
@@ -195,7 +185,6 @@ public:
     }
 
     /** Divide by a constant pixel-by-pixel
-     * @ingroup PolarOperations
      */
     void operator/=(const T val)
     {
@@ -205,7 +194,6 @@ public:
     }
 
     /** Subtract two polars pixel-by-pixel
-     * @ingroup PolarOperations
      */
     Polar& operator-=(const Polar<T> in)
     {
@@ -215,7 +203,6 @@ public:
     }
 
      /** Add two polars pixel-by-pixel
-     * @ingroup PolarOperations
      */
     Polar& operator+=(const Polar<T> in)
     {
@@ -225,7 +212,6 @@ public:
     }
 
      /** Multiply two polars pixel-by-pixel
-     * @ingroup PolarOperations
      */
     Polar& operator*=(const Polar<T> in)
     {
@@ -235,7 +221,6 @@ public:
     }
 
      /** Divide two polars pixel-by-pixel
-     * @ingroup PolarOperations
      */
     Polar& operator/=(const Polar<T> in)
     {
@@ -244,8 +229,8 @@ public:
 		(*(this))(i,j) /= in(i,j);
 
     }
+
     /** Rename polar
-     * @ingroup PolarOperations
      *
      * Give a new name to the polar.
      *
@@ -260,7 +245,6 @@ public:
     }
 
     /** Empty polar
-     * @ingroup PolarOperations
      *
      * This function clears the polar to an empty vector without name.
      *
@@ -277,11 +261,7 @@ public:
 	oversample = 1.;
     }
 
-    /// @defgroup PolarAccess Polar access
-    /// @ingroup Polars
-
     /** Name access
-     * @ingroup PolarAccess
      *
      * This function is used to know the name of the polar. It cannot be used to
      * assign a new one. You may use rename() for that.
@@ -296,7 +276,6 @@ public:
     }
 
     /** Number of rings access
-     * @ingroup PolarAccess
      *
      * This function is used to know the number of rings in the polar. 
      *
@@ -310,7 +289,6 @@ public:
     }
 
     /** Mode access
-     * @ingroup PolarAccess
      *
      * This function is used to know the "mode" of the polar. 
      *
@@ -328,7 +306,6 @@ public:
     }
 
     /** Oversample access
-     * @ingroup PolarAccess
      *
      * This function is used to know the oversampling factor of the polar. 
      *
@@ -346,7 +323,6 @@ public:
     }
 
     /** Number of samples in each ring access
-     * @ingroup PolarAccess
      *
      * This function is used to know the number of samples in a given ring.
      *
@@ -360,7 +336,6 @@ public:
     }
 
     /** The radius of each ring access
-     * @ingroup PolarAccess
      *
      * This function is used to know the radius of a given ring.
      *
@@ -374,7 +349,6 @@ public:
     }
 
     /** 1D Matrix access
-     * @ingroup PolarAccess
      *
      * This operator can be used to access any ring of the polar as Matrix1D.
      *
@@ -382,6 +356,7 @@ public:
      * Matrix1D<double> secondring = P.getRing(1);
      * @endcode
      */
+    //@{
     Matrix1D< T >& getRing(int i)
     {
         return rings[i];
@@ -390,9 +365,9 @@ public:
     {
         return rings[i];
     }
+    //@}
 
     /** 1D Matrix access
-     * @ingroup PolarAccess
      *
      * This operator can be used to set any ring of the polar with a Matrix1D.
      *
@@ -407,7 +382,6 @@ public:
     }
 
     /** Pixel access
-     * @ingroup PolarAccess
      *
      * This operator is used to access a pixel within the polar. That
      * means, given the ring and the number of the pixel in the
@@ -424,7 +398,6 @@ public:
     }
 
     /** Pixel access
-     * @ingroup PolarAccess
      *
      * This operator is used to access a pixel within the polar. That
      * means, given the ring and the number of the pixel in the
@@ -441,7 +414,6 @@ public:
     }
 
     /** Pixel access
-     * @ingroup PolarAccess
      *
      * This operator is used to set a pixel within the polar. That
      * means, given the ring and the number of the pixel in the
@@ -460,7 +432,6 @@ public:
 
 
     /** Compute sum or average of all pixels in polar rings.
-     * @ingroup PolarFunctions
      *
      */
     T computeSum(bool average = DONT_AVERAGE, int mode = FULL_CIRCLES) const
@@ -493,8 +464,6 @@ public:
     }
  
     /** Compute squared-sum or average squared-sum of all pixels in polar rings.
-     * @ingroup PolarFunctions
-     *
      */
     T computeSum2(bool average = DONT_AVERAGE, int mode = FULL_CIRCLES) const
     {
@@ -526,7 +495,6 @@ public:
     }
  
    /** Get Cartesian Coordinates of the Polar sampling
-     * @ingroup PolarFunctions
      *
      * The output of this function can be used to calculate Voronoi
      * areas, lists of neighbours etc.
@@ -594,7 +562,6 @@ public:
     }
 
     /** Convert cartesian Matrix2D to Polar
-     * @ingroup PolarFunctions
      *
      * Use gridding for interpolation. The input Matrix2D is assumed
      * to be pre-processed for gridding purposes.
@@ -674,7 +641,6 @@ public:
     }
 
     /** Fourier transform all rings
-     * @ingroup PolarFunctions
      *
      * 1D Fourier transform of all rings
      * Only the assymetric half is stored
@@ -714,14 +680,7 @@ public:
 
 };
 
-/** @defgroup PolarRelated Polar Related functions
- * @ingroup Polar
- *
- * These functions are not methods of Polar
- */
-
 /** Fourier-space rotational Cross-Correlation Funtion
- * @ingroup PolarRelated
  *
  *  This function returns the rotational cross-correlation
  *  function of two Polars M1 and M2 using the
@@ -780,14 +739,12 @@ void rotationalCorrelation(const Polar<complex<double> > &M1,
 }
 
 /** Inverse Fourier Transform of all rings
- * @ingroup PolarRelated
  *
  */
 void inverseFourierTransformRings(const Polar<complex<double> > & in, 
 				  Polar<double> & out, bool conjugated = false);
 
 /** Convert to a single vector
- * @ingroup PolarRelated
  *
  * Convert complex Polar structure to a single vector
  * This may be useful for parallelization purposes.
@@ -797,7 +754,6 @@ void convertPolarToSingleArray(const Polar<complex<double> > & in,
 			       Matrix1D<double> & out);
 
 /** Convert to a single vector
- * @ingroup PolarRelated
  *
  * Convert real Polar structure to a single vector
  * This may be useful for parallelization purposes.
@@ -807,7 +763,6 @@ void convertPolarToSingleArray(const Polar<double> & in,
 			       Matrix1D<double> & out);
 
 /** Convert back from a single vector to a complex polar structure
- * @ingroup PolarRelated
  *
  * Convert back from a single vector to a complex polar structure.
  * This may be useful for parallelization purposes.
@@ -818,7 +773,6 @@ void convertSingleArrayToPolar(const Matrix1D<double> & in,
 			       Polar<complex<double> > & out);
 
 /** Convert back from a single vector to a real polar structure
- * @ingroup PolarRelated
  *
  * Convert back from a single vector to a real polar structure.
  * This may be useful for parallelization purposes.
@@ -827,6 +781,5 @@ void convertSingleArrayToPolar(const Matrix1D<double> & in,
  */
 void convertSingleArrayToPolar(const Matrix1D<double> & in,
 			       Polar<double> & out);
-
-
+//@}
 #endif

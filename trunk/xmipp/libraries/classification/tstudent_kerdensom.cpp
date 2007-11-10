@@ -37,10 +37,10 @@
 //-----------------------------------------------------------------------------
 /**
  * Trains the TStudentKerDenSOM
- * @param _som  The KerDenSom to train
- * @param _ts   The training set
- * @param _update True if uses _som as starting point for training.
- * @param _sigma If update = true, uses this sigma for the training.
+ * Parameter: _som  The KerDenSom to train
+ * Parameter: _ts   The training set
+ * Parameter: _update True if uses _som as starting point for training.
+ * Parameter: _sigma If update = true, uses this sigma for the training.
  */
 void xmippTStudentKerDenSOM::train(xmippFuzzyMap& _som, TS& _examples, FileName& _fn, bool _update, double _sigma)
 {

@@ -38,7 +38,7 @@
 //-----------------------------------------------------------------------------
 /**
  * Sets the number of training steps
- * @param _nSteps  Number of training steps
+ * Parameter: _nSteps  Number of training steps
  */
 void xmippFuzzySOM::nSteps(const unsigned long& _nSteps)
 {
@@ -48,7 +48,7 @@ void xmippFuzzySOM::nSteps(const unsigned long& _nSteps)
 //-----------------------------------------------------------------------------
 /**
  * Sets the Intial Fuzzy membership
- * @param _m0
+ * Parameter: _m0
  */
 void xmippFuzzySOM::initialFuzzzyMembership(const double& _m0)
 {
@@ -59,7 +59,7 @@ void xmippFuzzySOM::initialFuzzzyMembership(const double& _m0)
 //-----------------------------------------------------------------------------
 /**
  * Sets the Final Fuzzy membership
- * @param _m1
+ * Parameter: _m1
  */
 void xmippFuzzySOM::finalFuzzzyMembership(const double& _m1)
 {
@@ -70,7 +70,7 @@ void xmippFuzzySOM::finalFuzzzyMembership(const double& _m1)
 //-----------------------------------------------------------------------------
 /**
  * Sets the number of deterministic annealing training steps
- * @param _annSteps  Number of steps
+ * Parameter: _annSteps  Number of steps
  */
 void xmippFuzzySOM::setAnnSteps(const unsigned long& _annSteps)
 {
@@ -81,7 +81,7 @@ void xmippFuzzySOM::setAnnSteps(const unsigned long& _annSteps)
 //-----------------------------------------------------------------------------
 /**
  * Sets the Regularization Constant
- * @param _reg
+ * Parameter: _reg
  */
 void xmippFuzzySOM::regularization(const double& _reg)
 {
@@ -92,8 +92,8 @@ void xmippFuzzySOM::regularization(const double& _reg)
 //-----------------------------------------------------------------------------
 /**
  * Trains the Fuzzy SOM
- * @param _som  The fuzzy som to train
- * @param _ts   The training set
+ * Parameter: _som  The fuzzy som to train
+ * Parameter: _ts   The training set
  */
 void xmippFuzzySOM::train(xmippFuzzyMap& _som, const TS& _examples)
 {
@@ -193,8 +193,8 @@ void xmippFuzzySOM::train(xmippFuzzyMap& _som, const TS& _examples)
 //-----------------------------------------------------------------------------
 /**
  * Tests the Fuzzy SOM
- * @param _som        The fuzzy som to test
- * @param _examples   The training set of examples
+ * Parameter: _som        The fuzzy som to test
+ * Parameter: _examples   The training set of examples
  */
 double xmippFuzzySOM::test(const xmippFuzzyMap& _som, const TS& _examples) const
 {

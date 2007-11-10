@@ -34,21 +34,22 @@
 #include <data/matrix2d.h>
 #include <data/geometry.h>
 
-/**@name APH2D Files */
+/**@defgroup APH2D APH2D Files
+   @ingroup InterfaceLibrary */
 //@{
 /** APH2D Files.
     This is a class to read/write APH files as produced by the MRC's program
     mmbox.
-    \begin{verbatim}
+    @code
 1410065407   24.8900    0.0000    0.0000   16.0000  1024  1024   2.500
  -31 -31     4.0    34.0  1     0.0     0.0
  -31 -30     4.0   337.0  1     0.0     0.0
  -31 -29     4.0   280.0  1     0.0     0.0
  -31 -28     4.0   224.0  1     0.0     0.0
  -31 -27     4.0   169.0  1     0.0     0.0
-    \end{verbatim}
+    @endcode
     The first line used to be skipped. Now, it is
-    \\<???> <a*x> <a*y> <b*x> <b*y> <crystal_Xdim> <crystal_Ydim> <sampling rate>
+    \\(???) (a*x) (a*y) (b*x) (b*y) (crystal_Xdim) (crystal_Ydim) (sampling rate)
 
     Each line describes a Fourier spot, the first
     two columns are h and k, then the magnitude, the phase, the spot IQ,

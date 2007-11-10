@@ -28,7 +28,8 @@
 
 #include "training_set.h"
 
-/**@name Data Sets*/
+/**@defgroup DataSets Data sets
+   @ingroup ClassificationLibrary */
 //@{
 /**
  * Abstract Data Set class that should be used by all classification algorithms.
@@ -69,7 +70,7 @@ public:
     /**
      * Method to classify a feature vector
      * It returns the 'class' to which the vector belongs
-     * @param _in  vcetor to test.
+     * Parameter: _in  vcetor to test.
      * @return     The result of classification.
      */
     virtual Out apply(const In& _in) const = 0;
@@ -81,14 +82,11 @@ public:
      * If it makes no sense, it should be declared as private. Although
      * it means many different things, it´s included here to have an uniform
      * representation
-     * @param _in  input vector to test.
+     * Parameter: _in  input vector to test.
      * @return     The result of classification.
      */
     virtual unsigned output(const In& _in) const = 0;
 };
 
 //@}
-
-//-----------------------------------------------------------------------------
-
 #endif//XMIPPCDSET_H

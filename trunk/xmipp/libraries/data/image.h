@@ -53,15 +53,80 @@
 // use other clases type
 
 template<typename T>
-class ImageImagicT;
+    class ImageImagicT;
 template<typename T>
-class ImageXmippT;
+    class ImageXmippT;
 
 // String that identifies a selline as an Imagic image
 static const char* IMAGIC_TAG = "imagic:";
 
-/// @defgroup Images Images
+/// @defgroup ImageMacros Speed up macros
+/// @ingroup Images
+//@{
+/** Matrix access
+ *
+ * This macro does the same as the normal matrix access but in a faster way as
+ * no function call is generated. This macro can be used with any of the derived
+ * classes from the Image class.
+ *
+ * @code
+ * IMGMATRIX(I).resize(128, 128);
+ *
+ * IMGMATRIX(I2) = IMGMATRIX(I1) + IMGMATRIX(I2);
+ * @endcode
+ */
+#define IMGMATRIX(I) ((I).img)
 
+/** Array access
+ *
+ * This macro allows you to access to the bidimensional array behind the image
+ * (double*).
+ */
+#define IMGARRAY(I) MAT_ARRAY((I).img)
+
+/** Pixel access
+ *
+ * This macro does the same as the normal pixel access (remember, logical
+ * access) but in a faster way as no function call is generated. This macro can
+ * be used with any of the derived classes from the Image class, except for the
+ * Oversampled Images (see ImageOver) as their logical positions are related in
+ * a special way to the physical ones.
+ *
+ * @code
+ * cout << "Grey level of pixel (-3, -3) of the image = "
+ *      << IMGPIXEL(I, -3, -3) << endl;
+ *
+ * IMGPIXEL(I, -3, -3) = IMGPIXEL(I, -3, -2);
+ * @endcode
+ */
+#define IMGPIXEL(I, i, j) MAT_ELEM(((I).img), (i), (j))
+
+/** Physical pixel access
+ *
+ * The physical pixel access gives you access to a pixel by its physical
+ * position and not by its logical one. This access shouldn't be used as a
+ * custom, use instead the logical access, but there might be cases in which
+ * this access might be interesting.
+ *
+ * Physical positions start at index 0 in C.
+ *
+ * This macro can be used by any of the derived classes from the Image class.
+ *
+ * @code
+ * cout << "This is the first pixel stored in the image " <<
+ *      DIRECT_IMGPIXEL(I, 0, 0) << endl;
+ * @endcode
+ */
+#define DIRECT_IMGPIXEL(I, i, j) DIRECT_MAT_ELEM(((I).img), (i), (j))
+//@}
+
+/// @defgroup Images Raw and Xmipp images
+/// @ingroup DataLibrary
+
+/**@defgroup XmippImages Xmipp images
+ * @ingroup Images
+*/
+//@{
 typedef enum
 {
     IBYTE = 1, IFLOAT = 2, I16 = 3
@@ -93,11 +158,7 @@ public:
     Matrix2D< T > img; // matrix with the image
 
 public:
-    /// @defgroup ImageConstructors Image constructors
-    /// @ingroup Images
-
     /** Empty constructor
-     * @ingroup ImageConstructors
      *
      * An empty image with size 0x0 is created.
      *
@@ -111,7 +172,6 @@ public:
     }
 
     /** Constructor with size
-     * @ingroup ImageConstructors
      *
      * A blank image (0.0 filled) is created with the given size. Pay attention
      * to the dimension order: Y and then X.
@@ -127,7 +187,6 @@ public:
     }
 
     /** Constructor using filename
-     * @ingroup ImageConstructors
      *
      * The name for the image is assigned but no load is performed. The image
      * content is empty, ie, with size 0x0.
@@ -142,7 +201,6 @@ public:
     }
 
     /** Copy constructor
-     * @ingroup ImageConstructors
      *
      * @code
      * Image I2(I1);
@@ -154,11 +212,7 @@ public:
         fn_img = I.fn_img;
     }
 
-    /// @defgroup ImageOperations Some operations
-    /// @ingroup Images
-
     /** Assignment
-     * @ingroup ImageOperations
      */
     ImageT& operator=(const ImageT& I)
     {
@@ -171,7 +225,6 @@ public:
     }
 
     /** Another function for assignment
-     * @ingroup ImageOperations
      */
     void assign(const ImageT& I)
     {
@@ -179,7 +232,6 @@ public:
     }
 
     /** Assignment from matrix
-     * @ingroup ImageOperations
      */
     template<typename T1>
     ImageT& operator=(const Matrix2D< T1 >& m)
@@ -193,7 +245,6 @@ public:
     }
 
     /** Another function for assignment from matrix
-     * @ingroup ImageOperations
      */
     template<typename T1>
     void assign(const Matrix2D< T1 >& m)
@@ -202,7 +253,6 @@ public:
     }
 
     /** Rename image
-     * @ingroup ImageOperations
      *
      * Give a new name to the image.
      *
@@ -216,7 +266,6 @@ public:
     }
 
     /** Empty image
-     * @ingroup ImageOperations
      *
      * This function clears the image to a 0x0 image without name.
      *
@@ -231,7 +280,6 @@ public:
     }
 
     /** Sets the origin of the image at its center
-     * @ingroup ImageOperations
      *
      * The exact formula for the center of an image is defined in the
      * conventions section, this function modify the indexes of the image in
@@ -251,7 +299,6 @@ public:
     }
 
     /** Fill with 0 and move origin to center
-     * @ingroup ImageOperations
      *
      * This function resizes the image to the given size, fill it with 0.0 and
      * ten moves the image logical origin to its center. See previous function.
@@ -266,11 +313,7 @@ public:
         moveOriginTo_center();
     }
 
-    /// @defgroup ImageAccess Image access
-    /// @ingroup Images
-
     /** 2D Matrix access
-     * @ingroup ImageAccess
      *
      * This operator can be used to access the matrix, and the matrix operations
      * defined in Matrix2D. In this way we could resize an image just by
@@ -293,7 +336,6 @@ public:
     }
 
     /** Another function for 2D Matrix access
-     * @ingroup ImageAccess
      */
     virtual void get_Matrix2D(Matrix2D< T >& m)
     {
@@ -301,7 +343,6 @@ public:
     }
 
     /** Another function for 2D Matrix access
-     * @ingroup ImageAccess
      */
     virtual void set_Matrix2D(const Matrix2D< T >& m)
     {
@@ -309,7 +350,6 @@ public:
     }
 
     /** Pixel access
-     * @ingroup ImageAccess
      *
      * This operator is used to access a pixel within the image. This is a
      * logical access, so you could access to negative positions if the image
@@ -328,7 +368,6 @@ public:
     }
 
     /** Another function for pixel access
-     * @ingroup ImageAccess
      */
     T getPixel(int i, int j) const
     {
@@ -336,7 +375,6 @@ public:
     }
 
     /** Another function for pixel access
-     * @ingroup ImageAccess
      */
     void setPixel(int i, int j, T val)
     {
@@ -344,7 +382,6 @@ public:
     }
 
     /** Name access
-     * @ingroup ImageAccess
      *
      * This function is used to know the name of the image. It cannot be used to
      * assign a new one.
@@ -359,7 +396,6 @@ public:
     }
 
     /** Cout << Image
-     * @ingroup ImageAccess
      *
      * Shows name and size
      */
@@ -372,15 +408,7 @@ public:
         return out;
     }
 
-    /** @defgroup ImageIO I/O functions
-     * @ingroup Images
-     *
-     * All these functions work with the image written in raw floats.
-     */
-
-
     /** Read image from disk, given the image's dimensions
-     * @ingroup ImageIO
      *
      * If the image doesn't exist at the given path then an exception is thrown.
      *
@@ -422,7 +450,6 @@ public:
     }
 
     /** Read image from disk using a file pointer
-     * @ingroup ImageIO
      *
      * This is the core routine of the previous one.
      */
@@ -456,7 +483,6 @@ public:
     }
 
     /** Load an image
-     * @ingroup ImageIO
      *
      * LoadImage is a static function that loads an image file depending on what
      *  kind of image type (e.g., Xmipp, Imagic) it is; it returns a pointer to
@@ -486,7 +512,6 @@ public:
     }
 
     /** Write image to disk
-     * @ingroup ImageIO
      *
      * If there is any problem in the writing, an exception is thrown. You can
      * give a name to the written volume different from the one used when it was
@@ -519,7 +544,6 @@ public:
     }
 
     /** Write image to disk using a file pointer
-     * @ingroup ImageIO
      *
      * This is the core routine of the previous one.
      */
@@ -605,70 +629,6 @@ inline void ImageT< complex< double> >::write(FILE*& fh, bool reversed,
         FWRITE(&b, sizeof(float), 1, fh, reversed);
     }
 }
-
-/// @defgroup ImageMacros Speed up macros
-/// @ingroup Images
-
-/** Matrix access
- * @ingroup ImageMacros
- *
- * This macro does the same as the normal matrix access but in a faster way as
- * no function call is generated. This macro can be used with any of the derived
- * classes from the Image class.
- *
- * @code
- * IMGMATRIX(I).resize(128, 128);
- *
- * IMGMATRIX(I2) = IMGMATRIX(I1) + IMGMATRIX(I2);
- * @endcode
- */
-#define IMGMATRIX(I) ((I).img)
-
-/** Array access
- * @ingroup ImageMacros
- *
- * This macro allows you to access to the bidimensional array behind the image
- * (double*).
- */
-#define IMGARRAY(I) MAT_ARRAY((I).img)
-
-/** Pixel access
- * @ingroup ImageMacros
- *
- * This macro does the same as the normal pixel access (remember, logical
- * access) but in a faster way as no function call is generated. This macro can
- * be used with any of the derived classes from the Image class, except for the
- * Oversampled Images (see ImageOver) as their logical positions are related in
- * a special way to the physical ones.
- *
- * @code
- * cout << "Grey level of pixel (-3, -3) of the image = "
- *      << IMGPIXEL(I, -3, -3) << endl;
- *
- * IMGPIXEL(I, -3, -3) = IMGPIXEL(I, -3, -2);
- * @endcode
- */
-#define IMGPIXEL(I, i, j) MAT_ELEM(((I).img), (i), (j))
-
-/** Physical pixel access
- * @ingroup ImageMacros
- *
- * The physical pixel access gives you access to a pixel by its physical
- * position and not by its logical one. This access shouldn't be used as a
- * custom, use instead the logical access, but there might be cases in which
- * this access might be interesting.
- *
- * Physical positions start at index 0 in C.
- *
- * This macro can be used by any of the derived classes from the Image class.
- *
- * @code
- * cout << "This is the first pixel stored in the image " <<
- *      DIRECT_IMGPIXEL(I, 0, 0) << endl;
- * @endcode
- */
-#define DIRECT_IMGPIXEL(I, i, j) DIRECT_MAT_ELEM(((I).img), (i), (j))
-
 
 /** Xmipp 2D Images
  * @ingroup Images
@@ -768,13 +728,6 @@ public:
     ImageXmippT(const ImageXmippT< T >& I) : ImageT< T >(I)
     {
         header = I.header;
-    }
-
-    /** Get access to header.
-     */
-    headerXmipp& getHeader()
-    {
-        return header;
     }
 
     /** Empty image
@@ -1027,6 +980,13 @@ public:
         bool reversed = (force_reversed) ? !header.reversed() : header.reversed();
         header.write(fp, force_reversed);
         ImageT< T >::write(fp, reversed, IFLOAT);
+    }
+
+    /** Get access to header.
+     */
+    headerXmipp& getHeader()
+    {
+        return header;
     }
 
     /** Resets header
@@ -1382,7 +1342,7 @@ public:
      *
      * @code
      * IX.get_eulerAngles1(phi, theta, psi);
-     * @encode
+     * @endcode
      */
     template<typename T1>
     void get_eulerAngles1(T1& _Phi1, T1& _Theta1, T1& _Psi1) const
@@ -1459,7 +1419,7 @@ public:
         header.Phi() = _Phi;
     }
 
-    /** Get Ph
+    /** Get Phi
      *
      * @code
      * cout << "First Euler angle " << IX.Phi() << endl;
@@ -1588,7 +1548,7 @@ public:
 
     /** Set 2sd Rotational angle. First alternative phi angle
      *
-     * @endcode
+     * @code
      * IX.rot() = 30;
      * @endcode
      */
@@ -1962,6 +1922,11 @@ public:
     }
 };
 
+typedef ImageT< double > Image;
+typedef ImageXmippT< double > ImageXmipp;
+typedef ImageT< complex< double > > FourierImage;
+typedef ImageXmippT< complex< double > > FourierImageXmipp;
+
 /** True if the given volume is an Xmipp image
  */
 int Is_ImageXmipp(const FileName &fn, bool skip_type_check = false,
@@ -1978,12 +1943,6 @@ int Is_FourierImageXmipp(const FileName& fn, bool skip_type_check = false,
  */
 void GetXmippImageSize(const FileName& fn, int& Ydim, int& Xdim);
 
-
-typedef ImageT< double > Image;
-typedef ImageXmippT< double > ImageXmipp;
-typedef ImageT< complex< double > > FourierImage;
-typedef ImageXmippT< complex< double > > FourierImageXmipp;
-
 /** Converts a Xmipp Image (real numbers) into  a Fourier Xmipp Image
  * (complex numbers)
  */
@@ -1994,8 +1953,10 @@ void ImageXmipp_to_FourierImageXmipp(ImageXmipp& I, FourierImageXmipp& F);
  * A simple copy of real parts is done
  */
 void FourierImageXmipp_to_ImageXmipp(FourierImageXmipp& F, ImageXmipp& I);
+//@}
 
 /** Image stack.
+ * @ingroup Images
 */
 class ImageXmippStack {
 public:
@@ -2037,8 +1998,10 @@ public:
     /** Write as volume. */
     void writeAsVolume(const FileName& name="", bool force_reversed = false);
 };
+//@}
 
 /** Oversampled images
+ * @ingroup Images
  *
  * The oversampled images are images which allow a more accurate treatment of
  * information by oversampling all pixels. The idea of this class is to have an
@@ -2401,7 +2364,7 @@ public:
      * IO.down_sample(&I);
      * @endcode
      */
-    void downsample(Image* I) const;
+    void downsample(ImageT< double >* I) const;
 
     /** Generate an oversampled image from a normal one
      *
@@ -2416,9 +2379,13 @@ public:
      *
      * FIXME NOT IMPLEMENTED!!
      */
-    void oversample(Image *I) const;
+    void oversample(ImageT< double > *I) const;
 };
 
+/**@defgroup Imagic Imagic images
+ * @ingroup Images
+*/
+//@{
 /* Extensions for the Imagic header and image files
  */
 static const char* IMAGIC_HEADER_EXT = "hed";
@@ -2894,5 +2861,6 @@ bool ImagicWriteImagicFile(const FileName& hed_fname,
 // Specialized function to read images with complex numbers in them
 template<>
 bool ImageImagicT< complex< double > >::read(const FileName&);
+//@}
 
 #endif

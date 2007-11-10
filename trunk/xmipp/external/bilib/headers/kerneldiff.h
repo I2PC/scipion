@@ -1,4 +1,5 @@
-/**@name Kernel derivatives */
+/**@defgroup KernelDerivatives Kernel derivatives
+   @ingroup BilibLibrary */
 //@{
 /*--------------------------------------------------------------------------*/
 /** Computes a derivative of order Derivative for a Blu interpolant function.

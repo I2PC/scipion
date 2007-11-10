@@ -36,6 +36,10 @@
 #include <interface/cc_lattice_io.h>
 #include <data/del_triang.h>
 
+/**@defgroup ImUmbend im_unbend (Crystal unbending)
+   @ingroup ReconsLibraryPrograms
+*/
+//@{
 
 /////////////////////////// CONSTANTS //////////////////////////////////
 
@@ -349,8 +353,6 @@ static double B[] =
 
 /////////////////////////////// DATA TYPES //////////////////////////////
 
-/**@name ImUmbend */
-
 // Struct to store corelation peak related information
 typedef struct
 {
@@ -365,13 +367,10 @@ typedef struct
 }
 LatPoint;
 
-
-//@{
 // ImUmbend structure ----------------------------------------------------------
 /** ImUmbend class.
     ImUmbend unbends a 2D crystal image.
 */
-
 class ImUmbend
 {
 
@@ -460,9 +459,7 @@ public:
         ;
         return o;
     };
-
-//@}
 };
 
-
+//@}
 #endif

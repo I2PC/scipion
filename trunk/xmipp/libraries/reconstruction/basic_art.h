@@ -39,7 +39,8 @@
 
 struct Recons_info;
 
-/**@name Basic and common ART
+/**@defgroup BasicART Basic and common ART
+   @ingroup ReconsLibraryPrograms 
     The main difference between ART applied to different cases (single
     particles, crystals, ...) is the single step applied to each case.
     Most of the tasks in the ART are common to all ART processes. All
@@ -48,15 +49,14 @@ struct Recons_info;
     of an extra_parameter structure containing all the specific information
     for the ART process.
 
-    The user interface program should make a call to the \Ref{Basic_ROUT_Art}
+    The user interface program should make a call to the \ref Basic_ROUT_Art
     routine with the corresponding extra_parameter structure.
 */
 //@{
 /* ART parameters ---------------------------------------------------------- */
 /** ART basic parameters.
     This class contains all information needed about the ART process.
-    See \URL[Art]{../../../Applications/Src/Art/Help/art.html}
-    for more information. */
+    See the user guide for more information about the ART parameters. */
 class Basic_ART_Parameters
 {
 public:
@@ -64,7 +64,6 @@ public:
     typedef enum {ART, pCAV, pAVSP, pSART, pBiCAV, pSIRT, pfSIRT, SIRT } t_parallel_mode;
 
     /* User parameters ...................................................... */
-    /**@name User parameters */
     //@{
     /// Basis function. By default, blobs
     Basis basis;
@@ -249,14 +248,14 @@ public:
         \\TELL_SAVE_AT_EACH_STEP: At each step (an iteration is
            compound of several steps) the following files are
            written to disk
-           \begin{verbatim}
+           @code
               PPPdiff          --> Difference between theoretical and real projections
               PPPtheo          --> Theoretical projection
               PPPread          --> Real projection
               PPPcorr          --> Correction image applied
               PPPbasis.basis   --> Reconstructed volume in the used basis
               PPPvol.vol       --> Reconstructed volume in voxels
-           \end{verbatim}
+           @endcode
         \\TELL_SAVE_INTERMIDIATE: At each iteration a voxel (and possibly
            a basis volume (if the TELL_SAVE_BASIS flag is set) is stored with
            the names fn_root"it"it.vol and .basis (for instance,
@@ -272,7 +271,7 @@ public:
     //@}
 
     /* ART Side information ................................................. */
-    /**@name ART Side Information
+    /** ART Side Information
         The Side information is useful information that needn't be computed
         more than once at the beginning from the ART parameters and that
         is used all over the program. */
@@ -308,10 +307,10 @@ public:
         be for example (0,1.05,0)*grid_size. This is really useful for crystals.
         If you don't use it, set it to NULL.
         This matrix passes from a to aint, and from b to bint.
-        \begin{verbatim}
+        @code
         aint = Dinv*a; a=D*aint;
         bint = Dinv*b; b=D*bint;
-        \end{verbatim}
+        @endcode
         */
     Matrix2D<double> *D;
     /// Just the inverse of D
@@ -428,8 +427,6 @@ public:
 
 };
 
-/**@name Projection Sorting*/
-//@{
 /** Sort projections orthogonally.
    This function sorts a number of images given by numIMG, whose information
    about their Euler angles are in IMG_inf, into an ordered list which
@@ -454,14 +451,6 @@ void no_sort(int numIMG, Matrix1D<int> &ordered_list);
 /** Randomize the projections.
    This function sorts randomly a number of images given by numIMG. */
 void sort_randomly(int numIMG, Matrix1D<int> &ordered_list);
-//@}
-
-/**@name Template routines
-   The Template routines try to help you to write an ART process,
-   they go from writing the parameters used to provide the framework for
-   the ART process. There are some routines you should provide from
-   outside. Take \Ref{Plain ART} as an example. */
-//@{
 
 /** Write first part of ART history.
     This function writes all ART parameters, projection angles, symmetry
@@ -471,7 +460,7 @@ void sort_randomly(int numIMG, Matrix1D<int> &ordered_list);
     of the History.
 
     Basic_ART_Parameters is not constant since things are written in
-    \Ref{Basic_ART_Parameters::fh_hist}.*/
+    \ref Basic_ART_Parameters::fh_hist.*/
 template <class Extra_ART_Parameters>
 void Basic_ART_Init_history(Basic_ART_Parameters &prm,
                             const Extra_ART_Parameters &eprm, const GridVolume &vol_basis0);
@@ -490,7 +479,7 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
     If it is -1, the function is run in seuqential mode. If it is 0, then
     it is the root process.
 
-    See the \Ref{Basic_ART_Parameters} for more information
+    See the \ref Basic_ART_Parameters for more information
     about how to generate the iterations.
 */
 
@@ -510,13 +499,6 @@ void Basic_ROUT_Art(Basic_ART_Parameters &prm,
                     Extra_ART_Parameters &eprm, VolumeXmipp &vol_voxels,
                     GridVolume &vol_basis);
 
-//@}
-//@}
-
-/**@name Reconstruction Miscellanea */
-//@{
-/**@name Projection sorting */
-//@{
 /** Reconstruction information.
    This structure contains information for all projections which are
    going to participate in the reconstruction.
@@ -559,11 +541,8 @@ struct Recons_info
     to NULL when it is not initialized. */
 void build_recons_info(SelFile &selfile, SelFile &selctf, const FileName &fn_ctf,
                        const SymList &SL, Recons_info * &IMG_Inf, bool do_not_use_symproj);
-//@}
 
 /* ------------------------------------------------------------------------- */
-/**@name Variability analysis */
-//@{
 /** Variability structure */
 class VariabilityClass
 {
@@ -596,11 +575,8 @@ public:
     /** Finish analysis. */
     void finishAnalysis();
 };
-//@}
 
 /* ------------------------------------------------------------------------- */
-/**@name POCS */
-//@{
 /** POCS structure */
 class POCSClass
 {
@@ -641,8 +617,6 @@ public:
     /// Apply
     void apply(GridVolume &vol_basis, int it, int images);
 };
-//@}
-
 //@}
 
 #include "basic_art.inc"

@@ -31,13 +31,13 @@ class Crystal_Projection_Parameters;
 
 #include "project.h"
 
-/**@name Crystals
-*/
+/**@defgroup CrystalProject project_crystal (Project crystals)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /* Crystal Projection parameters ------------------------------------------- */
 /** Crystal Projecting parameters.
     This class reads a set of projection parameters in a file (see
-    \URL[Project]{../../../Applications/Src/Project/Help/project.html}
+    the user guide of the projection program
     for more information about the file structure) and extract the
     useful information from it. This class allows also to write in
     the same file format, for doing so you must first introduce the
@@ -45,12 +45,13 @@ class Crystal_Projection_Parameters;
     write.
 
     A crystal is supposed to have two lattice vectors: a and b as follows
-
+    @code
      ^ b
      |
      |
      |
      -----------> a
+    @endcode
 */
 class Crystal_Projection_Parameters
 {

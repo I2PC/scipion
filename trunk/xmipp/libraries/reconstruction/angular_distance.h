@@ -30,7 +30,8 @@
 
 #include "symmetries.h"
 
-/**@name Angular Distance */
+/**@defgroup AngularDistance angular_distance (Distance between two angular assignments)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /** Angular Distance parameters. */
 class Prog_angular_distance_prm

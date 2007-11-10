@@ -23,6 +23,9 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
+#ifndef _PROJECTION_MATCHING_CRYSTAL_H
+#define _PROJECTION_MATCHING_CRYSTAL_H
+
 #include <data/fft.h>
 #include <data/args.h>
 #include <data/funcs.h>
@@ -41,7 +44,8 @@
 #define FOR_ALL_DIRECTIONS() for (int dirno=0;dirno<nr_dir; dirno++)
 #define FOR_ALL_ROTATIONS() for (int ipsi=0; ipsi<nr_psi; ipsi++ )
 
-/**@name projection_matching_crystal */
+/**@defgroup projection_matching_crystal projection_matching_crystal (Discrete angular assignment for crystals)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /** projection_matching_crystal parameters. */
 class Prog_projection_matching_crystal_prm
@@ -130,3 +134,4 @@ public:
 
 };
 //@}
+#endif

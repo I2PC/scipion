@@ -30,7 +30,8 @@
 
 #include <iostream>
 
-/// @defgroup RotationalSpectrum Rotational spectrum.
+/// @defgroup RotationalSpectrum Rotational spectrum
+/// @ingroup DataLibrary
 
 /** Cylindrical_Wave_Decomposition class.
  * @ingroup RotationalSpectrum

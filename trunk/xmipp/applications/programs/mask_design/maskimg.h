@@ -43,8 +43,8 @@ public:
     */
 
     /** maskFigure constructor
-    *   @param _cx: X-coordinate
-    *   @param _cy: Y-coordinate
+    *   Parameter: _cx: X-coordinate
+    *   Parameter: _cy: Y-coordinate
     */
     maskFigure(QPaintDevice* _paintDevice, QPixmap* _pixmap, int _width, int _height):
             QPainter(_paintDevice), pixmap(_pixmap)
@@ -108,8 +108,8 @@ public:
     }
 
     /** Moves the figure
-    *   @param _cx: new X-coordinate
-    *   @param _cy: new Y-coordinate
+    *   Parameter: _cx: new X-coordinate
+    *   Parameter: _cy: new Y-coordinate
     */
     virtual bool move(int _cx, int _cy) = 0;
 
@@ -147,8 +147,8 @@ public:
 
 
     /** Resizes the figure
-    *   @param _width: new width
-    *   @param _height: new height
+    *   Parameter: _width: new width
+    *   Parameter: _height: new height
     */
     virtual void resize(int _width, int _height)
     {
@@ -171,14 +171,12 @@ public:
     };
 
     /** this method returns true if the point passed as parameter is inside teh figure (virtual method)
-    *   @param _cx: X xoordinate of the point to test
-    *   @param _cy: X xoordinate of the point to test
+    *   Parameter: _cx: X xoordinate of the point to test
+    *   Parameter: _cy: X xoordinate of the point to test
     */
     virtual bool isIn(int _cx, int _cy) = 0;
 
     /** This method prints the class parameters.
-        I wish I knew how to do this with \begin{verbatin}
-    friend ostream & operator << \end{verbatin}
     */
     virtual void print(float scalex = 1.0, float scaley = 1.0) = 0;
 
@@ -204,8 +202,8 @@ class maskEllipse: public maskFigure
 public:
 
     /** maskEllipse constructor
-    *   @param _cx: X-coordinate
-    *   @param _cy: Y-coordinate
+    *   Parameter: _cx: X-coordinate
+    *   Parameter: _cy: Y-coordinate
     */
     maskEllipse(QPaintDevice* _paintDevice, QPixmap* _pixmap, int _width, int _height): maskFigure(_paintDevice, _pixmap, _width, _height)
     {
@@ -219,10 +217,10 @@ public:
 
 
     /** maskEllipse constructor
-    *   @param _cx: X-coordinate
-    *   @param _cy: Y-coordinate
-    *   @param _xradius: radius of the ellipse
-    *   @param _yradius: radius of the ellipse
+    *   Parameter: _cx: X-coordinate
+    *   Parameter: _cy: Y-coordinate
+    *   Parameter: _xradius: radius of the ellipse
+    *   Parameter: _yradius: radius of the ellipse
     */
     maskEllipse(int _cx = 0, int _cy = 0, int _xradius = 1, int _yradius = 1): maskFigure(_cx, _cy), rxradius(_xradius), ryradius(_yradius)
 {};
@@ -262,8 +260,8 @@ public:
 
 
     /** Moves the figure
-    *   @param _cx: new X-coordinate
-    *   @param _cy: new Y-coordinate
+    *   Parameter: _cx: new X-coordinate
+    *   Parameter: _cy: new Y-coordinate
     */
     virtual bool move(int _cx, int _cy)
     {
@@ -426,8 +424,8 @@ public:
 
 
     /** Resizes the figure
-    *   @param _width: new width
-    *   @param _height: new height
+    *   Parameter: _width: new width
+    *   Parameter: _height: new height
     */
     virtual void resize(int _width, int _height)
     {
@@ -456,8 +454,8 @@ public:
 
 
     /** this method returns true if the point passed as parameter is inside the circle
-    *   @param _cx: X xoordinate of the point to test
-    *   @param _cy: X xoordinate of the point to test
+    *   Parameter: _cx: X xoordinate of the point to test
+    *   Parameter: _cy: X xoordinate of the point to test
     */
     virtual bool isIn(int _cx, int _cy)
     {
@@ -499,17 +497,17 @@ class maskCircle: public maskEllipse
 public:
 
     /** maskCircle constructor
-    *   @param _cx: X-coordinate
-    *   @param _cy: Y-coordinate
+    *   Parameter: _cx: X-coordinate
+    *   Parameter: _cy: Y-coordinate
     */
     maskCircle(QPaintDevice* _paintDevice, QPixmap* _pixmap, int _width, int _height): maskEllipse(_paintDevice, _pixmap, _width, _height)
     {};
 
 
     /** maskCircle constructor
-    *   @param _cx: X-coordinate
-    *   @param _cy: Y-coordinate
-    *   @param _radius: radius of the circle
+    *   Parameter: _cx: X-coordinate
+    *   Parameter: _cy: Y-coordinate
+    *   Parameter: _radius: radius of the circle
     */
     maskCircle(int _cx = 0, int _cy = 0, int _radius = 1): maskEllipse(_cx, _cy, _radius, _radius)
     {};
@@ -582,8 +580,8 @@ class maskRectangle: public maskFigure
 public:
 
     /** maskRectangle constructor
-    *   @param _cx: X-coordinate
-    *   @param _cy: Y-coordinate
+    *   Parameter: _cx: X-coordinate
+    *   Parameter: _cy: Y-coordinate
     */
     maskRectangle(QPaintDevice* _paintDevice, QPixmap* _pixmap, int _width, int _height): maskFigure(_paintDevice, _pixmap, _width, _height)
     {
@@ -597,10 +595,10 @@ public:
 
 
     /** maskRectangle constructor
-    *   @param _cx: X-coordinate
-    *   @param _cy: Y-coordinate
-    *   @param _rwidth: width of the rectangle
-    *   @param _rheight: height of the rectangle
+    *   Parameter: _cx: X-coordinate
+    *   Parameter: _cy: Y-coordinate
+    *   Parameter: _rwidth: width of the rectangle
+    *   Parameter: _rheight: height of the rectangle
     */
     maskRectangle(int _cx = 0, int _cy = 0, int _rwidth = 1, int _rheight = 1): maskFigure(_cx, _cy), rrwidth(_rwidth), rrheight(_rheight)
 {};
@@ -639,8 +637,8 @@ public:
     };
 
     /** Moves the figure
-    *   @param _cx: new X-coordinate
-    *   @param _cy: new Y-coordinate
+    *   Parameter: _cx: new X-coordinate
+    *   Parameter: _cy: new Y-coordinate
     */
     virtual bool move(int _cx, int _cy)
     {
@@ -802,8 +800,8 @@ public:
 
 
     /** Resizes the figure
-    *   @param _width: new width
-    *   @param _height: new height
+    *   Parameter: _width: new width
+    *   Parameter: _height: new height
     */
     virtual void resize(int _width, int _height)
     {
@@ -832,8 +830,8 @@ public:
 
 
     /** this method returns true if the point passed as parameter is inside the circle
-    *   @param _cx: X xoordinate of the point to test
-    *   @param _cy: X xoordinate of the point to test
+    *   Parameter: _cx: X xoordinate of the point to test
+    *   Parameter: _cy: X xoordinate of the point to test
     */
     virtual bool isIn(int _cx, int _cy)
     {
@@ -870,17 +868,17 @@ class maskSquare: public maskRectangle
 public:
 
     /** maskSquare constructor
-    *   @param _cx: X-coordinate
-    *   @param _cy: Y-coordinate
+    *   Parameter: _cx: X-coordinate
+    *   Parameter: _cy: Y-coordinate
     */
     maskSquare(QPaintDevice* _paintDevice, QPixmap* _pixmap, int _width, int _height): maskRectangle(_paintDevice, _pixmap, _width, _height)
     {};
 
 
     /** maskSquare constructor
-    *   @param _cx: X-coordinate
-    *   @param _cy: Y-coordinate
-    *   @param _width: width of the sqaure
+    *   Parameter: _cx: X-coordinate
+    *   Parameter: _cy: Y-coordinate
+    *   Parameter: _width: width of the sqaure
     */
     maskSquare(int _cx = 0, int _cy = 0, int _width = 1): maskRectangle(_cx, _cy, _width, _width)
     {};
@@ -950,8 +948,8 @@ class maskEllipRing: public maskEllipse
 public:
 
     /** maskEllipRing constructor
-    *   @param _cx: X-coordinate
-    *   @param _cy: Y-coordinate
+    *   Parameter: _cx: X-coordinate
+    *   Parameter: _cy: Y-coordinate
     */
     maskEllipRing(QPaintDevice* _paintDevice, QPixmap* _pixmap, int _width, int _height): maskEllipse(_paintDevice, _pixmap, _width, _height)
     {
@@ -961,10 +959,10 @@ public:
 
 
     /** maskEllipse constructor
-    *   @param _cx: X-coordinate
-    *   @param _cy: Y-coordinate
-    *   @param _xradius: radius of the ellipse
-    *   @param _yradius: radius of the ellipse
+    *   Parameter: _cx: X-coordinate
+    *   Parameter: _cy: Y-coordinate
+    *   Parameter: _xradius: radius of the ellipse
+    *   Parameter: _yradius: radius of the ellipse
     */
     maskEllipRing(int _cx = 0, int _cy = 0, int _xradius = 1, int _yradius = 1): maskEllipse(_cx, _cy, _xradius, _yradius)
     {
@@ -1118,8 +1116,8 @@ public:
 
 
     /** Resizes the figure
-    *   @param _width: new width
-    *   @param _height: new height
+    *   Parameter: _width: new width
+    *   Parameter: _height: new height
     */
     virtual void resize(int _width, int _height)
     {
@@ -1151,8 +1149,8 @@ public:
 
 
     /** this method returns true if the point passed as parameter is inside the circle
-    *   @param _cx: X xoordinate of the point to test
-    *   @param _cy: X xoordinate of the point to test
+    *   Parameter: _cx: X xoordinate of the point to test
+    *   Parameter: _cy: X xoordinate of the point to test
     */
     virtual bool isIn(int _cx, int _cy)
     {
@@ -1193,17 +1191,17 @@ class maskCircleRing: public maskEllipRing
 public:
 
     /** maskCircleRing constructor
-    *   @param _cx: X-coordinate
-    *   @param _cy: Y-coordinate
+    *   Parameter: _cx: X-coordinate
+    *   Parameter: _cy: Y-coordinate
     */
     maskCircleRing(QPaintDevice* _paintDevice, QPixmap* _pixmap, int _width, int _height): maskEllipRing(_paintDevice, _pixmap, _width, _height)
     {};
 
 
     /** maskCircleRing constructor
-    *   @param _cx: X-coordinate
-    *   @param _cy: Y-coordinate
-    *   @param _radius: outer radius of the circle
+    *   Parameter: _cx: X-coordinate
+    *   Parameter: _cy: Y-coordinate
+    *   Parameter: _radius: outer radius of the circle
     */
     maskCircleRing(int _cx = 0, int _cy = 0, int _radius = 1): maskEllipRing(_cx, _cy, _radius, _radius)
     {};
@@ -1268,8 +1266,8 @@ class maskRectFrame: public maskRectangle
 public:
 
     /** maskRectFrame constructor
-    *   @param _cx: X-coordinate
-    *   @param _cy: Y-coordinate
+    *   Parameter: _cx: X-coordinate
+    *   Parameter: _cy: Y-coordinate
     */
     maskRectFrame(QPaintDevice* _paintDevice, QPixmap* _pixmap, int _width, int _height): maskRectangle(_paintDevice, _pixmap, _width, _height)
     {
@@ -1279,10 +1277,10 @@ public:
 
 
     /** maskRectangle constructor
-    *   @param _cx: X-coordinate
-    *   @param _cy: Y-coordinate
-    *   @param _rwidth: width of the rectangle
-    *   @param _rheight: height of the rectangle
+    *   Parameter: _cx: X-coordinate
+    *   Parameter: _cy: Y-coordinate
+    *   Parameter: _rwidth: width of the rectangle
+    *   Parameter: _rheight: height of the rectangle
     */
     maskRectFrame(int _cx = 0, int _cy = 0, int _rwidth = 1, int _rheight = 1): maskRectangle(_cx, _cy, _rwidth, _rheight)
     {
@@ -1408,8 +1406,8 @@ public:
 
 
     /** Resizes the figure
-    *   @param _width: new width
-    *   @param _height: new height
+    *   Parameter: _width: new width
+    *   Parameter: _height: new height
     */
     virtual void resize(int _width, int _height)
     {
@@ -1441,8 +1439,8 @@ public:
 
 
     /** this method returns true if the point passed as parameter is inside the frame
-    *   @param _cx: X xoordinate of the point to test
-    *   @param _cy: X xoordinate of the point to test
+    *   Parameter: _cx: X xoordinate of the point to test
+    *   Parameter: _cy: X xoordinate of the point to test
     */
     virtual bool isIn(int _cx, int _cy)
     {
@@ -1481,18 +1479,18 @@ class maskSquFrame: public maskRectFrame
 public:
 
     /** maskSquFrame constructor
-    *   @param _cx: X-coordinate
-    *   @param _cy: Y-coordinate
+    *   Parameter: _cx: X-coordinate
+    *   Parameter: _cy: Y-coordinate
     */
     maskSquFrame(QPaintDevice* _paintDevice, QPixmap* _pixmap, int _width, int _height): maskRectFrame(_paintDevice, _pixmap, _width, _height)
     {};
 
 
     /** maskSquFrame constructor
-    *   @param _cx: X-coordinate
-    *   @param _cy: Y-coordinate
-    *   @param _rwidth: width of the rectangle
-    *   @param _rheight: height of the rectangle
+    *   Parameter: _cx: X-coordinate
+    *   Parameter: _cy: Y-coordinate
+    *   Parameter: _rwidth: width of the rectangle
+    *   Parameter: _rheight: height of the rectangle
     */
     maskSquFrame(int _cx = 0, int _cy = 0, int _rwidth = 1, int _rheight = 1): maskRectFrame(_cx, _cy, _rwidth, _rheight)
     {};
@@ -1547,8 +1545,8 @@ class maskPolygon: public maskFigure
 public:
 
     /** maskPolygon constructor
-    *   @param _cx: X-coordinate
-    *   @param _cy: Y-coordinate
+    *   Parameter: _cx: X-coordinate
+    *   Parameter: _cy: Y-coordinate
     */
     maskPolygon(QPaintDevice* _paintDevice, QPixmap* _pixmap, int _width, int _height): maskFigure(_paintDevice, _pixmap, _width, _height)
     {
@@ -1556,8 +1554,8 @@ public:
     };
 
     /** Moves the figure
-    *   @param _cx: new X-coordinate
-    *   @param _cy: new Y-coordinate
+    *   Parameter: _cx: new X-coordinate
+    *   Parameter: _cy: new Y-coordinate
     */
     virtual bool move(int _cx, int _cy)
     {
@@ -1738,8 +1736,8 @@ public:
     }
 
     /** Resizes the figure
-    *   @param _width: new width
-    *   @param _height: new height
+    *   Parameter: _width: new width
+    *   Parameter: _height: new height
     */
     virtual void resize(int _width, int _height)
     {
@@ -1779,8 +1777,8 @@ public:
     }
 
     /** this method returns true if the point passed as parameter is inside the circle
-    *   @param _cx: X xoordinate of the point to test
-    *   @param _cy: X xoordinate of the point to test
+    *   Parameter: _cx: X xoordinate of the point to test
+    *   Parameter: _cy: X xoordinate of the point to test
     */
     virtual bool isIn(int _cx, int _cy)
     {
@@ -1824,7 +1822,7 @@ class maskImg : public QWidget
     QPixmap pmScaled;  // the scaled pixmap
 public:
     maskImg(QWidget *parent = 0, const char *name = 0, int wFlags = 0);
-    maskImg(QWidget *parent = 0, Image *_image = 0, maskType _typeOfMask = CIRCLE, const char *name = 0, int wFlags = 0);
+    maskImg(QWidget *parent = 0, ImageT<double> *_image = 0, maskType _typeOfMask = CIRCLE, const char *name = 0, int wFlags = 0);
     maskImg(QWidget *parent = 0, QImage *_image = 0, maskType _typeOfMask = CIRCLE, const char *name = 0, int wFlags = 0);
     ~maskImg();
 
@@ -1862,7 +1860,7 @@ private:
     int         circle, rect, ellip, squ, ring, ellipring, rectframe,
     squframe, si, polygon; // Menu item ids
     void Init();
-    bool  xmipp2Qt(Image &_image);
+    bool  xmipp2Qt(ImageT<double> &_image);
     bool  Qt2xmipp(QImage _image);
     bool  showImage();
     void updateStatus();

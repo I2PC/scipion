@@ -29,7 +29,8 @@
 #include <data/image.h>
 #include <data/volume.h>
 
-/**@name Draw Surface program */
+/**@defgroup DrawSurface draw_surface (Draw a surface on a volume)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /* Surface Program Parameters ---------------------------------------------- */
 /** Parameter class for the project program */
@@ -50,13 +51,10 @@ public:
     /** Colouring density */
     float    color;
 
-    /**@name Side parameters */
-    //@{
     /// Volume where to draw
     VolumeXmipp vol;
     /// Surface
     ImageXmipp surface;
-    //@}
 public:
     /** Read from a command line.
         An exception might be thrown by any of the internal conversions,

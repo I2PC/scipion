@@ -36,12 +36,13 @@
 #include <data/matrix2d.h>
 #include <data/geometry.h>
 
-/**@name Correlation Lattice I/O */
+/**@defgroup ccLattice Correlation Lattice I/O
+   @ingroup InterfaceLibrary */
 //@{
 /** Correlation Lattice I/O.
     This is a class to read/write Corelation files as produced by the MRC's program
     quadserach.
-    \begin{verbatim}
+    @code
          1
          2
          3
@@ -58,7 +59,7 @@
      0.000     0.000            0.00
      0.000     0.000            0.00
      0.000     0.000            0.00
-    \end{verbatim}
+    @endcode
 
     Each line after the fifth gives de position of a correlation maxima
     */

@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _PROG_EULER_HH
-#  define _PROG_EULER_HH
+#define _PROG_EULER_HH
 
 #include <data/args.h>
 #include <data/docfile.h>
@@ -33,10 +33,11 @@
 #include <data/projection.h>
 #include <data/geometry.h>
 
-/**@name EULER-->Calculate de new tilt after volume
-compresion */
+/**@defgroup CrystalEuler Euler (Calculate new tilt after volume compresion)
+   @ingroup ReconsLibraryPrograms */
 //@{
 
+/** Compute the Euler angles in real space. */
 void ROUT_EULER(const double rot,
                 const double tilt,
                 const double psi,
@@ -45,11 +46,7 @@ void ROUT_EULER(const double rot,
                 const double d10,
                 const double d11);
 
-//@}
-/**@name EULER-->Calculate de new tilt after volume
-compresion in Fourier space*/
-//@{
-
+/** Compute the Euler angles in Fourier space. */
 void ROUT_EULER1(const double rot,
                  const double tilt,
                  const double psi,
@@ -57,6 +54,5 @@ void ROUT_EULER1(const double rot,
                  const double d01,
                  const double d10,
                  const double d11);
-
 //@}
 #endif

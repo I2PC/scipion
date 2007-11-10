@@ -1,4 +1,5 @@
-/**@name Polynomial */
+/**@defgroup BilibPolynomial Polynomial
+   @ingroup BilibLibrary */
 //@{
 /*--------------------------------------------------------------------------*/
 /** Differentiation of the polynomial p(x) = (a[0] + Sum a[k] x^k).

@@ -30,7 +30,8 @@
 #include "image.h"
 #include "volume.h"
 
-/// @defgroup RangeAdjust Adjust grey level range.
+/// @defgroup RangeAdjust Adjust grey level range of images and volumes
+/// @ingroup DataLibraryPrograms
 
 /** Parameter class for the project program.
  * @ingroup RangeAdjust

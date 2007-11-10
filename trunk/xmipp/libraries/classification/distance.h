@@ -39,10 +39,14 @@
 #include "data_types.h"
 #include "vector_ops.h"
 
+/**@defgroup Distances Distances
+   @ingroup ClassificationLibrary */
+//@{
+   
 /**
  * Euclidean distance.
- * @param _v1  First argument
- * @param _v2  Second argument
+ * Parameter: _v1  First argument
+ * Parameter: _v2  Second argument
  * @exception DifferentSize if _v1 and _v2  hasn't the same size
  */
 xmippFeature eDist(const xmippVector& _v1, const xmippVector& _v2);
@@ -51,16 +55,14 @@ xmippFeature eDist(const xmippVector& _v1, const xmippVector& _v2);
 
 /**
  * Manhattan distance.
- * @param _v1  First argument
- * @param _v2  Second argument
+ * Parameter: _v1  First argument
+ * Parameter: _v2  Second argument
  * @exception DifferentSize if _v1 and _v2  hasn't the same size
  */
 xmippFeature mDist(const xmippVector& _v1, const xmippVector& _v2);
 
 //-----------------------------------------------------------------------------
 
-/**@name Distance class*/
-//@{
 /**
  * This class defines an abstract interface for distances
  * Type T must have all arithmetic operations, specially - and conversion
@@ -78,12 +80,9 @@ public:
     virtual xmippFeature operator()(const xmippVector& _v1,
                                     const xmippVector& _v2) = 0;
 };
-//@}
 
 //-----------------------------------------------------------------------------
 
-/**@name Euclidean Distance*/
-//@{
 ///Euclidean distance class
 class xmippEDistance: public xmippDistance
 {
@@ -95,8 +94,8 @@ public:
 
     /**
      * Euclidean distance.
-     * @param _v1  First argument
-     * @param _v2  Second argument
+     * Parameter: _v1  First argument
+     * Parameter: _v2  Second argument
      * @exception DifferentSize if _v1 and _v2  hasn't the same size
      */
     xmippFeature operator()(const xmippVector& _v1, const xmippVector& _v2)
@@ -104,12 +103,9 @@ public:
         return eDist(_v1, _v2);
     }
 };
-//@}
 
 //-----------------------------------------------------------------------------
 
-/**@name Manhattan*/
-//@{
 ///Manhattan distance
 class xmippMDistance: public xmippDistance
 {
@@ -121,8 +117,8 @@ public:
 
     /**
      * Manhattan distance.
-     * @param _v1  First argument
-     * @param _v2  Second argument
+     * Parameter: _v1  First argument
+     * Parameter: _v2  Second argument
      * @exception DifferentSize if _v1 and _v2  hasn't the same size
      */
     xmippFeature operator()(const xmippVector& _v1, const xmippVector& _v2)
@@ -130,11 +126,7 @@ public:
         return mDist(_v1, _v2);
     }
 };
-//@}
 
-
-/**@name Norm class*/
-//@{
 /**
 * Norm: norm of a vector (euclidean distance to origin)
 *
@@ -145,7 +137,4 @@ public:
     xmippFeature operator()(const xmippVector& v);
 };
 //@}
-
-//-----------------------------------------------------------------------------
-
 #endif

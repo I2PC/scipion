@@ -14,8 +14,6 @@
 
 #include "matrix1d.h"
 
-// TODO Document everything
-
 #define stBest1Exp   0
 #define stRand1Exp   1
 #define stRandToBest1Exp 2
@@ -31,56 +29,105 @@ class DESolver;
 
 typedef void(DESolver::*StrategyFunction)(int);
 
+/** @defgroup DifferentialEvolution Differential Evolution Optimizer
+ *  @ingroup DataLibrary
+ *  For further information visit: http://www.icsi.berkeley.edu/~storn/code.html
+ */
+//@{
+
+/** Differential evolution class.
+  * Example of use:
+  * @code
+  * // Declaration of the optimizer
+  * class AlignmentSolver : public DESolver {
+  * public:
+  *    AlignmentSolver(int dim,int pop) : DESolver(dim,pop), count(0) {;}
+  *    double EnergyFunction(double trial[],bool &bAtSolution) {
+  *       double result=wrapper_fitness_individual(trial);
+  *       if (count++ % (5*nPop) == 0)
+  *           std::cout << "Evaluations= " << count/nPop
+  *                     << " energy= " << Energy()
+  * 	            << " axisRot= " << Solution()[0]
+  * 	            << " axisTilt= " << Solution()[1]
+  * 	            << " axisShiftX= " << Solution()[2]
+  * 	            << " axisShiftY= " << Solution()[3]
+  * 	            << " axisShiftZ= " << Solution()[4]
+  * 		    << std::endl;
+  *       bAtSolution=false;
+  *       return(result);
+  *    }
+  * private:
+  *    int count;
+  * };
+  *  
+  * // Optimizer use:
+  *        AlignmentSolver solver(length,length*Npop);
+  *        solver.Setup(MULTIDIM_ARRAY(min_allowed),
+  *                     MULTIDIM_ARRAY(max_allowed), stBest2Bin, 0.5, 0.8);
+  *        solver.Solve(NGenerations);
+  *        double current_energy=solver.Energy();
+  *        double* bestSolution=solver.Solution();
+  * @endcode
+  */  
 class DESolver
 {
 public:
+    /// Empty constructor
     DESolver(int dim, int popSize, double _pGrad = 0.0);
+    
+    /// Destructor
     ~DESolver(void);
 
-    // Setup() must be called before solve to set min, max, strategy etc.
-    void Setup(double min[],
-               double max[],
+    /// Setup() must be called before solve to set min, max, strategy etc.
+    void Setup(double *min,
+               double *max,
                int deStrategy,
                double diffScale,
                double crossoverProb);
 
-    // Solve() returns true if EnergyFunction() returns true.
-    // Otherwise it runs maxGenerations generations and returns false.
+    /** Solve() returns true if EnergyFunction() returns true.
+        Otherwise it runs maxGenerations generations and returns false.
+    */
     virtual bool Solve(int maxGenerations);
 
-    // EnergyFunction must be overridden for problem to solve
-    // testSolution[] is nDim array for a candidate solution
-    // setting bAtSolution = true indicates solution is found
-    // and Solve() immediately returns true.
+    /** EnergyFunction must be overridden for problem to solve
+        testSolution[] is nDim array for a candidate solution
+        setting bAtSolution = true indicates solution is found
+        and Solve() immediately returns true.
+    */
     virtual double EnergyFunction(double testSolution[], bool& bAtSolution) = 0;
 
+    /// Return dimension
     int Dimension(void)
     {
         return (nDim);
     }
 
+    /// Return population
     int Population(void)
     {
         return (nPop);
     }
 
-    // Call these functions after Solve() to get results.
+    /// Call these functions after Solve() to get results.
     double Energy(void)
     {
         return (bestEnergy);
     }
 
+    /// Return best solution
     double* Solution(void)
     {
         return (bestSolution);
     }
 
+    /// Return the number of generations
     int Generations(void)
     {
         return (generations);
     }
 
-    // Enable gradient
+    /// Enable gradient
     void enable_grad(double _pGrad)
     {
         pGrad = _pGrad;
@@ -129,6 +176,7 @@ private:
     void Rand2Bin(int candidate);
 
 };
+//@}
 
 double EnergyFunctionGrad(double*);
 

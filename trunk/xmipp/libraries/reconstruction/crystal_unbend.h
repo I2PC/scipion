@@ -35,6 +35,10 @@
 
 #include "im_unbend.h"
 
+/**Main routine for unbending
+   @ingroup ImUmbend
+*/
+//@{
 void ROUT_Umbend(ImUmbend& prm);
 
 #endif

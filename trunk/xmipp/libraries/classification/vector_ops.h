@@ -42,7 +42,8 @@
 
 using namespace std;
 
-/**@name Vector Operations*/
+/**@defgroup VectorOperations Vector Operations
+   @ingroup ClassificationLibrary */
 //@{
 
 /**
@@ -169,9 +170,9 @@ template<class T> vector<T>& operator/=(vector<T>& v1, const vector<T>& v2)
 
 /**
  * Returns a random initialized vector
- * @param _size   Size of vector
- * @param _lower  Lower value for random elements
- * @param _upper  Upper value for random elements
+ * Parameter: _size   Size of vector
+ * Parameter: _lower  Lower value for random elements
+ * Parameter: _upper  Upper value for random elements
  */
 template <class T>
 vector<T> randomVector(const unsigned& _size, const T& _lower,
@@ -188,8 +189,8 @@ vector<T> randomVector(const unsigned& _size, const T& _lower,
 
 /**
  * += operator. Ref Stroustrup, p 301.
- * @param _v1  First argument
- * @param _v2  Second argument
+ * Parameter: _v1  First argument
+ * Parameter: _v2  Second argument
  * @exception DifferentSize if _v1 and _v2  hasn't the same size
  */
 template <class T>
@@ -206,8 +207,8 @@ vector<T>& operator += (vector<T>& _v1, const vector<T>& _v2)
 
 /**
  * -= operator. Ref Stroustrup, p 301.
- * @param _v1  First argument
- * @param _v2  Second argument
+ * Parameter: _v1  First argument
+ * Parameter: _v2  Second argument
  * @exception DifferentSize if _v1 and _v2  hasn't the same size
  */
 template <class T>
@@ -224,8 +225,8 @@ vector<T>& operator -= (vector<T>& _v1, const vector<T>& _v2)
 
 /**
  * + operator. Ref Stroustrup, p 301.
- * @param _v1  First argument
- * @param _v2  Second argument
+ * Parameter: _v1  First argument
+ * Parameter: _v2  Second argument
  * @exception DifferentSize if _v1 and _v2  hasn't the same size
  */
 template <class T>
@@ -244,8 +245,8 @@ vector<T> operator + (const vector<T>& _v1, const vector<T>& _v2)
 
 /**
  * - operator. Ref Stroustrup, p 301.
- * @param _v1  First argument
- * @param _v2  Second argument
+ * Parameter: _v1  First argument
+ * Parameter: _v2  Second argument
  * @exception DifferentSize if _v1 and _v2  hasn't the same size
  */
 template <class T>
@@ -264,8 +265,8 @@ vector<T> operator - (const vector<T>& _v1, const vector<T>& _v2)
 
 /**
  * Dot product. Ref Stroustrup, p 301.
- * @param _v1  First argument
- * @param _v2  Second argument
+ * Parameter: _v1  First argument
+ * Parameter: _v2  Second argument
  * @exception DifferentSize if _v1 and _v2  hasn't the same size
  */
 template <class T>
@@ -284,8 +285,8 @@ T operator *(const vector<T>& _v1, const vector<T>& _v2)
 
 /**
  * Multiplies each element times _alpha. Ref Stroustrup, p 301.
- * @param _v      The container
- * @param _alpha  The element to be multiplied by each element in the container
+ * Parameter: _v      The container
+ * Parameter: _alpha  The element to be multiplied by each element in the container
  */
 template <class T>
 vector<T>& operator *= (vector<T>& _v, const T _alpha)
@@ -300,8 +301,8 @@ vector<T>& operator *= (vector<T>& _v, const T _alpha)
 
 /**
  * Divides each element by _alpha. Ref Stroustrup, p 301.
- * @param _v      The container
- * @param _alpha  The element to be multiplied by each element in the container
+ * Parameter: _v      The container
+ * Parameter: _alpha  The element to be multiplied by each element in the container
  */
 template <class T>
 vector<T>& operator /= (vector<T>& _v, const T _alpha)
@@ -315,8 +316,8 @@ vector<T>& operator /= (vector<T>& _v, const T _alpha)
 
 /**
  * Standard output for a vector<T>
- * @param _os The output stream
- * @param _v  The container to be printed
+ * Parameter: _os The output stream
+ * Parameter: _v  The container to be printed
  */
 template <class T>
 ostream& operator << (ostream& _os, const vector<T>& _v)
@@ -331,8 +332,8 @@ ostream& operator << (ostream& _os, const vector<T>& _v)
 
 /**
  * Standard input for a vector<T>
- * @param _is  The input stream
- * @param _v   The container to be read
+ * Parameter: _is  The input stream
+ * Parameter: _v   The container to be read
  * @exception  runtime_error  If there are problems reading the vector
  */
 template <class T>
@@ -376,8 +377,5 @@ istream& operator >> (istream& _is, vector<T>& _v)
     return _is;
 };
 //@}
-
-//-----------------------------------------------------------------------------
-
 #endif
 

@@ -22,6 +22,10 @@
  *  All comments concerning this program package may be sent to the    
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
+
+#ifndef _MLALIGN3D_H
+#define _MLALIGN3D_H
+
 #include <data/fft.h>
 #include <data/args.h>
 #include <data/funcs.h>
@@ -34,6 +38,9 @@
 #include <reconstruction/symmetrize.h>
 #include <vector>
 
+/**@defgroup MLalign3D ml_align3d (Maximum likelihood in 3D)
+   @ingroup ReconsLibraryPrograms */
+//@{
 typedef struct Wedgelist {int num; double th0; double thF;} wedgelist;
 
 #define FOR_ALL_MODELS() for (int refno=0;refno<nr_ref; refno++)
@@ -44,8 +51,6 @@ typedef struct Wedgelist {int num; double th0; double thF;} wedgelist;
 #define FOR_ALL_DEFOCUS_GROUPS() for (int ifocus=0; ifocus<nr_focus; ifocus++) 
 #define SIGNIFICANT_WEIGHT_LOW 1e-4
 
-/**@name MLalign3D */
-//@{
 /** MLalign3D parameters. */
 class Prog_MLalign3D_prm {
 public:
@@ -145,8 +150,8 @@ public:
 		     int &opt_refno, double &opt_rot, double &opt_tilt, double &opt_psi,
 		     double &opt_xoff, double &opt_yoff, double &opt_zoff);
 
-  /// Calculate weighted ML averages for new model and new model
-  /// parameters using real-space likelihood functions
+  /** Calculate weighted ML averages for new model and new model
+      parameters using real-space likelihood functions */
   void ML_integrate(Matrix3D<double> &Mimg, Matrix2D<double> &A_img, 
 		    vector<Matrix3D<double> > &wsum_Mimgs,
 		    vector<Matrix3D<double> > &wsum_Mwedge,
@@ -170,13 +175,13 @@ public:
 			 double &wsum_sigma_noise2, double &wsum_sigma_offset, 
 			 vector<double> &sumw, double &sumcorr, double &sumw_allrefs, int iter);
 
-  // Solvent flattening
+  /// Solvent flattening
   void solvent_flattening(FileName &fn_solvent);
 
-  // Planned misalignment
+  /// Planned misalignment
   void misalign(Matrix2D<double> &A_img, DocFile DFmis, FileName fn_img);
 
-  // Calculate symmetrized tomogram and its corresponding missing wedge
+  /// Calculate symmetrized tomogram and its corresponding missing wedge
   void symmetrize_tomogram(Matrix3D<double> &Min, Matrix3D<double> &Mout, 
 			   Matrix3D<double> &Mwedge, 
 			   SymList &SL, Matrix2D<double> A, 
@@ -190,3 +195,4 @@ public:
 
 };				    
 //@}
+#endif

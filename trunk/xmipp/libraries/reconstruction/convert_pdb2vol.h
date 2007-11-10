@@ -28,7 +28,8 @@
 #include "blobs.h"
 #include <interface/pdb.h>
 
-/**@name PDB Phantom program */
+/**@defgroup PDBPhantom convert_pdb2vol (PDB Phantom program)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /* PDB Phantom Program Parameters ------------------------------------------ */
 /** Parameter class for the PDB Phantom program */

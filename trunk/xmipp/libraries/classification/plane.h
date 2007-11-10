@@ -33,11 +33,12 @@
 
 #include "map.h"
 
+/**@defgroup Planes Planes
+   @ingroup ClassificationLibrary */
+//@{
 /// Alias for Plane Type (it uses a SOM map)
 typedef xmippMap planeType;
 
-/**@name Planes*/
-//@{
 /**
  * This class calculates the influence of each independent variable
  * in the SOM. It is used for visualizing the effect of each vector component on
@@ -56,15 +57,14 @@ public:
 
     /** getPlane: gets the "plane" (a map representing the effect of the
     *   given variable.
-    *   @param _in: input SOM
-    *   @param _out: output plane
-    *   @param _plane: variable
+    *   Parameter: _in: input SOM
+    *   Parameter: _out: output plane
+    *   Parameter: _plane: variable
     */
     void getPlane(const In& _in, Out& _out, const unsigned _plane) const;
 
 
 };
-
 //@}
 
 #endif//XMIPPPLANES_H

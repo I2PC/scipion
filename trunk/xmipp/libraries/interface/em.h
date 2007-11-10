@@ -24,6 +24,9 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
+#ifndef _EMFILES_H
+#define _EMFILES_H
+
 #include <data/funcs.h>
 #include <data/matrix3d.h>
 #include <data/geometry.h>
@@ -31,7 +34,8 @@
 
 #include <sys/stat.h>
 
-/**@name EM Files */
+/**@defgroup EMFiles EM Files
+   @ingroup InterfaceLibrary */
 //@{
 /** EM Files.
     This is a class to read/write EM-format volume files as produced
@@ -115,4 +119,4 @@ public:
 };
 
 //@}
-
+#endif

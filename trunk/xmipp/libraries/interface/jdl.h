@@ -34,7 +34,8 @@
 
 #include <vector>
 
-/**@name JDL Files */
+/**@defgroup JDLFiles JDL Files
+   @ingroup InterfaceLibrary */
 //@{
 /** JDL Files.
     This is a class to write Job Description Language files for the grid.

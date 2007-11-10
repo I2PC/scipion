@@ -50,19 +50,19 @@
 // FIXME remove this
 #include "multidim_friends.inc"
 
-// TODO Document
 template<class T>
 void applyGeometry(VT& V2, Matrix2D< double > A, const VT& V1, bool inv,
                 bool wrap);
 
-// TODO Document
 template<class T>
 void applyGeometryBSpline(VT& V2, Matrix2D< double > A, const VT& V1,
                         int Splinedegree, bool inv, bool wrap, T outside = 0);
 
-/// @defgroup Volumes Volumes.
+/// @defgroup Volumes Volumes
+/// @ingroup MultidimensionalArrays
 
-/** @defgroup VolumesSpeedUp Speed up macros.
+/** @defgroup Matrix3dSpeedUp Speed up macros
+ *  @ingroup Volumes
  *
  * This macros are defined to allow high speed in critical parts of your
  * program. They shouldn't be used systematically as usually there is no
@@ -75,7 +75,7 @@ void applyGeometryBSpline(VT& V2, Matrix2D< double > A, const VT& V1,
  */
 
 /** @defgroup VolumesSizeShape Size and shape
- * @ingroup VolumesSpeedUp
+ * @ingroup Matrix3dSpeedUp
  *
  * Although they are not defined here you can also use STARTINGX and FINISHINGX
  * (defined for Matrix1D), or STARTINGY and FINISHINGY (defined for Matrix2D)
@@ -238,8 +238,8 @@ void applyGeometryBSpline(VT& V2, Matrix2D< double > A, const VT& V1,
         for (int i=0; i<YSIZE(V); i++) \
             for (int j=0; j<XSIZE(V); j++)
 
-/** @defgroup VolumesMemory Memory access.
- * @ingroup VolumesSpeedUp
+/** @defgroup VolumesMemory Memory access
+ * @ingroup Matrix3dSpeedUp
  */
 
 /** Volume element: Logical access.
@@ -318,7 +318,7 @@ public:
     int zinit, yinit, xinit;
 
 
-    /** @defgroup VolumesConstructors
+    /** @defgroup VolumesConstructors Constructors
      * @ingroup Volumes
      */
 
@@ -387,7 +387,7 @@ public:
         core_deallocate();
     }
 
-    /** @defgroup VolumesInitialization Initialisation.
+    /** @defgroup VolumesInitialization Initialisation
      * @ingroup Volumes
      */
 
@@ -830,7 +830,7 @@ public:
         return SAME_SHAPE3D(*this, op);
     }
 
-    /** @defgroup VolumesMemory Memory access.
+    /** @defgroup VolumesMemory Memory access
      * @ingroup Volumes
      *
      * This functions allows you to access to the matrix elements.
@@ -1472,7 +1472,7 @@ public:
         *this = result;
     }
 
-    /** @defgroup VolumesGeometrical Geometrical Transformations.
+    /** @defgroup VolumesGeometrical Geometrical Transformations
      * @ingroup Volumes
      *
      * In all geometrical transformations a periodic extension of the volume
@@ -2120,78 +2120,6 @@ public:
             jmin = j;
         }
     }
-
-    /** @defgroup VolumesIterators Iterators
-     * @ingroup Volumes
-     */
-
-    /** Apply the same scalar function to all slices.
-     * @ingroup VolumesIterators
-     *
-     * This function must take a matrix and return a single value, a column
-     * vector with these values is returned.
-     *
-     * @code
-     * T matrix_sum(mT& m) { return m.sum(); }
-     * v1 = V.forAllSlices(&matrix_sum);
-     * @endcode
-     */
-    vT forAllSlices(T(*f)(mT&)) const
-    {
-        vT tmp;
-
-        if (ZSIZE(*this) == 0)
-        {
-            tmp.clear();
-            return tmp;
-        }
-
-        tmp.resize(ZSIZE(*this));
-        STARTINGX(tmp) = STARTINGZ(*this);
-
-        for (int k = STARTINGZ(*this); k <= FINISHINGZ(*this); k++)
-        {
-            mT aux;
-            getSlice(k, aux);
-            VEC_ELEM(tmp, k) = (*f)(aux);
-        }
-
-        return tmp;
-    }
-
-    /** Apply the same matricial function to all slices.
-     * @ingroup VolumesIterators
-     *
-     * This function must take a matrix and return another matrix (of the
-     * same shape as the input one), a new volume with these transformed
-     * matrices is returned.
-     *
-     * @code
-     * mT matrix_norm(mT& m) { return m/m.sum();  }
-     * V2 = V.forAllSlices(&matrix_norm);
-     * @endcode
-     */
-    VT forAllSlices(mT(*f)(mT&)) const
-    {
-        VT tmp;
-
-        if (xdim == 0)
-        {
-            tmp.clear();
-            return tmp;
-        }
-        tmp.copyShape(*this);
-
-        for (int k = STARTINGZ(*this); k <= FINISHINGZ(*this); k++)
-        {
-            mT aux;
-            getSlice(k, aux);
-            aux = (*f)(aux);
-            tmp.setSlice(k, aux);
-        }
-
-        return tmp;
-    }
 };
 
 #include "multidim_friends_implementation.h"
@@ -2358,15 +2286,15 @@ void radialAverage(const Matrix3D< T >& m,
 #undef maT
 #undef maT1
 
-// TODO Document
+/// Print shape
 template<typename T>
 void VT::printShape(std::ostream& out) const
 {
     out << "Size(Z,Y,X): " << ZSIZE(*this) << "x" << YSIZE(*this) << "x"
-    << XSIZE(*this)
-    << " k=[" << STARTINGZ(*this) << ".." << FINISHINGZ(*this) << "]"
-    << " i=[" << STARTINGY(*this) << ".." << FINISHINGY(*this) << "]"
-    << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
+        << XSIZE(*this)
+        << " k=[" << STARTINGZ(*this) << ".." << FINISHINGZ(*this) << "]"
+        << " i=[" << STARTINGY(*this) << ".." << FINISHINGY(*this) << "]"
+        << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
 }
 
 // TODO Document

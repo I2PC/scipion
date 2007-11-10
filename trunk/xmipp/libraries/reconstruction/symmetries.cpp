@@ -488,8 +488,8 @@ void SymList::compute_subgroup(double accuracy)
     }
 }
 /** Guess Crystallographic space group.
-    Return the  \URL[space group]{
-    http://www.cryst.ehu.es/cgi-bin/cryst/programs/nph-getgen} number. So
+    Return the group number
+    http://www.cryst.ehu.es/cgi-bin/cryst/programs/nph-getgen. So
     far it has only been implemented for P1 (1), P2_122 (17) ,
     P22_12,
     P4 (75), P4212 (90) and P6 (168) */

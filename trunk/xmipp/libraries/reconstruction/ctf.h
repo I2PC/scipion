@@ -30,12 +30,13 @@
 #include <data/selfile.h>
 #include <map>
 
-/**@name CTF Correction */
+/**@defgroup CTFSupport CTF support classes
+   @ingroup ReconsLibrary */
 //@{
 /** CTF class.
     Here goes how to compute the radial average of a parametric CTF:
 
-    \begin{verbatim}
+    @code
       #include <Reconstruction/CTF.hh>
 
       int main() {
@@ -60,12 +61,12 @@
   }
   return 0;
       }
-   \end{verbatim}
+   @endcode
 
    Here is another sample program for generating the CTF, the noise
    background, the envelope and the power spectrum density
 
-   \begin{verbatim}
+   @code
       #include <Reconstruction/CTF.hh>
       #include <XmippData/xmippFFT.hh>
 
@@ -130,7 +131,7 @@
          }
          return 0;
       }
-   \end{verbatim}
+   @endcode
 
 */
 class XmippCTF
@@ -476,7 +477,7 @@ public:
     name of the corresponding ctfparam file.
     
     Example of use:
-    \begin{verbatim}
+    @code
         CTFDat ctfdat;
 	ctfdat.read("ctfdat.txt");
 	ctfdat.goFirstLine();
@@ -493,7 +494,7 @@ public:
 	    ctfdat.nextLine();
 	}
 	progress_bar(ctfdat.lineNo());
-    \end{verbatim}
+    @endcode
 */
 class CTFDat {
 public:

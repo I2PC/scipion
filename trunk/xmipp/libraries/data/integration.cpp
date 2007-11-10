@@ -25,8 +25,39 @@
 
 #include "integration.h"
 
-#define JMAXP 30
-#define K 5
+/* Integrate --------------------------------------------------------------- */
+double integrateNewtonCotes(double(*f)(double),
+                            double a, double b, int N)
+{
+    if (N < 2 || N > 9)
+        REPORT_ERROR(1, "integrateNewtonCotes: N must be greater than 1");
+    double h = (b - a) / (N - 1);
+    Matrix1D<double> fx(N);
+    for (int i = 0; i < N; i++)
+        fx(i) = (*f)(a + i * h);
+    switch (N)
+    {
+    case 2:
+        return h / 2*(fx(0) + fx(1));
+    case 3:
+        return h / 3*(fx(0) + 4*fx(1) + fx(2));
+    case 4:
+        return h*3.0 / 8.0*((fx(0) + fx(3)) + 3*(fx(1) + fx(2)));
+    case 5:
+        return h*2.0 / 45.0*(7*(fx(0) + fx(4)) + 32*(fx(1) + fx(3)) + 12*fx(2));
+    case 6:
+        return h*5.0 / 288.0*(19*(fx(0) + fx(5)) + 75*(fx(1) + fx(4)) + 50*(fx(2) + fx(3)));
+    case 7:
+        return h / 140.0*(41*(fx(0) + fx(6)) + 216*(fx(1) + fx(5)) + 27*(fx(2) + fx(4)) +
+                          272*fx(3));
+    case 8:
+        return h*7.0 / 17280.0*(751*(fx(0) + fx(7)) + 3577*(fx(1) + fx(6)) + 1323*(fx(2) + fx(5)) +
+                                2989*(fx(3) + fx(4)));
+    case 9:
+        return 4.0 / 14175.0*h*(989*(fx(0) + fx(8)) + 5888*(fx(1) + fx(7)) +
+                                -928*(fx(2) + fx(6)) + 10496*(fx(3) + fx(5)) - 4540*fx(4));
+    }
+}
 
 //**********************************************************
 // Implementation of the integral using the Trapeze method
@@ -84,6 +115,8 @@ double Trapeze::Trap(int n)
 //**********************************************************
 // Implementation of the integral using the Romberg method
 //**********************************************************
+#define JMAXP 30
+#define K 5
 
 double Romberg::operator()()
 {  //adapted from qromb
@@ -139,75 +172,6 @@ double Romberg::midpnt(int n)
         return s;
     }
 }
-
-//*
-// The polint function is used in the Romberg::operator only
-//*
-double *my_vector(int nl, int nh);
-
-void polint(double xa[], double ya[], int n, double x, double &y, double &dy)
-{
-    int i, m, ns = 1;
-    double den, dif, dift, ho, hp, w;
-    double *c, *d;
-    dif = fabs(x - xa[1]);
-    c = my_vector(1, n);
-    d = my_vector(1, n);
-    for (i = 1;i <= n;i++)
-    {
-        if ((dift = fabs(x - xa[i])) < dif)
-        {
-            ns = i;
-            dif = dift;
-        }
-        c[i] = ya[i];
-        d[i] = ya[i];
-    }
-    y = ya[ns--];
-    for (m = 1;m < n;m++)
-    {
-        for (i = 1;i <= n - m;i++)
-        {
-            ho = xa[i] - x;
-            hp = xa[i+m] - x;
-            w = c[i+1] - d[i];
-            if ((den = ho - hp) == 0.0)
-            {
-                printf("error in routine polint\n");
-                exit(1);
-            }
-            den = w / den;
-            d[i] = hp * den;
-            c[i] = ho * den;
-        }
-        y += (dy = (2 * ns < (n - m) ? c[ns+1] : d[ns--]));
-    }
-    delete [] d; //replaces free_my_vector
-    delete [] c; //replaces free_my_vector
-}
-
-
-void error(const char *s)
-{
-    cerr << endl << s << endl; //1st "endl" is in case program is printing
-    cout << endl << s << endl; //something out when the error occurs
-    cout.flush(); //write the output buffer to the screen
-    //or wherever the output of cout goes.
-    abort();
-}
-
-#define NR_END 1
-
-double *my_vector(int nl, int nh)
-// allocate a double my_vector with subscript range v[nl .. nh]
-{
-    double *v;
-    v = new double[nh-nl+1+NR_END];
-    if (!v)
-        error("allocation failure in my_vector1()");
-    return v -nl + NR_END;
-}
-
 
 // Multidimensional integration --------------------------------------------
 #ifndef __INTEL_COMPILER

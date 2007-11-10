@@ -22,8 +22,8 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#ifndef _PROG_PDBPHANTOM_HH
-#define _PROG_PDBPHANTOM_HH
+#ifndef _PROG_ANGULAR_PROJECTION_MATCHING_PROJECT_HH
+#define _PROG_ANGULAR_PROJECTION_MATCHING_PROJECT_HH
 
 #include "sampling.h"
 #include <reconstruction/symmetries.h>
@@ -35,9 +35,10 @@
 #include <reconstruction/projection.h>
 #include <data/volume.h>
 #include <data/funcs.h>
-/**@name PDB Phantom program */
+/**defgroup AngularProjectionMatchingProject angular_projection_matching_project (Projection program for projection matching)
+   @ingroup ReconsLibraryPrograms */
 //@{
-/* PDB Phantom Program Parameters ------------------------------------------ */
+/* Prog_Angular_Projection_Matching_Project_Parameters --------------------- */
 /** Parameter class for the PDB Phantom program */
 class Prog_Angular_Projection_Matching_Project_Parameters
 {

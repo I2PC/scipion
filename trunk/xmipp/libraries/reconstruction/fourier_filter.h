@@ -32,12 +32,13 @@
 #include <data/fft.h>
 #include <data/mask.h>
 
-/**@name Fourier Masks */
+/**@defgroup FourierMasks Masks in Fourier space
+   @ingroup ReconsLibrary */
 //@{
 /** Filter class for Fourier space.
 
    Example of use for highpass filtering
-   \begin{verbatim}
+   @code
       ImageXmipp I("image.xmp");
       FourierMask Filter;
       Filter.FilterShape=RAISED_COSINE;
@@ -48,17 +49,17 @@
       Filter.generate_mask(I());
       Filter.apply_mask_Space(I());
       I.write("filtered_image.xmp");
-   \end{verbatim}
+   @endcode
 
    Example of use reading a mask from file
-   \begin{verbatim}
+   @code
       ImageXmipp I("image.xmp");
       I().setXmippOrigin();
       FourierMask Filter;
       Filter.read_mask("mask.fft");
       Filter.apply_mask_Space(I());
       I.write("filtered_image.xmp");
-   \end{verbatim}
+   @endcode
 */
 class FourierMask
 {

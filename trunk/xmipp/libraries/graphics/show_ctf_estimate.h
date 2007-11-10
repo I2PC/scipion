@@ -31,7 +31,8 @@
 
 #include <reconstruction/ctf_estimate_from_micrograph.h>
 
-/**@name Assign CTF Viewer*/
+/**@defgroup AssignCTFViewer Assign CTF Viewer
+   @ingroup GraphicsLibrary */
 //@{
 
 /** Assign CTF Viewer.

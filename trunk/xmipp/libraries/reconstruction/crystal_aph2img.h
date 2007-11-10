@@ -32,7 +32,8 @@
 #include <data/matrix1d.h>
 #include <interface/aph_origmerg.h>
 
-/**@name Spots <-->Real Space 2D program */
+/**@defgroup Spots2DrealSpace crystal_aph2img (Converts crystal spots to and from real space projections)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /* Spot-->Real Space Program Parameters ------------------------------------ */
 /** Spot --> Real Space parameters.

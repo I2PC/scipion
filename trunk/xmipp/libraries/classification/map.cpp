@@ -35,10 +35,10 @@
 
 /**
  * Constructs a SOM with initial code vectors filled with zero.
- * @param _layout  Type of layout
- * @param _width   Width of the output plane
- * @param _height  Height of the output plane
- * @param _size    Size of code vectors
+ * Parameter: _layout  Type of layout
+ * Parameter: _width   Width of the output plane
+ * Parameter: _height  Height of the output plane
+ * Parameter: _size    Size of code vectors
  */
 xmippMap::xmippMap(const string& _layout,  unsigned _width,
                    const unsigned& _height, const unsigned& _size)
@@ -61,12 +61,12 @@ xmippMap::xmippMap(const string& _layout,  unsigned _width,
 
 /**
  * Constructs a SOM with random initial code vectors
- * @param _layout  Type of layout
- * @param _width   Width of the output plane
- * @param _height  Height of the output plane
- * @param _size    Size of code vectors
- * @param _lower   Lower value for random elements
- * @param _upper   Upper value for random elements
+ * Parameter: _layout  Type of layout
+ * Parameter: _width   Width of the output plane
+ * Parameter: _height  Height of the output plane
+ * Parameter: _size    Size of code vectors
+ * Parameter: _lower   Lower value for random elements
+ * Parameter: _upper   Upper value for random elements
  */
 xmippMap::xmippMap(const string& _layout,  unsigned _width,
                    const unsigned& _height, const unsigned& _size, const double& _lower,
@@ -89,11 +89,11 @@ xmippMap::xmippMap(const string& _layout,  unsigned _width,
 /**
  * Constructs a SOM with initial code vectors taken randomly from
  * the training file.
- * @param _layout  Type of layout
- * @param _width   Width of the output plane
- * @param _height  Height of the output plane
- * @param _ts      Training set; will be used to get initial values
- * @param _use_rand_cvs  Use random code vector pixel values
+ * Parameter: _layout  Type of layout
+ * Parameter: _width   Width of the output plane
+ * Parameter: _height  Height of the output plane
+ * Parameter: _ts      Training set; will be used to get initial values
+ * Parameter: _use_rand_cvs  Use random code vector pixel values
  */
 /* Part of this code were developed by Lorenzo Zampighi and Nelson Tang
    of the department of Physiology of the David Geffen School of Medicine,
@@ -121,7 +121,7 @@ xmippMap::xmippMap(const string& _layout,  unsigned _width,
 
 /**
  * Construct a SOM from the code vectors in a stream
- * @param _is  The stream
+ * Parameter: _is  The stream
  * @exception  runtime_error  If there are problems with the stream
  */
 xmippMap::xmippMap(istream& _is, bool _cv) : xmippCB(false)
@@ -154,8 +154,8 @@ const string& xmippMap::layout() const
 
 /**
  * Returns the neighborhood of a neuron
- * @param _center  Reference to the center of neighborhood
- * @param _radius  Radius of neighbohood
+ * Parameter: _center  Reference to the center of neighborhood
+ * Parameter: _radius  Radius of neighbohood
  */
 vector<unsigned> xmippMap::neighborhood(const SomPos& _center, double _radius) const
 {
@@ -164,8 +164,8 @@ vector<unsigned> xmippMap::neighborhood(const SomPos& _center, double _radius) c
 
 /**
  * Returns the distance between two neurons according to the Layout
- * @param _center  Reference to the center of neighborhood
- * @param _v       Position of the code vector
+ * Parameter: _center  Reference to the center of neighborhood
+ * Parameter: _v       Position of the code vector
  */
 double xmippMap::neighDist(const SomPos& _center, const SomPos& _v) const
 {
@@ -191,7 +191,7 @@ unsigned xmippMap::height() const
 
 /**
  * Returns a code vector given its position
- * @param _pos  The position of the code vector
+ * Parameter: _pos  The position of the code vector
  * @exception out_of _range   If _pos is out of range
  */
 SomIn& xmippMap::itemAtPos(const SomPos& _pos)
@@ -210,7 +210,7 @@ SomIn& xmippMap::itemAtPos(const SomPos& _pos)
 
 /**
  * Returns a const reference to a code vector given its position
- * @param _pos  The position of the code vector
+ * Parameter: _pos  The position of the code vector
  * @exception out_of _range   If _pos is out of range
  */
 const SomIn& xmippMap::itemAtPos(const SomPos& _pos) const
@@ -228,7 +228,7 @@ const SomIn& xmippMap::itemAtPos(const SomPos& _pos) const
 
 /**
  * Returns the target of a code vector given its position
- * @param _pos  The position of the code vector
+ * Parameter: _pos  The position of the code vector
  */
 xmippLabel& xmippMap::targetAtPos(const SomPos& _pos)
 {
@@ -253,7 +253,7 @@ xmippLabel& xmippMap::targetAtPos(const SomPos& _pos)
 
 /**
  * Returns a const target of a code vector given its position
- * @param _pos  The position of the code vector
+ * Parameter: _pos  The position of the code vector
  */
 const xmippLabel& xmippMap::targetAtPos(const SomPos& _pos) const
 {
@@ -292,7 +292,7 @@ void xmippMap::clear()
 
 /**
  * Return the position associated to an index
- * @param _i  Index of the code vector
+ * Parameter: _i  Index of the code vector
  * @exception out_of _range   If _i is out of range
  */
 SomPos xmippMap::indexToPos(const unsigned& _i) const
@@ -310,7 +310,7 @@ SomPos xmippMap::indexToPos(const unsigned& _i) const
 
 /**
  * Return the index associated to a position
- * @param _pos  Position of the code vector
+ * Parameter: _pos  Position of the code vector
  * @exception out_of _range   If _i is out of range
  */
 unsigned xmippMap::PosToIndex(const SomPos& _pos) const
@@ -328,7 +328,7 @@ unsigned xmippMap::PosToIndex(const SomPos& _pos) const
 
 /**
  * Returns the position in the som of a code vector
- * @param _v  Reference to the code vector
+ * Parameter: _v  Reference to the code vector
  */
 SomPos xmippMap::codVecPos(SomIn& _v)
 {
@@ -338,7 +338,7 @@ SomPos xmippMap::codVecPos(SomIn& _v)
 /**
  * Returns the position of the code vector that represents the input in the
  * som
- * @param _in  Sample to classify
+ * Parameter: _in  Sample to classify
  */
 SomPos xmippMap::applyPos(const SomIn& _in)
 {
@@ -348,7 +348,7 @@ SomPos xmippMap::applyPos(const SomIn& _in)
 
 /**
  * Standard output for a SOM
- * @param _os The output stream
+ * Parameter: _os The output stream
  */
 void xmippMap::printSelf(ostream& _os) const
 {
@@ -360,7 +360,7 @@ void xmippMap::printSelf(ostream& _os) const
 
 /**
  * Standard input for a SOM
- * @param _is The input stream
+ * Parameter: _is The input stream
  */
 void xmippMap::readSelf(istream& _is)
 {
@@ -411,7 +411,7 @@ void xmippMap::readSelf(istream& _is)
 /**
  * Saves the xmippMap class into a stream.
  * this method can be used to save the status of the class.
- * @param _os The output stream
+ * Parameter: _os The output stream
  */
 void xmippMap::saveObject(ostream& _os) const
 {
@@ -424,7 +424,7 @@ void xmippMap::saveObject(ostream& _os) const
 /**
  * Loads the xmippMap class from a stream.
  * this method can be used to load the status of the class.
- * @param _is The output stream
+ * Parameter: _is The output stream
  */
 void xmippMap::loadObject(istream& _is)
 {
@@ -450,9 +450,9 @@ void xmippMap::loadObject(istream& _is)
 
 /**
  * Constructs a neighborhood
- * @param _som     The som
- * @param _center  Reference to the center of neighborhood
- * @param _radius  Radius of neighbohood
+ * Parameter: _som     The som
+ * Parameter: _center  Reference to the center of neighborhood
+ * Parameter: _radius  Radius of neighbohood
  */
 vector<unsigned> Layout::neighborhood(const xmippMap* _som, const SomPos& _center,
                                       double _radius) const
@@ -472,9 +472,9 @@ vector<unsigned> Layout::neighborhood(const xmippMap* _som, const SomPos& _cente
 
 /**
  * Constructs a neighborhood
- * @param _som     The Fuzzy Som
- * @param _center  Reference to the center of neighborhood
- * @param _radius  Radius of neighbohood
+ * Parameter: _som     The Fuzzy Som
+ * Parameter: _center  Reference to the center of neighborhood
+ * Parameter: _radius  Radius of neighbohood
  */
 vector<unsigned> Layout::neighborhood(const xmippFuzzyMap* _som, const SomPos& _center,
                                       double _radius) const
@@ -497,9 +497,9 @@ vector<unsigned> Layout::neighborhood(const xmippFuzzyMap* _som, const SomPos& _
 /**
  * Returns true if the vector in the given position is in the neighborhood
  * or false otherwise
- * @param _center  Position of the center of neighborhood
- * @param _v       Position of the code vector
- * @param _radius  Radius of neighbohood
+ * Parameter: _center  Position of the center of neighborhood
+ * Parameter: _v       Position of the code vector
+ * Parameter: _radius  Radius of neighbohood
  */
 bool Layout::isIn(const SomPos& _center, const SomPos& _v,
                   double _radius) const
@@ -522,8 +522,8 @@ const string& Layout::id() const
 
 /**
  * Returns the distance between two vectors in their given position
- * @param _center  Position of the center of neighborhood
- * @param _v       Position of the code vector
+ * Parameter: _center  Position of the center of neighborhood
+ * Parameter: _v       Position of the code vector
  */
 
 double RECTLayout::dist(const SomPos& _center, const SomPos& _v) const
@@ -535,8 +535,8 @@ double RECTLayout::dist(const SomPos& _center, const SomPos& _v) const
 /**
  * Returns the local average of a neuron in a non-const reference.
  *     (average of the sourounding vectors)
- * @param _center  Reference to the center of neighborhood
- * @param _aveVector: returns the average vector
+ * Parameter: _center  Reference to the center of neighborhood
+ * Parameter: _aveVector: returns the average vector
  */
 void RECTLayout::localAve(const xmippFuzzyMap* _som, const SomPos& _center, vector<double>& _aveVector) const
 {
@@ -581,7 +581,7 @@ void RECTLayout::localAve(const xmippFuzzyMap* _som, const SomPos& _center, vect
 
 /**
  * Returns the average number of intermediate neighbors.
- * @param _center  Reference to the center of neighborhood
+ * Parameter: _center  Reference to the center of neighborhood
  */
 double RECTLayout::numNeig(const xmippFuzzyMap* _som, const SomPos& _center) const
 {
@@ -614,8 +614,8 @@ double RECTLayout::numNeig(const xmippFuzzyMap* _som, const SomPos& _center) con
 
 /**
  * Returns the distance between two vectors in their given position
- * @param _center  Position of the center of neighborhood
- * @param _v       Position of the code vector
+ * Parameter: _center  Position of the center of neighborhood
+ * Parameter: _v       Position of the code vector
  */
 
 double HEXALayout::dist(const SomPos& _center, const SomPos& _v) const
@@ -645,8 +645,8 @@ double HEXALayout::dist(const SomPos& _center, const SomPos& _v) const
 /**
  * Returns the local average of a neuron in a non-const reference.
  *     (average of the sourounding vectors)
- * @param _center  Reference to the center of neighborhood
- * @param _aveVector: returns the average vector
+ * Parameter: _center  Reference to the center of neighborhood
+ * Parameter: _aveVector: returns the average vector
  */
 void HEXALayout::localAve(const xmippFuzzyMap* _som, const SomPos& _center, vector<double>& _aveVector) const
 {
@@ -706,7 +706,7 @@ void HEXALayout::localAve(const xmippFuzzyMap* _som, const SomPos& _center, vect
 
 /**
  * Returns the average number of intermediate neighbors.
- * @param _center  Reference to the center of neighborhood
+ * Parameter: _center  Reference to the center of neighborhood
  */
 double HEXALayout::numNeig(const xmippFuzzyMap* _som, const SomPos& _center) const
 {
@@ -749,12 +749,12 @@ double HEXALayout::numNeig(const xmippFuzzyMap* _som, const SomPos& _center) con
 
 /**
  * Constructs a Fuzzy SOM with random initial code vectors
- * @param _layout  Type of layout
- * @param _width   Width of the output plane
- * @param _height  Height of the output plane
- * @param _size    Size of code vectors
- * @param _lower   Lower value for random elements
- * @param _upper   Upper value for random elements
+ * Parameter: _layout  Type of layout
+ * Parameter: _width   Width of the output plane
+ * Parameter: _height  Height of the output plane
+ * Parameter: _size    Size of code vectors
+ * Parameter: _lower   Lower value for random elements
+ * Parameter: _upper   Upper value for random elements
  */
 xmippFuzzyMap::xmippFuzzyMap(const string& _layout,  unsigned _width,
                              const unsigned& _height, const unsigned& _size, const double& _lower,
@@ -776,11 +776,11 @@ xmippFuzzyMap::xmippFuzzyMap(const string& _layout,  unsigned _width,
 /**
  * Constructs a Fuzzy SOM with initial code vectors taken randomly from
  * the training file.
- * @param _layout  Type of layout
- * @param _width   Width of the output plane
- * @param _height  Height of the output plane
- * @param _ts      Training set; will be used to get initial values
- * @param _use_rand_cvs  Use random code vector pixel values
+ * Parameter: _layout  Type of layout
+ * Parameter: _width   Width of the output plane
+ * Parameter: _height  Height of the output plane
+ * Parameter: _ts      Training set; will be used to get initial values
+ * Parameter: _use_rand_cvs  Use random code vector pixel values
  */
 /* Part of this code were developed by Lorenzo Zampighi and Nelson Tang
    of the department of Physiology of the David Geffen School of Medicine,
@@ -805,8 +805,8 @@ xmippFuzzyMap::xmippFuzzyMap(const string& _layout,  unsigned _width,
 
 /**
  * Construct a SOM from the code vectors in a stream
- * @param _is  The stream
- * @param _size Size of code vectors (number of data points)
+ * Parameter: _is  The stream
+ * Parameter: _size Size of code vectors (number of data points)
  * @exception  runtime_error  If there are problems with the stream
  */
 xmippFuzzyMap::xmippFuzzyMap(istream& _is, const unsigned _size, bool _cv) : xmippFCB(false)
@@ -839,8 +839,8 @@ const string& xmippFuzzyMap::layout() const
 
 /**
  * Returns the neighborhood of a neuron
- * @param _center  Reference to the center of neighborhood
- * @param _radius  Radius of neighbohood
+ * Parameter: _center  Reference to the center of neighborhood
+ * Parameter: _radius  Radius of neighbohood
  */
 vector<unsigned> xmippFuzzyMap::neighborhood(const SomPos& _center, double _radius) const
 {
@@ -849,8 +849,8 @@ vector<unsigned> xmippFuzzyMap::neighborhood(const SomPos& _center, double _radi
 
 /**
  * Returns the neighborhood of a neuron in a non-const reference.
- * @param _center  Reference to the center of neighborhood
- * @param _radius  Radius of neighbohood
+ * Parameter: _center  Reference to the center of neighborhood
+ * Parameter: _radius  Radius of neighbohood
  */
 void xmippFuzzyMap::neighborhood(const SomPos& _center, double _radius, vector<unsigned>& _neig) const
 {
@@ -860,8 +860,8 @@ void xmippFuzzyMap::neighborhood(const SomPos& _center, double _radius, vector<u
 /**
  * Returns the local average of a neuron in a non-const reference.
  *     (average of the sourounding vectors)
- * @param _center  Reference to the center of neighborhood
- * @param _aveVector: returns the average vector
+ * Parameter: _center  Reference to the center of neighborhood
+ * Parameter: _aveVector: returns the average vector
  */
 void xmippFuzzyMap::localAve(const SomPos& _center, vector<double>& _aveVector) const
 {
@@ -871,8 +871,8 @@ void xmippFuzzyMap::localAve(const SomPos& _center, vector<double>& _aveVector) 
 
 /**
  * Returns the distance between two neurons according to the Layout
- * @param _center  Reference to the center of neighborhood
- * @param _v       Position of the code vector
+ * Parameter: _center  Reference to the center of neighborhood
+ * Parameter: _v       Position of the code vector
  */
 double xmippFuzzyMap::neighDist(const SomPos& _center, const SomPos& _v) const
 {
@@ -898,7 +898,7 @@ unsigned xmippFuzzyMap::height() const
 
 /**
  * Returns a code vector given its position
- * @param _pos  The position of the code vector
+ * Parameter: _pos  The position of the code vector
  * @exception out_of _range   If _pos is out of range
  */
 SomIn& xmippFuzzyMap::itemAtPos(const SomPos& _pos)
@@ -916,7 +916,7 @@ SomIn& xmippFuzzyMap::itemAtPos(const SomPos& _pos)
 
 /**
  * Returns a const reference to a code vector given its position
- * @param _pos  The position of the code vector
+ * Parameter: _pos  The position of the code vector
  * @exception out_of _range   If _pos is out of range
  */
 const SomIn& xmippFuzzyMap::itemAtPos(const SomPos& _pos) const
@@ -934,7 +934,7 @@ const SomIn& xmippFuzzyMap::itemAtPos(const SomPos& _pos) const
 
 /**
  * Returns the target of a code vector given its position
- * @param _pos  The position of the code vector
+ * Parameter: _pos  The position of the code vector
  */
 xmippLabel& xmippFuzzyMap::targetAtPos(const SomPos& _pos)
 {
@@ -959,7 +959,7 @@ xmippLabel& xmippFuzzyMap::targetAtPos(const SomPos& _pos)
 
 /**
  * Returns a const target of a code vector given its position
- * @param _pos  The position of the code vector
+ * Parameter: _pos  The position of the code vector
  */
 const xmippLabel& xmippFuzzyMap::targetAtPos(const SomPos& _pos) const
 {
@@ -997,7 +997,7 @@ void xmippFuzzyMap::clear()
 
 /**
  * Return the position associated to an index
- * @param _i  Index of the code vector
+ * Parameter: _i  Index of the code vector
  * @exception out_of _range   If _i is out of range
  */
 SomPos xmippFuzzyMap::indexToPos(const unsigned& _i) const
@@ -1016,7 +1016,7 @@ SomPos xmippFuzzyMap::indexToPos(const unsigned& _i) const
 
 /**
  * Return the index associated to a position
- * @param _pos  Position of the code vector
+ * Parameter: _pos  Position of the code vector
  * @exception out_of _range   If _i is out of range
  */
 unsigned xmippFuzzyMap::PosToIndex(const SomPos& _pos) const
@@ -1034,7 +1034,7 @@ unsigned xmippFuzzyMap::PosToIndex(const SomPos& _pos) const
 
 /**
  * Returns the position in the som of a code vector
- * @param _v  Reference to the code vector
+ * Parameter: _v  Reference to the code vector
  */
 SomPos xmippFuzzyMap::codVecPos(SomIn& _v)
 {
@@ -1044,7 +1044,7 @@ SomPos xmippFuzzyMap::codVecPos(SomIn& _v)
 /**
  * Returns the position of the code vector that represents the input in the
  * som
- * @param _in  Sample to classify (index to the sample)
+ * Parameter: _in  Sample to classify (index to the sample)
  */
 SomPos xmippFuzzyMap::applyPos(const unsigned& _in)
 {
@@ -1054,7 +1054,7 @@ SomPos xmippFuzzyMap::applyPos(const unsigned& _in)
 
 /**
  * Standard output for a Fuzzy SOM
- * @param _os The output stream
+ * Parameter: _os The output stream
  */
 void xmippFuzzyMap::printSelf(ostream& _os) const
 {
@@ -1066,7 +1066,7 @@ void xmippFuzzyMap::printSelf(ostream& _os) const
 
 /**
  * Standard input for a Fuzzy SOM
- * @param _is The input stream
+ * Parameter: _is The input stream
  */
 void xmippFuzzyMap::readSelf(istream& _is, const unsigned _size)
 {
@@ -1101,7 +1101,7 @@ void xmippFuzzyMap::readSelf(istream& _is, const unsigned _size)
 /**
  * Saves the xmippFuzzyMap class into a stream.
  * this method can be used to save the status of the class.
- * @param _os The output stream
+ * Parameter: _os The output stream
  */
 void xmippFuzzyMap::saveObject(ostream& _os) const
 {
@@ -1115,7 +1115,7 @@ void xmippFuzzyMap::saveObject(ostream& _os) const
 /**
  * Loads the xmippFuzzyMap class from a stream.
  * this method can be used to load the status of the class.
- * @param _is The output stream
+ * Parameter: _is The output stream
  */
 void xmippFuzzyMap::loadObject(istream& _is)
 {

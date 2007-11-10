@@ -1,4 +1,5 @@
-/**@name Histograms */
+/**@defgroup BilibHistograms Histograms
+   @ingroup BilibLibrary */
 //@{
 /*--------------------------------------------------------------------------*/
 /** Build histogram.
@@ -24,45 +25,46 @@ extern int  HistogramBuild
 
 /*--------------------------------------------------------------------------*/
 /** Equalize histogram.
-    Construction of the lookup table: Value[k] <-> EqualizedValue[k].
-    EqualizedValue[] satisfies:
-    \begin{verbatim}
-       sum(k in K(n0)) Frequency[k] ~=~ sum(k in K(n1)) Frequency[k]
-       for all n0, n1 in [0L, NumberOfClasses - 1L]
-    \end{verbatim}
-    where ~=~ means "is about equal to", and where K(n) is a domain such that
-    \begin{verbatim}
-       EqualizedValue[k0] = (sum(k1 in K(n)) Frequency[k1] * Value[k1])
-          / (sum(k2 in K(n)) Frequency[k2])
-       for all k0 in K(n)
-    \end{verbatim}
-    under the constraint
-    \begin{verbatim}
-       DistinctElements(QuantizedValue[]) == NumberOfClasses
-    \end{verbatim}
-
-    Frequency[] is a (double)array of length HistogramLength.
-    The content of Frequency[] must be strictly positive.
-    The content of Frequency[] must have unit sum.
-    Value[] is a (float)array of length HistogramLength.
-    The content of Value[] must be sorted in strictly ascending order.
-    EqualizedValue[] is a returned (float)array of length HistogramLength.
-
-    On input, NumberOfClasses indicates the desired number of classes.
-    On output, NumberOfClasses returns the effective number of classes.
-    NumberOfClasses is no greater than (1.0 / max(Frequency[])), and never
-    increases.
-
-    It may happen that the only solution that satisfies all constraints is
-    undesirable
-    e.g., Frequency[] = {0.9, 0.1};
-          Value[] = {10.0F, 90.0F};
-          NumberOfClasses = 2L; (desired)
-    results in
-          QuantizedValues[] = {18.0F, 18.0F};
-          NumberOfClasses = 1L; (actual)
-
-    success: return(!ERROR); failure: return(ERROR) */
+  * Construction of the lookup table: Value[k] <-> EqualizedValue[k].
+  * EqualizedValue[] satisfies:
+  * @code
+  *    sum(k in K(n0)) Frequency[k] ~=~ sum(k in K(n1)) Frequency[k]
+  *    for all n0, n1 in [0L, NumberOfClasses - 1L]
+  * @endcode
+  * where ~=~ means "is about equal to", and where K(n) is a domain such that
+  * @code
+  *     EqualizedValue[k0] = (sum(k1 in K(n)) Frequency[k1] * Value[k1])
+  *        / (sum(k2 in K(n)) Frequency[k2])
+  *     for all k0 in K(n)
+  * @endcode
+  * under the constraint
+  * @code
+  *    DistinctElements(QuantizedValue[]) == NumberOfClasses
+  * @endcode
+  *
+  * Frequency[] is a (double)array of length HistogramLength.
+  * The content of Frequency[] must be strictly positive.
+  * The content of Frequency[] must have unit sum.
+  * Value[] is a (float)array of length HistogramLength.
+  * The content of Value[] must be sorted in strictly ascending order.
+  * EqualizedValue[] is a returned (float)array of length HistogramLength.
+  *
+  * On input, NumberOfClasses indicates the desired number of classes.
+  * On output, NumberOfClasses returns the effective number of classes.
+  * NumberOfClasses is no greater than (1.0 / max(Frequency[])), and never
+  * increases.
+  *
+  * It may happen that the only solution that satisfies all constraints is
+  * undesirable
+  * e.g., Frequency[] = {0.9, 0.1};
+  *       Value[] = {10.0F, 90.0F};
+  *       NumberOfClasses = 2L; (desired)
+  * results in
+  *       QuantizedValues[] = {18.0F, 18.0F};
+  *       NumberOfClasses = 1L; (actual)
+  *
+  * success: return(!ERROR); failure: return(ERROR)
+*/
 extern int  HistogramEqualize
     (
         double Frequency[],  /* histogram ordinates */

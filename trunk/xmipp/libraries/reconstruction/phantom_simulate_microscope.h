@@ -23,13 +23,14 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _PROG_MICROSCOPE_HH
-#  define _PROG_MICROSCOPE_HH
+#define _PROG_MICROSCOPE_HH
 
 #include "fourier_filter.h"
 
 #include <data/progs.h>
 
-/**@name Microscope program */
+/**@defgroup MicroscopeProgram phantom_simulate_microscope (Microscope simulation)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /* Microscope Program Parameters ------------------------------------------- */
 /** Parameter class for the project program */

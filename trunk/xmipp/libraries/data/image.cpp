@@ -267,7 +267,7 @@ void ImageOver::clear()
 }
 
 // Generate the normal image by averaging ----------------------------------
-void ImageOver::downsample(Image *I) const
+void ImageOver::downsample(ImageT< double > *I) const
 {
     IMGMATRIX(*I).resize(overvmax - overvmin + 1, overumax - overumin + 1);
     for (int i = overvmin; i <= overvmax; i++)
@@ -284,7 +284,7 @@ void ImageOver::downsample(Image *I) const
 }
 
 // Generate the oversample image by interpolation --------------------------
-void ImageOver::oversample(Image *I) const
+void ImageOver::oversample(ImageT < double > *I) const
     {}
 
 /****************************************************************************/

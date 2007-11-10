@@ -32,6 +32,10 @@
 #include "macros.h"
 #include "error.h"
 
+//@defgroup NumericalRecipes Functions from the Numerical Recipes
+//@ingroup DataLibrary
+//@{
+
 // Utilities --------------------------------------------------------------
 void nrerror(char error_text[]);
 
@@ -299,4 +303,8 @@ void gaussj(T *a, int n, T *b, int m)
 void choldc(double *a, int n, double *p);
 // Cholesky backsubstitution
 void cholsl(double *a, int n, double *p, double *b, double *x);
+// Polynomial interpolation
+void polint(double *xa, double *ya, int n, double x, double &y, double &dy);
+//@}
+
 #endif

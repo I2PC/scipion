@@ -45,7 +45,8 @@
 #include <iostream>
 #include <list>
 
-/**@name Show Tables*/
+/**@defgroup ShowTables Show Tables
+   @ingroup GraphicsLibrary */
 //@{
 /** Class to show tables.
     This is a general class that is inherited by real show classes

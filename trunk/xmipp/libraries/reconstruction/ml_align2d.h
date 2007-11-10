@@ -23,6 +23,9 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
+#ifndef _MLALIGN3D_H
+#define _MLALIGN3D_H
+
 #include <data/fft.h>
 #include <data/args.h>
 #include <data/funcs.h>
@@ -46,7 +49,8 @@
 #define SMALLVALUE 1e-4
 #define SMALLANGLE 1.75
 
-/**@name MLalign2D */
+/**@defgroup MLalign2D ml_align2d (Maximum likelihood in 2D)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /** MLalign2D parameters. */
 class Prog_MLalign2D_prm
@@ -114,7 +118,7 @@ public:
     /** vector for flipping (i.e. 90/180-degree rotations) matrices */
     vector<Matrix2D<double> > F;
     /** Vector for images to hold references (new & old) */
-    vector <ImageXmipp> Iref, Iold, Ictf;
+    vector < ImageXmippT<double> > Iref, Iold, Ictf;
     /** Matrices for calculating PDF of (in-plane) translations */
     Matrix2D<double> P_phi, Mr2;
     /** Fast mode */
@@ -188,9 +192,10 @@ public:
     /** Include all frequencies in the refinement */
     bool do_include_allfreqs;
 
-    /// IN DEVELOPMENT
-    /// Deterministic annealing
+    /** IN DEVELOPMENT
+        Deterministic annealing */
     double anneal, anneal_step;
+
     /** debug flag */
     int debug;
 
@@ -213,26 +218,26 @@ public:
     /// Setup lots of stuff
     void produce_Side_info();
 
-    /// Calculate initial sigma2 from average power spectrum of the
-    /// experimental images
+    /** Calculate initial sigma2 from average power spectrum of the
+       experimental images */
     void estimate_initial_sigma2();
 
     /// Fill Wiener filter vectors with 1/CTF until the first zero
     void calculate_division_ctf();
 
-    /// Calculate Wiener filter for defocus series as defined by Frank
-    /// (2nd ed. formula 2.32b on p.60)
+    /** Calculate Wiener filter for defocus series as defined by Frank
+        (2nd ed. formula 2.32b on p.60) */
     void calculate_wiener_defocus_series(Matrix1D<double> &spectral_signal, int iter);
 
     /// Generate initial references from random subset averages
     void generate_initial_references();
 
-    /// Read reference images in memory & set offset vectors
-    /// (This produce_side_info is Selfile-dependent!)
+    /** Read reference images in memory & set offset vectors
+        (This produce_side_info is Selfile-dependent!) */
     void produce_Side_info2(int nr_vols = 1);
 
-    /// Read and write optimal translations to disc
-    /// (not to store them all in memory)
+    /** Read and write optimal translations to disc
+        (not to store them all in memory) */
     void write_offsets(FileName fn, vector<double> &data);
     bool read_offsets(FileName fn, vector<double> &data);
 
@@ -240,7 +245,7 @@ public:
     void calculate_pdf_phi();
 
     /// Fill vector of matrices with all rotations of reference
-    void rotate_reference(vector<ImageXmipp> &Iref,
+    void rotate_reference(vector< ImageXmippT<double> > &Iref,
                           bool fill_real_space,
                           bool fill_fourier_space,
                           vector <vector< Matrix2D<double> > > &Mref,
@@ -251,35 +256,35 @@ public:
                                   vector <vector< Matrix2D<double> > > &Mnew, bool real_space,
                                   vector<Matrix2D<double> > &Mref);
 
-    /// Calculate which references have projection directions close to
-    /// phi and theta
+    /** Calculate which references have projection directions close to
+        phi and theta */
     void preselect_directions(float &phi, float &theta,
                               vector<double> &pdf_directions);
 
-    /// Pre-calculate which model and phi have significant probabilities
-    /// without taking translations into account!
+    /** Pre-calculate which model and phi have significant probabilities
+       without taking translations into account! */
     void preselect_significant_model_phi(Matrix2D<double> &Mimg, vector<double> &offsets,
                                          vector <vector< Matrix2D<double > > > &Mref,
                                          Matrix2D<int> &Msignificant,
                                          vector<double > &pdf_directions);
 
-    // Calculate the FT of a translated matrix using a phase shift in
-    // Fourier space
+    /** Calculate the FT of a translated matrix using a phase shift in
+        Fourier space */
     void Fourier_translate2D(const Matrix2D<complex<double> > &Fimg,
                              int focus, Matrix1D<double> &trans,
                              Matrix2D<complex<double> > &Fimg_shift);
 
-    // If not determined yet: search optimal offsets using maxCC
-    // Then for all optimal translations, calculate all translated FTs
-    // for each of the flipped variants
+    /** If not determined yet: search optimal offsets using maxCC
+        Then for all optimal translations, calculate all translated FTs
+        for each of the flipped variants */
     void calculate_fourier_offsets(Matrix2D<double> &Mimg, int focus,
                                    vector <vector< Matrix2D<complex<double> > > > &Fref,
                                    Matrix2D<double> &ctf, vector<double> &offsets,
                                    vector<vector<Matrix2D<complex<double> > > > &Fimg_trans,
                                    Matrix2D<int> &Moffsets, Matrix2D<int> &Moffsets_mirror);
 
-    // Calculate translated matrices for all limited translations
-    // for each of the flipped variants
+    /** Calculate translated matrices for all limited translations
+        for each of the flipped variants */
     void calculate_realspace_offsets(Matrix2D<double> &Mimg, vector<double > &offsets,
                                      vector<double > &pdf_directions,
                                      vector<vector<Matrix2D<double> > > &Mimg_trans,
@@ -299,8 +304,8 @@ public:
                                vector<double> &opt_offsets_ref,
                                vector<double > &pdf_directions);
 
-    // ML-integration over limited translations,
-    // and with -fast way of selection significant rotations
+    /** ML-integration over limited translations,
+        and with -fast way of selection significant rotations */
     void ML_integrate_locally(Matrix2D<double> &Mimg,
                               vector <vector< Matrix2D<double> > > &Mref,
                               vector <vector< Matrix2D<double> > > &Mwsum_imgs,
@@ -336,7 +341,7 @@ public:
                                vector<double> &pdf_directions);
 
     /// Integrate over all experimental images
-    void ML_sum_over_all_images(SelFile &SF, vector<ImageXmipp> &Iref, int iter,
+    void ML_sum_over_all_images(SelFile &SF, vector< ImageXmippT<double> > &Iref, int iter,
                                 double &LL, double &sumcorr, DocFile &DFo,
                                 vector<Matrix2D<double> > &wsum_Mref,
                                 vector<Matrix2D<double> > &wsum_ctfMref,
@@ -366,3 +371,4 @@ public:
 
 };
 //@}
+#endif

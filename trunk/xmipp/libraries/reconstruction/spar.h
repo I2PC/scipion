@@ -29,7 +29,8 @@
 
 #include <data/matrix2d.h>
 
-/**@name Spectrum modelling by AR filters */
+/**@defgroup SPAR Spectrum modelling by AR filters
+   @ingroup ReconsLibrary */
 //@{
 /** CausalAR.
 

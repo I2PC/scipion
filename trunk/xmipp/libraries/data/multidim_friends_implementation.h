@@ -1,4 +1,5 @@
 /** Core array by scalar.
+  * @ingroup ArrayByScalar
  */
 template<typename T>
 void coreArrayByScalar(const maT& op1,
@@ -29,6 +30,7 @@ void coreArrayByScalar(const maT& op1,
 }
 
 /** Scalar by array.
+  * @ingroup ScalarByArray
  */
 template<typename T>
 void coreScalarByArray(const T& op1,
@@ -59,6 +61,7 @@ void coreScalarByArray(const T& op1,
 }
 
 /** Array by array.
+  * @ingroup ArrayByArray
  */
 template<typename T>
 void coreArrayByArray(const maT& op1,
@@ -90,6 +93,7 @@ void coreArrayByArray(const maT& op1,
 }
 
 /** Equality for normal data types.
+  * @ingroup MultidimUtilities
  */
 template<typename T>
 bool operator==(const maT& op1, const maT& op2)

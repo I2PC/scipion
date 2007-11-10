@@ -23,11 +23,17 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
+#ifndef _DIRECTIONS_H
+#define _DIRECTIONS_H
+
 #include <data/funcs.h>
 #include <data/docfile.h>
 
 #include "symmetries.h"
 
+/**@defgroup Directions Operations for projection directions
+   @ingroup ReconsLibrary */
+//@{
 /// Check whether projection directions are unique
 bool directions_are_unique(double rot,  double tilt,
                            double rot2, double tilt2,
@@ -46,6 +52,8 @@ void make_even_distribution(DocFile &DF, double sampling,
 /// Select a user-provided tilt range
 void limit_tilt_range(DocFile &DF, double tilt_range0, double tilt_rangeF);
 
-// Determine which of the entries in DFlib is closest to [rot1,tilt1]
+/// Determine which of the entries in DFlib is closest to [rot1,tilt1]
 int find_nearest_direction(double rot1, double tilt1,
                            DocFile &DFlib, int col_rot, int col_tilt, SymList &SL);
+//@}
+#endif

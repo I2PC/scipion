@@ -37,43 +37,44 @@
 #include "blobs.h"
 #include "projection.h"
 
-/**@name Phantoms
-    Phantoms are mathematical description of volumes such that in the
-    reconstruction process, we can know exactly which was the original
-    volume in a mathematical way. In this package phantoms are considered
-    to be a collection of features plus some more information about the
-    background and the phantom size. A feature is a cone, a box, a cylinder,
-    or any other geometrical figure described by its parameters and not
-    as a volume with voxels at a given value.
-
-    The file format generated and accepted by this library is the following:
-    \begin{verbatim}
-    "#Phantom Xdim Ydim Zdim Background density [scale factor]\n"
-    "          64   64   64            0             1\n"
-    "#Type +/= Density X_Center Y_Center Z_Center\n"
-    " sph   +     1      <x0>     <y0>     <z0>    <radius>\n"
-    " blo   +     1      <x0>     <y0>     <z0>    <radius>   <alpha> <order>\n"
-    " cyl   +     1      <x0>     <y0>     <z0>    <xradius> <yradius> <height>               <rot> <tilt> <psi>\n"
-    " dcy   +     1      <x0>     <y0>     <z0>    <radius>            <height>  <separation> <rot> <tilt> <psi>\n"
-    " cub   =     1      <x0>     <y0>     <z0>    <xdim>     <ydim>    <zdim>                <rot> <tilt> <psi>\n"
-    " ell   =     1      <x0>     <y0>     <z0>    <xradius> <yradius> <zradius>              <rot> <tilt> <psi>\n"
-    " con   +     1      <x0>     <y0>     <z0>    <radius>            <height>               <rot> <tilt> <psi>\n"
-    \end{verbatim}
-    where spheres, blobs,cylinders, double cylinders, cubes, ellipsoids and cones
-    are defined (in this order). The '+' sign means that this feature will
-    be added at those positions of the volume ocuupied by it. '=' instead
-    means that those voxels will be set to the value of the density of this
-    feature (if two features overlap the density of the last one is kept
-    in the overlapping voxels). The density is the grey level of voxels
-    affected by that feature. In the preceeding example the final volume
-    is 64x64x64 and has got a background density of 0. The center of the
-    features might be negative, and they represent mathematical positions
-    in R3. The phantom dimension, instead, define the phantom in this case
-    to go from -32 to 31, in this R3 space.
-
-    If the scale factor, which by default is 1, is not unity then the whole
-    phantom is scaled (0.5 means to its half and 1.5 enlarged by one half)
-    just after reading it.
+/**@defgroup Phantoms Phantoms
+ * @ingroup ReconsLibrary
+ *  Phantoms are mathematical description of volumes such that in the
+ *  reconstruction process, we can know exactly which was the original
+ *  volume in a mathematical way. In this package phantoms are considered
+ *  to be a collection of features plus some more information about the
+ *  background and the phantom size. A feature is a cone, a box, a cylinder,
+ *  or any other geometrical figure described by its parameters and not
+ *  as a volume with voxels at a given value.
+ *
+ *  The file format generated and accepted by this library is the following:
+ *  @code
+ *  "#Phantom Xdim Ydim Zdim Background density [scale factor]\n"
+ *  "          64   64   64            0             1\n"
+ *  "#Type +/= Density X_Center Y_Center Z_Center\n"
+ *  " sph   +     1      <x0>     <y0>     <z0>    <radius>\n"
+ *  " blo   +     1      <x0>     <y0>     <z0>    <radius>   <alpha> <order>\n"
+ *  " cyl   +     1      <x0>     <y0>     <z0>    <xradius> <yradius> <height>               <rot> <tilt> <psi>\n"
+ *  " dcy   +     1      <x0>     <y0>     <z0>    <radius>            <height>  <separation> <rot> <tilt> <psi>\n"
+ *  " cub   =     1      <x0>     <y0>     <z0>    <xdim>     <ydim>    <zdim>                <rot> <tilt> <psi>\n"
+ *  " ell   =     1      <x0>     <y0>     <z0>    <xradius> <yradius> <zradius>              <rot> <tilt> <psi>\n"
+ *  " con   +     1      <x0>     <y0>     <z0>    <radius>            <height>               <rot> <tilt> <psi>\n"
+ *  @endcode
+ *  where spheres, blobs,cylinders, double cylinders, cubes, ellipsoids and cones
+ *  are defined (in this order). The '+' sign means that this feature will
+ *  be added at those positions of the volume ocuupied by it. '=' instead
+ *  means that those voxels will be set to the value of the density of this
+ *  feature (if two features overlap the density of the last one is kept
+ *  in the overlapping voxels). The density is the grey level of voxels
+ *  affected by that feature. In the preceeding example the final volume
+ *  is 64x64x64 and has got a background density of 0. The center of the
+ *  features might be negative, and they represent mathematical positions
+ *  in R3. The phantom dimension, instead, define the phantom in this case
+ *  to go from -32 to 31, in this R3 space.
+ *
+ *  If the scale factor, which by default is 1, is not unity then the whole
+ *  phantom is scaled (0.5 means to its half and 1.5 enlarged by one half)
+ *  just after reading it.
 */
 //@{
 /* FEATURE ================================================================= */
@@ -128,7 +129,7 @@ public:
         and inverse Euler matrices. */
     virtual void prepare() = 0;
 
-/// Assignment
+    /// Assignment
     Feature & operator = (const Feature &F);
 
     /** Another function for assigmnet.*/
@@ -144,8 +145,6 @@ public:
     virtual void rotate_center(const Matrix2D<double> &E);
 
     /* Inside ------------------------------------------------------------------ */
-    /**@name Inside */
-//@{
     /** Speeded up point inside a feature, VIRTUAL!!.
         This function MUST be implemented for each subclass and tells you if
         a point is inside the feature or not. If the point is inside returns 1
@@ -226,15 +225,11 @@ public:
         return intersects_sphere(r, radius, aux1, aux2, aux3);
     }
 
-
-//@}
-    /**@name Backgrounds */
-//@{
     /** Produce a sphere envolving the feature.
         This function returns a pointer to a feature (a sphere) with
         the same center, density, and feature behaviour as the given feature.
         The radius could be given in voxel units or if you leave it 0 then
-        the radius is computed as 1.5 times the \Ref{max_distance} of this
+        the radius is computed as 1.5 times the \ref max_distance of this
         feature */
     Feature *encircle(double radius = 0) const;
 
@@ -257,10 +252,7 @@ public:
         the mode used the background parameter is understood as the sphere
         radius or as the scaling factor. */
     Feature *background(int back_mode, double back_param) const;
-//@}
 
-    /**@name Measures */
-//@{
     /** Speeded Up intersection of a feature with a ray, VIRTUAL!!!.
         This function returns the length of the intersection between the ray
         defined by its direction and a passing point and the actual feature
@@ -296,10 +288,7 @@ public:
         the feature. If the plane is outside the volume
         scope the result is mean=variance=0 */
     void mean_variance_in_plane(Volume *V, double z, double &mean, double &var);
-//@}
 
-    /**@name Drawing */
-//@{
     /** Project feature onto a projection plane.
         Projection is a class itself which has got inside the direction of
         projection. The projection plane is not cleaned (set all values to 0)
@@ -324,14 +313,14 @@ public:
         The volume borders are taken into account and you might make a for
         using these two values like this:
         \\Ex:
-        \begin{verbatim}
+        @code
         F.corners(V,corner1,corner2);
         for (int k=ZZ(corner1); k<=ZZ(corner2); k++)
             for (int i=YY(corner1); i<=YY(corner2); i++)
                 for (int j=XX(corner1); j<=XX(corner2); j++) {
                     ...
         }
-        \end{verbatim}*/
+        @endcode*/
     void corners(const Volume *V, Matrix1D<double> &corner1,
                  Matrix1D<double> &corner2);
 
@@ -355,11 +344,11 @@ public:
         inside the features.
         The volume is not cleaned at the beginning.
         \\ Ex:
-        \begin{verbatim}
+        @code
         f.draw_in(&V)              --> Internal density
         f.draw_in(&V,INTERNAL,0.5) --> Internal density, 0.5 is discarded
         f.draw_in(&V,EXTERNAL,0.5) --> External density=0.5
-        \end{verbatim}
+        @endcode
     */
     void draw_in(Volume *V, int color_mode = INTERNAL, double colour = -1);
 
@@ -387,14 +376,11 @@ public:
 
         Only the center is transformed, the feature will keep the same size.*/
     void selfApplyGeometry(const Matrix2D<double> &A);
-//@}
 
-    /**@name I/O */
-//@{
     /** Print the feature in the Feature format, VIRTUAL!!!.
         This function prints the feature in the Standard Feature format (readable
         by this library). Notice that the standard format is different for each
-        specific feature. See \Ref{Phantoms} for more information about the
+        specific feature. See \ref Phantoms for more information about the
         supported file format. */
     virtual void feat_printf(FILE *fh) const = 0;
 
@@ -405,7 +391,7 @@ public:
     void read_common(char *line);
 
     /** Read a feature from a file, VIRTUAL!!!.
-        The format must be the one given in \Ref{Phantoms}, and each subclass
+        The format must be the one given in \ref Phantoms, and each subclass
         must implement its own I/O routines. These routines must fill only the
         non common part of the feature description, but they receive the whole
         line with the description. */
@@ -415,9 +401,8 @@ public:
         This function is based on the cout << ... of each subclass. First
         shows the common part of the feature and then its specific part. Be
         careful that you must show a pointer to the feature!!
-        \\ Ex: Sphere sph; cout << (Feature *) &sph; */
+        \\ Ex: Sphere sphere; cout << (Feature *) \&sphere; */
     friend ostream& operator << (ostream &o, const Feature *F);
-//@}
 };
 
 /* ORIENTED FEATURE ======================================================== */
@@ -474,10 +459,10 @@ public:
     A point (r) in the universal coordinate system, where spheres are defined
     in general, can be expressed (rp) with respect to a system where the sphere
     is centered at the origin and its radius is unity by
-    \begin{verbatim}
+    @code
     V3_MINUS_V3(rp,r,sph.Center);
     V3_BY_CT(rp, rp, 1/radius);
-    \end{verbatim}
+    @endcode
     Directions (free vectors) are transformed in the same fashio except
     that for the first vector substraction (referring to the origin).
 */
@@ -499,7 +484,7 @@ public:
 
     /** Speeded up point inside a sphere.
         This function tells you if a point is inside the sphere or not.
-        See \Ref{Feature::point_inside} */
+        See \ref Feature::point_inside */
     int point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const;
 
     /** Density inside an Sphere.
@@ -520,7 +505,7 @@ public:
     void scale(double factor, Feature *_f) const;
 
     /** Intersection of a ray with a sphere.
-        See \Ref{Feature::intersection} to know more about the parameters
+        See \ref Feature::intersection to know more about the parameters
         meaning. */
     double intersection(const Matrix1D<double> &direction,
                         const Matrix1D<double> &passing_point,
@@ -528,7 +513,7 @@ public:
 
     /** Volume of a sphere.
         This function returns 4/3*PI*radius*radius*radius.
-        See \Ref{Feature::volume} */
+        See \ref Feature::volume */
     double volume() const
     {
         return 4 / 3*PI*radius*radius*radius;
@@ -536,11 +521,11 @@ public:
 
     /** Read specific description for a sphere.
         An exception is thrown if the line doesn't conform the standard
-        specification. See \Ref{Feature::read_specific} */
+        specification. See \ref Feature::read_specific */
     void read_specific(char *line);
 
     /** Print sphere in the standard feature format.
-        \ See {Feature::feat_printf}, \Ref{Phantoms} */
+        \ See {Feature::feat_printf}, \ref Phantoms */
     void feat_printf(FILE *fh) const;
 
     /** Show feature not in the standard format but more informatively.
@@ -570,10 +555,10 @@ public:
     A point (r) in the universal coordinate system, where blobs are defined
     in general, can be expressed (rp) with respect to a system where the blob
     is centered at the origin and its radius is unity by
-    \begin{verbatim}
+    @code
     V3_MINUS_V3(rp,r,sph.Center);
     V3_BY_CT(rp, rp, 1/radius);
-    \end{verbatim}
+    @endcode
     Directions (free vectors) are transformed in the same fashion except
     that for the first vector substraction (referring to the origin).
 */
@@ -603,7 +588,7 @@ public:
 
     /** Speeded up point inside a blob.
         This function tells you if a point is inside the blob or not.
-        See \Ref{Feature::point_inside} */
+        See \ref Feature::point_inside */
     int point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const;
 
     /** Density inside a blob.
@@ -621,7 +606,7 @@ public:
     void scale(double factor, Feature *_f) const;
 
     /** Intersection of a ray with a blob.
-        See \Ref{Feature::intersection} to know more about the parameters
+        See \ref Feature::intersection to know more about the parameters
         meaning. */
 //ROB pending
     double intersection(const Matrix1D<double> &direction,
@@ -630,7 +615,7 @@ public:
 
     /** Mass of a Blob.
         This function returns mass inside a blob. 3 is the dimension
-        See \Ref{Feature::volume} */
+        See \ref Feature::volume */
     double volume() const
     {
         return basvolume(radius, alpha, m, 3);
@@ -640,11 +625,11 @@ public:
 ///
     /** Read specific description for a blob.
         An exception is thrown if the line doesn't conform the standard
-        specification. See \Ref{Feature::read_specific} */
+        specification. See \ref Feature::read_specific */
     void read_specific(char *line);
 
     /** Print blob in the standard feature format.
-        \ See {Feature::feat_printf}, \Ref{Phantoms} */
+        \ See {Feature::feat_printf}, \ref Phantoms */
     void feat_printf(FILE *fh) const;
 
     /** Show feature not in the standard format but more informatively.
@@ -683,13 +668,13 @@ public:
     in general, can be expressed (rp) with respect to a system where the cylinder
     is centered at the origin, its radius and height are unity and its base is
     parallel to the XY plane by
-    \begin{verbatim}
+    @code
     V3_MINUS_V3(rp,r,cyl.Center);
     M3x3_BY_V3x1(rp,cyl.euler,rp);
     XX(rp) /= cyl.radius;
     YY(rp) /= cyl.radius;
     ZZ(rp) /= cyl.height;
-    \end{verbatim}
+    @endcode
     Directions (free vectors) are transformed in the same fashion except
     that for the first vector substraction (referring the origin).
 */
@@ -719,7 +704,7 @@ public:
 
     /** Speeded up point inside a cylinder.
         This function tells you if a point is inside the cylinder or not.
-        See \Ref{Feature::point_inside} */
+        See \ref Feature::point_inside */
     int point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const;
 
     /** Density inside an cylinder.
@@ -740,7 +725,7 @@ public:
     void scale(double factor, Feature *_f) const;
 
     /** Intersection of a ray with a cylinder.
-        See \Ref{Feature::intersection} to know more about the parameters
+        See \ref Feature::intersection to know more about the parameters
         meaning. */
     double intersection(const Matrix1D<double> &direction,
                         const Matrix1D<double> &passing_point,
@@ -748,7 +733,7 @@ public:
 
     /** Volume of a cylinder.
         This function returns 4/3*PI*radius*radius*height.
-        See \Ref{Feature::volume} */
+        See \ref Feature::volume */
     double volume() const
     {
         return 4 / 3*PI*xradius*yradius*height;
@@ -756,11 +741,11 @@ public:
 
     /** Read specific description for a cylinder.
         An exception is thrown if the line doesn't conform the standard
-        specification. See \Ref{Feature::read_specific} */
+        specification. See \ref Feature::read_specific */
     void read_specific(char *line);
 
     /** Print cylinder in the standard feature format.
-        \ See {Feature::feat_printf}, \Ref{Phantoms} */
+        \ See {Feature::feat_printf}, \ref Phantoms */
     void  feat_printf(FILE *fh) const;
 
     /** Show feature not in the standard format but more informatively.
@@ -806,21 +791,21 @@ public:
     in general, can be expressed (rp) with respect to a system where the FIRST
     cylinder is centered at the origin, its radius is unity and its base is
     parallel to the XY plane (notice that the height is not transformed) by
-    \begin{verbatim}
+    @code
     V3_MINUS_V3(rp,r,dcy.Center+dcy.);
     ZZ(r) -= (separation/2+height/2);
     M3x3_BY_V3x1(rp,dcy.euler,rp);
     XX(rp) /= dcy.radius;
     YY(rp) /= dcy.radius;
-    \end{verbatim}
+    @endcode
     and for the SECOND dcyinder
-    \begin{verbatim}
+    @code
     V3_MINUS_V3(rp,r,dcy.Center+dcy.);
     ZZ(r) += (separation/2+height/2);     // This is the only one line changing
     M3x3_BY_V3x1(rp,dcy.euler,rp);
     XX(rp) /= dcy.radius;
     YY(rp) /= dcy.radius;
-    \end{verbatim}
+    @endcode
     Directions (free vectors) are transformed in the same fashion except
     that for the first two vector substraction (referring the origin).
 */
@@ -851,7 +836,7 @@ public:
 
     /** Speeded up point inside a double cylinder.
         This function tells you if a point is inside any of the cylinders or not.
-        See \Ref{Feature::point_inside} */
+        See \ref Feature::point_inside */
     int point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const;
 
     /** Density inside a double cylinder.
@@ -874,7 +859,7 @@ public:
     void scale(double factor, Feature *_f) const;
 
     /** Intersection of a ray with a double cylinder.
-        See \Ref{Feature::intersection} to know more about the parameters
+        See \ref Feature::intersection to know more about the parameters
         meaning. The ray intersection consider both cylinders, of course. */
     double intersection(const Matrix1D<double> &direction,
                         const Matrix1D<double> &passing_point,
@@ -882,7 +867,7 @@ public:
 
     /** Volume of a double cylinder.
         This function returns 2* 4/3*PI*radius*radius*height.
-        See \Ref{Feature::volume} */
+        See \ref Feature::volume */
     double volume() const
     {
         return 2* 4 / 3*PI*radius*radius*height;
@@ -890,11 +875,11 @@ public:
 
     /** Read specific description for a double cylinder.
         An exception is thrown if the line doesn't conform the standard
-        specification. See \Ref{Feature::read_specific} */
+        specification. See \ref Feature::read_specific */
     void read_specific(char *line);
 
     /** Print double cylinder in the standard feature format.
-        \ See {Feature::feat_printf}, \Ref{Phantoms} */
+        \ See {Feature::feat_printf}, \ref Phantoms */
     void feat_printf(FILE *fh) const;
 
     /** Show feature not in the standard format but more informatively.
@@ -937,13 +922,13 @@ public:
     in general, can be expressed (rp) with respect to a system where the cube
     is centered at the origin, all its dimensions are unity and its axes
     are aligned with XYZ by
-    \begin{verbatim}
+    @code
     V3_MINUS_V3(rp,r,cub.Center);
     M3x3_BY_V3x1(rp,cub.euler,rp);
     XX(rp) /= cub.xdim;
     YY(rp) /= cub.ydim;
     ZZ(rp) /= cub.zdim;
-    \end{verbatim}
+    @endcode
     Directions (free vectors) are transformed in the same fashion except
     that for the first vector substraction (referring the origin).
 */
@@ -973,7 +958,7 @@ public:
 
     /** Speeded up point inside a cube.
         This function tells you if a point is inside the cube or not.
-        See \Ref{Feature::point_inside} */
+        See \ref Feature::point_inside */
     int point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const;
 
     /** Density inside an Cube.
@@ -994,7 +979,7 @@ public:
     void scale(double factor, Feature *_f) const;
 
     /** Intersection of a ray with a cube, NOT IMPLEMENTED!!!.
-        See \Ref{Feature::intersection} to know more about the parameters
+        See \ref Feature::intersection to know more about the parameters
         meaning. */
     double intersection(const Matrix1D<double> &direction,
                         const Matrix1D<double> &passing_point,
@@ -1002,7 +987,7 @@ public:
 
     /** Volume of a cube.
         This function returns xdim*ydim*zdim.
-        See \Ref{Feature::volume} */
+        See \ref Feature::volume */
     double volume() const
     {
         return xdim*ydim*zdim;
@@ -1010,11 +995,11 @@ public:
 
     /** Read specific description for a cube.
         An exception is thrown if the line doesn't conform the standard
-        specification. See \Ref{Feature::read_specific} */
+        specification. See \ref Feature::read_specific */
     void read_specific(char *line);
 
     /** Print cube in the standard feature format.
-        \ See {Feature::feat_printf}, \Ref{Phantoms} */
+        \ See {Feature::feat_printf}, \ref Phantoms */
     void feat_printf(FILE *fh) const;
 
     /** Show feature not in the standard format but more informatively.
@@ -1057,13 +1042,13 @@ public:
     in general, can be expressed (rp) with respect to a system where the ellipsoid
     is centered at the origin, all its radii are unity and its axes
     are aligned with XYZ by
-    \begin{verbatim}
+    @code
     V3_MINUS_V3(rp,r,ell.Center);
     M3x3_BY_V3x1(rp,ell.euler,rp);
     XX(rp) /= ell.xradius;
     YY(rp) /= ell.yradius;
     ZZ(rp) /= ell.zradius;
-    \end{verbatim}
+    @endcode
     Directions (free vectors) are transformed in the same fashion except
     that for the first vector substraction (referring the origin).
 */
@@ -1093,7 +1078,7 @@ public:
 
     /** Speeded up point inside an ellipsoid.
         This function tells you if a point is inside the elliposoid or not.
-        See \Ref{Feature::point_inside} */
+        See \ref Feature::point_inside */
     int point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const;
 
     /** Density inside a Ellipsoid.
@@ -1114,7 +1099,7 @@ public:
     void scale(double factor, Feature *_f) const;
 
     /** Intersection of a ray with an ellipsoid.
-        See \Ref{Feature::intersection} to know more about the parameters
+        See \ref Feature::intersection to know more about the parameters
         meaning. */
     double intersection(const Matrix1D<double> &direction,
                         const Matrix1D<double> &passing_point,
@@ -1122,7 +1107,7 @@ public:
 
     /** Volume of an ellipsoid.
         This function returns 4/3*PI*xradius*yradius*zradius.
-        See \Ref{Feature::volume} */
+        See \ref Feature::volume */
     double volume() const
     {
         return 4 / 3*PI*xradius*yradius*zradius;
@@ -1130,11 +1115,11 @@ public:
 
     /** Read specific description for an ellipsoid.
         An exception is thrown if the line doesn't conform the standard
-        specification. See \Ref{Feature::read_specific} */
+        specification. See \ref Feature::read_specific */
     void read_specific(char *line);
 
     /** Print ellipsoid in the standard feature format.
-        \ See {Feature::feat_printf}, \Ref{Phantoms} */
+        \ See {Feature::feat_printf}, \ref Phantoms */
     void feat_printf(FILE *fh) const;
 
     /** Show feature not in the standard format but more informatively.
@@ -1177,13 +1162,13 @@ public:
     in general, can be expressed (rp) with respect to a system where the cone
     is centered at the origin, its radius and height is unity and its base is
     parallel to the XY plane by
-    \begin{verbatim}
+    @code
     V3_MINUS_V3(rp,r,con.Center);
     M3x3_BY_V3x1(rp,con.euler,rp);
     XX(rp) /= con.radius;
     YY(rp) /= con.radius;
     ZZ(rp) /= con.height;
-    \end{verbatim}
+    @endcode
     Directions (free vectors) are transformed in the same fashion except
     that for the first vector substraction (referring the origin).
 */
@@ -1211,7 +1196,7 @@ public:
 
     /** Speeded up point inside a cone.
         This function tells you if a point is inside the cone or not.
-        See \Ref{Feature::point_inside} */
+        See \ref Feature::point_inside */
     int point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const;
 
     /** Density inside a cone.
@@ -1232,7 +1217,7 @@ public:
     void scale(double factor, Feature *_f) const;
 
     /** Intersection of a ray with a cone, NOT IMPLEMENTED!!!!.
-        See \Ref{Feature::intersection} to know more about the parameters
+        See \ref Feature::intersection to know more about the parameters
         meaning. */
     double intersection(const Matrix1D<double> &direction,
                         const Matrix1D<double> &passing_point,
@@ -1240,7 +1225,7 @@ public:
 
     /** Volume of a cone.
         This function returns 1/3*PI*radius*radius*height.
-        See \Ref{Feature::volume} */
+        See \ref Feature::volume */
     double volume() const
     {
         return 1 / 3*PI*radius*radius*height;
@@ -1248,11 +1233,11 @@ public:
 
     /** Read specific description for a cone.
         An exception is thrown if the line doesn't conform the standard
-        specification. See \Ref{Feature::read_specific} */
+        specification. See \ref Feature::read_specific */
     void read_specific(char *line);
 
     /** Print cone in the standard feature format.
-        \ See {Feature::feat_printf}, \Ref{Phantoms} */
+        \ See {Feature::feat_printf}, \ref Phantoms */
     void feat_printf(FILE *fh) const;
 
     /** Show feature not in the standard format but more informatively.
@@ -1286,17 +1271,17 @@ public:
     background density. This is the class that will interact with the
     reconstruction programs as the features classes themselves haven't
     got enough information to generate the final volume. The file format
-    to generate the phantom is described in the previous page (\Ref{Phantoms}).
+    to generate the phantom is described in the previous page (\ref Phantoms).
 
     This class is thought to be filled from a file, and doesn't give
     many facilities to update it from program. This is something
     to do.
 
     Here goes an example of how to manage loops in the phantom class,
-    \begin{verbatim}
+    @code
        // Show all features
        for (int i=1; i<=P.FeatNo(); i++) cout << P(i);
-    \end{verbatim}
+    @endcode
 */
 class Phantom
 {
@@ -1328,8 +1313,6 @@ public:
     /// List with the features
     vector<Feature*> VF;
 public:
-    /**@name Structure relative */
-//@{
     /** Empty constructor.
         The empty phantom is 0x0x0, background density=0, no feature is inside
         and no name. */
@@ -1337,7 +1320,7 @@ public:
 
     /** Construct from a phantom file.
         Construct the phantom according to the specifications of the given file.
-        The file must accomplish the structure given in \Ref{Phantoms}. */
+        The file must accomplish the structure given in \ref Phantoms. */
     Phantom(const FileName &fn_phantom)
     {
         read(fn_phantom);
@@ -1383,26 +1366,23 @@ public:
         VF.push_back(f);
     }
 
-/// Assignment
+    /// Assignment
     Phantom & operator = (const Phantom &P);
 
     /** Another function for assignment.*/
     void assign(const Phantom &P);
 
-/// Prepare for work.
+    /// Prepare for work.
     void prepare();
 
-/// Return the maximum distance of any feature to the volume center
+    /// Return the maximum distance of any feature to the volume center
     double max_distance() const;
 
-/// Return the volume of all the features
+    /// Return the volume of all the features
     double volume() const;
-//@}
 
-    /**@name I/O */
-//@{
     /** Read a phantom file.
-        The file must accomplish the structure given in \Ref{Phantoms}.
+        The file must accomplish the structure given in \ref Phantoms .
 
         If you don't apply the scale then all spatial coordinates are
         expressed in the given scale units. I.e., if the scale is 0.25 that
@@ -1422,10 +1402,7 @@ public:
     /** Write a phantom file in the standard feature format.
         You may rename the file or not giving a different name in the write call. */
     void write(const FileName &fn_phantom = "");
-//@}
 
-    /**@name Inside */
-//@{
     /** Speeded up voxel inside any feature.
         This function tells you if the voxel of size 1x1x1 whose center is at
         position r is inside any of the features. A voxel is said to be inside
@@ -1437,7 +1414,7 @@ public:
         aux1 and aux2, are two vectors of dimension 3. They must be supplied
         in order to gain speed in the calculations. This is very useful
         when checking if many voxels are inside any feature. See also
-        \Ref{Feature::voxel_inside} to know more. */
+        \ref Feature::voxel_inside to know more. */
     int voxel_inside_any_feat(const Matrix1D<double> &r,
                               Matrix1D<double> &aux1, Matrix1D<double> &aux2) const;
 
@@ -1469,10 +1446,7 @@ public:
         Matrix1D<double> aux1(3), aux2(3), aux3(3);
         return any_feature_intersects_sphere(r, radius, aux1, aux2, aux3);
     }
-//@}
 
-    /**@name Drawing */
-//@{
     /** Draw the phantom in the volume.
         The volume is cleaned, resized to the phantom size and its origin
         is set at the center of the volume. Then every feature is drawn into
@@ -1492,7 +1466,7 @@ public:
 #define CLEAN      1
     /** Sketch the surface of the phantom in the volume.
         This function allows you to draw only the surface of every feature
-        (see \Ref{Feature::sketch_in} to see when a voxel is said to belong
+        (see \ref Feature::sketch_in to see when a voxel is said to belong
         to the feature surface). The input volume might be cleaned (resized
         and the logical origin set at the physical center) or not according
         to the labels CLEAN or DONT_CLEAN (by default). The grey level for
@@ -1502,7 +1476,7 @@ public:
 
     /** Shift.
         Shift all features in the phantom a given amount of voxels. See
-        \Ref{Feature::shift}. */
+        \ref Feature::shift. */
     void shift(double shiftX, double shiftY, double shiftZ);
 
     /** Rotate.
@@ -1527,9 +1501,9 @@ public:
         the projection of the phantom is computed. A matrix A (3x3) can be supplied
         in order to apply a deformation in the projection plane. A must
         be such that
-        \begin{verbatim}
+        @code
         deformed position=A*undeformed position
-        \end{verbatim}*/
+        @endcode*/
     void project_to(Projection &P, int Ydim, int Xdim,
                     double rot, double tilt, double psi, const Matrix2D<double> *A = NULL) const;
 
@@ -1572,7 +1546,6 @@ public:
         */
     void surface(double z0, double radius, int direction, Image *P)
     const;
-//@}
 };
 //@}
 #endif

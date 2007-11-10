@@ -2113,7 +2113,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 
 }
 
-void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, vector<ImageXmipp> &Iref, int iter,
+void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, vector< ImageXmippT<double> > &Iref, int iter,
 					   double &LL, double &sumcorr, DocFile &DFo,
 					   vector<Matrix2D<double> > &wsum_Mref,
 					   vector<Matrix2D<double> > &wsum_ctfMref,

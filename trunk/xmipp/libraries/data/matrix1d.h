@@ -48,7 +48,8 @@
 
 std::string floatToString(float val, int width, int prec);
 
-/// @defgroup Vectors Xmipp Vectors
+/// @defgroup Vectors Vectors
+/// @ingroup MultidimensionalArrays
 
 /** @defgroup VectorsSpeedUp Speed up macros
  * @ingroup Vectors
@@ -318,6 +319,7 @@ std::string floatToString(float val, int width, int prec);
  * Matrix1D< double > a(2), b(2), c(2);
  * ...;
  * V2_MINUS_V2(a, b, c);
+ * @endcode
  */
 #define V2_MINUS_V2(a, b, c) { \
         XX(a) = XX(b) - XX(c); \
@@ -1442,7 +1444,7 @@ public:
         fn_tmp.init_random(10);
         write((string) "PPP" + fn_tmp + ".txt");
 
-        ofstream fh_gplot;
+        std::ofstream fh_gplot;
         fh_gplot.open(((string) "PPP" + fn_tmp + ".gpl").c_str());
         if (!fh_gplot)
             REPORT_ERROR(1,
@@ -1494,7 +1496,7 @@ public:
 // FIXME Oh, my my...
 #include "multidim_friends_implementation.h"
 
-/**@defgroup VectorsRelated Related functions.
+/**@defgroup VectorsRelated Related functions
  * @ingroup Vectors
  *
  * These functions are not methods of Matrix1D
@@ -1736,15 +1738,17 @@ void powellOptimizer(Matrix1D< double >& p,
                      const Matrix1D< double >& steps,
                      bool show = false);
 
-// TODO Document
+/** Print vector shape.
+  * @ingroup VectorsSizeShape */
 template<typename T>
-void vT::printShape(ostream& out) const
+void vT::printShape(std::ostream& out) const
 {
     out << "Size: " << xdim
-    << "i=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
+        << "i=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
 }
 
-// TODO Document
+/** Get vector size.
+  * @ingroup VectorsSizeShape */
 template<typename T>
 void vT::getSize(int* size) const
 {
@@ -1753,7 +1757,8 @@ void vT::getSize(int* size) const
     size[2] = 1;
 }
 
-// TODO Document
+/** True if the coordinate is outside the vector range.
+  * @ingroup VectorsUtilities */
 template<typename T>
 bool vT::outside(const Matrix1D< double >& v) const
 {
@@ -1763,21 +1768,25 @@ bool vT::outside(const Matrix1D< double >& v) const
     return (XX(v) < STARTINGX(*this) || XX(v) > FINISHINGX(*this));
 }
 
-// TODO Document
+/** True if the index is outside the vector range.
+  * @ingroup VectorsUtilities */
 template<typename T>
 bool vT::outside(int i) const
 {
     return (i < STARTINGX(*this) || i > FINISHINGX(*this));
 }
 
-// TODO Document
+/** True if the two vector ranges intersect.
+  * @ingroup VectorsUtilities */
 template<typename T>
 bool vT::intersects(const vT& m) const
 {
     return intersects(STARTINGX(m), m.xdim - 1);
 }
 
-// TODO Document
+/** True if the vector range of this object intersects with the
+  * one defined by these corners.
+  * @ingroup VectorsUtilities */
 template<typename T>
 bool vT::intersects(const Matrix1D< double >& corner1,
                     const Matrix1D< double >& corner2) const
@@ -1788,7 +1797,9 @@ bool vT::intersects(const Matrix1D< double >& corner1,
     return intersects(XX(corner1), XX(corner2) - XX(corner1));
 }
 
-// TODO Document
+/** True if the vector range of this object intersects with the
+  * one defined by the initial value x0 and this size.
+  * @ingroup VectorsUtilities */
 template<typename T>
 bool vT::intersects(double x0, double xdim) const
 {
@@ -1801,7 +1812,8 @@ bool vT::intersects(double x0, double xdim) const
     return true;
 }
 
-// TODO Document
+/** True if the coordinate provided is at the corner.
+  * @ingroup VectorsUtilities */
 template<typename T>
 bool vT::isCorner(const Matrix1D< double >& v)
 {
@@ -1812,7 +1824,8 @@ bool vT::isCorner(const Matrix1D< double >& v)
     return (XX(v) == STARTINGX(*this) || XX(v) == FINISHINGX(*this));
 }
 
-// TODO Document
+/** True if the coordinate provided is at the border.
+  * @ingroup VectorsUtilities */
 template<typename T>
 bool vT::isBorder(const Matrix1D< int >& v)
 {
@@ -1822,14 +1835,17 @@ bool vT::isBorder(const Matrix1D< int >& v)
     return isBorder(XX(v));
 }
 
-// TODO Document
+/** True if the index provided is at the corner.
+  * @ingroup VectorsUtilities */
 template<typename T>
 bool vT::isBorder(int i)
 {
     return (i == STARTINGX(*this)  || i == FINISHINGX(*this));
 }
 
-// TODO Document
+/** Put a patch (patch_array) on top of this objects.
+  * Valid operations are: '=', '+', '-', '*', '/'
+  * @ingroup VectorsUtilities */
 template<typename T>
 void vT::patch(const vT& patch_array, char operation)
 {
@@ -1859,7 +1875,8 @@ void vT::patch(const vT& patch_array, char operation)
     }
 }
 
-// TODO Document
+/** Show a vector.
+  * @ingroup VectorsUtilities */
 template<typename T>
 std::ostream& operator<<(std::ostream& out, const vT& v)
 {
@@ -1884,7 +1901,8 @@ std::ostream& operator<<(std::ostream& out, const vT& v)
     return out;
 }
 
-// TODO Document
+/** Compute vector statistics within two corners.
+  * @ingroup VectorsUtilities */
 template<typename T>
 void vT::computeStats(double& avg, double& stddev, T& min_val, T& max_val,
                        const Matrix1D< double >& corner1,
@@ -1917,7 +1935,8 @@ void vT::computeStats(double& avg, double& stddev, T& min_val, T& max_val,
     }
 }
 
-// TODO Document
+/** Compute vector minimum and maximum value within two corners.
+  * @ingroup VectorsUtilities */
 template<typename T>
 void vT::computeDoubleMinMax(double& min_val, double& max_val,
                                const Matrix1D< double >& corner1,
@@ -1935,7 +1954,9 @@ void vT::computeDoubleMinMax(double& min_val, double& max_val,
     }
 }
 
-// TODO Document
+/** Compute the center of mass within a mask.
+  * If no mask is to be used, supply NULL.
+  * @ingroup VectorsUtilities */
 template<typename T>
 void vT::centerOfMass(Matrix1D< double >& center, void* mask)
 {

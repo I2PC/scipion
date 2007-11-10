@@ -496,7 +496,7 @@ void Prog_MLPalign2D_prm::updatePdfTranslations()
 
 }
 
-void Prog_MLPalign2D_prm::calculateFtRingsAllRefs(const vector<ImageXmipp> &Iref,
+void Prog_MLPalign2D_prm::calculateFtRingsAllRefs(const vector< ImageXmippT<double> > &Iref,
 						  vector< Polar< complex <double> > > &fP_refs,
 						  Polar< complex <double> > &fP_zero,
 						  vector< double > &sum2_refs,
@@ -544,7 +544,7 @@ void Prog_MLPalign2D_prm::calculateFtRingsAllRefs(const vector<ImageXmipp> &Iref
 
 }
 
-void Prog_MLPalign2D_prm::calculateFtRingsAllTransImg(const ImageXmipp &img,
+void Prog_MLPalign2D_prm::calculateFtRingsAllTransImg(const ImageXmippT<double> &img,
 						      vector< Polar< complex <double> > > &fP_trans,
 						      vector< Polar< complex <double> > > &fPm_trans,
 						      double &Xi2, const int &first, const int &last)
@@ -574,7 +574,7 @@ void Prog_MLPalign2D_prm::calculateFtRingsAllTransImg(const ImageXmipp &img,
 
 }
 
-void Prog_MLPalign2D_prm::processOneImage(const ImageXmipp &img,
+void Prog_MLPalign2D_prm::processOneImage(const ImageXmippT<double> &img,
 					  const vector < Polar <complex <double> >  > &fP_ref,
 					  const vector < double > &sum2_refs,
 					  const vector < double > &pdf_directions,
@@ -793,7 +793,7 @@ void Prog_MLPalign2D_prm::processOneImage(const ImageXmipp &img,
 }
 
 
-void Prog_MLPalign2D_prm::sumOverAllImages(SelFile &SF, const vector<ImageXmipp> &Iref,
+void Prog_MLPalign2D_prm::sumOverAllImages(SelFile &SF, const vector< ImageXmippT<double> > &Iref,
 					   double &LL, double &sumcorr, DocFile &DFo,
 					   vector < Polar <complex <double> > > &fP_wsum_imgs,
 					   double &wsum_sigma_noise, double &wsum_sigma_offset,  

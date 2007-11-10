@@ -22,6 +22,10 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
+
+#ifndef _ML_REFINE3D_H
+#define _ML_REFINE3D_H
+
 #include <data/fft.h>
 #include <data/args.h>
 #include <data/funcs.h>
@@ -47,8 +51,8 @@
 
 #include <vector>
 
-
-/**@name Refine3d */
+/**@defgroup Refine3d ml_refine3d (Maximum likelihood 3D refinement)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /** Refine3d parameters. */
 class Prog_Refine3d_prm
@@ -122,7 +126,7 @@ public:
     void reconstruction(int argc, char **argv,
                         int iter, int volno, int noise = 0);
 
-/// Calculate 3D SSNR according to Unser ea. (2005)
+    /// Calculate 3D SSNR according to Unser ea. (2005)
     void calculate_3DSSNR(Matrix1D<double> &spectral_signal, int iter);
 
     /// After reconstruction update reference volume selfile
@@ -139,3 +143,4 @@ public:
 
 };
 //@}
+#endif

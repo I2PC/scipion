@@ -1,24 +1,24 @@
-/**@name FIR Convolve */
+/**@defgroup FIRConvolve FIR Convolve
+   @ingroup BilibLibrary */
 //@{
 /*--------------------------------------------------------------------------*/
 /** FIR Convolve 1D.
-
-    The specified boundary convention applies to the input data only,
-    not to the kernel. The boundary convention applied to the kernel
-    is FiniteDataSupport. The input and the output have the same length.
-    The origin for the kernel is given with respect to the leftmost sample [0].
-
-    success: return(!ERROR); failure: return(ERROR)
-
-    General structure is as follows:
-    \begin{verbatim}
-     for (i = 0L; (i < SignalLength); i++) {
-         Sum = 0.0;
-         for (j = -Infinity; (j <= Infinity); j++)
-              Sum += InputData[j] * Kernel[KernelOrigin + i - j];
-         OutputData[i] = Sum;
-     }
-    \end{verbatim}
+ * The specified boundary convention applies to the input data only,
+ *  not to the kernel. The boundary convention applied to the kernel
+ *  is FiniteDataSupport. The input and the output have the same length.
+ *  The origin for the kernel is given with respect to the leftmost sample [0].
+ *
+ *  success: return(!ERROR); failure: return(ERROR)
+ *
+ *  General structure is as follows:
+ *  @code
+ *   for (i = 0L; (i < SignalLength); i++) {
+ *       Sum = 0.0;
+ *       for (j = -Infinity; (j <= Infinity); j++)
+ *            Sum += InputData[j] * Kernel[KernelOrigin + i - j];
+ *       OutputData[i] = Sum;
+ *   }
+ *  @endcode
 */
 extern int  FirConvolve
     (
@@ -34,25 +34,25 @@ extern int  FirConvolve
 
 /*--------------------------------------------------------------------------*/
 /** FIR Convolve Antisymmetric 1D.
-    The specified boundary convention applies to the input data only,
-    not to the kernel. The boundary convention applied to the kernel is
-    FiniteDataSupport. The input and the output have the same length.
-    The origin for the kernel is its leftmost sample; it corresponds to its
-    anti-symmetry axis. The value of the kernel at the origin is expected to be
-    HalfKernel[0] = 0.0. The full length of the symmetric kernel is
-    (2L * KernelHalfLength - 1L)
-
-    success: return(!ERROR); failure: return(ERROR)
-
-    General structure is as follows:
-    \begin{verbatim}
-     for (i = 0L; (i < SignalLength); i++) {
-  Sum = 0.0;
-  for (j = 1L; (j < KernelHalfLength); j++)
-             Sum += (InputData[i + j] - InputData[i - j]) * HalfKernel[j];
-         OutputData[i] = Sum;
-     }
-     \end{verbatim}
+  * The specified boundary convention applies to the input data only,
+  * not to the kernel. The boundary convention applied to the kernel is
+  * FiniteDataSupport. The input and the output have the same length.
+  * The origin for the kernel is its leftmost sample; it corresponds to its
+  * anti-symmetry axis. The value of the kernel at the origin is expected to be
+  * HalfKernel[0] = 0.0. The full length of the symmetric kernel is
+  * (2L * KernelHalfLength - 1L)
+  *
+  * success: return(!ERROR); failure: return(ERROR)
+  *
+  * General structure is as follows:
+  * @code
+  *  for (i = 0L; (i < SignalLength); i++) {
+  *     Sum = 0.0;
+  *     for (j = 1L; (j < KernelHalfLength); j++)
+  *          Sum += (InputData[i + j] - InputData[i - j]) * HalfKernel[j];
+  *     OutputData[i] = Sum;
+  *  }
+  * @endcode
 */
 extern int  FirConvolveAntiSymmetric
     (
@@ -67,26 +67,26 @@ extern int  FirConvolveAntiSymmetric
 
 /*--------------------------------------------------------------------------*/
 /** FIR Convolve Antisymmetric 3D.
-    The specified boundary convention applies to the input data only,
-    not to the kernel. The boundary convention applied to the kernel is
-    FiniteDataSupport. VolumeSource is a (double)volume of size (Nx x Ny x Nz).
-    OutputData is a (double)volume of size (Nx x Ny x Nz). The origin for the
-    kernel is its leftmost sample; it corresponds to its anti-symmetry axis.
-    The full length of the amti-symmetric kernel is (2L * KernelHalfLength - 1L).
-    The 1D kernel is applied successively to each principal direction in a
-    separable fashion.
-
-    success: return(!ERROR); failure: return(ERROR)
-
-    General structure is as follows:
-    \begin{verbatim}
-     for (i = 0L; (i < SignalLength); i++) {
-        Sum = InputData[i] * HalfKernel[0];
-        for (j = 1L; (j < KernelHalfLength); j++)
-            Sum += (InputData[i + j] - InputData[i - j]) * HalfKernel[j];
-        OutputData[i] = Sum;
-     }
-    \end{verbatim}
+  * The specified boundary convention applies to the input data only,
+  * not to the kernel. The boundary convention applied to the kernel is
+  * FiniteDataSupport. VolumeSource is a (double)volume of size (Nx x Ny x Nz).
+  * OutputData is a (double)volume of size (Nx x Ny x Nz). The origin for the
+  * kernel is its leftmost sample; it corresponds to its anti-symmetry axis.
+  * The full length of the amti-symmetric kernel is (2L * KernelHalfLength - 1L).
+  * The 1D kernel is applied successively to each principal direction in a
+  * separable fashion.
+  *
+  * success: return(!ERROR); failure: return(ERROR)
+  *
+  * General structure is as follows:
+  * @code
+  *  for (i = 0L; (i < SignalLength); i++) {
+  *     Sum = InputData[i] * HalfKernel[0];
+  *     for (j = 1L; (j < KernelHalfLength); j++)
+  *         Sum += (InputData[i + j] - InputData[i - j]) * HalfKernel[j];
+  *     OutputData[i] = Sum;
+  *  }
+  * @endcode
 */
 extern int  FirConvolveAntiSymmetricVolume
     (
@@ -103,24 +103,24 @@ extern int  FirConvolveAntiSymmetricVolume
 
 /*--------------------------------------------------------------------------*/
 /** FIR Convolve Symmetric 1D.
-    The specified boundary convention applies to the input data only, not
-    to the kernel. The boundary convention applied to the kernel is
-    FiniteDataSupport. The input and the output have the same length.
-    The origin for the kernel is its leftmost sample; it corresponds to its
-    symmetry axis. The full length of the symmetric kernel is
-    (2L * KernelHalfLength - 1L).
-
-    success: return(!ERROR); failure: return(ERROR)
-
-    General structure is as follows:
-    \begin{verbatim}
-     for (i = 0L; (i < SignalLength); i++) {
-         Sum = InputData[i] * HalfKernel[0];
-         for (j = 1L; (j < KernelHalfLength); j++)
-             Sum += (InputData[i + j] + InputData[i - j]) * HalfKernel[j];
-         OutputData[i] = Sum;
-     }
-     \end{verbatim}
+  * The specified boundary convention applies to the input data only, not
+  * to the kernel. The boundary convention applied to the kernel is
+  * FiniteDataSupport. The input and the output have the same length.
+  * The origin for the kernel is its leftmost sample; it corresponds to its
+  * symmetry axis. The full length of the symmetric kernel is
+  * (2L * KernelHalfLength - 1L).
+  *
+  * success: return(!ERROR); failure: return(ERROR)
+  *
+  * General structure is as follows:
+  * @code
+  *  for (i = 0L; (i < SignalLength); i++) {
+  *      Sum = InputData[i] * HalfKernel[0];
+  *      for (j = 1L; (j < KernelHalfLength); j++)
+  *          Sum += (InputData[i + j] + InputData[i - j]) * HalfKernel[j];
+  *      OutputData[i] = Sum;
+  *  }
+  *  @endcode
 */
 
 extern int  FirConvolveSymmetric
@@ -136,26 +136,26 @@ extern int  FirConvolveSymmetric
 
 /*--------------------------------------------------------------------------*/
 /** FIR Convolve Symmetric 3D.
-    The specified boundary convention applies to the input data only,
-    not to the kernel. The boundary convention applied to the kernel is
-    FiniteDataSupport. VolumeSource is a (double)volume of size (Nx x Ny x Nz).
-    OutputData is a (double)volume of size (Nx x Ny x Nz). The origin for the
-    kernel is its leftmost sample; it corresponds to its symmetry axis.
-    The full length of the symmetric kernel is (2L * KernelHalfLength - 1L).
-    The 1D kernel is applied successively to each principal direction in a
-    separable fashion.
-
-    success: return(!ERROR); failure: return(ERROR)
-
-    General structure is as follows:
-    \begin{verbatim}
-     for (i = 0L; (i < SignalLength); i++) {
-       Sum = InputData[i] * HalfKernel[0];
-       for (j = 1L; (j < KernelHalfLength); j++)
-           Sum += (InputData[i + j] + InputData[i - j]) * HalfKernel[j];
-       OutputData[i] = Sum;
-     }
-     \end{verbatim}
+ * The specified boundary convention applies to the input data only,
+ *  not to the kernel. The boundary convention applied to the kernel is
+ *  FiniteDataSupport. VolumeSource is a (double)volume of size (Nx x Ny x Nz).
+ *  OutputData is a (double)volume of size (Nx x Ny x Nz). The origin for the
+ *  kernel is its leftmost sample; it corresponds to its symmetry axis.
+ *  The full length of the symmetric kernel is (2L * KernelHalfLength - 1L).
+ *  The 1D kernel is applied successively to each principal direction in a
+ *  separable fashion.
+ *
+ *  success: return(!ERROR); failure: return(ERROR)
+ *
+ *  General structure is as follows:
+ *  @code
+ *   for (i = 0L; (i < SignalLength); i++) {
+ *     Sum = InputData[i] * HalfKernel[0];
+ *     for (j = 1L; (j < KernelHalfLength); j++)
+ *         Sum += (InputData[i + j] + InputData[i - j]) * HalfKernel[j];
+ *     OutputData[i] = Sum;
+ *   }
+ *   @endcode
 */
 extern int  FirConvolveSymmetricVolume
     (

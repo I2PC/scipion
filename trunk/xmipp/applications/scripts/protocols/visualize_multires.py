@@ -6,7 +6,6 @@
 # ./visualize_multires.py
 #
 # Author: Carlos Oscar Sanchez Sorzano, April 2007
-# QUEDA POR HACER: Mostrar la distribucion angular del summary
 #
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
@@ -192,9 +191,13 @@ class VisualizeMultires3DClass:
    # Show Angle Convergence
    #------------------------------------------------------------------------
    def showAngleConvergence(self):
-       command="echo plot \\\"angle_convergence.txt\\\" u 1:2 w l"
-       command+=" \; pause 300 | gnuplot &"
-       self.execute(command)
+       plot=visualization.gnuplot()
+       plot.plot_xy_file("angle_convergence.txt",
+                         Title="Angular assignment convergence",
+                         X_Label="Iteration",
+                         Y_Label="Degrees",
+                         X_col=1,
+                         Y_col=2)
 	     
    #------------------------------------------------------------------------
    # Show Angular Assignment Discrete Summary

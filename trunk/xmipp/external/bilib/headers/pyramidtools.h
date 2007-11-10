@@ -16,7 +16,8 @@
 
 ---------------------------------------------------------------------------- */
 
-/**@name Pyramid tools */
+/**@defgroup PyramidTools Pyramid tools
+   @ingroup BilibLibrary */
 //@{
 /** Get Pyramid Filter.
  Function:

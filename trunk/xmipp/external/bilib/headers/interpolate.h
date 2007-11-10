@@ -1,4 +1,5 @@
-/**@name Spline interpolation */
+/**@defgroup SplineInterpolation Spline interpolation
+   @ingroup BilibLibrary */
 //@{
 /*--------------------------------------------------------------------------*/
 /** Interpolation 1D.

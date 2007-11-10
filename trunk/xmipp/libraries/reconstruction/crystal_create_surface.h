@@ -32,7 +32,8 @@
 
 #include <iostream>
 
-/**@name Create_Surface Program */
+/**@defgroup CrystalSurface crystal_create_surface (Create a surface from a crystal volume)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /* Create_Surface Program Parameters ------------------------------------------ */
 /** Please go to this URL
@@ -42,9 +43,7 @@ for further details
 
 class Prog_create_surface
 {
-
 public:
-
     /** Struct to keep the data of the plane lattice and the
     mapped lattice */
     struct surface_coordinates
@@ -77,8 +76,6 @@ public:
     Matrix1D<double > a, b;
     double x_des, y_des, z_des, x_nor_des, y_nor_des, z_nor_des;
 
-
-
 public:
     /** Constructor */
     Prog_create_surface();
@@ -105,8 +102,5 @@ public:
     lattice   */
     void run();
 };
-
-
-
 //@}
 #endif

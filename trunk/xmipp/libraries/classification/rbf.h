@@ -31,43 +31,44 @@
 
 class xmippRBF;
 
-/**@name Radial Basis Functions.
-
-The simplest way to use the Radial Basis Functions is by training different
-RBFs using different scales. To do so, use the function RBF_train_best_scale.
-You must provide a set of candidate centroids (not all of them will be used in
-the best RBF), a set of X (the independent variables), a set of corresponding y
-(y is supposed to be a function of X). You must also provide a search range for
-the scale (this is a number that helps to find the radius, and from 0.5 to 2
-should be a good enough range). The output of this function is the best RBF
-found for the data as well as the fitting error and the predicted y using the
-RBF model.
-
-The RBF model is predicted_y=sum_{for_all_centroids} weight(i)*
-   gaussian_radius(i)(X-Centroid(i)). This is the function used to estimate
-the value of y at X.
-
-Once the RBF is selected (trained) then you may use it to predict the value of y
-at a certain X. Use RBF predict for this task.
-
-Example:
-\begin{verbatim}
-   // Compute the RBF model for the known X and y.
-   // Training stage
-   xmippCTVectors knownX;     // Initialize conveniently
-   vector<double> knowny;     // Initialize conveniently
-   xmippCTVectors candidateC; // Initialize conveniently
-   xmippRBF       RBFmodel;   // Do not need to be initialized
-   double         error;      // Do not need to be initialized
-   vector<double> predicted_y;// Do not need to be initialized
-   RBF_train_best_scale(candidate_C, knownX, knowny, 0.5, 2, 0.1,
-      RBF, error, y_predicted);
-
-   // Interpolate for other Xs using the model previously trained.
-   xmippCTVectors another_set_X; // Initialize
-   vector<double> predictions_for_another_set_X; // Do not initialize
-   RBF_predict(RBF, another_set_X, predictions_for_another_set_X);
-\end{verbatim}
+/**@defgroup RBFs Radial Basis Functions
+  *@ingroup ClassificationLibrary
+  *
+  * The simplest way to use the Radial Basis Functions is by training different
+  * RBFs using different scales. To do so, use the function RBF_train_best_scale.
+  * You must provide a set of candidate centroids (not all of them will be used in
+  * the best RBF), a set of X (the independent variables), a set of corresponding y
+  * (y is supposed to be a function of X). You must also provide a search range for
+  * the scale (this is a number that helps to find the radius, and from 0.5 to 2
+  * should be a good enough range). The output of this function is the best RBF
+  * found for the data as well as the fitting error and the predicted y using the
+  * RBF model.
+  *
+  * The RBF model is predicted_y=sum_{for_all_centroids} weight(i)*
+  *    gaussian_radius(i)(X-Centroid(i)). This is the function used to estimate
+  * the value of y at X.
+  *
+  * Once the RBF is selected (trained) then you may use it to predict the value of y
+  * at a certain X. Use RBF predict for this task.
+  *
+  * Example:
+  * @code
+  *    // Compute the RBF model for the known X and y.
+  *    // Training stage
+  *    xmippCTVectors knownX;     // Initialize conveniently
+  *    vector<double> knowny;     // Initialize conveniently
+  *    xmippCTVectors candidateC; // Initialize conveniently
+  *    xmippRBF       RBFmodel;   // Do not need to be initialized
+  *    double         error;      // Do not need to be initialized
+  *    vector<double> predicted_y;// Do not need to be initialized
+  *    RBF_train_best_scale(candidate_C, knownX, knowny, 0.5, 2, 0.1,
+  *       RBF, error, y_predicted);
+  *
+  *    // Interpolate for other Xs using the model previously trained.
+  *    xmippCTVectors another_set_X; // Initialize
+  *    vector<double> predictions_for_another_set_X; // Do not initialize
+  *    RBF_predict(RBF, another_set_X, predictions_for_another_set_X);
+  * @endcode
 */
 //@{
 

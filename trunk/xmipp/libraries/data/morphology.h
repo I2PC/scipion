@@ -29,9 +29,11 @@
 #include "matrix2d.h"
 #include "matrix3d.h"
 
-/**@name Mathematical morphology */
-//@{
-/**@name 2D processes.
+/// @defgroup MathematicalMorphology Mathematical morphology
+/// @ingroup DataLibrary
+
+/**@defgroup Morphology2D 2D processes
+   @ingroup MathematicalMorphology
     The neighbourhood must be 4 or 8.
 
     Count is the number of pixels
@@ -74,7 +76,8 @@ void random_convex_hull(const Matrix2D<double> &img, Matrix2D<double> &hull,
                         long N = 100);
 //@}
 
-/**@name 3D processes.
+/**@defgroup Morphology3D 3D processes
+   @ingroup MathematicalMorphology
     The neighbourhood must be 6, 18 or 26.
 
     Count is the number of voxels
@@ -100,6 +103,5 @@ void closing3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
 /** Opening=Erosion+Dilation */
 void opening3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
                int count, int size);
-//@}
 //@}
 #endif

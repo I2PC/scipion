@@ -33,7 +33,8 @@
 
 #include "projection.h"
 
-/**@name Shift refinement */
+/**@defgroup ShiftRefinement refinement (Shift refinement)
+   @ingroup ReconsLibraryPrograms */
 //@{
 
 /**Correlates two projections and finds the maximun of the correlation matrix.
@@ -48,13 +49,11 @@ void calculate_and_find_correlation_max_proj(Projection const &proj1,
 /**Correlates two matrices  and finds the maximun of the correlation matrix.
    This center may not be at  an integer position.
    The routine works as follows:
-   \begin{enumerate}
-   \item Search for the maximun with pixel acuraccy inside the window
-   \item Calculate the gravity centre of the corelation
+   - Search for the maximun with pixel acuraccy inside the window
+   - Calculate the gravity centre of the corelation
          in a neighborhood such as maximum/sqrt(2) > value
-   \item Look for the gravity centre in this neighborhood
-   \end{enumerate}
-   {\bf Note:} The neighborhood is circular
+   - Look for the gravity centre in this neighborhood
+   Note: The neighborhood is circular
 */
 template <class T>
 void calculate_and_find_correlation_max_mat(Matrix2D<T> const &mat1,

@@ -35,7 +35,8 @@
 #include <data/funcs.h>
 #include <data/matrix1d.h>
 
-/**@name VRML */
+/**@defgroup VRMLInterface VRML
+   @ingroup InterfaceLibrary */
 //@{
 /**  VRML
       This is a class to draw a few vrml objects, designed with the idea

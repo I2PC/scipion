@@ -28,7 +28,8 @@
 #include "funcs.h"
 #include "volume.h"
 
-/**@name Segment */
+///@defgroup VolumeSegment Volume segmentation
+///@ingroup DataLibraryPrograms
 //@{
 /** Segment parameters. */
 class Prog_segment_prm
@@ -80,7 +81,6 @@ public:
     /** Really compute the mask. If a mask name is given then it is
         written to disk.*/
     void segment(VolumeXmipp &mask);
-
 };
 //@}
 #endif

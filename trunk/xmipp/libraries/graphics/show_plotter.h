@@ -39,7 +39,8 @@
 
 #include <data/matrix2d.h>
 
-/**@name Show Plotter */
+/**@defgroup ShowPlotter Show Plotter
+   @ingroup GraphicsLibrary */
 //@{
 /** Class to store the Settings of the plotter.
     It has been implemented to let the plotter
@@ -104,7 +105,7 @@ public:
     .png image.
 
     An example of use is provided by:
-    \begin{verbatim}
+    @code
          #include <XmippGraphics/showPlotter.hh>
          #include <qapplication.h>
 
@@ -124,7 +125,7 @@ public:
             } catch (Xmipp_error XE) {cout << XE;}
             return 0;
          }
-    \end{verbatim}
+    @endcode
 */
 class Plotter : public QMainWindow
 {

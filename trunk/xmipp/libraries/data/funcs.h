@@ -56,6 +56,7 @@ using namespace std;
 #include "../../xmippConfiguration.inc"
 
 /// @defgroup GeneralFunctions General functions
+/// @ingroup DataLibrary
 
 /// @defgroup NumericalFunctions Numerical functions
 /// @ingroup GeneralFunctions
@@ -236,14 +237,6 @@ double gaussian2D(double x,
                   double ang,
                   double muX = 0,
                   double muY = 0);
-
-/** Integrate a function using Newton-Cotes formula
- * @ingroup NumericalFunctions
- *
- * Estimate the integral of a function between a and b using N points.
- */
-double integrateNewtonCotes(double(*f)(double), double a, double b, int N);
-
 
 /// @defgroup MiscellaneousFunctions Miscellaneous functions
 /// @ingroup GeneralFunctions

@@ -30,9 +30,10 @@
 #include "progs.h"
 #include "mask.h"
 
-/// @defgroup Normalize Normalize program.
+/// @defgroup Normalize Normalization of images and volumes
+/// @ingroup DataLibraryPrograms
 
-/** Normalize parameters.
+/** Normalize parameters
  * @ingroup Normalize
  */
 class Normalize_parameters: public Prog_parameters

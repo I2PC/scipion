@@ -32,7 +32,8 @@
 
 #include <vector>
 
-/// @defgroup MakeSpectra Make spectra.
+/// @defgroup MakeSpectra Make spectra
+/// @ingroup DataLibraryPrograms
 
 /** Make spectra parameters.
  * @ingroup MakeSpectra
@@ -78,7 +79,7 @@ public:
     void show_specific();
 
     /** Usage. This function calls usage_specific.
-     */
+         */
     void usage();
 
     /** Show specific parameters.

@@ -36,6 +36,7 @@ void apply_geo_cont_2D_mask(Matrix2D< double >& mask,
                             const Matrix2D< double >& A);
 
 /// @defgroup Masks Masks
+/// @ingroup DataLibrary
 
 /// @defgroup Masks1D 1D masks
 /// @ingroup Masks
@@ -63,7 +64,7 @@ void RaisedCosineMask(Matrix1D< double >& mask,
  *
  * The mask is supposed to be resized and with its logical origin already set. A
  * circle placed logically at (x0,y0), by default (0,0), is created within the
- * two the radii indicated with an extra region of <pix_width> pixels. The only
+ * two the radii indicated with an extra region of (pix_width) pixels. The only
  * two valid modes are INNER_MASK (by default) or OUTSIDE_MASK. Inner mask are
  * normal RaisedCrowns, and outside masks are 1 - RaisedCrowns. When entering,
  * the mask is initialiazed to 0 and then the mask is created.
@@ -200,7 +201,7 @@ void RaisedCosineMask(Matrix2D< double >& mask,
  *
  * The mask is supposed to be resized and with its logical origin already set. A
  * circle placed logically at (x0,y0), by default (0,0), is created within the
- * two the radii indicated with an extra region of <pix_width> pixels. The only
+ * two the radii indicated with an extra region of (pix_width) pixels. The only
  * two valid modes are INNER_MASK (by default) or OUTSIDE_MASK. Inner mask are
  * normal RaisedCrowns, and outside masks are 1 - RaisedCrowns.
  *
@@ -421,7 +422,7 @@ void RaisedCosineMask(Matrix3D< double >& mask,
  *
  * The mask is supposed to be resized and with its logical origin already set. A
  * circle placed logically at (x0,y0,z0), by default (0,0,0), is created within
- * the two the radii indicated with an extra region of <pix_width> voxels. The
+ * the two the radii indicated with an extra region of (pix_width) voxels. The
  * only two valid modes are INNER_MASK (by default) or OUTSIDE_MASK. Inner mask
  * are normal RaisedCrowns, and outside masks are 1 - RaisedCrowns.
  *
@@ -1263,7 +1264,7 @@ void apply_geo_cont_2D_mask(Matrix2D< double >& mask,
 /** Apply binary mask to an image (1D)
  * @ingroup MasksTools
  *
- * The image values for which the input mask is 0 are set to <subs_val>. The
+ * The image values for which the input mask is 0 are set to (subs_val). The
  * input and output matrices can be the same ones. Only the overlapping values
  * are affected by the mask.
  *
@@ -1310,7 +1311,7 @@ void apply_cont_mask(const Matrix1D< double >& mask, const Matrix1D< T >& m_in,
 /** Apply binary mask to an image (2D)
  * @ingroup MasksTools
  *
- * The image values for which the input mask is 0 are set to <subs_val>. The
+ * The image values for which the input mask is 0 are set to (subs_val). The
  * input and output matrices can be the same ones. Only the overlapping values
  * are affected by the mask
  */

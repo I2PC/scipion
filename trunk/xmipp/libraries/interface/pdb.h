@@ -33,12 +33,13 @@
 #include <data/matrix1d.h>
 #include <reconstruction/projection.h>
 
-/**@name PDB */
+/**@defgroup PDBinterface PDB
+   @ingroup InterfaceLibrary */
 //@{
 /** Returns the charge of an atom.
     Returns 0 if the atom is not within the short list (H, C, N, O, S, P, Fe)
     of valid atoms. */
-int atomCharge(const string &atom);
+int atomCharge(const std::string &atom);
 
 /** Returns the radius of an atom.
     Returns 0 if the atom is not within the short list (H, C, N, O, S, P, Fe)
@@ -46,7 +47,7 @@ int atomCharge(const string &atom);
     
     The radius data is taken from http://www.webelements.com as the empirical
     radius. */
-double atomRadius(const string &atom);
+double atomRadius(const std::string &atom);
 
 /** Compute the center of mass and limits of a PDB file.
     The limits are referred to the center of mass, i.e., the
@@ -61,7 +62,7 @@ void computePDBgeometry(const std::string &fnPDB,
     The result is written in the output PDB. Set centerPDB if you
     want to compute the center of mass first and apply the transformation
     after centering the PDB. */
-void applyGeometry(const string &fn_in, const string &fn_out,
+void applyGeometry(const std::string &fn_in, const std::string &fn_out,
     const Matrix2D<double> &A, bool centerPDB=true);
 
 /** Atom class. */
@@ -149,7 +150,7 @@ double electronFormFactorRealSpace(double r,
     factor convolved with a suitable low pass filter for sampling the volume
     at a sampling rate M*T. The radial profile is sampled at T Angstroms/pixel.
 */
-void atomRadialProfile(int M, double T, const string &atom,
+void atomRadialProfile(int M, double T, const std::string &atom,
     Matrix1D<double> &profile);
 
 /** Atom projection radial profile.

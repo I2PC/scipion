@@ -30,7 +30,8 @@
 
 #include "phantom.h"
 
-/**@name Evaluation program */
+/**@defgroup EvaluateFOMS foms_evaluate (FOMs evaluation program)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /* Evaluation Program Parameters ------------------------------------------- */
 /** Parameter class for the evaluate program */
@@ -66,7 +67,7 @@ public:
     /** Apply gray fitting between volumes before evaluating. */
     bool fit_gray_scales;
 
-    /**@name Background definition.
+    /** Background definition.
        The background of a feature is defined either by a sphere of radius
        back_radius or a scaled version of that same feature. The way of
        knowing which one it is, is using the flag back_mode which can only
@@ -91,14 +92,14 @@ public:
         \\ SAVE_MAPS: save generated phantom, label map, distance map,
            difference, absolute difference and quadratic difference maps
            (volumes) with names:
-           \begin{verbatim}
+           @code
            w0001_eval_phantom.vol
            w0001_eval_label.vol
            w0001_evaluateQuadratic_map.vol
            w0001_eval_difference_map.vol
            w0001_eval_absolute_map.vol
            w0001_eval_distance_map.vol
-           \end{verbatim}
+           @endcode
         \\ SHOW_VALUES: you can ask interactively to show the voxel
            values for this feature.
         \\ SHOW_PROCESS: routines show information about the main
@@ -153,7 +154,7 @@ public:
         ...=0 means that it belongs to the background */
     VolumeXmipp       vol_label;
     /** Global mask.
-        If you give a \Ref{global_radius} then all voxels outside this
+        If you give a global_radius then all voxels outside this
         mask are not taken into the computations */
     VolumeXmipp       vol_mask;
     /** Distance volume.
@@ -192,7 +193,6 @@ public:
 class EVALUATE_results
 {
 public:
-    /**@name Structural consistency results*/
     //@{
     /// for features: L2 error
     Matrix1D<double> scL2_FOMs;
@@ -230,7 +230,6 @@ public:
     double           resol_FOM;
     //@}
 
-    /**@name Histogram based results */
     //@{
     /// for double cylinders: vertical error
     Matrix1D<double> hsvr_FOMs;
@@ -250,7 +249,6 @@ public:
     double           hsdt_FOM;
     //@}
 
-    /**@name Directional results */
     //@{
     /// global: Slice histograms
     ImageXmipp      img_histog;
@@ -258,7 +256,6 @@ public:
     double           drrt_FOM;
     //@}
 
-    /**@name Distance based FOMs */
     //@{
     /// global: blurring distance
     double           dsbl_FOM;
@@ -271,10 +268,10 @@ public:
     This is the core function in the FOM calculations. The results
     are returned in a structure because they are too many. You may
     cause this function to output some information about the process
-    using the \Ref{Prog_Evaluate_Parameters::tell} variable.
+    using the \ref Prog_Evaluate_Parameters::tell variable.
 
     If you set the following flags then these other files are created:
-    \begin{verbatim}
+    @code
     SHOW_PROCESS     -->
         w0001_eval_radon.plot:  with the Radon transforms
     SAVE_HISTOGRAMS  -->
@@ -282,7 +279,7 @@ public:
     Without any flag -->
         w0001_eval_shape.plot:  with the shape information
         w0001_eval_slice_histog.img: with the slice histograms as an image
-    \end{verbatim} */
+    @endcode */
 void compute_FOMs(const Prog_Evaluate_Parameters &prm,
                   EVALUATE_Side_Info &side, EVALUATE_results &results);
 
@@ -299,10 +296,6 @@ void show_FOMs(const Prog_Evaluate_Parameters &prm,
 void ROUT_Evaluate(Prog_Evaluate_Parameters &prm,
                    EVALUATE_results &results);
 
-/**@name Multiple evaluation */
-//@{
-/**@name Set of plain FOMs */
-//@{
 /** FOM class with all kin of FOMs. */
 class FOMs
 {
@@ -355,7 +348,5 @@ public:
                            const FOMs &fstddev);
 };
 
-//@}
-//@}
 //@}
 #endif

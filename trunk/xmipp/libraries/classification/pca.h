@@ -30,7 +30,8 @@ using namespace std;
 #include <data/funcs.h>
 #include <data/matrix2d.h>
 
-/**@name PCA classes*/
+/**@defgroup PCA Principal Component Analysis
+   @ingroup ClassificationLibrary */
 //@{
 /** Basic PCA class */
 class xmippPC
@@ -46,7 +47,7 @@ public:
     /**
     * Construct a xmippPC object with eigenvectors & eigenvalues
     * from ts.
-    * @param ts The vectors.
+    * Parameter: ts The vectors.
     */
     xmippPC(xmippCTVectors const &ts)
     {
@@ -56,8 +57,8 @@ public:
     /**
     * Construct a xmippPC object with eigenvectors & eigenvalues
     * from ts, using only the items given in idx.
-    * @param ts The vectors.
-    * @param idx The indexes of the vectors to use
+    * Parameter: ts The vectors.
+    * Parameter: idx The indexes of the vectors to use
     */
     xmippPC(xmippCTVectors const &ts, vector<unsigned> const & idx)
     {
@@ -66,14 +67,14 @@ public:
 
     /**
     * Calculate the eigenval/vecs
-    * @param ts The vectors.
+    * Parameter: ts The vectors.
     */
     void reset(xmippCTVectors const &ts);
 
     /**
     * Calculate the eigenval/vecs
-    * @param ts The vectors.
-    * @param idx The indexes of the vectors to use
+    * Parameter: ts The vectors.
+    * Parameter: idx The indexes of the vectors to use
     */
     void reset(xmippCTVectors const &ts, vector<unsigned> const & idx);
 
@@ -111,7 +112,7 @@ public:
     vector<double> avg_ei;
 
     /**Set identity matrix as eigenvector matrix
-     @param n The number of eigenvectors*/
+     Parameter: n The number of eigenvectors*/
     void setIdentity(int n);
 
     /** Clear.

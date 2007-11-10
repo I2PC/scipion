@@ -35,7 +35,8 @@
 #include <data/volume.h>
 #include <data/image.h>
 
-/**@name Spider */
+/**@defgroup SpiderInterface Spider
+   @ingroup InterfaceLibrary */
 //@{
 /** Generate a Spider "count" file.
     This function returns a DocFile with (1, 2, 3, ..., imax) */
@@ -144,13 +145,12 @@ void Angular_refinement_Radon(const FileName &fn_vol, const FileName &fn_sel,
                               double max_shift = 2);
 
 /** Angular refinement via Projection Matching. fn_ext is computed as the
-    extension of the volume. The files refangles.<fn_ext> and projlist.<fn_ext> are
-    created with the reference angles and the projection list respectively.
-    Ideal projections are called ideal****.<fn_ext>. The selfile with the
+    extension of the volume. The files refangles.(fn_ext) and projlist.(fn_ext)
+    are created with the reference angles and the projection list respectively.
+    Ideal projections are called ideal****.(fn_ext). The selfile with the
     experimental images (fn_sel) is translated for Spider under the name
-    experimentalsel.<fn_ext>. The max_shift must be a multiple of the
+    experimentalsel.(fn_ext). The max_shift must be a multiple of the
     shift_step*/
-
 void Angular_refinement_Matching(const FileName &fn_vol, const FileName &fn_sel,
                                  const FileName &fn_report,
                                  double tilt_step = 2,

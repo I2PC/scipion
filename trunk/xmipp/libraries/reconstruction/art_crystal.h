@@ -33,18 +33,17 @@
 #include "reconstruct_art.h"
 #include "symmetries.h"
 
-/**@name ART+crystal */
+/**@defgroup ARTCrystal art_crystal (ART for crystals)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /** ART+crystal parameters.
     Here only those specific parameters for crystals are found, the rest of
     parameters common with normal ART should be looked up in
-    \Ref{Prog_Art_Parameters} */
+    \ref Basic_ART_Parameters */
 class Crystal_ART_Parameters
 {
 public:
     /* User parameters ...................................................... */
-    /**@name User parameters */
-    //@{
     /// First lattice vector module (user supplies it in arbitrary units
     /// but it is divided by sampling as soon as it is initialized)
     double a_mag;
@@ -61,13 +60,8 @@ public:
     Matrix1D<double> bvox;
     /// Fill space, repeat unit cell all over the space
     bool fill_space;
-    //@}
 
     /* Side information ..................................................... */
-    /**@name Side information */
-    //@{
-    /**@name Crystal lattice related */
-    //@{
     /// First lattice vector (BCC units)
     Matrix1D<double> a;
     /// Second lattice vector (BCC units)
@@ -82,7 +76,6 @@ public:
     Matrix1D<double> bi;
     /// space_group
     int space_group;
-    //@}
     /** Unit cell mask.
         This mask is defined in the BCC space
         and it represent a parallelogram defined by points (-a-b)/2, (-a+b)/2,
@@ -90,7 +83,6 @@ public:
         the basis inside this mask. Be careful that this is a 2D mask for a 3D
         reconstruction. */
     Matrix2D<int> unit_cell_mask;
-    //@}
 public:
     /// cout << crystal_prm;
     friend ostream & operator << (ostream &o,
@@ -121,10 +113,10 @@ public:
     Given two real lattice vectors, this function returns the corresponding
     integer vectors and the matrix V which passes from a to aint. All
     vectors are supposed to be 2x1, so V is 2x2. Before computing
-    \begin{verbatim}
+    @code
        aint = Vinv*a; a=V*aint;
        bint = Vinv*b; b=V*bint;
-    \end{verbatim} */
+    @endcode */
 void compute_integer_lattice(const Matrix1D<double> &a,
                              const Matrix1D<double> &b,
                              double a_mag, double b_mag,
@@ -165,7 +157,7 @@ void finish_ART_iterations(const Basic_ART_Parameters &prm,
 void expand_to_fill_space(const Basic_ART_Parameters &prm,
                           const Crystal_ART_Parameters &eprm, GridVolume &vol);
 
-/** Force the {\it trial} volume to be symmetric. */
+/** Force the trial volume to be symmetric. */
 void apply_symmetry(GridVolume &vol_in, GridVolume *vol_out,
                     const Crystal_ART_Parameters &eprm,
                     int grid_type);

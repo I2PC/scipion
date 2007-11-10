@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include "splines.h"
+#include <data/integration.h>
 
 /* Bspline03 by a LUT ------------------------------------------------------ */
 double Bspline03LUT(double x)

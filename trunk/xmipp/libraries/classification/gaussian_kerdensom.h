@@ -34,7 +34,8 @@
 
 #include "kerdensom.h"
 
-/**@name Smoothly Distributed t-Student Kernel Probability Density Estimator Self Organizing Map*/
+/**@defgroup SmoothlyTStudent Smoothly Distributed t-Student Kernel Probability Density Estimator Self Organizing Map
+   @ingroup ClassificationLibrary */
 //@{
 /**
  * This class trains a Smoothly Distributed Kernel Probability Density Estimator Self Organizing Map
@@ -46,11 +47,11 @@ public:
 
     /**
      * Constructs the algorithm
-     * @param _reg0       Initial regularization factor
-     * @param _reg1       Final regularization factor
-     * @param _annSteps   Number of steps in deterministic annealing
-     * @param _epsilon    Stopping criterion
-     * @param _nSteps     Number of training steps
+     * Parameter: _reg0       Initial regularization factor
+     * Parameter: _reg1       Final regularization factor
+     * Parameter: _annSteps   Number of steps in deterministic annealing
+     * Parameter: _epsilon    Stopping criterion
+     * Parameter: _nSteps     Number of training steps
      */
     xmippGaussianKerDenSOM(double _reg0, double _reg1, unsigned long _annSteps,
                            double _epsilon, unsigned long _nSteps)
@@ -66,10 +67,10 @@ public:
 
     /**
      * Trains the GaussianKerDenSOM
-     * @param _som  The KerDenSom to train
-     * @param _ts   The training set
-     * @param _update True if uses _som as starting point for training.
-     * @param _sigma If update = true, uses this sigma for the training.
+     * Parameter: _som  The KerDenSom to train
+     * Parameter: _ts   The training set
+     * Parameter: _update True if uses _som as starting point for training.
+     * Parameter: _sigma If update = true, uses this sigma for the training.
      */
     virtual void train(xmippFuzzyMap& _som, TS& _examples, FileName& _fn_vectors, bool _update = false, double _sigma = 0);
 
@@ -98,6 +99,4 @@ protected:
 };
 
 //@}
-
-
 #endif

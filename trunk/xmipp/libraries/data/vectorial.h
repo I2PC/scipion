@@ -28,9 +28,10 @@
 
 #include "volume.h"
 
-/// @defgroup Vectorial Vectorial.
+/// @defgroup Vectorial Vector volumes
+/// @ingroup MultidimensionalArrays
 
-/** @defgroup VectorialSpeedUp Speed up functions.
+/** @defgroup VectorialSpeedUp Speed up functions
  * @ingroup Vectorial
  */
 
@@ -72,7 +73,7 @@ class Vectorial_Matrix3D
     Matrix3D< double > __Z;
 
 public:
-    /// @defgroup VectorialShape Shape.
+    /// @defgroup VectorialShape Shape
     /// @ingroup Vectorial
 
     /** Resize.
@@ -133,7 +134,7 @@ public:
         __Z.setXmippOrigin();
     }
 
-    /// @defgroup VectorialAccess Component access.
+    /// @defgroup VectorialAccess Component access
     /// @ingroup Vectorial
 
     /** Vector at a position.
@@ -404,7 +405,7 @@ public:
         return MULTIDIM_ELEM(__Z, i);
     }
 
-    /// @defgroup VectorialUtilitites Utilities.
+    /// @defgroup VectorialUtilitites Utilities
     /// @ingroup Vectorial
 
     /** Substitute each vector by its unit vector.

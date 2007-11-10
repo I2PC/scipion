@@ -29,7 +29,8 @@
 #include "funcs.h"
 #include "micrograph.h"
 
-/**@name Downsample */
+///@defgroup MicrographDownsample Micrograph Downsample
+/// @ingroup DataLibraryPrograms
 //@{
 /** Downsample parameters. */
 class Prog_downsample_prm

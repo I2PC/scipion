@@ -139,7 +139,7 @@ maskImg::maskImg(QWidget *parent, QImage *_image, maskType _typeOfMask, const ch
 
 /****************************************************/
 
-maskImg::maskImg(QWidget *parent, Image *_image, maskType _typeOfMask, const char *name, int wFlags)
+maskImg::maskImg(QWidget *parent, ImageT<double> *_image, maskType _typeOfMask, const char *name, int wFlags)
         : QWidget(parent, name, wFlags),
         filename(0),
         helpmsg(0)
@@ -515,7 +515,7 @@ bool maskImg::showImage()
 
 /*****************************************/
 
-bool maskImg::xmipp2Qt(Image &_image)
+bool maskImg::xmipp2Qt(ImageT<double> &_image)
 {
     bool ok = FALSE;
 

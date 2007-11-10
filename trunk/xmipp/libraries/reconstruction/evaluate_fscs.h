@@ -31,7 +31,8 @@
 
 #include "phantom.h"
 
-/**@name Evaluation FSCs program */
+/**@defgroup EvaluateFSCs evaluate_fscs (Evaluation FSCs program)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /* Evaluation FSCs Program Parameters --------------------------------------- */
 /** Parameter class for the evaluate FSCs program */

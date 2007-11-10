@@ -35,7 +35,8 @@ const int BLOB_SUBSAMPLING = 10;
 const int PIXEL_SUBSAMPLING = 1;
 const int SPLINE_SUBSAMPLING = 1;
 
-/**@name Basis function
+/**@defgroup BasisFunction Basis function
+   @ingroup ReconsLibrary
     This class defines the basis function to use for the reconstruction.
     Currently, valid basis functions are blobs and voxels.
 */

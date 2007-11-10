@@ -137,7 +137,7 @@ void Prog_align2d_prm::usage()
 }
 
 // Rotational alignment ========================================================
-bool Prog_align2d_prm::align_rot(ImageXmipp &img, const Matrix2D<double> &Mref,
+bool Prog_align2d_prm::align_rot(ImageXmippT<double> &img, const Matrix2D<double> &Mref,
                                  const float &max_rot, const float &Rin, const float &Rout, const double &outside)
 {
 
@@ -219,7 +219,7 @@ bool Prog_align2d_prm::align_rot(ImageXmipp &img, const Matrix2D<double> &Mref,
 }
 
 // translational alignment =====================================================
-bool Prog_align2d_prm::align_trans(ImageXmipp &img, const Matrix2D<double> &Mref, const float &max_shift,
+bool Prog_align2d_prm::align_trans(ImageXmippT<double> &img, const Matrix2D<double> &Mref, const float &max_shift,
                                    const double &outside)
 {
 
@@ -326,7 +326,7 @@ bool Prog_align2d_prm::align_trans(ImageXmipp &img, const Matrix2D<double> &Mref
 }
 
 // Complete search alignment ========================================================
-bool Prog_align2d_prm::align_complete_search(ImageXmipp &img, const Matrix2D<double> &Mref,
+bool Prog_align2d_prm::align_complete_search(ImageXmippT<double> &img, const Matrix2D<double> &Mref,
         const float &max_shift, const float &max_rot, const float &psi_interval,
         const float &Rin, const float &Rout, const double &outside)
 {

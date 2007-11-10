@@ -34,17 +34,18 @@
 #include <data/matrix3d.h>
 #include <data/geometry.h>
 
-/**@name APH2D Files */
+/**@defgroup APH3D APH3D Files
+   @ingroup InterfaceLibrary */
 //@{
 /** APH2D Files.
     This is a class to read/write APH files as produced by the CCP$'s program
     prepmklcf (just the log file).
-    \begin{verbatim}
+    @code
    H   K   L      A      P     FOM*100         REJECTS
                                       0   1  0.000     0.0  180.0     0.0   1.0
    0   1   1  6097.2  -90.0 100.0
    0   1   1  9847.4  -90.0 100.0
-    \end{verbatim}
+    @endcode
     First lines are skiped Each line describes a Fourier spot (if indented is
     ignored), the first  three columns are h, k and l, then the magnitude, the
     phase

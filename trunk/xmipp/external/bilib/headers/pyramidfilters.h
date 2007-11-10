@@ -16,7 +16,8 @@
 
 ---------------------------------------------------------------------------- */
 
-/**@name Pyramid filters */
+/**@defgroup PyramidFilters Pyramid filters
+   @ingroup BilibLibrary */
 //@{
 /** PyramidFilterSplinel2.
  Function:  PyramidFilterSplinel2

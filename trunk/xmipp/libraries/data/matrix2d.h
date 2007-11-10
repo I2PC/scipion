@@ -51,56 +51,42 @@
 
 #include "multidim_friends.inc"
 
-// TODO Document
 template<typename T>
 mT multiplyElements(const mT& op1, const mT& op2);
 
-// TODO Document
 template<typename T>
 void multiplyMatrix(const mT& op1, const mT& op2, mT& result);
 
-// TODO Document
 template<typename T>
 void solve(const mT& A, const vT& b, vT& result);
 
-// TODO Document
 template<typename T>
 void solve(const mT& A, const mT& b, mT& result);
 
-/** Solve linear systems by singular value decomposition.
- *
- * This is indicated for ill-conditioned systems and hard-to-solve problems
- * (But it's slower)
- */
 template<typename T>
 void solveBySVD(const mT& A,
                 const vT& b,
                 Matrix1D< double >& result,
                 double tolerance);
 
-// TODO Document
 template<typename T>
 void ludcmp(const mT& A, mT& LU, Matrix1D< int >& indx, T& d);
 
-// TODO Document
 template<typename T>
 void lubksb(const mT& LU, Matrix1D< int >& indx, vT& b);
 
-// TODO Document
 template<typename T>
 void svdcmp(const Matrix2D< T >& a,
             Matrix2D< double >& u,
             Matrix1D< double >& w,
             Matrix2D< double >& v);
 
-// TODO Document
 void svbksb(Matrix2D< double >& u,
             Matrix1D< double >& w,
             Matrix2D< double >& v,
             Matrix1D< double >& b,
             Matrix1D< double >& x);
 
-// TODO Document
 template<typename T>
 void applyGeometry(mT& m2,
                 Matrix2D< double > A,
@@ -109,7 +95,6 @@ void applyGeometry(mT& m2,
                 bool wrap,
                 T outside = (T) 0);
 
-// TODO Document
 template<typename T>
 void applyGeometryBSpline(mT& m2,
                         Matrix2D< double > A,
@@ -119,16 +104,14 @@ void applyGeometryBSpline(mT& m2,
                         bool wrap,
                         T outside = (T) 0);
 
-// TODO Document
 Matrix2D< double > rotation2DMatrix(double ang);
 
-// TODO Document
 Matrix2D< double > translation2DMatrix(const Matrix1D< double > v);
 
-// TODO Document
 int bestPrecision(float F, int _width);
 
-/// @defgroup Matrices Xmipp Matrices
+/// @defgroup Matrices Matrices
+/// @ingroup MultidimensionalArrays
 
 /** @defgroup MatricesSpeedUp Speed up macros
  * @ingroup Matrices
@@ -3257,7 +3240,7 @@ void leastSquare(const Matrix2D< double >& C, const Matrix1D< double >& d,
 
 // TODO Document
 template<typename T>
-void mT::printShape(ostream& out) const
+void mT::printShape(std::ostream& out) const
 {
     out << "Size(Y,X): " << YSIZE(*this) << "x" << XSIZE(*this)
     << " i=[" << STARTINGY(*this) << ".." << FINISHINGY(*this) << "]"
@@ -3469,9 +3452,9 @@ void mT::centerOfMass(Matrix1D< double >& center, void* mask)
         center /= mass;
 }
 
-// TODO Document
+/// Show matrix
 template<typename T>
-ostream& operator<<(ostream& ostrm, const mT& v)
+std::ostream& operator<<(std::ostream& ostrm, const mT& v)
 {
     if (XSIZE(v) == 0 || YSIZE(v) == 0)
         ostrm << "NULL matrix\n";

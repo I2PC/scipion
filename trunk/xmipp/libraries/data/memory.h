@@ -29,7 +29,8 @@
 #include "error.h"
 
 /* Memory managing --------------------------------------------------------- */
-/**@name Memory managing */
+///@defgroup MemoryManaging Memory management for numerical recipes
+/// @ingroup DataLibrary
 //@{
 /** Ask memory for any type vector.
     The valid values range from v[nl] to v[nh]. If no memory is available

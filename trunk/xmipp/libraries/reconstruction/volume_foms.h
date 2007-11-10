@@ -30,7 +30,8 @@
 
 #include "phantom.h"
 
-/**@name Figures of merit
+/**@defgroup FiguresOfMerit Figures of Merit
+   @ingroup ReconsLibrary
    Local FOM functions return also a vector with the local error or
    whatever for each feature. Features are numbered from 0 to
    phantom.FeatNo()-1.
@@ -40,15 +41,15 @@
     The volume label must have for each voxel to which feature it belongs
     to. It is supposed that there is no intersection between features and
     the labelling code must be:
-    \begin{verbatim}
+    @code
               0         --> background
               1         --> feature 1
               2         --> feature 2
              ...
        phantom.FeatNo() --> last feature
-    \end{verbatim}
+    @endcode
     feat_voxels contains the result with indexes 0 ... FeatNo().
-    See also \Ref{Phantom::label}. */
+    See also Phantom::label. */
 void compute_voxels_in_feat(Volume *vol_label,
                             Matrix1D<double> &feat_voxels);
 
@@ -74,51 +75,51 @@ void show_voxels_in_feat(const Volume *vol_phantom,
     Under this function several measures are performed over the volume.
 
     The scL2_FOM is a squared error measure and it is defined as
-    \begin{verbatim}
+    @code
                         1   1
     scL2_FOM(f) = 1 - ---- sum 1/2(p(i)-r(i))²
                       N(f) N(f)
-    \end{verbatim}
+    @endcode
 
     The scL1_FOM is an absolute error measure defined as
-    \begin{verbatim}
+    @code
                         1   1
     scL1_FOM(f) = 1 - ---- sum 1/2|p(i)-r(i)|
                       N(f) N(f)
-    \end{verbatim}
+    @endcode
 
     The scmu_FOM measures the difference between the mean value within
     the feature in the phantom and in the reconstruction.
-    \begin{verbatim}
+    @code
                         1
     scmu_FOM(f) = 1 - ---- | p(f).avg() - r(f).avg() |
                         2
-    \end{verbatim}
+    @endcode
 
     The scdev_FOM measures the difference between the standard deviation
     value within the feature in the phantom and in the reconstruction.
-    \begin{verbatim}
+    @code
     scdev_FOM(f) = 1 - | p(f).stddev() - r(f).stddev() |
-    \end{verbatim}
+    @endcode
 
     The scrange_FOM is the difference between the ranges in the phantom
     and the reconstruction.
-    \begin{verbatim}
+    @code
     scrange_FOM(f) = 1 - 1/2(|p(f).max()-r(f).max()| + |p(f).min()-r(f).min()|)
-    \end{verbatim}
+    @endcode
 
     The sccorr_FOM is the correlation between the phantom and the reconstruction.
-    \begin{verbatim}
+    @code
                       1   1                                   1         1
     sccorr_FOM(f) = ---- sum (p(i)-p(f).avg())(r(i)-r(f).avg())/(sum (p(i)-p(f).avg())²*sum (r(i)-r(f).avg())²)
-    \end{verbatim}  N(f) N(f)      N(f)    N(f)
+    @endcode  N(f) N(f)      N(f)    N(f)
 
     The mutual information is defined as
-    \begin{verbatim}
+    @code
                         I(x,y)
     scinf_FOM(x,y) = -----------      I(x) = -sum(p(i)*log(p(i)))
                       I(x)*I(y)
-    \end{verbatim}
+    @endcode
 
     These calculations will be carried out only on those voxels which are
     labelled as 'f'. If f=-1 the they are carried out over the whole volume.
@@ -147,7 +148,7 @@ void compute_sc_FOMs(
 
     \\========================================================================
     \\The vertical resolution FOM is defined as
-    \begin{verbatim}
+    @code
                        r1.avg()+r2.avg()-2*r3.avg()
                    ----------------------------------
                    sqrt(r1.var()+r2.var()+4*r3.var())
@@ -155,7 +156,7 @@ void compute_sc_FOMs(
                        p1.avg()+p2.avg()-2*p3.avg()
                    ----------------------------------
                    sqrt(p1.var()+p2.var()+4*p3.var())
-    \end{verbatim}
+    @endcode
     where var() stands for variance, and r1 is a plane in the reconstruction
     in the lower cyilinder, r2 is a plane in the reconstruction in the
     upper cylinder and r3 is in between both cylinders. p1, p2 and p3 are
@@ -177,7 +178,7 @@ void compute_sc_FOMs(
     the local background. The routine studies the confidence in that
     both means are different, and returns the difference of confidence
     between the phantom and the reconstruction.
-    \begin{verbatim}
+    @code
     hsmu_FOM(f)=1-|confidence(phantom)-confidence(recons)|
 
     confidence(recons)=erf(zr/sqrt(2))
@@ -185,7 +186,7 @@ void compute_sc_FOMs(
     erf(x)=(2 / sqrt(pi)) integral{0 to x} of (e ** -t **2)  dt
 
     zr=ABS(mrf-mrb)/sqrt(vrf/Nf+vrb/Nb)
-    \end{verbatim}
+    @endcode
     where mrf and mrb are the mean of the reconstruction in the foreground
     and in the background respectively, vrf and vrb are the variances
     in the same places, and Nf and Nb are the number of voxels in
@@ -195,9 +196,9 @@ void compute_sc_FOMs(
 
     I have modified the functional such that what is returned is the
     difference between the two z's.
-    \begin{verbatim}
+    @code
     hsmu_FOM(f)=z(phantom)-z(recons)
-    \end{verbatim}
+    @endcode
     In the case that z(phantom)=infinite then hsmu_FOM(f)=z(recons);
     \\The final hsmu_FOM is the average of all the feature hsmu_FOMs
     \\========================================================================
@@ -206,31 +207,31 @@ void compute_sc_FOMs(
     the mean separability between the background and the outer foreground
     (defined as a feature with the same shape in the region between a scale
     factor of 2/3 and 1).
-    \begin{verbatim}
+    @code
     zr=ABS(mro-mrb)/sqrt(vro/No+vrb/Nb)
 
     hsbr_FOM(f)=z(phantom)-z(recons)
-    \end{verbatim}
+    @endcode
     In the case that z(phantom)=infinite then hsmu_FOM(f)=z(recons);
     \\========================================================================
     \\The detectability error measures which is the intersection area between
     the two histograms in the phantom and the reconstruction. The FOM is
     defined as
-    \begin{verbatim}
+    @code
     hsdt_FOM(f) = 1- |dt_err(phantom)-dt_err(recons)|;
-    \end{verbatim}
+    @endcode
     where the dterr is the mentioned interction area.
 
     The final hsdt_FOM is the average of all the feature hsdt_FOMs
     \\========================================================================
     \\There is an old hot spot detectability FOM which is not computed now.
-    \begin{verbatim}
+    @code
                |feat.avg() -  back.avg()|
     z = ------------------------------------
                feat.var()     back.var()
          sqrt(------------ + ------------)
                    Nb             Nf
-    \end{verbatim}
+    @endcode
     he this value was thresholded and all features above the threshold
     gave 1 point and features below the threshold 0 points.
 
@@ -257,10 +258,10 @@ void compute_hs_FOMs(Volume *vol_phantom,
     The result is stored as a Matrix1D<double>
 
     The directional FOMs are computed in two steps:
-    \begin{verbatim}
+    @code
        1) The volume is rotated after the two Euler angles
        2) With the plane at this position, the FOM is measured.
-    \end{verbatim}
+    @endcode
     The rotation of the volume gives another volume of the same dimensions.
 
     The two FOMs considered here are the Radon and the Slice histogram FOMs.
@@ -332,14 +333,14 @@ void compute_distance_map(const Volume *vol_label, const Phantom &label,
     ========================================================================
     \\ The blurring distance somehow reflects up to which distance the
     blurring extends. It is defined as in the following formula:
-    \begin{verbatim}
+    @code
                      -1     1    Nb   1    1
     blurring_distance   = ----- sum ----- --- (pi-ri)²
                            Nb   i=1  di    2
-    \end{verbatim}
+    @endcode
     where the sum is extended only to those voxels of the background
     (there are Nb of these voxels). di is the distance value for that
-    voxel (see \Ref{compute_distance_map} to know how this distance is
+    voxel (see compute_distance_map to know how this distance is
     defined), and pi and ri are the phantom and reconstruction values
     at that voxel respectively.
 
@@ -350,11 +351,11 @@ void compute_distance_map(const Volume *vol_label, const Phantom &label,
     reconstruction which were not in the phantom, for this reason
     gives a lot of importance to errors far from the phantom. The formula
     is
-    \begin{verbatim}
+    @code
                             1    Nb     1
     appearance_distance = ----- sum di --- (pi-ri)²
                            Nb   i=1     2
-    \end{verbatim}
+    @endcode
 */
 void compute_ds_FOMs(const Volume *vol_phantom, const Volume *vol_recons,
                      const Volume *vol_label,

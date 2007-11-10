@@ -42,12 +42,13 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
 /*---------------------------------------------------------------------------*/
 /* PROJECTION                                                                */
 /*---------------------------------------------------------------------------*/
-/**@name Projections */
-//@{
+/**@defgroup ProjectionsGeneration Projections generation from volumes
+   @ingroup ReconsLibrary */
 // Projecting functions ====================================================
 #define FORWARD  1
 #define BACKWARD 0
-/**@name Single particle projections */
+/**@defgroup SingleParticleProjections Single particle projections
+   @ingroup ProjectionsGeneration*/
 //@{
 #define ARTK     1
 #define CAVK     2
@@ -106,11 +107,11 @@ void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
 		    const Matrix1D<double> *roffset=NULL);
 
 /** From voxel volumes, off-centered tilt axis.
-    This routine projects a volume that is rotating <angle> degrees
-    around the axis defined by the two angles <axisRot,axisTilt> and
+    This routine projects a volume that is rotating (angle) degrees
+    around the axis defined by the two angles (axisRot,axisTilt) and
     that passes through the point raxis. The projection can be futher
     inplane rotated and shifted through the parameters
-    <inplaneRot> and <rinplane>.
+    (inplaneRot) and (rinplane).
     
     All vectors involved must be 3D.
     
@@ -144,9 +145,8 @@ void count_eqs_in_projection(GridVolumeT<int> &GVNeq,
                              const Basis &basis, Projection &read_proj);
 //@}
 
-/**@name Crystal projections */
-//@{
 /** Project a crystal basis volume.
+  * @ingroup ProjectionsGeneration
     This function projects a crystal deformed basis volume, ie, in the
     documentation volume g. However the angles given must be those for
     volume f, the undeformed one. You must supply the deformed lattice
@@ -162,9 +162,6 @@ void project_Crystal_Volume(GridVolume &vol, const Basis &basis,
                             const Matrix1D<double> &aint, const Matrix1D<double> &bint,
                             const Matrix2D<double> &D, const Matrix2D<double> &Dinv,
                             const Matrix2D<int> &mask, int FORW, int eq_mode = ARTK);
-//@}
-
-//@}
 
 // Implementations =========================================================
 // Some aliases

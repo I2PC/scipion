@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _PROG_PROJECTION_HH
-#  define _PROG_PROJECTION_HH
+#define _PROG_PROJECTION_HH
 
 #include <data/funcs.h>
 #include <data/docfile.h>
@@ -35,19 +35,20 @@
 #include "projection.h"
 #include "project_crystal.h"
 
-/**@name Projection program */
+/**@defgroup ProjectionProgram project (Generate projections from a volume)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /* Projection Program Parameters ------------------------------------------- */
 /** Parameter class for the project program */
 class Prog_Project_Parameters
 {
 public:
-    /// Filename with the \Ref{Projection_Parameters}.
+    /// Filename with the \ref Projection_Parameters.
     FileName fn_proj_param;
     /// Selection file with all projections
     FileName fn_sel_file;
     /** Filename with the special crystal parameters
-       (\Ref{Crystal_Projection_Parameters}) */
+       (\ref Crystal_Projection_Parameters ) */
     FileName fn_crystal;
     /// Symmetry file
     FileName fn_sym;
@@ -83,7 +84,7 @@ public:
     we may have two groups with different psi angles random by group,
     ie, the psi angle is random but inside the group the angle remains
     constant, see the following table for an example).
-    \begin{verbatim}
+    @code
          ROT      TILT      PSI
        -------  --------  -------
           0        0       34.56
@@ -95,7 +96,7 @@ public:
           0       90      132.87
           0      180      132.87
           0      270      132.87
-    \end{verbatim}
+    @endcode
 */
 struct Angle_range
 {
@@ -124,7 +125,7 @@ struct Angle_range
 /* Projection parameters --------------------------------------------------- */
 /** Projecting parameters.
     This class reads a set of projection parameters in a file (see
-    \URL[Project]{../../../Applications/Src/Project/Help/project.html}
+    the user help for xmipp_project
     for more information about the file structure) and extract the
     useful information from it. This class allows also to write in
     the same file format, for doing so you must first introduce the
@@ -133,8 +134,6 @@ struct Angle_range
 class Projection_Parameters
 {
 public:
-    /**@name Filenames and size */
-    //@{
     /** Phantom filename.
         It can be a Xmipp volume or a mathematically defined phantom. */
     FileName fnPhantom;
@@ -150,12 +149,9 @@ public:
     /// Projection Ydim
     int      proj_Ydim;
 
-    /// Debugging level. See \Ref{Prog_Project_Parameters::tell}
+    /// Debugging level. See \ref Prog_Project_Parameters::tell
     int tell;
-    //@}
 
-    /**@name Angle Mode: Giving ranges */
-    //@{
     /// Enable angle range mode (0 or 1)
     bool enable_angle_range;
     /// Rotational angle range
@@ -164,10 +160,7 @@ public:
     Angle_range tilt_range;
     /// Psi angle range
     Angle_range psi_range;
-    //@}
 
-    /**@name Angle mode: Using a Document File */
-    //@{
     /// Document filename
     FileName fn_angle;
     /// First number in the document file is "rot","tilt" or "psi"
@@ -176,13 +169,7 @@ public:
     string   ang2;
     /// Third number in the document file is "rot","tilt" or "psi"
     string   ang3;
-    //@}
 
-    /**@name Noise.
-       Noise to the pixels is introduced by adding Gaussian noise, while
-       to the center is done by translating the image by a random
-       quantity */
-    //@{
     /// Bias to be applied to each pixel grey value */
     double    Npixel_avg;
     /// Standard deviation of the noise to be added to each pixel grey value
@@ -192,7 +179,6 @@ public:
     double    Ncenter_avg;
     /// Standard deviation of the image center
     double    Ncenter_dev;
-    //@}
 public:
     /** From Program Parameters.
         This function loads the Projection Parameters from the parameters
@@ -279,7 +265,7 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
     Generate a set of projections given the projection parameters.
     This is the main projecting routine. This function generates a set
     of projections according to the projecting parameters defined (see
-    \Ref{Prog_Project_Parameters} to know more about how to specify
+    \ref Prog_Project_Parameters to know more about how to specify
     everything). The projections are written to disk.
 
     The Projection field will keep

@@ -37,8 +37,8 @@
 
 /**
  * Trains the algorithm
- * @param _xmippDS Data structure to train, a codeBook in this case
- * @param _examples  A training set with the training examples
+ * Parameter: _xmippDS Data structure to train, a codeBook in this case
+ * Parameter: _examples  A training set with the training examples
  */
 
 void xmippFKCN::train(xmippFCB& _xmippDS, const TS& _examples) const

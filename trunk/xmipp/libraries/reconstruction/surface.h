@@ -28,14 +28,15 @@
 #include <data/funcs.h>
 #include <reconstruction/phantom.h>
 
-/**@name Surface program */
+/**@defgroup SurfaceProgram surface (Create a surface from a phantom)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /* Surface Program Parameters ---------------------------------------------- */
 /** Parameter class for the project program */
 class Prog_Surface_Parameters
 {
 public:
-    /// Filename with the \Ref{Phantom}.
+    /// Filename with the Phantom.
     FileName fnPhantom;
     /// Probe radius
     double probe_radius;
@@ -55,15 +56,12 @@ public:
     FileName fn_bottom;
     /// Filename of output mask
     FileName fn_mask;
-    /**@name Side parameters */
-    //@{
     /// Phantom
     Phantom phantom;
     /// Top surface
     ImageXmipp top_surface;
     /// Bottom surface
     ImageXmipp bottom_surface;
-    //@}
 public:
     /** Read from a command line.
         An exception might be thrown by any of the internal conversions,
@@ -97,7 +95,7 @@ void create_surface_mask(const Image *top, const Image *bottom,
 
 /** Run surface.
     This function is who really creates the surface for the phantom. It is
-    very simple and lies on \Ref{Phantom::surface} or \Ref{surface_mask}*/
+    very simple and lies on Phantom::surface or surface_mask.*/
 void ROUT_surface(Prog_Surface_Parameters &prm);
 //@}
 #endif

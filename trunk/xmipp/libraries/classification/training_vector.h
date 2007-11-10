@@ -38,7 +38,8 @@ using namespace std;
 #include "training_set.h"
 #include "vector_ops.h"
 
-/**@name Training Vectors (Feature vectors) class*/
+/**@defgroup TrainingVectors Training Vectors (Feature vectors) class
+   @ingroup ClassificationLibrary */
 //@{
 /**
  * This class implements all the necessary functionality for classic
@@ -58,8 +59,8 @@ public:
 
     /**
      * Default constructor
-     @param _vecSize Vector dimension; required to dim the feature and types vector
-     @para _calib calibration which should be true if the data set has labels
+     Parameter: _vecSize Vector dimension; required to dim the feature and types vector
+     Parameter: _calib calibration which should be true if the data set has labels
     */
     xmippCTVectors(unsigned _vecSize = 0, bool _calib = true)
             : xmippCTSet<xmippVector, xmippLabel>(_calib),  /*varStats(_vecSize),*/
@@ -68,7 +69,7 @@ public:
 
     /**
      * Constructs a training set given a stream
-     * @param _is  The input stream
+     * Parameter: _is  The input stream
      * @exception  runtime_error  If there are problems with the stream
      */
     xmippCTVectors(istream & _is);
@@ -76,7 +77,7 @@ public:
 
     /**
      * Copy Constructor. Useful when returning a xmippCTVectors Class.
-     * @param op1 xmippCTVectors
+     * Parameter: op1 xmippCTVectors
      */
     xmippCTVectors(const xmippCTVectors &op1);
 
@@ -104,13 +105,13 @@ public:
 
     /**
      * Standard output for a training set
-     * @param _os The output stream
+     * Parameter: _os The output stream
      */
     virtual void printSelf(ostream& _os) const;
 
     /**
      * Standard input for a training set
-     * @param _is The input stream
+     * Parameter: _is The input stream
      * @exception  runtime_error  If there are problems with the stream
      */
     virtual void readSelf(istream& _is);
@@ -119,7 +120,7 @@ public:
     /**
      * Saves the class into a stream.
      * this method can be used to save the status of the class.
-     * @param _os The output stream
+     * Parameter: _os The output stream
      */
     virtual void saveObject(ostream& _os) const;
 
@@ -127,47 +128,47 @@ public:
     /**
      * Loads the class from a stream.
      * this method can be used to load the status of the class.
-     * @param _is The output stream
+     * Parameter: _is The output stream
      */
     virtual void loadObject(istream& _is);
 
 
     /**
      * Deletes a variable (feature) from Training set
-     * @param _var variable index
+     * Parameter: _var variable index
      */
     void deleteVariable(int _var);
 
     /**
      * Operator "="
-     * @param op1 xmippCTVectors
+     * Parameter: op1 xmippCTVectors
      */
     xmippCTVectors& operator= (const xmippCTVectors &op1);
 
 
     /** Copy the structure from another TS but leave it empty.
-    * @param _ts xmippCTVectors
+    * Parameter: _ts xmippCTVectors
     * @note  Just the structure is copied, not the items or targets.
     */
     bool copyStructure(xmippCTVectors& _ts);
 
 
     /** Copy a row from an identical TS.
-    * @param _ts xmippCTVectors
-    * @param _idx   row to be copied
+    * Parameter: _ts xmippCTVectors
+    * Parameter: _idx   row to be copied
     * @note  No complete validation is done.
     */
     bool insertRowFrom(xmippCTVectors& _ts, unsigned int _idx);
 
     /** Delete a row from a TS.
-    * @param _idx   row to be deleted
+    * Parameter: _idx   row to be deleted
     */
     bool deleteRow(unsigned int _idx);
 
 
     /**
     * Normalize a feature in the training set
-    * @param _i  The index to the feature
+    * Parameter: _i  The index to the feature
     */
     virtual void normalizeFeature(unsigned _i);
 
@@ -202,7 +203,7 @@ public:
 
     /**
      * Calcualtes the average and SD of a feature in the training set
-     * @param _i  The index to the feature
+     * Parameter: _i  The index to the feature
      */
     void getFeatureStats(unsigned _i, xmippFeature& _mean, xmippFeature& _sd);
 
@@ -219,7 +220,4 @@ protected:
 
 };
 //@}
-
-//-----------------------------------------------------------------------------
-
 #endif//XMIPPCTVECTORS_H

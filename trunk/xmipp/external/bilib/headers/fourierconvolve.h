@@ -1,4 +1,5 @@
-/**@name Fourier Convolve */
+/**@defgroup FourierConvolve Fourier Convolve
+   @ingroup BilibLibrary */
 //@{
 /*--------------------------------------------------------------------------*/
 /** Fourier convolution with any kernel.

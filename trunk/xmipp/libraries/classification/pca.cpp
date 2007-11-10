@@ -36,7 +36,7 @@
 
 /**
 * Calculate the eigenval/vecs
-* @param ts The vectors.
+* Parameter: ts The vectors.
 */
 void xmippPC::reset(xmippCTVectors const &ts)
 {
@@ -48,8 +48,8 @@ void xmippPC::reset(xmippCTVectors const &ts)
 
 /**
 * Calculate the eigenval/vecs
-* @param ts The vectors.
-* @param idx The indexes of the vectors to use
+* Parameter: ts The vectors.
+* Parameter: idx The indexes of the vectors to use
 */
 void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
 {

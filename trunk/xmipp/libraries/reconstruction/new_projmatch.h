@@ -23,6 +23,9 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
+#ifndef _NEW_PROJECTION_MATCHING_H
+#define _NEW_PROJECTION_MATCHING_H
+
 #include <data/fft.h>
 #include <data/args.h>
 #include <data/funcs.h>
@@ -38,7 +41,8 @@
 #include "symmetries.h"
 #include "sampling.h"
 
-/**@name projection_matching */
+/**@defgroup new_projection_matching new_projmatch (Discrete angular assignment using a new projection matching)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /** projection_matching parameters. */
 class Prog_new_projection_matching_prm {
@@ -138,3 +142,4 @@ public:
     void write_classes();
 };				
 //@}
+#endif

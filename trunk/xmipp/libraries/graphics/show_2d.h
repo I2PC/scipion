@@ -43,18 +43,19 @@
 
 #include "show_tools.h"
 
-/**@name Show 2D*/
+/**@defgroup Show2D Show 2D
+   @ingroup GraphicsLibrary */
 //@{
 
 /** ImageViewer.
     This class is in the one in charge of opening a window with the 2D image.
 
     Example of use:
-    \begin{verbatim}
+    @code
        ImageViewer *showimg = new ImageViewer(argv[i], poll);
        showimg->loadImage( argv[i] );
        showimg->show();
-    \end{verbatim}
+    @endcode
 */
 class ImageViewer : public QWidget
 {
@@ -70,7 +71,7 @@ public:
     ImageViewer(const char *name = 0, bool _check_file_change = false);
 
     /** Constructor with a pointer to an Image */
-    ImageViewer(Image *_image = 0, const char *name = 0);
+    ImageViewer(ImageT<double> *_image = 0, const char *name = 0);
 
     /** Constructor with a pointer to a Fourier Xmipp Image */
     ImageViewer(FourierImageXmipp *_FFTimage = 0, const char *name = 0);
@@ -164,7 +165,7 @@ protected:
     int  ss, si, pi, ravg, profile, sfft, line_setup, editctfmodel;
     int         recomputectfmodel, enhancePSD;
     void Init();
-    bool  xmipp2Qt(Image& _image);
+    bool  xmipp2Qt(ImageT<double>& _image);
     bool  Qt2xmipp(QImage &_image);
     bool  showImage();
     void  generateFFTImage(Matrix2D<double> &out);

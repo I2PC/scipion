@@ -32,7 +32,7 @@
 
 /**
  * Construct a BatchSOM from the code vectors in a stream
- * @param _is  The stream
+ * Parameter: _is  The stream
  */
 xmippBatchSOM::xmippBatchSOM(istream& _is): xmippSOM(_is)
 {
@@ -43,8 +43,8 @@ xmippBatchSOM::xmippBatchSOM(istream& _is): xmippSOM(_is)
 
 /**
  * Trains the SOM
- * @param _som  The som to train
- * @param _ts   The training set
+ * Parameter: _som  The som to train
+ * Parameter: _ts   The training set
  */
 void xmippBatchSOM::train(xmippMap& _som, const xmippCTVectors& _ts) const
 {

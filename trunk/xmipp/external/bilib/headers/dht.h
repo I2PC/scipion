@@ -1,4 +1,5 @@
-/**@name Hartley Transform */
+/**@defgroup HartleyTransform Hartley Transform
+   @ingroup BilibLibrary */
 //@{
 /*--------------------------------------------------------------------------*/
 /** Discrete Hartley transform of a real signal.

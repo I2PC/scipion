@@ -36,8 +36,65 @@
 #include "matrix3d.h"
 #include "header.h"
 
-/// @defgroup Volumes Volumes
+/** @defgroup VolumesSpeedUp Speed up macros for volumes
+ *  @ingroup XmippVolumes
+ */
 
+/** 3D Matrix access.
+ * @ingroup VolumesSpeedUp
+ *
+ * This macro does the same as the normal 3D matrix access but in a faster way
+ * as no function call is generated.
+ *
+ * @code
+ * VOLMATRIX(V).resize(128, 128, 128);
+ *
+ * VOLMATRIX(V2) = VOLMATRIX(V1) + VOLMATRIX(V2);
+ * @endcode
+ */
+#define VOLMATRIX(V) ((V).img)
+
+/** Array access.
+ * @ingroup VolumesSpeedUp
+ *
+ * This macro allows you to access to the tridimensional array behind the image
+ * (float***).
+ */
+#define VOLARRAY(V) (VOL_ARRAY(V).img)
+
+/** Voxel access.
+ * @ingroup VolumesSpeedUp
+ *
+ * This macro does the same as the normal voxel access (remember, logical
+ * access) but in a faster way as no function call is generated.
+ *
+ * @code
+ * std::cout << "Grey level of voxel (2,-3,-3) of the Volume = " <<
+ *     VOLVOXEL(V, 2, -3, -3) << std::endl;
+ *
+ * VOLVOXEL(I, 2, -3, -3) = VOLVOXEL(I, 2, -3, -2);
+ * @endcode
+ */
+#define VOLVOXEL(V, k, i, j) VOL_ELEM(((V).img), (k), (i), (j))
+
+/** Physical voxel access.
+ * @ingroup VolumesSpeedUp
+ *
+ * The physical voxel access gives you access to a voxel by its physical
+ * position and not by its logical one. This access shouldn't be used as a
+ * custom, use instead the logical access, but there might be cases in which
+ * this access might be interesting. Physical positions start at index 0 in C.
+ *
+ * @code
+ * std::cout << "This is the first voxel stored in the Volume " <<
+ *     DIRECT_VOLVOXEL(V, 0, 0, 0) << std::endl;
+ * @endcode
+ */
+#define DIRECT_VOLVOXEL(V, k, i, j) DIRECT_VOL_ELEM(((V).img), (k), (i), (j))
+
+/// @defgroup XmippVolumes Raw and Xmipp volumes
+/// @ingroup DataLibrary
+//@{
 typedef enum
 {
     VBYTE = 1,
@@ -48,7 +105,6 @@ typedef enum
 } Volume_Type;
 
 /** Basic volume class.
- * @ingroup Volumes
  *
  * The volume class is a general class which only contains the volume itself
  * and a filename for it. It has got a float Matrix3D as member, and basically
@@ -69,11 +125,7 @@ public:
     FileName fn_img; // name of the image
     Matrix3D< T > img; // 3D matrix with the image
 
-    /// @defgroup VolumesConstructors Constructors
-    /// @ingroup Volumes
-
     /** Empty constructor.
-     * @ingroup VolumesConstructors
      *
      * An empty Volume with size 0x0x0 is created.
      *
@@ -87,7 +139,6 @@ public:
     }
 
     /** Constructor with size.
-     * @ingroup VolumesConstructors
      *
      * A blank Volume (0.0 filled) is created with the given size. Pay
      * attention to the dimension order: Z, Y and X.
@@ -103,7 +154,6 @@ public:
     }
 
     /** Constructor using filename.
-     * @ingroup VolumesConstructors
      *
      * The name for the volume is assigned but no load is performed. The volume
      * content is empty, ie, with size 0x0x0.
@@ -118,7 +168,6 @@ public:
     }
 
     /** Copy constructor.
-     * @ingroup VolumesConstructors
      *
      * @code
      * VolumeT< double > vol2(vol1);
@@ -130,11 +179,7 @@ public:
         *this = v;
     }
 
-    /// @defgroup VolumesOperations Some operations.
-    /// @ingroup Volumes
-
     /** Assignment.
-     * @ingroup VolumesOperations
      *
      * @code
      * vol2 = vol1;
@@ -153,7 +198,6 @@ public:
     }
 
     /** Another function for assigment.
-     * @ingroup VolumesOperations
      */
     template<typename T2>
     void assign(const VolumeT< T2 >& v)
@@ -162,7 +206,6 @@ public:
     }
 
     /** Assignment from Matrix3D.
-     * @ingroup VolumesOperations
      */
     template<typename T2>
     VolumeT& operator=(const Matrix3D< T2 >& m)
@@ -178,7 +221,6 @@ public:
     }
 
     /** Another function for assigment from Matrix3D.
-     * @ingroup VolumesOperations
      */
     template<typename T2>
     void assign(const Matrix3D< T2 >& m)
@@ -187,8 +229,6 @@ public:
     }
 
     /** Rename Volume.
-     * @ingroup VolumesOperations
-     *
      * Give a new name to the Volume.
      *
      * @code
@@ -201,8 +241,6 @@ public:
     }
 
     /** Empty Volume.
-     * @ingroup VolumesOperations
-     *
      * This function clears the Volume to a 0x0x0 Volume without name.
      *
      * @code
@@ -216,8 +254,6 @@ public:
     }
 
     /** Sets the origin of the Volume at its center.
-     * @ingroup VolumesOperations
-     *
      * The exact formula for the center of a Volume is defined in the
      * Conventions Section, this function modify the indexes of the Volume
      * in such a way that now the logical origin is at its center and the
@@ -236,8 +272,6 @@ public:
     }
 
     /** Fill with 0 and move origin to center.
-     * @ingroup VolumesOperations
-     *
      * This function resizes the Volume to the given size, fill it with
      * 0.0 and then moves the Volume logical origin to its center. See
      * previous function.
@@ -252,11 +286,7 @@ public:
         moveOriginTo_center();
     }
 
-    /// @defgroup VolumesAccess Image access.
-    /// @ingroup Volumes
-
     /** 3D Matrix access.
-     * @ingroup VolumesAccess
      *
      * This operator can be used to access the 3D matrix, and the matrix
      * operations defined in Matrix3D. In this way we could resize a Volume
@@ -280,7 +310,6 @@ public:
     }
 
     /** Get Matrix3D.
-     * @ingroup VolumesAccess
      */
     void get_Matrix3D(Matrix3D< T >& m)
     {
@@ -288,7 +317,6 @@ public:
     }
 
     /** Set Matrix3D.
-     * @ingroup VolumesAccess
      */
     void set_Matrix3D(const Matrix3D< T >& m)
     {
@@ -296,8 +324,6 @@ public:
     }
 
     /** Voxel access.
-     * @ingroup VolumesAccess
-     *
      * This operator is used to access a voxel within the Volume. This is a
      * logical access, so you could access to negative positions if the
      * Volume has been defined so (see the general explanation for the class).
@@ -315,7 +341,6 @@ public:
     }
 
     /** Get voxel.
-     * @ingroup VolumesAccess
      */
     T getVoxel(int z, int y, int x) const
     {
@@ -323,7 +348,6 @@ public:
     }
 
     /** Set voxel.
-     * @ingroup VolumesAccess
      */
     void setVoxel(int z, int y, int x, T val)
     {
@@ -331,8 +355,6 @@ public:
     }
 
     /** Name access.
-     * @ingroup VolumesAccess
-     *
      * This function is used to know the name of the Volume. It cannot be used
      * to assign a new one.
      *
@@ -346,8 +368,6 @@ public:
     }
 
     /** Cout << Volume.
-     * @ingroup VolumesAccess
-     *
      * Shows name and size.
      */
     friend std::ostream& operator<<(std::ostream& out, const VolumeT< T >& V)
@@ -360,14 +380,7 @@ public:
         return out;
     }
 
-    /** @defgroup VolumesIO I/O functions.
-     * @ingroup Volumes
-     *
-     * All these functions work with the image written in raw floats.
-     */
-
     /** Read Volume from disk, given the Volume's dimensions.
-     * @ingroup VolumesIO
      *
      * If the Volume doesn't exist at the given path then an exception is
      * thrown.
@@ -411,8 +424,6 @@ public:
     }
 
     /** Read image from disk using a file pointer.
-     * @ingroup VolumesIO
-     *
      * This is the core routine of the previous one.
      */
     void read(FILE* fh,
@@ -452,8 +463,6 @@ public:
     }
 
     /** Write Volume to disk.
-     * @ingroup VolumesIO
-     *
      * If there is any problem in the writing, an exception is thrown. You can
      * give a name to the written Volume different from the one used when it
      * was read. From this point the filename of the Volume has changed. This
@@ -481,8 +490,6 @@ public:
     }
 
     /** Write image to disk using a file pointer.
-     * @ingroup VolumesIO
-     *
      * This is the core routine of the previous one.
      */
     void write(FILE* fh, bool reversed, Volume_Type volume_type)
@@ -580,68 +587,10 @@ inline void VolumeT< complex< double > >::write(FILE *fh,
 }
 
 /** Write a volume in CCP4 format.
- * @ingroup VolumesIO
- *
  * See CCP4 format at http://www.ccp4.ac.uk/dist/html/maplib.html. Ts is the
  * sampling rate in angstroms per pixel
  */
 void write_as_CCP4(VolumeT< double>* V, const FileName& fn, double Ts = 1);
-
-/** @defgroup VolumesSpeedUp Speed up macros
- * @ingroup Volumes
- */
-
-/** 3D Matrix access.
- * @ingroup VolumesSpeedUp
- *
- * This macro does the same as the normal 3D matrix access but in a faster way
- * as no function call is generated.
- *
- * @code
- * VOLMATRIX(V).resize(128, 128, 128);
- *
- * VOLMATRIX(V2) = VOLMATRIX(V1) + VOLMATRIX(V2);
- * @endcode
- */
-#define VOLMATRIX(V) ((V).img)
-
-/** Array access.
- * @ingroup VolumesSpeedUp
- *
- * This macro allows you to access to the tridimensional array behind the image
- * (float***).
- */
-#define VOLARRAY(V) (VOL_ARRAY(V).img)
-
-/** Voxel access.
- * @ingroup VolumesSpeedUp
- *
- * This macro does the same as the normal voxel access (remember, logical
- * access) but in a faster way as no function call is generated.
- *
- * @code
- * std::cout << "Grey level of voxel (2,-3,-3) of the Volume = " <<
- *     VOLVOXEL(V, 2, -3, -3) << std::endl;
- *
- * VOLVOXEL(I, 2, -3, -3) = VOLVOXEL(I, 2, -3, -2);
- * @endcode
- */
-#define VOLVOXEL(V, k, i, j) VOL_ELEM(((V).img), (k), (i), (j))
-
-/** Physical voxel access.
- * @ingroup VolumesSpeedUp
- *
- * The physical voxel access gives you access to a voxel by its physical
- * position and not by its logical one. This access shouldn't be used as a
- * custom, use instead the logical access, but there might be cases in which
- * this access might be interesting. Physical positions start at index 0 in C.
- *
- * @code
- * std::cout << "This is the first voxel stored in the Volume " <<
- *     DIRECT_VOLVOXEL(V, 0, 0, 0) << std::endl;
- * @endcode
- */
-#define DIRECT_VOLVOXEL(V, k, i, j) DIRECT_VOL_ELEM(((V).img), (k), (i), (j))
 
 /** Xmipp 3D Volumes.
  *
@@ -668,8 +617,6 @@ protected:
 public:
 
     /** Empty constructor.
-     * @ingroup VolumesConstructors
-     *
      * Creates an empty (0x0x0) image with no information in the header.
      *
      * @code
@@ -693,8 +640,6 @@ public:
     }
 
     /** Constructor with size.
-     * @ingroup VolumesConstructors
-     *
      * Creates a 0.0 filled volume of size Zdim x Ydim x Xdim.
      *
      * @code
@@ -723,8 +668,6 @@ public:
     }
 
     /** Constructor with filename, read from disk.
-     * @ingroup VolumesConstructors
-     *
      * The filename given must exist, then the file is loaded in the VolumeXmipp
      * class structure. You have loaded the volume at the declaration time.
      *
@@ -750,8 +693,6 @@ public:
     }
 
     /** Copy constructor.
-     * @ingroup VolumesConstructors
-     *
      * @code
      * VolumeXmipp< double > vol2(vol1);
      * @endcode
@@ -762,8 +703,6 @@ public:
     }
 
     /** Empty image.
-     * @ingroup VolumesConstructors
-     *
      * All information is cleared.
      *
      * @code
@@ -777,8 +716,6 @@ public:
     }
 
     /** Show the header information of a Xmipp volume.
-     * @ingroup VolumesOperations
-     *
      * @code
      * std::cout << vol;
      * @endcode
@@ -792,8 +729,6 @@ public:
     }
 
     /** Assignment from another Xmipp volume.
-     * @ingroup VolumesOperations
-     *
      * @code
      * VolumeXmipp vol1, vol2;
      * vol2 = vol1;
@@ -811,8 +746,6 @@ public:
     }
 
     /** Assignment from a generic image.
-     * @ingroup VolumesOperations
-     *
      * @code
      * Volume< double > v;
      * VolumeXmipp< double > vol;
@@ -832,8 +765,6 @@ public:
     }
 
     /** Assignment from a 3D matrix.
-     * @ingroup VolumesOperations
-     *
      * @code
      * Matrix3D< float > m;
      * VolumeXmipp vol;
@@ -851,8 +782,6 @@ public:
     }
 
     /** Assignment from any kind of volume.
-     * @ingroup VolumesOperations
-     *
      * @code
      * Volume< double > vol;
      * VolumeXmipp v;
@@ -866,8 +795,6 @@ public:
     }
 
     /** Read Xmipp volume from disk.
-     * @ingroup VolumesIO
-     *
      * If the volume doesn't exist at the given path then an exception is
      * thrown.
      *
@@ -907,8 +834,6 @@ public:
     }
 
     /** Write Xmipp volume to disk.
-     * @ingroup VolumesIO
-     *
      * If there is any problem in the writing, an exception is thrown. You can
      * give a name to the written volume different from the one used when it
      * was read. From this point the filename of the volume has changed. This
@@ -939,12 +864,7 @@ public:
         fclose(fp);
     }
 
-    /// @defgroup VolumesHeader Header access
-    /// @ingroup Volumes
-
     /** Adjust header.
-     * @ingroup VolumesHeader
-     *
      * Force header to have the dimensions of the image, time, date updated.
      */
     void adjust_header()
@@ -965,7 +885,6 @@ public:
     }
 
     /** Resets header.
-     * @ingroup VolumesHeader
      */
     void clear_header()
     {
@@ -973,8 +892,6 @@ public:
     }
 
     /** Change Filename.
-     * @ingroup VolumesHeader
-     *
      * @code
      * vol.rename("newName.spd");
      * @endcode
@@ -986,8 +903,6 @@ public:
     }
 
     /** Reversed status.
-     * @ingroup VolumesHeader
-     *
      * This is used for the little/big endian process.
      */
     bool reversed() const
@@ -1003,24 +918,20 @@ typedef VolumeT< complex< double > > FourierVolume;
 typedef VolumeXmippT< complex< double > > FourierVolumeXmipp;
 
 /** True if the given volume is an Xmipp volume.
- * @ingroup VolumesRelated
  */
 int Is_VolumeXmipp(const FileName& fn,
                    bool skip_type_check = false,
                    bool force_reversed = false);
 
 /** True if the given volume is a Fourier Xmipp volume.
- * @ingroup VolumesRelated
  */
 int Is_FourierVolumeXmipp(const FileName& fn,
                           bool skip_type_check = false,
                           bool force_reversed = false);
 
 /** Get size of a volume.
- * @ingroup VolumesRelated
- *
  * Returns -1 if the file is not an Xmipp volume.
  */
 void GetXmippVolumeSize(const FileName& fn, int &Zdim, int &Ydim, int &Xdim);
-
+//@}
 #endif

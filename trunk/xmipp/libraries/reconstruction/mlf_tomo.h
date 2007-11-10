@@ -22,6 +22,10 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
+
+#ifndef _MLF_TOMO_H
+#define _MLF_TOMO_H
+
 #include <data/fft.h>
 #include <data/args.h>
 #include <data/funcs.h>
@@ -34,6 +38,10 @@
 #include "symmetrize.h"
 #include <vector>
 
+/**@defgroup mlf_tomo mlf_tomo (Maximum likelihood in Fourier space for tomography)
+   @ingroup ReconsLibraryPrograms */
+//@{
+/// Structure for storing a wedgelist
 typedef struct Wedgelist
 {
     int num;
@@ -44,8 +52,6 @@ wedgelist;
 
 #define SIGNIFICANT_WEIGHT_LOW 1e-4
 
-/**@name mlf_tomo */
-//@{
 /** mlf_tomo parameters. */
 class Prog_mlf_tomo_prm
 {
@@ -185,10 +191,10 @@ public:
                            vector<double> &sumw, double &sumcorr,
                            double &sumw_allrefs, int iter);
 
-    // Post-processing on (real-space) reference maps
+    /// Post-processing on (real-space) reference maps
     void post_process_references(vector<Matrix3D<double> > &Mref);
 
-    // Solvent flattening
+    /// Solvent flattening
     void solvent_flattening(vector<Matrix3D<double> > &Mref, FileName &fn_solvent);
 
     /// Write out reference images, selfile and logfile
@@ -200,3 +206,4 @@ public:
 
 };
 //@}
+#endif

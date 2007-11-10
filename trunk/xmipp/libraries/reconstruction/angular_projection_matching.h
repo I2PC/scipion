@@ -39,7 +39,8 @@
 #define FOR_ALL_DIRECTIONS() for (int dirno=0;dirno<nr_dir; dirno++)
 #define FOR_ALL_ROTATIONS() for (int ipsi=0; ipsi<nr_psi; ipsi++ )
 
-/**@name projection_matching */
+/**@defgroup ProjectionMatching angular_projection_matching (Discrete angular assignment by projection matching)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /** projection_matching parameters. */
 class Prog_projection_matching_prm {

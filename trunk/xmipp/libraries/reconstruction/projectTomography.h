@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #ifndef _PROG_PROJECTION_TOMOGRAPHY_HH
-#  define _PROG_PROJECTION_TOMOGRAPHY_HH
+#define _PROG_PROJECTION_TOMOGRAPHY_HH
 
 #include <data/funcs.h>
 #include <data/docfile.h>
@@ -32,14 +32,15 @@
 
 #include "projection.h"
 
-/**@name Projection Tomography program */
+/**@defgroup ProjectionTomographyProgram projectTomograpy (project for tilt series)
+   @ingroup ReconsLibraryPrograms */
 //@{
 /* Projection Tomogrpahy Program Parameters -------------------------------- */
 /** Parameter class for the project program */
 class Prog_Project_Tomography_Parameters
 {
 public:
-    /// Filename with the \Ref{Projection_Parameters}.
+    /// Filename with the Projection_Parameters.
     FileName fn_proj_param;
     /// Selection file with all projections
     FileName fn_sel_file;
@@ -72,8 +73,6 @@ public:
 class Projection_Tomography_Parameters
 {
 public:
-    /**@name Filenames and size */
-    //@{
     /** Phantom filename.
         It must be a Xmipp volume. */
     FileName fnPhantom;
@@ -89,12 +88,9 @@ public:
     /// Projection Ydim
     int      proj_Ydim;
 
-    /// Debugging level. See \Ref{Prog_Project_Parameters::tell}
+    /// Debugging level. See \ref Prog_Project_Parameters::tell
     int tell;
-    //@}
 
-    /**@name Angle Mode: Tomography */
-    //@{
     /// Rotational angle of the tilt axis
     double axisRot;
     /// Tilt angle of the tilt axis
@@ -107,13 +103,7 @@ public:
     double tiltF;
     /// Step in tilt
     double tiltStep;
-    //@}
 
-    /**@name Noise.
-       Noise to the pixels is introduced by adding Gaussian noise, while
-       to the center is done by translating the image by a random
-       quantity */
-    //@{
     /// Bias to be applied to each pixel grey value */
     double    Npixel_avg;
     /// Standard deviation of the noise to be added to each pixel grey value
@@ -128,7 +118,6 @@ public:
     double    Nangle_avg;
     /// Standard deviation of the angles
     double    Nangle_dev;
-    //@}
 public:
     /** Read projection parameters from a file.
         An exception is thrown if the file is not found or any of the

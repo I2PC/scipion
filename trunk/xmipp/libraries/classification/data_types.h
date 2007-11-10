@@ -62,7 +62,8 @@ using namespace std;
 #endif//MAXZERO
 
 //-----------------------------------------------------------------------------
-/**@name Some type definitions*/
+/**@defgroup DataTypes Some type definitions
+   @ingroup ClassificationLibrary */
 //@{
 /**
 * xmippFeature as float

@@ -151,7 +151,7 @@ ImageViewer::ImageViewer(QImage *_image, const char *name)
 
 /****************************************************/
 
-ImageViewer::ImageViewer(Image *_image, const char *name)
+ImageViewer::ImageViewer(ImageT<double> *_image, const char *name)
         : QWidget(NULL, name, QWidget::WDestructiveClose),
         filename(0),
         helpmsg(0)
@@ -573,7 +573,7 @@ bool ImageViewer::showImage()
 
 /*****************************************/
 
-bool ImageViewer::xmipp2Qt(Image& _image)
+bool ImageViewer::xmipp2Qt(ImageT<double>& _image)
 {
     bool ok = FALSE;
 

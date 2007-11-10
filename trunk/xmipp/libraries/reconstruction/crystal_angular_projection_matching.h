@@ -38,11 +38,15 @@
 
 #include <malloc.h>
 
+/**@defgroup crystal_projection_matching_crystal crystal_angular_projection_matching (Discrete angular assignment for crystals by projection matching)
+   @ingroup ReconsLibraryPrograms */
+//@{
+/** Loop for all directions */
 #define FOR_ALL_DIRECTIONS() for (int dirno=0;dirno<nr_dir; dirno++)
+
+/** Loop for all rotations */
 #define FOR_ALL_ROTATIONS() for (int ipsi=0; ipsi<nr_psi; ipsi++ )
 
-/**@name projection_matching_crystal */
-//@{
 /** projection_matching_crystal parameters. */
 class Prog_projection_matching_crystal_prm
 {

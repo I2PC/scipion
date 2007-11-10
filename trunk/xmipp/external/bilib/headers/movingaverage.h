@@ -1,26 +1,27 @@
-/**@name Moving average */
+/**@defgroup BilibMA Moving average
+   @ingroup BilibLibrary */
 //@{
 /*--------------------------------------------------------------------------*/
 /** Moving average (1D).
-    The specified boundary convention applies to the input data only, not to
-    the kernel. The boundary convention applied to the kernel is
-    FiniteDataSupport.
-
-    The kernel has a constant value and sums up to 1.0.
-    The input and the output have the same length.
-    The origin for the kernel is given with respect to the leftmost sample [0].
-
-    success: return(!ERROR); failure: return(ERROR)
-
-    General structure is as follows:
-    \begin{verbatim}
-     for (i = 0L; (i < SignalLength); i++) {
-       Sum = 0.0;
-       for (j = -Infinity; (j <= Infinity); j++)
-          Sum += InputData[j] * Kernel[KernelOrigin + i - j];
-       OutputData[i] = Sum;
-     }
-     \end{verbatim}
+  * The specified boundary convention applies to the input data only, not to
+  * the kernel. The boundary convention applied to the kernel is
+  * FiniteDataSupport.
+  *
+  * The kernel has a constant value and sums up to 1.0.
+  * The input and the output have the same length.
+  * The origin for the kernel is given with respect to the leftmost sample [0].
+  *
+  * success: return(!ERROR); failure: return(ERROR)
+  *
+  * General structure is as follows:
+  * @code
+  *  for (i = 0L; (i < SignalLength); i++) {
+  *    Sum = 0.0;
+  *    for (j = -Infinity; (j <= Infinity); j++)
+  *       Sum += InputData[j] * Kernel[KernelOrigin + i - j];
+  *    OutputData[i] = Sum;
+  *  }
+  * @endcode
 */
 extern int  MovingAverage
     (
@@ -35,26 +36,26 @@ extern int  MovingAverage
 
 /*--------------------------------------------------------------------------*/
 /** Moving average (3D).
-    The specified boundary convention applies to the input data only,
-    not to the kernel. The boundary convention applied to the kernel is
-    FiniteDataSupport.
-    VolumeSource is a (float)volume of size (Nx x Ny x Nz).
-    OutputData is a (float)volume of size (Nx x Ny x Nz).
-    The origin for the kernel is given with respect to the leftmost sample [0].
-    The 1D kernel is applied successively to each principal direction in a
-    separable fashion.
-
-    success: return(!ERROR); failure: return(ERROR).
-
-    General structure is as follows:
-    \begin{verbatim}
-     for (i = 0L; (i < SignalLength); i++) {
-       Sum = 0.0;
-       for (j = i - KernelOrigin; (j < (KernelLength + i - KernelOrigin)); j++)
-            Sum += InputData[j];
-       OutputData[i] = Sum / KernelLength;
-     }
-     \end{verbatim}
+  * The specified boundary convention applies to the input data only,
+  * not to the kernel. The boundary convention applied to the kernel is
+  * FiniteDataSupport.
+  * VolumeSource is a (float)volume of size (Nx x Ny x Nz).
+  * OutputData is a (float)volume of size (Nx x Ny x Nz).
+  * The origin for the kernel is given with respect to the leftmost sample [0].
+  * The 1D kernel is applied successively to each principal direction in a
+  * separable fashion.
+  *
+  * success: return(!ERROR); failure: return(ERROR).
+  *
+  * General structure is as follows:
+  * @code
+ *  for (i = 0L; (i < SignalLength); i++) {
+ *     Sum = 0.0;
+ *     for (j = i - KernelOrigin; (j < (KernelLength + i - KernelOrigin)); j++)
+ *          Sum += InputData[j];
+ *     OutputData[i] = Sum / KernelLength;
+ *   }
+ * @endcode
 */
 extern int  MovingAverageVolume
     (

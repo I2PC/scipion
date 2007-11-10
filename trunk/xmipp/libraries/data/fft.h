@@ -35,7 +35,9 @@
 #include "selfile.h"
 #include "funcs.h"
 
-/** @defgroup Fourier Fourier transforms */
+/** @defgroup Fourier Fourier transforms
+  * @ingroup DataLibrary
+  */
 
 /** @defgroup FourierConverters Index <--> Frequency, Continuous <--> Discrete
  * @ingroup Fourier
@@ -322,30 +324,26 @@ void InverseFourierTransformHalf(const Matrix2D< complex< double > > & in,
                                  Matrix2D< double >& out,
                                  int oriydim);
 
-/** @defgroup ComplexFourierTransforms Complex Fourier Transforms
- * @ingroup Fourier
- */
-
 /** Complex Direct Fourier Transform 1D
- * @ingroup ComplexFourierTransforms
+ * @ingroup FourierTransforms
  */
 void FourierTransform(const Matrix1D< complex< double > >& in,
                       Matrix1D< complex< double > > & out);
 
 /** Complex Inverse Fourier Transform 1D
- * @ingroup ComplexFourierTransforms
+ * @ingroup FourierTransforms
  */
 void InverseFourierTransform(const Matrix1D< complex< double > > & in,
                              Matrix1D< complex< double > >& out);
 
 /** Complex Direct Fourier Transform 1D, output half of (centro-symmetric) transform
- * @ingroup ComplexFourierTransforms
+ * @ingroup FourierTransforms
  */
 void FourierTransformHalf(const Matrix1D<complex<double> > &in,
                           Matrix1D< complex<double> > &out);
 
 /** Complex Inverse Fourier Transform 1D, input half of (centro-symmetric) transform
- * @ingroup ComplexFourierTransforms
+ * @ingroup FourierTransforms
  */
 void InverseFourierTransformHalf(const Matrix1D< complex<double> > &in,
                                  Matrix1D<complex<double> > &out, 
@@ -965,7 +963,7 @@ void my_ssnr_step(Matrix2D< complex< double > > const & AverageImage,
                   int n);
 
 /** Signal to noise ratio for 2D
- * @ingroup
+ * @ingroup FourierOperations
  */
 #define NGRUPOS 20
 template <typename T>
