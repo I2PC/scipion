@@ -44,6 +44,34 @@ def AddBatch(name, basedir, extension = ''):
     env.Alias(fullname, install)
     env.Default(alias)
 
+
+def AddProtocol(name, basedir):
+    # setup
+    basedir = AddLastSlash(basedir)
+    binprefix = os.path.join(env['prefix'], 'protocols')
+    
+    # only add prefix to protocol_*
+    if name.find('protocol') < 0:
+            install = env.Install(binprefix, basedir + name)
+            env.Default(install)
+            
+    else:
+        fullname = env['prepend'] + name
+       
+        # action
+        command = env.Command(os.path.join(basedir, fullname),
+            os.path.join(basedir, name), [Copy('$TARGET',
+            '$SOURCE'), Chmod('$TARGET', 0755)])
+
+        
+        # alias
+        alias = env.Alias(fullname, command)
+        install = env.Install(binprefix, command)
+        env.Alias(fullname, install)
+        env.Default(alias)
+    
+
+
 # FIXME default parameters' order, to save writing []
 def AddProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
                includes = [], libpath = [], libs = [], cxxflags = [],
@@ -112,6 +140,7 @@ def AddMPIProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
     install = env.Install(binprefix, program)
     env.Alias(fullname, install)
     env.Default(alias)
+
 
 # Add a program integrated in the Xmipp structure
 def AddXmippProgram(name, libs=[]):
@@ -550,8 +579,41 @@ AddBatch('extract_sidechain_from_pdb',
 AddBatch('convert_pdb2surface', 'applications/scripts/convert_pdb2surface')
 AddBatch('protocols', 'applications/scripts/protocols')
 
-# FIXME Protocols?
+# Protocols
+AddProtocol('arg.py', 'applications/scripts/protocols')
+AddProtocol('ctfdat.py', 'applications/scripts/protocols')
+AddProtocol('docfiles.py', 'applications/scripts/protocols')
+AddProtocol('launch_parallel_job.py', 'applications/scripts/protocols')
+AddProtocol('log.py', 'applications/scripts/protocols')
+AddProtocol('rename_files.py', 'applications/scripts/protocols')
+AddProtocol('selfile.py', 'applications/scripts/protocols')
+AddProtocol('spider_header.py', 'applications/scripts/protocols')
+AddProtocol('visualization.py', 'applications/scripts/protocols')
+AddProtocol('visualize_kerdensom.py', 'applications/scripts/protocols')
+AddProtocol('visualize_ml2d.py', 'applications/scripts/protocols')
+AddProtocol('visualize_ml3d.py', 'applications/scripts/protocols')
+AddProtocol('visualize_multires.py', 'applications/scripts/protocols')
+AddProtocol('visualize_preprocess_micrographs.py', 'applications/scripts/protocols')
+AddProtocol('visualize_preprocess_particles.py', 'applications/scripts/protocols')
+AddProtocol('visualize_projmatch.py', 'applications/scripts/protocols')
+AddProtocol('visualize_rct.py', 'applications/scripts/protocols')
+AddProtocol('visualize_rotspectra.py', 'applications/scripts/protocols')
 
+AddProtocol('protocol_gui.py', 'applications/scripts/protocols')
+AddProtocol('protocol_highres3d.py', 'applications/scripts/protocols')
+AddProtocol('protocol_kerdensom.py', 'applications/scripts/protocols')
+AddProtocol('protocol_ml2d.py', 'applications/scripts/protocols')
+AddProtocol('protocol_ml3d.py', 'applications/scripts/protocols')
+AddProtocol('protocol_multires.py', 'applications/scripts/protocols')
+AddProtocol('protocol_particle_pick.py', 'applications/scripts/protocols')
+AddProtocol('protocol_preprocess_micrographs.py', 'applications/scripts/protocols')
+AddProtocol('protocol_preprocess_particles.py', 'applications/scripts/protocols')
+AddProtocol('protocol_projmatch.py', 'applications/scripts/protocols')
+AddProtocol('protocol_rct.py', 'applications/scripts/protocols')
+AddProtocol('protocol_rotspectra.py', 'applications/scripts/protocols')
+AddProtocol('protocol_setup.py', 'applications/scripts/protocols')
+
+# Old names
 BackwardsBatches = [
     'adjust_volume',
     'align3D',

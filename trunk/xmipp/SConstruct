@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# vi: syntax=python
 
 # basic setup, import all environment and custom tools
 import os
@@ -17,7 +16,7 @@ base_dir +=  '/'
 # use only one signature file
 env.SConsignFile(base_dir + 'SCons.dblite')
 
-# read -or not- the cached options
+# read -or not- the cached -non default- options
 if (ARGUMENTS['mode'] == 'configure'):
     opts = Options(None, ARGUMENTS)
 else:
@@ -25,6 +24,8 @@ else:
 
 opts.Add('CC', 'The C compiler', 'gcc')
 opts.Add('CXX', 'The C++ compiler', 'g++')
+
+# Hack, some architectures required this (Coss?)
 opts.Add('LINKERFORPROGRAMS', 'Linker for programs', 'g++')
 
 # FIXME With ARGUMENTS these should be read... right?
@@ -69,7 +70,7 @@ opts.Update(env)
 # generate help for options
 Help(opts.GenerateHelpText(env, sort=cmp))
 
-# FIXME Hack for several flags in command-line
+# FIXME Hack, for several flags in command-line
 env['CCFLAGS'] = Split(env['CCFLAGS'])
 env['CXXFLAGS'] = Split(env['CXXFLAGS'])
 
@@ -202,7 +203,7 @@ if (ARGUMENTS['mode'] == 'configure'):
             print '* Did not find MPI library. Disabling ...'
             env['mpi'] = 0
 
-    #MATLAB
+    # MATLAB
     if int(env['matlab']):
 	print 'Checking for Matlab ... ',
 	if not os.path.exists(env['MATLAB_DIR'] + '/bin/matlab'):
@@ -248,7 +249,7 @@ elif (ARGUMENTS['mode'] == 'compile'):
         # env.Append(LINKFLAGS = ['-Wl,???'])
 
     # fast?
-    # COSS' work. I dont like this (asolano)
+    # COSS' work. I dont like this. Classic debug vs release (asolano) 
     if int(env['fast']):
         env.Append(CXXFLAGS = ['-O3', '-fomit-frame-pointer', '-ffast-math',
                    '-finline-functions', '-funroll-loops'])
