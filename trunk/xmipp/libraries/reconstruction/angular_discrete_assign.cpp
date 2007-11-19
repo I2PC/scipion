@@ -1099,8 +1099,10 @@ void Prog_angular_predict_prm::finish_processing()
 
     if (volume_mode)
     {
+        FileName fn_root=fn_ref.without_extension();
         system(((string)"xmipp_rmsel " + fn_ref + " > /dev/null").c_str());
         system(((string)"rm -f " + fn_ang).c_str());
+        system(((string)"rm -f " + fn_root+"_vectors.doc").c_str());
     }
 }
 
