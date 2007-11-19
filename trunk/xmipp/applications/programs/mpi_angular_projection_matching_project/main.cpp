@@ -26,7 +26,7 @@
 //#include "mpi_run.h"
 
 #include <data/args.h>
-#include <reconstruction/angular_projection_matching_project.h>
+#include <reconstruction/create_projection_library.h>
 #include <data/header.h>
 
 #include <cstring>
