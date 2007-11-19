@@ -166,10 +166,9 @@ void Prog_angular_predict_prm::produce_side_info(int rank)
 
         // Generate the reference projections internally
         randomize_random_generator();
-        fn_random = (string)"ref"+integerToString(ROUND(10000 * rnd_unif()))+
-           "_";
-        string command = (string)"-i " + fn_ref + " -o " + fn_random +
-           " -sampling_rate " + integerToString(proj_step);
+        fn_random = integerToString(ROUND(10000 * rnd_unif()));
+        string command = (string)"-i " + fn_ref + " -o ref" + fn_random +
+           "_ -sampling_rate " + integerToString(proj_step);
         if (fn_sym != "") command += (string)" -sym " + fn_sym;
         if (MPIversion)
             command=(string)"mpirun -np "+integerToString(numberOfProcessors)+
@@ -177,8 +176,8 @@ void Prog_angular_predict_prm::produce_side_info(int rank)
         else
             command=(string)"xmipp_create_projection_library "+command;
         system(command.c_str());
-        fn_ang = fn_random + "_angles.doc";
-        fn_ref=fn_random + ".sel";
+        fn_ang = (string) "ref"+fn_random + "__angles.doc";
+        fn_ref=(string) "ref"+fn_random + "_.sel";
     }
     else
     {

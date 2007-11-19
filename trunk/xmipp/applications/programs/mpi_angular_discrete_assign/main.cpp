@@ -69,8 +69,8 @@ int main(int argc, char **argv)
         // Now all the ranks except 0 produce their own info
         if (rank != 0)
         {
-            prm.fn_ref = (string)"ref" + integerToString(fn_random) + ".sel";
-            prm.fn_ang = (string)"reference" + integerToString(fn_random) + "__movements.txt";
+            prm.fn_ref = (string)"ref" + integerToString(fn_random) + "_.sel";
+            prm.fn_ang = (string)"ref" + integerToString(fn_random) + "__angles.doc";
             prm.produce_side_info(rank);
         }
 
