@@ -893,6 +893,7 @@ class MultiResClass:
              self.touchFile(self.symmetryFile)
 
        # Backup the protocol
+       self.changeDirectory(self.projectDir)
        log.make_backup_of_script_file(sys.argv[0],
                                       os.path.abspath(self.workDirectory))
 
