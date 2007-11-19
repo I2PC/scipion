@@ -11,11 +11,11 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # Iterations
-Iterations='1'
+Iterations='1 2 3'
 # Show model for angular assignment
 DoShowModelF=False
 # Show reconstructed volume
-DoShowVolume=False
+DoShowVolume=True
 # Show model after postprocessing
 DoShowModel=False
 # Show angle convergence
@@ -25,7 +25,7 @@ DoShowVectorDifferences=False
 # Show discrete angular assignment summary
 DoShowDiscreteSummary=False
 # Show resolution
-DoShowResolution=True
+DoShowResolution=False
 #------------------------------------------------------------------------------------------------
 # {section} Volume visualization
 #------------------------------------------------------------------------------------------------
@@ -93,40 +93,40 @@ class VisualizeMultires3DClass:
        self.matrixWidth=_MatrixWidth
 
        # Import the corresponding protocol
-       import protocol_highres3d
+       import protocol_multires
 
        # Produce side info
-       self.myMultiRes=protocol_highres3d.MultiResClass(
-      	        protocol_highres3d.SelFileName,
-		protocol_highres3d.ReferenceFileName,
-		protocol_highres3d.WorkDirectory,
-		protocol_highres3d.DoDeleteWorkingDir,
-		protocol_highres3d.NumberofIterations,
-		protocol_highres3d.ProjectDir,
-		protocol_highres3d.LogDir,
-		protocol_highres3d.ParticleRadius,
-		protocol_highres3d.ParticleMass,
-		protocol_highres3d.SymmetryFile,
-		protocol_highres3d.SamplingRate,
-		protocol_highres3d.PyramidLevels,
-		protocol_highres3d.AngularSteps,
-		protocol_highres3d.ReconstructionMethod,
-		protocol_highres3d.SerialART,
-		protocol_highres3d.ARTLambda,
-		protocol_highres3d.DiscreteAssignment,
-		protocol_highres3d.ContinuousAssignment,
-		protocol_highres3d.DoComputeResolution,
-		protocol_highres3d.ResumeIteration,
-		protocol_highres3d.CTFDat,
-		protocol_highres3d.PhaseCorrection,
-		protocol_highres3d.AmplitudeCorrection,
-		protocol_highres3d.DoReferenceMask,
-		protocol_highres3d.InitialReferenceMask,
-		protocol_highres3d.FilterReference,
-		protocol_highres3d.SegmentUsingMass,
-		protocol_highres3d.DoParallel,
-		protocol_highres3d.MyNumberOfCPUs,
-		protocol_highres3d.MyMachineFile,
+       self.myMultiRes=protocol_multires.MultiResClass(
+      	        protocol_multires.SelFileName,
+		protocol_multires.ReferenceFileName,
+		protocol_multires.WorkDirectory,
+		protocol_multires.DoDeleteWorkingDir,
+		protocol_multires.NumberofIterations,
+		protocol_multires.ProjectDir,
+		protocol_multires.LogDir,
+		protocol_multires.ParticleRadius,
+		protocol_multires.ParticleMass,
+		protocol_multires.SymmetryFile,
+		protocol_multires.SamplingRate,
+		protocol_multires.PyramidLevels,
+		protocol_multires.AngularSteps,
+		protocol_multires.ReconstructionMethod,
+		protocol_multires.SerialART,
+		protocol_multires.ARTLambda,
+		protocol_multires.DiscreteAssignment,
+		protocol_multires.ContinuousAssignment,
+		protocol_multires.DoComputeResolution,
+		protocol_multires.ResumeIteration,
+		protocol_multires.CTFDat,
+		protocol_multires.PhaseCorrection,
+		protocol_multires.AmplitudeCorrection,
+		protocol_multires.DoReferenceMask,
+		protocol_multires.InitialReferenceMask,
+		protocol_multires.FilterReference,
+		protocol_multires.SegmentUsingMass,
+		protocol_multires.DoParallel,
+		protocol_multires.MyNumberOfCPUs,
+		protocol_multires.MyMachineFile,
 		
 		False
               )
@@ -257,59 +257,63 @@ class VisualizeMultires3DClass:
    #------------------------------------------------------------------------
    def showResolution(self):
        if not len(self.iterationList)==0:
-          launchGnuplot=False
-          command="echo plot "
+          plotFSC=visualization.gnuplot()
+          plotFSC.prepare_empty_plot("Resolution measure by FSC",
+             "Armstrong^-1","Fourier Shell Correlation")
 	  for i in range(len(self.iterationList)):
-	      if os.path.exists(self.myMultiRes.getReconstructionRootname(
-	         self.iterationList[i])+"_2.vol.frc"):
-		 if launchGnuplot: command+=", "
-         	 command+="\\\""+self.myMultiRes.getReconstructionRootname(
-	                  self.iterationList[i])+\
-			  '_2.vol.frc\\\" u 1:2 title \\"FSC iteration '+\
-			  str(self.iterationList[i])+'\\" w l'
-		 if not launchGnuplot:
-		    command+=", \\\""+self.myMultiRes.getReconstructionRootname(
-                             self.iterationList[i])+\
-		             '_2.vol.frc\\\" u 1:3 title \\"Noise threshold\\" w l'
-		 launchGnuplot=True
-    	  if launchGnuplot:
-             command+=" \; set xlabel \\\"1/Angstrom\\\" \; replot \; "+\
-	              "pause 300 | gnuplot &"
-	     self.execute(command)
+              fscFile=self.myMultiRes.getReconstructionRootname(
+	         self.iterationList[i])+"_2.vol.frc"
+	      if os.path.exists(fscFile):
+                 if i==0:
+                    plotFSC.send(" plot '" + fscFile +
+                       "' using 1:2 title 'Iteration "+
+                       str(self.iterationList[i])+"' with lines")
+                    plotFSC.send(" replot '" + fscFile +
+                       "' using 1:3 title 'Noise level' with lines")
+                 else:
+                    plotFSC.send(" replot '" + fscFile +
+                       "' using 1:2 title 'Iteration "+
+                       str(self.iterationList[i])+"' with lines")
 
        if not len(self.iterationList)==0:
-          launchGnuplot=False
-          command="echo plot "
+          plotSSNR=visualization.gnuplot()
+          plotSSNR.prepare_empty_plot("Resolution measured by SSNR",
+             "Armstrong^-1","Spectral Signal-to-Noise Ratio")
 	  for i in range(len(self.iterationList)):
-	      if os.path.exists(self.myMultiRes.getReconstructionRootname(
-	         self.iterationList[i])+".vol.ssnr"):
-		 if launchGnuplot: command+=", "
-         	 command+="\\\""+self.myMultiRes.getReconstructionRootname(
-	                  self.iterationList[i])+\
-			  '.vol.ssnr\\\" u 2:3 title \\"SSNR iteration '+\
-			  str(self.iterationList[i])+'\\" w l'
-		 if not launchGnuplot:
-		    command+=", 0"
-		 launchGnuplot=True
-    	  if launchGnuplot:
-             command+=" \; set xlabel \\\"1/Angstrom\\\" \; "+\
-	              "set yrange [-5:30] \; replot \; pause 300 | gnuplot &"
-	     self.execute(command)
+              ssnrFile=self.myMultiRes.getReconstructionRootname(
+	         self.iterationList[i])+".vol.ssnr"
+	      if os.path.exists(ssnrFile):
+                 if i==0:
+                    plotSSNR.send(" plot '" + ssnrFile +
+                       "' using 2:3 title 'Iteration "+
+                       str(self.iterationList[i])+"' with lines")
+                    plotSSNR.send(" replot 0 title 'Noise level' with lines")
+                 else:
+                    plotSSNR.send(" replot '" + fscFile +
+                       "' using 1:2 title 'Iteration "+
+                       str(self.iterationList[i])+"' with lines")
+          plotSSNR.send("set yrange [-5:30]")
+          plotSSNR.send("replot")
 
    #------------------------------------------------------------------------
    # Show Vector Differences
    #------------------------------------------------------------------------
    def showVectorDifferences(self):
        if not len(self.iterationList)==0:
-          command="echo plot "
+          plot=visualization.gnuplot()
+          plot.prepare_empty_plot("Vector differences","Degrees","Histogram")
 	  for i in range(len(self.iterationList)):
-	      command+="\\\"Iteration"+itoa(self.iterationList[i],2)+\
+              diffFile="Iteration"+itoa(self.iterationList[i],2)+\
 	               "/diff_angles"+itoa(self.iterationList[i],2)+\
-		       "_vec_diff_hist.txt\\\" u 1:2 w st"
-	      if not i==len(self.iterationList)-1:
-	         command+=", "
-          command+=" \; pause 300 | gnuplot &"
-	  self.execute(command)
+		       "_vec_diff_hist.txt"
+              if i==0:
+                 plot.send(" plot '" + diffFile +
+                    "' using 1:2 title 'Iteration "+
+                    str(self.iterationList[i])+"' with steps")
+              else:
+                 plot.send(" replot '" + diffFile +
+                    "' using 1:2 title 'Iteration "+
+                    str(self.iterationList[i])+"' with steps")
 
    #------------------------------------------------------------------------
    # Show Volumes
