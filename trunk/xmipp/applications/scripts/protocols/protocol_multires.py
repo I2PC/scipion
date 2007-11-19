@@ -311,7 +311,7 @@ class MultiResClass:
        self.particleRadius=_ParticleRadius
        self.particleMass=_ParticleMass
        if _SymmetryFile=="":
-          self.symmetryFile=self.workDirectory+"/Src/symmetry.sym"
+          self.symmetryFile=""
        else:
           self.symmetryFile=os.path.abspath(_SymmetryFile)
        self.samplingRate=_SamplingRate
@@ -449,9 +449,11 @@ class MultiResClass:
 		 "-oang "+self.getDiscreteAnglesFilename(_iteration)+" "+\
 		 "-proj_step "+self.getAngularSteps(_iteration)+" "+\
 		 "-psi_step "+self.getAngularSteps(_iteration)+" "+\
-                 "-sym "+self.symmetryFile+" "+\
 		 "-summary "+self.getDiscreteAnglesSummaryDir(_iteration)+\
 		    "/summary"
+          if not self.symmetryFile=="":
+             params+=" -sym "+self.symmetryFile
+                
 	  self.createDirectory(self.getDiscreteAnglesSummaryDir(_iteration))
 	  launch_parallel_job.launch_job(self.doParallel,
         			       "xmipp_angular_discrete_assign",
@@ -488,12 +490,14 @@ class MultiResClass:
           raise RuntimeError,"There is a problem with the continuous assignment"
 
        # Measure distance between the two angular assignments
-       self.execute("xmipp_angular_distance -ang1 "+
+       angular_distance_command="xmipp_angular_distance -ang1 "+\
                     self.getAlignmentFFilename(_iteration)+" -ang2 "+\
       	            self.getAlignmentFilename(_iteration)+\
 		    " -o Iteration"+itoa(_iteration,2)+"/diff_angles"+\
-		    itoa(_iteration,2)+" -sym "+self.symmetryFile+\
-                    " -check_mirrors | "+\
+		    itoa(_iteration,2)+" -check_mirrors"
+       if not self.symmetryFile=="": 
+            aungular_distance_command+=" -sym "+self.symmetryFile
+       self.execute(angular_distance_command+" | "+\
 		    " sed -n 's/Global distance = /"+str(_iteration)+" /p' "+\
 		    ">> angle_convergence.txt")
 
@@ -889,8 +893,6 @@ class MultiResClass:
 	  self.changeDirectory(self.workDirectory)
 	  self.createDirectory('Src')
 	  self.createDirectory('Results')
-	  if not os.path.exists(self.symmetryFile):
-             self.touchFile(self.symmetryFile)
 
        # Backup the protocol
        self.changeDirectory(self.projectDir)
@@ -1018,8 +1020,9 @@ class MultiResClass:
        if self.getReconstructionMethod(_iteration)=="art":
           params="-i "+_selfile+" "+\
 	         "-o "+_outputRootName+" "+\
-		 "-l "+self.getARTLambda(_iteration)+" "+\
-		 "-sym "+self.symmetryFile+" "
+		 "-l "+self.getARTLambda(_iteration)
+          if not self.symmetryFile=="":
+             params+=" -sym "+self.symmetryFile
 	  if _applyMasks:
 	     params+="-R "+str(math.ceil(self.particleWorkingRadius*1.1))
 	  doParallel=self.doParallel
@@ -1037,8 +1040,9 @@ class MultiResClass:
        elif self.getReconstructionMethod(_iteration)=="wbp":
           params="-i "+_selfile+" "+\
 	         "-o "+_outputRootName+".vol "+\
-		 "-sym "+self.symmetryFile+" "+\
 		 "-use_each_image"
+          if not self.symmetryFile=="":
+	     params+="-sym "+self.symmetryFile+" "
 	  if not _applyMasks:
 	     params+=" -radius "+str(0.5*math.floor(math.sqrt(2.0)*
 	        self.workXDim/
@@ -1064,8 +1068,9 @@ class MultiResClass:
 	               " "+str(-math.ceil(self.particleWorkingRadius*1.1)))
        
        # Symmetrize volume
-       self.execute("xmipp_symmetrize -i "+_outputRootName+".vol "+\
-		    "-sym "+self.symmetryFile)
+       if not self.symmetryFile=="":
+          self.execute("xmipp_symmetrize -i "+_outputRootName+".vol "+\
+	               "-sym "+self.symmetryFile)
       
        # Mask volume
        if (not self.initialReferenceMask=="") and _applyMasks:
