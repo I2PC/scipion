@@ -42,6 +42,7 @@ int main(int argc, char **argv)
     {
         // Read input parameters
 	prm.MPIversion=true;
+        prm.numberOfProcessors=NProcessors;
         prm.read(argc, argv);
     }
     catch (Xmipp_error XE)

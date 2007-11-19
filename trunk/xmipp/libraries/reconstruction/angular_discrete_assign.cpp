@@ -163,41 +163,22 @@ void Prog_angular_predict_prm::produce_side_info(int rank)
     {
         volume_mode = true;
         cerr << "Generating reference projections ...\n";
-        VolumeXmipp V;
-        V.read(fn_ref);
+
         // Generate the reference projections internally
-        FileName fn_proj_param;
         randomize_random_generator();
-        fn_random = integerToString(ROUND(10000 * rnd_unif()));
-        fn_proj_param = (string)"proj" + fn_random + ".param";
-        ofstream fh_proj_param;
-        fh_proj_param.open(fn_proj_param.c_str());
-        if (!fh_proj_param)
-            REPORT_ERROR(1, (string)"Prog_angular_predict_prm::produce_side_info:"
-                         " Cannot open " + fn_proj_param + " for output");
-        int rotF = FLOOR(360.0 - proj_step);
-        int tiltF = FLOOR(90.0 - proj_step);
-        fh_proj_param
-        << fn_ref << endl // Volume to project
-        << "reference" << fn_random << "_ 1 xmp\n" // projection name
-        << XSIZE(V()) << " " << XSIZE(V()) << endl
-        << "NULL\n" // External angles
-        << "0 " << rotF  << " " << ROUND(1.0 + rotF / proj_step)  << " even\n"
-        << "0 " << tiltF << " " << ROUND(1.0 + tiltF / proj_step) << "\n"
-        << "0\n"
-        << "0\n"
-        << "0\n"
-        << "0\n"
-        << "0\n"
-        << "0\n"
-        ;
-        fh_proj_param.close();
-        fn_ref = (string)"ref" + fn_random + ".sel";
-        string command = (string)"xmipp_project -i " + fn_proj_param + " -o " + fn_ref;
+        fn_random = (string)"ref"+integerToString(ROUND(10000 * rnd_unif()))+
+           "_";
+        string command = (string)"-i " + fn_ref + " -o " + fn_random +
+           " -sampling_rate " + integerToString(proj_step);
         if (fn_sym != "") command += (string)" -sym " + fn_sym;
+        if (MPIversion)
+            command=(string)"mpirun -np "+integerToString(numberOfProcessors)+
+                " `which xmipp_mpi_create_projection_library` "+command;
+        else
+            command=(string)"xmipp_create_projection_library "+command;
         system(command.c_str());
-        system(((string)"rm -f " + fn_proj_param).c_str());
-        fn_ang = (string)"reference" + fn_random + "__movements.txt";
+        fn_ang = fn_random + "_angles.doc";
+        fn_ref=fn_random + ".sel";
     }
     else
     {
