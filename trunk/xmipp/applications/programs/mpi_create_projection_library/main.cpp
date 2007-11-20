@@ -26,7 +26,7 @@
 //#include "mpi_run.h"
 
 #include <data/args.h>
-#include <reconstruction/angular_projection_matching_project.h>
+#include <reconstruction/create_projection_library.h>
 #include <data/header.h>
 
 #include <cstring>
@@ -43,7 +43,7 @@
 #define TAG_WAIT   2
 #define TAG_FREEWORKER   3
 
-class Prog_mpi_projection_matching_project_prm:Prog_Angular_Projection_Matching_Project_Parameters
+class Prog_create_projection_library_Parameters:Prog_Angular_Projection_Matching_Project_Parameters
 {
     public:
     //int rank, size, num_img_tot;
@@ -68,7 +68,7 @@ class Prog_mpi_projection_matching_project_prm:Prog_Angular_Projection_Matching_
         bool verbose;
 
     /*  constructor ------------------------------------------------------- */
-    Prog_mpi_projection_matching_project_prm()
+    Prog_create_projection_library_Parameters()
     {
         //parent class constructor will be called by deault without parameters
         MPI_Comm_size(MPI_COMM_WORLD, &(nProcs));
@@ -311,7 +311,7 @@ int main(int argc, char *argv[])
     //size of the mpi block, number of images
     //mpi_job_size=!checkParameter(argc,argv,"-mpi_job_size","-1");
 
-    Prog_mpi_projection_matching_project_prm prm;
+    Prog_create_projection_library_Parameters prm;
     try
     {
         prm.read(argc, argv);
