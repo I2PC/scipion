@@ -26,7 +26,7 @@
 //#include "mpi_run.h"
 
 #include <data/args.h>
-#include <reconstruction/create_projection_library.h>
+#include <reconstruction/angular_projection_matching_project.h>
 #include <data/header.h>
 
 #include <cstring>
@@ -43,7 +43,7 @@
 #define TAG_WAIT   2
 #define TAG_FREEWORKER   3
 
-class Prog_mpi_create_projection_library_Parameters: Prog_create_projection_library_Parameters
+class Prog_mpi_projection_matching_project_prm:Prog_Angular_Projection_Matching_Project_Parameters
 {
     public:
     //int rank, size, num_img_tot;
@@ -68,7 +68,7 @@ class Prog_mpi_create_projection_library_Parameters: Prog_create_projection_libr
         bool verbose;
 
     /*  constructor ------------------------------------------------------- */
-    Prog_mpi_create_projection_library_Parameters()
+    Prog_mpi_projection_matching_project_prm()
     {
         //parent class constructor will be called by deault without parameters
         MPI_Comm_size(MPI_COMM_WORLD, &(nProcs));
@@ -84,7 +84,7 @@ class Prog_mpi_create_projection_library_Parameters: Prog_create_projection_libr
     /* Read parameters --------------------------------------------------------- */
     void read(int argc, char **argv)
     {
-        Prog_create_projection_library_Parameters::read(argc,argv);
+        Prog_Angular_Projection_Matching_Project_Parameters::read(argc,argv);
         mpi_job_size=textToInteger(getParameter(argc,argv,"-mpi_job_size","-1"));
         
     }
@@ -92,7 +92,7 @@ class Prog_mpi_create_projection_library_Parameters: Prog_create_projection_libr
     /* Usage ------------------------------------------------------------------- */
     void usage()
     {
-        Prog_create_projection_library_Parameters::usage();
+        Prog_Angular_Projection_Matching_Project_Parameters::usage();
         cerr << " [ -mpi_job_size default=-1]    : Number of images sent to a cpu in a single job \n";
         cerr << "                                 if  -1 the computer will fill the value for you";
     }
@@ -101,7 +101,7 @@ class Prog_mpi_create_projection_library_Parameters: Prog_create_projection_libr
     /* Show -------------------------------------------------------------------- */
     void show()
     {
-        Prog_create_projection_library_Parameters::show();
+        Prog_Angular_Projection_Matching_Project_Parameters::show();
 	cerr << " Size of mpi jobs " << mpi_job_size <<endl;
     }
 
@@ -117,7 +117,7 @@ class Prog_mpi_create_projection_library_Parameters: Prog_create_projection_libr
         //mysampling.SetNeighborhoodRadius(0.);//irelevant
         //true -> half_sphere
         mysampling.Compute_sampling_points(false,max_tilt_angle,min_tilt_angle);
-        mysampling.remove_redundant_points(symmetry, sym_order);
+        mysampling.remove_redundant_points(/*symmetry, sym_order*/);
         remove_points_not_close_to_experimental_points();
         if (rank == 0) 
         {
@@ -311,7 +311,7 @@ int main(int argc, char *argv[])
     //size of the mpi block, number of images
     //mpi_job_size=!checkParameter(argc,argv,"-mpi_job_size","-1");
 
-    Prog_mpi_create_projection_library_Parameters prm;
+    Prog_mpi_projection_matching_project_prm prm;
     try
     {
         prm.read(argc, argv);
@@ -337,3 +337,5 @@ int main(int argc, char *argv[])
     
     exit(0);
 }
+
+
