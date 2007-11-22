@@ -1,4 +1,5 @@
 #!/usr/bin/env csh
+set scriptdir=`which xmipp_protocols | sed "s|/bin/xmipp_protocols|/protocols|"`
 if (!(-e protocol_setup.py)) then
   echo " + Xmipp_protocols was never executed before in this directory."
   echo " + Make sure you run xmipp_protocols only in your project directory."
@@ -6,14 +7,14 @@ if (!(-e protocol_setup.py)) then
   echo -n " + Do you want to setup Xmipp protocols here? [y/n]:"
   set answer = $<
   if ($answer == y) then
-    echo " + Making a local copy of protocol_setup.py ... "  
-    cp ~/scripts/protocol_setup.py ./.
+    echo " + Making a local copy of xmipp_protocol_setup.py ... "  
+    cp ${scriptdir}/xmipp_protocol_setup.py ./.
   else
     exit 1
   endif
 else
-  echo " + Reading existing copy of protocol_setup.py ... "
+  echo " + Reading existing copy of "${prefix}"_protocol_setup.py ... "
 endif
 echo " + Launching GUI ... " 
-python ~/scripts/protocol_gui.py protocol_setup.py
+python ${scriptdir}/xmipp_protocol_gui.py xmipp_protocol_setup.py
 
