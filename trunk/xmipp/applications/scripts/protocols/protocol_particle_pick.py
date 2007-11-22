@@ -96,7 +96,7 @@ class particle_pick_class:
         os.chdir(os.pardir)
 
     def MakeGui(self):
-        import protocol_gui
+        import xmipp_protocol_gui
 
         self.master=Tk()
         self.total_count=0
@@ -105,14 +105,14 @@ class particle_pick_class:
         self.row={}
 
         # Create the Canvas with Scrollbars
-        self.canvas,self.frame=protocol_gui.PrepareCanvas(self.master)
+        self.canvas,self.frame=xmipp_protocol_gui.PrepareCanvas(self.master)
 
         # Fill the GUI
         self.FillMarkGui()
 
         # Launch the window
-        protocol_gui.LaunchCanvas(self.master,self.canvas,self.frame)
-        protocol_gui.GuiResize(self.master,self.frame)
+        xmipp_protocol_gui.LaunchCanvas(self.master,self.canvas,self.frame)
+        xmipp_protocol_gui.GuiResize(self.master,self.frame)
 
         # Enter main loop
         self.master.mainloop()
