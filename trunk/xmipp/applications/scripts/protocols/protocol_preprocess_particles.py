@@ -20,7 +20,7 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # {dir} Working subdirectory:
-""" Use the same directory where you executed protocol_preprocess_micrographs.py
+""" Use the same directory where you executed xmipp_protocol_preprocess_micrographs.py
 """
 WorkingDir="Preprocessing"
 # {file} Selfile with micrographs on which to perform processing
@@ -129,7 +129,7 @@ class preprocess_particles_class:
         import os,sys
         scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
         sys.path.append(scriptdir) # add default search path
-        import log,protocol_preprocess_micrographs
+        import log,xmipp_protocol_preprocess_micrographs
         
         self.WorkingDir=WorkingDir
         self.MicrographSelfile=os.path.abspath(MicrographSelfile)
@@ -167,7 +167,7 @@ class preprocess_particles_class:
         os.chdir(self.WorkingDir)
         
         # Parameters set from outside
-        self.Down=protocol_preprocess_micrographs.Down
+        self.Down=xmipp_protocol_preprocess_micrographs.Down
         
         # Check pairlist file
         if (not self.IsPairList):

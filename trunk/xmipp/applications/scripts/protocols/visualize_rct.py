@@ -3,9 +3,9 @@
 # Protocol for visualization of the results of protocol_rct.py
 #
 # Example use:
-# ./visualize_rct.py protocol_rct.py
+# ./visualize_rct.py xmipp_protocol_rct.py
 #
-# This script requires that protocol_rct.py is in the current directory
+# This script requires that xmipp_protocol_rct.py is in the current directory
 #
 # Author: Sjors Scheres, March 2007
 #

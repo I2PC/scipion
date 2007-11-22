@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #------------------------------------------------------------------------------------------------
-# Protocol for visualization of the results of protocol_multires.py
+# Protocol for visualization of the results of xmipp_protocol_multires.py
 #
 # Example use:
 # ./visualize_multires.py
@@ -93,40 +93,40 @@ class VisualizeMultires3DClass:
        self.matrixWidth=_MatrixWidth
 
        # Import the corresponding protocol
-       import protocol_multires
+       import xmipp_protocol_multires
 
        # Produce side info
-       self.myMultiRes=protocol_multires.MultiResClass(
-      	        protocol_multires.SelFileName,
-		protocol_multires.ReferenceFileName,
-		protocol_multires.WorkDirectory,
-		protocol_multires.DoDeleteWorkingDir,
-		protocol_multires.NumberofIterations,
-		protocol_multires.ProjectDir,
-		protocol_multires.LogDir,
-		protocol_multires.ParticleRadius,
-		protocol_multires.ParticleMass,
-		protocol_multires.SymmetryFile,
-		protocol_multires.SamplingRate,
-		protocol_multires.PyramidLevels,
-		protocol_multires.AngularSteps,
-		protocol_multires.ReconstructionMethod,
-		protocol_multires.SerialART,
-		protocol_multires.ARTLambda,
-		protocol_multires.DiscreteAssignment,
-		protocol_multires.ContinuousAssignment,
-		protocol_multires.DoComputeResolution,
-		protocol_multires.ResumeIteration,
-		protocol_multires.CTFDat,
-		protocol_multires.PhaseCorrection,
-		protocol_multires.AmplitudeCorrection,
-		protocol_multires.DoReferenceMask,
-		protocol_multires.InitialReferenceMask,
-		protocol_multires.FilterReference,
-		protocol_multires.SegmentUsingMass,
-		protocol_multires.DoParallel,
-		protocol_multires.MyNumberOfCPUs,
-		protocol_multires.MyMachineFile,
+       self.myMultiRes=xmipp_protocol_multires.MultiResClass(
+      	        xmipp_protocol_multires.SelFileName,
+		xmipp_protocol_multires.ReferenceFileName,
+		xmipp_protocol_multires.WorkDirectory,
+		xmipp_protocol_multires.DoDeleteWorkingDir,
+		xmipp_protocol_multires.NumberofIterations,
+		xmipp_protocol_multires.ProjectDir,
+		xmipp_protocol_multires.LogDir,
+		xmipp_protocol_multires.ParticleRadius,
+		xmipp_protocol_multires.ParticleMass,
+		xmipp_protocol_multires.SymmetryFile,
+		xmipp_protocol_multires.SamplingRate,
+		xmipp_protocol_multires.PyramidLevels,
+		xmipp_protocol_multires.AngularSteps,
+		xmipp_protocol_multires.ReconstructionMethod,
+		xmipp_protocol_multires.SerialART,
+		xmipp_protocol_multires.ARTLambda,
+		xmipp_protocol_multires.DiscreteAssignment,
+		xmipp_protocol_multires.ContinuousAssignment,
+		xmipp_protocol_multires.DoComputeResolution,
+		xmipp_protocol_multires.ResumeIteration,
+		xmipp_protocol_multires.CTFDat,
+		xmipp_protocol_multires.PhaseCorrection,
+		xmipp_protocol_multires.AmplitudeCorrection,
+		xmipp_protocol_multires.DoReferenceMask,
+		xmipp_protocol_multires.InitialReferenceMask,
+		xmipp_protocol_multires.FilterReference,
+		xmipp_protocol_multires.SegmentUsingMass,
+		xmipp_protocol_multires.DoParallel,
+		xmipp_protocol_multires.MyNumberOfCPUs,
+		xmipp_protocol_multires.MyMachineFile,
 		
 		False
               )

@@ -4,7 +4,7 @@
 # after a preliminary alignment (and classification) using MLalign2D
 #
 # Example use:
-# ./protocol_kerdensom.py
+# ./xmipp_protocol_kerdensom.py
 #
 # Author: Sjors Scheres, March 2007
 #

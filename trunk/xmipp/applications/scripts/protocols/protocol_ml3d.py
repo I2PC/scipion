@@ -4,7 +4,7 @@
 # {please cite} Scheres et al. (2007) Nature Methods, 4, 27-29
 #
 # Example use:
-# ./protocol_ml3d.py
+# ./xmipp_protocol_ml3d.py
 #
 # Author: Sjors Scheres, March 2007
 #

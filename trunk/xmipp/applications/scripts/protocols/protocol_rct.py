@@ -3,7 +3,7 @@
 # Protocol for random conical tilt reconstruction
 #
 # Example use:
-# ./protocol_rct.py
+# ./xmipp_protocol_rct.py
 #
 # Author: Sjors Scheres, March 2007
 #

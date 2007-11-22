@@ -652,10 +652,10 @@ class automated_gui_class:
             os.system(command)
         else:
             import os,tkFileDialog,shutil
-            fileformats = [('Protocol Scripts ','protocol_*_backup.py')]
+            fileformats = [('Protocol Scripts ','xmipp_protocol_*_backup.py')]
             protname = tkFileDialog.askopenfilename(title='Choose a Protocol',
                                                     filetypes=fileformats)
-            visname=(os.path.basename(protname)).replace('protocol_','visualize_')
+            visname=(os.path.basename(protname)).replace('xmipp_protocol_','visualize_')
             visname=visname.replace('_backup.py','.py')
             src=str(self.SYSTEMSCRIPTDIR)+'/'+visname
             shutil.copy(src,visname)

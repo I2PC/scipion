@@ -15,7 +15,7 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # {dir} Working subdirectory:
-""" Use the same directory where you executed protocol_preprocess_micrographs.py
+""" Use the same directory where you executed xmipp_protocol_preprocess_micrographs.py
 """
 WorkingDir="Preprocessing"
 # {file} Selfile with all micrographs to pick particles from:

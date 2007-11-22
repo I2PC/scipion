@@ -6,7 +6,7 @@
 # {please cite} Scheres et al. (2005) Bioinformatics, 21(suppl2), ii243-244 (fast version)
 #
 # Example use:
-# ./protocol_ml2d.py
+# ./xmipp_protocol_ml2d.py
 #
 # Author: Sjors Scheres, March 2007
 #

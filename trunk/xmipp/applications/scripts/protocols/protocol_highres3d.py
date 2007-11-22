@@ -6,7 +6,7 @@
 # {please cite} S. Jonic et al. Ultramicroscopy,  103:  303-317 (2005)
 #
 # Example use:
-# ./protocol_highres3d.py
+# ./xmipp_protocol_highres3d.py
 #
 # Author: Carlos Oscar Sanchez Sorzano, June 2007
 #
