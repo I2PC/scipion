@@ -38,7 +38,7 @@ class visualize_ML2D_class:
                  ProtocolName):
 	     
         import os,sys,shutil
-        scriptdir=os.path.expanduser('~')+'/scripts/'
+        scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
         sys.path.append(scriptdir) # add default search path
         import log
 

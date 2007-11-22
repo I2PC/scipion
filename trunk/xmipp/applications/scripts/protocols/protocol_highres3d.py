@@ -249,7 +249,7 @@ import shutil
 import string
 import sys
 
-scriptdir=os.path.expanduser('~')+'/scripts'
+scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
 sys.path.append(scriptdir) # add default search path
 import ctfdat
 import launch_parallel_job

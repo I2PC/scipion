@@ -71,7 +71,6 @@ class setup_protocols_class:
                      AutoLaunch):
 
             import os,sys
-
             self.SetupPreProcessMicrographs=SetupPreProcessMicrographs
             self.SetupParticlePick=SetupParticlePick
             self.SetupPreProcessParticles=SetupPreProcessParticles
@@ -87,32 +86,34 @@ class setup_protocols_class:
             self.LogDir=LogDir
             self.AutoLaunch=AutoLaunch
 
-            scriptdir=os.path.expanduser('~')+'/scripts/'
+            scriptdir = os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
             sys.path.append(scriptdir) # add default search path
             self.SYSTEMSCRIPTDIR=scriptdir
 
             # Which scripts and which directories to use
             self.library={}
             self.library['SetupPreProcessMicrographs']=[self.SetupPreProcessMicrographs,
-                                                ['protocol_preprocess_micrographs.py','visualize_preprocess_micrographs.py']]
+                                                        ['xmipp_protocol_preprocess_micrographs.py',
+                                                         'visualize_preprocess_micrographs.py']]
             self.library['SetupParticlePick']=[self.SetupParticlePick,
-                                                ['protocol_particle_pick.py']]
+                                                ['xmipp_protocol_particle_pick.py']]
             self.library['SetupPreProcessParticles']=[self.SetupPreProcessParticles,
-                                                ['protocol_preprocess_particles.py','visualize_preprocess_particles.py']]
+                                                ['xmipp_protocol_preprocess_particles.py',
+                                                 'visualize_preprocess_particles.py']]
             self.library['SetupML2D']=[self.SetupML2D,
-                                         ['protocol_ml2d.py','visualize_ml2d.py']]
+                                         ['xmipp_protocol_ml2d.py','visualize_ml2d.py']]
             self.library['SetupKerdensom']=[self.SetupKerdensom,
-                                              ['protocol_kerdensom.py','visualize_kerdensom.py']]
+                                              ['xmipp_protocol_kerdensom.py','visualize_kerdensom.py']]
             self.library['SetupRotSpectra']=[self.SetupRotSpectra,
-                                               ['protocol_rotspectra.py','visualize_rotspectra.py']]
+                                               ['xmipp_protocol_rotspectra.py','visualize_rotspectra.py']]
             self.library['SetupRCT']=[self.SetupRCT,
-                                        ['protocol_rct.py','visualize_rct.py']]
+                                        ['xmipp_protocol_rct.py','visualize_rct.py']]
             self.library['SetupML3D']=[self.SetupML3D,
-                                        ['protocol_ml3d.py','visualize_ml3d.py']]
+                                        ['xmipp_protocol_ml3d.py','visualize_ml3d.py']]
             self.library['SetupProjMatch']=[self.SetupProjMatch,
-                                        ['protocol_projmatch.py','visualize_projmatch.py']]
+                                        ['xmipp_protocol_projmatch.py','visualize_projmatch.py']]
             self.library['SetupMultiRes3d']=[self.SetupMultiRes3d,
-                                        ['protocol_multires.py','visualize_multires.py']]
+                                        ['xmipp_protocol_multires.py','visualize_multires.py']]
 
             # For automated editing of default directories in protocols
             self.DEFAULTDIRS={"ProjectDir":self.ProjectDir,
@@ -192,7 +193,7 @@ class setup_protocols_class:
             # Only auto-launch the first script
             script=scripts[0]
             if (self.AutoLaunch!=""):
-                command='python '+str(self.SYSTEMSCRIPTDIR)+'/protocol_gui.py '+str(script)+' &'
+                command='python '+str(self.SYSTEMSCRIPTDIR)+'/xmipp_protocol_gui.py '+str(script)+' &'
                 os.system(command)
 
 
