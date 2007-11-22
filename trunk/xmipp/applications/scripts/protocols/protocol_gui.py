@@ -10,7 +10,7 @@ only the variables contained in the header of a python script, and
 that it can also be used to launch the script.
 
 Usage:
-  python protocol_gui.py script.py
+  python xmipp_protocol_gui.py script.py
 
 Where the header of script.py should be organized as follows:
 
@@ -646,7 +646,7 @@ class automated_gui_class:
         import os
         if not self.is_setupgui:
             self.GuiSave()
-            command='python '+str(self.SYSTEMSCRIPTDIR)+'/protocol_gui.py '+\
+            command='python '+str(self.SYSTEMSCRIPTDIR)+'/xmipp_protocol_gui.py '+\
                      self.variables["AnalysisScript"][0]+' '+self.scriptname+' &'
             print command
             os.system(command)
@@ -659,7 +659,7 @@ class automated_gui_class:
             visname=visname.replace('_backup.py','.py')
             src=str(self.SYSTEMSCRIPTDIR)+'/'+visname
             shutil.copy(src,visname)
-            command='python '+str(self.SYSTEMSCRIPTDIR)+'/protocol_gui.py '+\
+            command='python '+str(self.SYSTEMSCRIPTDIR)+'/xmipp_protocol_gui.py '+\
                      visname+' '+protname+' &'
             print command
             os.system(command)
