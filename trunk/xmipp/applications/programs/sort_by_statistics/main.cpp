@@ -243,20 +243,63 @@ public:
             zscore.resize(nr_imgs);
             for (imgno = 0; imgno < nr_imgs; imgno++)
             {
-                values[imgno][0] = abs(avg_mean - values[imgno][0]) / sig_mean;
-                values[imgno][1] = abs(values[imgno][1] - avg_sig) / sig_sig;
-                values[imgno][2] = abs(values[imgno][2] - avg_min) / sig_min;
-                values[imgno][3] = abs(values[imgno][3] - avg_max) / sig_max;
-                values[imgno][4] = abs(values[imgno][4] - avg_nhighpix) / sig_nhighpix;
-                values[imgno][5] = abs(values[imgno][5] - avg_nlowpix) / sig_nlowpix;
-                values[imgno][6] = abs(values[imgno][6] - avg_nradhigh) / sig_nradhigh;
-                values[imgno][7] = abs(values[imgno][7] - avg_nradlow) / sig_nradlow;
-                values[imgno][8] = abs(values[imgno][8] - avg_sigquad) / sig_sigquad;
-                values[imgno][9] = abs(values[imgno][9] - avg_meanquad) / sig_meanquad;
-                values[imgno][10] = abs(values[imgno][10] - avg_ampl2_1) / sig_ampl2_1;
-                values[imgno][11] = abs(values[imgno][11] - avg_ampl2_2) / sig_ampl2_2;
-                values[imgno][12] = abs(values[imgno][12] - avg_ampl2_3) / sig_ampl2_3;
-                values[imgno][13] = abs(values[imgno][13] - avg_ampl2_4) / sig_ampl2_4;
+		if (sig_mean > 0.)
+		    values[imgno][0] = abs(avg_mean - values[imgno][0]) / sig_mean;
+		else
+		    values[imgno][0] = 0.;
+		if (sig_sig > 0.)
+		    values[imgno][1] = abs(values[imgno][1] - avg_sig) / sig_sig;
+		else
+		    values[imgno][1] = 0.;
+		if (sig_min > 0.)
+		    values[imgno][2] = abs(values[imgno][2] - avg_min) / sig_min;
+		else
+		    values[imgno][2] = 0.;
+		if (sig_max > 0.)
+		    values[imgno][3] = abs(values[imgno][3] - avg_max) / sig_max;
+		else
+		    values[imgno][3] = 0.;
+		if (sig_nhighpix > 0.)
+		    values[imgno][4] = abs(values[imgno][4] - avg_nhighpix) / sig_nhighpix;
+		else
+		    values[imgno][4] = 0.;
+		if (sig_nlowpix > 0.)
+		    values[imgno][5] = abs(values[imgno][5] - avg_nlowpix) / sig_nlowpix;
+		else
+		    values[imgno][5] = 0.;
+		if (sig_nradhigh > 0.)
+		    values[imgno][6] = abs(values[imgno][6] - avg_nradhigh) / sig_nradhigh;
+		else
+		    values[imgno][6] = 0.;
+		if (sig_nradlow > 0.)
+		    values[imgno][7] = abs(values[imgno][7] - avg_nradlow) / sig_nradlow;
+		else
+		    values[imgno][7] = 0.;
+		if (sig_sigquad > 0.)
+		    values[imgno][8] = abs(values[imgno][8] - avg_sigquad) / sig_sigquad;
+		else
+		    values[imgno][8] = 0.;
+		if (sig_meanquad > 0.)
+		    values[imgno][9] = abs(values[imgno][9] - avg_meanquad) / sig_meanquad;
+		else
+		    values[imgno][9] = 0.;
+		if (sig_ampl2_1 > 0.)
+		    values[imgno][10] = abs(values[imgno][10] - avg_ampl2_1) / sig_ampl2_1;
+ 		else
+		    values[imgno][10] = 0.;
+		if (sig_ampl2_2 > 0.)
+		    values[imgno][11] = abs(values[imgno][11] - avg_ampl2_2) / sig_ampl2_2;
+		else
+		    values[imgno][11] = 0.;
+		if (sig_ampl2_3 > 0.)
+		    values[imgno][12] = abs(values[imgno][12] - avg_ampl2_3) / sig_ampl2_3;
+		else
+		    values[imgno][12] = 0.;
+		if (sig_ampl2_4 > 0.)
+		    values[imgno][13] = abs(values[imgno][13] - avg_ampl2_4) / sig_ampl2_4;
+		else
+		    values[imgno][13] = 0.;
+
                 if (cutoff > 0.)
                 {
                     if (values[imgno][0] < cutoff) values[imgno][0] = 0.;
