@@ -1,6 +1,6 @@
 #!/usr/bin/env csh
 set scriptdir=`which xmipp_protocols | sed "s|/bin/xmipp_protocols|/protocols|"`
-if (!(-e protocol_setup.py)) then
+if (!(-e xmipp_protocol_setup.py)) then
   echo " + Xmipp_protocols was never executed before in this directory."
   echo " + Make sure you run xmipp_protocols only in your project directory."
   echo " + You are in directory: "${PWD}
