@@ -61,7 +61,7 @@ void Prog_create_projection_library_Parameters::read(int argc, char **argv)
 /* Usage ------------------------------------------------------------------- */
 void Prog_create_projection_library_Parameters::usage()
 {
-    cerr << "precompute_sampling\n"
+    cerr << "create_projection_library\n"
     << "   -i input_volume             : Input Volume\n"
     << "   -o root_file_name           : Root for output files\n"
     << "  [-symmetry cn]   :One of the 17 possible symmetries in\n"
@@ -75,10 +75,9 @@ void Prog_create_projection_library_Parameters::usage()
     << "  [-experimental_images \"\"]  : doc file with experimental data\n"
     << "  [-angular_distance 20]       : do not search a distance larger than...\n"
     << "\n"
-    << "Example of use: Sample at 2degres and use c6 symmetry\n"
+    << "Example of use: Sample at 2 degrees and use c6 symmetry\n"
     << "   xmipp_create_projection_library -i in.vol -o out "
-    << " -symmetry cn -sampling_rate 6 "
-    << " -sampling_rate 2 -psi_sampling 5\n"
+    << "    -symmetry cn -sym_order 6 -sampling_rate 2\n"
     ;
 }
 
