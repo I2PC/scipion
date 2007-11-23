@@ -729,7 +729,6 @@ void ShowSel::recomputeCTFmodel()
 
 	// Get the PSD name
 	FileName fn_root = assign_ctf_prm.image_fn.remove_all_extensions();
-	FileName fn_psd;
 	if (assign_ctf_prm.compute_at_particle)
 	{
             int i = indexOf(currentRow(), currentColumn());
