@@ -160,17 +160,17 @@ public:
     void usage()
     {
         Prog_parameters::usage();
-        cerr << " -physical                  : Use physical instead of logical\n"
-        << "                              coordinates\n"
-        << " -pad_value                 : value used for padding\n"
-        << " -corner_pad_value          : use the value of the upper\n"
-        << "                              left corner for padding\n"
-        << " -average_pad_value         : use the image average for padding\n"
-        << "  [-r0 <x0> <y0> [<z0>]     : Window using window corners\n"
-        << "   -rF <xF> <yF> [<zF>]]    : by default indexes are logical\n"
-        << "  [-size <sizeX> [<sizeY>] [<sizeZ>]: Window to a new size\n"
-        << "                            : if only one is given, the other two\n"
-        << "                              are supposed to be the same\n"
+        cerr << "  [-physical]               : Use physical instead of logical\n"
+             << "                             coordinates\n"
+             << "  [-pad_value <val>]        : value used for padding\n"
+             << "  [-corner_pad_value]       : use the value of the upper\n"
+             << "                              left corner for padding\n"
+             << "  [-average_pad_value]      : use the image average for padding\n"
+             << "  [-r0 <x0> <y0> [<z0>]     : Window using window corners\n"
+             << "   -rF <xF> <yF> [<zF>]]    : by default indexes are logical\n"
+             << "  [-size <sizeX> [<sizeY>] [<sizeZ>]]: Window to a new size\n"
+             << "                            : if only one is given, the other two\n"
+             << "                              are supposed to be the same\n"
         ;
     }
 };
