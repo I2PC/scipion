@@ -1,0 +1,30 @@
+# Volume and projection files ------------------------------------------------
+# volume description file or volume file
+Volumen-ccp4-35A_64_center.vol
+# projection seed and extension (this last is optional)
+g0ta 1 xmp
+# Y and X projection dimensions
+64 64
+#
+# Angle Set Source -----------------------------------------------------------
+#Externally generated
+# The ../Src is so beacuse this file will be executed in another directory
+NULL
+#Internally generated
+0 360 10 random
+0 180 5  random
+0 360 1 random         
+#0
+#0
+#0
+# Noise description ----------------------------------------------------------
+#     noise (and bias) applied to rotational angle 
+0
+#     noise (and bias) applied to tilting angle 
+0
+#     noise (and bias) applied to psi angle 
+0
+#     Noise (and bias) applied to pixels 
+0
+#     Noise (and bias) applied to particle center coordenates 
+0 2
