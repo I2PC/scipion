@@ -102,7 +102,8 @@ class automated_gui_class:
                  scriptname,
                  analyse_directory):
 
-        self.SYSTEMSCRIPTDIR=os.path.expanduser('~')+'/scripts/'
+        scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
+        self.SYSTEMSCRIPTDIR=scriptdir
 
         self.analyse_directory=analyse_directory
         if analyse_directory=='':
