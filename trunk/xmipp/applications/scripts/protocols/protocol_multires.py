@@ -15,13 +15,13 @@
 #-----------------------------------------------------------------------------
 
 # {file} Selfile with the input images:
-SelFileName='noefg_noPath.sel'
+SelFileName='images.sel'
 
 # {file} Initial 3D reference map:
-ReferenceFileName='noefg_sc64_norm_004.vol'
+ReferenceFileName='Src/initial_volume256.vol'
 
 # {dir} Working subdirectory: 
-WorkDirectory='MultiRes/test1'
+WorkDirectory='MultiRes/Exp1'
 
 # Delete working directory if it already exists?
 DoDeleteWorkingDir=False
@@ -39,16 +39,19 @@ ResumeIteration=1
 # {expert} {dir} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/home2/bioinfo/coss/Ribosome'
+ProjectDir='/usr/scratch/cosanchez/HMPV'
 
 # {expert} {dir} Directory name for logfiles:
 LogDir='Logs'
+
+# {expert} Skip prealignment:
+SkipPrealignment=True
 
 #-----------------------------------------------------------------------------
 # {section} Particle description
 #-----------------------------------------------------------------------------
 # Particle radius (pixels)
-ParticleRadius=32
+ParticleRadius=120
 
 # Particle mass (Daltons)
 ParticleMass=2000000
@@ -58,10 +61,10 @@ ParticleMass=2000000
     for a description of the symmetry file format
     dont give anything, if no symmetry is present
 """
-SymmetryFile=''
+SymmetryFile='C3'
 
 # Sampling rate (Angstrom/pixel)
-SamplingRate=5
+SamplingRate=1.296
 
 #-----------------------------------------------------------------------------
 # {section} Iteration parameters
@@ -80,7 +83,7 @@ SamplingRate=5
     Scaling is done via spline pyramids, please visit:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Pyramid
 """
-PyramidLevels='20x1 30x0'
+PyramidLevels='20x2 20x1 10x0'
 
 # Angular steps
 """ Angular steps for each of the iterations. This parameter is used to build
@@ -91,7 +94,7 @@ PyramidLevels='20x1 30x0'
     The discrete angular assignment is done with xmipp_angular_predict:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Angular_predict
 """
-AngularSteps='10x8 10x5 30x2'
+AngularSteps='15x8 15x5 20x2'
 
 # {expert} Reconstruction method
 """ Choose between wbp or art
@@ -104,7 +107,7 @@ AngularSteps='10x8 10x5 30x2'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-ReconstructionMethod='49xwbp art'
+ReconstructionMethod='50xwbp'
 
 # {expert} Serial ART
 """ Do serial ART even if parallel execution is available. This parameter
@@ -166,7 +169,7 @@ DoComputeResolution='0'
     if you have run this other protocol, you simply have to provide
     the name generated at that stage.
 """
-CTFDat=''
+CTFDat='ctf.dat'
 
 # {expert} Phase correction
 """ Specify whether a phase correction must be done or not.
@@ -177,7 +180,7 @@ PhaseCorrection=True
 """ Specify whether amplitude correction is performed or not at each
     iteration.
 """
-AmplitudeCorrection='0'
+AmplitudeCorrection='45x0 5x1'
 
 #-----------------------------------------------------------------------------
 # {section} Post-processing
@@ -193,7 +196,7 @@ AmplitudeCorrection='0'
 DoReferenceMask='50x1'
 
 # {file} Initial Reference Mask Volume
-InitialReferenceMask='circular_mask.msk'
+InitialReferenceMask='Src/mask256.vol'
 
 # {expert} Reference Lowpass filter (Normalized digital freq.)
 """ This vector specifies the frequency at which each reference volume
@@ -223,13 +226,13 @@ SegmentUsingMass='50x0'
 DoParallel=True
 
 # Number of processors to use:
-MyNumberOfCPUs=10
+MyNumberOfCPUs=8
 
 # {file} A list of all available CPUs (the MPI-machinefile):
 """ Depending on your system, your standard script to launch MPI-jobs may require this
     if your queueing system using an environment variable, give it here (with the leading $, e.g. $PBS_NODEFILE
 """
-MyMachineFile='/home2/bioinfo/coss/machines.dat'
+MyMachineFile=''
 
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
@@ -268,6 +271,7 @@ class MultiResClass:
 		_NumberofIterations,
 		_ProjectDir,
 		_LogDir,
+                _SkipPrealignment,
 		
 		_ParticleRadius,
 		_ParticleMass,
@@ -307,6 +311,7 @@ class MultiResClass:
        self.doDeleteWorkingDir=_DoDeleteWorkingDir
        self.numberOfIterations=_NumberofIterations
        self.logDir=os.path.abspath(_LogDir)
+       self.skipPrealignment=_SkipPrealignment
 		
        self.particleRadius=_ParticleRadius
        self.particleMass=_ParticleMass
@@ -314,6 +319,8 @@ class MultiResClass:
           self.symmetryFile=""
        else:
           self.symmetryFile=os.path.abspath(_SymmetryFile)
+          if not os.path.exists(self.symmetryFile):
+             self.symmetryFile=_SymmetryFile
        self.samplingRate=_SamplingRate
 
        self.pyramidLevels="0 "+_PyramidLevels
@@ -495,8 +502,8 @@ class MultiResClass:
       	            self.getAlignmentFilename(_iteration)+\
 		    " -o Iteration"+itoa(_iteration,2)+"/diff_angles"+\
 		    itoa(_iteration,2)+" -check_mirrors"
-       if not self.symmetryFile=="": 
-            aungular_distance_command+=" -sym "+self.symmetryFile
+       if not self.symmetryFile=="":
+            angular_distance_command+=" -sym "+self.symmetryFile
        self.execute(angular_distance_command+" | "+\
 		    " sed -n 's/Global distance = /"+str(_iteration)+" /p' "+\
 		    ">> angle_convergence.txt")
@@ -725,51 +732,30 @@ class MultiResClass:
        self.log("# Generating images for this iteration --------------------------------")
        factor=pow(2,-int(self.getPyramidLevel(_iteration)))
 
-       # Generate plain set of images
-       self.deleteDirectory("preproc")
-       self.copySelFile("../imgs.sel","preproc","preproc.sel",
-        		self.workDirectory+"/Results","..")
-
-       # Normalize images
-       self.execute("xmipp_normalize -i preproc.sel -method NewXmipp -background circle "+\
-        	    str(math.ceil(self.particleWorkingRadius*1.1)))
-
-       # Produce a set of suitable CTFs
-       if self.CTFDat!="":
-	  if self.phaseCorrection or \
-             (self.getAmplitudeCorrection(_iteration)=="1" \
-              and self.getPyramidLevel(_iteration)=="0"):
-	     CTFs=ctfdat.ctfdat()
-	     CTFs.read("../ctfdat.txt")
-	     preprocCTFs=CTFs.changeDirectory("preproc","../ScaledCTFs")
-	     self.log("# Creating a ctfdat file for preproc")
-             preprocCTFs.write("preproc_ctfdat.txt")
-
-	  # Correct for the phase
-	  if self.phaseCorrection:
-              self.execute("xmipp_ctf_correct_phase -ctfdat preproc_ctfdat.txt")
-
-	  # Correct for the amplitude
-	  if self.getAmplitudeCorrection(_iteration)=="1" \
-             and self.getPyramidLevel(_iteration)=="0":
-             self.execute("xmipp_header_assign -i "+\
-        		  self.getAlignmentFFilename(_iteration)+" -o preproc.sel"+\
-        		  " -force")
-             self.execute("xmipp_ctf_correct_idr -vol "+\
-        		  self.getModelFFilename(_iteration)+\
-			  " -ctfdat preproc_ctfdat.txt")
-
        # Generate images for assignment
        self.copySelFile("preproc.sel","preproc_assign")
+
+       # Correct for the amplitude
+       if self.CTFDat!="" and self.getAmplitudeCorrection(_iteration)=="1" \
+              and self.getPyramidLevel(_iteration)=="0":
+	  CTFs=ctfdat.ctfdat()
+	  CTFs.read("../ctfdat.txt")
+	  preprocCTFs=CTFs.changeDirectory("preproc_assign","../ScaledCTFs")
+	  self.log("# Creating a ctfdat file for preproc_assign")
+          preprocCTFs.write("preproc_assign_ctfdat.txt")
+          self.execute("xmipp_header_assign -i "+\
+        	       self.getAlignmentFFilename(_iteration)+" -o preproc_assign.sel"+\
+        	       " -force")
+          self.execute("xmipp_ctf_correct_idr -vol "+\
+        	       self.getModelFFilename(_iteration)+\
+		       " -ctfdat preproc_assign_ctfdat.txt")
+
+       # Scale if necessary
        if not self.getPyramidLevel(_iteration)=="0":
           self.execute("xmipp_scale_pyramid -i preproc_assign.sel -reduce -levels "+\
         	       str(self.getPyramidLevel(_iteration)))
           self.execute("xmipp_normalize -i preproc_assign.sel -method NewXmipp -background circle "+\
         	       str(math.ceil(self.particleWorkingRadius*1.1*factor)))
-
-       # Remove useless images
-       self.execute("xmipp_selfile_delete preproc.sel")
-       self.execute("rm -rf preproc")
 
        # Generate images for reconstruction
        self.copySelFile("preproc_assign.sel","preproc_recons")
@@ -936,14 +922,19 @@ class MultiResClass:
    def prealignment(self):
        self.log("Prealigning","info",True);
        if not os.path.exists(self.workDirectory+"/Src/prealignment.txt"):
-          self.changeDirectory(self.workDirectory+"/Results")
-	  self.copySelFile("../imgs.sel","preproc","preproc.sel",
-	     self.workDirectory+"/Results","..")
-	  self.execute("xmipp_average -i preproc.sel")
-	  self.execute("xmipp_align2d -i preproc.sel -ref preproc.med.xmp "+\
-	               "-iter 4 -only_trans")
-	  self.execute("xmipp_header_extract -i preproc.sel -o ../Src/prealignment.txt")
-	  self.execute("rm -rf preproc*")
+          if not self.skipPrealignment:
+             self.changeDirectory(self.workDirectory+"/Results")
+	     self.copySelFile("../imgs.sel","preproc","preproc.sel",
+	        self.workDirectory+"/Results","..")
+	     self.execute("xmipp_average -i preproc.sel")
+	     self.execute("xmipp_align2d -i preproc.sel -ref preproc.med.xmp "+\
+	                  "-iter 4 -only_trans")
+	     self.execute("xmipp_header_extract -i preproc.sel -o ../Src/prealignment.txt")
+	     self.execute("rm -rf preproc*")
+          else:
+             self.changeDirectory(self.workDirectory)
+             self.execute("xmipp_header_reset -i imgs.sel")
+	     self.execute("xmipp_header_extract -i imgs.sel -o Src/prealignment.txt")
 
    #------------------------------------------------------------------------
    # Prepare for first iteration
@@ -958,6 +949,25 @@ class MultiResClass:
 	  self.linkFile("../../Src/referenceScaledVolume.vol",self.getModelFilename(0))
 	  self.deleteFile("angle_convergence.txt")
 	  self.touchFile("angle_convergence.txt")
+
+          # Generate plain set of images
+          self.deleteDirectory("preproc")
+          self.copySelFile("../imgs.sel","preproc","preproc.sel",
+        		   self.workDirectory+"/Results","..")
+
+          # Normalize images
+          self.execute("xmipp_normalize -i preproc.sel -method NewXmipp -background circle "+\
+        	       str(math.ceil(self.particleWorkingRadius*1.1)))
+
+          # Correct for the phase
+          if self.CTFDat!="":
+	     CTFs=ctfdat.ctfdat()
+	     CTFs.read("../ctfdat.txt")
+	     preprocCTFs=CTFs.changeDirectory("preproc","../ScaledCTFs")
+	     self.log("# Creating a ctfdat file for preproc")
+             preprocCTFs.write("preproc_ctfdat.txt")
+             if self.phaseCorrection:
+                self.execute("xmipp_ctf_correct_phase -ctfdat preproc_ctfdat.txt")
        else:
           if not os.path.exists("angle_convergence.txt"):
 	     raise RuntimeError,"File angle_convergence.txt does not exist"
@@ -1141,6 +1151,7 @@ if __name__ == '__main__':
 		NumberofIterations,
 		ProjectDir,
 		LogDir,
+                SkipPrealignment,
 		
 		ParticleRadius,
 		ParticleMass,
