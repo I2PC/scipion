@@ -168,6 +168,12 @@ class automated_gui_class:
                     self.variables[args[0]][1]=="File" or
                     self.variables[args[0]][1]=="Directory"):
                     lineb=str(args[0])+'=\''+str(self.variables[args[0]][2].get())+"\'\n"
+                # Write Boolean as True/False (for old python < 2.3)
+                elif (self.variables[args[0]][1]=="Boolean"):
+                    if (self.variables[args[0]][2].get()):
+                        lineb=str(args[0])+'=True\n'
+                    else: 
+                        lineb=str(args[0])+'=False\n'
                 else:
                     lineb=str(args[0])+'='+str(self.variables[args[0]][2].get())+"\n"
             else:
