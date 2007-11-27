@@ -76,12 +76,12 @@ DoML3DClassification=True
 AngularSampling=10
 # Number of ml3d iterations to perform:
 NumberOfIterations=25
-# {file} Symmetry description file:
-""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
-    for a description of the symmetry file format
+# {file} Symmetry description: 
+""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetrize
+    for a description of the symmetry file and its acronym formats
     dont give anything, if no symmetry is present
 """
-SymmetryFile="/home2/bioinfo/scheres/work/protocols/G40P/6fold.sym"
+SymmetryFile=""
 # {expert} Additional xmipp_ml_refine3d parameters:
 """ For a complete description see the manual pages:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/MLrefine3D
