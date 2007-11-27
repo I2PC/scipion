@@ -64,13 +64,31 @@ int main(int argc, char **argv)
     try
     {
         Micrograph m, mTilted;
+        FileName fn8bits, fn8bitsTilted;
 
         m.open_micrograph(fnRaw, reversed);
         m.compute_8_bit_scaling();
+        if (m.depth()!=8)
+        {
+            fn8bits=fnRaw+".8bits";
+            m.write_as_8_bits(fn8bits);
+            m.close_micrograph();
+            m.open_micrograph(fn8bits,false);
+            m.compute_8_bit_scaling();
+        }
+        
         if (fnRawTilted != "")
         {
             mTilted.open_micrograph(fnRawTilted, reversed);
             mTilted.compute_8_bit_scaling();
+            if (mTilted.depth()!=8)
+            {
+                fn8bitsTilted=fnRaw+".8bits";
+                mTilted.write_as_8_bits(fn8bits);
+                mTilted.close_micrograph();
+                mTilted.open_micrograph(fn8bits,false);
+                mTilted.compute_8_bit_scaling();
+            }
         }
 
         // Configure application .............................................
@@ -99,6 +117,8 @@ int main(int argc, char **argv)
         m.close_micrograph();
         if (fnRawTilted != "") mTilted.close_micrograph();
         delete mainWidget;
+        if (fn8bits!="") system(((string)"rm -rf "+fn8bits+"*").c_str());
+        if (fn8bitsTilted!="") system(((string)"rm -rf "+fn8bitsTilted+"*").c_str());
     }
     catch (Xmipp_error XE)
     {
@@ -121,39 +141,3 @@ void Usage()
     << "  [-ctf <assign_CTF_prm_file>]        : Show the CTF models\n"
     ;
 }
-
-/* Colimate menu =========================================================== */
-/*Colimate:
-   PROGRAM Mark {
-      url="http://www.cnb.uam.es/~bioinfo/NewXmipp/Applications/Src/Mark/Help/mark.html";
-      help="Mark particles in raw micrographs";
-      OPEN MENU Mark;
-      COMMAND LINES {
-         + usual: xmipp_mark -i $UNTILTED
-                  [-tilted $TILTED]
-                  [-reverse_endian]
-      }
-      PARAMETER DEFINITIONS {
-         $UNTILTED {
-            label="Untilted or single micrograph";
-            help="Raw file";
-            type=file existing;
-         }
-         $TILTED {
-            label="Tilted micrograph";
-            help="Raw file";
-            type=file existing;
-         }
-         OPT(-reverse_endian) {
-            label="Reverse endianness";
-            help="The endiannes is reversed in both micrographs";
-         }
-      }
-   }
-   MENU Mark {
-      "I/O parameters"
-      $UNTILTED
-      OPT($TILTED)
-      OPT(-reverse_endian)
-   }
-*/
