@@ -277,8 +277,8 @@ void Prog_MLalign2D_prm::usage()
 {
     cerr << "Usage:  ml_align2d [options] " << endl;
     cerr << "   -i <selfile>                : Selfile with input images \n";
-    cerr << "   -ref <selfile/image>        : Selfile with initial references/single reference image \n";
-    cerr << "      OR -nref <int>               OR number of references to generate automatically (bias-free)\n";
+    cerr << "   -nref <int>                 : Number of references to generate automatically (recommended)\n";
+    cerr << "   OR -ref <selfile/image>         OR selfile with initial references/single reference image \n";
     cerr << " [ -o <rootname> ]             : Output rootname (default = \"ml2d\")\n";
     cerr << " [ -mirror ]                   : Also check mirror image of each reference \n";
     if (!fourier_mode)

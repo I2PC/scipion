@@ -251,10 +251,10 @@ void Prog_MLFalign2D_prm::usage()
 {
     cerr << "Usage:  mlf_align2d [options] " << endl;
     cerr << "   -i <selfile>                : Selfile with all input images \n";
-    cerr << "   -ctfdat <ctfdatfile>        : Two-column ASCII file with filenames and CTF parameter files of all images \n";
+    cerr << "   -ctfdat <ctfdatfile>        : Two-column ASCII file with filenames and CTF parameter files of all images (recommended) \n";
     cerr << "      OR -no_ctf                   OR do not use any CTF correction \n";
-    cerr << "   -ref <selfile/image>        : Selfile with initial references/single reference image \n";
-    cerr << "      OR -nref <int>               OR number of references to generate automatically (bias-free)\n";
+    cerr << "   -nref <int>                 : Number of references to generate automatically (recommended)\n";
+    cerr << "   OR -ref <selfile/image>         OR selfile with initial references/single reference image \n";
     cerr << " [ -o <rootname> ]             : Output rootname (default = \"mlf2d\")\n";
     cerr << " [ -mirror ]                   : Also check mirror image of each reference \n";
     cerr << " [ -search_shift <int=3>]      : Limited translational searches (in pixels) \n";
