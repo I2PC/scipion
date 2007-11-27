@@ -162,7 +162,7 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     do_esthetics = checkParameter(argc, argv, "-esthetics");
     anneal = textToFloat(getParameter(argc, argv, "-anneal", "1"));
     anneal_step = textToFloat(getParameter(argc, argv, "-anneal_step", "1"));
-    do_write_offsets = !checkParameter(argc, argv, "-dont_write_offsets");
+    do_write_offsets = checkParameter(argc, argv, "-write_offsets");
     fn_scratch = getParameter(argc, argv, "-scratch", "");
     zero_offsets = checkParameter(argc, argv, "-zero_offsets");
     debug = textToInteger(getParameter(argc, argv, "-debug","0"));
@@ -330,6 +330,7 @@ void Prog_MLalign2D_prm::extended_usage(bool ML3D)
         cerr << " [ -search_shift <float=999>]  : Limit of translational search [pix] (does NOT use FFT) \n";
     cerr << " [ -max_shift <float=dim/4>]   : Dont trust shifts larger than max_shift \n";
     cerr << " [ -doc <docfile=\"\"> ]         : Read initial angles and offsets from docfile \n";
+    cerr << " [ -write_offsets ]            : Save memory by writing optimal offsets to disc (disc-access intensive) \n";
     cerr << endl;
     exit(1);
 }

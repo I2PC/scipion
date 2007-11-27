@@ -286,6 +286,7 @@ void Prog_MLFalign2D_prm::extendedUsage(bool ML3D)
     cerr << " [ -dont_output_docfile ]      : Do not write out docfile with most likely angles & translations \n";
     cerr << " [ -dont_output_selfiles ]     : Do not write out selfiles with most likely class assignments \n";
     cerr << " [ -doc <docfile=\"\"> ]         : Read initial angles and offsets from docfile \n";
+    cerr << " [ -write_offsets ]            : Save memory by writing optimal offsets to disc (disc-access intensive) \n";
     cerr << endl;
     exit(1);
 }
