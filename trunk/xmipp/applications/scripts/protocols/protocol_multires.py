@@ -15,10 +15,10 @@
 #-----------------------------------------------------------------------------
 
 # {file} Selfile with the input images:
-SelFileName='images.sel'
+SelFileName='all_images.sel'
 
 # {file} Initial 3D reference map:
-ReferenceFileName='Src/initial_volume256.vol'
+ReferenceFileName='my_ref.vol'
 
 # {dir} Working subdirectory: 
 WorkDirectory='MultiRes/Exp1'
@@ -56,9 +56,9 @@ ParticleRadius=120
 # Particle mass (Daltons)
 ParticleMass=2000000
 
-# {file} Symmetry file
-""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
-    for a description of the symmetry file format
+# {file} Symmetry description
+""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetrize
+    for a description of the symmetry file and its acronym formats
     dont give anything, if no symmetry is present
 """
 SymmetryFile='C3'
@@ -169,18 +169,19 @@ DoComputeResolution='0'
     if you have run this other protocol, you simply have to provide
     the name generated at that stage.
 """
-CTFDat='ctf.dat'
+CTFDat=''
 
 # {expert} Phase correction
 """ Specify whether a phase correction must be done or not.
 """
-PhaseCorrection=True
+PhaseCorrection=False
 
 # {expert} Amplitude correction
 """ Specify whether amplitude correction is performed or not at each
     iteration.
+    E.g. 45x0 5x1
 """
-AmplitudeCorrection='45x0 5x1'
+AmplitudeCorrection='50x0'
 
 #-----------------------------------------------------------------------------
 # {section} Post-processing
@@ -196,7 +197,7 @@ AmplitudeCorrection='45x0 5x1'
 DoReferenceMask='50x1'
 
 # {file} Initial Reference Mask Volume
-InitialReferenceMask='Src/mask256.vol'
+InitialReferenceMask='my_mask.vol'
 
 # {expert} Reference Lowpass filter (Normalized digital freq.)
 """ This vector specifies the frequency at which each reference volume
