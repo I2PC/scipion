@@ -129,6 +129,9 @@ public:
     /** Compute scaling for 8 bits */
     void compute_8_bit_scaling();
 
+    /** Write as 8 bits */
+    void write_as_8_bits(const FileName &fn8bits);
+
     /** Micrograph filename. */
     string micrograph_name()
     {
