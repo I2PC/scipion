@@ -76,9 +76,9 @@ DoML3DClassification=True
 AngularSampling=10
 # Number of ml3d iterations to perform:
 NumberOfIterations=25
-# {file} Symmetry description: 
+# {file} In the case of symmetry supply the symmetry description file:
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetrize
-    for a description of the symmetry file and its acronym formats
+    for a description of the symmetry file format
     dont give anything, if no symmetry is present
 """
 SymmetryFile=""

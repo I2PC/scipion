@@ -56,12 +56,12 @@ ParticleRadius=120
 # Particle mass (Daltons)
 ParticleMass=2000000
 
-# {file} Symmetry description
+# {file} In the case of symmetry supply the symmetry description file:
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetrize
-    for a description of the symmetry file and its acronym formats
+    for a description of the symmetry file format
     dont give anything, if no symmetry is present
 """
-SymmetryFile='C3'
+Symfile='C6.sym'
 
 # Sampling rate (Angstrom/pixel)
 SamplingRate=1.296

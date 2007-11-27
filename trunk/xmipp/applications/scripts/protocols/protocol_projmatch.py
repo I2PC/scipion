@@ -125,12 +125,12 @@ Tilt0=40
 # Higher-value for restricted tilt angle search
 TiltF=140
 
-# {file} If you want to appply symmetry supply the symmetry description file or its acronym:
+# {file} In the case of symmetry supply the symmetry description file:
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetrize
-    for a description of the symmetry file and its acronym formats
+    for a description of the symmetry file format
     dont give anything, if no symmetry is present
 """
-Symfile='C6'
+Symfile='C6.sym'
 
 # {expert} Additional options for Projection_Matching
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Projection_matching and
