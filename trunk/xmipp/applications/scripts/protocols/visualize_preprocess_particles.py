@@ -59,16 +59,11 @@ class visualize_particles_class:
                 ShowSelfiles.append(selfile2)
             else:
                 ShowSelfiles.append(selfile)
-            visualization.visualize_images(ShowSelfiles,True)
-        # rest of stuff remains in WorkingDir!!
-        os.chdir(protocol.WorkingDir)
-        ShowSelfiles=[]
         if (DoShowSortedParticles):
             ShowSelfiles.append('sort_junk.sel')
-            visualization.visualize_images(ShowSelfiles,True)
         if (DoShowZscore):
             self.show_z_score()
-        os.chdir(pardir)
+        visualization.visualize_images(ShowSelfiles,True)
 
         # Return to parent dir and remove protocol.py(c)
         if (os.path.exists('protocol.py')):
