@@ -1,6 +1,6 @@
 #!/bin/sh
 
-VERSION=1.2
+VERSION=2.0
 NEW_NAME=xmipp_find_center3d
 
 # Warn user

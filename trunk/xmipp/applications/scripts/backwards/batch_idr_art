@@ -1,6 +1,6 @@
 #!/bin/sh
 
-VERSION=1.2
+VERSION=2.0
 NEW_NAME=xmipp_ctf_correct_idr
 
 # Warn user
