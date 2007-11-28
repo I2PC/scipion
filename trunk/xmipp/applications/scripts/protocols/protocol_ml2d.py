@@ -44,6 +44,11 @@ DoMirror=False
     http://dx.doi.org/10.1093/bioinformatics/bti1140
 """
 DoFast=True
+# {expert} Restart after iteration:
+""" For previous runs that stopped before convergence, resume the calculations
+    after the completely finished iteration. (Use zero to start from the beginning)
+"""
+RestartIter=0
 # {expert} Additional xmipp_ml_align2d parameters:
 """ For a complete description see the ml_align2d manual page at:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/MLalign2D
@@ -84,6 +89,7 @@ class ML2D_class:
                  NumberOfReferences,
                  DoMirror,
                  DoFast,
+                 RestartIter,
                  ExtraParamsMLalign2D,
                  DoParallel,
                  MyNumberOfCPUs,
@@ -113,29 +119,37 @@ class ML2D_class:
                                      sys.argv[0],
                                      self.WorkingDir)
                 
-        # Delete working directory if it exists, make a new one
-        if (DoDeleteWorkingDir and DoML2D): 
-            if os.path.exists(self.WorkingDir):
-                shutil.rmtree(self.WorkingDir)
-        if not os.path.exists(self.WorkingDir):
-            os.makedirs(self.WorkingDir)
+        # This is not a restart
+        if (RestartIter < 1):
+            # Delete working directory if it exists, make a new one
+            if (DoDeleteWorkingDir and DoML2D): 
+                if os.path.exists(self.WorkingDir):
+                    shutil.rmtree(self.WorkingDir)
+            if not os.path.exists(self.WorkingDir):
+                os.makedirs(self.WorkingDir)
 
-        # Create a selfile with absolute pathname in the WorkingDir
-        mysel=selfile.selfile()
-        mysel.read(InSelFile)
-        newsel=mysel.make_abspath()
-        self.InSelFile=os.path.abspath(self.WorkingDir+'/'+InSelFile)
-        newsel.write(self.InSelFile)
+                # Create a selfile with absolute pathname in the WorkingDir
+                mysel=selfile.selfile()
+                mysel.read(InSelFile)
+                newsel=mysel.make_abspath()
+                self.InSelFile=os.path.abspath(self.WorkingDir+'/'+InSelFile)
+                newsel.write(self.InSelFile)
 
-        # Backup script
-        log.make_backup_of_script_file(sys.argv[0],
-                                       os.path.abspath(self.WorkingDir))
+                # Backup script
+                log.make_backup_of_script_file(sys.argv[0],
+                                               os.path.abspath(self.WorkingDir))
     
-        # Execute protocol in the working directory
-        os.chdir(self.WorkingDir)
-        if (DoML2D):
-            self.execute_MLalign2D()
+                # Execute protocol in the working directory
+                os.chdir(self.WorkingDir)
+                if (DoML2D):
+                    self.execute_MLalign2D()
 
+        # Restarting a previous run...
+        else:
+            # Execute protocol in the working directory
+            os.chdir(self.WorkingDir)
+            self.restart_MLalign2D(RestartIter)
+     
         # Return to parent dir
         os.chdir(os.pardir)
 
@@ -152,9 +166,24 @@ class ML2D_class:
         if (self.DoMirror):
             params+= ' -mirror '
         # By default, do not write offsets for 2D alignments...
-        # This will affect -restart, but that falls outside the scope of the protocol anyway
+        # This will affect -restart ...
         params+=' '+self.ExtraParamsMLalign2D
-        params+=' -dont_write_offsets'
+        
+        launch_parallel_job.launch_job(self.DoParallel,
+                                       "xmipp_ml_align2d",
+                                       "xmipp_mpi_ml_align2d",
+                                       params,
+                                       self.log,
+                                       self.MyNumberOfCPUs,
+                                       self.MyMachineFile,
+                                       False)
+
+    def restart_MLalign2D(self, iter):
+        import os
+        import launch_parallel_job
+        print '*********************************************************************'
+        print '*  Restarting ml_align2d program :' 
+        params= ' -restart ml2d_it'    + str(iter).zfill(5) + '.log'
 
         launch_parallel_job.launch_job(self.DoParallel,
                                        "xmipp_ml_align2d",
@@ -208,6 +237,7 @@ if __name__ == '__main__':
                     NumberOfReferences,
                     DoMirror,
                     DoFast,
+                    RestartIter,
                     ExtraParamsMLalign2D,
                     DoParallel,
                     MyNumberOfCPUs,
