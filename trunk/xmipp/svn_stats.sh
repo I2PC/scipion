@@ -31,4 +31,4 @@ foreach DOLLARauthori ( sort (keys %author) ) {\
 
 chmod 755 inter.pl
 ./inter.pl < inter.txt
-#rm inter.pl inter.txt
+rm inter.pl inter.txt
