@@ -42,6 +42,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 int main(int argc, char **argv)
 {
     Prog_make_spectra_prm prm;
+    prm.apply_geo = true;
     SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
     prm.finish_processing();
 }
