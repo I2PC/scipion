@@ -2057,8 +2057,12 @@ bool SymList::isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder)
    char G1,G2,G3,G4;
    char auxChar[3];
    //each case check lenght, check first letter, second, is number
-   //Non a point group 
-   int mySize=fn_sym.size();
+   //Non a point group
+
+   //remove path
+   FileName fn_sym_tmp;
+   fn_sym_tmp=fn_sym.remove_directories(); 
+   int mySize=fn_sym_tmp.size();
    bool return_true;
    return_true=false;
    auxChar[2]='\0';
@@ -2069,10 +2073,10 @@ bool SymList::isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder)
       return false;
    }   
    //get the group character by character
-   G1=toupper((fn_sym.c_str())[0]);
-   G2=toupper((fn_sym.c_str())[1]);
+   G1=toupper((fn_sym_tmp.c_str())[0]);
+   G2=toupper((fn_sym_tmp.c_str())[1]);
    if (mySize > 2)
-   {   G3=toupper((fn_sym.c_str())[2]);
+   {   G3=toupper((fn_sym_tmp.c_str())[2]);
        if(mySize > 3)
            G4=toupper((fn_sym.c_str())[3]);
    }
@@ -2431,9 +2435,9 @@ void SymList::create_sym_file(FileName &symmetry, int pgGroup, int pgOrder)
     }
     else if (pgGroup == pg_I5)
     {
-        SymFile << "rot_axis 2 0.5257311143 0.8506508070 0";
+        SymFile << "rot_axis 2  0.5257311143  0.8506508070 0.";
         SymFile << endl;
-        SymFile << "rot_axis 3  0.9822469432 -0.1875924905 0";
+        SymFile << "rot_axis 3  0.9822469432 -0.1875924905 0.";
         SymFile << endl;
         SymFile << "rot_axis 5  0.7236067955 -0.4472135966 0.5257311143";
     }
