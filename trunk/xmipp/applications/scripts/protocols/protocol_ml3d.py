@@ -58,10 +58,20 @@ PixelSize=5.6
 DoGenerateSeeds=True
 # Number of seeds to be generated (and later on used in ml3d-classification):
 NumberOfReferences=3
-# {expert} {file} Alternatively, provide a selfile with user-defined seeds:
+# {expert} Alternative 1: don't classify anything, just refine my initial map
+""" No multiple seeds will be generated, only the initial 3D reference
+    map will be refined. One may still perform grey-scale correction
+    and/or low-pass filtering of this map.
+    Note that the option to generate unbiased seeds should be set to False
+    
+"""
+DoJustRefine=False
+# {expert} {file} Alternative 2: provide a selfile with user-defined seeds:
 """ Automated (unbiased!) seed generation is highly recommended...
-    But you may use this option to provide the seeds from a previous run
+    But you may use this option to provide your own seeds.
     The seeds should already be on the correct absolute greyscale!
+    Note that the options to generate unbiased seeds and to just
+    refine the initial map should be set to False
 """
 SeedsSelfile=""
 #------------------------------------------------------------------------------------------------
@@ -82,6 +92,15 @@ NumberOfIterations=25
     dont give anything, if no symmetry is present
 """
 SymmetryFile=""
+# {expert} Restart after iteration:
+""" For previous runs that stopped before convergence,
+    resume the calculations after the completely finished iteration,
+    i.e. including all 3D reconstructions.
+    Note that all flags about grey-scale correction, filtering and
+    seed generation will be ignored if a value larger than 0 is given,
+    since this option only concerns the ML3D classification part
+"""
+RestartIter=0
 # {expert} Additional xmipp_ml_refine3d parameters:
 """ For a complete description see the manual pages:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/MLrefine3D
@@ -127,11 +146,13 @@ class ML3D_class:
                  PixelSize,
                  DoGenerateSeeds,
                  NumberOfReferences,
+                 DoJustRefine,
                  InitialReference,
                  DoML3DClassification,
                  AngularSampling,
                  NumberOfIterations,
                  SymmetryFile,
+                 RestartIter,
                  ExtraParamsMLrefine3D,
                  SeedsSelfile,
                  DoParallel,
@@ -146,6 +167,7 @@ class ML3D_class:
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir
         self.NumberOfReferences=NumberOfReferences
+        self.DoJustRefine=DoJustRefine
         self.DoGenerateSeeds=DoGenerateSeeds
         self.InitialReference=os.path.abspath(InitialReference)
         if (len(SeedsSelfile)>0):
@@ -176,40 +198,48 @@ class ML3D_class:
                                      sys.argv[0],
                                      self.WorkingDir)
 
-        # Delete working directory if it exists, make a new one
-        if (DoDeleteWorkingDir): 
-            if os.path.exists(self.WorkingDir):
-                shutil.rmtree(self.WorkingDir)
-        if not os.path.exists(self.WorkingDir):
-            os.makedirs(self.WorkingDir)
+        # This is not a restart
+        if (RestartIter < 1):
+            # Delete working directory if it exists, make a new one
+            if (DoDeleteWorkingDir): 
+                if os.path.exists(self.WorkingDir):
+                    shutil.rmtree(self.WorkingDir)
+            if not os.path.exists(self.WorkingDir):
+                os.makedirs(self.WorkingDir)
 
-        # Create a selfile with absolute pathname in the WorkingDir
-        mysel=selfile.selfile()
-        mysel.read(InSelFile)
-        newsel=mysel.make_abspath()
-        self.InSelFile=os.path.abspath(self.WorkingDir+'/'+InSelFile)
-        newsel.write(self.InSelFile)
+            # Create a selfile with absolute pathname in the WorkingDir
+            mysel=selfile.selfile()
+            mysel.read(InSelFile)
+            newsel=mysel.make_abspath()
+            self.InSelFile=os.path.abspath(self.WorkingDir+'/'+InSelFile)
+            newsel.write(self.InSelFile)
 
-        # Backup script
-        log.make_backup_of_script_file(sys.argv[0],
-                                       os.path.abspath(self.WorkingDir))
+            # Backup script
+            log.make_backup_of_script_file(sys.argv[0],
+                                           os.path.abspath(self.WorkingDir))
     
-        # Execute MLalign2D in the working directory
-        os.chdir(self.WorkingDir)
+            # Execute in the working directory
+            os.chdir(self.WorkingDir)
 
-        self.copy_initial_refs()
+            self.copy_initial_refs()
         
-        if DoCorrectGreyScale:
-            self.correct_greyscale()
+            if DoCorrectGreyScale:
+                self.correct_greyscale()
 
-        if DoLowPassFilterReference:
-            self.filter_reference()
+            if DoLowPassFilterReference:
+                self.filter_reference()
 
-        if DoGenerateSeeds:
-            self.generate_seeds()
+            if DoGenerateSeeds:
+                self.generate_seeds()
 
-        if DoML3DClassification:
-            self.execute_ML3D_classification()
+            if DoML3DClassification:
+                self.execute_ML3D_classification()
+
+        # Restarting a previous run...
+        else:
+            # Execute protocol in the working directory
+            os.chdir(self.WorkingDir)
+            self.restart_MLrefine3D(RestartIter)
         
         # Return to parent dir
         os.chdir(os.pardir)
@@ -219,7 +249,7 @@ class ML3D_class:
         import os,shutil
         if os.path.exists(self.InitialReference):
             shutil.copy(self.InitialReference,'initial_reference.vol')
-        if (self.DoGenerateSeeds==False):
+        if (self.DoGenerateSeeds==False and DoJustRefine==False):
             fh=open(self.SeedsSelfile,'r')
             lines=fh.readlines()
             fh.close()
@@ -298,9 +328,8 @@ class ML3D_class:
         print '*  Low-pass filtering of the initial reference:'
 
 
-        corrvol='corrected_reference.vol'
-        if os.path.exists(corrvol):
-            reference=corrvol
+        if os.path.exists('corrected_reference.vol'):
+            reference='corrected_reference.vol'
         else:
             reference=self.InitialReference
         command='xmipp_fourier_filter -o filtered_reference.vol' + \
@@ -328,13 +357,10 @@ class ML3D_class:
         self.log.info(command)
         os.system(command)
 
-        
-        filvol='filtered_reference.vol'
-        corrvol='corrected_reference.vol'
-        if os.path.exists(filvol):
-            reference=filvol
-        elif os.path.exists(corrvol):
-            reference=corrvol
+        if os.path.exists('filtered_reference.vol'):
+            reference='filtered_reference.vol'
+        elif os.path.exists('corrected_reference.vol'):
+            reference='corrected_reference.vol'
         else:
             reference='initial_reference.vol'
 
@@ -365,9 +391,19 @@ class ML3D_class:
         if not os.path.exists(dirname):
             os.makedirs(dirname)
 
+        if (self.DoJustRefine):
+            if os.path.exists('filtered_reference.vol'):
+                reference='filtered_reference.vol'
+            elif os.path.exists('corrected_reference.vol'):
+                reference='corrected_reference.vol'
+            else:
+                reference='initial_reference.vol'
+        else:
+            reference='ml3d_seeds.sel'
+
         self.execute_MLrefine3D(self.InSelFile,
                                 dirname+'ml3d',
-                                'ml3d_seeds.sel',
+                                reference,
                                 self.AngularSampling,
                                 self.NumberOfIterations,
                                 self.SymmetryFile,
@@ -399,6 +435,23 @@ class ML3D_class:
                                        self.MyMachineFile,
                                        False)
 
+    # Either for seeds generation or for ML3D-classification
+    def restart_MLrefine3D(self,iter):
+        import os
+        import launch_parallel_job
+
+        print '*********************************************************************'
+        print '*  Restarting ml_refine3d program :' 
+        params= ' -restart RunML3D/ml3d_it' + str(iter).zfill(5) + '.log'
+        launch_parallel_job.launch_job(self.DoParallel,
+                                       "xmipp_ml_refine3d",
+                                       "xmipp_mpi_ml_refine3d",
+                                       params,
+                                       self.log,
+                                       self.MyNumberOfCPUs,
+                                       self.MyMachineFile,
+                                       False)
+        
     def close(self):
         message='Done!'
         print '*',message
@@ -422,11 +475,13 @@ if __name__ == '__main__':
                     PixelSize,
                     DoGenerateSeeds,
                     NumberOfReferences,
+                    DoJustRefine,
                     InitialReference,
                     DoML3DClassification,
                     AngularSampling,
                     NumberOfIterations,
                     SymmetryFile,
+                    RestartIter,
                     ExtraParamsMLrefine3D,
                     SeedsSelfile,
                     DoParallel,
