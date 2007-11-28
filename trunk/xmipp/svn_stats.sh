@@ -32,3 +32,9 @@ foreach DOLLARauthori ( sort (keys %author) ) {\
 chmod 755 inter.pl
 ./inter.pl < inter.txt
 rm inter.pl inter.txt
+
+# For plotting
+# gnuplot
+#   set timefmt "%Y-%m"
+#   set xdata time
+#   plot "inter" u 2:1 notitle w l
