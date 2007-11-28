@@ -957,6 +957,8 @@ class MultiResClass:
         		   self.workDirectory+"/Results","..")
 
           # Normalize images
+          self.execute("xmipp_normalize -i preproc.sel -method Ramp -background circle "+\
+        	       str(math.ceil(self.particleWorkingRadius*1.1)))
           self.execute("xmipp_normalize -i preproc.sel -method NewXmipp -background circle "+\
         	       str(math.ceil(self.particleWorkingRadius*1.1)))
 
