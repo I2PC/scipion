@@ -8,8 +8,7 @@
 %pointer_class(float,floatP);
 
 %{
-#include "string.h"
+#include <string.h>
 %}
 
 %include swigde_solver.i
-%include swigargs.i
