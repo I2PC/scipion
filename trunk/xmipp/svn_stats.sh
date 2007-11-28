@@ -1,5 +1,10 @@
-#/bin/sh
+#!/bin/tcsh
 svn log | grep "|" | awk '{split($5,a,"-"); persona[$3]=persona[$3]+1; printf "%s %s-%s\n",$3,a[1],a[2]}' > inter.txt
+if ($# == 1) then
+   echo "Considering only up to " $1
+   awk -v MAX=$1 '{if ($2<=MAX) {print $0}}' < inter.txt > aux
+   mv -f aux inter.txt
+endif
 
 echo '#\!/usr/bin/perl\
 \
@@ -26,4 +31,4 @@ foreach DOLLARauthori ( sort (keys %author) ) {\
 
 chmod 755 inter.pl
 ./inter.pl < inter.txt
-rm inter.pl inter.txt
+#rm inter.pl inter.txt
