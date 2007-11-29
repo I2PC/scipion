@@ -10,5 +10,3 @@
 %{
 #include <string.h>
 %}
-
-%include swigde_solver.i
