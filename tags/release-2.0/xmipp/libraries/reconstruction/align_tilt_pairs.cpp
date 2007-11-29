@@ -1,0 +1,269 @@
+/***************************************************************************
+ *
+ * Authors:    Sjors Scheres                 (scheres@cnb.uam.es)
+ *
+ * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.uam.es'
+ ***************************************************************************/
+#include "align_tilt_pairs.h"
+
+// Read arguments ==========================================================
+void Prog_centilt_prm::read(int argc, char **argv)
+{
+
+    FileName fn_sel;
+
+    // Selfile with untilted images
+    fn_sel = getParameter(argc, argv, "-u");
+    SFu.read(fn_sel);
+    // Selfile with tilted images
+    fn_sel = getParameter(argc, argv, "-t");
+    SFt.read(fn_sel);
+    if (SFu.ImgNo() != SFt.ImgNo())
+        REPORT_ERROR(1, "Unequal number of active images in untilted and tilted selfiles");
+    // Extension if not to overwrite input images
+    oext = getParameter(argc, argv, "-oext", "");
+    // Write out document file?
+    fn_doc = getParameter(argc, argv, "-doc", "");
+    // Maximum shift (discard images that shift more in last iteration)
+    max_shift = textToFloat(getParameter(argc, argv, "-max_shift", "0"));
+    // Force x-shift to be zero?
+    force_x_zero = checkParameter(argc, argv, "-force_x_zero");
+    // Perform centering?
+    do_center = !checkParameter(argc, argv, "-skip_centering");
+    // Perform cosine stretching?
+    do_stretch = !checkParameter(argc, argv, "-skip_stretching");
+}
+
+// Show ====================================================================
+void Prog_centilt_prm::show()
+{
+    cerr << " Selfile untilted images              : " <<  SFu.name() << endl;
+    cerr << " Selfile tilted images                : " <<  SFt.name() << endl;
+    if (oext != "")
+        cerr << " Output extension for tilted images   : " << oext << endl;
+    if (max_shift != 0)
+        cerr << " Discard images that shift more than  : " << max_shift << endl;
+    if (fn_doc != "")
+        cerr << " Output document file (tilted images) : " << fn_doc << endl;
+    if (force_x_zero)
+        cerr << " Force x-shift to be zero " << endl;
+    if (!do_stretch)
+        cerr << " Skip cosine stretching " << endl;
+    if (!do_center)
+        cerr << " Skip centering " << endl;
+
+}
+
+// usage ===================================================================
+void Prog_centilt_prm::usage()
+{
+    cerr << "Usage:  " << endl;
+    cerr << "  centilt [options]" << endl;
+    cerr << "   -u <selfile>             : Selfile containing untilted images \n"
+    << "   -t <selfile>             : Selfile containing tilted images \n"
+    << " [ -oext <extension> ]      : For output tilted images; if not to overwrite input\n"
+    << " [ -max_shift <float> ]     : Discard images that shift more [pix]\n"
+    << " [ -doc <docfile> ]         : write output document file with rotations & translations \n"
+    << " [ -force_x_zero ]          : Force x-shift to be zero \n"
+    << " [ -skip_stretching ]       : do not perform cosine stretching \n"
+    << " [ -skip_centering ]        : do not perform centering, i.e. only modify angles \n"
+    << endl;
+}
+
+// Center one tilted image  =====================================================
+bool Prog_centilt_prm::center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It, double &ccf)
+{
+
+    Matrix2D<double> A(3, 3), Maux(It()), Mcorr(It());
+    int              n_max = -1;
+    bool             neighbourhood = true;
+    int              imax, jmax, i_actual, j_actual, x_zero = 1;
+    double           maxcorr, xmax, ymax, sumcorr;
+    float            xshift, yshift, shift;
+
+    if (do_stretch)
+    {
+        // Cosine stretching, store stretched image in Maux
+        A.initIdentity();
+        A(0, 0) = COSD(It.Theta());
+        Maux.initZeros();
+        applyGeometry(Maux, A, It(), IS_INV, DONT_WRAP);
+    }
+    else Maux = It();
+
+    // Calculate cross-correlation
+    correlation_matrix(Maux, Iu(), Mcorr);
+    if (force_x_zero)
+    {
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(Mcorr)
+        {
+            if (j != 0) MAT_ELEM(Mcorr, i, j) = 0.;
+        }
+    }
+    Mcorr.maxIndex(imax, jmax);
+    maxcorr = MAT_ELEM(Mcorr, imax, jmax);
+
+    if (force_x_zero)
+    {
+        x_zero = 0;
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(Mcorr)
+        {
+            if (j != 0) MAT_ELEM(Mcorr, i, j) = 0.;
+        }
+    }
+    Mcorr.maxIndex(imax, jmax);
+    maxcorr = MAT_ELEM(Mcorr, imax, jmax);
+    xshift = (float) jmax;
+    yshift = (float) imax;
+
+    // Calculate correlation coefficient
+    A.initIdentity();
+    A(0, 2) = xshift;
+    A(1, 2) = yshift;
+    Maux.selfApplyGeometry(A, IS_INV, DONT_WRAP);
+    Maux.setXmippOrigin();
+    ccf = correlation_index(Iu(), Maux);
+
+    if (do_stretch) xshift *= COSD(It.Theta());
+    shift = sqrt(xshift * xshift + yshift * yshift);
+    
+    if ((max_shift < XMIPP_EQUAL_ACCURACY) || (shift < max_shift))
+    {
+        // Store shift in the header of the image
+	// Take rotation into account for shifts
+	It.Xoff() = -xshift*COSD(It.Psi()) - yshift*SIND(It.Psi());
+	It.Yoff() = xshift*SIND(It.Psi()) - yshift*COSD(It.Psi());
+        It.Phi() = Iu.Psi();
+        return true;
+    }
+    else return false;
+
+    Maux.core_deallocate();
+    Mcorr.core_deallocate();
+
+}
+
+// Main program  ===============================================================
+void Prog_centilt_prm::centilt()
+{
+
+    DocFile           DFo;
+    FileName          fn_img;
+    ImageXmipp        Iu, It;
+    Matrix2D<double>  Maux, A(3, 3);
+    Matrix1D<double>  dataline(6);
+    double            ccf, outside;
+    bool              OK;
+    int               imgno, barf, n_images, n_discarded;
+
+    if (fn_doc != "")
+    {
+        DFo.reserve(SFt.ImgNo()*2 + 1);
+        DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Corr (6)");
+    }
+
+    n_images = SFt.ImgNo();
+    n_discarded = 0;
+    cerr << "  Centering of " << n_images << " tilted images" << endl;
+    init_progress_bar(n_images);
+    barf = XMIPP_MAX(1, (int)(1 + (n_images / 60)));
+    imgno = 0;
+
+    while (imgno < n_images)
+    {
+
+        SFu.go_beginning();
+        SFt.go_beginning();
+        SFu.jump(imgno);
+        SFt.jump(imgno - n_discarded);
+        // Read in untilted image and apply shifts (center) and Phi (align tilt-axis with y-axis)
+        Iu.read(SFu.get_current_file());
+        Iu().setXmippOrigin();
+        Euler_angles2matrix(Iu.Phi(), 0., 0., A);
+        A(0, 2) = -Iu.Xoff();
+        A(1, 2) = -Iu.Yoff();
+        outside = dMij(Iu(), 0, 0);
+        Iu().selfApplyGeometry(A, IS_INV, DONT_WRAP, outside);
+
+        // Read in tilted image and apply Psi (align tilt-axis with y-axis) and shifts if present
+        It.read(SFt.get_current_file());
+        // Store original matrix for later output
+        Maux.resize(It());
+        Maux = It();
+        Euler_angles2matrix(0., 0., It.Psi(), A);
+        outside = dMij(It(), 0, 0);
+        It().selfApplyGeometry(A, IS_INV, DONT_WRAP, outside);
+        It().setXmippOrigin();
+
+        if (do_center) OK = center_tilted_image(Iu, It, ccf);
+        else
+        {
+            OK = true;
+            ccf = 1.;
+            It.Phi() = Iu.Psi();
+        }
+        if (OK)
+        {
+            fn_img = It.name();
+            if (oext != "")
+            {
+                fn_img = fn_img.without_extension() + "." + oext;
+            }
+            // Add line to document file
+            if (fn_doc != "")
+            {
+                dataline(0) = It.Phi();
+                dataline(1) = It.Theta();
+                dataline(2) = It.Psi();
+                dataline(3) = It.Xoff();
+                dataline(4) = It.Yoff();
+                dataline(5) = ccf;
+                DFo.append_comment(fn_img);
+                DFo.append_data_line(dataline);
+            }
+            SFt.set_current_filename(fn_img);
+            // Re-store original matrix & write out tilted image
+            It() = Maux;
+            It.write(fn_img);
+        }
+        else
+        {
+            SFt.remove(It.name());
+            n_discarded++;
+        }
+
+        imgno++;
+        if (imgno % barf == 0) progress_bar(imgno);
+    }
+    progress_bar(n_images);
+    if (max_shift > 0) cerr << "  Discarded " << n_discarded << " tilted images that shifted too much" << endl;
+
+    // Write out document file
+    if (fn_doc != "") DFo.write(fn_doc);
+
+    // Write out selfile
+    fn_img = SFt.name();
+    if (oext != "") fn_img = fn_img.insert_before_extension("_" + oext);
+    SFt.write(fn_img);
+
+
+}
+
