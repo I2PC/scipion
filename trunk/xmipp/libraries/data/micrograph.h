@@ -292,7 +292,8 @@ public:
     float operator()(int x, int y) const
     {
         if (y < 0 || y >= Ydim || x < 0 || x >= Xdim)
-            REPORT_ERROR(1, "Micrograph::(): index out of range");
+            // COSS: REPORT_ERROR(1, "Micrograph::(): index out of range");
+	    return 0;
         if (__depth == 8)
         {
             return m8[y*Xdim+x];
