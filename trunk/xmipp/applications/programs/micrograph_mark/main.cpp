@@ -83,10 +83,10 @@ int main(int argc, char **argv)
             mTilted.compute_8_bit_scaling();
             if (mTilted.depth()!=8)
             {
-                fn8bitsTilted=fnRaw+".8bits";
-                mTilted.write_as_8_bits(fn8bits);
+                fn8bitsTilted=fnRawTilted+".8bits";
+                mTilted.write_as_8_bits(fn8bitsTilted);
                 mTilted.close_micrograph();
-                mTilted.open_micrograph(fn8bits,false);
+                mTilted.open_micrograph(fn8bitsTilted,false);
                 mTilted.compute_8_bit_scaling();
             }
         }
