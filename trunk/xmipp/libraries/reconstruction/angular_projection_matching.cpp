@@ -492,10 +492,14 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
   sumCC=0.;
   imgno=0;
   SF.go_beginning();
-  //clean vector with selfiles
-  //clean image average
-  for (int dirno = 0; dirno < nr_dir; dirno++)
-     {   //do not bother about classes without assigned images
+  // I guess this if is needed here (otherwise bus errors if no
+  // -output_classes flag is given!) Sjors 12dec07
+  if (output_classes)
+  {
+      //clean vector with selfiles
+      //clean image average
+      for (int dirno = 0; dirno < nr_dir; dirno++)
+      {   //do not bother about classes without assigned images
          if(class_selfiles[dirno].ImgNo()==0)
               continue;
          class_selfiles[dirno].clear();
@@ -504,7 +508,8 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
              (class_avgs[dirno]()).init_constant(0.);
 	     class_avgs[dirno].weight() = 0;
              }
-     }         
+      }
+  }         
  
   while ((!SF.eof())) {
     fn_img=SF.NextImg();
