@@ -1,0 +1,4 @@
+xmipp_phantom_transform -i 1o7d.pdb -o 1o7dCentered.pdb -pdb -center_pdb
+xmipp_convert_pdb2vol -i 1o7dCentered.pdb -size 64
+xmipp_project -i random_projection.param -o g0ta.sel
+xmipp_reconstruct_art -i g0ta.sel -o g0ta -show_error
