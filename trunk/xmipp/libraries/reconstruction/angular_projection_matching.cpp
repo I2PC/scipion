@@ -59,6 +59,9 @@ void Prog_projection_matching_prm::read(int argc, char **argv)  {
   // Hidden stuff
   verb=textToInteger(getParameter(argc,argv,"-verb","1"));
   create_proyections=textToInteger(getParameter(argc,argv,"-create_proyections","1"));
+
+  // For improved killing control
+  fn_control = getParameter(argc, argv, "-control", "");
 }
 
 // Show ====================================================================
@@ -326,6 +329,9 @@ void Prog_projection_matching_prm::produce_Side_info() {
         //class_selfiles.clear();
 	while (!DF.eof())
 	{
+	    // Check whether to kill job
+	    exit_if_not_exists(fn_control);
+
 	    ref_rot[nr_dir]=DF(0);
 	    ref_tilt[nr_dir]=DF(1);
             //this should be changed for mpi, otherwise
@@ -512,6 +518,10 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
   }         
  
   while ((!SF.eof())) {
+
+    // Check whether to kill job
+    exit_if_not_exists(fn_control);
+
     fn_img=SF.NextImg();
     img.read(fn_img,false,false,false,true);
     img().setXmippOrigin();

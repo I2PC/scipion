@@ -170,6 +170,8 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     //only for interaction with Refine3D:
     search_rot = textToFloat(getParameter(argc, argv, "-search_rot", "999."));
 
+    // For improved control of MPI jobs
+    fn_control = getParameter(argc, argv, "-control", "");
 }
 
 // Show ====================================================================
@@ -3102,6 +3104,9 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector< ImageXmippT
     SF.go_beginning();
     while ((!SF.eof()))
     {
+
+	// Check whether to kill job
+	exit_if_not_exists(fn_control);
 
         // For defocus-groups in Fourier-mode
         line = SF.current();

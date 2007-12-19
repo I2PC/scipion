@@ -106,6 +106,9 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
 
     for (int iact_proj = 0; iact_proj < prm.numIMG ; iact_proj++)
     {
+	// Check whether to kill job
+	exit_if_not_exists(prm.fn_control);
+	
         // backprojection of the weighted residual image
         sqrtweight = sqrt(prm.residual_imgs[iact_proj].weight() / prm.sum_weight);
 
@@ -153,6 +156,9 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
     dim2 = (double)YSIZE(read_proj()) * XSIZE(read_proj());
     for (int iact_proj = 0; iact_proj < prm.numIMG ; iact_proj++)
     {
+	// Check whether to kill job
+	exit_if_not_exists(prm.fn_control);
+
         project_Volume(residual_vol, prm.basis, new_proj,
                        dummy_proj, YSIZE(read_proj()), XSIZE(read_proj()),
                        prm.IMG_Inf[iact_proj].rot,
@@ -298,6 +304,9 @@ void ART_single_step(
         ctf.generate_mask(theo_proj());
         ctf.apply_mask_Space(theo_proj());
     }
+
+    // Check whether to kill job
+    exit_if_not_exists(prm.fn_control);
 
     // Print system matrix
     if (prm.print_system_matrix)

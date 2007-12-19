@@ -66,6 +66,11 @@ MyNumberOfCPUs=10
     If your job submission system uses an environment variable, just type it here with the leading $
 """
 MyMachineFile="/home2/bioinfo/scheres/machines.dat"
+# {expert} Control file
+""" This is an ugly solution to have improved killing control over the mpi jobs.
+    The script will create this file, and any mpi-job will be killed as soon as this file doesn't exist anymore. This is required with certain queueing systems.
+"""
+MyControlFile=""
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
@@ -93,7 +98,8 @@ class ML2D_class:
                  ExtraParamsMLalign2D,
                  DoParallel,
                  MyNumberOfCPUs,
-                 MyMachineFile):
+                 MyMachineFile,
+                 MyControlFile):
 	     
         import os,sys,shutil
         scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
@@ -112,7 +118,11 @@ class ML2D_class:
             self.MyMachineFile=MyMachineFile
         else:
             self.MyMachineFile=os.path.abspath(MyMachineFile)
-        
+        if (MyControlFile==""):
+            self.DoControl=False
+        else:
+            self.DoControl=True
+   
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
                                      LogDir,
@@ -128,24 +138,40 @@ class ML2D_class:
             if not os.path.exists(self.WorkingDir):
                 os.makedirs(self.WorkingDir)
 
-                # Create a selfile with absolute pathname in the WorkingDir
-                mysel=selfile.selfile()
-                mysel.read(InSelFile)
-                newsel=mysel.make_abspath()
-                self.InSelFile=os.path.abspath(self.WorkingDir+'/'+InSelFile)
-                newsel.write(self.InSelFile)
+            # Create a CONTROL file for improved killing control
+            if (self.DoControl):
+                self.MyControlFile=os.path.abspath(self.WorkingDir+
+                                                   '/'+MyControlFile)
+                FILE = open(self.MyControlFile,"w")
+                FILE.write("Delete this file to kill all current processes\n")
+                FILE.close()
 
-                # Backup script
-                log.make_backup_of_script_file(sys.argv[0],
+            # Create a selfile with absolute pathname in the WorkingDir
+            mysel=selfile.selfile()
+            mysel.read(InSelFile)
+            newsel=mysel.make_abspath()
+            self.InSelFile=os.path.abspath(self.WorkingDir+'/'+InSelFile)
+            newsel.write(self.InSelFile)
+
+            # Backup script
+            log.make_backup_of_script_file(sys.argv[0],
                                                os.path.abspath(self.WorkingDir))
     
-                # Execute protocol in the working directory
-                os.chdir(self.WorkingDir)
-                if (DoML2D):
-                    self.execute_MLalign2D()
+            # Execute protocol in the working directory
+            os.chdir(self.WorkingDir)
+            if (DoML2D):
+                self.execute_MLalign2D()
 
         # Restarting a previous run...
         else:
+            # Create a CONTROL file for improved killing control
+            if (self.DoControl):
+                self.MyControlFile=os.path.abspath(self.WorkingDir+
+                                                   '/'+MyControlFile)
+                FILE = open(self.MyControlFile,"w")
+                FILE.write("Delete this file to kill current processes\n")
+                FILE.close()
+
             # Execute protocol in the working directory
             os.chdir(self.WorkingDir)
             self.restart_MLalign2D(RestartIter)
@@ -153,6 +179,9 @@ class ML2D_class:
         # Return to parent dir
         os.chdir(os.pardir)
 
+        # Delete the CONTROL file for improved killing control
+        if (self.DoControl):
+            os.remove(self.MyControlFile)
 
     def execute_MLalign2D(self):
         import os
@@ -168,7 +197,9 @@ class ML2D_class:
         # By default, do not write offsets for 2D alignments...
         # This will affect -restart ...
         params+=' '+self.ExtraParamsMLalign2D
-        
+        if (self.DoControl):
+            params+=' -control ' + self.MyControlFile
+
         launch_parallel_job.launch_job(self.DoParallel,
                                        "xmipp_ml_align2d",
                                        "xmipp_mpi_ml_align2d",
@@ -241,7 +272,8 @@ if __name__ == '__main__':
                     ExtraParamsMLalign2D,
                     DoParallel,
                     MyNumberOfCPUs,
-                    MyMachineFile)
+                    MyMachineFile,
+                    MyControlFile)
     # close 
     ML2D.close()
 

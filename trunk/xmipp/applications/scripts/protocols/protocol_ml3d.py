@@ -118,6 +118,11 @@ MyNumberOfCPUs=5
     if your queueing system using an environment variable, give it here (with the leading $, e.g. $PBS_NODEFILE
 """
 MyMachineFile="/home2/bioinfo/scheres/machines.dat"
+# {expert} Control file
+""" This is an ugly solution to have improved killing control over the mpi jobs.
+    The script will create this file, and any mpi-job will be killed as soon as this file doesn't exist anymore. This is required with certain queueing systems.
+"""
+MyControlFile=""
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
@@ -157,7 +162,8 @@ class ML3D_class:
                  SeedsSelfile,
                  DoParallel,
                  MyNumberOfCPUs,
-                 MyMachineFile):
+                 MyMachineFile,
+                 MyControlFile):
 	     
         import os,sys,shutil
         scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
@@ -191,6 +197,10 @@ class ML3D_class:
             self.MyMachineFile=MyMachineFile
         else:
             self.MyMachineFile=os.path.abspath(MyMachineFile)
+        if (MyControlFile==""):
+            self.DoControl=False
+        else:
+            self.DoControl=True
 
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
@@ -206,6 +216,14 @@ class ML3D_class:
                     shutil.rmtree(self.WorkingDir)
             if not os.path.exists(self.WorkingDir):
                 os.makedirs(self.WorkingDir)
+
+            # Create a CONTROL file for improved killing control
+            if (self.DoControl):
+                self.MyControlFile=os.path.abspath(self.WorkingDir+
+                                                   '/'+MyControlFile)
+                FILE = open(self.MyControlFile,"w")
+                FILE.write("Delete this file to kill all current processes\n")
+                FILE.close()
 
             # Create a selfile with absolute pathname in the WorkingDir
             mysel=selfile.selfile()
@@ -237,12 +255,24 @@ class ML3D_class:
 
         # Restarting a previous run...
         else:
+            # Create a CONTROL file for improved killing control
+            if (self.DoControl):
+                self.MyControlFile=os.path.abspath(self.WorkingDir+
+                                                   '/'+MyControlFile)
+                FILE = open(self.MyControlFile,"w")
+                FILE.write("Delete this file to kill current processes\n")
+                FILE.close()
+
             # Execute protocol in the working directory
             os.chdir(self.WorkingDir)
             self.restart_MLrefine3D(RestartIter)
         
         # Return to parent dir
         os.chdir(os.pardir)
+
+        # Delete the CONTROL file for improved killing control
+        if (self.DoControl):
+            os.remove(self.MyControlFile)
 
     # Make a copy of the initial references:
     def copy_initial_refs(self):
@@ -290,7 +320,9 @@ class ML3D_class:
         if not self.SymmetryFile=="":
             params+= ' -sym '+str(self.SymmetryFile)
         params+=' -dont_modify_header -output_classes -output_refs'
-                
+        if (self.DoControl):
+            params+=' -control ' + self.MyControlFile
+             
         launch_parallel_job.launch_job(self.DoParallel,
                                        "xmipp_angular_projection_matching",
                                        "xmipp_mpi_angular_projection_matching",
@@ -309,6 +341,8 @@ class ML3D_class:
                 '  -use_each_image -weight '
         if not self.SymmetryFile=="":
             params+= ' -sym '+str(self.SymmetryFile)
+        if (self.DoControl):
+            params+=' -control ' + self.MyControlFile
            
         launch_parallel_job.launch_job(self.DoParallel,
                                        "xmipp_reconstruct_wbp",
@@ -423,8 +457,10 @@ class ML3D_class:
                 ' -iter ' + str(iter) + \
                 ' -ang '  + str(sampling)
         if not symfile=="":
-            params+= ' -sym '+str(symfile)
+            params+= ' -sym ' + str(symfile)
         params+=' '+extraparam
+        if (self.DoControl):
+            params+=' -control ' + self.MyControlFile
 
         launch_parallel_job.launch_job(self.DoParallel,
                                        "xmipp_ml_refine3d",
@@ -486,7 +522,8 @@ if __name__ == '__main__':
                     SeedsSelfile,
                     DoParallel,
                     MyNumberOfCPUs,
-                    MyMachineFile)
+                    MyMachineFile,
+                    MyControlFile)
 
     # close 
     ML3D.close()

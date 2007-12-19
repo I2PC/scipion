@@ -53,7 +53,7 @@ class Prog_WBP_prm
 {
 public:
     /** Filenames */
-    FileName fn_out, fn_sym, fn_sel;
+    FileName fn_out, fn_sym, fn_sel, fn_control;
     /** SelFile containing all projections */
     SelFile SF;
     /** If true: apply shifts upon reading the images (default) */

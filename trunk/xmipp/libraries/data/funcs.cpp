@@ -369,6 +369,19 @@ int exists(const FileName &fn)
     return 1;
 }
 
+/* Exit program if filename is not empry and file does not exist ----------- */ 
+void exit_if_not_exists(const FileName &fn)
+{
+    if (fn != "")
+    {
+	if (!exists(fn))
+	{
+	    cerr<<"Control file "<<fn<<" does not exist: exiting...";
+	    exit(1);
+	}
+    }
+}
+
 /* Wait until file has a stable size --------------------------------------- */
 void wait_until_stable_size(const FileName &fn,
                             unsigned long time_step)

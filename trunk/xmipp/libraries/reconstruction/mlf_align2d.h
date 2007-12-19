@@ -57,7 +57,7 @@ class Prog_MLFalign2D_prm
 {
 public:
     /** Filenames reference selfile/image, fraction docfile & output rootname */
-    FileName fn_sel, fn_ref, fn_root, fn_frac, fn_sig, fn_doc, fn_ctfdat, fn_oext, fn_scratch;
+    FileName fn_sel, fn_ref, fn_root, fn_frac, fn_sig, fn_doc, fn_ctfdat, fn_oext, fn_scratch, fn_control;
     /** Command line */
     string cline;
     /** sigma-value for origin offsets */

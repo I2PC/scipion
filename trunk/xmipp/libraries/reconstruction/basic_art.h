@@ -268,6 +268,9 @@ public:
 
     /// Frequency for saving intermidiate
     int save_intermidiate_every;
+
+    /// Name of file for improved control in parallel jobs
+    FileName fn_control;
     //@}
 
     /* ART Side information ................................................. */

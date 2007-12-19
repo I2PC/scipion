@@ -147,6 +147,9 @@ void Prog_MLFalign2D_prm::read(int argc, char **argv, bool ML3D)
     debug = textToInteger(getParameter(argc, argv, "-debug","0"));
     do_variable_psi = checkParameter(argc, argv, "-var_psi");
     do_variable_trans = checkParameter(argc, argv, "-var_trans");
+
+    // For improved killing control
+    fn_control = getParameter(argc, argv, "-control", "");
 }
 
 // Show ====================================================================
@@ -2182,6 +2185,10 @@ void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, vector< ImageXmippT<doub
     SF.go_beginning();
     while ((!SF.eof()))
     {
+
+	// Check whether to kill job
+	exit_if_not_exists(fn_control);
+
         // Get defocus-group
 	if (do_ctf_correction)
 	{

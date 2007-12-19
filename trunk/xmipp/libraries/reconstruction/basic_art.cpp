@@ -91,6 +91,7 @@ void Basic_ART_Parameters::default_values()
     ref_trans_step     = -1;
     max_tilt           = 10.e6;
     grid_relative_size = 1.41;
+    fn_control         = "";
 }
 
 /* Read ART parameters ===================================================== */
@@ -124,6 +125,7 @@ void Basic_ART_Parameters::default_values()
     ray_length         = textToInteger(GET_PARAM_WITH_DEF("ray_length","-1"      )); \
     block_size        = textToInteger(GET_PARAM_WITH_DEF("block_size","1" )); \
     fn_sym             =      GET_PARAM_WITH_DEF("sym",       ""        );  \
+    fn_control         =      GET_PARAM_WITH_DEF("control",       ""        );  \
     force_sym          = textToInteger(GET_PARAM_WITH_DEF("force_sym","0"        )); \
     do_not_generate_subgroup= CHECK_PARAM(       "no_group"             );  \
     do_not_use_symproj = CHECK_PARAM(       "no_symproj"             );  \

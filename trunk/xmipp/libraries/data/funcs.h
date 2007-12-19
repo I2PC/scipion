@@ -888,6 +888,17 @@ public:
  */
 int exists(const FileName& fn);
 
+/** This function raised an ERROR if the filename if not empty and if
+ * the corresponding file does not exist. 
+ * This may be useful to have a better (killing) control on (mpi-regulated) jobs
+ * @ingroup Filenames
+ *
+ * @code
+ *   exit_if_not_exists("control_file.txt");
+ * @endcode
+ */
+void exit_if_not_exists(const FileName &fn);
+
 /** Waits until the given filename has a stable size
  * @ingroup Filenames
  *

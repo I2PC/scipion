@@ -41,6 +41,9 @@ void Prog_WBP_prm::read(int argc, char **argv)
     verb = textToInteger(getParameter(argc, argv, "-verb", "1"));
     do_weights = checkParameter(argc, argv, "-weight");
 
+    // For improved killing control
+    fn_control = getParameter(argc, argv, "-control", "");
+
 }
 
 // Show ====================================================================
@@ -395,6 +398,9 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
     imgno = 0;
     while (!SF.eof())
     {
+	// Check whether to kill job
+	exit_if_not_exists(fn_control);
+
         proj.read(SF.NextImg(), apply_shifts);
         proj().setXmippOrigin();
         if (do_weights)  proj() *= proj.weight();

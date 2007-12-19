@@ -47,7 +47,7 @@ class Prog_projection_matching_prm {
 public:
 
   /** Filenames reference selfile/image, fraction docfile & output rootname */
-  FileName fn_vol,fn_root,fn_sym,fn_ref,fn_ang;
+  FileName fn_vol,fn_root,fn_sym,fn_ref,fn_ang,fn_control;
   /** Selfile with experimental images */
   SelFile SF;
   /** Vector with reference library projections */
