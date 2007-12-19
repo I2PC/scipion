@@ -35,6 +35,8 @@ SetupRotSpectra=False
 SetupRCT=False
 # {setup-3d} ML3D classification
 SetupML3D=False
+# {setup-3d} MLF3D classification
+SetupMLF3D=False
 # {setup-3d} Projection matching refinement
 SetupProjMatch=False
 # {setup-3d} Multi-resolution refinement
@@ -64,6 +66,7 @@ class setup_protocols_class:
                      SetupRotSpectra,
                      SetupRCT,
                      SetupML3D,
+                     SetupMLF3D,
                      SetupProjMatch,
                      SetupMultiRes3d,
                      ProjectDir,
@@ -79,6 +82,7 @@ class setup_protocols_class:
             self.SetupRotSpectra=SetupRotSpectra
             self.SetupRCT=SetupRCT
             self.SetupML3D=SetupML3D
+            self.SetupMLF3D=SetupMLF3D
             self.SetupProjMatch=SetupProjMatch
             self.SetupMultiRes3d=SetupMultiRes3d
 
@@ -110,6 +114,8 @@ class setup_protocols_class:
                                         ['xmipp_protocol_rct.py','visualize_rct.py']]
             self.library['SetupML3D']=[self.SetupML3D,
                                         ['xmipp_protocol_ml3d.py','visualize_ml3d.py']]
+            self.library['SetupMLF3D']=[self.SetupMLF3D,
+                                        ['xmipp_protocol_mlf3d.py','visualize_mlf3d.py']]
             self.library['SetupProjMatch']=[self.SetupProjMatch,
                                         ['xmipp_protocol_projmatch.py','visualize_projmatch.py']]
             self.library['SetupMultiRes3d']=[self.SetupMultiRes3d,
@@ -216,6 +222,7 @@ if __name__ == '__main__':
                                 SetupRotSpectra,
                                 SetupRCT,
                                 SetupML3D,
+                                SetupMLF3D,
                                 SetupProjMatch,
                                 SetupMultiRes3d,
                                 ProjectDir,
