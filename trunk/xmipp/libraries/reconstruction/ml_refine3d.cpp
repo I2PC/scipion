@@ -137,7 +137,8 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)
 
     //Read Refine3d parameters
     fn_sel = getParameter(argc, argv, "-i");
-    fn_root = getParameter(argc, argv, "-o", "MLrefine3D");
+    if (fourier_mode) fn_root = getParameter(argc, argv, "-o", "mlf3d");
+    else fn_root = getParameter(argc, argv, "-o", "ml3d");
     if (!do_restart)
     {
         // Fill volume selfile
