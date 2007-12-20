@@ -58,7 +58,6 @@ void Prog_projection_matching_prm::read(int argc, char **argv)  {
 
   // Hidden stuff
   verb=textToInteger(getParameter(argc,argv,"-verb","1"));
-  create_proyections=textToInteger(getParameter(argc,argv,"-create_proyections","1"));
 
   // For improved killing control
   fn_control = getParameter(argc, argv, "-control", "");
@@ -399,6 +398,7 @@ void Prog_projection_matching_prm::PM_process_one_image(Matrix2D<double> &Mexp,
   computeStats_within_binary_mask(rotmask,Mexp,dummy,dummy,mean_img,stddev_img);
   Maux-=mean_img;
   apply_binary_mask(rotmask,Maux,Maux,0.);
+
   // Calculate correlation coefficients for all angles
   FOR_ALL_ROTATIONS() {
     psi=(double)(ipsi*360./nr_psi);
@@ -517,9 +517,9 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
 
     if (modify_header)
     {
+	// Re-read image to get the untransformed image matrix again
 	img.read(fn_img);
 	img.set_eulerAngles(ref_rot[opt_dirno],ref_tilt[opt_dirno],opt_psi);
-	//origin does not need to be set
         img.set_originOffsets(opt_xoff,opt_yoff);
 	img.write(fn_img);
     }
@@ -535,6 +535,7 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
 	class_selfiles[opt_dirno].insert(img.name());
     }
 
+
     if (verb>0) if (imgno%c==0) progress_bar(imgno);
     imgno++;
   }
@@ -543,13 +544,10 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
   if (verb>0) cerr << " ================================================================="<<endl;
 
   // free memory
-  /*
   free(ref_mean);
   free(ref_rot);
   free(ref_tilt);
   ref_img.clear();
-  mpi version will not work if memory is free
-  */
 }
 void Prog_projection_matching_prm::write_classes()
 {
