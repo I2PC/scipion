@@ -155,7 +155,7 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)
     fn_sym = getParameter(argc, argv, "-sym", "");
     eps = textToFloat(getParameter(argc, argv, "-eps", "5e-5"));
     verb = textToInteger(getParameter(argc, argv, "-verb", "1"));
-    Niter = textToInteger(getParameter(argc, argv, "-iter", "100"));
+    Niter = textToInteger(getParameter(argc, argv, "-iter", "25"));
     istart = textToInteger(getParameter(argc, argv, "-istart", "1"));
     tilt_range0 = textToFloat(getParameter(argc, argv, "-tilt0", "0."));
     tilt_rangeF = textToFloat(getParameter(argc, argv, "-tiltF", "90."));
@@ -186,7 +186,7 @@ void Prog_Refine3d_prm::usage()
     << "                               :  OR selfile with multiple reference volumes\n"
     << " [ -o <root=\"ml3d\"> ]          : Output rootname \n"
     << " [ -ang <float=10> ]           : Angular sampling (degrees) \n"
-    << " [ -iter <int=100> ]           : Maximum number of iterations \n"
+    << " [ -iter <int=25> ]            : Maximum number of iterations \n"
     << " [ -more_options ]             : Show additional parameters for 3D-refinement\n";
 
 }
@@ -201,7 +201,8 @@ void Prog_Refine3d_prm::MLF_usage()
     cerr << "   -vol <volume/selfile>        : Initial reference volume \n";
     cerr << "                               :  OR selfile with multiple reference volumes\n";
     cerr << " [ -o <rootname> ]             : Output rootname (default = \"mlf2d\")\n";
-    cerr << " [ -mirror ]                   : Also check mirror image of each reference \n";
+    cerr << " [ -ang <float=10> ]           : Angular sampling (degrees) \n";
+    cerr << " [ -iter <int=25>  ]           : Maximum number of iterations \n";
     cerr << " [ -search_shift <float=3>]    : Limited translational searches (in pixels) \n";
     cerr << " [ -reduce_noise <factor=1> ]  : Use a value smaller than one to decrease the estimated SSNRs \n";
     cerr << " [ -not_phase_flipped ]        : Use this if the experimental images have not been phase flipped \n";
