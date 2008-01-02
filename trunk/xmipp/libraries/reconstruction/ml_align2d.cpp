@@ -1842,6 +1842,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector< ImageXmippT
     nn = SF.ImgNo();
     if (verb > 0) init_progress_bar(nn);
     c = XMIPP_MAX(1, nn / 60);
+    Fwsum_imgs.clear();
     Msum_imgs.clear();
     sumw.clear();
     sumw_mirror.clear();
@@ -1865,7 +1866,15 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector< ImageXmippT
                 Msum_imgs[refno].push_back(Mdzero);
             }
         }
-    }
+	else
+	{
+	    Fwsum_imgs.push_back(dum);
+	    FOR_ALL_ROTATIONS()
+	    {
+		Fwsum_imgs[refno].push_back(Fdzero);
+	    }
+	}
+    }   
 
     // Loop over all images
     imgno = 0;
