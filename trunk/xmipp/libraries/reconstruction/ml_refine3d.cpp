@@ -30,10 +30,6 @@
 void Prog_Refine3d_prm::read(int &argc, char ** &argv)
 {
 
-    // This flag is set with scripts, so that for the user the
-    // mlf_align2d and the ml_align2d are distinct programs
-    //fourier_mode = checkParameter(argc, argv, "-MLF");
-
     bool do_restart = false;
 
     if (checkParameter(argc, argv, "-more_options"))
