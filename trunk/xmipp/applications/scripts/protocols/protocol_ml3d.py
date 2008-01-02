@@ -319,7 +319,7 @@ class ML3D_class:
                 ' -sam ' + str(ProjMatchSampling)
         if not self.SymmetryFile=="":
             params+= ' -sym '+str(self.SymmetryFile)
-        params+=' -dont_modify_header -output_classes -output_refs'
+        params+=' -dont_modify_header -output_refs'
         if (self.DoControl):
             params+=' -control ' + self.MyControlFile
              
@@ -331,6 +331,16 @@ class ML3D_class:
                                        self.MyNumberOfCPUs,
                                        self.MyMachineFile,
                                        False)
+
+        # Now make the class averages
+        command='xmipp_angular_class_average ' + \
+                 ' -i '   + dirname+basename+'.doc'  + \
+                 ' -lib ' + dirname+basename+'_lib.doc' + \
+                 ' -o '   + dirname+basename
+
+        print '* ',command
+        self.log.info(command)
+        os.system(command)
 
         # Followed by a weighted back-projection reconstruction
         iname=dirname+basename+'_classes.sel'
