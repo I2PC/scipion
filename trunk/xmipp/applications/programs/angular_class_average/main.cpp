@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
     float            w, sumw;
     Matrix2D<double> A(3,3);
     FileName         fn_img, fn_out, fn_tmp, fn_tst;
-    SelFile          SF, SFclass, SFclasses;
+    SelFile          SFclass, SFclasses;
     DocFile          DF, DFlib;
     ImageXmipp       img, avg;
 
@@ -205,7 +205,6 @@ void Usage()
     printf("        -i <docfile>        : docfile with assigned angles for all experimental particles\n");
     printf("        -lib <docfile>      : docfile with angles used to generate the projection matching library\n");
     printf("        -o <rootname=class> : output rootname for class averages and selfiles\n");
-    printf("       [-mirror]            : Use mirror operations in input docfile\n");
     printf("       [-columns] <rot=1> <tilt=2> <psi=3> <Xoff=4> <Yoff=5> \n"
            "                           : where the 5 integers are the column numbers for the \n"
            "                           : respective angles and offsets in the docfile\n"
