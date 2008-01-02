@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     int                         c, iter, volno, converged = 0;
     double                      LL, sumw_allrefs, convv, sumcorr, wsum_sigma_noise, wsum_sigma_offset;
     vector<double>              conv;
-    vector<Matrix2D<double> >   wsum_Mref,;
+    vector<Matrix2D<double> >   wsum_Mref;
     vector<double>              sumw, sumw_cv, sumw_mirror;
     DocFile                     DFo;
 
