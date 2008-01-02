@@ -32,13 +32,15 @@ int main(int argc, char **argv)
     ;
     double                      LL, sumw_allrefs, convv, sumcorr, wsum_sigma_noise, wsum_sigma_offset;
     vector<double>              conv;
-    vector<Matrix2D<double> >   wsum_Mref, wsum_ctfMref, Mwsum_sigma2;
+    vector<Matrix2D<double> >   wsum_Mref;
     vector<double>              sumw, sumw_cv, sumw_mirror;
-    Matrix1D<double>            spectral_signal;
     DocFile                     DFo;
 
     Prog_Refine3d_prm           prm;
     Prog_MLalign2D_prm          ML2D_prm;
+
+    // Set to false for ML3D
+    prm.fourier_mode = false;
 
     // Get input parameters
     try
@@ -64,7 +66,6 @@ int main(int argc, char **argv)
         // Project volume and read lots of stuff into memory
         prm.project_reference_volume(ML2D_prm.SFr);
         ML2D_prm.produce_Side_info();
-        if (ML2D_prm.fourier_mode) ML2D_prm.estimate_initial_sigma2();
         ML2D_prm.produce_Side_info2(prm.Nvols);
         ML2D_prm.show(true);
 
@@ -76,8 +77,7 @@ int main(int argc, char **argv)
     catch (Xmipp_error XE)
     {
         cout << XE;
-        if (prm.fourier_mode) prm.MLF_usage();
-        else prm.usage();
+        prm.usage();
         exit(0);
     }
 
@@ -106,16 +106,15 @@ int main(int argc, char **argv)
 
             // Integrate over all images
             ML2D_prm.ML_sum_over_all_images(ML2D_prm.SF, ML2D_prm.Iref, iter,
-                                            LL, sumcorr, DFo, wsum_Mref, wsum_ctfMref,
-                                            wsum_sigma_noise, Mwsum_sigma2,
-                                            wsum_sigma_offset, sumw, sumw_mirror);
+                                            LL, sumcorr, DFo, wsum_Mref, 
+                                            wsum_sigma_noise, wsum_sigma_offset, 
+					    sumw, sumw_mirror);
 
             // Update model parameters
-            ML2D_prm.update_parameters(wsum_Mref, wsum_ctfMref,
-                                       wsum_sigma_noise, Mwsum_sigma2,
-                                       wsum_sigma_offset, sumw,
-                                       sumw_mirror, sumcorr, sumw_allrefs,
-                                       spectral_signal);
+            ML2D_prm.update_parameters(wsum_Mref, 
+                                       wsum_sigma_noise, wsum_sigma_offset, 
+				       sumw, sumw_mirror, 
+				       sumcorr, sumw_allrefs);
 
             // Write intermediate output files
             ML2D_prm.write_output_files(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
@@ -126,32 +125,15 @@ int main(int argc, char **argv)
 	    if (prm.skip_reconstruction)
 		exit(1);
 
-            // Write noise images to disc
-            if (ML2D_prm.fourier_mode) prm.make_noise_images(ML2D_prm.Iref);
-
             // Reconstruct new volumes from the reference images
             for (volno = 0; volno < prm.Nvols; volno++)
                 prm.reconstruction(argc, argv, iter, volno, 0);
-            if (ML2D_prm.fourier_mode)
-            {
-                prm.make_noise_images(ML2D_prm.Iref);
-                for (volno = 0; volno < prm.Nvols; volno++)
-                    prm.reconstruction(argc, argv, iter, volno, 1);
-            }
 
             // Update the reference volume selection file
             // and post-process the volumes (for -FS also the noise volumes!)
-            prm.remake_SFvol(iter, false, ML2D_prm.fourier_mode);
+            prm.remake_SFvol(iter, false, false);
             prm.post_process_volumes(argc, argv);
             prm.remake_SFvol(iter, false, false);
-
-            // Calculate 3D-SSNR and new Wiener filters
-            if (ML2D_prm.fourier_mode)
-            {
-                prm.calculate_3DSSNR(spectral_signal, iter);
-                if (!ML2D_prm.do_divide_ctf)
-		    ML2D_prm.calculate_wiener_defocus_series(spectral_signal, iter);
-            }
 
             // Check convergence
             if (prm.check_convergence(iter))
@@ -186,8 +168,7 @@ int main(int argc, char **argv)
     catch (Xmipp_error XE)
     {
         cout << XE;
-        if (prm.fourier_mode) prm.MLF_usage();
-        else prm.usage();
+        prm.usage();
         exit(0);
     }
 

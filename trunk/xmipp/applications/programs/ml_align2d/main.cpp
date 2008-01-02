@@ -33,18 +33,14 @@ int main(int argc, char **argv)
     bool converged;
     vector<double> conv;
     double aux, wsum_sigma_noise, wsum_sigma_offset;
-    vector<Matrix2D<double > > wsum_Mref, wsum_ctfMref;
+    vector<Matrix2D<double > > wsum_Mref;
     vector<double> sumw, sumw_mirror;
     Matrix2D<double> P_phi, Mr2, Maux;
-    vector<Matrix2D<double> > Mwsum_sigma2;
     FileName fn_img, fn_tmp;
-    Matrix1D<double> oneline(0), spectral_signal;
+    Matrix1D<double> oneline(0);
     DocFile DFo;
 
     Prog_MLalign2D_prm prm;
-
-    // Set to true for MLF!
-    prm.fourier_mode = false;
 
     // Get input parameters
     try
@@ -52,8 +48,6 @@ int main(int argc, char **argv)
         prm.read(argc, argv);
         prm.produce_Side_info();
         prm.show();
-
-        if (prm.fourier_mode) prm.estimate_initial_sigma2();
 
         if (prm.fn_ref == "")
         {
@@ -73,8 +67,7 @@ int main(int argc, char **argv)
     catch (Xmipp_error XE)
     {
         cout << XE;
-        if (prm.fourier_mode) prm.MLF_usage();
-        else prm.usage();
+        prm.usage();
         exit(0);
     }
 
@@ -102,16 +95,15 @@ int main(int argc, char **argv)
 
             // Integrate over all images
             prm.ML_sum_over_all_images(prm.SF, prm.Iref, iter,
-                                       LL, sumcorr, DFo, wsum_Mref, wsum_ctfMref,
-                                       wsum_sigma_noise, Mwsum_sigma2,
-                                       wsum_sigma_offset, sumw, sumw_mirror);
+                                       LL, sumcorr, DFo, wsum_Mref,
+                                       wsum_sigma_noise, wsum_sigma_offset, 
+				       sumw, sumw_mirror);
 
             // Update model parameters
-            prm.update_parameters(wsum_Mref, wsum_ctfMref,
-                                  wsum_sigma_noise, Mwsum_sigma2,
-                                  wsum_sigma_offset, sumw,
-                                  sumw_mirror, sumcorr, sumw_allrefs,
-                                  spectral_signal);
+            prm.update_parameters(wsum_Mref, 
+                                  wsum_sigma_noise, wsum_sigma_offset, 
+				  sumw, sumw_mirror, 
+				  sumcorr, sumw_allrefs);
 
             // Check convergence
             converged = prm.check_convergence(conv);
@@ -119,10 +111,6 @@ int main(int argc, char **argv)
             if (prm.write_intermediate)
                 prm.write_output_files(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
             else prm.output_to_screen(iter, sumcorr, LL);
-
-            // Calculate new wiener filters
-            if (prm.fourier_mode && !prm.do_divide_ctf) 
-		prm.calculate_wiener_defocus_series(spectral_signal, iter);
 
             if (converged)
             {
@@ -146,8 +134,7 @@ int main(int argc, char **argv)
     catch (Xmipp_error XE)
     {
         cout << XE;
-        if (prm.fourier_mode) prm.MLF_usage();
-        else prm.usage();
+        prm.usage();
         exit(0);
     }
 

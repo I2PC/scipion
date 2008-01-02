@@ -36,13 +36,11 @@ int main(int argc, char **argv)
     double LL, sumw_allrefs, convv, sumcorr;
     vector<double> conv;
     double aux, wsum_sigma_noise, wsum_sigma_offset;
-    vector<Matrix2D<double > > wsum_Mref, wsum_ctfMref;
+    vector<Matrix2D<double > > wsum_Mref;
     vector<double> sumw, sumw_mirror;
     Matrix2D<double> P_phi, Mr2, Maux, Maux2;
-    vector<Matrix2D<double> > Mwsum_sigma2;
-    vector<Matrix1D<double> > spectral_snr;
     FileName fn_img, fn_tmp;
-    Matrix1D<double> oneline(0), spectral_signal;
+    Matrix1D<double> oneline(0);
     DocFile DFo;
     // For parallelization
     int rank, size, num_img_tot;
@@ -70,8 +68,6 @@ int main(int argc, char **argv)
 
         // Some output to screen
         if (rank == 0) prm.show();
-
-        if (prm.fourier_mode && rank == 0) prm.estimate_initial_sigma2();
 
         // Create references from random subset averages, or read them from selfile
         if (prm.fn_ref == "")
@@ -109,8 +105,7 @@ int main(int argc, char **argv)
         if (rank == 0)
         {
             cout << XE;
-            if (prm.fourier_mode) prm.MLF_usage();
-            else prm.usage();
+            prm.usage();
         }
         MPI_Finalize();
         exit(1);
@@ -144,9 +139,9 @@ int main(int argc, char **argv)
 
             // Integrate over all images
             prm.ML_sum_over_all_images(prm.SF, prm.Iref, iter,
-                                       LL, sumcorr, DFo, wsum_Mref, wsum_ctfMref,
-                                       wsum_sigma_noise, Mwsum_sigma2,
-                                       wsum_sigma_offset, sumw, sumw_mirror);
+                                       LL, sumcorr, DFo, wsum_Mref,
+                                       wsum_sigma_noise, wsum_sigma_offset, 
+				       sumw, sumw_mirror);
 
             // Here MPI_allreduce of all wsums,LL and sumcorr !!!
             MPI_Allreduce(&LL, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -167,28 +162,12 @@ int main(int argc, char **argv)
                 MPI_Allreduce(&sumw_mirror[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 sumw_mirror[refno] = aux;
             }
-            if (prm.fourier_mode)
-            {
-                for (int ifocus = 0;ifocus < prm.nr_focus;ifocus++)
-                {
-                    MPI_Allreduce(MULTIDIM_ARRAY(Mwsum_sigma2[ifocus]), MULTIDIM_ARRAY(Maux),
-                                  MULTIDIM_SIZE(Mwsum_sigma2[ifocus]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                    Mwsum_sigma2[ifocus] = Maux;
-                }
-                for (int refno = 0;refno < prm.n_ref; refno++)
-                {
-                    MPI_Allreduce(MULTIDIM_ARRAY(wsum_ctfMref[refno]), MULTIDIM_ARRAY(Maux),
-                                  MULTIDIM_SIZE(wsum_ctfMref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                    wsum_ctfMref[refno] = Maux;
-                }
-            }
 
             // Update model parameters
-            prm.update_parameters(wsum_Mref, wsum_ctfMref,
-                                  wsum_sigma_noise, Mwsum_sigma2,
-                                  wsum_sigma_offset, sumw,
-                                  sumw_mirror, sumcorr, sumw_allrefs,
-                                  spectral_signal);
+            prm.update_parameters(wsum_Mref, 
+                                  wsum_sigma_noise, wsum_sigma_offset, 
+				  sumw, sumw_mirror, 
+				  sumcorr, sumw_allrefs);
 
             // Check convergence
             converged = prm.check_convergence(conv);
@@ -227,10 +206,6 @@ int main(int argc, char **argv)
             }
             MPI_Barrier(MPI_COMM_WORLD);
 
-            // Calculate new wiener filters
-            if (prm.fourier_mode && !prm.do_divide_ctf) 
-		prm.calculate_wiener_defocus_series(spectral_signal, iter);
-
             if (converged)
             {
                 if (prm.verb > 0) cerr << " Optimization converged!" << endl;
@@ -248,8 +223,7 @@ int main(int argc, char **argv)
         if (rank == 0)
         {
             cout << XE;
-            if (prm.fourier_mode) prm.MLF_usage();
-            else prm.usage();
+            prm.usage();
         }
         MPI_Finalize();
         exit(1);

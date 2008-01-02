@@ -33,9 +33,8 @@ int main(int argc, char **argv)
     int                         c, iter, volno, converged = 0;
     double                      LL, sumw_allrefs, convv, sumcorr, wsum_sigma_noise, wsum_sigma_offset;
     vector<double>              conv;
-    vector<Matrix2D<double> >   wsum_Mref, wsum_ctfMref, Mwsum_sigma2;
+    vector<Matrix2D<double> >   wsum_Mref,;
     vector<double>              sumw, sumw_cv, sumw_mirror;
-    Matrix1D<double>            spectral_signal;
     DocFile                     DFo;
 
     // For parallelization
@@ -47,6 +46,9 @@ int main(int argc, char **argv)
 
     Prog_Refine3d_prm           prm;
     Prog_MLalign2D_prm          ML2D_prm;
+
+    // Set to false for ML3D
+    prm.fourier_mode = false;
 
     // Init Parallel interface
     MPI_Init(&argc, &argv);
@@ -86,8 +88,6 @@ int main(int argc, char **argv)
         // Check that there are enough computing nodes
         if (prm.Nvols > size)
             REPORT_ERROR(1, "mpi_MLrefine3D requires that you use more CPUs than reference volumes");
-        if (ML2D_prm.fourier_mode && 3*prm.Nvols > size)
-            REPORT_ERROR(1, "mpi_mlf_refine3d requires that you use three times more CPUs than reference volumes");
 
         // Project the reference volume
         prm.project_reference_volume(ML2D_prm.SFr, rank);
@@ -95,7 +95,6 @@ int main(int argc, char **argv)
 
         // All nodes produce general side-info
         ML2D_prm.produce_Side_info();
-        if (ML2D_prm.fourier_mode && rank == 0) ML2D_prm.estimate_initial_sigma2();
         MPI_Barrier(MPI_COMM_WORLD);
 
         // Select only relevant part of selfile for this rank
@@ -114,8 +113,7 @@ int main(int argc, char **argv)
         if (rank == 0)
         {
             cout << XE;
-            if (prm.fourier_mode) prm.MLF_usage();
-            else prm.usage();
+            prm.usage();
         }
         MPI_Finalize();
         exit(1);
@@ -155,9 +153,9 @@ int main(int argc, char **argv)
 
             // Integrate over all images
             ML2D_prm.ML_sum_over_all_images(ML2D_prm.SF, ML2D_prm.Iref, iter,
-                                            LL, sumcorr, DFo, wsum_Mref, wsum_ctfMref,
-                                            wsum_sigma_noise, Mwsum_sigma2,
-                                            wsum_sigma_offset, sumw, sumw_mirror);
+                                            LL, sumcorr, DFo, wsum_Mref,
+                                            wsum_sigma_noise, wsum_sigma_offset, 
+					    sumw, sumw_mirror);
 
             // Here MPI_allreduce of all weighted sums, LL, etc.
             // All nodes need the answer to calculate internally
@@ -170,21 +168,6 @@ int main(int argc, char **argv)
             wsum_sigma_noise = aux;
             MPI_Allreduce(&wsum_sigma_offset, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             wsum_sigma_offset = aux;
-            if (ML2D_prm.fourier_mode)
-            {
-                for (int ifocus = 0;ifocus < ML2D_prm.nr_focus;ifocus++)
-                {
-                    MPI_Allreduce(MULTIDIM_ARRAY(Mwsum_sigma2[ifocus]), MULTIDIM_ARRAY(Maux),
-                                  MULTIDIM_SIZE(Mwsum_sigma2[ifocus]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                    Mwsum_sigma2[ifocus] = Maux;
-                }
-                for (int refno = 0;refno < ML2D_prm.n_ref; refno++)
-                {
-                    MPI_Allreduce(MULTIDIM_ARRAY(wsum_ctfMref[refno]), MULTIDIM_ARRAY(Maux),
-                                  MULTIDIM_SIZE(wsum_ctfMref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                    wsum_ctfMref[refno] = Maux;
-                }
-            }
             for (int refno = 0;refno < ML2D_prm.n_ref; refno++)
             {
                 MPI_Allreduce(MULTIDIM_ARRAY(wsum_Mref[refno]), MULTIDIM_ARRAY(Maux),
@@ -197,11 +180,10 @@ int main(int argc, char **argv)
             }
 
             // Update model parameters
-            ML2D_prm.update_parameters(wsum_Mref, wsum_ctfMref,
-                                       wsum_sigma_noise, Mwsum_sigma2,
-                                       wsum_sigma_offset, sumw,
-                                       sumw_mirror, sumcorr, sumw_allrefs,
-                                       spectral_signal);
+            ML2D_prm.update_parameters(wsum_Mref, 
+                                       wsum_sigma_noise, wsum_sigma_offset, 
+				       sumw, sumw_mirror, 
+				       sumcorr, sumw_allrefs);
 
             // All nodes write out temporary DFo
             fn_tmp.compose(prm.fn_root, rank, "tmpdoc");
@@ -224,8 +206,6 @@ int main(int argc, char **argv)
                 ML2D_prm.write_output_files(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
                 prm.concatenate_selfiles(iter);
 
-                // Write noise images to disc
-                if (ML2D_prm.fourier_mode) prm.make_noise_images(ML2D_prm.Iref);
             }
             MPI_Barrier(MPI_COMM_WORLD);
 
@@ -235,12 +215,6 @@ int main(int argc, char **argv)
             if (rank < prm.Nvols)
                 // new reference reconstruction
                 prm.reconstruction(argc, argv, iter, rank, 0);
-            else if (ML2D_prm.fourier_mode && rank >= prm.Nvols && rank < 2*prm.Nvols)
-                // noise reconstruction
-                prm.reconstruction(argc, argv, iter, rank % prm.Nvols, 1);
-            else if (ML2D_prm.fourier_mode && rank >= 2*prm.Nvols && rank < 3*prm.Nvols)
-                // ctf-corrupted reconstruction
-                prm.reconstruction(argc, argv, iter, rank % prm.Nvols, 2);
             MPI_Barrier(MPI_COMM_WORLD);
 
             // Only the master does post-processing & convergence check (i.e. sequentially)
@@ -248,11 +222,8 @@ int main(int argc, char **argv)
             {
 
                 // Solvent flattening and/or symmetrization (if requested)
-                prm.remake_SFvol(iter, false, ML2D_prm.fourier_mode);
+                prm.remake_SFvol(iter, false, false);
                 prm.post_process_volumes(argc, argv);
-
-                // Calculate 3D-SSNR
-                if (ML2D_prm.fourier_mode) prm.calculate_3DSSNR(spectral_signal, iter);
 
                 // Check convergence
                 if (prm.check_convergence(iter))
@@ -265,13 +236,9 @@ int main(int argc, char **argv)
 
             // Broadcast new spectral_signal and converged to all nodes
             MPI_Bcast(&converged, 1, MPI_INT, 0, MPI_COMM_WORLD);
-            MPI_Bcast(MULTIDIM_ARRAY(spectral_signal), MULTIDIM_SIZE(spectral_signal),
-                      MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
             // Update filenames in SFvol (now without noise volumes!)
             prm.remake_SFvol(iter, false, false);
-            if (ML2D_prm.fourier_mode && !ML2D_prm.do_divide_ctf)
-                ML2D_prm.calculate_wiener_defocus_series(spectral_signal, iter);
 
             if (!converged && iter + 1 <= prm.Niter)
             {
@@ -302,8 +269,7 @@ int main(int argc, char **argv)
         if (rank == 0)
         {
             cout << XE;
-            if (prm.fourier_mode) prm.MLF_usage();
-            else prm.usage();
+            prm.usage();
         }
         MPI_Finalize();
         exit(1);
