@@ -28,10 +28,6 @@
 void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
 {
 
-    // This flag is set with scripts, so that for the user the
-    // mlf_align2d and the ml_align2d are distinct programs
-    fourier_mode = checkParameter(argc, argv, "-MLF");
-
     // Generate new command line for restart procedure
     cline = "";
     if (checkParameter(argc, argv, "-restart"))
@@ -97,16 +93,8 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     // Read command line
     if (checkParameter(argc, argv, "-more_options"))
     {
-        if (fourier_mode)
-        {
-            MLF_usage();
-            extended_usage();
-        }
-        else
-        {
-            usage();
-            extended_usage();
-        }
+	usage();
+	extended_usage();
     }
     n_ref = textToInteger(getParameter(argc, argv, "-nref", "0"));
     fn_ref = getParameter(argc, argv, "-ref", "");
@@ -138,26 +126,6 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     fn_doc = getParameter(argc, argv, "-doc", "");
     do_ML3D = ML3D;
 
-    // Fourier mode specific stuff
-    if (fourier_mode)
-    {
-        fn_ctfdat = getParameter(argc, argv, "-ctfdat","");
-        fn_root = getParameter(argc, argv, "-o", "mlf2d");
-        search_shift = textToFloat(getParameter(argc, argv, "-search_shift", "3"));
-        lowres_limit = textToInteger(getParameter(argc, argv, "-low", "0"));
-        highres_limit = textToInteger(getParameter(argc, argv, "-high", "9999"));
-        ini_highres_limit = textToInteger(getParameter(argc, argv, "-ini_high", "-1"));
-        phase_flipped = !checkParameter(argc, argv, "-not_phase_flipped");
-        reduce_snr = textToFloat(getParameter(argc, argv, "-reduce_snr", "1"));
-        first_iter_noctf = checkParameter(argc, argv, "-ctf_affected_refs");
-        if (reduce_snr > 1.)
-        {
-            cerr << "WARNING%% With reduce_snr>1 you may overfit the noise!" << endl;
-        }
-	do_include_allfreqs=checkParameter(argc,argv,"-include_allfreqs");
-	do_divide_ctf=checkParameter(argc,argv,"-divide_ctf");
-    }
-
     // Hidden arguments
     do_esthetics = checkParameter(argc, argv, "-esthetics");
     anneal = textToFloat(getParameter(argc, argv, "-anneal", "1"));
@@ -185,15 +153,8 @@ void Prog_MLalign2D_prm::show(bool ML3D)
         {
             cerr << " -----------------------------------------------------------------" << endl;
             cerr << " | Read more about this program in the following publications:   |" << endl;
-            if (fourier_mode)
-            {
-	        cerr << " |  Scheres ea. (2007) Structure, 15, 1167-1177                  |" << endl;
-            }
-            else
-            {
-                cerr << " |  Scheres ea. (2005) J.Mol.Biol. 348(1), 139-49                |" << endl;
-                cerr << " |  Scheres ea. (2005) Bioinform. 21(suppl.2), ii243-4   (-fast) |" << endl;
-            }
+	    cerr << " |  Scheres ea. (2005) J.Mol.Biol. 348(1), 139-49                |" << endl;
+	    cerr << " |  Scheres ea. (2005) Bioinform. 21(suppl.2), ii243-4   (-fast) |" << endl;
             cerr << " |                                                               |" << endl;
             cerr << " |  *** Please cite them if this program is of use to you! ***   |" << endl;
             cerr << " -----------------------------------------------------------------" << endl;
@@ -206,8 +167,8 @@ void Prog_MLalign2D_prm::show(bool ML3D)
             cerr << "  Number of references:   : " << n_ref << endl;
         cerr << "  Output rootname         : " << fn_root << endl;
         cerr << "  Stopping criterium      : " << eps << endl;
-        if (!fourier_mode) cerr << "  initial sigma noise     : " << sigma_noise << endl;
-        if (!fourier_mode) cerr << "  initial sigma offset    : " << sigma_offset << endl;
+        cerr << "  initial sigma noise     : " << sigma_noise << endl;
+        cerr << "  initial sigma offset    : " << sigma_offset << endl;
         cerr << "  Psi sampling interval   : " << psi_step << endl;
         if (do_mirror)
             cerr << "  Check mirrors           : true" << endl;
@@ -215,21 +176,11 @@ void Prog_MLalign2D_prm::show(bool ML3D)
             cerr << "  Check mirrors           : false" << endl;
         if (fn_frac != "")
             cerr << "  Initial model fractions : " << fn_frac << endl;
-        if (fourier_mode)
-        {
-            cerr << "  -> Use a coloured noise model and CTF correction" << endl;
-	    FOR_ALL_DEFOCUS_GROUPS()
-	    {
-		cerr << "    + defocus group "<<ifocus+1<<" contains "<<count_defocus[ifocus]<<" images"<<endl;
-	    }
-            if (reduce_snr < 1.)
-                cerr << "    + Multiply estimated SNR by " << reduce_snr << endl;
-        }
         if (maxCC_rather_than_ML)
         {
             cerr << "  -> Use a maxCC instead of a maximum likelihood target." << endl;
         }
-        if (fast_mode || fourier_mode)
+        if (fast_mode)
         {
             cerr << "  -> Use fast, reduced search-space approach with C = " << C_fast << endl;
             if (zero_offsets)
@@ -283,27 +234,7 @@ void Prog_MLalign2D_prm::usage()
     cerr << "   OR -ref <selfile/image>         OR selfile with initial references/single reference image \n";
     cerr << " [ -o <rootname> ]             : Output rootname (default = \"ml2d\")\n";
     cerr << " [ -mirror ]                   : Also check mirror image of each reference \n";
-    if (!fourier_mode)
-	cerr << " [ -fast ]                     : Use pre-centered images to pre-calculate significant orientations\n";
-    cerr << " [ -more_options ]             : Show all possible input parameters \n";
-}
-
-// Fourier mode usage ==============================================================
-void Prog_MLalign2D_prm::MLF_usage()
-{
-    cerr << "Usage:  mlf_align2d [options] " << endl;
-    cerr << "   -i <selfile>                : Selfile with all input images \n";
-    cerr << "   -ctfdat <ctfdatfile>        : Two-column ASCII file with filenames and CTF parameter files of all images \n";
-    cerr << "   -ref <selfile/image>        : Selfile with initial references/single reference image \n";
-    cerr << "      OR -nref <int>               OR number of references to generate automatically (bias-free)\n";
-    cerr << " [ -o <rootname> ]             : Output rootname (default = \"mlf2d\")\n";
-    cerr << " [ -mirror ]                   : Also check mirror image of each reference \n";
-    cerr << " [ -search_shift <float=3>]    : Limited translational searches (in pixels) \n";
-    cerr << " [ -reduce_snr <factor=1> ]    : Use a value smaller than one to decrease the estimated SSNRs \n";
-    cerr << " [ -not_phase_flipped ]        : Use this if the experimental images have not been phase flipped \n";
-    cerr << " [ -ctf_affected_refs ]        : Use this if the references (-ref) are not CTF-deconvoluted \n";
-    cerr << " [ -low <pix=0> ]              : Exclude lowest freq. Fourier pixels from P-calculations (in pixels) \n";
-    cerr << " [ -ini_high <pix=0> ]         : Exclude highest freq. Fourier pixels during first iteration (in pixels) \n";
+    cerr << " [ -fast ]                     : Use pre-centered images to pre-calculate significant orientations\n";
     cerr << " [ -more_options ]             : Show all possible input parameters \n";
 }
 
@@ -314,8 +245,7 @@ void Prog_MLalign2D_prm::extended_usage(bool ML3D)
     cerr << " [ -eps <float=5e-5> ]         : Stopping criterium \n";
     cerr << " [ -iter <int=100> ]           : Maximum number of iterations to perform \n";
     cerr << " [ -psi_step <float=5> ]       : In-plane rotation sampling interval [deg]\n";
-    if (!fourier_mode)
-        cerr << " [ -noise <float=1> ]          : Expected standard deviation for pixel noise \n";
+    cerr << " [ -noise <float=1> ]          : Expected standard deviation for pixel noise \n";
     cerr << " [ -offset <float=3> ]         : Expected standard deviation for origin offset [pix]\n";
     cerr << " [ -frac <docfile=\"\"> ]        : Docfile with expected model fractions (default: even distr.)\n";
     cerr << " [ -C <double=1e-12> ]         : Significance criterion for fast approach \n";
@@ -326,10 +256,8 @@ void Prog_MLalign2D_prm::extended_usage(bool ML3D)
     cerr << " [ -fix_fractions]             : Do not re-estimate the model fractions \n";
     cerr << " [ -dont_output_docfile ]      : Do not write out docfile with most likely angles & translations \n";
     cerr << " [ -dont_output_selfiles ]     : Do not write out selfiles with most likely class assignments \n";
-    if (!fourier_mode)
-        cerr << " [ -maxCC ]                    : Use maximum cross-correlation instead of maximum likelihood target \n";
-    if (!fourier_mode)
-        cerr << " [ -search_shift <float=999>]  : Limit of translational search [pix] (does NOT use FFT) \n";
+    cerr << " [ -maxCC ]                    : Use maximum cross-correlation instead of maximum likelihood target \n";
+    cerr << " [ -search_shift <float=999>]  : Limit of translational search [pix] (does NOT use FFT) \n";
     cerr << " [ -max_shift <float=dim/4>]   : Dont trust shifts larger than max_shift \n";
     cerr << " [ -doc <docfile=\"\"> ]         : Read initial angles and offsets from docfile \n";
     cerr << " [ -write_offsets ]            : Save memory by writing optimal offsets to disc (disc-access intensive) \n";
@@ -346,12 +274,11 @@ void Prog_MLalign2D_prm::produce_Side_info()
     FileName                    fn_img, fn_tmp, fn_base, fn_tmp2;
     ImageXmipp                  img;
     FourierImageXmipp           fourimg;
-    XmippCTF                    ctf;
     SelLine                     SL;
     SelFile                     SFtmp, SFpart;
-    Matrix1D<double>            offsets(2), dum, rmean_ctf;
+    Matrix1D<double>            offsets(2), dum;
     Matrix2D<double>            A(3, 3), Maux, Maux2;
-    Matrix2D<complex<double> >  Faux, ctfmask;
+    Matrix2D<complex<double> >  Faux;
     Matrix1D<int>               center(2), radial_count;
     vector<int>                 tmppointp, tmppointp_nolow, tmppointi, tmppointj;
     bool                        uniqname, nomoredirs;
@@ -386,7 +313,6 @@ void Prog_MLalign2D_prm::produce_Side_info()
     else
     {
         do_generate_refs = true;
-        first_iter_noctf = true;
     }
 
     // Check deterministic annealing parameters
@@ -512,147 +438,6 @@ void Prog_MLalign2D_prm::produce_Side_info()
     // Set & check max_shift
     if (max_shift < 0) max_shift = dim / 4.;
 
-    // Fourier-mode stuff
-    if (fourier_mode)
-    {
-	FileName fnt_img, fnt_ctf, fnt;
-	vector<FileName> all_fn_ctfs;
-	bool found, is_unique;
-	int iifocus;
-
-        // For fourier_mode: read ctfdat
-        // and determine the number of CTF groups
-	nr_focus = 0;
-        count_defocus.clear();
-	all_fn_ctfs.clear();
-	ctfdat.read(fn_ctfdat);
-	ctfdat.goFirstLine();
-	while (!ctfdat.eof())
-	{
-	    ctfdat.getCurrentLine(fnt_img,fnt_ctf);
-	    is_unique=true;
-	    for (int i = 0; i< all_fn_ctfs.size(); i++)
-	    {
-		if (fnt_ctf == all_fn_ctfs[i])
-		{
-		    is_unique=false;
-		    break;
-		}
-	    }
-	    if (is_unique)
-	    {
-		all_fn_ctfs.push_back(fnt_ctf);
-		count_defocus.push_back(0);
-		nr_focus++;
-	    }
-	    ctfdat.nextLine();
-	}
-	
-        // Fill count_defocus vectors and add CTF-group labels to selfile
-	SF.go_beginning();
-	SFtmp.clear();
-	while (!SF.eof())
-	{
-	    SL=SF.current();
-	    fnt=SF.NextImg();
-	    // Find which CTF group it belongs to
-	    found = false;
-	    ctfdat.goFirstLine();
-	    while (!ctfdat.eof())
-	    {
-		ctfdat.getCurrentLine(fnt_img,fnt_ctf);
-		if (fnt_img == fnt)
-		{
-		    found = true;
-		    for (iifocus = 0; iifocus< all_fn_ctfs.size(); iifocus++)
-			if (fnt_ctf == all_fn_ctfs[iifocus])
-			    break;
-		    break;
-		}
-		ctfdat.nextLine();
-	    }
-	    if (!found)
-		REPORT_ERROR(1, "Prog_MLalign2D_prm: Did not find image "+fnt+" in the CTFdat file");
-	    count_defocus[iifocus]++;
-	    SL.set_number(iifocus + 1);
-	    SFtmp.insert(SL);
-	}
-	SF=SFtmp;
-
-	// Check the number of images in each defocus group
-	// and read CTF-parameters from disc
-        Vctf.clear();
-        Vdec.clear();
-        Vsig.clear();
-	FOR_ALL_DEFOCUS_GROUPS()
-	{
-	    if (count_defocus[ifocus] < 50 && verb > 0)
-		cerr << "WARNING%% CTF group " << ifocus + 1 << " contains less than 50 images!" << endl;
-
-	    Vctf.push_back(dum);
-	    Vdec.push_back(dum);
-	    Vsig.push_back(dum);
-	    ctf.read(all_fn_ctfs[ifocus]);
-	    if (ABS(ctf.DeltafV - ctf.DeltafU) >1.) 
-	    {
-		REPORT_ERROR(1, "Prog_MLalign2D-ERROR%% Only non-astigmatic CTFs are allowed!");
-	    }
-	    ctf.K = 1.;
-	    ctf.enable_CTF = true;
-	    ctf.Produce_Side_Info();
-	    ctf.Generate_CTF(dim, dim, ctfmask);
-	    if (ifocus == 0)
-	    {
-		sampling = ctf.Tm;
-		Q0 = ctf.Q0;
-	    }
-	    else
-	    {
-		if (sampling != ctf.Tm)
-		    REPORT_ERROR(1, "Prog_MLalign2D-ERROR%% Different sampling rates in CTF parameter files!");
-		if (Q0 != ctf.Q0 )
-		    REPORT_ERROR(1, "Prog_MLalign2D-ERROR%% Avoid different Q0 values in the CTF parameter files!");
-	    }
-	    Maux.resize(dim, dim);
-	    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Maux)
-	    {
-		if (phase_flipped) dMij(Maux, i, j) = fabs(dMij(ctfmask, i, j).real());
-		else dMij(Maux, i, j) = dMij(ctfmask, i, j).real();
-	    }
-	    CenterFFT(Maux, true);
-	    Maux.setXmippOrigin();
-	    center.initZeros();
-	    rmean_ctf.initZeros();
-	    radialAverage(Maux, center, rmean_ctf, radial_count, true);
-	    Vctf[ifocus].resize(hdim);
-	    for (int irr = 0; irr < hdim; irr++)
-	    {
-		dVi(Vctf[ifocus], irr) = dVi(rmean_ctf, irr);
-	    }
-	    Vdec[ifocus].resize(Vctf[ifocus]);
-	    Vsig[ifocus].resize(Vctf[ifocus]);
-	}
-
-        // Check that search_shift is set
-        if (search_shift > hdim)
-            REPORT_ERROR(1, (string)"Prog_MLalign2D_prm: coloured noise model (-FS) requires limited search_shift!");
-
-        // Get a resolution pointer in Fourier-space
-        Mresol.resize(dim, dim);
-        Maux.resize(dim, dim);
-        Maux.setXmippOrigin();
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(Maux)
-        {
-            MAT_ELEM(Maux, i, j) = XMIPP_MIN((double)hdim - 1, sqrt((double)(i * i + j * j)));
-        }
-        CenterFFT(Maux, false);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mresol)
-        {
-            dMij(Mresol, i, j) = ROUND(dMij(Maux, i, j));
-        }
-
-    } //end fourier_mode
-
     // Set limit_rot & limit_trans
     if (search_rot < 180.) limit_rot = true;
     else limit_rot = false;
@@ -681,382 +466,6 @@ void Prog_MLalign2D_prm::produce_Side_info()
 
 
 }
-
-// estimate initial noise in fourier_mode
-void Prog_MLalign2D_prm::estimate_initial_sigma2()
-{
-
-    Matrix2D<double>            Maux, Mallave;
-    Matrix2D<complex<double> >  Fimg, Faux, Fave;
-    Matrix1D<double>            rmean_noise, rmean_signal, rmean_avesignal;
-    vector<Matrix2D<double> >   Msigma2, Mave;
-    Matrix1D<int>               center(2), radial_count;
-    double                      rr;
-    ImageXmipp                  img;
-    FileName                    fn_tmp;
-    SelLine                     SL;
-    int                         focus, c, nn;
-    ofstream                    fh;
-
-    center.initZeros();
-
-    // For first iteration only: calculate sigma2 (& spectral noise) from power
-    // spectra of all images and subtract power spectrum of average image
-    // (to take away low-res frequencies where the signal dominates!)
-    if (istart == 1)
-    {
-
-        if (verb > 0) cerr << "--> Estimating initial noise models from average power spectra ..." << endl;
-        if (verb > 0)
-        {
-            nn = SF.ImgNo();
-            init_progress_bar(nn);
-            c = XMIPP_MAX(1, nn / 60);
-        }
-        Msigma2.clear();
-        Msigma2.resize(nr_focus);
-        Mave.clear();
-        Mave.resize(nr_focus);
-        FOR_ALL_DEFOCUS_GROUPS()
-        {
-            Msigma2[ifocus].initZeros(dim, dim);
-            Msigma2[ifocus].setXmippOrigin();
-            Mave[ifocus].initZeros(dim, dim);
-            Mave[ifocus].setXmippOrigin();
-        }
-        Maux.initZeros(dim, dim);
-        SF.go_beginning();
-        int imgno = 0;
-        while (!SF.eof())
-        {
-            SL = SF.current();
-            focus = SL.get_number() - 1;
-            img.read(SF.NextImg(), false, false, false, false);
-            img().setXmippOrigin();
-            FourierTransform(img(), Fimg);
-            FFT_magnitude(Fimg, Maux);
-            Maux.setXmippOrigin();
-            Maux *= Maux;
-            Msigma2[focus] += Maux;
-            Mave[focus] += img();
-            imgno++;
-            if (verb > 0) if (imgno % c == 0) progress_bar(imgno);
-        }
-        if (verb > 0) progress_bar(nn);
-
-        // Calculate Vsig vectors and write them to disc
-        FOR_ALL_DEFOCUS_GROUPS()
-        {
-            Mave[ifocus] /= count_defocus[ifocus];
-            FourierTransform(Mave[ifocus], Fave);
-            FFT_magnitude(Fave, Maux);
-            Maux.setXmippOrigin();
-            Maux *= Maux;
-            CenterFFT(Maux, true);
-            rmean_signal.initZeros();
-            radialAverage(Maux, center, rmean_signal, radial_count, true);
-            CenterFFT(Msigma2[ifocus], true);
-            rmean_noise.initZeros();
-            radialAverage(Msigma2[ifocus], center, rmean_noise, radial_count, true);
-            rmean_noise /= count_defocus[ifocus];
-            // Subtract signal terms
-            // Divide by factor 2 because of the 2D-Gaussian distribution!
-            for (int irr = 0; irr < hdim; irr++)
-            {
-                dVi(Vsig[ifocus], irr) = (dVi(rmean_noise, irr) - dVi(rmean_signal, irr)) / 2.;
-            }
-
-            // write Vsig vector to disc
-            fn_tmp = fn_root + "_it";
-            fn_tmp.compose(fn_tmp, istart - 1, "");
-            fn_tmp += "_sig";
-            if (nr_focus > 1) fn_tmp.compose(fn_tmp, ifocus + 1, "");
-            fn_tmp += ".dat";
-            fh.open((fn_tmp).c_str(), ios::out);
-            if (!fh) REPORT_ERROR(1, (string)"Prog_MLalign2D_prm: Cannot write file: " + fn_tmp);
-            for (int irr = 0; irr < hdim; irr++)
-            {
-                fh << irr << " " << dVi(Vsig[ifocus], irr) << "\n";
-            }
-            fh.close();
-        }
-        Msigma2.clear();
-        Mave.clear();
-    }
-
-
-
-}
-
-void Prog_MLalign2D_prm::calculate_division_ctf()
-{
-    int                        maxres = hdim;
-    bool                       past_first_peak;
-    double                     prev;
-    Matrix2D<double>           Maux;
-    Matrix2D<complex<double> > Faux;
-
-    // Calculate resolution of first zero
-    FOR_ALL_DEFOCUS_GROUPS()
-    {
-	past_first_peak=false;
-	prev=0.;
-        for (int irr = 0; irr < hdim; irr++)
-        {
-	    if (abs(dVi(Vctf[ifocus], irr)) < prev) 
-	    { 
-		past_first_peak = true;
-	    }
-	    prev=abs(dVi(Vctf[ifocus], irr));
-	    if ( past_first_peak && abs(dVi(Vctf[ifocus], irr)) < 0.2 )
-	    {
-		maxres=XMIPP_MIN(maxres,irr);
-		break;
-	    }
-        }
-    }
-    cerr <<" Maximum resolution = "<<maxres<<endl;
-
-    // Now fill the Wiener filter vectors with 1/CTF until maxres
-    // (and zero beyond maxres)
-    FOR_ALL_DEFOCUS_GROUPS()
-    {
-        for (int irr = 0; irr < hdim; irr++)
-        {
-	    if (irr <= maxres)
-	    {
-		dVi(Vdec[ifocus], irr) = 1. / dVi(Vctf[ifocus], irr);
-	    }
-	    else
-	    {
-		dVi(Vdec[ifocus], irr) = 0.;
-            }
-        }
-    }
-    
-    // Fill the pointer vectors
-    Maux.initZeros(dim, dim);
-    Maux.setXmippOrigin();
-    FourierTransformHalf(Maux, Faux);
-    pointer_ctf.clear();
-    pointer_sigctf.clear();
-    pointer_i.clear();
-    pointer_j.clear();
-    nr_pointer_ctf = 0;
-    nr_pointer_sigctf = 0;
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
-    {
-        int resol = dMij(Mresol, i, j);
-	if (// exclude pixels above highres_limit
-            resol <= maxres
-            // exclude first half row because of FourierTransformHalf
-            && !(i == 0 && j > hdim)
-        )
-        {
-            pointer_ctf.push_back(i*XSIZE(Maux) + j);
-            pointer_i.push_back(i);
-            pointer_j.push_back(j);
-            nr_pointer_ctf++;
-
-            // For probability calculations
-            if (// exclude pixels below lowres_limit
-                resol > lowres_limit
-                // exclude pixels above maxres
-                && resol <= maxres)
-            {
-                pointer_sigctf.push_back(i*XSIZE(Maux) + j);
-                nr_pointer_sigctf++;
-            }
-
-        }
-    }
-
-}
-
-void Prog_MLalign2D_prm::calculate_wiener_defocus_series(Matrix1D<double> &spectral_signal,
-        int iter)
-{
-
-    // Use formula 2.32b on p60 from Frank's book 2nd ed.,
-    // Assume that Vctf, Vdec and Vsig exist (with their right sizes)
-    // and that Vctf, Vsig are already filled with the right values
-    vector<Matrix1D<double> >  Vsnr;
-    Matrix1D<double>           Vzero, Vdenom, Vavgctf2;
-    Matrix2D<double>           Maux;
-    Matrix2D<complex<double> > Faux;
-    ofstream                   fh;
-    int                        maxres = 0;
-    double                     noise, ssnr, current_highres_limit;
-    FileName                   fn_base, fn_tmp;
-
-    // Pre-calculate average CTF^2 and initialize Vsnr
-    Vavgctf2.initZeros(hdim);
-    Vzero.initZeros(hdim);
-    FOR_ALL_DEFOCUS_GROUPS()
-    {
-        Vsnr.push_back(Vzero);
-        for (int irr = 0; irr < hdim; irr++)
-        {
-            dVi(Vavgctf2, irr) += dVi(Vctf[ifocus], irr) * dVi(Vctf[ifocus], irr) * count_defocus[ifocus];
-        }
-    }
-    Vavgctf2 /= nr_exp_images;
-
-    // Calculate SSNR for all defocus groups
-    // For each group the spectral noise is estimated via (2*Vsig)/(count_defocus-1)
-    // The spectral signal is not split into defocus groups
-    // Therefore, affect the average spectral_signal for each defocu
-    // group with its CTF^2 and divide by the average CTF^2
-    FOR_ALL_DEFOCUS_GROUPS()
-    {
-	for (int irr = 0; irr < hdim; irr++)
-	{
-	    noise = 2. * dVi(Vsig[ifocus], irr) * (double)count_defocus[ifocus];
-	    noise /= (double)(count_defocus[ifocus] - 1);
-	    if (noise < 1e-20) dVi(Vsnr[ifocus], irr) = 0.;
-	    else
-	    {
-		if (dVi(Vavgctf2, irr) > 0.)
-		{
-		    dVi(Vsnr[ifocus], irr) = reduce_snr * dVi(Vctf[ifocus], irr) * dVi(Vctf[ifocus], irr) *
-			dVi(spectral_signal, irr) / (dVi(Vavgctf2, irr) * noise);
-		}
-		else dVi(Vsnr[ifocus], irr) = 0.;
-	    }
-	    // For start from already CTF-deconvoluted references:
-	    if ((iter == istart - 1) && !first_iter_noctf)
-		dVi(Vsnr[ifocus], irr) *= dVi(Vavgctf2, irr);
-	    // Take ini_highres_limit into account
-	    if ((iter == istart - 1) && (ini_highres_limit > 0) && (irr > ini_highres_limit))
-		dVi(Vsnr[ifocus], irr) = 0.;
-	    // Subtract 1 according Unser et al.
-	    dVi(Vsnr[ifocus], irr) = XMIPP_MAX(0., dVi(Vsnr[ifocus], irr) - 1.);
-	    // Prevent spurious high-frequency significant SNRs from random averages
-	    if (iter == 0 && do_generate_refs)
-		dVi(Vsnr[ifocus], irr) = XMIPP_MAX(0., dVi(Vsnr[ifocus], irr) - 2.);
-	    if (dVi(Vsnr[ifocus], irr) > 0. && irr > maxres) maxres = irr;
-	}
-    }
-
-    // Pre-calculate denominator of eq 2.32b of Frank's book (2nd ed.)
-    Vdenom.initZeros(hdim);
-    for (int irr = 0; irr < hdim; irr++)
-    {
-        FOR_ALL_DEFOCUS_GROUPS()
-        {
-            dVi(Vdenom, irr) += count_defocus[ifocus] * dVi(Vsnr[ifocus], irr) *
-                                dVi(Vctf[ifocus], irr) * dVi(Vctf[ifocus], irr);
-        }
-        dVi(Vdenom, irr) += 1.;
-        dVi(Vdenom, irr) /= nr_exp_images;
-    }
-
-    // Calculate Wiener filters
-    FOR_ALL_DEFOCUS_GROUPS()
-    {
-        for (int irr = 0; irr < hdim; irr++)
-        {
-            if (dVi(Vsnr[ifocus], irr) > 0.)
-            {
-                dVi(Vdec[ifocus], irr) = dVi(Vsnr[ifocus], irr) * dVi(Vctf[ifocus], irr) / dVi(Vdenom, irr);
-            }
-            else
-            {
-                dVi(Vdec[ifocus], irr) = 0.;
-            }
-        }
-    }
-
-    // Write Wiener filters and spectral SNR to text files
-    if (verb > 0)
-    {
-        fn_base = fn_root;
-        fn_base += "_it";
-        fn_base.compose(fn_base, iter, "");
-        // Defocus group-specific Wiener filter files
-        FOR_ALL_DEFOCUS_GROUPS()
-        {
-            fn_tmp = fn_base + "_wien";
-            if (nr_focus > 1) fn_tmp.compose(fn_tmp, ifocus + 1, "");
-            fn_tmp += ".txt";
-            fh.open((fn_tmp).c_str(), ios::out);
-            if (!fh)
-                REPORT_ERROR(3008, (string)"Prog_MLalign2D_prm: Cannot write file: " + fn_tmp);
-            fh  << "#  Resol    Wiener       CTF      SSNR    signal     noise " << endl;
-            for (int irr = 0; irr < hdim; irr++)
-            {
-                fh << floatToString((double)irr / (sampling*(double)dim));
-                fh.width(10);
-                fh << floatToString(dVi(Vdec[ifocus], irr));
-                fh.width(10);
-                fh << floatToString(dVi(Vctf[ifocus], irr));
-                fh.width(10);
-                fh << floatToString(XMIPP_MIN(25., dVi(Vsnr[ifocus], irr)));
-                fh.width(10);
-                fh << floatToString(dVi(spectral_signal, irr));
-                fh.width(10);
-                noise = 2. * dVi(Vsig[ifocus], irr) * (double)count_defocus[ifocus];
-                noise /= (double)(count_defocus[ifocus] - 1);
-                fh << floatToString(noise);
-                fh << endl;
-            }
-            fh.close();
-        }
-    }
-
-    // Get the new pointers to all pixels in FourierTransformHalf
-    // Pixel use in probability calculations: pointer_sigctf
-    // Pixel use in weighted sums of images: pointer_ctf
-    // And pointers to the original i and j coordinates
-
-    if (do_include_allfreqs) maxres=hdim;
-    Maux.initZeros(dim, dim);
-    Maux.setXmippOrigin();
-    FourierTransformHalf(Maux, Faux);
-    
-    current_highres_limit = maxres + 5; // hard-code increase_highres_limit to 5
-    current_highres_limit = XMIPP_MIN(current_highres_limit, highres_limit);
-    current_highres_limit = XMIPP_MIN(current_highres_limit, hdim);
-    maxres = XMIPP_MIN(maxres, highres_limit);
-    maxres = XMIPP_MIN(maxres, hdim);
-    pointer_ctf.clear();
-    pointer_sigctf.clear();
-    pointer_i.clear();
-    pointer_j.clear();
-    nr_pointer_ctf = 0;
-    nr_pointer_sigctf = 0;
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
-    {
-        int resol = dMij(Mresol, i, j);
-	if (// exclude pixels above highres_limit
-            resol <= current_highres_limit
-            // exclude first half row because of FourierTransformHalf
-            && !(i == 0 && j > hdim)
-        )
-        {
-            pointer_ctf.push_back(i*XSIZE(Maux) + j);
-            pointer_i.push_back(i);
-            pointer_j.push_back(j);
-            nr_pointer_ctf++;
-            // For probability calculations
-            if (// exclude pixels below lowres_limit
-                resol > lowres_limit
-                // exclude pixels above maxres
-                && resol <= maxres)
-            {
-                pointer_sigctf.push_back(i*XSIZE(Maux) + j);
-                nr_pointer_sigctf++;
-            }
-        }
-    }
-    if (debug>0) 
-    {
-	cerr<<"nr_pointer_ctf= "<<nr_pointer_ctf<<" nr_pointer_sigctf= "<<nr_pointer_sigctf<<endl;
-	cerr<<" lowres_limit= "<<lowres_limit<<" maxres= "<<maxres<<" current_highres_limit= "<<current_highres_limit<<endl;
-    }
-
-}
-
 
 // Generate initial references =============================================
 void Prog_MLalign2D_prm::generate_initial_references()
@@ -1138,7 +547,6 @@ void Prog_MLalign2D_prm::produce_Side_info2(int nr_vols)
         img().setXmippOrigin();
         Iref.push_back(img);
         if (!save_mem3) Iold.push_back(img);
-        if (fourier_mode) Ictf.push_back(img);
         // Default start is all equal model fractions
         alpha_k.push_back((double)1 / SFr.ImgNo());
         Iref[refno].weight() = alpha_k[refno] * (double)nr_exp_images;
@@ -1252,85 +660,6 @@ void Prog_MLalign2D_prm::produce_Side_info2(int nr_vols)
         {
             alpha_k[refno] /= sumfrac;
         }
-    }
-
-    if (fourier_mode)
-    {
-
-        Matrix2D<complex<double> >   Faux;
-        Matrix2D<double>             Maux;
-        Matrix1D<double>             dum, rmean_signal2, spectral_signal;
-        Matrix1D<int>                center(2), radial_count;
-        ifstream                     fh;
-
-        center.initZeros();
-        // Calculate average spectral signal
-        int c = 0;
-        FOR_ALL_MODELS()
-        {
-            if (alpha_k[refno] > 0.)
-            {
-                FourierTransform(Iref[refno](), Faux);
-                FFT_magnitude(Faux, Maux);
-                CenterFFT(Maux, true);
-                Maux *= Maux;
-                Maux *= alpha_k[refno] * (double)nr_exp_images;
-                Maux.setXmippOrigin();
-                rmean_signal2.initZeros();
-                radialAverage(Maux, center, rmean_signal2, radial_count, true);
-                if (c == 0) spectral_signal = rmean_signal2;
-                else spectral_signal += rmean_signal2;
-                c++;
-            }
-        }
-        if (do_ML3D)
-        {
-            // Divide by the number of reference volumes
-            // But I don't know alpha (from 3DSSNR) yet:
-            // Introduce a fudge-factor of 2 to prevent over-estimation ...
-	    // I think this is irrelevant, as the spectral_signal is
-	    // re-calculated in ml_refine3d.cpp
-            spectral_signal /= (double)nr_vols * 2.;
-        }
-        else
-        {
-            // Divide by the number of reference images
-            spectral_signal /= (double)n_ref;
-        }
-
-        // Read in Vsig-vectors with fixed file names
-        FOR_ALL_DEFOCUS_GROUPS()
-        {
-            fn_tmp = fn_root + "_it";
-            fn_tmp.compose(fn_tmp, istart - 1, "");
-            fn_tmp += "_sig";
-            if (nr_focus > 1) fn_tmp.compose(fn_tmp, ifocus + 1, "");
-            fn_tmp += ".dat";
-            fh.open((fn_tmp).c_str(), ios::in);
-            if (!fh) REPORT_ERROR(1, (string)"Prog_MLalign2D_prm: Cannot read file: " + fn_tmp);
-            else
-            {
-                for (int irr = 0; irr < hdim; irr++)
-                {
-                    fh >> idum;
-                    fh >> aux;
-                    if (idum != irr) REPORT_ERROR(1, (string)"Prog_MLalign2D_prm: Wrong format: " + fn_tmp);
-                    dVi(Vsig[ifocus], irr) = aux;
-                }
-            }
-            fh.close();
-        }
-
-	if (do_divide_ctf)
-	{
-	    // Just divide by CTF up till first zero
-	    calculate_division_ctf();
-	}
-	else
-	{
-	    // Calculate all Wiener filters
-	    calculate_wiener_defocus_series(spectral_signal, istart - 1);
-	}
     }
 
 }
@@ -1486,13 +815,13 @@ void Prog_MLalign2D_prm::rotate_reference(vector< ImageXmippT<double> > &Iref,
     {
         Mref.push_back(dumM);
         Fref.push_back(dumF);
-        if (!fourier_mode) computeStats_within_binary_mask(omask, Iref[refno](), dum, dum, avg, dum);
+        computeStats_within_binary_mask(omask, Iref[refno](), dum, dum, avg, dum);
         FOR_ALL_ROTATIONS()
         {
             // Add arbitrary number (small_angle) to avoid 0-degree rotation (lacking interpolation)
             psi = (double)(ipsi * psi_max / nr_psi) + SMALLANGLE;
             Maux = Iref[refno]().rotateBSpline(3, psi, WRAP);
-            if (!fourier_mode) apply_binary_mask(mask, Maux, Maux, avg);
+            apply_binary_mask(mask, Maux, Maux, avg);
             // Normalize the magnitude of the rotated references to 1st rot of that ref
             // This is necessary because interpolation due to rotation can lead to lower overall Fref
             // This would result in lower probabilities for those rotations
@@ -1517,14 +846,11 @@ void Prog_MLalign2D_prm::rotate_reference(vector< ImageXmippT<double> > &Iref,
             if (fill_fourier_space)
             {
                 FourierTransformHalf(Maux, Faux);
-                if (!fourier_mode)
+		Faux *= dim * dim;
+		FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
                 {
-                    Faux *= dim * dim;
-                    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
-                    {
-                        dMij(Faux, i, j) = conj(dMij(Faux, i, j));
-                    }
-                }
+		    dMij(Faux, i, j) = conj(dMij(Faux, i, j));
+		}
                 Fref[refno].push_back(Faux);
                 if (AA > 0) Fref[refno][ipsi] *= sqrt(stdAA / AA);
             }
@@ -1574,15 +900,12 @@ void Prog_MLalign2D_prm::reverse_rotate_reference(
             else
             {
                 InverseFourierTransformHalf(Fref[refno][ipsi], Maux, dim);
-                if (!fourier_mode)
-                {
-                    Maux /= dim * dim;
-                    CenterFFT(Maux, true);
-                }
+		Maux /= dim * dim;
+		CenterFFT(Maux, true);
             }
-            if (!fourier_mode) computeStats_within_binary_mask(omask, Maux, dum, dum, avg, dum);
+            computeStats_within_binary_mask(omask, Maux, dum, dum, avg, dum);
             Maux2 = Maux.rotateBSpline(3, -psi, WRAP);
-            if (!fourier_mode) apply_binary_mask(mask, Maux2, Maux2, avg);
+            apply_binary_mask(mask, Maux2, Maux2, avg);
             Mnew[refno] += Maux2;
         }
 
@@ -1759,183 +1082,6 @@ void Prog_MLalign2D_prm::preselect_significant_model_phi(
 
 }
 
-// Calculate the FT of a translated image by its corresponding phase shifts
-void Prog_MLalign2D_prm::Fourier_translate2D(const Matrix2D<complex<double> > &Fimg,
-        int focus, Matrix1D<double> &trans,
-        Matrix2D<complex<double> > &Fimg_shift)
-{
-
-    double xx, yy, xxshift, yyshift, dotp;
-    double a, b, c, d, ac, bd, ab_cd;
-    int ii;
-    xxshift = -trans(0) / (double)dim;
-    yyshift = -trans(1) / (double)dim;
-    Fimg_shift.resize(Fimg);
-    Fimg_shift.initZeros();
-    for (int ipoint = 0; ipoint < nr_pointer_ctf; ipoint++)
-    {
-        ii = pointer_ctf[ipoint];
-        xx = (double)pointer_j[ipoint];
-        yy = (double)pointer_i[ipoint];
-        dotp = 2 * PI * (xx * xxshift + yyshift * yy);
-        a = cos(dotp);
-        b = sin(dotp);
-        c = (Fimg).data[ii].real();
-        d = (Fimg).data[ii].imag();
-        ac = a * c;
-        bd = b * d;
-        ab_cd = (a + b) * (c + d);
-        (Fimg_shift).data[ii] = complex<double>(ac - bd, ab_cd - ac - bd);
-    }
-
-}
-
-// Calculate Fourier Transforms of translated matrices for all limited translations
-void Prog_MLalign2D_prm::calculate_fourier_offsets(Matrix2D<double> &Mimg, int focus,
-        vector <vector< Matrix2D<complex<double> > > > &Fref,
-        Matrix2D<double> &ctf, vector<double > &offsets,
-        vector<vector<Matrix2D<complex<double> > > > &Fimg_trans,
-        Matrix2D<int> &Moffsets, Matrix2D<int> &Moffsets_mirror)
-{
-
-    int irefmir, ix, iy, opt_ix, opt_iy, iflip, irot, opt_iflip, nr_mir, iflip_start, iflip_stop, count;
-    double ropt2, maxCC, CC, dxx, dyy;
-    vector<Matrix2D<complex<double> > > Fimg_flip, dum;
-    Matrix2D<complex<double> > Fimg;
-    Matrix1D<double> trans(2);
-    Matrix2D<double> Maux2, Maux;
-
-    Moffsets.resize(dim, dim);
-    Moffsets.setXmippOrigin();
-    Moffsets.init_constant(-1);
-    Moffsets_mirror.resize(dim, dim);
-    Moffsets_mirror.setXmippOrigin();
-    Moffsets_mirror.init_constant(-1);
-
-    Maux.resize(dim, dim);
-    Maux.setXmippOrigin();
-    Maux2.resize(dim, dim);
-    Maux2.setXmippOrigin();
-
-    Fimg_trans.clear();
-
-    if (do_mirror) nr_mir = 2;
-    else nr_mir = 1;
-
-    // Flip images and precalculate their Fourier Transform
-    FOR_ALL_FLIPS()
-    {
-        Maux.setXmippOrigin();
-        applyGeometry(Maux, F[iflip], Mimg, IS_INV, WRAP);
-        FourierTransformHalf(Maux, Fimg);
-        Fimg_flip.push_back(Fimg);
-    }
-
-    // If offsets > max_shift: recalculate optimal offset using maxCC via FFTs
-    FOR_ALL_MODELS()
-    {
-        for (int imir = 0; imir < nr_mir; imir++)
-        {
-            irefmir = imir * n_ref + refno;
-            iflip_start = imir * nr_nomirror_flips;
-            iflip_stop = imir * nr_nomirror_flips + nr_nomirror_flips;
-            ropt2 = offsets[2*irefmir] * offsets[2*irefmir] + offsets[2*irefmir+1] * offsets[2*irefmir+1];
-            maxCC = -999.;
-            // If shift larger than max_shift: recalculate best fit based on maxCC using FFT
-            if (ropt2 > max_shift*max_shift)
-            {
-                FOR_ALL_ROTATIONS()
-                {
-                    for (int iflip = iflip_start; iflip < iflip_stop; iflip++)
-                    {
-                        irot = iflip * nr_psi + ipsi;
-                        // Remember that Fref is not conjugated in fourier_mode...
-                        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Fimg_flip[iflip])
-                        {
-                            dMij(Fimg, i, j) = dMij(Fimg_flip[iflip], i, j) * (dMij(ctf, i, j) * conj(dMij(Fref[refno][ipsi], i, j)));
-                        }
-                        InverseFourierTransformHalf(Fimg, Maux, dim);
-                        CenterFFT(Maux, true);
-                        Maux.maxIndex(iy, ix);
-                        CC = MAT_ELEM(Maux, iy, ix);
-                        if (CC > maxCC)
-                        {
-                            maxCC = CC;
-                            opt_ix = ix;
-                            opt_iy = iy;
-                            opt_iflip = iflip;
-                        }
-                    }
-                }
-                // Set too large shifts to zero...
-                if (opt_ix*opt_ix + opt_iy*opt_iy > max_shift*max_shift)
-                {
-                    offsets[2*irefmir] = 0.;
-                    offsets[2*irefmir+1] = 0.;
-                }
-                else
-                {
-                    offsets[2*irefmir] = -opt_ix * DIRECT_MAT_ELEM(F[opt_iflip], 0, 0) -
-                                         opt_iy * DIRECT_MAT_ELEM(F[opt_iflip], 0, 1);
-                    offsets[2*irefmir+1] = -opt_ix * DIRECT_MAT_ELEM(F[opt_iflip], 1, 0) -
-                                           opt_iy * DIRECT_MAT_ELEM(F[opt_iflip], 1, 1);
-                }
-
-            }
-        }
-    }
-
-    // Now for all relevant offsets calculate the Fourier transforms
-    // Matrices Moffsets & Moffsets_mirror contain pointers to the FTs
-    count = 0;
-    FOR_ALL_MODELS()
-    {
-        for (int imir = 0; imir < nr_mir; imir++)
-        {
-            irefmir = imir * n_ref + refno;
-            iflip_start = imir * nr_nomirror_flips;
-            iflip_stop = imir * nr_nomirror_flips + nr_nomirror_flips;
-            FOR_ALL_LIMITED_TRANSLATIONS()
-            {
-                ix = ROUND(offsets[2*irefmir] + Vtrans[itrans](0));
-                iy = ROUND(offsets[2*irefmir+1] + Vtrans[itrans](1));
-                dxx = (double)intWRAP(ix, Moffsets.startingX(), Moffsets.finishingX());
-                dyy = (double)intWRAP(iy, Moffsets.startingY(), Moffsets.finishingY());
-                // For non-mirrors
-                if (imir == 0 && MAT_ELEM(Moffsets, ROUND(dyy), ROUND(dxx)) < 0)
-                {
-                    Fimg_trans.push_back(dum);
-                    for (int iflip = iflip_start; iflip < iflip_stop; iflip++)
-                    {
-                        trans(0) = dxx * DIRECT_MAT_ELEM(F[iflip], 0, 0) + dyy * DIRECT_MAT_ELEM(F[iflip], 0, 1);
-                        trans(1) = dxx * DIRECT_MAT_ELEM(F[iflip], 1, 0) + dyy * DIRECT_MAT_ELEM(F[iflip], 1, 1);
-                        Fourier_translate2D(Fimg_flip[iflip], focus, trans, Fimg);
-                        Fimg_trans[count].push_back(Fimg);
-                    }
-                    MAT_ELEM(Moffsets, ROUND(dyy), ROUND(dxx)) = count;
-                    count++;
-                }
-                // For mirrors use a separate offset-matrix
-                else if (imir == 1 && MAT_ELEM(Moffsets_mirror, ROUND(dyy), ROUND(dxx)) < 0)
-                {
-                    Fimg_trans.push_back(dum);
-                    for (int iflip = iflip_start; iflip < iflip_stop; iflip++)
-                    {
-                        trans(0) = dxx * DIRECT_MAT_ELEM(F[iflip], 0, 0) + dyy * DIRECT_MAT_ELEM(F[iflip], 0, 1);
-                        trans(1) = dxx * DIRECT_MAT_ELEM(F[iflip], 1, 0) + dyy * DIRECT_MAT_ELEM(F[iflip], 1, 1);
-                        Fourier_translate2D(Fimg_flip[iflip], focus, trans, Fimg);
-                        Fimg_trans[count].push_back(Fimg);
-                    }
-                    MAT_ELEM(Moffsets_mirror, ROUND(dyy), ROUND(dxx)) = count;
-                    count++;
-                }
-            }
-        }
-    }
-
-}
-
-
 // Calculate translated matrices for all limited translations
 // for each of the flipped variants
 void Prog_MLalign2D_prm::calculate_realspace_offsets(
@@ -2037,357 +1183,6 @@ void Prog_MLalign2D_prm::calculate_realspace_offsets(
             }
         }
     }
-
-}
-
-// Exclude translations from the MLF_integration
-// For significantly contributing refno+psi: re-calculate optimal shifts
-void Prog_MLalign2D_prm::MLF_integrate_locally(
-    Matrix2D<double> &Mimg, int focus, bool apply_ctf,
-    vector<vector<Matrix2D<complex<double> > > > &Fref,
-    vector <vector< Matrix2D<complex<double> > > > &Fwsum_imgs,
-    vector <vector< Matrix2D<complex<double> > > > &Fwsum_ctfimgs,
-    Matrix2D<double> &Mwsum_sigma2,
-    double &wsum_sigma_offset, vector<double> &sumw,
-    vector<double> &sumw_mirror,
-    double &LL, double &fracweight, 
-    int &opt_refno, double &opt_psi,
-    Matrix1D<double> &opt_offsets, vector<double> &opt_offsets_ref,
-    vector<double > &pdf_directions)
-{
-
-    Matrix3D<double>                             Mweight;
-    Matrix2D<double>                             sigma2, ctf, decctf;
-    Matrix2D<int>                                Moffsets, Moffsets_mirror;
-    vector<vector<Matrix2D<complex<double> > > > Fimg_trans;
-    vector<Matrix2D<complex<double> > >          dum;
-    Matrix2D<complex<double> >                   Fimg;
-    vector<Matrix1D<double> >                    uniq_offsets;
-
-    vector<double> refw(n_ref), refw_mirror(n_ref), Pmax_refmir(2*n_ref);
-    double sigma_noise2, XiA, Xi2, aux, fracpdf, pdf, weight;
-    double tmpr, tmpi, sum_refw = 0.;
-    double diff, maxweight = -99.e99, mindiff2 = 99.e99;
-    double logsigma2;
-    int    irot, opt_ipsi, opt_iflip, opt_irot, irefmir, opt_irefmir, ix, iy, ii;
-    int    nr_uniq, point_trans, zscore;
-    int    opt_itrans, iflip_start, iflip_stop, nr_mir;
-
-    TimeStamp t0; 
-    time_config();
-
-    annotate_time(&t0);
-
-    // Calculate 2D matrices with values for ctf, decctf and sigma2 from 1D-vectors
-    sigma2.resize(dim, dim);
-    ctf.resize(dim, dim);
-    decctf.resize(dim, dim);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(sigma2)
-    {
-        ii = dMij(Mresol, i, j);
-        dMij(sigma2, i, j) = 2.* Vsig[focus].data[ii];
-        dMij(ctf, i, j) = Vctf[focus].data[ii];
-        dMij(decctf, i, j) = Vdec[focus].data[ii];
-    }
-    if (!apply_ctf) ctf.init_constant(1.);
-
-    // Precalculate normalization constant
-    logsigma2 = 0.;
-    for (int ipoint = 0; ipoint < nr_pointer_sigctf; ipoint++)
-    {
-	ii = pointer_sigctf[ipoint];
-	logsigma2 += log(PI*(sigma2).data[ii]);
-    }
-
-    // Precalculate Fimg_trans, on pruned and expanded offset list
-    calculate_fourier_offsets(Mimg, focus, Fref, ctf, opt_offsets_ref, Fimg_trans, Moffsets, Moffsets_mirror);
-
-    if (debug==1) {cout<<"processOneImage 1 "; print_elapsed_time(t0); annotate_time(&t0);}
-
-    Mweight.initZeros(nr_trans, n_ref, nr_flip*nr_psi);
-    FOR_ALL_MODELS()
-    {
-        if (!limit_rot || pdf_directions[refno] > 0.)
-        {
-            FOR_ALL_FLIPS()
-            {
-                irefmir = FLOOR(iflip / nr_nomirror_flips) * n_ref + refno;
-                ix = ROUND(opt_offsets_ref[2*irefmir]);
-                iy = ROUND(opt_offsets_ref[2*irefmir+1]);
-                Pmax_refmir[irefmir] = 0.;
-                if (iflip < nr_nomirror_flips) point_trans = MAT_ELEM(Moffsets, iy, ix);
-                else point_trans = MAT_ELEM(Moffsets_mirror, iy, ix);
-                if (iflip < nr_nomirror_flips) pdf = alpha_k[refno] * (1. - mirror_fraction[refno]) * MAT_ELEM(P_phi, iy, ix);
-                else pdf = alpha_k[refno] * mirror_fraction[refno] * MAT_ELEM(P_phi, iy, ix);
-                FOR_ALL_ROTATIONS()
-                {
-                    irot = iflip * nr_psi + ipsi;
-                    diff = 0.;
-                    for (int ipoint = 0; ipoint < nr_pointer_sigctf; ipoint++)
-                    {
-                        ii = pointer_sigctf[ipoint];
-                        tmpr = (double)((Fimg_trans[point_trans][iflip%nr_nomirror_flips]).data[ii]).real() -
-                               ctf.data[ii] * (double)((Fref[refno][ipsi]).data[ii]).real();
-                        tmpi = (double)((Fimg_trans[point_trans][iflip%nr_nomirror_flips]).data[ii]).imag() -
-                               ctf.data[ii] * (double)((Fref[refno][ipsi]).data[ii]).imag();
-                        tmpr = (tmpr * tmpr + tmpi * tmpi) / (anneal * (sigma2).data[ii]);
-                        diff += tmpr;
-                    }
-
-		    if (debug==9)
-		    {
-			cout <<360. - psi_step*(iflip*nr_psi+ipsi) - SMALLANGLE<<" "<<diff<<endl;
-		    }
-                    dVkij(Mweight, zero_trans, refno, irot) = diff;
-                    if (diff < mindiff2)
-                    {
-                        mindiff2 = diff;
-                        opt_refno = refno;
-                        opt_ipsi = ipsi;
-                        opt_iflip = iflip;
-                        opt_itrans = zero_trans;
-                        opt_irefmir = irefmir;
-                    }
-                }
-            }
-        }
-    }
-
-    // Now that we have mindiff2 calculate all weights and maxweight
-    FOR_ALL_MODELS()
-    {
-        if (!limit_rot || pdf_directions[refno] > 0.)
-        {
-            refw[refno] = 0.;
-            refw_mirror[refno] = 0.;
-            FOR_ALL_FLIPS()
-            {
-                irefmir = FLOOR(iflip / nr_nomirror_flips) * n_ref + refno;
-                ix = ROUND(opt_offsets_ref[2*irefmir]);
-                iy = ROUND(opt_offsets_ref[2*irefmir+1]);
-                if (iflip < nr_nomirror_flips) pdf = alpha_k[refno] * (1. - mirror_fraction[refno]) * MAT_ELEM(P_phi, iy, ix);
-                else pdf = alpha_k[refno] * mirror_fraction[refno] * MAT_ELEM(P_phi, iy, ix);
-                FOR_ALL_ROTATIONS()
-                {
-                    irot = iflip * nr_psi + ipsi;
-                    aux = dVkij(Mweight, zero_trans, refno, irot) - mindiff2;
-                    // next line because of numerical precision of exp-function
-                    if (aux > 1000.) weight = 0.;
-                    else weight = exp(-aux) * pdf;
-                    dVkij(Mweight, zero_trans, refno, irot) = weight;
-                    if (weight > Pmax_refmir[irefmir]) Pmax_refmir[irefmir] = weight;
-                    if (weight > maxweight)
-                    {
-                        maxweight = weight;
-                        opt_refno = refno;
-                        opt_ipsi = ipsi;
-                        opt_iflip = iflip;
-                        opt_itrans = zero_trans;
-                        opt_irefmir = irefmir;
-                    }
-                }
-            }
-        }
-    }
-
-    if (debug==1) {cout<<"processOneImage 2 "; print_elapsed_time(t0); annotate_time(&t0);}
-
-    // Now for all irefmir, check significant rotations...
-    // and calculate their limited_translations probabilities
-    FOR_ALL_MODELS()
-    {
-        if (!limit_rot || pdf_directions[refno] > 0.)
-        {
-            FOR_ALL_FLIPS()
-            {
-                irefmir = FLOOR(iflip / nr_nomirror_flips) * n_ref + refno;
-                if (iflip < nr_nomirror_flips) fracpdf = alpha_k[refno] * (1. - mirror_fraction[refno]);
-                else fracpdf = alpha_k[refno] * mirror_fraction[refno];
-                FOR_ALL_ROTATIONS()
-                {
-                    irot = iflip * nr_psi + ipsi;
-                    if (dVkij(Mweight, zero_trans, refno, irot) > C_fast*Pmax_refmir[irefmir])
-                    {
-                        // expand for all limited translations
-                        FOR_ALL_LIMITED_TRANSLATIONS()
-                        {
-                            if (itrans != zero_trans)
-                            { // zero_trans has already been calculated!
-                                ix = ROUND(opt_offsets_ref[2*irefmir] + Vtrans[itrans](0));
-                                iy = ROUND(opt_offsets_ref[2*irefmir+1] + Vtrans[itrans](1));
-                                ix = intWRAP(ix, Moffsets.startingX(), Moffsets.finishingX());
-                                iy = intWRAP(iy, Moffsets.startingY(), Moffsets.finishingY());
-                                if (iflip < nr_nomirror_flips) point_trans = MAT_ELEM(Moffsets, iy, ix);
-                                else point_trans = MAT_ELEM(Moffsets_mirror, iy, ix);
-                                pdf = fracpdf * MAT_ELEM(P_phi, iy, ix);
-                                if (pdf > 0)
-                                {
-                                    diff = 0.;
-                                    for (int ipoint = 0; ipoint < nr_pointer_sigctf; ipoint++)
-                                    {
-                                        ii = pointer_sigctf[ipoint];
-                                        tmpr = (double)((Fimg_trans[point_trans][iflip%nr_nomirror_flips]).data[ii]).real() -
-                                               ctf.data[ii] * (double)((Fref[refno][ipsi]).data[ii]).real();
-                                        tmpi = (double)((Fimg_trans[point_trans][iflip%nr_nomirror_flips]).data[ii]).imag() -
-                                               ctf.data[ii] * (double)((Fref[refno][ipsi]).data[ii]).imag();
-                                        tmpr = (tmpr * tmpr + tmpi * tmpi) / (anneal * (sigma2).data[ii]);
-                                        diff += tmpr;
-                                    }
-                                    aux = diff - mindiff2;
-                                    // next line because of numerical precision of exp-function
-                                    if (aux > 1000.) weight = 0.;
-                                    else weight = exp(-aux) * fracpdf * MAT_ELEM(P_phi, iy, ix);
-                                    dVkij(Mweight, itrans, refno, irot) = weight;
-                                    if (weight > maxweight)
-                                    {
-                                        maxweight = weight;
-                                        opt_refno = refno;
-                                        opt_ipsi = ipsi;
-                                        opt_iflip = iflip;
-                                        opt_itrans = itrans;
-                                        opt_irefmir = irefmir;
-                                    }
-                                }
-                                else dVkij(Mweight, itrans, refno, irot) = 0.;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    opt_offsets(0) = opt_offsets_ref[2*opt_irefmir] + Vtrans[opt_itrans](0);
-    opt_offsets(1) = opt_offsets_ref[2*opt_irefmir+1] + Vtrans[opt_itrans](1);
-    opt_psi = -psi_step * (opt_iflip * nr_psi + opt_ipsi) - SMALLANGLE;
-
-    // Now that we have maxweight, determine the sums over all weights
-    FOR_ALL_MODELS()
-    {
-        if (!limit_rot || pdf_directions[refno] > 0.)
-        {
-            FOR_ALL_FLIPS()
-            {
-                irefmir = FLOOR(iflip / nr_nomirror_flips) * n_ref + refno;
-                FOR_ALL_ROTATIONS()
-                {
-                    irot = iflip * nr_psi + ipsi;
-                    FOR_ALL_LIMITED_TRANSLATIONS()
-                    {
-                        weight = dVkij(Mweight, itrans, refno, irot);
-                        if (weight > SIGNIFICANT_WEIGHT_LOW*maxweight)
-                        {
-                            if (iflip < nr_nomirror_flips) refw[refno] += weight;
-                            else refw_mirror[refno] += weight;
-                            sum_refw += weight;
-                        }
-                        else dVkij(Mweight, itrans, refno, irot) = 0.;
-                    }
-                }
-            }
-        }
-    }
-    fracweight = maxweight / sum_refw;
-
-    // Accumulate weighted sums of fraction-parameters
-    FOR_ALL_MODELS()
-    {
-        if (!limit_rot || pdf_directions[refno] > 0.)
-        {
-            sumw[refno] += (refw[refno] + refw_mirror[refno]) / sum_refw;
-            sumw_mirror[refno] += refw_mirror[refno] / sum_refw;
-        }
-    }
-    
-    if (debug==1) {cout<<"processOneImage 3 "; print_elapsed_time(t0); annotate_time(&t0);}
-
-    // Acummulate all weighted sums
-    // and normalize them by sum_refw, such that sum over all weights is one!
-    FOR_ALL_MODELS()
-    {
-        if (!limit_rot || pdf_directions[refno] > 0.)
-        {
-            FOR_ALL_FLIPS()
-            {
-                irefmir = FLOOR(iflip / nr_nomirror_flips) * n_ref + refno;
-                FOR_ALL_ROTATIONS()
-                {
-                    irot = iflip * nr_psi + ipsi;
-                    FOR_ALL_LIMITED_TRANSLATIONS()
-                    {
-                        ix = ROUND(opt_offsets_ref[2*irefmir] + Vtrans[itrans](0));
-                        iy = ROUND(opt_offsets_ref[2*irefmir+1] + Vtrans[itrans](1));
-                        ix = intWRAP(ix, Moffsets.startingX(), Moffsets.finishingX());
-                        iy = intWRAP(iy, Moffsets.startingY(), Moffsets.finishingY());
-                        if (iflip < nr_nomirror_flips) point_trans = MAT_ELEM(Moffsets, iy, ix);
-                        else point_trans = MAT_ELEM(Moffsets_mirror, iy, ix);
-                        weight = dVkij(Mweight, itrans, refno, irot) / sum_refw;
-                        if (weight > 0.)
-                        {
-                            wsum_sigma_offset += weight * (double)(ix * ix + iy * iy);
-                            // Estimation of new references (use only significant pixels!)
-                            for (int ipoint = 0; ipoint < nr_pointer_ctf; ipoint++)
-                            {
-                                ii = pointer_ctf[ipoint];
-                                Fwsum_imgs[refno][ipsi].data[ii] +=
-                                    (weight * (decctf).data[ii]) * (Fimg_trans[point_trans][iflip%nr_nomirror_flips]).data[ii];
-                                Fwsum_ctfimgs[refno][ipsi].data[ii] +=
-                                    weight * (Fimg_trans[point_trans][iflip%nr_nomirror_flips]).data[ii];
-                                tmpr = (double)((Fimg_trans[point_trans][iflip%nr_nomirror_flips]).data[ii]).real() -
-                                       ctf.data[ii] * (double)((Fref[refno][ipsi]).data[ii]).real();
-                                tmpi = (double)((Fimg_trans[point_trans][iflip%nr_nomirror_flips]).data[ii]).imag() -
-                                       ctf.data[ii] * (double)((Fref[refno][ipsi]).data[ii]).imag();
-                                Mwsum_sigma2.data[ii] += weight * (tmpr * tmpr + tmpi * tmpi);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // Update the optimal origin offsets
-    if (do_mirror) nr_mir = 2;
-    else nr_mir = 1;
-    FOR_ALL_MODELS()
-    {
-        if (!limit_rot || pdf_directions[refno] > 0.)
-        {
-            for (int imir = 0; imir < nr_mir; imir++)
-            {
-                irefmir = imir * n_ref + refno;
-                iflip_start = imir * nr_nomirror_flips;
-                iflip_stop = imir * nr_nomirror_flips + nr_nomirror_flips;
-                opt_itrans = zero_trans;
-                for (int iflip = iflip_start; iflip < iflip_stop; iflip++)
-                {
-                    FOR_ALL_ROTATIONS()
-                    {
-                        irot = iflip * nr_psi + ipsi;
-                        FOR_ALL_LIMITED_TRANSLATIONS()
-                        {
-                            weight = dVkij(Mweight, itrans, refno, irot);
-                            if (weight > Pmax_refmir[irefmir])
-                            {
-                                Pmax_refmir[irefmir] = weight;
-                                opt_itrans = itrans;
-                            }
-                        }
-                    }
-                }
-                opt_offsets_ref[2*irefmir] += Vtrans[opt_itrans](0);
-                opt_offsets_ref[2*irefmir+1] += Vtrans[opt_itrans](1);
-            }
-        }
-    }
-
-    if (debug==1) {cout<<"processOneImage 4 "; print_elapsed_time(t0); annotate_time(&t0);}
-
-    // Compute Log Likelihood
-    // 1st term: log(refw_i)
-    // 2nd term: for subtracting mindiff2
-    // 3rd term: for missing normalization constant
-    LL += log(sum_refw) - mindiff2 - logsigma2;
 
 }
 
@@ -2998,21 +1793,20 @@ void Prog_MLalign2D_prm::maxCC_search_complete(Matrix2D<double> &Mimg,
 void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector< ImageXmippT<double> > &Iref, int iter,
         double &LL, double &sumcorr, DocFile &DFo,
         vector<Matrix2D<double> > &wsum_Mref,
-        vector<Matrix2D<double> > &wsum_ctfMref,
-        double &wsum_sigma_noise, vector<Matrix2D<double> > &Mwsum_sigma2,
-        double &wsum_sigma_offset, vector<double> &sumw, vector<double> &sumw_mirror)
+        double &wsum_sigma_noise, double &wsum_sigma_offset, 
+	vector<double> &sumw, vector<double> &sumw_mirror)
 {
 
     ImageXmipp img;
     SelLine line;
     FileName fn_img, fn_trans;
     vector <vector< Matrix2D<double> > > Mref, Msum_imgs;
-    vector <vector< Matrix2D<complex<double> > > > Fref, Fwsum_imgs, Fwsum_ctfimgs;
+    vector <vector< Matrix2D<complex<double> > > > Fref, Fwsum_imgs;
     vector<Matrix2D<complex <double> > > dum;
     vector<Matrix2D<double> > dum2;
     vector<double> allref_offsets, pdf_directions(n_ref);
-    Matrix2D<complex <double> > Fdzero;
     Matrix2D<double>  Mdzero;
+    Matrix2D<complex<double> >  Fdzero;
     Matrix2D<int> Msignificant;
     Msignificant.resize(n_ref, nr_psi*nr_flip);
     Matrix1D<double> dataline(9), opt_offsets(2), trans(2);
@@ -3020,17 +1814,12 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector< ImageXmippT
     float old_phi = -999., old_theta = -999.;
     double opt_psi, opt_flip, maxcorr;
     double opt_xoff, opt_yoff;
-    int c, nn, imgno, opt_refno, focus;
-    bool fill_real_space, fill_fourier_space, apply_ctf;
+    int c, nn, imgno, opt_refno;
+    bool fill_real_space, fill_fourier_space;
 
 
     // Generate (FT of) each rotated version of all references
-    if (fourier_mode)
-    {
-        fill_real_space = false;
-        fill_fourier_space = true;
-    }
-    else if (limit_trans || (maxCC_rather_than_ML && !(search_shift > 0.)))
+    if (limit_trans || (maxCC_rather_than_ML && !(search_shift > 0.)))
     {
         fill_real_space = true;
         fill_fourier_space = false;
@@ -3053,8 +1842,6 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector< ImageXmippT
     nn = SF.ImgNo();
     if (verb > 0) init_progress_bar(nn);
     c = XMIPP_MAX(1, nn / 60);
-    Fwsum_imgs.clear();
-    Fwsum_ctfimgs.clear();
     Msum_imgs.clear();
     sumw.clear();
     sumw_mirror.clear();
@@ -3063,15 +1850,6 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector< ImageXmippT
     Mdzero.setXmippOrigin();
     LL = 0.;
     wsum_sigma_noise = 0.;
-    if (fourier_mode)
-    {
-        Mwsum_sigma2.clear();
-        Mwsum_sigma2.resize(nr_focus);
-        FOR_ALL_DEFOCUS_GROUPS()
-        {
-            Mwsum_sigma2[ifocus].initZeros(hdim + 1, dim);
-        }
-    }
     wsum_sigma_offset = 0.;
     sumcorr = 0.;
     trans.initZeros();
@@ -3079,22 +1857,12 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector< ImageXmippT
     {
         sumw.push_back(0.);
         sumw_mirror.push_back(0.);
-        if ((maxCC_rather_than_ML || limit_trans) && !fourier_mode)
+        if ((maxCC_rather_than_ML || limit_trans))
         {
             Msum_imgs.push_back(dum2);
             FOR_ALL_ROTATIONS()
             {
                 Msum_imgs[refno].push_back(Mdzero);
-            }
-        }
-        else
-        {
-            Fwsum_imgs.push_back(dum);
-            Fwsum_ctfimgs.push_back(dum);
-            FOR_ALL_ROTATIONS()
-            {
-                Fwsum_imgs[refno].push_back(Fdzero);
-                Fwsum_ctfimgs[refno].push_back(Fdzero);
             }
         }
     }
@@ -3107,10 +1875,6 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector< ImageXmippT
 
 	// Check whether to kill job
 	exit_if_not_exists(fn_control);
-
-        // For defocus-groups in Fourier-mode
-        line = SF.current();
-        focus = line.get_number() - 1;
 
         fn_img = SF.NextImg();
         fn_trans = fn_img.remove_directories(offsets_keepdir);
@@ -3166,22 +1930,9 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector< ImageXmippT
                                   maxcorr, opt_refno, opt_psi, opt_offsets, pdf_directions);
 
         }
-        else if (fourier_mode)
+	else if (limit_trans)
         {
-            // B. Use a maximum-likelihood target function in Fourier space
-
-            if (iter == 1 && first_iter_noctf) apply_ctf = false;
-            else apply_ctf = true;
-            MLF_integrate_locally(img(), focus, apply_ctf, Fref,
-                                  Fwsum_imgs, Fwsum_ctfimgs, Mwsum_sigma2[focus], wsum_sigma_offset,
-                                  sumw, sumw_mirror, LL, maxcorr,
-                                  opt_refno, opt_psi, opt_offsets,
-                                  allref_offsets, pdf_directions);
-
-        }
-        else if (limit_trans)
-        {
-            // C. Use a maximum-likelihood target function in real space
+            // B. Use a maximum-likelihood target function in real space
             //    with limited translational searches
 
             ML_integrate_locally(img(), Mref, Msum_imgs, wsum_sigma_noise, wsum_sigma_offset,
@@ -3192,7 +1943,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector< ImageXmippT
         }
         else
         {
-            // D. Use a maximum-likelihood target function in real space
+            // C. Use a maximum-likelihood target function in real space
             //    with complete or reduced-space translational searches (-fast)
 
             if (fast_mode) preselect_significant_model_phi(img(), allref_offsets, Mref,
@@ -3249,12 +2000,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector< ImageXmippT
     if (verb > 0) progress_bar(nn);
 
     // reverse rotation of the weighted sums
-    if (fourier_mode)
-    {
-        reverse_rotate_reference(Fwsum_ctfimgs, Msum_imgs, false, wsum_ctfMref);
-        reverse_rotate_reference(Fwsum_imgs, Msum_imgs, false, wsum_Mref);
-    }
-    else if (maxCC_rather_than_ML || limit_trans)
+    if (maxCC_rather_than_ML || limit_trans)
         reverse_rotate_reference(Fwsum_imgs, Msum_imgs, true, wsum_Mref);
     else
         reverse_rotate_reference(Fwsum_imgs, Msum_imgs, false, wsum_Mref);
@@ -3263,13 +2009,9 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, vector< ImageXmippT
 
 // Update all model parameters
 void Prog_MLalign2D_prm::update_parameters(vector<Matrix2D<double> > &wsum_Mref,
-        vector<Matrix2D<double> > &wsum_ctfMref,
-        double &wsum_sigma_noise,
-        vector<Matrix2D<double> > &Mwsum_sigma2,
-        double &wsum_sigma_offset,
+        double &wsum_sigma_noise, double &wsum_sigma_offset,
         vector<double> &sumw, vector<double> &sumw_mirror,
-        double &sumcorr, double &sumw_allrefs,
-        Matrix1D<double> &spectral_signal)
+        double &sumcorr, double &sumw_allrefs)
 {
 
     Matrix1D<double> rmean_sigma2, rmean_signal2;
@@ -3296,22 +2038,11 @@ void Prog_MLalign2D_prm::update_parameters(vector<Matrix2D<double> > &wsum_Mref,
             Iref[refno]() = wsum_Mref[refno];
             Iref[refno]() /= sumw[refno];
             Iref[refno].weight() = sumw[refno];
-            if (fourier_mode)
-            {
-                Ictf[refno]() = wsum_ctfMref[refno];
-                Ictf[refno]() /= sumw[refno];
-                Ictf[refno].weight() = sumw[refno];
-            }
         }
         else
         {
             Iref[refno].weight() = 0.;
             Iref[refno]().initZeros(dim, dim);
-            if (fourier_mode)
-            {
-                Ictf[refno]().initZeros();
-                Ictf[refno].weight() = 0.;
-            }
         }
     }
 
@@ -3339,63 +2070,7 @@ void Prog_MLalign2D_prm::update_parameters(vector<Matrix2D<double> > &wsum_Mref,
     // Update the noise parameters
     if (!fix_sigma_noise)
     {
-
-        if (fourier_mode)
-        {
-            FOR_ALL_DEFOCUS_GROUPS()
-            {
-                // Get Mwsum_sigma2 from half to whole matrix...
-                Faux.resize(hdim + 1, dim);
-                FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
-                {
-                    dMij(Faux, i, j) = dMij(Mwsum_sigma2[ifocus], i, j);
-                }
-                Half2Whole(Faux, Faux2, dim);
-                FFT_magnitude(Faux2, Maux);
-                CenterFFT(Maux, true);
-                Maux.setXmippOrigin();
-                center.initZeros();
-                rmean_sigma2.initZeros();
-                radialAverage(Maux, center, rmean_sigma2, radial_count, true);
-                // Factor 2 here, because the Gaussian distribution is 2D!
-		for (int irr=0; irr<hdim; irr++)
-		{
-		    aux = dVi(rmean_sigma2, irr) / (double)(2 * count_defocus[ifocus]);
-		    if (aux > 0.)
-			dVi(Vsig[ifocus], irr) = aux;
-		    //Vsig[ifocus] = rmean_sigma2 / (double)(2 * count_defocus[ifocus]);
-		}
-            }
-        }
-        else
-            sigma_noise = sqrt(wsum_sigma_noise / (sumw_allrefs * dim * dim));
-    }
-
-    if (fourier_mode)
-    {
-
-        // Calculate average spectral signal
-        c = 0;
-        FOR_ALL_MODELS()
-        {
-            if (sumw[refno] > 0.)
-            {
-                FourierTransform(Ictf[refno](), Faux);
-                FFT_magnitude(Faux, Maux);
-                CenterFFT(Maux, true);
-                Maux *= Maux;
-                Maux *= sumw[refno];
-                Maux.setXmippOrigin();
-                center.initZeros();
-                rmean_signal2.initZeros();
-                radialAverage(Maux, center, rmean_signal2, radial_count, true);
-                if (c == 0) spectral_signal = rmean_signal2;
-                else spectral_signal += rmean_signal2;
-                c++;
-            }
-        }
-        spectral_signal /= (double)n_ref;
-
+	sigma_noise = sqrt(wsum_sigma_noise / (sumw_allrefs * dim * dim));
     }
 
     // Update annealing parameter
@@ -3492,14 +2167,6 @@ void Prog_MLalign2D_prm::write_output_files(const int iter, DocFile &DFo,
     // Write out current reference images and fill sel & log-file
     FOR_ALL_MODELS()
     {
-        if (fourier_mode)
-        {
-            fn_tmp = fn_root + "_cref";
-            fn_tmp.compose(fn_tmp, refno + 1, "");
-            fn_tmp = fn_tmp + ".xmp";
-            Ictf[refno].write(fn_tmp);
-            SFc.insert(fn_tmp, SelLine::ACTIVE);
-        }
         fn_tmp = fn_base + "_ref";
         fn_tmp.compose(fn_tmp, refno + 1, "");
         fn_tmp = fn_tmp + ".xmp";
@@ -3515,11 +2182,6 @@ void Prog_MLalign2D_prm::write_output_files(const int iter, DocFile &DFo,
     // Write out sel & log-file
     fn_tmp = fn_base + ".sel";
     SFo.write(fn_tmp);
-    if (fourier_mode)
-    {
-        fn_tmp = fn_root + "_cref.sel";
-        SFc.write(fn_tmp);
-    }
 
     DFl.go_beginning();
     comment = "MLalign2D-logfile: Number of images= " + floatToString(sumw_allrefs);
@@ -3563,29 +2225,6 @@ void Prog_MLalign2D_prm::write_output_files(const int iter, DocFile &DFo,
             fn_tmp.compose(fn_tmp, refno + 1, "sel");
             SFo.write(fn_tmp);
         }
-    }
-
-    if (fourier_mode)
-    {
-
-        // Write out updated Vsig vectors
-        if (!fix_sigma_noise)
-        {
-            FOR_ALL_DEFOCUS_GROUPS()
-            {
-                fn_tmp = fn_base + "_sig";
-                if (nr_focus > 1) fn_tmp.compose(fn_tmp, ifocus + 1, "");
-                fn_tmp += ".dat";
-                fh.open((fn_tmp).c_str(), ios::out);
-                if (!fh) REPORT_ERROR(1, (string)"Prog_MLalign2D_prm: Cannot write file: " + fn_tmp);
-                for (int irr = 0; irr < hdim; irr++)
-                {
-                    fh << irr << " " << dVi(Vsig[ifocus], irr) << "\n";
-                }
-                fh.close();
-            }
-        }
-
     }
 
 }
