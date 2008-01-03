@@ -41,19 +41,20 @@ using namespace std;
 #include <vector>
 
 // For timing functions
+// Uncomment next line timing functions are giving problems in your system
+//#define _NO_TIME
+#ifndef _NO_TIME
 #include <unistd.h>
 #include <sys/times.h>
 #ifdef _IRIX65
 #include <sys/types.h>
 #include <time.h>
 #endif
+#endif
 
 #include "numerical_recipes.h"
 #include "macros.h"
 #include "error.h"
-
-// FIXME local paths in includes is not recommended. The file could be removed.
-#include "../../xmippConfiguration.inc"
 
 /// @defgroup GeneralFunctions General functions
 /// @ingroup DataLibrary
