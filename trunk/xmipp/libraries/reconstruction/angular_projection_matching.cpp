@@ -56,8 +56,12 @@ void Prog_projection_matching_prm::read(int argc, char **argv)  {
   if (fn_ang!="" && ang_search>0)
     REPORT_ERROR(1," option -ang and -ang_search are incompatible!");
 
+  if (!modify_header && output_classes)
+    REPORT_ERROR(1," options -dont_modify_header and -output_classes are incompatible in this version... You may use xmipp_angular_class_average to calculate class averages after the projection_matching without -output_classes.");
+
   // Hidden stuff
   verb=textToInteger(getParameter(argc,argv,"-verb","1"));
+  create_proyections=textToInteger(getParameter(argc,argv,"-create_proyections","1"));
 
   // For improved killing control
   fn_control = getParameter(argc, argv, "-control", "");
@@ -149,6 +153,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
     double           mean_ref,stddev_ref,dummy,psi=0.;
     Matrix1D<double> dataline(3);
     int              nl;
+//cerr << "inside produce_Side_info "  << endl;
 
     // Set nr_psi
     nr_psi=CEIL(360./sampling);
@@ -162,7 +167,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
     nr_pixels_rotmask=(int)rotmask.sum();
 
     // Initialize empty image
-    if (output_classes)
+    if (output_classes && create_proyections==1)
     {
 	empty().resize(dim,dim);
 	empty().setXmippOrigin();
@@ -201,9 +206,12 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	    nr_dir++;
 	    if (output_classes)
 	    {
-		empty.rot()=proj.rot();
-		empty.tilt()=proj.tilt();
-		class_avgs.push_back(empty);
+		if (create_proyections==1)
+                    {
+                    empty.rot()=proj.rot();
+		    empty.tilt()=proj.tilt();
+                    class_avgs.push_back(empty);
+		    }
 		class_selfiles.push_back(emptySF);
 	    }
 	}
@@ -321,6 +329,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	DF.adjust_to_data_line();
 	nr_dir=0;
 	proj.clear_header();
+        //class_selfiles.clear();
 	while (!DF.eof())
 	{
 	    // Check whether to kill job
@@ -328,18 +337,26 @@ void Prog_projection_matching_prm::produce_Side_info() {
 
 	    ref_rot[nr_dir]=DF(0);
 	    ref_tilt[nr_dir]=DF(1);
+            //this should be changed for mpi, otherwise
+            //all projections are computed in each node
+            //cerr << "project at " << ref_rot[nr_dir] << " " << ref_tilt[nr_dir] << endl;
 	    project_Volume(vol(),proj,dim,dim,ref_rot[nr_dir],ref_tilt[nr_dir],psi);
 	    if (output_refs)
 	    {
 	        fn_tmp.compose(fn_refs,nr_dir+1,"proj");
-		proj.write(fn_tmp);
+	        if (create_proyections==1)
+	            proj.write(fn_tmp);
 	        SFr.insert(fn_tmp);
+//cerr << "inside write proj "  << fn_tmp << endl;
 	    }
 	    if (output_classes)
 	    {
-		empty.rot()=DF(0);
-		empty.tilt()=DF(1);
-		class_avgs.push_back(empty);
+	        if (create_proyections==1)
+                    {
+                    empty.rot()=DF(0);
+	            empty.tilt()=DF(1);
+	            class_avgs.push_back(empty);
+	            }
                 class_selfiles.push_back(emptySF);
 	    }
 	    computeStats_within_binary_mask(rotmask,proj(),dummy,dummy,mean_ref,stddev_ref);
@@ -354,7 +371,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
         }
         //at least do not save projections to disk
         //more than one
-	if (output_refs)
+	if (output_refs && create_proyections==1)
 	{
 	    fn_tmp=fn_refs+".doc";
 	    DF.write(fn_tmp);
@@ -398,7 +415,6 @@ void Prog_projection_matching_prm::PM_process_one_image(Matrix2D<double> &Mexp,
   computeStats_within_binary_mask(rotmask,Mexp,dummy,dummy,mean_img,stddev_img);
   Maux-=mean_img;
   apply_binary_mask(rotmask,Maux,Maux,0.);
-
   // Calculate correlation coefficients for all angles
   FOR_ALL_ROTATIONS() {
     psi=(double)(ipsi*360./nr_psi);
@@ -485,6 +501,25 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
   sumCC=0.;
   imgno=0;
   SF.go_beginning();
+  // I guess this if is needed here (otherwise bus errors if no
+  // -output_classes flag is given!) Sjors 12dec07
+  if (output_classes)
+  {
+      //clean vector with selfiles
+      //clean image average
+      for (int dirno = 0; dirno < nr_dir; dirno++)
+      {   //do not bother about classes without assigned images
+         if(class_selfiles[dirno].ImgNo()==0)
+              continue;
+         class_selfiles[dirno].clear();
+	 if (create_proyections==1)
+             {
+             (class_avgs[dirno]()).init_constant(0.);
+	     class_avgs[dirno].weight() = 0;
+             }
+      }
+  }         
+ 
   while ((!SF.eof())) {
 
     // Check whether to kill job
@@ -516,25 +551,29 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
 
 
     if (modify_header)
-    {
+    {   //change this so only header is read/write
 	// Re-read image to get the untransformed image matrix again
 	img.read(fn_img);
 	img.set_eulerAngles(ref_rot[opt_dirno],ref_tilt[opt_dirno],opt_psi);
+	//origin does not need to be set
         img.set_originOffsets(opt_xoff,opt_yoff);
 	img.write(fn_img);
     }
-    if (output_classes)
+    if (output_classes  /*&& create_proyections==1*/)
     {
+	class_selfiles[opt_dirno].insert(fn_img);
 	// Re-read image to get the untransformed image matrix again
 	img.read(fn_img);
 	img.set_eulerAngles(ref_rot[opt_dirno],ref_tilt[opt_dirno],opt_psi);
 	img.set_originOffsets(opt_xoff,opt_yoff);
 	img().selfApplyGeometryBSpline(img.get_transformation_matrix(),3,IS_INV,WRAP);
-	class_avgs[opt_dirno]()+=img();
-	class_avgs[opt_dirno].weight()+=1.;
-	class_selfiles[opt_dirno].insert(img.name());
+        if (create_proyections==1)
+	    {
+            class_avgs[opt_dirno]()+=img();
+	    class_avgs[opt_dirno].weight()+=1.;
+            }
+        //all this ned to be merged in the main mpi program
     }
-
 
     if (verb>0) if (imgno%c==0) progress_bar(imgno);
     imgno++;
@@ -544,10 +583,13 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
   if (verb>0) cerr << " ================================================================="<<endl;
 
   // free memory
+  /*
   free(ref_mean);
   free(ref_rot);
   free(ref_tilt);
   ref_img.clear();
+  mpi version will not work if memory is free
+  */
 }
 void Prog_projection_matching_prm::write_classes()
 {
@@ -562,8 +604,11 @@ void Prog_projection_matching_prm::write_classes()
 	fn_img.compose(fn_base,dirno+1,"xmp");
 	SF.insert(fn_img);
 	fn_sel.compose(fn_base,dirno+1,"sel");
-	class_avgs[dirno]()/=class_avgs[dirno].weight();
-	class_avgs[dirno].write(fn_img);
+	if (create_proyections==1)    
+            {
+            class_avgs[dirno]()/=class_avgs[dirno].weight();
+	    class_avgs[dirno].write(fn_img);
+	    }
         class_selfiles[dirno].write(fn_sel);
     }
     fn_base+="es.sel";
