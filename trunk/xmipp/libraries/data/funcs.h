@@ -213,12 +213,12 @@ public:
  * to be 0 if its absolute magnitude is smaller than precision. This is used to
  * avoid dividing by 0
  */
-int solve_2nd_degree_eq(float a,
-                        float b,
-                        float c,
-                        float& x1,
-                        float& x2,
-                        float prec = XMIPP_EQUAL_ACCURACY);
+int solve_2nd_degree_eq(double a,
+                        double b,
+                        double c,
+                        double& x1,
+                        double& x2,
+                        double prec = XMIPP_EQUAL_ACCURACY);
 
 /** 1D gaussian value
  * @ingroup NumericalFunctions

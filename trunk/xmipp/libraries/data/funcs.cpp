@@ -132,8 +132,8 @@ double KaiserBessel::sinhwin(double x) const
 
 
 // Solve second degree equation. ax^2+bx+c=0 -------------------------------
-int solve_2nd_degree_eq(float a, float b, float c, float &x1, float &x2,
-                        float prec)
+int solve_2nd_degree_eq(double a, double b, double c, double &x1, double &x2,
+                        double prec)
 {
     // Degenerate case?
     if (ABS(a) < prec)
@@ -146,7 +146,7 @@ int solve_2nd_degree_eq(float a, float b, float c, float &x1, float &x2,
         }
 
     // Normal case
-    float d = b * b - 4 * a * c;
+    double d = b * b - 4 * a * c;
     if (d < 0)
         return 0;
     else
