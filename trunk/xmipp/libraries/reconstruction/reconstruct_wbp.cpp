@@ -323,7 +323,7 @@ void Prog_WBP_prm::filter_one_image(Projection &proj)
     factor = (float)diameter;
 
     // Tabulated sinc
-    tabsinc TSINC(0.001, dim);
+    Tabsinc TSINC(0.001, dim);
 
     Euler_angles2matrix(proj.rot(), -proj.tilt(), proj.psi(), A);
     A = A.inv();
