@@ -52,6 +52,7 @@ using namespace std;
 #endif
 #endif
 
+#ifndef SWIG
 #include "numerical_recipes.h"
 #include "macros.h"
 #include "error.h"
@@ -72,19 +73,21 @@ using namespace std;
  * if (TSINC(1)==0)
  *    cout << "This is true!\n";
  * @endcode
+ *
+ * This class is not ported to Python.
  */
-class tabsinc
+class Tabsinc
 {
 private:
 
-    float sampl;
+    double sampl;
     int xmax;
     int no_elem;
-    float* tabulatedsinc;
+    double* tabulatedsinc;
 
 public:
     /** Constructor with sampling rate and range */
-    tabsinc(const float dd, const int xx)
+    Tabsinc(const double dd, const int xx)
     {
         sampl = dd;
         xmax = xx;
@@ -92,13 +95,13 @@ public:
     }
 
     // Destructor
-    ~tabsinc()
+    ~Tabsinc()
     {
-        free(tabulatedsinc);
+        delete tabulatedsinc;
     }
 
     /** Value access. Tabulated sine in radians */
-    float operator()(float val) const
+    double operator()(double val) const
     {
         return tabulatedsinc[ABS((int)(val / sampl))];
     }
@@ -107,11 +110,11 @@ public:
     void filltable()
     {
         no_elem = (int)(xmax / sampl);
-        tabulatedsinc = (float*) malloc(no_elem * sizeof(float));
+        tabulatedsinc = new double[no_elem];
         tabulatedsinc[0] = 1;
         for (int i = 1; i < no_elem; i++)
         {
-            float xx = (float) i * sampl * PI;
+            double xx = (double) i * sampl * PI;
             tabulatedsinc[i] = sin(xx) / xx;
         }
     }
@@ -144,6 +147,8 @@ public:
  *  double wx = kb.sinhwin(32);
  *  double tablex1 = kb.i0win_tab(delx-inxold+3);
  * @endcode
+ *
+ * This class is not ported to Python.
  */
 class KaiserBessel 
 {
@@ -195,8 +200,8 @@ public:
 
     /** Return the size of the I0 window */
     int get_window_size() const { return K; }
-
 };
+#endif
 
 /** Solve second degree equation
  * @ingroup NumericalFunctions
@@ -242,15 +247,20 @@ double gaussian2D(double x,
 /// @defgroup MiscellaneousFunctions Miscellaneous functions
 /// @ingroup GeneralFunctions
 
+#ifndef SWIG
 /** Print a boolean value
  * @ingroup MiscellaneousFunctions
- * */
+ *
+ * This function is not ported to Python.
+*/
 void print(ostream& o, const bool b);
 
 /** Print a value in binary
  * @ingroup MiscellaneousFunctions
  *
  * So far not instatiate for float/double number
+ *
+ * This function is not ported to Python.
  */
 template <typename T>
 void printb(ostream& o, T value)
@@ -275,6 +285,8 @@ void printb(ostream& o, T value)
  * @ingroup ComplexFunctions
  *
  * The output array(s) must be already resized.
+ *
+ * This function is not ported to Python.
  */
 template <typename T>
 void RealImag2Complex(const T* _real,
@@ -297,6 +309,8 @@ void RealImag2Complex(const T* _real,
  * @ingroup ComplexFunctions
  *
  * The output array(s) must be already resized.
+ *
+ * This function is not ported to Python.
  */
 template <typename T>
 void AmplPhase2Complex(const T* _ampl,
@@ -321,6 +335,8 @@ void AmplPhase2Complex(const T* _ampl,
  * @ingroup ComplexFunctions
  *
  * The output array(s) must be already resized.
+ *
+ * This function is not ported to Python.
  */
 template <typename T>
 void Complex2RealImag(const complex< double >* _complex,
@@ -343,6 +359,8 @@ void Complex2RealImag(const complex< double >* _complex,
  * @ingroup ComplexFunctions
  *
  * The output array(s) must be already resized.
+ *
+ * This function is not ported to Python.
  */
 template <typename T>
 void Complex2AmplPhase(const complex< double >* _complex,
@@ -362,6 +380,7 @@ void Complex2AmplPhase(const complex< double >* _complex,
         *aux_phase++ = atan2(im, re);
     }
 }
+#endif
 
 /** @defgroup RandomFunctions Random functions
  * @ingroup GeneralFunctions
@@ -637,8 +656,6 @@ public:
     FileName(const FileName& fn) : string(fn)
     {}
 
-    // FIXME What is this?
-#ifdef NEVER_DEFINED
     /** Constructor from root, number and extension
      * @ingroup FilenameConstructors
      *
@@ -650,11 +667,10 @@ public:
      * FileName fn_proj("g1ta",1); // fn_proj = "g1ta00001"
      * @endcode
      */
-    FileName(const char* str, int no = -1, const string& ext = "")
+    FileName(const char* str, int no, const string& ext = "")
     {
         compose(str, no, ext);
     }
-#endif
 
     /** Constructor from root and extension
      * @ingroup FilenameConstructors
@@ -863,13 +879,16 @@ public:
     FileName remove_directories(int keep = 0) const;
 };
 
-/** This class is used for comparin filenames.
+#ifndef SWIG
+/** This class is used for comparing filenames.
  * @ingroup Filenames
  *
  * Example: "g0ta00001.xmp" is less than "g0ta00002.xmp"
  *
  * This class is needed to define a std::map as
  * map<FileName,FileName,FileNameComparison> myMap;
+ *
+ * This function is not ported to Python.
  */
 class FileNameComparison {
 public:
@@ -878,6 +897,7 @@ public:
     	return fn1<fn2;
     }
 };
+#endif
 
 /** True if the file exists in the current directory
  * @ingroup Filenames
@@ -889,6 +909,7 @@ public:
  */
 int exists(const FileName& fn);
 
+#ifndef SWIG
 /** This function raised an ERROR if the filename if not empty and if
  * the corresponding file does not exist. 
  * This may be useful to have a better (killing) control on (mpi-regulated) jobs
@@ -897,8 +918,11 @@ int exists(const FileName& fn);
  * @code
  *   exit_if_not_exists("control_file.txt");
  * @endcode
+ *
+ * This function is not ported to Python.
  */
 void exit_if_not_exists(const FileName &fn);
+#endif
 
 /** Waits until the given filename has a stable size
  * @ingroup Filenames
@@ -926,6 +950,7 @@ void create_empty_file(const FileName& fn,
  */
 FileName xmippBaseDir();
 
+#ifndef SWIG
 /** @defgroup TimeManaging Time managing
  * @ingroup GeneralFunctions
  *
@@ -1004,6 +1029,8 @@ FileName xmippBaseDir();
  * // a quantity a little smaller.
  * progress_bar(60);
  * @endcode
+ *
+ * These functions is not ported to Python.
  */
 
 #ifdef _NO_TIME
@@ -1021,6 +1048,8 @@ typedef struct tms TimeStamp; // Renaming of the time structure
  * @code
  * time_config();
  * @endcode
+ *
+ * This function is not ported to Python.
  */
 void time_config();
 
@@ -1033,6 +1062,8 @@ void time_config();
  * TimeStamp t0;
  * annotate_time(&t0);
  * @endcode
+ *
+ * This function is not ported to Python.
  */
 void annotate_time(TimeStamp* time);
 
@@ -1043,6 +1074,8 @@ void annotate_time(TimeStamp* time);
  * times calling this function (Destination time=destination_time + (now -
  * original time)) and finally the elapsed time is the dest time minus the first
  * one (the one which initiliazed the dest time.
+ *
+ * This function is not ported to Python.
  */
 void acum_time(TimeStamp* orig, TimeStamp* dest);
 
@@ -1065,6 +1098,8 @@ void acum_time(TimeStamp* orig, TimeStamp* dest);
  * ...;
  * float elapsed = elapsed_time(t0, FALSE);
  * @endcode
+ *
+ * This function is not ported to Python.
  */
 float elapsed_time(TimeStamp& time, bool _IN_SECS = true);
 
@@ -1084,6 +1119,8 @@ float elapsed_time(TimeStamp& time, bool _IN_SECS = true);
  *
  * Usually the time is shown in seconds, but you might specify to show it in
  * clock ticks setting the variable _IN_SECS to FALSE.
+ *
+ * This function is not ported to Python.
  */
 void print_elapsed_time(TimeStamp& time, bool _IN_SECS = true);
 
@@ -1093,6 +1130,8 @@ void print_elapsed_time(TimeStamp& time, bool _IN_SECS = true);
  * To make this estimation the starting time must have been annotated before and
  * the fraction of the total amount of work must be estimated by the programmer.
  * See Time managing for an example.
+ *
+ * This function is not ported to Python.
  */
 float time_to_go(TimeStamp& time, float fraction_done);
 
@@ -1110,6 +1149,8 @@ float time_to_go(TimeStamp& time, float fraction_done);
  * @code
  * init_progress_bar(60);
  * @endcode
+ *
+ * This function is not ported to Python.
  */
 #define init_progress_bar(total) progress_bar(-(total));
 
@@ -1129,6 +1170,8 @@ float time_to_go(TimeStamp& time, float fraction_done);
  * of the progress bar, nobody prints anything to stdout as it is being used by
  * the progress bar. At the end you could make a call to progress_bar with the
  * total amount of work just to make sure that the printout is pretty enough.
+ *
+ * This function is not ported to Python.
  */
 void progress_bar(long act_time);
 
@@ -1138,6 +1181,8 @@ void progress_bar(long act_time);
  * This class implements the xmipp listener class for notification of progress
  * status and other operations. It is an abstract class that contains base
  * functions useful for implementation of customer-design notification classes.
+ *
+ * This class is not ported to Python.
  */
 class xmippBaseListener
 {
@@ -1220,6 +1265,8 @@ private:
  *
  * This class implements the xmipp classical textual listener class for
  * notification of progress status. It inherits from xmippBaseListener.
+ *
+ * This class is not ported to Python.
  */
 class xmippTextualListener: public xmippBaseListener
 {
@@ -1261,6 +1308,8 @@ public :
  * @code
  * TimeMessage("Hello, world");
  * @endcode
+ *
+ * This function is not ported to Python.
  */
 void TimeMessage(string message);
 
@@ -1284,6 +1333,8 @@ void TimeMessage(string message);
  * float f;
  * FREAD(&f, sizeof(float), 1, fp); // Normal order
  * @endcode
+ *
+ * This function is not ported to Python.
  */
 size_t FREAD(void* dest, size_t size, size_t nitems, FILE*& fp,
              bool reverse = false);
@@ -1293,6 +1344,8 @@ size_t FREAD(void* dest, size_t size, size_t nitems, FILE*& fp,
  *
  * This function is the same as fread from C, but at the end there is a flag
  * saying if data should be read in reverse order or not.
+ *
+ * This function is not ported to Python.
  */
 size_t FWRITE(const void* src,
               size_t size,
@@ -1302,6 +1355,8 @@ size_t FWRITE(const void* src,
 
 /** Conversion little-big endian
  * @ingroup LittleBigEndian
+ *
+ * This function is not ported to Python.
  */
 #define little22bigendian(x) ByteSwap((unsigned char*)& x,sizeof(x))
 
@@ -1309,17 +1364,23 @@ void ByteSwap(unsigned char* b, int n);
 
 /** Returns 1 if machine is big endian else 0
  * @ingroup LittleBigEndian
+ *
+ * This function is not ported to Python.
  */
 int IsBigEndian(void);
 
 /** Returns 1 if machine is little endian else 0
  * @ingroup LittleBigEndian
  *  little-endian format (sometimes called the Intel format
+ *
+ * This function is not ported to Python.
  */
 int IsLittleEndian(void);
 
 /** @defgroup Marsaglia Marsaglia random functions
  * @ingroup RandomFunctions
+ *
+ * These functions are not ported to Python.
  */
 
 /** Marsaglia
@@ -1344,6 +1405,8 @@ int IsLittleEndian(void);
  * of random numbers for serious simulation (Monte Carlo) studies."
  *
  * When the random numbers are floats, by default they are in the interval [0,1]
+ *
+ * This class is not ported to Python.
  */
 template <typename T>
 class Marsaglia
@@ -1535,5 +1598,6 @@ private:
                                       (double) MaxInteger);
     }
 };
+#endif
 
 #endif
