@@ -10,3 +10,5 @@
 %{
 #include <string.h>
 %}
+
+%include swigdenoise.i
