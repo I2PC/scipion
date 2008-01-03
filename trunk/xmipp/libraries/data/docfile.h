@@ -109,6 +109,8 @@ public:
      * @code
      * line[3] = 3; // line[3] must exist!!
      * @endcode
+     *
+     * This function is ignored in the python wrapper. Use "set" instead.
      */
     double& operator[](int i);
 
@@ -116,6 +118,8 @@ public:
      * @ingroup DocLineAccess
      *
      * The same as the previous function
+     *
+     * This function is renamed as "get" in the python wrapper.
      */
     double operator[](int i) const;
 
@@ -335,7 +339,7 @@ public:
     DocFile& operator=(const Matrix2D< double >& A);
 
     /** Another function for assignment from matrix.
-     * @ingroup DocFileCOprator
+     * @ingroup DocFileOperator
      */
     void assign(const Matrix2D< double >& A);
 
@@ -705,6 +709,8 @@ public:
      * @code
      * DF.FirstKey()=700;
      * @endcode
+     *
+     * This function is not ported to Python. Use set_FirstKey instead.
      */
     int& FirstKey()
     {
