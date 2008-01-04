@@ -146,7 +146,7 @@ void CorrectAmplitude3DParams::generateWienerFilters()
     Matrix1D<double> CTF1D, sumterm;
     FileName fn_tmp;
     int nrimgs;
-    ofstream  fh;
+    std::ofstream  fh;
     double res;
     double tot_nr_imgs = 0;
     double minsum=99.e99;
@@ -214,8 +214,8 @@ void CorrectAmplitude3DParams::generateWienerFilters()
 	// Write CTF and Wiener filter curves to disc
 	fn_tmp = fnOut + "_wien";
 	fn_tmp.compose(fn_tmp, ii+1, "txt");
-	fh.open((fn_tmp).c_str(), ios::out);
-	if (!fh) REPORT_ERROR(1, (string)"Error: Cannot write file: " + fn_tmp);
+	fh.open((fn_tmp).c_str(), std::ios::out);
+	if (!fh) REPORT_ERROR(1, (std::string)"Error: Cannot write file: " + fn_tmp);
 	for (int step = 0; step < nr_steps; step++) 
 	{
 	    res = (step * sqrt(3.) ) / 
@@ -229,15 +229,15 @@ void CorrectAmplitude3DParams::generateWienerFilters()
     }
 
     // Some output to screen
-    cerr <<" ---------------------------------------------------"<<endl;
-    cerr <<" + Number of defocus groups      = "<<ctfdat.lineNo()<<endl;
-    cerr <<" + Total number of images        = "<<tot_nr_imgs<<endl;
-    cerr <<" + Normalized Wiener constant    = "<<tot_nr_imgs*wienConst<<endl;
-    cerr <<" + Minimum of sum in denominator = "<<minsum<<endl;
-    cerr <<" + Maximum of sum in denominator = "<<maxsum<<endl;
-    cerr <<" + Minimum Wiener filter value   = "<<minwien<<endl;
-    cerr <<" + Maximum Wiener filter value   = "<<maxwien<<endl;
-    cerr <<" ---------------------------------------------------"<<endl;
+    std::cerr <<" ---------------------------------------------------"<<std::endl;
+    std::cerr <<" + Number of defocus groups      = "<<ctfdat.lineNo()<<std::endl;
+    std::cerr <<" + Total number of images        = "<<tot_nr_imgs<<std::endl;
+    std::cerr <<" + Normalized Wiener constant    = "<<tot_nr_imgs*wienConst<<std::endl;
+    std::cerr <<" + Minimum of sum in denominator = "<<minsum<<std::endl;
+    std::cerr <<" + Maximum of sum in denominator = "<<maxsum<<std::endl;
+    std::cerr <<" + Minimum Wiener filter value   = "<<minwien<<std::endl;
+    std::cerr <<" + Maximum Wiener filter value   = "<<maxwien<<std::endl;
+    std::cerr <<" ---------------------------------------------------"<<std::endl;
 
 }
 	
@@ -247,7 +247,7 @@ void CorrectAmplitude3DParams::generateVolumes()
 
     VolumeXmipp V;
     FileName fnVol, fnCTF;
-    Matrix3D<complex<double> > fft,fft_out;
+    Matrix3D<std::complex<double> > fft,fft_out;
     Matrix1D<int>    idx(3);
     Matrix1D<double> freq(3);
     int ires;

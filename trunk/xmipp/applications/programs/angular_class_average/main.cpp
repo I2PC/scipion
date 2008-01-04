@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage();
     }
 
@@ -184,13 +184,13 @@ int main(int argc, char *argv[])
 
 	if (ROUND(sumw) != nmax)
 	{
-	    cerr<<"sumw= "<<sumw<<" nmax= "<<nmax<<endl;
+	    std::cerr<<"sumw= "<<sumw<<" nmax= "<<nmax<<std::endl;
 	    REPORT_ERROR(1,"ERROR: there were images in the input docfile with rot and tilt angles that were not in the library!! Dont trust the averages and selfiles!");
 	}
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
 
 }

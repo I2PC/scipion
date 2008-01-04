@@ -107,8 +107,8 @@ double point_line_distance_3D(const Matrix1D<double> &p,
     r = x * x + y * y + z * z;
     if (r < 0)
     {
-        cout << "Horror: The distance of a line to a point can not be negative"
-        << "Congratulation you have found a bug in Xmipp." << endl;
+        std::cout << "Horror: The distance of a line to a point can not be negative"
+        << "Congratulation you have found a bug in Xmipp." << std::endl;
         exit(0);
     }
 #endif
@@ -124,7 +124,7 @@ double point_line_distance_3D(const Matrix1D<double> &p,
     Returns -1  if  A�+B�+C� <<1
      */
 
-void least_squares_plane_fit(const vector<fit_point> & IN_points,
+void least_squares_plane_fit(const std::vector<fit_point> & IN_points,
                              double &plane_a,
                              double &plane_b,
                              double &plane_c)
@@ -172,7 +172,7 @@ void least_squares_plane_fit(const vector<fit_point> & IN_points,
 
 /* Bspline fitting --------------------------------------------------------- */
 /* See http://en.wikipedia.org/wiki/Weighted_least_squares */
-void Bspline_model_fitting(const vector<fit_point> &IN_points,
+void Bspline_model_fitting(const std::vector<fit_point> &IN_points,
                            int SplineDegree, int l0, int lF, int m0, int mF,
                            double h_x, double h_y, double x0, double y0,
                            Bspline_model &result)
@@ -193,7 +193,7 @@ void Bspline_model_fitting(const vector<fit_point> &IN_points,
 
     // Modify the list of points to include the weight
     int Npoints = IN_points.size();
-    vector<fit_point> AUX_points = IN_points;
+    std::vector<fit_point> AUX_points = IN_points;
     for (int i = 0; i < Npoints; ++i)
     {
         double sqrt_w = sqrt(AUX_points[i].w);
@@ -347,7 +347,7 @@ void box_enclosing(const Matrix1D<double> &v0, const Matrix1D<double> &vF,
 }
 
 /* Point inside polygon ---------------------------------------------------- */
-bool point_inside_polygon(const vector< Matrix1D<double> > &polygon,
+bool point_inside_polygon(const std::vector< Matrix1D<double> > &polygon,
                           const Matrix1D<double> &point)
 {
     int i, j;
@@ -550,9 +550,9 @@ void Euler_direction2angles(Matrix1D<double> &v0,
 
     if (fabs((cb)) > 0.999847695)/*one degree */
     {
-        cerr << "\nWARNING: Routine Euler_direction2angles is not reliable\n"
-        "for small tilt angles. Up to 0.001 deg it should be OK\n"
-        "for most applications but you never know";
+        std::cerr << "\nWARNING: Routine Euler_direction2angles is not reliable\n"
+                     "for small tilt angles. Up to 0.001 deg it should be OK\n"
+                     "for most applications but you never know";
     }
 
     if (fabs((cb - 1.)) < FLT_EPSILON)
@@ -672,25 +672,25 @@ void Euler_matrix2angles(const Matrix2D<double> &A, double &alpha,
     Euler_angles2matrix(alpha, beta, gamma, Ap);
     if (A != Ap)
     {
-        cout << "---\n";
-        cout << "Euler_matrix2angles: I have computed angles "
+        std::cout << "---\n";
+        std::cout << "Euler_matrix2angles: I have computed angles "
         " which doesn't match with the original matrix\n";
-        cout << "Original matrix\n" << A;
-        cout << "Computed angles alpha=" << alpha << " beta=" << beta
-        << " gamma=" << gamma << endl;
-        cout << "New matrix\n" << Ap;
-        cout << "---\n";
+        std::cout << "Original matrix\n" << A;
+        std::cout << "Computed angles alpha=" << alpha << " beta=" << beta
+        << " gamma=" << gamma << std::endl;
+        std::cout << "New matrix\n" << Ap;
+        std::cout << "---\n";
     }
 #endif
 
 #ifdef DEBUG
-    cout << "abs_sb " << abs_sb << endl;
-    cout << "A(1,2) " << A(1, 2) << " A(0,2) " << A(0, 2) << " gamma "
-    << gamma << endl;
-    cout << "A(2,1) " << A(2, 1) << " A(2,0) " << A(2, 0) << " alpha "
-    << alpha << endl;
-    cout << "sign sb " << sign_sb << " A(2,2) " << A(2, 2)
-    << " beta " << beta << endl;
+    std::cout << "abs_sb " << abs_sb << std::endl;
+    std::cout << "A(1,2) " << A(1, 2) << " A(0,2) " << A(0, 2) << " gamma "
+    << gamma << std::endl;
+    std::cout << "A(2,1) " << A(2, 1) << " A(2,0) " << A(2, 0) << " alpha "
+    << alpha << std::endl;
+    std::cout << "sign sb " << sign_sb << " A(2,2) " << A(2, 2)
+    << " beta " << beta << std::endl;
 #endif
 }
 #undef CHECK
@@ -754,7 +754,7 @@ void Euler_Angles_after_compresion(const double rot, double tilt, double psi,
     }
     catch (Xmipp_error &XE)
     {
-        cout << XE;
+        std::cout << XE;
         exit(1);
     }
 

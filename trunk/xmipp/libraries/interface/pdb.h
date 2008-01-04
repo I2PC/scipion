@@ -87,7 +87,7 @@ class PDBPhantom
 {
 public:
     /// List of atoms
-    vector<Atom> atomList;
+    std::vector<Atom> atomList;
     
     /// Add Atom
     void addAtom(const Atom &atom)
@@ -165,11 +165,11 @@ class AtomInterpolator
 {
 public:
     // Vector of radial volume profiles
-    vector< Matrix1D<double> > volumeProfileCoefficients;
+    std::vector< Matrix1D<double> > volumeProfileCoefficients;
     // Vector of radial projection profiles
-    vector< Matrix1D<double> > projectionProfileCoefficients;
+    std::vector< Matrix1D<double> > projectionProfileCoefficients;
     // Vector of atom radii
-    vector<double> radii;
+    std::vector<double> radii;
     // Downsampling factor
     int M;
     // Fine sampling rate

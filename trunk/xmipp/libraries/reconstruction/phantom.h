@@ -93,7 +93,7 @@ public:
         A three letters string telling what kind of feature this object is.
         For example, "cyl", "con", "cub", ... See the specific classes to
         know exactly which is each label. */
-    string            Type;
+    std::string       Type;
 
     /** Feature behaviour.
         This flag indicates how the feature behaves inside the voxel volume.
@@ -398,11 +398,11 @@ public:
     virtual void read_specific(char *line) = 0;
 
     /** Show feature not in the standard format but more informatively.
-        This function is based on the cout << ... of each subclass. First
+        This function is based on the std::cout << ... of each subclass. First
         shows the common part of the feature and then its specific part. Be
         careful that you must show a pointer to the feature!!
-        \\ Ex: Sphere sphere; cout << (Feature *) \&sphere; */
-    friend ostream& operator << (ostream &o, const Feature *F);
+        \\ Ex: Sphere sphere; std::cout << (Feature *) \&sphere; */
+    friend std::ostream& operator << (std::ostream &o, const Feature *F);
 };
 
 /* ORIENTED FEATURE ======================================================== */
@@ -531,7 +531,7 @@ public:
     /** Show feature not in the standard format but more informatively.
         This function only shows the non common part of the feature. Use
         the << operator of Feature to show the whole feature. */
-    friend ostream& operator << (ostream &o, const Sphere &f);
+    friend std::ostream& operator << (std::ostream &o, const Sphere &f);
 
     /** Generate a random sphere.
         A sphere is generated randomly within the range of the parameters
@@ -635,7 +635,7 @@ public:
     /** Show feature not in the standard format but more informatively.
         This function only shows the non common part of the feature. Use
         the << operator of Feature to show the whole feature. */
-    friend ostream& operator << (ostream &o, const Blob &f);
+    friend std::ostream& operator << (std::ostream &o, const Blob &f);
 
     /** Generate a random blob.
         A sphere is generated randomly within the range of the parameters
@@ -751,7 +751,7 @@ public:
     /** Show feature not in the standard format but more informatively.
         This function only shows the non common part of the feature. Use
         the << operator of Feature to show the whole feature. */
-    friend ostream& operator << (ostream &o, const Cylinder &f);
+    friend std::ostream& operator << (std::ostream &o, const Cylinder &f);
 
     /** Generate a random cylinder.
         A cylinder is generated randomly within the range of the parameters
@@ -885,7 +885,7 @@ public:
     /** Show feature not in the standard format but more informatively.
         This function only shows the non common part of the feature. Use
         the << operator of Feature to show the whole feature. */
-    friend ostream& operator << (ostream &o, const DCylinder &f);
+    friend std::ostream& operator << (std::ostream &o, const DCylinder &f);
 
     /** Generate a random double cylinder.
         A double cylinder is generated randomly within the range of the parameters
@@ -1005,7 +1005,7 @@ public:
     /** Show feature not in the standard format but more informatively.
         This function only shows the non common part of the feature. Use
         the << operator of Feature to show the whole feature. */
-    friend ostream& operator << (ostream &o, const Cube &f);
+    friend std::ostream& operator << (std::ostream &o, const Cube &f);
 
     /** Generate a random cube.
         A cube is generated randomly within the range of the parameters
@@ -1125,7 +1125,7 @@ public:
     /** Show feature not in the standard format but more informatively.
         This function only shows the non common part of the feature. Use
         the << operator of Feature to show the whole feature. */
-    friend ostream& operator << (ostream &o, const Ellipsoid &f);
+    friend std::ostream& operator << (std::ostream &o, const Ellipsoid &f);
 
     /** Generate a random ellipsoid.
         An ellipsoid is generated randomly within the range of the parameters
@@ -1243,7 +1243,7 @@ public:
     /** Show feature not in the standard format but more informatively.
         This function only shows the non common part of the feature. Use
         the << operator of Feature to show the whole feature. */
-    friend ostream& operator << (ostream &o, const Cone &f);
+    friend std::ostream& operator << (std::ostream &o, const Cone &f);
 
     /** Generate a random cone.
         A cone is generated randomly within the range of the parameters
@@ -1280,7 +1280,7 @@ public:
     Here goes an example of how to manage loops in the phantom class,
     @code
        // Show all features
-       for (int i=1; i<=P.FeatNo(); i++) cout << P(i);
+       for (int i=1; i<=P.FeatNo(); i++) std::cout << P(i);
     @endcode
 */
 class Phantom
@@ -1311,7 +1311,7 @@ public:
     double          phantom_scale;
 
     /// List with the features
-    vector<Feature*> VF;
+    std::vector<Feature*> VF;
 public:
     /** Empty constructor.
         The empty phantom is 0x0x0, background density=0, no feature is inside
@@ -1392,12 +1392,12 @@ public:
         in length units (usually Angstroms).
 
         We recommend apply_scale=false only if you plan to modify the
-        description file without producing projections, voxel phantoms, ... */
+        description file without produstd::cing projections, voxel phantoms, ... */
     void read(const FileName &fn_phantom, bool apply_scale = true);
 
     /** Show a phantom file.
         The more descriptive format is used instead of the standard Feature format */
-    friend ostream& operator << (ostream &o, const Phantom &f);
+    friend std::ostream& operator << (std::ostream &o, const Phantom &f);
 
     /** Write a phantom file in the standard feature format.
         You may rename the file or not giving a different name in the write call. */

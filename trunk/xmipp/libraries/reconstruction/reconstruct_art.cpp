@@ -37,8 +37,8 @@ void Plain_ART_Parameters::produce_Side_Info(const Basic_ART_Parameters &prm,
         GridVolume &vol_basis0)
 {}
 
-/* Cout -------------------------------------------------------------------- */
-ostream & operator << (ostream &o, const Plain_ART_Parameters &eprm)
+/* std::cout -------------------------------------------------------------------- */
+std::ostream & operator << (std::ostream &o, const Plain_ART_Parameters &eprm)
 {
     return o;
 }
@@ -74,9 +74,9 @@ void process_correction(Projection &corr_proj)
 #ifdef DEBUG
     save() = corr_proj();
     save.write("PPPafter.xmp");
-    cout << "Press\n";
+    std::cout << "Press\n";
     char c;
-    cin >> c;
+    std::cin >> c;
 #endif
 }
 #undef DEBUG
@@ -94,14 +94,14 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
     ImageOver        *footprint = (ImageOver *) & prm.basis.blobprint;
     ImageOver        *footprint2 = (ImageOver *) & prm.basis.blobprint2;
     Matrix2D<double> *A = NULL;
-    vector<Matrix2D<double> > newres_imgs;
+    std::vector<Matrix2D<double> > newres_imgs;
     Matrix2D<int>    mask;
 
     residual_vol.resize(vol_basis);
     residual_vol.initZeros();
 
     // Calculate volume from all backprojected residual images
-    cerr << "Backprojection of residual images " << endl;
+    std::cerr << "Backprojection of residual images " << std::endl;
     if (!(prm.tell&TELL_SHOW_ERROR)) init_progress_bar(prm.numIMG);
 
     for (int iact_proj = 0; iact_proj < prm.numIMG ; iact_proj++)
@@ -144,7 +144,7 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
     pow_residual_vol = residual_vox().sum2() / MULTIDIM_SIZE(residual_vox());
     residual_vox.clear();
 
-    cerr << "Projection of residual volume; kappa = " << kappa << endl;
+    std::cerr << "Projection of residual volume; kappa = " << kappa << std::endl;
     if (!(prm.tell&TELL_SHOW_ERROR)) init_progress_bar(prm.numIMG);
 
     // Now that we have the residual volume: project in all directions
@@ -311,10 +311,10 @@ void ART_single_step(
     // Print system matrix
     if (prm.print_system_matrix)
     {
-        cout << "Equation system (Ax=b) ----------------------\n";
-        cout << "Size: ";
+        std::cout << "Equation system (Ax=b) ----------------------\n";
+        std::cout << "Size: ";
         A->printShape();
-        cout << endl;
+        std::cout << std::endl;
         for (int i = 0; i < YSIZE(*A); i++)
         {
             bool null_row = true;
@@ -326,14 +326,14 @@ void ART_single_step(
                 }
             if (!null_row)
             {
-                cout << "pixel=" << integerToString(i, 3) << " --> "
+                std::cout << "pixel=" << integerToString(i, 3) << " --> "
                 << MULTIDIM_ELEM(read_proj(), i) << " = ";
                 for (int j = 0; j < XSIZE(*A); j++)
-                    cout << DIRECT_MAT_ELEM(*A, i, j) << " ";
-                cout << endl;
+                    std::cout << DIRECT_MAT_ELEM(*A, i, j) << " ";
+                std::cout << std::endl;
             }
         }
-        cout << "---------------------------------------------\n";
+        std::cout << "---------------------------------------------\n";
         delete A;
     }
 

@@ -86,11 +86,11 @@ public:
     // SelFile images
     SelFile SF;
     // Stack of input images
-    vector<ImageXmipp>  images;
+    std::vector<ImageXmipp>  images;
     // Stack of optimal correlations for all images
-    vector<double>  corr;
+    std::vector<double>  corr;
     // Boolean for successful alignment of image
-    vector<bool>  success;
+    std::vector<bool>  success;
     // Image holding current reference
     ImageXmipp Iref;
 

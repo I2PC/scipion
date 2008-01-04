@@ -40,7 +40,7 @@ void Prog_MLPalign2D_prm::read(int argc, char **argv, bool ML3D)
         comment = (DFi.get_current_line()).get_text();
         if (strstr(comment.c_str(), "MLalign2D-logfile") == NULL)
         {
-            cerr << "Error!! Docfile is not of MLalign2D-logfile type. " << endl;
+            std::cerr << "Error!! Docfile is not of MLalign2D-logfile type. " << std::endl;
             exit(1);
         }
         else
@@ -86,7 +86,7 @@ void Prog_MLPalign2D_prm::read(int argc, char **argv, bool ML3D)
     {
         for (int i = 1; i < argc; i++)
         {
-            cline = cline + (string)argv[i] + " ";
+            cline = cline + (std::string)argv[i] + " ";
         }
     }
 
@@ -131,48 +131,48 @@ void Prog_MLPalign2D_prm::show(bool ML3D)
         // To screen
         if (!ML3D)
         {
-            cerr << " -----------------------------------------------------------------" << endl;
-            cerr << " | Read more about this program in the following publications:   |" << endl;
-	    cerr << " |  Scheres ea. (2005) J.Mol.Biol. 348(1), 139-49                |" << endl;
-	    cerr << " |  Scheres ea. (2005) Bioinform. 21(suppl.2), ii243-4   (-fast) |" << endl;
-            cerr << " |                                                               |" << endl;
-            cerr << " |  *** Please cite them if this program is of use to you! ***   |" << endl;
-            cerr << " -----------------------------------------------------------------" << endl;
+            std::cerr << " -----------------------------------------------------------------" << std::endl;
+            std::cerr << " | Read more about this program in the following publications:   |" << std::endl;
+	    std::cerr << " |  Scheres ea. (2005) J.Mol.Biol. 348(1), 139-49                |" << std::endl;
+	    std::cerr << " |  Scheres ea. (2005) Bioinform. 21(suppl.2), ii243-4   (-fast) |" << std::endl;
+            std::cerr << " |                                                               |" << std::endl;
+            std::cerr << " |  *** Please cite them if this program is of use to you! ***   |" << std::endl;
+            std::cerr << " -----------------------------------------------------------------" << std::endl;
         }
-        cerr << "--> Maximum-likelihood multi-reference refinement " << endl;
-        cerr << "--> Using polar coordinates and limited translational searches " << endl;
-        cerr << "  Input images            : " << fn_sel << " (" << nr_exp_images << ")" << endl;
+        std::cerr << "--> Maximum-likelihood multi-reference refinement " << std::endl;
+        std::cerr << "--> Using polar coordinates and limited translational searches " << std::endl;
+        std::cerr << "  Input images            : " << fn_sel << " (" << nr_exp_images << ")" << std::endl;
         if (fn_ref != "")
-            cerr << "  Reference image(s)      : " << fn_ref << endl;
+            std::cerr << "  Reference image(s)      : " << fn_ref << std::endl;
         else
-            cerr << "  Number of references:   : " << nr_ref << endl;
-        cerr << "  Output rootname         : " << fn_root << endl;
-        cerr << "  Stopping criterium      : " << eps << endl;
-        cerr << "  initial sigma noise     : " << sigma_noise << endl;
-        cerr << "  initial sigma offset    : " << sigma_offset << endl;
+            std::cerr << "  Number of references:   : " << nr_ref << std::endl;
+        std::cerr << "  Output rootname         : " << fn_root << std::endl;
+        std::cerr << "  Stopping criterium      : " << eps << std::endl;
+        std::cerr << "  initial sigma noise     : " << sigma_noise << std::endl;
+        std::cerr << "  initial sigma offset    : " << sigma_offset << std::endl;
         if (do_mirror)
-            cerr << "  Check mirrors           : true" << endl;
+            std::cerr << "  Check mirrors           : true" << std::endl;
         else
-            cerr << "  Check mirrors           : false" << endl;
+            std::cerr << "  Check mirrors           : false" << std::endl;
         if (fn_frac != "")
-            cerr << "  Initial model fractions : " << fn_frac << endl;
+            std::cerr << "  Initial model fractions : " << fn_frac << std::endl;
 
-	cerr << "    + Limit polar coordinates to radii between "<<Ri<<" and "<<Ro<<" pixels"<<endl; 
+	std::cerr << "    + Limit polar coordinates to radii between "<<Ri<<" and "<<Ro<<" pixels"<<std::endl; 
         if (search_shift < 999.)
-            cerr << "    + Limit translational search to +/- " << search_shift << " pixels" << endl;
+            std::cerr << "    + Limit translational search to +/- " << search_shift << " pixels" << std::endl;
         if (search_rot < 180.)
-            cerr << "    + Limit orientational search to +/- " << search_rot << " degrees" << endl;
+            std::cerr << "    + Limit orientational search to +/- " << search_rot << " degrees" << std::endl;
 
         // Hidden stuff
         if (fix_fractions)
         {
-            cerr << "  -> Do not update estimates of model fractions." << endl;
+            std::cerr << "  -> Do not update estimates of model fractions." << std::endl;
         }
         if (fix_sigma_noise)
         {
-            cerr << "  -> Do not update sigma-estimate of noise." << endl;
+            std::cerr << "  -> Do not update sigma-estimate of noise." << std::endl;
         }
-        cerr << " -----------------------------------------------------------------" << endl;
+        std::cerr << " -----------------------------------------------------------------" << std::endl;
 
     }
 
@@ -181,32 +181,32 @@ void Prog_MLPalign2D_prm::show(bool ML3D)
 // Usage ===================================================================
 void Prog_MLPalign2D_prm::usage()
 {
-    cerr << "Usage:  mlp_align2d [options] " << endl;
-    cerr << "   -i <selfile>                : Selfile with input images \n";
-    cerr << "   -ref <selfile/image>        : Selfile with initial references/single reference image \n";
-    cerr << "      OR -nref <int>               OR number of references to generate automatically (bias-free)\n";
-    cerr << " [ -o <rootname> ]             : Output rootname (default = \"ml2d\")\n";
-    cerr << " [ -mirror ]                   : Also check mirror image of each reference \n";
-    cerr << " [ -Ri <float=1> ]             : Inner radius to limit rotational search \n";
-    cerr << " [ -Ro <float=dim/2 - 1> ]     : Outer radius to limit rotational search \n";
-    cerr << " [ -more_options ]             : Show all possible input parameters \n";
+    std::cerr << "Usage:  mlp_align2d [options] " << std::endl;
+    std::cerr << "   -i <selfile>                : Selfile with input images \n";
+    std::cerr << "   -ref <selfile/image>        : Selfile with initial references/single reference image \n";
+    std::cerr << "      OR -nref <int>               OR number of references to generate automatically (bias-free)\n";
+    std::cerr << " [ -o <rootname> ]             : Output rootname (default = \"ml2d\")\n";
+    std::cerr << " [ -mirror ]                   : Also check mirror image of each reference \n";
+    std::cerr << " [ -Ri <float=1> ]             : Inner radius to limit rotational search \n";
+    std::cerr << " [ -Ro <float=dim/2 - 1> ]     : Outer radius to limit rotational search \n";
+    std::cerr << " [ -more_options ]             : Show all possible input parameters \n";
 }
 
 // Extended usage ===================================================================
 void Prog_MLPalign2D_prm::extendedUsage(bool ML3D)
 {
-    cerr << "Additional options: " << endl;
-    cerr << " [ -eps <float=5e-5> ]         : Stopping criterium \n";
-    cerr << " [ -iter <int=100> ]           : Maximum number of iterations to perform \n";
-    cerr << " [ -noise <float=1> ]          : Expected standard deviation for pixel noise \n";
-    cerr << " [ -frac <docfile=\"\"> ]        : Docfile with expected model fractions (default: even distr.)\n";
-    if (!ML3D) cerr << " [ -restart <logfile> ]        : restart a run with all parameters as in the logfile \n";
-    if (!ML3D) cerr << " [ -istart <int> ]             : number of initial iteration \n";
-    cerr << " [ -fix_sigma_noise]           : Do not re-estimate the standard deviation in the pixel noise \n";
-    cerr << " [ -fix_fractions]             : Do not re-estimate the model fractions \n";
-    cerr << " [ -search_shift <float=999>]  : Limit of translational search [pix] (does NOT use FFT) \n";
-    cerr << " [ -doc <docfile=\"\"> ]         : Read initial angles and offsets from docfile \n";
-    cerr << endl;
+    std::cerr << "Additional options: " << std::endl;
+    std::cerr << " [ -eps <float=5e-5> ]         : Stopping criterium \n";
+    std::cerr << " [ -iter <int=100> ]           : Maximum number of iterations to perform \n";
+    std::cerr << " [ -noise <float=1> ]          : Expected standard deviation for pixel noise \n";
+    std::cerr << " [ -frac <docfile=\"\"> ]        : Docfile with expected model fractions (default: even distr.)\n";
+    if (!ML3D) std::cerr << " [ -restart <logfile> ]        : restart a run with all parameters as in the logfile \n";
+    if (!ML3D) std::cerr << " [ -istart <int> ]             : number of initial iteration \n";
+    std::cerr << " [ -fix_sigma_noise]           : Do not re-estimate the standard deviation in the pixel noise \n";
+    std::cerr << " [ -fix_fractions]             : Do not re-estimate the model fractions \n";
+    std::cerr << " [ -search_shift <float=999>]  : Limit of translational search [pix] (does NOT use FFT) \n";
+    std::cerr << " [ -doc <docfile=\"\"> ]         : Read initial angles and offsets from docfile \n";
+    std::cerr << std::endl;
     exit(1);
 }
 
@@ -285,7 +285,7 @@ void Prog_MLPalign2D_prm::generateInitialReferences()
 
     if (verb > 0)
     {
-        cerr << "  Generating initial references by averaging over random subsets" << endl;
+        std::cerr << "  Generating initial references by averaging over random subsets" << std::endl;
         init_progress_bar(nr_ref);
     }
 
@@ -333,7 +333,7 @@ void Prog_MLPalign2D_prm::produceSideInfo2(int nr_vols)
     double                    offx, offy, aux, sumfrac = 0.;
     FileName                  fn_tmp;
     ImageXmipp                img;
-    vector<double>            Vdum;
+    std::vector<double>            Vdum;
 
     // Read in all reference images in memory
     if (Is_ImageXmipp(fn_ref))
@@ -390,7 +390,7 @@ void Prog_MLPalign2D_prm::produceSideInfo2(int nr_vols)
             }
             else
             {
-                REPORT_ERROR(1, (string)"Prog_MLPalign2D_prm: Cannot find " + fn_tmp + " in docfile " + fn_doc);
+                REPORT_ERROR(1, (std::string)"Prog_MLPalign2D_prm: Cannot find " + fn_tmp + " in docfile " + fn_doc);
             }
 	    DF.go_beginning();
         }
@@ -423,7 +423,7 @@ void Prog_MLPalign2D_prm::produceSideInfo2(int nr_vols)
             DF.next_data_line();
         }
         if (ABS(sumfrac - 1.) > 1e-3)
-            if (verb > 0) cerr << " ->WARNING: Sum of all expected model fractions (" << sumfrac << ") is not one!" << endl;
+            if (verb > 0) std::cerr << " ->WARNING: Sum of all expected model fractions (" << sumfrac << ") is not one!" << std::endl;
         for (refno = 0; refno < nr_ref; refno++)
         {
             alpha_k[refno] /= sumfrac;
@@ -433,7 +433,7 @@ void Prog_MLPalign2D_prm::produceSideInfo2(int nr_vols)
 }
 
 void Prog_MLPalign2D_prm::preselectDirections(float &phi, float &theta,
-					      vector<double> &pdf_directions)
+					      std::vector<double> &pdf_directions)
 {
 
     float phi_ref, theta_ref, angle, angle2;
@@ -496,16 +496,16 @@ void Prog_MLPalign2D_prm::updatePdfTranslations()
 
 }
 
-void Prog_MLPalign2D_prm::calculateFtRingsAllRefs(const vector< ImageXmippT<double> > &Iref,
-						  vector< Polar< complex <double> > > &fP_refs,
-						  Polar< complex <double> > &fP_zero,
-						  vector< double > &sum2_refs,
+void Prog_MLPalign2D_prm::calculateFtRingsAllRefs(const std::vector< ImageXmippT<double> > &Iref,
+						  std::vector< Polar< std::complex <double> > > &fP_refs,
+						  Polar< std::complex <double> > &fP_zero,
+						  std::vector< double > &sum2_refs,
 						  const int &first, const int &last)
 {
 	Matrix2D<double>         Maux;
 	Polar<double>            P;
-	Polar<complex <double> > fP;
-	vector<double>           x,y,data;
+	Polar<std::complex <double> > fP;
+	std::vector<double>           x,y,data;
 
 	fP_refs.clear();
 	sum2_refs.clear();
@@ -545,13 +545,13 @@ void Prog_MLPalign2D_prm::calculateFtRingsAllRefs(const vector< ImageXmippT<doub
 }
 
 void Prog_MLPalign2D_prm::calculateFtRingsAllTransImg(const ImageXmippT<double> &img,
-						      vector< Polar< complex <double> > > &fP_trans,
-						      vector< Polar< complex <double> > > &fPm_trans,
+						      std::vector< Polar< std::complex <double> > > &fP_trans,
+						      std::vector< Polar< std::complex <double> > > &fPm_trans,
 						      double &Xi2, const int &first, const int &last)
 {
     Matrix2D<double>         Maux;
     Polar<double>            P;
-    Polar<complex <double> > fP;
+    Polar<std::complex <double> > fP;
 
     produceReverseGriddingMatrix2D(img(),Maux,kb);
     fP_trans.clear();
@@ -575,20 +575,20 @@ void Prog_MLPalign2D_prm::calculateFtRingsAllTransImg(const ImageXmippT<double> 
 }
 
 void Prog_MLPalign2D_prm::processOneImage(const ImageXmippT<double> &img,
-					  const vector < Polar <complex <double> >  > &fP_ref,
-					  const vector < double > &sum2_refs,
-					  const vector < double > &pdf_directions,
-					  vector < Polar <complex <double> > > &fP_wsum_imgs,
+					  const std::vector < Polar <std::complex <double> >  > &fP_ref,
+					  const std::vector < double > &sum2_refs,
+					  const std::vector < double > &pdf_directions,
+					  std::vector < Polar <std::complex <double> > > &fP_wsum_imgs,
 					  double &wsum_sigma_noise, double &wsum_sigma_offset, 
-					  vector < double > &sumw, vector < double > &sumw_mirror,
+					  std::vector < double > &sumw, std::vector < double > &sumw_mirror,
 					  double &LL, double &fracweight,
 					  int &opt_iref, double &opt_psi, double &opt_flip, 
 					  double &opt_xoff, double &opt_yoff)
 {
 
-    vector<double>                      refw, refw_mirror;
+    std::vector<double>                      refw, refw_mirror;
     Matrix1D<double>                    ang,corr;
-    vector< Polar< complex <double> > > fP_trans, fPm_trans;
+    std::vector< Polar< std::complex <double> > > fP_trans, fPm_trans;
     double                              A2, Xi2, A2_plus_Xi2;
     double                              aux, weight, maxweight, diff2, mindiff2;
     double                              wsum_corr, pdf, pdfm, pdft, sumw_allrefs;
@@ -596,8 +596,8 @@ void Prog_MLPalign2D_prm::processOneImage(const ImageXmippT<double> &img,
     double                              sigma_noise2 = sigma_noise * sigma_noise;
     int                                 opt_ipsi, opt_ipos, opt_itrans, nr_pos;
     Matrix1D<double>                    Mweight(nr_psi);
-    Matrix1D<complex <double> >         Fweight(nr_psi);
-    vector<int>                         img_xoffs, img_yoffs;
+    Matrix1D<std::complex <double> >         Fweight(nr_psi);
+    std::vector<int>                         img_xoffs, img_yoffs;
 
     //TimeStamp t0,t1; 
     //time_config();
@@ -605,7 +605,7 @@ void Prog_MLPalign2D_prm::processOneImage(const ImageXmippT<double> &img,
 
     // reserve memory for the weights vector
     nr_pos = nr_trans * nr_ref * dnr_psi;
-    vector<double> weights;
+    std::vector<double> weights;
 
     // Store actual offsets for pdf calculations
     img_xoffs.clear();
@@ -618,7 +618,7 @@ void Prog_MLPalign2D_prm::processOneImage(const ImageXmippT<double> &img,
 
     // Calculate all FT-rings for all translated images
     calculateFtRingsAllTransImg(img,fP_trans,fPm_trans,Xi2,Ri,Ro);
-    //cerr<<"generate polars: "; print_elapsed_time(t0);
+    //std::cerr<<"generate polars: "; print_elapsed_time(t0);
     //annotate_time(&t1);
 
    // Search over all references
@@ -788,27 +788,27 @@ void Prog_MLPalign2D_prm::processOneImage(const ImageXmippT<double> &img,
 	opt_flip = 0.;
 	opt_psi = ang(opt_ipsi);
     }
-    //cerr<<"all the rest: "; print_elapsed_time(t1);
+    //std::cerr<<"all the rest: "; print_elapsed_time(t1);
 
 }
 
 
-void Prog_MLPalign2D_prm::sumOverAllImages(SelFile &SF, const vector< ImageXmippT<double> > &Iref,
+void Prog_MLPalign2D_prm::sumOverAllImages(SelFile &SF, const std::vector< ImageXmippT<double> > &Iref,
 					   double &LL, double &sumcorr, DocFile &DFo,
-					   vector < Polar <complex <double> > > &fP_wsum_imgs,
+					   std::vector < Polar <std::complex <double> > > &fP_wsum_imgs,
 					   double &wsum_sigma_noise, double &wsum_sigma_offset,  
-					   vector<double> &sumw, vector<double> &sumw_mirror)
+					   std::vector<double> &sumw, std::vector<double> &sumw_mirror)
 {
 
     ImageXmipp        img;
     FileName          fn_img;
-    vector<double>    pdf_directions(nr_ref);
+    std::vector<double>    pdf_directions(nr_ref);
     Matrix1D<double>  dataline(8), opt_offsets(2), trans(2);
     float             old_phi = -999., old_theta = -999.;
     double            opt_psi, opt_flip, opt_xoff, opt_yoff, maxcorr;
     int               c, nn, imgno, opt_iref;
-    //vector<Polar<complex<double> > > fP_refs;
-    //Polar<complex<double> >          fP_zero;
+    //std::vector<Polar<std::complex<double> > > fP_refs;
+    //Polar<std::complex<double> >          fP_zero;
 
     // Calculate FTs of polar rings of all references
     //calculateFtRingsAllRefs(Iref,fP_refs,fP_zero,sum2_refs,Ri,Ro);
@@ -894,9 +894,9 @@ void Prog_MLPalign2D_prm::sumOverAllImages(SelFile &SF, const vector< ImageXmipp
 }
 
 // Update all model parameters
-void Prog_MLPalign2D_prm::updateParameters(vector < Polar <complex <double> > > &fP_wsum_imgs,
+void Prog_MLPalign2D_prm::updateParameters(std::vector < Polar <std::complex <double> > > &fP_wsum_imgs,
 					   double &wsum_sigma_noise, double &wsum_sigma_offset,
-					   vector<double> &sumw, vector<double> &sumw_mirror,
+					   std::vector<double> &sumw, std::vector<double> &sumw_mirror,
 					   double &sumcorr, double &sumw_allrefs)
 {
 
@@ -911,7 +911,7 @@ void Prog_MLPalign2D_prm::updateParameters(vector < Polar <complex <double> > > 
 
     // Update the reference images
     Polar<double> P;
-    vector<double> x, y, data;
+    std::vector<double> x, y, data;
     Matrix2D<double> Maux;
     for (int iref = 0; iref < nr_ref; iref++)
     {
@@ -980,7 +980,7 @@ void Prog_MLPalign2D_prm::updateParameters(vector < Polar <complex <double> > > 
 }
 
 // Check convergence
-bool Prog_MLPalign2D_prm::checkConvergence(vector<double> &conv)
+bool Prog_MLPalign2D_prm::checkConvergence(std::vector<double> &conv)
 {
 
     bool converged = true;
@@ -1014,7 +1014,7 @@ bool Prog_MLPalign2D_prm::checkConvergence(vector<double> &conv)
 
 void Prog_MLPalign2D_prm::writeOutputFiles(const int iter, DocFile &DFo,
         double &sumw_allrefs, double &LL, double &avecorr,
-        vector<double> &conv)
+        std::vector<double> &conv)
 {
 
     FileName          fn_tmp, fn_base, fn_tmp2;
@@ -1022,7 +1022,7 @@ void Prog_MLPalign2D_prm::writeOutputFiles(const int iter, DocFile &DFo,
     SelFile           SFo, SFc;
     DocFile           DFl;
     string            comment;
-    ofstream          fh;
+    std::ofstream          fh;
 
     DFl.clear();
     SFo.clear();

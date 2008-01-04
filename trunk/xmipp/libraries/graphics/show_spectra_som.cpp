@@ -58,9 +58,9 @@ void ShowSpectraSOM::initWithFile(const FileName &_fn_root,
     init();
     readFile(_fn_root);
 
-    ifstream fh_in(_fn_dat.c_str());
+    std::ifstream fh_in(_fn_dat.c_str());
     if (!fh_in)
-        REPORT_ERROR(1, (string)"ShowSpectra::readFile: Cannot open" + _fn_dat);
+        REPORT_ERROR(1, (std::string)"ShowSpectra::readFile: Cannot open" + _fn_dat);
     Vdat = new xmippCTVectors(fh_in);
     fh_in.close();
 
@@ -91,13 +91,13 @@ void ShowSpectraSOM::readSOMFiles(const FileName &_fn_root)
     // Read histogram
     if (exists(fn_his))
     {
-        ifstream fh_his(fn_his.c_str());
+        std::ifstream fh_his(fn_his.c_str());
         if (fh_his)
         {
             xmippCTVectors ts(0, true);
             fh_his >> ts;
             int imax = ts.size();
-            hisAssigned = new string[imax];
+            hisAssigned = new std::string[imax];
             for (int i = 0; i < imax; i++)
                 hisAssigned[i] = ts.theTargets[i];
         }
@@ -107,13 +107,13 @@ void ShowSpectraSOM::readSOMFiles(const FileName &_fn_root)
     // Read errors
     if (exists(fn_err))
     {
-        ifstream fh_err(fn_err.c_str());
+        std::ifstream fh_err(fn_err.c_str());
         if (fh_err)
         {
             xmippCTVectors ts(0, true);
             fh_err >> ts;
             int imax = ts.size();
-            cv_errors = new string[imax];
+            cv_errors = new std::string[imax];
             for (int i = 0; i < imax; i++)
                 cv_errors[i] = ts.theTargets[i];
         }
@@ -123,10 +123,10 @@ void ShowSpectraSOM::readSOMFiles(const FileName &_fn_root)
     // Read inf file
     if (exists(fn_inf))
     {
-        ifstream fh_inf(fn_inf.c_str());
+        std::ifstream fh_inf(fn_inf.c_str());
         if (fh_inf)
         {
-            string line;
+            std::string line;
             getline(fh_inf, line);
             infStr = line.c_str();
             infStr += "\n";
@@ -143,12 +143,12 @@ void ShowSpectraSOM::readSOMFiles(const FileName &_fn_root)
     // Read codevectors
     if (exists(fn_class))
     {
-        ifstream fh_class(fn_class.c_str());
+        std::ifstream fh_class(fn_class.c_str());
         if (fh_class)
         {
-            string line, fn;
+            std::string line, fn;
             int dim;
-            string topol, neigh;
+            std::string topol, neigh;
             fh_class >> dim >> topol >> NumCols >> NumRows >> neigh;
             listSize = NumCols * NumRows;
             if (listSize == 0)
@@ -178,8 +178,8 @@ void ShowSpectraSOM::readSOMFiles(const FileName &_fn_root)
                 infStr += "\n";
             }
 
-            SFcv = new vector<string>[listSize];
-            SFcvs = new vector<int>[listSize];
+            SFcv = new std::vector<std::string>[listSize];
+            SFcvs = new std::vector<int>[listSize];
             int j = 0;
             while (!fh_class.eof())
             {

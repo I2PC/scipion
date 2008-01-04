@@ -74,7 +74,7 @@ void ImageViewer::Init()
 
     options =  new QPopupMenu();
     menubar->insertItem("&Options", options);
-    ss = options->insertItem("Set Spacing");
+    ss = options->insertItem("Set spacing");
     ravg = options->insertItem("Radial average");
     line_setup = options->insertItem("Line setup");
     profile = options->insertItem("Profile");
@@ -259,7 +259,7 @@ void ImageViewer::doOption(int item)
     if (item == ss)
     {
         ScrollParam* param_window;
-        param_window = new ScrollParam(0.1, 10, spacing, "Set spacing", "Spacing",
+        param_window = new ScrollParam(0.1, 10, spacing, "Set spacing", "spacing",
                                        0, "new window", WDestructiveClose);
         connect(param_window, SIGNAL(new_value(float)), this, SLOT(set_spacing(float)));
         param_window->setFixedSize(250, 150);
@@ -268,7 +268,7 @@ void ImageViewer::doOption(int item)
     else if (item == sfft)
     {
         ExclusiveParam* param_window;
-        vector<string> list_values;
+        std::vector<std::string> list_values;
         list_values.push_back("10*log10(abs(z)^2)");
         list_values.push_back("real(z)");
         list_values.push_back("imag(z)");
@@ -306,8 +306,8 @@ void ImageViewer::doOption(int item)
     else if (item == editctfmodel)
     {
         FileName fn_param = ((FileName)filename).without_extension() + ".ctfparam";
-        string command = (string)"xmipp_edit -i " + fn_param + " &";
-        cout << command << endl;
+        std::string command = (std::string)"xmipp_edit -i " + fn_param + " &";
+        std::cout << command << std::endl;
         system(command.c_str());
     }
     else if (item == recomputectfmodel)
@@ -317,7 +317,7 @@ void ImageViewer::doOption(int item)
     else if (item == enhancePSD)
     {
         ScrollParam* param_window;
-        vector<float> min, max;
+        std::vector<float> min, max;
         min.push_back(0.01);
         max.push_back(0.5);
         min.push_back(0.01);
@@ -328,13 +328,13 @@ void ImageViewer::doOption(int item)
         max.push_back(0.5);
         min.push_back(0.01);
         max.push_back(0.5);
-        vector<float> initial_value;
+        std::vector<float> initial_value;
         initial_value.push_back(0.02);
         initial_value.push_back(0.2);
         initial_value.push_back(0.02);
         initial_value.push_back(0.01);
         initial_value.push_back(0.5);
-        vector<char *> prm_name;
+        std::vector<char *> prm_name;
         prm_name.push_back("Filter w1");
         prm_name.push_back("Filter w2");
         prm_name.push_back("Filter decay");
@@ -344,8 +344,8 @@ void ImageViewer::doOption(int item)
                                        "Enhance PSD", 0, "new window", WDestructiveClose, 2);
 
         // Connect its output to my input (set_spacing)
-        connect(param_window, SIGNAL(new_value(vector<float>)),
-                this,         SLOT(runEnhancePSD(vector<float>)));
+        connect(param_window, SIGNAL(new_value(std::vector<float>)),
+                this,         SLOT(runEnhancePSD(std::vector<float>)));
 
         // Show
         param_window->setFixedSize(200, 175);
@@ -357,7 +357,7 @@ void ImageViewer::doOption(int item)
 /* Refine profile line ----------------------------------------------------- */
 void ImageViewer::refineProfileLine()
 {
-    vector<float> min, max;
+    std::vector<float> min, max;
     min.push_back(0);
     max.push_back(XSIZE(xmippImage()) - 1);
     min.push_back(0);
@@ -367,12 +367,12 @@ void ImageViewer::refineProfileLine()
     min.push_back(0);
     max.push_back(YSIZE(xmippImage()) - 1);
 
-    vector<float> initial_value;
+    std::vector<float> initial_value;
     initial_value.push_back(xi);
     initial_value.push_back(yi);
     initial_value.push_back(xf);
     initial_value.push_back(yf);
-    vector<char *> prm_name;
+    std::vector<char *> prm_name;
     prm_name.push_back("X initial");
     prm_name.push_back("Y initial");
     prm_name.push_back("X final");
@@ -382,8 +382,8 @@ void ImageViewer::refineProfileLine()
                                 "Setup profile line", 0, "new window", WDestructiveClose, 0);
 
     // Connect its output to my input (set_spacing)
-    connect(param_window, SIGNAL(new_value(vector<float>)),
-            this,          SLOT(set_profile_line(vector<float>)));
+    connect(param_window, SIGNAL(new_value(std::vector<float>)),
+            this,          SLOT(set_profile_line(std::vector<float>)));
 
     // Show
     param_window->setFixedSize(200, 300);
@@ -394,7 +394,7 @@ void ImageViewer::refineProfileLine()
     drawLine(xir, yir, xfr, yfr);
 }
 
-void ImageViewer::set_profile_line(vector<float> prm)
+void ImageViewer::set_profile_line(std::vector<float> prm)
 {
     xi = (int)prm[0];
     yi = (int)prm[1];
@@ -469,7 +469,7 @@ void ImageViewer::saveImage(int item)
             ImageXmipp tmpImage;
             tmpImage() = xmippImage();
             // Saves Xmipp Image
-            tmpImage.rename((string)((const char *)savefilename));
+            tmpImage.rename((std::string)((const char *)savefilename));
             tmpImage.write();
 
         }
@@ -649,7 +649,7 @@ bool ImageViewer::loadImage(const char *fileName,
 {
     filename = fileName;
     load_mode = _load_mode;
-    bool imagic = ((string)(filename)).find("imagic:") == 0;
+    bool imagic = ((std::string)(filename)).find("imagic:") == 0;
     bool ok = FALSE;
     static bool message_shown = false;
     if (filename)
@@ -732,7 +732,7 @@ bool ImageViewer::loadImage(const char *fileName,
         struct stat info;
         if (stat(filename, &info) && !imagic)
         {
-            cerr << "loadImage: Cannot get time of file " << filename << endl;
+            std::cerr << "loadImage: Cannot get time of file " << filename << std::endl;
             modification_time = 0;
         }
         else modification_time = info.st_mtime;
@@ -1182,7 +1182,7 @@ void ImageViewer::check_file()
     static bool message_shown = false;
     if (stat(filename, &info) && !message_shown)
     {
-        cerr << "check_file: Cannot get time of file " << filename << endl;
+        std::cerr << "check_file: Cannot get time of file " << filename << std::endl;
         message_shown = true;
     }
     if (info.st_mtime != modification_time)
@@ -1232,7 +1232,7 @@ void ImageViewer::recomputeCTFmodel()
 }
 
 // Run Enhance PSD ---------------------------------------------------------
-void ImageViewer::runEnhancePSD(vector<float> enhance_prms)
+void ImageViewer::runEnhancePSD(std::vector<float> enhance_prms)
 {
     Prog_Enhance_PSD_Parameters prm;
     prm.center = true;

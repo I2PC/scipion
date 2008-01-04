@@ -40,7 +40,7 @@ void Symmetrize_Parameters::read(int argc, char **argv)
 /* Usage ------------------------------------------------------------------- */
 void Symmetrize_Parameters::usage()
 {
-    cout
+    std::cout
     << "Usage: symmetrize [Purpose and Parameters]\n"
     << "Purpose: Symmetrize a 3D volume\n"
     << "Parameter Values: (notice space before value)\n"
@@ -53,15 +53,15 @@ void Symmetrize_Parameters::usage()
 }
 
 /* Show -------------------------------------------------------------------- */
-ostream & operator << (ostream &out, const Symmetrize_Parameters &prm)
+std::ostream & operator << (std::ostream &out, const Symmetrize_Parameters &prm)
 {
-    out << "File in:       " << prm.fn_in  << endl
-    << "File out:      " << prm.fn_out << endl
-    << "Symmetry file: " << prm.fn_sym << endl
-    << "Generate group:" << !prm.do_not_generate_subgroup << endl
+    out << "File in:       " << prm.fn_in  << std::endl
+    << "File out:      " << prm.fn_out << std::endl
+    << "Symmetry file: " << prm.fn_sym << std::endl
+    << "Generate group:" << !prm.do_not_generate_subgroup << std::endl
     << "Wrapping:      ";
     print(out, prm.wrap);
-    out << endl;
+    out << std::endl;
     return out;
 }
 
@@ -76,7 +76,7 @@ void symmetrize(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
     V_out = V_in;
     if (show_progress)
     {
-        cerr << "Symmetrizing ...\n";
+        std::cerr << "Symmetrizing ...\n";
         init_progress_bar(SL.SymsNo());
     }
 
@@ -93,7 +93,7 @@ void symmetrize(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
            to reuse V_in !!!, this is very memory wasting */
         applyGeometry(V_aux(), R.transpose(), V_in(), IS_NOT_INV, wrap);
 #ifdef DEBUG
-        V_aux.write((string)"PPPsym_" + integerToString(i) + ".vol");
+        V_aux.write((std::string)"PPPsym_" + integerToString(i) + ".vol");
 #endif
 
         /* *** CO: I am not very sure about the reason for this, but it
@@ -145,7 +145,7 @@ void symmetrize_Bspline(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out
         arrayByArray(V_out(), V_aux(), V_out(), '+');
 
 #ifdef DEBUG
-        V_aux.write((string)"PPPsym_" + integerToString(i) + ".vol");
+        V_aux.write((std::string)"PPPsym_" + integerToString(i) + ".vol");
 #endif
 
     }
@@ -166,7 +166,7 @@ void ROUT_symmetrize(const Symmetrize_Parameters &prm)
     SL.read_sym_file(prm.fn_sym, accuracy);
     V_in.read(prm.fn_in);
 
-    cerr << prm;
+    std::cerr << prm;
     symmetrize(SL, V_in, V_out, prm.wrap, true);
     if (prm.fn_out == "") fn_out = V_in.name();
     else fn_out = prm.fn_out;

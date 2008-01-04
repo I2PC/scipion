@@ -117,7 +117,7 @@
  *         {
  *             out << floatToString((float) val(i,j), 10, prec) << ' ';
  *         }
- *         out << endl;
+ *         out << std::endl;
  *     }
  *
  *     return out;
@@ -411,7 +411,7 @@ std::string nextToken(const std::string& str, int& i);
  */
 char* firstWord(char* str,
                  int _errno = 2106,
-                 std::string errmsg = "first word: String not found",
+                 const std::string & errmsg = "first word: String not found",
                  int exit = 0);
 
 /** Get non empty string (STL).
@@ -495,7 +495,7 @@ void readFloatList(const char* str,
         if (token == NULL)
         {
             // CO: Should not report other error than the required one
-            // cout << "Read float list: Number of true parameters doesn't \
+            // std::cout << "Read float list: Number of true parameters doesn't \
             // coincide\n";
             REPORT_ERROR(_errno, errmsg);
         }
@@ -537,7 +537,7 @@ void readFloatList(const std::string& str,
         if (token == "")
         {
             // CO: Should not report other error than the required one
-            // cout << "Read float list: Number of true parameters doesn't \
+            // std::cout << "Read float list: Number of true parameters doesn't \
             // coincide\n";
             REPORT_ERROR(_errno, errmsg);
         }
@@ -566,7 +566,7 @@ void readFloatList(const char* str,
                      int N,
                      Matrix1D< T >& v,
                      int _errno = 2105,
-                     string errmsg = "Error reading floating list",
+                     std::string errmsg = "Error reading floating list",
                      int exit = 0)
 {
     T valueF;
@@ -578,7 +578,7 @@ void readFloatList(const char* str,
         if (token == NULL)
         {
             // CO: Should not report other error than the required one
-            // cout << "Read float list: Number of true parameters doesn't \
+            // std::cout << "Read float list: Number of true parameters doesn't \
             // coincide\n";
             REPORT_ERROR(_errno, errmsg);
         }
@@ -637,7 +637,7 @@ char* getParameter(int argc,
                 const char* param,
                 const char* option = NULL,
                 int _errno = -1,
-                std::string errmsg = "",
+                const std::string & errmsg = "",
                 int exit = 0);
 
 /** Get two float parameters after a flag from the command line.
@@ -656,7 +656,7 @@ bool getTwoDoubleParams(int argc,
                          double v1_def,
                          double v2_def,
                          int _errno = 2104,
-                         std::string errmsg = "",
+                         const std::string & errmsg = "",
                          int exit = 0);
 
 /** Get 3 float parameters after a flag from the command line.
@@ -677,7 +677,7 @@ bool getThreeDoubleParams(int argc,
                          double v2_def,
                          double v3_def,
                          int _errno = 2104,
-                         std::string errmsg = "",
+                         const std::string& errmsg = "",
                          int exit = 0);
 
 /** Get boolean parameters from the command line.
@@ -756,7 +756,7 @@ Matrix1D< double > getVectorParameter(int argc,
                                     const char* param,
                                     int dim = 2,
                                     int _errno = -1,
-                                    std::string errmsg = "",
+                                    const std::string & errmsg = "",
                                     int exit = 0);
 
 /** Get specific command line.
@@ -879,7 +879,7 @@ std::string getParameter(FILE* fh,
                       int skip = 0,
                       const char* option = NULL,
                       int _errno = -1,
-                      std::string errmsg = "",
+                      const std::string & errmsg = "",
                       int exit = 0);
 
 /** Check if a parameter is present in a file.
@@ -901,7 +901,7 @@ Matrix1D< double > getVectorParameter(FILE* fh,
                                     const char* param,
                                     int dim = 2,
                                     int _errno = -1,
-                                    std::string errmsg = "",
+                                    const std::string & errmsg = "",
                                     int exit = 0);
 
 #endif

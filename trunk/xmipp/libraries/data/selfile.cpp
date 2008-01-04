@@ -5,7 +5,7 @@
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
  * Part of this module has been developed by Lorenzo Zampighi and Nelson Tang
- * Dept. Physiology of the David Geffen School of Medicine
+ * Dept. Physiology of the David Geffen School of Medistd::cine
  * Univ. of California, Los Angeles.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -77,21 +77,21 @@ bool operator < (const SelLine &l1, const SelLine &l2)
         return l1.text < l2.text;
 }
 
-ostream& operator << (ostream& o, const SelLine &SFL)
+std::ostream& operator << (std::ostream& o, const SelLine &SFL)
 {
     switch (SFL.line_type)
     {
     case (SelLine::DATALINE):
-                    o << SFL.text << " " << SFL.label << endl;
+                    o << SFL.text << " " << SFL.label << std::endl;
         break;
     case (SelLine::COMMENT):
-                    o << SFL.text << endl;
+                    o << SFL.text << std::endl;
         break;
     }
     return o;
 }
 
-istream& operator >> (istream& o, SelLine &SFL)
+std::istream& operator >> (std::istream& o, SelLine &SFL)
 {
     std::string line;
     char     img_name[1024];
@@ -183,10 +183,10 @@ void SelFile::assign(const SelFile &SF)
 }
 
 /* Show Sel file ----------------------------------------------------------- */
-ostream& operator << (ostream& o, const SelFile &SF)
+std::ostream& operator << (std::ostream& o, const SelFile &SF)
 {
-    vector<SelLine>::const_iterator current = SF.text_line.begin();
-    vector<SelLine>::const_iterator last    = SF.text_line.end();
+    std::vector<SelLine>::const_iterator current = SF.text_line.begin();
+    std::vector<SelLine>::const_iterator last    = SF.text_line.end();
     while (current != last)
     {
         o << *current;
@@ -198,7 +198,7 @@ ostream& operator << (ostream& o, const SelFile &SF)
 /* Clean ------------------------------------------------------------------- */
 void SelFile::clean()
 {
-    vector<SelLine>::iterator current = text_line.begin();
+    std::vector<SelLine>::iterator current = text_line.begin();
     while (current != text_line.end())
     {
         if ((*current).line_type == SelLine::DATALINE &&
@@ -215,9 +215,9 @@ void SelFile::clean()
 /* Clean comments ---------------------------------------------------------- */
 void SelFile::clean_comments()
 {
-    vector<SelLine>::iterator current = text_line.begin();
-    vector<SelLine>::iterator last    = text_line.end();
-    vector<SelLine>::iterator temp;
+    std::vector<SelLine>::iterator current = text_line.begin();
+    std::vector<SelLine>::iterator last    = text_line.end();
+    std::vector<SelLine>::iterator temp;
     while (current != last)
     {
         if ((*current).line_type == SelLine::COMMENT)
@@ -237,7 +237,7 @@ void SelFile::clean_comments()
 void SelFile::read(const FileName &sel_name, int overriding)
 {
     SelLine   temp;
-    ifstream  fh_sel;
+    std::ifstream  fh_sel;
     int       line_no = 1;
 
     // Empties current SelFile
@@ -249,7 +249,7 @@ void SelFile::read(const FileName &sel_name, int overriding)
     {
         // Read Imagic selfile
         const FileName hed_fname = sel_name.substr(IMAGIC_TAG_LEN);
-        ImageImagicInfo info = ImagicGetImgInfo(hed_fname);
+        ImageImagicinfo info = ImagicGetImgInfo(hed_fname);
         no_imgs = info.num_img;
         temp.line_type = SelLine::DATALINE;
         temp.label = SelLine::ACTIVE;
@@ -262,7 +262,7 @@ void SelFile::read(const FileName &sel_name, int overriding)
     else
     {
         // Read normal selfile
-        fh_sel.open(sel_name.c_str(), ios::in);
+        fh_sel.open(sel_name.c_str(), std::ios::in);
         if (!fh_sel)
             REPORT_ERROR(1551, (std::string)"SelFile::read: File " + sel_name + " not found");
 
@@ -276,7 +276,7 @@ void SelFile::read(const FileName &sel_name, int overriding)
             }
             catch (Xmipp_error)
             {
-                cout << "Sel file: Line " << line_no << " is skipped due to an error\n";
+                std::cout << "Sel file: Line " << line_no << " is skipped due to an error\n";
             }
             switch (temp.line_type)
             {
@@ -314,9 +314,9 @@ void SelFile::merge(const FileName &sel_name)
 /* Write ------------------------------------------------------------------- */
 void SelFile::write(const FileName &sel_name)
 {
-    ofstream    fh_sel;
-    vector<SelLine>::iterator current = text_line.begin();
-    vector<SelLine>::iterator last    = text_line.end();
+    std::ofstream    fh_sel;
+    std::vector<SelLine>::iterator current = text_line.begin();
+    std::vector<SelLine>::iterator last    = text_line.end();
 
     if (strcmp(sel_name.c_str(), "") != 0)
         fn_sel = sel_name;
@@ -326,7 +326,7 @@ void SelFile::write(const FileName &sel_name)
     {
         // Write Imagic selfile
         const FileName hed_fname = sel_name.substr(IMAGIC_TAG_LEN);
-        vector<Image *> imgs;
+        std::vector<Image *> imgs;
         for (; current != last; current++)
         {
             Image *img;
@@ -336,14 +336,14 @@ void SelFile::write(const FileName &sel_name)
         }
         if (!ImagicWriteImagicFile(hed_fname, imgs))
             REPORT_ERROR(1553, "Error writing selfile to Imagic file " + sel_name);
-        for (vector<Image *>::iterator i = imgs.begin(); i != imgs.end(); i++)
+        for (std::vector<Image *>::iterator i = imgs.begin(); i != imgs.end(); i++)
             delete(*i);
     }
     else
     {
         // Write Xmipp selfile
         // Open file
-        fh_sel.open(fn_sel.c_str(), ios::out);
+        fh_sel.open(fn_sel.c_str(), std::ios::out);
         if (!fh_sel)
             REPORT_ERROR(1553, "SelFile::write: File " + fn_sel + " cannot be written");
 
@@ -359,9 +359,9 @@ void SelFile::write(const FileName &sel_name)
 /* Merging with another selfile -------------------------------------------- */
 void SelFile::merge(SelFile &SF)
 {
-    vector<SelLine>::iterator current = SF.text_line.begin();
-    vector<SelLine>::iterator last    = SF.text_line.end();
-    vector<SelLine>::iterator found;
+    std::vector<SelLine>::iterator current = SF.text_line.begin();
+    std::vector<SelLine>::iterator last    = SF.text_line.end();
+    std::vector<SelLine>::iterator found;
 
     SelLine discrepancy;
     discrepancy.line_type = SelLine::COMMENT;
@@ -588,10 +588,11 @@ void SelFile::jump(int how_many, SelLine::Label label)
 
 /* Find an image (inside the list) ----------------------------------------- */
 // It returns a pointer to past-last element if the image is not inside
-vector<SelLine>::iterator find(vector<SelLine> &text, const std::string &img_name)
+std::vector<SelLine>::iterator find(std::vector<SelLine> &text,
+    const std::string &img_name)
 {
-    vector<SelLine>::iterator current = text.begin();
-    vector<SelLine>::iterator last    = text.end();
+    std::vector<SelLine>::iterator current = text.begin();
+    std::vector<SelLine>::iterator last    = text.end();
 
     while (current != last)
     {
@@ -606,10 +607,10 @@ vector<SelLine>::iterator find(vector<SelLine> &text, const std::string &img_nam
 /* Find an image (inside the Sel File) ------------------------------------- */
 // It returns a pointer to past-last element if the image is not inside
 // *** THIS SHOULD USE THE PREVIOUS FUNCTION BUT I CANNOT MAKE IT TO COMPILE
-vector<SelLine>::iterator SelFile::find(const std::string &img_name)
+std::vector<SelLine>::iterator SelFile::find(const std::string &img_name)
 {
-    vector<SelLine>::iterator current = text_line.begin();
-    vector<SelLine>::iterator last    = text_line.end();
+    std::vector<SelLine>::iterator current = text_line.begin();
+    std::vector<SelLine>::iterator last    = text_line.end();
 
     while (current != last)
     {
@@ -626,8 +627,8 @@ vector<SelLine>::iterator SelFile::find(const std::string &img_name)
 int SelFile::ImgNo(SelLine::Label label) const
 {
     int N = 0;
-    vector<SelLine>::const_iterator current = text_line.begin();
-    vector<SelLine>::const_iterator last    = text_line.end();
+    std::vector<SelLine>::const_iterator current = text_line.begin();
+    std::vector<SelLine>::const_iterator last    = text_line.end();
     while (current != last)
     {
         if ((*current).line_type == SelLine::DATALINE &&
@@ -642,8 +643,8 @@ int SelFile::ImgNo(SelLine::Label label) const
 int SelFile::LineNo()
 {
     int N = 0;
-    vector<SelLine>::iterator current = text_line.begin();
-    vector<SelLine>::iterator last    = text_line.end();
+    std::vector<SelLine>::iterator current = text_line.begin();
+    std::vector<SelLine>::iterator last    = text_line.end();
     while (current != last)
     {
         N++;
@@ -655,7 +656,7 @@ int SelFile::LineNo()
 /* Image size -------------------------------------------------------------- */
 void SelFile::ImgSize(int &Ydim, int &Xdim)
 {
-    vector<SelLine>::iterator aux = current_line;
+    std::vector<SelLine>::iterator aux = current_line;
     go_first_ACTIVE();
     FileName fn_img = (*current_line).text;
     if (fn_img.find("imagic:") != -1)
@@ -688,7 +689,7 @@ void SelFile::ImgSize(int &Ydim, int &Xdim)
 /* File Extension ---------------------------------------------------------- */
 FileName SelFile::FileExtension()
 {
-    vector<SelLine>::iterator aux = current_line;
+    std::vector<SelLine>::iterator aux = current_line;
     go_first_ACTIVE();
     FileName ext = (*current_line).text;
     ext = ext.get_extension();
@@ -756,7 +757,7 @@ void SelFile::get_statistics(Image& _ave, Image& _sd, double& _min,
 /* Maximum filename length ------------------------------------------------- */
 int SelFile::MaxFileNameLength()
 {
-    vector<SelLine>::iterator aux = current_line;
+    std::vector<SelLine>::iterator aux = current_line;
     int max_length = 0;
     go_first_ACTIVE();
     while (!eof())
@@ -783,8 +784,8 @@ const std::string& SelFile::get_file_number(int i)
 {
     if (i < 0)
         return "";
-    vector<SelLine>::iterator current = text_line.begin();
-    vector<SelLine>::iterator last    = text_line.end();
+    std::vector<SelLine>::iterator current = text_line.begin();
+    std::vector<SelLine>::iterator last    = text_line.end();
 
     int currenti = 0;
     while (current != last)
@@ -802,8 +803,8 @@ const std::string& SelFile::get_file_number(int i)
 /* Remove a certain file --------------------------------------------------- */
 void SelFile::remove(const std::string &img_name)
 {
-    vector<SelLine>::iterator aux = find(img_name);
-    vector<SelLine>::iterator temp;
+    std::vector<SelLine>::iterator aux = find(img_name);
+    std::vector<SelLine>::iterator temp;
     if (aux != text_line.end())
     {
         if (aux == current_line)
@@ -825,7 +826,7 @@ void SelFile::remove_current()
 {
     if (current_line != text_line.end())
     {
-        vector<SelLine>::iterator temp;
+        std::vector<SelLine>::iterator temp;
         temp = current_line;
         temp++;
         if ((*current_line).line_type == SelLine::DATALINE)
@@ -839,7 +840,7 @@ void SelFile::remove_current()
 void SelFile::set(const std::string& img_name, SelLine::Label label)
 {
     SelLine temp;
-    vector<SelLine>::iterator aux = find(img_name);
+    std::vector<SelLine>::iterator aux = find(img_name);
     if (aux == text_line.end())
     {
         temp.line_type = SelLine::DATALINE;
@@ -972,7 +973,7 @@ SelFile SelFile::random_discard(int N)
 
     SelLine::Label label = SelLine::ACTIVE;
     result = *this;
-    N = min(N, no_imgs);
+    N = std::min(N, no_imgs);
     for (i = 0; i < N; i++)
     {
         // Jump a random number from the beginning
@@ -995,19 +996,19 @@ SelFile SelFile::random_discard(int N)
 // Only img_files with the active label are considered
 SelFile compare(SelFile &SF1, SelFile &SF2, const int mode)
 {
-    vector<SelLine>     only_in_SF1;
-    vector<SelLine>     only_in_SF2;
-    vector<SelLine>     in_both;
+    std::vector<SelLine>     only_in_SF1;
+    std::vector<SelLine>     only_in_SF2;
+    std::vector<SelLine>     in_both;
     SelFile           result;
     SelLine           temp;
     int               SF1_discarded = 0, SF2_discarded = 0;
     char              str[10];
 
     // Search in File 1
-    vector<SelLine>::iterator current = SF1.text_line.begin();
-    vector<SelLine>::iterator last    = SF1.text_line.end();
-    vector<SelLine>::iterator last_SF = SF2.text_line.end();
-    vector<SelLine>::iterator found;
+    std::vector<SelLine>::iterator current = SF1.text_line.begin();
+    std::vector<SelLine>::iterator last    = SF1.text_line.end();
+    std::vector<SelLine>::iterator last_SF = SF2.text_line.end();
+    std::vector<SelLine>::iterator found;
 
     while (current != last)
     {
@@ -1162,8 +1163,8 @@ SelFile compare(SelFile &SF1, SelFile &SF2, const int mode)
 void SelFile::for_all(void(*f)(FileName, FileName), const std::string& _ext,
                       SelLine::Label _label)
 {
-    vector<SelLine>::iterator current = text_line.begin();
-    vector<SelLine>::iterator last    = text_line.end();
+    std::vector<SelLine>::iterator current = text_line.begin();
+    std::vector<SelLine>::iterator last    = text_line.end();
     while (current != last)
     {
         if ((*current).line_type == SelLine::DATALINE && (*current).label == _label)

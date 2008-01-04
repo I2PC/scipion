@@ -41,18 +41,18 @@ void Prog_angular_distance_prm::read(int argc, char **argv)
 // Show ====================================================================
 void Prog_angular_distance_prm::show()
 {
-    cout << "Angular docfile 1: " << fn_ang1       << endl
-    << "Angular docfile 2: " << fn_ang2       << endl
-    << "Angular output   : " << fn_ang_out    << endl
-    << "Symmetry file    : " << fn_sym        << endl
-    << "Check mirrors    : " << check_mirrors << endl
+    std::cout << "Angular docfile 1: " << fn_ang1       << std::endl
+    << "Angular docfile 2: " << fn_ang2       << std::endl
+    << "Angular output   : " << fn_ang_out    << std::endl
+    << "Symmetry file    : " << fn_sym        << std::endl
+    << "Check mirrors    : " << check_mirrors << std::endl
     ;
 }
 
 // usage ===================================================================
 void Prog_angular_distance_prm::usage()
 {
-    cerr << "   -ang1 <DocFile 1>         : Angular document file 1\n"
+    std::cerr << "   -ang1 <DocFile 1>         : Angular document file 1\n"
     << "   -ang2 <DocFile 2>         : Angular document file 2\n"
     << "  [-o <DocFile out>]         : Merge dcfile. If not given it is\n"
     << "                               not generated\n"
@@ -76,7 +76,7 @@ void Prog_angular_distance_prm::produce_side_info()
 
 // 2nd angle set -----------------------------------------------------------
 #define SHOW_ANGLES(rot,tilt,psi) \
-    cout << #rot  << "=" << rot << " " \
+    std::cout << #rot  << "=" << rot << " " \
     << #tilt << "=" << tilt << " " \
     << #psi  << "=" << psi << " ";
 //#define DEBUG
@@ -85,7 +85,7 @@ double Prog_angular_distance_prm::second_angle_set(double rot1, double tilt1,
         bool projdir_mode)
 {
 #ifdef DEBUG
-    cout << "   ";
+    std::cout << "   ";
     SHOW_ANGLES(rot2, tilt2, psi2);
 #endif
 
@@ -121,13 +121,13 @@ double Prog_angular_distance_prm::second_angle_set(double rot1, double tilt1,
         axes_dist += dist;
         N++;
 #ifdef DEBUG
-        cout << "d(" << i << ")=" << dist << " ";
+        std::cout << "d(" << i << ")=" << dist << " ";
 #endif
     }
     axes_dist /= N;
 
 #ifdef DEBUG
-    cout << "-->" << axes_dist << endl;
+    std::cout << "-->" << axes_dist << std::endl;
 #endif
 
     return axes_dist;
@@ -142,7 +142,7 @@ double Prog_angular_distance_prm::check_symmetries(double rot1, double tilt1,
 {
 #ifdef DEBUG
     SHOW_ANGLES(rot1, tilt1, psi1);
-    cout << endl;
+    std::cout << std::endl;
 #endif
 
     int imax = SL.SymsNo() + 1;
@@ -196,7 +196,7 @@ double Prog_angular_distance_prm::check_symmetries(double rot1, double tilt1,
         }
     }
 #ifdef DEBUG
-    cout << "   Best=" << best_ang_dist << endl;
+    std::cout << "   Best=" << best_ang_dist << std::endl;
 #endif
     rot2 = best_rot2;
     tilt2 = best_tilt2;

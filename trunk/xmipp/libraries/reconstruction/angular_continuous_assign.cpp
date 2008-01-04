@@ -70,13 +70,13 @@ void Prog_angular_predict_continuous_prm::read(int argc, char **argv)
 void Prog_angular_predict_continuous_prm::show()
 {
     Prog_parameters::show();
-    cout << "Reference volume:   " << fn_ref              << endl
-    << "Initial angle file: " << fn_ang              << endl
-    << "Ouput angular file: " << fn_out_ang          << endl
-    << "Gaussian Fourier:   " << gaussian_DFT_sigma  << endl
-    << "Gaussian Real:      " << gaussian_Real_sigma << endl
-    << "Max. Iter:          " << max_no_iter         << endl
-    << "Modify header:  " << !dont_modify_header << endl
+    std::cout << "Reference volume:   " << fn_ref              << std::endl
+    << "Initial angle file: " << fn_ang              << std::endl
+    << "Ouput angular file: " << fn_out_ang          << std::endl
+    << "Gaussian Fourier:   " << gaussian_DFT_sigma  << std::endl
+    << "Gaussian Real:      " << gaussian_Real_sigma << std::endl
+    << "Max. Iter:          " << max_no_iter         << std::endl
+    << "Modify header:  " << !dont_modify_header << std::endl
     ;
 }
 
@@ -84,7 +84,7 @@ void Prog_angular_predict_continuous_prm::show()
 void Prog_angular_predict_continuous_prm::usage()
 {
     Prog_parameters::usage();
-    cerr << "   -ref <Xmipp Volume>      : Reference volume\n"
+    std::cerr << "   -ref <Xmipp Volume>      : Reference volume\n"
     << "  [-ang <angle file>]       : DocFile with the initial angles\n"
     << "                              otherwise, the angles and shifts\n"
     << "                              are taken from the image headers\n"
@@ -373,7 +373,7 @@ double CSTSplineAssignment(
     else
     {
         retval = -1;
-        cout << "There is a problem with one image, angles not assigned\n";
+        std::cout << "There is a problem with one image, angles not assigned\n";
     }
 
     // Return

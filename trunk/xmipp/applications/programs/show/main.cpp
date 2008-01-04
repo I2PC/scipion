@@ -235,12 +235,12 @@ int main(int argc, char **argv)
                 case MODE_IMG:
                     fn = argv[i];
                     if (fn.find("imagic:") != -1) break;
-                    cerr << argv[i] << " is not a valid filename\n";
+                    std::cerr << argv[i] << " is not a valid filename\n";
                     continue;
                 case MODE_PSDSEL:
                 case MODE_CTFSEL:
                 case MODE_SEL:
-                    cerr << argv[i] << " is not a valid filename\n";
+                    std::cerr << argv[i] << " is not a valid filename\n";
                     continue;
                 case MODE_VOL:
                     fn = argv[i];
@@ -249,14 +249,14 @@ int main(int argc, char **argv)
                         fn = fn.substr(0, fn.length() - 1);
                         if (!exists(fn.c_str()))
                         {
-                            cerr << fn << " is not a valid filename\n";
+                            std::cerr << fn << " is not a valid filename\n";
                             continue;
                         }
                     }
                     else
                     {
                         continue;
-                        cerr << fn << " is not a valid filename\n";
+                        std::cerr << fn << " is not a valid filename\n";
                     }
                     break;
                 case MODE_SPECT:
@@ -361,13 +361,13 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cerr << XE;
+        std::cerr << XE;
     }
 }
 
 void Usage()
 {
-    cout << "Usage: show [options]\n"
+    std::cout << "Usage: show [options]\n"
     << "    -img <images> |       : Input images\n"
     << "    -ctf <images> |       : Input CTFs (in image format)\n"
     << "    -psd <images> |       : Input PSDs (in image format)\n"

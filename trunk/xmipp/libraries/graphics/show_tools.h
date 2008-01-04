@@ -53,7 +53,7 @@
     @code
       // Create window
       ScrollParam* param_window;
-      param_window = new ScrollParam(min, max, spacing, "Set spacing", "Spacing",
+      param_window = new ScrollParam(min, max, spacing, "Set spacing", "spacing",
          0, "new window", WDestructiveClose);
 
       // Connect its output to my input (set_spacing)
@@ -69,20 +69,20 @@
     @code
       // Create window
       ScrollParam* param_window;
-      vector<float> min; min.push_back(1); min.push_back(1);
-      vector<float> max; max.push_back(N); max.push_back(N);
-      vector<float> initial_value;
+      std::vector<float> min; min.push_back(1); min.push_back(1);
+      std::vector<float> max; max.push_back(N); max.push_back(N);
+      std::vector<float> initial_value;
          initial_value.push_back(spacing);
          initial_value.push_back(x_tick_off);
-      vector<char *> prm_name;
-         prm_name.push_back("Spacing");
+      std::vector<char *> prm_name;
+         prm_name.push_back("spacing");
          prm_name.push_back("Tick offset");
       param_window = new ScrollParam(min,max,initial_value,prm_name,
   "Set spacing", 0, "new window", WDestructiveClose,0);
 
       // Connect its output to my input (set_spacing)
-      connect( param_window, SIGNAL(new_value(vector<float>)),
-              this,          SLOT(set_spacing(vector<float>)) );
+      connect( param_window, SIGNAL(new_value(std::vector<float>)),
+              this,          SLOT(set_spacing(std::vector<float>)) );
 
       // Show
       param_window->setFixedSize(200,175);
@@ -101,8 +101,8 @@ public:
 
     /** Constructor for several scrolls.
         Provide the min_value, max_value, caption and initial_value.*/
-    ScrollParam(vector<float> &min, vector<float> &max,
-                vector<float> &initial_value, vector<char *> &prm_name,
+    ScrollParam(std::vector<float> &min, std::vector<float> &max,
+                std::vector<float> &initial_value, std::vector<char *> &prm_name,
                 char *caption, QWidget *parent = 0,
                 const char *name = 0, int wFlags = 0, int precision = 2);
 
@@ -110,16 +110,16 @@ public:
     ~ScrollParam();
 
     /** Init. */
-    void init(vector<float> &min, vector<float> &max,
-              vector<float> &initial_value, vector<char *> &prm_name,
+    void init(std::vector<float> &min, std::vector<float> &max,
+              std::vector<float> &initial_value, std::vector<char *> &prm_name,
               char *caption, int precision = 2);
 
     /** Get current values. */
-    vector<float> getCurrentValues();
+    std::vector<float> getCurrentValues();
 private:
-    vector<float>     value;
-    vector<QLabel *>  value_lab;   // label for the current value of the slider
-    vector<QScrollBar *> scroll;   // sliders
+    std::vector<float>     value;
+    std::vector<QLabel *>  value_lab;   // label for the current value of the slider
+    std::vector<QScrollBar *> scroll;   // sliders
     int       my_precision;
 private slots:
     void scrollValueChanged(int);
@@ -129,7 +129,7 @@ signals:
     /** Signal emitted when the value is changed*/
     void new_value(float);
     /** Signal emitted when the value is changed*/
-    void new_value(vector<float>);
+    void new_value(std::vector<float>);
     /** Signal emitted when the close button is clicked */
     void signal_close_clicked();
     /** Signal emitted when the ok button is clicked */
@@ -142,7 +142,7 @@ signals:
 
     An example of use of this class is
     @code
-       vector<string> list_values;
+       std::vector<std::string> list_values;
        list_values.push_back("Option 1");
        list_values.push_back("Option 2");
       // Create window
@@ -165,14 +165,14 @@ class ExclusiveParam : public QWidget
 public:
     /** Constructor.
         Provide the min_value, max_value, caption and initial_value.*/
-    ExclusiveParam(vector<string> &list_values, int initial_value,
+    ExclusiveParam(std::vector<std::string> &list_values, int initial_value,
                    char *caption, QWidget *parent = 0,
                    const char *name = 0, int wFlags = 0);
     ~ExclusiveParam();
 
 private:
     int       value;
-    vector< QRadioButton *> button;
+    std::vector< QRadioButton *> button;
 private slots:
     void but_close_clicked();
     void but_ok_clicked();

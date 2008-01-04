@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error &XE)
     {
-        cout << XE;
+        std::cout << XE;
         bool usage_more = checkParameter(argc, argv, "-more_help");
         if (usage_more)
         {
@@ -66,11 +66,11 @@ int main(int argc, char *argv[])
             Basic_ROUT_Art(art_prm, dummy, vol_voxels, vol_blobs);
         else
             Basic_ROUT_Art(art_prm, crystal_art_prm, vol_voxels, vol_blobs);
-        cerr.flush();
+        std::cerr.flush();
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         exit(1);
     }
     exit(0);

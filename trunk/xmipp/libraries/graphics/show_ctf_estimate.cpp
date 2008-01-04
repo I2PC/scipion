@@ -39,8 +39,8 @@ AssignCTFViewer::AssignCTFViewer(const FileName &_fn_psd,
         assign_ctf_prm.adjust_CTF_prm.initial_ctfmodel.K = 1;
 
     // Open a window for the scroll parameters ..............................
-    vector<float> min, max, initial_value;
-    vector<char *> prm_name;
+    std::vector<float> min, max, initial_value;
+    std::vector<char *> prm_name;
 
     // Set min_freq
     min.push_back(0);
@@ -75,8 +75,8 @@ AssignCTFViewer::AssignCTFViewer(const FileName &_fn_psd,
     // Open window for scrolls
     select_prm = new ScrollParam(min, max, initial_value, prm_name,
                                  "Recompute CTF model", 0, "new window", WDestructiveClose, 0);
-    connect(select_prm, SIGNAL(new_value(vector<float>)),
-            this,       SLOT(set_prm(vector<float>)));
+    connect(select_prm, SIGNAL(new_value(std::vector<float>)),
+            this,       SLOT(set_prm(std::vector<float>)));
     connect(select_prm, SIGNAL(signal_ok_clicked()),
             this,       SLOT(okToProceed()));
     connect(select_prm, SIGNAL(signal_close_clicked()),
@@ -93,7 +93,7 @@ AssignCTFViewer::AssignCTFViewer(const FileName &_fn_psd,
 }
 
 // Set parameters ----------------------------------------------------------
-void AssignCTFViewer::set_prm(vector<float> new_prm)
+void AssignCTFViewer::set_prm(std::vector<float> new_prm)
 {
     // If there is a change of min, max freq
     if (current_prm[0] != new_prm[0] || current_prm[1] != new_prm[1])
@@ -110,7 +110,7 @@ void AssignCTFViewer::set_prm(vector<float> new_prm)
 }
 
 // Update mask -------------------------------------------------------------
-void AssignCTFViewer::updateMask(vector<float> &prm)
+void AssignCTFViewer::updateMask(std::vector<float> &prm)
 {
     xmippImage() = xmippImage_backup;
     double min_freq = prm[0] / 100;
@@ -131,7 +131,7 @@ void AssignCTFViewer::updateMask(vector<float> &prm)
 }
 
 // Draw first zero ---------------------------------------------------------
-void AssignCTFViewer::drawFirstZero(vector<float> &prm)
+void AssignCTFViewer::drawFirstZero(std::vector<float> &prm)
 {
     // Setup a CTF model with the known parameters
     XmippCTF ctfmodel;
@@ -185,8 +185,8 @@ void AssignCTFViewer::okToProceed()
     // Create adjust parameters file
     FileName fn_random;
     fn_random.init_random(15);
-    fn_random = (string)"PPP" + fn_random + ".txt";
-    ofstream fh_adjust_param;
+    fn_random = (std::string)"PPP" + fn_random + ".txt";
+    std::ofstream fh_adjust_param;
     fh_adjust_param.open(fn_random.c_str());
     if (!fh_adjust_param)
         REPORT_ERROR(1, "ShowSel::recomputeCTFmodel: Cannot open "
@@ -194,31 +194,31 @@ void AssignCTFViewer::okToProceed()
 
     // Write adjust_CTF parameters
     fh_adjust_param
-    << "ctf=         " << fn_psd             << endl
-    << "min_freq=    " << current_prm[0] / 100 << endl
-    << "max_freq=    " << current_prm[1] / 100 << endl
+    << "ctf=         " << fn_psd             << std::endl
+    << "min_freq=    " << current_prm[0] / 100 << std::endl
+    << "max_freq=    " << current_prm[1] / 100 << std::endl
     ;
     if (!assign_ctf_prm.adjust_CTF_prm.astigmatic_noise)
         fh_adjust_param << "radial_noise=yes\n";
     fh_adjust_param << "defocus_range=4000\n";
     fh_adjust_param << "show_optimization=yes\n";
-    fh_adjust_param << endl;
+    fh_adjust_param << std::endl;
 
     // Write CTF parameters
     fh_adjust_param
-    << "voltage=             " << assign_ctf_prm.adjust_CTF_prm.initial_ctfmodel.kV << endl
-    << "spherical_aberration=" << assign_ctf_prm.adjust_CTF_prm.initial_ctfmodel.Cs << endl
-    << "sampling_rate=       " << assign_ctf_prm.adjust_CTF_prm.initial_ctfmodel.Tm << endl
-    << "defocusU=            " << current_prm[2]*1000              << endl
-    << "defocusV=            " << current_prm[3]*1000              << endl
-    << "azimuthal_angle=     " << current_prm[4]                   << endl
-    << "ctfmodelSize=        " << assign_ctf_prm.adjust_CTF_prm.ctfmodelSize      << endl
+    << "voltage=             " << assign_ctf_prm.adjust_CTF_prm.initial_ctfmodel.kV << std::endl
+    << "spherical_aberration=" << assign_ctf_prm.adjust_CTF_prm.initial_ctfmodel.Cs << std::endl
+    << "sampling_rate=       " << assign_ctf_prm.adjust_CTF_prm.initial_ctfmodel.Tm << std::endl
+    << "defocusU=            " << current_prm[2]*1000              << std::endl
+    << "defocusV=            " << current_prm[3]*1000              << std::endl
+    << "azimuthal_angle=     " << current_prm[4]                   << std::endl
+    << "ctfmodelSize=        " << assign_ctf_prm.adjust_CTF_prm.ctfmodelSize      << std::endl
     ;
 
     fh_adjust_param.close();
 
     // Recompute the model
-    system(((string)"( xmipp_ctf_estimate_from_psd -i " + fn_random + " ; rm " + fn_random + " ) &").c_str());
+    system(((std::string)"( xmipp_ctf_estimate_from_psd -i " + fn_random + " ; rm " + fn_random + " ) &").c_str());
 
     // Close this window
     close();

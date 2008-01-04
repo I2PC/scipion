@@ -87,15 +87,15 @@ void Crystal_ART_Parameters::usage_more()
 }
 
 /* Show parameters ========================================================= */
-ostream & operator << (ostream &o, const Crystal_ART_Parameters &eprm)
+std::ostream & operator << (std::ostream &o, const Crystal_ART_Parameters &eprm)
 {
-    o << "Lattice vector a: " << eprm.a.transpose() << endl;
-    o << "Lattice vector b: " << eprm.b.transpose() << endl;
-    o << "mag_a: " << eprm.a_mag << endl;
-    o << "mag_b: " << eprm.b_mag << endl;
-    o << "ang_a2b_deg: " << eprm.ang_a2b_deg << endl;
-    o << "ang_x2a_deg: " << eprm.ang_x2a_deg << endl;
-    o << "Fill space: " << eprm.fill_space << endl;
+    o << "Lattice vector a: " << eprm.a.transpose() << std::endl;
+    o << "Lattice vector b: " << eprm.b.transpose() << std::endl;
+    o << "mag_a: " << eprm.a_mag << std::endl;
+    o << "mag_b: " << eprm.b_mag << std::endl;
+    o << "ang_a2b_deg: " << eprm.ang_a2b_deg << std::endl;
+    o << "ang_x2a_deg: " << eprm.ang_x2a_deg << std::endl;
+    o << "Fill space: " << eprm.fill_space << std::endl;
     o << "Symmetry group: " <<  eprm.space_group;
     return o;
 }
@@ -138,9 +138,9 @@ void compute_integer_lattice(const Matrix1D<double> &a,
             if (XX(aint) != 2*(int)(XX(aint) / 2) ||
                 YY(bint) != 2*(int)(YY(bint) / 2))
             {
-                cout << "\nLattice connstrains for P2_122 are not satisficed"
+                std::cout << "\nLattice connstrains for P2_122 are not satisficed"
                 << "\nRound[mag_a/(sampling*grid_size)] must be even"
-                << "\nPlease modify the parmeters and try again" << endl;
+                << "\nPlease modify the parmeters and try again" << std::endl;
                 exit(0);
             }
             break;
@@ -148,9 +148,9 @@ void compute_integer_lattice(const Matrix1D<double> &a,
             if (XX(aint) != 2*(int)(XX(aint) / 2) ||
                 YY(bint) != 2*(int)(YY(bint) / 2))
             {
-                cout << "\nLattice connstrains for P22_12 are not satisficed"
+                std::cout << "\nLattice connstrains for P22_12 are not satisficed"
                 << "\nRound[mag_a/(sampling*grid_size)] must be even"
-                << "\nPlease modify the parmeters and try again" << endl;
+                << "\nPlease modify the parmeters and try again" << std::endl;
                 exit(0);
             }
             break;
@@ -158,9 +158,9 @@ void compute_integer_lattice(const Matrix1D<double> &a,
             if (XX(aint) != 2*(int)(XX(aint) / 2) ||
                 YY(bint) != 2*(int)(YY(bint) / 2))
             {
-                cout << "\nLattice connstrains for P4212 are not satisficed"
+                std::cout << "\nLattice connstrains for P4212 are not satisficed"
                 << "\nRound[mag_a/(sampling*grid_size)] must be even"
-                << "\nPlease modify the parmeters and try again" << endl;
+                << "\nPlease modify the parmeters and try again" << std::endl;
                 exit(0);
             }
             break;
@@ -168,10 +168,10 @@ void compute_integer_lattice(const Matrix1D<double> &a,
         case sym_P6:
             break;// no check needed
         default:
-            cerr << "\n Congratulations: you have found a bug in the\n"
+            std::cerr << "\n Congratulations: you have found a bug in the\n"
             << "routine compute_integer_lattice or\n"
             << "you are using a non implemented symmetry group\n"
-            <<  endl;
+            <<  std::endl;
             exit(0);
             break;
         }//switch(space_group)  end
@@ -292,8 +292,8 @@ void Crystal_ART_Parameters::produce_Side_Info(
         sgn[3] = SGN0_VEC_PRODUCT(c4r, bi);
 
 #ifdef DEBUG_A_LOT
-        cout << "(x,y)=(" << XX(r) << "," << YY(r) << ") " << sgn[0] << sgn[1]
-        << sgn[2] << sgn[3] << endl;
+        std::cout << "(x,y)=(" << XX(r) << "," << YY(r) << ") " << sgn[0] << sgn[1]
+        << sgn[2] << sgn[3] << std::endl;
 #endif
 
         // Now check if point is inside
@@ -316,7 +316,7 @@ void Crystal_ART_Parameters::produce_Side_Info(
             {
                 unit_cell_mask(i, j) = 1;
 #ifdef DEBUG_A_LOT
-                cout << "    Inside\n";
+                std::cout << "    Inside\n";
 #endif
                 break;
             }
@@ -324,25 +324,25 @@ void Crystal_ART_Parameters::produce_Side_Info(
 
     // Show all parameters --------------------------------------------------
 #ifdef DEBUG
-    cout << "avox= " << avox.transpose() << endl;
-    cout << "bvox= " << bvox.transpose() << endl;
-    cout << "grid_relative_size= " << prm.grid_relative_size << endl;
-    cout << "a=    " << a.transpose()    << endl;
-    cout << "b=    " << b.transpose()    << endl;
-    cout << "aint= " << aint.transpose() << endl;
-    cout << "bint= " << bint.transpose() << endl;
-    cout << "ai=   " << ai.transpose()   << endl;
-    cout << "bi=   " << bi.transpose()   << endl;
-    cout << "D=    " << D;
-    cout << "Check that a=D*aint " << (D*aint).transpose() << endl;
-    cout << "Check that b=D*bint " << (D*bint).transpose() << endl;
-    cout << "Symmetry group: " <<  space_group;
+    std::cout << "avox= " << avox.transpose() << std::endl;
+    std::cout << "bvox= " << bvox.transpose() << std::endl;
+    std::cout << "grid_relative_size= " << prm.grid_relative_size << std::endl;
+    std::cout << "a=    " << a.transpose()    << std::endl;
+    std::cout << "b=    " << b.transpose()    << std::endl;
+    std::cout << "aint= " << aint.transpose() << std::endl;
+    std::cout << "bint= " << bint.transpose() << std::endl;
+    std::cout << "ai=   " << ai.transpose()   << std::endl;
+    std::cout << "bi=   " << bi.transpose()   << std::endl;
+    std::cout << "D=    " << D;
+    std::cout << "Check that a=D*aint " << (D*aint).transpose() << std::endl;
+    std::cout << "Check that b=D*bint " << (D*bint).transpose() << std::endl;
+    std::cout << "Symmetry group: " <<  space_group;
     ImageXmipp I;
     I = unit_cell_mask;
     I.write("unit_cell_mask.xmp");
-    cout << "unit_cell_mask shape=";
+    std::cout << "unit_cell_mask shape=";
     unit_cell_mask.printShape();
-    cout << endl;
+    std::cout << std::endl;
 #endif
 }
 #undef DEBUG
@@ -405,7 +405,7 @@ void ART_single_step(
     A.initIdentity();
     dMij(A, 0, 2) =  8;
     dMij(A, 1, 2) =  -5;
-    cout << "A" << A;
+    std::cout << "A" << A;
     //move read_proj
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(theo_proj())
     dMij(theo_proj(), i, j) = dMij(read_proj(), i, j);
@@ -484,7 +484,7 @@ void finish_ART_iterations(const Basic_ART_Parameters &prm,
 void expand_to_fill_space(const Basic_ART_Parameters &prm,
                           const Crystal_ART_Parameters &eprm, GridVolume &vol)
 {
-    cerr << "Replicating unit cell ...\n";
+    std::cerr << "Replicating unit cell ...\n";
 #ifdef DEBUG
     ImageXmipp save;
     save = vol(0)().getSlice(0);
@@ -507,13 +507,13 @@ void expand_to_fill_space(const Basic_ART_Parameters &prm,
     find_crystal_limits(corner1, corner2, zero, zero,
                         eprm.a, eprm.b, a0, aF, b0, bF);
 #ifdef DEBUG
-    cout << "Output Volume size (ZxYxX)=" << prm.Zoutput_volume_size
+    std::cout << "Output Volume size (ZxYxX)=" << prm.Zoutput_volume_size
     << " " << prm.Youtput_volume_size << " "
-    << prm.Xoutput_volume_size << endl;
-    cout << "corners:\n" << corner1.transpose() << endl
-    << corner2.transpose() << endl;
-    cout << "a0=" << a0 << "..." << aF << endl
-    << "b0=" << b0 << "..." << bF << endl;
+    << prm.Xoutput_volume_size << std::endl;
+    std::cout << "corners:\n" << corner1.transpose() << std::endl
+    << corner2.transpose() << std::endl;
+    std::cout << "a0=" << a0 << "..." << aF << std::endl
+    << "b0=" << b0 << "..." << bF << std::endl;
 #endif
 
     // Expand the volume to the required space
@@ -535,7 +535,7 @@ void expand_to_fill_space(const Basic_ART_Parameters &prm,
             if (MAT_ELEM(eprm.unit_cell_mask, i, j))
             {
 #ifdef DEBUG2
-                cout << "(y,x)=(" << i << "," << j << ") is inside\n";
+                std::cout << "(y,x)=(" << i << "," << j << ") is inside\n";
 #endif
                 for (int ii = b0; ii <= bF; ii++)
                     for (int jj = a0; jj <= aF; jj++)
@@ -547,7 +547,7 @@ void expand_to_fill_space(const Basic_ART_Parameters &prm,
                         if (!VOLMATRIX(V).outside(r))
                         {
 #ifdef DEBUG2
-                            cout << "   Is copied to (" << (int)YY(r) << ","
+                            std::cout << "   Is copied to (" << (int)YY(r) << ","
                             << (int)XX(r) << ")\n";
 #endif
                             // copy values if inside volume

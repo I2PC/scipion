@@ -37,7 +37,7 @@ int main (int argc,char *argv[]) {
    }
    catch (Xmipp_error &XE)
    {
-       cout << XE; prog_prm.Usage(); exit(1);
+       std::cout << XE; prog_prm.Usage(); exit(1);
    }
 
    try
@@ -47,7 +47,7 @@ int main (int argc,char *argv[]) {
    }
    catch (Xmipp_error XE)
    {
-   cout << XE;
+   std::cout << XE;
    }
    return 0;
 }

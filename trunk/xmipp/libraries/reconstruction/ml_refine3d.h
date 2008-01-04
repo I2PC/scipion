@@ -66,7 +66,7 @@ public:
     // Number of volumes to refine
     int Nvols;
     // vector with integers which projections are valid for which volume
-    vector<int> eachvol_start, eachvol_end;
+    std::vector<int> eachvol_start, eachvol_end;
     // Iteration numbers
     int istart, Niter;
     // Verbosity flag
@@ -76,7 +76,7 @@ public:
     // Angular sampling interval (degree)
     double angular;
     /// File handler for the history file
-    ofstream fh_hist;
+    std::ofstream fh_hist;
     // Use WBP instead of WLS-ART for reconstruction in ML
     bool do_wbp;
     // Low-pass filter digital frequency
@@ -120,7 +120,7 @@ public:
     void project_reference_volume(SelFile &SFlib, int rank = 0) ;
 
     /// (For mpi-version only:) calculate noise averages and write to disc
-    void make_noise_images(vector<ImageXmipp> &Iref) ;
+    void make_noise_images(std::vector<ImageXmipp> &Iref) ;
 
     /// reconstruction by (weighted ART) or WBP
     void reconstruction(int argc, char **argv,

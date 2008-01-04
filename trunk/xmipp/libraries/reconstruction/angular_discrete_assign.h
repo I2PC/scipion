@@ -117,34 +117,34 @@ public:
     Matrix2D<int> Mask_no;
     // Vector with all the DWT coefficients of the
     // library
-    vector<Matrix2D<double> * > library;
+    std::vector<Matrix2D<double> * > library;
     // Vector with all the names of the library images
-    vector<FileName> library_name;
+    std::vector<FileName> library_name;
     // Power of the library images at different
     // subbands
     Matrix2D<double> library_power;
     // Vector with the rotational angles of the library
-    vector<double> rot;
+    std::vector<double> rot;
     // Vector with the tilting angles of the library
-    vector<double> tilt;
+    std::vector<double> tilt;
     // Index of the current processed image
     int current_img;
     // Vector of image names
-    vector<string> image_name;
+    std::vector<std::string> image_name;
     // Vector of predicted rotational angles
-    vector<double> predicted_rot;
+    std::vector<double> predicted_rot;
     // Vector of predicted tilting angles
-    vector<double> predicted_tilt;
+    std::vector<double> predicted_tilt;
     // Vector of predicted psi angles
-    vector<double> predicted_psi;
+    std::vector<double> predicted_psi;
     // Vector of predicted shiftX
-    vector<double> predicted_shiftX;
+    std::vector<double> predicted_shiftX;
     // Vector of predicted shiftY
-    vector<double> predicted_shiftY;
+    std::vector<double> predicted_shiftY;
     // Vector of predicted corr
-    vector<double> predicted_corr;
+    std::vector<double> predicted_corr;
     // Vector of corresponding reference index
-    vector<int>    predicted_reference;
+    std::vector<int>    predicted_reference;
     // Parameters for computing distances
     Prog_angular_distance_prm distance_prm;
 public:
@@ -179,8 +179,8 @@ public:
         The list size is the total number of reference images. For each
         image the list is true if it is still a candidate.*/
     void build_ref_candidate_list(const ImageXmipp &I,
-                                  vector<bool> &candidate_list, vector<double> &cumulative_corr,
-                                  vector<double> &sumxy);
+                                  std::vector<bool> &candidate_list, std::vector<double> &cumulative_corr,
+                                  std::vector<double> &sumxy);
 
     /** Refine candidate list via correlation. Given a projection image and the
         list of alive candidates, this function correlates the input image with
@@ -188,38 +188,38 @@ public:
 
         m is the subband being studied*/
     void refine_candidate_list_with_correlation(int m,
-            Matrix1D<double> &dwt, vector<bool> &candidate_list,
-            vector<double> &cumulative_corr,
+            Matrix1D<double> &dwt, std::vector<bool> &candidate_list,
+            std::vector<double> &cumulative_corr,
             Matrix1D<double> &x_power,
-            vector<double> &sumxy, double th = 50);
+            std::vector<double> &sumxy, double th = 50);
 
     /** Evaluate candidates by correlation. The evaluation is returned in
         candidate_rate. Furthermore, this function returns the threshold for
         passing in the "score exam", a 7*/
-    double evaluate_candidates(const vector<double> &vscore,
-                               const vector<int> &candidate_idx, vector<double> &candidate_rate,
+    double evaluate_candidates(const std::vector<double> &vscore,
+                               const std::vector<int> &candidate_idx, std::vector<double> &candidate_rate,
                                double weight);
 
     /** Group views.
         The input images are supposed to be ordered by rate.
         The groups are also sorted by rate. */
-    void group_views(const vector<double> &vrot,
-                     const vector<double> &vtilt, const vector<double> &vpsi,
-                     const vector<int> &best_idx, const vector<int> &candidate_idx,
-                     vector< vector<int> > &groups);
+    void group_views(const std::vector<double> &vrot,
+                     const std::vector<double> &vtilt, const std::vector<double> &vpsi,
+                     const std::vector<int> &best_idx, const std::vector<int> &candidate_idx,
+                     std::vector< std::vector<int> > &groups);
 
     /** Pick the best image from the groups.
         If method == 0 it takes the maximum of the first group (the
         one with best rate). If method==1, it takes the maximum
         of the most populated group. */
     int pick_view(int method,
-                  vector< vector<int> > &groups,
-                  vector<double> &vscore,
-                  vector<double> &vrot,
-                  vector<double> &vtilt,
-                  vector<double> &vpsi,
-                  const vector<int> &best_idx,
-                  const vector<int> &candidate_idx, const vector<double> &candidate_rates);
+                  std::vector< std::vector<int> > &groups,
+                  std::vector<double> &vscore,
+                  std::vector<double> &vrot,
+                  std::vector<double> &vtilt,
+                  std::vector<double> &vpsi,
+                  const std::vector<int> &best_idx,
+                  const std::vector<int> &candidate_idx, const std::vector<double> &candidate_rates);
 
     /** Predict rotational and tilting angles.
         The function returns the two assigned angles and the corresponding

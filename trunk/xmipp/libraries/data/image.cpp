@@ -7,7 +7,7 @@
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
  * Part of this module has been developed by Lorenzo Zampighi and Nelson Tang
- * Dept. Physiology of the David Geffen School of Medicine
+ * Dept. Physiology of the David Geffen School of Medistd::cine
  * Univ. of California, Los Angeles.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -135,7 +135,7 @@ bool ImageXmippStack::readFromStack(const FileName& name,
 
     fn=name;
     if ((fp = fopen(name.c_str(), "rb")) == NULL)
-        REPORT_ERROR(1501, (string) "ImageXmippStack::read: File " +
+        REPORT_ERROR(1501, (std::string) "ImageXmippStack::read: File " +
                      name + " not found");
 
     // Read header
@@ -157,11 +157,11 @@ bool ImageXmippStack::readFromStack(const FileName& name,
         ImageXmipp I;
         if (!I.getHeader().read(fp, true, reversed, true))
             REPORT_ERROR(1502,
-                (string)"ImageXmippStack::readFromStack: Cannot read image "+
+                (std::string)"ImageXmippStack::readFromStack: Cannot read image "+
                 integerToString(i));
         if (!I.readImageContent(fp, apply_geo, only_apply_shifts))
             REPORT_ERROR(1502,
-                (string)"ImageXmippStack::readFromStack: Cannot read (2) image "
+                (std::string)"ImageXmippStack::readFromStack: Cannot read (2) image "
                 +integerToString(i));
         I.rename(name.insert_before_extension(integerToString(i,5)));
         stack.push_back(I);
@@ -180,7 +180,7 @@ void ImageXmippStack::writeAsStack(const FileName& name, bool force_reversed)
         fn=name;
 
     if ((fp = fopen(fn.c_str(), "wb")) == NULL)
-        REPORT_ERROR(1503, (string) "ImageXmippStack::write: File " + fn +
+        REPORT_ERROR(1503, (std::string) "ImageXmippStack::write: File " + fn +
                      " cannot be written");
 
     getImage(0).adjust_header();
@@ -292,10 +292,10 @@ void ImageOver::oversample(ImageT < double > *I) const
 /****************************************************************************/
 
 template <>
-bool ImageImagicT<complex<double> >::read(const FileName &name)
+bool ImageImagicT<std::complex<double> >::read(const FileName &name)
 {
     rename(name);
-    ImageImagicInfo img_info = ImagicGetImgInfo(getHedFname());
+    ImageImagicinfo img_info = ImagicGetImgInfo(getHedFname());
 
     FileName img_fname = getImgFname();
     if (img_fname == "")
@@ -324,7 +324,7 @@ bool ImageImagicT<complex<double> >::read(const FileName &name)
             // read imaginary part of a complex number
             FREAD(&b, size, 1, img_fh, reversed);
             // Assign the number
-            complex<double> c(a, b);
+            std::complex<double> c(a, b);
             MULTIDIM_ELEM(img, i) = c;
         }
         break;
@@ -337,9 +337,9 @@ bool ImageImagicT<complex<double> >::read(const FileName &name)
     return (true);
 }
 
-const ImageImagicInfo ImagicGetImgInfo(const FileName &hed_fname)
+const ImageImagicinfo ImagicGetImgInfo(const FileName &hed_fname)
 {
-    ImageImagicInfo info;
+    ImageImagicinfo info;
 
     FILE *fp;
     if ((fp = fopen(hed_fname.c_str(), "rb")) != NULL)

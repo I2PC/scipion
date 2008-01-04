@@ -55,11 +55,11 @@ public:
   /** The reference volume */
   VolumeXmipp vol;
   /** Vector with reference FTs of polar rings */
-  vector<Polar<complex<double> > > fP_ref;
+  std::vector<Polar<std::complex<double> > > fP_ref;
   /** Vector with reference images */
-  vector<Matrix2D<double> > proj_ref;
+  std::vector<Matrix2D<double> > proj_ref;
   /** vector with stddevs for all reference projections */
-  vector<double> stddev_ref;
+  std::vector<double> stddev_ref;
   /** dimension of the images */
   int dim;
   /** Verbose level:
@@ -84,8 +84,8 @@ public:
    * each projection direction) */
   bool output_classes;
   /** Vector with all running class averages */
-  vector<ImageXmipp> class_avgs;
-  vector<SelFile> class_selfiles;
+  std::vector<ImageXmipp> class_avgs;
+  std::vector<SelFile> class_selfiles;
 
    /** Symmetry. One of the 17 possible symmetries in
       single particle electron microscopy.

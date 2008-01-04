@@ -47,19 +47,19 @@
 #include <qgrid.h>
 
 /* Show -------------------------------------------------------------------- */
-ostream & operator << (ostream &_out, const Particle &_p)
+std::ostream & operator << (std::ostream &_out, const Particle &_p)
 {
     _out << _p.x      << " " << _p.y << " "
     << _p.idx    << " "
     << (int)_p.status << " "
     << _p.dist   << " "
     << _p.vec.transpose()
-    << endl
+    << std::endl
     ;
     return _out;
 }
 
-void Particle::read(istream &_in, int _vec_size)
+void Particle::read(std::istream &_in, int _vec_size)
 {
     _in >> x >> y
     >> idx
@@ -127,7 +127,7 @@ void Classification_model::build_model()
     else
     {
         // Keep only the diagonal
-        cout << "The training model is not well posed.\n"
+        std::cout << "The training model is not well posed.\n"
         << "A weak independent model used instead\n";
         __sigma_inv.initZeros(__sigma);
         for (int i = 0; i < XSIZE(__sigma); i++)
@@ -168,13 +168,13 @@ void Classification_model::compute_largest_distance()
     int N = __training_particle.size();
     Matrix1D<double> dist(N);
 #ifdef DEBUG
-    cout << "Computing largest distance ...\n";
+    std::cout << "Computing largest distance ...\n";
 #endif
     for (int i = 0;i < N;i++)
     {
         dist(i) = distance_to_average(__training_particle.at(i).vec);
 #ifdef DEBUG
-        cout << "   Distance of " << i << " = " << dist(i) << endl;
+        std::cout << "   Distance of " << i << " = " << dist(i) << std::endl;
 #endif
     }
     histogram1D hist;
@@ -182,21 +182,21 @@ void Classification_model::compute_largest_distance()
     __largest_distance = hist.percentil(90);
 
 #ifdef DEBUG
-    cout << "Largest distance = " << __largest_distance << endl;
+    std::cout << "Largest distance = " << __largest_distance << std::endl;
 #endif
 }
 #undef DEBUG
 
 /* Show -------------------------------------------------------------------- */
-ostream & operator << (ostream &_out, const Classification_model &_m)
+std::ostream & operator << (std::ostream &_out, const Classification_model &_m)
 {
     int imax = _m.__training_particle.size();
     int N = 0;
     for (int i = 0; i < imax; i++)
         if (_m.__training_particle.at(i).status != 0) N++;
-    _out << "#N.particles= " << N << endl;
+    _out << "#N.particles= " << N << std::endl;
     if (imax > 0)
-        _out << "#Vector_size= " << XSIZE(_m.__training_particle.at(0).vec) << endl;
+        _out << "#Vector_size= " << XSIZE(_m.__training_particle.at(0).vec) << std::endl;
     else
         _out << "#Vector_size= 0\n";
     _out << "#x y index_in_micrograph status dist_to_average vector\n";
@@ -206,9 +206,9 @@ ostream & operator << (ostream &_out, const Classification_model &_m)
     return _out;
 }
 
-istream & operator >> (istream &_in, Classification_model &_m)
+std::istream & operator >> (std::istream &_in, Classification_model &_m)
 {
-    string dummy;
+    std::string dummy;
     int imax, vec_size;
     _in >> dummy >> imax;
     _in >> dummy >> vec_size;
@@ -224,11 +224,11 @@ istream & operator >> (istream &_in, Classification_model &_m)
 }
 
 /* Print model ------------------------------------------------------------- */
-void Classification_model::print_model(ostream &_out)
+void Classification_model::print_model(std::ostream &_out)
 {
-    _out << "Average of the model: " << __avg.transpose() << endl;
-    _out << "Covariance of the model:\n" << __sigma << endl;
-    _out << "Largest distance:" << __largest_distance << endl;
+    _out << "Average of the model: " << __avg.transpose() << std::endl;
+    _out << "Covariance of the model:\n" << __sigma << std::endl;
+    _out << "Largest distance:" << __largest_distance << std::endl;
 }
 
 /* Constructor ------------------------------------------------------------- */
@@ -371,10 +371,10 @@ void QtWidgetMicrograph::openMenus()
 /* Learn particles --------------------------------------------------------- */
 void QtWidgetMicrograph::learnParticles()
 {
-    cerr << "\n------------------Learning Phase---------------------------\n";
+    std::cerr << "\n------------------Learning Phase---------------------------\n";
     createMask();
 
-    vector<int> all_idx;
+    std::vector<int> all_idx;
     int num_part = __m->ParticleNo();
     for (int i = 0; i < num_part; i++)
         if (__m->coord(i).valid && __m->coord(i).label != __auto_label)
@@ -394,8 +394,8 @@ void QtWidgetMicrograph::buildSelectionModel()
     __selection_model.import_particles(__training_loaded_model);
     __selection_model.import_particles(__auto_loaded_model);
 
-    cerr << "Number of training particles :: "
-    << __selection_model.__training_particle.size() << endl;
+    std::cerr << "Number of training particles :: "
+    << __selection_model.__training_particle.size() << std::endl;
 
     __selection_model.build_model();
     __selection_model.compute_largest_distance();
@@ -414,7 +414,7 @@ bool sort_criteria(const Particle &p1, const Particle &p2)
 void QtWidgetMicrograph::automaticallySelectParticles()
 {
     if (XSIZE(__selection_model.__sigma_inv) == 0) return;
-    cerr << "------------------Automatic Phase---------------------------" << endl;
+    std::cerr << "------------------Automatic Phase---------------------------" << std::endl;
 
     const Matrix2D<int> &mask = __mask.get_binary_mask2D();
 
@@ -422,7 +422,7 @@ void QtWidgetMicrograph::automaticallySelectParticles()
     double threshold = __selection_model.__largest_distance;
 
     //define a vector to store automatically selected particles
-    vector< Particle > candidate_vec, all_vec;
+    std::vector< Particle > candidate_vec, all_vec;
 
     //top,left corner of the piece
     int top = 0, left = 0, next_top = 0, next_left = 0;
@@ -436,11 +436,11 @@ void QtWidgetMicrograph::automaticallySelectParticles()
     while (get_corner_piece(top, left, skip_y,
                             next_skip_x, next_skip_y, next_top, next_left))
     {
-        cerr << "Processing piece number " << N << "...\n";
+        std::cerr << "Processing piece number " << N << "...\n";
 #ifdef DEBUG
-        cerr << "    (top,left)=" << top << "," << left
+        std::cerr << "    (top,left)=" << top << "," << left
         << " skip y,x=" << next_skip_y << "," << next_skip_x
-        << " next=" << next_top << "," << next_left << endl;
+        << " next=" << next_top << "," << next_left << std::endl;
 #endif
 
         // Get a piece and prepare it
@@ -448,7 +448,7 @@ void QtWidgetMicrograph::automaticallySelectParticles()
         {
             top = next_top;
             left = next_left;
-            cerr << "bad piece...skipping" << endl;
+            std::cerr << "bad piece...skipping" << std::endl;
             N++;
             continue;
         }
@@ -463,12 +463,12 @@ void QtWidgetMicrograph::automaticallySelectParticles()
         next_posy = posy = skip_y + YSIZE(mask) / 2;
 
 #ifdef DEBUG_MORE
-        cerr << "Skip(y,x)=" << skip_y << "," << skip_x << endl;
+        std::cerr << "Skip(y,x)=" << skip_y << "," << skip_x << std::endl;
 #endif
         while (get_next_scanning_pos(next_posx, next_posy, skip_x, skip_y))
         {
 #ifdef DEBUG_MORE
-            cerr << "Pos(y,x)=" << posy << "," << posx
+            std::cerr << "Pos(y,x)=" << posy << "," << posx
             << " Micro(y,x)=" << posy*__reduction + top
             << "," << posx*__reduction + left
             << " Next pos(y,x)=" << next_posy << "," << next_posx;
@@ -478,7 +478,7 @@ void QtWidgetMicrograph::automaticallySelectParticles()
             {
                 double dist = __selection_model.distance_to_average(v);
 #ifdef DEBUG_MORE
-                cerr << " Success " << dist;
+                std::cerr << " Success " << dist;
 #endif
 
                 // Build the Particle structure
@@ -497,7 +497,7 @@ void QtWidgetMicrograph::automaticallySelectParticles()
                 if (dist < threshold)
                 {
 #ifdef DEBUG_MORE
-                    cerr << "   Initial";
+                    std::cerr << "   Initial";
 #endif
                     // Refine the particle position
                     P.x = posx;
@@ -509,12 +509,12 @@ void QtWidgetMicrograph::automaticallySelectParticles()
                     // Insert it in the list of candidates
                     candidate_vec.push_back(P);
 #ifdef DEBUG_EVEN_MORE
-                    cout << "\n   " << P.vec.transpose() << endl;
+                    std::cout << "\n   " << P.vec.transpose() << std::endl;
 #endif
                 }
             }
 #ifdef DEBUG_MORE
-            cerr << endl;
+            std::cerr << std::endl;
 #endif
 
             // Go to next scanning position
@@ -548,11 +548,11 @@ void QtWidgetMicrograph::automaticallySelectParticles()
 
     // reject the candidates that are pointing to the same particle
     int Nalive = reject_within_distance(candidate_vec, __particle_radius, false);
-    cout << "Nalive=" << Nalive << endl;
+    std::cout << "Nalive=" << Nalive << std::endl;
 
     // reject the candidates that are two close to each other
     Nalive = reject_within_distance(candidate_vec, __min_distance_between_particles, true);
-    cout << "Nalive=" << Nalive << endl;
+    std::cout << "Nalive=" << Nalive << std::endl;
 
     //insert selected particles in the result
     int imax = candidate_vec.size();
@@ -590,12 +590,12 @@ void QtWidgetMicrograph::automaticallySelectParticles()
             else
             {
                 candidate_vec.at(i).status = 0;
-                cout << "Error found:" << candidate_vec.at(i).x << ","
-                << candidate_vec.at(i).y << endl;
+                std::cout << "Error found:" << candidate_vec.at(i).x << ","
+                << candidate_vec.at(i).y << std::endl;
             }
         }
 
-    cerr << "Number of automatically selected particles = " << n << endl;
+    std::cerr << "Number of automatically selected particles = " << n << std::endl;
 
     __auto_label = add_family(__auto_model.__training_particle, "auto");
 
@@ -606,8 +606,8 @@ void QtWidgetMicrograph::automaticallySelectParticles()
 #undef DEBUG_EVEN_MORE
 
 /* Add family -------------------------------------------------------------- */
-int QtWidgetMicrograph::add_family(vector<Particle> &_list,
-                                   const string &_family_name)
+int QtWidgetMicrograph::add_family(std::vector<Particle> &_list,
+                                   const std::string &_family_name)
 {
     int ilabel = __m->add_label(_family_name);
     int imax = _list.size();
@@ -696,7 +696,7 @@ void QtWidgetMicrograph::classifyMask()
 #undef DEBUG
 
 /* Build training vectors -------------------------------------------------- */
-void QtWidgetMicrograph::buildVectors(vector<int> &_idx,
+void QtWidgetMicrograph::buildVectors(std::vector<int> &_idx,
                                       Classification_model &__model)
 {
     __model.clear();
@@ -743,7 +743,7 @@ void QtWidgetMicrograph::buildVectors(vector<int> &_idx,
         }
 
         //make vector from the neighbours
-        vector< Matrix1D<int> > nbr;
+        std::vector< Matrix1D<int> > nbr;
         nbr.reserve(num_part);
         find_nbr(_idx, part_i, x, y, posx, posy, visited, nbr);
         for (int i = 0;i < nbr.size();i++)
@@ -793,7 +793,7 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
     {
         save() = __piece;
         save.write("PPP0.xmp");
-        cout << "Particle is at (y,x)=" << _y << "," << _x << endl;
+        std::cout << "Particle is at (y,x)=" << _y << "," << _x << std::endl;
         save().initZeros(YSIZE(mask), XSIZE(mask));
         STARTINGY(save()) = STARTINGY(mask);
         STARTINGX(save()) = STARTINGX(mask);
@@ -861,9 +861,9 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
     {
         save.write("PPP1.xmp");
         savefg.write("PPP2.xmp");
-        cout << _result.transpose() << endl;
-        cout << "Distance=" << __selection_model.distance_to_average(_result);
-        cout << "Press any key\n";
+        std::cout << _result.transpose() << std::endl;
+        std::cout << "Distance=" << __selection_model.distance_to_average(_result);
+        std::cout << "Press any key\n";
         char c;
         cin >> c;
     }
@@ -1051,9 +1051,9 @@ bool QtWidgetMicrograph::prepare_piece()
 
 /* Get neighbours ---------------------------------------------------------- */
 //To get the neighbours and their positions in the piece image
-void QtWidgetMicrograph::find_nbr(vector<int> &_idx, int _index, int _x, int _y,
+void QtWidgetMicrograph::find_nbr(std::vector<int> &_idx, int _index, int _x, int _y,
                                   int _posx, int _posy, Matrix1D<char> &_visited,
-                                  vector< Matrix1D<int> > &_nbr)
+                                  std::vector< Matrix1D<int> > &_nbr)
 {
     int piece_xsize = XSIZE(__piece);
     int piece_ysize = YSIZE(__piece);
@@ -1145,7 +1145,7 @@ double dist_euc(const Particle &p1, const Particle &p2)
 }
 
 int QtWidgetMicrograph::reject_within_distance(
-    vector<Particle> &_Input, double _min_dist,
+    std::vector<Particle> &_Input, double _min_dist,
     bool _reject_both)
 {
     int imax = _Input.size();
@@ -1171,7 +1171,7 @@ int QtWidgetMicrograph::reject_within_distance(
 /* Reject manually selected ------------------------------------------------ */
 void QtWidgetMicrograph::reject_previously_selected(
     const Classification_model &_model,
-    vector<Particle> &_candidate_vec)
+    std::vector<Particle> &_candidate_vec)
 {
     int imax = _candidate_vec.size();
     int jmax = _model.__training_particle.size();
@@ -1337,32 +1337,32 @@ void QtWidgetMicrograph::loadModels()
                        "Model filename root", QLineEdit::Normal,
                        __m->micrograph_name().c_str(), &ok);
     if (!ok || qfn_root.isEmpty()) return;
-    string fn_root = qfn_root.ascii();
+    std::string fn_root = qfn_root.ascii();
 
     // Load parameters
-    string dummy;
-    ifstream fh_params;
+    std::string dummy;
+    std::ifstream fh_params;
     fh_params.open((fn_root + ".param").c_str());
     if (!fh_params)
     {
-        cerr << (string)"QtWidgetMicrograph::write: Cannot open file " +
-        fn_root + ".param for input" << endl;
+        std::cerr << (std::string)"QtWidgetMicrograph::write: Cannot open file " +
+        fn_root + ".param for input" << std::endl;
         return;
     }
     fh_params >> dummy >> __gray_bins
-    >> dummy >> __radial_bins
-    >> dummy >> __keep
-    >> dummy >> __piece_xsize
-    >> dummy >> __piece_ysize
-    >> dummy >> __particle_radius
-    >> dummy >> __min_distance_between_particles
-    >> dummy >> __output_scale
-    >> dummy >> __reduction
-    >> dummy >> __piece_overlap
-    >> dummy >> __particle_overlap
-    >> dummy >> __numin
-    >> dummy >> __numax
-    >> dummy >> __Nerror_models
+              >> dummy >> __radial_bins
+              >> dummy >> __keep
+              >> dummy >> __piece_xsize
+              >> dummy >> __piece_ysize
+              >> dummy >> __particle_radius
+              >> dummy >> __min_distance_between_particles
+              >> dummy >> __output_scale
+              >> dummy >> __reduction
+              >> dummy >> __piece_overlap
+              >> dummy >> __particle_overlap
+              >> dummy >> __numin
+              >> dummy >> __numax
+              >> dummy >> __Nerror_models
     ;
     fh_params.close();
 
@@ -1375,19 +1375,19 @@ void QtWidgetMicrograph::loadModels()
     classifyMask();
 
     // Load training vectors
-    ifstream fh_training;
+    std::ifstream fh_training;
     fh_training.open((fn_root + ".training").c_str());
     if (!fh_training)
-        REPORT_ERROR(1, (string)"QtWidgetMicrograph::write: Cannot open file " +
+        REPORT_ERROR(1, (std::string)"QtWidgetMicrograph::write: Cannot open file " +
                      fn_root + ".training" + " for input");
     fh_training >> __training_loaded_model;
     fh_training.close();
 
     // Load auto vectors
-    ifstream fh_auto;
+    std::ifstream fh_auto;
     fh_auto.open((fn_root + ".auto").c_str());
     if (!fh_auto)
-        REPORT_ERROR(1, (string)"QtWidgetMicrograph::write: Cannot open file " +
+        REPORT_ERROR(1, (std::string)"QtWidgetMicrograph::write: Cannot open file " +
                      fn_root + ".auto" + " for input");
     fh_auto >> __auto_loaded_model;
     fh_auto.close();
@@ -1402,13 +1402,13 @@ void QtWidgetMicrograph::loadModels()
         __error_model.push_back(error);
     }
 
-    ifstream fh_error;
+    std::ifstream fh_error;
     __use_euclidean_distance_for_errors = false;
     for (int i = 0; i < __Nerror_models; i++)
     {
         fh_error.open((fn_root + ".error" + integerToString(i, 1)).c_str());
         if (!fh_error)
-            REPORT_ERROR(1, (string)"QtWidgetMicrograph::write: Cannot open file " +
+            REPORT_ERROR(1, (std::string)"QtWidgetMicrograph::write: Cannot open file " +
                          fn_root + ".error" + integerToString(i, 1) + " for input");
         fh_error >> __error_model.at(i);
         fh_error.close();
@@ -1441,7 +1441,7 @@ void QtWidgetMicrograph::saveModels()
 void QtWidgetMicrograph::rebuild_moved_automatic_vectors()
 {
     // Rebuild vectors
-    vector<int> indexes_to_rebuild, indexes_to_rebuild_in_micrograph;
+    std::vector<int> indexes_to_rebuild, indexes_to_rebuild_in_micrograph;
     int imax = __auto_model.__training_particle.size();
     for (int i = 0; i < imax; i++)
         if (__auto_model.__training_particle.at(i).status == 2)
@@ -1510,7 +1510,7 @@ void QtWidgetMicrograph::classify_errors()
         {
             Classification_model &error_class = __error_model.at(i);
             int lmax = error_class.__training_particle.size();
-            vector<Particle>::iterator ptr = error_class.__training_particle.begin();
+            std::vector<Particle>::iterator ptr = error_class.__training_particle.begin();
             for (int l = 0; l < lmax; l++, ptr++)
             {
                 double best_dist = 0;
@@ -1551,7 +1551,7 @@ void QtWidgetMicrograph::write()
 {
     // Get the rootname
     bool ok;
-    string fn_root = (QInputDialog::getText("Saving model",
+    std::string fn_root = (QInputDialog::getText("Saving model",
                                             "Model filename root", QLineEdit::Normal, __m->micrograph_name().c_str(), &ok)).ascii();
     if (!ok) return;
 
@@ -1561,25 +1561,25 @@ void QtWidgetMicrograph::write()
     save.write(fn_root + ".mask");
 
     // Save parameters
-    ofstream fh_params;
+    std::ofstream fh_params;
     fh_params.open((fn_root + ".param").c_str());
     if (!fh_params)
-        REPORT_ERROR(1, (string)"QtWidgetMicrograph::write: Cannot open file " +
+        REPORT_ERROR(1, (std::string)"QtWidgetMicrograph::write: Cannot open file " +
                      fn_root + ".param" + " for output");
-    fh_params << "gray_bins=                    " << __gray_bins                     << endl
-    << "radial_bins=                    " << __radial_bins                   << endl
-    << "keep=                         " << __keep                          << endl
-    << "piece_xsize=                  " << __piece_xsize                   << endl
-    << "piece_ysize=                  " << __piece_ysize                   << endl
-    << "particle_radius=                " << __particle_radius               << endl
-    << "min_distance_between_particles= " << __min_distance_between_particles << endl
-    << "output_scale=                   " << __output_scale                   << endl
-    << "reduction_factor=               " << __reduction                      << endl
-    << "piece_overlap=                  " << __piece_overlap                  << endl
-    << "particle_overlap=               " << __particle_overlap               << endl
-    << "numin=                          " << __numin                          << endl
-    << "numax=                          " << __numax                          << endl
-    << "Nerror_models=                  " << __Nerror_models                  << endl
+    fh_params << "gray_bins=                    " << __gray_bins                     << std::endl
+    << "radial_bins=                    " << __radial_bins                   << std::endl
+    << "keep=                         " << __keep                          << std::endl
+    << "piece_xsize=                  " << __piece_xsize                   << std::endl
+    << "piece_ysize=                  " << __piece_ysize                   << std::endl
+    << "particle_radius=                " << __particle_radius               << std::endl
+    << "min_distance_between_particles= " << __min_distance_between_particles << std::endl
+    << "output_scale=                   " << __output_scale                   << std::endl
+    << "reduction_factor=               " << __reduction                      << std::endl
+    << "piece_overlap=                  " << __piece_overlap                  << std::endl
+    << "particle_overlap=               " << __particle_overlap               << std::endl
+    << "numin=                          " << __numin                          << std::endl
+    << "numax=                          " << __numax                          << std::endl
+    << "Nerror_models=                  " << __Nerror_models                  << std::endl
     ;
     fh_params.close();
 
@@ -1587,34 +1587,34 @@ void QtWidgetMicrograph::write()
     Classification_model aux_model;
     aux_model = __training_model;
     aux_model.import_particles(__training_loaded_model);
-    ofstream fh_training;
+    std::ofstream fh_training;
     fh_training.open((fn_root + ".training").c_str());
     if (!fh_training)
-        REPORT_ERROR(1, (string)"QtWidgetMicrograph::write: Cannot open file " +
+        REPORT_ERROR(1, (std::string)"QtWidgetMicrograph::write: Cannot open file " +
                      fn_root + ".training" + " for output");
-    fh_training << aux_model << endl;
+    fh_training << aux_model << std::endl;
     fh_training.close();
 
     // Save auto vectors
     aux_model = __auto_model;
     aux_model.import_particles(__auto_loaded_model);
-    ofstream fh_auto;
+    std::ofstream fh_auto;
     fh_auto.open((fn_root + ".auto").c_str());
     if (!fh_auto)
-        REPORT_ERROR(1, (string)"QtWidgetMicrograph::write: Cannot open file " +
+        REPORT_ERROR(1, (std::string)"QtWidgetMicrograph::write: Cannot open file " +
                      fn_root + ".auto" + " for output");
-    fh_auto << aux_model << endl;
+    fh_auto << aux_model << std::endl;
     fh_auto.close();
 
     // Save error vectors
-    ofstream fh_error;
+    std::ofstream fh_error;
     for (int i = 0; i < __Nerror_models; i++)
     {
         fh_error.open((fn_root + ".error" + integerToString(i, 1)).c_str());
         if (!fh_error)
-            REPORT_ERROR(1, (string)"QtWidgetMicrograph::write: Cannot open file " +
+            REPORT_ERROR(1, (std::string)"QtWidgetMicrograph::write: Cannot open file " +
                          fn_root + ".error" + integerToString(i, 1) + " for output");
-        fh_error << __error_model.at(i) << endl;
+        fh_error << __error_model.at(i) << std::endl;
         fh_error.close();
     }
 }
@@ -1799,8 +1799,8 @@ void QtWidgetMicrograph::slotChangeContrast()
 void QtWidgetMicrograph::slotChangeCrop()
 {
     CropWidget *crop = new CropWidget(this, 0, "new window", WDestructiveClose);
-    connect(crop, SIGNAL(new_value(vector<int>)),
-            __mImageOverview, SLOT(slotDrawCropArea(vector<int>)));
+    connect(crop, SIGNAL(new_value(std::vector<int>)),
+            __mImageOverview, SLOT(slotDrawCropArea(std::vector<int>)));
     crop->show();
 }
 
@@ -1927,8 +1927,8 @@ CropWidget::CropWidget(QtWidgetMicrograph *_qtwidgetmicrograph,
     Layout->addLayout(grid, 5);
 
     // Layout the four bars
-    vector<int> min, max, init_value;
-    vector<char *> prm_name;
+    std::vector<int> min, max, init_value;
+    std::vector<char *> prm_name;
     prm_name.push_back("x0");
     min.push_back(0);
     max.push_back(Xdim);
@@ -2017,7 +2017,7 @@ CropWidget::~CropWidget()
 // One of the sliders changed ----------------------------------------------
 void CropWidget::scrollValueChanged(int new_val)
 {
-    vector<int> value;
+    std::vector<int> value;
     // Get values
     for (int i = 0; i < __label.size(); i++)
     {
@@ -2045,12 +2045,12 @@ void CropWidget::accept()
 {
     __qtwidgetmicrograph->overview()->finish_crop_area();
     // Get values
-    vector<int> value;
+    std::vector<int> value;
     for (int i = 0; i < __label.size(); i++)
         value.push_back(__scroll[i]->value());
 
     // Get output image
-    string fn_out = __outputNameLineEdit->text().ascii();
+    std::string fn_out = __outputNameLineEdit->text().ascii();
     if (fn_out == "")
     {
         QMessageBox::information(this, "Mark",
@@ -2062,12 +2062,12 @@ void CropWidget::accept()
     // Do the cropping
     int w = value[2] - value[0];
     int h = value[3] - value[1];
-    string command = (string)"xmipp_window_micrograph " +
+    std::string command = (std::string)"xmipp_window_micrograph " +
                      "-i " + __qtwidgetmicrograph->getMicrograph()->micrograph_name() +
                      " -o " + fn_out +
                      " -size " + integerToString(w, 0) + " " + integerToString(h, 0) +
                      " -top_left_corner " + integerToString(value[0], 0) + " " + integerToString(value[1], 0);
-    cout << "Executing:\n" << command << endl;
+    std::cout << "Executing:\n" << command << std::endl;
     system(command.c_str());
 
     // Close the parameters window

@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
     float           sign_rot = PLUS, sign_tilt = PLUS, sign_psi = PLUS;
     float           sign_xshift = PLUS, sign_yshift = PLUS;
     int             key_img;
-    string          root, ext;
+    std::string     root, ext;
     bool            verb, do_weights = false, do_mirrors = false, round_shifts = false;
     bool            force = false;
     float           weight, mirror;
@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage();
     }
 
@@ -119,14 +119,14 @@ int main(int argc, char *argv[])
         {
 
             // Non-NewXmipp type document file
-            cerr << "Warning!! Docfile is of non-NewXmipp type. " << endl;
+            std::cerr << "Warning!! Docfile is of non-NewXmipp type. " << std::endl;
             if (fn_out == "")
                 REPORT_ERROR(1, "Please specify corresponding selfile: -o <selfile>");
             SF.read(fn_out);
             if (SF.ImgNo() != DF.get_last_key())
                 REPORT_ERROR(1, "docfile and corresponding selfile have unequal (active) entries");
             else
-                cerr << "Corresponding selfile has expected number of entries" << endl;
+                std::cerr << "Corresponding selfile has expected number of entries" << std::endl;
             SF.go_first_ACTIVE();
             DF.go_beginning();
             while (!SF.eof())
@@ -166,11 +166,11 @@ int main(int argc, char *argv[])
                 if (do_mirrors) img.flip() = mirror;
                 if (verb)
                 {
-                    cout << fn_img  << " : rot = " << rot << " tilt = " << tilt
+                    std::cout << fn_img  << " : rot = " << rot << " tilt = " << tilt
                     << " psi = " << psi << " Xoff = " << xshift << " Yoff = " << yshift;
-                    if (do_weights) cout << " Weight = " << weight;
-                    if (do_mirrors) cout << " Mirror = " << DF(ABS(col_mirror) - 1);
-                    cout << endl;
+                    if (do_weights) std::cout << " Weight = " << weight;
+                    if (do_mirrors) std::cout << " Mirror = " << DF(ABS(col_mirror) - 1);
+                    std::cout << std::endl;
                 }
                 img.write(fn_img);
 
@@ -225,20 +225,20 @@ int main(int argc, char *argv[])
                 if (do_mirrors) img.flip() = mirror;
                 if (verb)
                 {
-                    cout << fn_img  << " : rot = " << rot << " tilt = " << tilt
+                    std::cout << fn_img  << " : rot = " << rot << " tilt = " << tilt
                     << " psi = " << psi << " Xoff = " << xshift << " Yoff = " << yshift;
-                    if (do_weights) cout << " Weight = " << weight;
-                    if (do_mirrors) cout << " Mirror = " << DF(ABS(col_mirror) - 1);
-                    cout << endl;
+                    if (do_weights) std::cout << " Weight = " << weight;
+                    if (do_mirrors) std::cout << " Mirror = " << DF(ABS(col_mirror) - 1);
+                    std::cout << std::endl;
                 }
                 img.write(fn_img);
             }
         }
-        if (!verb) cerr << " done" << endl;
+        if (!verb) std::cerr << " done" << std::endl;
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
 
 }

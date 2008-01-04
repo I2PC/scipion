@@ -47,7 +47,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         prm.usage();
         exit(0);
     }
@@ -61,7 +61,7 @@ int main(int argc, char **argv)
         // Process all images
         prm.PM_loop_over_all_images(prm.SF, DFo, sumCC);
 
-        cerr << " Average maxCC = " << sumCC / prm.SF.ImgNo() << endl;
+        std::cerr << " Average maxCC = " << sumCC / prm.SF.ImgNo() << std::endl;
         fn_tmp = prm.fn_root + ".doc";
         DFo.write(fn_tmp);
 
@@ -70,7 +70,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         prm.usage();
         exit(0);
     }

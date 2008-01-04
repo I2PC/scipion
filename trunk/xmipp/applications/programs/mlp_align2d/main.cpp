@@ -30,10 +30,10 @@ int main(int argc, char **argv)
 
     int c, nn, imgno, opt_refno;
     bool converged;
-    vector<double> conv;
+    std::vector<double> conv;
     double aux, LL, sumw_allrefs, sumcorr, wsum_sigma_noise, wsum_sigma_offset;
-    vector< Polar <complex<double> > > fP_wsum_imgs;
-    vector<double> sumw, sumw_mirror;
+    std::vector< Polar <complex<double> > > fP_wsum_imgs;
+    std::vector<double> sumw, sumw_mirror;
     FileName fn_img;
     DocFile DFo;
 
@@ -63,7 +63,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         prm.usage();
         exit(0);
     }
@@ -74,7 +74,7 @@ int main(int argc, char **argv)
         for (int iter = prm.istart; iter <= prm.Niter; iter++)
         {
 
-            if (prm.verb > 0) cerr << "  Multi-reference refinement:  iteration " << iter << " of " << prm.Niter << endl;
+            if (prm.verb > 0) std::cerr << "  Multi-reference refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
 
             for (int iref = 0;iref < prm.nr_ref; iref++) prm.Iold[iref]() = prm.Iref[iref]();
 
@@ -101,7 +101,7 @@ int main(int argc, char **argv)
 
             if (converged)
             {
-		if (prm.verb > 0) cerr << " Optimization converged!" << endl;
+		if (prm.verb > 0) std::cerr << " Optimization converged!" << std::endl;
 		break;
 	    }
 
@@ -113,7 +113,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         prm.usage();
         exit(0);
     }

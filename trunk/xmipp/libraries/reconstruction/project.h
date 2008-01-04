@@ -70,7 +70,7 @@ public:
     void read(int argc, char **argv);
 
     /** Usage message.
-        This function shows the way of introducing this parameters. */
+        This function shows the way of introdustd::cing this parameters. */
     void usage();
 };
 
@@ -138,11 +138,11 @@ public:
         It can be a Xmipp volume or a mathematically defined phantom. */
     FileName fnPhantom;
     /// Starting name for all projections
-    string   fnProjectionSeed;
+    std::string   fnProjectionSeed;
     /// First projection number. By default, 1.
     int      starting;
     /// Extension for projection filenames. This is optional
-    string   fn_projection_extension;
+    std::string   fn_projection_extension;
 
     /// Projection Xdim
     int      proj_Xdim;
@@ -164,11 +164,11 @@ public:
     /// Document filename
     FileName fn_angle;
     /// First number in the document file is "rot","tilt" or "psi"
-    string   ang1;
+    std::string   ang1;
     /// Second number in the document file is "rot","tilt" or "psi"
-    string   ang2;
+    std::string   ang2;
     /// Third number in the document file is "rot","tilt" or "psi"
-    string   ang3;
+    std::string   ang3;
 
     /// Bias to be applied to each pixel grey value */
     double    Npixel_avg;

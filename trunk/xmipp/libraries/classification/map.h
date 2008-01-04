@@ -42,7 +42,7 @@
 #include "vector_ops.h"
 
 typedef xmippVector SomIn;
-typedef pair<long, long> SomPos;
+typedef std::pair<long, long> SomPos;
 
 // Forward declarations
 
@@ -70,7 +70,7 @@ public:
      * Parameter: _height  Height of the output plane
      * Parameter: _size    Size of code vectors
      */
-    xmippMap(const string& _layout,  unsigned _width,
+    xmippMap(const std::string& _layout,  unsigned _width,
              const unsigned& _height, const unsigned& _size);
 
 
@@ -83,7 +83,7 @@ public:
      * Parameter: _lower   Lower value for random elements
      * Parameter: _upper   Upper value for random elements
      */
-    xmippMap(const string& _layout,  unsigned _width,
+    xmippMap(const std::string& _layout,  unsigned _width,
              const unsigned& _height, const unsigned& _size, const double& _lower,
              const double& _upper);
 
@@ -97,7 +97,7 @@ public:
      * Parameter: _ts      Training set; will be used to get initial values
      * Parameter: _use_rand_cvs  Use random code vector values
      */
-    xmippMap(const string& _layout,  unsigned _width,
+    xmippMap(const std::string& _layout,  unsigned _width,
              const unsigned& _height, const xmippCTVectors& _ts,
              const bool _use_rand_cvs = false);
 
@@ -107,7 +107,7 @@ public:
      * Parameter: _cv  If the stream holds a codevector file or a whole codebook file
      * @exception  runtime_error  If there are problems with the stream
      */
-    xmippMap(istream& _is, bool _cv = true);
+    xmippMap(std::istream& _is, bool _cv = true);
 
     /**
      * Virtual destructor is needed
@@ -125,14 +125,14 @@ public:
     /**
      * Returns the id of layout that som has
      */
-    const string& layout() const;
+    const std::string& layout() const;
 
     /**
      * Returns the neighborhood of a neuron
      * Parameter: _center  Reference to the center of neighborhood
      * Parameter: _radius  Radius of neighbohood
      */
-    vector<unsigned> neighborhood(const SomPos& _center, double _radius) const;
+    std::vector<unsigned> neighborhood(const SomPos& _center, double _radius) const;
 
     /**
      * Returns the distance between two neurons according to the Layout
@@ -218,7 +218,7 @@ public:
      * Parameter: _os   The output stream
      * Parameter: _som  The som to be printed
      */
-    friend ostream& operator << (ostream& _os, const xmippMap& _som)
+    friend std::ostream& operator << (std::ostream& _os, const xmippMap& _som)
     {
         _som.printSelf(_os);
     };
@@ -229,7 +229,7 @@ public:
      * Parameter: _som The code book to be read
      * @exception  runtime_error  If there are problems with the stream
      */
-    friend istream& operator >> (istream& _is, xmippMap& _som)
+    friend std::istream& operator >> (std::istream& _is, xmippMap& _som)
     {
         _som.readSelf(_is);
     };
@@ -241,9 +241,8 @@ public:
     */
     xmippMap& operator= (const xmippMap &op1)
     {
-        strstreambuf bf;
-        ;
-        iostream _str(&bf);
+        std::strstreambuf bf;
+        std::iostream _str(&bf);
         op1.printSelf(_str);
         readSelf(_str);
         return *this;
@@ -254,21 +253,21 @@ public:
      * Standard output for a map
      * Parameter: _os The output stream
      */
-    virtual void printSelf(ostream& _os) const;
+    virtual void printSelf(std::ostream& _os) const;
 
 
     /**
      * Standard input for a map
      * Parameter: _is The input stream
      */
-    virtual void readSelf(istream& _is);
+    virtual void readSelf(std::istream& _is);
 
     /**
      * Saves the xmippMap class into a stream.
      * this method can be used to save the status of the class.
      * Parameter: _os The output stream
      */
-    virtual void saveObject(ostream& _os) const;
+    virtual void saveObject(std::ostream& _os) const;
 
 
     /**
@@ -276,7 +275,7 @@ public:
      * this method can be used to load the status of the class.
      * Parameter: _is The output stream
      */
-    virtual void loadObject(istream& _is);
+    virtual void loadObject(std::istream& _is);
 
 
     /**
@@ -320,7 +319,7 @@ public:
      * Parameter: _lower   Lower value for random elements
      * Parameter: _upper   Upper value for random elements
      */
-    xmippFuzzyMap(const string& _layout,  unsigned _width,
+    xmippFuzzyMap(const std::string& _layout,  unsigned _width,
                   const unsigned& _height, const unsigned& _size, const double& _lower,
                   const double& _upper);
 
@@ -334,7 +333,7 @@ public:
      * Parameter: _ts      Training set; will be used to get initial values
      * Parameter: _use_rand_cvs  Use random code vector pixel values
      */
-    xmippFuzzyMap(const string& _layout,  unsigned _width,
+    xmippFuzzyMap(const std::string& _layout,  unsigned _width,
                   const unsigned& _height, const xmippCTVectors& _ts,
                   const bool _use_rand_cvs = false);
 
@@ -346,7 +345,7 @@ public:
      * Parameter: _cv   If the stream holds a codevector file or a whole codebook file
      * @exception   runtime_error  If there are problems with the stream
      */
-    xmippFuzzyMap(istream& _is, const unsigned _size = 0, bool _cv = true);
+    xmippFuzzyMap(std::istream& _is, const unsigned _size = 0, bool _cv = true);
 
     /**
      * Virtual destructor is needed
@@ -364,21 +363,21 @@ public:
     /**
      * Returns the id of layout that som has
      */
-    const string& layout() const;
+    const std::string& layout() const;
 
     /**
      * Returns the neighborhood of a neuron
      * Parameter: _center  Reference to the center of neighborhood
      * Parameter: _radius  Radius of neighbohood
      */
-    vector<unsigned> neighborhood(const SomPos& _center, double _radius) const;
+    std::vector<unsigned> neighborhood(const SomPos& _center, double _radius) const;
 
     /**
      * Returns the neighborhood of a neuron in a non-const reference.
      * Parameter: _center  Reference to the center of neighborhood
      * Parameter: _radius  Radius of neighbohood
      */
-    void neighborhood(const SomPos& _center, double _radius, vector<unsigned>& _neig) const;
+    void neighborhood(const SomPos& _center, double _radius, std::vector<unsigned>& _neig) const;
 
 
     /**
@@ -387,7 +386,7 @@ public:
      * Parameter: _center  Reference to the center of neighborhood
      * Parameter: _aveVector: returns the average vector
      */
-    void localAve(const SomPos& _center, vector<double>& _aveVector) const;
+    void localAve(const SomPos& _center, std::vector<double>& _aveVector) const;
 
 
     /**
@@ -474,7 +473,7 @@ public:
      * Parameter: _os   The output stream
      * Parameter: _som  The som to be printed
      */
-    friend ostream& operator << (ostream& _os, const xmippFuzzyMap& _fsom)
+    friend std::ostream& operator << (std::ostream& _os, const xmippFuzzyMap& _fsom)
     {
         _fsom.printSelf(_os);
     };
@@ -485,7 +484,7 @@ public:
      * Parameter: _som The code book to be read
      * @exception  runtime_error  If there are problems with the stream
      */
-    friend istream& operator >> (istream& _is, xmippFuzzyMap& _fsom)
+    friend std::istream& operator >> (std::istream& _is, xmippFuzzyMap& _fsom)
     {
         _fsom.readSelf(_is);
     };
@@ -497,9 +496,8 @@ public:
     */
     xmippFuzzyMap& operator= (const xmippFuzzyMap &op1)
     {
-        strstreambuf bf;
-        ;
-        iostream _str(&bf);
+        std::strstreambuf bf;
+        std::iostream _str(&bf);
         op1.printSelf(_str);
         readSelf(_str);
         return *this;
@@ -510,7 +508,7 @@ public:
      * Standard output for a fuzzy map
      * Parameter: _os The output stream
      */
-    virtual void printSelf(ostream& _os) const;
+    virtual void printSelf(std::ostream& _os) const;
 
 
     /**
@@ -518,14 +516,14 @@ public:
      * Parameter: _size Size of code vectors (number of data points)
      * Parameter: _is The input stream
      */
-    virtual void readSelf(istream& _is, const unsigned _size = 0);
+    virtual void readSelf(std::istream& _is, const unsigned _size = 0);
 
     /**
      * Saves the xmippFuzzyMap class into a stream.
      * this method can be used to save the status of the class.
      * Parameter: _os The output stream
      */
-    virtual void saveObject(ostream& _os) const;
+    virtual void saveObject(std::ostream& _os) const;
 
 
     /**
@@ -533,7 +531,7 @@ public:
      * this method can be used to load the status of the class.
      * Parameter: _is The output stream
      */
-    virtual void loadObject(istream& _is);
+    virtual void loadObject(std::istream& _is);
 
 
     /**
@@ -581,7 +579,7 @@ public:
      * Generic constructor
      * Parameter:  _id  The identification
      */
-    Layout(const string& _id = "") : theId(_id)
+    Layout(const std::string& _id = "") : theId(_id)
     {};
 
     /**
@@ -597,7 +595,7 @@ public:
      * Parameter: _center  Reference to the center of neighborhood
      * Parameter: _radius  Radius of neighbohood
      */
-    vector<unsigned> neighborhood(const xmippMap* _som, const SomPos& _center,
+    std::vector<unsigned> neighborhood(const xmippMap* _som, const SomPos& _center,
                                   double _radius) const;
 
 
@@ -607,7 +605,7 @@ public:
      * Parameter: _center  Reference to the center of neighborhood
      * Parameter: _radius  Radius of neighbohood
      */
-    vector<unsigned> neighborhood(const xmippFuzzyMap* _som, const SomPos& _center,
+    std::vector<unsigned> neighborhood(const xmippFuzzyMap* _som, const SomPos& _center,
                                   double _radius) const;
 
 
@@ -618,7 +616,7 @@ public:
      * Parameter: _center  Reference to the center of neighborhood
      * Parameter: _aveVector: returns the average vector
      */
-    virtual void localAve(const xmippFuzzyMap* _som, const SomPos& _center, vector<double>& _aveVector) const = 0;
+    virtual void localAve(const xmippFuzzyMap* _som, const SomPos& _center, std::vector<double>& _aveVector) const = 0;
 
 
     /**
@@ -652,11 +650,11 @@ public:
     /**
      * Returns the id of the layout
      */
-    const string& id() const;
+    const std::string& id() const;
 
 private:
 
-    string theId;
+    std::string theId;
 };
 
 /**
@@ -697,7 +695,7 @@ public:
      * Parameter: _center  Reference to the center of neighborhood
      * Parameter: _aveVector: returns the average vector
      */
-    virtual void localAve(const xmippFuzzyMap* _som, const SomPos& _center, vector<double>& _aveVector) const;
+    virtual void localAve(const xmippFuzzyMap* _som, const SomPos& _center, std::vector<double>& _aveVector) const;
 
     /**
      * Returns the average number of neighbors.
@@ -708,7 +706,7 @@ public:
 
 protected:
 
-    RECTLayout(const string& _id) : Layout(_id)
+    RECTLayout(const std::string& _id) : Layout(_id)
     {};
 };
 
@@ -747,7 +745,7 @@ public:
      * Parameter: _center  Reference to the center of neighborhood
      * Parameter: _aveVector: returns the average vector
      */
-    virtual void localAve(const xmippFuzzyMap* _som, const SomPos& _center, vector<double>& _aveVector) const;
+    virtual void localAve(const xmippFuzzyMap* _som, const SomPos& _center, std::vector<double>& _aveVector) const;
 
     /**
      * Returns the average number of neighbors.
@@ -758,7 +756,7 @@ public:
 
 protected:
 
-    HEXALayout(const string& _id) : Layout(_id)
+    HEXALayout(const std::string& _id) : Layout(_id)
     {};
 };
 

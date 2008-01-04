@@ -64,7 +64,7 @@ void Prog_IDR_ART_Parameters::IDR_correction()
 {
     Projection Ireal, Inorm, Itheo, Itheo_CTF;
 
-    cerr << "Modifying input data ...\n";
+    std::cerr << "Modifying input data ...\n";
     init_progress_bar(ctfdat.lineNo());
     int istep = CEIL((double)ctfdat.lineNo() / 60.0);
     int imgs = 0;
@@ -127,9 +127,9 @@ void Prog_IDR_ART_Parameters::IDR_correction()
             save() = Itheo() - mu * Itheo_CTF();
             save.write("PPPdiff.xmp");
             Itheo.write("PPPidr.xmp");
-            cout << "Press any key to continue\n";
+            std::cout << "Press any key to continue\n";
             char c;
-            cin >> c;
+            std::cin >> c;
 #endif
     	}
 

@@ -58,7 +58,7 @@
  * @code
  * Matrix1D< double > Z = vectorR3(0, 0, 1), P = vector_R3(1, 1, 1), Pp(3);
  * Uproject_to_plane(P,Z,0,Pp);
- * cout << "After projecting: Pp=" << Pp.transpose() << endl;
+ * std::cout << "After projecting: Pp=" << Pp.transpose() << std::endl;
  * @endcode
  *
  * The starting U in the function name stands for the fact that the plane and
@@ -95,7 +95,7 @@ void Uproject_to_plane(const Matrix1D< double >& point,
  * @code
  * Matrix1D< double > P = vectorR3(1, 1, 1), Pp(3);
  * Uproject_to_plane(P, 0, 0, 0, Pp);
- * cout << "After projecting: Pp=" << Pp.transpose() << endl;
+ * std::cout << "After projecting: Pp=" << Pp.transpose() << std::endl;
  * @endcode
  *
  * The starting U in the function name stands for the fact that the plane, and
@@ -134,7 +134,7 @@ void Uproject_to_plane(const Matrix1D< double >& r,
  * Matrix1D< double > P = vectorR3(1, 1, 1), Pp(3);
  * Matrix2D< double > euler = Euler_angles2matrix(0, 0, 0);
  * Uproject_to_plane(P, euler, Pp);
- * cout << "After projecting: Pp=" << Pp.transpose() << endl;
+ * std::cout << "After projecting: Pp=" << Pp.transpose() << std::endl;
  * @endcode
  *
  * The starting U in the function name stands for the fact that the plane, and
@@ -216,7 +216,7 @@ struct fit_point
  *
  * where w is a weighting factor. Set it to 1 if you do not want to use it
  */
-void least_squares_plane_fit(const vector< fit_point >& IN_points,
+void least_squares_plane_fit(const std::vector< fit_point >& IN_points,
                              double& plane_A,
                              double& plane_B,
                              double& plane_C);
@@ -363,7 +363,7 @@ public:
  * model.evaluate(x,y);
  * @endcode
  */
-void Bspline_model_fitting(const vector< fit_point >& IN_points,
+void Bspline_model_fitting(const std::vector< fit_point >& IN_points,
                            int SplineDegree,
                            int l0,
                            int lF,
@@ -420,7 +420,7 @@ void box_enclosing(const Matrix1D< double >& v0,
  * ust be the same), determine whether another point is inside the polygon or
  * not.
  */
-bool point_inside_polygon(const vector< Matrix1D< double > > & polygon,
+bool point_inside_polygon(const std::vector< Matrix1D< double > > & polygon,
                           const Matrix1D< double >& point);
 
 /** Line Plane Intersection

@@ -60,14 +60,14 @@ void Prog_angular_predict_tomography_prm::read(int argc, char **argv)
 void Prog_angular_predict_tomography_prm::show()
 {
     Prog_parameters::show();
-    cout << "Reference images: " << fn_ref << endl
-    << "Ouput angular file: " << fn_out_ang << endl
-    << "Max rot change: " << max_rot_change << " step: " << rot_step << endl
-    << "Max tilt change: " << max_tilt_change << " step: " << tilt_step << endl
-    << "Max psi change: " << max_psi_change << " step: " << psi_step << endl
-    << "Max shift change: " << max_shift_change << " step: " << shift_step << endl
-    << "OnlyX: " << onlyX << endl
-    << "OnlyY: " << onlyY << endl
+    std::cout << "Reference images: " << fn_ref << std::endl
+    << "Ouput angular file: " << fn_out_ang << std::endl
+    << "Max rot change: " << max_rot_change << " step: " << rot_step << std::endl
+    << "Max tilt change: " << max_tilt_change << " step: " << tilt_step << std::endl
+    << "Max psi change: " << max_psi_change << " step: " << psi_step << std::endl
+    << "Max shift change: " << max_shift_change << " step: " << shift_step << std::endl
+    << "OnlyX: " << onlyX << std::endl
+    << "OnlyY: " << onlyY << std::endl
     ;
 }
 
@@ -75,7 +75,7 @@ void Prog_angular_predict_tomography_prm::show()
 void Prog_angular_predict_tomography_prm::usage()
 {
     Prog_parameters::usage();
-    cerr << "   -ref <volume>             : Reference volume\n"
+    std::cerr << "   -ref <volume>             : Reference volume\n"
     << "   -oang <angle file>        : DocFile with output angles\n"
     << "  [-max_rot_change <ang=5>]  : Maximum change allowed in rot\n"
     << "  [-max_tilt_change <ang=2>] : Maximum change allowed in tilt\n"
@@ -103,7 +103,7 @@ double Prog_angular_predict_tomography_prm::predict_angles(ImageXmipp &I,
         double &assigned_shiftX, double &assigned_shiftY,
         double &assigned_rot, double &assigned_tilt, double &assigned_psi)
 {
-    vector<Alignment> list_of_alignments;
+    std::vector<Alignment> list_of_alignments;
 
     for (double rot = -max_rot_change; rot <= max_rot_change; rot += rot_step)
         for (double tilt = I.tilt() - max_tilt_change;
@@ -186,7 +186,7 @@ double Prog_angular_predict_tomography_prm::predict_angles(ImageXmipp &I,
                         }
 
 #ifdef DEBUG
-                        cout << A;
+                        std::cout << A;
                         ImageXmipp save;
                         save() = theo() - theo_avg;
                         save.write("PPPtheo.xmp");
@@ -195,7 +195,7 @@ double Prog_angular_predict_tomography_prm::predict_angles(ImageXmipp &I,
                         multiplyElements((theo() - theo_avg), (Ip() - read_avg), save());
                         save.write("PPPprod.xmp");
                         char c;
-                        cin >> c;
+                        std::cin >> c;
 #endif
                     }
                     list_of_alignments.push_back(best_psi_alignment);

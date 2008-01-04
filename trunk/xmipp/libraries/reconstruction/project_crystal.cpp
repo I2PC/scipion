@@ -53,7 +53,7 @@ void Crystal_Projection_Parameters::read(FileName fn_crystal, double scale)
 
     if ((fh_param = fopen(fn_crystal.c_str(), "r")) == NULL)
         REPORT_ERROR(3005,
-                     (string)"Prog_Project_Parameters::read: There is a problem "
+                     (std::string)"Prog_Project_Parameters::read: There is a problem "
                      "opening the file " + fn_crystal);
 
     while (fgets(line, 200, fh_param) != NULL)
@@ -120,7 +120,7 @@ void Crystal_Projection_Parameters::read(FileName fn_crystal, double scale)
         } /* switch end */
     } /* while end */
     if (lineNo != 7 && lineNo != 6)
-        REPORT_ERROR(3007, (string)"Prog_Project_Crystal::read: I "
+        REPORT_ERROR(3007, (std::string)"Prog_Project_Crystal::read: I "
                      "couldn't read all parameters from file " + fn_crystal);
 
     fclose(fh_param);
@@ -133,7 +133,7 @@ void Crystal_Projection_Parameters::write(FileName fn_crystal)
 
     if ((fh_param = fopen(fn_crystal.c_str(), "w")) == NULL)
         REPORT_ERROR(3005,
-                     (string)"Prog_Project_Parameters::write: There is a problem "
+                     (std::string)"Prog_Project_Parameters::write: There is a problem "
                      "opening the file " + fn_crystal + " for output");
 
     fprintf(fh_param, "# Crystal dimensions (X, Y)\n");
@@ -235,30 +235,30 @@ void project_crystal(Phantom &phantom, Projection &P,
     }
     //#define DEBUG
 #ifdef DEBUG
-    cout << "P shape ";
+    std::cout << "P shape ";
     P().printShape();
-    cout << endl;
-    cout << "P.euler " << P.euler;
-    cout << endl;
-    cout << "rot= " << rot << " tilt= " << tilt << " psi= " << psi << endl;
-    cout << "a " << prm_crystal.a.transpose() << endl;
-    cout << "b " << prm_crystal.b.transpose() << endl;
-    cout << "proja " << proja.transpose() << endl;
-    cout << "projb " << projb.transpose() << endl;
-    cout << "proj_Xdim " << prm.proj_Xdim << " proj_Ydim " << prm.proj_Ydim
-    << endl;
-    cout << "A\n" << A << endl;
-    cout << "Ainv\n" << Ainv << endl;
-    cout << "D\n" << D << endl;
-    cout << "Dinv\n" << Dinv << endl;
+    std::cout << std::endl;
+    std::cout << "P.euler " << P.euler;
+    std::cout << std::endl;
+    std::cout << "rot= " << rot << " tilt= " << tilt << " psi= " << psi << std::endl;
+    std::cout << "a " << prm_crystal.a.transpose() << std::endl;
+    std::cout << "b " << prm_crystal.b.transpose() << std::endl;
+    std::cout << "proja " << proja.transpose() << std::endl;
+    std::cout << "projb " << projb.transpose() << std::endl;
+    std::cout << "proj_Xdim " << prm.proj_Xdim << " proj_Ydim " << prm.proj_Ydim
+    << std::endl;
+    std::cout << "A\n" << A << std::endl;
+    std::cout << "Ainv\n" << Ainv << std::endl;
+    std::cout << "D\n" << D << std::endl;
+    std::cout << "Dinv\n" << Dinv << std::endl;
 #endif
 
     // Compute aproj and bproj in the deformed projection space
     Matrix1D<double> aprojd = A * proja;
     Matrix1D<double> bprojd = A * projb;
 #ifdef DEBUG
-    cout << "aprojd " << aprojd.transpose() << endl;
-    cout << "bprojd " << bprojd.transpose() << endl;
+    std::cout << "aprojd " << aprojd.transpose() << std::endl;
+    std::cout << "bprojd " << bprojd.transpose() << std::endl;
 #endif
 
     // Get rid of all unnecessary components
@@ -278,13 +278,13 @@ void project_crystal(Phantom &phantom, Projection &P,
     YY(corner2) = LAST_XMIPP_INDEX(prm.proj_Ydim);
     // Now deform
 #ifdef DEBUG
-    cout << "corner1 before deformation " << corner1.transpose() << endl;
-    cout << "corner2 before deformation " << corner2.transpose() << endl;
+    std::cout << "corner1 before deformation " << corner1.transpose() << std::endl;
+    std::cout << "corner2 before deformation " << corner2.transpose() << std::endl;
 #endif
     rectangle_enclosing(corner1, corner2, A2D, corner1, corner2);
 #ifdef DEBUG
-    cout << "corner1 after deformation " << corner1.transpose() << endl;
-    cout << "corner2 after deformation " << corner2.transpose() << endl;
+    std::cout << "corner1 after deformation " << corner1.transpose() << std::endl;
+    std::cout << "corner2 after deformation " << corner2.transpose() << std::endl;
 #endif
 
     Matrix2D<double> cell_shiftX, cell_shiftY, cell_shiftZ;
@@ -343,13 +343,13 @@ void project_crystal(Phantom &phantom, Projection &P,
     }
     //#define DEBUG
 #ifdef DEBUG
-    cout << "Cell inside shape ";
+    std::cout << "Cell inside shape ";
     cell_inside.printShape();
-    cout << endl;
-    cout << "Cell inside\n" << cell_inside << endl;
-    cout << "Cell shiftX\n" << cell_shiftX << endl;
-    cout << "Cell shiftY\n" << cell_shiftY << endl;
-    cout << "Cell shiftZ\n" << cell_shiftZ << endl;
+    std::cout << std::endl;
+    std::cout << "Cell inside\n" << cell_inside << std::endl;
+    std::cout << "Cell shiftX\n" << cell_shiftX << std::endl;
+    std::cout << "Cell shiftY\n" << cell_shiftY << std::endl;
+    std::cout << "Cell shiftZ\n" << cell_shiftZ << std::endl;
 #endif
     //#undef DEBUG
 
@@ -362,20 +362,20 @@ void project_crystal(Phantom &phantom, Projection &P,
         projection_direction.selfTranspose();
         density_factor = (projection_direction * Dinv).module();
 #ifdef DEBUG
-        cout << "projection_direction" << projection_direction << endl;
-        cout << "projection_direction*A" << projection_direction*A << endl;
+        std::cout << "projection_direction" << projection_direction << std::endl;
+        std::cout << "projection_direction*A" << projection_direction*A << std::endl;
 #endif
     }
 #ifdef DEBUG
-    cout << "X proyectado=" << (AE*vectorR3(1.0, 0.0, 0.0)).transpose() << endl;
-    cout << "Y proyectado=" << (AE*vectorR3(0.0, 1.0, 0.0)).transpose() << endl;
-    cout << "P.euler_shape=" << endl;
+    std::cout << "X proyectado=" << (AE*vectorR3(1.0, 0.0, 0.0)).transpose() << std::endl;
+    std::cout << "Y proyectado=" << (AE*vectorR3(0.0, 1.0, 0.0)).transpose() << std::endl;
+    std::cout << "P.euler_shape=" << std::endl;
     (P.euler).printShape();
-    cout << "P.euler="      << P.euler << endl;
-    cout << "AE="           << AE << endl;
-    cout << "AEinv="        << AEinv << endl;
-    cout << "Ainv="            << Ainv << endl;
-    cout << "density_factor="      << density_factor << endl;
+    std::cout << "P.euler="      << P.euler << std::endl;
+    std::cout << "AE="           << AE << std::endl;
+    std::cout << "AEinv="        << AEinv << std::endl;
+    std::cout << "Ainv="            << Ainv << std::endl;
+    std::cout << "density_factor="      << density_factor << std::endl;
 #endif
 
     // Project all cells
@@ -392,13 +392,13 @@ void project_crystal(Phantom &phantom, Projection &P,
         //SHIFT still pending
         //cell_shift = cell_shift*phantom.phantom_scale;
 #ifdef DEBUG
-        cout << "cell_shift on deformed projection plane "
-        << cell_shift.transpose() << endl;
+        std::cout << "cell_shift on deformed projection plane "
+        << cell_shift.transpose() << std::endl;
 #endif
         M3x3_BY_V3x1(cell_shift, AEinv, cell_shift);
 #ifdef DEBUG
-        cout << "cell_shift on real space "
-        << cell_shift.transpose() << endl;
+        std::cout << "cell_shift on real space "
+        << cell_shift.transpose() << std::endl;
 #endif
 
         Phantom aux;
@@ -438,8 +438,8 @@ void project_crystal(Phantom &phantom, Projection &P,
 
         cell_shift = cell_shift - ZZ(cell_shift) / ZZ(P.direction) * P.direction;
 #ifdef DEBUG
-        cout << "cell_shift after moving to ground "
-        << cell_shift.transpose() << endl;
+        std::cout << "cell_shift after moving to ground "
+        << cell_shift.transpose() << std::endl;
 #endif
 
         aux.shift(XX(cell_shift), YY(cell_shift), ZZ(cell_shift));
@@ -450,11 +450,11 @@ void project_crystal(Phantom &phantom, Projection &P,
 
         P() = P() * density_factor;
 #ifdef DEBUG_MORE
-        cout << "After Projecting ...\n" << aux << endl;
+        std::cout << "After Projecting ...\n" << aux << std::endl;
         P.write("inter");
-        cout << "Hit any key\n";
+        std::cout << "Hit any key\n";
         char c;
-        cin >> c;
+        std::cin >> c;
 #endif
     }
 
@@ -584,8 +584,8 @@ void move_following_spiral(Matrix1D<double> &r, const Matrix2D<int> &visited)
     }
 
 #ifdef DEBUG
-    cout << r1 << " " << r2 << " " << r3 << " "
-    << c1 << " " << c2 << " " << c3 << endl;
+    std::cout << r1 << " " << r2 << " " << r3 << " "
+    << c1 << " " << c2 << " " << c3 << std::endl;
 #endif
 
 // Decide where to go
@@ -677,10 +677,10 @@ void fill_cell_positions(Projection &P,
 
 #ifdef DEBUG
     P().printShape();
-    cout << endl;
-    cout << "aprojd=" << aproj.transpose() << endl;
-    cout << "bprojd=" << bproj.transpose() << endl;
-    cout << iamin << " " << iamax << " " << ibmin << " " << ibmax << endl;
+    std::cout << std::endl;
+    std::cout << "aprojd=" << aproj.transpose() << std::endl;
+    std::cout << "bprojd=" << bproj.transpose() << std::endl;
+    std::cout << iamin << " " << iamax << " " << ibmin << " " << ibmax << std::endl;
 #endif
 
     // Compute weight table in the undeformed space
@@ -711,16 +711,16 @@ void fill_cell_positions(Projection &P,
     STARTINGX(visited) = iamin - (visited_size - (iamax - iamin + 1) + 1) / 2;
     STARTINGY(visited) = ibmin - (visited_size - (ibmax - ibmin + 1) + 1) / 2;
 #ifdef DEBUG
-    cout << "weight=" << weight;
-    cout << "cell_shiftX shape ";
+    std::cout << "weight=" << weight;
+    std::cout << "cell_shiftX shape ";
     cell_shiftX.printShape();
-    cout << endl;
-    cout << "cell_inside shape ";
+    std::cout << std::endl;
+    std::cout << "cell_inside shape ";
     cell_inside.printShape();
-    cout << endl;
-    cout << "visited shape ";
+    std::cout << std::endl;
+    std::cout << "visited shape ";
     visited.printShape();
-    cout << endl;
+    std::cout << std::endl;
 #endif
 
     // Perform the crystal deformation starting in the middle of the
@@ -733,7 +733,7 @@ void fill_cell_positions(Projection &P,
     {
         visited(INDEX(r)) = true;
 #ifdef DEBUG
-        cout << "   Visiting " << r.transpose() << endl;
+        std::cout << "   Visiting " << r.transpose() << std::endl;
 #endif
 
         // Weight is computed in the undeformed space
@@ -765,8 +765,8 @@ void fill_cell_positions(Projection &P,
     }
 
 #ifdef DEBUG
-    cout << "Cell shift X without absolute displacements" << cell_shiftX;
-    cout << "Cell shift Y without absolute displacements" << cell_shiftY;
+    std::cout << "Cell shift X without absolute displacements" << cell_shiftX;
+    std::cout << "Cell shift Y without absolute displacements" << cell_shiftY;
 #endif
 
     // The previous shifts are relative to the final position, now
@@ -792,15 +792,15 @@ void fill_cell_positions(Projection &P,
             cell_inside(i, j) = 1;
 //ROBERTO
 #ifdef DEBUG
-            cout << "(i,j)=(" << i << "," << j << ")\n";
-            cout << "   Projection shape ";
+            std::cout << "(i,j)=(" << i << "," << j << ")\n";
+            std::cout << "   Projection shape ";
             P().printShape();
-            cout << endl;
-            cout << "   AuxCorner1 " << auxcorner1.transpose() << endl
+            std::cout << std::endl;
+            std::cout << "   AuxCorner1 " << auxcorner1.transpose() << std::endl
             << "   Origin     " << cell_shiftX(i, j) << " "
-            << cell_shiftY(i, j) << endl
-            << "   AuxCorner2 " << auxcorner2.transpose() << endl;
-            cout << "   Inside= " << cell_inside(i, j) << endl;
+            << cell_shiftY(i, j) << std::endl
+            << "   AuxCorner2 " << auxcorner2.transpose() << std::endl;
+            std::cout << "   Inside= " << cell_inside(i, j) << std::endl;
 #endif
 
         }
@@ -838,10 +838,10 @@ void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal,
 
     //#define DEBUG2
 #ifdef DEBUG2
-    cout << aux_DF_shift;
-    cout << "exp_shifts_matrix_X shape" << endl;
+    std::cout << aux_DF_shift;
+    std::cout << "exp_shifts_matrix_X shape" << std::endl;
     exp_shifts_matrix_X.printShape();
-    cout << endl;
+    std::cout << std::endl;
 #endif
 #undef DEBUG2
     //fill matrix with docfile data
@@ -873,9 +873,9 @@ void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal,
     }
     //#define DEBUG2
 #ifdef DEBUG2
-    cout << "exp_shifts_matrix_X" << exp_shifts_matrix_X;
-    cout << "exp_shifts_matrix_Y" << exp_shifts_matrix_Y;
-    cout << "exp_shifts_matrix_Z" << exp_shifts_matrix_Z;
+    std::cout << "exp_shifts_matrix_X" << exp_shifts_matrix_X;
+    std::cout << "exp_shifts_matrix_Y" << exp_shifts_matrix_Y;
+    std::cout << "exp_shifts_matrix_Z" << exp_shifts_matrix_Z;
 #endif
 #undef DEBUG2
 

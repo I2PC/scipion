@@ -26,9 +26,6 @@
 #ifndef FUNCS_H
 #define FUNCS_H
 
-// TODO remove this, never open namespaces in header files
-using namespace std;
-
 #include <iostream>
 #include <fstream>
 #include <cmath>
@@ -71,7 +68,7 @@ using namespace std;
  * @code
  * tabsinc TSINC(0.0001,64);
  * if (TSINC(1)==0)
- *    cout << "This is true!\n";
+ *    std::cout << "This is true!\n";
  * @endcode
  *
  * This class is not ported to Python.
@@ -158,8 +155,8 @@ protected:
     int K; /** I0 window size */
     double vtable; /** table I0 non-zero domain maximum */
     int ntable;
-    vector<double> i0table;
-    double dtable; /** table spacing */
+    std::vector<double> i0table;
+    double dtable; /** table spastd::cing */
     double alphar; /** alpha*r */
     double fac; /** 2*pi*alpha*r*v */
     double vadjust; 
@@ -181,7 +178,7 @@ public:
 
     /** Compute the maximum error in the table */
     double I0table_maxerror();
-    vector<double> dump_table() {
+    std::vector<double> dump_table() {
 	return i0table;
     }
 
@@ -253,7 +250,7 @@ double gaussian2D(double x,
  *
  * This function is not ported to Python.
 */
-void print(ostream& o, const bool b);
+void print(std::ostream& o, const bool b);
 
 /** Print a value in binary
  * @ingroup MiscellaneousFunctions
@@ -263,7 +260,7 @@ void print(ostream& o, const bool b);
  * This function is not ported to Python.
  */
 template <typename T>
-void printb(ostream& o, T value)
+void printb(std::ostream& o, T value)
 {
     char buf[CHAR_BIT * sizeof(T) + 1];
     size_t i;
@@ -291,7 +288,7 @@ void printb(ostream& o, T value)
 template <typename T>
 void RealImag2Complex(const T* _real,
                       const T* _imag,
-                      complex< double >* _complex,
+                      std::complex< double >* _complex,
                       int length)
 {
     T* aux_real = (T*) _real;
@@ -315,7 +312,7 @@ void RealImag2Complex(const T* _real,
 template <typename T>
 void AmplPhase2Complex(const T* _ampl,
                        const T* _phase,
-                       complex< double >* _complex,
+                       std::complex< double >* _complex,
                        int length)
 {
     T* aux_ampl = (T*) _ampl;
@@ -339,7 +336,7 @@ void AmplPhase2Complex(const T* _ampl,
  * This function is not ported to Python.
  */
 template <typename T>
-void Complex2RealImag(const complex< double >* _complex,
+void Complex2RealImag(const std::complex< double >* _complex,
                       T* _real,
                       T* _imag,
                       int length)
@@ -363,7 +360,7 @@ void Complex2RealImag(const complex< double >* _complex,
  * This function is not ported to Python.
  */
 template <typename T>
-void Complex2AmplPhase(const complex< double >* _complex,
+void Complex2AmplPhase(const std::complex< double >* _complex,
                        T* _ampl,
                        T* _phase,
                        int length)
@@ -400,7 +397,7 @@ void Complex2AmplPhase(const complex< double >* _complex,
  *
  * // Show 10 random numbers between -1 and 1
  * for (int i=0; i<10; i++)
- *     cout << rnd_unif(-1,1) << endl;
+ *     std::cout << rnd_unif(-1,1) << std::endl;
  * @endcode
  */
 
@@ -434,8 +431,8 @@ void randomize_random_generator();
  * @ingroup RandomFunctions
  *
  * @code
- * cout << "This random number should be between 0 and 1: " << rnd_unif()
- * << endl;
+ * std::cout << "This random number should be between 0 and 1: " << rnd_unif()
+ * << std::endl;
  * @endcode
  */
 float rnd_unif();
@@ -444,8 +441,8 @@ float rnd_unif();
  * @ingroup RandomFunctions
  *
  * @code
- * cout << "This random number should be between 0 and 10: " << rnd_unif(0,10)
- * << endl;
+ * std::cout << "This random number should be between 0 and 10: " << rnd_unif(0,10)
+ * << std::endl;
  * @endcode
  */
 float rnd_unif(float a, float b);
@@ -454,8 +451,8 @@ float rnd_unif(float a, float b);
  * @ingroup RandomFunctions
  *
  * @code
- * cout << "This random number should follow N(0,1): " << rnd_gaus()
- * << endl;
+ * std::cout << "This random number should follow N(0,1): " << rnd_gaus()
+ * << std::endl;
  * @endcode
  */
 float rnd_gaus();
@@ -464,8 +461,8 @@ float rnd_gaus();
  * @ingroup RandomFunctions
  *
  * @code
- * cout << "This random number should follow N(1,4): " << rnd_gaus(1,2)
- * << endl;
+ * std::cout << "This random number should follow N(1,4): " << rnd_gaus(1,2)
+ * << std::endl;
  * @endcode
  */
 float rnd_gaus(float a, float b);
@@ -564,8 +561,8 @@ float chi2_from_t0(float t0, float degrees_of_freedom);
  * Watch out that the following inequation must hold 0<a<=b.
  *
  * @code
- * cout << "This random number should be between 1 and 1000: "
- * << rnd_log(10,1000)<< endl;
+ * std::cout << "This random number should be between 1 and 1000: "
+ * << rnd_log(10,1000)<< std::endl;
  * @endcode
  */
 float rnd_log(float a, float b);
@@ -610,7 +607,7 @@ float rnd_log(float a, float b);
  * here, although most of the functions work with the more general model
  * "name.extension"
  */
-class FileName: public string
+class FileName: public std::string
 {
 public:
     /// @defgroup FilenameConstructors Filename constructors
@@ -626,7 +623,7 @@ public:
      * FileName fn_blobs;
      * @endcode
      */
-    FileName(): string("")
+    FileName(): std::string("")
     {}
 
     /** Constructor from string
@@ -638,22 +635,22 @@ public:
      * pointer movement instead of a string concatenation.
      *
      * @code
-     * FileName fn_blobs((string) "art00001" + ".blobs");
+     * FileName fn_blobs((std::string) "art00001" + ".blobs");
      * @endcode
      */
-    FileName(const string& str): string(str)
+    FileName(const std::string& str): std::string(str)
     {}
 
     /** Constructor from char*
      * @ingroup FilenameConstructors
      */
-    FileName(const char* str) : string(str)
+    FileName(const char* str) : std::string(str)
     {}
 
     /** Copy constructor
      * @ingroup FilenameConstructors
      */
-    FileName(const FileName& fn) : string(fn)
+    FileName(const FileName& fn) : std::string(fn)
     {}
 
     /** Constructor from root, number and extension
@@ -667,7 +664,7 @@ public:
      * FileName fn_proj("g1ta",1); // fn_proj = "g1ta00001"
      * @endcode
      */
-    FileName(const char* str, int no, const string& ext = "")
+    FileName(const char* str, int no, const std::string& ext = "")
     {
         compose(str, no, ext);
     }
@@ -681,7 +678,7 @@ public:
      * FileName fn_proj("g1ta00001", "xmp"); // fn_proj = "g1ta00001.xmp"
      * @endcode
      */
-    FileName(const char* str, const string& ext): string(str + ext)
+    FileName(const char* str, const std::string& ext): std::string(str + ext)
     {}
 
     /// @defgroup FilenameComposing Composing/Decomposing the filename
@@ -694,7 +691,7 @@ public:
      * fn_proj.compose("g1ta", 1, "xmp");  // fn_proj = "g1ta00001.xmp"
      * @endcode
      */
-    void compose(const string& str, int no, const string& ext);
+    void compose(const std::string& str, int no, const std::string& ext);
 
     /** Get the root from a filename
      * @ingroup FilenameComposing
@@ -709,7 +706,7 @@ public:
     /** Get the base name from a filename
      * @ingroup FilenameComposing
      */
-    string get_baseName() const;
+    std::string get_baseName() const;
 
     /** Get the number from a filename
      * @ingroup FilenameComposing
@@ -730,10 +727,10 @@ public:
      * returned.
      *
      * @code
-     * string ext = fn_proj.get_extension();
+     * std::string ext = fn_proj.get_extension();
      * @endcode
      */
-    string get_extension() const;
+    std::string get_extension() const;
 
     /** Random name
      * @ingroup FilenameComposing
@@ -758,7 +755,7 @@ public:
      * fn_proj.add_prefix("h"); // fn_proj == "hg1ta00001"
      * @endcode
      */
-    FileName add_prefix(const string& prefix) const;
+    FileName add_prefix(const std::string& prefix) const;
 
     /** Add extension at the end.
      * @ingroup FilenameManipulators
@@ -771,7 +768,7 @@ public:
      * fn_proj.add_extension("xmp"); // fn_proj == "g1ta00001.xmp"
      * @endcode
      */
-    FileName add_extension(const string& ext) const;
+    FileName add_extension(const std::string& ext) const;
 
     /** Remove last extension, if any
      * @ingroup FilenameManipulators
@@ -814,7 +811,7 @@ public:
      * // fn_proj=="g1ta00001pp"
      * @endcode
      */
-    FileName insert_before_extension(const string& str) const;
+    FileName insert_before_extension(const std::string& str) const;
 
     /** Remove a certain extension
      * @ingroup FilenameManipulators
@@ -829,7 +826,7 @@ public:
      * // fn_proj == "g1ta00001.bak"
      * @endcode
      */
-    FileName remove_extension(const string& ext) const;
+    FileName remove_extension(const std::string& ext) const;
 
     /** Remove all extensions
      * @ingroup FilenameManipulators
@@ -852,7 +849,8 @@ public:
      * // fn_proj=="g1ta00001.xmp.bak"
      * @endcode
      */
-    FileName substitute_extension(const string& ext1, const string& ext2) const;
+    FileName substitute_extension(const std::string& ext1,
+        const std::string& ext2) const;
 
     /** Without a substring
      * @ingroup FilenameManipulators
@@ -860,7 +858,7 @@ public:
      * If the substring is not present the same FileName is returned, if it is
      * there the substring is removed.
      */
-    FileName without(const string& str) const;
+    FileName without(const std::string& str) const;
 
     /** Remove until prefix
      * @ingroup FilenameManipulators
@@ -869,7 +867,7 @@ public:
      * instance /usr/local/data/ctf-image00001.fft with ctf- yields
      * image00001.fft. If the prefix is not found nothing is done.
      */
-    FileName remove_until_prefix(const string& str) const;
+    FileName remove_until_prefix(const std::string& str) const;
 
     /** Remove all directories
      * @ingroup FilenameManipulators
@@ -904,7 +902,7 @@ public:
  *
  * @code
  * if (exists("g1ta00001"))
- *     cout << "The file exists" << endl;
+ *     std::cout << "The file exists" << std::endl;
  * @endcode
  */
 int exists(const FileName& fn);
@@ -999,7 +997,7 @@ FileName xmippBaseDir();
  *     ...
  *     // Compute the time to go with the fraction of work already done
  *     to_go = time_to_go(t0, (float) (i + 1) / 60);
- *     cout << "I think you will be here " << to_go << "seconds more\n";
+ *     std::cout << "I think you will be here " << to_go << "seconds more\n";
  * }
  * @endcode
  *
@@ -1207,7 +1205,7 @@ public :
      *
      * _rsop: string message
      */
-    virtual void OnReportOperation(const string& _rsOp) = 0;
+    virtual void OnReportOperation(const std::string& _rsOp) = 0;
 
     /** Show a bar with the progress in time
      *
@@ -1295,7 +1293,7 @@ public :
      *
      * _rsop: string message
      */
-    virtual void OnReportOperation(const string& _rsOp);
+    virtual void OnReportOperation(const std::string& _rsOp);
 };
 
 /** Shows a message and the time it was produced
@@ -1311,7 +1309,7 @@ public :
  *
  * This function is not ported to Python.
  */
-void TimeMessage(string message);
+void TimeMessage(const std::string &message);
 
 /** @defgroup LittleBigEndian Little/Big endian
  * @ingroup GeneralFunctions
@@ -1450,11 +1448,11 @@ public:
         Number_of_Numbers = No_Numbers; // initialize class variable
         Type_size = sizeof(T);
 
-        ifstream in(fn_in.c_str());
-        in.seekg(0, ios::end); // End of file
+        std::ifstream in(fn_in.c_str());
+        in.seekg(0, std::ios::end); // End of file
         std::streampos sp = in.tellg(); // Size of file
         if (sp < Number_of_Numbers * Type_size)
-            REPORT_ERROR(1, (string) "Marsaglia::Init: File " + fn_in +
+            REPORT_ERROR(1, (std::string) "Marsaglia::Init: File " + fn_in +
                          "is too small");
         else
         {
@@ -1464,7 +1462,7 @@ public:
             random_vector = new char[(Number_of_Numbers * Type_size)];
             T_random_vector = (T*) random_vector;
             in.seekg((std::streampos) FLOOR(rnd_unif(0.f, (float)(sp -
-                                            (std::streamoff)(Number_of_Numbers * Type_size)))), ios::beg);
+                                            (std::streamoff)(Number_of_Numbers * Type_size)))), std::ios::beg);
             in.read(random_vector, (Number_of_Numbers * Type_size));
 
             in.close();
@@ -1538,8 +1536,8 @@ public:
         int Type_size; // sizeof(type)
         Type_size = sizeof(T);
 
-        ifstream in(fn_in.c_str());
-        in.seekg(0, ios::end);              // End of file
+        std::ifstream in(fn_in.c_str());
+        in.seekg(0, std::ios::end);              // End of file
         std::streampos sp = in.tellg();     // Size of file
         T power_of_2 = (T) NEXT_POWER_OF_2(m_max);
         if (power_of_2 == m_max)
@@ -1550,7 +1548,7 @@ public:
 
         // get a random number to set the file pointer at a random position
         in.seekg((std::streampos) FLOOR(rnd_unif(0.f, (float)(sp -
-                                        (std::streamoff)(Number_of_Numbers*Type_size)))), ios::beg);
+                                        (std::streamoff)(Number_of_Numbers*Type_size)))), std::ios::beg);
         for (int ii = 0; ii < Number_of_Numbers;)
         {
             aux_number = T_random_vector[ii];
@@ -1561,7 +1559,7 @@ public:
                 if (in.eof())
                     in.seekg((std::streampos) FLOOR(rnd_unif(0.f, (float)
                                                     (sp - (std::streamoff)(Number_of_Numbers*Type_size)))),
-                             ios::beg);
+                             std::ios::beg);
                 in.read((char*) &(T_random_vector[ii]), Type_size);
             }
             else

@@ -44,35 +44,35 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
 // Show general information ................................................
    *prm.fh_hist << " RECONSTRUCTION HISTORY: \n\n";
    *prm.fh_hist << " Parameters -------------------------------------------------\n";
-   *prm.fh_hist << " Projections file: " << prm.fn_sel << endl;
-   *prm.fh_hist << " CTF file:         " << prm.fn_ctf << endl;
-   *prm.fh_hist << " Unmatched projectors:" << prm.unmatched << endl;
-   *prm.fh_hist << " Denoise: " << prm.denoise << endl;
-   *prm.fh_hist << " Sampling= " << prm.sampling << endl;
-   *prm.fh_hist << prm.basis << endl;
+   *prm.fh_hist << " Projections file: " << prm.fn_sel << std::endl;
+   *prm.fh_hist << " CTF file:         " << prm.fn_ctf << std::endl;
+   *prm.fh_hist << " Unmatched projectors:" << prm.unmatched << std::endl;
+   *prm.fh_hist << " Denoise: " << prm.denoise << std::endl;
+   *prm.fh_hist << " Sampling= " << prm.sampling << std::endl;
+   *prm.fh_hist << prm.basis << std::endl;
    switch (prm.grid_type) {
       case FCC: *prm.fh_hist << " Grid Type: FCC "; break;
       case BCC: *prm.fh_hist << " Grid Type: BCC "; break;
       case CC:  *prm.fh_hist << " Grid Type: CC ";  break;
    }
-   *prm.fh_hist << " Ray length: " << prm.ray_length << endl;
+   *prm.fh_hist << " Ray length: " << prm.ray_length << std::endl;
    *prm.fh_hist << "\n Radius of the interest sphere= " << prm.R
-               << " pixels" << endl;
+               << " pixels" << std::endl;
    *prm.fh_hist << " Grid unit=" << prm.grid_relative_size
-               << " pixels" << endl;
+               << " pixels" << std::endl;
    if (prm.proj_ext==0) *prm.fh_hist << " No Projection extension\n";
    else *prm.fh_hist << " Projection extension frame: " << prm.proj_ext
       << " pixels\n";
    if (prm.Zoutput_volume_size==0) *prm.fh_hist << " Output volume size as input images\n";
    else *prm.fh_hist << " Output volume size (ZxYxX): "
       << prm.Zoutput_volume_size << "x" << prm.Youtput_volume_size
-      << "x" << prm.Xoutput_volume_size << endl;
-   *prm.fh_hist << " Iterations:    lambda=" << prm.lambda_list.transpose() << endl
-               << "                No. Iter=" << prm.no_it << endl;
+      << "x" << prm.Xoutput_volume_size << std::endl;
+   *prm.fh_hist << " Iterations:    lambda=" << prm.lambda_list.transpose() << std::endl
+               << "                No. Iter=" << prm.no_it << std::endl;
    if (prm.WLS) {
-     *prm.fh_hist << " Perform weighted least-squares ART "<< endl;
-     *prm.fh_hist << " Iterations:    kappa=" << prm.kappa_list.transpose() << endl
-                 << "                No. Iter=" << prm.no_it << endl;
+     *prm.fh_hist << " Perform weighted least-squares ART "<< std::endl;
+     *prm.fh_hist << " Iterations:    kappa=" << prm.kappa_list.transpose() << std::endl
+                 << "                No. Iter=" << prm.no_it << std::endl;
    }
    *prm.fh_hist << " Parallel mode: ";
    switch (prm.parallel_mode) {
@@ -81,11 +81,11 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
       case Basic_ART_Parameters::pSIRT:  *prm.fh_hist << "Parallel SIRT\n"; break;
       case Basic_ART_Parameters::pfSIRT:  *prm.fh_hist << "Parallel False SIRT\n"; break;
       case Basic_ART_Parameters::pSART:
-          *prm.fh_hist << "SART, block size=" << prm.block_size << endl;
+          *prm.fh_hist << "SART, block size=" << prm.block_size << std::endl;
           break;
       case Basic_ART_Parameters::pAVSP:   *prm.fh_hist << "AVSP\n"; break;
       case Basic_ART_Parameters::pBiCAV:
-          *prm.fh_hist << "BiCAV, block size=" << prm.block_size << endl;
+          *prm.fh_hist << "BiCAV, block size=" << prm.block_size << std::endl;
           break;
       case Basic_ART_Parameters::pCAV:  *prm.fh_hist << "CAV (global algorithm)\n";break;
    }
@@ -95,39 +95,39 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
    else if (prm.eq_mode==CAVARTK) *prm.fh_hist << "CAVARTK\n";
    else *prm.fh_hist << "ARTK\n";
    *prm.fh_hist << " Projections: Ydim x Xdim = " << prm.projYdim
-      << " x " << prm.projXdim << endl;
-   *prm.fh_hist << " Surface mask: " << prm.fn_surface_mask << endl;
-   *prm.fh_hist << " POCS freq: " << prm.POCS_freq << endl;
-   *prm.fh_hist << " Known volume: " << prm.known_volume << endl;
+      << " x " << prm.projXdim << std::endl;
+   *prm.fh_hist << " Surface mask: " << prm.fn_surface_mask << std::endl;
+   *prm.fh_hist << " POCS freq: " << prm.POCS_freq << std::endl;
+   *prm.fh_hist << " Known volume: " << prm.known_volume << std::endl;
    *prm.fh_hist << " Positivity: "; print(*prm.fh_hist,prm.positivity);
    *prm.fh_hist << " Apply shifts in images headers: "; print(*prm.fh_hist,prm.apply_shifts);
-      *prm.fh_hist << endl;
-   *prm.fh_hist << " Symmetry file: " << prm.fn_sym << endl;
+      *prm.fh_hist << std::endl;
+   *prm.fh_hist << " Symmetry file: " << prm.fn_sym << std::endl;
    *prm.fh_hist << " Force Symmetry each: " << prm.sym_each << " projections"
-                                                           <<endl;
+                                                           <<std::endl;
    *prm.fh_hist << " Maximun absolute tilt angle: " << prm.max_tilt << " degrees"
-                                                           <<endl;
+                                                           <<std::endl;
    *prm.fh_hist << " Generating symmetry group: ";
-       print(*prm.fh_hist,!prm.do_not_generate_subgroup); *prm.fh_hist << endl;
+       print(*prm.fh_hist,!prm.do_not_generate_subgroup); *prm.fh_hist << std::endl;
    *prm.fh_hist << " Do not use symmetrized projections: ";
-       print(*prm.fh_hist,!prm.do_not_use_symproj); *prm.fh_hist << endl;
+       print(*prm.fh_hist,!prm.do_not_use_symproj); *prm.fh_hist << std::endl;
    *prm.fh_hist << " Number of total projections (including symmetrized): "
-      << prm.numIMG << endl;
-   *prm.fh_hist << " Number of different projections: " << prm.trueIMG << endl;
-   *prm.fh_hist << " Forcing symmetry: " << prm.force_sym << endl;
-   *prm.fh_hist << " Stop at: " << prm.stop_at << endl;
+      << prm.numIMG << std::endl;
+   *prm.fh_hist << " Number of different projections: " << prm.trueIMG << std::endl;
+   *prm.fh_hist << " Forstd::cing symmetry: " << prm.force_sym << std::endl;
+   *prm.fh_hist << " Stop at: " << prm.stop_at << std::endl;
    if (prm.random_sort)
-       *prm.fh_hist << "Random sort" << endl;
+       *prm.fh_hist << "Random sort" << std::endl;
    else
        *prm.fh_hist << "Sort with last " << prm.sort_last_N << " images\n";
-   *prm.fh_hist << " Variability analysis: " << prm.variability_analysis << endl;
+   *prm.fh_hist << " Variability analysis: " << prm.variability_analysis << std::endl;
    if (prm.SL.SymsNo()!=0) {
       Matrix2D<double> L(4,4),R(4,4); // A matrix from the list
       *prm.fh_hist << "Symmetry matrices -------\n";
       for (int j=0; j<prm.SL.SymsNo(); j++) {
          prm.SL.get_matrices(j,L,R);
-         *prm.fh_hist << "Left  Symmetry matrix " << j << endl << L;
-         *prm.fh_hist << "Right Symmetry matrix " << j << endl << R << endl;
+         *prm.fh_hist << "Left  Symmetry matrix " << j << std::endl << L;
+         *prm.fh_hist << "Right Symmetry matrix " << j << std::endl << R << std::endl;
       }
    }
    *prm.fh_hist << " Saving intermidiate at every "
@@ -158,7 +158,7 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
 
 // Show Initial volume and volume structure ................................
    if (prm.fn_start != "")
-      *prm.fh_hist << "Starting from file: " << prm.fn_start << endl;
+      *prm.fh_hist << "Starting from file: " << prm.fn_start << std::endl;
    else
       *prm.fh_hist << "Starting from a zero volume\n";
 
@@ -277,7 +277,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
       POCS.newIteration();
       VC.newIteration();
       if (rank==-1) {
-	 cerr << "Running iteration " << it << " with lambda= " << prm.lambda(it)<< "\n" << endl;
+	 std::cerr << "Running iteration " << it << " with lambda= " << prm.lambda(it)<< "\n" << std::endl;
 	 if (!(prm.tell&TELL_SHOW_ERROR)) init_progress_bar(prm.numIMG);
       }
 
@@ -289,12 +289,12 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
           int iact_proj; // Index inside the sorting information for act_proj
           if (prm.tell&TELL_MANUAL_ORDER) {
              int proj_number;
-             cerr << "Introduce next projection to study: ";
-             cin  >> proj_number;
+             std::cerr << "Introduce next projection to study: ";
+             std::cin  >> proj_number;
              int sym_number=-1;
              if (prm.SL.SymsNo()!=0) {
-                cerr << "Introduce symmetry to study: ";
-                cin  >> sym_number;
+                std::cerr << "Introduce symmetry to study: ";
+                std::cin  >> sym_number;
              }
              iact_proj=0;
              while (iact_proj<prm.numIMG) {
@@ -334,8 +334,8 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
           aux_tilt=read_proj.tilt();
           if((aux_tilt > prm.max_tilt && aux_tilt < 180.-prm.max_tilt) ||
              (aux_tilt > prm.max_tilt + 180 && aux_tilt < 360.-prm.max_tilt)) {
-              cerr << "Skipping Proj no: " << iact_proj
-		             << "tilt=" << read_proj.tilt()  << endl;
+              std::cerr << "Skipping Proj no: " << iact_proj
+		             << "tilt=" << read_proj.tilt()  << std::endl;
 		        continue;
           }
 
@@ -352,14 +352,14 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
          //Skip if desired	
           if (prm.tell&TELL_ONLY_SYM)
 	     if( prm.IMG_Inf[iact_proj].sym != -1) {
-		cerr << "Skipping Proj no: " << iact_proj
+		std::cerr << "Skipping Proj no: " << iact_proj
 		     << " with symmetry no: " << prm.IMG_Inf[iact_proj].sym
-		     <<  endl;
+		     <<  std::endl;
 		continue;
 	     } else
-		cerr << "NO Skipping Proj no: " << iact_proj
+		std::cerr << "NO Skipping Proj no: " << iact_proj
 		     << " with symmetry no: " << prm.IMG_Inf[iact_proj].sym
-		     <<  endl;
+		     <<  std::endl;
 		
           // For wlsART: use alig_proj for residual image!!
 	  if (prm.WLS) alig_proj=prm.residual_imgs[iact_proj];
@@ -413,30 +413,30 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
              << prm.IMG_Inf[iact_proj].sym << "\t\t" << mean_error;
           if (POCS.apply_POCS)
              *prm.fh_hist << "\tPOCS:" << POCS.POCS_mean_error;
-          *prm.fh_hist << endl;
+          *prm.fh_hist << std::endl;
           if (prm.tell&TELL_SHOW_ERROR) {
-             cout << prm.IMG_Inf[iact_proj].fn_proj << ", sym="
+             std::cout << prm.IMG_Inf[iact_proj].fn_proj << ", sym="
                 << prm.IMG_Inf[iact_proj].sym << "\t\t" << mean_error;
              if (POCS.apply_POCS)
-                cout        << "\tPOCS:" << POCS.POCS_mean_error;
-             cout << endl;
+                std::cout        << "\tPOCS:" << POCS.POCS_mean_error;
+             std::cout << std::endl;
           } else if (act_proj%XMIPP_MAX(1,prm.numIMG/60)==0) progress_bar(act_proj);
 
           if (prm.tell&TELL_STATS) {
-             cout << "   read      ";   read_proj().print_stats();
-             cout << "\n   theo      "; theo_proj().print_stats();
-             cout << "\n   corr      "; corr_proj().print_stats();
-             cout << "\n   alig      "; alig_proj().print_stats();
-             cout << "\n   diff      "; diff_proj().print_stats();
-             cout << "\n   subvol(0) "; (*ptr_vol_out)(0)().print_stats();
-             cout << "\n";
+             std::cout << "   read      ";   read_proj().print_stats();
+             std::cout << "\n   theo      "; theo_proj().print_stats();
+             std::cout << "\n   corr      "; corr_proj().print_stats();
+             std::cout << "\n   alig      "; alig_proj().print_stats();
+             std::cout << "\n   diff      "; diff_proj().print_stats();
+             std::cout << "\n   subvol(0) "; (*ptr_vol_out)(0)().print_stats();
+             std::cout << "\n";
           }
 
           if (prm.tell&TELL_SAVE_AT_EACH_STEP) {
-      	     cout << "Stats PPPdiff.xmp: "; diff_proj().print_stats(); cout << endl;
-      	     cout << "Stats PPPtheo.xmp: "; theo_proj().print_stats(); cout << endl;
-      	     cout << "Stats PPPread.xmp: "; read_proj().print_stats(); cout << endl;
-      	     cout << "Stats PPPcorr.xmp: "; corr_proj().print_stats(); cout << endl;
+      	     std::cout << "Stats PPPdiff.xmp: "; diff_proj().print_stats(); std::cout << std::endl;
+      	     std::cout << "Stats PPPtheo.xmp: "; theo_proj().print_stats(); std::cout << std::endl;
+      	     std::cout << "Stats PPPread.xmp: "; read_proj().print_stats(); std::cout << std::endl;
+      	     std::cout << "Stats PPPcorr.xmp: "; corr_proj().print_stats(); std::cout << std::endl;
              diff_proj.write("PPPdiff.xmp");
              theo_proj.write("PPPtheo.xmp");
              read_proj.write("PPPread.xmp");
@@ -446,7 +446,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
              vol_basis.write("PPPbasis.basis");
              prm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
                 Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
-      	     cout << "Stats PPPvol.vol : "; vol_voxels().print_stats(); cout << endl;
+      	     std::cout << "Stats PPPvol.vol : "; vol_voxels().print_stats(); std::cout << std::endl;
              vol_voxels.write("PPPvol.vol");
 
 	     if (!iv_launched) {
@@ -454,7 +454,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 		system("xmipp_show -vol PPPvol.vol -poll &");
 		iv_launched=true;
 	     }
-             cout << "\nHit any key and enter\n"; char c; cin >> c;
+             std::cout << "\nHit any key and enter\n"; char c; std::cin >> c;
          }
 
       	 // Save intermidiate
@@ -462,7 +462,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
              prm.save_intermidiate_every!=0 &&
 	     act_proj%prm.save_intermidiate_every==0) {
 	    if (prm.tell&TELL_SAVE_INTERMIDIATE)
-               cerr << "\nSaving intermidiate ...\n"
+               std::cerr << "\nSaving intermidiate ...\n"
                     << "Converting basis volume to voxels ...\n";
             // Save reconstructed volume
             prm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
@@ -496,30 +496,30 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
       // Prepare for next global iteration ---------------------------------
       // Calculate norm and print
       if (rank==-1) {
-	 *prm.fh_hist << "Finished - Iteration " << it << endl;
+	 *prm.fh_hist << "Finished - Iteration " << it << std::endl;
          if (prm.WLS)
-	    cerr        << "   Weighted error: " << global_mean_error
+	    std::cerr        << "   Weighted error: " << global_mean_error
 	                << " 1st block: "        << global_mean_error_1stblock
                         << " 2nd block: "        << mean_error_2ndblock
-	                << " residual: "         << pow_residual_imgs << endl;
+	                << " residual: "         << pow_residual_imgs << std::endl;
          else
-            cerr << "   Global mean squared error: "
-                 <<  global_mean_error/prm.numIMG << endl;
+            std::cerr << "   Global mean squared error: "
+                 <<  global_mean_error/prm.numIMG << std::endl;
 
          if (prm.WLS)
 	    *prm.fh_hist << "   Weighted error: " << global_mean_error
 	                << " 1st block: "        << global_mean_error_1stblock
                         << " 2nd block: "        << mean_error_2ndblock
-	                << " residual: "         << pow_residual_imgs << endl;
+	                << " residual: "         << pow_residual_imgs << std::endl;
          else
 	    *prm.fh_hist << "   Global mean squared error: "
-                        << global_mean_error/prm.numIMG << endl;
+                        << global_mean_error/prm.numIMG << std::endl;
 
 	 if (POCS.apply_POCS) {
-            cerr        << "   POCS Global mean squared error: "
-                	<< POCS.POCS_global_mean_error/POCS.POCS_N << endl;
+            std::cerr        << "   POCS Global mean squared error: "
+                	<< POCS.POCS_global_mean_error/POCS.POCS_N << std::endl;
             *prm.fh_hist << "   POCS Global mean squared error: "
-                	<< POCS.POCS_global_mean_error/POCS.POCS_N << endl;
+                	<< POCS.POCS_global_mean_error/POCS.POCS_N << std::endl;
 	 }
       }
 
@@ -535,7 +535,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
           vol_basis=vol_basis_out;
 
       if (prm.tell&TELL_SAVE_INTERMIDIATE && it!=prm.no_it-1) {
-         if (rank==-1) cerr << "Converting basis volume to voxels ...\n";
+         if (rank==-1) std::cerr << "Converting basis volume to voxels ...\n";
          prm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
             Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
          vol_voxels.write(prm.fn_root+"it"+integerToString(it)+".vol");
@@ -550,7 +550,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 
    // Times on screen
    if (rank==-1) {
-      cout << "\nTime of " << prm.no_it << " iterations: \n";
+      std::cout << "\nTime of " << prm.no_it << " iterations: \n";
       print_elapsed_time(time0);
    }
 

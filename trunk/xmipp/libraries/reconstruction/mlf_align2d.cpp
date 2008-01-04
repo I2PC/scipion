@@ -32,7 +32,7 @@ void Prog_MLFalign2D_prm::read(int argc, char **argv, bool ML3D)
     cline = "";
     if (checkParameter(argc, argv, "-restart"))
     {
-        string comment;
+        std::string comment;
         FileName fn_sel;
         DocFile DFi;
         DFi.read(getParameter(argc, argv, "-restart"));
@@ -40,7 +40,7 @@ void Prog_MLFalign2D_prm::read(int argc, char **argv, bool ML3D)
         comment = (DFi.get_current_line()).get_text();
         if (strstr(comment.c_str(), "MLFalign2D-logfile") == NULL)
         {
-            cerr << "Error!! Docfile is not of MLFalign2D-logfile type. " << endl;
+            std::cerr << "Error!! Docfile is not of MLFalign2D-logfile type. " << std::endl;
             exit(1);
         }
         else
@@ -86,7 +86,7 @@ void Prog_MLFalign2D_prm::read(int argc, char **argv, bool ML3D)
     {
         for (int i = 1; i < argc; i++)
         {
-            cline = cline + (string)argv[i] + " ";
+            cline = cline + (std::string)argv[i] + " ";
         }
     }
 
@@ -161,89 +161,89 @@ void Prog_MLFalign2D_prm::show(bool ML3D)
         // To screen
         if (!ML3D)
         {
-            cerr << " -----------------------------------------------------------------" << endl;
-            cerr << " | Read more about this program in the following publication:    |" << endl;
-	    cerr << " |  Scheres ea. (2007) Structure, 15, 1167-1177                  |" << endl;
-            cerr << " |                                                               |" << endl;
-            cerr << " |   *** Please cite it if this program is of use to you! ***    |" << endl;
-            cerr << " -----------------------------------------------------------------" << endl;
+            std::cerr << " -----------------------------------------------------------------" << std::endl;
+            std::cerr << " | Read more about this program in the following publication:    |" << std::endl;
+	    std::cerr << " |  Scheres ea. (2007) Structure, 15, 1167-1177                  |" << std::endl;
+            std::cerr << " |                                                               |" << std::endl;
+            std::cerr << " |   *** Please cite it if this program is of use to you! ***    |" << std::endl;
+            std::cerr << " -----------------------------------------------------------------" << std::endl;
         }
-        cerr << "--> Multi-reference refinement " << endl;
-        cerr << "--> using a maximum-likelihood in Fourier-space (MLF) target " <<endl;
+        std::cerr << "--> Multi-reference refinement " << std::endl;
+        std::cerr << "--> using a maximum-likelihood in Fourier-space (MLF) target " <<std::endl;
 	if (do_ctf_correction)
 	{
-	    cerr << "--> with CTF correction "<<endl;
+	    std::cerr << "--> with CTF correction "<<std::endl;
 	}
 	else
 	{
-	    cerr << "--> ignoring CTF effects "<<endl;
+	    std::cerr << "--> ignoring CTF effects "<<std::endl;
 	}
-        cerr << "  Input images            : " << fn_sel << " (" << nr_exp_images << ")" << endl;
+        std::cerr << "  Input images            : " << fn_sel << " (" << nr_exp_images << ")" << std::endl;
         if (fn_ref != "")
 	{
-            cerr << "  Reference image(s)      : " << fn_ref << endl;
+            std::cerr << "  Reference image(s)      : " << fn_ref << std::endl;
 	}
         else
 	{
-            cerr << "  Number of references:   : " << n_ref << endl;
+            std::cerr << "  Number of references:   : " << n_ref << std::endl;
 	}
 	if (do_ctf_correction)
 	{
-	    cerr << "  CTF-parameters file     : " << fn_ctfdat << endl;
+	    std::cerr << "  CTF-parameters file     : " << fn_ctfdat << std::endl;
 	}
-        cerr << "  Output rootname         : " << fn_root << endl;
-        cerr << "  Stopping criterium      : " << eps << endl;
-        cerr << "  initial sigma offset    : " << sigma_offset << endl;
-        cerr << "  Psi sampling interval   : " << psi_step << " degrees" << endl;
-	cerr << "  Translational searches  : " << search_shift << " pixels" << endl;
-	cerr << "  Low resolution limit    : " << lowres_limit << " Ang" << endl;
-	cerr << "  High resolution limit   : " << highres_limit << " Ang" << endl;
+        std::cerr << "  Output rootname         : " << fn_root << std::endl;
+        std::cerr << "  Stopping criterium      : " << eps << std::endl;
+        std::cerr << "  initial sigma offset    : " << sigma_offset << std::endl;
+        std::cerr << "  Psi sampling interval   : " << psi_step << " degrees" << std::endl;
+	std::cerr << "  Translational searches  : " << search_shift << " pixels" << std::endl;
+	std::cerr << "  Low resolution limit    : " << lowres_limit << " Ang" << std::endl;
+	std::cerr << "  High resolution limit   : " << highres_limit << " Ang" << std::endl;
 	if (reduce_snr != 1.)
-	    cerr << "  Multiply estimated SNR  : " << reduce_snr << endl;
+	    std::cerr << "  Multiply estimated SNR  : " << reduce_snr << std::endl;
 	if (reduce_snr > 1.)
 	{
-	    cerr << "  --> WARNING!! With reduce_snr>1 you may likely overfit the noise!" << endl;
+	    std::cerr << "  --> WARNING!! With reduce_snr>1 you may likely overfit the noise!" << std::endl;
 	}
         if (do_mirror)
-            cerr << "  Check mirrors           : true" << endl;
+            std::cerr << "  Check mirrors           : true" << std::endl;
         else
-            cerr << "  Check mirrors           : false" << endl;
+            std::cerr << "  Check mirrors           : false" << std::endl;
         if (fn_frac != "")
-            cerr << "  Initial model fractions : " << fn_frac << endl;
+            std::cerr << "  Initial model fractions : " << fn_frac << std::endl;
 	if (do_ctf_correction)
 	{
 	    if (phase_flipped)
-		cerr << "    + Assuming images have been phase flipped " << endl;
+		std::cerr << "    + Assuming images have been phase flipped " << std::endl;
 	    else
-		cerr << "    + Assuming images have not been phase flipped " << endl;
+		std::cerr << "    + Assuming images have not been phase flipped " << std::endl;
 	    FOR_ALL_DEFOCUS_GROUPS()
 	    {
-		cerr << "    + CTF group "<<ifocus+1<<" contains "<<count_defocus[ifocus]<<" images"<<endl;
+		std::cerr << "    + CTF group "<<ifocus+1<<" contains "<<count_defocus[ifocus]<<" images"<<std::endl;
 	    }
 	}
 	if (ini_highres_limit > 0.)
-	    cerr << "    + High resolution limit for 1st iteration set to " << ini_highres_limit << "Ang"<<endl;
+	    std::cerr << "    + High resolution limit for 1st iteration set to " << ini_highres_limit << "Ang"<<std::endl;
         if (search_rot < 180.)
-            cerr << "    + Limit orientational search to +/- " << search_rot << " degrees" << endl;
+            std::cerr << "    + Limit orientational search to +/- " << search_rot << " degrees" << std::endl;
 	if (do_variable_psi)
-            cerr << "    + Vary in-plane rotational sampling with resolution " << endl;
+            std::cerr << "    + Vary in-plane rotational sampling with resolution " << std::endl;
 	if (do_variable_trans)
-            cerr << "    + Vary in-plane translational sampling with resolution " << endl;
+            std::cerr << "    + Vary in-plane translational sampling with resolution " << std::endl;
 
         // Hidden stuff
         if (fix_fractions)
         {
-            cerr << "    + Do not update estimates of model fractions." << endl;
+            std::cerr << "    + Do not update estimates of model fractions." << std::endl;
         }
         if (fix_sigma_offset)
         {
-            cerr << "    + Do not update sigma-estimate of origin offsets." << endl;
+            std::cerr << "    + Do not update sigma-estimate of origin offsets." << std::endl;
         }
         if (fix_sigma_noise)
         {
-            cerr << "    + Do not update estimated noise spectra." << endl;
+            std::cerr << "    + Do not update estimated noise spectra." << std::endl;
         }
-	cerr << " -----------------------------------------------------------------" << endl;
+	std::cerr << " -----------------------------------------------------------------" << std::endl;
 
     }
 
@@ -252,45 +252,45 @@ void Prog_MLFalign2D_prm::show(bool ML3D)
 // Fourier mode usage ==============================================================
 void Prog_MLFalign2D_prm::usage()
 {
-    cerr << "Usage:  mlf_align2d [options] " << endl;
-    cerr << "   -i <selfile>                : Selfile with all input images \n";
-    cerr << "   -ctfdat <ctfdatfile>        : Two-column ASCII file with filenames and CTF parameter files of all images (recommended) \n";
-    cerr << "      OR -no_ctf                   OR do not use any CTF correction \n";
-    cerr << "   -nref <int>                 : Number of references to generate automatically (recommended)\n";
-    cerr << "   OR -ref <selfile/image>         OR selfile with initial references/single reference image \n";
-    cerr << " [ -o <rootname> ]             : Output rootname (default = \"mlf2d\")\n";
-    cerr << " [ -mirror ]                   : Also check mirror image of each reference \n";
-    cerr << " [ -search_shift <int=3>]      : Limited translational searches (in pixels) \n";
-    cerr << " [ -reduce_snr <factor=1> ]    : Use a value smaller than one to decrease the estimated SSNRs \n";
-    cerr << " [ -not_phase_flipped ]        : Use this if the experimental images have not been phase flipped \n";
-    cerr << " [ -ctf_affected_refs ]        : Use this if the references (-ref) are not CTF-deconvoluted \n";
-    cerr << " [ -low <Ang=999> ]            : Exclude lowest frequencies from P-calculations (in Ang) \n";
-    cerr << " [ -high <Ang=0> ]             : Exclude highest frequencies from P-calculations (in Ang) \n";
-    cerr << " [ -ini_high <Ang=0> ]         : Exclude highest frequencies during first iteration (in Ang) \n";
-    cerr << " [ -pixel_size <Ang=1> ]       : Pixel size in Angstrom (only necessary for -no_ctf mode) \n";
-    cerr << " [ -more_options ]             : Show all possible input parameters \n";
+    std::cerr << "Usage:  mlf_align2d [options] " << std::endl;
+    std::cerr << "   -i <selfile>                : Selfile with all input images \n";
+    std::cerr << "   -ctfdat <ctfdatfile>        : Two-column ASCII file with filenames and CTF parameter files of all images (recommended) \n";
+    std::cerr << "      OR -no_ctf                   OR do not use any CTF correction \n";
+    std::cerr << "   -nref <int>                 : Number of references to generate automatically (recommended)\n";
+    std::cerr << "   OR -ref <selfile/image>         OR selfile with initial references/single reference image \n";
+    std::cerr << " [ -o <rootname> ]             : Output rootname (default = \"mlf2d\")\n";
+    std::cerr << " [ -mirror ]                   : Also check mirror image of each reference \n";
+    std::cerr << " [ -search_shift <int=3>]      : Limited translational searches (in pixels) \n";
+    std::cerr << " [ -reduce_snr <factor=1> ]    : Use a value smaller than one to decrease the estimated SSNRs \n";
+    std::cerr << " [ -not_phase_flipped ]        : Use this if the experimental images have not been phase flipped \n";
+    std::cerr << " [ -ctf_affected_refs ]        : Use this if the references (-ref) are not CTF-deconvoluted \n";
+    std::cerr << " [ -low <Ang=999> ]            : Exclude lowest frequencies from P-calculations (in Ang) \n";
+    std::cerr << " [ -high <Ang=0> ]             : Exclude highest frequencies from P-calculations (in Ang) \n";
+    std::cerr << " [ -ini_high <Ang=0> ]         : Exclude highest frequencies during first iteration (in Ang) \n";
+    std::cerr << " [ -pixel_size <Ang=1> ]       : Pixel size in Angstrom (only necessary for -no_ctf mode) \n";
+    std::cerr << " [ -more_options ]             : Show all possible input parameters \n";
 }
 
 // Extended usage ===================================================================
 void Prog_MLFalign2D_prm::extendedUsage(bool ML3D)
 {
-    cerr << "Additional options: " << endl;
-    cerr << " [ -eps <float=5e-5> ]         : Stopping criterium \n";
-    cerr << " [ -iter <int=100> ]           : Maximum number of iterations to perform \n";
-    cerr << " [ -psi_step <float=5> ]       : In-plane rotation sampling interval [deg]\n";
-    cerr << " [ -offset <float=3> ]         : Expected standard deviation for origin offset [pix]\n";
-    cerr << " [ -frac <docfile=\"\"> ]        : Docfile with expected model fractions (default: even distr.)\n";
-    cerr << " [ -C <double=1e-12> ]         : Significance criterion for fast approach \n";
-    if (!ML3D) cerr << " [ -restart <logfile> ]        : restart a run with all parameters as in the logfile \n";
-    if (!ML3D) cerr << " [ -istart <int> ]             : number of initial iteration \n";
-    cerr << " [ -fix_sigma_noise]           : Do not re-estimate the standard deviation in the noise spectra \n";
-    cerr << " [ -fix_sigma_offset]          : Do not re-estimate the standard deviation in the origin offsets \n";
-    cerr << " [ -fix_fractions]             : Do not re-estimate the model fractions \n";
-    cerr << " [ -dont_output_docfile ]      : Do not write out docfile with most likely angles & translations \n";
-    cerr << " [ -dont_output_selfiles ]     : Do not write out selfiles with most likely class assignments \n";
-    cerr << " [ -doc <docfile=\"\"> ]         : Read initial angles and offsets from docfile \n";
-    cerr << " [ -write_offsets ]            : Save memory by writing optimal offsets to disc (disc-access intensive) \n";
-    cerr << endl;
+    std::cerr << "Additional options: " << std::endl;
+    std::cerr << " [ -eps <float=5e-5> ]         : Stopping criterium \n";
+    std::cerr << " [ -iter <int=100> ]           : Maximum number of iterations to perform \n";
+    std::cerr << " [ -psi_step <float=5> ]       : In-plane rotation sampling interval [deg]\n";
+    std::cerr << " [ -offset <float=3> ]         : Expected standard deviation for origin offset [pix]\n";
+    std::cerr << " [ -frac <docfile=\"\"> ]        : Docfile with expected model fractions (default: even distr.)\n";
+    std::cerr << " [ -C <double=1e-12> ]         : Significance criterion for fast approach \n";
+    if (!ML3D) std::cerr << " [ -restart <logfile> ]        : restart a run with all parameters as in the logfile \n";
+    if (!ML3D) std::cerr << " [ -istart <int> ]             : number of initial iteration \n";
+    std::cerr << " [ -fix_sigma_noise]           : Do not re-estimate the standard deviation in the noise spectra \n";
+    std::cerr << " [ -fix_sigma_offset]          : Do not re-estimate the standard deviation in the origin offsets \n";
+    std::cerr << " [ -fix_fractions]             : Do not re-estimate the model fractions \n";
+    std::cerr << " [ -dont_output_docfile ]      : Do not write out docfile with most likely angles & translations \n";
+    std::cerr << " [ -dont_output_selfiles ]     : Do not write out selfiles with most likely class assignments \n";
+    std::cerr << " [ -doc <docfile=\"\"> ]         : Read initial angles and offsets from docfile \n";
+    std::cerr << " [ -write_offsets ]            : Save memory by writing optimal offsets to disc (disc-access intensive) \n";
+    std::cerr << std::endl;
     exit(1);
 }
 
@@ -308,9 +308,9 @@ void Prog_MLFalign2D_prm::produceSideInfo()
     SelFile                     SFtmp, SFpart;
     Matrix1D<double>            offsets(2), dum, rmean_ctf;
     Matrix2D<double>            A(3, 3), Maux, Maux2;
-    Matrix2D<complex<double> >  Faux, ctfmask;
+    Matrix2D<std::complex<double> >  Faux, ctfmask;
     Matrix1D<int>               center(2), radial_count;
-    vector<int>                 tmppointp, tmppointp_nolow, tmppointi, tmppointj;
+    std::vector<int>                 tmppointp, tmppointp_nolow, tmppointi, tmppointj;
     bool                        uniqname, nomoredirs;
     float                       xx, yy;
     double                      av, psi, aux, Q0;
@@ -449,7 +449,7 @@ void Prog_MLFalign2D_prm::produceSideInfo()
     }
 
     FileName fnt_img, fnt_ctf, fnt;
-    vector<FileName> all_fn_ctfs;
+    std::vector<FileName> all_fn_ctfs;
     bool found, is_unique;
     int iifocus;
 
@@ -537,7 +537,7 @@ void Prog_MLFalign2D_prm::produceSideInfo()
 	FOR_ALL_DEFOCUS_GROUPS()
 	{
 	    if (count_defocus[ifocus] < 50 && verb > 0)
-		cerr << "WARNING%% CTF group " << ifocus + 1 << " contains less than 50 images!" << endl;
+		std::cerr << "WARNING%% CTF group " << ifocus + 1 << " contains less than 50 images!" << std::endl;
 	    
 	    Vctf.push_back(dum);
 	    Vdec.push_back(dum);
@@ -605,16 +605,16 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
 {
 
     Matrix2D<double>            Maux, Mallave;
-    Matrix2D<complex<double> >  Fimg, Faux, Fave;
+    Matrix2D<std::complex<double> >  Fimg, Faux, Fave;
     Matrix1D<double>            rmean_noise, rmean_signal, rmean_avesignal;
-    vector<Matrix2D<double> >   Msigma2, Mave;
+    std::vector<Matrix2D<double> >   Msigma2, Mave;
     Matrix1D<int>               center(2), radial_count;
     double                      rr;
     ImageXmipp                  img;
     FileName                    fn_tmp;
     SelLine                     SL;
     int                         focus = 0, c, nn;
-    ofstream                    fh;
+    std::ofstream                    fh;
 
     center.initZeros();
 
@@ -624,7 +624,7 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
     if (istart == 1)
     {
 
-        if (verb > 0) cerr << "--> Estimating initial noise models from average power spectra ..." << endl;
+        if (verb > 0) std::cerr << "--> Estimating initial noise models from average power spectra ..." << std::endl;
         if (verb > 0)
         {
             nn = SF.ImgNo();
@@ -694,8 +694,8 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
             fn_tmp += "_ctf";
             if (nr_focus > 1) fn_tmp.compose(fn_tmp, ifocus + 1, "");
             fn_tmp += ".noise";
-            fh.open((fn_tmp).c_str(), ios::out);
-            if (!fh) REPORT_ERROR(1, (string)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
+            fh.open((fn_tmp).c_str(), std::ios::out);
+            if (!fh) REPORT_ERROR(1, (std::string)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
 	    for (int irr = 0; irr < hdim; irr++)
             {
                 fh << (double)irr/(sampling*dim) << " " << dVi(Vsig[ifocus], irr) << "\n";
@@ -717,11 +717,11 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
     // Use formula 2.32b on p60 from Frank's book 2nd ed.,
     // Assume that Vctf, Vdec and Vsig exist (with their right sizes)
     // and that Vctf, Vsig are already filled with the right values
-    vector<Matrix1D<double> >  Vsnr;
+    std::vector<Matrix1D<double> >  Vsnr;
     Matrix1D<double>           Vzero, Vdenom, Vavgctf2;
     Matrix2D<double>           Maux;
-    Matrix2D<complex<double> > Faux;
-    ofstream                   fh;
+    Matrix2D<std::complex<double> > Faux;
+    std::ofstream                   fh;
     int                        maxres = 0;
     double                     noise, ssnr;
     int                        int_lowres_limit, int_highres_limit, int_ini_highres_limit;
@@ -843,10 +843,10 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
             fn_tmp = fn_base + "_ctf";
             if (nr_focus > 1) fn_tmp.compose(fn_tmp, ifocus + 1, "");
             fn_tmp += ".ssnr";
-            fh.open((fn_tmp).c_str(), ios::out);
+            fh.open((fn_tmp).c_str(), std::ios::out);
             if (!fh)
-                REPORT_ERROR(3008, (string)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
-            fh  << "#  Resol      SSNR       CTF    Wiener    signal     noise       Ang" << endl;
+                REPORT_ERROR(3008, (std::string)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
+            fh  << "#  Resol      SSNR       CTF    Wiener    signal     noise       Ang" << std::endl;
             for (int irr = 0; irr < hdim; irr++)
             {
                 fh << floatToString((double)irr / (sampling*dim));
@@ -871,7 +871,7 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
 		{
 		    fh << floatToString(999.);
 		}
-		fh << endl;
+		fh << std::endl;
             }
             fh.close();
         }
@@ -897,11 +897,11 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
 
     if (debug>0) 
     {
-	cerr<<" Current resolution limits: "<<endl;
-	cerr<<" + low   res= "<<lowres_limit<<" Ang ("<<int_lowres_limit<<" shell)"<<endl;
-	cerr<<" + prob. res= "<<sampling*dim/current_probres_limit<<" Ang ("<<current_probres_limit<<" shell)"<<endl;
-	cerr<<" + extra res= "<<sampling*dim/current_highres_limit<<" Ang ("<<current_highres_limit<<" shell)"<<endl;
-	cerr<<" + high  res= "<<highres_limit<<" Ang ("<<int_highres_limit<<" shell)"<<endl;
+	std::cerr<<" Current resolution limits: "<<std::endl;
+	std::cerr<<" + low   res= "<<lowres_limit<<" Ang ("<<int_lowres_limit<<" shell)"<<std::endl;
+	std::cerr<<" + prob. res= "<<sampling*dim/current_probres_limit<<" Ang ("<<current_probres_limit<<" shell)"<<std::endl;
+	std::cerr<<" + extra res= "<<sampling*dim/current_highres_limit<<" Ang ("<<current_highres_limit<<" shell)"<<std::endl;
+	std::cerr<<" + high  res= "<<highres_limit<<" Ang ("<<int_highres_limit<<" shell)"<<std::endl;
     }
 
     // Get the new pointers to all pixels in FourierTransformHalf
@@ -949,7 +949,7 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
 
     if (debug>0) 
     {
-	cerr<<"nr_points_2d= "<<nr_points_2d<<" nr_points_prob= "<<nr_points_prob<<endl;
+	std::cerr<<"nr_points_2d= "<<nr_points_2d<<" nr_points_prob= "<<nr_points_prob<<std::endl;
     }
 
     // For variable in-plane sampling rates
@@ -1015,7 +1015,7 @@ void Prog_MLFalign2D_prm::setCurrentSamplingRates(double current_probres_limit)
     }
     if (verb > 0 && (do_variable_psi || do_variable_trans))
     {
-	cerr<<" Current resolution= "<<current_probres_limit<<" Ang; current psi_step = "<<psi_step<<" current trans_step = "<<trans_step<<endl;
+	std::cerr<<" Current resolution= "<<current_probres_limit<<" Ang; current psi_step = "<<psi_step<<" current trans_step = "<<trans_step<<std::endl;
 
     }
 }
@@ -1032,7 +1032,7 @@ void Prog_MLFalign2D_prm::generateInitialReferences()
 
     if (verb > 0)
     {
-        cerr << "  Generating initial references by averaging over random subsets" << endl;
+        std::cerr << "  Generating initial references by averaging over random subsets" << std::endl;
         init_progress_bar(n_ref);
     }
 
@@ -1080,7 +1080,7 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols)
     double                    offx, offy, aux, sumfrac = 0.;
     FileName                  fn_tmp;
     ImageXmipp                img;
-    vector<double>            Vdum;
+    std::vector<double>            Vdum;
 
     // Read in all reference images in memory
     if (Is_ImageXmipp(fn_ref))
@@ -1116,9 +1116,9 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols)
     {
         fn_scratch += "/ml_align2d_offsets";
 	// Clean it if already existing
-    	system(((string)"rm -rf "+fn_scratch).c_str());
+    	system(((std::string)"rm -rf "+fn_scratch).c_str());
  	// Generate new one
-    	system(((string)"mkdir -p " + fn_scratch).c_str());
+    	system(((std::string)"mkdir -p " + fn_scratch).c_str());
     }
 
     // Read optimal origin offsets from fn_doc
@@ -1136,7 +1136,7 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols)
             }
             else
             {
-                REPORT_ERROR(1, (string)"Prog_MLFalign2D_prm: Cannot find " + fn_tmp + " in docfile " + fn_doc);
+                REPORT_ERROR(1, (std::string)"Prog_MLFalign2D_prm: Cannot find " + fn_tmp + " in docfile " + fn_doc);
             }
         }
         DF.go_beginning();
@@ -1177,7 +1177,7 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols)
                 }
                 else
                 {
-                    REPORT_ERROR(1, (string)"Prog_MLFalign2D_prm: Cannot find " + fn_tmp + " in docfile " + fn_doc);
+                    REPORT_ERROR(1, (std::string)"Prog_MLFalign2D_prm: Cannot find " + fn_tmp + " in docfile " + fn_doc);
                 }
             }
             else
@@ -1208,7 +1208,7 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols)
             DF.next_data_line();
         }
         if (ABS(sumfrac - 1.) > 1e-3)
-            if (verb > 0) cerr << " ->WARNING: Sum of all expected model fractions (" << sumfrac << ") is not one!" << endl;
+            if (verb > 0) std::cerr << " ->WARNING: Sum of all expected model fractions (" << sumfrac << ") is not one!" << std::endl;
         for (refno = 0; refno < n_ref; refno++)
         {
             alpha_k[refno] /= sumfrac;
@@ -1216,11 +1216,11 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols)
     }
 
 
-    Matrix2D<complex<double> >   Faux;
+    Matrix2D<std::complex<double> >   Faux;
     Matrix2D<double>             Maux;
     Matrix1D<double>             dum, rmean_signal2, spectral_signal;
     Matrix1D<int>                center(2), radial_count;
-    ifstream                     fh;
+    std::ifstream                     fh;
 
     center.initZeros();
     // Calculate average spectral signal
@@ -1265,8 +1265,8 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols)
 	fn_tmp += "_ctf";
 	if (nr_focus > 1) fn_tmp.compose(fn_tmp, ifocus + 1, "");
 	fn_tmp += ".noise";
-	fh.open((fn_tmp).c_str(), ios::in);
-	if (!fh) REPORT_ERROR(1, (string)"Prog_MLFalign2D_prm: Cannot read file: " + fn_tmp);
+	fh.open((fn_tmp).c_str(), std::ios::in);
+	if (!fh) REPORT_ERROR(1, (std::string)"Prog_MLFalign2D_prm: Cannot read file: " + fn_tmp);
 	else
 	{
 	    for (int irr = 0; irr < hdim; irr++)
@@ -1274,8 +1274,8 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols)
 		fh >> aux;
 		if (ABS(aux - ((double)irr/(sampling*dim)) ) > 0.01 ) 
 		{
-		    cerr<<"aux= "<<aux<<" resol= "<<(double)irr/(sampling*dim)<<endl;
-		    REPORT_ERROR(1, (string)"Prog_MLFalign2D_prm: Wrong format: " + fn_tmp);
+		    std::cerr<<"aux= "<<aux<<" resol= "<<(double)irr/(sampling*dim)<<std::endl;
+		    REPORT_ERROR(1, (std::string)"Prog_MLFalign2D_prm: Wrong format: " + fn_tmp);
 		}
 		fh >> aux;
 		dVi(Vsig[ifocus], irr) = aux;
@@ -1289,10 +1289,10 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols)
 
 }
 
-void Prog_MLFalign2D_prm::writeOffsets(FileName fn, vector<double> &data)
+void Prog_MLFalign2D_prm::writeOffsets(FileName fn, std::vector<double> &data)
 {
 
-    ofstream fh;
+    std::ofstream fh;
     int itot;
 
     if (fn_scratch!="")
@@ -1301,18 +1301,18 @@ void Prog_MLFalign2D_prm::writeOffsets(FileName fn, vector<double> &data)
     	fn = fn_scratch + "/" + fn;
     }
 
-    fh.open((fn).c_str(), ios::out);
+    fh.open((fn).c_str(), std::ios::out);
     if (!fh)
     {
         fh.clear();
         // Create the directory if it does not exist yet, and try again
-        string dirname;
-        int last_slash = ((string)fn).rfind("/");
-        dirname = ((string)fn).erase(last_slash);
-        if (!exists(dirname)) system(((string)"mkdir -p " + dirname).c_str());
-        fh.open((fn).c_str(), ios::out);
+        std::string dirname;
+        int last_slash = ((std::string)fn).rfind("/");
+        dirname = ((std::string)fn).erase(last_slash);
+        if (!exists(dirname)) system(((std::string)"mkdir -p " + dirname).c_str());
+        fh.open((fn).c_str(), std::ios::out);
         if (!fh)
-            REPORT_ERROR(3008, (string)"Prog_MLFalign2D_prm: Cannot write file: " + fn);
+            REPORT_ERROR(3008, (std::string)"Prog_MLFalign2D_prm: Cannot write file: " + fn);
     }
 
     itot = data.size();
@@ -1326,13 +1326,13 @@ void Prog_MLFalign2D_prm::writeOffsets(FileName fn, vector<double> &data)
 
 }
 
-bool Prog_MLFalign2D_prm::readOffsets(FileName fn, vector<double> &data)
+bool Prog_MLFalign2D_prm::readOffsets(FileName fn, std::vector<double> &data)
 {
 
-    ifstream fh;
+    std::ifstream fh;
     int ii, itot, nr_off, itoth, nr_offh;
     double remain;
-    vector<double> data1;
+    std::vector<double> data1;
 
     if (fn_scratch!="")
     {
@@ -1343,7 +1343,7 @@ bool Prog_MLFalign2D_prm::readOffsets(FileName fn, vector<double> &data)
     if (!exists(fn)) return false;
     else
     {
-        fh.open((fn).c_str(), ios::in);
+        fh.open((fn).c_str(), std::ios::in);
         if (!fh) return false;
         else
         {
@@ -1406,8 +1406,8 @@ void Prog_MLFalign2D_prm::calculateInPlanePDF()
 
 }
 
-void Prog_MLFalign2D_prm::appendFTtoVector(const Matrix2D<complex<double> > &in,
-					   vector<double> &out)
+void Prog_MLFalign2D_prm::appendFTtoVector(const Matrix2D<std::complex<double> > &in,
+					   std::vector<double> &out)
 {
 
     // First, store the points used in the probability calculations
@@ -1420,9 +1420,9 @@ void Prog_MLFalign2D_prm::appendFTtoVector(const Matrix2D<complex<double> > &in,
 
 }
 
-void Prog_MLFalign2D_prm::getFTfromVector(const vector<double> &in, 
+void Prog_MLFalign2D_prm::getFTfromVector(const std::vector<double> &in, 
 					  const int start_point,
-					  Matrix2D<complex<double> > &out, 
+					  Matrix2D<std::complex<double> > &out, 
 					  bool only_real)
 {
 
@@ -1436,7 +1436,7 @@ void Prog_MLFalign2D_prm::getFTfromVector(const vector<double> &in,
 	for (int ipoint = 0; ipoint < nr_points_2d; ipoint++)
 	{
 	    int ii = pointer_2d[ipoint];
-	    complex<double> aux(in[start_point+ipoint],0.);
+	    std::complex<double> aux(in[start_point+ipoint],0.);
 	    out.data[ii] = aux;
 	}
     }
@@ -1445,20 +1445,20 @@ void Prog_MLFalign2D_prm::getFTfromVector(const vector<double> &in,
 	for (int ipoint = 0; ipoint < nr_points_2d; ipoint++)
 	{
 	    int ii = pointer_2d[ipoint];
-	    complex<double> aux(in[start_point+2*ipoint],in[start_point+2*ipoint+1]);
+	    std::complex<double> aux(in[start_point+2*ipoint],in[start_point+2*ipoint+1]);
 	    out.data[ii] = aux;
 	}
     }
 }
 
 // Rotate reference for all models and rotations and fill Fref vectors =============
-void Prog_MLFalign2D_prm::rotateReference(vector<double> &out)
+void Prog_MLFalign2D_prm::rotateReference(std::vector<double> &out)
 {
     out.clear();
 
     double AA, stdAA, psi;
     Matrix2D<double> Maux;
-    Matrix2D<complex<double> > Faux;
+    Matrix2D<std::complex<double> > Faux;
 
     Maux.initZeros(dim, dim);
     Maux.setXmippOrigin();
@@ -1495,13 +1495,13 @@ void Prog_MLFalign2D_prm::rotateReference(vector<double> &out)
 
 
 // Collect all rotations and sum to update Iref() for all models ==========
-void Prog_MLFalign2D_prm::reverseRotateReference(const vector<double> &in,
-						 vector<Matrix2D<double > > &out)
+void Prog_MLFalign2D_prm::reverseRotateReference(const std::vector<double> &in,
+						 std::vector<Matrix2D<double > > &out)
 {
 
     double psi, dum, avg, ang;
     Matrix2D<double> Maux, Maux2;
-    Matrix2D<complex<double> > Faux;
+    Matrix2D<std::complex<double> > Faux;
     Maux.resize(dim, dim);
     Maux2.resize(dim, dim);
     Maux.setXmippOrigin();
@@ -1526,7 +1526,7 @@ void Prog_MLFalign2D_prm::reverseRotateReference(const vector<double> &in,
 }
 
 void Prog_MLFalign2D_prm::preselectDirections(float &phi, float &theta,
-        vector<double> &pdf_directions)
+        std::vector<double> &pdf_directions)
 {
 
     float phi_ref, theta_ref, angle, angle2;
@@ -1557,9 +1557,9 @@ void Prog_MLFalign2D_prm::preselectDirections(float &phi, float &theta,
     }
 }
 
-void Prog_MLFalign2D_prm::fourierTranslate2D(const vector<double> &in,
+void Prog_MLFalign2D_prm::fourierTranslate2D(const std::vector<double> &in,
 					     Matrix1D<double> &trans,
-					     vector<double> &out,
+					     std::vector<double> &out,
 					     int point_start)
 {
     double xx, yy, xxshift, yyshift, dotp;
@@ -1586,16 +1586,16 @@ void Prog_MLFalign2D_prm::fourierTranslate2D(const vector<double> &in,
 }
 
 void Prog_MLFalign2D_prm::calculateFourierOffsets(const Matrix2D<double> &Mimg,
-						  const vector<double > &offsets,
-						  vector<double>  &out,
+						  const std::vector<double > &offsets,
+						  std::vector<double>  &out,
 						  Matrix2D<int> &Moffsets, 
 						  Matrix2D<int> &Moffsets_mirror)
 {
 
     int irefmir, ix, iy, opt_ix, opt_iy, iflip, nr_mir, iflip_start, iflip_stop, count;
     double dxx, dyy;
-    vector<double> Fimg_flip;
-    Matrix2D<complex<double> > Fimg;
+    std::vector<double> Fimg_flip;
+    Matrix2D<std::complex<double> > Fimg;
     Matrix1D<double> trans(2);
     Matrix2D<double> Maux2, Maux;
 
@@ -1674,28 +1674,28 @@ void Prog_MLFalign2D_prm::calculateFourierOffsets(const Matrix2D<double> &Mimg,
 // For significantly contributing refno+psi: re-calculate optimal shifts
 void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg, 
 					  const int focus, bool apply_ctf,
-					  const vector<double> &Fref,
-					  vector<double> &Fwsum_imgs,
-					  vector<double> &Fwsum_ctfimgs,
-					  vector<double> &Mwsum_sigma2,
+					  const std::vector<double> &Fref,
+					  std::vector<double> &Fwsum_imgs,
+					  std::vector<double> &Fwsum_ctfimgs,
+					  std::vector<double> &Mwsum_sigma2,
 					  double &wsum_sigma_offset, 
-					  vector<double> &sumw,
-					  vector<double> &sumw_mirror,
+					  std::vector<double> &sumw,
+					  std::vector<double> &sumw_mirror,
 					  double &LL, double &fracweight, 
 					  int &opt_refno, double &opt_psi,
 					  Matrix1D<double> &opt_offsets, 
-					  vector<double> &opt_offsets_ref,
-					  vector<double > &pdf_directions)
+					  std::vector<double> &opt_offsets_ref,
+					  std::vector<double > &pdf_directions)
 {
 
     Matrix3D<double>                             Mweight;
     Matrix2D<int>                                Moffsets, Moffsets_mirror;
-    vector<double>                               Fimg_trans;
-    vector<Matrix1D<double> >                    uniq_offsets;
+    std::vector<double>                               Fimg_trans;
+    std::vector<Matrix1D<double> >                    uniq_offsets;
 
 
-    vector<double> refw(n_ref), refw_mirror(n_ref), Pmax_refmir(2*n_ref);
-    vector<double> sigma2, ctf, decctf;
+    std::vector<double> refw(n_ref), refw_mirror(n_ref), Pmax_refmir(2*n_ref);
+    std::vector<double> sigma2, ctf, decctf;
     double sigma_noise2, XiA, Xi2, aux, fracpdf, pdf, weight;
     double tmpr, tmpi, sum_refw = 0.;
     double diff, maxweight = -99.e99, mindiff2 = 99.e99;
@@ -1739,7 +1739,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
     // Precalculate Fimg_trans, on pruned and expanded offset list
     calculateFourierOffsets(Mimg, opt_offsets_ref, Fimg_trans, Moffsets, Moffsets_mirror);
 
-    if (debug==1) {cout<<"processOneImage 1 "; print_elapsed_time(t0); annotate_time(&t0);}
+    if (debug==1) {std::cout<<"processOneImage 1 "; print_elapsed_time(t0); annotate_time(&t0);}
 
     Mweight.initZeros(nr_trans, n_ref, nr_flip*nr_psi);
     FOR_ALL_MODELS()
@@ -1762,7 +1762,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 		}
 		if (point_trans < 0 || point_trans > dim2)
 		{
-		    cerr<<"point_trans = "<<point_trans<<" ix= "<<ix<<" iy= "<<iy<<endl;
+		    std::cerr<<"point_trans = "<<point_trans<<" ix= "<<ix<<" iy= "<<iy<<std::endl;
 		    REPORT_ERROR(1,"mlf_align2d BUG: point_trans < 0");
 		}
                 if (iflip < nr_nomirror_flips) 
@@ -1795,7 +1795,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 				diff += (tmpr * tmpr + tmpi * tmpi) / sigma2[ii];
 			    }
 			}
-			cerr<<"normal: diff= "<<diff; print_elapsed_time(t0); 
+			std::cerr<<"normal: diff= "<<diff; print_elapsed_time(t0); 
 			exit(0);
 		    }
 		    */
@@ -1821,7 +1821,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                     dVkij(Mweight, zero_trans, refno, irot) = diff;
 		    if (debug == 9)
 		    {
-			cerr<<"refno= "<<refno<<" irot= "<<irot<<" diff= "<<diff<<" mindiff2= "<<mindiff2<<endl;
+			std::cerr<<"refno= "<<refno<<" irot= "<<irot<<" diff= "<<diff<<" mindiff2= "<<mindiff2<<std::endl;
 		    }
                     if (diff < mindiff2)
                     {
@@ -1880,7 +1880,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
         }
     }
 
-    if (debug==1) {cout<<"processOneImage 2 "; print_elapsed_time(t0); annotate_time(&t0);}
+    if (debug==1) {std::cout<<"processOneImage 2 "; print_elapsed_time(t0); annotate_time(&t0);}
 
     // Now for all irefmir, check significant rotations...
     // and calculate their limited_translations probabilities
@@ -1913,7 +1913,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                                 else point_trans = MAT_ELEM(Moffsets_mirror, iy, ix);
 				if (point_trans < 0 || point_trans > dim2)
 				{
-				    cerr<<"point_trans = "<<point_trans<<" ix= "<<ix<<" iy= "<<iy<<endl;
+				    std::cerr<<"point_trans = "<<point_trans<<" ix= "<<ix<<" iy= "<<iy<<std::endl;
 				    REPORT_ERROR(1,"mlf_align2d BUG: point_trans < 0 or > dim2");
 				}
 				pdf = fracpdf * MAT_ELEM(P_phi, iy, ix);
@@ -1958,7 +1958,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                                 else dVkij(Mweight, itrans, refno, irot) = 0.;
 				if (debug == 9)
 				{
-				    cerr<<"refno= "<<refno<<" irot= "<<irot<<" itrans= "<<itrans<<" weight= "<<dVkij(Mweight, itrans, refno, irot)<<" maxweight= "<<maxweight<<endl;
+				    std::cerr<<"refno= "<<refno<<" irot= "<<irot<<" itrans= "<<itrans<<" weight= "<<dVkij(Mweight, itrans, refno, irot)<<" maxweight= "<<maxweight<<std::endl;
 				}
                             }
                         }
@@ -2011,7 +2011,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
         }
     }
     
-    if (debug==1) {cout<<"processOneImage 3 "; print_elapsed_time(t0); annotate_time(&t0);}
+    if (debug==1) {std::cout<<"processOneImage 3 "; print_elapsed_time(t0); annotate_time(&t0);}
 
     // Acummulate all weighted sums
     // and normalize them by sum_refw, such that sum over all weights is one!
@@ -2107,7 +2107,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
         }
     }
 
-    if (debug==1) {cout<<"processOneImage 4 "; print_elapsed_time(t0); annotate_time(&t0);}
+    if (debug==1) {std::cout<<"processOneImage 4 "; print_elapsed_time(t0); annotate_time(&t0);}
 
     // Compute Log Likelihood
     // 1st term: log(refw_i)
@@ -2117,21 +2117,21 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 
 }
 
-void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, vector< ImageXmippT<double> > &Iref, int iter,
+void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, std::vector< ImageXmippT<double> > &Iref, int iter,
 					   double &LL, double &sumcorr, DocFile &DFo,
-					   vector<Matrix2D<double> > &wsum_Mref,
-					   vector<Matrix2D<double> > &wsum_ctfMref,
-					   vector<vector<double> > &Mwsum_sigma2,
+					   std::vector<Matrix2D<double> > &wsum_Mref,
+					   std::vector<Matrix2D<double> > &wsum_ctfMref,
+					   std::vector<std::vector<double> > &Mwsum_sigma2,
 					   double &wsum_sigma_offset, 
-					   vector<double> &sumw, 
-					   vector<double> &sumw_mirror)
+					   std::vector<double> &sumw, 
+					   std::vector<double> &sumw_mirror)
 {
 
     ImageXmipp img;
     SelLine line;
     FileName fn_img, fn_trans;
-    vector<double> Fref, Fwsum_imgs, Fwsum_ctfimgs, dum;
-    vector<double> allref_offsets, pdf_directions(n_ref);
+    std::vector<double> Fref, Fwsum_imgs, Fwsum_ctfimgs, dum;
+    std::vector<double> allref_offsets, pdf_directions(n_ref);
     Matrix1D<double> dataline(9), opt_offsets(2), trans(2);
 
     float old_phi = -999., old_theta = -999.;
@@ -2201,7 +2201,7 @@ void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, vector< ImageXmippT<doub
 
 	if (debug==2)
 	{
-	    cerr<<fn_img<<" "<<focus +1 <<endl;
+	    std::cerr<<fn_img<<" "<<focus +1 <<std::endl;
 	}
 
         img.read(fn_img, false, false, false, false);
@@ -2299,18 +2299,18 @@ void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, vector< ImageXmippT<doub
 }
 
 // Update all model parameters
-void Prog_MLFalign2D_prm::updateParameters(vector<Matrix2D<double> > &wsum_Mref,
-					   vector<Matrix2D<double> > &wsum_ctfMref,
-					   vector<vector<double> > &Mwsum_sigma2,
+void Prog_MLFalign2D_prm::updateParameters(std::vector<Matrix2D<double> > &wsum_Mref,
+					   std::vector<Matrix2D<double> > &wsum_ctfMref,
+					   std::vector<std::vector<double> > &Mwsum_sigma2,
 					   double &wsum_sigma_offset,
-					   vector<double> &sumw, vector<double> &sumw_mirror,
+					   std::vector<double> &sumw, std::vector<double> &sumw_mirror,
 					   double &sumcorr, double &sumw_allrefs,
 					   Matrix1D<double> &spectral_signal)
 {
 
     Matrix1D<double> rmean_sigma2, rmean_signal2;
     Matrix1D<int> center(2), radial_count;
-    Matrix2D<complex<double> > Faux, Faux2;
+    Matrix2D<std::complex<double> > Faux, Faux2;
     Matrix2D<double> Maux;
     FileName fn_tmp;
     double rr, thresh, aux;
@@ -2423,7 +2423,7 @@ void Prog_MLFalign2D_prm::updateParameters(vector<Matrix2D<double> > &wsum_Mref,
 }
 
 // Check convergence
-bool Prog_MLFalign2D_prm::checkConvergence(vector<double> &conv)
+bool Prog_MLFalign2D_prm::checkConvergence(std::vector<double> &conv)
 {
 
     bool converged = true;
@@ -2457,15 +2457,15 @@ bool Prog_MLFalign2D_prm::checkConvergence(vector<double> &conv)
 
 void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, DocFile &DFo,
 					   double &sumw_allrefs, double &LL, 
-					   double &avecorr, vector<double> &conv)
+					   double &avecorr, std::vector<double> &conv)
 {
 
     FileName          fn_tmp, fn_base, fn_tmp2;
     Matrix1D<double>  fracline(3);
     SelFile           SFo, SFc;
     DocFile           DFl;
-    string            comment;
-    ofstream          fh;
+    std::string       comment;
+    std::ofstream     fh;
 
     DFl.clear();
     SFo.clear();
@@ -2482,7 +2482,7 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, DocFile &DFo,
     	if (fn_scratch!="") 
 	{
 	    // Clean scrath disc
-	    system(((string)"rm -rf "+fn_scratch).c_str());
+	    system(((std::string)"rm -rf "+fn_scratch).c_str());
 	}
     
     }
@@ -2560,8 +2560,8 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, DocFile &DFo,
 	    fn_tmp = fn_base + "_ctf";
 	    if (nr_focus > 1) fn_tmp.compose(fn_tmp, ifocus + 1, "");
 	    fn_tmp += ".noise";
-	    fh.open((fn_tmp).c_str(), ios::out);
-	    if (!fh) REPORT_ERROR(1, (string)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
+	    fh.open((fn_tmp).c_str(), std::ios::out);
+	    if (!fh) REPORT_ERROR(1, (std::string)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
             for (int irr = 0; irr < hdim; irr++)
             {
                 fh << irr/(sampling*dim) << " " << dVi(Vsig[ifocus], irr) << "\n";

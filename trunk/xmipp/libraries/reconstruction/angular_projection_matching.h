@@ -51,8 +51,8 @@ public:
   /** Selfile with experimental images */
   SelFile SF;
   /** Vector with reference library projections */
-  vector<Matrix2D<double> > ref_img;
-  vector<Matrix2D<double> >::iterator idirno;
+  std::vector<Matrix2D<double> > ref_img;
+  std::vector<Matrix2D<double> >::iterator idirno;
   /** Vectors for standard deviation and mean of reference library projections */
   double * ref_stddev, * ref_mean;
   /** Vector with reference library angles */
@@ -95,8 +95,8 @@ public:
      * each projection direction) */
     bool output_classes;
     /** Vector with all running class averages */
-    vector<ImageXmipp> class_avgs;
-    vector<SelFile> class_selfiles;
+    std::vector<ImageXmipp> class_avgs;
+    std::vector<SelFile> class_selfiles;
 
 public:
   /// Read arguments from command line

@@ -45,27 +45,27 @@ public:
     void show()
     {
         Prog_parameters::show();
-        cout << "Operation: ";
+        std::cout << "Operation: ";
         switch (operation)
         {
         case Expand:
-            cout << "Expand\n";
+            std::cout << "Expand\n";
             break;
         case Reduce:
-            cout << "Reduce\n";
+            std::cout << "Reduce\n";
             break;
         case None  :
-            cout << "None  \n";
+            std::cout << "None  \n";
             break;
         }
-        cout << "Levels: " << levels << endl;
+        std::cout << "Levels: " << levels << std::endl;
     }
 
     void usage()
     {
         Prog_parameters::usage();
-        cerr << "  -expand | -reduce         : Expand or reduce the image\n";
-        cerr << " [-levels=<l=1>]            : Expansion/reduction factor\n";
+        std::cerr << "  -expand | -reduce         : Expand or reduce the image\n";
+        std::cerr << " [-levels=<l=1>]            : Expansion/reduction factor\n";
     }
 };
 

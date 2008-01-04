@@ -440,7 +440,7 @@ void maskImg::saveImage(int item)
                 }
 
             // Saves Xmipp Image
-            tmpImage.rename((string)((const  char *)savefilename));
+            tmpImage.rename((std::string)((const  char *)savefilename));
             tmpImage.write();
             // print parameters
             theMaskFigure->print(pmScaled.width() / (float)xmippImage().colNumber(),
@@ -626,7 +626,7 @@ bool maskImg::loadImage(const char *fileName)
                 // reads Xmipp Image
                 Image *tmpImage = Image::LoadImage(fileName, apply_geo);
                 if (!tmpImage)
-                    REPORT_ERROR(1501, (string)"Error opening file " + fileName);
+                    REPORT_ERROR(1501, (std::string)"Error opening file " + fileName);
                 ok = TRUE;
                 ok = xmipp2Qt(*tmpImage);
                 delete tmpImage;

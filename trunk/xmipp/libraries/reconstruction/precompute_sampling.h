@@ -51,20 +51,20 @@ public:
 
 
     /** root for output files */
-    string sampling_file_root;
+    std::string sampling_file_root;
 
     /** Symmetry. One of the 17 possible symmetries in
        single particle electron microscopy.
        See details at url
        Possible values are: c1, ci, cs, cn, cnv, cnh, sn,
        dn, dnv, dnh, t, td, th, o, oh, i, ih */
-    string symmetry;
+    std::string symmetry;
 
     /** For infinite groups symmetry order*/
     int sym_order;
 
     /** fil vector with symmetry axis */
-    // vector <Matrix1D<double> > symmetry_vectors;
+    // std::vector <Matrix1D<double> > symmetry_vectors;
 
     /** maximun tilt angle */
     double max_tilt_angle;
@@ -84,7 +84,7 @@ public:
     void read(int argc, char **argv);
 
     /** Usage message.
-        This function shows the way of introducing this parameters. */
+        This function shows the way of introdustd::cing this parameters. */
     void usage();
 
     /** Show parameters. */
@@ -94,7 +94,7 @@ public:
     void run();
 
     /** get all directions related by symmetry to (1,0,0)  */
-    void get_sym_vectors(vector< Matrix1D<double > > &sym_points);
+    void get_sym_vectors(std::vector< Matrix1D<double > > &sym_points);
 
 };
 //@}

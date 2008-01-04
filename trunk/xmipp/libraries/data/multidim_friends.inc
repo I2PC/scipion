@@ -36,18 +36,18 @@ template<>
 std::ostream& operator<<(std::ostream& ostrm, const maTC& m);
 
 template<>
-void coreArrayByScalar< complex< double > >(const maTC&op1,
-                                               const complex< double >& op2,
+void coreArrayByScalar< std::complex< double > >(const maTC&op1,
+                                               const std::complex< double >& op2,
                                                maTC& result,
                                                char operation);
 
 template<>
-void coreScalarByArray< complex< double > >(const complex< double >& op1,
+void coreScalarByArray< std::complex< double > >(const std::complex< double >& op1,
                                                const maTC& op2,
                                                maTC& result,
                                                char operation);
 
 template<>
-void coreArrayByArray< complex< double > >(const maTC& op1, const maTC& op2,
+void coreArrayByArray< std::complex< double > >(const maTC& op1, const maTC& op2,
                                               maTC& result,
                                               char operation);

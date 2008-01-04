@@ -46,7 +46,7 @@ int main(int argc, char **argv)
     {
         if (rank == 0)
         {
-            cout << XE;
+            std::cout << XE;
             prm.usage();
         }
         exit(1);
@@ -72,7 +72,7 @@ int main(int argc, char **argv)
         {
             int toGo = imgNbr;
             MPI_Status status;
-            cerr << "Assigning angles ...\n";
+            std::cerr << "Assigning angles ...\n";
             init_progress_bar(imgNbr);
             while (toGo > 0)
             {
@@ -89,7 +89,7 @@ int main(int argc, char **argv)
                 if (toGo % (imgNbr / 60) == 0)
                 {
                     progress_bar(imgNbr - toGo);
-                    cerr.flush();
+                    std::cerr.flush();
                 }
             }
             progress_bar(imgNbr);
@@ -141,6 +141,6 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE << endl;
+        std::cout << XE << std::endl;
     }
 }

@@ -63,7 +63,7 @@ class xmippCTSet
 public:
 
     /// Training sets mode
-    typedef multimap<unsigned, unsigned, less<unsigned> > splitTS;
+    typedef std::multimap<unsigned, unsigned, std::less<unsigned> > splitTS;
 
     /// iterator
     typedef splitTS::iterator splitIt;
@@ -74,8 +74,8 @@ public:
     /// use of samples
     typedef enum { TRAIN = 0, VALIDATION = 1, TEST = 2 } useMode;
 
-    vector<Item> theItems;
-    vector<Target> theTargets;
+    std::vector<Item> theItems;
+    std::vector<Target> theTargets;
 
     /**
      * Default constructor
@@ -91,7 +91,7 @@ public:
      * Parameter: _is  The input stream
      */
 
-    xmippCTSet(istream & _is) :  splitTrainingSet(), theItems(), theTargets(), isCalibrated(false)
+    xmippCTSet(std::istream & _is) :  splitTrainingSet(), theItems(), theTargets(), isCalibrated(false)
     {
         loadObject(_is);
         computeNumTargets();
@@ -114,9 +114,9 @@ public:
     {
         if ((_tp > 1) || (_tp <= 0) || (_vp > 1) || (_vp <= 0) || (_tp + _vp > 1))
         {
-            throw invalid_argument("Split mode proportions must be < 1");
+            throw std::invalid_argument("Split mode proportions must be < 1");
         }
-        vector<float> acc(2); // 3 modes
+        std::vector<float> acc(2); // 3 modes
         acc[TRAIN] = _tp;
         acc[VALIDATION] = _tp + _vp;
         xmippUniform<float> p(0.0, 1.0);
@@ -132,7 +132,7 @@ public:
                     break;
                 }
             }
-            splitTrainingSet.insert(pair<unsigned, unsigned>(rw, i));
+            splitTrainingSet.insert(std::pair<unsigned, unsigned>(rw, i));
         }
     }
 
@@ -213,15 +213,15 @@ public:
     {
         if (!isCalibrated)
         {
-            string msg;
+            std::string msg;
             msg = "The training set is not calibrated.";
-            throw out_of_range(msg);
+            throw std::out_of_range(msg);
         }
         if (_i >= size())
         {
-            string msg;
+            std::string msg;
             msg = "Out of range. No target at position " + integerToString(_i);
-            throw out_of_range(msg);
+            throw std::out_of_range(msg);
         }
 
         return theTargets[_i];
@@ -237,9 +237,9 @@ public:
     {
         if (_i >= size())
         {
-            string msg;
+            std::string msg;
             msg = "Out of range. No target at position " + integerToString(_i);
-            throw out_of_range(msg);
+            throw std::out_of_range(msg);
         }
 
         return theTargets[_i];
@@ -256,9 +256,9 @@ public:
     {
         if (_i >= size())
         {
-            string msg;
+            std::string msg;
             msg = "Out of range. No item at position " + integerToString(_i);
-            throw out_of_range(msg);
+            throw std::out_of_range(msg);
         }
 
         return theItems[_i];
@@ -276,9 +276,9 @@ public:
     {
         if (_i >= size())
         {
-            string msg;
+            std::string msg;
             msg = "Out of range. No item at position " + integerToString(_i);
-            throw out_of_range(msg);
+            throw std::out_of_range(msg);
         }
 
         return theItems[_i];
@@ -318,7 +318,7 @@ public:
      * Standard output for a training set
      * Parameter: _os The output stream
      */
-    virtual void printSelf(ostream& _os) const
+    virtual void printSelf(std::ostream& _os) const
     {
         writeItems(_os);
     };
@@ -329,7 +329,7 @@ public:
      * @exception  runtime_error  If there are problems with the stream
      * NOTE: This method is empty, it should be defined.
      */
-    virtual void readSelf(istream& _is)
+    virtual void readSelf(std::istream& _is)
     {};
 
 
@@ -338,7 +338,7 @@ public:
      * this method can be used to save the status of the class.
      * Parameter: _os The output stream
      */
-    virtual void saveObject(ostream& _os) const
+    virtual void saveObject(std::ostream& _os) const
     {
         writeCalibrated(_os);
         writeItems(_os, true);
@@ -350,7 +350,7 @@ public:
      * this method can be used to load the status of the class.
      * Parameter: _is The output stream
      */
-    virtual void loadObject(istream& _is)
+    virtual void loadObject(std::istream& _is)
     {
         clear();
         // first of all, check if the training set is calibrated or not
@@ -367,7 +367,7 @@ public:
     unsigned numTargets() const
     {
         if (!calibrated())
-            throw runtime_error("TS not calibrated");
+            throw std::runtime_error("TS not calibrated");
         return nTargets;
     };
 
@@ -392,7 +392,7 @@ public:
       * Parameter: _os The output stream
       * Parameter: _ts  The training set to be printed
       */
-    friend ostream& operator << (ostream& _os, const xmippCTSet& _ts)
+    friend std::ostream& operator << (std::ostream& _os, const xmippCTSet& _ts)
     {
         _ts.printSelf(_os);
         return _os;
@@ -404,7 +404,7 @@ public:
      * Parameter: _ts  The training set to be read
      * @exception  runtime_error  If there are problems with the stream
      */
-    friend istream& operator >> (istream& _is, xmippCTSet& _ts)
+    friend std::istream& operator >> (std::istream& _is, xmippCTSet& _ts)
     {
         _ts.readSelf(_is);
         return _is;
@@ -419,7 +419,7 @@ protected:
     {
         if (calibrated())
         {
-            typedef set< Target, less<Target> > STB;
+            typedef std::set< Target, std::less<Target> > STB;
             STB targetSet;
             for (unsigned i = 0; i < size(); i ++)
             {
@@ -438,36 +438,36 @@ protected:
      * Parameter: _is  The input stream
      * @exception  runtime_error  If there are problems with the stream
      */
-    void checkCalibrated(istream& _is)
+    void checkCalibrated(std::istream& _is)
     {
         skipComments(_is);
 
         if (_is)
         {
-            string s;
-            _is >> (string&)s;
+            std::string s;
+            _is >> s;
 
             // Comments skipped, read calibrated
             if (_is)
             {
-                string s2 = "";
+                std::string s2 = "";
 
                 // uppercase s
-                for (string::iterator i = s.begin() ; i != s.end() ; i++)
+                for (std::string::iterator i = s.begin() ; i != s.end() ; i++)
                     s2 += toupper(*i);
 
                 if (s2 == "CALIBRATED")
                     isCalibrated = true;
                 else
-                    for (string::iterator i = s.end() ; i > s.begin() ; _is.putback(*(--i)));
+                    for (std::string::iterator i = s.end() ; i > s.begin() ; _is.putback(*(--i)));
             }
         }
 
         if (!_is)
         {
-            string msg;
+            std::string msg;
             msg = "Error reading the file";
-            throw runtime_error(msg);
+            throw std::runtime_error(msg);
         }
     };
 
@@ -477,7 +477,7 @@ protected:
     * Parameter: _is  The input stream
     * @exception  runtime_error  If there are problems with the stream
     */
-    void readItems(istream& _is)
+    void readItems(std::istream& _is)
     {
         while (_is)
         {
@@ -489,11 +489,11 @@ protected:
                 {
                     _is >> item;
                 }
-                catch (exception&)
+                catch (std::exception&)
                 {
-                    string msg;
+                    std::string msg;
                     msg = "Error reading the item";
-                    throw runtime_error(msg);
+                    throw std::runtime_error(msg);
                 }
 
                 if (_is)
@@ -517,11 +517,11 @@ protected:
                                 else
                                     target = Target();
                         }
-                        catch (exception&)
+                        catch (std::exception&)
                         {
-                            string msg;
+                            std::string msg;
                             msg = "Error reading the item";
-                            throw runtime_error(msg);
+                            throw std::runtime_error(msg);
                         }
 
                         theTargets.push_back(target);
@@ -531,9 +531,9 @@ protected:
                 }
                 else
                 {
-                    string msg;
+                    std::string msg;
                     msg = "Error reading the item";
-                    throw runtime_error(msg);
+                    throw std::runtime_error(msg);
                 }
             }
         }
@@ -545,10 +545,10 @@ protected:
      * Writes if the training set is calibrated or not
      * Parameter: _os  The output stream
      */
-    void writeCalibrated(ostream& _os) const
+    void writeCalibrated(std::ostream& _os) const
     {
         if (isCalibrated)
-            _os << "calibrated" << endl;
+            _os << "calibrated" << std::endl;
     };
 
 
@@ -557,10 +557,10 @@ protected:
      * Parameter: _os  The output stream
      * Parameter: _delim Flag to use "<" delimiters (false by default)
      */
-    void writeItems(ostream& _os, bool _delim = false) const
+    void writeItems(std::ostream& _os, bool _delim = false) const
     {
-        typename vector<Item>::const_iterator i;
-        typename vector<Target>::const_iterator j;
+        typename std::vector<Item>::const_iterator i;
+        typename std::vector<Target>::const_iterator j;
         for (i = theItems.begin(), j = theTargets.begin() ; i < theItems.end() ;
              i++, j++)
         {
@@ -585,7 +585,7 @@ protected:
             if (isCalibrated)
                 _os << " " << *j;
 
-            _os << endl;
+            _os << std::endl;
         }
     };
 
@@ -594,7 +594,7 @@ protected:
      * Skip the comments if the stream
      * Parameter: _is  The input stream
      */
-    void skipComments(istream& _is) const
+    void skipComments(std::istream& _is) const
     {
         char c;
         if (_is)
@@ -620,7 +620,7 @@ protected:
     /** Protected interface to the items
         @return a const_iterator that points to the first Item in the set
      */
-    typename vector<Item>::const_iterator itemsBegin() const
+    typename std::vector<Item>::const_iterator itemsBegin() const
     {
         return theItems.begin();
     }
@@ -629,7 +629,7 @@ protected:
     /** Protected interface to the items
      @return a const_iterator that points to the last Item in the set
      */
-    typename vector<Item>::const_iterator itemsEnd() const
+    typename std::vector<Item>::const_iterator itemsEnd() const
     {
         return theItems.end();
     }
@@ -639,7 +639,7 @@ protected:
         @return a const_iterator that points to the first Target in the set
     */
 
-    typename vector<Target>::const_iterator targetsBegin() const
+    typename std::vector<Target>::const_iterator targetsBegin() const
     {
         return theTargets.begin();
     }
@@ -647,7 +647,7 @@ protected:
     /** Protected interface to the targets
         @return a const_iterator that points to the last Target in the set
     */
-    typename vector<Target>::const_iterator targetsEnd() const
+    typename std::vector<Target>::const_iterator targetsEnd() const
     {
         return theTargets.end();
     }
@@ -656,8 +656,8 @@ protected:
 protected:
 
     splitTS splitTrainingSet;
-    /*  vector<Item> theItems;
-      vector<Target> theTargets;*/
+    /*  std::vector<Item> theItems;
+      std::vector<Target> theTargets;*/
     bool isCalibrated;
     unsigned nTargets;  // Number of targets in the training set
 };

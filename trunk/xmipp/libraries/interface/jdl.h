@@ -44,51 +44,51 @@ class JDLFile
 {
 public:
     /// Type. By default "Job"
-    string jdl_type;
+    std::string jdl_type;
 
     /// Jobtype. By default "normal"
-    string jdl_jobtype;
+    std::string jdl_jobtype;
 
     /// Virtual organization. By default "biomed"
-    string jdl_virtualorganization;
+    std::string jdl_virtualorganization;
 
     /** Job rootname.
         stderr and stdout are dumped into job_root.stderr.txt and
         job_root.stdout.txt. The invoked program is job_root.sh*/
-    string job_root;
+    std::string job_root;
 
     /** Running Script.
         The script job_root.sh is generated from the information of this
         set of lines. */
-    vector <string> job_sh;
+    std::vector <std::string> job_sh;
 
     /** Running programs.
         These are the programs that must be sent to be executed by the
         script. */
-    vector <string> running_programs;
+    std::vector <std::string> running_programs;
 
     /** Input files. */
-    vector <string> input_files;
+    std::vector <std::string> input_files;
 
     /** Input selfiles. */
-    vector <string> input_selfiles;
+    std::vector <std::string> input_selfiles;
 
     /** Input wildfiles. */
-    vector <string> input_wildfiles;
+    std::vector <std::string> input_wildfiles;
 
     /** Output files. */
-    vector <string> output_files;
+    std::vector <std::string> output_files;
 
     /** Output selfiles. */
-    vector <string> output_selfiles;
+    std::vector <std::string> output_selfiles;
 
     /** Output wildfiles. */
-    vector <string> output_wildfiles;
+    std::vector <std::string> output_wildfiles;
 
     /** Where to publish the input data.
         If not given, the Storage Element (SE) of the Computing
         Element (CE) with more free CPUs is selected. */
-    string publisher_data_in;
+    std::string publisher_data_in;
 
     /** Where to publish the output data.
         If there is no data_out publisher, but there is a data_in publisher,
@@ -96,10 +96,10 @@ public:
         then baudelaire.cnb.uam.es is the data_out publisher, and the
         data_in publisher is taken as the Storage Element (SE) of the Computing
         Element (CE) with more free CPUs. */
-    string publisher_data_out;
+    std::string publisher_data_out;
 
     /** Local output directory */
-    string local_output_dir;
+    std::string local_output_dir;
 public:
     JDLFile()
     {
@@ -114,53 +114,53 @@ public:
     void clear();
 
     /** Add file to the input. */
-    void add_file_to_input_files(const string &str)
+    void add_file_to_input_files(const std::string &str)
     {
         input_files.push_back(str);
     }
 
     /** Add file to the input selfiles.
         All files in this selfile will be packed and sent to the remote host.*/
-    void add_file_to_input_selfiles(const string &str)
+    void add_file_to_input_selfiles(const std::string &str)
     {
         input_selfiles.push_back(str);
     }
 
     /** Add file to the input wildfiles.
         All files with this pattern will be packed and sent to the remote host.*/
-    void add_file_to_input_wildfiles(const string &str)
+    void add_file_to_input_wildfiles(const std::string &str)
     {
         input_wildfiles.push_back(str);
     }
 
     /** Add file to the output. */
-    void add_file_to_output_files(const string &str)
+    void add_file_to_output_files(const std::string &str)
     {
         output_files.push_back(str);
     }
 
     /** Add file to the output selfiles.
         All files in this selfile will be packed and sent from the remote host.*/
-    void add_file_to_output_selfiles(const string &str)
+    void add_file_to_output_selfiles(const std::string &str)
     {
         output_selfiles.push_back(str);
     }
 
     /** Add file to the output wildfiles.
         All files with this pattern will be packed and sent from the remote host.*/
-    void add_file_to_output_wildfiles(const string &str)
+    void add_file_to_output_wildfiles(const std::string &str)
     {
         output_wildfiles.push_back(str);
     }
 
     /** Add command to the running script. */
-    void add_command_to_script(const string &str)
+    void add_command_to_script(const std::string &str)
     {
         job_sh.push_back(str);
     }
 
     /** Add program to the running programs. */
-    void add_program_to_running_programs(const string &str)
+    void add_program_to_running_programs(const std::string &str)
     {
         running_programs.push_back(str);
     }

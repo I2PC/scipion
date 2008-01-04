@@ -588,7 +588,7 @@ public:
      *
      * @code
      * if (SF.eof())
-     *     cout << "The document file is over\n";
+     *     std::cout << "The document file is over\n";
      * @endcode
      */
     int eof()

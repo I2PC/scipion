@@ -33,11 +33,11 @@ int main(int argc, char **argv)
     int c, nn, imgno, opt_refno;
     double LL, sumw_allrefs, sumcorr;
     double aux, wsum_sigma_offset, wsum_sigma_noise2;
-    vector<Matrix3D<double > > wsum_Mref, Mref;
-    vector<Matrix3D<double > > wsum_Mwedge;
-    vector<double> sumw, wsum_sigma2, sum_nonzero_pixels;
+    std::vector<Matrix3D<double > > wsum_Mref, Mref;
+    std::vector<Matrix3D<double > > wsum_Mwedge;
+    std::vector<double> sumw, wsum_sigma2, sum_nonzero_pixels;
     Matrix3D<double> Maux;
-    vector<int> count_defocus;
+    std::vector<int> count_defocus;
     FileName fn_img, fn_tmp;
     Matrix1D<double> oneline(0);
     DocFile DFo, DFf;
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         prm.usage();
         exit(0);
     }
@@ -75,7 +75,7 @@ int main(int argc, char **argv)
         for (int iter = prm.istart; iter <= prm.Niter; iter++)
         {
 
-            if (prm.verb > 0) cerr << "  Sub-tomogram refinement:  iteration " << iter << " of " << prm.Niter << endl;
+            if (prm.verb > 0) std::cerr << "  Sub-tomogram refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
 
             DFo.clear();
             DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Zoff (6), WedNo (7) Ref (8), Pmax/sumP (9)");
@@ -110,7 +110,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         prm.usage();
         exit(0);
     }

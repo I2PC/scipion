@@ -129,8 +129,8 @@ protected:
     unsigned numNeurons;
     unsigned numVectors;
     unsigned dim;
-    vector < vector<double> > tmpMap;
-    vector<double> tmpD, tmpD1, tmpDens, tmpV;
+    std::vector < std::vector<double> > tmpMap;
+    std::vector<double> tmpD, tmpD1, tmpDens, tmpV;
 
 
     /** Declaration of virtual method */

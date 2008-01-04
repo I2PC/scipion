@@ -95,8 +95,8 @@ void ImUmbend::PeaksCorresp()
 //  #define DEBUG
 #ifdef DEBUG
     for (int kk = 0; kk < INCR_coord.size(); kk++)
-        cout <<  INCR_coord[kk].x << " " << INCR_coord[kk].y << " "
-        <<  INCR_coord[kk].Incrx << " " << INCR_coord[kk].Incry << endl;
+        std::cout <<  INCR_coord[kk].x << " " << INCR_coord[kk].y << " "
+        <<  INCR_coord[kk].Incrx << " " << INCR_coord[kk].Incry << std::endl;
 
 #endif
 #undef DEBUG
@@ -116,7 +116,7 @@ void ImUmbend::UnBending()
 {
 
     //Del. Triang.
-    vector <ITRIANGLE> LatTri;
+    std::vector <ITRIANGLE> LatTri;
     //Interpolation Parameters
     LatPoint TargetPt;
     //Auxiliar variables
@@ -132,7 +132,7 @@ void ImUmbend::UnBending()
     }
     catch (Xmipp_error XE)
     {
-        cerr << XE;
+        std::cerr << XE;
         exit(1);
     }
     //xmipp coordinates in image
@@ -150,8 +150,8 @@ void ImUmbend::UnBending()
     // Extend Shifts to Regular Grid (MRC Coordinates)
     // (Remove it when you find an efficient triangle search)
     int Nh, Nk;
-    Nk = (int)ceil(min(abs(ExpLat.dim[0] / ExpLat.a(0)), abs(ExpLat.dim[0] / ExpLat.b(0))));
-    Nh = (int)ceil(min(abs(ExpLat.dim[1] / ExpLat.a(1)), abs(ExpLat.dim[1] / ExpLat.b(1))));
+    Nk = (int)ceil(std::min(abs(ExpLat.dim[0] / ExpLat.a(0)), abs(ExpLat.dim[0] / ExpLat.b(0))));
+    Nh = (int)ceil(std::min(abs(ExpLat.dim[1] / ExpLat.a(1)), abs(ExpLat.dim[1] / ExpLat.b(1))));
     Matrix2D <double> MatIncrX, MatIncrY;
     MatIncrX.initZeros(Nh, Nk);
     MatIncrY.initZeros(Nh, Nk);
@@ -159,7 +159,7 @@ void ImUmbend::UnBending()
 #undef DEBUG
     //   #define DEBUG
 #ifdef DEBUG
-    cout <<  MatIncrX.rowNumber() << " " << MatIncrX.colNumber() << endl;
+    std::cout <<  MatIncrX.rowNumber() << " " << MatIncrX.colNumber() << std::endl;
 #endif
 #undef DEBUG
 
@@ -191,13 +191,13 @@ void ImUmbend::UnBending()
 
 #ifdef TIMES
         times(&after);
-        cout << "Total Shift time " << after.tms_utime - before.tms_utime << endl;
+        std::cout << "Total Shift time " << after.tms_utime - before.tms_utime << std::endl;
 #endif
 
 #undef DEBUG
         //    #define DEBUG
 #ifdef DEBUG
-        cout <<  TargetPt.x << " " << TargetPt.y << " " << TargetPt.Incrx << " " << TargetPt.Incry << endl;
+        std::cout <<  TargetPt.x << " " << TargetPt.y << " " << TargetPt.Incrx << " " << TargetPt.Incry << std::endl;
 #endif
 #undef DEBUG
 
@@ -233,7 +233,7 @@ void ImUmbend::UnBending()
     }
     catch (Xmipp_error XE)
     {
-        cerr << XE;
+        std::cerr << XE;
         exit(1);
     }
 
@@ -286,8 +286,8 @@ void ImUmbend::ShiftsInterpReg(Matrix2D <double> & MatIncrX, Matrix2D <double> &
 #undef DEBUG
         //  #define DEBUG
 #ifdef DEBUG
-        cout <<  Tx << " " << Ty << " " << i << " " << j << endl;
-        cout << TargetPt.Incrx << " " << TargetPt.Incry << "  " << MatIncrX(i, j) << " " << MatIncrY(i, j) << endl;
+        std::cout <<  Tx << " " << Ty << " " << i << " " << j << std::endl;
+        std::cout << TargetPt.Incrx << " " << TargetPt.Incry << "  " << MatIncrX(i, j) << " " << MatIncrY(i, j) << std::endl;
 #endif
 #undef DEBUG
     }
@@ -386,7 +386,7 @@ void ImUmbend::Interp2D(float Tx, float Ty, float Ti, float Tj, float TiM, float
 
 ///////////////////////////////////////////////////////////////////////////
 //Linear Interpolation from scattered data set to regular grid
-void ImUmbend::Scattered2Regular(Matrix2D <double> & MatIncrX, Matrix2D <double> & MatIncrY, vector <ITRIANGLE> &LatTri)
+void ImUmbend::Scattered2Regular(Matrix2D <double> & MatIncrX, Matrix2D <double> & MatIncrY, std::vector <ITRIANGLE> &LatTri)
 {
 
     int k;
@@ -428,7 +428,7 @@ void ImUmbend::Scattered2Regular(Matrix2D <double> & MatIncrX, Matrix2D <double>
 #undef DEBUG
         //  #define DEBUG
 #ifdef DEBUG
-        cout <<  i << " " << j << " " << INCR_coord[k].x << " " << INCR_coord[k].y << "  " << MatIncrX(i, j) << " " << MatIncrY(i, j) << endl;
+        std::cout <<  i << " " << j << " " << INCR_coord[k].x << " " << INCR_coord[k].y << "  " << MatIncrX(i, j) << " " << MatIncrY(i, j) << std::endl;
 #endif
 #undef DEBUG
 
@@ -440,7 +440,7 @@ void ImUmbend::Scattered2Regular(Matrix2D <double> & MatIncrX, Matrix2D <double>
 
 // Displacement Interpolation from Triangulation of Irregular Grid
 // Border values are set to nearest neighbour
-void ImUmbend::ShiftsInterp(LatPoint &TargetPt, vector <ITRIANGLE> &  LatTri)
+void ImUmbend::ShiftsInterp(LatPoint &TargetPt, std::vector <ITRIANGLE> &  LatTri)
 {
     //Interpolation Parameters
     int Tind, Ptind;
@@ -463,7 +463,7 @@ void ImUmbend::ShiftsInterp(LatPoint &TargetPt, vector <ITRIANGLE> &  LatTri)
     Tind = FindNearestTri(TargetPt, LatTri);
 #ifdef TIMES
     times(&after);
-    cout << "Triang. search time " << after.tms_utime - before.tms_utime << endl;
+    std::cout << "Triang. search time " << after.tms_utime - before.tms_utime << std::endl;
 #endif
 
     if (Tind > 0)
@@ -513,7 +513,7 @@ void ImUmbend::ShiftsInterp(LatPoint &TargetPt, vector <ITRIANGLE> &  LatTri)
 //////////////////////////////////////////////// TRIANGULATION HANDLINNG ////////////////////////////////////
 
 /////////////Delaunay Triangulation of Lat. Pts
-void ImUmbend::LatTriang(vector <ITRIANGLE> & LatTri)
+void ImUmbend::LatTriang(std::vector <ITRIANGLE> & LatTri)
 {
     int i;
     int N = 0;
@@ -562,7 +562,7 @@ void ImUmbend::LatTriang(vector <ITRIANGLE> & LatTri)
 #undef DEBUG
         //  #define DEBUG
 #ifdef DEBUG
-        cout <<  i << " " << v[i].p1 << " " << v[i].p2 << " " << v[i].p3 << endl;
+        std::cout <<  i << " " << v[i].p1 << " " << v[i].p2 << " " << v[i].p3 << std::endl;
 #endif
 #undef DEBUG
 
@@ -579,7 +579,7 @@ void ImUmbend::LatTriang(vector <ITRIANGLE> & LatTri)
 
 /////////////////// Computation of Nearest Triangl. to TargetPt
 // Returns index of triangle in vector LatTri
-int ImUmbend::FindNearestTri(LatPoint &TargetPt, vector <ITRIANGLE> &  LatTri)
+int ImUmbend::FindNearestTri(LatPoint &TargetPt, std::vector <ITRIANGLE> &  LatTri)
 {
 
     int k, Vind, t;

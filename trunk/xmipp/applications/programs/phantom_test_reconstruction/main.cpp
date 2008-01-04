@@ -29,7 +29,7 @@
 
 void Usage();
 void test_training(Recons_test_Parameters &prm, int nvol,
-                   const FileName &fn_hist, const string &training_FOM);
+                   const FileName &fn_hist, const std::string &training_FOM);
 void test_all_FOMs(Recons_test_Parameters &prm, int nvol,
                    const FileName &fn_hist);
 
@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 {
     FileName                fn_test_params, fn_root;
     bool                    only_training;
-    string                  training_FOM;
+    std::string             training_FOM;
     bool                    dont_rewrite;
     Recons_test_Parameters  recons_prm;
     int                     nvol;
@@ -57,11 +57,11 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error &XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage();
         exit(1);
     }
-    cout << recons_prm << endl;
+    std::cout << recons_prm << std::endl;
 
 // Make tests ..............................................................
     try
@@ -73,13 +73,13 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
     exit(0);
 }
 
 /* Show results ------------------------------------------------------------ */
-void show_measured_point(ostream &out, Recons_test_Parameters prm, int i)
+void show_measured_point(std::ostream &out, Recons_test_Parameters prm, int i)
 {
     out << "Test " << i;
     if (prm.recons_method == use_WBP)
@@ -112,7 +112,7 @@ void show_measured_point(ostream &out, Recons_test_Parameters prm, int i)
 
 /* Tests on SCL2 ----------------------------------------------------------- */
 void test_training(Recons_test_Parameters &prm, int nvol,
-                   const FileName &fn_hist, const string &training_FOM)
+                   const FileName &fn_hist, const std::string &training_FOM)
 {
     Matrix1D<double> training_avgs;
     Matrix1D<double> training_devs;
@@ -120,8 +120,8 @@ void test_training(Recons_test_Parameters &prm, int nvol,
     EVALUATE_results results;
 
     // Open History file
-    ofstream fh_hist;
-    fh_hist.open(fn_hist.c_str(), ios::out);
+    std::ofstream fh_hist;
+    fh_hist.open(fn_hist.c_str(), std::ios::out);
     if (!fh_hist)
         REPORT_ERROR(1, "recons_test: Cannot open file " + fn_hist + " for output");
 
@@ -135,7 +135,7 @@ void test_training(Recons_test_Parameters &prm, int nvol,
     training_N.resize(TestNo);
 
     // Perform measures
-    fh_hist << "Training on " << training_FOM << endl;
+    fh_hist << "Training on " << training_FOM << std::endl;
     for (int i = 0; i < TestNo; i++)
     {
         single_measure_on_FOM(prm, i, nvol,
@@ -145,7 +145,7 @@ void test_training(Recons_test_Parameters &prm, int nvol,
         if (!prm.evaluate)
             fh_hist << " ---> " << training_avgs(i) << "+-" << training_devs(i)
             << " (" << training_N(i) << ")";
-        fh_hist << "endl";
+        fh_hist << "std::endl";
         fh_hist.flush();
     }
     fh_hist.close();
@@ -153,15 +153,15 @@ void test_training(Recons_test_Parameters &prm, int nvol,
     // Show results
     if (prm.evaluate)
     {
-        cout << "****************************************************************\n";
-        cout << "Reconstruction test results\n";
-        cout << "****************************************************************\n";
+        std::cout << "****************************************************************\n";
+        std::cout << "Reconstruction test results\n";
+        std::cout << "****************************************************************\n";
         for (int i = 0; i < TestNo; i++)
         {
-            show_measured_point(cout, prm, i);
-            cout << " ---> " << training_avgs(i) << "+-" << training_devs(i)
+            show_measured_point(std::cout, prm, i);
+            std::cout << " ---> " << training_avgs(i) << "+-" << training_devs(i)
             << " (" << training_N(i) << ")";
-            cout << endl;
+            std::cout << std::endl;
         }
     }
 }
@@ -173,8 +173,8 @@ void test_all_FOMs(Recons_test_Parameters &prm, int nvol,
     EVALUATE_results results;
 
     // Open History file
-    ofstream fh_hist;
-    fh_hist.open(fn_hist.c_str(), ios::out);
+    std::ofstream fh_hist;
+    fh_hist.open(fn_hist.c_str(), std::ios::out);
     if (!fh_hist)
         REPORT_ERROR(1, "recons_test: Cannot open file " + fn_hist + " for output");
 
@@ -191,7 +191,7 @@ void test_all_FOMs(Recons_test_Parameters &prm, int nvol,
         single_measure_on_all_FOMs(prm, i, nvol, foms_mean, foms_stddev,
                                    results);
         show_measured_point(fh_hist, prm, i);
-        cout << endl;
+        std::cout << std::endl;
         if (prm.evaluate)
             show_stats(fh_hist, i, foms_mean, foms_stddev);
     }
@@ -200,14 +200,14 @@ void test_all_FOMs(Recons_test_Parameters &prm, int nvol,
     // Show results
     if (prm.evaluate)
     {
-        cout << "****************************************************************\n";
-        cout << "Reconstruction test results\n";
-        cout << "****************************************************************\n";
+        std::cout << "****************************************************************\n";
+        std::cout << "Reconstruction test results\n";
+        std::cout << "****************************************************************\n";
         for (int i = 0; i < TestNo; i++)
         {
-            show_measured_point(cout, prm, i);
-            cout << endl;
-            show_stats(cout, i, foms_mean, foms_stddev);
+            show_measured_point(std::cout, prm, i);
+            std::cout << std::endl;
+            show_stats(std::cout, i, foms_mean, foms_stddev);
         }
     }
 }

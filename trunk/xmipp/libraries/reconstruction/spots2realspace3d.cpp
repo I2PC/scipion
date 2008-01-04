@@ -32,7 +32,7 @@ void Spot2RealSpace3D_Parameters::read_from_file(const FileName &fnprm)
     FILE *fh_param;
     if ((fh_param = fopen(fnprm.c_str(), "r")) == NULL)
         REPORT_ERROR(3005,
-                     (string)"Spot2RealSpace3D_Parameters::read: There is a problem "
+                     (std::string)"Spot2RealSpace3D_Parameters::read: There is a problem "
                      "opening the file " + fnprm);
     try
     {
@@ -74,10 +74,10 @@ void Spot2RealSpace3D_Parameters::read_from_file(const FileName &fnprm)
         is = new istrstream(aux_str.c_str());
         SpaceGroup = textToInteger(getParameter(fh_param, "Space Group", 0, "1"));
 		
-		cout << " fnaph_in: "<<fnaph_in<< " \n"<<endl;
-		cout << " fn_out  : "<<fn_out<< " \n"<<endl;
-		cout << " KeepContrast: "<<KeepContrast<< " \n"<<endl;
-		cout << " Space Group: "<<SpaceGroup<< " \n"<<endl;
+		std::cout << " fnaph_in: "<<fnaph_in<< " \n"<<std::endl;
+		std::cout << " fn_out  : "<<fn_out<< " \n"<<std::endl;
+		std::cout << " KeepContrast: "<<KeepContrast<< " \n"<<std::endl;
+		std::cout << " Space Group: "<<SpaceGroup<< " \n"<<std::endl;
 		
         try
         {
@@ -93,9 +93,9 @@ void Spot2RealSpace3D_Parameters::read_from_file(const FileName &fnprm)
     }
     catch (Xmipp_error XE)
     {
-		cout << " se va por aqui 1 \n"<<endl;
-        cout << XE << endl;
-        REPORT_ERROR(3007, (string)"There is an error reading " + fnprm);
+		std::cout << " se va por aqui 1 \n"<<std::endl;
+        std::cout << XE << std::endl;
+        REPORT_ERROR(3007, (std::string)"There is an error reading " + fnprm);
     }
 
     fclose(fh_param);
@@ -103,19 +103,19 @@ void Spot2RealSpace3D_Parameters::read_from_file(const FileName &fnprm)
 
 
 /* Show parameters --------------------------------------------------------- */
-ostream& operator << (ostream &o, const Spot2RealSpace3D_Parameters &prm)
+std::ostream& operator << (std::ostream &o, const Spot2RealSpace3D_Parameters &prm)
 {
-    o << "APH Input            : " << prm.fnaph_in << endl
-    << "Output Spider File   : " << prm.fn_out << endl
-    << "Ouput Layout (x,y,z) : " << prm.NoCells.transpose() << endl
-    << "Phase_Shift (x,y,z)  : " << prm.Phase_Shift.transpose()  << endl
-    << "Cell Size (x,y,z)    : " << prm.Celldim .transpose() << endl
-    << "Keep Contrast        : " << prm.KeepContrast << endl;
+    o << "APH Input            : " << prm.fnaph_in << std::endl
+    << "Output Spider File   : " << prm.fn_out << std::endl
+    << "Ouput Layout (x,y,z) : " << prm.NoCells.transpose() << std::endl
+    << "Phase_Shift (x,y,z)  : " << prm.Phase_Shift.transpose()  << std::endl
+    << "Cell Size (x,y,z)    : " << prm.Celldim .transpose() << std::endl
+    << "Keep Contrast        : " << prm.KeepContrast << std::endl;
     return o;
 }
 
 /* DFT^-1 ------------------------------------------------------------------ */
-void IDFT_3D(const Matrix3D< complex<double> > &FT, Matrix3D<double> &V1)
+void IDFT_3D(const Matrix3D< std::complex<double> > &FT, Matrix3D<double> &V1)
 {
     double x, y, z;
     int s_iz, s_iy, s_ix, e_iz, e_iy, e_ix;
@@ -165,7 +165,7 @@ void IDFT_3D(const Matrix3D< complex<double> > &FT, Matrix3D<double> &V1)
                     {
                         for (kx = s_kx;kx <= e_kx;kx++)
                         {
-                            if (VOL_ELEM(FT, kz, ky, kx) == (complex<double>)0.0)
+                            if (VOL_ELEM(FT, kz, ky, kx) == (std::complex<double>)0.0)
                                 continue;
                             cosarg = cos(kz * argz
                                          + ky * argy
@@ -210,7 +210,7 @@ void IDFT_3D(const Matrix3D< complex<double> > &FT, Matrix3D<double> &V1)
 //void Spot2RealSpace3D_Parameters::produce_SideInfo() {
 //    FOR_ALL_ELEMENTS_IN_MATRIX3D(aph_file.spots_abs) {//l,k,h
 //       if(aph_file.spots_abs(k,i,j)!=0.)
-//         cout << j <<" " << i << " " << k << " " <<aph_file.spots_abs(k,i,j) << endl;
+//         std::cout << j <<" " << i << " " << k << " " <<aph_file.spots_abs(k,i,j) << std::endl;
 //    }
 //}
 /* Main routine for transforming ------------------------------------------- */
@@ -218,7 +218,7 @@ void ROUT_Spots2RealSpace_3D(Spot2RealSpace3D_Parameters &prm,
                              VolumeXmipp &V1)
 {
     prm.aph_file.read_from_prepmklcf(prm.fnaph_in);
-    cout << prm;
+    std::cout << prm;
     // Apply phase shift
     double phase_shift = (prm.KeepContrast) ? 0 : 180;
     FOR_ALL_ELEMENTS_IN_MATRIX3D(prm.aph_file.spots_arg)
@@ -242,7 +242,7 @@ void ROUT_Spots2RealSpace_3D(Spot2RealSpace3D_Parameters &prm,
     int ksize = MAX(ABS(kmin), ABS(kmax));
     int hsize = MAX(ABS(hmin), ABS(hmax));
 
-    Matrix3D< complex<double> > FT;
+    Matrix3D< std::complex<double> > FT;
     FT.initZeros(2*lsize + 1, 2*ksize + 1, 2*hsize + 1);
     STARTINGZ(FT) = -lsize;
     STARTINGY(FT) = -ksize;
@@ -252,20 +252,20 @@ void ROUT_Spots2RealSpace_3D(Spot2RealSpace3D_Parameters &prm,
 	switch (prm.SpaceGroup)	
     {
     case(1):
-                    cout << "Detected P1 symmetry" << endl;
+                    std::cout << "Detected P1 symmetry" << std::endl;
         symmetrize_P1(FT, prm);
         break;
     case(75)://P4
-                    cout << "Detected P4 symmetry" << endl;
+                    std::cout << "Detected P4 symmetry" << std::endl;
         symmetrize_P4(FT, prm);
         break;
 		
     case(90)://P4212
-                    cout << "Detected P4212 symmetry" << endl;
+                    std::cout << "Detected P4212 symmetry" << std::endl;
         symmetrize_P4212(FT, prm);
         break;
     default:
-        cerr << "\nHORROR: Symmetry not implemented!!!" << endl;
+        std::cerr << "\nHORROR: Symmetry not implemented!!!" << std::endl;
         exit(false);
         break;
 
@@ -324,7 +324,7 @@ void ROUT_Spots2RealSpace_3D(Spot2RealSpace3D_Parameters &prm,
 
 }
 
-void symmetrize_P1(Matrix3D< complex<double> > &FT,
+void symmetrize_P1(Matrix3D< std::complex<double> > &FT,
                    Spot2RealSpace3D_Parameters &prm)
 {
     FOR_ALL_ELEMENTS_IN_MATRIX3D(prm.aph_file.spots_abs)
@@ -335,7 +335,7 @@ void symmetrize_P1(Matrix3D< complex<double> > &FT,
     }
 }
 
-void symmetrize_P4(Matrix3D< complex<double> > &FT,
+void symmetrize_P4(Matrix3D< std::complex<double> > &FT,
                    Spot2RealSpace3D_Parameters &prm)
 {
     int asymmh, asymmk, asymml;   /* Reflection equivalent in the asymm. unit. */
@@ -355,11 +355,11 @@ void symmetrize_P4(Matrix3D< complex<double> > &FT,
                 asymmh = h;
                 asymmk = k;
                 asymml = l;
-//	cout << " .. Entra a P4 y hace sus cositas: \n"<<endl;
+//	std::cout << " .. Entra a P4 y hace sus cositas: \n"<<std::endl;
                 /* Computing the reflection equivalent in the asymmetric unit. */
                 AsymmUnitP4(&asymmh, &asymmk, &asymml, &ip1, &ip2, &spec, &iptest);
-//cout << "\n (" << l <<"," << k << "," << h <<")->";
-//cout << " (" << asymml <<"," << asymmk << "," << asymmh <<")= ";
+//std::cout << "\n (" << l <<"," << k << "," << h <<")->";
+//std::cout << " (" << asymml <<"," << asymmk << "," << asymmh <<")= ";
 
                 if (VOL_ELEM(prm.aph_file.spots_abs, asymml, asymmk, asymmh) == 0)
                     continue;
@@ -376,14 +376,14 @@ void symmetrize_P4(Matrix3D< complex<double> > &FT,
                 // if(impose && spec) refptr->ap.phs = iptest;
 
                 VOL_ELEM(FT, l, k, h) = polar(amplitude, DEG2RAD(phase));
-//cout << "FT" <<VOL_ELEM(FT, l,k,h);
+//std::cout << "FT" <<VOL_ELEM(FT, l,k,h);
             }//for h
         }//for k
     }//for l
 
 }
 
-void symmetrize_P4212(Matrix3D< complex<double> > &FT,
+void symmetrize_P4212(Matrix3D< std::complex<double> > &FT,
                       Spot2RealSpace3D_Parameters &prm)
 {
     int asymmh, asymmk, asymml;   /* Reflection equivalent in the asymm. unit. */
@@ -403,11 +403,11 @@ void symmetrize_P4212(Matrix3D< complex<double> > &FT,
                 asymmh = h;
                 asymmk = k;
                 asymml = l;
-//	cout << " .. Entra a P4212 y hace sus cositas: \n"<<endl;
+//	std::cout << " .. Entra a P4212 y hace sus cositas: \n"<<std::endl;
                 /* Computing the reflection equivalent in the asymmetric unit. */
                 AsymmUnitP4212(&asymmh, &asymmk, &asymml, &ip1, &ip2, &spec, &iptest);
-//cout << "\n (" << l <<"," << k << "," << h <<")->";
-//cout << " (" << asymml <<"," << asymmk << "," << asymmh <<")= ";
+//std::cout << "\n (" << l <<"," << k << "," << h <<")->";
+//std::cout << " (" << asymml <<"," << asymmk << "," << asymmh <<")= ";
                 if (VOL_ELEM(prm.aph_file.spots_abs, asymml, asymmk, asymmh) == 0)
                     continue;
                 /* The amplitude is the same. */
@@ -423,7 +423,7 @@ void symmetrize_P4212(Matrix3D< complex<double> > &FT,
                 // if(impose && spec) refptr->ap.phs = iptest;
 
                 VOL_ELEM(FT, l, k, h) = polar(amplitude, DEG2RAD(phase));
-//cout << "FT" <<VOL_ELEM(FT, l,k,h);
+//std::cout << "FT" <<VOL_ELEM(FT, l,k,h);
             }//for h
         }//for k
     }//for l
@@ -460,7 +460,7 @@ static int matrix[4][8]={
 static int gomatrix[3] = {1, 2, 1};
 
 int pass, index;
-//	cout << " .. Entra a AsymunitP4 y sigue haciendo sus cositas: \n"<<endl;
+//	std::cout << " .. Entra a AsymunitP4 y sigue haciendo sus cositas: \n"<<std::endl;
 
 /* Initialization of ip1 and ip2. */
 *ip1 = 1; *ip2 = 0;
@@ -531,7 +531,7 @@ void AsymmUnitP4212(int *ih, int *ik, int *il, int *ip1, int *ip2,
         };
 
     int pass, index;
-//	cout << " .. Entra a AsymunitP4212 y sigue haciendo sus cositas: \n"<<endl;
+//	std::cout << " .. Entra a AsymunitP4212 y sigue haciendo sus cositas: \n"<<std::endl;
 
     /* Initialization of ip1 and ip2. */
     *ip1 = 1;

@@ -34,7 +34,7 @@
  * Construct a SOM from the code vectors in a stream
  * Parameter: _is  The stream
  */
-xmippSOM::xmippSOM(istream& _is): xmippBaseAlgo<xmippMap>()
+xmippSOM::xmippSOM(std::istream& _is): xmippBaseAlgo<xmippMap>()
 {
     readSelf(_is);
 };
@@ -79,14 +79,14 @@ void xmippSOM::train(xmippMap& _som, xmippCTVectors& _ts) const
 
     int verbosity = listener->getVerbosity();
     if (verbosity)
-        listener->OnReportOperation((string) "Training Kohonen SOM....\n");
+        listener->OnReportOperation((std::string) "Training Kohonen SOM....\n");
     if (verbosity == 1 || verbosity == 3)
         listener->OnInitOperation(somNSteps);
 
 
     while (t < somNSteps)
     {
-        for (vector<SomIn>::iterator i = _ts.theItems.begin();
+        for (std::vector<SomIn>::iterator i = _ts.theItems.begin();
              t < somNSteps && i < _ts.theItems.end() ; i++, t++)
         {
             // get the best matching.
@@ -94,9 +94,9 @@ void xmippSOM::train(xmippMap& _som, xmippCTVectors& _ts) const
             if (somNeigh == BUBBLE)
             { // Bubble
                 // update the neighborhood around the best one
-                vector<unsigned> neig = _som.neighborhood(_som.codVecPos(theBest),
+                std::vector<unsigned> neig = _som.neighborhood(_som.codVecPos(theBest),
                                         ceil(somRadius(t, somNSteps)));
-                for (vector<unsigned>::iterator it = neig.begin();it < neig.end();it++)
+                for (std::vector<unsigned>::iterator it = neig.begin();it < neig.end();it++)
                 {
                     SomIn& v = _som.theItems[*it];
                     for (unsigned j = 0; j < v.size(); j++)
@@ -126,7 +126,7 @@ void xmippSOM::train(xmippMap& _som, xmippCTVectors& _ts) const
         {
             char s[100];
             sprintf(s, "Iteration %d of %d.\n", t, somNSteps);
-            listener->OnReportOperation((string) s);
+            listener->OnReportOperation((std::string) s);
         }
     } // while t < somSteps
 
@@ -149,7 +149,7 @@ double xmippSOM::test(const xmippMap& _som, const TS& _examples) const
     int verbosity = listener->getVerbosity();
     if (verbosity)
     {
-        listener->OnReportOperation((string) "Estimating quantization error....\n");
+        listener->OnReportOperation((std::string) "Estimating quantization error....\n");
         listener->OnInitOperation(_examples.size());
     }
 
@@ -189,10 +189,10 @@ void xmippSOM::clear()
 * Standard output for a SOM algorithm
 * Parameter: _os The output stream
 */
-void xmippSOM::printSelf(ostream& _os) const
+void xmippSOM::printSelf(std::ostream& _os) const
 {
-    _os << (int) somNeigh << endl;
-    _os << somNSteps << endl;
+    _os << (int) somNeigh << std::endl;
+    _os << somNSteps << std::endl;
     somAlpha.printSelf(_os);
     somRadius.printSelf(_os);
 };
@@ -201,7 +201,7 @@ void xmippSOM::printSelf(ostream& _os) const
 * Standard input for a som algorithm
 * Parameter: _is The input stream
 */
-void xmippSOM::readSelf(istream& _is)
+void xmippSOM::readSelf(std::istream& _is)
 {
     clear();
     try
@@ -214,11 +214,11 @@ void xmippSOM::readSelf(istream& _is)
         somRadius.readSelf(_is);
 
     }
-    catch (exception& e)
+    catch (std::exception& e)
     {
-        ostrstream msg;
-        msg << e.what() << endl << "Error reading the SOM algorithm";
-        throw runtime_error(msg.str());
+        std::ostrstream msg;
+        msg << e.what() << std::endl << "Error reading the SOM algorithm";
+        throw std::runtime_error(msg.str());
     }
 
 };
@@ -229,7 +229,7 @@ void xmippSOM::readSelf(istream& _is)
  * this method can be used to save the status of the class.
  * Parameter: _os The output stream
  */
-void xmippSOM::saveObject(ostream& _os) const
+void xmippSOM::saveObject(std::ostream& _os) const
 {
     printSelf(_os);
 }
@@ -240,7 +240,7 @@ void xmippSOM::saveObject(ostream& _os) const
  * this method can be used to load the status of the class.
  * Parameter: _is The output stream
  */
-void xmippSOM::loadObject(istream& _is)
+void xmippSOM::loadObject(std::istream& _is)
 {
     readSelf(_is);
 }
@@ -272,17 +272,17 @@ double Descent::operator()(const unsigned _step, const unsigned _nSteps) const
 * Standard output for a Descent class
 * Parameter: _os The output stream
 */
-void Descent::printSelf(ostream& _os) const
+void Descent::printSelf(std::ostream& _os) const
 {
-    _os << initial << endl;
-    _os << final << endl;
+    _os << initial << std::endl;
+    _os << final << std::endl;
 };
 
 /**
 * Standard input for a Descent class
 * Parameter: _is The input stream
 */
-void Descent::readSelf(istream& _is)
+void Descent::readSelf(std::istream& _is)
 {
     try
     {
@@ -291,11 +291,11 @@ void Descent::readSelf(istream& _is)
         if (_is)
             _is >> final;
     }
-    catch (exception& e)
+    catch (std::exception& e)
     {
-        ostrstream msg;
-        msg << e.what() << endl << "Error reading Descent class";
-        throw runtime_error(msg.str());
+        std::ostrstream msg;
+        msg << e.what() << std::endl << "Error reading Descent class";
+        throw std::runtime_error(msg.str());
     }
 
 };
@@ -306,7 +306,7 @@ void Descent::readSelf(istream& _is)
  * this method can be used to save the status of the class.
  * Parameter: _os The output stream
  */
-void Descent::saveObject(ostream& _os) const
+void Descent::saveObject(std::ostream& _os) const
 {
     printSelf(_os);
 }
@@ -317,7 +317,7 @@ void Descent::saveObject(ostream& _os) const
  * this method can be used to load the status of the class.
  * Parameter: _is The output stream
  */
-void Descent::loadObject(istream& _is)
+void Descent::loadObject(std::istream& _is)
 {
     readSelf(_is);
 }

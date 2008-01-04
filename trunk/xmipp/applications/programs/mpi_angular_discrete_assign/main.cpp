@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     {
         if (rank == 0)
         {
-            cout << XE;
+            std::cout << XE;
             prm.usage();
         }
         exit(1);
@@ -69,8 +69,8 @@ int main(int argc, char **argv)
         // Now all the ranks except 0 produce their own info
         if (rank != 0)
         {
-            prm.fn_ref = (string)"ref" + integerToString(fn_random) + "_.sel";
-            prm.fn_ang = (string)"ref" + integerToString(fn_random) + "__angles.doc";
+            prm.fn_ref = (std::string)"ref" + integerToString(fn_random) + "_.sel";
+            prm.fn_ang = (std::string)"ref" + integerToString(fn_random) + "__angles.doc";
             prm.produce_side_info(rank);
         }
 
@@ -88,7 +88,7 @@ int main(int argc, char **argv)
         if (rank == 0)
         {
             int toGo = imgNbr;
-            cerr << "Assigning angles ...\n";
+            std::cerr << "Assigning angles ...\n";
             init_progress_bar(imgNbr);
             MPI_Status status;
             while (toGo > 0)
@@ -106,7 +106,7 @@ int main(int argc, char **argv)
                 if (toGo % (imgNbr / 60) == 0)
                 {
                     progress_bar(imgNbr - toGo);
-                    cerr.flush();
+                    std::cerr.flush();
                 }
             }
             progress_bar(imgNbr);
@@ -153,6 +153,6 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE << endl;
+        std::cout << XE << std::endl;
     }
 }

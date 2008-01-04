@@ -69,7 +69,7 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)
     // Generate new command line for restart procedure
     if (checkParameter(argc, argv, "-restart"))
     {
-        string   comment, cline = "";
+        std::string   comment, cline = "";
         DocFile  DFi;
         FileName fn_tmp;
 
@@ -79,7 +79,7 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)
         comment = (DFi.get_current_line()).get_text();
         if (strstr(comment.c_str(), "MLalign2D-logfile") == NULL)
         {
-            cerr << "Error!! Docfile is not of MLalign2D-logfile type. " << endl;
+            std::cerr << "Error!! Docfile is not of MLalign2D-logfile type. " << std::endl;
             exit(1);
         }
         else
@@ -180,8 +180,8 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)
 // Usage ===================================================================
 void Prog_Refine3d_prm::usage()
 {
-    cerr << "Usage:  ml_refine3d [options] " << endl;
-    cerr << "   -i <selfile>                : Selfile with input images \n"
+    std::cerr << "Usage:  ml_refine3d [options] " << std::endl;
+    std::cerr << "   -i <selfile>                : Selfile with input images \n"
     << "   -vol <volume/selfile>       : Initial reference volume \n"
     << "                               :  OR selfile with multiple reference volumes\n"
     << " [ -o <root=\"ml3d\"> ]          : Output rootname \n"
@@ -194,32 +194,32 @@ void Prog_Refine3d_prm::usage()
 // MLF Usage =================================================================
 void Prog_Refine3d_prm::MLF_usage()
 {
-    cerr << "Usage:  mlf_refine3d [options] " << endl;
-    cerr << "   -i <selfile>                : Selfile with all input images \n";
-    cerr << "   -ctfdat <ctfdatfile>        : Two-column ASCII file with filenames and CTF parameter files of all images \n";
-    cerr << "      OR -no_ctf                   OR do not use any CTF correction \n";
-    cerr << "   -vol <volume/selfile>        : Initial reference volume \n";
-    cerr << "                               :  OR selfile with multiple reference volumes\n";
-    cerr << " [ -o <rootname> ]             : Output rootname (default = \"mlf2d\")\n";
-    cerr << " [ -ang <float=10> ]           : Angular sampling (degrees) \n";
-    cerr << " [ -iter <int=25>  ]           : Maximum number of iterations \n";
-    cerr << " [ -search_shift <float=3>]    : Limited translational searches (in pixels) \n";
-    cerr << " [ -reduce_noise <factor=1> ]  : Use a value smaller than one to decrease the estimated SSNRs \n";
-    cerr << " [ -not_phase_flipped ]        : Use this if the experimental images have not been phase flipped \n";
-    cerr << " [ -ctf_affected_refs ]        : Use this if the references (-ref) are not CTF-deconvoluted \n";
-    cerr << " [ -low <Ang=999> ]            : Exclude lowest frequencies from P-calculations (in Ang) \n";
-    cerr << " [ -high <Ang=0> ]             : Exclude highest frequencies from P-calculations (in Ang) \n";
-    cerr << " [ -ini_high <Ang=0> ]         : Exclude highest frequencies during first iteration (in Ang) \n";
-    cerr << " [ -pixel_size <Ang=1> ]       : Pixel size in Angstrom (only necessary for -no_ctf mode) \n";
-    cerr << " [ -more_options ]             : Show additional parameters for 3D-refinement \n";
+    std::cerr << "Usage:  mlf_refine3d [options] " << std::endl;
+    std::cerr << "   -i <selfile>                : Selfile with all input images \n";
+    std::cerr << "   -ctfdat <ctfdatfile>        : Two-column ASCII file with filenames and CTF parameter files of all images \n";
+    std::cerr << "      OR -no_ctf                   OR do not use any CTF correction \n";
+    std::cerr << "   -vol <volume/selfile>        : Initial reference volume \n";
+    std::cerr << "                               :  OR selfile with multiple reference volumes\n";
+    std::cerr << " [ -o <rootname> ]             : Output rootname (default = \"mlf2d\")\n";
+    std::cerr << " [ -ang <float=10> ]           : Angular sampling (degrees) \n";
+    std::cerr << " [ -iter <int=25>  ]           : Maximum number of iterations \n";
+    std::cerr << " [ -search_shift <float=3>]    : Limited translational searches (in pixels) \n";
+    std::cerr << " [ -reduce_noise <factor=1> ]  : Use a value smaller than one to decrease the estimated SSNRs \n";
+    std::cerr << " [ -not_phase_flipped ]        : Use this if the experimental images have not been phase flipped \n";
+    std::cerr << " [ -ctf_affected_refs ]        : Use this if the references (-ref) are not CTF-deconvoluted \n";
+    std::cerr << " [ -low <Ang=999> ]            : Exclude lowest frequencies from P-calculations (in Ang) \n";
+    std::cerr << " [ -high <Ang=0> ]             : Exclude highest frequencies from P-calculations (in Ang) \n";
+    std::cerr << " [ -ini_high <Ang=0> ]         : Exclude highest frequencies during first iteration (in Ang) \n";
+    std::cerr << " [ -pixel_size <Ang=1> ]       : Pixel size in Angstrom (only necessary for -no_ctf mode) \n";
+    std::cerr << " [ -more_options ]             : Show additional parameters for 3D-refinement \n";
 
 }
 
 // Extended usage =============================================================
 void Prog_Refine3d_prm::extended_usage()
 {
-    cerr << "Additional options: " << endl;
-    cerr << " [ -l <float=0.2> ]            : wlsART-relaxation parameter (lambda)  \n"
+    std::cerr << "Additional options: " << std::endl;
+    std::cerr << " [ -l <float=0.2> ]            : wlsART-relaxation parameter (lambda)  \n"
     << " [ -k <float=0.5> ]            : wlsART-relaxation parameter for residual (kappa)\n"
     << " [ -n <int=10> ]               : Number of wlsART-iterations \n"
     << " [ -nostart ]                  : Start wlsART reconstructions from all-zero volumes \n"
@@ -230,7 +230,7 @@ void Prog_Refine3d_prm::extended_usage()
     << " [ -tiltF <float=90.> ]        : Higher-value for restricted tilt angle search \n"
     << " [ -show_all_ML_options ]      : Show all parameters for the ML-refinement\n"
     << " [ -show_all_ART_options ]     : Show all parameters for the wlsART reconstruction \n";
-    cerr << endl;
+    std::cerr << std::endl;
     exit(1);
 }
 
@@ -241,76 +241,76 @@ void Prog_Refine3d_prm::show()
     if (verb > 0)
     {
         // To screen
-        cerr << " -----------------------------------------------------------------" << endl;
-        cerr << " | Read more about this program in the following publication:    |" << endl;
+        std::cerr << " -----------------------------------------------------------------" << std::endl;
+        std::cerr << " | Read more about this program in the following publication:    |" << std::endl;
         if (fourier_mode)
-            cerr << " |  Scheres ea. (2007)  Structure, 15, 1167-1177                 |" << endl;
+            std::cerr << " |  Scheres ea. (2007)  Structure, 15, 1167-1177                 |" << std::endl;
         else
-            cerr << " |  Scheres ea. (2007)  Nature Methods, 4, 27-29                 |" << endl;
-        cerr << " |                                                               |" << endl;
-        cerr << " |    *** Please cite it if this program is of use to you! ***   |" << endl;
-        cerr << " -----------------------------------------------------------------" << endl;
-        cerr << "--> Maximum-likelihood multi-reference 3D-refinement" << endl;
+            std::cerr << " |  Scheres ea. (2007)  Nature Methods, 4, 27-29                 |" << std::endl;
+        std::cerr << " |                                                               |" << std::endl;
+        std::cerr << " |    *** Please cite it if this program is of use to you! ***   |" << std::endl;
+        std::cerr << " -----------------------------------------------------------------" << std::endl;
+        std::cerr << "--> Maximum-likelihood multi-reference 3D-refinement" << std::endl;
         if (Nvols == 1)
-            cerr << "  Initial reference volume : " << fn_vol << endl;
+            std::cerr << "  Initial reference volume : " << fn_vol << std::endl;
         else
         {
-            cerr << "  Selfile with references  : " << fn_vol << endl;
-            cerr << "    with # of volumes      : " << Nvols << endl;
+            std::cerr << "  Selfile with references  : " << fn_vol << std::endl;
+            std::cerr << "    with # of volumes      : " << Nvols << std::endl;
         }
-        cerr << "  Experimental images:     : " << fn_sel << endl;
-        cerr << "  Angular sampling rate    : " << angular << endl;
+        std::cerr << "  Experimental images:     : " << fn_sel << std::endl;
+        std::cerr << "  Angular sampling rate    : " << angular << std::endl;
         if (fn_sym != "")
-            cerr << "  Symmetry file:           : " << fn_sym << endl;
+            std::cerr << "  Symmetry file:           : " << fn_sym << std::endl;
         if (fn_symmask != "")
-            cerr << "  Local symmetry mask      : " << fn_symmask << endl;
-        cerr << "  Output rootname          : " << fn_root << endl;
-        cerr << "  Convergence criterion    : " << eps << endl;
+            std::cerr << "  Local symmetry mask      : " << fn_symmask << std::endl;
+        std::cerr << "  Output rootname          : " << fn_root << std::endl;
+        std::cerr << "  Convergence criterion    : " << eps << std::endl;
         if (lowpass > 0)
-            cerr << "  Low-pass filter          : " << lowpass << endl;
+            std::cerr << "  Low-pass filter          : " << lowpass << std::endl;
         if (tilt_range0 > 0. || tilt_rangeF < 90.)
-            cerr << "  Limited tilt range       : " << tilt_range0 << "  " << tilt_rangeF << endl;
+            std::cerr << "  Limited tilt range       : " << tilt_range0 << "  " << tilt_rangeF << std::endl;
         if (wlsart_no_start)
-            cerr << "  -> Start wlsART reconstructions from all-zero volumes " << endl;
+            std::cerr << "  -> Start wlsART reconstructions from all-zero volumes " << std::endl;
         if (do_wbp)
-            cerr << "  -> Use weighted back-projection instead of ART for reconstruction" << endl;
+            std::cerr << "  -> Use weighted back-projection instead of ART for reconstruction" << std::endl;
         if (do_prob_solvent)
-            cerr << "  -> Perform probabilistic solvent flattening" << endl;
-        cerr << " -----------------------------------------------------------------" << endl;
+            std::cerr << "  -> Perform probabilistic solvent flattening" << std::endl;
+        std::cerr << " -----------------------------------------------------------------" << std::endl;
 
         // Also open and fill history file
-        fh_hist.open((fn_root + ".hist").c_str(), ios::app);
+        fh_hist.open((fn_root + ".hist").c_str(), std::ios::app);
         if (!fh_hist)
-            REPORT_ERROR(3008, (string)"Prog_Refine3d: Cannot open file " + fn_root + ".hist");
+            REPORT_ERROR(3008, (std::string)"Prog_Refine3d: Cannot open file " + fn_root + ".hist");
 
-        fh_hist << " -----------------------------------------------------------------" << endl;
-        fh_hist << " | Read more about this program in the following publication:    |" << endl;
+        fh_hist << " -----------------------------------------------------------------" << std::endl;
+        fh_hist << " | Read more about this program in the following publication:    |" << std::endl;
         if (fourier_mode)
-            fh_hist << " |  Scheres ea. (2007)  Structure, 15, 1167-1177                 |" << endl;
+            fh_hist << " |  Scheres ea. (2007)  Structure, 15, 1167-1177                 |" << std::endl;
         else
-            fh_hist << " |  Scheres ea. (2007)  Nature Methods, 4, 27-29                 |" << endl;
-        fh_hist << " |                                                               |" << endl;
-        fh_hist << " |    *** Please cite it if this program is of use to you! ***   |" << endl;
-        fh_hist << " -----------------------------------------------------------------" << endl;
-        fh_hist << "--> Maximum-likelihood multi-reference 3D-refinement" << endl;
-        fh_hist << "  Initial reference volume : " << fn_vol << endl;
-        fh_hist << "  Experimental images:     : " << fn_sel << endl;
-        fh_hist << "  Angular sampling rate    : " << angular << endl;
+            fh_hist << " |  Scheres ea. (2007)  Nature Methods, 4, 27-29                 |" << std::endl;
+        fh_hist << " |                                                               |" << std::endl;
+        fh_hist << " |    *** Please cite it if this program is of use to you! ***   |" << std::endl;
+        fh_hist << " -----------------------------------------------------------------" << std::endl;
+        fh_hist << "--> Maximum-likelihood multi-reference 3D-refinement" << std::endl;
+        fh_hist << "  Initial reference volume : " << fn_vol << std::endl;
+        fh_hist << "  Experimental images:     : " << fn_sel << std::endl;
+        fh_hist << "  Angular sampling rate    : " << angular << std::endl;
         if (fn_sym != "")
-            fh_hist << "  Symmetry file:           : " << fn_sym << endl;
-        fh_hist << "  Output rootname          : " << fn_root << endl;
-        fh_hist << "  Convergence criterion    : " << eps << endl;
+            fh_hist << "  Symmetry file:           : " << fn_sym << std::endl;
+        fh_hist << "  Output rootname          : " << fn_root << std::endl;
+        fh_hist << "  Convergence criterion    : " << eps << std::endl;
         if (lowpass > 0)
-            fh_hist << "  Low-pass filter          : " << lowpass << endl;
+            fh_hist << "  Low-pass filter          : " << lowpass << std::endl;
         if (tilt_range0 > 0. || tilt_rangeF < 90.)
-            fh_hist << "  Limited tilt range       : " << tilt_range0 << "  " << tilt_rangeF << endl;
+            fh_hist << "  Limited tilt range       : " << tilt_range0 << "  " << tilt_rangeF << std::endl;
         if (wlsart_no_start)
-            fh_hist << "  -> Start wlsART reconstructions from all-zero volumes " << endl;
+            fh_hist << "  -> Start wlsART reconstructions from all-zero volumes " << std::endl;
         if (do_wbp)
-            fh_hist << "  -> Use weighted back-projection instead of wlsART for reconstruction" << endl;
+            fh_hist << "  -> Use weighted back-projection instead of wlsART for reconstruction" << std::endl;
         if (do_prob_solvent)
-            fh_hist << "  -> Perform probabilistic solvent flattening" << endl;
-        fh_hist << " -----------------------------------------------------------------" << endl;
+            fh_hist << "  -> Perform probabilistic solvent flattening" << std::endl;
+        fh_hist << " -----------------------------------------------------------------" << std::endl;
 
     }
 
@@ -356,7 +356,7 @@ void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank)
 
     if (verb > 0 && rank == 0)
     {
-        cerr << "--> projecting reference library ..." << endl;
+        std::cerr << "--> projecting reference library ..." << std::endl;
         init_progress_bar(nl);
     }
 
@@ -395,7 +395,7 @@ void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank)
     if (verb > 0 && rank == 0)
     {
         progress_bar(nl);
-        cerr << " -----------------------------------------------------------------" << endl;
+        std::cerr << " -----------------------------------------------------------------" << std::endl;
     }
 
     if (rank == 0)
@@ -412,7 +412,7 @@ void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank)
 }
 
 // Make noise images for 3D SSNR calculation ===================================
-void Prog_Refine3d_prm::make_noise_images(vector<ImageXmipp> &Iref)
+void Prog_Refine3d_prm::make_noise_images(std::vector<ImageXmipp> &Iref)
 {
 
     ImageXmipp img;
@@ -493,7 +493,7 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
         Plain_ART_Parameters   dummy;
         GridVolume             new_blobs;
         GridVolume             start_blobs;
-        if (verb > 0) cerr << "--> weighted least-squares ART reconstruction " << endl;
+        if (verb > 0) std::cerr << "--> weighted least-squares ART reconstruction " << std::endl;
 
         // Read ART parameters from command line & I/O with outer loop of Refine3d
         art_prm.read(argc, argv);
@@ -531,7 +531,7 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
     {
 
         Prog_WBP_prm           wbp_prm;
-        if (verb > 0) cerr << "--> WBP reconstruction " << endl;
+        if (verb > 0) std::cerr << "--> WBP reconstruction " << std::endl;
 
         // read command line (fn_sym, angular etc.)
         wbp_prm.read(argc, argv);
@@ -546,7 +546,7 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
         new_vol.write(wbp_prm.fn_out);
     }
 
-    if (verb > 0) cerr << " -----------------------------------------------------------------" << endl;
+    if (verb > 0) std::cerr << " -----------------------------------------------------------------" << std::endl;
 
 }
 
@@ -554,7 +554,7 @@ void Prog_Refine3d_prm::calculate_3DSSNR(Matrix1D<double> &spectral_signal, int 
 {
 
     SelFile                     SFnoise;
-    Matrix2D<complex<double> >  Faux;
+    Matrix2D<std::complex<double> >  Faux;
     headerXmipp                 head;
     VolumeXmipp                 vol, nvol;
     FileName                    fn_tmp, fn_tmp2;
@@ -578,7 +578,7 @@ void Prog_Refine3d_prm::calculate_3DSSNR(Matrix1D<double> &spectral_signal, int 
 
     if (verb > 0)
     {
-        cerr << "--> calculating 3D-SSNR ..." << endl;
+        std::cerr << "--> calculating 3D-SSNR ..." << std::endl;
         init_progress_bar(SFnoise.ImgNo());
     }
 
@@ -679,8 +679,8 @@ void Prog_Refine3d_prm::calculate_3DSSNR(Matrix1D<double> &spectral_signal, int 
     {
         fn_tmp = fn_root + "_it";
         fn_tmp.compose(fn_tmp, iter, "3dssnr");
-        ofstream out(fn_tmp.c_str(), ios::out);
-        out  << "#        signal    1/alpha    alpha-S    alpha-N" << endl;
+        std::ofstream out(fn_tmp.c_str(), std::ios::out);
+        out  << "#        signal    1/alpha    alpha-S    alpha-N" << std::endl;
         FOR_ALL_ELEMENTS_IN_MATRIX1D(spectral_signal)
         {
             if (i > 0 && i < dim / 2)
@@ -695,7 +695,7 @@ void Prog_Refine3d_prm::calculate_3DSSNR(Matrix1D<double> &spectral_signal, int 
                 out <<  floatToString(VEC_ELEM(avg_alphaS, i));
                 out.width(10);
                 out <<  floatToString(VEC_ELEM(avg_alphaN, i));
-                out << endl;
+                out << std::endl;
             }
         }
         out.close();
@@ -803,13 +803,13 @@ void Prog_Refine3d_prm::concatenate_selfiles(int iter)
         fn_class.compose(fn_class, iter, "");
         fn_class += "_class_vol";
         fn_class.compose(fn_class, volno + 1, "sel");
-        system(((string)"rm -f " + fn_class).c_str());
+        system(((std::string)"rm -f " + fn_class).c_str());
         for (int nr = eachvol_start[volno]; nr <= eachvol_end[volno]; nr++)
         {
             fn_tmp = fn_root + "_ref";
             fn_tmp.compose(fn_tmp, nr + 1, "sel");
-            system(((string)"cat " + fn_tmp + " >> " + fn_class).c_str());
-            system(((string)"rm -f " + fn_tmp).c_str());
+            system(((std::string)"cat " + fn_tmp + " >> " + fn_class).c_str());
+            system(((std::string)"rm -f " + fn_tmp).c_str());
         }
     }
 
@@ -894,7 +894,7 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv)
                     segm_prm.fn_vol = fn_vol;
                     segm_prm.fn_mask = fn_vol + ".solv";
                     segm_prm.do_prob = true;
-                    cerr << segm_prm;
+                    std::cerr << segm_prm;
                     fh_hist << segm_prm;
                     segm_prm.produce_side_info();
                     segm_prm.segment(Vsolv);
@@ -986,7 +986,7 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv)
             vol.write(fn_vol);
 
         }
-        if (verb > 0) cerr << " -----------------------------------------------------------------" << endl;
+        if (verb > 0) std::cerr << " -----------------------------------------------------------------" << std::endl;
     }
 
 }
@@ -1003,7 +1003,7 @@ bool Prog_Refine3d_prm::check_convergence(int iter)
     int                    dim;
     bool                   converged = true;
 
-    if (verb > 0) cerr << "--> checking convergence " << endl;
+    if (verb > 0) std::cerr << "--> checking convergence " << std::endl;
 
     for (int volno = 0; volno < Nvols; volno++)
     {
@@ -1046,13 +1046,13 @@ bool Prog_Refine3d_prm::check_convergence(int iter)
         {
             if (Nvols > 1)
             {
-                cerr << "Relative signal change volume " << volno + 1 << " = " << change / signal << endl;
-                fh_hist << "Relative signal change volume " << volno + 1 << " = " << change / signal << endl;
+                std::cerr << "Relative signal change volume " << volno + 1 << " = " << change / signal << std::endl;
+                fh_hist << "Relative signal change volume " << volno + 1 << " = " << change / signal << std::endl;
             }
             else
             {
-                cerr << "Relative signal change volume = " << change / signal << endl;
-                fh_hist << "Relative signal change volume = " << change / signal << endl;
+                std::cerr << "Relative signal change volume = " << change / signal << std::endl;
+                fh_hist << "Relative signal change volume = " << change / signal << std::endl;
             }
         }
     }

@@ -48,8 +48,8 @@ void Prog_Surface_Parameters::read(int argc, char **argv)
 /* Usage =================================================================== */
 void Prog_Surface_Parameters::usage() const
 {
-    cout << "\nUsage:\n";
-    cout << "surface\n"
+    std::cout << "\nUsage:\n";
+    std::cout << "surface\n"
     << "  [-i <Phantom file>]             : Phantom description file\n"
     << "  [-o <volume_mask>]              : Output mask\n"
     << "  [-r <probe_radius=0.5>]         : Probe radius for surface generation\n"

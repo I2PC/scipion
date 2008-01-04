@@ -470,11 +470,11 @@ public:
     /** Prints mask parameters (virtual)*/
     virtual void print(float scalex, float scaley)
     {
-        cout << "(Origin_x,Origin_y): (" << rcx / scalex << ", "
-        << rcy / scaley << ")" << endl;
+        std::cout << "(Origin_x,Origin_y): (" << rcx / scalex << ", "
+        << rcy / scaley << ")" << std::endl;
 
-        cout << "(Radius_x,Radius_y): (" << rxradius / scalex << ", "
-        << ryradius / scaley << ")" << endl;
+        std::cout << "(Radius_x,Radius_y): (" << rxradius / scalex << ", "
+        << ryradius / scaley << ")" << std::endl;
     }
 
 protected:
@@ -844,11 +844,11 @@ public:
     /** Prints mask parameters (virtual)*/
     virtual void print(float scalex, float scaley)
     {
-        cout << "(Origin_x,Origin_y): (" << rcx / scalex << ", "
-        << rcy / scaley << ")" << endl;
+        std::cout << "(Origin_x,Origin_y): (" << rcx / scalex << ", "
+        << rcy / scaley << ")" << std::endl;
 
-        cout << "(half_width,half_height): (" << rrwidth / scalex << ", "
-        << rrheight / scaley << ")" << endl;
+        std::cout << "(half_width,half_height): (" << rrwidth / scalex << ", "
+        << rrheight / scaley << ")" << std::endl;
     }
 
 protected:
@@ -1168,9 +1168,9 @@ public:
     virtual void print(float scalex, float scaley)
     {
         maskEllipse::print(scalex, scaley);
-        cout << "(innerXradius,innerYradius): (" << innerXradius / scalex << ", "
+        std::cout << "(innerXradius,innerYradius): (" << innerXradius / scalex << ", "
         << innerYradius / scaley << ")"
-        << endl;
+        << std::endl;
     }
 
 
@@ -1454,10 +1454,10 @@ public:
     virtual void print(float scalex, float scaley)
     {
         maskRectangle::print(scalex, scaley);
-        cout << "(half_innerwidth,"
+        std::cout << "(half_innerwidth,"
         "half_innerheight): (" << innerwidth / scalex << ", "
         << innerheight / scaley << ")"
-        << endl;
+        << std::endl;
     }
 
 
@@ -1560,7 +1560,7 @@ public:
     virtual bool move(int _cx, int _cy)
     {
         if (list_of_points.size() == 0) return true;
-        cout << "Is this ever called? Contact coss@cnb.uam.es\n";
+        std::cout << "Is this ever called? Contact coss@cnb.uam.es\n";
     };
 
     /** Moves the figure to the left one pixel
@@ -1643,7 +1643,7 @@ public:
     */
     virtual bool decreaseWidth()
     {
-        cout << "Resizing is not available for polygons\n";
+        std::cout << "Resizing is not available for polygons\n";
         return true;
     };
 
@@ -1651,7 +1651,7 @@ public:
     */
     virtual bool decreaseHeight()
     {
-        cout << "Resizing is not available for polygons\n";
+        std::cout << "Resizing is not available for polygons\n";
         return true;
     };
 
@@ -1659,7 +1659,7 @@ public:
     */
     virtual bool increaseWidth()
     {
-        cout << "Resizing is not available for polygons\n";
+        std::cout << "Resizing is not available for polygons\n";
         return true;
     };
 
@@ -1667,7 +1667,7 @@ public:
     */
     virtual bool increaseHeight()
     {
-        cout << "Resizing is not available for polygons\n";
+        std::cout << "Resizing is not available for polygons\n";
         return true;
     };
 
@@ -1789,20 +1789,20 @@ public:
     /** Prints mask parameters (virtual)*/
     virtual void print(float scalex, float scaley)
     {
-        cout << "List of points\n";
+        std::cout << "List of points\n";
         for (int i = 0; i < list_of_points.size(); i++)
-            cout << "Point " << i << " (X,Y)=("
+            std::cout << "Point " << i << " (X,Y)=("
             << XX(list_of_points[i]) / scalex << ","
             << YY(list_of_points[i]) / scaley << ")\n";
     }
 
 protected:
-    vector< Matrix1D<double> > list_of_points;
-    Matrix1D<double>           top_left_corner;
-    Matrix1D<double>           bottom_right_corner;
-    Matrix1D<double>           old_top_left_corner;
-    Matrix1D<double>           old_bottom_right_corner;
-    bool                       close_polygon;
+    std::vector< Matrix1D<double> > list_of_points;
+    Matrix1D<double>                top_left_corner;
+    Matrix1D<double>                bottom_right_corner;
+    Matrix1D<double>                old_top_left_corner;
+    Matrix1D<double>                old_bottom_right_corner;
+    bool                            close_polygon;
 };
 
 /**@name maskImg*/
@@ -1828,7 +1828,7 @@ public:
 
     /** Apply transformations that are stored in the headers of the images? */
     bool        apply_geo;
-    string      saveasname;
+    std::string saveasname;
     bool loadImage(const char *fileName);
     Image xmippImage;    // Xmipp Image
 

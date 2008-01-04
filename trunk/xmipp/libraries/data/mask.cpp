@@ -144,7 +144,7 @@ void BinaryCircularMask(Matrix2D<int> &mask,
         MAT_ELEM(mask,YY(r),XX(r))=(r2<=radius2); \
     }
 void BinaryDWTCircularMask(Matrix2D<int> &mask, double radius,
-                           int smin, int smax, const string &quadrant)
+                           int smin, int smax, const std::string &quadrant)
 {
     double radius2 = radius * radius / (4 * (smin + 1));
     mask.initZeros();
@@ -329,7 +329,7 @@ void SincBlackmanMask(Matrix2D<double> &mask,
     bool end = FALSE;
     while (!end)
     {
-        cout << N1 << " " << P1 << " " << N2 << " " << P2 << endl;
+        std::cout << N1 << " " << P1 << " " << N2 << " " << P2 << std::endl;
 
         N12 = ROUND((N1 + N2) / 2);
         EVALUATE_POWER_OF_SINCBLACKMAN2D(N12, P12);
@@ -451,7 +451,7 @@ void BinarySphericalMask(Matrix3D<int> &mask,
         VOL_ELEM(mask,ZZ(r),YY(r),XX(r))=(r2<=radius2); \
     }
 void BinaryDWTSphericalMask(Matrix3D<int> &mask, double radius,
-                            int smin, int smax, const string &quadrant)
+                            int smin, int smax, const std::string &quadrant)
 {
     mask.initZeros();
     double radius2 = radius * radius / (4 * (smin + 1));
@@ -1037,83 +1037,83 @@ void Mask_Params::read(int argc, char **argv)
 void Mask_Params::show() const
 {
 #define SHOW_MODE \
-    if (mode==INNER_MASK) cout << "   mode=INNER MASK\n"; \
-    else                  cout << "   mode=OUTER MASK\n";
+    if (mode==INNER_MASK) std::cout << "   mode=INNER MASK\n"; \
+    else                  std::cout << "   mode=OUTER MASK\n";
 #define SHOW_CENTER \
-    cout << "   (x0,y0,z0)=(" << x0 << "," << y0 << "," << z0 << ")\n";
+    std::cout << "   (x0,y0,z0)=(" << x0 << "," << y0 << "," << z0 << ")\n";
     switch (type)
     {
     case NO_MASK:
-        cout << "Mask type: No mask\n";
+        std::cout << "Mask type: No mask\n";
         break;
     case BINARY_CIRCULAR_MASK:
-        cout << "Mask type: Binary circular\n"
-        << "   R=" << R1 << endl;
+        std::cout << "Mask type: Binary circular\n"
+        << "   R=" << R1 << std::endl;
         SHOW_MODE;
         SHOW_CENTER;
         break;
     case BINARY_DWT_CIRCULAR_MASK:
-        cout << "Mask type: Binary DWT circular\n"
-        << "   R=" << R1 << endl
-        << "   smin=" << smin << endl
-        << "   smax=" << smax << endl
-        << "   quadrant=" << quadrant << endl;
+        std::cout << "Mask type: Binary DWT circular\n"
+        << "   R=" << R1 << std::endl
+        << "   smin=" << smin << std::endl
+        << "   smax=" << smax << std::endl
+        << "   quadrant=" << quadrant << std::endl;
         break;
     case BINARY_CROWN_MASK:
-        cout << "Mask type: Binary crown\n"
-        << "   R1=" << R1 << endl
-        << "   R2=" << R2 << endl;
+        std::cout << "Mask type: Binary crown\n"
+        << "   R1=" << R1 << std::endl
+        << "   R2=" << R2 << std::endl;
         SHOW_MODE;
         SHOW_CENTER;
         break;
     case BINARY_CYLINDER_MASK:
-        cout << "Mask type: Cylinder\n"
-        << "   R1=" << R1 << endl;
+        std::cout << "Mask type: Cylinder\n"
+        << "   R1=" << R1 << std::endl;
         SHOW_MODE;
         SHOW_CENTER;
         break;
     case BINARY_FRAME_MASK:
-        cout << "Mask type: Frame\n"
-        << "   Xrect=" << Xrect << endl
-        << "   Yrect=" << Yrect << endl;
+        std::cout << "Mask type: Frame\n"
+        << "   Xrect=" << Xrect << std::endl
+        << "   Yrect=" << Yrect << std::endl;
         SHOW_MODE;
         SHOW_CENTER;
         break;
     case GAUSSIAN_MASK:
-        cout << "Mask type: Gaussian\n"
-        << "   sigma=" << sigma << endl;
+        std::cout << "Mask type: Gaussian\n"
+        << "   sigma=" << sigma << std::endl;
         SHOW_MODE;
         SHOW_CENTER;
         break;
     case RAISED_COSINE_MASK:
-        cout << "Mask type: Raised cosine\n"
-        << "   R1=" << R1 << endl
-        << "   R2=" << R2 << endl;
+        std::cout << "Mask type: Raised cosine\n"
+        << "   R1=" << R1 << std::endl
+        << "   R2=" << R2 << std::endl;
         SHOW_MODE;
         SHOW_CENTER;
         break;
     case RAISED_CROWN_MASK:
-        cout << "Mask type: Raised crown\n"
-        << "   R1=" << R1 << endl
-        << "   R2=" << R2 << endl
-        << "   pixwidth=" << pix_width << endl;
+        std::cout << "Mask type: Raised crown\n"
+        << "   R1=" << R1 << std::endl
+        << "   R2=" << R2 << std::endl
+        << "   pixwidth=" << pix_width << std::endl;
         SHOW_MODE;
         SHOW_CENTER;
         break;
     case BLACKMAN_MASK:
-        cout << "Mask type: Blackman\n";
+        std::cout << "Mask type: Blackman\n";
         SHOW_MODE;
         SHOW_CENTER;
         break;
     case SINC_MASK:
-        cout << "Mask type: Sinc\n"
-        << "   w=" << omega << endl;
+        std::cout << "Mask type: Sinc\n"
+        << "   w=" << omega << std::endl;
         SHOW_MODE;
         SHOW_CENTER;
         break;
     default:
-        cout << "Mask type: Read from disk\n"
-        << "   File=" << fn_mask << endl;
+        std::cout << "Mask type: Read from disk\n"
+        << "   File=" << fn_mask << std::endl;
         break;
     }
 }
@@ -1121,10 +1121,10 @@ void Mask_Params::show() const
 // Usage -------------------------------------------------------------------
 void Mask_Params::usage() const
 {
-    cerr << "Mask usage:\n";
-    cerr << "   [-center <x0=0> <y0=0> <z0=0>]: Center of the mask\n";
+    std::cerr << "Mask usage:\n";
+    std::cerr << "   [-center <x0=0> <y0=0> <z0=0>]: Center of the mask\n";
     if (allowed_data_types & INT_MASK)
-        cerr << "   [-mask circular <R>       : circle/sphere mask\n"
+        std::cerr << "   [-mask circular <R>       : circle/sphere mask\n"
         << "                               if R>0 => outside R\n"
         << "                               if R<0 => inside  R\n"
         << "   [-mask DWT_circular <R> <smin> <smax>: circle/sphere mask\n"
@@ -1148,7 +1148,7 @@ void Mask_Params::usage() const
         << "   |-mask <binary file>      : Read from file\n"
         ;
     if (allowed_data_types & DOUBLE_MASK)
-        cerr << "   |-mask gaussian <sigma>   : 2D or 3D gaussian\n"
+        std::cerr << "   |-mask gaussian <sigma>   : 2D or 3D gaussian\n"
         << "                               if sigma > 0 => outside gaussian\n"
         << "                               if sigma < 0 => inside gaussian\n"
         << "   |-mask raised_cosine <R1> <R2>: 2D or 3D raised_cosine\n"
@@ -1371,7 +1371,7 @@ void apply_geo_cont_2D_mask(Matrix2D<double> &mask,
 
 // Count with mask =========================================================
 int count_with_mask(const Matrix2D<int> &mask,
-                    const Matrix2D< complex<double> > &m, int mode, double th1, double th2)
+                    const Matrix2D< std::complex<double> > &m, int mode, double th1, double th2)
 {
     SPEED_UP_temps;
     int N = 0;
@@ -1396,7 +1396,7 @@ int count_with_mask(const Matrix2D<int> &mask,
 }
 
 int count_with_mask(const Matrix3D<int> &mask,
-                    const Matrix3D< complex<double> > &m, int mode, double th1, double th2)
+                    const Matrix3D< std::complex<double> > &m, int mode, double th1, double th2)
 {
     SPEED_UP_temps;
     int N = 0;

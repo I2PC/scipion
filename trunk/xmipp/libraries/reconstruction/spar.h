@@ -113,7 +113,7 @@ double NonCausalAR(Matrix2D<double> &Img,
 
    DATE:        6-1-2001
 */
-void ARFilter(Matrix2D<double> &Img, Matrix2D< complex<double> > &Filter,
+void ARFilter(Matrix2D<double> &Img, Matrix2D< std::complex<double> > &Filter,
               Matrix2D<double> &ARParameters);
 
 /** Combine AR Filters.
@@ -135,10 +135,10 @@ void ARFilter(Matrix2D<double> &Img, Matrix2D< complex<double> > &Filter,
 
    DATE:        6-1-2001
 */
-void combineARFilters(const Matrix2D< complex<double> > &Filter1,
-                      const Matrix2D< complex<double> > &Filter2,
-                      Matrix2D< complex<double> > &Filter,
-                      const string &method);
+void combineARFilters(const Matrix2D< std::complex<double> > &Filter1,
+                      const Matrix2D< std::complex<double> > &Filter2,
+                      Matrix2D< std::complex<double> > &Filter,
+                      const std::string &method);
 
 //@}
 #endif

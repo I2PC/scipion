@@ -63,26 +63,26 @@ void JDLFile::write()
     fn_tmpdir.init_random(4);
     FileName fn_data_in;
     fn_data_in.init_random(4);
-    fn_data_in = (string)"xmipp" + job_root + "in" + fn_data_in;
+    fn_data_in = (std::string)"xmipp" + job_root + "in" + fn_data_in;
     FileName fn_data_out;
     fn_data_out.init_random(4);
-    fn_data_out = (string)"xmipp" + job_root + "out" + fn_data_out;
+    fn_data_out = (std::string)"xmipp" + job_root + "out" + fn_data_out;
 
     // Write the local script ...............................................
-    ofstream fh_sh;
+    std::ofstream fh_sh;
     fh_sh.open((job_root + "_local_in.sh").c_str());
     if (!fh_sh)
-        REPORT_ERROR(1, (string)"JDLFile::write: Cannot open file " +
+        REPORT_ERROR(1, (std::string)"JDLFile::write: Cannot open file " +
                      job_root + "_local_in.sh for output");
 
     // Create temporary directory with all the data
     fh_sh << "#!/bin/sh\n";
     fh_sh << "# Create temporary directory\n";
-    fh_sh << "mkdir " << fn_tmpdir << endl;
+    fh_sh << "mkdir " << fn_tmpdir << std::endl;
     if (local_output_dir != "." && local_output_dir != "..")
-        fh_sh << "mkdir " << fn_tmpdir << "/" << local_output_dir << endl;
-    fh_sh << "cd " << fn_tmpdir << endl;
-    fh_sh << endl;
+        fh_sh << "mkdir " << fn_tmpdir << "/" << local_output_dir << std::endl;
+    fh_sh << "cd " << fn_tmpdir << std::endl;
+    fh_sh << std::endl;
 
     // Search for all programs
     fh_sh << "# Create links to all programs\n";
@@ -95,7 +95,7 @@ void JDLFile::write()
     imax = input_files.size();
     for (int i = 0; i < imax; i++)
         fh_sh << "cp " << input_files[i] << " .\n";
-    fh_sh << endl;
+    fh_sh << std::endl;
 
     // Add all files in selfiles
     fh_sh << "# Create links to all input files in selfiles\n";
@@ -110,18 +110,18 @@ void JDLFile::write()
             fh_sh << "cp " << fn_img << " .\n";
         }
     }
-    fh_sh << endl;
+    fh_sh << std::endl;
 
     // Build the input tar
     fh_sh << "# Create the tar file and remove the temporary directory\n";
     fh_sh << "tar zchf " << fn_data_in << ".tgz .\n";
     fh_sh << "mv " << fn_data_in << ".tgz ..\n";
     fh_sh << "cd ..\n";
-    fh_sh << "rm -rf " << fn_tmpdir << endl;
+    fh_sh << "rm -rf " << fn_tmpdir << std::endl;
     imax = input_wildfiles.size();
     for (int i = 0; i < imax; i++)
-        fh_sh << "tar zrf " << fn_data_in << ".tgz " << input_wildfiles[i] << endl;
-    fh_sh << endl;
+        fh_sh << "tar zrf " << fn_data_in << ".tgz " << input_wildfiles[i] << std::endl;
+    fh_sh << std::endl;
 
     // Publish the data
     fh_sh << "# Publish the data\n";
@@ -137,10 +137,10 @@ void JDLFile::write()
     {
         // Rank the Computing Elements according to free CPUs ................
         // Create the jdl to get the rank of free CPUs
-        string rankCE_jdl = (string)"xmipp" + job_root + "rankCE.jdl";
-        string rankCE_list = (string)"xmipp" + job_root + "rankCE_list_match.txt";
-        string rankSE_list = (string)"xmipp" + job_root + "rankSE_list_match.txt";
-        ofstream fh_rank_jdl;
+        std::string rankCE_jdl = (std::string)"xmipp" + job_root + "rankCE.jdl";
+        std::string rankCE_list = (std::string)"xmipp" + job_root + "rankCE_list_match.txt";
+        std::string rankSE_list = (std::string)"xmipp" + job_root + "rankSE_list_match.txt";
+        std::ofstream fh_rank_jdl;
         fh_rank_jdl.open(rankCE_jdl.c_str());
         if (!fh_rank_jdl)
             REPORT_ERROR(1, "JDLFile::write: Cannot open file " +
@@ -164,9 +164,9 @@ void JDLFile::write()
         fh_sh
         << "# Get the best storage element and publish the data\n"
         << "edg-job-list-match --rank " << rankCE_jdl << " > "
-        << rankCE_list << endl
+        << rankCE_list << std::endl
         << "lcg-infosites --vo " << jdl_virtualorganization << " closeSE > "
-        << rankSE_list << endl
+        << rankSE_list << std::endl
         << "i=11\n"
         << "until ! [ \"$se\" == \"\" ];\n"
         << "do\n"
@@ -187,10 +187,10 @@ void JDLFile::write()
         << "   fi\n"
         << "   let i=$i+2\n"
         << "done\n"
-        << "rm " << rankSE_list << endl
-        << "rm " << rankCE_list << endl
-        << "rm " << rankCE_jdl  << endl
-        << endl
+        << "rm " << rankSE_list << std::endl
+        << "rm " << rankCE_list << std::endl
+        << "rm " << rankCE_jdl  << std::endl
+        << std::endl
         << "   if [ $se == \"\" ];\n"
         << "   then\n"
         << "     echo \" Fail: lcg_lr: \"No such file or directory\"\"  > error_publish.txt \n"
@@ -198,12 +198,12 @@ void JDLFile::write()
         ;
     }
     fh_sh.close();
-    system(((string)"chmod u+x " + job_root + "_local_in.sh").c_str());
+    system(((std::string)"chmod u+x " + job_root + "_local_in.sh").c_str());
 
     // Write the remote script ..............................................
     fh_sh.open((job_root + "remote.sh").c_str());
     if (!fh_sh)
-        REPORT_ERROR(1, (string)"JDLFile::write: Cannot open file " +
+        REPORT_ERROR(1, (std::string)"JDLFile::write: Cannot open file " +
                      job_root + "remote.sh for output");
 
     // Get the input data and programs
@@ -218,26 +218,26 @@ void JDLFile::write()
     imax = running_programs.size();
     for (int i = 0; i < imax; i++)
         fh_sh << "chmod 700 " << running_programs[i] << "\n";
-    fh_sh << endl;
+    fh_sh << std::endl;
 
     // Write user commands
     fh_sh << "# User commands\n";
     imax = job_sh.size();
     for (int i = 0; i < imax; i++)
-        fh_sh << job_sh[i] << endl;
-    fh_sh << endl;
+        fh_sh << job_sh[i] << std::endl;
+    fh_sh << std::endl;
 
     // Pack the output
     fh_sh << "# Prepare an output directory\n";
-    fh_sh << "mkdir " << fn_tmpdir << endl << endl;
-    fh_sh << "cd " << fn_tmpdir << endl;
+    fh_sh << "mkdir " << fn_tmpdir << std::endl << std::endl;
+    fh_sh << "cd " << fn_tmpdir << std::endl;
 
     // Add all output files
     fh_sh << "# Create links to all output files\n";
     imax = output_files.size();
     for (int i = 0; i < imax; i++)
         fh_sh << "cp " << output_files[i] << " .\n";
-    fh_sh << endl;
+    fh_sh << std::endl;
 
     // Add all files in selfiles
     fh_sh << "# Create links to all output files in selfiles\n";
@@ -252,20 +252,20 @@ void JDLFile::write()
             fh_sh << "cp " << fn_img << " .\n";
         }
     }
-    fh_sh << endl;
+    fh_sh << std::endl;
 
     // Build the output tar
     fh_sh << "# Create the tar file and remove the temporary directory\n";
     fh_sh << "tar cf " << fn_data_out << ".tar .\n";
     fh_sh << "mv " << fn_data_out << ".tar ..\n";
     fh_sh << "cd ..\n";
-    fh_sh << "rm -rf " << fn_tmpdir << endl;
+    fh_sh << "rm -rf " << fn_tmpdir << std::endl;
     imax = output_wildfiles.size();
     for (int i = 0; i < imax; i++)
-        fh_sh << "tar rf " << fn_data_out << ".tar " << output_wildfiles[i] << endl;
+        fh_sh << "tar rf " << fn_data_out << ".tar " << output_wildfiles[i] << std::endl;
     fh_sh << "gzip " << fn_data_out << ".tar\n";
-    fh_sh << endl;
-    fh_sh << endl;
+    fh_sh << std::endl;
+    fh_sh << std::endl;
 
     // Publish the data
     fh_sh << "# Publish the data\n"
@@ -298,13 +298,13 @@ void JDLFile::write()
         ;
     }
     fh_sh.close();
-    system(((string)"chmod u+x " + job_root + "remote.sh").c_str());
+    system(((std::string)"chmod u+x " + job_root + "remote.sh").c_str());
 
     // Write JDL file .......................................................
-    ofstream fh_jdl;
+    std::ofstream fh_jdl;
     fh_jdl.open((job_root + ".jdl").c_str());
     if (!fh_jdl)
-        REPORT_ERROR(1, (string)"JDLFile::write: Cannot open file " +
+        REPORT_ERROR(1, (std::string)"JDLFile::write: Cannot open file " +
                      job_root + ".jdl for output");
     fh_jdl << "Type = \"" << jdl_type << "\";\n"
     << "JobType = \"" << jdl_jobtype << "\";\n"
@@ -325,7 +325,7 @@ void JDLFile::write()
     // Write the local out script ...........................................
     fh_sh.open((job_root + "_local_out.sh").c_str());
     if (!fh_sh)
-        REPORT_ERROR(1, (string)"JDLFile::write: Cannot open file " +
+        REPORT_ERROR(1, (std::string)"JDLFile::write: Cannot open file " +
                      job_root + "_local_out.sh for output");
 
     // Get the output data
@@ -354,7 +354,7 @@ void JDLFile::write()
         fh_sh << "if ( !(-e " << local_output_dir << ") ) then\n"
         << "   mkdir " << local_output_dir << "\n"
         << "endif\n";
-        fh_sh << "cd " << local_output_dir << endl;
+        fh_sh << "cd " << local_output_dir << std::endl;
         fh_sh << "tar -zxf ../" << fn_data_out << ".tgz\n";
         fh_sh << "cd ..\n";
     }
@@ -362,5 +362,5 @@ void JDLFile::write()
     fh_sh << "rm " << fn_data_in << ".tgz\n";
 
     fh_sh.close();
-    system(((string)"chmod u+x " + job_root + "_local_out.sh").c_str());
+    system(((std::string)"chmod u+x " + job_root + "_local_out.sh").c_str());
 }

@@ -32,11 +32,11 @@ int main(int argc, char **argv) {
   int c,nn,imgno,opt_refno;
   double LL,sumw_allrefs,sumcorr;
   double aux,wsum_sigma_offset,wsum_sigma_noise2;
-  vector<Matrix3D<double > > wsum_Mref;
-  vector<Matrix3D<double > > wsum_Mwedge;
-  vector<double> sumw;
+  std::vector<Matrix3D<double > > wsum_Mref;
+  std::vector<Matrix3D<double > > wsum_Mwedge;
+  std::vector<double> sumw;
   Matrix3D<double> Maux;
-  vector<int> count_defocus;
+  std::vector<int> count_defocus;
   FileName fn_img,fn_tmp;
   Matrix1D<double> oneline(0);
   DocFile DFo,DFf;
@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     prm.produce_Side_info();
     prm.show();
 
-  } catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(0);}
+  } catch (Xmipp_error XE) {std::cout << XE; prm.usage(); exit(0);}
     
   try {
     Maux.resize(prm.dim,prm.dim,prm.dim);
@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
   // Loop over all iterations
     for (int iter=prm.istart; iter<=prm.Niter; iter++) {
 
-      if (prm.verb>0) cerr << "  multi-reference refinement:  iteration " << iter <<" of "<< prm.Niter<<endl;
+      if (prm.verb>0) std::cerr << "  multi-reference refinement:  iteration " << iter <<" of "<< prm.Niter<<std::endl;
 
       DFo.clear();
       DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Zoff (6), WedNo (7) Ref (8), Pmax/sumP (9)");
@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
     fn_img=prm.fn_root+".doc";
     DFo.write(fn_img);
 
-  } catch (Xmipp_error XE) {cout << XE; prm.usage(); exit(0);}
+  } catch (Xmipp_error XE) {std::cout << XE; prm.usage(); exit(0);}
 }
 
 

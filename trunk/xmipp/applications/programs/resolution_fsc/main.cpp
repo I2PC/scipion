@@ -59,19 +59,19 @@ public:
     void show()
     {
         Prog_parameters::show();
-        cout << "Reference file = " << fn_ref << endl;
-        cout << "Sampling rate  = " << sam << endl;
+        std::cout << "Reference file = " << fn_ref << std::endl;
+        std::cout << "Sampling rate  = " << sam << std::endl;
     }
     void usage()
     {
-        cerr << " EITHER:\n";
-        cerr << "   -ref <input file>        : Filename for reference image/volume \n";
-        cerr << "   -i <input file>          : either an image/volume or a selection file\n";
-        cerr << " OR:\n";
-        cerr << "   -set_of_images <selfile> : SelFile containing a set of 2D-images\n";
-        cerr << " For both modes:\n";
-        cerr << "   -sam <sampling rate>     : i.e. pixel size (in Angstrom) \n";
-        cerr << "  [-dont_apply_geo]         : for 2D-images: do not apply transformation stored in the header\n";
+        std::cerr << " EITHER:\n";
+        std::cerr << "   -ref <input file>        : Filename for reference image/volume \n";
+        std::cerr << "   -i <input file>          : either an image/volume or a selection file\n";
+        std::cerr << " OR:\n";
+        std::cerr << "   -set_of_images <selfile> : SelFile containing a set of 2D-images\n";
+        std::cerr << " For both modes:\n";
+        std::cerr << "   -sam <sampling rate>     : i.e. pixel size (in Angstrom) \n";
+        std::cerr << "  [-dont_apply_geo]         : for 2D-images: do not apply transformation stored in the header\n";
     }
 };
 
@@ -88,10 +88,10 @@ void process_img(ImageXmipp &img, const Prog_parameters *prm)
     FileName fn_dpr, fn_frc;
     fn_dpr = img.name() + ".dpr";
     fn_frc = img.name() + ".frc";
-    ofstream out(fn_dpr.c_str(), ios::out);
-    ofstream out2(fn_frc.c_str(), ios::out);
-    out  << "# Resol. [1/Ang]   DPR [deg]" << endl;
-    out2 << "# Resol. [1/Ang]      FRC      FRC_random_noise" << endl;
+    std::ofstream out(fn_dpr.c_str(), std::ios::out);
+    std::ofstream out2(fn_frc.c_str(), std::ios::out);
+    out  << "# Resol. [1/Ang]   DPR [deg]" << std::endl;
+    out2 << "# Resol. [1/Ang]      FRC      FRC_random_noise" << std::endl;
     FOR_ALL_ELEMENTS_IN_MATRIX1D(freq)
     {
         if (i > 0)
@@ -99,13 +99,13 @@ void process_img(ImageXmipp &img, const Prog_parameters *prm)
             out.width(10);
             out  << VEC_ELEM(freq, i);
             out.width(17);
-            out << VEC_ELEM(dpr, i)  << endl;
+            out << VEC_ELEM(dpr, i)  << std::endl;
             out2.width(10);
             out2  << VEC_ELEM(freq, i);
             out2.width(17);
             out2  << VEC_ELEM(frc, i);
             out2.width(17);
-            out2  << VEC_ELEM(frc_noise, i) << endl;
+            out2  << VEC_ELEM(frc_noise, i) << std::endl;
         }
     }
     out.close();
@@ -128,10 +128,10 @@ void process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
     FileName fn_dpr, fn_frc;
     fn_dpr = vol.name() + ".dpr";
     fn_frc = vol.name() + ".frc";
-    ofstream out(fn_dpr.c_str(), ios::out);
-    ofstream out2(fn_frc.c_str(), ios::out);
-    out  << "# Resol. [1/Ang]   DPR [deg]" << endl;
-    out2 << "# Resol. [1/Ang]      FRC      FRC_random_noise" << endl;
+    std::ofstream out(fn_dpr.c_str(), std::ios::out);
+    std::ofstream out2(fn_frc.c_str(), std::ios::out);
+    out  << "# Resol. [1/Ang]   DPR [deg]" << std::endl;
+    out2 << "# Resol. [1/Ang]      FRC      FRC_random_noise" << std::endl;
     FOR_ALL_ELEMENTS_IN_MATRIX1D(freq)
     {
         if (i > 0)
@@ -139,13 +139,13 @@ void process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
             out.width(10);
             out  << VEC_ELEM(freq, i);
             out.width(17);
-            out << VEC_ELEM(dpr, i)  << endl;
+            out << VEC_ELEM(dpr, i)  << std::endl;
             out2.width(10);
             out2  << VEC_ELEM(freq, i);
             out2.width(17);
             out2  << VEC_ELEM(frc, i);
             out2.width(17);
-            out2  << VEC_ELEM(frc_noise, i) << endl;
+            out2  << VEC_ELEM(frc_noise, i) << std::endl;
         }
     }
     out.close();
@@ -205,30 +205,30 @@ int main(int argc, char **argv)
             fn_dpr = fn_sel + ".dpr";
             fn_frc = fn_sel + ".frc";
             fn_ssnr = fn_sel + ".snr";
-            ofstream out(fn_dpr.c_str(), ios::out);
-            ofstream out2(fn_frc.c_str(), ios::out);
-            ofstream out3(fn_ssnr.c_str(), ios::out);
-            out  << "# Resol. [1/Ang]   DPR [deg]" << endl;
-            out2 << "# Resol. [1/Ang]      FRC      FRC_random_noise" << endl;
-            out3 << "# Resol. [1/Ang]       SSNR          #Pixels" << endl;
+            std::ofstream out(fn_dpr.c_str(), std::ios::out);
+            std::ofstream out2(fn_frc.c_str(), std::ios::out);
+            std::ofstream out3(fn_ssnr.c_str(), std::ios::out);
+            out  << "# Resol. [1/Ang]   DPR [deg]" << std::endl;
+            out2 << "# Resol. [1/Ang]      FRC      FRC_random_noise" << std::endl;
+            out3 << "# Resol. [1/Ang]       SSNR          #Pixels" << std::endl;
             FOR_ALL_ELEMENTS_IN_MATRIX1D(freq)
             {
                 out.width(10);
                 out  << VEC_ELEM(freq, i);
                 out.width(17);
-                out << VEC_ELEM(dpr, i)  << endl;
+                out << VEC_ELEM(dpr, i)  << std::endl;
                 out2.width(10);
                 out2  << VEC_ELEM(freq, i);
                 out2.width(17);
                 out2  << VEC_ELEM(frc, i);
                 out2.width(17);
-                out2  << VEC_ELEM(frc_noise, i) << endl;
+                out2  << VEC_ELEM(frc_noise, i) << std::endl;
                 out3.width(10);
                 out3  << VEC_ELEM(freq, i);
                 out3.width(17);
                 out3  << VEC_ELEM(ssnr, i);
                 out3.width(17);
-                out3  << VEC_ELEM(pixel, i) << endl;
+                out3  << VEC_ELEM(pixel, i) << std::endl;
             }
             out.close();
             out2.close();
@@ -236,7 +236,7 @@ int main(int argc, char **argv)
         }
         catch (Xmipp_error XE)
         {
-            cout << XE;
+            std::cout << XE;
             Resolution_parameters prm;
             prm.usage();
         }

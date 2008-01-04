@@ -79,7 +79,7 @@ void Tomogram::open_tomogram(const FileName &_fn_tomogram,
         fn_inf = fn_tomogram.add_extension("inf");
         FILE *fh_inf = fopen(fn_inf.c_str(), "r");
         if (!fh_inf)
-            REPORT_ERROR(1, (string)"Tomogram::open_tomogram: Cannot find " +
+            REPORT_ERROR(1, (std::string)"Tomogram::open_tomogram: Cannot find " +
                          fn_inf);
         Xdim = textToInteger(getParameter(fh_inf, "Xdim"));
         Ydim = textToInteger(getParameter(fh_inf, "Ydim"));
@@ -101,7 +101,7 @@ void Tomogram::open_tomogram(const FileName &_fn_tomogram,
     // Open tomogram and map
     fh_tomogram = open(fn_tomogram.c_str(), O_RDWR, S_IREAD | S_IWRITE);
     if (fh_tomogram == -1)
-        REPORT_ERROR(1, (string)"Tomogram::open_tomogram: There is a "
+        REPORT_ERROR(1, (std::string)"Tomogram::open_tomogram: There is a "
                      "problem opening " + fn_tomogram);
     char *aux_ptr;
     switch (__depth)
@@ -110,7 +110,7 @@ void Tomogram::open_tomogram(const FileName &_fn_tomogram,
         m8 = (unsigned char *) mmap(0, (__depth / 8) * Zdim * Ydim * Xdim + __offset,
                                     PROT_READ | PROT_WRITE, MAP_SHARED, fh_tomogram, 0);
         if (m8 == MAP_FAILED)
-            REPORT_ERROR(1, (string)"Tomogram::open_tomogram: cannot map " +
+            REPORT_ERROR(1, (std::string)"Tomogram::open_tomogram: cannot map " +
                          _fn_tomogram + " in memory");
         m8 += __offset;
         break;
@@ -123,19 +123,19 @@ void Tomogram::open_tomogram(const FileName &_fn_tomogram,
             {
                 /*
                 switch (errno) {
-                case EACCES:    cout << "EACCES:   \n"; break;
-                  case EAGAIN:    cout << "EAGAIN:   \n"; break;
-                case EBADF:     cout << "EBADF:    \n"; break;
-                case EINVAL:    cout << "EINVAL:   \n"; break;
-                case EMFILE:    cout << "EMFILE:   \n"; break;
-                case ENODEV:    cout << "ENODEV:   \n"; break;
-                case ENOMEM:    cout << "ENOMEM:   \n"; break;
-                case ENOTSUP:   cout << "ENOTSUP:  \n"; break;
-                case ENXIO:     cout << "ENXIO:    \n"; break;
-                case EOVERFLOW: cout << "EOVERFLOW:\n"; break;
+                case EACCES:    std::cout << "EACCES:   \n"; break;
+                  case EAGAIN:    std::cout << "EAGAIN:   \n"; break;
+                case EBADF:     std::cout << "EBADF:    \n"; break;
+                case EINVAL:    std::cout << "EINVAL:   \n"; break;
+                case EMFILE:    std::cout << "EMFILE:   \n"; break;
+                case ENODEV:    std::cout << "ENODEV:   \n"; break;
+                case ENOMEM:    std::cout << "ENOMEM:   \n"; break;
+                case ENOTSUP:   std::cout << "ENOTSUP:  \n"; break;
+                case ENXIO:     std::cout << "ENXIO:    \n"; break;
+                case EOVERFLOW: std::cout << "EOVERFLOW:\n"; break;
                 }
                 */
-                REPORT_ERROR(1, (string)"Tomogram::open_tomogram: cannot map " +
+                REPORT_ERROR(1, (std::string)"Tomogram::open_tomogram: cannot map " +
                              _fn_tomogram + " in memory");
             }
             aux_ptr = (char *)m16;
@@ -151,19 +151,19 @@ void Tomogram::open_tomogram(const FileName &_fn_tomogram,
             {
                 /*
                 switch (errno) {
-                case EACCES:    cout << "EACCES:   \n"; break;
-                  case EAGAIN:    cout << "EAGAIN:   \n"; break;
-                case EBADF:     cout << "EBADF:    \n"; break;
-                case EINVAL:    cout << "EINVAL:   \n"; break;
-                case EMFILE:    cout << "EMFILE:   \n"; break;
-                case ENODEV:    cout << "ENODEV:   \n"; break;
-                case ENOMEM:    cout << "ENOMEM:   \n"; break;
-                case ENOTSUP:   cout << "ENOTSUP:  \n"; break;
-                case ENXIO:     cout << "ENXIO:    \n"; break;
-                case EOVERFLOW: cout << "EOVERFLOW:\n"; break;
+                case EACCES:    std::cout << "EACCES:   \n"; break;
+                  case EAGAIN:    std::cout << "EAGAIN:   \n"; break;
+                case EBADF:     std::cout << "EBADF:    \n"; break;
+                case EINVAL:    std::cout << "EINVAL:   \n"; break;
+                case EMFILE:    std::cout << "EMFILE:   \n"; break;
+                case ENODEV:    std::cout << "ENODEV:   \n"; break;
+                case ENOMEM:    std::cout << "ENOMEM:   \n"; break;
+                case ENOTSUP:   std::cout << "ENOTSUP:  \n"; break;
+                case ENXIO:     std::cout << "ENXIO:    \n"; break;
+                case EOVERFLOW: std::cout << "EOVERFLOW:\n"; break;
                 }
                 */
-                REPORT_ERROR(1, (string)"Tomogram::open_tomogram: cannot map " +
+                REPORT_ERROR(1, (std::string)"Tomogram::open_tomogram: cannot map " +
                              _fn_tomogram + " in memory");
             }
             aux_ptr = (char *)um16;
@@ -176,7 +176,7 @@ void Tomogram::open_tomogram(const FileName &_fn_tomogram,
         m32 = (float*) mmap(0, (__depth / 8) * Zdim * Ydim * Xdim + __offset,
                             PROT_READ | PROT_WRITE, MAP_SHARED, fh_tomogram, 0);
         if (m32 == MAP_FAILED)
-            REPORT_ERROR(1, (string)"Tomogram::open_tomogram: cannot map " +
+            REPORT_ERROR(1, (std::string)"Tomogram::open_tomogram: cannot map " +
                          _fn_tomogram + " in memory");
         aux_ptr = (char *)m32;
         aux_ptr += __offset;
@@ -231,16 +231,16 @@ void Tomogram::get_piece(Matrix1D<int> &r0, Matrix1D<int> &length,
                          Matrix3D<double> &piece)
 {
     Matrix1D<int> rF = r0 + length - 1;
-    cout << r0.transpose() << endl;
-    cout << length.transpose() << endl;
-    cout << Xdim << " " << Ydim << " " << Zdim << endl;
+    std::cout << r0.transpose() << std::endl;
+    std::cout << length.transpose() << std::endl;
+    std::cout << Xdim << " " << Ydim << " " << Zdim << std::endl;
     if (XX(rF) >= Xdim)
         XX(r0) = Xdim - XX(length) - 1;
     if (YY(rF) >= Ydim)
         YY(r0) = Ydim - YY(length) - 1;
     if (ZZ(rF) >= Zdim)
         ZZ(r0) = Zdim - ZZ(length) - 1;
-    cout << r0.transpose() << endl;
+    std::cout << r0.transpose() << std::endl;
     if (XX(r0) < 0 || YY(r0) < 0 || ZZ(r0) < 0)
         REPORT_ERROR(1, "Tomogram::get_piece: piece does not fit into tomogram");
 

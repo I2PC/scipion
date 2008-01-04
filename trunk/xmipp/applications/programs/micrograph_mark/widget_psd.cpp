@@ -41,15 +41,15 @@ void QtWidgetPSD::set_assign_CTF_file(Micrograph &m,
     // Check if the CTF is computed at each particle
     if (assign_ctf_prm.compute_at_particle)
     {
-        cerr << "QtWidgetPSD::set_assign_CTF_file: The PSDs and CTFs cannot be shown "
-        "for individual particles. See file " << fn_assign_CTF << endl;
+        std::cerr << "QtWidgetPSD::set_assign_CTF_file: The PSDs and CTFs cannot be shown "
+        "for individual particles. See file " << fn_assign_CTF << std::endl;
         return;
     }
 
     // Generate a random selfile
     FileName fn_random;
     fn_random.init_random(15);
-    fn_random = (string)"PPP" + fn_random + ".sel";
+    fn_random = (std::string)"PPP" + fn_random + ".sel";
     files_to_remove.push_back(fn_random);
 
     // To shape the selfile
@@ -71,7 +71,7 @@ void QtWidgetPSD::set_assign_CTF_file(Micrograph &m,
                 fn_avg = fn_root + "_ARMAavg.ctfmodel_halfplane";
             else fn_avg = fn_root + "_Periodogramavg.ctfmodel_halfplane";
         }
-        system(((string)"xmipp_do_selfile " + fn_avg + " > " + fn_random).c_str());
+        system(((std::string)"xmipp_do_selfile " + fn_avg + " > " + fn_random).c_str());
         div_NumberX = div_NumberY = 1;
     }
     else
@@ -81,11 +81,11 @@ void QtWidgetPSD::set_assign_CTF_file(Micrograph &m,
         if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
             PSDfn_root = fn_root + "_ARMA";
         else PSDfn_root = fn_root + "_Periodogram";
-        string command;
+        std::string command;
         if (!ctf_mode)
-            command = (string)"xmipp_do_selfile \"" + PSDfn_root + "?????.psd\" > " + fn_random;
+            command = (std::string)"xmipp_do_selfile \"" + PSDfn_root + "?????.psd\" > " + fn_random;
         else
-            command = (string)"xmipp_do_selfile \"" + PSDfn_root + "?????.ctfmodel_halfplane\" > " + fn_random;
+            command = (std::string)"xmipp_do_selfile \"" + PSDfn_root + "?????.ctfmodel_halfplane\" > " + fn_random;
         system(command.c_str());
 
         int Ydim, Xdim;
@@ -111,5 +111,5 @@ void QtWidgetPSD::set_assign_CTF_file(Micrograph &m,
 QtWidgetPSD::~QtWidgetPSD()
 {
     for (int i = 0; i < files_to_remove.size(); i++)
-        system(((string)"rm " + files_to_remove[i]).c_str());
+        system(((std::string)"rm " + files_to_remove[i]).c_str());
 }

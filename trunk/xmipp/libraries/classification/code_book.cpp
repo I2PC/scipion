@@ -93,7 +93,7 @@ xmippCB::xmippCB(unsigned _n, unsigned _size, xmippFeature _lower,
     // Assign random vectors
     for (unsigned i = 0 ; i < _n ; i++)
     {
-        vector<xmippFeature> v;
+        std::vector<xmippFeature> v;
         v = randomVector(_size, _lower, _upper);
         theItems[i] = v;
     }
@@ -110,7 +110,7 @@ xmippCB::xmippCB(unsigned _n, unsigned _size, xmippFeature _lower,
  */
 
 /* Part of this code were developed by Lorenzo Zampighi and Nelson Tang
-   of the department of Physiology of the David Geffen School of Medicine,
+   of the department of Physiology of the David Geffen School of Medistd::cine,
    University of California, Los Angeles
 */
 
@@ -127,14 +127,14 @@ xmippCB::xmippCB(unsigned _n, const xmippCTVectors& _ts, const bool _use_rand_cv
     // Assign random vectors
     for (unsigned i = 0 ; i < _n ; i++)
     {
-        vector<xmippFeature> v;
+        std::vector<xmippFeature> v;
         int index = (int) rnd_unif(0, _ts.size() - 1);
         v = _ts.theItems[index];
         if (_use_rand_cvs)
         {
             // NT: Scan this vector for the range of pixel values
             xmippFeature minval, maxval;
-            vector<xmippFeature>::const_iterator viter = v.begin();
+            std::vector<xmippFeature>::const_iterator viter = v.begin();
             minval = maxval = *viter;
             for (viter++; viter != v.end(); viter++)
             {
@@ -155,7 +155,7 @@ xmippCB::xmippCB(unsigned _n, const xmippCTVectors& _ts, const bool _use_rand_cv
  * Parameter: _is  The input stream
  * @exception  runtime_error  If there are problems with the stream
  */
-xmippCB::xmippCB(istream& _is) : xmippCDSet<xmippVector, xmippLabel>(), xmippCTSet<xmippVector, xmippLabel>(_is)
+xmippCB::xmippCB(std::istream& _is) : xmippCDSet<xmippVector, xmippLabel>(), xmippCTSet<xmippVector, xmippLabel>(_is)
 {
     readSelf(_is);
 };
@@ -167,8 +167,8 @@ xmippCB::xmippCB(istream& _is) : xmippCDSet<xmippVector, xmippLabel>(), xmippCTS
 xmippVector& xmippCB::test(const xmippVector& _in) const
 {
     // eval the first one to init best & bestDist
-    vector<xmippVector>::const_iterator i = itemsBegin();
-    vector<xmippVector>::const_iterator best = i;
+    std::vector<xmippVector>::const_iterator i = itemsBegin();
+    std::vector<xmippVector>::const_iterator best = i;
     double bestDist = (double) eDist(*i, _in);
 
     // eval the rest
@@ -192,8 +192,8 @@ xmippVector& xmippCB::test(const xmippVector& _in) const
 unsigned xmippCB::testIndex(const xmippVector& _in) const
 {
     // eval the first one to init best & bestDist
-    vector<xmippVector>::const_iterator i = itemsBegin();
-    vector<xmippVector>::const_iterator best = i;
+    std::vector<xmippVector>::const_iterator i = itemsBegin();
+    std::vector<xmippVector>::const_iterator best = i;
     double bestDist = (double) eDist(*i, _in);
 
     // eval the rest
@@ -255,11 +255,11 @@ void xmippCB::classify(const xmippCTVectors* _ts)
  * Prints the histogram values of each Fuzzy codevector.
  * Parameter: _os  The the output stream
  */
-void xmippCB::printHistogram(ostream& _os) const
+void xmippCB::printHistogram(std::ostream& _os) const
 {
-    _os << "1 " << size() << endl;
+    _os << "1 " << size() << std::endl;
     for (int j = 0; j < size(); j++)
-        _os << j << " " << classifSizeAt(j) << endl;
+        _os << j << " " << classifSizeAt(j) << std::endl;
 };
 
 
@@ -267,23 +267,23 @@ void xmippCB::printHistogram(ostream& _os) const
  * Prints the Average Quantization Error of each codevector.
  * Parameter: _os  The the output stream
  */
-void xmippCB::printQuantError(ostream& _os) const
+void xmippCB::printQuantError(std::ostream& _os) const
 {
-    _os << "1 " << size() << endl;
+    _os << "1 " << size() << std::endl;
     for (int j = 0; j < size(); j++)
-        _os << j << " " << aveDistances[j] << endl;
+        _os << j << " " << aveDistances[j] << std::endl;
 };
 
 /**
  * Returns the list of input vectors associated to this code vector.
  */
-const vector< unsigned>& xmippCB::classifAt(const unsigned& _index) const
+const std::vector< unsigned>& xmippCB::classifAt(const unsigned& _index) const
 {
     if (_index < 0 || _index > classifVectors.size())
     {
-        ostringstream msg;
+        std::ostringstream msg;
         msg << "index out of range";
-        throw runtime_error(msg.str());
+        throw std::runtime_error(msg.str());
     }
     return classifVectors[_index];
 };
@@ -295,9 +295,9 @@ unsigned xmippCB::classifSizeAt(const unsigned& _index) const
 {
     if (_index < 0 || _index > classifVectors.size())
     {
-        ostringstream msg;
+        std::ostringstream msg;
         msg << "index out of range";
-        throw runtime_error(msg.str());
+        throw std::runtime_error(msg.str());
     }
     return classifVectors[_index].size();
 };
@@ -323,7 +323,7 @@ void xmippCB::calibrate(xmippCTVectors& _ts,
                         xmippLabel _def)
 {
     // set the default label
-    for (vector<xmippVector>::const_iterator i = itemsBegin() ;
+    for (std::vector<xmippVector>::const_iterator i = itemsBegin() ;
          i < itemsEnd() ; i++)
         theTargets[i - itemsBegin()] = _def;
     if (_ts.calibrated())
@@ -351,7 +351,7 @@ unsigned xmippCB::output(const xmippVector& _in) const
  * Standard output for a codebook
  * Parameter: _os The output stream
  */
-void xmippCB::printSelf(ostream& _os) const
+void xmippCB::printSelf(std::ostream& _os) const
 {
     xmippCTSet<xmippVector, xmippLabel>::printSelf(_os);
 };
@@ -360,7 +360,7 @@ void xmippCB::printSelf(ostream& _os) const
  * Standard input for a codebook
  * Parameter: _is The input stream
  */
-void xmippCB::readSelf(istream& _is, long _dim, long _size)
+void xmippCB::readSelf(std::istream& _is, long _dim, long _size)
 {
 
 #ifndef _NO_EXCEPTION
@@ -368,7 +368,7 @@ void xmippCB::readSelf(istream& _is, long _dim, long _size)
     {
 #endif
         clear();
-        string line;
+        std::string line;
 
         // Determines the number of rows and columns in the training set
 
@@ -396,7 +396,7 @@ void xmippCB::readSelf(istream& _is, long _dim, long _size)
 
         for (int i = 0; i < size; i++)
         {
-            vector<xmippFeature> v;
+            std::vector<xmippFeature> v;
             v.resize(dim);
             for (int j = 0; j < dim; j++)
             {
@@ -410,11 +410,11 @@ void xmippCB::readSelf(istream& _is, long _dim, long _size)
         }
 #ifndef _NO_EXCEPTION
     }
-    catch (exception& e)
+    catch (std::exception& e)
     {
-        ostringstream msg;
-        msg << e.what() << endl << "Error reading the code book";
-        throw runtime_error(msg.str());
+        std::ostringstream msg;
+        msg << e.what() << std::endl << "Error reading the code book";
+        throw std::runtime_error(msg.str());
     }
 #endif
 };
@@ -424,7 +424,7 @@ void xmippCB::readSelf(istream& _is, long _dim, long _size)
  * Reads the classif vectors from a stream.
  * Parameter: _is  The input stream
  */
-void xmippCB::readClassifVectors(istream& _is)
+void xmippCB::readClassifVectors(std::istream& _is)
 {
     int dim;
     _is >> dim;
@@ -438,11 +438,11 @@ void xmippCB::readClassifVectors(istream& _is)
  * Writes the classif vectors to a stream
  * Parameter: _os  The output stream
  */
-void xmippCB::writeClassifVectors(ostream& _os) const
+void xmippCB::writeClassifVectors(std::ostream& _os) const
 {
-    _os << classifVectors.size() << endl;
+    _os << classifVectors.size() << std::endl;
     for (int i = 0; i < classifVectors.size(); i++)
-        _os << classifVectors[i] << endl;
+        _os << classifVectors[i] << std::endl;
 }
 
 
@@ -451,7 +451,7 @@ void xmippCB::writeClassifVectors(ostream& _os) const
  * this method can be used to save the status of the class.
  * Parameter: _os The output stream
  */
-void xmippCB::saveObject(ostream& _os) const
+void xmippCB::saveObject(std::ostream& _os) const
 {
     writeClassifVectors(_os);
     xmippCTSet<xmippVector, xmippLabel>::saveObject(_os);
@@ -463,7 +463,7 @@ void xmippCB::saveObject(ostream& _os) const
  * this method can be used to load the status of the class.
  * Parameter: _is The output stream
  */
-void xmippCB::loadObject(istream& _is)
+void xmippCB::loadObject(std::istream& _is)
 {
     clear();
     readClassifVectors(_is);
@@ -476,13 +476,13 @@ void xmippCB::loadObject(istream& _is)
  *  Parameter: _varStats The normalization information
  */
 
-void xmippCB::unNormalize(const vector<xmippCTVectors::statsStruct>&  _varStats)
+void xmippCB::unNormalize(const std::vector<xmippCTVectors::statsStruct>&  _varStats)
 {
     if (_varStats.size() != theItems[0].size())
     {
-        ostringstream msg;
+        std::ostringstream msg;
         msg << "Normalization information does not coincide with codebook structure";
-        throw runtime_error(msg.str());
+        throw std::runtime_error(msg.str());
     }
     for (unsigned it = 0; it < size(); it++)
     {
@@ -500,13 +500,13 @@ void xmippCB::unNormalize(const vector<xmippCTVectors::statsStruct>&  _varStats)
  *  Parameter: _varStats The normalization information
  */
 
-void xmippCB::Normalize(const vector<xmippCTVectors::statsStruct>&  _varStats)
+void xmippCB::Normalize(const std::vector<xmippCTVectors::statsStruct>&  _varStats)
 {
     if (_varStats.size() != theItems[0].size())
     {
-        ostringstream msg;
+        std::ostringstream msg;
         msg << "Normalization information does not coincide with codebook structure";
-        throw runtime_error(msg.str());
+        throw std::runtime_error(msg.str());
     }
     for (unsigned it = 0; it < size(); it++)
     {

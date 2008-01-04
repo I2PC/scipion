@@ -37,20 +37,20 @@ void Usage();
     { \
         int count; \
         if      (count_above && !count_below) {\
-            cout << stringToString(fn_in,max_length) \
+            std::cout << stringToString(fn_in,max_length) \
             << " number of " << elem_type << " above " << th_above; \
             count=count_with_mask_above(mask,m,th_above); \
         } else if (count_below && !count_above) {\
-            cout << stringToString(fn_in,max_length) \
+            std::cout << stringToString(fn_in,max_length) \
             << " number of " << elem_type << " below " << th_below; \
             count=count_with_mask_below(mask,m,th_below); \
         } else if (count_below && count_above) {\
-            cout << stringToString(fn_in,max_length) \
+            std::cout << stringToString(fn_in,max_length) \
             << " number of " << elem_type << " above " << th_above \
             << " and below " << th_below << " = "; \
             count=count_with_mask_between(mask,m,th_above,th_below); \
         } \
-        cout << " = " << count << endl; \
+        std::cout << " = " << count << std::endl; \
     }
 
 #define SET_SUBS_VAL(I) \
@@ -77,7 +77,7 @@ int main(int argc, char **argv)
     double th_below;
     bool            apply_geo;
     double          subs_val;
-    string          str_subs_val;
+    std::string     str_subs_val;
     int             count;
     int             max_length = 0;
 #define V VOLMATRIX(volume)
@@ -111,7 +111,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage();
         mask_prm.usage();
         exit(1);
@@ -156,7 +156,7 @@ int main(int argc, char **argv)
                     COUNT_ELEMENTS(mask2D, I, "pixels");
                 }
                 else
-                    cerr << "Cannot count pixels with a continuous mask\n";
+                    std::cerr << "Cannot count pixels with a continuous mask\n";
             }
 
             // Mask a single volume --------------------------------------------------
@@ -185,7 +185,7 @@ int main(int argc, char **argv)
                     COUNT_ELEMENTS(mask3D, V, "voxels");
                 }
                 else
-                    cerr << "Cannot count pixels with a continuous mask\n";
+                    std::cerr << "Cannot count pixels with a continuous mask\n";
             }
 
         }
@@ -248,7 +248,7 @@ int main(int argc, char **argv)
                             COUNT_ELEMENTS(mask2D, I, "pixels");
                         }
                         else
-                            cerr << "Cannot count pixels with a continuous mask\n";
+                            std::cerr << "Cannot count pixels with a continuous mask\n";
                     }
 
                     // Process a volume ...............................................
@@ -269,13 +269,13 @@ int main(int argc, char **argv)
                             COUNT_ELEMENTS(mask3D, V, "voxels");
                         }
                         else
-                            cerr << "Cannot count pixels with a continuous mask\n";
+                            std::cerr << "Cannot count pixels with a continuous mask\n";
                     }
 
                     // Not a Spider file ..............................................
                 }
                 else
-                    cout << fn_in << " is not a SPIDER file\n";
+                    std::cout << fn_in << " is not a SPIDER file\n";
 
                 if (i++ % 25 == 0 && !count) progress_bar(i);
             }
@@ -297,7 +297,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
     exit(0);
 } //main
@@ -305,7 +305,7 @@ int main(int argc, char **argv)
 /* Usage ------------------------------------------------------------------- */
 void Usage()
 {
-    cerr << "Usage: mask <parameters>\n"
+    std::cerr << "Usage: mask <parameters>\n"
     << "   -i <image or volume> [-o <image_out or volume_out]\n"
     << "   -i <selfile> [-oext <output extension>]\n"
     << "   [-save_mask]                       : apply and save mask\n"

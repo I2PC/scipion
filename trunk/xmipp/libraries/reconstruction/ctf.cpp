@@ -34,7 +34,7 @@ void XmippCTF::read(const FileName &fn, bool disable_if_not_K)
     FILE *fh_param;
     if ((fh_param = fopen(fn.c_str(), "r")) == NULL)
         REPORT_ERROR(1,
-                     (string)"XmippCTF::read: There is a problem "
+                     (std::string)"XmippCTF::read: There is a problem "
                      "opening the file " + fn);
 
     try
@@ -101,8 +101,8 @@ void XmippCTF::read(const FileName &fn, bool disable_if_not_K)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE << endl;
-        REPORT_ERROR(1, (string)"There is an error reading " + fn);
+        std::cout << XE << std::endl;
+        REPORT_ERROR(1, (std::string)"There is an error reading " + fn);
     }
     fclose(fh_param);
 }
@@ -110,19 +110,19 @@ void XmippCTF::read(const FileName &fn, bool disable_if_not_K)
 /* Write ------------------------------------------------------------------- */
 void XmippCTF::write(const FileName &fn)
 {
-    ofstream fh_param;
+    std::ofstream fh_param;
     fh_param.open(fn.c_str());
     if (!fh_param)
-        REPORT_ERROR(1, (string)"Xmipp_CTF::write: Cannot open " + fn +
+        REPORT_ERROR(1, (std::string)"Xmipp_CTF::write: Cannot open " + fn +
                      " for output");
-    fh_param << *this << endl;
+    fh_param << *this << std::endl;
     fh_param.close();
 }
 
 /* Usage ------------------------------------------------------------------- */
 void XmippCTF::Usage()
 {
-    cerr << "  [defocusU=<DeltafU>]              : Defocus in Angstroms (Ex: -800)\n"
+    std::cerr << "  [defocusU=<DeltafU>]              : Defocus in Angstroms (Ex: -800)\n"
     << "  [defocusV=<DeltafV=DeltafU>]      : If astigmatism\n"
     << "  [azimuthal_angle=<ang=0>]         : Angle between X and U (degrees)\n"
     << "  [sampling_rate=<Tm=1>]            : Angstroms/pixel\n"
@@ -136,7 +136,7 @@ void XmippCTF::Usage()
     << "  [transversal_displace=<DeltaR=0>] : Angstrom. Ex: 3\n"
     << "  [Q0=<Q0=0>]                       : Percentage of cosine\n"
     << "  [K=<K=1>]                         : Global gain\n"
-    << endl
+    << std::endl
     << "  [base_line=<b=0>]                 : Global base line\n"
     << "  [gaussian_K=<K=0>]                : Gaussian gain\n"
     << "  [sigmaU=<s=0>]                    : Gaussian width\n"
@@ -158,46 +158,46 @@ void XmippCTF::Usage()
 }
 
 /* Show -------------------------------------------------------------------- */
-ostream & operator << (ostream &out, const XmippCTF &ctf)
+std::ostream & operator << (std::ostream &out, const XmippCTF &ctf)
 {
     if (ctf.enable_CTF)
     {
         out
-        << "sampling_rate=        " << ctf.Tm    << endl
-        << "voltage=              " << ctf.kV    << endl
-        << "defocusU=             " << ctf.DeltafU   << endl
-        << "defocusV=             " << ctf.DeltafV   << endl
-        << "azimuthal_angle=      " << ctf.azimuthal_angle << endl
-        << "spherical_aberration= " << ctf.Cs              << endl
-        << "chromatic_aberration= " << ctf.Ca              << endl
-        << "energy_loss=          " << ctf.espr            << endl
-        << "lens_stability=       " << ctf.ispr            << endl
-        << "convergence_cone=     " << ctf.alpha           << endl
-        << "longitudinal_displace=" << ctf.DeltaF          << endl
-        << "transversal_displace= " << ctf.DeltaR          << endl
-        << "Q0=                   " << ctf.Q0              << endl
-        << "K=                    " << ctf.K               << endl
+        << "sampling_rate=        " << ctf.Tm    << std::endl
+        << "voltage=              " << ctf.kV    << std::endl
+        << "defocusU=             " << ctf.DeltafU   << std::endl
+        << "defocusV=             " << ctf.DeltafV   << std::endl
+        << "azimuthal_angle=      " << ctf.azimuthal_angle << std::endl
+        << "spherical_aberration= " << ctf.Cs              << std::endl
+        << "chromatic_aberration= " << ctf.Ca              << std::endl
+        << "energy_loss=          " << ctf.espr            << std::endl
+        << "lens_stability=       " << ctf.ispr            << std::endl
+        << "convergence_cone=     " << ctf.alpha           << std::endl
+        << "longitudinal_displace=" << ctf.DeltaF          << std::endl
+        << "transversal_displace= " << ctf.DeltaR          << std::endl
+        << "Q0=                   " << ctf.Q0              << std::endl
+        << "K=                    " << ctf.K               << std::endl
         ;
     }
     if (ctf.enable_CTFnoise)
     {
-        out << "gaussian_K=           " << ctf.gaussian_K      << endl
-        << "sigmaU=               " << ctf.sigmaU      << endl
-        << "sigmaV=               " << ctf.sigmaV      << endl
-        << "cU=                   " << ctf.cU       << endl
-        << "cV=                   " << ctf.cV       << endl
-        << "gaussian_angle=       " << ctf.gaussian_angle  << endl
-        << "sqrt_K=               " << ctf.sqrt_K      << endl
-        << "sqU=                  " << ctf.sqU      << endl
-        << "sqV=                  " << ctf.sqV      << endl
-        << "sqrt_angle=           " << ctf.sqrt_angle      << endl
-        << "base_line=            " << ctf.base_line       << endl
-        << "gaussian_K2=          " << ctf.gaussian_K2     << endl
-        << "sigmaU2=              " << ctf.sigmaU2      << endl
-        << "sigmaV2=              " << ctf.sigmaV2      << endl
-        << "cU2=                  " << ctf.cU2      << endl
-        << "cV2=                  " << ctf.cV2       << endl
-        << "gaussian_angle2=      " << ctf.gaussian_angle2 << endl
+        out << "gaussian_K=           " << ctf.gaussian_K      << std::endl
+        << "sigmaU=               " << ctf.sigmaU      << std::endl
+        << "sigmaV=               " << ctf.sigmaV      << std::endl
+        << "cU=                   " << ctf.cU       << std::endl
+        << "cV=                   " << ctf.cV       << std::endl
+        << "gaussian_angle=       " << ctf.gaussian_angle  << std::endl
+        << "sqrt_K=               " << ctf.sqrt_K      << std::endl
+        << "sqU=                  " << ctf.sqU      << std::endl
+        << "sqV=                  " << ctf.sqV      << std::endl
+        << "sqrt_angle=           " << ctf.sqrt_angle      << std::endl
+        << "base_line=            " << ctf.base_line       << std::endl
+        << "gaussian_K2=          " << ctf.gaussian_K2     << std::endl
+        << "sigmaU2=              " << ctf.sigmaU2      << std::endl
+        << "sigmaV2=              " << ctf.sigmaV2      << std::endl
+        << "cU2=                  " << ctf.cU2      << std::endl
+        << "cV2=                  " << ctf.cV2       << std::endl
+        << "gaussian_angle2=      " << ctf.gaussian_angle2 << std::endl
         ;
     }
     return out;
@@ -305,21 +305,21 @@ void XmippCTF::zero(int n, const Matrix1D<double> &u, Matrix1D<double> &freq) co
     {
         // Compute more accurate zero
 #ifdef DEBUG
-        cout << n << " zero: w=" << w << " (" << wmax << ") freq="
+        std::cout << n << " zero: w=" << w << " (" << wmax << ") freq="
         << (u*w).transpose()
         << " last_ctf=" << last_ctf << " ctf=" << ctf << " ";
 #endif
         w += ctf * wstep / (last_ctf - ctf);
         V2_BY_CT(freq, u, w);
 #ifdef DEBUG
-        cout << " final w= " << w << " final freq=" << freq.transpose() << endl;
+        std::cout << " final w= " << w << " final freq=" << freq.transpose() << std::endl;
 #endif
     }
 }
 #undef DEBUG
 
 /* Apply the CTF to an image ----------------------------------------------- */
-void XmippCTF::Apply_CTF(Matrix2D < complex<double> > &FFTI) const
+void XmippCTF::Apply_CTF(Matrix2D < std::complex<double> > &FFTI) const
 {
     Matrix1D<int>    idx(2);
     Matrix1D<double> freq(2);
@@ -336,13 +336,13 @@ void XmippCTF::Apply_CTF(Matrix2D < complex<double> > &FFTI) const
 /* Generate CTF Image ------------------------------------------------------ */
 //#define DEBUG
 void XmippCTF::Generate_CTF(int Ydim, int Xdim,
-                            Matrix2D < complex<double> > &CTF) const
+                            Matrix2D < std::complex<double> > &CTF) const
 {
     Matrix1D<int>    idx(2);
     Matrix1D<double> freq(2);
     CTF.resize(Ydim, Xdim);
 #ifdef DEBUG
-    cout << "CTF:\n" << *this << endl;
+    std::cout << "CTF:\n" << *this << std::endl;
 #endif
     FOR_ALL_ELEMENTS_IN_MATRIX2D(CTF)
     {
@@ -353,8 +353,8 @@ void XmippCTF::Generate_CTF(int Ydim, int Xdim,
         CTF(i, j) = CTF_at(XX(freq), YY(freq));
 #ifdef DEBUG
         if (i == 0)
-            cout << i << " " << j << " " << YY(freq) << " " << XX(freq)
-            << " " << CTF(i, j) << endl;
+            std::cout << i << " " << j << " " << YY(freq) << " " << XX(freq)
+            << " " << CTF(i, j) << std::endl;
 #endif
     }
 }
@@ -383,21 +383,21 @@ bool XmippCTF::physical_meaning()
 #ifdef DEBUG
         if (retval == false)
         {
-            cout << *this << endl;
-            cout << "K>=0       && base_line>=0  " << (K >= 0       && base_line >= 0) << endl
-            << "kV>=50     && kV<=1000      " << (kV >= 50     && kV <= 1000)     << endl
-            << "espr>=0    && espr<=20      " << (espr >= 0    && espr <= 20)     << endl
-            << "ispr>=0    && ispr<=20      " << (ispr >= 0    && ispr <= 20)     << endl
-            << "Cs>=0      && Cs<=20        " << (Cs >= 0      && Cs <= 20)       << endl
-            << "Ca>=0      && Ca<=3         " << (Ca >= 0      && Ca <= 3)        << endl
-            << "alpha>=0   && alpha<=5      " << (alpha >= 0   && alpha <= 5)     << endl
-            << "DeltaF>=0  && DeltaF<=1000  " << (DeltaF >= 0  && DeltaF <= 1000) << endl
-            << "DeltaR>=0  && DeltaR<=100   " << (DeltaR >= 0  && DeltaR <= 100)  << endl
-            << "Q0>=-0.40  && Q0<=0       " << (Q0 >= -0.40  && Q0 <= 0)          << endl
-            << "DeltafU<=0 && DeltafV<=0    " << (DeltafU <= 0 && DeltafV <= 0)   << endl
-            << "CTF_at(0,0)>=0       " << (CTF_at(0, 0) >= 0)         << endl
+            std::cout << *this << std::endl;
+            std::cout << "K>=0       && base_line>=0  " << (K >= 0       && base_line >= 0) << std::endl
+            << "kV>=50     && kV<=1000      " << (kV >= 50     && kV <= 1000)     << std::endl
+            << "espr>=0    && espr<=20      " << (espr >= 0    && espr <= 20)     << std::endl
+            << "ispr>=0    && ispr<=20      " << (ispr >= 0    && ispr <= 20)     << std::endl
+            << "Cs>=0      && Cs<=20        " << (Cs >= 0      && Cs <= 20)       << std::endl
+            << "Ca>=0      && Ca<=3         " << (Ca >= 0      && Ca <= 3)        << std::endl
+            << "alpha>=0   && alpha<=5      " << (alpha >= 0   && alpha <= 5)     << std::endl
+            << "DeltaF>=0  && DeltaF<=1000  " << (DeltaF >= 0  && DeltaF <= 1000) << std::endl
+            << "DeltaR>=0  && DeltaR<=100   " << (DeltaR >= 0  && DeltaR <= 100)  << std::endl
+            << "Q0>=-0.40  && Q0<=0       " << (Q0 >= -0.40  && Q0 <= 0)          << std::endl
+            << "DeltafU<=0 && DeltafV<=0    " << (DeltafU <= 0 && DeltafV <= 0)   << std::endl
+            << "CTF_at(0,0)>=0       " << (CTF_at(0, 0) >= 0)         << std::endl
             ;
-            cout << "CTF_at(0,0)=" << CTF_at(0, 0, true) << endl;
+            std::cout << "CTF_at(0,0)=" << CTF_at(0, 0, true) << std::endl;
         }
 #endif
     }
@@ -434,41 +434,41 @@ bool XmippCTF::physical_meaning()
 #ifdef DEBUG
         if (retval2 == false)
         {
-            cout << *this << endl;
-            cout << "base_line>=0       &&        " << (base_line >= 0)           << endl
-            << "gaussian_K>=0      &&        " << (gaussian_K >= 0)    << endl
-            << "sigmaU>=0      && sigmaV>=0     " << (sigmaU >= 0      && sigmaV >= 0)   << endl
-            << "sigmaU<=100e3      && sigmaV<=100e3       " << (sigmaU <= 100e3      && sigmaV <= 100e3)   << endl
-            << "cU>=0       && cV>=0      " << (cU >= 0       && cV >= 0)   << endl
-            << "sqU>=0      && sqV>=0      " << (sqU >= 0        && sqV >= 0)   << endl
-            << "sqrt_K>=0      &&        " << (sqrt_K >= 0)     << endl
-            << "gaussian_K2>=0     &&        " << (gaussian_K2 >= 0)    << endl
-            << "sigmaU2>=0      && sigmaV2>=0     " << (sigmaU2 >= 0      && sigmaV2 >= 0)   << endl
-            << "sigmaU2<=100e3     && sigmaV2<=100e3      " << (sigmaU2 <= 100e3     && sigmaV2 <= 100e3)  << endl
-            << "cU2>=0       && cV2>=0      " << (cU2 >= 0      && cV2 >= 0)  << endl
-            << "gaussian_angle>=0  && gaussian_angle<=90  " << (gaussian_angle >= 0  && gaussian_angle <= 90)  << endl
-            << "sqrt_angle>=0      && sqrt_angle<=90      " << (sqrt_angle >= 0      && sqrt_angle <= 90)      << endl
-            << "gaussian_angle2>=0 && gaussian_angle2<=90 " << (gaussian_angle2 >= 0 && gaussian_angle2 <= 90) << endl
+            std::cout << *this << std::endl;
+            std::cout << "base_line>=0       &&        " << (base_line >= 0)           << std::endl
+            << "gaussian_K>=0      &&        " << (gaussian_K >= 0)    << std::endl
+            << "sigmaU>=0      && sigmaV>=0     " << (sigmaU >= 0      && sigmaV >= 0)   << std::endl
+            << "sigmaU<=100e3      && sigmaV<=100e3       " << (sigmaU <= 100e3      && sigmaV <= 100e3)   << std::endl
+            << "cU>=0       && cV>=0      " << (cU >= 0       && cV >= 0)   << std::endl
+            << "sqU>=0      && sqV>=0      " << (sqU >= 0        && sqV >= 0)   << std::endl
+            << "sqrt_K>=0      &&        " << (sqrt_K >= 0)     << std::endl
+            << "gaussian_K2>=0     &&        " << (gaussian_K2 >= 0)    << std::endl
+            << "sigmaU2>=0      && sigmaV2>=0     " << (sigmaU2 >= 0      && sigmaV2 >= 0)   << std::endl
+            << "sigmaU2<=100e3     && sigmaV2<=100e3      " << (sigmaU2 <= 100e3     && sigmaV2 <= 100e3)  << std::endl
+            << "cU2>=0       && cV2>=0      " << (cU2 >= 0      && cV2 >= 0)  << std::endl
+            << "gaussian_angle>=0  && gaussian_angle<=90  " << (gaussian_angle >= 0  && gaussian_angle <= 90)  << std::endl
+            << "sqrt_angle>=0      && sqrt_angle<=90      " << (sqrt_angle >= 0      && sqrt_angle <= 90)      << std::endl
+            << "gaussian_angle2>=0 && gaussian_angle2<=90 " << (gaussian_angle2 >= 0 && gaussian_angle2 <= 90) << std::endl
             ;
             if (min_sigma > 0)
-                cout << "ABS(sigmaU-sigmaV)/min_sigma<=3         " << (ABS(sigmaU - sigmaV) / min_sigma <= 3)     << endl;
+                std::cout << "ABS(sigmaU-sigmaV)/min_sigma<=3         " << (ABS(sigmaU - sigmaV) / min_sigma <= 3)     << std::endl;
             if (min_c > 0)
-                cout << "ABS(cU-cV)/min_c<=3                     " << (ABS(cU - cV) / min_c <= 3)                 << endl;
+                std::cout << "ABS(cU-cV)/min_c<=3                     " << (ABS(cU - cV) / min_c <= 3)                 << std::endl;
             if (gaussian_K > 0)
-                cout << "(cU*Tm>=0.01) && (cV*Tm>=0.01)          " << ((cU*Tm >= 0.01) && (cV*Tm >= 0.01))      << endl;
+                std::cout << "(cU*Tm>=0.01) && (cV*Tm>=0.01)          " << ((cU*Tm >= 0.01) && (cV*Tm >= 0.01))      << std::endl;
             if (min_sigma2 > 0)
-                cout << "ABS(sigmaU2-sigmaV2)/min_sigma2<=3      " << (ABS(sigmaU2 - sigmaV2) / min_sigma2 <= 3)  << endl;
+                std::cout << "ABS(sigmaU2-sigmaV2)/min_sigma2<=3      " << (ABS(sigmaU2 - sigmaV2) / min_sigma2 <= 3)  << std::endl;
             if (min_c2 > 0)
-                cout << "ABS(cU2-cV2)/min_c2<=3                  " << (ABS(cU2 - cV2) / min_c2 <= 3)              << endl;
+                std::cout << "ABS(cU2-cV2)/min_c2<=3                  " << (ABS(cU2 - cV2) / min_c2 <= 3)              << std::endl;
             if (gaussian_K2 > 0)
-                cout << "(cU2*Tm>=0.01) && (cV2*Tm>=0.01)        " << ((cU2*Tm >= 0.01) && (cV2*Tm >= 0.01))    << endl;
-            cout << cV2*Tm << endl;
+                std::cout << "(cU2*Tm>=0.01) && (cV2*Tm>=0.01)        " << ((cU2*Tm >= 0.01) && (cV2*Tm >= 0.01))    << std::endl;
+            std::cout << cV2*Tm << std::endl;
         }
 #endif
     }
     else retval2 = true;
 #ifdef DEBUG
-    // cout << "Retval= " << retval << " retval2= " << retval2 << endl;
+    // std::cout << "Retval= " << retval << " retval2= " << retval2 << std::endl;
 #endif
     return retval && retval2;
 }

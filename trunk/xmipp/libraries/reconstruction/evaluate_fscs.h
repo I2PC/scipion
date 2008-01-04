@@ -85,11 +85,11 @@ public:
     void read(int argc, char **argv);
 
     /** Usage message.
-        This function shows the way of introducing this parameters. */
+        This function shows the way of introdustd::cing this parameters. */
     void usage();
 
-    /** cout << prm; */
-    friend ostream & operator << (ostream &out,
+    /** std::cout << prm; */
+    friend std::ostream & operator << (std::ostream &out,
                                   const Prog_Evaluate_FSCs_Parameters &prm);
 
     /** Produce side information.

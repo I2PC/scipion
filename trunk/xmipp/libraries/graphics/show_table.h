@@ -6,7 +6,7 @@
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
  * Part of this module has been developed by Lorenzo Zampighi and Nelson Tang
- * Dept. Physiology of the David Geffen School of Medicine
+ * Dept. Physiology of the David Geffen School of Medistd::cine
  * Univ. of California, Los Angeles.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -81,7 +81,7 @@ protected:
     // Array with pointer to the pixmaps of each cell
     QPixmap   **content;
     // List to know which pixmaps are older, and probably out of use
-    list<int>   content_queue;
+    std::list<int>   content_queue;
     // Number of cells
     int         listSize;
 
@@ -105,7 +105,7 @@ protected:
     // Status label. Need not be used
     QLabel     *status;
     // Tempfiles that need to be deleted on destruction
-    vector<string> tempfilenames;
+    std::vector<std::string> tempfilenames;
 public:
     /** Empty constructor */
     ShowTable();
@@ -215,7 +215,7 @@ protected:
     void showStats(SelFile &SF, bool apply_geo = FALSE);
 
     /* Make a temp file */
-    string makeTempFile(int &fd);
+    std::string makeTempFile(int &fd);
 private slots:
     /* Open window with help about keys */
     void giveHelp();

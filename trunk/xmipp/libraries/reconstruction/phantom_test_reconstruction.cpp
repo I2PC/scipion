@@ -44,9 +44,9 @@
 /* Read Reconstruction test parameters from file =========================== */
 void Recons_test_Parameters::read(const FileName &fn_test_params)
 {
-    FILE    *fh_param;
-    string  str;
-    char *  auxstr;
+    FILE        *fh_param;
+    std::string  str;
+    char *       auxstr;
 
     // Clean old lambda and no_it
     lambda0.clear();
@@ -58,7 +58,7 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
     // Open file
     if ((fh_param = fopen(fn_test_params.c_str(), "r")) == NULL)
         REPORT_ERROR(3005,
-                     (string)"Recons_test_Parameters::read: There is a problem "
+                     (std::string)"Recons_test_Parameters::read: There is a problem "
                      "opening the file " + fn_test_params);
 
     // Read parameters
@@ -72,7 +72,7 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
         else if (str == "WBP")         recons_method = use_WBP;
         else if (str == "SIRT_Spider") recons_method = use_SIRT_Spider;
         else
-            REPORT_ERROR(3007, (string)"Recons_test_Parameters::read: "
+            REPORT_ERROR(3007, (std::string)"Recons_test_Parameters::read: "
                          "reconstruction mode " + str + " not supported");
         random_sort = checkParameter(fh_param, "random sort");
         sort_last_N = textToInteger(getParameter(fh_param, "sort last", 0, "2"));
@@ -273,14 +273,14 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE << endl;
-        REPORT_ERROR(3007, (string)"There is an error reading " + fn_test_params);
+        std::cout << XE << std::endl;
+        REPORT_ERROR(3007, (std::string)"There is an error reading " + fn_test_params);
     }
     fclose(fh_param);
 }
 
 /* Show parameters ========================================================= */
-ostream & operator << (ostream &out, const Recons_test_Parameters &prm)
+std::ostream & operator << (std::ostream &out, const Recons_test_Parameters &prm)
 {
     out << "Reconstruction Test Parameters ===================\n";
     out << "   Reconstruction method=";
@@ -299,46 +299,46 @@ ostream & operator << (ostream &out, const Recons_test_Parameters &prm)
         out << "SIRT Spider\n";
         break;
     }
-    out << "   Phantom family: " << prm.fn_random_phantom << endl;
-    out << "   Voxel Phantom: "  << prm.fn_voxel_phantom  << endl;
-    out << "   Projection parameters: " << prm.fn_proj_params << endl;
-    out << "   Crystal parameters: " << prm.fn_crystal << endl;
+    out << "   Phantom family: " << prm.fn_random_phantom << std::endl;
+    out << "   Voxel Phantom: "  << prm.fn_voxel_phantom  << std::endl;
+    out << "   Projection parameters: " << prm.fn_proj_params << std::endl;
+    out << "   Crystal parameters: " << prm.fn_crystal << std::endl;
     out << "   Random Sort: ";
     print(out, prm.random_sort);
-    out << endl;
-    out << "   Sort with last: " << prm.sort_last_N << endl;
-    out << "   Measurements: " << prm.MeasNo << endl;
-    out << "   Accuracy: " << prm.accuracy << endl;
-    out << "   Unluckiness: " << prm.unluckiness << endl;
-    out << "   Only structural: " << prm.only_structural << endl;
-    out << "   Global radius: " << prm.global_radius << endl;
-    out << "   Max resolution: " << prm.max_resolution << endl;
-    out << "   Symmetry file: " << prm.fn_sym << endl;
-    out << "   Final Symmetry file: " << prm.fn_final_sym << endl;
-    out << "   CTF file: " << prm.fn_CTF << endl;
-    out << "   Defocus change: " << prm.defocus_change << endl;
-    out << "   Noise stddev: " << prm.sigma << endl;
-    out << "   Noise lowpass before CTF: " << prm.low_pass_before_CTF << endl;
-    out << "   High pass cutoff: " << prm.w_hp << endl;
-    out << "   Probe radius: " << prm.probe_radius << endl;
+    out << std::endl;
+    out << "   Sort with last: " << prm.sort_last_N << std::endl;
+    out << "   Measurements: " << prm.MeasNo << std::endl;
+    out << "   Accuracy: " << prm.accuracy << std::endl;
+    out << "   Unluckiness: " << prm.unluckiness << std::endl;
+    out << "   Only structural: " << prm.only_structural << std::endl;
+    out << "   Global radius: " << prm.global_radius << std::endl;
+    out << "   Max resolution: " << prm.max_resolution << std::endl;
+    out << "   Symmetry file: " << prm.fn_sym << std::endl;
+    out << "   Final Symmetry file: " << prm.fn_final_sym << std::endl;
+    out << "   CTF file: " << prm.fn_CTF << std::endl;
+    out << "   Defocus change: " << prm.defocus_change << std::endl;
+    out << "   Noise stddev: " << prm.sigma << std::endl;
+    out << "   Noise lowpass before CTF: " << prm.low_pass_before_CTF << std::endl;
+    out << "   High pass cutoff: " << prm.w_hp << std::endl;
+    out << "   Probe radius: " << prm.probe_radius << std::endl;
     out << "   Top surface: ";
     if (prm.enable_top_surface)
-        out << "true z0=" << prm.top0 << " zF=" << prm.topF << endl;
+        out << "true z0=" << prm.top0 << " zF=" << prm.topF << std::endl;
     else out << "false\n";
     out << "   Bottom surface: ";
     if (prm.enable_bottom_surface)
-        out << "true z0=" << prm.bottom0 << " zF=" << prm.bottomF << endl;
+        out << "true z0=" << prm.bottom0 << " zF=" << prm.bottomF << std::endl;
     else out << "false\n";
     out << "   Start from phantom: ";
     print(out, prm.start_from_phantom);
-    out << endl;
-    out << "   Start from lowpass filter: " << prm.starting_low_pass << endl;
-    out << "   Start noise: " << prm.starting_noise << endl;
-    out << "   Stop at: " << prm.stop_at << endl;
-    out << "   Reconstruction radius: " << prm.reconstruction_radius << endl;
+    out << std::endl;
+    out << "   Start from lowpass filter: " << prm.starting_low_pass << std::endl;
+    out << "   Start noise: " << prm.starting_noise << std::endl;
+    out << "   Stop at: " << prm.stop_at << std::endl;
+    out << "   Reconstruction radius: " << prm.reconstruction_radius << std::endl;
     out << "   Run also without constraints: ";
     print(out, prm.run_also_without_constraints);
-    out << endl;
+    out << std::endl;
     if (prm.enable_normalization)
     {
         out << "   Y=AX+B: A follows N(" << prm.a_avg << "," << prm.a_stddev
@@ -370,12 +370,12 @@ ostream & operator << (ostream &out, const Recons_test_Parameters &prm)
             prm.normalizing_method == NEWXMIPP2 ||
             prm.normalizing_method == NEAR_OLDXMIPP ||
             prm.normalizing_method == MICHAEL)
-            cout << "   Background mode: Circle, radius " << prm.bg_radius << endl;
+            std::cout << "   Background mode: Circle, radius " << prm.bg_radius << std::endl;
     }
     if (prm.correct_phase)
     {
         out << "   Correcting CTF phase\n"
-        << "   Small is under " << prm.phase_correction_param << endl
+        << "   Small is under " << prm.phase_correction_param << std::endl
         << "   Correcting method: ";
         switch (prm.phase_correction_method)
         {
@@ -393,7 +393,7 @@ ostream & operator << (ostream &out, const Recons_test_Parameters &prm)
 
     if (prm.correct_amplitude)
         out << "   Correcting CTF amplitude\n"
-        << "   IDR relaxation factor: " << prm.mu << endl;
+        << "   IDR relaxation factor: " << prm.mu << std::endl;
     if (prm.unmatched)
         out << "   Unmatched CTF correction\n";
     if (prm.recons_method == use_ART || prm.recons_method == use_SIRT)
@@ -417,32 +417,32 @@ ostream & operator << (ostream &out, const Recons_test_Parameters &prm)
             out << "   Voxel basis\n";
         out << "   Succesive parameters: ";
         print(out, prm.succesive_params);
-        out << endl;
+        out << std::endl;
         if (prm.POCS_positivity) out << "   Positivity constraint allowed\n";
         if (prm.force_sym != -1)   out << "   Symmetry forced=" << prm.force_sym << "\n";
         if (prm.do_not_use_symproj) out << "   Do not use symmetrized projections\n";
         if (prm.enable_segmented_surface)
-            out << "   Segmented surface threshold: " << prm.threshold_surface_segment << endl;
-        out << "   Dilation for segmented volumes/surfaces: " << prm.segmented_dilation << endl;
-        out << "   Constrained mass: " << prm.mass << endl;
+            out << "   Segmented surface threshold: " << prm.threshold_surface_segment << std::endl;
+        out << "   Dilation for segmented volumes/surfaces: " << prm.segmented_dilation << std::endl;
+        out << "   Constrained mass: " << prm.mass << std::endl;
     }
     if (prm.recons_method == use_WBP)
         for (int i = 0; i < prm.WBP_threshold.size(); i++)
-            out << "   Threshold=" << prm.WBP_threshold[i] << endl;
+            out << "   Threshold=" << prm.WBP_threshold[i] << std::endl;
     else
         for (int i = 0; i < prm.lambda0.size(); i++)
             out << "   Lambda0=" << prm.lambda0[i]
             << " LambdaF=" << prm.lambdaF[i]
             << " No It0 =" << prm.no_it0[i]
             << " No ItF =" << prm.no_itF[i]
-            << endl;
+            << std::endl;
     if (prm.tomography) out << "   Tomography mode\n";
     if (prm.evaluate)
         out << "   Evaluation active\n"
         << "   Alternative evaluation phantom: "
-        << prm.fn_alternative_evaluation_phantom << endl
+        << prm.fn_alternative_evaluation_phantom << std::endl
         << "   Smooth evaluation mask: "
-        << prm.fn_smooth_evaluation_mask << endl
+        << prm.fn_smooth_evaluation_mask << std::endl
         ;
     return out;
 }
@@ -451,7 +451,7 @@ ostream & operator << (ostream &out, const Recons_test_Parameters &prm)
 void single_measure_on_FOM(Recons_test_Parameters &prm,
                            int i, int &nvol,
                            double &training_avg, double &training_stddev, double &training_N,
-                           EVALUATE_results &results, const string &training_FOM)
+                           EVALUATE_results &results, const std::string &training_FOM)
 {
     double min, max;
     bool accuracy_mode = prm.MeasNo == -1;
@@ -460,7 +460,7 @@ void single_measure_on_FOM(Recons_test_Parameters &prm,
     prm.only_structural = true;
     for (int k = 0; k < sample_size; k++)
     {
-        cout << "Making measure number: " << k + 1 << endl;
+        std::cout << "Making measure number: " << k + 1 << std::endl;
         single_recons_test(prm, i, nvol, results);
         if (prm.evaluate)
         {
@@ -490,7 +490,7 @@ void single_measure_on_FOM(Recons_test_Parameters &prm,
                 double t = student_outside_probb(prm.unluckiness, k + 1);
                 double estimated_sample_size =
                     t * training_stddev / (prm.accuracy / 100 * training_avg);
-                cout << "tFOM values=" << aux.transpose() << endl
+                std::cout << "tFOM values=" << aux.transpose() << std::endl
                 << estimated_sample_size << " samples will be needed\n";
                 if (sample_size < estimated_sample_size && k == sample_size - 1)
                 {
@@ -515,7 +515,7 @@ void single_measure_on_all_FOMs(Recons_test_Parameters &prm, int i,
     FOMs foms(prm.MeasNo);
     for (int k = 0; k < XSIZE(foms.scL2); k++)
     {
-        cout << "Making measure number: " << k << endl;
+        std::cout << "Making measure number: " << k << std::endl;
         single_recons_test(prm, i, nvol, results);
         if (nvol != -1) nvol++;
         if (prm.evaluate) foms.set_FOMs(k, results);
@@ -524,7 +524,7 @@ void single_measure_on_all_FOMs(Recons_test_Parameters &prm, int i,
     if (prm.evaluate)
     {
         compute_FOMs_stats(foms, i, foms_mean, foms_stddev);
-        cout << foms;
+        std::cout << foms;
     }
 }
 
@@ -611,7 +611,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
         prm_micro.after_ctf_noise = true;
         prm_micro.produce_side_info();
 
-        cerr << "Applying microscope simulation ...\n";
+        std::cerr << "Applying microscope simulation ...\n";
         init_progress_bar(SF.ImgNo());
         int i = 0;
         while (!SF.eof())
@@ -639,7 +639,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
         Filter.FilterBand = HIGHPASS;
         Filter.w1 = prm.w_hp;
         Filter.raised_w = 0.02;
-        cerr << "Filtering the images ...\n";
+        std::cerr << "Filtering the images ...\n";
         init_progress_bar(SF.ImgNo());
         int i = 0;
         bool first = true;
@@ -675,7 +675,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
         norm_prm.background_mode = CIRCLE;
         norm_prm.r = prm.bg_radius;
         norm_prm.produce_side_info();
-        cerr << "Applying linear transformation and normalizing ...\n";
+        std::cerr << "Applying linear transformation and normalizing ...\n";
         init_progress_bar(SF.ImgNo());
         int n = 0;
         while (!SF.eof())
@@ -728,7 +728,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
         if (prm.fn_random_phantom == "")
             REPORT_ERROR(1,
                          "Recons_test: Cannot use surface option without a mathematical phantom");
-        cerr << "Generating surface ...\n";
+        std::cerr << "Generating surface ...\n";
         prm_surface.probe_radius = prm.probe_radius;
         prm_surface.fnPhantom = fnPhantom;
         prm_surface.phantom = realization;
@@ -834,8 +834,8 @@ void single_recons_test(const Recons_test_Parameters &prm,
             art_prm.fn_ctf = fn_applied_CTF;
         }
 
-        cout << "Selected: Lambda= " << art_prm.lambda_list.transpose() << endl
-        << " No_it= " << art_prm.no_it << endl;
+        std::cout << "Selected: Lambda= " << art_prm.lambda_list.transpose() << std::endl
+        << " No_it= " << art_prm.no_it << std::endl;
 
         if (prm.run_also_without_constraints)
         {
@@ -855,7 +855,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
 
         if (prm.start_from_phantom)
         {
-            cerr << "Filtering phantom ...\n";
+            std::cerr << "Filtering phantom ...\n";
             VolumeXmipp starting_vol;
             starting_vol() = vol_phantom();
             if (prm.starting_noise != 0)
@@ -869,7 +869,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
             Filter.apply_mask_Space(starting_vol());
             starting_vol.write(fn_recons_root + "_starting.vol");
 
-            cerr << "Converting phantom to basis ...\n";
+            std::cerr << "Converting phantom to basis ...\n";
             int grid_type = BCC;
             if (prm.voxel_basis) grid_type = CC;
             art_prm.basis.changeFromVoxels(starting_vol(), vol_basis, grid_type,
@@ -905,11 +905,11 @@ void single_recons_test(const Recons_test_Parameters &prm,
     }
     else if (prm.recons_method == use_WBP)
     {
-        string command_line = (string)"xmipp_wbp -i " + Prog_proj_prm.fn_sel_file +
-                              " -o " + fn_recons_root + ".vol " +
-                              " -radius " + integerToString((int)(proj_prm.proj_Xdim / 2)) +
-                              " -threshold " + floatToString(prm.WBP_threshold[i], 0);
-        cerr << "Reconstructing with WBP ...\n";
+        std::string command_line = (std::string)"xmipp_wbp -i " + Prog_proj_prm.fn_sel_file +
+              " -o " + fn_recons_root + ".vol " +
+              " -radius " + integerToString((int)(proj_prm.proj_Xdim / 2)) +
+              " -threshold " + floatToString(prm.WBP_threshold[i], 0);
+        std::cerr << "Reconstructing with WBP ...\n";
         system(command_line.c_str());
     }
     else if (prm.recons_method == use_SIRT_Spider)
@@ -917,8 +917,8 @@ void single_recons_test(const Recons_test_Parameters &prm,
         double lambda = rnd_log(prm.lambda0[i], prm.lambdaF[i]);
         double no_it = (int)rnd_log(prm.no_it0[i], prm.no_itF[i]);
         int radius = (int)(proj_prm.proj_Xdim / 2) - 2;
-        cout << "Selected: Lambda= " << lambda
-        << " No_it= " << no_it << endl;
+        std::cout << "Selected: Lambda= " << lambda
+        << " No_it= " << no_it << std::endl;
         SIRT_Spider(SF, lambda, no_it, radius, fn_root, fn_ext, fn_recons_root,
                     "b73");
     }
@@ -926,7 +926,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
 // Filter result -----------------------------------------------------------
     if (prm.max_resolution != -1)
     {
-        cerr << "Filtering result ...\n";
+        std::cerr << "Filtering result ...\n";
         vol_recons.read(fn_recons_root + ".vol");
         Filter.FilterShape = RAISED_COSINE;
         Filter.FilterBand = LOWPASS;
@@ -993,7 +993,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
         else eval_prm.global_radius = CEIL(proj_prm.proj_Xdim / 2);
         // eval_prm.tell |= SAVE_HISTOGRAMS | SAVE_MAPS | SHOW_PROCESS;
         eval_prm.tell |= SHOW_PROCESS;
-        cerr << "   Evaluating ...\n";
+        std::cerr << "   Evaluating ...\n";
         ROUT_Evaluate(eval_prm, results);
     }
 }

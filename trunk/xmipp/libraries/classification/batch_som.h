@@ -59,7 +59,7 @@ public:
      * Construct a BatchSOM from the code vectors in a stream
      * Parameter: _is  The stream
      */
-    xmippBatchSOM(istream& _is);
+    xmippBatchSOM(std::istream& _is);
 
 
     /**

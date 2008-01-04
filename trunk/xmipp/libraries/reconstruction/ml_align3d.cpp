@@ -71,69 +71,69 @@ void Prog_MLalign3D_prm::show() {
 
   if (verb>0) {
     // To screen
-    cerr << "--> Maximum-likelihood multi-reference refinement "<<endl; 
-    cerr << "  Tomographic volumes     : "<< SF.name()<<" ("<<SF.ImgNo()<<")"<<endl;
-    cerr << "  Reference volumes       : "<< fn_ref<<" ("<<SFr.ImgNo()<<")"<<endl;
-    cerr << "  Output rootname         : "<< fn_root<<endl;
-    cerr << "  Number of iterations    : "<< Niter<<endl;
-    cerr << "  Rot search              : "<<rot0<<" "<<rotF<<" "<< rot_step<<endl;
-    cerr << "  Tilt search             : "<<tilt0<<" "<<tiltF<<" "<< tilt_step<<endl;
-    cerr << "  Psi search              : "<<psi0<<" "<<psiF<<" "<< psi_step<<endl;
+    std::cerr << "--> Maximum-likelihood multi-reference refinement "<<std::endl; 
+    std::cerr << "  Tomographic volumes     : "<< SF.name()<<" ("<<SF.ImgNo()<<")"<<std::endl;
+    std::cerr << "  Reference volumes       : "<< fn_ref<<" ("<<SFr.ImgNo()<<")"<<std::endl;
+    std::cerr << "  Output rootname         : "<< fn_root<<std::endl;
+    std::cerr << "  Number of iterations    : "<< Niter<<std::endl;
+    std::cerr << "  Rot search              : "<<rot0<<" "<<rotF<<" "<< rot_step<<std::endl;
+    std::cerr << "  Tilt search             : "<<tilt0<<" "<<tiltF<<" "<< tilt_step<<std::endl;
+    std::cerr << "  Psi search              : "<<psi0<<" "<<psiF<<" "<< psi_step<<std::endl;
     if (ccf_mode)
-      cerr << "  -> Use maximum constrained CCF "<<endl;
+      std::cerr << "  -> Use maximum constrained CCF "<<std::endl;
     else {
-      cerr << "  -> Use maximum-likelihood with a real-space error model "<<endl;
-      cerr << "  Sigma noise             : "<<sqrt(sigma_noise2)<<endl;
+      std::cerr << "  -> Use maximum-likelihood with a real-space error model "<<std::endl;
+      std::cerr << "  Sigma noise             : "<<sqrt(sigma_noise2)<<std::endl;
     }
     if (fn_sym!="")
-      cerr << "  Symmetry file           : "<< fn_sym<<endl;
+      std::cerr << "  Symmetry file           : "<< fn_sym<<std::endl;
     if (fn_solv!="")
-      cerr << "  Solvent mask            : "<< fn_solv<<endl;
+      std::cerr << "  Solvent mask            : "<< fn_solv<<std::endl;
     if (fn_solv2!="")
-      cerr << "  Second solvent mask     : "<< fn_solv2<<endl;
+      std::cerr << "  Second solvent mask     : "<< fn_solv2<<std::endl;
     if (fn_frac!="") {
-      cerr << "  -> Read initial model fractions from "<< fn_frac<<endl;
+      std::cerr << "  -> Read initial model fractions from "<< fn_frac<<std::endl;
     }
     if (fix_fractions) {
-      cerr << "  -> Do not update estimates of model fractions."<<endl;
+      std::cerr << "  -> Do not update estimates of model fractions."<<std::endl;
     }
     if (fix_sigma_noise) {
-      cerr << "  -> Do not update sigma-estimate of noise."<<endl;
+      std::cerr << "  -> Do not update sigma-estimate of noise."<<std::endl;
     }
     if (fix_sigma_offset) {
-      cerr << "  -> Do not update sigma-estimate of origin offsets."<<endl;
+      std::cerr << "  -> Do not update sigma-estimate of origin offsets."<<std::endl;
     }
-    cerr << " -----------------------------------------------------------------"<<endl;
+    std::cerr << " -----------------------------------------------------------------"<<std::endl;
   }
 
 } 
 
 // Usage ===================================================================
 void Prog_MLalign3D_prm::usage() {
-    cerr << "Usage:  MLalign3D [options] "<<endl;
-    cerr << "   -i <selfile>                : Selfile with input images \n";
-    cerr      << "   -ref <selfile/image>        : Selfile with initial reference images/single reference image \n";
-    cerr      << " [ -o <rootname=\"MLalign3D\"> ] : Output rootname \n";
-    cerr << " [ -offset <float=0>]          : Search radius for limited translations [pix] \n";
-    cerr << " [ -max_shift <float=dim/2>]   : Maximum allowed shift [pix] \n";
-    cerr << " [ -CCF]                       : Use maxCC target (default: max. likelihood) \n";
-    cerr << "   Angular search parameters:        \n";                          
-    cerr << " [ -rot  <rot0=0>  <rotF=0>  <step_rot=1> \n";
-    cerr << " [ -tilt <tilt0=0> <tiltF=0> <step_tilt=1>\n";
-    cerr << " [ -psi  <psi0=0>  <psiF=0>  <step_psi=1> \n";
-    cerr << " [ -sym <symfile> ]            : Enforce symmetry \n";
-    cerr << " [ -more_options ]             : Show all possible input parameters \n";
+    std::cerr << "Usage:  MLalign3D [options] "<<std::endl;
+    std::cerr << "   -i <selfile>                : Selfile with input images \n";
+    std::cerr      << "   -ref <selfile/image>        : Selfile with initial reference images/single reference image \n";
+    std::cerr      << " [ -o <rootname=\"MLalign3D\"> ] : Output rootname \n";
+    std::cerr << " [ -offset <float=0>]          : Search radius for limited translations [pix] \n";
+    std::cerr << " [ -max_shift <float=dim/2>]   : Maximum allowed shift [pix] \n";
+    std::cerr << " [ -CCF]                       : Use maxCC target (default: max. likelihood) \n";
+    std::cerr << "   Angular search parameters:        \n";                          
+    std::cerr << " [ -rot  <rot0=0>  <rotF=0>  <step_rot=1> \n";
+    std::cerr << " [ -tilt <tilt0=0> <tiltF=0> <step_tilt=1>\n";
+    std::cerr << " [ -psi  <psi0=0>  <psiF=0>  <step_psi=1> \n";
+    std::cerr << " [ -sym <symfile> ]            : Enforce symmetry \n";
+    std::cerr << " [ -more_options ]             : Show all possible input parameters \n";
 }
 
 // Extended usage ===================================================================
 void Prog_MLalign3D_prm::extended_usage() {
-  cerr << "Additional options: "<<endl;
-  cerr << " [ -iter <int=100> ]           : Maximum number of iterations to perform \n";
-  cerr << " [ -frac <docfile=\"\"> ]        : Docfile with expected model fractions (default: even distr.)\n";
-  cerr << " [ -fix_sigma_noise]           : Do not re-estimate the standard deviation in the pixel noise \n";
-  cerr << " [ -fix_sigma_offset]          : Do not re-estimate the standard deviation in the offsets \n";
-  cerr << " [ -fix_fractions]             : Do not re-estimate the model fractions \n";
-  cerr << endl;
+  std::cerr << "Additional options: "<<std::endl;
+  std::cerr << " [ -iter <int=100> ]           : Maximum number of iterations to perform \n";
+  std::cerr << " [ -frac <docfile=\"\"> ]        : Docfile with expected model fractions (default: even distr.)\n";
+  std::cerr << " [ -fix_sigma_noise]           : Do not re-estimate the standard deviation in the pixel noise \n";
+  std::cerr << " [ -fix_sigma_offset]          : Do not re-estimate the standard deviation in the offsets \n";
+  std::cerr << " [ -fix_fractions]             : Do not re-estimate the model fractions \n";
+  std::cerr << std::endl;
   exit(1);
 }
 
@@ -242,7 +242,7 @@ void Prog_MLalign3D_prm::produce_Side_info() {
       DF.next_data_line();
     }
     if (ABS(sumfrac-1.)>1e-4) 
-      cerr << " ->WARNING: Sum of all expected model fractions ("<<floatToString(sumfrac)<<") is not one!"<<endl;
+      std::cerr << " ->WARNING: Sum of all expected model fractions ("<<floatToString(sumfrac)<<") is not one!"<<std::endl;
     for (refno=0; refno<nr_ref; refno++) { alpha_k[refno]/=sumfrac; }
   }
 
@@ -291,8 +291,8 @@ void Prog_MLalign3D_prm::produce_Side_info() {
 	    }
 	  }
 	  if (ifound!=1) {
-	    cerr <<ifound;
-	    cerr << "ERROR% wedge "<<iaux<<" for tomogram "<<fn_vol<<" not found in wedge-list"<<endl;
+	    std::cerr <<ifound;
+	    std::cerr << "ERROR% wedge "<<iaux<<" for tomogram "<<fn_vol<<" not found in wedge-list"<<std::endl;
 	    exit(0);
 	  }
 	} else {
@@ -301,7 +301,7 @@ void Prog_MLalign3D_prm::produce_Side_info() {
 	  img_thF.push_back(0.);
 	}
       } else {
-	cerr << "ERROR% "<<fn_vol<<" not found in document file"<<endl;
+	std::cerr << "ERROR% "<<fn_vol<<" not found in document file"<<std::endl;
 	exit(0);
       }
     }
@@ -349,18 +349,18 @@ void Prog_MLalign3D_prm::calculate_pdf_trans() {
 
 void Prog_MLalign3D_prm::CCF_integrate(
 	  Matrix3D<double> &Mimg, Matrix2D<double> &A_img, 
-	  vector<Matrix3D<double> > &wsum_Mimgs,
-	  vector<Matrix3D<double> > &wsum_Mwedge,
-	  double &th0, double &thF, vector<double> &sumw, double &maxccf, 
+	  std::vector<Matrix3D<double> > &wsum_Mimgs,
+	  std::vector<Matrix3D<double> > &wsum_Mwedge,
+	  double &th0, double &thF, std::vector<double> &sumw, double &maxccf, 
 	  int &opt_refno, double &opt_rot, double &opt_tilt, double &opt_psi,
 	  double &opt_xoff, double &opt_yoff, double &opt_zoff) {
 
 
   Matrix3D<double> Maux, Mwedge, Mwedgebig, Msmall, Maux2;
-  Matrix3D<complex<double> > Fimg, Faux, FFref;
+  Matrix3D<std::complex<double> > Fimg, Faux, FFref;
   Matrix2D<double> A(4,4), A_rot(4,4), I(4,4);
   Matrix1D<double> opt_offsets(3);
-  vector<double> refw(nr_ref);
+  std::vector<double> refw(nr_ref);
   double aux,weight,diff,dum,avg;
   double sum_refw=0.;
   int ioptx,iopty,ioptz,xmax,ymax,zmax;
@@ -386,7 +386,7 @@ void Prog_MLalign3D_prm::CCF_integrate(
     Fimg*=dim3;
   }
 
-  // Calculate Xi2 forcing the supposed missing wedge
+  // Calculate Xi2 forstd::cing the supposed missing wedge
   if (nr_wedge>0) {
     BinaryWedgeMask(Mwedge,th0,thF,I);
     CenterFFT(Mwedge,false);
@@ -476,7 +476,7 @@ void Prog_MLalign3D_prm::CCF_integrate(
 	    Maux.maxIndex(zmax,ymax,xmax);
 	    max=VOL_ELEM(Maux,zmax,ymax,xmax);
 	  }
-	  if (verb>0) cout <<rot<<" "<<tilt<<" "<<psi<<" "<<xmax<<" "<<ymax<<" "<<zmax<<" "<<max<<endl;
+	  if (verb>0) std::cout <<rot<<" "<<tilt<<" "<<psi<<" "<<xmax<<" "<<ymax<<" "<<zmax<<" "<<max<<std::endl;
 	  if (max>maxccf) {
 	    maxccf=max;
 	    opt_xoff=(double)-xmax;
@@ -534,20 +534,20 @@ void Prog_MLalign3D_prm::CCF_integrate(
 // Integration over all model,orientations and translations
 void Prog_MLalign3D_prm::ML_integrate(
 	  Matrix3D<double> &Mimg, Matrix2D<double> &A_img, 
-	  vector<Matrix3D<double> > &wsum_Mimgs,
-	  vector<Matrix3D<double> > &wsum_Mwedge,
+	  std::vector<Matrix3D<double> > &wsum_Mimgs,
+	  std::vector<Matrix3D<double> > &wsum_Mwedge,
 	  double &wsum_sigma_noise2,  double &wsum_sigma_offset,  
 	  double &th0, double &thF, 
-	  vector<double> &sumw, double &LL, double &fracweight, 
+	  std::vector<double> &sumw, double &LL, double &fracweight, 
 	  int &opt_refno, double &opt_rot, double &opt_tilt, double &opt_psi,
 	  double &opt_xoff, double &opt_yoff, double &opt_zoff) {
 
   Matrix3D<double> Maux, Mwedge, Msmall, Mwedgebig, Mimgori;
-  vector<Matrix3D<double> > Mweight;
-  Matrix3D<complex<double> > Fimg, Faux, FFref;
+  std::vector<Matrix3D<double> > Mweight;
+  Matrix3D<std::complex<double> > Fimg, Faux, FFref;
   Matrix2D<double> A(4,4), A_rot(4,4), I(4,4);
   Matrix1D<double> offsets(3);
-  vector<double> refw(nr_ref);
+  std::vector<double> refw(nr_ref);
   double sum_refw=0.,maxweight=-99.e99,mindiff2=99.e99,wsum_corr=0.;
   int iweight,ioptx,iopty,ioptz,xmax,ymax,zmax,smalldim;
   double rot,tilt,psi,rot_sam,Xi2,A2,corrA2,mind,sumweight,maxw,sum,aux,weight,dum,avg;
@@ -579,7 +579,7 @@ void Prog_MLalign3D_prm::ML_integrate(
     Fimg*=dim3;
   }
 
-  // Calculate Xi2 forcing the supposed missing wedge
+  // Calculate Xi2 forstd::cing the supposed missing wedge
   if (nr_wedge>0) {
     BinaryWedgeMask(Mwedge,th0,thF,I);
     CenterFFT(Mwedge,false);
@@ -777,15 +777,15 @@ void Prog_MLalign3D_prm::ML_integrate(
 
 }
 
-void Prog_MLalign3D_prm::ML_sum_over_all_images(SelFile &SF, vector<Matrix3D<double> > &Iref, 
+void Prog_MLalign3D_prm::ML_sum_over_all_images(SelFile &SF, std::vector<Matrix3D<double> > &Iref, 
 			  double &LL, double &sumcorr, DocFile &DFo, 
-			  vector<Matrix3D<double> > &wsum_Mref,
-			  vector<Matrix3D<double> > &wsum_Mwedge, 
+			  std::vector<Matrix3D<double> > &wsum_Mref,
+			  std::vector<Matrix3D<double> > &wsum_Mwedge, 
 			  double &wsum_sigma_noise2, 
-			  double &wsum_sigma_offset, vector<double> &sumw) {
+			  double &wsum_sigma_offset, std::vector<double> &sumw) {
 
-  vector <Matrix3D<complex<double> > > Fref,wsum_Fimgs;
-  Matrix3D<complex<double> > Fdzero;
+  std::vector <Matrix3D<std::complex<double> > > Fref,wsum_Fimgs;
+  Matrix3D<std::complex<double> > Fdzero;
   Matrix3D<double> Mdzero, Mdzerobig;
   Matrix1D<double> dataline(10), opt_offsets(3), mis_offsets(3);  
   Matrix2D<double> A_img(4,4);
@@ -902,16 +902,16 @@ void Prog_MLalign3D_prm::ML_sum_over_all_images(SelFile &SF, vector<Matrix3D<dou
 }
 
 // Update all model parameters
-void Prog_MLalign3D_prm::update_parameters(vector<Matrix3D<double> > &wsum_Mref,
-                                           vector<Matrix3D<double> > &wsum_Mwedge, 
+void Prog_MLalign3D_prm::update_parameters(std::vector<Matrix3D<double> > &wsum_Mref,
+                                           std::vector<Matrix3D<double> > &wsum_Mwedge, 
 					   double &wsum_sigma_noise2, double &wsum_sigma_offset,
-					   vector<double> &sumw, 
+					   std::vector<double> &sumw, 
 					   double &sumcorr, double &sumw_allrefs, int iter) {
 
   VolumeXmipp Vaux,Vaux2;
   Matrix1D<double> rmean_sigma2,rmean_wedge;
   Matrix1D<int> center(3),radial_count;
-  Matrix3D<complex<double> > Faux,Fsum;
+  Matrix3D<std::complex<double> > Faux,Fsum;
   Matrix3D<double> Maux,Msum,allsum_Mwedge;
   double rr,dum,avg,theta_corr,sum_ref=0.;
 
@@ -1063,7 +1063,7 @@ void Prog_MLalign3D_prm::misalign(Matrix2D<double> &A_img,
     mis_offsets(1)=DFmis(4);
     mis_offsets(2)=DFmis(5);
   } else {
-    cerr << "ERROR% "<<fn_img<<" not found in misalignment document file"<<endl;
+    std::cerr << "ERROR% "<<fn_img<<" not found in misalignment document file"<<std::endl;
     exit(0);
   }
   A=Euler_rotation3DMatrix(mis_rot,mis_tilt,mis_psi);
@@ -1083,7 +1083,7 @@ void Prog_MLalign3D_prm::symmetrize_tomogram(Matrix3D<double> &Min, Matrix3D<dou
   double dum,avg;
   Matrix2D<double> L(4,4), R(4,4); 
   Matrix3D<double> Maux,Mwed;
-  Matrix3D<complex<double> > Faux;
+  Matrix3D<std::complex<double> > Faux;
   Maux.initZeros(dim,dim,dim);
   Maux.setXmippOrigin();
   Mwed.initZeros(dim,dim,dim);
@@ -1136,7 +1136,7 @@ void Prog_MLalign3D_prm::symmetrize_tomogram(Matrix3D<double> &Min, Matrix3D<dou
 }
 
 void Prog_MLalign3D_prm::write_output_files(const int iter, SelFile &SF, DocFile &DF, 
-					    double &sumw_allrefs, vector<double> &sumw, 
+					    double &sumw_allrefs, std::vector<double> &sumw, 
 					    double &LL, double &avecorr) {
 
   FileName fn_tmp,fn_base;

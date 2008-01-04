@@ -60,8 +60,8 @@ class xmippCB : public xmippCDSet<xmippVector, xmippLabel>, public xmippCTSet<xm
 {
 public:
 
-    vector< vector <unsigned> > classifVectors;
-    vector< double > aveDistances;
+    std::vector< std::vector <unsigned> > classifVectors;
+    std::vector< double > aveDistances;
 
 
     /**
@@ -113,7 +113,7 @@ public:
      * Parameter: _is  The input stream
      * @exception  runtime_error  If there are problems with the stream
      */
-    xmippCB(istream& _is);
+    xmippCB(std::istream& _is);
 
     /**
      * Virtual destructor needed
@@ -154,7 +154,7 @@ public:
     /**
      * Returns the list of input vectors associated to this code vector.
      */
-    virtual const vector< unsigned>& classifAt(const unsigned& _index) const;
+    virtual const std::vector< unsigned>& classifAt(const unsigned& _index) const;
 
     /**
     * Returns the number of input vectors associated to this code vector.
@@ -187,20 +187,20 @@ public:
      * Standard output for a code book
      * Parameter: _os The output stream
      */
-    virtual void printSelf(ostream& _os) const;
+    virtual void printSelf(std::ostream& _os) const;
 
     /**
      * Standard input for a code book
      * Parameter: _is The input stream
      */
-    virtual void readSelf(istream& _is, long _dim = -1, long _size = -1);
+    virtual void readSelf(std::istream& _is, long _dim = -1, long _size = -1);
 
     /**
      * Saves the xmippCodeBook class into a stream.
      * this method can be used to save the status of the class.
      * Parameter: _os The output stream
      */
-    virtual void saveObject(ostream& _os) const;
+    virtual void saveObject(std::ostream& _os) const;
 
 
     /**
@@ -208,14 +208,14 @@ public:
      * this method can be used to load the status of the class.
      * Parameter: _is The output stream
      */
-    virtual void loadObject(istream& _is);
+    virtual void loadObject(std::istream& _is);
 
     /**
      * Normalize all features in the codebook
      *  Parameter: _varStats The normalization information
      */
 
-    virtual void Normalize(const vector <xmippCTVectors::statsStruct>&  _varStats);
+    virtual void Normalize(const std::vector <xmippCTVectors::statsStruct>&  _varStats);
 
 
     /**
@@ -223,20 +223,20 @@ public:
      *  Parameter: _varStats The normalization information
      */
 
-    virtual void unNormalize(const vector <xmippCTVectors::statsStruct>&  _varStats);
+    virtual void unNormalize(const std::vector <xmippCTVectors::statsStruct>&  _varStats);
 
 
     /**
      * Prints the histogram values of each codevector.
      * Parameter: _os  The the output stream
      */
-    virtual void printHistogram(ostream& _os) const;
+    virtual void printHistogram(std::ostream& _os) const;
 
     /**
      * Prints the Average Quantization Error of each codevector.
      * Parameter: _os  The the output stream
      */
-    virtual void printQuantError(ostream& _os) const;
+    virtual void printQuantError(std::ostream& _os) const;
 
 
 protected:
@@ -245,13 +245,13 @@ protected:
      * Reads the classif vectors from a stream.
      * Parameter: _is  The input stream
      */
-    void readClassifVectors(istream& _is);
+    void readClassifVectors(std::istream& _is);
 
     /**
      * Writes the classif vectors to a stream
      * Parameter: _os  The output stream
      */
-    void writeClassifVectors(ostream& _os) const;
+    void writeClassifVectors(std::ostream& _os) const;
 };
 //@}
 #endif//XMIPPCODEBOOK_H

@@ -49,13 +49,13 @@ protected:
     // Original data
     xmippCTVectors *Vdat;
     // Array of list of images, a list for each codevector
-    vector<string> *SFcv;
+    std::vector<std::string> *SFcv;
     // Array of list of spectra, a list for each codevector
-    vector<int>    *SFcvs;
+    std::vector<int>    *SFcvs;
     // Histogram of images assigned
-    string  *hisAssigned;
+    std::string  *hisAssigned;
     // Errors within group
-    string  *cv_errors;
+    std::string  *cv_errors;
     // Info file
     QString infStr;
 

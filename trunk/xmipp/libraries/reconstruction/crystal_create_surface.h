@@ -69,7 +69,7 @@ public:
 
     /** Paramter that determines the shape of the surface to
     be mapped */
-    string option;
+    std::string option;
 
     /** parameters included in the input file */
     int hmax, hmin, kmin, kmax;
@@ -91,7 +91,7 @@ public:
     void read_input_file();
 
     /** Usage message.
-        This function shows the way of introducing this parameters. */
+        This function shows the way of introdustd::cing this parameters. */
     void usage();
 
     /** The maping function maps each (h,k) point into a parabole or cosine surface */

@@ -367,7 +367,7 @@ public:
         return static_cast< FileName >(fn_img);
     }
 
-    /** Cout << Volume.
+    /** std::cout << Volume.
      * Shows name and size.
      */
     friend std::ostream& operator<<(std::ostream& out, const VolumeT< T >& V)
@@ -545,7 +545,7 @@ public:
 
 // Specialization for complex numbers
 template<>
-inline void VolumeT< complex< double > >::read(FILE* fh,
+inline void VolumeT< std::complex< double > >::read(FILE* fh,
         int Zdim,
         int Ydim,
         int Xdim,
@@ -572,7 +572,7 @@ inline void VolumeT< complex< double > >::read(FILE* fh,
 }
 
 template<>
-inline void VolumeT< complex< double > >::write(FILE *fh,
+inline void VolumeT< std::complex< double > >::write(FILE *fh,
         bool reversed,
         Volume_Type volume_type)
 {
@@ -629,12 +629,12 @@ public:
             header.headerType() = headerXmipp::VOL_XMIPP;
         else if (typeid(T) == typeid(int))
             header.headerType() = headerXmipp::VOL_INT;
-        else if (typeid(T) == typeid(complex< double >))
+        else if (typeid(T) == typeid(std::complex< double >))
             header.headerType() = headerXmipp::VOL_FOURIER;
         else
         {
-            std::cout << "\nError: VolumeXmipp should be" <<
-            " complex< double >, double or integer\n";
+            std::cout << "\nError: VolumeXmipp should be"
+                      << " std::complex< double >, double or integer\n";
             exit(0);
         }
     }
@@ -652,7 +652,7 @@ public:
             header.headerType() = headerXmipp::VOL_XMIPP;
         else if (typeid(T) == typeid(int))
             header.headerType() = headerXmipp::VOL_INT;
-        else if (typeid(T) == typeid(complex< double >))
+        else if (typeid(T) == typeid(std::complex< double >))
             header.headerType() = headerXmipp::VOL_FOURIER;
         else
         {
@@ -681,7 +681,7 @@ public:
             header.headerType() = headerXmipp::VOL_XMIPP;
         else if (typeid(T) == typeid(int))
             header.headerType() = headerXmipp::VOL_INT;
-        else if (typeid(T) == typeid(complex< double >))
+        else if (typeid(T) == typeid(std::complex< double >))
             header.headerType() = headerXmipp::VOL_FOURIER;
         else
         {
@@ -873,7 +873,7 @@ public:
             header.headerType() = headerXmipp::VOL_XMIPP;
         else if (typeid(T) == typeid(int))
             header.headerType() = headerXmipp::VOL_INT;
-        else if (typeid(T) == typeid(complex< double >))
+        else if (typeid(T) == typeid(std::complex< double >))
             header.headerType() = headerXmipp::VOL_FOURIER;
 
         header.set_dimension(YSIZE(VolumeT< T >::img), XSIZE(VolumeT<T>::img));
@@ -914,8 +914,8 @@ public:
 // TODO Document
 typedef VolumeT< double > Volume;
 typedef VolumeXmippT< double > VolumeXmipp;
-typedef VolumeT< complex< double > > FourierVolume;
-typedef VolumeXmippT< complex< double > > FourierVolumeXmipp;
+typedef VolumeT< std::complex< double > > FourierVolume;
+typedef VolumeXmippT< std::complex< double > > FourierVolumeXmipp;
 
 /** True if the given volume is an Xmipp volume.
  */

@@ -108,7 +108,7 @@ std::string floatToString(float val, int width, int prec);
  * @code
  * FOR_ALL_ELEMENTS_IN_MATRIX1D(v)
  * {
- *     cout << v(i) << " ";
+ *     std::cout << v(i) << " ";
  * }
  * @endcode
  */
@@ -129,7 +129,7 @@ std::string floatToString(float val, int width, int prec);
  * XX(corner2) = 1;
  * FOR_ALL_ELEMENTS_IN_MATRIX1D_BETWEEN(corner1, corner2)
  * {
- *     cout << v(XX(r)) << " ";
+ *     std::cout << v(XX(r)) << " ";
  * }
  * @endcode
  */
@@ -170,7 +170,7 @@ std::string floatToString(float val, int width, int prec);
  * @code
  * FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(v)
  * {
- *     cout << DIRECT_MAT_ELEM(v, i) << " ";
+ *     std::cout << DIRECT_MAT_ELEM(v, i) << " ";
  * }
  * @endcode
  */
@@ -247,7 +247,7 @@ std::string floatToString(float val, int width, int prec);
  * This macro gives you access to the array (T*).
  *
  * @code
- * cout << "This is an int*" << VEC_ARRAY(v) << endl;
+ * std::cout << "This is an int*" << VEC_ARRAY(v) << std::endl;
  * @endcode
  */
 #define VEC_ARRAY(v) MULTIDIM_ARRAY(v)
@@ -848,7 +848,7 @@ public:
      *
      * @code
      * if (v.isRow())
-     *     cout << "v is a row vector\n";
+     *     std::cout << "v is a row vector\n";
      * @endcode
      */
     int isRow() const
@@ -861,7 +861,7 @@ public:
      *
      * @code
      * if (v.isCol())
-     *     cout << "v is a column vector\n";
+     *     std::cout << "v is a column vector\n";
      * @endcode
      */
     int  isCol()  const
@@ -1152,7 +1152,7 @@ public:
                                char operation)
     {
         if (!op1.sameShape(op2))
-            REPORT_ERROR(1007, (string) "Array_by_array: different shapes (" +
+            REPORT_ERROR(1007, (std::string) "Array_by_array: different shapes (" +
                          operation + ")");
 
         if (operation == 'x')
@@ -1438,24 +1438,24 @@ public:
      * This function uses gnuplot to plot this vector. You must supply the
      * xlabel, ylabel, and title.
      */
-    void showWithGnuPlot(const string& xlabel, const string& title)
+    void showWithGnuPlot(const std::string& xlabel, const std::string& title)
     {
         FileName fn_tmp;
         fn_tmp.init_random(10);
-        write((string) "PPP" + fn_tmp + ".txt");
+        write((std::string) "PPP" + fn_tmp + ".txt");
 
         std::ofstream fh_gplot;
-        fh_gplot.open(((string) "PPP" + fn_tmp + ".gpl").c_str());
+        fh_gplot.open(((std::string) "PPP" + fn_tmp + ".gpl").c_str());
         if (!fh_gplot)
             REPORT_ERROR(1,
-                         (string) "vector::showWithGnuPlot: Cannot open PPP" + fn_tmp +
+                         (std::string) "vector::showWithGnuPlot: Cannot open PPP" + fn_tmp +
                          ".gpl for output");
         fh_gplot << "set xlabel \"" + xlabel + "\"\n";
         fh_gplot << "plot \"PPP" + fn_tmp + ".txt\" title \"" + title +
         "\" w l\n";
         fh_gplot << "pause 300 \"\"\n";
         fh_gplot.close();
-        system(((string) "(gnuplot PPP" + fn_tmp + ".gpl; rm PPP" + fn_tmp +
+        system(((std::string) "(gnuplot PPP" + fn_tmp + ".gpl; rm PPP" + fn_tmp +
                 ".txt PPP" + fn_tmp + ".gpl) &").c_str());
     }
 
@@ -1546,8 +1546,8 @@ Matrix1D< int > vectorR3(int x, int y, int z);
  * @code
  * Matrix1D< double > v1(1000);
  * v1.init_random(0, 10, "gaussian");
- * cout << "The power of this vector should be 100 and is " <<
- *     dotProduct(v1, v1) << endl;
+ * std::cout << "The power of this vector should be 100 and is " <<
+ *     dotProduct(v1, v1) << std::endl;
  * @endcode
  */
 template<typename T>
@@ -1574,7 +1574,7 @@ T dotProduct(const Matrix1D< T >& v1, const Matrix1D< T >& v2)
  *
  * @code
  * Matrix1D< T > X = vectorR3(1, 0, 0), Y = vector_R3(0, 1, 0);
- * cout << "X*Y=Z=" << vectorProduct(X,Y).transpose() << endl;
+ * std::cout << "X*Y=Z=" << vectorProduct(X,Y).transpose() << std::endl;
  * @endcode
  */
 template<typename T>
@@ -1605,7 +1605,7 @@ Matrix1D< T > vectorProduct(const Matrix1D< T >& v1, const Matrix1D< T >& v2)
  * Matrix1D< double > X = vectorR3(1, 0, 0), Y = vector_R3(0, 1, 0),
  *     Z = vectorR3(0, 0, 1);
  * if (areOrthogonal(X, Y, Z))
- *     cout << "Of course, they are orthogonal\n";
+ *     std::cout << "Of course, they are orthogonal\n";
  * @endcode
  */
 int areOrthogonal(Matrix1D< double >& v1,
@@ -1625,9 +1625,9 @@ int areOrthogonal(Matrix1D< double >& v1,
  * Matrix1D< double > X = vectorR3(1, 0, 0), Y = vector_R3(0, 1, 0),
  *     Z = vectorR3(0, 0, 1);
  * if (areSystem(X,Y,Z))
- *     cout << "Of course, they are a system\n";
+ *     std::cout << "Of course, they are a system\n";
  * if (!areSystem(-X, Y, Z))
- *     cout << "But not in this case even if they are orthogonal\n";
+ *     std::cout << "But not in this case even if they are orthogonal\n";
  * @endcode
  */
 int areSystem(Matrix1D< double >& v1,

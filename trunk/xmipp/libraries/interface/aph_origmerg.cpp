@@ -36,15 +36,15 @@
 #define VERBOSE
 //#define DEBUG
 // Show a spot =============================================================
-ostream &operator<<(ostream &os, const spot &s)
+std::ostream &operator<<(std::ostream &os, const spot &s)
 {
     os << "(" << s.h     << "," << s.k << "," << s.zstar << ") = ";
-    os << "(" << s.amp   << "," << s.phase << ")" << endl;
-    os << "\tFILM= "   << s.FILM   << endl;
-    os << "\tIQ= "     << s.IQ     << endl;
-    os << "\tFLMWGT= " << s.FLMWGT << endl;
-    os << "\tBACK= "   << s.BACK   << endl;
-    os << "\tCTF= "    << s.myCTF    << endl;
+    os << "(" << s.amp   << "," << s.phase << ")" << std::endl;
+    os << "\tFILM= "   << s.FILM   << std::endl;
+    os << "\tIQ= "     << s.IQ     << std::endl;
+    os << "\tFLMWGT= " << s.FLMWGT << std::endl;
+    os << "\tBACK= "   << s.BACK   << std::endl;
+    os << "\tCTF= "    << s.myCTF    << std::endl;
     return os;
 }
 
@@ -52,13 +52,13 @@ ostream &operator<<(ostream &os, const spot &s)
 void APHFileorigmerg::read(const FileName &fn,
                            const int mrc_label)
 {
-    ifstream  fh_aph;
-    string    line;
+    std::ifstream  fh_aph;
+    std::string    line;
     // Empties current APH File
     clear();
     read_mrc_label = mrc_label;
     // Open file
-    fh_aph.open(fn.c_str(), ios::in);
+    fh_aph.open(fn.c_str(), std::ios::in);
     if (!fh_aph)
         REPORT_ERROR(1601, "APHFileorigmerg::read: File " + fn + " not found");
 
@@ -95,15 +95,15 @@ void APHFileorigmerg::read(const FileName &fn,
         }
         catch (Xmipp_error)
         {
-            cout << "aph File: Line " << line_no << " is skipped due to an error\n";
+            std::cout << "aph File: Line " << line_no << " is skipped due to an error\n";
         }
     }/* while */
 
 //   #define DEBUG_max
 #ifdef DEBUG_max
-    cout << "max_h: " << max_h << " max_k: " << max_k << endl;
-    cout << "min_h: " << min_h << " min_k: " << min_k << endl;
-    cout << "Number Spots: " << aph_data_vector.size() << endl;
+    std::cout << "max_h: " << max_h << " max_k: " << max_k << std::endl;
+    std::cout << "min_h: " << min_h << " min_k: " << min_k << std::endl;
+    std::cout << "Number Spots: " << aph_data_vector.size() << std::endl;
 #endif
 #undef DEBUG_max
 
@@ -117,18 +117,18 @@ void APHFileorigmerg::read(const FileName &fn,
 /* ------------------------------------------------------------------------- */
 void APHFileorigmerg::write(const FileName &fn) const
 {
-    ofstream fh;
+    std::ofstream fh;
     fh.open(fn.c_str());
     char aux_char[128];
     //sort vector can not be done here
     if (!fh)
-        REPORT_ERROR(1, (string)"APHFileorigmerg::write: Cannot open " +
+        REPORT_ERROR(1, (std::string)"APHFileorigmerg::write: Cannot open " +
                      fn + " for output");
 
     if (read_mrc_label == -1)
-        fh << setfill('0') << setw(4) << 9999 << endl;
+        fh << std::setfill('0') << std::setw(4) << 9999 << std::endl;
     else
-        fh << setfill('0') << setw(4) << read_mrc_label << endl;
+        fh << std::setfill('0') << std::setw(4) << read_mrc_label << std::endl;
     for (int line_no = 0; line_no < aph_data_vector.size(); line_no++)
     {
         if ((aph_data_vector[line_no]).amp < 0.0001) continue;
@@ -204,9 +204,9 @@ void APHFileorigmerg::unasymmetrization(const double a_mag, const  double b_mag,
                             a_b_ang,  symmetry_group, Counter);
         break;
     default         :
-        cerr << "APHFileorigmerg::unasymmetrization:" << endl;
-        cerr << "\t\tsymmetry " << symmetry_group << " not implemented"
-        << endl;
+        std::cerr << "APHFileorigmerg::unasymmetrization:" << std::endl;
+        std::cerr << "\t\tsymmetry " << symmetry_group << " not implemented"
+        << std::endl;
         exit(1);
     }
 }//unasymmetrization end
@@ -295,7 +295,7 @@ void APHFileorigmerg::unsymmetrice_P222_1(const double a_mag, const  double b_ma
 
 //   #define DEBUGCounter1
 #ifdef DEBUGCounter1
-    cout << Counter;
+    std::cout << Counter;
 #endif
 #undef DEBUGCounter1
 
@@ -328,7 +328,7 @@ void APHFileorigmerg::unsymmetrice_P222_1(const double a_mag, const  double b_ma
                 MAT_ELEM(Counter, k, h) -= 1;
                 //#define DEBUGTILTZERO
 #ifdef  DEBUGTILTZERO
-                cout << (aph_data_vector[line_no]);
+                std::cout << (aph_data_vector[line_no]);
 #endif
 #undef DEBUGTILTZERO
             }//if ( MAT_ELEM(Counter, k, h)> 1){
@@ -389,18 +389,18 @@ void APHFileorigmerg::unsymmetrice_P222_1(const double a_mag, const  double b_ma
         }
 //      #define DEBUG
 #ifdef DEBUG
-        cout << "Theorical_Z 1 =" << first.h  *  h_contrib +
-        first.k  *  k_contrib << endl;
-        cout << first ;
-        cout << "Theorical_Z 2=" << second.h  *  h_contrib +
-        second.k  *  k_contrib << endl;
-        cout << second ;
-        cout << "Theorical_Z 3=" << third.h  *  h_contrib +
-        third.k  *  k_contrib << endl;
-        cout << third ;
-        cout << "Theorical_Z 4=" << fourth.h  *  h_contrib +
-        fourth.k  *  k_contrib << endl;
-        cout << fourth ;
+        std::cout << "Theorical_Z 1 =" << first.h  *  h_contrib +
+        first.k  *  k_contrib << std::endl;
+        std::cout << first ;
+        std::cout << "Theorical_Z 2=" << second.h  *  h_contrib +
+        second.k  *  k_contrib << std::endl;
+        std::cout << second ;
+        std::cout << "Theorical_Z 3=" << third.h  *  h_contrib +
+        third.k  *  k_contrib << std::endl;
+        std::cout << third ;
+        std::cout << "Theorical_Z 4=" << fourth.h  *  h_contrib +
+        fourth.k  *  k_contrib << std::endl;
+        std::cout << fourth ;
 #endif
 #undef DEBUG
         // Select  right point
@@ -443,7 +443,7 @@ void APHFileorigmerg::unsymmetrice_P222_1(const double a_mag, const  double b_ma
                 //if IQ positive h must be positive and z=0
                 //so I must apply R3 (o R3 .R2) (h , -k, l,am,180*k-ph
                 //otherwise R1 . R3 (-h,k,-l,Am -180k +ph)
-//cout << "(h,k,aux_spot.IQ) " << h << " " << k << " " << aux_spot.IQ << endl;
+//std::cout << "(h,k,aux_spot.IQ) " << h << " " << k << " " << aux_spot.IQ << std::endl;
                 if (aux_spot.IQ > 0)
                 {
                     aux_spot.k  *= -1;
@@ -466,17 +466,17 @@ void APHFileorigmerg::unsymmetrice_P222_1(const double a_mag, const  double b_ma
         }//if(mrc_tilt==0)
         aux_spot.phase = realWRAP(aux_spot.phase, -180., 180.);
         aph_data_vector[line_no] = aux_spot;
-        cout << "Selected point: " << aph_data_vector[line_no];
+        std::cout << "Selected point: " << aph_data_vector[line_no];
         if (MAT_ELEM(Counter, k, h) > 2)
             REPORT_ERROR(1234, "unsymmetrice_P222_1: Count can not be > 2.");
 //      #define DEBUG
 #ifdef DEBUG
-        cout << "diff_z[0]" << diff_z[0] << " diff_z[1]" << diff_z[1] << endl;
-        cout << "diff_z[2]" << diff_z[2] << " diff_z[3]" << diff_z[3] << endl;
+        std::cout << "diff_z[0]" << diff_z[0] << " diff_z[1]" << diff_z[1] << std::endl;
+        std::cout << "diff_z[2]" << diff_z[2] << " diff_z[3]" << diff_z[3] << std::endl;
 
-        cout << "diff_z[0] again " << first.zstar - (first.h  *  h_contrib +
-                first.k  *  k_contrib) << endl;
-        //cout << aph_data_vector[line_no] ;
+        std::cout << "diff_z[0] again " << first.zstar - (first.h  *  h_contrib +
+                first.k  *  k_contrib) << std::endl;
+        //std::cout << aph_data_vector[line_no] ;
 #endif
 #undef DEBUG
     }//for line_no
@@ -509,17 +509,17 @@ void APHFileorigmerg::compute_Z(double a_mag, double b_mag,
     k_contrib = /* -1.  * */ tilt_tangent * per_tilt_b;
     //#define DEBUG
 #ifdef DEBUG
-    cout << "mod_astar_in_A: " << mod_astar_in_A << endl;
-    cout << "mod_bstar_in_A: " << mod_bstar_in_A << endl;
-    cout << "per_tilt_a staxa: " << per_tilt_a << endl;//staxa
-    cout << "per_tilt_b staxb: " << per_tilt_b << endl;//staxb
-    cout << "a_b_ang_star  : " << RAD2DEG(a_b_ang) << endl;
-    cout << "taxb          : " << RAD2DEG(taxb) << endl;
-    cout << "ttilt         : " <<  tilt_tangent;
+    std::cout << "mod_astar_in_A: " << mod_astar_in_A << std::endl;
+    std::cout << "mod_bstar_in_A: " << mod_bstar_in_A << std::endl;
+    std::cout << "per_tilt_a staxa: " << per_tilt_a << std::endl;//staxa
+    std::cout << "per_tilt_b staxb: " << per_tilt_b << std::endl;//staxb
+    std::cout << "a_b_ang_star  : " << RAD2DEG(a_b_ang) << std::endl;
+    std::cout << "taxb          : " << RAD2DEG(taxb) << std::endl;
+    std::cout << "ttilt         : " <<  tilt_tangent;
     double z_star = h_contrib;
-    cout << " z(hk 10) " <<  z_star << endl;
+    std::cout << " z(hk 10) " <<  z_star << std::endl;
     z_star = k_contrib;
-    cout << " z(hk 01) " <<  z_star << endl;
+    std::cout << " z(hk 01) " <<  z_star << std::endl;
 #endif
 #undef DEBUG
 

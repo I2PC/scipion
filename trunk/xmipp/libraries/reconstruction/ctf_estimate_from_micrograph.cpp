@@ -40,7 +40,7 @@ void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files)
     // Read specific parameters for this program from input file
     FILE *fh_param;
     if ((fh_param = fopen(fn_prm.c_str(), "r")) == NULL)
-        REPORT_ERROR(1, (string)"assign_CTF: There is a problem "
+        REPORT_ERROR(1, (std::string)"assign_CTF: There is a problem "
                      "opening the file " + fn_prm);
 
     reversed          = checkParameter(fh_param, "reverse endian");
@@ -77,39 +77,39 @@ void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files)
 
 /* Write parameters ========================================================= */
 void Prog_assign_CTF_prm::write(const FileName &fn_prm,
-                                string directory)
+                                const std::string &directory)
 {
-    ofstream fh_param;
-    fh_param.open(fn_prm.c_str(), ios::out);
+    std::ofstream fh_param;
+    fh_param.open(fn_prm.c_str(), std::ios::out);
     if (!fh_param)
-        REPORT_ERROR(1, (string)"assign_CTF: There is a problem "
+        REPORT_ERROR(1, (std::string)"assign_CTF: There is a problem "
                      "opening the file " + fn_prm + " for write");
     fh_param << "# Assign CTF parameters\n";
-    string aux;
+    std::string aux;
     bool remove_directories = directory != "";
     if (!remove_directories) aux = image_fn;
     else                     aux = directory + "/" + image_fn.remove_directories();
     if (!selfile_mode)
-        fh_param << "image="                << aux                  << endl;
-    fh_param << "N_horizontal="         << N_horizontal         << endl
-    << "N_vertical="           << N_vertical           << endl;
+        fh_param << "image="                << aux                  << std::endl;
+    fh_param << "N_horizontal="         << N_horizontal         << std::endl
+    << "N_vertical="           << N_vertical           << std::endl;
     if (!remove_directories) aux = selfile_fn;
     else                     aux = directory + "/" + selfile_fn.remove_directories();
-    fh_param << "selfile="              << aux                  << endl;
+    fh_param << "selfile="              << aux                  << std::endl;
     if (!remove_directories) aux = picked_fn;
     else                     aux = directory + "/" + picked_fn.remove_directories();
-    fh_param << "picked="               << aux                  << endl;
+    fh_param << "picked="               << aux                  << std::endl;
     if (compute_at_particle) fh_param << "compute_at_particle=yes\n";
     if (micrograph_averaging) fh_param << "micrograph_averaging=yes\n";
     if (piece_averaging)
     {
         fh_param << "piece_averaging=yes\n"
-        << "Nside_piece=" << Nside_piece << endl;
+        << "Nside_piece=" << Nside_piece << std::endl;
     }
     if (PSD_mode == Periodogram) fh_param << "Periodogram=yes\n";
     if (dont_adjust_CTF) fh_param << "dont_adjust_CTF=yes\n";
 
-    fh_param << endl;
+    fh_param << std::endl;
     fh_param.close();
 
     adjust_CTF_prm.write(fn_prm, false);
@@ -154,7 +154,7 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(Matrix2D<double> &piece,
             else
             {
                 // Compute the periodogram
-                Matrix2D< complex<double> > Periodogram;
+                Matrix2D< std::complex<double> > Periodogram;
                 FourierTransform(small_piece, Periodogram);
                 FFT_magnitude(Periodogram, small_psd);
                 small_psd *= small_psd;
@@ -179,7 +179,7 @@ void Prog_assign_CTF_prm::process()
 {
     // Open input files -----------------------------------------------------
     // Open coordinates
-    ifstream PosFile; // File with picked coordinates
+    std::ifstream PosFile; // File with picked coordinates
     if (picked_fn != "") PosFile.open(picked_fn.c_str());
 
     // Open selfile with images
@@ -190,7 +190,7 @@ void Prog_assign_CTF_prm::process()
     FileName fn_root;
     if (!selfile_mode) fn_root = image_fn.remove_all_extensions();
     else               fn_root = selfile_fn.remove_all_extensions();
-    ofstream OutputFile_ctf;
+    std::ofstream OutputFile_ctf;
     if (selfile_fn != "") OutputFile_ctf.open(
             (selfile_fn.without_extension() + ".ctfdat").c_str());
 
@@ -212,19 +212,19 @@ void Prog_assign_CTF_prm::process()
     {
         // Check if sel file is empty
         if (SF.LineNo() == 0)
-            REPORT_ERROR(1, (string)"Prog_assign_CTF_prm: sel file " + SF.name() +
+            REPORT_ERROR(1, (std::string)"Prog_assign_CTF_prm: sel file " + SF.name() +
                          "is empty ");
 
         // Count the number of lines in the Position file
-        string line;
+        std::string line;
         PosFile.clear();
-        PosFile.seekg(0, ios::beg);
+        PosFile.seekg(0, std::ios::beg);
         while (getline(PosFile, line)) if (line[0] != '#') div_Number++;
 
         // check that the number of entries in the pos file is the right one
         if (SF.LineNo() != div_Number)
         {
-            cerr << "Prog_assign_CTF_prm: number of entries in "
+            std::cerr << "Prog_assign_CTF_prm: number of entries in "
             << "pos file: " << picked_fn.c_str()
             << "(" << div_Number << ") "
             << " and sel file "
@@ -255,10 +255,10 @@ void Prog_assign_CTF_prm::process()
 
     // Process each piece ---------------------------------------------------
     PosFile.clear();
-    PosFile.seekg(0, ios::beg); // Start of file
+    PosFile.seekg(0, std::ios::beg); // Start of file
     SF.go_beginning();
     ImageXmipp psd_avg;
-    cerr << "Computing models of each piece ...\n";
+    std::cerr << "Computing models of each piece ...\n";
     init_progress_bar(div_Number);
 
     // Prepare these filenames in case they are needed
@@ -273,7 +273,7 @@ void Prog_assign_CTF_prm::process()
         if (compute_at_particle)
         {
             // Read position of the particle
-            string line;
+            std::string line;
             getline(PosFile, line);
             while (line[0] == '#') getline(PosFile, line);
             float fi, fj;
@@ -281,9 +281,9 @@ void Prog_assign_CTF_prm::process()
             i = (int) fi;
             j = (int) fj;
 #ifdef DEBUG
-            cout << "line" << line << endl;
-            cout << "read from file (j,i)= (" << j << "," << i << ")" << endl;
-            cout << "Particle file name: " << SF.get_current_file() << endl;
+            std::cout << "line" << line << std::endl;
+            std::cout << "read from file (j,i)= (" << j << "," << i << ")" << std::endl;
+            std::cout << "Particle file name: " << SF.get_current_file() << std::endl;
 #endif
 
             // j,i are the window center, we need the top-left corner
@@ -347,7 +347,7 @@ void Prog_assign_CTF_prm::process()
             else
             {
                 // Compute the periodogram
-                Matrix2D< complex<double> > Periodogram;
+                Matrix2D< std::complex<double> > Periodogram;
                 FourierTransform(piece, Periodogram);
                 FFT_magnitude(Periodogram, psd());
                 psd() *= psd();
@@ -363,7 +363,7 @@ void Prog_assign_CTF_prm::process()
             if (micrograph_averaging && PSD_mode == ARMA)
             {
                 psd_avg.write(fn_avg);
-                if (N == 1) system(((string)"xmipp_show -psd " +
+                if (N == 1) system(((std::string)"xmipp_show -psd " +
                                         fn_avg + " -poll &").c_str());
             }
         }
@@ -415,7 +415,7 @@ void Prog_assign_CTF_prm::process()
         if (!dont_adjust_CTF)
         {
             // Estimate the CTF parameters
-            cerr << "Adjusting CTF model to the PSD ...\n";
+            std::cerr << "Adjusting CTF model to the PSD ...\n";
             adjust_CTF_prm.fn_psd = fn_avg;
             XmippCTF ctfmodel;
             double fitting_error = ROUT_Adjust_CTF(adjust_CTF_prm,
@@ -433,7 +433,7 @@ void Prog_assign_CTF_prm::process()
             PosFile.close();
             PosFile.open(picked_fn.c_str());
             if (!PosFile)
-                REPORT_ERROR(1, (string)"Prog_assign_CTF_prm::process: Could not open " +
+                REPORT_ERROR(1, (std::string)"Prog_assign_CTF_prm::process: Could not open " +
                              picked_fn + " for reading");
         }
         while (!SF.eof())
@@ -441,7 +441,7 @@ void Prog_assign_CTF_prm::process()
 	    FileName fn_img=SF.NextImg();
             if (!selfile_mode)
             {
-                string line;
+                std::string line;
                 getline(PosFile, line);
                 while (line[0] == '#') getline(PosFile, line);
                 if (SF.Is_ACTIVE())

@@ -57,18 +57,18 @@ void Prog_SSNR_prm::read(int argc, char **argv)
 }
 
 // Show parameters ---------------------------------------------------------
-ostream & operator << (ostream &out, const Prog_SSNR_prm &prm)
+std::ostream & operator << (std::ostream &out, const Prog_SSNR_prm &prm)
 {
-    out << "Signal:         " << prm.fn_S       << endl
-    << "Noise:          " << prm.fn_N       << endl
-    << "Signal selfile: " << prm.fn_Ssel    << endl
-    << "Noise  selfile: " << prm.fn_Nsel    << endl
-    << "Volumetric SSNR:" << prm.fn_VSSNR   << endl
-    << "Output images:  " << prm.fn_out     << endl
-    << "Ring width:     " << prm.ring_width << endl
-    << "Sampling rate:  " << prm.Tm         << endl
-    << "Generate VSSNR: " << prm.generate_VSSNR << endl
-    << "Radial average: " << prm.radial_avg << endl
+    out << "Signal:         " << prm.fn_S       << std::endl
+    << "Noise:          " << prm.fn_N       << std::endl
+    << "Signal selfile: " << prm.fn_Ssel    << std::endl
+    << "Noise  selfile: " << prm.fn_Nsel    << std::endl
+    << "Volumetric SSNR:" << prm.fn_VSSNR   << std::endl
+    << "Output images:  " << prm.fn_out     << std::endl
+    << "Ring width:     " << prm.ring_width << std::endl
+    << "Sampling rate:  " << prm.Tm         << std::endl
+    << "Generate VSSNR: " << prm.generate_VSSNR << std::endl
+    << "Radial average: " << prm.radial_avg << std::endl
     ;
     return out;
 }
@@ -76,7 +76,7 @@ ostream & operator << (ostream &out, const Prog_SSNR_prm &prm)
 // Usage -------------------------------------------------------------------
 void Prog_SSNR_prm::usage() const
 {
-    cerr << " SSNR Estimation ------------------------------------------------\n"
+    std::cerr << " SSNR Estimation ------------------------------------------------\n"
     << "SSNR\n"
     << "   -S <Volume|Selfile>   : Signal volume or its projections\n"
     << "   -N <Volume|Selfile>   : Noise volume or its projections\n"
@@ -175,7 +175,7 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
     // Selfile of the 2D images
     SelFile SF_individual;
 
-    cerr << "Computing the SSNR ...\n";
+    std::cerr << "Computing the SSNR ...\n";
     init_progress_bar(SF_S.ImgNo());
     int imgno = 0;
     while (!SF_S.eof())
@@ -216,13 +216,13 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
         Is() -= Iths();
         In() -= Ithn();
 
-        Matrix2D< complex<double> > FFT_Is;   FourierTransform(Is(), FFT_Is);
-        Matrix2D< complex<double> > FFT_Iths; FourierTransform(Iths(), FFT_Iths);
-        Matrix2D< complex<double> > FFT_In;   FourierTransform(In(), FFT_In);
-        Matrix2D< complex<double> > FFT_Ithn; FourierTransform(Ithn(), FFT_Ithn);
+        Matrix2D< std::complex<double> > FFT_Is;   FourierTransform(Is(), FFT_Is);
+        Matrix2D< std::complex<double> > FFT_Iths; FourierTransform(Iths(), FFT_Iths);
+        Matrix2D< std::complex<double> > FFT_In;   FourierTransform(In(), FFT_In);
+        Matrix2D< std::complex<double> > FFT_Ithn; FourierTransform(Ithn(), FFT_Ithn);
 
 #ifdef DEBUG
-        ImageXmippT < complex<double> > savec;
+        ImageXmippT < std::complex<double> > savec;
         savec() = FFT_Is;   savec.write("PPPFFTread_signal.xmp");
         savec() = FFT_In;   savec.write("PPPFFTread_noise.xmp");
         savec() = FFT_Iths; savec.write("PPPFFTtheo_signal.xmp");
@@ -350,11 +350,11 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
     // Produce VSSNR ........................................................
     if (dim == 2)
     {
-        cerr << "Interpolating the VSSNR ...\n";
+        std::cerr << "Interpolating the VSSNR ...\n";
         SF_individual.write(fn_out_images + ".sel");
-        system(((string)"xmipp_art -i " + fn_out_images + ".sel -o " + fn_VSSNR +
+        system(((std::string)"xmipp_art -i " + fn_out_images + ".sel -o " + fn_VSSNR +
                 " -l 0.1 -R " + integerToString(ROUND(XSIZE(S()) / 3)) + " -ray_length 1 -n 5").c_str());
-        system(((string)"xmipp_rmsel " + fn_out_images + ".sel ").c_str());
+        system(((std::string)"xmipp_rmsel " + fn_out_images + ".sel ").c_str());
     }
 }
 #undef DEBUG
@@ -409,7 +409,7 @@ void Prog_SSNR_prm::Radial_average(Matrix2D<double> &output)
 // Main --------------------------------------------------------------------
 void ROUT_SSNR(Prog_SSNR_prm &prm, Matrix2D<double> &output)
 {
-    cout << prm;
+    std::cout << prm;
     prm.produce_side_info();
     if (!prm.radial_avg)
     {

@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 {
 
     FileName       sel_file;   // selection file
-    string         dest_path;  // extension for output files in selection file.
+    std::string    dest_path;  // extension for output files in selection file.
 
 
     /* Parameters ============================================================== */
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage(argv);
     }
 
@@ -78,14 +78,14 @@ int main(int argc, char *argv[])
 
         if (break_point < 0)
         {
-            cout << endl << "Error, destination path is not a valid directory name " << endl;
+            std::cout << std::endl << "Error, destination path is not a valid directory name " << std::endl;
             Usage(argv);
             exit(0);
         }
 
 
         // Finds last slash in sel name
-        string org_path;
+        std::string org_path;
         break_point = -1;
         for (int i = sel_file.size() - 1; i >= 0; i--)
         {
@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
         }
 
         SelFile SF(sel_file);
-        string comStr;
+        std::string comStr;
         while (!SF.eof())
         {
             // Get file
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
                 comStr = "mv " + org_path + in_name + " " + dest_path;
 
                 if (!system(comStr.c_str()))
-                    cout << " file " << org_path << in_name << " moved to " << dest_path << endl;
+                    std::cout << " file " << org_path << in_name << " moved to " << dest_path << std::endl;
             }
             SF.next();
         }  // while
@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
     exit(0);
 } //main

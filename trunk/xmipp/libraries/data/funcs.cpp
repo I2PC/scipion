@@ -34,8 +34,6 @@
 #include <fstream>
 #include <typeinfo>
 
-using namespace std;
-
 /* Numerical functions ----------------------------------------------------- */
 // Kaiser-Bessel constructor
 KaiserBessel::KaiserBessel(double alpha_, int K_, double r_, double v_,
@@ -179,7 +177,7 @@ double gaussian2D(double x, double y, double sigmaX, double sigmaY,
 }
 
 /* Print a boolean value --------------------------------------------------- */
-void print(ostream &o, const bool b)
+void print(std::ostream &o, const bool b)
 {
     if (b)
         o << "TRUE";
@@ -376,7 +374,7 @@ void exit_if_not_exists(const FileName &fn)
     {
 	if (!exists(fn))
 	{
-	    cerr<<"Control file "<<fn<<" does not exist: exiting...";
+	    std::cerr << "Control file " << fn << " does not exist: exiting...";
 	    exit(1);
 	}
     }
@@ -391,14 +389,14 @@ void wait_until_stable_size(const FileName &fn,
     struct stat info1, info2;
     if (stat(fn.c_str(), &info1))
         REPORT_ERROR(1,
-                     (string)"wait_until_stable_size: Cannot get size of file " + fn);
+                     (std::string)"wait_until_stable_size: Cannot get size of file " + fn);
     off_t size1 = info1.st_size;
     do
     {
         usleep(time_step);
         if (stat(fn.c_str(), &info2))
             REPORT_ERROR(1,
-                         (string)"wait_until_stable_size: Cannot get size of file " + fn);
+                         (std::string)"wait_until_stable_size: Cannot get size of file " + fn);
         off_t size2 = info2.st_size;
         if (size1 == size2)
             break;
@@ -418,7 +416,7 @@ void create_empty_file(const FileName &fn, unsigned long long size,
         REPORT_ERROR(1, "create_empty_file: No memory left");
     FILE * fd = fopen(fn.c_str(), "w");
     if (fd == NULL)
-        REPORT_ERROR(1, (string)"create_empty_file: Cannot open file" + fn);
+        REPORT_ERROR(1, (std::string)"create_empty_file: Cannot open file" + fn);
     for (unsigned long i = 0; i < size / block_size; i++)
         fwrite(buffer, sizeof(unsigned char), block_size, fd);
     fwrite(buffer, sizeof(unsigned char), size % block_size, fd);
@@ -428,8 +426,8 @@ void create_empty_file(const FileName &fn, unsigned long long size,
 /* Get the Xmipp Base directory -------------------------------------------- */
 FileName xmippBaseDir()
 {
-    string path = getenv("PATH");
-    vector<string> directories;
+    std::string path = getenv("PATH");
+    std::vector<std::string> directories;
     int number_directories = splitString(path, ":", directories);
     if (number_directories == 0)
         REPORT_ERROR(1, "xmippBaseDir::Cannot find Xmipp Base directory");
@@ -453,7 +451,7 @@ FileName xmippBaseDir()
 }
 
 // Constructor with root, number and extension .............................
-void FileName::compose(const string &str, int no, const string &ext)
+void FileName::compose(const std::string &str, int no, const std::string &ext)
 {
     *this = (FileName) str;
     if (no != -1)
@@ -482,10 +480,10 @@ FileName FileName::get_root() const
 }
 
 // Get the base name of a filename .........................................
-string FileName::get_baseName() const
+std::string FileName::get_baseName() const
 {
-    string basename = "";
-    string myname = *this;
+    std::string basename = "";
+    std::string myname = *this;
     int myindex = 0;
     for (int p = myname.size() - 1; p >= 0; p--)
     {
@@ -517,7 +515,7 @@ int FileName::get_number() const
     {
         if (point - root_end > 5)
             root_end = point - 5 - 1;
-        string aux = substr(root_end + 1, point - root_end + 1);
+        std::string aux = substr(root_end + 1, point - root_end + 1);
         return atoi(aux.c_str());
     }
     else
@@ -525,7 +523,7 @@ int FileName::get_number() const
 }
 
 // Get the extension of a filename .........................................
-string FileName::get_extension() const
+std::string FileName::get_extension() const
 {
     int skip_directories = find_last_of("/") + 1;
     int first_point = find_first_of(".", skip_directories);
@@ -545,7 +543,7 @@ void FileName::init_random(int length)
 }
 
 // Add at beginning ........................................................
-FileName FileName::add_prefix(const string &prefix) const
+FileName FileName::add_prefix(const std::string &prefix) const
 {
     FileName retval = *this;
     int skip_directories = find_last_of("/") + 1;
@@ -553,14 +551,14 @@ FileName FileName::add_prefix(const string &prefix) const
 }
 
 // Add at the end ..........................................................
-FileName FileName::add_extension(const string &ext) const
+FileName FileName::add_extension(const std::string &ext) const
 {
     if (ext == "")
         return *this;
     else
     {
         FileName retval = *this;
-        retval = retval.append((string)"." + ext);
+        retval = retval.append((std::string)"." + ext);
         return retval;
     }
 }
@@ -579,7 +577,7 @@ FileName FileName::without_root() const
 }
 
 // Insert before extension .................................................
-FileName FileName::insert_before_extension(const string &str) const
+FileName FileName::insert_before_extension(const std::string &str) const
 {
     int point = -1;
     bool done = false;
@@ -604,9 +602,9 @@ FileName FileName::insert_before_extension(const string &str) const
 }
 
 // Remove an extension wherever it is ......................................
-FileName FileName::remove_extension(const string &ext) const
+FileName FileName::remove_extension(const std::string &ext) const
 {
-    int first = find((string)"." + ext);
+    int first = find((std::string)"." + ext);
     if (first == -1)
         return *this;
     else
@@ -628,21 +626,21 @@ FileName FileName::remove_all_extensions() const
 }
 
 // Substitute one extension by other .......................................
-FileName FileName::substitute_extension(const string &ext1,
-                                        const string &ext2) const
+FileName FileName::substitute_extension(const std::string &ext1,
+                                        const std::string &ext2) const
 {
-    int first = find((string)"." + ext1);
+    int first = find((std::string)"." + ext1);
     if (first == -1)
         return *this;
     else
     {
         FileName retval = *this;
-        return retval.replace(first, 1 + ext1.length(), (string)"." + ext2);
+        return retval.replace(first, 1 + ext1.length(), (std::string)"." + ext2);
     }
 }
 
 // Remove a substring ......................................................
-FileName FileName::without(const string &str) const
+FileName FileName::without(const std::string &str) const
 {
     if (str.length() == 0)
         return *this;
@@ -657,7 +655,7 @@ FileName FileName::without(const string &str) const
 }
 
 // Remove until prefix .....................................................
-FileName FileName::remove_until_prefix(const string &str) const
+FileName FileName::remove_until_prefix(const std::string &str) const
 {
     if (str.length() == 0)
         return *this;
@@ -699,7 +697,7 @@ float elapsed_time(TimeStamp &time)
 {}
 float time_to_go(TimeStamp &time, float fraction_done)
 {}
-void TimeMessage(string message)
+void TimeMessage(const std::string &message)
 {}
 void progress_bar(long rlen)
 {}
@@ -741,8 +739,8 @@ void print_elapsed_time(TimeStamp &time, bool _IN_SECS)
         userTime /= XmippTICKS;
         sysTime /= XmippTICKS;
     }
-    cout << "Elapsed time: User(" << userTime << ") System(" << sysTime
-    << ")\n";
+    std::cout << "Elapsed time: User(" << userTime << ") System(" << sysTime
+              << ")\n";
 }
 
 // Calculate elapsed time since last annotation .............................
@@ -771,7 +769,7 @@ float time_to_go(TimeStamp &time, float fraction_done)
 }
 
 // Show a message with the time it is produced .............................
-void TimeMessage(string message)
+void TimeMessage(const std::string & message)
 {
     struct tm *T;
     time_t     seconds;
@@ -876,9 +874,9 @@ void xmippTextualListener::OnProgress(unsigned long _it)
 }
 
 // Shows a message indicating the operation in progress.
-void xmippTextualListener::OnReportOperation(const string& _rsOp)
+void xmippTextualListener::OnReportOperation(const std::string& _rsOp)
 {
-    fprintf(stderr, _rsOp.c_str());// cout << _rsOp;
+    fprintf(stderr, _rsOp.c_str());// std::cout << _rsOp;
 }
 
 

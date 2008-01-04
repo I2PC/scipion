@@ -48,7 +48,7 @@ void xmippFKCN::train(xmippFCB& _xmippDS, const TS& _examples) const
 
     int verbosity = listener->getVerbosity();
     if (verbosity)
-        listener->OnReportOperation((string) "Training....\n");
+        listener->OnReportOperation((std::string) "Training....\n");
     if (verbosity == 1 || verbosity == 3)
         listener->OnInitOperation(epochs);
 
@@ -70,7 +70,7 @@ void xmippFKCN::train(xmippFCB& _xmippDS, const TS& _examples) const
     // Initialize auxiliary Codebook
 
     auxCB = _xmippDS;
-    vector<xmippVector> alpha;
+    std::vector<xmippVector> alpha;
     alpha.resize(numVectors);
     for (vv = 0; vv < numVectors; vv++)
         alpha[vv].resize(numClusters, 0.);
@@ -132,7 +132,7 @@ void xmippFKCN::train(xmippFCB& _xmippDS, const TS& _examples) const
 
         for (cc = 0; cc < numClusters; cc++)
         {
-            vector<double> tmpV;
+            std::vector<double> tmpV;
             tmpV.resize(_examples.theItems[0].size(), 0.);
             auxSum = 0;
             for (vv = 0; vv < numVectors; vv++)
@@ -168,7 +168,7 @@ void xmippFKCN::train(xmippFCB& _xmippDS, const TS& _examples) const
         {
             char s[100];
             sprintf(s, "Iteration %d of %d. Code vectors variation: %g\n", t, epochs, stopError);
-            listener->OnReportOperation((string) s);
+            listener->OnReportOperation((std::string) s);
         }
 
     } // while

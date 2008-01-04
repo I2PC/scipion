@@ -817,8 +817,8 @@ void project_Crystal_Volume(
 #ifdef DEBUG
         ImageXmipp save;
         save = norm_proj;
-        if (FORW) save.write((string)"PPPnorm_FORW" + (char)(48 + i));
-        else      save.write((string)"PPPnorm_BACK" + (char)(48 + i));
+        if (FORW) save.write((std::string)"PPPnorm_FORW" + (char)(48 + i));
+        else      save.write((std::string)"PPPnorm_BACK" + (char)(48 + i));
 #endif
     }
 }

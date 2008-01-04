@@ -32,10 +32,10 @@ int main(int argc, char **argv)
 
     int                         c, iter, volno, converged = 0;
     double                      LL, sumw_allrefs, convv, sumcorr, wsum_sigma_offset;
-    vector<double>              conv;
-    vector<Matrix2D<double> >   wsum_Mref, wsum_ctfMref;
-    vector<vector<double> >     Mwsum_sigma2;
-    vector<double>              sumw, sumw_mirror;
+    std::vector<double>              conv;
+    std::vector<Matrix2D<double> >   wsum_Mref, wsum_ctfMref;
+    std::vector<std::vector<double> >     Mwsum_sigma2;
+    std::vector<double>              sumw, sumw_mirror;
     Matrix1D<double>            spectral_signal;
     DocFile                     DFo;
 
@@ -113,7 +113,7 @@ int main(int argc, char **argv)
     {
         if (rank == 0)
         {
-            cout << XE;
+            std::cout << XE;
             prm.MLF_usage();
         }
         MPI_Finalize();
@@ -134,8 +134,8 @@ int main(int argc, char **argv)
 
             if (prm.verb > 0)
             {
-                cerr        << "--> 3D-EM volume refinement:  iteration " << iter << " of " << prm.Niter << endl;
-                prm.fh_hist << "--> 3D-EM volume refinement:  iteration " << iter << " of " << prm.Niter << endl;
+                std::cerr        << "--> 3D-EM volume refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
+                prm.fh_hist << "--> 3D-EM volume refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
             }
 
             // Prepare DFo header
@@ -213,7 +213,7 @@ int main(int argc, char **argv)
                     DFo.locate(DFo.get_last_key());
                     DFo.next();
                     DFo.remove_current();
-                    system(((string)"rm -f " + fn_tmp).c_str());
+                    system(((std::string)"rm -f " + fn_tmp).c_str());
                 }
                 ML2D_prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
                 prm.concatenate_selfiles(iter);
@@ -252,7 +252,7 @@ int main(int argc, char **argv)
                 if (prm.check_convergence(iter))
                 {
                     converged = 1;
-                    if (prm.verb > 0) cerr << "--> Optimization converged!" << endl;
+                    if (prm.verb > 0) std::cerr << "--> Optimization converged!" << std::endl;
                 }
 
             }
@@ -287,14 +287,14 @@ int main(int argc, char **argv)
 	    ML2D_prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
 
         if (!converged && prm.verb > 0)
-            cerr << "--> Optimization was stopped before convergence was reached!" << endl;
+            std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;
 
     }
     catch (Xmipp_error XE)
     {
         if (rank == 0)
         {
-            cout << XE;
+            std::cout << XE;
             prm.MLF_usage();
         }
         MPI_Finalize();

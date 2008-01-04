@@ -42,18 +42,18 @@
  * Parameter: _is  The input stream
  * @exception  runtime_error  If there are problems with the stream
  */
-xmippCTVectors::xmippCTVectors(istream & _is)
+xmippCTVectors::xmippCTVectors(std::istream & _is)
 {
     try
     {
         clear();
         readSelf(_is);
     }
-    catch (exception& e)
+    catch (std::exception& e)
     {
-        ostringstream msg;
-        msg << e.what() << endl << "Error reading the training vector";
-        throw runtime_error(msg.str());
+        std::ostringstream msg;
+        msg << e.what() << std::endl << "Error reading the training vector";
+        throw std::runtime_error(msg.str());
     }
 };
 
@@ -112,9 +112,9 @@ void xmippCTVectors::clear()
  * Parameter: _os The output stream
  * Parameter: _ts  The training set to be printed
  */
-void xmippCTVectors::printSelf(ostream& _os) const
+void xmippCTVectors::printSelf(std::ostream& _os) const
 {
-    _os << dimension() << " " << theItems.size() << endl;
+    _os << dimension() << " " << theItems.size() << std::endl;
     xmippCTSet<xmippVector, xmippLabel>::printSelf(_os);
 };
 
@@ -124,14 +124,14 @@ void xmippCTVectors::printSelf(ostream& _os) const
  * Parameter: _ts  The training set to be read
  * @exception  runtime_error  If there are problems with the stream
  */
-void xmippCTVectors::readSelf(istream& _is)
+void xmippCTVectors::readSelf(std::istream& _is)
 {
 #ifndef _NO_EXCEPTION
     try
     {
 #endif
         clear();
-        string line;
+        std::string line;
 
         // Determines the number of rows and columns in the training set
 
@@ -151,7 +151,7 @@ void xmippCTVectors::readSelf(istream& _is)
 
         for (int i = 0; i < size; i++)
         {
-            vector<xmippFeature> v;
+            std::vector<xmippFeature> v;
             v.resize(dim);
             for (int j = 0; j < dim; j++)
             {
@@ -166,11 +166,11 @@ void xmippCTVectors::readSelf(istream& _is)
 
 #ifndef _NO_EXCEPTION
     }
-    catch (exception& e)
+    catch (std::exception& e)
     {
-        ostringstream msg;
-        msg << e.what() << endl << "Error reading the training set";
-        throw runtime_error(msg.str());
+        std::ostringstream msg;
+        msg << e.what() << std::endl << "Error reading the training set";
+        throw std::runtime_error(msg.str());
     }
 #endif
 };
@@ -181,15 +181,15 @@ void xmippCTVectors::readSelf(istream& _is)
  * this method can be used to save the status of the class.
  * Parameter: _os The output stream
  */
-void xmippCTVectors::saveObject(ostream& _os) const
+void xmippCTVectors::saveObject(std::ostream& _os) const
 {
-    _os << dimension() << endl;
-    _os << normalized << endl;
+    _os << dimension() << std::endl;
+    _os << normalized << std::endl;
     if (normalized)
         for (int i = 0; i < varStats.size(); i++)
         {
-            _os << varStats[i].mean << endl;
-            _os << varStats[i].sd << endl;
+            _os << varStats[i].mean << std::endl;
+            _os << varStats[i].sd << std::endl;
         }
     xmippCTSet<xmippVector, xmippLabel>::saveObject(_os);
 };
@@ -200,7 +200,7 @@ void xmippCTVectors::saveObject(ostream& _os) const
  * this method can be used to load the status of the class.
  * Parameter: _is The output stream
  */
-void xmippCTVectors::loadObject(istream& _is)
+void xmippCTVectors::loadObject(std::istream& _is)
 {
     clear();
     int dim;
@@ -214,7 +214,7 @@ void xmippCTVectors::loadObject(istream& _is)
         _is >> varStats[i].mean;
         _is >> varStats[i].sd;
     }
-    xmippCTSet<xmippVector, xmippLabel>::loadObject((istream&)_is);
+    xmippCTSet<xmippVector, xmippLabel>::loadObject((std::istream&)_is);
 };
 
 
@@ -316,9 +316,9 @@ void xmippCTVectors::normalizeFeature(unsigned _i)
 
     if (_i > itemAt(0).size())
     {
-        ostringstream msg;
+        std::ostringstream msg;
         msg << "Out of range. No variable at position " << _i;
-        throw out_of_range(msg.str());
+        throw std::out_of_range(msg.str());
     }
 
     // first calculates the mean
@@ -400,23 +400,23 @@ double xmippCTVectors::getUnormalizedVar(unsigned _item, unsigned _var) const
 {
     if (!normalized)
     {
-        ostringstream msg;
+        std::ostringstream msg;
         msg << "Variable is not normalized" << _var;
-        throw runtime_error(msg.str());
+        throw std::runtime_error(msg.str());
     }
 
     if (_var > itemAt(0).size())
     {
-        ostringstream msg;
+        std::ostringstream msg;
         msg << "Out of range. No variable at position " << _var;
-        throw out_of_range(msg.str());
+        throw std::out_of_range(msg.str());
     }
 
     if (_item > size())
     {
-        ostringstream msg;
+        std::ostringstream msg;
         msg << "Out of range. No item at position " << _var;
-        throw out_of_range(msg.str());
+        throw std::out_of_range(msg.str());
     }
 
     double t;
@@ -439,7 +439,7 @@ bool xmippCTVectors::isNormalized() const
 /**
   * Returns a const reference to the normalization vector
 */
-/*  const vector<xmippCTVectors::statsStruct>& xmippCTVectors::getNormalizationInfo() const {
+/*  const std::vector<xmippCTVectors::statsStruct>& xmippCTVectors::getNormalizationInfo() const {
    return varStats;
   };*/
 
@@ -454,9 +454,9 @@ void xmippCTVectors::getFeatureStats(unsigned _i, xmippFeature& _mean, xmippFeat
 
     if (_i > itemAt(0).size())
     {
-        ostringstream msg;
+        std::ostringstream msg;
         msg << "Out of range. No variable at position " << _i;
-        throw out_of_range(msg.str());
+        throw std::out_of_range(msg.str());
     }
 
     // first calculates the mean

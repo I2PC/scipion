@@ -666,7 +666,7 @@ void CTFViewer::setPlotSettings()
 }
 
 // Get CTF curve -----------------------------------------------------------
-void CTFViewer::getCTFcurve(const string &type, int angle,
+void CTFViewer::getCTFcurve(const std::string &type, int angle,
                             Matrix2D<double> &data, int Nsamples)
 {
     double sampling_rate = ctf.Tm; // in Angstroms/pixel

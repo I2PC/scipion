@@ -93,8 +93,8 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
     void usage()
     {
         Prog_create_projection_library_Parameters::usage();
-        cerr << " [ -mpi_job_size default=-1]    : Number of images sent to a cpu in a single job \n";
-        cerr << "                                 if  -1 the computer will fill the value for you";
+        std::cerr << " [ -mpi_job_size default=-1]    : Number of images sent to a cpu in a single job \n";
+        std::cerr << "                                 if  -1 the computer will fill the value for you";
     }
 
 
@@ -102,7 +102,7 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
     void show()
     {
         Prog_create_projection_library_Parameters::show();
-	cerr << " Size of mpi jobs " << mpi_job_size <<endl;
+	std::cerr << " Size of mpi jobs " << mpi_job_size <<std::endl;
     }
 
     /* Pre Run --------------------------------------------------------------------- */
@@ -149,10 +149,10 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
             verbose = true;
             #define DEBUG
             #ifdef DEBUG
-            cerr << "numberOfJobs " << numberOfJobs << endl
-                 << "mpi_job_size " << mpi_job_size << endl
+            std::cerr << "numberOfJobs " << numberOfJobs << std::endl
+                 << "mpi_job_size " << mpi_job_size << std::endl
                  << "close_points_angles.size()" <<  close_points_angles.size()
-                 <<endl;
+                 <<std::endl;
             #endif
             #undef DEBUG
         }
@@ -176,7 +176,7 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
                          MPI_COMM_WORLD, &status);
 //#define DEBUG
 #ifdef DEBUG
-cerr << "Mr_f received TAG_FREEWORKER from worker " <<  status.MPI_SOURCE << endl;
+std::cerr << "Mr_f received TAG_FREEWORKER from worker " <<  status.MPI_SOURCE << std::endl;
 #endif
                    //send work
                    MPI_Send(&i,
@@ -188,14 +188,14 @@ cerr << "Mr_f received TAG_FREEWORKER from worker " <<  status.MPI_SOURCE << end
                     i++; //increase job number       
 //#define DEBUG
 #ifdef DEBUG
-cerr << "Ms_f sent TAG_WORKFORWORKER to worker " <<  status.MPI_SOURCE << endl;
-cerr << "Sent jobNo " <<  i << endl;
+std::cerr << "Ms_f sent TAG_WORKFORWORKER to worker " <<  status.MPI_SOURCE << std::endl;
+std::cerr << "Sent jobNo " <<  i << std::endl;
 #endif
 //#undef DEBUG
                     }
                  else
                     {
-                    cerr << "M_f Recived unknown TAG" << endl;
+                    std::cerr << "M_f Recived unknown TAG" << std::endl;
                     exit(0);
                     }           
             }
@@ -207,8 +207,8 @@ cerr << "Sent jobNo " <<  i << endl;
             MPI_Recv(0, 0, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
                   MPI_COMM_WORLD, &status);
     #ifdef DEBUG
-    cerr << "Mr received TAG_FREEWORKER from worker " <<  status.MPI_SOURCE << endl;
-    cerr << "Ms sent TAG_STOP to worker" << status.MPI_SOURCE << endl;
+    std::cerr << "Mr received TAG_FREEWORKER from worker " <<  status.MPI_SOURCE << std::endl;
+    std::cerr << "Ms sent TAG_STOP to worker" << status.MPI_SOURCE << std::endl;
     #endif
     #undef DEBUG
             MPI_Send(0, 0, MPI_INT, status.MPI_SOURCE, TAG_STOP, MPI_COMM_WORLD);
@@ -245,13 +245,13 @@ cerr << "Sent jobNo " <<  i << endl;
                 MPI_Send(0, 0, MPI_INT, 0, TAG_FREEWORKER, MPI_COMM_WORLD);
 //#define DEBUG
 #ifdef DEBUG
-cerr << "W" << rank << " " << "sent TAG_FREEWORKER to master " << endl;
+std::cerr << "W" << rank << " " << "sent TAG_FREEWORKER to master " << std::endl;
 #endif
 #undef DEBUG
                 //get yor next task
                 MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 #ifdef DEBUG
-cerr << "W" << rank << " " << "probe MPI_ANY_TAG " << endl;
+std::cerr << "W" << rank << " " << "probe MPI_ANY_TAG " << std::endl;
 #endif
                 if (status.MPI_TAG == TAG_STOP)//no more jobs exit
                     {
@@ -261,7 +261,7 @@ cerr << "W" << rank << " " << "probe MPI_ANY_TAG " << endl;
                    MPI_Recv(0, 0, MPI_INT, 0, TAG_STOP,
                          MPI_COMM_WORLD, &status);
 #ifdef DEBUG
-cerr << "Wr" << rank << " " << "TAG_STOP" << endl;
+std::cerr << "Wr" << rank << " " << "TAG_STOP" << std::endl;
 #endif
                     break;
                     }
@@ -271,8 +271,8 @@ cerr << "Wr" << rank << " " << "TAG_STOP" << endl;
                     //get the jobs number
                     MPI_Recv(&jobNumber, 1, MPI_INT, 0, TAG_WORKFORWORKER, MPI_COMM_WORLD, &status);
 #ifdef DEBUG  
-cerr << "Wr" << rank << " " << "TAG_WORKFORWORKER" << endl;
-    cerr <<    "jobNumber "  << jobNumber << endl;  
+std::cerr << "Wr" << rank << " " << "TAG_WORKFORWORKER" << std::endl;
+    std::cerr <<    "jobNumber "  << jobNumber << std::endl;  
 #endif
 #undef DEBUG
                     // Process all images
@@ -284,7 +284,7 @@ cerr << "Wr" << rank << " " << "TAG_WORKFORWORKER" << endl;
                     }
                 else
                    {
-                   cerr << "3) Recived unknown TAG I quit" << endl;
+                   std::cerr << "3) Recived unknown TAG I quit" << std::endl;
                    exit(0);
                    }           
             }
@@ -319,7 +319,7 @@ int main(int argc, char *argv[])
 
     catch (Xmipp_error XE)
     {
-        cerr << XE;
+        std::cerr << XE;
         prm.usage();
         exit(1);
     }
@@ -331,7 +331,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cerr << XE;
+        std::cerr << XE;
         exit(1);
     }
     

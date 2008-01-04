@@ -348,8 +348,8 @@ blobtype best_blob(double alpha_0, double alpha_F, double inc_alpha,
                     }
         }
 #ifdef DEBUG
-    att.write((string)"att" + floatToString(w) + ".xmp");
-    ops.write((string)"ops" + floatToString(w) + ".xmp");
+    att.write((std::string)"att" + floatToString(w) + ".xmp");
+    ops.write((std::string)"ops" + floatToString(w) + ".xmp");
 #endif
     retval.radius = best_a;
     retval.alpha = best_alpha;
@@ -439,11 +439,11 @@ void blobs2voxels_SimpleGrid(const Matrix3D<double> &vol_blobs,
     if (condition)
     {
         (*vol_voxels)().printShape();
-        cout << endl;
-        cout << "x0= " << x0 << " xF= " << xF << endl;
-        cout << "y0= " << y0 << " yF= " << yF << endl;
-        cout << "z0= " << z0 << " zF= " << zF << endl;
-        cout << grid;
+        std::cout << std::endl;
+        std::cout << "x0= " << x0 << " xF= " << xF << std::endl;
+        std::cout << "y0= " << y0 << " yF= " << yF << std::endl;
+        std::cout << "z0= " << z0 << " zF= " << zF << std::endl;
+        std::cout << grid;
     }
 #endif
 
@@ -457,8 +457,8 @@ void blobs2voxels_SimpleGrid(const Matrix3D<double> &vol_blobs,
         VEC_ELEM(blob_table, i) = blob_val((double)i / istep, blob);
 #ifdef DEBUG_MORE
         if (condition)
-            cout << "Blob (" << i << ") r=" << (double)i / istep <<
-            " val= " << VEC_ELEM(blob_table, i) << endl;
+            std::cout << "Blob (" << i << ") r=" << (double)i / istep <<
+            " val= " << VEC_ELEM(blob_table, i) << std::endl;
 #endif
     }
 
@@ -483,8 +483,8 @@ void blobs2voxels_SimpleGrid(const Matrix3D<double> &vol_blobs,
                 if (condition)
                 {
                     printf("Dealing blob at (%d,%d,%d) = %f\n", j, i, k, VOL_ELEM(vol_blobs, k, i, j));
-                    cout << "Center of the blob      "
-                    << act_coord.transpose() << endl;
+                    std::cout << "Center of the blob      "
+                    << act_coord.transpose() << std::endl;
                 }
 #endif
 
@@ -494,11 +494,11 @@ void blobs2voxels_SimpleGrid(const Matrix3D<double> &vol_blobs,
                     M3x3_BY_V3x1(real_position, *D, act_coord);
 #ifdef DEBUG
                     if (condition)
-                        cout << "Center of the blob moved to "
+                        std::cout << "Center of the blob moved to "
                         //ROB, the "moved" coordinates are in
                         // real_position not in act_coord
-                        << act_coord.transpose() << endl;
-                    << real_position.transpose() << endl;
+                        << act_coord.transpose() << std::endl;
+                    << real_position.transpose() << std::endl;
 #endif
                     // ROB This is OK if blob.radius is in Cartesian space as I
                     // think is the case
@@ -525,12 +525,12 @@ void blobs2voxels_SimpleGrid(const Matrix3D<double> &vol_blobs,
                 if (YY(corner2) <= y0) process = false;
                 if (ZZ(corner2) <= z0) process = false;
 #ifdef DEBUG
-                if (!process && condition) cout << "   It is outside output volume\n";
+                if (!process && condition) std::cout << "   It is outside output volume\n";
 #endif
                 if (!grid.is_interesting(real_position))
                 {
 #ifdef DEBUG
-                    if (process && condition) cout << "   It is not interesting\n";
+                    if (process && condition) std::cout << "   It is not interesting\n";
 #endif
                     process = false;
                 }
@@ -538,8 +538,8 @@ void blobs2voxels_SimpleGrid(const Matrix3D<double> &vol_blobs,
 #ifdef DEBUG
                 if (condition)
                 {
-                    cout << "Corner 1 for this point " << corner1.transpose() << endl;
-                    cout << "Corner 2 for this point " << corner2.transpose() << endl;
+                    std::cout << "Corner 1 for this point " << corner1.transpose() << std::endl;
+                    std::cout << "Corner 2 for this point " << corner2.transpose() << std::endl;
                 }
 #endif
 
@@ -555,8 +555,8 @@ void blobs2voxels_SimpleGrid(const Matrix3D<double> &vol_blobs,
 #ifdef DEBUG
                     if (condition)
                     {
-                        cout << "Clipped and rounded Corner 1 " << corner1.transpose() << endl;
-                        cout << "Clipped and rounded Corner 2 " << corner2.transpose() << endl;
+                        std::cout << "Clipped and rounded Corner 1 " << corner1.transpose() << std::endl;
+                        std::cout << "Clipped and rounded Corner 2 " << corner2.transpose() << std::endl;
                     }
 #endif
 
@@ -598,9 +598,9 @@ void blobs2voxels_SimpleGrid(const Matrix3D<double> &vol_blobs,
 #ifdef DEBUG_MORE
                                 if (condition)
                                 {
-                                    cout << "At (" << intx << ","
+                                    std::cout << "At (" << intx << ","
                                     << inty << "," << intz << ") distance=" << d;
-                                    cout.flush();
+                                    std::cout.flush();
                                 }
 #endif
 
@@ -614,11 +614,11 @@ void blobs2voxels_SimpleGrid(const Matrix3D<double> &vol_blobs,
 #ifdef DEBUG_MORE
                                     if (condition)
                                     {
-                                        cout << " adding " << VOL_ELEM(vol_blobs, k, i, j)
+                                        std::cout << " adding " << VOL_ELEM(vol_blobs, k, i, j)
                                         << " * " << VEC_ELEM(blob_table, id) << " = "
                                         << VOL_ELEM(vol_blobs, k, i, j)*
-                                        VEC_ELEM(blob_table, id) << endl;
-                                        cout.flush();
+                                        VEC_ELEM(blob_table, id) << std::endl;
+                                        std::cout.flush();
                                     }
 #endif
                                     if (vol_corr != NULL)
@@ -644,10 +644,10 @@ void blobs2voxels_SimpleGrid(const Matrix3D<double> &vol_blobs,
 #ifdef DEBUG_MORE
                                     if (condition)
                                     {
-                                        cout << " adding " << VOL_ELEM(*vol_corr, iz, iy, ix)
+                                        std::cout << " adding " << VOL_ELEM(*vol_corr, iz, iy, ix)
                                         << " * " << VEC_ELEM(blob_table, id) << " = "
-                                        << contrib << endl;
-                                        cout.flush();
+                                        << contrib << std::endl;
+                                        std::cout.flush();
                                     }
 #endif
                                 }
@@ -657,10 +657,10 @@ void blobs2voxels_SimpleGrid(const Matrix3D<double> &vol_blobs,
                     {
                         VOL_ELEM(vol_blobs, k, i, j) += vol_correction / N_eq;
 #ifdef DEBUG_MORE
-                        cout << " correction= " << vol_correction << endl
-                        << " Number of eqs= " << N_eq << endl
+                        std::cout << " correction= " << vol_correction << std::endl
+                        << " Number of eqs= " << N_eq << std::endl
                         << " Blob after correction= "
-                        << VOL_ELEM(vol_blobs, k, i, j) << endl;
+                        << VOL_ELEM(vol_blobs, k, i, j) << std::endl;
 #endif
                     }
                 }
@@ -711,10 +711,10 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
     YY(size) = (int)YY(Gcorner2) - (int)YY(Gcorner1) + 1;
     ZZ(size) = (int)ZZ(Gcorner2) - (int)ZZ(Gcorner1) + 1;
 #ifdef DEBUG
-    cout << "Gcorner1  " << Gcorner1.transpose() << endl;
-    cout << "Gcorner2  " << Gcorner2.transpose() << endl;
-    cout << "Size of voxel volume " << (int)ZZ(size) << " x "
-    << (int)YY(size) << " x " << (int)XX(size) << endl;
+    std::cout << "Gcorner1  " << Gcorner1.transpose() << std::endl;
+    std::cout << "Gcorner2  " << Gcorner2.transpose() << std::endl;
+    std::cout << "Size of voxel volume " << (int)ZZ(size) << " x "
+    << (int)YY(size) << " x " << (int)XX(size) << std::endl;
 #endif
 
 #ifdef NEVER_DEFINED
@@ -739,9 +739,9 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
         YY(size) = (int)YY(Gcorner2) - (int)YY(Gcorner1) + 1;
         ZZ(size) = (int)ZZ(Gcorner2) - (int)ZZ(Gcorner1) + 1;
 #ifdef DEBUG
-        cout << "Limiting to " << limit << " diff = " << diff << endl;
-        cout << "New Gcorner1  " << Gcorner1.transpose() << endl;
-        cout << "New Gcorner2  " << Gcorner2.transpose() << endl;
+        std::cout << "Limiting to " << limit << " diff = " << diff << std::endl;
+        std::cout << "New Gcorner1  " << Gcorner1.transpose() << std::endl;
+        std::cout << "New Gcorner2  " << Gcorner2.transpose() << std::endl;
 #endif
     }
 #endif
@@ -749,9 +749,9 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
     type_cast(Gcorner1, corner1);
 
 #ifdef DEBUG
-    cout << "Final size of voxel volume " << (int)ZZ(size) << " x "
-    << (int)YY(size) << " x " << (int)XX(size) << endl;
-    cout << "Corner1= " << corner1.transpose() << endl;
+    std::cout << "Final size of voxel volume " << (int)ZZ(size) << " x "
+    << (int)YY(size) << " x " << (int)XX(size) << std::endl;
+    std::cout << "Corner1= " << corner1.transpose() << std::endl;
 #endif
 }
 #undef DEBUG
@@ -785,15 +785,15 @@ void blobs2voxels(const GridVolume &vol_blobs,
         blobs2voxels_SimpleGrid(vol_blobs(i)(), vol_blobs.grid(i),
                                 blob, vol_voxels, D);
 #ifdef DEBUG
-        cout << "Blob grid no " << i << " stats: ";
+        std::cout << "Blob grid no " << i << " stats: ";
         vol_blobs(i)().print_stats();
-        cout << endl;
-        cout << "So far vol stats: ";
+        std::cout << std::endl;
+        std::cout << "So far vol stats: ";
         (*vol_voxels).print_stats();
-        cout << endl;
+        std::cout << std::endl;
         VolumeXmipp save;
         save() = *vol_voxels;
-        save.write((string)"PPPvoxels" + integerToString(i));
+        save.write((std::string)"PPPvoxels" + integerToString(i));
 #endif
     }
 
@@ -865,13 +865,13 @@ void blobs2space_coefficients(const GridVolume &vol_blobs,
                     (*vol_coefs)((int)ZZ(coef_position), (int)YY(coef_position),
                                  (int)XX(coef_position)) = vol_blobs(n)(k, i, j);
 #ifdef DEBUG
-                    cout << "Blob value at (" << j << "," << i << ","
+                    std::cout << "Blob value at (" << j << "," << i << ","
                     << k << ") (" << XX(univ_position)
                     << "," << YY(univ_position) << ","
                     << ZZ(univ_position) << ") ("
                     << XX(coef_position) << "," << YY(coef_position) << ","
                     << ZZ(coef_position) << ") --> "
-                    << vol_blobs(n)((int)k, (int)i, (int)j) << endl;
+                    << vol_blobs(n)((int)k, (int)i, (int)j) << std::endl;
 #endif
                 }
     }
@@ -924,12 +924,12 @@ void ART_voxels2blobs_single_step(
         blobs2voxels_SimpleGrid(vol_in(i)(), vol_in.grid(i), blob, theo_vol, D,
                                 50, corr_vol, mask_vol, FORWARD, eq_mode);
 #ifdef DEBUG
-        cout << "Blob grid no " << i << " stats: ";
+        std::cout << "Blob grid no " << i << " stats: ";
         vol_in(i)().print_stats();
-        cout << endl;
-        cout << "So far vol stats: ";
+        std::cout << std::endl;
+        std::cout << "So far vol stats: ";
         (*theo_vol)().print_stats();
-        cout << endl;
+        std::cout << std::endl;
 #endif
     }
 
@@ -942,9 +942,9 @@ void ART_voxels2blobs_single_step(
     VolumeXmipp save, save2;
     save() = *theo_vol;
     save.write("PPPtheovol.vol");
-    cout << "Theo stats:";
+    std::cout << "Theo stats:";
     save().print_stats();
-    cout << endl;
+    std::cout << std::endl;
     save() = *corr_vol;
     save.write("PPPcorr2vol.vol");
     save2().resize(save());
@@ -995,18 +995,18 @@ void ART_voxels2blobs_single_step(
     }
 #ifdef DEBUG
     save.write("PPPdiffvol.vol");
-    cout << "Diff stats:";
+    std::cout << "Diff stats:";
     save().print_stats();
-    cout << endl;
+    std::cout << std::endl;
     save2.write("PPPreadvol.vol");
-    cout << "Read stats:";
+    std::cout << "Read stats:";
     save2().print_stats();
-    cout << endl;
+    std::cout << std::endl;
     save() = *corr_vol;
     save.write("PPPcorrvol.vol");
-    cout << "Corr stats:";
+    std::cout << "Corr stats:";
     save().print_stats();
-    cout << endl;
+    std::cout << std::endl;
 #endif
 
     mean_error /= XMIPP_MAX(N, 1); // At worst, divided by 1
@@ -1017,15 +1017,15 @@ void ART_voxels2blobs_single_step(
         blobs2voxels_SimpleGrid((*vol_out)(i)(), (*vol_out).grid(i), blob,
                                 theo_vol, D, 50, corr_vol, mask_vol, BACKWARD, eq_mode);
 #ifdef DEBUG
-        cout << "Blob grid no " << i << " stats: ";
+        std::cout << "Blob grid no " << i << " stats: ";
         vol_in(i)().print_stats();
-        cout << endl;
+        std::cout << std::endl;
 #endif
     }
 #ifdef DEBUG
     char c;
-    cout << "Press any key to continue\n";
-    cin >> c;
+    std::cout << "Press any key to continue\n";
+    std::cin >> c;
 #endif
 }
 #undef DEBUG
@@ -1087,24 +1087,24 @@ void voxels2blobs(const Matrix3D<double> *vol_voxels,
     vol_blobs.adapt_to_grid(grid_blobs);
 
     // Convert ..............................................................
-    cout << "Converting voxel volume to blobs\n";
+    std::cout << "Converting voxel volume to blobs\n";
     ART_voxels2blobs_single_step(vol_blobs, &vol_blobs, blob, D, lambda,
                                  &(theo_vol()), vol_voxels,
                                  &(corr_vol()), vol_mask, mean_error_1, max_error, VARTK);
     if (tell && SHOW_CONVERSION)
-        cout << "   Finished iteration: " << it++
+        std::cout << "   Finished iteration: " << it++
         << " Mean Error= " << mean_error_1
         << " Max_Error= " << max_error
-        << endl;
+        << std::endl;
     else
-        cout << "0%";
-    cout.flush();
+        std::cout << "0%";
+    std::cout.flush();
 #ifdef DEBUG
     theo_vol.write("PPPtheo.vol");
     corr_vol.write("PPPcorr.vol");
-    cout << "Press any key\n";
+    std::cout << "Press any key\n";
     char c;
-    cin >> c;
+    std::cin >> c;
 #endif
 
     double change;
@@ -1117,26 +1117,26 @@ void voxels2blobs(const Matrix3D<double> *vol_voxels,
 #ifdef DEBUG
         theo_vol.write("PPPtheo.vol");
         corr_vol.write("PPPcorr.vol");
-        cout << "Press any key\n";
+        std::cout << "Press any key\n";
         char c;
-        cin >> c;
+        std::cin >> c;
 #endif
         change = ABS(mean_error - mean_error_1) / mean_error_1;
         mean_error_1 = mean_error;
         if (tell && SHOW_CONVERSION)
-            cout << "   Finished iteration: " << it++
+            std::cout << "   Finished iteration: " << it++
             << " Mean Error= " << mean_error
             << " Max_Error= " << max_error
-            << endl;
+            << std::endl;
         else
         {
             printf("\r");
-            cout << 100 - change << "%";
+            std::cout << 100 - change << "%";
         }
-        cout.flush();
+        std::cout.flush();
         end_condition = change <= final_error_change;
     }
     while (!end_condition);
-    cout << endl;
+    std::cout << std::endl;
 }
 #undef DEBUG

@@ -26,9 +26,6 @@
 #ifndef INTEGRATION_H
 #define INTEGRATION_H
 
-// TODO remove this, NEVER open namespaces in header files
-using namespace std;
-
 #include <cstdlib>
 #include <cmath>
 #include <cstdio>
@@ -280,8 +277,8 @@ void integrand(const int *ndim, const double xx[],
 
 @code
 #include <data/integration.hh>
-cout << multidimensionalIntegral(vectorR2(0,0),vector_R2(10,10),
-            &integrand) << endl;
+std::cout << multidimensionalIntegral(vectorR2(0,0),vector_R2(10,10),
+            &integrand) << std::endl;
 @endcode
  */
 double multidimensionalIntegral(const Matrix1D<double> &x0,

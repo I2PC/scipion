@@ -6,7 +6,7 @@
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
  * Part of this module has been developed by Lorenzo Zampighi and Nelson Tang
- * Dept. Physiology of the David Geffen School of Medicine
+ * Dept. Physiology of the David Geffen School of Medistd::cine
  * Univ. of California, Los Angeles.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -87,13 +87,13 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root)
     // Read histogram
     if (exists(fn_his))
     {
-        ifstream fh_his(fn_his.c_str());
+        std::ifstream fh_his(fn_his.c_str());
         if (fh_his)
         {
             xmippCTVectors ts(0, true);
             fh_his >> ts;
             int imax = ts.size();
-            hisAssigned = new string[imax];
+            hisAssigned = new std::string[imax];
             for (int i = 0; i < imax; i++)
                 hisAssigned[i] = ts.theTargets[i];
         }
@@ -103,13 +103,13 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root)
     // Read errors
     if (exists(fn_err))
     {
-        ifstream fh_err(fn_err.c_str());
+        std::ifstream fh_err(fn_err.c_str());
         if (fh_err)
         {
             xmippCTVectors ts(0, true);
             fh_err >> ts;
             int imax = ts.size();
-            cv_errors = new string[imax];
+            cv_errors = new std::string[imax];
             for (int i = 0; i < imax; i++)
                 cv_errors[i] = ts.theTargets[i];
         }
@@ -119,10 +119,10 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root)
     // Read inf file
     if (exists(fn_inf))
     {
-        ifstream fh_inf(fn_inf.c_str());
+        std::ifstream fh_inf(fn_inf.c_str());
         if (fh_inf)
         {
-            string line;
+            std::string line;
             getline(fh_inf, line);
             infStr = line.c_str();
             infStr += "\n";
@@ -139,12 +139,12 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root)
     // Read codevectors
     if (exists(fn_class))
     {
-        ifstream fh_class(fn_class.c_str());
+        std::ifstream fh_class(fn_class.c_str());
         if (fh_class)
         {
-            string line, fn;
+            std::string line, fn;
             int dim;
-            string topol, neigh;
+            std::string topol, neigh;
             fh_class >> dim >> topol >> NumCols >> NumRows >> neigh;
             listSize = NumCols * NumRows;
             if (listSize == 0)
@@ -368,7 +368,7 @@ void ShowSOM::showRepresentedAverageTogether()
         return;
     }
 
-    //vector <string> cell_labels;
+    //std::vector <std::string> cell_labels;
     QPixmap *pixmap = new QPixmap[numMarked];
     if (!pixmap)
     {
@@ -402,7 +402,7 @@ void ShowSOM::showRepresentedAverageTogether()
             ImageXmipp xm_ave;
             xm_ave = _ave;
             int tempfd;
-            string tmpImgfile = makeTempFile(tempfd);
+            std::string tmpImgfile = makeTempFile(tempfd);
             // Add that image file to the SelFile and save it
             xm_ave.write(tmpImgfile);
             SFAvgs.insert(tmpImgfile);

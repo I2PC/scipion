@@ -98,13 +98,13 @@ public:
     XmippCTF ctf;
 
     /** Mask1D */
-    Matrix1D< complex<double> > mask1D;
+    Matrix1D< std::complex<double> > mask1D;
 
     /** Mask2D */
-    Matrix2D< complex<double> > mask2D;
+    Matrix2D< std::complex<double> > mask2D;
 
     /** Mask3D */
-    Matrix3D< complex<double> > mask3D;
+    Matrix3D< std::complex<double> > mask3D;
 public:
     /** Empty constructor */
     FourierMask()
@@ -290,13 +290,13 @@ public:
         It should have been already generated. The given image is modified.
         An exception is thrown if the mask do not fit the size and shape of
         the */
-    void apply_mask_Fourier(Matrix1D< complex<double> > &v);
+    void apply_mask_Fourier(Matrix1D< std::complex<double> > &v);
 
     /** Apply mask in 2D. */
-    void apply_mask_Fourier(Matrix2D< complex<double> > &v);
+    void apply_mask_Fourier(Matrix2D< std::complex<double> > &v);
 
     /** Apply mask in 3D. */
-    void apply_mask_Fourier(Matrix3D< complex<double> > &v);
+    void apply_mask_Fourier(Matrix3D< std::complex<double> > &v);
 
     /** Apply mask (argument is in real space)..
         It doesn't need to have a mask already generated. If the mask is equal

@@ -71,7 +71,7 @@ public:
     void produceSideInfo();
 
     /** Usage message.
-        This function shows the way of introducing this parameters. */
+        This function shows the way of introdustd::cing this parameters. */
     void usage();
 
     /** Show parameters. */
@@ -106,7 +106,7 @@ public:
     void blob_properties() const;
 
     /* Atom weight and radius */
-    void atomBlobDescription(const string &_element,
+    void atomBlobDescription(const std::string &_element,
         double &weight, double &radius) const;
 
     /* Protein geometry */

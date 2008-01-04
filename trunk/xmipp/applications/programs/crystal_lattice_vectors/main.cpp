@@ -33,7 +33,7 @@ int main(int argc, char **argv)
 {
     Matrix1D<double> a, b;
     double crystal_size, /*taya,*/ rot, tilt, psi;
-    string op;
+    std::string op;
     /*   bool   MRC;*/
 
     // Get parameters .......................................................
@@ -60,7 +60,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage();
         exit(1);
     }
@@ -93,7 +93,7 @@ int main(int argc, char **argv)
             NOTE 1: asume column vectors
             NOTE 2: a and b are the crystal vectors in real space
         */
-#define SHOW(str,v,i) x=v(0,i); y=v(1,i); cout << str << "("<< x \
+#define SHOW(str,v,i) x=v(0,i); y=v(1,i); std::cout << str << "("<< x \
     << "," << y << ") (" << sqrt(x*x+y*y) << ")\n";
         if (op == "RF")
         {
@@ -115,8 +115,8 @@ int main(int argc, char **argv)
             b.resize(3);
             double gammap = RAD2DEG(atan2(vectorProduct(a, b).module(),
                                           dotProduct(a, b)));
-            cout << "Angle from ap* to bp*="
-            << gammap << endl;
+            std::cout << "Angle from ap* to bp*="
+            << gammap << std::endl;
         }
         else if (op == "FR")
         {
@@ -136,10 +136,10 @@ int main(int argc, char **argv)
                         rot=taya+(180-gamma)-rot;
                         Euler_angles2matrix(rot,tilt,psi,E2D); E2D.resize(2,2);
                  v=E2D.inv()*vp;
-                     cout << "rot: " << rot <<endl;
-                     cout << "tilt: " << tilt <<endl;
-                     cout << "psi: " << psi <<endl;
-                     cout << "gamma: " << rot <<endl;
+                     std::cout << "rot: " << rot <<std::endl;
+                     std::cout << "tilt: " << tilt <<std::endl;
+                     std::cout << "psi: " << psi <<std::endl;
+                     std::cout << "gamma: " << rot <<std::endl;
 
                      }
             */
@@ -149,7 +149,7 @@ int main(int argc, char **argv)
             SHOW("bp =", vp, 1);
             SHOW("a  =", v, 0);
             SHOW("b  =", v, 1);
-            cout << "Angle from a to b: " << gamma << endl;
+            std::cout << "Angle from a to b: " << gamma << std::endl;
         }
         else if (op == "PR")
         {
@@ -166,14 +166,14 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
     exit(0);
 }
 
 void Usage()
 {
-    cout << "Purpose: This program allows you to compute the lattice vectors\n"
+    std::cout << "Purpose: This program allows you to compute the lattice vectors\n"
     << "         in the reciprocal space (Real-->Fourier & Fourier-->Real)\n"
     << "Usage: lattice_vectors [options]\n"
     << "  -lattice_a [xa,ya]             : First lattice vector\n"

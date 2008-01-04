@@ -36,7 +36,7 @@ void generate_Spider_count(int imax, DocFile &DF_out)
     Matrix1D<double>   aux(1);
 
     DF_out.clear();
-    DF_out.append_comment((string)"Count for Spider up to " + integerToString(imax));
+    DF_out.append_comment((std::string)"Count for Spider up to " + integerToString(imax));
 
     for (aux(0) = 1; aux(0) <= imax; aux(0)++)
         DF_out.append_data_line(aux);
@@ -49,7 +49,7 @@ void translate_to_Spider_sel(SelFile &SF_in, DocFile &DF_out, bool new_style)
     int               selline = 1;
 
     DF_out.clear();
-    DF_out.append_comment((string)"Translation for Spider of " + SF_in.name());
+    DF_out.append_comment((std::string)"Translation for Spider of " + SF_in.name());
 
     SF_in.go_beginning();
     while (!SF_in.eof())
@@ -75,8 +75,8 @@ void translate_to_Spider_sel(SelFile &SF_in, DocFile &DF_out, bool new_style)
 
 // Extract angles ----------------------------------------------------------
 void extract_angles(SelFile &SF_in, DocFile &DF_out,
-                    const string &ang1, const string &ang2,
-                    const string &ang3)
+                    const std::string &ang1, const std::string &ang2,
+                    const std::string &ang3)
 {
 
     checkAngle(ang1);
@@ -84,12 +84,12 @@ void extract_angles(SelFile &SF_in, DocFile &DF_out,
     checkAngle(ang3);
 
     DF_out.clear();
-    DF_out.append_comment((string)"Angles for " + SF_in.name() +
+    DF_out.append_comment((std::string)"Angles for " + SF_in.name() +
                           ".   Angle order: " + ang1 + " " + ang2 + " " + ang3);
 
     int i = 0;
     time_config();
-    cerr << "Extracting angles ...\n";
+    std::cerr << "Extracting angles ...\n";
     init_progress_bar(SF_in.ImgNo());
     while (!SF_in.eof())
     {
@@ -126,11 +126,11 @@ void write_angles(SelFile &SF_in, DocFile &DF_in,
     checkAngle(ang2);
     checkAngle(ang3);
 
-//   cout << "FirstLine_colNumber" << DF_in.FirstLine_colNumber();
+//   std::cout << "FirstLine_colNumber" << DF_in.FirstLine_colNumber();
 
     int i = 0;
     time_config();
-    cerr << "Writting new headers ...\n";
+    std::cerr << "Writting new headers ...\n";
     init_progress_bar(SF_in.ImgNo());
     FirstLine_colNumber = DF_in.FirstLine_colNumber();
     while (!SF_in.eof())
@@ -179,8 +179,8 @@ void rename_for_Spider(SelFile &SF_in, SelFile &SF_out, const FileName &fn_root,
         else             fn_out = fn_out.add_extension(out_ext);
         SF_out.insert(fn_out);
 
-        cout << "Renaming " << fn_in << " as " << fn_out << endl;
-        string command = (string)"cp " + fn_in + " " + fn_out;
+        std::cout << "Renaming " << fn_in << " as " << fn_out << std::endl;
+        std::string command = (std::string)"cp " + fn_in + " " + fn_out;
         system(command.c_str());
 
         counter++;
@@ -197,7 +197,7 @@ void create_empty_Spider_file(const FileName &fn, int Zdim, int Ydim,
         REPORT_ERROR(1, "create_empty_Spider_file: No memory left");
     FILE * fd = fopen(fn.c_str(), "w");
     if (fd == NULL)
-        REPORT_ERROR(1, (string)"create_empty_Spider_file: Cannot open file" + fn);
+        REPORT_ERROR(1, (std::string)"create_empty_Spider_file: Cannot open file" + fn);
 
     // Write Header
     headerXmipp header;
@@ -225,10 +225,10 @@ void radon_transform(VolumeXmipp &V_in, const FileName &fn_out,
     if (output_size == -1) output_size = CEIL(1.5 * XSIZE(V_in()));
 
     if (V_in.name() == "") V_in.write("superfeo.vol");
-    else system(((string)"ln -s " + V_in.name() + " superfeo.vol").c_str());
+    else system(((std::string)"ln -s " + V_in.name() + " superfeo.vol").c_str());
 
     // Generate spider batch
-    ofstream spider_batch;
+    std::ofstream spider_batch;
     spider_batch.open("b01.vol");
     if (!spider_batch)
         REPORT_ERROR(1, "3D_Radon_transform:: Cannot open file for Spider batch");
@@ -237,10 +237,10 @@ void radon_transform(VolumeXmipp &V_in, const FileName &fn_out,
     << "superfeo\n"
     << "n\n"
     << "n\n"
-    << output_size << endl
+    << output_size << std::endl
     << "superfeo2\n"
-    << Delta_rot << " " << Delta_tilt << endl
-    << FLOOR(0.5*XSIZE(V_in())) << endl
+    << Delta_rot << " " << Delta_tilt << std::endl
+    << FLOOR(0.5*XSIZE(V_in())) << std::endl
     << "n\n"
     << "en\n"
     ;
@@ -249,9 +249,9 @@ void radon_transform(VolumeXmipp &V_in, const FileName &fn_out,
     char *spider_prog = getenv("SPIDER");
     if (spider_prog == NULL)
         REPORT_ERROR(1, "Project:: The environment variable SPIDER is not set");
-    system(((string)spider_prog + " vol b01").c_str());
+    system(((std::string)spider_prog + " vol b01").c_str());
     system("rm LOG.vol results.vol* b01*.vol superfeo.vol");
-    system(((string)"mv superfeo2.vol " + fn_out).c_str());
+    system(((std::string)"mv superfeo2.vol " + fn_out).c_str());
 }
 
 // 2D Radon ----------------------------------------------------------------
@@ -261,10 +261,10 @@ void radon_transform(ImageXmipp &I_in, const FileName &fn_out,
     if (output_size == -1) output_size = CEIL(1.5 * XSIZE(I_in()));
 
     if (I_in.name() == "") I_in.write("superfeo.xmp");
-    else system(((string)"ln -s " + I_in.name() + " superfeo.xmp").c_str());
+    else system(((std::string)"ln -s " + I_in.name() + " superfeo.xmp").c_str());
 
     // Generate spider batch
-    ofstream spider_batch;
+    std::ofstream spider_batch;
     spider_batch.open("b01.xmp");
     if (!spider_batch)
         REPORT_ERROR(1, "2D_Radon_transform:: Cannot open file for Spider batch");
@@ -272,10 +272,10 @@ void radon_transform(ImageXmipp &I_in, const FileName &fn_out,
     << "rm 2d\n"
     << "superfeo\n"
     << "-90 88\n"
-    << Delta_ang << endl
+    << Delta_ang << std::endl
     << "superfeo2\n"
-    << output_size << endl
-    << FLOOR(0.5*XSIZE(I_in())) << endl
+    << output_size << std::endl
+    << FLOOR(0.5*XSIZE(I_in())) << std::endl
     << "0 0\n"
     << "n\n"
     << "en\n"
@@ -285,9 +285,9 @@ void radon_transform(ImageXmipp &I_in, const FileName &fn_out,
     char *spider_prog = getenv("SPIDER");
     if (spider_prog == NULL)
         REPORT_ERROR(1, "Project:: The environment variable SPIDER is not set");
-    system(((string)spider_prog + " xmp b01").c_str());
+    system(((std::string)spider_prog + " xmp b01").c_str());
     system("rm LOG.xmp results.xmp* b01*.xmp superfeo.xmp");
-    system(((string)"mv superfeo2.xmp " + fn_out).c_str());
+    system(((std::string)"mv superfeo2.xmp " + fn_out).c_str());
 }
 
 // Fourier Radon transform -------------------------------------------------
@@ -295,10 +295,10 @@ void Fourier_transform_of_Radon_transform(const FileName &fn_in,
         const FileName &fn_out, double cutoff_freq,
         double Fermi_temperature)
 {
-    system(((string)"ln -s " + fn_in + " superfeo.fft").c_str());
+    system(((std::string)"ln -s " + fn_in + " superfeo.fft").c_str());
 
     // Generate spider batch
-    ofstream spider_batch;
+    std::ofstream spider_batch;
     spider_batch.open("b01.fft");
     if (!spider_batch)
         REPORT_ERROR(1, "Fourier_Radon_transform:: Cannot open file for Spider batch");
@@ -313,8 +313,8 @@ void Fourier_transform_of_Radon_transform(const FileName &fn_in,
     << "m\n"
     << "8\n"
     << "5\n"
-    << cutoff_freq << endl
-    << Fermi_temperature << endl
+    << cutoff_freq << std::endl
+    << Fermi_temperature << std::endl
     << "a\n"
     << "n\n"
     << "n\n"
@@ -325,9 +325,9 @@ void Fourier_transform_of_Radon_transform(const FileName &fn_in,
     char *spider_prog = getenv("SPIDER");
     if (spider_prog == NULL)
         REPORT_ERROR(1, "Project:: The environment variable SPIDER is not set");
-    system(((string)spider_prog + " fft b01").c_str());
+    system(((std::string)spider_prog + " fft b01").c_str());
     system("rm LOG.fft results.fft* b01*.fft superfeo.fft");
-    system(((string)"mv superfeo2.fft " + fn_out).c_str());
+    system(((std::string)"mv superfeo2.fft " + fn_out).c_str());
 }
 
 // Angular refinement Radon ------------------------------------------------
@@ -352,8 +352,8 @@ void Angular_refinement_Radon(const FileName &fn_vol, const FileName &fn_sel,
     int last_image = first_image + SF_kk.ImgNo() - 1;
 
     // Generate spider batch
-    ofstream spider_batch;
-    spider_batch.open(((string)"b01." + fn_ext).c_str());
+    std::ofstream spider_batch;
+    spider_batch.open(((std::string)"b01." + fn_ext).c_str());
     if (!spider_batch)
         REPORT_ERROR(1, "Angular refinement:: Cannot open file for Spider batch");
 #ifdef NEVER_DEFINED
@@ -363,24 +363,24 @@ void Angular_refinement_Radon(const FileName &fn_vol, const FileName &fn_sel,
     << "0 0\n"
     << "*\n"
     << "*\n"
-    << fn_vol.without_extension() << endl
-    << fn_first.without_extension() << endl
-    << first_image << "-" << last_image << endl
+    << fn_vol.without_extension() << std::endl
+    << fn_first.without_extension() << std::endl
+    << first_image << "-" << last_image << std::endl
     << "0 0\n"
     << "0\n"
     << "peak00001\n"
     << "s\n"
-    << max_shift << endl
+    << max_shift << std::endl
     << "s\n"
     << "1\n"
-    << tilt0 << " " << tiltF << endl
-    << tilt_step << endl
-    << rot0 << " " << rotF << endl
-    << rot_step << endl
-    << psi0 << " " << psiF << endl
-    << psi_step << endl
+    << tilt0 << " " << tiltF << std::endl
+    << tilt_step << std::endl
+    << rot0 << " " << rotF << std::endl
+    << rot_step << std::endl
+    << psi0 << " " << psiF << std::endl
+    << psi_step << std::endl
     << "n\n"
-    << fn_report << endl
+    << fn_report << std::endl
     << "en\n"
     ;
 #endif
@@ -391,24 +391,24 @@ void Angular_refinement_Radon(const FileName &fn_vol, const FileName &fn_sel,
     << "0\n"
     << "*\n"
     << "*\n"
-    << fn_vol.without_extension() << endl
-    << fn_first.without_extension() << endl
-    << first_image << "-" << last_image << endl
+    << fn_vol.without_extension() << std::endl
+    << fn_first.without_extension() << std::endl
+    << first_image << "-" << last_image << std::endl
     << "0 0\n"
     << "0\n"
     << "peak00001\n"
     << "s\n"
-    << max_shift << endl
+    << max_shift << std::endl
     << "s\n"
     << "1\n"
-    << tilt0 << " " << tiltF << endl
-    << tilt_step << endl
-    << rot0 << " " << rotF << endl
-    << rot_step << endl
-    << psi0 << " " << psiF << endl
-    << psi_step << endl
+    << tilt0 << " " << tiltF << std::endl
+    << tilt_step << std::endl
+    << rot0 << " " << rotF << std::endl
+    << rot_step << std::endl
+    << psi0 << " " << psiF << std::endl
+    << psi_step << std::endl
     << "n\n"
-    << fn_report << endl
+    << fn_report << std::endl
     << "en\n"
     ;
     spider_batch.close();
@@ -416,16 +416,16 @@ void Angular_refinement_Radon(const FileName &fn_vol, const FileName &fn_sel,
     char *spider_prog = getenv("SPIDER");
     if (spider_prog == NULL)
         REPORT_ERROR(1, "Angular refinement:: The environment variable SPIDER is not set");
-    system(((string)"rm " + fn_report + "." + fn_ext).c_str());
-    system(((string)spider_prog + " " + fn_ext + " b01").c_str());
-    system(((string)"rm LOG." + fn_ext + " results." + fn_ext +
+    system(((std::string)"rm " + fn_report + "." + fn_ext).c_str());
+    system(((std::string)spider_prog + " " + fn_ext + " b01").c_str());
+    system(((std::string)"rm LOG." + fn_ext + " results." + fn_ext +
             "* b01*." + fn_ext).c_str());
-    system(((string)"for i in peak?????." + fn_ext + " ; do rm $i ; done").
+    system(((std::string)"for i in peak?????." + fn_ext + " ; do rm $i ; done").
            c_str());
 
     SF_kk.go_first_ACTIVE();
     while (!SF_kk.eof())
-        system(((string)"rm " + SF_kk.NextImg()).c_str());
+        system(((std::string)"rm " + SF_kk.NextImg()).c_str());
 
     // Reorder the report columns
     DocFile DF_report, DF_report_standard;
@@ -476,11 +476,11 @@ void Angular_refinement_Matching(const FileName &fn_vol,
 
     DocFile experimental_sel;
     generate_Spider_count(last_image, experimental_sel);
-    experimental_sel.write((string)"experimentalsel." + fn_ext);
+    experimental_sel.write((std::string)"experimentalsel." + fn_ext);
 
     // Generate Spider batch
-    ofstream spider_batch;
-    spider_batch.open(((string)"b01." + fn_ext).c_str());
+    std::ofstream spider_batch;
+    spider_batch.open(((std::string)"b01." + fn_ext).c_str());
 
     if (!spider_batch)
         REPORT_ERROR(1, "Angular refinement:: Cannot open file for Spider batch");
@@ -492,7 +492,7 @@ void Angular_refinement_Matching(const FileName &fn_vol,
     << "   de\n"
     << "   refangles\n"
     << "endif\n"
-    << endl
+    << std::endl
 
     // If the output document file for the projection list exists, delete it
     << "iq fi x88\n"
@@ -501,41 +501,41 @@ void Angular_refinement_Matching(const FileName &fn_vol,
     << "   de\n"
     << "   projlist\n"
     << "endif\n"
-    << endl
+    << std::endl
 
     // Generate an even angular distribution
     // spaced after the tilt_step
     << "vo ea,x83\n"
-    << tilt_step << endl
+    << tilt_step << std::endl
     << "0,0\n"
     << "0,0\n"
     << "refangles\n"
     << "x83=x83-1\n"
-    << endl
+    << std::endl
 
     // Create a list with the projection numbers
     //<< "doc create\n"
     //<< "projlist\n"
     //<< "1\n"
     //<< "1-x83\n"
-    //<< endl
+    //<< std::endl
     << "do lb1 I=1,x83\n"
     << "   sd x0,x0\n"
     << "   projlist\n"
     << "lb1\n"
-    << endl
+    << std::endl
 
     // Create projections
     << "pj 3q\n"
-    << fn_vol.without_extension() << endl
-    << Xdim*0.69 << endl // Radius
+    << fn_vol.without_extension() << std::endl
+    << Xdim*0.69 << std::endl // Radius
     << "projlist\n"
     << "refangles\n"
     << "ideal****\n"
-    << endl
+    << std::endl
 
     // Create individual selfiles for each projection
-    << "x20=" << last_image << endl
+    << "x20=" << last_image << std::endl
     << "do lb2 I=1,x20\n"
     << "   ud x0,x55\n"
     << "   experimentalsel\n"
@@ -548,21 +548,21 @@ void Angular_refinement_Matching(const FileName &fn_vol,
     << "   de\n"
     << "   apmq\n"
     << "endif\n"
-    << endl
+    << std::endl
 
     // Effectively refine
     << "ap mq\n"
     << "ideal****\n"
     << "projlist\n"
-    <<  max_shift << "," << shift_step << endl
-    << first_ring << "," << last_ring << endl
+    <<  max_shift << "," << shift_step << std::endl
+    << first_ring << "," << last_ring << std::endl
     << "kk*****\n"
-    << "1-" << last_image << endl
+    << "1-" << last_image << std::endl
     << "apmq\n"
-    << endl
+    << std::endl
 
     // Delete reference projections
-    << endl
+    << std::endl
     << "do lb4 x12=1,x83\n"
     << "   de\n"
     << "   ideal{****x12}\n"
@@ -574,23 +574,23 @@ void Angular_refinement_Matching(const FileName &fn_vol,
     char *spider_prog = getenv("SPIDER");
     if (spider_prog == NULL)
         REPORT_ERROR(1, "Angular refinement:: The environment variable SPIDER is not set");
-    system(((string)spider_prog + " " + fn_ext + " b01").c_str());
-    system(((string)"rm LOG." + fn_ext + " results." + fn_ext +
+    system(((std::string)spider_prog + " " + fn_ext + " b01").c_str());
+    system(((std::string)"rm LOG." + fn_ext + " results." + fn_ext +
             "* b01*." + fn_ext).c_str());
 
     SF_kk.go_first_ACTIVE();
     while (!SF_kk.eof())
-        system(((string)"rm " + SF_kk.NextImg()).c_str());
+        system(((std::string)"rm " + SF_kk.NextImg()).c_str());
 
     // Rewrite the report in the same format as the Radon programs
-    system(((string)"grep -v \";\" apmq." + fn_ext + " > apmq1." + fn_ext).c_str());
-    system(((string)"mv apmq1." + fn_ext + " apmq." + fn_ext).c_str());
+    system(((std::string)"grep -v \";\" apmq." + fn_ext + " > apmq1." + fn_ext).c_str());
+    system(((std::string)"mv apmq1." + fn_ext + " apmq." + fn_ext).c_str());
     DocFile DF_report;
-    DF_report.read((string)"apmq." + fn_ext);
-    DF_report.write((string)"apmq." + fn_ext);
+    DF_report.read((std::string)"apmq." + fn_ext);
+    DF_report.write((std::string)"apmq." + fn_ext);
 
     // Call again spider to get the assigned angles
-//    spider_batch.open(((string)"b02."+fn_ext).c_str());
+//    spider_batch.open(((std::string)"b02."+fn_ext).c_str());
 //    if (!spider_batch)
 //       REPORT_ERROR(1,"Angular refinement:: Cannot open file for Spider batch");
 //    spider_batch
@@ -605,13 +605,13 @@ void Angular_refinement_Matching(const FileName &fn_vol,
 //       << "en\n"
 //    ;
 //    spider_batch.close();
-//    system(((string)spider_prog+" "+fn_ext+" b02").c_str());
-//    system(((string)"rm LOG."+fn_ext+" results."+fn_ext+
+//    system(((std::string)spider_prog+" "+fn_ext+" b02").c_str());
+//    system(((std::string)"rm LOG."+fn_ext+" results."+fn_ext+
 //       "* "+"b02*."+fn_ext).c_str());
-    system(((string)"rm projlist." + fn_ext + " experimentalsel." + fn_ext).c_str());
+    system(((std::string)"rm projlist." + fn_ext + " experimentalsel." + fn_ext).c_str());
 
-    DocFile refangles((string)"refangles." + fn_ext);
-    DocFile apmq((string)"apmq." + fn_ext);
+    DocFile refangles((std::string)"refangles." + fn_ext);
+    DocFile apmq((std::string)"apmq." + fn_ext);
     DocFile DF_report_standard;
     DF_report_standard.append_comment("Headerinfo columns: rot tilt psi x y corr");
 
@@ -641,5 +641,5 @@ void Angular_refinement_Matching(const FileName &fn_vol,
     }
 
     DF_report_standard.write(fn_report + ".txt");
-    system(((string)"rm apmq." + fn_ext + " refangles." + fn_ext).c_str());
+    system(((std::string)"rm apmq." + fn_ext + " refangles." + fn_ext).c_str());
 }

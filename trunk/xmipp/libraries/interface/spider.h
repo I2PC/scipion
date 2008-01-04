@@ -54,8 +54,8 @@ void translate_to_Spider_sel(SelFile &SF_in, DocFile &DF_out, bool new_style);
     (rot, tilt, psi).
     An exception is thrown if the angles are not one of these.*/
 void extract_angles(SelFile &SF_in, DocFile &DF_out,
-                    const string &ang1 = "rot", const string &ang2 = "tilt",
-                    const string &ang3 = "psi");
+                    const std::string &ang1 = "rot", const std::string &ang2 = "tilt",
+                    const std::string &ang3 = "psi");
 
 #ifdef NEVERDEFINED
 /** Extract angles from a Docfile and store them in a SelFile.
@@ -63,8 +63,8 @@ void extract_angles(SelFile &SF_in, DocFile &DF_out,
     (rot, tilt, psi).
     An exception is thrown if the angles are not one of these.*/
 void write_angles(SelFile &SF_out, DocFile &DF_in,
-                  const string &ang1 = "rot", const string &ang2 = "tilt",
-                  const string &ang3 = "psi");
+                  const std::string &ang1 = "rot", const std::string &ang2 = "tilt",
+                  const std::string &ang3 = "psi");
 #endif
 
 /** Rename ACTIVE images in a selfile.

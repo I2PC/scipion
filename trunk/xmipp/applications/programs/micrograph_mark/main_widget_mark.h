@@ -148,7 +148,7 @@ public:
     // has generated its set of values. When both micrographs
     // generated the images, the selfiles are compared to remove
     // those images that were discarded in only one of them
-    void generated(bool _this_is_tilted, const string &_label);
+    void generated(bool _this_is_tilted, const std::string &_label);
 public slots:
     void slotAddCoordTilted(int _mX, int _mY, int _f);
     void slotAddCoordUntilted(int _mX, int _mY, int _f);

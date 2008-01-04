@@ -54,7 +54,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage();
         exit(1);
     }
@@ -72,8 +72,8 @@ int main(int argc, char **argv)
             if (Is_VolumeXmipp(file_name))
             {
                 header.read(file_name);
-                cout << "FileName     : " << file_name << endl;
-                cout << header;
+                std::cout << "FileName     : " << file_name << std::endl;
+                std::cout << header;
 
                 // For images .........................................................
             }
@@ -81,42 +81,42 @@ int main(int argc, char **argv)
             {
 
                 header.read(file_name);
-                cout << "FileName     : " << file_name << endl;
-                cout << header;
+                std::cout << "FileName     : " << file_name << std::endl;
+                std::cout << header;
                 if (show_old_rot)
-                    cout << "Old rot      : " << header.old_rot() << endl;
-                cout << endl;
+                    std::cout << "Old rot      : " << header.old_rot() << std::endl;
+                std::cout << std::endl;
 
                 // For fourier volumes .................................................
             }
             else if (Is_FourierVolumeXmipp(file_name))
             {
                 header.read(file_name);
-                cout << "FileName     : " << file_name << endl;
-                cout << header;
+                std::cout << "FileName     : " << file_name << std::endl;
+                std::cout << header;
 
                 // For fourier images .................................................
             }
             else if (Is_FourierImageXmipp(file_name))
             {
                 header.read(file_name);
-                cout << "FileName     : " << file_name << endl;
-                cout << header;
+                std::cout << "FileName     : " << file_name << std::endl;
+                std::cout << header;
 
                 // Is not an Spider file ..............................................
             }
             else
-                cout << file_name << " is not a Spider File";
+                std::cout << file_name << " is not a Spider File";
 
             // Finish information .................................................
-            cout << endl;
+            std::cout << std::endl;
 
         } // while
 
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
 
     exit(0);
@@ -126,10 +126,10 @@ int main(int argc, char **argv)
 /* Usage ------------------------------------------------------------------- */
 void Usage()
 {
-    cerr << "Purpose:\n";
-    cerr << "    Prints to screen some of the information stored in the header\n";
+    std::cerr << "Purpose:\n";
+    std::cerr << "    Prints to screen some of the information stored in the header\n";
 
-    cerr << "Usage: header_print " << endl
+    std::cerr << "Usage: header_print " << std::endl
     << "    -i               : Selfile with images/volumes \n"
     << "                        or individual image or volume \n"
     << "   [-show_old_rot]   : also show old rotational angle\n";

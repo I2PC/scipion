@@ -32,8 +32,6 @@
 #include <qpainter.h>
 #include <qinputdialog.h>
 
-using namespace std;
-
 TextEdit::TextEdit(QWidget *parent, const char *name)
         : QMainWindow(parent, name)
 {

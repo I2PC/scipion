@@ -63,7 +63,7 @@ public:
     /** sigma-value for origin offsets */
     double sigma_offset;
     /** Vector containing estimated fraction for each model */
-    vector<double> alpha_k;
+    std::vector<double> alpha_k;
     /** Flag whether to fix estimates for model fractions */
     bool fix_fractions;
     /** Flag whether to fix estimate for sigma of noise */
@@ -79,7 +79,7 @@ public:
     /** Number of steps to sample rot, tilt, psi and limited translations */
     int nr_rot, nr_rot_tilt, nr_tilt, nr_psi, nr_trans;
     /** Offsets for limited translations */
-    vector<Matrix1D<double> > Vtrans;
+    std::vector<Matrix1D<double> > Vtrans;
     /** Range and step size for angular searches */
     double rot0,  rotF,  rot_step;
     double tilt0, tiltF, tilt_step;
@@ -95,21 +95,21 @@ public:
     SelFile SF, SFr, SFw;
     // Vector for volumes to hold the real and imag parts of Fref and
     // the sum of all wedges for each reference
-    vector<vector <Matrix3D<double> > > Fref_trans;
+    std::vector<std::vector <Matrix3D<double> > > Fref_trans;
     // For all tomograms: angles, offsets and wedge parameters
-    vector<double> img_rot, img_tilt, img_psi, img_xoff, img_yoff, img_zoff, img_th0, img_thF, img_wednr;
+    std::vector<double> img_rot, img_tilt, img_psi, img_xoff, img_yoff, img_zoff, img_th0, img_thF, img_wednr;
     // Matrices for calculating PDF of (in-plane) translations
     Matrix3D<double> pdf_trans, Mr2;
     /** Number for which limited translation is zero */
     int zero_trans;
     /** Vector for Fourier-space sigma2-values  */
-    vector<double> Vsigma2;
+    std::vector<double> Vsigma2;
     /** number of different wedges */
     int nr_wedge;
     Matrix3D<double> smooth_edge_mask, corr_mask;
     Matrix3D<int> outside_mask, mask, resmask, resmask2;
     /* wedgelist */
-    vector<wedgelist> wedges;
+    std::vector<wedgelist> wedges;
     /* Symmetry information */
     SymList SL;
     /* store as double: dim x dim x dim */
@@ -119,9 +119,9 @@ public:
     /* also for smoothing */
     int nr_img;
     /* pointers for the different wedges in Fourier Space */
-    vector<vector<int> > pointer, pointer_mis, pointer_i, pointer_j, pointer_k, pointer_resol;
+    std::vector<std::vector<int> > pointer, pointer_mis, pointer_i, pointer_j, pointer_k, pointer_resol;
     /* Number of elements in pointers for the different ctf-matrices */
-    vector<int> nr_pointer, nr_pointer_mis;
+    std::vector<int> nr_pointer, nr_pointer_mis;
     /* High/low resolution limits */
     double highres, lowres;
     /* Integer high/low resolution limits*/
@@ -131,7 +131,7 @@ public:
     /* Maximum number of pixels to search offsets */
     double search_shift;
     /* Vector for nonzero pixels of each wedge */
-    vector<vector<double> > nonzero_pixels;
+    std::vector<std::vector<double> > nonzero_pixels;
 
     //// DEBUGGING
     bool debug;
@@ -167,40 +167,40 @@ public:
 
     /// parameters using fourier-space likelihood functions
     void MLF_integrate(Matrix3D<double> Mimg, Matrix2D<double> A_img, int iwedge,
-                       vector<Matrix3D<double> > &wsum_Fimgs,
-                       vector<Matrix3D<double> > &wsum_Fweds,
-                       vector<double> &wsum_sigma2, double &wsum_sigma_offset,
-                       vector<double> &sumw, double &LL, double &fracweight,
+                       std::vector<Matrix3D<double> > &wsum_Fimgs,
+                       std::vector<Matrix3D<double> > &wsum_Fweds,
+                       std::vector<double> &wsum_sigma2, double &wsum_sigma_offset,
+                       std::vector<double> &sumw, double &LL, double &fracweight,
                        int &opt_refno, double &opt_rot, double &opt_tilt, double &opt_psi,
                        double &opt_xoff, double &opt_yoff, double &opt_zoff);
 
     /// Integrate over all experimental images
     void sum_over_all_images(SelFile &SF,
-                             vector<Matrix3D<double> > &wsum_Fimgs,
-                             vector<Matrix3D<double> > &wsum_Fweds,
-                             vector<double> &sum_nonzero_pixels,
-                             vector<double> &wsum_sigma2, double &wsum_sigma_offset,
-                             vector<double> &sumw, double &LL,
+                             std::vector<Matrix3D<double> > &wsum_Fimgs,
+                             std::vector<Matrix3D<double> > &wsum_Fweds,
+                             std::vector<double> &sum_nonzero_pixels,
+                             std::vector<double> &wsum_sigma2, double &wsum_sigma_offset,
+                             std::vector<double> &sumw, double &LL,
                              double &sumcorr, DocFile &DFo);
 
     /// Update all model parameters
-    void update_parameters(vector<Matrix3D<double> > &wsum_Fimgs,
-                           vector<Matrix3D<double> > &wsum_Fweds,
-                           vector<double> &sum_nonzero_pixels,
-                           vector<double> &wsum_sigma2, double &wsum_sigma_offset,
-                           vector<double> &sumw, double &sumcorr,
+    void update_parameters(std::vector<Matrix3D<double> > &wsum_Fimgs,
+                           std::vector<Matrix3D<double> > &wsum_Fweds,
+                           std::vector<double> &sum_nonzero_pixels,
+                           std::vector<double> &wsum_sigma2, double &wsum_sigma_offset,
+                           std::vector<double> &sumw, double &sumcorr,
                            double &sumw_allrefs, int iter);
 
     /// Post-processing on (real-space) reference maps
-    void post_process_references(vector<Matrix3D<double> > &Mref);
+    void post_process_references(std::vector<Matrix3D<double> > &Mref);
 
     /// Solvent flattening
-    void solvent_flattening(vector<Matrix3D<double> > &Mref, FileName &fn_solvent);
+    void solvent_flattening(std::vector<Matrix3D<double> > &Mref, FileName &fn_solvent);
 
     /// Write out reference images, selfile and logfile
     void write_output_files(const int iter, SelFile &SF, DocFile &DF,
-                            vector<Matrix3D<double> > &Mref,
-                            double &sumw_allrefs, vector<double> &sumw,
+                            std::vector<Matrix3D<double> > &Mref,
+                            double &sumw_allrefs, std::vector<double> &sumw,
                             double &LL, double &avecorr);
 
 

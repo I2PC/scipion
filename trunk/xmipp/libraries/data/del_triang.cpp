@@ -311,7 +311,7 @@ int CircumCircle(double xp, double yp, double x1, double y1, double x2, double y
 
 /////////////////// Computation of Nearest Triangl. to TargetPt
 // Returns index of triangle in vector LatTri
-/*int FindNearest(XYZ &TargetPt, vector <XYZ> & INCR_coord, vector <ITRIANGLE> &  LatTri)
+/*int FindNearest(XYZ &TargetPt, std::vector <XYZ> & INCR_coord, std::vector <ITRIANGLE> &  LatTri)
 {
 
  int k,Vind,t;

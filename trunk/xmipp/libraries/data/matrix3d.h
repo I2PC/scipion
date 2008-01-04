@@ -45,7 +45,7 @@
 #define maT1 Matrix3D< T1 >
 
 #undef  maTC
-#define maTC Matrix3D< complex< double > >
+#define maTC Matrix3D< std::complex< double > >
 
 // FIXME remove this
 #include "multidim_friends.inc"
@@ -1319,7 +1319,7 @@ public:
                     T aux;
                     if (k == 0 && i == 0)
                         std::cout << "Changing " << j << " " << XSIZE(*this) - 1 - j
-                        << std::endl;
+                                  << std::endl;
 
                     SWAP(DIRECT_VOL_ELEM(*this, k, i, j),
                          DIRECT_VOL_ELEM(*this, k, i, XSIZE(*this) - 1 - j),
@@ -2126,17 +2126,17 @@ public:
 
 // TODO Document
 template<>
-void coreArrayByScalar< complex< double > > (const maTC& op1,
-        const complex< double >& op2, maTC& result, char operation);
+void coreArrayByScalar< std::complex< double > > (const maTC& op1,
+        const std::complex< double >& op2, maTC& result, char operation);
 
 // TODO Document
 template<>
-void coreScalarByArray< complex< double > > (const complex< double >& op1,
+void coreScalarByArray< std::complex< double > > (const std::complex< double >& op1,
         const maTC& op2, maTC& result, char operation);
 
 // TODO Document
 template<>
-void coreArrayByArray< complex< double> > (const maTC& op1, const maTC& op2,
+void coreArrayByArray< std::complex< double> > (const maTC& op1, const maTC& op2,
         maTC& result, char operation);
 
 /** @defgroup VolumesRelated Related functions
@@ -2462,7 +2462,7 @@ std::ostream& operator<<(std::ostream& ostrm, const VT& v)
 
     for (int k = STARTINGZ(v); k <= FINISHINGZ(v); k++)
     {
-        ostrm << "Slice No. " << k << endl;
+        ostrm << "Slice No. " << k << std::endl;
         for (int i = STARTINGY(v); i <= FINISHINGY(v); i++)
         {
             for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
@@ -2970,9 +2970,12 @@ void VT::centerOfMass(Matrix1D< double >& center, void* mask)
         center /= mass;
 }
 
-// TODO Document
+// Specific instantiations for complexes
+template <>
+std::ostream& operator << (std::ostream& ostrm, const Matrix3D< std::complex<double> > & v);
+
 template<>
-complex<double> Matrix3D< complex< double> >::interpolatedElement(double x,
-        double y, double z, complex< double > outside_value);
+std::complex<double> Matrix3D< std::complex< double> >::interpolatedElement(double x,
+        double y, double z, std::complex< double > outside_value);
 
 #endif

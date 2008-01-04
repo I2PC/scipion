@@ -16,7 +16,7 @@
 
 void usage()
 {
-    cerr << "edit\n"
+    std::cerr << "edit\n"
     << "   -i <filenames>    : Files to open\n"
     << "  [-remove]          : Remove the files after finishing\n"
     ;
@@ -35,7 +35,7 @@ int main(int argc, char ** argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         usage();
         exit(1);
     }

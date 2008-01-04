@@ -65,7 +65,7 @@ public:
     Prog_assign_CTF_prm assign_ctf_prm;
 
     // Filenames to remove when this object is destroyed
-    vector<FileName> files_to_remove;
+    std::vector<FileName> files_to_remove;
 };
 
 #endif

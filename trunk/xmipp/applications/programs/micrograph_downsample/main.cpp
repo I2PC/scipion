@@ -44,7 +44,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage(prm);
         exit(1);
     }
@@ -73,14 +73,14 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
 }
 
 /* Usage =================================================================== */
 void Usage(const Prog_downsample_prm &prm)
 {
-    cerr << "Purpose: This file allows you to downsample raw images\n"
+    std::cerr << "Purpose: This file allows you to downsample raw images\n"
     << "Usage: downsample [parameters]\n"
     << "   -i <input_file>        : Raw input file, <input_file>.inf\n"
     << "                            must exist\n"

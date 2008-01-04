@@ -19,8 +19,6 @@
 #ifndef XMIPPRM_H
 #define XMIPPRM_H
 
-using namespace std;
-
 #include "base_algorithm.h"
 #include "data_types.h"
 #include "training_vector.h"
@@ -49,7 +47,7 @@ public:
     * "gaussian" or "sparse"
     * Parameter: _type The type of the matrix distribution
     */
-    void setRMDistribution(string _type)
+    void setRMDistribution(const std::string &_type)
     {
         matdist = _type;
     }
@@ -85,7 +83,7 @@ public:
 
 
 private:
-    string matdist; // Matrix distribution (sparse or gaussian)
+    std::string matdist; // Matrix distribution (sparse or gaussian)
     Matrix2D<double> RM;
     xmippBaseListener* listener;   // Listener class
 

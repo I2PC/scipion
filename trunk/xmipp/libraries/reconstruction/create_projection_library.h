@@ -68,7 +68,7 @@ public:
     /** vector with valid proyection directions after looking for 
         directions close to experimental data. 
          */
-    vector <Matrix1D<double> > close_points_angles;
+    std::vector <Matrix1D<double> > close_points_angles;
 
     /** filename with experimental images angles. 
         This information is used to generate only angles close to experimental
@@ -86,7 +86,7 @@ public:
        See details at url
        Possible values are: c1, ci, cs, cn, cnv, cnh, sn,
        dn, dnv, dnh, t, td, th, o, oh, i, ih */
-    string symmetry;
+    std::string symmetry;
 
     /** For infinite groups symmetry order*/
     int sym_order;
@@ -104,7 +104,7 @@ public:
     int Ydim;
 
     /** fil vector with symmetry axis */
-    // vector <Matrix1D<double> > symmetry_vectors;
+    // std::vector <Matrix1D<double> > symmetry_vectors;
 public:
     /** Empty constructor */
     Prog_create_projection_library_Parameters();
@@ -116,7 +116,7 @@ public:
     void read(int argc, char **argv);
 
     /** Usage message.
-        This function shows the way of introducing this parameters. */
+        This function shows the way of introdustd::cing this parameters. */
     void usage();
 
     /** Show parameters. */
@@ -126,7 +126,7 @@ public:
     void run();
 
     /** get all directions related by symmetry to (1,0,0)  */
-    void get_sym_vectors(vector< Matrix1D<double > > &sym_points);
+    void get_sym_vectors(std::vector< Matrix1D<double > > &sym_points);
 
     /** Project in all the directions between indexes init and end*/
     void project_angle_vector(int my_init, int my_end, bool verbose = true);

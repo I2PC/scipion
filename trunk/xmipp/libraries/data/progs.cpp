@@ -43,32 +43,32 @@ void Prog_parameters::read(int argc, char **argv)
 
 void Prog_parameters::show()
 {
-    cout << "Input File: " << fn_in << endl;
+    std::cout << "Input File: " << fn_in << std::endl;
     if (apply_geo && !Is_VolumeXmipp(fn_in))
-        cout << "Applying transformation stored in header of 2D-image" << endl;
+        std::cout << "Applying transformation stored in header of 2D-image" << std::endl;
     if (each_image_produces_an_output)
     {
         if (fn_out != "")
-            cout << "Output File: " << fn_out << endl;
+            std::cout << "Output File: " << fn_out << std::endl;
         if (oext != "")
-            cout << "Output Extension: " << oext << endl;
+            std::cout << "Output Extension: " << oext << std::endl;
         if (oroot != "")
-            cout << "Output Root: " << oroot << endl;
+            std::cout << "Output Root: " << oroot << std::endl;
     }
 }
 
 void Prog_parameters::usage()
 {
-    cerr << "   -i <input file>          : either an image/volume or a selection file\n";
+    std::cerr << "   -i <input file>          : either an image/volume or a selection file\n";
     if (each_image_produces_an_output)
     {
-        cerr << "  [-o <output file>]        : if wanted in case of a single image\n"
+        std::cerr << "  [-o <output file>]        : if wanted in case of a single image\n"
         << "  [-oext <extension>]       : if wanted in case of a selection file\n"
         << "  [-oroot <root>]           : if wanted in case of a selection file\n";
     }
     else
     {
-        cerr  << "  [-dont_apply_geo]         : for 2D-images: do not apply transformation stored in the header\n";
+        std::cerr  << "  [-dont_apply_geo]         : for 2D-images: do not apply transformation stored in the header\n";
     }
 }
 
@@ -143,8 +143,8 @@ void SF_main(int argc, char **argv,
     }
     catch (Xmipp_error XE)
     {
-        cerr << XE;
-        cerr << "Usage: \n"
+        std::cerr << XE;
+        std::cerr << "Usage: \n"
         << "   " << argv[0] << " [options]\n";
         prm->usage();
         exit(1);
@@ -154,7 +154,7 @@ void SF_main(int argc, char **argv,
     try
     {
         if (!exists(prm->fn_in))
-            EXIT_ERROR(1, (string)argv[0] + ": " + prm->fn_in + " doesn't exist");
+            EXIT_ERROR(1, (std::string)argv[0] + ": " + prm->fn_in + " doesn't exist");
         bool success;
 
         // For single image .....................................................
@@ -175,7 +175,7 @@ void SF_main(int argc, char **argv,
                 if (prm->each_image_produces_an_output)
                 {
                     /*       if (prm->apply_geo) {
-                            cerr << "BUG: apply_geo and each_image_produces_an_output should not co-exist"
+                            std::cerr << "BUG: apply_geo and each_image_produces_an_output should not co-exist"
                                  << " the only exception is the apply_geo program";
                            }
                     */     img.write(fn_out);
@@ -313,7 +313,7 @@ void SF_main(int argc, char **argv,
                         {
                             /*
                             if (prm->apply_geo) {
-                              cerr << "BUG: apply_geo and each_image_produces_an_output should not co-exist"
+                              std::cerr << "BUG: apply_geo and each_image_produces_an_output should not co-exist"
                                    << " the only exception is the apply_geo program";
                             }
                             */
@@ -423,7 +423,7 @@ void SF_main(int argc, char **argv,
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         exit(1);
     }
 }

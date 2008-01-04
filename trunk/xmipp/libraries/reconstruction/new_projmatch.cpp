@@ -62,47 +62,47 @@ void Prog_new_projection_matching_prm::read(int argc, char **argv)  {
 void Prog_new_projection_matching_prm::show() {
 
   if (verb>0) {
-    cerr << "  Input images            : "<< SF.name()<<" ("<<SF.ImgNo()<<")"<<endl;
-    cerr << "  Reference volume        : "<< fn_vol<<endl;
-    cerr << "  Output rootname         : "<< fn_root<<endl;
-    cerr << "  Angular sampling rate   : "<< sampling <<endl;
+    std::cerr << "  Input images            : "<< SF.name()<<" ("<<SF.ImgNo()<<")"<<std::endl;
+    std::cerr << "  Reference volume        : "<< fn_vol<<std::endl;
+    std::cerr << "  Output rootname         : "<< fn_root<<std::endl;
+    std::cerr << "  Angular sampling rate   : "<< sampling <<std::endl;
     if (Ri>0)
-    cerr << "  Inner radius rot-search : "<<Ri<<endl;
+    std::cerr << "  Inner radius rot-search : "<<Ri<<std::endl;
     if (Ro>0)
-    cerr << "  Outer radius rot-search : "<<Ro<<endl;
-    cerr << "  -> Limit search of origin offsets to  +/- "<<max_shift<<" pixels"<<endl;
+    std::cerr << "  Outer radius rot-search : "<<Ro<<std::endl;
+    std::cerr << "  -> Limit search of origin offsets to  +/- "<<max_shift<<" pixels"<<std::endl;
     if (ang_search>0) {
-      cerr << "  -> Limit search of rot and tilt angle to  +/- "<<ang_search<<" degrees"<<endl;
+      std::cerr << "  -> Limit search of rot and tilt angle to  +/- "<<ang_search<<" degrees"<<std::endl;
     }
     if (tilt_range0>0. || tilt_rangeF<180.)
     {
-	cerr << "  -> Limited tilt range       : "<<tilt_range0<<"  "<<tilt_rangeF<<endl;
+	std::cerr << "  -> Limited tilt range       : "<<tilt_range0<<"  "<<tilt_rangeF<<std::endl;
     }
     if (!modify_header)
     {
-	cerr << "  -> Do not modify the image headers (only output docfile)"<<endl;
+	std::cerr << "  -> Do not modify the image headers (only output docfile)"<<std::endl;
     }
     if (output_refs)
     {
-	cerr << "  -> Output library projections, sel and docfile"<<endl;
+	std::cerr << "  -> Output library projections, sel and docfile"<<std::endl;
     }
     if (output_classes)
     {
-	cerr << "  -> Output class averages and selfiles for each projection direction "<<endl;
+	std::cerr << "  -> Output class averages and selfiles for each projection direction "<<std::endl;
     }
     if (do_reproject)
     {
-	cerr << "  -> save_memA: re-project volume for each translational search"<<endl;
+	std::cerr << "  -> save_memA: re-project volume for each translational search"<<std::endl;
     }
 
-    cerr << " ================================================================="<<endl;
+    std::cerr << " ================================================================="<<std::endl;
   }
 }
 
 // Usage ===================================================================
 void Prog_new_projection_matching_prm::usage() {
-  cerr << "Usage:  projection_matching [options] "<<endl;
-  cerr << "   -i <selfile>                : Selfile with input images \n"
+  std::cerr << "Usage:  projection_matching [options] "<<std::endl;
+  std::cerr << "   -i <selfile>                : Selfile with input images \n"
        << "   -vol <volume>               : Reference volume \n"
        << " [ -o <rootname=\"out\"> ]       : Output rootname \n"
        << " [ -sam <float=10> ]           : Sampling rate for rot, tilt & psi (degrees) \n"
@@ -112,7 +112,7 @@ void Prog_new_projection_matching_prm::usage() {
 
 // Extended usage ===================================================================
 void Prog_new_projection_matching_prm::extended_usage() {
-  cerr << "Additional options: \n"
+  std::cerr << "Additional options: \n"
        << " [ -ang_search <float=-1> ]    : Maximum change in rot & tilt  (+/- degrees) \n"
        << " [ -tilt0 <float=0.> ]         : Lower-value for restricted tilt angle search \n"
        << " [ -tiltF <float=90.> ]        : Higher-value for restricted tilt angle search \n"
@@ -171,7 +171,7 @@ void Prog_new_projection_matching_prm::produce_Side_info() {
     vol().setXmippOrigin();
 
     // Generate reference projections from sampling
-    if (verb>0) cerr << "--> Projecting the reference volume ..."<<endl;
+    if (verb>0) std::cerr << "--> Projecting the reference volume ..."<<std::endl;
 
     nl = mysampling.no_redundant_sampling_points_vector.size();
     if (verb>0) init_progress_bar(nl);
@@ -203,7 +203,7 @@ void Prog_new_projection_matching_prm::produce_Side_info() {
 	// Calculate FTs of polar rings (store its complex conjugated!)
 	Matrix2D<double>         Maux;
 	Polar<double>            P;
-	Polar<complex <double> > fP;
+	Polar<std::complex <double> > fP;
 	produceReverseGriddingMatrix2D(proj(),Maux,kb);
 	P.getPolarFromCartesian(Maux,kb,Ri,Ro);
 	mean = P.computeSum(true);
@@ -233,7 +233,7 @@ void Prog_new_projection_matching_prm::produce_Side_info() {
 	vol.clear();
 
     if (verb>0) progress_bar(nl);
-    if (verb>0) cerr << " ================================================================="<<endl;
+    if (verb>0) std::cerr << " ================================================================="<<std::endl;
 
 }
 
@@ -243,7 +243,7 @@ void Prog_new_projection_matching_prm::rotationally_align_one_image(const Matrix
 {
     Matrix2D<double>         Maux;
     Polar<double>            P;
-    Polar<complex <double> > fP,fPm;
+    Polar<std::complex <double> > fP,fPm;
     Matrix1D<double>         ang,corr;
     int                      max_index;
     double                   mean;
@@ -350,7 +350,7 @@ void Prog_new_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocF
   double opt_rot,opt_tilt,opt_psi,opt_flip,opt_xoff,opt_yoff,maxcorr;
   int c,nn,imgno,samplenr,opt_samplenr;
 
-  if (verb>0) cerr << "--> Projection matching ... "<<endl;
+  if (verb>0) std::cerr << "--> Projection matching ... "<<std::endl;
 
   // Initialize
   nn=SF.ImgNo();
@@ -429,7 +429,7 @@ void Prog_new_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocF
   }
 
   if (verb>0) progress_bar(nn);
-  if (verb>0) cerr << " ================================================================="<<endl;
+  if (verb>0) std::cerr << " ================================================================="<<std::endl;
 
 }
 

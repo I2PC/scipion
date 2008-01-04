@@ -60,8 +60,8 @@ public:
     }
 
     // Some operators streams
-    friend ostream& operator<<(ostream& o, const headerXmipp& I);  // cout << I
-    void print_hard(ostream& o) const;
+    friend std::ostream& operator<<(std::ostream& o, const headerXmipp& I); 
+    void print_hard(std::ostream& o) const;
 
     // reversed is only used in case that the type_check is skipped
     int read(FILE* fp,

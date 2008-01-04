@@ -30,7 +30,7 @@
  * (multidimensional array<T>) to the type you need. For example, for
  * a vector library would be
  *
- * #define maT vector<T>
+ * #define maT std::vector<T>
  *
  * These definitions are outside because in this way we can reuse the
  * module for other libraries (matrices1D, matrices2D, ...). This way

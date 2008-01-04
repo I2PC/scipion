@@ -47,10 +47,10 @@
 void xmippGaussianKerDenSOM::train(xmippFuzzyMap& _som, TS& _examples, FileName& _fn, bool _update, double _sigma)
 {
     // Saves algorithm information in fn file
-    FileName tmpN1 = _fn.c_str() + (string) ".LCurveInfo";
+    FileName tmpN1 = _fn.c_str() + (std::string) ".LCurveInfo";
     FileName tmpN;
-    ofstream algoStream(tmpN1.c_str());
-    algoStream << "File, Regularization, Functional, Sigma" << endl;
+    std::ofstream algostream(tmpN1.c_str());
+    algostream << "File, Regularization, Functional, Sigma" << std::endl;
 
     numNeurons = _som.size();
     numVectors = _examples.size();
@@ -66,11 +66,11 @@ void xmippGaussianKerDenSOM::train(xmippFuzzyMap& _som, TS& _examples, FileName&
 
     int verbosity = listener->getVerbosity();
     if (verbosity)
-        listener->OnReportOperation((string) "\nTraining KerDenSOM....\n");
+        listener->OnReportOperation((std::string) "\nTraining KerDenSOM....\n");
 
     // Initialization
     if (verbosity)
-        listener->OnReportOperation((string) "\nInitializing....\n");
+        listener->OnReportOperation((std::string) "\nInitializing....\n");
     if (!_update)
     {
         initU(&_som);
@@ -104,9 +104,9 @@ void xmippGaussianKerDenSOM::train(xmippFuzzyMap& _som, TS& _examples, FileName&
             {
                 char s[100];
                 sprintf(s, "\nTraining Deterministic Annealing step %d of %d....\n", iter + 1, annSteps);
-                listener->OnReportOperation((string) s);
+                listener->OnReportOperation((std::string) s);
             }
-            else listener->OnReportOperation((string) "Training ....\n");
+            else listener->OnReportOperation((std::string) "Training ....\n");
         }
 
         if (annSteps == 1)
@@ -115,16 +115,16 @@ void xmippGaussianKerDenSOM::train(xmippFuzzyMap& _som, TS& _examples, FileName&
             regtmp = exp(tmpregMax - iter * (tmpregMax - tmpregMin) / (annSteps - 1));
         stopError = mainIterations(&_som, &_examples, sigma, regtmp);
         if (verbosity)
-            listener->OnReportOperation((string) "Calculating cost function....\n");
+            listener->OnReportOperation((std::string) "Calculating cost function....\n");
         double funct = functional(&_examples, &_som, sigma, reg1, lkhood, pen);
 
-        algoStream << iter << ",  "  << regtmp << ",  " << funct << ",  " << sigma << endl;
+        algostream << iter << ",  "  << regtmp << ",  " << funct << ",  " << sigma << std::endl;
 
         if (verbosity)
         {
             char s[100];
             sprintf(s, "Code vectors variation: %g\n", stopError);
-            listener->OnReportOperation((string) s);
+            listener->OnReportOperation((std::string) s);
         }
 
 
@@ -132,97 +132,97 @@ void xmippGaussianKerDenSOM::train(xmippFuzzyMap& _som, TS& _examples, FileName&
         {
             // Classifying
             if (verbosity)
-                listener->OnReportOperation((string) "Classifying....\n");
+                listener->OnReportOperation((std::string) "Classifying....\n");
             _som.classify(&_examples);
 
             // Calibrating
             if (verbosity)
-                listener->OnReportOperation((string) "Calibrating....\n");
+                listener->OnReportOperation((std::string) "Calibrating....\n");
             _som.calibrate(_examples);
 
             if (_examples.isNormalized())
             {
                 if (verbosity)
-                    listener->OnReportOperation((string) "Denormalizing code vectors....\n");
+                    listener->OnReportOperation((std::string) "Denormalizing code vectors....\n");
                 _som.unNormalize(_examples.getNormalizationInfo()); // de-normalize codevectors
             }
 
             // Saves each codebook (for all iterations)
-            tmpN = _fn.c_str() + (string) "_" + integerToString(iter) + (string) ".cod";
+            tmpN = _fn.c_str() + (std::string) "_" + integerToString(iter) + (std::string) ".cod";
             if (verbosity)
-                listener->OnReportOperation((string) "Saving code vectors....\n");
-            ofstream codS(tmpN.c_str());
+                listener->OnReportOperation((std::string) "Saving code vectors....\n");
+            std::ofstream codS(tmpN.c_str());
             codS << _som;
             codS.flush();
 
             // save .his file (Histogram)
             if (verbosity)
-                listener->OnReportOperation((string) "Saving histogram file....\n");
-            tmpN = _fn.c_str() + (string) "_" + integerToString(iter) + (string) ".his";
-            ofstream hisStream(tmpN.c_str());
+                listener->OnReportOperation((std::string) "Saving histogram file....\n");
+            tmpN = _fn.c_str() + (std::string) "_" + integerToString(iter) + (std::string) ".his";
+            std::ofstream hisStream(tmpN.c_str());
             _som.printHistogram(hisStream);
             hisStream.flush();
 
             // save .err file (Average Quantization Error)
             if (verbosity)
-                listener->OnReportOperation((string) "Saving Average Quantization Error file....\n");
-            tmpN = _fn.c_str() + (string) "_" + integerToString(iter) + (string) ".err";
-            ofstream errStream(tmpN.c_str());
+                listener->OnReportOperation((std::string) "Saving Average Quantization Error file....\n");
+            tmpN = _fn.c_str() + (std::string) "_" + integerToString(iter) + (std::string) ".err";
+            std::ofstream errStream(tmpN.c_str());
             _som.printQuantError(errStream);
             errStream.flush();
 
             // save .vs file to be compatible with SOM_PAK
             if (verbosity)
-                listener->OnReportOperation((string) "Saving visual file....\n");
-            tmpN = _fn.c_str() + (string) "_" + integerToString(iter) + (string) ".vs";
-            ofstream vsStream(tmpN.c_str());
-            vsStream << _examples.theItems[0].size() << " " << _som.layout() << " " << _som.width() << " " << _som.height() << " gaussian" << endl;
+                listener->OnReportOperation((std::string) "Saving visual file....\n");
+            tmpN = _fn.c_str() + (std::string) "_" + integerToString(iter) + (std::string) ".vs";
+            std::ofstream vsStream(tmpN.c_str());
+            vsStream << _examples.theItems[0].size() << " " << _som.layout() << " " << _som.width() << " " << _som.height() << " gaussian" << std::endl;
             for (int i = 0; i < _examples.size(); i++)
             {
                 int j = _som.fuzzyWinner(i);
-                vsStream << _som.indexToPos(j).first << " " << _som.indexToPos(j).second << " " << _som.memb[i][j] << " " << _examples.theTargets[i] << endl;
+                vsStream << _som.indexToPos(j).first << " " << _som.indexToPos(j).second << " " << _som.memb[i][j] << " " << _examples.theTargets[i] << std::endl;
             }
             vsStream.flush();
 
             // save .inf file
             if (verbosity)
-                listener->OnReportOperation((string) "Saving inf file....\n");
-            tmpN = _fn.c_str() + (string) "_" + integerToString(iter) + (string) ".inf";
-            ofstream infS(tmpN.c_str());
-            infS << "Kernel Probability Density Estimator SOM algorithm" << endl << endl;
-            infS << "Deterministic annealing step " << iter + 1 << " out of " << annSteps << endl;
-            infS << "Number of feature vectors: " << _examples.size() << endl;
-            infS << "Number of variables: " << _examples.theItems[0].size() << endl;
-            infS << "Horizontal dimension (Xdim) = " << _som.width() << endl;
-            infS << "Vertical dimension (Ydim) = " << _som.height() << endl;
+                listener->OnReportOperation((std::string) "Saving inf file....\n");
+            tmpN = _fn.c_str() + (std::string) "_" + integerToString(iter) + (std::string) ".inf";
+            std::ofstream infS(tmpN.c_str());
+            infS << "Kernel Probability Density Estimator SOM algorithm" << std::endl << std::endl;
+            infS << "Deterministic annealing step " << iter + 1 << " out of " << annSteps << std::endl;
+            infS << "Number of feature vectors: " << _examples.size() << std::endl;
+            infS << "Number of variables: " << _examples.theItems[0].size() << std::endl;
+            infS << "Horizontal dimension (Xdim) = " << _som.width() << std::endl;
+            infS << "Vertical dimension (Ydim) = " << _som.height() << std::endl;
             if (_examples.isNormalized())
-                infS << "Input data normalized" << endl;
+                infS << "Input data normalized" << std::endl;
             else
-                infS << "Input data not normalized" << endl;
+                infS << "Input data not normalized" << std::endl;
             if (_som.layout() == "rect")
-                infS << "Rectangular topology " << endl;
+                infS << "Rectangular topology " << std::endl;
             else
-                infS << "Hexagonal topology " << endl;
-            infS << "Gaussian Kernel function " << endl;
-            infS << "Total number of iterations = " << somNSteps << endl;
-            infS << "Stopping criteria (eps) = " << epsilon << endl << endl ;
+                infS << "Hexagonal topology " << std::endl;
+            infS << "Gaussian Kernel function " << std::endl;
+            infS << "Total number of iterations = " << somNSteps << std::endl;
+            infS << "Stopping criteria (eps) = " << epsilon << std::endl << std::endl ;
 
-            infS << "Smoothness factor (regularization) = " << regtmp << endl;
-            infS << "Functional value = " << funct << endl;
-            infS << "Sigma (Kernel width) = " << sigma << endl;
+            infS << "Smoothness factor (regularization) = " << regtmp << std::endl;
+            infS << "Functional value = " << funct << std::endl;
+            infS << "Sigma (Kernel width) = " << sigma << std::endl;
             infS.flush();
 
             if (_examples.isNormalized())
             {
                 if (verbosity)
-                    listener->OnReportOperation((string) "Normalizing code vectors....\n");
+                    listener->OnReportOperation((std::string) "Normalizing code vectors....\n");
                 _som.Normalize(_examples.getNormalizationInfo());       // normalize code vectors
             }
         } // if annSteps
 
     } // for
 
-    algoStream.flush();
+    algostream.flush();
 
     tmpV.clear();
     tmpDens.clear();

@@ -55,8 +55,8 @@ void Prog_make_spectra_prm::show()
 
 void Prog_make_spectra_prm::show_specific()
 {
-    cout << "Output file: " << fn_out << endl;
-    cout << rot_spt << endl;
+    std::cout << "Output file: " << fn_out << std::endl;
+    std::cout << rot_spt << std::endl;
 }
 
 // Usage -------------------------------------------------------------------
@@ -68,7 +68,7 @@ void Prog_make_spectra_prm::usage()
 
 void Prog_make_spectra_prm::usage_specific()
 {
-    cerr << "   -o <fn_out>                 : Output file with the spectra\n"
+    std::cerr << "   -o <fn_out>                 : Output file with the spectra\n"
     ;
     rot_spt.usage();
 }
@@ -85,22 +85,22 @@ void Prog_make_spectra_prm::process_img(ImageXmipp &img)
 // Finish processing -------------------------------------------------------
 void Prog_make_spectra_prm::finish_processing()
 {
-    ofstream fh_out;
+    std::ofstream fh_out;
     fh_out.open(fn_out.c_str());
 
     if (!fh_out)
-        REPORT_ERROR(1, (string)"Prog_make_spectra_prm::finish_processing: "
+        REPORT_ERROR(1, (std::string)"Prog_make_spectra_prm::finish_processing: "
                      "Cannot open" + fn_out + " for output");
     if (Harmonics.size() != 0)
     {
-        fh_out << XSIZE(Harmonics[0]) << " " << Harmonics.size() << endl;
+        fh_out << XSIZE(Harmonics[0]) << " " << Harmonics.size() << std::endl;
         int imax = Harmonics.size();
         for (int i = 0; i < imax; i++)
         {
             double norm = Harmonics[i].sum() / 100.0;
             for (int j = 0; j < XSIZE(Harmonics[i]); j++)
                 fh_out << floatToString(Harmonics[i](j) / norm, 6, 4) << " ";
-            fh_out << Img_name[i] << endl;
+            fh_out << Img_name[i] << std::endl;
         }
     }
     fh_out.close();

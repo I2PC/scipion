@@ -104,7 +104,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage();
         exit(1);
     }
@@ -640,7 +640,7 @@ void radial_avg(int operand_type1, FileName &fn_1, FileName &fn_out)
 /**************************************************************************/
 void Usage()
 {
-    cout  << " A simple Xmipp images calculator. Binary and unary operations\n"
+    std::cout  << " A simple Xmipp images calculator. Binary and unary operations\n"
     << " Parameters:\n"
     << " -i xmipp image or volume. This is the input for the program. \n"
     << " -o output of the program. An xmipp image or volue. \n"

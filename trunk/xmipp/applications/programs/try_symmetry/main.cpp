@@ -40,13 +40,13 @@ public:
     void show()
     {
         Prog_parameters::show();
-        cout << "Symmetry order = " << symmetry << endl;
+        std::cout << "Symmetry order = " << symmetry << std::endl;
     }
 
     void usage()
     {
         Prog_parameters::usage();
-        cerr << "  [-symorder <n>]           : Symmetry order\n";
+        std::cerr << "  [-symorder <n>]           : Symmetry order\n";
     }
 };
 

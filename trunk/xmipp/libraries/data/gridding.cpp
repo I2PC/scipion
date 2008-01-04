@@ -31,8 +31,8 @@
  ***************************************************************************/
 #include "gridding.h"
 
-void produceReverseGriddingFourierMatrix2D(const Matrix2D< complex< double > > &in, 
-					   Matrix2D< complex< double > > &out,
+void produceReverseGriddingFourierMatrix2D(const Matrix2D< std::complex< double > > &in, 
+					   Matrix2D< std::complex< double > > &out,
 					   KaiserBessel &kb)
 {
     Matrix2D<double> aux;
@@ -42,7 +42,7 @@ void produceReverseGriddingFourierMatrix2D(const Matrix2D< complex< double > > &
 }
 
 void produceReverseGriddingFourierMatrix2D(const Matrix2D< double > &in, 
-					   Matrix2D< complex< double > > &out,
+					   Matrix2D< std::complex< double > > &out,
 					   KaiserBessel &kb)
 {
     // 1. Set up constants and Kaiser-Bessel object
@@ -82,7 +82,7 @@ void produceReverseGriddingMatrix2D(const Matrix2D< double > &in,
     kb = KaiserBessel(GRIDDING_ALPHA, GRIDDING_K, r, v , Nx);
     
     // 2. FFT, pad with zeros and divide in Fourier space by a sinhwin
-    Matrix2D<complex<double> > aux,aux2;
+    Matrix2D<std::complex<double> > aux,aux2;
     double wx, wy;
     FourierTransform(in,aux);
     CenterFFT(aux,true);
@@ -103,8 +103,8 @@ void produceReverseGriddingMatrix2D(const Matrix2D< double > &in,
 }
 
 // Prepare a 3D Fourier-space volume for gridding
-void produceReverseGriddingFourierMatrix3D(const Matrix3D< complex< double > > &in, 
-					   Matrix3D< complex< double > > &out,
+void produceReverseGriddingFourierMatrix3D(const Matrix3D< std::complex< double > > &in, 
+					   Matrix3D< std::complex< double > > &out,
 					   KaiserBessel &kb)
 {
     Matrix3D<double> aux;
@@ -114,7 +114,7 @@ void produceReverseGriddingFourierMatrix3D(const Matrix3D< complex< double > > &
 }
 
 void produceReverseGriddingFourierMatrix3D(const Matrix3D< double > &in, 
-					   Matrix3D< complex< double > > &out,
+					   Matrix3D< std::complex< double > > &out,
 					   KaiserBessel &kb)
 {
     // 1. Set up constants and Kaiser-Bessel object
@@ -157,7 +157,7 @@ void produceReverseGriddingMatrix3D(const Matrix3D< double > &in,
     kb = KaiserBessel(GRIDDING_ALPHA, GRIDDING_K, r, v , Nx);
     
     // 2. Center FFT and divide in Fourier space by a sinhwin
-    Matrix3D<complex<double> > aux,aux2;
+    Matrix3D<std::complex<double> > aux,aux2;
     double wx, wy, wz;
     FourierTransform(in,aux);
     CenterFFT(aux,true);
@@ -178,8 +178,8 @@ void produceReverseGriddingMatrix3D(const Matrix3D< double > &in,
 
 }
 
-void approximateVoronoiArea(vector<double> &voronoi_area,
-			    const vector<double> &xin, const vector<double> &yin, 
+void approximateVoronoiArea(std::vector<double> &voronoi_area,
+			    const std::vector<double> &xin, const std::vector<double> &yin, 
 			    const double oversample)
 {
 
@@ -234,7 +234,7 @@ void produceForwardGriddingMatrix2D(const Matrix2D< double > &in,
 				    KaiserBessel &kb)
 {
 
-    Matrix2D<complex<double> > aux, aux2;
+    Matrix2D<std::complex<double> > aux, aux2;
     int xdim,ydim;
     double wx, wy;
 
@@ -265,7 +265,7 @@ void produceForwardGriddingMatrix2D(const Matrix2D< double > &in,
 
 }
 
-void produceForwardGriddingMatrix2D(const Matrix2D< complex<double > > &in, 
+void produceForwardGriddingMatrix2D(const Matrix2D< std::complex<double > > &in, 
 				    Matrix2D< double > &out,
 				    KaiserBessel &kb, bool is_centered)
 {
@@ -294,8 +294,8 @@ void produceForwardGriddingMatrix2D(const Matrix2D< complex<double > > &in,
 
 }
 
-void produceForwardGriddingFourierMatrix2D(const Matrix2D< complex<double > > &in, 
-					   Matrix2D< complex<double > > &out,
+void produceForwardGriddingFourierMatrix2D(const Matrix2D< std::complex<double > > &in, 
+					   Matrix2D< std::complex<double > > &out,
 					   KaiserBessel &kb, bool is_centered)
 {
     Matrix2D<double> aux;

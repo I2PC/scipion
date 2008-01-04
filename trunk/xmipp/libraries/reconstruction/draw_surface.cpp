@@ -45,7 +45,7 @@ void Prog_Draw_Surface_Parameters::read(int argc, char **argv)
 /* Usage ------------------------------------------------------------------- */
 void Prog_Draw_Surface_Parameters::usage() const
 {
-    cerr << "Usage: draw_surface [parameters]\n"
+    std::cerr << "Usage: draw_surface [parameters]\n"
     << "   -i <volume>                   : volume where drawing surface\n"
     << "   -s <surface>                  : image with a surface coded\n"
     << "  [-o <output volume>]           : if not given the same as input\n"

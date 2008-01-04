@@ -222,7 +222,7 @@ void QtImageMicrograph::mouseReleaseEvent(QMouseEvent *e)
     {
         if (isTilted())
         {
-            cout << "Moving last particle to (X,Y)=(" << mX << "," << mY << ")\n";
+            std::cout << "Moving last particle to (X,Y)=(" << mX << "," << mY << ")\n";
             getMicrograph()->move_last_coord_to(mX, mY);
             __pressed = false;
             emit signalRepaint();
@@ -230,7 +230,7 @@ void QtImageMicrograph::mouseReleaseEvent(QMouseEvent *e)
         }
         else
         {
-            cout << "Particle marked at (X,Y)=(" << mX << "," << mY << ")\n";
+            std::cout << "Particle marked at (X,Y)=(" << mX << "," << mY << ")\n";
             getMicrograph()->add_coord(mX, mY, __activeFamily);
             __pressed = false;
             emit signalAddCoordOther(mX, mY, __activeFamily);

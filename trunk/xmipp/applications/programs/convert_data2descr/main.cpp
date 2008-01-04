@@ -53,39 +53,39 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error)
     {
-        cout << "Usage:" << endl;
-        cout << "-iname       : Input file name (Data File)" << endl;
-        cout << "-oname       : Output file name (Phantom Description File)" << endl;
-        cout << "-radius      : Radius of the sphere (Default: none)" << endl;
-        cout << "-vsize       : Voxel size in Angstrom (Default: 1)" << endl;
-        cout << "-dimX        : X dimension (Default 60)" << endl;
-        cout << "-dimY        : Y dimension (Default dimX)" << endl;
-        cout << "-dimZ        : Z dimension (Default dimX)" << endl;
-        cout << "-offX        : X offset (Default 0)" << endl;
-        cout << "-offY        : Y offset (Default offX)" << endl;
-        cout << "-offZ        : Z offset (Default offX)" << endl;
+        std::cout << "Usage:" << std::endl;
+        std::cout << "-iname       : Input file name (Data File)" << std::endl;
+        std::cout << "-oname       : Output file name (Phantom Description File)" << std::endl;
+        std::cout << "-radius      : Radius of the sphere (Default: none)" << std::endl;
+        std::cout << "-vsize       : Voxel size in Angstrom (Default: 1)" << std::endl;
+        std::cout << "-dimX        : X dimension (Default 60)" << std::endl;
+        std::cout << "-dimY        : Y dimension (Default dimX)" << std::endl;
+        std::cout << "-dimZ        : Z dimension (Default dimX)" << std::endl;
+        std::cout << "-offX        : X offset (Default 0)" << std::endl;
+        std::cout << "-offY        : Y offset (Default offX)" << std::endl;
+        std::cout << "-offZ        : Z offset (Default offX)" << std::endl;
         exit(1);
     }
 
-    cout << endl << "Given parameters are: " << endl;
-    cout << "iname = " << iname << endl;
-    cout << "oname = " << oname << endl;
+    std::cout << std::endl << "Given parameters are: " << std::endl;
+    std::cout << "iname = " << iname << std::endl;
+    std::cout << "oname = " << oname << std::endl;
     if (radius > 0)
-        cout << "radius = " << radius << endl;
-    cout << "vsize = " << vsize << endl;
-    cout << "dimX  = " << dimX << endl;
-    cout << "dimY  = " << dimY << endl;
-    cout << "dimZ  = " << dimZ << endl;
-    cout << "offX  = " << offX << endl;
-    cout << "offY  = " << offY << endl;
-    cout << "offZ  = " << offZ << endl;
+        std::cout << "radius = " << radius << std::endl;
+    std::cout << "vsize = " << vsize << std::endl;
+    std::cout << "dimX  = " << dimX << std::endl;
+    std::cout << "dimY  = " << dimY << std::endl;
+    std::cout << "dimZ  = " << dimZ << std::endl;
+    std::cout << "offX  = " << offX << std::endl;
+    std::cout << "offY  = " << offY << std::endl;
+    std::cout << "offZ  = " << offZ << std::endl;
 
 
-    cout << endl << "Reading input file...." << endl;
-    ifstream iStream(iname);
+    std::cout << std::endl << "Reading input file...." << std::endl;
+    std::ifstream iStream(iname);
     if (!iStream)
     {
-        cerr << argv[0] << ": can't open file " << iname << endl;
+        std::cerr << argv[0] << ": can't open file " << iname << std::endl;
         exit(EXIT_FAILURE);
     }
     xmippCTVectors ts(0, false);
@@ -95,12 +95,12 @@ int main(int argc, char **argv)
     fout = fopen(oname, "w");
     if (fout == NULL)
     {
-        cerr << argv[0] << ": can't open file " << oname << endl;
+        std::cerr << argv[0] << ": can't open file " << oname << std::endl;
         exit(EXIT_FAILURE);
     }
 
     fprintf(fout, "%8d%8d%8d  0\n", dimX, dimY, dimZ);
-    cout << "Converting to Phantom file...." << endl;
+    std::cout << "Converting to Phantom file...." << std::endl;
     for (int i = 0; i < ts.size(); i++)
     {
         if (radius > 0)
@@ -111,7 +111,7 @@ int main(int argc, char **argv)
 
     fclose(fout);      // close output file
 
-    cout << "Done!" << endl << endl;
+    std::cout << "Done!" << std::endl << std::endl;
     exit(0);
 }
 

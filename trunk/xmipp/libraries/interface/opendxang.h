@@ -46,8 +46,8 @@
 class openDXang
 {
 private:
-    ofstream fh_out_header;
-    ofstream fh_out_data;
+    std::ofstream fh_out_header;
+    std::ofstream fh_out_data;
     FileName openDXangname;
     int number_of_elements;
 

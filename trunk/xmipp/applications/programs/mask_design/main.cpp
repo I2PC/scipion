@@ -46,7 +46,7 @@ int main(int argc, char **argv)
     qInitImageIO();
 #endif
 
-    string selname = "", imgname = "", saveasname = "";
+    std::string selname = "", imgname = "", saveasname = "";
     bool sdflag = false;
     bool apply_geo;
 
@@ -63,13 +63,13 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error)
     {
-        cout << "Xmask: Creates a mask using a Graphical User Interface" << endl;
-        cout << "Usage:" << endl;
-        cout << "-img              : Image to visualize" << endl;
-        cout << "-sel              : Use Sel file average or SD Image" << endl;
-        cout << "[-sd]             : Uses SD image instead of Average image (default: false)" << endl;
-        cout << "[-save_as <name>] : Always save mask with this name" << endl;
-        cout << "[-dont_apply_geo] : Do not apply transformation stored in the header" << endl;
+        std::cout << "Xmask: Creates a mask using a Graphical User Interface" << std::endl;
+        std::cout << "Usage:" << std::endl;
+        std::cout << "-img              : Image to visualize" << std::endl;
+        std::cout << "-sel              : Use Sel file average or SD Image" << std::endl;
+        std::cout << "[-sd]             : Uses SD image instead of Average image (default: false)" << std::endl;
+        std::cout << "[-save_as <name>] : Always save mask with this name" << std::endl;
+        std::cout << "[-dont_apply_geo] : Do not apply transformation stored in the header" << std::endl;
 
         exit(1);
     }
@@ -84,7 +84,7 @@ int main(int argc, char **argv)
     }
     else
     {
-        cout << "Calculating average and SD images from sel file......" << endl;
+        std::cout << "Calculating average and SD images from sel file......" << std::endl;
         SelFile SF((FileName) selname);
         Image ave, sd;
         double min, max;

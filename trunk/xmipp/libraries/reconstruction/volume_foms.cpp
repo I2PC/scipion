@@ -76,7 +76,7 @@ void compute_voxels_in_feat(Volume *vol_label,
 /* ------------------------------------------------------------------------- */
 void show_voxels_in_feat(const Volume *vol_phantom,
                          const Volume *vol_recons, const Volume *vol_label,
-                         int selected_feat, ostream &out)
+                         int selected_feat, std::ostream &out)
 {
     out << "#Voxels for feature " << selected_feat;
 
@@ -86,7 +86,7 @@ void show_voxels_in_feat(const Volume *vol_phantom,
         {
             out << "(z=" << k << ",y=" << i << ",x=" << j << ")"
             << "Phantom=" << pi
-            << " Recons=" << ri << endl;
+            << " Recons=" << ri << std::endl;
         }
     }
 }
@@ -94,17 +94,17 @@ void show_voxels_in_feat(const Volume *vol_phantom,
 void show_voxels_in_feat(const Volume *vol_phantom,
                          const Volume *vol_recons, const Volume *vol_label,
                          const Phantom &phantom_descr,
-                         int selected_feat, ostream &out)
+                         int selected_feat, std::ostream &out)
 {
     Matrix1D<double> r(3);
     int true_feat = ABS(selected_feat);
     if (selected_feat > 0)
     {
-        out << "#Voxels for feature " << selected_feat << endl;
+        out << "#Voxels for feature " << selected_feat << std::endl;
     }
     else if (selected_feat < 0)
     {
-        out << "#Voxel for border of feature  " << selected_feat << endl;
+        out << "#Voxel for border of feature  " << selected_feat << std::endl;
     }
     else
         out << "#Voxels for background\n";
@@ -139,7 +139,7 @@ void show_voxels_in_feat(const Volume *vol_phantom,
             out << i << ",";
             out.width(3);
             out << k << ")";
-            out << " (" << r.transpose() << ")" << endl;
+            out << " (" << r.transpose() << ")" << std::endl;
         }
     }
 }
@@ -253,32 +253,32 @@ void compute_sc_FOMs(
     // Show process
     if (tell&0x4)
     { // This is the flag SHOW_PROCESS of Prog_evaluate.h
-        cout << "   Selected feature: ";
+        std::cout << "   Selected feature: ";
         switch (sel_feat)
         {
         case - 1:
-            cout << "whole volume\n";
+            std::cout << "whole volume\n";
             break;
         case  0:
-            cout << "background\n";
+            std::cout << "background\n";
             break;
         default:
-            cout << sel_feat << endl;
+            std::cout << sel_feat << std::endl;
             break;
         }
-        cout << "   L2_error:         " << L2_error / no_samples << endl;
-        cout << "   L1_error:         " << L1_error / no_samples << endl;
-        cout << "   phantom average:  " << phantom_avg << endl;
-        cout << "   recons average:   " << recons_avg << endl;
-        cout << "   phantom stddev:   " << phantom_stddev << endl;
-        cout << "   recons stddev:    " << recons_stddev << endl;
-        cout << "   phantom range:    [" << mp << "," << Mp << "]\n";
-        cout << "   recons range:     [" << mr << "," << Mr << "]\n";
-        cout << "   covariance:       " << covariance << endl
-        << "   phantom inf:      " << phantom_information << endl
-        << "   recons inf:       " << recons_information << endl
-        << "   mutual inf:       " << phantom_recons_information << endl
-        << endl;
+        std::cout << "   L2_error:         " << L2_error / no_samples << std::endl;
+        std::cout << "   L1_error:         " << L1_error / no_samples << std::endl;
+        std::cout << "   phantom average:  " << phantom_avg << std::endl;
+        std::cout << "   recons average:   " << recons_avg << std::endl;
+        std::cout << "   phantom stddev:   " << phantom_stddev << std::endl;
+        std::cout << "   recons stddev:    " << recons_stddev << std::endl;
+        std::cout << "   phantom range:    [" << mp << "," << Mp << "]\n";
+        std::cout << "   recons range:     [" << mr << "," << Mr << "]\n";
+        std::cout << "   covariance:       " << covariance << std::endl
+        << "   phantom inf:      " << phantom_information << std::endl
+        << "   recons inf:       " << recons_information << std::endl
+        << "   mutual inf:       " << phantom_recons_information << std::endl
+        << std::endl;
     }
 }
 
@@ -335,9 +335,9 @@ void compute_hs_FOMs(Volume *vol_phantom,
         z2 = ROUND(ZZ(DC->Center) - DC->separation / 2 - DC->height / 2);
         z3 = ROUND(ZZ(DC->Center));
 #ifdef DEBUG
-        cout << "z1=" << z1 << endl;
-        cout << "z2=" << z2 << endl;
-        cout << "z3=" << z3 << endl;
+        std::cout << "z1=" << z1 << std::endl;
+        std::cout << "z2=" << z2 << std::endl;
+        std::cout << "z3=" << z3 << std::endl;
 #endif
     }
 
@@ -351,29 +351,29 @@ void compute_hs_FOMs(Volume *vol_phantom,
     // foreground, background or nowhere (border or another feature)
     Back->corners(vol_recons, corner1, corner2);
 #ifdef DEBUG
-    cout << "Foreground " << phantom_descr(sel_feat);
-    cout << "Background " << Back;
-    cout << "Inner  foreground " << Inner_fore;
-    cout << "Middle foreground " << Mid_fore;
-    cout << "Corner1 " << corner1.transpose() << endl;
-    cout << "Corner2 " << corner2.transpose() << endl;
+    std::cout << "Foreground " << phantom_descr(sel_feat);
+    std::cout << "Background " << Back;
+    std::cout << "Inner  foreground " << Inner_fore;
+    std::cout << "Middle foreground " << Mid_fore;
+    std::cout << "Corner1 " << corner1.transpose() << std::endl;
+    std::cout << "Corner2 " << corner2.transpose() << std::endl;
 #endif
     FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1, corner2)
     {
 #ifdef DEBUG
-        cout << "Studying " << r.transpose();
+        std::cout << "Studying " << r.transpose();
 #endif
         if (!m_r)
         {
 #ifdef DEBUG
-            cout << "    Not in the mask\n";
+            std::cout << "    Not in the mask\n";
 #endif
             continue; // If it is not in the mask continue
         }
         int totally_inside_foreground =
             phantom_descr(sel_feat)->voxel_inside(r) == 8;
 #ifdef DEBUG
-        cout << "   It's totally inside the foreground\n";
+        std::cout << "   It's totally inside the foreground\n";
 #endif
 
         // Check if inside background
@@ -383,7 +383,7 @@ void compute_hs_FOMs(Volume *vol_phantom,
             if (l_r == 0)
             {
 #ifdef DEBUG
-                cout << "   It's purely in the background\n";
+                std::cout << "   It's purely in the background\n";
 #endif
                 mpb += p_r;
                 vpb += p_r * p_r;
@@ -397,7 +397,7 @@ void compute_hs_FOMs(Volume *vol_phantom,
             else if (Inner_fore->voxel_inside(r) > 0)
             {
 #ifdef DEBUG
-                cout << "   It's in the inner foreground\n";
+                std::cout << "   It's in the inner foreground\n";
 #endif
                 mpf += p_r;
                 vpf += p_r * p_r;
@@ -409,7 +409,7 @@ void compute_hs_FOMs(Volume *vol_phantom,
             else if (Mid_fore->voxel_inside(r) != 8 && totally_inside_foreground)
             {
 #ifdef DEBUG
-                cout << "   It's in the outer foreground\n";
+                std::cout << "   It's in the outer foreground\n";
 #endif
                 mpo += p_r;
                 vpo += p_r * p_r;
@@ -431,7 +431,7 @@ void compute_hs_FOMs(Volume *vol_phantom,
             totally_inside_foreground)
         {
 #ifdef DEBUG
-            cout << "   Adding it to hsvr\n";
+            std::cout << "   Adding it to hsvr\n";
 #endif
             mp2 += p_r;
             vp2 += p_r * p_r;
@@ -462,7 +462,7 @@ void compute_hs_FOMs(Volume *vol_phantom,
     }
     else
     {
-        cout << "   Watch out, there is no voxel in the inner foreground\n";
+        std::cout << "   Watch out, there is no voxel in the inner foreground\n";
     }
     if (Nb != 0)
     {
@@ -473,7 +473,7 @@ void compute_hs_FOMs(Volume *vol_phantom,
     }
     else
     {
-        cout << "   Watch out, there is no voxel in the inside background\n";
+        std::cout << "   Watch out, there is no voxel in the inside background\n";
     }
     if (No != 0)
     {
@@ -484,7 +484,7 @@ void compute_hs_FOMs(Volume *vol_phantom,
     }
     else
     {
-        cout << "   Watch out, there is no voxel in the outer foreground\n";
+        std::cout << "   Watch out, there is no voxel in the outer foreground\n";
     }
 
     // Compute mean separability ............................................
@@ -555,10 +555,10 @@ void compute_hs_FOMs(Volume *vol_phantom,
         vr3 = vr3 / Nvr - mr3 * mr3;
 
 #ifdef DEBUG
-        cout << "mr1=" << mr1 << "\nmr2=" << mr2 << "\nmr3=" << mr3 << endl
-        << "vr1=" << vr1 << "\nvr2=" << vr2 << "\nvr3=" << vr3 << endl
-        << "mp1=" << mp1 << "\nmp2=" << mp2 << "\nmp3=" << mp3 << endl
-        << "vp1=" << vp1 << "\nvp2=" << vp2 << "\nvp3=" << vp3 << endl
+        std::cout << "mr1=" << mr1 << "\nmr2=" << mr2 << "\nmr3=" << mr3 << std::endl
+        << "vr1=" << vr1 << "\nvr2=" << vr2 << "\nvr3=" << vr3 << std::endl
+        << "mp1=" << mp1 << "\nmp2=" << mp2 << "\nmp3=" << mp3 << std::endl
+        << "vp1=" << vp1 << "\nvp2=" << vp2 << "\nvp3=" << vp3 << std::endl
         << "Nvr=" << Nvr;
 #endif
         if (vr1 + vr2 + 4*vr3 != 0)
@@ -574,24 +574,24 @@ void compute_hs_FOMs(Volume *vol_phantom,
         }
         else
         {
-            cout << "   Watch out, there is no deviation in reconstruction \n"
+            std::cout << "   Watch out, there is no deviation in reconstruction \n"
             << "   for vertical resolution FOM\n";
             hsvr_FOM = -1;
         }
     }
     else
     {
-        cout << "   Watch out, there is no voxel for vertical resolution FOM\n";
+        std::cout << "   Watch out, there is no voxel for vertical resolution FOM\n";
         hsvr_FOM = -1;
     }
 
     // Show results .........................................................
     if (tell&0x4)
     { // This is the flag SHOW_PROCESS of Prog_evaluate.h
-        cout << "Foreground " << phantom_descr(sel_feat);
-        cout << "Background " << Back;
-        cout << "Inner  foreground " << Inner_fore;
-        cout << "Middle foreground " << Mid_fore;
+        std::cout << "Foreground " << phantom_descr(sel_feat);
+        std::cout << "Background " << Back;
+        std::cout << "Inner  foreground " << Inner_fore;
+        std::cout << "Middle foreground " << Mid_fore;
         printf("   Selected feature: %d\n", sel_feat);
         printf("      Inner Foreground\n");
         printf("         phantom avg(): % 8.5f   var(): % 8.5f\n", mpf, vpf);
@@ -657,7 +657,7 @@ void compute_hs_FOMs(Volume *vol_phantom,
             VEC_ELEM(aux, 5) = Hrf(i);
             DF.append_data_line(aux);
         }
-        if (fn_histog == "stdout") cout << DF;
+        if (fn_histog == "stdout") std::cout << DF;
         else                     DF.write(fn_histog);
     }
 
@@ -759,7 +759,7 @@ void compute_dr_FOMs(const Volume *vol_phantom, const Volume *vol_recons,
             VEC_ELEM(aux, 3) = VEC_ELEM(RTno, i);
             DF.append_data_line(aux);
         }
-        if (fn_radon == "stdout") cout << DF;
+        if (fn_radon == "stdout") std::cout << DF;
         else                    DF.write(fn_radon);
     }
 }
@@ -774,7 +774,7 @@ void compute_distance_map(const Volume *vol_label, const Phantom &label,
     // Variables ............................................................
     // Some vectors to perform the distance operations
     struct coord    auxcoord;
-    vector<coord>   border;
+    std::vector<coord>   border;
     Matrix1D<double> r(3), v_dist(3);
 
     // Search for all voxels in the border ..................................
@@ -909,7 +909,7 @@ void show_shape(const Volume *vol_phantom, const Volume *vol_recons,
     }
 
     // Save shape
-    if (fn_shape == "stdout") cout << DF;
+    if (fn_shape == "stdout") std::cout << DF;
     else DF.write(fn_shape);
 
     DF.clear();
@@ -926,38 +926,38 @@ void compute_resolution(VolumeXmipp &vol_phantom,
     // If the phantom is not saved, save it
     FileName ext = vol_recons.name().get_extension();
     FileName original_phantom_name = vol_phantom.name();
-    vol_phantom.rename((string)"superfeo." + ext);
+    vol_phantom.rename((std::string)"superfeo." + ext);
     vol_phantom.write();
 
     // Generate and run spider batch
-    ofstream spider_batch;
-    spider_batch.open(((string)"b01." + ext).c_str());
+    std::ofstream spider_batch;
+    spider_batch.open(((std::string)"b01." + ext).c_str());
     if (!spider_batch)
         REPORT_ERROR(1, "Compute resol:: Cannot open file for Spider batch");
     spider_batch
     << "rf 3\n"
-    << vol_phantom.name().without_extension() << endl
-    << vol_recons .name().without_extension() << endl
-    << "1" << endl
-    << "0.001 1000" << endl
-    << "C" << endl
-    << "90" << endl
-    << "5" << endl
-    << "resolution" << endl
+    << vol_phantom.name().without_extension() << std::endl
+    << vol_recons .name().without_extension() << std::endl
+    << "1" << std::endl
+    << "0.001 1000" << std::endl
+    << "C" << std::endl
+    << "90" << std::endl
+    << "5" << std::endl
+    << "resolution" << std::endl
     << "en\n"
     ;
     spider_batch.close();
     char *spider_prog = getenv("SPIDER");
     if (spider_prog == NULL)
         REPORT_ERROR(1, "Compute resol:: The environment variable SPIDER is not set");
-    system(((string)spider_prog + " " + ext + " b01").c_str());
+    system(((std::string)spider_prog + " " + ext + " b01").c_str());
     vol_phantom.rename(original_phantom_name);
 
     // Process output file
     DocFile DF;
     try
     {
-        DF.read((string)"resolution." + ext);
+        DF.read((std::string)"resolution." + ext);
     }
     catch (Xmipp_error XE)
     {
@@ -981,17 +981,17 @@ void compute_resolution(VolumeXmipp &vol_phantom,
         double xF = DF(i  , 0), yF = DF(i  , 2) - DF(i  , 3);
         resolution = x0 - y0 * (xF - x0) / (yF - y0);
 
-        //system(((string)"rm resolution."+ext).c_str());
+        //system(((std::string)"rm resolution."+ext).c_str());
         system("rm LOG* results* b01*");
-        system(((string)"rm superfeo." + ext).c_str());
+        system(((std::string)"rm superfeo." + ext).c_str());
     }
     else resolution = -1;
 
     // Show results .........................................................
     if (tell&0x4) // This is the flag SHOW_PROCESS of Prog_evaluate.h
-        system(((string)"cat resolution." + ext).c_str());
+        system(((std::string)"cat resolution." + ext).c_str());
 
-//   system(((string)"rm resolution."+ext).c_str());
+//   system(((std::string)"rm resolution."+ext).c_str());
 }
 
 // Based on Bsoft
@@ -1000,17 +1000,17 @@ void compute_resolution(VolumeXmipp &vol_phantom,
 {
     // Prepare volumes to be evaluated
     if (vol_phantom.name() != "")
-        system(((string)"ln -s " + vol_phantom.name() + " superfeo.spi").c_str());
+        system(((std::string)"ln -s " + vol_phantom.name() + " superfeo.spi").c_str());
     else vol_phantom.write("superfeo.spi");
     if (vol_recons.name() != "")
-        system(((string)"ln -s " + vol_recons.name() + " superfeo2.spi").c_str());
+        system(((std::string)"ln -s " + vol_recons.name() + " superfeo2.spi").c_str());
     else vol_recons.write("superfeo2.spi");
 
     // Run bresolve of bsoft to compute resolution
     system("bresolve -s 1 -m superfeo.spi superfeo2.spi > superfeo3");
 
     // Process output file
-    ifstream fh_resol;
+    std::ifstream fh_resol;
     fh_resol.open("superfeo3");
     if (!fh_resol)
         REPORT_ERROR(1,
@@ -1022,7 +1022,7 @@ void compute_resolution(VolumeXmipp &vol_phantom,
     }
     catch (...)
     {
-        cerr << "compute_resolution: Error reading resolution, ignoring it\n";
+        std::cerr << "compute_resolution: Error reading resolution, ignoring it\n";
         resolution = -1;
     }
     fh_resol.close();
@@ -1052,19 +1052,19 @@ double compute_FSC(VolumeXmipp &vol_phantom,
 
     // Prepare volumes to be evaluated
     if (vol_phantom.name() != "")
-        system(((string)"ln -s " + vol_phantom.name() + " superfeo.spi").c_str());
+        system(((std::string)"ln -s " + vol_phantom.name() + " superfeo.spi").c_str());
     else vol_phantom.write("superfeo.spi");
     if (vol_recons.name() != "")
-        system(((string)"ln -s " + vol_recons.name() + " superfeo2.spi").c_str());
+        system(((std::string)"ln -s " + vol_recons.name() + " superfeo2.spi").c_str());
     else vol_recons.write("superfeo2.spi");
 
     // Run bresolve of bsoft to compute resolution
-    string command = (string)"bresolve -s " + floatToString(sampling_rate) +
+    string command = (std::string)"bresolve -s " + floatToString(sampling_rate) +
                      " -v4 -m superfeo.spi superfeo2.spi > superfeo3";
     system(command.c_str());
 
     // Process output file
-    ifstream fh_resol;
+    std::ifstream fh_resol;
     fh_resol.open("superfeo3");
     if (!fh_resol)
         REPORT_ERROR(1,
@@ -1086,8 +1086,8 @@ double compute_FSC(VolumeXmipp &vol_phantom,
 
         // Copy until the line that says Fourier
         bool fourier_found = false;
-        vector<double> auxfreq, auxFSC;
-        vector<string> tokens;
+        std::vector<double> auxfreq, auxFSC;
+        std::vector<string> tokens;
         do
         {
             if (!getline(fh_resol, line))
@@ -1120,7 +1120,7 @@ double compute_FSC(VolumeXmipp &vol_phantom,
     }
     catch (Xmipp_error XE)
     {
-        cerr << XE << endl
+        std::cerr << XE << std::endl
         << "compute_resolution: Error reading resolution, ignoring it\n";
     }
     fh_resol.close();
@@ -1145,32 +1145,32 @@ double compute_FSC(VolumeXmipp &vol_phantom,
 
     // Prepare volumes to be evaluated
     if (vol_phantom.name() != "")
-        system(((string)"ln -s " + vol_phantom.name() + " superfeo.vol").c_str());
+        system(((std::string)"ln -s " + vol_phantom.name() + " superfeo.vol").c_str());
     else vol_phantom.write("superfeo.vol");
     if (vol_recons.name() != "")
-        system(((string)"ln -s " + vol_recons.name() + " superfeo2.vol").c_str());
+        system(((std::string)"ln -s " + vol_recons.name() + " superfeo2.vol").c_str());
     else vol_recons.write("superfeo2.vol");
 
     // Run bresolve of bsoft to compute resolution
-    string command = (string)"xmipp_resolution -sam " + floatToString(sampling_rate) +
-                     " -ref superfeo.vol -i superfeo2.vol";
+    std::string command = (std::string)"xmipp_resolution -sam " + floatToString(sampling_rate) +
+                          " -ref superfeo.vol -i superfeo2.vol";
     system(command.c_str());
 
     // Process output file
-    ifstream fh_resol;
+    std::ifstream fh_resol;
     fh_resol.open("superfeo2.vol.frc");
     if (!fh_resol)
         REPORT_ERROR(1,
                      "compute_FSC: Cannot open results file from xmipp_resolution");
     try
     {
-        string line;
+        std::string line;
         // Skip first line
         getline(fh_resol, line);
 
         // Read the rest
-        vector<double> auxfreq, auxFSC;
-        vector<string> tokens;
+        std::vector<double> auxfreq, auxFSC;
+        std::vector<std::string> tokens;
         while (getline(fh_resol, line))
         {
             tokenize(line, tokens);
@@ -1192,7 +1192,7 @@ double compute_FSC(VolumeXmipp &vol_phantom,
     }
     catch (Xmipp_error XE)
     {
-        cerr << XE << endl
+        std::cerr << XE << std::endl
         << "compute_resolution: Error reading resolution, ignoring it\n";
     }
     fh_resol.close();

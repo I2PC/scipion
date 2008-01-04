@@ -76,7 +76,7 @@ void Basis::read(const FileName &fn)
     FILE *fh;
     if ((fh = fopen(fn.c_str(), "r")) == NULL)
         REPORT_ERROR(3005,
-                     (string)"Basis::read: There is a problem "
+                     (std::string)"Basis::read: There is a problem "
                      "opening the file " + fn);
 
     GET_BASIS_PARAMS;
@@ -86,7 +86,7 @@ void Basis::read(const FileName &fn)
 // Usage -------------------------------------------------------------------
 void Basis::usage() const
 {
-    cerr << "\nBasis parameters"
+    std::cerr << "\nBasis parameters"
     << "\nFor blobs:"
     << "\n   [-r blrad=2]          blob radius"
     << "\n   [-m blord=2]          order of Bessel function in blob"
@@ -129,8 +129,8 @@ void Basis::produce_side_info(const Grid &grid)
     }
 
 #ifdef DEBUG
-    cout << "Sum of a basis on the grid=" << sum_on_grid << endl;
-    cout << "D\n" << D << endl;
+    std::cout << "Sum of a basis on the grid=" << sum_on_grid << std::endl;
+    std::cout << "D\n" << D << std::endl;
     ImageXmipp save;
     save() = blobprint();
     save.write("footprint.xmp");
@@ -139,14 +139,14 @@ void Basis::produce_side_info(const Grid &grid)
 #undef DEBUG
 
 // Show --------------------------------------------------------------------
-ostream & operator << (ostream & out, const Basis &basis)
+std::ostream & operator << (std::ostream & out, const Basis &basis)
 {
     switch (basis.type)
     {
     case Basis::blobs:
         out << " Blobs:         radius=" << basis.blob.radius << " pixels"
         << " alpha=" << basis.blob.alpha
-        << " order=" << basis.blob.order << endl;
+        << " order=" << basis.blob.order << std::endl;
         break;
     case Basis::voxels:
         out << "Voxels\n";

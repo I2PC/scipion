@@ -71,7 +71,7 @@ protected:
     /* This image will contain a single particle from the micrograph,
        this is done to avoid asking/freeing memory all time. */
     Image                   single_particle;
-    vector<Particle_coords> coords;
+    std::vector<Particle_coords> coords;
     FileName                fn_coords;
     FileName                fn_micrograph;
     FileName                fn_inf;
@@ -94,7 +94,7 @@ protected:
     float                   __b;
     /* bool                    __in_core; */
     int                     fh_micrograph;
-    vector<string>          labels;
+    std::vector<std::string> labels;
 public:
     /** Constructor */
     Micrograph()
@@ -133,7 +133,7 @@ public:
     void write_as_8_bits(const FileName &fn8bits);
 
     /** Micrograph filename. */
-    string micrograph_name()
+    const FileName& micrograph_name()
     {
         return(fn_micrograph);
     }
@@ -156,13 +156,13 @@ public:
 
     /** Particle.
         Return the list of particles. */
-    vector<Particle_coords> & Particles()
+    std::vector<Particle_coords> & Particles()
     {
         return coords;
     }
 
     /** Another function for getting the particles.*/
-    void get_Particles(vector<Particle_coords> & _coords)
+    void get_Particles(std::vector<Particle_coords> & _coords)
     {
         _coords = coords;
     }
@@ -485,7 +485,7 @@ public:
 
     /** Add label.
         The index assigned to the label is returned */
-    int add_label(const string &label)
+    int add_label(const std::string &label)
     {
         labels.push_back(label);
         return labels.size() - 1;
@@ -500,7 +500,7 @@ public:
     /** Get a label.
         An exception is thrown if the index is greater than the
         number of labels */
-    string & get_label(int n)
+    std::string & get_label(int n)
     {
         if (n < 0 || n > LabelNo())
             REPORT_ERROR(1, "Micrograph::get_label(): index out of range");
@@ -508,7 +508,7 @@ public:
     }
 
     /** Another function for get a lebel.*/
-    void get_label(int n, string &_label)
+    void get_label(int n, std::string &_label)
     {
         _label = get_label(n);
     }

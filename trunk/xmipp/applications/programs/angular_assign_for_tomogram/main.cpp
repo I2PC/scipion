@@ -38,7 +38,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
-    cout << "This program is not intended for volumes\n";
+    std::cout << "This program is not intended for volumes\n";
     return false;
 }
 

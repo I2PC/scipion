@@ -50,7 +50,7 @@ Prog_create_surface::Prog_create_surface()
 /* Usage ------------------------------------------------------------------- */
 void Prog_create_surface::usage()
 {
-    cout << "   -i <pdb file>                    : File to read data from\n"
+    std::cout << "   -i <pdb file>                    : File to read data from\n"
     << "   -o <pdb file>                    : File to write result data in\n"
     << "   -f <string>                      : Name of the surface to map\n";
 }
@@ -72,7 +72,7 @@ void Prog_create_surface::read_input_file()
     char    *auxstr;
     if ((fh_param = fopen(fn_in.c_str(), "r")) == NULL)
         REPORT_ERROR(3005,
-                     (string)"Prog_Project_Parameters::read: There is a problem "
+                     (std::string)"Prog_Project_Parameters::read: There is a problem "
                      "opening the file " + fn_in);
 
     while (fgets(line, 200, fh_param) != NULL)
@@ -113,7 +113,7 @@ void Prog_create_surface::read_input_file()
         } /* switch end */
     } /* while end */
     if (lineNo != 4)
-        REPORT_ERROR(3007, (string)"Prog_Project_Parameters::read: I "
+        REPORT_ERROR(3007, (std::string)"Prog_Project_Parameters::read: I "
                      "couldn't read all parameters from file " + fn_in);
 
     fclose(fh_param);
@@ -183,7 +183,7 @@ void Prog_create_surface::maping_function(Matrix1D<double > a, Matrix1D<double >
     }
     else
     {
-        cerr << "function " << option << " not implemented" << endl;
+        std::cerr << "function " << option << " not implemented" << std::endl;
         exit(1);
     }
 //*

@@ -66,7 +66,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage();
         exit(1);
     }
@@ -88,11 +88,11 @@ int main(int argc, char **argv)
             // Read angles
             FileName fn_ang = fn_micrograph.without_extension();
             fn_ang = fn_ang.add_extension("ang");
-            ifstream fh_ang;
+            std::ifstream fh_ang;
             fh_ang.open(fn_ang.c_str());
             if (!fh_ang)
-                REPORT_ERROR(1, (string)"Scissor: Cannot open file" + fn_ang);
-            string aux;
+                REPORT_ERROR(1, (std::string)"Scissor: Cannot open file" + fn_ang);
+            std::string aux;
             getline(fh_ang, aux);
             double alpha_u, alpha_t, tilt_angle;
             fh_ang >> alpha_u >> alpha_t >> tilt_angle;
@@ -123,13 +123,13 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
 }
 
 void Usage()
 {
-    cerr << "Purpose: Cut the images marked with xmipp_mark\n"
+    std::cerr << "Purpose: Cut the images marked with xmipp_mark\n"
     << "Usage: scissor [options]\n"
     << "For single images -------------------------\n"
     << "   -i <input micrograph>      : From which the images will be cutted\n"

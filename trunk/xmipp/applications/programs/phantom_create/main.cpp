@@ -29,8 +29,8 @@ void Usage(char *argv[]);
 
 int main(int argc, char *argv[])
 {
-    string            fn_phantom;
-    string            fn_vol;
+    FileName          fn_phantom;
+    FileName          fn_vol;
     Phantom           phantom;
     VolumeXmipp       vol;
 
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage(argv);
     }
 
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         exit(1);
     }
     exit(0);

@@ -70,19 +70,19 @@ public:
     /** Number of projection directions */
     int nr_dir;
     /** Vector with reference library projections */
-    vector<Matrix2D<double> > ref_img;
+    std::vector<Matrix2D<double> > ref_img;
     /** Vectors for standard deviation and mean of reference library projections */
     double * ref_stddev, * ref_mean;
     /** Vector with reference library angles */
     double * ref_rot, * ref_tilt;
     /** Vectors to stored valid shifts */
-    vector <Matrix1D<double> > shift_vector;
+    std::vector <Matrix1D<double> > shift_vector;
     /** Maximum allowed shift */
     double max_shift;
     /** Flag whether to store optimal transformations in the image headers */
     bool modify_header;
 #ifdef NEVERDEFINE
-    vector<Matrix2D<double> >::iterator idirno;
+    std::vector<Matrix2D<double> >::iterator idirno;
     /** Number of steps to sample in-plane rotation in 90 degrees */
     int nr_psi;
     /** Verbose level:

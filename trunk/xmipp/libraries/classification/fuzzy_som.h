@@ -147,8 +147,8 @@ private:
     unsigned numNeurons;
     unsigned numVectors;
     unsigned dim;
-    vector<double> tmpV, tmpD, tmpDens;
-    vector < vector<double> > tmpMap;
+    std::vector<double> tmpV, tmpD, tmpDens;
+    std::vector < std::vector<double> > tmpMap;
 
     void showX(const TS& _ts);
 

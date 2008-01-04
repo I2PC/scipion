@@ -5,7 +5,7 @@
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
  * Part of this module has been developed by Lorenzo Zampighi and Nelson Tang
- * Dept. Physiology of the David Geffen School of Medicine
+ * Dept. Physiology of the David Geffen School of Medistd::cine
  * Univ. of California, Los Angeles.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -93,8 +93,8 @@ static const char* IMAGIC_TAG = "imagic:";
  * a special way to the physical ones.
  *
  * @code
- * cout << "Grey level of pixel (-3, -3) of the image = "
- *      << IMGPIXEL(I, -3, -3) << endl;
+ * std::cout << "Grey level of pixel (-3, -3) of the image = "
+ *      << IMGPIXEL(I, -3, -3) << std::endl;
  *
  * IMGPIXEL(I, -3, -3) = IMGPIXEL(I, -3, -2);
  * @endcode
@@ -113,8 +113,8 @@ static const char* IMAGIC_TAG = "imagic:";
  * This macro can be used by any of the derived classes from the Image class.
  *
  * @code
- * cout << "This is the first pixel stored in the image " <<
- *      DIRECT_IMGPIXEL(I, 0, 0) << endl;
+ * std::cout << "This is the first pixel stored in the image " <<
+ *      DIRECT_IMGPIXEL(I, 0, 0) << std::endl;
  * @endcode
  */
 #define DIRECT_IMGPIXEL(I, i, j) DIRECT_MAT_ELEM(((I).img), (i), (j))
@@ -356,8 +356,8 @@ public:
      * has been defined so (see the general explanation for the class).
      *
      * @code
-     * cout << "Grey level of pixel (-3,-3) of the image = " << I(-3, -3)
-     * << endl;
+     * std::cout << "Grey level of pixel (-3,-3) of the image = " << I(-3, -3)
+     * << std::endl;
      *
      * I(-3, -3) = I(-3, -2);
      * @endcode
@@ -387,7 +387,7 @@ public:
      * assign a new one.
      *
      * @code
-     * cout << "Image name: " << I.name() << endl;
+     * std::cout << "Image name: " << I.name() << std::endl;
      * @endcode
      */
     const FileName name() const
@@ -395,15 +395,15 @@ public:
         return fn_img;
     }
 
-    /** Cout << Image
+    /** std::cout << Image
      *
      * Shows name and size
      */
-    friend ostream& operator<<(ostream& out, const ImageT& I)
+    friend std::ostream& operator<<(std::ostream& out, const ImageT& I)
     {
-        out << "Image Name   : " << I.fn_img << endl
-        << "dimensions   : " << I.img.rowNumber() << " x " << I.img.colNumber()
-        << "  (rows x columns)" << endl;
+        out << "Image Name   : " << I.fn_img << std::endl
+            << "dimensions   : " << I.img.rowNumber() << " x " << I.img.colNumber()
+            << "  (rows x columns)" << std::endl;
 
         return out;
     }
@@ -492,7 +492,7 @@ public:
     static ImageT< T >* LoadImage(const FileName& name, bool apply_geo = false)
     {
         ImageT< T >* ret = NULL;
-        if (name.find(IMAGIC_TAG) != string::npos)
+        if (name.find(IMAGIC_TAG) != std::string::npos)
         {
             ImageImagicT< T >* i = new ImageImagicT< T >();
             if (i->read(name))
@@ -593,7 +593,7 @@ public:
 // Specialized function to read images with complex numbers in them
 // Inlined to avoid multiple definitions
 template<>
-inline bool ImageT< complex< double> >::read(FILE*& fh, float fIform,
+inline bool ImageT< std::complex< double> >::read(FILE*& fh, float fIform,
         int Ydim, int Xdim, bool reversed, Image_Type image_type)
 {
     img.resize(Ydim, Xdim);
@@ -608,7 +608,7 @@ inline bool ImageT< complex< double> >::read(FILE*& fh, float fIform,
         FREAD(&b, sizeof(float), 1, fh, reversed);
 
         // Assign the number
-        complex< double > c(a, b);
+        std::complex< double > c(a, b);
         MULTIDIM_ELEM(img, i) = c;
     }
     return (true);
@@ -616,7 +616,7 @@ inline bool ImageT< complex< double> >::read(FILE*& fh, float fIform,
 
 // Specialized function to write images with complex numbers in them
 template<>
-inline void ImageT< complex< double> >::write(FILE*& fh, bool reversed,
+inline void ImageT< std::complex< double> >::write(FILE*& fh, bool reversed,
         Image_Type image_type)
 {
     FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
@@ -662,7 +662,7 @@ public:
      */
     ImageXmippT(): ImageT< T >()
     {
-        if (typeid(T) == typeid(complex< double >))
+        if (typeid(T) == typeid(std::complex< double >))
             // Sets header of type Image_Fourier(Complex)
             header.headerType() = headerXmipp::IMG_FOURIER;
         else if (typeid(T) == typeid(double))
@@ -683,7 +683,7 @@ public:
      */
     ImageXmippT(int Ydim, int Xdim) : ImageT< T >(Ydim, Xdim)
     {
-        if (typeid(T) == typeid(complex< double >))
+        if (typeid(T) == typeid(std::complex< double >))
             // Sets header of type Image_Fourier(Complex)
             header.headerType() = headerXmipp::IMG_FOURIER;
         else if (typeid(T) == typeid(double))
@@ -708,7 +708,7 @@ public:
      */
     ImageXmippT(FileName _name, bool apply_geo = false) : ImageT< T >(_name)
     {
-        if (typeid(T) == typeid(complex< double >))
+        if (typeid(T) == typeid(std::complex< double >))
             // Sets header of type Image_Fourier (Complex)
             header.headerType() = headerXmipp::IMG_FOURIER;
         else if (typeid(T) == typeid(double))
@@ -747,10 +747,10 @@ public:
     /** Show the header information of a Xmipp image
      *
      * @code
-     * cout << IX;
+     * std::cout << IX;
      * @endcode
      */
-    friend ostream& operator<<(ostream& out, const ImageXmippT< T >& I)
+    friend std::ostream& operator<<(std::ostream& out, const ImageXmippT< T >& I)
     {
         out << (ImageT< T >&) I << I.header;
         return out;
@@ -879,7 +879,7 @@ public:
 
         ImageXmippT< T >::rename(name);
         if ((fp = fopen(ImageT< T >::fn_img.c_str(), "rb")) == NULL)
-            REPORT_ERROR(1501, (string) "ImageXmipp::read: File " +
+            REPORT_ERROR(1501, (std::string) "ImageXmipp::read: File " +
                          ImageT<T>::fn_img + " not found");
 
         bool ret=readImageHeaderAndContent(fp, skip_type_check, reversed,
@@ -966,7 +966,7 @@ public:
             ImageXmippT< T >::rename(name);
 
         if ((fp = fopen(ImageT<T>::fn_img.c_str(), "wb")) == NULL)
-            REPORT_ERROR(1503, (string) "ImageXmipp::write: File " + name +
+            REPORT_ERROR(1503, (std::string) "ImageXmipp::write: File " + name +
                          " cannot be written");
 
         write(fp,force_reversed);
@@ -1002,7 +1002,7 @@ public:
      */
     void adjust_header()
     {
-        if (typeid(T) == typeid(complex< double >))
+        if (typeid(T) == typeid(std::complex< double >))
             // Sets header of type Image_Fourier (Complex)
             header.headerType() = headerXmipp::IMG_FOURIER;
         else if (typeid(T) == typeid(double))
@@ -1112,8 +1112,8 @@ public:
             {
                 // This indeed seems to be an OldXmipp style header with
                 // non-zero offsets
-                cerr << "WARNING%% Copying shifts from old to new headers: "
-                << (*this).name() << endl;
+                std::cerr << "WARNING%% Copying shifts from old to new headers: "
+                          << (*this).name() << std::endl;
 
                 header.fXoff() = -(float) mat(2, 0);
                 header.fYoff() = -(float) mat(2, 1);
@@ -1169,7 +1169,7 @@ public:
     /** Get Xoff
      *
      * @code
-     * cout << "Origin Offset in X-direction: " << IX.Xoff() << endl;
+     * std::cout << "Origin Offset in X-direction: " << IX.Xoff() << std::endl;
      * @endcode
      */
     float Xoff() const
@@ -1198,7 +1198,7 @@ public:
     /** Get Yoff
      *
      * @code
-     * cout << "Origin Offset in Y-direction: " << IX.Yoff() << endl;
+     * std::cout << "Origin Offset in Y-direction: " << IX.Yoff() << std::endl;
      * @endcode
      */
     float Yoff() const
@@ -1227,7 +1227,7 @@ public:
     /** Get weight
      *
      * @code
-     * cout << "Weight: " << IX.weight() << endl;
+     * std::cout << "Weight: " << IX.weight() << std::endl;
      * @endcode
      */
     float  weight() const
@@ -1258,7 +1258,7 @@ public:
     /** Get flip
      *
      * @code
-     * cout << "Flip: " << IX.flip() << endl;
+     * std::cout << "Flip: " << IX.flip() << std::endl;
      * @endcode
      */
     float flip() const
@@ -1393,7 +1393,7 @@ public:
     /** Get old rotational angle
      *
      * @code
-     * cout << "First Euler angle " << IX.old_rot() << endl;
+     * std::cout << "First Euler angle " << IX.old_rot() << std::endl;
      * @endcode
      */
     float old_rot() const
@@ -1422,7 +1422,7 @@ public:
     /** Get Phi
      *
      * @code
-     * cout << "First Euler angle " << IX.Phi() << endl;
+     * std::cout << "First Euler angle " << IX.Phi() << std::endl;
      * @endcode
      */
     float Phi() const
@@ -1451,7 +1451,7 @@ public:
     /** Get rot
      *
      * @code
-     * cout << "First Euler angle " << IX.rot() << endl;
+     * std::cout << "First Euler angle " << IX.rot() << std::endl;
      * @endcode
      */
     float rot() const
@@ -1480,7 +1480,7 @@ public:
     /** Get Phi1. First alternative phi angle
      *
      * @code
-     * cout << "First Euler angle " << IX.Phi1() << endl;
+     * std::cout << "First Euler angle " << IX.Phi1() << std::endl;
      * @endcode
      */
     float  Phi1() const
@@ -1509,7 +1509,7 @@ public:
     /** Get rot1. First alternative phi angle
      *
      * @code
-     * cout << "First Euler angle " << IX.rot1() << endl;
+     * std::cout << "First Euler angle " << IX.rot1() << std::endl;
      * @endcode
      */
     float rot1() const
@@ -1538,7 +1538,7 @@ public:
     /** Get Phi2. Second alternative phi angle
      *
      * @code
-     * cout << "First Euler angle " << IX.Phi2() << endl;
+     * std::cout << "First Euler angle " << IX.Phi2() << std::endl;
      * @endcode
      */
     float Phi2() const
@@ -1567,7 +1567,7 @@ public:
     /** Get rot2. Second alternative phi angle
      *
      * @code
-     * cout << "First Euler angle " << IX.rot2() << endl;
+     * std::cout << "First Euler angle " << IX.rot2() << std::endl;
      * @endcode
      */
     float rot2() const
@@ -1596,7 +1596,7 @@ public:
     /** Get Theta
      *
      * @code
-     * cout << "Second Euler angle " << IX.Theta() << endl;
+     * std::cout << "Second Euler angle " << IX.Theta() << std::endl;
      * @endcode
      */
     float Theta() const
@@ -1625,7 +1625,7 @@ public:
     /** Get Tilting angle
      *
      * @code
-     * cout << "Second Euler angle " << IX.tilt() << endl;
+     * std::cout << "Second Euler angle " << IX.tilt() << std::endl;
      * @endcode
      */
     float tilt() const
@@ -1653,7 +1653,7 @@ public:
     /** Get Theta1
      *
      * @code
-     * cout << "Second Euler angle " << IX.Theta1() << endl;
+     * std::cout << "Second Euler angle " << IX.Theta1() << std::endl;
      * @endcode
      */
     float Theta1() const
@@ -1682,7 +1682,7 @@ public:
     /** Get 1st Tilting angle
      *
      * @code
-     * cout << "Second Euler angle " << IX.tilt1() << endl;
+     * std::cout << "Second Euler angle " << IX.tilt1() << std::endl;
      * @endcode
      */
     float tilt1() const
@@ -1710,7 +1710,7 @@ public:
     /** Get Theta2
      *
      * @code
-     * cout << "Second Euler angle " << IX.Theta2() << endl;
+     * std::cout << "Second Euler angle " << IX.Theta2() << std::endl;
      * @endcode
      */
     float Theta2() const
@@ -1739,7 +1739,7 @@ public:
     /** Get 2sd Tilting angle
      *
      * @code
-     * cout << "Second Euler angle " << IX.tilt2() << endl;
+     * std::cout << "Second Euler angle " << IX.tilt2() << std::endl;
      * @endcode
      */
     float tilt2() const
@@ -1768,7 +1768,7 @@ public:
     /** Get Psi
      *
      * @code
-     * cout << "Third Euler angle " << IX.psi() << endl;
+     * std::cout << "Third Euler angle " << IX.psi() << std::endl;
      * @endcode
      */
     float Psi() const
@@ -1797,7 +1797,7 @@ public:
     /** Get psi
      *
      * @code
-     * cout << "Third Euler angle " << IX.psi() << endl;
+     * std::cout << "Third Euler angle " << IX.psi() << std::endl;
      * @endcode
      */
     float psi() const
@@ -1826,7 +1826,7 @@ public:
     /** Get Psi1
      *
      * @code
-     * cout << "Third Euler angle " << IX.psi1() << endl;
+     * std::cout << "Third Euler angle " << IX.psi1() << std::endl;
      * @endcode
      */
     float Psi1() const
@@ -1855,7 +1855,7 @@ public:
     /** Get psi1
      *
      * @code
-     * cout << "Third Euler angle " << IX.psi1() << endl;
+     * std::cout << "Third Euler angle " << IX.psi1() << std::endl;
      * @endcode
      */
     float psi1() const
@@ -1884,7 +1884,7 @@ public:
     /** Get Psi2
      *
      * @code
-     * cout << "Third Euler angle " << IX.psi2() << endl;
+     * std::cout << "Third Euler angle " << IX.psi2() << std::endl;
      * @endcode
      */
     float Psi2() const
@@ -1913,7 +1913,7 @@ public:
     /** Get psi2
      *
      * @code
-     * cout << "Third Euler angle " << IX.psi2() << endl;
+     * std::cout << "Third Euler angle " << IX.psi2() << std::endl;
      * @endcode
      */
     float psi2() const
@@ -1924,8 +1924,8 @@ public:
 
 typedef ImageT< double > Image;
 typedef ImageXmippT< double > ImageXmipp;
-typedef ImageT< complex< double > > FourierImage;
-typedef ImageXmippT< complex< double > > FourierImageXmipp;
+typedef ImageT< std::complex< double > > FourierImage;
+typedef ImageXmippT< std::complex< double > > FourierImageXmipp;
 
 /** True if the given volume is an Xmipp image
  */
@@ -1965,7 +1965,7 @@ public:
 
     /** Stack of images. Where the true data is.
      */
-    vector< ImageXmipp > stack;
+    std::vector< ImageXmipp > stack;
 public:
     /** Read from stack file.
      */
@@ -2204,7 +2204,7 @@ public:
      * thrown if you try to access an image outside the image.
      *
      * @code
-     * cout << IO(1.34,-0.56) << endl;
+     * std::cout << IO(1.34,-0.56) << std::endl;
      * @endcode
      */
     double operator()(double v, double u) const
@@ -2263,7 +2263,7 @@ public:
      * data type is based.
      *
      * @code
-     * cout << IO();
+     * std::cout << IO();
      * @endcode
      */
     Matrix2D< double >& operator()()
@@ -2426,11 +2426,11 @@ enum ImageImagicType
 };
 
 /* structure that holds Imagic image information */
-struct ImageImagicInfo
+struct ImageImagicinfo
 {
     unsigned int num_img;
     unsigned int xsize, ysize;
-    vector< ImageImagicType > img_types;
+    std::vector< ImageImagicType > img_types;
 };
 
 /** Imagic Image class
@@ -2536,14 +2536,14 @@ public:
 
     /** Show
      */
-    friend ostream& operator<<(ostream& out, const ImageImagicT< T >& I)
+    friend std::ostream& operator<<(std::ostream& out, const ImageImagicT< T >& I)
     {
         out << (ImageT< T >&) I;
 
         /* COSS: These functions are not defined
-           out << "IMAGIC header fname: " << get_hedfname() << endl;
-           out << "IMAGIC image fname:  " << get_imgfname() << endl;
-           out << "image number:        " << get_imgnum() << endl;
+           out << "IMAGIC header fname: " << get_hedfname() << std::endl;
+           out << "IMAGIC image fname:  " << get_imgfname() << std::endl;
+           out << "image number:        " << get_imgnum() << std::endl;
         */
 
         return (out);
@@ -2554,7 +2554,7 @@ public:
     bool read(const FileName& name)
     {
         rename(name);
-        ImageImagicInfo img_info = ImagicGetImgInfo(getHedFname());
+        ImageImagicinfo img_info = ImagicGetImgInfo(getHedFname());
 
         FileName img_fname = getImgFname();
         if (img_fname == "")
@@ -2673,9 +2673,9 @@ public:
             imgnum = -1;
 
             // Look for special IMAGIC format: 'imagic:<hedfile>:<imgnum>'
-            if (ImageT< T >::fn_img.find(IMAGIC_TAG) != string::npos)
+            if (ImageT< T >::fn_img.find(IMAGIC_TAG) != std::string::npos)
             {
-                const string::size_type imgnumpos =
+                const std::string::size_type imgnumpos =
                     ImageT< T >::fn_img.rfind(IMAGIC_TAG_SEP);
 
                 if (imgnumpos > IMAGIC_TAG_LEN)
@@ -2706,14 +2706,14 @@ typedef ImageImagicT< double > ImageImagic;
 /** Creates a string of the format 'imagic:hedfname:num' suitable for use as an
  * image name
  */
-inline string ImagicMakeName(const char* hed_fname, unsigned int imgnum)
+inline std::string ImagicMakeName(const char* hed_fname, unsigned int imgnum)
 {
 #if GCC_VERSION < 30300
     char aux[15];
     ostrstream ss(aux, sizeof(aux));
 #else
 
-    ostringstream ss;
+    std::ostringstream ss;
 #endif
 
     ss << IMAGIC_TAG << hed_fname << IMAGIC_TAG_SEP << imgnum;
@@ -2722,14 +2722,14 @@ inline string ImagicMakeName(const char* hed_fname, unsigned int imgnum)
 
 /** Looks at an IMAGIC header file for information about the images it contains
  */
-const ImageImagicInfo ImagicGetImgInfo(const FileName& hed_fname);
+const ImageImagicinfo ImagicGetImgInfo(const FileName& hed_fname);
 
 /** Creates a new Imagic header/image file pair, filling it with the data
  * pointed to by the vector parameter
  */
 template<typename T>
 bool ImagicWriteImagicFile(const FileName& hed_fname,
-                           const vector< ImageT< T >* > & imgs,
+                           const std::vector< ImageT< T >* > & imgs,
                            ImageImagicType img_type = IMAGIC_REAL)
 {
     const FileName img_fname = hed_fname.substitute_extension(IMAGIC_HEADER_EXT,
@@ -2776,7 +2776,7 @@ bool ImagicWriteImagicFile(const FileName& hed_fname,
             header_block[IMAGIC_IDX_IXLP1] = XSIZE((*image)());
             header_block[IMAGIC_IDX_IYLP1] = YSIZE((*image)());
 
-            string formatstr;
+            std::string formatstr;
             switch (img_type)
             {
             case IMAGIC_REAL:
@@ -2860,7 +2860,7 @@ bool ImagicWriteImagicFile(const FileName& hed_fname,
 
 // Specialized function to read images with complex numbers in them
 template<>
-bool ImageImagicT< complex< double > >::read(const FileName&);
+bool ImageImagicT< std::complex< double > >::read(const FileName&);
 //@}
 
 #endif

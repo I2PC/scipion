@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage();
         exit(1);
     }
@@ -105,14 +105,14 @@ int main(int argc, char *argv[])
             C = DF.col(col);
             if (automatic_range) C.computeDoubleMinMax(m, M);
             compute_hist(C, hist, m, M, StepsNo);
-            cerr << "Min: " << m << " max: " << M
-            << " Steps: " << StepsNo << endl;
+            std::cerr << "Min: " << m << " max: " << M
+            << " Steps: " << StepsNo << std::endl;
             C.computeStats(avg, stddev, dummy, dummy);
-            cerr << "Mean: " << avg << " Stddev: " << stddev << endl;
-            cerr << "Percentil (" << percentil << "): "
-            << hist.percentil(percentil) << endl;
+            std::cerr << "Mean: " << avg << " Stddev: " << stddev << std::endl;
+            std::cerr << "Percentil (" << percentil << "): "
+            << hist.percentil(percentil) << std::endl;
             if (fn_out != "") hist.write(fn_out);
-            else            cout << hist;
+            else            std::cout << hist;
 
             // 2D histograms -----------------------------------------------------
         }
@@ -126,16 +126,16 @@ int main(int argc, char *argv[])
                 C2.computeDoubleMinMax(m2, M2);
             }
             compute_hist(C, C2, hist2, m, M, m2, M2, StepsNo, StepsNo2);
-            cerr << "Min1: "   << m        << " max1: " << M
-            << " Steps1: " << StepsNo  << endl;
+            std::cerr << "Min1: "   << m        << " max1: " << M
+            << " Steps1: " << StepsNo  << std::endl;
             C.computeStats(avg, stddev, dummy, dummy);
-            cerr << "Mean: " << avg << " Stddev: " << stddev << endl;
-            cerr << "Min2: "   << m2       << " max2: " << M2
-            << " Steps2: " << StepsNo2 << endl;
+            std::cerr << "Mean: " << avg << " Stddev: " << stddev << std::endl;
+            std::cerr << "Min2: "   << m2       << " max2: " << M2
+            << " Steps2: " << StepsNo2 << std::endl;
             C2.computeStats(avg, stddev, dummy, dummy);
-            cerr << "Mean: " << avg << " Stddev: " << stddev << endl;
+            std::cerr << "Mean: " << avg << " Stddev: " << stddev << std::endl;
             if (fn_out != "") hist2.write(fn_out);
-            else            cout << hist2;
+            else            std::cout << hist2;
             if (generate_img)
             {
                 ImageXmipp I;
@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
 }
 /* Usage ------------------------------------------------------------------- */

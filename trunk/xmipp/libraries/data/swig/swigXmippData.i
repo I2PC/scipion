@@ -1,15 +1,8 @@
 // Name of the output module
 %module XmippData
 
-// General includes
-%{
-#include <sstream>
-#include <complex>
-#include "../error.h"
-//#include <string.h>
-%}
-
 // C and C++ string definitions
+%include stl.i
 %include cstring.i
 %include std_string.i
 
@@ -23,6 +16,14 @@
 // Redefine all assignment operators of classes as the function .assign()
 %rename(assign) *::operator=;
 
+// General includes
+%{
+#include <sstream>
+#include <complex>
+#include <string>
+using namespace std;
+%}
+
 // The C++ insertion operator cannot be ported to Python. Instead, use the
 // SWIG macro PRINT(type) to add printing capabilities to a class.
 %ignore operator<<;
@@ -31,7 +32,7 @@
 {
     std::string __str__()
     {
-        stringstream s;
+        std::stringstream s;
         s << *self;
         return s.str();
     }

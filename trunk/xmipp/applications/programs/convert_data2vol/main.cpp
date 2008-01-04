@@ -39,10 +39,10 @@ int main(int argc, char **argv)
     float T;
     float tmpR;
     char *fname, *iname, *bmname, *imgName, *ext;
-    string selname;
+    std::string selname;
     VolumeXmipp mask;
-    vector < vector <float> > dataPoints;
-    vector < string > labels;
+    std::vector < std::vector <float> > dataPoints;
+    std::vector < std::string > labels;
     bool nomask = false;
     bool noBB = true;
     FileName  tmpN;
@@ -70,52 +70,52 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error)
     {
-        cout << "data2img: Convert a data set into a set of volumes" << endl;
-        cout << "Usage:" << endl;
-        cout << "-sel           : Output sel file name" << endl;
-        cout << "[-iname]       : Input file name (default: out.dat)" << endl;
-        cout << "[-imgName]     : first letters of the images' names (default: img)" << endl;
-        cout << "[-ext]         : Extension of the output volumes (default: spi)" << endl;
-        cout << "[-mname]       : Input Mask file name (default: mask.spi)" << endl;
-        cout << "[-nomask]      : set if the mask is not going to be used" << endl;
-        cout << "[-rows]        : Number of rows if the mask is not going to be used" << endl;
-        cout << "[-cols]        : Number of columns if the mask is not going to be used" << endl;
-        cout << "[-planes]      : Number of planes if the mask is not going to be used" << endl;
+        std::cout << "data2img: Convert a data set into a set of volumes" << std::endl;
+        std::cout << "Usage:" << std::endl;
+        std::cout << "-sel           : Output sel file name" << std::endl;
+        std::cout << "[-iname]       : Input file name (default: out.dat)" << std::endl;
+        std::cout << "[-imgName]     : first letters of the images' names (default: img)" << std::endl;
+        std::cout << "[-ext]         : Extension of the output volumes (default: spi)" << std::endl;
+        std::cout << "[-mname]       : Input Mask file name (default: mask.spi)" << std::endl;
+        std::cout << "[-nomask]      : set if the mask is not going to be used" << std::endl;
+        std::cout << "[-rows]        : Number of rows if the mask is not going to be used" << std::endl;
+        std::cout << "[-cols]        : Number of columns if the mask is not going to be used" << std::endl;
+        std::cout << "[-planes]      : Number of planes if the mask is not going to be used" << std::endl;
         exit(1);
     }
 
-    cout << "Given parameters are: " << endl;
-    cout << "sel = " << selname << endl;
+    std::cout << "Given parameters are: " << std::endl;
+    std::cout << "sel = " << selname << std::endl;
     if (!nomask)
-        cout << "mname = " << bmname << endl;
+        std::cout << "mname = " << bmname << std::endl;
     else
     {
-        cout << "No mask is going to be used" << endl;
-        cout << "Number of rows of the generated volumes: " << rows << endl;
-        cout << "Number of columns of the generated volumes: " << cols << endl;
-        cout << "Number of planes of the generated volumes: " << planes << endl;
+        std::cout << "No mask is going to be used" << std::endl;
+        std::cout << "Number of rows of the generated volumes: " << rows << std::endl;
+        std::cout << "Number of columns of the generated volumes: " << cols << std::endl;
+        std::cout << "Number of planes of the generated volumes: " << planes << std::endl;
     }
-    cout << "iname = " << fname << endl;
-    cout << "imgName = " << imgName << endl;
+    std::cout << "iname = " << fname << std::endl;
+    std::cout << "imgName = " << imgName << std::endl;
 
     // Read spider mask
     if (!nomask)
     {
-        cout << endl << "reading mask " << bmname << "......" << endl << endl;
+        std::cout << std::endl << "reading mask " << bmname << "......" << std::endl << std::endl;
         mask.read(bmname);           // Reads the mask
         //Adjust the range to 0-1
         mask().range_adjust(0, 1);   // just in case
         //if (noBB)
         mask().setXmippOrigin();   // sets origin at the center of the mask.
-        cout << mask;       // Output Volumen Information
+        std::cout << mask;       // Output Volumen Information
     }
 
-    cout << endl << "Reading input file...." << endl;
+    std::cout << std::endl << "Reading input file...." << std::endl;
 
-    ifstream iStream(fname);
+    std::ifstream iStream(fname);
     if (!iStream)
     {
-        cerr << argv[0] << ": can't open file " << iname << endl;
+        std::cerr << argv[0] << ": can't open file " << iname << std::endl;
         exit(EXIT_FAILURE);
     }
     xmippCTVectors ts(0, true);
@@ -125,17 +125,17 @@ int main(int argc, char **argv)
     fout = fopen(selname.c_str(), "w");
     if (fout == NULL)
     {
-        cerr << argv[0] << ": can't open file " << selname << endl;
+        std::cerr << argv[0] << ": can't open file " << selname << std::endl;
         exit(EXIT_FAILURE);
     }
 
     if (nomask && (planes*rows*cols != ts.theItems[0].size()))
     {
-        cerr << argv[0] << ": Images size doesn't coincide with data file " << endl;
+        std::cerr << argv[0] << ": Images size doesn't coincide with data file " << std::endl;
         exit(EXIT_FAILURE);
     }
 
-    cout << "generating volumes......" << endl;
+    std::cout << "generating volumes......" << std::endl;
 
     for (int i = 0; i < ts.size(); i++)
     {
@@ -174,7 +174,7 @@ int main(int argc, char **argv)
                     } // for x
         } // if nomask.
 
-        tmpN = (string) imgName + integerToString(i) + (string) "." + (string) ext;
+        tmpN = (std::string) imgName + integerToString(i) + (std::string) "." + (std::string) ext;
         image.write(tmpN);
         fprintf(fout, "%s 1 \n", tmpN.c_str());
     }

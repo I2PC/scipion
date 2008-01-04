@@ -39,7 +39,7 @@
 ****************************************************************************/
 void Usage()
 {
-    cerr << "This program generates and assigns a CTF to a selfile of particles.\n"
+    std::cerr << "This program generates and assigns a CTF to a selfile of particles.\n"
     << "   -i <parameters file>         : Name of the file of parameters with all info for the program.\n"
     ;
 }
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error &XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage();
         exit(1);
     }
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error &XE)
     {
-        cout << XE;
+        std::cout << XE;
         exit(1);
     }
 }

@@ -324,7 +324,7 @@ void QtImageOverviewMicrograph::finish_crop_area()
     emit signalRepaint();
 }
 
-void QtImageOverviewMicrograph::slotDrawCropArea(vector<int> value)
+void QtImageOverviewMicrograph::slotDrawCropArea(std::vector<int> value)
 {
     __x0_crop = value[0];
     __y0_crop = value[1];

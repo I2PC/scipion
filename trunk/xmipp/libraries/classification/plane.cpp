@@ -43,12 +43,12 @@ void xmippPlanes::getPlane(const In& _in, Out& _out, unsigned _plane) const
     // Check Maps dimensions
 
     if ((_out.height() != _in.height()) || (_out.width() != _in.width()))
-        throw invalid_argument("xmippPlanes: Invalid Plane dimensions.");
+        throw std::invalid_argument("xmippPlanes: Invalid Plane dimensions.");
 
     // Check if _plane is valid
 
     if (_plane > _in.itemAtPos(SomPos(0, 0)).size())
-        throw invalid_argument("xmippPlanes: _plane parameter > Codevector dimension.");
+        throw std::invalid_argument("xmippPlanes: _plane parameter > Codevector dimension.");
 
     // Set calibrated tag.
 

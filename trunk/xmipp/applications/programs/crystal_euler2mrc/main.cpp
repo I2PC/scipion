@@ -17,15 +17,14 @@ void MRC2Euler(double *, double *, double *);
 
 int main(int argc, char **argv)
 {
-    using namespace std;
     /////////////////////// Command Line Parameters
     // I/O Files
-    string filein;
-    string fileout;
+    std::string filein;
+    std::string fileout;
     // Angular System
-    string AngSystem;
+    std::string AngSystem;
     // Space
-    string Space;
+    std::string Space;
 
     /////////////////////// IO Files
     DocFile EMSeriesFile;
@@ -76,13 +75,13 @@ int main(int argc, char **argv)
 
     if (Euler)
     {
-        AnglesFile1.append_comment((string) "LinNo  NoElements  Im_ID  rot tilt psi Scaling");
-        AnglesFile2.append_comment((string) "LinNo  NoElements  Im_ID  rot tilt psi Scaling");
+        AnglesFile1.append_comment((std::string) "LinNo  NoElements  Im_ID  rot tilt psi Scaling");
+        AnglesFile2.append_comment((std::string) "LinNo  NoElements  Im_ID  rot tilt psi Scaling");
     }
     else
     {
-        AnglesFile1.append_comment((string) "LinNo  NoElements  Im_ID  taxa3D taxa2D tilt Scaling");
-        AnglesFile2.append_comment((string) "LinNo  NoElements  Im_ID  taxa3D taxa2D tilt Scaling");
+        AnglesFile1.append_comment((std::string) "LinNo  NoElements  Im_ID  taxa3D taxa2D tilt Scaling");
+        AnglesFile2.append_comment((std::string) "LinNo  NoElements  Im_ID  taxa3D taxa2D tilt Scaling");
     }
 
     Angles.set_type(DocLine::DATALINE);
@@ -176,7 +175,7 @@ int main(int argc, char **argv)
 
     }
 
-    string filename = fileout + "1";
+    std::string filename = fileout + "1";
     AnglesFile1.write(filename.c_str());
     filename = fileout + "2";
     AnglesFile2.write(filename.c_str());
@@ -188,13 +187,13 @@ int main(int argc, char **argv)
 
 void Usage(char *argv[])
 {
-    cout << "Purpose:\n"
+    std::cout << "Purpose:\n"
     << "    Computes Angles from EMTilt series\n"
-    << "Usage:" << argv[0] << " -i filein -o fileout -ang_system AngSystem" <<  endl
-    << "\t-i               :  Input EMLatVectors file" << endl
-    << "\t-o               :  Output EulerAngles file" << endl
-    << "\t-ang_syst        :  Angular System (Euler or MRCTilt)" << endl
-    << "\t-space           :  Space (Real or Fourier)" << endl
+    << "Usage:" << argv[0] << " -i filein -o fileout -ang_system AngSystem" <<  std::endl
+    << "\t-i               :  Input EMLatVectors file" << std::endl
+    << "\t-o               :  Output EulerAngles file" << std::endl
+    << "\t-ang_syst        :  Angular System (Euler or MRCTilt)" << std::endl
+    << "\t-space           :  Space (Real or Fourier)" << std::endl
     ;
     exit(1);
 
@@ -247,7 +246,7 @@ void EM2Tilt(double * Ref, double * Tilt, double *Scale, double *Ang1, double * 
     double DISC = BX * BX - 4.0 * AX * CX;
     if (DISC < 0.0)
     {
-        cout << "Discriminant less than zero" << endl;
+        std::cout << "Discriminant less than zero" << std::endl;
         return;
     }
     double PSQ1 = (-BX + sqrt(DISC)) / (2.0 * AX);
@@ -260,7 +259,7 @@ void EM2Tilt(double * Ref, double * Tilt, double *Scale, double *Ang1, double * 
         PP1 = sqrt(PSQ2);
     else
     {
-        cout << "Two Negative Roots.Something Wrong" << endl;
+        std::cout << "Two Negative Roots.Something Wrong" << std::endl;
         return;
     }
 

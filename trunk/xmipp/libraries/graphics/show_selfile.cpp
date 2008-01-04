@@ -291,14 +291,14 @@ const char * ShowSel::cellLabel(int i) const
         {
             XmippCTF ctf;
             ctf.read(fn_param, false);
-            string defocus_val = integerToString(ROUND(XMIPP_MIN(ctf.DeltafU, ctf.DeltafV)), 6) + " " +
-                                 integerToString(ROUND(XMIPP_MAX(ctf.DeltafU, ctf.DeltafV)), 6) + " " +
-                                 integerToString(ABS(ROUND(ctf.DeltafU - ctf.DeltafV)));
+            std::string defocus_val = integerToString(ROUND(XMIPP_MIN(ctf.DeltafU, ctf.DeltafV)), 6) + " " +
+                                      integerToString(ROUND(XMIPP_MAX(ctf.DeltafU, ctf.DeltafV)), 6) + " " +
+                                      integerToString(ABS(ROUND(ctf.DeltafU - ctf.DeltafV)));
             return defocus_val.c_str();
         }
         catch (Xmipp_error XE)
         {
-            return ((string)"Cannot open " + fn_param).c_str();
+            return ((std::string)"Cannot open " + fn_param).c_str();
         }
     }
     else
@@ -363,7 +363,7 @@ void ShowSel::insert_content_in_queue(int i)
     // Check if the image i is already in the queue
     int jmax = content_queue.size();
     bool found = false;
-    list<int>::iterator ptr = content_queue.begin();
+    std::list<int>::iterator ptr = content_queue.begin();
     for (int j = 0; j < jmax; j++)
     {
         if ((*ptr) == i)
@@ -483,7 +483,7 @@ void ShowSel::writeSelFile(SelFile &_SF, bool overwrite)
 {
 
     if (overwrite)
-        _SF.write((string)((const char *)selfile_fn.c_str()));
+        _SF.write((std::string)((const char *)selfile_fn.c_str()));
     else
     {
         QString newfilename = QFileDialog::getSaveFileName(
@@ -501,9 +501,9 @@ void ShowSel::writeSelFile(SelFile &_SF, bool overwrite)
             if (fi.exists())
                 if (QMessageBox::information(this, "Showsel application",
                                              "The file already exist. Overwrite?",
-                                             "Yes", "No") == 0) _SF.write((string)((const char *)newfilename));
+                                             "Yes", "No") == 0) _SF.write((std::string)((const char *)newfilename));
                 else QMessageBox::about(this, "Warning!", "Saving aborted\n");
-            else _SF.write((string)((const char *)newfilename));
+            else _SF.write((std::string)((const char *)newfilename));
         }
         else  QMessageBox::about(this, "Warning!", "Saving aborted\n");
     }
@@ -699,7 +699,7 @@ void ShowSel::editCTFmodel()
     }
 
     // Edit the CTF
-    system(((string)"xmipp_edit -i " + fn_param + " &").c_str());
+    system(((std::string)"xmipp_edit -i " + fn_param + " &").c_str());
 }
 
 // Recompute CTF model -----------------------------------------------------
@@ -721,8 +721,8 @@ void ShowSel::recomputeCTFmodel()
 	}
 	catch (Xmipp_error XE)
 	{
-            cout << XE;
-            cout << "It seems that " << fn_assign << " is not the parameter file"
+            std::cout << XE;
+            std::cout << "It seems that " << fn_assign << " is not the parameter file"
             << " that you used to estimate the CTFs\n";
             return;
 	}

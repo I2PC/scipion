@@ -58,7 +58,7 @@
       (0.95*1/(1+6*<lambda>))
       en
     @endcode
-    The actual process status is written to cerr.
+    The actual process status is written to std::cerr.
 */
 void SIRT_Spider(SelFile &SF, double lambda, double no_it, int radius,
                  const FileName &fn_root, const FileName &fn_ext,

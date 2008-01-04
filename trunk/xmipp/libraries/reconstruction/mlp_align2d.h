@@ -57,9 +57,9 @@ public:
     /** Sigma value for expected origin offsets */
     double sigma_offset;
     /** Vector containing estimated fraction for each model */
-    vector<double> alpha_k;
+    std::vector<double> alpha_k;
     /** Vector containing estimated fraction for mirror of each model */
-    vector<double> mirror_fraction;
+    std::vector<double> mirror_fraction;
     /** Flag for checking mirror images of all references */
     bool do_mirror;
     /** Flag whether to fix estimates for model fractions */
@@ -89,17 +89,17 @@ public:
     /** SelFile images (working, test and reference set) */
     SelFile SF, SFr;
     /** Vector for images to hold references (new & old) */
-    vector < ImageXmippT<double> > Iref, Iold;
+    std::vector < ImageXmippT<double> > Iref, Iold;
     /** Vector for FT rings for all references */
-    vector <Polar <complex <double> > > fP_refs;
+    std::vector <Polar <std::complex <double> > > fP_refs;
     /** Vector for sum2 for all references */
-    vector < double > sum2_refs;
+    std::vector < double > sum2_refs;
     /** Empty Polar */
-    Polar <complex <double> > fP_zero;
+    Polar <std::complex <double> > fP_zero;
     /** Number of limited translations */
     int nr_trans;
     /** pointers to original x and y translations */
-    vector<double> Vxtrans, Vytrans;
+    std::vector<double> Vxtrans, Vytrans;
     /** Matrices for calculating PDF of (in-plane) translations */
     Matrix2D<double> Mpdf_trans, Mr2;
     /** Limited search range for origin offsets */
@@ -109,7 +109,7 @@ public:
     /** Limited search range for projection directions */
     double search_rot;
     /** Vectors to store old phi, theta, xoff and yoff for all images */
-    vector<float> imgs_oldphi, imgs_oldtheta, imgs_oldxoff, imgs_oldyoff;
+    std::vector<float> imgs_oldphi, imgs_oldtheta, imgs_oldxoff, imgs_oldyoff;
     /** Flag for using ML3D */
     bool do_ML3D;
     /** Flag for generation of initial models from random subsets */
@@ -121,7 +121,7 @@ public:
     /** One common kb object for all images! */
     KaiserBessel kb;
     /** Precalculated Voronoi areas for the polar structure*/
-    vector<double> voronoi_area;
+    std::vector<double> voronoi_area;
 
 public:
     /** Read command line
@@ -173,7 +173,7 @@ public:
      * phi and theta
      */
     void preselectDirections(float &phi, float &theta,
-			     vector<double> &pdf_directions);
+			     std::vector<double> &pdf_directions);
 
     /** Update PDF of the translation
      *
@@ -186,10 +186,10 @@ public:
      * Calculate Fourier-transforms of all rings of all references
      * (interpolation based on reverse gridding)
      */
-    void calculateFtRingsAllRefs(const vector< ImageXmippT<double> > &Iref,
-				 vector< Polar< complex <double> > > &fP_refs,
-				 Polar< complex <double> > &fP_zero,
-				 vector< double > &sum2_refs,
+    void calculateFtRingsAllRefs(const std::vector< ImageXmippT<double> > &Iref,
+				 std::vector< Polar< std::complex <double> > > &fP_refs,
+				 Polar< std::complex <double> > &fP_zero,
+				 std::vector< double > &sum2_refs,
 				 const int &first, const int &last);
 
     /** Prepare experimental image
@@ -199,8 +199,8 @@ public:
      * (interpolation based on reverse gridding)
      */
     void calculateFtRingsAllTransImg(const  ImageXmippT<double>  &Iexp,
-				     vector< Polar< complex <double> > > &fP_trans,
-				     vector< Polar< complex <double> > > &fPm_trans,
+				     std::vector< Polar< std::complex <double> > > &fP_trans,
+				     std::vector< Polar< std::complex <double> > > &fPm_trans,
 				     double &Xi2, const int &first, const int &last);
 
 
@@ -211,38 +211,38 @@ public:
      *
      */
     void processOneImage(const ImageXmippT<double> &img,
-			 const vector < Polar <complex <double> >  > &fP_refs,
-			 const vector < double > &sum2_refs,
-			 const vector < double > &pdf_directions,
-			 vector < Polar <complex <double> > > &fP_wsum_imgs,
+			 const std::vector < Polar <std::complex <double> >  > &fP_refs,
+			 const std::vector < double > &sum2_refs,
+			 const std::vector < double > &pdf_directions,
+			 std::vector < Polar <std::complex <double> > > &fP_wsum_imgs,
 			 double &wsum_sigma_noise, double &wsum_sigma_offset, 
-			 vector < double > &sumw, vector < double > &sumw_mirror,
+			 std::vector < double > &sumw, std::vector < double > &sumw_mirror,
 			 double &LL, double &fracweight,
 			 int &opt_refno, double &opt_psi, double &opt_flip, 
 			 double &opt_xoff, double &opt_yoff);
 
     /** The actual loop over all images
      */
-    void sumOverAllImages(SelFile &SF, const vector< ImageXmippT<double> > &Iref,
+    void sumOverAllImages(SelFile &SF, const std::vector< ImageXmippT<double> > &Iref,
 			  double &LL, double &sumcorr, DocFile &DFo,
-			  vector < Polar <complex <double> > > &fP_wsum_imgs,
+			  std::vector < Polar <std::complex <double> > > &fP_wsum_imgs,
 			  double &wsum_sigma_noise, double &wsum_sigma_offset, 
-			  vector <double> &sumw, vector <double> &sumw_mirror);
+			  std::vector <double> &sumw, std::vector <double> &sumw_mirror);
 
     /** Update all model parameters
      * Here the maximization step of the EM-algorithm is performed.
      *
      */
-    void updateParameters(vector < Polar <complex <double> > > &fP_wsum_imgs,
+    void updateParameters(std::vector < Polar <std::complex <double> > > &fP_wsum_imgs,
 			  double &wsum_sigma_noise, double &wsum_sigma_offset, 
-			  vector <double> &sumw, vector <double> &sumw_mirror,
+			  std::vector <double> &sumw, std::vector <double> &sumw_mirror,
 			  double &sumcorr, double &sumw_allrefs);
 
     /** Convergence check
      * Convergence is based on signal change in the cartesian-sampled images
      *
      */
-    bool checkConvergence(vector<double> &conv);
+    bool checkConvergence(std::vector<double> &conv);
 
     /** Write output files
      *  Write out reference images, selfile and logfile
@@ -250,7 +250,7 @@ public:
      */
     void writeOutputFiles(const int iter, DocFile &DFo,
                             double &sumw_allrefs, double &LL, double &avecorr,
-                            vector<double> &conv);
+                            std::vector<double> &conv);
 
 };
 //@}

@@ -53,7 +53,7 @@ void Prog_Evaluate_FSCs_Parameters::read(int argc, char **argv)
 /* Evaluate usage ========================================================== */
 void Prog_Evaluate_FSCs_Parameters::usage()
 {
-    cerr << "Usage: evaluate_FSCs\n"
+    std::cerr << "Usage: evaluate_FSCs\n"
     << "   -p <phantom filename>          : Xmipp volume\n"
     << "   -r <reconstruction filename>   : Xmipp volume or selfile with volumes\n"
     << "  [-o <output filename>]          : for the FSC\n"
@@ -65,12 +65,12 @@ void Prog_Evaluate_FSCs_Parameters::usage()
 }
 
 /* Show parameters ========================================================= */
-ostream & operator << (ostream &out, const Prog_Evaluate_FSCs_Parameters &prm)
+std::ostream & operator << (std::ostream &out, const Prog_Evaluate_FSCs_Parameters &prm)
 {
-    out << "Phantom         : " << prm.fn_phantom        << endl
-    << "Reconstruction  : " << prm.fn_recons         << endl
-    << "Output file     : " << prm.fn_out            << endl
-    << "Sampling rate   : " << prm.sampling_rate     << endl
+    out << "Phantom         : " << prm.fn_phantom        << std::endl
+    << "Reconstruction  : " << prm.fn_recons         << std::endl
+    << "Output file     : " << prm.fn_out            << std::endl
+    << "Sampling rate   : " << prm.sampling_rate     << std::endl
     ;
     out << "Action          : ";
     switch (prm.action)
@@ -86,7 +86,7 @@ ostream & operator << (ostream &out, const Prog_Evaluate_FSCs_Parameters &prm)
         break;
     case COMPARE_TWO_SETS:
         out << "Compare two sets: "
-        << prm.fn_recons2 << endl;
+        << prm.fn_recons2 << std::endl;
         break;
     }
     return out;
@@ -121,7 +121,7 @@ void Prog_Evaluate_FSCs_Parameters::compute_average_resolution(
 
     Matrix1D<double> frequency, FSC;
     int i = 0;
-    cerr << "Estimating average resolution ...\n";
+    std::cerr << "Estimating average resolution ...\n";
     init_progress_bar(XSIZE(resol));
     while (!SF_recons.eof())
     {
@@ -147,7 +147,7 @@ void Prog_Evaluate_FSCs_Parameters::compute_average_FSC(
 
     Matrix1D<double> FSC;
     int n = 0;
-    cerr << "Estimating average FSC ...\n";
+    std::cerr << "Estimating average FSC ...\n";
     init_progress_bar(N);
     while (!SF_recons.eof())
     {
@@ -181,7 +181,7 @@ void Prog_Evaluate_FSCs_Parameters::compare_two_sets(
     VolumeXmipp reconstruction2;
     Matrix1D<double> FSC1, FSC2;
     int n = 0;
-    cerr << "Estimating average FSC ...\n";
+    std::cerr << "Estimating average FSC ...\n";
     init_progress_bar(N);
     while (!SF_recons.eof())
     {
@@ -217,7 +217,7 @@ void ROUT_Evaluate_FSCs(Prog_Evaluate_FSCs_Parameters &prm)
     Matrix1D<double> frequency, FSC, min_FSC, max_FSC, stddev_FSC;
     double avg_resol, stddev_resol, resolution, avg_FSC;
     int i;
-    ofstream fh_out;
+    std::ofstream fh_out;
 
     switch (prm.action)
     {
@@ -225,35 +225,35 @@ void ROUT_Evaluate_FSCs(Prog_Evaluate_FSCs_Parameters &prm)
     case ESTIMATE_SINGLE_FSC:
         resolution = compute_FSC(prm.phantom, prm.reconstruction,
                                  prm.sampling_rate, frequency, FSC);
-        cout << "The resolution (FSC<0.5) of this volume is "
-        << resolution << endl;
+        std::cout << "The resolution (FSC<0.5) of this volume is "
+        << resolution << std::endl;
 
         // Compute the average FSC until the resolution
         avg_FSC = 0;
         i = 0;
         while (frequency(i) < resolution) avg_FSC += FSC(i++);
         if (i != 0) avg_FSC /= i;
-        cout << "The average FSC until the resolution is "
-        << avg_FSC << endl;
+        std::cout << "The average FSC until the resolution is "
+        << avg_FSC << std::endl;
 
         // Write the FSC
         fh_out.open(prm.fn_out.c_str());
         if (!fh_out)
-            REPORT_ERROR(1, (string)"Evaluate FSCs: Cannot open file" +
+            REPORT_ERROR(1, (std::string)"Evaluate FSCs: Cannot open file" +
                          prm.fn_out + " for output");
         fh_out << "# Freq(1/A) FSC\n";
         FOR_ALL_ELEMENTS_IN_MATRIX1D(frequency)
-        fh_out << frequency(i) << " " << FSC(i) << endl;
+        fh_out << frequency(i) << " " << FSC(i) << std::endl;
         fh_out.close();
         break;
 
         // Estimate average resolution
     case ESTIMATE_AVERAGE_RESOLUTION:
         prm.compute_average_resolution(avg_resol, stddev_resol, FSC);
-        cout << "Average resolution=" << avg_resol << "+-" << stddev_resol
-        << endl << endl;
-        cout << "Vector of all resolutions involved=\n" << FSC.transpose()
-        << endl;
+        std::cout << "Average resolution=" << avg_resol << "+-" << stddev_resol
+        << std::endl << std::endl;
+        std::cout << "Vector of all resolutions involved=\n" << FSC.transpose()
+        << std::endl;
         break;
 
         // Estimate average resolution
@@ -263,12 +263,12 @@ void ROUT_Evaluate_FSCs(Prog_Evaluate_FSCs_Parameters &prm)
         // Write the FSC
         fh_out.open(prm.fn_out.c_str());
         if (!fh_out)
-            REPORT_ERROR(1, (string)"Evaluate FSCs: Cannot open file" +
+            REPORT_ERROR(1, (std::string)"Evaluate FSCs: Cannot open file" +
                          prm.fn_out + " for output");
         fh_out << "# Freq(1/A) FSC min_FSC max_FSC\n";
         FOR_ALL_ELEMENTS_IN_MATRIX1D(frequency)
         fh_out << frequency(i) << " " << FSC(i) << " "
-        << min_FSC(i) << " " << max_FSC(i) << endl;
+        << min_FSC(i) << " " << max_FSC(i) << std::endl;
         fh_out.close();
         break;
 
@@ -279,13 +279,13 @@ void ROUT_Evaluate_FSCs(Prog_Evaluate_FSCs_Parameters &prm)
         // Write the FSC
         fh_out.open(prm.fn_out.c_str());
         if (!fh_out)
-            REPORT_ERROR(1, (string)"Evaluate FSCs: Cannot open file" +
+            REPORT_ERROR(1, (std::string)"Evaluate FSCs: Cannot open file" +
                          prm.fn_out + " for output");
         fh_out << "# Freq(1/A) diff_FSC stddev_diff_FSC avg-stddev avg+stddev\n";
         FOR_ALL_ELEMENTS_IN_MATRIX1D(frequency)
         fh_out << frequency(i) << " " << FSC(i) << " "
         << stddev_FSC(i) << " " << FSC(i) - stddev_FSC(i) << " "
-        << FSC(i) + stddev_FSC(i) << endl;
+        << FSC(i) + stddev_FSC(i) << std::endl;
         fh_out.close();
         break;
     }

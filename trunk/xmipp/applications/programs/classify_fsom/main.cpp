@@ -59,13 +59,13 @@ main(int argc, char** argv)
     bool           norm = 1; // Normalize?
     unsigned       xdim;  // X-dimension (-->)
     unsigned       ydim;  // Y-dimension
-    double        m0 = 2.0; // Initial m
+    double         m0 = 2.0; // Initial m
     double         m1 = 1.01; // Final m
     double         reg;  // Regularization (smoothness) parameter
-    string         layout = "RECT"; // topology (layout)
+    std::string    layout = "RECT"; // topology (layout)
     unsigned       annSteps = 1000; // Deterministic Annealing steps
-    bool         saveClusters = false;    // Save clusters in separate files
-    bool use_rand_cvs = false; // NT: flag to truly randomize codevectors or not
+    bool           saveClusters = false;    // Save clusters in separate files
+    bool           use_rand_cvs = false; // NT: flag to truly randomize codevectors or not
 
     /* Parameters ============================================================== */
     try
@@ -111,7 +111,7 @@ main(int argc, char** argv)
         {
             if (checkParameter(argc, argv, "-rect"))
             {
-                cout << "Error: you can not define two topologies" << endl;
+                std::cout << "Error: you can not define two topologies" << std::endl;
                 exit(EXIT_FAILURE);
             }
             layout = "HEXA";
@@ -149,7 +149,7 @@ main(int argc, char** argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage(argv);
     }
 
@@ -159,55 +159,55 @@ main(int argc, char** argv)
 
     if (iter < 1)
     {
-        cerr << argv[0] << ": invalid value for iter (must be > 1): " << iter << endl;
+        std::cerr << argv[0] << ": invalid value for iter (must be > 1): " << iter << std::endl;
         exit(EXIT_FAILURE);
     }
 
     if (verb < 0 || verb > 2)
     {
-        cerr << argv[0] << ": invalid value for verbosity (must be between 0 and 2): " << verb << endl;
+        std::cerr << argv[0] << ": invalid value for verbosity (must be between 0 and 2): " << verb << std::endl;
         exit(EXIT_FAILURE);
     }
 
     if (m0 <= 1)
     {
-        cerr << argv[0] << ": invalid value for m0 (must be > 1): " << m0 << endl;
+        std::cerr << argv[0] << ": invalid value for m0 (must be > 1): " << m0 << std::endl;
         exit(EXIT_FAILURE);
     }
 
     if (m1 <= 1)
     {
-        cerr << argv[0] << ": invalid value for m1 (must be > 1): " << m1 << endl;
+        std::cerr << argv[0] << ": invalid value for m1 (must be > 1): " << m1 << std::endl;
         exit(EXIT_FAILURE);
     }
 
     if ((annSteps != 0) && (m0 <= m1))
     {
-        cerr << argv[0] << ": invalid value for m0 and m1 (m0 must be > m1) " << endl;
+        std::cerr << argv[0] << ": invalid value for m0 and m1 (m0 must be > m1) " << std::endl;
         exit(EXIT_FAILURE);
     }
 
     if ((annSteps < 0) || (annSteps == 1))
     {
-        cerr << argv[0] << ": invalid value for annSteps (must be > 1): " << annSteps << endl;
+        std::cerr << argv[0] << ": invalid value for annSteps (must be > 1): " << annSteps << std::endl;
         exit(EXIT_FAILURE);
     }
 
     if (reg < 0)
     {
-        cerr << argv[0] << ": invalid value for smoothness parameter (must be > 0): " << reg << endl;
+        std::cerr << argv[0] << ": invalid value for smoothness parameter (must be > 0): " << reg << std::endl;
         exit(EXIT_FAILURE);
     }
 
     if (xdim < 1)
     {
-        cerr << argv[0] << ": invalid value for xdim (must be > 1): " << xdim << endl;
+        std::cerr << argv[0] << ": invalid value for xdim (must be > 1): " << xdim << std::endl;
         exit(EXIT_FAILURE);
     }
 
     if (ydim < 1)
     {
-        cerr << argv[0] << ": invalid value for ydim (must be > 1): " << ydim << endl;
+        std::cerr << argv[0] << ": invalid value for ydim (must be > 1): " << ydim << std::endl;
         exit(EXIT_FAILURE);
     }
 
@@ -216,40 +216,40 @@ main(int argc, char** argv)
 
     /* Shows parameters ===================================================== */
 
-    cout << endl << "Parameters used: " << endl;
-    cout << "Input data file : " << fn_in << endl;
-    cout << "Output code vector file : " << fn_out << ".cod" << endl;
+    std::cout << std::endl << "Parameters used: " << std::endl;
+    std::cout << "Input data file : " << fn_in << std::endl;
+    std::cout << "Output code vector file : " << fn_out << ".cod" << std::endl;
     if (cb_in != "")
-        cout << "Input code vectors file name : " << cb_in << endl;
+        std::cout << "Input code vectors file name : " << cb_in << std::endl;
     else if (use_rand_cvs)
-        cout << "Using randomized code vectors" << endl;
-    cout << "Horizontal dimension (Xdim) = " << xdim << endl;
-    cout << "Vertical dimension (Ydim) = " << ydim << endl;
+        std::cout << "Using randomized code vectors" << std::endl;
+    std::cout << "Horizontal dimension (Xdim) = " << xdim << std::endl;
+    std::cout << "Vertical dimension (Ydim) = " << ydim << std::endl;
     if (layout == "HEXA")
-        cout << "Hexagonal topology " << endl;
+        std::cout << "Hexagonal topology " << std::endl;
     else
-        cout << "Rectangular topology " << endl;
-    cout << "Initial Fuzzy Constant (m0) = " << m0 << endl;
-    cout << "Final Fuzzy Constant (m1) = " << m1 << endl;
-    cout << "Regularization Constant (reg) = " << reg << endl;
-    cout << "Deterministic annealing steps = " << annSteps << endl;
-    cout << "Total number of iterations = " << iter << endl;
-    cout << "Stopping criteria (eps) = " << eps << endl;
-    cout << "verbosity level = " << verb << endl;
+        std::cout << "Rectangular topology " << std::endl;
+    std::cout << "Initial Fuzzy Constant (m0) = " << m0 << std::endl;
+    std::cout << "Final Fuzzy Constant (m1) = " << m1 << std::endl;
+    std::cout << "Regularization Constant (reg) = " << reg << std::endl;
+    std::cout << "Deterministic annealing steps = " << annSteps << std::endl;
+    std::cout << "Total number of iterations = " << iter << std::endl;
+    std::cout << "Stopping criteria (eps) = " << eps << std::endl;
+    std::cout << "verbosity level = " << verb << std::endl;
     if (norm)
-        cout << "Normalize input data" << endl;
+        std::cout << "Normalize input data" << std::endl;
     else
-        cout << "Do not normalize input data " << endl;
+        std::cout << "Do not normalize input data " << std::endl;
 
 
     /* Open training vector ================================================= */
 
-    cout << endl << "Reading file " << fn_in << "....." << endl;
+    std::cout << std::endl << "Reading file " << fn_in << "....." << std::endl;
 
-    ifstream inStream(fn_in.c_str());
+    std::ifstream inStream(fn_in.c_str());
     if (!inStream)
     {
-        cerr << argv[0] << ": can't open file " << fn_in << endl;
+        std::cerr << argv[0] << ": can't open file " << fn_in << std::endl;
         exit(EXIT_FAILURE);
     }
 
@@ -258,9 +258,9 @@ main(int argc, char** argv)
     {
         inStream >> ts;
     }
-    catch (exception& e)
+    catch (std::exception& e)
     {
-        cerr << argv[0] << ": can't read file " << fn_in  << " because " << e.what() << endl;
+        std::cerr << argv[0] << ": can't read file " << fn_in  << " because " << e.what() << std::endl;
         exit(EXIT_FAILURE);
     }
 
@@ -273,7 +273,7 @@ main(int argc, char** argv)
 
         if (norm)
         {
-            cout << "Normalizing....." << endl;
+            std::cout << "Normalizing....." << std::endl;
             ts.normalize();        // Normalize input data
         }
 
@@ -281,11 +281,11 @@ main(int argc, char** argv)
 
         if (cb_in != "")
         {
-            cout << "Reading fuzzy codevectors file " << cb_in << "....." << endl;
-            ifstream codeStream(cb_in.c_str());
+            std::cout << "Reading fuzzy codevectors file " << cb_in << "....." << std::endl;
+            std::ifstream codeStream(cb_in.c_str());
             if (!codeStream)
             {
-                cerr << argv[0] << ": can't open file " << cb_in << endl;
+                std::cerr << argv[0] << ": can't open file " << cb_in << std::endl;
                 exit(EXIT_FAILURE);
             }
             myMap = new xmippFuzzyMap(codeStream, ts.size(), true);
@@ -301,11 +301,11 @@ main(int argc, char** argv)
         }
         else
         {
-            cout << "Reading algorithm file " << fn_algo_in << "....." << endl << endl;
-            ifstream algoStream(fn_algo_in.c_str());
+            std::cout << "Reading algorithm file " << fn_algo_in << "....." << std::endl << std::endl;
+            std::ifstream algoStream(fn_algo_in.c_str());
             if (!algoStream)
             {
-                cerr << argv[0] << ": can't open file " << fn_algo_in << endl;
+                std::cerr << argv[0] << ": can't open file " << fn_algo_in << std::endl;
                 exit(EXIT_FAILURE);
             }
         }
@@ -318,7 +318,7 @@ main(int argc, char** argv)
         {
             if (ts.isNormalized())
             {
-                cout << "Normalizing code vectors....." << endl;
+                std::cout << "Normalizing code vectors....." << std::endl;
                 myMap->Normalize(ts.getNormalizationInfo());       // normalize code vectors
             }
             thisSOM->train(*myMap, ts);                   // Train algorithm
@@ -328,123 +328,123 @@ main(int argc, char** argv)
 
         // Test algorithm
         double dist = thisSOM->test(*myMap, ts);
-        cout << endl << "Quantization error : " <<  dist << endl;
+        std::cout << std::endl << "Quantization error : " <<  dist << std::endl;
 
         // Calculates functional value
         double functional, fidelity, penalty;
         functional = thisSOM->functional(ts, *myMap, m1, reg, fidelity, penalty);
-        cout << "Functional : " <<  functional << " (fidelity = " << fidelity << " penalty = " << penalty << " )" << endl << endl;
+        std::cout << "Functional : " <<  functional << " (fidelity = " << fidelity << " penalty = " << penalty << " )" << std::endl << std::endl;
 
 
         // Classifying
-        cout << "Classifying....." << endl;
+        std::cout << "Classifying....." << std::endl;
         myMap->classify(&ts);
 
         // Calibrating
-        cout << "Calibrating....." << endl;
+        std::cout << "Calibrating....." << std::endl;
         myMap->calibrate(ts);
 
         /*******************************************************
             Saving all kind of Information
         *******************************************************/
 
-        cout << "Saving algorithm information as " << fn_out << ".inf ....." << endl;
-        tmpN = fn_out.c_str() + (string) ".inf";
-        ofstream infS(tmpN.c_str());
-        infS << "Fuzzy SOM algorithm" << endl << endl;
-        infS << "Input data file : " << fn_in << endl;
+        std::cout << "Saving algorithm information as " << fn_out << ".inf ....." << std::endl;
+        tmpN = fn_out.c_str() + (std::string) ".inf";
+        std::ofstream infS(tmpN.c_str());
+        infS << "Fuzzy SOM algorithm" << std::endl << std::endl;
+        infS << "Input data file : " << fn_in << std::endl;
         if (cb_in != "")
-            infS << "Input code vectors file : " << cb_in << endl;
+            infS << "Input code vectors file : " << cb_in << std::endl;
         else if (use_rand_cvs)
-            infS << "Using randomized code vectors" << endl;
-        infS << "Code vectors output file : " << fn_out <<  ".cod" << endl;
-        infS << "Algorithm information output file : " << fn_out <<  ".inf" << endl;
-        infS << "Number of feature vectors: " << ts.size() << endl;
-        infS << "Number of variables: " << ts.theItems[0].size() << endl;
-        infS << "Horizontal dimension (Xdim) = " << xdim << endl;
-        infS << "Vertical dimension (Ydim) = " << ydim << endl;
+            infS << "Using randomized code vectors" << std::endl;
+        infS << "Code vectors output file : " << fn_out <<  ".cod" << std::endl;
+        infS << "Algorithm information output file : " << fn_out <<  ".inf" << std::endl;
+        infS << "Number of feature vectors: " << ts.size() << std::endl;
+        infS << "Number of variables: " << ts.theItems[0].size() << std::endl;
+        infS << "Horizontal dimension (Xdim) = " << xdim << std::endl;
+        infS << "Vertical dimension (Ydim) = " << ydim << std::endl;
         if (layout == "HEXA")
-            infS << "Hexagonal topology " << endl;
+            infS << "Hexagonal topology " << std::endl;
         else
-            infS << "Rectangular topology " << endl;
+            infS << "Rectangular topology " << std::endl;
         if (norm)
-            infS << "Input data normalized" << endl;
+            infS << "Input data normalized" << std::endl;
         else
-            infS << "Input data not normalized" << endl;
-        infS << "Initial Fuzzy constant (m0) = " << m0 << endl;
-        infS << "Final Fuzzy constant (m1) = " << m1 << endl;
-        infS << "Smoothness factor (reg) = " << reg << endl;
-        infS << "Deterministic annealing steps = " << annSteps << endl;
-        infS << "Total number of iterations = " << iter << endl;
-        infS << "Stopping criteria (eps) = " << eps << endl;
-        infS << "Quantization error : " <<  dist << endl;
-        infS << "Functional : " <<  functional << " (fidelity = " << fidelity << " penalty = " << penalty << " )" << endl << endl;
+            infS << "Input data not normalized" << std::endl;
+        infS << "Initial Fuzzy constant (m0) = " << m0 << std::endl;
+        infS << "Final Fuzzy constant (m1) = " << m1 << std::endl;
+        infS << "Smoothness factor (reg) = " << reg << std::endl;
+        infS << "Deterministic annealing steps = " << annSteps << std::endl;
+        infS << "Total number of iterations = " << iter << std::endl;
+        infS << "Stopping criteria (eps) = " << eps << std::endl;
+        infS << "Quantization error : " <<  dist << std::endl;
+        infS << "Functional : " <<  functional << " (fidelity = " << fidelity << " penalty = " << penalty << " )" << std::endl << std::endl;
         infS.flush();
 
         // assign data to clusters according to fuzzy threshold
         if (saveClusters)
         {
-            cout << "Saving neurons assigments ....." << endl;
+            std::cout << "Saving neurons assigments ....." << std::endl;
             for (unsigned i = 0; i < myMap->size(); i++)
             {
-                tmpN = fn_out.c_str() + (string) "."  + integerToString(i);
-                ofstream cStream(tmpN.c_str());
+                tmpN = fn_out.c_str() + (std::string) "."  + integerToString(i);
+                std::ofstream cStream(tmpN.c_str());
                 for (int j = 0; j < myMap->classifAt(i).size(); j++)
-                    cStream << myMap->classifAt(i)[j] << endl;
+                    cStream << myMap->classifAt(i)[j] << std::endl;
                 cStream.flush();
             }
         }
 
         // save .vs file to be compatible with SOM_PAK
-        cout << "Saving visual file as " << fn_out << ".vs ....." << endl;
-        tmpN = fn_out.c_str() + (string) ".vs";
-        ofstream vsStream(tmpN.c_str());
-        vsStream << ts.theItems[0].size() << " " << myMap->layout() << " " << myMap->width() << " " << myMap->height() << " gaussian" << endl;
+        std::cout << "Saving visual file as " << fn_out << ".vs ....." << std::endl;
+        tmpN = fn_out.c_str() + (std::string) ".vs";
+        std::ofstream vsStream(tmpN.c_str());
+        vsStream << ts.theItems[0].size() << " " << myMap->layout() << " " << myMap->width() << " " << myMap->height() << " gaussian" << std::endl;
         for (int i = 0; i < ts.size(); i++)
         {
             int j = myMap->fuzzyWinner(i);
-            vsStream << myMap->indexToPos(j).first << " " << myMap->indexToPos(j).second << " " << myMap->memb[i][j] << " " << ts.theTargets[i] << endl;
+            vsStream << myMap->indexToPos(j).first << " " << myMap->indexToPos(j).second << " " << myMap->memb[i][j] << " " << ts.theTargets[i] << std::endl;
         }
         vsStream.flush();
 
 
         // save .his file (Histogram)
-        cout << "Saving code vectors histogram file as " << fn_out << ".his ....." << endl;
-        tmpN = fn_out.c_str() + (string) ".his";
-        ofstream hisStream(tmpN.c_str());
+        std::cout << "Saving code vectors histogram file as " << fn_out << ".his ....." << std::endl;
+        tmpN = fn_out.c_str() + (std::string) ".his";
+        std::ofstream hisStream(tmpN.c_str());
         myMap->printHistogram(hisStream);
         hisStream.flush();
 
         // save .err file (Average Quantization Error)
-        cout << "Saving code vectors average quantization error file as " << fn_out << ".err ....." << endl;
-        tmpN = fn_out.c_str() + (string) ".err";
-        ofstream errStream(tmpN.c_str());
+        std::cout << "Saving code vectors average quantization error file as " << fn_out << ".err ....." << std::endl;
+        tmpN = fn_out.c_str() + (std::string) ".err";
+        std::ofstream errStream(tmpN.c_str());
         myMap->printQuantError(errStream);
         errStream.flush();
 
         if (norm)
         {
-            cout << "Denormalizing code vectors....." << endl;
+            std::cout << "Denormalizing code vectors....." << std::endl;
             myMap->unNormalize(ts.getNormalizationInfo()); // de-normalize codevectors
         }
 
-        cout << "Saving code vectors as " << fn_out << ".cod ....." << endl;
-        tmpN = fn_out.c_str() + (string) ".cod";
-        ofstream codS(tmpN.c_str());
+        std::cout << "Saving code vectors as " << fn_out << ".cod ....." << std::endl;
+        tmpN = fn_out.c_str() + (std::string) ".cod";
+        std::ofstream codS(tmpN.c_str());
         codS << *myMap;
         codS.flush();
 
 
-        cout << endl;
+        std::cout << std::endl;
 
         delete myMap;
         delete thisSOM;
 
 
     }
-    catch (const exception& e)
+    catch (const std::exception& e)
     {
-        cout << e.what() << endl;
+        std::cout << e.what() << std::endl;
     }
     return 0;
 }

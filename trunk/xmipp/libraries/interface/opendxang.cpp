@@ -37,11 +37,11 @@ void openDXang::openDXangFile(FileName openDXangname_aux)
     openDXang::number_of_elements = 0;
 
 //data
-    openDXang::fh_out_data.open(data_name.c_str(), ios::out); //trunc file
+    openDXang::fh_out_data.open(data_name.c_str(), std::ios::out); //trunc file
     if (fh_out_data.fail())
     {
-        cerr << "Cant open file: "
-        << data_name.c_str() << endl;
+        std::cerr << "Cant open file: "
+        << data_name.c_str() << std::endl;
         exit(0);
     }
 
@@ -62,7 +62,7 @@ void openDXang::Add_Item(const Matrix1D<double> RotTiltPsi)
 
 
     openDXang::number_of_elements++;
-    openDXang::fh_out_data << " " << X << " " << Y << " " << Z << endl;
+    openDXang::fh_out_data << " " << X << " " << Y << " " << Z << std::endl;
 
 
 }
@@ -74,11 +74,11 @@ openDXang::~openDXang()
     header_name = openDXangname.add_extension("general");
 
 //header
-    openDXang::fh_out_header.open(header_name.c_str(), ios::out); //trunc file
+    openDXang::fh_out_header.open(header_name.c_str(), std::ios::out); //trunc file
     if (fh_out_header.fail())
     {
-        cerr << "Cant open file: "
-        << header_name.c_str() << endl;
+        std::cerr << "Cant open file: "
+        << header_name.c_str() << std::endl;
         exit(0);
     }
 
@@ -92,7 +92,7 @@ openDXang::~openDXang()
     << "field = locations\n"
     << "structure = 3-vector\n"
     << "type = float\n\n"
-    << "end" << endl;
+    << "end" << std::endl;
 
 
 

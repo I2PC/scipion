@@ -43,11 +43,11 @@ int main(int argc, char **argv)
     DocFile      DFi, DFo, DFa, DFtmp;
     DocLine      DLi;
     Matrix1D<double> indataline(3), outdataline(3);
-    vector<DocFile> allDFs;
+    std::vector<DocFile> allDFs;
     double       noise, offset, LL, R;
     int          argcp;
     char         **argvp, *copyp;
-    string       line;
+    std::string  line;
     bool         out_assign = false;
 
     // Read arguments --------------------------------------------------------
@@ -60,7 +60,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage();
         exit(1);
     }
@@ -234,7 +234,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
     exit(0);
 
@@ -243,13 +243,13 @@ int main(int argc, char **argv)
 /* Usage ------------------------------------------------------------------- */
 void Usage()
 {
-    cerr << "Purpose:\n";
-    cerr << "    Combine weighted average images from parallel runs of xmipp_MLalign2D \n";
-    cerr << "Usage: MLalign2D_combine <parameters>\n"
+    std::cerr << "Purpose:\n";
+    std::cerr << "    Combine weighted average images from parallel runs of xmipp_MLalign2D \n";
+    std::cerr << "Usage: MLalign2D_combine <parameters>\n"
     << "   -i <logselfile>  : selection file containing MLalign2D-log files of parallel runs\n"
     << "   -o <rootname>    : rootname for output files (default: logsel-rootname)\n"
 
-    << endl;
+    << std::endl;
 }
 
 

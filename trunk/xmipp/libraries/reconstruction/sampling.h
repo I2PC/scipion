@@ -52,14 +52,14 @@ public:
         double tilt;
         double psi;
     };
-    typedef vector<vertices> Vect_angles;
+    typedef std::vector<vertices> Vect_angles;
     /** Geographical co-ordinates of the home vertices of the 10 diamonds
      as angles*/
     Vect_angles vertices_angles;
 
     /** Geographical co-ordinates of the home vertices of the 10 diamonds
     as angles*/
-    vector <Matrix1D<double> > vertices_vectors;
+    std::vector <Matrix1D<double> > vertices_vectors;
 
 
     /** sampling rate in radians */
@@ -75,21 +75,21 @@ public:
     double cos_neighborhood_radius;
 
     /** vector with neighbors */
-    vector<vector<int> >  my_neighbors;
+    std::vector<std::vector<int> >  my_neighbors;
     /** vector with neighbors psi*/
-    vector<vector<double> > my_neighbors_psi;
+    std::vector<std::vector<double> > my_neighbors_psi;
 
     /** vector with sampling points described by vectors */
-    vector <Matrix1D<double> > sampling_points_vector;
+    std::vector <Matrix1D<double> > sampling_points_vector;
     /** vector with sampling points described by angles */
-    vector <Matrix1D<double> > sampling_points_angles;
+    std::vector <Matrix1D<double> > sampling_points_angles;
 
     /** vector with sampling points described by vectors, only store
         the non redundant part */
-    vector <Matrix1D<double> > no_redundant_sampling_points_vector;
+    std::vector <Matrix1D<double> > no_redundant_sampling_points_vector;
     /** vector with sampling points described by angles, only store
         the non redundant part */
-    vector <Matrix1D<double> > no_redundant_sampling_points_angles;
+    std::vector <Matrix1D<double> > no_redundant_sampling_points_angles;
 
     /** Default constructor. sampling in degrees*/
     XmippSampling();
@@ -115,13 +115,13 @@ public:
     /** fill edge */
     void fill_edge(Matrix1D<double> starting_point,
                    Matrix1D<double> ending_point,
-                   vector <Matrix1D<double> > &edge_vector,
+                   std::vector <Matrix1D<double> > &edge_vector,
                    bool FLAG_END
                   );
     /** fill distance */
     void fill_distance(Matrix1D<double> starting_point,
                        Matrix1D<double> ending_point,
-                       vector <Matrix1D<double> > &edge_vector,
+                       std::vector <Matrix1D<double> > &edge_vector,
                        int number,
                        bool only_half_spheree,
                        double min_z= -10.,
@@ -136,7 +136,7 @@ public:
     /* eliminate redundant points,
         symmetry group, symmetry order */
 
-    void remove_redundant_points(string symmetry, int sym_order);
+    void remove_redundant_points(const std::string & symmetry, int sym_order);
 
     /// Usage
     //void Usage();
@@ -146,10 +146,10 @@ public:
 
     /** create symmetry file from introduced symmetry
         see  SymList class */
-    void create_sym_file(string symmetry, int sym_order);
+    void create_sym_file(const std::string& symmetry, int sym_order);
 
     /** save assymetric unit sampling in a doc file */
-    void create_asym_unit_file(FileName docfilename);
+    void create_asym_unit_file(const FileName& docfilename);
 
     /** for each point i in the assymetric sampling unit cell
     compute the neighbors inside the assymetric unit cell,

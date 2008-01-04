@@ -137,19 +137,19 @@ double spatial_Bspline03_proj(
     if (alpha_max - alpha_min < XMIPP_EQUAL_ACCURACY) return 0.0;
 
 #ifdef DEBUG
-    cout << "Pixel:  " << r.transpose() << endl
-    << "Dir:    " << ur.transpose() << endl
-    << "Alpha x:" << alpha_xmin << " " << alpha_xmax << endl
-    << "        " << (r + alpha_xmin*ur).transpose() << endl
-    << "        " << (r + alpha_xmax*ur).transpose() << endl
-    << "Alpha y:" << alpha_ymin << " " << alpha_ymax << endl
-    << "        " << (r + alpha_ymin*ur).transpose() << endl
-    << "        " << (r + alpha_ymax*ur).transpose() << endl
-    << "Alpha z:" << alpha_zmin << " " << alpha_zmax << endl
-    << "        " << (r + alpha_zmin*ur).transpose() << endl
-    << "        " << (r + alpha_zmax*ur).transpose() << endl
-    << "alpha  :" << alpha_min  << " " << alpha_max  << endl
-    << endl;
+    std::cout << "Pixel:  " << r.transpose() << std::endl
+    << "Dir:    " << ur.transpose() << std::endl
+    << "Alpha x:" << alpha_xmin << " " << alpha_xmax << std::endl
+    << "        " << (r + alpha_xmin*ur).transpose() << std::endl
+    << "        " << (r + alpha_xmax*ur).transpose() << std::endl
+    << "Alpha y:" << alpha_ymin << " " << alpha_ymax << std::endl
+    << "        " << (r + alpha_ymin*ur).transpose() << std::endl
+    << "        " << (r + alpha_ymax*ur).transpose() << std::endl
+    << "Alpha z:" << alpha_zmin << " " << alpha_zmax << std::endl
+    << "        " << (r + alpha_zmin*ur).transpose() << std::endl
+    << "        " << (r + alpha_zmax*ur).transpose() << std::endl
+    << "alpha  :" << alpha_min  << " " << alpha_max  << std::endl
+    << std::endl;
 #endif
 
     // Compute the first point in the volume intersecting the ray
@@ -158,8 +158,8 @@ double spatial_Bspline03_proj(
     V3_PLUS_V3(v, r, v);
 
 #ifdef DEBUG
-    cout << "First entry point: " << v.transpose() << endl;
-    cout << "   Alpha_min: " << alpha_min << endl;
+    std::cout << "First entry point: " << v.transpose() << std::endl;
+    std::cout << "   Alpha_min: " << alpha_min << std::endl;
 #endif
 
     // Follow the ray
@@ -188,14 +188,14 @@ double spatial_Bspline03_proj(
         ZZ(v) += diff_alpha * ZZ(ur);
 
 #ifdef DEBUG
-        cout << "Alpha x,y,z: " << alpha_x << " " << alpha_y
-        << " " << alpha_z << " ---> " << alpha << endl;
+        std::cout << "Alpha x,y,z: " << alpha_x << " " << alpha_y
+        << " " << alpha_z << " ---> " << alpha << std::endl;
 
-        cout << "    Next entry point: " << v.transpose() << endl
-        << "    diff_alpha: " << diff_alpha << endl
-        << "    ray_sum: " << ray_sum << endl
+        std::cout << "    Next entry point: " << v.transpose() << std::endl
+        << "    diff_alpha: " << diff_alpha << std::endl
+        << "    ray_sum: " << ray_sum << std::endl
         << "    Alfa tot: " << alpha << "alpha_max: " << alpha_max <<
-        endl;
+        std::endl;
 
 #endif
     }
@@ -239,11 +239,11 @@ void spatial_Bspline032voxels_SimpleGrid(const Matrix3D<double> &vol_splines,
 #ifdef DEBUG
     bool condition = true;
     (*vol_voxels)().printShape();
-    cout << endl;
-    cout << "x0= " << x0 << " xF= " << xF << endl;
-    cout << "y0= " << y0 << " yF= " << yF << endl;
-    cout << "z0= " << z0 << " zF= " << zF << endl;
-    cout << grid;
+    std::cout << std::endl;
+    std::cout << "x0= " << x0 << " xF= " << xF << std::endl;
+    std::cout << "y0= " << y0 << " yF= " << yF << std::endl;
+    std::cout << "z0= " << z0 << " zF= " << zF << std::endl;
+    std::cout << grid;
 #endif
 
     // Convert the whole grid ...............................................
@@ -267,8 +267,8 @@ void spatial_Bspline032voxels_SimpleGrid(const Matrix3D<double> &vol_splines,
                 if (condition)
                 {
                     printf("Dealing spline at (%d,%d,%d) = %f\n", j, i, k, VOL_ELEM(vol_splines, k, i, j));
-                    cout << "Center of the blob      "
-                    << act_coord.transpose() << endl;
+                    std::cout << "Center of the blob      "
+                    << act_coord.transpose() << std::endl;
                 }
 #endif
 
@@ -281,12 +281,12 @@ void spatial_Bspline032voxels_SimpleGrid(const Matrix3D<double> &vol_splines,
                 if (YY(act_coord) <= y0) process = false;
                 if (ZZ(act_coord) <= z0) process = false;
 #ifdef DEBUG
-                if (!process && condition) cout << "   It is outside output volume\n";
+                if (!process && condition) std::cout << "   It is outside output volume\n";
 #endif
                 if (!grid.is_interesting(act_coord))
                 {
 #ifdef DEBUG
-                    if (process && condition) cout << "   It is not interesting\n";
+                    if (process && condition) std::cout << "   It is not interesting\n";
 #endif
                     process = false;
                 }
@@ -298,8 +298,8 @@ void spatial_Bspline032voxels_SimpleGrid(const Matrix3D<double> &vol_splines,
 #ifdef DEBUG
                     if (condition)
                     {
-                        cout << "Corner 1 for this point " << corner1.transpose() << endl;
-                        cout << "Corner 2 for this point " << corner2.transpose() << endl;
+                        std::cout << "Corner 1 for this point " << corner1.transpose() << std::endl;
+                        std::cout << "Corner 2 for this point " << corner2.transpose() << std::endl;
                     }
 #endif
 
@@ -313,8 +313,8 @@ void spatial_Bspline032voxels_SimpleGrid(const Matrix3D<double> &vol_splines,
 #ifdef DEBUG
                     if (condition)
                     {
-                        cout << "Clipped and rounded Corner 1 " << corner1.transpose() << endl;
-                        cout << "Clipped and rounded Corner 2 " << corner2.transpose() << endl;
+                        std::cout << "Clipped and rounded Corner 1 " << corner1.transpose() << std::endl;
+                        std::cout << "Clipped and rounded Corner 2 " << corner2.transpose() << std::endl;
                     }
 #endif
 
@@ -334,10 +334,10 @@ void spatial_Bspline032voxels_SimpleGrid(const Matrix3D<double> &vol_splines,
 #ifdef DEBUG_MORE
                                 if (condition)
                                 {
-                                    cout << "At (" << intx << ","
+                                    std::cout << "At (" << intx << ","
                                     << inty << "," << intz << ") value="
                                     << spline_value;
-                                    cout.flush();
+                                    std::cout.flush();
                                 }
 #endif
 
@@ -347,11 +347,11 @@ void spatial_Bspline032voxels_SimpleGrid(const Matrix3D<double> &vol_splines,
 #ifdef DEBUG_MORE
                                 if (condition)
                                 {
-                                    cout << " adding " << VOL_ELEM(vol_splines, k, i, j)
+                                    std::cout << " adding " << VOL_ELEM(vol_splines, k, i, j)
                                     << " * " << value_spline << " = "
                                     << VOL_ELEM(vol_splines, k, i, j)*
-                                    value_spline << endl;
-                                    cout.flush();
+                                    value_spline << std::endl;
+                                    std::cout.flush();
                                 }
 #endif
                             }
@@ -408,15 +408,15 @@ void spatial_Bspline032voxels(const GridVolume &vol_splines,
         spatial_Bspline032voxels_SimpleGrid(vol_splines(i)(), vol_splines.grid(i),
                                             vol_voxels);
 #ifdef DEBUG
-        cout << "Spline grid no " << i << " stats: ";
+        std::cout << "Spline grid no " << i << " stats: ";
         vol_splines(i)().print_stats();
-        cout << endl;
-        cout << "So far vol stats: ";
+        std::cout << std::endl;
+        std::cout << "So far vol stats: ";
         (*vol_voxels).print_stats();
-        cout << endl;
+        std::cout << std::endl;
         VolumeXmipp save;
         save() = *vol_voxels;
-        save.write((string)"PPPvoxels" + integerToString(i));
+        save.write((std::string)"PPPvoxels" + integerToString(i));
 #endif
     }
 

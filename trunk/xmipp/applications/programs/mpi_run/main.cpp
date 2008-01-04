@@ -89,7 +89,7 @@ class Prog_MPI_Run_Parameters
     /* Usage ------------------------------------------------------------------- */
     void usage()
     {
-        cerr << "MPI_Run\n"
+        std::cerr << "MPI_Run\n"
         << "   -i <command file>    : File with commands to send to mpirun\n"
         << "\n"
         << "Example of use:\n"
@@ -100,7 +100,7 @@ class Prog_MPI_Run_Parameters
     /* Show -------------------------------------------------------------------- */
     void show()
     {
-        cout << "Commands  file:           " << fn_commands << endl
+        std::cout << "Commands  file:           " << fn_commands << std::endl
         ;
     }
 
@@ -112,13 +112,13 @@ class Prog_MPI_Run_Parameters
 
         if (rank == 0)
         {
-            ifstream fh_in;
+            std::ifstream fh_in;
             fh_in.open(fn_commands.c_str());
             if (!fh_in)
-                REPORT_ERROR(1, (string)"Cannot open " + fn_commands);
+                REPORT_ERROR(1, (std::string)"Cannot open " + fn_commands);
 
     #define MAX_LINE 1024
-            string line;
+            std::string line;
             char szline[MAX_LINE];
             int number_of_node_waiting = 0; // max is nprocs -1
             while (!fh_in.eof())
@@ -129,8 +129,8 @@ class Prog_MPI_Run_Parameters
                 number_of_node_waiting++;
                 getline(fh_in, line);
                 strcpy(szline, line.c_str());
-                string::size_type loc = line.find("MPI_Barrier", 0);
-                if (loc != string::npos)
+                std::string::size_type loc = line.find("MPI_Barrier", 0);
+                if (loc != std::string::npos)
                 {
                     while (number_of_node_waiting < (nprocs - 1))
                     {
@@ -158,7 +158,7 @@ class Prog_MPI_Run_Parameters
                          TAG_WORK,
                          MPI_COMM_WORLD);
                 number_of_node_waiting--;
-                //cout << line << endl;
+                //std::cout << line << std::endl;
             }
 
             fh_in.close();
@@ -188,7 +188,7 @@ class Prog_MPI_Run_Parameters
                     continue;
                 }
                 MPI_Recv(&szline, MAX_LINE, MPI_CHAR, 0, TAG_WORK, MPI_COMM_WORLD, &status);
-                cout << szline << endl;
+                std::cout << szline << std::endl;
                 //do the job
                 system(szline);
 
@@ -224,7 +224,7 @@ int main(int argc, char *argv[])
 
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         prm.usage();
         exit(1);
     }
@@ -236,7 +236,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         exit(1);
     }
     exit(0);

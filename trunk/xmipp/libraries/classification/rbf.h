@@ -56,17 +56,17 @@ class xmippRBF;
   *    // Compute the RBF model for the known X and y.
   *    // Training stage
   *    xmippCTVectors knownX;     // Initialize conveniently
-  *    vector<double> knowny;     // Initialize conveniently
+  *    std::vector<double> knowny;     // Initialize conveniently
   *    xmippCTVectors candidateC; // Initialize conveniently
   *    xmippRBF       RBFmodel;   // Do not need to be initialized
   *    double         error;      // Do not need to be initialized
-  *    vector<double> predicted_y;// Do not need to be initialized
+  *    std::vector<double> predicted_y;// Do not need to be initialized
   *    RBF_train_best_scale(candidate_C, knownX, knowny, 0.5, 2, 0.1,
   *       RBF, error, y_predicted);
   *
   *    // Interpolate for other Xs using the model previously trained.
   *    xmippCTVectors another_set_X; // Initialize
-  *    vector<double> predictions_for_another_set_X; // Do not initialize
+  *    std::vector<double> predictions_for_another_set_X; // Do not initialize
   *    RBF_predict(RBF, another_set_X, predictions_for_another_set_X);
   * @endcode
 */
@@ -80,14 +80,14 @@ class xmippRBF;
     Exceptions are thrown if any of the input dimensions do not
     meet what expected.*/
 void RBF_train_best_scale(xmippCTVectors &candidate_C,  xmippCTVectors &X,
-                          vector<double> &y, double minscale,
+                          std::vector<double> &y, double minscale,
                           double maxscale, double scalestep, xmippRBF &RBF,
-                          double &error, vector<double> &y_predicted);
+                          double &error, std::vector<double> &y_predicted);
 
 /** Predict the values at given points.
     Given the centers, weight and radii this function returns the predicted
     values at given X. */
-void RBF_predict(xmippRBF &RBF,  xmippCTVectors &X, vector<double> &y_predicted);
+void RBF_predict(xmippRBF &RBF,  xmippCTVectors &X, std::vector<double> &y_predicted);
 
 /** Compute design matrix. Given the set of centers (C), the set of radius (r)
     and the set of points (X) this function computes the design matrix of the
@@ -103,8 +103,8 @@ void RBF_design_matrix(xmippCTVectors &C, Matrix1D<double> &r,
     The selected centers are chosen via the index_out variable.
     */
 void RBF_train(xmippCTVectors &C,  xmippCTVectors &X,
-               vector<double> &y, Matrix1D<double> &r, double scale,
-               vector<int> &idx_out, Matrix1D<double> &r_out,
+               std::vector<double> &y, Matrix1D<double> &r, double scale,
+               std::vector<int> &idx_out, Matrix1D<double> &r_out,
                Matrix1D<double> &w_out, double &error);
 
 /** RBF class.
@@ -138,8 +138,8 @@ public:
         returns the error of prediction (defined as the standard deviation
         of the predicted value with respect to y) and vector of predicted
         values for the training set. */
-    void train(xmippCTVectors &candidate_C, xmippCTVectors &X, vector<double> &y,
-               double &error, vector<double> &y_predicted, double minscale = 0.1,
+    void train(xmippCTVectors &candidate_C, xmippCTVectors &X, std::vector<double> &y,
+               double &error, std::vector<double> &y_predicted, double minscale = 0.1,
                double maxscale = 1.0, double scalestep = 0.15)
     {
         RBF_train_best_scale(candidate_C, X, y, minscale, maxscale, scalestep,
@@ -148,16 +148,16 @@ public:
 
     /** Predict the values at given points.
         Given the points X this function returns the predicted points.*/
-    void predict(xmippCTVectors &X, vector<double> &y_predicted)
+    void predict(xmippCTVectors &X, std::vector<double> &y_predicted)
     {
         RBF_predict(*this, X, y_predicted);
     }
 
     /** Show an RBF. */
-    friend ostream & operator << (ostream &out, xmippRBF &rbf);
+    friend std::ostream & operator << (std::ostream &out, xmippRBF &rbf);
 
     /** Read an RBF. */
-    friend istream & operator >> (istream &in, xmippRBF &rbf);
+    friend std::istream & operator >> (std::istream &in, xmippRBF &rbf);
 };
 
 //@}

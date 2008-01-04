@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 {
 
     FileName       sel_file;   // selection file
-    string         dest_path;  // extension for output files in selection file.
+    std::string    dest_path;  // extension for output files in selection file.
 
 
     /* Parameters ============================================================== */
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage(argv);
     }
 
@@ -76,14 +76,14 @@ int main(int argc, char *argv[])
 
         if (break_point < 0)
         {
-            cout << endl << "Error, destination path is not a valid directory name " << endl;
+            std::cout << std::endl << "Error, destination path is not a valid directory name " << std::endl;
             Usage(argv);
             exit(0);
         }
 
 
         // Finds last slash
-        string org_path;
+        std::string org_path;
         break_point = -1;
         for (int i = sel_file.size() - 1; i >= 0; i--)
         {
@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
 
         SelFile SF(sel_file);
         SelFile SF_out;
-        string comStr;
+        std::string comStr;
         while (!SF.eof())
         {
             // Get file
@@ -114,8 +114,8 @@ int main(int argc, char *argv[])
                 if (SF.Is_ACTIVE())
                 {
                     FileName in_name = line.get_text();
-                    string pathname = line.get_text();
-                    string myfilename = pathname.substr(pathname.rfind("/") + 1, string::npos);
+                    std::string pathname = line.get_text();
+                    std::string myfilename = pathname.substr(pathname.rfind("/") + 1, std::string::npos);
                     SF_out.insert(myfilename, SelLine::ACTIVE);
                     comStr = "cp " + org_path + in_name + " " + dest_path;
                     system(comStr.c_str()) ;
@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
 
 

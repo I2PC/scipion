@@ -85,7 +85,7 @@ void CorrectPhaseParams::readCTF(const FileName &fnCTF)
 
 /* Correct a single image -------------------------------------------------- */
 //#define DEBUG
-void CorrectPhaseParams::correct(Matrix2D< complex<double> > &v)
+void CorrectPhaseParams::correct(Matrix2D< std::complex<double> > &v)
 {
     ctf.generate_mask(v);
 #ifdef DEBUG
@@ -94,7 +94,7 @@ void CorrectPhaseParams::correct(Matrix2D< complex<double> > &v)
 
     FOR_ALL_ELEMENTS_IN_MATRIX2D(v)
     {
-        complex<double> m = ctf.mask2D(i, j);
+        std::complex<double> m = ctf.mask2D(i, j);
         if (m.imag() != 0)
             REPORT_ERROR(1, "CorrectPhase::correct: CTF is not real\n");
 #ifdef DEBUG
@@ -125,9 +125,9 @@ void CorrectPhaseParams::correct(Matrix2D< complex<double> > &v)
 /* Correct a set of images ------------------------------------------------- */
 void CorrectPhaseParams::run()
 {
-    Matrix2D< complex<double> > fft;
+    Matrix2D< std::complex<double> > fft;
     ctfdat.goFirstLine();
-    cerr << "Correcting CTF phase ...\n";
+    std::cerr << "Correcting CTF phase ...\n";
     int istep = CEIL((double)ctfdat.lineNo() / 60.0);
     init_progress_bar(ctfdat.lineNo());
     int i = 0;

@@ -40,8 +40,6 @@
 
 #include "uniform.h"
 
-using namespace std;
-
 /**@defgroup VectorOperations Vector Operations
    @ingroup ClassificationLibrary */
 //@{
@@ -51,10 +49,10 @@ using namespace std;
  *    returns a vector
  *    example: r = v+a
  */
-template<class T> vector<T> operator+(const vector<T>& v, const T& a)
+template<class T> std::vector<T> operator+(const std::vector<T>& v, const T& a)
 {
-    vector<T> tmp = v;
-    transform(tmp.begin(), tmp.end(), tmp.begin(), bind2nd(plus<T>(), a));
+    std::vector<T> tmp = v;
+    transform(tmp.begin(), tmp.end(), tmp.begin(), bind2nd(std::plus<T>(), a));
     return tmp;
 }
 
@@ -63,10 +61,10 @@ template<class T> vector<T> operator+(const vector<T>& v, const T& a)
  *    returns a vector
  *    example: r = a+v
  */
-template<class T> vector<T> operator+(const T& a, const vector<T>& v)
+template<class T> std::vector<T> operator+(const T& a, const std::vector<T>& v)
 {
-    vector<T> tmp = v;
-    transform(tmp.begin(), tmp.end(), tmp.begin(), bind2nd(plus<T>(), a));
+    std::vector<T> tmp = v;
+    transform(tmp.begin(), tmp.end(), tmp.begin(), bind2nd(std::plus<T>(), a));
     return tmp;
 }
 
@@ -75,10 +73,10 @@ template<class T> vector<T> operator+(const T& a, const vector<T>& v)
  *    returns a vector
  *    example: r = v-a
  */
-template<class T> vector<T> operator-(const vector<T>& v, const T& a)
+template<class T> std::vector<T> operator-(const std::vector<T>& v, const T& a)
 {
-    vector<T> tmp = v;
-    transform(tmp.begin(), tmp.end(), tmp.begin(), bind2nd(minus<T>(), a));
+    std::vector<T> tmp = v;
+    transform(tmp.begin(), tmp.end(), tmp.begin(), bind2nd(std::minus<T>(), a));
     return tmp;
 }
 
@@ -87,10 +85,10 @@ template<class T> vector<T> operator-(const vector<T>& v, const T& a)
  *    returns a vector
  *    example: r = a-v
  */
-template<class T> vector<T> operator-(const T& a, const vector<T>& v)
+template<class T> std::vector<T> operator-(const T& a, const std::vector<T>& v)
 {
-    vector<T> tmp(v.size(), a);
-    transform(tmp.begin(), tmp.end(), v.begin(), tmp.begin(), minus<T>());
+    std::vector<T> tmp(v.size(), a);
+    transform(tmp.begin(), tmp.end(), v.begin(), tmp.begin(), std::minus<T>());
     return tmp;
 }
 
@@ -99,10 +97,10 @@ template<class T> vector<T> operator-(const T& a, const vector<T>& v)
  *    returns a vector
  *    example: r = v*a
  */
-template<class T> vector<T> operator*(const vector<T>& v, T a)
+template<class T> std::vector<T> operator*(const std::vector<T>& v, T a)
 {
-    vector<T> tmp = v;
-    transform(tmp.begin(), tmp.end(), tmp.begin(), bind2nd(multiplies<T>(), a));
+    std::vector<T> tmp = v;
+    transform(tmp.begin(), tmp.end(), tmp.begin(), bind2nd(std::multiplies<T>(), a));
     return tmp;
 }
 
@@ -111,10 +109,10 @@ template<class T> vector<T> operator*(const vector<T>& v, T a)
  *    returns a vector
  *    example: r = a*v
  */
-template<class T> vector<T> operator*(T a, const vector<T>& v)
+template<class T> std::vector<T> operator*(T a, const std::vector<T>& v)
 {
-    vector<T> tmp = v;
-    transform(tmp.begin(), tmp.end(), tmp.begin(), bind2nd(multiplies<T>(), a));
+    std::vector<T> tmp = v;
+    transform(tmp.begin(), tmp.end(), tmp.begin(), bind2nd(std::multiplies<T>(), a));
     return tmp;
 }
 
@@ -124,10 +122,10 @@ template<class T> vector<T> operator*(T a, const vector<T>& v)
  *    returns a vector
  *    example: r = v/a
  */
-template<class T> vector<T> operator/(const vector<T>& v, T a)
+template<class T> std::vector<T> operator/(const std::vector<T>& v, T a)
 {
-    vector<T> tmp = v;
-    transform(tmp.begin(), tmp.end(), tmp.begin(), bind2nd(divides<T>(), a));
+    std::vector<T> tmp = v;
+    transform(tmp.begin(), tmp.end(), tmp.begin(), bind2nd(std::divides<T>(), a));
     return tmp;
 }
 
@@ -136,10 +134,10 @@ template<class T> vector<T> operator/(const vector<T>& v, T a)
  *    returns a vector
  *    example: r = a/v
  */
-template<class T> vector<T> operator/(T a, const vector<T>& v)
+template<class T> std::vector<T> operator/(T a, const std::vector<T>& v)
 {
-    vector<T> tmp(v.size(), a);
-    transform(tmp.begin(), tmp.end(), v.begin(), tmp.begin(), divides<T>());
+    std::vector<T> tmp(v.size(), a);
+    transform(tmp.begin(), tmp.end(), v.begin(), tmp.begin(), std::divides<T>());
     return tmp;
 }
 
@@ -148,9 +146,9 @@ template<class T> vector<T> operator/(T a, const vector<T>& v)
  *    returns a vector
  *    example: v = v*r
  */
-template<class T> vector<T>& operator*=(vector<T>& v1, const vector<T>& v2)
+template<class T> std::vector<T>& operator*=(std::vector<T>& v1, const std::vector<T>& v2)
 {
-    transform(v1.begin(), v1.end(), v2.begin(), v1.begin(), multiplies<T>());
+    transform(v1.begin(), v1.end(), v2.begin(), v1.begin(), std::multiplies<T>());
     return v1;
 }
 
@@ -159,9 +157,9 @@ template<class T> vector<T>& operator*=(vector<T>& v1, const vector<T>& v2)
  *    returns a vector
  *    example: v = v/r
  */
-template<class T> vector<T>& operator/=(vector<T>& v1, const vector<T>& v2)
+template<class T> std::vector<T>& operator/=(std::vector<T>& v1, const std::vector<T>& v2)
 {
-    transform(v1.begin(), v1.end(), v2.begin(), v1.begin(), divides<T>());
+    transform(v1.begin(), v1.end(), v2.begin(), v1.begin(), std::divides<T>());
     return v1;
 }
 
@@ -175,12 +173,12 @@ template<class T> vector<T>& operator/=(vector<T>& v1, const vector<T>& v2)
  * Parameter: _upper  Upper value for random elements
  */
 template <class T>
-vector<T> randomVector(const unsigned& _size, const T& _lower,
+std::vector<T> randomVector(const unsigned& _size, const T& _lower,
                        const T& _upper)
 {
-    vector<T> v(_size);
+    std::vector<T> v(_size);
     xmippUniform<T> u(_lower, _upper);
-    typename vector<T>::iterator i;
+    typename std::vector<T>::iterator i;
     for (i = v.begin() ; i < v.end() ; *i++ = u());
 
     return v;
@@ -194,13 +192,13 @@ vector<T> randomVector(const unsigned& _size, const T& _lower,
  * @exception DifferentSize if _v1 and _v2  hasn't the same size
  */
 template <class T>
-vector<T>& operator += (vector<T>& _v1, const vector<T>& _v2)
+std::vector<T>& operator += (std::vector<T>& _v1, const std::vector<T>& _v2)
 {
     if (_v1.size() != _v2.size())
-        throw runtime_error("different size vectors in +=");
+        throw std::runtime_error("different size vectors in +=");
 
     transform(_v1.begin(), _v1.end(), _v2.begin(), _v1.begin(),
-              plus<T>());
+              std::plus<T>());
 
     return _v1;
 };
@@ -212,13 +210,13 @@ vector<T>& operator += (vector<T>& _v1, const vector<T>& _v2)
  * @exception DifferentSize if _v1 and _v2  hasn't the same size
  */
 template <class T>
-vector<T>& operator -= (vector<T>& _v1, const vector<T>& _v2)
+std::vector<T>& operator -= (std::vector<T>& _v1, const std::vector<T>& _v2)
 {
     if (_v1.size() != _v2.size())
-        throw runtime_error("different size vectors in -=");
+        throw std::runtime_error("different size vectors in -=");
 
     transform(_v1.begin(), _v1.end(), _v2.begin(), _v1.begin(),
-              minus<T>());
+              std::minus<T>());
 
     return _v1;
 };
@@ -230,16 +228,16 @@ vector<T>& operator -= (vector<T>& _v1, const vector<T>& _v2)
  * @exception DifferentSize if _v1 and _v2  hasn't the same size
  */
 template <class T>
-vector<T> operator + (const vector<T>& _v1, const vector<T>& _v2)
+std::vector<T> operator + (const std::vector<T>& _v1, const std::vector<T>& _v2)
 {
     if (_v1.size() != _v2.size())
-        throw runtime_error("different size vectors in +");
+        throw std::runtime_error("different size vectors in +");
 
     // temp. container
-    vector<T> tmp(_v1.size());
+    std::vector<T> tmp(_v1.size());
 
     transform(_v1.begin(), _v1.end(), _v2.begin(), tmp.begin(),
-              plus<T>());
+              std::plus<T>());
     return tmp;
 };
 
@@ -250,16 +248,16 @@ vector<T> operator + (const vector<T>& _v1, const vector<T>& _v2)
  * @exception DifferentSize if _v1 and _v2  hasn't the same size
  */
 template <class T>
-vector<T> operator - (const vector<T>& _v1, const vector<T>& _v2)
+std::vector<T> operator - (const std::vector<T>& _v1, const std::vector<T>& _v2)
 {
     if (_v1.size() != _v2.size())
-        throw runtime_error("different size vectors in -");
+        throw std::runtime_error("different size vectors in -");
 
     // temp. container
-    vector<T> tmp(_v1.size());
+    std::vector<T> tmp(_v1.size());
 
     transform(_v1.begin(), _v1.end(), _v2.begin(), tmp.begin(),
-              minus<T>());
+              std::minus<T>());
     return tmp;
 };
 
@@ -270,13 +268,13 @@ vector<T> operator - (const vector<T>& _v1, const vector<T>& _v2)
  * @exception DifferentSize if _v1 and _v2  hasn't the same size
  */
 template <class T>
-T operator *(const vector<T>& _v1, const vector<T>& _v2)
+T operator *(const std::vector<T>& _v1, const std::vector<T>& _v2)
 {
     if (_v1.size() != _v2.size())
-        throw runtime_error("different size vectors in *");
+        throw std::runtime_error("different size vectors in *");
 
     T dotProd = 0;
-    typename vector<T>::const_iterator i, j;
+    typename std::vector<T>::const_iterator i, j;
     for (i = _v1.begin(), j = _v2.begin() ; i != _v1.end() ; i++, j++)
         dotProd += *i * *j;
 
@@ -289,9 +287,9 @@ T operator *(const vector<T>& _v1, const vector<T>& _v2)
  * Parameter: _alpha  The element to be multiplied by each element in the container
  */
 template <class T>
-vector<T>& operator *= (vector<T>& _v, const T _alpha)
+std::vector<T>& operator *= (std::vector<T>& _v, const T _alpha)
 {
-    typename vector<T>::iterator i;
+    typename std::vector<T>::iterator i;
     for (i = _v.begin() ; i != _v.end() ; i++)
         *i *= _alpha;
 
@@ -305,9 +303,9 @@ vector<T>& operator *= (vector<T>& _v, const T _alpha)
  * Parameter: _alpha  The element to be multiplied by each element in the container
  */
 template <class T>
-vector<T>& operator /= (vector<T>& _v, const T _alpha)
+std::vector<T>& operator /= (std::vector<T>& _v, const T _alpha)
 {
-    typename vector<T>::iterator i;
+    typename std::vector<T>::iterator i;
     for (i = _v.begin() ; i != _v.end() ; i++)
         *i /= _alpha;
 
@@ -315,29 +313,29 @@ vector<T>& operator /= (vector<T>& _v, const T _alpha)
 };
 
 /**
- * Standard output for a vector<T>
+ * Standard output for a std::vector<T>
  * Parameter: _os The output stream
  * Parameter: _v  The container to be printed
  */
 template <class T>
-ostream& operator << (ostream& _os, const vector<T>& _v)
+std::ostream& operator << (std::ostream& _os, const std::vector<T>& _v)
 {
     _os << "< ";
-    typename vector<T>::const_iterator i;
+    typename std::vector<T>::const_iterator i;
     for (i = _v.begin(); i != _v.end(); i++) _os << *i << " ";
-    //CO: copy( _v.begin(), _v.end(), ostream_iterator<T>( _os, " "));
+    //CO: copy( _v.begin(), _v.end(), std::ostream_iterator<T>( _os, " "));
     _os << ">";
     return _os;
 };
 
 /**
- * Standard input for a vector<T>
+ * Standard input for a std::vector<T>
  * Parameter: _is  The input stream
  * Parameter: _v   The container to be read
  * @exception  runtime_error  If there are problems reading the vector
  */
 template <class T>
-istream& operator >> (istream& _is, vector<T>& _v)
+std::istream& operator >> (std::istream& _is, std::vector<T>& _v)
 {
     _v.clear();
 
@@ -345,7 +343,7 @@ istream& operator >> (istream& _is, vector<T>& _v)
     _is >> c;
 
     if (_is && c != '<')
-        _is.setstate(ios::failbit);
+        _is.setstate(std::ios::failbit);
 
     bool finish = false;
 
@@ -372,7 +370,7 @@ istream& operator >> (istream& _is, vector<T>& _v)
     }
 
     if (!_is)
-        throw runtime_error("Error reading the vector");
+        throw std::runtime_error("Error reading the vector");
 
     return _is;
 };

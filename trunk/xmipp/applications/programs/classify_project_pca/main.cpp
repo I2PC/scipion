@@ -78,7 +78,7 @@ main(int argc, char** argv)
         {
             if (checkParameter(argc, argv, "-p"))
             {
-                cerr << argv[0] << ": Invalid option. You can not select number of dimensions and percent at the same time" << endl;
+                std::cerr << argv[0] << ": Invalid option. You can not select number of dimensions and percent at the same time" << std::endl;
                 exit(EXIT_FAILURE);
             }
             k = textToInteger(getParameter(argc, argv, "-k"));
@@ -89,7 +89,7 @@ main(int argc, char** argv)
         {
             if (checkParameter(argc, argv, "-k"))
             {
-                cerr << argv[0] << ": Invalid option. You can not select number of dimensions and percent at the same time" << endl;
+                std::cerr << argv[0] << ": Invalid option. You can not select number of dimensions and percent at the same time" << std::endl;
                 exit(EXIT_FAILURE);
             }
             p = textToFloat(getParameter(argc, argv, "-p"));
@@ -106,7 +106,7 @@ main(int argc, char** argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage(argv);
     }
 
@@ -116,45 +116,45 @@ main(int argc, char** argv)
 
     if (!met && (p <= 0 || p > 100))
     {
-        cerr << argv[0] << ": invalid value for percent of explained variance (must be > 0 and <= 100): " << p << endl;
+        std::cerr << argv[0] << ": invalid value for percent of explained variance (must be > 0 and <= 100): " << p << std::endl;
         exit(EXIT_FAILURE);
     }
 
     /* Shows parameters ===================================================== */
 
-    cout << endl << "Parameters used: " << endl;
-    cout << "Input data file : " << fn_in << endl;
-    cout << "Input eigen vectors file : " << fn_ein << endl;
-    cout << "Input eigen values file : " << fn_evin << endl;
-    cout << "Output file name : " << fn_out << endl;
+    std::cout << std::endl << "Parameters used: " << std::endl;
+    std::cout << "Input data file : " << fn_in << std::endl;
+    std::cout << "Input eigen vectors file : " << fn_ein << std::endl;
+    std::cout << "Input eigen values file : " << fn_evin << std::endl;
+    std::cout << "Output file name : " << fn_out << std::endl;
     if (met)
-        cout << "Dimension of projected subspace : " << k << endl;
+        std::cout << "Dimension of projected subspace : " << k << std::endl;
     else
-        cout << "Percent of explained variance : " << p << endl;
+        std::cout << "Percent of explained variance : " << p << std::endl;
     if (recon)
-        cout << "Reconstruct original data" << endl;
+        std::cout << "Reconstruct original data" << std::endl;
 
 
     /* Open training vector ================================================= */
 
 
-    ifstream inStream(fn_in.c_str());
+    std::ifstream inStream(fn_in.c_str());
     if (!inStream)
     {
-        cerr << argv[0] << ": can't open file " << fn_in << endl;
+        std::cerr << argv[0] << ": can't open file " << fn_in << std::endl;
         exit(EXIT_FAILURE);
     }
 
     xmippCTVectors ts(0, false);
 
-    cout << endl << "Reading data file " << fn_in << "....." << endl;
+    std::cout << std::endl << "Reading data file " << fn_in << "....." << std::endl;
     inStream >> ts;
 
     if (met)
     {
         if (k > ts.theItems[0].size() || k <= 0)
         {
-            cerr << argv[0] << ": invalid value for dimension of projected subspace (must be > 0 and <= dimension of the data): " << k << endl;
+            std::cerr << argv[0] << ": invalid value for dimension of projected subspace (must be > 0 and <= dimension of the data): " << k << std::endl;
             exit(EXIT_FAILURE);
         }
     }
@@ -162,30 +162,30 @@ main(int argc, char** argv)
     /* Open eigen vectors================================================= */
 
 
-    ifstream einStream(fn_ein.c_str());
+    std::ifstream einStream(fn_ein.c_str());
     if (!einStream)
     {
-        cerr << argv[0] << ": can't open file " << fn_ein << endl;
+        std::cerr << argv[0] << ": can't open file " << fn_ein << std::endl;
         exit(EXIT_FAILURE);
     }
 
     xmippCTVectors ev(0, false);
 
-    cout << "Reading eigen vectors file " << fn_ein << "....." << endl;
+    std::cout << "Reading eigen vectors file " << fn_ein << "....." << std::endl;
     einStream >> ev;
 
     /* Open eigen values================================================= */
 
-    ifstream evinStream(fn_evin.c_str());
+    std::ifstream evinStream(fn_evin.c_str());
     if (!evinStream)
     {
-        cerr << argv[0] << ": can't open file " << fn_evin << endl;
+        std::cerr << argv[0] << ": can't open file " << fn_evin << std::endl;
         exit(EXIT_FAILURE);
     }
 
     xmippCTVectors eval(0, false);
 
-    cout << "Reading eigen values file " << fn_evin << "....." << endl;
+    std::cout << "Reading eigen values file " << fn_evin << "....." << std::endl;
     evinStream >> eval;
 
     /* Real stuff ============================================================== */
@@ -206,7 +206,7 @@ main(int argc, char** argv)
             }
         }
         k = bestIndex + 1;
-        cout << "Explained " << p << "% of the variance with " << k << " components" << endl;
+        std::cout << "Explained " << p << "% of the variance with " << k << " components" << std::endl;
     }
     else
     {
@@ -215,7 +215,7 @@ main(int argc, char** argv)
         for (int i = 0; i < k; i++)
             cum += eval.theItems[i][2] * 100.0;
         p = cum;
-        cout << "The " << k << " components explain " << p << "% of the variance." << endl;
+        std::cout << "The " << k << " components explain " << p << "% of the variance." << std::endl;
     }
 
     try
@@ -227,7 +227,7 @@ main(int argc, char** argv)
         xmippCTVectors statVec(0, true);
         statVec = ts.getStatVector();
 
-        cout << "projecting into " << k << " dimensions..." << endl;
+        std::cout << "projecting into " << k << " dimensions..." << std::endl;
         int size = ts.size();
         int dim = ts.itemAt(0).size();
 
@@ -252,7 +252,7 @@ main(int argc, char** argv)
         xmippCTVectors reconsTs(0, true);
         if (recon)
         {
-            cout << "Estimating original data using " << k << " components..." << endl;
+            std::cout << "Estimating original data using " << k << " components..." << std::endl;
             reconsTs.theItems.resize(size);
             reconsTs.theTargets.resize(size);
             for (int h = 0; h < size; h++) reconsTs.theItems[h].resize(dim, 0);
@@ -276,62 +276,62 @@ main(int argc, char** argv)
             Saving all kind of Information
         *******************************************************/
 
-        cout << "Saving projected vectors as " << fn_out << ".dat ....." << endl;
-        tmpN = fn_out.c_str() + (string) ".dat";
-        ofstream projS(tmpN.c_str());
-        projS << k << " " << size << endl;
+        std::cout << "Saving projected vectors as " << fn_out << ".dat ....." << std::endl;
+        tmpN = fn_out.c_str() + (std::string) ".dat";
+        std::ofstream projS(tmpN.c_str());
+        projS << k << " " << size << std::endl;
         for (int j = 0; j < size ; j++)
         {
             for (int i = 0; i < k; i++)
                 projS << " " << projectedTs.theItems[j][i];
-            projS << " " << ts.theTargets[j] << endl;
+            projS << " " << ts.theTargets[j] << std::endl;
         }
         projS.flush();
 
         if (recon)
         {
-            cout << "Saving reconstructed vectors as " << fn_out << ".recon ....." << endl;
-            tmpN = fn_out.c_str() + (string) ".recon";
-            ofstream rS(tmpN.c_str());
-            rS << dim << " " << size << endl;
+            std::cout << "Saving reconstructed vectors as " << fn_out << ".recon ....." << std::endl;
+            tmpN = fn_out.c_str() + (std::string) ".recon";
+            std::ofstream rS(tmpN.c_str());
+            rS << dim << " " << size << std::endl;
             for (int j = 0; j < size ; j++)
             {
                 for (int i = 0; i < dim; i++)
                     rS << " " << reconsTs.theItems[j][i];
-                rS << " " << ts.theTargets[j] << endl;
+                rS << " " << ts.theTargets[j] << std::endl;
             }
             rS.flush();
         }
 
-        cout << "Saving algorithm information as " << fn_out << ".inf ....." << endl;
-        tmpN = fn_out.c_str() + (string) ".inf";
-        ofstream infS(tmpN.c_str());
-        infS << "PCA Projection" << endl << endl;
-        infS << "Input data file : " << fn_in << endl;
-        infS << "Projected vectors output file : " << fn_out <<  ".dat" << endl;
-        infS << "Algorithm information output file : " << fn_out <<  ".inf" << endl;
-        infS << "Number of feature vectors: " << ts.size() << endl;
-        infS << "Number of variables: " << ts.itemAt(0).size() << endl;
+        std::cout << "Saving algorithm information as " << fn_out << ".inf ....." << std::endl;
+        tmpN = fn_out.c_str() + (std::string) ".inf";
+        std::ofstream infS(tmpN.c_str());
+        infS << "PCA Projection" << std::endl << std::endl;
+        infS << "Input data file : " << fn_in << std::endl;
+        infS << "Projected vectors output file : " << fn_out <<  ".dat" << std::endl;
+        infS << "Algorithm information output file : " << fn_out <<  ".inf" << std::endl;
+        infS << "Number of feature vectors: " << ts.size() << std::endl;
+        infS << "Number of variables: " << ts.itemAt(0).size() << std::endl;
         if (met)
         {
-            infS << "Dimension of projected subspace : " << k << endl;
-            infS << "Percent of explained variance : " << p << endl;
+            infS << "Dimension of projected subspace : " << k << std::endl;
+            infS << "Percent of explained variance : " << p << std::endl;
         }
         else
         {
-            infS << "Percent of explained variance : " << p << endl;
-            infS << "Number of final components : " << k << endl;
+            infS << "Percent of explained variance : " << p << std::endl;
+            infS << "Number of final components : " << k << std::endl;
         }
         if (recon)
-            infS << "Reconstruct original data" << endl;
+            infS << "Reconstruct original data" << std::endl;
         infS.flush();
 
-        cout << endl;
+        std::cout << std::endl;
 
     }
     catch (Xmipp_error &e)
     {
-        cout << e << endl;
+        std::cout << e << std::endl;
     }
     return 0;
 }

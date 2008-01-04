@@ -57,31 +57,31 @@ public:
     void show()
     {
         Prog_parameters::show();
-        cout << "Performing a ";
+        std::cout << "Performing a ";
         switch (operation)
         {
         case DILATION       :
-            cout << "Dilation\n";
+            std::cout << "Dilation\n";
             break;
         case EROSION       :
-            cout << "Erosion\n";
+            std::cout << "Erosion\n";
             break;
         case OPENING       :
-            cout << "Opening\n";
+            std::cout << "Opening\n";
             break;
         case CLOSING       :
-            cout << "Closing\n";
+            std::cout << "Closing\n";
             break;
         }
-        cout << "Size=" << size << endl
-        << "Neighbourhood=" << neig << endl
-        << "Count=" << count << endl;
+        std::cout << "Size=" << size << std::endl
+        << "Neighbourhood=" << neig << std::endl
+        << "Count=" << count << std::endl;
     }
 
     void usage()
     {
         Prog_parameters::usage();
-        cerr << "  [-dil]             : Apply dilation\n"
+        std::cerr << "  [-dil]             : Apply dilation\n"
         << "  [-ero]             : Apply erosion\n"
         << "  [-clo]             : Apply closing\n"
         << "  [-ope]             : Apply opening\n"
@@ -102,7 +102,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
     ImageXmipp retval;
     retval() = img();
 
-    cout << "Initially the image has " << img().sum() << " pixels set to 1\n";
+    std::cout << "Initially the image has " << img().sum() << " pixels set to 1\n";
     switch (eprm->operation)
     {
     case DILATION:
@@ -120,7 +120,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
     }
 
     img() = retval();
-    cout << "Finally the image has " << img().sum() << " pixels set to 1\n";
+    std::cout << "Finally the image has " << img().sum() << " pixels set to 1\n";
     return true;
 }
 
@@ -131,7 +131,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
     VolumeXmipp retval;
     retval() = vol();
 
-    cout << "Initially the volume has " << vol().sum() << " voxels set to 1\n";
+    std::cout << "Initially the volume has " << vol().sum() << " voxels set to 1\n";
     switch (eprm->operation)
     {
     case DILATION:
@@ -149,7 +149,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
     }
 
     vol() = retval();
-    cout << "Finally the volume has " << vol().sum() << " voxels set to 1\n";
+    std::cout << "Finally the volume has " << vol().sum() << " voxels set to 1\n";
     return true;
 }
 

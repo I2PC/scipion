@@ -37,14 +37,14 @@ void ROUT_Umbend(ImUmbend &ImUm)
 {
 
 
-    cout << "Reading" << endl;
+    std::cout << "Reading" << std::endl;
     //Read .cor file
     ImUm.ReadMRCCord();
     //(ImUm.myUmbendfile).read(ImUm.FN_Correlation);
-    cout << "PeaksCorrespondance" << endl;
+    std::cout << "PeaksCorrespondance" << std::endl;
     //Uniform sistematic sampling
     ImUm.PeaksCorresp();
-    cout << "Crystal UnBending" << endl;
+    std::cout << "Crystal UnBending" << std::endl;
     //Displacement Interpolation
     ImUm.UnBending();
 }

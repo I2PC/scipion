@@ -53,18 +53,18 @@ SimpleGrid::SimpleGrid(const SimpleGrid &SG)
     R2            = SG.R2;
 }
 
-// Cout --------------------------------------------------------------------
-ostream& operator <<(ostream& o, const SimpleGrid &grid)
+// std::cout --------------------------------------------------------------------
+std::ostream& operator <<(std::ostream& o, const SimpleGrid &grid)
 {
-    o << "   Simple Grid -----" << endl;
-    o << "   Vector 1: " << ((grid.basis).Col(0)).transpose() << endl;
-    o << "   Vector 2: " << ((grid.basis).Col(1)).transpose() << endl;
-    o << "   Vector 3: " << ((grid.basis).Col(2)).transpose() << endl;
-    o << "   Relative size:         " << grid.relative_size       << endl;
-    o << "   Interest radius�:      " << grid.R2                  << endl;
-    o << "   Origin (univ.coords)   " << grid.origin.transpose()  << endl;
-    o << "   Highest (grid. coord)  " << grid.highest.transpose() << endl;
-    o << "   Lowest (grid. coord)   " << grid.lowest.transpose()  << endl;
+    o << "   Simple Grid -----" << std::endl;
+    o << "   Vector 1: " << ((grid.basis).Col(0)).transpose() << std::endl;
+    o << "   Vector 2: " << ((grid.basis).Col(1)).transpose() << std::endl;
+    o << "   Vector 3: " << ((grid.basis).Col(2)).transpose() << std::endl;
+    o << "   Relative size:         " << grid.relative_size       << std::endl;
+    o << "   Interest radius�:      " << grid.R2                  << std::endl;
+    o << "   Origin (univ.coords)   " << grid.origin.transpose()  << std::endl;
+    o << "   Highest (grid. coord)  " << grid.highest.transpose() << std::endl;
+    o << "   Lowest (grid. coord)   " << grid.lowest.transpose()  << std::endl;
     return o;
 }
 
@@ -200,11 +200,11 @@ void Grid::voxel_corners(Matrix1D<double> &Gcorner1, Matrix1D<double> &Gcorner2,
         }
 
 #ifdef DEBUG
-        cout << LG[n];
-        cout << "SGcorner1 " << SGcorner1.transpose() << endl;
-        cout << "SGcorner2 " << SGcorner2.transpose() << endl;
-        cout << "Gcorner1  " << Gcorner1.transpose() << endl;
-        cout << "Gcorner2  " << Gcorner2.transpose() << endl;
+        std::cout << LG[n];
+        std::cout << "SGcorner1 " << SGcorner1.transpose() << std::endl;
+        std::cout << "SGcorner2 " << SGcorner2.transpose() << std::endl;
+        std::cout << "Gcorner1  " << Gcorner1.transpose() << std::endl;
+        std::cout << "Gcorner2  " << Gcorner2.transpose() << std::endl;
 #endif
     }
 }
@@ -425,11 +425,11 @@ SimpleGrid Create_grid_within_sphere(double relative_size,
             }
 
 #ifdef DEBUG
-    cout << "Sphere radius = " << R << endl
-    << "relative size = " << relative_size << endl
-    << "X module      = " << X.module() << endl
-    << "Y module      = " << Y.module() << endl
-    << "Z module      = " << Z.module() << endl
+    std::cout << "Sphere radius = " << R << std::endl
+    << "relative size = " << relative_size << std::endl
+    << "X module      = " << X.module() << std::endl
+    << "Y module      = " << Y.module() << std::endl
+    << "Z module      = " << Z.module() << std::endl
     << grid
     ;
 #endif

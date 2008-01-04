@@ -26,8 +26,8 @@
 /** Core array by scalar specialization.
  */
 template<>
-void coreArrayByScalar< complex< double > >(const maTC& op1,
-                                               const complex< double >& op2,
+void coreArrayByScalar< std::complex< double > >(const maTC& op1,
+                                               const std::complex< double >& op2,
                                                maTC& result,
                                                char operation)
 {
@@ -55,7 +55,7 @@ void coreArrayByScalar< complex< double > >(const maTC& op1,
 /** Scalar by array specialization.
  */
 template<>
-void coreScalarByArray< complex< double > >(const complex< double >& op1,
+void coreScalarByArray< std::complex< double > >(const std::complex< double >& op1,
                                                const maTC& op2,
                                                maTC& result,
                                                char operation)
@@ -84,7 +84,7 @@ void coreScalarByArray< complex< double > >(const complex< double >& op1,
 /** Array by array specialization.
  */
 template <>
-void coreArrayByArray< complex< double > >(const maTC& op1,
+void coreArrayByArray< std::complex< double > >(const maTC& op1,
                                               const maTC& op2,
                                               maTC& result,
                                               char operation)

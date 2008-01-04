@@ -95,17 +95,17 @@ int main(int argc, char** argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage(argv);
     }
 
 
-    cout << endl << "Reading file " << fn_in << "....." << endl;
+    std::cout << std::endl << "Reading file " << fn_in << "....." << std::endl;
 
-    ifstream inStream(fn_in.c_str());
+    std::ifstream inStream(fn_in.c_str());
     if (!inStream)
     {
-        cerr << argv[0] << ": can't open file " << fn_in << endl;
+        std::cerr << argv[0] << ": can't open file " << fn_in << std::endl;
         exit(EXIT_FAILURE);
     }
 
@@ -117,47 +117,47 @@ int main(int argc, char** argv)
     {
         inStream >> in;
     }
-    catch (exception& e)
+    catch (std::exception& e)
     {
-        cerr << argv[0] << ": can't read file " << fn_in  << " because " << e.what() << endl;
+        std::cerr << argv[0] << ": can't read file " << fn_in  << " because " << e.what() << std::endl;
         exit(EXIT_FAILURE);
     }
 
     if (dim < 0 || dim >= in.theItems[0].size())
     {
-        cerr << argv[0] << ": invalid value for dim " << dim << endl;
+        std::cerr << argv[0] << ": invalid value for dim " << dim << std::endl;
         exit(EXIT_FAILURE);
     }
 
     if (iter < 1)
     {
-        cerr << argv[0] << ": invalid value for iter " << iter << endl;
+        std::cerr << argv[0] << ": invalid value for iter " << iter << std::endl;
         exit(EXIT_FAILURE);
     }
 
     if (verb < 0 || verb > 2)
     {
-        cerr << argv[0] << ": invalid value for verbosity " << verb << endl;
+        std::cerr << argv[0] << ": invalid value for verbosity " << verb << std::endl;
         exit(EXIT_FAILURE);
     }
 
     /* Real stuff ============================================================== */
 
 
-    cout << "Parameters used: " << endl;
-    cout << "Input data file : " << fn_in << endl;
-    cout  << "Output file : " << fn_out <<  ".sam" << endl;
-    cout << "Algorithm information output file : " << fn_out <<  ".inf" << endl;
-    cout << "Output space dimension = " << dim << endl;
+    std::cout << "Parameters used: " << std::endl;
+    std::cout << "Input data file : " << fn_in << std::endl;
+    std::cout  << "Output file : " << fn_out <<  ".sam" << std::endl;
+    std::cout << "Algorithm information output file : " << fn_out <<  ".inf" << std::endl;
+    std::cout << "Output space dimension = " << dim << std::endl;
     if (norm)
-        cout << "Input data normalized" << endl;
+        std::cout << "Input data normalized" << std::endl;
     else
-        cout << "Input data not normalized" << endl;
-    cout << "Total number of iterations = " << iter << endl << endl;
+        std::cout << "Input data not normalized" << std::endl;
+    std::cout << "Total number of iterations = " << iter << std::endl << std::endl;
 
     if (norm)
     {
-        cout << "Normalizing....." << endl;
+        std::cout << "Normalizing....." << std::endl;
         in.normalize();        // Normalize input data
     }
     Sammon::Out out(in.theItems[0].size()); // create output data set
@@ -167,31 +167,31 @@ int main(int argc, char** argv)
     sammon.setListener(&myListener); // Set Listener
     sammon(in, out);   // do mapping
 
-    cout << "Saving mapped data in " << fn_out << ".sam....." << endl;
+    std::cout << "Saving mapped data in " << fn_out << ".sam....." << std::endl;
 
-    tmpN = fn_out.c_str() + (string) ".sam";
-    ofstream outStream(tmpN.c_str());
+    tmpN = fn_out.c_str() + (std::string) ".sam";
+    std::ofstream outStream(tmpN.c_str());
     outStream << out;
     outStream.flush();
     xmippFeature stress = sammon.getStress();
-    cout << "Sammon stress (Distance error) : " << stress << endl;
+    std::cout << "Sammon stress (Distance error) : " << stress << std::endl;
 
-    cout << "Saving algorithm information as " << fn_out << ".inf ....." << endl;
-    tmpN = fn_out.c_str() + (string) ".inf";
-    ofstream infS(tmpN.c_str());
-    infS << "Sammon algorithm" << endl << endl;
-    infS << "Input data file : " << fn_in << endl;
-    infS << "Output file : " << fn_out <<  ".cod" << endl;
-    infS << "Algorithm information output file : " << fn_out <<  ".inf" << endl;
-    infS << "Number of feature vectors: " << in.size() << endl;
-    infS << "Number of variables: " << in.theItems[0].size() << endl;
-    infS << "Output space dimension = " << dim << endl;
+    std::cout << "Saving algorithm information as " << fn_out << ".inf ....." << std::endl;
+    tmpN = fn_out.c_str() + (std::string) ".inf";
+    std::ofstream infS(tmpN.c_str());
+    infS << "Sammon algorithm" << std::endl << std::endl;
+    infS << "Input data file : " << fn_in << std::endl;
+    infS << "Output file : " << fn_out <<  ".cod" << std::endl;
+    infS << "Algorithm information output file : " << fn_out <<  ".inf" << std::endl;
+    infS << "Number of feature vectors: " << in.size() << std::endl;
+    infS << "Number of variables: " << in.theItems[0].size() << std::endl;
+    infS << "Output space dimension = " << dim << std::endl;
     if (norm)
-        infS << "Input data normalized" << endl;
+        infS << "Input data normalized" << std::endl;
     else
-        infS << "Input data not normalized" << endl;
-    infS << "Total number of iterations = " << iter << endl;
-    infS << "Sammon stress (mapping error) : " <<  stress << endl;
+        infS << "Input data not normalized" << std::endl;
+    infS << "Total number of iterations = " << iter << std::endl;
+    infS << "Sammon stress (mapping error) : " <<  stress << std::endl;
     infS.flush();
 
 

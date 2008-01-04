@@ -76,17 +76,17 @@ int main(int argc, char **argv)
         // get volume dimensions ---------------------------------------------------
         if (Is_ImageXmipp(fn_input))
         {
-            cout << "\nBy the moment I only process volumes" << endl;
+            std::cout << "\nBy the moment I only process volumes" << std::endl;
             exit(1);
         }
         else if (Is_VolumeXmipp(fn_input))
         {
-            cout << "\n Reading file: " << fn_input << endl;
+            std::cout << "\n Reading file: " << fn_input << std::endl;
             volume_in.read(fn_input);
         }
         else
         {
-            cout << "\n Can not read file: " << fn_input << endl;
+            std::cout << "\n Can not read file: " << fn_input << std::endl;
         }
 
         /* Checking out the value of gamma. */
@@ -121,7 +121,7 @@ int main(int argc, char **argv)
 
         // output volume
         VOLMATRIX(volume_out).resize(maxz - minz + 1, ny, newnx);
-        cout << " Skewing file with gama= " << gamma << endl;
+        std::cout << " Skewing file with gama= " << gamma << std::endl;
 
         for (z = minz;z <= (maxz); z++)
         {
@@ -183,14 +183,14 @@ int main(int argc, char **argv)
 
             }/*SkewLine*/
         }/* for z end */
-        cout << "\n Writting file: " << fn_out << " ..." << endl;
+        std::cout << "\n Writting file: " << fn_out << " ..." << std::endl;
         volume_out.write(fn_out);
-        cout << "\n End writting file: " << fn_out << " ..." << endl;
+        std::cout << "\n End writting file: " << fn_out << " ..." << std::endl;
 
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
     exit(0);
 }
@@ -198,11 +198,11 @@ int main(int argc, char **argv)
 
 void Usage(char *argv[])
 {
-    cout << "Purpose:\n";
-    cout << "    Skew (undeform) a volume\n";
+    std::cout << "Purpose:\n";
+    std::cout << "    Skew (undeform) a volume\n";
 
-    cout << "Usage:" << argv[0] << " -i filename -o filename -gamma skew_amgle_degrees -zmin Zmin -zmax Zmax" << endl << endl;
-    cout << endl;
+    std::cout << "Usage:" << argv[0] << " -i filename -o filename -gamma skew_amgle_degrees -zmin Zmin -zmax Zmax" << std::endl << std::endl;
+    std::cout << std::endl;
 
     exit(1);
 

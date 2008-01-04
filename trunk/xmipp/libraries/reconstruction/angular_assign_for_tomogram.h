@@ -42,7 +42,7 @@ public:
     double x;
     double y;
     double corr;
-    friend ostream & operator << (ostream &out, const Alignment &A)
+    friend std::ostream & operator << (std::ostream &out, const Alignment &A)
     {
         out << A.rot << "\t" << A.tilt << "\t" << A.psi << "\t" << A.x
             << "\t" << A.y << "\t" << A.corr << std::endl;
@@ -88,8 +88,8 @@ public:
     bool onlyY;
 public:
     VolumeXmipp V;
-    vector<Alignment> list_of_assigned;
-    vector<FileName>  image_name;
+    std::vector<Alignment> list_of_assigned;
+    std::vector<FileName>  image_name;
 public:
     /// Empty constructor
     Prog_angular_predict_tomography_prm();

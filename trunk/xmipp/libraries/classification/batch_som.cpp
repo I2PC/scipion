@@ -34,7 +34,7 @@
  * Construct a BatchSOM from the code vectors in a stream
  * Parameter: _is  The stream
  */
-xmippBatchSOM::xmippBatchSOM(istream& _is): xmippSOM(_is)
+xmippBatchSOM::xmippBatchSOM(std::istream& _is): xmippSOM(_is)
 {
     readSelf(_is);
 };
@@ -54,12 +54,12 @@ void xmippBatchSOM::train(xmippMap& _som, const xmippCTVectors& _ts) const
 
     int verbosity = listener->getVerbosity();
     if (verbosity)
-        listener->OnReportOperation((string) "Batch Training Kohonen SOM....\n");
+        listener->OnReportOperation((std::string) "Batch Training Kohonen SOM....\n");
     if (verbosity == 1 || verbosity == 3)
         listener->OnInitOperation(somNSteps);
 
     SomIn aveVector(_som.theItems[0].size());
-    vector<unsigned> tmpVector;
+    std::vector<unsigned> tmpVector;
 
     while (t < somNSteps)
     {
@@ -71,8 +71,8 @@ void xmippBatchSOM::train(xmippMap& _som, const xmippCTVectors& _ts) const
                 aveVector[a] = 0.;
             long total = 0;
             // Collects a list of the input vectors assigned to the neighborhood
-            vector<unsigned> neig = _som.neighborhood(_som.indexToPos(it), ceil(somRadius(t, somNSteps)));
-            for (vector<unsigned>::iterator itt = neig.begin();itt < neig.end();itt++)
+            std::vector<unsigned> neig = _som.neighborhood(_som.indexToPos(it), ceil(somRadius(t, somNSteps)));
+            for (std::vector<unsigned>::iterator itt = neig.begin();itt < neig.end();itt++)
             {
                 tmpVector =  _som.classifAt(*itt);
                 for (unsigned j = 0 ; j < tmpVector.size() ; j++)
@@ -98,7 +98,7 @@ void xmippBatchSOM::train(xmippMap& _som, const xmippCTVectors& _ts) const
         {
             char s[100];
             sprintf(s, "Iteration %d of %d.\n", t + 1, somNSteps);
-            listener->OnReportOperation((string) s);
+            listener->OnReportOperation((std::string) s);
         }
         t++;
 

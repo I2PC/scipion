@@ -40,8 +40,8 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cerr << XE;
-        cerr << "Usage: CTFViewer\n"
+        std::cerr << XE;
+        std::cerr << "Usage: CTFViewer\n"
         << "   [-i <CTF file>] : The file is assumed to be of kind .ctfparam\n";
         exit(1);
     }
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cerr << XE;
+        std::cerr << XE;
         exit(1);
     }
     return 0;

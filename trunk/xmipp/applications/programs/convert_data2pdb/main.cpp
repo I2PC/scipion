@@ -48,30 +48,30 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error)
     {
-        cout << "Usage:" << endl;
-        cout << "-iname       : Input file name (data file)" << endl;
-        cout << "-oname       : Output file name (PDB File)" << endl;
-        cout << "-vsize       : Voxel size in Angstrom (Default: 1)" << endl;
-        cout << "-offX        : X offset (default = 0)" << endl;
-        cout << "-offY        : Y offset (default X)" << endl;
-        cout << "-offZ        : Z offset (default X)" << endl;
+        std::cout << "Usage:" << std::endl;
+        std::cout << "-iname       : Input file name (data file)" << std::endl;
+        std::cout << "-oname       : Output file name (PDB File)" << std::endl;
+        std::cout << "-vsize       : Voxel size in Angstrom (Default: 1)" << std::endl;
+        std::cout << "-offX        : X offset (default = 0)" << std::endl;
+        std::cout << "-offY        : Y offset (default X)" << std::endl;
+        std::cout << "-offZ        : Z offset (default X)" << std::endl;
         exit(1);
     }
 
-    cout << endl << "Given parameters are: " << endl;
-    cout << "iname = " << iname << endl;
-    cout << "oname = " << oname << endl;
-    cout << "vsize = " << vsize << endl;
-    cout << "offX  = " << offX << endl;
-    cout << "offY  = " << offY << endl;
-    cout << "offZ  = " << offZ << endl;
+    std::cout << std::endl << "Given parameters are: " << std::endl;
+    std::cout << "iname = " << iname << std::endl;
+    std::cout << "oname = " << oname << std::endl;
+    std::cout << "vsize = " << vsize << std::endl;
+    std::cout << "offX  = " << offX << std::endl;
+    std::cout << "offY  = " << offY << std::endl;
+    std::cout << "offZ  = " << offZ << std::endl;
 
 
-    cout << endl << "Reading input file...." << endl;
-    ifstream iStream(iname);
+    std::cout << std::endl << "Reading input file...." << std::endl;
+    std::ifstream iStream(iname);
     if (!iStream)
     {
-        cerr << argv[0] << ": can't open file " << iname << endl;
+        std::cerr << argv[0] << ": can't open file " << iname << std::endl;
         exit(EXIT_FAILURE);
     }
     xmippCTVectors ts(0, false);
@@ -81,17 +81,17 @@ int main(int argc, char **argv)
     fout = fopen(oname, "w");
     if (fout == NULL)
     {
-        cerr << argv[0] << ": can't open file " << oname << endl;
+        std::cerr << argv[0] << ": can't open file " << oname << std::endl;
         exit(EXIT_FAILURE);
     }
 
-    cout << "Converting to PDB...." << endl;
+    std::cout << "Converting to PDB...." << std::endl;
     for (int i = 0; i < ts.size(); i++)
         fprintf(fout, "ATOM  %5d XMIP XMIP    1 %11.3f%8.3f%8.3f %5.2f  0.00      XMIP\n", i + 1, (ts.theItems[i][0] + offX)*vsize, (ts.theItems[i][1] + offY)*vsize, (ts.theItems[i][2] + offZ)*vsize);
 
     fclose(fout);      // close output file
 
-    cout << "Done!" << endl << endl;
+    std::cout << "Done!" << std::endl << std::endl;
     exit(0);
 }
 

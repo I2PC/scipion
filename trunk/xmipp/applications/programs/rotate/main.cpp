@@ -84,23 +84,23 @@ public:
     {
         Prog_parameters::show();
         if (Euler_mode)
-            cout << "Euler angles (rot, tilt, psi): " << rot << " " << tilt
-            << " " << psi << endl;
+            std::cout << "Euler angles (rot, tilt, psi): " << rot << " " << tilt
+            << " " << psi << std::endl;
         else if (Align_mode)
-            cout << "Aligning " << axis.transpose() << " with Z\n";
+            std::cout << "Aligning " << axis.transpose() << " with Z\n";
         else if (Axis_mode)
-            cout << "Rotating " << ang << " degrees around " << axis.transpose()
-		 << endl;
+            std::cout << "Rotating " << ang << " degrees around " << axis.transpose()
+		 << std::endl;
        if (!wrap)
-	   cout << "Do not wrap."<<endl;
+	   std::cout << "Do not wrap."<<std::endl;
        if (gridding)
-	   cout << "Use reverse gridding for interpolation."<<endl;
+	   std::cout << "Use reverse gridding for interpolation."<<std::endl;
     }
 
     void usage()
     {
         Prog_parameters::usage();
-        cerr << "  [-euler <rot> <tilt> <psi>        : Rotate with these Euler angles\n"
+        std::cerr << "  [-euler <rot> <tilt> <psi>        : Rotate with these Euler angles\n"
         << "  [-alignWithZ \"[<x>,<y>,<z>]\"]     : Align (x,y,z) with Z\n"
         << "                                      Notice that brackets for the\n"
         << "                                      vector must be written and do not\n"

@@ -107,7 +107,7 @@ main(int argc, char** argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage(argv);
     }
 
@@ -115,55 +115,55 @@ main(int argc, char** argv)
 
     if (c <= 1)
     {
-        cerr << "Number of clusters c = " << c << " must be > 1" << endl;
+        std::cerr << "Number of clusters c = " << c << " must be > 1" << std::endl;
         exit(EXIT_FAILURE);
     }
 
     if (m <= 1)
     {
-        cerr << "Fuzzy constant m = " << m << " must be > 1" << endl;
+        std::cerr << "Fuzzy constant m = " << m << " must be > 1" << std::endl;
         exit(EXIT_FAILURE);
     }
 
     if (iter < 1)
     {
-        cerr << argv[0] << ": invalid value for iter (must be > 1): " << iter << endl;
+        std::cerr << argv[0] << ": invalid value for iter (must be > 1): " << iter << std::endl;
         exit(EXIT_FAILURE);
     }
 
     if (verb < 0 || verb > 2)
     {
-        cerr << argv[0] << ": invalid value for verbosity (must be between 0 and 2): " << verb << endl;
+        std::cerr << argv[0] << ": invalid value for verbosity (must be between 0 and 2): " << verb << std::endl;
         exit(EXIT_FAILURE);
     }
 
 
     /* Shows parameters ===================================================== */
 
-    cout << endl << "Parameters used: " << endl;
-    cout << "Input data file : " << fn_in << endl;
-    cout << "Output file name : " << fn_out << endl;
+    std::cout << std::endl << "Parameters used: " << std::endl;
+    std::cout << "Input data file : " << fn_in << std::endl;
+    std::cout << "Output file name : " << fn_out << std::endl;
     if (cb_in != "")
-        cout << "Input cluster centers file name : " << cb_in << endl;
-    cout << "Number of clusters = " << c << endl;
-    cout << "Fuzzy constant = " << m << endl;
-    cout << "Total number of iterations = " << iter << endl;
-    cout << "Stopping criteria (eps) = " << eps << endl;
-    cout << "verbosity level = " << verb << endl;
+        std::cout << "Input cluster centers file name : " << cb_in << std::endl;
+    std::cout << "Number of clusters = " << c << std::endl;
+    std::cout << "Fuzzy constant = " << m << std::endl;
+    std::cout << "Total number of iterations = " << iter << std::endl;
+    std::cout << "Stopping criteria (eps) = " << eps << std::endl;
+    std::cout << "verbosity level = " << verb << std::endl;
     if (norm)
-        cout << "Normalize input data" << endl;
+        std::cout << "Normalize input data" << std::endl;
     else
-        cout << "Do not normalize input data " << endl;
+        std::cout << "Do not normalize input data " << std::endl;
 
 
     /* Open training vector ================================================= */
 
-    cout << endl << "Reading file " << fn_in << "....." << endl;
+    std::cout << std::endl << "Reading file " << fn_in << "....." << std::endl;
 
-    ifstream inStream(fn_in.c_str());
+    std::ifstream inStream(fn_in.c_str());
     if (!inStream)
     {
-        cerr << argv[0] << ": can't open file " << fn_in << endl;
+        std::cerr << argv[0] << ": can't open file " << fn_in << std::endl;
         exit(EXIT_FAILURE);
     }
 
@@ -172,15 +172,15 @@ main(int argc, char** argv)
     {
         inStream >> ts;
     }
-    catch (exception& e)
+    catch (std::exception& e)
     {
-        cerr << argv[0] << ": can't read file " << fn_in  << " because " << e.what() << endl;
+        std::cerr << argv[0] << ": can't read file " << fn_in  << " because " << e.what() << std::endl;
         exit(EXIT_FAILURE);
     }
 
     if (c >= ts.size())
     {
-        cerr << "Number of clusters c = " << c << " must be < " << ts.size() << endl;
+        std::cerr << "Number of clusters c = " << c << " must be < " << ts.size() << std::endl;
         exit(EXIT_FAILURE);
     }
 
@@ -192,7 +192,7 @@ main(int argc, char** argv)
     {
         if (norm)
         {
-            cout << "Normalizing....." << endl;
+            std::cout << "Normalizing....." << std::endl;
             ts.normalize();        // Normalize input data
         }
 
@@ -201,11 +201,11 @@ main(int argc, char** argv)
         xmippFCB* thisFCB;
         if (cb_in != "")
         {
-            cout << "Reading fuzzy cluster centers file " << cb_in << "....." << endl;
-            ifstream codeStream(cb_in.c_str());
+            std::cout << "Reading fuzzy cluster centers file " << cb_in << "....." << std::endl;
+            std::ifstream codeStream(cb_in.c_str());
             if (!codeStream)
             {
-                cerr << argv[0] << ": can't open file " << cb_in << endl;
+                std::cerr << argv[0] << ": can't open file " << cb_in << std::endl;
                 exit(EXIT_FAILURE);
             }
             thisFCB = new xmippFCB(codeStream, ts.size()); // Reads FuzzyCodeBook from file
@@ -221,14 +221,14 @@ main(int argc, char** argv)
 
         // Test algorithm
         xmippFeature qerror = thisFCmeans.test(*thisFCB, ts);
-        cout << "Quantization error : " <<  qerror << endl;
+        std::cout << "Quantization error : " <<  qerror << std::endl;
 
         // Classifying
-        cout << "Classifying....." << endl;
+        std::cout << "Classifying....." << std::endl;
         thisFCB->classify(&ts);
 
         // Calibrating
-        cout << "Calibrating....." << endl;
+        std::cout << "Calibrating....." << std::endl;
         thisFCB->fuzzyCalibrate(ts);
 
         // Shows Validity functionals (If applicable)
@@ -237,102 +237,102 @@ main(int argc, char** argv)
         xmippFeature H = thisFCmeans.H(*thisFCB);
         xmippFeature NFI = thisFCmeans.NFI(*thisFCB);
         xmippFeature S = thisFCmeans.S(*thisFCB, ts);
-        cout << endl << "Validity Functionals : " << endl;
-        cout << "Partition coefficient (max) (F) : " << F << endl;
-        cout << "Partition entropy (min) (H) : " << H << endl;
-        cout << "Non-Fuzzy Index (max) (NFI) : " << NFI << endl;
-        cout << "Compactness and Separation index (min) (S) : " << S << endl;
-        cout << endl;
+        std::cout << std::endl << "Validity Functionals : " << std::endl;
+        std::cout << "Partition coefficient (max) (F) : " << F << std::endl;
+        std::cout << "Partition entropy (min) (H) : " << H << std::endl;
+        std::cout << "Non-Fuzzy Index (max) (NFI) : " << NFI << std::endl;
+        std::cout << "Compactness and Separation index (min) (S) : " << S << std::endl;
+        std::cout << std::endl;
 
         // assign data to clusters according to fuzzy threshold
         if (saveClusters)
         {
-            cout << "Saving clusters assigments ....." << endl;
+            std::cout << "Saving clusters assigments ....." << std::endl;
             for (unsigned i = 0; i < thisFCB->size(); i++)
             {
-                tmpN = fn_out.c_str() + (string) "."  + integerToString(i);
-                ofstream cStream(tmpN.c_str());
+                tmpN = fn_out.c_str() + (std::string) "."  + integerToString(i);
+                std::ofstream cStream(tmpN.c_str());
                 for (int j = 0; j < thisFCB->classifAt(i).size(); j++)
-                    cStream << thisFCB->classifAt(i)[j] << endl;
+                    cStream << thisFCB->classifAt(i)[j] << std::endl;
                 cStream.flush();
             }
         }
 
         // save .his file (Histogram)
-        cout << "Saving clusters histogram file as " << fn_out << ".his ....." << endl;
-        tmpN = fn_out.c_str() + (string) ".his";
-        ofstream hisStream(tmpN.c_str());
+        std::cout << "Saving clusters histogram file as " << fn_out << ".his ....." << std::endl;
+        tmpN = fn_out.c_str() + (std::string) ".his";
+        std::ofstream hisStream(tmpN.c_str());
         thisFCB->printHistogram(hisStream);
         hisStream.flush();
 
         // save .err file (Average Quantization Error)
-        cout << "Saving cluster centers average quantization error file as " << fn_out << ".err ....." << endl;
-        tmpN = fn_out.c_str() + (string) ".err";
-        ofstream errStream(tmpN.c_str());
+        std::cout << "Saving cluster centers average quantization error file as " << fn_out << ".err ....." << std::endl;
+        tmpN = fn_out.c_str() + (std::string) ".err";
+        std::ofstream errStream(tmpN.c_str());
         thisFCB->printQuantError(errStream);
         errStream.flush();
 
         // save .vs file to be compatible with SOM_PAK
-        cout << "Saving visual file as " << fn_out << ".vs ....." << endl;
-        tmpN = fn_out.c_str() + (string) ".vs";
-        ofstream vsStream(tmpN.c_str());
-        vsStream << ts.theItems[0].size() << " " << "FCMeans" << " " << thisFCB->membClusters() << " 1" << " gaussian" << endl;
+        std::cout << "Saving visual file as " << fn_out << ".vs ....." << std::endl;
+        tmpN = fn_out.c_str() + (std::string) ".vs";
+        std::ofstream vsStream(tmpN.c_str());
+        vsStream << ts.theItems[0].size() << " " << "FCMeans" << " " << thisFCB->membClusters() << " 1" << " gaussian" << std::endl;
         for (int i = 0; i < ts.size(); i++)
         {
             int j = thisFCB->fuzzyWinner(i);
-            vsStream << j << " 0 " << thisFCB->memb[i][j] << " " << ts.theTargets[i] << endl;
+            vsStream << j << " 0 " << thisFCB->memb[i][j] << " " << ts.theTargets[i] << std::endl;
         }
         vsStream.flush();
 
-        cout << "Saving algorithm information as " << fn_out << ".inf ....." << endl;
-        tmpN = fn_out.c_str() + (string) ".inf";
-        ofstream infS(tmpN.c_str());
-        infS << "Fuzzy c-Means Clustering Algorithm (FCMeans)" << endl << endl;
-        infS << "Input data file : " << fn_in << endl;
+        std::cout << "Saving algorithm information as " << fn_out << ".inf ....." << std::endl;
+        tmpN = fn_out.c_str() + (std::string) ".inf";
+        std::ofstream infS(tmpN.c_str());
+        infS << "Fuzzy c-Means Clustering Algorithm (FCMeans)" << std::endl << std::endl;
+        infS << "Input data file : " << fn_in << std::endl;
         if (cb_in != "")
-            infS << "Input cluster centers file : " << cb_in << endl;
-        infS << "Cluster centers output file : " << fn_out <<  ".cod" << endl;
+            infS << "Input cluster centers file : " << cb_in << std::endl;
+        infS << "Cluster centers output file : " << fn_out <<  ".cod" << std::endl;
         if (cb_in != "")
-            infS << "Input cluster centers file name : " << cb_in << endl;
-        infS << "Algorithm information output file : " << fn_out <<  ".inf" << endl;
-        infS << "Number of feature vectors: " << ts.size() << endl;
-        infS << "Number of variables: " << ts.theItems[0].size() << endl;
-        infS << "Number of clusters: " << thisFCB->membClusters() << endl;
+            infS << "Input cluster centers file name : " << cb_in << std::endl;
+        infS << "Algorithm information output file : " << fn_out <<  ".inf" << std::endl;
+        infS << "Number of feature vectors: " << ts.size() << std::endl;
+        infS << "Number of variables: " << ts.theItems[0].size() << std::endl;
+        infS << "Number of clusters: " << thisFCB->membClusters() << std::endl;
         if (norm)
-            infS << "Input data normalized" << endl;
+            infS << "Input data normalized" << std::endl;
         else
-            infS << "Input data not normalized" << endl;
-        infS << "Fuzzy constant (m) = " << m << endl;
-        infS << "Total number of iterations = " << iter << endl;
-        infS << "Stopping criteria (eps) = " << eps << endl;
-        infS << "Quantization error : " <<  qerror << endl;
-        infS << endl << "Validity Functionals : " << endl;
-        infS << "Partition coefficient (max) (F) : " << F << endl;
-        infS << "Partition entropy (min) (H) : " << H << endl;
-        infS << "Non-Fuzzy Index (max) (NFI) : " << NFI << endl;
-        infS << "Compactness and Separation index (min) (S) : " << S << endl;
+            infS << "Input data not normalized" << std::endl;
+        infS << "Fuzzy constant (m) = " << m << std::endl;
+        infS << "Total number of iterations = " << iter << std::endl;
+        infS << "Stopping criteria (eps) = " << eps << std::endl;
+        infS << "Quantization error : " <<  qerror << std::endl;
+        infS << std::endl << "Validity Functionals : " << std::endl;
+        infS << "Partition coefficient (max) (F) : " << F << std::endl;
+        infS << "Partition entropy (min) (H) : " << H << std::endl;
+        infS << "Non-Fuzzy Index (max) (NFI) : " << NFI << std::endl;
+        infS << "Compactness and Separation index (min) (S) : " << S << std::endl;
         infS.flush();
 
         if (norm)
         {
-            cout << "Denormalizing cluster centers....." << endl;
+            std::cout << "Denormalizing cluster centers....." << std::endl;
             thisFCB->unNormalize(ts.getNormalizationInfo()); // de-normalize cluster centers
         }
 
         // Save codevectors
-        cout << "Saving cluster centers in " << fn_out << ".cod....." << endl;
-        tmpN = fn_out.c_str() + (string) ".cod";
-        ofstream outStream(tmpN.c_str());
-        outStream << ts.theItems[0].size() << " " << thisFCB->size() << endl;
+        std::cout << "Saving cluster centers in " << fn_out << ".cod....." << std::endl;
+        tmpN = fn_out.c_str() + (std::string) ".cod";
+        std::ofstream outStream(tmpN.c_str());
+        outStream << ts.theItems[0].size() << " " << thisFCB->size() << std::endl;
         outStream << *thisFCB;
         outStream.flush();
 
         delete thisFCB;
 
     }
-    catch (const exception& e)
+    catch (const std::exception& e)
     {
-        cout << e.what() << endl;
+        std::cout << e.what() << std::endl;
     }
     return 0;
 }

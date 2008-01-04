@@ -67,7 +67,8 @@ public:
     void read(int argc, char **argv);
 
     /// Show
-    friend ostream & operator << (ostream &out, const Prog_segment_prm &prm);
+    friend std::ostream & operator << (std::ostream &out,
+        const Prog_segment_prm &prm);
 
     /// Usage
     void usage() const;

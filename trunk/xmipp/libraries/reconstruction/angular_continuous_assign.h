@@ -70,19 +70,19 @@ public:
     // Number of images processed so far
     int              current_image;
     // Vector of image names
-    vector<string> image_name;
+    std::vector<std::string> image_name;
     // Vector of predicted rotational angles
-    vector<double>   predicted_rot;
+    std::vector<double>   predicted_rot;
     // Vector of predicted tilting angles
-    vector<double>   predicted_tilt;
+    std::vector<double>   predicted_tilt;
     // Vector of predicted psi angles
-    vector<double>   predicted_psi;
+    std::vector<double>   predicted_psi;
     // Vector of predicted shiftX
-    vector<double>   predicted_shiftX;
+    std::vector<double>   predicted_shiftX;
     // Vector of predicted shiftY
-    vector<double>   predicted_shiftY;
+    std::vector<double>   predicted_shiftY;
     // Vector of predicted corr
-    vector<double>   predicted_cost;
+    std::vector<double>   predicted_cost;
 public:
     /// Empty constructor
     Prog_angular_predict_continuous_prm();

@@ -40,16 +40,16 @@
 // APH =====================================================================
 void APHFile3D::read_from_prepmklcf(const FileName &fn)
 {
-    ifstream  fh_aph;
-    int       line_no = 1;
-    int       hmax = 0, kmax = 0, lmax = 0, hmin = 0, kmin = 0, lmin = 0;
-    string    line;
-    int       h, k, l;
+    std::ifstream  fh_aph;
+    int            line_no = 1;
+    int            hmax = 0, kmax = 0, lmax = 0, hmin = 0, kmin = 0, lmin = 0;
+    std::string    line;
+    int            h, k, l;
 
     // Empties current APH File
     clear();
     // Open file
-    fh_aph.open(fn.c_str(), ios::in);
+    fh_aph.open(fn.c_str(), std::ios::in);
     if (!fh_aph)
         REPORT_ERROR(1601, "aphFile::read: File " + fn + " not found");
 
@@ -80,13 +80,13 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
 
 //#define DEBUG_read
 #ifdef DEBUG_read
-    cout << "Reduce_phase_accuracy: " << Reduce_phase_accuracy << endl;
-    cout << "a: " << a << endl;
-    cout << "b: " << b << endl;
-    cout << "gamma: " << gamma << endl;
-    cout << "c: " << c << endl;
-    cout << "resolution: " << resolution << endl;
-    cout << "Amp_Scale: " << Amp_Scale << endl;
+    std::cout << "Reduce_phase_accuracy: " << Reduce_phase_accuracy << std::endl;
+    std::cout << "a: " << a << std::endl;
+    std::cout << "b: " << b << std::endl;
+    std::cout << "gamma: " << gamma << std::endl;
+    std::cout << "c: " << c << std::endl;
+    std::cout << "resolution: " << resolution << std::endl;
+    std::cout << "Amp_Scale: " << Amp_Scale << std::endl;
 #endif
 #undef DEBUG_read
 
@@ -96,13 +96,13 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
         try
         {
             getline(fh_aph, line);
-            if (string::npos !=
+            if (std::string::npos !=
                 line.find("   H   K   L      A      P     FOM*100         REJECTS"))
                 break;
         }
         catch (Xmipp_error)
         {
-            cout << "3Daph File reading error an error\n";
+            std::cout << "3Daph File reading error an error\n";
         }
     }/* while */
 
@@ -114,9 +114,9 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
         try
         {
             getline(fh_aph, line);
-            if (string::npos != line.find("                                 "))
+            if (std::string::npos != line.find("                                 "))
                 continue;
-            else if (string::npos != line.find("MKLCF FILE COMPLETED"))
+            else if (std::string::npos != line.find("MKLCF FILE COMPLETED"))
                 break;
             h = textToInteger(firstToken(line));
             k = textToInteger(nextToken());
@@ -130,7 +130,7 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
         }
         catch (Xmipp_error)
         {
-            cout << "aph File: Line " << line_no << " is skipped due to an error\n";
+            std::cout << "aph File: Line " << line_no << " is skipped due to an error\n";
         }
         line_no++;
     }/* while */
@@ -141,7 +141,7 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
         try
         {
             getline(fh_aph, line);
-            if (string::npos !=
+            if (std::string::npos !=
                 line.find(" * Space Group ="))
             {
                 Space_Group = textToInteger(line.c_str() + 16);
@@ -150,7 +150,7 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
         }
         catch (Xmipp_error)
         {
-            cout << "3Daph File reading error an error\n";
+            std::cout << "3Daph File reading error an error\n";
         }
     }/* while */
 
@@ -159,8 +159,8 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
 
 #define DEBUG_max
 #ifdef DEBUG_max
-    cout << "hmax: " << hmax << " kmax: " << kmax << " lmax: " << lmax << endl;
-    cout << "hmin: " << hmin << " kmin: " << kmin << " lmin: " << lmin << endl;
+    std::cout << "hmax: " << hmax << " kmax: " << kmax << " lmax: " << lmax << std::endl;
+    std::cout << "hmin: " << hmin << " kmin: " << kmin << " lmin: " << lmin << std::endl;
 #endif
 #undef DEBUG_max
 
@@ -180,7 +180,7 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
 
     // Read each line (again) and copy values to the matrices
     fh_aph.close();
-    fh_aph.open(fn.c_str(), ios::in);
+    fh_aph.open(fn.c_str(), std::ios::in);
     line_no = 1;
 
     // look for the begining of the data
@@ -189,13 +189,13 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
         try
         {
             getline(fh_aph, line);
-            if (string::npos !=
+            if (std::string::npos !=
                 line.find("   H   K   L      A      P     FOM*100         REJECTS"))
                 break;
         }
         catch (Xmipp_error)
         {
-            cout << "3Daph File reading error an error\n";
+            std::cout << "3Daph File reading error an error\n";
         }
     }/* while */
 
@@ -204,9 +204,9 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
         try
         {
             getline(fh_aph, line);
-            if (string::npos != line.find("                                 "))
+            if (std::string::npos != line.find("                                 "))
                 continue;
-            else if (string::npos != line.find("MKLCF FILE COMPLETED"))
+            else if (std::string::npos != line.find("MKLCF FILE COMPLETED"))
                 break;
             h     = textToInteger(firstToken(line));
             k     = textToInteger(nextToken());
@@ -221,8 +221,8 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
             case(90)://P4212
                             if (h > k || h < 0 || l < 0)
                     {
-                        cerr << "\nHORROR reflection outside the assymetric unit\n"
-                        << "(h,k,l)=" << h << " " << k << " " << l << endl;
+                        std::cerr << "\nHORROR reflection outside the assymetric unit\n"
+                        << "(h,k,l)=" << h << " " << k << " " << l << std::endl;
                         exit(1);
                         break;
                     }
@@ -230,8 +230,8 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
         }
         catch (Xmipp_error XE)
         {
-            cout << XE;
-            cout << "aph File: Line " << line_no << " is skipped due to an error\n";
+            std::cout << XE;
+            std::cout << "aph File: Line " << line_no << " is skipped due to an error\n";
         }
         line_no++;
     }/* while */

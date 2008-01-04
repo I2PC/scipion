@@ -47,7 +47,7 @@
 #define maT  Matrix2D< T >
 #define maT1 Matrix2D< T1 >
 #undef  maTC
-#define maTC Matrix2D< complex< double > >
+#define maTC Matrix2D< std::complex< double > >
 
 #include "multidim_friends.inc"
 
@@ -187,7 +187,7 @@ int bestPrecision(float F, int _width);
  * @code
  * FOR_ALL_ELEMENTS_IN_MATRIX2D(m)
  * {
- *     cout << m(i, j) << " ";
+ *     std::cout << m(i, j) << " ";
  * }
  * @endcode
  */
@@ -214,7 +214,7 @@ int bestPrecision(float F, int _width);
  *
  * FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
  * {
- *     cout << v(r) << " ";
+ *     std::cout << v(r) << " ";
  * }
  * @endcode
  */
@@ -263,7 +263,7 @@ int bestPrecision(float F, int _width);
  * @code
  * FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(m)
  * {
- *     cout << DIRECT_MAT_ELEM(m, i, j) << " ";
+ *     std::cout << DIRECT_MAT_ELEM(m, i, j) << " ";
  * }
  * @endcode
  */
@@ -313,7 +313,7 @@ int bestPrecision(float F, int _width);
  * This macro gives you access to the array (T*).
  *
  * @code
- * cout << "This is an int *" << MAT_ARRAY(m) << endl;
+ * std::cout << "This is an int *" << MAT_ARRAY(m) << std::endl;
  * @endcode
  */
 #define MAT_ARRAY(m) MULTIDIM_ARRAY(m)
@@ -1402,7 +1402,7 @@ public:
      * inside matrix, the numbering of the rows is also logical not physical.
      *
      * @code
-     * vector< double > v;
+     * std::vector< double > v;
      * m.getRow(-2, v);
      * @endcode
      */
@@ -1445,7 +1445,7 @@ public:
      * inside matrix, the numbering of the column is also logical not physical.
      *
      * @code
-     * vector< double > v;
+     * std::vector< double > v;
      * m.getCol(-1, v);
      * @endcode
      */
@@ -1569,7 +1569,7 @@ public:
 
             if (!op1.sameShape(op2))
                 REPORT_ERROR(1007,
-                             (string) "Array_by_array: different shapes (" +
+                             (std::string) "Array_by_array: different shapes (" +
                              operation + ")");
 
             result.resize(op1);
@@ -2665,7 +2665,7 @@ public:
      *
      * @code
      * if (m.isVector())
-     *     cout << "The matrix is like a vector\n";
+     *     std::cout << "The matrix is like a vector\n";
      * @endcode
      */
     bool isVector() const
@@ -2678,7 +2678,7 @@ public:
      *
      * @code
      * if (m.isSquare())
-     *     cout << "The matrix is square\n";
+     *     std::cout << "The matrix is square\n";
      * @endcode
      */
     bool isSquare() const
@@ -2691,7 +2691,7 @@ public:
      *
      * @code
      * if (m.isSingular())
-     *     cout << "The matrix is singular\n";
+     *     std::cout << "The matrix is singular\n";
      * @endcode
      */
     bool isSingular() const
@@ -2704,7 +2704,7 @@ public:
      *
      * @code
      * if (m.isDiagonal())
-     *     cout << "The matrix is diagonal\n";
+     *     std::cout << "The matrix is diagonal\n";
      * @endcode
      */
     bool isDiagonal() const
@@ -2744,7 +2744,7 @@ public:
      *
      * @code
      * if (m.isSymmetric())
-     *     cout << "The matrix is symmetric\n";
+     *     std::cout << "The matrix is symmetric\n";
      * @endcode
      */
     bool isSymmetric() const
@@ -2766,7 +2766,7 @@ public:
      *
      * @code
      * if (m.isSkewSymmetric())
-     *     cout << "The matrix is skewsymmetric\n";
+     *     std::cout << "The matrix is skewsymmetric\n";
      * @endcode
      */
     bool isSkewSymmetric() const
@@ -2788,7 +2788,7 @@ public:
      *
      * @code
      * if (m.isUpperTriangular())
-     *     cout << "The matrix is upper triangular\n";
+     *     std::cout << "The matrix is upper triangular\n";
      * @endcode
      */
     bool isUpperTriangular() const
@@ -2807,7 +2807,7 @@ public:
      *
      * @code
      * if (m.isLowerTriangular())
-     *     cout << "The matrix is lower triangular\n";
+     *     std::cout << "The matrix is lower triangular\n";
      * @endcode
      */
     bool isLowerTriangular() const
@@ -2828,7 +2828,7 @@ public:
      *
      * @code
      * if (m.isIdentity())
-     *     cout << "The matrix is identity\n";
+     *     std::cout << "The matrix is identity\n";
      * @endcode
      */
     bool isIdentity() const
@@ -2842,7 +2842,7 @@ public:
      *
      * @code
      * if (m.isZero())
-     *     cout << "The matrix is null\n";
+     *     std::cout << "The matrix is null\n";
      * @endcode
      */
     bool isZero() const
@@ -2909,27 +2909,27 @@ public:
 
 // Specializations case for complex numbers
 template<>
-complex< double > Matrix2D< complex< double > >::interpolatedElement(
-    double x, double y, complex< double > outside_value) const;
+std::complex< double > Matrix2D< std::complex< double > >::interpolatedElement(
+    double x, double y, std::complex< double > outside_value) const;
 
 template<>
-void coreArrayByScalar< complex< double > > (const maTC& op1,
-        const complex< double >& op2, maTC& result, char operation);
+void coreArrayByScalar< std::complex< double > > (const maTC& op1,
+        const std::complex< double >& op2, maTC& result, char operation);
 
 template<>
-void coreScalarByArray< complex< double > > (const complex< double >& op1,
+void coreScalarByArray< std::complex< double > > (const std::complex< double >& op1,
         const maTC& op2, maTC& result, char operation);
 
 template<>
-void coreArrayByArray< complex< double > > (const maTC& op1, const maTC& op2,
+void coreArrayByArray< std::complex< double > > (const maTC& op1, const maTC& op2,
         maTC& result, char operation);
 
 template<>
-inline void Matrix2D< complex< double > >::produceSplineCoefficients(
+inline void Matrix2D< std::complex< double > >::produceSplineCoefficients(
     Matrix2D< double >& coeffs, int SplineDegree) const
 {
     // TODO Implement
-    cerr << "Spline coefficients of a complex matrix is not implemented\n";
+    std::cerr << "Spline coefficients of a complex matrix is not implemented\n";
 }
 
 /** @defgroup MatricesRelated Related functions
@@ -3460,7 +3460,7 @@ std::ostream& operator<<(std::ostream& ostrm, const mT& v)
         ostrm << "NULL matrix\n";
     else
     {
-        ostrm << endl;
+        ostrm << std::endl;
         double max_val = ABS(MULTIDIM_ELEM(v, 0));
 
         FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v)
@@ -3475,7 +3475,7 @@ std::ostream& operator<<(std::ostream& ostrm, const mT& v)
                 ostrm << floatToString((double) MAT_ELEM(v, i, j), 10, prec) << ' ';
             }
 
-            ostrm << endl;
+            ostrm << std::endl;
         }
     }
 
@@ -3684,11 +3684,11 @@ void applyGeometry(mT& M2, Matrix2D< double > A, const mT& M1, bool inv,
     // at the output pixel
     //#define DEBUG_APPLYGEO
 #ifdef DEBUG_APPLYGEO
-    cout << "A\n" << A << endl
-    << "(cen_x ,cen_y )=(" << cen_x  << "," << cen_y  << ")\n"
-    << "(cen_xp,cen_yp)=(" << cen_xp << "," << cen_yp << ")\n"
-    << "(min_xp,min_yp)=(" << minxp  << "," << minyp  << ")\n"
-    << "(max_xp,max_yp)=(" << maxxp  << "," << maxyp  << ")\n";
+    std::cout << "A\n" << A << std::endl
+              << "(cen_x ,cen_y )=(" << cen_x  << "," << cen_y  << ")\n"
+              << "(cen_xp,cen_yp)=(" << cen_xp << "," << cen_yp << ")\n"
+              << "(min_xp,min_yp)=(" << minxp  << "," << minyp  << ")\n"
+              << "(max_xp,max_yp)=(" << maxxp  << "," << maxyp  << ")\n";
 #endif
     //#undef DEBUG_APPLYGEO
 
@@ -3715,10 +3715,10 @@ void applyGeometry(mT& M2, Matrix2D< double > A, const mT& M1, bool inv,
             T tmp;
 
 #ifdef DEBUG_APPLYGEO
-            cout << "Computing (" << i << "," << j << ")\n";
-            cout << "   (y, x) =(" << y << "," << x << ")\n"
-            << "   before wrapping (y',x')=(" << yp << "," << xp << ") "
-            << endl;
+            std::cout << "Computing (" << i << "," << j << ")\n";
+            std::cout << "   (y, x) =(" << y << "," << x << ")\n"
+                      << "   before wrapping (y',x')=(" << yp << "," << xp << ") "
+                      << std::endl;
 #endif
             // If the point is outside the image, apply a periodic extension
             // of the image, what exits by one side enters by the other
@@ -3746,9 +3746,9 @@ void applyGeometry(mT& M2, Matrix2D< double > A, const mT& M1, bool inv,
             }
 
 #ifdef DEBUG_APPLYGEO
-            cout << "   after wrapping (y',x')=(" << yp << "," << xp << ") "
-            << endl;
-            cout << "   Interp = " << interp << endl;
+            std::cout << "   after wrapping (y',x')=(" << yp << "," << xp << ") "
+                      << std::endl;
+            std::cout << "   Interp = " << interp << std::endl;
             x++;
 #endif
 
@@ -3777,9 +3777,9 @@ void applyGeometry(mT& M2, Matrix2D< double > A, const mT& M1, bool inv,
                 }
 
 #ifdef DEBUG_APPLYGEO
-                cout << "   From (" << n1 << "," << m1 << ") and ("
-                << n2 << "," << m2 << ")\n";
-                cout << "   wx= " << wx << " wy= " << wy << endl;
+                std::cout << "   From (" << n1 << "," << m1 << ") and ("
+                          << n2 << "," << m2 << ")\n";
+                std::cout << "   wx= " << wx << " wy= " << wy << std::endl;
 #endif
 
                 // Perform interpolation
@@ -3802,8 +3802,7 @@ void applyGeometry(mT& M2, Matrix2D< double > A, const mT& M1, bool inv,
                 dMij(M2, i, j) = tmp;
 
 #ifdef DEBUG_APPYGEO
-
-                cout << "   val= " << tmp << endl;
+                std::cout << "   val= " << tmp << std::endl;
 #endif
 
             }
@@ -3897,10 +3896,10 @@ void applyGeometryBSpline(mT& M2, Matrix2D< double > A, const mT& M1,
             T tmp;
 
 #ifdef DEBUG_APPLYGEO
-            cout << "Computing (" << i << "," << j << ")\n";
-            cout << "   (y, x) =(" << y << "," << x << ")\n"
-            << "   before wrapping (y',x')=(" << yp << "," << xp << ") "
-            << endl;
+            std::cout << "Computing (" << i << "," << j << ")\n";
+            std::cout << "   (y, x) =(" << y << "," << x << ")\n"
+                      << "   before wrapping (y',x')=(" << yp << "," << xp << ") "
+                      << std::endl;
 #endif
 
             // If the point is outside the image, apply a periodic extension
@@ -3928,9 +3927,9 @@ void applyGeometryBSpline(mT& M2, Matrix2D< double > A, const mT& M1,
             }
 
 #ifdef DEBUG_APPLYGEO
-            cout << "   after wrapping (y',x')=(" << yp << "," << xp << ") "
-            << endl;
-            cout << "   Interp = " << interp << endl;
+            std::cout << "   after wrapping (y',x')=(" << yp << "," << xp << ") "
+                      << std::endl;
+            std::cout << "   Interp = " << interp << std::endl;
             x++;
 #endif
 
@@ -3940,7 +3939,7 @@ void applyGeometryBSpline(mT& M2, Matrix2D< double > A, const mT& M1,
                                      xp, yp, Splinedegree);
 
 #ifdef DEBUG_APPLYGEO
-                cout << "   val= " << dMij(M2, i, j) << endl;
+                std::cout << "   val= " << dMij(M2, i, j) << std::endl;
 #endif
 
             }
@@ -3956,9 +3955,9 @@ void applyGeometryBSpline(mT& M2, Matrix2D< double > A, const mT& M1,
 
 // TODO Document
 template<>
-inline void Matrix2D< complex< double > >::scaleToSizeBSpline(
+inline void Matrix2D< std::complex< double > >::scaleToSizeBSpline(
     int Splinedegree, int Ydim, int Xdim,
-    Matrix2D< complex< double > > & result) const
+    Matrix2D< std::complex< double > > & result) const
 {
     Matrix2D< double > re, im, scre, scim;
 
@@ -3980,27 +3979,27 @@ inline void Matrix2D< complex< double > >::scaleToSizeBSpline(
 
 // TODO Document
 template<>
-bool Matrix2D< complex< double > >::isDiagonal() const;
+bool Matrix2D< std::complex< double > >::isDiagonal() const;
 
 // TODO Document
 template<>
-bool Matrix2D< complex<double> >::isScalar() const;
+bool Matrix2D< std::complex<double> >::isScalar() const;
 
 // TODO Document
 template<>
-bool Matrix2D< complex< double > >::isSymmetric() const;
+bool Matrix2D< std::complex< double > >::isSymmetric() const;
 
 // TODO Document
 template<>
-bool Matrix2D< complex< double > >::isSkewSymmetric() const;
+bool Matrix2D< std::complex< double > >::isSkewSymmetric() const;
 
 // TODO Document
 template<>
-bool Matrix2D< complex< double > >::isUpperTriangular() const;
+bool Matrix2D< std::complex< double > >::isUpperTriangular() const;
 
 // TODO Document
 template<>
-bool Matrix2D< complex< double > >::isLowerTriangular() const;
+bool Matrix2D< std::complex< double > >::isLowerTriangular() const;
 
 // TODO Document
 template<typename T>

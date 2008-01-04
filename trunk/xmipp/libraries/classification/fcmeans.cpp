@@ -35,7 +35,7 @@
  * Parameter: _is Must have the parameters in the same order than the previous ctor.
    ****** check out this ************
  */
-/*xmippFCMeans::xmippFCMeans( istream& _is )
+/*xmippFCMeans::xmippFCMeans( std::istream& _is )
   :xmippBaseAlgo< xmippFCB >( "xmippFCMeans") {
   _is >> m;
   _is >> epsilon;
@@ -56,7 +56,7 @@ void xmippFCMeans::train(xmippFCB& _xmippDS, TS& _examples) const
 
     int verbosity = listener->getVerbosity();
     if (verbosity)
-        listener->OnReportOperation((string) "Training....\n");
+        listener->OnReportOperation((std::string) "Training....\n");
     if (verbosity == 1 || verbosity == 3)
         listener->OnInitOperation(epochs);
 
@@ -164,7 +164,7 @@ void xmippFCMeans::train(xmippFCB& _xmippDS, TS& _examples) const
         {
             char s[100];
             sprintf(s, "Iteration %d of %d. Code vectors variation: %g\n", t + 1, epochs, stopError);
-            listener->OnReportOperation((string) s);
+            listener->OnReportOperation((std::string) s);
         }
 
     } // while
@@ -190,7 +190,7 @@ double xmippFCMeans::test(const xmippFCB& _xmippDS,
     int verbosity = listener->getVerbosity();
     if (verbosity)
     {
-        listener->OnReportOperation((string) "Testing....\n");
+        listener->OnReportOperation((std::string) "Testing....\n");
         listener->OnInitOperation(_examples.size());
     }
 
@@ -224,7 +224,7 @@ double xmippFCMeans::fuzzyTest(const xmippFCB& _xmippDS,
     int verbosity = listener->getVerbosity();
     if (verbosity)
     {
-        listener->OnReportOperation((string) "Testing....\n");
+        listener->OnReportOperation((std::string) "Testing....\n");
         listener->OnInitOperation(_examples.size());
     }
 
@@ -338,14 +338,14 @@ double xmippFCMeans::S(const xmippFCB& _xmippDS,
                        const TS& _examples) const
 {
 
-    vector< vector< xmippFeature > > ICD;       // Intercluster distance
-    vector< vector< xmippFeature > > D;         // Distance from each data to cluster centers
+    std::vector< std::vector< xmippFeature > > ICD;       // Intercluster distance
+    std::vector< std::vector< xmippFeature > > D;         // Distance from each data to cluster centers
 
     unsigned i;
     D.resize(_xmippDS.membClusters());
     for (i = 0; i < _xmippDS.membClusters(); i++)
     {
-        vector <xmippFeature> d;
+        std::vector <xmippFeature> d;
         d.resize(_xmippDS.membVectors());
         for (unsigned k = 0; k < _xmippDS.membVectors(); k++)
             d[k] = eDist(_xmippDS.theItems[i], _examples.theItems[k]);
@@ -355,7 +355,7 @@ double xmippFCMeans::S(const xmippFCB& _xmippDS,
     ICD.resize(_xmippDS.membClusters());
     for (i = 0; i < _xmippDS.membClusters(); i++)
     {
-        vector <xmippFeature> v;
+        std::vector <xmippFeature> v;
         v.resize(_xmippDS.membVectors());
         for (unsigned j = 0; j < _xmippDS.membClusters(); j++)
             v[j] = eDist(_xmippDS.theItems[i], _xmippDS.theItems[j]);
@@ -381,14 +381,14 @@ double xmippFCMeans::S(const xmippFCB& _xmippDS,
 
 
 /// print itself on standard output
-void xmippFCMeans::printSelf(ostream& _os) const
+void xmippFCMeans::printSelf(std::ostream& _os) const
 {
     // Call base class, which will print ID
-    _os << "Class (Algorithm): " << endl;
+    _os << "Class (Algorithm): " << std::endl;
     xmippBaseAlgo<xmippFCB>::printSelf(_os);
-    _os << endl;
+    _os << std::endl;
     // Print parameters in the same order they are declared
-    _os << "Fuzzy constant m = " << m << endl;
-    _os << "Epsilon eps = " << epsilon << endl;
-    _os << "Iterations iter = " << epochs << endl << endl;
+    _os << "Fuzzy constant m = " << m << std::endl;
+    _os << "Epsilon eps = " << epsilon << std::endl;
+    _os << "Iterations iter = " << epochs << std::endl << std::endl;
 } ;

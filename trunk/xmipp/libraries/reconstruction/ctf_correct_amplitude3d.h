@@ -74,7 +74,7 @@ public:
     DocFile DFimgs;
 
     /// The 3D CTFs and Wiener filters
-    vector< Matrix1D<double> > Vctfs1D, Vwien1D; 
+    std::vector< Matrix1D<double> > Vctfs1D, Vwien1D; 
 
 public:
     /** Empty constructor */

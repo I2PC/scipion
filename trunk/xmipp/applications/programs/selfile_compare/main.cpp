@@ -48,8 +48,8 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
-        cout << "Usage: compare_selfiles\n"
+        std::cout << XE;
+        std::cout << "Usage: compare_selfiles\n"
 	     << "   -i1 <selfile1>      : First  selfile to compare\n"
 	     << "   -i2 <selfile2>      : Second selfile to compare\n"
 	     << "   -o  <selfile_out>   : Output selfile to compare\n"
@@ -67,7 +67,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
 
     return 0;

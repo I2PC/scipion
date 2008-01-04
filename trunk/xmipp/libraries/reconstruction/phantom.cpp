@@ -260,7 +260,7 @@ void Feature::read_common(char *line)
                   &(ZZ(Center)));
     if (stat != 6)
         REPORT_ERROR(3003,
-                     (string)"Error when reading common part of feature: " + line);
+                     (std::string)"Error when reading common part of feature: " + line);
     Type = straux;
 }
 
@@ -270,7 +270,7 @@ void Sphere::read_specific(char *line)
     int stat;
     stat = sscanf(line, "%*s %*c %*f %*f %*f %*f %lf", &radius);
     if (stat != 1)
-        REPORT_ERROR(3003, (string)"Error when reading a sphere:" + line);
+        REPORT_ERROR(3003, (std::string)"Error when reading a sphere:" + line);
     prepare();
 }
 
@@ -280,7 +280,7 @@ void Blob::read_specific(char *line)
     int stat;
     stat = sscanf(line, "%*s %*c %*f %*f %*f %*f %lf %lf %d", &radius, &alpha, &m);
     if (stat != 3)
-        REPORT_ERROR(3003, (string)"Error when reading a blob:" + line);
+        REPORT_ERROR(3003, (std::string)"Error when reading a blob:" + line);
     prepare();
 }
 
@@ -291,7 +291,7 @@ void Cylinder::read_specific(char *line)
     stat = sscanf(line, "%*s %*c %*f %*f %*f %*f %lf %lf %lf %lf %lf %lf", &xradius,
                   &yradius, &height, &rot, &tilt, &psi);
     if (stat != 6)
-        REPORT_ERROR(3003, (string)"Error when reading a cylinder:" + line);
+        REPORT_ERROR(3003, (std::string)"Error when reading a cylinder:" + line);
     prepare();
 }
 
@@ -302,7 +302,7 @@ void DCylinder::read_specific(char *line)
     stat = sscanf(line, "%*s %*c %*f %*f %*f %*f %lf %lf %lf %lf %lf %lf",
                   &radius, &height, &separation, &rot, &tilt, &psi);
     if (stat != 6)
-        REPORT_ERROR(3003, (string)"Error when reading a double cylinder:" + line);
+        REPORT_ERROR(3003, (std::string)"Error when reading a double cylinder:" + line);
     prepare();
 }
 
@@ -313,7 +313,7 @@ void Cube::read_specific(char *line)
     stat = sscanf(line, "%*s %*c %*f %*f %*f %*f %lf %lf %lf %lf %lf %lf",
                   &xdim, &ydim, &zdim, &rot, &tilt, &psi);
     if (stat != 6)
-        REPORT_ERROR(3003, (string)"Error when reading a cube" + line);
+        REPORT_ERROR(3003, (std::string)"Error when reading a cube" + line);
     prepare();
 }
 
@@ -324,7 +324,7 @@ void Ellipsoid::read_specific(char *line)
     stat = sscanf(line, "%*s %*c %*f %*f %*f %*f %lf %lf %lf %lf %lf %lf",
                   &xradius, &yradius, &zradius, &rot, &tilt, &psi);
     if (stat != 6)
-        REPORT_ERROR(3003, (string)"Error when reading an ellipsoid" + line);
+        REPORT_ERROR(3003, (std::string)"Error when reading an ellipsoid" + line);
     prepare();
 }
 
@@ -335,7 +335,7 @@ void Cone::read_specific(char *line)
     stat = sscanf(line, "%*s %*c %*f %*f %*f %*f %lf %lf %lf %lf %lf", &radius, &height,
                   &rot, &tilt, &psi);
     if (stat != 5)
-        REPORT_ERROR(3003, (string)"Error when reading a cone" + line);
+        REPORT_ERROR(3003, (std::string)"Error when reading a cone" + line);
     prepare();
 }
 
@@ -407,15 +407,15 @@ void  Cone::feat_printf(FILE *fh) const
 }
 
 /* Show feat --------------------------------------------------------------- */
-ostream& operator << (ostream &o, const Feature *F)
+std::ostream& operator << (std::ostream &o, const Feature *F)
 {
     if (F != NULL)
     {
-        o << "Feature --------" << endl;
-        o << "   Type:        " << F->Type << endl;
-        o << "   Add_Assign:  " << F->Add_Assign << endl;
-        o << "   Density:     " << F->Density << endl;
-        o << "   Center:      " << F->Center.transpose() << endl;
+        o << "Feature --------" << std::endl;
+        o << "   Type:        " << F->Type << std::endl;
+        o << "   Add_Assign:  " << F->Add_Assign << std::endl;
+        o << "   Density:     " << F->Density << std::endl;
+        o << "   Center:      " << F->Center.transpose() << std::endl;
         if (F->Type == "sph") o << *((Sphere *) F);
         else if (F->Type == "blo") o << *((Blob *) F);
         else if (F->Type == "cyl") o << *((Cylinder *) F);
@@ -428,77 +428,77 @@ ostream& operator << (ostream &o, const Feature *F)
 }
 
 /* Show sphere ------------------------------------------------------------- */
-ostream& operator << (ostream &o, const Sphere &f)
+std::ostream& operator << (std::ostream &o, const Sphere &f)
 {
-    o << "   Radius: " << f.radius << endl;
+    o << "   Radius: " << f.radius << std::endl;
     return o;
 }
 
 /* Show Blob   ------------------------------------------------------------- */
-ostream& operator << (ostream &o, const Blob &f)
+std::ostream& operator << (std::ostream &o, const Blob &f)
 {
-    o << "   Radius: "  << f.radius << endl;
-    o << "   Alpha:  "  << f.alpha << endl;
-    o << "   m:      "  << f.m << endl;
+    o << "   Radius: "  << f.radius << std::endl;
+    o << "   Alpha:  "  << f.alpha << std::endl;
+    o << "   m:      "  << f.m << std::endl;
     return o;
 }
 
 /* Show cylinder ----------------------------------------------------------- */
-ostream& operator << (ostream &o, const Cylinder &f)
+std::ostream& operator << (std::ostream &o, const Cylinder &f)
 {
-    o << "   XRadius: " << f.xradius << endl;
-    o << "   YRadius: " << f.yradius << endl;
-    o << "   Height:  " << f.height << endl;
-    o << "   Rot:     " << f.rot << endl;
-    o << "   Tilt:    " << f.tilt << endl;
-    o << "   Psi:     " << f.psi << endl;
+    o << "   XRadius: " << f.xradius << std::endl;
+    o << "   YRadius: " << f.yradius << std::endl;
+    o << "   Height:  " << f.height << std::endl;
+    o << "   Rot:     " << f.rot << std::endl;
+    o << "   Tilt:    " << f.tilt << std::endl;
+    o << "   Psi:     " << f.psi << std::endl;
     return o;
 }
 
 /* Show double cylinder ---------------------------------------------------- */
-ostream& operator << (ostream &o, const DCylinder &f)
+std::ostream& operator << (std::ostream &o, const DCylinder &f)
 {
-    o << "   Radius: " << f.radius << endl;
-    o << "   Height: " << f.height << endl;
-    o << "   Separ.: " << f.separation << endl;
-    o << "   Rot:    " << f.rot << endl;
-    o << "   Tilt:   " << f.tilt << endl;
-    o << "   Psi:    " << f.psi << endl;
+    o << "   Radius: " << f.radius << std::endl;
+    o << "   Height: " << f.height << std::endl;
+    o << "   Separ.: " << f.separation << std::endl;
+    o << "   Rot:    " << f.rot << std::endl;
+    o << "   Tilt:   " << f.tilt << std::endl;
+    o << "   Psi:    " << f.psi << std::endl;
     return o;
 }
 
 /* Show cube --------------------------------------------------------------- */
-ostream& operator << (ostream &o, const Cube &f)
+std::ostream& operator << (std::ostream &o, const Cube &f)
 {
-    o << "   Xdim:   " << f.xdim << endl;
-    o << "   Ydim:   " << f.ydim << endl;
-    o << "   Zdim:   " << f.zdim << endl;
-    o << "   Rot:    " << f.rot << endl;
-    o << "   Tilt:   " << f.tilt << endl;
-    o << "   Psi:    " << f.psi << endl;
+    o << "   Xdim:   " << f.xdim << std::endl;
+    o << "   Ydim:   " << f.ydim << std::endl;
+    o << "   Zdim:   " << f.zdim << std::endl;
+    o << "   Rot:    " << f.rot << std::endl;
+    o << "   Tilt:   " << f.tilt << std::endl;
+    o << "   Psi:    " << f.psi << std::endl;
     return o;
 }
 
 /* Show ellipsoid ---------------------------------------------------------- */
-ostream& operator << (ostream &o, const Ellipsoid &f)
+std::ostream& operator << (std::ostream &o, const Ellipsoid &f)
 {
-    o << "   Xradius: " << f.xradius << endl;
-    o << "   Yradius: " << f.yradius << endl;
-    o << "   Zradius: " << f.zradius << endl;
-    o << "   Rot:     " << f.rot << endl;
-    o << "   Tilt:    " << f.tilt << endl;
-    o << "   Psi:     " << f.psi << endl;
+    o << "   Xradius: " << f.xradius << std::endl;
+    o << "   Yradius: " << f.yradius << std::endl;
+    o << "   Zradius: " << f.zradius << std::endl;
+    o << "   Rot:     " << f.rot << std::endl;
+    o << "   Tilt:    " << f.tilt << std::endl;
+    o << "   Psi:     " << f.psi << std::endl;
     return o;
 }
 
 /* Show cone --------------------------------------------------------------- */
-ostream& operator << (ostream &o, const Cone &f)
+std::ostream& operator << (std::ostream &o, const Cone &f)
 {
-    o << "   Radius: " << f.radius << endl;
-    o << "   Height: " << f.height << endl;
-    o << "   Rot:    " << f.rot << endl;
-    o << "   Tilt:   " << f.tilt << endl;
-    o << "   Psi:    " << f.psi << endl;
+    o << "   Radius: " << f.radius << std::endl;
+    o << "   Height: " << f.height << std::endl;
+    o << "   Rot:    " << f.rot << std::endl;
+    o << "   Tilt:   " << f.tilt << std::endl;
+    o << "   Psi:    " << f.psi << std::endl;
     return o;
 }
 
@@ -633,8 +633,8 @@ int Cone::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
 #ifdef DEBUG
 #define DEBUG_SHOW \
     if (ZZ(r)==0 && YY(r)==0) \
-        cout << "Point (z=" << ZZ(aux1) << ",y=" << YY(aux1) << ",x=" \
-        << XX(aux1) << ") inside=" << inside << endl;
+        std::cout << "Point (z=" << ZZ(aux1) << ",y=" << YY(aux1) << ",x=" \
+        << XX(aux1) << ") inside=" << inside << std::endl;
 #else
 #define DEBUG_SHOW
 #endif
@@ -681,7 +681,7 @@ double Feature::voxel_inside_by_normalized_density(
 #ifdef NEVER
     if (Type == "blo")
     {
-        cout << "den=" <<   density_inside(r, aux2) << endl;
+        std::cout << "den=" <<   density_inside(r, aux2) << std::endl;
         return(density_inside(r, aux2));
     }
     else
@@ -800,13 +800,13 @@ void Feature::draw_in(Volume *V, int colour_mode, double colour)
 
     corners(V, corner1, corner2);
 #ifdef DEBUG
-    cout << "Drawing \n";
-    cout << this;
-    cout << "colour_mode=" << colour_mode << endl;
-    cout << "Add_Assign= " << Add_Assign  << endl;
-    cout << "add=        " << add         << endl;
-    cout << "   Corner 1" << corner1.transpose() << endl;
-    cout << "   Corner 2" << corner2.transpose() << endl;
+    std::cout << "Drawing \n";
+    std::cout << this;
+    std::cout << "colour_mode=" << colour_mode << std::endl;
+    std::cout << "Add_Assign= " << Add_Assign  << std::endl;
+    std::cout << "add=        " << add         << std::endl;
+    std::cout << "   Corner 1" << corner1.transpose() << std::endl;
+    std::cout << "   Corner 2" << corner2.transpose() << std::endl;
 #endif
     FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1, corner2)
     {
@@ -815,7 +815,7 @@ void Feature::draw_in(Volume *V, int colour_mode, double colour)
         //int condition=(ZZ(r)==-12) && (YY(r)==1);
         int condition = 1;
         if (condition)
-            cout << "   r=" << r.transpose() << " inside= " << inside;
+            std::cout << "   r=" << r.transpose() << " inside= " << inside;
 #endif
         if (inside != 0)
         {
@@ -824,12 +824,12 @@ void Feature::draw_in(Volume *V, int colour_mode, double colour)
             else     Vr  = XMIPP_MAX(drawing_colour, Vr);
 #ifdef DEBUG
             if (condition)
-                cout << "   V(r)=" << VOLVOXEL((*V), (int)ZZ(r), (int)YY(r), (int)XX(r));
+                std::cout << "   V(r)=" << VOLVOXEL((*V), (int)ZZ(r), (int)YY(r), (int)XX(r));
 #endif
         }
 #ifdef DEBUG
         if (condition)
-            cout << endl;
+            std::cout << std::endl;
 #endif
     }
 }
@@ -951,13 +951,13 @@ double Cylinder::intersection(
     ZZ(u) /= height;
 
 #ifdef DEBUG
-    cout << "Intersecting .-.-.-.-.-.-.\n";
-    cout << *this;
-    cout << "   direction(Univ) = " << direction.transpose() << endl;
-    cout << "   passing  (Univ) = " << passing_point.transpose() << endl;
-    cout << "   direction(Obj.) = " << u.transpose() << endl;
-    cout << "   passing  (Obj.) = " << r.transpose() << endl;
-    cout << "   intersection    = " << intersection_unit_cylinder(u, r) << endl;
+    std::cout << "Intersecting .-.-.-.-.-.-.\n";
+    std::cout << *this;
+    std::cout << "   direction(Univ) = " << direction.transpose() << std::endl;
+    std::cout << "   passing  (Univ) = " << passing_point.transpose() << std::endl;
+    std::cout << "   direction(Obj.) = " << u.transpose() << std::endl;
+    std::cout << "   passing  (Obj.) = " << r.transpose() << std::endl;
+    std::cout << "   intersection    = " << intersection_unit_cylinder(u, r) << std::endl;
 #endif
 
     return intersection_unit_cylinder(u, r) / norm;
@@ -1101,22 +1101,22 @@ void Feature::project_to(Projection &P, const Matrix2D<double> &VP,
 
 //#define DEBUG_LITTLE
 #ifdef DEBUG_LITTLE
-    cout << "Actual feature\n"     << this << endl;
-    cout << "Center              " << Center.transpose() << endl;
-    cout << "VP matrix\n"          << VP << endl;
-    cout << "P.direction         " << P.direction.transpose() << endl;
-    cout << "direction           " << direction.transpose() << endl;
-    cout << "P.euler matrix      " << P.euler << endl;
-    cout << "max_distance        " << max_distance << endl;
-    cout << "origin              " << origin.transpose() << endl;
-//      cout << "origin_debug (Univ.coord) " << origin_debug.transpose() << endl;
+    std::cout << "Actual feature\n"     << this << std::endl;
+    std::cout << "Center              " << Center.transpose() << std::endl;
+    std::cout << "VP matrix\n"          << VP << std::endl;
+    std::cout << "P.direction         " << P.direction.transpose() << std::endl;
+    std::cout << "direction           " << direction.transpose() << std::endl;
+    std::cout << "P.euler matrix      " << P.euler << std::endl;
+    std::cout << "max_distance        " << max_distance << std::endl;
+    std::cout << "origin              " << origin.transpose() << std::endl;
+//      std::cout << "origin_debug (Univ.coord) " << origin_debug.transpose() << std::endl;
 #endif
     /*
        // Step 2). Express this projected center in the projection coord system
        M3x3_BY_V3x1(origin_debug,P.euler,origin_debug);
     //   if (A!=NULL) M2x2_BY_V2x1(origin,*A,origin_);
        #ifdef DEBUG_LITTLE
-          cout << "origin (Proj.coord) " << origin_debug.transpose() << endl;
+          std::cout << "origin (Proj.coord) " << origin_debug.transpose() << std::endl;
        #endif
     */
 
@@ -1126,38 +1126,38 @@ void Feature::project_to(Projection &P, const Matrix2D<double> &VP,
     VECTOR_R3(corner1, max_distance, max_distance, max_distance);
     VECTOR_R3(corner2, -max_distance, -max_distance, -max_distance);
 #ifdef DEBUG_LITTLE
-    cout << "Corner1 : " << corner1.transpose() << endl
-    << "Corner2 : " << corner2.transpose() << endl;
+    std::cout << "Corner1 : " << corner1.transpose() << std::endl
+    << "Corner2 : " << corner2.transpose() << std::endl;
 #endif
 
     box_enclosing(corner1, corner2, VP, corner1, corner2);
 //   if (A!=NULL) {
 //      rectangle_enclosing(corner1,corner2,*A,corner1,corner2);
 #ifdef DEBUG_LITTLE
-    cout << "Corner1 moves to : " << corner1.transpose() << endl
-    << "Corner2 moves to : " << corner2.transpose() << endl;
+    std::cout << "Corner1 moves to : " << corner1.transpose() << std::endl
+    << "Corner2 moves to : " << corner2.transpose() << std::endl;
 #endif
 //   }
 
     V3_PLUS_V3(corner1, origin, corner1);
     V3_PLUS_V3(corner2, origin, corner2);
 #ifdef DEBUG_LITTLE
-    cout << "Corner1 finally is : " << corner1.transpose() << endl
-    << "Corner2 finally is : " << corner2.transpose() << endl;
+    std::cout << "Corner1 finally is : " << corner1.transpose() << std::endl
+    << "Corner2 finally is : " << corner2.transpose() << std::endl;
 #endif
     /*
        Matrix1D<double> corner1_debug(2),corner2_debug(2);
        VECTOR_R2(corner1_debug, max_distance, max_distance);
        VECTOR_R2(corner2_debug,-max_distance,-max_distance);
        #ifdef DEBUG_LITTLE
-          cout << "Corner1_debug : " << corner1_debug.transpose() << endl
-               << "Corner2_debug : " << corner2_debug.transpose() << endl;
+          std::cout << "Corner1_debug : " << corner1_debug.transpose() << std::endl
+               << "Corner2_debug : " << corner2_debug.transpose() << std::endl;
        #endif
        V2_PLUS_V2(corner1_debug,origin_debug,corner1_debug);
        V2_PLUS_V2(corner2_debug,origin_debug,corner2_debug);
        #ifdef DEBUG_LITTLE
-          cout << "Corner1_debug finally is : " << corner1_debug.transpose() << endl
-               << "Corner2_debug finally is : " << corner2_debug.transpose() << endl;
+          std::cout << "Corner1_debug finally is : " << corner1_debug.transpose() << std::endl
+               << "Corner2_debug finally is : " << corner2_debug.transpose() << std::endl;
        #endif
     */
     // Discard not necessary components
@@ -1172,9 +1172,9 @@ void Feature::project_to(Projection &P, const Matrix2D<double> &VP,
     YY(corner2) = CLIP(ROUND(YY(corner2)), STARTINGY(P()), FINISHINGY(P()));
 
 #ifdef DEBUG_LITTLE
-    cout << "corner1      " << corner1.transpose() << endl;
-    cout << "corner2      " << corner2.transpose() << endl;
-    cout.flush();
+    std::cout << "corner1      " << corner1.transpose() << std::endl;
+    std::cout << "corner2      " << corner2.transpose() << std::endl;
+    std::cout.flush();
 #endif
 
     // Check if there is something to project
@@ -1188,8 +1188,8 @@ void Feature::project_to(Projection &P, const Matrix2D<double> &VP,
         {
             double length = 0;
 #ifdef DEBUG_EVEN_MORE
-            cout << "Studying point (" << u << "," << v << ")\n";
-            cout.flush();
+            std::cout << "Studying point (" << u << "," << v << ")\n";
+            std::cout.flush();
 #endif
 
             // Perform subsampling ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
@@ -1217,9 +1217,9 @@ void Feature::project_to(Projection &P, const Matrix2D<double> &VP,
                     if (possible_length > 0) length += possible_length;
 
 #ifdef DEBUG_EVEN_MORE
-                    cout << "Averaging at (" << actu << "," << actv << ")\n";
-                    cout << "   which in univ. coords is " << act.transpose() << endl;
-                    cout << "   intersection there " << possible_length << endl;
+                    std::cout << "Averaging at (" << actu << "," << actv << ")\n";
+                    std::cout << "   which in univ. coords is " << act.transpose() << std::endl;
+                    std::cout << "   intersection there " << possible_length << std::endl;
 #endif
                     // Prepare for next iteration
                     actu += SUBSTEP * 2.0;
@@ -1228,8 +1228,8 @@ void Feature::project_to(Projection &P, const Matrix2D<double> &VP,
             }
             length /= (SUBSAMPLING * SUBSAMPLING);
 #ifdef DEBUG
-            cout << "Final value added at position (" << u << "," << v << ")="
-            << length << endl;
+            std::cout << "Final value added at position (" << u << "," << v << ")="
+            << length << std::endl;
 #endif
 
             // Add at the correspondant pixel the found intersection ,,,,,,,,,,
@@ -1816,7 +1816,7 @@ void Phantom::read(const FileName &fn_phantom, bool apply_scale)
     Ellipsoid  *ell;
     Cone       *con;
     Feature    *feat, *scaled_feat;
-    string     feat_type;
+    std::string feat_type;
     double     scale;          // The scale factor is not stored
     char       straux[6];
 
@@ -1825,7 +1825,7 @@ void Phantom::read(const FileName &fn_phantom, bool apply_scale)
 
 // Open Volume Description File
     if ((fh_phantom = fopen(fn_phantom.c_str(), "r")) == NULL)
-        REPORT_ERROR(3003, (string)"Phantom::read: Cannot open the phantom file: "
+        REPORT_ERROR(3003, (std::string)"Phantom::read: Cannot open the phantom file: "
                      + fn_phantom);
     fn = fn_phantom;
 
@@ -1862,7 +1862,7 @@ void Phantom::read(const FileName &fn_phantom, bool apply_scale)
         feat_type = straux;
         if (stat != 1)
             REPORT_ERROR(3003,
-                         (string)"Phantom::read: Not correct feature type" + line);
+                         (std::string)"Phantom::read: Not correct feature type" + line);
 
         if (feat_type == "sph")
         {
@@ -1914,7 +1914,7 @@ void Phantom::read(const FileName &fn_phantom, bool apply_scale)
             con->read_specific(line);
         }
         else
-            REPORT_ERROR(3003, (string)"Phantom::read: Unknown feature type: " + line);
+            REPORT_ERROR(3003, (std::string)"Phantom::read: Unknown feature type: " + line);
 
         // Scale and Store feature
         if (apply_scale)
@@ -1934,12 +1934,12 @@ void Phantom::read(const FileName &fn_phantom, bool apply_scale)
 }
 
 /* Show whole phantom ------------------------------------------------------ */
-ostream& operator << (ostream &o, const Phantom &P)
+std::ostream& operator << (std::ostream &o, const Phantom &P)
 {
-    cout << "Phantom ---------------------------------------\n";
-    cout << "Dimensions: " << P.xdim << " x " << P.ydim << " x " << P.zdim << endl;
-    cout << "Background density: " << P.Background_Density << endl;
-    cout << "phantom_scale : " << P.phantom_scale << endl;
+    std::cout << "Phantom ---------------------------------------\n";
+    std::cout << "Dimensions: " << P.xdim << " x " << P.ydim << " x " << P.zdim << std::endl;
+    std::cout << "Background density: " << P.Background_Density << std::endl;
+    std::cout << "phantom_scale : " << P.phantom_scale << std::endl;
     for (int i = 0; i < P.VF.size(); i++) o << P.VF[i];
     return o;
 }
@@ -1953,7 +1953,7 @@ void Phantom::write(const FileName &fn_phantom)
 
 // Open Volume Description File
     if ((fh_phantom = fopen(fn_phantom.c_str(), "w")) == NULL)
-        REPORT_ERROR(3003, (string)"Phantom::write: Cannot open the phantom file "
+        REPORT_ERROR(3003, (std::string)"Phantom::write: Cannot open the phantom file "
                      + fn_phantom + " for output");
 
 // Write global comment and size
@@ -2070,8 +2070,8 @@ void Phantom::project_to(Projection &P, int Ydim, int Xdim,
                          double rot, double tilt, double psi, const Matrix2D<double> *A) const
 {
 #ifdef DEBUG
-    cout << "Ydim=" << Ydim << " Xdim=" << Xdim << endl
-    << "rot=" << rot << " tilt=" << tilt << " psi=" << psi << endl
+    std::cout << "Ydim=" << Ydim << " Xdim=" << Xdim << std::endl
+    << "rot=" << rot << " tilt=" << tilt << " psi=" << psi << std::endl
     << "A\n" << A;
 #endif
     // Initialise projection
@@ -2122,9 +2122,9 @@ const
         if (z0 < FIRST_XMIPP_INDEX(zdim) || z0 > LAST_XMIPP_INDEX(zdim))
             REPORT_ERROR(1, "Phantom::surface: z0 outside phantom");
 #ifdef DEBUG
-    cout << "Direction: " << direction << endl;
-    cout << "z0:        " << z0        << endl;
-    cout << "zdim:      " << zdim      << endl;
+    std::cout << "Direction: " << direction << std::endl;
+    std::cout << "z0:        " << z0        << std::endl;
+    std::cout << "zdim:      " << zdim      << std::endl;
 #endif
 
     Matrix1D<double> aux1(3), aux2(3), aux3(3), r(3);
@@ -2132,7 +2132,7 @@ const
     FOR_ALL_ELEMENTS_IN_MATRIX2D(IMGMATRIX(*P))
     {
 #ifdef DEBUG
-        cout << "Processing (" << i << "," << j << ")" << endl;
+        std::cout << "Processing (" << i << "," << j << ")" << std::endl;
 #endif
         // Init ray
         int k;
@@ -2142,7 +2142,7 @@ const
         finished = false;
 
 #ifdef DEBUG
-        cout << "Initial k=" << k << endl;
+        std::cout << "Initial k=" << k << std::endl;
 #endif
         // Check that it is not inside and move ray
         // at the end k takes the right value for the image
@@ -2150,7 +2150,7 @@ const
         {
             VECTOR_R3(r, j, i, k);
 #ifdef DEBUG
-            cout << "Checking " << r.transpose() << endl;
+            std::cout << "Checking " << r.transpose() << std::endl;
 #endif
             // If it is inside move a step backward and finish
             if (any_feature_intersects_sphere(r, radius, aux1, aux2, aux3))

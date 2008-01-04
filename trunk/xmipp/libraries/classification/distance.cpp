@@ -40,7 +40,7 @@
 xmippFeature eDist(const xmippVector& _v1, const xmippVector& _v2)
 {
     if (_v1.size() != _v2.size())
-        throw runtime_error("vector of different size in eDist");
+        throw std::runtime_error("vector of different size in eDist");
 
     double dist = 0;
     xmippVector::const_iterator i, j;
@@ -64,7 +64,7 @@ xmippFeature eDist(const xmippVector& _v1, const xmippVector& _v2)
 xmippFeature mDist(const xmippVector& _v1, const xmippVector& _v2)
 {
     if (_v1.size() != _v2.size())
-        throw runtime_error("vector of different size in mDist");
+        throw std::runtime_error("vector of different size in mDist");
 
     double dist = 0;
     xmippVector::const_iterator i, j;

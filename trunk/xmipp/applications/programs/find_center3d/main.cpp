@@ -83,7 +83,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage();
         mask_prm.usage();
         exit(1);
@@ -101,7 +101,7 @@ int main(int argc, char **argv)
         // Compute center of mass
         Matrix1D<double> centerOfMass;
         volume().centerOfMass(centerOfMass, &mask_prm.get_binary_mask3D());
-        cout << "Center of mass (X,Y,Z)= " << centerOfMass.transpose() << endl;
+        std::cout << "Center of mass (X,Y,Z)= " << centerOfMass.transpose() << std::endl;
 
         // Move origin to that center of mass
         volume().selfTranslate(-centerOfMass, DONT_WRAP);
@@ -114,7 +114,7 @@ int main(int argc, char **argv)
             Matrix2D<double> Euler;
             Matrix1D<double> sym_axis(3);
             int maxsteps = FLOOR((rotF - rot0) / step_rot) * FLOOR((tiltF - tilt0) / step_tilt);
-            cerr << "Searching symmetry axis ...\n";
+            std::cerr << "Searching symmetry axis ...\n";
             init_progress_bar(maxsteps);
             int i = 0;
             for (double rot = rot0; rot <= rotF; rot += step_rot)
@@ -152,17 +152,17 @@ int main(int argc, char **argv)
                     if ((i++) % XMIPP_MAX(maxsteps / 60, 1) == 0) progress_bar(i);
                 }
             progress_bar(maxsteps);
-            cout << "Symmetry axis (rot,tilt)= " << best_rot << " "
+            std::cout << "Symmetry axis (rot,tilt)= " << best_rot << " "
             << best_tilt << " --> ";
             Euler_angles2matrix(best_rot, best_tilt, 0, Euler);
             Euler.getRow(2, sym_axis);
-            cout << sym_axis << endl;
+            std::cout << sym_axis << std::endl;
         }
 
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
     exit(0);
 } //main
@@ -170,11 +170,11 @@ int main(int argc, char **argv)
 /* Usage ------------------------------------------------------------------- */
 void Usage()
 {
-    cerr << "Purpose:\n";
-    cerr << "    Finds the 3D center of mass within a mask\n"
+    std::cerr << "Purpose:\n";
+    std::cerr << "    Finds the 3D center of mass within a mask\n"
     << "    and a symmetry rotational axis passing through that center\n";
 
-    cerr << "Usage: findcenter3D [options]" << endl
+    std::cerr << "Usage: findcenter3D [options]" << std::endl
     << "    -i <volume>                         : volume to process\n"
     << "   [-center_volume]                     : save the centered volume\n"
     << "   [-rot_sym <n=0>]                     : order of the rotational axis\n"

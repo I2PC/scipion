@@ -76,21 +76,21 @@ void CrispVolume::read(const FileName &fn)
     fclose(fp);
 }
 
-ostream & operator << (ostream &out, const CrispVolume &cv)
+std::ostream & operator << (std::ostream &out, const CrispVolume &cv)
 {
     out << "Crisp volume =============================\n";
-    out << "flags= " << cv.flags << endl
-    << "Adata= " << cv.Adata << endl
-    << "Bdata= " << cv.Bdata << endl
-    << "Cdata= " << cv.Cdata << endl
-    << "Afile= " << cv.Afile << endl
-    << "Bfile= " << cv.Bfile << endl
-    << "Cfile= " << cv.Cfile << endl
-    << "Asize= " << cv.Asize << endl
-    << "Bsize= " << cv.Bsize << endl
-    << "Csize= " << cv.Csize << endl
-    << "Gamma= " << cv.Gamma << endl
-    << "Name = " << cv.Name  << endl;
+    out << "flags= " << cv.flags << std::endl
+    << "Adata= " << cv.Adata << std::endl
+    << "Bdata= " << cv.Bdata << std::endl
+    << "Cdata= " << cv.Cdata << std::endl
+    << "Afile= " << cv.Afile << std::endl
+    << "Bfile= " << cv.Bfile << std::endl
+    << "Cfile= " << cv.Cfile << std::endl
+    << "Asize= " << cv.Asize << std::endl
+    << "Bsize= " << cv.Bsize << std::endl
+    << "Csize= " << cv.Csize << std::endl
+    << "Gamma= " << cv.Gamma << std::endl
+    << "Name = " << cv.Name  << std::endl;
     return out;
 }
 

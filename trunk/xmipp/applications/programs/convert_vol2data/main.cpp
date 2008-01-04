@@ -38,10 +38,10 @@ int main(int argc, char **argv)
     FILE *fp;
     float tmpR;
     char *fname, *iname, *bmname;
-    string selname;
+    std::string selname;
     VolumeXmipp mask;
-    vector < vector <float> > dataPoints;
-    vector < string > labels;
+    std::vector < std::vector <float> > dataPoints;
+    std::vector < std::string > labels;
     bool nomask = false;
     bool verb = false;
 
@@ -60,48 +60,48 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error)
     {
-        cout << "img2data: Convert a set of volumes into a set of data vectors" << endl;
-        cout << "Usage:" << endl;
-        cout << "-sel           : Sel file name" << endl;
-        cout << "-mname         : Input Mask file name (default: mask.spi)" << endl;
-        cout << "[-nomask]      : set if the mask is not going to be used" << endl;
-        cout << "[-fname]       : Output file name (default: out.dat)" << endl;
-        cout << "[-verb]        : Verbosity (default: false)" << endl;
+        std::cout << "img2data: Convert a set of volumes into a set of data vectors" << std::endl;
+        std::cout << "Usage:" << std::endl;
+        std::cout << "-sel           : Sel file name" << std::endl;
+        std::cout << "-mname         : Input Mask file name (default: mask.spi)" << std::endl;
+        std::cout << "[-nomask]      : set if the mask is not going to be used" << std::endl;
+        std::cout << "[-fname]       : Output file name (default: out.dat)" << std::endl;
+        std::cout << "[-verb]        : Verbosity (default: false)" << std::endl;
         exit(1);
     }
 
 
-    cout << "Given parameters are: " << endl;
-    cout << "sel = " << selname << endl;
+    std::cout << "Given parameters are: " << std::endl;
+    std::cout << "sel = " << selname << std::endl;
     if (!nomask)
     {
-        cout << "mname = " << bmname << endl;
+        std::cout << "mname = " << bmname << std::endl;
     }
     else
-        cout << "No mask is going to be used" << endl;
-    cout << "fname = " << fname << endl;
+        std::cout << "No mask is going to be used" << std::endl;
+    std::cout << "fname = " << fname << std::endl;
 
 
     // Read spider mask
 
     if (!nomask)
     {
-        cout << endl << "reading mask " << bmname << "......" << endl << endl;
+        std::cout << std::endl << "reading mask " << bmname << "......" << std::endl << std::endl;
         mask.read(bmname);        // Reads the mask
         //Adjust the range to 0-1
         mask().range_adjust(0, 1); // just in case
-        cout << mask;    // Output Volumen Information
+        std::cout << mask;    // Output Volumen Information
     }
 
-    cout << "generating data......" << endl;
+    std::cout << "generating data......" << std::endl;
 
     SelFile SF((FileName) selname);
     // Read Sel file
     while (!SF.eof())
     {
-        string image_name = SF.NextImg();
+        std::string image_name = SF.NextImg();
         if (verb)
-            cout << "generating points for image " << image_name << "......" << endl;
+            std::cout << "generating points for image " << image_name << "......" << std::endl;
         VolumeXmipp image(image_name);      // reads image
 
         // Extract the data
@@ -111,7 +111,7 @@ int main(int argc, char **argv)
 
         // Generates coordinates (data points)
 
-        vector <float> imagePoints;
+        std::vector <float> imagePoints;
 
         for (int z = STARTINGZ(image()); z <= FINISHINGZ(image()); z++)
             for (int y = STARTINGY(image()); y <= FINISHINGY(image()); y++)
@@ -132,7 +132,7 @@ int main(int argc, char **argv)
         dataPoints.push_back(imagePoints);
     } // while
 
-    cout << endl << "Saving points......" << endl;
+    std::cout << std::endl << "Saving points......" << std::endl;
     fp = fopen(fname, "w");
     fprintf(fp, "%d %d\n", dataPoints[0].size(), dataPoints.size()); // Save dimension
     for (unsigned i = 0; i < dataPoints.size(); i++)

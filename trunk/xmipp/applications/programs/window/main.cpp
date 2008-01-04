@@ -148,19 +148,19 @@ public:
     {
         Prog_parameters::show();
         if (size_mode)
-            cout << "New size: (XxYxZ)=" << sizeX << "x" << sizeY << "x"
-            << sizeZ << endl;
+            std::cout << "New size: (XxYxZ)=" << sizeX << "x" << sizeY << "x"
+            << sizeZ << std::endl;
         else
-            cout << "New window: from (z0,y0,x0)=(" << z0 << ","
+            std::cout << "New window: from (z0,y0,x0)=(" << z0 << ","
             << y0 << "," << x0 << ") to (zF,yF,xF)=(" << zF << "," << yF
             << "," << xF << ")\n"
-            << "Physical: " << physical_coords << endl;
+            << "Physical: " << physical_coords << std::endl;
     }
 
     void usage()
     {
         Prog_parameters::usage();
-        cerr << "  [-physical]               : Use physical instead of logical\n"
+        std::cerr << "  [-physical]               : Use physical instead of logical\n"
              << "                             coordinates\n"
              << "  [-pad_value <val>]        : value used for padding\n"
              << "  [-corner_pad_value]       : use the value of the upper\n"

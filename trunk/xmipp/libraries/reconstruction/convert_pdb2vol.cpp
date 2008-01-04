@@ -79,8 +79,8 @@ void Prog_PDBPhantom_Parameters::produceSideInfo() {
 }
 
 /* Atom description ------------------------------------------------------- */
-void Prog_PDBPhantom_Parameters::atomBlobDescription(const string &_element,
-        double &weight, double &radius) const
+void Prog_PDBPhantom_Parameters::atomBlobDescription(
+    const std::string &_element, double &weight, double &radius) const
 {
     int idx = -1;
     weight = radius = 0;
@@ -193,23 +193,23 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
     std::ifstream fh_pdb;
     fh_pdb.open(fn_pdb.c_str());
     if (!fh_pdb)
-        REPORT_ERROR(1, (string)"Prog_PDBPhantom_Parameters::protein_geometry:"
+        REPORT_ERROR(1, (std::string)"Prog_PDBPhantom_Parameters::protein_geometry:"
                      "Cannot open " + fn_pdb + " for reading");
 
     // Process all lines of the file
     while (!fh_pdb.eof())
     {
         // Read an ATOM line
-        string line;
+        std::string line;
         getline(fh_pdb, line);
         if (line == "") continue;
-        string kind = line.substr(0,4);
+        std::string kind = line.substr(0,4);
         if (kind != "ATOM") continue;
 
         // Extract atom type and position
         // Typical line:
         // ATOM    909  CA  ALA A 161      58.775  31.984 111.803  1.00 34.78
-        string atom_type = line.substr(13,2);
+        std::string atom_type = line.substr(13,2);
         double x = textToFloat(line.substr(30,8));
         double y = textToFloat(line.substr(38,8));
         double z = textToFloat(line.substr(46,8));
@@ -290,14 +290,14 @@ void Prog_PDBPhantom_Parameters::blob_properties() const
     std::ofstream fh_out;
     fh_out.open((fn_out + "_Fourier_profile.txt").c_str());
     if (!fh_out)
-        REPORT_ERROR(1, (string)"Prog_PDBPhantom_Parameters::blob_properties:"
+        REPORT_ERROR(1, (std::string)"Prog_PDBPhantom_Parameters::blob_properties:"
                      " Cannot open " + fn_out + "_Fourier_profile.txt for output");
-    fh_out << "# Freq(1/A) 10*log10(|Blob(f)|^2) Ts=" << highTs << endl;
+    fh_out << "# Freq(1/A) 10*log10(|Blob(f)|^2) Ts=" << highTs << std::endl;
     for (double w = 0; w < 1.0 / (2*highTs); w += 1.0 / (highTs * 500))
     {
         double H = kaiser_Fourier_value(w * highTs, periodicTable(0, 0) / highTs,
                                         blob.alpha, blob.order);
-        fh_out << w << " " << 10*log10(H*H) << endl;
+        fh_out << w << " " << 10*log10(H*H) << std::endl;
     }
     fh_out.close();
 }
@@ -312,17 +312,17 @@ void Prog_PDBPhantom_Parameters::create_protein_using_scattering_profiles() {
     std::ifstream fh_pdb;
     fh_pdb.open(fn_pdb.c_str());
     if (!fh_pdb)
-        REPORT_ERROR(1, (string)"Prog_PDBPhantom_Parameters::create_protein_using_scattering_profiles:"
+        REPORT_ERROR(1, (std::string)"Prog_PDBPhantom_Parameters::create_protein_using_scattering_profiles:"
                      "Cannot open " + fn_pdb + " for reading");
 
     // Process all lines of the file
     while (!fh_pdb.eof())
     {
         // Read an ATOM line
-        string line;
+        std::string line;
         getline(fh_pdb, line);
         if (line == "") continue;
-        string kind =line.substr(0,4);
+        std::string kind =line.substr(0,4);
         if (kind != "ATOM") continue;
 
         // Extract atom type and position

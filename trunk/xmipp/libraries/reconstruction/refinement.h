@@ -91,8 +91,8 @@ void calculate_and_find_correlation_max_mat(Matrix2D<T> const &mat1,
     }
     //       #define DEBUG_calculate_and_find_correlation_max_mat
 #ifdef  DEBUG_calculate_and_find_correlation_max_mat
-    cout << "\n imax, jmax: " << imax << " " << jmax << endl;
-    cout.flush();
+    std::cout << "\n imax, jmax: " << imax << " " << jmax << std::endl;
+    std::cout.flush();
 #endif
 
     /******* Calculate the gravity centre of the corelation        ****/
@@ -122,17 +122,17 @@ void calculate_and_find_correlation_max_mat(Matrix2D<T> const &mat1,
                 else
                 {
                     stop_loop = true;
-                    cout << "\nWarning(calculate_and_find_correlation_max_mat)"
+                    std::cout << "\nWarning(calculate_and_find_correlation_max_mat)"
                     << "\n some points neede to determine the maxima"
-                    << "\n are not available" << endl;
+                    << "\n are not available" << std::endl;
                 }
             }
     }
 
     //       #define DEBUG_calculate_and_find_correlation_max_mat
 #ifdef DEBUG_calculate_and_find_correlation_max_mat
-    cout << "\n n_max, temp_max: " << n_max << " " << temp_max << endl;
-    cout.flush();
+    std::cout << "\n n_max, temp_max: " << n_max << " " << temp_max << std::endl;
+    std::cout.flush();
 #endif
 
     /*** We have the neighborhood => looking for the gravity centre ***/
@@ -161,12 +161,12 @@ void calculate_and_find_correlation_max_mat(Matrix2D<T> const &mat1,
 
     //       #define DEBUG_calculate_and_find_correlation_max_mat
 #ifdef DEBUG_calculate_and_find_correlation_max_mat
-    cout << "\n  shift_XX  "   << shift_X  << endl;
-    cout << "\n  shift_Y  "   << shift_Y  << endl;
-    cout << "\n  jj_max   "   << jj_max   << endl;
-    cout << "\n  ii_max   "   << ii_max   << endl;
-    cout << "\n  sum_corr "   << sum_corr << endl;
-    cout.flush();
+    std::cout << "\n  shift_XX  "   << shift_X  << std::endl;
+    std::cout << "\n  shift_Y  "   << shift_Y  << std::endl;
+    std::cout << "\n  jj_max   "   << jj_max   << std::endl;
+    std::cout << "\n  ii_max   "   << ii_max   << std::endl;
+    std::cout << "\n  sum_corr "   << sum_corr << std::endl;
+    std::cout.flush();
 #endif
 
 }

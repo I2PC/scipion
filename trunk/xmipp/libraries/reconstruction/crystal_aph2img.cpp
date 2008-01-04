@@ -47,7 +47,7 @@ void Spot2RealSpace2D_Parameters::read_from_file(const FileName &fnprm)
     FILE *fh_param;
     if ((fh_param = fopen(fnprm.c_str(), "r")) == NULL)
         REPORT_ERROR(3005,
-                     (string)"Spot2RealSpace2D_Parameters::read: There is a problem "
+                     (std::string)"Spot2RealSpace2D_Parameters::read: There is a problem "
                      "opening the file " + fnprm);
 
     try
@@ -61,13 +61,13 @@ void Spot2RealSpace2D_Parameters::read_from_file(const FileName &fnprm)
         fn_out = getParameter(fh_param, "Output file", 0, NULL,
                            3007, "Spot2RealSpace2D_Parameters::read: Output File not found");
         maxIQ = textToInteger(getParameter(fh_param, "maxIQ", 0, "6"));
-        string aux_str = getParameter(fh_param, "Output cells no", 0, "1 1");
+        std::string aux_str = getParameter(fh_param, "Output cells no", 0, "1 1");
 #if GCC_VERSION < 30300
-        istrstream *is = NULL;
-        is = new istrstream(aux_str.c_str());
+        std::istrstream *is = NULL;
+        is = new std::istrstream(aux_str.c_str());
 #else
-        istringstream *is = NULL;
-        is = new istringstream(aux_str.c_str());
+        std::istringstream *is = NULL;
+        is = new std::istringstream(aux_str.c_str());
 #endif
         try
         {
@@ -94,9 +94,9 @@ void Spot2RealSpace2D_Parameters::read_from_file(const FileName &fnprm)
         aux_str = getParameter(fh_param, "Phase Shift", 0, "180.0 180.0");
         delete is;
 #if GCC_VERSION < 30300
-        is = new istrstream(aux_str.c_str());
+        is = new std::istrstream(aux_str.c_str());
 #else
-        is = new istringstream(aux_str.c_str());
+        is = new std::istringstream(aux_str.c_str());
 #endif
         try
         {
@@ -112,9 +112,9 @@ void Spot2RealSpace2D_Parameters::read_from_file(const FileName &fnprm)
         aux_str = getParameter(fh_param, "Cell Size");
         delete is;
 #if GCC_VERSION < 30300
-        is = new istrstream(aux_str.c_str());
+        is = new std::istrstream(aux_str.c_str());
 #else
-        is = new istringstream(aux_str.c_str());
+        is = new std::istringstream(aux_str.c_str());
 #endif
         try
         {
@@ -135,8 +135,8 @@ void Spot2RealSpace2D_Parameters::read_from_file(const FileName &fnprm)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE << endl;
-        REPORT_ERROR(3007, (string)"There is an error reading " + fnprm);
+        std::cout << XE << std::endl;
+        REPORT_ERROR(3007, (std::string)"There is an error reading " + fnprm);
     }
     fclose(fh_param);
 }
@@ -166,7 +166,7 @@ void Spot2RealSpace2D_Parameters::produce_SideInfo()
     else if (str_symmetry_group == "P6")      symmetry_group = sym_P6;
     else if (str_symmetry_group == "P622")    symmetry_group = sym_P622;
     else
-        REPORT_ERROR(1, (string)"Spot2RealSpace2D_Parameters::produce_SideInfo:"
+        REPORT_ERROR(1, (std::string)"Spot2RealSpace2D_Parameters::produce_SideInfo:"
                      " Unknown symmetry group:" + str_symmetry_group);
 
     // convert taxa, tilt to Euler angles
@@ -188,48 +188,48 @@ void Spot2RealSpace2D_Parameters::produce_SideInfo()
 }
 
 /* Show parameters --------------------------------------------------------- */
-ostream& operator << (ostream &o, const Spot2RealSpace2D_Parameters &prm)
+std::ostream& operator << (std::ostream &o, const Spot2RealSpace2D_Parameters &prm)
 {
-    o << "APH Input          : " << prm.fnaph_in << endl
+    o << "APH Input          : " << prm.fnaph_in << std::endl
 #ifdef REMOVE
-    << "APH Reference      : " << prm.fnaph_ref << endl
+    << "APH Reference      : " << prm.fnaph_ref << std::endl
 #endif
-    << "Output Spider File : " << prm.fn_out << endl
-    << "Maximum IQ         : " << prm.maxIQ << endl
-    << "a_mag(A)           : " << prm.a_mag << endl
-    << "b_mag(A)           : " << prm.b_mag << endl
-    << "a->b angle         : " << RAD2DEG(prm.a_b_ang) << endl
-    << "Rotational angle   : " << RAD2DEG(prm.rot) << endl
-    << "Tilt angle         : " << RAD2DEG(prm.tilt) << endl
-    << "psi angle          : " << RAD2DEG(prm.psi) << endl
-    << "taxa angle         : " << RAD2DEG(prm.taxa) << endl
-    << "mrc_tilt angle     : " << RAD2DEG(prm.mrc_tilt) << endl
-    << "mrc_label          : " << prm.mrc_label << endl
-    << "sampling rate      : " << prm.SamplingRate << endl
+    << "Output Spider File : " << prm.fn_out << std::endl
+    << "Maximum IQ         : " << prm.maxIQ << std::endl
+    << "a_mag(A)           : " << prm.a_mag << std::endl
+    << "b_mag(A)           : " << prm.b_mag << std::endl
+    << "a->b angle         : " << RAD2DEG(prm.a_b_ang) << std::endl
+    << "Rotational angle   : " << RAD2DEG(prm.rot) << std::endl
+    << "Tilt angle         : " << RAD2DEG(prm.tilt) << std::endl
+    << "psi angle          : " << RAD2DEG(prm.psi) << std::endl
+    << "taxa angle         : " << RAD2DEG(prm.taxa) << std::endl
+    << "mrc_tilt angle     : " << RAD2DEG(prm.mrc_tilt) << std::endl
+    << "mrc_label          : " << prm.mrc_label << std::endl
+    << "sampling rate      : " << prm.SamplingRate << std::endl
 #ifdef REMOVE
-    << "Lattice a          : " << prm.proj_latt_vec.Col(0).transpose() << endl
-    << "Lattice b          : " << prm.proj_latt_vec.Col(1).transpose() << endl
+    << "Lattice a          : " << prm.proj_latt_vec.Col(0).transpose() << std::endl
+    << "Lattice b          : " << prm.proj_latt_vec.Col(1).transpose() << std::endl
 #endif
     << "Ouput Layout (x,y) : " << prm.NoCells_X
-    << " x " << prm.NoCells_Y << endl
+    << " x " << prm.NoCells_Y << std::endl
     << "Phase_Shift (x,y)  : " << XX(prm.Phase_Shift) << ","
-    << YY(prm.Phase_Shift)  << endl
-    << "Keep Contrast      : " << prm.KeepContrast << endl
-    << "Cell Size (x,y)    : " << prm.CellXdim << "," << prm.CellYdim << endl
+    << YY(prm.Phase_Shift)  << std::endl
+    << "Keep Contrast      : " << prm.KeepContrast << std::endl
+    << "Cell Size (x,y)    : " << prm.CellXdim << "," << prm.CellYdim << std::endl
 #ifdef REMOVE
-    << "Crystaledge        : " << prm.aph_file.Xdim << endl
-    << "Crystaledge(ref)   : " << prm.aph_ref.Xdim << endl
+    << "Crystaledge        : " << prm.aph_file.Xdim << std::endl
+    << "Crystaledge(ref)   : " << prm.aph_ref.Xdim << std::endl
 #endif
-    << "Scale_Factor       : " << prm.Scale_Factor << endl
+    << "Scale_Factor       : " << prm.Scale_Factor << std::endl
 #ifdef REMOVE
-    << "Sampling Scale*    : " << prm.SamplingScale << endl
+    << "Sampling Scale*    : " << prm.SamplingScale << std::endl
 #endif
-    << "3D Symmetry group  : " << prm.symmetry_group << endl;
+    << "3D Symmetry group  : " << prm.symmetry_group << std::endl;
     return o;
 }
 
 /* DFT^-1 ------------------------------------------------------------------ */
-void IDFT(const Matrix2D< complex<double> > &FT, Matrix2D<double> &I,
+void IDFT(const Matrix2D< std::complex<double> > &FT, Matrix2D<double> &I,
           int ydim, int xdim)
 {
     I.initZeros(ydim, xdim);
@@ -266,7 +266,7 @@ void ROUT_Spots2RealSpace(Spot2RealSpace2D_Parameters &prm,
     int h, k;
     //symmery should be reforced after APPLYYING SHIFT
     prm.produce_SideInfo();
-    cout << prm;
+    std::cout << prm;
     // Read APH files, vector size must be in Amstrongs
     (prm.aph_file).read(prm.fnaph_in, prm.mrc_label);
     // Now we should be able to check if the points does belong to the
@@ -311,11 +311,11 @@ void ROUT_Spots2RealSpace(Spot2RealSpace2D_Parameters &prm,
     // Resize and symmetrize Fourier Transform
 #define DEBUG
 #ifdef DEGUG
-    cout << "prm.a_mag: "          << prm.a_mag             << endl;
-    cout << "prm.b_mag: "          << prm.b_mag             << endl;
-    cout << "prm.taxa: "           << RAD2DEG(prm.taxa)     << endl;
-    cout << "prm.mrc_tilt: "       << RAD2DEG(prm.mrc_tilt) << endl;
-    cout << "prm.symmetry_group: " << prm.symmetry_group    << endl;
+    std::cout << "prm.a_mag: "          << prm.a_mag             << std::endl;
+    std::cout << "prm.b_mag: "          << prm.b_mag             << std::endl;
+    std::cout << "prm.taxa: "           << RAD2DEG(prm.taxa)     << std::endl;
+    std::cout << "prm.mrc_tilt: "       << RAD2DEG(prm.mrc_tilt) << std::endl;
+    std::cout << "prm.symmetry_group: " << prm.symmetry_group    << std::endl;
 #endif
 #undef DEBUG
     int ksize = XMIPP_MAX(ABS((prm.aph_file).min_k), ABS((prm.aph_file).max_k));
@@ -323,7 +323,7 @@ void ROUT_Spots2RealSpace(Spot2RealSpace2D_Parameters &prm,
 
     //When data is copied to FT move it from degrees to radians.
     //It is done inside the polar function
-    Matrix2D< complex<double> > FT;
+    Matrix2D< std::complex<double> > FT;
     FT.initZeros(2*ksize + 1, 2*hsize + 1);
     STARTINGY(FT) = -ksize;
     STARTINGX(FT) = -hsize;
@@ -336,9 +336,9 @@ void ROUT_Spots2RealSpace(Spot2RealSpace2D_Parameters &prm,
             h = (prm.aph_file.aph_data_vector[i]).h;
             k = (prm.aph_file.aph_data_vector[i]).k;
 
-            MAT_ELEM(FT, k, h) = polar((prm.aph_file.aph_data_vector[i]).amp,
+            MAT_ELEM(FT, k, h) = std::polar((prm.aph_file.aph_data_vector[i]).amp,
                                        DEG2RAD((prm.aph_file.aph_data_vector[i]).phase));
-            MAT_ELEM(FT, -k, -h) = conj(MAT_ELEM(FT, k, h));
+            MAT_ELEM(FT, -k, -h) = std::conj(MAT_ELEM(FT, k, h));
         }
     }
 
@@ -373,14 +373,14 @@ void ROUT_RealSpace2Spots(RealSpace2Spots2D_Parameters &prm,
                           Projection &prj)
 {
     //show parameters
-    cout << prm;
+    std::cout << prm;
     //loop through the sel file
-    Matrix2D< complex<double> > FT;
+    Matrix2D< std::complex<double> > FT;
     // CALL DFT
     prj.read(prm.fn_in);
 //   #define DEBUG
 #ifdef DEBUG
-    cout << prj();
+    std::cout << prj();
 #endif
 #undef DEBUG
     DFT(prj(), FT);
@@ -413,7 +413,7 @@ void ROUT_RealSpace2Spots(RealSpace2Spots2D_Parameters &prm,
 
     FOR_ALL_ELEMENTS_IN_MATRIX2D(FT)
     {
-//     if(j==0 && i==1) {cout << "EXTRA" << abs(MAT_ELEM(FT,i,j));}
+//     if(j==0 && i==1) {std::cout << "EXTRA" << abs(MAT_ELEM(FT,i,j));}
 //     else continue;
         tmp_spot.amp      = abs(MAT_ELEM(FT, i, j));
         if (tmp_spot.amp < 0.0001) continue;
@@ -440,7 +440,7 @@ void ROUT_RealSpace2Spots(RealSpace2Spots2D_Parameters &prm,
 //      );
 //  if(DoesIntersect!=0)
 //            {
-//      cerr << "ERROR: plane and line does not intersec" << endl;
+//      std::cerr << "ERROR: plane and line does not intersec" << std::endl;
 //      exit(1);
 //      }
 //         tmp_spot.zstar      = ZZ(intersection_point);
@@ -479,7 +479,7 @@ void RealSpace2Spots2D_Parameters::read_from_file(const FileName &fnprm)
     FILE *fh_param;
     if ((fh_param = fopen(fnprm.c_str(), "r")) == NULL)
         REPORT_ERROR(3005,
-                     (string)"RealSpace2Spots2D_Parameters::read: There is a problem "
+                     (std::string)"RealSpace2Spots2D_Parameters::read: There is a problem "
                      "opening the file " + fnprm);
 
     try
@@ -489,14 +489,14 @@ void RealSpace2Spots2D_Parameters::read_from_file(const FileName &fnprm)
         fnaph_out = getParameter(fh_param, "APH file", 0, NULL,
                               3007, "RealSpace2Spots2D_Parameters::read: Output File not found");
         {
-            string aux_str = getParameter(fh_param, "lattice_a", 0, NULL,
+            std::string aux_str = getParameter(fh_param, "lattice_a", 0, NULL,
                                        3007, "RealSpace2Spots2D_Parameters::read: crystal vector a not found");
 #if GCC_VERSION < 30300
-            istrstream *is = NULL;
-            is = new istrstream(aux_str.c_str());
+            std::istrstream *is = NULL;
+            is = new std::istrstream(aux_str.c_str());
 #else
-            istringstream *is = NULL;
-            is = new istringstream(aux_str.c_str());
+            std::istringstream *is = NULL;
+            is = new std::istringstream(aux_str.c_str());
 #endif
             try
             {
@@ -510,14 +510,14 @@ void RealSpace2Spots2D_Parameters::read_from_file(const FileName &fnprm)
             delete is;
         }
         {
-            string aux_str = getParameter(fh_param, "lattice_b", 0, NULL,
+            std::string aux_str = getParameter(fh_param, "lattice_b", 0, NULL,
                                        3007, "RealSpace2Spots2D_Parameters::read: crystal vector b not found");
 #if GCC_VERSION < 30300
-            istrstream *is = NULL;
-            is = new istrstream(aux_str.c_str());
+            std::istrstream *is = NULL;
+            is = new std::istrstream(aux_str.c_str());
 #else
-            istringstream *is = NULL;
-            is = new istringstream(aux_str.c_str());
+            std::istringstream *is = NULL;
+            is = new std::istringstream(aux_str.c_str());
 #endif
             try
             {
@@ -538,29 +538,29 @@ void RealSpace2Spots2D_Parameters::read_from_file(const FileName &fnprm)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE << endl;
-        REPORT_ERROR(3007, (string)"There is an error reading " + fnprm);
+        std::cout << XE << std::endl;
+        REPORT_ERROR(3007, (std::string)"There is an error reading " + fnprm);
     }
     fclose(fh_param);
 }
-#define SHOW(str,v,i) x=v(0,i); y=v(1,i); cout << str << "("<< x \
+#define SHOW(str,v,i) x=v(0,i); y=v(1,i); std::cout << str << "("<< x \
     << "," << y << ") (" << sqrt(x*x+y*y) << ")\n";
 
 /* Show parameters --------------------------------------------------------- */
-ostream& operator << (ostream &o, const RealSpace2Spots2D_Parameters &prm)
+std::ostream& operator << (std::ostream &o, const RealSpace2Spots2D_Parameters &prm)
 {
-    o << "Input XMIPP File   : " << prm.fn_in << endl
-    << "Output APH File    : " << prm.fnaph_out << endl
-    << "taxa               : " << (prm.taxa) << endl
-    << "Tilt angle         : " << (prm.mrc_tilt) << endl
-    << "mrc_label          : " << prm.mrc_label << endl
-    << "lattice_a          : " << prm.vector_a << endl
-    << "lattice_b          : " << prm.vector_b << endl
+    o << "Input XMIPP File   : " << prm.fn_in << std::endl
+    << "Output APH File    : " << prm.fnaph_out << std::endl
+    << "taxa               : " << (prm.taxa) << std::endl
+    << "Tilt angle         : " << (prm.mrc_tilt) << std::endl
+    << "mrc_label          : " << prm.mrc_label << std::endl
+    << "lattice_a          : " << prm.vector_a << std::endl
+    << "lattice_b          : " << prm.vector_b << std::endl
     ;
     return o;
 }
 /* DFT ------------------------------------------------------------------ */
-void DFT(const Matrix2D<double> &I, Matrix2D< complex<double> > &FT)
+void DFT(const Matrix2D<double> &I, Matrix2D< std::complex<double> > &FT)
 {
 //   Matrix2D<double> I; I.resize(3,3);
 //   I(0,0)=1;I(0,1)=2;I(0,2)=3;
@@ -589,18 +589,18 @@ void DFT(const Matrix2D<double> &I, Matrix2D< complex<double> > &FT)
                     if (MAT_ELEM(I, k, l) == 0.0) continue;
                     myreal = MAT_ELEM(I, k, l) * cos(wK + wl * L);
                     myimag = MAT_ELEM(I, k, l) * sin(wK + wl * L);
-                    MAT_ELEM(FT, K, L) += complex<double>(myreal, 0);
-                    MAT_ELEM(FT, K, L) -= complex<double>(0, myimag);
-//cout << k << " " << l << "  " << K << " " << L
+                    MAT_ELEM(FT, K, L) += std::complex<double>(myreal, 0);
+                    MAT_ELEM(FT, K, L) -= std::complex<double>(0, myimag);
+//std::cout << k << " " << l << "  " << K << " " << L
 //     << " " << MAT_ELEM(I,k,l) << " "
-//     << myreal << " " << myimag << endl;
-//cout << MAT_ELEM(FT,K,L) << endl;
+//     << myreal << " " << myimag << std::endl;
+//std::cout << MAT_ELEM(FT,K,L) << std::endl;
                 }
             }
         }
     }
-//cout << I;
-//cout << FT;
+//std::cout << I;
+//std::cout << FT;
     progress_bar(YSIZE(I));
 
 }

@@ -69,7 +69,7 @@ void region_growing(const Matrix2D<double> &I_in, Matrix2D<double> &I_out,
                     int i, int j,
                     float stop_colour, float filling_colour, bool less, int neighbourhood)
 {
-    list<int> iNeighbours;       /* A list for neighbour pixels */
+    std::list<int> iNeighbours;   /* A list for neighbour pixels */
     int iCurrenti, iCurrentj;     /* Coordinates of the current pixel considered */
 
     /* First task is copying the input image into the output one */
@@ -125,7 +125,7 @@ void region_growing(const Matrix3D<double> &V_in, Matrix3D<double> &V_out,
                     int k, int i, int j,
                     float stop_colour, float filling_colour, bool less)
 {
-    list<int> iNeighbours;       /* A list for neighbour voxels */
+    std::list<int> iNeighbours;       /* A list for neighbour voxels */
     int iCurrentk, iCurrenti, iCurrentj;     /* Coordinates of the current voxel considered */
 
     /* First task is copying the input volume into the output one */
@@ -605,7 +605,7 @@ void Smoothing_Shah(Matrix2D<double> &img,
              ((diffsurface > SHAH_CONVERGENCE_THRESHOLD) && !OuterLoops); i++)
         {
 
-            /* cout << "Iteration ..." << i+1;*/
+            /* std::cout << "Iteration ..." << i+1;*/
             /* Iteratively update surface estimate */
             for (int j = 0; j < InnerLoops; j++)
                 diffsurface =
@@ -619,10 +619,10 @@ void Smoothing_Shah(Matrix2D<double> &img,
 
             /* Calculate new functional energy */
             double energy = Shah_energy(img, surface_strength, edge_strength, k, W);
-            /* cout << " Energy " << energy
+            /* std::cout << " Energy " << energy
                  << " ... Relative Diff " << diffsurface
                  << " ... Edge diff " << diffedge
-                 << endl; */
+                 << std::endl; */
         }
     }
 }

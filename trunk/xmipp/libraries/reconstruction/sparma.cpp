@@ -49,7 +49,7 @@ void ARMA_parameters::read(const FileName &InputFile)
     // Read the parameters file to get every one
     FILE *file;
     if ((file = fopen(InputFile.c_str(), "r")) == NULL)
-        REPORT_ERROR(1, (string)"ARMA_parameters::read: There is a problem "
+        REPORT_ERROR(1, (std::string)"ARMA_parameters::read: There is a problem "
                      "opening the file " + InputFile);
 
     fn_in        = getParameter(file, "image", 0, "");
@@ -66,23 +66,23 @@ void ARMA_parameters::read(const FileName &InputFile)
 // Write to a file =========================================================
 void ARMA_parameters::write(const FileName &fn_prm, bool rewrite)
 {
-    ofstream fh_param;
-    if (!rewrite) fh_param.open(fn_prm.c_str(), ios::app);
-    else          fh_param.open(fn_prm.c_str(), ios::out);
+    std::ofstream fh_param;
+    if (!rewrite) fh_param.open(fn_prm.c_str(), std::ios::app);
+    else          fh_param.open(fn_prm.c_str(), std::ios::out);
     if (!fh_param)
-        REPORT_ERROR(1, (string)"ARMA_parameters::write: There is a problem "
+        REPORT_ERROR(1, (std::string)"ARMA_parameters::write: There is a problem "
                      "opening the file " + fn_prm);
     fh_param << "# ARMA parameters\n";
     if (fn_in != "")
-        fh_param << "image=" << fn_in     << endl;
+        fh_param << "image=" << fn_in     << std::endl;
     if (fn_filter != "")
-        fh_param << "ARMAfile=" << fn_filter << endl;
-    fh_param << "N_AR="     << N_AR      << endl
-    << "M_AR="     << M_AR      << endl
-    << "N_MA="     << N_MA      << endl
-    << "M_MA="     << M_MA      << endl
+        fh_param << "ARMAfile=" << fn_filter << std::endl;
+    fh_param << "N_AR="     << N_AR      << std::endl
+    << "M_AR="     << M_AR      << std::endl
+    << "N_MA="     << N_MA      << std::endl
+    << "M_MA="     << M_MA      << std::endl
     ;
-    fh_param << endl;
+    fh_param << std::endl;
     fh_param.close();
 }
 
@@ -312,7 +312,7 @@ void ARMAFilter(Matrix2D<double> &Img, Matrix2D< double > &Filter,
             // take advantage of this fact.
             double val2 = dSigma * B / A, val;
             //if   (val2>=0) val=sqrt(val2);
-            //else {val=abs(sqrt(complex<double>(val2,0)));}
+            //else {val=abs(sqrt(std::complex<double>(val2,0)));}
             Filter(sizeY - 1 - i, sizeX - 1 - j) = Filter(i, j) = ABS(val2);
         }
 

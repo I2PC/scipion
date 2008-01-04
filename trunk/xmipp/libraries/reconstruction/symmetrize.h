@@ -57,7 +57,7 @@ public:
     void usage();
 
     /** Show parameters */
-    friend ostream & operator << (ostream &out, const Symmetrize_Parameters
+    friend std::ostream & operator << (std::ostream &out, const Symmetrize_Parameters
                                   &prm);
 };
 

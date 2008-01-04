@@ -38,7 +38,7 @@
 #undef maT
 // Special case for complex numbers
 template <>
-ostream& operator << (ostream& out, const Matrix1D< complex<double> > & v)
+std::ostream& operator << (std::ostream& out, const Matrix1D< std::complex<double> > & v)
 {
     if (MULTIDIM_SIZE(v) == 0)
         out << "NULL vector\n";

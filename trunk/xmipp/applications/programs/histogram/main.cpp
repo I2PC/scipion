@@ -67,7 +67,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error Xe)
     {
-        cout << Xe;
+        std::cout << Xe;
         Usage();
         mask_prm.usage();
         exit(1);
@@ -110,11 +110,11 @@ int main(int argc, char **argv)
         }
 
         if (fn_out != "") hist.write(fn_out);
-        else            cout << hist;
+        else            std::cout << hist;
     }
     catch (Xmipp_error Xe)
     {
-        cout << Xe;
+        std::cout << Xe;
     }
     exit(0);
 }
@@ -122,7 +122,7 @@ int main(int argc, char **argv)
 /* Usage ------------------------------------------------------------------- */
 void Usage()
 {
-    cout << "histogram [Parameters]:\n"
+    std::cout << "histogram [Parameters]:\n"
     << "   -i <File_in>                : Input Xmipp Volume or Image\n"
     << "  [-o <File_out>]              : Text file with histogram\n"
     << "  [-range <m> <M>]             : range for the histogram\n"

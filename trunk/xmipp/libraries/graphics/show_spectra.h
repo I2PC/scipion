@@ -48,7 +48,7 @@ protected:
 
     // Axes offset within cell frame
     int offX, offY;
-    // Spacing between X ticks
+    // spacing between X ticks
     int spacing;
     // Offset for ticks
     int x_tick_off;
@@ -99,7 +99,7 @@ protected:
     void setCommonSpectraOptionsRightclickMenubar(void);
 public:
     /* Apply filter */
-    void applyFilter(const vector<int> &min, const vector<int> &max);
+    void applyFilter(const std::vector<int> &min, const std::vector<int> &max);
 protected slots:
     // These slots are related with the right click menubar ---------------- */
     // Select spectra by value
@@ -123,7 +123,7 @@ protected slots:
     // Change ticks spacing
     virtual void changeXstep();
     // returns spacing from scroll window
-    virtual void set_spacing(vector<float> prm);
+    virtual void set_spacing(std::vector<float> prm);
 
 public:
     /** Initialize with a set of vectors.
@@ -142,7 +142,7 @@ class SpectraFilter : public QWidget
     Q_OBJECT
 public:
     /** Constructor */
-    SpectraFilter(int min, int max, const vector<float> &_x,
+    SpectraFilter(int min, int max, const std::vector<float> &_x,
                   ShowSpectra *show_spectra,
                   QWidget *parent = 0, const char *name = 0, int wflags = 0);
     /** Destructor */

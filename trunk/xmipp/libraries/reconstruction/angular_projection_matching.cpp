@@ -71,51 +71,51 @@ void Prog_projection_matching_prm::read(int argc, char **argv)  {
 void Prog_projection_matching_prm::show() {
 
   if (verb>0) {
-    cerr << "  Input images            : "<< SF.name()<<" ("<<SF.ImgNo()<<")"<<endl;
-    cerr << "  Reference volume        : "<< fn_vol<<endl;
-    cerr << "  Output rootname         : "<< fn_root<<endl;
-    cerr << "  Angular sampling rate   : "<< sampling <<endl;
+    std::cerr << "  Input images            : "<< SF.name()<<" ("<<SF.ImgNo()<<")"<<std::endl;
+    std::cerr << "  Reference volume        : "<< fn_vol<<std::endl;
+    std::cerr << "  Output rootname         : "<< fn_root<<std::endl;
+    std::cerr << "  Angular sampling rate   : "<< sampling <<std::endl;
     if (Ri>0)
-    cerr << "  Inner radius rot-search : "<<Ri<<endl;
+    std::cerr << "  Inner radius rot-search : "<<Ri<<std::endl;
     if (Ro>0)
-    cerr << "  Outer radius rot-search : "<<Ro<<endl;
-    cerr << "  -> Limit search of origin offsets to  +/- "<<max_shift<<" pixels"<<endl;
+    std::cerr << "  Outer radius rot-search : "<<Ro<<std::endl;
+    std::cerr << "  -> Limit search of origin offsets to  +/- "<<max_shift<<" pixels"<<std::endl;
     if (ang_search>0) {
-      cerr << "  -> Limit search of rot and tilt angle to  +/- "<<ang_search<<" degrees"<<endl;
+      std::cerr << "  -> Limit search of rot and tilt angle to  +/- "<<ang_search<<" degrees"<<std::endl;
     }
     if (tilt_range0>0. || tilt_rangeF<180.)
     {
-	cerr << "  -> Limited tilt range       : "<<tilt_range0<<"  "<<tilt_rangeF<<endl;
+	std::cerr << "  -> Limited tilt range       : "<<tilt_range0<<"  "<<tilt_rangeF<<std::endl;
     }
     if (fn_sym!="")
     {
-	cerr << "  -> Limit angular search to asymmetric part, as defined by: "<<fn_sym<<endl;
+	std::cerr << "  -> Limit angular search to asymmetric part, as defined by: "<<fn_sym<<std::endl;
     }
     if (fn_ang!="")
     {
-	cerr << "  -> Document file with angles for projection library: "<<fn_ang<<endl;
+	std::cerr << "  -> Document file with angles for projection library: "<<fn_ang<<std::endl;
     }
     if (!modify_header)
     {
-	cerr << "  -> Do not modify the image headers (only output docfile)"<<endl;
+	std::cerr << "  -> Do not modify the image headers (only output docfile)"<<std::endl;
     }
     if (output_refs)
     {
-	cerr << "  -> Output library projections, sel and docfile"<<endl;
+	std::cerr << "  -> Output library projections, sel and docfile"<<std::endl;
     }
     if (output_classes)
     {
-	cerr << "  -> Output class averages and selfiles for each projection direction "<<endl;
+	std::cerr << "  -> Output class averages and selfiles for each projection direction "<<std::endl;
     }
 
-    cerr << " ================================================================="<<endl;
+    std::cerr << " ================================================================="<<std::endl;
   }
 }
 
 // Usage ===================================================================
 void Prog_projection_matching_prm::usage() {
-  cerr << "Usage:  projection_matching [options] "<<endl;
-  cerr << "   -i <selfile>                : Selfile with input images \n"
+  std::cerr << "Usage:  projection_matching [options] "<<std::endl;
+  std::cerr << "   -i <selfile>                : Selfile with input images \n"
        << "   -vol <volume>               : Reference volume \n"
        << " [ -o <rootname=\"out\"> ]       : Output rootname \n"
        << " [ -sam <float=10> ]           : Sampling rate for rot, tilt & psi (degrees) \n"
@@ -125,7 +125,7 @@ void Prog_projection_matching_prm::usage() {
 
 // Extended usage ===================================================================
 void Prog_projection_matching_prm::extended_usage() {
-  cerr << "Additional options: \n"
+  std::cerr << "Additional options: \n"
        << " [ -ang_search <float=-1> ]    : Maximum change in rot & tilt  (+/- degrees) \n"
        << " [ -tilt0 <float=0.> ]         : Lower-value for restricted tilt angle search \n"
        << " [ -tiltF <float=180.> ]       : Higher-value for restricted tilt angle search \n"
@@ -153,7 +153,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
     double           mean_ref,stddev_ref,dummy,psi=0.;
     Matrix1D<double> dataline(3);
     int              nl;
-//cerr << "inside produce_Side_info "  << endl;
+//std::cerr << "inside produce_Side_info "  << std::endl;
 
     // Set nr_psi
     nr_psi=CEIL(360./sampling);
@@ -227,7 +227,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	    // THIS CODE IS AT LEAST SLOPPY...
 
 	    // 1. Create even distribution over the entire Ewald sphere
-	    if (verb>0) cerr << "--> Making even distribution on entire Ewald sphere "<<endl;
+	    if (verb>0) std::cerr << "--> Making even distribution on entire Ewald sphere "<<std::endl;
 	    make_even_distribution(DF,sampling,SL,true);
 	    if (tilt_range0>0. || tilt_rangeF<180.)
 		limit_tilt_range(DF,tilt_range0,tilt_rangeF);
@@ -246,7 +246,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
 		DFi.append_data_line(dataline);
 	    }
 	    // 3. Check which angles of DF to use
-	    if (verb>0) cerr << "--> Selecting relevant library projection directions ..."<<endl;
+	    if (verb>0) std::cerr << "--> Selecting relevant library projection directions ..."<<std::endl;
 	    if (verb>0)
 	    {
 		nn=DF.dataLineNo();
@@ -302,7 +302,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	// Generate reference projections from even distribution
 	{
 	    // Create evenly-distributed reference projection angles
-	    if (verb>0) cerr << "--> Making even angular distribution ..."<<endl;
+	    if (verb>0) std::cerr << "--> Making even angular distribution ..."<<std::endl;
 	    make_even_distribution(DF,sampling,SL,true);
 	    if (tilt_range0>0. || tilt_rangeF<180.)
 		limit_tilt_range(DF,tilt_range0,tilt_rangeF);
@@ -322,7 +322,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	SFr.go_beginning();
 	DF.go_beginning();
 
-	if (verb>0) cerr << "--> Projecting the reference volume ..."<<endl;
+	if (verb>0) std::cerr << "--> Projecting the reference volume ..."<<std::endl;
 	if (verb>0) init_progress_bar(nl);
 
 	fn_refs=fn_root+"_lib";
@@ -339,7 +339,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	    ref_tilt[nr_dir]=DF(1);
             //this should be changed for mpi, otherwise
             //all projections are computed in each node
-            //cerr << "project at " << ref_rot[nr_dir] << " " << ref_tilt[nr_dir] << endl;
+            //std::cerr << "project at " << ref_rot[nr_dir] << " " << ref_tilt[nr_dir] << std::endl;
 	    project_Volume(vol(),proj,dim,dim,ref_rot[nr_dir],ref_tilt[nr_dir],psi);
 	    if (output_refs)
 	    {
@@ -347,7 +347,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	        if (create_proyections==1)
 	            proj.write(fn_tmp);
 	        SFr.insert(fn_tmp);
-//cerr << "inside write proj "  << fn_tmp << endl;
+//std::cerr << "inside write proj "  << fn_tmp << std::endl;
 	    }
 	    if (output_classes)
 	    {
@@ -379,7 +379,7 @@ void Prog_projection_matching_prm::produce_Side_info() {
 	    SFr.write(fn_tmp);
 	}
 	if (verb>0) progress_bar(nl);
-	if (verb>0) cerr << " ================================================================="<<endl;
+	if (verb>0) std::cerr << " ================================================================="<<std::endl;
 
     }
 
@@ -400,7 +400,7 @@ void Prog_projection_matching_prm::PM_process_one_image(Matrix2D<double> &Mexp,
   double stddev_img,mean_img,dummy,xmax,ymax;
   int c=0,ioptpsi=0,ioptflip=0;
   bool search;
-  vector<Matrix2D<double> >::iterator ipp;
+  std::vector<Matrix2D<double> >::iterator ipp;
 
   maxCC=-99.e99;
   Mimg.resize(dim,dim);
@@ -442,7 +442,7 @@ void Prog_projection_matching_prm::PM_process_one_image(Matrix2D<double> &Mexp,
         oldCC=aveCC;
         aveCC+=(thisCC-oldCC)/(c+1);
         if (c>1) varCC=(1.-1./(double)c)*varCC+(c+1.)*(oldCC-aveCC)*(oldCC-aveCC);
-	//cout << "rot= "<<ref_rot[dirno]<<" tilt= "<<ref_tilt[dirno]<<" psi= "<<psi<<" CC= "<<thisCC<<" maxCC= "<<maxCC<<" "<<dirno<<" "<<opt_dirno<<endl;
+	//std::cout << "rot= "<<ref_rot[dirno]<<" tilt= "<<ref_tilt[dirno]<<" psi= "<<psi<<" CC= "<<thisCC<<" maxCC= "<<maxCC<<" "<<dirno<<" "<<opt_dirno<<std::endl;
 	if (thisCC>maxCC) {
 	  maxCC=thisCC;
 	  opt_psi=psi;
@@ -490,7 +490,7 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
   double opt_psi,opt_xoff,opt_yoff,maxCC,Zscore;
   int c,nn,imgno,opt_dirno;
 
-  if (verb>0) cerr << "--> Projection matching ... "<<endl;
+  if (verb>0) std::cerr << "--> Projection matching ... "<<std::endl;
 
   // Initialize
   nn=SF.ImgNo();
@@ -580,7 +580,7 @@ void Prog_projection_matching_prm::PM_loop_over_all_images(SelFile &SF, DocFile 
   }
 
   if (verb>0) progress_bar(nn);
-  if (verb>0) cerr << " ================================================================="<<endl;
+  if (verb>0) std::cerr << " ================================================================="<<std::endl;
 
   // free memory
   /*

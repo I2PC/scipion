@@ -72,20 +72,20 @@ public:
     * Standard output for a Descent class
     * Parameter: _os The output stream
     */
-    virtual void printSelf(ostream& _os) const;
+    virtual void printSelf(std::ostream& _os) const;
 
     /**
     * Standard input for a Descent class
     * Parameter: _is The input stream
     */
-    virtual void readSelf(istream& _is);
+    virtual void readSelf(std::istream& _is);
 
     /**
      * Saves the Descent class into a stream.
      * this method can be used to save the status of the class.
      * Parameter: _os The output stream
      */
-    virtual void saveObject(ostream& _os) const;
+    virtual void saveObject(std::ostream& _os) const;
 
 
     /**
@@ -93,7 +93,7 @@ public:
      * this method can be used to load the status of the class.
      * Parameter: _is The output stream
      */
-    virtual void loadObject(istream& _is);
+    virtual void loadObject(std::istream& _is);
 
 
     /**
@@ -101,7 +101,7 @@ public:
     * Parameter: _os   The output stream
     * Parameter: _desc  The class
     */
-    friend ostream& operator << (ostream& _os, const Descent& _desc)
+    friend std::ostream& operator << (std::ostream& _os, const Descent& _desc)
     {
         _desc.printSelf(_os);
         return _os;
@@ -112,7 +112,7 @@ public:
     * Parameter: _is The input stream
     * Parameter: _desc The class
     */
-    friend istream& operator >> (istream& _is, Descent& _desc)
+    friend std::istream& operator >> (std::istream& _is, Descent& _desc)
     {
         _desc.readSelf(_is);
         return _is;
@@ -151,7 +151,7 @@ public:
      * Construct a SOM from the code vectors in a stream
      * Parameter: _is  The stream
      */
-    xmippSOM(istream& _is);
+    xmippSOM(std::istream& _is);
 
 
     /**
@@ -205,20 +205,20 @@ public:
     * Standard output for a SOM algorithm
     * Parameter: _os The output stream
     */
-    virtual void printSelf(ostream& _os) const;
+    virtual void printSelf(std::ostream& _os) const;
 
     /**
     * Standard input for a SOM algorithm
     * Parameter: _is The input stream
     */
-    virtual void readSelf(istream& _is);
+    virtual void readSelf(std::istream& _is);
 
     /**
      * Saves the xmippSOM class into a stream.
      * this method can be used to save the status of the class.
      * Parameter: _os The output stream
      */
-    virtual void saveObject(ostream& _os) const;
+    virtual void saveObject(std::ostream& _os) const;
 
 
     /**
@@ -226,14 +226,14 @@ public:
      * this method can be used to load the status of the class.
      * Parameter: _is The output stream
      */
-    virtual void loadObject(istream& _is);
+    virtual void loadObject(std::istream& _is);
 
     /**
     * Standard output for a som algorithm
     * Parameter: _os   The output stream
     * Parameter: _som  The som algorithm to be printed
     */
-    friend ostream& operator << (ostream& _os, const xmippSOM& _som)
+    friend std::ostream& operator << (std::ostream& _os, const xmippSOM& _som)
     {
         _som.printSelf(_os);
         return _os;
@@ -244,7 +244,7 @@ public:
     * Parameter: _is The input stream
     * Parameter: _som The som algorithm
     */
-    friend istream& operator >> (istream& _is, xmippSOM& _som)
+    friend std::istream& operator >> (std::istream& _is, xmippSOM& _som)
     {
         _som.readSelf(_is);
         return _is;
@@ -257,9 +257,8 @@ public:
     */
     xmippSOM& operator= (const xmippSOM &op1)
     {
-        strstreambuf bf;
-        ;
-        iostream _str(&bf);
+        std::strstreambuf bf;
+        std::iostream _str(&bf);
         op1.printSelf(_str);
         readSelf(_str);
         return *this;

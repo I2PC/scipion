@@ -56,7 +56,7 @@ void Prog_MPI_Run_Parameters::read(int argc, char **argv)
 /* Usage ------------------------------------------------------------------- */
 void Prog_MPI_Run_Parameters::usage()
 {
-    cerr << "MPI_Run\n"
+    std::cerr << "MPI_Run\n"
     << "   -i <command file>    : File with commands to send to mpirun\n"
     << "\n"
     << "Example of use:\n"
@@ -67,7 +67,7 @@ void Prog_MPI_Run_Parameters::usage()
 /* Show -------------------------------------------------------------------- */
 void Prog_MPI_Run_Parameters::show()
 {
-    cout << "Commands  file:           " << fn_commands << endl
+    std::cout << "Commands  file:           " << fn_commands << std::endl
     ;
 }
 
@@ -82,7 +82,7 @@ void Prog_MPI_Run_Parameters::run()
         ifstream fh_in;
         fh_in.open(fn_commands.c_str());
         if (!fh_in)
-            REPORT_ERROR(1, (string)"Cannot open " + fn_commands);
+            REPORT_ERROR(1, (std::string)"Cannot open " + fn_commands);
 
 #define MAX_LINE 1024
         string line;
@@ -125,7 +125,7 @@ void Prog_MPI_Run_Parameters::run()
                      TAG_WORK,
                      MPI_COMM_WORLD);
             number_of_node_waiting--;
-            //cout << line << endl;
+            //std::cout << line << std::endl;
         }
 
         fh_in.close();
@@ -155,7 +155,7 @@ void Prog_MPI_Run_Parameters::run()
                 continue;
             }
             MPI_Recv(&szline, MAX_LINE, MPI_CHAR, 0, TAG_WORK, MPI_COMM_WORLD, &status);
-            cout << szline << endl;
+            std::cout << szline << std::endl;
             //do the job
             system(szline);
 

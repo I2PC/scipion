@@ -55,8 +55,8 @@ protected:
 public:
     int                   mode;         // Use full or half circles
     double                oversample;
-    vector<double>        ring_radius;  // radius of each ring
-    vector<Matrix1D<T> >  rings;        // vector with all rings
+    std::vector<double>        ring_radius;  // radius of each ring
+    std::vector<Matrix1D<T> >  rings;        // vector with all rings
 public:
     /** Empty constructor
      *
@@ -267,7 +267,7 @@ public:
      * assign a new one. You may use rename() for that.
      *
      * @code
-     * cout << "Polar name: " << P.name() << endl;
+     * std::cout << "Polar name: " << P.name() << std::endl;
      * @endcode
      */
     const FileName name() const
@@ -280,7 +280,7 @@ public:
      * This function is used to know the number of rings in the polar. 
      *
      * @code
-     * cout << "Number of rings: " << P.getRingNo() << endl;
+     * std::cout << "Number of rings: " << P.getRingNo() << std::endl;
      * @endcode
      */
     const int getRingNo() const
@@ -297,7 +297,7 @@ public:
      * HALF_CIRCLES = 0 (used for symmetric functions, e.g. Fourier transforms)
      *
      * @code
-     * cout << "Mode: " << P.getMode() << endl;
+     * std::cout << "Mode: " << P.getMode() << std::endl;
      * @endcode
      */
     const int getMode() const
@@ -314,7 +314,7 @@ public:
      * Oversampling < 1 means undersampling
      *
      * @code
-     * cout << "Oversample: " << P.getOversample() << endl;
+     * std::cout << "Oversample: " << P.getOversample() << std::endl;
      * @endcode
      */
     const double getOversample() const
@@ -327,7 +327,7 @@ public:
      * This function is used to know the number of samples in a given ring.
      *
      * @code
-     * cout << "Number of samples in second ring: " << P.getSampleNo(1) << endl;
+     * std::cout << "Number of samples in second ring: " << P.getSampleNo(1) << std::endl;
      * @endcode
      */
     const int getSampleNo(int iring) const
@@ -340,7 +340,7 @@ public:
      * This function is used to know the radius of a given ring.
      *
      * @code
-     * cout << "Radius of second ring: " << P.getRadius(1) << endl;
+     * std::cout << "Radius of second ring: " << P.getRadius(1) << std::endl;
      * @endcode
      */
     const double getRadius(int iring) const
@@ -389,7 +389,7 @@ public:
      *
      * @code
      * int ring = 1, phi = 0;
-     * cout <<" first pixel of second ring= "<<P.getPixel(ring,phi)<<endl;
+     * std::cout <<" first pixel of second ring= "<<P.getPixel(ring,phi)<<std::endl;
      * @endcode
      */
     T& getPixel(int r, int f) const
@@ -405,7 +405,7 @@ public:
      *
      * @code
      * int ring = 1, phi = 0;
-     * cout <<" first pixel of second ring= "<<P(ring,phi)<<endl;
+     * std::cout <<" first pixel of second ring= "<<P(ring,phi)<<std::endl;
      * @endcode
      */
     T& operator()(int r, int f) const
@@ -504,9 +504,9 @@ public:
      * of the polar structure. 
      *
      */
-    void getCartesianCoordinates(vector<double> &x,
-				 vector<double> &y,
-				 vector<T> &data,
+    void getCartesianCoordinates(std::vector<double> &x,
+				 std::vector<double> &y,
+				 std::vector<T> &data,
 				 const double extra_shell = GRIDDING_K/2)
     {
 	double                     twopi, dphi,radius;
@@ -649,7 +649,7 @@ public:
      *
      * @code
      * Polar<double> P;
-     * Polar<complex<double> > Pf;
+     * Polar<std::complex<double> > Pf;
      * KaiserBessel kb;
      * Matrix2D<double> Maux;
      * produceReverseGriddingMatrix2D(img(),Maux,kb);
@@ -657,10 +657,10 @@ public:
      * Pf = P.fourierTransformRings();
      * @endcode
      */
-    Polar<complex<double> > fourierTransformRings(bool conjugated = DONT_CONJUGATE) const
+    Polar<std::complex<double> > fourierTransformRings(bool conjugated = DONT_CONJUGATE) const
     {
-	Polar<complex<double> > out;
-	Matrix1D<complex<double> > Fring;
+	Polar<std::complex<double> > out;
+	Matrix1D<std::complex<double> > Fring;
 	out.clear();
 	for (int iring = 0; iring < rings.size(); iring++)
 	{ 
@@ -693,14 +693,14 @@ public:
  *
  */
 template<typename T>
-void rotationalCorrelation(const Polar<complex<double> > &M1,
-			   const Polar<complex<double> > &M2,
+void rotationalCorrelation(const Polar<std::complex<double> > &M1,
+			   const Polar<std::complex<double> > &M2,
 			   Matrix1D<double> &angles, 
 			   Matrix1D<T > &corr)
 {
 
-    Matrix1D<complex<double> > Fsum, Faux;
-    complex<double> aux;
+    Matrix1D<std::complex<double> > Fsum, Faux;
+    std::complex<double> aux;
 
     int nrings = M1.getRingNo();
     if (nrings != M2.getRingNo())
@@ -741,7 +741,7 @@ void rotationalCorrelation(const Polar<complex<double> > &M1,
 /** Inverse Fourier Transform of all rings
  *
  */
-void inverseFourierTransformRings(const Polar<complex<double> > & in, 
+void inverseFourierTransformRings(const Polar<std::complex<double> > & in, 
 				  Polar<double> & out, bool conjugated = false);
 
 /** Convert to a single vector
@@ -750,7 +750,7 @@ void inverseFourierTransformRings(const Polar<complex<double> > & in,
  * This may be useful for parallelization purposes.
  * 
  */
-void convertPolarToSingleArray(const Polar<complex<double> > & in, 
+void convertPolarToSingleArray(const Polar<std::complex<double> > & in, 
 			       Matrix1D<double> & out);
 
 /** Convert to a single vector
@@ -770,7 +770,7 @@ void convertPolarToSingleArray(const Polar<double> & in,
  * 
  */
 void convertSingleArrayToPolar(const Matrix1D<double> & in,
-			       Polar<complex<double> > & out);
+			       Polar<std::complex<double> > & out);
 
 /** Convert back from a single vector to a real polar structure
  *

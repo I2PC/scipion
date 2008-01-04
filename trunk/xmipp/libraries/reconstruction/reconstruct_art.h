@@ -46,8 +46,8 @@ class Plain_ART_Parameters
     /* User parameters ..................................................... */
     /* Side information .................................................... */
 public:
-    /// cout << eprm;
-    friend ostream & operator << (ostream &o,
+    /// std::cout << eprm;
+    friend std::ostream & operator << (std::ostream &o,
                                   const Plain_ART_Parameters &eprm);
 
     /// Produce Plain side information from the Extra parameters

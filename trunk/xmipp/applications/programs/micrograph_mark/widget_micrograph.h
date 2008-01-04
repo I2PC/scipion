@@ -64,10 +64,10 @@ public:
     double dist;          // distance from the avg vector
 
     // Print
-    friend ostream & operator << (ostream &_out, const Particle &_p);
+    friend std::ostream & operator << (std::ostream &_out, const Particle &_p);
 
     // Read
-    void read(istream &_in, int _vec_size);
+    void read(std::istream &_in, int _vec_size);
 };
 
 /* Classification model ---------------------------------------------------- */
@@ -81,7 +81,7 @@ public:
     // Inverse of sigma
     Matrix2D<double>           __sigma_inv;
     // Example vectors
-    vector< Particle >         __training_particle;
+    std::vector< Particle >         __training_particle;
     // largest distance in the example set
     double                     __largest_distance;
     // Well posed
@@ -132,13 +132,13 @@ public:
     double euclidean_distance_to_average(const Matrix1D<double> &my_X);
 
     // Print
-    friend ostream & operator << (ostream &_out, const Classification_model &_m);
+    friend std::ostream & operator << (std::ostream &_out, const Classification_model &_m);
 
     // Read
-    friend istream & operator >> (istream &_in, Classification_model &_m);
+    friend std::istream & operator >> (std::istream &_in, Classification_model &_m);
 
     // Print model
-    void print_model(ostream &_out);
+    void print_model(std::ostream &_out);
 };
 
 /* Widget for the micrograph ----------------------------------------------- */
@@ -165,19 +165,19 @@ private:
     bool                       __learn_particles_done;
     bool                       __autoselection_done;
     Mask_Params                __mask;
-    vector < Matrix2D<int> * > __mask_classification;
+    std::vector < Matrix2D<int> * > __mask_classification;
     bool                       __use_background;
-    vector < Matrix1D<int> * > __radial_val;
+    std::vector < Matrix1D<int> * > __radial_val;
     Classification_model       __training_model;
     Classification_model       __training_loaded_model;
     Classification_model       __auto_model;
     Classification_model       __auto_loaded_model;
     Classification_model       __selection_model;
-    vector<Classification_model> __error_model;
+    std::vector<Classification_model> __error_model;
     int                        __Nerror_models;
     bool                       __use_euclidean_distance_for_errors;
     int                        __auto_label;
-    vector<int>                __error_index;
+    std::vector<int>                __error_index;
     Matrix2D<double>           __piece;
     int                        __gray_bins;
     int                        __radial_bins;
@@ -303,7 +303,7 @@ public:
     void classifyMask();
 
     // Build vectors
-    void buildVectors(vector<int> &_idx, Classification_model &_model);
+    void buildVectors(std::vector<int> &_idx, Classification_model &_model);
 
     // Build classfication vector
     // x,y are in the coordinate system of the piece (that might be
@@ -337,10 +337,10 @@ public:
     //To get the neighbours of the particle at position (x,y) in the micrograph
     // (with actual coordinates in the piece posx,posy)
     // and their positions in the piece image
-    void find_nbr(vector<int> &_idx, int _index,
+    void find_nbr(std::vector<int> &_idx, int _index,
                   int _x, int _y,
                   int _posx, int _posy, Matrix1D<char> &_visited,
-                  vector< Matrix1D<int> > &_nbr);
+                  std::vector< Matrix1D<int> > &_nbr);
 
     // Automatically Select Particles
     void automaticallySelectParticles();
@@ -359,20 +359,20 @@ public:
     // depending upon _reject_both. This function returns the number of particles
     // that are still candidates.
     int reject_within_distance(
-        vector<Particle> &_Input, double _min_dist, bool _reject_both);
+        std::vector<Particle> &_Input, double _min_dist, bool _reject_both);
 
     // Reject those automatically selected particles that are very close
     // to manually selected ones.
     void reject_previously_selected(const Classification_model &_model,
-                                    vector<Particle> &_candidate_vec);
+                                    std::vector<Particle> &_candidate_vec);
 
     // Refine the position of a particle within the current piece
     void refine_center(Particle &my_P);
 
     // Add family.
     // The family label is returned
-    int add_family(vector<Particle> &_list,
-                   const string &_family_name);
+    int add_family(std::vector<Particle> &_list,
+                   const std::string &_family_name);
 
     // Move particle.
     // The input index is the index of the moved particle in the micrograph list
@@ -456,15 +456,15 @@ public:
     ~CropWidget();
 private:
     QtWidgetMicrograph      *__qtwidgetmicrograph;
-    vector < QScrollBar * >  __scroll;
-    vector < QLabel * >      __label;
+    std::vector < QScrollBar * >  __scroll;
+    std::vector < QLabel * >      __label;
     QLineEdit               *__outputNameLineEdit;
 private slots:
     void scrollValueChanged(int);
     void accept();
     void cancel();
 signals:
-    void new_value(vector<int>);
+    void new_value(std::vector<int>);
 };
 
 /** Class to adjust circle radius

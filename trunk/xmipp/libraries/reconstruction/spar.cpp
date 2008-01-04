@@ -189,7 +189,7 @@ double CausalAR(Matrix2D<double> &Img,
     R.initZeros();
     STARTINGY(R) = l0 - pF;
     STARTINGX(R) = m0 - qF;
-    cerr << "Generating correlation coefficients ...\n";
+    std::cerr << "Generating correlation coefficients ...\n";
     FOR_ALL_ELEMENTS_IN_MATRIX2D(R)
     MAT_ELEM(R, i, j) = correlation(Img, Img, NULL, i, j);
 
@@ -267,11 +267,11 @@ double CausalAR(Matrix2D<double> &Img,
     }
 
     // Solve the equation system to determine the AR model coeficients and sigma.
-    cerr << "Solving AR model ...\n";
+    std::cerr << "Solving AR model ...\n";
     /*****************************************/
 #ifdef DEBUG
-    ofstream fichero("coeficientes.txt");
-    fichero << Coeficients << endl << Indep_terms << endl ;
+    std::ofstream fichero("coeficientes.txt");
+    fichero << Coeficients << std::endl << Indep_terms << std::endl ;
     fichero.close();
 #endif
     /******************************************/
@@ -334,7 +334,7 @@ double NonCausalAR(Matrix2D<double> &Img,
     R.initZeros();
     STARTINGY(R) = l0 - pF;
     STARTINGX(R) = m0 - qF;
-    cerr << "Generating correlation coefficients ...\n";
+    std::cerr << "Generating correlation coefficients ...\n";
     FOR_ALL_ELEMENTS_IN_MATRIX2D(R)
     MAT_ELEM(R, i, j) = correlation(Img, Img, NULL, i, j);
 
@@ -399,7 +399,7 @@ double NonCausalAR(Matrix2D<double> &Img,
     }
 
     // Solve the equation system to determine the AR model coeficients and sigma.
-    cerr << "Solving AR model ...\n";
+    std::cerr << "Solving AR model ...\n";
     solve(Coeficients, Indep_terms, ARcoeficients);
 
     // Put the ARcoeficients into the matrix given as parameter
@@ -421,7 +421,7 @@ double NonCausalAR(Matrix2D<double> &Img,
 
 /* AR Filter --------------------------------------------------------------- */
 #define DEBUG
-void ARFilter(Matrix2D<double> &Img, Matrix2D< complex<double> > &Filter,
+void ARFilter(Matrix2D<double> &Img, Matrix2D< std::complex<double> > &Filter,
               Matrix2D<double> &ARParameters)
 {
 
@@ -439,7 +439,7 @@ void ARFilter(Matrix2D<double> &Img, Matrix2D< complex<double> > &Filter,
     // index
 
 #ifdef DEBUG
-    ofstream filelog("coeficientes.txt");
+    std::ofstream filelog("coeficientes.txt");
 #endif
     FOR_ALL_ELEMENTS_IN_MATRIX2D(Filter)
     {
@@ -452,11 +452,11 @@ void ARFilter(Matrix2D<double> &Img, Matrix2D< complex<double> > &Filter,
         B = ComputeTermB(dDigitalFreq, ARParameters);
 
         double sigma = sqrt(MAT_ELEM(ARParameters, 0, 0));
-        Filter(i, j) = complex<double> (sigma * (1 + A) / ((1 + A) * (1 + A) + B * B),
+        Filter(i, j) = std::complex<double> (sigma * (1 + A) / ((1 + A) * (1 + A) + B * B),
                                         sigma * (-B) / ((1 + A) * (1 + A) + B * B));
 
 #ifdef DEBUG
-        filelog << "A " << A << " B " << B << " po " << abs(Filter(i, j)) << endl ;
+        filelog << "A " << A << " B " << B << " po " << abs(Filter(i, j)) << std::endl ;
 #endif
     }
 
@@ -467,10 +467,10 @@ void ARFilter(Matrix2D<double> &Img, Matrix2D< complex<double> > &Filter,
 #undef DEBUG
 
 /* Combine AR filters ------------------------------------------------------ */
-void combineARFilters(const Matrix2D< complex<double> > &Filter1,
-                      const Matrix2D< complex<double> > &Filter2,
-                      Matrix2D< complex<double> > &Filter,
-                      const string &method)
+void combineARFilters(const Matrix2D< std::complex<double> > &Filter1,
+                      const Matrix2D< std::complex<double> > &Filter2,
+                      Matrix2D< std::complex<double> > &Filter,
+                      const std::string &method)
 {
     Filter.resize(Filter1);
 

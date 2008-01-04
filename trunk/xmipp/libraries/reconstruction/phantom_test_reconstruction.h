@@ -92,22 +92,22 @@ public:
     int sort_last_N;
 
     /// Initial Relaxation parameter (valid for ART and SIRT)
-    vector<double> lambda0;
+    std::vector<double> lambda0;
 
     /// Final Relaxation parameter (valid for ART and SIRT)
-    vector<double> lambdaF;
+    std::vector<double> lambdaF;
 
     /// Initial Number of iterations (valid for ART and SIRT)
-    vector<int> no_it0;
+    std::vector<int> no_it0;
 
     /// Final Number of iterations (valid for ART and SIRT)
-    vector<int> no_itF;
+    std::vector<int> no_itF;
 
     /// Use succesive relaxation parameters
     bool succesive_params;
 
     /// Threshold for WBP
-    vector<double> WBP_threshold;
+    std::vector<double> WBP_threshold;
 
     /// Maximum expected resolution (<1/2), used to filter reconstruction
     double max_resolution;
@@ -237,7 +237,7 @@ public:
     void read(const FileName &fn_test_params);
 
     /** Show parameters */
-    friend ostream & operator << (ostream &out, const Recons_test_Parameters
+    friend std::ostream & operator << (std::ostream &out, const Recons_test_Parameters
                                   &prm);
 };
 
@@ -262,7 +262,7 @@ public:
 void single_measure_on_FOM(Recons_test_Parameters &prm,
                            int i, int &nvol,
                            double &training_mean, double &training_stddev, double &training_N,
-                           EVALUATE_results &results, const string &training_FOM);
+                           EVALUATE_results &results, const std::string &training_FOM);
 
 /** Single measure on all FOMs.
     A measure is compound of \ref Recons_test_Parameters::MeasNo tests.

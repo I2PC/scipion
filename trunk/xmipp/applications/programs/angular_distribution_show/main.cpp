@@ -36,7 +36,7 @@ void Usage();
 
 int main(int argc, char *argv[])
 {
-    string          ang1 = "rot", ang2 = "tilt", ang3 = "psi";
+    std::string     ang1 = "rot", ang2 = "tilt", ang3 = "psi";
     DocFile         angles;
     FileName        fn_ang, fn_sel, fn_hist, fn_ps, fn_DX;
     int             steps;
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
         {
             if (i + 3 >= argc)
             {
-                cout << "Angular distribution: Not enough parameters behind -ang\n";
+                std::cout << "Angular distribution: Not enough parameters behind -ang\n";
                 Usage();
                 exit(1);
             }
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage();
         exit(1);
     }
@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
         Euler_up_down(rot,tilt,psi,rot,tilt,psi);
 
         double rot, tilt, psi;
-        vector< Matrix1D<double> > v, v_ang;
+        std::vector< Matrix1D<double> > v, v_ang;
         v.reserve(AngleNo);
         v_ang.reserve(AngleNo);
         for (int i = 0; i < AngleNo; i++)
@@ -167,12 +167,12 @@ int main(int argc, char *argv[])
 
 #define SHOW {\
         GET_ANGLES(i+1); \
-        cout << i << " " << rot << " " << tilt << " v[i]=" \
-        << v[i].transpose() << endl; \
+        std::cout << i << " " << rot << " " << tilt << " v[i]=" \
+        << v[i].transpose() << std::endl; \
         GET_ANGLES(j+1); \
-        cout << j << " " << rot << " " << tilt << " v[j]=" \
-        << v[j].transpose() << endl; \
-        cout << " d= " << d << endl << endl; \
+        std::cout << j << " " << rot << " " << tilt << " v[j]=" \
+        << v[j].transpose() << std::endl; \
+        std::cout << " d= " << d << std::endl << std::endl; \
     }
 
             // Compute minimum distance table
@@ -206,10 +206,10 @@ int main(int argc, char *argv[])
 // Show distribution as triangles ==========================================
         if (fn_ps != "")
         {
-            ofstream fh_ps;
-            fh_ps.open(fn_ps.c_str(), ios::out);
+            std::ofstream fh_ps;
+            fh_ps.open(fn_ps.c_str(), std::ios::out);
             if (!fh_ps)
-                EXIT_ERROR(1, (string)"Ang_distribution: Cannot open " + fn_ps + " for output");
+                EXIT_ERROR(1, (std::string)"Ang_distribution: Cannot open " + fn_ps + " for output");
 
             fh_ps << "%%!PS-Adobe-2.0\n";
             fh_ps << "%% Creator: Angular Distribution\n";
@@ -311,7 +311,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
 
 }
@@ -319,10 +319,10 @@ int main(int argc, char *argv[])
 /* Usage ------------------------------------------------------------------- */
 void Usage()
 {
-    cout << "Usage:\n";
-    cout << "   ang_distribution <options>\n";
-    cout << "   Where <options> are:\n";
-    cout << "      (-sel <sel_file> |            : selection file with the set of images\n"
+    std::cout << "Usage:\n";
+    std::cout << "   ang_distribution <options>\n";
+    std::cout << "   Where <options> are:\n";
+    std::cout << "      (-sel <sel_file> |            : selection file with the set of images\n"
     << "       -ang <ang_file>              : Spider document file with the angles\n"
     << "      [-order <ang1> <ang2> <ang3>]): where ang1, ang2 and ang3 are\n"
     << "                                      either psi, psi, tilt, tilt,\n"

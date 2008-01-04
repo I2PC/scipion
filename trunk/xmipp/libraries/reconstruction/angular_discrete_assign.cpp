@@ -77,23 +77,23 @@ void Prog_angular_predict_prm::read(int argc, char **argv)
 void Prog_angular_predict_prm::show()
 {
     Prog_parameters::show();
-    cout << "Reference images: " << fn_ref << endl
-    << "Angle file: " << fn_ang << endl
-    << "Ouput angular file: " << fn_out_ang << endl
-    << "Max proj change: " << max_proj_change << endl
-    << "Max psi change: " << max_psi_change << " step: " << psi_step << endl
-    << "Max shift change: " << max_shift_change << " step: " << shift_step << endl
-    << "Proj step: " << proj_step << endl
-    << "Keep %: " << th_discard << endl
-    << "smin: " << smin << endl
-    << "smax: " << smax << endl
-    << "Check mirrors: " << check_mirrors << endl
-    << "Pick: " << pick << endl
-    << "Dont apply geo: " << dont_apply_geo << endl
-    << "Show level: " << tell << endl
-    << "Modify header:  " << !dont_modify_header << endl
-    << "5D search: " << search5D << endl
-    << "Summary: " << summaryRootname << endl
+    std::cout << "Reference images: " << fn_ref << std::endl
+    << "Angle file: " << fn_ang << std::endl
+    << "Ouput angular file: " << fn_out_ang << std::endl
+    << "Max proj change: " << max_proj_change << std::endl
+    << "Max psi change: " << max_psi_change << " step: " << psi_step << std::endl
+    << "Max shift change: " << max_shift_change << " step: " << shift_step << std::endl
+    << "Proj step: " << proj_step << std::endl
+    << "Keep %: " << th_discard << std::endl
+    << "smin: " << smin << std::endl
+    << "smax: " << smax << std::endl
+    << "Check mirrors: " << check_mirrors << std::endl
+    << "Pick: " << pick << std::endl
+    << "Dont apply geo: " << dont_apply_geo << std::endl
+    << "Show level: " << tell << std::endl
+    << "Modify header:  " << !dont_modify_header << std::endl
+    << "5D search: " << search5D << std::endl
+    << "Summary: " << summaryRootname << std::endl
     ;
 }
 
@@ -104,7 +104,7 @@ void Prog_angular_predict_prm::usage()
     if (extended_usage) more_usage();
     else
     {
-        cerr << "   -ref <selfile|volume>    : Selfile with the reference images\n"
+        std::cerr << "   -ref <selfile|volume>    : Selfile with the reference images\n"
         << "                              If a volume is given, supply -proj_step\n"
         << "   -oang <angle file>       : DocFile with output angles\n"
         << "  [-sym <symmetry file>]    : Symmetry file if any\n"
@@ -118,7 +118,7 @@ void Prog_angular_predict_prm::usage()
 
 void Prog_angular_predict_prm::more_usage()
 {
-    cerr << "   -ref <selfile|volume>    : Selfile with the reference images\n"
+    std::cerr << "   -ref <selfile|volume>    : Selfile with the reference images\n"
     << "                              If a volume is given, supply -proj_step\n"
     << "  [-ang <angle file>]       : DocFile with the angles for the reference\n"
     << "                              produced by xmipp_project\n"
@@ -162,22 +162,22 @@ void Prog_angular_predict_prm::produce_side_info(int rank)
     if (Is_VolumeXmipp(fn_ref))
     {
         volume_mode = true;
-        cerr << "Generating reference projections ...\n";
+        std::cerr << "Generating reference projections ...\n";
 
         // Generate the reference projections internally
         randomize_random_generator();
         fn_random = integerToString(ROUND(10000 * rnd_unif()));
-        string command = (string)"-i " + fn_ref + " -o ref" + fn_random +
+        std::string command = (std::string)"-i " + fn_ref + " -o ref" + fn_random +
            "_ -sampling_rate " + integerToString(proj_step);
-        if (fn_sym != "") command += (string)" -sym " + fn_sym;
+        if (fn_sym != "") command += (std::string)" -sym " + fn_sym;
         if (MPIversion)
-            command=(string)"mpirun -np "+integerToString(numberOfProcessors)+
+            command=(std::string)"mpirun -np "+integerToString(numberOfProcessors)+
                 " `which xmipp_mpi_create_projection_library` "+command;
         else
-            command=(string)"xmipp_create_projection_library "+command;
+            command=(std::string)"xmipp_create_projection_library "+command;
         system(command.c_str());
-        fn_ang = (string) "ref"+fn_random + "__angles.doc";
-        fn_ref=(string) "ref"+fn_random + "_.sel";
+        fn_ang = (std::string) "ref"+fn_random + "__angles.doc";
+        fn_ref=(std::string) "ref"+fn_random + "_.sel";
     }
     else
     {
@@ -292,7 +292,7 @@ void Prog_angular_predict_prm::produce_library(int rank)
     library_power.initZeros(number_of_imgs, SBNo);
 
     if (rank==0) {
-       cerr << "Generating reference library ...\n";
+       std::cerr << "Generating reference library ...\n";
        init_progress_bar(number_of_imgs);
     }
     int n = 0, nstep = XMIPP_MAX(1, number_of_imgs / 60); // For progress bar
@@ -324,8 +324,8 @@ void Prog_angular_predict_prm::produce_library(int rank)
 
 // Build candidate list ------------------------------------------------------
 void Prog_angular_predict_prm::build_ref_candidate_list(const ImageXmipp &I,
-        vector<bool> &candidate_list, vector<double> &cumulative_corr,
-        vector<double> &sumxy)
+        std::vector<bool> &candidate_list, std::vector<double> &cumulative_corr,
+        std::vector<double> &sumxy)
 {
     int refNo = rot.size();
     candidate_list.resize(refNo);
@@ -342,8 +342,8 @@ void Prog_angular_predict_prm::build_ref_candidate_list(const ImageXmipp &I,
                                       I.rot(), I.tilt(), 0, dummy_rot, dummy_tilt, dummy_psi, true);
             candidate_list[i] = (ang_distance <= max_proj_change);
 #ifdef DEBUG
-            cout << "(" << I.rot() << "," << I.tilt() << ") and ("
-            << rot[i] << "," << tilt[i] << ") --> " << ang_distance << endl;
+            std::cout << "(" << I.rot() << "," << I.tilt() << ") and ("
+            << rot[i] << "," << tilt[i] << ") --> " << ang_distance << std::endl;
 #endif
         }
     }
@@ -353,8 +353,8 @@ void Prog_angular_predict_prm::build_ref_candidate_list(const ImageXmipp &I,
 void Prog_angular_predict_prm::refine_candidate_list_with_correlation(
     int m,
     Matrix1D<double> &dwt,
-    vector<bool> &candidate_list, vector<double> &cumulative_corr,
-    Matrix1D<double> &x_power, vector<double> &sumxy,
+    std::vector<bool> &candidate_list, std::vector<double> &cumulative_corr,
+    Matrix1D<double> &x_power, std::vector<double> &sumxy,
     double th)
 {
     histogram1D hist;
@@ -378,8 +378,8 @@ void Prog_angular_predict_prm::refine_candidate_list_with_correlation(
 
             if (tell & TELL_ROT_TILT)
             {
-                cout << "Candidate " << i << " corr= " << cumulative_corr[i]
-                << " rot= " << rot[i] << " tilt= " << tilt[i] << endl;
+                std::cout << "Candidate " << i << " corr= " << cumulative_corr[i]
+                << " rot= " << rot[i] << " tilt= " << tilt[i] << std::endl;
             }
         }
     }
@@ -392,7 +392,7 @@ void Prog_angular_predict_prm::refine_candidate_list_with_correlation(
 
     // Show the percentil used
     if (tell & TELL_ROT_TILT)
-        cout << "# Percentil " << corr_th << endl << endl;
+        std::cout << "# Percentil " << corr_th << std::endl << std::endl;
 }
 
 // Predict rot and tilt ----------------------------------------------------
@@ -405,14 +405,14 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
                      "experimental images must be of a size that is power of 2");
 
     // Build initial candidate list
-    vector<bool>   candidate_list;
-    vector<double> cumulative_corr;
-    vector<double> sumxy;
+    std::vector<bool>   candidate_list;
+    std::vector<double> cumulative_corr;
+    std::vector<double> sumxy;
     build_ref_candidate_list(I, candidate_list, cumulative_corr, sumxy);
     int imax = candidate_list.size();
 
     // Make DWT of the input image and build vectors for comparison
-    vector<Matrix1D<double> * > Idwt;
+    std::vector<Matrix1D<double> * > Idwt;
     Matrix1D<double> x_power(SBNo); x_power.initZeros();
     Matrix1D<int> SBidx(SBNo); SBidx.initZeros();
     for (int m = 0; m < SBNo; m++)
@@ -442,9 +442,9 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
     {
         // Show image name
         if (tell & TELL_ROT_TILT)
-            cout << "# " << I.name() << " m=" << m
+            std::cout << "# " << I.name() << " m=" << m
             << " current rot="  << I.rot()
-            << " current tilt=" << I.tilt() << endl;
+            << " current tilt=" << I.tilt() << std::endl;
         refine_candidate_list_with_correlation(m, *(Idwt[m]),
                                                candidate_list, cumulative_corr,
 					       x_power, sumxy, th_discard);
@@ -468,8 +468,8 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
 
     if (N_max == 0)
     {
-        cerr << "Predict_angles: Empty candidate list for image "
-        << I.name() << endl;
+        std::cerr << "Predict_angles: Empty candidate list for image "
+        << I.name() << std::endl;
         assigned_rot = I.rot();
         assigned_tilt = I.tilt();
         return 0;
@@ -499,9 +499,9 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
 
 // Evaluate candidates by correlation ----------------------------------------
 double Prog_angular_predict_prm::evaluate_candidates(
-    const vector<double> &vscore,
-    const vector<int> &candidate_idx,
-    vector<double> &candidate_rate, double weight)
+    const std::vector<double> &vscore,
+    const std::vector<int> &candidate_idx,
+    std::vector<double> &candidate_rate, double weight)
 {
     // Compute maximum and minimum of correlations
     int imax = vscore.size();
@@ -524,30 +524,30 @@ double Prog_angular_predict_prm::evaluate_candidates(
         if (score_step != 0) points = FLOOR((vscore[i] - min_score) / score_step);
         else               points = 10;
         if (tell & TELL_PSI_SHIFT)
-            cout << "Candidate (" << i << ") score=" << vscore[i]
-            << " points=" << points << endl;
+            std::cout << "Candidate (" << i << ") score=" << vscore[i]
+            << " points=" << points << std::endl;
         candidate_rate[j] += weight * points;
     }
 
     if (tell & TELL_PSI_SHIFT)
-        cout << "Evaluation:" << candidate_rate << endl
+        std::cout << "Evaluation:" << candidate_rate << std::endl
         << "Threshold for obtaining a 7 in score: "
-        << min_score + 7*score_step << endl;
+        << min_score + 7*score_step << std::endl;
     return min_score + 7*score_step;
 }
 
 // Group images --------------------------------------------------------------
 //#define DEBUG
-void Prog_angular_predict_prm::group_views(const vector<double> &vrot,
-        const vector<double> &vtilt, const vector<double> &vpsi,
-        const vector<int> &best_idx, const vector<int> &candidate_idx,
-        vector< vector<int> > &groups)
+void Prog_angular_predict_prm::group_views(const std::vector<double> &vrot,
+        const std::vector<double> &vtilt, const std::vector<double> &vpsi,
+        const std::vector<int> &best_idx, const std::vector<int> &candidate_idx,
+        std::vector< std::vector<int> > &groups)
 {
     for (int j = 0; j < best_idx.size(); j++)
     {
         int i = candidate_idx[best_idx[j]];
 #ifdef DEBUG
-        cout << "Looking for a group for image " << best_idx[j] << endl;
+        std::cout << "Looking for a group for image " << best_idx[j] << std::endl;
 #endif
         double roti = vrot[i];
         double tilti = vtilt[i];
@@ -564,8 +564,8 @@ void Prog_angular_predict_prm::group_views(const vector<double> &vrot,
                 double ang_distance = distance_prm.check_symmetries(
                                           vrot[ip], vtilt[ip], vpsi[ip], roti, tilti, psii, false);
 #ifdef DEBUG
-                cout << "   comparing with " << groups[g][jp] << " d="
-                << ang_distance << endl;
+                std::cout << "   comparing with " << groups[g][jp] << " d="
+                << ang_distance << std::endl;
 #endif
                 if (ang_distance > 15)
                 {
@@ -583,17 +583,17 @@ void Prog_angular_predict_prm::group_views(const vector<double> &vrot,
         if (!assigned)
         {
 #ifdef DEBUG
-            cout << "Creating a new group\n";
+            std::cout << "Creating a new group\n";
 #endif
             // Create a new group with the first item in the list
-            vector<int> group;
+            std::vector<int> group;
             group.push_back(best_idx[j]);
             groups.push_back(group);
         }
         else
         {
 #ifdef DEBUG
-            cout << "Assigning to group " << g << endl;
+            std::cout << "Assigning to group " << g << std::endl;
 #endif
             // Insert the image in the fitting group
             groups[g].push_back(best_idx[j]);
@@ -606,7 +606,7 @@ void Prog_angular_predict_prm::group_views(const vector<double> &vrot,
     if (groups.size() == best_idx.size())
     {
         groups.clear();
-        vector<int> group;
+        std::vector<int> group;
         for (int j = 0; j < best_idx.size(); j++) group.push_back(best_idx[j]);
         groups.push_back(group);
     }
@@ -615,13 +615,13 @@ void Prog_angular_predict_prm::group_views(const vector<double> &vrot,
 
 // Pick view -----------------------------------------------------------------
 int Prog_angular_predict_prm::pick_view(int method,
-                                        vector< vector<int> > &groups,
-                                        vector<double> &vscore,
-                                        vector<double> &vrot,
-                                        vector<double> &vtilt,
-                                        vector<double> &vpsi,
-                                        const vector<int> &best_idx,
-                                        const vector<int> &candidate_idx, const vector<double> &candidate_rate)
+                                        std::vector< std::vector<int> > &groups,
+                                        std::vector<double> &vscore,
+                                        std::vector<double> &vrot,
+                                        std::vector<double> &vtilt,
+                                        std::vector<double> &vpsi,
+                                        const std::vector<int> &best_idx,
+                                        const std::vector<int> &candidate_idx, const std::vector<double> &candidate_rate)
 {
 
     if (method == 0)
@@ -641,7 +641,7 @@ int Prog_angular_predict_prm::pick_view(int method,
     else if (method == 1)
     {
         // Sum the rates in all groups
-        vector<double> group_rate;
+        std::vector<double> group_rate;
         group_rate.reserve(groups.size());
         int best_g;
         double best_group_rate = -1e38;
@@ -665,7 +665,7 @@ int Prog_angular_predict_prm::pick_view(int method,
 #ifdef DEBUG
         if (groups_with_max_rate > 1)
         {
-            cout << "There are two groups with maximum rate\n";
+            std::cout << "There are two groups with maximum rate\n";
         }
 #endif
 
@@ -759,9 +759,9 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
 
     // Search in the psi-shift space
     int N_trials = 0;
-    vector<double> vshiftX, vshiftY, vpsi, vrot, vtilt, vcorr,
+    std::vector<double> vshiftX, vshiftY, vpsi, vrot, vtilt, vcorr,
     vproj_error, vproj_compact, vang_jump, vscore;
-    vector<int>    vref_idx;
+    std::vector<int>    vref_idx;
 
     double backup_max_shift_change = max_shift_change;
     if (!search5D) max_shift_change = 0;
@@ -829,11 +829,11 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
 
 #ifdef DEBUG
                     Ip.write("PPPafter_denoising.xmp");
-                    ImageXmipp Iref((string)"g0tb" + integerToString(best_ref_idx + 1, 5) + ".xmp");
+                    ImageXmipp Iref((std::string)"g0tb" + integerToString(best_ref_idx + 1, 5) + ".xmp");
                     Iref.write("PPPref.xmp");
-                    cerr << "Press any key\n";
+                    std::cerr << "Press any key\n";
                     char c;
-                    cin >> c;
+                    std::cin >> c;
 #endif
 
                 }
@@ -867,7 +867,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
     {
         vscore.push_back(vcorr[i]);
         if (tell & TELL_PSI_SHIFT)
-            cout << "i=" << i
+            std::cout << "i=" << i
             << " shiftX= " << vshiftX[i] << " shiftY= " << vshiftY[i]
             << " psi= "          << vpsi[i]
             << " rot= "          << vrot[i]
@@ -878,7 +878,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
             << " proj_compact= " << vproj_compact[i]
             << " refidx= "       << vref_idx[i]
             << " ang_jump= "     << vang_jump[i]
-            << endl;
+            << std::endl;
     }
 
     // Is the psi range circular?
@@ -887,8 +887,8 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
 
     // Compute minimum and maximum of the correlation and projection error
     double avg_score_maxima = 0;
-    vector<int> local_maxima;
-    if (tell & TELL_PSI_SHIFT) cout << "Local maxima\n";
+    std::vector<int> local_maxima;
+    if (tell & TELL_PSI_SHIFT) std::cout << "Local maxima\n";
     for (int i = 0; i < N_trials; i++)
     {
         // Look for the left and right sample
@@ -912,20 +912,20 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
         {
             local_maxima.push_back(i);
             if (tell & TELL_PSI_SHIFT)
-                cout << "i= " << i
+                std::cout << "i= " << i
                 << " psi= " << vpsi[i] << " rot= " << vrot[i] << " tilt= "
-                << vtilt[i] << " score= " << vscore[i] << endl;
+                << vtilt[i] << " score= " << vscore[i] << std::endl;
         }
     }
     avg_score_maxima /= local_maxima.size();
     if (tell & TELL_PSI_SHIFT)
-        cout << "Avg_maxima=" << avg_score_maxima << endl;
+        std::cout << "Avg_maxima=" << avg_score_maxima << std::endl;
 
     // Remove all local maxima below the average
     int jmax = local_maxima.size();
-    vector<int> candidate_local_maxima;
-    vector<double> candidate_rate;
-    if (tell & TELL_PSI_SHIFT) cout << "Keeping ...\n";
+    std::vector<int> candidate_local_maxima;
+    std::vector<double> candidate_rate;
+    if (tell & TELL_PSI_SHIFT) std::cout << "Keeping ...\n";
     for (int j = 0; j < jmax; j++)
     {
         int i = local_maxima[j];
@@ -934,9 +934,9 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
             candidate_local_maxima.push_back(i);
             candidate_rate.push_back(0);
             if (tell & TELL_PSI_SHIFT)
-                cout << "i= " << i
+                std::cout << "i= " << i
                 << " psi= " << vpsi[i] << " rot= " << vrot[i] << " tilt= "
-                << vtilt[i] << " score= " << vscore[i] << endl;
+                << vtilt[i] << " score= " << vscore[i] << std::endl;
         }
     }
     jmax = candidate_local_maxima.size();
@@ -945,7 +945,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
     evaluate_candidates(vscore, candidate_local_maxima, candidate_rate, 1);
 
     // Sort the candidates
-    if (tell & TELL_PSI_SHIFT) cout << "\nSelecting image\n";
+    if (tell & TELL_PSI_SHIFT) std::cout << "\nSelecting image\n";
     Matrix1D<double> score(jmax);
 //   for (int j=0; j<jmax; j++) score(j)=candidate_rate[j];
     for (int j = 0; j < jmax; j++) score(j) = vscore[candidate_local_maxima[j]];
@@ -953,14 +953,14 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
 
     if (tell & (TELL_PSI_SHIFT | TELL_OPTIONS))
     {
-        cout << I.name() << endl;
-        cout.flush();
+        std::cout << I.name() << std::endl;
+        std::cout.flush();
         for (int j = 0; j < jmax; j++)
         {
             int jp = idx_score(j) - 1;
             double score = candidate_rate[jp];
             int i = candidate_local_maxima[jp];
-            cout << "i= " << i
+            std::cout << "i= " << i
             << " psi= " << vpsi[i] << " rot= " << vrot[i] << " tilt= "
             << vtilt[i]
             << " score= " << vscore[i]
@@ -969,15 +969,15 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
             << " compact= " << vproj_compact[i]
             << " angjump= " << vang_jump[i]
             << " rate=" << candidate_rate[jp]
-            << " reference image #=" << vref_idx[i] + 1 << endl;
+            << " reference image #=" << vref_idx[i] + 1 << std::endl;
         }
-        cout << endl;
-        cout.flush();
+        std::cout << std::endl;
+        std::cout.flush();
     }
 
     // Consider the top
     int jtop = jmax - 1;
-    vector<int> best_idx;
+    std::vector<int> best_idx;
     int max_score_diff = 1;
     while (jtop > 0 &&
            candidate_rate[idx_score(jmax-1)-1] -
@@ -988,7 +988,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
     }
     best_idx.push_back(idx_score(jtop) - 1);
     if (tell & TELL_PSI_SHIFT)
-        cout << "Best indices: " << best_idx << endl;
+        std::cout << "Best indices: " << best_idx << std::endl;
 
     // Pick the best one from the top
     int ibest, jbest;
@@ -1002,10 +1002,10 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
     {
         // There are more than one in the top
         // Group the different views
-        vector< vector<int> > groups;
+        std::vector< std::vector<int> > groups;
         group_views(vrot, vtilt, vpsi, best_idx, candidate_local_maxima, groups);
         if (tell & TELL_PSI_SHIFT)
-            cout << "Partition: " << groups << endl;
+            std::cout << "Partition: " << groups << std::endl;
 
         // Pick the best image from the groups
         jbest = pick_view(pick, groups, vscore, vrot, vtilt, vpsi,
@@ -1048,14 +1048,14 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
 
     if (tell & (TELL_PSI_SHIFT | TELL_OPTIONS))
     {
-        cout << "Originally it had, psi=" << I.psi() << " rot=" << I.rot()
-        << " tilt=" << I.tilt() << endl;
-        cout << "Finally I choose: ";
-        if (tell & TELL_PSI_SHIFT) cout << jbest << "\n";
-        cout << "psi= " << best_psi << " rot= " << best_rot << " tilt= "
+        std::cout << "Originally it had, psi=" << I.psi() << " rot=" << I.rot()
+        << " tilt=" << I.tilt() << std::endl;
+        std::cout << "Finally I choose: ";
+        if (tell & TELL_PSI_SHIFT) std::cout << jbest << "\n";
+        std::cout << "psi= " << best_psi << " rot= " << best_rot << " tilt= "
         << best_tilt << " shiftX=" << best_shiftX
         << " shiftY=" << best_shiftY << " score= " << best_score
-        << " rate= " << best_rate << endl << endl;
+        << " rate= " << best_rate << std::endl << std::endl;
     }
 
     // Save results
@@ -1099,9 +1099,9 @@ void Prog_angular_predict_prm::finish_processing()
     if (volume_mode)
     {
         FileName fn_root=fn_ref.without_extension();
-        system(((string)"xmipp_rmsel " + fn_ref + " > /dev/null").c_str());
-        system(((string)"rm -f " + fn_ang).c_str());
-        system(((string)"rm -f " + fn_root+"_vectors.doc").c_str());
+        system(((std::string)"xmipp_rmsel " + fn_ref + " > /dev/null").c_str());
+        system(((std::string)"rm -f " + fn_ang).c_str());
+        system(((std::string)"rm -f " + fn_root+"_vectors.doc").c_str());
     }
 }
 
@@ -1118,12 +1118,12 @@ void Prog_angular_predict_prm::produceSummary()
 
     // Initialize variables for storing the reference weights
     // and the assigned averages
-    vector< vector<FileName> > referenceWeight;
-    vector< ImageXmipp >  assignedAvg;
+    std::vector< std::vector<FileName> > referenceWeight;
+    std::vector< ImageXmipp >  assignedAvg;
     referenceWeight.reserve(L);
     assignedAvg.reserve(L);
     ImageXmipp blankImage(Ydim, Xdim);
-    vector<FileName> blankList;
+    std::vector<FileName> blankList;
     for (int l = 0; l < L; l++)
     {
         referenceWeight.push_back(blankList);
@@ -1174,8 +1174,8 @@ void Prog_angular_predict_prm::produceSummary()
         DFsummary.append_data_line(v);
 
         // Write the assigned images in a selfile
-        SFsummary.insert_comment((string)"Images assigned to " + fn_refl);
-        SFsummary.insert_comment((string)"rot=" + floatToString(rot[l]) + " tilt=" + floatToString(tilt[l]));
+        SFsummary.insert_comment((std::string)"Images assigned to " + fn_refl);
+        SFsummary.insert_comment((std::string)"rot=" + floatToString(rot[l]) + " tilt=" + floatToString(tilt[l]));
         if (referenceWeight[l].size() != 0)
         {
             for (int i = 0; i < referenceWeight[l].size(); i++)

@@ -87,7 +87,7 @@ XmippSampling::XmippSampling()
     for (int i = 0;
          i < vertices_vectors.size();
          i++)
-        cout  <<  vertices_vectors[].transpose()  << endl;
+        std::cout  <<  vertices_vectors[].transpose()  << std::endl;
 #endif
 #undef DEBUG1
 }
@@ -110,9 +110,9 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere,
                                             double min_tilt)
 {
     /** vector to decimate the triangles */
-    vector <Matrix1D<double> > edge_vector_start;
+    std::vector <Matrix1D<double> > edge_vector_start;
     /** vector to decimate the triangles */
-    vector <Matrix1D<double> > edge_vector_end;
+    std::vector <Matrix1D<double> > edge_vector_end;
     // I need 10 auxiliary vector for edges
     Matrix1D<double> starting_point, ending_point;
     double max_z;
@@ -242,10 +242,10 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere,
          i < edge_vector_start.size();
          i++)
     {
-        cout  <<  edge_vector_start[i].transpose()  << " 1 1 " << endl;
-        cout  <<  edge_vector_end[i].transpose()  << " 1 2 " << endl;
+        std::cout  <<  edge_vector_start[i].transpose()  << " 1 1 " << std::endl;
+        std::cout  <<  edge_vector_end[i].transpose()  << " 1 2 " << std::endl;
     }
-    //cout  <<  ending_point.transpose()    << " 1.1 1.5 " << endl;
+    //std::cout  <<  ending_point.transpose()    << " 1.1 1.5 " << std::endl;
 #endif
 #undef DEBUG2
     // add  main corners
@@ -296,7 +296,7 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere,
          i < sampling_points_vector.size();
          i++)
     {
-        cout  <<  sampling_points_vector[i].transpose()  << " 1 1 " << endl;
+        std::cout  <<  sampling_points_vector[i].transpose()  << " 1 1 " << std::endl;
     }
 #endif
 #undef DEBUG3
@@ -330,7 +330,7 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere,
          i < sampling_points_vector.size();
          i++)
     {
-        cout  <<  sampling_points_vector[i].transpose()  << " 1 1 " << endl;
+        std::cout  <<  sampling_points_vector[i].transpose()  << " 1 1 " << std::endl;
     }
 #endif
 #undef DEBUG3
@@ -385,7 +385,7 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere,
          i < sampling_points_angles.size();
          i++)
     {
-        cout  <<  sampling_points_angles[i].transpose()  << " 1 1 " << endl;
+        std::cout  <<  sampling_points_angles[i].transpose()  << " 1 1 " << std::endl;
     }
 #endif
 #undef DEBUG3
@@ -415,7 +415,7 @@ int XmippSampling::sort_func(Matrix1D<double> &t, Matrix1D<double> &a)
 
 void XmippSampling::fill_edge(Matrix1D<double> starting_point,
                               Matrix1D<double> ending_point,
-                              vector <Matrix1D<double> > & edge_vector,
+                              std::vector <Matrix1D<double> > & edge_vector,
                               bool END_FLAG
                              )
 {
@@ -439,7 +439,7 @@ void XmippSampling::fill_edge(Matrix1D<double> starting_point,
 }
 void XmippSampling::fill_distance(Matrix1D<double> starting_point,
                                   Matrix1D<double> ending_point,
-                                  vector <Matrix1D<double> > &
+                                  std::vector <Matrix1D<double> > &
                                   sampling_points_vector,
                                   int my_number_of_samples,
                                   bool only_half_sphere,
@@ -490,7 +490,7 @@ void XmippSampling::fill_distance(Matrix1D<double> starting_point,
 */
 }
 
-void XmippSampling::remove_redundant_points(string symmetry,
+void XmippSampling::remove_redundant_points(const std::string &symmetry,
         int sym_order)
 {
     Matrix2D<double>  L(4, 4), R(4, 4);
@@ -792,17 +792,17 @@ void XmippSampling::remove_redundant_points(string symmetry,
     }
     else
     {
-        cerr << "ERROR: Symmetry " << symmetry  << "is not known" << endl;
+        std::cerr << "ERROR: Symmetry " << symmetry  << "is not known" << std::endl;
         exit(0);
     }
 
 }
 /* Create symmetry file----------------------------------------------------- */
-void XmippSampling::create_sym_file(string symmetry, int sym_order)
+void XmippSampling::create_sym_file(const std::string& symmetry, int sym_order)
 {
     symmetry_file = symmetry + ".sym";
-    ofstream SymFile;
-    SymFile.open(symmetry_file.c_str(), ios::out);
+    std::ofstream SymFile;
+    SymFile.open(symmetry_file.c_str(), std::ios::out);
     if (symmetry.compare("cn") == 0)
     {
         SymFile << "rot_axis " << sym_order << " 0 0 1";
@@ -818,110 +818,110 @@ void XmippSampling::create_sym_file(string symmetry, int sym_order)
     else if (symmetry.compare("cnv") == 0)
     {
         SymFile << "rot_axis " << sym_order << " 0 0 1";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "mirror_plane 0 1 0";
     }
     else if (symmetry.compare("cnh") == 0)
     {
         SymFile << "rot_axis " << sym_order << " 0 0 1";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "mirror_plane 0 0 1";
     }
     else if (symmetry.compare("sn") == 0)
     {
         int order = sym_order / 2;
         SymFile << "rot_axis " << order << " 0 0 1";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "inversion ";
     }
     else if (symmetry.compare("dn") == 0)
     {
         SymFile << "rot_axis " << sym_order << " 0 0 1";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis " << "2" << " 0 1 0";
     }
     else if (symmetry.compare("dnv") == 0)
     {
         SymFile << "rot_axis " << sym_order << " 0 0 1";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis " << "2" << " 0 1 0";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "mirror_plane 0 1 0";
     }
     else if (symmetry.compare("dnh") == 0)
     {
         SymFile << "rot_axis " << sym_order << " 0 0 1";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis " << "2" << " 1 0 0";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "mirror_plane 0 0 1";
     }
     else if (symmetry.compare("t") == 0)
     {
         SymFile << "rot_axis " << "3" << "  0. 0. 1.";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis " << "2" << " 0. 0.816496 0.577350";
     }
     else if (symmetry.compare("td") == 0)
     {
         SymFile << "rot_axis " << "3" << "  0. 0. 1.";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis " << "2" << " 0. 0.816496 0.577350";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "mirror_plane 1.4142136 2.4494897 0.0000000";
     }
     else if (symmetry.compare("th") == 0)
     {
         SymFile << "rot_axis " << "3" << "  0. 0. 1.";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis " << "2" << " 0. -0.816496 -0.577350";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "inversion";
     }
     else if (symmetry.compare("o") == 0)
     {
         SymFile << "rot_axis " << "3" << "  .5773502  .5773502 .5773502";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis " << "4" << " 0 0 1";
     }
     else if (symmetry.compare("oh") == 0)
     {
         SymFile << "rot_axis " << "3" << "  .5773502  .5773502 .5773502";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis " << "4" << " 0 0 1";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "mirror_plane 0 1 1";
     }
     else if (symmetry.compare("i") == 0)
     {
         SymFile << "rot_axis 2  0             0          1";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis 5 -1.618033989  -1           0";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis 3 -0.53934467   -1.4120227   0";
     }
     else if (symmetry.compare("ih") == 0)
     {
         SymFile << "rot_axis 2  0             0          1";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis 5 -1.618033989  -1           0";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis 3 -0.53934467   -1.4120227   0";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "mirror_plane 1 0 0";
     }
     else
     {
-        cerr << "ERROR: Symmetry " << symmetry  << "is not known" << endl;
+        std::cerr << "ERROR: Symmetry " << symmetry  << "is not known" << std::endl;
         exit(0);
     }
     SymFile.close();
     SL.read_sym_file(symmetry_file);
 
 }
-void XmippSampling::create_asym_unit_file(FileName docfilename)
+void XmippSampling::create_asym_unit_file(const FileName &docfilename)
 {
-    DocFile           DFvectors, DFangles;
+    DocFile DFvectors, DFangles;
     DFvectors.clear();
     DFangles.clear();
     FileName tmp_filename;
@@ -943,8 +943,8 @@ void XmippSampling::compute_neighbors(void)
     double my_dotProduct;
     Matrix1D<double>  row(3);
     Matrix2D<double>  L(4, 4), R(4, 4);
-    vector<int>  aux_neighbors;
-    vector<double> aux_neighbors_psi;
+    std::vector<int>  aux_neighbors;
+    std::vector<double> aux_neighbors_psi;
     for (int i = 0; i < no_redundant_sampling_points_vector.size(); i++)
     {
         aux_neighbors_psi.clear();
@@ -954,7 +954,7 @@ void XmippSampling::compute_neighbors(void)
         for (int j = 0; j < no_redundant_sampling_points_vector.size(); j++)
         {
 #ifdef DEBUGH
-            cerr << "i,j " << i << " " << j << endl;
+            std::cerr << "i,j " << i << " " << j << std::endl;
 #endif
             if (i == j) continue;
             //check identity
@@ -971,7 +971,7 @@ void XmippSampling::compute_neighbors(void)
                 for (int isym = 0; isym < SL.SymsNo(); isym++)
                 {
 #ifdef DEBUGH
-                    cerr << "            isym " << isym << endl;
+                    std::cerr << "            isym " << isym << std::endl;
 #endif
                     SL.get_matrices(isym, L, R);
                     R.resize(3, 3);
@@ -980,7 +980,7 @@ void XmippSampling::compute_neighbors(void)
                                                  row);
 
 #ifdef DEBUGHH
-                    cerr << "            row out " << row << endl;
+                    std::cerr << "            row out " << row << std::endl;
 #endif
                     if (my_dotProduct > cos_neighborhood_radius)
                     {
@@ -993,7 +993,7 @@ void XmippSampling::compute_neighbors(void)
                         aux_neighbors_psi.push_back(psip);
 #ifdef DEBUGHH
                         Euler_direction(rotp, tiltp, psip, row);
-                        cerr << "row in " << row << endl;
+                        std::cerr << "row in " << row << std::endl;
 #endif
                         break;
                     }

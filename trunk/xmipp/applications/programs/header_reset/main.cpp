@@ -48,13 +48,13 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage();
     }
 
     try
     {
-        cerr << " Resetting all angles, origin offsets, weights and mirror flags to zero ... " << endl;
+        std::cerr << " Resetting all angles, origin offsets, weights and mirror flags to zero ... " << std::endl;
         SF.go_beginning();
         while (!SF.eof())
         {
@@ -62,11 +62,11 @@ int main(int argc, char *argv[])
             img.clear_header();
             img.write(img.name());
         }
-        cerr << " done!" << endl;
+        std::cerr << " done!" << std::endl;
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage();
     }
 }

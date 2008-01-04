@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     bool            enable_random_substitute;
     bool            apply_geo;
     double          new_val, old_val, avg_val, sig_val;
-    string          str_new_val, str_old_val;
+    std::string     str_new_val, str_old_val;
     double          accuracy;
     Mask_Params     mask_prm(INT_MASK);
     Matrix2D<int>   * mask2D;
@@ -108,7 +108,7 @@ int main(int argc, char **argv)
 
     catch (Xmipp_error Xe)
     {
-        cout << Xe;
+        std::cout << Xe;
         Usage();
         mask_prm.usage();
         exit(1);
@@ -193,7 +193,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error Xe)
     {
-        cout << Xe;
+        std::cout << Xe;
     }
     exit(0);
 }
@@ -201,7 +201,7 @@ int main(int argc, char **argv)
 /* Usage ------------------------------------------------------------------- */
 void Usage()
 {
-    cout << "threshold [Parameters]:\n"
+    std::cout << "threshold [Parameters]:\n"
     << "   -i <File_in>                   : Input Xmipp Volume or Image\n"
     << "  [-o <File_out>]                 : If not given, the same as input\n"
     << "  [-dist <Distance volume>        : of the same size as the input\n"

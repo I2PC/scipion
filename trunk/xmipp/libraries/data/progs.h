@@ -66,7 +66,7 @@ public:
     /// Use this flag for not writing at every image
     bool each_image_produces_an_output;
 
-    /// Use this flag for not producing a time bar
+    /// Use this flag for not produstd::cing a time bar
     bool allow_time_bar;
 
     /// Empty constructor

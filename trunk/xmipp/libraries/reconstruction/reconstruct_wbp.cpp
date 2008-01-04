@@ -53,25 +53,25 @@ void Prog_WBP_prm::show()
     if (verb > 0)
     {
         // To screen
-        cerr << " =================================================================" << endl;
-        cerr << " Weighted-back projection (arbitrary geometry) " << endl;
-        cerr << " =================================================================" << endl;
-        cerr << " Input selfile             : " << fn_sel << endl;
-        cerr << " Output volume             : " << fn_out << endl;
+        std::cerr << " =================================================================" << std::endl;
+        std::cerr << " Weighted-back projection (arbitrary geometry) " << std::endl;
+        std::cerr << " =================================================================" << std::endl;
+        std::cerr << " Input selfile             : " << fn_sel << std::endl;
+        std::cerr << " Output volume             : " << fn_out << std::endl;
         if (diameter > 0)
-            cerr << " Reconstruction radius     : " << diameter / 2 << endl;
-        cerr << " Relative filter threshold : " << threshold << endl;
+            std::cerr << " Reconstruction radius     : " << diameter / 2 << std::endl;
+        std::cerr << " Relative filter threshold : " << threshold << std::endl;
         if (fn_sym != "")
-            cerr << " Symmetry file:            : " << fn_sym << endl;
+            std::cerr << " Symmetry file:            : " << fn_sym << std::endl;
         if (!apply_shifts)
-            cerr << " --> Do not apply shifts upon reading the images" << endl;
+            std::cerr << " --> Do not apply shifts upon reading the images" << std::endl;
         if (do_all_matrices)
-            cerr << " --> Use all projection directions in arbitrary geometry filter" << endl;
+            std::cerr << " --> Use all projection directions in arbitrary geometry filter" << std::endl;
         else
-            cerr << " --> Use sampled directions for filter, sampling = " << sampling << endl;
+            std::cerr << " --> Use sampled directions for filter, sampling = " << sampling << std::endl;
         if (do_weights)
-            cerr << " --> Use weights stored in the image headers" << endl;
-        cerr << " -----------------------------------------------------------------" << endl;
+            std::cerr << " --> Use weights stored in the image headers" << std::endl;
+        std::cerr << " -----------------------------------------------------------------" << std::endl;
     }
 
 }
@@ -81,18 +81,18 @@ void Prog_WBP_prm::usage()
 {
 
     // To screen
-    cerr << "  Usage:\n";
-    cerr << "  WBP <options>\n";
-    cerr << "   -i <input selfile>          : selection file with input images \n";
-    cerr << " [ -o <name=\"wbp.vol\">         : filename for output volume \n";
-    cerr << " [ -radius <int=dim/2> ]       : Reconstruction radius \n";
-    cerr << " [ -sym <symfile> ]            : Enforce symmetry \n";
-    cerr << " [ -threshold <float=0.005> ]  : Lower (relative) threshold for filter values \n";
-    cerr << " [ -filsam <float=5> ]         : Angular sampling rate for geometry filter \n";
-    cerr << " [ -use_each_image]            : Use each image instead of sampled representatives for filter \n";
-    cerr << " [ -weight]                    : Use weights stored in image headers \n";
-    cerr << " [ -dont_apply_shifts ]        : dont apply origin offsets as stored in the image headers\n";
-    cerr << " -----------------------------------------------------------------" << endl;
+    std::cerr << "  Usage:\n";
+    std::cerr << "  WBP <options>\n";
+    std::cerr << "   -i <input selfile>          : selection file with input images \n";
+    std::cerr << " [ -o <name=\"wbp.vol\">         : filename for output volume \n";
+    std::cerr << " [ -radius <int=dim/2> ]       : Reconstruction radius \n";
+    std::cerr << " [ -sym <symfile> ]            : Enforce symmetry \n";
+    std::cerr << " [ -threshold <float=0.005> ]  : Lower (relative) threshold for filter values \n";
+    std::cerr << " [ -filsam <float=5> ]         : Angular sampling rate for geometry filter \n";
+    std::cerr << " [ -use_each_image]            : Use each image instead of sampled representatives for filter \n";
+    std::cerr << " [ -weight]                    : Use weights stored in image headers \n";
+    std::cerr << " [ -dont_apply_shifts ]        : dont apply origin offsets as stored in the image headers\n";
+    std::cerr << " -----------------------------------------------------------------" << std::endl;
 
 }
 
@@ -119,7 +119,7 @@ void Prog_WBP_prm::produce_Side_info()
         }
         if (SF.ImgNo() == 0)
         {
-            cerr << "there is no input file with weight!=0" << endl;
+            std::cerr << "there is no input file with weight!=0" << std::endl;
             exit(1);
         }
     }
@@ -145,9 +145,9 @@ void Prog_WBP_prm::get_sampled_matrices(SelFile &SF)
     Matrix2D<double>  L(4, 4), R(4, 4);
     double            newrot, newtilt, newpsi, rot, tilt, psi, totimgs = 0.;
     int               NN, dir, optdir;
-    vector<double>    count_imgs;
+    std::vector<double>    count_imgs;
 
-    if (verb > 0) cerr << "--> Sampling the filter ..." << endl;
+    if (verb > 0) std::cerr << "--> Sampling the filter ..." << std::endl;
 
     // Create an (asymmetric part of an) even projection direction distribution
     make_even_distribution(DFlib, sampling, SL, true);
@@ -387,7 +387,7 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
     count_thr = 0;
 
     // Initialize time bar
-    if (verb > 0) cerr << "--> Back-projecting ..." << endl;
+    if (verb > 0) std::cerr << "--> Back-projecting ..." << std::endl;
     nn = SF.ImgNo();
     if (verb > 0) init_progress_bar(nn);
     c = XMIPP_MAX(1, nn / 60);

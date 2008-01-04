@@ -338,29 +338,29 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
     condition = true;
     if (condition)
     {
-        cout << "Equation mode " << eq_mode << endl;
-        cout << "Footprint size " << YY_footprint_size << "x"
-        << XX_footprint_size << endl;
-        cout << "rot=" << proj.Phi() << " tilt=" << proj.Theta()
-        << " psi=" << proj.Psi() << endl;
-        cout << "Euler matrix " << proj.euler;
-        cout << "Projection direction " << prjDir << endl;
-        cout << grid;
-        cout << "image limits (" << x0 << "," << y0 << ") (" << xF << ","
+        std::cout << "Equation mode " << eq_mode << std::endl;
+        std::cout << "Footprint size " << YY_footprint_size << "x"
+        << XX_footprint_size << std::endl;
+        std::cout << "rot=" << proj.Phi() << " tilt=" << proj.Theta()
+        << " psi=" << proj.Psi() << std::endl;
+        std::cout << "Euler matrix " << proj.euler;
+        std::cout << "Projection direction " << prjDir << std::endl;
+        std::cout << grid;
+        std::cout << "image limits (" << x0 << "," << y0 << ") (" << xF << ","
         << yF << ")\n";
-        cout << "prjX           " << prjX.transpose()      << endl;
-        cout << "prjY           " << prjY.transpose()      << endl;
-        cout << "prjZ           " << prjZ.transpose()      << endl;
-        cout << "prjOrigin      " << prjOrigin.transpose() << endl;
-        cout << "beginZ(coord)  " << beginZ.transpose()    << endl;
-        cout << "lowest         " << XX_lowest  << " " << YY_lowest
-        << " " << XX_lowest  << endl;
-        cout << "highest        " << XX_highest << " " << YY_highest
-        << " " << XX_highest << endl;
-        cout << "Stats of input basis volume ";
+        std::cout << "prjX           " << prjX.transpose()      << std::endl;
+        std::cout << "prjY           " << prjY.transpose()      << std::endl;
+        std::cout << "prjZ           " << prjZ.transpose()      << std::endl;
+        std::cout << "prjOrigin      " << prjOrigin.transpose() << std::endl;
+        std::cout << "beginZ(coord)  " << beginZ.transpose()    << std::endl;
+        std::cout << "lowest         " << XX_lowest  << " " << YY_lowest
+        << " " << XX_lowest  << std::endl;
+        std::cout << "highest        " << XX_highest << " " << YY_highest
+        << " " << XX_highest << std::endl;
+        std::cout << "Stats of input basis volume ";
         vol().print_stats();
-        cout << endl;
-        cout.flush();
+        std::cout << std::endl;
+        std::cout.flush();
     }
 #endif
 
@@ -408,13 +408,13 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                     if (condition)
                     {
                         printf("\nProjecting grid coord (%d,%d,%d) ", j, i, k);
-                        cout << "Vol there = " << VOLVOXEL(vol, k, i, j) << endl;
+                        std::cout << "Vol there = " << VOLVOXEL(vol, k, i, j) << std::endl;
                         printf(" 3D universal position (%f,%f,%f) \n",
                                XX(univ_position), YY(univ_position), ZZ(univ_position));
-                        cout << " Center of the basis proj (2D) " << XX(actprj) << "," << YY(actprj) << endl;
+                        std::cout << " Center of the basis proj (2D) " << XX(actprj) << "," << YY(actprj) << std::endl;
                         Matrix1D<double> aux;
                         Uproject_to_plane(univ_position, proj.euler, aux);
-                        cout << " Center of the basis proj (more accurate) " << aux.transpose() << endl;
+                        std::cout << " Center of the basis proj (more accurate) " << aux.transpose() << std::endl;
                     }
 #endif
 
@@ -427,10 +427,10 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
 #ifdef DEBUG
                     if (condition)
                     {
-                        cout << "Clipped and rounded Corner 1 " << XX_corner1
-                        << " " << YY_corner1 << " " << endl;
-                        cout << "Clipped and rounded Corner 2 " << XX_corner2
-                        << " " << YY_corner2 << " " << endl;
+                        std::cout << "Clipped and rounded Corner 1 " << XX_corner1
+                        << " " << YY_corner1 << " " << std::endl;
+                        std::cout << "Clipped and rounded Corner 2 " << XX_corner2
+                        << " " << YY_corner2 << " " << std::endl;
                     }
 #endif
 
@@ -457,15 +457,15 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
 #ifdef DEBUG
                                 if (condition)
                                 {
-                                    cout << "Position in projection (" << x << ","
+                                    std::cout << "Position in projection (" << x << ","
                                     << y << ") ";
                                     double y, x;
                                     if (basis.type == Basis::blobs)
                                     {
-                                        cout << "in footprint ("
+                                        std::cout << "in footprint ("
                                         << foot_U << "," << foot_V << ")";
                                         IMG2OVER(basis.blobprint, foot_V, foot_U, y, x);
-                                        cout << " (d= " << sqrt(y*y + x*x) << ") ";
+                                        std::cout << " (d= " << sqrt(y*y + x*x) << ") ";
                                         fflush(stdout);
                                     }
                                 }
@@ -510,13 +510,13 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                                             M3x3_BY_V3x1(prjPix, proj.eulert, prjPix);
 #ifdef DEBUG
                                             if (condition)
-                                                cout << " in volume coord ("
+                                                std::cout << " in volume coord ("
                                                 << prjPix.transpose() << ")";
 #endif
                                             V3_MINUS_V3(prjPix, prjPix, univ_position);
 #ifdef DEBUG
                                             if (condition)
-                                                cout << " in voxel coord ("
+                                                std::cout << " in voxel coord ("
                                                 << prjPix.transpose() << ")";
 #endif
                                             a = basis.projection_at(prjDir, prjPix);
@@ -534,14 +534,14 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                                             double px, py;
                                             a = 0;
 #ifdef DEBUG
-                                            if (condition) cout << endl;
+                                            if (condition) std::cout << std::endl;
 #endif
                                             for (ii = 0, px = p0; ii < ART_PIXEL_SUBSAMPLING; ii++, px += pStep)
                                                 for (jj = 0, py = p0; jj < ART_PIXEL_SUBSAMPLING; jj++, py += pStep)
                                                 {
 #ifdef DEBUG
                                                     if (condition)
-                                                        cout << "    subsampling (" << ii << ","
+                                                        std::cout << "    subsampling (" << ii << ","
                                                         << jj << ") ";
 #endif
                                                     SPEED_UP_temps;
@@ -551,34 +551,34 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                                                     M3x3_BY_V3x1(prjPix, proj.eulert, prjPix);
 #ifdef DEBUG
                                                     if (condition)
-                                                        cout << " in volume coord ("
+                                                        std::cout << " in volume coord ("
                                                         << prjPix.transpose() << ")";
 #endif
                                                     V3_MINUS_V3(prjPix, prjPix, univ_position);
 #ifdef DEBUG
                                                     if (condition)
-                                                        cout << " in voxel coord ("
+                                                        std::cout << " in voxel coord ("
                                                         << prjPix.transpose() << ")";
 #endif
                                                     a += basis.projection_at(prjDir, prjPix);
 #ifdef DEBUG
                                                     if (condition)
-                                                        cout << " partial a="
+                                                        std::cout << " partial a="
                                                         << basis.projection_at(prjDir, prjPix)
-                                                        << endl;
+                                                        << std::endl;
 #endif
                                                 }
                                             a *= pAvg;
                                             a2 = a * a;
 #ifdef DEBUG
                                             if (condition)
-                                                cout << "   Finally ";
+                                                std::cout << "   Finally ";
 #endif
                                         }
                                     }
                                 }
 #ifdef DEBUG
-                                if (condition) cout << "=" << a << " , " << a2;
+                                if (condition) std::cout << "=" << a << " , " << a2;
 #endif
                                 if (FORW)
                                 {
@@ -613,9 +613,9 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
 #ifdef DEBUG
                                     if (condition)
                                     {
-                                        cout << " proj= " << IMGPIXEL(proj, y, x)
-                                        << " norm_proj=" << IMGPIXEL(norm_proj, y, x) << endl;
-                                        cout.flush();
+                                        std::cout << " proj= " << IMGPIXEL(proj, y, x)
+                                        << " norm_proj=" << IMGPIXEL(norm_proj, y, x) << std::endl;
+                                        std::cout.flush();
                                     }
 #endif
                                 }
@@ -626,9 +626,9 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
 #ifdef DEBUG
                                     if (condition)
                                     {
-                                        cout << " corr_img= " << IMGPIXEL(norm_proj, y, x)
-                                        << " correction=" << vol_corr << endl;
-                                        cout.flush();
+                                        std::cout << " corr_img= " << IMGPIXEL(norm_proj, y, x)
+                                        << " correction=" << vol_corr << std::endl;
+                                        std::cout.flush();
                                     }
 #endif
                                 }
@@ -661,8 +661,8 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                             if (condition)
                             {
                                 printf("\nFinal value at (%d,%d,%d) ", j, i, k);
-                                cout << " = " << VOLVOXEL(vol, k, i, j) << endl;
-                                cout.flush();
+                                std::cout << " = " << VOLVOXEL(vol, k, i, j) << std::endl;
+                                std::cout.flush();
                             }
 #endif
                         }
@@ -718,10 +718,10 @@ void project_Volume(
 #ifdef DEBUG_LITTLE
     if (FORW)
     {
-        cout << "Number of volumes: " << vol.VolumesNo() << endl
-        << "YdimxXdim: " << Ydim << "x" << Xdim << endl;
+        std::cout << "Number of volumes: " << vol.VolumesNo() << std::endl
+        << "YdimxXdim: " << Ydim << "x" << Xdim << std::endl;
         for (int i = 0; i < vol.VolumesNo(); i++)
-            cout << "Volume " << i << endl << vol.grid(i) << endl;
+            std::cout << "Volume " << i << std::endl << vol.grid(i) << std::endl;
     }
 
 #endif
@@ -737,8 +737,8 @@ void project_Volume(
 #ifdef DEBUG
         ImageXmipp save;
         save = norm_proj;
-        if (FORW) save.write((string)"PPPnorm_FORW" + (char)(48 + i));
-        else      save.write((string)"PPPnorm_BACK" + (char)(48 + i));
+        if (FORW) save.write((std::string)"PPPnorm_FORW" + (char)(48 + i));
+        else      save.write((std::string)"PPPnorm_BACK" + (char)(48 + i));
 #endif
     }
 }

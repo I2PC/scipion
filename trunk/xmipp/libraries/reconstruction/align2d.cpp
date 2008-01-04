@@ -78,46 +78,46 @@ void Prog_align2d_prm::read(int argc, char **argv)
 // Show ====================================================================
 void Prog_align2d_prm::show()
 {
-    cerr << " Input selfile         : " <<  SF.name() << endl;
+    std::cerr << " Input selfile         : " <<  SF.name() << std::endl;
     if (oext != "")
-        cerr << " Output extension      : " << oext << endl;
-    cerr << " Number of iterations  : " << Niter << endl;
+        std::cerr << " Output extension      : " << oext << std::endl;
+    std::cerr << " Number of iterations  : " << Niter << std::endl;
     if (fn_ref != "")
-        cerr << " Alignment Reference   : " <<  fn_ref << endl;
+        std::cerr << " Alignment Reference   : " <<  fn_ref << std::endl;
     else
-        cerr << " Alignment Reference   : piramidal combination of images" << endl;
+        std::cerr << " Alignment Reference   : piramidal combination of images" << std::endl;
 
     if (do_filter)
     {
-        cerr << " Low pass filter [Ang] : " <<  resol << endl;
-        cerr << " Sampling rate   [Ang] : " <<  sam << endl;
+        std::cerr << " Low pass filter [Ang] : " <<  resol << std::endl;
+        std::cerr << " Sampling rate   [Ang] : " <<  sam << std::endl;
     }
     if (Ri != 0 || Ro != 0)
-        cerr << " Inner radius          : " << Ri  << endl;
-    cerr << " Outer radius          : " << Ro  << endl;
+        std::cerr << " Inner radius          : " << Ri  << std::endl;
+    std::cerr << " Outer radius          : " << Ro  << std::endl;
     if (max_shift != 0)
-        cerr << " Max. shift last iter. : " << max_shift << endl;
+        std::cerr << " Max. shift last iter. : " << max_shift << std::endl;
     if (max_rot != 0)
-        cerr << " Max. rotat. last iter.: " << max_rot << endl;
+        std::cerr << " Max. rotat. last iter.: " << max_rot << std::endl;
     if (fn_doc != "")
-        cerr << " Output document file  : " << fn_doc << endl;
+        std::cerr << " Output document file  : " << fn_doc << std::endl;
     if (!do_rot)
-        cerr << "Skip rotational alignment " << endl;
+        std::cerr << "Skip rotational alignment " << std::endl;
     if (!do_trans)
-        cerr << "Skip translational alignment " << endl;
+        std::cerr << "Skip translational alignment " << std::endl;
     if (do_complete)
     {
-        cerr << "Use complete-search alignment with:" << endl;
-        cerr << " Psi interval          : " << psi_interval  << endl;
+        std::cerr << "Use complete-search alignment with:" << std::endl;
+        std::cerr << " Psi interval          : " << psi_interval  << std::endl;
     }
 }
 
 // usage ===================================================================
 void Prog_align2d_prm::usage()
 {
-    cerr << "Usage:  " << endl;
-    cerr << "  align2d [options]" << endl;
-    cerr << "   -i <selfile>             : Selfile containing images to be aligned \n"
+    std::cerr << "Usage:  " << std::endl;
+    std::cerr << "  align2d [options]" << std::endl;
+    std::cerr << "   -i <selfile>             : Selfile containing images to be aligned \n"
     << " [ -ref <image> ]           : reference image; if none: piramidal combination of subset of images \n"
     << " [ -oext <extension> ]      : For output images & selfile; if none: input will be overwritten \n"
     << " [ -iter <int=1> ]          : Number of iterations to perform \n"
@@ -133,7 +133,7 @@ void Prog_align2d_prm::usage()
     << " [ -complete ]              : Use complete-search alignment \n"
     << " [ -psi_step <float=10>]    : Sampling interval to search rotation [deg] \n"
 
-    << endl;
+    << std::endl;
 }
 
 // Rotational alignment ========================================================
@@ -434,10 +434,10 @@ void Prog_align2d_prm::do_pspc()
     n_piram = (int)pow(2., (double)nlev);
 
     // Copy n_piram to a new temporary array of ImageXmipp
-    vector<ImageXmipp>  imgpspc;
+    std::vector<ImageXmipp>  imgpspc;
     for (imgno = 0;imgno < n_piram;imgno++) imgpspc.push_back(images[imgno]);
 
-    cerr << "  Piramidal combination of " << n_piram << " images" << endl;
+    std::cerr << "  Piramidal combination of " << n_piram << " images" << std::endl;
     init_progress_bar(n_piram);
     barf = XMIPP_MAX(1, (int)(1 + (n_piram / 60)));
 
@@ -531,11 +531,11 @@ void Prog_align2d_prm::refinement()
     barf = XMIPP_MAX(1, (int)(1 + (n_images / 60)));
 
     n_refined = 0;
-    cerr << "  Alignment:  iteration " << 1 << " of " << Niter << " (with " << n_images << " images)" << endl;
+    std::cerr << "  Alignment:  iteration " << 1 << " of " << Niter << " (with " << n_images << " images)" << std::endl;
     for (int iter = 0; iter < Niter; iter++)
     {
 
-        if (iter > 0) cerr << "  Refinement: iteration " << iter + 1 << " of " << Niter << endl;
+        if (iter > 0) std::cerr << "  Refinement: iteration " << iter + 1 << " of " << Niter << std::endl;
         if (iter == (Niter - 1))
         {
             curr_max_rot = max_rot;
@@ -614,7 +614,7 @@ void Prog_align2d_prm::refinement()
         } // loop over all images
         progress_bar(n_images);
 
-        if (n_images > n_refined) cerr << "  Discarded " << n_images - n_refined << " images." << endl;
+        if (n_images > n_refined) std::cerr << "  Discarded " << n_images - n_refined << " images." << std::endl;
         if (iter == 0) FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Msum)
         {
             dMij(Mref, i, j) = dMij(Msum, i, j) / (n_refined);
@@ -676,11 +676,11 @@ void Prog_align2d_prm::calc_correlation(const Matrix2D<double> &Mref, const floa
         fn_tmp = fn_sel.without_extension() + ".corr";
         if (oext != "") fn_tmp = fn_tmp.insert_before_extension("_" + oext);
         //Output rotation correlation file
-        ofstream out(fn_tmp.c_str(), ios::out);
-        out << "# Angle [deg]   Corr.Coeff." << endl;
+        std::ofstream out(fn_tmp.c_str(), std::ios::out);
+        out << "# Angle [deg]   Corr.Coeff." << std::endl;
         for (int i = 0; i < nstep; i++)
         {
-            out << i*psi_interval << "  " << ccf(i) << endl;
+            out << i*psi_interval << "  " << ccf(i) << std::endl;
         }
         out.close();
     }
@@ -716,7 +716,7 @@ void Prog_align2d_prm::align2d()
         fmask.raised_w = 0.1;
         fmask.FilterShape = RAISED_COSINE;
         fmask.FilterBand = LOWPASS;
-        Matrix2D< complex<double> > fft;
+        Matrix2D< std::complex<double> > fft;
         FourierTransform(images[0](), fft);
         fmask.generate_mask(fft);
         for (int imgno = 0;imgno < n_images;imgno++)
@@ -773,7 +773,7 @@ void Prog_align2d_prm::align2d()
 
     // Calculate average and stddev image and write out
 //  if(SFo.ImgNo(SelLine::ACTIVE)){
-    cerr << "Calculating average, correlations and writing out results ..." << endl;
+    std::cerr << "Calculating average, correlations and writing out results ..." << std::endl;
     ImageXmipp med, sig;
     double min, max;
     if (SFo.ImgNo(SelLine::ACTIVE))

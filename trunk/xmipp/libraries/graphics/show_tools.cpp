@@ -42,27 +42,27 @@ ScrollParam::ScrollParam(float min , float max, float initial_value,
                          int wFlags, int precision) :
         QWidget(parent, name, wFlags)
 {
-    vector<float> vmin;
+    std::vector<float> vmin;
     vmin.push_back(min);
-    vector<float> vmax;
+    std::vector<float> vmax;
     vmax.push_back(max);
-    vector<float> vinitial_value;
+    std::vector<float> vinitial_value;
     vinitial_value.push_back(initial_value);
-    vector<char *> vprm_name;
+    std::vector<char *> vprm_name;
     vprm_name.push_back(prm_name);
     init(vmin, vmax, vinitial_value, vprm_name, caption, precision);
 }
 
-ScrollParam::ScrollParam(vector<float> &min , vector<float> &max,
-                         vector<float> &initial_value, vector<char *> &prm_name,
+ScrollParam::ScrollParam(std::vector<float> &min , std::vector<float> &max,
+                         std::vector<float> &initial_value, std::vector<char *> &prm_name,
                          char *caption, QWidget *parent, const char *name, int wFlags, int precision) :
         QWidget(parent, name, wFlags)
 {
     init(min, max, initial_value, prm_name, caption, precision);
 }
 
-void ScrollParam::init(vector<float> &min, vector<float> &max,
-                       vector<float> &initial_value, vector<char *> &prm_name,
+void ScrollParam::init(std::vector<float> &min, std::vector<float> &max,
+                       std::vector<float> &initial_value, std::vector<char *> &prm_name,
                        char *caption, int precision)
 {
 
@@ -102,7 +102,7 @@ void ScrollParam::init(vector<float> &min, vector<float> &max,
         // Add range
         QLabel     *lab2 = new QLabel(this, "lab2");
         lab2->setFont(QFont("times", 12));
-        lab2->setText(((string)"[" + floatToString(min[i], 0) + "," + floatToString(max[i], 0) + "]").c_str());
+        lab2->setText(((std::string)"[" + floatToString(min[i], 0) + "," + floatToString(max[i], 0) + "]").c_str());
         lab2->setFixedSize(lab2->sizeHint());
         grid->addWidget(lab2, i + 1, 1, AlignCenter);
 
@@ -155,7 +155,7 @@ ScrollParam::~ScrollParam()
     }
 }
 
-vector<float> ScrollParam::getCurrentValues()
+std::vector<float> ScrollParam::getCurrentValues()
 {
     for (int i = 0; i < value.size(); i++)
     {
@@ -188,7 +188,7 @@ void ScrollParam::slot_ok_clicked()
 }
 
 
-ExclusiveParam::ExclusiveParam(vector<string> &list_values, int initial_value,
+ExclusiveParam::ExclusiveParam(std::vector<std::string> &list_values, int initial_value,
                                char *caption, QWidget *parent, const char *name, int wFlags) :
         QWidget(parent, name, wFlags)
 {

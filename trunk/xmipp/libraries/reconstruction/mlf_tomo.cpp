@@ -75,44 +75,44 @@ void Prog_mlf_tomo_prm::show()
     if (verb > 0)
     {
         // To screen
-        cerr << "--> Maximum-likelihood multi-reference refinement " << endl;
-        cerr << "  Tomographic volumes     : " << SF.name() << " (" << SF.ImgNo() << ")" << endl;
-        cerr << "  Reference volumes       : " << fn_ref << " (" << SFr.ImgNo() << ")" << endl;
-        cerr << "  Output rootname         : " << fn_root << endl;
-        cerr << "  Number of iterations    : " << Niter << endl;
-        cerr << "  Rot search              : " << rot0 << " " << rotF << " " << rot_step << endl;
-        cerr << "  Tilt search             : " << tilt0 << " " << tiltF << " " << tilt_step << endl;
-        cerr << "  Psi search (wrt axis)   : " << psi0 << " " << psiF << " " << psi_step << endl;
+        std::cerr << "--> Maximum-likelihood multi-reference refinement " << std::endl;
+        std::cerr << "  Tomographic volumes     : " << SF.name() << " (" << SF.ImgNo() << ")" << std::endl;
+        std::cerr << "  Reference volumes       : " << fn_ref << " (" << SFr.ImgNo() << ")" << std::endl;
+        std::cerr << "  Output rootname         : " << fn_root << std::endl;
+        std::cerr << "  Number of iterations    : " << Niter << std::endl;
+        std::cerr << "  Rot search              : " << rot0 << " " << rotF << " " << rot_step << std::endl;
+        std::cerr << "  Tilt search             : " << tilt0 << " " << tiltF << " " << tilt_step << std::endl;
+        std::cerr << "  Psi search (wrt axis)   : " << psi0 << " " << psiF << " " << psi_step << std::endl;
         if (fn_sym != "")
-            cerr << "  Symmetry file           : " << fn_sym << endl;
+            std::cerr << "  Symmetry file           : " << fn_sym << std::endl;
         if (fn_mask != "")
-            cerr << "  Use mask                : " << fn_mask << endl;
+            std::cerr << "  Use mask                : " << fn_mask << std::endl;
         if (fn_solv != "")
-            cerr << "  Solvent mask            : " << fn_solv << endl;
+            std::cerr << "  Solvent mask            : " << fn_solv << std::endl;
         if (fn_solv2 != "")
-            cerr << "  Second solvent mask     : " << fn_solv2 << endl;
+            std::cerr << "  Second solvent mask     : " << fn_solv2 << std::endl;
         if (fn_frac != "")
         {
-            cerr << "  Initial model frections : " << fn_frac << endl;
+            std::cerr << "  Initial model frections : " << fn_frac << std::endl;
         }
-        cerr << "  Limited shift search    : " << search_shift << endl;
+        std::cerr << "  Limited shift search    : " << search_shift << std::endl;
         if (fix_fractions)
         {
-            cerr << "  -> Do not update estimates of model fractions." << endl;
+            std::cerr << "  -> Do not update estimates of model fractions." << std::endl;
         }
         if (fix_sigma_noise)
         {
-            cerr << "  -> Do not update sigma-estimate of noise." << endl;
+            std::cerr << "  -> Do not update sigma-estimate of noise." << std::endl;
         }
         if (fix_sigma_offset)
         {
-            cerr << "  -> Do not update sigma-estimate of origin offsets." << endl;
+            std::cerr << "  -> Do not update sigma-estimate of origin offsets." << std::endl;
         }
         if (lowres > 0. || highres > 0.)
         {
-            cerr << "  -> Limit to resolutions between " << lowres << " and " << highres << endl;
+            std::cerr << "  -> Limit to resolutions between " << lowres << " and " << highres << std::endl;
         }
-        cerr << " -----------------------------------------------------------------" << endl;
+        std::cerr << " -----------------------------------------------------------------" << std::endl;
     }
 
 }
@@ -120,33 +120,33 @@ void Prog_mlf_tomo_prm::show()
 // Usage ===================================================================
 void Prog_mlf_tomo_prm::usage()
 {
-    cerr << "Usage:  mlf_tomo [options] " << endl;
-    cerr << "   -i <selfile>                : Selfile with input images \n";
-    cerr << "   -ref <selfile/image>        : Selfile with initial reference images/single reference image \n";
-    cerr << " [ -o <rootname=\"mlf_tomo\"> ] : Output rootname \n";
-    cerr << " [ -sumwedges <selfile=\"\"> ]  : Selfile with sum of wedges for each reference \n";
-    cerr << " [ -wedgelist <docfile=\"\"> ]  : Docfile with wedge parameters \n";
+    std::cerr << "Usage:  mlf_tomo [options] " << std::endl;
+    std::cerr << "   -i <selfile>                : Selfile with input images \n";
+    std::cerr << "   -ref <selfile/image>        : Selfile with initial reference images/single reference image \n";
+    std::cerr << " [ -o <rootname=\"mlf_tomo\"> ] : Output rootname \n";
+    std::cerr << " [ -sumwedges <selfile=\"\"> ]  : Selfile with sum of wedges for each reference \n";
+    std::cerr << " [ -wedgestd::list <docfile=\"\"> ]  : Docfile with wedge parameters \n";
 
-    cerr << " [ -offset <float=0>]          : Search radius for limited translations [pix] \n";
-    cerr << " [ -max_shift <float=dim/2>]   : Maximum allowed shift [pix] \n";
-    cerr << "   Angular search parameters:        \n";
-    cerr << " [ -rot  <rot0=0>  <rotF=0>  <step_rot=1> \n";
-    cerr << " [ -tilt <tilt0=0> <tiltF=0> <step_tilt=1>\n";
-    cerr << " [ -psi  <psi0=0>  <psiF=0>  <step_psi=1> \n";
-    cerr << " [ -sym <symfile> ]            : Enforce symmetry \n";
-    cerr << " [ -more_options ]             : Show all possible input parameters \n";
+    std::cerr << " [ -offset <float=0>]          : Search radius for limited translations [pix] \n";
+    std::cerr << " [ -max_shift <float=dim/2>]   : Maximum allowed shift [pix] \n";
+    std::cerr << "   Angular search parameters:        \n";
+    std::cerr << " [ -rot  <rot0=0>  <rotF=0>  <step_rot=1> \n";
+    std::cerr << " [ -tilt <tilt0=0> <tiltF=0> <step_tilt=1>\n";
+    std::cerr << " [ -psi  <psi0=0>  <psiF=0>  <step_psi=1> \n";
+    std::cerr << " [ -sym <symfile> ]            : Enforce symmetry \n";
+    std::cerr << " [ -more_options ]             : Show all possible input parameters \n";
 }
 
 // Extended usage ===================================================================
 void Prog_mlf_tomo_prm::extended_usage()
 {
-    cerr << "Additional options: " << endl;
-    cerr << " [ -iter <int=100> ]           : Maximum number of iterations to perform \n";
-    cerr << " [ -frac <docfile=\"\"> ]        : Docfile with expected model fractions (default: even distr.)\n";
-    cerr << " [ -fix_sigma_noise]           : Do not re-estimate the standard deviation in the pixel noise \n";
-    cerr << " [ -fix_sigma_offset]          : Do not re-estimate the standard deviation in the offsets \n";
-    cerr << " [ -fix_fractions]             : Do not re-estimate the model fractions \n";
-    cerr << endl;
+    std::cerr << "Additional options: " << std::endl;
+    std::cerr << " [ -iter <int=100> ]           : Maximum number of iterations to perform \n";
+    std::cerr << " [ -frac <docfile=\"\"> ]        : Docfile with expected model fractions (default: even distr.)\n";
+    std::cerr << " [ -fix_sigma_noise]           : Do not re-estimate the standard deviation in the pixel noise \n";
+    std::cerr << " [ -fix_sigma_offset]          : Do not re-estimate the standard deviation in the offsets \n";
+    std::cerr << " [ -fix_fractions]             : Do not re-estimate the model fractions \n";
+    std::cerr << std::endl;
     exit(1);
 }
 
@@ -158,8 +158,8 @@ void Prog_mlf_tomo_prm::produce_Side_info()
     VolumeXmipp vol;
     headerXmipp head;
     Matrix3D<double> Maux, Faux_real, Faux_imag;
-    vector<Matrix3D<double> > Vdum;
-    Matrix3D<complex<double> > Faux, Fref;
+    std::vector<Matrix3D<double> > Vdum;
+    Matrix3D<std::complex<double> > Faux, Fref;
     int xdim, ydim, zdim, c, iaux, ifound, refno = 0;
     float xx, yy;
     double dum, avg;
@@ -293,7 +293,7 @@ void Prog_mlf_tomo_prm::produce_Side_info()
             DF.next_data_line();
         }
         if (ABS(sumfrac - 1.) > 1e-4)
-            cerr << " ->WARNING: Sum of all expected model fractions (" << floatToString(sumfrac) << ") is not one!" << endl;
+            std::cerr << " ->WARNING: Sum of all expected model fractions (" << floatToString(sumfrac) << ") is not one!" << std::endl;
         for (refno = 0; refno < nr_ref; refno++)
         {
             alpha_k[refno] /= sumfrac;
@@ -315,7 +315,7 @@ void Prog_mlf_tomo_prm::produce_Side_info()
             ww.thF = (double)DF1(2);
             wedges.push_back(ww);
             nr_wedge++;
-            if (debug) cerr << "wedge " << ww.num << " = " << ww.th0 << " - " << ww.thF << endl;
+            if (debug) std::cerr << "wedge " << ww.num << " = " << ww.th0 << " - " << ww.thF << std::endl;
             DF1.next();
         }
         DF1.clear();
@@ -346,8 +346,8 @@ void Prog_mlf_tomo_prm::produce_Side_info()
     }
     if (fn_sig != "")
     {
-        ifstream fh;
-        fh.open((fn_sig).c_str(), ios::in);
+        std::ifstream fh;
+        fh.open((fn_sig).c_str(), std::ios::in);
         for (int i = 0; i < resol_max; i++)
         {
             fh >> iaux;
@@ -403,8 +403,8 @@ void Prog_mlf_tomo_prm::produce_Side_info2()
                     }
                     if (ifound != 1)
                     {
-                        cerr << ifound;
-                        cerr << "ERROR% wedge " << iaux << " for tomogram " << fn_vol << " not found in wedge-list" << endl;
+                        std::cerr << ifound;
+                        std::cerr << "ERROR% wedge " << iaux << " for tomogram " << fn_vol << " not found in wedge-list" << std::endl;
                         exit(0);
                     }
                 }
@@ -417,7 +417,7 @@ void Prog_mlf_tomo_prm::produce_Side_info2()
             }
             else
             {
-                cerr << "ERROR% " << fn_vol << " not found in document file" << endl;
+                std::cerr << "ERROR% " << fn_vol << " not found in document file" << std::endl;
                 exit(0);
             }
         }
@@ -464,7 +464,7 @@ void Prog_mlf_tomo_prm::produce_Side_info2()
             }
             else
             {
-                cerr << "ERROR% " << fn_vol << " not found in misalignment document file" << endl;
+                std::cerr << "ERROR% " << fn_vol << " not found in misalignment document file" << std::endl;
                 exit(0);
             }
             A_img = Euler_rotation3DMatrix(img_rot[imgno], img_tilt[imgno], img_psi[imgno]);
@@ -489,19 +489,19 @@ void Prog_mlf_tomo_prm::estimate_initial_sigma2()
 {
 
     VolumeXmipp      vol;
-    Matrix3D<complex<double> > Faux;
+    Matrix3D<std::complex<double> > Faux;
     DocFile          DF;
     FileName         fn_vol, fn_out;
     int              ii, ires, iwedge, imgno, c, nn;
     double           tmpr, tmpi;
-    vector<double>   Vsum, Vavg_real, Vavg_imag;
+    std::vector<double>   Vsum, Vavg_real, Vavg_imag;
 
     if (istart == 1)
     { // else assume the files have been read with fixed filenames, and do nothing
 
         if (verb > 0)
         {
-            cerr << "  Estimating initial noise models from average power spectra" << endl;
+            std::cerr << "  Estimating initial noise models from average power spectra" << std::endl;
             nn = SF.ImgNo();
             init_progress_bar(nn);
             c = XMIPP_MAX(1, nn / 60);
@@ -561,7 +561,7 @@ void Prog_mlf_tomo_prm::estimate_initial_sigma2()
                     Vsigma2[ires]/=Vsum[ires];
                     if (debug)
                     {
-                        cerr<<ires<<" Vsig2= "<<Vsigma2[ires]<<" avg2= "<<tmpr<<" sum= "<<Vsum[ires]<<" new sigma2= "<<(Vsigma2[ires]-tmpr)/2<<endl;
+                        std::cerr<<ires<<" Vsig2= "<<Vsigma2[ires]<<" avg2= "<<tmpr<<" sum= "<<Vsum[ires]<<" new sigma2= "<<(Vsigma2[ires]-tmpr)/2<<std::endl;
                     }
                     Vsigma2[ires]=(Vsigma2[ires]-tmpr)/2;
                     */
@@ -571,11 +571,11 @@ void Prog_mlf_tomo_prm::estimate_initial_sigma2()
             if (verb > 0)
             {
                 // Write to disc
-                ofstream fh;
+                std::ofstream fh;
                 fn_out = fn_root + "_it";
                 fn_out.compose(fn_out, istart - 1, "");
                 fn_out += "_sigma2.dat";
-                fh.open((fn_out).c_str(), ios::out);
+                fh.open((fn_out).c_str(), std::ios::out);
                 for (int i = 0; i < resol_max; i++)
                 {
                     fh << i << " " << Vsigma2[i] << "\n";
@@ -627,8 +627,8 @@ void Prog_mlf_tomo_prm::update_pointers()
 
     Matrix2D<double> I(4, 4);
     Matrix3D<double> Mwedge, Maux;
-    vector<int> dum;
-    vector<double> dum2;
+    std::vector<int> dum;
+    std::vector<double> dum2;
     int iaux;
     VolumeXmipp Vt;
     FileName fnt;
@@ -714,12 +714,12 @@ void Prog_mlf_tomo_prm::update_pointers()
         }
         if (debug)
         {
-            cerr << "non-zero pixels for wedge" << iwedge;
+            std::cerr << "non-zero pixels for wedge" << iwedge;
             for (int i = 0; i < resol_max; i++)
             {
-                cerr << nonzero_pixels[iwedge][i] << " ";
+                std::cerr << nonzero_pixels[iwedge][i] << " ";
             }
-            cerr << endl;
+            std::cerr << std::endl;
         }
     }
 
@@ -728,25 +728,25 @@ void Prog_mlf_tomo_prm::update_pointers()
 // Here perform the main probability-weighted integration over all
 // rotations, translations and classes of the given image
 void Prog_mlf_tomo_prm::MLF_integrate(Matrix3D<double> Mimg, Matrix2D<double> A_img, int iwedge,
-                                      vector<Matrix3D<double> > &wsum_Fimgs,
-                                      vector<Matrix3D<double> > &wsum_Fweds,
-                                      vector<double> &wsum_sigma2, double &wsum_sigma_offset,
-                                      vector<double> &sumw, double &LL, double &fracweight,
+                                      std::vector<Matrix3D<double> > &wsum_Fimgs,
+                                      std::vector<Matrix3D<double> > &wsum_Fweds,
+                                      std::vector<double> &wsum_sigma2, double &wsum_sigma_offset,
+                                      std::vector<double> &sumw, double &LL, double &fracweight,
                                       int &opt_refno, double &opt_rot, double &opt_tilt, double &opt_psi,
                                       double &opt_xoff, double &opt_yoff, double &opt_zoff)
 {
 
     Matrix3D<double> Mrotwedge, Frotref_real, Frotref_imag, Frotimg_real, Frotimg_imag;
     Matrix3D<double> Faux_real, Faux_imag;
-    vector<Matrix3D<double> > Fimg_trans;
-    vector<Matrix3D<double> > dum;
-    vector<double> Vweight;
-    Matrix3D<complex<double> > Fimg, Faux;
+    std::vector<Matrix3D<double> > Fimg_trans;
+    std::vector<Matrix3D<double> > dum;
+    std::vector<double> Vweight;
+    Matrix3D<std::complex<double> > Fimg, Faux;
     Matrix2D<double> A(4, 4), A_rot(4, 4), I(4, 4);
     Matrix1D<double> offsets(3);
-    vector<double> radavg_sigma2(resol_max);
-    vector<vector<double> > Vwsum_sigma2;
-    vector<double> refw(nr_ref), pdf_itrans;
+    std::vector<double> radavg_sigma2(resol_max);
+    std::vector<std::vector<double> > Vwsum_sigma2;
+    std::vector<double> refw(nr_ref), pdf_itrans;
     double sum_refw = 0., maxweight = -99.e99, mindiff = 99.e99, wsum_corr = 0.;
     int iweight, ioptx, iopty, ioptz, xmax, ymax, zmax, opt_itrans, ii, ires;
     double rot, tilt, psi, rot_sam, diff, sumweight, maxw, sum, aux, weight;
@@ -845,7 +845,7 @@ void Prog_mlf_tomo_prm::MLF_integrate(Matrix3D<double> Mimg, Matrix2D<double> A_
                                 //if (debug) Vt().data[ii]=(double)tmpd/(2*Vsigma2[ires]);
                                 if (debug && ii == 13066)
                                 {
-                                    cerr << "Mrotwedge= " << (Mrotwedge).data[ii] << " Fimg_trans[2*itrans]= " << (Fimg_trans[2*itrans].data[ii]) << " (Frotref_real)= " << (Frotref_real).data[ii] << " diff2= " << tmpd << endl;
+                                    std::cerr << "Mrotwedge= " << (Mrotwedge).data[ii] << " Fimg_trans[2*itrans]= " << (Fimg_trans[2*itrans].data[ii]) << " (Frotref_real)= " << (Frotref_real).data[ii] << " diff2= " << tmpd << std::endl;
                                 }
                             }
                             //if (debug) {
@@ -856,9 +856,9 @@ void Prog_mlf_tomo_prm::MLF_integrate(Matrix3D<double> Mimg, Matrix2D<double> A_
                             if (diff < mindiff) mindiff = diff;
                             if (debug)
                             {
-                                cerr << rot << " " << tilt << " " << psi << " " << itrans << " " << diff << " " << mindiff;
-                                if (diff == mindiff) cerr << "**" << endl;
-                                else cerr << endl;
+                                std::cerr << rot << " " << tilt << " " << psi << " " << itrans << " " << diff << " " << mindiff;
+                                if (diff == mindiff) std::cerr << "**" << std::endl;
+                                else std::cerr << std::endl;
                             }
                         }
                     }
@@ -944,7 +944,7 @@ void Prog_mlf_tomo_prm::MLF_integrate(Matrix3D<double> Mimg, Matrix2D<double> A_
                                 weight /= sum_refw;
                                 if (debug)
                                 {
-                                    cerr << " weight= " << weight << " sum_refw= " << sum_refw << endl;
+                                    std::cerr << " weight= " << weight << " sum_refw= " << sum_refw << std::endl;
                                 }
                                 // Impute missing wedges for reference values
                                 for (int ipoint = 0; ipoint < nr_pointer_mis[iwedge]; ipoint++)
@@ -965,7 +965,7 @@ void Prog_mlf_tomo_prm::MLF_integrate(Matrix3D<double> Mimg, Matrix2D<double> A_
                                 for (int i = 0; i < resol_max; i++)
                                 {
                                     wsum_sigma2[i] += weight * Vwsum_sigma2[iweight][i];
-                                    //if (debug) cerr <<"wsum_sigma2+= "<<weight<<" * "<<Vwsum_sigma2[iweight][i]<<endl;
+                                    //if (debug) std::cerr <<"wsum_sigma2+= "<<weight<<" * "<<Vwsum_sigma2[iweight][i]<<std::endl;
                                 }
                                 // weighted sum for origin offsets
                                 wsum_sigma_offset += weight * ((Vtrans[itrans](0) + opt_xoff) * (Vtrans[itrans](0) + opt_xoff) +
@@ -993,11 +993,11 @@ void Prog_mlf_tomo_prm::MLF_integrate(Matrix3D<double> Mimg, Matrix2D<double> A_
 
 
 void Prog_mlf_tomo_prm::sum_over_all_images(SelFile &SF,
-        vector<Matrix3D<double> > &wsum_Fimgs,
-        vector<Matrix3D<double> > &wsum_Fweds,
-        vector<double> &sum_nonzero_pixels,
-        vector<double> &wsum_sigma2, double &wsum_sigma_offset,
-        vector<double> &sumw, double &LL, double &sumcorr, DocFile &DFo)
+        std::vector<Matrix3D<double> > &wsum_Fimgs,
+        std::vector<Matrix3D<double> > &wsum_Fweds,
+        std::vector<double> &sum_nonzero_pixels,
+        std::vector<double> &wsum_sigma2, double &wsum_sigma_offset,
+        std::vector<double> &sumw, double &LL, double &sumcorr, DocFile &DFo)
 {
 
     Matrix3D<double> Mdzero;
@@ -1101,18 +1101,18 @@ void Prog_mlf_tomo_prm::sum_over_all_images(SelFile &SF,
 }
 
 // Update all model parameters
-void Prog_mlf_tomo_prm::update_parameters(vector<Matrix3D<double> > &wsum_Fimgs,
-        vector<Matrix3D<double> > &wsum_Fweds,
-        vector<double> &sum_nonzero_pixels,
-        vector<double> &wsum_sigma2, double &wsum_sigma_offset,
-        vector<double> &sumw, double &sumcorr,
+void Prog_mlf_tomo_prm::update_parameters(std::vector<Matrix3D<double> > &wsum_Fimgs,
+        std::vector<Matrix3D<double> > &wsum_Fweds,
+        std::vector<double> &sum_nonzero_pixels,
+        std::vector<double> &wsum_sigma2, double &wsum_sigma_offset,
+        std::vector<double> &sumw, double &sumcorr,
         double &sumw_allrefs, int iter)
 {
 
     VolumeXmipp Vaux, Vaux2;
     Matrix1D<double> rmean_sigma2;
     Matrix1D<int> center(3), radial_count;
-    Matrix3D<complex<double> > Faux, Fsum;
+    Matrix3D<std::complex<double> > Faux, Fsum;
     Matrix3D<double> Maux, Msum, Faux_real, Faux_imag;
     double rr, dum, avg, theta_corr, sum_ref = 0.;
 
@@ -1231,7 +1231,7 @@ void Prog_mlf_tomo_prm::update_parameters(vector<Matrix3D<double> > &wsum_Fimgs,
                 if (sum_nonzero_pixels[i] > 0.)
                     Vsigma2[i] = wsum_sigma2[i] / (2 * sum_nonzero_pixels[i]);
                 else Vsigma2[i] = 0.;
-                if (debug) cerr << " Vsig2= " << Vsigma2[i] << endl;
+                if (debug) std::cerr << " Vsig2= " << Vsigma2[i] << std::endl;
             }
 
         }
@@ -1242,8 +1242,8 @@ void Prog_mlf_tomo_prm::update_parameters(vector<Matrix3D<double> > &wsum_Fimgs,
         {
             int ires;
             double tmpr,tmpi;
-            vector<double> diff2_ref;
-            vector<Matrix3D<complex<double> > > Fref;
+            std::vector<double> diff2_ref;
+            std::vector<Matrix3D<std::complex<double> > > Fref;
             Fref.clear();
             for (int i=0; i<resol_max; i++) 
          diff2_ref.push_back(0.);
@@ -1283,7 +1283,7 @@ void Prog_mlf_tomo_prm::update_parameters(vector<Matrix3D<double> > &wsum_Fimgs,
          if (sum_nonzero_pixels[i]>0.)
              Vsigma2[i]=(wsum_sigma2[i]+diff2_ref[i]*theta*theta_corr)/(2*sum_nonzero_pixels[i]);
          else Vsigma2[i]=0.;
-         if (debug) cerr<<" Vsig2= ("<< wsum_sigma2[i]<<" + "<<diff2_ref[i]<<" *" <<theta*theta_corr<<") /2* "<<sum_nonzero_pixels[i]<<endl;
+         if (debug) std::cerr<<" Vsig2= ("<< wsum_sigma2[i]<<" + "<<diff2_ref[i]<<" *" <<theta*theta_corr<<") /2* "<<sum_nonzero_pixels[i]<<std::endl;
             }
         }
         */
@@ -1292,10 +1292,10 @@ void Prog_mlf_tomo_prm::update_parameters(vector<Matrix3D<double> > &wsum_Fimgs,
 }
 
 // Post-process reference volumes =================================================
-void Prog_mlf_tomo_prm::post_process_references(vector<Matrix3D<double> > &Mref)
+void Prog_mlf_tomo_prm::post_process_references(std::vector<Matrix3D<double> > &Mref)
 {
 
-    Matrix3D<complex<double> > Faux;
+    Matrix3D<std::complex<double> > Faux;
     Matrix3D<double> Faux_real, Faux_imag, Maux;
     bool changed = false;
     double cutoff = 0.1;
@@ -1342,7 +1342,7 @@ void Prog_mlf_tomo_prm::post_process_references(vector<Matrix3D<double> > &Mref)
 }
 
 // Modify reference volumes ======================================================
-void Prog_mlf_tomo_prm::solvent_flattening(vector<Matrix3D<double> > &Mref, FileName &fn_solvent)
+void Prog_mlf_tomo_prm::solvent_flattening(std::vector<Matrix3D<double> > &Mref, FileName &fn_solvent)
 {
 
     VolumeXmipp solv;
@@ -1374,8 +1374,8 @@ void Prog_mlf_tomo_prm::solvent_flattening(vector<Matrix3D<double> > &Mref, File
 }
 
 void Prog_mlf_tomo_prm::write_output_files(const int iter, SelFile &SF, DocFile &DF,
-        vector<Matrix3D<double> > &Mref,
-        double &sumw_allrefs, vector<double> &sumw,
+        std::vector<Matrix3D<double> > &Mref,
+        double &sumw_allrefs, std::vector<double> &sumw,
         double &LL, double &avecorr)
 {
 
@@ -1421,9 +1421,9 @@ void Prog_mlf_tomo_prm::write_output_files(const int iter, SelFile &SF, DocFile 
     }
 
     // Write out sigma2 for Fourier-mode
-    ofstream fh;
+    std::ofstream fh;
     fn_tmp = fn_base + "_sigma2.dat";
-    fh.open((fn_tmp).c_str(), ios::out);
+    fh.open((fn_tmp).c_str(), std::ios::out);
     for (int i = 0; i < resol_max; i++)
     {
         fh << i << " " << Vsigma2[i] << "\n";

@@ -60,7 +60,7 @@ void compute_voxels_in_feat(Volume *vol_label,
     if it is 0 then the background voxels are shown */
 void show_voxels_in_feat(const Volume *vol_phantom,
                          const Volume *vol_recons, const Volume *vol_label,
-                         int selected_feat, ostream &out);
+                         int selected_feat, std::ostream &out);
 
 /** Show voxel values in feat using a phantom.
     This function shows in two columns the values of the voxels corresponding
@@ -69,7 +69,7 @@ void show_voxels_in_feat(const Volume *vol_phantom,
     of the point with respecto to the center of the feature is shown */
 void show_voxels_in_feat(const Volume *vol_phantom,
                          const Volume *vol_recons, const Volume *volume_label, const Phantom &P,
-                         int selected_feat, ostream &out);
+                         int selected_feat, std::ostream &out);
 
 /** Compute structural consistency for a single feature.
     Under this function several measures are performed over the volume.
@@ -117,7 +117,7 @@ void show_voxels_in_feat(const Volume *vol_phantom,
     The mutual information is defined as
     @code
                         I(x,y)
-    scinf_FOM(x,y) = -----------      I(x) = -sum(p(i)*log(p(i)))
+    sstd::cinf_FOM(x,y) = -----------      I(x) = -sum(p(i)*log(p(i)))
                       I(x)*I(y)
     @endcode
 

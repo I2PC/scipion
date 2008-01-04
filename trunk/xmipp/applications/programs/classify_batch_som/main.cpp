@@ -51,9 +51,9 @@ main(int argc, char** argv)
     bool           norm = 1; // Normalize?
     unsigned       xdim = 10; // X-dimension (-->)
     unsigned       ydim = 5; // Y-dimension
-    float         radius_0; // Initial radius value
-    string         layout = "HEXA"; // Type of layout (Topology)
-    bool         saveClusters = false;    // Save clusters in separate files
+    float          radius_0; // Initial radius value
+    std::string    layout = "HEXA"; // Type of layout (Topology)
+    bool           saveClusters = false;    // Save clusters in separate files
 
     /* Parameters ============================================================== */
     try
@@ -62,7 +62,7 @@ main(int argc, char** argv)
         fn_in = getParameter(argc, argv, "-i");
 
         if (checkParameter(argc, argv, "-o"))
-            fn_out = getParameter(argc, argv, "-cout");
+            fn_out = getParameter(argc, argv, "-std::cout");
         else
         {
             Usage(argv);
@@ -79,7 +79,7 @@ main(int argc, char** argv)
         {
             if (checkParameter(argc, argv, "-rect"))
             {
-                cout << "Error: you can not define two topologies" << endl;
+                std::cout << "Error: you can not define two topologies" << std::endl;
                 exit(EXIT_FAILURE);
             }
             layout = "HEXA";
@@ -116,7 +116,7 @@ main(int argc, char** argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage(argv);
     }
 
@@ -126,75 +126,75 @@ main(int argc, char** argv)
 
     if (iter < 1)
     {
-        cerr << argv[0] << ": invalid value for iter (must be > 1): " << iter << endl;
+        std::cerr << argv[0] << ": invalid value for iter (must be > 1): " << iter << std::endl;
         exit(EXIT_FAILURE);
     }
 
     if (verb < 0 || verb > 2)
     {
-        cerr << argv[0] << ": invalid value for verbosity (must be between 0 and 2): " << verb << endl;
+        std::cerr << argv[0] << ": invalid value for verbosity (must be between 0 and 2): " << verb << std::endl;
         exit(EXIT_FAILURE);
     }
 
 
     if (radius_0 < 1)
     {
-        cerr << argv[0] << ": invalid value for radius (must be > 1): " << radius_0 << endl;
+        std::cerr << argv[0] << ": invalid value for radius (must be > 1): " << radius_0 << std::endl;
         exit(EXIT_FAILURE);
     }
 
     if (xdim < 1)
     {
-        cerr << argv[0] << ": invalid value for xdim (must be > 1): " << xdim << endl;
+        std::cerr << argv[0] << ": invalid value for xdim (must be > 1): " << xdim << std::endl;
         exit(EXIT_FAILURE);
     }
 
     if (ydim < 1)
     {
-        cerr << argv[0] << ": invalid value for ydim (must be > 1): " << ydim << endl;
+        std::cerr << argv[0] << ": invalid value for ydim (must be > 1): " << ydim << std::endl;
         exit(EXIT_FAILURE);
     }
 
 
     /* Shows parameters ===================================================== */
 
-    cout << endl << "Parameters used: " << endl;
-    cout << "Input data file : " << fn_in << endl;
-    cout << "Output file name : " << fn_out << endl;
+    std::cout << std::endl << "Parameters used: " << std::endl;
+    std::cout << "Input data file : " << fn_in << std::endl;
+    std::cout << "Output file name : " << fn_out << std::endl;
     if (cb_in != "")
-        cout << "Input code vectors file name : " << cb_in << endl;
+        std::cout << "Input code vectors file name : " << cb_in << std::endl;
     if (saveClusters)
-        cout << "Save clusters in separate files: " << fn_out << ".(cluster number)" << endl;
-    cout << "Horizontal dimension (Xdim) = " << xdim << endl;
-    cout << "Vertical dimension (Ydim) = " << ydim << endl;
+        std::cout << "Save clusters in separate files: " << fn_out << ".(cluster number)" << std::endl;
+    std::cout << "Horizontal dimension (Xdim) = " << xdim << std::endl;
+    std::cout << "Vertical dimension (Ydim) = " << ydim << std::endl;
     if (layout == "HEXA")
-        cout << "Hexagonal topology " << endl;
+        std::cout << "Hexagonal topology " << std::endl;
     else
-        cout << "Rectangular topology " << endl;
+        std::cout << "Rectangular topology " << std::endl;
 
-    cout << "Initial neighborhood radius (radius) = " << radius_0 << endl;
+    std::cout << "Initial neighborhood radius (radius) = " << radius_0 << std::endl;
 
-    cout << "Total number of iterations = " << iter << endl;
-    cout << "verbosity level = " << verb << endl;
+    std::cout << "Total number of iterations = " << iter << std::endl;
+    std::cout << "verbosity level = " << verb << std::endl;
     if (norm)
-        cout << "Normalize input data" << endl;
+        std::cout << "Normalize input data" << std::endl;
     else
-        cout << "Do not normalize input data " << endl;
+        std::cout << "Do not normalize input data " << std::endl;
 
 
     /* Open training vector ================================================= */
 
 
-    ifstream inStream(fn_in.c_str());
+    std::ifstream inStream(fn_in.c_str());
     if (!inStream)
     {
-        cerr << argv[0] << ": can't open file " << fn_in << endl;
+        std::cerr << argv[0] << ": can't open file " << fn_in << std::endl;
         exit(EXIT_FAILURE);
     }
 
     xmippCTVectors ts(0, true);
 
-    cout << endl << "Reading data file " << fn_in << "....." << endl;
+    std::cout << std::endl << "Reading data file " << fn_in << "....." << std::endl;
     inStream >> ts;
 
 
@@ -205,7 +205,7 @@ main(int argc, char** argv)
     {
         if (norm)
         {
-            cout << "Normalizing....." << endl;
+            std::cout << "Normalizing....." << std::endl;
             ts.normalize();        // Normalize input data
         }
 
@@ -213,11 +213,11 @@ main(int argc, char** argv)
 
         if (cb_in != "")
         {
-            cout << "Reading codevectors file " << cb_in << "....." << endl;
-            ifstream codeStream(cb_in.c_str());
+            std::cout << "Reading codevectors file " << cb_in << "....." << std::endl;
+            std::ifstream codeStream(cb_in.c_str());
             if (!codeStream)
             {
-                cerr << argv[0] << ": can't open file " << cb_in << endl;
+                std::cerr << argv[0] << ": can't open file " << cb_in << std::endl;
                 exit(EXIT_FAILURE);
             }
             myMap = new xmippMap(codeStream);
@@ -236,109 +236,109 @@ main(int argc, char** argv)
         thisSOM->train(*myMap, ts);                // Train algorithm
 
         // Test algorithm
-        cout << endl;
+        std::cout << std::endl;
         double dist = thisSOM->test(*myMap, ts);
-        cout << endl << "Quantization error : " <<  dist << endl;
+        std::cout << std::endl << "Quantization error : " <<  dist << std::endl;
 
         // Classifying
-        cout << "Classifying....." << endl;
+        std::cout << "Classifying....." << std::endl;
         myMap->classify(&ts);
 
         // Calibrating
-        cout << "Calibrating....." << endl;
+        std::cout << "Calibrating....." << std::endl;
         myMap->calibrate(ts);
 
         /*******************************************************
             Saving all kind of Information
         *******************************************************/
 
-        cout << "Saving algorithm information as " << fn_out << ".inf ....." << endl;
-        tmpN = fn_out.c_str() + (string) ".inf";
-        ofstream infS(tmpN.c_str());
-        infS << "Kohonen BatchSOM algorithm" << endl << endl;
-        infS << "Input data file : " << fn_in << endl;
+        std::cout << "Saving algorithm information as " << fn_out << ".inf ....." << std::endl;
+        tmpN = fn_out.c_str() + (std::string) ".inf";
+        std::ofstream infS(tmpN.c_str());
+        infS << "Kohonen BatchSOM algorithm" << std::endl << std::endl;
+        infS << "Input data file : " << fn_in << std::endl;
         if (cb_in != "")
-            infS << "Input code vectors file : " << cb_in << endl;
-        infS << "Code vectors output file : " << fn_out <<  ".cod" << endl;
-        infS << "Algorithm information output file : " << fn_out <<  ".inf" << endl;
-        infS << "Number of feature vectors: " << ts.size() << endl;
-        infS << "Number of variables: " << ts.itemAt(0).size() << endl;
-        infS << "Horizontal dimension (Xdim) = " << xdim << endl;
-        infS << "Vertical dimension (Ydim) = " << ydim << endl;
+            infS << "Input code vectors file : " << cb_in << std::endl;
+        infS << "Code vectors output file : " << fn_out <<  ".cod" << std::endl;
+        infS << "Algorithm information output file : " << fn_out <<  ".inf" << std::endl;
+        infS << "Number of feature vectors: " << ts.size() << std::endl;
+        infS << "Number of variables: " << ts.itemAt(0).size() << std::endl;
+        infS << "Horizontal dimension (Xdim) = " << xdim << std::endl;
+        infS << "Vertical dimension (Ydim) = " << ydim << std::endl;
         if (layout == "HEXA")
-            infS << "Hexagonal topology " << endl;
+            infS << "Hexagonal topology " << std::endl;
         else
-            infS << "Rectangular topology " << endl;
-        infS << "Initial neighborhood radius (radius) = " << radius_0 << endl;
-        infS << "Total number of iterations = " << iter << endl;
+            infS << "Rectangular topology " << std::endl;
+        infS << "Initial neighborhood radius (radius) = " << radius_0 << std::endl;
+        infS << "Total number of iterations = " << iter << std::endl;
         if (norm)
-            infS << "Input data normalized" << endl;
+            infS << "Input data normalized" << std::endl;
         else
-            infS << "Input data not normalized" << endl;
-        infS << "Quantization error : " <<  dist << endl;
+            infS << "Input data not normalized" << std::endl;
+        infS << "Quantization error : " <<  dist << std::endl;
 
         infS.flush();
 
         // assign data to neurons
         if (saveClusters)
         {
-            cout << "Saving neurons assigments ....." << endl;
+            std::cout << "Saving neurons assigments ....." << std::endl;
             for (unsigned i = 0; i < myMap->size(); i++)
             {
-                tmpN = fn_out.c_str() + (string) "."  + integerToString(i);
-                ofstream cStream(tmpN.c_str());
+                tmpN = fn_out.c_str() + (std::string) "."  + integerToString(i);
+                std::ofstream cStream(tmpN.c_str());
                 for (int j = 0; j < myMap->classifAt(i).size(); j++)
-                    cStream << myMap->classifAt(i)[j] << endl;
+                    cStream << myMap->classifAt(i)[j] << std::endl;
                 cStream.flush();
             }
         }
 
         // save .vs file to be compatible with SOM_PAK
-        cout << "Saving visual file as " << fn_out << ".vs ....." << endl;
-        tmpN = fn_out.c_str() + (string) ".vs";
-        ofstream vsStream(tmpN.c_str());
-        vsStream << ts.theItems[0].size() << " " << myMap->layout() << " " << myMap->width() << " " << myMap->height() << " bubble" << endl;
+        std::cout << "Saving visual file as " << fn_out << ".vs ....." << std::endl;
+        tmpN = fn_out.c_str() + (std::string) ".vs";
+        std::ofstream vsStream(tmpN.c_str());
+        vsStream << ts.theItems[0].size() << " " << myMap->layout() << " " << myMap->width() << " " << myMap->height() << " bubble" << std::endl;
         for (int i = 0; i < ts.size(); i++)
         {
             int j = myMap->winner(ts, i);
-            vsStream << myMap->indexToPos(j).first << " " << myMap->indexToPos(j).second << " " << eDist(myMap->theItems[j], ts.theItems[i]) << " " << ts.theTargets[i] << endl;
+            vsStream << myMap->indexToPos(j).first << " " << myMap->indexToPos(j).second << " " << eDist(myMap->theItems[j], ts.theItems[i]) << " " << ts.theTargets[i] << std::endl;
         }
         vsStream.flush();
 
         // save .his file (Histogram)
-        cout << "Saving code vectors histogram file as " << fn_out << ".his ....." << endl;
-        tmpN = fn_out.c_str() + (string) ".his";
-        ofstream hisStream(tmpN.c_str());
+        std::cout << "Saving code vectors histogram file as " << fn_out << ".his ....." << std::endl;
+        tmpN = fn_out.c_str() + (std::string) ".his";
+        std::ofstream hisStream(tmpN.c_str());
         myMap->printHistogram(hisStream);
         hisStream.flush();
 
         // save .err file (Average Quantization Error)
-        cout << "Saving code vectors average quantization error file as " << fn_out << ".err ....." << endl;
-        tmpN = fn_out.c_str() + (string) ".err";
-        ofstream errStream(tmpN.c_str());
+        std::cout << "Saving code vectors average quantization error file as " << fn_out << ".err ....." << std::endl;
+        tmpN = fn_out.c_str() + (std::string) ".err";
+        std::ofstream errStream(tmpN.c_str());
         myMap->printQuantError(errStream);
         errStream.flush();
 
         if (norm)
         {
-            cout << "Denormalizing code vectors....." << endl;
+            std::cout << "Denormalizing code vectors....." << std::endl;
             myMap->unNormalize(ts.getNormalizationInfo()); // de-normalize codevectors
         }
 
-        cout << "Saving code vectors as " << fn_out << ".cod ....." << endl;
-        tmpN = fn_out.c_str() + (string) ".cod";
-        ofstream codS(tmpN.c_str());
+        std::cout << "Saving code vectors as " << fn_out << ".cod ....." << std::endl;
+        tmpN = fn_out.c_str() + (std::string) ".cod";
+        std::ofstream codS(tmpN.c_str());
         codS << *myMap;
         codS.flush();
 
-        cout << endl;
+        std::cout << std::endl;
 
         delete myMap;
 
     }
-    catch (const exception& e)
+    catch (const std::exception& e)
     {
-        cout << e.what() << endl;
+        std::cout << e.what() << std::endl;
     }
     return 0;
 }

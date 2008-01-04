@@ -45,7 +45,7 @@
 class VrmlFile
 {
 private:
-    ofstream fh_out;
+    std::ofstream fh_out;
     int need_footer; //1=YES, 0=NO
 public:
     /**Open file and write header. Default filename is myvrml.wrl"

@@ -124,11 +124,11 @@ public:
     void read(int argc, char **argv);
 
     /** Usage message.
-        This function shows the way of introducing this parameters. */
+        This function shows the way of introdustd::cing this parameters. */
     void usage();
 
-    /** cout << prm; */
-    friend ostream & operator << (ostream &out,
+    /** std::cout << prm; */
+    friend std::ostream & operator << (std::ostream &out,
                                   const Prog_Evaluate_Parameters &prm);
 };
 
@@ -341,10 +341,10 @@ public:
                                    FOMs &fmean, FOMs &fstddev);
 
     /** Show. */
-    friend ostream & operator << (ostream &out, const FOMs &foms);
+    friend std::ostream & operator << (std::ostream &out, const FOMs &foms);
 
     /** Show mean and stddev. Show mean and stddev at position i. */
-    friend void show_stats(ostream &out, int i, const FOMs &fmean,
+    friend void show_stats(std::ostream &out, int i, const FOMs &fmean,
                            const FOMs &fstddev);
 };
 

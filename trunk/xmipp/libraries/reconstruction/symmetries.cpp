@@ -51,11 +51,11 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
         {   //create symmetry file that will be read
            create_sym_file(fn_sym, pgGroup, pgOrder);
            if ((fpoii = fopen(fn_sym.c_str(), "r")) == NULL)
-            REPORT_ERROR(3005, (string)"SymList::read_sym_file:Can't open file: "
+            REPORT_ERROR(3005, (std::string)"SymList::read_sym_file:Can't open file: "
                      +  fn_sym);
         }
         else
-            REPORT_ERROR(3005, (string)"SymList::read_sym_file:Can't open file: "
+            REPORT_ERROR(3005, (std::string)"SymList::read_sym_file:Can't open file: "
                      + " or do not recognize symmetry group" + fn_sym);
     }
     //reset space_group
@@ -74,8 +74,8 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
         auxstr = firstToken(line);
         if (auxstr == NULL)
         {
-            cout << line;
-            cout << "Wrong line in symmetry file, the line is skipped\n";
+            std::cout << line;
+            std::cout << "Wrong line in symmetry file, the line is skipped\n";
             continue;
         }
         if (strcmp(auxstr, "rot_axis") == 0)
@@ -475,10 +475,10 @@ void SymList::compute_subgroup(double accuracy)
         {
 //#define DEBUG        
 #ifdef DEBUG
-            cout << "Matrix size " << XSIZE(tried) << " "
+            std::cout << "Matrix size " << XSIZE(tried) << " "
             << "trying " << i << " " << j << " "
-            << "chain length=" << new_chain_length << endl;
-            cout << "Result R\n" << newR;
+            << "chain length=" << new_chain_length << std::endl;
+            std::cout << "Result R\n" << newR;
 #endif
 #undef DEBUG
             add_matrices(newL, newR, new_chain_length);
@@ -506,47 +506,47 @@ int  SymList::crystallographic_space_group(double mag_a, double mag_b,
     case sym_P4:
         if (fabs((mag_a - mag_b)) > XMIPP_EQUAL_ACCURACY ||
             fabs(ang_a2b_deg - 90) > XMIPP_EQUAL_ACCURACY)
-            cerr << "\nWARNING: P42 but mag_a != mag_b\n"
-            << " or ang_a2b !=90" << endl;
+            std::cerr << "\nWARNING: P42 but mag_a != mag_b\n"
+            << " or ang_a2b !=90" << std::endl;
         return(space_group);
         break;
     case sym_P2_122:
         if (fabs((mag_a - mag_b)) > XMIPP_EQUAL_ACCURACY ||
             fabs(ang_a2b_deg - 90) > XMIPP_EQUAL_ACCURACY)
-            cerr << "\nWARNING: P2_122 but mag_a != mag_b\n"
-            << " or ang_a2b !=90" << endl;
+            std::cerr << "\nWARNING: P2_122 but mag_a != mag_b\n"
+            << " or ang_a2b !=90" << std::endl;
         return(space_group);
         break;
     case sym_P22_12:
         if (fabs((mag_a - mag_b)) > XMIPP_EQUAL_ACCURACY ||
             fabs(ang_a2b_deg - 90) > XMIPP_EQUAL_ACCURACY)
-            cerr << "\nWARNING: P22_12 but mag_a != mag_b\n"
-            << " or ang_a2b !=90" << endl;
+            std::cerr << "\nWARNING: P22_12 but mag_a != mag_b\n"
+            << " or ang_a2b !=90" << std::endl;
         return(space_group);
         break;
     case sym_P42_12:
         if (fabs((mag_a - mag_b)) > XMIPP_EQUAL_ACCURACY ||
             fabs(ang_a2b_deg - 90) > XMIPP_EQUAL_ACCURACY)
-            cerr << "\nWARNING: P42_12 but mag_a != mag_b\n"
-            << " or ang_a2b !=90" << endl;
+            std::cerr << "\nWARNING: P42_12 but mag_a != mag_b\n"
+            << " or ang_a2b !=90" << std::endl;
         return(space_group);
         break;
     case sym_P6:
         if (fabs((mag_a - mag_b)) > XMIPP_EQUAL_ACCURACY ||
             fabs(ang_a2b_deg - 120.) > XMIPP_EQUAL_ACCURACY)
         {
-            cerr << "\nWARNING: marked as P6 but mag_a != mag_b\n"
-            << "or ang_a2b !=120" << endl;
-            cerr << "\nWARNING: P1 is assumed\n";
+            std::cerr << "\nWARNING: marked as P6 but mag_a != mag_b\n"
+            << "or ang_a2b !=120" << std::endl;
+            std::cerr << "\nWARNING: P1 is assumed\n";
             return(sym_P1);
         }
         else  return(space_group);
         break;
     default:
-        cerr << "\n Congratulations: you have found a bug in the\n"
+        std::cerr << "\n Congratulations: you have found a bug in the\n"
         << "routine crystallographic_space_group or\n"
         << "You have called to this rotuine BEFORE reading\n"
-        << "the symmetry info" << endl;
+        << "the symmetry info" << std::endl;
         exit(0);
         break;
     }//switch(space_group)  end
@@ -584,16 +584,16 @@ void symmetrize_crystal_vectors(Matrix1D<double> &aint,
         XX(bint) =   XX(eprm_bint);
         YY(bint) =                   YY(eprm_bint);
         break;
-    case(sym_P2):       cerr << "\n Group P2 not implemented\n";
+    case(sym_P2):       std::cerr << "\n Group P2 not implemented\n";
         exit(1);
         break;
-    case(sym_P2_1):     cerr << "\n Group P2_1 not implemented\n";
+    case(sym_P2_1):     std::cerr << "\n Group P2_1 not implemented\n";
         exit(1);
         break;
-    case(sym_C2):       cerr << "\n Group C2 not implemented\n";
+    case(sym_C2):       std::cerr << "\n Group C2 not implemented\n";
         exit(1);
         break;
-    case(sym_P222):     cerr << "\n Group P222 not implemented\n";
+    case(sym_P222):     std::cerr << "\n Group P222 not implemented\n";
         exit(1);
         break;
     case(sym_P2_122):
@@ -651,7 +651,7 @@ void symmetrize_crystal_vectors(Matrix1D<double> &aint,
             }//switch P22_12 end
         break;
 
-    case(sym_P22_12_1): cerr << "\n Group P22_12_1 not implemented\n";
+    case(sym_P22_12_1): std::cerr << "\n Group P22_12_1 not implemented\n";
         exit(1);
         break;
     case(sym_P4):
@@ -729,18 +729,18 @@ void symmetrize_crystal_vectors(Matrix1D<double> &aint,
                 VECTOR_R3(shift, 0.5, 0.5, 0);
                 break;
             default:
-                cout << "\n Wrong symmetry number "
-                "in symmetrize_crystal_vectors, bye" << endl;
+                std::cout << "\n Wrong symmetry number "
+                "in symmetrize_crystal_vectors, bye" << std::endl;
                 exit(1);
                 break;
 
 
             }//switch P4212 end
         break;
-    case(sym_P3):       cerr << "\n Group P3 not implemented\n";
+    case(sym_P3):       std::cerr << "\n Group P3 not implemented\n";
         exit(1);
         break;
-    case(sym_P312):     cerr << "\n Group P312 not implemented\n";
+    case(sym_P312):     std::cerr << "\n Group P312 not implemented\n";
         exit(1);
         break;
     case(sym_P6):
@@ -779,7 +779,7 @@ void symmetrize_crystal_vectors(Matrix1D<double> &aint,
             }//switch P6 end
         break;
 
-    case(sym_P622):     cerr << "\n Group P622 not implemented\n";
+    case(sym_P622):     std::cerr << "\n Group P622 not implemented\n";
         exit(1);
         break;
     }
@@ -808,16 +808,16 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
     case(sym_undefined):
                 case(sym_P1):
                         break;
-    case(sym_P2):       cerr << "\n Group P2 not implemented\n";
+    case(sym_P2):       std::cerr << "\n Group P2 not implemented\n";
         exit(1);
         break;
-    case(sym_P2_1):     cerr << "\n Group P2_1 not implemented\n";
+    case(sym_P2_1):     std::cerr << "\n Group P2_1 not implemented\n";
         exit(1);
         break;
-    case(sym_C2):       cerr << "\n Group C2 not implemented\n";
+    case(sym_C2):       std::cerr << "\n Group C2 not implemented\n";
         exit(1);
         break;
-    case(sym_P222):     cerr << "\n Group P222 not implemented\n";
+    case(sym_P222):     std::cerr << "\n Group P222 not implemented\n";
         exit(1);
         break;
     case(sym_P2_122):
@@ -826,28 +826,28 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
     case(sym_P22_12):
                     Symmetrize_Vol(symmetry_P22_12)//already has ;
                     break;
-    case(sym_P22_12_1): cerr << "\n Group P22_12_1 not implemented\n";
+    case(sym_P22_12_1): std::cerr << "\n Group P22_12_1 not implemented\n";
         exit(1);
         break;
     case(sym_P4):
                     Symmetrize_Vol(symmetry_P4)//already has ;
                     break;
-    case(sym_P422):     cerr << "\n Group P422 not implemented\n";
+    case(sym_P422):     std::cerr << "\n Group P422 not implemented\n";
         exit(1);
         break;
     case(sym_P42_12):
                     Symmetrize_Vol(symmetry_P42_12)//already has ;
                     break;
-    case(sym_P3):       cerr << "\n Group P3 not implemented\n";
+    case(sym_P3):       std::cerr << "\n Group P3 not implemented\n";
         exit(1);
         break;
-    case(sym_P312):     cerr << "\n Group P312 not implemented\n";
+    case(sym_P312):     std::cerr << "\n Group P312 not implemented\n";
         exit(1);
         break;
     case(sym_P6):
                     Symmetrize_Vol(symmetry_P6)//already has ;
                     break;
-    case(sym_P622):     cerr << "\n Group P622 not implemented\n";
+    case(sym_P622):     std::cerr << "\n Group P622 not implemented\n";
         exit(1);
         break;
     }
@@ -886,7 +886,7 @@ void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
             break;
         if (XX_lowest == XX_highest)
         {
-            cerr << "Error in symmetry_P2_122, while(1)" << endl;
+            std::cerr << "Error in symmetry_P2_122, while(1)" << std::endl;
             exit(0);
         }
     }
@@ -897,7 +897,7 @@ void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
             break;
         if (XX_lowest == XX_highest)
         {
-            cerr << "Error in symmetry_P2_122, while(1)" << endl;
+            std::cerr << "Error in symmetry_P2_122, while(1)" << std::endl;
             exit(0);
         }
     }
@@ -908,7 +908,7 @@ void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
             break;
         if (YY_lowest == YY_highest)
         {
-            cerr << "Error in symmetry_P2_122, while(1)" << endl;
+            std::cerr << "Error in symmetry_P2_122, while(1)" << std::endl;
             exit(0);
         }
     }
@@ -919,7 +919,7 @@ void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
             break;
         if (YY_lowest == YY_highest)
         {
-            cerr << "Error in symmetry_P2_122, while(1)" << endl;
+            std::cerr << "Error in symmetry_P2_122, while(1)" << std::endl;
             exit(0);
         }
 
@@ -976,7 +976,7 @@ void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
     //FCC non supported yet
     if (volume_no == 1 && grid_type == FCC)
     {
-        cerr << "\nSimetries using FCC not implemented\n";
+        std::cerr << "\nSimetries using FCC not implemented\n";
         exit(1);
     }
 
@@ -1003,9 +1003,9 @@ void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
-                        cerr << "ERROR in symmetry_P function"
+                        std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
-                        << "outside mask\a" << endl;
+                        << "outside mask\a" << std::endl;
                 }
                 x0 = xx;
                 y0 = yy;
@@ -1026,9 +1026,9 @@ void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
-                        cerr << "ERROR in symmetry_P function"
+                        std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
-                        << "outside mask\a" << endl;
+                        << "outside mask\a" << std::endl;
                 }//sym=1 end
                 x1 = xx;
                 y1 = yy;
@@ -1049,9 +1049,9 @@ void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
-                        cerr << "ERROR in symmetry_P function"
+                        std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
-                        << "outside mask\a" << endl;
+                        << "outside mask\a" << std::endl;
                 }//sym=2 end
                 x2 = xx;
                 y2 = yy;
@@ -1062,7 +1062,7 @@ void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
 //    if(volume_no==1)
 //    {
 //      switch (grid_type) {
-//  case FCC: cerr<< "\nSimetries using FCC not implemented\n";break;
+//  case FCC: std::cerr<< "\nSimetries using FCC not implemented\n";break;
 //  case BCC: x0--;y0--;               z1--;
 //            x2--;y2--;z2--;     y3--;
 //     x4--;          x5--;     z5--;
@@ -1106,7 +1106,7 @@ void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
             break;
         if (XX_lowest == XX_highest)
         {
-            cerr << "Error in symmetry_P2_122, while(1)" << endl;
+            std::cerr << "Error in symmetry_P2_122, while(1)" << std::endl;
             exit(0);
         }
     }
@@ -1117,7 +1117,7 @@ void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
             break;
         if (XX_lowest == XX_highest)
         {
-            cerr << "Error in symmetry_P2_122, while(1)" << endl;
+            std::cerr << "Error in symmetry_P2_122, while(1)" << std::endl;
             exit(0);
         }
     }
@@ -1128,7 +1128,7 @@ void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
             break;
         if (YY_lowest == YY_highest)
         {
-            cerr << "Error in symmetry_P2_122, while(1)" << endl;
+            std::cerr << "Error in symmetry_P2_122, while(1)" << std::endl;
             exit(0);
         }
     }
@@ -1139,7 +1139,7 @@ void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
             break;
         if (YY_lowest == YY_highest)
         {
-            cerr << "Error in symmetry_P2_122, while(1)" << endl;
+            std::cerr << "Error in symmetry_P2_122, while(1)" << std::endl;
             exit(0);
         }
 
@@ -1196,7 +1196,7 @@ void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
     //FCC non supported yet
     if (volume_no == 1 && grid_type == FCC)
     {
-        cerr << "\nSimetries using FCC not implemented\n";
+        std::cerr << "\nSimetries using FCC not implemented\n";
         exit(1);
     }
 
@@ -1223,9 +1223,9 @@ void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
-                        cerr << "ERROR in symmetry_P function"
+                        std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
-                        << "outside mask\a" << endl;
+                        << "outside mask\a" << std::endl;
                 }
                 x0 = xx;
                 y0 = yy;
@@ -1246,9 +1246,9 @@ void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
-                        cerr << "ERROR in symmetry_P function"
+                        std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
-                        << "outside mask\a" << endl;
+                        << "outside mask\a" << std::endl;
                 }//sym=1 end
                 x1 = xx;
                 y1 = yy;
@@ -1269,9 +1269,9 @@ void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
-                        cerr << "ERROR in symmetry_P function"
+                        std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
-                        << "outside mask\a" << endl;
+                        << "outside mask\a" << std::endl;
                 }//sym=2 end
                 x2 = xx;
                 y2 = yy;
@@ -1282,7 +1282,7 @@ void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
 //    if(volume_no==1)
 //    {
 //      switch (grid_type) {
-//  case FCC: cerr<< "\nSimetries using FCC not implemented\n";break;
+//  case FCC: std::cerr<< "\nSimetries using FCC not implemented\n";break;
 //  case BCC: x0--;y0--;               z1--;
 //            x2--;y2--;z2--;     y3--;
 //     x4--;          x5--;     z5--;
@@ -1318,7 +1318,7 @@ void symmetry_P4(Volume &vol, const SimpleGrid &grid,
             break;
         if (XX_lowest == XX_highest)
         {
-            cerr << "Error in symmetry_P4, while(1)" << endl;
+            std::cerr << "Error in symmetry_P4, while(1)" << std::endl;
             exit(0);
         }
     }
@@ -1329,7 +1329,7 @@ void symmetry_P4(Volume &vol, const SimpleGrid &grid,
             break;
         if (XX_lowest == XX_highest)
         {
-            cerr << "Error in symmetry_P4, while(1)" << endl;
+            std::cerr << "Error in symmetry_P4, while(1)" << std::endl;
             exit(0);
         }
     }
@@ -1340,7 +1340,7 @@ void symmetry_P4(Volume &vol, const SimpleGrid &grid,
             break;
         if (YY_lowest == YY_highest)
         {
-            cerr << "Error in symmetry_P4, while(1)" << endl;
+            std::cerr << "Error in symmetry_P4, while(1)" << std::endl;
             exit(0);
         }
     }
@@ -1351,7 +1351,7 @@ void symmetry_P4(Volume &vol, const SimpleGrid &grid,
             break;
         if (YY_lowest == YY_highest)
         {
-            cerr << "Error in symmetry_P4, while(1)" << endl;
+            std::cerr << "Error in symmetry_P4, while(1)" << std::endl;
             exit(0);
         }
 
@@ -1406,7 +1406,7 @@ void symmetry_P4(Volume &vol, const SimpleGrid &grid,
     //FCC non supported yet
     if (volume_no == 1 && grid_type == FCC)
     {
-        cerr << "\nSimetries using FCC not implemented\n";
+        std::cerr << "\nSimetries using FCC not implemented\n";
         exit(1);
     }
     for (z = minZ;z <= maxZ;z++)
@@ -1432,9 +1432,9 @@ void symmetry_P4(Volume &vol, const SimpleGrid &grid,
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
-                        cerr << "ERROR in symmetry_P function"
+                        std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
-                        << "outside mask\a" << endl;
+                        << "outside mask\a" << std::endl;
                 }
                 x0 = xx;
                 y0 = yy;
@@ -1454,9 +1454,9 @@ void symmetry_P4(Volume &vol, const SimpleGrid &grid,
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
-                        cerr << "ERROR in symmetry_P function"
+                        std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
-                        << "outside mask\a" << endl;
+                        << "outside mask\a" << std::endl;
                 }//sym=1 end
                 x1 = xx;
                 y1 = yy;
@@ -1475,9 +1475,9 @@ void symmetry_P4(Volume &vol, const SimpleGrid &grid,
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
-                        cerr << "ERROR in symmetry_P function"
+                        std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
-                        << "outside mask\a" << endl;
+                        << "outside mask\a" << std::endl;
                 }//sym=2 end
                 x2 = xx;
                 y2 = yy;
@@ -1518,7 +1518,7 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
             break;
         if (XX_lowest == XX_highest)
         {
-            cerr << "Error in symmetry_P42_12, while(1)" << endl;
+            std::cerr << "Error in symmetry_P42_12, while(1)" << std::endl;
             exit(0);
         }
     }
@@ -1529,7 +1529,7 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
             break;
         if (XX_lowest == XX_highest)
         {
-            cerr << "Error in symmetry_P42_12, while(1)" << endl;
+            std::cerr << "Error in symmetry_P42_12, while(1)" << std::endl;
             exit(0);
         }
     }
@@ -1540,7 +1540,7 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
             break;
         if (YY_lowest == YY_highest)
         {
-            cerr << "Error in symmetry_P42_12, while(1)" << endl;
+            std::cerr << "Error in symmetry_P42_12, while(1)" << std::endl;
             exit(0);
         }
     }
@@ -1551,7 +1551,7 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
             break;
         if (YY_lowest == YY_highest)
         {
-            cerr << "Error in symmetry_P42_12, while(1)" << endl;
+            std::cerr << "Error in symmetry_P42_12, while(1)" << std::endl;
             exit(0);
         }
 
@@ -1618,7 +1618,7 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
     //FCC non supported yet
     if (volume_no == 1 && grid_type == FCC)
     {
-        cerr << "\nSimetries using FCC not implemented\n";
+        std::cerr << "\nSimetries using FCC not implemented\n";
         exit(1);
     }
 
@@ -1644,9 +1644,9 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
-                        cerr << "ERROR in symmetry_P function"
+                        std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
-                        << "outside mask\a" << endl;
+                        << "outside mask\a" << std::endl;
                 }
                 x0 = xx;
                 y0 = yy;
@@ -1666,9 +1666,9 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
-                        cerr << "ERROR in symmetry_P function"
+                        std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
-                        << "outside mask\a" << endl;
+                        << "outside mask\a" << std::endl;
                 }//sym=1 end
                 x1 = xx;
                 y1 = yy;
@@ -1689,9 +1689,9 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
-                        cerr << "ERROR in symmetry_P function"
+                        std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
-                        << "outside mask\a" << endl;
+                        << "outside mask\a" << std::endl;
                 }//sym=2 end
                 x2 = xx;
                 y2 = yy;
@@ -1710,9 +1710,9 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
-                        cerr << "ERROR in symmetry_P function"
+                        std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
-                        << "outside mask\a" << endl;
+                        << "outside mask\a" << std::endl;
                 }//sym=3 end
                 x3 = xx;
                 y3 = yy;
@@ -1731,9 +1731,9 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
-                        cerr << "ERROR in symmetry_P function"
+                        std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
-                        << "outside mask\a" << endl;
+                        << "outside mask\a" << std::endl;
                 }//sym=4 end
                 x4 = xx;
                 y4 = yy;
@@ -1752,9 +1752,9 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
-                        cerr << "ERROR in symmetry_P function"
+                        std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
-                        << "outside mask\a" << endl;
+                        << "outside mask\a" << std::endl;
                 }//sym=5 end
                 x5 = xx;
                 y5 = yy;
@@ -1774,9 +1774,9 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
-                        cerr << "ERROR in symmetry_P function"
+                        std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
-                        << "outside mask\a" << endl;
+                        << "outside mask\a" << std::endl;
                 }//sym=6 end
                 x6 = xx;
                 y6 = yy;
@@ -1787,7 +1787,7 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
 //    if(volume_no==1)
 //    {
 //      switch (grid_type) {
-//  case FCC: cerr<< "\nSimetries using FCC not implemented\n";break;
+//  case FCC: std::cerr<< "\nSimetries using FCC not implemented\n";break;
 //  case BCC: x0--;y0--;               z1--;
 //            x2--;y2--;z2--;     y3--;
 //     x4--;          x5--;     z5--;
@@ -1830,7 +1830,7 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
             break;
         if (XX_lowest == XX_highest)
         {
-            cerr << "Error in symmetry_P42_12, while(1)" << endl;
+            std::cerr << "Error in symmetry_P42_12, while(1)" << std::endl;
             exit(0);
         }
     }
@@ -1841,7 +1841,7 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
             break;
         if (XX_lowest == XX_highest)
         {
-            cerr << "Error in symmetry_P42_12, while(1)" << endl;
+            std::cerr << "Error in symmetry_P42_12, while(1)" << std::endl;
             exit(0);
         }
     }
@@ -1852,7 +1852,7 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
             break;
         if (YY_lowest == YY_highest)
         {
-            cerr << "Error in symmetry_P42_12, while(1)" << endl;
+            std::cerr << "Error in symmetry_P42_12, while(1)" << std::endl;
             exit(0);
         }
     }
@@ -1863,7 +1863,7 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
             break;
         if (YY_lowest == YY_highest)
         {
-            cerr << "Error in symmetry_P42_12, while(1)" << endl;
+            std::cerr << "Error in symmetry_P42_12, while(1)" << std::endl;
             exit(0);
         }
 
@@ -1917,7 +1917,7 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
     //FCC non supported yet
     if (volume_no == 1 && grid_type == FCC)
     {
-        cerr << "\nSimetries using FCC not implemented\n";
+        std::cerr << "\nSimetries using FCC not implemented\n";
         exit(1);
     }
 
@@ -1938,9 +1938,9 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
-                        cerr << "ERROR in symmetry_P function"
+                        std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
-                        << "outside mask\a" << endl;
+                        << "outside mask\a" << std::endl;
                 }
                 x0 = xx;
                 y0 = yy;
@@ -1955,9 +1955,9 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
-                        cerr << "ERROR in symmetry_P function"
+                        std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
-                        << "outside mask\a" << endl;
+                        << "outside mask\a" << std::endl;
                 }//sym=1 end
                 x1 = xx;
                 y1 = yy;
@@ -1972,9 +1972,9 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
-                        cerr << "ERROR in symmetry_P function"
+                        std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
-                        << "outside mask\a" << endl;
+                        << "outside mask\a" << std::endl;
                 }//sym=2 end
                 x2 = xx;
                 y2 = yy;
@@ -1989,9 +1989,9 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
-                        cerr << "ERROR in symmetry_P function"
+                        std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
-                        << "outside mask\a" << endl;
+                        << "outside mask\a" << std::endl;
                 }//sym=3 end
                 x3 = xx;
                 y3 = yy;
@@ -2006,9 +2006,9 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
-                        cerr << "ERROR in symmetry_P function"
+                        std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
-                        << "outside mask\a" << endl;
+                        << "outside mask\a" << std::endl;
                 }//sym=4 end
                 x4 = xx;
                 y4 = yy;
@@ -2019,7 +2019,7 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
                     switch (grid_type)
                     {
                     case FCC:
-                        cerr << "\nSimetries using FCC not implemented\n";
+                        std::cerr << "\nSimetries using FCC not implemented\n";
                         break;
                         //there is no way to reinforce P6 in the second grid without
                         //interpolation. This is the best we can do.
@@ -2292,8 +2292,8 @@ bool SymList::isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder)
 void SymList::create_sym_file(FileName &symmetry, int pgGroup, int pgOrder)
 {   
     symmetry = symmetry + ".sym";
-    ofstream SymFile;
-    SymFile.open(symmetry.c_str(), ios::out);
+    std::ofstream SymFile;
+    SymFile.open(symmetry.c_str(), std::ios::out);
     if (pgGroup == pg_CN)
     {
         SymFile << "rot_axis " << pgOrder << " 0 0 1";
@@ -2309,141 +2309,141 @@ void SymList::create_sym_file(FileName &symmetry, int pgGroup, int pgOrder)
     else if (pgGroup == pg_CNV)
     {
         SymFile << "rot_axis " << pgOrder << " 0 0 1";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "mirror_plane 0 1 0";
     }
     else if (pgGroup == pg_CNH)
     {
         SymFile << "rot_axis " << pgOrder << " 0 0 1";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "mirror_plane 0 0 1";
     }
     else if (pgGroup == pg_SN)
     {
         int order = pgOrder / 2;
         SymFile << "rot_axis " << order << " 0 0 1";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "inversion ";
     }
     else if (pgGroup == pg_DN)
     {
         SymFile << "rot_axis " << pgOrder << " 0 0 1";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis " << "2" << " 0 1 0";
     }
     else if (pgGroup == pg_DNV)
     {
         SymFile << "rot_axis " << pgOrder << " 0 0 1";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis " << "2" << " 0 1 0";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "mirror_plane 0 1 0";
     }
     else if (pgGroup == pg_DNH)
     {
         SymFile << "rot_axis " << pgOrder << " 0 0 1";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis " << "2" << " 1 0 0";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "mirror_plane 0 0 1";
     }
     else if (pgGroup == pg_T)
     {
         SymFile << "rot_axis " << "3" << "  0. 0. 1.";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis " << "2" << " 0. 0.816496 0.577350";
     }
     else if (pgGroup == pg_TD)
     {
         SymFile << "rot_axis " << "3" << "  0. 0. 1.";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis " << "2" << " 0. 0.816496 0.577350";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "mirror_plane 1.4142136 2.4494897 0.0000000";
     }
     else if (pgGroup == pg_TH)
     {
         SymFile << "rot_axis " << "3" << "  0. 0. 1.";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis " << "2" << " 0. -0.816496 -0.577350";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "inversion";
     }
     else if (pgGroup == pg_O)
     {
         SymFile << "rot_axis " << "3" << "  .5773502  .5773502 .5773502";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis " << "4" << " 0 0 1";
     }
     else if (pgGroup == pg_OH)
     {
         SymFile << "rot_axis " << "3" << "  .5773502  .5773502 .5773502";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis " << "4" << " 0 0 1";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "mirror_plane 0 1 1";
     }
     else if (pgGroup == pg_I)
     {
         SymFile << "rot_axis 2  0             1           0";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis 5 -0.85065080702670 0 0.5257311142635";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis 3 -0.9341723640 0.3568220765 0";
     }
     else if (pgGroup == pg_IH)
     {
         SymFile << "rot_axis 2  0             1           0";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis 5 -0.85065080702670 0 0.5257311142635";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis 3 -0.9341723640 0.3568220765 0";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "mirror_plane 1 0 0";
     }
     else if (pgGroup == pg_I1)
     {
         SymFile << "rot_axis 2  0             1           0";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis 5 -0.85065080702670 0 0.5257311142635";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis 3 -0.9341723640 0.3568220765 0";
     }
     else if (pgGroup == pg_I2)
     {
         SymFile << "rot_axis 2  0             0          1";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis 5 -1.618033989  -1           0";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis 3 -0.53934467   -1.4120227   0";
     }
     else if (pgGroup == pg_I3)
     {
         SymFile << "rot_axis 2  -0.5257311143 0 0.8506508070";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis 3  -0.9822469432 0 -0.1875924905";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis 5  -0.7236067955 -0.5257311143 -0.4472135966";
     }
     else if (pgGroup == pg_I4)
     {
         SymFile << "rot_axis 2  0.5257311143 0 0.8506508070";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis 3  0.9822469432 0 -0.1875924905";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis 5  0.7236067955 0.5257311143 -0.4472135966";
     }
     else if (pgGroup == pg_I5)
     {
         SymFile << "rot_axis 2  0.5257311143  0.8506508070 0.";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis 3  0.9822469432 -0.1875924905 0.";
-        SymFile << endl;
+        SymFile << std::endl;
         SymFile << "rot_axis 5  0.7236067955 -0.4472135966 0.5257311143";
     }
     else
     {
-        cerr << "ERROR: Symmetry " << symmetry  << "is not known" << endl;
+        std::cerr << "ERROR: Symmetry " << symmetry  << "is not known" << std::endl;
         exit(0);
     }
     SymFile.close();

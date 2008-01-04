@@ -33,11 +33,11 @@
 
 // inverse FFT of real signal
 
-void inverseFourierTransformRings(const Polar<complex<double> > & in, 
+void inverseFourierTransformRings(const Polar<std::complex<double> > & in, 
 				  Polar<double> &out, bool conjugated)
 {
     Matrix1D<double> Maux;
-    Matrix1D<complex<double> > Faux;
+    Matrix1D<std::complex<double> > Faux;
     out.clear();
     int oridim;
 
@@ -63,7 +63,7 @@ void inverseFourierTransformRings(const Polar<complex<double> > & in,
 }
 
 // conversion for complex polar
-void convertPolarToSingleArray(const Polar<complex<double> > & in, 
+void convertPolarToSingleArray(const Polar<std::complex<double> > & in, 
 			       Matrix1D<double> & out)
 {
     int size = 0;
@@ -107,13 +107,13 @@ void convertPolarToSingleArray(const Polar<double> & in,
 
 // conversion for complex polar
 void convertSingleArrayToPolar(const Matrix1D<double> & in,
-			       Polar<complex<double> > & out)
+			       Polar<std::complex<double> > & out)
 {
     int c = 0;
     for (int i = 0; i < out.rings.size(); i++)
 	for (int j = 0; j < XSIZE(out.rings[i]); j++)
 	{
-	    out.rings[i](j) = complex<double>(in(2*c), in(2*c+1));
+	    out.rings[i](j) = std::complex<double>(in(2*c), in(2*c+1));
 	    c++;
 	}
 

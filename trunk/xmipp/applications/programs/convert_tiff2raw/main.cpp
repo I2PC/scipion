@@ -43,8 +43,6 @@
 
 #include "tiffio.h"
 
-using namespace std;
-
 /*
 // initFile
 //
@@ -312,10 +310,10 @@ int main(int argc, char *argv[])
     // RGB images are usually samplesPerPixel=3
     if (samplesPerPixel != 1)
     {
-      cerr <<"WARNING! This tif has a value for samplesPerPixel larger than 1 (i.e. "<<samplesPerPixel<<")"<<endl;
-      cerr <<"         This could mean you are saving colour images (e.g. samplesPerPixel= 3)"<<endl;
-      cerr <<"         or that your tiff file header is not correctly set"<<endl;
-      cerr <<"         Setting samplePerPixel to 1 and continuing execution ... "<<endl;
+      std::cerr <<"WARNING! This tif has a value for samplesPerPixel larger than 1 (i.e. "<<samplesPerPixel<<")"<<std::endl;
+      std::cerr <<"         This could mean you are saving colour images (e.g. samplesPerPixel= 3)"<<std::endl;
+      std::cerr <<"         or that your tiff file header is not correctly set"<<std::endl;
+      std::cerr <<"         Setting samplePerPixel to 1 and continuing execution ... "<<std::endl;
       samplesPerPixel = 1;      
     }
 

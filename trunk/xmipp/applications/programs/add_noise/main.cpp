@@ -65,17 +65,17 @@ public:
     {
         Prog_parameters::show();
         if (gaussian)
-            cout << "Noise avg=" << noise_avg << endl
-            << "Noise stddev=" << noise_stddev << endl;
+            std::cout << "Noise avg=" << noise_avg << std::endl
+            << "Noise stddev=" << noise_stddev << std::endl;
         else if (uniform)
-            cout << "Noise min=" << noise_min << endl
-            << "Noise max=" << noise_max << endl;
+            std::cout << "Noise min=" << noise_min << std::endl
+            << "Noise max=" << noise_max << std::endl;
     }
 
     void usage()
     {
         Prog_parameters::usage();
-        cerr << "  [-gaussian <stddev> [<avg>=0]] : Gaussian noise parameters\n"
+        std::cerr << "  [-gaussian <stddev> [<avg>=0]] : Gaussian noise parameters\n"
         << "  [-uniform  <min> <max>]   : Uniform noise parameters\n";
     }
 };

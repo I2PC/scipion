@@ -60,7 +60,7 @@ public:
     void read(int argc, char **argv);
 
     /** Usage message.
-        This function shows the way of introducing this parameters. */
+        This function shows the way of introdustd::cing this parameters. */
     void usage();
 };
 
@@ -77,11 +77,11 @@ public:
         It must be a Xmipp volume. */
     FileName fnPhantom;
     /// Starting name for all projections
-    string   fnProjectionSeed;
+    std::string   fnProjectionSeed;
     /// First projection number. By default, 1.
     int      starting;
     /// Extension for projection filenames. This is optional
-    string   fn_projection_extension;
+    std::string   fn_projection_extension;
 
     /// Projection Xdim
     int      proj_Xdim;

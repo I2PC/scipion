@@ -41,9 +41,9 @@ public:
     double sig_sigquad, avg_sigquad, sig_meanquad, avg_meanquad;
     double avg_ampl2_1, avg_ampl2_2, avg_ampl2_3, avg_ampl2_4;
     double sig_ampl2_1, sig_ampl2_2, sig_ampl2_3, sig_ampl2_4;
-    vector<FileName> names;
+    std::vector<FileName> names;
     Matrix1D<double> zscore;
-    vector<vector<double> > values;
+    std::vector<std::vector<double> > values;
     FileName fn_out;
 
 public:
@@ -52,7 +52,7 @@ public:
 
     void usage()
     {
-        cout  << " A sorting program for identifying junk particles \n"
+        std::cout  << " A sorting program for identifying junk particles \n"
         << " Parameters:\n"
         << " -i <selfile>            : Selfile with (normalized) input images\n"
         << " [-o <root=\"sort_junk\">] : Output rootname\n"
@@ -71,17 +71,17 @@ public:
         double nlowpix, nhighpix, nradlow, nradhigh;
         double sum_quadsig, sum2_quadsig, sum_quadmean, sum2_quadmean;
         double ampl2_1, ampl2_2, ampl2_3, ampl2_4;
-        vector<double> dum;
+        std::vector<double> dum;
         Matrix2D<double> Mrad, ampl2;
-        Matrix2D<complex<double> > IMG;
+        Matrix2D<std::complex<double> > IMG;
         Matrix1D<int> radial_count, center(2);
         Matrix1D<double> rmean_ampl2;
         center.initZeros();
 
         if (do_means && !do_values)
-            cerr << " Processing training set ..." << endl;
+            std::cerr << " Processing training set ..." << std::endl;
         else
-            cerr << " Sorting particle set ..." << endl;
+            std::cerr << " Sorting particle set ..." << std::endl;
 
         SF.ImgSize(dim, dim);
         Mrad.resize(dim, dim);
@@ -393,7 +393,7 @@ int main(int argc, char **argv)
 
     Matrix1D<int> sorted;
     FileName fn, fn_train;
-    ofstream fh_zsum, fh_zind;
+    std::ofstream fh_zsum, fh_zind;
 
     sort_junk_parameters prm;
 
@@ -409,7 +409,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         prm.usage();
         exit(1);
     }
@@ -424,16 +424,16 @@ int main(int argc, char **argv)
         prm.process_selfile(SF, true, true);
     }
 
-    fh_zsum.open((prm.fn_out + ".sumZ").c_str(), ios::out);
-    fh_zind.open((prm.fn_out + ".indZ").c_str(), ios::out);
+    fh_zsum.open((prm.fn_out + ".sumZ").c_str(), std::ios::out);
+    fh_zind.open((prm.fn_out + ".indZ").c_str(), std::ios::out);
     sorted = prm.zscore.indexSort();
     SFout.clear();
-    fh_zind << "image : avg, stddev, min, max, nhighpix, nlowpix, nradhigh, nradlow, quadsig, quadmean, ampl2_1, ampl2_2, ampl2_3, ampl2_4 " << endl;
+    fh_zind << "image : avg, stddev, min, max, nhighpix, nlowpix, nradhigh, nradlow, quadsig, quadmean, ampl2_1, ampl2_2, ampl2_3, ampl2_4 " << std::endl;
     for (imgno = 0; imgno < nr_imgs; imgno++)
     {
         isort = sorted(imgno) - 1;
         SFout.insert(prm.names[isort]);
-        fh_zsum << prm.zscore(isort) << "   " << prm.names[isort] << endl;
+        fh_zsum << prm.zscore(isort) << "   " << prm.names[isort] << std::endl;
         fh_zind << prm.names[isort]
         << " : " << prm.values[isort][0]
         << " " << prm.values[isort][1]
@@ -448,7 +448,7 @@ int main(int argc, char **argv)
         << " " << prm.values[isort][10]
         << " " << prm.values[isort][11]
         << " " << prm.values[isort][12]
-        << " " << prm.values[isort][13] << endl;
+        << " " << prm.values[isort][13] << std::endl;
     }
     fh_zsum.close();
     fh_zind.close();

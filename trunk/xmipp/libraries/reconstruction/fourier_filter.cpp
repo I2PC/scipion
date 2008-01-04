@@ -159,47 +159,47 @@ void FourierMask::show()
 {
     if (FilterShape == WEDGE)
     {
-        cout << "Missing wedge for data between tilting angles of " << w1 << " and " << w2 << " deg\n";
+        std::cout << "Missing wedge for data between tilting angles of " << w1 << " and " << w2 << " deg\n";
     }
     else
     {
-        cout << "Filter Band: ";
+        std::cout << "Filter Band: ";
         switch (FilterBand)
         {
         case LOWPASS:
-            cout << "Lowpass before " << w1 << endl;
+            std::cout << "Lowpass before " << w1 << std::endl;
             break;
         case HIGHPASS:
-            cout << "Highpass after " << w1 << endl;
+            std::cout << "Highpass after " << w1 << std::endl;
             break;
         case BANDPASS:
-            cout << "Bandpass between " << w1 << " and " << w2 << endl;
+            std::cout << "Bandpass between " << w1 << " and " << w2 << std::endl;
             break;
         case STOPBAND:
-            cout << "Stopband between " << w1 << " and " << w2 << endl;
+            std::cout << "Stopband between " << w1 << " and " << w2 << std::endl;
             break;
         case CTF:
-            cout << "CTF\n";
+            std::cout << "CTF\n";
             break;
         case FROM_FILE:
-            cout << "From file " << fn_mask << endl;
+            std::cout << "From file " << fn_mask << std::endl;
             break;
         }
-        cout << "Filter Shape: ";
+        std::cout << "Filter Shape: ";
         switch (FilterShape)
         {
         case RAISED_COSINE:
-            cout << "Raised cosine with " << raised_w
+            std::cout << "Raised cosine with " << raised_w
             << " raised frequencies\n";
             break;
         case GAUSSIAN:
-            cout << "Gaussian\n";
+            std::cout << "Gaussian\n";
             break;
         case CTF:
-            cout << "CTF\n" << ctf;
+            std::cout << "CTF\n" << ctf;
             break;
         case FROM_FILE:
-            cout << "From file " << fn_mask << endl;
+            std::cout << "From file " << fn_mask << std::endl;
             break;
         }
     }
@@ -208,7 +208,7 @@ void FourierMask::show()
 /* Usage ------------------------------------------------------------------- */
 void FourierMask::usage()
 {
-    cerr << "   -low_pass  <w1>                   : Cutoff freq (<1/2 or A)\n"
+    std::cerr << "   -low_pass  <w1>                   : Cutoff freq (<1/2 or A)\n"
     << "   -high_pass <w1>                   : Cutoff freq (<1/2 or A)\n"
     << "   -band_pass <w1> <w2>              : Cutoff freq (<1/2 or A)\n"
     << "   -stop_band <w1> <w2>              : Cutoff freq (<1/2 or A)\n"
@@ -254,9 +254,9 @@ void FourierMask::read_mask(const FileName &fn)
 void FourierMask::write_amplitude(const FileName &fn, int dim,
                                   bool do_not_center)
 {
-    Matrix1D< complex<double> > aux1D;
-    Matrix2D< complex<double> > aux2D;
-    Matrix3D< complex<double> > aux3D;
+    Matrix1D< std::complex<double> > aux1D;
+    Matrix2D< std::complex<double> > aux2D;
+    Matrix3D< std::complex<double> > aux3D;
     switch (dim)
     {
     case 1:
@@ -331,29 +331,29 @@ void FourierMask::write_mask(const FileName &fn, int dim)
 }
 
 /* Apply mask -------------------------------------------------------------- */
-void FourierMask::apply_mask_Fourier(Matrix1D< complex<double> > &v)
+void FourierMask::apply_mask_Fourier(Matrix1D< std::complex<double> > &v)
 {
     v *= mask1D;
 }
-void FourierMask::apply_mask_Fourier(Matrix2D< complex<double> > &v)
+void FourierMask::apply_mask_Fourier(Matrix2D< std::complex<double> > &v)
 {
     v *= mask2D;
 }
-void FourierMask::apply_mask_Fourier(Matrix3D< complex<double> > &v)
+void FourierMask::apply_mask_Fourier(Matrix3D< std::complex<double> > &v)
 {
     v *= mask3D;
 }
 
 void FourierMask::apply_mask_Space(Matrix1D<double> &v)
 {
-    Matrix1D< complex<double> > aux1D;
+    Matrix1D< std::complex<double> > aux1D;
     FourierTransform(v, aux1D);
     aux1D *= mask1D;
     InverseFourierTransform(aux1D, v);
 }
 void FourierMask::apply_mask_Space(Matrix2D<double> &v)
 {
-    Matrix2D< complex<double> > aux2D;
+    Matrix2D< std::complex<double> > aux2D;
     FourierTransform(v, aux2D);
     if (XSIZE(mask2D) == 0) generate_mask(v);
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(aux2D)
@@ -362,7 +362,7 @@ void FourierMask::apply_mask_Space(Matrix2D<double> &v)
 }
 void FourierMask::apply_mask_Space(Matrix3D<double> &v)
 {
-    Matrix3D< complex<double> > aux3D;
+    Matrix3D< std::complex<double> > aux3D;
     FourierTransform(v, aux3D);
     if (XSIZE(mask3D) == 0) generate_mask(v);
     aux3D *= mask3D;

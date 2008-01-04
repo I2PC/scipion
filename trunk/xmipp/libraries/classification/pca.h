@@ -21,8 +21,6 @@
 #ifndef XMIPPPC_H
 #define XMIPPPC_H
 
-using namespace std;
-
 #include "base_algorithm.h"
 #include "data_types.h"
 #include "training_vector.h"
@@ -60,7 +58,7 @@ public:
     * Parameter: ts The vectors.
     * Parameter: idx The indexes of the vectors to use
     */
-    xmippPC(xmippCTVectors const &ts, vector<unsigned> const & idx)
+    xmippPC(xmippCTVectors const &ts, std::vector<unsigned> const & idx)
     {
         reset(ts, idx);
     }
@@ -76,12 +74,12 @@ public:
     * Parameter: ts The vectors.
     * Parameter: idx The indexes of the vectors to use
     */
-    void reset(xmippCTVectors const &ts, vector<unsigned> const & idx);
+    void reset(xmippCTVectors const &ts, std::vector<unsigned> const & idx);
 
     /**
     * The eigenvectors
     */
-    vector<xmippVector> eigenvec;
+    std::vector<xmippVector> eigenvec;
 
     /**
     * The eigenvalues
@@ -100,16 +98,16 @@ public:
     double prod_mean_mean;
 
     /** Products <ei,mean> */
-    vector<double> prod_ei_mean;
+    std::vector<double> prod_ei_mean;
 
     /** Products <ei,ei> */
-    vector<double> prod_ei_ei;
+    std::vector<double> prod_ei_ei;
 
     /** Average of the mean vector */
     double avg_mean;
 
     /** Average of the ei vectors */
-    vector<double> avg_ei;
+    std::vector<double> avg_ei;
 
     /**Set identity matrix as eigenvector matrix
      Parameter: n The number of eigenvectors*/
@@ -166,10 +164,10 @@ public:
     };
 
     /** Show relevant eigenvectors and eigenvalues */
-    friend ostream& operator << (ostream &out, const xmippPC &PC);
+    friend std::ostream& operator << (std::ostream &out, const xmippPC &PC);
 
     /** Read a set of PCA just as shown */
-    friend istream& operator >> (istream &in, xmippPC &PC);
+    friend std::istream& operator >> (std::istream &in, xmippPC &PC);
 
 private:
 
@@ -184,7 +182,7 @@ class PCA_set
 {
 public:
     /** Set of PCA analysis. */
-    vector<xmippPC *> PCA;
+    std::vector<xmippPC *> PCA;
 
 public:
     /** Destructor */
@@ -207,10 +205,10 @@ public:
     }
 
     /** Show all PCA */
-    friend ostream& operator << (ostream &out, const PCA_set &PS);
+    friend std::ostream& operator << (std::ostream &out, const PCA_set &PS);
 
     /** Read a set of PCA just as shown */
-    friend istream& operator >> (istream &in, PCA_set &PS);
+    friend std::istream& operator >> (std::istream &in, PCA_set &PS);
 };
 
 /** Running PCA.

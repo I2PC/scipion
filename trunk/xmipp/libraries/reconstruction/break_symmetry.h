@@ -67,9 +67,9 @@ public:
     // Radius for masking of volume
     double mask_radius;
     // File handler for the history file
-    ofstream fh_hist;
+    std::ofstream fh_hist;
     // Reference volumes
-    vector<Matrix3D<double> > vols;
+    std::vector<Matrix3D<double> > vols;
     // Mask
     VolumeXmipp mask;
 
@@ -88,7 +88,7 @@ public:
     void process_one_image(ImageXmipp &img, int &opt_vol, int &opt_sym, double &maxcorr);
 
     /// Process various images
-    void process_selfile(SelFile &SF, vector<SelFile> &SFout, double &avecorr);
+    void process_selfile(SelFile &SF, std::vector<SelFile> &SFout, double &avecorr);
 
     /// reconstruction by (weighted ART) or WBP
     void reconstruction(int argc, char **argv, SelFile &SF, int iter, int volno);

@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage();
     }
 
@@ -87,11 +87,11 @@ int main(int argc, char *argv[])
             DF.append_data_line(docline);
         }
         DF.write(fn_out);
-        cerr << " done!" << endl;
+        std::cerr << " done!" << std::endl;
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
 
 }

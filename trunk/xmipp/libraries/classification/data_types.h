@@ -35,8 +35,6 @@
 #include <set>              // set
 #include <string>           // string
 
-using namespace std;
-
 // MAXDOUBLE
 #include <limits.h>
 #ifndef _CYGWIN
@@ -76,21 +74,21 @@ typedef float xmippFeature;
 /**
 * xmippLabel as string
 */
-typedef string xmippLabel;
+typedef std::string xmippLabel;
 
 //-----------------------------------------------------------------------------
 
 /**
 * xmippVector as vector of doubles
 */
-typedef vector<xmippFeature> xmippVector;
+typedef std::vector<xmippFeature> xmippVector;
 
 //-----------------------------------------------------------------------------
 
 /**
 * xmippSet as a set of xmippfeatures
 */
-typedef set<xmippFeature, less<xmippFeature> > xmippSet;
+typedef std::set<xmippFeature, std::less<xmippFeature> > xmippSet;
 //@}
 
 //-----------------------------------------------------------------------------

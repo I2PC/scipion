@@ -100,7 +100,7 @@ public:
     void usage() const;
 
     /// Produce command line parameters
-    string command_line() const;
+    std::string command_line() const;
 
     /// Generate kernel
     void generate_kernel();

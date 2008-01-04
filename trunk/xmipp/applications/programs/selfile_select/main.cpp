@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage();
         exit(0);
     }
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
         if (strstr(fn_tst.c_str(), "Headerinfo") == NULL)
         {
             // Non-NewXmipp type document file
-            cerr << "Docfile is of non-NewXmipp type. " << endl;
+            std::cerr << "Docfile is of non-NewXmipp type. " << std::endl;
             if (fn_SF == "")
                 REPORT_ERROR(1, "Select images: Please provide the corresponding selfile as well.");
             SF.read(fn_SF);
@@ -96,14 +96,14 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
 }
 
 /* Usage ------------------------------------------------------------------- */
 void Usage()
 {
-    cerr << "Usage: select_images\n"
+    std::cerr << "Usage: select_images\n"
     << "   -doc <docfile>        : Input document file\n"
     << "  [-sel <selfile>]       : Corresponding selfile (only for non-NewXmipp docfiles)\n"
     << "  [-o  <docroot.sel>]    : Output selfile. By default, the docfile root + .sel\n"

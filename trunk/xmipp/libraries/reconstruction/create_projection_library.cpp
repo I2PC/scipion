@@ -50,7 +50,7 @@ void Prog_create_projection_library_Parameters::read(int argc, char **argv)
     {
          if(!checkParameter(argc, argv, "-experimental_images"))
          {
-             cerr << "Docfile with experimental images euler angles is missing" << endl;
+             std::cerr << "Docfile with experimental images euler angles is missing" << std::endl;
              exit(0);
          } 
             FnexperimentalImages = getParameter(argc, argv, "-experimental_images","");
@@ -61,7 +61,7 @@ void Prog_create_projection_library_Parameters::read(int argc, char **argv)
 /* Usage ------------------------------------------------------------------- */
 void Prog_create_projection_library_Parameters::usage()
 {
-    cerr << "create_projection_library\n"
+    std::cerr << "create_projection_library\n"
     << "   -i input_volume             : Input Volume\n"
     << "   -o root_file_name           : Root for output files\n"
     << "  [-symmetry cn]   :One of the 17 possible symmetries in\n"
@@ -85,19 +85,19 @@ void Prog_create_projection_library_Parameters::usage()
 void Prog_create_projection_library_Parameters::show()
 {
     
-    cout
-    << "output input_volume root:  " << input_volume << endl
-    << "output files root:         " << output_file_root << endl
-    << "Sampling rate:             " << sampling    << endl
-    << "symmetry group:            " << symmetry << endl
-    << "symmetry order:            " << sym_order << endl
-    << "max_tilt_angle:            " << max_tilt_angle << endl
-    << "min_tilt_angle:            " << min_tilt_angle << endl
-    << "psi_sampling:              " << psi_sampling << endl
+    std::cout
+    << "output input_volume root:  " << input_volume << std::endl
+    << "output files root:         " << output_file_root << std::endl
+    << "Sampling rate:             " << sampling    << std::endl
+    << "symmetry group:            " << symmetry << std::endl
+    << "symmetry order:            " << sym_order << std::endl
+    << "max_tilt_angle:            " << max_tilt_angle << std::endl
+    << "min_tilt_angle:            " << min_tilt_angle << std::endl
+    << "psi_sampling:              " << psi_sampling << std::endl
     ;
     if(angular_distance_bool)
-        cout << "angular_distance:          " << angular_distance << endl
-             << "experimental_images:       " << FnexperimentalImages << endl
+        std::cout << "angular_distance:          " << angular_distance << std::endl
+             << "experimental_images:       " << FnexperimentalImages << std::endl
         ;
 }
 
@@ -156,9 +156,9 @@ Prog_create_projection_library_Parameters::createDocFileWithExperimentalImages(v
 
     if( (symmetry!="cn" || sym_order!=1) && () )
     {
-        cerr << "experimental_images option only available for symmetry "
+        std::cerr << "experimental_images option only available for symmetry "
              << "cn and order 1" 
-             <<endl;
+             <<std::endl;
         exit(0);     
     }  
     
@@ -195,9 +195,9 @@ Prog_create_projection_library_Parameters::remove_points_not_close_to_experiment
 {   
     if((symmetry!="cn" || sym_order!=1) && angular_distance_bool==true)
     {
-        cerr << "experimental_images option only available for symmetry "
+        std::cerr << "experimental_images option only available for symmetry "
              << "cn and order 1" 
-             <<endl;
+             <<std::endl;
         exit(0);     
     }  
     //return new docfile if not restrictions

@@ -48,7 +48,7 @@ void Bilib_DWT(const Matrix1D<double> &input,
     int size_multiple = (int)pow(2.0, (double) iterations);
     if (XSIZE(input) % size_multiple != 0)
         REPORT_ERROR(1,
-                     (string)"Bilib_DWT 1D: Xsize must be a multiple of " +
+                     (std::string)"Bilib_DWT 1D: Xsize must be a multiple of " +
                      integerToString(size_multiple));
 
     result.initZeros(input);
@@ -58,7 +58,7 @@ void Bilib_DWT(const Matrix1D<double> &input,
     else if (isign == -1)
         TW.Operation = "Synthesis";
     else
-        REPORT_ERROR(1, (string)"waveletTransform 1D: unrecognized isign");
+        REPORT_ERROR(1, (std::string)"waveletTransform 1D: unrecognized isign");
     TW.Filter = "Orthonormal Spline";
     TW.BoundaryConditions = "Mirror";
     TW.Order = "3";
@@ -142,11 +142,11 @@ void Bilib_DWT(const Matrix2D<double> &input,
     int size_multiple = (int)pow(2.0, (double) iterations);
     if (XSIZE(input) % size_multiple != 0)
         REPORT_ERROR(1,
-                     (string)"Bilib_DWT 2D: Xsize must be a multiple of " +
+                     (std::string)"Bilib_DWT 2D: Xsize must be a multiple of " +
                      integerToString(size_multiple));
     if (YSIZE(input) % size_multiple != 0)
         REPORT_ERROR(1,
-                     (string)"Bilib_DWT 2D: Ysize must be a multiple of " +
+                     (std::string)"Bilib_DWT 2D: Ysize must be a multiple of " +
                      integerToString(size_multiple));
 
     result.initZeros(input);
@@ -156,7 +156,7 @@ void Bilib_DWT(const Matrix2D<double> &input,
     else if (isign == -1)
         TW.Operation = "Synthesis";
     else
-        REPORT_ERROR(1, (string)"waveletTransform 1D: unrecognized isign");
+        REPORT_ERROR(1, (std::string)"waveletTransform 1D: unrecognized isign");
     TW.Filter = "Orthonormal Spline";
     TW.BoundaryConditions = "Mirror";
     TW.Order = "3";
@@ -242,15 +242,15 @@ void Bilib_DWT(const Matrix3D<double> &input,
     int size_multiple = (int)pow(2.0, (double) iterations);
     if (XSIZE(input) % size_multiple != 0)
         REPORT_ERROR(1,
-                     (string)"Bilib_DWT 3D: Xsize must be a multiple of " +
+                     (std::string)"Bilib_DWT 3D: Xsize must be a multiple of " +
                      integerToString(size_multiple));
     if (YSIZE(input) % size_multiple != 0)
         REPORT_ERROR(1,
-                     (string)"Bilib_DWT 3D: Ysize must be a multiple of " +
+                     (std::string)"Bilib_DWT 3D: Ysize must be a multiple of " +
                      integerToString(size_multiple));
     if (ZSIZE(input) % size_multiple != 0)
         REPORT_ERROR(1,
-                     (string)"Bilib_DWT 3D: Zsize must be a multiple of " +
+                     (std::string)"Bilib_DWT 3D: Zsize must be a multiple of " +
                      integerToString(size_multiple));
 
     result.initZeros(input);
@@ -260,7 +260,7 @@ void Bilib_DWT(const Matrix3D<double> &input,
     else if (isign == -1)
         TW.Operation = "Synthesis";
     else
-        REPORT_ERROR(1, (string)"waveletTransform 1D: unrecognized isign");
+        REPORT_ERROR(1, (std::string)"waveletTransform 1D: unrecognized isign");
     TW.Filter = "Orthonormal Spline";
     TW.BoundaryConditions = "Mirror";
     TW.Order = "1";
@@ -387,7 +387,7 @@ void DWT_lowpass(const Matrix2D<double> &v, Matrix2D<double> &result)
 
 // Select block ------------------------------------------------------------
 // Quadrant .---------------------------------------------------------------
-string Quadrant2D(int q)
+std::string Quadrant2D(int q)
 {
     switch (q)
     {
@@ -406,7 +406,7 @@ string Quadrant2D(int q)
     }
 }
 
-string Quadrant3D(int q)
+std::string Quadrant3D(int q)
 {
     switch (q)
     {
@@ -445,7 +445,7 @@ string Quadrant3D(int q)
 #define DWT_icoef1D(i,s,smax) ()
 
 void Get_Scale_Quadrant(int size_x, int x,
-                        int &scale, string &quadrant)
+                        int &scale, std::string &quadrant)
 {
     double Nx = Get_Max_Scale(size_x);
     quadrant = "x";
@@ -454,7 +454,7 @@ void Get_Scale_Quadrant(int size_x, int x,
 }
 
 void Get_Scale_Quadrant(int size_x, int size_y, int x, int y,
-                        int &scale, string &quadrant)
+                        int &scale, std::string &quadrant)
 {
     double Nx = Get_Max_Scale(size_x);
     double Ny = Get_Max_Scale(size_y);
@@ -468,7 +468,7 @@ void Get_Scale_Quadrant(int size_x, int size_y, int x, int y,
 
 void Get_Scale_Quadrant(int size_x, int size_y, int size_z,
                         int x, int y, int z,
-                        int &scale, string &quadrant)
+                        int &scale, std::string &quadrant)
 {
     double Nx = Get_Max_Scale(size_x);
     double Ny = Get_Max_Scale(size_y);
@@ -484,7 +484,7 @@ void Get_Scale_Quadrant(int size_x, int size_y, int size_z,
 }
 
 // Clean quadrant ----------------------------------------------------------
-void clean_quadrant(Matrix2D<double> &I, int scale, const string &quadrant)
+void clean_quadrant(Matrix2D<double> &I, int scale, const std::string &quadrant)
 {
     int x1, y1, x2, y2;
     Matrix1D<int> corner1(2), corner2(2);
@@ -494,7 +494,7 @@ void clean_quadrant(Matrix2D<double> &I, int scale, const string &quadrant)
     FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2) I(r) = 0;
 }
 
-void clean_quadrant(Matrix3D<double> &I, int scale, const string &quadrant)
+void clean_quadrant(Matrix3D<double> &I, int scale, const std::string &quadrant)
 {
     int x1, y1, z1, x2, y2, z2;
     SelectDWTBlock(scale, I, quadrant, x1, x2, y1, y2, z1, z2);
@@ -532,7 +532,7 @@ void soft_thresholding(Matrix3D<double> &I, double th)
 
 // Adaptive soft thresholding ----------------------------------------------
 void adaptive_soft_thresholding_block(Matrix2D<double> &I, int scale,
-                                      const string &quadrant, double sigma)
+                                      const std::string &quadrant, double sigma)
 {
     // Compute block variance
     Matrix1D<int> corner1(2), corner2(2);
@@ -616,7 +616,7 @@ void DWT_keep_central_part(Matrix2D<double> &I, double R)
 // Bayesian Wiener filtering -----------------------------------------------
 //DWT_Bijaoui_denoise_LL -- Bijaoui denoising at a perticular scale.
 void DWT_Bijaoui_denoise_LL(Matrix2D<double> &WI, int scale,
-                            const string &orientation,
+                            const std::string &orientation,
                             double mu, double S, double N)
 {
     Matrix1D<int> x0(2), xF(2), r(2);
@@ -644,7 +644,7 @@ void DWT_Bijaoui_denoise_LL(Matrix2D<double> &WI, int scale,
 }
 
 void DWT_Bijaoui_denoise_LL(Matrix3D<double> &WI, int scale,
-                            const string &orientation,
+                            const std::string &orientation,
                             double mu, double S, double N)
 {
     Matrix1D<int> x0(3), xF(3), r(3);
@@ -768,16 +768,16 @@ void bayesian_solve_eq_system(
     Aeq.write("./matrices/Aeq.txt");
     beq.write("./matrices/beq.txt");
 
-    cout << "Equation system Cx=d\n"
-    << "C=\n" << C << endl
-    << "d=" << (power / Ncoefs).transpose() << endl
+    std::cout << "Equation system Cx=d\n"
+    << "C=\n" << C << std::endl
+    << "d=" << (power / Ncoefs).transpose() << std::endl
     << "Constraints\n"
     << "Ax<=b\n"
-    << "A=\n" << A << endl
-    << "b=" << b.transpose() << endl
+    << "A=\n" << A << std::endl
+    << "b=" << b.transpose() << std::endl
     << "Aeq x=beq\n"
-    << "Aeq=\n" << Aeq << endl
-    << "beq=" << beq.transpose() << endl;
+    << "Aeq=\n" << Aeq << std::endl
+    << "beq=" << beq.transpose() << std::endl;
 #endif
 
     // Solve the system
@@ -788,15 +788,15 @@ void bayesian_solve_eq_system(
 
 #ifdef DEBUG
 
-    cout << "scale_dim :: " << scale_dim << endl;
-    cout << "--------estimatedS -------- \n";
-    cout << estimatedS;
-    cout << "--------------------------- \n";
-    cout << "Inequality constraints agreement" << endl
-    << (A*estimatedS).transpose() << endl;
-    cout << "Equality constraints agreement" << endl
-    << (Aeq*estimatedS).transpose() << endl;
-    cout << "Goal function value: " << (C*estimatedS).transpose() << endl;
+    std::cout << "scale_dim :: " << scale_dim << std::endl;
+    std::cout << "--------estimatedS -------- \n";
+    std::cout << estimatedS;
+    std::cout << "--------------------------- \n";
+    std::cout << "Inequality constraints agreement" << std::endl
+    << (A*estimatedS).transpose() << std::endl;
+    std::cout << "Equality constraints agreement" << std::endl
+    << (Aeq*estimatedS).transpose() << std::endl;
+    std::cout << "Goal function value: " << (C*estimatedS).transpose() << std::endl;
 #endif
 }
 #undef DEBUG
@@ -816,12 +816,12 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix2D<double> &WI, int allowed_sca
 
 #ifdef DEBUG
 
-    cout << "powerI= " << powerI << endl;
+    std::cout << "powerI= " << powerI << std::endl;
     double powerWI = WI.sum2();
-    cout << "powerWI= " << powerWI << endl;
-    cout << "Ydim = " << Ydim << "  Xdim = " << Xdim << "\n";
-    cout << "Ncoef_total= " << Ncoef_total << endl;
-    cout << "max_scale = " << max_scale << "\n";
+    std::cout << "powerWI= " << powerWI << std::endl;
+    std::cout << "Ydim = " << Ydim << "  Xdim = " << Xdim << "\n";
+    std::cout << "Ncoef_total= " << Ncoef_total << std::endl;
+    std::cout << "max_scale = " << max_scale << "\n";
 #endif
 
     /*Calculate the power at each band*/
@@ -833,7 +833,7 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix2D<double> &WI, int allowed_sca
     //define some vectors
     Matrix1D<double> power(scale_dim), average(scale_dim), Ncoefs(scale_dim);
     Matrix1D<int> x0(2), xF(2), r(2);
-    vector<string> orientation;
+    std::vector<std::string> orientation;
     orientation.push_back("01");
     orientation.push_back("10");
     orientation.push_back("11");
@@ -863,15 +863,15 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix2D<double> &WI, int allowed_sca
 
     if (tell)
     {
-        cout << "scale = " << endl << scale << endl;
-        cout << "power= " << endl << power << "\n";
-        cout << "average= " << endl << average << "\n";
-        cout << "Ncoefs= " << endl << Ncoefs << "\n";
-        cout << "power_rest= " << power_rest << "\n";
-        cout << "Ncoefs_rest= " << Ncoefs_rest << "\n";
-        cout << "powerI= " << powerI << endl;
-        cout << "Total sum of powers = " << power.sum() + power_rest << endl;
-        cout << "Difference powers = " << powerI - power.sum() - power_rest << endl;
+        std::cout << "scale = " << std::endl << scale << std::endl;
+        std::cout << "power= " << std::endl << power << "\n";
+        std::cout << "average= " << std::endl << average << "\n";
+        std::cout << "Ncoefs= " << std::endl << Ncoefs << "\n";
+        std::cout << "power_rest= " << power_rest << "\n";
+        std::cout << "Ncoefs_rest= " << Ncoefs_rest << "\n";
+        std::cout << "powerI= " << powerI << std::endl;
+        std::cout << "Total sum of powers = " << power.sum() + power_rest << std::endl;
+        std::cout << "Difference powers = " << powerI - power.sum() - power_rest << std::endl;
     }
 
     /*Solve the Equation System*/
@@ -881,14 +881,14 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix2D<double> &WI, int allowed_sca
 
     if (tell)
     {
-        cout << "estimatedS =\n" << estimatedS << endl;
+        std::cout << "estimatedS =\n" << estimatedS << std::endl;
         double S = 0, N = 0;
         for (int i = 0; i < scale_dim; i++)
         {
             N += Ncoefs(i) * estimatedS(i);
             S += Ncoefs(i) * estimatedS(scale_dim + i);
         }
-        cout << "SNR value=" << S / N << endl << endl;
+        std::cout << "SNR value=" << S / N << std::endl << std::endl;
     }
 
     /* Apply the Bijaoui denoising to all scales >= allowed_scale */
@@ -902,7 +902,7 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix2D<double> &WI, int allowed_sca
 void bayesian_wiener_filtering(Matrix2D<double> &WI,
                                int allowed_scale, Matrix1D<double> &estimatedS)
 {
-    vector<string> orientation;
+    std::vector<std::string> orientation;
     orientation.push_back("01");
     orientation.push_back("10");
     orientation.push_back("11");
@@ -935,12 +935,12 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix3D<double> &WI, int allowed_sca
 
 #ifdef DEBUG
 
-    cout << "powerI= " << powerI << endl;
+    std::cout << "powerI= " << powerI << std::endl;
     double powerWI = WI.sum2();
-    cout << "powerWI= " << powerWI << endl;
-    cout << "Zdim= " << Zdim << " Ydim = " << Ydim << "  Xdim = " << Xdim << "\n";
-    cout << "Ncoef_total= " << Ncoef_total << endl;
-    cout << "max_scale = " << max_scale << "\n";
+    std::cout << "powerWI= " << powerWI << std::endl;
+    std::cout << "Zdim= " << Zdim << " Ydim = " << Ydim << "  Xdim = " << Xdim << "\n";
+    std::cout << "Ncoef_total= " << Ncoef_total << std::endl;
+    std::cout << "max_scale = " << max_scale << "\n";
 #endif
 
     /*Calculate the power at each band*/
@@ -952,7 +952,7 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix3D<double> &WI, int allowed_sca
     //define some vectors
     Matrix1D<double> power(scale_dim), average(scale_dim), Ncoefs(scale_dim);
     Matrix1D<int> x0(3), xF(3), r(3);
-    vector<string> orientation;
+    std::vector<std::string> orientation;
     orientation.push_back("001");
     orientation.push_back("010");
     orientation.push_back("011");
@@ -987,15 +987,15 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix3D<double> &WI, int allowed_sca
 
     if (tell)
     {
-        cout << "scale = " << endl << scale << endl;
-        cout << "power= " << endl << power << "\n";
-        cout << "average= " << endl << average << "\n";
-        cout << "Ncoefs= " << endl << Ncoefs << "\n";
-        cout << "power_rest= " << power_rest << "\n";
-        cout << "Ncoefs_rest= " << Ncoefs_rest << "\n";
-        cout << "powerI= " << powerI << endl;
-        cout << "Total sum of powers = " << power.sum() + power_rest << endl;
-        cout << "Difference powers = " << powerI - power.sum() - power_rest << endl;
+        std::cout << "scale = " << std::endl << scale << std::endl;
+        std::cout << "power= " << std::endl << power << "\n";
+        std::cout << "average= " << std::endl << average << "\n";
+        std::cout << "Ncoefs= " << std::endl << Ncoefs << "\n";
+        std::cout << "power_rest= " << power_rest << "\n";
+        std::cout << "Ncoefs_rest= " << Ncoefs_rest << "\n";
+        std::cout << "powerI= " << powerI << std::endl;
+        std::cout << "Total sum of powers = " << power.sum() + power_rest << std::endl;
+        std::cout << "Difference powers = " << powerI - power.sum() - power_rest << std::endl;
     }
 
     /*Solve the Equation System*/
@@ -1004,14 +1004,14 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix3D<double> &WI, int allowed_sca
                              SNR0, SNRF, powerI, power_rest, white_noise, tell, estimatedS);
     if (tell)
     {
-        cout << "estimatedS =\n" << estimatedS << endl;
+        std::cout << "estimatedS =\n" << estimatedS << std::endl;
         double S = 0, N = 0;
         for (int i = 0; i < scale_dim; i++)
         {
             N += Ncoefs(i) * estimatedS(i);
             S += Ncoefs(i) * estimatedS(scale_dim + i);
         }
-        cout << "SNR value=" << S / N << endl << endl;
+        std::cout << "SNR value=" << S / N << std::endl << std::endl;
     }
 
     /* Apply the Bijaoui denoising to all scales >= allowed_scale */
@@ -1024,7 +1024,7 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix3D<double> &WI, int allowed_sca
 void bayesian_wiener_filtering(Matrix3D<double> &WI,
                                int allowed_scale, Matrix1D<double> &estimatedS)
 {
-    vector<string> orientation;
+    std::vector<std::string> orientation;
     orientation.push_back("001");
     orientation.push_back("010");
     orientation.push_back("011");

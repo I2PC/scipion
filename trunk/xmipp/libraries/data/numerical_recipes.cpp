@@ -27,8 +27,6 @@
 #include <stdlib.h>
 #include <iostream>
 
-using namespace std;
-
 #include "numerical_recipes.h"
 
 /* NUMERICAL UTILITIES ----------------------------------------------------- */
@@ -936,10 +934,10 @@ void powell(double *p, double *xi, int n, double ftol, int &iter,
         /* By coss ----- */
         if (show)
         {
-            cout << iter << " (" << p[1];
+            std::cout << iter << " (" << p[1];
             for (int co = 2; co <= n; co++)
-                cout << "," << p[co];
-            cout << ")--->" << fret << endl;
+                std::cout << "," << p[co];
+            std::cout << ")--->" << fret << std::endl;
         }
         /* ------------- */
 
@@ -967,18 +965,18 @@ void powell(double *p, double *xi, int n, double ftol, int &iter,
                 /* By coss ----- */
                 if (show)
                 {
-                    cout << "   (";
+                    std::cout << "   (";
                     if (i == 1)
-                        cout << "***";
-                    cout << p[1];
+                        std::cout << "***";
+                    std::cout << p[1];
                     for (int co = 2; co <= n; co++)
                     {
-                        cout << ",";
+                        std::cout << ",";
                         if (co == i)
-                            cout << "***";
-                        cout << p[co];
+                            std::cout << "***";
+                        std::cout << p[co];
                     }
-                    cout << ")--->" << fret << endl;
+                    std::cout << ")--->" << fret << std::endl;
                 }
                 /* ------------- */
             }

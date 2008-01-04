@@ -77,7 +77,7 @@ double xmippKerDenSOM::test(const xmippFuzzyMap& _som, const TS& _examples) cons
     int verbosity = listener->getVerbosity();
     if (verbosity)
     {
-        listener->OnReportOperation((string) "\nEstimating quantization error....\n");
+        listener->OnReportOperation((std::string) "\nEstimating quantization error....\n");
         listener->OnInitOperation(_examples.size());
     }
 
@@ -188,7 +188,7 @@ double xmippKerDenSOM::mainIterations(xmippFuzzyMap* _som, const TS* _examples, 
         {
             char s[100];
             sprintf(s, "Iteration %d of %d. variation: %g\n", iter, somNSteps, stopError);
-            listener->OnReportOperation((string) s);
+            listener->OnReportOperation((std::string) s);
         }
     }
     while ((stopError > epsilon) && (iter < somNSteps));
@@ -398,12 +398,12 @@ double xmippKerDenSOM::randApproxGVC(const TS* _examples, const xmippFuzzyMap* _
 
 void xmippKerDenSOM::showX(const TS* _ts)
 {
-    cout << "Data (1..nd, 1..nv) "  << endl;
+    std::cout << "Data (1..nd, 1..nv) "  << std::endl;
     for (int i = 0; i < _ts->size(); i++)
     {
         for (int j = 0; j < _ts->theItems[0].size(); j++)
         {
-            cout << i + 1 << "  " << j + 1 << "  " << _ts->theItems[i][j] << endl;
+            std::cout << i + 1 << "  " << j + 1 << "  " << _ts->theItems[i][j] << std::endl;
         }
     }
 }
@@ -416,13 +416,13 @@ void xmippKerDenSOM::showX(const TS* _ts)
 
 void xmippKerDenSOM::showV(xmippFuzzyMap* _som)
 {
-    cout << "Code vectors (1..ni, 1..nj, 1..nv) "  << endl;
+    std::cout << "Code vectors (1..ni, 1..nj, 1..nv) "  << std::endl;
     for (int i = 0; i < _som->size(); i++)
     {
         int tmpj = _som->indexToPos(i).first;
         int tmpi = _som->indexToPos(i).second;
         for (int j = 0; j < _som->theItems[0].size(); j++)
-            cout << tmpi + 1 << "  " << tmpj + 1 << "  " << j + 1 << "  " << _som->theItems[i][j] << endl;
+            std::cout << tmpi + 1 << "  " << tmpj + 1 << "  " << j + 1 << "  " << _som->theItems[i][j] << std::endl;
     }
 }
 
@@ -433,14 +433,14 @@ void xmippKerDenSOM::showV(xmippFuzzyMap* _som)
 
 void xmippKerDenSOM::showU(xmippFuzzyMap* _som, const TS* _ts)
 {
-    cout << " Memberships (1..nd,1..ni,1..nj)" << endl;
+    std::cout << " Memberships (1..nd,1..ni,1..nj)" << std::endl;
     for (int i = 0; i <  _ts->size(); i++)
     {
         for (int j = 0; j < _som->size(); j++)
         {
             int tmpj = _som->indexToPos(j).first;
             int tmpi = _som->indexToPos(j).second;
-            cout << i + 1 << "  " << tmpi + 1 << "  " << tmpj + 1 << "  " << _som->memb[i][j] << endl;
+            std::cout << i + 1 << "  " << tmpi + 1 << "  " << tmpj + 1 << "  " << _som->memb[i][j] << std::endl;
         }
     }
 }
@@ -464,9 +464,9 @@ void xmippKerDenSOM::printV(xmippFuzzyMap* _som, const TS* _ts, FileName& _fname
     {
         if (_ts->getNormalizationInfo().size() != _som->theItems[0].size())
         {
-            ostrstream msg;
+            std::ostrstream msg;
             msg << "Normalization information does not coincide with codebook structure";
-            throw runtime_error(msg.str());
+            throw std::runtime_error(msg.str());
         }
         for (unsigned it = 0; it < _som->size(); it++)
         {

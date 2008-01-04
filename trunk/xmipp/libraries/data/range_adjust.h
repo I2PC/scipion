@@ -58,7 +58,7 @@ public:
 
     /** Usage message.
      *
-     * This function shows the way of introducing this parameters.
+     * This function shows the way of introdustd::cing this parameters.
      */
     void usage();
 

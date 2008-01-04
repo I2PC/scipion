@@ -84,14 +84,14 @@ void histogram1D::insert_value(double val)
     no_samples++;
 #ifdef DEBUG
 
-    cout << "   hmin " << hmin << " hmax " << hmax << " value " << val
-    << " index " << i << " out of " << no_steps << endl;
+    std::cout << "   hmin " << hmin << " hmax " << hmax << " value " << val
+    << " index " << i << " out of " << no_steps << std::endl;
 #endif
 }
 #undef DEBUG
 
-/* cout << hist ------------------------------------------------------------ */
-ostream& operator << (ostream &o, const histogram1D &hist)
+/* std::cout << hist ------------------------------------------------------------ */
+std::ostream& operator << (std::ostream &o, const histogram1D &hist)
 {
     Matrix2D<double> aux(hist.stepNo(), 2);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(hist)
@@ -106,10 +106,10 @@ ostream& operator << (ostream &o, const histogram1D &hist)
 /* Write to file ----------------------------------------------------------- */
 void histogram1D::write(const FileName &fn)
 {
-    ofstream  fh;
-    fh.open(fn.c_str(), ios::out);
+    std::ofstream  fh;
+    fh.open(fn.c_str(), std::ios::out);
     if (!fh)
-        REPORT_ERROR(1, (string)"Histogram1D::write: File " + fn +
+        REPORT_ERROR(1, (std::string)"Histogram1D::write: File " + fn +
                      " cannot be openned for output");
     fh << *this;
     fh.close();
@@ -226,8 +226,8 @@ double detectability_error(const histogram1D &h1, const histogram1D &h2)
         //#define DEBUG
 #ifdef DEBUG
 
-        cout << "Comparing at " << v << " (" << ih1 << ") p1=" << p1 << " p2= " << p2 << endl;
-        cout << "   hmin " << hmin << " hmax " << hmax << " stepsize " << h1.step_size << endl;
+        std::cout << "Comparing at " << v << " (" << ih1 << ") p1=" << p1 << " p2= " << p2 << std::endl;
+        std::cout << "   hmin " << hmin << " hmax " << hmax << " stepsize " << h1.step_size << std::endl;
 #endif//;
 
         if (p1 != 0 && p2 != 0)
@@ -244,7 +244,7 @@ double detectability_error(const histogram1D &h1, const histogram1D &h2)
     error /= N;
 #ifdef DEBUG
 
-    cout << "Total error = " << error << endl;
+    std::cout << "Total error = " << error << std::endl;
 #endif
 
     return error;
@@ -320,8 +320,8 @@ void histogram2D::insert_value(double v, double u)
     no_samples++;
 }
 
-/* cout << hist ------------------------------------------------------------ */
-ostream& operator << (ostream &o, const histogram2D &hist)
+/* std::cout << hist ------------------------------------------------------------ */
+std::ostream& operator << (std::ostream &o, const histogram2D &hist)
 {
     Matrix2D<double> aux(hist.IstepNo()*hist.JstepNo(), 3);
     int n = 0;
@@ -338,10 +338,10 @@ ostream& operator << (ostream &o, const histogram2D &hist)
 /* Write to file ----------------------------------------------------------- */
 void histogram2D::write(const FileName &fn)
 {
-    ofstream  fh;
-    fh.open(fn.c_str(), ios::out);
+    std::ofstream  fh;
+    fh.open(fn.c_str(), std::ios::out);
     if (!fh)
-        REPORT_ERROR(1, "MultidimArray::write: File " + fn + " cannot be openned for output");
+        REPORT_ERROR(1, (std::string)"MultidimArray::write: File " + fn + " cannot be openned for output");
     fh << *this;
     fh.close();
 }

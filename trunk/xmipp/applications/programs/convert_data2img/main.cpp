@@ -40,10 +40,10 @@ int main(int argc, char **argv)
     float tmpR;
 //  char *fname, *iname, *bmname, *imgName, *ext;
     FileName fname, iname, bmname, imgName, ext;
-    string selname, basename;
+    std::string selname, basename;
     ImageXmipp mask;
-    vector < vector <float> > dataPoints;
-    vector < string > labels;
+    std::vector < std::vector <float> > dataPoints;
+    std::vector < std::string > labels;
     bool nomask = false;
     bool noBB = true;
     FileName  tmpN;
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 
         fname = getParameter(argc, argv, "-i");
         basename = fname.get_baseName();
-        selname = basename + (string) ".sel";
+        selname = basename + (std::string) ".sel";
         selname = getParameter(argc, argv, "-o", selname.c_str());
         imgName = getParameter(argc, argv, "-imgName", basename.c_str());
         ext = getParameter(argc, argv, "-ext", "spi");
@@ -73,52 +73,52 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error)
     {
-        cout << "data2img: Convert a data set into a set of images" << endl;
-        cout << "Usage:" << endl;
-        cout << "-i             : Input file name (iname)" << endl;
-        cout << "[-o]           : Output sel file name (default: iname.sel)" << endl;
-        cout << "[-imgName]     : first letters of the images' names (default: iname)" << endl;
-        cout << "[-ext]         : Extension of the output images (default: spi)" << endl;
-        cout << "[-mask]        : Input Mask file name (default: mask.spi)" << endl;
-//    cout << "[-noBB]        : Images will be inside the Mask's bounding box (default: yes)" << endl;
-        cout << "[-nomask]      : set if the mask is not going to be used" << endl;
-        cout << "[-rows]        : Number of rows if the mask is not going to be used" << endl;
-        cout << "[-cols]        : Number of columns if the mask is not going to be used" << endl;
+        std::cout << "data2img: Convert a data set into a set of images" << std::endl;
+        std::cout << "Usage:" << std::endl;
+        std::cout << "-i             : Input file name (iname)" << std::endl;
+        std::cout << "[-o]           : Output sel file name (default: iname.sel)" << std::endl;
+        std::cout << "[-imgName]     : first letters of the images' names (default: iname)" << std::endl;
+        std::cout << "[-ext]         : Extension of the output images (default: spi)" << std::endl;
+        std::cout << "[-mask]        : Input Mask file name (default: mask.spi)" << std::endl;
+//    std::cout << "[-noBB]        : Images will be inside the Mask's bounding box (default: yes)" << std::endl;
+        std::cout << "[-nomask]      : set if the mask is not going to be used" << std::endl;
+        std::cout << "[-rows]        : Number of rows if the mask is not going to be used" << std::endl;
+        std::cout << "[-cols]        : Number of columns if the mask is not going to be used" << std::endl;
         exit(1);
     }
 
-    cout << "Given parameters are: " << endl;
-    cout << "output = " << selname << endl;
+    std::cout << "Given parameters are: " << std::endl;
+    std::cout << "output = " << selname << std::endl;
     if (!nomask)
-        cout << "mask = " << bmname << endl;
+        std::cout << "mask = " << bmname << std::endl;
     else
     {
-        cout << "No mask is going to be used" << endl;
-        cout << "Number of rows of the generated images: " << rows << endl;
-        cout << "Number of columns of the generated images: " << cols << endl;
+        std::cout << "No mask is going to be used" << std::endl;
+        std::cout << "Number of rows of the generated images: " << rows << std::endl;
+        std::cout << "Number of columns of the generated images: " << cols << std::endl;
     }
 //  if (!noBB)
-//     cout << "Generated images will be inside the mask's bounding box" << endl;
-    cout << "input = " << fname << endl;
-    cout << "imgName = " << imgName << endl;
+//     std::cout << "Generated images will be inside the mask's bounding box" << std::endl;
+    std::cout << "input = " << fname << std::endl;
+    std::cout << "imgName = " << imgName << std::endl;
 
     // Read spider mask
     if (!nomask)
     {
-        cout << endl << "reading mask " << bmname << "......" << endl << endl;
+        std::cout << std::endl << "reading mask " << bmname << "......" << std::endl << std::endl;
         mask.read(bmname);           // Reads the mask
         //Adjust the range to 0-1
         mask().range_adjust(0, 1);   // just in case
         if (noBB)
             mask().setXmippOrigin();   // sets origin at the center of the mask.
-        cout << mask;       // Output Volumen Information
+        std::cout << mask;       // Output Volumen Information
     }
 
     int minXPixel = 32000, maxXPixel = 0; int minYPixel = 32000, maxYPixel = 0;
     int NewXDim, NewYDim;
     if ((!noBB) && (!nomask))
     {
-        cout << endl << "Calculating the mask's minimum bounding box...." << endl;
+        std::cout << std::endl << "Calculating the mask's minimum bounding box...." << std::endl;
         for (int y = 0; y < mask().rowNumber(); y++)
             for (int x = 0; x < mask().colNumber(); x++)
             {
@@ -133,17 +133,17 @@ int main(int argc, char **argv)
             } // for x
         NewXDim = (maxXPixel - minXPixel) +  1;
         NewYDim = (maxYPixel - minYPixel) +  1;
-        cout << "minX = " << minXPixel << " maxX = " << maxXPixel << " DimX = " << NewXDim << endl;
-        cout << "minY = " << minYPixel << " maxY = " << maxYPixel << " DimY= " << NewYDim << endl;
+        std::cout << "minX = " << minXPixel << " maxX = " << maxXPixel << " DimX = " << NewXDim << std::endl;
+        std::cout << "minY = " << minYPixel << " maxY = " << maxYPixel << " DimY= " << NewYDim << std::endl;
         mask().moveOriginTo(minYPixel + NewYDim / 2, minXPixel + NewXDim / 2);   // sets origin at the center of the mask.
     }
 
-    cout << endl << "Reading input file...." << endl;
+    std::cout << std::endl << "Reading input file...." << std::endl;
 
-    ifstream iStream(fname.c_str());
+    std::ifstream iStream(fname.c_str());
     if (!iStream)
     {
-        cerr << argv[0] << ": can't open file " << iname << endl;
+        std::cerr << argv[0] << ": can't open file " << iname << std::endl;
         exit(EXIT_FAILURE);
     }
     xmippCTVectors ts(0, true);
@@ -153,17 +153,17 @@ int main(int argc, char **argv)
     fout = fopen(selname.c_str(), "w");
     if (fout == NULL)
     {
-        cerr << argv[0] << ": can't open file " << selname << endl;
+        std::cerr << argv[0] << ": can't open file " << selname << std::endl;
         exit(EXIT_FAILURE);
     }
 
     if (nomask && (rows*cols != ts.theItems[0].size()))
     {
-        cerr << argv[0] << ": Images size doesn't coincide with data file " << endl;
+        std::cerr << argv[0] << ": Images size doesn't coincide with data file " << std::endl;
         exit(EXIT_FAILURE);
     }
 
-    cout << "generating images......" << endl;
+    std::cout << "generating images......" << std::endl;
 
     for (int i = 0; i < ts.size(); i++)
     {
@@ -203,7 +203,7 @@ int main(int argc, char **argv)
                 } // for x
         } // if nomask.
 
-        tmpN = (string) imgName + integerToString(i) + (string) "." + (string) ext;
+        tmpN = (std::string) imgName + integerToString(i) + (std::string) "." + (std::string) ext;
         image.write(tmpN);
         fprintf(fout, "%s 1 \n", tmpN.c_str());
     }

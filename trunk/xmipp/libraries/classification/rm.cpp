@@ -45,7 +45,7 @@ void xmippRM::calculateRM(xmippCTVectors const &ts, int _k)
     int verbosity = listener->getVerbosity();
 
     if (verbosity)
-        listener->OnReportOperation((string) "Creating random matrix....\n");
+        listener->OnReportOperation((std::string) "Creating random matrix....\n");
 
     // Define de random matrix
 
@@ -78,7 +78,7 @@ void xmippRM::calculateRM(xmippCTVectors const &ts, int _k)
 
     // Normalize columns to unit length
     if (verbosity)
-        listener->OnReportOperation((string) "Normalizing random matrix....\n");
+        listener->OnReportOperation((std::string) "Normalizing random matrix....\n");
     if (verbosity == 1)
         listener->OnInitOperation(dim);
 
@@ -124,7 +124,7 @@ void xmippRM::Project(xmippCTVectors &input, xmippCTVectors &output, int _k)
 
     int verbosity = listener->getVerbosity();
     if (verbosity)
-        listener->OnReportOperation((string) "Projecting data....\n");
+        listener->OnReportOperation((std::string) "Projecting data....\n");
     if (verbosity == 1)
         listener->OnInitOperation(_k);
 

@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage(argv);
     }
 
@@ -79,17 +79,17 @@ int main(int argc, char *argv[])
             total++;
         }  // while
 
-        cout << "RESULTS: " << endl;
-        cout << "total number of images : " << total << " (100%)" << endl;
-        cout << "active images : " << active << " (" << (float) active*100.0 / (float) total << "%)" << endl;
-        cout << "discarded images : " << discarded << " (" << (float) discarded*100.0 / (float) total << "%)" << endl;
-        cout << "commented images : " << commented << " (" << (float) commented*100.0 / (float) total << "%)" << endl;
+        std::cout << "RESULTS: " << std::endl;
+        std::cout << "total number of images : " << total << " (100%)" << std::endl;
+        std::cout << "active images : " << active << " (" << (float) active*100.0 / (float) total << "%)" << std::endl;
+        std::cout << "discarded images : " << discarded << " (" << (float) discarded*100.0 / (float) total << "%)" << std::endl;
+        std::cout << "commented images : " << commented << " (" << (float) commented*100.0 / (float) total << "%)" << std::endl;
 
 
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
     exit(0);
 } //main

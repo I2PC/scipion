@@ -67,7 +67,7 @@ int main(int argc, char **argv)
     {
         if (rank == 0)
         {
-            cout << XE;
+            std::cout << XE;
             prm.usage();
         }
         MPI_Finalize();
@@ -87,7 +87,7 @@ int main(int argc, char **argv)
         // Here MPI_allreduce
         MPI_Allreduce(&sumCC, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         sumCC = aux;
-        if (prm.verb > 0) cerr << " Average maxCC = " << sumCC / num_img_tot << endl;
+        if (prm.verb > 0) std::cerr << " Average maxCC = " << sumCC / num_img_tot << std::endl;
 
         if (prm.output_classes)
         {
@@ -128,7 +128,7 @@ int main(int argc, char **argv)
                 DFo.locate(DFo.get_last_key());
                 DFo.next();
                 DFo.remove_current();
-                system(((string)"rm -f " + fn_img).c_str());
+                system(((std::string)"rm -f " + fn_img).c_str());
             }
             fn_tmp = prm.fn_root + ".doc";
             DFo.write(fn_tmp);
@@ -145,7 +145,7 @@ int main(int argc, char **argv)
                     fn_base.compose(prm.fn_root, rank2, "");
                     fn_img.compose(fn_base, dirno, "tmpsel");
                     SFo.append(fn_img);
-                    system(((string)"rm -f " + fn_img).c_str());
+                    system(((std::string)"rm -f " + fn_img).c_str());
                 }
                 prm.class_selfiles[dirno] = SFo;
             }
@@ -157,7 +157,7 @@ int main(int argc, char **argv)
     {
         if (rank == 0)
         {
-            cout << XE;
+            std::cout << XE;
             prm.usage();
         }
         MPI_Finalize();

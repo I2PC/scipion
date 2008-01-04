@@ -59,7 +59,7 @@ public:
     {
         Prog_parameters::usage();
         fmask.usage();
-        cerr << "  [-save_mask <fn_mask>]                : Save applied filter\n"
+        std::cerr << "  [-save_mask <fn_mask>]                : Save applied filter\n"
         << "  [-save_amplitude <fn_ampl>]           : Save amplitude of filter\n"
         << "  [-do_not_center]                      : For the amplitude file\n";
     }
@@ -68,7 +68,7 @@ public:
 bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 {
     FourierFilter_parameters *eprm = (FourierFilter_parameters *) prm;
-    Matrix2D< complex<double> > fft;
+    Matrix2D< std::complex<double> > fft;
     FourierTransform(img(), fft);
     if (eprm->first)
     {
@@ -84,7 +84,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
     FourierFilter_parameters *eprm = (FourierFilter_parameters *) prm;
-    Matrix3D< complex<double> > fft;
+    Matrix3D< std::complex<double> > fft;
     FourierTransform(vol(), fft);
     if (eprm->first)
     {

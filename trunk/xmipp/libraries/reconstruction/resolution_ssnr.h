@@ -103,7 +103,7 @@ public:
     void read(int argc, char **argv);
 
     /// Show parameters
-    friend ostream & operator << (ostream &out, const Prog_SSNR_prm &prm);
+    friend std::ostream & operator << (std::ostream &out, const Prog_SSNR_prm &prm);
 
     /// Usage
     void usage() const;

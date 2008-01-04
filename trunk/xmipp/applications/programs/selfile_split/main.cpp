@@ -88,7 +88,7 @@ int main(int argc, char **argv)
             }
             SFtmp2 = SFout.sort_by_filenames();
             SFout = SFtmp2;
-            string num = "_" + integerToString(i + 1);
+            std::string num = "_" + integerToString(i + 1);
             fn_out = fn_root + num;
             fn_out += ".sel";
             SFout.write(fn_out);
@@ -97,7 +97,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error)
     {
-        cerr << "ERROR, exiting..." << endl;
+        std::cerr << "ERROR, exiting..." << std::endl;
         exit(1);
     }
 
@@ -105,7 +105,7 @@ int main(int argc, char **argv)
 
 void Usage()
 {
-    cout << "Usage: split_selfile [options]\n"
+    std::cout << "Usage: split_selfile [options]\n"
     << "    -i <selfile>            : Input selfile\n"
     << "  [ -n <int=2> ]            : Number of output selfiles\n"
     << "  [ -o <rootname=selfile> ] : Rootname for output selfiles\n"

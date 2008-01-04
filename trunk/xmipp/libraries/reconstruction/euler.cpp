@@ -56,76 +56,76 @@ void ROUT_EULER(const double rot,
     D(2, 0) = 0.;
     D(2, 1) = 0.;
     D(2, 2) = 1.;
-    cout << "D matrix\n" << D;
+    std::cout << "D matrix\n" << D;
     D_1 = D.inv();
-    cout << "D_1 matrix\n" << D_1;
+    std::cout << "D_1 matrix\n" << D_1;
     Euler_direction(rot, tilt, psi, w);
-    cout << "Projection direction\n" << w;
+    std::cout << "Projection direction\n" << w;
 
 //Euler_direction2angles (w, newrot, newtilt, newpsi);
-//  cout << "If everything is OK this should be the original
-//  angles" << endl;
-//  cout << "rot= "  << newrot
+//  std::cout << "If everything is OK this should be the original
+//  angles" << std::endl;
+//  std::cout << "rot= "  << newrot
 //       << "tilt= " << newtilt
-//       << "psi= "  << newpsi << endl;
+//       << "psi= "  << newpsi << std::endl;
 
 //fw(0)=(float)w(0);
 //fw(1)=(float)w(1);
 //fw(2)=(float)w(2);
 
 //Euler_direction( (float)rot, (float)tilt, (float)psi, fw);
-//  cout << "Projection direction calculated in float\n" << fw;
+//  std::cout << "Projection direction calculated in float\n" << fw;
 
 //Euler_direction2angles (fw, fnewrot, fnewtilt, fnewpsi);
-//  cout << "If everything is OK this should be the original
-//  angles calculated in float" << endl;
-//  cout << "rot= "  << fnewrot
+//  std::cout << "If everything is OK this should be the original
+//  angles calculated in float" << std::endl;
+//  std::cout << "rot= "  << fnewrot
 //       << "tilt= " << fnewtilt
-//       << "psi= "  << fnewpsi << endl;
+//       << "psi= "  << fnewpsi << std::endl;
 
 
     D_1byw = D_1 * w;
-    cout << "Projection direction after streching\n" << D_1byw;
+    std::cout << "Projection direction after streching\n" << D_1byw;
 
     module = D_1byw.module();
-    cout << "module_of_Dbyw= " <<   module << endl;
+    std::cout << "module_of_Dbyw= " <<   module << std::endl;
 
     new_w = D_1byw / module;
-    cout << " D_1byw/module(D_1byw)\n" << new_w;
+    std::cout << " D_1byw/module(D_1byw)\n" << new_w;
 
     Euler_direction2angles(new_w, newrot, newtilt, newpsi);
     if (newtilt == 0.) newrot = rot;
-    cout << endl
+    std::cout << std::endl
     << "Old_rot  = " << rot  << " New_rot  = " << newrot
-    << endl
+    << std::endl
     << "Old_tilt = " << tilt << " New_tilt = " << newtilt
-    << endl
+    << std::endl
     << "Old_psi  = " << psi  << " New_psi  = " << newpsi
-    << endl;
+    << std::endl;
 
     Euler_direction(newrot, newtilt, newpsi, w);
-    cout << "Projectionn direction made with new angles\n" << w;
+    std::cout << "Projectionn direction made with new angles\n" << w;
     Euler_angles2matrix(rot, tilt, psi, D);
-    cout << "Euler Matrix with old angles\n" << D;
+    std::cout << "Euler Matrix with old angles\n" << D;
     try
     {
-        cout << "Inverse Euler Matrix with old angles\n" << D.inv();
+        std::cout << "Inverse Euler Matrix with old angles\n" << D.inv();
     }
     catch (Xmipp_error &XE)
     {
-        cout << XE;
+        std::cout << XE;
         exit(1);
     }
 
     Euler_angles2matrix(newrot, newtilt, newpsi, D);
-    cout << "Euler Matrix with new angles\n" << D;
+    std::cout << "Euler Matrix with new angles\n" << D;
     try
     {
-        cout << "Inverse Euler Matrix with new angles\n" << D.inv();
+        std::cout << "Inverse Euler Matrix with new angles\n" << D.inv();
     }
     catch (Xmipp_error &XE)
     {
-        cout << XE;
+        std::cout << XE;
         exit(1);
     }
 }/* ROUT_EULER end */

@@ -27,20 +27,20 @@
 #include "args.h"
 
 // Show CWD ----------------------------------------------------------------
-ostream & operator << (ostream &_out,
+std::ostream & operator << (std::ostream &_out,
                        const Cylindrical_Wave_Decomposition &_cwd)
 {
-    _out << "ir=" << _cwd.ir << endl
-    << "numin=" << _cwd.numin << endl
-    << "numax=" << _cwd.numax << endl
-    << "x0=" << _cwd.x0 << endl
-    << "y0=" << _cwd.y0 << endl
-    << "r1=" << _cwd.r1 << endl
-    << "r2=" << _cwd.r2 << endl
-    << "r3=" << _cwd.r3 << endl;
+    _out << "ir=" << _cwd.ir << std::endl
+    << "numin=" << _cwd.numin << std::endl
+    << "numax=" << _cwd.numax << std::endl
+    << "x0=" << _cwd.x0 << std::endl
+    << "y0=" << _cwd.y0 << std::endl
+    << "r1=" << _cwd.r1 << std::endl
+    << "r2=" << _cwd.r2 << std::endl
+    << "r3=" << _cwd.r3 << std::endl;
     FOR_ALL_ELEMENTS_IN_MATRIX1D(_cwd.out_ampcos)
     _out << _cwd.out_ampcos(i) << " "
-    << _cwd.out_ampsin(i) << endl;
+    << _cwd.out_ampsin(i) << std::endl;
     return _out;
 }
 
@@ -210,15 +210,15 @@ void Cylindrical_Wave_Decomposition::compute_cwd(Matrix2D<double> &img)
 }
 
 // Show Spectrum -----------------------------------------------------------
-ostream & operator << (ostream &_out, const Rotational_Spectrum &_spt)
+std::ostream & operator << (std::ostream &_out, const Rotational_Spectrum &_spt)
 {
-    _out << "numin=" << _spt.numin << endl
-    << "numax=" << _spt.numax << endl
-    << "x0=" << _spt.x0 << endl
-    << "y0=" << _spt.y0 << endl
-    << "rl=" << _spt.rl << endl
-    << "rh=" << _spt.rh << endl
-    << "dr=" << _spt.dr << endl;
+    _out << "numin=" << _spt.numin << std::endl
+         << "numax=" << _spt.numax << std::endl
+         << "x0=" << _spt.x0 << std::endl
+         << "y0=" << _spt.y0 << std::endl
+         << "rl=" << _spt.rl << std::endl
+         << "rh=" << _spt.rh << std::endl
+         << "dr=" << _spt.dr << std::endl;
     _out << _spt.rot_spectrum;
     return _out;
 }
@@ -391,7 +391,7 @@ void Rotational_Spectrum::read(int argc, char **argv)
 // Usage -------------------------------------------------------------------
 void Rotational_Spectrum::usage()
 {
-    cerr << "   -r1 <low radius>            : Integration radius\n"
+    std::cerr << "   -r1 <low radius>            : Integration radius\n"
     << "   -r2 <high radius>           : Integration radius\n"
     << "  [-rInc <increment=1>]        : Integration increment\n"
     << "  [-x0 <x center=-1>]          : In physical units.\n"

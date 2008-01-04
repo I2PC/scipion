@@ -45,7 +45,7 @@ void calculate_and_find_correlation_max_proj(Projection const &proj1,
 {
 //       #define DEBUG_calculate_and_find_correlation_max_proj
 #ifdef DEBUG_calculate_and_find_correlation_max_proj
-    cout << "\n  (cal_find_corr_proj) imagen_no:  "   << imagen_no  << endl;
+    std::cout << "\n  (cal_find_corr_proj) imagen_no:  "   << imagen_no  << std::endl;
 #endif
 
 

@@ -74,7 +74,7 @@ double solveNonNegative(const Matrix2D<double> &C, const Matrix1D<double> &d,
                        MULTIDIM_ARRAY(result),
                        &rnorm, NULL, NULL, NULL);
     if (success == 1)
-        cerr << "Warning, too many iterations in nnls\n";
+        std::cerr << "Warning, too many iterations in nnls\n";
     else if (success == 2)
         REPORT_ERROR(1, "Solve_nonneg: Not enough memory");
     return rnorm;
@@ -96,9 +96,9 @@ void solveViaCholesky(const Matrix2D<double> &A, const Matrix1D<double> &b,
 
 // Special case for complex numbers
 template <>
-void applyGeometryBSpline(Matrix2D< complex<double> > &M2,
-                        Matrix2D<double> A, const Matrix2D< complex<double> > &M1,
-                        int Splinedegree, bool inv, bool wrap, complex<double> outside)
+void applyGeometryBSpline(Matrix2D< std::complex<double> > &M2,
+                        Matrix2D<double> A, const Matrix2D< std::complex<double> > &M1,
+                        int Splinedegree, bool inv, bool wrap, std::complex<double> outside)
 {
     Matrix2D<double> re, im, rotre, rotim;
     double outre, outim;
@@ -118,7 +118,7 @@ void applyGeometryBSpline(Matrix2D< complex<double> > &M2,
 
 /* Is diagonal ------------------------------------------------------------- */
 template <>
-bool Matrix2D< complex<double> >::isDiagonal() const
+bool Matrix2D< std::complex<double> >::isDiagonal() const
 {
     if (XSIZE(*this) != YSIZE(*this))
         return false;
@@ -130,7 +130,7 @@ bool Matrix2D< complex<double> >::isDiagonal() const
 
 /* Is Scalar --------------------------------------------------------------- */
 template <>
-bool Matrix2D< complex<double> >::isScalar() const
+bool Matrix2D< std::complex<double> >::isScalar() const
 {
     if (!isDiagonal())
         return false;
@@ -143,7 +143,7 @@ bool Matrix2D< complex<double> >::isScalar() const
 
 /* Is Symmetric ------------------------------------------------------------ */
 template <>
-bool Matrix2D< complex<double> >::isSymmetric() const
+bool Matrix2D< std::complex<double> >::isSymmetric() const
 {
     if (XSIZE(*this) != YSIZE(*this))
         return false;
@@ -157,7 +157,7 @@ bool Matrix2D< complex<double> >::isSymmetric() const
 
 /* Is Skew symmetric ------------------------------------------------------- */
 template <>
-bool Matrix2D< complex<double> >::isSkewSymmetric() const
+bool Matrix2D< std::complex<double> >::isSkewSymmetric() const
 {
     if (XSIZE(*this) != YSIZE(*this))
         return false;
@@ -171,7 +171,7 @@ bool Matrix2D< complex<double> >::isSkewSymmetric() const
 
 /* Is Upper triangular ----------------------------------------------------- */
 template <>
-bool Matrix2D< complex<double> >::isUpperTriangular() const
+bool Matrix2D< std::complex<double> >::isUpperTriangular() const
 {
     if (XSIZE(*this) != YSIZE(*this))
         return false;
@@ -184,7 +184,7 @@ bool Matrix2D< complex<double> >::isUpperTriangular() const
 
 /* Is Lower triangular ----------------------------------------------------- */
 template <>
-bool Matrix2D< complex<double> >::isLowerTriangular() const
+bool Matrix2D< std::complex<double> >::isLowerTriangular() const
 {
     if (XSIZE(*this) != YSIZE(*this))
         return false;
@@ -548,9 +548,9 @@ void quadraticProgramming(const Matrix2D<double> &C, const Matrix1D<double> &d,
 #ifdef DEBUG
 
     if (inform == 0)
-        cout << "SUCCESSFUL RETURN. \n";
+        std::cout << "SUCCESSFUL RETURN. \n";
     if (inform == 1 || inform == 2)
-        cout << "\nINITIAL GUESS INFEASIBLE.\n";
+        std::cout << "\nINITIAL GUESS INFEASIBLE.\n";
     if (inform == 3)
         printf("\n MAXIMUM NUMBER OF ITERATIONS REACHED.\n");
     if (inform > 3)

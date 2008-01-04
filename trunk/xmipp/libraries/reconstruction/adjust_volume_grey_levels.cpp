@@ -42,8 +42,8 @@ void Prog_Adjust_Volume_Parameters::read(int argc, char **argv)
 /* Usage ------------------------------------------------------------------- */
 void Prog_Adjust_Volume_Parameters::usage()
 {
-    cerr << "Usage: adjust_volume\n";
-    cerr << "   -i <Volume>         : Input volume\n"
+    std::cerr << "Usage: adjust_volume\n";
+    std::cerr << "   -i <Volume>         : Input volume\n"
     << "   -sel <SelFile>      : Set of projections\n"
     << "  [-o <Output Volume>] : By default, the input one\n"
     << "  [-optimize]          : Optimize\n"
@@ -54,10 +54,10 @@ void Prog_Adjust_Volume_Parameters::usage()
 /* Show -------------------------------------------------------------------- */
 void Prog_Adjust_Volume_Parameters::show()
 {
-    cout << "Input Volume:  " << fn_vol   << endl
-    << "Input Selfile: " << fn_sel   << endl
-    << "Output Volume: " << fn_out   << endl
-    << "Optimize:      " << optimize << endl
+    std::cout << "Input Volume:  " << fn_vol   << std::endl
+    << "Input Selfile: " << fn_sel   << std::endl
+    << "Output Volume: " << fn_out   << std::endl
+    << "Optimize:      " << optimize << std::endl
     ;
 }
 
@@ -124,10 +124,10 @@ double Prog_Adjust_Volume_Parameters::mismatching(double a, double b)
         I.write("PPPexp.xmp");
         I() = P();
         I.write("PPPtheo.xmp");
-        cout << "Difference=" << diff.sum2() << endl;
-        cout << "Press any key\n";
+        std::cout << "Difference=" << diff.sum2() << std::endl;
+        std::cout << "Press any key\n";
         char c;
-        cin >> c;
+        std::cin >> c;
 #endif
     }
     return retval / N;
@@ -139,7 +139,7 @@ void Prog_Adjust_Volume_Parameters::apply(Matrix3D<double> &out)
 {
     // Compute the average power and average value of all the projections
     double sum = 0, sum2 = 0, N = 0;
-    cerr << "Computing first estimate of the linear transformation ...\n";
+    std::cerr << "Computing first estimate of the linear transformation ...\n";
     int imgno = SF.ImgNo();
     init_progress_bar(imgno);
     int i = 0;
@@ -167,7 +167,7 @@ void Prog_Adjust_Volume_Parameters::apply(Matrix3D<double> &out)
         if (i % 10 == 0) progress_bar(i);
     }
     progress_bar(imgno);
-    cout << endl;
+    std::cout << std::endl;
 
     // Statistics of the volume
     double avg0, stddev0, min0, max0;
@@ -198,7 +198,7 @@ void Prog_Adjust_Volume_Parameters::apply(Matrix3D<double> &out)
     double stddevF = stddev_pict / sqrt(r);
     double a = stddevF / stddev0;
     double b = avgF - a * avg0;
-    cout << "First Linear transformation: y=" << a << "*x+"  << b << endl;
+    std::cout << "First Linear transformation: y=" << a << "*x+"  << b << std::endl;
 
     // Optimize
     if (optimize)

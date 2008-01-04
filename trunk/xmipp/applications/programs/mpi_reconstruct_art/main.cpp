@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error &XE)
     {
-        cout << XE;
+        std::cout << XE;
         art_prm.usage();
         crystal_art_prm.usage_more();
         exit(1);
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
         MPI_Bcast(MULTIDIM_ARRAY(art_prm.ordered_list), MULTIDIM_SIZE(art_prm.ordered_list), MPI_INT, 0, MPI_COMM_WORLD);
         comms_t += MPI_Wtime() - aux_comm_t;
 
-        cout << "Filename root: " << art_prm.fn_root << endl;
+        std::cout << "Filename root: " << art_prm.fn_root << std::endl;
     }
     else
     {
@@ -187,27 +187,27 @@ int main(int argc, char *argv[])
         {
             if (art_prm.block_size < size) art_prm.block_size = size;  // Each processor will have at least one projection
             if (art_prm.block_size > num_img_tot) art_prm.block_size = num_img_tot;  // block_size is as much equal to num_img_tot
-            cout << "pSART " << "TB = " << art_prm.block_size << endl;
+            std::cout << "pSART " << "TB = " << art_prm.block_size << std::endl;
         }
         else if (art_prm.parallel_mode == Basic_ART_Parameters::pCAV)
-            cout << "pCAV" << endl;
+            std::cout << "pCAV" << std::endl;
         else if (art_prm.parallel_mode == Basic_ART_Parameters::pBiCAV)
         {
             if (art_prm.block_size < size) art_prm.block_size = size;  // Each processor will have at least one projection
             if (art_prm.block_size > num_img_tot) art_prm.block_size = num_img_tot;  // block_size is as much equal to num_img_tot
-            cout << "pBiCAV " << "TB = " << art_prm.block_size << endl;
+            std::cout << "pBiCAV " << "TB = " << art_prm.block_size << std::endl;
         }
         else if (art_prm.parallel_mode == Basic_ART_Parameters::pSIRT)
-            cout << "pSIRT" << endl;
+            std::cout << "pSIRT" << std::endl;
         else if (art_prm.parallel_mode == Basic_ART_Parameters::pfSIRT)
-            cout << "pfSIRT" << endl;
-        else cout << "pAVSP" << endl;
+            std::cout << "pfSIRT" << std::endl;
+        else std::cout << "pAVSP" << std::endl;
 
-        cout << "Number of processors: " << size << endl;
-        cout << "Lambda: " << art_prm.lambda_list(0) << endl;
-        cout << "Iterations: " << num_iter << endl;
-        cout << "Projections: " << num_img_tot << endl;
-        cout << "________________________________________________________________________________\n\n" << endl;
+        std::cout << "Number of processors: " << size << std::endl;
+        std::cout << "Lambda: " << art_prm.lambda_list(0) << std::endl;
+        std::cout << "Iterations: " << num_iter << std::endl;
+        std::cout << "Projections: " << num_img_tot << std::endl;
+        std::cout << "________________________________________________________________________________\n\n" << std::endl;
     }
 
     art_prm.block_size /= size; // Now this variable stores how many projs. from each block belong to each node.
@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
             comms_t += MPI_Wtime() - aux_comm_t;
             (*(art_prm.GVNeq))(n)() = GVNeq_aux(n)();
         }
-        if (rank == 0) cout << "Elapsed time for pCAV weights computation: " << MPI_Wtime() - cav_t << endl;
+        if (rank == 0) std::cout << "Elapsed time for pCAV weights computation: " << MPI_Wtime() - cav_t << std::endl;
     }
 
     /*************************** PARALLEL ART ALGORITHM ***************************/
@@ -388,7 +388,7 @@ int main(int argc, char *argv[])
                             // This case should not happen as this element
                             // is not affected by actual projections
 
-                            cerr << "Error with weights, contact developers!" << endl;
+                            std::cerr << "Error with weights, contact developers!" << std::endl;
                             exit(0);
                         }
                     }
@@ -441,7 +441,7 @@ int main(int argc, char *argv[])
                         // This case should not happen as this element
                         // is not affected by actual projections
 
-                        cerr << "Error with weights, contact developers!" << endl;
+                        std::cerr << "Error with weights, contact developers!" << std::endl;
                         exit(0);
                     }
                 }
@@ -512,11 +512,11 @@ int main(int argc, char *argv[])
         // Only the proccess with rank=0 (Master) will output the results
         if (rank == 0)
         {
-            cout << "\nIteration " << i << endl;
-            cout << "Time: " << MPI_Wtime() - it_t << " secs." << endl;
-            cout << "Comms. time: " << comms_t_it << " secs." << endl;
+            std::cout << "\nIteration " << i << std::endl;
+            std::cout << "Time: " << MPI_Wtime() - it_t << " secs." << std::endl;
+            std::cout << "Comms. time: " << comms_t_it << " secs." << std::endl;
             if (art_prm.parallel_mode == Basic_ART_Parameters::pBiCAV)
-                cout << "BiCAV weighting time: " << cavk_it_t << endl;
+                std::cout << "BiCAV weighting time: " << cavk_it_t << std::endl;
 
             if (i < num_iter - 1)
             {
@@ -542,13 +542,13 @@ int main(int argc, char *argv[])
         art_prm.fh_hist->close();
 
     uswtime(&recons_t);
-    cout << "\n\n------ FINAL STATISTICS ------" << endl;
-    cout << "\nTOTAL EXECUTION TIME: " << recons_t.wall - total_t << endl;
-    cout << "Communications time: " << comms_t << " secs." << endl;
-    cout << "CPU time: " << recons_t.user + recons_t.sys << " secs." << endl;
-    cout << "USER: " << recons_t.user << " SYSTEM: " << recons_t.sys << "\n\n" << endl;
+    std::cout << "\n\n------ FINAL STATISTICS ------" << std::endl;
+    std::cout << "\nTOTAL EXECUTION TIME: " << recons_t.wall - total_t << std::endl;
+    std::cout << "Communications time: " << comms_t << " secs." << std::endl;
+    std::cout << "CPU time: " << recons_t.user + recons_t.sys << " secs." << std::endl;
+    std::cout << "USER: " << recons_t.user << " SYSTEM: " << recons_t.sys << "\n\n" << std::endl;
     if (art_prm.parallel_mode == Basic_ART_Parameters::pBiCAV)
-        cout << "total pBiCAV Weighting time: " << cavk_total_t << endl;
+        std::cout << "total pBiCAV Weighting time: " << cavk_total_t << std::endl;
     MPI_Finalize();
     return 0 ;
 }

@@ -122,7 +122,7 @@ public:
                plotter.setCurveData(1,y/2);
                app.setMainWidget(&plotter);
                return app.exec();
-            } catch (Xmipp_error XE) {cout << XE;}
+            } catch (Xmipp_error XE) {std::cout << XE;}
             return 0;
          }
     @endcode

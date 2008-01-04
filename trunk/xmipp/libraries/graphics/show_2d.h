@@ -135,7 +135,7 @@ protected:
     bool convertEvent(QMouseEvent* e, int& x, int& y);
     const char* filename;
     Image xmippImage;  // Xmipp Image
-    Matrix2D< complex<double> > xmippImageFourier; // Fourier image
+    Matrix2D< std::complex<double> > xmippImageFourier; // Fourier image
     double      minGray;                // Minimum value of the image
     double      maxGray;                // Maximum value of the image
     QImage image;   // the loaded image
@@ -186,7 +186,7 @@ protected:
     void        recomputeCTFmodel();
 
 public slots:
-    void runEnhancePSD(vector<float> enhance_prms);
+    void runEnhancePSD(std::vector<float> enhance_prms);
 
 protected slots:
     void newWindow();
@@ -196,7 +196,7 @@ protected slots:
     void doOption(int);
     void  printIt();
     void  set_spacing(float _spacing);
-    void  set_profile_line(vector<float> prm);
+    void  set_profile_line(std::vector<float> prm);
     void  set_fft_show_mode(int _fft_show_mode);
     void        about();
     void        aboutXmipp();

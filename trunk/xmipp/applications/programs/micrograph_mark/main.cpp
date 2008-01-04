@@ -56,7 +56,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage();
         exit(1);
     }
@@ -117,12 +117,12 @@ int main(int argc, char **argv)
         m.close_micrograph();
         if (fnRawTilted != "") mTilted.close_micrograph();
         delete mainWidget;
-        if (fn8bits!="") system(((string)"rm -rf "+fn8bits+"*").c_str());
-        if (fn8bitsTilted!="") system(((string)"rm -rf "+fn8bitsTilted+"*").c_str());
+        if (fn8bits!="") system(((std::string)"rm -rf "+fn8bits+"*").c_str());
+        if (fn8bitsTilted!="") system(((std::string)"rm -rf "+fn8bitsTilted+"*").c_str());
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
     return 0;
 }
@@ -130,7 +130,7 @@ int main(int argc, char **argv)
 /* Usage ------------------------------------------------------------------- */
 void Usage()
 {
-    cerr << "Purpose: Mark particles in a Raw image\n"
+    std::cerr << "Purpose: Mark particles in a Raw image\n"
     << "         There must exist the image and the corresponding .inf file\n"
     << "\n"
     << "Usage: mark [options]\n"

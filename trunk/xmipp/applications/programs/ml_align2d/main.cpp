@@ -31,10 +31,10 @@ int main(int argc, char **argv)
     int c, nn, imgno, opt_refno;
     double LL, sumw_allrefs, convv, sumcorr;
     bool converged;
-    vector<double> conv;
+    std::vector<double> conv;
     double aux, wsum_sigma_noise, wsum_sigma_offset;
-    vector<Matrix2D<double > > wsum_Mref;
-    vector<double> sumw, sumw_mirror;
+    std::vector<Matrix2D<double > > wsum_Mref;
+    std::vector<double> sumw, sumw_mirror;
     Matrix2D<double> P_phi, Mr2, Maux;
     FileName fn_img, fn_tmp;
     Matrix1D<double> oneline(0);
@@ -66,7 +66,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         prm.usage();
         exit(0);
     }
@@ -80,7 +80,7 @@ int main(int argc, char **argv)
         for (int iter = prm.istart; iter <= prm.Niter; iter++)
         {
 
-            if (prm.verb > 0) cerr << "  Multi-reference refinement:  iteration " << iter << " of " << prm.Niter << endl;
+            if (prm.verb > 0) std::cerr << "  Multi-reference refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
 
             for (int refno = 0;refno < prm.n_ref; refno++) prm.Iold[refno]() = prm.Iref[refno]();
 
@@ -116,13 +116,13 @@ int main(int argc, char **argv)
             {
                 if (prm.anneal - 1. < 1e-5)
                 {
-                    if (prm.verb > 0) cerr << " Optimization converged!" << endl;
+                    if (prm.verb > 0) std::cerr << " Optimization converged!" << std::endl;
                     break;
                 }
                 else
                 {
                     prm.anneal -= prm.anneal_step;
-                    if (prm.verb > 0) cerr << " Lowering annealing parameter to " << prm.anneal << endl;
+                    if (prm.verb > 0) std::cerr << " Lowering annealing parameter to " << prm.anneal << std::endl;
                 }
 
             }
@@ -133,7 +133,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         prm.usage();
         exit(0);
     }

@@ -48,12 +48,12 @@ class xmippFCB : public xmippCB
 {
 public:
 
-    typedef vector< vector< xmippFeature > > MM;
+    typedef std::vector< std::vector< xmippFeature > > MM;
     /// Alias for Membership Matrix
-    //typedef xmippCTSet<vector<xmippFeature>,xmippLabel> TS;  // Alias for a Training set
+    //typedef xmippCTSet<std::vector<xmippFeature>,xmippLabel> TS;  // Alias for a Training set
     typedef xmippCTVectors TS;
     /// Alias for a Training set
-    typedef xmippCTSet<vector<xmippFeature>, xmippFeature > FV;
+    typedef xmippCTSet<std::vector<xmippFeature>, xmippFeature > FV;
     /// Alias for Fuzzy vectors
 
     // Fuzzy membership matrix
@@ -114,7 +114,7 @@ public:
      * Parameter: _size Size of code vectors (number of data points)
      */
 
-    xmippFCB(istream& _is, const unsigned _size = 0);
+    xmippFCB(std::istream& _is, const unsigned _size = 0);
 
     /**
      * Virtual destructor
@@ -225,13 +225,13 @@ public:
      * Writes the membership values
      * Parameter: _os  The output stream
      */
-    virtual void writeMembership(ostream& _os) const;
+    virtual void writeMembership(std::ostream& _os) const;
 
     /**
      * Reads the membership values
      * Parameter: _is  The input stream
      */
-    virtual void readMembership(istream& _is);
+    virtual void readMembership(std::istream& _is);
 
 
     /**
@@ -239,7 +239,7 @@ public:
      * this method can be used to save the status of the class.
      * Parameter: _os The output stream
      */
-    virtual void saveObject(ostream& _os) const;
+    virtual void saveObject(std::ostream& _os) const;
 
 
     /**
@@ -247,7 +247,7 @@ public:
      * this method can be used to load the status of the class.
      * Parameter: _is The output stream
      */
-    virtual void loadObject(istream& _is);
+    virtual void loadObject(std::istream& _is);
 
 
     /**
@@ -256,13 +256,13 @@ public:
      * Parameter: _size Size of code vectors (number of data points)
      * @exception  runtime_error  If there are problems with the stream
      */
-    virtual void readSelf(istream& _is, const unsigned _size = 0);
+    virtual void readSelf(std::istream& _is, const unsigned _size = 0);
 
     /**
      * Prints the density values of each Fuzzy codevector.
      * Parameter: _os  The the output stream
      */
-    virtual void printDensity(ostream& _os) const;
+    virtual void printDensity(std::ostream& _os) const;
 
 
 private:

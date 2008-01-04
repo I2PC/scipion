@@ -30,7 +30,7 @@
 
 /* Some operators *******************************************************/
 
-ostream& operator << (ostream& o, const headerXmipp &I)
+std::ostream& operator << (std::ostream& o, const headerXmipp &I)
 {
     o << "Image type   : ";
     switch ((int) I.header.fIform)
@@ -73,67 +73,67 @@ ostream& operator << (ostream& o, const headerXmipp &I)
         break;
     }
 
-    o << endl;
+    o << std::endl;
     o << "Reversed     : ";
     if (I.__reversed)
-        o << "TRUE"  << endl;
+        o << "TRUE"  << std::endl;
     else
-        o << "FALSE" << endl;
+        o << "FALSE" << std::endl;
     o << "dimensions   : " << I.header.fNslice << " x " << I.header.fNrow << " x " << I.header.fNcol;
-    o << "  (slices x rows x columns)" << endl;
-    o << "Euler angles : " << endl;
-    o << "  Phi   (rotation around Z axis) = " << I.header.fPhi << endl;
-    o << "  theta (tilt, second rotation around new Y axis) = " << I.header.fTheta << endl;
-    o << "  Psi   (third rotation around new Z axis) = " << I.header.fPsi << endl;
-    o << "Origin Offsets : " << endl;
-    o << "  Xoff  (origin offset in X-direction) = " << I.header.fXoff << endl;
-    o << "  Yoff  (origin offset in Y-direction) = " << I.header.fYoff << endl;
+    o << "  (slices x rows x columns)" << std::endl;
+    o << "Euler angles : " << std::endl;
+    o << "  Phi   (rotation around Z axis) = " << I.header.fPhi << std::endl;
+    o << "  theta (tilt, second rotation around new Y axis) = " << I.header.fTheta << std::endl;
+    o << "  Psi   (third rotation around new Z axis) = " << I.header.fPsi << std::endl;
+    o << "Origin Offsets : " << std::endl;
+    o << "  Xoff  (origin offset in X-direction) = " << I.header.fXoff << std::endl;
+    o << "  Yoff  (origin offset in Y-direction) = " << I.header.fYoff << std::endl;
     if (I.header.fFlag == 1.0f || I.header.fFlag == 2.0f)
     {
         o << "  Phi1   = " << I.header.fPhi1 ;
         o << "  theta1 = " << I.header.fTheta1 ;
-        o << "  Psi1   = " << I.header.fPsi1 << endl;
+        o << "  Psi1   = " << I.header.fPsi1 << std::endl;
     }
     if (I.header.fFlag == 2.0f)
     {
         o << "  Phi2   = " << I.header.fPhi2 ;
         o << "  theta2 = " << I.header.fTheta2 ;
-        o << "  Psi2   = " << I.header.fPsi2 << endl;
+        o << "  Psi2   = " << I.header.fPsi2 << std::endl;
     }
 
-    o << "Date         : " << I.get_date() << endl;
-    o << "Time         : " << I.get_time() << endl;
-    o << "Title        : " << I.get_title() << endl;
-    o << "Header size  : " << I.get_header_size() << endl;
-    o << "Weight  : " << I.Weight() << endl;
+    o << "Date         : " << I.get_date() << std::endl;
+    o << "Time         : " << I.get_time() << std::endl;
+    o << "Title        : " << I.get_title() << std::endl;
+    o << "Header size  : " << I.get_header_size() << std::endl;
+    o << "Weight  : " << I.Weight() << std::endl;
     return o;
 }
 
-void headerXmipp::print_hard(ostream &o) const
+void headerXmipp::print_hard(std::ostream &o) const
 {
-    o << "fNslice=" << header.fNslice << endl;
-    o << "fNrow=" <<   header.fNrow << endl;
-    o << "fNrec=" <<   header.fNrec << endl;
-    o << "fNlabel=" << header.fNlabel << endl;
-    o << "fIform=" <<  header.fIform << endl;
-    o << "fImami=" <<  header.fImami << endl;
-    o << "fFmax=" <<   header.fFmax << endl;
-    o << "fFmin=" <<   header.fFmin << endl;
-    o << "fAv=" <<     header.fAv << endl;
-    o << "fSig=" <<    header.fSig << endl;
-    o << "fIhist=" <<  header.fIhist << endl;
-    o << "fNcol=" <<   header.fNcol << endl;
-    o << "fLabrec=" << header.fLabrec << endl;
-    o << "fIangle=" << header.fIangle << endl;
-    o << "fPhi=" <<    header.fPhi << endl;
-    o << "fTheta=" <<  header.fTheta << endl;
-    o << "fPsi=" <<    header.fPsi << endl;
-    o << "fXoff=" <<   header.fXoff << endl;
-    o << "fYoff=" <<   header.fYoff << endl;
-    o << "fZoff=" <<   header.fZoff << endl;
-    o << "fScale=" <<  header.fScale << endl;
-    o << "fLabbyt=" << header.fLabbyt << endl;
-    o << "fLenbyt=" << header.fLenbyt << endl;
+    o << "fNslice=" << header.fNslice << std::endl;
+    o << "fNrow=" <<   header.fNrow << std::endl;
+    o << "fNrec=" <<   header.fNrec << std::endl;
+    o << "fNlabel=" << header.fNlabel << std::endl;
+    o << "fIform=" <<  header.fIform << std::endl;
+    o << "fImami=" <<  header.fImami << std::endl;
+    o << "fFmax=" <<   header.fFmax << std::endl;
+    o << "fFmin=" <<   header.fFmin << std::endl;
+    o << "fAv=" <<     header.fAv << std::endl;
+    o << "fSig=" <<    header.fSig << std::endl;
+    o << "fIhist=" <<  header.fIhist << std::endl;
+    o << "fNcol=" <<   header.fNcol << std::endl;
+    o << "fLabrec=" << header.fLabrec << std::endl;
+    o << "fIangle=" << header.fIangle << std::endl;
+    o << "fPhi=" <<    header.fPhi << std::endl;
+    o << "fTheta=" <<  header.fTheta << std::endl;
+    o << "fPsi=" <<    header.fPsi << std::endl;
+    o << "fXoff=" <<   header.fXoff << std::endl;
+    o << "fYoff=" <<   header.fYoff << std::endl;
+    o << "fZoff=" <<   header.fZoff << std::endl;
+    o << "fScale=" <<  header.fScale << std::endl;
+    o << "fLabbyt=" << header.fLabbyt << std::endl;
+    o << "fLenbyt=" << header.fLenbyt << std::endl;
 }
 
 /* Input (read) *******************************************************/
@@ -188,7 +188,7 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
      type_table[n][2]==file_type.c[1] && type_table[n][3]==file_type.c[0])
 #ifdef DEBUG
 
-        cout << "Checking correct type\n";
+        std::cout << "Checking correct type\n";
 #endif
 
         for (int i = 0; i < TYPE_TABLE_SIZE; i++)
@@ -207,7 +207,7 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
             return false;
 #ifdef DEBUG
 
-        cout << "OK\n";
+        std::cout << "OK\n";
 #endif
 
         // Now check this machine type
@@ -235,16 +235,16 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
     unsigned long usfHeader = (unsigned long) get_header_size();
 
 #ifdef DEBUG
-    cout << "Getting Status information\n";
+    std::cout << "Getting Status information\n";
 #endif
     if (fstat(fileno(fp), &info))
         return false;
 #ifdef DEBUG
-    cout << "OK\n";
+    std::cout << "OK\n";
 #endif
 
 #ifdef DEBUG
-    cout << "Checking if aberrant image\n";
+    std::cout << "Checking if aberrant image\n";
 #endif
     // CO: Check if it is an "aberrant" image
     if (im == IMG_XMIPP || header.fIform == 1)
@@ -254,14 +254,14 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
             --header.fNrec;
         }
 #ifdef DEBUG
-    cout << "OK\n";
+    std::cout << "OK\n";
 #endif
 
     // Extra checkings
     if (!skip_extra_checkings)
     {
 #ifdef DEBUG
-        cout << "Checking size\n";
+        std::cout << "Checking size\n";
 #endif
 
         switch (im)
@@ -270,12 +270,12 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
             size = usfHeader + usfNcol * usfNrow * sizeof(float);
 
 #ifdef DEBUG
-            cout << "usfHeader=    " << usfHeader     << endl
-                 << "usfNcol=      " << usfNcol       << endl
-                 << "usfNrow=      " << usfNrow       << endl
-                 << "computed size=" << size          << endl
-                 << "file size=    " << info.st_size  << endl
-                 << "header.fIform=" << header.fIform << endl
+            std::cout << "usfHeader=    " << usfHeader     << std::endl
+                 << "usfNcol=      " << usfNcol       << std::endl
+                 << "usfNrow=      " << usfNrow       << std::endl
+                 << "computed size=" << size          << std::endl
+                 << "file size=    " << info.st_size  << std::endl
+                 << "header.fIform=" << header.fIform << std::endl
             ;
 #endif
 
@@ -338,7 +338,7 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
             break;
         }
 #ifdef DEBUG
-        cout << "OK\n";
+        std::cout << "OK\n";
 #endif
 
     }
@@ -351,7 +351,7 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
     */
 
 #ifdef DEBUG
-    cout << "About to read the header content\n";
+    std::cout << "About to read the header content\n";
 #endif
     // Now read and throw empty filling space
     //  header.fLabrec = (float) ceil((float) 256/header.fNcol);

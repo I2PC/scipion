@@ -35,11 +35,11 @@ int main(int argc, char **argv)
     try
     {
         prm.read(argc, argv);
-        cout << prm;
+        std::cout << prm;
     }
     catch (Xmipp_error Xe)
     {
-        cout << Xe;
+        std::cout << Xe;
         Usage(prm);
         exit(1);
     }
@@ -53,14 +53,14 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error Xe)
     {
-        cout << Xe;
+        std::cout << Xe;
     }
 }
 
 /* Usage ------------------------------------------------------------------- */
 void Usage(const Prog_segment_prm &prm)
 {
-    cerr << "Usage: segment [Parameters]\n";
+    std::cerr << "Usage: segment [Parameters]\n";
     prm.usage();
 }
 

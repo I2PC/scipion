@@ -65,7 +65,7 @@ protected:
 public slots:
     void slotSetWidthHeight(int _w, int _h);
     void slotActualizeOtherOverview(int _x, int _y);
-    void slotDrawCropArea(vector<int> value);
+    void slotDrawCropArea(std::vector<int> value);
 
 signals:
     void signalActualizeOtherOverview(int _x, int _y);

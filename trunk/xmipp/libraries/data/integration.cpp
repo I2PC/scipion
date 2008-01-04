@@ -135,8 +135,7 @@ double Romberg::operator()()
         s[j+1] = s[j];
         h[j+1] = h[j] / 9.0;
     }
-    cout << "Too many steps in routine Romberg" << endl;
-    exit(1);
+    REPORT_ERROR(1,"Too many steps in routine Romberg");
     return 0.0;
 }
 

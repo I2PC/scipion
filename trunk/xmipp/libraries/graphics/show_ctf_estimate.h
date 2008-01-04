@@ -47,10 +47,10 @@ public:
     AssignCTFViewer(const FileName &_fn_psd, Prog_assign_CTF_prm &_assign_ctf_prm);
 
     /// Draw first zero
-    void drawFirstZero(vector<float> &prm);
+    void drawFirstZero(std::vector<float> &prm);
 
     /// Update mask
-    void updateMask(vector<float> &prm);
+    void updateMask(std::vector<float> &prm);
 public:
     // Assign CTF parameters
     Prog_assign_CTF_prm assign_ctf_prm;
@@ -67,13 +67,13 @@ public:
     // 2: Defocus U
     // 3: Defocus V
     // 4: Angle
-    vector<float> current_prm;
+    std::vector<float> current_prm;
 
     // Backup of the original image
     Matrix2D<double> xmippImage_backup;
 public slots:
     // Set a new set of parameters
-    void set_prm(vector<float> new_prm);
+    void set_prm(std::vector<float> new_prm);
     // cancel
     void cancel();
     // proceed

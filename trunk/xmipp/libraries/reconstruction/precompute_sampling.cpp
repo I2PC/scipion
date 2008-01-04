@@ -49,7 +49,7 @@ void Prog_Sampling_Parameters::read(int argc, char **argv)
 /* Usage ------------------------------------------------------------------- */
 void Prog_Sampling_Parameters::usage()
 {
-    cerr << "precompute_sampling\n"
+    std::cerr << "precompute_sampling\n"
     << "   -o root_file_name           : Root for output files\n"
     << "  [-symmetry cn]   :One of the 17 possible symmetries in\n"
     << "                                single particle electronmicroscopy\n"
@@ -71,14 +71,14 @@ void Prog_Sampling_Parameters::usage()
 /* Show -------------------------------------------------------------------- */
 void Prog_Sampling_Parameters::show()
 {
-    cout
-    << "Sampling rate:      " << sampling    << endl
-    << "output files root:  " << sampling_file_root << endl
-    << "symmetry group:     " << symmetry << endl
-    << "symmetry order:     " << sym_order << endl
-    << "neighborhood:       " << neighborhood << endl
-    << "max_tilt_angle:     " << max_tilt_angle << endl
-    << "min_tilt_angle:     " << min_tilt_angle << endl
+    std::cout
+    << "Sampling rate:      " << sampling    << std::endl
+    << "output files root:  " << sampling_file_root << std::endl
+    << "symmetry group:     " << symmetry << std::endl
+    << "symmetry order:     " << sym_order << std::endl
+    << "neighborhood:       " << neighborhood << std::endl
+    << "max_tilt_angle:     " << max_tilt_angle << std::endl
+    << "min_tilt_angle:     " << min_tilt_angle << std::endl
     ;
 }
 
@@ -100,8 +100,8 @@ void Prog_Sampling_Parameters::run()
 #ifdef DEBUG6
     for (int i = 0; i < mysampling.no_redundant_sampling_points_vector.size(); i++)
     {
-        cout << mysampling.no_redundant_sampling_points_vector[i].transpose() << " 1.1 2.2222 " << endl;
-        //cout << mysampling.no_redundant_sampling_points_angles[i].transpose() << " 1.21 1 " << endl;
+        std::cout << mysampling.no_redundant_sampling_points_vector[i].transpose() << " 1.1 2.2222 " << std::endl;
+        //std::cout << mysampling.no_redundant_sampling_points_angles[i].transpose() << " 1.21 1 " << std::endl;
     }
 #endif
 #undef DEBUG6
@@ -114,7 +114,7 @@ void Prog_Sampling_Parameters::run()
         double rotp, tiltp, psip;
         Matrix1D<double>  row(3);
         Matrix2D<double>  L(4, 4), R(4, 4);
-        //cerr << "mysampling.SL.SymsNo():" << mysampling.SL.SymsNo() << endl;
+        //std::cerr << "mysampling.SL.SymsNo():" << mysampling.SL.SymsNo() << std::endl;
         for (int i = 0; i < mysampling.no_redundant_sampling_points_vector.size(); i++)
         {
             if (i == 50)
@@ -122,24 +122,24 @@ void Prog_Sampling_Parameters::run()
                 rot = XX(mysampling.no_redundant_sampling_points_angles[i]);
                 tilt = YY(mysampling.no_redundant_sampling_points_angles[i]);
                 psi = ZZ(mysampling.no_redundant_sampling_points_angles[i]);
-                cerr << 1 << " " << 3 << " " << rot << " " << tilt << " " << psi << endl;
-                //cerr << mysampling.no_redundant_sampling_points_vector[i].transpose() << " 1 1" << endl;
+                std::cerr << 1 << " " << 3 << " " << rot << " " << tilt << " " << psi << std::endl;
+                //std::cerr << mysampling.no_redundant_sampling_points_vector[i].transpose() << " 1 1" << std::endl;
             }
             for (int isym = 0; isym < mysampling.SL.SymsNo(); isym++)
             {
-                //cerr << L << R << endl;
+                //std::cerr << L << R << std::endl;
                 mysampling.SL.get_matrices(isym, L, R);
                 R.resize(3, 3); // as only the relative orientation
                 row = R * mysampling.no_redundant_sampling_points_vector[i];
-                cout << row.transpose() << " 1 " << isym + 2 << endl;
+                std::cout << row.transpose() << " 1 " << isym + 2 << std::endl;
                 if (i == 50)
                 {
-                    //cerr << row.transpose() << " 1 " << isym +2 << endl;
+                    //std::cerr << row.transpose() << " 1 " << isym +2 << std::endl;
                     L.resize(3, 3); // Erase last row and column
-                    //cerr << L << R << endl;
+                    //std::cerr << L << R << std::endl;
                     Euler_apply_transf(L, R, rot, tilt, psi, rotp, tiltp, psip);
                     Euler_direction(rotp, tiltp, psip, row);
-                    cerr << isym + 2 << " " << 3 << " " << rotp << " " << tiltp << " " << psip << endl;
+                    std::cerr << isym + 2 << " " << 3 << " " << rotp << " " << tiltp << " " << psip << std::endl;
                 }
             }
         }
@@ -151,18 +151,18 @@ void Prog_Sampling_Parameters::run()
     for (int i = 0;
          i < mysampling.sampling_points_vector.size();
          i++)
-        cout  <<  mysampling.sampling_points_vector[i].transpose()  << " 1 1 " << endl;
+        std::cout  <<  mysampling.sampling_points_vector[i].transpose()  << " 1 1 " << std::endl;
 #endif
 #undef DEBUG6
     //#define DEBUG6
 #ifdef DEBUG6
     for (int i = 0; i < mysampling.no_redundant_sampling_points_vector.size();i++)
     {
-        cout  << mysampling.no_redundant_sampling_points_vector[i].transpose() << " 1.2 3 " << endl;
+        std::cout  << mysampling.no_redundant_sampling_points_vector[i].transpose() << " 1.2 3 " << std::endl;
         for (int j = 0; j < mysampling.my_neighbors[i].size();j++)
-            cout  <<
+            std::cout  <<
             mysampling.no_redundant_sampling_points_vector[mysampling.my_neighbors[i][j]].transpose()
-            << " 1.1 2 " << endl;
+            << " 1.1 2 " << std::endl;
     }
 #endif
 #undef DEBUG6

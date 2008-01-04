@@ -37,8 +37,8 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cerr << XE << endl;
-        cerr << "Usage: appenddocfile\n"
+        std::cerr << XE << std::endl;
+        std::cerr << "Usage: appenddocfile\n"
         << "   -i1 <docfile1>    : Input file 1\n"
         << "   -i2 <docfile2>    : Input file 2\n"
         << "   -o  <docfile1>    : Concatenated file: 1+2\n";
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cerr << XE << endl;
+        std::cerr << XE << std::endl;
         return 2;
     }
     return 0;

@@ -49,7 +49,7 @@ xmippFCB::xmippFCB(unsigned _n, unsigned _size, unsigned _data,
     memb.resize(numVectors);
     for (unsigned k = 0; k < numVectors; k++)
     {
-        vector <xmippFeature> v;
+        std::vector <xmippFeature> v;
         v.resize(numClusters, 0);
         memb[k] = v;
     } // for k
@@ -80,7 +80,7 @@ xmippFCB::xmippFCB(unsigned _n, unsigned _size, unsigned _data, double _lower, d
     memb.resize(numVectors);
     for (unsigned k = 0; k < numVectors; k++)
     {
-        vector <xmippFeature> v;
+        std::vector <xmippFeature> v;
         v.resize(numClusters, 0);
         memb[k] = v;
     } // for k
@@ -98,7 +98,7 @@ xmippFCB::xmippFCB(unsigned _n, unsigned _size, unsigned _data, double _lower, d
  */
 
 /* Part of this code were developed by Lorenzo Zampighi and Nelson Tang
-   of the department of Physiology of the David Geffen School of Medicine,
+   of the department of Physiology of the David Geffen School of Medistd::cine,
    University of California, Los Angeles
 */
 
@@ -112,7 +112,7 @@ xmippFCB::xmippFCB(unsigned _n, const xmippCTVectors& _ts, const bool _use_rand_
     memb.resize(numVectors);
     for (unsigned k = 0; k < numVectors; k++)
     {
-        vector <xmippFeature> v;
+        std::vector <xmippFeature> v;
         v.resize(numClusters, 0);
         memb[k] = v;
     } // for k
@@ -126,7 +126,7 @@ xmippFCB::xmippFCB(unsigned _n, const xmippCTVectors& _ts, const bool _use_rand_
  * Parameter: _size Size of code vectors (number of data points)
  * @exception  runtime_error  If there are problems with the stream
  */
-xmippFCB::xmippFCB(istream& _is, const unsigned _size)
+xmippFCB::xmippFCB(std::istream& _is, const unsigned _size)
 {
     readSelf(_is);
     // Initialize Fuzzy membership Matrix
@@ -137,7 +137,7 @@ xmippFCB::xmippFCB(istream& _is, const unsigned _size)
     memb.resize(numVectors);
     for (unsigned k = 0; k < numVectors; k++)
     {
-        vector <xmippFeature> v;
+        std::vector <xmippFeature> v;
         v.resize(numClusters, 0);
         memb[k] = v;
     } // for k
@@ -155,11 +155,11 @@ xmippFCB::xmippFCB(istream& _is, const unsigned _size)
  */
 xmippFeature xmippFCB::membAt(unsigned _di, unsigned _ci) const
 {
-    ostringstream msg;
+    std::ostringstream msg;
     if ((_di >= membVectors()) || (_ci >= membClusters()))
     {
-        msg << "Out of range. No item at position " << _di << "," << _ci << endl;
-        throw out_of_range(msg.str());
+        msg << "Out of range. No item at position " << _di << "," << _ci << std::endl;
+        throw std::out_of_range(msg.str());
     }
 
     return memb[_di][_ci];
@@ -173,11 +173,11 @@ xmippFeature xmippFCB::membAt(unsigned _di, unsigned _ci) const
  */
 xmippFeature& xmippFCB::membAt(unsigned _di, unsigned _ci)
 {
-    ostringstream msg;
+    std::ostringstream msg;
     if ((_di >= membVectors()) || (_ci >= membClusters()))
     {
-        msg << "Out of range. No item at position " << _di << "," << _ci << endl;
-        throw out_of_range(msg.str());
+        msg << "Out of range. No item at position " << _di << "," << _ci << std::endl;
+        throw std::out_of_range(msg.str());
     }
 
     return memb[_di][_ci];
@@ -265,7 +265,7 @@ xmippLabel xmippFCB::fuzzyApply(unsigned _in) const
 void xmippFCB::fuzzyCalibrate(xmippCTVectors& _ts, xmippLabel _def)
 {
     // set the default label
-    for (vector<xmippVector>::const_iterator i = itemsBegin();
+    for (std::vector<xmippVector>::const_iterator i = itemsBegin();
          i < itemsEnd() ; i++)
         theTargets[i - itemsBegin()] = _def;
 
@@ -374,16 +374,16 @@ xmippFCB::TS xmippFCB::alphaCore(TS _ts, double _alpha, unsigned _cluster) const
 
     if ((_alpha < 0) || (_alpha > 1))
     {
-        ostringstream msg;
+        std::ostringstream msg;
         msg << "threshold must be in [0,1]";
-        throw runtime_error(msg.str());
+        throw std::runtime_error(msg.str());
     }
 
     if ((_cluster < 0) || (_cluster >= membClusters()))
     {
-        ostringstream msg;
+        std::ostringstream msg;
         msg << "Invalid cluster number";
-        throw runtime_error(msg.str());
+        throw std::runtime_error(msg.str());
     }
     for (unsigned k = 1; k < membVectors(); k++)
     {     // Number of input vectors
@@ -415,11 +415,11 @@ xmippFCB::TS xmippFCB::alphaCore(TS _ts, double _alpha, unsigned _cluster) const
  * Writes the membership values
  * Parameter: _os  The output stream
  */
-void xmippFCB::writeMembership(ostream& _os) const
+void xmippFCB::writeMembership(std::ostream& _os) const
 {
-    _os << membVectors() << endl;
+    _os << membVectors() << std::endl;
     for (unsigned k = 0; k < numVectors; k++)   // Number of input vectors
-        _os << memb[k] << endl;
+        _os << memb[k] << std::endl;
 };
 
 
@@ -427,7 +427,7 @@ void xmippFCB::writeMembership(ostream& _os) const
  * Reads the membership values
  * Parameter: _is  The input stream
  */
-void xmippFCB::readMembership(istream& _is)
+void xmippFCB::readMembership(std::istream& _is)
 {
     _is >> numVectors;
     memb.resize(numVectors);
@@ -442,7 +442,7 @@ void xmippFCB::readMembership(istream& _is)
  * this method can be used to save the status of the class.
  * Parameter: _os The output stream
  */
-void xmippFCB::saveObject(ostream& _os) const
+void xmippFCB::saveObject(std::ostream& _os) const
 {
     writeMembership(_os);
     xmippCB::saveObject(_os);
@@ -455,7 +455,7 @@ void xmippFCB::saveObject(ostream& _os) const
  * Parameter: _size Size of code vectors (number of data points)
  * @exception  runtime_error  If there are problems with the stream
  */
-void xmippFCB::readSelf(istream& _is, const unsigned _size)
+void xmippFCB::readSelf(std::istream& _is, const unsigned _size)
 {
     xmippCB::readSelf(_is);
     // Initialize Fuzzy membership Matrix
@@ -465,7 +465,7 @@ void xmippFCB::readSelf(istream& _is, const unsigned _size)
     memb.resize(numVectors);
     for (int k = 0; k < numVectors; k++)
     {
-        vector <xmippFeature> v;
+        std::vector <xmippFeature> v;
         v.resize(numClusters, 0);
         memb[k] = v;
     } // for k
@@ -478,7 +478,7 @@ void xmippFCB::readSelf(istream& _is, const unsigned _size)
  * this method can be used to load the status of the class.
  * Parameter: _is The output stream
  */
-void xmippFCB::loadObject(istream& _is)
+void xmippFCB::loadObject(std::istream& _is)
 {
     clear();
     readMembership(_is);
@@ -490,15 +490,15 @@ void xmippFCB::loadObject(istream& _is)
  * Prints the density values of each Fuzzy codevector.
  * Parameter: _os  The the output stream
  */
-void xmippFCB::printDensity(ostream& _os) const
+void xmippFCB::printDensity(std::ostream& _os) const
 {
-    _os << "1" << endl;
+    _os << "1" << std::endl;
     for (int j = 0; j < numClusters; j++)
     {
         double sumDens = 0;
         for (int i = 0; i < numVectors; i++)
             sumDens += (double) memb[i][j];
-        _os << j << " " << sumDens << endl;
+        _os << j << " " << sumDens << std::endl;
     }
 };
 

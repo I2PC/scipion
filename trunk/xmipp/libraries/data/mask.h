@@ -135,7 +135,7 @@ void BinaryCircularMask(Matrix2D< int >& mask,
  */
 void BinaryDWTCircularMask(Matrix2D< int >& mask,
                            double radius, int smin, int smax,
-                           const string& quadrant);
+                           const std::string& quadrant);
 
 /** Creates a 2D crown mask for already sized masks
  * @ingroup Masks2D
@@ -319,7 +319,7 @@ void BinarySphericalMask(Matrix3D< int >& mask,
  */
 void BinaryDWTCircularMask(Matrix3D< int >& mask,
                            double radius, int smin, int smax,
-                           const string& quadrant);
+                           const std::string& quadrant);
 
 /** Creates a 3D crown mask for already sized masks
  * @ingroup Masks3D
@@ -643,7 +643,7 @@ public:
     /** Quadrant
      * If it is empty then all, except 000, are generated.
      */
-    string quadrant;
+    std::string quadrant;
 
     /** Filename from which the mask is read, if it is the case
      */
@@ -1607,7 +1607,7 @@ int count_with_mask(const Matrix2D< int >& mask,
 }
 
 int count_with_mask(const Matrix2D< int >& mask,
-                    const Matrix2D< complex< double > > & m, int mode,
+                    const Matrix2D< std::complex< double > > & m, int mode,
                     double th1, double th2);
 
 /** Count voxels with mask and threshold
@@ -1651,7 +1651,7 @@ int count_with_mask(const Matrix3D< int >& mask,
 }
 
 int count_with_mask(const Matrix3D< int >& mask,
-                    const Matrix3D< complex< double > > & m, int mode,
+                    const Matrix3D< std::complex< double > > & m, int mode,
                     double th1, double th2);
 
 /** Invert binary mask (2D)

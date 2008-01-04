@@ -98,7 +98,7 @@ public:
 
     /** Tomogram filename.
      */
-    string tomogram_name()
+    const std::string & tomogram_name()
     {
         return(fn_tomogram);
     }

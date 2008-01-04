@@ -50,21 +50,21 @@ void RBF_design_matrix(xmippCTVectors &C, Matrix1D<double> &r,
             double z = 0;
             for (int l = 0; l < vsize; l++)
             {
-                //cout << "X(" << i << "," << l << ")=" << Vij(X,i,l) << " "
+                //std::cout << "X(" << i << "," << l << ")=" << Vij(X,i,l) << " "
                 //     << "C(" << j << "," << l << ")=" << Vij(C,j,l) << " "
-                //     << "r=" << r(l) << endl;
+                //     << "r=" << r(l) << std::endl;
                 z += (Vij(X, i, l) - Vij(C, j, l)) * (Vij(X, i, l) - Vij(C, j, l)) / (r(l) * r(l));
             }
             H(i, j) = exp(-z);
-            // cout << "H(" << i << "," << j << ")=" << H(i,j) << endl;
+            // std::cout << "H(" << i << "," << j << ")=" << H(i,j) << std::endl;
         }
 }
 
 // Training Best scale -----------------------------------------------------
 void RBF_train_best_scale(xmippCTVectors &candidate_C,  xmippCTVectors &X,
-                          vector<double> &y, double minscale,
+                          std::vector<double> &y, double minscale,
                           double maxscale, double scalestep, xmippRBF &RBF,
-                          double &error, vector<double> &y_predicted)
+                          double &error, std::vector<double> &y_predicted)
 {
     int p = X.size(); // Number of points to evaluate
     int m = candidate_C.size(); // Number of centers
@@ -89,7 +89,7 @@ void RBF_train_best_scale(xmippCTVectors &candidate_C,  xmippCTVectors &X,
 
     // Compute model for each scale
     double  aux_error, best_error = 1e38;
-    vector<int> aux_idx, best_idx;
+    std::vector<int> aux_idx, best_idx;
     Matrix1D<double> aux_r, best_r;
     Matrix1D<double> aux_w, best_w;
 
@@ -135,8 +135,8 @@ void RBF_train_best_scale(xmippCTVectors &candidate_C,  xmippCTVectors &X,
 // Train a single scale ----------------------------------------------------
 //#define DEBUG
 void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
-               vector<double> &y, Matrix1D<double> &r, double scale,
-               vector<int> &idx_out, Matrix1D<double> &r_out,
+               std::vector<double> &y, Matrix1D<double> &r, double scale,
+               std::vector<int> &idx_out, Matrix1D<double> &r_out,
                Matrix1D<double> &w_out, double &error)
 {
 
@@ -266,7 +266,7 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
             err.maxIndex(jmax);
             idx_out.push_back(jmax);
 #ifdef DEBUG
-            cout << "j=" << jmax + 1 << endl;
+            std::cout << "j=" << jmax + 1 << std::endl;
 #endif
 
             // Collect next columns of Hm and Hn
@@ -313,17 +313,17 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
                     U(i, m - 1) += Hn(j, i) * F(j, jmax);
         }
 #ifdef DEBUG
-        cout << "U="  << U.compute_avg()  << endl
-        << "Hm=" << Hm.compute_avg() << endl
-        << "Hn=" << Hn.compute_avg() << endl
-        << "Hy=" << Hy.compute_avg() << endl
-        << "hh=" << hh.compute_avg() << endl;
+        std::cout << "U="  << U.compute_avg()  << std::endl
+        << "Hm=" << Hm.compute_avg() << std::endl
+        << "Hn=" << Hn.compute_avg() << std::endl
+        << "Hy=" << Hy.compute_avg() << std::endl
+        << "hh=" << hh.compute_avg() << std::endl;
 #endif
 
         // Update the sum of squared errors
         sse -= fy * fy * (2 * lam + ff) / ((lam + ff) * (lam + ff));
 #ifdef DEBUG
-        cout << "SSE=" << sse << endl;
+        std::cout << "SSE=" << sse << std::endl;
 #endif
 
         // Compute the current MSC
@@ -331,8 +331,8 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
         FOR_ALL_ELEMENTS_IN_MATRIX1D(hh) gam += hh(i) / (lam + hh(i));
         msc = p * sse / ((p - gam) * (p - gam));
 #ifdef DEBUG
-        cout << "MSC=" << msc << endl
-        << "Gam=" << gam << endl;
+        std::cout << "MSC=" << msc << std::endl
+        << "Gam=" << gam << std::endl;
 #endif
 
         // Are we ready to terminate
@@ -388,8 +388,8 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
             if (age >= conf_wait) finished = true;
         }
 #ifdef DEBUG
-        cout << "Finished=" << finished << endl
-        << "Age=" << age << endl;
+        std::cout << "Finished=" << finished << std::endl
+        << "Age=" << age << std::endl;
 
 #endif
     } // while (!finished)
@@ -397,7 +397,7 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
     // Don't include last regressors which aged the minimum
     m -= age;
 #ifdef DEBUG
-    cout << "m=" << m << endl;
+    std::cout << "m=" << m << std::endl;
 #endif
     idx_out.resize(m);
 
@@ -413,14 +413,14 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
     // Error measure
     error = msc;
 #ifdef DEBUG
-    cout << "w=" << w_out.compute_avg() << endl;
+    std::cout << "w=" << w_out.compute_avg() << std::endl;
 #endif
 }
 #undef DEBUG
 
 /* Predict ----------------------------------------------------------------- */
 void RBF_predict(xmippRBF &RBF,  xmippCTVectors &X,
-                 vector<double> &y_predicted)
+                 std::vector<double> &y_predicted)
 {
     Matrix2D<double> H;
     RBF_design_matrix(RBF.C, RBF.r, X, H);
@@ -432,19 +432,19 @@ void RBF_predict(xmippRBF &RBF,  xmippCTVectors &X,
 }
 
 /* Show and read ----------------------------------------------------------- */
-ostream & operator << (ostream &out, xmippRBF &rbf)
+std::ostream & operator << (std::ostream &out, xmippRBF &rbf)
 {
-    out << "Model dimension: " << XSIZE(rbf.w)      << endl;
-    out << "Radii:           " << XSIZE(rbf.r) << " " << rbf.r.transpose() << endl;
-    out << "Weights:         " << rbf.w.transpose() << endl;
-    out << "Centers:\n"        << rbf.C             << endl;
+    out << "Model dimension: " << XSIZE(rbf.w)      << std::endl;
+    out << "Radii:           " << XSIZE(rbf.r) << " " << rbf.r.transpose() << std::endl;
+    out << "Weights:         " << rbf.w.transpose() << std::endl;
+    out << "Centers:\n"        << rbf.C             << std::endl;
     return out;
 }
 
-istream & operator >> (istream &in, xmippRBF &rbf)
+std::istream & operator >> (std::istream &in, xmippRBF &rbf)
 {
     int p, dim;
-    string read_line;
+    std::string read_line;
     getline(in, read_line);
     sscanf(read_line.c_str(), "Model dimension: %d", &p);
     rbf.w.resize(p);

@@ -37,7 +37,7 @@ class QtFiltersController : public QWidget
     Q_OBJECT
 
 private:
-    vector<QtFilter*>  __filterList;
+    std::vector<QtFilter*>  __filterList;
     QDialog           *__addFilterDialog;
     QListBox          *__listFilters;
     const Micrograph  *__M;

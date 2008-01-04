@@ -113,7 +113,7 @@ void EM::read(const FileName &fn_in, VolumeXmipp &V, bool reversed)
     // Get header size
     struct stat info;
     if (fstat(fileno(fp), &info))
-        EXIT_ERROR(1, (string)"EM: Cannot get size of " + fn_in);
+        EXIT_ERROR(1, (std::string)"EM: Cannot get size of " + fn_in);
     int header_size = info.st_size - my_em_header.nx *
                       my_em_header.ny *
                       my_em_header.nz * mode_size;

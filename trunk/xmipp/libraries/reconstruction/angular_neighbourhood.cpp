@@ -55,7 +55,7 @@ void Prog_projection_neighbourhood_prm::get_angles(SelFile &SF_in, DocFile &DF_o
     int i = 0;
     double phi, theta, psi;
     time_config();
-    cerr << "Extracting angles ...\n";
+    std::cerr << "Extracting angles ...\n";
     init_progress_bar(SF_in.ImgNo());
     while (!SF_in.eof())
     {
@@ -72,18 +72,18 @@ void Prog_projection_neighbourhood_prm::get_angles(SelFile &SF_in, DocFile &DF_o
 // Show ====================================================================
 void Prog_projection_neighbourhood_prm::show()
 {
-    cerr << "Selfile                      : " << fn_sel        << endl
-    << "Neighbourhoods docfile       : " << fn_ref        << endl
-    << "Output root                  : " << fn_root_out   << endl
-    << "Max. neighbour distance      : " << maxdist       << endl
-    << "Symmetry file                : " << fn_sym        << endl
+    std::cerr << "Selfile                      : " << fn_sel        << std::endl
+    << "Neighbourhoods docfile       : " << fn_ref        << std::endl
+    << "Output root                  : " << fn_root_out   << std::endl
+    << "Max. neighbour distance      : " << maxdist       << std::endl
+    << "Symmetry file                : " << fn_sym        << std::endl
     ;
 }
 
 // usage ===================================================================
 void Prog_projection_neighbourhood_prm::usage()
 {
-    cerr << "   -i     <SelFile>       : Selfile containing the images \n"
+    std::cerr << "   -i     <SelFile>       : Selfile containing the images \n"
     << "   -nbh   <DocFile>       : Document file with the defined neighbourhood directions\n"
     << "  [-oroot <name=nbhood> ] : Rootname for output files \n"
     << "  [-dist  <d=10>        ] : Maximum neighbourhood distance \n"
@@ -165,7 +165,7 @@ void Prog_projection_neighbourhood_prm::compute_neighbourhood()
     SelLine selline;
 
     get_angles(SF1, DF1);
-    cerr << "Calculating ...\n";
+    std::cerr << "Calculating ...\n";
     DF2.go_first_data_line();
     while (!DF2.eof())
     {

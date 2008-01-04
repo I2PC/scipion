@@ -246,7 +246,7 @@ void Basic_ART_Parameters::read(const FileName &fn)
     FILE *fh;
     if ((fh = fopen(fn.c_str(), "r")) == NULL)
         REPORT_ERROR(3005,
-                     (string)"Basic_ART_Parameters::read: There is a problem "
+                     (std::string)"Basic_ART_Parameters::read: There is a problem "
                      "opening the file " + fn);
 
     GET_ART_PARAMS;
@@ -269,7 +269,7 @@ void Basic_ART_Parameters::read(const FileName &fn)
 /* Usage =================================================================== */
 void Basic_ART_Parameters::usage()
 {
-    cerr
+    std::cerr
     << "Usage: art [Options and Parameters]"
     << "\nOptions:"
     << "\nParameter Values: (note space before value)"
@@ -287,7 +287,7 @@ void Basic_ART_Parameters::usage()
 
 void Basic_ART_Parameters::usage_more()
 {
-    cerr
+    std::cerr
     << "Usage: art [Options and Parameters]"
     << "\nOptions:"
     << "\nParameter Values: (note space before value)"
@@ -320,7 +320,7 @@ void Basic_ART_Parameters::usage_more()
     << "\n   [-noisy_reconstruction] Perform a companion noisy reconstruction"
     << "\n   [-ray_length <r=-1>]  In basis units\n"
     ;
-    cerr
+    std::cerr
     << "\nIteration parameters"
     << "\n   [-n noit=1]           number of iterations"
     << "\n   [-stop_at stop_at=0]  number of images presented"
@@ -359,7 +359,7 @@ void Basic_ART_Parameters::usage_more()
     << "\n                         crystals"
     ;
     basis.usage();
-    cerr
+    std::cerr
     << "\nDebugging options"
     << "\n   [-print_system_matrix]print the matrix of the system Ax=b"
     << "\n   [-show_iv <n=10>]     show volumes/images as the reconstruction goes"
@@ -419,7 +419,7 @@ void sort_perpendicular(int numIMG, Recons_info *IMG_Inf,
     VEC_ELEM(ordered_list, 0) = i;
 
     // Choose the rest of projections
-    cerr << "Sorting projections ...\n";
+    std::cerr << "Sorting projections ...\n";
     init_progress_bar(numIMG - 1);
     for (i = 1; i < numIMG; i++)
     {
@@ -451,7 +451,7 @@ void sort_perpendicular(int numIMG, Recons_info *IMG_Inf,
 
     // A final call to progress bar to finish a possible small piece
     progress_bar(numIMG - 1);
-    cout << endl;
+    std::cout << std::endl;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -474,7 +474,7 @@ void sort_randomly(int numIMG, Matrix1D<int> &ordered_list)
     ordered_list.resize(numIMG);
     chosen.initZeros(numIMG);
 
-    cerr << "Randomizing projections ...\n";
+    std::cerr << "Randomizing projections ...\n";
     init_progress_bar(numIMG - 1);
     int ptr = 0;
     randomize_random_generator();
@@ -504,7 +504,7 @@ void sort_randomly(int numIMG, Matrix1D<int> &ordered_list)
 
     // A final call to progress bar to finish a possible small piece
     progress_bar(numIMG - 1);
-    cout << endl;
+    std::cout << std::endl;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -524,10 +524,10 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
     /* Create history file handler --------------------------------------------- */
     if (level >= FULL)
     {
-        fh_hist = new ofstream;
-        fh_hist->open((fn_root + ".hist").c_str(), ios::out);
+        fh_hist = new std::ofstream;
+        fh_hist->open((fn_root + ".hist").c_str(), std::ios::out);
         if (!fh_hist)
-            REPORT_ERROR(3008, (string)"Produce_Basic_ART_Side_Info: Cannot open file "
+            REPORT_ERROR(3008, (std::string)"Produce_Basic_ART_Side_Info: Cannot open file "
                          + fn_root + ".hist");
     }
 
@@ -552,7 +552,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
             }
             if (selfile.ImgNo() == 0)
             {
-                cerr << "there is no input file with weight!=0" << endl;
+                std::cerr << "there is no input file with weight!=0" << std::endl;
                 exit(1);
             }
         }
@@ -651,7 +651,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
             */
         }
 
-        *fh_hist << "WLS-ART% Sum over all weights = " << sum_weight << endl;
+        *fh_hist << "WLS-ART% Sum over all weights = " << sum_weight << std::endl;
     }
 
     /* Setting initial volumes ------------------------------------------------- */
@@ -675,7 +675,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
                                      (double)Xoutput_volume_size / 2,
                                      (double)Youtput_volume_size / 2,
                                      (double)Zoutput_volume_size / 2);
-                    /* If you substract half the basis radius, you are forcing that the
+                    /* If you substract half the basis radius, you are forstd::cing that the
                        last basis touches slightly the volume border. By not substracting
                        it there is a basis center as near the border as possible. */
                     corner = corner + proj_ext/*CO: -blob.radius/2*/;
@@ -735,7 +735,7 @@ void Basic_ART_Parameters::compute_CAV_weights(GridVolume &vol_basis0,
     Projection read_proj;
     if (debug_level > 0)
     {
-        cerr << "Counting equations ...\n";
+        std::cerr << "Counting equations ...\n";
         init_progress_bar(numIMG);
     }
     for (int act_proj = 0; act_proj < numProjs_node ; act_proj++)
@@ -766,7 +766,7 @@ void Basic_ART_Parameters::compute_CAV_weights(GridVolume &vol_basis0,
             Neq += (*GVNeq)(n)(k, i, j);
             Nunk++;
         }
-        cerr << "There are " << Neq << " equations and " << Nunk
+        std::cerr << "There are " << Neq << " equations and " << Nunk
         << " unknowns (redundancy=" << 100.0 - 100.0*Nunk / Neq << ")\n";
     }
 }

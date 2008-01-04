@@ -222,9 +222,9 @@ void QtMainWidgetMark::add_point(const Particle_coords &U,
     __Nu++; // Number of particles
 
 #ifdef _DEBUG
-    cout << "Adding point U(" << U.X << "," << U.Y << ") T(" << T.X << ","
+    std::cout << "Adding point U(" << U.X << "," << U.Y << ") T(" << T.X << ","
     << T.Y << ")\n";
-    cout << "A at input" << __Au << "B at input" << __Bt;
+    std::cout << "A at input" << __Au << "B at input" << __Bt;
 #endif
     // Adjust untilted dependent matrix
     __Au(0, 0) += U.X * U.X  ;
@@ -249,7 +249,7 @@ void QtMainWidgetMark::add_point(const Particle_coords &U,
     __Bt(2, 2) = __Au(2, 2);
 
 #ifdef _DEBUG
-    cout << "A at output" << __Au << "B at output" << __Bt;
+    std::cout << "A at output" << __Au << "B at output" << __Bt;
 #endif
 }
 
@@ -263,7 +263,7 @@ void QtMainWidgetMark::adjust_passing_matrix(const Particle_coords &U,
         solve(__Au, __Bt, __Put);
         __Put = __Put.transpose();
 #ifdef _DEBUG
-        cout << "Solved " << __Put;
+        std::cout << "Solved " << __Put;
 #endif
         __Ptu = __Put.inv();
     }
@@ -284,7 +284,7 @@ void QtMainWidgetMark::recalculate_passing_matrix()
         solve(__Au, __Bt, __Put);
         __Put = __Put.transpose();
 #ifdef _DEBUG
-        cout << "Solved " << __Put;
+        std::cout << "Solved " << __Put;
 #endif
         __Ptu = __Put.inv();
     }
@@ -301,12 +301,12 @@ void QtMainWidgetMark::pass_to_tilted(int _muX, int _muY,
 
         VECTOR_R3(m, _muX, _muY, 1);
 #ifdef _DEBUG
-        cout << "Input=" << m.transpose() << endl;
-        cout << "Matrix=\n" << __Put;
+        std::cout << "Input=" << m.transpose() << std::endl;
+        std::cout << "Matrix=\n" << __Put;
 #endif
         M3x3_BY_V3x1(m, __Put, m);
 #ifdef _DEBUG
-        cout << "Output=" << m.transpose() << endl;
+        std::cout << "Output=" << m.transpose() << std::endl;
 #endif
 
         _mtX = (int)XX(m);
@@ -412,7 +412,7 @@ void QtMainWidgetMark::compute_gamma()
     __gamma /= triang;
     __gamma = RAD2DEG(__gamma);
     if (triang < 100)
-        cout << "Not many particles, tilt angle may not be accurate" << endl;
+        std::cout << "Not many particles, tilt angle may not be accurate" << std::endl;
 }
 
 /* Compute alphas ---------------------------------------------------------- */
@@ -487,13 +487,13 @@ void QtMainWidgetMark::write_angles()
     fn = fn.without_extension();
     fn = fn.add_extension("ang");
 
-    ofstream out;
-    out.open(fn.c_str(), ios::out);
+    std::ofstream out;
+    out.open(fn.c_str(), std::ios::out);
     if (!out)
-        REPORT_ERROR(1, (string)"QtMainWidgetMark::write_angles: Cannot open "
+        REPORT_ERROR(1, (std::string)"QtMainWidgetMark::write_angles: Cannot open "
                      + fn + " for output\n");
     out << "# alpha_u alpha_t gamma\n"
-    << __alpha_u << " " << __alpha_t << " " << __gamma << endl;
+        << __alpha_u << " " << __alpha_t << " " << __gamma << std::endl;
     out.close();
 }
 
@@ -506,9 +506,9 @@ void QtMainWidgetMark::draw_axes()
 
 /* Get informed that one of the micrographs generated images --------------- */
 void QtMainWidgetMark::generated(bool _this_is_tilted,
-                                 const string &_label)
+                                 const std::string &_label)
 {
-    cerr << "Balancing both selfiles ...\n";
+    std::cerr << "Balancing both selfiles ...\n";
     if (_this_is_tilted)   __tilted_generated = true;
     else                 __untilted_generated = true;
     if (__untilted_generated && __tilted_generated)
@@ -527,7 +527,7 @@ void QtMainWidgetMark::generated(bool _this_is_tilted,
             {
                 SFUntilted.set_current(SelLine::DISCARDED);
                 SFTilted.set_current(SelLine::DISCARDED);
-                cerr << "Images " << SFUntilted.get_current_file() << " and "
+                std::cerr << "Images " << SFUntilted.get_current_file() << " and "
                 << SFTilted.get_current_file() << " are discarded\n";
             }
             SFUntilted.next();
@@ -543,7 +543,7 @@ void QtMainWidgetMark::slotAddCoordTilted(int _muX, int _muY, int _f)
     int mtX, mtY;
 
     pass_to_tilted(_muX, _muY, mtX, mtY, true);
-    cout << "     --> in the tilted image (" << mtX << "," << mtY << ")\n";
+    std::cout << "     --> in the tilted image (" << mtX << "," << mtY << ")\n";
     __mTiltedWidget->getMicrograph()->add_coord(mtX, mtY, _f);
 
     __mTiltedWidget->slotDrawEllipse(mtX, mtY, _f);

@@ -56,8 +56,8 @@
  *  Produces a 2D Fourier-space matrix2d for reverse-gridding
  *  interpolation from a Fourier-space matrix2d
  */
-void produceReverseGriddingFourierMatrix2D(const Matrix2D< complex < double> > &in, 
-					   Matrix2D< complex < double > > &out,
+void produceReverseGriddingFourierMatrix2D(const Matrix2D< std::complex < double> > &in, 
+					   Matrix2D< std::complex < double > > &out,
 					   KaiserBessel &kb);
 
 /** Produce a complex Matrix2D for reverse gridding from a real Matrix2D
@@ -68,7 +68,7 @@ void produceReverseGriddingFourierMatrix2D(const Matrix2D< complex < double> > &
  *  This real-space matrix2d should have the Xmipp origin set!
  */
 void produceReverseGriddingFourierMatrix2D(const Matrix2D< double > &in, 
-					   Matrix2D< complex< double > > &out,
+					   Matrix2D< std::complex< double > > &out,
 					   KaiserBessel &kb);
 
 /** Produce a real Matrix2D for reverse gridding from a real Matrix2D
@@ -87,8 +87,8 @@ void produceReverseGriddingMatrix2D(const Matrix2D< double > &in,
  *  Produces a 3D Fourier-space matrix3d for reverse-gridding
  *  interpolation from a Fourier-space matrix3d
  */
-void produceReverseGriddingFourierMatrix3D(const Matrix3D< complex < double > > &in, 
-					   Matrix3D< complex < double > > &out,
+void produceReverseGriddingFourierMatrix3D(const Matrix3D< std::complex < double > > &in, 
+					   Matrix3D< std::complex < double > > &out,
 					   KaiserBessel &kb);
 
 /** Produce a complex Matrix3D for reverse gridding from a real Matrix2D
@@ -99,7 +99,7 @@ void produceReverseGriddingFourierMatrix3D(const Matrix3D< complex < double > > 
  *  This real-space matrix3d should have the Xmipp origin set!
  */
 void produceReverseGriddingFourierMatrix3D(const Matrix3D< double > &in, 
-					   Matrix3D< complex< double > > &out,
+					   Matrix3D< std::complex< double > > &out,
 					   KaiserBessel &kb);
 
 /** Produce a real Matrix3D for reverse gridding from a real Matrix2D
@@ -549,7 +549,7 @@ T interpolatedElementReverseGridding(const Matrix3D<T> &in, double x, double y, 
  *
  * @code
  * KaiserBessel kb;
- * matrix3D<complex<double> > Faux;
+ * matrix3D<std::complex<double> > Faux;
  * TODO!!!!
  * @endcode
  */
@@ -834,8 +834,9 @@ void applyGeometryReverseGridding(Matrix3D<T> &V2, Matrix2D< double > A,
  *  generation of the x and y coordinates
  *
  */
-void approximateVoronoiArea(vector<double> &voronoi_area,
-			    const vector<double> &xin, const vector<double> &yin, 
+void approximateVoronoiArea(std::vector<double> &voronoi_area,
+			    const std::vector<double> &xin,
+                            const std::vector<double> &yin, 
 			    const double oversample = 10.);
 
 /** Interpolate Cartesian coordinates from any irregularly sampled grid
@@ -850,7 +851,7 @@ void approximateVoronoiArea(vector<double> &voronoi_area,
  *
  * @code
  * KaiserBessel kb;
- * vector<double> x,y,data,voronoi_area;
+ * std::vector<double> x,y,data,voronoi_area;
  * matrix2D<double> Maux;
  *
  * P.getCartesianCoordinates(x,y,data); // (P is a Polar<double>)
@@ -862,10 +863,10 @@ void approximateVoronoiArea(vector<double> &voronoi_area,
  */
 template <typename T>
 Matrix2D<T> interpolateCartesianFromArbitrarySampling(const int xdim, const int ydim,
-						      const vector<double> &xin, 
-						      const vector<double> &yin,
-						      const vector<T> &data, 
-						      const vector<double> &voronoi_area,
+						      const std::vector<double> &xin, 
+						      const std::vector<double> &yin,
+						      const std::vector<T> &data, 
+						      const std::vector<double> &voronoi_area,
 						      const KaiserBessel &kb)
 {
 
@@ -925,7 +926,7 @@ void produceForwardGriddingMatrix2D(const Matrix2D< double > &in,
  *  Produces a 2D real-space matrix2d after having performed
  *  interpolateCartesianFromArbitrarySampling for fourier-space coordinates.
  */
-void produceForwardGriddingMatrix2D(const Matrix2D< complex<double > > &in, 
+void produceForwardGriddingMatrix2D(const Matrix2D< std::complex<double > > &in, 
 				    Matrix2D< double > &out,
 				    KaiserBessel &kb,
 				    bool is_centered = true);
@@ -936,8 +937,8 @@ void produceForwardGriddingMatrix2D(const Matrix2D< complex<double > > &in,
  *  Produces a 2D fourier-space matrix2d after having performed
  *  interpolateCartesianFromArbitrarySampling for fourier-space coordinates.
  */
-void produceForwardGriddingFourierMatrix2D(const Matrix2D< complex<double > > &in, 
-					   Matrix2D< complex<double > > &out,
+void produceForwardGriddingFourierMatrix2D(const Matrix2D< std::complex<double > > &in, 
+					   Matrix2D< std::complex<double > > &out,
 					   KaiserBessel &kb,
 					   bool is_centered = true);
 

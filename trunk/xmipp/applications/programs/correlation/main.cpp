@@ -116,7 +116,7 @@ public:
         }
         catch (Xmipp_error XE)
         {
-            cout << XE;
+            std::cout << XE;
             usage();
             exit(1);
         }
@@ -124,20 +124,20 @@ public:
 
     void show()
     {
-        cout << "Reference file: " << fn_ref << endl;
-        if (usemask) cout << "mask file: " << fn_msk << endl;
+        std::cout << "Reference file: " << fn_ref << std::endl;
+        if (usemask) std::cout << "mask file: " << fn_msk << std::endl;
         Prog_parameters::show();
-        cout << endl;
+        std::cout << std::endl;
     }
     void usage()
     {
-        cerr << "   -ref <input file>        : Filename for reference image/volume \n";
+        std::cerr << "   -ref <input file>        : Filename for reference image/volume \n";
         Prog_parameters::usage();
-        cerr << "  [-mask <input mask>]      : Restrict similarity calculation to region within the mask\n";
-        cerr << "  [-co ]                    : Only calculate correlation (i.e. signal product) \n";
-        cerr << "  [-cc ]                    : Only calculate cross-correlation coefficient \n";
-        cerr << "  [-eu ]                    : Only calculate euclidian distance \n";
-        cerr << "  [-mi ]                    : Only calculate mutual information\n";
+        std::cerr << "  [-mask <input mask>]      : Restrict similarity calculation to region within the mask\n";
+        std::cerr << "  [-co ]                    : Only calculate correlation (i.e. signal product) \n";
+        std::cerr << "  [-cc ]                    : Only calculate cross-correlation coefficient \n";
+        std::cerr << "  [-eu ]                    : Only calculate euclidian distance \n";
+        std::cerr << "  [-mi ]                    : Only calculate mutual information\n";
     }
 };
 
@@ -162,12 +162,12 @@ void process_img(ImageXmipp &img, const Prog_parameters *prm)
         if (eprm->domi) mi = mutual_information(eprm->refI(), img(), 0, 0, &eprm->mask2D);
     }
 
-    cout << img.name() << ": ";
-    if (eprm->doco) cout << " co= " << co;
-    if (eprm->docc) cout << " cc= " << cc;
-    if (eprm->doeu) cout << " eu= " << eu;
-    if (eprm->domi) cout << " mi= " << mi;
-    cout << endl;
+    std::cout << img.name() << ": ";
+    if (eprm->doco) std::cout << " co= " << co;
+    if (eprm->docc) std::cout << " cc= " << cc;
+    if (eprm->doeu) std::cout << " eu= " << eu;
+    if (eprm->domi) std::cout << " mi= " << mi;
+    std::cout << std::endl;
 }
 
 
@@ -190,12 +190,12 @@ void process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
         if (eprm->doeu) eu = euclidian_distance(eprm->refV(), vol(), &eprm->mask3D);
         if (eprm->domi) mi = mutual_information(eprm->refV(), vol(), 0, 0, &eprm->mask3D);
     }
-    cout << vol.name() << ": ";
-    if (eprm->docc) cout << " co= " << co;
-    if (eprm->docc) cout << " cc= " << cc;
-    if (eprm->doeu) cout << " eu= " << eu;
-    if (eprm->domi) cout << " mi= " << mi;
-    cout << endl;
+    std::cout << vol.name() << ": ";
+    if (eprm->docc) std::cout << " co= " << co;
+    if (eprm->docc) std::cout << " cc= " << cc;
+    if (eprm->doeu) std::cout << " eu= " << eu;
+    if (eprm->domi) std::cout << " mi= " << mi;
+    std::cout << std::endl;
 
 }
 

@@ -82,7 +82,7 @@ public:
         By default, no */
     bool            generate_symmetrical_reflections;
     /** Symmetry group */
-    string          str_symmetry_group;
+    std::string     str_symmetry_group;
 #ifdef NEVERDEFINED
     /** vector perpendicular to projection plane */
     Matrix1D<double> v_perpendicular_proj_plane;
@@ -124,7 +124,7 @@ public:
     */
     void read_from_file(const FileName &fnprm);
     /** Show parameters. */
-    friend ostream& operator << (ostream &o, const Spot2RealSpace2D_Parameters &prm);
+    friend std::ostream& operator << (std::ostream &o, const Spot2RealSpace2D_Parameters &prm);
     /** Produce Side Information */
     void produce_SideInfo();
 #ifdef NEVERDEFINED
@@ -182,7 +182,7 @@ public:
     */
     void read_from_file(const FileName &fnprm);
     /** Show parameters. */
-    friend ostream& operator << (ostream &o, const RealSpace2Spots2D_Parameters &prm);
+    friend std::ostream& operator << (std::ostream &o, const RealSpace2Spots2D_Parameters &prm);
     /** Produce Side Information */
     void produce_SideInfo();
 
@@ -200,11 +200,11 @@ void ROUT_RealSpace2Spots(RealSpace2Spots2D_Parameters &prm,
 //@}
 /** Discrete inverse, but not fast Fourier transform
 */
-void IDFT(const Matrix2D< complex<double> > &FT, Matrix2D<double> &I,
+void IDFT(const Matrix2D< std::complex<double> > &FT, Matrix2D<double> &I,
           int ydim, int xdim);
 
 /** Discrete direct, but not fast Fourier transform
 */
-void DFT(const Matrix2D<double> &I,  Matrix2D< complex<double> > &FT);
+void DFT(const Matrix2D<double> &I,  Matrix2D< std::complex<double> > &FT);
 
 #endif

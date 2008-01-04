@@ -37,9 +37,9 @@ int main(int argc, char **argv) {
   int c,nn,imgno,opt_refno,iaux;
   double LL,sumw_allrefs,sumcorr;
   double aux,wsum_sigma_noise2, wsum_sigma_offset;
-  vector<Matrix3D<double > > wsum_Mref;
-  vector<Matrix3D<double > > wsum_Mwedge;
-  vector<double> sumw;
+  std::vector<Matrix3D<double > > wsum_Mref;
+  std::vector<Matrix3D<double > > wsum_Mwedge;
+  std::vector<double> sumw;
   Matrix3D<double> Maux, Mauxbig;
   FileName fn_img,fn_tmp;
   Matrix1D<double> oneline(0);
@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
     if (rank==0) prm.show();
     else  prm.verb=0;
 
-  } catch (Xmipp_error XE) {if (rank==0) {cout << XE; prm.usage();} MPI_Finalize(); exit(1);} 
+  } catch (Xmipp_error XE) {if (rank==0) {std::cout << XE; prm.usage();} MPI_Finalize(); exit(1);} 
 
     
   try {
@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
     // Loop over all iterations
     for (int iter=prm.istart; iter<=prm.Niter; iter++) {
 
-      if (prm.verb>0) cerr << "  multi-reference refinement:  iteration " << iter <<" of "<< prm.Niter<<endl;
+      if (prm.verb>0) std::cerr << "  multi-reference refinement:  iteration " << iter <<" of "<< prm.Niter<<std::endl;
 
       DFo.clear();
       if (rank==0) 
@@ -137,7 +137,7 @@ int main(int argc, char **argv) {
 	  DFo.locate(DFo.get_last_key());
 	  DFo.next();
 	  DFo.remove_current();
-	  system(((string)"rm -f "+fn_img).c_str());
+	  system(((std::string)"rm -f "+fn_img).c_str());
 	}
 	
 	fn_tmp=prm.fn_root+"_it";
@@ -149,7 +149,7 @@ int main(int argc, char **argv) {
     } // end loop iterations
 
 
-  } catch (Xmipp_error XE) {if (rank==0) {cout << XE; prm.usage();} MPI_Finalize(); exit(1);}
+  } catch (Xmipp_error XE) {if (rank==0) {std::cout << XE; prm.usage();} MPI_Finalize(); exit(1);}
 
 
   MPI_Finalize();	

@@ -68,7 +68,7 @@ public:
      * Ctor from stream
      * Parameter: _is Must have the parameters in the same order than the previous ctor.
      */
-//  xmippFCMeans( istream& _is );
+//  xmippFCMeans( std::istream& _is );
 
 
     /*
@@ -158,7 +158,7 @@ public:
 protected:
 
     /// print itself on standard output
-    void printSelf(ostream& _os) const ;
+    void printSelf(std::ostream& _os) const ;
 
     double m;       // Fuzzy constant
     double epsilon;      // Stopping criterion Error < epsilon

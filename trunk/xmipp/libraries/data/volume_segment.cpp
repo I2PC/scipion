@@ -48,18 +48,18 @@ void Prog_segment_prm::read(int argc, char **argv)
 }
 
 // Show ====================================================================
-ostream & operator << (ostream &out, const Prog_segment_prm &prm)
+std::ostream & operator << (std::ostream &out, const Prog_segment_prm &prm)
 {
-    out << "Input file   : " << prm.fn_vol        << endl
-    << "Voxel mass   : " << prm.voxel_mass    << endl
-    << "Dalton mass  : " << prm.dalton_mass   << endl
-    << "AA mass      : " << prm.aa_mass       << endl
-    << "Sampling rate: " << prm.sampling_rate << endl
-    << "Output mask  : " << prm.fn_mask       << endl
-    << "Enable thres.: " << prm.en_threshold  << endl
-    << "Threshold    : " << prm.threshold     << endl
-    << "Wang radius  : " << prm.wang_radius   << endl
-    << "Probabilistic: " << prm.do_prob       << endl
+    out << "Input file   : " << prm.fn_vol        << std::endl
+        << "Voxel mass   : " << prm.voxel_mass    << std::endl
+        << "Dalton mass  : " << prm.dalton_mass   << std::endl
+        << "AA mass      : " << prm.aa_mass       << std::endl
+        << "Sampling rate: " << prm.sampling_rate << std::endl
+        << "Output mask  : " << prm.fn_mask       << std::endl
+        << "Enable thres.: " << prm.en_threshold  << std::endl
+        << "Threshold    : " << prm.threshold     << std::endl
+        << "Wang radius  : " << prm.wang_radius   << std::endl
+        << "Probabilistic: " << prm.do_prob       << std::endl
     ;
     return out;
 }
@@ -67,7 +67,7 @@ ostream & operator << (ostream &out, const Prog_segment_prm &prm)
 // usage ===================================================================
 void Prog_segment_prm::usage() const
 {
-    cerr << "   -i <input volume>       : Volume to segment\n"
+    std::cerr << "   -i <input volume>       : Volume to segment\n"
     << "  [-voxel_mass  <mass>  |  : Mass in voxels\n"
     << "   [-dalton_mass <mass> |  : Mass in daltons\n"
     << "    -aa_mass     <mass>]   : Mass in aminoacids\n"
@@ -92,7 +92,7 @@ void Prog_segment_prm::produce_side_info()
         else
             voxel_mass = aa_mass * 110 * 1.207 / sampling_rate3;
     }
-    cout << endl << "Derived voxel_mass=" << voxel_mass << endl;
+    std::cout << std::endl << "Derived voxel_mass=" << voxel_mass << std::endl;
 }
 
 // Count voxels ============================================================
@@ -111,7 +111,7 @@ double segment_threshold(const Volume *V_in, Volume *V_out,
 
 #ifdef DEBUG
 
-    cout << threshold << endl;
+    std::cout << threshold << std::endl;
     VolumeXmipp save;
     save() = (*V_in)();
     save.write("PPP0.vol");
@@ -141,10 +141,10 @@ double segment_threshold(const Volume *V_in, Volume *V_out,
 
 #ifdef DEBUG
 
-    cout << count << endl << endl;
-    cout << "Press any key\n";
+    std::cout << count << std::endl << std::endl;
+    std::cout << "Press any key\n";
     char c;
-    cin >> c;
+    std::cin >> c;
 #endif
 
     // Pick the maximum
@@ -280,8 +280,8 @@ void Prog_segment_prm::segment(VolumeXmipp &mask)
         {
             double th_med = (th_min + th_max) * 0.5;
             double mass_med = segment_threshold(&V, &mask, th_med, do_prob);
-            cout << "Threshold= " << th_med
-            << " mass of the main piece= " << mass_med << endl;
+            std::cout << "Threshold= " << th_med
+            << " mass of the main piece= " << mass_med << std::endl;
             if (ABS(mass_med - voxel_mass) / voxel_mass < 0.001)
             {
                 ok = true;
@@ -306,8 +306,8 @@ void Prog_segment_prm::segment(VolumeXmipp &mask)
     {
         // Perform a single thresholding
         double mass_med = segment_threshold(&V, &mask, threshold, do_prob);
-        cout << "Threshold= " << threshold
-        << " mass of the main piece= " << mass_med << endl;
+        std::cout << "Threshold= " << threshold
+        << " mass of the main piece= " << mass_med << std::endl;
         ok = true;
     }
 
@@ -328,6 +328,6 @@ void Prog_segment_prm::segment(VolumeXmipp &mask)
     if (fn_mask != "" && (ok || do_prob))
         mask.write(fn_mask);
     if (!ok && !do_prob)
-        cout << "Segment: Cannot find an appropriate threshold\n";
+        std::cout << "Segment: Cannot find an appropriate threshold\n";
 }
 

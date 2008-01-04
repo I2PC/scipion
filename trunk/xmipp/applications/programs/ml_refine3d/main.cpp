@@ -31,9 +31,9 @@ int main(int argc, char **argv)
     int                         c, iter, volno, converged = 0;
     ;
     double                      LL, sumw_allrefs, convv, sumcorr, wsum_sigma_noise, wsum_sigma_offset;
-    vector<double>              conv;
-    vector<Matrix2D<double> >   wsum_Mref;
-    vector<double>              sumw, sumw_cv, sumw_mirror;
+    std::vector<double>              conv;
+    std::vector<Matrix2D<double> >   wsum_Mref;
+    std::vector<double>              sumw, sumw_cv, sumw_mirror;
     DocFile                     DFo;
 
     Prog_Refine3d_prm           prm;
@@ -76,7 +76,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         prm.usage();
         exit(0);
     }
@@ -91,8 +91,8 @@ int main(int argc, char **argv)
 
             if (prm.verb > 0)
             {
-                cerr        << "--> 3D-EM volume refinement:  iteration " << iter << " of " << prm.Niter << endl;
-                prm.fh_hist << "--> 3D-EM volume refinement:  iteration " << iter << " of " << prm.Niter << endl;
+                std::cerr        << "--> 3D-EM volume refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
+                prm.fh_hist << "--> 3D-EM volume refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
             }
 
             DFo.clear();
@@ -139,7 +139,7 @@ int main(int argc, char **argv)
             if (prm.check_convergence(iter))
             {
                 converged = 1;
-                if (prm.verb > 0) cerr << "--> Optimization converged!" << endl;
+                if (prm.verb > 0) std::cerr << "--> Optimization converged!" << std::endl;
             }
 
             // Re-project volumes
@@ -163,11 +163,11 @@ int main(int argc, char **argv)
 	// Write out converged doc and logfiles
 	ML2D_prm.write_output_files(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
 
-        if (!converged && prm.verb > 0) cerr << "--> Optimization was stopped before convergence was reached!" << endl;
+        if (!converged && prm.verb > 0) std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         prm.usage();
         exit(0);
     }

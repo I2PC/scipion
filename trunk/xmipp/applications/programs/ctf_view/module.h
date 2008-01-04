@@ -128,8 +128,8 @@ public:
 private:
     // Function to create a Curve for CTF
     // Valid types are "pure", "damping", "noise"
-    void getCTFcurve(const string &type, int angle, Matrix2D<double> &curve,
-                     int Nsamples = 200);
+    void getCTFcurve(const std::string &type, int angle,
+                     Matrix2D<double> &curve, int Nsamples = 200);
     // Function to create the curve for the experimental curve
     void getExperimentalCurve(int angle, Matrix2D<double> &curve,
                               int Nsamples = 200);

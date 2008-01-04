@@ -40,7 +40,7 @@
 */
 void xmippPC::reset(xmippCTVectors const &ts)
 {
-    vector<unsigned> dummy;
+    std::vector<unsigned> dummy;
     for (unsigned i = 0;i < ts.size();i++)
         dummy.push_back(i);
     reset(ts, dummy);
@@ -51,9 +51,9 @@ void xmippPC::reset(xmippCTVectors const &ts)
 * Parameter: ts The vectors.
 * Parameter: idx The indexes of the vectors to use
 */
-void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
+void xmippPC::reset(xmippCTVectors const &ts, std::vector<unsigned> const & idx)
 {
-    vector<xmippVector> a;
+    std::vector<xmippVector> a;
     int n = ts.dimension();
     a.resize(n);
     int verbosity = listener->getVerbosity();
@@ -61,7 +61,7 @@ void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
     {
 
         if (verbosity)
-            listener->OnReportOperation((string) "Normalizing....\n");
+            listener->OnReportOperation((std::string) "Normalizing....\n");
         if (verbosity == 1)
             listener->OnInitOperation(n);
 
@@ -71,7 +71,7 @@ void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
             a[k].resize(n);
             xmippFeature sum = 0.0;
             int l = 0;
-            for (vector<unsigned>::const_iterator i = idx.begin();i != idx.end();i++)
+            for (std::vector<unsigned>::const_iterator i = idx.begin();i != idx.end();i++)
             {
                 if (finite(ts.itemAt(*i)[k]))
                 {
@@ -94,7 +94,7 @@ void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
             {
                 xmippFeature sum = 0.0;
                 int l = 0;
-                for (vector<unsigned>::const_iterator it = idx.begin();it != idx.end();it++)
+                for (std::vector<unsigned>::const_iterator it = idx.begin();it != idx.end();it++)
                 {
                     xmippFeature d1 = ts.itemAt(*it)[i] - mean[i];
                     xmippFeature d2 = ts.itemAt(*it)[j] - mean[j];
@@ -114,7 +114,7 @@ void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
             listener->OnProgress(n);
 
 //  for(int i=0;i<n;i++)
-//   cout << a[i] << endl;
+//   std::cout << a[i] << std::endl;
 
     }
 
@@ -128,7 +128,7 @@ void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
     xmippVector z;
     z.resize(n);
     xmippVector &d = eigenval;
-    vector<xmippVector> &v = eigenvec;
+    std::vector<xmippVector> &v = eigenvec;
 
     for (int i = 0;i < n;i++)
     {
@@ -140,7 +140,7 @@ void xmippPC::reset(xmippCTVectors const &ts, vector<unsigned> const & idx)
     int nrot = 0;
 
     if (verbosity)
-        listener->OnReportOperation((string) "Diagonalizing matrix....\n");
+        listener->OnReportOperation((std::string) "Diagonalizing matrix....\n");
     if (verbosity == 1)
         listener->OnInitOperation(50);
 
@@ -359,30 +359,30 @@ void xmippPC::clear()
 }
 
 /* Show/read PCA ----------------------------------------------------------- */
-ostream& operator << (ostream &out, const xmippPC &PC)
+std::ostream& operator << (std::ostream &out, const xmippPC &PC)
 {
-    out << "Relevant Dimension: " << PC.get_Dimension() << endl;
+    out << "Relevant Dimension: " << PC.get_Dimension() << std::endl;
     out << "Mean vector: ";
     int size = PC.mean.size();
     out << "(" << size << ") ---> ";
     for (int j = 0; j < size; j++)
         out << PC.mean[j] << " ";
-    out << endl;
+    out << std::endl;
     for (int i = 0; i < PC.get_Dimension(); i++)
     {
         out << PC.eigenval[i] << " (" << size << ") ---> ";
         for (int j = 0; j < size; j++)
             out << PC.eigenvec[i][j] << " ";
-        out << endl;
+        out << std::endl;
     }
     return out;
 }
 
-istream& operator >> (istream &in, xmippPC &PC)
+std::istream& operator >> (std::istream &in, xmippPC &PC)
 {
     PC.clear();
     int D;
-    string read_line;
+    std::string read_line;
     getline(in, read_line);
     sscanf(read_line.c_str(), "Relevant Dimension: %d", &D);
     PC.set_Dimension(D);
@@ -394,7 +394,7 @@ istream& operator >> (istream &in, xmippPC &PC)
     sscanf(read_line.c_str(), "Mean vector: (%d) --->", &size);
     read_line.erase(0, read_line.find('>') + 1); // remove until --->
     PC.mean.resize(size);
-    istrstream istr1(read_line.c_str());
+    std::istrstream istr1(read_line.c_str());
     for (int j = 0; j < size; j++)
         istr1 >> PC.mean[j];
 
@@ -406,7 +406,7 @@ istream& operator >> (istream &in, xmippPC &PC)
         PC.eigenval[i] = f;
         read_line.erase(0, read_line.find('>') + 1); // remove until --->
         PC.eigenvec[i].resize(size);
-        istrstream istr2(read_line.c_str());
+        std::istrstream istr2(read_line.c_str());
         for (int j = 0; j < size; j++)
             istr2 >> PC.eigenvec[i][j];
     }
@@ -431,18 +431,18 @@ int PCA_set::create_empty_PCA(int n)
 }
 
 /* Show/Read PCAset -------------------------------------------------------- */
-ostream& operator << (ostream &out, const PCA_set &PS)
+std::ostream& operator << (std::ostream &out, const PCA_set &PS)
 {
     int imax = PS.PCA.size();
-    out << "Number of PCAs: " << imax << endl;
+    out << "Number of PCAs: " << imax << std::endl;
     for (int i = 0; i < imax; i++) out << *(PS.PCA[i]);
     return out;
 }
 
-istream& operator >> (istream &in, PCA_set &PS)
+std::istream& operator >> (std::istream &in, PCA_set &PS)
 {
     int imax;
-    string read_line;
+    std::string read_line;
     getline(in, read_line);
     sscanf(read_line.c_str(), "Number of PCAs: %d\n", &imax);
     PS.PCA.resize(imax);

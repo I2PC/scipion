@@ -59,23 +59,23 @@ void Prog_Random_Phantom_Parameters::read(int argc, char **argv)
 /* Usage =================================================================== */
 void Prog_Random_Phantom_Parameters::usage()
 {
-    cout << "Usage:\n";
-    cout << "random_phantom [Options and Parameters]\n";
-    cout << "[Options and Parameters]:\n";
-    cout << "   -i <Random      phantom description file | Xmipp Volume>\n";
-    cout << "                      The Xmipp volume can only be used for stats\n";
-    cout << "  [-o <Realization phantom description file>]\n";
-    cout << "  [-min_volume <min_vol>]                     minimum volume\n"
+    std::cout << "Usage:\n";
+    std::cout << "random_phantom [Options and Parameters]\n";
+    std::cout << "[Options and Parameters]:\n";
+    std::cout << "   -i <Random      phantom description file | Xmipp Volume>\n";
+    std::cout << "                      The Xmipp volume can only be used for stats\n";
+    std::cout << "  [-o <Realization phantom description file>]\n";
+    std::cout << "  [-min_volume <min_vol>]                     minimum volume\n"
     << "                                              for each feature\n";
-    cout << "  [-discrete]         density values are forced to be discrete\n";
-    cout << "  [-distance d]       distance between feature centers\n";
-    cout << "                      greater than d\n";
-    cout << "  [-radius r]         feature centers inside an sphere of radius r\n";
-    cout << "  [-stats <N=-1>]     Compute family volume statistics with N samples\n";
-    cout << "  [-ctf <CTF description>] For computing the projection statistics\n";
-    cout << "  [-Xdim <dim>        For computing the projection statistics\n";
-    cout << "  [-Ydim <dim=Xdim>]  For computing the projection statistics\n";
-    cout << "  [-target_SNR <SNR>] For computing the noise power needed for this SNR\n";
+    std::cout << "  [-discrete]         density values are forced to be discrete\n";
+    std::cout << "  [-distance d]       distance between feature centers\n";
+    std::cout << "                      greater than d\n";
+    std::cout << "  [-radius r]         feature centers inside an sphere of radius r\n";
+    std::cout << "  [-stats <N=-1>]     Compute family volume statistics with N samples\n";
+    std::cout << "  [-ctf <CTF description>] For computing the projection statistics\n";
+    std::cout << "  [-Xdim <dim>        For computing the projection statistics\n";
+    std::cout << "  [-Ydim <dim=Xdim>]  For computing the projection statistics\n";
+    std::cout << "  [-target_SNR <SNR>] For computing the noise power needed for this SNR\n";
 }
 
 /* Produce Side Information ================================================ */
@@ -96,20 +96,20 @@ void Random_Phantom_Side_Info::produce_Side_Info(
 
         // Check that it meets the conditions
         if (Random.FeatNo() % 2 != 0)
-            EXIT_ERROR(1, (string)"Random_phantom: The number of features in " +
+            EXIT_ERROR(1, (std::string)"Random_phantom: The number of features in " +
                        prm.fn_random + " is not a multiple of 2");
 
         if (Random.FeatNo() == 0)
-            EXIT_ERROR(1, (string)"Random_phantom: There is no phantom in " +
+            EXIT_ERROR(1, (std::string)"Random_phantom: There is no phantom in " +
                        prm.fn_random);
 
         for (int i = 1; i <= Random.FeatNo(); i += 2)
         {
             if (Random(i)->Type != Random(i + 1)->Type)
-                EXIT_ERROR(1, (string)"Random_phantom: Feature number " + integerToString(i) +
+                EXIT_ERROR(1, (std::string)"Random_phantom: Feature number " + integerToString(i) +
                            " is not of the same type as " + integerToString(i + 1));
             if (Random(i)->Add_Assign != Random(i + 1)->Add_Assign)
-                EXIT_ERROR(1, (string)"Random_phantom: Feature number " + integerToString(i) +
+                EXIT_ERROR(1, (std::string)"Random_phantom: Feature number " + integerToString(i) +
                            " is not of the same +/= behaviour as " + integerToString(i + 1));
         }
     }
@@ -271,11 +271,11 @@ void generate_realization_of_random_phantom(
             }
             if (loop_conunter > MAX_LOOP_NUMBER)
             {
-                cout << "\nOh My Dear after " << MAX_LOOP_NUMBER  << " iterations"
+                std::cout << "\nOh My Dear after " << MAX_LOOP_NUMBER  << " iterations"
                 << "\nI simply can not get a correct feature"
-                << "\nConsider relaxing the constraints" << endl;
-                cout << "The troublesome feature is no: " << i / 2 <<
-                "(first one is 0)" << feat_aux << endl;
+                << "\nConsider relaxing the constraints" << std::endl;
+                std::cout << "The troublesome feature is no: " << i / 2 <<
+                "(first one is 0)" << feat_aux << std::endl;
                 Valid_Feature = 1;
             }
             loop_conunter++;
@@ -366,11 +366,11 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
             FOR_ALL_ELEMENTS_IN_MATRIX2D(proj())
             if (ABS(proj(i, j)) > 1e-6) proj_area(n)++;
 #ifdef DEBUG
-            cout << "Area: " << proj_area(n) << endl;
+            std::cout << "Area: " << proj_area(n) << std::endl;
             proj.write("inter.xmp");
-            cout << "Press any key\n";
+            std::cout << "Press any key\n";
             char c;
-            cin >> c;
+            std::cin >> c;
 #endif
 
             // Compute projection power
@@ -385,27 +385,27 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
         compute_hist(proj_power, hist_proj, 300);
         compute_hist(proj_area, hist_area, 300);
         volume.computeStats(avg, stddev, dummy, dummy);
-        cout << "# Volume average: " << avg << endl
-        << "# Volume stddev:  " << stddev << endl
-        << "# Volume percentil  2.5%: " << hist_vol.percentil(2.5) << endl
-        << "# Volume percentil 97.5%: " << hist_vol.percentil(97.5) << endl
-        << hist_vol << endl << endl;
+        std::cout << "# Volume average: " << avg << std::endl
+        << "# Volume stddev:  " << stddev << std::endl
+        << "# Volume percentil  2.5%: " << hist_vol.percentil(2.5) << std::endl
+        << "# Volume percentil 97.5%: " << hist_vol.percentil(97.5) << std::endl
+        << hist_vol << std::endl << std::endl;
         proj_power.computeStats(power_avg, power_stddev, dummy, dummy);
-        cout << "# Projection power average: " << power_avg << endl
-        << "# Projection power stddev:  " << power_stddev << endl
-        << "# Projection percentil  2.5%: " << hist_proj.percentil(2.5) << endl
-        << "# Projection percentil 97.5%: " << hist_proj.percentil(97.5) << endl
+        std::cout << "# Projection power average: " << power_avg << std::endl
+        << "# Projection power stddev:  " << power_stddev << std::endl
+        << "# Projection percentil  2.5%: " << hist_proj.percentil(2.5) << std::endl
+        << "# Projection percentil 97.5%: " << hist_proj.percentil(97.5) << std::endl
         << hist_proj;
         proj_area.computeStats(area_avg, area_stddev, dummy, dummy);
-        cout << "# Projection area average: " << area_avg << endl
-        << "# Projection area stddev:  " << area_stddev << endl
-        << "# Area percentil  2.5%:    " << hist_area.percentil(2.5) << endl
-        << "# Area percentil 97.5%:    " << hist_area.percentil(97.5) << endl
-        << hist_area << endl;
+        std::cout << "# Projection area average: " << area_avg << std::endl
+        << "# Projection area stddev:  " << area_stddev << std::endl
+        << "# Area percentil  2.5%:    " << hist_area.percentil(2.5) << std::endl
+        << "# Area percentil 97.5%:    " << hist_area.percentil(97.5) << std::endl
+        << hist_area << std::endl;
         if (prm.target_SNR != -1)
         {
-            cout << endl;
-            cout << "For an SNR of " << prm.target_SNR
+            std::cout << std::endl;
+            std::cout << "For an SNR of " << prm.target_SNR
             << ", a total noise with a standard deviation of "
             << sqrt(power_avg*power_avg*Xdim*Ydim / (prm.target_SNR*area_avg))
             << " is needed\n";

@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage(argv);
     }
 
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
         /* Perform copy or move =================================================== */
 
         // Finds last slash
-        string org_path;
+        std::string org_path;
         int break_point = -1;
         for (int i = sel_file.size() - 1; i >= 0; i--)
         {
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
         }
 
         SelFile SF(sel_file);
-        string comStr;
+        std::string comStr;
         while (!SF.eof())
         {
             // Get file
@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
     exit(0);
 } //main

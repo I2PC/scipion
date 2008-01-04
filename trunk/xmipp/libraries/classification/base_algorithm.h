@@ -62,7 +62,7 @@ public:
      * Constructor.
      * Parameter: _ID an ID string unique for each algorithm class
      */
-    xmippBaseAlgo(const string& _ID = ""): ID(_ID)
+    xmippBaseAlgo(const std::string& _ID = ""): ID(_ID)
     {};
 
     /**
@@ -103,22 +103,22 @@ public:
 
     /** Print itself on standard output
      */
-    virtual void printSelf(ostream& _os) const
+    virtual void printSelf(std::ostream& _os) const
     {
-        _os << "xmippBaseAlgo" << endl; // to identify it as an algorith
-        _os << ID << endl;
+        _os << "xmippBaseAlgo" << std::endl; // to identify it as an algorith
+        _os << ID << std::endl;
     };
 
     /** Set ID (returns a const reference to the ID)
     */
-    virtual const string& setID() const
+    virtual const std::string& setID() const
     {
         return ID;
     };
 
     /** Set ID (returns a non-const reference to the ID)
     */
-    virtual string& setID()
+    virtual std::string& setID()
     {
         return ID;
     };
@@ -132,14 +132,14 @@ public:
     };
 
 protected:
-    string ID;// algorithm ID, an unique name to recognize the algorithm
+    std::string ID;// algorithm ID, an unique name to recognize the algorithm
     xmippBaseListener* listener;   // Listener class
 
 };
 
 //-----------------------------------------------------------------------------
 template<class DS>
-ostream& operator << (ostream& _os, const xmippBaseAlgo<DS>& _algo)
+std::ostream& operator << (std::ostream& _os, const xmippBaseAlgo<DS>& _algo)
 {
     _algo.printSelf(_os);
     return _os;

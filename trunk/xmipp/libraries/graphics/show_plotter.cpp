@@ -169,7 +169,7 @@ Plotter::~Plotter()
 
 /* Zoom -------------------------------------------------------------------- */
 /* The zoom stack is represented by two member variables
-   zoomStack holds the different zoom settings as vector<PlotSettings>
+   zoomStack holds the different zoom settings as std::vector<PlotSettings>
    curZoom holds the current PlotSettings index in the zoomstack
    the zoomIN & OUT buttons are hidden until we call show on them in
    the zoomIn or zoomOut slots
@@ -624,7 +624,7 @@ void Plotter::drawCurves(QPainter *painter)
     QRect rect(Margin , Margin , width() - 2 *Margin, height() - 2*Margin);
     painter->setClipRect(rect.x() + 1, rect.y() + 1, rect.width() - 2, rect.height() - 2);
 
-    map <int, Matrix2D<double> > ::const_iterator it = curveMap.begin();
+    std::map <int, Matrix2D<double> > ::const_iterator it = curveMap.begin();
     while (it != curveMap.end())
     {
         // The first member of the it value gives us the ID

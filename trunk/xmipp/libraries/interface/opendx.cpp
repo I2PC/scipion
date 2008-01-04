@@ -29,20 +29,20 @@
 
 void openDX::openDXFile(FileName openDXname)
 {
-    openDX::fh_out.open(openDXname.c_str(), ios::out); //trunc file
+    openDX::fh_out.open(openDXname.c_str(), std::ios::out); //trunc file
     if (fh_out.fail())
     {
-        cerr << "Cant open file: "
-        << openDXname.c_str() << endl;
+        std::cerr << "Cant open file: "
+        << openDXname.c_str() << std::endl;
         exit(0);
     }
 
 //do not change the size of this header without updating the destructor
     openDX::number_of_elements = 0;
     openDX::fh_out << "# The following example describes an irregular grid."
-    << endl;
+    << std::endl;
     openDX::fh_out << "object 1 class array type float rank 1 shape 3 "
-    << "items XXXXX data follows" << endl;
+    << "items XXXXX data follows" << std::endl;
 }/* openDX */
 
 
@@ -53,7 +53,7 @@ void openDX::Add_Item(const Matrix1D<double> XYZ)
     Y = YY(XYZ);
     Z = ZZ(XYZ);
     openDX::number_of_elements++;
-    openDX::fh_out << " " << X << " " << Y << " " << Z << endl;
+    openDX::fh_out << " " << X << " " << Y << " " << Z << std::endl;
 }//add sphere
 
 openDX::~openDX()
@@ -66,7 +66,7 @@ openDX::~openDX()
     for (int ii = 0; ii < openDX::number_of_elements; ii++)
     {
         if (ii % 10 == 0)
-            openDX::fh_out << endl;
+            openDX::fh_out << std::endl;
         openDX::fh_out << "1 ";
     }
 
@@ -79,7 +79,7 @@ openDX::~openDX()
     << "end\n";
 //write right number of point
 
-    fh_out.seekp(106, ios::beg);
+    fh_out.seekp(106, std::ios::beg);
     openDX::fh_out.width(5);
     openDX::fh_out << openDX::number_of_elements;
 

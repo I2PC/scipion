@@ -107,31 +107,31 @@ public:
     void show()
     {
         Prog_parameters::show();
-        if (wrap) cout << "Wrapping image/volume\n";
-        else      cout << "Not wrapping image/volume\n";
-        if (store_in_header) cout << "Storing the shift in header\n";
-        else                 cout << "Shifting image/volume\n";
+        if (wrap) std::cout << "Wrapping image/volume\n";
+        else      std::cout << "Not wrapping image/volume\n";
+        if (store_in_header) std::cout << "Storing the shift in header\n";
+        else                 std::cout << "Shifting image/volume\n";
         if (shift.getDimension() > 1)
-            cout << "Shift: " << shift.transpose() << endl;
+            std::cout << "Shift: " << shift.transpose() << std::endl;
         else if (DF_shifts.name() != "")
         {
-            cout << "Shift docfile: " << DF_shifts.name() << endl;
-            cout << "colX_shift:  " << colX_shift << endl;
+            std::cout << "Shift docfile: " << DF_shifts.name() << std::endl;
+            std::cout << "colX_shift:  " << colX_shift << std::endl;
         }
         if (scale.getDimension() > 1)
-            cout << "Scale: " << scale.transpose() << endl;
+            std::cout << "Scale: " << scale.transpose() << std::endl;
         else if (DF_scales.name() != "")
         {
-            cout << "Scale: docfile: "       << DF_scales.name() << endl;
-            cout << "colX_scale:  " << colX_scale << endl;
+            std::cout << "Scale: docfile: "       << DF_scales.name() << std::endl;
+            std::cout << "colX_scale:  " << colX_scale << std::endl;
         }
-        if (center_mass) cout << "Moving center of mass to origin\n";
+        if (center_mass) std::cout << "Moving center of mass to origin\n";
     }
 
     void usage()
     {
         Prog_parameters::usage();
-        cerr << "   -shift \"[<x>,<y>[,<z>]]\" : Shift by (x,y,z) for volumes, (x,y) for images\n"
+        std::cerr << "   -shift \"[<x>,<y>[,<z>]]\" : Shift by (x,y,z) for volumes, (x,y) for images\n"
         << "   -scale \"[<x>,[<y>,<z>]]\" : Scale by (x,y,z)\n"
 //           << "   -Docfile                 : Shift and/or Scales are stored in a Docfile\n"
         << "   -shift <DocFile>         : Shifts are stored in a Docfile\n"

@@ -57,7 +57,7 @@
                CTF_at_f+=CTF.CTF_at(f*cos(ang),f*sin(ang));
         N++;
      }
-     cout << f << " " << CTF_at_f/N << endl;
+     std::cout << f << " " << CTF_at_f/N << std::endl;
   }
   return 0;
       }
@@ -78,7 +78,7 @@
             fn_root=getParameter(argc,argv,"-o");
             Xdim=textToInteger(getParameter(argc,argv,"-xdim"));
          } catch (Xmipp_error XE) {
-            cerr << XE << endl
+            std::cerr << XE << std::endl
                  << "Usage: produce_imgs \n"
                  << "         -i <CTF descr file>\n"
                  << "         -o <filename root>\n"
@@ -127,7 +127,7 @@
             CenterFFT(Ipsd(), true); Ipsd.write(fn_root+"_psd.xmp");
 
          } catch (Xmipp_error XE) {
-            cout << XE << endl;
+            std::cout << XE << std::endl;
          }
          return 0;
       }
@@ -255,7 +255,7 @@ public:
     void Usage();
 
     /// Show
-    friend ostream & operator << (ostream &out, const XmippCTF &ctf);
+    friend std::ostream & operator << (std::ostream &out, const XmippCTF &ctf);
 
     /// Clear.
     void clear();
@@ -302,13 +302,13 @@ public:
         double cosine_part = cos(argument);
         if (show)
         {
-            cout << "   Deltaf=" << deltaf << endl;
-            cout << "   u,u2,u4=" << u << " " << u2 << " " << u4 << endl;
-            cout << "   K1,K2,sin=" << K1 << " " << K2 << " "
-            << sine_part << endl;
-            cout << "   Q0=" << Q0 << endl;
-            cout << "   (X,Y)=(" << X << "," << Y << ") CTF without damping="
-            << -(sine_part + Q0*cosine_part) << endl;
+            std::cout << "   Deltaf=" << deltaf << std::endl;
+            std::cout << "   u,u2,u4=" << u << " " << u2 << " " << u4 << std::endl;
+            std::cout << "   K1,K2,sin=" << K1 << " " << K2 << " "
+            << sine_part << std::endl;
+            std::cout << "   Q0=" << Q0 << std::endl;
+            std::cout << "   (X,Y)=(" << X << "," << Y << ") CTF without damping="
+            << -(sine_part + Q0*cosine_part) << std::endl;
         }
         return -(sine_part + Q0*cosine_part);
     }
@@ -327,17 +327,17 @@ public:
         double E = Eespr * EdeltaF * EdeltaR * Ealpha;
         if (show)
         {
-            cout << "   Deltaf=" << deltaf << endl;
-            cout << "   u,u2,u4=" << u << " " << u2 << " " << u4 << endl;
-            cout << "   K3,Eespr=" << K3 << " " << Eespr << endl;
-            cout << "   K4,Eispr=" << K4 << " " << /*Eispr <<*/ endl;
-            cout << "   K5,EdeltaF=" << K5 << " " << EdeltaF << endl;
-            cout << "   EdeltaR=" << EdeltaR << endl;
-            cout << "   K6,K7,Ealpha=" << K6 << " " << K7 << " " << Ealpha
-            << endl;
-            cout << "   Total atenuation(E)= " << E << endl;
-            cout << "   (X,Y)=(" << X << "," << Y << ") CTFdamp="
-            << E << endl;
+            std::cout << "   Deltaf=" << deltaf << std::endl;
+            std::cout << "   u,u2,u4=" << u << " " << u2 << " " << u4 << std::endl;
+            std::cout << "   K3,Eespr=" << K3 << " " << Eespr << std::endl;
+            std::cout << "   K4,Eispr=" << K4 << " " << /*Eispr <<*/ std::endl;
+            std::cout << "   K5,EdeltaF=" << K5 << " " << EdeltaF << std::endl;
+            std::cout << "   EdeltaR=" << EdeltaR << std::endl;
+            std::cout << "   K6,K7,Ealpha=" << K6 << " " << K7 << " " << Ealpha
+            << std::endl;
+            std::cout << "   Total atenuation(E)= " << E << std::endl;
+            std::cout << "   (X,Y)=(" << X << "," << Y << ") CTFdamp="
+            << E << std::endl;
         }
         return -K*E;
     }
@@ -362,20 +362,20 @@ public:
         double E = Eespr * EdeltaF * EdeltaR * Ealpha;
         if (show)
         {
-            cout << "   Deltaf=" << deltaf << endl;
-            cout << "   u,u2,u4=" << u << " " << u2 << " " << u4 << endl;
-            cout << "   K1,K2,sin=" << K1 << " " << K2 << " "
-            << sine_part << endl;
-            cout << "   K3,Eespr=" << K3 << " " << Eespr << endl;
-            cout << "   K4,Eispr=" << K4 << " " << /*Eispr <<*/ endl;
-            cout << "   K5,EdeltaF=" << K5 << " " << EdeltaF << endl;
-            cout << "   EdeltaR=" << EdeltaR << endl;
-            cout << "   K6,K7,Ealpha=" << K6 << " " << K7 << " " << Ealpha
-            << endl;
-            cout << "   Total atenuation(E)= " << E << endl;
-            cout << "   K,Q0,base_line=" << K << "," << Q0 << "," << base_line << endl;
-            cout << "   (X,Y)=(" << X << "," << Y << ") CTF="
-            << -K*(sine_part + Q0*cosine_part)*E + base_line << endl;
+            std::cout << "   Deltaf=" << deltaf << std::endl;
+            std::cout << "   u,u2,u4=" << u << " " << u2 << " " << u4 << std::endl;
+            std::cout << "   K1,K2,sin=" << K1 << " " << K2 << " "
+            << sine_part << std::endl;
+            std::cout << "   K3,Eespr=" << K3 << " " << Eespr << std::endl;
+            std::cout << "   K4,Eispr=" << K4 << " " << /*Eispr <<*/ std::endl;
+            std::cout << "   K5,EdeltaF=" << K5 << " " << EdeltaF << std::endl;
+            std::cout << "   EdeltaR=" << EdeltaR << std::endl;
+            std::cout << "   K6,K7,Ealpha=" << K6 << " " << K7 << " " << Ealpha
+            << std::endl;
+            std::cout << "   Total atenuation(E)= " << E << std::endl;
+            std::cout << "   K,Q0,base_line=" << K << "," << Q0 << "," << base_line << std::endl;
+            std::cout << "   (X,Y)=(" << X << "," << Y << ") CTF="
+            << -K*(sine_part + Q0*cosine_part)*E + base_line << std::endl;
         }
         return -K*(sine_part + Q0*cosine_part)*E;
     }
@@ -422,18 +422,18 @@ public:
         double w = sqrt(X * X + Y * Y);
         if (show)
         {
-            cout << "   ellipsoid_ang=" << RAD2DEG(ellipsoid_ang) << endl
-            << "   ellipsoid_sqrt_ang=" << RAD2DEG(ellipsoid_sqrt_ang) << endl
+            std::cout << "   ellipsoid_ang=" << RAD2DEG(ellipsoid_ang) << std::endl
+            << "   ellipsoid_sqrt_ang=" << RAD2DEG(ellipsoid_sqrt_ang) << std::endl
             << "   sqUp, sqVp=" << sqUp << "," << sqVp << " (" << sq << ")\n"
             << "   cUp, cVp=" << cUp << "," << cVp << " (" << c << ")\n"
             << "   sigmaUp, sigmaVp=" << sigmaUp << "," << sigmaVp << " (" << sigma << ")\n"
-            << "   ellipsoid_ang2=" << RAD2DEG(ellipsoid_ang2) << endl
+            << "   ellipsoid_ang2=" << RAD2DEG(ellipsoid_ang2) << std::endl
             << "   cUp2, cVp2=" << cUp2 << "," << cVp2 << " (" << c2 << ")\n"
             << "   sigmaUp2, sigmaVp2=" << sigmaUp2 << "," << sigmaVp2 << " (" << sigma2 << ")\n";
-            cout << "   (X,Y)=(" << X << "," << Y << ") (" << w << ") CTFnoise="
+            std::cout << "   (X,Y)=(" << X << "," << Y << ") (" << w << ") CTFnoise="
             << base_line +
             gaussian_K*exp(-sigma*(w - c)*(w - c)) + sqrt_K*exp(-sq*sqrt(w)) -
-            gaussian_K2*exp(-sigma2*(w - c2)*(w - c2)) << endl;
+            gaussian_K2*exp(-sigma2*(w - c2)*(w - c2)) << std::endl;
         }
         return base_line +
                gaussian_K*exp(-sigma*(w - c)*(w - c)) + sqrt_K*exp(-sq*sqrt(w)) -
@@ -445,13 +445,13 @@ public:
     void zero(int n, const Matrix1D<double> &u, Matrix1D<double> &freq) const;
 
     /// Apply CTF to an image
-    void Apply_CTF(Matrix2D < complex<double> > &FFTI) const;
+    void Apply_CTF(Matrix2D < std::complex<double> > &FFTI) const;
 
     /** Generate CTF image.
         The sample image is used only to take its dimensions. */
     template <class T>
     void Generate_CTF(const Matrix2D<T> &sample_image,
-                      Matrix2D < complex<double> > &CTF) const
+                      Matrix2D < std::complex<double> > &CTF) const
     {
         Generate_CTF(YSIZE(sample_image), XSIZE(sample_image), CTF);
         STARTINGX(CTF) = STARTINGX(sample_image);
@@ -460,11 +460,11 @@ public:
 
     /// Generate CTF image.
     void Generate_CTF(int Ydim, int Xdim,
-                      Matrix2D < complex<double> > &CTF) const;
+                      Matrix2D < std::complex<double> > &CTF) const;
 
     /** Check physical meaning.
         true if the CTF parameters have physical meaning.
-        Call this function after producing side information */
+        Call this function after produstd::cing side information */
     bool physical_meaning();
 
     /** Force physical meaning.*/
@@ -481,7 +481,7 @@ public:
         CTFDat ctfdat;
 	ctfdat.read("ctfdat.txt");
 	ctfdat.goFirstLine();
-	cerr << "Correcting CTF phase ...\n";
+	std::cerr << "Correcting CTF phase ...\n";
 	int istep = CEIL((double)ctfdat.lineNo() / 60.0);
 	init_progress_bar(ctfdat.lineNo());
 	int i = 0;

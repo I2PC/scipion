@@ -54,25 +54,25 @@ public:
         switch (FFT_mode)
         {
         case COMPLETE_FFT:
-            cout << "Computing the whole FFT\n";
+            std::cout << "Computing the whole FFT\n";
             break;
         case ONLY_AMPLITUDES:
-            cout << "Computing Amplitude FFT\n";
+            std::cout << "Computing Amplitude FFT\n";
             break;
         case ONLY_PHASE:
-            cout << "Computing Phase FFT\n";
+            std::cout << "Computing Phase FFT\n";
             break;
         }
-        if (apply_log) cout << "Computing Log of result\n";
-        if (squared)   cout << "Squaring amplitudes\n";
-        if (do_not_center) cout << "Not centering result\n";
-        else               cout << "Centering result\n";
+        if (apply_log) std::cout << "Computing Log of result\n";
+        if (squared)   std::cout << "Squaring amplitudes\n";
+        if (do_not_center) std::cout << "Not centering result\n";
+        else               std::cout << "Centering result\n";
     }
 
     void usage()
     {
         Prog_parameters::usage();
-        cerr << "  [-phase]                  : By default, the whole FFT\n"
+        std::cerr << "  [-phase]                  : By default, the whole FFT\n"
         << "  [-amplitudes]             : is returned\n"
         << "  [-log10]                  : Return logarithm of result\n"
         << "  [-squared]                : Return the square of the result\n"
@@ -83,7 +83,7 @@ public:
 bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 {
     FFT_parameters *eprm = (FFT_parameters *) prm;
-    Matrix2D< complex<double> > fftI;
+    Matrix2D< std::complex<double> > fftI;
     FourierTransform(img(), fftI);
     switch (eprm->FFT_mode)
     {
@@ -105,7 +105,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
     FFT_parameters *eprm = (FFT_parameters *) prm;
-    Matrix3D< complex<double> > fftV;
+    Matrix3D< std::complex<double> > fftV;
     FourierTransform(vol(), fftV);
     switch (eprm->FFT_mode)
     {

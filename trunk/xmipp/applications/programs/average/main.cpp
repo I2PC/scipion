@@ -54,14 +54,14 @@ public:
     void usage()
     {
         Prog_parameters::usage();
-        cerr << "  [-more_options]           : show additional options\n";
+        std::cerr << "  [-more_options]           : show additional options\n";
         if (more_options)
         {
-            cerr << "  [-set_weight]             : for 2D-images: set weight in header of average to nr. of particles\n";
-            cerr << "  [-weighted_avg]           : for 2D-images: use header weights in weighted average calculation\n";
+            std::cerr << "  [-set_weight]             : for 2D-images: set weight in header of average to nr. of particles\n";
+            std::cerr << "  [-weighted_avg]           : for 2D-images: use header weights in weighted average calculation\n";
         }
-        cerr << endl;
-        cerr << "Purpose: This program allows you to calculate the average and \n"
+        std::cerr << std::endl;
+        std::cerr << "Purpose: This program allows you to calculate the average and \n"
         << "         standard deviation of a set of images or volumes \n";
 
     }
@@ -119,7 +119,7 @@ void Statis_parameters::final_process()
         else if (set_weight)
         {
             sumI.weight() = (double)nI;
-            cerr << " Setting weight in the header of the average image to " << integerToString(nI) << endl;
+            std::cerr << " Setting weight in the header of the average image to " << integerToString(nI) << std::endl;
         }
         sumI.write(fn_root + ".med.xmp");
         sumI2.write(fn_root + ".sig.xmp");

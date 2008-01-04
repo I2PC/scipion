@@ -32,8 +32,6 @@
 
 #include <mpi.h>
 
-using namespace std;
-
 /**@name MPI_Run program */
 //@{
 /* MPI Run Program Parameters ------------------------------------------ */
@@ -64,7 +62,7 @@ public:
     void read(int argc, char **argv);
 
     /** Usage message.
-        This function shows the way of introducing this parameters. */
+        This function shows the way of introdustd::cing this parameters. */
     void usage();
 
     /** Show parameters. */

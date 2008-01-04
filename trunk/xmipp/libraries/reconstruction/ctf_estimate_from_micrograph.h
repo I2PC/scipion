@@ -90,7 +90,7 @@ public:
 
     /** Write parameters to file.
         The directory is an option used in the grid. */
-    void write(const FileName &fn_prm, string directory = "");
+    void write(const FileName &fn_prm, const std::string & directory = "");
 
     /** PSD averaging within a piece.
         Compute the PSD of a piece by subdividing it in smaller pieces and

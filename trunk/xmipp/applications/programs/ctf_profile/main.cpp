@@ -45,14 +45,14 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage();
         exit(-1);
     }
 
     // Show parameters
-    cout << "# File: " << fn_ctf << endl
-    << "# Direction: " << w_dir.transpose() << endl;
+    std::cout << "# File: " << fn_ctf << std::endl
+    << "# Direction: " << w_dir.transpose() << std::endl;
 
     // Show profile
     try
@@ -64,7 +64,7 @@ int main(int argc, char **argv)
         CTF.Produce_Side_Info();
 
         // Compute CTF at each frequency
-        cout << "# Dig.Freq Cont.Freq Cont.Freq(A) CTF_pure CTF_noise CTF_total\n";
+        std::cout << "# Dig.Freq Cont.Freq Cont.Freq(A) CTF_pure CTF_noise CTF_total\n";
         w_dir /= w_dir.module();
         for (double w = 0; w <= 0.5; w += w_step)
         {
@@ -73,21 +73,21 @@ int main(int argc, char **argv)
             double CTF_noise = CTF.CTFnoise_at(XX(current_w), YY(current_w));
             double cont_freq = current_w.module();
             double cont_freq_A = (cont_freq == 0) ? 0 : 1 / cont_freq;
-            cout << w << " " << cont_freq << " " << cont_freq_A << " "
+            std::cout << w << " " << cont_freq << " " << cont_freq_A << " "
             << CTF_pure << " " << CTF_noise << " " << CTF_pure*CTF_pure + CTF_noise
-            << endl;
+            << std::endl;
         }
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
 }
 
 // Usage -------------------------------------------------------------------
 void Usage()
 {
-    cerr << "Usage: CTF_profile [options]\n"
+    std::cerr << "Usage: CTF_profile [options]\n"
     << "   -i <CTF description file>      : CTF to plot\n"
     << "  [-w_dir \"[X=1,Y=0]\"             : Frequency direction\n"
     << "  [-w_step <step=0.001>]          : Normalized to 0.5\n";

@@ -81,8 +81,8 @@ void Prog_Break_Sym_prm::read(int argc, char **argv)
 // Usage ===================================================================
 void Prog_Break_Sym_prm::usage()
 {
-    cerr << "Usage:  Break_Sym [options] " << endl;
-    cerr << "   -i <selfile>                : Selfile with input images \n"
+    std::cerr << "Usage:  Break_Sym [options] " << std::endl;
+    std::cerr << "   -i <selfile>                : Selfile with input images \n"
     << "   -vol <volume/selfile>       : Initial reference volume \n"
     << "                               :  OR selfile with multiple reference volumes\n"
     << " [ -sym <symfile> ]            : Symmetry to be broken \n"
@@ -99,46 +99,46 @@ void Prog_Break_Sym_prm::show()
     if (verb > 0)
     {
         // To screen
-        cerr << " =================================================================" << endl;
-        cerr << " Break symmetry " << endl;
-        cerr << " =================================================================" << endl;
+        std::cerr << " =================================================================" << std::endl;
+        std::cerr << " Break symmetry " << std::endl;
+        std::cerr << " =================================================================" << std::endl;
         if (Nvols == 1)
-            cerr << " Initial reference volume : " << fn_vol << endl;
+            std::cerr << " Initial reference volume : " << fn_vol << std::endl;
         else
         {
-            cerr << " Selfile with references  : " << fn_vol << endl;
-            cerr << "   with # of volumes      : " << Nvols << endl;
+            std::cerr << " Selfile with references  : " << fn_vol << std::endl;
+            std::cerr << "   with # of volumes      : " << Nvols << std::endl;
         }
-        cerr << " Experimental images:     : " << SF.name() << " (" << SF.ImgNo() << ")" << endl;
-        cerr << " Symmetry file:           : " << fn_sym << endl;
-        cerr << " Output rootname          : " << fn_root << endl;
-        cerr << " Convergence criterion    : " << eps << endl;
+        std::cerr << " Experimental images:     : " << SF.name() << " (" << SF.ImgNo() << ")" << std::endl;
+        std::cerr << " Symmetry file:           : " << fn_sym << std::endl;
+        std::cerr << " Output rootname          : " << fn_root << std::endl;
+        std::cerr << " Convergence criterion    : " << eps << std::endl;
         if (mask_radius > 0)
-            cerr << " Mask radius              : " << mask_radius << endl;
-        cerr << " =================================================================" << endl;
+            std::cerr << " Mask radius              : " << mask_radius << std::endl;
+        std::cerr << " =================================================================" << std::endl;
 
         // Also open and fill history file
-        fh_hist.open((fn_root + ".hist").c_str(), ios::out);
+        fh_hist.open((fn_root + ".hist").c_str(), std::ios::out);
         if (!fh_hist)
-            REPORT_ERROR(3008, (string)"Prog_Break_Sym: Cannot open file " + fn_root + ".hist");
+            REPORT_ERROR(3008, (std::string)"Prog_Break_Sym: Cannot open file " + fn_root + ".hist");
 
-        fh_hist << " =================================================================" << endl;
-        fh_hist << " Break symmetry " << endl;
-        fh_hist << " =================================================================" << endl;
+        fh_hist << " =================================================================" << std::endl;
+        fh_hist << " Break symmetry " << std::endl;
+        fh_hist << " =================================================================" << std::endl;
         if (Nvols == 1)
-            fh_hist << " Initial reference volume : " << fn_vol << endl;
+            fh_hist << " Initial reference volume : " << fn_vol << std::endl;
         else
         {
-            fh_hist << " Selfile with references  : " << fn_vol << endl;
-            fh_hist << "   with # of volumes      : " << Nvols << endl;
+            fh_hist << " Selfile with references  : " << fn_vol << std::endl;
+            fh_hist << "   with # of volumes      : " << Nvols << std::endl;
         }
-        fh_hist << " Experimental images:     : " << SF.name() << " (" << SF.ImgNo() << ")" << endl;
-        fh_hist << " Symmetry file:           : " << fn_sym << endl;
-        fh_hist << " Output rootname          : " << fn_root << endl;
-        fh_hist << " Convergence criterion    : " << eps << endl;
+        fh_hist << " Experimental images:     : " << SF.name() << " (" << SF.ImgNo() << ")" << std::endl;
+        fh_hist << " Symmetry file:           : " << fn_sym << std::endl;
+        fh_hist << " Output rootname          : " << fn_root << std::endl;
+        fh_hist << " Convergence criterion    : " << eps << std::endl;
         if (mask_radius > 0)
-            fh_hist << " Mask radius              : " << mask_radius << endl;
-        fh_hist << " =================================================================" << endl;
+            fh_hist << " Mask radius              : " << mask_radius << std::endl;
+        fh_hist << " =================================================================" << std::endl;
 
     }
 
@@ -204,7 +204,7 @@ void Prog_Break_Sym_prm::process_one_image(ImageXmipp &img, int &opt_vol,
             }
         }
         corr /= sqrt(Asq) * sqrt(Xsq);
-        if (verb > 1) cout << " " << corr;
+        if (verb > 1) std::cout << " " << corr;
         if (corr > maxcorr)
         {
             maxcorr = corr;
@@ -246,7 +246,7 @@ void Prog_Break_Sym_prm::process_one_image(ImageXmipp &img, int &opt_vol,
                 }
             }
             corr /= sqrt(Asq) * sqrt(Xsq);
-            if (verb > 1) cout << " " << corr;
+            if (verb > 1) std::cout << " " << corr;
             if (corr > maxcorr)
             {
                 maxcorr = corr;
@@ -265,13 +265,13 @@ void Prog_Break_Sym_prm::process_one_image(ImageXmipp &img, int &opt_vol,
     img.write(img.name());
     if (verb > 1)
     {
-        cout << endl;
-        cout << opt_rot << " " << opt_tilt << " " << opt_psi << endl;
+        std::cout << std::endl;
+        std::cout << opt_rot << " " << opt_tilt << " " << opt_psi << std::endl;
     }
 }
 
 // Projection of the reference (blob) volume =================================
-void Prog_Break_Sym_prm::process_selfile(SelFile &SF, vector<SelFile> &SFout, double &avecorr)
+void Prog_Break_Sym_prm::process_selfile(SelFile &SF, std::vector<SelFile> &SFout, double &avecorr)
 {
 
     ImageXmipp img;
@@ -334,7 +334,7 @@ void Prog_Break_Sym_prm::reconstruction(int argc, char **argv, SelFile &SF,
     SF.write(fn_insel);
 
     Prog_WBP_prm           wbp_prm;
-    if (verb > 0) cerr << "--> WBP reconstruction " << endl;
+    if (verb > 0) std::cerr << "--> WBP reconstruction " << std::endl;
 
     // read command line (fn_sym, angular etc.)
     wbp_prm.read(argc, argv);
@@ -349,7 +349,7 @@ void Prog_Break_Sym_prm::reconstruction(int argc, char **argv, SelFile &SF,
     new_vol.write(wbp_prm.fn_out);
     vols[volno] = new_vol();
 
-    if (verb > 0) cerr << " =================================================================" << endl;
+    if (verb > 0) std::cerr << " =================================================================" << std::endl;
 
 }
 

@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error &XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage();
         exit(1);
     }
@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
 
 }
@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
 /* Usage ------------------------------------------------------------------- */
 void Usage()
 {
-    cout << "Usage: Voxels22blobs [Parameters]\n"
+    std::cout << "Usage: Voxels22blobs [Parameters]\n"
     << "   (-voxels | -blobs) <file_in>       : Input file\n"
     << "    -o <file_out>                     : of the opposite type\n"
     << "   [-r <blob radius=2>]               : blob radius\n"

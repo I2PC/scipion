@@ -89,7 +89,7 @@ public:
     void usage() const;
 
     /// Show
-    friend ostream & operator << (ostream &out, const Basis &basis);
+    friend std::ostream & operator << (std::ostream &out, const Basis &basis);
 
     /** Set sampling rate. */
     void set_sampling_rate(double _Tm);

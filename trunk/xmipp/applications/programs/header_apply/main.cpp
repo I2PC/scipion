@@ -45,7 +45,7 @@ public:
     void usage()
     {
         Prog_parameters::usage();
-        cerr << "  [-dont_wrap]              : By default, the image is wrapped\n"
+        std::cerr << "  [-dont_wrap]              : By default, the image is wrapped\n"
 	     << "  [-gridding]               : Use reverse gridding for interpolation\n";
     }
 
@@ -53,9 +53,9 @@ public:
     {
         Prog_parameters::show();
         if (!wrap)
-            cout << "Do not wrap"<<endl;
+            std::cout << "Do not wrap"<<std::endl;
         if (gridding)
-            cout << "Use reverse gridding interpolation"<<endl;
+            std::cout << "Use reverse gridding interpolation"<<std::endl;
     }
 };
 
@@ -87,7 +87,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
-    cerr << "Error: applygeo does not work with volumes\n";
+    std::cerr << "Error: applygeo does not work with volumes\n";
     exit(0);
     return false;
 }

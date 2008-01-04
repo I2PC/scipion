@@ -44,7 +44,7 @@ void Prog_Microscope_Parameters::read(int argc, char **argv)
 void Prog_Microscope_Parameters::usage()
 {
     Prog_parameters::usage();
-    cerr << "  [-ctf <CTF descr>]        : a CTF description\n"
+    std::cerr << "  [-ctf <CTF descr>]        : a CTF description\n"
     << "  [-defocus_change <v=0%>]  : change in the defocus value\n"
     << "  [-low_pass <w=0>]         : low pass filter for noise before CTF\n"
     << "  [-noise <stddev=0>]       : noise to be added\n"
@@ -56,13 +56,13 @@ void Prog_Microscope_Parameters::usage()
 void Prog_Microscope_Parameters::show()
 {
     Prog_parameters::show();
-    cout << "CTF file: " << fn_ctf << endl
-    << "Noise: " << sigma << endl
-    << "Noise before: " << sigma_before_CTF << endl
-    << "Noise after: " << sigma_after_CTF << endl
-    << "Low pass freq: " << low_pass_before_CTF << endl
-    << "After CTF noise: " << after_ctf_noise << endl
-    << "Defocus change: " << defocus_change << endl
+    std::cout << "CTF file: " << fn_ctf << std::endl
+    << "Noise: " << sigma << std::endl
+    << "Noise before: " << sigma_before_CTF << std::endl
+    << "Noise after: " << sigma_after_CTF << std::endl
+    << "Low pass freq: " << low_pass_before_CTF << std::endl
+    << "After CTF noise: " << after_ctf_noise << std::endl
+    << "Defocus change: " << defocus_change << std::endl
     ;
 }
 
@@ -163,8 +163,8 @@ void Prog_Microscope_Parameters::apply(Matrix2D<double> &I)
 #ifdef DEBUG
         ctf.write_amplitude("PPP_particular.xmp");
         char c;
-        cout << "Press any key\n";
-        cin >> c;
+        std::cout << "Press any key\n";
+        std::cin >> c;
 #endif
     }
 

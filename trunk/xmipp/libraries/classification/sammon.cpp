@@ -44,11 +44,11 @@ xmippSammon::xmippSammon(const unsigned _mapped,
         stress(-1)
 {
     if (mapped < 1)
-        throw invalid_argument("xmippSammon: mapped space must be > 1");
+        throw std::invalid_argument("xmippSammon: mapped space must be > 1");
     if (num_iterations < 1)
-        throw invalid_argument("xmippSammon: number of iterations must be > 0");
+        throw std::invalid_argument("xmippSammon: number of iterations must be > 0");
     if (learning_rate <= 0.0)
-        throw invalid_argument("xmippSammon: learning rate must be > 0");
+        throw std::invalid_argument("xmippSammon: learning rate must be > 0");
 }
 
 //-----------------------------------------------------------------------------
@@ -67,32 +67,32 @@ void xmippSammon::operator()(const In& in, Out& out)
     {
         generate(v.begin(), v.end(), uniform);
         transform(v.begin(), v.end(), v.begin(),
-                  bind2nd(divides<double>(), norm(v)));
+                  bind2nd(std::divides<double>(), norm(v)));
         out.add(v, in.theTargets[i]);
     }
 
     // calculate distances in original space
-    vector<xmippFeature> distances(in.size() *(in.size() - 1) / 2);
-    vector<xmippFeature>::iterator distance = distances.begin();
+    std::vector<xmippFeature> distances(in.size() *(in.size() - 1) / 2);
+    std::vector<xmippFeature>::iterator distance = distances.begin();
     for (i = 1; i < in.size(); i++)
         for (unsigned j = 0; j < i; j++)
             *distance++ = max(0.001, eDist(in.theItems[i], in.theItems[j]));
 
     // centroids of mapped samples
-    vector<xmippFeature> centroid(mapped);
+    std::vector<xmippFeature> centroid(mapped);
 
     // first derivative and second derivative of mapping error
-    vector<xmippFeature> dE(in.size());
-    vector<xmippFeature> d2E2(in.size());
+    std::vector<xmippFeature> dE(in.size());
+    std::vector<xmippFeature> d2E2(in.size());
 
     // copy of the samples for each pattern loop p
-    vector<vector<xmippFeature> > out2(in.size(), vector<xmippFeature>(mapped));
+    std::vector<std::vector<xmippFeature> > out2(in.size(), std::vector<xmippFeature>(mapped));
     int p;
     unsigned q;
 
     verbosity = listener->getVerbosity();
     if (verbosity)
-        listener->OnReportOperation((string) "mapping....\n");
+        listener->OnReportOperation((std::string) "mapping....\n");
     if (verbosity == 1 || verbosity == 3)
         listener->OnInitOperation(num_iterations);
 
@@ -183,7 +183,7 @@ void xmippSammon::operator()(const In& in, Out& out)
             {
                 char s[100];
                 sprintf(s, "Iteration %d of %d. Sammon Stress: %f\n", iteration + 1, num_iterations, stress);
-                listener->OnReportOperation((string) s);
+                listener->OnReportOperation((std::string) s);
             }
 
         } // if verbosity

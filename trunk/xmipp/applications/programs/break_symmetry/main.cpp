@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 {
 
     int                         iter;
-    vector<SelFile>             SFout;
+    std::vector<SelFile>             SFout;
     double                      avecorr;
     FileName                    fn_tmp;
     Prog_Break_Sym_prm          prm;
@@ -45,7 +45,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         prm.usage();
         exit(0);
     }
@@ -60,16 +60,16 @@ int main(int argc, char **argv)
 
             if (prm.verb > 0)
             {
-                cerr        << "--> Break symmetry:  iteration " << iter << " of " << prm.Niter << endl;
-                prm.fh_hist << "--> Break symmetry:  iteration " << iter << " of " << prm.Niter << endl;
+                std::cerr        << "--> Break symmetry:  iteration " << iter << " of " << prm.Niter << std::endl;
+                prm.fh_hist << "--> Break symmetry:  iteration " << iter << " of " << prm.Niter << std::endl;
             }
 
             prm.process_selfile(prm.SF, SFout, avecorr);
 
             if (prm.verb > 0)
             {
-                cerr        << "--> Average ccf: " << avecorr << endl;
-                prm.fh_hist << "--> Average ccf: " << avecorr << endl;
+                std::cerr        << "--> Average ccf: " << avecorr << std::endl;
+                prm.fh_hist << "--> Average ccf: " << avecorr << std::endl;
             }
 
             for (int volno = 0; volno < prm.Nvols; volno++)
@@ -81,7 +81,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         prm.usage();
         exit(0);
     }

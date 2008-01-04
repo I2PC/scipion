@@ -90,7 +90,7 @@ public:
     *   It takes a SOM as input and returns the calculated Umatrix
     */
 
-    void getUmatrix(const In& in, Out& out, const vector<unsigned>& _varsOut) const;
+    void getUmatrix(const In& in, Out& out, const std::vector<unsigned>& _varsOut) const;
 
 
 private:

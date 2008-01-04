@@ -275,7 +275,7 @@ int main(int argc, char **argv)
 	}
 
         if (!first)
-            std:: cout << "The best correlation is for\n"
+             std::cout << "The best correlation is for\n"
                        << "Scale                  : " << best_align(4) << std::endl
                        << "Translation (X,Y,Z)    : " << best_align(7)
 		       << " " << best_align(6) << " " << best_align(5)

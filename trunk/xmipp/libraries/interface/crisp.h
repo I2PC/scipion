@@ -77,7 +77,7 @@ public:
     /// Read from file
     void read(const FileName &fn);
     /// Show header
-    friend ostream & operator << (ostream &out, const CrispVolume &cv);
+    friend std::ostream & operator << (std::ostream &out, const CrispVolume &cv);
     /// Write as spider
     void write_as_spider(const FileName &fn);
 };

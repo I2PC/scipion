@@ -6,7 +6,7 @@
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
  * Part of this module has been developed by Lorenzo Zampighi and Nelson Tang
- * Dept. Physiology of the David Geffen School of Medicine
+ * Dept. Physiology of the David Geffen School of Medistd::cine
  * Univ. of California, Los Angeles.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -131,8 +131,8 @@ void ShowTable::annotateTime(const FileName &_fn)
 {
     struct stat info;
     if (stat(_fn.c_str(), &info))
-        cerr << "ShowTable::annotateTime: Cannot get time of file "
-        << _fn << endl;
+        std::cerr << "ShowTable::annotateTime: Cannot get time of file "
+        << _fn << std::endl;
     modification_time = info.st_mtime;
 }
 
@@ -421,7 +421,7 @@ void ShowTable::GUIopenFile()
 {
     QString newfilename = QFileDialog::getOpenFileName(QString::null, "*", this, "Sel files");
     if (!newfilename.isEmpty())
-        openNewFile((string)((const char *)newfilename));
+        openNewFile((std::string)((const char *)newfilename));
 }
 
 /* Help -------------------------------------------------------------------- */
@@ -455,7 +455,7 @@ void ShowTable::check_file()
     static bool message_shown = false;
     if (stat(fn.c_str(), &info) && !message_shown)
     {
-        cerr << "check_file: Cannot get time of file " << fn << endl;
+        std::cerr << "check_file: Cannot get time of file " << fn << std::endl;
         message_shown = true;
     }
     if (info.st_mtime != modification_time) reOpenFile();
@@ -486,9 +486,9 @@ void ShowTable::showStats(SelFile &SF, bool apply_geo)
    OPEN file descriptor (passed in as a parameter) which must be closed
    by the caller AFTER writing whatever contents are needed.  The file
    will be automatically deleted when this ShowTable object is destroyed. */
-string ShowTable::makeTempFile(int &fd)
+std::string ShowTable::makeTempFile(int &fd)
 {
-    string tmpfname = (string) P_tmpdir + "/xmipp_tempfile_XXXXXX";
+    std::string tmpfname = (std::string) P_tmpdir + "/xmipp_tempfile_XXXXXX";
     char *tempfile = strdup(tmpfname.c_str());
     fd = mkstemp(tempfile);
     tmpfname = tempfile;

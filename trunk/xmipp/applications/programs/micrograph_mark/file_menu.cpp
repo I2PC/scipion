@@ -128,7 +128,7 @@ void QtFileMenu::slotLoadCoords()
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
 }
 
@@ -250,7 +250,7 @@ void QtFileMenu::slotGenerateImages()
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
 }
 

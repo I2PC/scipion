@@ -97,8 +97,8 @@
  * eff0 = hist.percentil(2.5);
  * effF = hist.percentil(97.5);
  *
- * cout << "The effective range goes from " << eff0
- *     << " to " << effF << endl;
+ * std::cout << "The effective range goes from " << eff0
+ *     << " to " << effF << std::endl;
  * @endcode
  */
 class histogram1D: public Matrix1D< double >
@@ -217,7 +217,7 @@ public:
      * The first column is the value associated to each histogram measure. The
      * second one is the histogram measure.
      */
-    friend ostream& operator<<(ostream& o, const histogram1D& hist);
+    friend std::ostream& operator<<(std::ostream& o, const histogram1D& hist);
 
     /** Write an histogram to disk.
      */
@@ -262,7 +262,7 @@ public:
     /** Minimum value where the histogram is defined
      *
      * @code
-     * cout << "Minimum value for histogram " << hist.min() << endl;
+     * std::cout << "Minimum value for histogram " << hist.min() << std::endl;
      * @endcode
      */
     double hist_min() const
@@ -273,7 +273,7 @@ public:
     /** Maximum value where the histogram is defined
      *
      * @code
-     * cout << "Maximum value for histogram " << hist.max() << endl;
+     * std::cout << "Maximum value for histogram " << hist.max() << std::endl;
      * @endcode
      */
     double hist_max() const
@@ -284,7 +284,7 @@ public:
     /** Step size for the histogram
      *
      * @code
-     * cout << "Step size of the histogram " << hist.step() << endl;
+     * std::cout << "Step size of the histogram " << hist.step() << std::endl;
      * @endcode
      */
     double step() const
@@ -295,7 +295,7 @@ public:
     /** Number of steps in the histogram
      *
      * @code
-     * cout << "No. Steps in the histogram " << hist.stepNo() << endl;
+     * std::cout << "No. Steps in the histogram " << hist.stepNo() << std::endl;
      * @endcode
      */
     int stepNo() const
@@ -306,7 +306,7 @@ public:
     /** Number of samples introduced in the histogram
      *
      * @code
-     * cout << "No. Samples in the histogram " << hist.sampleNo() << endl;
+     * std::cout << "No. Samples in the histogram " << hist.sampleNo() << std::endl;
      * @endcode
      */
     double sampleNo() const
@@ -649,7 +649,7 @@ public:
      * The first column and second column are the (X,Y) coordinates of each
      * histogram measure. The third one is the histogram measure.
      */
-    friend ostream& operator<<(ostream& o, const histogram2D& hist);
+    friend std::ostream& operator<<(std::ostream& o, const histogram2D& hist);
 
     /** Write an histogram to disk
      */
@@ -707,7 +707,7 @@ public:
     /** Minimum i value where the histogram is defined
      *
      * @code
-     * cout << "Minimum value for histogram " << hist.Imin() << endl;
+     * std::cout << "Minimum value for histogram " << hist.Imin() << std::endl;
      * @endcode
      */
     double Ihist_min() const
@@ -718,7 +718,7 @@ public:
     /** Maximum i value where the histogram is defined
      *
      * @code
-     * cout << "Maximum value for histogram " << hist.Imax() << endl;
+     * std::cout << "Maximum value for histogram " << hist.Imax() << std::endl;
      * @endcode
      */
     double Ihist_max() const
@@ -729,7 +729,7 @@ public:
     /** Step size in i for the histogram
      *
      * @code
-     * cout << "Step size of the histogram " << hist.Istep() << endl;
+     * std::cout << "Step size of the histogram " << hist.Istep() << std::endl;
      * @endcode
      */
     double Istep() const
@@ -740,7 +740,7 @@ public:
     /** Number of steps in i in the histogram
      *
      * @code
-     * cout << "No. Steps in the histogram " << hist.IstepNo() << endl;
+     * std::cout << "No. Steps in the histogram " << hist.IstepNo() << std::endl;
      * @endcode
      */
     int IstepNo() const
@@ -751,7 +751,7 @@ public:
     /** Minimum j value where the histogram is defined
      *
      * @code
-     * cout << "Minimum value for histogram " << hist.Jmin() << endl;
+     * std::cout << "Minimum value for histogram " << hist.Jmin() << std::endl;
      * @endcode
      */
     double Jhist_min() const
@@ -762,7 +762,7 @@ public:
     /** Maximum j value where the histogram is defined
      *
      * @code
-     * cout << "Maximum value for histogram " << hist.Jmax() << endl;
+     * std::cout << "Maximum value for histogram " << hist.Jmax() << std::endl;
      * @endcode
      */
     double Jhist_max() const
@@ -773,7 +773,7 @@ public:
     /** Step size in j for the histogram
      *
      * @code
-     * cout << "Step size of the histogram " << hist.Jstep() << endl;
+     * std::cout << "Step size of the histogram " << hist.Jstep() << std::endl;
      * @endcode
      */
     double Jstep() const
@@ -784,7 +784,7 @@ public:
     /** Number of steps in j in the histogram
      *
      * @code
-     * cout << "No. Steps in the histogram " << hist.JstepNo() << endl;
+     * std::cout << "No. Steps in the histogram " << hist.JstepNo() << std::endl;
      * @endcode
      */
     int JstepNo() const
@@ -795,7 +795,7 @@ public:
     /** Number of samples introduced in the histogram
      *
      * @code
-     * cout << "No. Samples in the histogram " << hist.sampleNo() << endl;
+     * std::cout << "No. Samples in the histogram " << hist.sampleNo() << std::endl;
      * @endcode
      */
     int sampleNo() const

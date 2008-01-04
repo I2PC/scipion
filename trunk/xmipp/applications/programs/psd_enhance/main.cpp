@@ -35,7 +35,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
-    cerr << "This process is not valid for volumes\n";
+    std::cerr << "This process is not valid for volumes\n";
     return false;
 }
 

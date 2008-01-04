@@ -27,10 +27,10 @@
 
 VrmlFile::VrmlFile(FileName vrmlfilename)
 {
-    VrmlFile::fh_out.open(vrmlfilename.c_str(), ios::out); //trunc file
+    VrmlFile::fh_out.open(vrmlfilename.c_str(), std::ios::out); //trunc file
     VrmlFile::need_footer = 0;
-    VrmlFile::fh_out << "#VRML V2.0 utf8" << endl;
-    VrmlFile::fh_out << "# (XMIPP libraries) by R. Marabini" << endl ;
+    VrmlFile::fh_out << "#VRML V2.0 utf8" << std::endl;
+    VrmlFile::fh_out << "# (XMIPP libraries) by R. Marabini" << std::endl ;
 }/* VrmlFile */
 
 void VrmlFile::Sphere(Matrix1D<double> XYZ,
@@ -50,25 +50,25 @@ void VrmlFile::Sphere(Matrix1D<double> XYZ,
     if ((VrmlFile::need_footer) == 1)
         VrmlFile::fh_out << "    ]\n}\n";
 
-    VrmlFile::fh_out << "Transform {" << endl
-    << "    children [" << endl
-    << "       Transform { translation " << X << " " << Y << " " << Z << endl
-    << "        children[" << endl
-    << "        DEF BallRow Group {" << endl
-    << "            children [" << endl
-    << "                Shape {" << endl
-    << "                   appearance Appearance {" << endl
-    << "                        material Material { emissiveColor " << R << " " << G << " " << B << endl
-    << "                                            diffuseColor  " << R << " " << G << " " << B << endl
-    << "                                            specularColor 1 1 1"               << endl
-    << "                                            shininess     0.1" <<          " }" << endl
-    << "                    }" << endl
-    << "                    geometry Sphere { radius " << radius << " }" << endl
-    << "                }" << endl
-    << "            ]" << endl
-    << "        }" << endl
-    << "        ]" << endl
-    << "        }" << endl;
+    VrmlFile::fh_out << "Transform {" << std::endl
+    << "    children [" << std::endl
+    << "       Transform { translation " << X << " " << Y << " " << Z << std::endl
+    << "        children[" << std::endl
+    << "        DEF BallRow Group {" << std::endl
+    << "            children [" << std::endl
+    << "                Shape {" << std::endl
+    << "                   appearance Appearance {" << std::endl
+    << "                        material Material { emissiveColor " << R << " " << G << " " << B << std::endl
+    << "                                            diffuseColor  " << R << " " << G << " " << B << std::endl
+    << "                                            specularColor 1 1 1"               << std::endl
+    << "                                            shininess     0.1" <<          " }" << std::endl
+    << "                    }" << std::endl
+    << "                    geometry Sphere { radius " << radius << " }" << std::endl
+    << "                }" << std::endl
+    << "            ]" << std::endl
+    << "        }" << std::endl
+    << "        ]" << std::endl
+    << "        }" << std::endl;
     VrmlFile::need_footer = 1;
 
 }// sphere end
@@ -80,7 +80,7 @@ void VrmlFile::Add_sphere(const Matrix1D<double> XYZ)
     Y = YY(XYZ);
     Z = ZZ(XYZ);
 
-    VrmlFile::fh_out << "       Transform { translation  " << X << " " << Y << " " << Z << " children [USE BallRow] }     " << endl;
+    VrmlFile::fh_out << "       Transform { translation  " << X << " " << Y << " " << Z << " children [USE BallRow] }     " << std::endl;
 }//add sphere
 
 
@@ -101,28 +101,28 @@ void VrmlFile::Trans_Sphere(const Matrix1D<double> XYZ,
     if (VrmlFile::need_footer == 1)
         VrmlFile::fh_out << "    ]\n}\n";
     VrmlFile::fh_out
-    << "# Trans_Sphere " << endl
-    << "Transform {" << endl
-    << "    children [" << endl
-    << "       Transform { translation " << X << " " << Y << " " << Z << endl
-    << "        children[" << endl
-    << "        DEF BallRow Group {" << endl
-    << "            children [" << endl
-    << "                Shape {" << endl
-    << "                   appearance Appearance {" << endl
-    << "                       material Material { emissiveColor " << R << " " << G << " " << B << endl
-    << "                                           diffuseColor  " << R << " " << G << " " << B << endl
-    << "                                           transparency  0.5}" << endl
-    << "                }" << endl
-    << "                    geometry Sphere { radius " << radius << " }" << endl
-    << "            }" << endl
-    << "        ]" << endl
-    << "    }" << endl
-    << "    ]" << endl
-    << "    }" << endl;
+    << "# Trans_Sphere " << std::endl
+    << "Transform {" << std::endl
+    << "    children [" << std::endl
+    << "       Transform { translation " << X << " " << Y << " " << Z << std::endl
+    << "        children[" << std::endl
+    << "        DEF BallRow Group {" << std::endl
+    << "            children [" << std::endl
+    << "                Shape {" << std::endl
+    << "                   appearance Appearance {" << std::endl
+    << "                       material Material { emissiveColor " << R << " " << G << " " << B << std::endl
+    << "                                           diffuseColor  " << R << " " << G << " " << B << std::endl
+    << "                                           transparency  0.5}" << std::endl
+    << "                }" << std::endl
+    << "                    geometry Sphere { radius " << radius << " }" << std::endl
+    << "            }" << std::endl
+    << "        ]" << std::endl
+    << "    }" << std::endl
+    << "    ]" << std::endl
+    << "    }" << std::endl;
     VrmlFile::need_footer = 1;
-//      << "    ]" << endl
-//      << "}" << endl;
+//      << "    ]" << std::endl
+//      << "}" << std::endl;
 }//transparent sphere end
 
 /*-----------------------------------------------

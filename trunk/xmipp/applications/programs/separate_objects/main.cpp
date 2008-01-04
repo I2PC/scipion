@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage();
         exit(0);
     }
@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
                     I.write(fn_out);
                 }
 
-                cout << "Image number " << o << " contains " << number_elements
+                std::cout << "Image number " << o << " contains " << number_elements
                 << " pixels set to 1\n";
             }
         }
@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
                     V.write(fn_out);
                 }
 
-                cout << "Volume number " << o << " contains " << number_elements
+                std::cout << "Volume number " << o << " contains " << number_elements
                 << " voxels set to 1\n";
             }
         }
@@ -116,14 +116,14 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
 }
 
 /* Usage ------------------------------------------------------------------- */
 void Usage()
 {
-    cerr << "Usage: separate_objects\n"
+    std::cerr << "Usage: separate_objects\n"
     << "   -i <fn_in>                      : Input image or volume\n"
     << "  [-o <fn_root>]                   : Root filename for output\n"
     << "                                     By default, the input name\n"

@@ -52,19 +52,19 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
     exit(0);
 }
 
 void Usage(char *argv[])
 {
-    cout << "Purpose:\n"
+    std::cout << "Purpose:\n"
     << "    Perform a DISCRETE but not FAST Fourier Transform\n"
     << "    The input is an aph (MRC) file\n"
 
-    << "Usage:" << argv[0] << " -i filename" << endl << endl
-    << "\t-i           : Parameters file" << endl
+    << "Usage:" << argv[0] << " -i filename" << std::endl << std::endl
+    << "\t-i           : Parameters file" << std::endl
     ;
     exit(1);
 

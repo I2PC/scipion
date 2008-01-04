@@ -112,7 +112,7 @@ void xmippFuzzySOM::train(xmippFuzzyMap& _som, const TS& _examples)
 
     int verbosity = listener->getVerbosity();
     if (verbosity)
-        listener->OnReportOperation((string) "\nTraining Fuzzy SOM....\n");
+        listener->OnReportOperation((std::string) "\nTraining Fuzzy SOM....\n");
 
     // Deterministic annealing step
     if (annSteps)
@@ -123,7 +123,7 @@ void xmippFuzzySOM::train(xmippFuzzyMap& _som, const TS& _examples)
                 _som.memb[i][j] = 0.;
 
         if (verbosity)
-            listener->OnReportOperation((string) "\nDeterministic annealing steps....\n");
+            listener->OnReportOperation((std::string) "\nDeterministic annealing steps....\n");
         if (verbosity == 1 || verbosity == 3)
             listener->OnInitOperation(annSteps);
 
@@ -140,7 +140,7 @@ void xmippFuzzySOM::train(xmippFuzzyMap& _som, const TS& _examples)
             {
                 char s[100];
                 sprintf(s, "Iteration %d of %d. Code vectors variation: %g\n", iter + 1, annSteps, stopError);
-                listener->OnReportOperation((string) s);
+                listener->OnReportOperation((std::string) s);
             }
         }
         if (verbosity == 1 || verbosity == 3)
@@ -157,7 +157,7 @@ void xmippFuzzySOM::train(xmippFuzzyMap& _som, const TS& _examples)
 
 
     if (verbosity)
-        listener->OnReportOperation((string) "\nFinal steps....\n");
+        listener->OnReportOperation((std::string) "\nFinal steps....\n");
     if (verbosity == 1 || verbosity == 3)
         listener->OnInitOperation(somNSteps);
 
@@ -175,7 +175,7 @@ void xmippFuzzySOM::train(xmippFuzzyMap& _som, const TS& _examples)
         {
             char s[100];
             sprintf(s, "Iteration %d of %d. Code vectors variation: %g\n", t, somNSteps, stopError);
-            listener->OnReportOperation((string) s);
+            listener->OnReportOperation((std::string) s);
         }
     } // while
     if (verbosity == 1 || verbosity == 3)
@@ -203,7 +203,7 @@ double xmippFuzzySOM::test(const xmippFuzzyMap& _som, const TS& _examples) const
     int verbosity = listener->getVerbosity();
     if (verbosity)
     {
-        listener->OnReportOperation((string) "\nEstimating quantization error....\n");
+        listener->OnReportOperation((std::string) "\nEstimating quantization error....\n");
         listener->OnInitOperation(_examples.size());
     }
 
@@ -372,12 +372,12 @@ double xmippFuzzySOM::functional(const TS& _examples, const xmippFuzzyMap& _som,
 //-----------------------------------------------------------------------------
 void xmippFuzzySOM::showX(const TS& _ts)
 {
-    cout << "Data (1..nd, 1..nv) "  << endl;
+    std::cout << "Data (1..nd, 1..nv) "  << std::endl;
     for (int i = 0; i < _ts.size(); i++)
     {
         for (int j = 0; j < _ts.theItems[0].size(); j++)
         {
-            cout << i + 1 << "  " << j + 1 << "  " << _ts.theItems[i][j] << endl;
+            std::cout << i + 1 << "  " << j + 1 << "  " << _ts.theItems[i][j] << std::endl;
         }
     }
 }
@@ -386,27 +386,27 @@ void xmippFuzzySOM::showX(const TS& _ts)
 //-----------------------------------------------------------------------------
 void xmippFuzzySOM::showV(xmippFuzzyMap& _som)
 {
-    cout << "Code vectors (1..ni, 1..nj, 1..nv) "  << endl;
+    std::cout << "Code vectors (1..ni, 1..nj, 1..nv) "  << std::endl;
     for (int i = 0; i < _som.size(); i++)
     {
         int tmpj = _som.indexToPos(i).first;
         int tmpi = _som.indexToPos(i).second;
         for (int j = 0; j < _som.theItems[0].size(); j++)
-            cout << tmpi + 1 << "  " << tmpj + 1 << "  " << j + 1 << "  " << _som.theItems[i][j] << endl;
+            std::cout << tmpi + 1 << "  " << tmpj + 1 << "  " << j + 1 << "  " << _som.theItems[i][j] << std::endl;
     }
 }
 
 //-----------------------------------------------------------------------------
 void xmippFuzzySOM::showU(xmippFuzzyMap& _som, const TS& _ts)
 {
-    cout << " Memberships (1..nd,1..ni,1..nj)" << endl;
+    std::cout << " Memberships (1..nd,1..ni,1..nj)" << std::endl;
     for (int i = 0; i <  _ts.size(); i++)
     {
         for (int j = 0; j < _som.size(); j++)
         {
             int tmpj = _som.indexToPos(j).first;
             int tmpi = _som.indexToPos(j).second;
-            cout << i + 1 << "  " << tmpi + 1 << "  " << tmpj + 1 << "  " << _som.memb[i][j] << endl;
+            std::cout << i + 1 << "  " << tmpi + 1 << "  " << tmpj + 1 << "  " << _som.memb[i][j] << std::endl;
         }
     }
 

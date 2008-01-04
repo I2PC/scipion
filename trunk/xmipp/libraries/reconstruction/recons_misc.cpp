@@ -70,7 +70,7 @@ void build_recons_info(SelFile &selfile, SelFile &selctf,
         REPORT_ERROR(3008, "Build_Recons_Info: No memory for the sorting");
 
     int i = 0; // It will account for the number of valid projections processed
-    cerr << "Reading angle information ...\n";
+    std::cerr << "Reading angle information ...\n";
     init_progress_bar(trueIMG);
     while (!selfile.eof())
     {
@@ -170,8 +170,8 @@ void VariabilityClass::newUpdateVolume(GridVolume *ptr_vol_out,
 #ifdef DEBUG
     vol_voxels.write("PPPVariability.vol");
     char c;
-    cout << "Press any key\n";
-    cin >> c;
+    std::cout << "Press any key\n";
+    std::cin >> c;
 #endif
 
     // Select the LLL block and keep it
@@ -203,7 +203,7 @@ void VariabilityClass::finishAnalysis()
     SignificantT2().initZeros(zsize, ysize, xsize);
     SignificantMaxRatio().initZeros(zsize, ysize, xsize);
     SignificantMinRatio().initZeros(zsize, ysize, xsize);
-    cerr << "Classifying voxels ...\n";
+    std::cerr << "Classifying voxels ...\n";
     init_progress_bar(MULTIDIM_SIZE(SignificantT2()));
     int counter = 0, nxny = ysize * zsize;
 #ifdef MODE7
@@ -218,13 +218,13 @@ void VariabilityClass::finishAnalysis()
     FOR_ALL_ELEMENTS_IN_MATRIX3D(SignificantT2())
     {
         // Save the data for this voxel
-        ofstream fh_dat;
+        std::ofstream fh_dat;
         fh_dat.open("PPP.dat");
         if (!fh_dat)
             REPORT_ERROR(1, "VariabilityClass::finishAnalysis: "
                          "Cannot open PPP.dat for output");
-        fh_dat << NFEATURES << " " << nmax << endl;
-        vector< Matrix1D<double> > v;
+        fh_dat << NFEATURES << " " << nmax << std::endl;
+        std::vector< Matrix1D<double> > v;
         v.clear();
         for (int n = 0; n < nmax; n++)
         {
@@ -269,13 +269,13 @@ void VariabilityClass::finishAnalysis()
             v_aux = v_aux * v_aux;
             // COSS: Doesn't work: v_aux=v_aux.sort();
 
-            fh_dat << v_aux.transpose() << endl;
+            fh_dat << v_aux.transpose() << std::endl;
             v.push_back(v_aux);
         }
         fh_dat.close();
 
         // Classify
-        system("xmipp_fcmeans -din PPP.dat -cout PPP -c 2 -saveclusters > /dev/null");
+        system("xmipp_fcmeans -din PPP.dat -std::cout PPP -c 2 -saveclusters > /dev/null");
 
         // Pick up results
         Matrix2D<double> aux;
@@ -283,7 +283,7 @@ void VariabilityClass::finishAnalysis()
 #define GET_RESULTS(fh,fn,avg,cov,N,idx) \
     fh.open(fn);\
     if (!fh) \
-        REPORT_ERROR(1,(string)"VariabilityClass::finishAnalysis: " \
+        REPORT_ERROR(1,(std::string)"VariabilityClass::finishAnalysis: " \
                      "Cannot open "+fn+" for input"); \
     n_previous=-1; \
     while (!fh.eof()) { \
@@ -301,38 +301,38 @@ void VariabilityClass::finishAnalysis()
     aux.fromVector(avg); \
     cov-=aux*aux.transpose();
 
-        ifstream fh_0;
+        std::ifstream fh_0;
         Matrix1D<double> avg0(NFEATURES);
         Matrix1D<int>    idx0(nmax);
         Matrix2D<double> covariance0(NFEATURES, NFEATURES);
         int N0 = 0;
         GET_RESULTS(fh_0, "PPP.0", avg0, covariance0, N0, idx0);
 #ifdef DEBUG
-        cout << "Class 0 is:\n";
+        std::cout << "Class 0 is:\n";
         for (int n = 0; n < XSIZE(idx0); n++)
         {
             if (idx0(n))
             {
                 int iact_proj = prm->ordered_list(n);
-                cout << prm->IMG_Inf[iact_proj].fn_proj << endl;
+                std::cout << prm->IMG_Inf[iact_proj].fn_proj << std::endl;
             }
         }
 #endif
 
-        ifstream fh_1;
+        std::ifstream fh_1;
         Matrix1D<double> avg1(NFEATURES);
         Matrix1D<int>    idx1(nmax);
         Matrix2D<double> covariance1(NFEATURES, NFEATURES);
         int N1 = 0;
         GET_RESULTS(fh_1, "PPP.1", avg1, covariance1, N1, idx1);
 #ifdef DEBUG
-        cout << "Class 1 is:\n";
+        std::cout << "Class 1 is:\n";
         for (int n = 0; n < XSIZE(idx1); n++)
         {
             if (idx1(n))
             {
                 int iact_proj = prm->ordered_list(n);
-                cout << prm->IMG_Inf[iact_proj].fn_proj << endl;
+                std::cout << prm->IMG_Inf[iact_proj].fn_proj << std::endl;
             }
         }
 #endif
@@ -385,8 +385,8 @@ void VariabilityClass::finishAnalysis()
             SignificantMaxRatio(k, i, j) = eigenvalues(NFEATURES - 1) / eigenvalues(0);
         }
 #ifdef DEBUG
-        cout << "T2 for this classification is " << T2(0, 0) << endl;
-        cout << "Eigenvalues are " << eigenvalues.transpose() << endl;
+        std::cout << "T2 for this classification is " << T2(0, 0) << std::endl;
+        std::cout << "Eigenvalues are " << eigenvalues.transpose() << std::endl;
 #endif
         if (++counter % nxny == 0) progress_bar(counter);
     }
@@ -455,9 +455,9 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
         if (prm->tell&TELL_SAVE_AT_EACH_STEP)
         {
             vol_voxels.write("PPPvolPOCS0.vol");
-            cout << "Stats PPPvolPOCS0.vol: ";
+            std::cout << "Stats PPPvolPOCS0.vol: ";
             vol_voxels().print_stats();
-            cout << endl;
+            std::cout << std::endl;
         }
         // Apply surface restriction
         if (prm->surface_mask != NULL)
@@ -472,9 +472,9 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
         if (prm->tell&TELL_SAVE_AT_EACH_STEP)
         {
             vol_POCS.write("PPPvolPOCS1.vol");
-            cout << "Stats PPPvolPOCS1.vol: ";
+            std::cout << "Stats PPPvolPOCS1.vol: ";
             vol_POCS().print_stats();
-            cout << endl;
+            std::cout << std::endl;
         }
         // Force symmetry
         if (prm->force_sym != 0)
@@ -484,9 +484,9 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
             if (prm->tell&TELL_SAVE_AT_EACH_STEP)
             {
                 vol_aux.write("PPPvolPOCS2.vol");
-                cout << "Stats PPPvolPOCS2.vol: ";
+                std::cout << "Stats PPPvolPOCS2.vol: ";
                 vol_aux().print_stats();
-                cout << endl;
+                std::cout << std::endl;
             }
         }
         // Apply volume constraint
@@ -510,9 +510,9 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
         if (prm->tell&TELL_SAVE_AT_EACH_STEP)
         {
             vol_POCS.write("PPPvolPOCS3.vol");
-            cout << "Stats PPPvolPOCS3.vol: ";
+            std::cout << "Stats PPPvolPOCS3.vol: ";
             vol_POCS().print_stats();
-            cout << endl;
+            std::cout << std::endl;
         }
 
         // Do not allow positivity outside interest region
@@ -534,8 +534,8 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
             posi++;
         }
         // Debugging messages
-        //cerr << "Relaxation/Positivity " << (double)relax/(double)bg << " "
-        //     << (double)posi/(double)fg << " " << endl;
+        //std::cerr << "Relaxation/Positivity " << (double)relax/(double)bg << " "
+        //     << (double)posi/(double)fg << " " << std::endl;
 
         // Solve volumetric equations
         switch (prm->basis.type)
@@ -561,8 +561,8 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
                                                  NULL,
                                                  POCS_mean_error, POCS_max_error, VARTK);
                     if (prm->tell&TELL_SAVE_AT_EACH_STEP)
-                        cout << "    POCS Iteration " << i
-                        << " POCS Error=" <<  POCS_mean_error << endl;
+                        std::cout << "    POCS Iteration " << i
+                        << " POCS Error=" <<  POCS_mean_error << std::endl;
                 }
             }
             break;
@@ -600,7 +600,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
             {
             case POCS_measuring:
 #ifdef DEBUG_POCS
-                cout << "M:" << POCS_vec_i << " " << POCS_mean_error << endl;
+                std::cout << "M:" << POCS_vec_i << " " << POCS_mean_error << std::endl;
 #endif
                 POCS_errors(POCS_vec_i++) = POCS_mean_error;
                 if (POCS_vec_i == POCS_N_measure)
@@ -611,7 +611,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
                     POCS_freq++;
                     POCS_state = POCS_use;
 #ifdef DEBUG_POCS
-                    cerr << "1: Changing to " << POCS_freq << endl;
+                    std::cerr << "1: Changing to " << POCS_freq << std::endl;
 #endif
                 }
                 break;
@@ -620,8 +620,8 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
                 POCS_errors.computeStats(POCS_avg,
                                           POCS_stddev, dummy, POCS_min);
 #ifdef DEBUG_POCS
-                cout << "Reference errors: " << POCS_errors.transpose() << endl;
-                cout << "Checking " << ABS(POCS_mean_error - POCS_avg) << " " << 1.2*1.96*POCS_stddev << endl;
+                std::cout << "Reference errors: " << POCS_errors.transpose() << std::endl;
+                std::cout << "Checking " << ABS(POCS_mean_error - POCS_avg) << " " << 1.2*1.96*POCS_stddev << std::endl;
 #endif
                 if (ABS(POCS_mean_error - POCS_avg) < 1.2*1.96*POCS_stddev)
                 {
@@ -644,7 +644,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
                     { // increase frequency
                         POCS_freq++;
 #ifdef DEBUG_POCS
-                        cerr << "2: Changing to " << POCS_freq << endl;
+                        std::cerr << "2: Changing to " << POCS_freq << std::endl;
 #endif
                         POCS_used = 0;
                     }
@@ -657,7 +657,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
                         POCS_freq = prm->POCS_freq + 1;
                         POCS_used = 0;
 #ifdef DEBUG_POCS
-                        cerr << "3: Changing to " << POCS_freq << endl;
+                        std::cerr << "3: Changing to " << POCS_freq << std::endl;
 #endif
                     }
                     else if (POCS_used > 2)
@@ -667,7 +667,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
                         POCS_used = 0;
                         POCS_state = POCS_lowering;
 #ifdef DEBUG_POCS
-                        cerr << "Lowering\n";
+                        std::cerr << "Lowering\n";
 #endif
                     }
                 }

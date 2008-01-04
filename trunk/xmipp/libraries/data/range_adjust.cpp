@@ -38,18 +38,18 @@ void Prog_Range_adjust_Parameters::read(int argc, char **argv)
 /* Usage ------------------------------------------------------------------- */
 void Prog_Range_adjust_Parameters::usage()
 {
-    cerr << "   -min <min_val>       : Output minimum value\n"
-    << "   -max <max_val>       : Output maximum value\n"
-    << "  [-noise <sigma %>]    : Variation of the minimum value\n"
+    std::cerr << "   -min <min_val>       : Output minimum value\n"
+              << "   -max <max_val>       : Output maximum value\n"
+              << "  [-noise <sigma %>]    : Variation of the minimum value\n"
     ;
 }
 
 /* Show -------------------------------------------------------------------- */
 void Prog_Range_adjust_Parameters::show()
 {
-    cout << "Min:   " << min_val << endl
-    << "Max:   " << max_val << endl
-    << "Noise: " << sigma   << endl;
+    std::cout << "Min:   " << min_val << std::endl
+              << "Max:   " << max_val << std::endl
+              << "Noise: " << sigma   << std::endl;
 }
 
 /* Apply ------------------------------------------------------------------- */

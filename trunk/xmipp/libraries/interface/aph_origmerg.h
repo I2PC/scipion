@@ -68,7 +68,7 @@ struct spot
 };
 
 /// Show a spot
-ostream &operator<<(ostream &os, const spot &s);
+std::ostream &operator<<(std::ostream &os, const spot &s);
 
 // function for sorting elements in ascending order
 //  bool operator<(  spot A, spot B )
@@ -97,7 +97,7 @@ public:
     /** APH Filename */
     FileName fn_aph;
     /** Pointer to a SPOT vector */
-    vector<spot> aph_data_vector;
+    std::vector<spot> aph_data_vector;
 //   struct spot  * aph_data_array[];
 #ifdef REMOVE //No needed since we use a vector v.size()
     /** number of spots */

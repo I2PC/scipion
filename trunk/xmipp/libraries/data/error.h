@@ -73,10 +73,10 @@
  * }
  * catch (Xmipp_error XE)
  * {
- *     cout << XE;
- *     cout << "The reconstructed volume is too small to be saved in blobs";
- *     cout << "So, there is no blob version of it at this iteration";
- *     cout << "I go on processing" << endl;
+ *     std::cout << XE;
+ *     std::cout << "The reconstructed volume is too small to be saved in blobs";
+ *     std::cout << "So, there is no blob version of it at this iteration";
+ *     std::cout << "I go on processing" << std::endl;
  * }
  * #else
  * vol_blobs.write(fn_blobs);
@@ -144,7 +144,7 @@ public:
     /** Message shown */
     std::string msg;
 
-    /** File producing the error */
+    /** File produstd::cing the error */
     std::string file;
 
     /** Line number */

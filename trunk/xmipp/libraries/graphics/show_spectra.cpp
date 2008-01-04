@@ -83,9 +83,9 @@ void ShowSpectra::readFile(const FileName &_fn, double _minGray, double _maxGray
 
 void ShowSpectra::readDatFile(const FileName &_fn)
 {
-    ifstream fh_in(_fn.c_str());
+    std::ifstream fh_in(_fn.c_str());
     if (!fh_in)
-        REPORT_ERROR(1, (string)"ShowSpectra::readFile: Cannot open" + _fn);
+        REPORT_ERROR(1, (std::string)"ShowSpectra::readFile: Cannot open" + _fn);
     V = new xmippCTVectors(fh_in);
     fh_in.close();
 
@@ -275,7 +275,7 @@ void ShowSpectra::selectByValues()
 }
 
 /* Apply filter ------------------------------------------------------------ */
-void ShowSpectra::applyFilter(const vector<int> &min, const vector<int> &max)
+void ShowSpectra::applyFilter(const std::vector<int> &min, const std::vector<int> &max)
 {
     int N = V->theItems[0].size();
 
@@ -385,28 +385,28 @@ void ShowSpectra::changeXstep()
 {
     int N = V->theItems[0].size();
     ScrollParam* param_window;
-    vector<float> min;
+    std::vector<float> min;
     min.push_back(1);
     min.push_back(1);
-    vector<float> max;
+    std::vector<float> max;
     max.push_back(N);
     max.push_back(N);
-    vector<float> initial_value;
+    std::vector<float> initial_value;
     initial_value.push_back(spacing);
     initial_value.push_back(x_tick_off);
-    vector<char *> prm_name;
-    prm_name.push_back("Spacing");
+    std::vector<char *> prm_name;
+    prm_name.push_back("spacing");
     prm_name.push_back("Tick offset");
     param_window = new ScrollParam(min, max, initial_value, prm_name,
                                    "Set spacing", 0, "new window", WDestructiveClose, 0);
-    connect(param_window, SIGNAL(new_value(vector<float>)), this,
-            SLOT(set_spacing(vector<float>)));
+    connect(param_window, SIGNAL(new_value(std::vector<float>)), this,
+            SLOT(set_spacing(std::vector<float>)));
     param_window->setFixedSize(200, 175);
     param_window->show();
 }
 
 /****************************************************/
-void ShowSpectra::set_spacing(vector<float> prm)
+void ShowSpectra::set_spacing(std::vector<float> prm)
 {
     spacing = (int) prm[0];
     x_tick_off = (int) prm[1];
@@ -454,7 +454,7 @@ void ShowSpectra::setCommonSpectraOptionsRightclickMenubar()
 /* ------------------------------------------------------------------------- */
 // Spectra filter constructor
 SpectraFilter::SpectraFilter(int min, int max,
-                             const vector<float> &_x, ShowSpectra *_show_spectra,
+                             const std::vector<float> &_x, ShowSpectra *_show_spectra,
                              QWidget *parent, const char *name, int wflags):
         QWidget(parent, name, wflags)
 {
@@ -525,7 +525,7 @@ SpectraFilter::SpectraFilter(int min, int max,
         // Label
         QLabel     *label = new QLabel(this, "label");
         label->setFont(QFont("times", 12));
-        label->setText(((string)"Harmonic " + integerToString(i + 1, 2)).c_str());
+        label->setText(((std::string)"Harmonic " + integerToString(i + 1, 2)).c_str());
         label->setFixedSize(label->sizeHint());
         grid->addWidget(label, i + 1, 2, AlignCenter);
 
@@ -582,8 +582,8 @@ void SpectraFilter::scrollValueChanged(int new_val)
 /* Filter ------------------------------------------------------------------ */
 void SpectraFilter::but_ok_clicked()
 {
-    vector<int> min(__N);
-    vector<int> max(__N);
+    std::vector<int> min(__N);
+    std::vector<int> max(__N);
     for (int i = 0; i < __N; i++)
     {
         min[i] = __scroll_min[i]->value();

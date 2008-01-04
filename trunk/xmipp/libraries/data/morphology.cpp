@@ -243,7 +243,7 @@ void random_convex_hull(const Matrix2D<double> &img, Matrix2D<double> &hull,
 {
     hull = img;
 
-    vector<int> full_tx, full_ty;
+    std::vector<int> full_tx, full_ty;
     // Build the list of points
     FOR_ALL_ELEMENTS_IN_MATRIX2D(img)
     if (img(i, j) > 0)

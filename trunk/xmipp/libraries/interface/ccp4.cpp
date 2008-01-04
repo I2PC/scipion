@@ -142,7 +142,7 @@ void CCP4::read(const FileName &fn_in,
     // Get header size
     struct stat info;
     if (fstat(fileno(fp), &info))
-        EXIT_ERROR(1, (string)"CCP4: Cannot get size of " + fn_in);
+        EXIT_ERROR(1, (std::string)"CCP4: Cannot get size of " + fn_in);
     int header_size = info.st_size - my_mrc_header.nx *
                       my_mrc_header.ny *
                       my_mrc_header.nz * mode_size;
@@ -219,7 +219,7 @@ void CCP4::read(const FileName &fn_in,
     // Get header size
     struct stat info;
     if (fstat(fileno(fp), &info))
-        EXIT_ERROR(1, (string)"CCP4: Cannot get size of " + fn_in);
+        EXIT_ERROR(1, (std::string)"CCP4: Cannot get size of " + fn_in);
     int header_size = info.st_size - my_mrc_header.nx *
                       my_mrc_header.ny *
                       my_mrc_header.nz * mode_size;

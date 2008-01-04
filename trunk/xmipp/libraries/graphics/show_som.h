@@ -44,9 +44,9 @@ protected:
     // Array of selfiles, a selfile for each codevector
     SelFile *SFcv;
     // Histogram of images assigned
-    string  *hisAssigned;
+    std::string  *hisAssigned;
     // Errors within group
-    string  *cv_errors;
+    std::string  *cv_errors;
     // Info file
     QString infStr;
 

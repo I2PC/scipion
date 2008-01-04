@@ -29,17 +29,17 @@
 
 void VirusEulerMatrices::read(const FileName &fn)
 {
-    ifstream  fh_Euler;
-    int       line_no = 0;
-    string    line;
-    int       i;
+    std::ifstream  fh_Euler;
+    int            line_no = 0;
+    std::string    line;
+    int            i;
 
     //alloc Memory
     for (i = 0;i < Vir_Eq_Views;i++)
         E_Matrices[i].resize(3, 3);
 
     // Open file
-    fh_Euler.open(fn.c_str(), ios::in);
+    fh_Euler.open(fn.c_str(), std::ios::in);
     if (!fh_Euler)
         REPORT_ERROR(1601, "VirusEulerMatrices::read: File " + fn + " not found");
 
@@ -56,17 +56,17 @@ void VirusEulerMatrices::read(const FileName &fn)
             E_Matrices[(int)(line_no/3)](line_no % 3, 0) = textToFloat(firstToken(line));
             E_Matrices[(int)(line_no/3)](line_no % 3, 1) = textToFloat(nextToken());
             E_Matrices[(int)(line_no/3)](line_no % 3, 2) = textToFloat(nextToken());
-//cout<<line<<endl;
+//std::cout<<line<<std::endl;
         }
         catch (Xmipp_error)
         {
-            cout << "Euler File: Line " << line_no << " is skipped due to an error\n";
+            std::cout << "Euler File: Line " << line_no << " is skipped due to an error\n";
         }
         line_no++;
         fh_Euler.peek();
 //if(line_no%3==0)
 //{
-//cout<<E_Matrices[(int)((line_no-1)/3)];
+//std::cout<<E_Matrices[(int)((line_no-1)/3)];
 //exit(1);
 //}
     }/* while */

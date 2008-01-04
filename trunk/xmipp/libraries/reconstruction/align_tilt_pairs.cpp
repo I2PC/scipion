@@ -55,29 +55,29 @@ void Prog_centilt_prm::read(int argc, char **argv)
 // Show ====================================================================
 void Prog_centilt_prm::show()
 {
-    cerr << " Selfile untilted images              : " <<  SFu.name() << endl;
-    cerr << " Selfile tilted images                : " <<  SFt.name() << endl;
+    std::cerr << " Selfile untilted images              : " <<  SFu.name() << std::endl;
+    std::cerr << " Selfile tilted images                : " <<  SFt.name() << std::endl;
     if (oext != "")
-        cerr << " Output extension for tilted images   : " << oext << endl;
+        std::cerr << " Output extension for tilted images   : " << oext << std::endl;
     if (max_shift != 0)
-        cerr << " Discard images that shift more than  : " << max_shift << endl;
+        std::cerr << " Discard images that shift more than  : " << max_shift << std::endl;
     if (fn_doc != "")
-        cerr << " Output document file (tilted images) : " << fn_doc << endl;
+        std::cerr << " Output document file (tilted images) : " << fn_doc << std::endl;
     if (force_x_zero)
-        cerr << " Force x-shift to be zero " << endl;
+        std::cerr << " Force x-shift to be zero " << std::endl;
     if (!do_stretch)
-        cerr << " Skip cosine stretching " << endl;
+        std::cerr << " Skip cosine stretching " << std::endl;
     if (!do_center)
-        cerr << " Skip centering " << endl;
+        std::cerr << " Skip centering " << std::endl;
 
 }
 
 // usage ===================================================================
 void Prog_centilt_prm::usage()
 {
-    cerr << "Usage:  " << endl;
-    cerr << "  centilt [options]" << endl;
-    cerr << "   -u <selfile>             : Selfile containing untilted images \n"
+    std::cerr << "Usage:  " << std::endl;
+    std::cerr << "  centilt [options]" << std::endl;
+    std::cerr << "   -u <selfile>             : Selfile containing untilted images \n"
     << "   -t <selfile>             : Selfile containing tilted images \n"
     << " [ -oext <extension> ]      : For output tilted images; if not to overwrite input\n"
     << " [ -max_shift <float> ]     : Discard images that shift more [pix]\n"
@@ -85,7 +85,7 @@ void Prog_centilt_prm::usage()
     << " [ -force_x_zero ]          : Force x-shift to be zero \n"
     << " [ -skip_stretching ]       : do not perform cosine stretching \n"
     << " [ -skip_centering ]        : do not perform centering, i.e. only modify angles \n"
-    << endl;
+    << std::endl;
 }
 
 // Center one tilted image  =====================================================
@@ -182,7 +182,7 @@ void Prog_centilt_prm::centilt()
 
     n_images = SFt.ImgNo();
     n_discarded = 0;
-    cerr << "  Centering of " << n_images << " tilted images" << endl;
+    std::cerr << "  Centering of " << n_images << " tilted images" << std::endl;
     init_progress_bar(n_images);
     barf = XMIPP_MAX(1, (int)(1 + (n_images / 60)));
     imgno = 0;
@@ -254,7 +254,7 @@ void Prog_centilt_prm::centilt()
         if (imgno % barf == 0) progress_bar(imgno);
     }
     progress_bar(n_images);
-    if (max_shift > 0) cerr << "  Discarded " << n_discarded << " tilted images that shifted too much" << endl;
+    if (max_shift > 0) std::cerr << "  Discarded " << n_discarded << " tilted images that shifted too much" << std::endl;
 
     // Write out document file
     if (fn_doc != "") DFo.write(fn_doc);

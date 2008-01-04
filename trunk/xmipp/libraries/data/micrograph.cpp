@@ -83,14 +83,13 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
         __offset = header.get_header_size();
         __depth = 32;
         reversed = header.reversed();
-//cerr << "I am in  Is_ImageXmipp, dim " <<  Xdim   <<   " " <<  Ydim << endl;
     }
     else
     {
         fn_inf = fn_micrograph.add_extension("inf");
         FILE *fh_inf = fopen(fn_inf.c_str(), "r");
         if (!fh_inf)
-            REPORT_ERROR(1, (string)"Micrograph::open_micrograph: Cannot find " +
+            REPORT_ERROR(1, (std::string)"Micrograph::open_micrograph: Cannot find " +
                          fn_inf);
         Xdim = textToInteger(getParameter(fh_inf, "Xdim"));
         Ydim = textToInteger(getParameter(fh_inf, "Ydim"));
@@ -109,7 +108,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
     // Open micrograph and map
     fh_micrograph = open(fn_micrograph.c_str(), O_RDWR, S_IREAD | S_IWRITE);
     if (fh_micrograph == -1)
-        REPORT_ERROR(1, (string)"Micrograph::open_micrograph: There is a "
+        REPORT_ERROR(1, (std::string)"Micrograph::open_micrograph: There is a "
                      "problem opening " + fn_micrograph +
                      "\nCheck that the file has write permission");
     char *aux_ptr;
@@ -120,17 +119,17 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
         m8 = (unsigned char *) mmap(0, (__depth / 8) * Ydim * Xdim + __offset,
                                     PROT_READ | PROT_WRITE, MAP_SHARED, fh_micrograph, 0);
         if (m8 == MAP_FAILED)
-            REPORT_ERROR(1, (string)"Micrograph::open_micrograph: cannot map " +
+            REPORT_ERROR(1, (std::string)"Micrograph::open_micrograph: cannot map " +
                          _fn_micrograph + " in memory");
         m8 += __offset;
         /* } else {
            m8=new unsigned char (Ydim*Xdim*__depth/8);
            int length=Ydim*Xdim*__depth/8;
            int read_length=read(fh_micrograph,m8,length);
-           cout << SSIZE_MAX << endl;
-           cout << read_length << endl;
+           std::cout << SSIZE_MAX << std::endl;
+           std::cout << read_length << std::endl;
            if (read_length!=length)
-              REPORT_ERROR(1,(string)"Micrograph::open_micrograph: cannot read "+
+              REPORT_ERROR(1,(std::string)"Micrograph::open_micrograph: cannot read "+
                  _fn_micrograph+" in memory");
         } */
         break;
@@ -144,19 +143,19 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
             {
                 /*
                 switch (errno) {
-                case EACCES:    cout << "EACCES:   \n"; break;
-                  case EAGAIN:    cout << "EAGAIN:   \n"; break;
-                case EBADF:     cout << "EBADF:    \n"; break;
-                case EINVAL:    cout << "EINVAL:   \n"; break;
-                case EMFILE:    cout << "EMFILE:   \n"; break;
-                case ENODEV:    cout << "ENODEV:   \n"; break;
-                case ENOMEM:    cout << "ENOMEM:   \n"; break;
-                case ENOTSUP:   cout << "ENOTSUP:  \n"; break;
-                case ENXIO:     cout << "ENXIO:    \n"; break;
-                case EOVERFLOW: cout << "EOVERFLOW:\n"; break;
+                case EACCES:    std::cout << "EACCES:   \n"; break;
+                  case EAGAIN:    std::cout << "EAGAIN:   \n"; break;
+                case EBADF:     std::cout << "EBADF:    \n"; break;
+                case EINVAL:    std::cout << "EINVAL:   \n"; break;
+                case EMFILE:    std::cout << "EMFILE:   \n"; break;
+                case ENODEV:    std::cout << "ENODEV:   \n"; break;
+                case ENOMEM:    std::cout << "ENOMEM:   \n"; break;
+                case ENOTSUP:   std::cout << "ENOTSUP:  \n"; break;
+                case ENXIO:     std::cout << "ENXIO:    \n"; break;
+                case EOVERFLOW: std::cout << "EOVERFLOW:\n"; break;
                 }
                 */
-                REPORT_ERROR(1, (string)"Micrograph::open_micrograph: cannot map " +
+                REPORT_ERROR(1, (std::string)"Micrograph::open_micrograph: cannot map " +
                              _fn_micrograph + " in memory");
             }
             aux_ptr = (char *)m16;
@@ -172,19 +171,19 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
             {
                 /*
                 switch (errno) {
-                case EACCES:    cout << "EACCES:   \n"; break;
-                  case EAGAIN:    cout << "EAGAIN:   \n"; break;
-                case EBADF:     cout << "EBADF:    \n"; break;
-                case EINVAL:    cout << "EINVAL:   \n"; break;
-                case EMFILE:    cout << "EMFILE:   \n"; break;
-                case ENODEV:    cout << "ENODEV:   \n"; break;
-                case ENOMEM:    cout << "ENOMEM:   \n"; break;
-                case ENOTSUP:   cout << "ENOTSUP:  \n"; break;
-                case ENXIO:     cout << "ENXIO:    \n"; break;
-                case EOVERFLOW: cout << "EOVERFLOW:\n"; break;
+                case EACCES:    std::cout << "EACCES:   \n"; break;
+                  case EAGAIN:    std::cout << "EAGAIN:   \n"; break;
+                case EBADF:     std::cout << "EBADF:    \n"; break;
+                case EINVAL:    std::cout << "EINVAL:   \n"; break;
+                case EMFILE:    std::cout << "EMFILE:   \n"; break;
+                case ENODEV:    std::cout << "ENODEV:   \n"; break;
+                case ENOMEM:    std::cout << "ENOMEM:   \n"; break;
+                case ENOTSUP:   std::cout << "ENOTSUP:  \n"; break;
+                case ENXIO:     std::cout << "ENXIO:    \n"; break;
+                case EOVERFLOW: std::cout << "EOVERFLOW:\n"; break;
                 }
                 */
-                REPORT_ERROR(1, (string)"Micrograph::open_micrograph: cannot map " +
+                REPORT_ERROR(1, (std::string)"Micrograph::open_micrograph: cannot map " +
                              _fn_micrograph + " in memory");
             }
             aux_ptr = (char *)um16;
@@ -195,7 +194,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
            m16=new short int (Ydim*Xdim*__depth/8);
            int length=Ydim*Xdim*__depth/8;
            if (read(fh_micrograph,m16,length)!=length)
-              REPORT_ERROR(1,(string)"Micrograph::open_micrograph: cannot read "+
+              REPORT_ERROR(1,(std::string)"Micrograph::open_micrograph: cannot read "+
                  _fn_micrograph+" in memory");
         } */
         break;
@@ -204,7 +203,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
         m32 = (float*) mmap(0, (__depth / 8) * Ydim * Xdim + __offset,
                             PROT_READ | PROT_WRITE, MAP_SHARED, fh_micrograph, 0);
         if (m32 == MAP_FAILED)
-            REPORT_ERROR(1, (string)"Micrograph::open_micrograph: cannot map " +
+            REPORT_ERROR(1, (std::string)"Micrograph::open_micrograph: cannot map " +
                          _fn_micrograph + " in memory");
         aux_ptr = (char *)m32;
         aux_ptr += __offset;
@@ -263,7 +262,7 @@ void Micrograph::close_micrograph()
 /* Compute 8 bit scaling --------------------------------------------------- */
 void Micrograph::compute_8_bit_scaling()
 {
-    cerr << "Computing 8 bit scaling ...\n";
+    std::cerr << "Computing 8 bit scaling ...\n";
 
     // Compute minimum and maximum value
     float minval, maxval;
@@ -279,9 +278,9 @@ void Micrograph::compute_8_bit_scaling()
                 maxval = tmp;
             /*
             if(maxval > 32000)
-              cout << "(i,j) max min valuefloat value" << i << " " << j
+              std::cout << "(i,j) max min valuefloat value" << i << " " << j
                  << " " << maxval << " " << minval << " "<< tmp
-                 << " " << (*this)(j,i) << endl;
+                 << " " << (*this)(j,i) << std::endl;
             */
         }
     }
@@ -312,7 +311,7 @@ void Micrograph::compute_8_bit_scaling()
     __a = (maxF - minF) / (maxval - minval);
     __b = minF - __a * minval;
     __scaling_valid = true;
-    //cerr <<  "__a  " << __a  << "__b" << __b << endl;
+    //std::cerr <<  "__a  " << __a  << "__b" << __b << std::endl;
 
 }
 
@@ -324,17 +323,17 @@ void Micrograph::write_as_8_bits(const FileName &fn8bits)
     // Create empty output file
     create_empty_file(fn8bits, ((unsigned long long)Ydim)*Xdim);
 
-    ofstream fh8bits_inf;
+    std::ofstream fh8bits_inf;
     fh8bits_inf.open((fn8bits + ".inf").c_str());
     if (!fh8bits_inf)
-        REPORT_ERROR(1, (string)"write_as_8_bits: Cannot open " + fn8bits +
+        REPORT_ERROR(1, (std::string)"write_as_8_bits: Cannot open " + fn8bits +
                      ".inf");
     fh8bits_inf << "# Generated by write_as_8_bits\n";
-    fh8bits_inf << "# Original file: " << fn_micrograph << endl;
+    fh8bits_inf << "# Original file: " << fn_micrograph << std::endl;
     fh8bits_inf << "# Image width\n";
-    fh8bits_inf << "Xdim= " << Xdim << endl;
+    fh8bits_inf << "Xdim= " << Xdim << std::endl;
     fh8bits_inf << "# Image length\n";
-    fh8bits_inf << "Ydim= " << Ydim << endl;
+    fh8bits_inf << "Ydim= " << Ydim << std::endl;
     fh8bits_inf << "# Pixel depth\n";
     fh8bits_inf << "bitspersample=8\n";
     fh8bits_inf.close();
@@ -351,32 +350,32 @@ void Micrograph::write_as_8_bits(const FileName &fn8bits)
 /* Save coordinates to disk ------------------------------------------------ */
 void Micrograph::write_coordinates(int label, const FileName &_fn_coords)
 {
-    ofstream fh;
+    std::ofstream fh;
     if (_fn_coords != "")
         fn_coords = _fn_coords;
-    fh.open(fn_coords.c_str(), ios::out);
+    fh.open(fn_coords.c_str(), std::ios::out);
     if (!fh)
-        REPORT_ERROR(1, (string)"Micrograph::write: File " + fn_coords +
+        REPORT_ERROR(1, (std::string)"Micrograph::write: File " + fn_coords +
                      " cannot be openned for output");
     int imax = coords.size();
     fh << "# <X position> <Y position>\n";
     for (int i = 0; i < imax; i++)
         if (coords[i].valid && coords[i].label == label)
-            fh << coords[i].X << " " << coords[i].Y << endl;
+            fh << coords[i].X << " " << coords[i].Y << std::endl;
     fh.close();
 }
 
 /* Read coordinates from disk ---------------------------------------------- */
 void Micrograph::read_coordinates(int label, const FileName &_fn_coords)
 {
-    ifstream  fh;
-    int       line_no = 0;
-    string    line;
+    std::ifstream  fh;
+    int            line_no = 0;
+    std::string    line;
 
     fn_coords = _fn_coords;
-    fh.open(fn_coords.c_str(), ios::in);
+    fh.open(fn_coords.c_str(), std::ios::in);
     if (!fh)
-        REPORT_ERROR(1, (string)"Micrograph::read: File " + fn_coords + " not found");
+        REPORT_ERROR(1, (std::string)"Micrograph::read: File " + fn_coords + " not found");
 
     // Count the number of lines
     fh.peek();
@@ -391,7 +390,7 @@ void Micrograph::read_coordinates(int label, const FileName &_fn_coords)
     fh.clear();
 
     // Resize coordinate list and read
-    fh.open(fn_coords.c_str(), ios::in);
+    fh.open(fn_coords.c_str(), std::ios::in);
     coords.reserve(line_no);
     struct Particle_coords aux;
     aux.valid = true;
@@ -405,7 +404,7 @@ void Micrograph::read_coordinates(int label, const FileName &_fn_coords)
             int converted_elements = sscanf(line.c_str(), "%d %d",
                                             &aux.X, &aux.Y);
             if (converted_elements != 2)
-                cerr << "Ignoring line: " << line << endl;
+                std::cerr << "Ignoring line: " << line << std::endl;
             else
                 coords.push_back(aux);
         }
@@ -502,7 +501,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
         //#define DEBUG66
 #ifdef DEBUG66
 
-        cout << "Min= " << Dmin << " Dmax" << Dmax << endl;
+        std::cout << "Min= " << Dmin << " Dmax" << Dmax << std::endl;
 #endif
 #undef DEBUG66
 
@@ -516,8 +515,8 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
     }
     // Scissor all particles
     if (ang != 0)
-        cout << "Angle from Y axis to tilt axis " << ang << endl
-        << "   applying apropriate rotation\n";
+        std::cout << "Angle from Y axis to tilt axis " << ang << std::endl
+                  << "   applying apropriate rotation\n";
     int i = starting_index;
     int nmax = ParticleNo();
     for (int n = 0; n < nmax; n++)
@@ -526,8 +525,8 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
             fn_out.compose(fn_root, i++, "xmp");
             if (!M->scissor(coords[n], (Image &) I, Dmin, Dmax, scaleX, scaleY))
             {
-                cout << "Particle " << fn_out << " is very near the border, "
-                << "corresponding image is set to blank\n";
+                std::cout << "Particle " << fn_out << " is very near the border, "
+                          << "corresponding image is set to blank\n";
                 SF.insert(fn_out, SelLine::DISCARDED);
             }
             else
@@ -796,7 +795,7 @@ void normalize_NewXmipp2(Image *I, const Matrix2D<int> &bg_mask)
 void normalize_ramp(Image *I, const Matrix2D<int> &bg_mask)
 {
     fit_point          onepoint;
-    vector<fit_point>  allpoints;
+    std::vector<fit_point>  allpoints;
     double             pA, pB, pC;
     double             avgbg, stddevbg, minbg, maxbg;
 
@@ -832,7 +831,7 @@ void normalize_remove_neighbours(Image *I,
                                  const double &threshold)
 {
     fit_point          onepoint;
-    vector<fit_point>  allpoints;
+    std::vector<fit_point>  allpoints;
     double             pA, pB, pC;
     double             avgbg, stddevbg, minbg, maxbg, aux, newstddev;
     double             sum1 = 0.;

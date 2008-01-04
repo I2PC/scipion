@@ -121,7 +121,7 @@
  *
  * NTOTAL = the total number of complex data values
  * NPASS  = the dimension of the current variable
- * NSPAN/NPASS = the spacing of consecutive data values while indexing the
+ * NSPAN/NPASS = the spastd::cing of consecutive data values while indexing the
  * current variable
  * ISIGN - see above documentation
  *

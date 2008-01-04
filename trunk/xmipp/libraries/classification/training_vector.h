@@ -32,8 +32,6 @@
 
 #include <sstream>
 
-using namespace std;
-
 #include "data_types.h"
 #include "training_set.h"
 #include "vector_ops.h"
@@ -72,7 +70,7 @@ public:
      * Parameter: _is  The input stream
      * @exception  runtime_error  If there are problems with the stream
      */
-    xmippCTVectors(istream & _is);
+    xmippCTVectors(std::istream & _is);
 
 
     /**
@@ -107,14 +105,14 @@ public:
      * Standard output for a training set
      * Parameter: _os The output stream
      */
-    virtual void printSelf(ostream& _os) const;
+    virtual void printSelf(std::ostream& _os) const;
 
     /**
      * Standard input for a training set
      * Parameter: _is The input stream
      * @exception  runtime_error  If there are problems with the stream
      */
-    virtual void readSelf(istream& _is);
+    virtual void readSelf(std::istream& _is);
 
 
     /**
@@ -122,7 +120,7 @@ public:
      * this method can be used to save the status of the class.
      * Parameter: _os The output stream
      */
-    virtual void saveObject(ostream& _os) const;
+    virtual void saveObject(std::ostream& _os) const;
 
 
     /**
@@ -130,7 +128,7 @@ public:
      * this method can be used to load the status of the class.
      * Parameter: _is The output stream
      */
-    virtual void loadObject(istream& _is);
+    virtual void loadObject(std::istream& _is);
 
 
     /**
@@ -196,7 +194,7 @@ public:
     /**
     * Returns a const reference to the normalization vector
     */
-    virtual const vector<statsStruct>& getNormalizationInfo() const
+    virtual const std::vector<statsStruct>& getNormalizationInfo() const
     {
         return varStats;
     };
@@ -215,7 +213,7 @@ public:
 
 
 protected:
-    vector <statsStruct>  varStats;
+    std::vector <statsStruct>  varStats;
     bool    normalized;
 
 };

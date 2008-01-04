@@ -85,7 +85,7 @@
  *
  * @code
  * if (SGN(x) == -1)
- *     cout << "x is negative" << endl;
+ *     std::cout << "x is negative" << std::endl;
  * @endcode
  */
 #ifndef SGN
@@ -100,7 +100,7 @@
  *
  * @code
  * if (SGN0(x) == -1)
- *     cout << "x is negative" << endl;
+ *     std::cout << "x is negative" << std::endl;
  * @endcode
  */
 #ifndef SGN0
@@ -257,7 +257,7 @@
  *
  * @code
  * if (COSD(90) == 0)
- *     cout << "This is in degrees!\n";
+ *     std::cout << "This is in degrees!\n";
  * @endcode
  */
 #define COSD(x) cos(PI * (x) / 180.)
@@ -267,7 +267,7 @@
  *
  * @code
  * if (ACOSD(0.5) == 60)
- *     cout << "This is in degrees!\n";
+ *     std::cout << "This is in degrees!\n";
  * @endcode
  */
 #define ACOSD(x) acos((x)) * 180. / PI
@@ -277,7 +277,7 @@
  *
  * @code
  * if (SIND(90) == 1)
- *     cout << "This is in degrees!\n";
+ *     std::cout << "This is in degrees!\n";
  * @endcode
  */
 #define SIND(x) sin(PI * (x) / 180.)
@@ -287,7 +287,7 @@
  *
  * @code
  * if (ASIND(0.5) == 30.)
- *     cout << "This is in degrees!\n";
+ *     std::cout << "This is in degrees!\n";
  * @endcode
  */
 #define ASIND(x) asin((x)) * 180. / PI

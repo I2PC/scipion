@@ -48,21 +48,21 @@ void SIRT_Spider(SelFile &SF, double lambda, double no_it, int radius,
     DF.write(fn_spider_ang);
 
     // Generate appropiate Spider batch file
-    ofstream fh_batch;
+    std::ofstream fh_batch;
     FileName full_fn_batch = fn_batch + "." + fn_ext;
-    fh_batch.open(full_fn_batch.c_str(), ios::out);
+    fh_batch.open(full_fn_batch.c_str(), std::ios::out);
     if (!fh_batch)
-        REPORT_ERROR(3005, (string)"single_recons_test:: Could not open "
+        REPORT_ERROR(3005, (std::string)"single_recons_test:: Could not open "
                      "the file " + full_fn_batch + " for output");
 
     SF.go_first_ACTIVE();
     fh_batch << "bp rp\n";
-    fh_batch << SF.get_current_file() << endl;
-    fh_batch << fn_spider_sel << endl;
-    fh_batch << radius << endl;
-    fh_batch << fn_spider_ang << endl;
+    fh_batch << SF.get_current_file() << std::endl;
+    fh_batch << fn_spider_sel << std::endl;
+    fh_batch << radius << std::endl;
+    fh_batch << fn_spider_ang << std::endl;
     fh_batch << "n\n";
-    fh_batch << fn_recons_root << endl;
+    fh_batch << fn_recons_root << std::endl;
     fh_batch << "(" << lambda << ",0)\n";
     fh_batch << "(" << no_it << ",1)\n";
     fh_batch << "(0.,2.)\n";
@@ -71,13 +71,13 @@ void SIRT_Spider(SelFile &SF, double lambda, double no_it, int radius,
     fh_batch.close();
 
     // Call Spider
-    string command_line = (string)"spider " + fn_ext + " " + fn_batch;
-    cerr << "Reconstructing with SIRT Spider ...\n";
+    std::string command_line = (std::string)"spider " + fn_ext + " " + fn_batch;
+    std::cerr << "Reconstructing with SIRT Spider ...\n";
     system(command_line.c_str());
 
     // Rename Spider output
-    command_line = (string)"mv " + fn_recons_root + "." + fn_ext + " " +
+    command_line = (std::string)"mv " + fn_recons_root + "." + fn_ext + " " +
                    fn_recons_root + ".vol";
-    cerr << "Renaming Spider output ...\n";
+    std::cerr << "Renaming Spider output ...\n";
     system(command_line.c_str());
 }

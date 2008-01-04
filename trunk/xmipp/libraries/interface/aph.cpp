@@ -49,16 +49,16 @@
 // APH =====================================================================
 void APHFile2D::read(const FileName &fn)
 {
-    ifstream  fh_aph;
-    int       line_no = 1;
-    int       hmax = 0, kmax = 0, hmin = 0, kmin = 0;
-    string    line;
+    std::ifstream  fh_aph;
+    int            line_no = 1;
+    int            hmax = 0, kmax = 0, hmin = 0, kmin = 0;
+    std::string    line;
 
     // Empties current APH File
     clear();
 
     // Open file
-    fh_aph.open(fn.c_str(), ios::in);
+    fh_aph.open(fn.c_str(), std::ios::in);
     if (!fh_aph)
         REPORT_ERROR(1601, "aphFile::read: File " + fn + " not found");
 
@@ -68,14 +68,14 @@ void APHFile2D::read(const FileName &fn)
     astar.resize(2);
     bstar.resize(2);
 #if GCC_VERSION < 30300
-    istrstream is(line.c_str());
+    std::istrstream is(line.c_str());
 #else
-    istringstream is(line.c_str());
+    std::istringstream is(line.c_str());
 #endif
     try
     {
         is >> label >> XX(astar) >> YY(astar) >> XX(bstar) >> YY(bstar)
-        >> Xdim >> Ydim >> sampling_rate;
+           >> Xdim >> Ydim >> sampling_rate;
     }
     catch (...)
     {
@@ -101,13 +101,13 @@ void APHFile2D::read(const FileName &fn)
         }
         catch (Xmipp_error)
         {
-            cout << "aph File: Line " << line_no << " is skipped due to an error\n";
+            std::cout << "aph File: Line " << line_no << " is skipped due to an error\n";
         }
         line_no++;
     }/* while */
 #ifdef DEBUG
-    cout << "hmax: " << hmax << " kmax: " << kmax << endl;
-    cout << "hmin: " << hmin << " kmin: " << kmin << endl;
+    std::cout << "hmax: " << hmax << " kmax: " << kmax << std::endl;
+    std::cout << "hmin: " << hmin << " kmin: " << kmin << std::endl;
 #endif
 
     // Ask for memory
@@ -131,7 +131,7 @@ void APHFile2D::read(const FileName &fn)
     // Read each line (again) and copy values to the matrices
     fh_aph.close();
     fh_aph.clear();
-    fh_aph.open(fn.c_str(), ios::in);
+    fh_aph.open(fn.c_str(), std::ios::in);
     line_no = 1;
 
     // Read first line and skip it
@@ -154,7 +154,7 @@ void APHFile2D::read(const FileName &fn)
                 a3 = textToFloat(nextToken(line, i));
                 a4 = textToFloat(nextToken(line, i));
                 a5 = textToFloat(nextToken(line, i));
-                string aux;
+                std::string aux;
                 aux = nextToken(line, i);
                 if (first)
                 {
@@ -182,16 +182,16 @@ void APHFile2D::read(const FileName &fn)
                 }
 //  #define DEBUG
 #ifdef DEBUG
-                cout << " " << h << " " << k << " " << a1 << " " << a2 << " ";
-                cout << a3 << " " << a4 << " " << a5 << " " << a6 << endl;
+                std::cout << " " << h << " " << k << " " << a1 << " " << a2 << " ";
+                std::cout << a3 << " " << a4 << " " << a5 << " " << a6 << std::endl;
 #endif
 //  #undef DEBUG
             }
         }
         catch (Xmipp_error XE)
         {
-            cout << XE;
-            cout << "aph File: Line " << line_no << " is skipped due to an error\n";
+            std::cout << XE;
+            std::cout << "aph File: Line " << line_no << " is skipped due to an error\n";
         }
         line_no++;
         fh_aph.peek();
@@ -205,17 +205,17 @@ void APHFile2D::read(const FileName &fn)
 /* ------------------------------------------------------------------------- */
 void APHFile2D::write(const FileName &fn) const
 {
-    ofstream fh;
+    std::ofstream fh;
     fh.open(fn.c_str());
     char aux_char[128];
     if (!fh)
-        REPORT_ERROR(1, (string)"APHFile2D::write: Cannot open " +
+        REPORT_ERROR(1, (std::string)"APHFile2D::write: Cannot open " +
                      fn + " for output");
 
-    fh << setfill('0') << setw(4) << label << " "
-    << XX(astar) << " " << YY(astar) << " "
-    << XX(bstar) << " " << YY(bstar) << " "
-    << Xdim << " " << Ydim << " " << sampling_rate << endl;
+    fh << std::setfill('0') << std::setw(4) << label << " "
+       << XX(astar) << " " << YY(astar) << " "
+       << XX(bstar) << " " << YY(bstar) << " "
+       << Xdim << " " << Ydim << " " << sampling_rate << std::endl;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(spots_abs)
     {
         if (spots_abs(i, j) != 0)
@@ -261,56 +261,56 @@ void Euler_to_MRC(double rot, double tilt, double psi,
     else if (rot < PI*2.)    *mrc_taxa = PI * 5. / 2 - rot;
     else
     {
-        cerr << "\nHORROR: (Euler_to_MRC) Can't find taxa\n)";
+        std::cerr << "\nHORROR: (Euler_to_MRC) Can't find taxa\n)";
         exit(1);
     }
     if ((rot < PI / 2 + 0.1   && rot > PI / 2 - .1) ||
         (rot < PI*3 / 2 + 0.1 && rot > PI*3 / 2 - .1) ||
         (rot < 0.1) ||
         (rot > (PI*2) - .1))
-        cerr << "\nWARMING, rot close 0,90,270 or 360 degrees, conversion not reliable\n";
+        std::cerr << "\nWARMING, rot close 0,90,270 or 360 degrees, conversion not reliable\n";
 
 
     if ((SGN(tilt) == + 1) && (rot <= PI*3. / 2. && rot > PI / 2.))
     {
-        cout << "one\n";
+        std::cout << "one\n";
         *mrc_tilt = -tilt;
     }//nrg
     else if ((SGN(tilt) == -1) && (rot > PI*3. / 2.))
     {
-        cout << "two\n";
+        std::cout << "two\n";
         *mrc_tilt = tilt;
     }//neg
     else if ((SGN(tilt) == -1) && (rot <= PI / 2.))
     {
-        cout << "three\n";
+        std::cout << "three\n";
         *mrc_tilt = tilt;
     }//neg
     else if ((SGN(tilt) == + 1) && (rot > PI*3. / 2.))
     {
-        cout << "four\n";
+        std::cout << "four\n";
         *mrc_tilt = tilt;
     }//plus
     else if ((SGN(tilt) == -1) && (rot <= PI*3. / 2. && rot > PI / 2.))
     {
-        cout << "five\n";
+        std::cout << "five\n";
         *mrc_tilt = -tilt;
     }//plus
     else if ((SGN(tilt) == + 1) && (rot <= PI / 2.))
     {
-        cout << "six\n";
+        std::cout << "six\n";
         *mrc_tilt = + tilt;
     } //plu
     else
     {
-        cerr << "\nHORROR: (Euler_to_MRC) Can't find tilt\n)";
+        std::cerr << "\nHORROR: (Euler_to_MRC) Can't find tilt\n)";
         exit(1);
     }
 
-//cout << "\nDEBUG rot: " << rot<<endl;
-//cout << "\nDEBUG tilt: " << tilt<<endl;
-//cout << "\nDEBUG psi: " << psi<<endl;
-//cout << "\nDEBUG *mrc_tilt: " << *mrc_tilt<<endl;
+//std::cout << "\nDEBUG rot: " << rot<<std::endl;
+//std::cout << "\nDEBUG tilt: " << tilt<<std::endl;
+//std::cout << "\nDEBUG psi: " << psi<<std::endl;
+//std::cout << "\nDEBUG *mrc_tilt: " << *mrc_tilt<<std::endl;
 
 }
 
@@ -336,13 +336,13 @@ void MRC_to_Euler(double  mrc_taxa, double  mrc_tilt,
     }
     else
     {
-        cerr << "\nHORROR: (MRC_to_Euler) taxa bigger than 180\n)";
+        std::cerr << "\nHORROR: (MRC_to_Euler) taxa bigger than 180\n)";
         exit(1);
     }
     if (*tilt != 0 && ((mrc_taxa < PI / 2 + 0.1   && mrc_taxa > PI / 2 - .1) ||
                        (mrc_taxa < PI + 0.1 && mrc_taxa > PI - .1) ||
                        (mrc_taxa < 0.1)))
-        cerr << "\nWARNING, taxa close 0,90 or 180 degrees, conversion not reliable\n";
+        std::cerr << "\nWARNING, taxa close 0,90 or 180 degrees, conversion not reliable\n";
 }
 
 void APHFile2D::copy_reflection(int h, int k, int new_h, int new_k,
@@ -473,9 +473,9 @@ void APHFile2D::generate_symmetrical_reflections(int symmetry_group)
             save.write("PPPSpots_arg.xmp");
             type_cast(visited, save());
             save.write("PPPvisited.xmp");
-            cout << "Press\n";
+            std::cout << "Press\n";
             char c;
-            cin >> c;
+            std::cin >> c;
 #endif
         }
     }

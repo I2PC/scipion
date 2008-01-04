@@ -62,7 +62,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage();
         exit(1);
     }
@@ -167,7 +167,7 @@ int main(int argc, char **argv)
                     // Not a Spider file ..............................................
                 }
                 else
-                    cout << fn_in << " is not a SPIDER file\n";
+                    std::cout << fn_in << " is not a SPIDER file\n";
 
                 if (i++ % 25 == 0) progress_bar(i);
             }
@@ -176,7 +176,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
     exit(0);
 } //main
@@ -184,10 +184,10 @@ int main(int argc, char **argv)
 /* Usage ------------------------------------------------------------------- */
 void Usage()
 {
-    cerr << "Purpose:\n";
-    cerr << "    Scale images/volumes to a given size\n";
+    std::cerr << "Purpose:\n";
+    std::cerr << "    Scale images/volumes to a given size\n";
 
-    cerr << "Usage: scale <parameters>\n"
+    std::cerr << "Usage: scale <parameters>\n"
     << "   -i <image or volume> [-o <image_out or volume_out]\n"
     << "   -i <selfile> [-oext <output extension>]\n"
     << "   -xdim <new x dimension>\n"

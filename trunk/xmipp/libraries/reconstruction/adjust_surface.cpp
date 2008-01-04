@@ -126,8 +126,8 @@ void Prog_Adjust_Surface_Parameters::read(int argc, char **argv)
 /* Usage =================================================================== */
 void Prog_Adjust_Surface_Parameters::usage() const
 {
-    cout << "\nUsage:\n";
-    cout << "adjust_surface\n"
+    std::cout << "\nUsage:\n";
+    std::cout << "adjust_surface\n"
     << "   -i <Input surface>             : Xmipp image\n"
     << "  [-o <Output surface>]           : Output scaled surface\n"
     << "   -vol <volume to fit>           : volume to be fitted\n"
@@ -435,9 +435,9 @@ double correlate_surface_and_volume_gradients(const Image *surf,
                 //grad_in_Vsurf.selfNormalize();
                 retval += ABS(dotProduct(grad_in_V, grad_in_Vsurf));
 #ifdef DEBUG
-                cout << "(" << k << "," << i << "," << j << ") in V="
+                std::cout << "(" << k << "," << i << "," << j << ") in V="
                 << grad_in_V.transpose() << " in surf "
-                << grad_in_Vsurf.transpose() << endl;
+                << grad_in_Vsurf.transpose() << std::endl;
 #endif
             }
         }
@@ -532,11 +532,11 @@ void ROUT_adjust_surface(Prog_Adjust_Surface_Parameters &prm)
     prm.p.resize(7);
 
     // Search for all possible combinations .................................
-    cerr << "Correlating surface and volume ...\n";
+    std::cerr << "Correlating surface and volume ...\n";
     if (prm.exhaustive)
     {
         double *p_aux = prm.p.adaptForNumericalRecipes();
-        cout << "# shiftx shifty angle ktop kbottom corr\n";
+        std::cout << "# shiftx shifty angle ktop kbottom corr\n";
         int act_corr = 0;
         for (prm.p(1) = STARTINGY(prm.shift_mask); prm.p(1) <= FINISHINGY(prm.shift_mask); prm.p(1) += prm.shift_step)
             for (prm.p(0) = STARTINGX(prm.shift_mask); prm.p(0) <= FINISHINGX(prm.shift_mask); prm.p(0) += prm.shift_step)
@@ -550,20 +550,20 @@ void ROUT_adjust_surface(Prog_Adjust_Surface_Parameters &prm)
                                 {
                                     if (prm.tell & MANUAL_ORDER)
                                     {
-                                        cout << "shiftx =";
-                                        cin >> prm.p(0);
-                                        cout << "shifty =";
-                                        cin >> prm.p(1);
-                                        cout << "angle =";
-                                        cin >> prm.p(2);
-                                        cout << "ktop (" << prm.ztop0 << "..." << prm.ztopF << ")=";
-                                        cin >> prm.p(3);
-                                        cout << "kbottom (" << prm.zbottom0 << "..." << prm.zbottomF << ")=";
-                                        cin >> prm.p(4);
-                                        cout << "scaleX =";
-                                        cin >> prm.p(5);
-                                        cout << "scaleY =";
-                                        cin >> prm.p(6);
+                                        std::cout << "shiftx =";
+                                        std::cin >> prm.p(0);
+                                        std::cout << "shifty =";
+                                        std::cin >> prm.p(1);
+                                        std::cout << "angle =";
+                                        std::cin >> prm.p(2);
+                                        std::cout << "ktop (" << prm.ztop0 << "..." << prm.ztopF << ")=";
+                                        std::cin >> prm.p(3);
+                                        std::cout << "kbottom (" << prm.zbottom0 << "..." << prm.zbottomF << ")=";
+                                        std::cin >> prm.p(4);
+                                        std::cout << "scaleX =";
+                                        std::cin >> prm.p(5);
+                                        std::cout << "scaleY =";
+                                        std::cin >> prm.p(6);
                                     }
 
                                     corr = eval_surface(p_aux);
@@ -578,17 +578,17 @@ void ROUT_adjust_surface(Prog_Adjust_Surface_Parameters &prm)
                                         best_shifty = prm.p(1);
                                         best_scaleX = prm.p(5);
                                         best_scaleY = prm.p(6);
-                                        cout << "********    ";
+                                        std::cout << "********    ";
                                     }
 
-                                    cout << prm.p(0) << " " << prm.p(1) << " " << prm.p(2) << " "
+                                    std::cout << prm.p(0) << " " << prm.p(1) << " " << prm.p(2) << " "
                                     << prm.p(3) << " " << prm.p(4) << " " << prm.p(5) << " "
-                                    << prm.p(6) << " " << corr << endl;
+                                    << prm.p(6) << " " << corr << std::endl;
                                     if (prm.tell & MANUAL_ORDER)
                                     {
-                                        cout << "Press any key\n";
+                                        std::cout << "Press any key\n";
                                         char c;
-                                        cin >> c;
+                                        std::cin >> c;
                                     }
                                 }
             }
@@ -621,14 +621,14 @@ void ROUT_adjust_surface(Prog_Adjust_Surface_Parameters &prm)
     }
 
     // Apply best correlation
-    cout << "Best correlation found for\n"
-    << "  shiftx = " << best_shiftx  << endl
-    << "  shifty = " << best_shifty  << endl
-    << "  ang    = " << best_ang     << endl
-    << "  ktop   = " << best_ktop    << endl
-    << "  kbottom= " << best_kbottom << endl
-    << "  scaleX = " << best_scaleX  << endl
-    << "  scaleY = " << best_scaleY  << endl;
+    std::cout << "Best correlation found for\n"
+    << "  shiftx = " << best_shiftx  << std::endl
+    << "  shifty = " << best_shifty  << std::endl
+    << "  ang    = " << best_ang     << std::endl
+    << "  ktop   = " << best_ktop    << std::endl
+    << "  kbottom= " << best_kbottom << std::endl
+    << "  scaleX = " << best_scaleX  << std::endl
+    << "  scaleY = " << best_scaleY  << std::endl;
     if (prm.apply)
     {
         prm.wsurface().resize(prm.surface());

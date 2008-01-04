@@ -82,7 +82,7 @@ int translate_randomness(char * str)
     if (strcmp(str, "random") == 0)       return ANGLE_RANGE_RANDOM;
     if (strcmp(str, "even") == 0)         return ANGLE_EVENLY;
     REPORT_ERROR(3007,
-                 (string)"Prog_Project_Parameters::read: Not recognized randomness: "
+                 (std::string)"Prog_Project_Parameters::read: Not recognized randomness: "
                  + str);
 }
 
@@ -95,7 +95,7 @@ void Projection_Parameters::read(const FileName &fn_proj_param)
 
     if ((fh_param = fopen(fn_proj_param.c_str(), "r")) == NULL)
         REPORT_ERROR(3005,
-                     (string)"Prog_Project_Parameters::read: There is a problem "
+                     (std::string)"Prog_Project_Parameters::read: There is a problem "
                      "opening the file " + fn_proj_param);
     while (fgets(line, 200, fh_param) != NULL)
     {
@@ -148,12 +148,12 @@ void Projection_Parameters::read(const FileName &fn_proj_param)
                 catch (Xmipp_error XE)
                 {
                     REPORT_ERROR(3007,
-                                 (string)"An angle order description is "
+                                 (std::string)"An angle order description is "
                                  + "missing for file: " + fn_angle);
                 }
             }
             else
-                REPORT_ERROR(3007, (string)"Prog_Project_Parameters::read: "
+                REPORT_ERROR(3007, (std::string)"Prog_Project_Parameters::read: "
                              "file " + fn_angle + " doesn't exist");
             lineNo = 4;
             break;
@@ -288,7 +288,7 @@ void Projection_Parameters::read(const FileName &fn_proj_param)
         } /* switch end */
     } /* while end */
     if (lineNo != 12)
-        REPORT_ERROR(3007, (string)"Prog_Project_Parameters::read: I "
+        REPORT_ERROR(3007, (std::string)"Prog_Project_Parameters::read: I "
                      "couldn't read all parameters from file " + fn_proj_param);
     fclose(fh_param);
 }
@@ -300,7 +300,7 @@ void Projection_Parameters::write(const FileName &fn_proj_param) const
 
     if ((fh_param = fopen(fn_proj_param.c_str(), "w")) == NULL)
         REPORT_ERROR(3005,
-                     (string)"Prog_Project_Parameters::write: There is a problem "
+                     (std::string)"Prog_Project_Parameters::write: There is a problem "
                      "opening the file " + fn_proj_param + " for output");
 
     fprintf(fh_param,
@@ -615,7 +615,7 @@ int count_even_angles(const Projection_Parameters &prm)
     }
     N++; // This shouldn't be necessary but some GCC optimization
     // sometimes doesn't do well its work. For instance if we
-    // add cout << N after N++ in the loop, then it works perfectly
+    // add std::cout << N after N++ in the loop, then it works perfectly
     return N;
 }
 
@@ -665,7 +665,7 @@ int Assign_angles(DocFile &DF, const Projection_Parameters &prm,
                 generate_even_angles(ExtProjs, Nrottilt, DF, prm);
                 // Clear empty entries
                 DF.go_first_data_line();
-                vector<int> to_remove;
+                std::vector<int> to_remove;
                 while (!DF.eof())
                 {
                     if (DF.get_current_line().get_no_components() == 0)
@@ -737,7 +737,7 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
 {
     int NumProjs = 0;
     SF.clear();
-    cerr << "Projecting ...\n";
+    std::cerr << "Projecting ...\n";
     if (!(prm.tell&TELL_SHOW_ANGLES)) init_progress_bar(side.DF.dataLineNo());
     SF.reserve(side.DF.dataLineNo());
     DocFile DF_movements;
@@ -752,7 +752,7 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
                         prm.fn_projection_extension);
 
         // Choose angles .....................................................
-        if (prm.tell&TELL_SHOW_ANGLES) side.DF.show_line(cout);
+        if (prm.tell&TELL_SHOW_ANGLES) side.DF.show_line(std::cout);
         else if ((NumProjs % XMIPP_MAX(1, side.DF.dataLineNo() / 60)) == 0)
             progress_bar(NumProjs);
         movements(0) = rot  = side.DF(0);
@@ -889,7 +889,7 @@ int ROUT_project(Prog_Project_Parameters &prm, Projection &proj, SelFile &SF)
     }
     else
     {
-        cout << side.DF;
+        std::cout << side.DF;
     }
     return ProjNo;
 }

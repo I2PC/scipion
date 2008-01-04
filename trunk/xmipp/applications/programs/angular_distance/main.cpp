@@ -37,7 +37,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         prm.usage();
         exit(0);
     }
@@ -47,10 +47,10 @@ int main(int argc, char **argv)
     {
         prm.produce_side_info();
         double dist = prm.compute_distance();
-        cout << "Global distance = " << dist << endl;
+        std::cout << "Global distance = " << dist << std::endl;
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
 }

@@ -189,21 +189,21 @@ void Prog_Evaluate_Parameters::usage()
 }
 
 /* Show parameters ========================================================= */
-ostream & operator << (ostream &out, const Prog_Evaluate_Parameters &prm)
+std::ostream & operator << (std::ostream &out, const Prog_Evaluate_Parameters &prm)
 {
     out << "Evaluating parameters ----------------------\n";
-    out << "Phantom         : " << prm.fnPhantom        << endl;
-    out << "Reconstruction  : " << prm.fn_recons         << endl;
-    out << "Percent mass    : " << prm.percent_mass      << endl;
-    out << "RSrot           : " << prm.RSrot             << endl;
-    out << "RStilt          : " << prm.RStilt            << endl;
-    out << "Global radius   : " << prm.global_radius     << endl;
-    out << "Surface mask    : " << prm.fn_mask           << endl;
-    out << "Fit gray scales : " << prm.fit_gray_scales   << endl;
-    out << "Back mode       : " << prm.back_mode         << endl;
-    out << "Back radius     : " << prm.back_radius       << endl;
-    out << "Back factor     : " << prm.back_factor       << endl;
-    out << "Tell            : " << prm.tell              << endl;
+    out << "Phantom         : " << prm.fnPhantom        << std::endl;
+    out << "Reconstruction  : " << prm.fn_recons         << std::endl;
+    out << "Percent mass    : " << prm.percent_mass      << std::endl;
+    out << "RSrot           : " << prm.RSrot             << std::endl;
+    out << "RStilt          : " << prm.RStilt            << std::endl;
+    out << "Global radius   : " << prm.global_radius     << std::endl;
+    out << "Surface mask    : " << prm.fn_mask           << std::endl;
+    out << "Fit gray scales : " << prm.fit_gray_scales   << std::endl;
+    out << "Back mode       : " << prm.back_mode         << std::endl;
+    out << "Back radius     : " << prm.back_radius       << std::endl;
+    out << "Back factor     : " << prm.back_factor       << std::endl;
+    out << "Tell            : " << prm.tell              << std::endl;
     return out;
 }
 
@@ -233,7 +233,7 @@ void EVALUATE_Side_Info::produce_Side_Info(
     }
     else
     {
-        cerr << "Generating phantom ...\n";
+        std::cerr << "Generating phantom ...\n";
         phantom_descr.read(prm.fnPhantom);
         phantom_descr.draw_in(&vol_phantom);
         phantom_descr.label(&vol_label);
@@ -246,21 +246,21 @@ void EVALUATE_Side_Info::produce_Side_Info(
         (vol_phantom().rowNumber() != vol_recons().rowNumber()) ||
         (vol_phantom().colNumber() != vol_recons().colNumber()))
     {
-        cout << "Be careful!!!, volumes with different sizes\n";
-        cout << "Phantom:        " << vol_phantom().sliceNumber() << " x " <<
-        vol_phantom().rowNumber() << " x " << vol_phantom().colNumber() << endl;
-        cout << "Reconstruction: " << vol_recons().sliceNumber() << " x " <<
-        vol_recons().rowNumber() << " x " << vol_recons().colNumber() << endl;
+        std::cout << "Be careful!!!, volumes with different sizes\n";
+        std::cout << "Phantom:        " << vol_phantom().sliceNumber() << " x " <<
+        vol_phantom().rowNumber() << " x " << vol_phantom().colNumber() << std::endl;
+        std::cout << "Reconstruction: " << vol_recons().sliceNumber() << " x " <<
+        vol_recons().rowNumber() << " x " << vol_recons().colNumber() << std::endl;
 
         cutToCommonSize(vol_phantom(), vol_recons());
-        cout << "Cutting to common size " << vol_phantom().sliceNumber() << " x " <<
-        vol_phantom().rowNumber() << " x " << vol_phantom().colNumber() << endl;
+        std::cout << "Cutting to common size " << vol_phantom().sliceNumber() << " x " <<
+        vol_phantom().rowNumber() << " x " << vol_phantom().colNumber() << std::endl;
 
         cutToCommonSize(vol_label(), vol_recons());
     }
 
     // Generate global mask .................................................
-    cerr << "Generating mask ...\n";
+    std::cerr << "Generating mask ...\n";
     if (prm.fn_mask != "")
     {
         vol_mask.read(prm.fn_mask);
@@ -313,14 +313,14 @@ void EVALUATE_Side_Info::produce_Side_Info(
     // Fit gray values ......................................................
     if (prm.fit_gray_scales)
     {
-        cerr << "Fitting gray values ...\n";
+        std::cerr << "Fitting gray values ...\n";
         range_adjust_within_mask(&(vol_mask()), vol_phantom(), vol_recons());
     }
 
     // Computing distance map ...............................................
     if (!((prm.tell&ONLY_STRUCTURAL) || descr_mode == XMIPP_PHANTOM))
     {
-        cerr << "Computing distance map ...\n";
+        std::cerr << "Computing distance map ...\n";
         compute_distance_map(&vol_label, phantom_descr, &vol_mask,
                              &vol_distance);
     }
@@ -335,7 +335,7 @@ void compute_FOMs(const Prog_Evaluate_Parameters &prm,
 
     /* Structural consistency FOMs --------------------------------------------- */
     // Global measures
-    cerr << "Computing global structural consistency ...\n";
+    std::cerr << "Computing global structural consistency ...\n";
     compute_sc_FOMs(&side.vol_phantom, &side.vol_recons, &side.vol_label,
                     &side.vol_mask, -1, results.scL2_FOM, results.scL1_FOM,
                     results.scmu_FOM, results.scdev_FOM, results.scrange_FOM,
@@ -358,7 +358,7 @@ void compute_FOMs(const Prog_Evaluate_Parameters &prm,
                                                                            results.scL2_FOMs;
     if (side.descr_mode == MATH_PHANTOM)
     {
-        cerr << "Computing Local structural consistency ...\n";
+        std::cerr << "Computing Local structural consistency ...\n";
         for (int i = 0; i <= side.num_feat; i++)
             compute_sc_FOMs(&side.vol_phantom, &side.vol_recons, &side.vol_label,
                             &side.vol_mask, i, results.scL2_FOMs(i), results.scL1_FOMs(i),
@@ -400,7 +400,7 @@ void compute_FOMs(const Prog_Evaluate_Parameters &prm,
         if (side.descr_mode == MATH_PHANTOM)
         {
             // FOM for each feature
-            cerr << "Computing Histogram based FOMs ...\n";
+            std::cerr << "Computing Histogram based FOMs ...\n";
             for (int i = 1; i <= side.num_feat; i++)
                 compute_hs_FOMs(&side.vol_phantom, &side.vol_recons, &side.vol_label,
                                 &side.vol_mask, i, side.phantom_descr, prm.back_mode,
@@ -418,7 +418,7 @@ void compute_FOMs(const Prog_Evaluate_Parameters &prm,
 
         /* Directional FOMs ----------------------------------------------------- */
         // Global measures
-        cerr << "Computing directional FOMs ...\n";
+        std::cerr << "Computing directional FOMs ...\n";
         compute_hist(side.vol_recons(), hist_recons, 200);
         double threshold = hist_recons.percentil(prm.percent_mass);
 
@@ -432,7 +432,7 @@ void compute_FOMs(const Prog_Evaluate_Parameters &prm,
         /* Distance map based --------------------------------------------------- */
         if (side.descr_mode == MATH_PHANTOM)
         {
-            cerr << "Computing distance based FOMs ...\n";
+            std::cerr << "Computing distance based FOMs ...\n";
             compute_ds_FOMs(&side.vol_phantom, &side.vol_recons, &side.vol_label,
                             &side.vol_distance, results.dsbl_FOM, results.dsad_FOM);
 
@@ -450,49 +450,49 @@ void show_FOMs(const Prog_Evaluate_Parameters &prm,
 {
 
     // Show Parameters ......................................................
-    cout << endl;
-    cout << "PHANTOM FILE      : " << prm.fnPhantom << endl;
-    cout << "RECONSTRUCTED FILE: " << prm.fn_recons  << endl;
+    std::cout << std::endl;
+    std::cout << "PHANTOM FILE      : " << prm.fnPhantom << std::endl;
+    std::cout << "RECONSTRUCTED FILE: " << prm.fn_recons  << std::endl;
     if (!(prm.tell&ONLY_STRUCTURAL))
     {
-        cout << "Direction for dFOM: (rot=" << prm.RSrot << "," << "tilt="
-        << prm.RStilt << ")" << endl;
-        cout << "Slice histograms  : ignoring initial " << prm.percent_mass <<
+        std::cout << "Direction for dFOM: (rot=" << prm.RSrot << "," << "tilt="
+        << prm.RStilt << ")" << std::endl;
+        std::cout << "Slice histograms  : ignoring initial " << prm.percent_mass <<
         "% mass\n";
     }
     if (prm.global_radius == 0)
-        cout << "Global FOMs measured over the whole volume\n";
+        std::cout << "Global FOMs measured over the whole volume\n";
     else
-        cout << "Global FOMs measured over a sphere of radius "
-        << prm.global_radius << endl;
+        std::cout << "Global FOMs measured over a sphere of radius "
+        << prm.global_radius << std::endl;
     if (prm.back_mode == ENLARGE_MODE)
-        cout << "Background mode: ENLARGE by " << prm.back_factor << endl;
+        std::cout << "Background mode: ENLARGE by " << prm.back_factor << std::endl;
     else
-        cout << "Background mode: SPHERES of radius " << prm.back_radius << endl;
+        std::cout << "Background mode: SPHERES of radius " << prm.back_radius << std::endl;
 
     if (side.descr_mode == MATH_PHANTOM && (prm.tell & SHOW_PROCESS))
     {
-        cout << "Phantom description ----------------------------------------\n";
-        cout << side.phantom_descr;
+        std::cout << "Phantom description ----------------------------------------\n";
+        std::cout << side.phantom_descr;
     }
 
-    cout << "Structural consistency -------------------------------------\n";
+    std::cout << "Structural consistency -------------------------------------\n";
 
     // Show volume statistics ...............................................
     double avg, stddev, min, max;
     side.vol_phantom().computeStats(avg, stddev, min, max);
-    cout << "Phantom Stats: \n";
-    cout << "   ";
+    std::cout << "Phantom Stats: \n";
+    std::cout << "   ";
     side.vol_phantom().print_stats();
-    cout << endl;
-    cout << "    range=" << max - min << endl;
+    std::cout << std::endl;
+    std::cout << "    range=" << max - min << std::endl;
     side.vol_recons().computeStats(avg, stddev, min, max);
-    cout << "Recons  Stats: \n";
-    cout << "   ";
+    std::cout << "Recons  Stats: \n";
+    std::cout << "   ";
     side.vol_recons().print_stats();
-    cout << endl;
-    cout << "    range=" << max - min << endl;
-    cout << endl;
+    std::cout << std::endl;
+    std::cout << "    range=" << max - min << std::endl;
+    std::cout << std::endl;
 
     // Show Structural consistency ..........................................
     printf("scL2        FOM:%f\n", results.scL2_FOM);
@@ -515,12 +515,12 @@ void show_FOMs(const Prog_Evaluate_Parameters &prm,
                results.scdev_FOMs(i), results.scrange_FOMs(i), results.sccorr_FOMs(i),
                results.scinf_FOMs(i));
     }
-    cout << endl;
+    std::cout << std::endl;
 
     if (!(prm.tell&ONLY_STRUCTURAL))
     {
         // Show histogram based FOMS ............................................
-        cout << "Histogram based --------------------------------------------\n";
+        std::cout << "Histogram based --------------------------------------------\n";
         printf("hsin        FOM:%f\n", results.hsmu_FOM);
         printf("hsbr        FOM:%f\n", results.hsbr_FOM);
         printf("hsdt        FOM:%f\n", results.hsdt_FOM);
@@ -533,14 +533,14 @@ void show_FOMs(const Prog_Evaluate_Parameters &prm,
                    i, results.hsmu_FOMs(i),  results.hsbr_FOMs(i),
                    results.hsdt_FOMs(i), results.hsvr_FOMs(i));
         }
-        cout << endl;
+        std::cout << std::endl;
 
         // Show Directional FOMs ................................................
-        cout << "Directional ------------------------------------------------\n";
+        std::cout << "Directional ------------------------------------------------\n";
         printf("scrt        FOM:%f\n", results.drrt_FOM);
 
         // Show Distance FOMs ...................................................
-        cout << "Distance based ---------------------------------------------\n";
+        std::cout << "Distance based ---------------------------------------------\n";
         printf("scbl        FOM:%f\n", results.dsbl_FOM);
         printf("scad        FOM:%f\n", results.dsad_FOM);
     }
@@ -551,39 +551,39 @@ void show_FOMs(const Prog_Evaluate_Parameters &prm,
         VolumeXmipp save, error;
 
         // Save generated phantom
-        cerr << "Saving generated phantom ...\n";
+        std::cerr << "Saving generated phantom ...\n";
         side.vol_phantom.write(side.fn_root + "_eval_phantom.vol");
 
         // Save mask
-        cerr << "Saving evaluation mask ...\n";
+        std::cerr << "Saving evaluation mask ...\n";
         side.vol_mask.write(side.fn_root + "_eval_mask.vol");
 
         // Save label map
-        cerr << "Saving label map ...\n";
+        std::cerr << "Saving label map ...\n";
         side.vol_label.write(side.fn_root + "_eval_label.vol");
 
         // Save a map of differences
         save() = error() = side.vol_phantom() - side.vol_recons();
         if (side.descr_mode == MATH_PHANTOM) side.phantom_descr.sketch_in(&save);
-        cerr << "Saving difference map ...\n";
+        std::cerr << "Saving difference map ...\n";
         save.write(side.fn_root + "_eval_difference_map.vol");
 
         // Save a map of quadratic errors
         save() = error() = error() * error();
         if (side.descr_mode == MATH_PHANTOM) side.phantom_descr.sketch_in(&save);
-        cerr << "Saving quadratic errors ...\n";
+        std::cerr << "Saving quadratic errors ...\n";
         save.write(side.fn_root + "_evaluateQuadratic_map.vol");
 
         // Save a absolute difference map
         save() = ABSnD(side.vol_phantom() - side.vol_recons());
         if (side.descr_mode == MATH_PHANTOM) side.phantom_descr.sketch_in(&save);
-        cerr << "Saving absolute difference map ...\n";
+        std::cerr << "Saving absolute difference map ...\n";
         save.write(side.fn_root + "_eval_absolute_map.vol");
 
         if (!(prm.tell&ONLY_STRUCTURAL))
         {
             // Save distance map
-            cerr << "Saving distance map ...\n";
+            std::cerr << "Saving distance map ...\n";
             side.vol_distance.write(side.fn_root + "_eval_distance_map.vol");
 
             // Save blurring map
@@ -591,14 +591,14 @@ void show_FOMs(const Prog_Evaluate_Parameters &prm,
             FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(side.vol_distance))
             if (side.vol_distance(k, i, j) == -1) save(k, i, j) = 0;
             else save(k, i, j) = 1 / side.vol_distance(k, i, j) * error(k, i, j);
-            cerr << "Saving blurring map ...\n";
+            std::cerr << "Saving blurring map ...\n";
             save.write(side.fn_root + "_eval_blurring_map.vol");
 
             // Save appearing map
             FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(side.vol_distance))
             if (side.vol_distance(k, i, j) == -1) save(k, i, j) = 0;
             else save(k, i, j) = side.vol_distance(k, i, j) * error(k, i, j);
-            cerr << "Saving appearence map ...\n";
+            std::cerr << "Saving appearence map ...\n";
             save.write(side.fn_root + "_eval_appearing_map.vol");
         }
     }
@@ -607,21 +607,21 @@ void show_FOMs(const Prog_Evaluate_Parameters &prm,
     if (prm.tell&SHOW_VALUES)
     {
         int sel_feat = 0;
-        string fn_out;
-        ofstream fh_out;
+        std::string fn_out;
+        std::ofstream fh_out;
 
-        cout << "Name of the filename to dump values: ";
-        cin >> fn_out;
-        fh_out.open(fn_out.c_str(), ios::out);
+        std::cout << "Name of the filename to dump values: ";
+        std::cin >> fn_out;
+        fh_out.open(fn_out.c_str(), std::ios::out);
         if (!fh_out)
-            REPORT_ERROR(3005, (string)"Evaluate show: Could not open " + fn_out
+            REPORT_ERROR(3005, (std::string)"Evaluate show: Could not open " + fn_out
                          + " for output");
 
         while (sel_feat != 1000)
         {
-            cout << "What feature do you want to see (" << -side.num_feat << ","
+            std::cout << "What feature do you want to see (" << -side.num_feat << ","
             << side.num_feat << ") (1000=finish): ";
-            cin  >> sel_feat;
+            std::cin  >> sel_feat;
             if (ABS(sel_feat) <= side.num_feat)
                 switch (side.descr_mode)
                 {
@@ -643,7 +643,7 @@ void show_FOMs(const Prog_Evaluate_Parameters &prm,
 void Evaluate_single_step(const Prog_Evaluate_Parameters &prm,
                           EVALUATE_results &results)
 {
-    cout << prm;
+    std::cout << prm;
 
 // Read volumes, label them and generate global mask
     EVALUATE_Side_Info side;
@@ -671,7 +671,7 @@ void ROUT_Evaluate(Prog_Evaluate_Parameters &prm,
         bool mathematical_phantom;
         while (!SF.eof())
         {
-            cerr << "Perfoming measure for test number " << k << endl;
+            std::cerr << "Perfoming measure for test number " << k << std::endl;
             prm.fn_recons = SF.NextImg();
             if (prm.fnPhantom == "")
             {
@@ -695,10 +695,10 @@ void ROUT_Evaluate(Prog_Evaluate_Parameters &prm,
             }
         }
         compute_FOMs_stats(foms, 0, foms_mean, foms_stddev);
-        cout << foms;
-        cout << "--------------------------------------------------\n";
-        cout << "After combining " << SF.ImgNo() << " volumes\n";
-        show_stats(cout, 0, foms_mean, foms_stddev);
+        std::cout << foms;
+        std::cout << "--------------------------------------------------\n";
+        std::cout << "After combining " << SF.ImgNo() << " volumes\n";
+        show_stats(std::cout, 0, foms_mean, foms_stddev);
     }
 }
 
@@ -857,74 +857,74 @@ void compute_FOMs_stats(const FOMs &foms, int i, FOMs &fmean, FOMs &fstddev)
 }
 
 /* Show ==================================================================== */
-ostream & operator << (ostream &out, const FOMs &foms)
+std::ostream & operator << (std::ostream &out, const FOMs &foms)
 {
     out << "All results in all tests\n";
     out << "--------------------------------------------------\n";
-    out << "scL2\n"     << foms.scL2.transpose()     << endl;
-    out << "scL1\n"     << foms.scL1.transpose()     << endl;
-    out << "scL2w\n"    << foms.scL2w.transpose()    << endl;
-    out << "scL1w\n"    << foms.scL1w.transpose()    << endl;
-    out << "scmu\n"     << foms.scmu.transpose()     << endl;
-    out << "scdev\n"    << foms.scdev.transpose()    << endl;
-    out << "scrange\n"  << foms.scrange.transpose()  << endl;
-    out << "sccorr\n"   << foms.sccorr.transpose()   << endl;
-    out << "scinf\n"    << foms.scinf.transpose()    << endl;
-    out << "scresol\n"  << foms.scresol.transpose()  << endl;
-    out << "scL20\n"    << foms.scL20.transpose()    << endl;
-    out << "scL10\n"    << foms.scL10.transpose()    << endl;
-    out << "scmu0\n"    << foms.scmu0.transpose()    << endl;
-    out << "scdev0\n"   << foms.scdev0.transpose()   << endl;
-    out << "scrange0\n" << foms.scrange0.transpose() << endl;
-    out << "scL21\n"    << foms.scL21.transpose()    << endl;
-    out << "scL11\n"    << foms.scL11.transpose()    << endl;
-    out << "scmu1\n"    << foms.scmu1.transpose()    << endl;
-    out << "scdev1\n"   << foms.scdev1.transpose()   << endl;
-    out << "scrange1\n" << foms.scrange1.transpose() << endl;
+    out << "scL2\n"     << foms.scL2.transpose()     << std::endl;
+    out << "scL1\n"     << foms.scL1.transpose()     << std::endl;
+    out << "scL2w\n"    << foms.scL2w.transpose()    << std::endl;
+    out << "scL1w\n"    << foms.scL1w.transpose()    << std::endl;
+    out << "scmu\n"     << foms.scmu.transpose()     << std::endl;
+    out << "scdev\n"    << foms.scdev.transpose()    << std::endl;
+    out << "scrange\n"  << foms.scrange.transpose()  << std::endl;
+    out << "sccorr\n"   << foms.sccorr.transpose()   << std::endl;
+    out << "scinf\n"    << foms.scinf.transpose()    << std::endl;
+    out << "scresol\n"  << foms.scresol.transpose()  << std::endl;
+    out << "scL20\n"    << foms.scL20.transpose()    << std::endl;
+    out << "scL10\n"    << foms.scL10.transpose()    << std::endl;
+    out << "scmu0\n"    << foms.scmu0.transpose()    << std::endl;
+    out << "scdev0\n"   << foms.scdev0.transpose()   << std::endl;
+    out << "scrange0\n" << foms.scrange0.transpose() << std::endl;
+    out << "scL21\n"    << foms.scL21.transpose()    << std::endl;
+    out << "scL11\n"    << foms.scL11.transpose()    << std::endl;
+    out << "scmu1\n"    << foms.scmu1.transpose()    << std::endl;
+    out << "scdev1\n"   << foms.scdev1.transpose()   << std::endl;
+    out << "scrange1\n" << foms.scrange1.transpose() << std::endl;
 
-    out << "hsvr\n"    << foms.hsvr.transpose()    << endl;
-    out << "hsmu\n"    << foms.hsmu.transpose()    << endl;
-    out << "hsbr\n"    << foms.hsbr.transpose()    << endl;
-    out << "hsdt\n"    << foms.hsdt.transpose()    << endl;
+    out << "hsvr\n"    << foms.hsvr.transpose()    << std::endl;
+    out << "hsmu\n"    << foms.hsmu.transpose()    << std::endl;
+    out << "hsbr\n"    << foms.hsbr.transpose()    << std::endl;
+    out << "hsdt\n"    << foms.hsdt.transpose()    << std::endl;
 
-    out << "drrt\n"    << foms.drrt.transpose()    << endl;
+    out << "drrt\n"    << foms.drrt.transpose()    << std::endl;
 
-    out << "dsbl\n"    << foms.dsbl.transpose()    << endl;
-    out << "dsad\n"    << foms.dsad.transpose()    << endl;
+    out << "dsbl\n"    << foms.dsbl.transpose()    << std::endl;
+    out << "dsad\n"    << foms.dsad.transpose()    << std::endl;
     out << "--------------------------------------------------\n";
     return out;
 }
 
 /* Show stats ============================================================== */
-void show_stats(ostream &out, int i, const FOMs &fmean,
+void show_stats(std::ostream &out, int i, const FOMs &fmean,
                 const FOMs &fstddev)
 {
-    out << "    scL2:     " << fmean.scL2(i)     << "+-" << fstddev.scL2(i)    << endl;
-    out << "    scL1:     " << fmean.scL1(i)     << "+-" << fstddev.scL1(i)    << endl;
-    out << "    scL2w:    " << fmean.scL2w(i)    << "+-" << fstddev.scL2w(i)   << endl;
-    out << "    scL1w:    " << fmean.scL1w(i)    << "+-" << fstddev.scL1w(i)   << endl;
-    out << "    scmu:     " << fmean.scmu(i)     << "+-" << fstddev.scmu(i)    << endl;
-    out << "    scdev:    " << fmean.scdev(i)    << "+-" << fstddev.scdev(i)   << endl;
-    out << "    scrange:  " << fmean.scrange(i)  << "+-" << fstddev.scrange(i) << endl;
-    out << "    sccorr:   " << fmean.sccorr(i)   << "+-" << fstddev.sccorr(i)  << endl;
-    out << "    scinf:    " << fmean.scinf(i)    << "+-" << fstddev.scinf(i)   << endl;
-    out << "    scresol:  " << fmean.scresol(i)  << "+-" << fstddev.scresol(i) << endl;
-    out << "    scL20:    " << fmean.scL20(i)    << "+-" << fstddev.scL20(i)   << endl;
-    out << "    scL10:    " << fmean.scL10(i)    << "+-" << fstddev.scL10(i)   << endl;
-    out << "    scmu0:    " << fmean.scmu0(i)    << "+-" << fstddev.scmu0(i)   << endl;
-    out << "    scdev0:   " << fmean.scdev0(i)   << "+-" << fstddev.scdev0(i)  << endl;
-    out << "    scrange0: " << fmean.scrange0(i) << "+-" << fstddev.scrange0(i) << endl;
-    out << "    scL21:    " << fmean.scL21(i)    << "+-" << fstddev.scL21(i)   << endl;
-    out << "    scL11:    " << fmean.scL11(i)    << "+-" << fstddev.scL11(i)   << endl;
-    out << "    scmu1:    " << fmean.scmu1(i)    << "+-" << fstddev.scmu1(i)   << endl;
-    out << "    scdev1:   " << fmean.scdev1(i)   << "+-" << fstddev.scdev1(i)  << endl;
-    out << "    scrange1: " << fmean.scrange1(i) << "+-" << fstddev.scrange1(i) << endl;
-    out << "    scbl:     " << fmean.dsbl(i)     << "+-" << fstddev.dsbl(i)    << endl;
-    out << "    scap:     " << fmean.dsad(i)     << "+-" << fstddev.dsad(i)    << endl;
-    out << "    scrt:     " << fmean.drrt(i)     << "+-" << fstddev.drrt(i)    << endl;
-    out << "    hsin:     " << fmean.hsmu(i)     << "+-" << fstddev.hsmu(i)    << endl;
-    out << "    hsbr:     " << fmean.hsbr(i)     << "+-" << fstddev.hsbr(i)    << endl;
-    out << "    hsdt:     " << fmean.hsdt(i)     << "+-" << fstddev.hsdt(i)    << endl;
-    out << "    hsvr:     " << fmean.hsvr(i)     << "+-" << fstddev.hsvr(i)    << endl;
+    out << "    scL2:     " << fmean.scL2(i)     << "+-" << fstddev.scL2(i)    << std::endl;
+    out << "    scL1:     " << fmean.scL1(i)     << "+-" << fstddev.scL1(i)    << std::endl;
+    out << "    scL2w:    " << fmean.scL2w(i)    << "+-" << fstddev.scL2w(i)   << std::endl;
+    out << "    scL1w:    " << fmean.scL1w(i)    << "+-" << fstddev.scL1w(i)   << std::endl;
+    out << "    scmu:     " << fmean.scmu(i)     << "+-" << fstddev.scmu(i)    << std::endl;
+    out << "    scdev:    " << fmean.scdev(i)    << "+-" << fstddev.scdev(i)   << std::endl;
+    out << "    scrange:  " << fmean.scrange(i)  << "+-" << fstddev.scrange(i) << std::endl;
+    out << "    sccorr:   " << fmean.sccorr(i)   << "+-" << fstddev.sccorr(i)  << std::endl;
+    out << "    scinf:    " << fmean.scinf(i)    << "+-" << fstddev.scinf(i)   << std::endl;
+    out << "    scresol:  " << fmean.scresol(i)  << "+-" << fstddev.scresol(i) << std::endl;
+    out << "    scL20:    " << fmean.scL20(i)    << "+-" << fstddev.scL20(i)   << std::endl;
+    out << "    scL10:    " << fmean.scL10(i)    << "+-" << fstddev.scL10(i)   << std::endl;
+    out << "    scmu0:    " << fmean.scmu0(i)    << "+-" << fstddev.scmu0(i)   << std::endl;
+    out << "    scdev0:   " << fmean.scdev0(i)   << "+-" << fstddev.scdev0(i)  << std::endl;
+    out << "    scrange0: " << fmean.scrange0(i) << "+-" << fstddev.scrange0(i) << std::endl;
+    out << "    scL21:    " << fmean.scL21(i)    << "+-" << fstddev.scL21(i)   << std::endl;
+    out << "    scL11:    " << fmean.scL11(i)    << "+-" << fstddev.scL11(i)   << std::endl;
+    out << "    scmu1:    " << fmean.scmu1(i)    << "+-" << fstddev.scmu1(i)   << std::endl;
+    out << "    scdev1:   " << fmean.scdev1(i)   << "+-" << fstddev.scdev1(i)  << std::endl;
+    out << "    scrange1: " << fmean.scrange1(i) << "+-" << fstddev.scrange1(i) << std::endl;
+    out << "    scbl:     " << fmean.dsbl(i)     << "+-" << fstddev.dsbl(i)    << std::endl;
+    out << "    scap:     " << fmean.dsad(i)     << "+-" << fstddev.dsad(i)    << std::endl;
+    out << "    scrt:     " << fmean.drrt(i)     << "+-" << fstddev.drrt(i)    << std::endl;
+    out << "    hsin:     " << fmean.hsmu(i)     << "+-" << fstddev.hsmu(i)    << std::endl;
+    out << "    hsbr:     " << fmean.hsbr(i)     << "+-" << fstddev.hsbr(i)    << std::endl;
+    out << "    hsdt:     " << fmean.hsdt(i)     << "+-" << fstddev.hsdt(i)    << std::endl;
+    out << "    hsvr:     " << fmean.hsvr(i)     << "+-" << fstddev.hsvr(i)    << std::endl;
     out.flush();
 }

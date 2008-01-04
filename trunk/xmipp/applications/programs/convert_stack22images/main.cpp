@@ -48,7 +48,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage();
         exit(1);
     }
@@ -104,7 +104,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
     exit(0);
 } //main
@@ -112,9 +112,9 @@ int main(int argc, char **argv)
 /* Usage ------------------------------------------------------------------- */
 void Usage()
 {
-    cerr << "Purpose:\n";
-    cerr << "    Converts Spider stacks into images or volumes or viceversa\n";
-    cerr << "Usage: stack22images " << endl
+    std::cerr << "Purpose:\n";
+    std::cerr << "    Converts Spider stacks into images or volumes or viceversa\n";
+    std::cerr << "Usage: stack22images " << std::endl
          << "    -stack stackFile : Stack with the set of images\n"
          << "   [-sel selFile]    : Selfile with the set of images\n"
          << "   [-vol volume]     : Volume with the set of images\n"

@@ -36,10 +36,10 @@ int main(int argc, char *argv[])
     FileName       fn_in;    // input file
     FileName       fn_out;   // output file
     FileName       sel_file; // selection file
-    string         sel_ext;  // extension for output files in selection file.
-    char        raw_type = 'b';
+    std::string    sel_ext;  // extension for output files in selection file.
+    char           raw_type = 'b';
     int            Zdim, Ydim, Xdim;
-    int         size_arg;
+    int            size_arg;
     int            header_size;
     bool           generate_inf;
     bool           reverse_endian;
@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
             FileName fn_inf = fn_in + ".inf";
             FILE *fh_inf = fopen(fn_inf.c_str(), "r");
             if (!fh_inf)
-                REPORT_ERROR(1, (string)"Raw22Spi:Cannot find " + fn_inf);
+                REPORT_ERROR(1, (std::string)"Raw22Spi:Cannot find " + fn_inf);
             Zdim = 1;
             Ydim = textToInteger(getParameter(fh_inf, "Ydim"));
             Xdim = textToInteger(getParameter(fh_inf, "Xdim"));
@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
         Usage(argv);
     }
 
@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
             SelFile SF(sel_file);
             FileName SF_out_name;
             SF_out_name = sel_file.without_extension().add_prefix("out_");
-            SF_out_name += (string)"." + sel_file.get_extension();
+            SF_out_name += (std::string)"." + sel_file.get_extension();
             SelFile SF_out;
             SF_out.clear();
             while (!SF.eof())
@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
     }
     catch (Xmipp_error XE)
     {
-        cout << XE;
+        std::cout << XE;
     }
     exit(0);
 } //main
@@ -243,15 +243,15 @@ void raw22spi(const FileName &fn_in, const FileName &fn_out,
         }
         if (generate_inf)
         {
-            ofstream fh((fn_out + ".inf").c_str());
+            std::ofstream fh((fn_out + ".inf").c_str());
             if (!fh)
                 REPORT_ERROR(1, "Cannot create output .inf file");
             fh << "# Image width\n";
-            fh << "Xdim=" << XSIZE(Ix()) << endl;
+            fh << "Xdim=" << XSIZE(Ix()) << std::endl;
             fh << "# Image length\n";
-            fh << "Ydim=" << YSIZE(Ix()) << endl;
+            fh << "Ydim=" << YSIZE(Ix()) << std::endl;
             fh << "# Pixel depth\n";
-            fh << "bitspersample=" << bits << endl;
+            fh << "bitspersample=" << bits << std::endl;
             fh.close();
         }
     }

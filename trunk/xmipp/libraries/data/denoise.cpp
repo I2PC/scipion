@@ -60,7 +60,7 @@ void Denoising_parameters::read(int argc, char **argv)
 {
     Prog_parameters::read(argc, argv);
     DWT_type = getParameter(argc, argv, "-type", "DAUB12");
-    string aux = getParameter(argc, argv, "-denoising", "remove_scales");
+    std::string aux = getParameter(argc, argv, "-denoising", "remove_scales");
     if (aux == "remove_scales")
         denoising_type = REMOVE_SCALE;
     else if (aux == "soft_thresholding")
@@ -123,41 +123,41 @@ void Denoising_parameters::show()
 void Denoising_parameters::show_specific()
 {
     if (denoising_type != SHAH)
-        cout << "DWT type: " << DWT_type << endl;
-    cout << "Denoising: ";
+        std::cout << "DWT type: " << DWT_type << std::endl;
+    std::cout << "Denoising: ";
     switch (denoising_type)
     {
     case REMOVE_SCALE:
-        cout << " Remove scale " << scale << endl;
+        std::cout << " Remove scale " << scale << std::endl;
         break;
     case SOFT_THRESHOLDING:
-        cout << " Soft thresholding " << threshold << endl;
+        std::cout << " Soft thresholding " << threshold << std::endl;
         break;
     case BAYESIAN:
-        cout << " Bayesian\n";
-        cout << " SNR between " << SNR0 << " and " << SNRF << endl
-        << " up to scale " << scale << endl;
+        std::cout << " Bayesian\n";
+        std::cout << " SNR between " << SNR0 << " and " << SNRF << std::endl
+        << " up to scale " << scale << std::endl;
         if (white_noise)
-            cout << " Imposing white noise\n";
+            std::cout << " Imposing white noise\n";
         break;
     case ADAPTIVE_SOFT:
-        cout << " Adaptive soft thresholding\n";
+        std::cout << " Adaptive soft thresholding\n";
         break;
     case CENTRAL:
-        cout << " Keeping central part " << R << " pixels\n";
+        std::cout << " Keeping central part " << R << " pixels\n";
         break;
     case SHAH:
-        cout << " Shah difussion\n"
-        << " Outer iterations " << Shah_outer << endl
-        << " Inner iterations " << Shah_inner << endl
-        << " Refinement interations " << Shah_refinement << endl
-        << " Weight " << Shah_weight.transpose() << endl;
+        std::cout << " Shah difussion\n"
+        << " Outer iterations " << Shah_outer << std::endl
+        << " Inner iterations " << Shah_inner << std::endl
+        << " Refinement interations " << Shah_refinement << std::endl
+        << " Weight " << Shah_weight.transpose() << std::endl;
         if (Shah_edge)
-            cout << " Generating edge image\n";
+            std::cout << " Generating edge image\n";
         break;
     }
     if (denoising_type != SHAH)
-        cout << "Output scale: " << output_scale << endl;
+        std::cout << "Output scale: " << output_scale << std::endl;
 }
 
 // Usage -------------------------------------------------------------------s
@@ -169,33 +169,33 @@ void Denoising_parameters::usage()
 
 void Denoising_parameters::usage_specific()
 {
-    cerr << "  [-type <str=DAUB12]        : DWT type. Valid types are:\n"
-    << "                               DAUB4, DAUB12, DAUB20\n"
-    << "  [-denoising <str=remove_scale] : Denoising action\n"
-    << "                               remove_scale\n"
-    << "                               bayesian\n"
-    << "                               soft_thresholding\n"
-    << "                               adaptive_soft\n"
-    << "                               central\n"
-    << "                               difussion\n"
-    << "  [-scale <s=0>]             : scale\n"
-    << "  [-output_scale <s=0>]      : output_scale\n"
-    << "  [-th <th=50>]              : threshold of values (%) to remove\n"
-    << "  [-R <r=-1>]                : Radius to keep, by default half the size\n"
-    << "  [-SNR0 <SNR=0.1>]          : Smallest SNR\n"
-    << "  [-SNRF <SNR=0.2>]          : Largest SNR\n"
-    << "  [-white_noise]             : Select if the noise is white\n"
-    << "  [-outer <it=10>]           : Difussion outer iterations\n"
-    << "  [-inner <it=1>]            : Difussion inner iterations\n"
-    << "  [-refinement <it=1>]       : Difussion refinement iterations\n"
-    << "  [-Shah_weight [w0,w1,w2,w3]]:Diffusion weights\n"
-    << "                               w0=data matching (=0)\n"
-    << "                               w1=1st derivative smooth (=50)\n"
-    << "                               w2=edge strength (=50)\n"
-    << "                               w3=edge smoothness (=0.02)\n"
-    << "  [-only_edge]               : Produce the edge image of the diffusion\n"
-    << "  [-show]                    : Show information about the process\n"
-    ;
+    std::cerr << "  [-type <str=DAUB12]        : DWT type. Valid types are:\n"
+              << "                               DAUB4, DAUB12, DAUB20\n"
+              << "  [-denoising <str=remove_scale] : Denoising action\n"
+              << "                               remove_scale\n"
+              << "                               bayesian\n"
+              << "                               soft_thresholding\n"
+              << "                               adaptive_soft\n"
+              << "                               central\n"
+              << "                               difussion\n"
+              << "  [-scale <s=0>]             : scale\n"
+              << "  [-output_scale <s=0>]      : output_scale\n"
+              << "  [-th <th=50>]              : threshold of values (%) to remove\n"
+              << "  [-R <r=-1>]                : Radius to keep, by default half the size\n"
+              << "  [-SNR0 <SNR=0.1>]          : Smallest SNR\n"
+              << "  [-SNRF <SNR=0.2>]          : Largest SNR\n"
+              << "  [-white_noise]             : Select if the noise is white\n"
+              << "  [-outer <it=10>]           : Difussion outer iterations\n"
+              << "  [-inner <it=1>]            : Difussion inner iterations\n"
+              << "  [-refinement <it=1>]       : Difussion refinement iterations\n"
+              << "  [-Shah_weight [w0,w1,w2,w3]]:Diffusion weights\n"
+              << "                               w0=data matching (=0)\n"
+              << "                               w1=1st derivative smooth (=50)\n"
+              << "                               w2=edge strength (=50)\n"
+              << "                               w3=edge smoothness (=0.02)\n"
+              << "  [-only_edge]               : Produce the edge image of the diffusion\n"
+              << "  [-show]                    : Show information about the process\n"
+     ;
 }
 
 // Denoise image -----------------------------------------------------------
@@ -263,7 +263,7 @@ void Denoising_parameters::denoise(Matrix3D<double> &vol)
 {
     if (denoising_type == SHAH)
     {
-        cerr << "Shah denoising is not implemented for volumes\n";
+        std::cerr << "Shah denoising is not implemented for volumes\n";
         return;
     }
     double size2 = log10((double)XSIZE(vol)) / log10(2.0);
@@ -299,13 +299,13 @@ void Denoising_parameters::denoise(Matrix3D<double> &vol)
                                                white_noise, tell, !dont_denoise);
         break;
     case ADAPTIVE_SOFT:
-        cout << "Adaptive soft-thresholding not implemented for volumes\n";
+        std::cout << "Adaptive soft-thresholding not implemented for volumes\n";
         break;
     case CENTRAL:
-        cout << "Keep central part not implemented for volumes\n";
+        std::cout << "Keep central part not implemented for volumes\n";
         break;
     case SHAH:
-        cout << "Shah Difussion not implemented for volumes\n";
+        std::cout << "Shah Difussion not implemented for volumes\n";
         break;
     }
 

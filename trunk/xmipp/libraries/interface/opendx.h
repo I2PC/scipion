@@ -47,7 +47,7 @@
 class openDX
 {
 private:
-    ofstream fh_out;
+    std::ofstream fh_out;
     int number_of_elements;
 public:
     /**Open file and write header. Default filename is myopenDX.dx"

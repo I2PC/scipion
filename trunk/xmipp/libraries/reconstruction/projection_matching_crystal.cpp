@@ -54,8 +54,8 @@ void Prog_projection_matching_crystal_prm::read(int argc, char **argv)
 // Usage ===================================================================
 void Prog_projection_matching_crystal_prm::usage()
 {
-    cerr << "Usage:  projection_matching [options] " << endl;
-    cerr << "   -ref <selfile>                : Selfile with reference images \n"
+    std::cerr << "Usage:  projection_matching [options] " << std::endl;
+    std::cerr << "   -ref <selfile>                : Selfile with reference images \n"
     << "   -exp <selfile>                : Selfile with experimenal images \n"
     << "   -o filerootname               : Output file root name \n"
     << "   -psi_sam number               : number of samples \n"
@@ -74,20 +74,20 @@ void Prog_projection_matching_crystal_prm::usage()
 void Prog_projection_matching_crystal_prm::show()
 {
 
-    cerr << "  Reference images            : " << SFref.name() << " (" << SFref.ImgNo() << ")" << endl;
-    cerr << "  Experimental images         : " << SFexp.name() << " (" << SFexp.ImgNo() << ")" << endl;
-    cerr << "  Output rootname             : " << fn_root << endl;
-    cerr << "  Psi distance                : " << psi_distance << endl;
-    cerr << "  Shift distance              : " << shift_distance << endl;
-    cerr << "  Scale distance              : " << scale_distance << endl;
-    cerr << "  Rot distance                : " << rot_distance << endl;
-    cerr << "  Tilt distance               : " << tilt_distance << endl;
-    cerr << "  Psi number samples          : " << psi_sampling << endl;
-    cerr << "  Shift number samples        : " << shift_sampling << endl;
-    cerr << "  Scale number samples        : " << scale_sampling << endl;
-    cerr << "  Do not modify the image headers (only output docfile): " << !modify_header << endl;
+    std::cerr << "  Reference images            : " << SFref.name() << " (" << SFref.ImgNo() << ")" << std::endl;
+    std::cerr << "  Experimental images         : " << SFexp.name() << " (" << SFexp.ImgNo() << ")" << std::endl;
+    std::cerr << "  Output rootname             : " << fn_root << std::endl;
+    std::cerr << "  Psi distance                : " << psi_distance << std::endl;
+    std::cerr << "  Shift distance              : " << shift_distance << std::endl;
+    std::cerr << "  Scale distance              : " << scale_distance << std::endl;
+    std::cerr << "  Rot distance                : " << rot_distance << std::endl;
+    std::cerr << "  Tilt distance               : " << tilt_distance << std::endl;
+    std::cerr << "  Psi number samples          : " << psi_sampling << std::endl;
+    std::cerr << "  Shift number samples        : " << shift_sampling << std::endl;
+    std::cerr << "  Scale number samples        : " << scale_sampling << std::endl;
+    std::cerr << "  Do not modify the image headers (only output docfile): " << !modify_header << std::endl;
 
-    cerr << " =================================================================" << endl;
+    std::cerr << " =================================================================" << std::endl;
 }
 
 // Side info stuff ===================================================================
@@ -152,9 +152,9 @@ void Prog_projection_matching_crystal_prm::produce_Side_info()
 //#define DEBUG
 #ifdef DEBUG
     for (int ii = 0 ; ii < nr_dir; ii++)
-        cout << ref_rot[ii] << " " << ref_tilt[ii] << endl;
+        std::cout << ref_rot[ii] << " " << ref_tilt[ii] << std::endl;
     for (int jj = 0 ; jj < shift_vector.size(); jj++)
-        cout << shift_vector[jj] << endl;
+        std::cout << shift_vector[jj] << std::endl;
 #endif
 #undef DEBUG
 }
@@ -182,7 +182,7 @@ void Prog_projection_matching_crystal_prm::PM_process_one_image(Matrix2D<double>
     double stddev_img, mean_img, dummy, xmax, ymax;
     int c = 0, ioptpsi = 0, ioptflip = 0;
     bool search;
-    vector<Matrix2D<double> >::iterator ipp;
+    std::vector<Matrix2D<double> >::iterator ipp;
 
     maxCC = -99.e99;
     Mimg.resize(dim, dim);
@@ -252,14 +252,14 @@ void Prog_projection_matching_crystal_prm::PM_process_one_image(Matrix2D<double>
 #ifdef DEBUG
                         xmax = XX(shift_vector[ishift]) * my_scale;
                         ymax = YY(shift_vector[ishift]) * my_scale;
-                        cout <<  SFref.get_file_number(dir_counter) <<
+                        std::cout <<  SFref.get_file_number(dir_counter) <<
                         " rot= "  << ref_rot[dir_counter]  <<
                         " tilt= " << ref_tilt[dir_counter] <<
-                        " psi= "  << my_psi << " CC= " << thisCC << endl;
+                        " psi= "  << my_psi << " CC= " << thisCC << std::endl;
                         " xmax= "
-                        << xmax << " ymax= " << ymax << endl;
+                        << xmax << " ymax= " << ymax << std::endl;
                         " scale= "
-                        << my_scale << endl;
+                        << my_scale << std::endl;
 #endif
 #undef DEBUG
                         if (thisCC > maxCC)
@@ -288,14 +288,14 @@ void Prog_projection_matching_crystal_prm::PM_process_one_image(Matrix2D<double>
 
     //#define DEBUG
 #ifdef DEBUG
-    cout <<  SFref.get_file_number(opt_dirno) <<
+    std::cout <<  SFref.get_file_number(opt_dirno) <<
     " rot= "  << ref_rot[opt_dirno]  <<
     " tilt= " << ref_tilt[opt_dirno] <<
     " psi= "  << opt_psi <<
     " opt_xoff= "  << opt_xoff <<
     " opt_yoff= "  << opt_yoff <<
     " opt_scale= "  << opt_scale <<
-    " CC= " << maxCC << endl;
+    " CC= " << maxCC << std::endl;
 #endif
 #undef DEBUG
     //#define DEBUG

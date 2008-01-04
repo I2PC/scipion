@@ -106,7 +106,7 @@ public:
     Matrix1D<double> kappa_list;
 
     /** Vector containing all residual images for wlsART */
-    vector<Projection> residual_imgs;
+    std::vector<Projection> residual_imgs;
 
     /** Sum ML-weight of all projections*/
     double sum_weight;
@@ -289,7 +289,7 @@ public:
     int             projYdim;
 
     /// File handler for the history file
-    ofstream        *fh_hist;
+    std::ofstream        *fh_hist;
 
     /// Array with all the sorting information for each projection
     Recons_info     *IMG_Inf;
@@ -360,11 +360,11 @@ public:
     void read(const FileName &fn);
 
     /** Usage message.
-        This function shows the way of introducing the most common parameters. */
+        This function shows the way of introdustd::cing the most common parameters. */
     void usage();
 
     /** Full Usage message.
-        This function shows the way of introducing these parameters. */
+        This function shows the way of introdustd::cing these parameters. */
     void usage_more();
 
 #define BASIC 0
@@ -558,7 +558,7 @@ public:
     Basic_ART_Parameters *prm;
 
     /// Vector of training vectors
-    vector < Matrix3D<double> > VA;
+    std::vector < Matrix3D<double> > VA;
 
     /// Number of updates so far
     int N;

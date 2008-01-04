@@ -73,7 +73,7 @@
 
    double M=blob_Fourier_val (0, blob);
    for (double w=0; w<=2; w += 0.05)
-      cout << w << " " <<  blob_Fourier_val (w, blob)/M << endl;
+      std::cout << w << " " <<  blob_Fourier_val (w, blob)/M << std::endl;
 
    return 0;
       }
@@ -104,7 +104,7 @@ struct blobtype
     @code
     struct blobtype blob; blob.radius = 2; blob.order = 2; blob.alpha = 3.6;
     Matrix1D<double> v=vectorR3(1,1,1);
-    cout << "Blob value at (1,1,1) = " << blob_val(v.mod(),blob) << endl;
+    std::cout << "Blob value at (1,1,1) = " << blob_val(v.mod(),blob) << std::endl;
     @endcode */
 #define blob_val(r, blob) kaiser_value(r, blob.radius, blob.alpha, blob.order)
 double kaiser_value(double r, double a, double alpha, int m);
@@ -123,8 +123,8 @@ double kaiser_value(double r, double a, double alpha, int m);
     @code
     struct blobtype blob; blob.radius = 2; blob.order = 2; blob.alpha = 3.6;
     Matrix1D<double> v=vectorR3(1,1,1);
-    cout << "Blob line integral through (1,1,1) = " << blob_proj(v.mod(),blob)
-         << endl;
+    std::cout << "Blob line integral through (1,1,1) = " << blob_proj(v.mod(),blob)
+         << std::endl;
     @endcode */
 #define blob_proj(r, blob) kaiser_proj(r, blob.radius, blob.alpha, blob.order)
 double kaiser_proj(double r, double a, double alpha, int m);
@@ -174,17 +174,17 @@ double blob_att(double w, struct blobtype b);
     would need to make a reconstruction with this blob. */
 double blob_ops(double w, struct blobtype b);
 
-/** Optimal CC grid spacing.
+/** Optimal CC grid spastd::cing.
     This function returns the optimal grid relative size for the blob
     selected. */
 double optimal_CC_grid_relative_size(struct blobtype b);
 
-/** Optimal BCC grid spacing.
+/** Optimal BCC grid spastd::cing.
     This function returns the optimal grid relative size for the blob
     selected. */
 double optimal_BCC_grid_relative_size(struct blobtype b);
 
-/** Optimal FCC grid spacing.
+/** Optimal FCC grid spastd::cing.
     This function returns the optimal grid relative size for the blob
     selected. */
 double optimal_FCC_grid_relative_size(struct blobtype b);
@@ -250,7 +250,7 @@ void footprint_blob(ImageOver &blobprint, const struct blobtype &blob,
     Grid BCCgrid;
     BCCgrid=BCC_grid(1.41,vectorR3(-5,-5,-5),vector_R3( 5, 5, 5));
 
-    cout << "The sum of a single blob over the grid is " <<
+    std::cout << "The sum of a single blob over the grid is " <<
          << sum_blob_grid(blob, BCCgrid);
     @endcode
 

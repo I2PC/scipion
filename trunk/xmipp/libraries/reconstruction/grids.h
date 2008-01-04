@@ -42,7 +42,7 @@ GridVolumeT<T> operator -(T f, const GridVolumeT<T> &GV);
 template <class T>
 GridVolumeT<T> operator /(T f, const GridVolumeT<T> &GV);
 template <class T>
-ostream& operator << (ostream &o, const GridVolumeT<T> &GV);
+std::ostream& operator << (std::ostream &o, const GridVolumeT<T> &GV);
 
 /**@defgroup Grids Grids
    @ingroup ReconsLibrary
@@ -52,7 +52,7 @@ ostream& operator << (ostream &o, const GridVolumeT<T> &GV);
     positions defined by the grid. Grids in Xmipp may be as complex as
     you liked, a complex grid is supposed to be a superposition of
     simpler grids. Simple grids mantain information about the simple
-    grids themselves (orientation, spacing, ...) while complex
+    grids themselves (orientation, spastd::cing, ...) while complex
     ones are only collections of simple grids. Usual grids as BCC
     (Body Centered Cubic) or FCC (Face Centered Cubic),
     can be expressed as the superposition of two CC (Cubic) grids.
@@ -182,8 +182,8 @@ public:
 
     /** Show a Simple grid.
         Shows all information about the simple grid.
-        \\Ex: cout << sg; */
-    friend ostream& operator <<(ostream& o, const SimpleGrid &grid);
+        \\Ex: std::cout << sg; */
+    friend std::ostream& operator <<(std::ostream& o, const SimpleGrid &grid);
 
     /** Assignment.
         \\ Ex: sg2=sg1; */
@@ -214,21 +214,21 @@ public:
     }
 
     /** Get X vector of the grid.
-        \\Ex: Matrix1D<double> X; sg.get_X(X) << endl; */
+        \\Ex: Matrix1D<double> X; sg.get_X(X) << std::endl; */
     void get_X(Matrix1D<double> &v) const
     {
         basis.getCol(0, v);
     }
 
     /** Get Y vector of the grid.
-        \\Ex: Matrix1D<double> Y; sg.get_Y(Y) << endl; */
+        \\Ex: Matrix1D<double> Y; sg.get_Y(Y) << std::endl; */
     void get_Y(Matrix1D<double> &v) const
     {
         basis.getCol(1, v);
     }
 
     /** Get Z vector of the grid.
-        \\Ex: Matrix1D<double> Z; sg.get_Z(Z) << endl; */
+        \\Ex: Matrix1D<double> Z; sg.get_Z(Z) << std::endl; */
     void get_Z(Matrix1D<double> &v) const
     {
         basis.getCol(2, v);
@@ -345,7 +345,7 @@ public:
         @code
            SimpleGrid sg;
            sg.origin=vectorR3(10,10,10);
-           cout << "What is the position within the grid of the origin? "
+           std::cout << "What is the position within the grid of the origin? "
                 << sg.universe2grid(sg.origin);
         @endcode */
     void universe2grid(const Matrix1D<double> &uv, Matrix1D<double> &gv) const
@@ -465,7 +465,7 @@ public:
     each simple grid, or apply the function you want to each simple grid.
     For instance, here you have a function to show a complex grid
     @code
-       ostream& operator << (ostream& o, Grid &grid) {
+       std::ostream& operator << (std::ostream& o, Grid &grid) {
           o << "Complex Grid -------------------------------------\n";
           for (int i=0; i<grid.GridsNo(); i++) o << grid(i);
           return o;
@@ -479,7 +479,7 @@ public:
 class Grid
 {
     /* Structure --------------------------------------------------------------- */
-    vector<SimpleGrid>   LG;                 // List of grids
+    std::vector<SimpleGrid>   LG;                 // List of grids
 public:
     /* Protoypes --------------------------------------------------------------- */
     /** Add a grid to the set.
@@ -500,7 +500,7 @@ public:
         grid is the number 0. An exception is thrown if you try to access
         a simple grid beyond the number of actual simple grids inside the
         complex one.
-        \\ Ex: cout << "The first grid in the BCC grid is " << BCC(0); */
+        \\ Ex: std::cout << "The first grid in the BCC grid is " << BCC(0); */
     const SimpleGrid & operator()(int n) const
     {
         if (n>LG.size())
@@ -532,7 +532,7 @@ public:
     /** Number of simple grids inside.
         This function returns the number of simple grids inside the complex
         grid.
-        \\ Ex: cout << "In BCC there are " << BCC.GridsNo() << " grids\n"; */
+        \\ Ex: std::cout << "In BCC there are " << BCC.GridsNo() << " grids\n"; */
     int GridsNo() const
     {
         return LG.size();
@@ -540,8 +540,8 @@ public:
 
     /** Show a complex grid.
         Show all simple grids inside the complex one.
-        \\ Ex: cout << BCC; */
-    friend ostream& operator << (ostream& o, const Grid &grid)
+        \\ Ex: std::cout << BCC; */
+    friend std::ostream& operator << (std::ostream& o, const Grid &grid)
     {
         o << "Complex Grid -------------------------------------\n";
         for (int i = 0; i < grid.GridsNo(); i++) o << grid(i);
@@ -788,7 +788,7 @@ Grid Create_FCC_grid(double relative_size, double R);
 template <class T> class GridVolumeT
 {
 // Structure ---------------------------------------------------------------
-    vector<VolumeT<T> * > LV;               // List of volumes
+    std::vector<VolumeT<T> * > LV;               // List of volumes
     Grid                 G;                 // Grid associated to this volume
 
 public:
@@ -885,7 +885,7 @@ public:
                 const Matrix1D<double> &corner2)
     {
         VolumeT<T> *         Vol_aux;
-        vector<VolumeT<T> * > LV_aux;
+        std::vector<VolumeT<T> * > LV_aux;
 
         for (int n = 0; n < G.GridsNo(); n++)
         {
@@ -1074,7 +1074,7 @@ public:
     VolumeT<T> * Vol_aux; \
     \
     if (VolumesNo()!=GV.VolumesNo()) \
-        REPORT_ERROR(3004,(string)"GridVolume::"+op+": Different number of subvolumes");\
+        REPORT_ERROR(3004,(std::string)"GridVolume::"+op+": Different number of subvolumes");\
     \
     result.G = G;\
     result.LV.reserve(VolumesNo());\
@@ -1085,8 +1085,8 @@ public:
             arrayByArray((*this)(i)(),GV(i)(),(*Vol_aux)(),op); \
             result.LV.push_back(Vol_aux); \
         } catch (Xmipp_error XE) {\
-            cout << XE; \
-            REPORT_ERROR(3004,(string)"GridVolume::"+op+": Different shape of volume " +\
+            std::cout << XE; \
+            REPORT_ERROR(3004,(std::string)"GridVolume::"+op+": Different shape of volume " +\
                          integerToString(i)); \
         } \
     } \
@@ -1135,14 +1135,14 @@ public:
 
 #define GRIDVOL_BY_GRIDVOLASSIG(op) \
     if (VolumesNo()!=GV.VolumesNo()) \
-        REPORT_ERROR(3004,(string)"GridVolume::"+op+"=: Different number of subvolumes");\
+        REPORT_ERROR(3004,(std::string)"GridVolume::"+op+"=: Different number of subvolumes");\
     \
     for (int i=0; i<VolumesNo(); i++) { \
         try { \
             arrayByArray((*this)(i)(),GV(i)(),(*this)(i)(),op); \
         } catch (Xmipp_error XE) {\
-            cout << XE; \
-            REPORT_ERROR(3004,(string)"GridVolume::"+op+"=: Different shape of volume " +\
+            std::cout << XE; \
+            REPORT_ERROR(3004,(std::string)"GridVolume::"+op+"=: Different shape of volume " +\
                          integerToString(i)); \
         } \
     }
@@ -1206,10 +1206,10 @@ public:
         VolumeXmippT<T>    V;
         float temp_float;
         size_t floatsize;
-        const type_info &typeinfoT = typeid(T); // We need to know what kind
+        const std::type_info &typeinfoT = typeid(T); // We need to know what kind
         // of variable is T
-        const type_info &typeinfoD = typeid(double);
-        const type_info &typeinfoI = typeid(int);
+        const std::type_info &typeinfoD = typeid(double);
+        const std::type_info &typeinfoI = typeid(int);
 
         floatsize = (size_t) sizeof(float);
 
@@ -1329,17 +1329,17 @@ public:
 
         float temp_float;
         size_t floatsize;
-        const type_info &typeinfoT = typeid(T); // We need to know what kind
+        const std::type_info &typeinfoT = typeid(T); // We need to know what kind
         // of variable is T
-        const type_info &typeinfoD = typeid(double);
-        const type_info &typeinfoI = typeid(int);
+        const std::type_info &typeinfoD = typeid(double);
+        const std::type_info &typeinfoI = typeid(int);
 
         floatsize = (size_t) sizeof(float);
         // We use a trick to save the grid information in the volume
         // If the following if is true the trick can not be used
         if ((typeid(T) == typeid(int)) && (sizeof(float) != sizeof(int)))
         {
-            cout << "\nError: GridVolume is integer and\n"
+            std::cout << "\nError: GridVolume is integer and\n"
             "(sizeof(float)!= sizeof(int)\n";
             exit(0);
         }
@@ -1428,11 +1428,11 @@ public:
             STARTINGY(VOLMATRIX(*sV)) = Yinit;
             STARTINGX(VOLMATRIX(*sV)) = Xinit;
 #ifdef DEBUG
-            cout << "The read grid is \n" << sG;
-            cout << "Volume dimensions: " << Zdim << " x " << Ydim << " x "
-            << Xdim << endl;
-            cout << "Volume init: " << Zinit << " x " << Yinit << " x "
-            << Xinit << endl;
+            std::cout << "The read grid is \n" << sG;
+            std::cout << "Volume dimensions: " << Zdim << " x " << Ydim << " x "
+            << Xdim << std::endl;
+            std::cout << "Volume init: " << Zinit << " x " << Yinit << " x "
+            << Xinit << std::endl;
 #endif
             sli++;
 
@@ -1443,7 +1443,7 @@ public:
                     for (j = 0; j < XSIZE(VOLMATRIX(*sV)); j++)
                     {
 #ifdef DEBUG
-                        cout << "Reading from file position (" << sli << "," << i
+                        std::cout << "Reading from file position (" << sli << "," << i
                         << "," << j << ") to subvolume position ("
                         << k << "," << i << "," << j << ")\n";
 #endif
@@ -1461,8 +1461,8 @@ public:
 #undef DEBUG
 
     /** Show volume.
-        \\Ex: cout << V; */
-    friend ostream& operator <<< > (ostream &o, const GridVolumeT &GV);
+        \\Ex: std::cout << V; */
+    friend std::ostream& operator <<< > (std::ostream &o, const GridVolumeT &GV);
     //@}
 };
 
@@ -1472,14 +1472,14 @@ typedef GridVolumeT<double> GridVolume;
 /** Show a grid.
   @ingroup Grids */
 template <class T>
-ostream& operator << (ostream &o, const GridVolumeT<T> &GV)
+std::ostream& operator << (std::ostream &o, const GridVolumeT<T> &GV)
 {
     o << "Grid Volume -----------\n";
     o << GV.G;
-    o << "Number of volumes= " << GV.VolumesNo() << endl;
+    o << "Number of volumes= " << GV.VolumesNo() << std::endl;
     for (int i = 0; i < GV.VolumesNo(); i++)
     {
-        o << "Volume " << i << "------------" << endl;
+        o << "Volume " << i << "------------" << std::endl;
         o << GV(i)();
     }
     return o;

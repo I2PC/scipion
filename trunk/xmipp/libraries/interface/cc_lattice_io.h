@@ -93,13 +93,13 @@ public:
     /** Vectors to store optimal X and Y position plus croos correlation  peaks */
     //Peaks Coord.
     //Correlation Peaks
-    vector <double> MRC_Xcoord;
-    vector <double> MRC_Ycoord;
-    vector <int> MRC_Xindex;
-    vector <int> MRC_Yindex;
+    std::vector <double> MRC_Xcoord;
+    std::vector <double> MRC_Ycoord;
+    std::vector <int> MRC_Xindex;
+    std::vector <int> MRC_Yindex;
 
     //Cross Correlation
-    vector <double> MRC_CCcoheficiente;
+    std::vector <double> MRC_CCcoheficiente;
 
 
 ////////////////////////////////  FUNCTIONS //////////////////////////
@@ -121,14 +121,14 @@ public:
 ////////////////////////////
 
     /* Show parameters --------------------------------------------------------- */
-    friend ostream & operator << (ostream &o, const CCLattice_IO &prm)
+    friend std::ostream & operator << (std::ostream &o, const CCLattice_IO &prm)
     {
-        o << "astar vector              :   " << prm.a << endl
-        << "bstar vector              :   " << prm.b << endl
-        << "Cristal_dim               :   " << prm.dim[0] << " "
-        << prm.dim[1] << endl
-        << "Cristal_Search_Origen     :   " << prm.O[0] << " "
-        << prm.O[1] << endl
+        o << "astar vector              :   " << prm.a << std::endl
+          << "bstar vector              :   " << prm.b << std::endl
+          << "Cristal_dim               :   " << prm.dim[0] << " "
+          << prm.dim[1] << std::endl
+          << "Cristal_Search_Origen     :   " << prm.O[0] << " "
+          << prm.O[1] << std::endl
         ;
 
         return o;

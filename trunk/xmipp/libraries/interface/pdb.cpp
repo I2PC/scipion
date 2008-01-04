@@ -414,7 +414,7 @@ double electronFormFactorRealSpace(double r,
 
 /* Computation of the low pass filter -------------------------------------- */
 // Returns the impulse response of the lowpass filter
-void hlpf(Matrix1D<double> &f, int M, double T, const string &filterType,
+void hlpf(Matrix1D<double> &f, int M, double T, const std::string &filterType,
    Matrix1D<double> &filter, double reductionFactor=0.8,
    double ripple=0.01, double deltaw=1.0/8.0)
 {
@@ -448,7 +448,7 @@ void fhlpf(const Matrix1D<double> &f, const Matrix1D<double> &filter,
    auxFilter.window(STARTINGX(filter)-Nmax,FINISHINGX(filter)+Nmax);
    
    // Convolve in Fourier
-   Matrix1D< complex<double> > F, Filter;
+   Matrix1D< std::complex<double> > F, Filter;
    FourierTransform(auxF,F);
    FourierTransform(auxFilter,Filter);
    F*=Filter;
@@ -458,7 +458,7 @@ void fhlpf(const Matrix1D<double> &f, const Matrix1D<double> &filter,
    FOR_ALL_ELEMENTS_IN_MATRIX1D(F) {
       double w; FFT_IDX2DIGFREQ(i,XSIZE(F),w);
       w*=2*PI;
-      F(i)*=complex<double>(cos(w*(STARTINGX(auxFilter)-1)),
+      F(i)*=std::complex<double>(cos(w*(STARTINGX(auxFilter)-1)),
                             sin(w*(STARTINGX(auxFilter)-1)));
       F(i)*=XSIZE(auxFilter);
    }
@@ -471,7 +471,7 @@ Matrix1D<double> globalHlpfPrm(3);
 Matrix1D<double> globalf;
 int globalM;
 double globalT;
-string globalAtom;
+std::string globalAtom;
 
 double Hlpf_fitness(double *p)
 {
@@ -510,7 +510,7 @@ double Hlpf_fitness(double *p)
     // Build the frequency response of the convolved and coarsely sampled
     // atom
     Matrix1D<double> aux, FfilterMag, freq;
-    Matrix1D< complex<double> > Ffilter;
+    Matrix1D< std::complex<double> > Ffilter;
     aux=fhlpfCoarselySampled;
     aux.window(-10*FINISHINGX(aux),10*FINISHINGX(aux));
     FourierTransform(aux,Ffilter);
@@ -549,7 +549,7 @@ double Hlpf_fitness(double *p)
     of the cutoff frequency, bestPrm(1)=ripple of the Kaiser window,
     bestPrm(2)=deltaw of the Kaiser window.
 */
-void optimizeHlpf(Matrix1D<double> &f, int M, double T, const string &atom,
+void optimizeHlpf(Matrix1D<double> &f, int M, double T, const std::string &atom,
     Matrix1D<double> &filter, Matrix1D<double> &bestPrm)
 {
     globalHlpfPrm(0)=1.0;     // reduction factor
@@ -569,7 +569,7 @@ void optimizeHlpf(Matrix1D<double> &f, int M, double T, const string &atom,
 }
 
 /* Atom radial profile ----------------------------------------------------- */
-void atomRadialProfile(int M, double T, const string &atom,
+void atomRadialProfile(int M, double T, const std::string &atom,
     Matrix1D<double> &profile)
 {
     // Compute the electron form factor in real space
@@ -719,15 +719,15 @@ void projectAtom(const Atom &atom, Projection &P,
 
 //#define DEBUG_LITTLE
 #ifdef DEBUG_LITTLE
-    cout << "Actual atom\n"        << atom.atomType << " ("
+    std::cout << "Actual atom\n"        << atom.atomType << " ("
     	 << atom.x << "," << atom.y << "," << atom.z << ")\n";
-    cout << "Center              " << Center.transpose() << endl;
-    cout << "VP matrix\n"          << VP << endl;
-    cout << "P.direction         " << P.direction.transpose() << endl;
-    cout << "direction           " << direction.transpose() << endl;
-    cout << "P.euler matrix      " << P.euler << endl;
-    cout << "max_distance        " << max_distance << endl;
-    cout << "origin              " << origin.transpose() << endl;
+    std::cout << "Center              " << Center.transpose() << std::endl;
+    std::cout << "VP matrix\n"          << VP << std::endl;
+    std::cout << "P.direction         " << P.direction.transpose() << std::endl;
+    std::cout << "direction           " << direction.transpose() << std::endl;
+    std::cout << "P.euler matrix      " << P.euler << std::endl;
+    std::cout << "max_distance        " << max_distance << std::endl;
+    std::cout << "origin              " << origin.transpose() << std::endl;
 #endif
 
     // Find limits for projection ...........................................
@@ -736,21 +736,21 @@ void projectAtom(const Atom &atom, Projection &P,
     VECTOR_R3(corner1, max_distance, max_distance, max_distance);
     VECTOR_R3(corner2, -max_distance, -max_distance, -max_distance);
 #ifdef DEBUG_LITTLE
-    cout << "Corner1 : " << corner1.transpose() << endl
-         << "Corner2 : " << corner2.transpose() << endl;
+    std::cout << "Corner1 : " << corner1.transpose() << std::endl
+         << "Corner2 : " << corner2.transpose() << std::endl;
 #endif
 
     box_enclosing(corner1, corner2, VP, corner1, corner2);
 #ifdef DEBUG_LITTLE
-    cout << "Corner1 moves to : " << corner1.transpose() << endl
-         << "Corner2 moves to : " << corner2.transpose() << endl;
+    std::cout << "Corner1 moves to : " << corner1.transpose() << std::endl
+         << "Corner2 moves to : " << corner2.transpose() << std::endl;
 #endif
 
     V3_PLUS_V3(corner1, origin, corner1);
     V3_PLUS_V3(corner2, origin, corner2);
 #ifdef DEBUG_LITTLE
-    cout << "Corner1 finally is : " << corner1.transpose() << endl
-         << "Corner2 finally is : " << corner2.transpose() << endl;
+    std::cout << "Corner1 finally is : " << corner1.transpose() << std::endl
+         << "Corner2 finally is : " << corner2.transpose() << std::endl;
 #endif
     // Discard not necessary components
     corner1.resize(2);
@@ -764,9 +764,9 @@ void projectAtom(const Atom &atom, Projection &P,
     YY(corner2) = CLIP(ROUND(YY(corner2)), STARTINGY(P()), FINISHINGY(P()));
 
 #ifdef DEBUG_LITTLE
-    cout << "corner1      " << corner1.transpose() << endl;
-    cout << "corner2      " << corner2.transpose() << endl;
-    cout.flush();
+    std::cout << "corner1      " << corner1.transpose() << std::endl;
+    std::cout << "corner2      " << corner2.transpose() << std::endl;
+    std::cout.flush();
 #endif
 
     // Check if there is something to project
@@ -781,8 +781,8 @@ void projectAtom(const Atom &atom, Projection &P,
             double length = 0;
 //#define DEBUG_EVEN_MORE
 #ifdef DEBUG_EVEN_MORE
-            cout << "Studying point (" << u << "," << v << ")\n";
-            cout.flush();
+            std::cout << "Studying point (" << u << "," << v << ")\n";
+            std::cout.flush();
 #endif
 
             // Perform subsampling ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
@@ -810,11 +810,11 @@ void projectAtom(const Atom &atom, Projection &P,
                     if (possible_length > 0) length += possible_length;
 
 #ifdef DEBUG_EVEN_MORE
-                    cout << "Averaging at (" << actu << "," << actv << ")\n";
-                    cout << "   which in univ. coords is " << act.transpose() << endl;
-		    cout << "   r=" << r << endl;
-                    cout << "   intersection there " << possible_length << endl;
-		    cout.flush();
+                    std::cout << "Averaging at (" << actu << "," << actv << ")\n";
+                    std::cout << "   which in univ. coords is " << act.transpose() << std::endl;
+		    std::cout << "   r=" << r << std::endl;
+                    std::cout << "   intersection there " << possible_length << std::endl;
+		    std::cout.flush();
 #endif
                     // Prepare for next iteration
                     actu += SUBSTEP * 2.0;
@@ -824,9 +824,9 @@ void projectAtom(const Atom &atom, Projection &P,
             length /= (SUBSAMPLING * SUBSAMPLING);
 //#define DEBUG
 #ifdef DEBUG
-            cout << "Final value added at position (" << u << "," << v << ")="
-                 << length << endl;
-	    cout.flush();
+            std::cout << "Final value added at position (" << u << "," << v << ")="
+                 << length << std::endl;
+	    std::cout.flush();
 #endif
 
             // Add at the correspondant pixel the found intersection ,,,,,,,,,,
@@ -855,7 +855,7 @@ void projectPDB(const PDBPhantom &phantomPDB,
     	try {
        	    projectAtom(phantomPDB.getAtom(i), proj, VP, PV, interpolator);
 	} catch (Xmipp_error XE) {
-	    std::cout << XE << endl;
+	    std::cout << XE << std::endl;
 	}
     }
 }

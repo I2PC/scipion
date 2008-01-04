@@ -389,7 +389,7 @@ public:
     double cc_peak_factor;
 
     /** Interpolation Model for Extension of Experimental Shifts to whole crystal image*/
-    string  InterpModel;
+    std::string  InterpModel;
 
     //////////////////////////////// Umbend Variables
 
@@ -398,7 +398,7 @@ public:
 
 
     /**  Experimental Displacements */
-    vector <LatPoint> INCR_coord;
+    std::vector <LatPoint> INCR_coord;
 
 
     /** Crystal Image  */
@@ -435,27 +435,27 @@ public:
     void Interp2D(float Tx, float Ty, float Ti, float Tj, float TiM, float TjM, float * ACoeff);
 
     /**Linear Interpolation from scattered data set to regular grid*/
-    void Scattered2Regular(Matrix2D <double> & , Matrix2D <double> & , vector <ITRIANGLE> &);
+    void Scattered2Regular(Matrix2D <double> & , Matrix2D <double> & , std::vector <ITRIANGLE> &);
     /**Displacement Interpolation from Triangulation of Irregular Grid*/
-    void ShiftsInterp(LatPoint &, vector <ITRIANGLE> &);
+    void ShiftsInterp(LatPoint &, std::vector <ITRIANGLE> &);
 
 ////////////////////////////  Triangulation
 
     /**Lattice Triangulation (using DelTriang.hh)*/
-    void LatTriang(vector <ITRIANGLE> &);
+    void LatTriang(std::vector <ITRIANGLE> &);
 
     /**Returns index of triangle in vector LatTri*/
-    int FindNearestTri(LatPoint &,  vector <ITRIANGLE> &);
+    int FindNearestTri(LatPoint &,  std::vector <ITRIANGLE> &);
 
     /** Returns index of nearest Vertex in vector INCR_coord*/
     int FindNearestPt(LatPoint &);
 ///////////////////////////  I/O
     /** Show parameters */
-    friend ostream & operator << (ostream &o, const ImUmbend &prm)
+    friend std::ostream & operator << (std::ostream &o, const ImUmbend &prm)
     {
-        o << "Input Correlation File      : " << prm.FN_Correlation << endl
-        << "Correlation_Peak_Threshold               : " << prm.cc_peak_factor << endl
-        << "Input Image           :" << prm.inImfile << endl
+        o << "Input Correlation File      : " << prm.FN_Correlation << std::endl
+        << "Correlation_Peak_Threshold               : " << prm.cc_peak_factor << std::endl
+        << "Input Image           :" << prm.inImfile << std::endl
         ;
         return o;
     };

@@ -60,15 +60,15 @@ public:
     /** If true: use maximum cross-correlation instead of maximum likelihood target */
     bool maxCC_rather_than_ML;
     /** Command line */
-    string cline;
+    std::string cline;
     /** Sigma value for expected pixel noise */
     double sigma_noise;
     /** sigma-value for origin offsets */
     double sigma_offset;
     /** Vector containing estimated fraction for each model */
-    vector<double> alpha_k;
+    std::vector<double> alpha_k;
     /** Vector containing estimated fraction for mirror of each model */
-    vector<double> mirror_fraction;
+    std::vector<double> mirror_fraction;
     /** Flag for checking mirror images of all references */
     bool do_mirror;
     /** Flag whether to fix estimates for model fractions */
@@ -98,7 +98,7 @@ public:
     /** Total number of experimental images */
     int nr_exp_images;
     /** Sum of squared amplitudes of the references */
-    vector<double> A2;
+    std::vector<double> A2;
     /** Verbose level:
         1: gives progress bar (=default)
         0: gives no output to screen at all */
@@ -115,9 +115,9 @@ public:
     /** SelFile images (working, test and reference set) */
     SelFile SF, SFr;
     /** vector for flipping (i.e. 90/180-degree rotations) matrices */
-    vector<Matrix2D<double> > F;
+    std::vector<Matrix2D<double> > F;
     /** Vector for images to hold references (new & old) */
-    vector < ImageXmippT<double> > Iref, Iold;
+    std::vector < ImageXmippT<double> > Iref, Iold;
     /** Matrices for calculating PDF of (in-plane) translations */
     Matrix2D<double> P_phi, Mr2;
     /** Fast mode */
@@ -135,7 +135,7 @@ public:
     /** Number for which limited translation is zero */
     int zero_trans;
     /** Offsets for limited translations */
-    vector<Matrix1D<double> > Vtrans;
+    std::vector<Matrix1D<double> > Vtrans;
     /** Start all optimal offsets from zero values */
     bool zero_offsets;
     /** Limited search range for origin offsets */
@@ -147,7 +147,7 @@ public:
     /** Save memory options */
     bool save_mem1, save_mem2, save_mem3;
     /** Vectors to store old phi, theta, xoff and yoff for all images */
-    vector<float> imgs_oldphi, imgs_oldtheta, imgs_oldxoff, imgs_oldyoff;
+    std::vector<float> imgs_oldphi, imgs_oldtheta, imgs_oldxoff, imgs_oldyoff;
     /** Number of subdirectories to keep for unique offsets filenames */
     int offsets_keepdir;
     /** Flag for using ML3D */
@@ -157,7 +157,7 @@ public:
     /** Flag whether to write offsets to disc */
     bool do_write_offsets;
     /** Vector to store optimal origin offsets (if not written to disc) */
-    vector<vector<double> > imgs_offsets;
+    std::vector<std::vector<double> > imgs_offsets;
 
     /** IN DEVELOPMENT
         Deterministic annealing */
@@ -191,94 +191,94 @@ public:
 
     /** Read and write optimal translations to disc
         (not to store them all in memory) */
-    void write_offsets(FileName fn, vector<double> &data);
-    bool read_offsets(FileName fn, vector<double> &data);
+    void write_offsets(FileName fn, std::vector<double> &data);
+    bool read_offsets(FileName fn, std::vector<double> &data);
 
     /// Calculate probability density distribution for in-plane transformations
     void calculate_pdf_phi();
 
     /// Fill vector of matrices with all rotations of reference
-    void rotate_reference(vector< ImageXmippT<double> > &Iref,
+    void rotate_reference(std::vector< ImageXmippT<double> > &Iref,
                           bool fill_real_space,
                           bool fill_fourier_space,
-                          vector <vector< Matrix2D<double> > > &Mref,
-                          vector <vector< Matrix2D<complex<double> > > > &Fref);
+                          std::vector <std::vector< Matrix2D<double> > > &Mref,
+                          std::vector <std::vector< Matrix2D<std::complex<double> > > > &Fref);
 
     /// Apply reverse rotations to all matrices in vector and fill new matrix with their sum
-    void reverse_rotate_reference(vector <vector< Matrix2D<complex<double> > > > &Fnew,
-                                  vector <vector< Matrix2D<double> > > &Mnew, bool real_space,
-                                  vector<Matrix2D<double> > &Mref);
+    void reverse_rotate_reference(std::vector <std::vector< Matrix2D<std::complex<double> > > > &Fnew,
+                                  std::vector <std::vector< Matrix2D<double> > > &Mnew, bool real_space,
+                                  std::vector<Matrix2D<double> > &Mref);
 
     /** Calculate which references have projection directions close to
         phi and theta */
     void preselect_directions(float &phi, float &theta,
-                              vector<double> &pdf_directions);
+                              std::vector<double> &pdf_directions);
 
     /** Pre-calculate which model and phi have significant probabilities
        without taking translations into account! */
-    void preselect_significant_model_phi(Matrix2D<double> &Mimg, vector<double> &offsets,
-                                         vector <vector< Matrix2D<double > > > &Mref,
+    void preselect_significant_model_phi(Matrix2D<double> &Mimg, std::vector<double> &offsets,
+                                         std::vector <std::vector< Matrix2D<double > > > &Mref,
                                          Matrix2D<int> &Msignificant,
-                                         vector<double > &pdf_directions);
+                                         std::vector<double > &pdf_directions);
 
     /** Calculate translated matrices for all limited translations
         for each of the flipped variants */
-    void calculate_realspace_offsets(Matrix2D<double> &Mimg, vector<double > &offsets,
-                                     vector<double > &pdf_directions,
-                                     vector<vector<Matrix2D<double> > > &Mimg_trans,
+    void calculate_realspace_offsets(Matrix2D<double> &Mimg, std::vector<double > &offsets,
+                                     std::vector<double > &pdf_directions,
+                                     std::vector<std::vector<Matrix2D<double> > > &Mimg_trans,
                                      Matrix2D<int> &Moffsets, Matrix2D<int> &Moffsets_mirror);
 
     /** ML-integration over limited translations,
         and with -fast way of selection significant rotations */
     void ML_integrate_locally(Matrix2D<double> &Mimg,
-                              vector <vector< Matrix2D<double> > > &Mref,
-                              vector <vector< Matrix2D<double> > > &Mwsum_imgs,
+                              std::vector <std::vector< Matrix2D<double> > > &Mref,
+                              std::vector <std::vector< Matrix2D<double> > > &Mwsum_imgs,
                               double &wsum_sigma_noise, double &wsum_sigma_offset,
-                              vector<double> &sumw, vector<double> &sumw_mirror,
+                              std::vector<double> &sumw, std::vector<double> &sumw_mirror,
                               double &LL, double &fracweight,
                               int &opt_refno, double &opt_psi,
                               Matrix1D<double> &opt_offsets,
-                              vector<double> &opt_offsets_ref,
-                              vector<double> &pdf_directions);
+                              std::vector<double> &opt_offsets_ref,
+                              std::vector<double> &pdf_directions);
 
     /// ML-integration over all (or -fast) translations
     void ML_integrate_complete(Matrix2D<double> &Mimg,
-                               vector <vector< Matrix2D<complex<double> > > > &Fref,
+                               std::vector <std::vector< Matrix2D<std::complex<double> > > > &Fref,
                                Matrix2D<int> &Msignificant,
-                               vector <vector< Matrix2D<complex<double> > > > &Fwsum_imgs,
+                               std::vector <std::vector< Matrix2D<std::complex<double> > > > &Fwsum_imgs,
                                double &wsum_sigma_noise, double &wsum_sigma_offset,
-                               vector<double> &sumw, vector<double> &sumw_mirror,
+                               std::vector<double> &sumw, std::vector<double> &sumw_mirror,
                                double &LL, double &fracweight,
                                int &opt_refno, double &opt_psi,
-                               Matrix1D<double> &opt_offsets, vector<double> &opt_offsets_ref,
-                               vector<double > &pdf_directions);
+                               Matrix1D<double> &opt_offsets, std::vector<double> &opt_offsets_ref,
+                               std::vector<double > &pdf_directions);
 
     /// Calculate maxCC averages for new model and new model parameters
     void maxCC_search_complete(Matrix2D<double> &Mimg,
-                               vector <vector< Matrix2D<complex<double> > > > &Fref,
-                               vector <vector< Matrix2D<double> > > &Mref,
+                               std::vector <std::vector< Matrix2D<std::complex<double> > > > &Fref,
+                               std::vector <std::vector< Matrix2D<double> > > &Mref,
                                double &max_shift,
-                               vector <vector< Matrix2D<double> > > &Msum_imgs,
-                               vector<double> &sumw, vector<double> &sumw_mirror,
+                               std::vector <std::vector< Matrix2D<double> > > &Msum_imgs,
+                               std::vector<double> &sumw, std::vector<double> &sumw_mirror,
                                double &minSQ, int &opt_refno, double &opt_psi,
                                Matrix1D<double> &opt_offsets,
-                               vector<double> &pdf_directions);
+                               std::vector<double> &pdf_directions);
 
     /// Integrate over all experimental images
-    void ML_sum_over_all_images(SelFile &SF, vector< ImageXmippT<double> > &Iref, int iter,
+    void ML_sum_over_all_images(SelFile &SF, std::vector< ImageXmippT<double> > &Iref, int iter,
                                 double &LL, double &sumcorr, DocFile &DFo,
-                                vector<Matrix2D<double> > &wsum_Mref,
+                                std::vector<Matrix2D<double> > &wsum_Mref,
                                 double &wsum_sigma_noise, double &wsum_sigma_offset,
-                                vector<double> &sumw, vector<double> &sumw_mirror);
+                                std::vector<double> &sumw, std::vector<double> &sumw_mirror);
 
     /// Update all model parameters
-    void update_parameters(vector<Matrix2D<double> > &wsum_Mref,
+    void update_parameters(std::vector<Matrix2D<double> > &wsum_Mref,
                            double &wsum_sigma_noise, double &wsum_sigma_offset, 
-			   vector<double> &sumw, vector<double> &sumw_mirror,
+			   std::vector<double> &sumw, std::vector<double> &sumw_mirror,
                            double &sumcorr, double &sumw_allrefs);
 
     /// check convergence
-    bool check_convergence(vector<double> &conv);
+    bool check_convergence(std::vector<double> &conv);
 
     /// Output some parameters to screen
     void output_to_screen(int &iter, double &sumcorr, double &LL);
@@ -286,7 +286,7 @@ public:
     /// Write out reference images, selfile and logfile
     void write_output_files(const int iter, DocFile &DFo,
                             double &sumw_allrefs, double &LL, double &avecorr,
-                            vector<double> &conv);
+                            std::vector<double> &conv);
 
 };
 //@}

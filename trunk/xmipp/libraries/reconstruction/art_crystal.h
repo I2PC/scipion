@@ -84,8 +84,8 @@ public:
         reconstruction. */
     Matrix2D<int> unit_cell_mask;
 public:
-    /// cout << crystal_prm;
-    friend ostream & operator << (ostream &o,
+    /// std::cout << crystal_prm;
+    friend std::ostream & operator << (std::ostream &o,
                                   const Crystal_ART_Parameters &eprm);
 
     /** Read special parameters from a command line.
@@ -96,7 +96,7 @@ public:
     void read(int argc, char **argv, Basic_ART_Parameters &prm);
 
     /** Usage message.
-        This function shows the way of introducing these parameters. */
+        This function shows the way of introdustd::cing these parameters. */
     void usage_more();
 
     /** Produce Initial and Side information for ART+crystal.

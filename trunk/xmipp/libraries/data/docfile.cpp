@@ -126,7 +126,7 @@ std::ostream& operator<<(std::ostream& o, const DocLine& line)
             o << aux;
         }
 
-        o << endl;
+        o << std::endl;
         break;
 
     case (DocLine::COMMENT):
@@ -1184,7 +1184,7 @@ DocFile DocFile::random_discard(int n)
 
     result = *this;
     randomize_random_generator();
-    n = min(n, no_lines);
+    n = std::min(n, no_lines);
 
     for (i = 0; i < n; i++)
     {
