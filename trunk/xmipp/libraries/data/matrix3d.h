@@ -565,15 +565,6 @@ public:
         free_Tvolume(m, 1, ZSIZE(*this), 1, YSIZE(*this), 1, XSIZE(*this));
     }
 
-    /** Intersects.
-     * @ingroup VolumesSizeShape
-     *
-     * TRUE if this array intersects with the box defined by the arguments (x0
-     * is the starting X).
-     */
-    bool intersects(double x0, double y0, double z0, double xdim, double ydim,
-                    double zdim) const;
-
     /** Outside.
      * @ingroup VolumesSizeShape
      *
@@ -581,13 +572,6 @@ public:
      * array.
      */
     bool outside(int k, int i, int j) const;
-
-    /** isBorder.
-     * @ingroup VolumesSizeShape
-     *
-     * TRUE if the logical index given belong to the border of the matrix.
-     */
-    bool isBorder(int k, int i, int j);
 
     /** Set logical origin in Xmipp fashion.
      * @ingroup VolumesSizeShape
@@ -2202,123 +2186,6 @@ bool VT::outside(int k, int i, int j) const
     return (j < STARTINGX(*this) || j > FINISHINGX(*this) ||
             i < STARTINGY(*this) || i > FINISHINGY(*this) ||
             k < STARTINGZ(*this) || k > FINISHINGZ(*this));
-}
-
-// TODO Document
-template<typename T>
-bool VT::intersects(const VT& m) const
-{
-    return intersects(STARTINGZ(m), STARTINGY(m), STARTINGX(m),
-                      XSIZE(m) - 1, YSIZE(m) - 1, ZSIZE(m) - 1);
-}
-
-// TODO Document
-template<typename T>
-bool VT::intersects(const Matrix1D< double >& corner1,
-                    const Matrix1D< double >& corner2) const
-{
-    if (XSIZE(corner1) != 2 || XSIZE(corner2) != 2)
-        REPORT_ERROR(1002, "intersects 1D: corner sizes are not 1");
-
-    return intersects(XX(corner1), YY(corner1), ZZ(corner1),
-                      XX(corner2) - XX(corner1), YY(corner2) - YY(corner1),
-                      ZZ(corner2) - ZZ(corner1));
-}
-
-// TODO Document
-template<typename T>
-bool VT::intersects(double x0, double y0, double z0, double xdim, double ydim,
-                    double zdim) const
-{
-    SPEED_UP_temps;
-
-    spduptmp0 = MAX(STARTINGZ(*this), z0);
-    spduptmp1 = MIN(FINISHINGZ(*this), z0 + zdim);
-    if (spduptmp0 > spduptmp1)
-        return false;
-
-    spduptmp0 = MAX(STARTINGY(*this), y0);
-    spduptmp1 = MIN(FINISHINGY(*this), y0 + ydim);
-    if (spduptmp0 > spduptmp1)
-        return false;
-
-    spduptmp0 = MAX(STARTINGX(*this), x0);
-    spduptmp1 = MIN(FINISHINGX(*this), x0 + xdim);
-    if (spduptmp0 > spduptmp1)
-        return false;
-
-    return true;
-}
-
-// TODO Document
-template<typename T>
-bool VT::isCorner(const Matrix1D< double >& v)
-{
-    if (XSIZE(v) < 3)
-        REPORT_ERROR(1, "isCorner: index vector has got not enough components");
-
-    return ((ZZ(v) == STARTINGZ(*this) && XX(v) == STARTINGX(*this) &&
-             YY(v) == STARTINGY(*this))  ||
-            (ZZ(v) == STARTINGZ(*this) && XX(v) == STARTINGX(*this) &&
-             YY(v) == FINISHINGY(*this)) ||
-            (ZZ(v) == STARTINGZ(*this) && XX(v) == FINISHINGX(*this) &&
-             YY(v) == STARTINGY(*this))  ||
-            (ZZ(v) == STARTINGZ(*this) && XX(v) == FINISHINGX(*this) &&
-             YY(v) == FINISHINGY(*this)) ||
-            (ZZ(v) == FINISHINGZ(*this) && XX(v) == STARTINGX(*this) &&
-             YY(v) == STARTINGY(*this))  ||
-            (ZZ(v) == FINISHINGZ(*this) && XX(v) == STARTINGX(*this) &&
-             YY(v) == FINISHINGY(*this)) ||
-            (ZZ(v) == FINISHINGZ(*this) && XX(v) == FINISHINGX(*this) &&
-             YY(v) == STARTINGY(*this))  ||
-            (ZZ(v) == FINISHINGZ(*this) && XX(v) == FINISHINGX(*this) &&
-             YY(v) == FINISHINGY(*this)));
-}
-
-// TODO Comment
-template<typename T>
-bool VT::isBorder(const Matrix1D< int >& v)
-{
-    if (XSIZE(v) < 3)
-        REPORT_ERROR(1, "isBorder: index vector has got not enough components");
-
-    return  isBorder(ZZ(v), YY(v), XX(v));
-}
-
-// TODO Document
-template<typename T>
-bool VT::isBorder(int k, int i, int j)
-{
-    return (j == STARTINGX(*this) || j == FINISHINGX(*this)  ||
-            k == STARTINGZ(*this) || k == FINISHINGZ(*this)  ||
-            i == STARTINGY(*this) || i == FINISHINGY(*this));
-}
-
-// TODO Document
-template<typename T>
-void VT::patch(const VT& patch_array, char operation)
-{
-    SPEED_UP_temps;
-
-    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(patch_array, *this)
-    switch (operation)
-    {
-    case '=':
-        VOL_ELEM(*this, k, i, j) = VOL_ELEM(patch_array, k, i, j);
-        break;
-    case '+':
-        VOL_ELEM(*this, k, i, j) += VOL_ELEM(patch_array, k, i, j);
-        break;
-    case '-':
-        VOL_ELEM(*this, k, i, j) -= VOL_ELEM(patch_array, k, i, j);
-        break;
-    case '*':
-        VOL_ELEM(*this, k, i, j) *= VOL_ELEM(patch_array, k, i, j);
-        break;
-    case '/':
-        VOL_ELEM(*this, k, i, j) /= VOL_ELEM(patch_array, k, i, j);
-        break;
-    }
 }
 
 // TODO Document

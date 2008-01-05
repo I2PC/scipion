@@ -920,14 +920,6 @@ public:
     void killAdaptationForNumericalRecipes2(T** m) const
         {}
 
-    /** Intersects
-     * @ingroup MatricesSize
-     *
-     * TRUE if this array intersects with the rectangle defined by the arguments
-     * (x0 is the starting X).
-     */
-    bool intersects(double x0, double y0, double xdim, double ydim) const;
-
     /** Outside
      * @ingroup MatricesSize
      *
@@ -935,13 +927,6 @@ public:
      * array.
      */
     bool outside(int i, int j) const;
-
-    /** isBorder
-     * @ingroup MatricesSize
-     *
-     * TRUE if the logical index given belong to the border of the matrix
-     */
-    bool isBorder(int i, int j);
 
     /** Set logical origin in Xmipp fashion
      * @ingroup MatricesSize
@@ -1194,6 +1179,17 @@ public:
     T& operator()(const Matrix1D< int >& v) const
     {
         return MAT_ELEM(*this, YY(v), XX(v));
+    }
+
+    bool isCorner(const Matrix1D< double >& v) const
+    {
+        if (XSIZE(v) < 2)
+            REPORT_ERROR(1, "isCorner: index vector has got not enough components");
+
+        return ((XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this))  ||
+                (XX(v) == STARTINGX(*this)  && YY(v) == FINISHINGY(*this)) ||
+                (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this))  ||
+                (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this)));
     }
 
     /** Interpolates the value of the 2D matrix M at the point (x,y)
@@ -3022,108 +3018,6 @@ bool mT::outside(int i, int j) const
 {
     return (j < STARTINGX(*this) || j > FINISHINGX(*this) ||
             i < STARTINGY(*this) || i > FINISHINGY(*this));
-}
-
-// TODO Document
-template<typename T>
-bool mT::intersects(const mT& m) const
-{
-    return intersects(STARTINGX(m), STARTINGY(m), XSIZE(m) - 1, YSIZE(m) - 1);
-}
-
-// TODO Document
-template<typename T>
-bool mT::intersects(const Matrix1D< double >& corner1,
-                    const Matrix1D< double >& corner2) const
-{
-    if (XSIZE(corner1) != 2 || XSIZE(corner2) != 2)
-        REPORT_ERROR(1002, "intersects 1D: corner sizes are not 1");
-
-    return intersects(XX(corner1), YY(corner1),
-                      XX(corner2) - XX(corner1), YY(corner2) - YY(corner1));
-}
-
-// TODO Document
-template<typename T>
-bool mT::intersects(double x0, double y0, double xdim, double ydim) const
-{
-    SPEED_UP_temps;
-
-    spduptmp0 = XMIPP_MAX(STARTINGY(*this), y0);
-    spduptmp1 = XMIPP_MIN(FINISHINGY(*this), y0 + ydim);
-
-    if (spduptmp0 > spduptmp1)
-        return false;
-
-    spduptmp0 = XMIPP_MAX(STARTINGX(*this), x0);
-    spduptmp1 = XMIPP_MIN(FINISHINGX(*this), x0 + xdim);
-
-    if (spduptmp0 > spduptmp1)
-        return false;
-
-    return true;
-}
-
-// TODO Document
-template<typename T>
-bool mT::isCorner(const Matrix1D< double >& v)
-{
-    if (XSIZE(v) < 2)
-        REPORT_ERROR(1, "isCorner: index vector has got not enough components");
-
-    return ((XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this))  ||
-            (XX(v) == STARTINGX(*this)  && YY(v) == FINISHINGY(*this)) ||
-            (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this))  ||
-            (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this)));
-}
-
-// TODO Document
-template<typename T>
-bool mT::isBorder(const Matrix1D< int >& v)
-{
-    if (XSIZE(v) < 2)
-        REPORT_ERROR(1, "isBorder: index vector has got not enough components");
-
-    return  isBorder(YY(v), XX(v));
-}
-
-// TODO Document
-template<typename T>
-bool mT::isBorder(int i, int j)
-{
-    return (j == STARTINGX(*this)  || j == FINISHINGX(*this)  ||
-            i == STARTINGY(*this)  || i == FINISHINGY(*this));
-}
-
-// TODO Document
-template<typename T>
-void mT::patch(const mT& patch_array, char operation)
-{
-    SPEED_UP_temps;
-
-    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(patch_array, *this)
-    switch (operation)
-    {
-    case '=':
-        MAT_ELEM(*this, i, j) = MAT_ELEM(patch_array, i, j);
-        break;
-
-    case '+':
-        MAT_ELEM(*this, i, j) += MAT_ELEM(patch_array, i, j);
-        break;
-
-    case '-':
-        MAT_ELEM(*this, i, j) -= MAT_ELEM(patch_array, i, j);
-        break;
-
-    case '*':
-        MAT_ELEM(*this, i, j) *= MAT_ELEM(patch_array, i, j);
-        break;
-
-    case '/':
-        MAT_ELEM(*this, i, j) /= MAT_ELEM(patch_array, i, j);
-        break;
-    }
 }
 
 // TODO Document

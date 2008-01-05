@@ -82,47 +82,6 @@ Matrix1D<int> vectorR3(int x, int y, int z)
     return result;
 }
 
-/* Are orthogonal ---------------------------------------------------------- */
-int areOrthogonal(Matrix1D<double> &v1, Matrix1D<double> &v2,
-                   Matrix1D<double> &v3)
-{
-    if (XSIZE(v1) != 3 || XSIZE(v2) != 3 || XSIZE(v3) != 3)
-        REPORT_ERROR(1002, "Are orthogonal: Some vector do not belong to R3");
-    try
-    {
-        if (dotProduct(v1, v2) != 0)
-            return 0;
-        if (dotProduct(v2, v3) != 0)
-            return 0;
-        if (dotProduct(v1, v3) != 0)
-            return 0;
-    }
-    catch (Xmipp_error)
-    {
-        REPORT_ERROR(1007, "Are orthogonal: Vectors are not all of the same shape");
-    }
-    return 1;
-}
-
-/* Are system? ------------------------------------------------------------- */
-int areSystem(Matrix1D<double> &v1, Matrix1D<double> &v2,
-               Matrix1D<double> &v3)
-{
-    Matrix1D<double> aux(3);
-    if (XSIZE(v1) != 3 || XSIZE(v2) != 3 || XSIZE(v3) != 3)
-        REPORT_ERROR(1002, "Are orthogonal: Some vector do not belong to R3");
-    aux = vectorProduct(v1, v2);
-    if (aux != v3)
-        return 0;
-    aux = vectorProduct(v2, v3);
-    if (aux != v1)
-        return 0;
-    aux = vectorProduct(v3, v1);
-    if (aux != v2)
-        return 0;
-    return 1;
-}
-
 /* Powell's optimizer ------------------------------------------------------ */
 void powellOptimizer(Matrix1D<double> &p, int i0, int n,
                       double(*f)(double *x), double ftol, double &fret,

@@ -846,53 +846,6 @@ void clear()
 // This function must be explictly implemented outside
 bool outside(const Matrix1D< double >& v) const;
 
-/** True if this object intersects logically the argument array.
- * @ingroup Size
- */
-// This function must be explictly implemented outside
-bool intersects(const maT& m) const;
-
-/** True if this object intersects logically the argument rectangle.
- * @ingroup Size
- *
- * corner1 is the top-left corner and corner2 the right-bottom corner
- * of the rectangle.
- */
-// This function must be explictly implemented outside
-bool intersects(const Matrix1D< double >& corner1,
-                const Matrix1D< double >& corner2) const;
-
-/** True if the given index is in one corner.
- * @ingroup Size
- *
- * It is understood that one corner in logical coordinates. It throws
- * an exception if there are not enough components in v for this array,
- * that is, 1 for vectors, 2 for matrices and 3 for volumes.
- */
-// This function must be explictly implemented outside
-bool isCorner(const Matrix1D< double >& v);
-
-/** True if the given index is in a border.
- * @ingroup Size
- *
- * It is understood that one border in logical coordinates. It throws an
- * exception if there are not enough components in v for this array, that
- * is, 1 for vectors, 2 for matrices and 3 for volumes.
- */
-// This function must be explictly implemented outside
-bool isBorder(const Matrix1D< int >& v);
-
-/** Insert a patch in array.
- * @ingroup Size
- *
- * This function substitutes the array given as argument in this object.
- * It works with logical indexes, only the overlapping area is patched.
- * You can modify the patch behaviour with the following operations '=',
- * '+', '-', '*' or '/'
- */
-// This function must be explictly implemented outside
-void patch(const maT& patch, char operation = '=');
-
 /// @defgroup Initialization Initialization
 /// @ingroup MultidimensionalArrays
 
@@ -1049,16 +1002,6 @@ maT& operator=(const maT& op1)
     return *this;
 }
 
-/** Unary plus.
- * @ingroup Operators
- *
- * It is used to build arithmetic expressions.
- */
-maT operator+()
-{
-    return *this;
-}
-
 /** Unary minus.
  * @ingroup Operators
  *
@@ -1093,63 +1036,6 @@ void core_unary_minus()
 }
 #endif
 
-/** Equality.
- * @ingroup Operators
- *
- * Used to build logical expressions. It checks exact equality value by
- * value (the difference mustn't be greater than EQUAL_ACCURACY, origins,
- * and size.
- *
- * @code
- * if (v1 == v2)
- *     std::cout << "v1 and v2 are the same";
- * @endcode
- */
-bool equal(const maT& op, double accuracy = XMIPP_EQUAL_ACCURACY) const
-{
-    if (!sameShape(op))
-        return false;
-    else
-        return core_equality(op, accuracy);
-}
-
-/** Operator ==.
- * @ingroup Operators
- *
- * The EQUAL_ACCURACY is used as accuracy measure
- */
-bool friend operator==<>(const maT& op1, const maT& op2);
-
-/** Operator !=.
- * @ingroup Operators
- *
- * Not ==.
- */
-bool friend operator!=(const maT& op1, const maT& op2)
-{
-    return !(op1 == op2);
-}
-
-#ifndef SWIG
-/** Core equal.
- * @ingroup Operators
- *
- * This is the equality of the core array.
- *
- * This function is not ported to Python.
- */
-bool core_equality(const maT& op2, double accuracy) const
-{
-    if (size != op2.size)
-        return false;
-
-    for (int i = 0; i < size; i++)
-        if (ABS(data[i] - op2.data[i]) > accuracy)
-            return false;
-
-    return true;
-}
-
 /** Input from input stream.
  * @ingroup Operators
  *
@@ -1170,7 +1056,6 @@ friend std::istream& operator>>(std::istream& in, maT& v)
 
     return in;
 }
-#endif
 
 /** Read from an ASCII file.
  * @ingroup Operators
@@ -1188,26 +1073,6 @@ void read(const FileName& fn)
                                                 fn + " not found"));
 
     in >> *this;
-    in.close();
-}
-
-/** Read from a binary file.
- * @ingroup Operators
- *
- * The array must be previously resized to the correct size.
- */
-void read_binary(const FileName& fn)
-{
-    std::ifstream in;
-    in.open(fn.c_str(), std::ios::in | std::ios::binary);
-    if (!in)
-        REPORT_ERROR(1,
-                     static_cast< std::string>("MultidimArray::read: File " + fn
-                                               + " not found"));
-
-    for (int i = 0; i < size; i++)
-        in.read(static_cast< char* >(&data[i]), sizeof(T));
-
     in.close();
 }
 
@@ -1241,25 +1106,6 @@ void write(const FileName& fn) const
     out.close();
 }
 
-/** Write to a binary file.
- * @ingroup Operators
- */
-void write_binary(const FileName& fn) const
-{
-    std::ofstream out;
-
-    out.open(fn.c_str(), std::ios::out | std::ios::binary);
-    if (!out)
-        REPORT_ERROR(1,
-                     static_cast< std::string >("MultidimArray::write: File " + fn
-                                                + " not found"));
-
-    for (int i = 0; i < size; i++)
-        out.write(static_cast< char* >(&data[i]), sizeof(T));
-
-    out.close();
-}
-
 /** Edit with xmipp_editor.
  * @ingroup Operators
  *
@@ -1281,6 +1127,15 @@ void edit()
                                        " -remove &").c_str()));
 }
 
+bool equal(const maT& op, double accuracy = XMIPP_EQUAL_ACCURACY) const
+{
+    if (!sameShape(op))
+        return false;
+    for (int i = 0; i < size; i++)
+        if (ABS(data[i] - op.data[i]) > accuracy)
+            return false;
+    return true;
+}
 
 /** @defgroup MultidimUtilities Utilities
  *  @ingroup MultidimensionalArrays
@@ -1541,40 +1396,6 @@ void selfABSnD()
 {
     for (int i = 0; i < size; i++)
         data[i] = ABS(data[i]);
-}
-
-/** MAX n-dimensional.
- * @ingroup MultidimUtilities
- *
- * Each component of the result is the maximum of the correspoing
- * components of the two input arrays. They must have the same shape, if
- * not an exception is thrown
- */
-friend void MAXnD(const maT& v1, const maT& v2, maT& result)
-{
-    if (!v1.sameShape(v2))
-        REPORT_ERROR(1007, "MAX: arrays of different shape");
-
-    result.resize(v1);
-    for (int i = 0; i < result.size; i++)
-        result.data[i] = MAX(v1.data[i], v2.data[i]);
-}
-
-/** MIN n-dimensional.
- * @ingroup MultidimUtilities
- *
- * Each component of the result is the minimum of the correspoing
- * components of the two input arrays. They must have the same shape, if
- * not an exception is thrown
- */
-friend void MINnD(const maT& v1, const maT& v2, maT& result)
-{
-    if (!v1.sameShape(v2))
-        REPORT_ERROR(1007, "MIN: arrays of different shape");
-
-    result.resize(v1);
-    for (int i = 0; i < result.size; i++)
-        result.data[i] = MIN(v1.data[i], v2.data[i]);
 }
 
 /** Sqrt.

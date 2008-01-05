@@ -722,14 +722,6 @@ public:
         {}
 #endif
 
-    /** Intersects
-     * @ingroup VectorsSize
-     *
-     * TRUE if this array intersects with the segment defined by the arguments
-     * (x0 is the starting X).
-     */
-    bool intersects(double x0, double xdim) const;
-
     /** Outside
      * @ingroup VectorsSize
      *
@@ -737,13 +729,6 @@ public:
      * array.
      */
     bool outside(int i) const;
-
-    /** isBorder
-     * @ingroup VectorsSize
-     *
-     * TRUE if the logical index given belong to the border of the matrix
-     */
-    bool isBorder(int i);
 
     /** Set logical origin in Xmipp fashion
      * @ingroup VectorsSize
@@ -1573,46 +1558,6 @@ Matrix1D< T > vectorProduct(const Matrix1D< T >& v1, const Matrix1D< T >& v2)
     return result;
 }
 
-/** True if the three R3 vectors are orthogonal
- * @ingroup VectorsUtilities
- *
- * Three R3 vectors are said to be orthogonal if the determinant of the matrix
- * formed by the 3 is 0. An exception is thrown if the vectors do not belong to
- * R3, but not if they don't have the same shape.
- *
- * @code
- * Matrix1D< double > X = vectorR3(1, 0, 0), Y = vector_R3(0, 1, 0),
- *     Z = vectorR3(0, 0, 1);
- * if (areOrthogonal(X, Y, Z))
- *     std::cout << "Of course, they are orthogonal\n";
- * @endcode
- */
-int areOrthogonal(Matrix1D< double >& v1,
-                  Matrix1D< double >& v2,
-                  Matrix1D< double >& v3);
-
-/** True if the three R3 vectors form a coordinate system
- * @ingroup VectorsUtilities
- *
- * Three R3 vectors form a coordinate system if they are orthogonal and
- * V1*V2=V3, V2*V3=V1, and V3*V1=V2. The exact equality is checked in this
- * function so there could be some numerical errors which cause the three
- * vectors not to be recognized as a coordinate system. An exception is thrown
- * if the vectors do not belong to R3.
- *
- * @code
- * Matrix1D< double > X = vectorR3(1, 0, 0), Y = vector_R3(0, 1, 0),
- *     Z = vectorR3(0, 0, 1);
- * if (areSystem(X,Y,Z))
- *     std::cout << "Of course, they are a system\n";
- * if (!areSystem(-X, Y, Z))
- *     std::cout << "But not in this case even if they are orthogonal\n";
- * @endcode
- */
-int areSystem(Matrix1D< double >& v1,
-              Matrix1D< double >& v2,
-              Matrix1D< double >& v3);
-
 /// @defgroup VectorsMiscellaneous Miscellaneous
 /// @ingroup VectorsRelated
 
@@ -1757,105 +1702,6 @@ template<typename T>
 bool vT::outside(int i) const
 {
     return (i < STARTINGX(*this) || i > FINISHINGX(*this));
-}
-
-/** True if the two vector ranges intersect.
-  * @ingroup VectorsUtilities */
-template<typename T>
-bool vT::intersects(const vT& m) const
-{
-    return intersects(STARTINGX(m), m.xdim - 1);
-}
-
-/** True if the vector range of this object intersects with the
-  * one defined by these corners.
-  * @ingroup VectorsUtilities */
-template<typename T>
-bool vT::intersects(const Matrix1D< double >& corner1,
-                    const Matrix1D< double >& corner2) const
-{
-    if (corner1.xdim != 1 || corner2.xdim != 1)
-        REPORT_ERROR(1002, "intersects 1D: corner sizes are not 1");
-
-    return intersects(XX(corner1), XX(corner2) - XX(corner1));
-}
-
-/** True if the vector range of this object intersects with the
-  * one defined by the initial value x0 and this size.
-  * @ingroup VectorsUtilities */
-template<typename T>
-bool vT::intersects(double x0, double xdim) const
-{
-    SPEED_UP_temps;
-    spduptmp0 = MAX(STARTINGX(*this), x0);
-    spduptmp1 = MIN(FINISHINGX(*this), x0 + xdim);
-    if (spduptmp0 > spduptmp1)
-        return false;
-
-    return true;
-}
-
-/** True if the coordinate provided is at the corner.
-  * @ingroup VectorsUtilities */
-template<typename T>
-bool vT::isCorner(const Matrix1D< double >& v)
-{
-    if (v.xdim < 1)
-        REPORT_ERROR(1,
-                     "isCorner: index vector has got not enough components");
-
-    return (XX(v) == STARTINGX(*this) || XX(v) == FINISHINGX(*this));
-}
-
-/** True if the coordinate provided is at the border.
-  * @ingroup VectorsUtilities */
-template<typename T>
-bool vT::isBorder(const Matrix1D< int >& v)
-{
-    if (v.xdim < 1)
-        REPORT_ERROR(1, "isBorder: index vector has got not enough components");
-
-    return isBorder(XX(v));
-}
-
-/** True if the index provided is at the corner.
-  * @ingroup VectorsUtilities */
-template<typename T>
-bool vT::isBorder(int i)
-{
-    return (i == STARTINGX(*this)  || i == FINISHINGX(*this));
-}
-
-/** Put a patch (patch_array) on top of this objects.
-  * Valid operations are: '=', '+', '-', '*', '/'
-  * @ingroup VectorsUtilities */
-template<typename T>
-void vT::patch(const vT& patch_array, char operation)
-{
-    SPEED_UP_temps;
-    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX1D(patch_array, *this)
-    switch (operation)
-    {
-    case '=':
-        VEC_ELEM(*this, i) = VEC_ELEM(patch_array, i);
-        break;
-
-    case '+':
-        VEC_ELEM(*this, i) += VEC_ELEM(patch_array, i);
-        break;
-
-    case '-':
-        VEC_ELEM(*this, i) -= VEC_ELEM(patch_array, i);
-        break;
-
-    case '*':
-        VEC_ELEM(*this, i) *= VEC_ELEM(patch_array, i);
-        break;
-
-    case '/':
-        VEC_ELEM(*this, i) /= VEC_ELEM(patch_array, i);
-        break;
-    }
 }
 
 /** Show a vector.

@@ -786,8 +786,13 @@ void fill_cell_positions(Projection &P,
             YY(auxcorner1) = YY(corner1) + cell_shiftY(i, j);
             XX(auxcorner2) = XX(corner2) + cell_shiftX(i, j);
             YY(auxcorner2) = YY(corner2) + cell_shiftY(i, j);
-
-            cell_inside(i, j) = P().intersects(auxcorner1, auxcorner2);
+            
+            cell_inside(i, j) =
+                (XMIPP_MAX(STARTINGY (P()),YY(auxcorner1))<=
+                 XMIPP_MIN(FINISHINGY(P()),YY(auxcorner2))) &&
+                (XMIPP_MAX(STARTINGX (P()),XX(auxcorner1))<=
+                 XMIPP_MIN(FINISHINGX(P()),XX(auxcorner2)));
+                                
 //TEMPORAL FIX FOR PHANTOM AS BIG AS THE WHOLE CRYSTAL
             cell_inside(i, j) = 1;
 //ROBERTO
