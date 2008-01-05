@@ -2773,57 +2773,6 @@ void applyGeometryBSpline(VT& V2, Matrix2D< double > A, const VT& V1,
 
 // TODO Document
 template<typename T>
-void VT::computeStats(double& avg, double& stddev, T& min_val, T& max_val,
-                       const Matrix1D< double >& corner1,
-                       const Matrix1D< double >& corner2) const
-{
-    min_val = max_val = (*this)(corner1);
-    Matrix1D< double > r(3);
-    double N = 0, sum = 0, sum2 = 0;
-
-    FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1, corner2)
-    {
-        sum += (*this)(r);
-        sum2 += (*this)(r) * (*this)(r);
-        N++;
-
-        if ((*this)(r) < min_val)
-            min_val = (*this)(r);
-        else if ((*this)(r) > max_val)
-            max_val = (*this)(r);
-    }
-
-    if (N != 0)
-    {
-        avg = sum / N;
-        stddev = sqrt(sum2 / N - avg * avg);
-    }
-    else
-    {
-        avg = stddev = 0;
-    }
-}
-
-// TODO Document
-template <class T>
-void VT::computeDoubleMinMax(double& min_val, double& max_val,
-                               const Matrix1D< double >& corner1,
-                               const Matrix1D< double >& corner2) const
-{
-    min_val = max_val = (*this)(corner1);
-    Matrix1D< double > r(3);
-
-    FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1, corner2)
-    {
-        if ((*this)(r) < min_val)
-            min_val = (*this)(r);
-        else if ((*this)(r) > max_val)
-            max_val = (*this)(r);
-    }
-}
-
-// TODO Document
-template<typename T>
 void VT::centerOfMass(Matrix1D< double >& center, void* mask)
 {
     center.initZeros(3);

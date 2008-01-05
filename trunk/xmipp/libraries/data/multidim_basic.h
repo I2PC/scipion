@@ -162,33 +162,6 @@ void computeDoubleMinMax(double& min, double& max) const
     }
 }
 
-/** Minimum and maximum within region.
- * @ingroup Statistics
- *
- * The region is specified by two corners.
- */
-void computeDoubleMinMax(double& min,
-                           double& max,
-                           const Matrix1D< double >& corner1,
-                           const Matrix1D< double >& corner2) const;
-
-/** Minimum and maximum within region.
- * @ingroup Statistics
- *
- * The region is specified by two corners.
- */
-void computeDoubleMinMax(double& min,
-                           double& max,
-                           const Matrix1D< int >& corner1,
-                           const Matrix1D< int >& corner2) const
-{
-    Matrix1D< double > dcorner1, dcorner2;
-    type_cast(corner1, dcorner1);
-    type_cast(corner2, dcorner2);
-
-    computeDoubleMinMax(min, max, dcorner1, dcorner2);
-}
-
 /** Average of the values in the array.
  * @ingroup Statistics
  *
@@ -314,18 +287,6 @@ void computeStats(double& avg,
 
     computeStats(avg, stddev, min, max, dcorner1, dcorner2);
 }
-
-/** Compute statistics within region.
- * @ingroup Statistics
- *
- * The region is specified by two corners.
- */
-void computeStats(double& avg,
-                   double& stddev,
-                   T& min,
-                   T& max,
-                   const Matrix1D< double >& corner1,
-                   const Matrix1D< double >& corner2) const;
 
 /** Adjust the range of the array to a given one.
  * @ingroup Statistics
