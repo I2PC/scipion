@@ -1469,7 +1469,7 @@ void Prog_MLFalign2D_prm::rotateReference(std::vector<double> &out)
 	{
 	    // Add arbitrary number (small_angle) to avoid 0-degree rotation (lacking interpolation)
 	    psi = (double)(ipsi * psi_max / nr_psi) + SMALLANGLE;
-	    Maux = Iref[refno]().rotateBSpline(3, psi, WRAP);
+	    Iref[refno]().rotateBSpline(3, psi, Maux, WRAP);
 	    FourierTransformHalf(Maux, Faux);
 	    
 	    // Normalize the magnitude of the rotated references to 1st rot of that ref
@@ -1518,7 +1518,7 @@ void Prog_MLFalign2D_prm::reverseRotateReference(const std::vector<double> &in,
             psi = (double)(ipsi * psi_max / nr_psi) + SMALLANGLE;
 	    getFTfromVector(in, refno*nr_psi*dnr_points_2d + ipsi*dnr_points_2d, Faux);
 	    InverseFourierTransformHalf(Faux, Maux, dim);
-	    Maux2 = Maux.rotateBSpline(3, -psi, WRAP);
+	    Maux.rotateBSpline(3, -psi, Maux2, WRAP);
             out[refno] += Maux2;
         }
     }
@@ -1543,8 +1543,8 @@ void Prog_MLFalign2D_prm::preselectDirections(float &phi, float &theta,
             theta_ref = Iref[refno].Theta();
             Euler_direction(phi, theta, 0., u);
             Euler_direction(phi_ref, theta_ref, 0., v);
-            u.normalize();
-            v.normalize();
+            u.selfNormalize();
+            v.selfNormalize();
             angle = RAD2DEG(acos(dotProduct(u, v)));
             angle = fabs(realWRAP(angle, -180, 180));
             // also check mirror

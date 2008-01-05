@@ -286,7 +286,8 @@ Matrix2D<double> alignWithZ(const Matrix1D<double> &axis)
         REPORT_ERROR(1002, "alignWithZ: Axis is not in R3");
 
     // Copy axis and compute length of the projection on YZ plane
-    Axis = axis.normalize();
+    Axis = axis;
+    Axis.selfNormalize();
     double proj_mod = sqrt(YY(Axis) * YY(Axis) + ZZ(Axis) * ZZ(Axis));
 
     A(3, 3) = 1;

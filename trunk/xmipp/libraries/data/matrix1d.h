@@ -446,9 +446,11 @@ class Matrix1D
 #include "multidim_basic.h"
 
 public:
+#ifndef SWIG
     int xdim; ///< dimension of array [0...xdim-1]
     int xinit; ///< indexes of array [xinit...xinit+xdim-1]
     bool row; ///< 0=column vector (default), 1=row vector
+#endif
 
     /// @defgroup VectorsConstructors Constructors
     /// @ingroup Vectors
@@ -693,6 +695,7 @@ public:
         size = Xdim;
     }
 
+#ifndef SWIG
     /** Produce a vector suitable for working with Numerical Recipes
      * @ingroup VectorsSize
      *
@@ -701,6 +704,7 @@ public:
      * fact the vector provided for Numerical recipes is exactly this same one
      * but with the indexes changed.
      *
+     * This function is not ported to Python.
      */
     T* adaptForNumericalRecipes() const
     {
@@ -711,9 +715,12 @@ public:
      * @ingroup VectorsSize
      *
      * Nothing needs to be done in fact.
+     *
+     * This function is not ported to Python.
      */
     void killAdaptationForNumericalRecipes(T* m) const
         {}
+#endif
 
     /** Intersects
      * @ingroup VectorsSize
@@ -770,6 +777,7 @@ public:
         STARTINGX(*this) = i + FIRST_XMIPP_INDEX(xdim);
     }
 
+#ifndef SWIG
     /** Sets the origin
      * @ingroup VectorsSize
      *
@@ -780,11 +788,14 @@ public:
      * @code
      * v.startingX() = -2;
      * @endcode
+     *
+     * This function is not ported to Python.
      */
     int& startingX()
     {
         return xinit;
     }
+#endif
 
     /** Another function for sets the origin
      * @ingroup VectorsSize
@@ -1135,6 +1146,7 @@ public:
     /// @defgroup VectorsUtilities Utilities
     /// @ingroup Vectors
 
+#ifndef SWIG
     /** Array by array
      * @ingroup VectorsUtilities
      *
@@ -1147,6 +1159,8 @@ public:
      * It must be implemented in every Matrix module, this is so because of the
      * Matrix2D, for which the multiplication is not a component by component
      * multiplication but an algebraic one.
+     *
+     * This function is not ported to Python.
      */
     friend void arrayByArray(const maT& op1, const maT& op2, maT& result,
                                char operation)
@@ -1161,6 +1175,7 @@ public:
         result.resize(op1);
         coreArrayByArray(op1, op2, result, operation);
     }
+#endif
 
     /** Vector by matrix
      * @ingroup VectorsUtilities
@@ -1195,25 +1210,6 @@ public:
     void selfTranspose()
     {
         row = !row;
-    }
-
-    /** Reverse vector values
-     * @ingroup VectorsUtilities
-     *
-     * The first value is now the last one, the second value is now the one
-     * before the last one, ... the shape (column or vector) and the origin of
-     * the vector are not modified. For example, a vector of values [0 1 2 3]
-     * would give [3 2 1 0].
-     *
-     * @code
-     * v2 = v1.reverse();
-     * @endcode
-     */
-    vT reverse() const
-    {
-        vT temp(*this);
-        temp.selfReverse();
-        return temp;
     }
 
     /** Reverse vector values, keep in this object
@@ -1254,23 +1250,6 @@ public:
     double angle()
     {
         return atan2((double) YY(*this), (double) XX(*this));
-    }
-
-    /** Normalize vector
-     * @ingroup VectorsUtilities
-     *
-     * Generate a vector of module 1. This is achieved dividing the vector its
-     * euclidean norm.
-     *
-     * @code
-     * v2 = v1.normalize();
-     * @endcode
-     */
-    vT normalize() const
-    {
-        vT temp(*this);
-        temp.selfNormalize();
-        return temp;
     }
 
     /** Normalize this vector, store the result here
@@ -1693,6 +1672,7 @@ void sortTwoVectors(vT& v1, vT& v2)
     }
 }
 
+#ifndef SWIG
 /** Optimize using Powell's method.
   * @ingroup VectorsMiscellaneous
   *
@@ -1737,6 +1717,7 @@ void powellOptimizer(Matrix1D< double >& p,
                      int& iter,
                      const Matrix1D< double >& steps,
                      bool show = false);
+#endif
 
 /** Print vector shape.
   * @ingroup VectorsSizeShape */
@@ -1747,6 +1728,7 @@ void vT::printShape(std::ostream& out) const
         << "i=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
 }
 
+#ifndef SWIG
 /** Get vector size.
   * @ingroup VectorsSizeShape */
 template<typename T>
@@ -1756,6 +1738,7 @@ void vT::getSize(int* size) const
     size[1] = 1;
     size[2] = 1;
 }
+#endif
 
 /** True if the coordinate is outside the vector range.
   * @ingroup VectorsUtilities */
@@ -1886,7 +1869,7 @@ std::ostream& operator<<(std::ostream& out, const vT& v)
     {
         // Look for the exponent
         vT aux(v);
-        aux.ABSnD();
+        aux.selfABSnD();
         int prec = bestPrecision(aux.compute_max(), 10);
 
         FOR_ALL_ELEMENTS_IN_MATRIX1D(v)

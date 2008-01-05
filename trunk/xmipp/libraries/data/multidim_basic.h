@@ -42,6 +42,7 @@
 /// @ingroup MultidimensionalArrays
 //@{
 public:
+#ifndef SWIG
 // The array itself
 T* data;
 
@@ -50,6 +51,7 @@ int size;
 
 // Dimension (1 for vectors, 2 for matrices..)
 int dimension;
+#endif
 //@}
 
 /// @defgroup Statistics Statistics functions
@@ -527,6 +529,7 @@ void operator^=(const maT& op1)
  * array and its former content is lost
  */
 
+#ifndef SWIG
 /** Array by scalar.
  * @ingroup ArrayByScalar
  *
@@ -535,6 +538,8 @@ void operator^=(const maT& op1)
  * which really implements the operations. Simple calls to it perform much
  * faster than calls to the corresponding operators. Although it is
  * supposed to be a hidden function not useable by normal programmers.
+ *
+ * This function is not ported to Python.
  */
 friend void array_by_scalar(const maT& op1,
                             T op2,
@@ -549,11 +554,14 @@ friend void array_by_scalar(const maT& op1,
  * @ingroup ArrayByScalar
  *
  * It assumes that the result is already resized.
+ *
+ * This function is not ported to Python.
  */
 friend void coreArrayByScalar<>(const maT& op1,
                                    const T& op2,
                                    maT& result,
                                    char operation);
+#endif
 
 /** v3 = v1 + k.
  * @ingroup ArrayByScalar
@@ -605,8 +613,11 @@ maT operator^(T op1) const
     return tmp;
 }
 
+#ifndef SWIG
 /** v3 += k.
  * @ingroup ArrayByScalar
+ *
+ * This function is not ported to Python.
  */
 void operator+=(const T& op1)
 {
@@ -615,6 +626,8 @@ void operator+=(const T& op1)
 
 /** v3 -= k.
  * @ingroup ArrayByScalar
+ *
+ * This function is not ported to Python.
  */
 void operator-=(const T& op1)
 {
@@ -623,6 +636,8 @@ void operator-=(const T& op1)
 
 /** v3 *= k.
  * @ingroup ArrayByScalar
+ *
+ * This function is not ported to Python.
  */
 void operator*=(const T& op1)
 {
@@ -631,6 +646,8 @@ void operator*=(const T& op1)
 
 /** v3 /= k.
  * @ingroup ArrayByScalar
+ *
+ * This function is not ported to Python.
  */
 void operator/=(const T& op1)
 {
@@ -639,6 +656,8 @@ void operator/=(const T& op1)
 
 /** v3 ^= k.
  * @ingroup ArrayByScalar
+ *
+ * This function is not ported to Python.
  */
 void operator^=(const T& op1)
 {
@@ -666,6 +685,8 @@ void operator^=(const T& op1)
  * really implements the operations. Simple calls to it perform much faster
  * than calls to the corresponding operators. Although it is supposed to
  * be a hidden function not useable by normal programmers.
+ *
+ * This function is not ported to Python.
  */
 friend void scalar_by_array(T op1,
                             const maT& op2,
@@ -680,11 +701,14 @@ friend void scalar_by_array(T op1,
  * @ingroup ScalarByArray
  *
  * It assumes that the result is already resized.
+ *
+ * This function is not ported to Python.
  */
 friend void coreScalarByArray<>(const T& op1,
                                    const maT& op2,
                                    maT& result,
                                    char operation);
+#endif
 
 /** v3 = k + v2.
  * @ingroup ScalarByArray
@@ -736,11 +760,13 @@ friend maT operator^(T op1, const maT& op2)
     return tmp;
 }
 
+#ifndef SWIG
 /// @defgroup Size Size management
 /// @ingroup MultidimensionalArrays
-
 /** Core initialize.
  * @ingroup Size
+ *
+ * This function is not ported to Python.
  */
 void core_init()
 {
@@ -750,6 +776,8 @@ void core_init()
 
 /** Allocate array memory.
  * @ingroup Size
+ *
+ * This function is not ported to Python.
  */
 void core_allocate(long int n)
 {
@@ -768,6 +796,8 @@ void core_allocate(long int n)
 
 /** Deallocate.
  * @ingroup Size
+ *
+ * This function is not ported to Python.
  */
 void core_deallocate()
 {
@@ -777,6 +807,7 @@ void core_deallocate()
     data = NULL;
     size = 0;
 }
+#endif
 
 /** Resize according to a pattern.
  * @ingroup Size
@@ -797,14 +828,18 @@ void resize(const maT1 &op1)
     copyShape(op1);
 }
 
+#ifndef SWIG
 /** Get size.
  * @ingroup Size
  *
  * Returns the size of the object in a 3D vector. If the object is a matrix
  * or a vector, then the higher order dimensions will be set to 1, ie,
  * (Xdim, 1, 1) or (Xdim, Ydim, 1).
+ *
+ * This function is not ported to Python.
  */
 void getSize(int* size) const;
+#endif
 
 /** Print shape of multidimensional array.
  * @ingroup Size
@@ -1037,6 +1072,8 @@ void add_noise(double op1,
  * v1 = v2 + v3;
  * v1 = v2 = v3;
  * @endcode
+ *
+ * This function is ported to Python as assign.
  */
 maT& operator=(const maT& op1)
 {
@@ -1079,17 +1116,21 @@ maT operator-() const
     return tmp;
 }
 
+#ifndef SWIG
 /** Core Unary minus.
  * @ingroup Operators
  *
  * This function inverts (-x) each component of the core multidimensional
  * array, the result is stored in this same array.
+ *
+ * This function is not ported to Python.
  */
 void core_unary_minus()
 {
     for (int i = 0; i < size; i++)
         data[i] = -data[i];
 }
+#endif
 
 /** Equality.
  * @ingroup Operators
@@ -1128,10 +1169,13 @@ bool friend operator!=(const maT& op1, const maT& op2)
     return !(op1 == op2);
 }
 
+#ifndef SWIG
 /** Core equal.
  * @ingroup Operators
  *
  * This is the equality of the core array.
+ *
+ * This function is not ported to Python.
  */
 bool core_equality(const maT& op2, double accuracy) const
 {
@@ -1154,6 +1198,8 @@ bool core_equality(const maT& op2, double accuracy) const
  * v.resize(3);
  * std::cin >> v;
  * @endcode
+ *
+ * This function is not ported to Python.
  */
 // This function must be explictly implemented outside
 friend std::istream& operator>>(std::istream& in, maT& v)
@@ -1163,6 +1209,7 @@ friend std::istream& operator>>(std::istream& in, maT& v)
 
     return in;
 }
+#endif
 
 /** Read from an ASCII file.
  * @ingroup Operators
@@ -1203,6 +1250,7 @@ void read_binary(const FileName& fn)
     in.close();
 }
 
+#ifndef SWIG
 /** Output to an output stream.
  * @ingroup Operators
  *
@@ -1214,6 +1262,7 @@ void read_binary(const FileName& fn)
  */
 // This function must be explictly implemented outside
 friend std::ostream& operator<<< > (std::ostream& out, const maT& v);
+#endif
 
 /** Write to an ASCII file.
  * @ingroup Operators
@@ -1492,22 +1541,10 @@ void binarize(double val = 0,
  *
  * Applies a ROUND (look for the nearest integer) to each array element.
  */
-void ROUNDnD()
+void selfROUNDnD()
 {
     for (int i = 0; i < size; i++)
         data[i] = ROUND(data[i]);
-}
-
-/** ROUND n-dimensional.
- * @ingroup MultidimUtilities
- *
- * The same as before but the result is returned.
- */
-friend maT ROUNDnD(const maT& a)
-{
-    maT tmp(a);
-    tmp.ROUNDnD();
-    return tmp;
 }
 
 /** CEILING n-dimensional.
@@ -1516,22 +1553,10 @@ friend maT ROUNDnD(const maT& a)
  * Applies a CEILING (look for the nearest larger integer) to each
  * array element.
  */
-void CEILnD()
+void selfCEILnD()
 {
     for (int i = 0; i < size; i++)
         data[i] = CEIL(data[i]);
-}
-
-/** CEILING n-dimensional.
- * @ingroup MultidimUtilities
- *
- * The same as before but the result is returned.
- */
-friend maT CEILnD(const maT& a)
-{
-    maT tmp(a);
-    tmp.CEILnD();
-    return tmp;
 }
 
 /** FLOOR n-dimensional.
@@ -1540,22 +1565,10 @@ friend maT CEILnD(const maT& a)
  * Applies a FLOOR (look for the nearest larger integer) to each
  * array element.
  */
-void FLOORnD()
+void selfFLOORnD()
 {
     for (int i = 0; i < size; i++)
         data[i] = FLOOR(data[i]);
-}
-
-/** FLOOR n-dimensional.
- * @ingroup MultidimUtilities
- *
- * The same as before but the result is returned.
- */
-friend maT FLOORnD(const maT& a)
-{
-    maT tmp(a);
-    tmp.FLOORnD();
-    return tmp;
 }
 
 /** ABS n-dimensional.
@@ -1563,22 +1576,10 @@ friend maT FLOORnD(const maT& a)
  *
  * Applies an ABS (absolute value) to each array element.
  */
-void ABSnD()
+void selfABSnD()
 {
     for (int i = 0; i < size; i++)
         data[i] = ABS(data[i]);
-}
-
-/** ABS n-dimensional.
- * @ingroup MultidimUtilities
- *
- * The same as before but the result is returned.
- */
-friend maT ABSnD(const maT& a)
-{
-    maT tmp(a);
-    tmp.ABSnD();
-    return tmp;
 }
 
 /** MAX n-dimensional.
@@ -1598,18 +1599,6 @@ friend void MAXnD(const maT& v1, const maT& v2, maT& result)
         result.data[i] = MAX(v1.data[i], v2.data[i]);
 }
 
-/** MAX n-dimensional.
- * @ingroup MultidimUtilities
- *
- * The same as before but the result is returned.
- */
-friend maT MAXnD(const maT& v1, const maT& v2)
-{
-    maT tmp;
-    MAXnD(v1, v2, tmp);
-    return tmp;
-}
-
 /** MIN n-dimensional.
  * @ingroup MultidimUtilities
  *
@@ -1627,40 +1616,16 @@ friend void MINnD(const maT& v1, const maT& v2, maT& result)
         result.data[i] = MIN(v1.data[i], v2.data[i]);
 }
 
-/** MIN n-dimensional.
- * @ingroup MultidimUtilities
- *
- * The same as before but the result is returned.
- */
-friend maT MINnD(const maT& v1, const maT& v2)
-{
-    maT tmp;
-    MINnD(v1, v2, tmp);
-    return tmp;
-}
-
 /** Sqrt.
  * @ingroup MultidimUtilities
  *
  * Each component of the result is the square root of the original
  * component.
  */
-void SQRTnD()
+void selfSQRTnD()
 {
     for (int i = 0; i < size; i++)
         data[i] = static_cast< T >(sqrt(static_cast< double >(data[i])));
-}
-
-/** Sqrt n-dimensional.
- * @ingroup MultidimUtilities
- *
- * The same as before but the result is returned.
- */
-friend maT SQRTnD(const maT& a)
-{
-    maT tmp(a);
-    tmp.SQRTnD();
-    return tmp;
 }
 
 /** Sum of matrix values.
@@ -1707,22 +1672,10 @@ double sum2() const
  *
  * Each component of the result is the log10 of the original components.
  */
-void self_log10()
+void selfLog10()
 {
     for (int i = 0; i < size; i++)
         data[i] = static_cast< T >(log10(static_cast< double >(data[i])));
-}
-
-/** Log10 n-dimensional.
- * @ingroup MultidimUtilities
- *
- * The same as before but the result is returned.
- */
-friend maT log10(const maT& a)
-{
-    maT tmp(a);
-    tmp.self_log10();
-    return tmp;
 }
 
 /** Compute center of mass.

@@ -178,7 +178,8 @@ void Prog_create_surface::maping_function(Matrix1D<double > a, Matrix1D<double >
     else if (option.compare("parabole") == 0)
     {
         coordx = vec.module();
-        normalized_vec = vec.normalize();
+        normalized_vec = vec;
+        normalized_vec.selfNormalize();
         parabole.Aperture = 0.001;
     }
     else
@@ -245,7 +246,7 @@ void Prog_create_surface::maping_function(Matrix1D<double > a, Matrix1D<double >
         normal_vec.X() = + cteA * cteB * sin(cteB * result.cox_real) ;
         normal_vec.Y() = 0 ;
         normal_vec.Z() = + 1 ;
-        normal_vec = normal_vec.normalize();
+        normal_vec.selfNormalize();
         result.Nx = normal_vec.X();
         result.Ny = normal_vec.Y();
         result.Nz = normal_vec.Z();
@@ -264,7 +265,7 @@ void Prog_create_surface::maping_function(Matrix1D<double > a, Matrix1D<double >
         normal_vec.X() = -2. * parabole.Aperture * result.cox_real ;
         normal_vec.Y() = -2. * parabole.Aperture * result.coy_real ;
         normal_vec.Z() = + 1 ;
-        normal_vec = normal_vec.normalize();
+        normal_vec.selfNormalize();
         result.Nx = normal_vec.X();
         result.Ny = normal_vec.Y();
         result.Nz = normal_vec.Z();

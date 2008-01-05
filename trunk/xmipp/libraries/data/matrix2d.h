@@ -1601,9 +1601,8 @@ public:
         return result;
     }
 
-    /** Reverse matrix values over X axis.
+    /** Reverse matrix values over X axis, keep in this object
      * @ingroup MatricesUtilities
-     *
      * Maybe better with an example:
      *
      * @code
@@ -1612,20 +1611,6 @@ public:
      *  7 8 9]          1 2 3]
      * @endcode
      *
-     * @code
-     * m2 = m1.reverseX();
-     * @endcode
-     */
-    mT reverseX() const
-    {
-        mT temp(*this);
-        temp.selfReverseX();
-
-        return temp;
-    }
-
-    /** Reverse matrix values over X axis, keep in this object
-     * @ingroup MatricesUtilities
      */
     void selfReverseX()
     {
@@ -1640,9 +1625,8 @@ public:
             }
     }
 
-    /** Reverse matrix values over Y axis
+    /** Reverse matrix values over Y axis, keep in this object.
      * @ingroup MatricesUtilities
-     *
      * Maybe better with an example:
      *
      * @code
@@ -1650,21 +1634,6 @@ public:
      *  4 5 6  ----->   6 5 4
      *  7 8 9]          9 8 7]
      * @endcode
-     *
-     * @code
-     * m2 = m1.reverseY();
-     * @endcode
-     */
-    mT reverseY() const
-    {
-        mT temp(*this);
-        temp.selfReverseY();
-
-        return temp;
-    }
-
-    /** Reverse matrix values over Y axis, keep in this object.
-     * @ingroup MatricesUtilities
      */
     void selfReverseY()
     {
@@ -1966,19 +1935,6 @@ public:
     /** Rotate matrix
      * @ingroup MatricesGeometrical
      *
-     * Same as the previous one.
-     */
-    mT rotate(double ang, bool wrap = DONT_WRAP) const
-    {
-        mT aux;
-        rotate(ang, aux, wrap);
-
-        return aux;
-    }
-
-    /** Rotate matrix
-     * @ingroup MatricesGeometrical
-     *
      * Same as the previous one, but the result is kept in this object
      */
     void selfRotate(double ang, bool wrap = DONT_WRAP)
@@ -2003,19 +1959,6 @@ public:
     {
         Matrix2D< double > temp = rotation2DMatrix(ang);
         applyGeometryBSpline(result, temp, *this, Splinedegree, IS_NOT_INV, wrap);
-    }
-
-    /** Rotate matrix (using Bspline interpolation)
-     * @ingroup MatricesGeometrical
-     *
-     * Same as the previous one.
-     */
-    mT rotateBSpline(int Splinedegree, double ang, bool wrap = DONT_WRAP) const
-    {
-        mT aux;
-        rotateBSpline(Splinedegree, ang, aux, wrap);
-
-        return aux;
     }
 
     /** Rotate matrix (using Bspline interpolation).
@@ -2052,19 +1995,6 @@ public:
     /** Translate matrix
      * @ingroup MatricesGeometrical
      *
-     * Same as the previous one.
-     */
-    mT translate(const Matrix1D< double >& v, bool wrap = WRAP) const
-    {
-        mT aux;
-        translate(v, aux, wrap);
-
-        return aux;
-    }
-
-    /** Translate matrix
-     * @ingroup MatricesGeometrical
-     *
      * Same as the previous one, but the result is kept in this object
      */
     void selfTranslate(const Matrix1D< double >& v, bool wrap = WRAP)
@@ -2092,20 +2022,6 @@ public:
     {
         Matrix2D< double > temp = translation2DMatrix(v);
         applyGeometryBSpline(result, temp, *this, Splinedegree, IS_NOT_INV, wrap);
-    }
-
-    /** Translate matrix (using Bspline interpolation)
-     * @ingroup MatricesGeometrical
-     *
-     * Same as the previous one.
-     */
-    mT translateBSpline(int Splinedegree,
-                         const Matrix1D< double >& v, bool wrap = WRAP) const
-    {
-        mT aux;
-        translateBSpline(Splinedegree, v, aux, wrap);
-
-        return aux;
     }
 
     /** Translate matrix (using Bspline interpolation)
@@ -2179,19 +2095,6 @@ public:
     /** Scales to a new size
      * @ingroup MatricesGeometrical
      *
-     * Same as the previous one.
-     */
-    mT scaleToSize(int Ydim, int Xdim) const
-    {
-        mT aux;
-        scaleToSize(Ydim, Xdim, aux);
-
-        return aux;
-    }
-
-    /** Scales to a new size
-     * @ingroup MatricesGeometrical
-     *
      * Same as the previous one, but the result is kept in this object.
      */
     void selfScaleToSize(int Ydim, int Xdim)
@@ -2224,19 +2127,6 @@ public:
         DIRECT_MAT_ELEM(temp, 1, 1) = (double) Ydim / (double) YSIZE(*this);
 
         applyGeometryBSpline(result, temp, *this, Splinedegree, IS_NOT_INV, WRAP);
-    }
-
-    /** Scales to a new size (using Bspline interpolation)
-     * @ingroup MatricesGeometrical
-     *
-     * Same as the previous one.
-     */
-    mT scaleToSizeBSpline(int Splinedegree, int Ydim, int Xdim) const
-    {
-        mT aux;
-        scaleToSizeBSpline(Splinedegree, Ydim, Xdim, aux);
-
-        return aux;
     }
 
     /** Scales to a new size (using Bspline interpolation)
@@ -2440,159 +2330,6 @@ public:
 
         Reduce_2D(MULTIDIM_ARRAY(aux), XSIZE(aux), YSIZE(aux),
                   MULTIDIM_ARRAY(reduced), g, ng, IsCentered);
-    }
-
-    /// @defgroup MatricesIterators Iterators
-    /// @ingroup Matrices
-
-    /** Apply the same scalar function to all rows
-     * @ingroup MatricesIterators
-     *
-     * This function must take a row vector and return a single value, a column
-     * vector with these values is returned.
-     *
-     * @code
-     * T vector_sum(vT&v)
-     * {
-     *     return v.sum();
-     * }
-     *
-     * v1 = m.forAllRows(&vector_sum);
-     * @endcode
-     */
-    vT forAllRows(T(*f)(vT&)) const
-    {
-        vT temp;
-        if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
-            return temp;
-
-        temp.resize(YSIZE(*this));
-        STARTINGX(temp) = STARTINGY(*this);
-        temp.setCol();
-
-        for (int i = STARTINGY(*this); i <= FINISHINGY(*this); i++)
-        {
-            vT aux;
-            getRow(i, aux);
-            VEC_ELEM(temp, i) = (*f)(aux);
-        }
-
-        return temp;
-    }
-
-    /** Apply the same scalar function to all columns
-     * @ingroup MatricesIterators
-     *
-     * This function must take a column vector and return a single value, a row
-     * vector with these values is returned.
-     *
-     * @code
-     * T vector_sum(vT& v)
-     * {
-     *     return v.sum();
-     * }
-     *
-     * v1 = m.forAllCols(&vector_sum);
-     * @endcode
-     */
-    vT forAllCols(T(*f)(vT&)) const
-    {
-        vT temp;
-        if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
-            return temp;
-
-        temp.resize(XSIZE(*this));
-        STARTINGX(temp) = STARTINGX(*this);
-        temp.setRow();
-
-        for (int j = STARTINGX(*this); j <= FINISHINGX(*this); j++)
-        {
-            vT aux;
-            getCol(j, aux);
-            VEC_ELEM(temp, j) = (*f)(aux);
-        }
-
-        return temp;
-    }
-
-    /** Apply the same vectorial function to all rows
-     * @ingroup MatricesIterators
-     *
-     * This function must take a row vector and return a row vector (of the
-     * same size as the input one), a new matrix with these transformed rows is
-     * returned.
-     *
-     * @code
-     * vT vector_norm(vT& v)
-     * {
-     *     return v.normalize();
-     * }
-     *
-     * m2 = m.forAllRows(&vector_norm);
-     * @endcode
-     */
-    mT forAllRows(vT(*f)(vT&)) const
-    {
-        mT aux(*this);
-        aux.forAllRows(f);
-
-        return aux;
-    }
-
-    /** Apply a vectorial function to all rows, keep in this object.
-     * @ingroup MatricesIterators
-     */
-    void forAllRows(vT(*f)(vT&))
-    {
-        if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
-            return;
-
-        for (int i = STARTINGY(*this); i <= FINISHINGY(*this); i++)
-        {
-            vT aux;
-            getRow(i, aux);
-            setRow(i, (*f)(aux));
-        }
-    }
-
-    /** Apply the same vectorial function to all columns
-     * @ingroup MatricesIterators
-     *
-     * This function must take a columnm vector and return a column vector
-     * (of the same size as the input one), a new matrix with these transformed
-     * columns is returned.
-     *
-     * @code
-     * vT vector_norm(vT& v)
-     * {
-     *     return v.normalize();
-     * }
-     *
-     * m2 = m.forAllCols(&vector_norm);
-     * @endcode
-     */
-    mT forAllCols(vT(*f)(vT&)) const
-    {
-        mT aux(*this);
-        aux.forAllCols(f);
-
-        return aux;
-    }
-
-    /** Apply a vectorial function to all rows, keep in this object
-     * @ingroup MatricesIterators
-     */
-    void forAllCols(vT(*f)(vT&))
-    {
-        if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
-            return;
-
-        for (int j = STARTINGX(*this); j <= FINISHINGX(*this); j++)
-        {
-            vT aux;
-            getCol(j, aux);
-            setCol(j, (*f)(aux));
-        }
     }
 
     /** @defgroup MatricesAlgebraic Algebraic operations

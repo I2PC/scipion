@@ -480,9 +480,9 @@ double eval_surface(double *p)
     if (!(prmsij == ZDIM && gasprm->phantom))
         sij = p[4] + a * (prmsij - gasprm->min_val);
     else sij = ZDIM;
-    if (p[3] != 0) gasprm->wsurface().rotate(p[3], WRAP);
+    if (p[3] != 0) gasprm->wsurface().selfRotate(p[3], WRAP);
     if (XX(shift) != 0 || YY(shift) != 0)
-        gasprm->wsurface().translate(shift, WRAP);
+        gasprm->wsurface().selfTranslate(shift, WRAP);
     if (p[6] != 0 || p[7] != 0)
     {
         Matrix2D<double> scale_m;
@@ -636,9 +636,9 @@ void ROUT_adjust_surface(Prog_Adjust_Surface_Parameters &prm)
         FOR_ALL_ELEMENTS_IN_MATRIX2D(IMGMATRIX(prm.wsurface))
         if (!(prmsij == ZDIM && prm.phantom)) sij = best_ktop + a * (prmsij - prm.min_val);
         else                                sij = ZDIM;
-        if (best_ang != 0) prm.wsurface().rotate(best_ang, WRAP);
+        if (best_ang != 0) prm.wsurface().selfRotate(best_ang, WRAP);
         if (best_shiftx != 0 || best_shifty != 0)
-            prm.wsurface().translate(vectorR2(best_shiftx, best_shifty), WRAP);
+            prm.wsurface().selfTranslate(vectorR2(best_shiftx, best_shifty), WRAP);
         if (best_scaleX != 0 || best_scaleY != 0)
         {
             Matrix2D<double> scale_m;

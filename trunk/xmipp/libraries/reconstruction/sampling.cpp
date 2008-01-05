@@ -432,7 +432,7 @@ void XmippSampling::fill_edge(Matrix1D<double> starting_point,
         alpha  = sin((1. - gamma) * upsilon) / (sin(upsilon));
         beta   = sin(gamma * upsilon) / sin(upsilon);
         v_aux = alpha * starting_point + beta * ending_point;
-        v_aux = v_aux.normalize();
+        v_aux.selfNormalize();
         if (beta > 0.9999 && END_FLAG) continue;
         edge_vector.push_back(v_aux);
     }
@@ -466,7 +466,7 @@ void XmippSampling::fill_distance(Matrix1D<double> starting_point,
         alpha  = sin((1. - gamma) * upsilon) / (sin(upsilon));
         beta   = sin(gamma * upsilon) / sin(upsilon);
         v_aux = alpha * starting_point + beta * ending_point;
-        v_aux = v_aux.normalize();
+        v_aux.selfNormalize();
         if (   (only_half_sphere && ZZ(v_aux) < 0.0)
            || ZZ(v_aux) < min_z
            || ZZ(v_aux) > max_z
@@ -619,11 +619,14 @@ void XmippSampling::remove_redundant_points(const std::string &symmetry,
     else if (symmetry.compare("t") == 0)
     {//OK
         Matrix1D<double>  _3_fold_axis_1_by_3_fold_axis_2(3);
-        _3_fold_axis_1_by_3_fold_axis_2 = vectorR3(-0.942809, 0., 0.).normalize();
+        _3_fold_axis_1_by_3_fold_axis_2 = vectorR3(-0.942809, 0., 0.);
+        _3_fold_axis_1_by_3_fold_axis_2.selfNormalize();
         Matrix1D<double>  _3_fold_axis_2_by_3_fold_axis_3(3);
-        _3_fold_axis_2_by_3_fold_axis_3 = vectorR3(0.471405, 0.272165, 0.7698).normalize();
+        _3_fold_axis_2_by_3_fold_axis_3 = vectorR3(0.471405, 0.272165, 0.7698);
+        _3_fold_axis_2_by_3_fold_axis_3.selfNormalize();
         Matrix1D<double>  _3_fold_axis_3_by_3_fold_axis_1(3);
-        _3_fold_axis_3_by_3_fold_axis_1 = vectorR3(0.471404, 0.816497, 0.).normalize();
+        _3_fold_axis_3_by_3_fold_axis_1 = vectorR3(0.471404, 0.816497, 0.);
+        _3_fold_axis_3_by_3_fold_axis_1.selfNormalize();
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >=     90. &&
@@ -644,11 +647,14 @@ void XmippSampling::remove_redundant_points(const std::string &symmetry,
     else if (symmetry.compare("td") == 0)
     {//OK
         Matrix1D<double>  _2_fold_axis_1_by_3_fold_axis_2(3);
-        _2_fold_axis_1_by_3_fold_axis_2 = vectorR3(-0.942809, 0., 0.).normalize();
+        _2_fold_axis_1_by_3_fold_axis_2 = vectorR3(-0.942809, 0., 0.);
+        _2_fold_axis_1_by_3_fold_axis_2.selfNormalize();
         Matrix1D<double>  _3_fold_axis_2_by_3_fold_axis_5(3);
-        _3_fold_axis_2_by_3_fold_axis_5 = vectorR3(0.471405, 0.272165, 0.7698).normalize();
+        _3_fold_axis_2_by_3_fold_axis_5 = vectorR3(0.471405, 0.272165, 0.7698);
+        _3_fold_axis_2_by_3_fold_axis_5.selfNormalize();
         Matrix1D<double>  _3_fold_axis_5_by_2_fold_axis_1(3);
-        _3_fold_axis_5_by_2_fold_axis_1 = vectorR3(0., 0.471405, -0.666667).normalize();
+        _3_fold_axis_5_by_2_fold_axis_1 = vectorR3(0., 0.471405, -0.666667);
+        _3_fold_axis_5_by_2_fold_axis_1.selfNormalize();
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
 //           if ( XX(sampling_points_angles[i])>=     120. &&
@@ -669,11 +675,14 @@ void XmippSampling::remove_redundant_points(const std::string &symmetry,
     else if (symmetry.compare("th") == 0)
     {//OK
         Matrix1D<double>  _3_fold_axis_1_by_2_fold_axis_1(3);
-        _3_fold_axis_1_by_2_fold_axis_1 = vectorR3(-0.816496, 0., 0.).normalize();
+        _3_fold_axis_1_by_2_fold_axis_1 = vectorR3(-0.816496, 0., 0.);
+        _3_fold_axis_1_by_2_fold_axis_1.selfNormalize();
         Matrix1D<double>  _2_fold_axis_1_by_2_fold_axis_2(3);
-        _2_fold_axis_1_by_2_fold_axis_2 = vectorR3(0.707107, 0.408248, -0.57735).normalize();
+        _2_fold_axis_1_by_2_fold_axis_2 = vectorR3(0.707107, 0.408248, -0.57735);
+        _2_fold_axis_1_by_2_fold_axis_2.selfNormalize();
         Matrix1D<double>  _2_fold_axis_2_by_3_fold_axis_1(3);
-        _2_fold_axis_2_by_3_fold_axis_1 = vectorR3(-0.408248, -0.707107, 0.).normalize();
+        _2_fold_axis_2_by_3_fold_axis_1 = vectorR3(-0.408248, -0.707107, 0.);
+        _2_fold_axis_2_by_3_fold_axis_1.selfNormalize();
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
 //           if ( XX(sampling_points_angles[i])>=     120. &&
@@ -694,11 +703,14 @@ void XmippSampling::remove_redundant_points(const std::string &symmetry,
     else if (symmetry.compare("o") == 0)
     {//OK
         Matrix1D<double>  _3_fold_axis_1_by_3_fold_axis_2(3);
-        _3_fold_axis_1_by_3_fold_axis_2 = vectorR3(0., -1., 1.).normalize();
+        _3_fold_axis_1_by_3_fold_axis_2 = vectorR3(0., -1., 1.);
+        _3_fold_axis_1_by_3_fold_axis_2.selfNormalize();
         Matrix1D<double>  _3_fold_axis_2_by_4_fold_axis(3);
-        _3_fold_axis_2_by_4_fold_axis = vectorR3(1., 1., 0.).normalize();
+        _3_fold_axis_2_by_4_fold_axis = vectorR3(1., 1., 0.);
+        _3_fold_axis_2_by_4_fold_axis.selfNormalize();
         Matrix1D<double>  _4_fold_axis_by_3_fold_axis_1(3);
-        _4_fold_axis_by_3_fold_axis_1 = vectorR3(-1., 1., 0.).normalize();
+        _4_fold_axis_by_3_fold_axis_1 = vectorR3(-1., 1., 0.);
+        _4_fold_axis_by_3_fold_axis_1.selfNormalize();
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if ((XX(sampling_points_angles[i]) >=   45. &&
@@ -720,11 +732,14 @@ void XmippSampling::remove_redundant_points(const std::string &symmetry,
     else if (symmetry.compare("oh") == 0)
     {//OK
         Matrix1D<double>  _3_fold_axis_1_by_3_fold_axis_2(3);
-        _3_fold_axis_1_by_3_fold_axis_2 = vectorR3(0., -1., 1.).normalize();
+        _3_fold_axis_1_by_3_fold_axis_2 = vectorR3(0., -1., 1.);
+        _3_fold_axis_1_by_3_fold_axis_2.selfNormalize();
         Matrix1D<double>  _3_fold_axis_2_by_4_fold_axis(3);
-        _3_fold_axis_2_by_4_fold_axis = vectorR3(1., 1., 0.).normalize();
+        _3_fold_axis_2_by_4_fold_axis = vectorR3(1., 1., 0.);
+        _3_fold_axis_2_by_4_fold_axis.selfNormalize();
         Matrix1D<double>  _4_fold_axis_by_3_fold_axis_1(3);
-        _4_fold_axis_by_3_fold_axis_1 = vectorR3(-1., 1., 0.).normalize();
+        _4_fold_axis_by_3_fold_axis_1 = vectorR3(-1., 1., 0.);
+        _4_fold_axis_by_3_fold_axis_1.selfNormalize();
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >=   90. &&
@@ -744,15 +759,18 @@ void XmippSampling::remove_redundant_points(const std::string &symmetry,
     else if (symmetry.compare("i") == 0)
     {//OK
         Matrix1D<double>  _5_fold_axis_1_by_5_fold_axis_2(3);
-        _5_fold_axis_1_by_5_fold_axis_2 = vectorR3(0., 0., 1.).normalize();
+        _5_fold_axis_1_by_5_fold_axis_2 = vectorR3(0., 0., 1.);
+        _5_fold_axis_1_by_5_fold_axis_2.selfNormalize();
         Matrix1D<double>  _5_fold_axis_2_by_3_fold_axis(3);
         _5_fold_axis_2_by_3_fold_axis = vectorR3(0.187592467856686,
                                         -0.303530987314591,
-                                        -0.491123477863004).normalize();
+                                        -0.491123477863004);
+        _5_fold_axis_2_by_3_fold_axis.selfNormalize();
         Matrix1D<double>  _3_fold_axis_by_5_fold_axis_1(3);
         _3_fold_axis_by_5_fold_axis_1 = vectorR3(0.187592467856686,
                                         0.303530987314591,
-                                        -0.491123477863004).normalize();
+                                        -0.491123477863004);
+        _3_fold_axis_by_5_fold_axis_1.selfNormalize();
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >= -31.7174745559 &&
@@ -774,7 +792,8 @@ void XmippSampling::remove_redundant_points(const std::string &symmetry,
         Matrix1D<double>  _5_fold_axis_2_by_3_fold_axis(3);
         _5_fold_axis_2_by_3_fold_axis = vectorR3(0.187592467856686,
                                         -0.303530987314591,
-                                        -0.491123477863004).normalize();
+                                        -0.491123477863004);
+        _5_fold_axis_2_by_3_fold_axis.selfNormalize();
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >=  0. &&

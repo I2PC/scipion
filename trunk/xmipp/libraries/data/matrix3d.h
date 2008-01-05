@@ -1277,7 +1277,7 @@ public:
         coreArrayByArray(op1, op2, result, operation);
     }
 
-    /** Reverse volume values over X axis.
+    /** Reverse matrix values over X axis, keep in this object.
      * @ingroup VolumesUtilites
      *
      * Maybe better with an example:
@@ -1296,19 +1296,6 @@ public:
      *  17 18 19]          11 12 13]
      * @endcode
      *
-     * @code
-     * V2 = V1.reverseX();
-     * @endcode
-     */
-    VT reverseX() const
-    {
-        VT tmp(*this);
-        tmp.selfReverseX();
-        return tmp;
-    }
-
-    /** Reverse matrix values over X axis, keep in this object.
-     * @ingroup VolumesUtilites
      */
     void selfReverseX()
     {
@@ -1329,7 +1316,7 @@ public:
         STARTINGX(*this) = -FINISHINGX(*this);
     }
 
-    /** Reverse matrix values over Y axis.
+    /** Reverse matrix values over Y axis, keep in this object.
      * @ingroup VolumesUtilites
      *
      * Maybe better with an example:
@@ -1348,19 +1335,6 @@ public:
      *  17 18 19]          19 18 17]
      * @endcode
      *
-     * @code
-     * V2 = V1.reverseY();
-     * @endcode
-     */
-    VT reverseY() const
-    {
-        VT tmp(*this);
-        tmp.selfReverseY();
-        return tmp;
-    }
-
-    /** Reverse matrix values over Y axis, keep in this object.
-     * @ingroup VolumesUtilites
      */
     void selfReverseY()
     {
@@ -1377,7 +1351,7 @@ public:
         STARTINGY(*this) = -FINISHINGY(*this);
     }
 
-    /** Reverse matrix values over Z axis.
+    /** Reverse matrix values over Z axis, keep in this object.
      * @ingroup VolumesUtilites
      *
      * Maybe better with an example:
@@ -1396,19 +1370,6 @@ public:
      *  17 18 19]          07 08 09]
      * @endcode
      *
-     * @code
-     * V2 = V1.reverseZ();
-     * @endcode
-     */
-    VT reverseZ() const
-    {
-        VT tmp(*this);
-        tmp.selfReverseZ();
-        return tmp;
-    }
-
-    /** Reverse matrix values over Z axis, keep in this object.
-     * @ingroup VolumesUtilites
      */
     void selfReverseZ()
     {
@@ -1612,27 +1573,6 @@ public:
         applyGeometryBSpline(result, temp, *this, IS_NOT_INV, wrap, outside);
     }
 
-    /** Rotate a volume around system axis, return result.
-     * @ingroup VolumesGeometrical
-     */
-    VT rotate(double ang, char axis, bool wrap = DONT_WRAP) const
-    {
-        VT aux;
-        rotate(ang, axis, aux, wrap);
-        return aux;
-    }
-
-    /** Rotate a volume around system axis, return result (Bspline).
-     * @ingroup VolumesGeometrical
-     */
-    VT rotateBSpline(int Splinedegree, double ang, char axis,
-                      bool wrap = DONT_WRAP) const
-    {
-        VT aux;
-        rotateBSpline(Splinedegree, ang, axis, aux, wrap);
-        return aux;
-    }
-
     /** Rotate a volume around system axis, keep in this object.
      * @ingroup VolumesGeometrical
      */
@@ -1684,27 +1624,6 @@ public:
                            wrap, outside);
     }
 
-    /** Rotate a volume around any axis, return result.
-     * @ingroup VolumesGeometrical
-     */
-    VT rotate(double ang, const Matrix1D< double > v, bool wrap = DONT_WRAP) const
-    {
-        VT aux;
-        rotate(ang, v, aux, wrap);
-        return aux;
-    }
-
-    /** Rotate a volume around any axis, return result (Bspline).
-     * @ingroup VolumesGeometrical
-     */
-    VT rotateBSpline(int Splinedegree, double ang, const Matrix1D< double > v,
-                      bool wrap = DONT_WRAP) const
-    {
-        VT aux;
-        rotateBSpline(Splinedegree, ang, v, aux, wrap);
-        return aux;
-    }
-
     /** Rotate a volume around any axis, keep in this object.
      * @ingroup VolumesGeometrical
      */
@@ -1753,27 +1672,6 @@ public:
     {
         Matrix2D< double > tmp = translation3DMatrix(v);
         applyGeometry(result, tmp, *this, IS_NOT_INV, wrap);
-    }
-
-    /** Translate a volume, return result.
-     * @ingroup VolumesGeometrical
-     */
-    VT translate(const Matrix1D< double >& v, bool wrap = WRAP) const
-    {
-        VT aux;
-        translate(v, aux, wrap);
-        return aux;
-    }
-
-    /** Translate a volume, return result (Bspline).
-     * @ingroup VolumesGeometrical
-     */
-    VT translateBSpline(int Splinedegree, const Matrix1D< double >& v,
-                         bool wrap = WRAP) const
-    {
-        VT aux;
-        translateBSpline(Splinedegree, v, aux, wrap);
-        return aux;
     }
 
     /** Translate a volume, keep in this object.
@@ -1866,27 +1764,6 @@ public:
         result.resize(Zdim, Ydim, Xdim);
 
         applyGeometryBSpline(result, tmp, *this, Splinedegree, IS_NOT_INV, WRAP);
-    }
-
-    /** Scales to a new size, return result
-     * @ingroup VolumesGeometrical
-     */
-    VT scaleToSize(int Zdim, int Ydim, int Xdim) const
-    {
-        VT aux;
-        scaleToSize(Zdim, Ydim, Xdim, aux);
-        return aux;
-    }
-
-    /** Scales to a new size, return result (Bspline).
-     * @ingroup VolumesGeometrical
-     */
-    VT scaleToSizeBSpline(int Splinedegree, int Zdim, int Ydim,
-                             int Xdim) const
-    {
-        VT aux;
-        scaleToSizeBSpline(Splinedegree, Zdim, Ydim, Xdim, aux);
-        return aux;
     }
 
     /** Scales to a new size, keep in this object.

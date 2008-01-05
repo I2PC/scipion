@@ -575,7 +575,8 @@ void show_FOMs(const Prog_Evaluate_Parameters &prm,
         save.write(side.fn_root + "_evaluateQuadratic_map.vol");
 
         // Save a absolute difference map
-        save() = ABSnD(side.vol_phantom() - side.vol_recons());
+        save() = side.vol_phantom() - side.vol_recons();
+        save().selfABSnD();
         if (side.descr_mode == MATH_PHANTOM) side.phantom_descr.sketch_in(&save);
         std::cerr << "Saving absolute difference map ...\n";
         save.write(side.fn_root + "_eval_absolute_map.vol");

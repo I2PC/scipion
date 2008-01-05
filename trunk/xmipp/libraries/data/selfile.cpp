@@ -750,7 +750,7 @@ void SelFile::get_statistics(Image& _ave, Image& _sd, double& _min,
         delete image;
     }
     _sd() /= (n - 1);
-    _sd().SQRTnD();
+    _sd().selfSQRTnD();
 }
 
 
@@ -1157,23 +1157,4 @@ SelFile compare(SelFile &SF1, SelFile &SF2, const int mode)
     result.current_line = result.text_line.begin();
 
     return result;
-}
-
-/* For all ----------------------------------------------------------------- */
-void SelFile::for_all(void(*f)(FileName, FileName), const std::string& _ext,
-                      SelLine::Label _label)
-{
-    std::vector<SelLine>::iterator current = text_line.begin();
-    std::vector<SelLine>::iterator last    = text_line.end();
-    while (current != last)
-    {
-        if ((*current).line_type == SelLine::DATALINE && (*current).label == _label)
-        {
-            if (_ext != "")
-                (*f)((*current).text, (*current).text + "." + _ext);
-            else
-                (*f)((*current).text, (*current).text);
-        }
-        current++;
-    }
 }

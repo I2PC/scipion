@@ -51,9 +51,8 @@ using namespace std;
 }
 
 // All interfaces being ported
+%include swigfuncs.i
 %include swigdenoise.i
 %include swigdocfile.i
-%include swigfuncs.i
 
 // rm libraries/data/swig/libXmippDataSwig.so libraries/data/swig/XmippData.py libraries/data/swig/swigXmippData_wrap.os libraries/data/swig/swigXmippData_wrap.cc ; ./scons.compile
-

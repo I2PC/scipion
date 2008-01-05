@@ -167,7 +167,7 @@ bool Prog_align2d_prm::align_rot(ImageXmippT<double> &img, const Matrix2D<double
     for (i = 0; i < nstep; i++)
     {
         psi_actual = (double)i * psi_coarse_step;
-        Maux = Mimg.rotate(psi_actual, DONT_WRAP);
+        Mimg.rotate(psi_actual, Maux, DONT_WRAP);
         corr(i) = correlation(Mref, Maux, &mask);
     }
     corr.maxIndex(i_maxcorr);
@@ -179,7 +179,7 @@ bool Prog_align2d_prm::align_rot(ImageXmippT<double> &img, const Matrix2D<double
     for (i = 0; i < nstep; i++)
     {
         psi_actual = psi_max_coarse - psi_coarse_step + 1 + (double)i;
-        Maux = Mimg.rotate(psi_actual, DONT_WRAP);
+        Mimg.rotate(psi_actual, Maux, DONT_WRAP);
         corr(i) = correlation(Mref, Maux, &mask);
     }
     corr.maxIndex(i_maxcorr);
@@ -367,7 +367,7 @@ bool Prog_align2d_prm::align_complete_search(ImageXmippT<double> &img, const Mat
     for (int i = 0; i < nstep; i++)
     {
         psi_actual = (double)i * psi_interval;
-        Maux = Mref2.rotate(-psi_actual, DONT_WRAP);
+        Mref2.rotate(-psi_actual, Maux, DONT_WRAP);
         correlation_matrix(Mimg, Maux, Mcorr);
         Mcorr.maxIndex(imax, jmax);
         corr = MAT_ELEM(Mcorr, imax, jmax);
@@ -665,7 +665,7 @@ void Prog_align2d_prm::calc_correlation(const Matrix2D<double> &Mref, const floa
             for (int i = 0; i < nstep; i++)
             {
                 psi_actual = (double)i * psi_interval;
-                Maux = Mimg.rotate(psi_actual, DONT_WRAP);
+                Mimg.rotate(psi_actual, Maux, DONT_WRAP);
                 ccf(i) += correlation_index(Mref, Maux, &mask);
             }
         }

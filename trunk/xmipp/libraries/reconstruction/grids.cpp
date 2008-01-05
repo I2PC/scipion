@@ -225,9 +225,9 @@ SimpleGrid Create_CC_grid(double relative_size, const Matrix1D<double> &corner1,
 
     // Compute the lowest and highest indexes inside the grid
     grid.universe2grid(corner1, grid.lowest);
-    grid.lowest.FLOORnD();
+    grid.lowest.selfFLOORnD();
     grid.universe2grid(corner2, grid.highest);
-    grid.highest.CEILnD();
+    grid.highest.selfCEILnD();
 
     grid.R2 = -1;
     return grid;
@@ -241,7 +241,7 @@ Grid Create_CC_grid(double relative_size, const Matrix1D<double> &corner1,
     SimpleGrid      aux_grid;
 
     Matrix1D<double> origin = (corner1 + corner2) / 2;
-    origin.ROUNDnD();
+    origin.selfROUNDnD();
     aux_grid = Create_CC_grid(relative_size, corner1, corner2, origin);
     result.add_grid(aux_grid);
     return result;
@@ -269,7 +269,7 @@ Grid Create_BCC_grid(double relative_size, const Matrix1D<double> &corner1,
     Grid             result;
     SimpleGrid       aux_grid;
     Matrix1D<double> origin = (corner1 + corner2) / 2;
-    origin.ROUNDnD();
+    origin.selfROUNDnD();
 
     //Even Slice
     //    0 1 2 3 4 5 6 7 8 9 10 11 12 (Col)
@@ -327,7 +327,7 @@ Grid Create_FCC_grid(double relative_size, const Matrix1D<double> &corner1,
     Matrix1D<double> aux_origin;
     Matrix1D<double> cornerb;
     Matrix1D<double> origin = (corner1 + corner2) / 2;
-    origin.ROUNDnD();
+    origin.selfROUNDnD();
 
     //Even Slice
     //    0 1 2 3 4 5 6 7 8 9 10 11 12 (Col)

@@ -820,7 +820,7 @@ void Prog_MLalign2D_prm::rotate_reference(std::vector< ImageXmippT<double> > &Ir
         {
             // Add arbitrary number (small_angle) to avoid 0-degree rotation (lacking interpolation)
             psi = (double)(ipsi * psi_max / nr_psi) + SMALLANGLE;
-            Maux = Iref[refno]().rotateBSpline(3, psi, WRAP);
+            Iref[refno]().rotateBSpline(3, psi, Maux, WRAP);
             apply_binary_mask(mask, Maux, Maux, avg);
             // Normalize the magnitude of the rotated references to 1st rot of that ref
             // This is necessary because interpolation due to rotation can lead to lower overall Fref
@@ -904,7 +904,7 @@ void Prog_MLalign2D_prm::reverse_rotate_reference(
 		CenterFFT(Maux, true);
             }
             computeStats_within_binary_mask(omask, Maux, dum, dum, avg, dum);
-            Maux2 = Maux.rotateBSpline(3, -psi, WRAP);
+            Maux.rotateBSpline(3, -psi, Maux2, WRAP);
             apply_binary_mask(mask, Maux2, Maux2, avg);
             Mnew[refno] += Maux2;
         }
@@ -936,8 +936,8 @@ void Prog_MLalign2D_prm::preselect_directions(float &phi, float &theta,
             theta_ref = Iref[refno].Theta();
             Euler_direction(phi, theta, 0., u);
             Euler_direction(phi_ref, theta_ref, 0., v);
-            u.normalize();
-            v.normalize();
+            u.selfNormalize();
+            v.selfNormalize();
             angle = RAD2DEG(acos(dotProduct(u, v)));
             angle = fabs(realWRAP(angle, -180, 180));
             // also check mirror
@@ -990,7 +990,7 @@ void Prog_MLalign2D_prm::preselect_significant_model_phi(
                 FOR_ALL_ROTATIONS()
                 {
                     double psi = (double)(ipsi * psi_max / nr_psi) + SMALLANGLE;
-                    Maux = Iref[refno]().rotateBSpline(3, psi, WRAP);
+                    Iref[refno]().rotateBSpline(3, psi, Maux, WRAP);
                     Mrot.push_back(Maux);
                 }
             }
@@ -1011,7 +1011,7 @@ void Prog_MLalign2D_prm::preselect_significant_model_phi(
                 {
                     trans(0) = offsets[2*irefmir];
                     trans(1) = offsets[2*irefmir+1];
-                    Maux = Mimg.translate(trans, true);
+                    Mimg.translate(trans, Maux, true);
                     applyGeometry(Maux2, F[iflip], Maux, IS_INV, WRAP);
                     FOR_ALL_ROTATIONS()
                     {
@@ -1159,7 +1159,7 @@ void Prog_MLalign2D_prm::calculate_realspace_offsets(
                         {
                             trans(0) = dxx * DIRECT_MAT_ELEM(Finv[iflip], 0, 0) + dyy * DIRECT_MAT_ELEM(Finv[iflip], 0, 1);
                             trans(1) = dxx * DIRECT_MAT_ELEM(Finv[iflip], 1, 0) + dyy * DIRECT_MAT_ELEM(Finv[iflip], 1, 1);
-                            Maux = Mflip[iflip].translate(trans, WRAP);
+                            Mflip[iflip].translate(trans, Maux, WRAP);
                             Mimg_trans[count].push_back(Maux);
                         }
                         MAT_ELEM(Moffsets, ROUND(dyy), ROUND(dxx)) = count;
@@ -1173,7 +1173,7 @@ void Prog_MLalign2D_prm::calculate_realspace_offsets(
                         {
                             trans(0) = dxx * DIRECT_MAT_ELEM(Finv[iflip], 0, 0) + dyy * DIRECT_MAT_ELEM(Finv[iflip], 0, 1);
                             trans(1) = dxx * DIRECT_MAT_ELEM(Finv[iflip], 1, 0) + dyy * DIRECT_MAT_ELEM(Finv[iflip], 1, 1);
-                            Maux = Mflip[iflip].translate(trans, WRAP);
+                            Mflip[iflip].translate(trans, Maux, WRAP);
                             Mimg_trans[count].push_back(Maux);
                         }
                         MAT_ELEM(Moffsets_mirror, ROUND(dyy), ROUND(dxx)) = count;

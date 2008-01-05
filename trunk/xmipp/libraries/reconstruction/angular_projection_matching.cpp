@@ -418,7 +418,7 @@ void Prog_projection_matching_prm::PM_process_one_image(Matrix2D<double> &Mexp,
   // Calculate correlation coefficients for all angles
   FOR_ALL_ROTATIONS() {
     psi=(double)(ipsi*360./nr_psi);
-    Mimg=Maux.rotate(psi,DONT_WRAP);
+    Maux.rotate(psi,Mimg,DONT_WRAP);
     ipp=ref_img.begin();
     FOR_ALL_DIRECTIONS() {
       search=true;
@@ -457,7 +457,7 @@ void Prog_projection_matching_prm::PM_process_one_image(Matrix2D<double> &Mexp,
   Zscore=(maxCC-aveCC)/(sqrt(varCC));
 
   // Interpolated translational search for optimal angles ===================================
-  Mimg=Mexp.rotate(opt_psi,DONT_WRAP);
+  Mexp.rotate(opt_psi,Mimg,DONT_WRAP);
   Mref=ref_img[opt_dirno];
   if (max_shift>0) best_shift(Mimg,Mref,xmax,ymax);
   else xmax=ymax=0.;
@@ -469,7 +469,7 @@ void Prog_projection_matching_prm::PM_process_one_image(Matrix2D<double> &Mexp,
   opt_yoff=xmax*SIND(opt_psi)-ymax*COSD(opt_psi);
 
   // Calculate optimal correlation coefficient
-  Mimg=Mimg.translate(vectorR2(-xmax,-ymax));
+  Mimg.selfTranslate(vectorR2(-xmax,-ymax));
   Mimg-=mean_img;
   maxCC=0.;
   FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mimg) {

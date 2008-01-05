@@ -891,40 +891,6 @@ public:
      * @endcode
      */
     friend SelFile compare(SelFile& SF1, SelFile& SF2, const int mode);
-
-    /** Apply a function to all images with a certain label.
-     * @ingroup SelFilesHelpful
-     *
-     * The function must take an input image name and an output image name.
-     * Then transform the input image into the output one according to its
-     * functionality, and finally save the result as an Xmipp image. The output
-     * names are formed by adding an extension to the input ones, this
-     * extension can be empty and then the input and output images are the
-     * same. By default, the function is only applied to ACTIVE images
-     * and the output image is the same as the input one.
-     *
-     * @code
-     * void function1(FileName in, FileName out)
-     * {
-     *     ImageXmipp A(in);
-     *     A() = A().reverseY();
-     *     A.save(out);
-     * }
-     *
-     * ...
-     *
-     * sel.for_all(&function1); // Same I/O image, apply
-     *                          // only to ACTIVE images
-     *
-     * sel.for_all(&function1, "out"); // Add ".out"
-     *
-     * sel.for_all(&function1, "", SelLine::DISCARDED);
-     * // Same I/O, apply only to DISCARDED images
-     * @endcode
-     */
-    void for_all(void(*f)(FileName, FileName),
-                 const std::string& _ext = "",
-                 SelLine::Label _label = SelLine::ACTIVE);
 };
 
 #endif

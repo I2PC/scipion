@@ -704,8 +704,8 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
 
     // Add blob radius in each direction, and find the furthest integer
     // samples => compute size
-    Gcorner1 = CEILnD(Gcorner1 - blob.radius);
-    Gcorner2 = FLOORnD(Gcorner2 + blob.radius);
+    Gcorner1 -= blob.radius; Gcorner1.selfCEILnD();
+    Gcorner2 += blob.radius; Gcorner2.selfFLOORnD();
 
     XX(size) = (int)XX(Gcorner2) - (int)XX(Gcorner1) + 1;
     YY(size) = (int)YY(Gcorner2) - (int)YY(Gcorner1) + 1;

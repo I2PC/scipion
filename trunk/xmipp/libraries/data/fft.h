@@ -874,7 +874,7 @@ void differential_phase_residual(Matrix2D< T > const & m1,
     tmp2.initZeros();
     radialAverage(aux, origin, tmp2, radial_count, true);
     dpr = tmp2 / tmp1;
-    dpr = SQRTnD(dpr);
+    dpr.selfSQRTnD();
     dpr.resize(dim);
     freq.resize(dim);
 
@@ -939,7 +939,7 @@ void differential_phase_residual(Matrix3D< T > const & m1,
     tmp2.initZeros();
     radialAverage(aux, origin, tmp2, radial_count, true);
     dpr = tmp2 / tmp1;
-    dpr = SQRTnD(dpr);
+    dpr.selfSQRTnD();
     dpr.resize(dim);
     freq.resize(dim);
 

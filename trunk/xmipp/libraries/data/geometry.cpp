@@ -543,7 +543,7 @@ void Euler_direction2angles(Matrix1D<double> &v0,
     //if not normalized do it so
     v.resize(3);
     v = v0;
-    v = v.normalize();
+    v.selfNormalize();
 
     v_aux.resize(3);
     cb = VEC_ELEM(v, 2);
