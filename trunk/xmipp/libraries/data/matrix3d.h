@@ -1108,7 +1108,7 @@ public:
         j_log = j_phys + xinit;
     }
 
-    /** Get Slice.
+    /** Slice access for reading.
      * @ingroup VolumesMemory
      *
      * This function returns a slice (a matrix) corresponding to the choosen
@@ -1121,30 +1121,6 @@ public:
      * Cut along Z axis       Y(2D)=Y(3D)    X(2D)=X(3D)
      * Cut along Y axis       Y(2D)=Z(3D)    X(2D)=X(3D)
      * Cut along X axis       Y(2D)=Z(3D)    X(2D)=-Y(3D)
-     * @endcode
-     *
-     * @code
-     * Matrix2D< doubl e> m = V.slice(0);
-     * @endcode
-     */
-    mT getSlice(int i, char axis = 'Z') const
-    {
-        mT tmp;
-        getSlice(i, tmp, axis);
-        return tmp;
-    }
-
-    /** Slice access for reading.
-     * @ingroup VolumesMemory
-     *
-     * This function returns a slice (a matrix) corresponding to the choosen
-     * slice inside matrix, the numbering of the slices is also logical not
-     * physical. This function differs from the previous one in that this one
-     * cuts and assign in a single step instead of in two steps, as in
-     * the previous example.
-     *
-     * @code
-     * V.slice(0, m);
      * @endcode
      */
     void getSlice(int k, mT& M, char axis = 'Z') const

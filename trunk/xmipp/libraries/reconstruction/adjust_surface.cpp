@@ -365,7 +365,7 @@ double correlate_surface_and_volume_2D(const Image *surf, const Volume *V,
     if (tell & MANUAL_ORDER)
     {
         ImageXmipp save;
-        save() = (*Vsurf)().getSlice(0);
+        (*Vsurf)().getSlice(0,save());
         save.write("PPPsurface.img");
         for (int i = STARTINGY(VOL); i <= FINISHINGY(VOL); i++)
             for (int j = STARTINGX(VOL); j <= FINISHINGX(VOL); j++)
