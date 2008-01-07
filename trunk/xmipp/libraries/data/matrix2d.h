@@ -2393,45 +2393,6 @@ public:
     /// @defgroup MatricesTypes Matrix types
     /// @ingroup Matrices
 
-    /** True if matrix is a single row or a single column
-     * @ingroup MatricesTypes
-     *
-     * @code
-     * if (m.isVector())
-     *     std::cout << "The matrix is like a vector\n";
-     * @endcode
-     */
-    bool isVector() const
-    {
-        return (XSIZE(*this) == 1) || (YSIZE(*this) == 1);
-    }
-
-    /** True if the matrix is square
-     * @ingroup MatricesTypes
-     *
-     * @code
-     * if (m.isSquare())
-     *     std::cout << "The matrix is square\n";
-     * @endcode
-     */
-    bool isSquare() const
-    {
-        return (XSIZE(*this) == YSIZE(*this));
-    }
-
-    /** True if the matrix is singular (det()==0)
-     * @ingroup MatricesTypes
-     *
-     * @code
-     * if (m.isSingular())
-     *     std::cout << "The matrix is singular\n";
-     * @endcode
-     */
-    bool isSingular() const
-    {
-        return ABS(det()) < XMIPP_EQUAL_ACCURACY;
-    }
-
     /** True if the matrix is diagonal
      * @ingroup MatricesTypes
      *
@@ -2472,90 +2433,6 @@ public:
         return true;
     }
 
-    /** True if the matrix is symmetric
-     * @ingroup MatricesTypes
-     *
-     * @code
-     * if (m.isSymmetric())
-     *     std::cout << "The matrix is symmetric\n";
-     * @endcode
-     */
-    bool isSymmetric() const
-    {
-        if (XSIZE(*this) != YSIZE(*this))
-            return false;
-
-        for (int i = 0; i < YSIZE(*this); i++)
-            for (int j = i + 1; j < XSIZE(*this); j++)
-                if (ABS(DIRECT_MAT_ELEM(*this, i, j) -
-                        DIRECT_MAT_ELEM(*this, j, i)) > XMIPP_EQUAL_ACCURACY)
-                    return false;
-
-        return true;
-    }
-
-    /** True if the matrix is skew-symmetric (anti-symmetric)
-     * @ingroup MatricesTypes
-     *
-     * @code
-     * if (m.isSkewSymmetric())
-     *     std::cout << "The matrix is skewsymmetric\n";
-     * @endcode
-     */
-    bool isSkewSymmetric() const
-    {
-        if (XSIZE(*this) != YSIZE(*this))
-            return false;
-
-        for (int i = 0; i < YSIZE(*this); i++)
-            for (int j = i + 1; j < XSIZE(*this); j++)
-                if (ABS(DIRECT_MAT_ELEM(*this, i, j) +
-                        DIRECT_MAT_ELEM(*this, j, i)) > XMIPP_EQUAL_ACCURACY)
-                    return false;
-
-        return true;
-    }
-
-    /** True if the matrix is upper-triangular
-     * @ingroup MatricesTypes
-     *
-     * @code
-     * if (m.isUpperTriangular())
-     *     std::cout << "The matrix is upper triangular\n";
-     * @endcode
-     */
-    bool isUpperTriangular() const
-    {
-        if (XSIZE(*this) != YSIZE(*this))
-            return false;
-        for (int i = 1; i < YSIZE(*this); i++)
-            for (int j = 0; j < i - 1; j++)
-                if (ABS(DIRECT_MAT_ELEM(*this, i, j)) > XMIPP_EQUAL_ACCURACY)
-                    return false;
-        return true;
-    }
-
-    /** True if the matrix is lower-triangular
-     * @ingroup MatricesTypes
-     *
-     * @code
-     * if (m.isLowerTriangular())
-     *     std::cout << "The matrix is lower triangular\n";
-     * @endcode
-     */
-    bool isLowerTriangular() const
-    {
-        if (XSIZE(*this) != YSIZE(*this))
-            return false;
-
-        for (int i = 1; i < YSIZE(*this); i++)
-            for (int j = i + 1; j < XSIZE(*this); j++)
-                if (ABS(DIRECT_MAT_ELEM(*this, i, j)) > XMIPP_EQUAL_ACCURACY)
-                    return false;
-
-        return true;
-    }
-
     /** True if the matrix is identity
      * @ingroup MatricesTypes
      *
@@ -2568,20 +2445,6 @@ public:
     {
         return isScalar() &&
                ABS(DIRECT_MAT_ELEM(*this, 0, 0) - (T) 1) < XMIPP_EQUAL_ACCURACY;
-    }
-
-    /** True if the matrix is null
-     * @ingroup MatricesTypes
-     *
-     * @code
-     * if (m.isZero())
-     *     std::cout << "The matrix is null\n";
-     * @endcode
-     */
-    bool isZero() const
-    {
-        return isScalar() &&
-               ABS(DIRECT_MAT_ELEM(*this, 0, 0) - (T) 0) < XMIPP_EQUAL_ACCURACY;
     }
 
     /** Maximum element
@@ -3609,22 +3472,6 @@ bool Matrix2D< std::complex< double > >::isDiagonal() const;
 // TODO Document
 template<>
 bool Matrix2D< std::complex<double> >::isScalar() const;
-
-// TODO Document
-template<>
-bool Matrix2D< std::complex< double > >::isSymmetric() const;
-
-// TODO Document
-template<>
-bool Matrix2D< std::complex< double > >::isSkewSymmetric() const;
-
-// TODO Document
-template<>
-bool Matrix2D< std::complex< double > >::isUpperTriangular() const;
-
-// TODO Document
-template<>
-bool Matrix2D< std::complex< double > >::isLowerTriangular() const;
 
 // TODO Document
 template<typename T>
