@@ -519,7 +519,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
 
     /* If checking the variability --------------------------------------------- */
     if (variability_analysis)
-        parallel_mode == SIRT;
+        parallel_mode = SIRT;
 
     /* Create history file handler --------------------------------------------- */
     if (level >= FULL)
