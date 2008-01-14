@@ -178,6 +178,18 @@ class selfile:
        newsel.set(newlines)
        return newsel
 
+   # inverts selfile orden
+   def reverse(self):
+       newlines=[]
+       N=len(self.sellines)
+       for i in range(N):
+           name=self.sellines[N-i-1][0]
+	   state=self.sellines[N-i-1][1]
+           newlines.append([name,state])
+       newsel=selfile()
+       newsel.set(newlines)
+       return newsel
+
    # Copies all particles in the selfile to "directory"
    # "directory" is created if it does not exist
    # A new selfile is made in the current directory
