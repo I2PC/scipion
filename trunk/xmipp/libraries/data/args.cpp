@@ -190,7 +190,7 @@ std::string floatToString(float F, int _width, int _prec)
         outs.precision(_prec);
 
 #if GCC_VERSION < 30301
-    outs << F << ends;
+    outs << F << std::ends;
 #else
     outs << F;
 #endif
