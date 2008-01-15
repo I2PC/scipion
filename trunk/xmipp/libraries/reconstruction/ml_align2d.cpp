@@ -223,9 +223,9 @@ void Prog_MLalign2D_prm::show(bool ML3D)
         }
         if (do_student)
         {
-            std::cerr << "  -> Use t-student distribution for improved robustness " << endl;
+            std::cerr << "  -> Use t-student distribution for improved robustness " << std::endl;
         }
-        std::cerr << " -----------------------------------------------------------------" << endl;
+        std::cerr << " -----------------------------------------------------------------" << std::endl;
 
     }
 
@@ -1214,7 +1214,7 @@ void Prog_MLalign2D_prm::ML_integrate_locally(
     std::vector <std::vector< Matrix2D<double> > > &Mwsum_imgs,
     double &wsum_sigma_noise, double &wsum_sigma_offset,
     std::vector<double> &sumw, std::vector<double> &sumw2, std::vector<double> &sumw_mirror,
-    double &LL, double &fracweight,
+    double &LL, double &fracweight, double &maxweight2,
     int &opt_refno, double &opt_psi,
     Matrix1D<double> &opt_offsets, std::vector<double> &opt_offsets_ref,
     std::vector<double> &pdf_directions)
