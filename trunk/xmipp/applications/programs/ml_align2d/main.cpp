@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     std::vector<double> conv;
     double aux, wsum_sigma_noise, wsum_sigma_offset;
     std::vector<Matrix2D<double > > wsum_Mref;
-    std::vector<double> sumw, sumw_mirror;
+    std::vector<double> sumw, sumw2, sumw_mirror;
     Matrix2D<double> P_phi, Mr2, Maux;
     FileName fn_img, fn_tmp;
     Matrix1D<double> oneline(0);
@@ -88,7 +88,7 @@ int main(int argc, char **argv)
             if (prm.maxCC_rather_than_ML)
                 DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Corr (8)");
             else
-                DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8)");
+		DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), w_robust (9)");
 
             // Pre-calculate pdfs
             if (!prm.maxCC_rather_than_ML) prm.calculate_pdf_phi();
@@ -97,12 +97,12 @@ int main(int argc, char **argv)
             prm.ML_sum_over_all_images(prm.SF, prm.Iref, iter,
                                        LL, sumcorr, DFo, wsum_Mref,
                                        wsum_sigma_noise, wsum_sigma_offset, 
-				       sumw, sumw_mirror);
+				       sumw, sumw2, sumw_mirror);
 
             // Update model parameters
             prm.update_parameters(wsum_Mref, 
                                   wsum_sigma_noise, wsum_sigma_offset, 
-				  sumw, sumw_mirror, 
+				  sumw, sumw2, sumw_mirror, 
 				  sumcorr, sumw_allrefs);
 
             // Check convergence

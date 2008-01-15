@@ -37,7 +37,7 @@ int main(int argc, char **argv)
     std::vector<double> conv;
     double aux, wsum_sigma_noise, wsum_sigma_offset;
     std::vector<Matrix2D<double > > wsum_Mref;
-    std::vector<double> sumw, sumw_mirror;
+    std::vector<double> sumw, sumw2, sumw_mirror;
     Matrix2D<double> P_phi, Mr2, Maux, Maux2;
     FileName fn_img, fn_tmp;
     Matrix1D<double> oneline(0);
@@ -131,7 +131,7 @@ int main(int argc, char **argv)
                 if (prm.maxCC_rather_than_ML)
                     DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Corr (8)");
                 else
-                    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8)");
+                    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), w_robust (9)");
             }
 
             // Pre-calculate pdfs
@@ -141,7 +141,7 @@ int main(int argc, char **argv)
             prm.ML_sum_over_all_images(prm.SF, prm.Iref, iter,
                                        LL, sumcorr, DFo, wsum_Mref,
                                        wsum_sigma_noise, wsum_sigma_offset, 
-				       sumw, sumw_mirror);
+				       sumw,  sumw2, sumw_mirror);
 
             // Here MPI_allreduce of all wsums,LL and sumcorr !!!
             MPI_Allreduce(&LL, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -161,12 +161,14 @@ int main(int argc, char **argv)
                 sumw[refno] = aux;
                 MPI_Allreduce(&sumw_mirror[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 sumw_mirror[refno] = aux;
+                MPI_Allreduce(&sumw2[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                sumw2[refno] = aux;
             }
 
             // Update model parameters
             prm.update_parameters(wsum_Mref, 
                                   wsum_sigma_noise, wsum_sigma_offset, 
-				  sumw, sumw_mirror, 
+				  sumw, sumw2, sumw_mirror, 
 				  sumcorr, sumw_allrefs);
 
             // Check convergence

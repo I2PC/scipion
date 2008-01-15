@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     double                      LL, sumw_allrefs, convv, sumcorr, wsum_sigma_noise, wsum_sigma_offset;
     std::vector<double>              conv;
     std::vector<Matrix2D<double> >   wsum_Mref;
-    std::vector<double>              sumw, sumw_cv, sumw_mirror;
+    std::vector<double>              sumw, sumw2, sumw_cv, sumw_mirror;
     DocFile                     DFo;
 
     Prog_Refine3d_prm           prm;
@@ -99,7 +99,7 @@ int main(int argc, char **argv)
             if (ML2D_prm.maxCC_rather_than_ML)
                 DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Corr (8)");
             else
-                DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8)");
+                DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), w_robust (9)");
 
             // Pre-calculate pdfs
             if (!ML2D_prm.maxCC_rather_than_ML) ML2D_prm.calculate_pdf_phi();
@@ -108,12 +108,12 @@ int main(int argc, char **argv)
             ML2D_prm.ML_sum_over_all_images(ML2D_prm.SF, ML2D_prm.Iref, iter,
                                             LL, sumcorr, DFo, wsum_Mref, 
                                             wsum_sigma_noise, wsum_sigma_offset, 
-					    sumw, sumw_mirror);
+					    sumw, sumw2, sumw_mirror);
 
             // Update model parameters
             ML2D_prm.update_parameters(wsum_Mref, 
                                        wsum_sigma_noise, wsum_sigma_offset, 
-				       sumw, sumw_mirror, 
+				       sumw, sumw2, sumw_mirror, 
 				       sumcorr, sumw_allrefs);
 
             // Write intermediate output files

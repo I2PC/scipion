@@ -162,6 +162,10 @@ public:
     /** IN DEVELOPMENT
         Deterministic annealing */
     double anneal, anneal_step;
+    /** Use t-student distribution instead of normal one */
+    bool do_student;
+    /** Degrees of freedom for the t-student distribution */
+    double df, df2;
 
     /** debug flag */
     int debug;
@@ -234,8 +238,8 @@ public:
                               std::vector <std::vector< Matrix2D<double> > > &Mref,
                               std::vector <std::vector< Matrix2D<double> > > &Mwsum_imgs,
                               double &wsum_sigma_noise, double &wsum_sigma_offset,
-                              std::vector<double> &sumw, std::vector<double> &sumw_mirror,
-                              double &LL, double &fracweight,
+                              std::vector<double> &sumw, std::vector<double> &sumw2, std::vector<double> &sumw_mirror,
+                              double &LL, double &fracweight, double &maxweight2,
                               int &opt_refno, double &opt_psi,
                               Matrix1D<double> &opt_offsets,
                               std::vector<double> &opt_offsets_ref,
@@ -247,8 +251,8 @@ public:
                                Matrix2D<int> &Msignificant,
                                std::vector <std::vector< Matrix2D<std::complex<double> > > > &Fwsum_imgs,
                                double &wsum_sigma_noise, double &wsum_sigma_offset,
-                               std::vector<double> &sumw, std::vector<double> &sumw_mirror,
-                               double &LL, double &fracweight,
+                               std::vector<double> &sumw, std::vector<double> &sumw2, std::vector<double> &sumw_mirror,
+                               double &LL, double &fracweight, double &maxweight2,
                                int &opt_refno, double &opt_psi,
                                Matrix1D<double> &opt_offsets, std::vector<double> &opt_offsets_ref,
                                std::vector<double > &pdf_directions);
@@ -269,12 +273,12 @@ public:
                                 double &LL, double &sumcorr, DocFile &DFo,
                                 std::vector<Matrix2D<double> > &wsum_Mref,
                                 double &wsum_sigma_noise, double &wsum_sigma_offset,
-                                std::vector<double> &sumw, std::vector<double> &sumw_mirror);
+                                std::vector<double> &sumw, std::vector<double> &sum2, std::vector<double> &sumw_mirror);
 
     /// Update all model parameters
     void update_parameters(std::vector<Matrix2D<double> > &wsum_Mref,
                            double &wsum_sigma_noise, double &wsum_sigma_offset, 
-			   std::vector<double> &sumw, std::vector<double> &sumw_mirror,
+			   std::vector<double> &sumw, std::vector<double> &sumw2, std::vector<double> &sumw_mirror,
                            double &sumcorr, double &sumw_allrefs);
 
     /// check convergence
