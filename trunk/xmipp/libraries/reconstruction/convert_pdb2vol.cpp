@@ -174,7 +174,8 @@ void Prog_PDBPhantom_Parameters::compute_protein_geometry()
         max_dim = XMIPP_MAX(max_dim, CEIL(XX(limit) * 2 / Ts) + 5);
         if (useBlobs || usePoorGaussian)
             output_dim = (int)NEXT_POWER_OF_2(max_dim);
-        output_dim = max_dim+10;
+        else 
+            output_dim = max_dim+10;
         std::cout << "Setting output_dim to " << output_dim << std::endl;
     }
 }
