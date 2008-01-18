@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 #------------------------------------------------------------------------------------------------
-# Protocol for Xmipp-based ml3d classification, according to:
-# {please cite} Scheres et al. (2007) Nature Methods, 4, 27-29
+# Protocol for Xmipp-based ML3D/MLF3D classification, according to:
+# {please cite} for ML3D:  Scheres et al. (2007) Nature Methods, 4, 27-29
+# {please cite} for MLF3D: Scheres et al. (2007) Structure, 15, 1167-1177
 #
 # Example use:
 # ./xmipp_protocol_ml3d.py
 #
-# Author: Sjors Scheres, March 2007
+# Author: Sjors Scheres, December 2007
 #
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
@@ -22,9 +23,30 @@ DoDeleteWorkingDir=False
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir="/home2/bioinfo/scheres/work/protocols/G40P"
+ProjectDir="/home/scheres"
 # {expert} Directory name for logfiles:
 LogDir="Logs"
+#------------------------------------------------------------------------------------------------
+# {section} MLF-specific parameters
+#------------------------------------------------------------------------------------------------
+# Perform MLF3D instead of ML3D classification?
+DoMlf=False
+# {file} CTFdat file with the input images:
+""" The names of both the images and the ctf-parameter files should be with absolute paths.
+"""
+InCtfDatFile="all_images.ctfdat"
+# Is the initial 3D reference map CTF-amplitude corrected?
+""" If coming from programs other than xmipp_mlf_refine3d this is usually not the case. If you will perform a grey-scale correction, this parameter becomes irrelevant as the output maps never have the CTF-amplitudes corrected.
+"""
+InitialMapIsAmplitudeCorrected=True
+# {expert} Are the seeds  CTF-amplitude corrected?
+""" This option is only relevant if you provide your own seeds! If the seeds are generated automatically, this parameter becomes irrelevant as they will always be amplitude-corrected
+"""
+SeedsAreAmplitudeCorrected=False
+# High-resolution limit (in Angstroms)
+""" No frequencies higher than this limit will be taken into account. If zero is given, no limit is imposed
+"""
+HighResLimit=20
 #------------------------------------------------------------------------------------------------
 # {section} Correct absolute grey scale of initial reference
 #------------------------------------------------------------------------------------------------
@@ -77,14 +99,14 @@ SeedsSelfile=""
 #------------------------------------------------------------------------------------------------
 # {section} ML3D classification
 #------------------------------------------------------------------------------------------------
-# Perform ml3d classification run?
+# Perform ML(F)3D classification run?
 DoML3DClassification=True
-# Angular sampling for ml3d classification:
+# Angular sampling for ML(F)3D classification:
 """ Fine samplings take huge amounts of CPU and memory.
     Therefore, in general, dont use samplings finer than 10 degrees.
 """
 AngularSampling=10
-# Number of ml3d iterations to perform:
+# Number of ML(F)3D iterations to perform:
 NumberOfIterations=25
 # {file} In the case of symmetry supply the symmetry description file:
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetrize
@@ -101,7 +123,7 @@ SymmetryFile=""
     since this option only concerns the ML3D classification part
 """
 RestartIter=0
-# {expert} Additional xmipp_ml_refine3d parameters:
+# {expert} Additional xmipp_ml(f)_refine3d parameters:
 """ For a complete description see the manual pages:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/MLrefine3D
 """
@@ -143,6 +165,11 @@ class ML3D_class:
                  DoDeleteWorkingDir,
                  ProjectDir,
                  LogDir,
+                 DoMlf,
+                 InCtfDatFile,
+                 InitialMapIsAmplitudeCorrected,
+                 SeedsAreAmplitudeCorrected,
+                 HighResLimit,
                  DoCorrectGreyScale,
                  ProjMatchSampling,
                  WbpThreshold,
@@ -172,6 +199,10 @@ class ML3D_class:
 
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir
+        self.DoMlf=DoMlf
+        self.RefForSeedsIsAmplitudeCorrected=InitialMapIsAmplitudeCorrected
+        self.SeedsAreAmplitudeCorrected=SeedsAreAmplitudeCorrected
+        self.HighResLimit=HighResLimit
         self.NumberOfReferences=NumberOfReferences
         self.DoJustRefine=DoJustRefine
         self.DoGenerateSeeds=DoGenerateSeeds
@@ -231,6 +262,10 @@ class ML3D_class:
             newsel=mysel.make_abspath()
             self.InSelFile=os.path.abspath(self.WorkingDir+'/'+InSelFile)
             newsel.write(self.InSelFile)
+
+            if (self.DoMlf):
+                # Copy CTFdat to the workingdir as well
+                shutil.copy(InCtfDatFile,self.WorkingDir+'/my.ctfdat')
 
             # Backup script
             log.make_backup_of_script_file(sys.argv[0],
@@ -311,6 +346,9 @@ class ML3D_class:
         if not os.path.exists(dirname):
             os.makedirs(dirname)
 
+        # Grey-scale correction always leads to an amplitude uncorrected map
+        self.RefForSeedsIsAmplitudeCorrected=False
+            
         # A single cycle of projection matching
         basename='corrected_reference'
         params= ' -i '    + str(self.InSelFile) + \
@@ -421,10 +459,13 @@ class ML3D_class:
                                     self.AngularSampling,
                                     1,
                                     self.SymmetryFile,
+                                    self.RefForSeedsIsAmplitudeCorrected,
                                     self.ExtraParamsMLrefine3D)
             newsel.insert(outname+'_it00001.vol','1')
         newsel.write('ml3d_seeds.sel')
 
+        # Seed generation with MLF always does amplitude correction
+        self.SeedsAreAmplitudeCorrected=True
 
     # Perform the actual classification
     def execute_ML3D_classification(self):
@@ -451,11 +492,13 @@ class ML3D_class:
                                 self.AngularSampling,
                                 self.NumberOfIterations,
                                 self.SymmetryFile,
+                                self.SeedsAreAmplitudeCorrected,
                                 self.ExtraParamsMLrefine3D)
 
 
     # Either for seeds generation or for ML3D-classification
-    def execute_MLrefine3D(self,inselfile,outname,volname,sampling,iter,symfile,extraparam):
+    def execute_MLrefine3D(self,inselfile,outname,
+                           volname,sampling,iter,symfile,amplitude_corrected,extraparam):
         import os
         import launch_parallel_job
 
@@ -466,15 +509,28 @@ class ML3D_class:
                 ' -vol '  + str(volname) + \
                 ' -iter ' + str(iter) + \
                 ' -ang '  + str(sampling)
+        params+=' '+extraparam
         if not symfile=="":
             params+= ' -sym ' + str(symfile)
-        params+=' '+extraparam
         if (self.DoControl):
             params+=' -control ' + self.MyControlFile
+        if (self.DoMlf):
+            params+= ' -ctfdat my.ctfdat'
+            if (not amplitude_corrected):
+                params+= ' -ctf_affected_refs'
+            if (self.HighResLimit > 0):
+                params += ' -high ' + str(self.HighResLimit)
 
+        if (self.DoMlf):
+            program="xmipp_mlf_refine3d"
+            mpiprogram="xmipp_mpi_mlf_refine3d"
+        else:
+            program="xmipp_ml_refine3d"
+            mpiprogram="xmipp_mpi_ml_refine3d"
+           
         launch_parallel_job.launch_job(self.DoParallel,
-                                       "xmipp_ml_refine3d",
-                                       "xmipp_mpi_ml_refine3d",
+                                       program,
+                                       mpiprogram,
                                        params,
                                        self.log,
                                        self.MyNumberOfCPUs,
@@ -487,11 +543,19 @@ class ML3D_class:
         import launch_parallel_job
 
         print '*********************************************************************'
-        print '*  Restarting ml_refine3d program :' 
+        print '*  Restarting ml(f)_refine3d program :' 
         params= ' -restart RunML3D/ml3d_it' + str(iter).zfill(5) + '.log'
+
+        if (self.DoMlf):
+            program="xmipp_mlf_refine3d"
+            mpiprogram="xmipp_mpi_mlf_refine3d"
+        else:
+            program="xmipp_ml_refine3d"
+            mpiprogram="xmipp_mpi_ml_refine3d"
+
         launch_parallel_job.launch_job(self.DoParallel,
-                                       "xmipp_ml_refine3d",
-                                       "xmipp_mpi_ml_refine3d",
+                                       program,
+                                       mpiprogram,
                                        params,
                                        self.log,
                                        self.MyNumberOfCPUs,
@@ -513,6 +577,11 @@ if __name__ == '__main__':
                     DoDeleteWorkingDir,
                     ProjectDir,
                     LogDir,
+                    DoMlf,
+                    InCtfDatFile,
+                    InitialMapIsAmplitudeCorrected,
+                    SeedsAreAmplitudeCorrected,
+                    HighResLimit,
                     DoCorrectGreyScale,
                     ProjMatchSampling,
                     WbpThreshold,
@@ -534,7 +603,7 @@ if __name__ == '__main__':
                     MyNumberOfCPUs,
                     MyMachineFile,
                     MyControlFile)
-
+    
     # close 
     ML3D.close()
 

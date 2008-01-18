@@ -2,13 +2,13 @@
 #------------------------------------------------------------------------------------------------
 # Protocol for Xmipp-based 2D alignment and classification,
 # using maximum-likelihood principles, according to:
-# {please cite} Scheres et al. (2005) J.Mol.Biol 348, 139-149 
-# {please cite} Scheres et al. (2005) Bioinformatics, 21(suppl2), ii243-244 (fast version)
+# {please cite} for ML2D:  Scheres et al. (2005) J.Mol.Biol 348, 139-149 
+# {please cite} for MLF2D: Scheres et al. (2007) Structure 15, 1167-1177
 #
 # Example use:
 # ./xmipp_protocol_ml2d.py
 #
-# Author: Sjors Scheres, March 2007
+# Author: Sjors Scheres, January 2008
 #
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
@@ -28,7 +28,20 @@ ProjectDir="/home/scheres/xmipp/applications/scripts/protocols"
 """
 LogDir="Logs"
 #------------------------------------------------------------------------------------------------
-# {section} ml_align2d parameters
+# {section} MLF-specific parameters
+#------------------------------------------------------------------------------------------------
+# Perform MLF2D instead of ML2D classification?
+DoMlf=False
+# {file} CTFdat file with the input images:
+""" The names of both the images and the ctf-parameter files should be with absolute paths.
+"""
+InCtfDatFile="all_images.ctfdat"
+# High-resolution limit (in Angstroms)
+""" No frequencies higher than this limit will be taken into account. If zero is given, no limit is imposed
+"""
+HighResLimit=20
+#------------------------------------------------------------------------------------------------
+# {section} ml(f)_align2d parameters
 #------------------------------------------------------------------------------------------------
 # Perform 2D maximum-likelihood refinement?
 DoML2D=True
@@ -90,6 +103,9 @@ class ML2D_class:
                  DoDeleteWorkingDir,
                  ProjectDir,
                  LogDir,
+                 DoMlf,
+                 InCtfDatFile,
+                 HighResLimit,
                  DoML2D,
                  NumberOfReferences,
                  DoMirror,
@@ -108,6 +124,8 @@ class ML2D_class:
 
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir
+        self.DoMlf=DoMlf
+        self.HighResLimit=HighResLimit
         self.NumberOfReferences=NumberOfReferences
         self.DoMirror=DoMirror
         self.DoFast=DoFast
@@ -153,6 +171,10 @@ class ML2D_class:
             self.InSelFile=os.path.abspath(self.WorkingDir+'/'+InSelFile)
             newsel.write(self.InSelFile)
 
+            if (self.DoMlf):
+                # Copy CTFdat to the workingdir as well
+                shutil.copy(InCtfDatFile,self.WorkingDir+'/my.ctfdat')
+
             # Backup script
             log.make_backup_of_script_file(sys.argv[0],
                                                os.path.abspath(self.WorkingDir))
@@ -187,22 +209,31 @@ class ML2D_class:
         import os
         import launch_parallel_job
         print '*********************************************************************'
-        print '*  Executing ml_align2d program :' 
-        params= ' -i '    + str(self.InSelFile) + \
+        print '*  Executing ml(f)_align2d program :' 
+        params= ' -o ml2d -i '    + str(self.InSelFile) + \
                 ' -nref ' + str(self.NumberOfReferences)
+        params+=' '+self.ExtraParamsMLalign2D
         if (self.DoFast):
             params+= ' -fast '
         if (self.DoMirror):
             params+= ' -mirror '
-        # By default, do not write offsets for 2D alignments...
-        # This will affect -restart ...
-        params+=' '+self.ExtraParamsMLalign2D
+        if (self.DoMlf):
+            params+= ' -ctfdat my.ctfdat'
+            if (self.HighResLimit > 0):
+                params += ' -high ' + str(self.HighResLimit)
         if (self.DoControl):
             params+=' -control ' + self.MyControlFile
 
+        if (self.DoMlf):
+            program="xmipp_ml_alignd"
+            mpiprogram="xmipp_mpi_mlf_align2d"
+        else:
+            program="xmipp_ml_align2d"
+            mpiprogram="xmipp_mpi_ml_align2d"
+           
         launch_parallel_job.launch_job(self.DoParallel,
-                                       "xmipp_ml_align2d",
-                                       "xmipp_mpi_ml_align2d",
+                                       program,
+                                       mpiprogram,
                                        params,
                                        self.log,
                                        self.MyNumberOfCPUs,
@@ -213,39 +244,24 @@ class ML2D_class:
         import os
         import launch_parallel_job
         print '*********************************************************************'
-        print '*  Restarting ml_align2d program :' 
+        print '*  Restarting ml(f)_align2d program :' 
         params= ' -restart ml2d_it'    + str(iter).zfill(5) + '.log'
 
+        if (self.DoMlf):
+            program="xmipp_ml_alignd"
+            mpiprogram="xmipp_mpi_mlf_align2d"
+        else:
+            program="xmipp_ml_align2d"
+            mpiprogram="xmipp_mpi_ml_align2d"
+           
         launch_parallel_job.launch_job(self.DoParallel,
-                                       "xmipp_ml_align2d",
-                                       "xmipp_mpi_ml_align2d",
+                                       program,
+                                       mpiprogram,
                                        params,
                                        self.log,
                                        self.MyNumberOfCPUs,
                                        self.MyMachineFile,
                                        False)
-
-    def visualize_ML2D(self):
-        # Visualize class averages:
-        import glob
-        import os
-        selfiles=glob.glob(str(self.WorkingDir)+'_it?????.sel')
-        if len(selfiles)==0:
-            print "No selfiles yet. Visualize after job completion..."
-        else:
-            lastselfile=selfiles[-1]
-            command='xmipp_show -sel '+str(lastselfile)+ ' & '
-            print '* ',command
-            self.log.info(command)
-            os.system(command)
-            # print logfile to screen:
-            logfiles=glob.glob('ml2d_it?????.log')
-            lastlogfile=logfiles[-1]
-            fh=open(lastlogfile,'r')
-            loglines=fh.readlines()
-            print "Logfile "+str(lastlogfile)+": "
-            for line in loglines:
-                print line[:-1]
 
     def close(self):
         message='Done!'
@@ -264,6 +280,9 @@ if __name__ == '__main__':
                     DoDeleteWorkingDir,
                     ProjectDir,
                     LogDir,
+                    DoMlf,
+                    InCtfDatFile,
+                    HighResLimit,
                     DoML2D,
                     NumberOfReferences,
                     DoMirror,
