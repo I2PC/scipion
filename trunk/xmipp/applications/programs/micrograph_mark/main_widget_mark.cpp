@@ -486,7 +486,7 @@ void QtMainWidgetMark::write_angles()
     FileName fn = __mWidget->getMicrograph()->micrograph_name();
     fn = fn.without_extension();
     fn = fn.add_extension("ang");
-
+    
     std::ofstream out;
     out.open(fn.c_str(), std::ios::out);
     if (!out)
@@ -495,6 +495,21 @@ void QtMainWidgetMark::write_angles()
     out << "# alpha_u alpha_t gamma\n"
         << __alpha_u << " " << __alpha_t << " " << __gamma << std::endl;
     out.close();
+
+    // Also write out matrix if requested
+    if (__mWidget->getMicrograph()->write_matrix())
+    {
+	fn = fn.without_extension();
+	fn = fn.add_extension("mat");
+	std::ofstream out;
+	out.open(fn.c_str(), std::ios::out);
+	if (!out)
+	    REPORT_ERROR(1, (std::string)"QtMainWidgetMark::write_matrix: Cannot open "
+			 + fn + " for output\n");
+        out << __Put;
+	out.close();
+    }
+    
 }
 
 /* Draw tilt axes ---------------------------------------------------------- */

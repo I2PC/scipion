@@ -63,7 +63,8 @@ void Micrograph::clear()
 
 /* Open micrograph --------------------------------------------------------- */
 void Micrograph::open_micrograph(const FileName &_fn_micrograph,
-                                 /*bool in_core,*/ bool reversed)
+                                 /*bool in_core,*/ bool reversed, 
+				 bool write_matrix)
 {
     struct stat info;
 
@@ -214,6 +215,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
     }
     /*__in_core=in_core; */
     __reversed = reversed;
+    __write_matrix = write_matrix;
 }
 
 /* Close micrograph -------------------------------------------------------- */
@@ -413,6 +415,25 @@ void Micrograph::read_coordinates(int label, const FileName &_fn_coords)
     fh.close();
 }
 
+/* Transform all coordinates ---------------------------------------------- */
+void Micrograph::transform_coordinates(const Matrix2D<double> &M)
+{
+    Matrix1D<double> m(3);
+    SPEED_UP_temps;
+    
+    int imax = coords.size();
+    for (int i = 0; i < imax; i++)
+    {
+	if (coords[i].valid)
+	{
+	    VECTOR_R3(m,coords[i].X, coords[i].Y,1);
+	    M3x3_BY_V3x1(m, M, m);
+	    coords[i].X=(int)XX(m);
+	    coords[i].Y=(int)YY(m);
+	}
+    }
+}
+
 /* Scissor ----------------------------------------------------------------- */
 int Micrograph::scissor(const Particle_coords &P, ImageT<double> &result,
                         double Dmin, double Dmax, double scaleX, double scaleY,
@@ -479,7 +500,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
     else
     {
         M = new Micrograph;
-        M->open_micrograph(fn_image, __reversed);
+        M->open_micrograph(fn_image, __reversed, __write_matrix);
         M->set_window_size(X_window_size, Y_window_size);
         M->set_transmitance_flag(compute_transmitance);
         M->set_inverse_flag(compute_inverse);

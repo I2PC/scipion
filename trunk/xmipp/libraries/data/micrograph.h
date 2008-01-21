@@ -85,6 +85,7 @@ protected:
     bool                    __is_signed;
     bool                    compute_transmitance;
     bool                    compute_inverse;
+    bool                    __write_matrix;
     unsigned char           *m8;
     short int               *m16;
     unsigned short int      *um16;
@@ -116,11 +117,17 @@ public:
     {
         return __reversed;
     }
+    /** Do I have to output the transformation matrix for tilt pairs? */
+    bool write_matrix()
+    {
+        return __write_matrix;
+    }
 
     /** Open micrograph.
         An exception is thrown if the file is not valid. */
     void open_micrograph(const FileName &fn_micrograph, /*bool in_core=FALSE,*/
-                         bool reversed = false);
+                         bool reversed = false,
+			 bool write_matrix = false);
 
     /** Close micrograpgh.
         After working with the file, you must close it. */
@@ -138,6 +145,7 @@ public:
         return(fn_micrograph);
     }
 
+
     /** Save coordinates to disk. */
     void write_coordinates(int label, const FileName &fn_coords = "");
 
@@ -146,6 +154,10 @@ public:
         families are untouched as well as the coordinates already belonging
         to this family */
     void read_coordinates(int label, const FileName &fn_coords);
+
+    /** Transform all coordinates according to a 3x3 transformation
+     * matrix */
+    void transform_coordinates(const Matrix2D<double> &M);
 
     /** Particle number.
         Number of particles in the coordinate list */
