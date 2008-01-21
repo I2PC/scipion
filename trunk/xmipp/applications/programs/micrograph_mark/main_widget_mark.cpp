@@ -496,19 +496,15 @@ void QtMainWidgetMark::write_angles()
         << __alpha_u << " " << __alpha_t << " " << __gamma << std::endl;
     out.close();
 
-    // Also write out matrix if requested
-    if (__mWidget->getMicrograph()->write_matrix())
-    {
-	fn = fn.without_extension();
-	fn = fn.add_extension("mat");
-	std::ofstream out;
-	out.open(fn.c_str(), std::ios::out);
-	if (!out)
-	    REPORT_ERROR(1, (std::string)"QtMainWidgetMark::write_matrix: Cannot open "
-			 + fn + " for output\n");
-        out << __Put;
-	out.close();
-    }
+    // Also write out 3x3 transformation matrix
+    fn = fn.without_extension();
+    fn = fn.add_extension("mat");
+    out.open(fn.c_str(), std::ios::out);
+    if (!out)
+	REPORT_ERROR(1, (std::string)"QtMainWidgetMark::write_angles: Cannot open "
+		     + fn + " for output\n");
+    out << __Put;
+    out.close();
     
 }
 

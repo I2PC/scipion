@@ -40,7 +40,6 @@ int main(int argc, char **argv)
     bool     reversed;
     FileName fn_assign_CTF;
     bool     ctf_mode = false;
-    bool     write_matrix;
 
     // Get input parameters .................................................
     try
@@ -49,7 +48,6 @@ int main(int argc, char **argv)
         fnRawTilted   = getParameter(argc, argv, "-tilted", "");
         reversed      = checkParameter(argc, argv, "-reverse_endian");
         fn_assign_CTF = getParameter(argc, argv, "-psd", "");
-	write_matrix  = checkParameter(argc, argv, "-output_matrix");
         if (checkParameter(argc, argv, "-ctf"))
         {
             ctf_mode = true;
@@ -75,7 +73,7 @@ int main(int argc, char **argv)
             fn8bits=fnRaw+".8bits";
             m.write_as_8_bits(fn8bits);
             m.close_micrograph();
-            m.open_micrograph(fn8bits,false, write_matrix);
+            m.open_micrograph(fn8bits,false);
             m.compute_8_bit_scaling();
         }
         
@@ -88,7 +86,7 @@ int main(int argc, char **argv)
                 fn8bitsTilted=fnRawTilted+".8bits";
                 mTilted.write_as_8_bits(fn8bitsTilted);
                 mTilted.close_micrograph();
-                mTilted.open_micrograph(fn8bitsTilted,false, write_matrix);
+                mTilted.open_micrograph(fn8bitsTilted,false);
                 mTilted.compute_8_bit_scaling();
             }
         }
@@ -141,6 +139,5 @@ void Usage()
     << "  [-reverse_endian]                   : Raw 16-bit file with reversed endian\n"
     << "  [-psd <assign_CTF_prm_file>]        : Show the PSDs\n"
     << "  [-ctf <assign_CTF_prm_file>]        : Show the CTF models\n"
-    << "  [-output_matrix ]                   : Output transformation matrix\n"
     ;
 }

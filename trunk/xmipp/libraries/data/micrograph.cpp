@@ -63,8 +63,7 @@ void Micrograph::clear()
 
 /* Open micrograph --------------------------------------------------------- */
 void Micrograph::open_micrograph(const FileName &_fn_micrograph,
-                                 /*bool in_core,*/ bool reversed, 
-				 bool write_matrix)
+                                 /*bool in_core,*/ bool reversed)
 {
     struct stat info;
 
@@ -215,7 +214,6 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
     }
     /*__in_core=in_core; */
     __reversed = reversed;
-    __write_matrix = write_matrix;
 }
 
 /* Close micrograph -------------------------------------------------------- */
@@ -500,7 +498,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
     else
     {
         M = new Micrograph;
-        M->open_micrograph(fn_image, __reversed, __write_matrix);
+        M->open_micrograph(fn_image, __reversed);
         M->set_window_size(X_window_size, Y_window_size);
         M->set_transmitance_flag(compute_transmitance);
         M->set_inverse_flag(compute_inverse);
