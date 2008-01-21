@@ -30,7 +30,7 @@ void Usage();
 
 int main(int argc, char **argv)
 {
-    FileName fn_orig, fn_micrograph, fn_pos, fn_root;
+    FileName fn_orig, fn_micrograph, fn_pos, fn_root, fn_transform;
     FileName fn_tilted, fn_root_tilted;
     int      Ydim, Xdim;
     int      startN;
@@ -39,6 +39,7 @@ int main(int argc, char **argv)
     bool     compute_inverse = false;
     double   alpha;
     bool     pair_mode;
+    Matrix2D<double> Mtransform(3,3);
     try
     {
         fn_micrograph = getParameter(argc, argv, "-i");
@@ -63,6 +64,7 @@ int main(int argc, char **argv)
             fn_root_tilted = getParameter(argc, argv, "-root_tilted");
             fn_tilted     = getParameter(argc, argv, "-tilted");
         }
+        fn_transform = getParameter(argc, argv, "-transform","");
     }
     catch (Xmipp_error XE)
     {
@@ -78,6 +80,17 @@ int main(int argc, char **argv)
             m.open_micrograph(fn_micrograph, reverse_endian);
             m.set_window_size(Xdim, Ydim);
             m.read_coordinates(0, fn_pos);
+	    if (fn_transform!="")
+	    {
+		std::ifstream fh_transform;
+		fh_transform.open(fn_transform.c_str());
+		if (!fh_transform)
+		    REPORT_ERROR(1, (std::string)"Scissor: Cannot open file" + fn_transform);
+		fh_transform >> Mtransform;
+		fh_transform.close();
+		m.transform_coordinates(Mtransform);
+		m.write_coordinates(0,fn_pos+".transform");
+	    }
             m.add_label("");
             m.set_transmitance_flag(compute_transmitance);
             m.set_inverse_flag(compute_inverse);
@@ -137,6 +150,7 @@ void Usage()
     << "   -root <root name>          : for the cutted images\n"
     << "   -pos <position file>       : order X,Y\n"
     << "                                from transmitance\n"
+    << "  [-transform <matrixfile>]   : transform all coordinates according to this matrix\n"
     << "  [-alpha <ang>]              : Angle from Y axis to tilt axis\n"
     << "                                as it comes out from xmipp_mark\n"
     << "For image pairs ---------------------------\n"
