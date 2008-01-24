@@ -1122,6 +1122,19 @@ public:
      */
     DocFile randomize();
 
+    /** Randomly perturb the values in a column.
+     * @ingroup DocFileHelpful
+     *
+     * All values in the given column will be added a random
+     * perturbation taken from a Gaussian distribution with stddev
+     * sigma
+     *
+     * @code
+     * DF1.disturb_column(3);
+     * @endcode
+     */
+    void perturb_column(int col, double sigma);
+
     /** Discard randomly N lines.
      * @ingroup DocFileHelpful
      *

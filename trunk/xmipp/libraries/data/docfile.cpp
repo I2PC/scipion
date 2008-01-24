@@ -1177,6 +1177,23 @@ DocFile DocFile::randomize()
     return result;
 }
 
+void DocFile::perturb_column(int col, double sigma)
+{
+
+    randomize_random_generator();
+
+    std::vector< DocLine >::iterator current = m.begin();
+    std::vector< DocLine >::iterator last = m.end();
+
+    while (current != last)
+    {
+        if (current->line_type == DocLine::DATALINE)
+            (*current)[col] += rnd_gaus(0., sigma);
+        current++;
+    }
+
+}
+
 DocFile DocFile::random_discard(int n)
 {
     DocFile result;
