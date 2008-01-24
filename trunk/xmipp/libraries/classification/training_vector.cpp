@@ -326,7 +326,7 @@ void xmippCTVectors::normalizeFeature(unsigned _i)
     int nn = 0;
     for (int it = 0; it < size(); it++)
     {
-        if (!isnan(itemAt(it)[_i]))
+        if (!std::isnan(itemAt(it)[_i]))
         {
             mean += itemAt(it)[_i];
             nn++;
@@ -339,7 +339,7 @@ void xmippCTVectors::normalizeFeature(unsigned _i)
     xmippFeature sd = 0;
     for (int it = 0; it < size(); it++)
     {
-        if (!isnan(itemAt(it)[_i]))
+        if (!std::isnan(itemAt(it)[_i]))
             sd += (itemAt(it)[_i] - mean) * (itemAt(it)[_i] - mean);
     }
     sd = sqrt(sd / (xmippFeature)(nn - 1));
@@ -349,7 +349,7 @@ void xmippCTVectors::normalizeFeature(unsigned _i)
     {
         for (int it = 0; it < size(); it++)
         {
-            if (!isnan(itemAt(it)[_i]))
+            if (!std::isnan(itemAt(it)[_i]))
                 itemAt(it)[_i] = (itemAt(it)[_i] - mean) / sd;
         }
     }
@@ -383,7 +383,7 @@ void xmippCTVectors::unNormalize()
     {
         for (unsigned i = 0; i < itemAt(0).size(); i++)
         {
-            if (!isnan(itemAt(it)[i]))
+            if (!std::isnan(itemAt(it)[i]))
                 itemAt(it)[i] = itemAt(it)[i] * varStats[i].sd + varStats[i].mean;
         }
     }
@@ -420,7 +420,7 @@ double xmippCTVectors::getUnormalizedVar(unsigned _item, unsigned _var) const
     }
 
     double t;
-    if (!isnan(itemAt(_item)[_var]))
+    if (!std::isnan(itemAt(_item)[_var]))
         t = (double) itemAt(_item)[_var] * varStats[_var].sd + varStats[_var].mean;
 
     return t;
@@ -464,7 +464,7 @@ void xmippCTVectors::getFeatureStats(unsigned _i, xmippFeature& _mean, xmippFeat
     int nn = 0;
     for (int it = 0; it < size(); it++)
     {
-        if (!isnan(itemAt(it)[_i]))
+        if (!std::isnan(itemAt(it)[_i]))
         {
             _mean += itemAt(it)[_i];
             nn++;
@@ -477,7 +477,7 @@ void xmippCTVectors::getFeatureStats(unsigned _i, xmippFeature& _mean, xmippFeat
     _sd = 0;
     for (int it = 0; it < size(); it++)
     {
-        if (!isnan(itemAt(it)[_i]))
+        if (!std::isnan(itemAt(it)[_i]))
             _sd += (itemAt(it)[_i] - _mean) * (itemAt(it)[_i] - _mean);
     }
     _sd = sqrt(_sd / (xmippFeature)(nn - 1));

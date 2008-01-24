@@ -488,7 +488,7 @@ void xmippCB::unNormalize(const std::vector<xmippCTVectors::statsStruct>&  _varS
     {
         for (unsigned i = 0; i < theItems[0].size(); i++)
         {
-            if (!isnan(theItems[it][i]))
+            if (!std::isnan(theItems[it][i]))
                 theItems[it][i] = theItems[it][i] * _varStats[i].sd + _varStats[i].mean;
         }
     }
@@ -512,7 +512,7 @@ void xmippCB::Normalize(const std::vector<xmippCTVectors::statsStruct>&  _varSta
     {
         for (unsigned i = 0; i < theItems[0].size(); i++)
         {
-            if (!isnan(theItems[it][i]))
+            if (!std::isnan(theItems[it][i]))
             {
                 if (_varStats[i].sd != 0)
                     theItems[it][i] = (theItems[it][i] - _varStats[i].mean) / _varStats[i].sd;
