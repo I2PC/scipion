@@ -37,7 +37,7 @@ int main(int argc, char **argv)
     bool     reverse_endian;
     bool     compute_transmitance = false;
     bool     compute_inverse = false;
-    double   alpha;
+    double   alpha, down_transform;
     bool     pair_mode;
     Matrix2D<double> Mtransform(3,3);
     try
@@ -65,6 +65,7 @@ int main(int argc, char **argv)
             fn_tilted     = getParameter(argc, argv, "-tilted");
         }
         fn_transform = getParameter(argc, argv, "-transform","");
+	down_transform = textToFloat(getParameter(argc, argv, "-down_transform","1"));
     }
     catch (Xmipp_error XE)
     {
@@ -82,6 +83,8 @@ int main(int argc, char **argv)
             m.read_coordinates(0, fn_pos);
 	    if (fn_transform!="")
 	    {
+		if (down_transform != 1.)
+		    m.scale_coordinates(1./down_transform);
 		std::ifstream fh_transform;
 		fh_transform.open(fn_transform.c_str());
 		if (!fh_transform)
@@ -89,7 +92,8 @@ int main(int argc, char **argv)
 		fh_transform >> Mtransform;
 		fh_transform.close();
 		m.transform_coordinates(Mtransform);
-		m.write_coordinates(0,fn_pos+".transform");
+		if (down_transform != 1.)
+		    m.scale_coordinates(down_transform);
 	    }
             m.add_label("");
             m.set_transmitance_flag(compute_transmitance);
@@ -150,7 +154,8 @@ void Usage()
     << "   -root <root name>          : for the cutted images\n"
     << "   -pos <position file>       : order X,Y\n"
     << "                                from transmitance\n"
-    << "  [-transform <matrixfile>]   : transform all coordinates according to this matrix\n"
+    << "  [-transform <.mat-file>]    : transform all coordinates according to this 3x3 matrix\n"
+    << "  [-down_transform <int=1>]   : the transformation matrix was determined with this downsampling rate\n"
     << "  [-alpha <ang>]              : Angle from Y axis to tilt axis\n"
     << "                                as it comes out from xmipp_mark\n"
     << "For image pairs ---------------------------\n"
