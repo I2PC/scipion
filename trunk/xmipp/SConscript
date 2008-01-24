@@ -238,7 +238,7 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[]):
 
     # action
     # FIXME Exclusive may not be what users want
-    if int(env['static']):
+    if int(env['static']) or int(env['osx']):
         library = env.StaticLibrary(
             basedir + name,
             sources,
@@ -594,7 +594,6 @@ AddProtocol('visualization.py', 'applications/scripts/protocols')
 AddProtocol('visualize_kerdensom.py', 'applications/scripts/protocols')
 AddProtocol('visualize_ml2d.py', 'applications/scripts/protocols')
 AddProtocol('visualize_ml3d.py', 'applications/scripts/protocols')
-AddProtocol('visualize_mlf3d.py', 'applications/scripts/protocols')
 AddProtocol('visualize_multires.py', 'applications/scripts/protocols')
 AddProtocol('visualize_preprocess_micrographs.py', 'applications/scripts/protocols')
 AddProtocol('visualize_preprocess_particles.py', 'applications/scripts/protocols')
