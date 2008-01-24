@@ -238,7 +238,8 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[]):
 
     # action
     # FIXME Exclusive may not be what users want
-    if int(env['static']) or int(env['osx']):
+    # Sjors: Hack for OS X compilation (static libs, dynamic apps...??)
+    if int(env['static']) or (env['PLATFORM'] == 'darwin'):
         library = env.StaticLibrary(
             basedir + name,
             sources,

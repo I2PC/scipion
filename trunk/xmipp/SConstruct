@@ -36,7 +36,6 @@ opts.Add(BoolOption('strip', 'Strip binaries?', 'yes'))
 opts.Add(BoolOption('warn', 'Show warnings?', 'no'))
 opts.Add(BoolOption('fast', 'Fast?', 'no'))
 opts.Add(BoolOption('static', 'Prevent dynamic linking?', 'no'))
-opts.Add(BoolOption('osx', 'Is this an OS X platform?', 'no'))
 
 opts.Add(BoolOption('gui', 'Build the GUI programs?', 'yes'))
 opts.Add('QTDIR', 'Where is QT installed', '/usr/share/qt3')
@@ -142,7 +141,7 @@ if (ARGUMENTS['mode'] == 'configure'):
         env.Append(LINKFLAGS = '$STATIC_FLAG')
 
     # osx?
-    if int(env['osx']):
+    if env['PLATFORM'] == 'darwin':
         env.Append(CCFLAGS = '-m32')
         env.Append(CXXFLAGS = '-m32')
         env.Append(LINKFLAGS = '-m32')
