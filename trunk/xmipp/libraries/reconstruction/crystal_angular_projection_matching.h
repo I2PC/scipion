@@ -36,7 +36,6 @@
 #include <reconstruction/directions.h>
 #include <reconstruction/symmetries.h>
 
-#include <malloc.h>
 
 /**@defgroup crystal_projection_matching_crystal crystal_angular_projection_matching (Discrete angular assignment for crystals by projection matching)
    @ingroup ReconsLibraryPrograms */
