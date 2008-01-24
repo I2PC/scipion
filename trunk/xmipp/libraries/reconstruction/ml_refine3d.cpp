@@ -162,6 +162,7 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)
     fn_symmask = getParameter(argc, argv, "-sym_mask", "");
     lowpass = textToFloat(getParameter(argc, argv, "-filter", "-1"));
     wlsart_no_start = checkParameter(argc, argv, "-nostart");
+    do_perturb = checkParameter(argc, argv, "-perturb");
 
     // Hidden for now
     fn_solv = getParameter(argc, argv, "-solvent", "");
@@ -228,6 +229,7 @@ void Prog_Refine3d_prm::extended_usage()
     << " [ -sym_mask <maskfile> ]      : Local symmetry (only inside mask) \n"
     << " [ -tilt0 <float=0.> ]         : Lower-value for restricted tilt angle search \n"
     << " [ -tiltF <float=90.> ]        : Higher-value for restricted tilt angle search \n"
+    << " [ -perturb ]                  : Randomly perturb reference projection directions \n"
     << " [ -show_all_ML_options ]      : Show all parameters for the ML-refinement\n"
     << " [ -show_all_ART_options ]     : Show all parameters for the wlsART reconstruction \n";
     std::cerr << std::endl;
@@ -354,6 +356,16 @@ void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank)
     eachvol_start.clear();
     eachvol_end.clear();
 
+    // Only the master will actually project (and thus perturb if requested)
+    if (rank == 0 && do_perturb)
+    {   
+	DocFile DFt;
+	DFt=DFlib;
+	DFt.perturb_column(0,angular/3.);
+	DFlib=DFt;
+	DFlib.perturb_column(1,angular/3.);
+    }
+
     if (verb > 0 && rank == 0)
     {
         std::cerr << "--> projecting reference library ..." << std::endl;
@@ -405,9 +417,6 @@ void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank)
         fn_tmp = fn_root + "_lib.doc";
         DFlib.write(fn_tmp);
     }
-
-    // Free memory
-    vol.clear();
 
 }
 

@@ -98,6 +98,8 @@ public:
     bool fourier_mode;
     // Flag to skip reconstruction
     bool skip_reconstruction;
+    // Perturb angles of reference projections
+    bool do_perturb;
 
 public:
 
