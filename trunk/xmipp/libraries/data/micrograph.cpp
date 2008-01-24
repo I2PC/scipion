@@ -432,6 +432,21 @@ void Micrograph::transform_coordinates(const Matrix2D<double> &M)
     }
 }
 
+/* Multiply coordinates by a constant -------------------------------------- */
+void Micrograph::scale_coordinates(const double &c)
+{
+    int imax = coords.size();
+    for (int i = 0; i < imax; i++)
+    {
+	if (coords[i].valid)
+	{
+	    coords[i].X = (int)coords[i].X*c;
+	    coords[i].Y = (int)coords[i].Y*c;
+	}
+    }
+
+}
+
 /* Scissor ----------------------------------------------------------------- */
 int Micrograph::scissor(const Particle_coords &P, ImageT<double> &result,
                         double Dmin, double Dmax, double scaleX, double scaleY,

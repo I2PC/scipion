@@ -152,6 +152,9 @@ public:
      * matrix */
     void transform_coordinates(const Matrix2D<double> &M);
 
+    /** Multiply coordinates by a constant */
+    void scale_coordinates(const double &c);
+
     /** Particle number.
         Number of particles in the coordinate list */
     int ParticleNo() const
