@@ -26,7 +26,11 @@
 
 #include <cstdio>
 #include <cmath>
-#include <values.h>
+#include <float.h>
+
+#ifndef MAXDOUBLE
+#define MAXDOUBLE DBL_MAX
+#endif
 
 #include "groe.h"
 #include "spider.h"
