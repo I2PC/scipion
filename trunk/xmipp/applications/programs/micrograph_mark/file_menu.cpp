@@ -202,8 +202,8 @@ void QtFileMenu::slotGenerateImages()
 	// might have a 8bit version in memory because this gives
 	// nicer visualization with the XVsmooth routines
 	// Also see our explanation in main.cpp
-	FileName fnt=(((QtWidgetMicrograph*)parentWidget())->getMicrograph())->micrograph_name();
-        originalMLineEdit.setText(fnt);
+	FileName fnt = (((QtWidgetMicrograph*)parentWidget())->getMicrograph())->micrograph_name();
+        originalMLineEdit.setText(fnt.c_str());
         QRadioButton  computeTransmitance("Transmitance -> O.D.  ", &qgrid);
         QRadioButton  computeInverse("Invert", &qgrid);
         computeTransmitance.setChecked(FALSE);
