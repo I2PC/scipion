@@ -94,6 +94,7 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)
             cline = (DFi.get_current_line()).get_text();
             comment = comment + cline;
             // regenerate command line
+	    argv = NULL;
             generateCommandLine(comment, argc, argv, copy);
             // Get number of volumes and names to generate SFvol
             if (fourier_mode) fn_root = getParameter(argc, argv, "-o", "mlf3d");
