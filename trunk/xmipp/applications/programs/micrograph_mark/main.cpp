@@ -130,12 +130,8 @@ int main(int argc, char **argv)
         // Run application ...................................................
         app.setMainWidget(mainWidget);
         mainWidget->show();
-	std::cerr<<"before exec"<<std::endl;
-	std::cerr<<"micrograph name= "<<m.micrograph_name()<<std::endl;
-	std::cerr<<"fn8bits= "<<fn8bits<<std::endl;
 	
         app.exec();
-	std::cerr<<"after exec"<<std::endl;
 
 	// SJORS&ROBERTO: when clicking QUIT from the File Menu, we
         // never reach this part of the code. There is an exit before!!
