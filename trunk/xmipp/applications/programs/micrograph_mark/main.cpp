@@ -64,31 +64,51 @@ int main(int argc, char **argv)
     try
     {
         Micrograph m, mTilted;
-        FileName fn8bits, fn8bitsTilted;
+        FileName fn8bits="", fn8bitsTilted="";
 
         m.open_micrograph(fnRaw, reversed);
-        m.compute_8_bit_scaling();
+	// Sjors & Roberto: 25jan08
+	// The following is a "chapuza" because the 8-bit
+	// visualization routine from XVsmooth is much nicer than our
+	// own routine. We save the micrograph with name fn8bits,
+	// re-read it in 8bit-format, and then set the name explicitly
+	// to the original fnRaw to get the correct .pos, .ang etc
+	// files.
+	// Note that this also requires that the name of the original
+	// micrograph in the dialog window under "generate images"
+	// should be the original fnRaw (and not be left blank as before!)
         if (m.depth()!=8)
         {
             fn8bits=fnRaw+".8bits";
             m.write_as_8_bits(fn8bits);
             m.close_micrograph();
             m.open_micrograph(fn8bits,false);
+	    m.set_micrograph_name(fnRaw);
             m.compute_8_bit_scaling();
+	    system(((std::string)"rm -rf "+fn8bits+"*").c_str());
         }
+	else
+	{
+	    m.compute_8_bit_scaling();
+	}
         
         if (fnRawTilted != "")
         {
             mTilted.open_micrograph(fnRawTilted, reversed);
-            mTilted.compute_8_bit_scaling();
             if (mTilted.depth()!=8)
             {
                 fn8bitsTilted=fnRawTilted+".8bits";
                 mTilted.write_as_8_bits(fn8bitsTilted);
                 mTilted.close_micrograph();
                 mTilted.open_micrograph(fn8bitsTilted,false);
+		mTilted.set_micrograph_name(fnRawTilted);
                 mTilted.compute_8_bit_scaling();
+		system(((std::string)"rm -rf "+fn8bitsTilted+"*").c_str());
             }
+	    else
+	    {
+		mTilted.compute_8_bit_scaling();
+	    }
         }
 
         // Configure application .............................................
@@ -110,15 +130,23 @@ int main(int argc, char **argv)
         // Run application ...................................................
         app.setMainWidget(mainWidget);
         mainWidget->show();
-
+	std::cerr<<"before exec"<<std::endl;
+	std::cerr<<"micrograph name= "<<m.micrograph_name()<<std::endl;
+	std::cerr<<"fn8bits= "<<fn8bits<<std::endl;
+	
         app.exec();
+	std::cerr<<"after exec"<<std::endl;
 
+	// SJORS&ROBERTO: when clicking QUIT from the File Menu, we
+        // never reach this part of the code. There is an exit before!!
         // Finish ............................................................
+	/*
         m.close_micrograph();
         if (fnRawTilted != "") mTilted.close_micrograph();
         delete mainWidget;
         if (fn8bits!="") system(((std::string)"rm -rf "+fn8bits+"*").c_str());
         if (fn8bitsTilted!="") system(((std::string)"rm -rf "+fn8bitsTilted+"*").c_str());
+	*/
     }
     catch (Xmipp_error XE)
     {

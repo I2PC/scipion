@@ -132,12 +132,17 @@ public:
     /** Write as 8 bits */
     void write_as_8_bits(const FileName &fn8bits);
 
-    /** Micrograph filename. */
+    /** Get micrograph filename. */
     const FileName& micrograph_name()
     {
         return(fn_micrograph);
     }
 
+    /** Set micrograph filename. */
+    void set_micrograph_name(const FileName& fn)
+    {
+	fn_micrograph = fn;
+    }
 
     /** Save coordinates to disk. */
     void write_coordinates(int label, const FileName &fn_coords = "");

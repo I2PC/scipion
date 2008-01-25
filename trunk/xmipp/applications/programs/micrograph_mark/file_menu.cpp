@@ -197,6 +197,13 @@ void QtFileMenu::slotGenerateImages()
         startingIndexLineEdit.setText("1");
         QLabel    originalM("Original micrograph: ", &qgrid);
         QLineEdit originalMLineEdit(&qgrid);
+	// Sjors & Roberto: 25jan08
+	// Here we need the name of the original micrograph, as we
+	// might have a 8bit version in memory because this gives
+	// nicer visualization with the XVsmooth routines
+	// Also see our explanation in main.cpp
+	FileName fnt=(((QtWidgetMicrograph*)parentWidget())->getMicrograph())->micrograph_name();
+        originalMLineEdit.setText(fnt);
         QRadioButton  computeTransmitance("Transmitance -> O.D.  ", &qgrid);
         QRadioButton  computeInverse("Invert", &qgrid);
         computeTransmitance.setChecked(FALSE);
