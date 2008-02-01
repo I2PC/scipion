@@ -27,7 +27,7 @@
 
 
 // Read ===================================================================
-void Prog_Refine3d_prm::read(int &argc, char ** &argv)
+void Prog_Refine3d_prm::read(int argc, char ** argv, int &argc2, char ** &argv2)
 {
 
     bool do_restart = false;
@@ -94,13 +94,14 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)
             cline = (DFi.get_current_line()).get_text();
             comment = comment + cline;
             // regenerate command line
-	    argv = NULL;
-            generateCommandLine(comment, argc, argv, copy);
+	    argv2 = NULL;
+	    argc2 = 0;
+            generateCommandLine(comment, argc2, argv2, copy);
             // Get number of volumes and names to generate SFvol
-            if (fourier_mode) fn_root = getParameter(argc, argv, "-o", "mlf3d");
-            else fn_root = getParameter(argc, argv, "-o", "ml3d");
-            fn_vol = getParameter(argc, argv, "-vol");
-            istart = textToInteger(getParameter(argc, argv, "-istart"));
+            if (fourier_mode) fn_root = getParameter(argc2, argv2, "-o", "mlf3d");
+            else fn_root = getParameter(argc2, argv2, "-o", "ml3d");
+            fn_vol = getParameter(argc2, argv2, "-vol");
+            istart = textToInteger(getParameter(argc2, argv2, "-istart"));
             if (Is_VolumeXmipp(fn_vol))
             {
                 SFvol.reserve(1);
@@ -131,15 +132,22 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)
             SFvol.write(fn_vol);
         }
     }
+    else
+    {
+	// no restart, just copy argc to argc2 and argv to argv2
+	argc2 = argc;
+	argv2 = argv;
+    }
+
 
     //Read Refine3d parameters
-    fn_sel = getParameter(argc, argv, "-i");
-    if (fourier_mode) fn_root = getParameter(argc, argv, "-o", "mlf3d");
-    else fn_root = getParameter(argc, argv, "-o", "ml3d");
+    fn_sel = getParameter(argc2, argv2, "-i");
+    if (fourier_mode) fn_root = getParameter(argc2, argv2, "-o", "mlf3d");
+    else fn_root = getParameter(argc2, argv2, "-o", "ml3d");
     if (!do_restart)
     {
         // Fill volume selfile
-        fn_vol = getParameter(argc, argv, "-vol");
+        fn_vol = getParameter(argc2, argv2, "-vol");
         if (Is_VolumeXmipp(fn_vol))
         {
             SFvol.reserve(1);
@@ -152,27 +160,27 @@ void Prog_Refine3d_prm::read(int &argc, char ** &argv)
         Nvols = SFvol.ImgNo();
     }
 
-    angular = textToFloat(getParameter(argc, argv, "-ang", "10"));
-    fn_sym = getParameter(argc, argv, "-sym", "");
-    eps = textToFloat(getParameter(argc, argv, "-eps", "5e-5"));
-    verb = textToInteger(getParameter(argc, argv, "-verb", "1"));
-    Niter = textToInteger(getParameter(argc, argv, "-iter", "25"));
-    istart = textToInteger(getParameter(argc, argv, "-istart", "1"));
-    tilt_range0 = textToFloat(getParameter(argc, argv, "-tilt0", "0."));
-    tilt_rangeF = textToFloat(getParameter(argc, argv, "-tiltF", "90."));
-    fn_symmask = getParameter(argc, argv, "-sym_mask", "");
-    lowpass = textToFloat(getParameter(argc, argv, "-filter", "-1"));
-    wlsart_no_start = checkParameter(argc, argv, "-nostart");
-    do_perturb = checkParameter(argc, argv, "-perturb");
+    angular = textToFloat(getParameter(argc2, argv2, "-ang", "10"));
+    fn_sym = getParameter(argc2, argv2, "-sym", "");
+    eps = textToFloat(getParameter(argc2, argv2, "-eps", "5e-5"));
+    verb = textToInteger(getParameter(argc2, argv2, "-verb", "1"));
+    Niter = textToInteger(getParameter(argc2, argv2, "-iter", "25"));
+    istart = textToInteger(getParameter(argc2, argv2, "-istart", "1"));
+    tilt_range0 = textToFloat(getParameter(argc2, argv2, "-tilt0", "0."));
+    tilt_rangeF = textToFloat(getParameter(argc2, argv2, "-tiltF", "90."));
+    fn_symmask = getParameter(argc2, argv2, "-sym_mask", "");
+    lowpass = textToFloat(getParameter(argc2, argv2, "-filter", "-1"));
+    wlsart_no_start = checkParameter(argc2, argv2, "-nostart");
+    do_perturb = checkParameter(argc2, argv2, "-perturb");
 
     // Hidden for now
-    fn_solv = getParameter(argc, argv, "-solvent", "");
-    do_wbp = checkParameter(argc, argv, "-WBP");
-    do_prob_solvent = checkParameter(argc, argv, "-prob_solvent");
-    threshold_solvent = textToFloat(getParameter(argc, argv, "-threshold_solvent", "999"));
-    do_deblob_solvent = checkParameter(argc, argv, "-deblob_solvent");
-    dilate_solvent = textToInteger(getParameter(argc, argv, "-dilate_solvent", "0"));
-    skip_reconstruction = checkParameter(argc, argv, "-skip_reconstruction");
+    fn_solv = getParameter(argc2, argv2, "-solvent", "");
+    do_wbp = checkParameter(argc2, argv2, "-WBP");
+    do_prob_solvent = checkParameter(argc2, argv2, "-prob_solvent");
+    threshold_solvent = textToFloat(getParameter(argc2, argv2, "-threshold_solvent", "999"));
+    do_deblob_solvent = checkParameter(argc2, argv2, "-deblob_solvent");
+    dilate_solvent = textToInteger(getParameter(argc2, argv2, "-dilate_solvent", "0"));
+    skip_reconstruction = checkParameter(argc2, argv2, "-skip_reconstruction");
 
     // Checks
     if (lowpass > 0.5) REPORT_ERROR(1, "Digital frequency for low-pass filter should be smaller than 0.5");

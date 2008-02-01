@@ -104,7 +104,7 @@ public:
 public:
 
     /// Read additional arguments for 3D-process from command line
-    void read(int &argc, char ** &argv) ;
+    void read(int argc, char ** argv, int &argc2, char ** &argv2) ;
 
     /// ML Usage
     void usage();
