@@ -44,6 +44,7 @@ public:
 
     void show()
     {
+        if (quiet) return;
         Prog_parameters::show();
         std::cout << "Operation: ";
         switch (operation)

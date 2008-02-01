@@ -60,6 +60,9 @@ public:
     /// Input file
     FileName fn_in;
 
+    /// Quiet
+    bool quiet;
+
     /// This flag for application of the transformation as stored in the header
     bool apply_geo;
 
@@ -76,6 +79,7 @@ public:
         each_image_produces_an_output = true;
         allow_time_bar = true;
         apply_geo = false;
+	quiet = false;
     }
 
     /// Read the basic parameters defined for this class

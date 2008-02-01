@@ -33,6 +33,7 @@ void Prog_parameters::read(int argc, char **argv)
     fn_out = getParameter(argc, argv, "-o", "");
     oext   = getParameter(argc, argv, "-oext", "");
     oroot  = getParameter(argc, argv, "-oroot", "");
+    quiet  = checkParameter(argc, argv, "-quiet");
     // For each_image_produces_an_output there exists no possibility to apply_geo
     // This because it would require a back-transformation, which deteriorates the images
     if (!each_image_produces_an_output)
@@ -43,6 +44,7 @@ void Prog_parameters::read(int argc, char **argv)
 
 void Prog_parameters::show()
 {
+    if (quiet) return;
     std::cout << "Input File: " << fn_in << std::endl;
     if (apply_geo && !Is_VolumeXmipp(fn_in))
         std::cout << "Applying transformation stored in header of 2D-image" << std::endl;
@@ -63,8 +65,9 @@ void Prog_parameters::usage()
     if (each_image_produces_an_output)
     {
         std::cerr << "  [-o <output file>]        : if wanted in case of a single image\n"
-        << "  [-oext <extension>]       : if wanted in case of a selection file\n"
-        << "  [-oroot <root>]           : if wanted in case of a selection file\n";
+                  << "  [-oext <extension>]       : if wanted in case of a selection file\n"
+                  << "  [-oroot <root>]           : if wanted in case of a selection file\n"
+                  << "  [-quiet]                  : do not show anything on screen\n";
     }
     else
     {
@@ -269,7 +272,7 @@ void SF_main(int argc, char **argv,
             // Initialise progress bar
             time_config();
             int i = 0;
-            if (prm->allow_time_bar)
+            if (prm->allow_time_bar && !prm->quiet)
                 init_progress_bar(SF_in.ImgNo());
             int istep = CEIL((double)SF_in.ImgNo() / 60.0);
 
@@ -408,10 +411,10 @@ void SF_main(int argc, char **argv,
                     else
                         SF_out.insert(prm->fn_out, SelLine::DISCARDED);
 
-                if (i++ % istep == 0 && prm->allow_time_bar)
+                if (i++ % istep == 0 && prm->allow_time_bar && !prm->quiet)
                     progress_bar(i);
             }
-            if (prm->allow_time_bar)
+            if (prm->allow_time_bar && !prm->quiet)
                 progress_bar(SF_in.ImgNo());
             if (prm->each_image_produces_an_output)
                 if (prm->oext != "")
