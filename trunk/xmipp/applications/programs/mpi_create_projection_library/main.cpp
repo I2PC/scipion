@@ -147,7 +147,7 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
         if (rank == 1)
         {
             verbose = true;
-            #define DEBUG
+            // #define DEBUG
             #ifdef DEBUG
             std::cerr << "numberOfJobs " << numberOfJobs << std::endl
                  << "mpi_job_size " << mpi_job_size << std::endl
@@ -195,7 +195,7 @@ std::cerr << "Sent jobNo " <<  i << std::endl;
                     }
                  else
                     {
-                    std::cerr << "M_f Recived unknown TAG" << std::endl;
+                    std::cerr << "M_f Received unknown TAG" << std::endl;
                     exit(0);
                     }           
             }
@@ -278,13 +278,12 @@ std::cerr << "Wr" << rank << " " << "TAG_WORKFORWORKER" << std::endl;
                     // Process all images
                      project_angle_vector(jobNumber*mpi_job_size,
                      XMIPP_MIN((jobNumber+1)* mpi_job_size -1 , 
-                                close_points_angles.size()-1)
-                                 );
+                                close_points_angles.size()-1), !quiet);
                     //get yor next task
                     }
                 else
                    {
-                   std::cerr << "3) Recived unknown TAG I quit" << std::endl;
+                   std::cerr << "3) Received unknown TAG I quit" << std::endl;
                    exit(0);
                    }           
             }
