@@ -30,6 +30,9 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
 
     // Generate new command line for restart procedure
     cline = "";
+    int argc2 = 0;
+    char ** argv2 = NULL;
+
     if (checkParameter(argc, argv, "-restart"))
     {
         std::string comment;
@@ -62,7 +65,7 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
             DFi.next();
             cline = (DFi.get_current_line()).get_text();
             comment = comment + cline;
-            generateCommandLine(comment, argc, argv, copy);
+            generateCommandLine(comment, argc2, argv2, copy);
             if (!ML3D)
             {
                 // Read images names from restart file
@@ -84,64 +87,67 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     }
     else
     {
-        for (int i = 1; i < argc; i++)
+	// no restart, just copy argc to argc2 and argv to argv2
+	argc2 = argc;
+	argv2 = argv;	
+        for (int i = 1; i < argc2; i++)
         {
-            cline = cline + (std::string)argv[i] + " ";
+            cline = cline + (std::string)argv2[i] + " ";
         }
     }
 
     // Read command line
-    if (checkParameter(argc, argv, "-more_options"))
+    if (checkParameter(argc2, argv2, "-more_options"))
     {
 	usage();
 	extended_usage();
     }
-    n_ref = textToInteger(getParameter(argc, argv, "-nref", "0"));
-    fn_ref = getParameter(argc, argv, "-ref", "");
-    fn_sel = getParameter(argc, argv, "-i");
-    fn_root = getParameter(argc, argv, "-o", "ml2d");
-    psi_step = textToFloat(getParameter(argc, argv, "-psi_step", "5"));
-    Niter = textToInteger(getParameter(argc, argv, "-iter", "100"));
-    istart = textToInteger(getParameter(argc, argv, "-istart", "1"));
-    sigma_noise = textToFloat(getParameter(argc, argv, "-noise", "1"));
-    sigma_offset = textToFloat(getParameter(argc, argv, "-offset", "3"));
-    do_mirror = checkParameter(argc, argv, "-mirror");
-    eps = textToFloat(getParameter(argc, argv, "-eps", "5e-5"));
-    fn_frac = getParameter(argc, argv, "-frac", "");
-    write_docfile = !checkParameter(argc, argv, "-dont_output_docfile");
-    write_selfiles = !checkParameter(argc, argv, "-dont_output_selfiles");
-    write_intermediate = !checkParameter(argc, argv, "-dont_output_intermediate");
-    fix_fractions = checkParameter(argc, argv, "-fix_fractions");
-    fix_sigma_offset = checkParameter(argc, argv, "-fix_sigma_offset");
-    fix_sigma_noise = checkParameter(argc, argv, "-fix_sigma_noise");
-    verb = textToInteger(getParameter(argc, argv, "-verb", "1"));
-    maxCC_rather_than_ML = checkParameter(argc, argv, "-maxCC");
-    fast_mode = checkParameter(argc, argv, "-fast");
-    C_fast = textToFloat(getParameter(argc, argv, "-C", "1e-12"));
-    max_shift = textToFloat(getParameter(argc, argv, "-max_shift", "-1"));
-    save_mem1 = checkParameter(argc, argv, "-save_memA");
-    save_mem2 = checkParameter(argc, argv, "-save_memB");
-    save_mem3 = checkParameter(argc, argv, "-save_memC");
-    search_shift = textToFloat(getParameter(argc, argv, "-search_shift", "999."));
-    fn_doc = getParameter(argc, argv, "-doc", "");
+    n_ref = textToInteger(getParameter(argc2, argv2, "-nref", "0"));
+    fn_ref = getParameter(argc2, argv2, "-ref", "");
+    fn_sel = getParameter(argc2, argv2, "-i");
+    fn_root = getParameter(argc2, argv2, "-o", "ml2d");
+    psi_step = textToFloat(getParameter(argc2, argv2, "-psi_step", "5"));
+    Niter = textToInteger(getParameter(argc2, argv2, "-iter", "100"));
+    istart = textToInteger(getParameter(argc2, argv2, "-istart", "1"));
+    sigma_noise = textToFloat(getParameter(argc2, argv2, "-noise", "1"));
+    sigma_offset = textToFloat(getParameter(argc2, argv2, "-offset", "3"));
+    do_mirror = checkParameter(argc2, argv2, "-mirror");
+    eps = textToFloat(getParameter(argc2, argv2, "-eps", "5e-5"));
+    fn_frac = getParameter(argc2, argv2, "-frac", "");
+    write_docfile = !checkParameter(argc2, argv2, "-dont_output_docfile");
+    write_selfiles = !checkParameter(argc2, argv2, "-dont_output_selfiles");
+    write_intermediate = !checkParameter(argc2, argv2, "-dont_output_intermediate");
+    fix_fractions = checkParameter(argc2, argv2, "-fix_fractions");
+    fix_sigma_offset = checkParameter(argc2, argv2, "-fix_sigma_offset");
+    fix_sigma_noise = checkParameter(argc2, argv2, "-fix_sigma_noise");
+    verb = textToInteger(getParameter(argc2, argv2, "-verb", "1"));
+    maxCC_rather_than_ML = checkParameter(argc2, argv2, "-maxCC");
+    fast_mode = checkParameter(argc2, argv2, "-fast");
+    C_fast = textToFloat(getParameter(argc2, argv2, "-C", "1e-12"));
+    max_shift = textToFloat(getParameter(argc2, argv2, "-max_shift", "-1"));
+    save_mem1 = checkParameter(argc2, argv2, "-save_memA");
+    save_mem2 = checkParameter(argc2, argv2, "-save_memB");
+    save_mem3 = checkParameter(argc2, argv2, "-save_memC");
+    search_shift = textToFloat(getParameter(argc2, argv2, "-search_shift", "999."));
+    fn_doc = getParameter(argc2, argv2, "-doc", "");
     do_ML3D = ML3D;
 
     // Hidden arguments
-    do_esthetics = checkParameter(argc, argv, "-esthetics");
-    anneal = textToFloat(getParameter(argc, argv, "-anneal", "1"));
-    anneal_step = textToFloat(getParameter(argc, argv, "-anneal_step", "1"));
-    do_write_offsets = checkParameter(argc, argv, "-write_offsets");
-    fn_scratch = getParameter(argc, argv, "-scratch", "");
-    zero_offsets = checkParameter(argc, argv, "-zero_offsets");
-    debug = textToInteger(getParameter(argc, argv, "-debug","0"));
-    do_student = checkParameter(argc, argv, "-robust");
-    df = (double) textToInteger(getParameter(argc, argv, "-df", "3"));
+    do_esthetics = checkParameter(argc2, argv2, "-esthetics");
+    anneal = textToFloat(getParameter(argc2, argv2, "-anneal", "1"));
+    anneal_step = textToFloat(getParameter(argc2, argv2, "-anneal_step", "1"));
+    do_write_offsets = checkParameter(argc2, argv2, "-write_offsets");
+    fn_scratch = getParameter(argc2, argv2, "-scratch", "");
+    zero_offsets = checkParameter(argc2, argv2, "-zero_offsets");
+    debug = textToInteger(getParameter(argc2, argv2, "-debug","0"));
+    do_student = checkParameter(argc2, argv2, "-robust");
+    df = (double) textToInteger(getParameter(argc2, argv2, "-df", "3"));
 
-    //only for interaction with Refine3D:
-    search_rot = textToFloat(getParameter(argc, argv, "-search_rot", "999."));
+    // Only for interaction with refine3d:
+    search_rot = textToFloat(getParameter(argc2, argv2, "-search_rot", "999."));
 
     // For improved control of MPI jobs
-    fn_control = getParameter(argc, argv, "-control", "");
+    fn_control = getParameter(argc2, argv2, "-control", "");
 }
 
 // Show ====================================================================
