@@ -5,9 +5,6 @@
 
 #include "del_triang.h"
 
-#define FALSE 0;
-#define TRUE 1;
-
 //////////////////////////// DELAUNAY TRIANGULATION //////////////////////////////////////
 /*
    Triangulation subroutine
@@ -35,7 +32,7 @@
 */
 int Triangulate(int nv, XYZ *pxyz, ITRIANGLE *v, int *ntri)
 {
-    int * complete = NULL;
+    bool * complete = NULL;
     IEDGE * edges = NULL;
     int nedge = 0;
 
@@ -51,7 +48,7 @@ int Triangulate(int nv, XYZ *pxyz, ITRIANGLE *v, int *ntri)
 
     /* Allocate memory for the completeness list, flag for each triangle */
     trimax = 3 * nv + 100;
-    if ((complete = (int*) malloc(trimax * sizeof(int))) == NULL)
+    if ((complete = (bool*) malloc(trimax * sizeof(bool))) == NULL)
     {
         status = 1;
         goto skip;
@@ -114,7 +111,7 @@ int Triangulate(int nv, XYZ *pxyz, ITRIANGLE *v, int *ntri)
     v[0].p1 = nv;
     v[0].p2 = nv + 1;
     v[0].p3 = nv + 2;
-    complete[0] = FALSE;
+    complete[0] = true;
     *ntri = 1;
 
 
@@ -149,7 +146,7 @@ int Triangulate(int nv, XYZ *pxyz, ITRIANGLE *v, int *ntri)
             if (xc + r < xp)
                 // Suggested
                 // if (xc + r + EPSILON < xp)
-                complete[j] = TRUE;
+                complete[j] = true;
             if (inside)
             {
                 /* Check that we haven't exceeded the edge list size */
@@ -220,7 +217,7 @@ int Triangulate(int nv, XYZ *pxyz, ITRIANGLE *v, int *ntri)
             v[*ntri].p1 = edges[j].p1;
             v[*ntri].p2 = edges[j].p2;
             v[*ntri].p3 = i;
-            complete[*ntri] = FALSE;
+            complete[*ntri] = false;
             (*ntri)++;
         }
     }
@@ -251,7 +248,7 @@ skip:
    The circumcircle centre is returned in (xc,yc) and the radius r
    NOTE: A point on the edge is inside the circumcircle
 */
-int CircumCircle(double xp, double yp, double x1, double y1, double x2, double y2, double x3, double y3,
+bool CircumCircle(double xp, double yp, double x1, double y1, double x2, double y2, double x3, double y3,
                  double *xc, double *yc, double *r)
 {
     double m1, m2, mx1, mx2, my1, my2;
@@ -261,7 +258,7 @@ int CircumCircle(double xp, double yp, double x1, double y1, double x2, double y
 
     /* Check for coincident points */
     if ((fabs(y1 - y2) < EPSILON) && (fabs(y2 - y3) < EPSILON))
-        return FALSE;
+        return false;
 
     if (fabs(y2 -y1) < EPSILON)
     {
@@ -301,7 +298,7 @@ int CircumCircle(double xp, double yp, double x1, double y1, double x2, double y
     drsqr = dx * dx + dy * dy;
 
 
-    return((drsqr <= rsqr) ? 1 : 0);
+    return((drsqr <= rsqr) ? true : false);
     // Suggested
     // return((drsqr <= rsqr + EPSILON) ? TRUE : FALSE);
 

@@ -23,7 +23,7 @@ XYZ;
 
 int Triangulate(int, XYZ*, ITRIANGLE*, int*);
 
-int CircumCircle(double , double ,
+bool CircumCircle(double , double ,
                  double , double , double , double , double , double ,
                  double *, double *, double *);
 
