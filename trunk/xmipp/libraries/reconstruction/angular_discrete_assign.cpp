@@ -76,24 +76,25 @@ void Prog_angular_predict_prm::read(int argc, char **argv)
 // Show ====================================================================
 void Prog_angular_predict_prm::show()
 {
+    if (quiet) return;
     Prog_parameters::show();
     std::cout << "Reference images: " << fn_ref << std::endl
-    << "Angle file: " << fn_ang << std::endl
-    << "Ouput angular file: " << fn_out_ang << std::endl
-    << "Max proj change: " << max_proj_change << std::endl
-    << "Max psi change: " << max_psi_change << " step: " << psi_step << std::endl
-    << "Max shift change: " << max_shift_change << " step: " << shift_step << std::endl
-    << "Proj step: " << proj_step << std::endl
-    << "Keep %: " << th_discard << std::endl
-    << "smin: " << smin << std::endl
-    << "smax: " << smax << std::endl
-    << "Check mirrors: " << check_mirrors << std::endl
-    << "Pick: " << pick << std::endl
-    << "Dont apply geo: " << dont_apply_geo << std::endl
-    << "Show level: " << tell << std::endl
-    << "Modify header:  " << !dont_modify_header << std::endl
-    << "5D search: " << search5D << std::endl
-    << "Summary: " << summaryRootname << std::endl
+              << "Angle file: " << fn_ang << std::endl
+              << "Ouput angular file: " << fn_out_ang << std::endl
+              << "Max proj change: " << max_proj_change << std::endl
+              << "Max psi change: " << max_psi_change << " step: " << psi_step << std::endl
+              << "Max shift change: " << max_shift_change << " step: " << shift_step << std::endl
+              << "Proj step: " << proj_step << std::endl
+              << "Keep %: " << th_discard << std::endl
+              << "smin: " << smin << std::endl
+              << "smax: " << smax << std::endl
+              << "Check mirrors: " << check_mirrors << std::endl
+              << "Pick: " << pick << std::endl
+              << "Dont apply geo: " << dont_apply_geo << std::endl
+              << "Show level: " << tell << std::endl
+              << "Modify header:  " << !dont_modify_header << std::endl
+              << "5D search: " << search5D << std::endl
+              << "Summary: " << summaryRootname << std::endl
     ;
 }
 
@@ -105,13 +106,13 @@ void Prog_angular_predict_prm::usage()
     else
     {
         std::cerr << "   -ref <selfile|volume>    : Selfile with the reference images\n"
-        << "                              If a volume is given, supply -proj_step\n"
-        << "   -oang <angle file>       : DocFile with output angles\n"
-        << "  [-sym <symmetry file>]    : Symmetry file if any\n"
-        << "  [-dont_apply_geo]         : do not apply the translations in the header\n"
-        << "  [-dont_modify_header]     : Don't save the parameters in the\n"
-        << "                              image header\n"
-        << "  [-more_help]              : Show all options\n"
+                  << "                              If a volume is given, supply -proj_step\n"
+                  << "   -oang <angle file>       : DocFile with output angles\n"
+                  << "  [-sym <symmetry file>]    : Symmetry file if any\n"
+                  << "  [-dont_apply_geo]         : do not apply the translations in the header\n"
+                  << "  [-dont_modify_header]     : Don't save the parameters in the\n"
+                  << "                              image header\n"
+                  << "  [-more_help]              : Show all options\n"
         ;
     }
 }
@@ -119,34 +120,34 @@ void Prog_angular_predict_prm::usage()
 void Prog_angular_predict_prm::more_usage()
 {
     std::cerr << "   -ref <selfile|volume>    : Selfile with the reference images\n"
-    << "                              If a volume is given, supply -proj_step\n"
-    << "  [-ang <angle file>]       : DocFile with the angles for the reference\n"
-    << "                              produced by xmipp_project\n"
-    << "   -oang <angle file>       : DocFile with output angles\n"
-    << "  [-sym <symmetry file>]    : Symmetry file if any\n"
-    << "  [-max_proj_change <ang=-1>]: Maximum change allowed in rot-tilt\n"
-    << "  [-max_psi_change <ang=-1>]: Maximum change allowed in psi\n"
-    << "  [-max_shift_change <r=0>] : Maximum change allowed in shift\n"
-    << "  [-proj_step <ang=5>]      : Projection (rot-tilt) step\n"
-    << "  [-psi_step <ang=5>]       : Step in psi in degrees\n"
-    << "  [-shift_step <r=1>]       : Step in shift in pixels\n"
-    << "  [-keep <th=50%>]          : How many images are kept each round\n"
-    << "  [-smin <s=1>]             : Finest scale to consider (lowest value=0)\n"
-    << "  [-smax <s=-1>]            : Coarsest scale to consider (highest value=log2(Xdim))\n"
-    << "  [-do_not_check_mirrors]   : Otherwise, mirror versions of the experimental\n"
-    << "                              images are also explored\n"
-    << "  [-pick <mth=1>]           : 0 --> maximum of the first group\n"
-    << "                              1 --> maximum of the most populated\n"
-    << "  [-dont_apply_geo]         : do not apply the translations in the header\n"
-    << "                              The header rotation is never applied\n"
-    << "  [-show_rot_tilt]          : Show the rot-tilt process\n"
-    << "  [-show_psi_shift]         : Show the psi-shift process\n"
-    << "  [-show_options]           : Show final options among which\n"
-    << "                              the angles are selected\n"
-    << "  [-dont_modify_header]     : Don't save the parameters in the\n"
-    << "                              image header\n"
-    << "  [-5D]                     : Perform a 5D search instead of 3D+2D\n"
-    << "  [-summary <rootname>]     : Summary rootname\n"
+              << "                              If a volume is given, supply -proj_step\n"
+              << "  [-ang <angle file>]       : DocFile with the angles for the reference\n"
+              << "                              produced by xmipp_project\n"
+              << "   -oang <angle file>       : DocFile with output angles\n"
+              << "  [-sym <symmetry file>]    : Symmetry file if any\n"
+              << "  [-max_proj_change <ang=-1>]: Maximum change allowed in rot-tilt\n"
+              << "  [-max_psi_change <ang=-1>]: Maximum change allowed in psi\n"
+              << "  [-max_shift_change <r=0>] : Maximum change allowed in shift\n"
+              << "  [-proj_step <ang=5>]      : Projection (rot-tilt) step\n"
+              << "  [-psi_step <ang=5>]       : Step in psi in degrees\n"
+              << "  [-shift_step <r=1>]       : Step in shift in pixels\n"
+              << "  [-keep <th=50%>]          : How many images are kept each round\n"
+              << "  [-smin <s=1>]             : Finest scale to consider (lowest value=0)\n"
+              << "  [-smax <s=-1>]            : Coarsest scale to consider (highest value=log2(Xdim))\n"
+              << "  [-do_not_check_mirrors]   : Otherwise, mirror versions of the experimental\n"
+              << "                              images are also explored\n"
+              << "  [-pick <mth=1>]           : 0 --> maximum of the first group\n"
+              << "                              1 --> maximum of the most populated\n"
+              << "  [-dont_apply_geo]         : do not apply the translations in the header\n"
+              << "                              The header rotation is never applied\n"
+              << "  [-show_rot_tilt]          : Show the rot-tilt process\n"
+              << "  [-show_psi_shift]         : Show the psi-shift process\n"
+              << "  [-show_options]           : Show final options among which\n"
+              << "                              the angles are selected\n"
+              << "  [-dont_modify_header]     : Don't save the parameters in the\n"
+              << "                              image header\n"
+              << "  [-5D]                     : Perform a 5D search instead of 3D+2D\n"
+              << "  [-summary <rootname>]     : Summary rootname\n"
     ;
 }
 
@@ -162,7 +163,7 @@ void Prog_angular_predict_prm::produce_side_info(int rank)
     if (Is_VolumeXmipp(fn_ref))
     {
         volume_mode = true;
-        std::cerr << "Generating reference projections ...\n";
+        if (!quiet) std::cerr << "Generating reference projections ...\n";
 
         // Generate the reference projections internally
         randomize_random_generator();
@@ -170,6 +171,7 @@ void Prog_angular_predict_prm::produce_side_info(int rank)
         std::string command = (std::string)"-i " + fn_ref + " -o ref" + fn_random +
            "_ -sampling_rate " + integerToString(proj_step);
         if (fn_sym != "") command += (std::string)" -sym " + fn_sym;
+        if (quiet) command += " -quiet";
         if (MPIversion)
             command=(std::string)"mpirun -np "+integerToString(numberOfProcessors)+
                 " `which xmipp_mpi_create_projection_library` "+command;
@@ -292,8 +294,11 @@ void Prog_angular_predict_prm::produce_library(int rank)
     library_power.initZeros(number_of_imgs, SBNo);
 
     if (rank==0) {
-       std::cerr << "Generating reference library ...\n";
-       init_progress_bar(number_of_imgs);
+        if (!quiet)
+        {
+            std::cerr << "Generating reference library ...\n";
+            init_progress_bar(number_of_imgs);
+        }
     }
     int n = 0, nstep = XMIPP_MAX(1, number_of_imgs / 60); // For progress bar
     while (!SF_ref.eof())
@@ -317,9 +322,9 @@ void Prog_angular_predict_prm::produce_library(int rank)
         }
 
         // Prepare for next iteration
-        if (++n % nstep == 0 && rank==0) progress_bar(n);
+        if (++n % nstep == 0 && rank==0 && !quiet) progress_bar(n);
     }
-    if (rank==0) progress_bar(SF_ref.ImgNo());
+    if (rank==0 && !quiet) progress_bar(SF_ref.ImgNo());
 }
 
 // Build candidate list ------------------------------------------------------
@@ -468,8 +473,8 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
 
     if (N_max == 0)
     {
-        std::cerr << "Predict_angles: Empty candidate list for image "
-        << I.name() << std::endl;
+        if (!quiet) std::cerr << "Predict_angles: Empty candidate list for image "
+                              << I.name() << std::endl;
         assigned_rot = I.rot();
         assigned_tilt = I.tilt();
         return 0;
@@ -525,14 +530,14 @@ double Prog_angular_predict_prm::evaluate_candidates(
         else               points = 10;
         if (tell & TELL_PSI_SHIFT)
             std::cout << "Candidate (" << i << ") score=" << vscore[i]
-            << " points=" << points << std::endl;
+                      << " points=" << points << std::endl;
         candidate_rate[j] += weight * points;
     }
 
     if (tell & TELL_PSI_SHIFT)
         std::cout << "Evaluation:" << candidate_rate << std::endl
-        << "Threshold for obtaining a 7 in score: "
-        << min_score + 7*score_step << std::endl;
+                  << "Threshold for obtaining a 7 in score: "
+                  << min_score + 7*score_step << std::endl;
     return min_score + 7*score_step;
 }
 
@@ -565,7 +570,7 @@ void Prog_angular_predict_prm::group_views(const std::vector<double> &vrot,
                                           vrot[ip], vtilt[ip], vpsi[ip], roti, tilti, psii, false);
 #ifdef DEBUG
                 std::cout << "   comparing with " << groups[g][jp] << " d="
-                << ang_distance << std::endl;
+                          << ang_distance << std::endl;
 #endif
                 if (ang_distance > 15)
                 {
@@ -868,17 +873,17 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
         vscore.push_back(vcorr[i]);
         if (tell & TELL_PSI_SHIFT)
             std::cout << "i=" << i
-            << " shiftX= " << vshiftX[i] << " shiftY= " << vshiftY[i]
-            << " psi= "          << vpsi[i]
-            << " rot= "          << vrot[i]
-            << " tilt= "         << vtilt[i]
-            << " score= "        << vscore[i]
-            << " corr= "         << vcorr[i]
-            << " proj_error= "   << vproj_error[i]
-            << " proj_compact= " << vproj_compact[i]
-            << " refidx= "       << vref_idx[i]
-            << " ang_jump= "     << vang_jump[i]
-            << std::endl;
+                      << " shiftX= " << vshiftX[i] << " shiftY= " << vshiftY[i]
+                      << " psi= "          << vpsi[i]
+                      << " rot= "          << vrot[i]
+                      << " tilt= "         << vtilt[i]
+                      << " score= "        << vscore[i]
+                      << " corr= "         << vcorr[i]
+                      << " proj_error= "   << vproj_error[i]
+                      << " proj_compact= " << vproj_compact[i]
+                      << " refidx= "       << vref_idx[i]
+                      << " ang_jump= "     << vang_jump[i]
+                      << std::endl;
     }
 
     // Is the psi range circular?
@@ -913,8 +918,8 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
             local_maxima.push_back(i);
             if (tell & TELL_PSI_SHIFT)
                 std::cout << "i= " << i
-                << " psi= " << vpsi[i] << " rot= " << vrot[i] << " tilt= "
-                << vtilt[i] << " score= " << vscore[i] << std::endl;
+                          << " psi= " << vpsi[i] << " rot= " << vrot[i] << " tilt= "
+                          << vtilt[i] << " score= " << vscore[i] << std::endl;
         }
     }
     avg_score_maxima /= local_maxima.size();
@@ -935,8 +940,8 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
             candidate_rate.push_back(0);
             if (tell & TELL_PSI_SHIFT)
                 std::cout << "i= " << i
-                << " psi= " << vpsi[i] << " rot= " << vrot[i] << " tilt= "
-                << vtilt[i] << " score= " << vscore[i] << std::endl;
+                          << " psi= " << vpsi[i] << " rot= " << vrot[i] << " tilt= "
+                          << vtilt[i] << " score= " << vscore[i] << std::endl;
         }
     }
     jmax = candidate_local_maxima.size();
@@ -961,15 +966,15 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
             double score = candidate_rate[jp];
             int i = candidate_local_maxima[jp];
             std::cout << "i= " << i
-            << " psi= " << vpsi[i] << " rot= " << vrot[i] << " tilt= "
-            << vtilt[i]
-            << " score= " << vscore[i]
-            << " corr= " << vcorr[i]
-            << " error= " << vproj_error[i]
-            << " compact= " << vproj_compact[i]
-            << " angjump= " << vang_jump[i]
-            << " rate=" << candidate_rate[jp]
-            << " reference image #=" << vref_idx[i] + 1 << std::endl;
+                      << " psi= " << vpsi[i] << " rot= " << vrot[i] << " tilt= "
+                      << vtilt[i]
+                      << " score= " << vscore[i]
+                      << " corr= " << vcorr[i]
+                      << " error= " << vproj_error[i]
+                      << " compact= " << vproj_compact[i]
+                      << " angjump= " << vang_jump[i]
+                      << " rate=" << candidate_rate[jp]
+                      << " reference image #=" << vref_idx[i] + 1 << std::endl;
         }
         std::cout << std::endl;
         std::cout.flush();
@@ -1049,13 +1054,13 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
     if (tell & (TELL_PSI_SHIFT | TELL_OPTIONS))
     {
         std::cout << "Originally it had, psi=" << I.psi() << " rot=" << I.rot()
-        << " tilt=" << I.tilt() << std::endl;
+                  << " tilt=" << I.tilt() << std::endl;
         std::cout << "Finally I choose: ";
         if (tell & TELL_PSI_SHIFT) std::cout << jbest << "\n";
         std::cout << "psi= " << best_psi << " rot= " << best_rot << " tilt= "
-        << best_tilt << " shiftX=" << best_shiftX
-        << " shiftY=" << best_shiftY << " score= " << best_score
-        << " rate= " << best_rate << std::endl << std::endl;
+                  << best_tilt << " shiftX=" << best_shiftX
+                  << " shiftY=" << best_shiftY << " score= " << best_score
+                  << " rate= " << best_rate << std::endl << std::endl;
     }
 
     // Save results
