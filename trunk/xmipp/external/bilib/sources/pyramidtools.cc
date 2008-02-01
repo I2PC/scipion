@@ -52,87 +52,87 @@ using namespace std;
 /* Declaration of static procedures                                          */
 /* ------------------------------------------------------------------------- */
 static void ExpandStandard_1D(	
-				double In[], long NxIn,
+				double In[], long int NxIn,
 				double Out[],
-				double w[], long nw
+				double w[], long int nw
 				);
 						
 static void ReduceStandard_1D(	
-				double In[], long NxIn,
+				double In[], long int NxIn,
 				double Out[],
-				double w[], long nw
+				double w[], long int nw
 				);
 						
 static void ExpandCentered_1D(	
-				double In[], long NxIn,
+				double In[], long int NxIn,
  				double Out[],
- 				double w[], long nw
+ 				double w[], long int nw
  				);
 
 static void ReduceCentered_1D(	
-				double In[], long NxIn,
+				double In[], long int NxIn,
  				double Out[],
- 				double w[], long nw
+ 				double w[], long int nw
  				);
 
 static void GetRow( 
-				double *Image, long Nx, long Ny,
-				long RowNb,
-				double *Row, long RowSize
+				double *Image, long int Nx, long int Ny,
+				long int RowNb,
+				double *Row, long int RowSize
 				);
 				
 static void GetColumn( 
-				double *Image, long Nx, long Ny,
-				long ColumnNb,
-				double *Column, long ColumnSize
+				double *Image, long int Nx, long int Ny,
+				long int ColumnNb,
+				double *Column, long int ColumnSize
 				);
 				
 static void PutRow( 
-				double *Image, long Nx, long Ny,
-				long RowNb,
-				double *Row, long RowSize
+				double *Image, long int Nx, long int Ny,
+				long int RowNb,
+				double *Row, long int RowSize
 				);
 				
 static void PutColumn( 
-				double *Image, long Nx, long Ny,
-				long ColumnNb, 
-				double *Column, long ColumnSize
+				double *Image, long int Nx, long int Ny,
+				long int ColumnNb, 
+				double *Column, long int ColumnSize
 				);
 
 static void GetX_3D( 
-				double *Image, long Nx, long Ny, long Nz,
-				long y, long z,
-				double *out, long OutSize
+				double *Image, long int Nx, long int Ny, long int Nz,
+				long int y, long int z,
+				double *out, long int OutSize
 				);
 				
 static void GetY_3D( 
-				double *Image, long Nx, long Ny, long Nz,
-				long x, long z,
-				double *out, long OutSize
+				double *Image, long int Nx, long int Ny, long int Nz,
+				long int x, long int z,
+				double *out, long int OutSize
 				);
 				
 static void GetZ_3D( 
-				double *Image, long Nx, long Ny, long Nz,
-				long x, long y,
-				double *out, long OutSize
+				double *Image, long int Nx, long int Ny, long int Nz,
+				long int x, long int y,
+				double *out, long int OutSize
 				);
 				
 static void PutX_3D( 
-				double *Image, long Nx, long Ny, long Nz,
-				long y, long z,
-				double *in, long inSize
+				double *Image, long int Nx, long int Ny, long int Nz,
+				long int y, long int z,
+				double *in, long int inSize
 				);
 				
 static void PutY_3D( 
-				double *Image, long Nx, long Ny, long Nz,
-				long x, long z,
-				double *in, long inSize
+				double *Image, long int Nx, long int Ny, long int Nz,
+				long int x, long int z,
+				double *in, long int inSize
 				);
 
 static void PutZ_3D( 
-				double *Image, long Nx, long Ny, long Nz,
-				long x, long y,
-				double *in, long inSize
+				double *Image, long int Nx, long int Ny, long int Nz,
+				long int x, long int y,
+				double *in, long int inSize
 				);
 			
 /* ----------------------------------------------------------------------------
@@ -164,9 +164,9 @@ static void PutZ_3D(
 ---------------------------------------------------------------------------- */
 extern int GetPyramidFilter(
 					char *Filter, 				
-					long Order, 				
-					double g[], long *ng,
-					double h[], long *nh,
+					long int Order, 				
+					double g[], long int *ng,
+					double h[], long int *nh,
 					short *IsCentered)		
 {
 
@@ -220,9 +220,9 @@ extern int GetPyramidFilter(
 		
 ---------------------------------------------------------------------------- */
 extern int Reduce_2D(	
-				double *In, long NxIn, long NyIn,
+				double *In, long int NxIn, long int NyIn,
 				double *Out,
-				double g[], long ng,
+				double g[], long int ng,
 				short IsCentered
 				)
 {
@@ -230,8 +230,8 @@ double	*Tmp;
 double 	*InBuffer;		/* Input buffer to 1D process */ 
 double	*OutBuffer;		/* Output buffer to 1D process */ 
 long	kx, ky;
-long 	NxOut;
-long 	NyOut;
+long int 	NxOut;
+long int 	NyOut;
 
 	/* --- Define dimension of the output --- */
 	NxOut = NxIn/2L;
@@ -320,9 +320,9 @@ long 	NyOut;
 		
 ---------------------------------------------------------------------------- */
 extern int Reduce_3D(	
-				double *In, long NxIn, long NyIn, long NzIn,
+				double *In, long int NxIn, long int NyIn, long int NzIn,
 				double *Out,
-				double g[], long ng,
+				double g[], long int ng,
 				short IsCentered
 				)
 {
@@ -330,9 +330,9 @@ double	*Tmp, *Tmp2;
 double 	*InBuffer;		/* Input buffer to 1D process */ 
 double	*OutBuffer;		/* Output buffer to 1D process */ 
 long	kx, ky, kz;
-long 	NxOut;
-long 	NyOut;
-long    NzOut;
+long int 	NxOut;
+long int 	NyOut;
+long int    NzOut;
 
 	/* --- Define dimension of the output --- */
 	NxOut = NxIn/2L;
@@ -459,17 +459,17 @@ long    NzOut;
 		
 ---------------------------------------------------------------------------- */
 extern int Expand_2D(	
-				double *In, long NxIn, long NyIn,
+				double *In, long int NxIn, long int NyIn,
 				double *Out,
-				double h[], long nh,
+				double h[], long int nh,
 				short IsCentered
 				)
 {
 double  *InBuffer; 		/* Input buffer to 1D process */ 
 double  *OutBuffer;		/* Output buffer to 1D process */ 
-long 	kx, ky;
-long 	NxOut;
-long 	NyOut;
+long int 	kx, ky;
+long int 	NxOut;
+long int 	NyOut;
 	
 	if (NxIn <= 1L) 
 		NxOut = 1L; 
@@ -550,18 +550,18 @@ long 	NyOut;
 		
 ---------------------------------------------------------------------------- */
 extern int Expand_3D(	
-				double *In, long NxIn, long NyIn,long NzIn,
+				double *In, long int NxIn, long int NyIn,long int NzIn,
 				double *Out,
-				double h[], long nh,
+				double h[], long int nh,
 				short IsCentered
 				)
 {
 double  *InBuffer; 		/* Input buffer to 1D process */ 
 double  *OutBuffer;		/* Output buffer to 1D process */ 
-long 	kx, ky, kz;
-long 	NxOut;
-long 	NyOut;
-long 	NzOut;
+long int 	kx, ky, kz;
+long int 	NxOut;
+long int 	NyOut;
+long int 	NzOut;
 	
 	if (NxIn <= 1L) 
 		NxOut = 1L; 
@@ -663,9 +663,9 @@ long 	NzOut;
 	
 ---------------------------------------------------------------------------- */
 extern void Reduce_1D(	
-				double In[], long NxIn,
+				double In[], long int NxIn,
 				double Out[], 
-				double g[], long ng,
+				double g[], long int ng,
 				short IsCentered
 				)
 {
@@ -685,9 +685,9 @@ extern void Reduce_1D(
 	
 ---------------------------------------------------------------------------- */
 extern void Expand_1D(	
-				double In[], long NxIn,
+				double In[], long int NxIn,
 				double Out[],
-				double h[], long nh,
+				double h[], long int nh,
 				short IsCentered
 				)
 {
@@ -718,12 +718,12 @@ extern void Expand_1D(
 				
 ---------------------------------------------------------------------------- */
 static void ReduceStandard_1D(	
-				double In[], long NxIn,
+				double In[], long int NxIn,
 				double Out[],
-				double g[], long ng)
+				double g[], long int ng)
 {
-long k, i, i1, i2;
-long kk, kn, nred, n;
+long int k, i, i1, i2;
+long int kk, kn, nred, n;
 	
 	nred = NxIn/2L;
 	n  = nred*2L;
@@ -782,12 +782,12 @@ long kk, kn, nred, n;
 				
 ---------------------------------------------------------------------------- */
 static void ExpandStandard_1D(	
-				double In[], long NxIn,
+				double In[], long int NxIn,
 				double Out[], 
-				double h[], long nh)
+				double h[], long int nh)
 {
-long k, j, i, i1, i2;
-long kn, nexp, n;
+long int k, j, i, i1, i2;
+long int kn, nexp, n;
 	
 	nexp = NxIn*2L;
 	n = NxIn;
@@ -847,12 +847,12 @@ long kn, nexp, n;
 		Daniel Sage, EPFL, Biomedical Imaging Group, April 1999
 
 ---------------------------------------------------------------------------- */
-extern void ReduceCentered_1D(	double In[], long NxIn,
+extern void ReduceCentered_1D(	double In[], long int NxIn,
  								double Out[],
- 								double g[], long ng)
+ 								double g[], long int ng)
 {
 double 	*y_tmp;
-long 	k, i, i1, i2;
+long int 	k, i, i1, i2;
 long	kk, kn, nred, n;
 	 
 	nred = NxIn/2L;
@@ -918,12 +918,12 @@ long	kk, kn, nred, n;
 		Daniel Sage, EPFL, Biomedical Imaging Group, April 1999
 
 ---------------------------------------------------------------------------- */
-extern void ExpandCentered_1D(	double In[], long NxIn,
+extern void ExpandCentered_1D(	double In[], long int NxIn,
 								double Out[],
-								double h[], long nh)
+								double h[], long int nh)
 {
-long k, i, j, i1, k0, i2;
-long kk, kn, nexp, n;
+long int k, i, j, i1, k0, i2;
+long int kk, kn, nexp, n;
 
 	nexp = NxIn*2L;
 	n = NxIn;
@@ -988,9 +988,9 @@ long kk, kn, nexp, n;
 				
 ---------------------------------------------------------------------------- */
 static void GetRow( 
-				double *Image, long Nx, long Ny,
-				long RowNb,
-				double *Row, long RowSize
+				double *Image, long int Nx, long int Ny,
+				long int RowNb,
+				double *Row, long int RowSize
 				)
 {
 int i;
@@ -1017,9 +1017,9 @@ int BaseIndex;
 				
 ---------------------------------------------------------------------------- */
 static void GetColumn( 
-				double *Image, long Nx, long Ny,
-				long ColumnNb,
-				double *Column, long ColumnSize
+				double *Image, long int Nx, long int Ny,
+				long int ColumnNb,
+				double *Column, long int ColumnSize
 				)
 {
 int j;
@@ -1048,9 +1048,9 @@ int Index;
 				
 ---------------------------------------------------------------------------- */
 static void PutRow( 
-				double *Image, long Nx, long Ny,
-				long RowNb,
-				double *Row, long RowSize
+				double *Image, long int Nx, long int Ny,
+				long int RowNb,
+				double *Row, long int RowSize
 				)
 {
 int i;
@@ -1077,9 +1077,9 @@ int BaseIndex;
 				
 ---------------------------------------------------------------------------- */
 static void PutColumn( 
-				double *Image, long Nx, long Ny,
-				long ColumnNb, 
-				double *Column, long ColumnSize
+				double *Image, long int Nx, long int Ny,
+				long int ColumnNb, 
+				double *Column, long int ColumnSize
 				)
 {
 int j;
@@ -1094,80 +1094,80 @@ int Index;
 }
 
 static void GetX_3D( 
-				double *Image, long Nx, long Ny, long Nz,
-				long y, long z,
-				double *out, long outSize
+				double *Image, long int Nx, long int Ny, long int Nz,
+				long int y, long int z,
+				double *out, long int outSize
 				)
 {
-	long index = z*Nx*Ny+y*Nx;
-	for (long i=0L; i<outSize; i++) {
+	long int index = z*Nx*Ny+y*Nx;
+	for (long int i=0L; i<outSize; i++) {
 		out[i] = (double)Image[index];
 		index+=1;
         }
 }
 
 static void GetY_3D( 
-				double *Image, long Nx, long Ny, long Nz,
-				long x, long z,
-				double *out, long outSize
+				double *Image, long int Nx, long int Ny, long int Nz,
+				long int x, long int z,
+				double *out, long int outSize
 				)
 {
-	long index = z*Nx*Ny+x;
-	for (long i=0L; i<outSize; i++) {
+	long int index = z*Nx*Ny+x;
+	for (long int i=0L; i<outSize; i++) {
 		out[i] = (double)Image[index];
 		index+=Nx;
 	}
 }
 
 static void GetZ_3D( 
-				double *Image, long Nx, long Ny, long Nz,
-				long x, long y,
-				double *out, long outSize
+				double *Image, long int Nx, long int Ny, long int Nz,
+				long int x, long int y,
+				double *out, long int outSize
 				)
 {
-	long index = y*Nx+x;
-	long NyNx= Ny*Nx;
-	for (long i=0L; i<outSize; i++) {
+	long int index = y*Nx+x;
+	long int NyNx= Ny*Nx;
+	for (long int i=0L; i<outSize; i++) {
 		out[i] = (double)Image[index];
 		index+=NyNx;
 	}
 }
 
 static void PutX_3D( 
-				double *Image, long Nx, long Ny, long Nz,
-				long y, long z,
-				double *in, long inSize
+				double *Image, long int Nx, long int Ny, long int Nz,
+				long int y, long int z,
+				double *in, long int inSize
 				)
 {
-	long index = z*Nx*Ny+y*Nx;
-	for (long i=0L; i<inSize; i++) {
+	long int index = z*Nx*Ny+y*Nx;
+	for (long int i=0L; i<inSize; i++) {
 		Image[index]=in[i];
 		index+=1;
         }
 }
 
 static void PutY_3D( 
-				double *Image, long Nx, long Ny, long Nz,
-				long x, long z,
-				double *in, long inSize
+				double *Image, long int Nx, long int Ny, long int Nz,
+				long int x, long int z,
+				double *in, long int inSize
 				)
 {
-	long index = z*Nx*Ny+x;
-	for (long i=0L; i<inSize; i++) {
+	long int index = z*Nx*Ny+x;
+	for (long int i=0L; i<inSize; i++) {
 		Image[index]=in[i];
 		index+=Ny;
 	}
 }
 
 static void PutZ_3D( 
-				double *Image, long Nx, long Ny, long Nz,
-				long x, long y,
-				double *in, long inSize
+				double *Image, long int Nx, long int Ny, long int Nz,
+				long int x, long int y,
+				double *in, long int inSize
 				)
 {
-	long index = y*Nx+x;
-	long NyNx= Ny*Nx;
-	for (long i=0L; i<inSize; i++) {
+	long int index = y*Nx+x;
+	long int NyNx= Ny*Nx;
+	for (long int i=0L; i<inSize; i++) {
 		Image[index]=in[i];
 		index+=NyNx;
 	}
