@@ -30,6 +30,9 @@ void Prog_MLFalign2D_prm::read(int argc, char **argv, bool ML3D)
 
     // Generate new command line for restart procedure
     cline = "";
+    int argc2 = 0;
+    char ** argv2 = NULL;
+
     if (checkParameter(argc, argv, "-restart"))
     {
         std::string comment;
@@ -62,7 +65,7 @@ void Prog_MLFalign2D_prm::read(int argc, char **argv, bool ML3D)
             DFi.next();
             cline = (DFi.get_current_line()).get_text();
             comment = comment + cline;
-            generateCommandLine(comment, argc, argv, copy);
+            generateCommandLine(comment, argc2, argv2, copy);
             if (!ML3D)
             {
                 // Read images names from restart file
@@ -84,72 +87,75 @@ void Prog_MLFalign2D_prm::read(int argc, char **argv, bool ML3D)
     }
     else
     {
-        for (int i = 1; i < argc; i++)
+	// no restart, just copy argc to argc2 and argv to argv2
+	argc2 = argc;
+	argv2 = argv;
+        for (int i = 1; i < argc2; i++)
         {
-            cline = cline + (std::string)argv[i] + " ";
+            cline = cline + (std::string)argv2[i] + " ";
         }
     }
 
     // Read command line
-    if (checkParameter(argc, argv, "-more_options"))
+    if (checkParameter(argc2, argv2, "-more_options"))
     {
 	usage();
 	extendedUsage();
     }
 
     // Main parameters
-    n_ref = textToInteger(getParameter(argc, argv, "-nref", "0"));
-    fn_ref = getParameter(argc, argv, "-ref", "");
-    fn_sel = getParameter(argc, argv, "-i");
-    do_ctf_correction = !checkParameter(argc, argv, "-no_ctf");
+    n_ref = textToInteger(getParameter(argc2, argv2, "-nref", "0"));
+    fn_ref = getParameter(argc2, argv2, "-ref", "");
+    fn_sel = getParameter(argc2, argv2, "-i");
+    do_ctf_correction = !checkParameter(argc2, argv2, "-no_ctf");
     if (do_ctf_correction)
     {
-	fn_ctfdat = getParameter(argc, argv, "-ctfdat","");
+	fn_ctfdat = getParameter(argc2, argv2, "-ctfdat","");
     }
     else
     {
-	sampling = textToFloat(getParameter(argc, argv, "-pixel_size","1"));
+	sampling = textToFloat(getParameter(argc2, argv2, "-pixel_size","1"));
     }
-    fn_root = getParameter(argc, argv, "-o", "mlf2d");
-    search_shift = textToInteger(getParameter(argc, argv, "-search_shift", "3"));
-    psi_step = textToFloat(getParameter(argc, argv, "-psi_step", "5"));
-    do_mirror = checkParameter(argc, argv, "-mirror");
-    lowres_limit = textToInteger(getParameter(argc, argv, "-low", "999"));
-    highres_limit = textToInteger(getParameter(argc, argv, "-high", "0"));
-    ini_highres_limit = textToInteger(getParameter(argc, argv, "-ini_high", "0"));
-    phase_flipped = !checkParameter(argc, argv, "-not_phase_flipped");
-    reduce_snr = textToFloat(getParameter(argc, argv, "-reduce_snr", "1"));
-    first_iter_noctf = checkParameter(argc, argv, "-ctf_affected_refs");
+    fn_root = getParameter(argc2, argv2, "-o", "mlf2d");
+    search_shift = textToInteger(getParameter(argc2, argv2, "-search_shift", "3"));
+    psi_step = textToFloat(getParameter(argc2, argv2, "-psi_step", "5"));
+    do_mirror = checkParameter(argc2, argv2, "-mirror");
+    lowres_limit = textToInteger(getParameter(argc2, argv2, "-low", "999"));
+    highres_limit = textToInteger(getParameter(argc2, argv2, "-high", "0"));
+    ini_highres_limit = textToInteger(getParameter(argc2, argv2, "-ini_high", "0"));
+    phase_flipped = !checkParameter(argc2, argv2, "-not_phase_flipped");
+    reduce_snr = textToFloat(getParameter(argc2, argv2, "-reduce_snr", "1"));
+    first_iter_noctf = checkParameter(argc2, argv2, "-ctf_affected_refs");
 
     // Less common stuff
-    Niter = textToInteger(getParameter(argc, argv, "-iter", "100"));
-    istart = textToInteger(getParameter(argc, argv, "-istart", "1"));
-    sigma_offset = textToFloat(getParameter(argc, argv, "-offset", "3"));
-    eps = textToFloat(getParameter(argc, argv, "-eps", "5e-5"));
-    fn_frac = getParameter(argc, argv, "-frac", "");
-    write_docfile = !checkParameter(argc, argv, "-dont_output_docfile");
-    write_selfiles = !checkParameter(argc, argv, "-dont_output_selfiles");
-    fix_fractions = checkParameter(argc, argv, "-fix_fractions");
-    fix_sigma_offset = checkParameter(argc, argv, "-fix_sigma_offset");
-    fix_sigma_noise = checkParameter(argc, argv, "-fix_sigma_noise");
-    verb = textToInteger(getParameter(argc, argv, "-verb", "1"));
-    C_fast = textToFloat(getParameter(argc, argv, "-C", "1e-12"));
-    fn_doc = getParameter(argc, argv, "-doc", "");
-    do_include_allfreqs=checkParameter(argc,argv,"-include_allfreqs");
+    Niter = textToInteger(getParameter(argc2, argv2, "-iter", "100"));
+    istart = textToInteger(getParameter(argc2, argv2, "-istart", "1"));
+    sigma_offset = textToFloat(getParameter(argc2, argv2, "-offset", "3"));
+    eps = textToFloat(getParameter(argc2, argv2, "-eps", "5e-5"));
+    fn_frac = getParameter(argc2, argv2, "-frac", "");
+    write_docfile = !checkParameter(argc2, argv2, "-dont_output_docfile");
+    write_selfiles = !checkParameter(argc2, argv2, "-dont_output_selfiles");
+    fix_fractions = checkParameter(argc2, argv2, "-fix_fractions");
+    fix_sigma_offset = checkParameter(argc2, argv2, "-fix_sigma_offset");
+    fix_sigma_noise = checkParameter(argc2, argv2, "-fix_sigma_noise");
+    verb = textToInteger(getParameter(argc2, argv2, "-verb", "1"));
+    C_fast = textToFloat(getParameter(argc2, argv2, "-C", "1e-12"));
+    fn_doc = getParameter(argc2, argv2, "-doc", "");
+    do_include_allfreqs=checkParameter(argc2,argv2,"-include_allfreqs");
 
     // Only for interaction with Refine3D:
     do_ML3D = ML3D;
-    search_rot = textToFloat(getParameter(argc, argv, "-search_rot", "999."));
+    search_rot = textToFloat(getParameter(argc2, argv2, "-search_rot", "999."));
 
     // Hidden arguments
-    do_write_offsets = checkParameter(argc, argv, "-write_offsets");
-    fn_scratch = getParameter(argc, argv, "-scratch", "");
-    debug = textToInteger(getParameter(argc, argv, "-debug","0"));
-    do_variable_psi = checkParameter(argc, argv, "-var_psi");
-    do_variable_trans = checkParameter(argc, argv, "-var_trans");
+    do_write_offsets = checkParameter(argc2, argv2, "-write_offsets");
+    fn_scratch = getParameter(argc2, argv2, "-scratch", "");
+    debug = textToInteger(getParameter(argc2, argv2, "-debug","0"));
+    do_variable_psi = checkParameter(argc2, argv2, "-var_psi");
+    do_variable_trans = checkParameter(argc2, argv2, "-var_trans");
 
     // For improved killing control
-    fn_control = getParameter(argc, argv, "-control", "");
+    fn_control = getParameter(argc2, argv2, "-control", "");
 }
 
 // Show ====================================================================
