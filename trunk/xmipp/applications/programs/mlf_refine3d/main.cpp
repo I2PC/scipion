@@ -28,8 +28,8 @@
 int main(int argc, char **argv)
 {
 
-    int                         c, iter, volno, converged = 0;
-    ;
+    int                         c, iter, volno, converged = 0, argc2 = 0;
+    char **                     argv2 = NULL;
     double                      LL, sumw_allrefs, convv, sumcorr, wsum_sigma_noise, wsum_sigma_offset;
     std::vector<double>              conv;
     std::vector<Matrix2D<double> >   wsum_Mref, wsum_ctfMref;
@@ -49,14 +49,14 @@ int main(int argc, char **argv)
     {
 
         // Read command line
-        prm.read(argc, argv);
+        prm.read(argc, argv, argc2, argv2);
         prm.show();
         // Write starting volume(s) to disc with correct name for iteration loop
         prm.remake_SFvol(prm.istart - 1, true);
 
         // Read MLalign2D-stuff
-        ML2D_prm.read(argc, argv, true);
-        if (!checkParameter(argc, argv, "-psi_step")) ML2D_prm.psi_step = prm.angular;
+        ML2D_prm.read(argc2, argv2, true);
+        if (!checkParameter(argc2, argv2, "-psi_step")) ML2D_prm.psi_step = prm.angular;
         ML2D_prm.fn_root = prm.fn_root;
         ML2D_prm.do_mirror = true;
         ML2D_prm.write_docfile = true;
@@ -130,15 +130,15 @@ int main(int argc, char **argv)
             // Reconstruct new volumes from the reference images
             for (volno = 0; volno < prm.Nvols; volno++)
 	    {
-                prm.reconstruction(argc, argv, iter, volno, 0);
-	        prm.reconstruction(argc, argv, iter, volno, 1);
-	        prm.reconstruction(argc, argv, iter, volno, 2);
+                prm.reconstruction(argc2, argv2, iter, volno, 0);
+	        prm.reconstruction(argc2, argv2, iter, volno, 1);
+	        prm.reconstruction(argc2, argv2, iter, volno, 2);
             }
 
             // Update the reference volume selection file
             // and post-process the volumes (for -FS also the noise volumes!)
             prm.remake_SFvol(iter, false, true);
-            prm.post_process_volumes(argc, argv);
+            prm.post_process_volumes(argc2, argv2);
             prm.remake_SFvol(iter, false, false);
 
             // Calculate 3D-SSNR and new Wiener filters

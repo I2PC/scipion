@@ -30,7 +30,8 @@
 int main(int argc, char **argv)
 {
 
-    int                         c, iter, volno, converged = 0;
+    int                         c, iter, volno, converged = 0, argc2 = 0;
+    char **                     argv2 = NULL;
     double                      LL, sumw_allrefs, convv, sumcorr, wsum_sigma_noise, wsum_sigma_offset;
     std::vector<double>              conv;
     std::vector<Matrix2D<double> >   wsum_Mref;
@@ -61,7 +62,7 @@ int main(int argc, char **argv)
     {
 
         // Read command line
-        prm.read(argc, argv);
+        prm.read(argc, argv, argc2, argv2);
 
         // Write starting volumes to disc with correct name for iteration loop
         if (rank == 0)
@@ -73,9 +74,9 @@ int main(int argc, char **argv)
         MPI_Barrier(MPI_COMM_WORLD);
 
         // Read and set general MLalign2D-stuff
-        ML2D_prm.read(argc, argv, true);
+        ML2D_prm.read(argc2, argv2, true);
         if (rank != 0) ML2D_prm.verb = prm.verb = 0;
-        if (!checkParameter(argc, argv, "-psi_step")) ML2D_prm.psi_step = prm.angular;
+        if (!checkParameter(argc2, argv2, "-psi_step")) ML2D_prm.psi_step = prm.angular;
         ML2D_prm.fn_root = prm.fn_root;
         ML2D_prm.fast_mode = true;
         ML2D_prm.do_mirror = true;
@@ -216,7 +217,7 @@ int main(int argc, char **argv)
             // number of volumes to reconstruct ...
             if (rank < prm.Nvols)
                 // new reference reconstruction
-                prm.reconstruction(argc, argv, iter, rank, 0);
+                prm.reconstruction(argc2, argv2, iter, rank, 0);
             MPI_Barrier(MPI_COMM_WORLD);
 
             // Only the master does post-processing & convergence check (i.e. sequentially)
@@ -225,7 +226,7 @@ int main(int argc, char **argv)
 
                 // Solvent flattening and/or symmetrization (if requested)
                 prm.remake_SFvol(iter, false, false);
-                prm.post_process_volumes(argc, argv);
+                prm.post_process_volumes(argc2, argv2);
 
                 // Check convergence
                 if (prm.check_convergence(iter))
