@@ -33,16 +33,7 @@
 
 #include <fstream>
 #include <iomanip>
-
-#define GCC_VERSION (__GNUC__ * 10000 \
-                     + __GNUC_MINOR__ * 100 \
-                     + __GNUC_PATCHLEVEL__)
-/* Test for GCC > 3.3.0 */
-#if GCC_VERSION >= 30300
-#include <sstream>
-#else
-#include <strstream.h>
-#endif
+#include <strstream>
 
 #define VERBOSE
 //#define DEBUG
