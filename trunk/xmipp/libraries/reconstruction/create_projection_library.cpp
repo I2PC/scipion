@@ -56,6 +56,7 @@ void Prog_create_projection_library_Parameters::read(int argc, char **argv)
             FnexperimentalImages = getParameter(argc, argv, "-experimental_images","");
             angular_distance = textToFloat(getParameter(argc, argv,"-angular_distance"));
     }
+    quiet = checkParameter(argc, argv,"-quiet");
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -74,6 +75,7 @@ void Prog_create_projection_library_Parameters::usage()
     << "  [-min_tilt_angle -91]        : minimum tilt angle in degrees\n"
     << "  [-experimental_images \"\"]  : doc file with experimental data\n"
     << "  [-angular_distance 20]       : do not search a distance larger than...\n"
+    << "  [-quiet]                     : do not show messages\n"
     << "\n"
     << "Example of use: Sample at 2 degrees and use c6 symmetry\n"
     << "   xmipp_create_projection_library -i in.vol -o out "
@@ -84,37 +86,36 @@ void Prog_create_projection_library_Parameters::usage()
 /* Show -------------------------------------------------------------------- */
 void Prog_create_projection_library_Parameters::show()
 {
-    
-    std::cout
-    << "output input_volume root:  " << input_volume << std::endl
-    << "output files root:         " << output_file_root << std::endl
-    << "Sampling rate:             " << sampling    << std::endl
-    << "symmetry group:            " << symmetry << std::endl
-    << "symmetry order:            " << sym_order << std::endl
-    << "max_tilt_angle:            " << max_tilt_angle << std::endl
-    << "min_tilt_angle:            " << min_tilt_angle << std::endl
-    << "psi_sampling:              " << psi_sampling << std::endl
+    if (quiet) return;    
+    std::cout << "output input_volume root:  " << input_volume << std::endl
+              << "output files root:         " << output_file_root << std::endl
+              << "Sampling rate:             " << sampling    << std::endl
+              << "symmetry group:            " << symmetry << std::endl
+              << "symmetry order:            " << sym_order << std::endl
+              << "max_tilt_angle:            " << max_tilt_angle << std::endl
+              << "min_tilt_angle:            " << min_tilt_angle << std::endl
+              << "psi_sampling:              " << psi_sampling << std::endl
     ;
-    if(angular_distance_bool)
+    if (angular_distance_bool)
         std::cout << "angular_distance:          " << angular_distance << std::endl
-             << "experimental_images:       " << FnexperimentalImages << std::endl
+                  << "experimental_images:       " << FnexperimentalImages << std::endl
         ;
 }
 
 
 
 void
-Prog_create_projection_library_Parameters::project_angle_vector(int
-my_init, int my_end, bool verbose)
+Prog_create_projection_library_Parameters::project_angle_vector(
+    int my_init, int my_end, bool verbose)
 {
     Projection P;
     FileName fn_proj;
     double rot,tilt,psi;
     int mySize;
     mySize=my_end-my_init+1;
-    if(psi_sampling < 360)
+    if (psi_sampling < 360)
        mySize *= (int) (359.99999/psi_sampling);
-    if(verbose)
+    if (verbose && !quiet)
        init_progress_bar(mySize);
     int myCounter=0;
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
@@ -125,20 +126,19 @@ my_init, int my_end, bool verbose)
     {
        for (int i=my_init;i<=my_end;i++)
        {    
-           if(verbose)
+           if (verbose && !quiet)
                progress_bar(i-my_init);
            psi= mypsi+ZZ(close_points_angles[i]);
            tilt=      YY(close_points_angles[i]);
            rot=       XX(close_points_angles[i]);
 
-    //progress bar     
            project_Volume(inputVol(), P, Ydim, Xdim,rot,tilt,psi);
 
            fn_proj.compose(output_file_root, myCounter++,"xmp");
            P.write(fn_proj);
        }
     }
-    if(verbose)
+    if (verbose && !quiet)
         progress_bar(mySize);
 
 }

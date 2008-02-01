@@ -60,6 +60,9 @@ public:
     /** root for output files */
     FileName output_file_root;
 
+    /** Quiet */
+    bool quiet;
+
     /** docfile with experimental images angles. 
         This information is used to generate only angles close to experimental
         images */
