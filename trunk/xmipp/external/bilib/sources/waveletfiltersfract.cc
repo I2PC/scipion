@@ -71,8 +71,8 @@ int i,n,m,sumTerms,size;
 unsigned long t;
 
 	Alpha=fabs(Alpha);
-
-	m=(int)ceil(log(size=getFilterSize(Alpha))/log(2.0))+1;
+        size=getFilterSize(Alpha);
+	m=(int)ceil(log((long double)size)/log(2.0))+1;
     n=1<<m;
     while(2*n<size)
     { /* So that we're sure we have enough points ! */
@@ -125,7 +125,7 @@ unsigned long t;
     	Convolve121( R , size+1 );
     }	
 
-    mulfact=1./sqrt(2)/(double)n;
+    mulfact=1./sqrt(2.0)/(double)n;
 
     for(i=0;i<size+1;i++)
     {
