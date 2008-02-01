@@ -174,7 +174,7 @@ void Prog_angular_predict_prm::produce_side_info(int rank)
         if (quiet) command += " -quiet";
         if (MPIversion)
             command=(std::string)"mpirun -np "+integerToString(numberOfProcessors)+
-                " `which xmipp_mpi_create_projection_library` "+command;
+                " `which xmipp_mpi_create_projection_library` -quiet "+command;
         else
             command=(std::string)"xmipp_create_projection_library "+command;
         system(command.c_str());
