@@ -30,9 +30,6 @@
 #include <cmath>
 #include <cstdio>
 #include <iostream>
-#ifndef __INTEL_COMPILER
-#include <external/cuba/cuba.h>
-#endif
 #include "matrix1d.h"
 
 /** @defgroup NumericalIntegration Numerical integration
@@ -242,47 +239,4 @@ public:
      */
     double midpnt(int n);
 };
-
-#ifndef __INTEL_COMPILER
-/** Multidimensional integration
-    @ingroup Numerical_interation
-    Compute the double, triple, ... integral of a function. For instance
-
-    @code
-    integral_x0^xF  integral_y0^yF f(x,y) dx dy
-    @endcode
-
-    Our computation is based on the CUBA library (http://www.feynarts.de/cuba/).
-
-    Example of use.
-
-  1) Define the function to integrate:
-@code
-void integrand(const int *ndim, const double xx[],
-               const int *ncomp, double ff[]) {
-   #define f ff[0]
-   #define x xx[0]
-   #define y xx[1]
-   f=x+y;
-}
-@endcode
-
-    ndim is the number of dimensions of the integral. It is equal
-    to the number of variables of f. ncomp is the number of components
-    of f. The CUBA library is
-    prepared for functions returning more than 1 value, but our
-    function is not.
-
- 2) In the main code
-
-@code
-#include <data/integration.hh>
-std::cout << multidimensionalIntegral(vectorR2(0,0),vector_R2(10,10),
-            &integrand) << std::endl;
-@endcode
- */
-double multidimensionalIntegral(const Matrix1D<double> &x0,
-                                const Matrix1D<double> &xF, integrand_t integrand);
-#endif
-
 #endif
