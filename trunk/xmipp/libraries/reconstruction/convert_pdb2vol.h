@@ -56,6 +56,9 @@ public:
 
     /** Use poor Gaussian instead of scattering factors */
     bool usePoorGaussian;
+    
+    /** Do not report anything */
+    bool quiet;
 public:
     /** Empty constructor */
     Prog_PDBPhantom_Parameters();
