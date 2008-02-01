@@ -69,14 +69,15 @@ void Prog_angular_predict_continuous_prm::read(int argc, char **argv)
 // Show ====================================================================
 void Prog_angular_predict_continuous_prm::show()
 {
+    if (quiet) return;
     Prog_parameters::show();
     std::cout << "Reference volume:   " << fn_ref              << std::endl
-    << "Initial angle file: " << fn_ang              << std::endl
-    << "Ouput angular file: " << fn_out_ang          << std::endl
-    << "Gaussian Fourier:   " << gaussian_DFT_sigma  << std::endl
-    << "Gaussian Real:      " << gaussian_Real_sigma << std::endl
-    << "Max. Iter:          " << max_no_iter         << std::endl
-    << "Modify header:  " << !dont_modify_header << std::endl
+              << "Initial angle file: " << fn_ang              << std::endl
+              << "Ouput angular file: " << fn_out_ang          << std::endl
+              << "Gaussian Fourier:   " << gaussian_DFT_sigma  << std::endl
+              << "Gaussian Real:      " << gaussian_Real_sigma << std::endl
+              << "Max. Iter:          " << max_no_iter         << std::endl
+              << "Modify header:  " << !dont_modify_header << std::endl
     ;
 }
 
