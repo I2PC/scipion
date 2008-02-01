@@ -314,31 +314,19 @@ def AddSwigLibrary(name, basedir, sourceList, includes, libpath=[], libs=[]):
 
 # --- Libraries
 
-# Cuba
-CubaSources = [
-    'cuba/src/vegas/Vegas.c',
-    'cuba/src/suave/Suave.c',
-    'cuba/src/divonne/Divonne.c',
-    'cuba/src/cuhre/Cuhre.c']
-
 # Bilib
 BilibSources = Glob('external/bilib/sources', '*.cc', [])
 
 # INRIA
 INRIASources = Glob('external/inria', '*.cc', [])
 
-if env['CC'] == 'gcc':
-   AddLibrary('XmippExternal', 'external',
-      INRIASources + BilibSources + CubaSources,
-      ['bilib', 'bilib/headers', 'bilib/types', 'cuba/src/common'])
-else:
-   AddLibrary('XmippExternal', 'external',
-      INRIASources + BilibSources,
-      ['bilib', 'bilib/headers', 'bilib/types'])
+AddLibrary('XmippExternal', 'external',
+   INRIASources + BilibSources,
+   ['bilib', 'bilib/headers', 'bilib/types'])
 
 # XmippData
 DataSources = Glob('libraries/data','*.cpp',[])
-AddLibrary('XmippData', 'libraries/data', DataSources, ['#'])
+AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],['lib'],['XmippExternal'])
 SwigDataSources = ['libraries/data/swig/swigXmippData.i'] 	 
 AddSwigLibrary('XmippData', 'libraries/data', SwigDataSources, ['#'], 	 
     [], ['XmippData'])
@@ -405,7 +393,7 @@ ReconsSources = [
     'volume_labelling.cpp']
 
 AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
-           ['#libraries', '#external', '#'])
+           ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData'])
 
 # ReconsInterface
 ReconsInterfaceSources = [
@@ -417,9 +405,6 @@ ReconsInterfaceSources = [
     'project.cpp',
     'recons_spider.cpp']
 
-AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
-           ReconsInterfaceSources, ['#libraries', '#external', '#'])
-
 #remove dinamic mpi library since it is very problematic
 # ReconstrunctionMPI
 #if int(env['mpi']):
@@ -430,12 +415,16 @@ AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
 # Classification
 ClassificationSources = Glob('libraries/classification', '*.cpp', [])
 AddLibrary('XmippClassif', 'libraries/classification', ClassificationSources,
-    ['#libraries',  '#'])
+    ['#libraries',  '#'],['lib'],['XmippExternal','XmippData'])
 
 # Interface
 InterfaceSources = Glob('libraries/interface', '*.cpp', [])
 AddLibrary('XmippInterface', 'libraries/interface', InterfaceSources,
-    ['#libraries', '#external', '#'])
+    ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData'])
+
+# Recons Interface
+AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
+           ReconsInterfaceSources, ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','XmippRecons','XmippInterface'])
 
 # OldXmipp
 OldXmippSources = Glob('libraries/legacy', '*.cpp',[])
