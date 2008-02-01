@@ -46,9 +46,9 @@
 */
 extern int GetPyramidFilter(
         char *Filter,
-        long Order,
-        double g[], long *ng,
-        double h[], long *nh,
+        long int Order,
+        double g[], long int *ng,
+        double h[], long int *nh,
         short *FlagCentered
     );
 
@@ -68,9 +68,9 @@ extern int GetPyramidFilter(
   Filter:   g[ng] coefficients of the filter
 */
 extern int Reduce_2D(
-        double *In, long NxIn, long NyIn,
+        double *In, long int NxIn, long int NyIn,
         double *Out,
-        double w[], long nw,
+        double w[], long int nw,
         short FlagCentered
     );
 
@@ -90,9 +90,9 @@ extern int Reduce_2D(
   Filter:   g[ng] coefficients of the filter
 */
 extern int Reduce_3D(
-        double *In, long NxIn, long NyIn, long NzIn,
+        double *In, long int NxIn, long int NyIn, long int NzIn,
         double *Out,
-        double w[], long nw,
+        double w[], long int nw,
         short FlagCentered
     );
 
@@ -112,9 +112,9 @@ extern int Reduce_3D(
   Filter coef: h[nh]
 */
 extern int Expand_2D(
-        double *In, long NxIn, long NyIn,
+        double *In, long int NxIn, long int NyIn,
         double *Out,
-        double h[], long nh,
+        double h[], long int nh,
         short FlagCentered
     );
 
@@ -134,9 +134,9 @@ extern int Expand_2D(
   Filter coef: h[nh]
 */
 extern int Expand_3D(
-        double *In, long NxIn, long NyIn, long NzIn,
+        double *In, long int NxIn, long int NyIn, long int NzIn,
         double *Out,
-        double h[], long nh,
+        double h[], long int nh,
         short FlagCentered
     );
 
@@ -154,9 +154,9 @@ extern int Expand_3D(
   Daniel Sage, EPFL, Biomedical Imaging Group, April 1999
 */
 extern void Reduce_1D(
-        double x[], long nx,
+        double x[], long int nx,
         double y[],
-        double w[], long nw,
+        double w[], long int nw,
         short FlagCentered
     );
 
@@ -174,9 +174,9 @@ extern void Reduce_1D(
   Daniel Sage, EPFL, Biomedical Imaging Group, April 1999
 */
 extern void Expand_1D(
-        double x[], long nx,
+        double x[], long int nx,
         double y[],
-        double w[], long nw,
+        double w[], long int nw,
         short FlagCentered
     );
 
