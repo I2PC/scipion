@@ -80,7 +80,9 @@ typedef unsigned long  ULONG;
 #define ANCHO    1024                  /* Screen dimension, in pixels  */
 #define ALTO      768
 
+#ifndef PI
 #define PI 3.141592654f                 /* Guess what?                  */
+#endif
 
 /******************* Type declarations *********************************/
 
