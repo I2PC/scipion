@@ -174,7 +174,7 @@ void CCLattice_IO::write(const FileName &fn)
     // Open file
     fh_cor.open(fn.c_str(), std::ios::out);
     fh_cor.precision(5);
-    fh_cor << setiosflags(std::ios::fixed);
+    fh_cor << std::setiosflags(std::ios::fixed);
     if (fh_cor.fail())
         REPORT_ERROR(1601, "CCLattice_IO::write: File " + fn + " can not be opened");
     // Write fith dumy lines
