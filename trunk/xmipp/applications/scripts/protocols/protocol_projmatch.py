@@ -892,7 +892,7 @@ def execute_projection_matching(_mylog,
    parameters=  parameters                           + \
               ' -Ri '          + str(_Ri)           + \
               ' -Ro '          + str(_Ro)           + \
-              ' -output_refs -output_classes ' + \
+              ' -output_refs ' + \
               ' -ang_search ' + str(_MaxChangeInAngles) +\
               ' '              + _ProjMatchingExtra
    if len(_Symfile)>1:
@@ -909,6 +909,16 @@ def execute_projection_matching(_mylog,
                        _MyNumberOfCPUs,
                        _MyMachineFile,
                        RunInBackground)
+
+   # Now make the class averages
+   command='xmipp_angular_class_average ' + \
+            ' -i '   + _Proj_Maching_Output_Root_Name+'.doc'  + \
+            ' -lib ' + _Proj_Maching_Output_Root_Name+'_lib.doc' + \
+            ' -o '   + _Proj_Maching_Output_Root_Name
+   print '* ',command
+   _mylog.info(command) 
+   os.system(command)
+
    #make absolute path so visualization protocol can be run from
    #the same directory
    
