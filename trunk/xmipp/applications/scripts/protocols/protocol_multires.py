@@ -61,7 +61,7 @@ ParticleMass=2000000
     for a description of the symmetry file format
     dont give anything, if no symmetry is present
 """
-Symfile='C6.sym'
+SymmetryFile='C6.sym'
 
 # Sampling rate (Angstrom/pixel)
 SamplingRate=1.296
