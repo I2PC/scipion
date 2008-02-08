@@ -452,7 +452,7 @@ void xmippKerDenSOM::showU(xmippFuzzyMap* _som, const TS* _ts)
 
 void xmippKerDenSOM::printV(xmippFuzzyMap* _som, const TS* _ts, FileName& _fname)
 {
-
+    using namespace std;
     FILE* F = fopen(_fname.c_str(), "w");
     if (F == NULL)
     {
@@ -472,7 +472,7 @@ void xmippKerDenSOM::printV(xmippFuzzyMap* _som, const TS* _ts, FileName& _fname
         {
             for (unsigned i = 0; i < _som->theItems[0].size(); i++)
             {
-                if (!std::isnan(_som->theItems[it][i]))
+                if (!isnan(_som->theItems[it][i]))
                     _som->theItems[it][i] = _som->theItems[it][i] * _ts->getNormalizationInfo()[i].sd + _ts->getNormalizationInfo()[i].mean;
                 fprintf(F, "%g ", _som->theItems[it][i]);
             }

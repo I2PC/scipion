@@ -27,8 +27,9 @@
 // xmippCTVectors.cc
 //-----------------------------------------------------------------------------
 
-#include "training_vector.h"
+#include <cmath>
 
+#include "training_vector.h"
 #include <data/args.h>
 
 
@@ -312,6 +313,8 @@ bool xmippCTVectors::deleteRow(unsigned int _idx)
  */
 void xmippCTVectors::normalizeFeature(unsigned _i)
 {
+    using namespace std;
+
     // Do some validation
 
     if (_i > itemAt(0).size())
@@ -326,7 +329,7 @@ void xmippCTVectors::normalizeFeature(unsigned _i)
     int nn = 0;
     for (int it = 0; it < size(); it++)
     {
-        if (!std::isnan(itemAt(it)[_i]))
+        if (!isnan(itemAt(it)[_i]))
         {
             mean += itemAt(it)[_i];
             nn++;
@@ -339,7 +342,7 @@ void xmippCTVectors::normalizeFeature(unsigned _i)
     xmippFeature sd = 0;
     for (int it = 0; it < size(); it++)
     {
-        if (!std::isnan(itemAt(it)[_i]))
+        if (!isnan(itemAt(it)[_i]))
             sd += (itemAt(it)[_i] - mean) * (itemAt(it)[_i] - mean);
     }
     sd = sqrt(sd / (xmippFeature)(nn - 1));
@@ -349,7 +352,7 @@ void xmippCTVectors::normalizeFeature(unsigned _i)
     {
         for (int it = 0; it < size(); it++)
         {
-            if (!std::isnan(itemAt(it)[_i]))
+            if (!isnan(itemAt(it)[_i]))
                 itemAt(it)[_i] = (itemAt(it)[_i] - mean) / sd;
         }
     }
@@ -379,11 +382,12 @@ void xmippCTVectors::normalize()
 
 void xmippCTVectors::unNormalize()
 {
+    using namespace std;
     for (unsigned it = 0; it < size(); it++)
     {
         for (unsigned i = 0; i < itemAt(0).size(); i++)
         {
-            if (!std::isnan(itemAt(it)[i]))
+            if (!isnan(itemAt(it)[i]))
                 itemAt(it)[i] = itemAt(it)[i] * varStats[i].sd + varStats[i].mean;
         }
     }
@@ -398,6 +402,7 @@ void xmippCTVectors::unNormalize()
 
 double xmippCTVectors::getUnormalizedVar(unsigned _item, unsigned _var) const
 {
+    using namespace std;
     if (!normalized)
     {
         std::ostringstream msg;
@@ -420,7 +425,7 @@ double xmippCTVectors::getUnormalizedVar(unsigned _item, unsigned _var) const
     }
 
     double t;
-    if (!std::isnan(itemAt(_item)[_var]))
+    if (!isnan(itemAt(_item)[_var]))
         t = (double) itemAt(_item)[_var] * varStats[_var].sd + varStats[_var].mean;
 
     return t;
@@ -450,8 +455,9 @@ bool xmippCTVectors::isNormalized() const
  */
 void xmippCTVectors::getFeatureStats(unsigned _i, xmippFeature& _mean, xmippFeature& _sd)
 {
-    // Do some validation
+    using namespace std;
 
+    // Do some validation
     if (_i > itemAt(0).size())
     {
         std::ostringstream msg;
@@ -464,7 +470,7 @@ void xmippCTVectors::getFeatureStats(unsigned _i, xmippFeature& _mean, xmippFeat
     int nn = 0;
     for (int it = 0; it < size(); it++)
     {
-        if (!std::isnan(itemAt(it)[_i]))
+        if (!isnan(itemAt(it)[_i]))
         {
             _mean += itemAt(it)[_i];
             nn++;
@@ -477,7 +483,7 @@ void xmippCTVectors::getFeatureStats(unsigned _i, xmippFeature& _mean, xmippFeat
     _sd = 0;
     for (int it = 0; it < size(); it++)
     {
-        if (!std::isnan(itemAt(it)[_i]))
+        if (!isnan(itemAt(it)[_i]))
             _sd += (itemAt(it)[_i] - _mean) * (itemAt(it)[_i] - _mean);
     }
     _sd = sqrt(_sd / (xmippFeature)(nn - 1));
