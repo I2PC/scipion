@@ -70,6 +70,10 @@ void Prog_angular_predict_prm::read(int argc, char **argv)
     if (checkParameter(argc, argv, "-show_options")) tell |= TELL_OPTIONS;
     search5D = checkParameter(argc, argv, "-5D");
     summaryRootname = getParameter(argc, argv, "-summary", "");
+    // Sjors searching shifts in combination with mirrors has been
+    // implemented in the wrong way: it will give nonsense!
+    if (check_mirrors && !search5D) 
+	REPORT_ERROR(1, "Prog_angular_predict_prm:: read: because of a BUG you cannot do a 3D+2D seach without giving the -do_not_check_mirrors option.");
     if (!MPIversion) produce_side_info();
 }
 
@@ -1024,7 +1028,9 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
         ImageXmipp Iref;
         Iref.read(library_name[vref_idx[ibest]]);
         Iref().setXmippOrigin();
-        if (Xoff == 0 && Yoff == 0) Ip() = I();
+	//Sjors: without rotating the reference, this will go wrong!
+	Iref().selfRotate(-vpsi[ibest]);
+	if (Xoff == 0 && Yoff == 0) Ip() = I();
         else
         {
             VECTOR_R2(shift, Xoff, Yoff);
