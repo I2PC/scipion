@@ -158,8 +158,7 @@ void Prog_mlf_tomo_prm::produce_Side_info()
     VolumeXmipp vol;
     headerXmipp head;
     Matrix3D<double> Maux, Faux_real, Faux_imag;
-    std::vector<Matrix3D<double> > Vdum;
-    Matrix3D<std::complex<double> > Faux, Fref;
+    Matrix3D<std::complex<double> > Faux, Faux2;
     int xdim, ydim, zdim, c, iaux, ifound, refno = 0;
     float xx, yy;
     double dum, avg;
@@ -231,9 +230,9 @@ void Prog_mlf_tomo_prm::produce_Side_info()
     Maux.setXmippOrigin();
     nr_ref = 0;
     SFr.go_beginning();
+    Fref.clear();
     while (!SFr.eof())
     {
-        Fref_trans.push_back(Vdum);
         vol.read(SFr.NextImg());
         vol().setXmippOrigin();
         //computeStats_within_binary_mask(outside_mask,vol(),dum,dum,avg,dum);
@@ -241,38 +240,17 @@ void Prog_mlf_tomo_prm::produce_Side_info()
         //Maux+=vol();
         // Store the centered FFT of each reference
         // Store real and imaginary parts separately!!
-        FourierTransform(vol(), Fref);
-        CenterOriginFFT(Fref, true);
+        FourierTransform(vol(), Faux2);
+        CenterOriginFFT(Faux2, true);
 
-        // Pre-calculate all translated versions of Fref
-        for (int itrans = 0; itrans < nr_trans; itrans++)
-        {
-            Faux = Fref;
-            ShiftFFT(Faux, Vtrans[itrans](0), Vtrans[itrans](1), Vtrans[itrans](2));
-            Complex2RealImag(Faux, Faux_real, Faux_imag);
-            // Store real and imaginary parts separately!!
-            Fref_trans[refno].push_back(Faux_real);
-            Fref_trans[refno].push_back(Faux_imag);
-        }
+	Complex2RealImag(Faux2, Faux_real, Faux_imag);
+	Fref.push_back(Faux_real);
+	Fref.push_back(Faux_imag);
 
         // Default start is all equal model fractions
         alpha_k.push_back((double)1 / SFr.ImgNo());
         nr_ref++;
     }
-
-    // Prepare for smoothing RETHINK THIS WITH CENTERORIGINFFT!!
-    /*
-    if (theta0>0) theta=theta0;
-    if (theta>0) 
-    {
-    double theta_corr=(double)nr_img/(double)(nr_ref*nr_ref);
-    for (int refno=0;refno<nr_ref; refno++) 
-    {
-     Iref[refno]+=(theta*theta_corr)*Maux;
-     Iref[refno]/=(theta*theta_corr+1);
-    }
-    }
-    */
 
     // Read in symmetry information
     if (fn_sym != "") SL.read_sym_file(fn_sym);
@@ -736,7 +714,7 @@ void Prog_mlf_tomo_prm::MLF_integrate(Matrix3D<double> Mimg, Matrix2D<double> A_
                                       double &opt_xoff, double &opt_yoff, double &opt_zoff)
 {
 
-    Matrix3D<double> Mrotwedge, Frotref_real, Frotref_imag, Frotimg_real, Frotimg_imag;
+    Matrix3D<double> Mwedge, Mrotwedge, Frotref_real, Frotref_imag, Frotimg_real, Frotimg_imag;
     Matrix3D<double> Faux_real, Faux_imag;
     std::vector<Matrix3D<double> > Fimg_trans;
     std::vector<Matrix3D<double> > dum;
@@ -766,12 +744,16 @@ void Prog_mlf_tomo_prm::MLF_integrate(Matrix3D<double> Mimg, Matrix2D<double> A_
 
     // Force missing wedge
     Faux.resize(dim, dim, dim);
+    Mwedge.initZeros(dim,dim,dim);
+    Mrotwedge.initZeros(dim,dim,dim);
+    Mwedge.setXmippOrigin();
+    Mrotwedge.setXmippOrigin();
     for (int ipoint = 0; ipoint < nr_pointer[iwedge]; ipoint++)
     {
         ii = pointer[iwedge][ipoint];
         (Faux).data[ii] = (Fimg).data[ii];
+	(Mwedge).data[ii] = 1.;
     }
-    Fimg = Faux;
 
     // Pre-calculate all translated versions of Fimg
     for (int itrans = 0; itrans < nr_trans; itrans++)
@@ -808,8 +790,8 @@ void Prog_mlf_tomo_prm::MLF_integrate(Matrix3D<double> Mimg, Matrix2D<double> A_
                     if (alpha_k[refno] > 0.)
                     {
                         refw[refno] = 0.;
-                        applyGeometryBSpline(Frotref_real, A, Fref_trans[refno][2*zero_trans], 3, IS_INV, DONT_WRAP);
-                        applyGeometryBSpline(Frotref_imag, A, Fref_trans[refno][2*zero_trans+1], 3, IS_INV, DONT_WRAP);
+                        applyGeometryBSpline(Frotref_real, A, Fref[2*refno], 3, IS_INV, DONT_WRAP);
+                        applyGeometryBSpline(Frotref_imag, A, Fref[2*refno+1], 3, IS_INV, DONT_WRAP);
                         if (debug)
                         {
                             RealImag2Complex(Frotref_real, Frotref_imag, Faux);
@@ -843,10 +825,6 @@ void Prog_mlf_tomo_prm::MLF_integrate(Matrix3D<double> Mimg, Matrix2D<double> A_
                                 diff += tmpd / (2 * Vsigma2[ires]);
                                 // probably this if is too expensive for a debug...
                                 //if (debug) Vt().data[ii]=(double)tmpd/(2*Vsigma2[ires]);
-                                if (debug && ii == 13066)
-                                {
-                                    std::cerr << "Mrotwedge= " << (Mrotwedge).data[ii] << " Fimg_trans[2*itrans]= " << (Fimg_trans[2*itrans].data[ii]) << " (Frotref_real)= " << (Frotref_real).data[ii] << " diff2= " << tmpd << std::endl;
-                                }
                             }
                             //if (debug) {
                             //  Vt.write("diff.vol");
@@ -946,13 +924,12 @@ void Prog_mlf_tomo_prm::MLF_integrate(Matrix3D<double> Mimg, Matrix2D<double> A_
                                 {
                                     std::cerr << " weight= " << weight << " sum_refw= " << sum_refw << std::endl;
                                 }
-                                // Impute missing wedges for reference values
-                                for (int ipoint = 0; ipoint < nr_pointer_mis[iwedge]; ipoint++)
+				// weighted sum of missing wedges
+                                applyGeometryBSpline(Mrotwedge, A, Mwedge, 3, IS_NOT_INV, DONT_WRAP);
+				FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Mrotwedge)
                                 {
-                                    ii = pointer_mis[iwedge][ipoint];
-                                    (Fimg_trans[2*itrans]).data[ii] = (Fref_trans[refno][2*itrans]).data[ii];
-                                    (Fimg_trans[2*itrans+1]).data[ii] = (Fref_trans[refno][2*itrans+1]).data[ii];
-                                }
+				    dVkij(wsum_Fweds[refno],k,i,j) += weight * dVkij(Mrotwedge,k,i,j);
+				}
                                 // weighted sum of rotated and translated images
                                 applyGeometryBSpline(Frotimg_real, A, Fimg_trans[2*itrans], 3, IS_NOT_INV, DONT_WRAP);
                                 applyGeometryBSpline(Frotimg_imag, A, Fimg_trans[2*itrans+1], 3, IS_NOT_INV, DONT_WRAP);
@@ -1113,7 +1090,7 @@ void Prog_mlf_tomo_prm::update_parameters(std::vector<Matrix3D<double> > &wsum_F
     Matrix1D<double> rmean_sigma2;
     Matrix1D<int> center(3), radial_count;
     Matrix3D<std::complex<double> > Faux, Fsum;
-    Matrix3D<double> Maux, Msum, Faux_real, Faux_imag;
+    Matrix3D<double> Maux, Msum, Faux_real, Faux_imag, Mwed;
     double rr, dum, avg, theta_corr, sum_ref = 0.;
 
     // Pre-calculate sumw_allrefs
@@ -1149,7 +1126,7 @@ void Prog_mlf_tomo_prm::update_parameters(std::vector<Matrix3D<double> > &wsum_F
         }
     }
 
-    // Update all Fref_trans matrices
+    // Update all Fref matrices
     for (int refno = 0;refno < nr_ref; refno++)
     {
         if (sumw[refno] > 0.)
@@ -1157,56 +1134,26 @@ void Prog_mlf_tomo_prm::update_parameters(std::vector<Matrix3D<double> > &wsum_F
             Faux_real = wsum_Fimgs[2*refno] / sumw[refno];
             Faux_imag = wsum_Fimgs[2*refno+1] / sumw[refno];
             RealImag2Complex(Faux_real, Faux_imag, Fsum);
+	    Mwed = wsum_Fweds[refno] / sumw[refno];
 
-            // Calculate all translated versions of Faux
-            for (int itrans = 0; itrans < nr_trans; itrans++)
-            {
-                Faux = Fsum;
-                ShiftFFT(Faux, Vtrans[itrans](0), Vtrans[itrans](1), Vtrans[itrans](2));
-                Complex2RealImag(Faux, Faux_real, Faux_imag);
-                // Store real and imaginary parts separately!!
-                Fref_trans[refno][2*itrans] = Faux_real;
-                Fref_trans[refno][2*itrans+1] = Faux_imag;
-            }
-
-            // RETHINK SMOOTHING FOR NEW WAY OF DOING STUFF...
-            /*
-            Msum+=Iref[refno];
-            sum_ref+=1.;
-            */
+	    // Do the actual imputation here
+	    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Fsum)
+	    {
+		dVkij(Fref[2*refno],k,i,j) *= (1. - dVkij(Mwed,k,i,j));
+		dVkij(Fref[2*refno],k,i,j) += dVkij(Faux_real,k,i,j);
+	    }
+	    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Fsum)
+	    {
+		dVkij(Fref[2*refno+1],k,i,j) *= (1. - dVkij(Mwed,k,i,j));
+		dVkij(Fref[2*refno+1],k,i,j) += dVkij(Faux_imag,k,i,j);
+	    }
         }
         else
         {
-            for (int itrans = 0; itrans < nr_trans; itrans++)
-            {
-                Fref_trans[refno][2*itrans].initZeros();
-                Fref_trans[refno][2*itrans+1].initZeros();
-            }
+            Fref[2*refno].initZeros();
+            Fref[2*refno+1].initZeros();
         }
     }
-
-    // Smooth references...
-    /*
-    if (theta>0) {
-    theta_corr=(double)nr_img/(double)(nr_ref*nr_ref);
-    FourierTransform(Msum,Fsum);
-    Fsum*=theta_corr*theta;
-    for (int refno=0;refno<nr_ref; refno++) {
-     FourierTransform(wsum_Mref[refno],Faux);
-     Faux+=Fsum;
-     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux) {
-    dVkij(Faux,k,i,j)/=dVkij(wsum_Mwedge[refno],k,i,j)+(double)sum_ref*theta*theta_corr;
-     }
-     InverseFourierTransform(Faux,Iref[refno]);
-    }
-    if (theta0>0) 
-     theta=theta0*exp(-theta_step*iter);
-    else {
-     theta-=theta_step;
-    }
-    theta=MAX(0,theta);
-    }
-    */
 
     // Update model fractions
     if (!fix_fractions)
@@ -1222,71 +1169,18 @@ void Prog_mlf_tomo_prm::update_parameters(std::vector<Matrix3D<double> > &wsum_F
     // Update estimate for noise
     if (!fix_sigma_noise)
     {
+	for (int i = 0; i < resol_max; i++)
+	{
+	    // STILL ADD A TERM FOR THE IMPUTATION HERE!!!
+	    
 
-        if (theta == 0)
-        {
-            for (int i = 0; i < resol_max; i++)
-            {
-                // Factor 2 because of 2D-Gaussian in Fourier space!
-                if (sum_nonzero_pixels[i] > 0.)
-                    Vsigma2[i] = wsum_sigma2[i] / (2 * sum_nonzero_pixels[i]);
-                else Vsigma2[i] = 0.;
-                if (debug) std::cerr << " Vsig2= " << Vsigma2[i] << std::endl;
-            }
+	    // Factor 2 because of 2D-Gaussian in Fourier space!
+	    if (sum_nonzero_pixels[i] > 0.)
+		Vsigma2[i] = wsum_sigma2[i] / (2 * sum_nonzero_pixels[i]);
+	    else Vsigma2[i] = 0.;
+	    if (debug) std::cerr << " Vsig2= " << Vsigma2[i] << std::endl;
+	}
 
-        }
-
-        // RETHINK THIS FOR NEW STUFF....
-        /*
-        else 
-        {
-            int ires;
-            double tmpr,tmpi;
-            std::vector<double> diff2_ref;
-            std::vector<Matrix3D<std::complex<double> > > Fref;
-            Fref.clear();
-            for (int i=0; i<resol_max; i++) 
-         diff2_ref.push_back(0.);
-            for (int refno=0;refno<nr_ref; refno++) 
-            {
-         FourierTransform(Iref[refno],Faux);
-         Complex2RealImag(Faux,Faux_real,Faux_imag);
-         Fref.push_back(Faux_real);
-         Fref.push_back(Faux_imag);
-            }
-            for (int refno=0;refno<nr_ref; refno++) 
-            {
-         if (sumw[refno]>0.) 
-         {
-             for (int refno2=0; refno2<nr_ref; refno2++) 
-             {
-          if (refno!=refno2 && sumw[refno2]>0.) 
-          {
-              FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Fref[refno]) {
-           ires=dVkij(Mresol,k,i,j);
-           if (ires>resol_min && ires<resol_max) 
-           {
-               tmpr= (double)(dVkij(Fref[refno],k,i,j)).real() -
-            (double)(dVkij(Fref[refno2],k,i,j)).real();
-               tmpi= (double)(dVkij(Fref[refno],k,i,j)).imag() -
-            (double)(dVkij(Fref[refno2],k,i,j)).imag();
-               diff2_ref[ires]+=tmpr*tmpr+tmpi*tmpi;
-           }
-              }
-          }
-             }
-         }
-            }
-            for (int i=0; i<resol_max; i++) 
-            {
-         // Factor 2 because of 2D-Gaussian in Fourier space!
-         if (sum_nonzero_pixels[i]>0.)
-             Vsigma2[i]=(wsum_sigma2[i]+diff2_ref[i]*theta*theta_corr)/(2*sum_nonzero_pixels[i]);
-         else Vsigma2[i]=0.;
-         if (debug) std::cerr<<" Vsig2= ("<< wsum_sigma2[i]<<" + "<<diff2_ref[i]<<" *" <<theta*theta_corr<<") /2* "<<sum_nonzero_pixels[i]<<std::endl;
-            }
-        }
-        */
     }
 
 }
@@ -1307,7 +1201,7 @@ void Prog_mlf_tomo_prm::post_process_references(std::vector<Matrix3D<double> > &
     Mref.clear();
     for (int refno = 0;refno < nr_ref; refno++)
     {
-        RealImag2Complex(Fref_trans[refno][2*zero_trans], Fref_trans[refno][2*zero_trans+1], Faux);
+        RealImag2Complex(Fref[2*refno], Fref[2*refno+1], Faux);
         CenterOriginFFT(Faux, false);
         InverseFourierTransform(Faux, Maux);
         Mref.push_back(Maux);
@@ -1335,7 +1229,7 @@ void Prog_mlf_tomo_prm::post_process_references(std::vector<Matrix3D<double> > &
         {
             FourierTransform(Mref[refno], Faux);
             CenterOriginFFT(Faux, true);
-            Complex2RealImag(Faux, Fref_trans[refno][2*zero_trans], Fref_trans[refno][2*zero_trans+1]);
+            Complex2RealImag(Faux, Fref[2*refno], Fref[2*refno+1]);
         }
     }
 
@@ -1381,7 +1275,7 @@ void Prog_mlf_tomo_prm::write_output_files(const int iter, SelFile &SF, DocFile 
 
     FileName fn_tmp, fn_base;
     Matrix1D<double> fracline(1);
-    string comment;
+    std::string comment;
     VolumeXmipp tmpvol;
     FourierVolumeXmipp Ftmpvol;
 
@@ -1409,7 +1303,7 @@ void Prog_mlf_tomo_prm::write_output_files(const int iter, SelFile &SF, DocFile 
         fn_tmp = fn_base + "_ref";
         fn_tmp.compose(fn_tmp, refno + 1, "");
         fn_tmp = fn_tmp + ".sumvol";
-        RealImag2Complex(Fref_trans[refno][2*zero_trans], Fref_trans[refno][2*zero_trans+1], Ftmpvol());
+        RealImag2Complex(Fref[2*refno], Fref[2*refno+1], Ftmpvol());
         CenterOriginFFT(Ftmpvol(), false);
         InverseFourierTransform(Ftmpvol(), tmpvol());
         tmpvol.write(fn_tmp);

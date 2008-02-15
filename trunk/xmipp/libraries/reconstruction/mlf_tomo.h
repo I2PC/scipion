@@ -95,7 +95,7 @@ public:
     SelFile SF, SFr, SFw;
     // Vector for volumes to hold the real and imag parts of Fref and
     // the sum of all wedges for each reference
-    std::vector<std::vector <Matrix3D<double> > > Fref_trans;
+    std::vector<Matrix3D<double> > Fref;
     // For all tomograms: angles, offsets and wedge parameters
     std::vector<double> img_rot, img_tilt, img_psi, img_xoff, img_yoff, img_zoff, img_th0, img_thF, img_wednr;
     // Matrices for calculating PDF of (in-plane) translations
@@ -121,9 +121,9 @@ public:
     /* pointers for the different wedges in Fourier Space */
     std::vector<std::vector<int> > pointer, pointer_mis, pointer_i, pointer_j, pointer_k, pointer_resol;
     /* Number of elements in pointers for the different ctf-matrices */
-    std::vector<int> nr_pointer, nr_pointer_mis;
-    /* High/low resolution limits */
-    double highres, lowres;
+    std::vector<int> nr_pointer, nr_pointer_prob, nr_pointer_mis;
+    /* High/low and probability-calculation resolution limits */
+    double highres, lowres, probres;
     /* Integer high/low resolution limits*/
     int resol_max, resol_min;
     /* resolution pointer */
