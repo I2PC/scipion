@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 {
     std::string     ang1 = "rot", ang2 = "tilt", ang3 = "psi";
     DocFile         angles;
-    FileName        fn_ang, fn_sel, fn_hist, fn_ps, fn_DX;
+    FileName        fn_ang, fn_sel, fn_hist, fn_ps, fn_DX, fn_bild;
     int             steps;
     int             tell;
     float           R, r, rmax, wmax = -99.e99;
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
     float           tilt_view;
     int             up_down_correction, colw;
     bool            solid_sphere;
-
+    float           shift_center;
 
 // Check the command line ==================================================
     try
@@ -56,6 +56,7 @@ int main(int argc, char *argv[])
         fn_hist = getParameter(argc, argv, "-hist", "");
         fn_ps = getParameter(argc, argv, "-ps", "");
         fn_DX = getParameter(argc, argv, "-DX", "");
+        fn_bild = getParameter(argc, argv, "-bild", "");
         steps = textToInteger(getParameter(argc, argv, "-steps", "100"));
         tell = checkParameter(argc, argv, "-show_process");
         R = textToFloat(getParameter(argc, argv, "-R", "60"));
@@ -65,7 +66,7 @@ int main(int argc, char *argv[])
         up_down_correction = checkParameter(argc, argv, "-up_down_correction");
         solid_sphere = checkParameter(argc, argv, "-solid_sphere");
         colw = textToInteger(getParameter(argc, argv, "-wcol", "-1"));
-
+        shift_center= textToFloat(getParameter(argc, argv, "-shift_center", "0"));
         // Angle order
         int i;
         if ((i = paremeterPosition(argc, argv, "-order")) != -1)
@@ -202,7 +203,33 @@ int main(int argc, char *argv[])
         }
 
 
-
+// Show distribution in chimera as bild file ==========================================
+        if (fn_bild != "")
+        {
+            std::ofstream fh_bild;
+            fh_bild.open(fn_bild.c_str(), std::ios::out);
+            if (!fh_bild)
+                EXIT_ERROR(1, (std::string)"Ang_distribution: Cannot open " + fn_ps + " for output");
+            fh_bild << ".color 1 0 0" << std::endl;
+	    
+            for (int i = 0; i < AngleNo; i++)
+            {
+                // Triangle size depedent on w
+                if (colw >= 0)
+                {
+                    r  = angles(i + 1, colw);
+                    r *= rmax / wmax;
+                }
+                else r = rmax;
+                fh_bild << ".sphere " 
+		        << R*XX(v[i])  + shift_center << " " 
+		        << R*YY(v[i])  + shift_center << " " 
+		        << R*ZZ(v[i])  + shift_center << " " 
+			<< r 
+			<<"\n";
+            }
+            fh_bild.close();
+        }
 // Show distribution as triangles ==========================================
         if (fn_ps != "")
         {
@@ -329,16 +356,18 @@ void Usage()
     << "                                      rot or rot. The default\n"
     << "                                      order is rot, tilt and psi.\n"
     << "      [-DX <-DX file out>           : DX file\n"
+    << "      [-bild <-chimera file out>    : Chimera file\n"
     << "      [-hist <doc_file>]            : histogram of distances\n"
     << "      [-steps <stepno=100>]         : number of divisions in the histogram\n"
     << "      [-show_process]               : show distances.\n"
     << "      [-ps <PS file out>]           : PS file with the topological sphere\n"
-    << "      [-R <big_sphere_radius=60>]   : sphere radius for the PS file\n"
-    << "      [-r <triangle side=1.5>]      : triangle size for the PS file\n"
+    << "      [-R <big_sphere_radius=60>]   : sphere radius for the PS/bild file\n"
+    << "      [-r <triangle side=1.5>]      : triangle size for the PS/bild file\n"
     << "      [-rot_view <rot angle=0>]     : rotational angle for the view\n"
     << "      [-tilt_view <tilt angle=30>]  : tilting angle for the view\n"
     << "      [-wcol <column number=-1>]    : generate triangles with size depending on \n"
     << "                                      number in corresponding column of the docfile\n"
+    << "      [-shift_center <shift_center=0>]: shift coordinates center for bild file\n"
     << "      [-up_down_correction]         : correct angles so that a semisphere\n"
     << "                                      is shown\n"
     << "      [-solid_sphere]               : projections in the back plane are\n"
