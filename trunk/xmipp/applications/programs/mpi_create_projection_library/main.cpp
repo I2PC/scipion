@@ -86,7 +86,6 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
     {
         Prog_create_projection_library_Parameters::read(argc,argv);
         mpi_job_size=textToInteger(getParameter(argc,argv,"-mpi_job_size","-1"));
-        
     }
 
     /* Usage ------------------------------------------------------------------- */
@@ -94,8 +93,8 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
     {
         Prog_create_projection_library_Parameters::usage();
         std::cerr << " [ -mpi_job_size default=-1]    : Number of images sent to a cpu in a single job \n";
-        std::cerr << "                                 if  -1 the computer will fill the value for you";
-    }
+        std::cerr << "                                  if  -1 the computer will fill the value for you";
+  }
 
 
     /* Show -------------------------------------------------------------------- */
@@ -105,20 +104,31 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
 	std::cerr << " Size of mpi jobs " << mpi_job_size <<std::endl;
     }
 
-    /* Pre Run --------------------------------------------------------------------- */
+    /* Pre Run PreRun for all nodes but not for all works */
     void preRun()
     {
+        int my_seed;
         if (rank == 0) 
         {
             show();
+	    //randon numbers must be the same in all nodes
+	    srand ( time(NULL) );
+            my_seed=rand();
+	    
         }
+	//Bcast must be seem by all processors
+	MPI_Bcast (&my_seed, 1, MPI_INT, 0, MPI_COMM_WORLD);
         //all ranks
+	//set sampling must go before set noise
         mysampling.SetSampling(sampling);
+        mysampling.SetNoise(perturb_projection_vector,my_seed);
+
         //mysampling.SetNeighborhoodRadius(0.);//irelevant
         //true -> half_sphere
         mysampling.Compute_sampling_points(false,max_tilt_angle,min_tilt_angle);
         mysampling.remove_redundant_points(symmetry, sym_order);
         remove_points_not_close_to_experimental_points();
+	/* perturb points */
         if (rank == 0) 
         {
             mysampling.create_sym_file(symmetry, sym_order);
