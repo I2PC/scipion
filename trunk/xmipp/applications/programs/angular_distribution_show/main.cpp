@@ -1,6 +1,7 @@
 /***************************************************************************
  *
  * Authors:    Carlos Oscar            coss@cnb.uam.es (1999)
+ *             Roberto Marabini        added bild option (2008)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
