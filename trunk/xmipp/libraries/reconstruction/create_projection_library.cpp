@@ -57,6 +57,7 @@ void Prog_create_projection_library_Parameters::read(int argc, char **argv)
             angular_distance = textToFloat(getParameter(argc, argv,"-angular_distance"));
     }
     quiet = checkParameter(argc, argv,"-quiet");
+    perturb_projection_vector=textToFloat(getParameter(argc,argv,"-perturb","0"));       
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -76,6 +77,9 @@ void Prog_create_projection_library_Parameters::usage()
     << "  [-experimental_images \"\"]  : doc file with experimental data\n"
     << "  [-angular_distance 20]       : do not search a distance larger than...\n"
     << "  [-quiet]                     : do not show messages\n"
+    << "  [-perturb default=0.0]	     : gaussian noise projection unit vectors \n"
+    << "				       a value=sin(sampling_rate)/4  \n"
+    << "				       may be a good staring point \n"
     << "\n"
     << "Example of use: Sample at 2 degrees and use c6 symmetry\n"
     << "   xmipp_create_projection_library -i in.vol -o out "
@@ -249,6 +253,10 @@ void Prog_create_projection_library_Parameters::run()
     show();
     //all ranks
     mysampling.SetSampling(sampling);
+    srand ( time(NULL) );
+    int my_seed;
+    my_seed=rand();
+    mysampling.SetNoise(perturb_projection_vector,my_seed);
     //mysampling.SetNeighborhoodRadius(0.);//irelevant
     //true -> half_sphere
     mysampling.Compute_sampling_points(false,max_tilt_angle,min_tilt_angle);
