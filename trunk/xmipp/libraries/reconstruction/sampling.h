@@ -65,6 +65,9 @@ public:
     /** sampling rate in radians */
     double sampling_rate_rad;
 
+    /** sampling rate for the unit vectors */
+    double sampling_noise;
+
     /** number of samples */
     int number_of_samples;
 
@@ -129,6 +132,10 @@ public:
                       );
     /** set sampling rate */
     void SetSampling(double sampling);
+
+    /** set sampling noise for projection vectors create in the unit
+        sphere */
+    void SetNoise(double deviation, int my_seed=-1);
 
     /** set neighborhood distance */
     void SetNeighborhoodRadius(double neighborhood);

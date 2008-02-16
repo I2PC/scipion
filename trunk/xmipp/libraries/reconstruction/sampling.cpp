@@ -82,6 +82,9 @@ XmippSampling::XmippSampling()
     vertices_vectors.push_back(vectorR3(-0.723606898343194, -0.525731188379405, -0.447213343087301));
     vertices_vectors.push_back(vectorR3(0.276393242471372, -0.850650927984471, -0.447213343087301));
     vertices_vectors.push_back(vectorR3(0., 0., -1.));
+    
+    sampling_noise=0.0;
+    
     //#define DEBUG1
 #ifdef  DEBUG1
     for (int i = 0;
@@ -96,6 +99,12 @@ void XmippSampling::SetSampling(double sampling)
 {
     sampling_rate_rad = DEG2RAD(sampling);
     number_of_samples = ROUND(cte_w / sampling_rate_rad);
+}
+
+void XmippSampling::SetNoise(double noise_deviation, int my_seed)
+{
+    sampling_noise = noise_deviation;
+    init_random_generator(my_seed);
 }
 
 void XmippSampling::SetNeighborhoodRadius(double neighborhood)
@@ -248,6 +257,8 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere,
     //std::cout  <<  ending_point.transpose()    << " 1.1 1.5 " << std::endl;
 #endif
 #undef DEBUG2
+/*
+
     // add  main corners
     for (int i = 0;
          i < vertices_vectors.size();
@@ -262,6 +273,31 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere,
         else
             sampling_points_vector.push_back(vertices_vectors[i]);
     }
+*/
+    // add main corners that are not part of the basic octahedrons
+    {
+    int i=11;
+        if (   (only_half_sphere && ZZ(vertices_vectors[i]) < 0.0)
+           || ZZ(vertices_vectors[i]) < min_z
+           || ZZ(vertices_vectors[i]) > max_z
+           )
+        //if (only_half_sphere && ZZ(vertices_vectors[i]) < 0.0)
+            ;
+        else
+            sampling_points_vector.push_back(vertices_vectors[i]);
+    }
+    {
+    int i=0;
+        if (   (only_half_sphere && ZZ(vertices_vectors[i]) < 0.0)
+           || ZZ(vertices_vectors[i]) < min_z
+           || ZZ(vertices_vectors[i]) > max_z
+           )
+        //if (only_half_sphere && ZZ(vertices_vectors[i]) < 0.0)
+            ;
+        else
+            sampling_points_vector.push_back(vertices_vectors[i]);
+    }
+    
     // add edges
     for (int i = 0;
          i < edge_vector_start.size();
@@ -292,14 +328,23 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere,
     }
 //#define DEBUG3
 #ifdef  DEBUG3
-    for (int i = 0;
-         i < sampling_points_vector.size();
-         i++)
-    {
-        std::cout  <<  sampling_points_vector[i].transpose()  << " 1 1 " << std::endl;
-    }
+     for (int i = 0;
+	  i < sampling_points_vector.size();
+	  i++)
+     {
+         std::cout  <<  ".color 1 0 0" << std::endl
+                    <<  ".sphere " << sampling_points_vector[i].transpose()  << 
+	               " .025" << std::endl;
+	 sampling_points_vector[i].add_noise(0.0, sampling_noise, "gaussian");
+	 sampling_points_vector[i].selfNormalize();
+         std::cout  <<  ".color 0 0 1" << std::endl
+                    <<  ".sphere " << sampling_points_vector[i].transpose()  << 
+	               " .027" << std::endl;
+     }
+    
 #endif
 #undef DEBUG3
+
     // add in between points
     int j = 0;
     bool j_flag = false;
@@ -330,10 +375,37 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere,
          i < sampling_points_vector.size();
          i++)
     {
-        std::cout  <<  sampling_points_vector[i].transpose()  << " 1 1 " << std::endl;
+        std::cout  <<  ".color 1 0 0" << std::endl
+                   <<  ".sphere " << sampling_points_vector[i].transpose()  << 
+	               " .025" << std::endl;
+    }
+#endif
+
+    //noisify angles
+    if(sampling_noise!=0.0){ 
+	 for (int i = 0;
+              i < sampling_points_vector.size();
+              i++)
+	 {
+             sampling_points_vector[i].add_noise(0.0, sampling_noise, "gaussian");
+	     sampling_points_vector[i].selfNormalize();
+	 }
+    }
+
+//#define DEBUG3
+#ifdef  DEBUG3
+    for (int i = 0;
+         i < sampling_points_vector.size();
+         i++)
+    {
+        std::cout  <<  ".color 0 1 0" << std::endl
+                   <<  ".sphere " << sampling_points_vector[i].transpose()  << 
+	               " .03" << std::endl;
     }
 #endif
 #undef DEBUG3
+
+    // store sampling points as angles
     Matrix1D<double> aux(3), aux1(3);
     ZZ(aux) = 0.;
     double rot, tilt, psi;
