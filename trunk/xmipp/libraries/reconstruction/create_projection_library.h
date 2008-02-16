@@ -48,6 +48,9 @@ public:
     /** Sampling rate. Distance between sampling points in degrees*/
     double sampling;
 
+    /**Perturb angles of reference projections*/
+    double perturb_projection_vector;
+
     /** produce projections in psi? */
     double psi_sampling;
 
