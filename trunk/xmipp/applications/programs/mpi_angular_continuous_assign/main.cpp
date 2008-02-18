@@ -135,12 +135,15 @@ int main(int argc, char **argv)
             }
         }
 
-        MPI_Finalize();
         if (rank == 0) prm.finish_processing();
+        MPI_Finalize();
         return 0 ;
     }
+
     catch (Xmipp_error XE)
     {
         std::cout << XE << std::endl;
+        MPI_Finalize();
+	return 1 ;
     }
 }
