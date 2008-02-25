@@ -61,7 +61,7 @@ ParticleMass=2000000
     for a description of the symmetry file format
     dont give anything, if no symmetry is present
 """
-SymmetryFile='C6.sym'
+SymmetryFile=''
 
 # Sampling rate (Angstrom/pixel)
 SamplingRate=1.296
@@ -452,17 +452,31 @@ class MultiResClass:
        
        # Perform a discrete angular assignment
        if self.getDiscreteAssignment(_iteration)=="1":
-	  params="-i preproc_assign.sel "+\
-        	 "-ref "+self.getModelFFilename(_iteration)+" "+\
-		 "-oang "+self.getDiscreteAnglesFilename(_iteration)+" "+\
-		 "-proj_step "+self.getAngularSteps(_iteration)+" "+\
-		 "-psi_step "+self.getAngularSteps(_iteration)+" "+\
-		 "-summary "+self.getDiscreteAnglesSummaryDir(_iteration)+\
-		    "/summary"
+          params0="-i "+self.getModelFFilename(_iteration)+" "+\
+                   " -sampling_rate "+self.getAngularSteps(_iteration)+" "+\
+                   "-o ref"
+          if not self.symmetryFile=="":
+             params0+=" -sym "+self.symmetryFile
+             
+          params="-i preproc_assign.sel "+\
+                  "-ref ref.sel -ang ref_angles.doc "+\
+                  "-oang "+self.getDiscreteAnglesFilename(_iteration)+" "+\
+                  "-psi_step "+self.getAngularSteps(_iteration)+" "+\
+                  "-max_shift_change 999 "+\
+                  "-summary "+self.getDiscreteAnglesSummaryDir(_iteration)+\
+                  "/summary -dont_modify_header -do_not_check_mirrors -max_shift_change 999"
           if not self.symmetryFile=="":
              params+=" -sym "+self.symmetryFile
-                
-	  self.createDirectory(self.getDiscreteAnglesSummaryDir(_iteration))
+
+          self.createDirectory(self.getDiscreteAnglesSummaryDir(_iteration))
+          launch_parallel_job.launch_job(self.doParallel,
+                                         "xmipp_create_projection_library",
+                                         "xmipp_mpi_create_projection_library",
+                                         params0,
+                                         self.mylog,
+                                         self.myNumberOfCPUs,
+                                         self.myMachineFile,
+                                         False)
 	  launch_parallel_job.launch_job(self.doParallel,
         			       "xmipp_angular_discrete_assign",
         			       "xmipp_mpi_angular_discrete_assign",
