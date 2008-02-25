@@ -297,7 +297,7 @@ void ART_single_step(
     project_Volume(vol_in, prm.basis, theo_proj,
                    corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
                    read_proj.rot(), read_proj.tilt(), read_proj.psi(), FORWARD, prm.eq_mode,
-                   prm.GVNeq, A, prm.ray_length);
+                   prm.GVNeq, A, prm.ray_length, prm.threads);
 
     if (fn_ctf != "" && prm.unmatched)
     {
@@ -393,7 +393,7 @@ void ART_single_step(
     project_Volume(*vol_out, prm.basis, theo_proj,
                    corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
                    read_proj.rot(), read_proj.tilt(), read_proj.psi(), BACKWARD, prm.eq_mode,
-                   prm.GVNeq, NULL, prm.ray_length);
+                   prm.GVNeq, NULL, prm.ray_length, prm.threads);
 
     // Remove footprints if necessary
     if (remove_footprints)
