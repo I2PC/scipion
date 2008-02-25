@@ -32,6 +32,43 @@
 #define xDim XSIZE(IMGMATRIX(proj))
 #define yDim YSIZE(IMGMATRIX(proj))
 
+// These two structures are needed when projecting and backprojecting using
+// threads. They make mutual exclusion and synchronization possible.
+barrier_t project_barrier;
+pthread_mutex_t project_mutex = PTHREAD_MUTEX_INITIALIZER;
+    
+int barrier_init(barrier_t *barrier,int needed)
+{
+    barrier->needed = needed;
+    barrier->called = 0;
+    pthread_mutex_init(&barrier->mutex,NULL);
+    pthread_cond_init(&barrier->cond,NULL);
+    return 0;
+}
+
+int barrier_destroy(barrier_t *barrier)
+{
+    pthread_mutex_destroy(&barrier->mutex);
+    pthread_cond_destroy(&barrier->cond);
+    return 0;
+}
+        
+int barrier_wait(barrier_t *barrier)
+{
+    pthread_mutex_lock(&barrier->mutex);
+    barrier->called++;
+    if (barrier->called == barrier->needed) {
+        barrier->called = 0;
+        pthread_cond_broadcast(&barrier->cond);
+    } else {
+        pthread_cond_wait(&barrier->cond,&barrier->mutex);
+    }
+    pthread_mutex_unlock(&barrier->mutex);
+    return 0;
+}
+
+project_thread_params * project_threads;
+
 // Projection from a voxel volume ==========================================
 /* Project a voxel volume -------------------------------------------------- */
 //#define DEBUG
@@ -829,6 +866,6 @@ void count_eqs_in_projection(GridVolumeT<int> &GVNeq,
                              const Basis &basis, Projection &read_proj)
 {
     for (int i = 0; i < GVNeq.VolumesNo(); i++)
-        project_SimpleGrid(GVNeq(i), GVNeq.grid(i), basis,
-                           read_proj, read_proj, FORWARD, COUNT_EQ, NULL, NULL);
+        project_SimpleGrid(&(GVNeq(i)), &(GVNeq.grid(i)), &basis,
+                           &read_proj, &read_proj, FORWARD, COUNT_EQ, NULL, NULL);
 }

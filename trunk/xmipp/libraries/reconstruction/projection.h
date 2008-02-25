@@ -27,16 +27,67 @@
 
 #include <data/image.h>
 #include <data/projection.h>
-
+#include <pthread.h>
 #include "grids.h"
 #include "basis.h"
 
+// Threads things. Threads is a way of distributing workload across
+// different workers to solve a problem faster. Nevertheless, sometimes
+// we need synchronization between threads to avoid undesired race
+// conditions and other problems. Here we are an implementation of a barrier
+// that allows putting all threads to wait at a given point untill all of them
+// have reached such point and can continue working. Barriers are usually
+// available through pthreads system library. Nonetheless, sometimes it is not
+// so we have to implement it here.
+
+typedef struct {
+    int needed;
+    int called;
+    pthread_mutex_t mutex;
+    pthread_cond_t cond;
+} barrier_t;
+
+// These two structures are needed when projecting and backprojecting using
+// threads. They make mutual exclusion and synchronization possible.
+extern barrier_t project_barrier;
+extern pthread_mutex_t project_mutex;
+
+int barrier_init(barrier_t *barrier,int needed);
+int barrier_destroy(barrier_t *barrier);
+int barrier_wait(barrier_t *barrier);
+
+// This structure contains all the information needed by a thread
+// working on the projecting/backprojecting of a projection. This is
+// structure is needed to pass parameters from the master thread to the
+// working threads as they run as a function which does not accept passed
+// parameters other than a void * structure.
+typedef struct {
+        int thread_id;
+        int threads_count;
+        VolumeT<double> * vol;
+        const SimpleGrid * grid;
+        const Basis * basis;
+        Projection * global_proj;
+        Projection * global_norm_proj;
+        int FORW;
+        int eq_mode;
+        const VolumeT<int> *VNeq;
+        Matrix2D<double> *M;
+        double ray_length;  
+        double rot,tilt,psi;
+	bool destroy;
+} project_thread_params;
+
+extern project_thread_params * project_threads;
+
+
 template <class T>
-void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
-                        const Basis &basis,
-                        Projection &proj, Projection &norm_proj, int FORW, int eq_mode,
+void project_SimpleGrid(VolumeT<T> *vol, const SimpleGrid *grid,
+                        const Basis *basis,
+                        Projection *proj, Projection *norm_proj, int FORW, int eq_mode,
                         const VolumeT<int> *VNeq, Matrix2D<double> *M,
-                        double ray_length = -1.0);
+			double ray_length = -1.0,
+                        int thread_id = -1, int num_threads = 1);
 
 
 /*---------------------------------------------------------------------------*/
@@ -86,7 +137,7 @@ void project_Volume(GridVolumeT<T> &vol, const Basis &basis,
                     Projection &proj, Projection &norm_proj, int Ydim, int Xdim,
                     double rot, double tilt, double psi, int FORW, int eq_mode = ARTK,
                     GridVolumeT<int> *GVNeq = NULL, Matrix2D<double> *M = NULL,
-                    double ray_length = -1);
+                    double ray_length = -1, int threads = 1);
 
 /** From voxel volumes.
 
@@ -211,35 +262,131 @@ void project_Crystal_Volume(GridVolume &vol, const Basis &basis,
 const int ART_PIXEL_SUBSAMPLING = 2;
 
 template <class T>
-void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
-                        const Basis &basis,
-                        Projection &proj, Projection &norm_proj, int FORW, int eq_mode,
+void *project_SimpleGridThread( void * params )
+{	
+	project_thread_params * thread_data = (project_thread_params *)params;
+	
+	VolumeT<T> * vol;
+	const SimpleGrid * grid;
+	
+	int thread_id = thread_data->thread_id;
+	int threads_count = thread_data->threads_count;
+		
+	const Basis * basis;
+	
+	Projection * proj;
+	Projection * norm_proj;
+	
+	Projection * forw_proj = new Projection();
+	Projection * forw_norm_proj = new Projection();
+	
+	Projection * global_proj;
+	Projection * global_norm_proj;
+	
+	int FORW;
+	int eq_mode;
+	const VolumeT<int> *VNeq;
+	Matrix2D<double> *M;
+	double ray_length;
+	
+	double rot,tilt,psi;
+	
+	do
+	{
+        	barrier_wait( &project_barrier );
+		
+		if( thread_data->destroy == true )
+			break;
+		
+		vol = thread_data->vol;
+		grid = thread_data->grid;
+		basis = thread_data->basis;
+		FORW = thread_data->FORW;
+		eq_mode = thread_data->eq_mode;
+		VNeq = thread_data->VNeq;
+		M = thread_data->M;
+		ray_length = thread_data->ray_length;
+		global_proj = thread_data->global_proj;
+		global_norm_proj = thread_data->global_norm_proj;
+		
+		rot = thread_data->rot;
+		tilt = thread_data->tilt;
+		psi = thread_data->psi;
+		
+		if( FORW )
+		{
+			proj = forw_proj;
+			norm_proj = forw_norm_proj;
+			
+			proj->reset(YSIZE( (*global_proj)() ), XSIZE( (*global_proj)() ));
+			proj->set_angles(rot, tilt, psi);
+			(*norm_proj)().copyShape((*proj)());
+			(*norm_proj)().initZeros();
+		}
+		else
+		{
+			proj = global_proj;
+			norm_proj = global_norm_proj;
+		}
+		
+		project_SimpleGrid( vol, grid,
+                        basis,
+                        proj, 
+			norm_proj, FORW, eq_mode,
+                        VNeq, M,
+			ray_length,
+			thread_id,
+			threads_count
+      			);
+		
+		if( FORW )
+		{
+			pthread_mutex_lock( &project_mutex );
+
+			(*global_proj)() = (*global_proj)() + (*proj)();
+			(*global_norm_proj)() = (*global_norm_proj)() + (*norm_proj)();
+			
+			pthread_mutex_unlock( &project_mutex );
+		}
+		
+		barrier_wait( &project_barrier );
+	}while(1);
+	
+	return (void *)NULL;
+}
+
+
+template <class T>
+void project_SimpleGrid(VolumeT<T> *vol, const SimpleGrid *grid,
+                        const Basis *basis,
+                        Projection *proj, Projection *norm_proj, int FORW, int eq_mode,
                         const VolumeT<int> *VNeq, Matrix2D<double> *M,
-                        double ray_length)
+                        double ray_length, 
+			int thread_id, int numthreads)
 {
     Matrix1D<double> zero(3);                // Origin (0,0,0)
-    static Matrix1D<double> prjPix(3);       // Position of the pixel within the
+    Matrix1D<double> prjPix(3);       // Position of the pixel within the
     // projection
-    static Matrix1D<double> prjX(3);         // Coordinate: Projection of the
-    static Matrix1D<double> prjY(3);         // 3 grid vectors
-    static Matrix1D<double> prjZ(3);
-    static Matrix1D<double> prjOrigin(3);    // Coordinate: Where in the 2D
+    Matrix1D<double> prjX(3);         // Coordinate: Projection of the
+    Matrix1D<double> prjY(3);         // 3 grid vectors
+    Matrix1D<double> prjZ(3);
+    Matrix1D<double> prjOrigin(3);    // Coordinate: Where in the 2D
     // projection plane the origin of
     // the grid projects
-    static Matrix1D<double> prjDir(3);       // Projection direction
+    Matrix1D<double> prjDir(3);       // Projection direction
 
-    static Matrix1D<double> actprj(3);       // Coord: Actual position inside
+    Matrix1D<double> actprj(3);       // Coord: Actual position inside
     // the projection plane
-    static Matrix1D<double> beginZ(3);       // Coord: Plane coordinates of the
+    Matrix1D<double> beginZ(3);       // Coord: Plane coordinates of the
     // projection of the 3D point
     // (z0,YY(lowest),XX(lowest))
-    static Matrix1D<double> univ_beginY(3);  // Coord: coordinates of the
+    Matrix1D<double> univ_beginY(3);  // Coord: coordinates of the
     // grid point
     // (z0,y0,XX(lowest))
-    static Matrix1D<double> univ_beginZ(3);  // Coord: coordinates of the
+    Matrix1D<double> univ_beginZ(3);  // Coord: coordinates of the
     // grid point
     // (z0,YY(lowest),XX(lowest))
-    static Matrix1D<double> beginY(3);       // Coord: Plane coordinates of the
+    Matrix1D<double> beginY(3);       // Coord: Plane coordinates of the
     // projection of the 3D point
     // (z0,y0,XX(lowest))
     double XX_footprint_size;                // The footprint is supposed
@@ -271,7 +418,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
 
     // Prepare system matrix for printing ...................................
     if (M != NULL)
-        M->initZeros(YSIZE(proj())*XSIZE(proj()), grid.get_number_of_samples());
+        M->initZeros(YSIZE((*proj)())*XSIZE((*proj)()), grid->get_number_of_samples());
 
     // Project grid axis ....................................................
     // These vectors ((1,0,0),(0,1,0),...) are referred to the grid
@@ -280,31 +427,31 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
     // the universal grid.
     // actprj is reused with a different purpose
     VECTOR_R3(actprj, 1, 0, 0);
-    grid.Gdir_project_to_plane(actprj, proj.euler, prjX);
+    grid->Gdir_project_to_plane(actprj, proj->euler, prjX);
     VECTOR_R3(actprj, 0, 1, 0);
-    grid.Gdir_project_to_plane(actprj, proj.euler, prjY);
+    grid->Gdir_project_to_plane(actprj, proj->euler, prjY);
     VECTOR_R3(actprj, 0, 0, 1);
-    grid.Gdir_project_to_plane(actprj, proj.euler, prjZ);
+    grid->Gdir_project_to_plane(actprj, proj->euler, prjZ);
 
     // This time the origin of the grid is in the universal coord system
-    Uproject_to_plane(grid.origin, proj.euler, prjOrigin);
+    Uproject_to_plane(grid->origin, proj->euler, prjOrigin);
 
     // Get the projection direction .........................................
-    proj.euler.getRow(2, prjDir);
+    proj->euler.getRow(2, prjDir);
 
     // Footprint size .......................................................
     // The following vectors are integer valued vectors, but they are
     // stored as real ones to make easier operations with other vectors
-    if (basis.type == Basis::blobs)
+    if (basis->type == Basis::blobs)
     {
-        XX_footprint_size = basis.blobprint.umax();
-        YY_footprint_size = basis.blobprint.vmax();
-        Usampling         = basis.blobprint.Ustep();
-        Vsampling         = basis.blobprint.Vstep();
+        XX_footprint_size = basis->blobprint.umax();
+        YY_footprint_size = basis->blobprint.vmax();
+        Usampling         = basis->blobprint.Ustep();
+        Vsampling         = basis->blobprint.Vstep();
     }
-    else if (basis.type == Basis::voxels || basis.type == Basis::splines)
+    else if (basis->type == Basis::voxels || basis->type == Basis::splines)
     {
-        YY_footprint_size = XX_footprint_size = CEIL(basis.max_length());
+        YY_footprint_size = XX_footprint_size = CEIL(basis->max_length());
         Usampling = Vsampling = 0;
     }
     XX_footprint_size += XMIPP_EQUAL_ACCURACY;
@@ -319,19 +466,24 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
     // The vectors returned by the projection routines are R3 but we
     // are only interested in their first 2 components, ie, in the
     // in-plane components
-    beginZ = XX(grid.lowest) * prjX + YY(grid.lowest) * prjY + ZZ(grid.lowest) * prjZ
-             + prjOrigin;
 
     // This type conversion gives more speed
-    int ZZ_lowest = (int) ZZ(grid.lowest);
-    int YY_lowest = (int) YY(grid.lowest);
-    int XX_lowest = (int) XX(grid.lowest);
-    int ZZ_highest = (int) ZZ(grid.highest);
-    int YY_highest = (int) YY(grid.highest);
-    int XX_highest = (int) XX(grid.highest);
 
+    int ZZ_lowest = (int) ZZ(grid->lowest);
+
+    if( thread_id != -1 )
+        ZZ_lowest += thread_id;
+
+    int YY_lowest = (int) YY(grid->lowest);
+    int XX_lowest = (int) XX(grid->lowest);
+    int ZZ_highest = (int) ZZ(grid->highest);
+    int YY_highest = (int) YY(grid->highest);
+    int XX_highest = (int) XX(grid->highest);
+
+    beginZ = XX_lowest * prjX + YY_lowest * prjY + ZZ_lowest * prjZ + prjOrigin;
+	
     // Check if in VSSNR
-    bool VSSNR_mode = (ray_length == basis.max_length());
+    bool VSSNR_mode = (ray_length == basis->max_length());
 
 #ifdef DEBUG_LITTLE
     int condition;
@@ -341,8 +493,8 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
         std::cout << "Equation mode " << eq_mode << std::endl;
         std::cout << "Footprint size " << YY_footprint_size << "x"
         << XX_footprint_size << std::endl;
-        std::cout << "rot=" << proj.Phi() << " tilt=" << proj.Theta()
-        << " psi=" << proj.Psi() << std::endl;
+        std::cout << "rot=" << proj->Phi() << " tilt=" << proj->Theta()
+        << " psi=" << proj->Psi() << std::endl;
         std::cout << "Euler matrix " << proj.euler;
         std::cout << "Projection direction " << prjDir << std::endl;
         std::cout << grid;
@@ -365,21 +517,22 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
 #endif
 
     // Compute the grid lattice vectors in space ............................
-    static Matrix2D<double> grid_basis(3, 3);
-    grid_basis = grid.basis * grid.relative_size;
-    static Matrix1D<double> gridX(3);  // Direction of the grid lattice vectors
-    static Matrix1D<double> gridY(3);  // in universal coordinates
-    static Matrix1D<double> gridZ(3);
+    Matrix2D<double> grid_basis(3, 3);
+    grid_basis = grid->basis * grid->relative_size;
+    Matrix1D<double> gridX(3);  // Direction of the grid lattice vectors
+    Matrix1D<double> gridY(3);  // in universal coordinates
+    Matrix1D<double> gridZ(3);
+    Matrix1D<double> univ_position(3);
+
     grid_basis.getCol(0, gridX);
     grid_basis.getCol(1, gridY);
     grid_basis.getCol(2, gridZ);
 
-    univ_beginZ = XX(grid.lowest) * gridX + YY(grid.lowest) * gridY +
-                  ZZ(grid.lowest) * gridZ + grid.origin;
+    univ_beginZ = XX_lowest * gridX + YY_lowest * gridY + ZZ_lowest * gridZ + grid->origin;
 
-    static Matrix1D<double> univ_position(3);
     int number_of_basis = 0;
-    for (k = ZZ_lowest; k <= ZZ_highest; k++)
+    
+    for (k = ZZ_lowest; k <= ZZ_highest; k += numthreads)
     {
         // Corner of the row defined by Y
         beginY = beginZ;
@@ -396,9 +549,9 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                 if (ray_length != -1)
                     ray_length_interesting =
                         ABS(point_plane_distance_3D(univ_position, zero,
-                                                    proj.direction)) <= ray_length;
+                                                    proj->direction)) <= ray_length;
 
-                if (grid.is_interesting(univ_position) &&
+                if (grid->is_interesting(univ_position) &&
                     ray_length_interesting)
                 {
                     // Be careful that you cannot skip any basis, although its
@@ -419,10 +572,10 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
 #endif
 
                     // Search for integer corners for this basis
-                    XX_corner1 = CEIL(XMIPP_MAX(x0, XX(actprj) - XX_footprint_size));
-                    YY_corner1 = CEIL(XMIPP_MAX(y0, YY(actprj) - YY_footprint_size));
-                    XX_corner2 = FLOOR(XMIPP_MIN(xF, XX(actprj) + XX_footprint_size));
-                    YY_corner2 = FLOOR(XMIPP_MIN(yF, YY(actprj) + YY_footprint_size));
+                    XX_corner1 = CEIL(XMIPP_MAX(STARTINGX(IMGMATRIX(*proj)), XX(actprj) - XX_footprint_size));
+                    YY_corner1 = CEIL(XMIPP_MAX(STARTINGY(IMGMATRIX(*proj)), YY(actprj) - YY_footprint_size));
+                    XX_corner2 = FLOOR(XMIPP_MIN(FINISHINGX(IMGMATRIX(*proj)), XX(actprj) + XX_footprint_size));
+                    YY_corner2 = FLOOR(XMIPP_MIN(FINISHINGY(IMGMATRIX(*proj)), YY(actprj) + YY_footprint_size));
 
 #ifdef DEBUG
                     if (condition)
@@ -439,8 +592,8 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                     if (XX_corner1 <= XX_corner2 && YY_corner1 <= YY_corner2)
                     {
                         // Compute the index of the basis for corner1
-                        if (basis.type == Basis::blobs)
-                            OVER2IMG(basis.blobprint, (double)YY_corner1 - YY(actprj),
+                        if (basis->type == Basis::blobs)
+                            OVER2IMG(basis->blobprint, (double)YY_corner1 - YY(actprj),
                                      (double)XX_corner1 - XX(actprj), foot_V1, foot_U1);
 
                         if (!FORW) vol_corr = 0;
@@ -470,7 +623,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                                     }
                                 }
 #endif
-                                double a, a2;
+		             double a, a2;
                                 // Check if volumetric interpolation (i.e., SSNR)
                                 if (VSSNR_mode)
                                 {
@@ -479,19 +632,19 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                                     // system
                                     SPEED_UP_temps;
                                     VECTOR_R3(prjPix, x, y, 0);
-                                    M3x3_BY_V3x1(prjPix, proj.eulert, prjPix);
+                                    M3x3_BY_V3x1(prjPix, proj->eulert, prjPix);
                                     V3_MINUS_V3(prjPix, prjPix, univ_position);
-                                    a = basis.value_at(prjPix);
+                                    a = basis->value_at(prjPix);
                                     a2 = a * a;
                                 }
                                 else
                                 {
                                     // This is normal reconstruction from projections
-                                    if (basis.type == Basis::blobs)
+                                    if (basis->type == Basis::blobs)
                                     {
                                         // Projection of a blob
-                                        a = IMGPIXEL(basis.blobprint, foot_V, foot_U);
-                                        a2 = IMGPIXEL(basis.blobprint2, foot_V, foot_U);
+                                        a = IMGPIXEL(basis->blobprint, foot_V, foot_U);
+                                        a2 = IMGPIXEL(basis->blobprint2, foot_V, foot_U);
                                     }
                                     else
                                     {
@@ -507,7 +660,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                                             SPEED_UP_temps;
                                             VECTOR_R3(prjPix, x, y, 0);
                                             // Express the point in a local coordinate system
-                                            M3x3_BY_V3x1(prjPix, proj.eulert, prjPix);
+                                            M3x3_BY_V3x1(prjPix, proj->eulert, prjPix);
 #ifdef DEBUG
                                             if (condition)
                                                 std::cout << " in volume coord ("
@@ -519,7 +672,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                                                 std::cout << " in voxel coord ("
                                                 << prjPix.transpose() << ")";
 #endif
-                                            a = basis.projection_at(prjDir, prjPix);
+                                            a = basis->projection_at(prjDir, prjPix);
                                             a2 = a * a;
                                         }
                                         else
@@ -548,7 +701,7 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                                                     // Get the pixel in universal coordinates
                                                     VECTOR_R3(prjPix, x + px, y + py, 0);
                                                     // Express the point in a local coordinate system
-                                                    M3x3_BY_V3x1(prjPix, proj.eulert, prjPix);
+                                                    M3x3_BY_V3x1(prjPix, proj->eulert, prjPix);
 #ifdef DEBUG
                                                     if (condition)
                                                         std::cout << " in volume coord ("
@@ -559,12 +712,12 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                                                     if (condition)
                                                         std::cout << " in voxel coord ("
                                                         << prjPix.transpose() << ")";
-#endif
-                                                    a += basis.projection_at(prjDir, prjPix);
+#endif 
+                                      a += basis->projection_at(prjDir, prjPix);
 #ifdef DEBUG
                                                     if (condition)
                                                         std::cout << " partial a="
-                                                        << basis.projection_at(prjDir, prjPix)
+                                                        << basis->projection_at(prjDir, prjPix)
                                                         << std::endl;
 #endif
                                                 }
@@ -586,26 +739,26 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                                     {
                                     case CAVARTK:
                                     case ARTK:
-                                        IMGPIXEL(proj, y, x) += VOLVOXEL(vol, k, i, j) * a;
-                                        IMGPIXEL(norm_proj, y, x) += a2;
+                                        IMGPIXEL(*proj, y, x) += VOLVOXEL(*vol, k, i, j) * a;
+                                        IMGPIXEL(*norm_proj, y, x) += a2;
                                         if (M != NULL)
                                         {
                                             int py, px;
-                                            proj().toPhysical(y, x, py, px);
-                                            int number_of_pixel = py * XSIZE(proj()) + px;
+                                            (*proj)().toPhysical(y, x, py, px);
+                                            int number_of_pixel = py * XSIZE((*proj)()) + px;
                                             (*M)(number_of_pixel, number_of_basis) = a;
                                         }
                                         break;
                                     case CAVK:
-                                        IMGPIXEL(proj, y, x) += VOLVOXEL(vol, k, i, j) * a;
-                                        IMGPIXEL(norm_proj, y, x) += a2 * N_eq;
+                                        IMGPIXEL(*proj, y, x) += VOLVOXEL(*vol, k, i, j) * a;
+                                        IMGPIXEL(*norm_proj, y, x) += a2 * N_eq;
                                         break;
                                     case COUNT_EQ:
-                                        VOLVOXEL(vol, k, i, j)++;
+                                        VOLVOXEL(*vol, k, i, j)++;
                                         break;
                                     case CAV:
-                                        IMGPIXEL(proj, y, x) += VOLVOXEL(vol, k, i, j) * a;
-                                        IMGPIXEL(norm_proj, y, x) += a2 *
+                                        IMGPIXEL(*proj, y, x) += VOLVOXEL(*vol, k, i, j) * a;
+                                        IMGPIXEL(*norm_proj, y, x) += a2 *
                                                                      VOLVOXEL(*VNeq, k, i, j);
                                         break;
                                     }
@@ -613,20 +766,20 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
 #ifdef DEBUG
                                     if (condition)
                                     {
-                                        std::cout << " proj= " << IMGPIXEL(proj, y, x)
-                                        << " norm_proj=" << IMGPIXEL(norm_proj, y, x) << std::endl;
+                                        std::cout << " proj= " << IMGPIXEL(*proj, y, x)
+                                        << " norm_proj=" << IMGPIXEL(*norm_proj, y, x) << std::endl;
                                         std::cout.flush();
                                     }
 #endif
                                 }
                                 else
                                 {
-                                    vol_corr += IMGPIXEL(norm_proj, y, x) * a;
+                                    vol_corr += IMGPIXEL(*norm_proj, y, x) * a;
                                     if (a != 0) N_eq++;
 #ifdef DEBUG
                                     if (condition)
                                     {
-                                        std::cout << " corr_img= " << IMGPIXEL(norm_proj, y, x)
+                                        std::cout << " corr_img= " << IMGPIXEL(*norm_proj, y, x)
                                         << " correction=" << vol_corr << std::endl;
                                         std::cout.flush();
                                     }
@@ -655,13 +808,13 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
                                 correction = (T) vol_corr;
                                 break;
                             }
-                            VOLVOXEL(vol, k, i, j) += correction;
+                            VOLVOXEL(*vol, k, i, j) += correction;
 
 #ifdef DEBUG
                             if (condition)
                             {
                                 printf("\nFinal value at (%d,%d,%d) ", j, i, k);
-                                std::cout << " = " << VOLVOXEL(vol, k, i, j) << std::endl;
+                                std::cout << " = " << VOLVOXEL(*vol, k, i, j) << std::endl;
                                 std::cout.flush();
                             }
 #endif
@@ -677,8 +830,8 @@ void project_SimpleGrid(VolumeT<T> &vol, const SimpleGrid &grid,
             V2_PLUS_V2(beginY, beginY, prjY);
             V3_PLUS_V3(univ_beginY, univ_beginY, gridY);
         }
-        V2_PLUS_V2(beginZ, beginZ, prjZ);
-        V3_PLUS_V3(univ_beginZ, univ_beginZ, gridZ);
+        V2_PLUS_V2(beginZ, beginZ, prjZ * numthreads );
+        V3_PLUS_V3(univ_beginZ, univ_beginZ, gridZ * numthreads);
     }
 }
 
@@ -704,8 +857,9 @@ void project_Volume(
     int              eq_mode,             // ARTK, CAVARTK, CAVK or CAV
     GridVolumeT<int> *GVNeq,              // Number of equations per blob
     Matrix2D<double> *M,                  // System matrix
-    double            ray_length)         // Ray length of the projection
-{
+    double            ray_length,		  // Ray length of the projection
+	int				  threads)         
+	{
     // If projecting forward initialise projections
     if (FORW)
     {
@@ -714,6 +868,24 @@ void project_Volume(
         norm_proj().copyShape(proj());
         norm_proj().initZeros();
     }
+	
+	if( threads > 0 )
+	{
+		for( int c = 0 ; c < threads ; c++ )
+		{
+			project_threads[c].global_proj = &proj;
+			project_threads[c].global_norm_proj = &norm_proj;
+			project_threads[c].FORW = FORW;   
+			project_threads[c].eq_mode = eq_mode;
+			project_threads[c].basis = &basis;
+			project_threads[c].M = M;
+			project_threads[c].rot = rot;
+			project_threads[c].tilt = tilt;
+			project_threads[c].psi = psi;
+			project_threads[c].ray_length = ray_length;
+		}
+	}
+
 
 #ifdef DEBUG_LITTLE
     if (FORW)
@@ -732,8 +904,29 @@ void project_Volume(
         VolumeT<int> *VNeq;
         if (GVNeq != NULL)   VNeq = &((*GVNeq)(i));
         else VNeq = NULL;
-        project_SimpleGrid(vol(i), vol.grid(i), basis,
-                           proj, norm_proj, FORW, eq_mode, VNeq, M, ray_length);
+        
+		if( threads > 1 )
+		{
+			for( int c = 0 ; c < threads ; c++ )
+			{
+				project_threads[c].vol = &(vol(i));
+				project_threads[c].grid = &(vol.grid(i));
+				project_threads[c].VNeq = VNeq;
+			}
+			
+			barrier_wait( &project_barrier );  
+        
+			// Here is being processed the volume by the threads
+        
+			barrier_wait( &project_barrier );
+		}
+		else
+		{
+			// create on thread to do the job
+			project_SimpleGrid(&(vol(i)), &(vol.grid(i)), &basis,
+			                   &proj, &norm_proj, FORW, eq_mode, VNeq, M, ray_length);
+		}
+	
 #ifdef DEBUG
         ImageXmipp save;
         save = norm_proj;
