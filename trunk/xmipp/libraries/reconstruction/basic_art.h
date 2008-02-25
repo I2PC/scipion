@@ -221,6 +221,12 @@ public:
 
     /// Noisy reconstruction
     bool noisy_reconstruction;
+	
+	/// Only for internal purposes, MUST be set when running MPI.
+	bool using_MPI;
+	
+	/// Number of threads to use. Can not be different than 1 when using MPI.
+	int threads;
 
 #define TELL_IV           0x100
 #define TELL_ONLY_SYM       0x80

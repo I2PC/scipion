@@ -92,6 +92,8 @@ void Basic_ART_Parameters::default_values()
     max_tilt           = 10.e6;
     grid_relative_size = 1.41;
     fn_control         = "";
+	
+	threads			   = 1;
 }
 
 /* Read ART parameters ===================================================== */
@@ -153,6 +155,7 @@ void Basic_ART_Parameters::default_values()
     known_volume       = textToFloat(GET_PARAM_WITH_DEF("known_volume","-1"      )); \
     positivity         = CHECK_PARAM("POCS_positivity"); \
     apply_shifts       = !CHECK_PARAM("dont_apply_shifts"); \
+    threads            = textToInteger(GET_PARAM_WITH_DEF("thr", "1"         )); \
     if      (grid_relative_size == -1)  grid_relative_size = sqrt (2.0); \
     else if (grid_relative_size == -2)  grid_relative_size = pow (2.0,1.0/3.0); \
     \
@@ -335,13 +338,14 @@ void Basic_ART_Parameters::usage_more()
     << "\n    -k [kappa0, kappa1, ...]\n"
     << "\nParallel parameters"
     << "\n                         by default, sequential ART is applied"
+	<< "\n	 [-thr N=1]			   Number of threads to use. NOTE: Not available when using MPI."
     << "\n   [-SIRT]               Simultaneous Iterative Reconstruction Technique"
     << "\n   [-pSIRT]              Parallel (MPI) Simultaneous Iterative Reconstruction Technique"
     << "\n   [-pfSIRT]             Parallel (MPI) False Simultaneous Iterative Reconstruction Technique (Faster convergence than pSIRT)"
     << "\n   [-pSART]              Parallel (MPI) Simultaneous ART\n"
     << "\n   [-pAVSP]              Parallel (MPI) Average Strings\n"
     << "\n   [-pBiCAV]             Parallel (MPI) Block Iterative CAV\n"
-    << "\n   [-pCAV]             Parallel (MPI) CAV\n"
+    << "\n   [-pCAV]               Parallel (MPI) CAV\n"
     << "\n   [-block_size <n=1>]   Number of projections to each block (SART and BiCAV)\n"
     << "\n   [-CAVARTK]            Component Averaging Variant of Block ART\n"
     << "\nGrid parameters"
@@ -714,11 +718,19 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
 
     /* Basis side info --------------------------------------------------------- */
     if (level >= BASIC)
-{
+	{
         basis.set_D(D);
         basis.produce_side_info(vol_basis0.grid());
     }
 
+	if( !using_MPI )
+	{
+		// We can use threads
+		if ( threads > 1 )
+		{
+		}
+	}
+	
     /* Express the ray length in basis units ----------------------------------- */
     if (ray_length != -1) ray_length *= basis.max_length();
 }

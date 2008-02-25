@@ -28,6 +28,7 @@
 
 #include <data/docfile.h>
 #include <data/mask.h>
+#include <sys/time.h>
 
 class POCSClass;
 class VariabilityClass;
@@ -195,7 +196,31 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
                                        // factors for unitary basis
    Projection      diff_proj;          // Difference between the
                                        // theoretical and real image
+									   
+   // As this is a threaded implementation, create structures for threads, and
+   // create threads
+   
+	pthread_t * th_ids = (pthread_t *)malloc( prm.threads * sizeof( pthread_t));
+	
+	// Initialize the structures which will contain the parameters passed to different
+	// threads
+	project_threads= (project_thread_params *) malloc ( prm.threads * sizeof( project_thread_params ) );
+	
+	// Initialize barrier to wait for working threads and the master thread.
+	barrier_init( &project_barrier, (prm.threads+1) );
 
+	// Threas are created in a waiting state. They can only run when master thread unlocks them by calling
+	// barrier_wait() 
+		
+	for( int c = 0 ; c < prm.threads ; c++ )
+	{
+		project_threads[c].thread_id = c;
+		project_threads[c].threads_count = prm.threads;
+		project_threads[c].destroy = false;
+		
+		pthread_create( (th_ids+c), NULL, project_SimpleGridThread<double>, (void *)(project_threads+c) );
+	}
+   
    // Reconstruction results ...............................................
    double          mean_error,mean_error_1stblock;
    double          global_mean_error,global_mean_error_1stblock;
@@ -566,6 +591,29 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
       SF_noise.write(prm.fn_root+"_noise_proj.sel");
       SF_signal.write(prm.fn_root+"_signal_proj.sel");
    }
+   
+   // Destroy created threads. This is done in a tricky way. At this point, threads
+   // are "slept" waiting for a barrier to be reached by the master thread to continue
+   // projecting/backprojecting a new projection. Here we set the flag destroy=true so
+   // thre threads won't process a projections but will return.
+   
+   	for( int c = 0 ; c < prm.threads ; c++ )
+	{
+		project_threads[c].destroy = true;
+	}
+
+	// Trigger threads "self-destruction"
+	barrier_wait( &project_barrier );
+	
+	// Wait for effective threads death
+   	for( int c = 0 ; c < prm.threads ; c++ )
+	{
+		pthread_join(*(th_ids+c),NULL);
+	}
+	
+	// Destroy barrier and mutex, as they are no longer needed.
+	pthread_mutex_destroy( &project_mutex );
+	barrier_destroy( &project_barrier );
 }
 
 /* ------------------------------------------------------------------------- */
@@ -578,6 +626,11 @@ void Basic_ROUT_Art(Basic_ART_Parameters &prm,
 // Configure time clock
    time_config();
 
+struct timeval start_time, end_time;
+long int init_usecs, process_usecs, finish_usecs;
+
+gettimeofday(&start_time, NULL);
+
 // Produce side information and initial volume
    prm.produce_Side_Info(vol_basis);
 //calculate symmetry in produce_Side_Info and exit if wrong sampling
@@ -587,8 +640,20 @@ void Basic_ROUT_Art(Basic_ART_Parameters &prm,
 // Show parameters and initiate history
    Basic_ART_Init_history(prm, eprm, vol_basis);
 
+gettimeofday(&end_time, NULL);
+
+init_usecs = (end_time.tv_sec-start_time.tv_sec)*1000000+(end_time.tv_usec-start_time.tv_usec);
+ 
+gettimeofday(&start_time,NULL);
+
 // Iterations
    Basic_ART_iterations(prm, eprm, vol_basis);
+
+gettimeofday(&end_time,NULL);
+   
+process_usecs = (end_time.tv_sec-start_time.tv_sec)*1000000+(end_time.tv_usec-start_time.tv_usec);
+
+gettimeofday(&start_time,NULL);
 
 // Finish iterations
    finish_ART_iterations(prm, eprm, vol_basis);
@@ -600,10 +665,22 @@ void Basic_ROUT_Art(Basic_ART_Parameters &prm,
       prm.projYdim:prm.Youtput_volume_size;
    int Zoutput_volume_size=(prm.Zoutput_volume_size==0) ?
       prm.projXdim:prm.Zoutput_volume_size;
+
+//   int min_distance = ceil( ( 2 * prm.grid_relative_size ) / prm.basis.blob.radius) + 1;
+   
    prm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
-      Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
+      Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size,prm.threads);
+
    vol_voxels.write(prm.fn_root+".vol");
    if (prm.tell&TELL_SAVE_BASIS) vol_basis.write(prm.fn_root+".basis");
    prm.fh_hist->close();
+
+gettimeofday(&end_time,NULL);
+
+finish_usecs = (end_time.tv_sec-start_time.tv_sec)*1000000+(end_time.tv_usec-start_time.tv_usec);
+      
+std::cout << "INIT_TIME: " << (double)init_usecs/(double)1000000 << std::endl;
+std::cout << "PROCESS_TIME: " << (double)process_usecs/(double)1000000 << std::endl;
+std::cout << "FINISH_TIME: " << (double)finish_usecs/(double)1000000 << std::endl;
 
 }
