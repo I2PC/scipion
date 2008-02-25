@@ -30,6 +30,40 @@
 
 #include <data/image.h>
 #include <data/volume.h>
+#include <pthread.h>
+
+// Thread declaration
+void * blobs2voxels_SimpleGrid( void * data );
+
+// Mutex used to make load balancing thread-safe
+extern pthread_mutex_t blobs_conv_mutex;
+
+// There exist one integer per slice. If value == 0, this slice
+// can be processed. If value == -1, this slice has already been processed and
+// if value > 0, this slice is influenced by a neighbour slice being processed and,
+// at this moment, can not be scheduled for processing. In the latest case, the
+// threads will have to look for a value == 0 slice.
+extern int * slices_status;
+
+// Number of already processed slices.
+extern int slices_processed;
+
+// This structure is needed to pass parameters to threads. 
+typedef struct{
+	const Matrix3D<double> *vol_blobs;
+	const SimpleGrid *grid;
+	const struct blobtype *blob;
+	Matrix3D<double> *vol_voxels;
+	const Matrix2D<double> *D;
+	int istep;
+	Matrix3D<double> *vol_corr;
+	const Matrix3D<double> *vol_mask;
+	bool FORW;
+	int eq_mode;
+	int thread_id;
+	int threads_num;
+	int min_separation;
+} ThreadBlobsToVoxels ;
 
 /* ========================================================================= */
 /* BLOBS                                                                     */
@@ -228,7 +262,7 @@ blobtype best_blob(double alpha_0, double alpha_F, double inc_alpha,
     1.7, the function will create a normalised footprint of logical corners
     (-2,-2) to (2,2) (in the universal coord. system) (this size is the minimum
     integer number of pixels which contain entirely the blob), with 50
-    samples each pixel. The real size of the footprint is (5·50)x(5·50).
+    samples each pixel. The real size of the footprint is (550)x(550).
 */
 void footprint_blob(ImageOver &blobprint, const struct blobtype &blob,
                     int istep = 50, int normalise = 0);
@@ -304,7 +338,7 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
 */
 void blobs2voxels(const GridVolume &vol_blobs,
                   const struct blobtype &blob, Matrix3D<double> *vol_voxels,
-                  const Matrix2D<double> *D = NULL, int Zdim = 0, int Ydim = 0, int Xdim = 0);
+                  const Matrix2D<double> *D = NULL, int threads = 1, int Zdim = 0, int Ydim = 0, int Xdim = 0);
 
 /** Blob coefficients as a voxel volume.
     This function returns a volume with the blob coefficients in their right position
@@ -335,7 +369,7 @@ void voxels2blobs(const Matrix3D<double> *vol_voxels,
                   int grid_type, double grid_relative_size,
                   double lambda, const Matrix3D<double> *vol_mask = NULL,
                   const Matrix2D<double> *D = NULL,
-                  double final_error_change = 0.01, int tell = 0, double R = -1);
+                  double final_error_change = 0.01, int tell = 0, double R = -1, int threads = 1);
 
 #define VARTK 1
 #define VMAXARTK 2
@@ -367,6 +401,6 @@ void ART_voxels2blobs_single_step(
     const Matrix2D<double> *D, double lambda, Matrix3D<double> *theo_vol,
     const Matrix3D<double> *read_vol, Matrix3D<double> *corr_vol,
     const Matrix3D<double> *mask_vol,
-    double &mean_error, double &max_error, int eq_mode = VARTK);
+    double &mean_error, double &max_error, int eq_mode = VARTK, int threads=1);
 //@}
 #endif

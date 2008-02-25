@@ -160,13 +160,13 @@ std::ostream & operator << (std::ostream & out, const Basis &basis)
 
 // Change to voxels --------------------------------------------------------
 void Basis::changeToVoxels(GridVolume &vol_basis, Matrix3D<double> *vol_voxels,
-                           int Zdim, int Ydim, int Xdim) const
+                           int Zdim, int Ydim, int Xdim, int threads ) const
 {
     int xdiff, ydiff, zdiff;
     switch (type)
     {
     case blobs:
-        blobs2voxels(vol_basis, blob, vol_voxels, D, Zdim, Ydim, Xdim);
+        blobs2voxels(vol_basis, blob, vol_voxels, D, threads , Zdim, Ydim, Xdim );
         break;
     case voxels:
         *vol_voxels = vol_basis(0)();
@@ -191,7 +191,7 @@ void Basis::changeToVoxels(GridVolume &vol_basis, Matrix3D<double> *vol_voxels,
 void Basis::changeFromVoxels(const Matrix3D<double> &vol_voxels,
                              GridVolume &vol_basis, int grid_type, double grid_relative_size,
                              const Matrix3D<double> *vol_mask,
-                             const Matrix2D<double> *D, double R) const
+                             const Matrix2D<double> *D, double R, int threads) const
 {
     Grid grid;
     Matrix1D<double> corner1(3), corner2(3);
@@ -201,7 +201,7 @@ void Basis::changeFromVoxels(const Matrix3D<double> &vol_voxels,
     case blobs:
         voxels2blobs(&vol_voxels, blob, vol_basis,
                      grid_type, grid_relative_size, 0.05, vol_mask,
-                     D, 0.01, 0, R);
+                     D, 0.01, 0, R, threads);
         break;
     case voxels:
         VECTOR_R3(corner1, STARTINGX(vol_voxels),
