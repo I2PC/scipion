@@ -40,6 +40,7 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
     Matrix2D<double> L(4, 4), R(4, 4);
     Matrix1D<double> axis(3), shift(3);
     int pgGroup, pgOrder;
+    std::vector<std::string> fileContent;
     
     //check if reserved word
     
@@ -48,16 +49,23 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
     {
         //check if reserved word and return group and order
         if (isSymmetryGroup(fn_sym, pgGroup, pgOrder))
-        {   //create symmetry file that will be read
-           create_sym_file(fn_sym, pgGroup, pgOrder);
-           if ((fpoii = fopen(fn_sym.c_str(), "r")) == NULL)
-            REPORT_ERROR(3005, (std::string)"SymList::read_sym_file:Can't open file: "
-                     +  fn_sym);
+        { 
+	    fill_symmetry_class(fn_sym, pgGroup, pgOrder,fileContent);
         }
         else
             REPORT_ERROR(3005, (std::string)"SymList::read_sym_file:Can't open file: "
                      + " or do not recognize symmetry group" + fn_sym);
     }
+    else
+    {
+        while (fgets(line, 79, fpoii) != NULL)
+        {
+            if (line[0] == ';' || line[0] == '#' || line[0] == '\0') continue;
+	    fileContent.push_back(line);
+	}
+        fclose(fpoii);
+    }
+    
     //reset space_group
     space_group = 0;
     // Count the number of symmetries ------------------------------------
@@ -68,9 +76,9 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
     int no_axis, no_mirror_planes, no_inversion_points;
     no_axis = no_mirror_planes = no_inversion_points = 0;
 
-    while (fgets(line, 79, fpoii) != NULL)
+    for (int n=0; n<fileContent.size(); n++)
     {
-        if (line[0] == ';' || line[0] == '#' || line[0] == '\0') continue;
+        strcpy(line,fileContent[n].c_str());
         auxstr = firstToken(line);
         if (auxstr == NULL)
         {
@@ -99,9 +107,6 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
         else if (strcmp(auxstr, "P2_122") == 0) true_symNo += 3;
         else if (strcmp(auxstr, "P22_12") == 0) true_symNo += 3;
     }
-
-    fseek(fpoii, 0L, SEEK_SET);
-
     // Ask for memory
     __L.resize(4*true_symNo, 4);
     __R.resize(4*true_symNo, 4);
@@ -112,9 +117,10 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
     // Read symmetry parameters
     i = 0;
     shift.initZeros();
-    while (fgets(line, 79, fpoii) != NULL)
+
+    for (int n=0; n<fileContent.size(); n++)
     {
-        if (line[0] == ';' || line[0] == '#' || line[0] == '\0') continue;
+        strcpy(line,fileContent[n].c_str());
         auxstr = firstToken(line);
         // Rotational axis ---------------------------------------------------
         if (strcmp(auxstr, "rot_axis") == 0)
@@ -122,11 +128,11 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
             auxstr = nextToken();
             fold = textToInteger(auxstr);
             auxstr = nextToken();
-            axis.X() = textToFloat(auxstr);
+            axis.X() = textToDouble(auxstr);
             auxstr = nextToken();
-            axis.Y() = textToFloat(auxstr);
+            axis.Y() = textToDouble(auxstr);
             auxstr = nextToken();
-            axis.Z() = textToFloat(auxstr);
+            axis.Z() = textToDouble(auxstr);
             ang_incr = 360. / fold;
             L.initIdentity();
             for (j = 1, rot_ang = ang_incr; j < fold; j++, rot_ang += ang_incr)
@@ -290,7 +296,7 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
             __sym_elements++;
         }
     }
-    fclose(fpoii);
+
     if (accuracy > 0) compute_subgroup(accuracy);
 
     //possible crystallographic symmetry
@@ -2066,6 +2072,7 @@ bool SymList::isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder)
    bool return_true;
    return_true=false;
    auxChar[2]='\0';
+   //size maybe 4 because n maybe a 2 digit number
    if(mySize>4 || mySize<1)
    {
       pgGroup=-1;
@@ -2285,167 +2292,160 @@ bool SymList::isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder)
        pgOrder=-1;
        return_true=true;
    }
- 
+//#define DEBUG7
+#ifdef DEBUG7
+std::cerr << "pgGroup" << pgGroup << " pgOrder " << pgOrder << std::endl;
+#endif
+#undef DEBUG7 
    
    return return_true;
 }
-void SymList::create_sym_file(FileName &symmetry, int pgGroup, int pgOrder)
+void SymList::fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgOrder,
+   std::vector<std::string> &fileContent)
 {   
-    symmetry = symmetry + ".sym";
-    std::ofstream SymFile;
-    SymFile.open(symmetry.c_str(), std::ios::out);
+    std::ostringstream line1;
+    std::ostringstream line2;
+    std::ostringstream line3;
+    std::ostringstream line4;
     if (pgGroup == pg_CN)
     {
-        SymFile << "rot_axis " << pgOrder << " 0 0 1";
+        line1 << "rot_axis " << pgOrder << " 0 0 1";
     }
     else if (pgGroup == pg_CI)
     {
-        SymFile << "inversion ";
+        line1 << "inversion ";
     }
     else if (pgGroup == pg_CS)
     {
-        SymFile << "mirror_plane 0 0 1";
+        line1 << "mirror_plane 0 0 1";
     }
     else if (pgGroup == pg_CNV)
     {
-        SymFile << "rot_axis " << pgOrder << " 0 0 1";
-        SymFile << std::endl;
-        SymFile << "mirror_plane 0 1 0";
+        line1 << "rot_axis " << pgOrder << " 0 0 1";
+        line2 << "mirror_plane 0 1 0";
     }
     else if (pgGroup == pg_CNH)
     {
-        SymFile << "rot_axis " << pgOrder << " 0 0 1";
-        SymFile << std::endl;
-        SymFile << "mirror_plane 0 0 1";
+        line1 << "rot_axis " << pgOrder << " 0 0 1";
+        line2 << "mirror_plane 0 0 1";
     }
     else if (pgGroup == pg_SN)
     {
         int order = pgOrder / 2;
-        SymFile << "rot_axis " << order << " 0 0 1";
-        SymFile << std::endl;
-        SymFile << "inversion ";
+	if(2*order != pgOrder)
+	{
+            std::cerr << "ERROR: order for SN group must be even" << std::endl;
+            exit(0);
+	}
+        line1 << "rot_axis " << order << " 0 0 1";
+        line2 << "inversion ";
     }
     else if (pgGroup == pg_DN)
     {
-        SymFile << "rot_axis " << pgOrder << " 0 0 1";
-        SymFile << std::endl;
-        SymFile << "rot_axis " << "2" << " 0 1 0";
+        line1 << "rot_axis " << pgOrder << " 0 0 1";
+        line2 << "rot_axis " << "2" << " 0 1 0";
     }
     else if (pgGroup == pg_DNV)
     {
-        SymFile << "rot_axis " << pgOrder << " 0 0 1";
-        SymFile << std::endl;
-        SymFile << "rot_axis " << "2" << " 0 1 0";
-        SymFile << std::endl;
-        SymFile << "mirror_plane 0 1 0";
+        line1 << "rot_axis " << pgOrder << " 0 0 1";
+        line2 << "rot_axis " << "2" << " 0 1 0";
+        line3 << "mirror_plane 0 1 0";
     }
     else if (pgGroup == pg_DNH)
     {
-        SymFile << "rot_axis " << pgOrder << " 0 0 1";
-        SymFile << std::endl;
-        SymFile << "rot_axis " << "2" << " 1 0 0";
-        SymFile << std::endl;
-        SymFile << "mirror_plane 0 0 1";
+        line1 << "rot_axis " << pgOrder << " 0 0 1";
+        line2 << "rot_axis " << "2" << " 1 0 0";
+        line3 << "mirror_plane 0 0 1";
     }
     else if (pgGroup == pg_T)
     {
-        SymFile << "rot_axis " << "3" << "  0. 0. 1.";
-        SymFile << std::endl;
-        SymFile << "rot_axis " << "2" << " 0. 0.816496 0.577350";
+        line1 << "rot_axis " << "3" << "  0. 0. 1.";
+        line2 << "rot_axis " << "2" << " 0. 0.816496 0.577350";
     }
     else if (pgGroup == pg_TD)
     {
-        SymFile << "rot_axis " << "3" << "  0. 0. 1.";
-        SymFile << std::endl;
-        SymFile << "rot_axis " << "2" << " 0. 0.816496 0.577350";
-        SymFile << std::endl;
-        SymFile << "mirror_plane 1.4142136 2.4494897 0.0000000";
+        line1 << "rot_axis " << "3" << "  0. 0. 1.";
+        line2 << "rot_axis " << "2" << " 0. 0.816496 0.577350";
+        line3 << "mirror_plane 1.4142136 2.4494897 0.0000000";
     }
     else if (pgGroup == pg_TH)
     {
-        SymFile << "rot_axis " << "3" << "  0. 0. 1.";
-        SymFile << std::endl;
-        SymFile << "rot_axis " << "2" << " 0. -0.816496 -0.577350";
-        SymFile << std::endl;
-        SymFile << "inversion";
+        line1 << "rot_axis " << "3" << "  0. 0. 1.";
+        line2 << "rot_axis " << "2" << " 0. -0.816496 -0.577350";
+        line3 << "inversion";
     }
     else if (pgGroup == pg_O)
     {
-        SymFile << "rot_axis " << "3" << "  .5773502  .5773502 .5773502";
-        SymFile << std::endl;
-        SymFile << "rot_axis " << "4" << " 0 0 1";
+        line1 << "rot_axis " << "3" << "  .5773502  .5773502 .5773502";
+        line2 << "rot_axis " << "4" << " 0 0 1";
     }
     else if (pgGroup == pg_OH)
     {
-        SymFile << "rot_axis " << "3" << "  .5773502  .5773502 .5773502";
-        SymFile << std::endl;
-        SymFile << "rot_axis " << "4" << " 0 0 1";
-        SymFile << std::endl;
-        SymFile << "mirror_plane 0 1 1";
+        line1 << "rot_axis " << "3" << "  .5773502  .5773502 .5773502";
+        line2 << "rot_axis " << "4" << " 0 0 1";
+        line3 << "mirror_plane 0 1 1";
     }
     else if (pgGroup == pg_I)
     {
-        SymFile << "rot_axis 2  0             1           0";
-        SymFile << std::endl;
-        SymFile << "rot_axis 5 -0.85065080702670 0 0.5257311142635";
-        SymFile << std::endl;
-        SymFile << "rot_axis 3 -0.9341723640 0.3568220765 0";
+        line1 << "rot_axis 2  0 	    1		0";
+        line2 << "rot_axis 5 -0.85065080702670 0 0.5257311142635";
+        line3 << "rot_axis 3 -0.9341723640 0.3568220765 0";
     }
     else if (pgGroup == pg_IH)
     {
-        SymFile << "rot_axis 2  0             1           0";
-        SymFile << std::endl;
-        SymFile << "rot_axis 5 -0.85065080702670 0 0.5257311142635";
-        SymFile << std::endl;
-        SymFile << "rot_axis 3 -0.9341723640 0.3568220765 0";
-        SymFile << std::endl;
-        SymFile << "mirror_plane 1 0 0";
+        line1 << "rot_axis 2  0  	   1	       0";
+        line2 << "rot_axis 5 -0.85065080702670 0 0.5257311142635";
+        line3 << "rot_axis 3 -0.9341723640 0.3568220765 0";
+        line4 << "mirror_plane 1 0 0";
     }
     else if (pgGroup == pg_I1)
     {
-        SymFile << "rot_axis 2  0             1           0";
-        SymFile << std::endl;
-        SymFile << "rot_axis 5 -0.85065080702670 0 0.5257311142635";
-        SymFile << std::endl;
-        SymFile << "rot_axis 3 -0.9341723640 0.3568220765 0";
+        line1 << "rot_axis 2  0  	   1	       0";
+        line2 << "rot_axis 5 -0.85065080702670 0 0.5257311142635";
+        line3 << "rot_axis 3 -0.9341723640 0.3568220765 0";
     }
     else if (pgGroup == pg_I2)
     {
-        SymFile << "rot_axis 2  0             0          1";
-        SymFile << std::endl;
-        SymFile << "rot_axis 5 -1.618033989  -1           0";
-        SymFile << std::endl;
-        SymFile << "rot_axis 3 -0.53934467   -1.4120227   0";
+        line1 << "rot_axis 2  0 	    0	       1";
+        line2 << "rot_axis 5 -1.618033989  -1		0";
+        line3 << "rot_axis 3 -0.53934467   -1.4120227	0";
     }
     else if (pgGroup == pg_I3)
     {
-        SymFile << "rot_axis 2  -0.5257311143 0 0.8506508070";
-        SymFile << std::endl;
-        SymFile << "rot_axis 3  -0.9822469432 0 -0.1875924905";
-        SymFile << std::endl;
-        SymFile << "rot_axis 5  -0.7236067955 -0.5257311143 -0.4472135966";
+        line1 << "rot_axis 2  -0.5257311143 0 0.8506508070";
+        line2 << "rot_axis 3  -0.9822469432 0 -0.1875924905";
+        line3 << "rot_axis 5  -0.7236067955 -0.5257311143 -0.4472135966";
     }
     else if (pgGroup == pg_I4)
     {
-        SymFile << "rot_axis 2  0.5257311143 0 0.8506508070";
-        SymFile << std::endl;
-        SymFile << "rot_axis 3  0.9822469432 0 -0.1875924905";
-        SymFile << std::endl;
-        SymFile << "rot_axis 5  0.7236067955 0.5257311143 -0.4472135966";
+        line1 << "rot_axis 2  0.5257311143 0 0.8506508070";
+        line2 << "rot_axis 3  0.9822469432 0 -0.1875924905";
+        line3 << "rot_axis 5  0.7236067955 0.5257311143 -0.4472135966";
     }
     else if (pgGroup == pg_I5)
     {
-        SymFile << "rot_axis 2  0.5257311143  0.8506508070 0.";
-        SymFile << std::endl;
-        SymFile << "rot_axis 3  0.9822469432 -0.1875924905 0.";
-        SymFile << std::endl;
-        SymFile << "rot_axis 5  0.7236067955 -0.4472135966 0.5257311143";
+        line1 << "rot_axis 2  0.5257311143  0.8506508070 0.";
+        line2 << "rot_axis 3  0.9822469432 -0.1875924905 0.";
+        line3 << "rot_axis 5  0.7236067955 -0.4472135966 0.5257311143";
     }
     else
     {
         std::cerr << "ERROR: Symmetry " << symmetry  << "is not known" << std::endl;
         exit(0);
     }
-    SymFile.close();
-
+    if (line1.str().size()>0)
+	fileContent.push_back(line1.str());
+    if (line2.str().size()>0)
+	fileContent.push_back(line2.str());
+    if (line3.str().size()>0)
+	fileContent.push_back(line3.str());
+    if (line4.str().size()>0)
+	fileContent.push_back(line4.str());
+    //#define DEBUG5
+    #ifdef DEBUG5 
+        for (int n=0; n<fileContent.size(); n++)
+            std::cerr << fileContent[n] << std::endl;
+	std::cerr << "fileContent.size()" << fileContent.size() << std::endl;    
+    #endif
+    #undef DEBUG5   
 }

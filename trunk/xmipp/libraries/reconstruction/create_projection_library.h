@@ -89,10 +89,11 @@ public:
 
    /** Symmetry. One of the 17 possible symmetries in
        single particle electron microscopy.
-       See details at url
-       Possible values are: c1, ci, cs, cn, cnv, cnh, sn,
-       dn, dnv, dnh, t, td, th, o, oh, i, ih */
-    std::string symmetry;
+        */
+    int symmetry;
+
+    /// symmetry file
+    FileName        fn_sym;
 
     /** For infinite groups symmetry order*/
     int sym_order;

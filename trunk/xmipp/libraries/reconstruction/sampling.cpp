@@ -562,7 +562,7 @@ void XmippSampling::fill_distance(Matrix1D<double> starting_point,
 */
 }
 
-void XmippSampling::remove_redundant_points(const std::string &symmetry,
+void XmippSampling::remove_redundant_points(const int symmetry,
         int sym_order)
 {
     Matrix2D<double>  L(4, 4), R(4, 4);
@@ -578,11 +578,10 @@ void XmippSampling::remove_redundant_points(const std::string &symmetry,
     //int j_end=0;
     Matrix1D<double>  row(3);
 
-
     no_redundant_sampling_points_vector.clear();
     no_redundant_sampling_points_angles.clear();
     double my_dotProduct;
-    if (symmetry.compare("cn") == 0)
+    if (symmetry == pg_CN)
     {//OK
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
@@ -594,8 +593,8 @@ void XmippSampling::remove_redundant_points(const std::string &symmetry,
             }
         }// for i
     }
-    else if (symmetry.compare("ci") == 0 ||
-             symmetry.compare("cs") == 0)
+    else if (symmetry == pg_CI  ||
+             symmetry == pg_CS )
     {//OK
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
@@ -606,7 +605,7 @@ void XmippSampling::remove_redundant_points(const std::string &symmetry,
             }
         }// for i
     }
-    else if (symmetry.compare("cnv") == 0)
+    else if (symmetry  == pg_CNV )
     {//OK
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
@@ -618,7 +617,7 @@ void XmippSampling::remove_redundant_points(const std::string &symmetry,
             }
         }// for i
     }
-    else if (symmetry.compare("cnh") == 0)
+    else if (symmetry  == pg_CNH )
     {//OK
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
@@ -632,7 +631,7 @@ void XmippSampling::remove_redundant_points(const std::string &symmetry,
             }
         }// for i
     }
-    else if (symmetry.compare("sn") == 0)
+    else if (symmetry  == pg_SN )
     {//OK
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
@@ -646,7 +645,7 @@ void XmippSampling::remove_redundant_points(const std::string &symmetry,
             }
         }// for i
     }
-    else if (symmetry.compare("dn") == 0)
+    else if (symmetry  == pg_DN )
     {
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
@@ -660,7 +659,7 @@ void XmippSampling::remove_redundant_points(const std::string &symmetry,
             }
         }// for i
     }
-    else if (symmetry.compare("dnv") == 0)
+    else if (symmetry  == pg_DNV )
     {
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
@@ -674,7 +673,7 @@ void XmippSampling::remove_redundant_points(const std::string &symmetry,
             }
         }// for i
     }
-    else if (symmetry.compare("dnh") == 0)
+    else if (symmetry  == pg_DNH )
     {
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
@@ -688,7 +687,7 @@ void XmippSampling::remove_redundant_points(const std::string &symmetry,
             }
         }// for i
     }
-    else if (symmetry.compare("t") == 0)
+    else if (symmetry  == pg_T )
     {//OK
         Matrix1D<double>  _3_fold_axis_1_by_3_fold_axis_2(3);
         _3_fold_axis_1_by_3_fold_axis_2 = vectorR3(-0.942809, 0., 0.);
@@ -716,7 +715,7 @@ void XmippSampling::remove_redundant_points(const std::string &symmetry,
                 }
         }// for i
     }
-    else if (symmetry.compare("td") == 0)
+    else if (symmetry  == pg_TD )
     {//OK
         Matrix1D<double>  _2_fold_axis_1_by_3_fold_axis_2(3);
         _2_fold_axis_1_by_3_fold_axis_2 = vectorR3(-0.942809, 0., 0.);
@@ -744,7 +743,7 @@ void XmippSampling::remove_redundant_points(const std::string &symmetry,
             }
         }// for i
     }
-    else if (symmetry.compare("th") == 0)
+    else if (symmetry  == pg_TH )
     {//OK
         Matrix1D<double>  _3_fold_axis_1_by_2_fold_axis_1(3);
         _3_fold_axis_1_by_2_fold_axis_1 = vectorR3(-0.816496, 0., 0.);
@@ -772,7 +771,7 @@ void XmippSampling::remove_redundant_points(const std::string &symmetry,
             }
         }// for i
     }
-    else if (symmetry.compare("o") == 0)
+    else if (symmetry  == pg_O )
     {//OK
         Matrix1D<double>  _3_fold_axis_1_by_3_fold_axis_2(3);
         _3_fold_axis_1_by_3_fold_axis_2 = vectorR3(0., -1., 1.);
@@ -801,7 +800,7 @@ void XmippSampling::remove_redundant_points(const std::string &symmetry,
                 }
         }// for i
     }
-    else if (symmetry.compare("oh") == 0)
+    else if (symmetry  == pg_OH )
     {//OK
         Matrix1D<double>  _3_fold_axis_1_by_3_fold_axis_2(3);
         _3_fold_axis_1_by_3_fold_axis_2 = vectorR3(0., -1., 1.);
@@ -828,7 +827,7 @@ void XmippSampling::remove_redundant_points(const std::string &symmetry,
                 }
         }// for i
     }
-    else if (symmetry.compare("i") == 0)
+    else if (symmetry  == pg_I )
     {//OK
         Matrix1D<double>  _5_fold_axis_1_by_5_fold_axis_2(3);
         _5_fold_axis_1_by_5_fold_axis_2 = vectorR3(0., 0., 1.);
@@ -859,7 +858,7 @@ void XmippSampling::remove_redundant_points(const std::string &symmetry,
                 }
         }// for i
     }
-    else if (symmetry.compare("ih") == 0)
+    else if (symmetry  == pg_IH )
     {//OK
         Matrix1D<double>  _5_fold_axis_2_by_3_fold_axis(3);
         _5_fold_axis_2_by_3_fold_axis = vectorR3(0.187592467856686,
@@ -883,55 +882,58 @@ void XmippSampling::remove_redundant_points(const std::string &symmetry,
     }
     else
     {
-        std::cerr << "ERROR: Symmetry " << symmetry  << "is not known" << std::endl;
+        std::cerr << "eRROR: Symmetry " << symmetry  << "is not known" << std::endl;
         exit(0);
     }
 
 }
+//THIs FUNCTION IS NOW OBSOLETE SIN 
+//SINCE read_sym_file does not longer need a file
+//use symmetry functions instead
 /* Create symmetry file----------------------------------------------------- */
-void XmippSampling::create_sym_file(const std::string& symmetry, int sym_order)
+void XmippSampling::create_sym_file(FileName simFp,int symmetry, int sym_order)
 {
-    symmetry_file = symmetry + ".sym";
+    symmetry_file = simFp + ".sym";
     std::ofstream SymFile;
     SymFile.open(symmetry_file.c_str(), std::ios::out);
-    if (symmetry.compare("cn") == 0)
+    if (symmetry == pg_CN)
     {
         SymFile << "rot_axis " << sym_order << " 0 0 1";
     }
-    else if (symmetry.compare("ci") == 0)
+    else if (symmetry == pg_CI)
     {
         SymFile << "inversion ";
     }
-    else if (symmetry.compare("cs") == 0)
+    else if (symmetry == pg_CS)
     {
         SymFile << "mirror_plane 0 0 1";
     }
-    else if (symmetry.compare("cnv") == 0)
+    else if (symmetry == pg_CNV)
     {
         SymFile << "rot_axis " << sym_order << " 0 0 1";
         SymFile << std::endl;
         SymFile << "mirror_plane 0 1 0";
     }
-    else if (symmetry.compare("cnh") == 0)
+    else if (symmetry == pg_CNH)
     {
         SymFile << "rot_axis " << sym_order << " 0 0 1";
         SymFile << std::endl;
         SymFile << "mirror_plane 0 0 1";
     }
-    else if (symmetry.compare("sn") == 0)
+    else if (symmetry == pg_SN)
     {
         int order = sym_order / 2;
         SymFile << "rot_axis " << order << " 0 0 1";
         SymFile << std::endl;
         SymFile << "inversion ";
     }
-    else if (symmetry.compare("dn") == 0)
+    else if (symmetry == pg_DN)
     {
         SymFile << "rot_axis " << sym_order << " 0 0 1";
         SymFile << std::endl;
         SymFile << "rot_axis " << "2" << " 0 1 0";
     }
-    else if (symmetry.compare("dnv") == 0)
+    else if (symmetry == pg_DNV)
     {
         SymFile << "rot_axis " << sym_order << " 0 0 1";
         SymFile << std::endl;
@@ -939,7 +941,7 @@ void XmippSampling::create_sym_file(const std::string& symmetry, int sym_order)
         SymFile << std::endl;
         SymFile << "mirror_plane 0 1 0";
     }
-    else if (symmetry.compare("dnh") == 0)
+    else if (symmetry == pg_DNH)
     {
         SymFile << "rot_axis " << sym_order << " 0 0 1";
         SymFile << std::endl;
@@ -947,13 +949,13 @@ void XmippSampling::create_sym_file(const std::string& symmetry, int sym_order)
         SymFile << std::endl;
         SymFile << "mirror_plane 0 0 1";
     }
-    else if (symmetry.compare("t") == 0)
+    else if (symmetry == pg_T)
     {
         SymFile << "rot_axis " << "3" << "  0. 0. 1.";
         SymFile << std::endl;
         SymFile << "rot_axis " << "2" << " 0. 0.816496 0.577350";
     }
-    else if (symmetry.compare("td") == 0)
+    else if (symmetry == pg_TD)
     {
         SymFile << "rot_axis " << "3" << "  0. 0. 1.";
         SymFile << std::endl;
@@ -961,7 +963,7 @@ void XmippSampling::create_sym_file(const std::string& symmetry, int sym_order)
         SymFile << std::endl;
         SymFile << "mirror_plane 1.4142136 2.4494897 0.0000000";
     }
-    else if (symmetry.compare("th") == 0)
+    else if (symmetry == pg_TH)
     {
         SymFile << "rot_axis " << "3" << "  0. 0. 1.";
         SymFile << std::endl;
@@ -969,13 +971,13 @@ void XmippSampling::create_sym_file(const std::string& symmetry, int sym_order)
         SymFile << std::endl;
         SymFile << "inversion";
     }
-    else if (symmetry.compare("o") == 0)
+    else if (symmetry == pg_O)
     {
         SymFile << "rot_axis " << "3" << "  .5773502  .5773502 .5773502";
         SymFile << std::endl;
         SymFile << "rot_axis " << "4" << " 0 0 1";
     }
-    else if (symmetry.compare("oh") == 0)
+    else if (symmetry == pg_OH)
     {
         SymFile << "rot_axis " << "3" << "  .5773502  .5773502 .5773502";
         SymFile << std::endl;
@@ -983,7 +985,7 @@ void XmippSampling::create_sym_file(const std::string& symmetry, int sym_order)
         SymFile << std::endl;
         SymFile << "mirror_plane 0 1 1";
     }
-    else if (symmetry.compare("i") == 0)
+    else if (symmetry == pg_I)
     {
         SymFile << "rot_axis 2  0             0          1";
         SymFile << std::endl;
@@ -991,7 +993,7 @@ void XmippSampling::create_sym_file(const std::string& symmetry, int sym_order)
         SymFile << std::endl;
         SymFile << "rot_axis 3 -0.53934467   -1.4120227   0";
     }
-    else if (symmetry.compare("ih") == 0)
+    else if (symmetry == pg_IH)
     {
         SymFile << "rot_axis 2  0             0          1";
         SymFile << std::endl;
@@ -1003,7 +1005,7 @@ void XmippSampling::create_sym_file(const std::string& symmetry, int sym_order)
     }
     else
     {
-        std::cerr << "ERROR: Symmetry " << symmetry  << "is not known" << std::endl;
+        std::cerr << "ERROR:: Symmetry " << symmetry  << "is not known" << std::endl;
         exit(0);
     }
     SymFile.close();

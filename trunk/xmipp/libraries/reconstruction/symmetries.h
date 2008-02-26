@@ -162,8 +162,10 @@ public:
          for details. It also fill the symmetry information  */
     bool isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder);
 
-    /** create symmetry file */
-    void  create_sym_file(FileName &symmetry, int pgGroup, int pgOrder);
+    /** fill fileContect with symmetry information*/
+void fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgOrder,
+   std::vector<std::string> &fileContent);
+
     
     /** Create Symmetry List from a Symmetry file.
         All the subgroup elements are computed automatically.

@@ -58,7 +58,10 @@ public:
        See details at url
        Possible values are: c1, ci, cs, cn, cnv, cnh, sn,
        dn, dnv, dnh, t, td, th, o, oh, i, ih */
-    std::string symmetry;
+    FileName        fn_sym;
+
+    /** 1-17 symmetry grouips */ 
+    int symmetry;
 
     /** For infinite groups symmetry order*/
     int sym_order;

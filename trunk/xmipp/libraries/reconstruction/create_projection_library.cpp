@@ -39,8 +39,9 @@ void Prog_create_projection_library_Parameters::read(int argc, char **argv)
 {
     input_volume = getParameter(argc, argv, "-i");
     output_file_root = getParameter(argc, argv, "-o");
-    symmetry = getParameter(argc, argv, "-symmetry","cn");
-    sym_order = textToInteger(getParameter(argc, argv, "-sym_order", "1"));
+    fn_sym = getParameter(argc, argv, "-sym","c1");
+//    symmetry = getParameter(argc, argv, "-sym","c1");
+//    sym_order = textToInteger(getParameter(argc, argv, "-sym_order", "1"));
     sampling = textToFloat(getParameter(argc, argv, "-sampling_rate", "5"));
     psi_sampling = textToFloat(getParameter(argc, argv, "-psi_sampling", "360"));
     max_tilt_angle = textToFloat(getParameter(argc, argv, "-max_tilt_angle","91"));
@@ -66,10 +67,10 @@ void Prog_create_projection_library_Parameters::usage()
     std::cerr << "create_projection_library\n"
     << "   -i input_volume             : Input Volume\n"
     << "   -o root_file_name           : Root for output files\n"
-    << "  [-symmetry cn]   :One of the 17 possible symmetries in\n"
+    << "  [-sym cn]   :One of the 17 possible symmetries in\n"
     << "                                single particle electronmicroscopy\n"
     << "                                i.e.  ci, cs, cn, cnv, cnh, sn, dn, dnv, dnh, t, td, th, o, oh, i, ih\n"
-    << "  [-sym_order 1]               : For infinite groups symmetry order\n"
+    << "                               : where n may change from 1 to 99\n"
     << "  [-sampling_rate 5]           : Distance in degrees between sampling points\n"
     << "  [-psi_sampling 360]          : sampling in psi, 360 -> no sampling in psi\n"
     << "  [-max_tilt_angle  91]        : maximum tilt angle in degrees\n"
@@ -94,8 +95,7 @@ void Prog_create_projection_library_Parameters::show()
     std::cout << "output input_volume root:  " << input_volume << std::endl
               << "output files root:         " << output_file_root << std::endl
               << "Sampling rate:             " << sampling    << std::endl
-              << "symmetry group:            " << symmetry << std::endl
-              << "symmetry order:            " << sym_order << std::endl
+              << "symmetry group:            " << fn_sym << std::endl
               << "max_tilt_angle:            " << max_tilt_angle << std::endl
               << "min_tilt_angle:            " << min_tilt_angle << std::endl
               << "psi_sampling:              " << psi_sampling << std::endl
@@ -197,7 +197,7 @@ Prog_create_projection_library_Parameters::createDocFileWithExperimentalImages(v
 void
 Prog_create_projection_library_Parameters::remove_points_not_close_to_experimental_points(void)
 {   
-    if((symmetry!="cn" || sym_order!=1) && angular_distance_bool==true)
+    if((symmetry!=pg_CN || sym_order!=1) && angular_distance_bool==true)
     {
         std::cerr << "experimental_images option only available for symmetry "
              << "cn and order 1" 
@@ -230,7 +230,7 @@ Prog_create_projection_library_Parameters::remove_points_not_close_to_experiment
             {
                 img_rot=DFi(0);
                 img_tilt=DFi(1);
-                // I knw this comparison is not accurate
+                // I know this comparison is not accurate
                 //but is fast and we do not need much precission
                 if ( ABS(realWRAP(img_rot-ref_rot,-180.,180.)) <= angular_distance &&
                      ABS(realWRAP(img_tilt-ref_tilt,-180.,180.)) <= angular_distance )
@@ -246,9 +246,14 @@ Prog_create_projection_library_Parameters::remove_points_not_close_to_experiment
 /* Run --------------------------------------------------------------------- */
 void Prog_create_projection_library_Parameters::run()
 {
+
     /////////////////////////////
     // PreRun for all nodes but not for all works
     /////////////////////////////
+    //all ranks
+    //process the symmetry file
+    if (!mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
+         REPORT_ERROR(3005, (std::string)"create_projection_library::run Invalid symmetry" +  fn_sym);
     //only rank 0
     show();
     //all ranks
@@ -261,7 +266,9 @@ void Prog_create_projection_library_Parameters::run()
     //true -> half_sphere
     mysampling.Compute_sampling_points(false,max_tilt_angle,min_tilt_angle);
     //only rank 0
-    mysampling.create_sym_file(symmetry, sym_order);
+    //mysampling.create_sym_file(fn_sym,symmetry, sym_order);
+    //all nodes
+    mysampling.SL.read_sym_file(fn_sym);
     //mpi_barrier here
     //all working nodes must read symmetry file
     //and experimental docfile if apropiate

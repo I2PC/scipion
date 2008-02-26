@@ -143,7 +143,7 @@ public:
     /* eliminate redundant points,
         symmetry group, symmetry order */
 
-    void remove_redundant_points(const std::string & symmetry, int sym_order);
+    void remove_redundant_points(const int symmetry, int sym_order);
 
     /// Usage
     //void Usage();
@@ -153,7 +153,7 @@ public:
 
     /** create symmetry file from introduced symmetry
         see  SymList class */
-    void create_sym_file(const std::string& symmetry, int sym_order);
+    void create_sym_file(FileName simFp,int  symmetry, int sym_order);
 
     /** save assymetric unit sampling in a doc file */
     void create_asym_unit_file(const FileName& docfilename);
