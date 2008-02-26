@@ -119,19 +119,22 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
 	//Bcast must be seem by all processors
 	MPI_Bcast (&my_seed, 1, MPI_INT, 0, MPI_COMM_WORLD);
         //all ranks
-	//set sampling must go before set noise
-        mysampling.SetSampling(sampling);
+	if (!mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
+	     REPORT_ERROR(3005, (std::string)"create_projection_library::run Invalid symmetry" +  fn_sym);//set sampling must go before set noise
+        												      mysampling.SetSampling(sampling);
         mysampling.SetNoise(perturb_projection_vector,my_seed);
 
         //mysampling.SetNeighborhoodRadius(0.);//irelevant
         //true -> half_sphere
         mysampling.Compute_sampling_points(false,max_tilt_angle,min_tilt_angle);
+        mysampling.SL.read_sym_file(fn_sym);
         mysampling.remove_redundant_points(symmetry, sym_order);
         remove_points_not_close_to_experimental_points();
 	/* perturb points */
         if (rank == 0) 
         {
-            mysampling.create_sym_file(symmetry, sym_order);
+            //mysampling.create_sym_file(symmetry, sym_order);
+            mysampling.SL.read_sym_file(fn_sym);
             mysampling.create_asym_unit_file(output_file_root);
         }
         
