@@ -49,6 +49,7 @@ int main(int argc, char **argv)
             std::cout << XE;
             prm.usage();
         }
+        MPI_Finalize();
         exit(1);
     }
 
