@@ -242,9 +242,10 @@ elif (ARGUMENTS['mode'] == 'compile'):
         # "safe" optimization
         env.Append(CXXFLAGS = ['-O2'])
 
+    env.Append(LINKFLAGS = ['-pthread'])
     # strip?
     if int(env['strip']):
-        env.Append(LINKFLAGS = ['-s', '-pthread'])
+        env.Append(LINKFLAGS = ['-s'])
 
     # warnings?
     if int(env['warn']):
