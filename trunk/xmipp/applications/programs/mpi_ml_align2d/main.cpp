@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     Prog_MLalign2D_prm prm;
 
     int c, nn, imgno, opt_refno, iaux;
-    double LL, sumw_allrefs, convv, sumcorr;
+    double LL, sumw_allrefs, convv, sumcorr, sumscale;
     std::vector<double> conv;
     double aux, wsum_sigma_noise, wsum_sigma_offset;
     std::vector<Matrix2D<double > > wsum_Mref;
@@ -131,7 +131,7 @@ int main(int argc, char **argv)
                 if (prm.maxCC_rather_than_ML)
                     DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Corr (8)");
                 else
-                    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), w_robust (9)");
+                    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), w_robust (9), scale (10)");
             }
 
             // Pre-calculate pdfs
@@ -139,7 +139,7 @@ int main(int argc, char **argv)
 
             // Integrate over all images
             prm.ML_sum_over_all_images(prm.SF, prm.Iref, iter,
-                                       LL, sumcorr, DFo, wsum_Mref,
+                                       LL, sumcorr, sumscale, DFo, wsum_Mref,
                                        wsum_sigma_noise, wsum_sigma_offset, 
 				       sumw,  sumw2, sumw_mirror);
 
@@ -148,6 +148,8 @@ int main(int argc, char **argv)
             LL = aux;
             MPI_Allreduce(&sumcorr, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             sumcorr = aux;
+            MPI_Allreduce(&sumscale, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            sumscale = aux;
             MPI_Allreduce(&wsum_sigma_noise, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             wsum_sigma_noise = aux;
             MPI_Allreduce(&wsum_sigma_offset, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -169,7 +171,7 @@ int main(int argc, char **argv)
             prm.update_parameters(wsum_Mref, 
                                   wsum_sigma_noise, wsum_sigma_offset, 
 				  sumw, sumw2, sumw_mirror, 
-				  sumcorr, sumw_allrefs);
+				  sumcorr, sumscale, sumw_allrefs);
 
             // Check convergence
             converged = prm.check_convergence(conv);
@@ -202,7 +204,7 @@ int main(int argc, char **argv)
                             system(((std::string)"rm -f " + fn_img).c_str());
                         }
                     }
-                    prm.write_output_files(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
+                    prm.write_output_files(iter, DFo, sumw_allrefs, LL, sumcorr, sumscale, conv);
                 }
                 else prm.output_to_screen(iter, sumcorr, LL);
             }
@@ -217,7 +219,7 @@ int main(int argc, char **argv)
 
         } // end loop iterations
 	if (rank == 0)  
-	    prm.write_output_files(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
+	    prm.write_output_files(-1, DFo, sumw_allrefs, LL, sumcorr, sumscale, conv);
 
     }
     catch (Xmipp_error XE)

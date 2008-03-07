@@ -166,6 +166,10 @@ public:
     bool do_student;
     /** Degrees of freedom for the t-student distribution */
     double df, df2;
+    /** Flag to refine grey-scale for each experimental image */
+    bool do_scale;
+    /** Grey-scale correction values */
+    std::vector<double> imgs_optscale;
 
     /** debug flag */
     int debug;
@@ -239,7 +243,7 @@ public:
                               std::vector <std::vector< Matrix2D<double> > > &Mwsum_imgs,
                               double &wsum_sigma_noise, double &wsum_sigma_offset,
                               std::vector<double> &sumw, std::vector<double> &sumw2, std::vector<double> &sumw_mirror,
-                              double &LL, double &fracweight, double &maxweight2,
+                              double &LL, double &fracweight, double &maxweight2, double &opt_scale,
                               int &opt_refno, double &opt_psi,
                               Matrix1D<double> &opt_offsets,
                               std::vector<double> &opt_offsets_ref,
@@ -252,7 +256,7 @@ public:
                                std::vector <std::vector< Matrix2D<std::complex<double> > > > &Fwsum_imgs,
                                double &wsum_sigma_noise, double &wsum_sigma_offset,
                                std::vector<double> &sumw, std::vector<double> &sumw2, std::vector<double> &sumw_mirror,
-                               double &LL, double &fracweight, double &maxweight2,
+                               double &LL, double &fracweight, double &maxweight2, double &opt_scale, 
                                int &opt_refno, double &opt_psi,
                                Matrix1D<double> &opt_offsets, std::vector<double> &opt_offsets_ref,
                                std::vector<double > &pdf_directions);
@@ -270,7 +274,7 @@ public:
 
     /// Integrate over all experimental images
     void ML_sum_over_all_images(SelFile &SF, std::vector< ImageXmippT<double> > &Iref, int iter,
-                                double &LL, double &sumcorr, DocFile &DFo,
+                                double &LL, double &sumcorr, double &sumscale, DocFile &DFo,
                                 std::vector<Matrix2D<double> > &wsum_Mref,
                                 double &wsum_sigma_noise, double &wsum_sigma_offset,
                                 std::vector<double> &sumw, std::vector<double> &sum2, std::vector<double> &sumw_mirror);
@@ -279,7 +283,7 @@ public:
     void update_parameters(std::vector<Matrix2D<double> > &wsum_Mref,
                            double &wsum_sigma_noise, double &wsum_sigma_offset, 
 			   std::vector<double> &sumw, std::vector<double> &sumw2, std::vector<double> &sumw_mirror,
-                           double &sumcorr, double &sumw_allrefs);
+                           double &sumcorr, double &sumscale, double &sumw_allrefs);
 
     /// check convergence
     bool check_convergence(std::vector<double> &conv);
@@ -289,7 +293,7 @@ public:
 
     /// Write out reference images, selfile and logfile
     void write_output_files(const int iter, DocFile &DFo,
-                            double &sumw_allrefs, double &LL, double &avecorr,
+                            double &sumw_allrefs, double &LL, double &avecorr, double &avescale,
                             std::vector<double> &conv);
 
 };

@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 {
 
     int c, nn, imgno, opt_refno;
-    double LL, sumw_allrefs, convv, sumcorr;
+    double LL, sumw_allrefs, convv, sumcorr, sumscale;
     bool converged;
     std::vector<double> conv;
     double aux, wsum_sigma_noise, wsum_sigma_offset;
@@ -88,14 +88,14 @@ int main(int argc, char **argv)
             if (prm.maxCC_rather_than_ML)
                 DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Corr (8)");
             else
-		DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), w_robust (9)");
+		DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), scale (9), w_robust (10)");
 
             // Pre-calculate pdfs
             if (!prm.maxCC_rather_than_ML) prm.calculate_pdf_phi();
 
             // Integrate over all images
             prm.ML_sum_over_all_images(prm.SF, prm.Iref, iter,
-                                       LL, sumcorr, DFo, wsum_Mref,
+                                       LL, sumcorr, sumscale, DFo, wsum_Mref,
                                        wsum_sigma_noise, wsum_sigma_offset, 
 				       sumw, sumw2, sumw_mirror);
 
@@ -103,13 +103,13 @@ int main(int argc, char **argv)
             prm.update_parameters(wsum_Mref, 
                                   wsum_sigma_noise, wsum_sigma_offset, 
 				  sumw, sumw2, sumw_mirror, 
-				  sumcorr, sumw_allrefs);
+				  sumcorr, sumscale, sumw_allrefs);
 
             // Check convergence
             converged = prm.check_convergence(conv);
 
             if (prm.write_intermediate)
-                prm.write_output_files(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
+                prm.write_output_files(iter, DFo, sumw_allrefs, LL, sumcorr, sumscale, conv);
             else prm.output_to_screen(iter, sumcorr, LL);
 
             if (converged)
@@ -128,7 +128,7 @@ int main(int argc, char **argv)
             }
 
         } // end loop iterations
-        prm.write_output_files(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
+        prm.write_output_files(-1, DFo, sumw_allrefs, LL, sumcorr, sumscale, conv);
 
     }
     catch (Xmipp_error XE)

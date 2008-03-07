@@ -29,12 +29,12 @@ int main(int argc, char **argv)
 {
 
     int                         c, iter, volno, converged = 0, argc2 = 0;
-    char **                     argv2 = NULL;
-    double                      LL, sumw_allrefs, convv, sumcorr, wsum_sigma_noise, wsum_sigma_offset;
+    char                        **argv2=NULL;
+    double                      LL, sumw_allrefs, convv, sumcorr, sumscale, wsum_sigma_noise, wsum_sigma_offset;
     std::vector<double>              conv;
     std::vector<Matrix2D<double> >   wsum_Mref, wsum_ctfMref;
     std::vector<std::vector<double> >     Mwsum_sigma2;
-    std::vector<double>              sumw, sumw_cv, sumw_mirror;
+    std::vector<double>              sumw, sumw2, sumw_cv, sumw_mirror, sumw_defocus;
     Matrix1D<double>            spectral_signal;
     DocFile                     DFo;
 
@@ -96,27 +96,27 @@ int main(int argc, char **argv)
             }
 
             DFo.clear();
-	    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8)");
+	    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8) Intensity (9) w-robust (10)");
 
             // Pre-calculate pdfs
             ML2D_prm.calculateInPlanePDF();
 
             // Integrate over all images
             ML2D_prm.sumOverAllImages(ML2D_prm.SF, ML2D_prm.Iref, iter,
-				      LL, sumcorr, DFo, 
+				      LL, sumcorr, sumscale, DFo, 
 				      wsum_Mref, wsum_ctfMref,
 				      Mwsum_sigma2, wsum_sigma_offset, 
-				      sumw, sumw_mirror);
+				      sumw, sumw2, sumw_mirror, sumw_defocus);
 
             // Update model parameters
             ML2D_prm.updateParameters(wsum_Mref, wsum_ctfMref,
 				      Mwsum_sigma2, wsum_sigma_offset, 
-				      sumw, sumw_mirror, 
-				      sumcorr, sumw_allrefs,
+				      sumw, sumw2, sumw_mirror, sumw_defocus, 
+				      sumcorr, sumscale, sumw_allrefs,
 				      spectral_signal);
 
             // Write intermediate output files
-            ML2D_prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
+            ML2D_prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, sumscale, conv);
             prm.concatenate_selfiles(iter);
 
 	    // Jump out before 3D reconstruction 
@@ -143,7 +143,7 @@ int main(int argc, char **argv)
 
             // Calculate 3D-SSNR and new Wiener filters
 	    prm.calculate_3DSSNR(spectral_signal, iter);
-	    ML2D_prm.updateWienerFilters(spectral_signal, iter);
+	    ML2D_prm.updateWienerFilters(spectral_signal, sumw_defocus, iter);
 
             // Check convergence
             if (prm.check_convergence(iter))
@@ -171,7 +171,7 @@ int main(int argc, char **argv)
         } // end loop iterations
 
 	// Write out converged doc and logfiles
-	ML2D_prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
+	ML2D_prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, sumscale, conv);
 
         if (!converged && prm.verb > 0) std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;
     }

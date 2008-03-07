@@ -152,7 +152,7 @@ public:
     bool do_ctf_correction;
     /** Pixel size in Angstroms */
     double sampling;
-    /** Vector with number of images per defocuss group (fourier_mode) */
+    /** Vector with number of images per defocuss group */
     std::vector<int> count_defocus;
     /** Flag whether the phases of the experimental images are flipped already */
     bool phase_flipped;
@@ -179,6 +179,14 @@ public:
     int current_highres_limit;
 
     /// IN DEVELOPMENT
+    /** Use t-student distribution instead of normal one */
+    bool do_student;
+    /** Degrees of freedom for the t-student distribution */
+    double df, df2;
+    /** Flag to refine grey-scale for each experimental image */
+    bool do_scale;
+    /** Grey-scale correction values */
+    std::vector<double> imgs_optscale;
     /** debug flag */
     int debug;
 
@@ -205,7 +213,8 @@ public:
 
     /// Calculate Wiener filter for defocus series as defined by Frank
     /// (2nd ed. formula 2.32b on p.60)
-    void updateWienerFilters(Matrix1D<double> &spectral_signal, int iter);
+    void updateWienerFilters(Matrix1D<double> &spectral_signal, 
+			     std::vector<double> &sumw_defocus, int iter);
 
     /// Vary in-plane and translational sampling rates with resolution
     void setCurrentSamplingRates(double current_probres_limit);
@@ -279,30 +288,34 @@ public:
 			 std::vector<double> &Mwsum_sigma2,
 			 double &wsum_sigma_offset, 
 			 std::vector<double> &sumw,
+			 std::vector<double> &sumw2,
 			 std::vector<double> &sumw_mirror,
-			 double &LL, double &fracweight, 
-			 int &opt_refno, double &opt_psi,
+			 double &LL, double &fracweight,  double &maxweight2, double &sum_refw2,
+			 double &opt_scale, int &opt_refno, double &opt_psi,
 			 Matrix1D<double> &opt_offsets, 
 			 std::vector<double> &opt_offsets_ref,
 			 std::vector<double > &pdf_directions);
 
     /// Integrate over all experimental images
     void sumOverAllImages(SelFile &SF, std::vector< ImageXmippT<double> > &Iref, int iter,
-			  double &LL, double &sumcorr, DocFile &DFo,
+			  double &LL, double &sumcorr, double &sumscale, DocFile &DFo,
 			  std::vector<Matrix2D<double> > &wsum_Mref,
 			  std::vector<Matrix2D<double> > &wsum_ctfMref,
 			  std::vector<std::vector<double> > &Mwsum_sigma2,
 			  double &wsum_sigma_offset, 
-			  std::vector<double> &sumw, 
-			  std::vector<double> &sumw_mirror);
+			  std::vector<double> &sumw, std::vector<double> &sumw2, 
+			  std::vector<double> &sumw_mirror,
+			  std::vector<double> &sumw_defocus);
 
     /// Update all model parameters (maximization step)
     void updateParameters(std::vector<Matrix2D<double> > &wsum_Mref,
 			  std::vector<Matrix2D<double> > &wsum_ctfMref,
 			  std::vector<std::vector<double> > &Mwsum_sigma2,
 			  double &wsum_sigma_offset,
-			  std::vector<double> &sumw, std::vector<double> &sumw_mirror,
-			  double &sumcorr, double &sumw_allrefs,
+			  std::vector<double> &sumw, std::vector<double> &sumw2, 
+			  std::vector<double> &sumw_mirror,
+			  std::vector<double> &sumw_defocus,
+			  double &sumcorr, double &sumscale, double &sumw_allrefs,
 			  Matrix1D<double> &spectral_signal);
 
     /// check convergence
@@ -310,7 +323,7 @@ public:
 
     /// Write out reference images, selfile and logfile
     void writeOutputFiles(const int iter, DocFile &DFo,
-			  double &sumw_allrefs, double &LL, double &avecorr,
+			  double &sumw_allrefs, double &LL, double &avecorr, double &avescale,
 			  std::vector<double> &conv);
 
 
