@@ -32,7 +32,6 @@ opts.Add('LINKERFORPROGRAMS', 'Linker for programs', 'g++')
 opts.Add('CXXFLAGS', 'The C++ compiler flags', None)
 
 opts.Add(BoolOption('debug', 'Build debug version?', 'no'))
-opts.Add(BoolOption('strip', 'Strip binaries?', 'yes'))
 opts.Add(BoolOption('warn', 'Show warnings?', 'no'))
 opts.Add(BoolOption('fast', 'Fast?', 'no'))
 opts.Add(BoolOption('static', 'Prevent dynamic linking?', 'no'))
@@ -233,19 +232,13 @@ elif (ARGUMENTS['mode'] == 'compile'):
         env.Append(CXXFLAGS = ['-g'])
         env.Append(CXXFLAGS = ['-pg'])
         env.Append(LINKFLAGS = ['-pg'])
-    
-        if int(env['strip']):
-            print '* WARNING: Debugging is impossible if strip is used.' \
-                  ' Disabling stripping..'
-            env['strip'] = 0
     else:
         # "safe" optimization
         env.Append(CXXFLAGS = ['-O2'])
+        env.Append(LINKFLAGS = ['-s'])
 
     env.Append(LINKFLAGS = ['-pthread'])
-    # strip?
-    if int(env['strip']):
-        env.Append(LINKFLAGS = ['-s'])
+    env.Append(CXXFLAGS = ['-pthread'])
 
     # warnings?
     if int(env['warn']):
