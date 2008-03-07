@@ -1808,7 +1808,7 @@ void estimate_defoci()
         max_allowed_defocusU = defocusU0 =
             XMIPP_MIN(-1000, global_prm->initial_ctfmodel.DeltafU + global_prm->defocus_range);
         min_allowed_defocusU = defocusUF =
-            XMIPP_MAX(-100000, global_prm->initial_ctfmodel.DeltafU - global_prm->defocus_range);
+            XMIPP_MAX(-150000, global_prm->initial_ctfmodel.DeltafU - global_prm->defocus_range);
         if (global_prm->initial_ctfmodel.DeltafV == 0)
         {
             defocusV0 = defocusU0;
@@ -1821,7 +1821,7 @@ void estimate_defoci()
             max_allowed_defocusV = defocusV0 =
                 XMIPP_MIN(-1000, global_prm->initial_ctfmodel.DeltafV + global_prm->defocus_range);
             min_allowed_defocusV = defocusVF =
-                XMIPP_MAX(-100000, global_prm->initial_ctfmodel.DeltafV - global_prm->defocus_range);
+                XMIPP_MAX(-150000, global_prm->initial_ctfmodel.DeltafV - global_prm->defocus_range);
         }
     }
 
