@@ -70,8 +70,12 @@ int main(int argc, char **argv)
         // Now all the ranks except 0 produce their own info
         if (rank != 0)
         {
-            prm.fn_ref = (std::string)"ref" + integerToString(fn_random) + "_.sel";
-            prm.fn_ang = (std::string)"ref" + integerToString(fn_random) + "__angles.doc";
+	    if (Is_VolumeXmipp(prm.fn_ref))
+	    {
+                prm.fn_ref = (std::string)"ref" + integerToString(fn_random) + "_.sel";
+                prm.fn_ang = (std::string)"ref" + integerToString(fn_random) + "__angles.doc";
+	    }
+	    
             prm.produce_side_info(rank);
         }
 
