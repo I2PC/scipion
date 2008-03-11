@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
+ * Authors:     Roberto Marabini
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -65,17 +65,12 @@ public:
 
     /** Quiet */
     bool quiet;
-
-    /** docfile with experimental images angles. 
-        This information is used to generate only angles close to experimental
-        images */
-    DocFile DFexperimentalImages;
-
+#ifdef NEVERDEFINED
     /** vector with valid proyection directions after looking for 
         directions close to experimental data. 
          */
     std::vector <Matrix1D<double> > close_points_angles;
-
+#endif
     /** filename with experimental images angles. 
         This information is used to generate only angles close to experimental
         images */
@@ -83,10 +78,19 @@ public:
     
     /** enabled angular_distance */
     bool angular_distance_bool;
-   
+
+    /** remove points far away from experimental data */
+    bool remove_points_far_away_from_experimental_data_bool;
+    
     /** enabled angular_distance */
     double angular_distance;
 
+    /** enabled angular_distance */
+    bool compute_closer_sampling_point_bool;
+    
+    /** enable is neighbors must be computed */ 
+    bool compute_neighbors_bool;
+   
    /** Symmetry. One of the 17 possible symmetries in
        single particle electron microscopy.
         */
@@ -137,9 +141,10 @@ public:
 
     /** Project in all the directions between indexes init and end*/
     void project_angle_vector(int my_init, int my_end, bool verbose = true);
-
+#ifdef NEVERDEFINED
     /** Remove projection points no closer to experimetal data than*/
     void remove_points_not_close_to_experimental_points(void);
+#endif
 };
 //@}
 #endif
