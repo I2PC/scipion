@@ -2406,9 +2406,9 @@ void SymList::fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgO
     }
     else if (pgGroup == pg_I2)
     {
-        line1 << "rot_axis 2  0 	    0	       1";
-        line2 << "rot_axis 5 -1.618033989  -1		0";
-        line3 << "rot_axis 3 -0.53934467   -1.4120227	0";
+        line1 << "rot_axis 2  0 0 1";
+        line2 << "rot_axis 5 -1.618033989  -1 0";
+        line3 << "rot_axis 3 -0.53934467   -1.4120227 0";
     }
     else if (pgGroup == pg_I3)
     {
