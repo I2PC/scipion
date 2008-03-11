@@ -32,6 +32,7 @@
 #include <data/matrix1d.h>
 #include <reconstruction/symmetries.h>
 #include <data/geometry.h>
+#include <iterator>
 
 #define cte_w 1.107149
 /**@defgroup SphereSampling sampling (Sampling the projection sphere)
@@ -81,6 +82,8 @@ public:
     std::vector<std::vector<int> >  my_neighbors;
     /** vector with neighbors psi*/
     std::vector<std::vector<double> > my_neighbors_psi;
+    /** vector with angular distance between points (dot_product)*/
+    std::vector<std::vector<double> > my_cross_correlation;
 
     /** vector with sampling points described by vectors */
     std::vector <Matrix1D<double> > sampling_points_vector;
@@ -164,6 +167,72 @@ public:
     */
 
     void compute_neighbors(void);
+   /** Save neighbors in a propietary ascii file. The structure is as
+       follows 
+      [vnum]
+      [size1]
+      [vec1_neighbors]
+      [vec1_psi]
+      [vec1_crosscorrelation]
+      [size2]
+      [vec2_neighbors]
+      [vec2_psi]
+      [vec2_crosscorrelation]
+      ...
+      [sizen]
+      [vecn_neighbors]
+      [vecn_psi]
+      [vecn_crosscorrelation]
+      
+      for the neighbors and
+      X1_angle  Y1_angle  Z1_angle
+      X1_vector Y1_vector Z1_vector
+      X2_angle  Y2_angle  Z2_angle
+      X2_vector Y2_vector Z2_vector
+      ...
+      Xn_angle  Yn_angle  Zn_angle
+      Xn_vector Yn_vector Zn_vector
+      for the sampling points
+
+      where vnum is the number of vectors, sizen is the number of elements in
+     that vector and vecn is the elements. 
+   
+   */
+   void save_sampling_file(FileName outfilename);
+   /** Read neighbors in a propietary ascii file. The structure is as
+       follows 
+      [vnum]
+      [size1]
+      [vec1]
+      [size2]
+      [vec2]
+      ...
+      [sizen]
+      [vecn]
+      
+      for the neighbors and
+      X1 Y1 Z1
+      X2 Y2 Z2
+      ...
+      Xn Yn Zn
+      for the sampling points
+
+      where vnum is the number of vectors, sizen is the number of elements in
+     that vector and vecn is the elements. 
+   
+   */
+   void read_sampling_file(FileName infilename);
+   
+   /** remove all those points that are further away from experimental data
+       than neighborhood_radius_rad */
+
+   /** remove all those points that are further away from experimental data
+       than neighborhood_radius_rad */
+   void remove_points_far_away_from_experimental_data(FileName FnexperimentalImages);
+   /** Find the closest sampling point for a docfile of experimental projections*/   
+   void find_closest_sampling_point(FileName FnexperimentalImages,
+                                    FileName output_file_root);
+
 };
 //@}
 #endif

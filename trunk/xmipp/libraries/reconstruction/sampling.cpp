@@ -98,7 +98,7 @@ XmippSampling::XmippSampling()
 void XmippSampling::SetSampling(double sampling)
 {
     sampling_rate_rad = DEG2RAD(sampling);
-    number_of_samples = ROUND(cte_w / sampling_rate_rad);
+    number_of_samples = ROUND(cte_w / sampling_rate_rad)+1;
 }
 
 void XmippSampling::SetNoise(double noise_deviation, int my_seed)
@@ -109,6 +109,11 @@ void XmippSampling::SetNoise(double noise_deviation, int my_seed)
 
 void XmippSampling::SetNeighborhoodRadius(double neighborhood)
 {
+    if(neighborhood>90)
+        {
+        std::cerr << "neighborhood can not be greater than 90 " << std::endl; 
+        exit(0);
+        }
     neighborhood_radius_rad = DEG2RAD(neighborhood);
     cos_neighborhood_radius = cos(neighborhood_radius_rad);
 }
@@ -257,23 +262,6 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere,
     //std::cout  <<  ending_point.transpose()    << " 1.1 1.5 " << std::endl;
 #endif
 #undef DEBUG2
-/*
-
-    // add  main corners
-    for (int i = 0;
-         i < vertices_vectors.size();
-         i++)
-    {
-        if (   (only_half_sphere && ZZ(vertices_vectors[i]) < 0.0)
-           || ZZ(vertices_vectors[i]) < min_z
-           || ZZ(vertices_vectors[i]) > max_z
-           )
-        //if (only_half_sphere && ZZ(vertices_vectors[i]) < 0.0)
-            continue;
-        else
-            sampling_points_vector.push_back(vertices_vectors[i]);
-    }
-*/
     // add main corners that are not part of the basic octahedrons
     {
     int i=11;
@@ -438,7 +426,7 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere,
             if (sort_func(aux, sampling_points_angles[k+1]))
             {
                 sampling_points_angles[k] = sampling_points_angles[k+1];
-                sampling_points_angles[k] = sampling_points_angles[k+1];
+//                sampling_points_angles[k] = sampling_points_angles[k+1];
                 sampling_points_angles[k+1] = aux; /*swap*/
                 sampling_points_vector[k] = sampling_points_vector[k+1];
                 sampling_points_vector[k] = sampling_points_vector[k+1];
@@ -526,12 +514,7 @@ void XmippSampling::fill_distance(Matrix1D<double> starting_point,
     double gamma;
     // skip first corener, already computed;
     double upsilon = acos(dotProduct(starting_point, ending_point));
-/*
-    //we need to remove projections with tilt angle not
-    //in between min_tilt-max_tilt
-    int auxCounter;
-    auxCounter=sampling_points_vector.size();
-*/
+
     for (int i1 = 1; i1 < my_number_of_samples; i1++)
     {
         gamma  = (double)i1 / (my_number_of_samples);
@@ -827,7 +810,7 @@ void XmippSampling::remove_redundant_points(const int symmetry,
                 }
         }// for i
     }
-    else if (symmetry  == pg_I )
+    else if (symmetry  == pg_I || symmetry  == pg_I2)
     {//OK
         Matrix1D<double>  _5_fold_axis_1_by_5_fold_axis_2(3);
         _5_fold_axis_1_by_5_fold_axis_2 = vectorR3(0., 0., 1.);
@@ -858,6 +841,110 @@ void XmippSampling::remove_redundant_points(const int symmetry,
                 }
         }// for i
     }
+    else if (symmetry  == pg_I1)
+    {//OK
+        Matrix2D<double>  A(3, 3);
+	Euler_angles2matrix(0, 90, 0, A);
+        Matrix1D<double>  _5_fold_axis_1_by_5_fold_axis_2(3);
+        _5_fold_axis_1_by_5_fold_axis_2 = A * vectorR3(0., 0., 1.);
+        _5_fold_axis_1_by_5_fold_axis_2.selfNormalize();
+        Matrix1D<double>  _5_fold_axis_2_by_3_fold_axis(3);
+        _5_fold_axis_2_by_3_fold_axis = A * vectorR3(0.187592467856686,
+                                        -0.303530987314591,
+                                        -0.491123477863004);
+        _5_fold_axis_2_by_3_fold_axis.selfNormalize();
+        Matrix1D<double>  _3_fold_axis_by_5_fold_axis_1(3);
+        _3_fold_axis_by_5_fold_axis_1 = A * vectorR3(0.187592467856686,
+                                        0.303530987314591,
+                                        -0.491123477863004);
+        _3_fold_axis_by_5_fold_axis_1.selfNormalize();
+
+        for (int i = 0; i < sampling_points_angles.size(); i++)
+        {
+            if (
+                dotProduct(sampling_points_vector[i], _5_fold_axis_2_by_3_fold_axis)   >= 0 &&
+                dotProduct(sampling_points_vector[i], _3_fold_axis_by_5_fold_axis_1)   >= 0 &&
+		dotProduct(sampling_points_vector[i], _5_fold_axis_1_by_5_fold_axis_2) >= 0
+            )
+            {
+                no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
+                no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
+            }
+        }// for i
+    }
+    else if (symmetry  == pg_I3)
+    {//OK
+        Matrix2D<double>  A(3, 3);
+	Euler_angles2matrix(0,31.7174745559,0, A);
+        Matrix1D<double>  _5_fold_axis_1_by_5_fold_axis_2(3);
+        _5_fold_axis_1_by_5_fold_axis_2 = A * vectorR3(0., 0., 1.);
+        _5_fold_axis_1_by_5_fold_axis_2.selfNormalize();
+        Matrix1D<double>  _5_fold_axis_2_by_3_fold_axis(3);
+        _5_fold_axis_2_by_3_fold_axis = A * vectorR3(0.187592467856686,
+                                        -0.303530987314591,
+                                        -0.491123477863004);
+        _5_fold_axis_2_by_3_fold_axis.selfNormalize();
+        Matrix1D<double>  _3_fold_axis_by_5_fold_axis_1(3);
+        _3_fold_axis_by_5_fold_axis_1 = A * vectorR3(0.187592467856686,
+                                        0.303530987314591,
+                                        -0.491123477863004);
+        _3_fold_axis_by_5_fold_axis_1.selfNormalize();
+
+        for (int i = 0; i < sampling_points_angles.size(); i++)
+        {
+            if (
+                dotProduct(sampling_points_vector[i], 
+		           _5_fold_axis_2_by_3_fold_axis)   >= 0 &&
+                dotProduct(sampling_points_vector[i], 
+		           _3_fold_axis_by_5_fold_axis_1)   >= 0 &&
+		dotProduct(sampling_points_vector[i], 
+		           _5_fold_axis_1_by_5_fold_axis_2) >= 0
+            )
+            {
+                no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
+                no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
+            }
+        }// for i
+    }
+    else if (symmetry  == pg_I4)
+    {//OK
+        Matrix2D<double>  A(3, 3);
+	Euler_angles2matrix(0,-31.7174745559,0, A);
+        Matrix1D<double>  _5_fold_axis_1_by_5_fold_axis_2(3);
+        _5_fold_axis_1_by_5_fold_axis_2 = A * vectorR3(0., 0., 1.);
+        _5_fold_axis_1_by_5_fold_axis_2.selfNormalize();
+        Matrix1D<double>  _5_fold_axis_2_by_3_fold_axis(3);
+        _5_fold_axis_2_by_3_fold_axis = A * vectorR3(0.187592467856686,
+                                        -0.303530987314591,
+                                        -0.491123477863004);
+        _5_fold_axis_2_by_3_fold_axis.selfNormalize();
+        Matrix1D<double>  _3_fold_axis_by_5_fold_axis_1(3);
+        _3_fold_axis_by_5_fold_axis_1 = A * vectorR3(0.187592467856686,
+                                        0.303530987314591,
+                                        -0.491123477863004);
+        _3_fold_axis_by_5_fold_axis_1.selfNormalize();
+
+        for (int i = 0; i < sampling_points_angles.size(); i++)
+        {
+            if (
+                dotProduct(sampling_points_vector[i], 
+		           _5_fold_axis_2_by_3_fold_axis)   <= 0 &&
+                dotProduct(sampling_points_vector[i], 
+		           _3_fold_axis_by_5_fold_axis_1)   <= 0 &&
+		dotProduct(sampling_points_vector[i], 
+		           _5_fold_axis_1_by_5_fold_axis_2) <= 0
+            )
+            {
+                no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
+                no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
+            }
+        }// for i
+    }
+    else if (symmetry  == pg_I5)
+    {//OK
+        std::cerr << "ERROR: pg_I5 Symmetry not implemented" << std::endl;
+        exit(0);
+    }
     else if (symmetry  == pg_IH )
     {//OK
         Matrix1D<double>  _5_fold_axis_2_by_3_fold_axis(3);
@@ -882,12 +969,12 @@ void XmippSampling::remove_redundant_points(const int symmetry,
     }
     else
     {
-        std::cerr << "eRROR: Symmetry " << symmetry  << "is not known" << std::endl;
+        std::cerr << "ERROR: Symmetry " << symmetry  << "is not known" << std::endl;
         exit(0);
     }
 
 }
-//THIs FUNCTION IS NOW OBSOLETE SIN 
+//THIs FUNCTION IS NOW OBSOLETE 
 //SINCE read_sym_file does not longer need a file
 //use symmetry functions instead
 /* Create symmetry file----------------------------------------------------- */
@@ -1018,15 +1105,138 @@ void XmippSampling::create_asym_unit_file(const FileName &docfilename)
     DFvectors.clear();
     DFangles.clear();
     FileName tmp_filename;
+    #define CHIMERA
+    #ifdef CHIMERA
+    std::ofstream filestr; 
+    filestr.open ("create_asym_unit_file.bild");
+    filestr    << ".color white" 
+	       << std::endl
+	       << ".sphere 0 0 0 .95"
+	       << std::endl
+	       ;
+    filestr    << ".color green" 
+	       << std::endl
+	       ;
+    #endif
     for (int i = 0; i < no_redundant_sampling_points_vector.size(); i++)
     {
+        #ifdef CHIMERA
+	filestr  << ".sphere " 
+	           << no_redundant_sampling_points_vector[i].transpose()
+		   << " 0.03"
+		   << std::endl
+		   ;
+	#endif
         DFvectors.insert_data_line(no_redundant_sampling_points_vector[i]);
         DFangles.insert_data_line(no_redundant_sampling_points_angles[i]);
     }
+    #ifdef CHIMERA
+    filestr.close();
+    #endif
+    #undef CHIMERA   
     tmp_filename = docfilename + "_vectors.doc";
     DFvectors.write(tmp_filename);
     tmp_filename = docfilename + "_angles.doc";
     DFangles.write(tmp_filename);
+}
+
+ void XmippSampling::save_sampling_file(FileName outfilename)
+{
+    FileName tmp_filename;
+    tmp_filename = outfilename + "_sampling.txt";
+    std::ofstream outfile; 
+    outfile.open(tmp_filename.c_str());
+    if (outfile.fail())
+        {
+        std::cerr << "Can not open file" << tmp_filename << std::endl ;
+        exit(0);
+        }
+
+    //total number of vectors
+    int num_elem;
+    num_elem = my_neighbors.size();
+    int num_elem2=0;
+    outfile << num_elem<< std::endl;
+    for(int i =0; i<num_elem;i++)
+    {
+        //total number of elements in a particular vector
+        num_elem2 = my_neighbors[i].size();
+        outfile  << num_elem2 << std::endl;
+        //outfile.write(reinterpret_cast<char*>(&num_elem2), sizeof(num_elem2));
+        //write vector[i] of neighbors, psi, distances
+        std::copy(my_neighbors[i].begin(),
+                  my_neighbors[i].end(),
+                  std::ostream_iterator<int>(outfile," "));
+        outfile << std::endl;
+        std::copy(my_neighbors_psi[i].begin(),
+                  my_neighbors_psi[i].end(),
+                  std::ostream_iterator<double>(outfile," "));
+        outfile << std::endl;
+//        std::copy(my_cross_correlation[i].begin(),
+//                  my_cross_correlation[i].end(),
+//		          std::ostream_iterator<double>(outfile," "));
+//       outfile << std::endl;
+    }
+    //lenght is 3 for the next 
+    //save sampling points
+    for (int i = 0; i < no_redundant_sampling_points_vector.size(); i++)
+    {
+        outfile << XX(no_redundant_sampling_points_vector[i]) << " ";
+        outfile << YY(no_redundant_sampling_points_vector[i]) << " ";
+        outfile << ZZ(no_redundant_sampling_points_vector[i]) << std::endl;
+        outfile << XX(no_redundant_sampling_points_angles[i]) << " ";
+        outfile << YY(no_redundant_sampling_points_angles[i]) << " ";
+        outfile << ZZ(no_redundant_sampling_points_angles[i]) << std::endl;
+    }    
+    outfile.close(); 
+}
+
+
+void XmippSampling::read_sampling_file(FileName infilename)
+{
+    FileName tmp_filename;
+    tmp_filename = infilename + "_sampling.txt";
+    std::ifstream infile; 
+    int num_elem = 0;
+    int num_elem2 = 0;
+    infile.open(tmp_filename.c_str(), std::ios::binary); 
+    if (infile.fail())
+       {
+       std::cerr << "Can not open file" << tmp_filename << std::endl ;
+       exit(0);
+       }
+    //total number of vectors
+    infile >> num_elem;
+    my_neighbors.resize(num_elem);
+    my_neighbors_psi.resize(num_elem);
+//    my_cross_correlation.resize(num_elem);
+    for(int i =0; i<num_elem;i++)
+    {
+         infile >> num_elem2;
+         my_neighbors[i].resize(num_elem2);
+         my_neighbors_psi[i].resize(num_elem2);
+         //my_cross_correlation[i].resize(num_elem2);
+         for (int j = 0; j < my_neighbors[i].size();j++)
+            infile >> my_neighbors[i][j];
+         for (int j = 0; j < my_neighbors_psi[i].size();j++)
+            infile >> my_neighbors_psi[i][j];
+//         for (int j = 0; j < my_cross_correlation[i].size();j++)
+//            infile >> my_cross_correlation[i][j];
+    }
+    no_redundant_sampling_points_vector.resize(num_elem);
+    no_redundant_sampling_points_angles.resize(num_elem);
+    for (int i = 0; i < num_elem; i++)
+    {   
+        no_redundant_sampling_points_vector[i].resize(3);
+        no_redundant_sampling_points_angles[i].resize(3);
+        infile >> XX(no_redundant_sampling_points_vector[i]);
+        infile >> YY(no_redundant_sampling_points_vector[i]);
+        infile >> ZZ(no_redundant_sampling_points_vector[i]);
+        infile >> XX(no_redundant_sampling_points_angles[i]);
+        infile >> YY(no_redundant_sampling_points_angles[i]);
+        infile >> ZZ(no_redundant_sampling_points_angles[i]);
+    }
+    infile.close(); 
 }
 
 void XmippSampling::compute_neighbors(void)
@@ -1038,46 +1248,42 @@ void XmippSampling::compute_neighbors(void)
     Matrix2D<double>  L(4, 4), R(4, 4);
     std::vector<int>  aux_neighbors;
     std::vector<double> aux_neighbors_psi;
+    std::vector<double> aux_cross_correlation;
     for (int i = 0; i < no_redundant_sampling_points_vector.size(); i++)
     {
         aux_neighbors_psi.clear();
+        aux_cross_correlation.clear();
         aux_neighbors.clear();
-        //#define DEBUGH
-        //#define DEBUGHH
         for (int j = 0; j < no_redundant_sampling_points_vector.size(); j++)
         {
-#ifdef DEBUGH
-            std::cerr << "i,j " << i << " " << j << std::endl;
-#endif
-            if (i == j) continue;
             //check identity
-            my_dotProduct = dotProduct(no_redundant_sampling_points_vector[i],
-                                         no_redundant_sampling_points_vector[j]);
+            if (i == j) continue;
+            my_dotProduct = /*ABS(*/dotProduct(
+	                                 no_redundant_sampling_points_vector[i],
+                                     no_redundant_sampling_points_vector[j]
+				                            )
+			                    /*)*/;
 
             if (my_dotProduct > cos_neighborhood_radius)
             {
                 aux_neighbors.push_back(j);
                 aux_neighbors_psi.push_back(0.0);
+                aux_cross_correlation.push_back(my_dotProduct);
             }
             else
             {
                 for (int isym = 0; isym < SL.SymsNo(); isym++)
                 {
-#ifdef DEBUGH
-                    std::cerr << "            isym " << isym << std::endl;
-#endif
                     SL.get_matrices(isym, L, R);
                     R.resize(3, 3);
                     row =  no_redundant_sampling_points_vector[j].transpose() * R;
-                    my_dotProduct = dotProduct(no_redundant_sampling_points_vector[i],
-                                                 row);
+                    my_dotProduct = /*ABS(*/dotProduct(no_redundant_sampling_points_vector[i],
+                                                 row)/*)*/;
 
-#ifdef DEBUGHH
-                    std::cerr << "            row out " << row << std::endl;
-#endif
                     if (my_dotProduct > cos_neighborhood_radius)
                     {
                         aux_neighbors.push_back(j);
+                        aux_cross_correlation.push_back(my_dotProduct);
                         rot = XX(no_redundant_sampling_points_angles[j]);
                         tilt = YY(no_redundant_sampling_points_angles[j]);
                         psi = ZZ(no_redundant_sampling_points_angles[j]);
@@ -1095,6 +1301,216 @@ void XmippSampling::compute_neighbors(void)
         }//for (int j=0;
         my_neighbors.push_back(aux_neighbors);
         my_neighbors_psi.push_back(aux_neighbors_psi);
+//        my_cross_correlation.push_back(aux_cross_correlation);
     }//for i
-#undef DEBUGH
+}
+/** Read doc file with experimental images
+    and remove all those points no closer than neighborhood_radius_rad
+    */
+
+
+void XmippSampling::remove_points_far_away_from_experimental_data(FileName FnexperimentalImages)
+{
+    double my_dotProduct;
+    Matrix1D<double>  row(3),direction(3);
+    Matrix2D<double>  L(4, 4), R(4, 4);
+    double img_tilt,img_rot,img_psi;
+    std::vector <Matrix1D<double> > exp_data_projection_direction;
+    //read input files
+    DocFile          DFi;
+    DFi.read(FnexperimentalImages);//experimental points
+    DFi.go_first_data_line();
+    while (!DFi.eof())
+    {
+        img_rot   = DFi(0);
+        img_tilt  = DFi(1);
+        img_psi   = DFi(2);
+
+        Euler_direction(img_rot, img_tilt, img_psi, direction);
+        exp_data_projection_direction.push_back(direction);
+        DFi.next_data_line();
+    }
+//#define DEBUG3
+#ifdef  DEBUG3
+    std::ofstream filestr; 
+    filestr.open ("remove_points_far_away_from_experimental_data.bild");
+//blue experimental directions (60 points by reflexion)
+     for (int i = 0;
+	  i < exp_data_projection_direction.size();
+	  i++)
+     {
+         filestr  <<  ".color red" << std::endl
+                    <<  ".sphere " << exp_data_projection_direction[i].transpose()  << 
+	               " .020" << std::endl;
+	 for (int isym = 0; isym < SL.SymsNo(); isym++)
+	 {
+             SL.get_matrices(isym, L, R);
+             R.resize(3, 3);
+             row =  exp_data_projection_direction[i].transpose() * R;
+             filestr  <<  ".color blue" << std::endl
+                	<<  ".sphere " << row  << 
+	        	   " .019" << std::endl;
+
+	 }//for (int isym=0
+     }
+#endif
+    for (int i = 0; i < no_redundant_sampling_points_vector.size(); i++)
+    {
+
+	    bool my_delete=true;
+        for(int j=0;j< exp_data_projection_direction.size();j++)
+        {
+            my_dotProduct = /*ABS(*/dotProduct(no_redundant_sampling_points_vector[i],
+                                         exp_data_projection_direction[j])/*)*/;
+
+            if (my_dotProduct > cos_neighborhood_radius)
+            {
+                my_delete=false;
+                break;//we want to keep this sampling point
+            } 
+            else//check all symmetry related points
+            {
+                for (int isym = 0; isym < SL.SymsNo(); isym++)
+                {
+                    SL.get_matrices(isym, L, R);
+                    R.resize(3, 3);
+
+                    row =  exp_data_projection_direction[j].transpose() * R;
+                    my_dotProduct = /*ABS(*/dotProduct(no_redundant_sampling_points_vector[i],
+                                                 row)/*)*/;
+                    if (my_dotProduct > cos_neighborhood_radius)//keep the sampling point
+                    {
+                        my_delete=false;
+                        break;//we want to keep this sampling point
+                    }
+                }//for (int isym=0
+            }
+        }//for j
+        if(my_delete)
+        {
+	
+	  
+         Matrix1D<double> aux(3);
+         int my_end;
+         my_end = no_redundant_sampling_points_vector.size()-1;
+         aux = no_redundant_sampling_points_vector[my_end];
+         no_redundant_sampling_points_vector[my_end] =
+            no_redundant_sampling_points_vector[i];
+         no_redundant_sampling_points_vector[i]=aux;   
+         no_redundant_sampling_points_vector.pop_back();    
+
+         aux = no_redundant_sampling_points_angles[my_end];
+         no_redundant_sampling_points_angles[my_end] =
+            no_redundant_sampling_points_angles[i];
+         no_redundant_sampling_points_angles[i]=aux;   
+         no_redundant_sampling_points_angles.pop_back();    
+
+	     i--;//since a point has been swaped we should repeat the same index  
+       }// if(my_delete)
+    }//for i end
+//#define DEBUG3    
+#ifdef  DEBUG3
+//green neighbours
+     for (int i = 0;
+	  i < no_redundant_sampling_points_vector.size();
+	  i++)
+     {
+         filestr    <<  ".color green" << std::endl
+                    <<  ".sphere " << no_redundant_sampling_points_vector[i].transpose()  << 
+	               " .018" << std::endl;
+     }
+    filestr.close();
+    
+#endif
+#undef DEBUG3
+}
+void XmippSampling::find_closest_sampling_point(FileName FnexperimentalImages,
+                                                FileName output_file_root)
+{
+    double my_dotProduct,my_dotProduct_aux;
+    Matrix1D<double>  row(3),direction(3);
+    Matrix1D<double> docline;
+    docline.initZeros(7);//three original angles, one winnir, new angles
+    Matrix2D<double>  L(4, 4), R(4, 4);
+    double img_tilt,img_rot,img_psi;
+    double my_dotProduct_winner=2.;
+    int winner_sampling=-1;
+    
+    //READ IMAGES AND CONVERT THEN INTO vectors    
+    //read input files
+    DocFile          DFi;
+    DFi.read(FnexperimentalImages);//experiemntal points
+    //add an extra column in the doc file and fill it with zero
+    DFi.set(1,3,0);
+    #define WRITEORIGINALANGLES
+    #ifdef WRITEORIGINALANGLES
+    //alloc space for new angles
+    DFi.set(1,6,0);
+    #endif
+    DFi.go_first_data_line();
+    while (!DFi.eof())
+    {
+        img_rot   = DFi(0);
+        img_tilt  = DFi(1);
+        img_psi   = DFi(2);
+
+        Euler_direction(img_rot, img_tilt, img_psi, direction);
+//#define DEBUG3
+#ifdef  DEBUG3
+//red sampling points
+        std::cout  <<  ".color red" << std::endl
+                   <<  ".sphere "   << direction.transpose()  
+		   <<  " .021"      << std::endl;
+#endif
+        my_dotProduct=-2;
+        for(int j=0;j< no_redundant_sampling_points_vector.size();j++)
+        {
+            my_dotProduct_aux = /*ABS(*/dotProduct(direction,
+                                no_redundant_sampling_points_vector[j])/*)*/;
+            if (my_dotProduct < my_dotProduct_aux)
+            {
+		my_dotProduct = my_dotProduct_aux;
+		winner_sampling = j;
+            }
+#ifdef  DEBUG3
+//red sampling points
+        if(j==3)
+        std::cout  <<  ".color yellow" << std::endl
+                   <<  ".sphere "   << no_redundant_sampling_points_vector[j].transpose()  
+		   <<  " .020"      << std::endl;
+#endif
+
+            for (int isym = 0; isym < SL.SymsNo(); isym++)
+            {
+                SL.get_matrices(isym, L, R);
+                R.resize(3, 3);
+                row =  no_redundant_sampling_points_vector[j].transpose() * R;
+                my_dotProduct_aux = /*ABS(*/dotProduct(direction,
+                                             row)/*)*/;
+#ifdef  DEBUG3
+        if(j==3)
+        std::cout  <<  ".color blue" << std::endl
+                   <<  ".sphere "   << row  
+		   <<  " .020"      << std::endl;
+#endif
+#undef DEBUG3
+                if (my_dotProduct < my_dotProduct_aux)
+                {
+		    my_dotProduct = my_dotProduct_aux;
+		    winner_sampling = j;
+                }
+            }//for isym
+        }//for j
+        //add winner to the DOC fILE
+	DFi.set(3, winner_sampling);
+	#ifdef WRITEORIGINALANGLES
+	DFi.set(4,XX(no_redundant_sampling_points_angles[winner_sampling]));  
+	DFi.set(5,YY(no_redundant_sampling_points_angles[winner_sampling]));  
+	DFi.set(6,ZZ(no_redundant_sampling_points_angles[winner_sampling]));  
+	#endif
+        DFi.next_data_line();
+    }//while
+    #undef WRITEORIGINALANGLES
+    if(output_file_root.size() > 0)
+        DFi.write(output_file_root+ "_closest_sampling_points.doc");  
 }
