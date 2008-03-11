@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
+ * Authors:    Roberto Marabini 
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
