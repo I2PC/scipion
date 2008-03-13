@@ -164,6 +164,7 @@ void ROUT_symmetrize(const Symmetrize_Parameters &prm)
 
     double accuracy = (prm.do_not_generate_subgroup) ? -1 : 1e-6;
     SL.read_sym_file(prm.fn_sym, accuracy);
+std::cerr << " read_sym_file" << std::endl;       
     V_in.read(prm.fn_in);
 
     std::cerr << prm;

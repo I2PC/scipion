@@ -813,28 +813,25 @@ void XmippSampling::remove_redundant_points(const int symmetry,
     else if (symmetry  == pg_I || symmetry  == pg_I2)
     {//OK
         Matrix1D<double>  _5_fold_axis_1_by_5_fold_axis_2(3);
-        _5_fold_axis_1_by_5_fold_axis_2 = vectorR3(0., 0., 1.);
+        _5_fold_axis_1_by_5_fold_axis_2 = vectorR3(0., 1., 0.);
         _5_fold_axis_1_by_5_fold_axis_2.selfNormalize();
         Matrix1D<double>  _5_fold_axis_2_by_3_fold_axis(3);
-        _5_fold_axis_2_by_3_fold_axis = vectorR3(0.187592467856686,
-                                        -0.303530987314591,
-                                        -0.491123477863004);
+        _5_fold_axis_2_by_3_fold_axis = vectorR3(-0.4999999839058737,
+                                                 -0.8090170074556163, 
+                                                  0.3090169861701543);
         _5_fold_axis_2_by_3_fold_axis.selfNormalize();
         Matrix1D<double>  _3_fold_axis_by_5_fold_axis_1(3);
-        _3_fold_axis_by_5_fold_axis_1 = vectorR3(0.187592467856686,
-                                        0.303530987314591,
-                                        -0.491123477863004);
+        _3_fold_axis_by_5_fold_axis_1 = vectorR3(0.4999999839058737, 
+                                                -0.8090170074556163, 
+                                                 0.3090169861701543);
         _3_fold_axis_by_5_fold_axis_1.selfNormalize();
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
-            if (XX(sampling_points_angles[i]) >= -31.7174745559 &&
-                XX(sampling_points_angles[i]) <=  31.7174745559 &&
-                YY(sampling_points_angles[i]) <=  90 &&
-                YY(sampling_points_angles[i]) >=  69.094843368)
-                if (
+            if (
+                    dotProduct(sampling_points_vector[i], _5_fold_axis_1_by_5_fold_axis_2) >= 0 &&
                     dotProduct(sampling_points_vector[i], _5_fold_axis_2_by_3_fold_axis) >= 0 &&
                     dotProduct(sampling_points_vector[i], _3_fold_axis_by_5_fold_axis_1) >= 0
-                )
+               )
                 {
                     no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
                     no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
@@ -844,27 +841,27 @@ void XmippSampling::remove_redundant_points(const int symmetry,
     else if (symmetry  == pg_I1)
     {//OK
         Matrix2D<double>  A(3, 3);
-	Euler_angles2matrix(0, 90, 0, A);
+	    Euler_angles2matrix(0, 90, 0, A);
         Matrix1D<double>  _5_fold_axis_1_by_5_fold_axis_2(3);
-        _5_fold_axis_1_by_5_fold_axis_2 = A * vectorR3(0., 0., 1.);
+        _5_fold_axis_1_by_5_fold_axis_2 = A * vectorR3(0., 1., 0.);
         _5_fold_axis_1_by_5_fold_axis_2.selfNormalize();
         Matrix1D<double>  _5_fold_axis_2_by_3_fold_axis(3);
-        _5_fold_axis_2_by_3_fold_axis = A * vectorR3(0.187592467856686,
-                                        -0.303530987314591,
-                                        -0.491123477863004);
+        _5_fold_axis_2_by_3_fold_axis = A * vectorR3(-0.4999999839058737,
+                                                 -0.8090170074556163, 
+                                                  0.3090169861701543);
         _5_fold_axis_2_by_3_fold_axis.selfNormalize();
         Matrix1D<double>  _3_fold_axis_by_5_fold_axis_1(3);
-        _3_fold_axis_by_5_fold_axis_1 = A * vectorR3(0.187592467856686,
-                                        0.303530987314591,
-                                        -0.491123477863004);
+        _3_fold_axis_by_5_fold_axis_1 = A * vectorR3(0.4999999839058737, 
+                                                -0.8090170074556163, 
+                                                 0.3090169861701543);
         _3_fold_axis_by_5_fold_axis_1.selfNormalize();
 
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if (
-                dotProduct(sampling_points_vector[i], _5_fold_axis_2_by_3_fold_axis)   >= 0 &&
-                dotProduct(sampling_points_vector[i], _3_fold_axis_by_5_fold_axis_1)   >= 0 &&
-		dotProduct(sampling_points_vector[i], _5_fold_axis_1_by_5_fold_axis_2) >= 0
+                    dotProduct(sampling_points_vector[i], _5_fold_axis_1_by_5_fold_axis_2) >= 0 &&
+                    dotProduct(sampling_points_vector[i], _5_fold_axis_2_by_3_fold_axis) >= 0 &&
+                    dotProduct(sampling_points_vector[i], _3_fold_axis_by_5_fold_axis_1) >= 0
             )
             {
                 no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
@@ -875,30 +872,27 @@ void XmippSampling::remove_redundant_points(const int symmetry,
     else if (symmetry  == pg_I3)
     {//OK
         Matrix2D<double>  A(3, 3);
-	Euler_angles2matrix(0,31.7174745559,0, A);
+	    Euler_angles2matrix(0,31.7174745559,0, A);
         Matrix1D<double>  _5_fold_axis_1_by_5_fold_axis_2(3);
-        _5_fold_axis_1_by_5_fold_axis_2 = A * vectorR3(0., 0., 1.);
+        _5_fold_axis_1_by_5_fold_axis_2 = A * vectorR3(0., 1., 0.);
         _5_fold_axis_1_by_5_fold_axis_2.selfNormalize();
         Matrix1D<double>  _5_fold_axis_2_by_3_fold_axis(3);
-        _5_fold_axis_2_by_3_fold_axis = A * vectorR3(0.187592467856686,
-                                        -0.303530987314591,
-                                        -0.491123477863004);
+        _5_fold_axis_2_by_3_fold_axis = A * vectorR3(-0.4999999839058737,
+                                                 -0.8090170074556163, 
+                                                  0.3090169861701543);
         _5_fold_axis_2_by_3_fold_axis.selfNormalize();
         Matrix1D<double>  _3_fold_axis_by_5_fold_axis_1(3);
-        _3_fold_axis_by_5_fold_axis_1 = A * vectorR3(0.187592467856686,
-                                        0.303530987314591,
-                                        -0.491123477863004);
+        _3_fold_axis_by_5_fold_axis_1 = A * vectorR3(0.4999999839058737, 
+                                                -0.8090170074556163, 
+                                                 0.3090169861701543);
         _3_fold_axis_by_5_fold_axis_1.selfNormalize();
 
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if (
-                dotProduct(sampling_points_vector[i], 
-		           _5_fold_axis_2_by_3_fold_axis)   >= 0 &&
-                dotProduct(sampling_points_vector[i], 
-		           _3_fold_axis_by_5_fold_axis_1)   >= 0 &&
-		dotProduct(sampling_points_vector[i], 
-		           _5_fold_axis_1_by_5_fold_axis_2) >= 0
+                    dotProduct(sampling_points_vector[i], _5_fold_axis_1_by_5_fold_axis_2) >= 0 &&
+                    dotProduct(sampling_points_vector[i], _5_fold_axis_2_by_3_fold_axis) >= 0 &&
+                    dotProduct(sampling_points_vector[i], _3_fold_axis_by_5_fold_axis_1) >= 0
             )
             {
                 no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
@@ -909,7 +903,7 @@ void XmippSampling::remove_redundant_points(const int symmetry,
     else if (symmetry  == pg_I4)
     {//OK
         Matrix2D<double>  A(3, 3);
-	Euler_angles2matrix(0,-31.7174745559,0, A);
+	    Euler_angles2matrix(0,-31.7174745559,0, A);
         Matrix1D<double>  _5_fold_axis_1_by_5_fold_axis_2(3);
         _5_fold_axis_1_by_5_fold_axis_2 = A * vectorR3(0., 0., 1.);
         _5_fold_axis_1_by_5_fold_axis_2.selfNormalize();
@@ -942,30 +936,154 @@ void XmippSampling::remove_redundant_points(const int symmetry,
     }
     else if (symmetry  == pg_I5)
     {//OK
-        std::cerr << "ERROR: pg_I5 Symmetry not implemented" << std::endl;
+        std::cerr << "ERROR: Symmetry pg_I5 not implemented" << std::endl;
         exit(0);
     }
-    else if (symmetry  == pg_IH )
+    else if (symmetry  == pg_IH || symmetry  == pg_I2H)
     {//OK
+        Matrix1D<double>  _5_fold_axis_1_by_5_fold_axis_2(3);
+        _5_fold_axis_1_by_5_fold_axis_2 = vectorR3(0., 1., 0.);
+        _5_fold_axis_1_by_5_fold_axis_2.selfNormalize();
         Matrix1D<double>  _5_fold_axis_2_by_3_fold_axis(3);
-        _5_fold_axis_2_by_3_fold_axis = vectorR3(0.187592467856686,
-                                        -0.303530987314591,
-                                        -0.491123477863004);
+        _5_fold_axis_2_by_3_fold_axis = vectorR3(-0.4999999839058737,
+                                                 -0.8090170074556163, 
+                                                  0.3090169861701543);
         _5_fold_axis_2_by_3_fold_axis.selfNormalize();
+        Matrix1D<double>  _3_fold_axis_by_5_fold_axis_1(3);
+        _3_fold_axis_by_5_fold_axis_1 = vectorR3(0.4999999839058737, 
+                                                -0.8090170074556163, 
+                                                 0.3090169861701543);
+        _3_fold_axis_by_5_fold_axis_1.selfNormalize();
+        Matrix1D<double>  _3_fold_axis_by_2_fold_axis(3);
+        _3_fold_axis_by_2_fold_axis =  vectorR3(1.,0.,0.);
+        _3_fold_axis_by_2_fold_axis.selfNormalize();
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
-            if (XX(sampling_points_angles[i]) >=  0. &&
-                XX(sampling_points_angles[i]) <=  31.7174745559 &&
-                YY(sampling_points_angles[i]) <=  90 &&
-                YY(sampling_points_angles[i]) >=  69.094843368)
-                if (
-                    dotProduct(sampling_points_vector[i], _5_fold_axis_2_by_3_fold_axis) >= 0
-                )
+            if (
+                    dotProduct(sampling_points_vector[i], _5_fold_axis_1_by_5_fold_axis_2) >= 0 &&
+                    dotProduct(sampling_points_vector[i], _5_fold_axis_2_by_3_fold_axis) >= 0 &&
+                    dotProduct(sampling_points_vector[i], _3_fold_axis_by_2_fold_axis) >= 0
+               )
                 {
                     no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
                     no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
                 }
         }// for i
+    }
+    else if (symmetry  == pg_I1H)
+    {//OK
+        Matrix2D<double>  A(3, 3);
+	    Euler_angles2matrix(0, 90, 0, A);
+        Matrix1D<double>  _5_fold_axis_1_by_5_fold_axis_2(3);
+        _5_fold_axis_1_by_5_fold_axis_2 = A * vectorR3(0., 1., 0.);
+        _5_fold_axis_1_by_5_fold_axis_2.selfNormalize();
+        Matrix1D<double>  _5_fold_axis_2_by_3_fold_axis(3);
+        _5_fold_axis_2_by_3_fold_axis = A * vectorR3(-0.4999999839058737,
+                                                 -0.8090170074556163, 
+                                                  0.3090169861701543);
+        _5_fold_axis_2_by_3_fold_axis.selfNormalize();
+        Matrix1D<double>  _3_fold_axis_by_5_fold_axis_1(3);
+        _3_fold_axis_by_5_fold_axis_1 = A * vectorR3(0.4999999839058737, 
+                                                -0.8090170074556163, 
+                                                 0.3090169861701543);
+        _3_fold_axis_by_5_fold_axis_1.selfNormalize();
+        Matrix1D<double>  _3_fold_axis_by_2_fold_axis(3);
+        _3_fold_axis_by_2_fold_axis =  A * vectorR3(1.,0.,0.);
+        _3_fold_axis_by_2_fold_axis.selfNormalize();
+        for (int i = 0; i < sampling_points_angles.size(); i++)
+        {
+            if (
+                    dotProduct(sampling_points_vector[i], _5_fold_axis_1_by_5_fold_axis_2) >= 0 &&
+                    dotProduct(sampling_points_vector[i], _5_fold_axis_2_by_3_fold_axis) >= 0 &&
+                    dotProduct(sampling_points_vector[i], _3_fold_axis_by_2_fold_axis) >= 0
+               )
+                {
+                    no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
+                    no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
+                }
+        }// for i
+    }
+    else if (symmetry  == pg_I3H)
+    {//OK
+        Matrix2D<double>  A(3, 3);
+	    Euler_angles2matrix(0,31.7174745559,0, A);
+        Matrix1D<double>  _5_fold_axis_1_by_5_fold_axis_2(3);
+        _5_fold_axis_1_by_5_fold_axis_2 = A * vectorR3(0., 0., 1.);
+        _5_fold_axis_1_by_5_fold_axis_2.selfNormalize();
+        Matrix1D<double>  _5_fold_axis_2_by_3_fold_axis(3);
+        _5_fold_axis_2_by_3_fold_axis = A * vectorR3(0.187592467856686,
+                                        -0.303530987314591,
+                                        -0.491123477863004);
+        _5_fold_axis_2_by_3_fold_axis.selfNormalize();
+        Matrix1D<double>  _3_fold_axis_by_5_fold_axis_1(3);
+        _3_fold_axis_by_5_fold_axis_1 = A * vectorR3(0.187592467856686,
+                                        0.303530987314591,
+                                        -0.491123477863004);
+        _3_fold_axis_by_5_fold_axis_1.selfNormalize();
+        Matrix1D<double>  _3_fold_axis_by_2_fold_axis(3);
+        _3_fold_axis_by_2_fold_axis = vectorR3(0.,1.,0.);
+        _3_fold_axis_by_2_fold_axis.selfNormalize();
+
+        for (int i = 0; i < sampling_points_angles.size(); i++)
+        {
+            if (
+                dotProduct(sampling_points_vector[i], 
+		           _5_fold_axis_2_by_3_fold_axis)   >= 0 &&
+                dotProduct(sampling_points_vector[i], 
+		           _3_fold_axis_by_5_fold_axis_1)   >= 0 &&
+		        dotProduct(sampling_points_vector[i], 
+		           _5_fold_axis_1_by_5_fold_axis_2) >= 0 &&
+                dotProduct(sampling_points_vector[i], 
+                   _3_fold_axis_by_2_fold_axis)     >= 0
+            )
+            {
+                no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
+                no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
+            }
+        }// for i
+    }
+    else if (symmetry  == pg_I4H)
+    {//OK
+        Matrix2D<double>  A(3, 3);
+	Euler_angles2matrix(0,-31.7174745559,0, A);
+        Matrix1D<double>  _5_fold_axis_1_by_5_fold_axis_2(3);
+        _5_fold_axis_1_by_5_fold_axis_2 = A * vectorR3(0., 0., 1.);
+        _5_fold_axis_1_by_5_fold_axis_2.selfNormalize();
+        Matrix1D<double>  _5_fold_axis_2_by_3_fold_axis(3);
+        _5_fold_axis_2_by_3_fold_axis = A * vectorR3(0.187592467856686,
+                                        -0.303530987314591,
+                                        -0.491123477863004);
+        _5_fold_axis_2_by_3_fold_axis.selfNormalize();
+        Matrix1D<double>  _3_fold_axis_by_5_fold_axis_1(3);
+        _3_fold_axis_by_5_fold_axis_1 = A * vectorR3(0.187592467856686,
+                                        0.303530987314591,
+                                        -0.491123477863004);
+        _3_fold_axis_by_5_fold_axis_1.selfNormalize();
+        Matrix1D<double>  _3_fold_axis_by_2_fold_axis(3);
+        _3_fold_axis_by_2_fold_axis = vectorR3(0.,1.,0.);
+        _3_fold_axis_by_2_fold_axis.selfNormalize();
+        for (int i = 0; i < sampling_points_angles.size(); i++)
+        {
+            if (
+                dotProduct(sampling_points_vector[i], 
+		           _5_fold_axis_2_by_3_fold_axis)   <= 0 &&
+                dotProduct(sampling_points_vector[i], 
+		           _3_fold_axis_by_5_fold_axis_1)   <= 0 &&
+		        dotProduct(sampling_points_vector[i], 
+		           _5_fold_axis_1_by_5_fold_axis_2) <= 0 &&
+                dotProduct(sampling_points_vector[i], 
+                   _3_fold_axis_by_2_fold_axis)     >= 0
+            )
+            {
+                no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
+                no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
+            }
+        }// for i
+    }
+    else if (symmetry  == pg_I5H)
+    {//OK
+        std::cerr << "ERROR: pg_I5H Symmetry not implemented" << std::endl;
+        exit(0);
     }
     else
     {
@@ -1123,7 +1241,7 @@ void XmippSampling::create_asym_unit_file(const FileName &docfilename)
         #ifdef CHIMERA
 	filestr  << ".sphere " 
 	           << no_redundant_sampling_points_vector[i].transpose()
-		   << " 0.03"
+		   << " 0.05"
 		   << std::endl
 		   ;
 	#endif

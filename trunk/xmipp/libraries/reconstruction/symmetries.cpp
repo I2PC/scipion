@@ -2250,13 +2250,6 @@ bool SymList::isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder)
        pgOrder=-1;
        return_true=true;
    }
-   //IH
-   else if (mySize==2 && G1=='I'&& G2=='H')
-   {
-       pgGroup=pg_IH;
-       pgOrder=-1;
-       return_true=true;
-   }
    //I1
    else if (mySize==2 && G1=='I'&& G2=='1')
    {
@@ -2289,6 +2282,48 @@ bool SymList::isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder)
    else if (mySize==2 && G1=='I'&& G2=='5')
    {
        pgGroup=pg_I5;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //IH
+   else if (mySize==2 && G1=='I'&& G2=='H')
+   {
+       pgGroup=pg_IH;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //I1H
+   else if (mySize==3 && G1=='I'&& G2=='1'&& G3=='H')
+   {
+       pgGroup=pg_I1H;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //I2H
+   else if (mySize==3 && G1=='I'&& G2=='2'&& G3=='H')
+   {
+       pgGroup=pg_I2H;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //I3H
+   else if (mySize==3 && G1=='I'&& G2=='3'&& G3=='H')
+   {
+       pgGroup=pg_I3H;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //I4H
+   else if (mySize==3 && G1=='I'&& G2=='4'&& G3=='H')
+   {
+       pgGroup=pg_I4H;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //I5H
+   else if (mySize==3 && G1=='I'&& G2=='5'&& G3=='H')
+   {
+       pgGroup=pg_I5H;
        pgOrder=-1;
        return_true=true;
    }
@@ -2385,48 +2420,75 @@ void SymList::fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgO
         line2 << "rot_axis " << "4" << " 0 0 1";
         line3 << "mirror_plane 0 1 1";
     }
-    else if (pgGroup == pg_I)
-    {
-        line1 << "rot_axis 2  0 	    1		0";
-        line2 << "rot_axis 5 -0.85065080702670 0 0.5257311142635";
-        line3 << "rot_axis 3 -0.9341723640 0.3568220765 0";
-    }
-    else if (pgGroup == pg_IH)
-    {
-        line1 << "rot_axis 2  0  	   1	       0";
-        line2 << "rot_axis 5 -0.85065080702670 0 0.5257311142635";
-        line3 << "rot_axis 3 -0.9341723640 0.3568220765 0";
-        line4 << "mirror_plane 1 0 0";
-    }
-    else if (pgGroup == pg_I1)
-    {
-        line1 << "rot_axis 2  0  	   1	       0";
-        line2 << "rot_axis 5 -0.85065080702670 0 0.5257311142635";
-        line3 << "rot_axis 3 -0.9341723640 0.3568220765 0";
-    }
-    else if (pgGroup == pg_I2)
+/*
+    else if (pgGroup == pg_I || pgGroup == pg_I2)
     {
         line1 << "rot_axis 2  0 0 1";
         line2 << "rot_axis 5 -1.618033989  -1 0";
         line3 << "rot_axis 3 -0.53934467   -1.4120227 0";
     }
+*/
+    else if (pgGroup == pg_I || pgGroup == pg_I2)
+    {
+        line1 << "rot_axis 2  0 0 1";
+        line2 << "rot_axis 5  0.525731114  0 0.850650807";
+        line3 << "rot_axis 3  0 0.356822076 0.934172364";
+    }
+    else if (pgGroup == pg_I1)
+    {
+        line1 << "rot_axis 2  1  	   0	       0";
+        line2 << "rot_axis 5 0.85065080702670 0 -0.5257311142635";
+        line3 << "rot_axis 3 0.9341723640 0.3568220765 0";
+    }
     else if (pgGroup == pg_I3)
     {
         line1 << "rot_axis 2  -0.5257311143 0 0.8506508070";
-        line2 << "rot_axis 3  -0.9822469432 0 -0.1875924905";
-        line3 << "rot_axis 5  -0.7236067955 -0.5257311143 -0.4472135966";
+        line3 << "rot_axis 5  0. 0. 1.";
+        line2 << "rot_axis 3  -0.4911234778630044, 0.3568220764705179, 0.7946544753759428";
     }
     else if (pgGroup == pg_I4)
     {
         line1 << "rot_axis 2  0.5257311143 0 0.8506508070";
-        line2 << "rot_axis 3  0.9822469432 0 -0.1875924905";
-        line3 << "rot_axis 5  0.7236067955 0.5257311143 -0.4472135966";
+        line3 << "rot_axis 5  0.8944271932547096 0 0.4472135909903704";
+        line2 << "rot_axis 3  0.4911234778630044 0.3568220764705179 0.7946544753759428";
     }
     else if (pgGroup == pg_I5)
     {
-        line1 << "rot_axis 2  0.5257311143  0.8506508070 0.";
-        line2 << "rot_axis 3  0.9822469432 -0.1875924905 0.";
-        line3 << "rot_axis 5  0.7236067955 -0.4472135966 0.5257311143";
+        std::cerr << "ERROR: Symmetry pg_I5 not implemented" << std::endl;
+        exit(0);
+    }
+    else if (pgGroup == pg_IH || pgGroup == pg_I2H)
+    {
+        line1 << "rot_axis 2  0 0 1";
+        line2 << "rot_axis 5  0.525731114  0 0.850650807";
+        line3 << "rot_axis 3  0 0.356822076 0.934172364";
+        line4 << "mirror_plane 1 0 0";
+    }
+    else if (pgGroup == pg_I1H)
+    {
+        line1 << "rot_axis 2  1  	   0	       0";
+        line2 << "rot_axis 5 0.85065080702670 0 -0.5257311142635";
+        line3 << "rot_axis 3 0.9341723640 0.3568220765 0";
+        line4 << "mirror_plane 0 0 -1";
+    }
+    else if (pgGroup == pg_I3H)
+    {
+        line1 << "rot_axis 2  -0.5257311143 0 0.8506508070";
+        line3 << "rot_axis 5  0. 0. 1.";
+        line2 << "rot_axis 3  -0.4911234778630044, 0.3568220764705179, 0.7946544753759428";
+        line4 << "mirror_plane 0.850650807 0  0.525731114";
+    }
+    else if (pgGroup == pg_I4H)
+    {
+        line1 << "rot_axis 2  0.5257311143 0 0.8506508070";
+        line3 << "rot_axis 5  0.8944271932547096 0 0.4472135909903704";
+        line2 << "rot_axis 3  0.4911234778630044 0.3568220764705179 0.7946544753759428";
+        line4 << "mirror_plane 0.850650807 0 -0.525731114";
+    }
+    else if (pgGroup == pg_I5H)
+    {
+        std::cerr << "ERROR: Symmetry pg_I5H not implemented" << std::endl;
+        exit(0);
     }
     else
     {

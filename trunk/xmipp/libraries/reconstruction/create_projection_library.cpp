@@ -243,12 +243,22 @@ void Prog_create_projection_library_Parameters::run()
         remove_points_far_away_from_experimental_data_bool)
         {	
         mysampling.remove_points_far_away_from_experimental_data(FnexperimentalImages);
+        #ifdef  DEBUGTIME
+        time (&end);
+        time_dif = difftime (end,start); start=end;
+        printf ("remove_points_far_away_from_experimental_data after %.2lf seconds\n", time_dif );
+        #endif
         }
     if(compute_closer_sampling_point_bool)
 	    {
 	    //find sampling point closer to experimental point (only 0) and bool
 	    //and save docfile with this information
 	    mysampling.find_closest_sampling_point(FnexperimentalImages,output_file_root);
+        #ifdef  DEBUGTIME
+        time (&end);
+        time_dif = difftime (end,start); start=end;
+        printf ("find_closest_sampling_point after %.2lf seconds\n", time_dif );
+        #endif
         }
     //only rank 0
     mysampling.create_asym_unit_file(output_file_root);
@@ -276,7 +286,7 @@ void Prog_create_projection_library_Parameters::run()
     //in this serial program there is a unique chunck
     //angle information is in
     //mysampling.no_redundant_sampling_points_vector[i]
-
+exit(0);
     //Run for all works
     project_angle_vector(0,
                  mysampling.no_redundant_sampling_points_angles.size()-1,!quiet);

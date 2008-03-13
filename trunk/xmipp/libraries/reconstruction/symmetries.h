@@ -92,6 +92,12 @@
 #define pg_I4   219 //another 52
 #define pg_I5   220 //another another 52 (used by EMBL-matfb)
 
+#define pg_I1H  221 //no crowther 222, + mirror plane
+#define pg_I2H  222 //crowther 222-> default in xmipp+ mirror plane
+#define pg_I3H  223 //52 as used by spider+ mirror plane
+#define pg_I4H  224 //another 52+ mirror plane
+#define pg_I5H  225 //another another 52 (used by EMBL-matfb)+ mirror plane
+
 /** Number of an image in the reconstruction list.
     This macro returns the index of a symmetry image (after the symmetry matrix
     number sym_no) within a list where the first images are true images and the
