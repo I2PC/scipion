@@ -15,19 +15,19 @@
 #-----------------------------------------------------------------------------
 
 # {file} Selfile with the input images:
-SelFileName='all_images.sel'
+SelFileName='noefg.sel'
 
 # {file} Initial 3D reference map:
-ReferenceFileName='my_ref.vol'
+ReferenceFileName='ml3d_it00020_vol00001_sc128.vol'
 
 # {dir} Working subdirectory: 
-WorkDirectory='MultiRes/Exp1'
+WorkDirectory='MultiRes/noefg_repeated'
 
 # Delete working directory if it already exists?
 DoDeleteWorkingDir=False
 
 # Number of iterations to perform
-NumberofIterations=50
+NumberofIterations=30
 
 # Resume at iteration
 """ This option may be used to finish a previously performed run.
@@ -39,7 +39,7 @@ ResumeIteration=1
 # {expert} {dir} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/usr/scratch/cosanchez/HMPV'
+ProjectDir='/home2/bioinfo/coss/noefg'
 
 # {expert} {dir} Directory name for logfiles:
 LogDir='Logs'
@@ -51,7 +51,7 @@ SkipPrealignment=True
 # {section} Particle description
 #-----------------------------------------------------------------------------
 # Particle radius (pixels)
-ParticleRadius=120
+ParticleRadius=60
 
 # Particle mass (Daltons)
 ParticleMass=2000000
@@ -64,7 +64,7 @@ ParticleMass=2000000
 SymmetryFile=''
 
 # Sampling rate (Angstrom/pixel)
-SamplingRate=1.296
+SamplingRate=2.8
 
 #-----------------------------------------------------------------------------
 # {section} Iteration parameters
@@ -83,7 +83,7 @@ SamplingRate=1.296
     Scaling is done via spline pyramids, please visit:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Pyramid
 """
-PyramidLevels='20x2 20x1 10x0'
+PyramidLevels='5x1 20x0'
 
 # Angular steps
 """ Angular steps for each of the iterations. This parameter is used to build
@@ -94,7 +94,7 @@ PyramidLevels='20x2 20x1 10x0'
     The discrete angular assignment is done with xmipp_angular_predict:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Angular_predict
 """
-AngularSteps='15x8 15x5 20x2'
+AngularSteps='5x5 20x3'
 
 # {expert} Reconstruction method
 """ Choose between wbp or art
@@ -107,7 +107,7 @@ AngularSteps='15x8 15x5 20x2'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-ReconstructionMethod='50xwbp'
+ReconstructionMethod='wbp'
 
 # {expert} Serial ART
 """ Do serial ART even if parallel execution is available. This parameter
@@ -148,7 +148,7 @@ DiscreteAssignment='50x1'
     The discrete angular assignment is done with xmipp_angular_predict:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Angular_predict_continuous
 """
-ContinuousAssignment='7x0 1'
+ContinuousAssignment='4x0 1'
 
 # {expert} Compute resolution
 """ Computation of the spectral signal-to-noise ratio is slow, do not abuse it.
@@ -197,7 +197,7 @@ AmplitudeCorrection='50x0'
 DoReferenceMask='50x1'
 
 # {file} Initial Reference Mask Volume
-InitialReferenceMask='my_mask.vol'
+InitialReferenceMask='circular_maskwi128.vol'
 
 # {expert} Reference Lowpass filter (Normalized digital freq.)
 """ This vector specifies the frequency at which each reference volume
@@ -207,7 +207,17 @@ InitialReferenceMask='my_mask.vol'
     For more information about Fourier filtering, please visit:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/FourierFilter
 """
-FilterReference='50x0.25'
+FilterLowPassReference='50x0.25'
+
+# {expert} Reference Highpass filter (Normalized digital freq.)
+""" This vector specifies the frequency at which each reference volume
+    will be filtered. The maximum frequency is 0.5, and 0.05 for all
+    iterations is a reasonable value.
+
+    For more information about Fourier filtering, please visit:
+    http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/FourierFilter
+"""
+FilterHighPassReference='50x0.05'
 
 # {expert} Segment reference using particle mass
 """ This vector specifies which iterations will use the particle mass
@@ -220,6 +230,12 @@ FilterReference='50x0.25'
 """
 SegmentUsingMass='50x0'
 
+# {expert} Recenter reference using center of mass
+""" Specify whether the reference for the next iteration must be recentered
+    or not after each iteration.
+"""
+Recenter=True
+
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
@@ -227,13 +243,13 @@ SegmentUsingMass='50x0'
 DoParallel=True
 
 # Number of processors to use:
-MyNumberOfCPUs=8
+MyNumberOfCPUs=15
 
 # {file} A list of all available CPUs (the MPI-machinefile):
 """ Depending on your system, your standard script to launch MPI-jobs may require this
     if your queueing system using an environment variable, give it here (with the leading $, e.g. $PBS_NODEFILE
 """
-MyMachineFile=''
+MyMachineFile='/home2/bioinfo/coss/machines.dat'
 
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
@@ -295,8 +311,10 @@ class MultiResClass:
 		
 		_DoReferenceMask,
 		_InitialReferenceMask,
-		_FilterReference,
+		_FilterLowPassReference,
+		_FilterHighPassReference,
 		_SegmentUsingMass,
+		_Recenter,
 
 		_DoParallel,
 		_MyNumberOfCPUs,
@@ -347,8 +365,10 @@ class MultiResClass:
        else:
           self.initialReferenceMask=""
 	  self.doReferenceMask="0"
-       self.filterReference="0 "+_FilterReference
+       self.filterLowPassReference="0 "+_FilterLowPassReference
+       self.filterHighPassReference="0 "+_FilterHighPassReference
        self.segmentUsingMass="0 "+_SegmentUsingMass
+       self.recenter=_Recenter
 
        self.doParallel=_DoParallel
        self.myNumberOfCPUs=_MyNumberOfCPUs
@@ -462,9 +482,9 @@ class MultiResClass:
                   "-ref ref.sel -ang ref_angles.doc "+\
                   "-oang "+self.getDiscreteAnglesFilename(_iteration)+" "+\
                   "-psi_step "+self.getAngularSteps(_iteration)+" "+\
-                  "-max_shift_change 999 "+\
                   "-summary "+self.getDiscreteAnglesSummaryDir(_iteration)+\
-                  "/summary -dont_modify_header -do_not_check_mirrors -max_shift_change 999"
+                  "/summary -dont_modify_header -do_not_check_mirrors"+\
+		  " -max_shift_change "+str(self.particleWorkingRadius/5)
           if not self.symmetryFile=="":
              params+=" -sym "+self.symmetryFile
 
@@ -485,6 +505,7 @@ class MultiResClass:
         			       self.myNumberOfCPUs,
         			       self.myMachineFile,
         			       False)
+      	  self.execute("find . -name \"ref*\" -exec rm -f {} \;")
        else:
           self.linkFile(removeDirectories(self.getAlignmentFFilename(_iteration)),
 	                self.getDiscreteAnglesFilename(_iteration))
@@ -786,11 +807,11 @@ class MultiResClass:
       self.copyFile(self.getReconstructionRootname(_iteration)+".vol",
                     self.getModelFilename(_iteration))
 		  
-      # Filter
-      if not self.getFilterReference(_iteration)=="0":
+      # Low Pass Filter
+      if not self.getFilterLowReference(_iteration)=="0":
          self.execute("xmipp_fourier_filter -i "+\
 	              self.getModelFilename(_iteration)+" "+\
-		      "-low_pass "+self.getFilterReference(_iteration)+" "+\
+		      "-low_pass "+self.getFilterLowPassReference(_iteration)+" "+\
 			 "-fourier_mask raised_cosine 0.05")
 	 if self.getDoReferenceMask(_iteration)=="1":
             self.execute("xmipp_mask -i "+self.getModelFilename(_iteration)+" "+\
@@ -808,13 +829,19 @@ class MultiResClass:
          self.deleteFile("temp_mask.vol")
 
       # Move the center of mass to 0
-      self.execute("xmipp_find_center3d -i "+self.getModelFilename(_iteration)+" "+\
-                   "-center_volume")
+      if self.recenter:
+          self.execute("xmipp_find_center3d -i "+self.getModelFilename(_iteration)+" "+\
+                       "-center_volume")
 
-      # Remove very low frequencies
-#     self.execute("xmipp_fourier_filter -i "+\
-#	           self.getModelFilename(_iteration)+" "+\
-#		   "-high_pass 0.03 -fourier_mask raised_cosine 0.02")
+      # High Pass Filter
+      if not self.getFilterHighReference(_iteration)=="0":
+         self.execute("xmipp_fourier_filter -i "+\
+	              self.getModelFilename(_iteration)+" "+\
+		      "-high_pass "+self.getFilterHighPassReference(_iteration)+" "+\
+			 "-fourier_mask raised_cosine 0.02")
+	 if self.getDoReferenceMask(_iteration)=="1":
+            self.execute("xmipp_mask -i "+self.getModelFilename(_iteration)+" "+\
+	        	 "-mask "+self.getMaskFilename(_iteration))
 
    #------------------------------------------------------------------------
    # Get
@@ -843,8 +870,10 @@ class MultiResClass:
       return getComponentFromVector(self.discreteAssignment,_iteration)
    def getDoReferenceMask(self,_iteration):
       return getComponentFromVector(self.doReferenceMask,_iteration)
-   def getFilterReference(self,_iteration):
-      return getComponentFromVector(self.filterReference,_iteration)
+   def getFilterLowPassReference(self,_iteration):
+      return getComponentFromVector(self.filterLowPassReference,_iteration)
+   def getFilterHighPassReference(self,_iteration):
+      return getComponentFromVector(self.filterHighPassReference,_iteration)
    def getIterationDirectory(self,_iteration):
       return "Iteration"+itoa(_iteration,2)
    def getMaskFilename(self,_iteration):
@@ -948,7 +977,7 @@ class MultiResClass:
 	     self.execute("rm -rf preproc*")
           else:
              self.changeDirectory(self.workDirectory)
-             self.execute("xmipp_header_reset -i imgs.sel")
+#             self.execute("xmipp_header_reset -i imgs.sel")
 	     self.execute("xmipp_header_extract -i imgs.sel -o Src/prealignment.txt")
 
    #------------------------------------------------------------------------
@@ -1191,8 +1220,10 @@ if __name__ == '__main__':
 		
 		DoReferenceMask,
 		InitialReferenceMask,
-		FilterReference,
+		FilterLowPassReference,
+		FilterHighPassReference,
 		SegmentUsingMass,
+		Recenter,
 
 		DoParallel,
 		MyNumberOfCPUs,
