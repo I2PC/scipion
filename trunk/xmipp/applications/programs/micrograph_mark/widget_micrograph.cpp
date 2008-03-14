@@ -2118,7 +2118,7 @@ AdjustCircleRadiustWidget::AdjustCircleRadiustWidget(int min, int max,
     __label_radius = new QLabel(this, "label");
     __label_radius->setFont(QFont("courier", 14));
     __label_radius->setText(integerToString(start_with, 3).c_str());
-    __label_radius->setFixedSize(__scroll_radius->sizeHint());
+    __label_radius->setFixedSize(__label_radius->sizeHint());
     grid->addWidget(__label_radius, 0, 2, AlignCenter);
 }
 
