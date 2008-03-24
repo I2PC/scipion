@@ -171,6 +171,7 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
             A = A.transpose();
             R = A * L * A.inv();
             set_shift(i, shift);
+            L.initIdentity();
             set_matrices(i++, L, R);
             __sym_elements++;
             // P4212 -------------------------------------------------------------
