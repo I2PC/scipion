@@ -261,7 +261,7 @@ void DocFile::assign(const Matrix2D< double >& mat)
     *this = mat;
 }
 
-//NOTE: MPI PROGRAM USE << TP PASS DOCFILES
+//NOTE: MPI PROGRAMS USE << TP PASS DOCFILES
 //FROM MASTER TO SLAVE
 //PLEASE DO NOT ALTER THE OUTPUR FORMAT
 std::ostream& operator<<(std::ostream& o, const DocFile& doc)
