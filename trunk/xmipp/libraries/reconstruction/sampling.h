@@ -89,7 +89,14 @@ public:
     std::vector <Matrix1D<double> > sampling_points_vector;
     /** vector with sampling points described by angles */
     std::vector <Matrix1D<double> > sampling_points_angles;
-
+    /** vector with symmetry matrices */
+    std::vector <Matrix2D<double> > R_repository;
+    std::vector <Matrix2D<double> > L_repository;
+    /** vector with product of experimental images and L and R */
+    std::vector <Matrix1D<double> > exp_data_projection_direction_by_L_R;
+    /** vector with psi resulting from product of experimental images and L and R */
+    std::vector <double > exp_data_projection_direction_by_L_R_psi;
+    
     /** vector with sampling points described by vectors, only store
         the non redundant part */
     std::vector <Matrix1D<double> > no_redundant_sampling_points_vector;
@@ -133,6 +140,9 @@ public:
                        double min_z= -10.,
                        double max_z= +10.
                       );
+    /** fill R and L Repository (vector with symmetry matrices) */
+    void fill_L_R_repository(void);
+                      
     /** set sampling rate */
     void SetSampling(double sampling);
 
@@ -166,7 +176,7 @@ public:
     save not only the neighbors but the angle psi
     */
 
-    void compute_neighbors(void);
+    void compute_neighbors(FileName FnexperimentalImages);
    /** Save neighbors in a propietary ascii file. The structure is as
        follows 
       [vnum]
@@ -232,7 +242,8 @@ public:
    /** Find the closest sampling point for a docfile of experimental projections*/   
    void find_closest_sampling_point(FileName FnexperimentalImages,
                                     FileName output_file_root);
-
+   /** Precalculate exp_data by symmetry matrices (speeds up calculations)*/
+   void fill_exp_data_projection_direction_by_L_R(FileName FnexperimentalImages);
 };
 //@}
 #endif

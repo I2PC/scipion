@@ -1123,7 +1123,7 @@ void XmippSampling::create_sym_file(FileName simFp,int symmetry, int sym_order)
     {
         SymFile << "rot_axis " << sym_order << " 0 0 1";
         SymFile << std::endl;
-        SymFile << "mirror_plane 0 0 1";
+        SymFile << "mirror_plane 0 0 -1";
     }
     else if (symmetry == pg_SN)
     {
@@ -1241,7 +1241,7 @@ void XmippSampling::create_asym_unit_file(const FileName &docfilename)
         #ifdef CHIMERA
 	filestr  << ".sphere " 
 	           << no_redundant_sampling_points_vector[i].transpose()
-		   << " 0.05"
+		   << " 0.018"
 		   << std::endl
 		   ;
 	#endif
@@ -1357,7 +1357,7 @@ void XmippSampling::read_sampling_file(FileName infilename)
     infile.close(); 
 }
 
-void XmippSampling::compute_neighbors(void)
+void XmippSampling::compute_neighbors(FileName FnexperimentalImages)
 {
     double rot,  tilt,  psi;
     double rotp, tiltp, psip;
@@ -1366,61 +1366,69 @@ void XmippSampling::compute_neighbors(void)
     Matrix2D<double>  L(4, 4), R(4, 4);
     std::vector<int>  aux_neighbors;
     std::vector<double> aux_neighbors_psi;
-    std::vector<double> aux_cross_correlation;
-    for (int i = 0; i < no_redundant_sampling_points_vector.size(); i++)
+    std::vector <Matrix1D<double> > exp_data_projection_direction;
+    Matrix1D<double>  direction(3);    
+    
+    for(int j=0;j< exp_data_projection_direction_by_L_R.size();)
     {
         aux_neighbors_psi.clear();
-        aux_cross_correlation.clear();
         aux_neighbors.clear();
-        for (int j = 0; j < no_redundant_sampling_points_vector.size(); j++)
+        for (int k = 0; k < R_repository.size(); k++,j++)
         {
-            //check identity
-            if (i == j) continue;
-            my_dotProduct = /*ABS(*/dotProduct(
-	                                 no_redundant_sampling_points_vector[i],
-                                     no_redundant_sampling_points_vector[j]
-				                            )
-			                    /*)*/;
+            for (int i = 0; i < no_redundant_sampling_points_vector.size(); i++)
+            {
+                my_dotProduct = dotProduct(no_redundant_sampling_points_vector[i],
+                                           exp_data_projection_direction_by_L_R[j]);
 
-            if (my_dotProduct > cos_neighborhood_radius)
-            {
-                aux_neighbors.push_back(j);
-                aux_neighbors_psi.push_back(0.0);
-                aux_cross_correlation.push_back(my_dotProduct);
-            }
-            else
-            {
-                for (int isym = 0; isym < SL.SymsNo(); isym++)
+                if (my_dotProduct > cos_neighborhood_radius)
                 {
-                    SL.get_matrices(isym, L, R);
-                    R.resize(3, 3);
-                    row =  no_redundant_sampling_points_vector[j].transpose() * R;
-                    my_dotProduct = /*ABS(*/dotProduct(no_redundant_sampling_points_vector[i],
-                                                 row)/*)*/;
-
-                    if (my_dotProduct > cos_neighborhood_radius)
-                    {
-                        aux_neighbors.push_back(j);
-                        aux_cross_correlation.push_back(my_dotProduct);
-                        rot = XX(no_redundant_sampling_points_angles[j]);
-                        tilt = YY(no_redundant_sampling_points_angles[j]);
-                        psi = ZZ(no_redundant_sampling_points_angles[j]);
-                        L.resize(3, 3); // Erase last row and column
-                        Euler_apply_transf(L, R, rot, tilt, psi, rotp, tiltp, psip);
-                        aux_neighbors_psi.push_back(psip);
-#ifdef DEBUGHH
-                        Euler_direction(rotp, tiltp, psip, row);
-                        std::cerr << "row in " << row << std::endl;
-#endif
-                        break;
-                    }
-                }//for (int isym=0
-            }
-        }//for (int j=0;
+                    aux_neighbors.push_back(i);
+                    aux_neighbors_psi.push_back(
+                        exp_data_projection_direction_by_L_R_psi[j]);
+                }
+            }//for i;
+        }//for k
         my_neighbors.push_back(aux_neighbors);
         my_neighbors_psi.push_back(aux_neighbors_psi);
-//        my_cross_correlation.push_back(aux_cross_correlation);
-    }//for i
+    }//for j
+    #define CHIMERA
+    #ifdef CHIMERA
+    std::ofstream filestr; 
+    filestr.open ("compute_neighbors.bild");
+    filestr    << ".color white" 
+	       << std::endl
+	       << ".sphere 0 0 0 .95"
+	       << std::endl
+	       ;
+    int exp_image=0;
+    filestr    <<  ".color yellow" << std::endl
+               <<  ".sphere "   << exp_data_projection_direction_by_L_R[exp_image*R_repository.size()].transpose()  
+		       <<  " .021"      << std::endl;
+    for(int i=(exp_image*R_repository.size()); 
+        i< (exp_image+1)*R_repository.size();
+        i++)
+        {
+        filestr    <<  ".color red" << std::endl
+                   <<  ".sphere "   << exp_data_projection_direction_by_L_R[i].transpose()  
+		           <<  " .020"      << std::endl;
+        }
+    double blue;    
+    for(int i=0; 
+        i< my_neighbors[exp_image].size();
+        i++)
+        {
+        blue = (my_neighbors_psi[exp_image][i]+180.)/360.;
+        filestr    <<  ".color 0 0 " << blue  << std::endl
+                   <<  ".sphere "   <<
+                   no_redundant_sampling_points_vector[my_neighbors[exp_image][i]].transpose()  
+		           <<  " .019"      << std::endl;
+        //std::cerr << my_neighbors_psi[exp_image][i] << std::endl;
+        }
+    filestr.close();
+    
+    #endif
+    #undef CHIMERA
+
 }
 /** Read doc file with experimental images
     and remove all those points no closer than neighborhood_radius_rad
@@ -1433,76 +1441,20 @@ void XmippSampling::remove_points_far_away_from_experimental_data(FileName Fnexp
     Matrix1D<double>  row(3),direction(3);
     Matrix2D<double>  L(4, 4), R(4, 4);
     double img_tilt,img_rot,img_psi;
-    std::vector <Matrix1D<double> > exp_data_projection_direction;
-    //read input files
-    DocFile          DFi;
-    DFi.read(FnexperimentalImages);//experimental points
-    DFi.go_first_data_line();
-    while (!DFi.eof())
-    {
-        img_rot   = DFi(0);
-        img_tilt  = DFi(1);
-        img_psi   = DFi(2);
 
-        Euler_direction(img_rot, img_tilt, img_psi, direction);
-        exp_data_projection_direction.push_back(direction);
-        DFi.next_data_line();
-    }
-//#define DEBUG3
-#ifdef  DEBUG3
-    std::ofstream filestr; 
-    filestr.open ("remove_points_far_away_from_experimental_data.bild");
-//blue experimental directions (60 points by reflexion)
-     for (int i = 0;
-	  i < exp_data_projection_direction.size();
-	  i++)
-     {
-         filestr  <<  ".color red" << std::endl
-                    <<  ".sphere " << exp_data_projection_direction[i].transpose()  << 
-	               " .020" << std::endl;
-	 for (int isym = 0; isym < SL.SymsNo(); isym++)
-	 {
-             SL.get_matrices(isym, L, R);
-             R.resize(3, 3);
-             row =  exp_data_projection_direction[i].transpose() * R;
-             filestr  <<  ".color blue" << std::endl
-                	<<  ".sphere " << row  << 
-	        	   " .019" << std::endl;
-
-	 }//for (int isym=0
-     }
-#endif
     for (int i = 0; i < no_redundant_sampling_points_vector.size(); i++)
     {
-
 	    bool my_delete=true;
-        for(int j=0;j< exp_data_projection_direction.size();j++)
+        for(int j=0;j< exp_data_projection_direction_by_L_R.size();j++)
         {
-            my_dotProduct = /*ABS(*/dotProduct(no_redundant_sampling_points_vector[i],
-                                         exp_data_projection_direction[j])/*)*/;
+            my_dotProduct = dotProduct(no_redundant_sampling_points_vector[i],
+                                       exp_data_projection_direction_by_L_R[j]);
 
             if (my_dotProduct > cos_neighborhood_radius)
             {
                 my_delete=false;
                 break;//we want to keep this sampling point
             } 
-            else//check all symmetry related points
-            {
-                for (int isym = 0; isym < SL.SymsNo(); isym++)
-                {
-                    SL.get_matrices(isym, L, R);
-                    R.resize(3, 3);
-
-                    row =  exp_data_projection_direction[j].transpose() * R;
-                    my_dotProduct = /*ABS(*/dotProduct(no_redundant_sampling_points_vector[i],
-                                                 row)/*)*/;
-                    if (my_dotProduct > cos_neighborhood_radius)//keep the sampling point
-                    {
-                        my_delete=false;
-                        break;//we want to keep this sampling point
-                    }
-                }//for (int isym=0
-            }
         }//for j
         if(my_delete)
         {
@@ -1526,9 +1478,19 @@ void XmippSampling::remove_points_far_away_from_experimental_data(FileName Fnexp
 	     i--;//since a point has been swaped we should repeat the same index  
        }// if(my_delete)
     }//for i end
-//#define DEBUG3    
-#ifdef  DEBUG3
-//green neighbours
+    #define CHIMERA
+    #ifdef CHIMERA
+    std::ofstream filestr; 
+    filestr.open ("remove_points_far_away_from_experimental_data.bild");
+    filestr    << ".color white" 
+	       << std::endl
+	       << ".sphere 0 0 0 .95"
+	       << std::endl
+	       ;
+    filestr    << ".color green" 
+	       << std::endl
+	       ;
+    //green neighbours
      for (int i = 0;
 	  i < no_redundant_sampling_points_vector.size();
 	  i++)
@@ -1539,8 +1501,8 @@ void XmippSampling::remove_points_far_away_from_experimental_data(FileName Fnexp
      }
     filestr.close();
     
-#endif
-#undef DEBUG3
+    #endif
+    #undef CHIMERA
 }
 void XmippSampling::find_closest_sampling_point(FileName FnexperimentalImages,
                                                 FileName output_file_root)
@@ -1551,21 +1513,143 @@ void XmippSampling::find_closest_sampling_point(FileName FnexperimentalImages,
     docline.initZeros(7);//three original angles, one winnir, new angles
     Matrix2D<double>  L(4, 4), R(4, 4);
     double img_tilt,img_rot,img_psi;
+    double rotp, tiltp, psip,aux_psi;
     double my_dotProduct_winner=2.;
     int winner_sampling=-1;
     
-    //READ IMAGES AND CONVERT THEN INTO vectors    
     //read input files
     DocFile          DFi;
     DFi.read(FnexperimentalImages);//experiemntal points
-    //add an extra column in the doc file and fill it with zero
-    DFi.set(1,3,0);
-    #define WRITEORIGINALANGLES
-    #ifdef WRITEORIGINALANGLES
-    //alloc space for new angles
-    DFi.set(1,6,0);
-    #endif
+    DFi.set(1,9,0);
+    DFi.go_beginning();
+    std::string   comment;
+    comment = (DFi.get_current_line()).get_text();    
+    if (strstr(comment.c_str(), "Headerinfo") == NULL &&
+        strstr(comment.c_str(), "ProjectionMatching") == NULL
+        )
+    {
+        std::cerr << "Error!! Docfile is not of Headerinfo. " << std::endl;
+        std::cerr << "current Docline " << comment << std::endl;
+        exit(1);
+    }
+    DFi.go_beginning();
+    DFi.remove_current();
+    DFi.go_beginning();
+    std::string   tmp_string; 
+    tmp_string  = "ProjectionMatching columns: rot (1), tilt (2), psi (3),";
+    tmp_string += " Xoff (4), Yoff (5), winner_ref (6),";
+    tmp_string += " PSI (7), ref_rot (8), ref_tilt (9),";
+    tmp_string += " ref_psi (10)";
+    DFi.insert_comment(tmp_string);
     DFi.go_first_data_line();
+
+#define DEBUG3
+#ifdef  DEBUG3
+    std::ofstream filestr; 
+    filestr.open ("find_closest_sampling_point.bild");
+    int exp_image=1;
+#endif
+
+    for(int i=0;i< exp_data_projection_direction_by_L_R.size();)
+    {
+        my_dotProduct=-2; 
+        for (int k = 0; k < R_repository.size(); k++,i++)
+        {
+#ifdef  DEBUG3
+        //experimental points plus symmetry
+        if( i>(exp_image*R_repository.size()-1) && i< ((exp_image+1)*R_repository.size()))
+            {
+            filestr    <<  ".color red" << std::endl
+                       <<  ".sphere "   << exp_data_projection_direction_by_L_R[i].transpose()  
+		               <<  " .019"      << std::endl;
+            }
+#endif
+        
+            for(int j=0;j< no_redundant_sampling_points_vector.size();j++)
+            {
+                my_dotProduct_aux =
+                dotProduct(exp_data_projection_direction_by_L_R[i],
+                            no_redundant_sampling_points_vector[j]);
+
+                if ( my_dotProduct_aux > my_dotProduct)
+                {
+		            my_dotProduct = my_dotProduct_aux;
+		            winner_sampling = j;
+                }
+            }//for j
+       }//for k
+#ifdef  DEBUG3
+            if( i==  ((exp_image+1)*R_repository.size()) )
+            {  
+                filestr    <<  ".color yellow" << std::endl
+                           <<  ".sphere "   << no_redundant_sampling_points_vector[winner_sampling].transpose()  
+		                   <<  " .020"      << std::endl;
+             }
+#endif
+        //add winner to the DOC fILE
+	    DFi.set(5, winner_sampling);
+	    DFi.set(6, exp_data_projection_direction_by_L_R_psi[winner_sampling]);
+	    DFi.set(7,XX(no_redundant_sampling_points_angles[winner_sampling]));  
+	    DFi.set(8,YY(no_redundant_sampling_points_angles[winner_sampling]));  
+	    DFi.set(9,ZZ(no_redundant_sampling_points_angles[winner_sampling]));  
+        DFi.next_data_line();
+    }//for i 
+    if(output_file_root.size() > 0)
+        DFi.write(output_file_root+ "_closest_sampling_points.doc");  
+#ifdef  DEBUG3
+    filestr.close();
+#endif
+#undef DEBUG3
+}
+void XmippSampling::fill_L_R_repository(void)
+{
+    Matrix2D<double>  L(4, 4), R(4, 4);
+    Matrix2D<double>  Identity(3,3);
+    Identity.initIdentity();
+    R_repository.push_back(Identity);
+    L_repository.push_back(Identity);
+     for (int isym = 0; isym < SL.SymsNo(); isym++)
+    {
+        SL.get_matrices(isym, L, R);
+        R.resize(3, 3);
+        L.resize(3, 3);
+        R_repository.push_back(R);
+        L_repository.push_back(L);
+    }
+//#define DEBUG3
+#ifdef  DEBUG3
+    for (int isym = 0; isym < R_repository.size(); isym++)
+        {
+        std::cout << R_repository[isym];
+        std::cout << L_repository[isym];
+        }
+#endif
+#undef DEBUG3
+}
+void XmippSampling::fill_exp_data_projection_direction_by_L_R(FileName FnexperimentalImages)
+{
+    std::vector <Matrix1D<double> > exp_data_projection_direction;
+    Matrix1D<double>  direction(3);
+    double rotp, tiltp, psip;
+    //read input files
+    DocFile          DFi;
+    DFi.read(FnexperimentalImages);//experimental points
+    DFi.go_first_data_line();
+    #define CHIMERA
+    #ifdef CHIMERA
+    std::ofstream filestr; 
+    filestr.open ("exp_data_projection_direction_by_L_R.bild");
+    filestr    << ".color white" 
+	       << std::endl
+	       << ".sphere 0 0 0 .95"
+	       << std::endl
+	       ;
+    filestr    << ".color green" 
+	       << std::endl
+	       ;
+    #endif
+    
+    double img_tilt,img_rot,img_psi;
     while (!DFi.eof())
     {
         img_rot   = DFi(0);
@@ -1573,62 +1657,36 @@ void XmippSampling::find_closest_sampling_point(FileName FnexperimentalImages,
         img_psi   = DFi(2);
 
         Euler_direction(img_rot, img_tilt, img_psi, direction);
-//#define DEBUG3
-#ifdef  DEBUG3
-//red sampling points
-        std::cout  <<  ".color red" << std::endl
-                   <<  ".sphere "   << direction.transpose()  
-		   <<  " .021"      << std::endl;
-#endif
-        my_dotProduct=-2;
-        for(int j=0;j< no_redundant_sampling_points_vector.size();j++)
-        {
-            my_dotProduct_aux = /*ABS(*/dotProduct(direction,
-                                no_redundant_sampling_points_vector[j])/*)*/;
-            if (my_dotProduct < my_dotProduct_aux)
-            {
-		my_dotProduct = my_dotProduct_aux;
-		winner_sampling = j;
-            }
-#ifdef  DEBUG3
-//red sampling points
-        if(j==3)
-        std::cout  <<  ".color yellow" << std::endl
-                   <<  ".sphere "   << no_redundant_sampling_points_vector[j].transpose()  
-		   <<  " .020"      << std::endl;
-#endif
-
-            for (int isym = 0; isym < SL.SymsNo(); isym++)
-            {
-                SL.get_matrices(isym, L, R);
-                R.resize(3, 3);
-                row =  no_redundant_sampling_points_vector[j].transpose() * R;
-                my_dotProduct_aux = /*ABS(*/dotProduct(direction,
-                                             row)/*)*/;
-#ifdef  DEBUG3
-        if(j==3)
-        std::cout  <<  ".color blue" << std::endl
-                   <<  ".sphere "   << row  
-		   <<  " .020"      << std::endl;
-#endif
-#undef DEBUG3
-                if (my_dotProduct < my_dotProduct_aux)
-                {
-		    my_dotProduct = my_dotProduct_aux;
-		    winner_sampling = j;
-                }
-            }//for isym
-        }//for j
-        //add winner to the DOC fILE
-	DFi.set(3, winner_sampling);
-	#ifdef WRITEORIGINALANGLES
-	DFi.set(4,XX(no_redundant_sampling_points_angles[winner_sampling]));  
-	DFi.set(5,YY(no_redundant_sampling_points_angles[winner_sampling]));  
-	DFi.set(6,ZZ(no_redundant_sampling_points_angles[winner_sampling]));  
-	#endif
+        exp_data_projection_direction.push_back(direction);
         DFi.next_data_line();
-    }//while
-    #undef WRITEORIGINALANGLES
-    if(output_file_root.size() > 0)
-        DFi.write(output_file_root+ "_closest_sampling_points.doc");  
+    }
+
+    exp_data_projection_direction_by_L_R.clear();
+    for (int i = 0; i < exp_data_projection_direction.size(); i++)
+        for (int j = 0; j < R_repository.size(); j++)
+        {
+        direction =  L_repository[j] *  
+                     (exp_data_projection_direction[i].transpose() * 
+                     R_repository[j]).transpose();
+        exp_data_projection_direction_by_L_R.push_back(direction);
+        Euler_apply_transf(L_repository[j], 
+                           R_repository[j], img_rot, 
+                           img_tilt, 
+                           img_psi, 
+                           rotp, 
+                           tiltp, 
+                           psip);
+        exp_data_projection_direction_by_L_R_psi.push_back(psip);   
+        #define CHIMERA
+        #ifdef CHIMERA
+        filestr << ".sphere " << direction.transpose()
+	            << " 0.02" << std::endl
+	            ;
+        #endif
+        }
+    #define CHIMERA
+    #ifdef CHIMERA
+    filestr.close();
+    #endif
+    #undef CHIMERA
 }
