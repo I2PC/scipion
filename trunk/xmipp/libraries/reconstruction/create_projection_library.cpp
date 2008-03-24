@@ -48,11 +48,12 @@ void Prog_create_projection_library_Parameters::read(int argc, char **argv)
     min_tilt_angle = textToFloat(getParameter(argc, argv, "-min_tilt_angle","-91"));
     angular_distance_bool = checkParameter(argc, argv,"-angular_distance");
     angular_distance=0.;
+   //NOTE: CASE WITH angular_distance but no experimental data does not work
     if(angular_distance_bool)
     {
          if(!checkParameter(argc, argv, "-experimental_images"))
          {
-             std::cerr << "Docfile with experimental images euler angles is missing" << std::endl;
+             std::cerr << "1-Docfile with experimental images euler angles is missing" << std::endl;
              exit(0);
          } 
             FnexperimentalImages = getParameter(argc, argv, "-experimental_images","");
@@ -63,7 +64,7 @@ void Prog_create_projection_library_Parameters::read(int argc, char **argv)
     {
          if(!checkParameter(argc, argv, "-experimental_images"))
          {
-             std::cerr << "Docfile with experimental images euler angles is missing" << std::endl;
+             std::cerr << "2-Docfile with experimental images euler angles is missing" << std::endl;
              exit(0);
          } 
             FnexperimentalImages = getParameter(argc, argv, "-experimental_images","");
@@ -79,7 +80,7 @@ void Prog_create_projection_library_Parameters::read(int argc, char **argv)
     {
          if(!checkParameter(argc, argv, "-experimental_images"))
          {
-             std::cerr << "Docfile with experimental images euler angles is missing" << std::endl;
+             std::cerr << "3-Docfile with experimental images euler angles is missing" << std::endl;
              exit(0);
          } 
             FnexperimentalImages = getParameter(argc, argv, "-experimental_images","");
@@ -100,7 +101,9 @@ void Prog_create_projection_library_Parameters::usage()
     << "   -o root_file_name           : Root for output files\n"
     << "  [-sym cn]   :One of the 17 possible symmetries in\n"
     << "                                single particle electronmicroscopy\n"
-    << "                                i.e.  ci, cs, cn, cnv, cnh, sn, dn, dnv, dnh, t, td, th, o, oh, i, ih\n"
+    << "                                i.e.  ci, cs, cn, cnv, cnh, sn, dn, dnv, "
+    << "                                dnh, t, td, th, o, oh, i1 (default MDB), i2, i3, i4, ih\n"
+    << "                                i1h (default MDB), i2h, i3h, i4h\n"
     << "                               : where n may change from 1 to 99\n"
     << "  [-sampling_rate 5]           : Distance in degrees between sampling points\n"
     << "  [-psi_sampling 360]          : sampling in psi, 360 -> no sampling in psi\n"
@@ -111,6 +114,7 @@ void Prog_create_projection_library_Parameters::usage()
     << "  [-closer_sampling_points]    : create doc file with closest sampling points\n"
     << "  [-compute_neighbors]         : create doc file with sampling point neighbors\n"
     << "  [-quiet]                     : do not show messages\n"
+    << "  [-near_exp_data]             : remove points far away from experimental data\n"
     << "  [-perturb default=0.0]       : gaussian noise projection unit vectors \n"
     << "			         a value=sin(sampling_rate)/4  \n"
     << "			         may be a good starting point \n"
@@ -227,6 +231,15 @@ void Prog_create_projection_library_Parameters::run()
     //mysampling.create_sym_file(fn_sym,symmetry, sym_order);
     //all nodes
     mysampling.SL.read_sym_file(fn_sym);
+    //store symmetry matrices, this is faster than computing them each time
+    mysampling.fill_L_R_repository();
+    //precompute product between symmetry matrices and experimental data
+    mysampling.fill_exp_data_projection_direction_by_L_R(FnexperimentalImages);
+    #ifdef  DEBUGTIME
+    time (&end);
+    time_dif = difftime (end,start); start=end;
+    printf ("fill_exp_data_projection_direction_by_L_R after %.2lf seconds\n", time_dif );
+    #endif
     //mpi_barrier here
     //all working nodes must read symmetry file
     //and experimental docfile if apropiate
@@ -241,7 +254,7 @@ void Prog_create_projection_library_Parameters::run()
     #endif
     if (FnexperimentalImages.size() > 0 && 
         remove_points_far_away_from_experimental_data_bool)
-        {	
+        {
         mysampling.remove_points_far_away_from_experimental_data(FnexperimentalImages);
         #ifdef  DEBUGTIME
         time (&end);
@@ -262,6 +275,11 @@ void Prog_create_projection_library_Parameters::run()
         }
     //only rank 0
     mysampling.create_asym_unit_file(output_file_root);
+    #ifdef  DEBUGTIME
+    time (&end);
+    time_dif = difftime (end,start); start=end;
+    printf ("create_asym_unit_file (save file) after %.2lf seconds\n", time_dif );
+    #endif
     //all nodes
     inputVol.read(input_volume);
     inputVol().setXmippOrigin();
@@ -270,23 +288,30 @@ void Prog_create_projection_library_Parameters::run()
     #ifdef  DEBUGTIME
     time (&end);
     time_dif = difftime (end,start); start=end;
-    printf ("compute_neighbors before %.2lf seconds\n", time_dif );
+    printf ("read volume after %.2lf seconds\n", time_dif );
     #endif
     if (compute_neighbors_bool)
         {
-	    mysampling.compute_neighbors();
+	    mysampling.compute_neighbors(output_file_root+ 
+                                     "_closest_sampling_points.doc");
 	    #ifdef  DEBUGTIME
 	    time (&end);
 	    time_dif = difftime (end,start); start=end;
 	    printf ("compute_neighbors after %.2lf seconds\n", time_dif );
 	    #endif
 	    mysampling.save_sampling_file(output_file_root);
+	    #ifdef  DEBUGTIME
+	    time (&end);
+	    time_dif = difftime (end,start); start=end;
+	    printf ("save sampling file after %.2lf seconds\n", time_dif );
+	    #endif
 	    }
+    //release some memory    
+    mysampling.exp_data_projection_direction_by_L_R.clear();
     //mpi master should divide doc in chuncks
     //in this serial program there is a unique chunck
     //angle information is in
     //mysampling.no_redundant_sampling_points_vector[i]
-exit(0);
     //Run for all works
     project_angle_vector(0,
                  mysampling.no_redundant_sampling_points_angles.size()-1,!quiet);
