@@ -96,7 +96,7 @@ void Prog_Sampling_Parameters::run()
     mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order);
     mysampling.remove_redundant_points(symmetry, sym_order);
     mysampling.create_asym_unit_file(sampling_file_root);
-    mysampling.compute_neighbors();
+    //mysampling.compute_neighbors();
     //#define DEBUG6
 #ifdef DEBUG6
     for (int i = 0; i < mysampling.no_redundant_sampling_points_vector.size(); i++)
