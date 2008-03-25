@@ -65,6 +65,8 @@ public:
     std::vector<double> stddev_ref;
     /** Vector with reference numbers for all reference projections */
     std::vector<int> id_ref;
+    /** Flag for complete or local angular searches */
+    bool do_complete;
     /** dimension of the images */
     int dim;
     /** Maximum allowed shift */
@@ -102,19 +104,19 @@ public:
   /** Rotational alignment using polar coordinates 
    *  The input image is assumed to be in FTs of polar rings 
    */
-  void rotationallyAlignOneImage(const Matrix2D<double> &img, int &opt_samplenr,
+  void rotationallyAlignOneImage(Matrix2D<double> &img, int &opt_samplenr,
 				 double &opt_psi, double &opt_flip, double &maxcorr);
 
   /** Translational alignment using cartesian coordinates 
    *  The optimal direction is re-projected from the volume
    */
-  void translationallyAlignOneImage(const Matrix2D<double> &img,
+  void translationallyAlignOneImage(Matrix2D<double> &img,
 				       const int &samplenr, const double &psi, const double &opt_flip,
 				       double &opt_xoff, double &opt_yoff, double &maxcorr);
 
   /** Read current image into memory and translate accoring to
       previous optimal Xoff and Yoff */
-  void getCurrentImage(int imgno, ImageXmipp img);
+  void getCurrentImage(int imgno, ImageXmipp &img);
 
   /** Fir the current image, store FT of the polar transforms of all
    * references, as well as the original images in memory */
