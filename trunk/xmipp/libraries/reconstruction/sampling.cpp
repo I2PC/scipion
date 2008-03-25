@@ -109,9 +109,9 @@ void XmippSampling::SetNoise(double noise_deviation, int my_seed)
 
 void XmippSampling::SetNeighborhoodRadius(double neighborhood)
 {
-    if(neighborhood>90)
+    if(neighborhood>181)
         {
-        std::cerr << "neighborhood can not be greater than 90 " << std::endl; 
+        std::cerr << "neighborhood can not be greater than 181 " << std::endl; 
         exit(0);
         }
     neighborhood_radius_rad = DEG2RAD(neighborhood);
@@ -1366,6 +1366,13 @@ void XmippSampling::read_sampling_file(FileName infilename, bool read_vectors)
             infile >> YY(no_redundant_sampling_points_vector[i]);
             infile >> ZZ(no_redundant_sampling_points_vector[i]);
         }
+	else
+	{
+	    double dum;
+	    infile >> dum;
+	    infile >> dum;
+	    infile >> dum;
+	}
         no_redundant_sampling_points_angles[i].resize(3);
         infile >> XX(no_redundant_sampling_points_angles[i]);
         infile >> YY(no_redundant_sampling_points_angles[i]);
