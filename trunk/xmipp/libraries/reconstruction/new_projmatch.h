@@ -41,6 +41,9 @@
 #include "symmetries.h"
 #include "sampling.h"
 
+#define MY_OUPUT_SIZE 9
+#define MAX_BATCH_SIZE 500
+
 /**@defgroup new_projection_matching new_projmatch (Discrete angular assignment using a new projection matching)
    @ingroup ReconsLibraryPrograms */
 //@{
@@ -48,61 +51,37 @@
 class Prog_new_projection_matching_prm {
 public:
 
-  /** Filenames reference selfile/image, fraction docfile & output rootname */
-  FileName fn_img,fn_vol,fn_root;
-  /** Selfile with experimental images */
-  SelFile SF;
-  /** The reference volume */
-  VolumeXmipp vol;
-  /** Vector with reference FTs of polar rings */
-  std::vector<Polar<std::complex<double> > > fP_ref;
-  /** Vector with reference images */
-  std::vector<Matrix2D<double> > proj_ref;
-  /** vector with stddevs for all reference projections */
-  std::vector<double> stddev_ref;
-  /** dimension of the images */
-  int dim;
-  /** Verbose level:
-      1: gives progress bar (=default)
-      0: gives no output to screen at all */
-  int verb;
-  /** Flag whether to store optimal transformations in the image headers */
-  bool modify_header;
-  /** Flag whether to output reference projections, selfile and docfile */
-  bool output_refs;
-  /** Angular sampling rate */
-  double sampling;
-  /** Maximum allowed shift */
-  double max_shift;
-    /** For user-provided tilt range */
-  double tilt_range0, tilt_rangeF;
-  /** Maximum allowed angular search ranges for rot and tilt */
-  double ang_search;
-  /** Inner and outer radii to limit the rotational search */
-  int Ri, Ro;
-  /** Flag to write class averages and class selfiles (one class for
-   * each projection direction) */
-  bool output_classes;
-  /** Vector with all running class averages */
-  std::vector<ImageXmipp> class_avgs;
-  std::vector<SelFile> class_selfiles;
-
-   /** Symmetry. One of the 17 possible symmetries in
-      single particle electron microscopy.
-      See details at url
-      Possible values are: c1, ci, cs, cn, cnv, cnh, sn,
-      dn, dnv, dnh, t, td, th, o, oh, i, ih */
-   string symmetry;
-   /** For infinite groups symmetry order*/
-   int sym_order;
-   /** sampling object */
-   XmippSampling mysampling;
-   /** One common kb object for all images! */
-   KaiserBessel kb;
-   /** Reproject reference projections for translational search
-    * instead of storing them all in memory */
-   bool do_reproject;
-
+    /** Filenames reference selfile/image, fraction docfile & output rootname */
+    FileName fn_exp,fn_ref,fn_root;
+    /** Docfile with experimental images */
+    DocFile DFexp;
+    /** Selfile with experimental images */
+    SelFile SFexp;
+    /** Vector with reference FTs of polar rings */
+    std::vector<Polar<std::complex<double> > > fP_ref;
+    /** Vector with reference images */
+    std::vector<Matrix2D<double> > proj_ref;
+    /** vector with stddevs for all reference projections */
+    std::vector<double> stddev_ref;
+    /** Vector with reference numbers for all reference projections */
+    std::vector<int> id_ref;
+    /** dimension of the images */
+    int dim;
+    /** Maximum allowed shift */
+    double max_shift;
+    /** Inner and outer radii to limit the rotational search */
+    int Ri, Ro;
+    /** Verbose level:
+	1: gives progress bar (=default)
+	0: gives no output to screen at all */
+    int verb;
+    
+    /** sampling object */
+    XmippSampling mysampling;
+    
+    /** One common kb object for all images! */
+    KaiserBessel kb;
+    
 
 public:
   /// Read arguments from command line
@@ -115,31 +94,35 @@ public:
   void usage();
 
   /// Extended Usage
-  void extended_usage();
+  void extendedUsage();
 
   /** Make shiftmask and calculate nr_psi */
-  void produce_Side_info();
+  void produceSideInfo();
 
   /** Rotational alignment using polar coordinates 
    *  The input image is assumed to be in FTs of polar rings 
    */
-  void rotationally_align_one_image(const Matrix2D<double> &img,
-				    const int &samplenr, int &opt_samplenr,  
-				    double &opt_psi, double &opt_flip, double &maxcorr);
+  void rotationallyAlignOneImage(const Matrix2D<double> &img, int &opt_samplenr,
+				 double &opt_psi, double &opt_flip, double &maxcorr);
 
   /** Translational alignment using cartesian coordinates 
    *  The optimal direction is re-projected from the volume
    */
-  void translationally_align_one_image(const Matrix2D<double> &img,
+  void translationallyAlignOneImage(const Matrix2D<double> &img,
 				       const int &samplenr, const double &psi, const double &opt_flip,
 				       double &opt_xoff, double &opt_yoff, double &maxcorr);
 
+  /** Read current image into memory and translate accoring to
+      previous optimal Xoff and Yoff */
+  void getCurrentImage(int imgno, ImageXmipp img);
+
+  /** Fir the current image, store FT of the polar transforms of all
+   * references, as well as the original images in memory */
+  void getCurrentReferences(int imgno);
+
   /** Loop over all images */
-  void PM_loop_over_all_images(SelFile &SF, DocFile &DFo, double &sumCC);
+  void processSomeImages(int * my_images, double * my_output);
 
-
-    /** Write to disc all class averages and selfiles */
-    void write_classes();
 };				
 //@}
 #endif
