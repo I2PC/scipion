@@ -1258,7 +1258,7 @@ void XmippSampling::create_asym_unit_file(const FileName &docfilename)
     DFangles.write(tmp_filename);
 }
 
- void XmippSampling::save_sampling_file(FileName outfilename)
+ void XmippSampling::save_sampling_file(FileName outfilename,bool write_vectors)
 {
     FileName tmp_filename;
     tmp_filename = outfilename + "_sampling.txt";
@@ -1286,10 +1286,12 @@ void XmippSampling::create_asym_unit_file(const FileName &docfilename)
                   my_neighbors[i].end(),
                   std::ostream_iterator<int>(outfile," "));
         outfile << std::endl;
+#ifdef MYPSI    
         std::copy(my_neighbors_psi[i].begin(),
                   my_neighbors_psi[i].end(),
                   std::ostream_iterator<double>(outfile," "));
         outfile << std::endl;
+#endif
 //        std::copy(my_cross_correlation[i].begin(),
 //                  my_cross_correlation[i].end(),
 //		          std::ostream_iterator<double>(outfile," "));
@@ -1297,11 +1299,15 @@ void XmippSampling::create_asym_unit_file(const FileName &docfilename)
     }
     //lenght is 3 for the next 
     //save sampling points
-    for (int i = 0; i < no_redundant_sampling_points_vector.size(); i++)
+    outfile << no_redundant_sampling_points_angles.size()<< std::endl;
+    for (int i = 0; i < no_redundant_sampling_points_angles.size(); i++)
     {
-        outfile << XX(no_redundant_sampling_points_vector[i]) << " ";
-        outfile << YY(no_redundant_sampling_points_vector[i]) << " ";
-        outfile << ZZ(no_redundant_sampling_points_vector[i]) << std::endl;
+        if (write_vectors)
+        {
+            outfile << XX(no_redundant_sampling_points_vector[i]) << " ";
+            outfile << YY(no_redundant_sampling_points_vector[i]) << " ";
+            outfile << ZZ(no_redundant_sampling_points_vector[i]) << std::endl;
+        }
         outfile << XX(no_redundant_sampling_points_angles[i]) << " ";
         outfile << YY(no_redundant_sampling_points_angles[i]) << " ";
         outfile << ZZ(no_redundant_sampling_points_angles[i]) << std::endl;
@@ -1310,7 +1316,7 @@ void XmippSampling::create_asym_unit_file(const FileName &docfilename)
 }
 
 
-void XmippSampling::read_sampling_file(FileName infilename)
+void XmippSampling::read_sampling_file(FileName infilename, bool read_vectors)
 {
     FileName tmp_filename;
     tmp_filename = infilename + "_sampling.txt";
@@ -1326,30 +1332,41 @@ void XmippSampling::read_sampling_file(FileName infilename)
     //total number of vectors
     infile >> num_elem;
     my_neighbors.resize(num_elem);
-    my_neighbors_psi.resize(num_elem);
+#ifdef MYPSI    
+        my_neighbors_psi.resize(num_elem);
+#endif
 //    my_cross_correlation.resize(num_elem);
     for(int i =0; i<num_elem;i++)
     {
          infile >> num_elem2;
          my_neighbors[i].resize(num_elem2);
+#ifdef MYPSI    
          my_neighbors_psi[i].resize(num_elem2);
+#endif
          //my_cross_correlation[i].resize(num_elem2);
          for (int j = 0; j < my_neighbors[i].size();j++)
             infile >> my_neighbors[i][j];
+#ifdef MYPSI    
          for (int j = 0; j < my_neighbors_psi[i].size();j++)
             infile >> my_neighbors_psi[i][j];
+#endif
 //         for (int j = 0; j < my_cross_correlation[i].size();j++)
 //            infile >> my_cross_correlation[i][j];
     }
-    no_redundant_sampling_points_vector.resize(num_elem);
+    infile >> num_elem;
+    if(read_vectors)
+        no_redundant_sampling_points_vector.resize(num_elem);
     no_redundant_sampling_points_angles.resize(num_elem);
     for (int i = 0; i < num_elem; i++)
     {   
-        no_redundant_sampling_points_vector[i].resize(3);
+        if(read_vectors)
+        {
+            no_redundant_sampling_points_vector[i].resize(3);
+            infile >> XX(no_redundant_sampling_points_vector[i]);
+            infile >> YY(no_redundant_sampling_points_vector[i]);
+            infile >> ZZ(no_redundant_sampling_points_vector[i]);
+        }
         no_redundant_sampling_points_angles[i].resize(3);
-        infile >> XX(no_redundant_sampling_points_vector[i]);
-        infile >> YY(no_redundant_sampling_points_vector[i]);
-        infile >> ZZ(no_redundant_sampling_points_vector[i]);
         infile >> XX(no_redundant_sampling_points_angles[i]);
         infile >> YY(no_redundant_sampling_points_angles[i]);
         infile >> ZZ(no_redundant_sampling_points_angles[i]);
@@ -1367,11 +1384,14 @@ void XmippSampling::compute_neighbors(FileName FnexperimentalImages)
     std::vector<int>  aux_neighbors;
     std::vector<double> aux_neighbors_psi;
     std::vector <Matrix1D<double> > exp_data_projection_direction;
-    Matrix1D<double>  direction(3);    
+    Matrix1D<double>  direction(3);  
+    bool new_reference=true; 
     
     for(int j=0;j< exp_data_projection_direction_by_L_R.size();)
     {
+#ifdef MYPSI    
         aux_neighbors_psi.clear();
+#endif
         aux_neighbors.clear();
         for (int k = 0; k < R_repository.size(); k++,j++)
         {
@@ -1382,14 +1402,41 @@ void XmippSampling::compute_neighbors(FileName FnexperimentalImages)
 
                 if (my_dotProduct > cos_neighborhood_radius)
                 {
-                    aux_neighbors.push_back(i);
-                    aux_neighbors_psi.push_back(
-                        exp_data_projection_direction_by_L_R_psi[j]);
+                    if(aux_neighbors.size()==0)
+                    {
+                        aux_neighbors.push_back(i);
+#ifdef MYPSI    
+                        aux_neighbors_psi.push_back(exp_data_projection_direction_by_L_R_psi[j]);
+#endif
+                    }
+                    else
+                    {   
+                        new_reference=true;
+                        for( int l=0;l<  aux_neighbors.size();l++)
+                        {
+                             if (aux_neighbors[l]==i)
+                                 new_reference=false;
+                        }
+                        if(new_reference)
+                        {
+                            aux_neighbors.push_back(i);
+#ifdef MYPSI    
+                            aux_neighbors_psi.push_back(exp_data_projection_direction_by_L_R_psi[j]);
+#endif
+                        }
+                    }      
+                    //same sampling point should appear only once
+                    //note that psi recorded here may be different from psi
+                    //recorded in _closest_sampling_points because
+                    //may refer to a different sampling point
+                    //in fact every point is degenerated
                 }
             }//for i;
         }//for k
         my_neighbors.push_back(aux_neighbors);
+#ifdef MYPSI    
         my_neighbors_psi.push_back(aux_neighbors_psi);
+#endif
     }//for j
     #define CHIMERA
     #ifdef CHIMERA
@@ -1417,7 +1464,11 @@ void XmippSampling::compute_neighbors(FileName FnexperimentalImages)
         i< my_neighbors[exp_image].size();
         i++)
         {
+        #ifdef MYPSI    
         blue = (my_neighbors_psi[exp_image][i]+180.)/360.;
+        #else
+        blue = 1.;
+        #endif
         filestr    <<  ".color 0 0 " << blue  << std::endl
                    <<  ".sphere "   <<
                    no_redundant_sampling_points_vector[my_neighbors[exp_image][i]].transpose()  
@@ -1516,6 +1567,7 @@ void XmippSampling::find_closest_sampling_point(FileName FnexperimentalImages,
     double rotp, tiltp, psip,aux_psi;
     double my_dotProduct_winner=2.;
     int winner_sampling=-1;
+    int winner_exp_L_R=-1;
     
     //read input files
     DocFile          DFi;
@@ -1538,7 +1590,11 @@ void XmippSampling::find_closest_sampling_point(FileName FnexperimentalImages,
     std::string   tmp_string; 
     tmp_string  = "ProjectionMatching columns: rot (1), tilt (2), psi (3),";
     tmp_string += " Xoff (4), Yoff (5), winner_ref (6),";
+    #ifdef MYPSI    
     tmp_string += " PSI (7), ref_rot (8), ref_tilt (9),";
+    #else
+    tmp_string += " void (7, reserved for psi), ref_rot (8), ref_tilt (9),";
+    #endif
     tmp_string += " ref_psi (10)";
     DFi.insert_comment(tmp_string);
     DFi.go_first_data_line();
@@ -1575,6 +1631,7 @@ void XmippSampling::find_closest_sampling_point(FileName FnexperimentalImages,
                 {
 		            my_dotProduct = my_dotProduct_aux;
 		            winner_sampling = j;
+                    winner_exp_L_R  = i;
                 }
             }//for j
        }//for k
@@ -1588,8 +1645,12 @@ void XmippSampling::find_closest_sampling_point(FileName FnexperimentalImages,
 #endif
         //add winner to the DOC fILE
 	    DFi.set(5, winner_sampling);
-	    DFi.set(6, exp_data_projection_direction_by_L_R_psi[winner_sampling]);
-	    DFi.set(7,XX(no_redundant_sampling_points_angles[winner_sampling]));  
+        #ifdef MYPSI    
+	    DFi.set(6, exp_data_projection_direction_by_L_R_psi[winner_exp_L_R]);
+	    #else
+        DFi.set(6,0.); 
+        #endif
+        DFi.set(7,XX(no_redundant_sampling_points_angles[winner_sampling]));  
 	    DFi.set(8,YY(no_redundant_sampling_points_angles[winner_sampling]));  
 	    DFi.set(9,ZZ(no_redundant_sampling_points_angles[winner_sampling]));  
         DFi.next_data_line();
@@ -1669,6 +1730,7 @@ void XmippSampling::fill_exp_data_projection_direction_by_L_R(FileName Fnexperim
                      (exp_data_projection_direction[i].transpose() * 
                      R_repository[j]).transpose();
         exp_data_projection_direction_by_L_R.push_back(direction);
+        #ifdef MYPSI    
         Euler_apply_transf(L_repository[j], 
                            R_repository[j], img_rot, 
                            img_tilt, 
@@ -1677,6 +1739,7 @@ void XmippSampling::fill_exp_data_projection_direction_by_L_R(FileName Fnexperim
                            tiltp, 
                            psip);
         exp_data_projection_direction_by_L_R_psi.push_back(psip);   
+        #endif
         #define CHIMERA
         #ifdef CHIMERA
         filestr << ".sphere " << direction.transpose()

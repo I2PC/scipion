@@ -80,8 +80,10 @@ public:
 
     /** vector with neighbors */
     std::vector<std::vector<int> >  my_neighbors;
+#ifdef MYPSI    
     /** vector with neighbors psi*/
     std::vector<std::vector<double> > my_neighbors_psi;
+#endif
     /** vector with angular distance between points (dot_product)*/
     std::vector<std::vector<double> > my_cross_correlation;
 
@@ -94,8 +96,10 @@ public:
     std::vector <Matrix2D<double> > L_repository;
     /** vector with product of experimental images and L and R */
     std::vector <Matrix1D<double> > exp_data_projection_direction_by_L_R;
+#ifdef MYPSI    
     /** vector with psi resulting from product of experimental images and L and R */
     std::vector <double > exp_data_projection_direction_by_L_R_psi;
+#endif
     
     /** vector with sampling points described by vectors, only store
         the non redundant part */
@@ -182,16 +186,22 @@ public:
       [vnum]
       [size1]
       [vec1_neighbors]
+#ifdef MYPSI    
       [vec1_psi]
+#endif
       [vec1_crosscorrelation]
       [size2]
       [vec2_neighbors]
+#ifdef MYPSI    
       [vec2_psi]
+#endif
       [vec2_crosscorrelation]
       ...
       [sizen]
       [vecn_neighbors]
+#ifdef MYPSI    
       [vecn_psi]
+#endif
       [vecn_crosscorrelation]
       
       for the neighbors and
@@ -205,10 +215,10 @@ public:
       for the sampling points
 
       where vnum is the number of vectors, sizen is the number of elements in
-     that vector and vecn is the elements. 
+      that vector and vecn is the elements. 
    
    */
-   void save_sampling_file(FileName outfilename);
+   void save_sampling_file(FileName outfilename,bool write_vectors=true);
    /** Read neighbors in a propietary ascii file. The structure is as
        follows 
       [vnum]
@@ -231,7 +241,7 @@ public:
      that vector and vecn is the elements. 
    
    */
-   void read_sampling_file(FileName infilename);
+   void read_sampling_file(FileName infilename,bool read_vectors=true);
    
    /** remove all those points that are further away from experimental data
        than neighborhood_radius_rad */
