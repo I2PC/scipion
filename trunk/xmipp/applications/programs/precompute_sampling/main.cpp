@@ -39,7 +39,9 @@ int main(int argc, char *argv[])
     test_case = textToInteger(getParameter(argc, argv, "-test_case", "0"));
     
     XmippSampling mysampling;
-    mysampling.read_sampling_file("img");
+    mysampling.read_sampling_file("img",true);
+    mysampling.save_sampling_file("kk",false);
+    std::cerr << "IMAGE READ" << std::endl;
     std::ofstream filestr; 
     filestr.open ("precompute.bild");
 
@@ -60,6 +62,7 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < mysampling.my_neighbors[test_case].size(); i++)
         {
+        #ifdef MYPSI  
         if(mysampling.my_neighbors_psi[test_case][i]==0)
             filestr    << ".color red" 
 	                   << std::endl
@@ -69,7 +72,8 @@ int main(int argc, char *argv[])
                        << " .02"
 	                   << std::endl
 	                   ;
-        else           
+        else 
+        #endif          
             filestr    << ".color green" 
 	                   << std::endl
 	                   << ".sphere "
