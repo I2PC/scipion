@@ -162,7 +162,7 @@ Prog_create_projection_library_Parameters::project_angle_vector(
        mySize *= (int) (359.99999/psi_sampling);
     if (verbose)
        init_progress_bar(mySize);
-    int myCounter=0;
+    int myCounter=1;
 
     
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
@@ -313,8 +313,9 @@ void Prog_create_projection_library_Parameters::run()
     //angle information is in
     //mysampling.no_redundant_sampling_points_vector[i]
     //Run for all works
-    project_angle_vector(0,
-                 mysampling.no_redundant_sampling_points_angles.size()-1,!quiet);
+    int myCounter=1;
+    project_angle_vector(myCounter,
+                 mysampling.no_redundant_sampling_points_angles.size(),!quiet);
 	#ifdef  DEBUGTIME
 	time (&end);
 	time_dif = difftime (end,start); start=end;
@@ -324,7 +325,6 @@ void Prog_create_projection_library_Parameters::run()
     //only rank 0 create sel file
     SelFile  mySF;
     FileName fn_temp;
-    int myCounter=0;
     
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
        for (int i=0;i<=mysampling.no_redundant_sampling_points_angles.size()-1;i++)
