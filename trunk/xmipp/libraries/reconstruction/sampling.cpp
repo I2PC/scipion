@@ -109,13 +109,19 @@ void XmippSampling::SetNoise(double noise_deviation, int my_seed)
 
 void XmippSampling::SetNeighborhoodRadius(double neighborhood)
 {
-    if(neighborhood>181)
+    if(neighborhood<0)
+       cos_neighborhood_radius=-1.01;
+    else if(neighborhood>180.001)
         {
-        std::cerr << "neighborhood can not be greater than 181 " << std::endl; 
+        std::cerr << "neighborhood can not be greater than 180 " << std::endl; 
+        std::cerr << "use any negative value to cover the whole space " << std::endl; 
         exit(0);
         }
-    neighborhood_radius_rad = DEG2RAD(neighborhood);
-    cos_neighborhood_radius = cos(neighborhood_radius_rad);
+    else
+    {
+        neighborhood_radius_rad = DEG2RAD(neighborhood);
+        cos_neighborhood_radius = cos(neighborhood_radius_rad);
+    }
 }
 
 /* Compute edge sampling points using Baumgardner  1995 */
@@ -1366,13 +1372,6 @@ void XmippSampling::read_sampling_file(FileName infilename, bool read_vectors)
             infile >> YY(no_redundant_sampling_points_vector[i]);
             infile >> ZZ(no_redundant_sampling_points_vector[i]);
         }
-	else
-	{
-	    double dum;
-	    infile >> dum;
-	    infile >> dum;
-	    infile >> dum;
-	}
         no_redundant_sampling_points_angles[i].resize(3);
         infile >> XX(no_redundant_sampling_points_angles[i]);
         infile >> YY(no_redundant_sampling_points_angles[i]);
