@@ -112,29 +112,45 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
         {
             show();
 	    //randon numbers must be the same in all nodes
-	    srand ( time(NULL) );
+        srand ( time(NULL) );
+        if(perturb_projection_vector!=0)
+	        {
             my_seed=rand();
-	    
+	        }
         }
 	//Bcast must be seem by all processors
-	MPI_Bcast (&my_seed, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        //all ranks
+    if(perturb_projection_vector!=0)
+        {
+	    MPI_Bcast (&my_seed, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        mysampling.SetNoise(perturb_projection_vector,my_seed);
+        }
+    //all ranks
+    mysampling.SetSampling(sampling);
 	if (!mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
 	     REPORT_ERROR(3005, (std::string)"create_projection_library::run Invalid symmetry" +  fn_sym);//set sampling must go before set noise
-        												      mysampling.SetSampling(sampling);
-        mysampling.SetNoise(perturb_projection_vector,my_seed);
+    if(angular_distance_bool!=0)	
+        mysampling.SetNeighborhoodRadius(angular_distance);//irelevant
 
-        //mysampling.SetNeighborhoodRadius(0.);//irelevant
-        //true -> half_sphere
-        mysampling.Compute_sampling_points(false,max_tilt_angle,min_tilt_angle);
-        mysampling.SL.read_sym_file(fn_sym);
-        mysampling.remove_redundant_points(symmetry, sym_order);
-        remove_points_not_close_to_experimental_points();
+    //true -> half_sphere
+    mysampling.Compute_sampling_points(false,max_tilt_angle,min_tilt_angle);
+    mysampling.SL.read_sym_file(fn_sym);
+    mysampling.remove_redundant_points(symmetry, sym_order);
+    if (FnexperimentalImages.size() > 0 && 
+        remove_points_far_away_from_experimental_data_bool)
+        {	
+        mysampling.remove_points_far_away_from_experimental_data(FnexperimentalImages);
+        }
+    if(compute_closer_sampling_point_bool)
+	    {
+	    //find sampling point closer to experimental point (only 0) and bool
+	    //and save docfile with this information
+	    mysampling.find_closest_sampling_point(FnexperimentalImages,output_file_root);
+        }
+
 	/* perturb points */
         if (rank == 0) 
         {
             //mysampling.create_sym_file(symmetry, sym_order);
-            mysampling.SL.read_sym_file(fn_sym);
             mysampling.create_asym_unit_file(output_file_root);
         }
         
@@ -145,14 +161,23 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
         Xdim = XSIZE(inputVol());
         Ydim = YSIZE(inputVol());
         }        
+        if (rank == 0) 
+        {
+            if (compute_neighbors_bool)
+                {
+	            mysampling.compute_neighbors(FnexperimentalImages);
+	            mysampling.save_sampling_file(output_file_root);
+                }
+	    }
+
         if (mpi_job_size != -1)
         {   
-            numberOfJobs = ceil((double)(close_points_angles.size())/mpi_job_size);
+            numberOfJobs = ceil((double)(mysampling.no_redundant_sampling_points_angles.size())/mpi_job_size);
         }
         else
         {   
             numberOfJobs=nProcs-1;//one node is the master
-            mpi_job_size=ceil((double)close_points_angles.size()/numberOfJobs);
+            mpi_job_size=ceil((double)mysampling.no_redundant_sampling_points_angles.size()/numberOfJobs);
         } 
            
         //only one node will write in the console
@@ -164,7 +189,7 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
             #ifdef DEBUG
             std::cerr << "numberOfJobs " << numberOfJobs << std::endl
                  << "mpi_job_size " << mpi_job_size << std::endl
-                 << "close_points_angles.size()" <<  close_points_angles.size()
+                 << "no_redundant_sampling_points_angles.size()" <<  mysampling.no_redundant_sampling_points_angles.size()
                  <<std::endl;
             #endif
             #undef DEBUG
@@ -235,7 +260,7 @@ std::cerr << "Sent jobNo " <<  i << std::endl;
             int myCounter=0;
 
             for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
-               for (int i=0;i<=close_points_angles.size()-1;i++)
+               for (int i=0;i<=mysampling.no_redundant_sampling_points_angles.size()-1;i++)
                { 
                 fn_temp.compose(output_file_root, myCounter++,"xmp");
                 mySF.insert(fn_temp);
@@ -291,7 +316,7 @@ std::cerr << "Wr" << rank << " " << "TAG_WORKFORWORKER" << std::endl;
                     // Process all images
                      project_angle_vector(jobNumber*mpi_job_size,
                      XMIPP_MIN((jobNumber+1)* mpi_job_size -1 , 
-                                close_points_angles.size()-1), !quiet);
+                                mysampling.no_redundant_sampling_points_angles.size()-1), !quiet);
                     //get yor next task
                     }
                 else
@@ -315,6 +340,7 @@ std::cerr << "Wr" << rank << " " << "TAG_WORKFORWORKER" << std::endl;
 
 int main(int argc, char *argv[])
 {
+std::cerr << "0\n";
     if (MPI_Init(&argc, &argv) != MPI_SUCCESS)
     {
         fprintf(stderr, "MPI initialization error\n");
@@ -322,13 +348,12 @@ int main(int argc, char *argv[])
     }
     //size of the mpi block, number of images
     //mpi_job_size=!checkParameter(argc,argv,"-mpi_job_size","-1");
-
+   
     Prog_mpi_create_projection_library_Parameters prm;
     try
     {
         prm.read(argc, argv);
     }
-
     catch (Xmipp_error XE)
     {
         std::cerr << XE;
