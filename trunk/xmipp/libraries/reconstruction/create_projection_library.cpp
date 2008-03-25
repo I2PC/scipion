@@ -166,7 +166,7 @@ Prog_create_projection_library_Parameters::project_angle_vector(
 
     
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
-       for (int i=0;i<my_init;i++)
+       for (int i=myCounter;i<my_init;i++)
          myCounter++;
         
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
@@ -327,7 +327,7 @@ void Prog_create_projection_library_Parameters::run()
     FileName fn_temp;
     
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
-       for (int i=0;i<=mysampling.no_redundant_sampling_points_angles.size()-1;i++)
+       for (int i=myCounter;i<=mysampling.no_redundant_sampling_points_angles.size();i++)
        {    
         fn_temp.compose(output_file_root, myCounter++,"xmp");
         mySF.insert(fn_temp);
