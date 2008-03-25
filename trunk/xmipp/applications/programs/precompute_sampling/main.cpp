@@ -35,26 +35,49 @@
 /* ------------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    Prog_Sampling_Parameters prm;
-    try
-    {
-        prm.read(argc, argv);
-    }
-    catch (Xmipp_error XE)
-    {
-        std::cout << XE;
-        prm.usage();
-        exit(1);
-    }
+    int test_case=0;
+    test_case = textToInteger(getParameter(argc, argv, "-test_case", "0"));
+    
+    XmippSampling mysampling;
+    mysampling.read_sampling_file("img");
+    std::ofstream filestr; 
+    filestr.open ("precompute.bild");
 
-    try
-    {
-        prm.run();
-    }
-    catch (Xmipp_error XE)
-    {
-        std::cout << XE;
-        exit(1);
-    }
-    exit(0);
+    // big sphere in the center
+    filestr    << ".color white" 
+	   << std::endl
+	   << ".sphere 0 0 0 .95"
+	   << std::endl
+	   ;
+    // initial point   
+    filestr    << ".color yellow" 
+	   << std::endl
+	   << ".sphere "
+       << mysampling.no_redundant_sampling_points_vector[test_case].transpose()
+       << " .021"
+	   << std::endl
+	   ;
+
+    for (int i = 0; i < mysampling.my_neighbors[test_case].size(); i++)
+        {
+        if(mysampling.my_neighbors_psi[test_case][i]==0)
+            filestr    << ".color red" 
+	                   << std::endl
+	                   << ".sphere "
+                       << mysampling.no_redundant_sampling_points_vector[
+                                    mysampling.my_neighbors[test_case][i]].transpose()
+                       << " .02"
+	                   << std::endl
+	                   ;
+        else           
+            filestr    << ".color green" 
+	                   << std::endl
+	                   << ".sphere "
+                       << mysampling.no_redundant_sampling_points_vector[
+                                    mysampling.my_neighbors[test_case][i]].transpose()
+                       << " .02"
+	                   << std::endl
+	                   ;
+        }
+    filestr.close();
 }
