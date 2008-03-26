@@ -24,6 +24,8 @@
  ***************************************************************************/
 
 #include "new_projmatch.h"
+//#define DEBUG
+#define TIMING
 
 // Read arguments ==========================================================
 void Prog_new_projection_matching_prm::read(int argc, char **argv)  {
@@ -33,8 +35,9 @@ void Prog_new_projection_matching_prm::read(int argc, char **argv)  {
   fn_ref = getParameter(argc,argv,"-ref","ref");
   fn_exp=getParameter(argc,argv,"-i");
   fn_root=getParameter(argc,argv,"-o","out");
-  max_shift=textToFloat(getParameter(argc,argv,"-max_shift","5"));
-  do_complete = checkParameter(argc,argv,"-complete");
+  max_shift=textToFloat(getParameter(argc,argv,"-max_shift","-1"));
+  avail_memory = textToFloat(getParameter(argc,argv,"-mem","1"));
+
 
   // Additional commands
   Ri=textToInteger(getParameter(argc,argv,"-Ri","-1"));
@@ -52,9 +55,19 @@ void Prog_new_projection_matching_prm::show() {
     std::cerr << "  Input images            : "<< fn_exp << std::endl;
     std::cerr << "  Output rootname         : "<< fn_root << std::endl;
     if (Ri>0)
-    std::cerr << "  Inner radius rot-search : "<<Ri<<std::endl;
+	std::cerr << "  Inner radius rot-search : "<<Ri<<std::endl;
     if (Ro>0)
-    std::cerr << "  Outer radius rot-search : "<<Ro<<std::endl;
+	std::cerr << "  Outer radius rot-search : "<<Ro<<std::endl;
+    if (max_nr_refs_in_memory<total_nr_refs)
+    {
+	std::cerr << "  Number of references    : "<<total_nr_refs<<std::endl;
+	std::cerr << "  Nr. refs in memory      : "<<max_nr_refs_in_memory<< " (using "
+		  <<avail_memory<<" Gb)"<<std::endl;
+    }
+    else
+    {
+	std::cerr << "  Number of references    : "<<total_nr_refs<<" (all stored in memory)"<<std::endl;	
+    }
     std::cerr << "  -> Limit search of origin offsets to  +/- "<<max_shift<<" pixels"<<std::endl;
     std::cerr << " ================================================================="<<std::endl;
   }
@@ -65,13 +78,14 @@ void Prog_new_projection_matching_prm::usage() {
   std::cerr << "Usage:  projection_matching [options] "<<std::endl;
   std::cerr << "   -i <selfile>                : Selfile with input images \n"
        << "   -ref <ref rootname=\"ref\">        : Rootname for reference projection files \n"
-       << " [ -max_shift <float=5> ]      : Maximum change in origin offset (+/- pixels) \n"
+       << " [ -max_shift <float=-1> ]     : Max. change in origin offset (+/- pixels; neg= no limit) \n"
        << " [ -more_options ]             : Show all program options\n";
 }
 
 // Extended usage ===================================================================
 void Prog_new_projection_matching_prm::extendedUsage() {
   std::cerr << "Additional options: \n"
+            << " [ -mem <float=1> ]            : Available memory for reference library (Gb)\n"
 	    << " [ -Ri <float=1> ]             : Inner radius to limit rotational search \n"
 	    << " [ -Ro <float=dim/2 - 1> ]     : Outer radius to limit rotational search \n";
   exit(1);
@@ -87,8 +101,11 @@ void Prog_new_projection_matching_prm::produceSideInfo() {
     SymList          SL;
     FileName         fn_img;
     double           mean,stddev,psi=0.;
+    Matrix2D<double> Maux;
     Matrix1D<double> dataline(3);
     int              nl;
+    Polar<double>    P;
+    Polar<std::complex <double> > fP;
 
     // Read Selfile and get dimensions
     DFexp.read(fn_exp);
@@ -103,13 +120,46 @@ void Prog_new_projection_matching_prm::produceSideInfo() {
     img.read(fn_img);
     dim = XSIZE(img());
 
+    // Set max_shift
+    if (max_shift<0) max_shift = dim/2;
+
     // Set ring defaults
     if (Ri<1) Ri=1;
     if (Ro<0) Ro=(dim/2)-1;
 
+    // Calculate necessary memory per image
+    img().produceSplineCoefficients(Maux,3);
+    P.getPolarFromCartesianBSpline(Maux,Ri,Ro);
+    P.fourierTransformRings(true);
+    double memory_per_ref = 0.;
+    for (int i = 0; i < fP.getRingNo(); i++)
+    {
+	memory_per_ref += (double) fP.getSampleNo(i) * 2 * sizeof(double);
+    }
+    memory_per_ref += dim * dim * sizeof(double);
+    max_nr_refs_in_memory = ROUND( 1024 * 1024 * 1024 * avail_memory / memory_per_ref);
+
     // Set up angular sampling
     mysampling.read_sampling_file(fn_ref,false);
+    total_nr_refs = mysampling.no_redundant_sampling_points_angles.size();
 
+    // Don't reserve more memory than necessary
+    max_nr_refs_in_memory = XMIPP_MIN(max_nr_refs_in_memory, total_nr_refs);
+
+    // Initialize pointers for reference retrieval 
+    pointer_allrefs2refsinmem.resize(total_nr_refs,-1);
+    pointer_refsinmem2allrefs.resize(max_nr_refs_in_memory,-1);
+    counter_refs_in_memory = 0;
+
+    // Initialize vectors with references
+    Polar<std::complex <double> > fP_dum;
+    fP_ref.resize(max_nr_refs_in_memory,fP_dum);
+    Matrix2D<double> Mdum;
+    proj_ref.resize(max_nr_refs_in_memory,Mdum);
+    double dum;
+    stddev_ref.resize(max_nr_refs_in_memory,dum);
+    loop_forward_refs=true;
+    
 }
 
 void Prog_new_projection_matching_prm::getCurrentImage(int imgno, ImageXmipp &img)
@@ -119,8 +169,8 @@ void Prog_new_projection_matching_prm::getCurrentImage(int imgno, ImageXmipp &im
     DocLine          DL;
     Matrix2D<double> A;
 
-    // jump to line imgno in DFexp, get data and filename
-    DFexp.locate(imgno);
+    // jump to line imgno+1 in DFexp, get data and filename
+    DFexp.locate(imgno+1);
     DL = DFexp.get_current_line();
     DFexp.previous();
     if (DFexp.get_current_line().Is_comment()) 
@@ -150,52 +200,57 @@ void Prog_new_projection_matching_prm::getCurrentImage(int imgno, ImageXmipp &im
 
 }
 
-void Prog_new_projection_matching_prm::getCurrentReferences(int imgno)
+int Prog_new_projection_matching_prm::getCurrentReference(int refno)
 {
 
     FileName                      fnt;
     ImageXmipp                    img;
-    int                           refno;
     double                        mean,stddev;
     Matrix2D<double>              Maux;
     Polar<double>                 P;
     Polar<std::complex <double> > fP;
 
-    //TODO: KEEP REFS THAT I STILL WANT TO USE INSTEAD OF READING ALL
-    //AGAIN FROM DISC!!!
-    fP_ref.clear();
-    stddev_ref.clear();
-    proj_ref.clear();
-    id_ref.clear();
+    // Image was not stored yet: read it from disc and store
+    fnt.compose(fn_ref,refno+1,"xmp");
+    img.read(fnt);
+    img().setXmippOrigin();
 
-    // Loop over all relevant references
-    for (int i = 0; i < mysampling.my_neighbors[imgno].size(); i++)
+    // Calculate FTs of polar rings and its stddev
+    img().produceSplineCoefficients(Maux,3);
+    P.getPolarFromCartesianBSpline(Maux,Ri,Ro);
+    mean = P.computeSum(true);
+    stddev = P.computeSum2(true);
+    stddev = sqrt(stddev - mean * mean);
+    P -= mean;
+    fP = P.fourierTransformRings(true);
+
+    int counter = counter_refs_in_memory % max_nr_refs_in_memory;
+    pointer_allrefs2refsinmem[refno] = counter;
+    if (pointer_refsinmem2allrefs[counter] != -1)
     {
-	// all my neighboyurs are:
-	refno = mysampling.my_neighbors[imgno][i];
-	fnt.compose(fn_ref,refno,"xmp");
-	img.read(fnt);
-	img().setXmippOrigin();
-
-	// Calculate FTs of polar rings (store its complex conjugated!)
-	img().produceSplineCoefficients(Maux,3);
-	P.getPolarFromCartesianBSpline(Maux,Ri,Ro);
-	mean = P.computeSum(true);
-	stddev = P.computeSum2(true);
-	stddev = sqrt(stddev - mean * mean);
-	P -= mean;
-	fP = P.fourierTransformRings(true);
-	fP_ref.push_back(fP);
-	stddev_ref.push_back(stddev);
-	// Also store reference projections in cartesian coordinates 
-	proj_ref.push_back(img());
-	id_ref.push_back(refno);
+	// This position was in use already
+	// Images will be overwritten, so reset the
+	// pointer_allrefs2refsinmem of the old images to -1
+	pointer_allrefs2refsinmem[pointer_refsinmem2allrefs[counter]] = -1;
     }
+    pointer_refsinmem2allrefs[counter] = refno;
+    fP_ref[counter] = fP;
+    stddev_ref[counter] = stddev;
+    proj_ref[counter] = img();
+ #ifdef DEBUG
+    std::cerr<<"counter= "<<counter<<"refno= "<<refno<<" stddev = "<<stddev;
+    std::cerr<<" refsinmem2allrefs= "<<pointer_refsinmem2allrefs[counter];
+    std::cerr<<" allrefs2refsinmem= "<<pointer_allrefs2refsinmem[pointer_refsinmem2allrefs[counter]] <<std::endl;
+
+#endif
+   
+    counter_refs_in_memory++;
 
 }
 
 void Prog_new_projection_matching_prm::rotationallyAlignOneImage(Matrix2D<double> &img,
-								 int &opt_samplenr,
+								 int imgno, 
+								 int &opt_refno,
 								 double &opt_psi, 
 								 double &opt_flip, 
 								 double &maxcorr)
@@ -204,87 +259,166 @@ void Prog_new_projection_matching_prm::rotationallyAlignOneImage(Matrix2D<double
     Polar<double>            P;
     Polar<std::complex <double> > fP,fPm;
     Matrix1D<double>         ang,corr;
-    int                      max_index;
-    double                   mean,stddev_img;
+    int                      max_index, refno, myinit, myfinal, myincr;
+    double                   mean;
 
-    TimeStamp t0; 
+#ifdef TIMING
+    TimeStamp t0,t1,t2; 
     time_config();
     annotate_time(&t0);
-
-    produceReverseGriddingMatrix2D(img,Maux,kb);
-    P.getPolarFromCartesianGridding(Maux,kb,Ri,Ro);
-    mean = P.computeSum(true);
-    stddev_img = P.computeSum2(true);
-    stddev_img = sqrt(stddev_img - mean * mean);
-    P -= mean; // for normalized cross-correlation coefficient
-
-#ifdef DEBUG
-    std::cerr<<"ringno exp: " <<P.getRingNo()<<std::endl;
-    std::cerr<<"nsam_last: "<<P.getSampleNo(P.getRingNo()-1)<<std::endl;
+    annotate_time(&t2);
 #endif
 
+    maxcorr = -99.e99;
+    img.produceSplineCoefficients(Maux,3);
+    P.getPolarFromCartesianBSpline(Maux,Ri,Ro);
+    mean = P.computeSum(true);
+    P -= mean; // for normalized cross-correlation coefficient
     fP = P.fourierTransformRings(false);
     fPm = P.fourierTransformRings(true);
 
-#ifdef DEBUG
-    std::cerr<<" do polar exp: "; print_elapsed_time(t0);
+#ifdef TIMING
+    float prepare_img = elapsed_time(t0);
+    float get_refs = 0.;
     annotate_time(&t0);
 #endif
 
-    // Loop over all relevant "neighbors" (i.e. directions within the search range)
-    maxcorr = -99.e99;
-
-    for (int i = 0; i < id_ref.size(); i++)
+    // Switch the order of looping through the references every time.
+    // That way, in case max_nr_refs_in_memory<total_nr_refs
+    // the references read in memory for the previous image
+    // will still be there when processing the next image
+    if (loop_forward_refs)
     {
+	myinit = 0;
+	myfinal = mysampling.my_neighbors[imgno].size();
+	myincr = 1;
+    }
+    else
+    {
+	myinit = mysampling.my_neighbors[imgno].size()-1;
+	myfinal = -1;
+	myincr = -1;
+    }
+
+    // Loop over all relevant "neighbours" (i.e. directions within the search range)
+    for (int i = myinit; i != myfinal; i+=myincr)
+    {
+
+#ifdef TIMING
+	annotate_time(&t1);
+#endif
+
+	// Get pointer to the current reference image
+	refno = pointer_allrefs2refsinmem[mysampling.my_neighbors[imgno][i]];
+	if (refno == -1)
+	{
+	    // Reference is not stored in memory (anymore): (re-)read from disc
+	    getCurrentReference(mysampling.my_neighbors[imgno][i]);
+	    refno = pointer_allrefs2refsinmem[mysampling.my_neighbors[imgno][i]];
+	}
+
+#ifdef TIMING
+	get_refs += elapsed_time(t1);
+#endif
+
+#ifdef DEBUG
+	std::cerr<<"Got refno= "<<refno<<" pointer= "<<mysampling.my_neighbors[imgno][i]<<std::endl;
+#endif	    
+
 	// A. Check straight image
-//	std::cerr<<"ringno exp: " <<fP.getRingNo()<<" ref: "<<fP_ref[i].getRingNo()<<" i= "<<i<<" id= "<<id_ref[i]<<" idsize= "<<id_ref.size()<<std::endl;
-//	std::cerr<<"nsmal_last exp: " <<fP.getSampleNo(fP.getRingNo()-1)<<" ref: "<<fP_ref[i].getSampleNo(fP.getRingNo()-1)<<std::endl;
-	rotationalCorrelation(fP,fP_ref[i],ang,corr);
-	corr /= stddev_ref[i] * stddev_img; // for normalized ccf
+	rotationalCorrelation(fP,fP_ref[refno],ang,corr);
+	corr /= stddev_ref[refno]; // for normalized ccf, forget about constant stddev_img
 	for (int k = 0; k < XSIZE(corr); k++)
 	{
-	    //std::cerr<<"ang= "<<ang(k)<<" corr = "<<corr(k)<<std::endl;
 	    if (corr(k)> maxcorr)
 	    {
 		maxcorr = corr(k);
 		opt_psi = ang(k);
-		opt_samplenr = i;
+		opt_refno = mysampling.my_neighbors[imgno][i];
 		opt_flip = 0.;
 	    }
 	}
+#ifdef DEBUG
+	std::cerr<<"straight: corr "<<maxcorr<<std::endl;
+#endif	    
 
 	// B. Check mirrored image
-	rotationalCorrelation(fPm,fP_ref[i],ang,corr);
-	corr /= stddev_ref[i] * stddev_img; // for normalized ccf
+	rotationalCorrelation(fPm,fP_ref[refno],ang,corr);
+	corr /= stddev_ref[refno]; // for normalized ccf, forget about constant stddev_img
 	for (int k = 0; k < XSIZE(corr); k++)
 	{
-//	    std::cerr<<"angp= "<<ang(k)<<" corr = "<<corr(k)<<std::endl;
 	    if (corr(k)> maxcorr)
 	    {
 		maxcorr = corr(k);
 		opt_psi = ang(k);
-		opt_samplenr = i;
+		opt_refno = mysampling.my_neighbors[imgno][i];
 		opt_flip = 1.;
 	    }
 	}
-    }
 #ifdef DEBUG
-    std::cerr<<" do all rots: "; print_elapsed_time(t0);
-    annotate_time(&t0);
+	std::cerr<<"mirror: corr "<<maxcorr;
+	if (opt_flip==1.) std::cerr<<"**";
+	std::cerr<<std::endl;
+#endif	    
+    }
+
+    // Flip order to loop through references
+    loop_forward_refs = !loop_forward_refs;
+
+#ifdef TIMING
+    float all_rot_align = elapsed_time(t0);
+    float total_rot = elapsed_time(t2);
+    std::cerr<<" rotal-align%% "<<total_rot
+	     <<" => prepare-img:  "<<prepare_img
+	     <<" all_rot_align: "<<all_rot_align
+	     <<" (of which "<<get_refs
+	     <<" to get "<< mysampling.my_neighbors[imgno].size()
+	     <<" refs for imgno "<<imgno<<" )"
+	     <<std::endl;
 #endif
 
 }
 
 void Prog_new_projection_matching_prm::translationallyAlignOneImage(Matrix2D<double> &img,
-								    const int &samplenr, const double &psi, 
-								    const double &opt_flip, double &opt_xoff, 
-								    double &opt_yoff, double &maxcorr)
+								    const int &opt_refno, 
+								    const double &opt_psi, 
+								    const double &opt_flip, 
+								    double &opt_xoff, 
+								    double &opt_yoff, 
+								    double &maxcorr)
 {
 
     Matrix2D<double> Mtrans,Mimg,Mref;
+    int refno;
+    Mtrans.setXmippOrigin();
+    Mimg.setXmippOrigin();
+    Mref.setXmippOrigin();
+
+#ifdef TIMING
+    TimeStamp t0,t1,t2; 
+    time_config();
+    annotate_time(&t0);
+#endif
+
+#ifdef DEBUG
+    std::cerr<<"start trans: opt_refno= "<<opt_refno<<" pointer= "<<pointer_allrefs2refsinmem[opt_refno]<<" opt_psi= "<<opt_psi<<"opt_flip= "<<opt_flip<<std::endl;
+#endif	    
+
+    // Get pointer to the correct reference image in memory
+    refno = pointer_allrefs2refsinmem[opt_refno];
+    if (refno == -1)
+    {
+	// Reference is not stored in memory (anymore): (re-)read from disc
+	getCurrentReference(opt_refno);
+	refno = pointer_allrefs2refsinmem[opt_refno];
+    }
 
     // Rotate stored reference projection by phi degrees
-    proj_ref[samplenr].rotateBSpline(3,-psi,Mref,DONT_WRAP);
+    proj_ref[refno].rotateBSpline(3,-opt_psi,Mref,DONT_WRAP);
+
+#ifdef DEBUG
+    std::cerr<<"rotated ref "<<std::endl;
+#endif	    
 
     if (opt_flip > 0.)
     {
@@ -306,13 +440,26 @@ void Prog_new_projection_matching_prm::translationallyAlignOneImage(Matrix2D<dou
     if (opt_xoff * opt_xoff + opt_yoff * opt_yoff > max_shift * max_shift) 
 	opt_xoff = opt_yoff = 0.;
 
+#ifdef DEBUG
+    std::cerr<<"optimal shift "<<opt_xoff<<" "<<opt_yoff<<std::endl;
+#endif	 
+   
     // Calculate standard cross-correlation coefficient
     Mimg.translate(vectorR2(opt_xoff,opt_yoff),Mtrans,true);
     maxcorr = correlation_index(Mref,Mtrans);
 
+#ifdef DEBUG
+    std::cerr<<"optimal shift corr "<<maxcorr<<std::endl;
+#endif	 
+
     // Correct X-shift for mirrored images
     if (opt_flip>0.)
 	opt_xoff *= -1.;	
+
+#ifdef TIMING
+    float total_trans = elapsed_time(t0);
+    std::cerr<<" trans-align%% "<<total_trans <<std::endl;
+#endif
 
 }
 
@@ -324,61 +471,29 @@ void Prog_new_projection_matching_prm::processSomeImages(int * my_images, double
 
   ImageXmipp img;
   double opt_rot, opt_tilt, opt_psi, opt_flip, opt_xoff, opt_yoff, maxcorr;
-  int opt_samplenr;
+  int opt_refno;
 
   int nr_images = my_images[0];
   // Prepare my_output
   my_output[0] = nr_images * MY_OUPUT_SIZE;
 
-  TimeStamp t0,t1; 
-  time_config();
-
   // Loop over all images
   for (int imgno = 0; imgno < nr_images; imgno++)
   {
-      annotate_time(&t0);
 
-      // add one since docfile numbering starts in one
-      int this_image = my_images[imgno + 1] + 1; 
+      // add one because first number is number of elements in the array
+      int this_image = my_images[imgno + 1]; 
 
       // read experimental image and all corresponding references in memory
       getCurrentImage(this_image,img);
 
-#ifdef DEBUG
-      std::cerr<<"read img: "<<img.name(); print_elapsed_time(t0);
-      annotate_time(&t0);
-#endif
-
-      // Read all references and set vectors with FTs of their polar coordinates
-      if (!do_complete || imgno == 0)
-      {
-#ifdef DEBUG
-	  annotate_time(&t0);
-#endif
-	  getCurrentReferences(this_image);
-#ifdef DEBUG
-	  std::cerr<<"get refs: "; print_elapsed_time(t0);
-	  annotate_time(&t0);
-#endif
-      }
-
       // Align the image (for now 3D+2D search only)
-      rotationallyAlignOneImage(img(), opt_samplenr, opt_psi, opt_flip, maxcorr);
-      opt_rot  = XX(mysampling.no_redundant_sampling_points_angles[id_ref[opt_samplenr]]);
-      opt_tilt = YY(mysampling.no_redundant_sampling_points_angles[id_ref[opt_samplenr]]);
-#ifdef DEBUG
-      std::cerr<<"rot align: "; print_elapsed_time(t0);
-      annotate_time(&t0);
-#endif
+      rotationallyAlignOneImage(img(),this_image, opt_refno, opt_psi, opt_flip, maxcorr);
+      opt_rot  = XX(mysampling.no_redundant_sampling_points_angles[opt_refno]);
+      opt_tilt = YY(mysampling.no_redundant_sampling_points_angles[opt_refno]);
+      translationallyAlignOneImage(img(), opt_refno, opt_psi, opt_flip, opt_xoff, opt_yoff, maxcorr);
 
-      translationallyAlignOneImage(img(), opt_samplenr, opt_psi, opt_flip, opt_xoff, opt_yoff, maxcorr);
-
-#ifdef DEBUG
-      std::cerr<<"trans align: "; print_elapsed_time(t0);
-      annotate_time(&t0);
-#endif
-
-      // Add previously applied translation to the newly found one
+     // Add previously applied translation to the newly found one
       opt_xoff += img.Xoff();
       opt_yoff += img.Yoff();
 
@@ -389,7 +504,7 @@ void Prog_new_projection_matching_prm::processSomeImages(int * my_images, double
       my_output[imgno * MY_OUPUT_SIZE + 4] = opt_psi;
       my_output[imgno * MY_OUPUT_SIZE + 5] = opt_xoff;
       my_output[imgno * MY_OUPUT_SIZE + 6] = opt_yoff;
-      my_output[imgno * MY_OUPUT_SIZE + 7] = id_ref[opt_samplenr];
+      my_output[imgno * MY_OUPUT_SIZE + 7] = opt_refno; 
       my_output[imgno * MY_OUPUT_SIZE + 8] = opt_flip;
       my_output[imgno * MY_OUPUT_SIZE + 9] = maxcorr;
 

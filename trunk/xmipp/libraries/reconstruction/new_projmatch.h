@@ -57,16 +57,6 @@ public:
     DocFile DFexp;
     /** Selfile with experimental images */
     SelFile SFexp;
-    /** Vector with reference FTs of polar rings */
-    std::vector<Polar<std::complex<double> > > fP_ref;
-    /** Vector with reference images */
-    std::vector<Matrix2D<double> > proj_ref;
-    /** vector with stddevs for all reference projections */
-    std::vector<double> stddev_ref;
-    /** Vector with reference numbers for all reference projections */
-    std::vector<int> id_ref;
-    /** Flag for complete or local angular searches */
-    bool do_complete;
     /** dimension of the images */
     int dim;
     /** Maximum allowed shift */
@@ -77,13 +67,28 @@ public:
 	1: gives progress bar (=default)
 	0: gives no output to screen at all */
     int verb;
-    
+    /** Available memory for storage of all references (in Gb) */
+    double avail_memory;
+    /** Maximum number of references to store in memory */
+    int max_nr_refs_in_memory;
+    /** Total number of references */
+    int total_nr_refs;
+    /** Counter for current filling of memory with references */
+    int counter_refs_in_memory;
+    /** Pointers for reference retrieval */
+    std::vector<int> pointer_allrefs2refsinmem;
+    std::vector<int> pointer_refsinmem2allrefs;
+    /** Vector with reference FTs of polar rings */
+    std::vector<Polar<std::complex<double> > > fP_ref;
+    /** Vector with reference images */
+    std::vector<Matrix2D<double> > proj_ref;
+    /** vector with stddevs for all reference projections */
+    std::vector<double> stddev_ref;
     /** sampling object */
     XmippSampling mysampling;
-    
-    /** One common kb object for all images! */
-    KaiserBessel kb;
-    
+    /** Flag whether to loop from low to high or from high to low
+     * through the references */
+    bool loop_forward_refs;
 
 public:
   /// Read arguments from command line
@@ -104,7 +109,7 @@ public:
   /** Rotational alignment using polar coordinates 
    *  The input image is assumed to be in FTs of polar rings 
    */
-  void rotationallyAlignOneImage(Matrix2D<double> &img, int &opt_samplenr,
+  void rotationallyAlignOneImage(Matrix2D<double> &img, int imgno, int &opt_samplenr,
 				 double &opt_psi, double &opt_flip, double &maxcorr);
 
   /** Translational alignment using cartesian coordinates 
@@ -118,9 +123,10 @@ public:
       previous optimal Xoff and Yoff */
   void getCurrentImage(int imgno, ImageXmipp &img);
 
-  /** Fir the current image, store FT of the polar transforms of all
-   * references, as well as the original images in memory */
-  void getCurrentReferences(int imgno);
+  /** Get pointer to the current reference image 
+      If this image wasn't stored in memory yet, read it from disc and
+      store FT of the polar transform as well as the original image */
+  int getCurrentReference(int refno);
 
   /** Loop over all images */
   void processSomeImages(int * my_images, double * my_output);
