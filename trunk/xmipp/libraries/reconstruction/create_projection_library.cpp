@@ -162,11 +162,11 @@ Prog_create_projection_library_Parameters::project_angle_vector(
        mySize *= (int) (359.99999/psi_sampling);
     if (verbose)
        init_progress_bar(mySize);
-    int myCounter=1;
+    int myCounter=0;
 
     
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
-       for (int i=myCounter;i<my_init;i++)
+       for (int i=0;i<my_init;i++)
          myCounter++;
         
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
@@ -181,7 +181,7 @@ Prog_create_projection_library_Parameters::project_angle_vector(
 
            project_Volume(inputVol(), P, Ydim, Xdim,rot,tilt,psi);
 
-           fn_proj.compose(output_file_root, myCounter++,"xmp");
+           fn_proj.compose(output_file_root, ++myCounter,"xmp");
            P.write(fn_proj);
        }
     }
@@ -313,9 +313,8 @@ void Prog_create_projection_library_Parameters::run()
     //angle information is in
     //mysampling.no_redundant_sampling_points_vector[i]
     //Run for all works
-    int myCounter=1;
-    project_angle_vector(myCounter,
-                 mysampling.no_redundant_sampling_points_angles.size(),!quiet);
+    project_angle_vector(0,
+                 mysampling.no_redundant_sampling_points_angles.size()-1,!quiet);
 	#ifdef  DEBUGTIME
 	time (&end);
 	time_dif = difftime (end,start); start=end;
@@ -325,12 +324,13 @@ void Prog_create_projection_library_Parameters::run()
     //only rank 0 create sel file
     SelFile  mySF;
     FileName fn_temp;
+    int myCounter=0;
     
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
-       for (int i=myCounter;i<=mysampling.no_redundant_sampling_points_angles.size();i++)
+       for (int i=0;i<=mysampling.no_redundant_sampling_points_angles.size()-1;i++)
        {    
-        fn_temp.compose(output_file_root, myCounter++,"xmp");
-        mySF.insert(fn_temp);
+	   fn_temp.compose(output_file_root, ++myCounter,"xmp");
+	   mySF.insert(fn_temp);
        }
     fn_temp=output_file_root+".sel";   
     mySF.write(fn_temp);         
