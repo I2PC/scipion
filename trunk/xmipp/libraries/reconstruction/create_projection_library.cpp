@@ -299,7 +299,7 @@ void Prog_create_projection_library_Parameters::run()
 	    time_dif = difftime (end,start); start=end;
 	    printf ("compute_neighbors after %.2lf seconds\n", time_dif );
 	    #endif
-	    mysampling.save_sampling_file(output_file_root);
+	    mysampling.save_sampling_file(output_file_root,false);
 	    #ifdef  DEBUGTIME
 	    time (&end);
 	    time_dif = difftime (end,start); start=end;
