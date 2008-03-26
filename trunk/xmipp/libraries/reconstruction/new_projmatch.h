@@ -40,9 +40,9 @@
 #include "projection.h"
 #include "symmetries.h"
 #include "sampling.h"
+#include "ctf.h"
 
 #define MY_OUPUT_SIZE 9
-#define MAX_BATCH_SIZE 500
 
 /**@defgroup new_projection_matching new_projmatch (Discrete angular assignment using a new projection matching)
    @ingroup ReconsLibraryPrograms */
@@ -51,8 +51,8 @@
 class Prog_new_projection_matching_prm {
 public:
 
-    /** Filenames reference selfile/image, fraction docfile & output rootname */
-    FileName fn_exp,fn_ref,fn_root;
+    /** Filenames */
+    FileName fn_exp, fn_ref, fn_root, fn_ctf;
     /** Docfile with experimental images */
     DocFile DFexp;
     /** Selfile with experimental images */
@@ -93,7 +93,13 @@ public:
     int search5d_shift;
     /** 5D-search: offset step (pixels) */
     int search5d_step;
+    /** 5D-search: actual displacement vectors */
     std::vector<int> search5d_xoff, search5d_yoff;
+    /** CTF object */
+    XmippCTF ctf;
+    /** Are the experimental images phase flipped? */
+    bool phase_flipped;
+    
 
 public:
   /// Read arguments from command line

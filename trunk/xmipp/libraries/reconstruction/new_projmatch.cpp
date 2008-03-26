@@ -35,15 +35,16 @@ void Prog_new_projection_matching_prm::read(int argc, char **argv)  {
   fn_ref  = getParameter(argc,argv,"-ref","ref");
   fn_exp  = getParameter(argc,argv,"-i");
   fn_root = getParameter(argc,argv,"-o","out");
-  search5d_shift  = textToInteger(getParameter(argc,argv,"-search5d_shift","0"));
-  search5d_step = textToInteger(getParameter(argc,argv,"-search5d_step","2"));
-  max_shift = textToFloat(getParameter(argc,argv,"-max_shift","-1"));
-  avail_memory = textToFloat(getParameter(argc,argv,"-mem","1"));
-
 
   // Additional commands
   Ri=textToInteger(getParameter(argc,argv,"-Ri","-1"));
   Ro=textToInteger(getParameter(argc,argv,"-Ro","-1"));
+  search5d_shift  = textToInteger(getParameter(argc,argv,"-search5d_shift","0"));
+  search5d_step = textToInteger(getParameter(argc,argv,"-search5d_step","2"));
+  max_shift = textToFloat(getParameter(argc,argv,"-max_shift","-1"));
+  avail_memory = textToFloat(getParameter(argc,argv,"-mem","1"));
+  fn_ctf  = getParameter(argc,argv,"-ctf","");
+  phase_flipped = !checkParameter(argc, argv, "-not_phase_flipped");
 
   // Hidden stuff
   verb=textToInteger(getParameter(argc,argv,"-verb","1"));
@@ -74,6 +75,14 @@ void Prog_new_projection_matching_prm::show() {
     {
 	std::cerr << "  5D-search shift range   : "<<search5d_shift<<" pixels (sampled "<<search5d_xoff.size()<<" times)"<<std::endl;
     }
+    if (fn_ctf!="")
+    {
+	std::cerr << "  CTF parameter file      :  " <<fn_ctf<<std::endl;
+	if (phase_flipped)
+	    std::cerr << "    + Assuming images have been phase flipped " << std::endl;
+	else
+	    std::cerr << "    + Assuming images have not been phase flipped " << std::endl;
+    }
     std::cerr << "  -> Limit origin offsets to  +/- "<<max_shift<<" pixels"<<std::endl;
     std::cerr << " ================================================================="<<std::endl;
   }
@@ -83,19 +92,21 @@ void Prog_new_projection_matching_prm::show() {
 void Prog_new_projection_matching_prm::usage() {
   std::cerr << "Usage:  projection_matching [options] "<<std::endl;
   std::cerr << "   -i <selfile>                : Selfile with input images \n"
-       << "   -ref <ref rootname=\"ref\">        : Rootname for reference projection files \n"
-       << " [ -max_shift <float=-1> ]     : Max. change in origin offset (+/- pixels; neg= no limit) \n"
-       << " [ -more_options ]             : Show all program options\n";
+	    << "   -ref <ref rootname=\"ref\">   : Rootname for reference projection files \n"
+	    << " [ -max_shift <float=-1> ]     : Max. change in origin offset (+/- pixels; neg= no limit) \n"
+	    << " [ -more_options ]             : Show all program options\n";
 }
 
 // Extended usage ===================================================================
 void Prog_new_projection_matching_prm::extendedUsage() {
   std::cerr << "Additional options: \n"
             << " [ -mem <float=1> ]            : Available memory for reference library (Gb)\n"
-            << " [ -search5d_shift <int=0>]    : Search range (in +/- pix) for 5D shift search\n"
-            << " [ -search5d_step <int=2>]     : Step size for 5D shift search (in pix) \n"
+            << " [ -search5d_shift <int=0> ]   : Search range (in +/- pix) for 5D shift search\n"
+            << " [ -search5d_step  <int=2> ]   : Step size for 5D shift search (in pix) \n"
 	    << " [ -Ri <float=1> ]             : Inner radius to limit rotational search \n"
-	    << " [ -Ro <float=dim/2 - 1> ]     : Outer radius to limit rotational search \n";
+	    << " [ -Ro <float=dim/2 - 1> ]     : Outer radius to limit rotational search \n"
+	    << " [ -ctf <ctfparam-file> ]      : Apply this CTF to the reference projections \n"
+	    << " [ -not_phase_flipped ]        : Use this if the experimental images have not been phase flipped \n";
   exit(1);
 }
 
@@ -186,6 +197,17 @@ void Prog_new_projection_matching_prm::produceSideInfo() {
 	}
     }
 
+    // CTF stuff
+    Matrix2D<std::complex<double> >  ctfmask;
+    ctf.read(fn_ctf);
+    if (ABS(ctf.DeltafV - ctf.DeltafU) >1.) 
+    {
+	REPORT_ERROR(1, "ERROR%% Only non-astigmatic CTFs are allowed!");
+    }
+    ctf.enable_CTF = true;
+    ctf.Produce_Side_Info();
+    ctf.Generate_CTF(dim, dim, ctfmask);
+
 }
 
 void Prog_new_projection_matching_prm::getCurrentImage(int imgno, ImageXmipp &img)
@@ -240,6 +262,16 @@ int Prog_new_projection_matching_prm::getCurrentReference(int refno)
     fnt.compose(fn_ref,refno+1,"xmp");
     img.read(fnt);
     img().setXmippOrigin();
+
+    // Apply CTF
+    if (fn_ctf!="")
+    {
+	Matrix2D<std::complex<double> > Faux;
+	FourierTransform(img(),Faux);
+	// STILL TO DO: HANDLE PHASE_FLIPPED IMAGES!!!!!
+	ctf.Apply_CTF(Faux);
+	InverseFourierTransform(Faux,img());
+    }
 
     // Calculate FTs of polar rings and its stddev
     img().produceSplineCoefficients(Maux,3);
