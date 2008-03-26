@@ -89,6 +89,11 @@ public:
     /** Flag whether to loop from low to high or from high to low
      * through the references */
     bool loop_forward_refs;
+    /** 5D-search: maximum offsets (+/- pixels) */
+    int search5d_shift;
+    /** 5D-search: offset step (pixels) */
+    int search5d_step;
+    std::vector<int> search5d_xoff, search5d_yoff;
 
 public:
   /// Read arguments from command line

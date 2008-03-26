@@ -32,10 +32,12 @@ void Prog_new_projection_matching_prm::read(int argc, char **argv)  {
 
   // Read command line
   if (checkParameter(argc,argv,"-more_options")) { usage(); extendedUsage();}
-  fn_ref = getParameter(argc,argv,"-ref","ref");
-  fn_exp=getParameter(argc,argv,"-i");
-  fn_root=getParameter(argc,argv,"-o","out");
-  max_shift=textToFloat(getParameter(argc,argv,"-max_shift","-1"));
+  fn_ref  = getParameter(argc,argv,"-ref","ref");
+  fn_exp  = getParameter(argc,argv,"-i");
+  fn_root = getParameter(argc,argv,"-o","out");
+  search5d_shift  = textToInteger(getParameter(argc,argv,"-search5d_shift","0"));
+  search5d_step = textToInteger(getParameter(argc,argv,"-search5d_step","2"));
+  max_shift = textToFloat(getParameter(argc,argv,"-max_shift","-1"));
   avail_memory = textToFloat(getParameter(argc,argv,"-mem","1"));
 
 
@@ -68,7 +70,11 @@ void Prog_new_projection_matching_prm::show() {
     {
 	std::cerr << "  Number of references    : "<<total_nr_refs<<" (all stored in memory)"<<std::endl;	
     }
-    std::cerr << "  -> Limit search of origin offsets to  +/- "<<max_shift<<" pixels"<<std::endl;
+    if (search5d_shift > 0)
+    {
+	std::cerr << "  5D-search shift range   : "<<search5d_shift<<" pixels (sampled "<<search5d_xoff.size()<<" times)"<<std::endl;
+    }
+    std::cerr << "  -> Limit origin offsets to  +/- "<<max_shift<<" pixels"<<std::endl;
     std::cerr << " ================================================================="<<std::endl;
   }
 }
@@ -86,6 +92,8 @@ void Prog_new_projection_matching_prm::usage() {
 void Prog_new_projection_matching_prm::extendedUsage() {
   std::cerr << "Additional options: \n"
             << " [ -mem <float=1> ]            : Available memory for reference library (Gb)\n"
+            << " [ -search5d_shift <int=0>]    : Search range (in +/- pix) for 5D shift search\n"
+            << " [ -search5d_step <int=2>]     : Step size for 5D shift search (in pix) \n"
 	    << " [ -Ri <float=1> ]             : Inner radius to limit rotational search \n"
 	    << " [ -Ro <float=dim/2 - 1> ]     : Outer radius to limit rotational search \n";
   exit(1);
@@ -159,7 +167,25 @@ void Prog_new_projection_matching_prm::produceSideInfo() {
     double dum;
     stddev_ref.resize(max_nr_refs_in_memory,dum);
     loop_forward_refs=true;
-    
+
+    // Initialize 5D search vectors
+    search5d_xoff.clear();
+    search5d_yoff.clear();
+    // Make sure origin is included
+    int myfinal=search5d_shift + search5d_shift%search5d_step;
+    for (int xoff = -myfinal; xoff <= myfinal; xoff+= search5d_step)
+    {
+	for (int yoff = -myfinal; yoff <= myfinal; yoff+= search5d_step)
+	{
+	    // Only take a circle (not a square)
+	    if ( xoff*xoff + yoff*yoff <= search5d_shift*search5d_shift)
+	    {
+		search5d_xoff.push_back(xoff);
+		search5d_yoff.push_back(yoff);
+	    }
+	}
+    }
+
 }
 
 void Prog_new_projection_matching_prm::getCurrentImage(int imgno, ImageXmipp &img)
@@ -257,10 +283,12 @@ void Prog_new_projection_matching_prm::rotationallyAlignOneImage(Matrix2D<double
 {
     Matrix2D<double>         Maux;
     Polar<double>            P;
-    Polar<std::complex <double> > fP,fPm;
     Matrix1D<double>         ang,corr;
-    int                      max_index, refno, myinit, myfinal, myincr;
-    double                   mean;
+    int                      max_index, refno, myinit, myfinal, myincr, nr_trans;
+    double                   mean, stddev;
+    std::vector<double>      stddev_img;
+    Polar<std::complex <double> > fP,fPm;
+    std::vector< Polar <std::complex <double> > > fP_img,fPm_img;
 
 #ifdef TIMING
     TimeStamp t0,t1,t2; 
@@ -271,11 +299,21 @@ void Prog_new_projection_matching_prm::rotationallyAlignOneImage(Matrix2D<double
 
     maxcorr = -99.e99;
     img.produceSplineCoefficients(Maux,3);
-    P.getPolarFromCartesianBSpline(Maux,Ri,Ro);
-    mean = P.computeSum(true);
-    P -= mean; // for normalized cross-correlation coefficient
-    fP = P.fourierTransformRings(false);
-    fPm = P.fourierTransformRings(true);
+    // Precalculate polar transform of each translation
+    nr_trans = search5d_xoff.size();
+    for (int itrans = 0; itrans < nr_trans; itrans++)
+    {
+	P.getPolarFromCartesianBSpline(Maux,Ri,Ro,(double)search5d_xoff[itrans],(double)search5d_yoff[itrans]);
+	mean = P.computeSum(true);
+	stddev = P.computeSum2(true);
+	stddev = sqrt(stddev - mean * mean);
+	P -= mean; // for normalized cross-correlation coefficient
+	fP = P.fourierTransformRings(false);
+	fPm = P.fourierTransformRings(true);
+	fP_img.push_back(fP);
+	fPm_img.push_back(fPm);
+	stddev_img.push_back(stddev);
+    }
 
 #ifdef TIMING
     float prepare_img = elapsed_time(t0);
@@ -325,41 +363,50 @@ void Prog_new_projection_matching_prm::rotationallyAlignOneImage(Matrix2D<double
 	std::cerr<<"Got refno= "<<refno<<" pointer= "<<mysampling.my_neighbors[imgno][i]<<std::endl;
 #endif	    
 
-	// A. Check straight image
-	rotationalCorrelation(fP,fP_ref[refno],ang,corr);
-	corr /= stddev_ref[refno]; // for normalized ccf, forget about constant stddev_img
-	for (int k = 0; k < XSIZE(corr); k++)
+
+	// Loop over all 5D-search translations
+	for (int itrans = 0; itrans < nr_trans; itrans++)
 	{
-	    if (corr(k)> maxcorr)
+
+	    // A. Check straight image
+	    rotationalCorrelation(fP_img[itrans],fP_ref[refno],ang,corr);
+	    corr /= stddev_ref[refno] * stddev_img[itrans]; // for normalized ccf
+	    for (int k = 0; k < XSIZE(corr); k++)
 	    {
-		maxcorr = corr(k);
-		opt_psi = ang(k);
-		opt_refno = mysampling.my_neighbors[imgno][i];
-		opt_flip = 0.;
+		if (corr(k)> maxcorr)
+		{
+		    maxcorr = corr(k);
+		    opt_psi = ang(k);
+		    opt_refno = mysampling.my_neighbors[imgno][i];
+		    opt_flip = 0.;
+		}
 	    }
-	}
+
 #ifdef DEBUG
-	std::cerr<<"straight: corr "<<maxcorr<<std::endl;
+	    std::cerr<<"straight: corr "<<maxcorr<<std::endl;
 #endif	    
 
-	// B. Check mirrored image
-	rotationalCorrelation(fPm,fP_ref[refno],ang,corr);
-	corr /= stddev_ref[refno]; // for normalized ccf, forget about constant stddev_img
-	for (int k = 0; k < XSIZE(corr); k++)
-	{
-	    if (corr(k)> maxcorr)
+	    // B. Check mirrored image
+	    rotationalCorrelation(fPm_img[itrans],fP_ref[refno],ang,corr);
+	    corr /= stddev_ref[refno] * stddev_img[itrans]; // for normalized ccf
+	    for (int k = 0; k < XSIZE(corr); k++)
 	    {
-		maxcorr = corr(k);
-		opt_psi = ang(k);
-		opt_refno = mysampling.my_neighbors[imgno][i];
-		opt_flip = 1.;
+		if (corr(k)> maxcorr)
+		{
+		    maxcorr = corr(k);
+		    opt_psi = ang(k);
+		    opt_refno = mysampling.my_neighbors[imgno][i];
+		    opt_flip = 1.;
+		}
 	    }
-	}
+
 #ifdef DEBUG
-	std::cerr<<"mirror: corr "<<maxcorr;
-	if (opt_flip==1.) std::cerr<<"**";
-	std::cerr<<std::endl;
+	    std::cerr<<"mirror: corr "<<maxcorr;
+	    if (opt_flip==1.) std::cerr<<"**";
+	    std::cerr<<std::endl;
 #endif	    
+
+	}
     }
 
     // Flip order to loop through references
@@ -368,9 +415,9 @@ void Prog_new_projection_matching_prm::rotationallyAlignOneImage(Matrix2D<double
 #ifdef TIMING
     float all_rot_align = elapsed_time(t0);
     float total_rot = elapsed_time(t2);
-    std::cerr<<" rotal-align%% "<<total_rot
-	     <<" => prepare-img:  "<<prepare_img
-	     <<" all_rot_align: "<<all_rot_align
+    std::cerr<<" rotal%% "<<total_rot
+	     <<" => prep: "<<prepare_img
+	     <<" all_refs: "<<all_rot_align
 	     <<" (of which "<<get_refs
 	     <<" to get "<< mysampling.my_neighbors[imgno].size()
 	     <<" refs for imgno "<<imgno<<" )"
@@ -458,7 +505,7 @@ void Prog_new_projection_matching_prm::translationallyAlignOneImage(Matrix2D<dou
 
 #ifdef TIMING
     float total_trans = elapsed_time(t0);
-    std::cerr<<" trans-align%% "<<total_trans <<std::endl;
+    std::cerr<<" trans%% "<<total_trans <<std::endl;
 #endif
 
 }
