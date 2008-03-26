@@ -71,6 +71,7 @@ void Prog_new_projection_matching_prm::show() {
     {
 	std::cerr << "  Number of references    : "<<total_nr_refs<<" (all stored in memory)"<<std::endl;	
     }
+    std::cerr << "  Max. allowed shift      : +/- " <<max_shift<<" pixels"<<std::endl;
     if (search5d_shift > 0)
     {
 	std::cerr << "  5D-search shift range   : "<<search5d_shift<<" pixels (sampled "<<search5d_xoff.size()<<" times)"<<std::endl;
@@ -83,7 +84,6 @@ void Prog_new_projection_matching_prm::show() {
 	else
 	    std::cerr << "    + Assuming images have not been phase flipped " << std::endl;
     }
-    std::cerr << "  -> Limit origin offsets to  +/- "<<max_shift<<" pixels"<<std::endl;
     std::cerr << " ================================================================="<<std::endl;
   }
 }
@@ -198,15 +198,18 @@ void Prog_new_projection_matching_prm::produceSideInfo() {
     }
 
     // CTF stuff
-    Matrix2D<std::complex<double> >  ctfmask;
-    ctf.read(fn_ctf);
-    if (ABS(ctf.DeltafV - ctf.DeltafU) >1.) 
+    if (fn_ctf != "")
     {
-	REPORT_ERROR(1, "ERROR%% Only non-astigmatic CTFs are allowed!");
+	Matrix2D<std::complex<double> >  ctfmask;
+	ctf.read(fn_ctf);
+	if (ABS(ctf.DeltafV - ctf.DeltafU) >1.) 
+	{
+	    REPORT_ERROR(1, "ERROR%% Only non-astigmatic CTFs are allowed!");
+	}
+	ctf.enable_CTF = true;
+	ctf.Produce_Side_Info();
+	ctf.Generate_CTF(dim, dim, ctfmask);
     }
-    ctf.enable_CTF = true;
-    ctf.Produce_Side_Info();
-    ctf.Generate_CTF(dim, dim, ctfmask);
 
 }
 
@@ -263,7 +266,8 @@ int Prog_new_projection_matching_prm::getCurrentReference(int refno)
     img.read(fnt);
     img().setXmippOrigin();
 
-    // Apply CTF
+    // Apply CTF (this takes approx as long as calculating the polar
+    // transform etc.)
     if (fn_ctf!="")
     {
 	Matrix2D<std::complex<double> > Faux;
