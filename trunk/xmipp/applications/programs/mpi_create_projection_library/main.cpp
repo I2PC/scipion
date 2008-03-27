@@ -134,6 +134,11 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
     //true -> half_sphere
     mysampling.Compute_sampling_points(false,max_tilt_angle,min_tilt_angle);
     mysampling.SL.read_sym_file(fn_sym);
+    //store symmetry matrices, this is faster than computing them each time
+    mysampling.fill_L_R_repository();
+    //precompute product between symmetry matrices and experimental data
+    mysampling.fill_exp_data_projection_direction_by_L_R(FnexperimentalImages);
+
     mysampling.remove_redundant_points(symmetry, sym_order);
     if (FnexperimentalImages.size() > 0 && 
         remove_points_far_away_from_experimental_data_bool)
@@ -166,9 +171,11 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
             if (compute_neighbors_bool)
                 {
 	            mysampling.compute_neighbors(FnexperimentalImages);
-	            mysampling.save_sampling_file(output_file_root);
+	            mysampling.save_sampling_file(output_file_root,false);
                 }
 	    }
+        //release some memory    
+        mysampling.exp_data_projection_direction_by_L_R.clear();
 
         if (mpi_job_size != -1)
         {   
@@ -254,7 +261,7 @@ std::cerr << "Sent jobNo " <<  i << std::endl;
             }         
         //only rank 0 create sel file
         if(rank==0)
-        {
+            {
             SelFile  mySF;
             FileName fn_temp;
             int myCounter=0;
@@ -262,12 +269,12 @@ std::cerr << "Sent jobNo " <<  i << std::endl;
             for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
                for (int i=0;i<=mysampling.no_redundant_sampling_points_angles.size()-1;i++)
                { 
-                fn_temp.compose(output_file_root, myCounter++,"xmp");
+                fn_temp.compose(output_file_root, ++myCounter,"xmp");
                 mySF.insert(fn_temp);
                }
             fn_temp=output_file_root+".sel";   
             mySF.write(fn_temp);         
-        }
+            }
         
         }
         else
