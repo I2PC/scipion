@@ -147,18 +147,20 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
         {	
         mysampling.remove_points_far_away_from_experimental_data(FnexperimentalImages);
         }
-    if(compute_closer_sampling_point_bool)
-	    {
-	    //find sampling point closer to experimental point (only 0) and bool
-	    //and save docfile with this information
-	    mysampling.find_closest_sampling_point(FnexperimentalImages,output_file_root);
-        }
 
-	/* perturb points */
+	/* save files */
         if (rank == 0) 
         {
+           if(compute_closer_sampling_point_bool)
+	           {
+	           //find sampling point closer to experimental point (only 0) and bool
+	           //and save docfile with this information
+	           mysampling.find_closest_sampling_point(FnexperimentalImages,output_file_root);
+               }
             //mysampling.create_sym_file(symmetry, sym_order);
+            #ifdef create_asym_unit_file   
             mysampling.create_asym_unit_file(output_file_root);
+            #endif
         }
         
         if (rank != 0) 
