@@ -93,8 +93,10 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
     {
         Prog_create_projection_library_Parameters::usage();
         std::cerr << " [ -mpi_job_size default=-1]    : Number of images sent to a cpu in a single job \n";
-        std::cerr << "                                  if  -1 the computer will fill the value for you";
-  }
+        std::cerr << "                                  10 may be a good value";
+        std::cerr << "                                  if  -1 the computer will put the maximum";
+        std::cerr << "                                  posible value that may not be the best option";
+    }
 
 
     /* Show -------------------------------------------------------------------- */
@@ -191,12 +193,14 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
         verbose=false;
         if (rank == 1)
         {
-            verbose = true;
-            // #define DEBUG
+            if(quiet)
+                verbose=false;
+            else    
+                verbose = true;
+            #define DEBUG
             #ifdef DEBUG
-            std::cerr << "numberOfJobs " << numberOfJobs << std::endl
-                 << "mpi_job_size " << mpi_job_size << std::endl
-                 << "no_redundant_sampling_points_angles.size()" <<  mysampling.no_redundant_sampling_points_angles.size()
+            std::cerr << "numberOfJobs: " << numberOfJobs << std::endl
+                 << "number of projections to be created: " <<  mysampling.no_redundant_sampling_points_angles.size()
                  <<std::endl;
             #endif
             #undef DEBUG
@@ -323,7 +327,8 @@ std::cerr << "Wr" << rank << " " << "TAG_WORKFORWORKER" << std::endl;
                     // Process all images
                      project_angle_vector(jobNumber*mpi_job_size,
                      XMIPP_MIN((jobNumber+1)* mpi_job_size -1 , 
-                                mysampling.no_redundant_sampling_points_angles.size()-1), !quiet);
+                                mysampling.no_redundant_sampling_points_angles.size()-1), 
+                                verbose);
                     //get yor next task
                     }
                 else
