@@ -200,6 +200,7 @@ void Prog_new_projection_matching_prm::produceSideInfo() {
     // CTF stuff
     if (fn_ctf != "")
     {
+	XmippCTF ctf;
 	Matrix2D<std::complex<double> >  ctfmask;
 	ctf.read(fn_ctf);
 	if (ABS(ctf.DeltafV - ctf.DeltafU) >1.) 
@@ -209,6 +210,12 @@ void Prog_new_projection_matching_prm::produceSideInfo() {
 	ctf.enable_CTF = true;
 	ctf.Produce_Side_Info();
 	ctf.Generate_CTF(dim, dim, ctfmask);
+	Mctf.resize(dim,dim);
+	FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mctf)
+	{
+	    if (phase_flipped) dMij(Mctf, i, j) = fabs(dMij(ctfmask, i, j).real());
+	    else dMij(Mctf, i, j) = dMij(ctfmask, i, j).real();
+	}
     }
 
 }
@@ -272,8 +279,10 @@ int Prog_new_projection_matching_prm::getCurrentReference(int refno)
     {
 	Matrix2D<std::complex<double> > Faux;
 	FourierTransform(img(),Faux);
-	// STILL TO DO: HANDLE PHASE_FLIPPED IMAGES!!!!!
-	ctf.Apply_CTF(Faux);
+	FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mctf)
+	{
+	    dMij(Faux,i,j) *= dMij(Mctf,i,j);
+	}
 	InverseFourierTransform(Faux,img());
     }
 

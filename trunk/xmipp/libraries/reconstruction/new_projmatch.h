@@ -95,8 +95,8 @@ public:
     int search5d_step;
     /** 5D-search: actual displacement vectors */
     std::vector<int> search5d_xoff, search5d_yoff;
-    /** CTF object */
-    XmippCTF ctf;
+    /** CTF image */
+    Matrix2D<double> Mctf;
     /** Are the experimental images phase flipped? */
     bool phase_flipped;
     
