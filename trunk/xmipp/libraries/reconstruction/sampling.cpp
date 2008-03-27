@@ -1229,7 +1229,7 @@ void XmippSampling::create_asym_unit_file(const FileName &docfilename)
     DFvectors.clear();
     DFangles.clear();
     FileName tmp_filename;
-    #define CHIMERA
+    //#define CHIMERA
     #ifdef CHIMERA
     std::ofstream filestr; 
     filestr.open ("create_asym_unit_file.bild");
@@ -1444,7 +1444,7 @@ void XmippSampling::compute_neighbors(FileName FnexperimentalImages)
         my_neighbors_psi.push_back(aux_neighbors_psi);
 #endif
     }//for j
-    #define CHIMERA
+    //#define CHIMERA
     #ifdef CHIMERA
     std::ofstream filestr; 
     filestr.open ("compute_neighbors.bild");
@@ -1535,7 +1535,7 @@ void XmippSampling::remove_points_far_away_from_experimental_data(FileName Fnexp
 	     i--;//since a point has been swaped we should repeat the same index  
        }// if(my_delete)
     }//for i end
-    #define CHIMERA
+    //#define CHIMERA
     #ifdef CHIMERA
     std::ofstream filestr; 
     filestr.open ("remove_points_far_away_from_experimental_data.bild");
@@ -1605,7 +1605,7 @@ void XmippSampling::find_closest_sampling_point(FileName FnexperimentalImages,
     DFi.insert_comment(tmp_string);
     DFi.go_first_data_line();
 
-#define DEBUG3
+//#define DEBUG3
 #ifdef  DEBUG3
     std::ofstream filestr; 
     filestr.open ("find_closest_sampling_point.bild");
@@ -1702,7 +1702,7 @@ void XmippSampling::fill_exp_data_projection_direction_by_L_R(FileName Fnexperim
     DocFile          DFi;
     DFi.read(FnexperimentalImages);//experimental points
     DFi.go_first_data_line();
-    #define CHIMERA
+    //#define CHIMERA
     #ifdef CHIMERA
     std::ofstream filestr; 
     filestr.open ("exp_data_projection_direction_by_L_R.bild");
@@ -1746,14 +1746,14 @@ void XmippSampling::fill_exp_data_projection_direction_by_L_R(FileName Fnexperim
                            psip);
         exp_data_projection_direction_by_L_R_psi.push_back(psip);   
         #endif
-        #define CHIMERA
+        //#define CHIMERA
         #ifdef CHIMERA
         filestr << ".sphere " << direction.transpose()
 	            << " 0.02" << std::endl
 	            ;
         #endif
         }
-    #define CHIMERA
+    //#define CHIMERA
     #ifdef CHIMERA
     filestr.close();
     #endif
