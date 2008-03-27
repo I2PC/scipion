@@ -39,10 +39,8 @@ int main(int argc, char **argv)
     {
         // Read command line & produce side info
         prm.read(argc, argv);
-        prm.show();
         prm.produceSideInfo();
-
-	
+        prm.show();
 
     }
     catch (Xmipp_error XE)
@@ -83,7 +81,7 @@ int main(int argc, char **argv)
 	    dataline(2)=output_values[i*MY_OUPUT_SIZE+4];
 	    dataline(3)=output_values[i*MY_OUPUT_SIZE+5];
 	    dataline(4)=output_values[i*MY_OUPUT_SIZE+6];
-	    dataline(5)=output_values[i*MY_OUPUT_SIZE+7];
+	    dataline(5)=output_values[i*MY_OUPUT_SIZE+7] + 1;
 	    dataline(6)=output_values[i*MY_OUPUT_SIZE+8];
 	    dataline(7)=output_values[i*MY_OUPUT_SIZE+9];
 	    DFo.append_comment(fn_tmp);
