@@ -273,12 +273,14 @@ void Prog_create_projection_library_Parameters::run()
         printf ("find_closest_sampling_point after %.2lf seconds\n", time_dif );
         #endif
         }
+    #ifdef create_asym_unit_file   
     //only rank 0
     mysampling.create_asym_unit_file(output_file_root);
     #ifdef  DEBUGTIME
     time (&end);
     time_dif = difftime (end,start); start=end;
     printf ("create_asym_unit_file (save file) after %.2lf seconds\n", time_dif );
+    #endif
     #endif
     //all nodes
     inputVol.read(input_volume);
