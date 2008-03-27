@@ -195,7 +195,7 @@ Prog_create_projection_library_Parameters::project_angle_vector(
 /* Run --------------------------------------------------------------------- */
 void Prog_create_projection_library_Parameters::run()
 { 
-    #define DEBUGTIME
+    //#define DEBUGTIME
     #ifdef  DEBUGTIME
     #include <ctime>
     
