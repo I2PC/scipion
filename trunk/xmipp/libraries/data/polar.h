@@ -561,10 +561,9 @@ public:
 
     }
 
-    /** Convert cartesian Matrix2D to Polar
+    /** Convert cartesian Matrix2D to Polar using gridding interpolation
      *
-     * Use gridding for interpolation. The input Matrix2D is assumed
-     * to be pre-processed for gridding purposes.
+     * The input Matrix2D is assumed to be pre-processed for gridding
      *
      * @code
      * Polar P;
@@ -573,11 +572,12 @@ public:
      * produceReverseGriddingMatrix2D(img(),Maux,kb);
      * P.getPolarFromCartesian(Maux,kb,1,15);
      * @endcode
+     *
      */
-    void getPolarFromCartesian(const Matrix2D<T> &M1, KaiserBessel &kb, 
-			       int first_ring, int last_ring, 
-			       double xoff = 0., double yoff = 0.,
-			       double oversample1 = 1., int mode1 = FULL_CIRCLES)
+    void getPolarFromCartesianGridding(const Matrix2D<T> &M1, KaiserBessel &kb, 
+				       int first_ring, int last_ring, 
+				       double xoff = 0., double yoff = 0.,
+				       double oversample1 = 1., int mode1 = FULL_CIRCLES)
     {
 	int nsam;
 	int nring = last_ring - first_ring + 1;
@@ -597,6 +597,7 @@ public:
 	else
 	    REPORT_ERROR(1,"Incorrect mode for getPolarFromCartesian");
 	
+
 	// Take 2x oversize M1 dims into account for calculating the limits 
 	minxp = FIRST_XMIPP_INDEX(XSIZE(M1)/2);
 	minyp = FIRST_XMIPP_INDEX(YSIZE(M1)/2);
@@ -639,6 +640,87 @@ public:
 	}
 
     }
+
+    /** Convert cartesian Matrix2D to Polar using B-spline interpolation
+     *
+     * The input Matrix2D is assumed to be pre-processed for B-splines
+     *
+     * @code
+     * Polar P;
+     * Matrix2D<double> Maux;
+     * img().produceSplineCoefficients(Maux,3);
+     * P.getPolarFromCartesianBSpline(Maux,1,15);
+     * @endcode
+     *
+     */
+    void getPolarFromCartesianBSpline(const Matrix2D<T> &M1, 
+				     int first_ring, int last_ring, 
+				     double xoff = 0., double yoff = 0.,
+				     double oversample1 = 1., int mode1 = FULL_CIRCLES)
+    {
+	int nsam;
+	int nring = last_ring - first_ring + 1;
+	double radius, twopi, dphi, phi; 
+	double xp, yp, minxp, maxxp, minyp, maxyp;
+
+	Matrix1D<T> Mring;
+	rings.clear();
+	ring_radius.clear();
+	mode = mode1;
+	oversample = oversample1;
+
+	if (mode == FULL_CIRCLES)
+	    twopi = 2.*PI;
+	else if (mode == HALF_CIRCLES)
+	    twopi = PI;
+	else
+	    REPORT_ERROR(1,"Incorrect mode for getPolarFromCartesian");
+	
+
+	// Limits of the matrix (not oversized!)
+	minxp = FIRST_XMIPP_INDEX(XSIZE(M1));
+	minyp = FIRST_XMIPP_INDEX(YSIZE(M1));
+	maxxp = LAST_XMIPP_INDEX(XSIZE(M1));
+	maxyp = LAST_XMIPP_INDEX(YSIZE(M1));
+
+	// Loop over all polar coordinates
+	for (int iring = first_ring; iring <= last_ring; iring++)
+	{
+	    radius = (double) iring;
+	    // Non-constant sampling!! (always even for convenient Half2Whole of FTs)
+	    nsam = 2 * (int)( 0.5 * oversample * twopi * radius );
+	    nsam = XMIPP_MAX(1, nsam);
+	    dphi = twopi / (double)nsam;
+	    Mring.resize(nsam);
+	    for (int iphi = 0; iphi < nsam; iphi++)
+	    {
+		// from polar to original cartesian coordinates
+		phi = iphi * dphi;
+		xp = sin(phi) * radius;
+		yp = cos(phi) * radius;
+
+		// Origin offsets
+		xp += xoff;
+		yp += yoff; 
+
+		// Wrap coordinates
+                if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
+                    xp > maxxp + XMIPP_EQUAL_ACCURACY)
+                    xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
+                if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
+                    yp > maxyp + XMIPP_EQUAL_ACCURACY)
+                    yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
+
+		// Perform the convolution interpolation
+		Mring(iphi) = (T) M1.interpolatedElementBSpline(xp,yp,3);
+	    }
+	    rings.push_back(Mring);
+	    ring_radius.push_back(radius);
+	}
+
+    }
+
+
 
     /** Fourier transform all rings
      *
