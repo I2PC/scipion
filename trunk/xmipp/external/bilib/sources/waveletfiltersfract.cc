@@ -65,14 +65,14 @@ extern int WaveletFiltersGetSize_Fract(double Alpha, long *nh, long *ng)
 
 extern int WaveletFiltersGetCoef_Fract(double Alpha, double *h, double *g) 
 {
-static double *R, *I;
-double dzeta,mulfact;
-int i,n,m,sumTerms,size;
-unsigned long t;
+    static double *R, *I;
+    double dzeta,mulfact;
+    int i,n,m,sumTerms,size;
+    unsigned long t;
 
-	Alpha=fabs(Alpha);
-        size=getFilterSize(Alpha);
-	m=(int)ceil(log((long double)size)/log(2.0))+1;
+    Alpha=fabs(Alpha);
+    size=getFilterSize(Alpha);
+    m=(int)ceil(log((double)size)/log(2.0))+1;
     n=1<<m;
     while(2*n<size)
     { /* So that we're sure we have enough points ! */

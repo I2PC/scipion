@@ -950,7 +950,7 @@ long int kk, kn, nexp, n;
 		}
 		Out[j+1] = 0.;  
 		for (k=-k0; k<nh; k=k+2L) {
-			kk=abs(k);    			/* filter coeff. are shifted with respect to above. */
+			kk=fabs((double)k);    			/* filter coeff. are shifted with respect to above. */
 			i1 = i+(k+1L)/2L;
 			if (i1 < 0L) {
 				i1 = (2*n-1-i1) % kn;
