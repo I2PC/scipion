@@ -747,18 +747,35 @@ int main(int argc, char *argv[])
     //mpi_job_size=!checkParameter(argc,argv,"-mpi_job_size","-1");
 
     Prog_mpi_new_projection_matching_prm prm;
-    try
-    {
-        prm.read(argc, argv);
-    }
+    if (prm.rank == 0)
+    {    
+        try
+        {
+            prm.read(argc, argv);
+        }
 
-    catch (Xmipp_error XE)
-    {
-        std::cerr << XE;
-        prm.usage();
-        exit(1);
+        catch (Xmipp_error XE)
+        {
+            std::cerr << XE;
+            prm.usage();
+            exit(1);
+        }
     }
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (prm.rank != 0)
+    {    
+        try
+        {
+            prm.read(argc, argv);
+        }
 
+        catch (Xmipp_error XE)
+        {
+            std::cerr << XE;
+            prm.usage();
+            exit(1);
+        }
+    }
     try
     {
         prm.preRun();
