@@ -91,8 +91,8 @@ void Prog_new_projection_matching_prm::show() {
 // Usage ===================================================================
 void Prog_new_projection_matching_prm::usage() {
   std::cerr << "Usage:  projection_matching [options] "<<std::endl;
-  std::cerr << "   -i <selfile>                : Selfile with input images \n"
-	    << "   -ref <ref rootname=\"ref\">   : Rootname for reference projection files \n"
+  std::cerr << "   -i <docfile>            : Docfile with input images \n"
+	    << "   -ref <ref rootname=\"ref\"> : Rootname for reference projection files \n"
 	    << " [ -max_shift <float=-1> ]     : Max. change in origin offset (+/- pixels; neg= no limit) \n"
 	    << " [ -more_options ]             : Show all program options\n";
 }
