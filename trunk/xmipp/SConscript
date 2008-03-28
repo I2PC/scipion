@@ -344,6 +344,7 @@ ReconsSources = [
     'angular_distance.cpp',
     'angular_neighbourhood.cpp',
     'angular_projection_matching.cpp',
+    'angular_class_average.cpp',
     'create_projection_library.cpp',
     'crystal_angular_projection_matching.cpp',
     'art_crystal.cpp',
@@ -446,7 +447,7 @@ AddXmippProgram('align2d', ['XmippRecons'])
 AddXmippProgram('align_tilt_pairs', ['XmippRecons'])
 AddXmippProgram('align_volumes')
 AddXmippProgram('angular_assign_for_tomogram', ['XmippRecons'])
-AddXmippProgram('angular_class_average')
+AddXmippProgram('angular_class_average', ['XmippRecons'])
 AddXmippProgram('angular_continuous_assign', ['XmippRecons'])
 AddXmippProgram('angular_discrete_assign', ['XmippRecons'])
 AddXmippProgram('angular_distance', ['XmippRecons'])
