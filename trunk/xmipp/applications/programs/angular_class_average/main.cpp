@@ -84,13 +84,10 @@ int main(int argc, char **argv)
 
             fn_tmp.compose(prm.fn_out,dirno,"xmp");
             SFclasses.insert(fn_tmp);
-	    if (prm.do_split && isplit==0)
+	    if (prm.do_split)
 	    {
 		fn_tmp.compose(prm.fn_out1,dirno,"xmp");
 		SFclasses1.insert(fn_tmp);
-	    }
-	    else if (prm.do_split && isplit==1)
-	    {
 		fn_tmp.compose(prm.fn_out2,dirno,"xmp");
 		SFclasses2.insert(fn_tmp);
 	    }
