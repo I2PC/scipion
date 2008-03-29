@@ -48,7 +48,7 @@
 int     * input_images ;
 int       input_images_size;
 double  * output_values;
-int       output_images_size;
+int       output_values_size;
 //consider
 //class Prog_mpi_projection_matching_prm:public Prog_projection_matching_prm
 //to access parent variables
@@ -147,6 +147,7 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
     /* Pre Run --------------------------------------------------------------------- */
     void preRun()
     {
+        int max_number_of_images_in_around_a_sampling_point=0;
         if (rank == 0) 
         {
             show();
@@ -175,7 +176,6 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
 	        mysampling.find_closest_experimental_point(fn_exp);
             //print number of points per node
             std::cerr << "voronoi region, number of elements" << std::endl;
-            int max_number_of_images_in_around_a_sampling_point=0;
             for (int j = 0;
                   j < mysampling.my_exp_img_per_sampling_point.size();
                   j++)   
@@ -190,9 +190,9 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
                      if (max_number_of_images_in_around_a_sampling_point  
                          < mysampling.my_exp_img_per_sampling_point[j].size())
                          max_number_of_images_in_around_a_sampling_point
-                         = mysampling.my_exp_img_per_sampling_point[j].size()       
+                         = mysampling.my_exp_img_per_sampling_point[j].size();       
                     }
-            std::cerr << "bigest subset " 
+            std::cerr << "biggest subset " 
                       << max_number_of_images_in_around_a_sampling_point 
                       << std::endl;
             //alloc memory for buffer          
@@ -202,6 +202,8 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
                 mpi_job_size=ceil((double)DFexp.dataLineNo()/numberOfJobs);
             }    
         } 
+        MPI_Bcast(&max_number_of_images_in_around_a_sampling_point, 
+                  1, MPI_INT, 0, MPI_COMM_WORLD);
         input_images_size = max_number_of_images_in_around_a_sampling_point+1 +1;
         input_images  = (int *)    malloc(input_images_size);
         output_values_size=MY_OUPUT_SIZE*max_number_of_images_in_around_a_sampling_point+1;
@@ -226,114 +228,86 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
     /* Run --------------------------------------------------------------------- */
     void run()
     {   
-
         if (rank == 0)
         {
-            int N = max_number_of_images_in_around_a_sampling_point.size();
+            int N = mysampling.my_exp_img_per_sampling_point.size();
             int killed_jobs=0;
             int index=0;
             int tip=-1;
             int number_of_processed_images=0;
             int stopTagsSent =0;
-            int total_number_of_images=DFexp.dataLineNo()
+            int total_number_of_images=DFexp.dataLineNo();
+total_number_of_images=3;
             while(1)
             {
                 //Wait until any message arrives
                 //be aware that mpi_Probe will block the program untill a message is received
-#ifdef DEBUG
-std::cerr << "Mp1 waiting for any  message " << std::endl;
-#endif
+                #define DEBUG
+                #ifdef DEBUG
+                std::cerr << "Mp1 waiting for any  message " << std::endl;
+                #endif
                 MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-#ifdef DEBUG
-std::cerr << "Mp2 received tag from worker " <<  status.MPI_SOURCE << std::endl;
-#endif
+                #ifdef DEBUG
+                std::cerr << "Mp2 received tag from worker " <<  status.MPI_SOURCE << std::endl;
+                #endif
                 // worker is free
                 if (status.MPI_TAG == TAG_FREEWORKER)
-                   {
-                   MPI_Recv(&tip, 1, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
+                {
+                    MPI_Recv(&tip, 1, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
                          MPI_COMM_WORLD, &status);
+                    #ifdef DEBUG
+                    std::cerr << "Mr3 received TAG_FREEWORKER from worker " <<  status.MPI_SOURCE 
+                              << "with tip= " << tip
+                              << std::endl;
+                    #endif
+                    if(number_of_processed_images==total_number_of_images)
+                        {
+                        MPI_Send(0, 0, MPI_INT, status.MPI_SOURCE, TAG_STOP, MPI_COMM_WORLD);
+                        stopTagsSent++;
+                        #ifdef DEBUG
+                        std::cerr << "Ms4 sent stop tag to worker " <<  status.MPI_SOURCE << std::endl
+                                 << std::endl;
+                        #endif
+                        break;
+                        }
+MPI_Send(0, 0, MPI_INT, status.MPI_SOURCE, TAG_WORKFORWORKER, MPI_COMM_WORLD);
+number_of_processed_images++;//////////////////////
 #ifdef DEBUG
-std::cerr << "Mp3 received tag from worker " <<  status.MPI_SOURCE << std::endl
-          << "with tip= " << tip
+std::cerr << "Ms5 sent TAG_WORKFORWORKER for " <<  status.MPI_SOURCE << std::endl
           << std::endl;
 #endif
-
-                   if(number_of_processed_images==total_number_of_images)
-                       {
-                       MPI_Send(0, 0, MPI_INT, status.MPI_SOURCE, TAG_STOP, MPI_COMM_WORLD);
-                       stopTagsSent++;
-                       break;
-                       }
-#ifdef DEBUG
-std::cerr << "Mp4 sent stop tag to worker " <<  status.MPI_SOURCE << std::endl
-          << std::endl;
-#endif
-                    if(tip==-1)
-                    {
-                        index=index%N;
-                    }
-                    else
-                        index=tip
-                    while( max_number_of_images_in_around_a_sampling_point[index%N].size()<0)
-                        index++;
-
-                    int number_of_images_to_transfer=MIN(
-                                                max_number_of_images_in_around_a_sampling_point[index].size,
-                                                mpi_job_size);
-
-                    input_images[0]=index%N;
-                    input_images[1]=number_of_images_to_transfer;
+                }//TAG_FREEWORKER
+            }//while       
 
 
-                    for(int k=2;k<number_of_images_to_transfer+2;k++)
-                       {
-                       number_of_processed_images++;
-                       input_images[k]=max_number_of_images_in_around_a_sampling_point.back();
-                       max_number_of_images_in_around_a_sampling_point.pop_back()
-                       }
-                    MPI_Send(input_images,
-                             number_of_images_to_transfer+2,
-                             MPI_INT, 
-                             status.MPI_SOURCE,
-                             TAG_WORKFORWORKER,
-                             MPI_COMM_WORLD)
-                    index++;
-
-#ifdef DEBUG
-std::cerr << "Ms_s send work for worker " <<  status.MPI_SOURCE << std::endl;
-#endif
-                    }//TAG_FREEWORKER
-              }//while end  
-              
               while (stopTagsSent < (nProcs-1))
               {
-                  MPI_Recv(0, 0, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
+                  MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+                  MPI_Recv(&tip, 1, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
                         MPI_COMM_WORLD, &status);
-#ifdef DEBUG
-std::cerr << "Mr received TAG_FREEWORKER from worker " <<  status.MPI_SOURCE << std::endl;
-std::cerr << "Ms sent TAG_STOP to worker" << status.MPI_SOURCE << std::endl;
-#endif
+                  #ifdef DEBUG
+                  std::cerr << "Mr received TAG_FREEWORKER from worker " <<  status.MPI_SOURCE << std::endl;
+                  std::cerr << "Ms sent TAG_STOP to worker" << status.MPI_SOURCE << std::endl;
+                  #endif
                   MPI_Send(0, 0, MPI_INT, status.MPI_SOURCE, TAG_STOP, MPI_COMM_WORLD);
                   stopTagsSent++;
               }         
-                  
-         }
+
+
+        }
         else //rank !=0
         {
         // Select only relevant part of selfile for this rank
         // job number
         // job size
         // aux variable
-        worker_tip=-1;;
+        int worker_tip=-1;;
             while (1)
             {
-                int jobNumber=0;
                 MPI_Send(&worker_tip, 1, MPI_INT, 0, TAG_FREEWORKER, MPI_COMM_WORLD);
-//#define DEBUG
 #ifdef DEBUG
 std::cerr << "W" << rank << " " << "sent TAG_FREEWORKER to master " << std::endl;
 #endif
-#undef DEBUG
                 //get your next task
                 MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 #ifdef DEBUG
@@ -341,14 +315,11 @@ std::cerr << "W" << rank << " " << "probe MPI_ANY_TAG " << std::endl;
 #endif
                 if (status.MPI_TAG == TAG_STOP)//no more jobs exit
                     {
-                   //If I  do not read this tag
-                   //master will no further process
-                   //a posibility is a non-blocking send
-                   MPI_Recv(0, 0, MPI_INT, 0, TAG_STOP,
+                    //If I  do not read this tag
+                    //master will no further process
+                    //a posibility is a non-blocking send
+                    MPI_Recv(0, 0, MPI_INT, 0, TAG_STOP,
                          MPI_COMM_WORLD, &status);
-#ifdef DEBUG
-std::cerr << "Wr" << rank << " " << "TAG_STOP" << std::endl;
-#endif
                     break;
                     }
                 if (status.MPI_TAG == TAG_WORKFORWORKER)
@@ -362,17 +333,13 @@ std::cerr << "Wr" << rank << " " << "TAG_STOP" << std::endl;
                              TAG_WORKFORWORKER, 
                              MPI_COMM_WORLD, 
                              &status);
-get dat and call the program, unpack it and call the program
-                    }
-                else
-                    {
-                    std::cerr << "3) Recived unknown TAG I quit" << std::endl;
-                    exit(0);
-                    }           
-             }
-        }
+#ifdef DEBUG
+std::cerr << "Wr" << rank << " " << "TAG_WORKFORWORKER" << std::endl;
+#endif
+                    }         
+            }
+        }    
         MPI_Finalize();
-
     }
 
     /* a short function to print a message and exit */
@@ -434,6 +401,5 @@ int main(int argc, char *argv[])
         std::cerr << XE;
         exit(1);
     }
-    
     exit(0);
 }
