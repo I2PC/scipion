@@ -1617,7 +1617,7 @@ void XmippSampling::find_closest_sampling_point(FileName FnexperimentalImages,
         my_dotProduct=-2; 
         for (int k = 0; k < R_repository.size(); k++,i++)
         {
-#ifdef  DEBUG3
+        #ifdef  DEBUG3
         //experimental points plus symmetry
         if( i>(exp_image*R_repository.size()-1) && i< ((exp_image+1)*R_repository.size()))
             {
@@ -1625,8 +1625,7 @@ void XmippSampling::find_closest_sampling_point(FileName FnexperimentalImages,
                        <<  ".sphere "   << exp_data_projection_direction_by_L_R[i].transpose()  
 		               <<  " .019"      << std::endl;
             }
-#endif
-        
+        #endif
             for(int j=0;j< no_redundant_sampling_points_vector.size();j++)
             {
                 my_dotProduct_aux =
@@ -1668,6 +1667,113 @@ void XmippSampling::find_closest_sampling_point(FileName FnexperimentalImages,
 #endif
 #undef DEBUG3
 }
+
+void XmippSampling::find_closest_experimental_point(FileName FnexperimentalImages)
+{
+    double my_dotProduct,my_dotProduct_aux;
+    Matrix1D<double>  row(3),direction(3);
+    double my_dotProduct_winner=2.;
+    int winner_sampling=-1;
+    int winner_exp_L_R=-1;
+    int winner_exp=-1;
+    //#define CHIMERA
+    #ifdef CHIMERA
+    std::vector<std::vector<int> >  aux_vec;
+    aux_vec.resize(no_redundant_sampling_points_vector.size());
+    #endif
+    
+    //resize vector
+    my_exp_img_per_sampling_point.resize(
+                    no_redundant_sampling_points_vector.size());
+    
+    for(int i=0,l=0;i< exp_data_projection_direction_by_L_R.size();l++)
+    {
+        my_dotProduct=-2; 
+        for (int k = 0; k < R_repository.size(); k++,i++)
+        {
+            for(int j=0;j< no_redundant_sampling_points_vector.size();j++)
+            {
+                my_dotProduct_aux =
+                dotProduct(exp_data_projection_direction_by_L_R[i],
+                            no_redundant_sampling_points_vector[j]);
+
+                if ( my_dotProduct_aux > my_dotProduct)
+                {
+		            my_dotProduct = my_dotProduct_aux;
+		            winner_sampling = j;
+                    #ifdef CHIMERA
+                    winner_exp_L_R  = i;
+                    #endif
+                    winner_exp = l;
+                }
+            }//for j
+        }//for k
+        my_exp_img_per_sampling_point[winner_sampling].push_back(winner_exp);
+        #ifdef CHIMERA
+        aux_vec[winner_sampling].push_back(winner_exp_L_R);
+        #endif
+    }//for i my_exp_img_per_sampling_point
+    #ifdef CHIMERA
+    std::ofstream filestr; 
+    filestr.open ("find_closest_experimental_point.bild");
+    filestr    << ".color white" 
+	      << std::endl
+	      << ".sphere 0 0 0 .95"
+	      << std::endl
+	      ;
+    filestr    << ".color red" 
+	      << std::endl
+	      ;
+    for (int i = 0;
+	i < no_redundant_sampling_points_vector.size();
+	i++)
+    {
+        filestr    <<  ".sphere " << no_redundant_sampling_points_vector[i].transpose()  << 
+	              " .018" << std::endl;
+    }
+    int my_sample_point=166;
+    filestr    << ".color green" 
+	      << std::endl
+	      ;
+    int ii;      
+    for (int i = 0;
+	i < my_exp_img_per_sampling_point[my_sample_point].size();
+	i++)
+    {   
+        ii=aux_vec[my_sample_point][i];
+        filestr    << ".sphere " 
+                   << exp_data_projection_direction_by_L_R[ii].transpose()  
+                   << " .017" << std::endl;
+    }
+    filestr.close();
+
+    #endif
+    #undef CHIMERA
+    //#define DEBUG4
+    #ifdef DEBUG4
+    std::ofstream filestr; 
+    filestr.open ("find_closest_experimental_point.txt");
+    
+    for (int i = 0;
+	i < my_exp_img_per_sampling_point.size();
+	i++)
+    {   //for each sampling point write its experimental images
+        filestr << i << std::endl;
+        for (int j = 0;
+	    j < my_exp_img_per_sampling_point[i].size();
+	    j++)
+        {   
+            filestr    << my_exp_img_per_sampling_point[i][j]  
+                       << " " ;
+        }
+        filestr << std::endl;
+    }
+    filestr.close();
+    
+    #endif
+    #undef DEBUG4
+}
+
 void XmippSampling::fill_L_R_repository(void)
 {
     Matrix2D<double>  L(4, 4), R(4, 4);

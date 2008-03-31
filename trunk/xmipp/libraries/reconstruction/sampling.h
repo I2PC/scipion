@@ -80,6 +80,8 @@ public:
 
     /** vector with neighbors */
     std::vector<std::vector<int> >  my_neighbors;
+    /** vector with experimental images per sampling point */
+    std::vector<std::vector<int> >  my_exp_img_per_sampling_point;
 #ifdef MYPSI    
     /** vector with neighbors psi*/
     std::vector<std::vector<double> > my_neighbors_psi;
@@ -252,6 +254,11 @@ public:
    /** Find the closest sampling point for a docfile of experimental projections*/   
    void find_closest_sampling_point(FileName FnexperimentalImages,
                                     FileName output_file_root);
+
+   /**for each sampling point find the experimental images
+      closer to that point than to any other */
+   void  find_closest_experimental_point(FileName FnexperimentalImages);
+
    /** Precalculate exp_data by symmetry matrices (speeds up calculations)*/
    void fill_exp_data_projection_direction_by_L_R(FileName FnexperimentalImages);
 };
