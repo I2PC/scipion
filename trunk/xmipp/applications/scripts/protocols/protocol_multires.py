@@ -490,8 +490,8 @@ class MultiResClass:
 
           self.createDirectory(self.getDiscreteAnglesSummaryDir(_iteration))
           launch_parallel_job.launch_job(self.doParallel,
-                                         "xmipp_create_projection_library",
-                                         "xmipp_mpi_create_projection_library",
+                                         "xmipp_angular_project_library",
+                                         "xmipp_mpi_angular_project_library",
                                          params0,
                                          self.mylog,
                                          self.myNumberOfCPUs,
