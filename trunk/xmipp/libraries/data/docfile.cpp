@@ -1334,3 +1334,39 @@ void select_images(DocFile& doc, SelFile& sel, int col, bool en_limit0,
         doc.next_data_line();
     }
 }
+
+void get_subset_docfile(DocFile& DFin, SelFile& SF, DocFile& DFout)
+{
+
+    DocLine DL;
+    FileName fn_tmp;
+
+    DFout.clear();
+    DFin.go_beginning();
+    DL = DFin.get_current_line();
+    if (DL.Is_comment()) 
+	fn_tmp = DL.get_text();
+    if (strstr(fn_tmp.c_str(), "Headerinfo") == NULL)
+	REPORT_ERROR(1607,"Input docfile is not of NewXmipp-style");
+    else
+	// append the same header to DFout
+	DFout.append_comment(fn_tmp);
+
+    SF.go_beginning();
+    while (!SF.eof())
+    {
+	fn_tmp = SF.NextImg();
+	if (DFin.search_comment(fn_tmp))
+	{
+            DFout.append_comment(fn_tmp);
+	    DL=DFin.get_current_line();
+            DFout.append_line(DL);
+	}
+	else
+	{
+	    REPORT_ERROR(1608, (std::string)"Docfile: Cannot find " + fn_tmp + " in docfile ");
+	}
+    }
+    
+}
+

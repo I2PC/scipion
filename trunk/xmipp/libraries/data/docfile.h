@@ -1243,4 +1243,16 @@ void select_images(DocFile& DF,
                    bool en_limitF,
                    double limitF);
 
+/** Get a docfile containing only those images in the input selfile
+ * @ingroup DocFileHelpful
+ *
+ * For this to work, the docfile should be in NewXmipp-like format
+ * with all filenames in comments above each line
+ * The docfile may contain more images than the selfile, but all
+ * images in the selfile should be present in the input docfile.
+ * The output docfile has the same order of images as the input selfile.
+ */
+void get_subset_docfile(DocFile& DFin,
+			SelFile& SF,
+			DocFile& DFout);
 #endif
