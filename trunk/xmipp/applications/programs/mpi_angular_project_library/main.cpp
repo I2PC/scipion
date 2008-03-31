@@ -26,7 +26,7 @@
 //#include "mpi_run.h"
 
 #include <data/args.h>
-#include <reconstruction/create_projection_library.h>
+#include <reconstruction/angular_project_library.h>
 #include <data/header.h>
 
 #include <cstring>
@@ -43,7 +43,7 @@
 #define TAG_WAIT   2
 #define TAG_FREEWORKER   3
 
-class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_library_Parameters
+class Prog_mpi_angular_project_library_Parameters:Prog_angular_project_library_Parameters
 {
     public:
     //int rank, size, num_img_tot;
@@ -68,7 +68,7 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
         bool verbose;
 
     /*  constructor ------------------------------------------------------- */
-    Prog_mpi_create_projection_library_Parameters()
+    Prog_mpi_angular_project_library_Parameters()
     {
         //parent class constructor will be called by deault without parameters
         MPI_Comm_size(MPI_COMM_WORLD, &(nProcs));
@@ -84,14 +84,14 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
     /* Read parameters --------------------------------------------------------- */
     void read(int argc, char **argv)
     {
-        Prog_create_projection_library_Parameters::read(argc,argv);
+        Prog_angular_project_library_Parameters::read(argc,argv);
         mpi_job_size=textToInteger(getParameter(argc,argv,"-mpi_job_size","-1"));
     }
 
     /* Usage ------------------------------------------------------------------- */
     void usage()
     {
-        Prog_create_projection_library_Parameters::usage();
+        Prog_angular_project_library_Parameters::usage();
         std::cerr << " [ -mpi_job_size default=-1]    : Number of images sent to a cpu in a single job \n";
         std::cerr << "                                  10 may be a good value";
         std::cerr << "                                  if  -1 the computer will put the maximum";
@@ -102,7 +102,7 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
     /* Show -------------------------------------------------------------------- */
     void show()
     {
-        Prog_create_projection_library_Parameters::show();
+        Prog_angular_project_library_Parameters::show();
 	std::cerr << " Size of mpi jobs " << mpi_job_size <<std::endl;
     }
 
@@ -129,7 +129,7 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
     //all ranks
     mysampling.SetSampling(sampling);
 	if (!mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
-	     REPORT_ERROR(3005, (std::string)"create_projection_library::run Invalid symmetry" +  fn_sym);//set sampling must go before set noise
+	     REPORT_ERROR(3005, (std::string)"angular_project_library::run Invalid symmetry" +  fn_sym);//set sampling must go before set noise
     if(angular_distance_bool!=0)	
         mysampling.SetNeighborhoodRadius(angular_distance);//irelevant
 
@@ -361,7 +361,7 @@ std::cerr << "0\n";
     //size of the mpi block, number of images
     //mpi_job_size=!checkParameter(argc,argv,"-mpi_job_size","-1");
    
-    Prog_mpi_create_projection_library_Parameters prm;
+    Prog_mpi_angular_project_library_Parameters prm;
     try
     {
         prm.read(argc, argv);
