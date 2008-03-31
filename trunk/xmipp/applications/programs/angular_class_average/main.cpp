@@ -34,9 +34,8 @@ int main(int argc, char **argv)
 {
     Prog_angular_class_average_prm  prm;
 
-    int              i, nmax, nr_ref, isplit;
+    int              i, nmax, nr_ref;
     double           lib_rot, lib_tilt, rot, tilt, psi, xshift, yshift, mirror;
-    double           w, sumw;
     SelFile          SFclasses, SFclasses1, SFclasses2;
     FileName         fn_tmp;
 
@@ -66,7 +65,6 @@ int main(int argc, char **argv)
 	SFclasses.clear();
 	SFclasses1.clear();
 	SFclasses2.clear();
-	sumw = 0.;
 
 	nr_ref = prm.DFlib.dataLineNo();
 	init_progress_bar(nr_ref);
@@ -79,8 +77,7 @@ int main(int argc, char **argv)
 	    lib_rot = prm.DFlib(ABS(prm.col_rot) - 1);
 	    lib_tilt = prm.DFlib(ABS(prm.col_tilt) - 1);
 	    
-	    prm.processOneClass(dirno, lib_rot, lib_tilt, w, isplit);
-	    sumw += w;
+	    prm.processOneClass(dirno, lib_rot, lib_tilt);
 
             fn_tmp.compose(prm.fn_out,dirno,"xmp");
             SFclasses.insert(fn_tmp);
@@ -106,13 +103,6 @@ int main(int argc, char **argv)
 	    fn_tmp=prm.fn_out2+"es.sel";
 	    SFclasses2.write(fn_tmp);
 	}
-
-	if (ROUND(sumw) != prm.DF.dataLineNo())
-	{
-	    std::cerr<<"sumw= "<<sumw<<" DF.dataLineNo()= "<<prm.DF.dataLineNo()<<std::endl;
-	    REPORT_ERROR(1,"ERROR: there were images in the input docfile with rot and tilt angles that were not in the library!! Dont trust the averages and selfiles!");
-	}
-
     }
     catch (Xmipp_error XE)
     {

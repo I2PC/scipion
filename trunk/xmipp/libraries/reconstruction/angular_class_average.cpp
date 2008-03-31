@@ -56,6 +56,18 @@ void Prog_angular_class_average_prm::read(int argc, char **argv)  {
 	col_yshift = 5;
     }
 
+    do_limit0=checkParameter(argc, argv, "-limit0");
+    if (do_limit0)
+    {
+	limit0 = textToFloat(getParameter(argc, argv, "-limit0"));
+    }
+    if (do_limitF)
+    {
+	limitF = textToFloat(getParameter(argc, argv, "-limitF"));
+    }
+    col_select = textToInteger(getParameter(argc, argv, "-select", "8"));
+    
+
     // Also assign weights or mirror flags?
     do_mirrors = checkParameter(argc, argv, "-mirror");
     if (do_mirrors)
@@ -76,7 +88,11 @@ void Prog_angular_class_average_prm::show() {
 	std::cerr << "     -> Split data in random halves and output class averages "<<std::endl;
     if (do_mirrors)
 	std::cerr << "     -> Take mirror operation into account "<<std::endl;
-    
+    if (do_limit0)
+	std::cerr << "     -> Discard images with value in column "<<col_select<<" below "<<limit0<<std::endl;
+    if (do_limitF)
+	std::cerr << "     -> Discard images with value in column "<<col_select<<" above "<<limitF<<std::endl;
+
     std::cerr << " ================================================================="<<std::endl;
 
 }
@@ -97,6 +113,9 @@ void Prog_angular_class_average_prm::usage() {
            "                           : Note that rot & tilt are used to determine the classes \n"
            "                           : and psi, xoff & yoff are applied to calculate the class averages\n");
     printf("       [-mirror <col_m=7>] : Apply mirror operation (from docfile column col_m) (0=no-flip; 1=flip)\n");
+    printf("       [-select <col_s=8>] : Column number to use for limit0/F selection\n");
+    printf("       [-limit0 <limit0>]  : Values in column <col_s> below this are discarded\n");
+    printf("       [-limitF <limitF>]  : Values in column <col_s> above this are discarded\n");
     exit(1);
 }
 
@@ -133,18 +152,16 @@ void Prog_angular_class_average_prm::produceSideInfo() {
 
 void Prog_angular_class_average_prm::processOneClass(int &dirno, 
 						     double &lib_rot, 
-						     double &lib_tilt,
-                                                     double &w,
-                                                     int &isplit) {
+						     double &lib_tilt) {
 
     ImageXmipp img, avg, avg1, avg2;
     FileName   fn_img, fn_tmp;
     SelFile    SFclass, SFclass1, SFclass2;
-    double     w1 = 0., w2 = 0.;
-    double     rot, tilt, psi, xshift, yshift, mirror;
+    double     w = 0., w1 = 0., w2 = 0.;
+    double     rot, tilt, psi, xshift, yshift, mirror, val;
+    int        isplit;
     Matrix2D<double> A(3,3);
 
-    w = 0.;
     avg=Iempty;
     SFclass.clear();
     if (do_split)
@@ -164,52 +181,57 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
 	if (DF.get_current_line().Is_comment()) fn_img = ((DF.get_current_line()).get_text()).erase(0, 3);
 	else  REPORT_ERROR(1, "Problem with NewXmipp-type document file");
 	DF.adjust_to_data_line();
-	rot = DF(ABS(col_rot) - 1);
-	tilt = DF(ABS(col_tilt) - 1);
+	rot = DF(col_rot - 1);
+	tilt = DF(col_tilt - 1);
+	// Check for matching rot and tilt
 	if (ABS(rot-lib_rot) < 0.01 && ABS(tilt-lib_tilt)<0.01)
 	{
-	    // matching rot and tilt!
-	    psi    = DF(ABS(col_psi) - 1);
-	    xshift = DF(ABS(col_xshift) - 1);
-	    yshift = DF(ABS(col_yshift) - 1);
-	    if (do_mirrors) mirror = DF(ABS(col_mirror) - 1);
-	    img.read(fn_img, false, false, false, false);
-	    img().setXmippOrigin();
-	    img.set_eulerAngles((float)0., (float)0., (float)psi);
-	    img.set_originOffsets(xshift, yshift);
-	    if (do_mirrors) img.flip() = mirror;
-
-	    // Apply in-plane transformation
-	    A = img.get_transformation_matrix();
-	    if (!A.isIdentity())
-		img().selfApplyGeometryBSpline(A, 3, IS_INV,WRAP);
-
-	    // Add to average
-	    avg() += img();
-	    w+= 1.;
-	    SFclass.insert(fn_img);
-
-	    // Add to split averages
-	    if (do_split)
+	    bool is_select = true;
+	    val = DF(col_select - 1);
+	    if ( (do_limit0 && val < limit0) || (do_limitF && val > limitF) ) is_select = false;
+	    if (is_select)
 	    {
-		isplit = ROUND(rnd_unif());
-		if (isplit==0)
+		psi    = DF(col_psi - 1);
+		xshift = DF(col_xshift - 1);
+		yshift = DF(col_yshift - 1);
+		if (do_mirrors) mirror = DF(col_mirror - 1);
+		img.read(fn_img, false, false, false, false);
+		img().setXmippOrigin();
+		img.set_eulerAngles((float)0., (float)0., (float)psi);
+		img.set_originOffsets(xshift, yshift);
+		if (do_mirrors) img.flip() = mirror;
+
+		// Apply in-plane transformation
+		A = img.get_transformation_matrix();
+		if (!A.isIdentity())
+		    img().selfApplyGeometryBSpline(A, 3, IS_INV,WRAP);
+		
+		// Add to average
+		avg() += img();
+		w+= 1.;
+		SFclass.insert(fn_img);
+
+		// Add to split averages
+		if (do_split)
 		{
-		    avg1() += img();
-		    w1 += 1.;
-		    SFclass1.insert(fn_img);
-		}
-		else
-		{
-		    avg2() += img();
-		    w2 += 1.;
-		    SFclass2.insert(fn_img);
+		    isplit = ROUND(rnd_unif());
+		    if (isplit==0)
+		    {
+			avg1() += img();
+			w1 += 1.;
+			SFclass1.insert(fn_img);
+		    }
+		    else
+		    {
+			avg2() += img();
+			w2 += 1.;
+			SFclass2.insert(fn_img);
+		    }
 		}
 	    }
-
 	}
     }
- 
+	
     // Write output files
     if (w > 0.)
     {

@@ -49,7 +49,11 @@ public:
     /** Output rootnames */
     FileName         fn_out, fn_out1, fn_out2;
     /** Column numbers */
-    int               col_rot, col_tilt, col_psi, col_xshift, col_yshift, col_mirror;          
+    int              col_rot, col_tilt, col_psi, col_xshift, col_yshift, col_mirror, col_select;          
+    /** Upper and lower selection limits */
+    double           limit0, limitF;
+    /** Flags wether to use limit0 and limitF selection */
+    bool             do_limit0, do_limitF;
     /** Flag whether to apply mirror operations */
     bool             do_mirrors;
     /** Flag whether also to write out class averages of random halves of the data */
@@ -73,9 +77,7 @@ public:
   /** Process a single class */
   void processOneClass(int &dirno, 
 		       double &lib_rot, 
-		       double &lib_tilt,
-		       double &w,
-		       int &isplit);
+		       double &lib_tilt);
 
 };				
 //@}
