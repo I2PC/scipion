@@ -72,7 +72,7 @@ int main(int argc, char **argv)
 	for (int i = 0; i < nr_images; i++)
 	{
 
-	    prm.DFexp.locate(output_values[i*MY_OUPUT_SIZE+1]+1);
+	    prm.DFexp.locate(round(output_values[i*MY_OUPUT_SIZE+1]+1));
 	    prm.DFexp.previous();
 	    fn_tmp = ((prm.DFexp.get_current_line()).get_text()).erase(0, 3);
 
