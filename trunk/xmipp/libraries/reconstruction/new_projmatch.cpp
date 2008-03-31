@@ -25,7 +25,7 @@
 
 #include "new_projmatch.h"
 //#define DEBUG
-#define TIMING
+//#define TIMING
 
 // Read arguments ==========================================================
 void Prog_new_projection_matching_prm::read(int argc, char **argv)  {
@@ -590,7 +590,7 @@ void Prog_new_projection_matching_prm::processSomeImages(int * my_images, double
       opt_yoff += img.Yoff();
 
       // Output
-      my_output[imgno * MY_OUPUT_SIZE + 1] = imgno;
+      my_output[imgno * MY_OUPUT_SIZE + 1] = this_image;
       my_output[imgno * MY_OUPUT_SIZE + 2] = opt_rot;
       my_output[imgno * MY_OUPUT_SIZE + 3] = opt_tilt;
       my_output[imgno * MY_OUPUT_SIZE + 4] = opt_psi;
