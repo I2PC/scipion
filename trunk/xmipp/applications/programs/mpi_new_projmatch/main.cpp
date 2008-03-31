@@ -240,10 +240,14 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
             int stopTagsSent =0;
             int total_number_of_images=DFexp.dataLineNo();
             Matrix1D<double>                 dataline(8);
-            DocFile DFo;
+            //DocFile DFo;
+            FileName                         fn_tmp;
             
-            DFo.clear();
-            DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Refno (6), Flip (7), maxCC (8)");
+            DFexp.go_beginning();
+            DFexp.remove_current();
+            DFexp.go_beginning();
+            DFexp.insert_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Refno (6), Flip (7), maxCC (8)");
+            DFexp.set(1,7,0);
             while(1)
             {
                 //Wait until any message arrives
@@ -270,21 +274,20 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
                     //create doc file
                     for (int i = 0; i < number; i++)
 	                {
-                        int imgNumber=round(output_values[i*MY_OUPUT_SIZE+1]);
-                        dataline(0)=output_values[i*MY_OUPUT_SIZE+2];
-	                    dataline(1)=output_values[i*MY_OUPUT_SIZE+3];
-	                    dataline(2)=output_values[i*MY_OUPUT_SIZE+4];
-	                    dataline(3)=output_values[i*MY_OUPUT_SIZE+5];
-	                    dataline(4)=output_values[i*MY_OUPUT_SIZE+6];
-	                    dataline(5)=output_values[i*MY_OUPUT_SIZE+7] + 1;
-	                    dataline(6)=output_values[i*MY_OUPUT_SIZE+8];
-	                    dataline(7)=output_values[i*MY_OUPUT_SIZE+9];
-	                    DFo.append_comment(integerToString(imgNumber));
-	                    DFo.append_data_line(dataline);
+                        int lineNumber=round(output_values[i*MY_OUPUT_SIZE+1]+1);
+	                    DFexp.locate(lineNumber);
+	                    DFexp.set(0,output_values[i*MY_OUPUT_SIZE+2]);
+	                    DFexp.set(1,output_values[i*MY_OUPUT_SIZE+3]);
+	                    DFexp.set(2,output_values[i*MY_OUPUT_SIZE+4]);
+	                    DFexp.set(3,output_values[i*MY_OUPUT_SIZE+5]);
+	                    DFexp.set(4,output_values[i*MY_OUPUT_SIZE+6]);
+	                    DFexp.set(5,output_values[i*MY_OUPUT_SIZE+7]+1);
+	                    DFexp.set(6,output_values[i*MY_OUPUT_SIZE+8]);
+	                    DFexp.set(7,output_values[i*MY_OUPUT_SIZE+9]);
                     }         
                 }
                 // worker is free
-                if (status.MPI_TAG == TAG_FREEWORKER)
+                else if (status.MPI_TAG == TAG_FREEWORKER)
                 {
                     MPI_Recv(&tip, 1, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
                          MPI_COMM_WORLD, &status);
@@ -312,8 +315,6 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
                     if(tip==-1)
                     {
                         index=index_counter;
-                        index_counter = index_counter++;
-                        index_counter = index_counter%N;
                     }
                     else
                         index=tip;
@@ -353,21 +354,53 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
                     }//TAG_FREEWORKER
             }//while       
 
-
-              while (stopTagsSent < (nProcs-1))
-              {
-                  MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-                  MPI_Recv(&tip, 1, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
-                        MPI_COMM_WORLD, &status);
-                  #ifdef DEBUG
-                  std::cerr << "Mr received TAG_FREEWORKER from worker " <<  status.MPI_SOURCE << std::endl;
-                  std::cerr << "Ms sent TAG_STOP to worker" << status.MPI_SOURCE << std::endl;
-                  #endif
-                  MPI_Send(0, 0, MPI_INT, status.MPI_SOURCE, TAG_STOP, MPI_COMM_WORLD);
-                  stopTagsSent++;
-              }
-        //close temperoal file with results               
-	    DFo.write(fn_root + ".doc");
+            while (stopTagsSent < (nProcs-1))
+            {
+                MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+                if (status.MPI_TAG == TAG_WORKFROMWORKER)
+                {
+                    MPI_Recv(output_values, 
+                             output_values_size, 
+                             MPI_DOUBLE, 
+                             MPI_ANY_SOURCE, 
+                             TAG_WORKFROMWORKER,
+                             MPI_COMM_WORLD, 
+                             &status);
+                    int number= round(output_values[0]/MY_OUPUT_SIZE);        
+                    //create doc file
+                    for (int i = 0; i < number; i++)
+	                {
+                        int lineNumber=round(output_values[i*MY_OUPUT_SIZE+1]+1);
+	                    DFexp.locate(lineNumber);
+	                    DFexp.set(0,output_values[i*MY_OUPUT_SIZE+2]);
+	                    DFexp.set(1,output_values[i*MY_OUPUT_SIZE+3]);
+	                    DFexp.set(2,output_values[i*MY_OUPUT_SIZE+4]);
+	                    DFexp.set(3,output_values[i*MY_OUPUT_SIZE+5]);
+	                    DFexp.set(4,output_values[i*MY_OUPUT_SIZE+6]);
+	                    DFexp.set(5,output_values[i*MY_OUPUT_SIZE+7]+1);
+	                    DFexp.set(6,output_values[i*MY_OUPUT_SIZE+8]);
+	                    DFexp.set(7,output_values[i*MY_OUPUT_SIZE+9]);
+                    }         
+                }
+                else if (status.MPI_TAG == TAG_FREEWORKER)
+                {
+                    MPI_Recv(&tip, 1, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
+                          MPI_COMM_WORLD, &status);
+                    #ifdef DEBUG
+                    std::cerr << "Mr received TAG_FREEWORKER from worker " <<  status.MPI_SOURCE << std::endl;
+                    std::cerr << "Ms sent TAG_STOP to worker" << status.MPI_SOURCE << std::endl;
+                    #endif
+                    MPI_Send(0, 0, MPI_INT, status.MPI_SOURCE, TAG_STOP, MPI_COMM_WORLD);
+                    stopTagsSent++;
+                }
+                else
+                {
+                    error_exit("Received unknown TAG I quit (master)");
+                }           
+                  
+            }
+            //close temperoal file with results               
+	        DFexp.write(fn_root + ".doc");
 
 
         }
@@ -382,7 +415,7 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
             {
                 int jobNumber=0;
                 MPI_Send(&worker_tip, 1, MPI_INT, 0, TAG_FREEWORKER, MPI_COMM_WORLD);
-                //#define DEBUG
+                #define DEBUG
                 #ifdef DEBUG
                 std::cerr << "W" << rank << " " << "sent TAG_FREEWORKER to master " << std::endl;
                 #endif
@@ -399,7 +432,8 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
                     MPI_Recv(0, 0, MPI_INT, 0, TAG_STOP,
                          MPI_COMM_WORLD, &status);
                     #ifdef DEBUG
-                    std::cerr << "Wr" << rank << " " << "TAG_STOP" << std::endl;
+                    std::cerr << "Wr" << rank 
+                              << " " << "TAG_STOP" << std::endl;
                     #endif
                     break;
                     }
@@ -416,8 +450,33 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
                              &status);
                     worker_tip =  input_images[0];
                     int number_of_transfered_images =  input_images[1];
+                    #ifdef DEBUG
+                    std::cerr << "Wr " << rank << " " << "TAG_WORKFROMWORKER" << std::endl;
+                    std::cerr << "\n rank, tip, input_images_size " 
+                              << rank 
+                              << " " 
+                              << worker_tip 
+                              << " "
+                              << input_images[1]
+                              << std::endl;
+                    for (int i=2; i < number_of_transfered_images+2 ; i++)
+                        std::cerr << input_images[i] << " " ;   
+                    std::cerr << std::endl;  
+                    #endif
                     /////////////
-                    processSomeImages(input_images,output_values);
+                    processSomeImages(&(input_images[1]),output_values);
+                    #ifdef DEBUG
+                    std::cerr << "Ws " << rank << " " << "TAG_WORKFROMWORKER" << std::endl;
+                    std::cerr << "\n rank, size " 
+                              << rank 
+                              << " " 
+                              << output_values[0]
+                              << std::endl;
+                    std::cerr << std::endl;    
+                    for (int i=0; i < output_values[0]; i++)
+                        std::cerr << output_values[i] << " " ;   
+                    std::cerr << std::endl;  
+                    #endif
                     MPI_Send(output_values,
                              output_values_size,
                              MPI_DOUBLE, 
@@ -425,23 +484,10 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
                              TAG_WORKFROMWORKER,
                              MPI_COMM_WORLD);
                     ///////////////
-                    #ifdef DEBUG
-                    std::cerr << "Wr" << rank << " " << "TAG_WORKFORWORKER" << std::endl;
-                    std::cerr << "\n rank, tip, size " 
-                              << rank 
-                              << " " 
-                              << worker_tip 
-                              << " "
-                              << number_of_transfered_images
-                              << std::endl;
-                    for (int i=2; i < number_of_transfered_images+2 ; i++)
-                        std::cerr << input_images[i] << " " ;   
-                    std::cerr << std::endl;    
-                    #endif
                     }
                 else
                     {
-                    error_exit("Received unknown TAG I quit");
+                    error_exit("Received unknown TAG I quit (worker)");
                     }           
              }//while(1)
         }//worker    
