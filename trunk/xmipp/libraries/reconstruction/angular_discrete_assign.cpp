@@ -178,9 +178,9 @@ void Prog_angular_predict_prm::produce_side_info(int rank)
         if (quiet) command += " -quiet";
         if (MPIversion)
             command=(std::string)"mpirun -np "+integerToString(numberOfProcessors)+
-                " `which xmipp_mpi_create_projection_library` -quiet "+command;
+                " `which xmipp_mpi_angular_project_library` -quiet "+command;
         else
-            command=(std::string)"xmipp_create_projection_library "+command;
+            command=(std::string)"xmipp_angular_project_library "+command;
         system(command.c_str());
         fn_ang = (std::string) "ref"+fn_random + "__angles.doc";
         fn_ref=(std::string) "ref"+fn_random + "_.sel";
