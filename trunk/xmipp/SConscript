@@ -345,7 +345,7 @@ ReconsSources = [
     'angular_neighbourhood.cpp',
     'angular_projection_matching.cpp',
     'angular_class_average.cpp',
-    'create_projection_library.cpp',
+    'angular_project_library.cpp',
     'crystal_angular_projection_matching.cpp',
     'art_crystal.cpp',
     'basic_art.cpp',
@@ -369,6 +369,7 @@ ReconsSources = [
     'mlf_align2d.cpp',
     'ml_refine3d.cpp',
 #    'mlf_tomo.cpp',
+#    'new_projmatch.cpp',
     'nma_alignment.cpp',
     'phantom.cpp',
     'phantom_create_random.cpp',
@@ -454,7 +455,8 @@ AddXmippProgram('angular_distance', ['XmippRecons'])
 AddXmippProgram('angular_distribution_show', ['XmippInterface'])
 AddXmippProgram('angular_neighbourhood', ['XmippRecons'])
 AddXmippProgram('angular_projection_matching', ['XmippRecons'])
-AddXmippProgram('create_projection_library', ['XmippRecons'])
+#AddXmippProgram('new_projmatch', ['XmippRecons'])
+AddXmippProgram('angular_project_library', ['XmippRecons'])
 AddXmippProgram('average')
 AddXmippProgram('break_symmetry',               ['XmippRecons'])
 # FIXME -Wno-deprecated
@@ -716,7 +718,8 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_angular_discrete_assign', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_create_projection_library', ['XmippRecons'])
+#    AddXmippMPIProgram('mpi_new_projmatch', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ml_align2d', ['XmippRecons'])
     AddXmippMPIProgram('mpi_mlf_align2d', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ml_refine3d', ['XmippRecons'])
