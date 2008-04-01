@@ -151,7 +151,7 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
         int max_number_of_images_in_around_a_sampling_point=0;
         if (rank == 0) 
         {
-            show();
+            //show();
             //read experimental doc file
             DFexp.read(fn_exp);
             //first set sampling rate
@@ -223,6 +223,10 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
         if (rank != 0)
         {
             produceSideInfo();
+	    if (rank == 1)
+	    {
+		show();
+	    }
         }
     }
 
@@ -415,7 +419,7 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
             {
                 int jobNumber=0;
                 MPI_Send(&worker_tip, 1, MPI_INT, 0, TAG_FREEWORKER, MPI_COMM_WORLD);
-                #define DEBUG
+                //#define DEBUG
                 #ifdef DEBUG
                 std::cerr << "W" << rank << " " << "sent TAG_FREEWORKER to master " << std::endl;
                 #endif
