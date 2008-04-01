@@ -66,7 +66,7 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
 
         /** classify the experimental data making voronoi regions
             with an hexagonal grid mapped onto a sphere surface */
-        int chuck_angular_distance;
+        int chunk_angular_distance;
                
         /** computing node number. Master=0 */
         int rank;
@@ -110,8 +110,8 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
     {
         Prog_new_projection_matching_prm::read(argc,argv);
         mpi_job_size=textToInteger(getParameter(argc,argv,"-mpi_job_size","10"));
-        chuck_angular_distance = checkParameter(argc, argv,"-chuck_angular_distance");
-        chuck_angular_distance = textToFloat(getParameter(argc, argv,"-chuck_angular_distance"));
+        chunk_angular_distance = checkParameter(argc, argv,"-chunk_angular_distance");
+        chunk_angular_distance = textToFloat(getParameter(argc, argv,"-chunk_angular_distance"));
         fn_sym = getParameter(argc, argv, "-sym","c1");
     }
 
@@ -122,7 +122,7 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
         std::cerr << " [ -mpi_job_size default=-1]    : Number of images sent to a cpu in a single job \n";
         std::cerr << "                                  10 may be a good value\n";
         std::cerr << "                                 if  -1 the computer will fill the value for you\n";
-        std::cerr << " [ -chuck_angular_distance N]    : sample the projection sphere with this \n";
+        std::cerr << " [ -chunk_angular_distance N]    : sample the projection sphere with this \n";
         std::cerr << "                                   sampling rate and create subsets of experimental\n";
         std::cerr << "                                   using the voronoi regions\n";
         std::cerr << "  [-sym cn]   :One of the 17 possible symmetries in\n"
@@ -140,7 +140,7 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
     {
         Prog_new_projection_matching_prm::show();
 	std::cerr << " Size of mpi jobs " << mpi_job_size <<std::endl
-              << " Sampling rate(chuck_angular_distance): " << chuck_angular_distance    << std::endl
+              << " Sampling rate(chunk_angular_distance): " << chunk_angular_distance    << std::endl
               << " Symmetry group:            " << fn_sym << std::endl
               ;
     }
@@ -155,7 +155,7 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
             //read experimental doc file
             DFexp.read(fn_exp);
             //first set sampling rate
-            mysampling.SetSampling(chuck_angular_distance);
+            mysampling.SetSampling(chunk_angular_distance);
             //create sampling points in the whole sphere
             mysampling.Compute_sampling_points(false,91.,-91.);
             //process the symmetry file
