@@ -530,20 +530,6 @@ int main(int argc, char *argv[])
         }
     }
     MPI_Barrier(MPI_COMM_WORLD);
-    if (prm.rank != 0)
-    {    
-        try
-        {
-            prm.read(argc, argv);
-        }
-
-        catch (Xmipp_error XE)
-        {
-            std::cerr << XE;
-            prm.usage();
-            MPI_Finalize();
-        }
-    }
     try
     {
         prm.preRun();
