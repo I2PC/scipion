@@ -538,6 +538,7 @@ int main(int argc, char *argv[])
     catch (Xmipp_error XE)
     {
         std::cerr << XE;
+        MPI_Finalize();
         exit(1);
     }
     exit(0);
