@@ -556,6 +556,16 @@ public:
      */
     int search_comment(std::string comment);
 
+    /** Search the entire file for the given string and remove all
+     * lines that contain this string apart from the first one
+     * @ingroup DocFilePointer
+     *
+     * @code
+     * if (DF.remove_multiple("Headerinfo")
+     * @endcode
+     */
+    int remove_multiple_strings(std::string pattern);
+
     /** Extract the comment's images' SelFile.
      * @ingroup DocFilePointer
      *

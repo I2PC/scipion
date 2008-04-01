@@ -498,6 +498,32 @@ int DocFile::search_comment(std::string comment)
     return 0;
 }
 
+int DocFile::remove_multiple_strings(std::string pattern)
+{
+    bool found_once = false;
+    go_beginning();
+    while (!eof())
+    {
+        if ((*current_line).Is_comment())
+        {
+            if (((*current_line).get_text()).find(pattern) < 
+		((*current_line).get_text()).size() )
+	    {
+		if (found_once)
+		{
+		    remove_current();
+		}
+		found_once = true;
+            }
+        }
+        next();
+    }
+
+    return 0;
+
+}
+
+
 void DocFile::get_selfile(SelFile& sel)
 {
     go_beginning();
