@@ -514,7 +514,7 @@ int main(int argc, char *argv[])
     //mpi_job_size=!checkParameter(argc,argv,"-mpi_job_size","-1");
 
     Prog_mpi_new_projection_matching_prm prm;
-    if (prm.rank == 0)
+    //if (prm.rank == 0)
     {    
         try
         {
@@ -524,8 +524,9 @@ int main(int argc, char *argv[])
         catch (Xmipp_error XE)
         {
             std::cerr << XE;
-            prm.usage();
-            exit(1);
+            if (prm.rank == 0)
+                prm.usage();
+            MPI_Finalize();
         }
     }
     MPI_Barrier(MPI_COMM_WORLD);
@@ -540,7 +541,7 @@ int main(int argc, char *argv[])
         {
             std::cerr << XE;
             prm.usage();
-            exit(1);
+            MPI_Finalize();
         }
     }
     try
