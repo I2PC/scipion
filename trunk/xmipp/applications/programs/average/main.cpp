@@ -34,11 +34,13 @@ public:
     VolumeXmipp sumV, sumV2;
     int         nI, nV;
     double      sumweight;
-    bool        set_weight, weighted_avg, more_options;
+    bool        set_weight, weighted_avg, more_options, only_avg, keep_first_header, is_first;
+    
 public:
     Statis_parameters()
     {
         nI = nV = 0;
+	is_first = true;
     }
     void final_process();
 
@@ -48,6 +50,8 @@ public:
         Prog_parameters::read(argc, argv);
         set_weight = checkParameter(argc, argv, "-set_weight");
         weighted_avg = checkParameter(argc, argv, "-weighted_avg");
+	only_avg = checkParameter(argc, argv, "-only_avg");
+	keep_first_header = checkParameter(argc, argv, "-keep_first_header");
         sumweight = 0.;
     }
 
@@ -59,6 +63,8 @@ public:
         {
             std::cerr << "  [-set_weight]             : for 2D-images: set weight in header of average to nr. of particles\n";
             std::cerr << "  [-weighted_avg]           : for 2D-images: use header weights in weighted average calculation\n";
+	    std::cerr << "  [-only_avg]               : Skip stddev calculation; Output average will be called rootname.xmp\n";
+	    std::cerr << "  [-keep_first_header]      : Set header of output images equal to header of first image (only for 2D!) \n";
         }
         std::cerr << std::endl;
         std::cerr << "Purpose: This program allows you to calculate the average and \n"
@@ -71,17 +77,38 @@ public:
 void process_img(ImageXmipp &img, const Prog_parameters *prm)
 {
     Statis_parameters *eprm = (Statis_parameters *) prm;
-    eprm->sumI().resize(img());
-    eprm->sumI2().resize(img());
+    if (eprm->keep_first_header)
+    {
+	if (eprm->is_first)
+	{
+	    eprm->sumI=img;
+	    eprm->sumI2=img;
+	    eprm->sumI().initZeros();
+	    eprm->sumI2().initZeros();
+	    eprm->is_first = false;
+	}
+    }
+    else
+    {
+	eprm->sumI().resize(img());
+	eprm->sumI2().resize(img());
+    }
     if (eprm->weighted_avg)
     {
         img() *= img.weight();
         eprm->sumweight += img.weight();
     }
+
     FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img())
     {
         MULTIDIM_ELEM(eprm->sumI(), i) += MULTIDIM_ELEM(img(), i);
-        MULTIDIM_ELEM(eprm->sumI2(), i) += MULTIDIM_ELEM(img(), i) * MULTIDIM_ELEM(img(), i);
+    }
+    if (!eprm->only_avg)
+    {
+	FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img())
+	{
+	    MULTIDIM_ELEM(eprm->sumI2(), i) += MULTIDIM_ELEM(img(), i) * MULTIDIM_ELEM(img(), i);
+	}
     }
     eprm->nI++;
 }
@@ -94,23 +121,35 @@ void process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
     FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(vol())
     {
         MULTIDIM_ELEM(eprm->sumV(), i) += MULTIDIM_ELEM(vol(), i);
-        MULTIDIM_ELEM(eprm->sumV2(), i) += MULTIDIM_ELEM(vol(), i) * MULTIDIM_ELEM(vol(), i);
+    }
+    if (!eprm->only_avg)
+    {
+	FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(vol())
+	{
+	    MULTIDIM_ELEM(eprm->sumV2(), i) += MULTIDIM_ELEM(vol(), i) * MULTIDIM_ELEM(vol(), i);
+	}
     }
     eprm->nV++;
 }
 
 void Statis_parameters::final_process()
 {
-    FileName fn_root = fn_in.without_extension();
+    FileName fnt, fn_root = fn_in.without_extension();
     if (nI != 0)
     {
         FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(sumI())
         {
             MULTIDIM_ELEM(sumI(), i) /= nI;
-            MULTIDIM_ELEM(sumI2(), i) /= nI;
-            MULTIDIM_ELEM(sumI2(), i) -= MULTIDIM_ELEM(sumI(), i) * MULTIDIM_ELEM(sumI(), i);
-            MULTIDIM_ELEM(sumI2(), i) = sqrt(ABS(MULTIDIM_ELEM(sumI2(), i)));
         }
+	if (!only_avg)
+	{
+	    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(sumI())
+	    {
+		MULTIDIM_ELEM(sumI2(), i) /= nI;
+		MULTIDIM_ELEM(sumI2(), i) -= MULTIDIM_ELEM(sumI(), i) * MULTIDIM_ELEM(sumI(), i);
+		MULTIDIM_ELEM(sumI2(), i) = sqrt(ABS(MULTIDIM_ELEM(sumI2(), i)));
+	    }
+	}
         if (weighted_avg)
         {
             sumI() /= sumweight;
@@ -121,20 +160,40 @@ void Statis_parameters::final_process()
             sumI.weight() = (double)nI;
             std::cerr << " Setting weight in the header of the average image to " << integerToString(nI) << std::endl;
         }
-        sumI.write(fn_root + ".med.xmp");
-        sumI2.write(fn_root + ".sig.xmp");
+	if (only_avg)
+	{
+	    sumI.write(fn_root + ".xmp");
+	}
+	else
+	{
+	    sumI.write(fn_root + ".med.xmp");
+	    sumI2.write(fn_root + ".sig.xmp");
+	}
     }
     if (nV != 0)
     {
         FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(sumV())
         {
             MULTIDIM_ELEM(sumV(), i) /= nV;
-            MULTIDIM_ELEM(sumV2(), i) /= nV;
-            MULTIDIM_ELEM(sumV2(), i) -= MULTIDIM_ELEM(sumV(), i) * MULTIDIM_ELEM(sumV(), i);
-            MULTIDIM_ELEM(sumV2(), i) = sqrt(ABS(MULTIDIM_ELEM(sumV2(), i)));
         }
-        sumV.write(fn_root + ".med.vol");
-        sumV2.write(fn_root + ".sig.vol");
+	if (!only_avg)
+	{
+	    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(sumV())
+	    {
+		MULTIDIM_ELEM(sumV2(), i) /= nV;
+		MULTIDIM_ELEM(sumV2(), i) -= MULTIDIM_ELEM(sumV(), i) * MULTIDIM_ELEM(sumV(), i);
+		MULTIDIM_ELEM(sumV2(), i) = sqrt(ABS(MULTIDIM_ELEM(sumV2(), i)));
+	    }
+	}
+	if (only_avg)
+	{
+	    sumV.write(fn_root + ".vol");
+	}
+	else
+	{
+	    sumV.write(fn_root + ".med.vol");
+	    sumV2.write(fn_root + ".sig.vol");
+	}
     }
 }
 
