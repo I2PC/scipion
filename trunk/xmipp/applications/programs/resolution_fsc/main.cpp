@@ -91,7 +91,7 @@ void process_img(ImageXmipp &img, const Prog_parameters *prm)
     std::ofstream out(fn_dpr.c_str(), std::ios::out);
     std::ofstream out2(fn_frc.c_str(), std::ios::out);
     out  << "# Resol. [1/Ang]   DPR [deg]" << std::endl;
-    out2 << "# Resol. [1/Ang]      FRC      FRC_random_noise" << std::endl;
+    out2 << "# Resol. [1/Ang]      FRC      FRC_random_noise     Resol. [Ang]" << std::endl;
     FOR_ALL_ELEMENTS_IN_MATRIX1D(freq)
     {
         if (i > 0)
@@ -105,7 +105,9 @@ void process_img(ImageXmipp &img, const Prog_parameters *prm)
             out2.width(17);
             out2  << VEC_ELEM(frc, i);
             out2.width(17);
-            out2  << VEC_ELEM(frc_noise, i) << std::endl;
+            out2  << VEC_ELEM(frc_noise, i);
+            out2.width(17);
+            out2  << 1./VEC_ELEM(freq, i) << std::endl;
         }
     }
     out.close();
@@ -131,7 +133,7 @@ void process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
     std::ofstream out(fn_dpr.c_str(), std::ios::out);
     std::ofstream out2(fn_frc.c_str(), std::ios::out);
     out  << "# Resol. [1/Ang]   DPR [deg]" << std::endl;
-    out2 << "# Resol. [1/Ang]      FRC      FRC_random_noise" << std::endl;
+    out2 << "# Resol. [1/Ang]      FSC      FSC_random_noise     Resol. [Ang]" << std::endl;
     FOR_ALL_ELEMENTS_IN_MATRIX1D(freq)
     {
         if (i > 0)
@@ -145,7 +147,9 @@ void process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
             out2.width(17);
             out2  << VEC_ELEM(frc, i);
             out2.width(17);
-            out2  << VEC_ELEM(frc_noise, i) << std::endl;
+            out2  << VEC_ELEM(frc_noise, i);
+            out2.width(17);
+            out2  << 1./VEC_ELEM(freq, i) << std::endl;
         }
     }
     out.close();
