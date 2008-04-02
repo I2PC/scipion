@@ -44,7 +44,7 @@ void Prog_new_projection_matching_prm::read(int argc, char **argv)  {
   max_shift = textToFloat(getParameter(argc,argv,"-max_shift","-1"));
   avail_memory = textToFloat(getParameter(argc,argv,"-mem","1"));
   fn_ctf  = getParameter(argc,argv,"-ctf","");
-  phase_flipped = !checkParameter(argc, argv, "-not_phase_flipped");
+  phase_flipped = checkParameter(argc, argv, "-phase_flipped");
 
   // Hidden stuff
   verb=textToInteger(getParameter(argc,argv,"-verb","1"));
@@ -93,7 +93,10 @@ void Prog_new_projection_matching_prm::usage() {
   std::cerr << "Usage:  projection_matching [options] "<<std::endl;
   std::cerr << "   -i <docfile>            : Docfile with input images \n"
 	    << "   -ref <ref rootname=\"ref\"> : Rootname for reference projection files \n"
-	    << " [ -max_shift <float=-1> ]     : Max. change in origin offset (+/- pixels; neg= no limit) \n"
+            << " [ -search5d_shift <int=0> ]   : Search range (in +/- pix) for 5D shift search\n"
+            << " [ -search5d_step  <int=2> ]   : Step size for 5D shift search (in pix) \n"
+	    << " [ -Ri <float=1> ]             : Inner radius to limit rotational search \n"
+	    << " [ -Ro <float=dim/2 - 1> ]     : Outer radius to limit rotational search \n"
 	    << " [ -more_options ]             : Show all program options\n";
 }
 
@@ -101,12 +104,9 @@ void Prog_new_projection_matching_prm::usage() {
 void Prog_new_projection_matching_prm::extendedUsage() {
   std::cerr << "Additional options: \n"
             << " [ -mem <float=1> ]            : Available memory for reference library (Gb)\n"
-            << " [ -search5d_shift <int=0> ]   : Search range (in +/- pix) for 5D shift search\n"
-            << " [ -search5d_step  <int=2> ]   : Step size for 5D shift search (in pix) \n"
-	    << " [ -Ri <float=1> ]             : Inner radius to limit rotational search \n"
-	    << " [ -Ro <float=dim/2 - 1> ]     : Outer radius to limit rotational search \n"
+	    << " [ -max_shift <float=-1> ]     : Max. change in origin offset (+/- pixels; neg= no limit) \n"
 	    << " [ -ctf <ctfparam-file> ]      : Apply this CTF to the reference projections \n"
-	    << " [ -not_phase_flipped ]        : Use this if the experimental images have not been phase flipped \n";
+	    << " [ -phase_flipped ]            : Use this if the experimental images have been phase flipped\n";
   exit(1);
 }
 
