@@ -61,6 +61,7 @@ void Prog_angular_class_average_prm::read(int argc, char **argv)  {
     {
 	limit0 = textToFloat(getParameter(argc, argv, "-limit0"));
     }
+    do_limitF=checkParameter(argc, argv, "-limitF");
     if (do_limitF)
     {
 	limitF = textToFloat(getParameter(argc, argv, "-limitF"));
