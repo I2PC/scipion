@@ -60,6 +60,8 @@ public:
     bool             do_split;
     /** One empty image with correct dimensions */
     ImageXmipp       Iempty;
+    /** Skip writing of selfiles */
+    bool             dont_write_selfiles;
 
 public:
   /// Read arguments from command line

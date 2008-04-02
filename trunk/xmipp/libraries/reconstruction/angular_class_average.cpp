@@ -77,6 +77,8 @@ void Prog_angular_class_average_prm::read(int argc, char **argv)  {
     // Perform splitting of the data?
     do_split = checkParameter(argc, argv, "-split"); 
 
+    // Skip writing selfiles?
+    dont_write_selfiles = checkParameter(argc, argv, "-dont_write_selfiles"); 
 }
 
 // Show ====================================================================
@@ -93,6 +95,8 @@ void Prog_angular_class_average_prm::show() {
 	std::cerr << "     -> Discard images with value in column "<<col_select<<" below "<<limit0<<std::endl;
     if (do_limitF)
 	std::cerr << "     -> Discard images with value in column "<<col_select<<" above "<<limitF<<std::endl;
+    if (dont_write_selfiles)
+	std::cerr << "     -> Do not write class selfiles to disc "<<std::endl;
 
     std::cerr << " ================================================================="<<std::endl;
 
@@ -117,6 +121,7 @@ void Prog_angular_class_average_prm::usage() {
     printf("       [-select <col_s=8>] : Column number to use for limit0/F selection\n");
     printf("       [-limit0 <limit0>]  : Values in column <col_s> below this are discarded\n");
     printf("       [-limitF <limitF>]  : Values in column <col_s> above this are discarded\n");
+    printf("       [-dont_write_selfiles]  : Do not write class selfiles to disc\n");
     exit(1);
 }
 
@@ -252,8 +257,11 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
 	fn_tmp.compose(fn_out,dirno,"xmp");
 	avg.write(fn_tmp);
 	// Write class selfile to disc
-	fn_tmp.compose(fn_out,dirno,"sel");
-	SFclass.write(fn_tmp);
+	if (!dont_write_selfiles)
+	{
+	    fn_tmp.compose(fn_out,dirno,"sel");
+	    SFclass.write(fn_tmp);
+	}
     }
 
     if (do_split)
@@ -272,9 +280,12 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
 	    // Write class ave1rage to disc
 	    fn_tmp.compose(fn_out1,dirno,"xmp");
 	    avg1.write(fn_tmp);
-	    // Write class selfile to disc
-	    fn_tmp.compose(fn_out1,dirno,"sel");
-	    SFclass1.write(fn_tmp);
+	    if (!dont_write_selfiles)
+	    {
+		// Write class selfile to disc
+		fn_tmp.compose(fn_out1,dirno,"sel");
+		SFclass1.write(fn_tmp);
+	    }
 	}
 	if (w2 > 0.)
 	{
@@ -290,9 +301,12 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
 	    // Write class ave1rage to disc
 	    fn_tmp.compose(fn_out2,dirno,"xmp");
 	    avg2.write(fn_tmp);
-	    // Write class selfile to disc
-	    fn_tmp.compose(fn_out2,dirno,"sel");
-	    SFclass2.write(fn_tmp);
+	    if (!dont_write_selfiles)
+	    {
+		// Write class selfile to disc
+		fn_tmp.compose(fn_out2,dirno,"sel");
+		SFclass2.write(fn_tmp);
+	    }
 	}
     }
 }
