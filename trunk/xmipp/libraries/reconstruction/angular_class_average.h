@@ -77,7 +77,10 @@ public:
   /** Process a single class */
   void processOneClass(int &dirno, 
 		       double &lib_rot, 
-		       double &lib_tilt);
+		       double &lib_tilt,
+		       double &w,
+		       double &w1,
+		       double &w2);
 
 };				
 //@}

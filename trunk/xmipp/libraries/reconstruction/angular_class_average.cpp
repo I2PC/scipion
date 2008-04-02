@@ -153,16 +153,19 @@ void Prog_angular_class_average_prm::produceSideInfo() {
 
 void Prog_angular_class_average_prm::processOneClass(int &dirno, 
 						     double &lib_rot, 
-						     double &lib_tilt) {
+						     double &lib_tilt,
+                                                     double &w,
+                                                     double &w1,
+                                                     double &w2) {
 
     ImageXmipp img, avg, avg1, avg2;
     FileName   fn_img, fn_tmp;
     SelFile    SFclass, SFclass1, SFclass2;
-    double     w = 0., w1 = 0., w2 = 0.;
     double     rot, tilt, psi, xshift, yshift, mirror, val;
     int        isplit;
     Matrix2D<double> A(3,3);
 
+    w = 0., w1 = 0., w2 = 0.;
     avg=Iempty;
     SFclass.clear();
     if (do_split)
@@ -240,18 +243,18 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
 	{
 	    MULTIDIM_ELEM(avg(), i) /= w;
 	}
+	avg.clear_header();
+	avg.set_eulerAngles((float)lib_rot, (float)lib_tilt, (float)0.);
+	avg.set_originOffsets(0., 0.);
+	avg.flip() = 0.;
+	avg.weight() = w;
+	// Write class average to disc
+	fn_tmp.compose(fn_out,dirno,"xmp");
+	avg.write(fn_tmp);
+	// Write class selfile to disc
+	fn_tmp.compose(fn_out,dirno,"sel");
+	SFclass.write(fn_tmp);
     }
-    avg.clear_header();
-    avg.set_eulerAngles((float)lib_rot, (float)lib_tilt, (float)0.);
-    avg.set_originOffsets(0., 0.);
-    avg.flip() = 0.;
-    avg.weight() = w;
-    // Write class average to disc
-    fn_tmp.compose(fn_out,dirno,"xmp");
-    avg.write(fn_tmp);
-    // Write class selfile to disc
-    fn_tmp.compose(fn_out,dirno,"sel");
-    SFclass.write(fn_tmp);
 
     if (do_split)
     {
@@ -261,38 +264,36 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
 	    {
 		MULTIDIM_ELEM(avg1(), i) /= w1;
 	    }
+	    avg1.clear_header();
+	    avg1.set_eulerAngles((float)lib_rot, (float)lib_tilt, (float)0.);
+	    avg1.set_originOffsets(0., 0.);
+	    avg1.flip() = 0.;
+	    avg1.weight() = w1;
+	    // Write class ave1rage to disc
+	    fn_tmp.compose(fn_out1,dirno,"xmp");
+	    avg1.write(fn_tmp);
+	    // Write class selfile to disc
+	    fn_tmp.compose(fn_out1,dirno,"sel");
+	    SFclass1.write(fn_tmp);
 	}
-	avg1.clear_header();
-	avg1.set_eulerAngles((float)lib_rot, (float)lib_tilt, (float)0.);
-	avg1.set_originOffsets(0., 0.);
-	avg1.flip() = 0.;
-	avg1.weight() = w1;
-	// Write class ave1rage to disc
-	fn_tmp.compose(fn_out1,dirno,"xmp");
-	avg1.write(fn_tmp);
-	// Write class selfile to disc
-	fn_tmp.compose(fn_out1,dirno,"sel");
-	SFclass1.write(fn_tmp);
-
 	if (w2 > 0.)
 	{
 	    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(avg2())
 	    {
 		MULTIDIM_ELEM(avg2(), i) /= w2;
 	    }
+	    avg2.clear_header();
+	    avg2.set_eulerAngles((float)lib_rot, (float)lib_tilt, (float)0.);
+	    avg2.set_originOffsets(0., 0.);
+	    avg2.flip() = 0.;
+	    avg2.weight() = w2;
+	    // Write class ave1rage to disc
+	    fn_tmp.compose(fn_out2,dirno,"xmp");
+	    avg2.write(fn_tmp);
+	    // Write class selfile to disc
+	    fn_tmp.compose(fn_out2,dirno,"sel");
+	    SFclass2.write(fn_tmp);
 	}
-	avg2.clear_header();
-	avg2.set_eulerAngles((float)lib_rot, (float)lib_tilt, (float)0.);
-	avg2.set_originOffsets(0., 0.);
-	avg2.flip() = 0.;
-	avg2.weight() = w2;
-	// Write class ave1rage to disc
-	fn_tmp.compose(fn_out2,dirno,"xmp");
-	avg2.write(fn_tmp);
-	// Write class selfile to disc
-	fn_tmp.compose(fn_out2,dirno,"sel");
-	SFclass2.write(fn_tmp);
     }
-
 }
 

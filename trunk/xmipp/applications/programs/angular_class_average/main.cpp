@@ -36,6 +36,7 @@ int main(int argc, char **argv)
 
     int              i, nmax, nr_ref;
     double           lib_rot, lib_tilt, rot, tilt, psi, xshift, yshift, mirror;
+    double           w, w1, w2;
     SelFile          SFclasses, SFclasses1, SFclasses2;
     FileName         fn_tmp;
 
@@ -77,16 +78,25 @@ int main(int argc, char **argv)
 	    lib_rot = prm.DFlib(ABS(prm.col_rot) - 1);
 	    lib_tilt = prm.DFlib(ABS(prm.col_tilt) - 1);
 	    
-	    prm.processOneClass(dirno, lib_rot, lib_tilt);
+	    prm.processOneClass(dirno, lib_rot, lib_tilt, w, w1, w2);
 
-            fn_tmp.compose(prm.fn_out,dirno,"xmp");
-            SFclasses.insert(fn_tmp);
+	    if (w > 0.)
+	    {
+		fn_tmp.compose(prm.fn_out,dirno,"xmp");
+		SFclasses.insert(fn_tmp);
+	    }
 	    if (prm.do_split)
 	    {
-		fn_tmp.compose(prm.fn_out1,dirno,"xmp");
-		SFclasses1.insert(fn_tmp);
-		fn_tmp.compose(prm.fn_out2,dirno,"xmp");
-		SFclasses2.insert(fn_tmp);
+		if (w1 > 0.)
+		{
+		    fn_tmp.compose(prm.fn_out1,dirno,"xmp");
+		    SFclasses1.insert(fn_tmp);
+		}
+		if (w2 > 0.)
+		{
+		    fn_tmp.compose(prm.fn_out2,dirno,"xmp");
+		    SFclasses2.insert(fn_tmp);
+		}
 	    }
             progress_bar(dirno);
 	    prm.DFlib.next();
