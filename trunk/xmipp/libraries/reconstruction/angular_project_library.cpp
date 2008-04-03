@@ -40,8 +40,6 @@ void Prog_angular_project_library_Parameters::read(int argc, char **argv)
     input_volume = getParameter(argc, argv, "-i");
     output_file_root = getParameter(argc, argv, "-o");
     fn_sym = getParameter(argc, argv, "-sym","c1");
-//    symmetry = getParameter(argc, argv, "-sym","c1");
-//    sym_order = textToInteger(getParameter(argc, argv, "-sym_order", "1"));
     sampling = textToFloat(getParameter(argc, argv, "-sampling_rate", "5"));
     psi_sampling = textToFloat(getParameter(argc, argv, "-psi_sampling", "360"));
     max_tilt_angle = textToFloat(getParameter(argc, argv, "-max_tilt_angle","91"));
@@ -234,7 +232,8 @@ void Prog_angular_project_library_Parameters::run()
     //store symmetry matrices, this is faster than computing them each time
     mysampling.fill_L_R_repository();
     //precompute product between symmetry matrices and experimental data
-    mysampling.fill_exp_data_projection_direction_by_L_R(FnexperimentalImages);
+    if (FnexperimentalImages.size() > 0)	
+        mysampling.fill_exp_data_projection_direction_by_L_R(FnexperimentalImages);
     #ifdef  DEBUGTIME
     time (&end);
     time_dif = difftime (end,start); start=end;
