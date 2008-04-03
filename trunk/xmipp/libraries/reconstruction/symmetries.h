@@ -288,6 +288,9 @@ void fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgOrder,
                                       double mag_b,
                                       double ang_a2b_deg) const;
 
+/** Retuen the area of the non redundant part of the Ewald sphere
+*/
+double  non_redundant_evald_sphere(int pgGroup, int pgOrder);
 };
 
 /** Applies to the crystal vectors de n-th symmetry  matrix, It also
@@ -355,7 +358,6 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
                  const Matrix1D<double> &eprm_bint,
                  const Matrix2D<int> &mask, int volume_no,
                  int grid_type);
-
 
 //@}
 #endif

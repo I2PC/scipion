@@ -2421,14 +2421,6 @@ void SymList::fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgO
         line2 << "rot_axis " << "4" << " 0 0 1";
         line3 << "mirror_plane 0 1 1";
     }
-/*
-    else if (pgGroup == pg_I || pgGroup == pg_I2)
-    {
-        line1 << "rot_axis 2  0 0 1";
-        line2 << "rot_axis 5 -1.618033989  -1 0";
-        line3 << "rot_axis 3 -0.53934467   -1.4120227 0";
-    }
-*/
     else if (pgGroup == pg_I || pgGroup == pg_I2)
     {
         line1 << "rot_axis 2  0 0 1";
@@ -2511,4 +2503,112 @@ void SymList::fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgO
 	std::cerr << "fileContent.size()" << fileContent.size() << std::endl;    
     #endif
     #undef DEBUG5   
+}
+double SymList::non_redundant_evald_sphere(int pgGroup, int pgOrder)
+{   
+    if (pgGroup == pg_CN)
+    {
+        return 4.*PI/pgOrder;
+    }
+    else if (pgGroup == pg_CI)
+    {
+        return 4.*PI/2.;
+    }
+    else if (pgGroup == pg_CS)
+    {
+        return 4.*PI/2.;
+    }
+    else if (pgGroup == pg_CNV)
+    {
+        return 4.*PI/pgOrder/2;
+    }
+    else if (pgGroup == pg_CNH)
+    {
+        return 4.*PI/pgOrder/2;
+    }
+    else if (pgGroup == pg_SN)
+    {
+        return 4.*PI/pgOrder;
+    }
+    else if (pgGroup == pg_DN)
+    {
+        return 4.*PI/pgOrder/2;
+    }
+    else if (pgGroup == pg_DNV)
+    {
+        return 4.*PI/pgOrder/4;
+    }
+    else if (pgGroup == pg_DNH)
+    {
+        return 4.*PI/pgOrder/4;
+    }
+    else if (pgGroup == pg_T)
+    {
+        return 4.*PI/12;
+    }
+    else if (pgGroup == pg_TD)
+    {
+        return 4.*PI/24;
+    }
+    else if (pgGroup == pg_TH)
+    {
+        return 4.*PI/24;
+    }
+    else if (pgGroup == pg_O)
+    {
+        return 4.*PI/24;
+    }
+    else if (pgGroup == pg_OH)
+    {
+        return 4.*PI/48;
+    }
+    else if (pgGroup == pg_I || pgGroup == pg_I2)
+    {
+        return 4.*PI/60;
+    }
+    else if (pgGroup == pg_I1)
+    {
+        return 4.*PI/60;
+    }
+    else if (pgGroup == pg_I3)
+    {
+        return 4.*PI/60;
+    }
+    else if (pgGroup == pg_I4)
+    {
+        return 4.*PI/60;
+    }
+    else if (pgGroup == pg_I5)
+    {
+        return 4.*PI/60;
+    }
+    else if (pgGroup == pg_IH || pgGroup == pg_I2H)
+    {
+        return 4.*PI/120;
+    }
+    else if (pgGroup == pg_I1H)
+    {
+        return 4.*PI/120;
+    }
+    else if (pgGroup == pg_I3H)
+    {
+        return 4.*PI/120;
+    }
+    else if (pgGroup == pg_I4H)
+    {
+        return 4.*PI/120;
+    }
+    else if (pgGroup == pg_I5H)
+    {
+        return 4.*PI/120;
+    }
+    else
+    {
+        std::cerr << "ERROR: Symmetry group, order=" << pgGroup
+                                                     << " " 
+                                                     <<  pgOrder  
+                                                     << "is not known" 
+                                                     << std::endl;
+        exit(0);
+    }
 }
