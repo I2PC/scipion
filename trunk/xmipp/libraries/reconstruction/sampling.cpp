@@ -84,6 +84,7 @@ XmippSampling::XmippSampling()
     vertices_vectors.push_back(vectorR3(0., 0., -1.));
     
     sampling_noise=0.0;
+    cos_neighborhood_radius=-1.01;
     
     //#define DEBUG1
 #ifdef  DEBUG1
@@ -99,6 +100,13 @@ void XmippSampling::SetSampling(double sampling)
 {
     sampling_rate_rad = DEG2RAD(sampling);
     number_of_samples = ROUND(cte_w / sampling_rate_rad)+1;
+    if (sampling_rate_rad > cte_w)
+    {    
+        std::cerr << "maximun value of sampling rate is " 
+                  << cte_w*180./PI
+                  << std::endl;
+        exit(1);
+    }
 }
 
 void XmippSampling::SetNoise(double noise_deviation, int my_seed)
@@ -256,7 +264,7 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere,
     starting_point = vertices_vectors[1];  ending_point = vertices_vectors[10];
     fill_edge(starting_point, ending_point, edge_vector_end, true);
 
-    //#define DEBUG2
+//#define DEBUG2
 #ifdef  DEBUG2
     for (int i = 0;
          i < edge_vector_start.size();
@@ -1298,10 +1306,6 @@ void XmippSampling::create_asym_unit_file(const FileName &docfilename)
                   std::ostream_iterator<double>(outfile," "));
         outfile << std::endl;
 #endif
-//        std::copy(my_cross_correlation[i].begin(),
-//                  my_cross_correlation[i].end(),
-//		          std::ostream_iterator<double>(outfile," "));
-//       outfile << std::endl;
     }
     //lenght is 3 for the next 
     //save sampling points
@@ -1317,7 +1321,10 @@ void XmippSampling::create_asym_unit_file(const FileName &docfilename)
         outfile << XX(no_redundant_sampling_points_angles[i]) << " ";
         outfile << YY(no_redundant_sampling_points_angles[i]) << " ";
         outfile << ZZ(no_redundant_sampling_points_angles[i]) << std::endl;
-    }    
+    }
+    //save_sampling_rate in radiands
+    outfile <<  sampling_rate_rad  << std::endl;
+    outfile <<  cos_neighborhood_radius << std::endl;
     outfile.close(); 
 }
 
@@ -1356,8 +1363,6 @@ void XmippSampling::read_sampling_file(FileName infilename, bool read_vectors)
          for (int j = 0; j < my_neighbors_psi[i].size();j++)
             infile >> my_neighbors_psi[i][j];
 #endif
-//         for (int j = 0; j < my_cross_correlation[i].size();j++)
-//            infile >> my_cross_correlation[i][j];
     }
     infile >> num_elem;
     if(read_vectors)
@@ -1377,7 +1382,10 @@ void XmippSampling::read_sampling_file(FileName infilename, bool read_vectors)
         infile >> YY(no_redundant_sampling_points_angles[i]);
         infile >> ZZ(no_redundant_sampling_points_angles[i]);
     }
-    infile.close(); 
+    //read sampling_rate in radiands
+    infile >>  sampling_rate_rad;
+    infile >>  cos_neighborhood_radius;
+    infile.close();
 }
 
 void XmippSampling::compute_neighbors(FileName FnexperimentalImages)
@@ -1681,9 +1689,10 @@ void XmippSampling::find_closest_experimental_point(FileName FnexperimentalImage
     std::vector<std::vector<int> >  aux_vec;
     aux_vec.resize(no_redundant_sampling_points_vector.size());
     #endif
+    std::vector<std::vector<int> >  aux_my_exp_img_per_sampling_point;
     
     //resize vector
-    my_exp_img_per_sampling_point.resize(
+    aux_my_exp_img_per_sampling_point.resize(
                     no_redundant_sampling_points_vector.size());
     
     for(int i=0,l=0;i< exp_data_projection_direction_by_L_R.size();l++)
@@ -1708,11 +1717,14 @@ void XmippSampling::find_closest_experimental_point(FileName FnexperimentalImage
                 }
             }//for j
         }//for k
-        my_exp_img_per_sampling_point[winner_sampling].push_back(winner_exp);
+        aux_my_exp_img_per_sampling_point[winner_sampling].push_back(winner_exp);
         #ifdef CHIMERA
         aux_vec[winner_sampling].push_back(winner_exp_L_R);
         #endif
-    }//for i my_exp_img_per_sampling_point
+    }//for i aux_my_exp_img_per_sampling_point
+    for(int i=0;i< aux_my_exp_img_per_sampling_point.size();i++)
+        if(aux_my_exp_img_per_sampling_point[i].size()!=0)
+           my_exp_img_per_sampling_point.push_back(aux_my_exp_img_per_sampling_point[i]); 
     #ifdef CHIMERA
     std::ofstream filestr; 
     filestr.open ("find_closest_experimental_point.bild");
@@ -1731,7 +1743,7 @@ void XmippSampling::find_closest_experimental_point(FileName FnexperimentalImage
         filestr    <<  ".sphere " << no_redundant_sampling_points_vector[i].transpose()  << 
 	              " .018" << std::endl;
     }
-    int my_sample_point=166;
+    int my_sample_point=5;
     filestr    << ".color green" 
 	      << std::endl
 	      ;
@@ -1749,7 +1761,7 @@ void XmippSampling::find_closest_experimental_point(FileName FnexperimentalImage
 
     #endif
     #undef CHIMERA
-    //#define DEBUG4
+    #define DEBUG4
     #ifdef DEBUG4
     std::ofstream filestr; 
     filestr.open ("find_closest_experimental_point.txt");
