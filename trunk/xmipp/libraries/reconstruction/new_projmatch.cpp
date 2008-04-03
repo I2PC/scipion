@@ -156,14 +156,14 @@ void Prog_new_projection_matching_prm::produceSideInfo() {
 	memory_per_ref += (double) fP.getSampleNo(i) * 2 * sizeof(double);
     }
     memory_per_ref += dim * dim * sizeof(double);
-    max_nr_refs_in_memory = ROUND( 1024 * 1024 * 1024 * avail_memory / memory_per_ref);
+    max_nr_imgs_in_memory = ROUND( 1024 * 1024 * 1024 * avail_memory / memory_per_ref);
 
     // Set up angular sampling
     mysampling.read_sampling_file(fn_ref,false);
     total_nr_refs = mysampling.no_redundant_sampling_points_angles.size();
 
     // Don't reserve more memory than necessary
-    max_nr_refs_in_memory = XMIPP_MIN(max_nr_refs_in_memory, total_nr_refs);
+    max_nr_refs_in_memory = XMIPP_MIN(max_nr_imgs_in_memory, total_nr_refs);
 
     // Initialize pointers for reference retrieval 
     pointer_allrefs2refsinmem.resize(total_nr_refs,-1);

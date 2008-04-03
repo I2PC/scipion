@@ -71,6 +71,11 @@ public:
     double avail_memory;
     /** Maximum number of references to store in memory */
     int max_nr_refs_in_memory;
+    /** Maximum number of references that can be stored in memory 
+    The difference between this and the previous varible is that
+    the previous one is the MIN(max_nr_refs_in_memory, number of references)
+    */
+    int max_nr_imgs_in_memory;
     /** Total number of references */
     int total_nr_refs;
     /** Counter for current filling of memory with references */
