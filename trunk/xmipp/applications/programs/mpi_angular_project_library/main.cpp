@@ -139,7 +139,8 @@ class Prog_mpi_angular_project_library_Parameters:Prog_angular_project_library_P
     //store symmetry matrices, this is faster than computing them each time
     mysampling.fill_L_R_repository();
     //precompute product between symmetry matrices and experimental data
-    mysampling.fill_exp_data_projection_direction_by_L_R(FnexperimentalImages);
+    if (FnexperimentalImages.size() > 0)	
+         mysampling.fill_exp_data_projection_direction_by_L_R(FnexperimentalImages);
 
     mysampling.remove_redundant_points(symmetry, sym_order);
     if (FnexperimentalImages.size() > 0 && 
