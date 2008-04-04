@@ -110,8 +110,8 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
     {
         Prog_new_projection_matching_prm::read(argc,argv);
         mpi_job_size=textToInteger(getParameter(argc,argv,"-mpi_job_size","10"));
-        chunk_angular_distance = checkParameter(argc, argv,"-chunk_angular_distance");
-        chunk_angular_distance = textToFloat(getParameter(argc, argv,"-chunk_angular_distance"));
+        chunk_angular_distance = textToFloat(getParameter(argc,
+        argv,"-chunk_angular_distance","-1"));
         fn_sym = getParameter(argc, argv, "-sym","c1");
     }
 
