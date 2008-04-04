@@ -174,13 +174,13 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
             chunk_mysampling.fill_exp_data_projection_direction_by_L_R(fn_exp);
             //remove redundant sampling points: symmetry
             chunk_mysampling.remove_redundant_points(symmetry, sym_order);
-           //remove sampling points too far away from experimental data
+            //remove sampling points too far away from experimental data
             chunk_mysampling.remove_points_far_away_from_experimental_data(fn_exp);
             //for each sampling point find the experimental images
             //closer to that point than to any other
 	        chunk_mysampling.find_closest_experimental_point(fn_exp);
             //print number of points per node
-            #define DEBUG
+            //#define DEBUG
             #ifdef DEBUG
             std::cerr << "voronoi region, number of elements" << std::endl;
             for (int j = 0;
@@ -204,7 +204,7 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
             std::cerr << "number of subsets " 
                       << chunk_mysampling.my_exp_img_per_sampling_point.size() 
                       << std::endl;
-            std::cerr << "biggest subset " 
+            std::cerr << "biggest subset (EXPERIMENTAL images per chunk)" 
                       << max_number_of_images_in_around_a_sampling_point 
                       << std::endl;
             std::cerr << "maximun number of references in memory "
@@ -262,7 +262,7 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
             {
                 //Wait until any message arrives
                 //be aware that mpi_Probe will block the program untill a message is received
-                #define DEBUG
+                //#define DEBUG
                 #ifdef DEBUG
                 std::cerr << "Mp1 waiting for any  message " << std::endl;
                 #endif
@@ -425,7 +425,7 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
             {
                 int jobNumber=0;
                 MPI_Send(&worker_tip, 1, MPI_INT, 0, TAG_FREEWORKER, MPI_COMM_WORLD);
-                #define DEBUG
+                //#define DEBUG
                 #ifdef DEBUG
                 std::cerr << "W" << rank << " " << "sent TAG_FREEWORKER to master " << std::endl;
                 #endif
@@ -523,8 +523,11 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
         double neighborhood_radius= ABS(acos(mysampling.cos_neighborhood_radius));
         //NEXT ONE IS SAMPLING NOT ANOTHERSAMPLING
         if (mysampling.cos_neighborhood_radius<-1.001) neighborhood_radius=0;
+        int counter=0;
         while(1)
         {
+            if(counter++ > 1000)
+                error_exit("Too small amount of memory, please increase it with -mem option");
             double area_chunk=non_reduntant_area_of_ewald_sphere/number_cpus;
             //area chunk is area of spheric casket=2 PI h
             chunk_angular_distance=acos(1-area_chunk/(2*PI));
@@ -538,7 +541,7 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
             cos(mysampling.sampling_rate_rad)/(1+cos(mysampling.sampling_rate_rad)) )  ) - PI);
             int number_of_images_that_fit_in_a_chunck_neigh =
                    ceil(area_chunck_neigh / areaVoronoiRegionReferenceLibrary);
-            #define DEBUG        
+            //#define DEBUG        
             #ifdef DEBUG
             std::cerr << "area_chunk " << area_chunk << std::endl;
             std::cerr << "2*chunk_angular_distance " << 2*chunk_angular_distance << std::endl;
@@ -562,7 +565,7 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
         //chunk_angular_distance -= neighborhood_radius;
         chunk_angular_distance *= 2.0;
 
-            #define DEBUG        
+            //#define DEBUG        
             #ifdef DEBUG
             std::cerr << "chunk_angular_distance "  << chunk_angular_distance
                       <<  std::endl
@@ -574,7 +577,7 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
             if(chunk_angular_distance > cte_w)
                chunk_angular_distance  = cte_w;
             chunk_angular_distance *= (180./PI);
-            #define DEBUG        
+            //#define DEBUG        
             #ifdef DEBUG
             std::cerr << "chunk_angular_distance_degrees "  << chunk_angular_distance
                       <<  std::endl;
