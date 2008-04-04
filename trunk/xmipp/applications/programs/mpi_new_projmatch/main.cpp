@@ -38,7 +38,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
-#include <iomanip.h>  
+#include <iomanip.h>
 
 #define TAG_WORKFORWORKER   0
 #define TAG_STOP   1
@@ -46,7 +46,7 @@
 #define TAG_FREEWORKER   3
 #define TAG_WORKFROMWORKER   4
 
-int     * input_images ;
+int     * input_images;
 int       input_images_size;
 double  * output_values;
 int       output_values_size;
@@ -66,7 +66,7 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
 
         /** classify the experimental data making voronoi regions
             with an hexagonal grid mapped onto a sphere surface */
-        int chunk_angular_distance;
+        double chunk_angular_distance;
                
         /** computing node number. Master=0 */
         int rank;
@@ -81,7 +81,7 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
         FileName        fn_sym;
         
         /** sampling object */
-        XmippSampling mysampling;
+        XmippSampling chunk_mysampling;
 
         /** Symmetry. One of the 17 possible symmetries in
             single particle electron microscopy.
@@ -148,61 +148,75 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
     /* Pre Run --------------------------------------------------------------------- */
     void preRun()
     {
+        produceSideInfo();
         int max_number_of_images_in_around_a_sampling_point=0;
         if (rank == 0) 
         {
-            //show();
+            show();
             //read experimental doc file
             DFexp.read(fn_exp);
-            //first set sampling rate
-            mysampling.SetSampling(chunk_angular_distance);
-            //create sampling points in the whole sphere
-            mysampling.Compute_sampling_points(false,91.,-91.);
             //process the symmetry file
-            if (!mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
+            if (!chunk_mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
                  REPORT_ERROR(3005, (std::string)"mpi_angular_proj_match::prerun Invalid symmetry: " +  fn_sym);
-            mysampling.SL.read_sym_file(fn_sym);
+            chunk_mysampling.SL.read_sym_file(fn_sym);
+            // find a value for chunk_angular_distance if != -1
+            if( chunk_angular_distance == -1)
+                compute_chunk_angular_distance(symmetry, sym_order);
+            //first set sampling rate
+            chunk_mysampling.SetSampling(chunk_angular_distance);
+            //create sampling points in the whole sphere
+            chunk_mysampling.Compute_sampling_points(false,91.,-91.);
             //store symmetry matrices, this is faster than computing them 
             //each time we need them
-            mysampling.fill_L_R_repository();
+            chunk_mysampling.fill_L_R_repository();
             //precompute product between symmetry matrices 
             //and experimental data
-            mysampling.fill_exp_data_projection_direction_by_L_R(fn_exp);
+            chunk_mysampling.fill_exp_data_projection_direction_by_L_R(fn_exp);
             //remove redundant sampling points: symmetry
-            mysampling.remove_redundant_points(symmetry, sym_order);
+            chunk_mysampling.remove_redundant_points(symmetry, sym_order);
            //remove sampling points too far away from experimental data
-            mysampling.remove_points_far_away_from_experimental_data(fn_exp);
+            chunk_mysampling.remove_points_far_away_from_experimental_data(fn_exp);
             //for each sampling point find the experimental images
             //closer to that point than to any other
-	        mysampling.find_closest_experimental_point(fn_exp);
+	        chunk_mysampling.find_closest_experimental_point(fn_exp);
             //print number of points per node
+            #define DEBUG
+            #ifdef DEBUG
             std::cerr << "voronoi region, number of elements" << std::endl;
             for (int j = 0;
-                  j < mysampling.my_exp_img_per_sampling_point.size();
+                  j < chunk_mysampling.my_exp_img_per_sampling_point.size();
                   j++)   
                     std::cerr << j 
                               << " " 
-                              << mysampling.my_exp_img_per_sampling_point[j].size()
+                              << chunk_mysampling.my_exp_img_per_sampling_point[j].size()
                               << std::endl;
+            #endif
+            #undef DEBUG
             for (int j = 0;
-                  j < mysampling.my_exp_img_per_sampling_point.size();
+                  j < chunk_mysampling.my_exp_img_per_sampling_point.size();
                   j++)   
                     {
                      if (max_number_of_images_in_around_a_sampling_point  
-                         < mysampling.my_exp_img_per_sampling_point[j].size())
+                         < chunk_mysampling.my_exp_img_per_sampling_point[j].size())
                          max_number_of_images_in_around_a_sampling_point
-                         = mysampling.my_exp_img_per_sampling_point[j].size();       
+                         = chunk_mysampling.my_exp_img_per_sampling_point[j].size();       
                     }
+            std::cerr << "number of subsets " 
+                      << chunk_mysampling.my_exp_img_per_sampling_point.size() 
+                      << std::endl;
             std::cerr << "biggest subset " 
                       << max_number_of_images_in_around_a_sampling_point 
+                      << std::endl;
+            std::cerr << "maximun number of references in memory "
+                      <<  max_nr_refs_in_memory
                       << std::endl;
             //alloc memory for buffer          
            if (mpi_job_size == -1)
             {   
                 int numberOfJobs=nProcs-1;//one node is the master
                 mpi_job_size=ceil((double)DFexp.dataLineNo()/numberOfJobs);
-            }    
-        } 
+            }
+        }
         MPI_Bcast(&max_number_of_images_in_around_a_sampling_point, 
                   1, MPI_INT, 0, MPI_COMM_WORLD);
         input_images_size = max_number_of_images_in_around_a_sampling_point+1 +1;
@@ -220,14 +234,6 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
         
         //many sequential programs free object alloc in side_info
         //becareful with that
-        if (rank != 0)
-        {
-            produceSideInfo();
-	    if (rank == 1)
-	    {
-		show();
-	    }
-        }
     }
 
     /* Run --------------------------------------------------------------------- */
@@ -235,7 +241,7 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
     {   
         if (rank == 0)
         {
-            int N = mysampling.my_exp_img_per_sampling_point.size();
+            int N = chunk_mysampling.my_exp_img_per_sampling_point.size();
             int killed_jobs=0;
             int index=0;
             int index_counter=0;
@@ -256,7 +262,7 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
             {
                 //Wait until any message arrives
                 //be aware that mpi_Probe will block the program untill a message is received
-                //#define DEBUG
+                #define DEBUG
                 #ifdef DEBUG
                 std::cerr << "Mp1 waiting for any  message " << std::endl;
                 #endif
@@ -322,14 +328,14 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
                     }
                     else
                         index=tip;
-                    while( mysampling.my_exp_img_per_sampling_point[index].size()<=0)
+                    while( chunk_mysampling.my_exp_img_per_sampling_point[index].size()<=0)
                     {
                         index_counter = index_counter++;
                         index_counter = index_counter%N;
                         index = index_counter;
                     }
                     int number_of_images_to_transfer=XMIPP_MIN(
-                                                mysampling.my_exp_img_per_sampling_point[index].size(),
+                                                chunk_mysampling.my_exp_img_per_sampling_point[index].size(),
                                                 mpi_job_size);
 
                     input_images[0]=index;
@@ -339,8 +345,8 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
                     for(int k=2;k<number_of_images_to_transfer+2;k++)
                        {
                        number_of_processed_images++;
-                       input_images[k]=mysampling.my_exp_img_per_sampling_point[index].back();
-                       mysampling.my_exp_img_per_sampling_point[index].pop_back();
+                       input_images[k]=chunk_mysampling.my_exp_img_per_sampling_point[index].back();
+                       chunk_mysampling.my_exp_img_per_sampling_point[index].pop_back();
                        }
 
                     MPI_Send(input_images,
@@ -419,7 +425,7 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
             {
                 int jobNumber=0;
                 MPI_Send(&worker_tip, 1, MPI_INT, 0, TAG_FREEWORKER, MPI_COMM_WORLD);
-                //#define DEBUG
+                #define DEBUG
                 #ifdef DEBUG
                 std::cerr << "W" << rank << " " << "sent TAG_FREEWORKER to master " << std::endl;
                 #endif
@@ -503,6 +509,77 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
     {
         fprintf(stderr, "%s", msg);
         MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+    }
+    
+    /** guess a good value for chunk_angular_distance.
+        this value is use to divide the work between
+        the different working nodes */
+    void compute_chunk_angular_distance(int symmetry, int sym_order)
+    {    
+        double non_reduntant_area_of_ewald_sphere =
+               chunk_mysampling.SL.non_redundant_evald_sphere(symmetry,sym_order);
+        double number_cpus  = (double) nProcs-1;
+        //NEXT ONE IS SAMPLING NOT ANOTHERSAMPLING
+        double neighborhood_radius= ABS(acos(mysampling.cos_neighborhood_radius));
+        //NEXT ONE IS SAMPLING NOT ANOTHERSAMPLING
+        if (mysampling.cos_neighborhood_radius<-1.001) neighborhood_radius=0;
+        while(1)
+        {
+            double area_chunk=non_reduntant_area_of_ewald_sphere/number_cpus;
+            //area chunk is area of spheric casket=2 PI h
+            chunk_angular_distance=acos(1-area_chunk/(2*PI));
+            double area_chunck_neigh= 2 * PI *( 1 - cos(chunk_angular_distance+neighborhood_radius));
+            //double area_chunck= 2 * PI *( 1 - cos(chunk_angular_distance));
+            //let us see how many references from the reference library fit
+            //in area_chunk, that is divide area_chunk between the voronoi
+            //region of the sampling points of the reference library
+            double areaVoronoiRegionReferenceLibrary = 2 *( 3 *(  acos( 
+            //NEXT ONE IS SAMPLING NOT ANOTHERSAMPLING
+            cos(mysampling.sampling_rate_rad)/(1+cos(mysampling.sampling_rate_rad)) )  ) - PI);
+            int number_of_images_that_fit_in_a_chunck_neigh =
+                   ceil(area_chunck_neigh / areaVoronoiRegionReferenceLibrary);
+            #define DEBUG        
+            #ifdef DEBUG
+            std::cerr << "area_chunk " << area_chunk << std::endl;
+            std::cerr << "2*chunk_angular_distance " << 2*chunk_angular_distance << std::endl;
+            //NEXT ONE IS SAMPLING NOT ANOTHERSAMPLING
+            std::cerr << "sampling_rate_rad " << mysampling.sampling_rate_rad 
+                      << " " << mysampling.sampling_rate_rad*180/PI 
+                      <<  std::endl;
+            std::cerr << "neighborhood_radius " << neighborhood_radius 
+                      <<  std::endl;
+            std::cerr << "areaVoronoiRegionReferenceLibrary " << areaVoronoiRegionReferenceLibrary << std::endl;
+            std::cerr << "number_of_images_that_fit_in_a_chunck_neigh " << number_of_images_that_fit_in_a_chunck_neigh << std::endl;
+            std::cerr << "number_cpus " << number_cpus << std::endl;
+            std::cerr << "max_nr_imgs_in_memory " << max_nr_imgs_in_memory << std::endl;
+            #endif
+            #undef DEBUG
+            if(number_of_images_that_fit_in_a_chunck_neigh>max_nr_imgs_in_memory)
+                number_cpus  = 1.2*number_cpus;
+            else
+                break;   
+        }
+        //chunk_angular_distance -= neighborhood_radius;
+        chunk_angular_distance *= 2.0;
+
+            #define DEBUG        
+            #ifdef DEBUG
+            std::cerr << "chunk_angular_distance "  << chunk_angular_distance
+                      <<  std::endl
+                      << "neighborhood_radius "     << neighborhood_radius 
+                      <<  std::endl;
+            #endif
+            #undef DEBUG
+            //chuck should not be bigger than a triangle in the icosahedra 
+            if(chunk_angular_distance > cte_w)
+               chunk_angular_distance  = cte_w;
+            chunk_angular_distance *= (180./PI);
+            #define DEBUG        
+            #ifdef DEBUG
+            std::cerr << "chunk_angular_distance_degrees "  << chunk_angular_distance
+                      <<  std::endl;
+            #endif
+            #undef DEBUG
     }
 
 };
