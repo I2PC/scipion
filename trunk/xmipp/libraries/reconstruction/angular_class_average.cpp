@@ -37,7 +37,7 @@ void Prog_angular_class_average_prm::read(int argc, char **argv)  {
     int i;
     if ((i = paremeterPosition(argc, argv, "-columns")) != -1)
     {
-	if (i + 5 >= argc)
+	if (i + 6 >= argc)
 	{
 	    REPORT_ERROR(1, "Not enough integers after -columns");
 	}
@@ -46,14 +46,16 @@ void Prog_angular_class_average_prm::read(int argc, char **argv)  {
 	col_psi = textToInteger(argv[i+3]);
 	col_xshift = textToInteger(argv[i+4]);
 	col_yshift = textToInteger(argv[i+5]);
+	col_ref  = textToInteger(argv[i+6]);
     }
     else
     {
-	col_rot = 1;
-	col_tilt = 2;
-	col_psi = 3;
+	col_rot    = 1;
+	col_tilt   = 2;
+	col_psi    = 3;
 	col_xshift = 4;
 	col_yshift = 5;
+	col_ref    = 6;
     }
 
     do_limit0=checkParameter(argc, argv, "-limit0");
@@ -112,9 +114,11 @@ void Prog_angular_class_average_prm::usage() {
     printf("        -lib <docfile>      : docfile with angles used to generate the projection matching library\n");
     printf("        -o <rootname=class> : output rootname for class averages and selfiles\n");
     printf("        -split              : also output averages of random halves of the data\n");
-    printf("       [-columns] <rot=1> <tilt=2> <psi=3> <Xoff=4> <Yoff=5> \n"
-           "                           : where the 5 integers are the column numbers for the \n"
-           "                           : respective angles and offsets in the docfile\n"
+    printf("       [-columns] <rot=1> <tilt=2> <psi=3> <Xoff=4> <Yoff=5> "
+           "<ref=6> \n"
+           "                           : where the 6 integers are the column numbers for the \n"
+           "                           : respective angles and offsets and optimal reference \n"
+           "                           : number in the docfile\n"
            "                           : Note that rot & tilt are used to determine the classes \n"
            "                           : and psi, xoff & yoff are applied to calculate the class averages\n");
     printf("       [-mirror <col_m=7>] : Apply mirror operation (from docfile column col_m) (0=no-flip; 1=flip)\n");
@@ -157,8 +161,8 @@ void Prog_angular_class_average_prm::produceSideInfo() {
 }
 
 void Prog_angular_class_average_prm::processOneClass(int &dirno, 
-						     double &lib_rot, 
-						     double &lib_tilt,
+//						     double &lib_rot, 
+//						     double &lib_tilt,
                                                      double &w,
                                                      double &w1,
                                                      double &w2) {
@@ -167,6 +171,7 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
     FileName   fn_img, fn_tmp;
     SelFile    SFclass, SFclass1, SFclass2;
     double     rot, tilt, psi, xshift, yshift, mirror, val;
+    int        ref_number;
     int        isplit;
     Matrix2D<double> A(3,3);
 
@@ -175,11 +180,11 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
     SFclass.clear();
     if (do_split)
     {
-	avg1=Iempty;
-	avg2=Iempty;
-	SFclass1.clear();
-	SFclass2.clear();
-        randomize_random_generator();
+	     avg1=Iempty;
+	     avg2=Iempty;
+	     SFclass1.clear();
+	     SFclass2.clear();
+             randomize_random_generator();
     }
 
     // Loop over all images in the input docfile
@@ -192,8 +197,10 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
 	DF.adjust_to_data_line();
 	rot = DF(col_rot - 1);
 	tilt = DF(col_tilt - 1);
+    ref_number = round(DF(col_ref - 1));
 	// Check for matching rot and tilt
-	if (ABS(rot-lib_rot) < 0.01 && ABS(tilt-lib_tilt)<0.01)
+//	if (ABS(rot-lib_rot) < 0.01 && ABS(tilt-lib_tilt)<0.01)
+	if (ref_number == dirno)
 	{
 	    bool is_select = true;
 	    val = DF(col_select - 1);
@@ -249,7 +256,7 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
 	    MULTIDIM_ELEM(avg(), i) /= w;
 	}
 	avg.clear_header();
-	avg.set_eulerAngles((float)lib_rot, (float)lib_tilt, (float)0.);
+	avg.set_eulerAngles((float)rot, (float)tilt, (float)0.);
 	avg.set_originOffsets(0., 0.);
 	avg.flip() = 0.;
 	avg.weight() = w;
@@ -273,7 +280,7 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
 		MULTIDIM_ELEM(avg1(), i) /= w1;
 	    }
 	    avg1.clear_header();
-	    avg1.set_eulerAngles((float)lib_rot, (float)lib_tilt, (float)0.);
+	    avg1.set_eulerAngles((float)rot, (float)tilt, (float)0.);
 	    avg1.set_originOffsets(0., 0.);
 	    avg1.flip() = 0.;
 	    avg1.weight() = w1;
@@ -294,7 +301,7 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
 		MULTIDIM_ELEM(avg2(), i) /= w2;
 	    }
 	    avg2.clear_header();
-	    avg2.set_eulerAngles((float)lib_rot, (float)lib_tilt, (float)0.);
+	    avg2.set_eulerAngles((float)rot, (float)tilt, (float)0.);
 	    avg2.set_originOffsets(0., 0.);
 	    avg2.flip() = 0.;
 	    avg2.weight() = w2;
