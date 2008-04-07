@@ -54,7 +54,7 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
         int nProcs;
         
         /** Dvide the job in this number block with this number of images */
-        int mpi_job_size;
+        //int mpi_job_size;
                
         /** computing node number. Master=0 */
         int rank;
@@ -80,16 +80,16 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
     void read(int argc, char **argv)
     {
         Prog_angular_class_average_prm::read(argc,argv);
-        mpi_job_size=textToInteger(getParameter(argc,argv,"-mpi_job_size","10"));
+        //mpi_job_size=textToInteger(getParameter(argc,argv,"-mpi_job_size","10"));
     }
 
     /* Usage ------------------------------------------------------------------- */
     void usage()
     {
         Prog_angular_class_average_prm::usage();
-        std::cerr << " [ -mpi_job_size default=-1]    : Number of images sent to a cpu in a single job \n";
-        std::cerr << "                                  10 may be a good value\n";
-        std::cerr << "                                 if  -1 the computer will fill the value for you\n";
+        //std::cerr << " [ -mpi_job_size default=-1]    : Number of images sent to a cpu in a single job \n";
+        //std::cerr << "                                  10 may be a good value\n";
+        //std::cerr << "                                 if  -1 the computer will fill the value for you\n";
      }
 
 
@@ -97,8 +97,8 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
     void show()
     {
         Prog_angular_class_average_prm::show();
-	    std::cerr << " Size of mpi jobs " << mpi_job_size <<std::endl
-              ;
+	    //std::cerr << " Size of mpi jobs " << mpi_job_size <<std::endl
+        //      ;
     }
 
     /* Pre Run --------------------------------------------------------------------- */
@@ -113,8 +113,8 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
     void run()
     {   
     
-        double myw[3];
-        int number_of_references_image=0;
+        double myw[4];
+        int number_of_references_image=1;
         if (rank == 0)
         {
 	        int nr_ref;
@@ -124,18 +124,13 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
 	        SFclasses.clear(); 
 	        SFclasses1.clear(); 
 	        SFclasses2.clear(); 
-            nr_ref = DFlib.dataLineNo();// master//library docfile
-	        init_progress_bar(nr_ref);// master
+            nr_ref = DFlib.dataLineNo();
+	        init_progress_bar(nr_ref);  
 
 
 
-            //int N = mysampling.my_exp_img_per_sampling_point.size();
-            //int killed_jobs=0;
-            //int index=0;
-            //int tip=-1;
             int stopTagsSent =0;
 	        init_progress_bar(nr_ref);// master
-            //int total_number_of_images=DFexp.dataLineNo();
             while(1)
             {
                 //Wait until any message arrives
@@ -153,19 +148,29 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
                 if (status.MPI_TAG == TAG_WORKFROMWORKER)
                 {
                     MPI_Recv(myw, 
-                             3, 
+                             4, 
                              MPI_DOUBLE, 
                              MPI_ANY_SOURCE, 
                              TAG_WORKFROMWORKER,
                              MPI_COMM_WORLD, 
                              &status);
-                    double w, w1,w2;         
+                    double w, w1,w2;
+                    int myref_number;         
                     w  = myw[0];
                     w1 = myw[1];
-                    w2 = myw[2];         
+                    w2 = myw[2]; 
+                    myref_number = round(myw[3]);        
+                    #ifdef DEBUG
+                    std::cerr << "Mr2.5 received work from worker " <<  status.MPI_SOURCE << std::endl;
+                    std::cerr << " w w1 w2 myref_number" 
+                              << w  << " "
+                              << w1 << " "
+                              << w2 << " "
+                              << myref_number <<  std::endl;  
+                    #endif
 	                if (w > 0.)
 	                {
-		                fn_tmp.compose(fn_out,number_of_references_image,"xmp");
+		                fn_tmp.compose(fn_out,myref_number,"xmp");
 		                SFclasses.insert(fn_tmp);
 	                }
 	                if (do_split)
@@ -191,7 +196,7 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
                     std::cerr << "Mr3 received TAG_FREEWORKER from worker " <<  status.MPI_SOURCE 
                               << std::endl;
                     #endif
-                    if(number_of_references_image==nr_ref)
+                    if(number_of_references_image>nr_ref)
                     {
                         MPI_Send(0, 0, MPI_INT, status.MPI_SOURCE, TAG_STOP, MPI_COMM_WORLD);
                         stopTagsSent++;
@@ -231,19 +236,29 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
                 if (status.MPI_TAG == TAG_WORKFROMWORKER)
                 {
                     MPI_Recv(myw, 
-                             3, 
+                             4, 
                              MPI_DOUBLE, 
                              MPI_ANY_SOURCE, 
                              TAG_WORKFROMWORKER,
                              MPI_COMM_WORLD, 
                              &status);
                     double w, w1,w2;
+                    int myref_number;         
                     w  = myw[0];
                     w1 = myw[1];
                     w2 = myw[2];         
+                    myref_number = round(myw[3]);        
+                    #ifdef DEBUG
+                    std::cerr << "Mr2.5 received work from worker " <<  status.MPI_SOURCE << std::endl;
+                    std::cerr << " w w1 w2 myref_number" 
+                              << w  << " "
+                              << w1 << " "
+                              << w2 << " "
+                              << myref_number <<  std::endl;  
+                    #endif
 	                if (w > 0.)
 	                {
-		                fn_tmp.compose(fn_out,number_of_references_image,"xmp");
+		                fn_tmp.compose(fn_out,myref_number,"xmp");
 		                SFclasses.insert(fn_tmp);
 	                }
 	                if (do_split)
@@ -272,14 +287,18 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
                 }    
             }         
 
-	        fn_tmp=fn_out+"es.sel";
-	        SFclasses.write(fn_tmp);
+	        SelFile          auxSF;
+            fn_tmp=fn_out+"es.sel";
+            auxSF=SFclasses.sort_by_filenames();
+	        auxSF.write(fn_tmp);
 	        if (do_split)
 	        {
 	            fn_tmp=fn_out1+"es.sel";
-	            SFclasses1.write(fn_tmp);
+                auxSF=SFclasses1.sort_by_filenames();
+	            auxSF.write(fn_tmp);
 	            fn_tmp=fn_out2+"es.sel";
-	            SFclasses2.write(fn_tmp);
+                auxSF=SFclasses2.sort_by_filenames();
+	            auxSF.write(fn_tmp);
 	        }
 
         }
@@ -327,8 +346,9 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
                                          myw[0], 
                                          myw[1], 
                                          myw[2]);//slaves
+                    myw[3]= (double)number_of_references_image;                    
                     MPI_Send(myw,
-                             3,
+                             4,
                              MPI_DOUBLE, 
                              0,
                              TAG_WORKFROMWORKER,
