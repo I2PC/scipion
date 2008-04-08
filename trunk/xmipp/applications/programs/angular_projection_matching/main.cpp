@@ -23,26 +23,24 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <reconstruction/angular_projection_matching.h>
+#include <reconstruction/new_projmatch.h>
+ 
 
 int main(int argc, char **argv)
 {
 
-    double                        sumCC;
-    DocFile                       DFlib, DFo;
-    SymList                       SL;
-    Prog_projection_matching_prm  prm;
-    FileName                      fn_tmp;
+    DocFile                          DFo;
+    Prog_new_projection_matching_prm prm;
+    FileName                         fn_tmp;
+    Matrix1D<double>                 dataline(8);
 
     // Get input parameters
     try
     {
         // Read command line & produce side info
         prm.read(argc, argv);
+        prm.produceSideInfo();
         prm.show();
-
-        // Project reference volume etc.
-        prm.produce_Side_info();
 
     }
     catch (Xmipp_error XE)
@@ -52,21 +50,47 @@ int main(int argc, char **argv)
         exit(0);
     }
 
+    int nr_images = prm.DFexp.dataLineNo();
+    int                              input_images[nr_images+1];
+    double                           output_values[MY_OUPUT_SIZE*nr_images+1];
+
     try
     {
 
         DFo.clear();
-        DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Refno (6), maxCC (7), Z-score (8)");
+        DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Refno (6), Flip (7), maxCC (8)");
 
         // Process all images
-        prm.PM_loop_over_all_images(prm.SF, DFo, sumCC);
+	input_images[0]=nr_images;
+	for (int i = 0; i < nr_images; i++)
+	{
+	    input_images[i+1]=i;
+	}
+        prm.processSomeImages(input_images,output_values);
 
-        std::cerr << " Average maxCC = " << sumCC / prm.SF.ImgNo() << std::endl;
-        fn_tmp = prm.fn_root + ".doc";
-        DFo.write(fn_tmp);
+	// Fill output docfile
+	for (int i = 0; i < nr_images; i++)
+	{
 
-        if (prm.output_classes) prm.write_classes();
+	    prm.DFexp.locate(round(output_values[i*MY_OUPUT_SIZE+1]+1));
+	    prm.DFexp.previous();
+	    fn_tmp = ((prm.DFexp.get_current_line()).get_text()).erase(0, 3);
 
+	    dataline(0)=output_values[i*MY_OUPUT_SIZE+2];
+	    dataline(1)=output_values[i*MY_OUPUT_SIZE+3];
+	    dataline(2)=output_values[i*MY_OUPUT_SIZE+4];
+	    dataline(3)=output_values[i*MY_OUPUT_SIZE+5];
+	    dataline(4)=output_values[i*MY_OUPUT_SIZE+6];
+	    dataline(5)=output_values[i*MY_OUPUT_SIZE+7] + 1;
+	    dataline(6)=output_values[i*MY_OUPUT_SIZE+8];
+	    dataline(7)=output_values[i*MY_OUPUT_SIZE+9];
+	    DFo.append_comment(fn_tmp);
+	    DFo.append_data_line(dataline);
+	}
+	
+	fn_tmp=prm.fn_root + ".doc";
+	DFo.write(fn_tmp);
+	std::cerr<<"done!"<<std::endl;
     }
     catch (Xmipp_error XE)
     {
