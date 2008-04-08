@@ -161,8 +161,6 @@ void Prog_angular_class_average_prm::produceSideInfo() {
 }
 
 void Prog_angular_class_average_prm::processOneClass(int &dirno, 
-//						     double &lib_rot, 
-//						     double &lib_tilt,
                                                      double &w,
                                                      double &w1,
                                                      double &w2) {
@@ -188,64 +186,65 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
     }
 
     // Loop over all images in the input docfile
+    DFlib.locate(dirno);
+	rot = DFlib(col_rot - 1);
+	tilt = DFlib(col_tilt - 1);
     DF.go_beginning();
     for (int n = 0; n < DF.dataLineNo(); n++)
     {
-	DF.next();
-	if (DF.get_current_line().Is_comment()) fn_img = ((DF.get_current_line()).get_text()).erase(0, 3);
-	else  REPORT_ERROR(1, "Problem with NewXmipp-type document file");
-	DF.adjust_to_data_line();
-	rot = DF(col_rot - 1);
-	tilt = DF(col_tilt - 1);
-    ref_number = round(DF(col_ref - 1));
-	// Check for matching rot and tilt
-//	if (ABS(rot-lib_rot) < 0.01 && ABS(tilt-lib_tilt)<0.01)
-	if (ref_number == dirno)
-	{
-	    bool is_select = true;
-	    val = DF(col_select - 1);
-	    if ( (do_limit0 && val < limit0) || (do_limitF && val > limitF) ) is_select = false;
-	    if (is_select)
+	    DF.next();
+	    if (DF.get_current_line().Is_comment()) fn_img = ((DF.get_current_line()).get_text()).erase(0, 3);
+	    else  REPORT_ERROR(1, "Problem with NewXmipp-type document file");
+	    DF.adjust_to_data_line();
+        ref_number = round(DF(col_ref - 1));
+	    // Check for matching rot and tilt
+    //	if (ABS(rot-lib_rot) < 0.01 && ABS(tilt-lib_tilt)<0.01)
+	    if (ref_number == dirno)
 	    {
-		psi    = DF(col_psi - 1);
-		xshift = DF(col_xshift - 1);
-		yshift = DF(col_yshift - 1);
-		if (do_mirrors) mirror = DF(col_mirror - 1);
-		img.read(fn_img, false, false, false, false);
-		img().setXmippOrigin();
-		img.set_eulerAngles((float)0., (float)0., (float)psi);
-		img.set_originOffsets(xshift, yshift);
-		if (do_mirrors) img.flip() = mirror;
+	        bool is_select = true;
+	        val = DF(col_select - 1);
+	        if ( (do_limit0 && val < limit0) || (do_limitF && val > limitF) ) is_select = false;
+	        if (is_select)
+	        {
+		         psi    = DF(col_psi - 1);
+		         xshift = DF(col_xshift - 1);
+		         yshift = DF(col_yshift - 1);
+		         if (do_mirrors) mirror = DF(col_mirror - 1);
+		         img.read(fn_img, false, false, false, false);
+		         img().setXmippOrigin();
+		         img.set_eulerAngles((float)0., (float)0., (float)psi);
+		         img.set_originOffsets(xshift, yshift);
+		         if (do_mirrors) img.flip() = mirror;
 
-		// Apply in-plane transformation
-		A = img.get_transformation_matrix();
-		if (!A.isIdentity())
-		    img().selfApplyGeometryBSpline(A, 3, IS_INV,WRAP);
-		
-		// Add to average
-		avg() += img();
-		w+= 1.;
-		SFclass.insert(fn_img);
+		         // Apply in-plane transformation
+		         A = img.get_transformation_matrix();
+		         if (!A.isIdentity())
+		             img().selfApplyGeometryBSpline(A, 3, IS_INV,WRAP);
 
-		// Add to split averages
-		if (do_split)
-		{
-		    isplit = ROUND(rnd_unif());
-		    if (isplit==0)
-		    {
-			avg1() += img();
-			w1 += 1.;
-			SFclass1.insert(fn_img);
-		    }
-		    else
-		    {
-			avg2() += img();
-			w2 += 1.;
-			SFclass2.insert(fn_img);
-		    }
-		}
+		         // Add to average
+		         avg() += img();
+		         w+= 1.;
+		         SFclass.insert(fn_img);
+
+		         // Add to split averages
+		         if (do_split)
+		         {
+		             isplit = ROUND(rnd_unif());
+		             if (isplit==0)
+		             {
+			         avg1() += img();
+			         w1 += 1.;
+			         SFclass1.insert(fn_img);
+		             }
+		             else
+		             {
+			         avg2() += img();
+			         w2 += 1.;
+			         SFclass2.insert(fn_img);
+		             }
+		         }
+	        }
 	    }
-	}
     }
 	
     // Write output files
