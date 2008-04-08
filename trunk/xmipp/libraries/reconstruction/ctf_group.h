@@ -72,8 +72,8 @@ public:
     // Vector with 1D CTF profiles for all micrographs and all groups
     std::vector<Matrix2D<double> > mics_ctf2d;
 
-    // Vector with average defocus value per micrograph
-    std::vector<double> mics_defocus;
+    // Vector with average defocus value per micrograph and per group
+    std::vector<double> mics_defocus, group_avgdef;
 
     // Vector with number of images per defocus group
     std::vector<int> mics_count;
@@ -82,7 +82,6 @@ public:
     std::vector< std::vector <FileName> > mics_fnimgs;
 
     // Pointers
-    std::vector<int> pointer_img2mic, pointer_mic2group;
     std::vector< std::vector <int> > pointer_group2mic;
 
 public:
