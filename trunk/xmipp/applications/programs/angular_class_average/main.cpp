@@ -63,9 +63,9 @@ int main(int argc, char **argv)
     {
 
 	    // Initialize
-	    SFclasses.clear(); // master
-	    SFclasses1.clear(); // master
-	    SFclasses2.clear(); // master
+	    SFclasses.clear(); 
+	    SFclasses1.clear();
+	    SFclasses2.clear();
 
 	    nr_ref = prm.DFlib.dataLineNo();// master//library docfile
 	    init_progress_bar(nr_ref);// master
