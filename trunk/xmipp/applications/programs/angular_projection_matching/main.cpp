@@ -23,14 +23,14 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <reconstruction/new_projmatch.h>
+#include <reconstruction/angular_projection_matching.h>
  
 
 int main(int argc, char **argv)
 {
 
     DocFile                          DFo;
-    Prog_new_projection_matching_prm prm;
+    Prog_angular_projection_matching_prm prm;
     FileName                         fn_tmp;
     Matrix1D<double>                 dataline(8);
 
