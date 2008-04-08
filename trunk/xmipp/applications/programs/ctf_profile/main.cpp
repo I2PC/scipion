@@ -38,8 +38,8 @@ int main(int argc, char **argv)
     try
     {
         fn_ctf = getParameter(argc, argv, "-i");
-        if (checkParameter(argc, argv, "-dir"))
-            w_dir = getVectorParameter(argc, argv, "-w_dim", 2);
+        if (checkParameter(argc, argv, "-w_dir"))
+            w_dir = getVectorParameter(argc, argv, "-w_dir", 2);
         else w_dir = vectorR2(1, 0);
         w_step = textToFloat(getParameter(argc, argv, "-w_step", "0.001"));
     }
