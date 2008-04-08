@@ -101,6 +101,8 @@ public:
     /** Produce the CTF groups automatically */
     void autoRun();
 
+    /** Write output */
+    void writeOutputToDisc();
 };
 //@}
 #endif

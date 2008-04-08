@@ -49,6 +49,9 @@ int main(int argc, char **argv)
             prm.autoRun();
             std::cerr << " done!" <<std::endl;
         }
+
+        prm.writeOutputToDisc();
+
     }
     catch (Xmipp_error XE)
     {

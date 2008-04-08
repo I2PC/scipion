@@ -260,13 +260,6 @@ void CtfGroupParams::autoRun()
     double diff, mindiff;
     int iopt_group, nr_groups;
     std::vector<int> dum;
-    FileName fnt;
-    SelFile SFo;
-    ImageXmipp img;
-    Matrix2D<double> Mavg;
-    double sumw, avgdef, mindef, maxdef;
-    int imic;
-    std::ofstream fh, fh2, fh3;
 
     // Make the actual groups
     nr_groups = 0;
@@ -310,17 +303,23 @@ void CtfGroupParams::autoRun()
         }
     }
     std::cerr<<" Number of CTF groups= "<<nr_groups<<std::endl;
-    
-    // I/O: For each group: 
-    //
-    // 1. write selfile with images
-    // 2. write average Mctf
-    // 3. write file with number of images per group
-    // 4. write file with avgdef, mindef and maxdef per group
-    // 5. write 1D profile files
+}
+   
+
+void CtfGroupParams::writeOutputToDisc()
+{
+
+    FileName fnt;
+    SelFile SFo;
+    ImageXmipp img;
+    Matrix2D<double> Mavg;
+    double sumw, avgdef, mindef, maxdef;
+    int imic;
+    std::ofstream fh, fh2, fh3;
+
     fh.open((fn_root+ "_groups.imgno").c_str(), std::ios::out);
     fh3.open((fn_root+ "_groups.defocus").c_str(), std::ios::out);
-    for (int igroup=0; igroup < nr_groups; igroup++)
+    for (int igroup=0; igroup < pointer_group2mic.size(); igroup++)
     {
         SFo.clear();
         Mavg.initZeros(dim,dim);
@@ -385,8 +384,6 @@ void CtfGroupParams::autoRun()
             fh2 << std::endl;
         }
         fh2.close();
-        // 5. Write CTF parameter file
-        // TODO
     }
     
     // 3. Write file with number of images per group
