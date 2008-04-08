@@ -177,12 +177,12 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
 	                {
 		                if (w1 > 0.)
 		                {
-		                    fn_tmp.compose(fn_out1,number_of_references_image,"xmp");
+		                    fn_tmp.compose(fn_out1,myref_number,"xmp");
 		                    SFclasses1.insert(fn_tmp);
 		                }
 		                if (w2 > 0.)
 		                {
-		                    fn_tmp.compose(fn_out2,number_of_references_image,"xmp");
+		                    fn_tmp.compose(fn_out2,myref_number,"xmp");
 		                    SFclasses2.insert(fn_tmp);
 		                }
 	                }
@@ -216,15 +216,14 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
                                  status.MPI_SOURCE, 
                                  TAG_WORKFORWORKER, 
                                  MPI_COMM_WORLD);
+                        number_of_references_image++;//////////////////////
+                        progress_bar(number_of_references_image);
 	                    //prm.DFlib.next();
-                     
                     }   
             #ifdef DEBUG
             std::cerr << "Ms5 sent TAG_WORKFORWORKER for " <<  status.MPI_SOURCE << std::endl
                       << std::endl;
             #endif
-            number_of_references_image++;//////////////////////
-            progress_bar(number_of_references_image);
                 }//TAG_FREEWORKER
             }//while       
             progress_bar(nr_ref);
@@ -265,12 +264,12 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
 	                {
 		                if (w1 > 0.)
 		                {
-		                    fn_tmp.compose(fn_out1,number_of_references_image,"xmp");
+		                    fn_tmp.compose(fn_out1,myref_number,"xmp");
 		                    SFclasses1.insert(fn_tmp);
 		                }
 		                if (w2 > 0.)
 		                {
-		                    fn_tmp.compose(fn_out2,number_of_references_image,"xmp");
+		                    fn_tmp.compose(fn_out2,myref_number,"xmp");
 		                    SFclasses2.insert(fn_tmp);
 		                }
 	                }
