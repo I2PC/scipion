@@ -26,7 +26,7 @@
 //#include "mpi_run.h"
 
 #include <data/args.h>
-#include <reconstruction/new_projmatch.h>
+#include <reconstruction/angular_projection_matching.h>
 #include <data/header.h>
 #include <reconstruction/sampling.h>
 #include <reconstruction/symmetries.h>
@@ -53,7 +53,7 @@ int       output_values_size;
 //consider
 //class Prog_mpi_projection_matching_prm:public Prog_projection_matching_prm
 //to access parent variables
-class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
+class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_prm
 {
     public:
     //int rank, size, num_img_tot;
@@ -92,7 +92,7 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
         int sym_order;
 
     /*  constructor ------------------------------------------------------- */
-    Prog_mpi_new_projection_matching_prm()
+    Prog_mpi_angular_projection_matching_prm()
     {
         //parent class constructor will be called by deault without parameters
         MPI_Comm_size(MPI_COMM_WORLD, &(nProcs));
@@ -108,7 +108,7 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
     /* Read parameters --------------------------------------------------------- */
     void read(int argc, char **argv)
     {
-        Prog_new_projection_matching_prm::read(argc,argv);
+        Prog_angular_projection_matching_prm::read(argc,argv);
         mpi_job_size=textToInteger(getParameter(argc,argv,"-mpi_job_size","10"));
         chunk_angular_distance = textToFloat(getParameter(argc,
         argv,"-chunk_angular_distance","-1"));
@@ -118,7 +118,7 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
     /* Usage ------------------------------------------------------------------- */
     void usage()
     {
-        Prog_new_projection_matching_prm::usage();
+        Prog_angular_projection_matching_prm::usage();
         std::cerr << " [ -mpi_job_size default=-1]    : Number of images sent to a cpu in a single job \n";
         std::cerr << "                                  10 may be a good value\n";
         std::cerr << "                                 if  -1 the computer will fill the value for you\n";
@@ -138,7 +138,7 @@ class Prog_mpi_new_projection_matching_prm:Prog_new_projection_matching_prm
     /* Show -------------------------------------------------------------------- */
     void show()
     {
-        Prog_new_projection_matching_prm::show();
+        Prog_angular_projection_matching_prm::show();
 	std::cerr << " Size of mpi jobs " << mpi_job_size <<std::endl
               << " Sampling rate(chunk_angular_distance): " << chunk_angular_distance    << std::endl
               << " Symmetry group:            " << fn_sym << std::endl
@@ -597,7 +597,7 @@ int main(int argc, char *argv[])
     //size of the mpi block, number of images
     //mpi_job_size=!checkParameter(argc,argv,"-mpi_job_size","-1");
 
-    Prog_mpi_new_projection_matching_prm prm;
+    Prog_mpi_angular_projection_matching_prm prm;
     bool finalize_worker=false;
     if (prm.rank == 0)
     {    
