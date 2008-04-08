@@ -110,6 +110,7 @@ void CtfGroupParams::produceSideInfo()
     int ydim, imgno;
     bool is_unique, found, is_first;
     double avgdef;
+    std::vector<FileName> mics_fnctf;
 
     SF.read(fn_sel);
     SF.ImgSize(dim,ydim);
@@ -201,6 +202,28 @@ void CtfGroupParams::produceSideInfo()
         imgno++;
     }
 
+    // Now that we have all information, sort micrographs on defocus value
+    // And update all corresponding pointers and data vectors.
+    std::vector<Matrix2D<double> > newmics_ctf2d=mics_ctf2d;
+    std::vector<int> newmics_count=mics_count;
+    std::vector< std::vector <FileName> > newmics_fnimgs=mics_fnimgs;
+    std::vector<double> sorted_defocus=mics_defocus;
+
+    std::sort(sorted_defocus.begin(), sorted_defocus.end());
+    std::reverse(sorted_defocus.begin(), sorted_defocus.end());
+    for (int isort = 0; isort < sorted_defocus.size(); isort++)
+        for (int imic=0; imic < mics_defocus.size(); imic++)
+            if (ABS(sorted_defocus[isort] -  mics_defocus[imic]) < XMIPP_EQUAL_ACCURACY)
+            {
+                newmics_ctf2d[isort]  = mics_ctf2d[imic];
+                newmics_count[isort]  = mics_count[imic];
+                newmics_fnimgs[isort] = mics_fnimgs[imic];
+                break;
+            }
+    mics_ctf2d   = newmics_ctf2d;
+    mics_count   = newmics_count;
+    mics_fnimgs  = newmics_fnimgs;
+    mics_defocus = sorted_defocus;
 }
 
 // Check whether a CTF is anisotropic
@@ -288,36 +311,6 @@ void CtfGroupParams::autoRun()
     }
     std::cerr<<" Number of CTF groups= "<<nr_groups<<std::endl;
     
-    // Calculate avgdef for each group
-    group_avgdef.clear();
-    for (int igroup=0; igroup < nr_groups; igroup++)
-    {
-        sumw = 0.;
-        avgdef = 0.;
-        for (int igmic=0; igmic < pointer_group2mic[igroup].size(); igmic++)
-        {            
-            imic = pointer_group2mic[igroup][igmic];
-            sumw += (double) mics_count[imic];
-            avgdef += mics_count[imic] * mics_defocus[imic];
-        }
-        group_avgdef.push_back(avgdef/sumw);
-    }
-
-    // Sort groups based on avgdef and reorder pointer_group2mic
-    std::vector<double> sorted_defocus=group_avgdef;
-    std::sort(sorted_defocus.begin(), sorted_defocus.end());
-    std::reverse(sorted_defocus.begin(), sorted_defocus.end());
-    std::vector<std::vector<int> > newpointer_group2mic=pointer_group2mic;
-    for (int isort = 0; isort < sorted_defocus.size(); isort++)
-        for (int igroup=0; igroup < nr_groups; igroup++)
-            if (ABS(sorted_defocus[isort] -  group_avgdef[igroup]) < XMIPP_EQUAL_ACCURACY)
-            {
-                newpointer_group2mic[isort] = pointer_group2mic[igroup];
-                break;
-            }
-    pointer_group2mic = newpointer_group2mic;
-    group_avgdef = sorted_defocus;
-
     // I/O: For each group: 
     //
     // 1. write selfile with images
@@ -332,6 +325,7 @@ void CtfGroupParams::autoRun()
         SFo.clear();
         Mavg.initZeros(dim,dim);
         sumw = 0.;
+        avgdef = 0.;
         mindef = 99.e99;
         maxdef = -99.e99;
         for (int igmic=0; igmic < pointer_group2mic[igroup].size(); igmic++)
@@ -340,7 +334,8 @@ void CtfGroupParams::autoRun()
             sumw += (double) mics_count[imic];
             // calculate (weighted) average Mctf
             Mavg += mics_count[imic] * mics_ctf2d[imic];
-            // Calculate min and max defocus values in this group
+            // Calculate avg, min and max defocus values in this group
+            avgdef += mics_count[imic] * mics_defocus[imic];
             mindef = XMIPP_MIN(mics_defocus[imic],mindef);
             maxdef = XMIPP_MAX(mics_defocus[imic],maxdef);
             // Fill SelFile
@@ -349,10 +344,11 @@ void CtfGroupParams::autoRun()
                 SFo.insert(mics_fnimgs[imic][iimg]);
             }
         }
-        std::cerr<<" Group "<<igroup + 1 <<" contains "<< pointer_group2mic[igroup].size()<<" ctfs and "<<sumw<<" images and has average defocus "<<group_avgdef[igroup]<<std::endl;
-        
         Mavg /= sumw;
+        avgdef /= sumw;
         fnt.compose(fn_root+"_group",igroup+1,"");
+        std::cerr<<" Group "<<fnt <<" contains "<< pointer_group2mic[igroup].size()<<" ctfs and "<<sumw<<" images and has average defocus "<<avgdef<<std::endl;
+        
         // 1. write selfile
         SFo.write(fnt+".sel");
         // 2. write average Mctf
@@ -366,7 +362,7 @@ void CtfGroupParams::autoRun()
         // 4. Output to file with avgdef, mindef and maxdef per group
         fh3 << integerToString(igroup+1);
         fh3.width(10);
-        fh3 << floatToString(group_avgdef[igroup]);
+        fh3 << floatToString(avgdef);
         fh3.width(10);
         fh3 << floatToString(mindef);
         fh3.width(10);

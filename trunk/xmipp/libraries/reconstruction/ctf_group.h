@@ -66,14 +66,11 @@ public:
     // Flag whether to throw out anisotropic CTFs
     bool do_discard_anisotropy;
 
-    // vector with all CTF filenames
-    std::vector<FileName> mics_fnctf;
-
     // Vector with 1D CTF profiles for all micrographs and all groups
     std::vector<Matrix2D<double> > mics_ctf2d;
 
     // Vector with average defocus value per micrograph and per group
-    std::vector<double> mics_defocus, group_avgdef;
+    std::vector<double> mics_defocus;
 
     // Vector with number of images per defocus group
     std::vector<int> mics_count;
