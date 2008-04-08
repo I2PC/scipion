@@ -23,12 +23,12 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "new_projmatch.h"
+#include "angular_projection_matching.h"
 //#define DEBUG
 //#define TIMING
 
 // Read arguments ==========================================================
-void Prog_new_projection_matching_prm::read(int argc, char **argv)  {
+void Prog_angular_projection_matching_prm::read(int argc, char **argv)  {
 
   // Read command line
   if (checkParameter(argc,argv,"-more_options")) { usage(); extendedUsage();}
@@ -52,7 +52,7 @@ void Prog_new_projection_matching_prm::read(int argc, char **argv)  {
 }
 
 // Show ====================================================================
-void Prog_new_projection_matching_prm::show() {
+void Prog_angular_projection_matching_prm::show() {
 
   if (verb>0) {
     std::cerr << "  Input images            : "<< fn_exp << std::endl;
@@ -89,7 +89,7 @@ void Prog_new_projection_matching_prm::show() {
 }
 
 // Usage ===================================================================
-void Prog_new_projection_matching_prm::usage() {
+void Prog_angular_projection_matching_prm::usage() {
   std::cerr << "Usage:  projection_matching [options] "<<std::endl;
   std::cerr << "   -i <docfile>            : Docfile with input images \n"
 	    << "   -ref <ref rootname=\"ref\"> : Rootname for reference projection files \n"
@@ -101,7 +101,7 @@ void Prog_new_projection_matching_prm::usage() {
 }
 
 // Extended usage ===================================================================
-void Prog_new_projection_matching_prm::extendedUsage() {
+void Prog_angular_projection_matching_prm::extendedUsage() {
   std::cerr << "Additional options: \n"
             << " [ -mem <float=1> ]            : Available memory for reference library (Gb)\n"
 	    << " [ -max_shift <float=-1> ]     : Max. change in origin offset (+/- pixels; neg= no limit) \n"
@@ -111,7 +111,7 @@ void Prog_new_projection_matching_prm::extendedUsage() {
 }
 
 // Side info stuff ===================================================================
-void Prog_new_projection_matching_prm::produceSideInfo() {
+void Prog_angular_projection_matching_prm::produceSideInfo() {
 
     ImageXmipp       img,empty;
     Projection       proj;
@@ -220,7 +220,7 @@ void Prog_new_projection_matching_prm::produceSideInfo() {
 
 }
 
-void Prog_new_projection_matching_prm::getCurrentImage(int imgno, ImageXmipp &img)
+void Prog_angular_projection_matching_prm::getCurrentImage(int imgno, ImageXmipp &img)
 {
 
     FileName         fn_img;
@@ -258,7 +258,7 @@ void Prog_new_projection_matching_prm::getCurrentImage(int imgno, ImageXmipp &im
 
 }
 
-int Prog_new_projection_matching_prm::getCurrentReference(int refno)
+int Prog_angular_projection_matching_prm::getCurrentReference(int refno)
 {
 
     FileName                      fnt;
@@ -319,7 +319,7 @@ int Prog_new_projection_matching_prm::getCurrentReference(int refno)
 
 }
 
-void Prog_new_projection_matching_prm::rotationallyAlignOneImage(Matrix2D<double> &img,
+void Prog_angular_projection_matching_prm::rotationallyAlignOneImage(Matrix2D<double> &img,
 								 int imgno, 
 								 int &opt_refno,
 								 double &opt_psi, 
@@ -471,7 +471,7 @@ void Prog_new_projection_matching_prm::rotationallyAlignOneImage(Matrix2D<double
 
 }
 
-void Prog_new_projection_matching_prm::translationallyAlignOneImage(Matrix2D<double> &img,
+void Prog_angular_projection_matching_prm::translationallyAlignOneImage(Matrix2D<double> &img,
 								    const int &opt_refno, 
 								    const double &opt_psi, 
 								    const double &opt_flip, 
@@ -557,7 +557,7 @@ void Prog_new_projection_matching_prm::translationallyAlignOneImage(Matrix2D<dou
 
 
 
-void Prog_new_projection_matching_prm::processSomeImages(int * my_images, double * my_output) 
+void Prog_angular_projection_matching_prm::processSomeImages(int * my_images, double * my_output) 
 {
 
 
