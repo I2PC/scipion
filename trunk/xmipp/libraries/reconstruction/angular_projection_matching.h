@@ -23,6 +23,9 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
+#ifndef _NEW_PROJECTION_MATCHING_H
+#define _NEW_PROJECTION_MATCHING_H
+
 #include <data/fft.h>
 #include <data/args.h>
 #include <data/funcs.h>
@@ -31,101 +34,119 @@
 #include <data/image.h>
 #include <data/filters.h>
 #include <data/mask.h>
+#include <data/gridding.h>
+#include <data/polar.h>
 
 #include "projection.h"
-#include "directions.h"
 #include "symmetries.h"
+#include "sampling.h"
+#include "ctf.h"
 
-#define FOR_ALL_DIRECTIONS() for (int dirno=0;dirno<nr_dir; dirno++)
-#define FOR_ALL_ROTATIONS() for (int ipsi=0; ipsi<nr_psi; ipsi++ )
+#define MY_OUPUT_SIZE 9
 
-/**@defgroup ProjectionMatching angular_projection_matching (Discrete angular assignment by projection matching)
+/**@defgroup new_projection_matching new_projmatch (Discrete angular assignment using a new projection matching)
    @ingroup ReconsLibraryPrograms */
 //@{
 /** projection_matching parameters. */
-class Prog_projection_matching_prm {
+class Prog_new_projection_matching_prm {
 public:
 
-  /** Filenames reference selfile/image, fraction docfile & output rootname */
-  FileName fn_vol,fn_root,fn_sym,fn_ref,fn_ang,fn_control;
-  /** Selfile with experimental images */
-  SelFile SF;
-  /** Vector with reference library projections */
-  std::vector<Matrix2D<double> > ref_img;
-  std::vector<Matrix2D<double> >::iterator idirno;
-  /** Vectors for standard deviation and mean of reference library projections */
-  double * ref_stddev, * ref_mean;
-  /** Vector with reference library angles */
-  double * ref_rot, * ref_tilt;
-  /** Number of projection directions */
-  int nr_dir;
-  /** Number of steps to sample in-plane rotation in 90 degrees */
-  int nr_psi;
-  /** dimension of the images */
-  int dim;
-  /** Verbose level:
-      1: gives progress bar (=default)
-      0: gives no output to screen at all */
-  int verb;
-  /** Create Projections
-      1 yes
-      0 no
-   **/
-  int create_proyections;
-   
-  /** Flag whether to store optimal transformations in the image headers */
-  bool modify_header;
-  /** Flag whether to output reference projections, selfile and docfile */
-  bool output_refs;
-  /** Angular sampling rate */
-  double sampling;
-  /** Maximum allowed shift */
-  double max_shift;
-    /** For user-provided tilt range */
-  double tilt_range0, tilt_rangeF;
-  /** Maximum allowed angular search ranges for rot and tilt */
-  double ang_search;
-  /** Mask for shifts */
-  Matrix2D<int> rotmask;
-  /** Number of white pixels in rotmask */
-  int nr_pixels_rotmask;
-  /** Inner and outer radii to limit the rotational search */
-  double Ri, Ro;
-    /** Flag to write class averages and class selfiles (one class for
-     * each projection direction) */
-    bool output_classes;
-    /** Vector with all running class averages */
-    std::vector<ImageXmipp> class_avgs;
-    std::vector<SelFile> class_selfiles;
+    /** Filenames */
+    FileName fn_exp, fn_ref, fn_root, fn_ctf;
+    /** Docfile with experimental images */
+    DocFile DFexp;
+    /** Selfile with experimental images */
+    SelFile SFexp;
+    /** dimension of the images */
+    int dim;
+    /** Maximum allowed shift */
+    double max_shift;
+    /** Inner and outer radii to limit the rotational search */
+    int Ri, Ro;
+    /** Verbose level:
+	1: gives progress bar (=default)
+	0: gives no output to screen at all */
+    int verb;
+    /** Available memory for storage of all references (in Gb) */
+    double avail_memory;
+    /** Maximum number of references to store in memory */
+    int max_nr_refs_in_memory;
+    /** Maximum number of references that can be stored in memory 
+    The difference between this and the previous varible is that
+    the previous one is the MIN(max_nr_refs_in_memory, number of references)
+    */
+    int max_nr_imgs_in_memory;
+    /** Total number of references */
+    int total_nr_refs;
+    /** Counter for current filling of memory with references */
+    int counter_refs_in_memory;
+    /** Pointers for reference retrieval */
+    std::vector<int> pointer_allrefs2refsinmem;
+    std::vector<int> pointer_refsinmem2allrefs;
+    /** Vector with reference FTs of polar rings */
+    std::vector<Polar<std::complex<double> > > fP_ref;
+    /** Vector with reference images */
+    std::vector<Matrix2D<double> > proj_ref;
+    /** vector with stddevs for all reference projections */
+    std::vector<double> stddev_ref;
+    /** sampling object */
+    XmippSampling mysampling;
+    /** Flag whether to loop from low to high or from high to low
+     * through the references */
+    bool loop_forward_refs;
+    /** 5D-search: maximum offsets (+/- pixels) */
+    int search5d_shift;
+    /** 5D-search: offset step (pixels) */
+    int search5d_step;
+    /** 5D-search: actual displacement vectors */
+    std::vector<int> search5d_xoff, search5d_yoff;
+    /** CTF image */
+    Matrix2D<double> Mctf;
+    /** Are the experimental images phase flipped? */
+    bool phase_flipped;
+    
 
 public:
   /// Read arguments from command line
-  virtual void read(int argc, char **argv);
+  void read(int argc, char **argv);
 
   /// Show
-  virtual void show();
+  void show();
 
   /// Usage
-  virtual void usage();
+  void usage();
 
   /// Extended Usage
-  void extended_usage();
+  void extendedUsage();
 
   /** Make shiftmask and calculate nr_psi */
-  void produce_Side_info();
+  void produceSideInfo();
 
-  /** Actual projection matching for one image */
-  void PM_process_one_image(Matrix2D<double> &Mexp,
-			    float &img_rot, float &img_tilt, float &img_psi,
-			    int &opt_dirno, double &opt_psi,
-			    double &opt_xoff, double &opt_yoff,
-			    double &maxCC, double &Zscore);
+  /** Rotational alignment using polar coordinates 
+   *  The input image is assumed to be in FTs of polar rings 
+   */
+  void rotationallyAlignOneImage(Matrix2D<double> &img, int imgno, int &opt_samplenr,
+				 double &opt_psi, double &opt_flip, double &maxcorr);
+
+  /** Translational alignment using cartesian coordinates 
+   *  The optimal direction is re-projected from the volume
+   */
+  void translationallyAlignOneImage(Matrix2D<double> &img,
+				       const int &samplenr, const double &psi, const double &opt_flip,
+				       double &opt_xoff, double &opt_yoff, double &maxcorr);
+
+  /** Read current image into memory and translate accoring to
+      previous optimal Xoff and Yoff */
+  void getCurrentImage(int imgno, ImageXmipp &img);
+
+  /** Get pointer to the current reference image 
+      If this image wasn't stored in memory yet, read it from disc and
+      store FT of the polar transform as well as the original image */
+  int getCurrentReference(int refno);
 
   /** Loop over all images */
-  void PM_loop_over_all_images(SelFile &SF, DocFile &DFo, double &sumCC);
+  void processSomeImages(int * my_images, double * my_output);
 
-
-    /** Write to disc all class averages and selfiles */
-    void write_classes();
 };				
 //@}
+#endif
