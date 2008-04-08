@@ -135,7 +135,7 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
             {
                 //Wait until any message arrives
                 //be aware that mpi_Probe will block the program untill a message is received
-                #define DEBUG
+                //#define DEBUG
                 #ifdef DEBUG
                 std::cerr << "Mp1 waiting for any  message " << std::endl;
                 #endif
