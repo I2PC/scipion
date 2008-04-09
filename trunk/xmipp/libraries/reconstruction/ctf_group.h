@@ -67,8 +67,17 @@ public:
     // Flag whether to throw out anisotropic CTFs
     bool do_discard_anisotropy;
 
+    /// Flag for calculating Wiener filters
+    bool do_wiener;
+
+    /// Wiener filter constant
+    double wiener_constant;
+
+    /// Matrix with denominator term of Wiener filter
+    Matrix2D<double> Mwien;
+
     // Vector with 1D CTF profiles for all micrographs and all groups
-    std::vector<Matrix2D<double> > mics_ctf2d;
+    std::vector<Matrix2D<double> > mics_ctf2d, groups_ctf2d;
 
     // Vector with average defocus value per micrograph and per group
     std::vector<double> mics_defocus;

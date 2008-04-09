@@ -44,6 +44,8 @@ void CtfGroupParams::read(int argc, char **argv)
     {
         fn_split = getParameter(argc, argv, "-split");
     }
+    do_wiener = checkParameter(argc, argv, "-wiener");
+    wiener_constant = textToFloat(getParameter(argc, argv, "-wc","-1"));
 
 }
 
@@ -54,6 +56,7 @@ void CtfGroupParams::show()
     std::cerr << "  Input sel file          : "<< fn_sel << std::endl;
     std::cerr << "  Input ctfdat file       : "<< fn_ctfdat << std::endl;
     std::cerr << "  Output rootname         : "<< fn_root << std::endl;
+    
     if (do_discard_anisotropy)
     {
         std::cerr << " -> Exclude anisotropic CTFs from the groups"<<std::endl;
@@ -61,8 +64,8 @@ void CtfGroupParams::show()
     if (do_auto)
     {
 	std::cerr << " -> Using automated mode for making groups"<<std::endl;
-        std::cerr << "  Maximum allowed error   : "<<max_error
-                  <<" at "<<resol_error<<"Ang resolution"<<std::endl; 
+        std::cerr << " -> With a maximum allowed error of "<<max_error
+                  <<" at "<<resol_error<<" Ang resolution"<<std::endl; 
     }
     else
     {
@@ -76,6 +79,11 @@ void CtfGroupParams::show()
     {
 	std::cerr << " -> Assume that data are NOT PHASE FLIPPED"<<std::endl;
     }
+    if (do_wiener)
+    {
+	std::cerr << " -> Also calculate Wiener filters, with constant= "<<wiener_constant<<std::endl;
+    }
+    std::cerr << "----------------------------------------------------------"<<std::endl;
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -86,6 +94,8 @@ void CtfGroupParams::usage()
               << "  [-o <oext=\"ctf\">]        : Output root name\n"
 	      << "  [-phase_flipped]          : Output filters for phase-flipped data\n"
               << "  [-discard_anisotropy]     : Exclude anisotropic CTFs from groups\n"
+              << "  [-wiener]                 : Also calculate Wiener filters\n"
+              << "  [-wc <float=-1>]          : Wiener-filter constant (if < 0: use FREALIGN default)\n"
               << " MODE 1: AUTOMATED: \n"
               << "  [-error <float=0.5> ]     : Maximum allowed error\n"
               << "  [-resol <float> ]         : Resol. (in Ang) for error calculation (default=Nyquist)\n"
@@ -120,6 +130,12 @@ void CtfGroupParams::produceSideInfo()
     Mctf.resize(dim,dim);
     ctfdat.read(fn_ctfdat);
 
+    if (do_wiener)
+    {
+        Mwien.resize(dim,dim);
+        Mwien.initZeros();
+    }
+
     mics_fnctf.clear();
     SF.go_beginning();
     is_first=true;
@@ -153,7 +169,8 @@ void CtfGroupParams::produceSideInfo()
                 {
                     // Read CTF in memory
                     ctf.read(fnt_ctf);
-                    ctf.enable_CTF = ctf.enable_CTFnoise = true;
+                    ctf.enable_CTF = true; 
+                    ctf.enable_CTFnoise = false;
                     ctf.Produce_Side_Info();
                     if (is_first)
                     {
@@ -172,23 +189,23 @@ void CtfGroupParams::produceSideInfo()
                     }
                     if (!do_discard_anisotropy || isIsotropic(ctf))
                     {
-                        avgdef = (ctf.DeltafU+ctf.DeltafV)/2.;
+                        avgdef = (ctf.DeltafU + ctf.DeltafV)/2.;
                         ctf.DeltafU = avgdef;
                         ctf.DeltafV = avgdef;
                         ctf.Generate_CTF(dim, dim, ctfmask);
-                        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mctf)
+                        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(ctfmask)
                         {
                             if (phase_flipped) dMij(Mctf, i, j) = fabs(dMij(ctfmask, i, j).real());
                             else dMij(Mctf, i, j) = dMij(ctfmask, i, j).real();
                         }
-                        // Fill vectors
+                       // Fill vectors
                         mics_fnctf.push_back(fnt_ctf);
                         mics_count.push_back(1);
                         mics_fnimgs.push_back(dum);
                         mics_fnimgs[mics_fnimgs.size()-1].push_back(fnt_img);
                         mics_ctf2d.push_back(Mctf);
                         mics_defocus.push_back(avgdef);
-                        std::cerr<<" uniq "<<fnt_img<<" in mic "<<mics_fnimgs.size()-1<<"def= "<<avgdef<<std::endl;
+                        //std::cerr<<" uniq "<<fnt_img<<" in mic "<<mics_fnimgs.size()-1<<"def= "<<avgdef<<std::endl;
                     }
                     else
                     {
@@ -203,6 +220,33 @@ void CtfGroupParams::produceSideInfo()
         imgno++;
     }
 
+    // Precalculate denominator term of the Wiener filter
+    if (do_wiener)
+    {
+        double sumimg = 0.;
+        for (int imic=0; imic < mics_count.size(); imic++)
+        {
+            sumimg += (double)mics_count[imic];
+            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mwien)
+            {
+                dMij(Mwien,i,j) += mics_count[imic] * dMij(mics_ctf2d[imic],i,j) * dMij(mics_ctf2d[imic],i,j); 
+            }
+        }
+        // Use Grigorieff's default for Wiener filter constant: 10% of average over all Mwien terms
+        // Grigorieff JSB 157(1) (2006), pp 117-125
+        if (wiener_constant < 0.) 
+        {
+            wiener_constant = 0.1 * Mwien.compute_avg();
+        }
+        // Also divide by sumimg (Wiener filter is for summing images, not averaging!)
+        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mwien)
+        {
+            dMij(Mwien,i,j) += wiener_constant;
+            dMij(Mwien,i,j) /= sumimg;
+        }
+        
+    }
+ 
     // Now that we have all information, sort micrographs on defocus value
     // And update all corresponding pointers and data vectors.
     std::vector<Matrix2D<double> > newmics_ctf2d=mics_ctf2d;
@@ -410,7 +454,7 @@ void CtfGroupParams::writeOutputToDisc()
         // 2. write average Mctf
         img() = Mavg;
         img.weight() = sumw;
-        img.write(fnt+".fft");
+        img.write(fnt+".ctf");
         // 3. Output to file with number of images per group
         fh << integerToString(igroup+1);
         fh.width(10);
@@ -448,6 +492,17 @@ void CtfGroupParams::writeOutputToDisc()
             fh2 << std::endl;
         }
         fh2.close();
+        // 7. Write Wiener filter
+        if (do_wiener)
+        {
+            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mavg)
+            {
+                dMij(Mavg,i,j) /= dMij(Mwien,i,j);
+            }
+            img() = Mavg;
+            img.weight() = sumw;
+            img.write(fnt+".wien");
+        }
     }
     
     // 3. Write file with number of images per group
@@ -456,8 +511,8 @@ void CtfGroupParams::writeOutputToDisc()
     fh3.close();
     // 5. Write docfile with defocus values to split manually
     DFo.write(fn_root+"_groups_split.doc");
-}
 
+}
 
 void CtfGroupParams::run()
 {
