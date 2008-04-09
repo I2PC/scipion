@@ -194,8 +194,12 @@ void  init_random_generator(int seed)
     idum = -1;
     ran1(&idum);
     if (seed != -1)
+    {
+        // Prevent seeds larger than 65000
+        seed %=0xffff; 
         for (int i = 0; i < seed; i++)
             ran1(&idum);
+    }
 }
 
 void  randomize_random_generator()
