@@ -418,20 +418,20 @@ AC_DEFINE_UNQUOTED(CODELET_OPTIM, "$CODELET_OPTIM", [extra CFLAGS for codelets])
 
 AC_CONFIG_FILES([
    Makefile
-   support/Makefile
-   genfft/Makefile
-   genfft-k7/Makefile
+   #support/Makefile
+   #genfft/Makefile
+   #genfft-k7/Makefile
    kernel/Makefile
-   simd/Makefile
-   simd/nonportable/Makefile
+   #simd/Makefile
+   #simd/nonportable/Makefile
 
    dft/Makefile
    dft/codelets/Makefile
    dft/codelets/standard/Makefile
-   dft/simd/Makefile
-   dft/simd/codelets/Makefile
-   dft/k7/Makefile
-   dft/k7/codelets/Makefile
+   #dft/simd/Makefile
+   #dft/simd/codelets/Makefile
+   #dft/k7/Makefile
+   #dft/k7/codelets/Makefile
 
    rdft/Makefile
    rdft/codelets/Makefile
@@ -441,18 +441,18 @@ AC_CONFIG_FILES([
 
    reodft/Makefile
 
-   threads/Makefile
+   #threads/Makefile
 
    api/Makefile
 
-   libbench2/Makefile
-   tests/Makefile
-   doc/Makefile
-   doc/FAQ/Makefile
+   #libbench2/Makefile
+   #tests/Makefile
+   #doc/Makefile
+   #doc/FAQ/Makefile
 
-   tools/Makefile
-   tools/fftw_wisdom.1
-   tools/fftw-wisdom-to-conf
+   #tools/Makefile
+   #tools/fftw_wisdom.1
+   #tools/fftw-wisdom-to-conf
 
    fftw.pc
 ])
