@@ -42,7 +42,7 @@
 #define TAG_STOP   1
 #define TAG_WAIT   2
 #define TAG_FREEWORKER   3
-
+   
 class Prog_mpi_angular_project_library_Parameters:Prog_angular_project_library_Parameters
 {
     public:
@@ -109,6 +109,17 @@ class Prog_mpi_angular_project_library_Parameters:Prog_angular_project_library_P
     /* Pre Run PreRun for all nodes but not for all works */
     void preRun()
     {
+//#define DEBUGTIME
+#ifdef  DEBUGTIME
+#include <ctime>
+     
+        time_t start,end;
+        double time_dif;
+        time (&start);
+        time (&end);
+        time_dif = difftime (end,start); start=end;
+        std::cerr<<" starting prerun rank= "<<rank<<std::endl;
+#endif
         int my_seed;
         if (rank == 0) 
         {
@@ -120,12 +131,22 @@ class Prog_mpi_angular_project_library_Parameters:Prog_angular_project_library_P
             my_seed=rand();
 	        }
         }
+#ifdef  DEBUGTIME
+        time (&end);
+        time_dif = difftime (end,start); start=end;
+        std::cerr<<" set rand seed rank= "<<rank<<std::endl;
+#endif
 	//Bcast must be seem by all processors
     if(perturb_projection_vector!=0)
-        {
-	    MPI_Bcast (&my_seed, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    {
+        MPI_Bcast (&my_seed, 1, MPI_INT, 0, MPI_COMM_WORLD);
         mysampling.SetNoise(perturb_projection_vector,my_seed);
-        }
+#ifdef  DEBUGTIME
+        time (&end);
+        time_dif = difftime (end,start); start=end;
+        std::cerr<<" after perturb rank= "<<rank<<std::endl;
+#endif
+    }
     //all ranks
     mysampling.SetSampling(sampling);
 	if (!mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
@@ -133,6 +154,11 @@ class Prog_mpi_angular_project_library_Parameters:Prog_angular_project_library_P
     if(angular_distance_bool!=0)	
         mysampling.SetNeighborhoodRadius(angular_distance);//irelevant
 
+#ifdef  DEBUGTIME
+    time (&end);
+    time_dif = difftime (end,start); start=end;
+    std::cerr<<" setsampling rank= "<<rank<<std::endl;
+#endif
     //true -> half_sphere
     mysampling.Compute_sampling_points(false,max_tilt_angle,min_tilt_angle);
     mysampling.SL.read_sym_file(fn_sym);
@@ -142,11 +168,27 @@ class Prog_mpi_angular_project_library_Parameters:Prog_angular_project_library_P
     if (FnexperimentalImages.size() > 0)	
          mysampling.fill_exp_data_projection_direction_by_L_R(FnexperimentalImages);
 
+#ifdef  DEBUGTIME
+    time (&end);
+    time_dif = difftime (end,start); start=end;
+    std::cerr<<" compute sampling points rank= "<<rank<<std::endl;
+#endif
+
     mysampling.remove_redundant_points(symmetry, sym_order);
+#ifdef  DEBUGTIME
+    time (&end);
+    time_dif = difftime (end,start); start=end;
+    std::cerr<<" remove redundant rank= "<<rank<<std::endl;
+#endif
     if (FnexperimentalImages.size() > 0 && 
         remove_points_far_away_from_experimental_data_bool)
         {	
         mysampling.remove_points_far_away_from_experimental_data(FnexperimentalImages);
+#ifdef  DEBUGTIME
+        time (&end);
+        time_dif = difftime (end,start); start=end;
+        std::cerr<<" remove points far away rank= "<<rank<<std::endl;
+#endif
         }
 
 	/* save files */
