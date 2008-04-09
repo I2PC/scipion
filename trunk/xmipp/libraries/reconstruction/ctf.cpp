@@ -56,7 +56,7 @@ void XmippCTF::read(const FileName &fn, bool disable_if_not_K)
             DeltaF = textToFloat(getParameter(fh_param, "longitudinal_displace", 0, "0"));
             DeltaR = textToFloat(getParameter(fh_param, "transversal_displace", 0, "0"));
             Q0 = textToFloat(getParameter(fh_param, "Q0", 0, "0"));
-            K = textToFloat(getParameter(fh_param, "K", 0, "0"));
+            K = textToFloat(getParameter(fh_param, "K", 0, "1"));
             if (K == 0 && disable_if_not_K) enable_CTF = false;
         }
 
