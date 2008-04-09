@@ -358,6 +358,7 @@ ReconsSources = [
     'ctf_correct_amplitude3d.cpp',
     'ctf.cpp',
     'ctf_estimate_from_micrograph.cpp',
+    'ctf_group.cpp',
     'directions.cpp',
     'draw_surface.cpp',
     'euler.cpp',
@@ -495,8 +496,10 @@ AddXmippProgram('ctf_correct_phase', ['XmippRecons'])
 AddXmippProgram('ctf_estimate_from_micrograph', ['XmippRecons'])
 AddXmippProgram('ctf_estimate_from_psd', ['XmippRecons'])
 AddXmippProgram('ctf_profile', ['XmippRecons'])
+AddXmippProgram('ctf_group', ['XmippRecons'])
 AddXmippProgram('denoise')
 AddXmippProgram('docfile_append')
+AddXmippProgram('docfile_select_subset')
 AddXmippProgram('docfile_histogram')
 AddXmippProgram('find_center3d')
 AddXmippProgram('foms_evaluate', ['XmippRecons'])
