@@ -234,19 +234,52 @@ void FourierMask::read_mask(const FileName &fn)
 {
     FilterBand = FilterShape = FROM_FILE;
     fn_mask = fn;
-    if (Is_FourierImageXmipp(fn_mask))
+    if (Is_ImageXmipp(fn_mask))
+    {
+        std::cerr<<"Converting real-valued mask in "<<fn_mask<<" to complex values..."<<std::endl;
+        ImageXmipp  I;
+        I.read(fn_mask);
+        FourierImageXmipp If;
+        If().resize(I());
+        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(If())
+        {
+            dMij(If(),i,j) = std::complex<double>(dMij(I(),i,j),0.);
+            std::cout<< dMij(If(),i,j)<<" "<<dMij(I(),i,j)<<std::endl;
+        }
+        mask2D = If();
+        mask2D.setXmippOrigin();
+    }
+    else if (Is_VolumeXmipp(fn_mask))
+    {
+        std::cerr<<"Converting real-valued mask in "<<fn_mask<<" to complex values..."<<std::endl;
+        VolumeXmipp  V;
+        V.read(fn_mask);
+        FourierVolumeXmipp Vf;
+        Vf().resize(V());
+        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Vf())
+        {
+            dVkij(Vf(),k,i,j) = std::complex<double>(dVkij(V(),k,i,j),0.);
+        }
+        mask3D = Vf();
+        mask3D.setXmippOrigin();
+    }
+    else if (Is_FourierImageXmipp(fn_mask))
     {
         FourierImageXmipp  I;
         I.read(fn_mask);
         mask2D = I();
         mask2D.setXmippOrigin();
     }
-    else
+    else if (Is_FourierVolumeXmipp(fn_mask))
     {
         FourierVolumeXmipp V;
         V.read(fn_mask);
         mask3D = V();
         mask3D.setXmippOrigin();
+    }
+    else
+    {
+        REPORT_ERROR(1,"Please provide fourier mask as a (Fourier) image/volume\n");
     }
 }
 
