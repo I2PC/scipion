@@ -33,6 +33,7 @@ int main(int argc, char **argv)
     try
     {
        prm.read(argc,argv);
+       prm.show();
        prm.produceSideInfo();
     }
     catch (Xmipp_error XE)
