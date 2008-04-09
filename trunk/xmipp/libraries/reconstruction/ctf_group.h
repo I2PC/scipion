@@ -28,6 +28,7 @@
 
 #include <data/args.h>
 #include <data/selfile.h>
+#include <data/docfile.h>
 #include <data/filters.h>
 #include "fourier_filter.h"
 #include "ctf.h"
@@ -40,7 +41,7 @@ class CtfGroupParams
 {
 public:
     /// Filenames
-    FileName fn_sel, fn_ctfdat, fn_root, fn_divide;
+    FileName fn_sel, fn_ctfdat, fn_root, fn_split;
 
     /// Maximum allowed error
     double max_error;
@@ -101,8 +102,15 @@ public:
     /** Produce the CTF groups automatically */
     void autoRun();
 
+    /** Split based onto defocus values  given in a docfile */
+    void manualRun();
+
     /** Write output */
     void writeOutputToDisc();
+
+    /** Do the job */
+    void run();
+
 };
 //@}
 #endif

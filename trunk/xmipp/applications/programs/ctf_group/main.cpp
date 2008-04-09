@@ -44,14 +44,7 @@ int main(int argc, char **argv)
 
     try
     {
-        if (prm.do_auto)
-        {
-            prm.autoRun();
-            std::cerr << " done!" <<std::endl;
-        }
-
-        prm.writeOutputToDisc();
-
+        prm.run();
     }
     catch (Xmipp_error XE)
     {

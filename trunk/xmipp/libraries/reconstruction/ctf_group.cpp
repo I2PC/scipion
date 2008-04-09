@@ -1,3 +1,4 @@
+
 /***************************************************************************
  *
  * Authors:     Sjors H.W. Scheres (scheres@cnb.uam.es)
@@ -33,7 +34,7 @@ void CtfGroupParams::read(int argc, char **argv)
     fn_root       = getParameter(argc, argv, "-o","ctf");
     phase_flipped = checkParameter(argc, argv, "-phase_flipped");
     do_discard_anisotropy = checkParameter(argc, argv, "-discard_anisotropy");
-    do_auto       = !checkParameter(argc, argv, "-divide_at");
+    do_auto       = !checkParameter(argc, argv, "-split");
     if (do_auto)
     {
         max_error     = textToFloat(getParameter(argc, argv, "-error","0.5"));
@@ -41,7 +42,7 @@ void CtfGroupParams::read(int argc, char **argv)
     }
     else
     {
-        fn_divide = getParameter(argc, argv, "-divide_at");
+        fn_split = getParameter(argc, argv, "-split");
     }
 
 }
@@ -65,7 +66,7 @@ void CtfGroupParams::show()
     }
     else
     {
-        std::cerr << " -> Group based on defocus values in "<<fn_divide<<std::endl;
+        std::cerr << " -> Group based on defocus values in "<<fn_split<<std::endl;
     }
     if (phase_flipped)
     {
@@ -89,7 +90,7 @@ void CtfGroupParams::usage()
               << "  [-error <float=0.5> ]     : Maximum allowed error\n"
               << "  [-resol <float> ]         : Resol. (in Ang) for error calculation (default=Nyquist)\n"
               << " MODE 2: MANUAL: \n"
-              << "  [-divide_at <docfile> ]   : 1-column docfile with defocus values \n"
+              << "  [-split <docfile> ]       : 1-column docfile with defocus values where to split the data \n"
     ;
 }
 
@@ -306,19 +307,75 @@ void CtfGroupParams::autoRun()
 }
    
 
+void CtfGroupParams::manualRun()
+{
+    DocFile DF;
+    double defocus, split, oldsplit=99.e99;
+    int count, nr_groups = 0;
+    Matrix1D<double> dataline(1);
+    std::vector<int> dum;
+
+    pointer_group2mic.clear();
+    DF.read(fn_split);    
+    // Append -99.e-99 to the end of the docfile
+    DF.locate(DF.get_last_key());
+    dataline(0)=-99.e99;
+    DF.append_data_line(dataline);
+
+    // Loop over all splits
+    DF.go_first_data_line();
+    while (!DF.eof())
+    {
+        split=DF(0);
+        count = 0;
+        for (int imic=0; imic < mics_ctf2d.size(); imic++)
+        {
+            defocus = mics_defocus[imic];
+            if (defocus < oldsplit && defocus >= split)
+            {
+                if (count == 0)
+                {
+                    // add new group
+                    pointer_group2mic.push_back(dum);
+                }
+                pointer_group2mic[nr_groups].push_back(imic);
+                count++;
+            }
+        }
+        if (count == 0)
+        {
+            std::cerr<<" Warning: group with defocus values between "<<oldsplit<<" and "<<split<<" is empty!"<<std::endl;
+        }
+        else
+        {
+            nr_groups++;
+        }
+        oldsplit = split;
+        DF.next_data_line();
+    }
+
+}
+
 void CtfGroupParams::writeOutputToDisc()
 {
 
     FileName fnt;
     SelFile SFo;
+    DocFile DFo;
+    Matrix1D<double> dataline(1);
     ImageXmipp img;
     Matrix2D<double> Mavg;
-    double sumw, avgdef, mindef, maxdef;
+    double sumw, avgdef, mindef, maxdef, split, oldmin=99.e99;
     int imic;
     std::ofstream fh, fh2, fh3;
 
+    
+    DFo.append_comment("Defocus values to split into "+integerToString(pointer_group2mic.size())+" ctf groups");
     fh.open((fn_root+ "_groups.imgno").c_str(), std::ios::out);
+    fh  << "# Number of images in each group \n";
     fh3.open((fn_root+ "_groups.defocus").c_str(), std::ios::out);
+    fh3 << "# Defocus values for each group (avg, max & min) \n";
+
     for (int igroup=0; igroup < pointer_group2mic.size(); igroup++)
     {
         SFo.clear();
@@ -363,11 +420,18 @@ void CtfGroupParams::writeOutputToDisc()
         fh3.width(10);
         fh3 << floatToString(avgdef);
         fh3.width(10);
-        fh3 << floatToString(mindef);
+        fh3 << floatToString(maxdef);
         fh3.width(10);
-        fh3 << floatToString(maxdef)<<std::endl;
-    
-        // 5. Write file with 1D profiles
+        fh3 << floatToString(mindef)<<std::endl;
+        // 5. Output to docfile for manual grouping
+        if (oldmin < 9.e99)
+        {
+            split = (oldmin + maxdef) / 2.;
+            dataline(0) = split;
+            DFo.append_data_line(dataline);
+        }
+        oldmin = mindef;
+        // 6. Write file with 1D profiles
         fh2.open((fnt+".profiles").c_str(), std::ios::out);
         for (int i=0; i < dim/2; i++)
         {
@@ -390,10 +454,26 @@ void CtfGroupParams::writeOutputToDisc()
     fh.close();
     // 4. Write file with avgdef, mindef and maxdef per group
     fh3.close();
-
-
+    // 5. Write docfile with defocus values to split manually
+    DFo.write(fn_root+"_groups_split.doc");
 }
 
 
+void CtfGroupParams::run()
+{
 
+    if (do_auto)
+    {
+        autoRun();
+    }
+    else
+    {
+        manualRun();
+    }
+
+    writeOutputToDisc();
+
+    std::cerr << " Done!" <<std::endl;
+    
+}
 
