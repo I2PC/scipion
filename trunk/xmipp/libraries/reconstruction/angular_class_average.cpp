@@ -196,7 +196,7 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
 	    if (DF.get_current_line().Is_comment()) fn_img = ((DF.get_current_line()).get_text()).erase(0, 3);
 	    else  REPORT_ERROR(1, "Problem with NewXmipp-type document file");
 	    DF.adjust_to_data_line();
-        ref_number = round(DF(col_ref - 1));
+            ref_number = ROUND(DF(col_ref - 1));
 	    // Check for matching rot and tilt
     //	if (ABS(rot-lib_rot) < 0.01 && ABS(tilt-lib_tilt)<0.01)
 	    if (ref_number == dirno)
