@@ -159,7 +159,7 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
                     w  = myw[0];
                     w1 = myw[1];
                     w2 = myw[2]; 
-                    myref_number = round(myw[3]);        
+                    myref_number = ROUND(myw[3]);        
                     #ifdef DEBUG
                     std::cerr << "Mr2.5 received work from worker " <<  status.MPI_SOURCE << std::endl;
                     std::cerr << " w w1 w2 myref_number" 
