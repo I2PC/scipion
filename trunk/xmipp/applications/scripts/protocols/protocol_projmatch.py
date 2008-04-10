@@ -1,33 +1,38 @@
 #!/usr/bin/env python
 #------------------------------------------------------------------------------------------------
 # Xmipp protocol for projection matching
-# using self-organizing maps
-#
-#  - delete and create workdirectory
 #
 # Example use:
 # ./xmipp_protocol_projmatch.py
 #
-# Author:Roberto Marabini, March 2007
+# Authors: Roberto Marabini,
+#          Sjors Scheres,    March 2008
 #
 #-----------------------------------------------------------------------------
 # {section} Global parameters
 #-----------------------------------------------------------------------------
 # {file} Selfile with the input images:
-SelFileName='all_images.sel'
+SelFileName='10.sel'
+
+# {file} {expert} Docfile with the input angles:
+""" Do not provide anything if there are no angles yet. 
+    In that case, the starting angles will be read from the image headers
+    This docfile should be in newXmipp-style format (with filenames as comments)
+    Note that all filenames in this docfile should be with absolute paths!
+"""
+DocFileName=''
 
 # {file} Initial 3D reference map:
-ReferenceFileName='reference.vol'
-#ReferenceFileName='init_reference/LTA_rot_0.1_norm.vol'
+ReferenceFileName='ml04_nfilt_norm.gt2'
 
 # Working subdirectory: 
-WorkDirectory='ProjMatch/Test1'
+WorkDirectory='ProjMatch/TestNoCtf1Realign2D'
 
 # Delete working subdirectory if it already exists?
-DoDeleteWorkingDir=True
+DoDeleteWorkingDir=False
 
 # Number of iterations to perform
-NumberofIterations=4
+NumberofIterations=1
 
 # Resume at iteration
 """ This option may be used to finish a previously performed run.
@@ -36,14 +41,49 @@ NumberofIterations=4
 """
 ContinueAtIteration=1
 
+# {expert} Save disc space by cleaning up intermediate files?
+""" Be careful, many options of the visualization protocol will not work anymore, since all class averages, selfiles etc will be deleted.
+"""
+CleanUpFiles=False
+
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/home2/bioinfo/rafa/Protocol/BC/PARA_Roberto'
-#ProjectDir='/home/roberto2/Test/PARA_Roberto'
+ProjectDir='/home/scheres/work/projmatch/phantom_ribosome'
 
 # {expert} Directory name for logfiles:
 LogDir='Logs'
+
+#-----------------------------------------------------------------------------
+# {section} CTF correction
+#-----------------------------------------------------------------------------
+
+# Perform CTF correction?
+""" If set to true, a CTF (amplitude and phase) corrected map will be refined,
+    and the data will be processed in CTF groups.
+    Note that you cannot combine CTF-correction with re-alignment of the classes.
+"""
+DoCtfCorrection=False
+
+# {file} CTFDat file with CTF groups:
+""" The input selfile may be a subset of the images in the CTFDat file, but all images in the input selfile must be present in the CTFDat file. This field is obligatory if CTF correction is to be performed.
+"""
+CTFDatName=''
+
+# {expert} Wiener constant
+""" Term that will be added to the denominator of the Wiener filter.
+    In theory, this value is the inverse of the signal-to-noise ratio
+    If a negative value is taken, the program will use a default value as in FREALIGN 
+    (i.e. 10% of average sum terms over entire space) 
+    see Grigorieff JSB 157 (2006) pp117-125
+"""
+WienerConstant=-1
+
+# Images have been phase flipped?
+DataArePhaseFlipped=False;
+
+# Is the initial reference map CTF (amplitude) corrected?
+ReferenceIsCtfCorrected=False
 
 #-----------------------------------------------------------------------------
 # {section} Mask
@@ -53,16 +93,16 @@ LogDir='Logs'
     Do not provide a very tight mask.
     See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mask for details
 """
-DoMask=True
+DoMask=False
 
-# Show masked volume
-""" Masked volume will be shown. Do not set ths option to true for non iterative processing (jobs sent to queues)
+# {expert} Show masked volume
+""" Masked volume will be shown. Do not set ths option to true for non-interactive processing (jobs sent to queues)
 """
 DisplayMask=False
 
 # {file} Binary mask-file used to mask the reference volume
 MaskFileName='mask.vol'
-#MaskFileName='circular_mask.msk'
+
 #-----------------------------------------------------------------------------
 # {section} Projection Matching
 #-----------------------------------------------------------------------------
@@ -72,13 +112,28 @@ MaskFileName='mask.vol'
 """
 DoProjectionMatching=True
 
-#  Show projection maching library and classes
-""" Show average of projections. Do not set ths option to true for non iterative processing (jobs sent to queues)
+# {expert} Show projection maching library and classes
+""" Show average of projections. Do not set this option to true for non-interactive processing (jobs sent to queues)
 """
-DisplayProjectionMatching=True
+DisplayProjectionMatching=False
 
-# Angular sampling rate (in degrees)
-"""Angular distance between neighboring projection  points
+# {expert} Inner radius for rotational correlation:
+""" In pixels from the image center
+"""
+InnerRadius=0
+
+# {expert} Outer radius for rotational correlation
+""" In pixels from the image center. Use a negative number to use the entire image.
+"""
+OuterRadius=-1
+
+# {expert} Available memory to store all references (Gb)
+""" This is only for the storage of the references. If yuor memories so not fit in memory, the projection matching program will run MUCH slower. But, keep in mind that probably some additional memory is needed for the operating system etc.
+"""
+AvailableMemory='1.5'
+
+# Angular sampling rate
+"""Angular distance (in degrees) between neighboring projection  points
     You must specify this option for each iteration. 
     This can be done by a sequence of numbers (for instance, "8 8 2 2 " 
     specifies 4 iterations, the first two set the value to 8 
@@ -88,10 +143,10 @@ DisplayProjectionMatching=True
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-AngSamplingRateDeg='3x15 3x10 4x5'
+AngSamplingRateDeg='4x20 5 3'
 
-# {expert} Angular Search 
-"""Maximum change in rot & tilt  (+/- degrees)
+# Angular search range 
+"""Maximum change in rot & tilt  (in +/- degrees)
     You must specify this option for each iteration. 
     This can be done by a sequence of numbers (for instance, "1000 1000 10 10 " 
     specifies 4 iterations, the first two set the value to 1000 (no restriction)
@@ -101,10 +156,18 @@ AngSamplingRateDeg='3x15 3x10 4x5'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-MaxChangeInAngles='5x1000 5x20 '
+MaxChangeInAngles='4x1000 1x20 1x10'
 
-# {expert} Maximum change in origin offset (+/- pixels)
-"""Maximum change in shift  (+/- pixels)
+# {expert} Perturb projection directions?
+""" If set to true, this option will result to a Gaussian perturbation to the 
+    evenly sampled projection directions of the reference library. 
+    This may serve to decrease the effects of model bias.
+"""
+PerturbProjectionDirections=True
+
+# Maximum change in origin offset
+""" Maximum allowed change in shift in the 3D+2D searches (in +/- pixels).
+    Shifts larger than this value will be reset to (0,0)
     You must specify this option for each iteration. 
     This can be done by a sequence of numbers (for instance, "1000 1000 10 10 " 
     specifies 4 iterations, the first two set the value to 1000 (no restriction)
@@ -114,23 +177,59 @@ MaxChangeInAngles='5x1000 5x20 '
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-MaxChangeOffset='8x1000 2x10'
+MaxChangeOffset='1000'
 
-# Restrict tilt angle search?
-DoRetricSearchbyTiltAngle=True
+# Search range for 5D translational search 
+""" Give search range from the image center for 5D searches (in +/- pixels).
+    Values larger than 0 will results in 5D searches (which may be CPU-intensive)
+    Give 0 for conventional 3D+2D searches. 
+    Note that after the 5D search, for the optimal angles always 
+    a 2D exhaustive search is performed anyway (making it ~5D+2D)
+    Provide a sequence of numbers (for instance, "5 5 3 0" specifies 4 iterations,
+    the first two set the value to 5, then one with 3, resp 0 pixels.
+    An alternative compact notation is ("3x5 2x3 0", i.e.,
+    3 iterations with value 5, and 2 with value 3 and the rest with 0).
+    Note: if there are less values than iterations the last value is reused
+    Note: if there are more values than iterations the extra value are ignored
+    
+"""
+Search5DShift='0'
 
-# Lower-value for restricted tilt angle search
+# {expert} Step size for 5D translational search
+""" Provide a sequence of numbers (for instance, "2 2 1 1" specifies 4 iterations,
+    the first two set the value to 2, then two with 1 pixel.
+    An alternative compact notation is ("2x2 2x1", i.e.,
+    2 iterations with value 2, and 2 with value 1).
+    Note: if there are less values than iterations the last value is reused
+    Note: if there are more values than iterations the extra value are ignored
+    
+"""
+Search5DStep='2'
+
+# {expert} Restrict tilt angle search?
+DoRetricSearchbyTiltAngle=False
+
+# {expert} Lower-value for restricted tilt angle search
 Tilt0=40
 
-# Higher-value for restricted tilt angle search
-TiltF=140
+# {expert} Higher-value for restricted tilt angle search
+TiltF=90
 
-# {file} In the case of symmetry supply the symmetry description file:
-""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetrize
-    for a description of the symmetry file format
-    dont give anything, if no symmetry is present
+# Symmetry group
+""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
+    for a description of the symmetry groups format
+    If no symmetry is present, give c1
 """
-Symfile='C6.sym'
+SymmetryGroup='c1'
+
+# Discard images with ccf below
+""" Provide a sequence of numbers (for instance, "0.3 0.3 0.5 0.5" specifies 4 iterations,
+    the first two set the value to 0.3, then two with 0.5.
+    An alternative compact notation would be ("2x0.3 2x0.5").
+    Note: if there are less values than iterations the last value is reused
+    Note: if there are more values than iterations the extra value are ignored
+"""    
+MinimumCrossCorrelation='0.'
 
 # {expert} Additional options for Projection_Matching
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Projection_matching and
@@ -142,14 +241,15 @@ Symfile='C6.sym'
 ProjMatchingExtra=''
 
 #-----------------------------------------------------------------------------
-# {section} 2D alignment
+# {section} 2D re-alignment of classes
 #-----------------------------------------------------------------------------
-# Perform 2D alignment?
+# Perform 2D re-alignment of classes?
 """ After performing a 3D projection matching iteration, each of the
     subsets of images assigned to one of the library projections is
     re-aligned using a 2D-alignment protocol.
     This may serve to remove model bias.
     See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Align2d for details
+    Note that you cannot combine this option with CTF-correction!
     You may specify this option for each iteration. 
     This can be done by a sequence of 0 or 1 numbers (for instance, "1 1 0 0" 
     specifies 4 iterations, the first two applied alig2d while the last 2
@@ -161,29 +261,8 @@ ProjMatchingExtra=''
     IMPORTANT: if you set this variable to 0 the output  of the projection
     muching step will be copied as output of align2d
 """
-DoAlign2D='1 1 0 0'
+DoAlign2D='1'
 
-# Display 2D alignment results
-""" Show aligned classes. Do not set ths option to true for non iterative processing (jobs sent to queues)
-"""
-DisplayAlign2D=True
-
-# Inner radius for rotational correlation:
-""" In pixels from the image center
-"""
-InnerRadius=0
-
-# Outer radius for rotational correlation
-""" In pixels from the image center.
-"""
-OuterRadius=18
-#set default OuterRadius=dim/2
-
-#Use Class as reference
-""" Use Class image as reference (True) versus use average of assigned
-    images to that class (False)
-"""
-AlignWithClassReference=True
 # {expert} Number of align2d iterations:
 """ Use at least 3
 """
@@ -215,18 +294,6 @@ Align2dMaxChangeOffset='2x15 2x10'
 """
 Align2dMaxChangeRot='2x1000 2x10'
 
-# {expert} Additional align2d parameters
-""" For a complete description, see http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Align2d
-
-  Examples:
-  Align2DExtraCommand=\"-trans_only  -filter 10 -sampling 2\"
-  Align2DExtraCommand=\"-max_shift 2 -max_rot 3\"
-
-  consider filtering the images with \"-filter 10 -sampling 2\"
-  See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Align2d for details
-"""
-Align2DExtraCommand='-filter 10 -sampling 2'
-
 #-----------------------------------------------------------------------------
 # {section} 3D Reconstruction
 #-----------------------------------------------------------------------------
@@ -238,8 +305,8 @@ Align2DExtraCommand='-filter 10 -sampling 2'
 """
 DoReconstruction=True
 
-# Display reconstructed volume?
-DisplayReconstruction=True
+# {expert} Display reconstructed volume?
+DisplayReconstruction=False
 
 # Reconstructiom method
 """ Choose between wbp or art
@@ -252,8 +319,7 @@ DisplayReconstruction=True
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-ReconstructionMethod='9xwbp art'
-#ReconstructionMethod='3xart wbp'
+ReconstructionMethod='wbp'
 
 # {expert} Values of lambda for art
 """ IMPORTANT: ou must specify a value of lambda for each iteration even
@@ -297,9 +363,9 @@ DoComputeResolution=True
 # Pixel size (in Ang.)
 """ This will make that the X-axis in the resolution plots has units 1/Angstrom
 """
-ResolSam=3.
+ResolSam=2.8
 
-# Display resolution?
+# {expert} Display resolution?
 DisplayResolution=False
 
 #-----------------------------------------------------------------------------
@@ -333,42 +399,28 @@ SetResolutiontoZero=False
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-ConstantToAddToFiltration='8x.15 2x.1'
-
-#-----------------------------------------------------------------------------
-# {section} Cleaning temporal files and Reseting original data
-#-----------------------------------------------------------------------------
-
-# Reset image header?
-"""Set shifts and angles stored in the image headers to zero 
-   in each iteration. You must specify this option for each iteration. 
-    This can be done by a sequence of numbers (for instance, "1 0 0 0" 
-    specifies 4 iterations, the first   resets the header 
-    and the last three do not reset it. An alternative compact notation 
-    is ("4x1 3x0", i.e.,
-    4 iterations with value 0, and three with value 1).
-    Note: if there are less values than iterations the last value is reused
-    Note: if there are more values than iterations the extra value are ignored
-    Note: Do not set this option to 1  if you want to limit the
-          search in projection matching
-"""
-ResetImageHeader='1 3x0'
+ConstantToAddToFiltration='4x0.15 0.1'
 
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
 # Use multiple processors in parallel?
-DoParallel=False
+DoParallel=True
 
 # Number of processors to use:
-NumberOfCPUs=2
+NumberOfCPUs=3
 
 # {file} A list of all available CPUs (the MPI-machinefile):
 """ Depending on your system, your standard script to launch MPI-jobs may require this
     if your queueing system using an environment variable, give it here (with the leading $, e.g. $PBS_NODEFILE
 """
-MachineFile='../../../machines.dat'
-#MachineFile='../../bin/machines.dat'
+MachineFile='mach.dat'
+
+# {expert} Control file
+""" This is an ugly solution to have improved killing control over the mpi jobs.
+    The script will create this file, and any mpi-job will be killed as soon as this file doesn't exist anymore. This is required with certain queueing systems.
+"""
+MyControlFile=''
 
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
@@ -381,19 +433,19 @@ AnalysisScript='visualize_projmatch.py'
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #-----------------------------------------------------------------------------
 #Do not change these variables
-ReferenceVolume='reference_volume.vol'
-Proj_Maching_Output_Root_Name="proj_match"
-multi_align2d_sel="multi_align2d.sel"
-align2d_sel="align2d.sel"
-align2d_doc="align2d.doc"
-docfile_with_original_angles='docfile_with_original_angles.doc'
-#directory to copy images
-images_dir='images'
-#inpu/output of mask/fourier_filtering
-Filtered_Image="filtered_reconstruction"
-#inpu/output of mask/fourier_filtering
-ReconstrucedVolume="reconstruction"
-
+ReferenceVolumeName='reference_volume.vol'
+ProjMatchRootName="proj_match"
+ProjectLibraryRootName="ref"
+ForReconstructionSel="reconstruction.sel"
+ForReconstructionDoc="reconstruction.doc"
+MultiAlign2dSel="multi_align2d.sel"
+DocFileWithOriginalAngles='original_angles.doc'
+docfile_with_current_angles='current_angles.doc'
+FilteredReconstruction="filtered_reconstruction"
+ReconstructedVolume="reconstruction"
+OutputFsc="resolution.fsc"
+CtfGroupDirectory="CtfGroups"
+CtfGroupRootName="ctf"
 
 class projection_matching_class:
 
@@ -402,6 +454,7 @@ class projection_matching_class:
    def __init__(self,
                 _NumberofIterations,
                 _ContinueAtIteration,
+                _CleanUpFiles,
                 _DoMask, 
                 _DisplayMask,
                 _ReferenceFileName,
@@ -409,18 +462,21 @@ class projection_matching_class:
                 _DoProjectionMatching,
                 _DisplayProjectionMatching,
                 _AngSamplingRateDeg,
+                _PerturbProjectionDirections,
                 _DoRetricSearchbyTiltAngle,
                 _Tilt0,
                 _TiltF,
                 _ProjMatchingExtra,
                 _MaxChangeOffset,
                 _MaxChangeInAngles,
+                _MinimumCrossCorrelation,
                 _DoAlign2D,
                 _InnerRadius,
                 _OuterRadius,
+                _Search5DShift,
+                _Search5DStep,
+                _AvailableMemory,
                 _Align2DIterNr,
-                _DisplayAlign2D,
-                _Align2DExtraCommand,
                 _Align2dMaxChangeOffset,
                 _Align2dMaxChangeRot,
                 _DisplayReconstruction,
@@ -433,32 +489,32 @@ class projection_matching_class:
                 _DoComputeResolution,
                 _ResolSam,
                 _SelFileName,
+                _DocFileName,
+                _DoCtfCorrection,
+                _CTFDatName,
+                _WienerConstant,
+                _DataArePhaseFlipped,
+                _ReferenceIsCtfCorrected,
                 _WorkDirectory,
                 _ProjectDir,
                 _LogDir,
                 _DoParallel,
                 _MyNumberOfCPUs,
                 _MyMachineFile,
-                _Symfile,
-                _ReferenceVolume,
-                _Proj_Maching_Output_Root_Name,
-                _multi_align2d_sel,
-                _AlignWithClassReference,
-                _align2d_sel,
-                _align2d_doc,
-                _ResetImageHeader,
+                _MyControlFile,
+                _SymmetryGroup,
                 _SetResolutiontoZero,
                 _ConstantToAddToFiltration
                 ):
-       import os,sys
+
+       # Import libraries and add Xmipp libs to default search path
+       import os,sys,shutil
        scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
-       sys.path.append(scriptdir) # add default search path
-       import log,logging
-       import shutil
+       sys.path.append(scriptdir)
+       import arg,log,logging,selfile
+
+       self._CleanUpFiles=_CleanUpFiles
        self._WorkDirectory=os.getcwd()+'/'+_WorkDirectory
-       #self._SelFileName=_ProjectDir+'/'+str(_SelFileName)
-       #self._SelFileName=os.path.abspath(str(_SelFileName))
-       #self._SelFileName=os.path.abspath(_SelFileName)
        self._SelFileName=_SelFileName
        selfile_without_ext=(os.path.splitext(str(os.path.basename(self._SelFileName))))[0]
        self._ReferenceFileName=os.path.abspath(_ReferenceFileName)
@@ -467,146 +523,168 @@ class projection_matching_class:
        self._DoProjectionMatching=_DoProjectionMatching
        self._DisplayProjectionMatching=_DisplayProjectionMatching
        self._DoRetricSearchbyTiltAngle=_DoRetricSearchbyTiltAngle
+       self._PerturbProjectionDirections=_PerturbProjectionDirections
        self._Tilt0=_Tilt0
        self._TiltF=_TiltF
        self._ProjMatchingExtra=_ProjMatchingExtra
-       ##self._AngSamplingRateDeg=str(_AngSamplingRateDeg)
-       ##self._MaxChangeOffset=str(_MaxChangeOffset)
-       ##self._MaxChangeInAngles=str(_MaxChangeInAngles)
        self._DisplayMask=_DisplayMask
-       #absolute path to main project dir
        self._ProjectDir=_ProjectDir
-       #self._DoAlign2D=_DoAlign2D
        self._InnerRadius=_InnerRadius
-       self._OuterRadius=_OuterRadius
+       self._AvailableMemory=_AvailableMemory
        self._Align2DIterNr=_Align2DIterNr
-       self._DisplayAlign2D=_DisplayAlign2D
-       self._Align2DExtraCommand=_Align2DExtraCommand
-       #self._Align2dMaxChangeOffset=_Align2dMaxChangeOffset
-       #self._Align2dMaxChangeRot=_Align2dMaxChangeRot
        self._DisplayReconstruction=_DisplayReconstruction
        self._DisplayResolution=_DisplayResolution
        self._DoReconstruction=_DoReconstruction
        self._DoComputeResolution=_DoComputeResolution
        self._ResolSam=_ResolSam
+       self._DoCtfCorrection=_DoCtfCorrection
+       self._WienerConstant=_WienerConstant
+       self._DataArePhaseFlipped=_DataArePhaseFlipped
        self._DoParallel=_DoParallel
        self._MyNumberOfCPUs=_MyNumberOfCPUs
-       if (len(_Symfile)>0):
-           self._Symfile=os.path.abspath(str(_Symfile))
-       else:
-           self._Symfile=_Symfile
-       #self._iteration_number=1
-       #self._ARTLambda=_ARTLambda
+       self._SymmetryGroup=_SymmetryGroup
        self._ARTReconstructionExtraCommand=_ARTReconstructionExtraCommand
        self._WBPReconstructionExtraCommand=_WBPReconstructionExtraCommand
-       #self._ReconstructionMethod=_ReconstructionMethod
        self._SetResolutiontoZero=_SetResolutiontoZero
-       #self._ConstantToAddToFiltration=_ConstantToAddToFiltration
        if (_MyMachineFile[0]=="$"):
            self._MyMachineFile=_MyMachineFile
        else:
            self._MyMachineFile=os.path.abspath(_MyMachineFile)
-       
+       if (_MyControlFile==""):
+           self._DoControl=False
+       else:
+           self._DoControl=True
+
        self._user_suplied_ReferenceVolume=self._ReferenceFileName
-       self._Proj_Maching_Output_Root_Name=_Proj_Maching_Output_Root_Name
-       self._multi_align2d_sel=_multi_align2d_sel
-       self._AlignWithClassReference=_AlignWithClassReference
-       self._align2d_sel=_align2d_sel
-       self._align2d_doc=_align2d_doc
-       #name of the masked volume
-       tmp_OutPutVol=os.path.basename(self._ReferenceFileName)
-       ReferenceFileName_without_ext=\
-            (os.path.splitext(str(os.path.basename(tmp_OutPutVol))))[0]
-       
-       
+
+       # Set up logging
        self._mylog=log.init_log_system(_ProjectDir,
                                        _LogDir,
                                        sys.argv[0],
                                        _WorkDirectory)
                                       
-       #uncomment next line to get Degub level logging
+       # Uncomment next line to get Debug level logging
        self._mylog.setLevel(logging.DEBUG)
        self._mylog.debug("Debug level logging enabled")
                                       
-       #_ContinueAtIteration-=1;
        _NumberofIterations +=1;
        if _ContinueAtIteration!=1 and DoDeleteWorkingDir==True:
           print "You can not delete the working directory"
-          print " and star at iteration", _ContinueAtIteration
+          print " and start at iteration", _ContinueAtIteration
           exit(1)
        if (DoDeleteWorkingDir): 
           delete_working_directory(self._mylog,self._WorkDirectory)
        else:
           self._mylog.info("Skipped DoDeleteWorkingDir") 
+
        create_working_directory(self._mylog,self._WorkDirectory)
-       #made backup of this script and visualize
        log.make_backup_of_script_file(sys.argv[0],self._WorkDirectory)
        log.make_backup_of_script_file(AnalysisScript,self._WorkDirectory)
        
-       #copy files to local directory
-       if _ContinueAtIteration==1:
-          copy_images_to_local_disk(self._mylog,
-                                    self._SelFileName,
-                                    self._WorkDirectory,
-                                    images_dir)
+       # Create a CONTROL file for improved killing control
+       if (self._DoControl):
+          self._MyControlFile=os.path.abspath(self._WorkDirectory + \
+                                             '/' + _MyControlFile)
+          FILE = open(self._MyControlFile,"w")
+          FILE.write("Delete this file to kill all current processes\n")
+          FILE.close()
+       else:
+          self._MyControlFile=""
+
+       # Create a selfile with absolute pathname in the WorkingDir
+       mysel=selfile.selfile()
+       mysel.read(_SelFileName)
+       newsel=mysel.make_abspath()
+       self._SelFileName=os.path.abspath(self._WorkDirectory + '/' + _SelFileName)
+       newsel.write(self._SelFileName)
        
-       
-       #change to working dir
-       # WorkDirectory='ProjMatch/Test1'
+       # Set self._OuterRadius
+       if (_OuterRadius < 0):
+          xdim,ydim=newsel.imgSize()
+          self._OuterRadius = (xdim/2) - 1 
+          comment = " Outer radius set to: " + str(self._OuterRadius)
+          print '* ' + comment
+          self._mylog.info(comment)
+       else:   
+          self._OuterRadius=_OuterRadius
+
+       # Create a docfile with the current angles in the WorkingDir
+       if (_DocFileName==''):
+          command='xmipp_header_extract -i ' + self._SelFileName + \
+                                      ' -o ' + self._WorkDirectory + '/' + \
+                                               DocFileWithOriginalAngles
+          self._mylog.info(command)
+          os.system(command)
+       else:
+          shutil.copy(_DocFileName, self._WorkDirectory + '/' + DocFileWithOriginalAngles)
+
+       # Change to working dir
        os.chdir(self._WorkDirectory)
        self._SelFileName=self._WorkDirectory+'/'+\
                          str(os.path.basename(self._SelFileName))
-       import arg                 
+
+       # Make CTF groups
+       if (self._DoCtfCorrection):
+          self._NumberOfCtfGroups=execute_ctf_groups(self._SelFileName,
+                                                     self._CtfDatName,
+                                                     self._DataArePhaseFlipped,
+                                                     self._WienerConstant)
+       else:
+          self._NumberOfCtfGroups=1
+
        ##
        ##LOOP
        ##
-       #output of reconstruction cicle
+       #output of reconstruction cycle
        #first value given by user
-       #this names are the input of the mask program
+       #these names are the input of the mask program
        #in general is the output of the reconstruction plus filtration
        self._ReconstructedVolume=[]
        fill_name_vector("",
                         self._ReconstructedVolume,
                         _NumberofIterations,
-                        ReconstrucedVolume)
+                        ReconstructedVolume)
                         
        self._ReconstructedandfilteredVolume=[]
        fill_name_vector(self._user_suplied_ReferenceVolume,
                         self._ReconstructedandfilteredVolume,
                         _NumberofIterations,
-                        Filtered_Image)
+                        FilteredReconstruction)
 
-       #reconstructed and filtered volume of n-1 after masking
-       #called reference volume
+       # Optimal angles from previous iteration or user-provided at the beginning
+       self._DocFileInputAngles=[]
+       fill_name_vector('../'+DocFileWithOriginalAngles,
+                        self._DocFileInputAngles,
+                        _NumberofIterations+1,
+                        docfile_with_current_angles)
+
+       # Reconstructed and filtered volume of n-1 after masking called reference volume
        self._ReferenceVolume=[]
-       fill_name_vector("",self._ReferenceVolume,_NumberofIterations,
-                        ReferenceVolume)
+       fill_name_vector("",
+                        self._ReferenceVolume,
+                        _NumberofIterations,
+                        ReferenceVolumeName)
 
        for _iteration_number in range(_ContinueAtIteration, _NumberofIterations):
           debug_string =  "ITERATION: " +  str(_iteration_number)
           print "*", debug_string
           self._mylog.info(debug_string)
-          self._ResetImageHeader=arg.getComponentFromVector(_ResetImageHeader,\
-                                                        _iteration_number-1)
-          if (int(self._ResetImageHeader)):
-              reset_image_header(self._mylog,self._SelFileName)
-       
-          #create working dir for this iteration
+
+          # Never allow DoAlign2D and DoCtfCorrection together
+          if (arg.getComponentFromVector(_DoAlign2D,_iteration_number-1) and
+              self._DoCtfCorrection):
+             error_message="You cannot realign classes AND perform CTF-correction. Switch either of them off!"
+             _mylog.error(error_message)
+             print error_message
+             exit(1)
+
+          # Create working dir for this iteration and go there
           Iteration_Working_Directory=self._WorkDirectory+'/Iter_'+\
                                       str(_iteration_number)
           create_working_directory(self._mylog,Iteration_Working_Directory)
-          #change to iteration_working dir
           os.chdir(Iteration_Working_Directory)
 
-          #save initial header
-          #docfile_with_original_angles='docfile_with_original_angles.doc'
-          command='xmipp_header_extract -i '
-          command=command+self._SelFileName + \
-                         ' -o ' + docfile_with_original_angles 
-          self._mylog.debug("save original header in file: " + 
-                                   docfile_with_original_angles ) 
-          self._mylog.info(command)
-          os.system(command)
+          # Mask reference volume
           execute_mask(_DoMask,
                        self._mylog,
                        self._ProjectDir,
@@ -615,85 +693,91 @@ class projection_matching_class:
                        self._DisplayMask,
                        _iteration_number,
                        self._ReferenceVolume[_iteration_number])#out
-          #parameters for projection matching
-          self._AngSamplingRateDeg=arg.getComponentFromVector(_AngSamplingRateDeg,\
-                                                        _iteration_number-1)
-          self._MaxChangeOffset=arg.getComponentFromVector(_MaxChangeOffset,\
-                                                        _iteration_number-1)
-          self._MaxChangeInAngles=arg.getComponentFromVector(_MaxChangeInAngles,\
-                                                        _iteration_number-1)
+
           if (_DoProjectionMatching):
-             #parameters for projection matching
+             # Parameters for projection matching
              self._AngSamplingRateDeg=arg.getComponentFromVector(_AngSamplingRateDeg,\
                                                            _iteration_number-1)
              self._MaxChangeOffset=arg.getComponentFromVector(_MaxChangeOffset,\
                                                            _iteration_number-1)
              self._MaxChangeInAngles=arg.getComponentFromVector(_MaxChangeInAngles,\
                                                            _iteration_number-1)
+             self._Search5DShift=arg.getComponentFromVector(_Search5DShift,\
+                                                           _iteration_number-1)
+             self._Search5DStep=arg.getComponentFromVector(_Search5DStep,\
+                                                           _iteration_number-1)
+             self._MinimumCrossCorrelation=arg.getComponentFromVector(_MinimumCrossCorrelation,\
+                                                           _iteration_number-1)
+             self._DoAlign2D=arg.getComponentFromVector(_DoAlign2D,\
+                                                           _iteration_number-1)
+             self._Align2dMaxChangeOffset=arg.getComponentFromVector(_Align2dMaxChangeOffset,\
+                                                           _iteration_number-1)
+             self._Align2dMaxChangeRot=arg.getComponentFromVector(_Align2dMaxChangeRot,\
+                                                           _iteration_number-1)
+
+             # Initial reference is CTF-amplitude corrected?
+             if ( (_iteration_number == 1) and (_ReferenceIsCtfCorrected==False) ):
+                self._ReferenceIsCtfCorrected=False
+             else: 
+                self._ReferenceIsCtfCorrected=True
+
              execute_projection_matching(self._mylog,
                                          self._ProjectDir,
-                                         self._ReferenceVolume[_iteration_number],#in
+                                         self._ReferenceVolume[_iteration_number],
                                          self._MaskFileName,
-                                         self._SelFileName,
-                                         self._Proj_Maching_Output_Root_Name, 
+                                         self._DocFileInputAngles[_iteration_number],
+                                         self._DocFileInputAngles[_iteration_number+1],
+                                         self._DoCtfCorrection,
+                                         self._NumberOfCtfGroups,
+                                         self._WienerConstant,
+                                         self._ReferenceIsCtfCorrected,
+                                         self._DataArePhaseFlipped,
                                          self._AngSamplingRateDeg,
+                                         self._PerturbProjectionDirections,
                                          self._DoRetricSearchbyTiltAngle,
                                          self._Tilt0,
                                          self._TiltF,
                                          self._InnerRadius,
                                          self._OuterRadius,
+                                         self._Search5DShift,
+                                         self._Search5DStep,
                                          self._MaxChangeOffset, 
-                                         self._MaxChangeInAngles,  
+                                         self._MaxChangeInAngles,
                                          self._ProjMatchingExtra,
+                                         self._MinimumCrossCorrelation,
                                          self._DisplayProjectionMatching,
                                          self._DoParallel,
                                          self._MyNumberOfCPUs,
                                          self._MyMachineFile,
                                          self._WorkDirectory,
-                                         self._Symfile,
+                                         self._SymmetryGroup,
+                                         self._AvailableMemory,
+                                         self._DoComputeResolution,
+                                         self._DoControl,
+                                         self._MyControlFile,
+                                         self._DoAlign2D,
+                                         self._Align2DIterNr,
+                                         self._Align2dMaxChangeOffset,
+                                         self._Align2dMaxChangeRot,
                                          _iteration_number
                                          )
           else:
              self._mylog.info("Skipped ProjectionMatching") 
-          #if (_DoAlign2D):
-          self._Align2dMaxChangeOffset=arg.getComponentFromVector(_Align2dMaxChangeOffset,\
-                                                        _iteration_number-1)
-          self._Align2dMaxChangeRot=arg.getComponentFromVector(_Align2dMaxChangeRot,\
-                                                        _iteration_number-1)
-          self._DoAlign2D=arg.getComponentFromVector(_DoAlign2D,\
-                                                           _iteration_number-1)
-          execute_align2d(self._mylog,
-                             self._InnerRadius,
-                             self._OuterRadius,
-                             self._Align2DIterNr,
-                             self._Align2DExtraCommand,
-                             self._Align2dMaxChangeOffset,
-                             self._Align2dMaxChangeRot,
-                             self._Proj_Maching_Output_Root_Name,
-                             _iteration_number,
-                             self._DoParallel,
-                             self._MyNumberOfCPUs,
-                             self._MyMachineFile,
-                             self._DisplayAlign2D,
-                             self._multi_align2d_sel,
-                             self._AlignWithClassReference,
-                             self._DoAlign2D
-                             )
-          #else:
-             #self._mylog.info("Skipped Align2D") 
-          #if (_DoAlign2D):
-          command='cat ' + self._multi_align2d_sel \
-                         + ' | grep  \.med\.xmp  ' \
-                         + ' | grep -v \ -1 >' \
-                         + self._align2d_sel
+
+
+          # Make a new selfile excluding the images that were possibly discarded by the user
+          command='cat ' + MultiAlign2dSel + \
+                        ' | grep -v ' +  ProjectLibraryRootName + \
+                        ' | grep -v ref.xmp ' + \
+                        ' | grep -v \ -1 >' + ForReconstructionSel
           self._mylog.info(command)
           os.system(command)
-          command='xmipp_header_extract -i ' + self._align2d_sel +\
-                                      ' -o ' + self._align2d_doc
+          command='xmipp_header_extract -i ' + ForReconstructionSel + \
+                                      ' -o ' + ForReconstructionDoc
           self._mylog.info(command)
           os.system(command)
-          #else:
-          
+
+
           self._ReconstructionMethod=arg.getComponentFromVector(_ReconstructionMethod,\
                                                         _iteration_number-1)
           self._ARTLambda=arg.getComponentFromVector(_ARTLambda,\
@@ -709,8 +793,7 @@ class projection_matching_class:
                                     self._MyMachineFile,
                                     self._ReconstructionMethod,
                                     self._ARTLambda,
-                                    self._align2d_sel,
-                                    self._Symfile,
+                                    self._SymmetryGroup,
                                     self._ReconstructedVolume[_iteration_number]
                                     )
           else:
@@ -718,35 +801,43 @@ class projection_matching_class:
           
           if (_DoComputeResolution):
               filter_frequence=execute_resolution(self._mylog,
-                           self._ARTReconstructionExtraCommand,
-                           self._WBPReconstructionExtraCommand,
-                           self._ReconstructionMethod,
-                           _iteration_number,
-                           self._DisplayReconstruction,
-                           self._ResolSam,
-                           self._align2d_sel,
-                           self._DoParallel,
-                           self._MyNumberOfCPUs,
-                           self._MyMachineFile,
-                           self._Symfile,
-                           self._DisplayResolution,
-                           self._ARTLambda)
-
+                                                  self._ARTReconstructionExtraCommand,
+                                                  self._WBPReconstructionExtraCommand,
+                                                  self._ReconstructionMethod,
+                                                  _iteration_number,
+                                                  self._DisplayReconstruction,
+                                                  self._ResolSam,
+                                                  self._DoParallel,
+                                                  self._MyNumberOfCPUs,
+                                                  self._MyMachineFile,
+                                                  self._SymmetryGroup,
+                                                  self._DisplayResolution,
+                                                  self._ReconstructedVolume[_iteration_number],
+                                                  self._ARTLambda
+                                                  )
           else:
              self._mylog.info("Skipped Resolution") 
           
           self._ConstantToAddToFiltration=arg.getComponentFromVector(\
                                                ConstantToAddToFiltration,\
-                                                        _iteration_number-1)
+                                                  _iteration_number-1)
+
           filter_at_given_resolution(_DoComputeResolution,
-                                  self._mylog, 
-                                  _iteration_number,
-                                  self._SetResolutiontoZero,
-                                  self._ConstantToAddToFiltration,
-                                  filter_frequence,
-                                  self._ReconstructedVolume[_iteration_number],
-                                  self._ReconstructedandfilteredVolume[1+_iteration_number]
-                                 )
+                                     self._mylog, 
+                                     _iteration_number,
+                                     self._SetResolutiontoZero,
+                                     self._ConstantToAddToFiltration,
+                                     filter_frequence,
+                                     self._ReconstructedVolume[_iteration_number],
+                                     self._ReconstructedandfilteredVolume[1+_iteration_number]
+                                     )
+
+          # Remove all class averages and reference projections
+          if (self._CleanUpFiles):
+             execute_cleanup(self._mylog,
+                             True,
+                             True,
+                             True)
 
 
 #------------------------------------------------------------------------
@@ -774,31 +865,37 @@ def create_working_directory(_mylog,_WorkDirectory):
     if not os.path.exists(_WorkDirectory):
        os.makedirs(_WorkDirectory)
 
-#------------------------------------------------------------------------
-#           copy files to local dir
-#------------------------------------------------------------------------
-def copy_images_to_local_disk(_mylog,_SelFileName,_WorkDirectory,images_dir):
-      import os,selfile
-      print '*********************************************************************'
-      print '* Copying images to working directory ...'
-      mysel=selfile.selfile()
-      mysel.read(_SelFileName)
-      newsel=mysel.copy_sel(_WorkDirectory+'/'+images_dir)
-      newsel.write(_WorkDirectory+'/'+_SelFileName)
-      newsel.make_abspath()
-      _mylog.info("copy files to local directory")
 
 #------------------------------------------------------------------------
-#           reset_image_header(self._SelFileName)
+#make ctf groups
 #------------------------------------------------------------------------
-def reset_image_header(_mylog,_SelFileName):
-    import os
-    print '**************************************************************'
-    print '* Reset headers of files in selfile ' + _SelFileName 
-    command = "xmipp_header_reset -i " + _SelFileName
-    print '* ',command
-    _mylog.info(command)
-    os.system(command)
+def execute_ctf_groups (_InPutSelfile,
+                        _CtfDatFile,
+                        _DataArePhaseFlipped,
+                        _WienerConstant):
+
+   import os,glob
+
+   if not os.path.exists(CtfGroupDirectory):
+      os.makedirs(CtfGroupDirectory)
+
+   print '*********************************************************************'
+   print '* Make CTF groups'
+   command='xmipp_ctf_group'+ \
+           ' -i '    + _InPutSelfile + \
+           ' -ctfdat ' + _CtfDatFile + \
+           ' -o ' + CtfGroupDirectory + '/' + CtfGroupRootName + \
+           ' -wiener -wc ' + str(_WienerConstant) + \
+           ' -split ' + _SplitDefocusDocFile
+   if (_DataArePhaseFlipped):
+      command += ' -phase_flipped'
+
+   print '* ',command
+   _mylog.info(command)
+   os.system(command)
+
+   ctflist=glob.glob(CtfGroupDirectory + '/' + CtfGroupRootName+'_group?????.ctf')
+   return len(ctflist)
 
 #------------------------------------------------------------------------
 #execute_mask
@@ -817,7 +914,6 @@ def execute_mask(_DoMask,
       InPutVolume=_ReferenceFileName
    else:   
       InPutVolume=_ReferenceFileName+".vol"
-   ##InPutVolume=InPutVolume.replace(".vol.vol",".vol")
    if (_DoMask):
        MaskVolume =_MaskFileName
        MaskedVolume=_ReferenceVolume
@@ -853,280 +949,269 @@ def execute_projection_matching(_mylog,
                                 _ProjectDir,
                                 _ReferenceVolume,
                                 _MaskFileName,
-                                _SelFileName,
-                                _Proj_Maching_Output_Root_Name,    
+                                _InputDocFileName,
+                                _OutputDocFileName,
+                                _DoCtfCorrection,
+                                _NumberOfCtfGroups,
+                                _WienerConstant,
+                                _ReferenceIsCtfCorrected,
+                                _DataArePhaseFlipped,
                                 _AngSamplingRateDeg,
+                                _PerturbProjectionDirections,
                                 _DoRetricSearchbyTiltAngle,
                                 _Tilt0,
                                 _TiltF,
                                 _Ri,
                                 _Ro,
+                                _Search5DShift,
+                                _Search5DStep,
                                 _MaxChangeOffset,
-                                _MaxChangeInAngles,   
+                                _MaxChangeInAngles,
                                 _ProjMatchingExtra,
+                                _MinimumCrossCorrelation,
                                 _DisplayProjectionMatching,
                                 _DoParallel,
                                 _MyNumberOfCPUs,
                                 _MyMachineFile,
                                 _WorkDirectory,
-                                _Symfile,
+                                _SymmetryGroup,
+                                _AvailableMemory,
+                                _DoComputeResolution,
+                                _DoControl,
+                                _MyControlFile,
+                                _DoAlign2D,
+                                _Align2DIterNr,
+                                _Align2dMaxChangeOffset,
+                                _Align2dMaxChangeRot,
                                 _iteration_number):
                                            
    _mylog.debug("execute_projection_matching")
-   import os,selfile
-   Reference_Vol=_ReferenceVolume
+   import os,shutil,string
+   import launch_parallel_job,selfile
+   RunInBackground=False
 
    print '*********************************************************************'
-   print '* Asign projection direction'
-   parameters=' -i '           + _SelFileName         + \
-              ' -vol '         + Reference_Vol + \
-              ' -o '           + _Proj_Maching_Output_Root_Name      + \
-              ' -sam '         + _AngSamplingRateDeg  + \
-              ' -max_shift '   + _MaxChangeOffset
+   print '* Create projection library'
+   parameters=' -i '                   + _ReferenceVolume + \
+              ' -experimental_images ' +  _InputDocFileName + \
+              ' -o '                   + ProjectLibraryRootName + \
+              ' -sampling_rate '       + _AngSamplingRateDeg  + \
+              ' -sym '                 + _SymmetryGroup + 'h' + \
+              ' -compute_neighbors '
+
+   if ( string.atof(_MaxChangeInAngles) < 181.):
+      parameters+= \
+              ' -angular_distance '    + str(_MaxChangeInAngles)
+   else:
+      parameters+= \
+              ' -angular_distance -1'
+
+   if (_PerturbProjectionDirections):
+      import math
+      # Just follow Roberto's suggestion
+      perturb=math.sin(math.radians(float(_AngSamplingRateDeg)))/4.
+      parameters+= \
+          ' -perturb ' + str(perturb)
+
+   if (_DoRetricSearchbyTiltAngle):
+     parameters+=  \
+              ' -min_tilt_angle '      + str(_Tilt0) + \
+              ' -max_tilt_angle '      + str(_TiltF)
   
-   if _DoRetricSearchbyTiltAngle:
-     parameters=  parameters                           + \
-              ' -tilt0 '       + str(_Tilt0)        + \
-              ' -tiltF '       + str(_TiltF)
-  
-   parameters=  parameters                           + \
-              ' -Ri '          + str(_Ri)           + \
-              ' -Ro '          + str(_Ro)           + \
-              ' -output_refs ' + \
-              ' -ang_search ' + str(_MaxChangeInAngles) +\
-              ' '              + _ProjMatchingExtra
-   if len(_Symfile)>1:
-      parameters = parameters + " -sym " + _Symfile
-   # -dont_modify_header          
-   import launch_parallel_job
-   RunInBackground=False
+   if (_DoControl):
+      parameters += \
+          ' -control '                 + _MyControlFile
+
    launch_parallel_job.launch_job(
                        _DoParallel,
-                       'xmipp_angular_projection_matching',
-                       'xmipp_mpi_angular_projection_matching',
+                       'xmipp_angular_project_library',
+                       'xmipp_mpi_angular_project_library',
                        parameters,
                        _mylog,
                        _MyNumberOfCPUs,
                        _MyMachineFile,
                        RunInBackground)
 
-   # Now make the class averages
-   command='xmipp_angular_class_average ' + \
-            ' -i '   + _Proj_Maching_Output_Root_Name+'.doc'  + \
-            ' -lib ' + _Proj_Maching_Output_Root_Name+'_lib.doc' + \
-            ' -o '   + _Proj_Maching_Output_Root_Name
-   print '* ',command
-   _mylog.info(command) 
-   os.system(command)
-
-   #make absolute path so visualization protocol can be run from
-   #the same directory
+   # Loop over all CTF groups
+   for ictf in range(_NumberOfCtfGroups):
    
+      if (_DoCtfCorrection):
+         outputname=ProjMatchRootName + '_' + CtfGroupName + '_' + str(ictf)
+         selfile = '../' + CtfGroupDirectory + '/' + CtfGroupName + '_' + str(ictf) + '.sel'
+         inputdocfile = (os.path.basename(selfile)).replace('.sel','.doc')
+         command='xmipp_docfile_select_subset ' + \
+                 '-i   ' + _InputDocFileName + \
+                 '-sel ' + selfile + \
+                 '-o   ' + inputdocfile
+         print '*********************************************************************'
+         print '* ',command
+         _mylog.info(command) 
+         os.system(command)
+      else:
+         outputname=ProjMatchRootName
+         inputdocfile=_InputDocFileName
+
+      print '*********************************************************************'
+      print '* Perform projection matching'
+      parameters= ' -i '              + inputdocfile + \
+                  ' -o '              + outputname + \
+                  ' -ref '            + ProjectLibraryRootName +\
+                  ' -Ri '             + str(_Ri)           + \
+                  ' -Ro '             + str(_Ro)           + \
+                  ' -max_shift '      + str(_MaxChangeOffset) + \
+                  ' -search5d_shift ' + str(_Search5DShift) + \
+                  ' -search5d_step  ' + str(_Search5DStep) + \
+                  ' -chunk_angular_distance 10' + \
+                  ' -mem '            + str(_AvailableMemory)
+
+      if (_DoCtfCorrection and _ReferenceIsCtfCorrected):
+         ctfparamfile = '../' + CtfGroupDirectory + '/' + CtfGroupName + '_' + str(ictf) + '.ctfparam'
+         parameters += \
+                  ' -ctf '            + ctfparamfile
+         if (_DataArePhaseFlipped):
+            parameters += \
+                  ' -phase_flipped '
+
+      if (_DoControl):
+         parameters += \
+                  ' -control '        + self.MyControlFile
+
+      launch_parallel_job.launch_job(
+                                     _DoParallel,
+                                     'xmipp_angular_projection_matching',
+                                     'xmipp_mpi_angular_projection_matching',
+                                     parameters,
+                                     _mylog,
+                                     _MyNumberOfCPUs,
+                                     _MyMachineFile,
+                                     RunInBackground)
+
+      # Now make the class averages
+      parameters =  ' -i '      + outputname + '.doc'  + \
+                    ' -lib '    + ProjectLibraryRootName + '_angles.doc' + \
+                    ' -o '      + outputname + \
+                    ' -limit0 ' + str(MinimumCrossCorrelation) + \
+                    ' -mirror 7 '
+      if (_DoAlign2D):
+         parameters += \
+                    ' -iter '             + str(_Align2DIterNr) + \
+                    ' -Ri '               + str(_Ri)           + \
+                    ' -Ro '               + str(_Ro)           + \
+                    ' -max_shift '        + str(_MaxChangeOffset) + \
+                    ' -max_shift_change ' + str(_Align2dMaxChangeOffset) + \
+                    ' -max_psi_change '   + str(_Align2dMaxChangeRot) 
+      if (_DoComputeResolution):
+         parameters += \
+                    ' -split '
+
+      #FIXME!
+      launch_parallel_job.launch_job(
+                                     False,#_DoParallel,
+                                     'xmipp_angular_class_average',
+                                     'xmipp_mpi_angular_class_average',
+                                     parameters,
+                                     _mylog,
+                                     _MyNumberOfCPUs,
+                                     _MyMachineFile,
+                                     RunInBackground)
+
+      if (_DoAlign2D):
+         outputdocfile =  outputname + '_classes_realigned.doc'
+      else:
+         outputdocfile =  outputname + '.doc'
+
+      if (not _DoCtfCorrection):
+         # No CTF groups: just move outputdocfile to standard name
+         shutil.move(outputdocfile,_OutputDocFileName)
+      else:
+         # Append ctf-group docfile to a single one called _OutputDocFileName
+         mydocfile = ProjMatchRootName + '_' + CtfGroupName 
+         if (os.path.exists(_OutputDocFileName)):
+            command='xmipp_docfile_append ' + \
+                    ' -i1 ' + _OutputDocFileName + \
+                    ' -i2 ' + outputdocfile + \
+                    '-remove_multiple Headerinfo ' + \
+                    '-o ' + _OutputDocFileName
+            print '* ',command
+            _mylog.info(command) 
+            os.system(command)
+            os.remove(outputdocfile)
+         else:
+            shutil.move(outputdocfile, _OutputDocFileName);
+
+         # LETS NOT UPDATE THE WIENER FILTER: THAT MAKES LIFE MUCH EASIER!
+         # THEN ON-THE-FLY CORRECT WIENER FILTER FOR EACH CTFGROUP AND ADD TO AVERAGE
+         # DELETE ALL FILES FOR THIS CTFGROUP TO PREVENT FILLING THE DISC
+
+         # Apply Wiener filter to the class averages (overwrite originals)
+         wiener_filter = '../' + CtfGroupDirectory + \
+                         '/' + CtfGroupRootName + \
+                         '_group' + str(ictf).zfill(5) + '.wien'
+         command = 'xmipp_fourier_filter ' + \
+                   ' -i ' + outputname + '_classes.sel' + \
+                   ' -fourier_mask ' + wiener_filter 
+         print '*********************************************************************'
+         print '* ',command
+         _mylog.info(command) 
+         os.system(command)
+
+         import glob
+         for classaverage in glob.glob(ProjMatchRootName + \
+                                          '_' + CtfGroupName+'_' + str(ictf) + '_class?????.xmp'):
+            
+            # Add classaverage to sum of classaverages over all CTF groups
+            # and delete current classaverage
+            sumaverage=classaverage.replace(CtfGroupName+'_' + str(ictf) + '_class', 'class')
+            tmpselfile = sumaverage.replace('.xmp','.sel')
+            if (os.path.exists(sumaverage)):
+               command = 'xmipp_selfile_create " ' + classaverage + ' ' + sumaverage + ' " > ' + tmpselfile
+               print '* ',command
+               _mylog.info(command) 
+               os.system(command)
+               command = 'xmipp_average -only_avg -weighted_avg -keep_first_header -i ' + tmpselfile 
+               print '* ',command
+               _mylog.info(command) 
+               os.system(command)
+               os.remove(classaverage)
+            else:
+               os.move(classaverage, sumaverage);
+
+   # End loop over all CTF groups
+
+   if (_DoCtfCorrection):
+      # remake classes selfile
+      command = 'xmipp_selfile_create " ' + ProjMatchRootName + \
+                '_class?????.xmp " >' + ProjMatchRootName + '_classes.sel'
+      print '* ',command
+      _mylog.info(command) 
+      os.system(command)
+ 
+   # Make absolute path so visualization protocol can be run from
+   # the same directory
+   
+
+   # Make selfile with reference projections, class averages and realigned averages
    classes_sel_file=selfile.selfile()
-   classes_sel_file.read(_Proj_Maching_Output_Root_Name+'_classes.sel')
-   library_sel_file=selfile.selfile()
-   library_sel_file.read(_Proj_Maching_Output_Root_Name+'_lib.sel')
-   newsel=library_sel_file.intercalate_union(classes_sel_file)
-   compare_sel_file=_Proj_Maching_Output_Root_Name+'_compare.sel'
+   classes_sel_file.read(ProjMatchRootName+'_classes.sel')
+   library_sel_file=classes_sel_file.replace_string(ProjMatchRootName+'_class',
+                                                        ProjectLibraryRootName);
+   before_alignment_sel_file=classes_sel_file.replace_string('.xmp','.ref.xmp');
+   before_alignment_sel_file.deactivate_all_images()
+   newsel=library_sel_file.intercalate_union_3(before_alignment_sel_file, classes_sel_file)
+   compare_sel_file=ProjMatchRootName+'_compare.sel'
    newsel=newsel.make_abspath()
-   newsel.write(compare_sel_file)
-   if _DisplayProjectionMatching==True:
+   newsel.write(MultiAlign2dSel)
+
+   if (_DisplayProjectionMatching):
       command='xmipp_show -sel '+ "../"+'Iter_'+\
-                   str(_iteration_number) +'/'+ compare_sel_file +' -w 10 &'
-      #NOTE, selection will be made in next showsel
+                   str(_iteration_number) +'/'+ MultiAlign2dSel +' -w 9 '
+      if (_Doalign2D):
+         command += ' -showall '
+
       print '*********************************************************************'
       print '* ',command
       _mylog.info(command) 
       os.system(command)
-
-#------------------------------------------------------------------------
-#execute_align2d
-#read all class*.sel files
-#align then with the class*.xmp images
-#save in class*_aligned.xmp
-#------------------------------------------------------------------------
-def execute_align2d(_mylog,
-                    _InnerRadius,
-                    _OuterRadius,
-                    _Align2DIterNr,
-                    _Align2DExtraCommand,
-                    _Align2dMaxChangeOffset,
-                    _Align2dMaxChangeRot,
-                    _Proj_Maching_Output_Root_Name,
-                    _iteration_number,
-                    _DoParallel,
-                    _MyNumberOfCPUs,
-                    _MyMachineFile,
-                    _DisplayAlign2D,
-                    _multi_align2d_sel,
-                    _AlignWithClassReference,
-                    _DoAlign2D
-                    ):
-   #proj_match_class00001.corr
-   #proj_match_class00001.med.xmp --> average class projection AFTER alig2d
-   #                                  has weight *
-   #proj_match_class00001.sig.xmp    standard deviation
-   #proj_match_class00001.ref.xmp --> teporal file produed by alig2d
-   #                                   with iteration reference
-   #                                   this image is filtered so may lok nicer 
-   #                                   than true average
-   #proj_match_class00001.sel  -- > particles asigned to reference 00001
-   #proj_match_class00001.xmp -- > average class projection BEFORE align *
-   #proj_match_lib00001.proj -- > gallery of projections*
-   #if secuential execute orden if not store it in a file
-   import tempfile,shutil
-   import spider_header 
-   one = 1. 
-   tmp_file_name = _Proj_Maching_Output_Root_Name +".tmp"
-   if _DoParallel:
-        fh = open(tmp_file_name,'w')
-      
-   _mylog.debug("execute_align2d")
-   _mylog.debug("_DoAlign2D " + _DoAlign2D)
-   import os,selfile, glob,shutil
-   class_sel_pattern = _Proj_Maching_Output_Root_Name+'_class[0-9]*.sel'
-   _mylog.debug("class_sel_pattern: " + class_sel_pattern)
-   aux_sel_file=selfile.selfile()
-   align2d_sel=selfile.selfile()
-   #create compare sel 
-   if(_DoAlign2D=='1'): 
-       for class_selfile in glob.glob(class_sel_pattern):
-          lib_file_name = class_selfile.replace('class','lib')
-          lib_file_name = lib_file_name.replace('.sel','.proj') 
-          class_file_name = class_selfile.replace('.sel','.xmp')
-          if(_AlignWithClassReference):
-             reference=lib_file_name
-          else:  
-             reference=class_file_name
-          aux_sel_file.read(class_selfile)
-          #first line in sel must be active
-
-          align2d_sel.insert(lib_file_name,str(1))
-          align2d_sel.insert(class_file_name,str(-1))
-          aligned_file_name = class_selfile.replace('.sel','.med.xmp')
-          align2d_sel.insert(aligned_file_name,str(1))
-          if (aux_sel_file.length()<1):
-             command="xmipp_operate -i " + \
-                      class_file_name + " -mult 0 -o " + aligned_file_name +"\n"
-             print '* ',command
-          elif (aux_sel_file.length()==1):
-             _mylog.info("cp "+aux_sel_file.sellines[0][0]+" "+aligned_file_name) 
-             shutil.copy(aux_sel_file.sellines[0][0],aligned_file_name)
-             # this images must  weight one
-             spider_header.set_header_position(aligned_file_name,
-                                               260,
-                                               one
-                                               )
-             command=""                                  
-          else:
-             print '*********************************************************************'
-             print '* Aligning translationally each class'
-             command='xmipp_align2d'+ \
-                     ' -i '  + class_selfile + \
-                     ' -Ri ' +   str(_InnerRadius) + \
-                     ' -Ro ' +   str(_OuterRadius) +\
-                     ' -iter ' + str(_Align2DIterNr) +\
-                     ' -ref ' + reference
-             if  len(_Align2dMaxChangeOffset)>1 :     
-               command +=' -max_shift '  + _Align2dMaxChangeOffset
-             if  len(_Align2dMaxChangeRot)>1 :     
-               command +=' -max_rot '  + _Align2dMaxChangeRot
-             if  len(_Align2DExtraCommand)>1 :     
-               command += ' '  + _Align2DExtraCommand
-             print '* ',command
-          if (len(command)>2):
-             if _DoParallel:
-                fh.writelines(command+"\n")
-                _mylog.debug(command)
-             else:  
-                os.system(command)
-                _mylog.info(command)
-       align2d_sel=align2d_sel.make_abspath()         
-       align2d_sel.write(_multi_align2d_sel);
-       if _DoParallel:
-           fh.close();
-           parameters="-i " +  tmp_file_name
-           _mylog.info("xmipp_mpi_run " + parameters)
-           import launch_parallel_job
-           RunInBackground=False
-           launch_parallel_job.launch_parallel_job(
-                               'xmipp_mpi_run',
-                               parameters,
-                               _mylog,
-                               _MyNumberOfCPUs,
-                               _MyMachineFile,
-                               RunInBackground)
-           #os.remove(tmp_file_name)
-   else:
-       for class_selfile in glob.glob(class_sel_pattern):
-          #projection matching average
-          inputfile  = class_selfile.replace('.sel','.xmp')
-          #alig2n2d output
-          outputfile = class_selfile.replace('.sel','.med.xmp')
-          shutil.copy(inputfile,outputfile)
-          aux_sel_file.read(class_selfile)
-          weight=aux_sel_file.length()
-          print "weight", weight
-          _mylog.info("cp "+inputfile+" "+outputfile+", weight="+str(weight)) 
-          # this images must  weight one
-          spider_header.set_header_position(outputfile,
-                                            260,
-                                            weight
-                                            )
-          
-          lib_file_name = class_selfile.replace('class','lib')
-          lib_file_name = lib_file_name.replace('.sel','.proj') 
-          align2d_sel.insert(lib_file_name,str(1))
-          align2d_sel.insert(inputfile,str(-1))
-          align2d_sel.insert(outputfile,str(1))
-       align2d_sel=align2d_sel.make_abspath()         
-       align2d_sel.write(_multi_align2d_sel);
-
-#   #if a sel file is empty copy reference class
-#   for class_selfile in glob.glob(class_sel_pattern):
-#      aux_sel_file.read(class_selfile)
-#      message= aux_sel_file.selfilename,\
-#             "length ", aux_sel_file.length(), \
-#             "length_t ", aux_sel_file.length_even_no_actives()
-#      _mylog.debug(message)
-#             
-#      if (aux_sel_file.length()<1 and \
-#          aux_sel_file.length_even_no_actives()>0):  
-#          class_file_name = class_selfile.replace('.sel','.xmp') 
-#          aligned_file_name = class_selfile.replace('.sel','.med.xmp')
-#          shutil.copy(class_file_name,aligned_file_name)
-#          _mylog.info("cp "+class_file_name+" "+aligned_file_name) 
-
-   if _DisplayAlign2D==True:
-      command='xmipp_show -showall -sel '+ "../"+'Iter_'+\
-                   str(_iteration_number) +'/'+ _multi_align2d_sel +' -w 9'
-      print '*********************************************************************'
-      print '* ',command
-      _mylog.info(command) 
-      os.system(command)
-
-   #Set right angle  for averages computed with align
-   #we may read using headerinfo.
-   _in_filename   =  _Proj_Maching_Output_Root_Name + '_classes.sel'
-   _out_filename  =  _Proj_Maching_Output_Root_Name + '_classes.doc'
-   command='xmipp_header_extract -i ' + _in_filename +\
-                               ' -o ' + _out_filename
-   _mylog.info(command)
-   os.system(command)
-
-
-   _input = open(_out_filename)
-   _output = open(_out_filename+'.o', 'w')
-   for s in _input.xreadlines():
-        _output.write(s.replace("xmp", "med.xmp"))
-   
-   _input.close()
-   _output.close()
-   command='xmipp_header_assign -i ' + _out_filename+'.o'
-   _mylog.info(command)
-   os.system(command)
-   
-   
 
 #------------------------------------------------------------------------
 #execute_reconstruction
@@ -1141,40 +1226,37 @@ def execute_reconstruction(_mylog,
                            _MyMachineFile,
                            _ReconstructionMethod,
                            _ARTLambda,
-                           _align2d_sel,
-                           _Symfile,
+                           _SymmetryGroup,
                            _ReconstructedandfilteredVolume):
-   import os,shutil
+
    _mylog.debug("execute_reconstruction")
 
+   import os,shutil
+   import launch_parallel_job
+   RunInBackground=False
 
-   #the user should be able to delete images
-   #this is dirty but what else can I do
-   reconstruction_sel=_align2d_sel;
-   Outputvolume  =_ReconstructedandfilteredVolume
+   Outputvolume = _ReconstructedandfilteredVolume
 
    print '*********************************************************************'
    print '* Reconstruct volume using '
    if _ReconstructionMethod=='wbp':
-      Outputvolume  =Outputvolume+".vol"
+      Outputvolume = Outputvolume+".vol"
       program = 'xmipp_reconstruct_wbp'
       mpi_program = 'xmipp_mpi_reconstruct_wbp'
-      parameters= ' -i '    + reconstruction_sel + \
+      parameters= ' -i '    + ForReconstructionSel + \
                   ' -o '    + Outputvolume + \
+                  ' -sym '  + _SymmetryGroup + \
                   ' -weight -use_each_image '
-      if len(_Symfile)>1:
-         parameters = parameters + ' -sym ' + _Symfile + ' '
       parameters = parameters + _WBPReconstructionExtraCommand
               
    elif _ReconstructionMethod=='art':
       program = 'xmipp_reconstruct_art'
       mpi_program = 'NULL'
       _DoParallel=False
-      parameters=' -i '    + reconstruction_sel + \
+      parameters=' -i '    + ForReconstructionSel + \
                  ' -o '    + Outputvolume + ' ' + \
+                 ' -sym '  + _SymmetryGroup + \
                  ' -WLS '
-      if len(_Symfile)>1:
-         parameters = parameters + ' -sym ' + _Symfile + ' '
       if len(_ARTLambda)>1:
          parameters = parameters + ' -l '   + _ARTLambda + ' '
       parameters = parameters + _ARTReconstructionExtraCommand
@@ -1183,8 +1265,6 @@ def execute_reconstruction(_mylog,
       print "Reconstruction method unknown. Quiting"
       exit(1)
     
-   import launch_parallel_job
-   RunInBackground=False
    launch_parallel_job.launch_job(
                        _DoParallel,
                        program,
@@ -1215,33 +1295,23 @@ def  execute_resolution(_mylog,
                         _iteration_number,
                         _DisplayReconstruction,
                         _ResolSam,
-                        _align2d_sel,
                         _DoParallel,
                         _MyNumberOfCPUs,
                         _MyMachineFile,
-                        _Symfile,
+                        _SymmetryGroup,
                         _DisplayResolution,
+                        _ReconstructedVolume,
                         _ARTLambda):
-    import os
-    # Split selfiles
-    #the user should be able to delete images
-    #this is dirty but what else can I do
-    reconstruction_sel=_align2d_sel;
-    split_sel_root_name="split_sel"
-    command='xmipp_selfile_split -o '+ split_sel_root_name+ \
-             ' -i ' + reconstruction_sel + \
-             ' -n 2'
-    print '* ',command
-    _mylog.info(command)
-    os.system(command)
+    import os,shutil
 
+    split_sel_root_name=ProjMatchRootName+'_split'
     Outputvolumes=[]
     Outputvolumes.append(split_sel_root_name+'_1')
     Outputvolumes.append(split_sel_root_name+'_2')
     
     Selfiles=[]
-    Selfiles.append(split_sel_root_name+'_1'+".sel")
-    Selfiles.append(split_sel_root_name+'_2'+".sel")
+    Selfiles.append(split_sel_root_name+'_1_classes.sel')
+    Selfiles.append(split_sel_root_name+'_2_classes.sel')
     for i in range(len(Outputvolumes)):
        print '*********************************************************************'
        print '* Reconstruct volume'
@@ -1250,10 +1320,9 @@ def  execute_resolution(_mylog,
           program = 'xmipp_reconstruct_wbp'
           mpi_program = 'xmipp_mpi_reconstruct_wbp'
           parameters= ' -i '    + Selfiles[i] + \
-                      ' -o '    + Outputvolumes[i] +".vol"\
-                  ' -weight -use_each_image '
-          if len(_Symfile)>1:
-             parameters = parameters + ' -sym ' + _Symfile + ' '
+                      ' -o '    + Outputvolumes[i] + ".vol" + \
+                      ' -sym '  + _SymmetryGroup + \
+                      ' -weight -use_each_image '
           parameters = parameters + _WBPReconstructionExtraCommand
 
        elif _ReconstructionMethod=='art':
@@ -1262,10 +1331,9 @@ def  execute_resolution(_mylog,
           mpi_program = 'NULL'
           _DoParallel=False
           parameters=' -i '    + Selfiles[i] + \
-                     ' -o '    + Outputvolumes[i] +\
+                     ' -o '    + Outputvolumes[i] + \
+                     ' -sym '  + _SymmetryGroup + \
                      ' -WLS '
-          if len(_Symfile)>1:
-             parameters = parameters + ' -sym ' + _Symfile + ' '
           if len(_ARTLambda)>1:
              parameters = parameters + ' -l '   + _ARTLambda + ' '
           parameters = parameters + _ARTReconstructionExtraCommand
@@ -1285,8 +1353,13 @@ def  execute_resolution(_mylog,
                            _MyMachineFile,
                            RunInBackground)
 
+    # Now that we have the volumes, remove the class averages and selfiles
+    my_pattern=split_sel_root_name+'_[1,2]_class*'
+    import glob
+    for file in glob.glob(my_pattern):
+       os.remove(file)
+    _mylog.info('Deleted all files called '+my_pattern)
 
-    
     for i in range(len(Outputvolumes)):
        Outputvolumes[i]+=".vol"
     print '**************************************************************'
@@ -1308,6 +1381,11 @@ def  execute_resolution(_mylog,
       print '*********************************************************************'
       print '* plot resolution'
       _mylog.info(" plot resolution")
+
+    # Copy FSC to standard name file
+    outputfsc=_ReconstructedVolume.replace(ReconstructedVolume+'.vol',OutputFsc)
+    shutil.copy(Outputvolumes[1]+'.frc',outputfsc) 
+
     #compute resolution
     resolution_fsc_file = Outputvolumes[1]+'.frc'
     f = open(resolution_fsc_file, 'r')
@@ -1366,6 +1444,41 @@ def filter_at_given_resolution(_DoComputeResolution,
     _mylog.info(command)
 
 
+#------------------------------------------------------------------------
+#create_working directory
+#------------------------------------------------------------------------
+def execute_cleanup(_mylog,
+                    _DeleteClassAverages,
+                    _DeleteReferenceProjections,
+                    _DeleteSplitReconstructions):
+   import os,glob
+
+   if (_DeleteClassAverages):
+      message=' CleanUp: deleting all class average files'
+      print '* ',message
+      _mylog.info(message)
+      for file in glob.glob(ProjMatchRootName+'_class?????.med.xmp'):
+         os.remove(file)
+      for file in glob.glob(ProjMatchRootName+'_class?????.xmp'):
+         os.remove(file)
+      for file in glob.glob(ProjMatchRootName+'_class?????.sel'):
+         os.remove(file)
+
+   if (_DeleteReferenceProjections):
+      message=' CleanUp: deleting all reference projections '
+      print '* ',message
+      _mylog.info(message)
+      for file in glob.glob(ProjectLibraryRootName + '?????.xmp'):
+         os.remove(file)
+
+   if (_DeleteSplitReconstructions):
+      message=' CleanUp: deleting reconstructions from random halves (for FSC)'
+      print '* ',message
+      _mylog.info(message)
+      for file in glob.glob(ProjMatchRootName+'_split_?.vol'):
+         os.remove(file)
+
+
 def  fill_name_vector(_user_suplied_name,
                       _volume_name_list,
                       _NumberofIterations,
@@ -1391,25 +1504,29 @@ if __name__ == '__main__':
   my_projmatch=projection_matching_class(
                 NumberofIterations,     
                 ContinueAtIteration,  
-                DoMask,                         
+                CleanUpFiles,
+                DoMask,   
                 DisplayMask,                    
                 ReferenceFileName,              
                 MaskFileName,                   
                 DoProjectionMatching,           
                 DisplayProjectionMatching,      
                 AngSamplingRateDeg,             
+                PerturbProjectionDirections,
                 DoRetricSearchbyTiltAngle,      
                 Tilt0,                          
                 TiltF,                          
                 ProjMatchingExtra,              
                 MaxChangeOffset,
-                MaxChangeInAngles,                
+                MaxChangeInAngles,
+                MinimumCrossCorrelation,
                 DoAlign2D,                      
                 InnerRadius,                    
                 OuterRadius,                    
+                Search5DShift,
+                Search5DStep,
+                AvailableMemory,
                 Align2DIterNr,                  
-                DisplayAlign2D,                 
-                Align2DExtraCommand,
                 Align2dMaxChangeOffset,
                 Align2dMaxChangeRot,            
                 DisplayReconstruction,
@@ -1422,20 +1539,20 @@ if __name__ == '__main__':
                 DoComputeResolution,
                 ResolSam,
                 SelFileName,                    
+                DocFileName,                    
+                DoCtfCorrection,
+                CTFDatName,
+                WienerConstant,
+                DataArePhaseFlipped,
+                ReferenceIsCtfCorrected,
                 WorkDirectory,                  
                 ProjectDir,                     
                 LogDir,                         
                 DoParallel,                     
                 NumberOfCPUs,                   
-                MachineFile,                    
-                Symfile,                        
-                ReferenceVolume,                
-                Proj_Maching_Output_Root_Name,  
-                multi_align2d_sel, 
-                AlignWithClassReference,             
-                align2d_sel,                    
-                align2d_doc,                    
-                ResetImageHeader,
+                MachineFile,
+                MyControlFile,
+                SymmetryGroup,                        
                 SetResolutiontoZero,
                 ConstantToAddToFiltration
                 )
