@@ -34,11 +34,12 @@ int main(int argc, char **argv)
 {
     Prog_angular_class_average_prm  prm;
 
-    int              i, nmax, nr_ref;
+    int              i, nmax, nr_ref, nr_images, reserve;
     double           ref_number, rot, tilt, psi, xshift, yshift, mirror;
     double           w, w1, w2;
     SelFile          SFclasses, SFclasses1, SFclasses2;
     FileName         fn_tmp;
+    Matrix1D<double> dataline(8);
 
     // Get input parameters
     try
@@ -61,22 +62,27 @@ int main(int argc, char **argv)
     // Making class averages
     try
     {
-
 	    // Initialize
 	    SFclasses.clear(); 
 	    SFclasses1.clear();
 	    SFclasses2.clear();
 
-	    nr_ref = prm.DFlib.dataLineNo();// master//library docfile
-	    init_progress_bar(nr_ref);// master
+            // Reserve memory for output from class realignment
+            if (prm.nr_iter > 0) reserve = prm.DF.dataLineNo();
+            else reserve = 0.;
+            double output_values[AVG_OUPUT_SIZE*reserve+1];
+
+	    nr_ref = prm.DFlib.dataLineNo();
+	    init_progress_bar(nr_ref);
 
 	    // Loop over all classes
-	    //prm.DFlib.go_beginning();// master
-	    for (int dirno = 1; dirno <= nr_ref; dirno++)
-	    {   //col_rot colum numbers
-	        //prm.DFlib.adjust_to_data_line();
-	        prm.processOneClass(dirno, w, w1, w2);
 
+	    //for (int dirno = 1; dirno <= nr_ref; dirno++)
+            for (int dirno = 144; dirno <= 144; dirno++)
+	    {   
+	        prm.processOneClass(dirno, w, w1, w2, output_values);
+
+                // Output *classes.sel files
 	        if (w > 0.)
 	        {
 		        fn_tmp.compose(prm.fn_out,dirno,"xmp");
@@ -95,12 +101,35 @@ int main(int argc, char **argv)
 		            SFclasses2.insert(fn_tmp);
 		        }
 	        }
+
+                // Fill new docfile (with params after realignment)
+                if (prm.nr_iter > 0)
+                {
+                   
+                    nr_images = ROUND(output_values[0] / AVG_OUPUT_SIZE);
+                    for (int i = 0; i < nr_images; i++)
+                    {
+                        prm.DF.locate(ROUND(output_values[i*AVG_OUPUT_SIZE+1]));
+                        prm.DF.set(0,output_values[i*AVG_OUPUT_SIZE+2]);
+                        prm.DF.set(1,output_values[i*AVG_OUPUT_SIZE+3]);
+                        prm.DF.set(2,output_values[i*AVG_OUPUT_SIZE+4]);
+                        prm.DF.set(3,output_values[i*AVG_OUPUT_SIZE+5]);
+                        prm.DF.set(4,output_values[i*AVG_OUPUT_SIZE+6]);
+                        prm.DF.set(5,output_values[i*AVG_OUPUT_SIZE+7]);
+                        prm.DF.set(6,output_values[i*AVG_OUPUT_SIZE+8]);
+                        prm.DF.set(7,output_values[i*AVG_OUPUT_SIZE+9]);
+                    }
+                }
+
                 progress_bar(dirno);
-	        //prm.DFlib.next();
+
             }
             progress_bar(nr_ref);
  
-        //maSTER SHOULD DO THE FOLLOWING...
+            // Write new document file
+            fn_tmp=prm.fn_out+"es_realigned.doc";
+            prm.DF.write(fn_tmp);
+
 	    // Write selfile with all classes
 	    fn_tmp=prm.fn_out+"es.sel";
 	    SFclasses.write(fn_tmp);

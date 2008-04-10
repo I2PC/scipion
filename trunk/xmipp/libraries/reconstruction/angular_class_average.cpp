@@ -58,6 +58,7 @@ void Prog_angular_class_average_prm::read(int argc, char **argv)  {
 	col_ref    = 6;
     }
 
+    // TODO: INSTEAD OF FIXED VALUE TO DISCARD IMAGES, DISCARD BOTTOM X% FOR EACH CLASS
     do_limit0=checkParameter(argc, argv, "-limit0");
     if (do_limit0)
     {
@@ -81,6 +82,14 @@ void Prog_angular_class_average_prm::read(int argc, char **argv)  {
 
     // Skip writing selfiles?
     dont_write_selfiles = checkParameter(argc, argv, "-dont_write_selfiles"); 
+
+    // Internal re-alignment of the class averages
+    Ri      = textToInteger(getParameter(argc,argv,"-Ri","-1"));
+    Ro      = textToInteger(getParameter(argc,argv,"-Ro","-1"));
+    nr_iter = textToInteger(getParameter(argc,argv,"-iter","0"));
+    max_shift        = textToFloat(getParameter(argc, argv, "-max_shift","999."));
+    max_shift_change = textToFloat(getParameter(argc, argv, "-max_shift_change","999."));
+    max_psi_change   = textToFloat(getParameter(argc, argv, "-max_psi_change","360."));
 }
 
 // Show ====================================================================
@@ -99,6 +108,17 @@ void Prog_angular_class_average_prm::show() {
 	std::cerr << "     -> Discard images with value in column "<<col_select<<" above "<<limitF<<std::endl;
     if (dont_write_selfiles)
 	std::cerr << "     -> Do not write class selfiles to disc "<<std::endl;
+    if (nr_iter > 0)
+    {
+        std::cerr << "     -> Re-align class averages in "<<nr_iter<<" iterations"<<std::endl;
+        std::cerr << "  Maximum shift           : "<<max_shift<<std::endl;
+        std::cerr << "  Maximum shift change    : "<<max_shift_change<<std::endl;
+        std::cerr << "  Maximum psi change      : "<<max_psi_change<<std::endl;
+        if (Ri>0)
+            std::cerr << "  Inner radius rot-search : "<<Ri<<std::endl;
+        if (Ro>0)
+            std::cerr << "  Outer radius rot-search : "<<Ro<<std::endl;
+    }
 
     std::cerr << " ================================================================="<<std::endl;
 
@@ -126,6 +146,13 @@ void Prog_angular_class_average_prm::usage() {
     printf("       [-limit0 <limit0>]  : Values in column <col_s> below this are discarded\n");
     printf("       [-limitF <limitF>]  : Values in column <col_s> above this are discarded\n");
     printf("       [-dont_write_selfiles]  : Do not write class selfiles to disc\n");
+    printf(" REALIGNMENT OF CLASSES \n");
+    printf("       [-iter <int=0>]                  : Number of iterations for re-alignment\n");
+    printf("       [-Ri <int=1>]                    : Inner radius to limit rotational search\n");
+    printf("       [-Ro <int=dim/2-1>]              : Outer radius to limit rotational search\n");
+    printf("       [-max_shift <float=999.>]        : Maximum shift (larger shifts will be set to 0)\n");
+    printf("       [-max_shift_change <float=999.>] : Maximum change in shift in last iteration \n");
+    printf("       [-max_psi_change <float=360.>]   : Maximum change in rotation in last iteration \n");
     exit(1);
 }
 
@@ -158,162 +185,386 @@ void Prog_angular_class_average_prm::produceSideInfo() {
     Iempty().setXmippOrigin();
     Iempty().initZeros();
 
+    // Set ring defaults
+    if (Ri<1) Ri=1;
+    if (Ro<0) Ro=(XSIZE(Iempty())/2)-1;
+
+    // Randomization
+    if (do_split) randomize_random_generator();
+
+}
+
+void Prog_angular_class_average_prm::getPolar(Matrix2D<double> &img, Polar<std::complex <double> > &fP, 
+                                              bool conjugated, float xoff, float yoff)
+{
+    Matrix2D<double> Maux;
+    Polar<double> P;
+
+    // Calculate FTs of polar rings and its stddev
+    img.produceSplineCoefficients(Maux,3);
+    P.getPolarFromCartesianBSpline(Maux,Ri,Ro,xoff,yoff);
+    fP = P.fourierTransformRings(conjugated);
+}
+
+void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
+                                                  ImageXmipp &avg2,
+                                                  SelFile    &SFclass1,
+                                                  SelFile    &SFclass2,
+                                                  std::vector<ImageXmipp> imgs,
+                                                  std::vector<int> splits,
+                                                  std::vector<int> numbers,
+                                                  int dirno,
+                                                  double * my_output)
+{
+
+
+    Polar<std::complex <double> >   fPref, fPrefm, fPimg;
+    std::vector<double>             ccfs(splits.size());
+    Matrix1D<double>                ang, corr;
+    Matrix2D<double>                Mimg, Mref;
+    double                          maxcorr, diff_psi, diff_shift, new_xoff, new_yoff;
+    double                          w1, w2, opt_flip=0., opt_psi=0., opt_xoff=0., opt_yoff=0.;
+    bool                            do_discard;
+
+    SFclass1.clear();
+    SFclass2.clear();
+    Mref = avg1() + avg2();
+//#define DEBUG
+#ifdef DEBUG
+        ImageXmipp It;
+        It() = Mref;
+        It.write("ref.xmp");
+#endif
+
+
+    for (int iter = 0; iter < nr_iter; iter++)
+    {
+        // Initialize iteration
+        getPolar(Mref,fPref,true);
+        getPolar(Mref,fPrefm,false);
+        avg1().initZeros();
+        avg2().initZeros();
+        w1 = w2 = 0.;
+
+#ifdef DEBUG
+        std::cerr<<" entering iter "<<iter<<std::endl;
+#endif      
+        for (int imgno = 0; imgno < imgs.size(); imgno++)
+        {
+            
+            do_discard = false;
+            maxcorr = -99.e99;
+            // Rotationally align
+            getPolar(imgs[imgno](),fPimg,false,(float)-imgs[imgno].Xoff(),(float)-imgs[imgno].Yoff());
+            // A. Check straight image
+            rotationalCorrelation(fPimg,fPref,ang,corr);
+	    for (int k = 0; k < XSIZE(corr); k++)
+	    {
+		if (corr(k)> maxcorr)
+		{
+		    maxcorr = corr(k);
+		    opt_psi = ang(k);
+                    opt_flip = 0.;
+		}
+	    }
+
+            // B. Check mirrored image
+            rotationalCorrelation(fPimg,fPrefm,ang,corr);
+	    for (int k = 0; k < XSIZE(corr); k++)
+	    {
+		if (corr(k)> maxcorr)
+		{
+		    maxcorr = corr(k);
+		    opt_psi = realWRAP(360. - ang(k), -180., 180.);
+                    opt_flip = 1.;
+		}
+	    }
+
+#ifdef DEBUG
+            std::cout<<" imgno= "<<imgno<<" Psi()= "<<imgs[imgno].Psi()<<" opt_psi= "<<opt_psi<<" flip()= "<<imgs[imgno].flip()<<" opt_flip= "<<opt_flip<<std::endl;
+#endif      
+            // Check max_psi_change in last iteration
+            if (iter == nr_iter - 1)
+            {
+                diff_psi = ABS(realWRAP(imgs[imgno].Psi() - opt_psi, -180., 180.));
+                if (diff_psi > max_psi_change) 
+                    do_discard = true;
+            }
+
+            // Translationally align
+            if (!do_discard)
+            {
+                if (opt_flip == 1.)
+                {
+                    // Flip experimental image
+                    Matrix2D<double> A(3,3);
+                    A.initIdentity();
+                    A(0, 0) *= -1.;
+                    A(0, 1) *= -1.;
+                    applyGeometry(Mimg, A, imgs[imgno](), IS_INV, DONT_WRAP);
+                    Mimg.selfRotateBSpline(3,opt_psi,DONT_WRAP);
+                }
+                else
+                {
+                    imgs[imgno]().rotateBSpline(3,opt_psi,Mimg,DONT_WRAP);
+                }
+                if (max_shift > 0) 
+                {
+                    // STILL CHECK THIS!!!
+                    best_shift(Mref,Mimg,opt_xoff,opt_yoff);
+                    if (opt_xoff * opt_xoff + opt_yoff * opt_yoff > max_shift * max_shift) 
+                    {
+                        opt_xoff = opt_yoff = 0.;
+                    }
+                    else
+                    {
+                        Mimg.selfTranslate(vectorR2(opt_xoff,opt_yoff),true);
+                    }
+                    new_xoff =  opt_xoff*COSD(opt_psi) + opt_yoff*SIND(opt_psi);
+                    new_yoff = -opt_xoff*SIND(opt_psi) + opt_yoff*COSD(opt_psi);
+
+#ifdef DEBUG
+     std::cout<<" imgno= "<<imgno<<" Xoff()= "<<imgs[imgno].Xoff()<<" opt_xoff= "<<opt_xoff<<" new_xoff= "<<new_xoff<<std::endl;
+     std::cout<<" imgno= "<<imgno<<" Yoff()= "<<imgs[imgno].Yoff()<<" opt_yoff= "<<opt_yoff<<" new_yoff= "<<new_yoff<<std::endl;
+#endif      
+                    // Check max_shift_change in last iteration
+                    if (iter == nr_iter - 1)
+                    {
+                        diff_shift = (new_xoff - opt_xoff) * (new_xoff - opt_xoff) +
+                                     (new_yoff - opt_yoff) * (new_yoff - opt_yoff);
+                        if (diff_shift > max_shift_change * max_shift_change) 
+                            do_discard = true;
+                    }
+                }
+            }
+
+            if (!do_discard)
+            {
+                imgs[imgno].Psi() =  opt_psi;
+                imgs[imgno].flip() = opt_flip;
+                if (opt_flip==1.)                
+                    imgs[imgno].Xoff() = -new_xoff;
+                else                
+                    imgs[imgno].Xoff() = new_xoff;
+                imgs[imgno].Yoff() = new_yoff;
+                ccfs[imgno] = correlation_index(Mref,Mimg);
+
+ #ifdef DEBUG
+                std::cout<<" imgno= "<<imgno<<" Psi()= "<<imgs[imgno].Psi()<<" Xoff()= "<<imgs[imgno].Xoff()<<" Yoff()= "<<imgs[imgno].Yoff()<<" flip()= "<<imgs[imgno].flip()<<" ccf= "<<ccfs[imgno]<<std::endl;
+#endif      
+                    // Check max_shift_change in last iteration
+               // Add to averages
+                if (splits[imgno]==0)
+                {
+                    w1 += 1.;
+                    avg1() += Mimg;
+                }
+                else if (splits[imgno]==1)
+                {
+                    w2 += 1.;
+                    avg2() += Mimg;
+                }
+            }
+            else
+            {
+                splits[imgno] = -1;
+                ccfs[imgno] = 0.;
+            }
+        }
+        Mref = avg1() + avg2();
+#ifdef DEBUG
+        It() = Mref;
+        It.weight()=w1+w2;
+        It.write("ref.xmp");
+#endif
+    }
+
+    avg1.weight() = w1;
+    avg2.weight() = w2;
+    
+    // Report the new angles, offsets and selfiles
+    my_output[0] = imgs.size() * AVG_OUPUT_SIZE;
+    for (int imgno = 0; imgno < imgs.size(); imgno++)
+    {
+        my_output[imgno * AVG_OUPUT_SIZE + 1] = numbers[imgno];
+        my_output[imgno * AVG_OUPUT_SIZE + 2] = avg1.rot();
+        my_output[imgno * AVG_OUPUT_SIZE + 3] = avg1.tilt();
+        my_output[imgno * AVG_OUPUT_SIZE + 4] = imgs[imgno].psi();
+        //if (imgs[imgno].flip()==1)
+        //    my_output[imgno * AVG_OUPUT_SIZE + 5] = -imgs[imgno].Xoff();
+        //else
+            my_output[imgno * AVG_OUPUT_SIZE + 5] = imgs[imgno].Xoff();
+        my_output[imgno * AVG_OUPUT_SIZE + 6] = imgs[imgno].Yoff();
+        my_output[imgno * AVG_OUPUT_SIZE + 7] = dirno;
+        my_output[imgno * AVG_OUPUT_SIZE + 8] = imgs[imgno].flip();
+        my_output[imgno * AVG_OUPUT_SIZE + 9] = ccfs[imgno];
+
+        if (splits[imgno] == 0) 
+            SFclass1.insert(imgs[imgno].name());
+        else if (splits[imgno] == 1) 
+            SFclass2.insert(imgs[imgno].name());
+    }
+
+
 }
 
 void Prog_angular_class_average_prm::processOneClass(int &dirno, 
                                                      double &w,
                                                      double &w1,
-                                                     double &w2) {
+                                                     double &w2,
+                                                     double * realign_output) {
 
     ImageXmipp img, avg, avg1, avg2;
     FileName   fn_img, fn_tmp;
     SelFile    SFclass, SFclass1, SFclass2;
     double     rot, tilt, psi, xshift, yshift, mirror, val;
-    int        ref_number;
+    int        ref_number, this_image;
     int        isplit;
     Matrix2D<double> A(3,3);
-
-    w = 0., w1 = 0., w2 = 0.;
-    avg=Iempty;
-    SFclass.clear();
-    if (do_split)
-    {
-	     avg1=Iempty;
-	     avg2=Iempty;
-	     SFclass1.clear();
-	     SFclass2.clear();
-             randomize_random_generator();
-    }
+    std::vector<int> exp_number, exp_split;
+    std::vector<ImageXmipp> exp_imgs;
+    
+    
+    // Get reference angles and preset to averages
+    DFlib.locate(dirno);
+    rot = DFlib(col_rot - 1);
+    tilt = DFlib(col_tilt - 1);
+    Iempty.set_eulerAngles((float)rot, (float)tilt, (float)0.);
+    Iempty.set_originOffsets(0., 0.);
+    Iempty.flip() = 0.;
+    avg1=Iempty;
+    avg2=Iempty;
 
     // Loop over all images in the input docfile
-    DFlib.locate(dirno);
-	rot = DFlib(col_rot - 1);
-	tilt = DFlib(col_tilt - 1);
     DF.go_beginning();
+    w = 0.;
+    w1 = 0.;
+    w2 = 0.;
     for (int n = 0; n < DF.dataLineNo(); n++)
     {
-	    DF.next();
-	    if (DF.get_current_line().Is_comment()) fn_img = ((DF.get_current_line()).get_text()).erase(0, 3);
-	    else  REPORT_ERROR(1, "Problem with NewXmipp-type document file");
-	    DF.adjust_to_data_line();
-            ref_number = ROUND(DF(col_ref - 1));
-	    // Check for matching rot and tilt
-    //	if (ABS(rot-lib_rot) < 0.01 && ABS(tilt-lib_tilt)<0.01)
-	    if (ref_number == dirno)
-	    {
-	        bool is_select = true;
-	        val = DF(col_select - 1);
-	        if ( (do_limit0 && val < limit0) || (do_limitF && val > limitF) ) is_select = false;
-	        if (is_select)
-	        {
-		         psi    = DF(col_psi - 1);
-		         xshift = DF(col_xshift - 1);
-		         yshift = DF(col_yshift - 1);
-		         if (do_mirrors) mirror = DF(col_mirror - 1);
-		         img.read(fn_img, false, false, false, false);
-		         img().setXmippOrigin();
-		         img.set_eulerAngles((float)0., (float)0., (float)psi);
-		         img.set_originOffsets(xshift, yshift);
-		         if (do_mirrors) img.flip() = mirror;
+        DF.next();
+        if (DF.get_current_line().Is_comment()) fn_img = ((DF.get_current_line()).get_text()).erase(0, 3);
+        else  REPORT_ERROR(1, "Problem with NewXmipp-type document file");
+        DF.adjust_to_data_line();
+        this_image = DF.get_current_key();
+        ref_number = ROUND(DF(col_ref - 1));
+        if (ref_number == dirno)
+        {
+            bool is_select = true;
+            val = DF(col_select - 1);
+            if ( (do_limit0 && val < limit0) || (do_limitF && val > limitF) ) is_select = false;
+            if (is_select)
+            {
+                psi    = DF(col_psi - 1);
+                xshift = DF(col_xshift - 1);
+                yshift = DF(col_yshift - 1);
+                if (do_mirrors) mirror = DF(col_mirror - 1);
+                img.read(fn_img, false, false, false, false);
+                img().setXmippOrigin();
+                img.set_eulerAngles((float)0., (float)0., (float)psi);
+                img.set_originOffsets(xshift, yshift);
+                if (do_mirrors) img.flip() = mirror;
+                
+                if (do_split) isplit = ROUND(rnd_unif());
+                else isplit = 0;
 
-		         // Apply in-plane transformation
-		         A = img.get_transformation_matrix();
-		         if (!A.isIdentity())
-		             img().selfApplyGeometryBSpline(A, 3, IS_INV,WRAP);
+                // For re-alignment of class: store all images in memory
+                if (nr_iter > 0)
+                {
+                    exp_imgs.push_back(img);
+                    exp_number.push_back(this_image);
+                    exp_split.push_back(isplit);
+                }
 
-		         // Add to average
-		         avg() += img();
-		         w+= 1.;
-		         SFclass.insert(fn_img);
-
-		         // Add to split averages
-		         if (do_split)
-		         {
-		             isplit = ROUND(rnd_unif());
-		             if (isplit==0)
-		             {
-			         avg1() += img();
-			         w1 += 1.;
-			         SFclass1.insert(fn_img);
-		             }
-		             else
-		             {
-			         avg2() += img();
-			         w2 += 1.;
-			         SFclass2.insert(fn_img);
-		             }
-		         }
-	        }
-	    }
+                // Apply in-plane transformation
+                A = img.get_transformation_matrix();
+                if (!A.isIdentity())
+                    img().selfApplyGeometryBSpline(A, 3, IS_INV,WRAP);
+                
+                // Add to average
+                if (isplit==0)
+                {
+                    avg1() += img();
+                    w1 += 1.;
+                    SFclass1.insert(fn_img);
+                }
+                else
+                {
+                    avg2() += img();
+                    w2 += 1.;
+                    SFclass2.insert(fn_img);
+                }
+            }
+        }
     }
 	
-    // Write output files
+    // Re-alignment of the class
+    if (nr_iter > 0)
+    {
+        SFclass = SFclass1 + SFclass2;
+        avg() = avg1() + avg2();
+        w = w1 + w2;
+        avg.weight() = w;
+        writeToDisc(avg,dirno,SFclass,fn_out,false,"ref.xmp");
+        reAlignClass(avg1, avg2, SFclass1, SFclass2, 
+                     exp_imgs, exp_split, exp_number, 
+                     dirno, realign_output);
+        std::cerr<<"SFclass1.ImgNo()= "<<SFclass1.ImgNo()<<" avg1.weight()= "<<avg1.weight()<<std::endl;
+        std::cerr<<"SFclass2.ImgNo()= "<<SFclass2.ImgNo()<<" avg2.weight()= "<<avg2.weight()<<std::endl;
+        w1 = avg1.weight();
+        w2 = avg2.weight();
+    }
+
+
+    // Output total and split averages and selfiles to disc
+    SFclass = SFclass1 + SFclass2;
+    avg() = avg1() + avg2();
+    w = w1 + w2;
+    avg.weight() = w;
+    avg1.weight() = w1;
+    avg2.weight() = w2;
+    writeToDisc(avg,dirno,SFclass,fn_out,!dont_write_selfiles);
+    if (do_split)
+    {
+        writeToDisc(avg1,dirno,SFclass1,fn_out1,!dont_write_selfiles);
+        writeToDisc(avg2,dirno,SFclass2,fn_out2,!dont_write_selfiles);
+    }
+
+}
+
+void Prog_angular_class_average_prm::writeToDisc(ImageXmipp avg,
+                                                 int        dirno,
+                                                 SelFile    SF,
+                                                 FileName   fn,
+                                                 bool       write_selfile,
+                                                 FileName   oext)
+{
+    
+    FileName fn_tmp;
+    double w = avg.weight();
+
     if (w > 0.)
     {
+        // Convert sum to average
 	FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(avg())
 	{
 	    MULTIDIM_ELEM(avg(), i) /= w;
 	}
-	avg.clear_header();
-	avg.set_eulerAngles((float)rot, (float)tilt, (float)0.);
-	avg.set_originOffsets(0., 0.);
-	avg.flip() = 0.;
-	avg.weight() = w;
 	// Write class average to disc
-	fn_tmp.compose(fn_out,dirno,"xmp");
+	fn_tmp.compose(fn,dirno,oext);
 	avg.write(fn_tmp);
 	// Write class selfile to disc
-	if (!dont_write_selfiles)
+	if (write_selfile)
 	{
-	    fn_tmp.compose(fn_out,dirno,"sel");
-	    SFclass.write(fn_tmp);
+	    fn_tmp.compose(fn,dirno,"sel");
+	    SF.write(fn_tmp);
 	}
+        
+        if (ROUND(w) != SF.ImgNo())
+        {
+            std::cerr<<" w = "<<w<<" SF.ImgNo()= "<<SF.ImgNo()<<" dirno = "<<dirno<<std::endl;
+            REPORT_ERROR(1,"Selfile and average weight do not correspond!");
+        }
     }
 
-    if (do_split)
-    {
-	if (w1 > 0.)
-	{
-	    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(avg1())
-	    {
-		MULTIDIM_ELEM(avg1(), i) /= w1;
-	    }
-	    avg1.clear_header();
-	    avg1.set_eulerAngles((float)rot, (float)tilt, (float)0.);
-	    avg1.set_originOffsets(0., 0.);
-	    avg1.flip() = 0.;
-	    avg1.weight() = w1;
-	    // Write class ave1rage to disc
-	    fn_tmp.compose(fn_out1,dirno,"xmp");
-	    avg1.write(fn_tmp);
-	    if (!dont_write_selfiles)
-	    {
-		// Write class selfile to disc
-		fn_tmp.compose(fn_out1,dirno,"sel");
-		SFclass1.write(fn_tmp);
-	    }
-	}
-	if (w2 > 0.)
-	{
-	    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(avg2())
-	    {
-		MULTIDIM_ELEM(avg2(), i) /= w2;
-	    }
-	    avg2.clear_header();
-	    avg2.set_eulerAngles((float)rot, (float)tilt, (float)0.);
-	    avg2.set_originOffsets(0., 0.);
-	    avg2.flip() = 0.;
-	    avg2.weight() = w2;
-	    // Write class ave1rage to disc
-	    fn_tmp.compose(fn_out2,dirno,"xmp");
-	    avg2.write(fn_tmp);
-	    if (!dont_write_selfiles)
-	    {
-		// Write class selfile to disc
-		fn_tmp.compose(fn_out2,dirno,"sel");
-		SFclass2.write(fn_tmp);
-	    }
-	}
-    }
 }
-

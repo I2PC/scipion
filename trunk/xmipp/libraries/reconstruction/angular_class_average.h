@@ -34,6 +34,9 @@
 #include <data/image.h>
 #include <data/filters.h>
 #include <data/mask.h>
+#include <data/polar.h>
+
+#define AVG_OUPUT_SIZE 9
 
 /**@defgroup ClassAverage Create class averages from projection
    matching docfiles
@@ -63,6 +66,20 @@ public:
     /** Skip writing of selfiles */
     bool             dont_write_selfiles;
 
+    
+    /** Re-alignment of classes */
+
+    /** Inner and outer radius for rotational alignment */
+    int Ri, Ro;
+    /** Number of iterations */
+    int nr_iter;
+    /** Convergence criterion */
+    double eps;
+    /** Search shift (shifts larger than this will be set to 0)*/
+    double max_shift;
+    /** Maximum allowed shift in last iteration (shifts larger than this will be set to 0)*/
+    double max_shift_change, max_psi_change;
+
 public:
   /// Read arguments from command line
   void read(int argc, char **argv);
@@ -76,14 +93,36 @@ public:
   /** Make shiftmask and calculate nr_psi */
   void produceSideInfo();
 
+  /** Convert from cartesian to FT of polar coordinates */
+  void getPolar(Matrix2D<double> &img, Polar<std::complex <double> > &fP, 
+                bool conjugated=false, float xoff = 0., float yoff = 0.);
+
+  /** Re-align all images in a class */
+  void reAlignClass(ImageXmipp &avg1,
+                    ImageXmipp &avg2,
+                    SelFile    &SFclass1,
+                    SelFile    &SFclass2,
+                    std::vector<ImageXmipp> imgs,
+                    std::vector<int> splits,
+                    std::vector<int> numbers,
+                    int dirno,
+                    double * my_output);
+
   /** Process a single class */
   void processOneClass(int &dirno, 
-//		       double &lib_rot, 
-//		       double &lib_tilt,
 		       double &w,
 		       double &w1,
-		       double &w2);
+		       double &w2,
+                       double * realign_output);
 
-};				
+  /** Write average and selfiles to disc */
+  void writeToDisc(ImageXmipp avg,
+                   int        dirno,
+                   SelFile    SF,
+                   FileName   fn,                                                 
+                   bool       write_selfile,
+                   FileName   oext="xmp");
+
+};
 //@}
 #endif
