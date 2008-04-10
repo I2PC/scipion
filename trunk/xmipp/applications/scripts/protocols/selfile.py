@@ -102,6 +102,20 @@ class selfile:
                return name,state
        return dname,dstate
 
+   # Deactivate all images in this selfile
+   def deactivate_all_images(self):
+      newlines=[]
+      for name,state in self.sellines:
+         newlines.append([name,'-1'])
+      self.sellines=newlines
+
+   # Deactivate all images in this selfile
+   def activate_all_images(self):
+      newlines=[]
+      for name,state in self.sellines:
+         newlines.append([name,'1'])
+      self.sellines=newlines
+
    # Makes filenames with absolute paths
    def make_abspath(self):
        import os
