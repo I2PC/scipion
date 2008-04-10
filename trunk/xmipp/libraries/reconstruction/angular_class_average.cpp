@@ -509,8 +509,6 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
         reAlignClass(avg1, avg2, SFclass1, SFclass2, 
                      exp_imgs, exp_split, exp_number, 
                      dirno, realign_output);
-        std::cerr<<"SFclass1.ImgNo()= "<<SFclass1.ImgNo()<<" avg1.weight()= "<<avg1.weight()<<std::endl;
-        std::cerr<<"SFclass2.ImgNo()= "<<SFclass2.ImgNo()<<" avg2.weight()= "<<avg2.weight()<<std::endl;
         w1 = avg1.weight();
         w2 = avg2.weight();
     }
