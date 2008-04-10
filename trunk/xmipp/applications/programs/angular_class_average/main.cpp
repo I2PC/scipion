@@ -77,8 +77,7 @@ int main(int argc, char **argv)
 
 	    // Loop over all classes
 
-	    //for (int dirno = 1; dirno <= nr_ref; dirno++)
-            for (int dirno = 144; dirno <= 144; dirno++)
+	    for (int dirno = 1; dirno <= nr_ref; dirno++)
 	    {   
 	        prm.processOneClass(dirno, w, w1, w2, output_values);
 
