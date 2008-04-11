@@ -996,10 +996,10 @@ bool Prog_MLPalign2D_prm::checkConvergence(std::vector<double> &conv)
         if (Iref[iref].weight() > 0.)
         {
             Maux = multiplyElements(Iold[iref](), Iold[iref]());
-            convv = 1. / (Maux.compute_avg());
+            convv = 1. / (Maux.computeAvg());
             Maux = Iold[iref]() - Iref[iref]();
             Maux = multiplyElements(Maux, Maux);
-            convv *= Maux.compute_avg();
+            convv *= Maux.computeAvg();
             conv.push_back(convv);
             if (convv > eps) converged = false;
         }

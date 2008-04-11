@@ -334,9 +334,9 @@ void ShowSel::producePixmapAt(int i)
         FourierImageXmipp If;
         If.read(imgnames[i]);
         FFT_magnitude(If(), I());
-        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(I())
-        MULTIDIM_ELEM(I(), i) =
-            log10(1 + MULTIDIM_ELEM(I(), i) * MULTIDIM_ELEM(I(), i));
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
+            MAT_ELEM(I(), i, j) =
+                log10(1 + MAT_ELEM(I(), i, j) * MAT_ELEM(I(), i, j));
     }
     else
         // Unknown image

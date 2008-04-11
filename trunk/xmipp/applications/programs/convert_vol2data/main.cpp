@@ -89,7 +89,7 @@ int main(int argc, char **argv)
         std::cout << std::endl << "reading mask " << bmname << "......" << std::endl << std::endl;
         mask.read(bmname);        // Reads the mask
         //Adjust the range to 0-1
-        mask().range_adjust(0, 1); // just in case
+        mask().rangeAdjust(0, 1); // just in case
         std::cout << mask;    // Output Volumen Information
     }
 

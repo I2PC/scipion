@@ -392,9 +392,9 @@ void spatial_Bspline032voxels(const GridVolume &vol_splines,
                                 vol_splines.grid(0).lowest;
         Matrix1D<double> corner = vol_splines.grid(0).lowest;
         (*vol_voxels).initZeros(CEIL(ZZ(size)), CEIL(YY(size)), CEIL(XX(size)));
-        (*vol_voxels).startingX() = FLOOR(XX(corner));
-        (*vol_voxels).startingY() = FLOOR(YY(corner));
-        (*vol_voxels).startingZ() = FLOOR(ZZ(corner));
+        STARTINGX(*vol_voxels) = FLOOR(XX(corner));
+        STARTINGY(*vol_voxels) = FLOOR(YY(corner));
+        STARTINGZ(*vol_voxels) = FLOOR(ZZ(corner));
     }
     else
     {
@@ -409,10 +409,10 @@ void spatial_Bspline032voxels(const GridVolume &vol_splines,
                                             vol_voxels);
 #ifdef DEBUG
         std::cout << "Spline grid no " << i << " stats: ";
-        vol_splines(i)().print_stats();
+        vol_splines(i)().printStats();
         std::cout << std::endl;
         std::cout << "So far vol stats: ";
-        (*vol_voxels).print_stats();
+        (*vol_voxels).printStats();
         std::cout << std::endl;
         VolumeXmipp save;
         save() = *vol_voxels;

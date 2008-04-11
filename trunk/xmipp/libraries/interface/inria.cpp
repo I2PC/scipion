@@ -71,7 +71,7 @@ void compute_derivative(const Matrix3D<double> &in_vol,
 
     // Compute derivative
     Matrix3D<float> aux;
-    type_cast(in_vol, aux);
+    typeCast(in_vol, aux);
     // This auxiliar volume is used due to the fact that INRIA library
     // seems to have a problem with input double volumes
     if (partial_derivative_3D(VOL_ARRAY(aux), FLOAT,

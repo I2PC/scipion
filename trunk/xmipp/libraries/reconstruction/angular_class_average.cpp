@@ -537,17 +537,12 @@ void Prog_angular_class_average_prm::writeToDisc(ImageXmipp avg,
                                                  bool       write_selfile,
                                                  FileName   oext)
 {
-    
     FileName fn_tmp;
     double w = avg.weight();
 
     if (w > 0.)
     {
-        // Convert sum to average
-	FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(avg())
-	{
-	    MULTIDIM_ELEM(avg(), i) /= w;
-	}
+	avg()/=w;
 	// Write class average to disc
 	fn_tmp.compose(fn,dirno,oext);
 	avg.write(fn_tmp);
@@ -564,5 +559,4 @@ void Prog_angular_class_average_prm::writeToDisc(ImageXmipp avg,
             REPORT_ERROR(1,"Selfile and average weight do not correspond!");
         }
     }
-
 }

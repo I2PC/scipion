@@ -50,8 +50,6 @@ public:
     XmippCTF             initial_ctfmodel;
     /// Show convergence values
     bool                 show_optimization;
-    /// Allow astigmatic noise
-    bool                 astigmatic_noise;
     /// X dimension of particle projections (-1=the same as the psd)
     int   ctfmodelSize;
 
@@ -76,6 +74,9 @@ public:
 
     /// Set of parameters for the complete adjustment of the CTF
     Matrix1D<double>     adjust;
+    
+    /// Model simplification
+    int                  modelSimplification;
 public:
     /// Read parameters from file
     void read(const FileName &fn_param);

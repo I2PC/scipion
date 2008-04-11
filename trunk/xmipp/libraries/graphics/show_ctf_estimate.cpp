@@ -198,7 +198,7 @@ void AssignCTFViewer::okToProceed()
     << "min_freq=    " << current_prm[0] / 100 << std::endl
     << "max_freq=    " << current_prm[1] / 100 << std::endl
     ;
-    if (!assign_ctf_prm.adjust_CTF_prm.astigmatic_noise)
+    if (!assign_ctf_prm.adjust_CTF_prm.modelSimplification)
         fh_adjust_param << "radial_noise=yes\n";
     fh_adjust_param << "defocus_range=4000\n";
     fh_adjust_param << "show_optimization=yes\n";

@@ -344,7 +344,7 @@ void xmipp2PSD(const Matrix2D<double> &input, Matrix2D<double> &output)
 {
     output = input;
     CenterFFT(output, true);
-    double min_val = output.compute_max();
+    double min_val = output.computeMax();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(output)
     if (output(i, j) > 0 && output(i, j) < min_val) min_val = output(i, j);
     min_val = 10 * log10(min_val);

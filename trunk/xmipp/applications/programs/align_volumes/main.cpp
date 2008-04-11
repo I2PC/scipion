@@ -260,7 +260,7 @@ int main(int argc, char **argv)
 	    Matrix1D<double> x(8), steps(8);
 	    double fitness;
 	    int iter;
-	    steps.init_constant(1);
+	    steps.initConstant(1);
 	    x(0)=(grey_scale0+grey_scaleF)/2;
 	    x(1)=(rot0+rotF)/2;
 	    x(2)=(tilt0+tiltF)/2;

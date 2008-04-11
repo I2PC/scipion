@@ -442,7 +442,7 @@ void Prog_Refine3d_prm::make_noise_images(std::vector<ImageXmipp> &Iref)
     {
         img = Iref[i];
         img().initZeros();
-        img().add_noise(0, 1, "gaussian");
+        img().addNoise(0, 1, "gaussian");
         if (Iref[i].weight() > 1.) img() /= sqrt(Iref[i].weight());
         fn_img = fn_root + "_noise";
         fn_img.compose(fn_img, i, "xmp");
@@ -522,12 +522,12 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
         if (!checkParameter(argc, argv, "-l"))
         {
             art_prm.lambda_list.resize(1);
-            art_prm.lambda_list.init_constant(0.2);
+            art_prm.lambda_list.initConstant(0.2);
         }
         if (!checkParameter(argc, argv, "-k"))
         {
             art_prm.kappa_list.resize(1);
-            art_prm.kappa_list.init_constant(0.5);
+            art_prm.kappa_list.initConstant(0.5);
         }
         art_prm.fn_sel = fn_insel;
         art_prm.fn_root = fn_tmp;
@@ -619,7 +619,7 @@ void Prog_Refine3d_prm::calculate_3DSSNR(Matrix1D<double> &spectral_signal, int 
         nvol().setXmippOrigin();
         vol().setXmippOrigin();
         Mone.resize(dim, dim);
-        Mone.init_constant(1. / (double)(dim*dim));
+        Mone.initConstant(1. / (double)(dim*dim));
         Mone.setXmippOrigin();
         SFnoise.go_beginning();
 
@@ -872,7 +872,7 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv)
                 {
                     Vsymmask.read(fn_symmask);
                     Vsymmask().setXmippOrigin();
-                    if (Vsymmask().compute_max() > 1. || Vsymmask().compute_min() < 0.)
+                    if (Vsymmask().computeMax() > 1. || Vsymmask().computeMin() < 0.)
                         REPORT_ERROR(1, "ERROR: sym_mask should have values between 0 and 1!");
                     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Vsymmask())
                     {
@@ -932,7 +932,7 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv)
                 {
                     // C. Read user-provided solvent mask from disc
                     Vsolv.read(fn_solv);
-                    if (Vsolv().compute_max() > 1. || Vsolv().compute_min() < 0.)
+                    if (Vsolv().computeMax() > 1. || Vsolv().computeMin() < 0.)
                         REPORT_ERROR(1, "ERROR: solvent mask should have values between 0 and 1!");
                 }
                 // Binarize Vsolv, avoiding buggy Vsolv().binarize()

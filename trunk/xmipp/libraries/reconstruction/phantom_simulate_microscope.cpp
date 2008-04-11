@@ -143,7 +143,7 @@ void Prog_Microscope_Parameters::apply(Matrix2D<double> &I)
     // Add noise before CTF
     Matrix2D<double> noisy;
     noisy.resize(I);
-    noisy.init_random(0, sigma_before_CTF, "gaussian");
+    noisy.initRandom(0, sigma_before_CTF, "gaussian");
     if (low_pass_before_CTF != 0) lowpass.apply_mask_Space(noisy);
     I += noisy;
 
@@ -172,7 +172,7 @@ void Prog_Microscope_Parameters::apply(Matrix2D<double> &I)
     if (fn_ctf != "") ctf.apply_mask_Space(I);
 
     // Add noise after CTF
-    noisy.init_random(0, sigma_after_CTF, "gaussian");
+    noisy.initRandom(0, sigma_after_CTF, "gaussian");
     if (after_ctf_noise) after_ctf.apply_mask_Space(noisy);
     I += noisy;
     I.window(FIRST_XMIPP_INDEX(Ydim), FIRST_XMIPP_INDEX(Xdim),

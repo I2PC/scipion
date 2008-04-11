@@ -379,6 +379,7 @@ ReconsSources = [
     'project_crystal.cpp',
     'projection.cpp',
     'psd_enhance.cpp',
+    'psd_sort.cpp',
     'radon.cpp',
     'recons_misc.cpp',
     'reconstruct_art.cpp',
@@ -539,6 +540,7 @@ AddXmippProgram('precompute_sampling', ['XmippRecons'])
 AddXmippProgram('project', ['XmippRecons','XmippRecons_Interface'])
 AddXmippProgram('project_tomography', ['XmippRecons'])
 AddXmippProgram('psd_enhance', ['XmippRecons'])
+AddXmippProgram('psd_sort', ['XmippRecons'])
 AddXmippProgram('range_adjust')
 AddXmippProgram('reconstruct_art', ['XmippRecons'])
 AddXmippProgram('reconstruct_wbp', ['XmippRecons'])
@@ -717,7 +719,7 @@ for b in BackwardsBatches:
 
 # MPI
 if int(env['mpi']):
-    AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
+#    AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_discrete_assign', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])

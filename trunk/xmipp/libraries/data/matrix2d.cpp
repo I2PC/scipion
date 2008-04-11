@@ -28,15 +28,6 @@
 /* ------------------------------------------------------------------------- */
 #include "matrix2d.h"
 
-/* ************************************************************************* */
-/* IMPLEMENTATIONS                                                           */
-/* ************************************************************************* */
-#define maT Matrix2D<T>
-#define ma  Matrix2D
-#include "multidim_basic.inc"
-#undef ma
-#undef maT
-
 /* Interface to numerical recipes: svbksb ---------------------------------- */
 void svbksb(Matrix2D<double> &u, Matrix1D<double> &w, Matrix2D<double> &v,
             Matrix1D<double> &b, Matrix1D<double> &x)
@@ -54,16 +45,16 @@ void svbksb(Matrix2D<double> &u, Matrix1D<double> &w, Matrix2D<double> &v,
 double solveNonNegative(const Matrix2D<double> &C, const Matrix1D<double> &d,
                     Matrix1D<double> &result)
 {
-    if (C.xdim == 0)
+    if (XSIZE(C) == 0)
         REPORT_ERROR(1108, "Solve_nonneg: Matrix is empty");
-    if (C.ydim != d.getDimension())
+    if (YSIZE(C) != XSIZE(d))
         REPORT_ERROR(1102, "Solve_nonneg: Different sizes of Matrix and Vector");
     if (d.isRow())
         REPORT_ERROR(1107, "Solve_nonneg: Not correct vector shape");
 
     Matrix2D<double> Ct(XSIZE(C), YSIZE(C)); // Ct=C^t
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Ct)
-    DIRECT_MAT_ELEM(Ct, i, j) = DIRECT_MAT_ELEM(C, j, i);
+        DIRECT_MAT_ELEM(Ct, i, j) = DIRECT_MAT_ELEM(C, j, i);
 
     result.initZeros(YSIZE(Ct));
     double rnorm;
@@ -107,7 +98,8 @@ void applyGeometryBSpline(Matrix2D< std::complex<double> > &M2,
     outre = outside.real();
     outim = outside.imag();
     Complex2RealImag(MULTIDIM_ARRAY(M1),
-                     MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im), MULTIDIM_SIZE(M1));
+                     MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
+                     MULTIDIM_SIZE(M1));
     applyGeometryBSpline(rotre, A, re, Splinedegree, inv, wrap, outre);
     applyGeometryBSpline(rotim, A, im, Splinedegree, inv, wrap, outim);
     M2.resize(M1);
@@ -115,6 +107,31 @@ void applyGeometryBSpline(Matrix2D< std::complex<double> > &M2,
                      MULTIDIM_ARRAY(M2), MULTIDIM_SIZE(re));
 }
 
+
+/* Is diagonal ------------------------------------------------------------- */
+template <>
+bool Matrix2D< std::complex<double> >::isDiagonal() const
+{
+    if (XSIZE(*this) != YSIZE(*this))
+        return false;
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
+        if (i != j && abs(DIRECT_MAT_ELEM(*this, i, j)) > XMIPP_EQUAL_ACCURACY)
+            return false;
+    return true;
+}
+
+/* Is Scalar --------------------------------------------------------------- */
+template <>
+bool Matrix2D< std::complex<double> >::isScalar() const
+{
+    if (!isDiagonal())
+        return false;
+    for (int i = 1; i < YSIZE(*this); i++)
+        if (abs(DIRECT_MAT_ELEM(*this, i, i) - DIRECT_MAT_ELEM(*this, 0, 0)) >
+            XMIPP_EQUAL_ACCURACY)
+            return false;
+    return true;
+}
 
 /* Rotation 2D ------------------------------------------------------------- */
 Matrix2D<double> rotation2DMatrix(double ang)
@@ -144,7 +161,7 @@ Matrix2D<double> rotation2DMatrix(double ang)
 /* Translation 2D ---------------------------------------------------------- */
 Matrix2D<double> translation2DMatrix(Matrix1D<double> v)
 {
-    if (v.getDimension() != 2)
+    if (XSIZE(v) != 2)
         REPORT_ERROR(1002, "Translation2D_matrix: vector is not in R2");
 
     Matrix2D<double> result(3, 3);
@@ -203,7 +220,7 @@ Matrix2D<double> alignWithZ(const Matrix1D<double> &axis)
     Matrix1D<double>  Axis;
     Matrix2D<double>  A(4, 4);
 
-    if (axis.getDimension() != 3)
+    if (XSIZE(axis) != 3)
         REPORT_ERROR(1002, "alignWithZ: Axis is not in R3");
 
     // Copy axis and compute length of the projection on YZ plane
@@ -330,18 +347,14 @@ CDAB;
 void quadraticProgramming_obj32(int nparam, int j, double* x, double* fj, void* cd)
 {
     CDAB* in = (CDAB *)cd;
-    Matrix2D<double> X;
-    XSIZE(X) = 1;
-    YSIZE(X) = nparam;
-    MULTIDIM_ARRAY(X) = x;
+    Matrix2D<double> X(1,nparam);
+    for (int i=0; i<nparam; ++i)
+       X(0,i)=x[i];
 
     Matrix2D<double> result;
     result = 0.5 * X.transpose() * in->C * X + in->D.transpose() * X;
 
     *fj = result(0, 0);
-    MULTIDIM_ARRAY(X) = NULL;
-    XSIZE(X) = YSIZE(X) = 0;
-    return;
 }
 
 /* To calculate the value of the jth constraint */
@@ -352,27 +365,20 @@ void quadraticProgramming_cntr32(int nparam, int j, double* x, double* gj, void*
     for (int k = 0; k < nparam; k++)
         *gj += in->A(j - 1, k) * x[k];
     *gj -= in->B(j - 1, 0);
-
-    return;
 }
 
 /* To calculate the value of the derivative of objective function */
 void quadraticProgramming_grob32(int nparam, int j, double* x, double* gradfj, void(*mydummy)(int, int, double*, double*, void*), void *cd)
 {
     CDAB* in = (CDAB *)cd;
-    Matrix2D<double> X;
-    XSIZE(X) = 1;
-    YSIZE(X) = nparam;
-    MULTIDIM_ARRAY(X) = x;
+    Matrix2D<double> X(1,nparam);
+    for (int i=0; i<nparam; ++i)
+       X(0,i)=x[i];
 
     Matrix2D<double> gradient;
     gradient = in->C * X + in->D;
     for (int k = 0; k < nparam; k++)
         gradfj[k] = gradient(k, 0);
-
-    MULTIDIM_ARRAY(X) = NULL;
-    XSIZE(X) = YSIZE(X) = 0;
-    return;
 }
 
 /* To calculate the value of the derivative of jth constraint */
@@ -381,7 +387,6 @@ void quadraticProgramming_grcn32(int nparam, int j, double *x, double *gradgj, v
     CDAB* in = (CDAB *)cd;
     for (int k = 0; k < nparam; k++)
         gradgj[k] = in->A(j - 1, k);
-    return;
 }
 
 /**************************************************************************
@@ -427,12 +432,12 @@ void quadraticProgramming(const Matrix2D<double> &C, const Matrix1D<double> &d,
     if (XSIZE(bl) == 0)
     {
         bl.resize(XSIZE(C));
-        bl.init_constant(-bigbnd);
+        bl.initConstant(-bigbnd);
     }
     if (XSIZE(bu) == 0)
     {
         bu.resize(XSIZE(C));
-        bu.init_constant(bigbnd);
+        bu.initConstant(bigbnd);
     }
 
     // Define intermediate variables
@@ -468,7 +473,6 @@ void quadraticProgramming(const Matrix2D<double> &C, const Matrix1D<double> &d,
           (void*)&prm);
 
 #ifdef DEBUG
-
     if (inform == 0)
         std::cout << "SUCCESSFUL RETURN. \n";
     if (inform == 1 || inform == 2)
@@ -478,9 +482,7 @@ void quadraticProgramming(const Matrix2D<double> &C, const Matrix1D<double> &d,
     if (inform > 3)
         printf("\ninform=%d\n", inform);
 #endif
-
 }
-
 
 /**************************************************************************
 
@@ -496,7 +498,6 @@ void leastSquare(const Matrix2D<double> &C, const Matrix1D<double> &d,
             Matrix1D<double> &bl,        Matrix1D<double> &bu,
             Matrix1D<double> &x)
 {
-
     // Convert d to Matrix2D for multiplication
     Matrix2D<double> P;
     P.fromVector(d);

@@ -1145,10 +1145,10 @@ void Prog_MLalign2D_prm::calculate_realspace_offsets(
 
     Moffsets.resize(dim, dim);
     Moffsets.setXmippOrigin();
-    Moffsets.init_constant(-1);
+    Moffsets.initConstant(-1);
     Moffsets_mirror.resize(dim, dim);
     Moffsets_mirror.setXmippOrigin();
-    Moffsets_mirror.init_constant(-1);
+    Moffsets_mirror.initConstant(-1);
     Maux.resize(dim, dim);
     Maux.setXmippOrigin();
     Mimg_trans.clear();
@@ -1287,9 +1287,10 @@ void Prog_MLalign2D_prm::ML_integrate_locally(
                     irot = iflip * nr_psi + ipsi;
                     Maux = Mref[refno][ipsi];
                     diff = A2_plus_Xi2;
-                    for (int ii = 0; ii < dim2; ii++)
+                    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Maux)
                     {
-                        diff -= opt_scale * (Maux).data[ii] * (Mtrans).data[ii];
+                        diff -= opt_scale * DIRECT_MAT_ELEM(Maux,i,j) *
+                                DIRECT_MAT_ELEM(Mtrans,i,j);
                     }
                     dVkij(Mweight, zero_trans, refno, irot) = diff;
 		    if (debug) {
@@ -1421,9 +1422,10 @@ void Prog_MLalign2D_prm::ML_integrate_locally(
                                 Mtrans = Mimg_trans[point_trans][iflip%nr_nomirror_flips];
                                 diff = A2_plus_Xi2;
 				pdf = fracpdf * MAT_ELEM(P_phi, iyy, ixx);
-                                for (int ii = 0; ii < dim2; ii++)
+                                FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Maux)
                                 {
-                                    diff -= opt_scale * (Maux).data[ii] * (Mtrans).data[ii];
+                                    diff -= opt_scale * DIRECT_MAT_ELEM(Maux,i,j) *
+                                            DIRECT_MAT_ELEM(Mtrans,i,j);
                                 }
 				if (!do_student)
 				{
@@ -1699,7 +1701,7 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
                         {
                             MAT_ELEM(Mweight[refno][irot], i, j) = A2_plus_Xi2 - opt_scale* MAT_ELEM(Maux, i, j);
                         }
-                        mind = Mweight[refno][irot].compute_min();
+                        mind = Mweight[refno][irot].computeMin();
                         if (mind < mindiff2) mindiff2 = mind;
                     }
                     else
@@ -1827,7 +1829,7 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
                     irot = iflip * nr_psi + ipsi;
                     if (dMij(Msignificant, refno, irot))
                     {
-                        if (Mweight[refno][irot].compute_max() > SIGNIFICANT_WEIGHT_LOW*maxweight)
+                        if (Mweight[refno][irot].computeMax() > SIGNIFICANT_WEIGHT_LOW*maxweight)
                         {
                             Mweight[refno][irot] /= sum_refw;
                             // Use Maux, because Mweight is smaller than dim x dim!
@@ -2170,7 +2172,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, std::vector< ImageX
 
             if (fast_mode) preselect_significant_model_phi(img(), allref_offsets, Mref,
                         Msignificant, pdf_directions);
-            else Msignificant.init_constant(1);
+            else Msignificant.initConstant(1);
             ML_integrate_complete(img(), Fref, Msignificant,
                                   Fwsum_imgs, wsum_sigma_noise, wsum_sigma_offset, 
                                   sumw, sumw2, sumw_mirror, LL, maxcorr, maxweight2, opt_scale,
@@ -2345,11 +2347,11 @@ bool Prog_MLalign2D_prm::check_convergence(std::vector<double> &conv)
     {
         if (Iref[refno].weight() > 0.)
         {
-            Maux = multiplyElements(Iold[refno](), Iold[refno]());
-            convv = 1. / (Maux.compute_avg());
+            multiplyElements(Iold[refno](), Iold[refno](), Maux);
+            convv = 1. / (Maux.computeAvg());
             Maux = Iold[refno]() - Iref[refno]();
-            Maux = multiplyElements(Maux, Maux);
-            convv *= Maux.compute_avg();
+            multiplyElements(Maux, Maux, Maux);
+            convv *= Maux.computeAvg();
             conv.push_back(convv);
             if (convv > eps) converged = false;
         }

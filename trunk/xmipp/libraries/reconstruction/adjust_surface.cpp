@@ -606,7 +606,7 @@ void ROUT_adjust_surface(Prog_Adjust_Surface_Parameters &prm)
         prm.p(5) = (prm.scaleX0 + prm.scaleXF) / 2;
         prm.p(6) = (prm.scaleY0 + prm.scaleYF) / 2;
         Matrix1D<double> steps(7);
-        steps.init_constant(1);
+        steps.initConstant(1);
         int iter = 0;
         powellOptimizer(prm.p, 1, 7, &eval_surface,
                          0.01, corr, iter, steps, true);

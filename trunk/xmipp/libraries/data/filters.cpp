@@ -28,7 +28,7 @@
 #include <list>
 
 /* Substract background ---------------------------------------------------- */
-void substract_background_plane(Image *I)
+void substract_background_plane(Matrix2D<double> &I)
 {
     Matrix2D<double> A(3, 3);
     Matrix1D<double> x(3), b(3);
@@ -36,32 +36,32 @@ void substract_background_plane(Image *I)
     // Solve the plane 'x'
     A.initZeros();
     b.initZeros();
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(IMGMATRIX(*I))
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(I)
     {
         A(0, 0) += j * j;
         A(0, 1) += j * i;
         A(0, 2) += j;
-        A(1, 0)  = A(0, 1);
         A(1, 1) += i * i;
         A(1, 2) += i;
-        A(2, 0)  = A(0, 2);
-        A(2, 1)  = A(1, 2);
         A(2, 2) += 1;
-        b(0)   += j * IMGPIXEL(*I, i, j);
-        b(1)   += i * IMGPIXEL(*I, i, j);
-        b(2)   += IMGPIXEL(*I, i, j);
+        b(0)    += j * MAT_ELEM(I, i, j);
+        b(1)    += i * MAT_ELEM(I, i, j);
+        b(2)    += MAT_ELEM(I, i, j);
     }
+    A(1, 0)  = A(0, 1);
+    A(2, 0)  = A(0, 2);
+    A(2, 1)  = A(1, 2);
     solve(A, b, x);
 
     // Now substract the plane
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(IMGMATRIX(*I))
-    IMGPIXEL(*I, i, j) -= x(0) * i + x(1) * j + x(2);
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(I)
+        MAT_ELEM(I, i, j) -= x(0) * i + x(1) * j + x(2);
 }
 
 /* Contranst enhancement --------------------------------------------------- */
 void contrast_enhancement(Image *I)
 {
-    (*I)().range_adjust(0, 255);
+    (*I)().rangeAdjust(0, 255);
 }
 
 /* Region growing for images ----------------------------------------------- */
@@ -340,7 +340,7 @@ void best_shift(const Matrix2D<double> &I1, const Matrix2D<double> &I2,
         }
     }
     else
-        Mcorr.statistics_adjust(0, 1);
+        Mcorr.statisticsAdjust(0, 1);
     Mcorr.maxIndex(imax, jmax);
     max = MAT_ELEM(Mcorr, imax, jmax);
 
@@ -590,9 +590,9 @@ void Smoothing_Shah(Matrix2D<double> &img,
                     bool adjust_range)
 {
 
-    type_cast(img, surface_strength);
+    typeCast(img, surface_strength);
     if (adjust_range)
-        surface_strength.range_adjust(0, 1);
+        surface_strength.rangeAdjust(0, 1);
     edge_strength.resize(img);
 
     for (int k = 1; k <= RefinementLoops; k++)
@@ -912,8 +912,7 @@ void local_thresholding(Matrix2D<double> &img,
     }
 
     // Substract the original from the convolved image and threshold
-    result.copyShape(img);
-    result.initZeros();
+    result.initZeros(img);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(convolved)
     {
         if (mask != NULL)

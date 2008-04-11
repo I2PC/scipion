@@ -39,6 +39,8 @@
 #include <strstream>
 #endif
 
+#include "matrix1d.h"
+
 /* NOTE: not a very safe implemenation but standard c functions do not retrieve
  * more than 6 significative digits */
 double textToDouble(const char* str, int _errno, std::string errmsg, int exit)

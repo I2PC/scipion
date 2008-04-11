@@ -462,7 +462,7 @@ void APHFile2D::generate_symmetrical_reflections(int symmetry_group)
             save.write("PPPSpots_abs.xmp");
             save() = spots_arg;
             save.write("PPPSpots_arg.xmp");
-            type_cast(visited, save());
+            typeCast(visited, save());
             save.write("PPPvisited.xmp");
             std::cout << "Press\n";
             char c;

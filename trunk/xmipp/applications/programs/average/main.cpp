@@ -98,16 +98,16 @@ void process_img(ImageXmipp &img, const Prog_parameters *prm)
         img() *= img.weight();
         eprm->sumweight += img.weight();
     }
-
-    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img())
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(img())
     {
-        MULTIDIM_ELEM(eprm->sumI(), i) += MULTIDIM_ELEM(img(), i);
+        MAT_ELEM(eprm->sumI(), i, j) += MAT_ELEM(img(), i, j);
     }
     if (!eprm->only_avg)
     {
-	FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img())
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(img())
 	{
-	    MULTIDIM_ELEM(eprm->sumI2(), i) += MULTIDIM_ELEM(img(), i) * MULTIDIM_ELEM(img(), i);
+	    MAT_ELEM(eprm->sumI2(), i, j) += MAT_ELEM(img(), i, j) *
+                MAT_ELEM(img(), i, j);
 	}
     }
     eprm->nI++;
@@ -118,15 +118,16 @@ void process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
     Statis_parameters *eprm = (Statis_parameters *) prm;
     eprm->sumV().resize(vol());
     eprm->sumV2().resize(vol());
-    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(vol())
+    FOR_ALL_ELEMENTS_IN_MATRIX3D(vol())
     {
-        MULTIDIM_ELEM(eprm->sumV(), i) += MULTIDIM_ELEM(vol(), i);
+        VOL_ELEM(eprm->sumV(), k, i, j) += VOL_ELEM(vol(), k ,i, j);
     }
     if (!eprm->only_avg)
     {
-	FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(vol())
+	FOR_ALL_ELEMENTS_IN_MATRIX3D(vol())
 	{
-	    MULTIDIM_ELEM(eprm->sumV2(), i) += MULTIDIM_ELEM(vol(), i) * MULTIDIM_ELEM(vol(), i);
+	    VOL_ELEM(eprm->sumV2(), k, i, j) +=
+                VOL_ELEM(vol(), k, i, j) * VOL_ELEM(vol(), k, i, j);
 	}
     }
     eprm->nV++;
@@ -137,17 +138,18 @@ void Statis_parameters::final_process()
     FileName fnt, fn_root = fn_in.without_extension();
     if (nI != 0)
     {
-        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(sumI())
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(sumI())
         {
-            MULTIDIM_ELEM(sumI(), i) /= nI;
+            MAT_ELEM(sumI(),  i, j) /= nI;
         }
 	if (!only_avg)
 	{
-	    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(sumI())
+	    FOR_ALL_ELEMENTS_IN_MATRIX2D(sumI())
 	    {
-		MULTIDIM_ELEM(sumI2(), i) /= nI;
-		MULTIDIM_ELEM(sumI2(), i) -= MULTIDIM_ELEM(sumI(), i) * MULTIDIM_ELEM(sumI(), i);
-		MULTIDIM_ELEM(sumI2(), i) = sqrt(ABS(MULTIDIM_ELEM(sumI2(), i)));
+		MAT_ELEM(sumI2(), i, j) /= nI;
+		MAT_ELEM(sumI2(), i, j) -= MAT_ELEM(sumI(), i, j) *
+                    MAT_ELEM(sumI(), i, j);
+		MAT_ELEM(sumI2(), i, j) = sqrt(ABS(MAT_ELEM(sumI2(), i, j)));
 	    }
 	}
         if (weighted_avg)
@@ -172,17 +174,18 @@ void Statis_parameters::final_process()
     }
     if (nV != 0)
     {
-        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(sumV())
+        FOR_ALL_ELEMENTS_IN_MATRIX3D(sumV())
         {
-            MULTIDIM_ELEM(sumV(), i) /= nV;
+            VOL_ELEM(sumV(),  k, i, j) /= nV;
         }
 	if (!only_avg)
 	{
-	    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(sumV())
+	    FOR_ALL_ELEMENTS_IN_MATRIX3D(sumV())
 	    {
-		MULTIDIM_ELEM(sumV2(), i) /= nV;
-		MULTIDIM_ELEM(sumV2(), i) -= MULTIDIM_ELEM(sumV(), i) * MULTIDIM_ELEM(sumV(), i);
-		MULTIDIM_ELEM(sumV2(), i) = sqrt(ABS(MULTIDIM_ELEM(sumV2(), i)));
+		VOL_ELEM(sumV2(), k, i, j) /= nV;
+		VOL_ELEM(sumV2(), k, i, j) -= VOL_ELEM(sumV(), k, i, j) *
+                    VOL_ELEM(sumV(), k, i, j);
+		VOL_ELEM(sumV2(), k, i, j) = sqrt(ABS(VOL_ELEM(sumV2(), k, i, j)));
 	    }
 	}
 	if (only_avg)
@@ -206,17 +209,3 @@ int main(int argc, char **argv)
     SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
     prm.final_process();
 }
-
-/* ------------------------------------------------------------------------- */
-/* Menu                                                                      */
-/* ------------------------------------------------------------------------- */
-/*Colimate:
-   PROGRAM Statis {
-      url="http://www.cnb.uam.es/~bioinfo/NewXmipp/Applications/Src/Statis/Help/statis.html";
-      help="Compute the average and standard deviation of a set of images";
-      OPEN MENU menu_selfile;
-      COMMAND LINES {
-        + usual: xmipp_statis $SELFILE_IN
-      }
-   }
-*/

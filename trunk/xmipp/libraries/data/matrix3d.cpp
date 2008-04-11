@@ -28,39 +28,6 @@
 /* ------------------------------------------------------------------------- */
 #include "matrix3d.h"
 
-/* ************************************************************************* */
-/* IMPLEMENTATIONS                                                           */
-/* ************************************************************************* */
-#define maT Matrix3D<T>
-#define ma  Matrix3D
-#include "multidim_basic.inc"
-#undef ma
-#undef maT
-
-template <>
-std::ostream& operator << (std::ostream& ostrm, const Matrix3D< std::complex<double> > & v)
-{
-    if (v.xdim == 0)
-        ostrm << "NULL Matrix3D\n";
-    else
-        ostrm << std::endl;
-
-    for (int k = STARTINGZ(v); k <= FINISHINGZ(v); k++)
-    {
-        ostrm << "Slice No. " << k << std::endl;
-        for (int i = STARTINGY(v); i <= FINISHINGY(v); i++)
-        {
-            for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
-            {
-                ostrm << VOL_ELEM(v, k, i, j) << ' ';
-            }
-            ostrm << std::endl;
-        }
-    }
-
-    return ostrm;
-}
-
 /* Interpolated element ---------------------------------------------------- */
 template <>
 std::complex<double> Matrix3D< std::complex<double> >::interpolatedElement(

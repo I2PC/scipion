@@ -60,9 +60,9 @@ void EM::write(const FileName &fn_out, const VolumeXmipp &V, bool reversed)
 
     //data,
     float f; //only floats are suported
-    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(V())
+    FOR_ALL_ELEMENTS_IN_MATRIX3D(V())
     {
-        f = (float) MULTIDIM_ELEM(V(), i);
+        f = (float) VOL_ELEM(V(),k,i,j);
         FWRITE(&f, sizeof(float), 1, fp, reversed);
     }
 
@@ -125,42 +125,42 @@ void EM::read(const FileName &fn_in, VolumeXmipp &V, bool reversed)
     {
     case MODE_BYTE:
         unsigned char c;
-        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(V())
+        FOR_ALL_ELEMENTS_IN_MATRIX3D(V())
         {
             fread(&c, sizeof(unsigned char), 1, fp);
-            MULTIDIM_ELEM(V(), i) = (double)c;
+            VOL_ELEM(V(), k, i, j) = (double)c;
         }
         break;
     case MODE_SHORT:
         short int si;
-        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(V())
+        FOR_ALL_ELEMENTS_IN_MATRIX3D(V())
         {
             FREAD(&si, sizeof(short int), 1, fp, reversed);
-            MULTIDIM_ELEM(V(), i) = (double)si;
+            VOL_ELEM(V(), k, i, j) = (double)si;
         }
         break;
     case MODE_LONG_INT:
         long int li;
-        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(V())
+        FOR_ALL_ELEMENTS_IN_MATRIX3D(V())
         {
             FREAD(&li, sizeof(long int), 1, fp, reversed);
-            MULTIDIM_ELEM(V(), i) = (double)li;
+            VOL_ELEM(V(), k, i, j) = (double)li;
         }
         break;
     case MODE_FLOAT:
         float f;
-        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(V())
+        FOR_ALL_ELEMENTS_IN_MATRIX3D(V())
         {
             FREAD(&f, sizeof(float), 1, fp, reversed);
-            MULTIDIM_ELEM(V(), i) = (double)f;
+            VOL_ELEM(V(), k, i, j) = (double)f;
         }
         break;
     case MODE_DOUBLE:
         double d;
-        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(V())
+        FOR_ALL_ELEMENTS_IN_MATRIX3D(V())
         {
             FREAD(&d, sizeof(float), 1, fp, reversed);
-            MULTIDIM_ELEM(V(), i) = (double)d;
+            VOL_ELEM(V(), k, i, j) = (double)d;
         }
         break;
     default:
@@ -170,19 +170,16 @@ void EM::read(const FileName &fn_in, VolumeXmipp &V, bool reversed)
     fclose(fp);
 }
 
-
 /* ------------------------------------------------------------------------- */
 void EM::clear()
 {
     memset(&my_em_header, '\0', SIZEOF_EM_HEADER);
 }
 
-
 /* ------------------------------------------------------------------------- */
 /** Fill em header from xmipp image. */
 void EM::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed)
 {
-
     clear();
     my_em_header.mode  = MODE_FLOAT;
     if (IsLittleEndian())
@@ -233,4 +230,3 @@ bool EM::read_header_from_file(const FileName &fn_in, bool reversed)
 
     return(reversed);
 }
-

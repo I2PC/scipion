@@ -149,7 +149,10 @@ public:
     template <class T>
     void generate_mask(T &v)
     {
-        int dim = v.dimension;
+        int dim;
+	if      (YSIZE(v)==1 && ZSIZE(v)==1) dim=1;
+	else if (ZSIZE(v)==1)                dim=2;
+	else                                 dim=3;
         // Resize Xmipp real mask
         bool copy_from_Xmipp_real_mask = true;
         Mask_Params real_mask;
@@ -237,19 +240,19 @@ public:
             if (dim == 1)
             {
                 real_mask.generate_1Dmask();
-                type_cast(real_mask.get_cont_mask1D(), mask1D);
+                typeCast(real_mask.get_cont_mask1D(), mask1D);
                 CenterFFT(mask1D, false);
             }
             else if (dim == 2)
             {
                 real_mask.generate_2Dmask();
-                type_cast(real_mask.get_cont_mask2D(), mask2D);
+                typeCast(real_mask.get_cont_mask2D(), mask2D);
                 CenterFFT(mask2D, false);
             }
             else
             {
                 real_mask.generate_3Dmask();
-                type_cast(real_mask.get_cont_mask3D(), mask3D);
+                typeCast(real_mask.get_cont_mask3D(), mask3D);
                 CenterFFT(mask3D, false);
             }
         }
@@ -263,7 +266,10 @@ public:
     void generate_CTF_mask(T &v)
     {
         STARTINGX(mask2D) = STARTINGY(mask2D) = 0;
-        int dim = v.dimension;
+	int dim;
+	if      (YSIZE(v)==1 && ZSIZE(v)==1) dim=1;
+	else if (ZSIZE(v)==1)                dim=2;
+	else                                 dim=3;
         if (dim != 2)
             REPORT_ERROR(1,
                          "generate_CTF_mask is intended only for images");
@@ -285,6 +291,12 @@ public:
         which is the dimension of the mask to save. */
     void write_amplitude(const FileName &fn, int dim,
                          bool do_not_center = false);
+
+    /** Center mask in the corners */
+    void centerMaskCorners();
+
+    /** Center mask in the middle */
+    void centerMaskMiddle();
 
     /** Apply mask (argument is in Fourier space).
         It should have been already generated. The given image is modified.

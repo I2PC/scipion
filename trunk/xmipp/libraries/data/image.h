@@ -239,7 +239,7 @@ public:
         if (&img != (Matrix2D< T >*) &m)
         {
             fn_img = "";
-            type_cast(m, img);
+            typeCast(m, img);
         }
         return *this;
     }
@@ -294,8 +294,8 @@ public:
      */
     void moveOriginTo_center()
     {
-        img.startingY() = FIRST_XMIPP_INDEX(img.ydim);
-        img.startingX() = FIRST_XMIPP_INDEX(img.xdim);
+        STARTINGY(img) = FIRST_XMIPP_INDEX(img.ydim);
+        STARTINGX(img) = FIRST_XMIPP_INDEX(img.xdim);
     }
 
     /** Fill with 0 and move origin to center
@@ -457,28 +457,30 @@ public:
               Image_Type image_type)
     {
         img.resize(Ydim, Xdim);
+    
+    	T* ptr;
+	unsigned long int n;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(img,n,ptr)
+            switch (image_type)
+            {
+            case IBYTE:
+        	unsigned char u;
+        	FREAD(&u, sizeof(unsigned char), 1, fh, reversed);
+        	*ptr = static_cast< T >(u);
+        	break;
 
-        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
-        switch (image_type)
-        {
-        case IBYTE:
-            unsigned char u;
-            FREAD(&u, sizeof(unsigned char), 1, fh, reversed);
-            MULTIDIM_ELEM(img, i) = u;
-            break;
+            case I16:
+        	unsigned short us;
+        	FREAD(&us, sizeof(unsigned short), 1, fh, reversed);
+        	*ptr = static_cast< T >(us);
+        	break;
 
-        case I16:
-            unsigned short us;
-            FREAD(&us, sizeof(unsigned short), 1, fh, reversed);
-            MULTIDIM_ELEM(img, i) = us;
-            break;
-
-        case IFLOAT:
-            float f;
-            FREAD(&f, sizeof(float), 1, fh, reversed);
-            MULTIDIM_ELEM(img, i) = f;
-            break;
-        }
+            case IFLOAT:
+        	float f;
+        	FREAD(&f, sizeof(float), 1, fh, reversed);
+        	*ptr = static_cast< T >(f);
+        	break;
+            }
         return (true);
     }
 
@@ -566,27 +568,29 @@ public:
             b = min_val;
         }
 
-        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
-        switch (image_type)
-        {
-        case IBYTE:
-            unsigned char u;
-            u = (unsigned char) ROUND(a * (MULTIDIM_ELEM(img, i) - b));
-            FWRITE(&u, sizeof(unsigned char), 1, fh, reversed);
-            break;
+    	T* ptr;
+	unsigned long int n;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(img,n,ptr)
+            switch (image_type)
+            {
+            case IBYTE:
+        	unsigned char u;
+        	u = static_cast< unsigned char > (ROUND(a * (*ptr - b)));
+        	FWRITE(&u, sizeof(unsigned char), 1, fh, reversed);
+        	break;
 
-        case I16:
-            unsigned short us;
-            us = (unsigned short) ROUND(a * (MULTIDIM_ELEM(img, i) - b));
-            FWRITE(&us, sizeof(unsigned short), 1, fh, reversed);
-            break;
+            case I16:
+        	unsigned short us;
+        	us = static_cast< unsigned short > (ROUND(a * (*ptr - b)));
+        	FWRITE(&us, sizeof(unsigned short), 1, fh, reversed);
+        	break;
 
-        case IFLOAT:
-            float f;
-            f = (float) MULTIDIM_ELEM(img, i);
-            FWRITE(&f, sizeof(float), 1, fh, reversed);
-            break;
-        }
+            case IFLOAT:
+        	float f;
+        	f = static_cast< float > (*ptr);
+        	FWRITE(&f, sizeof(float), 1, fh, reversed);
+        	break;
+            }
     }
 };
 
@@ -597,7 +601,9 @@ inline bool ImageT< std::complex< double> >::read(FILE*& fh, float fIform,
         int Ydim, int Xdim, bool reversed, Image_Type image_type)
 {
     img.resize(Ydim, Xdim);
-    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
+    std::complex< double>* ptr;
+    unsigned long int n;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(img,n,ptr)
     {
         float a, b;
 
@@ -609,7 +615,7 @@ inline bool ImageT< std::complex< double> >::read(FILE*& fh, float fIform,
 
         // Assign the number
         std::complex< double > c(a, b);
-        MULTIDIM_ELEM(img, i) = c;
+        *ptr = c;
     }
     return (true);
 }
@@ -619,11 +625,13 @@ template<>
 inline void ImageT< std::complex< double> >::write(FILE*& fh, bool reversed,
         Image_Type image_type)
 {
-    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
+    std::complex< double>* ptr;
+    unsigned long int n;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(img,n,ptr)
     {
         float a, b;
-        a = (float)(MULTIDIM_ELEM(img, i)).real();
-        b = (float)(MULTIDIM_ELEM(img, i)).imag();
+        a = (float)((*ptr).real());
+        b = (float)((*ptr).imag());
 
         FWRITE(&a, sizeof(float), 1, fh, reversed);
         FWRITE(&b, sizeof(float), 1, fh, reversed);
@@ -921,27 +929,10 @@ public:
                 Matrix2D< double > A =
                     ImageXmippT< T >::get_transformation_matrix(
                         only_apply_shifts);
-
                 if (!A.isIdentity())
                     ImageT< T >::img.selfApplyGeometryBSpline(A, 3, IS_INV,
                             WRAP);
             }
-//scale value in header is not reliable, do not use it
-#undef NEVERDEFINED
-#ifdef NEVERDEFINED
-            // scale if necessary
-            // TODO check this with Carlos
-            if ((header.Scale() != 0.) && (header.Scale() != 1.))
-            {
-                header.set_dimension(header.Ydim() * header.Scale(),
-                                     header.Xdim() * header.Scale());
-
-                ImageT< T >::img.selfScaleToSizeBSpline(3, header.iYdim(),
-                        header.iXdim());
-            }
-
-            header.set_header(); // Set header in a Xmipp consistent state
-#endif
         }
         return ret;
     }
@@ -2572,6 +2563,8 @@ public:
         // Read the image data
         ImageT<T>::img.resize(img_info.ysize, img_info.xsize);
         const bool reversed = false;
+	T* ptr;
+    	unsigned long int n;
         switch (img_info.img_types[imgnum])
         {
         case IMAGIC_REAL:
@@ -2579,10 +2572,10 @@ public:
             float data;
             const unsigned size = 4;
             fseek(img_fh, imgnum * size * img_offset, SEEK_SET);
-            FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(ImageT< T >::img)
+            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(ImageT< T >::img,n,ptr)
             {
                 FREAD(&data, size, 1, img_fh, reversed);
-                MULTIDIM_ELEM(ImageT< T >::img, i) = data;
+                *ptr = data;
             }
             break;
         }
@@ -2591,10 +2584,10 @@ public:
             short int data;
             const unsigned size = 2;
             fseek(img_fh, imgnum * size * img_offset, SEEK_SET);
-            FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(ImageT< T >::img)
+            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(ImageT< T >::img,n,ptr)
             {
                 FREAD(&data, size, 1, img_fh, reversed);
-                MULTIDIM_ELEM(ImageT< T >::img, i) = data;
+                *ptr = data;
             }
             break;
         }
@@ -2603,10 +2596,10 @@ public:
             unsigned char data;
             const unsigned size = 1;
             fseek(img_fh, imgnum * size * img_offset, SEEK_SET);
-            FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(ImageT< T >::img)
+            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(ImageT< T >::img,n,ptr)
             {
                 FREAD(&data, size, 1, img_fh, reversed);
-                MULTIDIM_ELEM(ImageT< T >::img, i) = data;
+                *ptr = data;
             }
             break;
         }
@@ -2817,13 +2810,15 @@ bool ImagicWriteImagicFile(const FileName& hed_fname,
             fwrite(header_block, sizeof(header_block), 1, imagic_hed);
 
             // Write the image data to the .img file
-            FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY((*image)())
+    	    T* ptr=NULL;
+    	    unsigned long int n;
+            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr((*image)(),n,ptr)
             {
                 switch (img_type)
                 {
                 case IMAGIC_REAL:
                 {
-                    const float p = (float) MULTIDIM_ELEM((*image)(), i);
+                    const float p = (float) *ptr;
                     FWRITE(&p, sizeof(p), 1, imagic_img, false);
                     break;
                 }
@@ -2831,7 +2826,7 @@ bool ImagicWriteImagicFile(const FileName& hed_fname,
                 case IMAGIC_INTG:
                 {
                     const unsigned short p =
-                        (unsigned short) MULTIDIM_ELEM((*image)(), i);
+                        (unsigned short) *ptr;
                     FWRITE(&p, sizeof(p), 1, imagic_img, false);
                     break;
                 }

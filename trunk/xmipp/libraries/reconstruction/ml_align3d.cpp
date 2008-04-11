@@ -378,7 +378,7 @@ void Prog_MLalign3D_prm::CCF_integrate(
   if (nr_wedge>0) {
     Mwedge.resize(dim,dim,dim);
     Mwedge.setXmippOrigin();
-  } else Mwedgebig.init_constant(1.);
+  } else Mwedgebig.initConstant(1.);
 
   // Fourier Transform of the experimental image
   if (nr_wedge>0 || sigma_offset>0) {
@@ -561,7 +561,7 @@ void Prog_MLalign3D_prm::ML_integrate(
   if (nr_wedge>0) {
     Mwedge.resize(dim,dim,dim);
     Mwedge.setXmippOrigin();
-  } else Mwedgebig.init_constant(1.);
+  } else Mwedgebig.initConstant(1.);
   Mwedgebig.setXmippOrigin();
 
   // Smaller matrices to store weights to save memory
@@ -647,7 +647,7 @@ void Prog_MLalign3D_prm::ML_integrate(
 	    FOR_ALL_ELEMENTS_IN_MATRIX3D(Msmall) {
 	      VOL_ELEM(Msmall,k,i,j)=0.5*(A2+Xi2)-VOL_ELEM(Maux,k,i,j);
 	    }
-	    mind=Msmall.compute_min();
+	    mind=Msmall.computeMin();
 	  }
 	  if (mind<mindiff2) mindiff2=mind;
 	  Mweight[iweight]=Msmall;
@@ -682,7 +682,7 @@ void Prog_MLalign3D_prm::ML_integrate(
 	    }
 	    refw[refno]+=sum;
 	    sum_refw+=sum;
-	    maxw=Mweight[iweight].compute_max();
+	    maxw=Mweight[iweight].computeMax();
 	    if (maxw>maxweight) {
 	      maxweight=maxw;
 	      Mweight[iweight].maxIndex(ioptz,iopty,ioptx);

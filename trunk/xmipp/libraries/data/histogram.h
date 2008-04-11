@@ -358,8 +358,8 @@ void compute_hist(const T& v, histogram1D& hist,
                   double min, double max, int no_steps)
 {
     hist.init(min, max, no_steps);
-    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v)
-    hist.insert_value(MULTIDIM_ELEM(v, i));
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(v)
+    	hist.insert_value(DIRECT_VEC_ELEM(v, i));
 }
 
 /** Compute histogram within a region
@@ -466,15 +466,11 @@ void reject_outliers(T& v, double percentil_out = 0.25)
     double eff0 = hist.percentil(percentil_out / 2);
     double effF = hist.percentil(100 - percentil_out / 2);
 
-    // FIXME No words for this...
-#define vi MULTIDIM_ELEM(v, i)
-
-    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v)
-    if (vi < eff0)
-        vi = eff0;
-    else if (vi > effF)
-        vi = effF;
-#undef vi
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(v)
+	if (DIRECT_VEC_ELEM(v,i) < eff0)
+            DIRECT_VEC_ELEM(v,i) = eff0;
+	else if (DIRECT_VEC_ELEM(v,i) > effF)
+            DIRECT_VEC_ELEM(v,i) = effF;
 }
 
 /** Histogram equalization and re-quantization
@@ -485,7 +481,7 @@ void reject_outliers(T& v, double percentil_out = 0.25)
  * array is defined between 0 and bins-1.
  */
 template<typename T>
-void histogram_equalization(T& v, int bins = 8)
+void histogram_equalization(MultidimArray<T>& v, int bins = 8)
 {
     const int hist_steps = 200;
     histogram1D hist;
@@ -515,24 +511,23 @@ void histogram_equalization(T& v, int bins = 8)
     }
 
     // requantize and equalize histogram
-    // FIXME Oh, my, again...
-#define vi MULTIDIM_ELEM(v, i)
-
-    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v)
-    if (vi < div(0))
-        vi = 0;
-    else if (vi > div(bins - 2))
-        vi = bins - 1;
-    else
+    T* ptr=NULL;
+    unsigned long int n;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v,n,ptr)
     {
-        index = 0;
-
-        while (vi > div(index))
-            index++;
-
-        vi = index;
+    	T vi=*ptr;
+    	if (vi < div(0))
+            *ptr = 0;
+	else if (vi > div(bins - 2))
+            *ptr = bins - 1;
+	else
+	{
+            index = 0;
+            while (vi > div(index))
+        	index++;
+            *ptr = index;
+	}
     }
-#undef vi
 }
 
 /** Histograms with 2 parameters
@@ -842,7 +837,8 @@ void compute_hist(const T& v1, const T& v2,
  * within the specified values, all the values lying outside are not counted
  */
 template<typename T>
-void compute_hist(const T& v1, const T& v2, histogram2D& hist,
+void compute_hist(const MultidimArray<T>& v1, const MultidimArray<T>& v2,
+    	    	  histogram2D& hist,
                   double m1, double M1, double m2, double M2, int no_steps1,
                   int no_steps2)
 {
@@ -851,8 +847,9 @@ void compute_hist(const T& v1, const T& v2, histogram2D& hist,
 
     hist.init(m1, M1, no_steps1, m2, M2, no_steps2);
 
-    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v1)
-    hist.insert_value(MULTIDIM_ELEM(v1, i), MULTIDIM_ELEM(v2, i));
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v1)
+    	hist.insert_value(DIRECT_MULTIDIM_ELEM(v1, n),
+	    	    	  DIRECT_MULTIDIM_ELEM(v2, n));
 }
 
 #endif

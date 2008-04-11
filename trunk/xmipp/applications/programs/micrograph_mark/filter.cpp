@@ -73,8 +73,8 @@ void QtSubstractBackgroundFilter::apply(Image *_img)
 {
     if (_img != NULL)
     {
-        substract_background_plane(_img);
-        I.range_adjust(0, 255);
+        substract_background_plane(IMGMATRIX(*_img));
+        I.rangeAdjust(0, 255);
     }
 }
 
@@ -91,7 +91,7 @@ void QtRemoveOutlierFilter::apply(Image *_img)
         I.threshold("below", th, th);
         th = h.percentil(95);
         I.threshold("above", th, th);
-        I.range_adjust(0, 255);
+        I.rangeAdjust(0, 255);
     }
 }
 
@@ -140,7 +140,7 @@ void QtHighPassFilter::apply(Image *_img)
         (*_img)().setXmippOrigin();
         filter.generate_mask((*_img)());
         filter.apply_mask_Space((*_img)());
-        (*_img)().range_adjust(0, 255);
+        (*_img)().rangeAdjust(0, 255);
         STARTINGX((*_img)()) = 0;
         STARTINGY((*_img)()) = 0;
     }

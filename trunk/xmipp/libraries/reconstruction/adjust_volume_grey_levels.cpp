@@ -206,7 +206,7 @@ void Prog_Adjust_Volume_Parameters::apply(Matrix3D<double> &out)
         Matrix1D<double> p(2), steps(2);
         p(0) = a;
         p(1) = b;
-        steps.init_constant(1);
+        steps.initConstant(1);
         double ftol = 0.01, fret;
         int iter;
         global_adjust_volume_prm = this;

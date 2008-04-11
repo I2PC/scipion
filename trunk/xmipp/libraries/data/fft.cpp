@@ -102,8 +102,7 @@ void Complex2RealImag(const Matrix3D< std::complex< double > > & in,
     real.resize(in);
     imag.resize(in);
     Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(real),
-                     MULTIDIM_ARRAY(imag), XSIZE(in)*YSIZE(in)*ZSIZE(in));
-
+        MULTIDIM_ARRAY(imag), MULTIDIM_SIZE(in));
 }
 
 /** Convert real,imag -> complex Fourier transforms 3D. -- */
@@ -113,8 +112,7 @@ void RealImag2Complex(const Matrix3D< double > & real,
 {
     out.resize(real);
     RealImag2Complex(MULTIDIM_ARRAY(real), MULTIDIM_ARRAY(imag),
-                     MULTIDIM_ARRAY(out), XSIZE(real)*YSIZE(real)*ZSIZE(real));
-
+        MULTIDIM_ARRAY(out), MULTIDIM_SIZE(real));
 }
 
 /** Direct Fourier Transform 1D ------------------------------------------- */
@@ -155,9 +153,9 @@ void FourierTransform(const Matrix3D<double> &in,
     im.resize(in);
     out.resize(in);
     VolumeDftRealToRealImaginary(MULTIDIM_ARRAY(re),
-                                 MULTIDIM_ARRAY(im), XSIZE(in), YSIZE(in), ZSIZE(in), &Status);
-    RealImag2Complex(MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
-                     MULTIDIM_ARRAY(out), XSIZE(in)*YSIZE(in)*ZSIZE(in));
+                                 MULTIDIM_ARRAY(im),
+                                 XSIZE(in), YSIZE(in), ZSIZE(in), &Status);
+    RealImag2Complex(re,im,out);
 }
 
 /** Inverse Fourier Transform 1D. ----------------------------------------- */
@@ -186,7 +184,8 @@ void InverseFourierTransform(const Matrix2D< std::complex<double> > &in,
     Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(out),
                      MULTIDIM_ARRAY(im), XSIZE(in)*YSIZE(in));
     VolumeInvDftRealImaginaryToReal(MULTIDIM_ARRAY(out),
-                                    MULTIDIM_ARRAY(im), XSIZE(in), YSIZE(in), 1, &Status);
+                                    MULTIDIM_ARRAY(im),
+                                    XSIZE(in), YSIZE(in), 1, &Status);
 }
 
 /** Inverse Fourier Transform 3D. ----------------------------------------- */
@@ -197,10 +196,10 @@ void InverseFourierTransform(const Matrix3D< std::complex<double> > &in,
     Matrix3D<double> im;
     out.resize(in);
     im.resize(in);
-    Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(out),
-                     MULTIDIM_ARRAY(im), XSIZE(in)*YSIZE(in)*ZSIZE(in));
+    Complex2RealImag(in, out, im);
     VolumeInvDftRealImaginaryToReal(MULTIDIM_ARRAY(out),
-                                    MULTIDIM_ARRAY(im), XSIZE(in), YSIZE(in), ZSIZE(in), &Status);
+                                    MULTIDIM_ARRAY(im),
+                                    XSIZE(in), YSIZE(in), ZSIZE(in), &Status);
 }
 
 
@@ -314,17 +313,17 @@ void ShiftFFT(Matrix1D< std::complex< double > > & v,
 {
     double dotp, a, b, c, d, ac, bd, ab_cd;
     double xxshift = xshift / (double)XSIZE(v);
-    for (int j = 0; j < XSIZE(v); j++)
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(v)
     {
-        dotp = -2 * PI * ((double)(j) * xxshift);
+        dotp = -2 * PI * ((double)(i) * xxshift);
         a = cos(dotp);
         b = sin(dotp);
-        c = (v).data[j].real();
-        d = (v).data[j].imag();
+        c = DIRECT_VEC_ELEM(v,i).real();
+        d = DIRECT_VEC_ELEM(v,i).imag();
         ac = a * c;
         bd = b * d;
         ab_cd = (a + b) * (c + d); // (ab_cd-ac-bd = ad+bc : but needs 4 multiplications)
-        (v).data[j] = std::complex<double>(ac - bd, ab_cd - ac - bd);
+        DIRECT_VEC_ELEM(v,i) = std::complex<double>(ac - bd, ab_cd - ac - bd);
     }
 }
 
@@ -334,20 +333,17 @@ void ShiftFFT(Matrix2D< std::complex< double > > & v,
     double dotp, a, b, c, d, ac, bd, ab_cd;
     double xxshift = xshift / (double)XSIZE(v);
     double yyshift = yshift / (double)YSIZE(v);
-    for (int i = 0; i < YSIZE(v); i++)
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(v)
     {
-        for (int j = 0; j < XSIZE(v); j++)
-        {
-            dotp = -2 * PI * ((double)(j) * xxshift + (double)(i) * yyshift);
-            a = cos(dotp);
-            b = sin(dotp);
-            c = (v).data[(i)*XSIZE(v)+(j)].real();
-            d = (v).data[(i)*XSIZE(v)+(j)].imag();
-            ac = a * c;
-            bd = b * d;
-            ab_cd = (a + b) * (c + d);
-            (v).data[(i)*XSIZE(v)+(j)] = std::complex<double>(ac - bd, ab_cd - ac - bd);
-        }
+        dotp = -2 * PI * ((double)(j) * xxshift + (double)(i) * yyshift);
+        a = cos(dotp);
+        b = sin(dotp);
+        c = DIRECT_MAT_ELEM(v,i,j).real();
+        d = DIRECT_MAT_ELEM(v,i,j).imag();
+        ac = a * c;
+        bd = b * d;
+        ab_cd = (a + b) * (c + d);
+        DIRECT_MAT_ELEM(v,i,j) = std::complex<double>(ac - bd, ab_cd - ac - bd);
     }
 }
 
@@ -358,23 +354,17 @@ void ShiftFFT(Matrix3D< std::complex< double > > & v,
     double xxshift = xshift / (double)XSIZE(v);
     double yyshift = yshift / (double)YSIZE(v);
     double zzshift = zshift / (double)ZSIZE(v);
-    for (int k = 0; k < ZSIZE(v); k++)
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(v)
     {
-        for (int i = 0; i < YSIZE(v); i++)
-        {
-            for (int j = 0; j < XSIZE(v); j++)
-            {
-                dotp = -2 * PI * ((double)(j) * xxshift + (double)(i) * yyshift + (double)(k) * zzshift);
-                a = cos(dotp);
-                b = sin(dotp);
-                c = (v).data[(k)*XYSIZE(v)+(i)*XSIZE(v)+(j)].real();
-                d = (v).data[(k)*XYSIZE(v)+(i)*XSIZE(v)+(j)].imag();
-                ac = a * c;
-                bd = b * d;
-                ab_cd = (a + b) * (c + d);
-                (v).data[(k)*XYSIZE(v)+(i)*XSIZE(v)+(j)] = std::complex<double>(ac - bd, ab_cd - ac - bd);
-            }
-        }
+        dotp = -2 * PI * ((double)(j) * xxshift + (double)(i) * yyshift + (double)(k) * zzshift);
+        a = cos(dotp);
+        b = sin(dotp);
+        c = DIRECT_VOL_ELEM(v,k,i,j).real();
+        d = DIRECT_VOL_ELEM(v,k,i,j).imag();
+        ac = a * c;
+        bd = b * d;
+        ab_cd = (a + b) * (c + d);
+        DIRECT_VOL_ELEM(v,k,i,j) = std::complex<double>(ac - bd, ab_cd - ac - bd);
     }
 }
 
@@ -535,7 +525,7 @@ void numerical_derivative(Matrix2D<double> &M, Matrix2D<double> &D,
 {
 
     // Set D to be a copy in shape of M
-    D.copyShape(M);
+    D.initZeros(M);
 
     Matrix1D<double> v, rotated;
     Matrix1D<double> ans; // To obtain results

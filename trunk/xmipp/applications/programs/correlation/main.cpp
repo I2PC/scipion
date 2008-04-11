@@ -66,7 +66,7 @@ public:
                     {
                         dMij(mask2D, i, j) = (int)dMij(MI(), i, j);
                     }
-                    MI().core_deallocate();
+                    MI().clear();
                 }
             }
             else if (Is_VolumeXmipp(fn_ref))
@@ -84,7 +84,7 @@ public:
                     {
                         dVkij(mask3D, k, i, j) = (int)dVkij(MV(), k, i, j);
                     }
-                    MV().core_deallocate();
+                    MV().clear();
                 }
             }
             else REPORT_ERROR(1, "Reference is not an image or a volume");

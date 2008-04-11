@@ -41,7 +41,7 @@
  * The background is computed as the plane which best fits all density values,
  * then this plane is substracted from the image.
  */
-void substract_background_plane(Image* I);
+void substract_background_plane(Matrix2D<double> &I);
 
 /** Constrast enhancement
  * @ingroup Filters
@@ -159,7 +159,7 @@ double correlation(const Matrix1D< T >& x,
     int i, ip; // indexes
     int Rows; // of the matrices
 
-    Rows = x.getDimension();
+    Rows = XSIZE(x);
     for (i = 0; i < Rows; i++)
     {
         ip = i - l;
@@ -648,9 +648,11 @@ double mutual_information(const Matrix2D< T >& x,
     int xdim, ydim;
     double retval = 0.0;
 
-    x.getDimension(xdim, ydim);
+    xdim=XSIZE(x);
+    ydim=YSIZE(x);
     aux_x.resize(xdim * ydim);
-    y.getDimension(xdim, ydim);
+    xdim=XSIZE(y);
+    ydim=YSIZE(y);
     aux_y.resize(xdim * ydim);
 
     FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(x, y)
@@ -725,9 +727,13 @@ double mutual_information(const Matrix3D< T >& x,
     int xdim, ydim, zdim;
     double retval = 0.0;
 
-    x.getDimension(ydim, xdim, zdim);
+    xdim=XSIZE(x);
+    ydim=YSIZE(x);
+    zdim=ZSIZE(x);
     aux_x.resize(xdim * ydim * zdim);
-    y.getDimension(ydim, xdim, zdim);
+    xdim=XSIZE(y);
+    ydim=YSIZE(y);
+    zdim=ZSIZE(y);
     aux_y.resize(xdim * ydim * zdim);
 
     FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(x, y)

@@ -30,23 +30,10 @@
 #include <complex>
 #include <cmath>
 
-#include "funcs.h"
+#include "multidimensional_array.h"
+#include "error.h"
 
-#include <external/bilib/types/tsplinebasis.h>
-#include <external/bilib/types/tboundaryconvention.h>
-#include <external/bilib/headers/linearalgebra.h>
-#include <external/bilib/headers/changebasis.h>
-#include <external/bilib/headers/kernel.h>
-
-// TODO Remove this ASAP
-#define maT Matrix1D< T >
-#define maT1 Matrix1D< T1 >
-#define maTC Matrix1D< std::complex < double > >
-
-// FIXME This is a BAD practice..
-#include "multidim_friends.inc"
-
-std::string floatToString(float val, int width, int prec);
+template <typename T> class Matrix2D;
 
 /// @defgroup Vectors Vectors
 /// @ingroup MultidimensionalArrays
@@ -64,40 +51,6 @@ std::string floatToString(float val, int width, int prec);
  * the copy constructor and in the creation/destruction of temporary vectors.
  */
 
-/// @defgroup VectorsSizeShape Size and shape
-/// @ingroup VectorsSpeedUp
-
-/** Returns the first valid logical index
- * @ingroup VectorsSizeShape
- *
- * @code
- * int org = STARTINGX(v);
- * @endcode
- */
-#define STARTINGX(v) ((v).xinit)
-
-/** Returns the last valid logical index
- * @ingroup VectorsSizeShape
- *
- * @code
- * int fin = FINISHINGX(v);
- * @endcode
- */
-#define FINISHINGX(v) ((v).xinit + (v).xdim - 1)
-
-/** Access to X dimension (size)
- * @ingroup VectorsSizeShape
- *
- * This is a macro equivalent to getDimension() or colNumber()
- *
- * @code
- * //  Set to 0 1 element out of 2
- * for (int i=0; i<XSIZE(v); i+=2)
- *     DIRECT_VEC_ELEM(v, i) = 0;
- * @endcode
- */
-#define XSIZE(v) ((v).xdim)
-
 /** For all elements in the array
  * @ingroup VectorsSizeShape
  *
@@ -113,7 +66,7 @@ std::string floatToString(float val, int width, int prec);
  * @endcode
  */
 #define FOR_ALL_ELEMENTS_IN_MATRIX1D(v) \
-    for (int i=(v).xinit; i<=FINISHINGX(v); i++)
+    for (int i=STARTINGX(v); i<=FINISHINGX(v); i++)
 
 /** For all elements in the array between corners
  * @ingroup VectorsSizeShape
@@ -180,32 +133,6 @@ std::string floatToString(float val, int width, int prec);
 /// @defgroup VectorsMemory Memory access
 /// @ingroup VectorsSpeedUp
 
-/** Vector element: Logical access
- * @ingroup VectorMemory
- *
- * @code
- * VEC_ELEM(v, -2) = 1;
- * val = VEC_ELEM(v, -2);
- * @endcode
- */
-#define VEC_ELEM(v, i) MULTIDIM_ELEM(v, (i) - ((v).xinit))
-
-/** Vector element: Physical access
- * @ingroup VectorsMemory
- *
- * Be careful because this is physical access, usually vectors follow the C
- * convention of starting index==0. This function should not be used as it goes
- * against the vector library philosophy unless you explicitly want to access
- * directly to any value in the vector without taking into account its logical
- * position.
- *
- * @code
- * DIRECT_VEC_ELEM(v, 0) = 1;
- * val = DIRECT_VEC_ELEM(v, 0);
- * @endcode
- */
-#define DIRECT_VEC_ELEM(v, i) MULTIDIM_ELEM(v, i)
-
 /** A short alias to previous function
  * @ingroup VectorsMemory
  */
@@ -219,7 +146,7 @@ std::string floatToString(float val, int width, int prec);
  * val = XX(v);
  * @endcode
  */
-#define XX(v) MULTIDIM_ELEM(v, 0)
+#define XX(v) DIRECT_VEC_ELEM(v, 0)
 
 /** Access to Y component
  * @ingroup VectorsMemory
@@ -229,7 +156,7 @@ std::string floatToString(float val, int width, int prec);
  * val = YY(v);
  * @endcode
  */
-#define YY(v) MULTIDIM_ELEM(v, 1)
+#define YY(v) DIRECT_VEC_ELEM(v, 1)
 
 /** Access to Z component
  * @ingroup VectorsMemory
@@ -239,18 +166,7 @@ std::string floatToString(float val, int width, int prec);
  * val = ZZ(v);
  * @endcode
  */
-#define ZZ(v) MULTIDIM_ELEM(v, 2)
-
-/** Array access
- * @ingroup VectorsMemory
- *
- * This macro gives you access to the array (T*).
- *
- * @code
- * std::cout << "This is an int*" << VEC_ARRAY(v) << std::endl;
- * @endcode
- */
-#define VEC_ARRAY(v) MULTIDIM_ARRAY(v)
+#define ZZ(v) DIRECT_VEC_ELEM(v, 2)
 
 /** @defgroup VectorsGeometry Geometry vectors
  * @ingroup VectorsSpeedUp
@@ -434,21 +350,13 @@ std::string floatToString(float val, int width, int prec);
         YY(a) = YY(b) * (c); \
         ZZ(a) = ZZ(b) * (c); }
 
-// FIXME No comments...
-#include "multidim_common.h"
-
 /// Template class for Xmipp vectors
 /// @ingroup Vectors
 template<typename T>
-class Matrix1D
+class Matrix1D: public MultidimArray<T>
 {
-/// FIXME Oh, my...
-#include "multidim_basic.h"
-
 public:
 #ifndef SWIG
-    int xdim; ///< dimension of array [0...xdim-1]
-    int xinit; ///< indexes of array [xinit...xinit+xdim-1]
     bool row; ///< 0=column vector (default), 1=row vector
 #endif
 
@@ -471,11 +379,9 @@ public:
      * // empty row vector
      * @endcode
      */
-    Matrix1D(bool column = true)
+    Matrix1D(bool column = true): MultidimArray<T>() 
     {
-        core_init();
-        initShape(column);
-        dimension = 1;
+        row = ! column;
     }
 
     /** Dimension constructor
@@ -495,17 +401,10 @@ public:
      * // empty row vector
      * @endcode
      */
-    Matrix1D(int dim, bool column = true)
+    Matrix1D(int dim, bool column = true): MultidimArray<T>()
     {
-        core_init();
-        initShape(column);
-        data = new T[dim];
-        if (data == NULL)
-            REPORT_ERROR(1001, "Resize: no memory left");
-        size = xdim = dim;
-        dimension = 1;
-        for (long int i = 0; i < size; i++)
-            data[i] = 0;
+        row = ! column;
+        MultidimArray<T>::resize(1,1,dim);
     }
 
     /** Copy constructor
@@ -518,20 +417,18 @@ public:
      * Matrix1D< double > v2(v1);
      * @endcode
      */
-    Matrix1D(const vT& v)
+    Matrix1D(const Matrix1D<T>& v): MultidimArray<T>()
     {
-        core_init();
-        initShape();
         *this = v;
     }
 
-    /** Destructor
+    /** Clear.
      * @ingroup VectorsConstructors
      */
-    ~Matrix1D()
-    {
-        core_deallocate();
-    }
+     void clear()
+     {
+        MultidimArray<T>::clear();
+     }
 
     /// @defgroup VectorsInitialization Initialization
     /// @ingroup Vectors
@@ -599,7 +496,24 @@ public:
     void initZeros(int dim)
     {
         resize(dim);
-        init_constant((T) 0);
+        initConstant((T) 0);
+    }
+
+    /** Zero initialisation with current dimension
+     * @ingroup VectorsInitialization
+     */
+    void initZeros()
+    {
+        MultidimArray<T>::initZeros();
+    }
+
+    /** Zero initialisation with current dimension
+     * @ingroup VectorsInitialization
+     */
+    template <typename T1>
+    void initZeros(const Matrix1D<T1> &m)
+    {
+        MultidimArray<T>::initZeros(m);
     }
 
     /** @defgroup VectorsSize Size and shape
@@ -623,32 +537,12 @@ public:
      * @endcode
      */
 
-    /** Init shape
-     * @ingroup VectorsSize
-     *
-     * xdim=0, startingx=0. The column or row mode is set according to input
-     * argument
-     */
-    void initShape(bool column = true)
+    /** Print vector shape.
+      * @ingroup VectorsSize */
+    void printShape(std::ostream& out=std::cout) const
     {
-        xinit = 0;
-        xdim = 0;
-        row = ! column;
-    }
-
-    /** Copy shape
-     * @ingroup VectorsSize
-     *
-     * Copy shape variables from a pattern AND THE ARRAY IS RESIZED
-     */
-    template<typename T1>
-    void copyShape(const maT1& v)
-    {
-        if (xdim != v.xdim)
-            resize(v.xdim);
-
-        STARTINGX(*this) = STARTINGX(v);
-        row = v.row;
+        out << "Size: " << XSIZE(*this)
+            << "i=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
     }
 
     /** Resize to a given size
@@ -665,34 +559,16 @@ public:
      */
     void resize(int Xdim)
     {
-        if (Xdim == xdim)
-            return;
+        MultidimArray<T>::resize(1,1,Xdim);
+    }
 
-        if (Xdim <= 0)
-        {
-            clear();
-            return;
-        }
-
-        // Ask for memory
-        T* new_m = new T[Xdim];
-        if (new_m == NULL)
-            REPORT_ERROR(1001, "Resize: no memory left");
-
-        // Copy needed elements, fill with 0 if necessary
-        for (int i = 0; i < Xdim; i++)
-            if (i < xdim)
-                new_m[i] = data[i];
-            else
-                new_m[i] = 0;
-
-        // deallocate old vector
-        core_deallocate();
-
-        // assign *this vector to the newly created
-        MULTIDIM_ARRAY(*this) = new_m;
-        xdim = Xdim;
-        size = Xdim;
+    /** Resize taking the shape from another vector
+     * @ingroup VectorsSize
+     */
+    template <typename T1>
+    void resize(const Matrix1D<T1> &M)
+    {
+    	MultidimArray<T>::resize(M);
     }
 
 #ifndef SWIG
@@ -708,7 +584,7 @@ public:
      */
     T* adaptForNumericalRecipes() const
     {
-        return data - 1;
+        return MULTIDIM_ARRAY(*this) - 1;
     }
 
     /** Kill an array produced for Numerical Recipes.
@@ -728,115 +604,23 @@ public:
      * TRUE if the logical index given is outside the definition region of this
      * array.
      */
-    bool outside(int i) const;
-
-    /** Set logical origin in Xmipp fashion
-     * @ingroup VectorsSize
-     *
-     * This function adjust the starting points in the vector such that the
-     * center of the vector is defined in the Xmipp fashion. See
-     * FIRST_XMIPP_INDEX
-     *
-     * @code
-     * v1.setXmippOrigin();
-     * @endcode
-     */
-    void setXmippOrigin()
+    bool outside(int i) const
     {
-        xinit = FIRST_XMIPP_INDEX(xdim);
+        return (i < STARTINGX(*this) || i > FINISHINGX(*this));
     }
 
-    /** Move origin to
+    /** Outside
      * @ingroup VectorsSize
      *
-     * This function adjust logical indexes such that the Xmipp origin of the
-     * array moves to the specified position. For instance, an array whose x
-     * indexes go from -1 to 1, if we move the origin to 4, then the x indexes
-     * go from 3 to 5. This is very useful for convolution operations where you
-     * only need to move the logical starting of the array.
-     *
-     * See FIRST_XMIPP_INDEX
+     * TRUE if the logical index given is outside the definition region of this
+     * array.
      */
-    void moveOriginTo(int i)
+    bool outside(const Matrix1D<double> &r) const
     {
-        STARTINGX(*this) = i + FIRST_XMIPP_INDEX(xdim);
-    }
-
-#ifndef SWIG
-    /** Sets the origin
-     * @ingroup VectorsSize
-     *
-     * The logical position of the first physical position is set with this
-     * function. By default the origin is 0 that is the standard convention in
-     * C.
-     *
-     * @code
-     * v.startingX() = -2;
-     * @endcode
-     *
-     * This function is not ported to Python.
-     */
-    int& startingX()
-    {
-        return xinit;
-    }
-#endif
-
-    /** Another function for sets the origin
-     * @ingroup VectorsSize
-     */
-    void setStartingX(int _xinit)
-    {
-        xinit = _xinit;
-    }
-
-    /** Returns the first valid logical index
-     * @ingroup VectorsSize
-     *
-     * @code
-     * int org = v.startingX();
-     * @endcode
-     */
-    int startingX() const
-    {
-        return xinit;
-    }
-
-    /** Returns the last valid logical index
-     * @ingroup VectorsSize
-     *
-     * @code
-     * int fin = v.finishingX();
-     * @endcode
-     */
-    int finishingX() const
-    {
-        return xinit + xdim - 1;
-    }
-
-    /** Returns the vector dimension
-     * @ingroup VectorsSize
-     *
-     * @code
-     * int dim = v.getDimension();
-     * @endcode
-     */
-    int getDimension() const
-    {
-        return xdim;
-    }
-
-    /** Returns the vector dimension
-     * @ingroup VectorsSize
-     *
-     * @code
-     * int dim;
-     * v.getDimension(dim);
-     * @endcode
-     */
-    void getDimension(int& d) const
-    {
-        d = xdim;
+        if (XSIZE(r) < 1)
+            REPORT_ERROR(1, "Outside: index vector has not got enough components");
+    
+        return (XX(r) < STARTINGX(*this) || XX(r) > FINISHINGX(*this));
     }
 
     /** True if vector is a row.
@@ -874,7 +658,7 @@ public:
      */
     void setRow()
     {
-        row = 1;
+        row = true;
     }
 
     /** Forces the vector to be a column vector
@@ -886,18 +670,7 @@ public:
      */
     void setCol()
     {
-        row = 0;
-    }
-
-    /** Same shape
-     * @ingroup VectorsSize
-     *
-     * Returns true if this object has got the same shape (origin and size) than
-     * the argument
-     */
-    bool sameShape(const maT& op) const
-    {
-        return xdim == op.xdim && xinit == op.xinit;
+        row = false;
     }
 
     /// @defgroup VectorsMemory Memory access
@@ -918,10 +691,12 @@ public:
      */
     T& operator()(int i) const
     {
-        if (i >= xinit + xdim || i < xinit)
-            REPORT_ERROR(1003, "Vector subscript not defined for this vector");
+        if (i > FINISHINGX(*this) || i < STARTINGX(*this))
+            REPORT_ERROR(1003, static_cast< std::string >
+	       ("Vector subscript not defined for this vector i=")+
+	       integerToString(i));
 
-        return MULTIDIM_ELEM(*this, i - STARTINGX(*this));
+        return VEC_ELEM(*this, i);
     }
 
     /** Interpolates the value of the 1D vector M at the point (x) knowing
@@ -958,7 +733,7 @@ public:
 	    int equivalent_l=l;
 	    if      (l<0)             equivalent_l=-l-1;
 	    else if (l>=XSIZE(*this)) equivalent_l=2*XSIZE(*this)-l-1;
-            double Coeff = (double) data[equivalent_l];
+            double Coeff = (double) DIRECT_VEC_ELEM(*this,equivalent_l);
             switch (SplineDegree)
             {
             case 2:
@@ -1050,10 +825,9 @@ public:
      */
     T& X() const
     {
-        if (xdim > 3 || xdim <= 0)
+        if (XSIZE(*this) > 3 || XSIZE(*this) <= 0)
             REPORT_ERROR(1003, "X: Subscript not defined for this dimension");
-
-        return MULTIDIM_ELEM(*this, 0);
+        return XX(*this);
     }
 
     /** Access to Y component
@@ -1073,10 +847,9 @@ public:
      */
     T& Y() const
     {
-        if (xdim > 3 || xdim <= 1)
+        if (XSIZE(*this) > 3 || XSIZE(*this) <= 1)
             REPORT_ERROR(1003, "Y: Subscript not defined for this dimension");
-
-        return MULTIDIM_ELEM(*this, 1);
+        return YY(*this);
     }
 
     /** Access to Z component
@@ -1095,9 +868,9 @@ public:
      */
     T& Z() const
     {
-        if (xdim != 3)
+        if (XSIZE(*this) != 3)
             REPORT_ERROR(1003, "Z: Subscript not defined for this dimension");
-        return MULTIDIM_ELEM(*this, 2);
+        return ZZ(*this);
     }
 
     /** Logical to physical index translation
@@ -1128,39 +901,248 @@ public:
         i_log = i_phys + STARTINGX(*this);
     }
 
-    /// @defgroup VectorsUtilities Utilities
-    /// @ingroup Vectors
+    /// @defgroup VectorOperators Operators
+    /// @ingroup Matrices
 
-#ifndef SWIG
-    /** Array by array
-     * @ingroup VectorsUtilities
+    /** Assignment.
+     * @ingroup VectorOperators
      *
-     * This function must take two arrays of the same size, and operate element
-     * by element according to the operation required. This is the function
-     * which really implements the operations. Simple calls to it perform much
-     * faster than calls to the corresponding operators. Although it is supposed
-     * to be a hidden function not useable by normal programmers.
+     * You can build as complex assignment expressions as you like. Multiple
+     * assignment is allowed.
      *
-     * It must be implemented in every Matrix module, this is so because of the
-     * Matrix2D, for which the multiplication is not a component by component
-     * multiplication but an algebraic one.
+     * @code
+     * v1 = v2 + v3;
+     * v1 = v2 = v3;
+     * @endcode
+     */
+    Matrix1D<T>& operator=(const Matrix1D<T>& op1)
+    {
+	if (&op1 != this)
+	{
+            resize(op1);
+            T* ptr=NULL;
+	    unsigned long int n;
+            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
+	    	*ptr=DIRECT_MULTIDIM_ELEM(op1,n);
+            row=op1.row;
+	}
+
+	return *this;
+    }
+
+    /** Unary minus.
+     * @ingroup VectorOperators
+     *
+     * It is used to build arithmetic expressions. You can make a minus
+     * of anything as long as it is correct semantically.
+     */
+    Matrix1D<T> operator-() const
+    {
+        Matrix1D<T> tmp(*this);
+	T* ptr;
+	unsigned long int n;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(tmp,n,ptr)
+            *ptr = -(*ptr);
+        return tmp;
+    }
+
+    /** v3 = v1 + v2.
+     * @ingroup VectorOperators
+     */
+    Matrix1D<T> operator+(const Matrix1D<T>& op1) const
+    {
+        Matrix1D<T> tmp;
+        arrayByArray(*this, op1, tmp, '+');
+        return tmp;
+    }
+
+    /** v3 = v1 - v2.
+     * @ingroup VectorOperators
+     */
+    Matrix1D<T> operator-(const Matrix1D<T>& op1) const
+    {
+        Matrix1D<T> tmp;
+        arrayByArray(*this, op1, tmp, '-');
+        return tmp;
+    }
+
+    /** v3 = v1 * v2.
+     * @ingroup VectorOperators
+     */
+    Matrix1D<T> operator*(const Matrix1D<T>& op1) const
+    {
+        Matrix1D<T> tmp;
+        arrayByArray(*this, op1, tmp, '*');
+        return tmp;
+    }
+
+    /** v3 = v1 / v2.
+     * @ingroup VectorOperators
+     */
+    Matrix1D<T> operator/(const Matrix1D<T>& op1) const
+    {
+        Matrix1D<T> tmp;
+        arrayByArray(*this, op1, tmp, '/');
+        return tmp;
+    }
+
+    /** v3 += v2.
+     * @ingroup VectorOperators
+     */
+    void operator+=(const Matrix1D<T>& op1)
+    {
+        arrayByArray(*this, op1, *this, '+');
+    }
+
+    /** v3 -= v2.
+     * @ingroup VectorOperators
+     */
+    void operator-=(const Matrix1D<T>& op1)
+    {
+        arrayByArray(*this, op1, *this, '-');
+    }
+
+    /** v3 *= v2.
+     * @ingroup VectorOperators
+     */
+    void operator*=(const Matrix1D<T>& op1)
+    {
+    	Matrix1D<T> tmp;
+        arrayByArray(*this, op1, tmp, '*');
+	*this=tmp;
+    }
+
+    /** v3 /= v2.
+     * @ingroup VectorOperators
+     */
+    void operator/=(const Matrix1D<T>& op1)
+    {
+        arrayByArray(*this, op1, *this, '/');
+    }
+
+    /** v3 = v1 + k.
+     * @ingroup VectorOperators
+     */
+    Matrix1D<T> operator+(T op1) const
+    {
+        Matrix1D<T> tmp;
+        arrayByScalar(*this, op1, tmp, '+');
+        return tmp;
+    }
+
+    /** v3 = v1 - k.
+     * @ingroup VectorOperators
+     */
+    Matrix1D<T> operator-(T op1) const
+    {
+        Matrix1D<T> tmp;
+        arrayByScalar(*this, op1, tmp, '-');
+        return tmp;
+    }
+
+    /** v3 = v1 * k.
+     * @ingroup VectorOperators
+     */
+    Matrix1D<T> operator*(T op1) const
+    {
+        Matrix1D<T> tmp;
+        arrayByScalar(*this, op1, tmp, '*');
+        return tmp;
+    }
+
+    /** v3 = v1 / k.
+     * @ingroup VectorOperators
+     */
+    Matrix1D<T> operator/(T op1) const
+    {
+        Matrix1D<T> tmp;
+        arrayByScalar(*this, op1, tmp, '/');
+        return tmp;
+    }
+
+    /** v3 += k.
+     * @ingroup VectorOperators
      *
      * This function is not ported to Python.
      */
-    friend void arrayByArray(const maT& op1, const maT& op2, maT& result,
-                               char operation)
+
+    void operator+=(const T& op1)
     {
-        if (!op1.sameShape(op2))
-            REPORT_ERROR(1007, (std::string) "Array_by_array: different shapes (" +
-                         operation + ")");
-
-        if (operation == 'x')
-            operation = '*';
-
-        result.resize(op1);
-        coreArrayByArray(op1, op2, result, operation);
+        arrayByScalar(*this, op1, *this, '+');
     }
-#endif
+
+    /** v3 -= k.
+     * @ingroup VectorOperators
+     *
+     * This function is not ported to Python.
+     */
+    void operator-=(const T& op1)
+    {
+        arrayByScalar(*this, op1, *this, '-');
+    }
+
+    /** v3 *= k.
+     * @ingroup VectorOperators
+     *
+     * This function is not ported to Python.
+     */
+    void operator*=(const T& op1)
+    {
+        arrayByScalar(*this, op1, *this, '*');
+    }
+
+    /** v3 /= k.
+     * @ingroup VectorOperators
+     *
+     * This function is not ported to Python.
+     */
+    void operator/=(const T& op1)
+    {
+        arrayByScalar(*this, op1, *this, '/');
+    }
+
+    /** v3 = k + v2.
+     * @ingroup VectorOperators
+     */
+    friend Matrix1D<T> operator+(T op1, const Matrix1D<T>& op2)
+    {
+        Matrix1D<T> tmp;
+        scalarByArray(op1, op2, tmp, '+');
+        return tmp;
+    }
+
+    /** v3 = k - v2.
+     * @ingroup VectorOperators
+     */
+    friend Matrix1D<T> operator-(T op1, const Matrix1D<T>& op2)
+    {
+        Matrix1D<T> tmp;
+        scalarByArray(op1, op2, tmp, '-');
+        return tmp;
+    }
+
+    /** v3 = k * v2.
+     * @ingroup VectorOperators
+     */
+    friend Matrix1D<T> operator*(T op1, const Matrix1D<T>& op2)
+    {
+        Matrix1D<T> tmp;
+        scalarByArray(op1, op2, tmp, '*');
+        return tmp;
+    }
+
+    /** v3 = k / v2
+     * @ingroup VectorOperators
+     */
+    friend Matrix1D<T> operator/(T op1, const Matrix1D<T>& op2)
+    {
+        Matrix1D<T> tmp;
+        scalarByArray(op1, op2, tmp, '/');
+        return tmp;
+    }
+
+    /// @defgroup VectorsUtilities Utilities
+    /// @ingroup Vectors
 
     /** Vector by matrix
      * @ingroup VectorsUtilities
@@ -1168,7 +1150,7 @@ public:
      * Algebraic vector by matrix multiplication. This function is actually
      * implemented in xmippMatrices2D
      */
-    vT operator*(const mT& M);
+    Matrix1D<T> operator*(const Matrix2D<T>& M);
 
     /** Algebraic transpose of vector
      * @ingroup VectorsUtilities
@@ -1180,9 +1162,9 @@ public:
      * v2 = v1.transpose();
      * @endcode
      */
-    vT transpose() const
+    Matrix1D<T> transpose() const
     {
-        vT temp(*this);
+        Matrix1D<T> temp(*this);
         temp.selfTranspose();
         return temp;
     }
@@ -1202,13 +1184,7 @@ public:
      */
     void selfReverse()
     {
-        int imax = (int)(xdim - 1) / 2;
-        for (int i = 0; i <= imax; i++)
-        {
-            T aux;
-            SWAP(MULTIDIM_ELEM(*this, i), MULTIDIM_ELEM(*this,
-                    xdim - 1 - i), aux);
-        }
+        MultidimArray<T>::selfReverseX();
     }
 
     /** Module of the vector
@@ -1223,7 +1199,7 @@ public:
      */
     double module() const
     {
-        return sqrt(sum2());
+        return sqrt(MultidimArray<T>::sum2());
     }
 
     /** Angle of the vector
@@ -1246,11 +1222,33 @@ public:
         if (ABS(m) > XMIPP_EQUAL_ACCURACY)
             *this /= (T) m;
         else
-            initZeros();
+            MultidimArray<T>::initZeros();
+    }
+
+    /** Compute the center of mass within a mask.
+      * If no mask is to be used, supply NULL.
+      * @ingroup VectorsUtilities */
+    void centerOfMass(Matrix1D< double >& center, void* mask=NULL)
+    {
+	center.initZeros(1);
+	double mass = 0;
+	Matrix1D< int >* imask = (Matrix1D< int >*) mask;
+
+	FOR_ALL_ELEMENTS_IN_MATRIX1D(*this)
+	{
+            if ((imask == NULL || VEC_ELEM(*imask, i)) &&
+		VEC_ELEM(*this, i))
+            {
+        	XX(center) += i * VEC_ELEM(*this, i);
+        	mass += VEC_ELEM(*this, i);
+            }
+	}
+	if (mass != 0)
+            center /= mass;
     }
 
     /** Sort vector elements
-     * @ingroup VectorsElements
+     * @ingroup VectorsUtilities
      *
      * Sort in ascending order the vector elements. You can use the "reverse"
      * function to sort in descending order.
@@ -1259,22 +1257,22 @@ public:
      * v2 = v1.sort();
      * @endcode
      */
-    vT sort() const
+    Matrix1D<T> sort() const
     {
-        vT temp;
+        Matrix1D<T> temp;
         Matrix1D< double > aux;
 
-        if (xdim == 0)
+        if (XSIZE(*this) == 0)
             return temp;
 
         // Initialise data
-        type_cast(*this, aux);
+        typeCast(*this, aux);
 
         // Sort
         double * aux_array = aux.adaptForNumericalRecipes();
-        qcksrt(xdim, aux_array);
+        qcksrt(XSIZE(*this), aux_array);
 
-        type_cast(aux, temp);
+        typeCast(aux, temp);
         return temp;
     }
 
@@ -1295,10 +1293,10 @@ public:
         Matrix1D< int >   indx;
         Matrix1D< double > temp;
 
-        if (xdim == 0)
+        if (XSIZE(*this) == 0)
             return indx;
 
-        if (xdim == 1)
+        if (XSIZE(*this) == 1)
         {
             indx.resize(1);
             indx(0) = 1;
@@ -1306,13 +1304,13 @@ public:
         }
 
         // Initialise data
-        indx.resize(xdim);
-        type_cast(*this, temp);
+        indx.resize(XSIZE(*this));
+        typeCast(*this, temp);
 
         // Sort indexes
         double* temp_array = temp.adaptForNumericalRecipes();
         int* indx_array = indx.adaptForNumericalRecipes();
-        indexx(xdim, temp_array, indx_array);
+        indexx(XSIZE(*this), temp_array, indx_array);
 
         return indx;
     }
@@ -1334,7 +1332,7 @@ public:
      */
     void window(int x0, int xF, T init_value = 0)
     {
-        vT result(xF - x0 + 1);
+        Matrix1D<T> result(xF - x0 + 1);
         STARTINGX(result) = x0;
 
         for (int j = x0; j <= xF; j++)
@@ -1354,7 +1352,7 @@ public:
      */
     void maxIndex(int& imax) const
     {
-        if (xdim == 0)
+        if (XSIZE(*this) == 0)
         {
             imax = -1;
             return;
@@ -1364,11 +1362,11 @@ public:
         T max = VEC_ELEM(*this, imax);
 
         FOR_ALL_ELEMENTS_IN_MATRIX1D(*this)
-        if (VEC_ELEM(*this, i) > max)
-        {
-            max = VEC_ELEM(*this, i);
-            imax = i;
-        }
+            if (VEC_ELEM(*this, i) > max)
+            {
+                max = VEC_ELEM(*this, i);
+                imax = i;
+            }
     }
 
     /** Minimum element
@@ -1379,7 +1377,7 @@ public:
      */
     void minIndex(int& imin) const
     {
-        if (xdim == 0)
+        if (XSIZE(*this) == 0)
         {
             imin = -1;
             return;
@@ -1389,11 +1387,11 @@ public:
         T min = VEC_ELEM(*this, imin);
 
         FOR_ALL_ELEMENTS_IN_MATRIX1D(*this)
-        if (VEC_ELEM(*this, i) < min)
-        {
-            min = VEC_ELEM(*this, i);
-            imin = i;
-        }
+            if (VEC_ELEM(*this, i) < min)
+            {
+                min = VEC_ELEM(*this, i);
+                imin = i;
+            }
     }
 
     /** Show using gnuplot
@@ -1406,59 +1404,25 @@ public:
     {
         FileName fn_tmp;
         fn_tmp.init_random(10);
-        write((std::string) "PPP" + fn_tmp + ".txt");
+        MultidimArray<T>::write(static_cast<std::string>("PPP") +
+            fn_tmp + ".txt");
 
         std::ofstream fh_gplot;
-        fh_gplot.open(((std::string) "PPP" + fn_tmp + ".gpl").c_str());
+        fh_gplot.open((static_cast<std::string>("PPP") + fn_tmp +
+            ".gpl").c_str());
         if (!fh_gplot)
             REPORT_ERROR(1,
-                         (std::string) "vector::showWithGnuPlot: Cannot open PPP" + fn_tmp +
-                         ".gpl for output");
+            static_cast<std::string>("vector::showWithGnuPlot: Cannot open PPP")
+                + fn_tmp + ".gpl for output");
         fh_gplot << "set xlabel \"" + xlabel + "\"\n";
         fh_gplot << "plot \"PPP" + fn_tmp + ".txt\" title \"" + title +
         "\" w l\n";
         fh_gplot << "pause 300 \"\"\n";
         fh_gplot.close();
-        system(((std::string) "(gnuplot PPP" + fn_tmp + ".gpl; rm PPP" + fn_tmp +
-                ".txt PPP" + fn_tmp + ".gpl) &").c_str());
-    }
-
-#ifndef DBL_EPSILON
-#define DBL_EPSILON 1e-50
-#endif
-
-    /** Produce spline coefficients
-     * @ingroup VectorsUtilities
-     *
-     * This function produces a set of Bspline coefficients that interpolate
-     * well this vector. The coefficients have the same shape as this matrix. T
-     * use the coefficients for interpolation see the function
-     * interpolatedElementBSpline.
-     */
-    void produceSplineCoefficients(Matrix1D< double >& coeffs,
-                               int SplineDegree = 3) const
-    {
-        coeffs.initZeros(XSIZE(*this));
-
-        STARTINGX(coeffs) = STARTINGX(*this);
-
-        int Status;
-        Matrix1D< double > aux;
-        type_cast(*this, aux);
-
-        ChangeBasisVolume(MULTIDIM_ARRAY(aux), MULTIDIM_ARRAY(coeffs),
-                          XSIZE(*this), 1, 1,
-                          CardinalSpline, BasicSpline, SplineDegree,
-                          MirrorOffBounds, DBL_EPSILON, &Status);
-        if (Status)
-            REPORT_ERROR(1, "Matrix1D::produceSplineCoefficients: Error");
+        system((static_cast<std::string>("(gnuplot PPP") + fn_tmp +
+            ".gpl; rm PPP" + fn_tmp + ".txt PPP" + fn_tmp + ".gpl) &").c_str());
     }
 };
-
-#undef DBL_EPSILON
-
-// FIXME Oh, my my...
-#include "multidim_friends_implementation.h"
 
 /**@defgroup VectorsRelated Related functions
  * @ingroup Vectors
@@ -1521,8 +1485,8 @@ T dotProduct(const Matrix1D< T >& v1, const Matrix1D< T >& v2)
         REPORT_ERROR(1002, "Dot product: vectors of different size or shape");
 
     T accumulate = 0;
-    for (int i = 0; i < v1.size; i++)
-        accumulate += v1.data[i] * v2.data[i];
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(v1)
+        accumulate += DIRECT_VEC_ELEM(v1,i) * DIRECT_VEC_ELEM(v2,i);
 
     return accumulate;
 }
@@ -1561,6 +1525,22 @@ Matrix1D< T > vectorProduct(const Matrix1D< T >& v1, const Matrix1D< T >& v2)
 /// @defgroup VectorsMiscellaneous Miscellaneous
 /// @ingroup VectorsRelated
 
+/** Vector equality.
+ * @ingroup VectorsMiscellaneous */
+template<typename T>
+bool operator==(const Matrix1D<T>& op1, const Matrix1D<T>& op2)
+{
+    return op1.equal(op2);
+}
+
+/** Vector inequality.
+ * @ingroup VectorsMiscellaneous */
+template<typename T>
+bool operator!=(const Matrix1D<T>& op1, const Matrix1D<T>& op2)
+{
+    return !(op1==op2);
+}
+
 /** Reduce both vectors to a common size
  * @ingroup VectorsMiscellaneous
  *
@@ -1580,7 +1560,7 @@ Matrix1D< T > vectorProduct(const Matrix1D< T >& v1, const Matrix1D< T >& v2)
  * @endcode
  */
 template<typename T>
-void cutToCommonSize(vT& V1, vT& V2)
+void cutToCommonSize(Matrix1D<T>& V1, Matrix1D<T>& V2)
 {
     int x0 = MAX(STARTINGX(V1), STARTINGX(V2));
     int xF = MIN(FINISHINGX(V1), FINISHINGX(V2));
@@ -1602,10 +1582,10 @@ void cutToCommonSize(vT& V1, vT& V2)
  * corner1 to corner2) loop.
  */
 template<typename T>
-void sortTwoVectors(vT& v1, vT& v2)
+void sortTwoVectors(Matrix1D<T>& v1, Matrix1D<T>& v2)
 {
     T temp;
-    if (v1.xdim != v2.xdim || STARTINGX(v1) != STARTINGX(v2))
+    if (!v1.sameShape(v2))
         REPORT_ERROR(1007,
                      "sortTwoVectors: vectors are not of the same shape");
 
@@ -1648,8 +1628,8 @@ void sortTwoVectors(vT& v1, vT& v2)
   * Matrix1D<double> x(8), steps(8);
   * double fitness;
   * int iter;
-  * steps.init_constant(1);
-  * x,init_zeros();
+  * steps.initConstant(1);
+  * x,initZeros();
   * powellOptimizer(x,1,8,&wrapperFitness,0.01,fitness,iter,steps,true);
   * @endcode
   *
@@ -1664,96 +1644,42 @@ void powellOptimizer(Matrix1D< double >& p,
                      bool show = false);
 #endif
 
-/** Print vector shape.
-  * @ingroup VectorsSizeShape */
-template<typename T>
-void vT::printShape(std::ostream& out) const
-{
-    out << "Size: " << xdim
-        << "i=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
-}
-
-#ifndef SWIG
-/** Get vector size.
-  * @ingroup VectorsSizeShape */
-template<typename T>
-void vT::getSize(int* size) const
-{
-    size[0] = xdim;
-    size[1] = 1;
-    size[2] = 1;
-}
-#endif
-
-/** True if the coordinate is outside the vector range.
-  * @ingroup VectorsUtilities */
-template<typename T>
-bool vT::outside(const Matrix1D< double >& v) const
-{
-    if (v.xdim < 1)
-        REPORT_ERROR(1, "Outside: index vector has got not enough components");
-
-    return (XX(v) < STARTINGX(*this) || XX(v) > FINISHINGX(*this));
-}
-
-/** True if the index is outside the vector range.
-  * @ingroup VectorsUtilities */
-template<typename T>
-bool vT::outside(int i) const
-{
-    return (i < STARTINGX(*this) || i > FINISHINGX(*this));
-}
-
 /** Show a vector.
   * @ingroup VectorsUtilities */
 template<typename T>
-std::ostream& operator<<(std::ostream& out, const vT& v)
+std::ostream& operator<<(std::ostream& out, const Matrix1D<T>& v)
 {
-    if (v.size == 0)
+    if (XSIZE(v) == 0)
         out << "NULL vector\n";
     else
     {
-        // Look for the exponent
-        vT aux(v);
-        aux.selfABSnD();
-        int prec = bestPrecision(aux.compute_max(), 10);
-
-        FOR_ALL_ELEMENTS_IN_MATRIX1D(v)
+        if (typeid(T) == typeid(std::complex<double>))
         {
-            if (v.row)
-                out << floatToString((double) VEC_ELEM(v, i), 10, prec) << ' ';
-            else
-                out << floatToString((double) VEC_ELEM(v, i), 10, prec) << '\n';
+            FOR_ALL_ELEMENTS_IN_MATRIX1D(v)
+            {
+                if (v.row)
+                    out << VEC_ELEM(v, i) << ' ';
+                else
+                    out << VEC_ELEM(v, i) << '\n';
+            }
+        }
+        else
+        {
+            // Look for the exponent
+            Matrix1D<T> aux(v);
+            aux.selfABSnD();
+            int prec = bestPrecision(aux.computeMax(), 10);
+
+            FOR_ALL_ELEMENTS_IN_MATRIX1D(v)
+            {
+                if (v.row)
+                    out << floatToString((double) VEC_ELEM(v, i), 10, prec) << ' ';
+                else
+                    out << floatToString((double) VEC_ELEM(v, i), 10, prec) << '\n';
+            }
         }
     }
 
     return out;
 }
-
-/** Compute the center of mass within a mask.
-  * If no mask is to be used, supply NULL.
-  * @ingroup VectorsUtilities */
-template<typename T>
-void vT::centerOfMass(Matrix1D< double >& center, void* mask)
-{
-    center.initZeros(1);
-    double mass = 0;
-    Matrix1D< int >* imask = (Matrix1D< int >*) mask;
-
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(*this)
-    {
-        if ((imask == NULL || VEC_ELEM(*imask, i)) &&
-	    VEC_ELEM(*this, i))
-        {
-            XX(center) += i * VEC_ELEM(*this, i);
-            mass += VEC_ELEM(*this, i);
-        }
-    }
-    if (mass != 0)
-        center /= mass;
-}
-
-#undef maT
-#undef maT1
-
 #endif

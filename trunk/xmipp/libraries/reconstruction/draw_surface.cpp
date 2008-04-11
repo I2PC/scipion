@@ -59,7 +59,7 @@ void Prog_Draw_Surface_Parameters::produce_Side_Info()
     vol.read(fn_in);
     surface.read(fn_surf);
     if (enable_adjust)
-        surface().range_adjust(ztop, zbottom);
+        surface().rangeAdjust(ztop, zbottom);
     vol().setXmippOrigin();
     surface().setXmippOrigin();
 }

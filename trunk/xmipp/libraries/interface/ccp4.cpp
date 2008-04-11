@@ -67,9 +67,9 @@ void CCP4::write(const FileName &fn_out, const ImageXmipp &I, bool reversed,
 
     //data,
     float f; //only float are suported
-    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(I())
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
     {
-        f = (float) MULTIDIM_ELEM(I(), i);
+        f = (float) MAT_ELEM(I(), i, j);
         FWRITE(&f, sizeof(float), 1, fp, reversed);
     }
 
@@ -96,9 +96,9 @@ void CCP4::write(const FileName &fn_out, const VolumeXmipp &V, bool reversed,
 
     //data,
     float f; //only float are suported
-    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(V())
+    FOR_ALL_ELEMENTS_IN_MATRIX3D(V())
     {
-        f = (float) MULTIDIM_ELEM(V(), i);
+        f = (float) VOL_ELEM(V(), k, i, j);
         FWRITE(&f, sizeof(float), 1, fp, reversed);
     }
 
@@ -154,26 +154,26 @@ void CCP4::read(const FileName &fn_in,
     {
     case MODE_BYTE:
         unsigned char c;
-        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(I())
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
         {
             fread(&c, sizeof(unsigned char), 1, fp);
-            MULTIDIM_ELEM(I(), i) = (double)c;
+            MAT_ELEM(I(), i, j) = (double)c;
         }
         break;
     case MODE_SHORT:
         short int si;
-        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(I())
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
         {
             FREAD(&si, sizeof(short int), 1, fp, reversed);
-            MULTIDIM_ELEM(I(), i) = (double)si;
+            MAT_ELEM(I(), i, j) = (double)si;
         }
         break;
     case MODE_FLOAT:
         float f;
-        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(I())
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
         {
             FREAD(&f, sizeof(float), 1, fp, reversed);
-            MULTIDIM_ELEM(I(), i) = (double)f;
+            MAT_ELEM(I(), i, j) = (double)f;
         }
         break;
     default:
@@ -231,26 +231,26 @@ void CCP4::read(const FileName &fn_in,
     {
     case MODE_BYTE:
         unsigned char c;
-        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(V())
+        FOR_ALL_ELEMENTS_IN_MATRIX3D(V())
         {
             fread(&c, sizeof(unsigned char), 1, fp);
-            MULTIDIM_ELEM(V(), i) = (double)c;
+            VOL_ELEM(V(), k, i, j) = (double)c;
         }
         break;
     case MODE_SHORT:
         short int si;
-        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(V())
+        FOR_ALL_ELEMENTS_IN_MATRIX3D(V())
         {
             FREAD(&si, sizeof(short int), 1, fp, reversed);
-            MULTIDIM_ELEM(V(), i) = (double)si;
+            VOL_ELEM(V(), k, i, j) = (double)si;
         }
         break;
     case MODE_FLOAT:
         float f;
-        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(V())
+        FOR_ALL_ELEMENTS_IN_MATRIX3D(V())
         {
             FREAD(&f, sizeof(float), 1, fp, reversed);
-            MULTIDIM_ELEM(V(), i) = (double)f;
+            VOL_ELEM(V(), k, i, j) = (double)f;
         }
         break;
     default:
@@ -308,9 +308,9 @@ void CCP4::fill_header_from_xmippimage(ImageXmipp I, bool reversed,
         my_mrc_header.nxstart = -1 * int(my_mrc_header.nx / 2);
         my_mrc_header.nystart = -1 * int(my_mrc_header.ny / 2);
         my_mrc_header.nzstart = -1 * int(my_mrc_header.nz / 2);
-        my_mrc_header.amin  = (float)(I().compute_min());
-        my_mrc_header.amax  = (float)(I().compute_max());
-        my_mrc_header.amean = (float)(I().compute_avg());
+        my_mrc_header.amin  = (float)(I().computeMin());
+        my_mrc_header.amax  = (float)(I().computeMax());
+        my_mrc_header.amean = (float)(I().computeAvg());
     }
     else
     {
@@ -359,11 +359,11 @@ void CCP4::fill_header_from_xmippimage(ImageXmipp I, bool reversed,
         my_mrc_header.maps  = Z_AXIS;
         little22bigendian(my_mrc_header.maps);
 
-        my_mrc_header.amin = I().compute_min();
+        my_mrc_header.amin = I().computeMin();
         little22bigendian(my_mrc_header.amin);
-        my_mrc_header.amax = I().compute_max();
+        my_mrc_header.amax = I().computeMax();
         little22bigendian(my_mrc_header.amax);
-        my_mrc_header.amean = I().compute_avg();
+        my_mrc_header.amean = I().computeAvg();
         little22bigendian(my_mrc_header.amean);
 
     }
@@ -398,9 +398,9 @@ void CCP4::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed,
         my_mrc_header.nxstart = -1 * int(my_mrc_header.nx / 2);
         my_mrc_header.nystart = -1 * int(my_mrc_header.ny / 2);
         my_mrc_header.nzstart = -1 * int(my_mrc_header.nz / 2);
-        my_mrc_header.amin  = (float)(V().compute_min());
-        my_mrc_header.amax  = (float)(V().compute_max());
-        my_mrc_header.amean = (float)(V().compute_avg());
+        my_mrc_header.amin  = (float)(V().computeMin());
+        my_mrc_header.amax  = (float)(V().computeMax());
+        my_mrc_header.amean = (float)(V().computeAvg());
         if (IsLittleEndian())
         {
             (my_mrc_header.machst)[0]  = 0x4 << 4;
@@ -470,11 +470,11 @@ void CCP4::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed,
         little22bigendian(my_mrc_header.beta);
         little22bigendian(my_mrc_header.gamma);
 
-        my_mrc_header.amin = V().compute_min();
+        my_mrc_header.amin = V().computeMin();
         little22bigendian(my_mrc_header.amin);
-        my_mrc_header.amax = V().compute_max();
+        my_mrc_header.amax = V().computeMax();
         little22bigendian(my_mrc_header.amax);
-        my_mrc_header.amean = V().compute_avg();
+        my_mrc_header.amean = V().computeAvg();
         little22bigendian(my_mrc_header.amean);
 
         if (IsLittleEndian())

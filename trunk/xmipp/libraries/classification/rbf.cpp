@@ -254,7 +254,7 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
             Fty(j) += Fm(i, j) * y[i];
             int imax = idx_out.size();
             err.resize(XSIZE(Fm));
-            err.init_constant(1);
+            err.initConstant(1);
             for (int i = 0; i < imax; i++)
                 err(idx_out[i]) = 0;
             FOR_ALL_ELEMENTS_IN_MATRIX1D(err)
@@ -313,11 +313,11 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
                     U(i, m - 1) += Hn(j, i) * F(j, jmax);
         }
 #ifdef DEBUG
-        std::cout << "U="  << U.compute_avg()  << std::endl
-        << "Hm=" << Hm.compute_avg() << std::endl
-        << "Hn=" << Hn.compute_avg() << std::endl
-        << "Hy=" << Hy.compute_avg() << std::endl
-        << "hh=" << hh.compute_avg() << std::endl;
+        std::cout << "U="  << U.computeAvg()  << std::endl
+        << "Hm=" << Hm.computeAvg() << std::endl
+        << "Hn=" << Hn.computeAvg() << std::endl
+        << "Hy=" << Hy.computeAvg() << std::endl
+        << "hh=" << hh.computeAvg() << std::endl;
 #endif
 
         // Update the sum of squared errors
@@ -354,7 +354,7 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
             finished = true;
             age = 1;
         }
-        else if (FmFm.compute_max() < 2.3e-16)
+        else if (FmFm.computeMax() < 2.3e-16)
         { // No more significant regressors
             finished = true;
             age = 0;
@@ -413,7 +413,7 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
     // Error measure
     error = msc;
 #ifdef DEBUG
-    std::cout << "w=" << w_out.compute_avg() << std::endl;
+    std::cout << "w=" << w_out.computeAvg() << std::endl;
 #endif
 }
 #undef DEBUG

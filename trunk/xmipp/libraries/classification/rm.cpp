@@ -73,7 +73,7 @@ void xmippRM::calculateRM(xmippCTVectors const &ts, int _k)
     }
     else
     {
-        RM.init_random(0, 1, "gaussian");
+        RM.initRandom(0, 1, "gaussian");
     }
 
     // Normalize columns to unit length

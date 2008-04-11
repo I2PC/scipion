@@ -201,9 +201,9 @@ bool Prog_align2d_prm::align_rot(ImageXmippT<double> &img, const Matrix2D<double
     }
     else psi = psi_max_fine;
 
-    Mimg.core_deallocate();
-    Maux.core_deallocate();
-    mask.core_deallocate();
+    Mimg.clear();
+    Maux.clear();
+    mask.clear();
 
     psi = realWRAP(psi, -180., 180.);
     if ((max_rot < XMIPP_EQUAL_ACCURACY) || (ABS(psi) < max_rot))
@@ -242,7 +242,7 @@ bool Prog_align2d_prm::align_trans(ImageXmippT<double> &img, const Matrix2D<doub
 
     // Calculate cross-correlation
     correlation_matrix(Maux, Mref, Mcorr);
-    Mcorr.statistics_adjust(0., 1.);
+    Mcorr.statisticsAdjust(0., 1.);
     Mcorr.maxIndex(imax, jmax);
     max = MAT_ELEM(Mcorr, imax, jmax);
 
@@ -308,8 +308,8 @@ bool Prog_align2d_prm::align_trans(ImageXmippT<double> &img, const Matrix2D<doub
         yshift=xshift=0.f;
     }   
 #endif    
-    Maux.core_deallocate();
-    Mcorr.core_deallocate();
+    Maux.clear();
+    Mcorr.clear();
 
     shift = sqrt(xshift * xshift + yshift * yshift);
     if ((max_shift < XMIPP_EQUAL_ACCURACY) || (shift < max_shift))
@@ -502,9 +502,6 @@ void Prog_align2d_prm::do_pspc()
     fn_tmp = fn_tmp.insert_before_extension(".pspc");
     Iref.write(fn_tmp);
     Iref.write(fn_ave);
-
-    Maux.core_deallocate();
-    Mref.core_deallocate();
 }
 
 // Alignment of all images by iterative refinement  ========================================
@@ -626,10 +623,6 @@ void Prog_align2d_prm::refinement()
         Iref.write(fn_ave);
 
     } // loop over iterations
-
-    Maux.core_deallocate();
-    Mref.core_deallocate();
-    Msum.core_deallocate();
 }
 
 // Write out results  ========================================================

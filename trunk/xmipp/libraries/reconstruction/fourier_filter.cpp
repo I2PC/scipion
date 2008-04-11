@@ -363,6 +363,21 @@ void FourierMask::write_mask(const FileName &fn, int dim)
     }
 }
 
+/* Center mask ------------------------------------------------------------- */
+void FourierMask::centerMaskCorners()
+{
+    CenterFFT(mask1D,false);
+    CenterFFT(mask2D,false);
+    CenterFFT(mask3D,false);
+}
+
+void FourierMask::centerMaskMiddle()
+{
+    CenterFFT(mask1D,true);
+    CenterFFT(mask2D,true);
+    CenterFFT(mask3D,true);
+}
+
 /* Apply mask -------------------------------------------------------------- */
 void FourierMask::apply_mask_Fourier(Matrix1D< std::complex<double> > &v)
 {

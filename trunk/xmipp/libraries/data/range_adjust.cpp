@@ -59,7 +59,7 @@ void Prog_Range_adjust_Parameters::apply(Matrix2D<double> &I)
     double amax = rnd_gaus(0, sigma);
     double minval = min_val + amin;
     double maxval = max_val + amax;
-    I.range_adjust(minval, maxval);
+    I.rangeAdjust(minval, maxval);
 }
 
 void Prog_Range_adjust_Parameters::apply(Matrix3D<double> &V)
@@ -68,5 +68,5 @@ void Prog_Range_adjust_Parameters::apply(Matrix3D<double> &V)
     double amax = rnd_gaus(0, sigma);
     double minval = min_val + amin;
     double maxval = max_val + amax;
-    V.range_adjust(minval, maxval);
+    V.rangeAdjust(minval, maxval);
 }

@@ -1072,8 +1072,8 @@ void series_convolution(Matrix1D< T >& series1,
                         bool FullConvolution = false)
 {
     // Store dimension of series
-    int dim1 = series1.getDimension();
-    int dim2 = series2.getDimension();
+    int dim1 = XSIZE(series1);
+    int dim2 = XSIZE(series2);
 
     // Resize series to the size of the resulting series
     // (Zeros are stored in the expanded values)
@@ -1108,7 +1108,7 @@ void series_convolution(Matrix1D< T >& series1,
         int dim = XMIPP_MAX(dim1, dim2);
 
         // Determine the number of values to discard
-        int discard = result.getDimension() - dim;
+        int discard = XSIZE(result) - dim;
 
         // Divide it by two as we have to discard them in both sides of the
         // vector

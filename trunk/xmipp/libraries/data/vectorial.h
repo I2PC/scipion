@@ -49,7 +49,7 @@
  * A single index (i) is available.
  */
 #define FOR_ALL_ELEMENTS_IN_MULTIDIM_VECTORIAL_MATRIX3D(v) \
-    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY((v).__X)
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY((v).__X)
 
 /** Vectorial volume.
  * @ingroup Vectorial
@@ -357,54 +357,6 @@ public:
         Z(k, i, j) = val;
     }
 
-    /** Constant access to a particular X component as a multidim array.
-     * @ingroup VectorialAccess
-     */
-    double X(int i) const
-    {
-        return MULTIDIM_ELEM(__X, i);
-    }
-
-    /** Access to a particular X component as a multidim array.
-     * @ingroup VectorialAccess
-     */
-    double& X(int i)
-    {
-        return MULTIDIM_ELEM(__X, i);
-    }
-
-    /** Constant access to a particular Y component as a multidim array.
-     * @ingroup VectorialAccess
-     */
-    double Y(int i) const
-    {
-        return MULTIDIM_ELEM(__Y, i);
-    }
-
-    /** Access to a particular Y component as a multidim array.
-     * @ingroup VectorialAccess
-     */
-    double& Y(int i)
-    {
-        return MULTIDIM_ELEM(__Y, i);
-    }
-
-    /** Constant access to a particular Z component as a multidim array.
-     * @ingroup VectorialAccess
-     */
-    double Z(int i) const
-    {
-        return MULTIDIM_ELEM(__Z, i);
-    }
-
-    /** Access to a particular Z component as a multidim array.
-     * @ingroup VectorialAccess
-     */
-    double& Z(int i)
-    {
-        return MULTIDIM_ELEM(__Z, i);
-    }
-
     /// @defgroup VectorialUtilitites Utilities
     /// @ingroup Vectorial
 
@@ -415,10 +367,13 @@ public:
     {
         FOR_ALL_ELEMENTS_IN_MULTIDIM_VECTORIAL_MATRIX3D(*this)
         {
-            double mod = sqrt(X(i) * X(i) + Y(i) * Y(i) + Z(i) * Z(i));
-            X(i) /= mod;
-            Y(i) /= mod;
-            Z(i) /= mod;
+            double mod = sqrt(
+	    	DIRECT_MULTIDIM_ELEM(__X,n) * DIRECT_MULTIDIM_ELEM(__X,n) + 
+		DIRECT_MULTIDIM_ELEM(__Y,n) * DIRECT_MULTIDIM_ELEM(__Y,n) + 
+		DIRECT_MULTIDIM_ELEM(__Z,n) * DIRECT_MULTIDIM_ELEM(__Z,n));
+            DIRECT_MULTIDIM_ELEM(__X,n) /= mod;
+            DIRECT_MULTIDIM_ELEM(__Y,n) /= mod;
+            DIRECT_MULTIDIM_ELEM(__Z,n) /= mod;
         }
     }
 
@@ -432,8 +387,10 @@ public:
         result.resize(__X);
 
         FOR_ALL_ELEMENTS_IN_MULTIDIM_VECTORIAL_MATRIX3D(*this)
-        MULTIDIM_ELEM(result, i) = sqrt(X(i) * X(i) + Y(i) * Y(i) +
-                                        Z(i) * Z(i));
+            DIRECT_MULTIDIM_ELEM(result,  n) = sqrt(
+	    	DIRECT_MULTIDIM_ELEM(__X,n) * DIRECT_MULTIDIM_ELEM(__X,n) + 
+		DIRECT_MULTIDIM_ELEM(__Y,n) * DIRECT_MULTIDIM_ELEM(__Y,n) + 
+		DIRECT_MULTIDIM_ELEM(__Z,n) * DIRECT_MULTIDIM_ELEM(__Z,n));
     }
 
     /** Write.
@@ -457,8 +414,6 @@ public:
     /// @defgroup VectorialArithmetic Arithmetic operations
     /// @ingroup Vectorial
 
-#define maT Vectorial_Matrix3D
-
 #define OPERATION(func, arg1, arg2, result, op) \
     func((arg1).__X, (arg2).__X, (result).__X, op); \
     func((arg1).__Y, (arg2).__Y, (result).__Y, op); \
@@ -467,9 +422,9 @@ public:
     /** v3=v1+v2.
      * @ingroup VectorialArithmetic
      */
-    maT operator+(const maT& op1) const
+    Vectorial_Matrix3D operator+(const Vectorial_Matrix3D& op1) const
     {
-        maT temp;
+        Vectorial_Matrix3D temp;
         OPERATION(arrayByArray, *this, op1, temp, '+');
         return temp;
     }
@@ -477,9 +432,9 @@ public:
     /** v3=v1-v2.
      * @ingroup VectorialAritmetic
      */
-    maT operator-(const maT& op1) const
+    Vectorial_Matrix3D operator-(const Vectorial_Matrix3D& op1) const
     {
-        maT temp;
+        Vectorial_Matrix3D temp;
         OPERATION(arrayByArray, *this, op1, temp, '-');
         return temp;
     }
@@ -487,9 +442,9 @@ public:
     /** v3=v1*v2.
      * @ingroup VectorialAritmetic
      */
-    maT operator*(const maT& op1) const
+    Vectorial_Matrix3D operator*(const Vectorial_Matrix3D& op1) const
     {
-        maT temp;
+        Vectorial_Matrix3D temp;
         OPERATION(arrayByArray, *this, op1, temp, '*');
         return temp;
     }
@@ -497,9 +452,9 @@ public:
     /** v3=v1/v2.
      * @ingroup VectorialAritmetic
      */
-    maT operator/(const maT& op1) const
+    Vectorial_Matrix3D operator/(const Vectorial_Matrix3D& op1) const
     {
-        maT temp;
+        Vectorial_Matrix3D temp;
         OPERATION(arrayByArray, *this, op1, temp, '/');
         return temp;
     }
@@ -507,9 +462,9 @@ public:
     /** v3=v1^v2.
      * @ingroup VectorialAritmetic
      */
-    maT operator^(const maT& op1) const
+    Vectorial_Matrix3D operator^(const Vectorial_Matrix3D& op1) const
     {
-        maT temp;
+        Vectorial_Matrix3D temp;
         OPERATION(arrayByArray, *this, op1, temp, '^');
         return temp;
     }
@@ -517,7 +472,7 @@ public:
     /** v3+=v2.
      * @ingroup VectorialAritmetic
      */
-    void operator+=(const maT& op1)
+    void operator+=(const Vectorial_Matrix3D& op1)
     {
         OPERATION(arrayByArray, *this, op1, *this, '+');
     }
@@ -525,7 +480,7 @@ public:
     /** v3-=v2.
      * @ingroup VectorialAritmetic
      */
-    void operator-=(const maT& op1)
+    void operator-=(const Vectorial_Matrix3D& op1)
     {
         OPERATION(arrayByArray, *this, op1, *this, '-');
     }
@@ -533,7 +488,7 @@ public:
     /** v3*=v2.
      * @ingroup VectorialAritmetic
      */
-    void operator*=(const maT& op1)
+    void operator*=(const Vectorial_Matrix3D& op1)
     {
         OPERATION(arrayByArray, *this, op1, *this, '*');
     }
@@ -541,7 +496,7 @@ public:
     /** v3/=v2.
      * @ingroup VectorialAritmetic
      */
-    void operator/= (const maT& op1)
+    void operator/= (const Vectorial_Matrix3D& op1)
     {
         OPERATION(arrayByArray, *this, op1, *this, '/');
     }
@@ -549,7 +504,7 @@ public:
     /** v3^=v2.
      * @ingroup VectorialAritmetic
      */
-    void operator^=(const maT& op1)
+    void operator^=(const Vectorial_Matrix3D& op1)
     {
         OPERATION(arrayByArray, *this, op1, *this, '^');
     }
@@ -563,50 +518,50 @@ public:
     /** v3=v1+k.
      * @ingroup VectorialAritmetic
      */
-    maT operator+(double op1) const
+    Vectorial_Matrix3D operator+(double op1) const
     {
-        maT temp;
-        OPERATION(array_by_scalar, *this, op1, temp, '+');
+        Vectorial_Matrix3D temp;
+        OPERATION(arrayByScalar, *this, op1, temp, '+');
         return temp;
     }
 
     /** v3=v1-k.
      * @ingroup VectorialAritmetic
      */
-    maT operator-(double op1) const
+    Vectorial_Matrix3D operator-(double op1) const
     {
-        maT temp;
-        OPERATION(array_by_scalar, *this, op1, temp, '-');
+        Vectorial_Matrix3D temp;
+        OPERATION(arrayByScalar, *this, op1, temp, '-');
         return temp;
     }
 
     /** v3=v1*k.
      * @ingroup VectorialAritmetic
      */
-    maT operator*(double op1) const
+    Vectorial_Matrix3D operator*(double op1) const
     {
-        maT temp;
-        OPERATION(array_by_scalar, *this, op1, temp, '*');
+        Vectorial_Matrix3D temp;
+        OPERATION(arrayByScalar, *this, op1, temp, '*');
         return temp;
     }
 
     /** v3=v1/k.
      * @ingroup VectorialAritmetic
      */
-    maT operator/(double op1) const
+    Vectorial_Matrix3D operator/(double op1) const
     {
-        maT temp;
-        OPERATION(array_by_scalar, *this, op1, temp, '/');
+        Vectorial_Matrix3D temp;
+        OPERATION(arrayByScalar, *this, op1, temp, '/');
         return temp;
     }
 
     /** v3=v1^k.
      * @ingroup VectorialAritmetic
      */
-    maT operator^(double op1) const
+    Vectorial_Matrix3D operator^(double op1) const
     {
-        maT temp;
-        OPERATION(array_by_scalar, *this, op1, temp, '^');
+        Vectorial_Matrix3D temp;
+        OPERATION(arrayByScalar, *this, op1, temp, '^');
         return temp;
     }
 
@@ -615,7 +570,7 @@ public:
      */
     void operator+=(const double& op1)
     {
-        OPERATION(array_by_scalar, *this, op1, *this, '+');
+        OPERATION(arrayByScalar, *this, op1, *this, '+');
     }
 
     /** v3-=k.
@@ -623,7 +578,7 @@ public:
      */
     void operator-=(const double& op1)
     {
-        OPERATION(array_by_scalar, *this, op1, *this, '-');
+        OPERATION(arrayByScalar, *this, op1, *this, '-');
     }
 
     /** v3*=k.
@@ -631,7 +586,7 @@ public:
      */
     void operator*=(const double& op1)
     {
-        OPERATION(array_by_scalar, *this, op1, *this, '*');
+        OPERATION(arrayByScalar, *this, op1, *this, '*');
     }
 
     /** v3/=k.
@@ -639,7 +594,7 @@ public:
      */
     void operator/=(const double& op1)
     {
-        OPERATION(array_by_scalar, *this, op1, *this, '/');
+        OPERATION(arrayByScalar, *this, op1, *this, '/');
     }
 
     /** v3^=k.
@@ -647,10 +602,10 @@ public:
      */
     void operator^=(const double& op1)
     {
-        OPERATION(array_by_scalar, *this, op1, *this, '^');
+        OPERATION(arrayByScalar, *this, op1, *this, '^');
     }
 
-#undef maT
+#undef Vectorial_Matrix3D
 
 };
 

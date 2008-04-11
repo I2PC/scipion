@@ -1447,10 +1447,9 @@ void Prog_MLFalign2D_prm::appendFTtoVector(const Matrix2D<std::complex<double> >
     for (int ipoint = 0; ipoint < nr_points_2d; ipoint++)
     {
 	int ii = pointer_2d[ipoint];
-	out.push_back((in.data[ii]).real());
-	out.push_back((in.data[ii]).imag());
+	out.push_back((DIRECT_MULTIDIM_ELEM(in,ii)).real());
+	out.push_back((DIRECT_MULTIDIM_ELEM(in,ii)).imag());
     }
-
 }
 
 void Prog_MLFalign2D_prm::getFTfromVector(const std::vector<double> &in, 
@@ -1470,7 +1469,7 @@ void Prog_MLFalign2D_prm::getFTfromVector(const std::vector<double> &in,
 	{
 	    int ii = pointer_2d[ipoint];
 	    std::complex<double> aux(in[start_point+ipoint],0.);
-	    out.data[ii] = aux;
+	    DIRECT_MULTIDIM_ELEM(out,ii) = aux;
 	}
     }
     else
@@ -1479,7 +1478,7 @@ void Prog_MLFalign2D_prm::getFTfromVector(const std::vector<double> &in,
 	{
 	    int ii = pointer_2d[ipoint];
 	    std::complex<double> aux(in[start_point+2*ipoint],in[start_point+2*ipoint+1]);
-	    out.data[ii] = aux;
+	    DIRECT_MULTIDIM_ELEM(out,ii) = aux;
 	}
     }
 }
@@ -1634,10 +1633,10 @@ void Prog_MLFalign2D_prm::calculateFourierOffsets(const Matrix2D<double> &Mimg,
 
     Moffsets.resize(dim, dim);
     Moffsets.setXmippOrigin();
-    Moffsets.init_constant(-1);
+    Moffsets.initConstant(-1);
     Moffsets_mirror.resize(dim, dim);
     Moffsets_mirror.setXmippOrigin();
-    Moffsets_mirror.init_constant(-1);
+    Moffsets_mirror.initConstant(-1);
     Maux.resize(dim, dim);
     Maux.setXmippOrigin();
     Maux2.resize(dim, dim);
@@ -1757,10 +1756,10 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
     for (int ipoint = 0; ipoint < nr_points_2d; ipoint++)
     {
 	int ii = pointer_2d[ipoint];
-	int ires = Mresol_int.data[ii];
-	sigma2.push_back(2.* Vsig[focus].data[ires]);
-	decctf.push_back(Vdec[focus].data[ires]);
-	ctf.push_back(Vctf[focus].data[ires]);
+	int ires = DIRECT_MULTIDIM_ELEM(Mresol_int,ii);
+	sigma2.push_back(2.* DIRECT_MULTIDIM_ELEM(Vsig[focus],ires));
+	decctf.push_back(DIRECT_MULTIDIM_ELEM(Vdec[focus],ires));
+	ctf.push_back(DIRECT_MULTIDIM_ELEM(Vctf[focus],ires));
     }
     if (!apply_ctf)
     {
@@ -2687,11 +2686,11 @@ bool Prog_MLFalign2D_prm::checkConvergence(std::vector<double> &conv)
     {
         if (Iref[refno].weight() > 0.)
         {
-            Maux = multiplyElements(Iold[refno](), Iold[refno]());
-            convv = 1. / (Maux.compute_avg());
+            multiplyElements(Iold[refno](), Iold[refno](), Maux);
+            convv = 1. / (Maux.computeAvg());
             Maux = Iold[refno]() - Iref[refno]();
-            Maux = multiplyElements(Maux, Maux);
-            convv *= Maux.compute_avg();
+            multiplyElements(Maux, Maux, Maux);
+            convv *= Maux.computeAvg();
             conv.push_back(convv);
             if (convv > eps) converged = false;
         }

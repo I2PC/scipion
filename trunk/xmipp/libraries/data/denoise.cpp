@@ -202,7 +202,7 @@ void Denoising_parameters::usage_specific()
 void Denoising_parameters::denoise(Matrix2D<double> &img)
 {
     if (denoising_type == BAYESIAN && adjust_range)
-        img.range_adjust(0, 1);
+        img.rangeAdjust(0, 1);
     if (denoising_type != SHAH)
     {
         double size2 = log10((double)XSIZE(img)) / log10(2.0);

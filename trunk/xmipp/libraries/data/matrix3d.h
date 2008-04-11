@@ -33,30 +33,23 @@
 #include <iostream>
 #include <string>
 #include <complex>
-#include <cstdlib>
-#include <cmath>
 
+#include <external/bilib/headers/pyramidtools.h>
+#include "multidimensional_array.h"
 #include "matrix1d.h"
 #include "matrix2d.h"
-#include "funcs.h"
-#include "args.h"
+#include "error.h"
 
-#define maT  Matrix3D< T >
-#define maT1 Matrix3D< T1 >
+template<typename T> class Matrix3D;
 
-#undef  maTC
-#define maTC Matrix3D< std::complex< double > >
+template<typename T>
+void applyGeometry(Matrix3D<T>& V2, Matrix2D< double > A,
+    const Matrix3D<T>& V1, bool inv, bool wrap);
 
-// FIXME remove this
-#include "multidim_friends.inc"
-
-template<class T>
-void applyGeometry(VT& V2, Matrix2D< double > A, const VT& V1, bool inv,
-                bool wrap);
-
-template<class T>
-void applyGeometryBSpline(VT& V2, Matrix2D< double > A, const VT& V1,
-                        int Splinedegree, bool inv, bool wrap, T outside = 0);
+template<typename T>
+void applyGeometryBSpline(Matrix3D<T>& V2, Matrix2D< double > A,
+    const Matrix3D<T>& V1, int Splinedegree, bool inv, bool wrap,
+    T outside = 0);
 
 /// @defgroup Volumes Volumes
 /// @ingroup MultidimensionalArrays
@@ -76,65 +69,7 @@ void applyGeometryBSpline(VT& V2, Matrix2D< double > A, const VT& V1,
 
 /** @defgroup VolumesSizeShape Size and shape
  * @ingroup Matrix3dSpeedUp
- *
- * Although they are not defined here you can also use STARTINGX and FINISHINGX
- * (defined for Matrix1D), or STARTINGY and FINISHINGY (defined for Matrix2D)
  */
-
-/** TRUE if both arrays have the same shape.
- * @ingroup VolumesSizeShape
- *
- * Two arrays have the same shape if they have the same size and the same
- * starting point. Be aware that this is a macro which simplifies to a boolean.
- */
-#define SAME_SHAPE3D(v1, v2) \
-    (XSIZE(v1) == XSIZE(v2) && \
-     YSIZE(v1) == YSIZE(v2) && \
-     ZSIZE(v1) == ZSIZE(v2) && \
-     STARTINGX(v1) == STARTINGX(v2) &&\
-     STARTINGY(v1) == STARTINGY(v2) && \
-     STARTINGZ(v1) == STARTINGZ(v2))
-
-/** Returns the first valid logical Z index.
- * @ingroup VolumesSizeShape
- *
- * @code
- * int orgZ = STARTINGZ(V);
- * @endcode
- */
-#define STARTINGZ(m) ((m).zinit)
-
-/** Returns the last valid logical Z index.
- * @ingroup VolumesSizeShape
- *
- * @code
- * int finZ = FINISHINGZ(V);
- * @endcode
- */
-#define FINISHINGZ(m) ((m).zinit + (m).zdim - 1)
-
-/** Access to Z dimension (size).
- * @ingroup VolumesSizeShape
- *
- * This is a macro equivalent to sliceNumber()
- *
- * @code
- * // Set to 0 1 element out of 8
- * for (int k=0; k<ZSIZE(V); k+=2)
- *     for (int i=0; i<YSIZE(V); i+=2)
- *         for (int j=0; j<XSIZE(V); j+=2)
- *             DIRECT_VOL_ELEM(V, k, i, j) = 0;
- * @endcode
- */
-#define ZSIZE(V) ((V).zdim)
-
-/** Access to XY dimension (size).
- * @ingroup VolumesSizeShape
- *
- * Notice that XYSIZE(*this) = XSIZE(*this) * YSIZE(*this). But, this value is
- * stored with the volume in order to make voxel access faster.
- */
-#define XYSIZE(V) ((V).xydim)
 
 /** For all elements in the array.
  * @ingroup VolumesSizeShape
@@ -146,7 +81,7 @@ void applyGeometryBSpline(VT& V2, Matrix2D< double > A, const VT& V1,
  * @code
  * FOR_ALL_ELEMENTS_IN_MATRIX3D(V)
  * {
- *     std::cout << m(k, i, j) << " ";
+ *     std::cout << V(k, i, j) << " ";
  * }
  * @endcode
  */
@@ -198,6 +133,7 @@ void applyGeometryBSpline(VT& V2, Matrix2D< double > A, const VT& V1,
  * (included limits) respectively. You need to define SPEED_UP_temps.
  *
  * @code
+ * SPEED_UP_temps; 
  * Matrix3D< double > V1(10, 10, 10), V2(20, 20, 20);
  * V1.setXmippOrigin();
  * V2.setXmippOrigin();
@@ -242,34 +178,6 @@ void applyGeometryBSpline(VT& V2, Matrix2D< double > A, const VT& V1,
  * @ingroup Matrix3dSpeedUp
  */
 
-/** Volume element: Logical access.
- * @ingroup VolumesMemory
- *
- * @code
- * VOL_ELEM(V, -1, -2, 1) = 1;
- * val = VOL_ELEM(V, -1, -2, 1);
- * @endcode
- */
-#define VOL_ELEM(V, k, i, j) \
-    DIRECT_VOL_ELEM(V,(k) - STARTINGZ(V), (i) - STARTINGY(V), (j) - STARTINGX(V))
-
-/** Volume element: Physical access.
- * @ingroup VolumesMemory
- *
- * Be careful because this is physical access, usually volumes follow the C
- * convention of starting index==0 (X,Y and Z). This function should not be used
- * as it goes against the vector library philosophy unless you explicitly want
- * to access directly to any value in the volume without taking into account
- * its logical position
- *
- * @code
- * DIRECT_VOL_ELEM(V, 0, 0, 0) = 1;
- * val = DIRECT_VOL_ELEM(V, 0, 0, 0);
- * @endcode
- */
-#define DIRECT_VOL_ELEM(V, k, i, j) (V).data[(k) * XYSIZE(V) + (i) * XSIZE(V) \
-        + (j)]
-
 /** A short alias for the previous function.
  * @ingroup VolumesMemory
  *
@@ -277,115 +185,61 @@ void applyGeometryBSpline(VT& V2, Matrix2D< double > A, const VT& V1,
  */
 #define dVkij(V, k, i, j) DIRECT_VOL_ELEM(V, k, i, j)
 
-/** Array access.
- * @ingroup VolumesMemory
- *
- * This macro gives you access to the array (T*).
- *
- * @code
- * std::cout << "This is an int*" << VOL_ARRAY(V) << std::endl;
- * @endcode
- */
-#define VOL_ARRAY(V) MULTIDIM_ARRAY(V)
-
-#include "multidim_common.h"
-
 /** Template class for Xmipp volumes
  */
 template<typename T>
-class Matrix3D
+class Matrix3D: public MultidimArray<T>
 {
-
-#include "multidim_basic.h"
-
 public:
-    /** Dimensions of array [0...zdim-1]
-     *                      [0...ydim-1]
-     *                      [0...xdim-1]
+    /// @defgroup VolumeConstructors Constructors
+    /// @ingroup Matrices
+
+    /** Empty constructor
+     * @ingroup VolumeConstructors
      */
-    int zdim, ydim, xdim;
-
-    /** xydim = xdim * ydim
-     */
-    int xydim;
-
-
-    /** This is so to make element access faster
-     * indexes of array  [zinit...zinit+zdim-1]
-     *                   [yinit...yinit+ydim-1]
-     *                   [xinit...xinit+xdim-1]
-     */
-    int zinit, yinit, xinit;
-
-
-    /** @defgroup VolumesConstructors Constructors
-     * @ingroup Volumes
-     */
-
-    /** Empty constructor.
-     * @ingroup VolumesConstructors
-     *
-     * The empty constructor creates a volume with no memory associated,
-     * origin=0, size=0, no statistics, ...
-     *
-     * @code
-     * Matrix3D< double > V1;
-     * @endcode
-     */
-    Matrix3D()
+    Matrix3D(): MultidimArray<T>()
     {
-        core_init();
-        initShape();
-        dimension = 3;
     }
 
-    /** Dimension constructor.
-     * @ingroup VolumesConstructors
+    /** Dimension constructor
+     * @ingroup VolumeConstructors
      *
-     * The dimension constructor creates a volume with memory associated (but
+     * The dimension constructor creates a matrix with memory associated (but
      * not assigned to anything, could be full of garbage) origin=0, size=the
-     * given one, no statistics, ...
-     *
-     * Be careful that first number is the Z dimension (number of slices), then
-     * the Y dimension (number of rows), and at the end the X dimension (number
-     * of columns).
+     * given one. e careful that first number is the Y dimension (number of
+     * rows), and the second the X dimension (number of columns).
      *
      * @code
-     * Matrix3D< double > V1(3, 6, 3);
+     * MAtrix3D< double > v1(6, 3);
      * @endcode
      */
-    Matrix3D(int Zdim, int Ydim, int Xdim)
+    Matrix3D(int Zdim, int Ydim, int Xdim): MultidimArray<T>()
     {
-        core_init();
-        initShape();
-        resize(Zdim, Ydim, Xdim);
-        dimension = 3;
+    	resize(Zdim, Ydim,Xdim);
     }
 
     /** Copy constructor
-     * @ingroup VolumesConstructors
+     * @ingroup VolumeConstructors
      *
-     * The created volume is a perfect copy of the input volume but with a
+     * The created matrix is a perfect copy of the input matrix but with a
      * different memory assignment.
      *
      * @code
-     * Matrix3D< double > V2(V1);
+     * MAtrix3D< double > m2(m1);
      * @endcode
      */
-    Matrix3D(const VT& V)
+    Matrix3D(const Matrix3D<T>& v)
     {
-        core_init();
-        initShape();
-        *this = V;
+        *this = v;
     }
 
-    /** Destructor.
-     * @ingroup VolumesConstructors
+    /** Clear.
+     * @ingroup VolumeConstructors
      */
-    ~Matrix3D()
-    {
-        core_deallocate();
-    }
+     void clear()
+     {
+        MultidimArray<T>::clear();
+     }
 
     /** @defgroup VolumesInitialization Initialisation
      * @ingroup Volumes
@@ -403,7 +257,24 @@ public:
     void initZeros(int Zdim, int Ydim, int Xdim)
     {
         resize(Zdim, Ydim, Xdim);
-        init_constant(static_cast<T>(0));
+        initConstant(static_cast<T>(0));
+    }
+
+    /** Zero initialisation with current dimension
+     * @ingroup VolumesInitialization
+     */
+    void initZeros()
+    {
+        MultidimArray<T>::initZeros();
+    }
+
+    /** Zero initialisation with current dimension
+     * @ingroup VolumesInitialization
+     */
+    template <typename T1>
+    void initZeros(const Matrix3D<T1> &m)
+    {
+        MultidimArray<T>::initZeros(m);
     }
 
     /** @defgroup VolumesSizeShape Size and shape
@@ -447,98 +318,6 @@ public:
      * @endcode
      */
 
-    /** Init shape.
-     * @ingroup VolumesSizeShape
-     *
-     * ydim,xdim=0, startingy,startingx=0.
-     */
-    void initShape()
-    {
-        xinit = yinit = zinit = 0;
-        xdim = ydim = zdim = 0;
-    }
-
-    /** Copy shape.
-     * @ingroup VolumesSizeShape
-     *
-     * Copy shape variables from a pattern AND THE ARRAY IS RESIZED
-     */
-    template<typename T1>
-    void copyShape(const maT1& v)
-    {
-        if (XSIZE(*this) != XSIZE(v) || YSIZE(*this) != YSIZE(v) ||
-            ZSIZE(*this) != ZSIZE(v))
-            resize(ZSIZE(v), YSIZE(v), XSIZE(v));
-
-        STARTINGX(*this) = STARTINGX(v);
-        STARTINGY(*this) = STARTINGY(v);
-        STARTINGZ(*this) = STARTINGZ(v);
-    }
-
-    /** Resize to a given size
-     * @ingroup VolumesSizeShape
-     *
-     * This function resize the actual array to the given size. The origin is
-     * not modified. If the actual array is larger than the pattern then the
-     * values outside the new size are lost, if it is smaller then 0's are
-     * added. An exception is thrown if there is no memory.
-     *
-     * @code
-     * V1.resize(3, 3, 2);
-     * @endcode
-     */
-    void resize(int Zdim, int Ydim, int Xdim)
-    {
-        if (Xdim == XSIZE(*this) && Ydim == YSIZE(*this) &&
-            Zdim == ZSIZE(*this))
-            return;
-
-        if (Xdim <= 0 || Ydim <= 0 || Zdim <= 0)
-        {
-            clear();
-            return;
-        }
-
-        // Ask for memory
-        T* new_m = new T [((long int)(Zdim)) *((long int)(Ydim)) *
-                          ((long int)(Xdim))];
-
-        if (new_m == NULL)
-            REPORT_ERROR(1001, "Resize: no memory left");
-
-        // Copy needed elements, fill with 0 if necessary
-        long int YXdim = ((long int)(Ydim)) * ((long int)(Xdim));
-
-        for (int k = 0; k < Zdim; k++)
-            for (int i = 0; i < Ydim; i++)
-                for (int j = 0; j < Xdim; j++)
-                {
-                    T val;
-                    if (k >= ZSIZE(*this))
-                        val = 0;
-                    else if (i >= YSIZE(*this))
-                        val = 0;
-                    else if (j >= XSIZE(*this))
-                        val = 0;
-                    else
-                        val = DIRECT_VOL_ELEM(*this, k, i, j);
-
-                    new_m[k * YXdim + Xdim * i + j] = val;
-                }
-
-        // deallocate old vector
-        core_deallocate();
-
-        // assign *this vector to the newly created
-        MULTIDIM_ARRAY(*this) = new_m;
-        XSIZE(*this) = Xdim;
-        YSIZE(*this) = Ydim;
-        ZSIZE(*this) = Zdim;
-        XYSIZE(*this) = YXdim;
-
-        size = Zdim * YXdim;
-    }
-
     /** Produce an array suitable for working with Numerical Recipes.
      * @ingroup VolumesSizeShape
      *
@@ -565,190 +344,50 @@ public:
         free_Tvolume(m, 1, ZSIZE(*this), 1, YSIZE(*this), 1, XSIZE(*this));
     }
 
+    /** Resize to a given size
+     * @ingroup VolumesSizeShape
+     */
+    void resize(int Zdim, int Ydim, int Xdim)
+    {
+    	MultidimArray<T>::resize(Zdim, Ydim, Xdim);
+    }
+
+    /** Resize taking the shape from another volume
+     * @ingroup VolumesSizeShape
+     */
+    template <typename T1>
+    void resize(const Matrix3D<T1> &M)
+    {
+    	MultidimArray<T>::resize(M);
+    }
+
     /** Outside.
      * @ingroup VolumesSizeShape
      *
      * TRUE if the logical index given is outside the definition region of this
      * array.
      */
-    bool outside(int k, int i, int j) const;
-
-    /** Set logical origin in Xmipp fashion.
-     * @ingroup VolumesSizeShape
-     *
-     * This function adjust the starting points in the volume such that the
-     * center of the volume is defined in the Xmipp fashion.
-     *
-     * @code
-     * V1.setXmippOrigin();
-     * @endcode
-     */
-    void setXmippOrigin()
+    bool outside(int k, int i, int j) const
     {
-        zinit = FIRST_XMIPP_INDEX(zdim);
-        yinit = FIRST_XMIPP_INDEX(ydim);
-        xinit = FIRST_XMIPP_INDEX(xdim);
+        return (j < STARTINGX(*this) || j > FINISHINGX(*this) ||
+                i < STARTINGY(*this) || i > FINISHINGY(*this) ||
+                k < STARTINGZ(*this) || k > FINISHINGZ(*this));
     }
 
-    /** Move origin to.
+    /** Outside
      * @ingroup VolumesSizeShape
      *
-     * This function adjust logical indexes such that the Xmipp origin of the
-     * array moves to the specified position. For instance, an array whose x
-     * indexes go from -1 to 1, if we move the origin to 4, then the x indexes
-     * go from 3 to 5. This is very useful for convolution operations where you
-     * only need to move the logical starting of the array.
-     *
+     * TRUE if the logical index given is outside the definition region of this
+     * array.
      */
-    void moveOriginTo(int k, int i, int j)
+    bool outside(const Matrix1D<double> &r) const
     {
-        zinit = k + FIRST_XMIPP_INDEX(zdim);
-        yinit = i + FIRST_XMIPP_INDEX(ydim);
-        xinit = j + FIRST_XMIPP_INDEX(xdim);
-    }
-
-    /** Sets the Z origin.
-     * @ingroup VolumesSizeShape
-     *
-     * The logical position of the first physical Z position is set with this
-     * function. By default the origin is 0 that is the standard convention in
-     * C.
-     *
-     * @code
-     * V.startingZ() = 0;
-     * @endcode
-     */
-    int& startingZ()
-    {
-        return zinit;
-    }
-
-    /** Another function for setting the Z origin.
-     * @ingroup VolumeSizeShape
-     */
-    void setStartingZ(int _zinit)
-    {
-        zinit = _zinit;
-    }
-
-    /** Returns the first valid logical Z index.
-     * @ingroup VolumesSizeShape
-     *
-     * @code
-     * int orgZ = V.startingZ();
-     * @endcode
-     */
-    int startingZ() const
-    {
-        return zinit;
-    }
-
-    /** Returns the last valid logical Z index.
-     * @ingroup VolumesSizeShape
-     *
-     * @code
-     * int finZ = V.finishingZ();
-     * @endcode
-     */
-    int finishingZ() const
-    {
-        return zinit + zdim - 1;
-    }
-
-    /** Sets the Y origin.
-     * @ingroup VolumesSizeShape
-     *
-     * The logical position of the first physical Y position is set with this
-     * function. By default the origin is 0 that is the standard convention in
-     * C.
-     *
-     * @code
-     * V.startingY = -2;
-     * @endcode
-     */
-    int& startingY()
-    {
-        return yinit;
-    }
-
-    /** Another function for setting the Y origin.
-     * @ingroup VolumesSizeShape
-     */
-    void setStartingY(int _yinit)
-    {
-        yinit = _yinit;
-    }
-
-    /** Returns the first valid logical Y index.
-     * @ingroup VolumesSizeShape
-     *
-     * @code
-     * int orgY = V.startingY();
-     * @endcode
-     */
-    int startingY() const
-    {
-        return yinit;
-    }
-
-    /** Returns the last valid logical Y index.
-     * @ingroup VolumesSizeShape
-     *
-     * @code
-     * int finY = V.finishingY();
-     * @endcode
-     */
-    int  finishingY() const
-    {
-        return yinit + ydim - 1;
-    }
-
-    /** Sets the X origin.
-     * @ingroup VolumesSizeShape
-     *
-     * The logical position of the first physical X position is set with this
-     * function. By default the origin is 0 that is the standard convention in
-     * C.
-     *
-     * @code
-     * V.startingX = -1;
-     * @endcode
-     */
-    int& startingX()
-    {
-        return xinit;
-    }
-
-    /** Another function for setting the X origin.
-     * @ingroup VolumesSizeShape
-     */
-    void setStartingX(int _xinit)
-    {
-        xinit = _xinit;
-    }
-
-    /** Returns the first valid logical X index.
-     * @ingroup VolumesSizeShape
-     *
-     * @code
-     * int orgX = V.startingX();
-     * @endcode
-     */
-    int startingX() const
-    {
-        return xinit;
-    }
-
-    /** Returns the last valid logical X index.
-     * @ingroup VolumesSizeShape
-     *
-     * @code
-     * int finX = V.finishingX();
-     * @endcode
-     */
-    int  finishingX() const
-    {
-        return xinit + xdim - 1;
+        if (XSIZE(r) < 3)
+            REPORT_ERROR(1, "Outside: index vector has not got enough components");
+    
+        return (XX(r) < STARTINGX(*this) || XX(r) > FINISHINGX(*this) ||
+                YY(r) < STARTINGY(*this) || YY(r) > FINISHINGY(*this) ||
+                ZZ(r) < STARTINGZ(*this) || ZZ(r) > FINISHINGZ(*this));
     }
 
     /** Returns the volume dimension.
@@ -762,56 +401,9 @@ public:
      */
     void getDimension(int& Ydim, int& Xdim, int& Zdim) const
     {
-        Xdim = xdim;
-        Ydim = ydim;
-        Zdim = zdim;
-    }
-
-    /** Returns Z dimension.
-     * @ingroup VolumesSizeShape
-     *
-     * @code
-     * int Zdim = V.sliceNumber();
-     * @endcode
-     */
-    int sliceNumber() const
-    {
-        return zdim;
-    }
-
-    /** Returns Y dimension.
-     * @ingroup VolumesSizeShape
-     *
-     * @code
-     * int Ydim = V.rowNumber();
-     * @endcode
-     */
-    int rowNumber() const
-    {
-        return ydim;
-    }
-
-    /** Returns X dimension.
-     * @ingroup VolumesSizeShape
-     *
-     * @code
-     * int Xdim = V.colNumber();
-     * @endcode
-     */
-    int colNumber() const
-    {
-        return xdim;
-    }
-
-    /** Same shape.
-     * @ingroup VolumesSizeShape
-     *
-     * Returns true if this object has got the same shape (origin and size)
-     * than the argument
-     */
-    bool sameShape(const VT& op) const
-    {
-        return SAME_SHAPE3D(*this, op);
+        Xdim = XSIZE(*this);
+        Ydim = YSIZE(*this);
+        Zdim = ZSIZE(*this);
     }
 
     /** @defgroup VolumesMemory Memory access
@@ -835,16 +427,19 @@ public:
      */
     T& operator()(int k, int i, int j) const
     {
-        if (k < zinit || k >= zinit + zdim)
-            REPORT_ERROR(1203,
-                         "Matrix3D::operator (): Matrix3D subscript (k) out of range");
+        if (k < STARTINGZ(*this) || k > FINISHINGZ(*this))
+            REPORT_ERROR(1203,static_cast< std::string > (
+                         "Matrix3D::operator (): Matrix3D subscript (k) out of range k=")+
+                         integerToString(k));
 
-        if (i < yinit || i >= yinit + ydim)
-            REPORT_ERROR(1203,
-                         "Matrix3D::operator (): Matrix3D subscript (i) out of range");
-        if (j < xinit || j >= xinit + xdim)
-            REPORT_ERROR(1203,
-                         "Matrix3D::operator (): Matrix3D subscript (j) out of range");
+        if (i < STARTINGY(*this) || i > FINISHINGY(*this))
+            REPORT_ERROR(1203,static_cast< std::string > (
+                         "Matrix3D::operator (): Matrix3D subscript (i) out of range i=")+
+                         integerToString(i));
+        if (j < STARTINGX(*this) || j > FINISHINGX(*this))
+            REPORT_ERROR(1203,static_cast< std::string > (
+                         "Matrix3D::operator (): Matrix3D subscript (j) out of range j=")+
+                         integerToString(j));
 
         return VOL_ELEM(*this, k, i, j);
     }
@@ -967,13 +562,11 @@ public:
 	    int equivalent_n=n;
 	    if      (n<0)             equivalent_n=-n-1;
 	    else if (n>=ZSIZE(*this)) equivalent_n=2*ZSIZE(*this)-n-1;
-            int plane_n = YSIZE(*this) * XSIZE(*this) * equivalent_n;
             double yxsum = 0.0;
             for (int m = m1; m <= m2; m++) {
 		int equivalent_m=m;
 		if      (m<0)             equivalent_m=-m-1;
 		else if (m>=YSIZE(*this)) equivalent_m=2*YSIZE(*this)-m-1;
-                int row_m = plane_n + XSIZE(*this) * equivalent_m;
                 double xsum = 0.0;
                 for (int l = l1; l <= l2; l++)
                 {
@@ -981,7 +574,8 @@ public:
 		    int equivalent_l=l;
 		    if      (l<0)             equivalent_l=-l-1;
 		    else if (l>=XSIZE(*this)) equivalent_l=2*XSIZE(*this)-l-1;
-                    double Coeff = (double) data[row_m + equivalent_l];
+                    double Coeff = (double) DIRECT_VOL_ELEM(*this,
+                        equivalent_n,equivalent_m,equivalent_l);
                     switch (SplineDegree)
                     {
                     case 2:
@@ -1074,58 +668,22 @@ public:
         return (T) zyxsum;
     }
 
-    /** Logical to physical index translation.
-     * @ingroup VolumesMemory
-     *
-     * This function returns the physical position of a logical one.
-     *
-     * @code
-     * m.toPhysical(k_log, i_log, j_log, k_phys, i_phys, j_phys);
-     * @endcode
-     */
-    void toPhysical(int k_log, int i_log, int j_log,
-                          int& k_phys, int& i_phys, int& j_phys) const
-    {
-        k_phys = k_log - zinit;
-        i_phys = i_log - yinit;
-        j_phys = j_log - xinit;
-    }
-
-    /** Physical to logical index translation.
-     * @ingroup VolumesMemory
-     *
-     * This function returns the logical position of a physical one.
-     *
-     * @code
-     * m.toLogical(i_phys, j_phys, i_log, j_log);
-     * @endcode
-     */
-    void toLogical(int k_phys, int i_phys, int j_phys,
-                          int& k_log, int& i_log, int& j_log) const
-    {
-        k_log = k_phys + zinit;
-        i_log = i_phys + yinit;
-        j_log = j_phys + xinit;
-    }
-
     /** Slice access for reading.
      * @ingroup VolumesMemory
      *
      * This function returns a slice (a matrix) corresponding to the choosen
      * slice inside matrix, the numbering of the slices is also logical not
-     * physical. By default slices are taken perpendicular to the Z axis,
-     * but you can specify different axis ('X' and 'Y'). When cutting slices
-     * the following axes conventions are followed.
+     * physical. This function differs from the previous one in that this one
+     * cuts and assign in a single step instead of in two steps, as in
+     * the previous example.
      *
      * @code
-     * Cut along Z axis       Y(2D)=Y(3D)    X(2D)=X(3D)
-     * Cut along Y axis       Y(2D)=Z(3D)    X(2D)=X(3D)
-     * Cut along X axis       Y(2D)=Z(3D)    X(2D)=-Y(3D)
+     * V.slice(0, m);
      * @endcode
      */
-    void getSlice(int k, mT& M, char axis = 'Z') const
+    void getSlice(int k, Matrix2D<T>& M, char axis = 'Z') const
     {
-        if (xdim == 0)
+        if (XSIZE(*this) == 0)
         {
             M.clear();
             return;
@@ -1134,38 +692,38 @@ public:
         switch (axis)
         {
         case 'Z':
-            if (k < zinit || k >= zinit + zdim)
+            if (k < STARTINGZ(*this) || k > FINISHINGZ(*this))
                 REPORT_ERROR(1203,
                              "Slice: Matrix3D subscript (k) out of range");
 
-            k = k - zinit;
-            M.resize(ydim, xdim);
+            k = k - STARTINGZ(*this);
+            M.resize(YSIZE(*this), XSIZE(*this));
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(M)
-            DIRECT_MAT_ELEM(M, i, j) = DIRECT_VOL_ELEM(*this, k, i, j);
+                DIRECT_MAT_ELEM(M, i, j) = DIRECT_VOL_ELEM(*this, k, i, j);
             STARTINGX(M) = STARTINGX(*this);
             STARTINGY(M) = STARTINGY(*this);
             break;
         case 'Y':
-            if (k < yinit || k >= yinit + ydim)
+            if (k < STARTINGY(*this) || k > FINISHINGY(*this))
                 REPORT_ERROR(1203,
                              "Slice: Matrix3D subscript (i) out of range");
 
-            k = k - yinit;
-            M.resize(zdim, xdim);
+            k = k - STARTINGY(*this);
+            M.resize(ZSIZE(*this), XSIZE(*this));
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(M)
-            DIRECT_MAT_ELEM(M, i, j) = DIRECT_VOL_ELEM(*this, i, k, j);
+                DIRECT_MAT_ELEM(M, i, j) = DIRECT_VOL_ELEM(*this, i, k, j);
             STARTINGX(M) = STARTINGX(*this);
             STARTINGY(M) = STARTINGZ(*this);
             break;
         case 'X':
-            if (k < xinit || k >= xinit + xdim)
+            if (k < STARTINGX(*this) || k > FINISHINGX(*this))
                 REPORT_ERROR(1203,
                              "Slice: Matrix3D subscript (j) out of range");
 
-            k = k - xinit;
-            M.resize(zdim, ydim);
+            k = k - STARTINGX(*this);
+            M.resize(ZSIZE(*this), YSIZE(*this));
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(M)
-            DIRECT_MAT_ELEM(M, i, j) = DIRECT_VOL_ELEM(*this, i, j, k);
+                DIRECT_MAT_ELEM(M, i, j) = DIRECT_VOL_ELEM(*this, i, j, k);
             STARTINGX(M) = STARTINGY(*this);
             STARTINGY(M) = STARTINGZ(*this);
             break;
@@ -1186,165 +744,299 @@ public:
      * V.setSlice(1, (V.slice(0)));
      * @endcode
      */
-    void setSlice(int k, const mT& v)
+    void setSlice(int k, const Matrix2D<T>& v)
     {
-        if (xdim == 0)
+        if (XSIZE(*this) == 0)
             return;
 
-        if (k < zinit || k >= zinit + zdim)
+        if (k < STARTINGZ(*this) || k > FINISHINGZ(*this))
             REPORT_ERROR(1203,
                          "setSlice: Matrix3D subscript (k) out of range");
 
-        if (v.rowNumber() != ydim || v.colNumber() != xdim)
+        if (v.rowNumber() != YSIZE(*this) || v.colNumber() != XSIZE(*this))
             REPORT_ERROR(1202,
                          "setSlice: Matrix3D dimensions different from the matrix ones");
 
-        k = k - zinit;
+        k = k - STARTINGZ(*this);
 
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(v)
-        DIRECT_VOL_ELEM(*this, k, i, j) = DIRECT_MAT_ELEM(v, i, j);
+            DIRECT_VOL_ELEM(*this, k, i, j) = DIRECT_MAT_ELEM(v, i, j);
+    }
+
+    /** Logical to physical index translation.
+     * @ingroup VolumesMemory
+     *
+     * This function returns the physical position of a logical one.
+     *
+     * @code
+     * m.toPhysical(k_log, i_log, j_log, k_phys, i_phys, j_phys);
+     * @endcode
+     */
+    void toPhysical(int k_log, int i_log, int j_log,
+                          int& k_phys, int& i_phys, int& j_phys) const
+    {
+        k_phys = k_log - STARTINGZ(*this);
+        i_phys = i_log - STARTINGY(*this);
+        j_phys = j_log - STARTINGX(*this);
+    }
+
+    /** Physical to logical index translation.
+     * @ingroup VolumesMemory
+     *
+     * This function returns the logical position of a physical one.
+     *
+     * @code
+     * m.toLogical(i_phys, j_phys, i_log, j_log);
+     * @endcode
+     */
+    void toLogical(int k_phys, int i_phys, int j_phys,
+                          int& k_log, int& i_log, int& j_log) const
+    {
+        k_log = k_phys + STARTINGZ(*this);
+        i_log = i_phys + STARTINGY(*this);
+        j_log = j_phys + STARTINGX(*this);
+    }
+
+    /// @defgroup VolumeOperators Operators
+    /// @ingroup Matrices
+
+    /** Assignment.
+     * @ingroup VolumeOperators
+     *
+     * You can build as complex assignment expressions as you like. Multiple
+     * assignment is allowed.
+     *
+     * @code
+     * v1 = v2 + v3;
+     * v1 = v2 = v3;
+     * @endcode
+     */
+    Matrix3D<T>& operator=(const Matrix3D<T>& op1)
+    {
+	if (&op1 != this)
+	{
+            resize(op1);
+            T* ptr=NULL;
+	    unsigned long int n;
+            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
+	    	*ptr=DIRECT_MULTIDIM_ELEM(op1,n);
+	}
+
+	return *this;
+    }
+
+    /** Unary minus.
+     * @ingroup VolumeOperators
+     *
+     * It is used to build arithmetic expressions. You can make a minus
+     * of anything as long as it is correct semantically.
+     */
+    Matrix3D<T> operator-() const
+    {
+        Matrix3D<T> tmp(*this);
+	T* ptr;
+	unsigned long int n;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(tmp,n,ptr)
+            *ptr = -(*ptr);
+        return tmp;
+    }
+
+    /** v3 = v1 + v2.
+     * @ingroup VolumeOperators
+     */
+    Matrix3D<T> operator+(const Matrix3D<T>& op1) const
+    {
+        Matrix3D<T> tmp;
+        arrayByArray(*this, op1, tmp, '+');
+        return tmp;
+    }
+
+    /** v3 = v1 - v2.
+     * @ingroup VolumeOperators
+     */
+    Matrix3D<T> operator-(const Matrix3D<T>& op1) const
+    {
+        Matrix3D<T> tmp;
+        arrayByArray(*this, op1, tmp, '-');
+        return tmp;
+    }
+
+    /** v3 = v1 * v2.
+     * @ingroup VolumeOperators
+     */
+    Matrix3D<T> operator*(const Matrix3D<T>& op1) const
+    {
+        Matrix3D<T> tmp;
+        arrayByArray(*this, op1, tmp, '*');
+        return tmp;
+    }
+
+    /** v3 = v1 / v2.
+     * @ingroup VolumeOperators
+     */
+    Matrix3D<T> operator/(const Matrix3D<T>& op1) const
+    {
+        Matrix3D<T> tmp;
+        arrayByArray(*this, op1, tmp, '/');
+        return tmp;
+    }
+
+    /** v3 += v2.
+     * @ingroup VolumeOperators
+     */
+    void operator+=(const Matrix3D<T>& op1)
+    {
+        arrayByArray(*this, op1, *this, '+');
+    }
+
+    /** v3 -= v2.
+     * @ingroup VolumeOperators
+     */
+    void operator-=(const Matrix3D<T>& op1)
+    {
+        arrayByArray(*this, op1, *this, '-');
+    }
+
+    /** v3 *= v2.
+     * @ingroup VolumeOperators
+     */
+    void operator*=(const Matrix3D<T>& op1)
+    {
+        arrayByArray(*this, op1, *this, '*');
+    }
+
+    /** v3 /= v2.
+     * @ingroup VolumeOperators
+     */
+    void operator/=(const Matrix3D<T>& op1)
+    {
+        arrayByArray(*this, op1, *this, '/');
+    }
+
+    /** v3 = v1 + k.
+     * @ingroup VolumeOperators
+     */
+    Matrix3D<T> operator+(T op1) const
+    {
+        Matrix3D<T> tmp;
+        arrayByScalar(*this, op1, tmp, '+');
+        return tmp;
+    }
+
+    /** v3 = v1 - k.
+     * @ingroup VolumeOperators
+     */
+    Matrix3D<T> operator-(T op1) const
+    {
+        Matrix3D<T> tmp;
+        arrayByScalar(*this, op1, tmp, '-');
+        return tmp;
+    }
+
+    /** v3 = v1 * k.
+     * @ingroup VolumeOperators
+     */
+    Matrix3D<T> operator*(T op1) const
+    {
+        Matrix3D<T> tmp;
+        arrayByScalar(*this, op1, tmp, '*');
+        return tmp;
+    }
+
+    /** v3 = v1 / k.
+     * @ingroup VolumeOperators
+     */
+    Matrix3D<T> operator/(T op1) const
+    {
+        Matrix3D<T> tmp;
+        arrayByScalar(*this, op1, tmp, '/');
+        return tmp;
+    }
+
+    /** v3 += k.
+     * @ingroup VolumeOperators
+     *
+     * This function is not ported to Python.
+     */
+
+    void operator+=(const T& op1)
+    {
+        arrayByScalar(*this, op1, *this, '+');
+    }
+
+    /** v3 -= k.
+     * @ingroup VolumeOperators
+     *
+     * This function is not ported to Python.
+     */
+    void operator-=(const T& op1)
+    {
+        arrayByScalar(*this, op1, *this, '-');
+    }
+
+    /** v3 *= k.
+     * @ingroup VolumeOperators
+     *
+     * This function is not ported to Python.
+     */
+    void operator*=(const T& op1)
+    {
+        arrayByScalar(*this, op1, *this, '*');
+    }
+
+    /** v3 /= k.
+     * @ingroup VolumeOperators
+     *
+     * This function is not ported to Python.
+     */
+    void operator/=(const T& op1)
+    {
+        arrayByScalar(*this, op1, *this, '/');
+    }
+
+    /** v3 = k + v2.
+     * @ingroup VolumeOperators
+     */
+    friend Matrix3D<T> operator+(T op1, const Matrix3D<T>& op2)
+    {
+        Matrix3D<T> tmp;
+        scalarByArray(op1, op2, tmp, '+');
+        return tmp;
+    }
+
+    /** v3 = k - v2.
+     * @ingroup VolumeOperators
+     */
+    friend Matrix3D<T> operator-(T op1, const Matrix3D<T>& op2)
+    {
+        Matrix3D<T> tmp;
+        scalarByArray(op1, op2, tmp, '-');
+        return tmp;
+    }
+
+    /** v3 = k * v2.
+     * @ingroup VolumeOperators
+     */
+    friend Matrix3D<T> operator*(T op1, const Matrix3D<T>& op2)
+    {
+        Matrix3D<T> tmp;
+        scalarByArray(op1, op2, tmp, '*');
+        return tmp;
+    }
+
+    /** v3 = k / v2
+     * @ingroup VolumeOperators
+     */
+    friend Matrix3D<T> operator/(T op1, const Matrix3D<T>& op2)
+    {
+        Matrix3D<T> tmp;
+        scalarByArray(op1, op2, tmp, '/');
+        return tmp;
     }
 
     /** @defgroup VolumesUtilites Utilities
      * @ingroup Volumes
      */
-
-    /** Operate with arrays.
-     * @ingroup VolumesUtilites
-     *
-     * This function must take two arrays of the same size, and operate element
-     * by element according to the operation required. This is the function
-     * which really implements the operations. Simple calls to it perform much
-     * faster than calls to the corresponding operators. Although it is
-     * supposed to be a hidden function not useable by normal programmers.
-     *
-     * It must be implemented in every Matrix module, this is so because
-     * of the Matrix2D, for which the multiplication is not a component by
-     * component multiplication but an algebraic one.
-     */
-    friend void arrayByArray(const maT& op1, const maT& op2, maT& result,
-                               char operation)
-    {
-        if (!op1.sameShape(op2))
-            REPORT_ERROR(1007,
-                         (std::string) "Array_by_array: different shapes (" +
-                         operation + ")");
-
-        if (operation == 'x')
-            operation = '*';
-
-        result.resize(op1);
-        coreArrayByArray(op1, op2, result, operation);
-    }
-
-    /** Reverse matrix values over X axis, keep in this object.
-     * @ingroup VolumesUtilites
-     *
-     * Maybe better with an example:
-     *
-     * @code
-     * slice 0
-     * [01 02 03          [07 08 09
-     *  04 05 06           04 05 06
-     *  07 08 09]          01 02 03]
-     *
-     * ----->
-     *
-     * slice 1
-     * [11 12 13          [17 18 19
-     *  14 15 16           14 15 16
-     *  17 18 19]          11 12 13]
-     * @endcode
-     *
-     */
-    void selfReverseX()
-    {
-        for (int k = 0; k < zdim; k++)
-            for (int i = 0; i < ydim; i++)
-                for (int j = 0; j <= (int)(xdim - 1) / 2; j++)
-                {
-                    T aux;
-                    if (k == 0 && i == 0)
-                        std::cout << "Changing " << j << " " << XSIZE(*this) - 1 - j
-                                  << std::endl;
-
-                    SWAP(DIRECT_VOL_ELEM(*this, k, i, j),
-                         DIRECT_VOL_ELEM(*this, k, i, XSIZE(*this) - 1 - j),
-                         aux);
-                }
-
-        STARTINGX(*this) = -FINISHINGX(*this);
-    }
-
-    /** Reverse matrix values over Y axis, keep in this object.
-     * @ingroup VolumesUtilites
-     *
-     * Maybe better with an example:
-     *
-     * @code
-     * slice 0
-     * [01 02 03          [03 02 01
-     *  04 05 06           06 05 04
-     *  07 08 09]          09 08 07]
-     *
-     * ----->
-     *
-     * slice 1
-     * [11 12 13          [13 12 11
-     *  14 15 16           16 15 14
-     *  17 18 19]          19 18 17]
-     * @endcode
-     *
-     */
-    void selfReverseY()
-    {
-        for (int k = 0; k < zdim; k++)
-            for (int i = 0; i <= (int)(ydim - 1) / 2; i++)
-                for (int j = 0; j < xdim; j++)
-                {
-                    T aux;
-                    SWAP(DIRECT_VOL_ELEM(*this, k, i, j),
-                         DIRECT_VOL_ELEM(*this, k, YSIZE(*this) - 1 - i, j),
-                         aux);
-                }
-
-        STARTINGY(*this) = -FINISHINGY(*this);
-    }
-
-    /** Reverse matrix values over Z axis, keep in this object.
-     * @ingroup VolumesUtilites
-     *
-     * Maybe better with an example:
-     *
-     * @code
-     * slice 0
-     * [01 02 03          [11 12 13
-     *  04 05 06           14 15 16
-     *  07 08 09]          17 18 19]
-     *
-     *  ----->
-     *
-     * slice 1
-     * [11 12 13          [01 02 03
-     *  14 15 16           04 05 06
-     *  17 18 19]          07 08 09]
-     * @endcode
-     *
-     */
-    void selfReverseZ()
-    {
-        for (int k = 0; k <= (int)(zdim - 1) / 2; k++)
-            for (int i = 0; i < ydim; i++)
-                for (int j = 0; j < xdim; j++)
-                {
-                    T aux;
-                    SWAP(DIRECT_VOL_ELEM(*this , k, i, j),
-                         DIRECT_VOL_ELEM(*this, ZSIZE(*this) - 1 - k, i, j),
-                         aux);
-                }
-
-        STARTINGZ(*this) = -FINISHINGZ(*this);
-    }
 
     /** Put a window to volume.
      * @ingroup VolumesUtilites
@@ -1375,7 +1067,7 @@ public:
      */
     void window(int z0, int y0, int x0, int zF, int yF, int xF, T init_value = 0)
     {
-        VT result(zF - z0 + 1, yF - y0 + 1, xF - x0 + 1);
+        Matrix3D<T> result(zF - z0 + 1, yF - y0 + 1, xF - x0 + 1);
         result.zinit = z0;
         result.yinit = y0;
         result.xinit = x0;
@@ -1383,14 +1075,40 @@ public:
         for (int k = z0; k <= zF; k++)
             for (int i = y0; i <= yF; i++)
                 for (int j = x0; j <= xF; j++)
-                    if ((k >= zinit && k <= zinit + zdim - 1) &&
-                        (i >= yinit && i <= yinit + ydim - 1) &&
-                        (j >= xinit && j <= xinit + xdim - 1))
+                    if ((k >= STARTINGZ(*this) && k <= FINISHINGZ(*this)) &&
+                        (i >= STARTINGY(*this) && i <= FINISHINGY(*this)) &&
+                        (j >= STARTINGX(*this) && j <= FINISHINGX(*this)))
                         VOL_ELEM(result, k, i, j) = VOL_ELEM(*this, k, i, j);
                     else
                         VOL_ELEM(result, k, i, j) = init_value;
 
         *this = result;
+    }
+
+    /** Computes the center of mass of a volume.
+     * @ingroup VolumesUtilites
+     */
+    void centerOfMass(Matrix1D< double >& center, void * mask=NULL)
+    {
+	center.initZeros(3);
+	double mass = 0;
+	Matrix3D< int >* imask = (Matrix3D< int >*) mask;
+
+	FOR_ALL_ELEMENTS_IN_MATRIX3D(*this)
+	{
+            if ((imask == NULL || VOL_ELEM(*imask, k, i, j)) &&
+		VOL_ELEM(*this, k, i, j) > 0)
+            {
+        	XX(center) += j * VOL_ELEM(*this, k, i, j);
+        	YY(center) += i * VOL_ELEM(*this, k, i, j);
+        	ZZ(center) += k * VOL_ELEM(*this, k, i, j);
+
+        	mass += VOL_ELEM(*this, k, i, j);
+            }
+	}
+
+	if (mass != 0)
+            center /= mass;
     }
 
     /** @defgroup VolumesGeometrical Geometrical Transformations
@@ -1473,14 +1191,14 @@ public:
      * applyGeometry(V2, A, V1);
      * @endcode
      */
-    friend void applyGeometry<>(VT& V2, Matrix2D< double > A,
-                             const VT& V1, bool inv, bool wrap);
+    friend void applyGeometry<>(Matrix3D<T>& V2, Matrix2D< double > A,
+                             const Matrix3D<T>& V1, bool inv, bool wrap);
 
     /** Apply geom with B-spline interpolation.
      * @ingroup VolumesGeometrical
      */
-    friend void applyGeometryBSpline<>(VT& V2, Matrix2D< double > A,
-                                     const VT& V1, int Splinedegree,
+    friend void applyGeometryBSpline<>(Matrix3D<T>& V2, Matrix2D< double > A,
+                                     const Matrix3D<T>& V1, int Splinedegree,
                                      bool inv, bool wrap, T outside);
 
     /** Self apply geom.
@@ -1490,7 +1208,7 @@ public:
      */
     void selfApplyGeometry(Matrix2D< double > A, bool inv, bool wrap)
     {
-        VT aux;
+        Matrix3D<T> aux;
         applyGeometry(aux, A, *this, inv, wrap);
         *this = aux;
     }
@@ -1501,7 +1219,7 @@ public:
     void selfApplyGeometryBSpline(Matrix2D< double > A, int SplineDegree,
                                  bool inv, bool wrap, T outside = 0)
     {
-        VT aux;
+        Matrix3D<T> aux;
         applyGeometryBSpline(aux, A, *this, SplineDegree, inv, wrap, outside);
         *this = aux;
     }
@@ -1517,7 +1235,8 @@ public:
      * V2 = V1.rotate(60);
      * @endcode
      */
-    void rotate(double ang, char axis, VT& result, bool wrap = DONT_WRAP) const
+    void rotate(double ang, char axis, Matrix3D<T>& result,
+        bool wrap = DONT_WRAP) const
     {
         Matrix2D< double > tmp = rotation3DMatrix(ang, axis);
         applyGeometry(result, tmp, *this, IS_NOT_INV, wrap);
@@ -1526,8 +1245,8 @@ public:
     /** Rotate a volume arounf system axis (BSpline).
      * @ingroup VolumesGeometrical
      */
-    void rotateBSpline(int Splinedegree, double ang, char axis, VT& result,
-                        bool wrap = DONT_WRAP, T outside = 0) const
+    void rotateBSpline(int Splinedegree, double ang, char axis,
+        Matrix3D<T>& result, bool wrap = DONT_WRAP, T outside = 0) const
     {
         Matrix2D< double > temp = rotation3DMatrix(ang, axis);
         applyGeometryBSpline(result, temp, *this, IS_NOT_INV, wrap, outside);
@@ -1538,7 +1257,7 @@ public:
      */
     void selfRotate(double ang, char axis, bool wrap = DONT_WRAP)
     {
-        VT aux;
+        Matrix3D<T> aux;
         rotate(ang, axis, aux, wrap);
         *this = aux;
     }
@@ -1549,7 +1268,7 @@ public:
     void selfRotateBSpline(int Splinedegree, double ang, char axis,
                              bool wrap = DONT_WRAP)
     {
-        VT aux;
+        Matrix3D<T> aux;
         rotateBSpline(Splinedegree, ang, axis, aux, wrap);
         *this = aux;
     }
@@ -1565,7 +1284,7 @@ public:
      * V2 = V1.rotate(60, vectorR3(1, 1, 1));
      * @endcode
      */
-    void rotate(double ang, const Matrix1D< double >& axis, VT& result,
+    void rotate(double ang, const Matrix1D< double >& axis, Matrix3D<T>& result,
                 bool wrap = DONT_WRAP) const
     {
         Matrix2D< double > tmp = rotation3DMatrix(ang, axis);
@@ -1576,7 +1295,7 @@ public:
      * @ingroup VolumesGeometrical
      */
     void rotateBSpline(int Splinedegree, double ang,
-                        const Matrix1D< double >& axis, VT& result,
+                        const Matrix1D< double >& axis, Matrix3D<T>& result,
                         bool wrap = DONT_WRAP, T outside = 0) const
     {
         Matrix2D< double > tmp = rotation3DMatrix(ang, axis);
@@ -1590,7 +1309,7 @@ public:
     void selfRotate(double ang, const Matrix1D< double >& v,
                      bool wrap = DONT_WRAP)
     {
-        VT aux;
+        Matrix3D<T> aux;
         rotate(ang, v, aux, wrap);
         *this = aux;
     }
@@ -1601,7 +1320,7 @@ public:
     void selfRotateBSpline(int Splinedegree, double ang,
                              const Matrix1D< double >& v, bool wrap = DONT_WRAP)
     {
-        VT aux;
+        Matrix3D<T> aux;
         rotateBSpline(Splinedegree, ang, v, aux, wrap);
         *this = aux;
     }
@@ -1617,7 +1336,8 @@ public:
      * V2 = V1.translate(vectorR3(0, 0, 2));
      * @endcode
      */
-    void translate(const Matrix1D< double >& v, VT& result, bool wrap = WRAP)
+    void translate(const Matrix1D< double >& v, Matrix3D<T>& result,
+        bool wrap = WRAP)
     const
     {
         Matrix2D< double > tmp = translation3DMatrix(v);
@@ -1628,7 +1348,7 @@ public:
      * @ingroup VolumesGeometrical
      */
     void translateBSpline(int Splinedegree, const Matrix1D< double >& v,
-                           VT& result, bool wrap = WRAP) const
+                           Matrix3D<T>& result, bool wrap = WRAP) const
     {
         Matrix2D< double > tmp = translation3DMatrix(v);
         applyGeometry(result, tmp, *this, IS_NOT_INV, wrap);
@@ -1639,7 +1359,7 @@ public:
      */
     void selfTranslate(const Matrix1D< double >& v, bool wrap = WRAP)
     {
-        VT aux;
+        Matrix3D<T> aux;
         translate(v, aux, wrap);
         *this = aux;
     }
@@ -1650,7 +1370,7 @@ public:
     void selfTranslateBSpline(int Splinedegree, const Matrix1D< double >& v,
                                 bool wrap = WRAP)
     {
-        VT aux;
+        Matrix3D<T> aux;
         translateBSpline(Splinedegree, v, aux, wrap);
         *this = aux;
     }
@@ -1663,7 +1383,7 @@ public:
      */
     void selfTranslateCenterOfMassToCenter(bool wrap = WRAP)
     {
-        setXmippOrigin();
+        MultidimArray<T>::setXmippOrigin();
         Matrix1D< double > center;
         centerOfMass(center);
         center *= -1;
@@ -1676,7 +1396,7 @@ public:
     void selfTranslateCenterOfMassToCenterBSpline(
         int Splinedegree, bool wrap = WRAP)
     {
-        setXmippOrigin();
+        MultidimArray<T>::setXmippOrigin();
         Matrix1D< double > center;
         centerOfMass(center);
         center *= -1;
@@ -1694,14 +1414,14 @@ public:
      * V2 = V1.scaleToSize(128, 128, 128);
      * @endcode
      */
-    void scaleToSize(int Zdim, int Ydim, int Xdim, VT& result) const
+    void scaleToSize(int Zdim, int Ydim, int Xdim, Matrix3D<T>& result) const
     {
         Matrix2D< double > tmp(4, 4);
         tmp.initIdentity();
 
-        DIRECT_MAT_ELEM(tmp, 0, 0) = (double) Xdim / (double) xdim;
-        DIRECT_MAT_ELEM(tmp, 1, 1) = (double) Ydim / (double) ydim;
-        DIRECT_MAT_ELEM(tmp, 2, 2) = (double) Zdim / (double) zdim;
+        DIRECT_MAT_ELEM(tmp, 0, 0) = (double) Xdim / (double) XSIZE(*this);
+        DIRECT_MAT_ELEM(tmp, 1, 1) = (double) Ydim / (double) YSIZE(*this);
+        DIRECT_MAT_ELEM(tmp, 2, 2) = (double) Zdim / (double) ZSIZE(*this);
 
         result.resize(Zdim, Ydim, Xdim);
 
@@ -1712,14 +1432,14 @@ public:
      * @ingroup VolumesGeometrical
      */
     void scaleToSizeBSpline(int Splinedegree, int Zdim, int Ydim, int Xdim,
-                               VT& result) const
+                               Matrix3D<T>& result) const
     {
         Matrix2D< double > tmp(4, 4);
         tmp.initIdentity();
 
-        DIRECT_MAT_ELEM(tmp, 0, 0) = (double) Xdim / (double) xdim;
-        DIRECT_MAT_ELEM(tmp, 1, 1) = (double) Ydim / (double) ydim;
-        DIRECT_MAT_ELEM(tmp, 2, 2) = (double) Zdim / (double) zdim;
+        DIRECT_MAT_ELEM(tmp, 0, 0) = (double) Xdim / (double) XSIZE(*this);
+        DIRECT_MAT_ELEM(tmp, 1, 1) = (double) Ydim / (double) YSIZE(*this);
+        DIRECT_MAT_ELEM(tmp, 2, 2) = (double) Zdim / (double) ZSIZE(*this);
 
         result.resize(Zdim, Ydim, Xdim);
 
@@ -1731,7 +1451,7 @@ public:
      */
     void selfScaleToSize(int Zdim, int Ydim, int Xdim)
     {
-        VT aux;
+        Matrix3D<T> aux;
         scaleToSize(Zdim, Ydim, Xdim, aux);
         *this = aux;
     }
@@ -1742,7 +1462,7 @@ public:
     void selfScaleToSizeBSpline(int Splinedegree,
                                     int Zdim, int Ydim, int Xdim)
     {
-        VT aux;
+        Matrix3D<T> aux;
         scaleToSizeBSpline(Splinedegree, Zdim, Ydim, Xdim, aux);
         *this = aux;
     }
@@ -1753,7 +1473,7 @@ public:
     void pyramidReduce(Matrix3D< double >& result, int levels = 1) const
     {
         Matrix3D< double > aux, aux2;
-        produceSplineCoefficients(aux, 3);
+        MultidimArray<T>::produceSplineCoefficients(aux, 3);
 
         for (int i = 0; i < levels; i++)
         {
@@ -1770,7 +1490,7 @@ public:
     void pyramidExpand(Matrix3D< double >& result, int levels = 1) const
     {
         Matrix3D< double > aux, aux2;
-        produceSplineCoefficients(aux, 3);
+        MultidimArray<T>::produceSplineCoefficients(aux, 3);
 
         for (int i = 0; i < levels; i++)
         {
@@ -1780,54 +1500,6 @@ public:
 
         aux2.produceImageFromSplineCoefficients(result, 3);
     }
-
-    /** Produce spline coefficients.
-     * @ingroup VolumesGeometrical
-     */
-#ifndef DBL_EPSILON
-#define DBL_EPSILON 1e-50
-#endif
-    void produceSplineCoefficients(Matrix3D< double >& coeffs, int SplineDegree = 3)
-    const
-    {
-        coeffs.initZeros(ZSIZE(*this), YSIZE(*this), XSIZE(*this));
-        STARTINGX(coeffs) = STARTINGX(*this);
-        STARTINGY(coeffs) = STARTINGY(*this);
-        STARTINGZ(coeffs) = STARTINGZ(*this);
-
-        int Status;
-        Matrix3D< double > aux;
-        type_cast(*this, aux);
-        ChangeBasisVolume(MULTIDIM_ARRAY(aux), MULTIDIM_ARRAY(coeffs),
-                          XSIZE(*this), YSIZE(*this), ZSIZE(*this),
-                          CardinalSpline, BasicSpline, SplineDegree,
-                          MirrorOffBounds, DBL_EPSILON, &Status);
-        if (Status)
-            REPORT_ERROR(1, "Matrix3D::produceSplineCoefficients: Error");
-    }
-
-    /** Produce image from B-spline coefficients.
-     * @ingroup VolumesGeometrical
-     */
-    void produceImageFromSplineCoefficients(
-        Matrix3D< double >& img, int SplineDegree = 3) const
-    {
-        img.initZeros(ZSIZE(*this), YSIZE(*this), XSIZE(*this));
-        STARTINGX(img) = STARTINGX(*this);
-        STARTINGY(img) = STARTINGY(*this);
-        STARTINGZ(img) = STARTINGZ(*this);
-
-        int Status;
-        Matrix3D< double > aux;
-        type_cast(*this, aux);
-        ChangeBasisVolume(MULTIDIM_ARRAY(aux), MULTIDIM_ARRAY(img),
-                          XSIZE(*this), YSIZE(*this), ZSIZE(*this),
-                          BasicSpline, CardinalSpline, SplineDegree,
-                          MirrorOnBounds, DBL_EPSILON, &Status);
-        if (Status)
-            REPORT_ERROR(1, "Matrix3D::produce_spline_img: Error");
-    }
-#undef DBL_EPSILON
 
     /** Expand a set of B-spline coefficients.
      * @ingroup VolumesGeometrical
@@ -1849,7 +1521,7 @@ public:
             REPORT_ERROR(1, "Unable to load the filter coefficients");
 
         Matrix3D< double > aux;
-        type_cast(*this, aux);
+        typeCast(*this, aux);
         expanded.resize(2 * ZSIZE(aux), 2 * YSIZE(aux), 2 * XSIZE(aux));
         Expand_3D(MULTIDIM_ARRAY(aux), XSIZE(aux), YSIZE(aux), ZSIZE(aux),
                   MULTIDIM_ARRAY(expanded), h, nh, IsCentered);
@@ -1875,7 +1547,7 @@ public:
             REPORT_ERROR(1, "Unable to load the filter coefficients");
 
         Matrix3D< double > aux;
-        type_cast(*this, aux);
+        typeCast(*this, aux);
 
         if (XSIZE(aux) % 2 != 0 && YSIZE(aux) % 2 != 0 && ZSIZE(aux) % 2 != 0)
             aux.resize(ZSIZE(aux - 1), YSIZE(aux) - 1, XSIZE(aux) - 1);
@@ -1918,17 +1590,19 @@ public:
             return;
         }
 
-        kmax = imax = jmax = 0;
-        T max = VOL_ELEM(*this, kmax, imax, jmax);
+        kmax = STARTINGZ(*this);
+        imax = STARTINGY(*this);
+        jmax = STARTINGX(*this);
+        T maxval = VOL_ELEM(*this, kmax, imax, jmax);
 
         FOR_ALL_ELEMENTS_IN_MATRIX3D(*this)
-        if (VOL_ELEM(*this, k, i, j) > max)
-        {
-            max = VOL_ELEM(*this, k, i, j);
-            kmax = k;
-            imax = i;
-            jmax = j;
-        }
+            if (VOL_ELEM(*this, k, i, j) > maxval)
+            {
+                maxval = VOL_ELEM(*this, k, i, j);
+                kmax = k;
+                imax = i;
+                jmax = j;
+            }
     }
 
     /** Minimum element.
@@ -1945,36 +1619,21 @@ public:
             return;
         }
 
-        kmin = imin = jmin = 0;
-        T min = VOL_ELEM(*this, kmin, imin, jmin);
+        kmin = STARTINGZ(*this);
+        imin = STARTINGY(*this);
+        jmin = STARTINGX(*this);
+        T minval = VOL_ELEM(*this, kmin, imin, jmin);
 
         FOR_ALL_ELEMENTS_IN_MATRIX3D(*this)
-        if (VOL_ELEM(*this, k, i, j) > min)
-        {
-            min = VOL_ELEM(*this, k, i, j);
-            kmin = k;
-            imin = i;
-            jmin = j;
-        }
+            if (VOL_ELEM(*this, k, i, j) > minval)
+            {
+                minval = VOL_ELEM(*this, k, i, j);
+                kmin = k;
+                imin = i;
+                jmin = j;
+            }
     }
 };
-
-#include "multidim_friends_implementation.h"
-
-// TODO Document
-template<>
-void coreArrayByScalar< std::complex< double > > (const maTC& op1,
-        const std::complex< double >& op2, maTC& result, char operation);
-
-// TODO Document
-template<>
-void coreScalarByArray< std::complex< double > > (const std::complex< double >& op1,
-        const maTC& op2, maTC& result, char operation);
-
-// TODO Document
-template<>
-void coreArrayByArray< std::complex< double> > (const maTC& op1, const maTC& op2,
-        maTC& result, char operation);
 
 /** @defgroup VolumesRelated Related functions
  * @ingroup Volumes
@@ -1985,6 +1644,22 @@ void coreArrayByArray< std::complex< double> > (const maTC& op1, const maTC& op2
 /** @defgroup VolumesMisc Miscellaneous
  * @ingroup VolumesRelated
  */
+
+/** Volume equality.
+ * @ingroup VolumesMisc */
+template<typename T>
+bool operator==(const Matrix3D<T>& op1, const Matrix3D<T>& op2)
+{
+    return op1.equal(op2);
+}
+
+/** Volume inequality.
+ * @ingroup VolumesMisc */
+template<typename T>
+bool operator!=(const Matrix3D<T>& op1, const Matrix3D<T>& op2)
+{
+    return !(op1==op2);
+}
 
 /** Reduce both volumes to a common size.
  * @ingroup VolumesMisc
@@ -2009,7 +1684,7 @@ void coreArrayByArray< std::complex< double> > (const maTC& op1, const maTC& op2
  * @endcode
  */
 template<typename T>
-void cutToCommonSize(VT& V1, VT& V2)
+void cutToCommonSize(Matrix3D<T>& V1, Matrix3D<T>& V2)
 {
     int z0 = XMIPP_MAX(STARTINGZ(V1), STARTINGZ(V2));
     int zF = XMIPP_MIN(FINISHINGZ(V1), FINISHINGZ(V2));
@@ -2083,7 +1758,7 @@ void radialAverage(const Matrix3D< T >& m,
 
     distances(7) = (int) floor(sqrt(x * x + y * y + z * z));
 
-    int dim = (int) CEIL(distances.compute_max()) + 1;
+    int dim = (int) CEIL(distances.computeMax()) + 1;
     if (rounding)
         dim++;
 
@@ -2117,66 +1792,23 @@ void radialAverage(const Matrix3D< T >& m,
 
     // Perform the mean
     FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_mean)
-    radial_mean(i) /= (T) radial_count(i);
+        radial_mean(i) /= (T) radial_count(i);
 }
 
-#undef maT
-#undef maT1
-
-/// Print shape
 template<typename T>
-void VT::printShape(std::ostream& out) const
-{
-    out << "Size(Z,Y,X): " << ZSIZE(*this) << "x" << YSIZE(*this) << "x"
-        << XSIZE(*this)
-        << " k=[" << STARTINGZ(*this) << ".." << FINISHINGZ(*this) << "]"
-        << " i=[" << STARTINGY(*this) << ".." << FINISHINGY(*this) << "]"
-        << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
-}
-
-// TODO Document
-template<typename T>
-void VT::getSize(int* size) const
-{
-    size[0] = xdim;
-    size[1] = ydim;
-    size[2] = zdim;
-}
-
-// TODO Document
-template<typename T>
-bool VT::outside(const Matrix1D< double >& v) const
-{
-    if (XSIZE(v) < 3)
-        REPORT_ERROR(1, "Outside: index vector has got not enough components");
-
-    return (XX(v) < STARTINGX(*this) || XX(v) > FINISHINGX(*this) ||
-            YY(v) < STARTINGY(*this) || YY(v) > FINISHINGY(*this) ||
-            ZZ(v) < STARTINGZ(*this) || ZZ(v) > FINISHINGZ(*this));
-}
-
-// TODO Document
-template<typename T>
-bool VT::outside(int k, int i, int j) const
-{
-    return (j < STARTINGX(*this) || j > FINISHINGX(*this) ||
-            i < STARTINGY(*this) || i > FINISHINGY(*this) ||
-            k < STARTINGZ(*this) || k > FINISHINGZ(*this));
-}
-
-// TODO Document
-template<typename T>
-std::ostream& operator<<(std::ostream& ostrm, const VT& v)
+std::ostream& operator<<(std::ostream& ostrm, const Matrix3D<T>& v)
 {
     if (v.xdim == 0)
         ostrm << "NULL Matrix3D\n";
     else
         ostrm << std::endl;
 
-    double max_val = ABS(MULTIDIM_ELEM(v , 0));
+    double max_val = ABS(DIRECT_VOL_ELEM(v , 0, 0, 0));
 
-    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v)
-    max_val = MAX(max_val, ABS(MULTIDIM_ELEM(v, i)));
+    T* ptr;
+    unsigned long int n;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v,n,ptr)
+    	max_val = XMIPP_MAX(max_val, ABS(*ptr));
 
     int prec = bestPrecision(max_val, 10);
 
@@ -2187,7 +1819,10 @@ std::ostream& operator<<(std::ostream& ostrm, const VT& v)
         {
             for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
             {
-                ostrm << floatToString((double) VOL_ELEM(v, k, i, j), 10, prec) << ' ';
+                if (typeid(T) == typeid(std::complex<double>))
+                    ostrm << DIRECT_VOL_ELEM(v, k, i, j) << ' ';
+                else
+                    ostrm << floatToString((double) DIRECT_VOL_ELEM(v, k, i, j), 10, prec) << ' ';
             }
             ostrm << std::endl;
         }
@@ -2196,11 +1831,10 @@ std::ostream& operator<<(std::ostream& ostrm, const VT& v)
     return ostrm;
 }
 
-// TODO Document
 //#define DEBUG
 template<typename T>
-void applyGeometry(VT& V2, Matrix2D< double > A, const VT& V1, bool inv,
-                bool wrap)
+void applyGeometry(Matrix3D<T>& V2, Matrix2D< double > A,
+    const Matrix3D<T>& V1, bool inv, bool wrap)
 {
     int m1, n1, o1, m2, n2, o2;
     double x, y, z, xp, yp, zp;
@@ -2253,15 +1887,14 @@ void applyGeometry(VT& V2, Matrix2D< double > A, const VT& V1, bool inv,
     maxzp = V1.zdim - cen_zp - 1;
 
 #ifdef DEBUG
-
     std::cout << "Geometry 2 center=("
-    << cen_z  << "," << cen_y  << "," << cen_x  << ")\n"
-    << "Geometry 1 center=("
-    << cen_zp << "," << cen_yp << "," << cen_xp << ")\n"
-    << "           min=("
-    << minzp  << "," << minyp  << "," << minxp  << ")\n"
-    << "           max=("
-    << maxzp  << "," << maxyp  << "," << maxxp  << ")\n"
+              << cen_z  << "," << cen_y  << "," << cen_x  << ")\n"
+              << "Geometry 1 center=("
+              << cen_zp << "," << cen_yp << "," << cen_xp << ")\n"
+              << "           min=("
+              << minzp  << "," << minyp  << "," << minxp  << ")\n"
+              << "           max=("
+              << maxzp  << "," << maxyp  << "," << maxxp  << ")\n"
     ;
 #endif
 
@@ -2364,12 +1997,12 @@ void applyGeometry(VT& V2, Matrix2D< double > A, const VT& V1, bool inv,
                     if (show_debug)
                     {
                         std::cout << "After wrapping(xp,yp,zp)= "
-                        << "(" << xp << "," << yp << "," << zp << ")\n";
+                                  << "(" << xp << "," << yp << "," << zp << ")\n";
                         std::cout << "(m1,n1,o1)-->(m2,n2,o2)="
-                        << "(" << m1 << "," << n1 << "," << o1 << ") "
-                        << "(" << m2 << "," << n2 << "," << o2 << ")\n";
+                                  << "(" << m1 << "," << n1 << "," << o1 << ") "
+                                  << "(" << m2 << "," << n2 << "," << o2 << ")\n";
                         std::cout << "(wx,wy,wz)="
-                        << "(" << wx << "," << wy << "," << wz << ")\n";
+                                  << "(" << wx << "," << wy << "," << wz << ")\n";
                     }
 #endif
 
@@ -2452,11 +2085,10 @@ void applyGeometry(VT& V2, Matrix2D< double > A, const VT& V1, bool inv,
 }
 #undef DEBUG
 
-// TODO Document
 //#define DEBUG
 template<typename T>
-void applyGeometryBSpline(VT& V2, Matrix2D< double > A, const VT& V1,
-                        int Splinedegree, bool inv, bool wrap, T outside)
+void applyGeometryBSpline(Matrix3D<T>& V2, Matrix2D< double > A,
+    const Matrix3D<T>& V1, int Splinedegree, bool inv, bool wrap, T outside)
 {
     int m1, n1, o1, m2, n2, o2;
     double x, y, z, xp, yp, zp;
@@ -2505,13 +2137,13 @@ void applyGeometryBSpline(VT& V2, Matrix2D< double > A, const VT& V1,
     maxzp = V1.zdim - cen_zp - 1;
 #ifdef DEBUG
     std::cout << "Geometry 2 center=("
-    << cen_z  << "," << cen_y  << "," << cen_x  << ")\n"
-    << "Geometry 1 center=("
-    << cen_zp << "," << cen_yp << "," << cen_xp << ")\n"
-    << "           min=("
-    << minzp  << "," << minyp  << "," << minxp  << ")\n"
-    << "           max=("
-    << maxzp  << "," << maxyp  << "," << maxxp  << ")\n"
+              << cen_z  << "," << cen_y  << "," << cen_x  << ")\n"
+              << "Geometry 1 center=("
+              << cen_zp << "," << cen_yp << "," << cen_xp << ")\n"
+              << "           min=("
+              << minzp  << "," << minyp  << "," << minxp  << ")\n"
+              << "           max=("
+              << maxzp  << "," << maxyp  << "," << maxxp  << ")\n"
     ;
 #endif
 
@@ -2614,35 +2246,7 @@ void applyGeometryBSpline(VT& V2, Matrix2D< double > A, const VT& V1,
         }
 }
 
-// TODO Document
-template<typename T>
-void VT::centerOfMass(Matrix1D< double >& center, void* mask)
-{
-    center.initZeros(3);
-    double mass = 0;
-    Matrix3D< int >* imask = (Matrix3D< int >*) mask;
-
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(*this)
-    {
-        if ((imask == NULL || VOL_ELEM(*imask, k, i, j)) &&
-	    VOL_ELEM(*this, k, i, j) > 0)
-        {
-            XX(center) += j * VOL_ELEM(*this, k, i, j);
-            YY(center) += i * VOL_ELEM(*this, k, i, j);
-            ZZ(center) += k * VOL_ELEM(*this, k, i, j);
-
-            mass += VOL_ELEM(*this, k, i, j);
-        }
-    }
-
-    if (mass != 0)
-        center /= mass;
-}
-
 // Specific instantiations for complexes
-template <>
-std::ostream& operator << (std::ostream& ostrm, const Matrix3D< std::complex<double> > & v);
-
 template<>
 std::complex<double> Matrix3D< std::complex< double> >::interpolatedElement(double x,
         double y, double z, std::complex< double > outside_value);

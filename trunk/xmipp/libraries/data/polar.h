@@ -813,7 +813,7 @@ void rotationalCorrelation(const Polar<std::complex<double> > &M1,
     // only true for even-valued whole-sizes!
     nsam_last = 2 * (nsam_last - 1);
     InverseFourierTransformHalf(Fsum,corr,nsam_last);
-    corr.setStartingX(0);
+    STARTINGX(corr)=0;
     angles.resize(nsam_last);
     for (int i = 0; i < nsam_last; i++)
 	angles(i)=(double)i*360./(nsam_last);

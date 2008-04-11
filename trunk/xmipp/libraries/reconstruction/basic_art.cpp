@@ -51,9 +51,9 @@ void Basic_ART_Parameters::default_values()
     WLS                = false;
     no_it              = 1;
     kappa_list.resize(1);
-    kappa_list.init_constant(0.5);
+    kappa_list.initConstant(0.5);
     lambda_list.resize(1);
-    lambda_list.init_constant(0.01);
+    lambda_list.initConstant(0.01);
     stop_at            = 0;
     basis.set_default();
     grid_relative_size = 1.41;
@@ -138,12 +138,12 @@ void Basic_ART_Parameters::default_values()
     WLS                = CHECK_PARAM("WLS"); \
     kappa_list  =  GET_VECTOR_PARAM("k",-1); \
     if (XSIZE(kappa_list)==0)                                              \
-    {kappa_list.resize(1); kappa_list.init_constant(0.5);}               \
+    {kappa_list.resize(1); kappa_list.initConstant(0.5);}               \
     no_it              = textToInteger(GET_PARAM_WITH_DEF("n",         "1"       )); \
     stop_at            = textToInteger(GET_PARAM_WITH_DEF("stop_at",   "0"       )); \
     lambda_list        =        GET_VECTOR_PARAM("l",         -1);          \
     if (XSIZE(lambda_list)==0)                                              \
-    {lambda_list.resize(1); lambda_list.init_constant(0.01);}               \
+    {lambda_list.resize(1); lambda_list.initConstant(0.01);}               \
     sampling           = textToFloat(GET_PARAM_WITH_DEF("sampling",  "1."        )); \
     sym_each           = textToInteger(GET_PARAM_WITH_DEF("sym_each",  "0"         )); \
     max_tilt           = textToFloat(GET_PARAM_WITH_DEF("max_tilt",  "10E6"      )); \
@@ -434,10 +434,12 @@ void sort_perpendicular(int numIMG, Recons_info *IMG_Inf,
             if (!VEC_ELEM(chosen, j))
             {
                 VEC_ELEM(product, j) +=
-                    ABS(dotProduct(v.Row(VEC_ELEM(ordered_list, i - 1)), v.Row(j)));
+                    ABS(dotProduct(v.Row(VEC_ELEM(ordered_list, i - 1)),
+		    	v.Row(j)));
                 if (N != -1 && i > N)
                     VEC_ELEM(product, j) -=
-                        ABS(dotProduct(v.Row(VEC_ELEM(ordered_list, i - N - 1)), v.Row(j)));
+                        ABS(dotProduct(v.Row(VEC_ELEM(ordered_list, i - N - 1)),
+			    v.Row(j)));
                 if (VEC_ELEM(product, j) < min_prod)
                 {
                     min_prod = VEC_ELEM(product, j);

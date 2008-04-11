@@ -155,10 +155,6 @@ bool Prog_centilt_prm::center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It,
         return true;
     }
     else return false;
-
-    Maux.core_deallocate();
-    Mcorr.core_deallocate();
-
 }
 
 // Main program  ===============================================================

@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
 
     myLast = myFirst + num_img_node - 1;
 
-    art_prm.ordered_list.startingX() = -myFirst;
+    STARTINGX(art_prm.ordered_list) = -myFirst;
 
     art_prm.no_it = 1;
 
@@ -265,7 +265,7 @@ int main(int argc, char *argv[])
 
             art_prm.numIMG = art_prm.block_size;
 
-            art_prm.ordered_list.startingX() = -myFirst;
+            STARTINGX(art_prm.ordered_list) = -myFirst;
 
             for (int ns = 0; ns < numsteps ; ns++)
             {
@@ -280,7 +280,7 @@ int main(int argc, char *argv[])
 
                 Basic_ART_iterations(art_prm, eprm, vol_basis, rank);
 
-                art_prm.ordered_list.startingX() -= art_prm.numIMG;
+                STARTINGX(art_prm.ordered_list) -= art_prm.numIMG;
 
                 processed += art_prm.numIMG;
 
@@ -317,7 +317,7 @@ int main(int argc, char *argv[])
 
             art_prm.parallel_mode = Basic_ART_Parameters::pCAV; // Another trick
 
-            art_prm.ordered_list.startingX() = -myFirst;
+            STARTINGX(art_prm.ordered_list) = -myFirst;
 
             for (int ns = 0; ns < numsteps ; ns++)
             {
@@ -352,53 +352,56 @@ int main(int argc, char *argv[])
                 }
                 cavk_it_t += MPI_Wtime() - cav_t;
 
-                for (int j = 0 ; j < vol_basis.VolumesNo() ; j++)
-                    vol_aux2(j)() = vol_basis(j)();
+                for (int jj = 0 ; jj < vol_basis.VolumesNo() ; jj++)
+                    vol_aux2(jj)() = vol_basis(jj)();
 
                 Basic_ART_iterations(art_prm, eprm, vol_basis, rank);
 
                 if (ns < (numsteps - 1))
                 {
-                    art_prm.ordered_list.startingX() -= art_prm.numIMG;
+                    STARTINGX(art_prm.ordered_list) -= art_prm.numIMG;
                     processed += art_prm.numIMG;
                 }
 
                 // All processors send their result and get the other's so all of them
                 // have the same volume for the next step.
 
-                for (int j = 0 ; j < vol_basis.VolumesNo() ; j++)
+                for (int jj = 0 ; jj < vol_basis.VolumesNo() ; jj++)
                 {
-                    vol_basis(j)() = vol_basis(j)() - vol_aux2(j)(); // Adapt result to parallel ennvironment from sequential routine
+                    vol_basis(jj)() = vol_basis(jj)() - vol_aux2(jj)(); // Adapt result to parallel ennvironment from sequential routine
                     MPI_Barrier(MPI_COMM_WORLD);
                     aux_comm_t = MPI_Wtime();
-                    MPI_Allreduce(MULTIDIM_ARRAY(vol_basis(j)()), MULTIDIM_ARRAY(vol_basis_aux(j)()), MULTIDIM_SIZE(vol_basis(j)()), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                    MPI_Allreduce(MULTIDIM_ARRAY(vol_basis(jj)()),
+                        MULTIDIM_ARRAY(vol_basis_aux(jj)()),
+                        MULTIDIM_SIZE(vol_basis(jj)()),
+                        MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                     aux_t = MPI_Wtime() - aux_comm_t;
                     comms_t += aux_t;
                     comms_t_it += aux_t;
 
-                    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(vol_basis(j)())
-                    if (MULTIDIM_ELEM(GVNeq_aux(j)(), i) == 0)
-                    {
-                        if (MULTIDIM_ELEM(vol_basis_aux(j)(), i) == 0)
+                    FOR_ALL_ELEMENTS_IN_MATRIX3D(vol_basis(jj)())
+                        if (VOL_ELEM(GVNeq_aux(jj)(), k, i, j) == 0)
                         {
-                            MULTIDIM_ELEM(vol_basis(j)(), i) = 0;
+                            if (VOL_ELEM(vol_basis_aux(jj)(), k, i, j) == 0)
+                            {
+                                VOL_ELEM(vol_basis(jj)(), k, i, j) = 0;
+                            }
+                            else
+                            {
+                                // This case should not happen as this element
+                                // is not affected by actual projections
+
+                                std::cerr << "Error with weights, contact developers!" << std::endl;
+                                exit(0);
+                            }
                         }
                         else
                         {
-                            // This case should not happen as this element
-                            // is not affected by actual projections
-
-                            std::cerr << "Error with weights, contact developers!" << std::endl;
-                            exit(0);
+                            VOL_ELEM(GVNeq_aux(jj)(), k, i, j) =
+                                VOL_ELEM(vol_aux2(jj)(), k, i, j) +
+                                VOL_ELEM(vol_basis_aux(jj)(), k, i, j) /
+                                VOL_ELEM(GVNeq_aux(jj)(), k, i, j);
                         }
-                    }
-                    else
-                    {
-                        MULTIDIM_ELEM(vol_basis(j)(), i) =
-                            MULTIDIM_ELEM(vol_aux2(j)(), i) +
-                            MULTIDIM_ELEM(vol_basis_aux(j)(), i) /
-                            MULTIDIM_ELEM(GVNeq_aux(j)(), i);
-                    }
                 }
             }
             art_prm.parallel_mode = Basic_ART_Parameters::pBiCAV; // trick undone
@@ -412,46 +415,48 @@ int main(int argc, char *argv[])
 
             art_prm.numIMG = num_img_node;
 
-            art_prm.ordered_list.startingX() = -myFirst;
+            STARTINGX(art_prm.ordered_list) = -myFirst;
 
             Basic_ART_iterations(art_prm, eprm, vol_basis, rank);
 
             // All processors send their result and get the other's so all of them
             // have the same volume for the next step.
-            for (int j = 0 ; j < vol_basis.VolumesNo() ; j++)
+            for (int jj = 0 ; jj < vol_basis.VolumesNo() ; jj++)
             {
-                vol_basis(j)() = vol_basis(j)() - vol_aux2(j)(); // Adapt result to parallel ennvironment from sequential routine
+                vol_basis(jj)() = vol_basis(jj)() - vol_aux2(jj)(); // Adapt result to parallel ennvironment from sequential routine
                 MPI_Barrier(MPI_COMM_WORLD);
                 aux_comm_t = MPI_Wtime();
-                MPI_Allreduce(MULTIDIM_ARRAY(vol_basis(j)()), MULTIDIM_ARRAY(vol_basis_aux(j)()), MULTIDIM_SIZE(vol_basis(j)()), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                MPI_Allreduce(MULTIDIM_ARRAY(vol_basis(jj)()),
+                    MULTIDIM_ARRAY(vol_basis_aux(jj)()),
+                    MULTIDIM_SIZE(vol_basis(jj)()),
+                    MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 aux_t = MPI_Wtime() - aux_comm_t;
                 comms_t += aux_t;
                 comms_t_it += aux_t;
 
-
-                FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(vol_basis(j)())
-                if (MULTIDIM_ELEM(GVNeq_aux(j)(), i) == 0)  // Division by 0
-                {
-                    if (MULTIDIM_ELEM(vol_basis_aux(j)(), i) == 0)
+                FOR_ALL_ELEMENTS_IN_MATRIX3D(vol_basis(jj)())
+                    if (VOL_ELEM(GVNeq_aux(jj)(), k, i, j) == 0)  // Division by 0
                     {
-                        MULTIDIM_ELEM(vol_basis(j)(), i) = 0;
+                        if (VOL_ELEM(vol_basis_aux(jj)(), k, i, j) == 0)
+                        {
+                            VOL_ELEM(vol_basis(jj)(), k, i, j) = 0;
+                        }
+                        else
+                        {
+                            // This case should not happen as this element
+                            // is not affected by actual projections
+
+                            std::cerr << "Error with weights, contact developers!" << std::endl;
+                            exit(0);
+                        }
                     }
                     else
                     {
-                        // This case should not happen as this element
-                        // is not affected by actual projections
-
-                        std::cerr << "Error with weights, contact developers!" << std::endl;
-                        exit(0);
+                        VOL_ELEM(vol_basis(jj)(), k, i, j) =
+                            VOL_ELEM(vol_aux2(jj)(), k, i, j) +
+                            VOL_ELEM(vol_basis_aux(jj)(), k, i, j) /
+                            VOL_ELEM(GVNeq_aux(jj)(), k, i, j);
                     }
-                }
-                else
-                {
-                    MULTIDIM_ELEM(vol_basis(j)(), i) =
-                        MULTIDIM_ELEM(vol_aux2(j)(), i) +
-                        MULTIDIM_ELEM(vol_basis_aux(j)(), i) /
-                        MULTIDIM_ELEM(GVNeq_aux(j)(), i);
-                }
             }
         }
         else
@@ -459,32 +464,35 @@ int main(int argc, char *argv[])
 
             art_prm.numIMG = num_img_node;
 
-            art_prm.ordered_list.startingX() = -myFirst;
+            STARTINGX(art_prm.ordered_list) = -myFirst;
 
             if (art_prm.parallel_mode == Basic_ART_Parameters::pSIRT ||
                 art_prm.parallel_mode == Basic_ART_Parameters::pfSIRT)
             {
-                for (int j = 0 ; j < vol_basis.VolumesNo() ; j++)
-                    vol_aux2(j)() = vol_basis(j)();
+                for (int jj = 0 ; jj < vol_basis.VolumesNo() ; jj++)
+                    vol_aux2(jj)() = vol_basis(jj)();
             }
 
             Basic_ART_iterations(art_prm, eprm, vol_basis, rank);
 
             // All processors send their result and get the other's so all of them
             // have the same volume for the next step.
-            for (int j = 0 ; j < vol_basis.VolumesNo() ; j++)
+            for (int jj = 0 ; jj < vol_basis.VolumesNo() ; jj++)
             {
                 // SIRT Alg. needs to store previous results but AVSP doesn't
                 if (art_prm.parallel_mode == Basic_ART_Parameters::pSIRT ||
                     art_prm.parallel_mode == Basic_ART_Parameters::pfSIRT)
                 {
-                    vol_basis(j)() = vol_basis(j)() - vol_aux2(j)(); // Adapt result to parallel ennvironment from sequential routine
+                    vol_basis(jj)() = vol_basis(jj)() - vol_aux2(jj)(); // Adapt result to parallel ennvironment from sequential routine
                 }
 
                 MPI_Barrier(MPI_COMM_WORLD);
                 aux_comm_t = MPI_Wtime();
 
-                MPI_Allreduce(MULTIDIM_ARRAY(vol_basis(j)()), MULTIDIM_ARRAY(vol_basis_aux(j)()), MULTIDIM_SIZE(vol_basis(j)()), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                MPI_Allreduce(MULTIDIM_ARRAY(vol_basis(jj)()),
+                    MULTIDIM_ARRAY(vol_basis_aux(jj)()),
+                    MULTIDIM_SIZE(vol_basis(jj)()),
+                    MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
                 aux_t = MPI_Wtime() - aux_comm_t;
                 comms_t += aux_t;
@@ -493,17 +501,17 @@ int main(int argc, char *argv[])
                 if (art_prm.parallel_mode == Basic_ART_Parameters::pfSIRT)
                 {
                     double norm_value = (double) num_img_tot;
-                    vol_basis(j)() = vol_aux2(j)() + (vol_basis_aux(j)() / norm_value);
+                    vol_basis(jj)() = vol_aux2(jj)() + (vol_basis_aux(jj)() / norm_value);
                 }
                 else if (art_prm.parallel_mode == Basic_ART_Parameters::pSIRT)
                 {
                     double norm_value = (double) num_img_tot * (double)(art_prm.ProjXdim() * art_prm.ProjYdim());
-                    vol_basis(j)() = vol_aux2(j)() + (vol_basis_aux(j)() / norm_value);
+                    vol_basis(jj)() = vol_aux2(jj)() + (vol_basis_aux(jj)() / norm_value);
                 }
                 else // ASS
                 {
-                    vol_basis(j)() = vol_basis_aux(j)();
-                    vol_basis(j)() /= size; // Non-SIRT Normalization
+                    vol_basis(jj)() = vol_basis_aux(jj)();
+                    vol_basis(jj)() /= size; // Non-SIRT Normalization
                 }
             }
         }

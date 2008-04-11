@@ -340,7 +340,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 	  if (prm.noisy_reconstruction) {
 	     init_random_generator(prm.IMG_Inf[iact_proj].seed);
 	     noisy_projection().resize(read_proj());
-	     noisy_projection().init_random(0,1,"gaussian");
+	     noisy_projection().initRandom(0,1,"gaussian");
              noisy_projection.moveOriginTo_center();
              noisy_projection.rot ()=prm.IMG_Inf[iact_proj].rot;
              noisy_projection.tilt()=prm.IMG_Inf[iact_proj].tilt;
@@ -448,20 +448,20 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
           } else if (act_proj%XMIPP_MAX(1,prm.numIMG/60)==0) progress_bar(act_proj);
 
           if (prm.tell&TELL_STATS) {
-             std::cout << "   read      ";   read_proj().print_stats();
-             std::cout << "\n   theo      "; theo_proj().print_stats();
-             std::cout << "\n   corr      "; corr_proj().print_stats();
-             std::cout << "\n   alig      "; alig_proj().print_stats();
-             std::cout << "\n   diff      "; diff_proj().print_stats();
-             std::cout << "\n   subvol(0) "; (*ptr_vol_out)(0)().print_stats();
+             std::cout << "   read      ";   read_proj().printStats();
+             std::cout << "\n   theo      "; theo_proj().printStats();
+             std::cout << "\n   corr      "; corr_proj().printStats();
+             std::cout << "\n   alig      "; alig_proj().printStats();
+             std::cout << "\n   diff      "; diff_proj().printStats();
+             std::cout << "\n   subvol(0) "; (*ptr_vol_out)(0)().printStats();
              std::cout << "\n";
           }
 
           if (prm.tell&TELL_SAVE_AT_EACH_STEP) {
-      	     std::cout << "Stats PPPdiff.xmp: "; diff_proj().print_stats(); std::cout << std::endl;
-      	     std::cout << "Stats PPPtheo.xmp: "; theo_proj().print_stats(); std::cout << std::endl;
-      	     std::cout << "Stats PPPread.xmp: "; read_proj().print_stats(); std::cout << std::endl;
-      	     std::cout << "Stats PPPcorr.xmp: "; corr_proj().print_stats(); std::cout << std::endl;
+      	     std::cout << "Stats PPPdiff.xmp: "; diff_proj().printStats(); std::cout << std::endl;
+      	     std::cout << "Stats PPPtheo.xmp: "; theo_proj().printStats(); std::cout << std::endl;
+      	     std::cout << "Stats PPPread.xmp: "; read_proj().printStats(); std::cout << std::endl;
+      	     std::cout << "Stats PPPcorr.xmp: "; corr_proj().printStats(); std::cout << std::endl;
              diff_proj.write("PPPdiff.xmp");
              theo_proj.write("PPPtheo.xmp");
              read_proj.write("PPPread.xmp");
@@ -471,7 +471,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
              vol_basis.write("PPPbasis.basis");
              prm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
                 Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
-      	     std::cout << "Stats PPPvol.vol : "; vol_voxels().print_stats(); std::cout << std::endl;
+      	     std::cout << "Stats PPPvol.vol : "; vol_voxels().printStats(); std::cout << std::endl;
              vol_voxels.write("PPPvol.vol");
 
 	     if (!iv_launched) {

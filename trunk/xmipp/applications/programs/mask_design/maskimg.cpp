@@ -524,7 +524,7 @@ bool maskImg::xmipp2Qt(ImageT<double> &_image)
         xmippImage = _image;
         // Creates a Qt Image to hold Xmipp Image
         QImage tmpImage(_image().colNumber(), _image().rowNumber(), 8, 256);
-        _image().range_adjust(0, 255);
+        _image().rangeAdjust(0, 255);
 
         // Sets Graylevel Palette.
         for (int i = 0; i < 256; i++)

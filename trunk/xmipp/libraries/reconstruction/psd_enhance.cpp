@@ -54,13 +54,13 @@ void Prog_Enhance_PSD_Parameters::usage()
 {
     Prog_parameters::usage();
     std::cerr << "  [-dont_center]            : By default, it is assumed that the image\n"
-    << "                              needs to be centered\n"
-    << "  [-dont_log]               : Don't take log10 before working\n"
-    << "  [-f1 <freq_low=0.05>]     : Low freq. for band pass filtration, max 0.5\n"
-    << "  [-f2 <freq_high=0.2>]     : High freq. for band pass filtration, max 0.5\n"
-    << "  [-decay <freq_decay=0.02>]: Decay for the transition bands\n"
-    << "  [-m1 <freq_low=0.025>]    : Low freq. for mask, max 0.5\n"
-    << "  [-m2 <freq_high=0.2>      : High freq. for mask, max 0.5\n"
+              << "                              needs to be centered\n"
+              << "  [-dont_log]               : Don't take log10 before working\n"
+              << "  [-f1 <freq_low=0.05>]     : Low freq. for band pass filtration, max 0.5\n"
+              << "  [-f2 <freq_high=0.2>]     : High freq. for band pass filtration, max 0.5\n"
+              << "  [-decay <freq_decay=0.02>]: Decay for the transition bands\n"
+              << "  [-m1 <freq_low=0.025>]    : Low freq. for mask, max 0.5\n"
+              << "  [-m2 <freq_high=0.2>      : High freq. for mask, max 0.5\n"
     ;
 }
 
@@ -69,12 +69,12 @@ void Prog_Enhance_PSD_Parameters::show()
 {
     Prog_parameters::show();
     std::cout << "Centering:    " << center      << std::endl
-    << "Log10:        " << take_log    << std::endl
-    << "Filter w1:    " << filter_w1   << std::endl
-    << "Filter w2:    " << filter_w2   << std::endl
-    << "Filter decay: " << decay_width << std::endl
-    << "Mask w1:      " << mask_w1     << std::endl
-    << "Mask w2:      " << mask_w2     << std::endl
+              << "Log10:        " << take_log    << std::endl
+              << "Filter w1:    " << filter_w1   << std::endl
+              << "Filter w2:    " << filter_w2   << std::endl
+              << "Filter decay: " << decay_width << std::endl
+              << "Mask w1:      " << mask_w1     << std::endl
+              << "Mask w2:      " << mask_w2     << std::endl
     ;
 }
 

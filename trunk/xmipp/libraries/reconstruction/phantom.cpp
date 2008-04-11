@@ -2007,7 +2007,7 @@ int Phantom::any_feature_intersects_sphere(const Matrix1D<double> &r,
 void Phantom::draw_in(Volume *V)
 {
     V->adapt_to_size(zdim, ydim, xdim);
-    (*V)().init_constant(Background_Density);
+    (*V)().initConstant(Background_Density);
     for (int i = 0; i < VF.size(); i++) VF[i]->draw_in(V);
 }
 

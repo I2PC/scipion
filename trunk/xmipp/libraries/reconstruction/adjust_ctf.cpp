@@ -100,7 +100,7 @@ int                    global_show;   // 0: Do not show
 
 /* Assign ctfmodel from a vector and viceversa ----------------------------- */
 void assign_CTF_from_parameters(double *p, XmippCTF &ctfmodel,
-                                int ia, int l, bool astigmatic_noise)
+                                int ia, int l, int modelSimplification)
 {
     ctfmodel.Tm = global_prm->Tm;
     if (ia <= 0 && l > 0)
@@ -184,27 +184,15 @@ void assign_CTF_from_parameters(double *p, XmippCTF &ctfmodel,
         l--;
     }        //     2
     if (ia <= 16 && l > 0)
-        if (astigmatic_noise)
-        {
-            ctfmodel.sqV           = p[16];
-            l--;
-        }   //     3 *
-        else
-        {
-            ctfmodel.sqV           = p[15];
-            l--;
-        }
+    {
+        ctfmodel.sqV           = p[16];
+        l--;
+    }   //     3 *
     if (ia <= 17 && l > 0)
-        if (astigmatic_noise)
-        {
-            ctfmodel.sqrt_angle    = p[17];
-            l--;
-        }   //     4 *
-        else
-        {
-            ctfmodel.sqrt_angle    = 0;
-            l--;
-        }
+    {
+        ctfmodel.sqrt_angle    = p[17];
+        l--;
+    }   //     4 *
     if (ia <= 18 && l > 0)
     {
         ctfmodel.gaussian_K     = p[18];
@@ -216,18 +204,18 @@ void assign_CTF_from_parameters(double *p, XmippCTF &ctfmodel,
         l--;
     }        //     6
     if (ia <= 20 && l > 0)
-        if (astigmatic_noise)
+        if (modelSimplification<3)
         {
             ctfmodel.sigmaV = p[20];
             l--;
-        }           //     7 *
+        }    //     7 *
         else
         {
             ctfmodel.sigmaV = p[19];
             l--;
         }
     if (ia <= 21 && l > 0)
-        if (astigmatic_noise)
+        if (modelSimplification<3)
         {
             ctfmodel.gaussian_angle = p[21];
             l--;
@@ -243,7 +231,7 @@ void assign_CTF_from_parameters(double *p, XmippCTF &ctfmodel,
         l--;
     }        //     9
     if (ia <= 23 && l > 0)
-        if (astigmatic_noise)
+        if (modelSimplification<3)
         {
             ctfmodel.cV            = p[23];
             l--;
@@ -264,47 +252,29 @@ void assign_CTF_from_parameters(double *p, XmippCTF &ctfmodel,
         l--;
     }        //    12
     if (ia <= 26 && l > 0)
-        if (astigmatic_noise)
-        {
-            ctfmodel.sigmaV2 = p[26];
-            l--;
-        }          //    13 *
-        else
-        {
-            ctfmodel.sigmaV2 = p[25];
-            l--;
-        }
+    {
+        ctfmodel.sigmaV2 = p[26];
+        l--;
+    }        //    13 *
     if (ia <= 27 && l > 0)
-        if (astigmatic_noise)
-        {
-            ctfmodel.gaussian_angle2 = p[27];
-            l--;
-        }  //    14 *
-        else
-        {
-            ctfmodel.gaussian_angle2 = 0;
-            l--;
-        }
+    {
+        ctfmodel.gaussian_angle2 = p[27];
+        l--;
+    }  //    14 *
     if (ia <= 28 && l > 0)
     {
         ctfmodel.cU2            = p[28];
         l--;
     }        //    15
     if (ia <= 29 && l > 0)
-        if (astigmatic_noise)
-        {
-            ctfmodel.cV2           = p[29];
-            l--;
-        }   //    16 *
-        else
-        {
-            ctfmodel.cV2           = p[28];
-            l--;
-        }
+    {
+        ctfmodel.cV2           = p[29];
+        l--;
+    }   //    16 *
 }
 
 void assign_parameters_from_CTF(XmippCTF &ctfmodel, double *p,
-                                int ia, int l, bool astigmatic_noise)
+                                int ia, int l, int modelSimplification)
 {
     if (ia <= 0 && l > 0)
     {
@@ -387,27 +357,15 @@ void assign_parameters_from_CTF(XmippCTF &ctfmodel, double *p,
         l--;
     }
     if (ia <= 16 && l > 0)
-        if (astigmatic_noise)
-        {
-            p[16] = ctfmodel.sqV;
-            l--;
-        }
-        else
-        {
-            p[16] = 0;
-            l--;
-        }
+    {
+        p[16] = ctfmodel.sqV;
+        l--;
+    }
     if (ia <= 17 && l > 0)
-        if (astigmatic_noise)
-        {
-            p[17] = ctfmodel.sqrt_angle;
-            l--;
-        }
-        else
-        {
-            p[17] = 0;
-            l--;
-        }
+    {
+        p[17] = ctfmodel.sqrt_angle;
+        l--;
+    }
     if (ia <= 18 && l > 0)
     {
         p[18] = ctfmodel.gaussian_K;
@@ -419,7 +377,7 @@ void assign_parameters_from_CTF(XmippCTF &ctfmodel, double *p,
         l--;
     }
     if (ia <= 20 && l > 0)
-        if (astigmatic_noise)
+        if (modelSimplification<3)
         {
             p[20] = ctfmodel.sigmaV;
             l--;
@@ -430,7 +388,7 @@ void assign_parameters_from_CTF(XmippCTF &ctfmodel, double *p,
             l--;
         }
     if (ia <= 21 && l > 0)
-        if (astigmatic_noise)
+        if (modelSimplification<3)
         {
             p[21] = ctfmodel.gaussian_angle;
             l--;
@@ -446,7 +404,7 @@ void assign_parameters_from_CTF(XmippCTF &ctfmodel, double *p,
         l--;
     }
     if (ia <= 23 && l > 0)
-        if (astigmatic_noise)
+        if (modelSimplification<3)
         {
             p[23] = ctfmodel.cV;
             l--;
@@ -467,49 +425,31 @@ void assign_parameters_from_CTF(XmippCTF &ctfmodel, double *p,
         l--;
     }
     if (ia <= 26 && l > 0)
-        if (astigmatic_noise)
-        {
-            p[26] = ctfmodel.sigmaV2;
-            l--;
-        }
-        else
-        {
-            p[26] = 0;
-            l--;
-        }
+    {
+        p[26] = ctfmodel.sigmaV2;
+        l--;
+    }
     if (ia <= 27 && l > 0)
-        if (astigmatic_noise)
-        {
-            p[27] = ctfmodel.gaussian_angle2;
-            l--;
-        }
-        else
-        {
-            p[27] = 0;
-            l--;
-        }
+    {
+        p[27] = ctfmodel.gaussian_angle2;
+        l--;
+    }
     if (ia <= 28 && l > 0)
     {
         p[28] = ctfmodel.cU2;
         l--;
     }
     if (ia <= 29 && l > 0)
-        if (astigmatic_noise)
-        {
-            p[29] = ctfmodel.cV2;
-            l--;
-        }
-        else
-        {
-            p[29] = 0;
-            l--;
-        }
+    {
+        p[29] = ctfmodel.cV2;
+        l--;
+    }
 }
 
 #define COPY_ctfmodel_TO_CURRENT_GUESS \
     assign_parameters_from_CTF(global_ctfmodel, \
-                               VEC_ARRAY(*global_adjust),0,ALL_CTF_PARAMETERS, \
-                               global_prm->astigmatic_noise);
+                               MULTIDIM_ARRAY(*global_adjust),0,ALL_CTF_PARAMETERS, \
+                               global_prm->modelSimplification);
 
 /* Read parameters --------------------------------------------------------- */
 void Adjust_CTF_Parameters::read(const FileName &fn_param)
@@ -525,9 +465,9 @@ void Adjust_CTF_Parameters::read(const FileName &fn_param)
     show_optimization = checkParameter(fh_param, "show_optimization");
     min_freq = textToFloat(getParameter(fh_param, "min_freq", 0, "0.03"));
     max_freq = textToFloat(getParameter(fh_param, "max_freq", 0, "0.35"));
-    astigmatic_noise = !checkParameter(fh_param, "radial_noise");
     defocus_range = textToFloat(getParameter(fh_param, "defocus_range", 0, "8000"));
     initial_Ca = textToFloat(getParameter(fh_param, "initial_Ca", 0, "2"));
+    modelSimplification = textToInteger(getParameter(fh_param, "model_simplification", 0, "0"));
 
     ctfmodelSize = textToInteger(getParameter(fh_param, "ctfmodelSize", 0, "128"));
 
@@ -568,15 +508,15 @@ void Adjust_CTF_Parameters::write(const FileName &fn_prm, bool rewrite)
     if (fn_similar_model != "")
         fh_param << "similar_model="     << fn_similar_model        << std::endl;
     fh_param << "min_freq="             << min_freq                << std::endl
-    << "max_freq="             << max_freq                << std::endl;
+             << "max_freq="             << max_freq                << std::endl;
     fh_param << "defocus_range="        << defocus_range           << std::endl;
     fh_param << "initial_Ca="           << initial_Ca              << std::endl;
     if (show_optimization)  fh_param    << "show_optimization=yes\n";
-    if (!astigmatic_noise)  fh_param    << "radial_noise=yes\n";
     fh_param << "ctfmodelSize="         << ctfmodelSize            << std::endl;
     fh_param << "enhance_min_freq="     << f1                      << std::endl
-    << "enhance_max_freq="     << f2                      << std::endl
-    << "enhance_weight="       << enhanced_weight         << std::endl;
+             << "enhance_max_freq="     << f2                      << std::endl
+             << "enhance_weight="       << enhanced_weight         << std::endl
+             << "model_simplification=" << modelSimplification     << std::endl;
 
     fh_param << initial_ctfmodel << std::endl;
     fh_param.close();
@@ -585,18 +525,18 @@ void Adjust_CTF_Parameters::write(const FileName &fn_prm, bool rewrite)
 /* Show -------------------------------------------------------------------- */
 void Adjust_CTF_Parameters::show()
 {
-    std::cout << "CTF file:           " << fn_psd              << std::endl
-	 << "Similar model:      " << fn_similar_model    << std::endl
-	 << "Min Freq.:          " << min_freq            << std::endl
-	 << "Max Freq.:          " << max_freq            << std::endl
-	 << "Sampling:           " << Tm                  << std::endl
-	 << "Radial noise:       " << !astigmatic_noise   << std::endl
-	 << "Defocus range:      " << defocus_range       << std::endl
-	 << "Initial Ca:         " << initial_Ca          << std::endl
-	 << "ctfmodelSize:       " << ctfmodelSize        << std::endl
-	 << "Enhance min freq:   " << f1                  << std::endl
- 	 << "Enhance max freq:   " << f2                  << std::endl
-	 << "Starting:\n"          << initial_ctfmodel    << std::endl
+    std::cout << "CTF file:            " << fn_psd              << std::endl
+	 << "Similar model:       " << fn_similar_model    << std::endl
+	 << "Min Freq.:           " << min_freq            << std::endl
+	 << "Max Freq.:           " << max_freq            << std::endl
+	 << "Sampling:            " << Tm                  << std::endl
+	 << "Defocus range:       " << defocus_range       << std::endl
+	 << "Initial Ca:          " << initial_Ca          << std::endl
+	 << "ctfmodelSize:        " << ctfmodelSize        << std::endl
+	 << "Enhance min freq:    " << f1                  << std::endl
+ 	 << "Enhance max freq:    " << f2                  << std::endl
+         << "Model simplification:" << modelSimplification << std::endl
+	 << "Starting:\n"           << initial_ctfmodel    << std::endl
     ;
 }
 
@@ -620,8 +560,12 @@ void Adjust_CTF_Parameters::Usage()
     << "   [radial_noise=yes|no]       : By default, noise is astigmatic\n"
     << "   [ctfmodelSize=128]          : Size for the ctfmodel\n"
     << "   [enhance_min_freq=<f=0.02>] : Normalized to 0.5\n"
-    << "   [enhance_max_freq=<f=0.15>]  : Normalized to 0.5\n"
+    << "   [enhance_max_freq=<f=0.15>] : Normalized to 0.5\n"
     << "   [enhance_weight=<w=5>]      : Weight of the enhanced term\n"
+    << "   [model_simplification=<s=0>]: 0 (no simplification)\n"
+    << "                                 1 (simplified envelope)\n"
+    << "                                 2 (last Gaussian removal)\n"
+    << "                                 3 (symmetric intermediate Gaussian)\n"
     ;
 }
 
@@ -629,7 +573,7 @@ void Adjust_CTF_Parameters::Usage()
 void Adjust_CTF_Parameters::produce_side_info()
 {
     adjust.resize(ALL_CTF_PARAMETERS);
-    assign_parameters_from_CTF(initial_ctfmodel, VEC_ARRAY(adjust), 0,
+    assign_parameters_from_CTF(initial_ctfmodel, MULTIDIM_ARRAY(adjust), 0,
                                ALL_CTF_PARAMETERS, true);
 
     // Read the CTF file, supposed to be the uncentered squared amplitudes
@@ -700,16 +644,16 @@ void Adjust_CTF_Parameters::produce_side_info()
 
     // Divide by the number of count at each frequency
     // and mask between min_freq and max_freq
-    double max_val = enhanced_ctftomodel().compute_max();
+    double max_val = enhanced_ctftomodel().computeMax();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(global_mask)
-    if (!global_mask(i, j)) enhanced_ctftomodel(i, j) = max_val;
-    double min_val = enhanced_ctftomodel().compute_min();
+    	if (!global_mask(i, j)) enhanced_ctftomodel(i, j) = max_val;
+    double min_val = enhanced_ctftomodel().computeMin();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(global_mask)
-    if (!global_mask(i, j)) enhanced_ctftomodel(i, j) = min_val;
+    	if (!global_mask(i, j)) enhanced_ctftomodel(i, j) = min_val;
     Matrix2D<double> aux;
     median_filter3x3(enhanced_ctftomodel(), aux);
     enhanced_ctftomodel() = aux;
-    enhanced_ctftomodel().range_adjust(0, enhanced_weight);
+    enhanced_ctftomodel().rangeAdjust(0, enhanced_weight);
 
     FourierMask Filter;
     Filter.FilterShape = RAISED_COSINE;
@@ -729,8 +673,8 @@ void generate_model_so_far(ImageXmipp &I, bool apply_log = false)
     Matrix1D<int>    idx(2);  // Indexes for Fourier plane
     Matrix1D<double> freq(2); // Frequencies for Fourier plane
 
-    assign_CTF_from_parameters(VEC_ARRAY(*global_adjust), global_ctfmodel,
-                               0, ALL_CTF_PARAMETERS, global_prm->astigmatic_noise);
+    assign_CTF_from_parameters(MULTIDIM_ARRAY(*global_adjust), global_ctfmodel,
+                               0, ALL_CTF_PARAMETERS, global_prm->modelSimplification);
     global_ctfmodel.Produce_Side_Info();
 
     I().resize(*f);
@@ -867,11 +811,11 @@ void Adjust_CTF_Parameters::generate_model_quadrant(int Ydim, int Xdim,
 
     // Scale and remove negative values because of the interpolation
     model.selfScaleToSizeBSpline(3, Ydim, Xdim);
-    model.range_adjust(0, 1);
+    model.rangeAdjust(0, 1);
 
     // Generate the CTF model
-    assign_CTF_from_parameters(VEC_ARRAY(*global_adjust), global_ctfmodel,
-                               0, ALL_CTF_PARAMETERS, global_prm->astigmatic_noise);
+    assign_CTF_from_parameters(MULTIDIM_ARRAY(*global_adjust), global_ctfmodel,
+                               0, ALL_CTF_PARAMETERS, global_prm->modelSimplification);
     global_ctfmodel.Produce_Side_Info();
     // Write the two model quadrants
     double minval = 1e38;
@@ -914,11 +858,11 @@ void Adjust_CTF_Parameters::generate_model_halfplane(int Ydim, int Xdim,
 
     // Scale and remove negative values because of the interpolation
     model.selfScaleToSizeBSpline(3, Ydim, Xdim);
-    model.range_adjust(0, 1);
+    model.rangeAdjust(0, 1);
 
     // The left part is the CTF model
-    assign_CTF_from_parameters(VEC_ARRAY(*global_adjust), global_ctfmodel,
-                               0, CTF_PARAMETERS, global_prm->astigmatic_noise);
+    assign_CTF_from_parameters(MULTIDIM_ARRAY(*global_adjust), global_ctfmodel,
+                               0, CTF_PARAMETERS, global_prm->modelSimplification);
     global_ctfmodel.Produce_Side_Info();
 
     double minval = 1e38;
@@ -961,7 +905,7 @@ double CTF_fitness(double *p)
     case 0:
         assign_CTF_from_parameters(p - FIRST_SQRT_PARAMETER + 1,
                                    global_ctfmodel, FIRST_SQRT_PARAMETER, SQRT_CTF_PARAMETERS,
-                                   global_prm->astigmatic_noise);
+                                   global_prm->modelSimplification);
         if (global_show >= 2)
         {
             std::cout << "Input vector:";
@@ -972,7 +916,7 @@ double CTF_fitness(double *p)
     case 1:
         assign_CTF_from_parameters(p - FIRST_SQRT_PARAMETER + 1,
                                    global_ctfmodel, FIRST_SQRT_PARAMETER, BACKGROUND_CTF_PARAMETERS,
-                                   global_prm->astigmatic_noise);
+                                   global_prm->modelSimplification);
         if (global_show >= 2)
         {
             std::cout << "Input vector:";
@@ -983,7 +927,7 @@ double CTF_fitness(double *p)
     case 2:
         assign_CTF_from_parameters(p - FIRST_ENVELOPE_PARAMETER + 1,
                                    global_ctfmodel, FIRST_ENVELOPE_PARAMETER, ENVELOPE_PARAMETERS,
-                                   global_prm->astigmatic_noise);
+                                   global_prm->modelSimplification);
         if (global_show >= 2)
         {
             std::cout << "Input vector:";
@@ -994,7 +938,7 @@ double CTF_fitness(double *p)
     case 3:
         assign_CTF_from_parameters(p - FIRST_DEFOCUS_PARAMETER + 1,
                                    global_ctfmodel, FIRST_DEFOCUS_PARAMETER, DEFOCUS_PARAMETERS,
-                                   global_prm->astigmatic_noise);
+                                   global_prm->modelSimplification);
         if (global_show >= 2)
         {
             std::cout << "Input vector:";
@@ -1005,7 +949,7 @@ double CTF_fitness(double *p)
     case 4:
         assign_CTF_from_parameters(p - 0 + 1,
                                    global_ctfmodel, 0, CTF_PARAMETERS,
-                                   global_prm->astigmatic_noise);
+                                   global_prm->modelSimplification);
         if (global_show >= 2)
         {
             std::cout << "Input vector:";
@@ -1016,7 +960,7 @@ double CTF_fitness(double *p)
     case 5:
         assign_CTF_from_parameters(p - 0 + 1,
                                    global_ctfmodel, 0, ALL_CTF_PARAMETERS,
-                                   global_prm->astigmatic_noise);
+                                   global_prm->modelSimplification);
         if (global_show >= 2)
         {
             std::cout << "Input vector:";
@@ -1330,12 +1274,9 @@ void estimate_background_sqrt_parameters()
     double fitness;
     Matrix1D<double> steps;
     steps.resize(SQRT_CTF_PARAMETERS);
-    steps.init_constant(0);
+    steps.initConstant(0);
     steps(0) = steps(1) = steps(2) = 1;
-    if (global_prm->astigmatic_noise)
-    {
-        steps(3) = steps(4) = 1;
-    }
+    steps(3) = steps(4) = 1;
 
     // Optimize without penalization
     if (global_prm->show_optimization)
@@ -1735,10 +1676,12 @@ void estimate_envelope_parameters()
     double fitness;
     Matrix1D<double> steps;
     steps.resize(ENVELOPE_PARAMETERS);
-    steps.init_constant(1);
+    steps.initConstant(1);
     steps(1) = 0; // Do not optimize Cs
     steps(5) = 0; // Do not optimize for alpha, since Ealpha depends on the
-    // defocus
+                  // defocus
+    if (global_prm->modelSimplification>=1)
+        steps(6) = steps(7) = 0; // Do not optimize DeltaF and DeltaR
     powellOptimizer(*global_adjust, FIRST_ENVELOPE_PARAMETER + 1, ENVELOPE_PARAMETERS,
                      &CTF_fitness, 0.05, fitness, iter, steps,
                      global_prm->show_optimization);
@@ -1827,14 +1770,14 @@ void estimate_defoci()
 
     double K_so_far = global_ctfmodel.K;
     Matrix1D<double> steps(DEFOCUS_PARAMETERS);
-    steps.init_constant(1);
+    steps.initConstant(1);
     steps(3) = 0; // Do not optimize kV
     steps(4) = 0; // Do not optimize K
     for (double defocusStep = initial_defocusStep; defocusStep >= XMIPP_MIN(8000, global_prm->defocus_range); defocusStep /= 2)
     {
         error.resize(CEIL((defocusV0 - defocusVF) / defocusStep + 1),
                      CEIL((defocusU0 - defocusUF) / defocusStep + 1));
-        error.init_constant(global_heavy_penalization);
+        error.initConstant(global_heavy_penalization);
         if (global_prm->show_optimization)
             std::cout << "V=[" << defocusV0 << "," << defocusVF << "]\n"
             << "U=[" << defocusU0 << "," << defocusUF << "]\n"
@@ -1882,12 +1825,12 @@ void estimate_defoci()
                             if (global_prm->show_optimization)
                             {
                                 std::cout << "    (DefocusU,DefocusV)=(" << defocusU << ","
-                                << defocusV << "), ang=" << angle
-                                << " --> (" << global_ctfmodel.DeltafU << ","
-                                << global_ctfmodel.DeltafV << "),"
-                                << global_ctfmodel.azimuthal_angle
-                                << " K=" << global_ctfmodel.K
-                                << " error=" << error(i, j) << std::endl;
+                                          << defocusV << "), ang=" << angle
+                                          << " --> (" << global_ctfmodel.DeltafU << ","
+                                          << global_ctfmodel.DeltafV << "),"
+                                          << global_ctfmodel.azimuthal_angle
+                                          << " K=" << global_ctfmodel.K
+                                          << " error=" << error(i, j) << std::endl;
 #ifdef DEBUG
                                 ImageXmipp save;
                                 save() = global_prm->enhanced_ctftomodel();
@@ -2021,7 +1964,7 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, XmippCTF &output_ctfmodel,
     global_adjust = &prm.adjust;
     global_penalize = false;
     global_max_gauss_freq = 0;
-    global_heavy_penalization = f->compute_max() * XSIZE(*f) * YSIZE(*f);
+    global_heavy_penalization = f->computeMax() * XSIZE(*f) * YSIZE(*f);
     global_show = 0;
 
     // Some variables needed by all steps
@@ -2050,9 +1993,9 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, XmippCTF &output_ctfmodel,
     global_penalize = true;
     global_current_penalty = global_penalty;
     steps.resize(BACKGROUND_CTF_PARAMETERS);
-    steps.init_constant(1);
-    if (!global_prm->astigmatic_noise)
-        steps(3) = steps(4) = steps(7) = steps(8) = steps(10) = 0;
+    steps.initConstant(1);
+    if (!global_prm->modelSimplification>=3)
+        steps(7) = steps(8) = steps(10) = 0;
     powellOptimizer(*global_adjust, FIRST_SQRT_PARAMETER + 1,
                      BACKGROUND_CTF_PARAMETERS, &CTF_fitness,
                      0.01, fitness, iter, steps, global_prm->show_optimization);
@@ -2112,13 +2055,15 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, XmippCTF &output_ctfmodel,
     global_action = 4;
 
     steps.resize(CTF_PARAMETERS);
-    steps.init_constant(1);
+    steps.initConstant(1);
     steps(3) = 0; // kV
     steps(5) = 0; // The spherical aberration (Cs) is not optimized
     if (prm.initial_ctfmodel.Q0 != 0)
         steps(12) = 0; // Q0
-    if (!global_prm->astigmatic_noise)
-        steps(16) = steps(17) = steps(20) = steps(21) = steps(23) = 0;
+    if (!global_prm->modelSimplification>=3)
+        steps(20) = steps(21) = steps(23) = 0;
+    if (prm.modelSimplification>=1)
+        steps(10) = steps(11) = 0;
     powellOptimizer(*global_adjust, 0 + 1,
                      CTF_PARAMETERS, &CTF_fitness,
                      0.01, fitness, iter, steps, global_prm->show_optimization);
@@ -2135,17 +2080,22 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, XmippCTF &output_ctfmodel,
       STEPs 9, 10 and 11: all parameters included second Gaussian
     /************************************************************************/
     global_action = 5;
-    estimate_background_gauss_parameters2();
+    if (prm.modelSimplification<2)
+       estimate_background_gauss_parameters2();
 
     steps.resize(ALL_CTF_PARAMETERS);
-    steps.init_constant(1);
+    steps.initConstant(1);
     steps(3) = 0; // kV
     steps(5) = 0; // The spherical aberration (Cs) is not optimized
     if (prm.initial_ctfmodel.Q0 != 0)
         steps(12) = 0; // Q0
-    if (!global_prm->astigmatic_noise)
-        steps(16) = steps(17) = steps(20) = steps(21) = steps(23) = steps(26) =
-                                                steps(27) = steps(29) = 0;
+    if (prm.modelSimplification>=3)
+        steps(20) = steps(21) = steps(23) = 0;
+    if (prm.modelSimplification>=2)
+        steps(24) = steps(25) = steps(26) =
+            steps(27) = steps(28) = steps(29) = 0;
+    if (prm.modelSimplification>=1)
+        steps(10) = steps(11) = 0;
     powellOptimizer(*global_adjust, 0 + 1,
                      ALL_CTF_PARAMETERS, &CTF_fitness,
                      0.01, fitness, iter, steps, global_prm->show_optimization);

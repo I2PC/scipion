@@ -30,7 +30,7 @@
 #include "numerical_recipes.h"
 
 /* NUMERICAL UTILITIES ----------------------------------------------------- */
-void nrerror(char error_text[])
+void nrerror(const char error_text[])
 {
     fprintf(stderr, "Numerical Recipes run-time error...\n");
     fprintf(stderr, "%s\n", error_text);
@@ -9311,7 +9311,6 @@ wavefilt wfilt;
 
 void pwtset(int n)
 {
-    void nrerror(char error_text[]);
     int k;
     float sig = -1.0;
     static double c4[5] =

@@ -317,7 +317,9 @@ bool ImageImagicT<std::complex<double> >::read(const FileName &name)
         float a, b;
         const unsigned size = 4;
         fseek(img_fh, imgnum*(size*2)*img_offset, SEEK_SET);
-        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img)
+    	std::complex<double>* ptr;
+	unsigned long int n;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(img,n,ptr)
         {
             // read real part of a complex number
             FREAD(&a, size, 1, img_fh, reversed);
@@ -325,7 +327,7 @@ bool ImageImagicT<std::complex<double> >::read(const FileName &name)
             FREAD(&b, size, 1, img_fh, reversed);
             // Assign the number
             std::complex<double> c(a, b);
-            MULTIDIM_ELEM(img, i) = c;
+            *ptr = c;
         }
         break;
     }

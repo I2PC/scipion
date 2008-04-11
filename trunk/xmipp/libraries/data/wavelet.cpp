@@ -83,7 +83,7 @@ void Bilib_DWT(const Matrix1D<double> &input,
             // Pick the Lowest subband
             Matrix1D<double> input_aux(xsize), result_aux(xsize);
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(input_aux)
-            DIRECT_VEC_ELEM(input_aux, i) = DIRECT_VEC_ELEM(result, i);
+            	DIRECT_VEC_ELEM(input_aux, i) = DIRECT_VEC_ELEM(result, i);
 
             // DWT
             TW.Input = MULTIDIM_ARRAY(input_aux);
@@ -95,7 +95,7 @@ void Bilib_DWT(const Matrix1D<double> &input,
 
             // Return the subband to the output
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(input_aux)
-            DIRECT_VEC_ELEM(result, i) = DIRECT_VEC_ELEM(result_aux, i);
+            	DIRECT_VEC_ELEM(result, i) = DIRECT_VEC_ELEM(result_aux, i);
         }
     }
     else if (isign == -1)
@@ -182,7 +182,7 @@ void Bilib_DWT(const Matrix2D<double> &input,
             // Pick the Lowest subband
             Matrix2D<double> input_aux(ysize, xsize), result_aux(ysize, xsize);
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(input_aux)
-            DIRECT_MAT_ELEM(input_aux, i, j) = DIRECT_MAT_ELEM(result, i, j);
+            	DIRECT_MAT_ELEM(input_aux, i, j) = DIRECT_MAT_ELEM(result, i, j);
 
             // DWT
             TW.Input = MULTIDIM_ARRAY(input_aux);
@@ -194,7 +194,7 @@ void Bilib_DWT(const Matrix2D<double> &input,
 
             // Return the subband to the output
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(input_aux)
-            DIRECT_MAT_ELEM(result, i, j) = DIRECT_MAT_ELEM(result_aux, i, j);
+            	DIRECT_MAT_ELEM(result, i, j) = DIRECT_MAT_ELEM(result_aux, i, j);
         }
     }
     else if (isign == -1)
@@ -209,7 +209,7 @@ void Bilib_DWT(const Matrix2D<double> &input,
             // Pick the Lowest subband
             Matrix2D<double> input_aux(ysize, xsize), result_aux(ysize, xsize);
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(input_aux)
-            DIRECT_MAT_ELEM(input_aux, i, j) = DIRECT_MAT_ELEM(input, i, j);
+                DIRECT_MAT_ELEM(input_aux, i, j) = DIRECT_MAT_ELEM(input, i, j);
 
             // DWT
             TW.Input = MULTIDIM_ARRAY(input_aux);
@@ -221,7 +221,7 @@ void Bilib_DWT(const Matrix2D<double> &input,
 
             // Return the subband to the output
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(input_aux)
-            DIRECT_MAT_ELEM(input, i, j) = DIRECT_MAT_ELEM(result_aux, i, j);
+            	DIRECT_MAT_ELEM(input, i, j) = DIRECT_MAT_ELEM(result_aux, i, j);
         }
 
         // First iteration
@@ -286,9 +286,9 @@ void Bilib_DWT(const Matrix3D<double> &input,
 
             // Pick the Lowest subband
             Matrix3D<double> input_aux(zsize, ysize, xsize),
-            result_aux(zsize, ysize, xsize);
+            	    	     result_aux(zsize, ysize, xsize);
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(input_aux)
-            DIRECT_VOL_ELEM(input_aux, k, i, j) = DIRECT_VOL_ELEM(result, k, i, j);
+                DIRECT_VOL_ELEM(input_aux, k, i, j) = DIRECT_VOL_ELEM(result, k, i, j);
 
             // DWT
             TW.Input = MULTIDIM_ARRAY(input_aux);
@@ -300,7 +300,7 @@ void Bilib_DWT(const Matrix3D<double> &input,
 
             // Return the subband to the output
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(input_aux)
-            DIRECT_VOL_ELEM(result, k, i, j) = DIRECT_VOL_ELEM(result_aux, k, i, j);
+                DIRECT_VOL_ELEM(result, k, i, j) = DIRECT_VOL_ELEM(result_aux, k, i, j);
         }
     }
     else if (isign == -1)
@@ -317,7 +317,7 @@ void Bilib_DWT(const Matrix3D<double> &input,
             Matrix3D<double> input_aux(zsize, ysize, xsize),
             result_aux(zsize, ysize, xsize);
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(input_aux)
-            DIRECT_VOL_ELEM(input_aux, k, i, j) = DIRECT_VOL_ELEM(input, k, i, j);
+                DIRECT_VOL_ELEM(input_aux, k, i, j) = DIRECT_VOL_ELEM(input, k, i, j);
 
             // DWT
             TW.Input = MULTIDIM_ARRAY(input_aux);
@@ -329,7 +329,7 @@ void Bilib_DWT(const Matrix3D<double> &input,
 
             // Return the subband to the output
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(input_aux)
-            DIRECT_VOL_ELEM(input, k, i, j) = DIRECT_VOL_ELEM(result_aux, k, i, j);
+                DIRECT_VOL_ELEM(input, k, i, j) = DIRECT_VOL_ELEM(result_aux, k, i, j);
         }
 
         // First iteration
@@ -809,8 +809,7 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix2D<double> &WI, int allowed_sca
     double powerI = WI.sum2();
 
     /*Number of pixels and some constraints on SNR*/
-    int Ydim = 0, Xdim = 0;
-    WI.getDimension(Ydim, Xdim);
+    int Ydim = YSIZE(WI), Xdim = XSIZE(WI);
     int Ncoef_total = Ydim * Xdim;
     int max_scale = ROUND(log(double(Xdim)) / log(2.0));
 
@@ -828,7 +827,7 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix2D<double> &WI, int allowed_sca
     //init the scale vector
     Matrix1D<int> scale(XMIPP_MIN(allowed_scale + 1, max_scale - 1));
     FOR_ALL_ELEMENTS_IN_MATRIX1D(scale) scale(i) = i;
-    int scale_dim = scale.getDimension();
+    int scale_dim = XSIZE(scale);
 
     //define some vectors
     Matrix1D<double> power(scale_dim), average(scale_dim), Ncoefs(scale_dim);
@@ -837,7 +836,7 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix2D<double> &WI, int allowed_sca
     orientation.push_back("01");
     orientation.push_back("10");
     orientation.push_back("11");
-    for (int j = 0;j < scale.getDimension();j++)
+    for (int j = 0;j < XSIZE(scale);j++)
     {
         for (int k = 0; k < orientation.size(); k++)
         {
@@ -928,8 +927,7 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix3D<double> &WI, int allowed_sca
     double powerI = WI.sum2();
 
     /*Number of pixels and some constraints on SNR*/
-    int Zdim, Ydim, Xdim;
-    WI.getDimension(Zdim, Ydim, Xdim);
+    int Zdim=ZSIZE(WI), Ydim=YSIZE(WI), Xdim=ZSIZE(WI);
     int Ncoef_total = Zdim * Ydim * Xdim;
     int max_scale = ROUND(log(double(Xdim)) / log(2.0));
 
@@ -947,7 +945,7 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix3D<double> &WI, int allowed_sca
     //init the scale vector
     Matrix1D<int> scale(allowed_scale + 1);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(scale) scale(i) = i;
-    int scale_dim = scale.getDimension();
+    int scale_dim = XSIZE(scale);
 
     //define some vectors
     Matrix1D<double> power(scale_dim), average(scale_dim), Ncoefs(scale_dim);
@@ -960,7 +958,7 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix3D<double> &WI, int allowed_sca
     orientation.push_back("101");
     orientation.push_back("110");
     orientation.push_back("111");
-    for (int j = 0;j < scale.getDimension();j++)
+    for (int j = 0;j < XSIZE(scale);j++)
     {
         for (int k = 0; k < orientation.size(); k++)
         {

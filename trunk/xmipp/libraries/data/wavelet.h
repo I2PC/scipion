@@ -97,7 +97,7 @@ void DWT(const Matrix1D< T >& v, Matrix1D< double >& result, int isign = 1)
     unsigned long int nn[1];
     unsigned long int* ptr_nn = nn - 1;
 
-    type_cast(v, result);
+    typeCast(v, result);
     nn[0] = XSIZE(result);
     double* ptr_result = MULTIDIM_ARRAY(result) - 1;
     wtn(ptr_result, ptr_nn, 1, isign, pwt);
@@ -116,7 +116,7 @@ void DWT(const Matrix2D< T >& v, Matrix2D< double >& result, int isign = 1)
     unsigned long int nn[2];
     unsigned long int* ptr_nn = nn - 1;
 
-    type_cast(v, result);
+    typeCast(v, result);
     nn[1] = YSIZE(result);
     nn[0] = XSIZE(result);
     double* ptr_result = MULTIDIM_ARRAY(result) - 1;
@@ -136,7 +136,7 @@ void DWT(const Matrix3D< T >& v, Matrix3D< double >& result, int isign = 1)
     unsigned long int nn[2];
     unsigned long int *ptr_nn = nn - 1;
 
-    type_cast(v, result);
+    typeCast(v, result);
     nn[2] = ZSIZE(result);
     nn[1] = YSIZE(result);
     nn[0] = XSIZE(result);

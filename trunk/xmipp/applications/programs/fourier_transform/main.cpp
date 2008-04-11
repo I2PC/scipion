@@ -96,8 +96,8 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
     }
     if (eprm->squared) img() *= img();
     if (eprm->apply_log)
-        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(img())
-        MULTIDIM_ELEM(img(), i) = log10(1 + MULTIDIM_ELEM(img(), i));
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(img())
+            MAT_ELEM(img(), i, j) = log10(1 + MAT_ELEM(img(), i, j));
     if (!eprm->do_not_center) CenterFFT(img(), true);
     return true;
 }
@@ -118,8 +118,8 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
     }
     if (eprm->squared) vol() *= vol();
     if (eprm->apply_log)
-        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(vol())
-        MULTIDIM_ELEM(vol(), i) = log10(1 + MULTIDIM_ELEM(vol(), i));
+        FOR_ALL_ELEMENTS_IN_MATRIX3D(vol())
+            VOL_ELEM(vol(), k, i, j) = log10(1 + VOL_ELEM(vol(), k, i, j));
     if (!eprm->do_not_center) CenterFFT(vol(), true);
     return true;
 }

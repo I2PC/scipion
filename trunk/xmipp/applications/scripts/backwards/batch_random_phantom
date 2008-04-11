@@ -1,7 +1,7 @@
 #!/bin/sh
 
 VERSION=2.0
-NEW_NAME=xmipp_create_random_phantom
+NEW_NAME=xmipp_phantom_create_random
 
 # Warn user
 echo "** Warning! This program name is deprecated as of Xmipp version" $VERSION

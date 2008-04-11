@@ -84,12 +84,12 @@ public:
             if (checkParameter(argc, argv, "-shift"))
             {
                 shift = getVectorParameter(argc, argv, "-shift", -1);
-                my_dim = shift.getDimension();
+                my_dim = XSIZE(shift);
             }
             if (checkParameter(argc, argv, "-scale"))
             {
                 scale = getVectorParameter(argc, argv, "-scale", -1);
-                my_dim = scale.getDimension();
+                my_dim = XSIZE(scale);
             }
 
             if (!checkParameter(argc, argv, "-shift") && !center_mass)
@@ -97,7 +97,7 @@ public:
             if (!checkParameter(argc, argv, "-scale"))
             {
                 scale.resize(my_dim);
-                scale.init_constant(1);
+                scale.initConstant(1);
             }
         }
         wrap = !checkParameter(argc, argv, "-dont_wrap");
@@ -111,14 +111,14 @@ public:
         else      std::cout << "Not wrapping image/volume\n";
         if (store_in_header) std::cout << "Storing the shift in header\n";
         else                 std::cout << "Shifting image/volume\n";
-        if (shift.getDimension() > 1)
+        if (XSIZE(shift) > 1)
             std::cout << "Shift: " << shift.transpose() << std::endl;
         else if (DF_shifts.name() != "")
         {
             std::cout << "Shift docfile: " << DF_shifts.name() << std::endl;
             std::cout << "colX_shift:  " << colX_shift << std::endl;
         }
-        if (scale.getDimension() > 1)
+        if (XSIZE(scale) > 1)
             std::cout << "Scale: " << scale.transpose() << std::endl;
         else if (DF_scales.name() != "")
         {
@@ -163,7 +163,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
     else if (eprm->Docfile != false)
     {
         eprm->shift.resize(2);
-        eprm->shift.init_constant(0.);
+        eprm->shift.initConstant(0.);
     }
     else if (eprm->center_mass)
     {
@@ -183,7 +183,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
     else if (eprm->Docfile != false || eprm->center_mass)
     {
         eprm->scale.resize(2);
-        eprm->scale.init_constant(1.);
+        eprm->scale.initConstant(1.);
     }
     A(0, 0) = XX(eprm->scale);
     A(1, 1) = YY(eprm->scale);
@@ -211,7 +211,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
     else if (eprm->Docfile != false)
     {
         eprm->shift.resize(3);
-        eprm->shift.init_constant(1.);
+        eprm->shift.initConstant(1.);
     }
     A(0, 3) = XX(eprm->shift);
     A(1, 3) = YY(eprm->shift);
@@ -230,7 +230,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
     else if (eprm->Docfile != false)
     {
         eprm->scale.resize(3);
-        eprm->scale.init_constant(1.);
+        eprm->scale.initConstant(1.);
     }
     A(0, 0) = XX(eprm->scale);
     A(1, 1) = YY(eprm->scale);

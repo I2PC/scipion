@@ -31,7 +31,7 @@
 #include <vector>
 
 #include "funcs.h"
-#include "matrix1d.h"
+template <typename T> class Matrix1D;
 
 /** @defgroup Arguments Arguments parsing
  *  @ingroup DataLibrary

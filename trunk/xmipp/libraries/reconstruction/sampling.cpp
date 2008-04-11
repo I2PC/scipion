@@ -389,7 +389,7 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere,
               i < sampling_points_vector.size();
               i++)
 	 {
-             sampling_points_vector[i].add_noise(0.0, sampling_noise, "gaussian");
+             sampling_points_vector[i].addNoise(0.0, sampling_noise, "gaussian");
 	     sampling_points_vector[i].selfNormalize();
 	 }
     }

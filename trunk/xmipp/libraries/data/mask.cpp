@@ -1200,7 +1200,7 @@ void Mask_Params::generate_1Dmask()
     switch (type)
     {
     case NO_MASK:
-        imask2D.init_constant(1);
+        imask2D.initConstant(1);
         break;
     case RAISED_COSINE_MASK:
         RaisedCosineMask(dmask1D, R1, R2, mode, x0);
@@ -1225,7 +1225,7 @@ void Mask_Params::generate_2Dmask(const bool& apply_geo)
     switch (type)
     {
     case NO_MASK:
-        imask2D.init_constant(1);
+        imask2D.initConstant(1);
         break;
     case BINARY_CIRCULAR_MASK:
         BinaryCircularMask(imask2D, R1, mode, x0, y0);
@@ -1259,7 +1259,7 @@ void Mask_Params::generate_2Dmask(const bool& apply_geo)
         break;
     case READ_MASK:
         I.read(fn_mask);
-        type_cast(I(), imask2D);
+        typeCast(I(), imask2D);
         imask2D.setXmippOrigin();
         break;
     default:
@@ -1290,7 +1290,7 @@ void Mask_Params::generate_3Dmask()
     switch (type)
     {
     case NO_MASK:
-        imask3D.init_constant(1);
+        imask3D.initConstant(1);
         break;
     case BINARY_CIRCULAR_MASK:
         BinarySphericalMask(imask3D, R1, mode, x0, y0, z0);
@@ -1330,7 +1330,7 @@ void Mask_Params::generate_3Dmask()
         break;
     case READ_MASK:
         V.read(fn_mask);
-        type_cast(V(), imask3D);
+        typeCast(V(), imask3D);
         imask3D.setXmippOrigin();
         break;
     default:
@@ -1349,12 +1349,12 @@ void apply_geo_binary_2D_mask(Matrix2D<int> &mask,
 {
     Matrix2D<double> tmp;
     tmp.resize(mask);
-    type_cast(mask, tmp);
+    typeCast(mask, tmp);
     double outside = DIRECT_MAT_ELEM(tmp, 0, 0);
     // Instead of IS_INV for images use IS_NOT_INV for masks!
     tmp.selfApplyGeometry(A, IS_NOT_INV, DONT_WRAP, outside);
     // The type cast gives strange results here, using round instead
-    //type_cast(tmp, mask);
+    //typeCast(tmp, mask);
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(mask) {
       dMij(mask,i,j)=ROUND(dMij(tmp,i,j));
     }
@@ -1421,7 +1421,7 @@ int count_with_mask(const Matrix3D<int> &mask,
 }
 
 /* Range adjust ------------------------------------------------------------ */
-void range_adjust_within_mask(const Matrix2D<double> *mask,
+void rangeAdjust_within_mask(const Matrix2D<double> *mask,
                               const Matrix2D<double> &m1,
                               Matrix2D<double> &m2)
 {
@@ -1464,7 +1464,7 @@ void range_adjust_within_mask(const Matrix2D<double> *mask,
     FOR_ALL_ELEMENTS_IN_MATRIX2D(m2) m2(i, j) = b(0) * m2(i, j) + b(1);
 }
 
-void range_adjust_within_mask(const Matrix3D<double> *mask,
+void rangeAdjust_within_mask(const Matrix3D<double> *mask,
                               const Matrix3D<double> &m1, Matrix3D<double> &m2)
 {
     Matrix2D<double> A(2, 2);

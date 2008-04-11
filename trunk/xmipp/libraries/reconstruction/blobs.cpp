@@ -824,7 +824,7 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
     }
 #endif
 
-    type_cast(Gcorner1, corner1);
+    typeCast(Gcorner1, corner1);
 
 #ifdef DEBUG
     std::cout << "Final size of voxel volume " << (int)ZZ(size) << " x "
@@ -847,9 +847,9 @@ void blobs2voxels(const GridVolume &vol_blobs,
         Matrix1D<int> size, corner;
         voxel_volume_shape(vol_blobs, blob, D, corner, size);
         (*vol_voxels).initZeros(ZZ(size), YY(size), XX(size));
-        (*vol_voxels).startingX() = XX(corner);
-        (*vol_voxels).startingY() = YY(corner);
-        (*vol_voxels).startingZ() = ZZ(corner);
+        STARTINGX(*vol_voxels) = XX(corner);
+        STARTINGY(*vol_voxels) = YY(corner);
+        STARTINGZ(*vol_voxels) = ZZ(corner);
     }
     else
     {
@@ -896,10 +896,10 @@ void blobs2voxels(const GridVolume &vol_blobs,
 	 
 #ifdef DEBUG
         std::cout << "Blob grid no " << i << " stats: ";
-        vol_blobs(i)().print_stats();
+        vol_blobs(i)().printStats();
         std::cout << std::endl;
         std::cout << "So far vol stats: ";
-        (*vol_voxels).print_stats();
+        (*vol_voxels).printStats();
         std::cout << std::endl;
         VolumeXmipp save;
         save() = *vol_voxels;
@@ -952,9 +952,9 @@ void blobs2space_coefficients(const GridVolume &vol_blobs,
     ZZ(corner1) = (int)(FLOOR(ZZ(corner1)) / g_2);
     ZZ(size) = (int)(CEIL(ZZ(size)) / g_2);
     (*vol_coefs).initZeros(ZZ(size), YY(size), XX(size));
-    (*vol_coefs).startingX() = XX(corner1);
-    (*vol_coefs).startingY() = YY(corner1);
-    (*vol_coefs).startingZ() = ZZ(corner1);
+    STARTINGX(*vol_coefs) = XX(corner1);
+    STARTINGY(*vol_coefs) = YY(corner1);
+    STARTINGZ(*vol_coefs) = ZZ(corner1);
 
     // Set all blob coefficients at the right position
     for (int n = 0; n < vol_blobs.VolumesNo(); n++)
@@ -1074,10 +1074,10 @@ void ART_voxels2blobs_single_step(
 //                                50, corr_vol, mask_vol, FORWARD, eq_mode);
 #ifdef DEBUG
         std::cout << "Blob grid no " << i << " stats: ";
-        vol_in(i)().print_stats();
+        vol_in(i)().printStats();
         std::cout << std::endl;
         std::cout << "So far vol stats: ";
-        (*theo_vol)().print_stats();
+        (*theo_vol)().printStats();
         std::cout << std::endl;
 #endif
     }
@@ -1092,7 +1092,7 @@ void ART_voxels2blobs_single_step(
     save() = *theo_vol;
     save.write("PPPtheovol.vol");
     std::cout << "Theo stats:";
-    save().print_stats();
+    save().printStats();
     std::cout << std::endl;
     save() = *corr_vol;
     save.write("PPPcorr2vol.vol");
@@ -1145,16 +1145,16 @@ void ART_voxels2blobs_single_step(
 #ifdef DEBUG
     save.write("PPPdiffvol.vol");
     std::cout << "Diff stats:";
-    save().print_stats();
+    save().printStats();
     std::cout << std::endl;
     save2.write("PPPreadvol.vol");
     std::cout << "Read stats:";
-    save2().print_stats();
+    save2().printStats();
     std::cout << std::endl;
     save() = *corr_vol;
     save.write("PPPcorrvol.vol");
     std::cout << "Corr stats:";
-    save().print_stats();
+    save().printStats();
     std::cout << std::endl;
 #endif
 
@@ -1197,7 +1197,7 @@ void ART_voxels2blobs_single_step(
 //                                theo_vol, D, 50, corr_vol, mask_vol, BACKWARD, eq_mode);
 #ifdef DEBUG
         std::cout << "Blob grid no " << i << " stats: ";
-        vol_in(i)().print_stats();
+        vol_in(i)().printStats();
         std::cout << std::endl;
 #endif
     }

@@ -374,7 +374,7 @@ void DocFile::renum()
     }
 }
 
-void DocFile::read(FileName name, int overriding)
+void DocFile::read(const FileName& name, int overriding)
 {
     DocLine temp;
     std::ifstream in;
@@ -438,7 +438,7 @@ void DocFile::read(FileName name, int overriding)
     renum();
 }
 
-void DocFile::write(FileName name)
+void DocFile::write(const FileName& name)
 {
     std::ofstream out;
     std::vector< DocLine >::iterator current = m.begin();
@@ -1288,7 +1288,7 @@ void DocFile::setCol(int c, Matrix1D< double >& v)
     }
     renum();
 
-    if (v.getDimension() < m.size())
+    if (XSIZE(v) < m.size())
         REPORT_ERROR(1605, "DocFile::setCol(): Column assignment not complete");
 }
 

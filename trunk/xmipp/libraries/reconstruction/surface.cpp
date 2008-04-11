@@ -95,7 +95,7 @@ void create_surface_mask(const Image *top, const Image *bottom, int zdim,
     STARTINGZ(VOL) = FIRST_XMIPP_INDEX(zdim);
     STARTINGY(VOL) = STARTINGY(*surf);
     STARTINGX(VOL) = STARTINGX(*surf);
-    VOL.init_constant(1);
+    VOL.initConstant(1);
 
     // Create mask
     int kmin = FIRST_XMIPP_INDEX(zdim);

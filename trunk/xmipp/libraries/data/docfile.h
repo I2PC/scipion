@@ -270,7 +270,7 @@ public:
      * DocFile DF("angles.doc");
      * @endcode
      */
-    DocFile(FileName doc_name)
+    DocFile(const FileName& doc_name)
     {
         first_key = 1;
         read(doc_name);
@@ -391,7 +391,7 @@ public:
      * DF.read("angles.doc");
      * @endcode
      */
-    void read(FileName _name, int overrinding = 1);
+    void read(const FileName& _name, int overrinding = 1);
 
     /** Append a file from disk to an already read one.
      * @ingroup DocFileDisk
@@ -421,7 +421,7 @@ public:
      * DF.write("angles3.doc"); // Save as ...
      * @endcode
      */
-    void write(FileName _name = "");
+    void write(const FileName& _name = "");
 
     /// @defgroup DocFilePointer Moving the current line pointer
     /// @ingroup DocFiles

@@ -235,7 +235,7 @@ void Prog_angular_predict_prm::produce_side_info(int rank)
     int Ydim, Xdim;
     SF_ref.ImgSize(Ydim, Xdim);
     Mask_no.resize(Ydim, Xdim);
-    Mask_no.init_constant(-1);
+    Mask_no.initConstant(-1);
 
     if (smax == -1) smax = Get_Max_Scale(Ydim) - 3;
     SBNo = (smax - smin + 1) * 3 + 1;
@@ -311,7 +311,7 @@ void Prog_angular_predict_prm::produce_library(int rank)
         library_name.push_back(I.name());
 
         // Make and distribute its DWT coefficients in the different PCA bins
-        I().statistics_adjust(0, 1);
+        I().statisticsAdjust(0, 1);
         DWT(I(), I());
         SBidx.initZeros();
         FOR_ALL_ELEMENTS_IN_MATRIX2D(Mask_no)
@@ -431,7 +431,7 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
         Idwt.push_back(subband);
     }
 
-    I().statistics_adjust(0, 1);
+    I().statisticsAdjust(0, 1);
     DWT(I(), I());
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mask_no)
     {

@@ -236,7 +236,7 @@ void CtfGroupParams::produceSideInfo()
         // Grigorieff JSB 157(1) (2006), pp 117-125
         if (wiener_constant < 0.) 
         {
-            wiener_constant = 0.1 * Mwien.compute_avg();
+            wiener_constant = 0.1 * Mwien.computeAvg();
         }
         // Also divide by sumimg (Wiener filter is for summing images, not averaging!)
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mwien)

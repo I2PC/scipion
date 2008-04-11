@@ -327,7 +327,7 @@ void ART_single_step(
             if (!null_row)
             {
                 std::cout << "pixel=" << integerToString(i, 3) << " --> "
-                << MULTIDIM_ELEM(read_proj(), i) << " = ";
+                    << DIRECT_MULTIDIM_ELEM(read_proj(), i) << " = ";
                 for (int j = 0; j < XSIZE(*A); j++)
                     std::cout << DIRECT_MAT_ELEM(*A, i, j) << " ";
                 std::cout << std::endl;

@@ -117,6 +117,7 @@ void Prog_assign_CTF_prm::write(const FileName &fn_prm,
 }
 
 /* Compute PSD by piece averaging ========================================== */
+//#define DEBUG
 void Prog_assign_CTF_prm::PSD_piece_by_averaging(Matrix2D<double> &piece,
         Matrix2D<double> &psd)
 {
@@ -127,6 +128,11 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(Matrix2D<double> &piece,
     int Xstep = (XSIZE(piece) - small_Xdim) / (Nside_piece - 1);
     int Ystep = (YSIZE(piece) - small_Ydim) / (Nside_piece - 1);
     psd.initZeros(small_piece);
+    #ifdef DEBUG
+        ImageXmipp save;
+        save()=piece;
+        save.write("PPPpiece.xmp");
+    #endif
     for (int ii = 0; ii < Nside_piece; ii++)
         for (int jj = 0; jj < Nside_piece; jj++)
         {
@@ -139,6 +145,11 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(Matrix2D<double> &piece,
                 for (j = 0, jb = j0; j < small_Xdim; j++, jb++)
                     DIRECT_MAT_ELEM(small_piece, i, j) =
                         DIRECT_MAT_ELEM(piece, ib, jb);
+            
+            #ifdef DEBUG
+                save()=small_piece;
+                save.write("PPPsmall_piece.xmp");
+            #endif
 
             // Compute the PSD of the small piece
             Matrix2D<double> small_psd;
@@ -161,17 +172,37 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(Matrix2D<double> &piece,
                 small_psd *= small_Ydim * small_Xdim;
             }
 
+            #ifdef DEBUG
+                save()=small_psd;
+                save.write("PPPsmall_psd.xmp");
+            #endif
+
             // Add to the average
             psd += small_psd;
         }
 
     // Compute the average of all the small pieces and enlarge
     psd /= (Nside_piece * Nside_piece);
-    CenterFFT(piece, true);
+
+    #ifdef DEBUG
+        save()=psd;
+        save.write("PPPpsd1.xmp");
+    #endif
+
+    CenterFFT(psd, true);
     psd.selfScaleToSizeBSpline(3, YSIZE(piece), XSIZE(piece));
-    CenterFFT(piece, false);
+    CenterFFT(psd, false);
     psd.threshold("below", 0, 0);
+
+    #ifdef DEBUG
+        save()=psd;
+        save.write("PPPpsd2.xmp");
+        std::cout << "Press any key\n";
+        char c;
+        std::cin >> c;
+    #endif
 }
+#undef DEBUG
 
 /* Main ==================================================================== */
 //#define DEBUG
@@ -330,7 +361,7 @@ void Prog_assign_CTF_prm::process()
             I.read(SF.get_current_file());
             piece = I();
         }
-        piece.statistics_adjust(0, 1);
+        piece.statisticsAdjust(0, 1);
 
         // Estimate the power spectrum .......................................
         ImageXmipp psd;

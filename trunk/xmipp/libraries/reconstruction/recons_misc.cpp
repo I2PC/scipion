@@ -400,7 +400,7 @@ void VariabilityClass::finishAnalysis()
         for (int np = n + 1; np < nmax; np++)
             coocurrence(np, n) = coocurrence(n, np);
     ImageXmipp save;
-    type_cast(coocurrence, save());
+    typeCast(coocurrence, save());
     save.write(prm->fn_root + "_coocurrence.xmp");
 }
 #undef DEBUG
@@ -456,7 +456,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
         {
             vol_voxels.write("PPPvolPOCS0.vol");
             std::cout << "Stats PPPvolPOCS0.vol: ";
-            vol_voxels().print_stats();
+            vol_voxels().printStats();
             std::cout << std::endl;
         }
         // Apply surface restriction
@@ -473,7 +473,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
         {
             vol_POCS.write("PPPvolPOCS1.vol");
             std::cout << "Stats PPPvolPOCS1.vol: ";
-            vol_POCS().print_stats();
+            vol_POCS().printStats();
             std::cout << std::endl;
         }
         // Force symmetry
@@ -485,7 +485,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
             {
                 vol_aux.write("PPPvolPOCS2.vol");
                 std::cout << "Stats PPPvolPOCS2.vol: ";
-                vol_aux().print_stats();
+                vol_aux().printStats();
                 std::cout << std::endl;
             }
         }
@@ -497,7 +497,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
             aux_mask.resize(vol_POCS());
             FOR_ALL_ELEMENTS_IN_MATRIX3D(aux_mask)
             aux_mask(k, i, j) = 1 - (int)vol_POCS(k, i, j);
-            long mask_voxels = vol_POCS().count_threshold("below", 0.5, 0);
+            long mask_voxels = vol_POCS().countThreshold("below", 0.5, 0);
             compute_hist_within_binary_mask(
                 aux_mask, vol_voxels(), hist, 300);
             double known_percentage;
@@ -511,7 +511,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
         {
             vol_POCS.write("PPPvolPOCS3.vol");
             std::cout << "Stats PPPvolPOCS3.vol: ";
-            vol_POCS().print_stats();
+            vol_POCS().printStats();
             std::cout << std::endl;
         }
 

@@ -31,8 +31,8 @@
 void Usage();
 
 #define SET_SUBS_VAL(I, subs_val, str_subs_val) \
-    if      (str_subs_val=="min") subs_val=I.compute_min(); \
-    else if (str_subs_val=="max") subs_val=I.compute_max(); \
+    if      (str_subs_val=="min") subs_val=I.computeMin(); \
+    else if (str_subs_val=="max") subs_val=I.computeMax(); \
     else                          subs_val=textToFloat(str_subs_val);
 
 int main(int argc, char **argv)
@@ -136,13 +136,13 @@ int main(int argc, char **argv)
        // Apply density restrictions -------------------------------------------
         if (image_mode)
         {
-            if (enable_th_below) I().threshold("below", th_below, th_below, mask2D->data);
-            if (enable_th_above) I().threshold("above", th_above, th_above, mask2D->data);
+            if (enable_th_below) I().threshold("below", th_below, th_below, mask2D);
+            if (enable_th_above) I().threshold("above", th_above, th_above, mask2D);
         }
         else
         {
-            if (enable_th_below) V().threshold("below", th_below, th_below, mask3D->data);
-            if (enable_th_above) V().threshold("above", th_above, th_above, mask3D->data);
+            if (enable_th_below) V().threshold("below", th_below, th_below, mask3D);
+            if (enable_th_above) V().threshold("above", th_above, th_above, mask3D);
         }
 
         // Apply substitution ---------------------------------------------------
@@ -151,21 +151,21 @@ int main(int argc, char **argv)
             {
                 SET_SUBS_VAL(I(), new_val, str_new_val);
                 SET_SUBS_VAL(I(), old_val, str_old_val);
-                I().substitute(old_val, new_val, accuracy, mask2D->data);
+                I().substitute(old_val, new_val, accuracy, mask2D);
             }
             else
             {
                 SET_SUBS_VAL(V(), new_val, str_new_val);
                 SET_SUBS_VAL(V(), old_val, str_old_val);
-                V().substitute(old_val, new_val, accuracy, mask3D->data);
+                V().substitute(old_val, new_val, accuracy, mask3D);
             }
 
         // Apply random substitution --------------------------------------------
         if (enable_random_substitute)
             if (image_mode)
-                I().random_substitute(old_val, avg_val, sig_val, accuracy, mask2D->data);
+                I().randomSubstitute(old_val, avg_val, sig_val, accuracy, mask2D);
             else
-                V().random_substitute(old_val, avg_val, sig_val, accuracy, mask3D->data);
+                V().randomSubstitute(old_val, avg_val, sig_val, accuracy, mask3D);
 
          // Apply distance restrictions ------------------------------------------
         if (!image_mode && fn_dist != "")

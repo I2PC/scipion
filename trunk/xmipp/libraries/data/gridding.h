@@ -87,7 +87,7 @@ void produceReverseGriddingMatrix2D(const Matrix2D< double > &in,
  *  Produces a 3D Fourier-space matrix3d for reverse-gridding
  *  interpolation from a Fourier-space matrix3d
  */
-void produceReverseGriddingFourierMatrix3D(const Matrix3D< std::complex < double > > &in, 
+void produceReverseGriddingFourierMatrix3D(Matrix3D< std::complex < double > > &in, 
 					   Matrix3D< std::complex < double > > &out,
 					   KaiserBessel &kb);
 
@@ -175,21 +175,21 @@ T interpolatedElementReverseGridding(const Matrix2D<T> &in, double x, double y, 
 	
     if ( inxold <= kbc || inxold >=nx-kbc-2 || 
 	 inyold <= kbc || inyold >=ny-kbc-2 )  {
-	x1 = (inxold-3+nx)%nx;
-	x2 = (inxold-2+nx)%nx;
-	x3 = (inxold-1+nx)%nx;
-	x4 = (inxold  +nx)%nx;
-	x5 = (inxold+1+nx)%nx;
-	x6 = (inxold+2+nx)%nx;
-	x7 = (inxold+3+nx)%nx;
+	x1 = (inxold-3)%nx;
+	x2 = (inxold-2)%nx;
+	x3 = (inxold-1)%nx;
+	x4 = (inxold  )%nx;
+	x5 = (inxold+1)%nx;
+	x6 = (inxold+2)%nx;
+	x7 = (inxold+3)%nx;
 
-	y1 = ((inyold-3+ny)%ny)*nx;
-	y2 = ((inyold-2+ny)%ny)*nx;
-	y3 = ((inyold-1+ny)%ny)*nx;
-	y4 = ((inyold  +ny)%ny)*nx;
-	y5 = ((inyold+1+ny)%ny)*nx;
-	y6 = ((inyold+2+ny)%ny)*nx;
-	y7 = ((inyold+3+ny)%ny)*nx;
+	y1 = ((inyold-3)%ny);
+	y2 = ((inyold-2)%ny);
+	y3 = ((inyold-1)%ny);
+	y4 = ((inyold  )%ny);
+	y5 = ((inyold+1)%ny);
+	y6 = ((inyold+2)%ny);
+	y7 = ((inyold+3)%ny);
     } else {
 	x1 = inxold-3;
 	x2 = inxold-2;
@@ -199,43 +199,71 @@ T interpolatedElementReverseGridding(const Matrix2D<T> &in, double x, double y, 
 	x6 = inxold+2;
 	x7 = inxold+3;
 
-	y1 = (inyold-3)*nx;
-	y2 = (inyold-2)*nx;
-	y3 = (inyold-1)*nx;
-	y4 = inyold*nx;
-	y5 = (inyold+1)*nx;
-	y6 = (inyold+2)*nx;
-	y7 = (inyold+3)*nx;
+	y1 = inyold-3;
+	y2 = inyold-2;
+	y3 = inyold-1;
+	y4 = inyold;
+	y5 = inyold+1;
+	y6 = inyold+2;
+	y7 = inyold+3;
     }
     
     // The actual convolution
-    pixel = ( in.data[x1+y1]*tablex1 + in.data[x2+y1]*tablex2 + in.data[x3+y1]*tablex3 +
-	      in.data[x4+y1]*tablex4 + in.data[x5+y1]*tablex5 + in.data[x6+y1]*tablex6 +
-	      in.data[x7+y1]*tablex7 ) * tabley1 +
+    pixel = ( DIRECT_MAT_ELEM(in,y1,x1)*tablex1 +
+              DIRECT_MAT_ELEM(in,y1,x2)*tablex2 + 
+              DIRECT_MAT_ELEM(in,y1,x3)*tablex3 +
+	      DIRECT_MAT_ELEM(in,y1,x4)*tablex4 +
+              DIRECT_MAT_ELEM(in,y1,x5)*tablex5 +
+              DIRECT_MAT_ELEM(in,y1,x6)*tablex6 +
+	      DIRECT_MAT_ELEM(in,y1,x7)*tablex7 ) * tabley1 +
 
-	    ( in.data[x1+y2]*tablex1 + in.data[x2+y2]*tablex2 + in.data[x3+y2]*tablex3 +
-	      in.data[x4+y2]*tablex4 + in.data[x5+y2]*tablex5 + in.data[x6+y2]*tablex6 +
-	      in.data[x7+y2]*tablex7 ) * tabley2 +
+            ( DIRECT_MAT_ELEM(in,y2,x1)*tablex1 +
+              DIRECT_MAT_ELEM(in,y2,x2)*tablex2 + 
+              DIRECT_MAT_ELEM(in,y2,x3)*tablex3 +
+	      DIRECT_MAT_ELEM(in,y2,x4)*tablex4 +
+              DIRECT_MAT_ELEM(in,y2,x5)*tablex5 +
+              DIRECT_MAT_ELEM(in,y2,x6)*tablex6 +
+	      DIRECT_MAT_ELEM(in,y2,x7)*tablex7 ) * tabley2 +
 
-	    ( in.data[x1+y3]*tablex1 + in.data[x2+y3]*tablex2 + in.data[x3+y3]*tablex3 +
-	      in.data[x4+y3]*tablex4 + in.data[x5+y3]*tablex5 + in.data[x6+y3]*tablex6 +
-	      in.data[x7+y3]*tablex7 ) * tabley3 +
+            ( DIRECT_MAT_ELEM(in,y3,x1)*tablex1 +
+              DIRECT_MAT_ELEM(in,y3,x2)*tablex2 + 
+              DIRECT_MAT_ELEM(in,y3,x3)*tablex3 +
+	      DIRECT_MAT_ELEM(in,y3,x4)*tablex4 +
+              DIRECT_MAT_ELEM(in,y3,x5)*tablex5 +
+              DIRECT_MAT_ELEM(in,y3,x6)*tablex6 +
+	      DIRECT_MAT_ELEM(in,y3,x7)*tablex7 ) * tabley3 +
 
-	    ( in.data[x1+y4]*tablex1 + in.data[x2+y4]*tablex2 + in.data[x3+y4]*tablex3 +
-	      in.data[x4+y4]*tablex4 + in.data[x5+y4]*tablex5 + in.data[x6+y4]*tablex6 +
-	      in.data[x7+y4]*tablex7 ) * tabley4 +
+            ( DIRECT_MAT_ELEM(in,y4,x1)*tablex1 +
+              DIRECT_MAT_ELEM(in,y4,x2)*tablex2 + 
+              DIRECT_MAT_ELEM(in,y4,x3)*tablex3 +
+	      DIRECT_MAT_ELEM(in,y4,x4)*tablex4 +
+              DIRECT_MAT_ELEM(in,y4,x5)*tablex5 +
+              DIRECT_MAT_ELEM(in,y4,x6)*tablex6 +
+	      DIRECT_MAT_ELEM(in,y4,x7)*tablex7 ) * tabley4 +
 
-	    ( in.data[x1+y5]*tablex1 + in.data[x2+y5]*tablex2 + in.data[x3+y5]*tablex3 +
-	      in.data[x4+y5]*tablex4 + in.data[x5+y5]*tablex5 + in.data[x6+y5]*tablex6 +
-	      in.data[x7+y5]*tablex7 ) * tabley5 +
+            ( DIRECT_MAT_ELEM(in,y5,x1)*tablex1 +
+              DIRECT_MAT_ELEM(in,y5,x2)*tablex2 + 
+              DIRECT_MAT_ELEM(in,y5,x3)*tablex3 +
+	      DIRECT_MAT_ELEM(in,y5,x4)*tablex4 +
+              DIRECT_MAT_ELEM(in,y5,x5)*tablex5 +
+              DIRECT_MAT_ELEM(in,y5,x6)*tablex6 +
+	      DIRECT_MAT_ELEM(in,y5,x7)*tablex7 ) * tabley5 +
 
-	    ( in.data[x1+y6]*tablex1 + in.data[x2+y6]*tablex2 + in.data[x3+y6]*tablex3 +
-	      in.data[x4+y6]*tablex4 + in.data[x5+y6]*tablex5 + in.data[x6+y6]*tablex6 +
-	      in.data[x7+y6]*tablex7 ) * tabley6 +
-	
-	    ( in.data[x1+y7]*tablex1 + in.data[x2+y7]*tablex2 + in.data[x3+y7]*tablex3 +
-	      in.data[x4+y7]*tablex4 + in.data[x5+y7]*tablex5 + in.data[x6+y7]*tablex6 +
-	      in.data[x7+y7]*tablex7 ) * tabley7;
+            ( DIRECT_MAT_ELEM(in,y6,x1)*tablex1 +
+              DIRECT_MAT_ELEM(in,y6,x2)*tablex2 + 
+              DIRECT_MAT_ELEM(in,y6,x3)*tablex3 +
+	      DIRECT_MAT_ELEM(in,y6,x4)*tablex4 +
+              DIRECT_MAT_ELEM(in,y6,x5)*tablex5 +
+              DIRECT_MAT_ELEM(in,y6,x6)*tablex6 +
+	      DIRECT_MAT_ELEM(in,y6,x7)*tablex7 ) * tabley6 +
+
+            ( DIRECT_MAT_ELEM(in,y7,x1)*tablex1 +
+              DIRECT_MAT_ELEM(in,y7,x2)*tablex2 + 
+              DIRECT_MAT_ELEM(in,y7,x3)*tablex3 +
+	      DIRECT_MAT_ELEM(in,y7,x4)*tablex4 +
+              DIRECT_MAT_ELEM(in,y7,x5)*tablex5 +
+              DIRECT_MAT_ELEM(in,y7,x6)*tablex6 +
+	      DIRECT_MAT_ELEM(in,y7,x7)*tablex7 ) * tabley7;
     
     w = (tablex1+tablex2+tablex3+tablex4+tablex5+tablex6+tablex7) *
 	(tabley1+tabley2+tabley3+tabley4+tabley5+tabley6+tabley7);	
@@ -264,7 +292,7 @@ T interpolatedElementReverseGridding(const Matrix2D<T> &in, double x, double y, 
  * @endcode
  */
 template <typename T>
-T interpolatedElementReverseGridding(const Matrix3D<T> &in, double x, double y, double z, const KaiserBessel &kb)
+T interpolatedElementReverseGridding(Matrix3D<T> &in, double x, double y, double z, const KaiserBessel &kb)
 {
     // size of this image:
     int nx = XSIZE(in);
@@ -320,29 +348,29 @@ T interpolatedElementReverseGridding(const Matrix3D<T> &in, double x, double y, 
     if ( inxold <= kbc || inxold >=nx-kbc-2 || 
 	 inyold <= kbc || inyold >=ny-kbc-2 || 
 	 inzold <= kbc || inzold >= nz-kbc-2 )  {
-	x1 = (inxold-3+nx)%nx;
-	x2 = (inxold-2+nx)%nx;
-	x3 = (inxold-1+nx)%nx;
-	x4 = (inxold  +nx)%nx;
-	x5 = (inxold+1+nx)%nx;
-	x6 = (inxold+2+nx)%nx;
-	x7 = (inxold+3+nx)%nx;
+	x1 = (inxold-3)%nx;
+	x2 = (inxold-2)%nx;
+	x3 = (inxold-1)%nx;
+	x4 = (inxold  )%nx;
+	x5 = (inxold+1)%nx;
+	x6 = (inxold+2)%nx;
+	x7 = (inxold+3)%nx;
 
-	y1 = ((inyold-3+ny)%ny)*nx;
-	y2 = ((inyold-2+ny)%ny)*nx;
-	y3 = ((inyold-1+ny)%ny)*nx;
-	y4 = ((inyold  +ny)%ny)*nx;
-	y5 = ((inyold+1+ny)%ny)*nx;
-	y6 = ((inyold+2+ny)%ny)*nx;
-	y7 = ((inyold+3+ny)%ny)*nx;
+	y1 = ((inyold-3)%ny);
+	y2 = ((inyold-2)%ny);
+	y3 = ((inyold-1)%ny);
+	y4 = ((inyold  )%ny);
+	y5 = ((inyold+1)%ny);
+	y6 = ((inyold+2)%ny);
+	y7 = ((inyold+3)%ny);
 
-	z1 = ((inzold-3+nz)%nz)*nx*ny;
-	z2 = ((inzold-2+nz)%nz)*nx*ny;
-	z3 = ((inzold-1+nz)%nz)*nx*ny;
-	z4 = ((inzold  +nz)%nz)*nx*ny;
-	z5 = ((inzold+1+nz)%nz)*nx*ny;
-	z6 = ((inzold+2+nz)%nz)*nx*ny;
-	z7 = ((inzold+3+nz)%nz)*nx*ny;
+	z1 = ((inzold-3)%nz);
+	z2 = ((inzold-2)%nz);
+	z3 = ((inzold-1)%nz);
+	z4 = ((inzold  )%nz);
+	z5 = ((inzold+1)%nz);
+	z6 = ((inzold+2)%nz);
+	z7 = ((inzold+3)%nz);
     } else {
 	x1 = inxold-3;
 	x2 = inxold-2;
@@ -352,178 +380,375 @@ T interpolatedElementReverseGridding(const Matrix3D<T> &in, double x, double y, 
 	x6 = inxold+2;
 	x7 = inxold+3;
 
-	y1 = (inyold-3)*nx;
-	y2 = (inyold-2)*nx;
-	y3 = (inyold-1)*nx;
-	y4 = inyold*nx;
-	y5 = (inyold+1)*nx;
-	y6 = (inyold+2)*nx;
-	y7 = (inyold+3)*nx;
+	y1 = inyold-3;
+	y2 = inyold-2;
+	y3 = inyold-1;
+	y4 = inyold;
+	y5 = inyold+1;
+	y6 = inyold+2;
+	y7 = inyold+3;
 
-	z1 = (inzold-3)*nx*ny;
-	z2 = (inzold-2)*nx*ny;
-	z3 = (inzold-1)*nx*ny;
-	z4 = inzold*nx*ny;
-	z5 = (inzold+1)*nx*ny;
-	z6 = (inzold+2)*nx*ny;		
-	z7 = (inzold+3)*nx*ny;
+	z1 = inzold-3;
+	z2 = inzold-2;
+	z3 = inzold-1;
+	z4 = inzold;
+	z5 = inzold+1;
+	z6 = inzold+2;          
+	z7 = inzold+3;
     }
     
     // The actual convolution
-    pixel  = ( ( in.data[x1+y1+z1]*tablex1 + in.data[x2+y1+z1]*tablex2 + in.data[x3+y1+z1]*tablex3 +
-		 in.data[x4+y1+z1]*tablex4 + in.data[x5+y1+z1]*tablex5 + in.data[x6+y1+z1]*tablex6 +
-		 in.data[x7+y1+z1]*tablex7 ) * tabley1 +
-	       ( in.data[x1+y2+z1]*tablex1 + in.data[x2+y2+z1]*tablex2 + in.data[x3+y2+z1]*tablex3 +
-		 in.data[x4+y2+z1]*tablex4 + in.data[x5+y2+z1]*tablex5 + in.data[x6+y2+z1]*tablex6 +
-		 in.data[x7+y2+z1]*tablex7 ) * tabley2 +
-	       ( in.data[x1+y3+z1]*tablex1 + in.data[x2+y3+z1]*tablex2 + in.data[x3+y3+z1]*tablex3 +
-		 in.data[x4+y3+z1]*tablex4 + in.data[x5+y3+z1]*tablex5 + in.data[x6+y3+z1]*tablex6 +
-		 in.data[x7+y3+z1]*tablex7 ) * tabley3 +
-	       ( in.data[x1+y4+z1]*tablex1 + in.data[x2+y4+z1]*tablex2 + in.data[x3+y4+z1]*tablex3 +
-		 in.data[x4+y4+z1]*tablex4 + in.data[x5+y4+z1]*tablex5 + in.data[x6+y4+z1]*tablex6 +
-		 in.data[x7+y4+z1]*tablex7 ) * tabley4 +
-	       ( in.data[x1+y5+z1]*tablex1 + in.data[x2+y5+z1]*tablex2 + in.data[x3+y5+z1]*tablex3 +
-		 in.data[x4+y5+z1]*tablex4 + in.data[x5+y5+z1]*tablex5 + in.data[x6+y5+z1]*tablex6 +
-		 in.data[x7+y5+z1]*tablex7 ) * tabley5 +
-	       ( in.data[x1+y6+z1]*tablex1 + in.data[x2+y6+z1]*tablex2 + in.data[x3+y6+z1]*tablex3 +
-		 in.data[x4+y6+z1]*tablex4 + in.data[x5+y6+z1]*tablex5 + in.data[x6+y6+z1]*tablex6 +
-		 in.data[x7+y6+z1]*tablex7 ) * tabley6 +
-	       ( in.data[x1+y7+z1]*tablex1 + in.data[x2+y7+z1]*tablex2 + in.data[x3+y7+z1]*tablex3 +
-		 in.data[x4+y7+z1]*tablex4 + in.data[x5+y7+z1]*tablex5 + in.data[x6+y7+z1]*tablex6 +
-		 in.data[x7+y7+z1]*tablex7 ) * tabley7 ) *tablez1 +
+    // COSS: This is a bad idea
+    pixel =(( DIRECT_VOL_ELEM(in,z1,y1,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z1,y1,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z1,y1,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z1,y1,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z1,y1,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z1,y1,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z1,y1,x7)*tablex7 ) * tabley1 +
+            ( DIRECT_VOL_ELEM(in,z1,y2,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z1,y2,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z1,y2,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z1,y2,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z1,y2,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z1,y2,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z1,y2,x7)*tablex7 ) * tabley2 +
+            ( DIRECT_VOL_ELEM(in,z1,y3,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z1,y3,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z1,y3,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z1,y3,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z1,y3,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z1,y3,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z1,y3,x7)*tablex7 ) * tabley3 +
+            ( DIRECT_VOL_ELEM(in,z1,y4,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z1,y4,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z1,y4,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z1,y4,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z1,y4,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z1,y4,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z1,y4,x7)*tablex7 ) * tabley4 +
+            ( DIRECT_VOL_ELEM(in,z1,y5,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z1,y5,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z1,y5,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z1,y5,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z1,y5,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z1,y5,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z1,y5,x7)*tablex7 ) * tabley5 +
+            ( DIRECT_VOL_ELEM(in,z1,y6,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z1,y6,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z1,y6,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z1,y6,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z1,y6,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z1,y6,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z1,y6,x7)*tablex7 ) * tabley6 +
+            ( DIRECT_VOL_ELEM(in,z1,y7,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z1,y7,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z1,y7,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z1,y7,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z1,y7,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z1,y7,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z1,y7,x7)*tablex7 ) * tabley7 ) * tablez1 +
 
-	     ( ( in.data[x1+y1+z2]*tablex1 + in.data[x2+y1+z2]*tablex2 + in.data[x3+y1+z2]*tablex3 +
-		 in.data[x4+y1+z2]*tablex4 + in.data[x5+y1+z2]*tablex5 + in.data[x6+y1+z2]*tablex6 +
-		 in.data[x7+y1+z2]*tablex7 ) * tabley1 +
-	       ( in.data[x1+y2+z2]*tablex1 + in.data[x2+y2+z2]*tablex2 + in.data[x3+y2+z2]*tablex3 +
-		 in.data[x4+y2+z2]*tablex4 + in.data[x5+y2+z2]*tablex5 + in.data[x6+y2+z2]*tablex6 +
-		 in.data[x7+y2+z2]*tablex7 ) * tabley2 +
-	       ( in.data[x1+y3+z2]*tablex1 + in.data[x2+y3+z2]*tablex2 + in.data[x3+y3+z2]*tablex3 +
-		 in.data[x4+y3+z2]*tablex4 + in.data[x5+y3+z2]*tablex5 + in.data[x6+y3+z2]*tablex6 +
-		 in.data[x7+y3+z2]*tablex7 ) * tabley3 +
-	       ( in.data[x1+y4+z2]*tablex1 + in.data[x2+y4+z2]*tablex2 + in.data[x3+y4+z2]*tablex3 +
-		 in.data[x4+y4+z2]*tablex4 + in.data[x5+y4+z2]*tablex5 + in.data[x6+y4+z2]*tablex6 +
-		 in.data[x7+y4+z2]*tablex7 ) * tabley4 +
-	       ( in.data[x1+y5+z2]*tablex1 + in.data[x2+y5+z2]*tablex2 + in.data[x3+y5+z2]*tablex3 +
-		 in.data[x4+y5+z2]*tablex4 + in.data[x5+y5+z2]*tablex5 + in.data[x6+y5+z2]*tablex6 +
-		 in.data[x7+y5+z2]*tablex7 ) * tabley5 +
-	       ( in.data[x1+y6+z2]*tablex1 + in.data[x2+y6+z2]*tablex2 + in.data[x3+y6+z2]*tablex3 +
-		 in.data[x4+y6+z2]*tablex4 + in.data[x5+y6+z2]*tablex5 + in.data[x6+y6+z2]*tablex6 +
-		 in.data[x7+y6+z2]*tablex7 ) * tabley6 +
-	       ( in.data[x1+y7+z2]*tablex1 + in.data[x2+y7+z2]*tablex2 + in.data[x3+y7+z2]*tablex3 +
-		 in.data[x4+y7+z2]*tablex4 + in.data[x5+y7+z2]*tablex5 + in.data[x6+y7+z2]*tablex6 +
-		 in.data[x7+y7+z2]*tablex7 ) * tabley7 ) *tablez2 +
+           (( DIRECT_VOL_ELEM(in,z2,y1,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z2,y1,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z2,y1,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z2,y1,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z2,y1,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z2,y1,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z2,y1,x7)*tablex7 ) * tabley1 +
+            ( DIRECT_VOL_ELEM(in,z2,y2,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z2,y2,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z2,y2,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z2,y2,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z2,y2,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z2,y2,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z2,y2,x7)*tablex7 ) * tabley2 +
+            ( DIRECT_VOL_ELEM(in,z2,y3,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z2,y3,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z2,y3,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z2,y3,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z2,y3,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z2,y3,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z2,y3,x7)*tablex7 ) * tabley3 +
+            ( DIRECT_VOL_ELEM(in,z2,y4,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z2,y4,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z2,y4,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z2,y4,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z2,y4,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z2,y4,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z2,y4,x7)*tablex7 ) * tabley4 +
+            ( DIRECT_VOL_ELEM(in,z2,y5,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z2,y5,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z2,y5,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z2,y5,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z2,y5,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z2,y5,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z2,y5,x7)*tablex7 ) * tabley5 +
+            ( DIRECT_VOL_ELEM(in,z2,y6,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z2,y6,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z2,y6,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z2,y6,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z2,y6,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z2,y6,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z2,y6,x7)*tablex7 ) * tabley6 +
+            ( DIRECT_VOL_ELEM(in,z2,y7,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z2,y7,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z2,y7,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z2,y7,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z2,y7,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z2,y7,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z2,y7,x7)*tablex7 ) * tabley7 ) * tablez2 +
 
-       	     ( ( in.data[x1+y1+z3]*tablex1 + in.data[x2+y1+z3]*tablex2 + in.data[x3+y1+z3]*tablex3 +
-		 in.data[x4+y1+z3]*tablex4 + in.data[x5+y1+z3]*tablex5 + in.data[x6+y1+z3]*tablex6 +
-		 in.data[x7+y1+z3]*tablex7 ) * tabley1 +
-	       ( in.data[x1+y2+z3]*tablex1 + in.data[x2+y2+z3]*tablex2 + in.data[x3+y2+z3]*tablex3 +
-		 in.data[x4+y2+z3]*tablex4 + in.data[x5+y2+z3]*tablex5 + in.data[x6+y2+z3]*tablex6 +
-		 in.data[x7+y2+z3]*tablex7 ) * tabley2 +
-	       ( in.data[x1+y3+z3]*tablex1 + in.data[x2+y3+z3]*tablex2 + in.data[x3+y3+z3]*tablex3 +
-		 in.data[x4+y3+z3]*tablex4 + in.data[x5+y3+z3]*tablex5 + in.data[x6+y3+z3]*tablex6 +
-		 in.data[x7+y3+z3]*tablex7 ) * tabley3 +
-	       ( in.data[x1+y4+z3]*tablex1 + in.data[x2+y4+z3]*tablex2 + in.data[x3+y4+z3]*tablex3 +
-		 in.data[x4+y4+z3]*tablex4 + in.data[x5+y4+z3]*tablex5 + in.data[x6+y4+z3]*tablex6 +
-		 in.data[x7+y4+z3]*tablex7 ) * tabley4 +
-	       ( in.data[x1+y5+z3]*tablex1 + in.data[x2+y5+z3]*tablex2 + in.data[x3+y5+z3]*tablex3 +
-		 in.data[x4+y5+z3]*tablex4 + in.data[x5+y5+z3]*tablex5 + in.data[x6+y5+z3]*tablex6 +
-		 in.data[x7+y5+z3]*tablex7 ) * tabley5 +
-	       ( in.data[x1+y6+z3]*tablex1 + in.data[x2+y6+z3]*tablex2 + in.data[x3+y6+z3]*tablex3 +
-		 in.data[x4+y6+z3]*tablex4 + in.data[x5+y6+z3]*tablex5 + in.data[x6+y6+z3]*tablex6 +
-		 in.data[x7+y6+z3]*tablex7 ) * tabley6 +
-	       ( in.data[x1+y7+z3]*tablex1 + in.data[x2+y7+z3]*tablex2 + in.data[x3+y7+z3]*tablex3 +
-		 in.data[x4+y7+z3]*tablex4 + in.data[x5+y7+z3]*tablex5 + in.data[x6+y7+z3]*tablex6 +
-		 in.data[x7+y7+z3]*tablex7 ) * tabley7 ) *tablez3 +
+           (( DIRECT_VOL_ELEM(in,z3,y1,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z3,y1,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z3,y1,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z3,y1,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z3,y1,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z3,y1,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z3,y1,x7)*tablex7 ) * tabley1 +
+            ( DIRECT_VOL_ELEM(in,z3,y2,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z3,y2,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z3,y2,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z3,y2,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z3,y2,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z3,y2,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z3,y2,x7)*tablex7 ) * tabley2 +
+            ( DIRECT_VOL_ELEM(in,z3,y3,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z3,y3,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z3,y3,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z3,y3,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z3,y3,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z3,y3,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z3,y3,x7)*tablex7 ) * tabley3 +
+            ( DIRECT_VOL_ELEM(in,z3,y4,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z3,y4,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z3,y4,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z3,y4,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z3,y4,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z3,y4,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z3,y4,x7)*tablex7 ) * tabley4 +
+            ( DIRECT_VOL_ELEM(in,z3,y5,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z3,y5,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z3,y5,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z3,y5,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z3,y5,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z3,y5,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z3,y5,x7)*tablex7 ) * tabley5 +
+            ( DIRECT_VOL_ELEM(in,z3,y6,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z3,y6,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z3,y6,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z3,y6,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z3,y6,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z3,y6,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z3,y6,x7)*tablex7 ) * tabley6 +
+            ( DIRECT_VOL_ELEM(in,z3,y7,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z3,y7,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z3,y7,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z3,y7,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z3,y7,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z3,y7,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z3,y7,x7)*tablex7 ) * tabley7 ) * tablez3 +
 
-	     ( ( in.data[x1+y1+z4]*tablex1 + in.data[x2+y1+z4]*tablex2 + in.data[x3+y1+z4]*tablex3 +
-		 in.data[x4+y1+z4]*tablex4 + in.data[x5+y1+z4]*tablex5 + in.data[x6+y1+z4]*tablex6 +
-		 in.data[x7+y1+z4]*tablex7 ) * tabley1 +
-	       ( in.data[x1+y2+z4]*tablex1 + in.data[x2+y2+z4]*tablex2 + in.data[x3+y2+z4]*tablex3 +
-		 in.data[x4+y2+z4]*tablex4 + in.data[x5+y2+z4]*tablex5 + in.data[x6+y2+z4]*tablex6 +
-		 in.data[x7+y2+z4]*tablex7 ) * tabley2 +
-	       ( in.data[x1+y3+z4]*tablex1 + in.data[x2+y3+z4]*tablex2 + in.data[x3+y3+z4]*tablex3 +
-		 in.data[x4+y3+z4]*tablex4 + in.data[x5+y3+z4]*tablex5 + in.data[x6+y3+z4]*tablex6 +
-		 in.data[x7+y3+z4]*tablex7 ) * tabley3 +
-	       ( in.data[x1+y4+z4]*tablex1 + in.data[x2+y4+z4]*tablex2 + in.data[x3+y4+z4]*tablex3 +
-		 in.data[x4+y4+z4]*tablex4 + in.data[x5+y4+z4]*tablex5 + in.data[x6+y4+z4]*tablex6 +
-		 in.data[x7+y4+z4]*tablex7 ) * tabley4 +
-	       ( in.data[x1+y5+z4]*tablex1 + in.data[x2+y5+z4]*tablex2 + in.data[x3+y5+z4]*tablex3 +
-		 in.data[x4+y5+z4]*tablex4 + in.data[x5+y5+z4]*tablex5 + in.data[x6+y5+z4]*tablex6 +
-		 in.data[x7+y5+z4]*tablex7 ) * tabley5 +
-	       ( in.data[x1+y6+z4]*tablex1 + in.data[x2+y6+z4]*tablex2 + in.data[x3+y6+z4]*tablex3 +
-		 in.data[x4+y6+z4]*tablex4 + in.data[x5+y6+z4]*tablex5 + in.data[x6+y6+z4]*tablex6 +
-		 in.data[x7+y6+z4]*tablex7 ) * tabley6 +
-	       ( in.data[x1+y7+z4]*tablex1 + in.data[x2+y7+z4]*tablex2 + in.data[x3+y7+z4]*tablex3 +
-		 in.data[x4+y7+z4]*tablex4 + in.data[x5+y7+z4]*tablex5 + in.data[x6+y7+z4]*tablex6 +
-		 in.data[x7+y7+z4]*tablex7 ) * tabley7 ) *tablez4 +
-	
-	     ( ( in.data[x1+y1+z5]*tablex1 + in.data[x2+y1+z5]*tablex2 + in.data[x3+y1+z5]*tablex3 +
-		 in.data[x4+y1+z5]*tablex4 + in.data[x5+y1+z5]*tablex5 + in.data[x6+y1+z5]*tablex6 +
-		 in.data[x7+y1+z5]*tablex7 ) * tabley1 +
-	       ( in.data[x1+y2+z5]*tablex1 + in.data[x2+y2+z5]*tablex2 + in.data[x3+y2+z5]*tablex3 +
-		 in.data[x4+y2+z5]*tablex4 + in.data[x5+y2+z5]*tablex5 + in.data[x6+y2+z5]*tablex6 +
-		 in.data[x7+y2+z5]*tablex7 ) * tabley2 +
-	       ( in.data[x1+y3+z5]*tablex1 + in.data[x2+y3+z5]*tablex2 + in.data[x3+y3+z5]*tablex3 +
-		 in.data[x4+y3+z5]*tablex4 + in.data[x5+y3+z5]*tablex5 + in.data[x6+y3+z5]*tablex6 +
-		 in.data[x7+y3+z5]*tablex7 ) * tabley3 +
-	       ( in.data[x1+y4+z5]*tablex1 + in.data[x2+y4+z5]*tablex2 + in.data[x3+y4+z5]*tablex3 +
-		 in.data[x4+y4+z5]*tablex4 + in.data[x5+y4+z5]*tablex5 + in.data[x6+y4+z5]*tablex6 +
-		 in.data[x7+y4+z5]*tablex7 ) * tabley4 +
-	       ( in.data[x1+y5+z5]*tablex1 + in.data[x2+y5+z5]*tablex2 + in.data[x3+y5+z5]*tablex3 +
-		 in.data[x4+y5+z5]*tablex4 + in.data[x5+y5+z5]*tablex5 + in.data[x6+y5+z5]*tablex6 +
-		 in.data[x7+y5+z5]*tablex7 ) * tabley5 +
-	       ( in.data[x1+y6+z5]*tablex1 + in.data[x2+y6+z5]*tablex2 + in.data[x3+y6+z5]*tablex3 +
-		 in.data[x4+y6+z5]*tablex4 + in.data[x5+y6+z5]*tablex5 + in.data[x6+y6+z5]*tablex6 +
-		 in.data[x7+y6+z5]*tablex7 ) * tabley6 +
-	       ( in.data[x1+y7+z5]*tablex1 + in.data[x2+y7+z5]*tablex2 + in.data[x3+y7+z5]*tablex3 +
-		 in.data[x4+y7+z5]*tablex4 + in.data[x5+y7+z5]*tablex5 + in.data[x6+y7+z5]*tablex6 +
-		 in.data[x7+y7+z5]*tablex7 ) * tabley7 ) *tablez5 +
+           (( DIRECT_VOL_ELEM(in,z4,y1,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z4,y1,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z4,y1,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z4,y1,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z4,y1,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z4,y1,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z4,y1,x7)*tablex7 ) * tabley1 +
+            ( DIRECT_VOL_ELEM(in,z4,y2,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z4,y2,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z4,y2,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z4,y2,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z4,y2,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z4,y2,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z4,y2,x7)*tablex7 ) * tabley2 +
+            ( DIRECT_VOL_ELEM(in,z4,y3,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z4,y3,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z4,y3,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z4,y3,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z4,y3,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z4,y3,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z4,y3,x7)*tablex7 ) * tabley3 +
+            ( DIRECT_VOL_ELEM(in,z4,y4,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z4,y4,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z4,y4,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z4,y4,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z4,y4,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z4,y4,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z4,y4,x7)*tablex7 ) * tabley4 +
+            ( DIRECT_VOL_ELEM(in,z4,y5,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z4,y5,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z4,y5,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z4,y5,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z4,y5,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z4,y5,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z4,y5,x7)*tablex7 ) * tabley5 +
+            ( DIRECT_VOL_ELEM(in,z4,y6,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z4,y6,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z4,y6,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z4,y6,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z4,y6,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z4,y6,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z4,y6,x7)*tablex7 ) * tabley6 +
+            ( DIRECT_VOL_ELEM(in,z4,y7,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z4,y7,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z4,y7,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z4,y7,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z4,y7,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z4,y7,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z4,y7,x7)*tablex7 ) * tabley7 ) * tablez4 +
 
-	     ( ( in.data[x1+y1+z6]*tablex1 + in.data[x2+y1+z6]*tablex2 + in.data[x3+y1+z6]*tablex3 +
-		 in.data[x4+y1+z6]*tablex4 + in.data[x5+y1+z6]*tablex5 + in.data[x6+y1+z6]*tablex6 +
-		 in.data[x7+y1+z6]*tablex7 ) * tabley1 +
-	       ( in.data[x1+y2+z6]*tablex1 + in.data[x2+y2+z6]*tablex2 + in.data[x3+y2+z6]*tablex3 +
-		 in.data[x4+y2+z6]*tablex4 + in.data[x5+y2+z6]*tablex5 + in.data[x6+y2+z6]*tablex6 +
-		 in.data[x7+y2+z6]*tablex7 ) * tabley2 +
-	       ( in.data[x1+y3+z6]*tablex1 + in.data[x2+y3+z6]*tablex2 + in.data[x3+y3+z6]*tablex3 +
-		 in.data[x4+y3+z6]*tablex4 + in.data[x5+y3+z6]*tablex5 + in.data[x6+y3+z6]*tablex6 +
-		 in.data[x7+y3+z6]*tablex7 ) * tabley3 +
-	       ( in.data[x1+y4+z6]*tablex1 + in.data[x2+y4+z6]*tablex2 + in.data[x3+y4+z6]*tablex3 +
-		 in.data[x4+y4+z6]*tablex4 + in.data[x5+y4+z6]*tablex5 + in.data[x6+y4+z6]*tablex6 +
-		 in.data[x7+y4+z6]*tablex7 ) * tabley4 +
-	       ( in.data[x1+y5+z6]*tablex1 + in.data[x2+y5+z6]*tablex2 + in.data[x3+y5+z6]*tablex3 +
-		 in.data[x4+y5+z6]*tablex4 + in.data[x5+y5+z6]*tablex5 + in.data[x6+y5+z6]*tablex6 +
-		 in.data[x7+y5+z6]*tablex7 ) * tabley5 +
-	       ( in.data[x1+y6+z6]*tablex1 + in.data[x2+y6+z6]*tablex2 + in.data[x3+y6+z6]*tablex3 +
-		 in.data[x4+y6+z6]*tablex4 + in.data[x5+y6+z6]*tablex5 + in.data[x6+y6+z6]*tablex6 +
-		 in.data[x7+y6+z6]*tablex7 ) * tabley6 +
-	       ( in.data[x1+y7+z6]*tablex1 + in.data[x2+y7+z6]*tablex2 + in.data[x3+y7+z6]*tablex3 +
-		 in.data[x4+y7+z6]*tablex4 + in.data[x5+y7+z6]*tablex5 + in.data[x6+y7+z6]*tablex6 +
-		 in.data[x7+y7+z6]*tablex7 ) * tabley7 ) *tablez6 +
+           (( DIRECT_VOL_ELEM(in,z5,y1,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z5,y1,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z5,y1,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z5,y1,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z5,y1,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z5,y1,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z5,y1,x7)*tablex7 ) * tabley1 +
+            ( DIRECT_VOL_ELEM(in,z5,y2,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z5,y2,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z5,y2,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z5,y2,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z5,y2,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z5,y2,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z5,y2,x7)*tablex7 ) * tabley2 +
+            ( DIRECT_VOL_ELEM(in,z5,y3,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z5,y3,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z5,y3,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z5,y3,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z5,y3,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z5,y3,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z5,y3,x7)*tablex7 ) * tabley3 +
+            ( DIRECT_VOL_ELEM(in,z5,y4,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z5,y4,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z5,y4,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z5,y4,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z5,y4,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z5,y4,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z5,y4,x7)*tablex7 ) * tabley4 +
+            ( DIRECT_VOL_ELEM(in,z5,y5,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z5,y5,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z5,y5,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z5,y5,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z5,y5,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z5,y5,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z5,y5,x7)*tablex7 ) * tabley5 +
+            ( DIRECT_VOL_ELEM(in,z5,y6,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z5,y6,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z5,y6,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z5,y6,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z5,y6,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z5,y6,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z5,y6,x7)*tablex7 ) * tabley6 +
+            ( DIRECT_VOL_ELEM(in,z5,y7,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z5,y7,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z5,y7,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z5,y7,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z5,y7,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z5,y7,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z5,y7,x7)*tablex7 ) * tabley7 ) * tablez5 +
 
-	     ( ( in.data[x1+y1+z7]*tablex1 + in.data[x2+y1+z7]*tablex2 + in.data[x3+y1+z7]*tablex3 +
-		 in.data[x4+y1+z7]*tablex4 + in.data[x5+y1+z7]*tablex5 + in.data[x6+y1+z7]*tablex6 +
-		 in.data[x7+y1+z7]*tablex7 ) * tabley1 +
-	       ( in.data[x1+y2+z7]*tablex1 + in.data[x2+y2+z7]*tablex2 + in.data[x3+y2+z7]*tablex3 +
-		 in.data[x4+y2+z7]*tablex4 + in.data[x5+y2+z7]*tablex5 + in.data[x6+y2+z7]*tablex6 +
-		 in.data[x7+y2+z7]*tablex7 ) * tabley2 +
-	       ( in.data[x1+y3+z7]*tablex1 + in.data[x2+y3+z7]*tablex2 + in.data[x3+y3+z7]*tablex3 +
-		 in.data[x4+y3+z7]*tablex4 + in.data[x5+y3+z7]*tablex5 + in.data[x6+y3+z7]*tablex6 +
-		 in.data[x7+y3+z7]*tablex7 ) * tabley3 +
-	       ( in.data[x1+y4+z7]*tablex1 + in.data[x2+y4+z7]*tablex2 + in.data[x3+y4+z7]*tablex3 +
-		 in.data[x4+y4+z7]*tablex4 + in.data[x5+y4+z7]*tablex5 + in.data[x6+y4+z7]*tablex6 +
-		 in.data[x7+y4+z7]*tablex7 ) * tabley4 +
-	       ( in.data[x1+y5+z7]*tablex1 + in.data[x2+y5+z7]*tablex2 + in.data[x3+y5+z7]*tablex3 +
-		 in.data[x4+y5+z7]*tablex4 + in.data[x5+y5+z7]*tablex5 + in.data[x6+y5+z7]*tablex6 +
-		 in.data[x7+y5+z7]*tablex7 ) * tabley5 +
-	       ( in.data[x1+y6+z7]*tablex1 + in.data[x2+y6+z7]*tablex2 + in.data[x3+y6+z7]*tablex3 +
-		 in.data[x4+y6+z7]*tablex4 + in.data[x5+y6+z7]*tablex5 + in.data[x6+y6+z7]*tablex6 +
-		 in.data[x7+y6+z7]*tablex7 ) * tabley6 +
-	       ( in.data[x1+y7+z7]*tablex1 + in.data[x2+y7+z7]*tablex2 + in.data[x3+y7+z7]*tablex3 +
-		 in.data[x4+y7+z7]*tablex4 + in.data[x5+y7+z7]*tablex5 + in.data[x6+y7+z7]*tablex6 +
-		 in.data[x7+y7+z7]*tablex7 ) * tabley7 ) *tablez7;
-    
+           (( DIRECT_VOL_ELEM(in,z6,y1,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z6,y1,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z6,y1,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z6,y1,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z6,y1,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z6,y1,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z6,y1,x7)*tablex7 ) * tabley1 +
+            ( DIRECT_VOL_ELEM(in,z6,y2,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z6,y2,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z6,y2,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z6,y2,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z6,y2,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z6,y2,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z6,y2,x7)*tablex7 ) * tabley2 +
+            ( DIRECT_VOL_ELEM(in,z6,y3,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z6,y3,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z6,y3,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z6,y3,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z6,y3,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z6,y3,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z6,y3,x7)*tablex7 ) * tabley3 +
+            ( DIRECT_VOL_ELEM(in,z6,y4,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z6,y4,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z6,y4,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z6,y4,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z6,y4,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z6,y4,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z6,y4,x7)*tablex7 ) * tabley4 +
+            ( DIRECT_VOL_ELEM(in,z6,y5,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z6,y5,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z6,y5,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z6,y5,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z6,y5,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z6,y5,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z6,y5,x7)*tablex7 ) * tabley5 +
+            ( DIRECT_VOL_ELEM(in,z6,y6,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z6,y6,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z6,y6,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z6,y6,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z6,y6,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z6,y6,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z6,y6,x7)*tablex7 ) * tabley6 +
+            ( DIRECT_VOL_ELEM(in,z6,y7,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z6,y7,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z6,y7,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z6,y7,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z6,y7,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z6,y7,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z6,y7,x7)*tablex7 ) * tabley7 ) * tablez6 +
+
+           (( DIRECT_VOL_ELEM(in,z7,y1,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z7,y1,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z7,y1,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z7,y1,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z7,y1,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z7,y1,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z7,y1,x7)*tablex7 ) * tabley1 +
+            ( DIRECT_VOL_ELEM(in,z7,y2,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z7,y2,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z7,y2,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z7,y2,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z7,y2,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z7,y2,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z7,y2,x7)*tablex7 ) * tabley2 +
+            ( DIRECT_VOL_ELEM(in,z7,y3,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z7,y3,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z7,y3,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z7,y3,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z7,y3,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z7,y3,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z7,y3,x7)*tablex7 ) * tabley3 +
+            ( DIRECT_VOL_ELEM(in,z7,y4,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z7,y4,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z7,y4,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z7,y4,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z7,y4,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z7,y4,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z7,y4,x7)*tablex7 ) * tabley4 +
+            ( DIRECT_VOL_ELEM(in,z7,y5,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z7,y5,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z7,y5,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z7,y5,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z7,y5,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z7,y5,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z7,y5,x7)*tablex7 ) * tabley5 +
+            ( DIRECT_VOL_ELEM(in,z7,y6,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z7,y6,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z7,y6,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z7,y6,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z7,y6,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z7,y6,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z7,y6,x7)*tablex7 ) * tabley6 +
+            ( DIRECT_VOL_ELEM(in,z7,y7,x1)*tablex1 +
+              DIRECT_VOL_ELEM(in,z7,y7,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z7,y7,x3)*tablex3 +
+	      DIRECT_VOL_ELEM(in,z7,y7,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z7,y7,x5)*tablex5 +
+              DIRECT_VOL_ELEM(in,z7,y7,x6)*tablex6 +
+	      DIRECT_VOL_ELEM(in,z7,y7,x7)*tablex7 ) * tabley7 ) * tablez7;
+
     w = (tablex1+tablex2+tablex3+tablex4+tablex5+tablex6+tablex7) *
 	(tabley1+tabley2+tabley3+tabley4+tabley5+tabley6+tabley7) *
 	(tablez1+tablez2+tablez3+tablez4+tablez5+tablez6+tablez7);	
@@ -699,7 +924,7 @@ void applyGeometryReverseGridding(Matrix2D<T> &M2, Matrix2D< double > A,
  */
 template<typename T>
 void applyGeometryReverseGridding(Matrix3D<T> &V2, Matrix2D< double > A, 
-				  const Matrix3D<T> &V1, const KaiserBessel &kb, 
+				  Matrix3D<T> &V1, const KaiserBessel &kb, 
 				  bool inv, bool wrap, 
 				  int nx = 0, int ny = 0, int nz = 0, T outside = (T) 0)
 {

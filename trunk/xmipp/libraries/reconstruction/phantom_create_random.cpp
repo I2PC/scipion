@@ -344,7 +344,7 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
             // Compute phantom volume
             if (!side.voxel_mode) volume(n) = Realization.volume();
             else volume(n) =
-                    side.VoxelPhantom().count_threshold("above", 0, 0);
+                    side.VoxelPhantom().countThreshold("above", 0, 0);
 
             // Compute projection
             if (!side.voxel_mode)

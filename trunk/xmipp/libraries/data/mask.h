@@ -1172,9 +1172,9 @@ public:
     {
         if (datatype() == INT_MASK)
         {
-            type_cast(imask1D, dmask1D);
-            type_cast(imask2D, dmask2D);
-            type_cast(imask3D, dmask3D);
+            typeCast(imask1D, dmask1D);
+            typeCast(imask2D, dmask2D);
+            typeCast(imask3D, dmask3D);
         }
     }
 
@@ -1186,9 +1186,9 @@ public:
     {
         if (datatype() == DOUBLE_MASK)
         {
-            type_cast(dmask1D, imask1D);
-            type_cast(dmask2D, imask2D);
-            type_cast(dmask3D, imask3D);
+            typeCast(dmask1D, imask1D);
+            typeCast(dmask2D, imask2D);
+            typeCast(dmask3D, imask3D);
         }
     }
 };
@@ -1662,8 +1662,10 @@ int count_with_mask(const Matrix3D< int >& mask,
 template<typename T>
 void invert_binary_mask(Matrix2D< T >& mask)
 {
-    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(mask)
-    MULTIDIM_ELEM(mask, i) = (MULTIDIM_ELEM(mask, i) == 1) ? 0 : 1;
+    T* ptr=NULL;
+    unsigned long int n;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(mask,n,ptr)
+        *ptr = 1-(*ptr);
 }
 
 /** Invert binary mask (3D)
@@ -1674,8 +1676,10 @@ void invert_binary_mask(Matrix2D< T >& mask)
 template<typename T>
 void invert_binary_mask(Matrix3D< T >& mask)
 {
-    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(mask)
-    MULTIDIM_ELEM(mask, i) = (MULTIDIM_ELEM(mask, i) == 1) ? 0 : 1;
+    T* ptr=NULL;
+    unsigned long int n;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(mask,n,ptr)
+    	*ptr = 1-(*ptr);
 }
 
 /** Range adjust within binary mask
@@ -1685,7 +1689,7 @@ void invert_binary_mask(Matrix3D< T >& mask)
  * voxels within the mask are used to compute the linear transformation. If no
  * mask is provided then all voxels are used.
  */
-void range_adjust_within_mask(const Matrix2D< double >* mask,
+void rangeAdjust_within_mask(const Matrix2D< double >* mask,
                               const Matrix2D< double >& m1,
                               Matrix2D< double >& m2);
 
@@ -1696,7 +1700,7 @@ void range_adjust_within_mask(const Matrix2D< double >* mask,
  * voxels within the mask are used to compute the linear transformation. If no
  * mask is provided then all voxels are used.
  */
-void range_adjust_within_mask(const Matrix3D< double >* mask,
+void rangeAdjust_within_mask(const Matrix3D< double >* mask,
                               const Matrix3D< double >& m1,
                               Matrix3D< double >& m2);
 

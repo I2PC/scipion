@@ -84,9 +84,9 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 {
     Add_noise_parameters *eprm = (Add_noise_parameters *) prm;
     if (eprm->gaussian)
-        img().add_noise(eprm->noise_avg, eprm->noise_stddev, "gaussian");
+        img().addNoise(eprm->noise_avg, eprm->noise_stddev, "gaussian");
     else if (eprm->uniform)
-        img().add_noise(eprm->noise_min, eprm->noise_max, "uniform");
+        img().addNoise(eprm->noise_min, eprm->noise_max, "uniform");
     return true;
 }
 
@@ -94,9 +94,9 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
     Add_noise_parameters *eprm = (Add_noise_parameters *) prm;
     if (eprm->gaussian)
-        vol().add_noise(eprm->noise_avg, eprm->noise_stddev, "gaussian");
+        vol().addNoise(eprm->noise_avg, eprm->noise_stddev, "gaussian");
     else if (eprm->uniform)
-        vol().add_noise(eprm->noise_min, eprm->noise_max, "uniform");
+        vol().addNoise(eprm->noise_min, eprm->noise_max, "uniform");
     return true;
 }
 

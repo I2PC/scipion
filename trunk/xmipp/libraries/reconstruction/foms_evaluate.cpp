@@ -228,7 +228,7 @@ void EVALUATE_Side_Info::produce_Side_Info(
         vol_phantom.read(prm.fnPhantom);
         vol_phantom.moveOriginTo_center();
         vol_label().resize(vol_phantom());
-        vol_label().init_constant(1);
+        vol_label().initConstant(1);
         num_feat = 0;
     }
     else
@@ -297,7 +297,7 @@ void EVALUATE_Side_Info::produce_Side_Info(
     else
     {
         vol_mask().resize(vol_recons());
-        vol_mask().init_constant(1);
+        vol_mask().initConstant(1);
     }
 
     if (prm.global_radius != 0)
@@ -314,7 +314,7 @@ void EVALUATE_Side_Info::produce_Side_Info(
     if (prm.fit_gray_scales)
     {
         std::cerr << "Fitting gray values ...\n";
-        range_adjust_within_mask(&(vol_mask()), vol_phantom(), vol_recons());
+        rangeAdjust_within_mask(&(vol_mask()), vol_phantom(), vol_recons());
     }
 
     // Computing distance map ...............................................
@@ -352,7 +352,7 @@ void compute_FOMs(const Prog_Evaluate_Parameters &prm,
 
     // Local measures
     results.scL2_FOMs.initZeros(side.num_feat + 1); // 0, 1, ..., FeatNo()
-    results.scL2_FOMs.init_constant(-1);
+    results.scL2_FOMs.initConstant(-1);
     results.scL1_FOMs = results.scmu_FOMs = results.scdev_FOMs =
                                                 results.scrange_FOMs = results.sccorr_FOMs = results.scinf_FOMs =
                                                                            results.scL2_FOMs;
@@ -388,7 +388,7 @@ void compute_FOMs(const Prog_Evaluate_Parameters &prm,
     }
 
     results.hsmu_FOMs.resize(side.num_feat + 1); // 0, 1, ..., FeatNo()
-    results.hsmu_FOMs.init_constant(-1);
+    results.hsmu_FOMs.initConstant(-1);
     results.hsvr_FOMs = results.hsdt_FOMs = results.hsbr_FOMs = results.hsmu_FOMs;
     results.hsmu_FOM = results.hsdt_FOM = results.hsbr_FOM = results.hsvr_FOM = -1;
     results.drrt_FOM = results.dsbl_FOM = results.dsad_FOM = -1;
@@ -483,13 +483,13 @@ void show_FOMs(const Prog_Evaluate_Parameters &prm,
     side.vol_phantom().computeStats(avg, stddev, min, max);
     std::cout << "Phantom Stats: \n";
     std::cout << "   ";
-    side.vol_phantom().print_stats();
+    side.vol_phantom().printStats();
     std::cout << std::endl;
     std::cout << "    range=" << max - min << std::endl;
     side.vol_recons().computeStats(avg, stddev, min, max);
     std::cout << "Recons  Stats: \n";
     std::cout << "   ";
-    side.vol_recons().print_stats();
+    side.vol_recons().printStats();
     std::cout << std::endl;
     std::cout << "    range=" << max - min << std::endl;
     std::cout << std::endl;

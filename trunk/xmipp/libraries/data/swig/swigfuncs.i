@@ -4,10 +4,13 @@
 
 // Many functions are ignored through the #ifndef SWIG mechanism.
 // Open the ../funcs.h file to see which ones
-class string {};
+class std::string {};
 %include "../funcs.h"
 
 PRINT(FileName)
+//%typemap(in) const FileName& {
+//    $1 = &(FileName(PyString_AsString($input)));
+//}
 
 /* Test code
 python
@@ -19,8 +22,8 @@ print XmippData.gaussian1D(3,1);
 print XmippData.gaussian1D(3,1,3);
 
 # A normal function with returned valued and reference arguments
-x1=doubleP()
-x2=doubleP()
+x1=XmippData.doubleP()
+x2=XmippData.doubleP()
 result=XmippData.solve_2nd_degree_eq(1.0,-1.0,-6.0,x1,x2)
 print x1.value()
 print x2.value()

@@ -103,7 +103,7 @@ void produceReverseGriddingMatrix2D(const Matrix2D< double > &in,
 }
 
 // Prepare a 3D Fourier-space volume for gridding
-void produceReverseGriddingFourierMatrix3D(const Matrix3D< std::complex< double > > &in, 
+void produceReverseGriddingFourierMatrix3D(Matrix3D< std::complex< double > > &in, 
 					   Matrix3D< std::complex< double > > &out,
 					   KaiserBessel &kb)
 {

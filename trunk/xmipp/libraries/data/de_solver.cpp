@@ -18,7 +18,7 @@ DESolver::DESolver(int dim, int popSize, double _pGrad) :
     bestSolution  = new double[nDim];
     trialGrad.resize(nDim);
     stepsGrad.resize(nDim);
-    stepsGrad.init_constant(1);
+    stepsGrad.initConstant(1);
     popEnergy   = new double[nPop];
     population   = new double[nPop * nDim];
 

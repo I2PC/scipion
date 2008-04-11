@@ -60,7 +60,7 @@ void compute_voxels_in_feat(Volume *vol_label,
     int sel_feat;
 
     // Choose dimensions for output vector
-    int label_no = (int)(*vol_label)().compute_max();
+    int label_no = (int)(*vol_label)().computeMax();
     feat_voxels.resize(label_no + 1); // 0, 1, ..., FeatNo()
 
     FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*vol_label))
@@ -701,12 +701,12 @@ void compute_dr_FOMs(const Volume *vol_phantom, const Volume *vol_recons,
 
     // Initialise output image and Radon Transform ..........................
     (*img_histog)().resize(rot_recons.sliceNumber(), no_steps);
-    (*img_histog)().startingY() = rot_recons.startingZ();
+    STARTINGY((*img_histog)()) = STARTINGZ(rot_recons);
     compute_hist(rot_recons, hist_recons, max_background,
-                 rot_recons.compute_max(), no_steps);
+                 rot_recons.computeMax(), no_steps);
 
     RT_recons.resize(rot_recons.sliceNumber());
-    RT_recons.startingX() = rot_recons.startingZ();
+    STARTINGX(RT_recons) = STARTINGZ(rot_recons);
     RT_phantom = RT_recons;
     RTno.initZeros(RT_recons);
 

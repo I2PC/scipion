@@ -179,7 +179,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 {
     Window_parameters *eprm = (Window_parameters *) prm;
     if (eprm->average_pad)
-        eprm->init_value = (img()).compute_avg();
+        eprm->init_value = (img()).computeAvg();
     else if (eprm->corner_pad)
         eprm->init_value = DIRECT_MAT_ELEM(img(), 0, 0);
     if (!eprm->physical_coords)
@@ -193,7 +193,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
     Window_parameters *eprm = (Window_parameters *) prm;
     if (eprm->average_pad)
-        eprm->init_value = (vol()).compute_avg();
+        eprm->init_value = (vol()).computeAvg();
     else if (eprm->corner_pad)
         eprm->init_value = DIRECT_VOL_ELEM(vol(), 0, 0, 0);
     if (!eprm->physical_coords)

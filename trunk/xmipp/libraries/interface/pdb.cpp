@@ -102,8 +102,8 @@ void computePDBgeometry(const std::string &fnPDB,
     centerOfMass.initZeros(3);
     limit0.initZeros(3);
     limitF.initZeros(3);
-    limit0.init_constant(1e30);
-    limitF.init_constant(-1e30);
+    limit0.initConstant(1e30);
+    limitF.initConstant(-1e30);
     double total_mass = 0;
 
     // Open the file
@@ -561,7 +561,7 @@ void optimizeHlpf(Matrix1D<double> &f, int M, double T, const std::string &atom,
     globalAtom=atom;
     double fitness;
     int iter;
-    Matrix1D<double> steps(3); steps.init_constant(1);
+    Matrix1D<double> steps(3); steps.initConstant(1);
     powellOptimizer(globalHlpfPrm, 1, 3,
                       &Hlpf_fitness, 0.05, fitness, iter, steps, false);
     bestPrm=globalHlpfPrm;

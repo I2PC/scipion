@@ -37,7 +37,7 @@
 //@{
 
 // Utilities --------------------------------------------------------------
-void nrerror(char error_text[]);
+void nrerror(const char error_text[]);
 
 // Random numbers ---------------------------------------------------------
 double ran1(int *idum);                                 // Uniform random

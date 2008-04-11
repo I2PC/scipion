@@ -320,8 +320,7 @@ void *project_SimpleGridThread( void * params )
 			
 			proj->reset(YSIZE( (*global_proj)() ), XSIZE( (*global_proj)() ));
 			proj->set_angles(rot, tilt, psi);
-			(*norm_proj)().copyShape((*proj)());
-			(*norm_proj)().initZeros();
+			(*norm_proj)().initZeros((*proj)());
 		}
 		else
 		{
@@ -510,7 +509,7 @@ void project_SimpleGrid(VolumeT<T> *vol, const SimpleGrid *grid,
         std::cout << "highest        " << XX_highest << " " << YY_highest
         << " " << XX_highest << std::endl;
         std::cout << "Stats of input basis volume ";
-        vol().print_stats();
+        vol().printStats();
         std::cout << std::endl;
         std::cout.flush();
     }
@@ -865,8 +864,7 @@ void project_Volume(
     {
         proj.reset(Ydim, Xdim);
         proj.set_angles(rot, tilt, psi);
-        norm_proj().copyShape(proj());
-        norm_proj().initZeros();
+        norm_proj().initZeros(proj());
     }
 	
 	if( threads > 0 )

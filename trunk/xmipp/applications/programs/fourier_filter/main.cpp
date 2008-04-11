@@ -60,8 +60,8 @@ public:
         Prog_parameters::usage();
         fmask.usage();
         std::cerr << "  [-save_mask <fn_mask>]                : Save applied filter\n"
-        << "  [-save_amplitude <fn_ampl>]           : Save amplitude of filter\n"
-        << "  [-do_not_center]                      : For the amplitude file\n";
+                  << "  [-save_amplitude <fn_ampl>]           : Save amplitude of filter\n"
+                  << "  [-do_not_center]                      : For the amplitude file\n";
     }
 };
 
@@ -101,39 +101,8 @@ int main(int argc, char **argv)
 {
     FourierFilter_parameters prm;
     SF_main(argc, argv, &prm, (void *)&process_img, (void *)&process_vol);
-    if (prm.fn_mask != "")      prm.fmask.write_mask(prm.fn_mask, 2);
+    if (prm.fn_mask != "")
+       prm.fmask.write_mask(prm.fn_mask, prm.dim);
     if (prm.fn_amplitude != "") prm.fmask.write_amplitude(prm.fn_amplitude,
                 prm.dim, prm.do_not_center);
 }
-
-/* Menus ------------------------------------------------------------------- */
-/*Colimate:
-   PROGRAM FourierFilter {
-      url="http://www.cnb.uam.es/~bioinfo/NewXmipp/Applications/Src/FourierFilter/Help/fourierfilter.html";
-      help="Apply a frequency filter to volumes and images";
-      OPEN MENU menu_fourierfilter;
-      COMMAND LINES {
- + usual: xmipp_fourierfilter
-               #include "prog_line.mnu"
-               [-save_mask $FN_MASK]
-        [-save_amplitude $FN_AMPL]
-        [-do_not_center]
-               #include "fourier_line.mnu"
-      }
-      PARAMETER DEFINITIONS {
-        #include "prog_vars.mnu"
-        $FN_MASK {type=file; label="Save applied mask as Xmipp Fourier Image";}
-        $FN_AMPL {type=file; label="Save amplitude of applied mask";}
-        OPT(-do_not_center) {label="Do not center";}
-        #include "fourier_vars.mnu"
-      }
-   }
-
-   MENU menu_fourierfilter {
-      #include "prog_menu.mnu"
-      OPT($FN_MASK)
-      OPT($FN_AMPL)
-      OPT(-do_not_center)
-      #include "fourier_menu.mnu"
-   }
-*/

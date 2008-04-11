@@ -112,9 +112,6 @@ void process_img(ImageXmipp &img, const Prog_parameters *prm)
     }
     out.close();
     out2.close();
-
-    frc.core_deallocate();
-
 }
 
 void process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
@@ -154,9 +151,6 @@ void process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
     }
     out.close();
     out2.close();
-
-    dpr.core_deallocate();
-    frc.core_deallocate();
 }
 
 

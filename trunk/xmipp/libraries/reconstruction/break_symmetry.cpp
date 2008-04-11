@@ -173,7 +173,7 @@ void Prog_Break_Sym_prm::process_one_image(ImageXmipp &img, int &opt_vol,
     {
         projmask().resize(dim, dim);
         projmask().setXmippOrigin();
-        projmask().init_constant(1.);
+        projmask().initConstant(1.);
     }
 
     // Pre-calculate Xsq:

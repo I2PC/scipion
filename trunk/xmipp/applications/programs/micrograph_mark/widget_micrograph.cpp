@@ -658,8 +658,8 @@ void QtWidgetMicrograph::classifyMask()
     double radial_step = (max_radius - 6) / __radial_bins;
 
     Matrix2D<int> *classif1 = new Matrix2D<int>;
-    classif1->copyShape(mask);
-    classif1->init_constant(-1);
+    classif1->resize(mask);
+    classif1->initConstant(-1);
     Matrix1D<int> Nrad(__radial_bins);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
     {
@@ -1557,7 +1557,7 @@ void QtWidgetMicrograph::write()
 
     // Save the mask
     ImageXmipp save;
-    type_cast(__mask.get_binary_mask2D(), save());
+    typeCast(__mask.get_binary_mask2D(), save());
     save.write(fn_root + ".mask");
 
     // Save parameters

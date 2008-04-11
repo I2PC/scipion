@@ -190,7 +190,7 @@ public:
     {
         if (this != static_cast< VolumeT*>(&v))
         {
-            type_cast(v.img, img);
+            typeCast(v.img, img);
             fn_img = v.fn_img;
         }
 
@@ -214,7 +214,7 @@ public:
         if (&img != (Matrix3D< T >*)(&m));
         {
             fn_img = "";
-            type_cast(m, img);
+            typeCast(m, img);
         }
 
         return *this;
@@ -266,9 +266,9 @@ public:
      */
     void moveOriginTo_center()
     {
-        img.startingZ() = FIRST_XMIPP_INDEX(img.zdim);
-        img.startingY() = FIRST_XMIPP_INDEX(img.ydim);
-        img.startingX() = FIRST_XMIPP_INDEX(img.xdim);
+        STARTINGZ(img) = FIRST_XMIPP_INDEX(img.zdim);
+        STARTINGY(img) = FIRST_XMIPP_INDEX(img.ydim);
+        STARTINGX(img) = FIRST_XMIPP_INDEX(img.xdim);
     }
 
     /** Fill with 0 and move origin to center.
@@ -435,29 +435,31 @@ public:
     {
         img.resize(Zdim, Ydim, Xdim);
 
-        for (int i = 0; i < img.size; i++)
+    	T* ptr;
+	unsigned long int n;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(img,n,ptr)
             switch (volume_type)
             {
             case VBYTE:
                 unsigned char u;
                 FREAD(&u, sizeof(unsigned char), 1, fh, reversed);
-                MULTIDIM_ELEM(img, i) = static_cast< T >(u);
+                *ptr = static_cast< T >(u);
                 break;
             case VINT:
                 int ii;
                 FREAD(&ii, sizeof(int), 1, fh, reversed);
-                MULTIDIM_ELEM(img, i) = static_cast< T >(ii);
+                *ptr = static_cast< T >(ii);
                 break;
                 // Integers and floats need to be reversed in identical way
             case V16:
                 unsigned short us;
                 FREAD(&us, sizeof(unsigned short), 1, fh, reversed);
-                MULTIDIM_ELEM(img, i) = static_cast< T >(us);
+                *ptr = static_cast< T >(us);
                 break;
             case VFLOAT:
                 float f;
                 FREAD(&f, sizeof(float), 1, fh, reversed);
-                MULTIDIM_ELEM(img, i) = static_cast< T >(f);
+                *ptr = static_cast< T >(f);
                 break;
             }
     }
@@ -513,32 +515,33 @@ public:
             b = min_val;
         }
 
-        for (int i = 0; i < img.size; i++)
+    	T* ptr;
+	unsigned long int n;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(img,n,ptr) {
             switch (volume_type)
             {
             case VBYTE:
                 unsigned char u;
-                u = static_cast< unsigned char >(ROUND(a *
-                                                       (MULTIDIM_ELEM(img, i) - b)));
+                u = static_cast< unsigned char >(ROUND(a * (*ptr - b)));
                 FWRITE(&u, sizeof(unsigned char), 1, fh, reversed);
                 break;
             case V16:
                 unsigned short us;
-                us = static_cast< unsigned short >(ROUND(a *
-                                                   (MULTIDIM_ELEM(img, i) - b)));
+                us = static_cast< unsigned short >(ROUND(a * (*ptr - b)));
                 FWRITE(&us, sizeof(unsigned short), 1, fh, reversed);
                 break;
             case VFLOAT:
                 float f;
-                f = static_cast< float >(MULTIDIM_ELEM(img, i));
+                f = static_cast< float >(*ptr);
                 FWRITE(&f, sizeof(float), 1, fh, reversed);
                 break;
             case VINT:
                 int ii;
-                ii = static_cast< int >(MULTIDIM_ELEM(img, i));
+                ii = static_cast< int >(*ptr);
                 FWRITE(&ii, sizeof(int), 1, fh, reversed);
                 break;
             }
+        }
     }
 };
 
@@ -554,7 +557,9 @@ inline void VolumeT< std::complex< double > >::read(FILE* fh,
 {
     img.resize(Zdim, Ydim, Xdim);
 
-    for (int i = 0; i < img.size; i++)
+    std::complex< double >* ptr=NULL;
+    unsigned long int n;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(img,n,ptr)
     {
         float a, b;
 
@@ -567,7 +572,7 @@ inline void VolumeT< std::complex< double > >::read(FILE* fh,
         // Assign the number
         std::complex< double > c(a, b);
 
-        MULTIDIM_ELEM(img, i) = c;
+        *ptr = c;
     }
 }
 
@@ -576,11 +581,13 @@ inline void VolumeT< std::complex< double > >::write(FILE *fh,
         bool reversed,
         Volume_Type volume_type)
 {
-    for (int i = 0; i < img.size; i++)
+    std::complex< double >* ptr=NULL;
+    unsigned long int n;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(img,n,ptr)
     {
         float a, b;
-        a = static_cast< float >((MULTIDIM_ELEM(img, i)).real());
-        b = static_cast< float >((MULTIDIM_ELEM(img, i)).imag());
+        a = static_cast< float >((*ptr).real());
+        b = static_cast< float >((*ptr).imag());
         FWRITE(&a, sizeof(float), 1, fh, reversed);
         FWRITE(&b, sizeof(float), 1, fh, reversed);
     }

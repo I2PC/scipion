@@ -741,7 +741,7 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
     if (!(prm.tell&TELL_SHOW_ANGLES)) init_progress_bar(side.DF.dataLineNo());
     SF.reserve(side.DF.dataLineNo());
     DocFile DF_movements;
-    DF_movements.append_comment("True rot, tilt and psi; rot, tilt, psi, X and Y shifts applied");
+    DF_movements.append_comment("True rot, tilt and psi; rot noise, tilt noise, psi noise, X and Y shifts applied");
     Matrix1D<double> movements(8);
 
     while (!side.DF.eof())
@@ -806,7 +806,7 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
         movements(4) = tilt - movements(1);
         movements(5) = psi - movements(2);
         proj.set_eulerAngles(rot, tilt, psi);
-        IMGMATRIX(proj).add_noise(prm.Npixel_avg, prm.Npixel_dev, "gaussian");
+        IMGMATRIX(proj).addNoise(prm.Npixel_avg, prm.Npixel_dev, "gaussian");
 
         // Save ..............................................................
         proj.write(fn_proj);

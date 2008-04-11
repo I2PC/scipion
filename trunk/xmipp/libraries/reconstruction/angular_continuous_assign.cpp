@@ -155,7 +155,7 @@ void Prog_angular_predict_continuous_prm::produce_side_info()
     mask_Fourier.sigma = gaussian_DFT_sigma * XSIZE(V());
     mask_Fourier.generate_2Dmask(YSIZE(V()), XSIZE(V()));
     mask_Fourier.get_cont_mask2D() *= sqrt(2 * PI) * gaussian_DFT_sigma * XSIZE(V());
-//   mask_Fourier.get_cont_mask2D().init_constant(1);
+//   mask_Fourier.get_cont_mask2D().initConstant(1);
     mask_Fourier.get_cont_mask2D()(0, 0) = 0;
 
     // Weight the input volume in real space
@@ -300,7 +300,7 @@ double CSTSplineAssignment(
 
     // Set the sampling rates
     Matrix1D<double> sampling_rate(3);
-    sampling_rate.init_constant(1);
+    sampling_rate.initConstant(1);
     Data.VoxelSize      = MULTIDIM_ARRAY(sampling_rate);
     Data.nx_VoxelSize   = 3;
     Data.PixelSize      = MULTIDIM_ARRAY(sampling_rate);
@@ -318,7 +318,7 @@ double CSTSplineAssignment(
 
     // Set performance parameters
     Matrix1D<double> Cost(max_no_iter + 1), TimePerIter(max_no_iter + 1),
-    Failures(max_no_iter + 1);
+    	    	     Failures(max_no_iter + 1);
     long             NumberIterPerformed, NumberSuccPerformed,
     NumberFailPerformed;
     Data.Cost             = MULTIDIM_ARRAY(Cost);

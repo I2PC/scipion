@@ -466,7 +466,7 @@ void QtMainWidgetMark::compute_alphas()
 
     // Fine search
     Matrix1D<double> steps(3);
-    steps.init_constant(1);
+    steps.initConstant(1);
     powellOptimizer(angles, 1, 3, &matrix_fitness,
                      0.001, fitness, iter, steps, false);
     __alpha_u = angles(0);

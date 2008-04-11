@@ -28,33 +28,6 @@
 /* ------------------------------------------------------------------------- */
 #include "matrix1d.h"
 
-/* ************************************************************************* */
-/* IMPLEMENTATIONS                                                           */
-/* ************************************************************************* */
-#define maT Matrix1D<T>
-#define ma  Matrix1D
-#include "multidim_basic.inc"
-#undef ma
-#undef maT
-// Special case for complex numbers
-template <>
-std::ostream& operator << (std::ostream& out, const Matrix1D< std::complex<double> > & v)
-{
-    if (MULTIDIM_SIZE(v) == 0)
-        out << "NULL vector\n";
-    else
-    {
-        FOR_ALL_ELEMENTS_IN_MATRIX1D(v)
-        {
-            if (v.row)
-                out << VEC_ELEM(v, i) << ' ';
-            else
-                out << VEC_ELEM(v, i) << '\n';
-        }
-    }
-    return out;
-}
-
 /* Vector R2 and R3 -------------------------------------------------------- */
 Matrix1D<double> vectorR2(double x, double y)
 {
@@ -101,8 +74,7 @@ void powellOptimizer(Matrix1D<double> &p, int i0, int n,
             xi[ptr] = (i == j) ? steps(i - 1) : 0;
 
     // Optimize
-    xi -= n; // This is because NR works with matrices
-    // starting at [1,1]
+    xi -= n; // This is because NR works with matrices starting at [1,1]
     powell(auxpptr, xi, n, ftol, iter, fret, f, show);
     xi += n;
 

@@ -273,7 +273,7 @@ void Normalize_parameters::apply_geo_mask(ImageXmipp& img)
     Matrix2D< double > tmp;
     // get copy of the mask 
     tmp.resize(bg_mask_bck);
-    type_cast(bg_mask_bck, tmp);
+    typeCast(bg_mask_bck, tmp);
 
     double outside = DIRECT_MAT_ELEM(tmp, 0, 0);
 
@@ -281,7 +281,7 @@ void Normalize_parameters::apply_geo_mask(ImageXmipp& img)
     tmp.selfApplyGeometryBSpline(img.get_transformation_matrix(), 3, IS_NOT_INV,
                                 DONT_WRAP, outside);
     // The type cast gives strange results here, using round instead
-    //type_cast(tmp, bg_mask);
+    //typeCast(tmp, bg_mask);
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(bg_mask) {
       dMij(bg_mask,i,j)=ROUND(dMij(tmp,i,j));
     }

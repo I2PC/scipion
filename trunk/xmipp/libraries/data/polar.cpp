@@ -53,7 +53,7 @@ void inverseFourierTransformRings(const Polar<std::complex<double> > & in,
 	else
 	    oridim = 2 * (XSIZE(Faux) - 1);
 	InverseFourierTransformHalf(Faux,Maux,oridim);
-	Maux.setStartingX(0);
+	STARTINGX(Maux)=0;
 	out.rings.push_back(Maux);
     }
 

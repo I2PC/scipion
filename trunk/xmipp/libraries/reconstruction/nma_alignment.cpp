@@ -300,7 +300,7 @@ Matrix1D<double> Prog_nma_alignment_prm::assignParameters(const ImageXmipp &img)
     Matrix1D<double> steps(XSIZE(parameters));
     double fitness;
     int iter;
-    steps.init_constant(1);
+    steps.initConstant(1);
     for (int i=1; i<=5; ++i)
         steps(XSIZE(steps)-i)=0;
     currentStage=1;

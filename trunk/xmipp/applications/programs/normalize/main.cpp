@@ -34,7 +34,7 @@ void process_img(ImageXmipp &img, const Prog_parameters *prm)
 
 void process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
-    vol().statistics_adjust(0, 1);
+    vol().statisticsAdjust(0, 1);
 }
 
 int main(int argc, char **argv)

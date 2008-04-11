@@ -54,9 +54,9 @@ void Usage();
     }
 
 #define SET_SUBS_VAL(I) \
-    if      (str_subs_val=="min") subs_val=I.compute_min(); \
-    else if (str_subs_val=="max") subs_val=I.compute_max(); \
-    else if (str_subs_val=="avg") subs_val=I.compute_avg(); \
+    if      (str_subs_val=="min") subs_val=I.computeMin(); \
+    else if (str_subs_val=="max") subs_val=I.computeMax(); \
+    else if (str_subs_val=="avg") subs_val=I.computeAvg(); \
     else                          subs_val=textToFloat(str_subs_val);
 
 /* MAIN -------------------------------------------------------------------- */

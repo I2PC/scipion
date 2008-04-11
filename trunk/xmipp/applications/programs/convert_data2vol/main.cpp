@@ -104,7 +104,7 @@ int main(int argc, char **argv)
         std::cout << std::endl << "reading mask " << bmname << "......" << std::endl << std::endl;
         mask.read(bmname);           // Reads the mask
         //Adjust the range to 0-1
-        mask().range_adjust(0, 1);   // just in case
+        mask().rangeAdjust(0, 1);   // just in case
         //if (noBB)
         mask().setXmippOrigin();   // sets origin at the center of the mask.
         std::cout << mask;       // Output Volumen Information

@@ -103,7 +103,7 @@ void symmetrize(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
         if (show_progress) progress_bar(i);
     }
     if (show_progress) progress_bar(SL.SymsNo());
-    array_by_scalar(V_out(), SL.SymsNo() + 1.0f, V_out(), '/');
+    arrayByScalar(V_out(), SL.SymsNo() + 1.0f, V_out(), '/');
 }
 #undef DEBUG
 
@@ -149,7 +149,7 @@ void symmetrize_Bspline(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out
 #endif
 
     }
-    array_by_scalar(V_out(), SL.SymsNo() + 1.0f, V_out(), '/');
+    arrayByScalar(V_out(), SL.SymsNo() + 1.0f, V_out(), '/');
 
 }
 #undef DEBUG

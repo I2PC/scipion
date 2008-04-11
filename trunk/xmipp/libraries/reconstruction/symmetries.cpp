@@ -112,7 +112,7 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
     __R.resize(4*true_symNo, 4);
     __shift.resize(true_symNo, 3);
     __chain_length.resize(true_symNo);
-    __chain_length.init_constant(1);
+    __chain_length.initConstant(1);
 
     // Read symmetry parameters
     i = 0;

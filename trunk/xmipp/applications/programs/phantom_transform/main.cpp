@@ -85,7 +85,7 @@ public:
         else
         {
             scale.resize(3);
-            scale.init_constant(1);
+            scale.initConstant(1);
         }
 
         // Apply shift

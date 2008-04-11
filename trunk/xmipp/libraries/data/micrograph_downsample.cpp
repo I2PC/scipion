@@ -155,13 +155,13 @@ void Prog_downsample_prm::generate_kernel()
     {
     case KER_RECTANGLE:
         kernel.resize(Yrect, Xrect);
-        kernel.init_constant(1);
+        kernel.initConstant(1);
         break;
     case KER_CIRCLE:
         ikernel.resize(CEIL(2*r) + 1, CEIL(2*r) + 1);
         ikernel.setXmippOrigin();
         BinaryCircularMask(ikernel, r);
-        type_cast(ikernel, kernel);
+        typeCast(ikernel, kernel);
         break;
     case KER_GAUSSIAN:
         kernel.resize(CEIL(2*r) + 1, CEIL(2*r) + 1);
@@ -170,7 +170,7 @@ void Prog_downsample_prm::generate_kernel()
         break;
     case KER_PICK:
         kernel.resize(1, 1);
-        kernel.init_constant(1);
+        kernel.initConstant(1);
         break;
     case KER_SINC:
         SeparableSincKaiserMask(kernel, (1.0 / Xstep),

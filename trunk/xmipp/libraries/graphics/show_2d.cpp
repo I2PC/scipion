@@ -192,7 +192,7 @@ void ImageViewer::generateFFTImage(Matrix2D<double> &out)
     out.initZeros(YSIZE(xmippImageFourier), XSIZE(xmippImageFourier));
     double min_positive;
     bool first = true;
-    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(xmippImageFourier)
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(xmippImageFourier)
     {
         double ampl, phase, val, eps;
         eps = 0;
@@ -200,26 +200,26 @@ void ImageViewer::generateFFTImage(Matrix2D<double> &out)
         switch (fft_show_mode)
         {
         case 0:
-            ampl = abs(MULTIDIM_ELEM(xmippImageFourier, i));
+            ampl = abs(MAT_ELEM(xmippImageFourier, i, j));
             if (ampl != 0)
-                val = MULTIDIM_ELEM(out, i) = 10 * log10(ampl * ampl);
-            else MULTIDIM_ELEM(Isubs, i) = 1;
+                val = MAT_ELEM(out, i, j) = 10 * log10(ampl * ampl);
+            else MAT_ELEM(Isubs, i, j) = 1;
             break;
         case 1:
-            val = MULTIDIM_ELEM(out, i) = real(MULTIDIM_ELEM(xmippImageFourier, i));
+            val = MAT_ELEM(out, i, j) = real(MAT_ELEM(xmippImageFourier, i, j));
             break;
         case 2:
-            val = MULTIDIM_ELEM(out, i) = imag(MULTIDIM_ELEM(xmippImageFourier, i));
+            val = MAT_ELEM(out, i, j) = imag(MAT_ELEM(xmippImageFourier, i, j));
             break;
         case 3:
-            val = MULTIDIM_ELEM(out, i) = abs(MULTIDIM_ELEM(xmippImageFourier, i));
+            val = MAT_ELEM(out, i, j) = abs(MAT_ELEM(xmippImageFourier, i, j));
             break;
         case 4:
-            ampl = abs(MULTIDIM_ELEM(xmippImageFourier, i));
-            val = MULTIDIM_ELEM(out, i) = ampl * ampl;
+            ampl = abs(MAT_ELEM(xmippImageFourier, i, j));
+            val = MAT_ELEM(out, i, j) = ampl * ampl;
             break;
         case 5:
-            val = MULTIDIM_ELEM(out, i) = arg(MULTIDIM_ELEM(xmippImageFourier, i));
+            val = MAT_ELEM(out, i, j) = arg(MAT_ELEM(xmippImageFourier, i, j));
             break;
         }
         if (val < min_positive || first)
@@ -232,8 +232,9 @@ void ImageViewer::generateFFTImage(Matrix2D<double> &out)
     // Substitute 0s by something a little bit smaller
     if (fft_show_mode == 0)
     {
-        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(Isubs)
-        if (MULTIDIM_ELEM(Isubs, i) == 1) MULTIDIM_ELEM(out, i) = min_positive - 1;
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(Isubs)
+            if (MAT_ELEM(Isubs, i, j) == 1)
+                MAT_ELEM(out, i, j) = min_positive - 1;
     }
 
     out.setXmippOrigin();
@@ -1252,8 +1253,8 @@ void ImageViewer::runEnhancePSD(std::vector<float> enhance_prms)
         Iaux() = I();
         // Remove the part of the model
         FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
-        if ((i < Ydim / 2 && j < Xdim / 2) || (i >= Ydim / 2 && j >= Xdim / 2))
-            I(i, j) = I(i, XSIZE(I()) - 1 - j);
+            if ((i < Ydim / 2 && j < Xdim / 2) || (i >= Ydim / 2 && j >= Xdim / 2))
+                I(i, j) = I(i, XSIZE(I()) - 1 - j);
     }
     prm.apply(I());
     if (load_mode == ImageViewer::CTF_mode)
@@ -1261,8 +1262,8 @@ void ImageViewer::runEnhancePSD(std::vector<float> enhance_prms)
         CenterFFT(I(), true);
         // Copy the part of the model
         FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
-        if ((i < Ydim / 2 && j < Xdim / 2) || (i >= Ydim / 2 && j >= Xdim / 2))
-            I(i, j) = ABS(Iaux(i, j));
+            if ((i < Ydim / 2 && j < Xdim / 2) || (i >= Ydim / 2 && j >= Xdim / 2))
+                I(i, j) = ABS(Iaux(i, j));
         CenterFFT(I(), false);
     }
     I().setXmippOrigin();

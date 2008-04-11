@@ -555,8 +555,6 @@ void Prog_angular_projection_matching_prm::translationallyAlignOneImage(Matrix2D
 
 }
 
-
-
 void Prog_angular_projection_matching_prm::processSomeImages(int * my_images, double * my_output) 
 {
 

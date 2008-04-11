@@ -474,13 +474,13 @@ void single_measure_on_FOM(Recons_test_Parameters &prm,
             {
                 Matrix1D<double> aux = results.scL2_FOMs;
                 aux.window(1, XSIZE(aux) - 1);
-                training_FOMs(k) = aux.compute_avg();
+                training_FOMs(k) = aux.computeAvg();
             }
             else if (training_FOM == "scL11")
             {
                 Matrix1D<double> aux = results.scL1_FOMs;
                 aux.window(1, XSIZE(aux) - 1);
-                training_FOMs(k) = aux.compute_avg();
+                training_FOMs(k) = aux.computeAvg();
             }
             if (accuracy_mode && k > 0)
             {
@@ -859,7 +859,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
             VolumeXmipp starting_vol;
             starting_vol() = vol_phantom();
             if (prm.starting_noise != 0)
-                starting_vol().add_noise(0, prm.starting_noise, "gaussian");
+                starting_vol().addNoise(0, prm.starting_noise, "gaussian");
             Filter.FilterShape = RAISED_COSINE;
             Filter.FilterBand = LOWPASS;
             Filter.w1 = prm.starting_low_pass;
