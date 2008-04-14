@@ -429,6 +429,7 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
     Iempty.set_eulerAngles((float)rot, (float)tilt, (float)0.);
     Iempty.set_originOffsets(0., 0.);
     Iempty.flip() = 0.;
+    avg=Iempty;
     avg1=Iempty;
     avg2=Iempty;
 
