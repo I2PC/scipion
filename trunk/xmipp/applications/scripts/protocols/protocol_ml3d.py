@@ -113,7 +113,7 @@ NumberOfIterations=25
     for a description of the symmetry file format
     dont give anything, if no symmetry is present
 """
-SymmetryFile=""
+Symmetry=""
 # {expert} Restart after iteration:
 """ For previous runs that stopped before convergence,
     resume the calculations after the completely finished iteration,
