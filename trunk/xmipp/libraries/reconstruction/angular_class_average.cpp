@@ -386,14 +386,14 @@ void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
     my_output[4] = imgs.size() * AVG_OUPUT_SIZE;
     for (int imgno = 0; imgno < imgs.size(); imgno++)
     {
-        my_output[imgno * AVG_OUPUT_SIZE + 5] = numbers[imgno];
-        my_output[imgno * AVG_OUPUT_SIZE + 6] = avg1.rot();
-        my_output[imgno * AVG_OUPUT_SIZE + 7] = avg1.tilt();
-        my_output[imgno * AVG_OUPUT_SIZE + 8] = imgs[imgno].psi();
-        //if (imgs[imgno].flip()==1)
-        //    my_output[imgno * AVG_OUPUT_SIZE + 9] = -imgs[imgno].Xoff();
-        //else
-            my_output[imgno * AVG_OUPUT_SIZE + 9] = imgs[imgno].Xoff();
+        if (splits[imgno] < 0)
+            my_output[imgno * AVG_OUPUT_SIZE + 5]  = -numbers[imgno];
+        else
+            my_output[imgno * AVG_OUPUT_SIZE + 5]  = numbers[imgno];
+        my_output[imgno * AVG_OUPUT_SIZE + 6]  = avg1.rot();
+        my_output[imgno * AVG_OUPUT_SIZE + 7]  = avg1.tilt();
+        my_output[imgno * AVG_OUPUT_SIZE + 8]  = imgs[imgno].psi();
+        my_output[imgno * AVG_OUPUT_SIZE + 9]  = imgs[imgno].Xoff();
         my_output[imgno * AVG_OUPUT_SIZE + 10] = imgs[imgno].Yoff();
         my_output[imgno * AVG_OUPUT_SIZE + 11] = dirno;
         my_output[imgno * AVG_OUPUT_SIZE + 12] = imgs[imgno].flip();

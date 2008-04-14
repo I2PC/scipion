@@ -111,15 +111,19 @@ int main(int argc, char **argv)
                     nr_images = ROUND(output_values[4] / AVG_OUPUT_SIZE);
                     for (int i = 0; i < nr_images; i++)
                     {
-                        prm.DF.locate(ROUND(output_values[i*AVG_OUPUT_SIZE+5]));
-                        prm.DF.set(0,output_values[i*AVG_OUPUT_SIZE+6]);
-                        prm.DF.set(1,output_values[i*AVG_OUPUT_SIZE+7]);
-                        prm.DF.set(2,output_values[i*AVG_OUPUT_SIZE+8]);
-                        prm.DF.set(3,output_values[i*AVG_OUPUT_SIZE+9]);
-                        prm.DF.set(4,output_values[i*AVG_OUPUT_SIZE+10]);
-                        prm.DF.set(5,output_values[i*AVG_OUPUT_SIZE+11]);
-                        prm.DF.set(6,output_values[i*AVG_OUPUT_SIZE+12]);
-                        prm.DF.set(7,output_values[i*AVG_OUPUT_SIZE+13]);
+                        int this_image = ROUND(output_values[i*AVG_OUPUT_SIZE+5]);
+                        if (!(this_image < 0))
+                        {
+                            prm.DF.locate(this_image);
+                            prm.DF.set(0,output_values[i*AVG_OUPUT_SIZE+6]);
+                            prm.DF.set(1,output_values[i*AVG_OUPUT_SIZE+7]);
+                            prm.DF.set(2,output_values[i*AVG_OUPUT_SIZE+8]);
+                            prm.DF.set(3,output_values[i*AVG_OUPUT_SIZE+9]);
+                            prm.DF.set(4,output_values[i*AVG_OUPUT_SIZE+10]);
+                            prm.DF.set(5,output_values[i*AVG_OUPUT_SIZE+11]);
+                            prm.DF.set(6,output_values[i*AVG_OUPUT_SIZE+12]);
+                            prm.DF.set(7,output_values[i*AVG_OUPUT_SIZE+13]);
+                        }
                     }
                 }
 
