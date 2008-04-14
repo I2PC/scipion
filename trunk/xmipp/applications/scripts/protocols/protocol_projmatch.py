@@ -1106,7 +1106,7 @@ def execute_projection_matching(_mylog,
 
       #FIXME!
       launch_parallel_job.launch_job(
-                                     False,#_DoParallel,
+                                     _DoParallel,
                                      'xmipp_angular_class_average',
                                      'xmipp_mpi_angular_class_average',
                                      parameters,
@@ -1383,7 +1383,7 @@ def  execute_resolution(_mylog,
       _mylog.info(" plot resolution")
 
     # Copy FSC to standard name file
-    outputfsc=_ReconstructedVolume.replace(ReconstructedVolume+'.vol',OutputFsc)
+    outputfsc=_ReconstructedVolume.replace(ReconstructedVolume,OutputFsc)
     shutil.copy(Outputvolumes[1]+'.frc',outputfsc) 
 
     #compute resolution
