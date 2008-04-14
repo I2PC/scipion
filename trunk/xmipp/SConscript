@@ -317,16 +317,26 @@ def AddSwigLibrary(name, basedir, sourceList, includes, libpath=[], libs=[]):
 # Bilib
 BilibSources = Glob('external/bilib/sources', '*.cc', [])
 
+# Fftw
+FftwSources = Glob('external/fftw-3.1.2/kernel', '*.c',[]) + \
+              Glob('external/fftw-3.1.2/dft', '*.c',[])    + \
+              Glob('external/fftw-3.1.2/rdft', '*.c',[])   + \
+              Glob('external/fftw-3.1.2/api', '*.c',[])    + \
+              Glob('external/fftw-3.1.2/reodft', '*.c',[])
+
 # INRIA
 INRIASources = Glob('external/inria', '*.cc', [])
 
 AddLibrary('XmippExternal', 'external',
    INRIASources + BilibSources,
    ['bilib', 'bilib/headers', 'bilib/types'])
+   
+AddLibrary('XmippFftw', 'external/fftw-3.1.2',
+   FftwSources,['.','kernel','rdft','dft','rdft/codelets','simd','dft/simd','dft/codelets','reodft'])
 
 # XmippData
 DataSources = Glob('libraries/data','*.cpp',[])
-AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],['lib'],['XmippExternal'])
+AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],['lib'],['XmippExternal','XmippFftw'])
 SwigDataSources = ['libraries/data/swig/swigXmippData.i'] 	 
 AddSwigLibrary('XmippData', 'libraries/data', SwigDataSources, ['#'], 	 
     [], ['XmippData'])
