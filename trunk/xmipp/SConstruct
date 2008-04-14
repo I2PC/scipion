@@ -18,6 +18,10 @@ env.SConsignFile(base_dir + 'SCons.dblite')
 # read -or not- the cached -non default- options
 if (ARGUMENTS['mode'] == 'configure'):
     opts = Options(None, ARGUMENTS)
+    #sorry about this but I do not know how to do it inside scons
+    #create configuration file for fftw
+    os.system("rm /tmp/fftw.LOCK /tmp/fftw.data;cd external/fftw-3.1.2;./configure");
+
 else:
     opts = Options('options.cache', ARGUMENTS)
 
@@ -223,7 +227,8 @@ if (ARGUMENTS['mode'] == 'configure'):
     
 elif (ARGUMENTS['mode'] == 'compile'):
     # --- This is the compilation mode
-
+    
+    
     # add separator to prepend (not shown in help)
     env['prepend'] = env['prepend'] + '_'
 
