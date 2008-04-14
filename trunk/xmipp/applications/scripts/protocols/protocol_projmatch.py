@@ -1092,7 +1092,7 @@ def execute_projection_matching(_mylog,
                     ' -o '      + outputname + \
                     ' -limit0 ' + str(MinimumCrossCorrelation) + \
                     ' -mirror 7 '
-      if (_DoAlign2D):
+      if (_DoAlign2D == '1'):
          parameters += \
                     ' -iter '             + str(_Align2DIterNr) + \
                     ' -Ri '               + str(_Ri)           + \
@@ -1115,7 +1115,7 @@ def execute_projection_matching(_mylog,
                                      _MyMachineFile,
                                      RunInBackground)
 
-      if (_DoAlign2D):
+      if (_DoAlign2D == '1'):
          outputdocfile =  outputname + '_classes_realigned.doc'
       else:
          outputdocfile =  outputname + '.doc'
@@ -1205,7 +1205,7 @@ def execute_projection_matching(_mylog,
    if (_DisplayProjectionMatching):
       command='xmipp_show -sel '+ "../"+'Iter_'+\
                    str(_iteration_number) +'/'+ MultiAlign2dSel +' -w 9 '
-      if (_Doalign2D):
+      if (_DoAlign2D == '1'):
          command += ' -showall '
 
       print '*********************************************************************'
