@@ -27,61 +27,79 @@
 /* Includes                                                                  */
 /* ------------------------------------------------------------------------- */
 #include <reconstruction/precompute_sampling.h>
+#include <data/fftw.h>
 #include <data/error.h>
 #include <iostream>
 
 /* ------------------------------------------------------------------------- */
 /* Program                                                                   */
 /* ------------------------------------------------------------------------- */
+#define MYSIZE 10000000
 int main(int argc, char *argv[])
 {
-    int test_case=0;
-    test_case = textToInteger(getParameter(argc, argv, "-test_case", "0"));
+    #define DEBUGTIME
+    #ifdef  DEBUGTIME
+    #include <ctime>
+    int clo = clock();
+    #endif
+
+    bool inplace = false; 
+    ImageXmipp img;
+    img.read("proj00001.xmp");
+
+    #ifdef  DEBUGTIME
+    printf ("image read in  %f mseconds\n", (double)(clock()-clo)/1000 );
+    clo = clock();
+    #endif
     
-    XmippSampling mysampling;
-    mysampling.read_sampling_file("img",true);
-    mysampling.save_sampling_file("kk",false);
-    std::cerr << "IMAGE READ" << std::endl;
-    std::ofstream filestr; 
-    filestr.open ("precompute.bild");
+    #define DIMENSION 2
+    xmippFftw fft_img(img(), false, true);
+    fft_img.Init("ES",FFTW_FORWARD,false);
+    #ifdef  DEBUGTIME
+    printf ("Plan created in  %f mseconds\n", (double)(clock()-clo)/1000 );
+    clo = clock();
+    #endif
+    fft_img.CenterRealDataBeforeTransform();
 
-    // big sphere in the center
-    filestr    << ".color white" 
-	   << std::endl
-	   << ".sphere 0 0 0 .95"
-	   << std::endl
-	   ;
-    // initial point   
-    filestr    << ".color yellow" 
-	   << std::endl
-	   << ".sphere "
-       << mysampling.no_redundant_sampling_points_vector[test_case].transpose()
-       << " .021"
-	   << std::endl
-	   ;
+    fft_img.Transform();
+    #ifdef  DEBUGTIME
+    printf ("image transformed in  %f mseconds\n", (double)(clock()-clo)/1000 );
+    clo = clock();
+    #endif
 
-    for (int i = 0; i < mysampling.my_neighbors[test_case].size(); i++)
-        {
-        #ifdef MYPSI  
-        if(mysampling.my_neighbors_psi[test_case][i]==0)
-            filestr    << ".color red" 
-	                   << std::endl
-	                   << ".sphere "
-                       << mysampling.no_redundant_sampling_points_vector[
-                                    mysampling.my_neighbors[test_case][i]].transpose()
-                       << " .02"
-	                   << std::endl
-	                   ;
-        else 
-        #endif          
-            filestr    << ".color green" 
-	                   << std::endl
-	                   << ".sphere "
-                       << mysampling.no_redundant_sampling_points_vector[
-                                    mysampling.my_neighbors[test_case][i]].transpose()
-                       << " .02"
-	                   << std::endl
-	                   ;
-        }
-    filestr.close();
+    complex<double> * IMG;
+    IMG = (complex<double> *)fft_img.fOut;
+
+    double * img_ptr;
+    img_ptr=MULTIDIM_ARRAY(img());
+    int xsize = (int)(((double)XSIZE(img()) / 2.) +1.);
+    int ysize = YSIZE(img());
+    
+    int ii=0;
+    for(int i=0; i<img().xdim; i++)
+       for(int j=0; j<img().ydim; j++)
+          img_ptr[ii++]=0.;
+
+    ii=0;
+    for (int i=0;i<ysize;i++)
+        for (int j=0;j<xsize;j++)
+           {
+           DIRECT_MAT_ELEM(img(),i,j) = abs(IMG[ii]);
+           ii++;
+           }
+    #ifdef  DEBUGTIME
+    printf ("computed abs value in  %f mseconds\n", (double)(clock()-clo)/1000 );
+    clo = clock();
+    #endif
+       
+    img.write("proj00001_fftwmod.xmp");
+    #ifdef  DEBUGTIME
+    printf ("write in  %f mseconds\n", (double)(clock()-clo)/1000 );
+    clo = clock();
+    #endif
+
+/**
+For processing a second image read again and call to Transform, no need to create another fourier
+object
+*/
 }
