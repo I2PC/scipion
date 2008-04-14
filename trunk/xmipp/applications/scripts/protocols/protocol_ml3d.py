@@ -183,7 +183,7 @@ class ML3D_class:
                  DoML3DClassification,
                  AngularSampling,
                  NumberOfIterations,
-                 SymmetryFile,
+                 Symmetry,
                  RestartIter,
                  ExtraParamsMLrefine3D,
                  SeedsSelfile,
@@ -215,10 +215,7 @@ class ML3D_class:
         self.LowPassFilter=LowPassFilter
         self.PixelSize=PixelSize
         self.NumberOfIterations=NumberOfIterations
-        if (len(SymmetryFile)>0):
-            self.SymmetryFile=os.path.abspath(SymmetryFile)
-        else:
-            self.SymmetryFile=SymmetryFile
+        self.Symmetry=Symmetry
         self.ExtraParamsMLrefine3D=ExtraParamsMLrefine3D
         self.ProjMatchSampling=ProjMatchSampling
         self.WbpThreshold=WbpThreshold
@@ -343,52 +340,81 @@ class ML3D_class:
         print '*  Correcting absolute grey scale of initial reference:'
 
         dirname='CorrectGreyscale/'
+        basename='corrected_reference'
+        docfile='original_angles.doc'
+        refname='ref'
         if not os.path.exists(dirname):
             os.makedirs(dirname)
 
         # Grey-scale correction always leads to an amplitude uncorrected map
         self.RefForSeedsIsAmplitudeCorrected=False
             
-        # A single cycle of projection matching
-        basename='corrected_reference'
-        params= ' -i '    + str(self.InSelFile) + \
-                ' -o '    + dirname+basename + \
-                ' -vol '  + str(self.InitialReference) + \
-                ' -sam ' + str(ProjMatchSampling)
-        if not self.SymmetryFile=="":
-            params+= ' -sym '+str(self.SymmetryFile)
-        params+=' -dont_modify_header -output_refs'
-        if (self.DoControl):
-            params+=' -control ' + self.MyControlFile
-             
+        print '*********************************************************************'
+        print '* Create initial docfile'
+        command='xmipp_header_extract -i ' + str(self.InSelFile) + \
+            ' -o ' + dirname + docfile
+        self.log.info(command)
+        os.system(command)
+
+        print '*********************************************************************'
+        print '* Create projection library'
+        parameters= ' -i '                   + str(self.InitialReference) + \
+                    ' -experimental_images ' + dirname + docfile + \
+                    ' -o '                   + dirname + refname + \
+                    ' -sampling_rate '       + str(self.ProjMatchSampling)  + \
+                    ' -sym '                 + self.Symmetry + 'h' + \
+                    ' -compute_neighbors -angular_distance -1 '
+
         launch_parallel_job.launch_job(self.DoParallel,
-                                       "xmipp_angular_projection_matching",
-                                       "xmipp_mpi_angular_projection_matching",
-                                       params,
+                                       "xmipp_angular_project_library",
+                                       "xmipp_mpi_angular_project_library",
+                                       parameters,
                                        self.log,
                                        self.MyNumberOfCPUs,
                                        self.MyMachineFile,
                                        False)
 
-        # Now make the class averages
-        command='xmipp_angular_class_average ' + \
-                 ' -i '   + dirname+basename+'.doc'  + \
-                 ' -lib ' + dirname+basename+'_lib.doc' + \
-                 ' -o '   + dirname+basename
 
-        print '* ',command
-        self.log.info(command)
-        os.system(command)
+        print '*********************************************************************'
+        print '* Perform projection matching'
+        parameters= ' -i '              + dirname + docfile + \
+                    ' -o '              + dirname + basename + \
+                    ' -ref '            + dirname + refname
 
-        # Followed by a weighted back-projection reconstruction
+        launch_parallel_job.launch_job(self.DoParallel,
+                                       'xmipp_angular_projection_matching',
+                                       'xmipp_mpi_angular_projection_matching',
+                                       parameters,
+                                       self.log,
+                                       self.MyNumberOfCPUs,
+                                       self.MyMachineFile,
+                                       False)
+
+        print '*********************************************************************'
+        print '* Make the class averages '
+        parameters =  ' -i '      + dirname + basename + '.doc'  + \
+                      ' -lib '    + dirname + refname  + '_angles.doc' + \
+                      ' -o '      + dirname + basename 
+
+        launch_parallel_job.launch_job(self.DoParallel,
+                                       'xmipp_angular_class_average',
+                                       'xmipp_mpi_angular_class_average',
+                                       parameters,
+                                       self.log,
+                                       self.MyNumberOfCPUs,
+                                       self.MyMachineFile,
+                                       False)
+
+
+        print '*********************************************************************'
+        print '* Perform WBP reconstruction '
         iname=dirname+basename+'_classes.sel'
         outname=basename+'.vol'
         params= ' -i '    + str(iname) + \
                 ' -o '    + str(outname) + \
                 ' -threshold '+str(self.WbpThreshold) + \
+                ' -sym '+ self.Symmetry + \
                 '  -use_each_image -weight '
-        if not self.SymmetryFile=="":
-            params+= ' -sym '+str(self.SymmetryFile)
         if (self.DoControl):
             params+=' -control ' + self.MyControlFile
            
@@ -458,7 +484,7 @@ class ML3D_class:
                                     reference,
                                     self.AngularSampling,
                                     1,
-                                    self.SymmetryFile,
+                                    self.Symmetry,
                                     self.RefForSeedsIsAmplitudeCorrected,
                                     self.ExtraParamsMLrefine3D)
             newsel.insert(outname+'_it00001.vol','1')
@@ -491,14 +517,14 @@ class ML3D_class:
                                 reference,
                                 self.AngularSampling,
                                 self.NumberOfIterations,
-                                self.SymmetryFile,
+                                self.Symmetry,
                                 self.SeedsAreAmplitudeCorrected,
                                 self.ExtraParamsMLrefine3D)
 
 
     # Either for seeds generation or for ML3D-classification
     def execute_MLrefine3D(self,inselfile,outname,
-                           volname,sampling,iter,symfile,amplitude_corrected,extraparam):
+                           volname,sampling,iter,symmetry,amplitude_corrected,extraparam):
         import os
         import launch_parallel_job
 
@@ -508,10 +534,9 @@ class ML3D_class:
                 ' -o '    + str(outname) + \
                 ' -vol '  + str(volname) + \
                 ' -iter ' + str(iter) + \
+                ' -sym '  + symmetry +\
                 ' -ang '  + str(sampling)
         params+=' '+extraparam
-        if not symfile=="":
-            params+= ' -sym ' + str(symfile)
         if (self.DoControl):
             params+=' -control ' + self.MyControlFile
         if (self.DoMlf):
@@ -595,7 +620,7 @@ if __name__ == '__main__':
                     DoML3DClassification,
                     AngularSampling,
                     NumberOfIterations,
-                    SymmetryFile,
+                    Symmetry,
                     RestartIter,
                     ExtraParamsMLrefine3D,
                     SeedsSelfile,
