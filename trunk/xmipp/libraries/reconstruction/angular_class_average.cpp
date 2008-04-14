@@ -383,21 +383,21 @@ void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
     avg2.weight() = w2;
     
     // Report the new angles, offsets and selfiles
-    my_output[0] = imgs.size() * AVG_OUPUT_SIZE;
+    my_output[4] = imgs.size() * AVG_OUPUT_SIZE;
     for (int imgno = 0; imgno < imgs.size(); imgno++)
     {
-        my_output[imgno * AVG_OUPUT_SIZE + 1] = numbers[imgno];
-        my_output[imgno * AVG_OUPUT_SIZE + 2] = avg1.rot();
-        my_output[imgno * AVG_OUPUT_SIZE + 3] = avg1.tilt();
-        my_output[imgno * AVG_OUPUT_SIZE + 4] = imgs[imgno].psi();
+        my_output[imgno * AVG_OUPUT_SIZE + 5] = numbers[imgno];
+        my_output[imgno * AVG_OUPUT_SIZE + 6] = avg1.rot();
+        my_output[imgno * AVG_OUPUT_SIZE + 7] = avg1.tilt();
+        my_output[imgno * AVG_OUPUT_SIZE + 8] = imgs[imgno].psi();
         //if (imgs[imgno].flip()==1)
-        //    my_output[imgno * AVG_OUPUT_SIZE + 5] = -imgs[imgno].Xoff();
+        //    my_output[imgno * AVG_OUPUT_SIZE + 9] = -imgs[imgno].Xoff();
         //else
-            my_output[imgno * AVG_OUPUT_SIZE + 5] = imgs[imgno].Xoff();
-        my_output[imgno * AVG_OUPUT_SIZE + 6] = imgs[imgno].Yoff();
-        my_output[imgno * AVG_OUPUT_SIZE + 7] = dirno;
-        my_output[imgno * AVG_OUPUT_SIZE + 8] = imgs[imgno].flip();
-        my_output[imgno * AVG_OUPUT_SIZE + 9] = ccfs[imgno];
+            my_output[imgno * AVG_OUPUT_SIZE + 9] = imgs[imgno].Xoff();
+        my_output[imgno * AVG_OUPUT_SIZE + 10] = imgs[imgno].Yoff();
+        my_output[imgno * AVG_OUPUT_SIZE + 11] = dirno;
+        my_output[imgno * AVG_OUPUT_SIZE + 12] = imgs[imgno].flip();
+        my_output[imgno * AVG_OUPUT_SIZE + 13] = ccfs[imgno];
 
         if (splits[imgno] == 0) 
             SFclass1.insert(imgs[imgno].name());
@@ -409,15 +409,12 @@ void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
 }
 
 void Prog_angular_class_average_prm::processOneClass(int &dirno, 
-                                                     double &w,
-                                                     double &w1,
-                                                     double &w2,
-                                                     double * realign_output) {
+                                                     double * my_output) {
 
     ImageXmipp img, avg, avg1, avg2;
     FileName   fn_img, fn_tmp;
     SelFile    SFclass, SFclass1, SFclass2;
-    double     rot, tilt, psi, xshift, yshift, mirror, val;
+    double     rot, tilt, psi, xshift, yshift, mirror, val, w, w1, w2;
     int        ref_number, this_image;
     int        isplit;
     Matrix2D<double> A(3,3);
@@ -508,11 +505,10 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
         writeToDisc(avg,dirno,SFclass,fn_out,false,"ref.xmp");
         reAlignClass(avg1, avg2, SFclass1, SFclass2, 
                      exp_imgs, exp_split, exp_number, 
-                     dirno, realign_output);
+                     dirno, my_output);
         w1 = avg1.weight();
         w2 = avg2.weight();
     }
-
 
     // Output total and split averages and selfiles to disc
     SFclass = SFclass1 + SFclass2;
@@ -527,6 +523,11 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
         writeToDisc(avg1,dirno,SFclass1,fn_out1,!dont_write_selfiles);
         writeToDisc(avg2,dirno,SFclass2,fn_out2,!dont_write_selfiles);
     }
+    
+    my_output[0] = (double)dirno;
+    my_output[1] = w;
+    my_output[2] = w1;
+    my_output[3] = w2;
 
 }
 

@@ -69,7 +69,7 @@ int main(int argc, char **argv)
 
             // Reserve memory for output from class realignment
             if (prm.nr_iter > 0) reserve = prm.DF.dataLineNo();
-            else reserve = 0.;
+            else reserve = 0;
             double output_values[AVG_OUPUT_SIZE*reserve+1];
 
 	    nr_ref = prm.DFlib.dataLineNo();
@@ -79,9 +79,12 @@ int main(int argc, char **argv)
 
 	    for (int dirno = 1; dirno <= nr_ref; dirno++)
 	    {   
-	        prm.processOneClass(dirno, w, w1, w2, output_values);
+	        prm.processOneClass(dirno, output_values);
 
                 // Output *classes.sel files
+                w = output_values[1];
+                w1 = output_values[2];
+                w2 = output_values[3];
 	        if (w > 0.)
 	        {
 		        fn_tmp.compose(prm.fn_out,dirno,"xmp");
@@ -105,18 +108,18 @@ int main(int argc, char **argv)
                 if (prm.nr_iter > 0)
                 {
                    
-                    nr_images = ROUND(output_values[0] / AVG_OUPUT_SIZE);
+                    nr_images = ROUND(output_values[4] / AVG_OUPUT_SIZE);
                     for (int i = 0; i < nr_images; i++)
                     {
-                        prm.DF.locate(ROUND(output_values[i*AVG_OUPUT_SIZE+1]));
-                        prm.DF.set(0,output_values[i*AVG_OUPUT_SIZE+2]);
-                        prm.DF.set(1,output_values[i*AVG_OUPUT_SIZE+3]);
-                        prm.DF.set(2,output_values[i*AVG_OUPUT_SIZE+4]);
-                        prm.DF.set(3,output_values[i*AVG_OUPUT_SIZE+5]);
-                        prm.DF.set(4,output_values[i*AVG_OUPUT_SIZE+6]);
-                        prm.DF.set(5,output_values[i*AVG_OUPUT_SIZE+7]);
-                        prm.DF.set(6,output_values[i*AVG_OUPUT_SIZE+8]);
-                        prm.DF.set(7,output_values[i*AVG_OUPUT_SIZE+9]);
+                        prm.DF.locate(ROUND(output_values[i*AVG_OUPUT_SIZE+5]));
+                        prm.DF.set(0,output_values[i*AVG_OUPUT_SIZE+6]);
+                        prm.DF.set(1,output_values[i*AVG_OUPUT_SIZE+7]);
+                        prm.DF.set(2,output_values[i*AVG_OUPUT_SIZE+8]);
+                        prm.DF.set(3,output_values[i*AVG_OUPUT_SIZE+9]);
+                        prm.DF.set(4,output_values[i*AVG_OUPUT_SIZE+10]);
+                        prm.DF.set(5,output_values[i*AVG_OUPUT_SIZE+11]);
+                        prm.DF.set(6,output_values[i*AVG_OUPUT_SIZE+12]);
+                        prm.DF.set(7,output_values[i*AVG_OUPUT_SIZE+13]);
                     }
                 }
 
@@ -126,8 +129,11 @@ int main(int argc, char **argv)
             progress_bar(nr_ref);
  
             // Write new document file
-            fn_tmp=prm.fn_out+"es_realigned.doc";
-            prm.DF.write(fn_tmp);
+            if (prm.nr_iter > 0)
+            {
+                fn_tmp=prm.fn_out+"es_realigned.doc";
+                prm.DF.write(fn_tmp);
+            }
 
 	    // Write selfile with all classes
 	    fn_tmp=prm.fn_out+"es.sel";

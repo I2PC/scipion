@@ -45,6 +45,9 @@
 #define TAG_FREEWORKER   3
 #define TAG_WORKFROMWORKER   4
 
+double  * output_values;
+int       output_values_size;
+
 class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
 {
     public:
@@ -107,6 +110,11 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
         produceSideInfo();
 //        MPI_Bcast(&max_number_of_images_in_around_a_sampling_point, 
 //                  1, MPI_INT, 0, MPI_COMM_WORLD);
+
+        int reserve = 0;
+        if (nr_iter > 0) reserve = DF.dataLineNo();
+        output_values_size=AVG_OUPUT_SIZE*reserve+5;
+        output_values = (double *) malloc(output_values_size*sizeof(double));
     }
 
     /* Run --------------------------------------------------------------------- */
@@ -117,20 +125,18 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
         int number_of_references_image=1;
         if (rank == 0)
         {
-	        int nr_ref;
+            int nr_ref;
             SelFile          SFclasses, SFclasses1, SFclasses2;
             FileName         fn_tmp;
-
-	        SFclasses.clear(); 
-	        SFclasses1.clear(); 
-	        SFclasses2.clear(); 
+            
+            SFclasses.clear(); 
+            SFclasses1.clear(); 
+            SFclasses2.clear(); 
             nr_ref = DFlib.dataLineNo();
-	        init_progress_bar(nr_ref);  
-
-
+            init_progress_bar(nr_ref);  
 
             int stopTagsSent =0;
-	        init_progress_bar(nr_ref);// master
+            init_progress_bar(nr_ref);// master
             while(1)
             {
                 //Wait until any message arrives
@@ -147,19 +153,19 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
                 // worker sends work
                 if (status.MPI_TAG == TAG_WORKFROMWORKER)
                 {
-                    MPI_Recv(myw, 
-                             4, 
+                    MPI_Recv(output_values, 
+                             output_values_size, 
                              MPI_DOUBLE, 
                              MPI_ANY_SOURCE, 
                              TAG_WORKFROMWORKER,
                              MPI_COMM_WORLD, 
                              &status);
-                    double w, w1,w2;
-                    int myref_number;         
-                    w  = myw[0];
-                    w1 = myw[1];
-                    w2 = myw[2]; 
-                    myref_number = ROUND(myw[3]);        
+                    double w, w1, w2;
+                    int myref_number;                             
+                    myref_number = ROUND(output_values[0]);        
+                    w  = output_values[1];
+                    w1 = output_values[2];
+                    w2 = output_values[3]; 
                     #ifdef DEBUG
                     std::cerr << "Mr2.5 received work from worker " <<  status.MPI_SOURCE << std::endl;
                     std::cerr << " w w1 w2 myref_number" 
@@ -168,30 +174,47 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
                               << w2 << " "
                               << myref_number <<  std::endl;  
                     #endif
-	                if (w > 0.)
-	                {
-		                fn_tmp.compose(fn_out,myref_number,"xmp");
-		                SFclasses.insert(fn_tmp);
-	                }
-	                if (do_split)
-	                {
-		                if (w1 > 0.)
-		                {
-		                    fn_tmp.compose(fn_out1,myref_number,"xmp");
-		                    SFclasses1.insert(fn_tmp);
-		                }
-		                if (w2 > 0.)
-		                {
-		                    fn_tmp.compose(fn_out2,myref_number,"xmp");
-		                    SFclasses2.insert(fn_tmp);
-		                }
-	                }
+                    if (w > 0.)
+                    {
+                        fn_tmp.compose(fn_out,myref_number,"xmp");
+                        SFclasses.insert(fn_tmp);
+                    }
+                    if (do_split)
+                    {
+                        if (w1 > 0.)
+                        {
+                            fn_tmp.compose(fn_out1,myref_number,"xmp");
+                            SFclasses1.insert(fn_tmp);
+                        }
+                        if (w2 > 0.)
+                        {
+                            fn_tmp.compose(fn_out2,myref_number,"xmp");
+                            SFclasses2.insert(fn_tmp);
+                        }
+                    }
+                    if (nr_iter > 0 )
+                    {
+                        int nr_images = ROUND(output_values[4] / AVG_OUPUT_SIZE);
+                        for (int i = 0; i < nr_images; i++)
+                        {
+                            DF.locate(ROUND(output_values[i*AVG_OUPUT_SIZE+5]));
+                            DF.set(0,output_values[i*AVG_OUPUT_SIZE+6]);
+                            DF.set(1,output_values[i*AVG_OUPUT_SIZE+7]);
+                            DF.set(2,output_values[i*AVG_OUPUT_SIZE+8]);
+                            DF.set(3,output_values[i*AVG_OUPUT_SIZE+9]);
+                            DF.set(4,output_values[i*AVG_OUPUT_SIZE+10]);
+                            DF.set(5,output_values[i*AVG_OUPUT_SIZE+11]);
+                            DF.set(6,output_values[i*AVG_OUPUT_SIZE+12]);
+                            DF.set(7,output_values[i*AVG_OUPUT_SIZE+13]);
+                        }
+                    }
+                    
                 }//TAG_WORKFROMWORKER
                 // worker is free
                 if (status.MPI_TAG == TAG_FREEWORKER)
                 {
                     MPI_Recv(0, 0, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
-                         MPI_COMM_WORLD, &status);
+                             MPI_COMM_WORLD, &status);
                     #ifdef DEBUG
                     std::cerr << "Mr3 received TAG_FREEWORKER from worker " <<  status.MPI_SOURCE 
                               << std::endl;
@@ -208,7 +231,7 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
                     }
                     else
                     {
-	                    //DFlib.adjust_to_data_line();
+                        //DFlib.adjust_to_data_line();
                         //dataforworker=DFlib(ABS(col_ref) - 1);
                         MPI_Send(&number_of_references_image, 
                                  1, 
@@ -218,35 +241,34 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
                                  MPI_COMM_WORLD);
                         number_of_references_image++;//////////////////////
                         progress_bar(number_of_references_image);
-	                    //prm.DFlib.next();
+                        //prm.DFlib.next();
                     }   
-            #ifdef DEBUG
-            std::cerr << "Ms5 sent TAG_WORKFORWORKER for " <<  status.MPI_SOURCE << std::endl
-                      << std::endl;
-            #endif
+                    #ifdef DEBUG
+                    std::cerr << "Ms5 sent TAG_WORKFORWORKER for " <<  status.MPI_SOURCE << std::endl
+                              << std::endl;
+                    #endif
                 }//TAG_FREEWORKER
             }//while       
             progress_bar(nr_ref);
-
 
             while (stopTagsSent < (nProcs-1))
             {
                 MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
                 if (status.MPI_TAG == TAG_WORKFROMWORKER)
                 {
-                    MPI_Recv(myw, 
-                             4, 
+                    MPI_Recv(output_values, 
+                             output_values_size, 
                              MPI_DOUBLE, 
                              MPI_ANY_SOURCE, 
                              TAG_WORKFROMWORKER,
                              MPI_COMM_WORLD, 
                              &status);
-                    double w, w1,w2;
-                    int myref_number;         
-                    w  = myw[0];
-                    w1 = myw[1];
-                    w2 = myw[2];         
-                    myref_number = round(myw[3]);        
+                    double w, w1, w2;
+                    int myref_number;                             
+                    myref_number = ROUND(output_values[0]);        
+                    w  = output_values[1];
+                    w1 = output_values[2];
+                    w2 = output_values[3]; 
                     #ifdef DEBUG
                     std::cerr << "Mr2.5 received work from worker " <<  status.MPI_SOURCE << std::endl;
                     std::cerr << " w w1 w2 myref_number" 
@@ -255,29 +277,45 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
                               << w2 << " "
                               << myref_number <<  std::endl;  
                     #endif
-	                if (w > 0.)
-	                {
-		                fn_tmp.compose(fn_out,myref_number,"xmp");
-		                SFclasses.insert(fn_tmp);
-	                }
-	                if (do_split)
-	                {
-		                if (w1 > 0.)
-		                {
-		                    fn_tmp.compose(fn_out1,myref_number,"xmp");
-		                    SFclasses1.insert(fn_tmp);
-		                }
-		                if (w2 > 0.)
-		                {
-		                    fn_tmp.compose(fn_out2,myref_number,"xmp");
-		                    SFclasses2.insert(fn_tmp);
-		                }
-	                }
+                    if (w > 0.)
+                    {
+                        fn_tmp.compose(fn_out,myref_number,"xmp");
+                        SFclasses.insert(fn_tmp);
+                    }
+                    if (do_split)
+                    {
+                        if (w1 > 0.)
+                        {
+                            fn_tmp.compose(fn_out1,myref_number,"xmp");
+                            SFclasses1.insert(fn_tmp);
+                        }
+                        if (w2 > 0.)
+                        {
+                            fn_tmp.compose(fn_out2,myref_number,"xmp");
+                            SFclasses2.insert(fn_tmp);
+                        }
+                    }
+                    if (nr_iter > 0 )
+                    {
+                        int nr_images = ROUND(output_values[4] / AVG_OUPUT_SIZE);
+                        for (int i = 0; i < nr_images; i++)
+                        {
+                            DF.locate(ROUND(output_values[i*AVG_OUPUT_SIZE+5]));
+                            DF.set(0,output_values[i*AVG_OUPUT_SIZE+6]);
+                            DF.set(1,output_values[i*AVG_OUPUT_SIZE+7]);
+                            DF.set(2,output_values[i*AVG_OUPUT_SIZE+8]);
+                            DF.set(3,output_values[i*AVG_OUPUT_SIZE+9]);
+                            DF.set(4,output_values[i*AVG_OUPUT_SIZE+10]);
+                            DF.set(5,output_values[i*AVG_OUPUT_SIZE+11]);
+                            DF.set(6,output_values[i*AVG_OUPUT_SIZE+12]);
+                            DF.set(7,output_values[i*AVG_OUPUT_SIZE+13]);
+                        }
+                    }
                 }
                 else if (status.MPI_TAG == TAG_FREEWORKER)
                 {
                     MPI_Recv(0, 0, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
-                          MPI_COMM_WORLD, &status);
+                             MPI_COMM_WORLD, &status);
                     #ifdef DEBUG
                     std::cerr << "Mr received TAG_FREEWORKER from worker " <<  status.MPI_SOURCE << std::endl;
                     #endif
@@ -286,20 +324,26 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
                 }    
             }         
 
-	        SelFile          auxSF;
+            SelFile          auxSF;
             fn_tmp=fn_out+"es.sel";
             auxSF=SFclasses.sort_by_filenames();
-	        auxSF.write(fn_tmp);
-	        if (do_split)
-	        {
-	            fn_tmp=fn_out1+"es.sel";
+            auxSF.write(fn_tmp);
+            if (do_split)
+            {
+                fn_tmp=fn_out1+"es.sel";
                 auxSF=SFclasses1.sort_by_filenames();
-	            auxSF.write(fn_tmp);
-	            fn_tmp=fn_out2+"es.sel";
+                auxSF.write(fn_tmp);
+                fn_tmp=fn_out2+"es.sel";
                 auxSF=SFclasses2.sort_by_filenames();
-	            auxSF.write(fn_tmp);
-	        }
-
+                auxSF.write(fn_tmp);
+            }
+            if (nr_iter > 0)
+            {
+                // Write new document file
+                fn_tmp=fn_out+"es_realigned.doc";
+                DF.write(fn_tmp);
+            }
+//            }
         }
         else //rank !=0
         {
@@ -341,13 +385,9 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
                     #ifdef DEBUG
                     std::cerr << "Wr" << rank << " " << "TAG_WORKFORWORKER" << std::endl;
                     #endif
-                    processOneClass(number_of_references_image, 
-                                         myw[0], 
-                                         myw[1], 
-                                         myw[2]);//slaves
-                    myw[3]= (double)number_of_references_image;                    
-                    MPI_Send(myw,
-                             4,
+                    processOneClass(number_of_references_image, output_values);
+                    MPI_Send(output_values,
+                             output_values_size,
                              MPI_DOUBLE, 
                              0,
                              TAG_WORKFROMWORKER,

@@ -110,10 +110,7 @@ public:
 
   /** Process a single class */
   void processOneClass(int &dirno, 
-		       double &w,
-		       double &w1,
-		       double &w2,
-                       double * realign_output);
+                       double * my_output);
 
   /** Write average and selfiles to disc */
   void writeToDisc(ImageXmipp avg,
