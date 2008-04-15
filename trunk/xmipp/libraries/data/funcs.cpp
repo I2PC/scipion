@@ -984,3 +984,5 @@ int IsBigEndian(void)
 
     return ((int)(*((unsigned char *) &ul)));
 }
+
+
