@@ -20,7 +20,7 @@ if (ARGUMENTS['mode'] == 'configure'):
     opts = Options(None, ARGUMENTS)
     #sorry about this but I do not know how to do it inside scons
     #create configuration file for fftw
-    os.system("rm /tmp/fftw.LOCK /tmp/fftw.data;cd external/fftw-3.1.2;./configure");
+    os.system("cd external/fftw-3.1.2;./configure");
 
 else:
     opts = Options('options.cache', ARGUMENTS)
