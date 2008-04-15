@@ -29,6 +29,7 @@
 #include <vector>
 #include <string>
 
+#include "args.h"
 #include "matrix1d.h"
 #include "matrix2d.h"
 #include "selfile.h"
@@ -631,6 +632,14 @@ public:
     {
         return find(_key) != m.end();
     }
+
+    /** Get the column number from a header pattern
+     * @ingroup DocFileInfo
+     *
+     * If this docfile doesn't have a NewXmipp-style header ç
+     * (starting with "Headerinfo"), an error is raised. 
+     */
+    int getColNumberFromHeader(const char * pattern);
 
     /** Number of columns of the first data line.
      * @ingroup DocFileInfo

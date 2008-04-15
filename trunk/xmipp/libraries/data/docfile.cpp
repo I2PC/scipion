@@ -564,6 +564,35 @@ void DocFile::locate(int k)
     }
 }
 
+int DocFile::getColNumberFromHeader(const char * pattern)
+{
+    std::string header;
+    go_beginning();
+    if ((*current_line).Is_comment())
+    {
+        header = (*current_line).get_text();
+        if (strstr(header.c_str(), "Headerinfo") == NULL)
+        {
+            REPORT_ERROR(1606,"DocFile:: docfile is of non-NewXmipp type!");
+        }
+        else
+        {
+            std::vector<std::string> tokens;
+            tokenize(header,tokens," \t()");
+            for (int i = 0; i < tokens.size(); i++) 
+            {
+                if (strstr(tokens[i].c_str(), pattern) != NULL) 
+                {
+                    return textToInteger(tokens[i+1]);
+                }
+            }
+        }
+    }
+    return -1;
+
+}
+
+
 int DocFile::FirstLine_colNumber()
 {
     std::vector< DocLine >::iterator aux = current_line;
