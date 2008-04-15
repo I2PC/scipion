@@ -54,6 +54,8 @@
 #include "macros.h"
 #include "error.h"
 
+#define FILENAMENUMBERLENGTH 6
+
 /// @defgroup GeneralFunctions General functions
 /// @ingroup DataLibrary
 
@@ -659,9 +661,9 @@ public:
      * The number and extension are optional.
      *
      * @code
-     * FileName fn_proj("g1ta00001.xmp"); // fn_proj = "g1ta00001.xmp"
-     * FileName fn_proj("g1ta",1,"xmp"); // fn_proj = "g1ta00001.xmp"
-     * FileName fn_proj("g1ta",1); // fn_proj = "g1ta00001"
+     * FileName fn_proj("g1ta000001.xmp"); // fn_proj = "g1ta000001.xmp"
+     * FileName fn_proj("g1ta",1,"xmp"); // fn_proj = "g1ta000001.xmp"
+     * FileName fn_proj("g1ta",1); // fn_proj = "g1ta000001"
      * @endcode
      */
     FileName(const char* str, int no, const std::string& ext = "")
@@ -688,7 +690,7 @@ public:
      * @ingroup FilenameComposing
      *
      * @code
-     * fn_proj.compose("g1ta", 1, "xmp");  // fn_proj = "g1ta00001.xmp"
+     * fn_proj.compose("g1ta", 1, "xmp");  // fn_proj = "g1ta000001.xmp"
      * @endcode
      */
     void compose(const std::string& str, int no, const std::string& ext);

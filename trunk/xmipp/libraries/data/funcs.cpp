@@ -460,8 +460,8 @@ void FileName::compose(const std::string &str, int no, const std::string &ext)
     *this = (FileName) str;
     if (no != -1)
     {
-        char aux_str[5];
-        sprintf(aux_str, "%05d", no);
+        char aux_str[FILENAMENUMBERLENGTH];
+        sprintf(aux_str, "%0FILENAMENUMBERLENGTHd", no);
         *this += aux_str;
     }
 
@@ -478,8 +478,8 @@ FileName FileName::get_root() const
         point = length();
     int root_end = find_last_not_of("0123456789", point - 1);
     if (root_end + 1 != point)
-        if (point - root_end > 5)
-            root_end = point - 5 - 1;
+        if (point - root_end > FILENAMENUMBERLENGTH)
+            root_end = point - FILENAMENUMBERLENGTH - 1;
     return (FileName) substr(0, root_end + 1);
 }
 
@@ -517,8 +517,8 @@ int FileName::get_number() const
     int root_end = find_last_not_of("0123456789", point - 1);
     if (root_end + 1 != point)
     {
-        if (point - root_end > 5)
-            root_end = point - 5 - 1;
+        if (point - root_end > FILENAMENUMBERLENGTH)
+            root_end = point - FILENAMENUMBERLENGTH - 1;
         std::string aux = substr(root_end + 1, point - root_end + 1);
         return atoi(aux.c_str());
     }
