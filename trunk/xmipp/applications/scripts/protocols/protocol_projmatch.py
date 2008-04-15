@@ -1061,7 +1061,6 @@ def execute_projection_matching(_mylog,
                   ' -max_shift '      + str(_MaxChangeOffset) + \
                   ' -search5d_shift ' + str(_Search5DShift) + \
                   ' -search5d_step  ' + str(_Search5DStep) + \
-                  ' -chunk_angular_distance 10' + \
                   ' -mem '            + str(_AvailableMemory)
 
       if (_DoCtfCorrection and _ReferenceIsCtfCorrected):
