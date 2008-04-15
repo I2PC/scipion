@@ -53,11 +53,13 @@ class Prog_WBP_prm
 {
 public:
     /** Filenames */
-    FileName fn_out, fn_sym, fn_sel, fn_control;
+    FileName fn_out, fn_sym, fn_sel, fn_doc, fn_control;
     /** SelFile containing all projections */
     SelFile SF;
-    /** If true: apply shifts upon reading the images (default) */
-    bool apply_shifts;
+    /** DocFile containing all angles */
+    DocFile DF;
+    /** Column numbers in the docfile */
+    int col_rot, col_tilt, col_psi, col_xoff, col_yoff, col_flip, col_weight;
     /** Lower threshold for the filter */
     double threshold;
     /** Counter for how many times the threshold was not reached */
@@ -94,6 +96,10 @@ public:
 
     /// Produce side info: fill arrays with relevant transformation matrices
     void produce_Side_info() ;
+
+    /// Get angles (either from reading the header or from a docfile)
+    void get_angles_for_image(FileName fn, double &rot, double &tilt, double &psi,
+                              double &xoff, double &yoff, double &flip, double &weight);
 
     /// Fill array with transformation matrices needed for arbitrary geometry filter
     void get_all_matrices(SelFile &SF) ;
