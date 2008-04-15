@@ -309,6 +309,7 @@ class ML3D_class:
     # Make a copy of the initial references:
     def copy_initial_refs(self):
         import os,shutil
+        import utils_xmipp
         if os.path.exists(self.InitialReference):
             shutil.copy(self.InitialReference,'initial_reference.vol')
         if (self.DoGenerateSeeds==False and DoJustRefine==False):
@@ -319,7 +320,7 @@ class ML3D_class:
             newlines=[]
             for line in lines:
                 i = i + 1
-                oname='initial_seed'+str(i).zfill(5)+'.vol'
+                oname=composeFileName('initial_seed',i,'vol')
                 words=line.split()
                 if words[0][0]=="/":
                     shutil.copy(words[0],oname)
@@ -565,11 +566,12 @@ class ML3D_class:
     # Either for seeds generation or for ML3D-classification
     def restart_MLrefine3D(self,iter):
         import os
-        import launch_parallel_job
+        import launch_parallel_job, utils_xmipp
 
         print '*********************************************************************'
         print '*  Restarting ml(f)_refine3d program :' 
-        params= ' -restart RunML3D/ml3d_it' + str(iter).zfill(5) + '.log'
+        restartname = composeFileName('RunML3D/ml3d_it',iter,'log')
+        params= ' -restart ' + restartname
 
         if (self.DoMlf):
             program="xmipp_mlf_refine3d"

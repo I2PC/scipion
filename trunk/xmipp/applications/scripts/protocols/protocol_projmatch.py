@@ -1104,7 +1104,6 @@ def execute_projection_matching(_mylog,
          parameters += \
                     ' -split '
 
-      #FIXME!
       launch_parallel_job.launch_job(
                                      _DoParallel,
                                      'xmipp_angular_class_average',
@@ -1144,9 +1143,9 @@ def execute_projection_matching(_mylog,
          # DELETE ALL FILES FOR THIS CTFGROUP TO PREVENT FILLING THE DISC
 
          # Apply Wiener filter to the class averages (overwrite originals)
-         wiener_filter = '../' + CtfGroupDirectory + \
-                         '/' + CtfGroupRootName + \
-                         '_group' + str(ictf).zfill(5) + '.wien'
+         import utils_xmipp
+         wienername = composeFileName(CtfGroupRootName+'_group',ictf,'wien')
+         wiener_filter = '../' + CtfGroupDirectory + '/' + wienername
          command = 'xmipp_fourier_filter ' + \
                    ' -i ' + outputname + '_classes.sel' + \
                    ' -fourier_mask ' + wiener_filter 

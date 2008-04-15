@@ -193,7 +193,8 @@ class kerdensom_class:
             lastitername=docfiles[-1].replace('.doc','')
             splits=lastitername.split('_it')
             ml2d_abs_rootname=splits[0]
-            self.classselfile=ml2d_abs_rootname+'_ref'+str(self.ML2DReferenceNr).zfill(5)+'.sel'
+            import utils_xmipp
+            self.classselfile=composeFileName(ml2d_abs_rootname+'_ref',self.ML2DReferenceNr,'sel')
             # Make a local copy of the images
             message='Making a local copy of the images in '+str(self.classselfile)
             print '* ',message
@@ -230,7 +231,8 @@ class kerdensom_class:
                     i=i+1
                     break
 
-        self.docfilename='ml2d_ref'+str(self.ML2DReferenceNr).zfill(5)+'.doc'
+        import utils_xmipp
+        self.docfilename=composeFileName('ml2d_ref',self.ML2DReferenceNr,'doc')
         fh=open(self.docfilename,'w')
         fh.writelines(newdoc)
         fh.close()

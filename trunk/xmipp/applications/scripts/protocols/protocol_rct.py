@@ -243,13 +243,17 @@ class RCT_class:
             # Loop over all classes selected for 3D-reconstruction
             lastitername=docfiles[-1].replace('.doc','')
             refs=self.SelectClasses.split(',')
+            import utils_xmipp
             for ref in refs:
                 # Copy selfile and average image of ML2DDir to WorkingDir
-                unt_selfile=ml2d_abs_rootname+'_ref'+str(ref).zfill(5)+'.sel'
-                local_unt_selfile='rct_ref'+str(ref).zfill(5)+'_untilted.sel'
-                local_til_selfile='rct_ref'+str(ref).zfill(5)+'_tilted.sel'
-                refavg=lastitername+'_ref'+str(ref).zfill(5)+'.xmp'
-                local_refavg='rct_ref'+str(ref).zfill(5)+'_untilted_avg.xmp'
+                unt_selfile=composeFileName(ml2d_abs_rootname+'_ref',ref,'sel')
+                local_unt_selfile=composeFileName('rct_ref',ref,'')
+                local_unt_selfile += '_untilted.sel'
+                local_til_selfile=composeFileName('rct_ref',ref,'')
+                local_til_selfile += '_tilted.sel'
+                refavg=composeFileName(lastitername+'_ref',ref,'xmp')
+                local_refavg=composeFileName('rct_ref',ref,'')
+                local_refavg += '_untilted_avg.xmp'
                 self.untiltclasslist[ref]=[local_unt_selfile,]
                 self.untiltclasslist[ref].append(local_refavg)
                 self.untiltclasslist[ref].append(local_til_selfile)
