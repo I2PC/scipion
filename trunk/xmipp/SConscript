@@ -599,6 +599,7 @@ AddProtocol('log.py', 'applications/scripts/protocols')
 AddProtocol('rename_files.py', 'applications/scripts/protocols')
 AddProtocol('selfile.py', 'applications/scripts/protocols')
 AddProtocol('spider_header.py', 'applications/scripts/protocols')
+AddProtocol('utils_xmipp.py', 'applications/scripts/protocols')
 AddProtocol('visualization.py', 'applications/scripts/protocols')
 AddProtocol('visualize_kerdensom.py', 'applications/scripts/protocols')
 AddProtocol('visualize_ml2d.py', 'applications/scripts/protocols')
@@ -729,7 +730,7 @@ for b in BackwardsBatches:
 
 # MPI
 if int(env['mpi']):
-#    AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_discrete_assign', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
