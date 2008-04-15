@@ -772,6 +772,8 @@ class projection_matching_class:
                         ' | grep -v \ -1 >' + ForReconstructionSel
           self._mylog.info(command)
           os.system(command)
+          print '*********************************************************************'
+          print '* Extracting angles from ' + ForReconstructionSel
           command='xmipp_header_extract -i ' + ForReconstructionSel + \
                                       ' -o ' + ForReconstructionDoc
           self._mylog.info(command)
@@ -1353,6 +1355,8 @@ def  execute_resolution(_mylog,
 
     # Now that we have the volumes, remove the class averages and selfiles
     my_pattern=split_sel_root_name+'_[1,2]_class*'
+    print '**************************************************************'
+    print '* Removing all temporary files called ' + my_pattern
     import glob
     for file in glob.glob(my_pattern):
        os.remove(file)
@@ -1360,6 +1364,7 @@ def  execute_resolution(_mylog,
 
     for i in range(len(Outputvolumes)):
        Outputvolumes[i]+=".vol"
+
     print '**************************************************************'
     print '* Compute resolution ' 
     command = "xmipp_resolution_fsc -ref " + Outputvolumes[0] +\
