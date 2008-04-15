@@ -133,10 +133,10 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
             SFclasses1.clear(); 
             SFclasses2.clear(); 
             nr_ref = DFlib.dataLineNo();
+            int c = XMIPP_MAX(1, nr_ref / 80);
             init_progress_bar(nr_ref);  
 
             int stopTagsSent =0;
-            init_progress_bar(nr_ref);// master
             while(1)
             {
                 //Wait until any message arrives
@@ -244,7 +244,7 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
                                  TAG_WORKFORWORKER, 
                                  MPI_COMM_WORLD);
                         number_of_references_image++;//////////////////////
-                        progress_bar(number_of_references_image);
+                        if (number_of_references_image % c == 0) progress_bar(number_of_references_image);
                         //prm.DFlib.next();
                     }   
                     #ifdef DEBUG
