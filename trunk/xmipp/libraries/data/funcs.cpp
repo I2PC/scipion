@@ -461,7 +461,11 @@ void FileName::compose(const std::string &str, int no, const std::string &ext)
     if (no != -1)
     {
         char aux_str[FILENAMENUMBERLENGTH];
-        sprintf(aux_str, "%0FILENAMENUMBERLENGTHd", no);
+        std::string tmp_fileformat;
+        tmp_fileformat = (std::string) "%0" +
+                         integerToString(FILENAMENUMBERLENGTH)+
+                         (std::string)"d";
+        sprintf(aux_str, tmp_fileformat.c_str(), no);
         *this += aux_str;
     }
 
