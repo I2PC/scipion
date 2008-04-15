@@ -794,7 +794,7 @@ configure:21832: gcc -std=gnu99 -o conftest -O3 -fomit-frame-pointer -malign-dou
 configure:21835: $? = 0
 configure:21841: ./conftest
 configure:21844: $? = 0
-configure:21860: result: 6fb:20800:e3bd:bfebfbff
+configure:21860: result: 6fb:1020800:e3bd:bfebfbff
 configure:22111: checking whether C compiler accepts -march=pentiumpro
 configure:22136: gcc -std=gnu99 -c -march=pentiumpro  conftest.c >&5
 configure:22142: $? = 0
@@ -1578,7 +1578,7 @@ configure:28311: $? = 0
 configure:28325: result: yes
 configure:28332: checking for _doprnt
 configure:28388: gcc -std=gnu99 -o conftest -O3 -fomit-frame-pointer -malign-double -fstrict-aliasing -ffast-math -march=pentiumpro   conftest.c  >&5
-/tmp/cca7xZta.o: In function `main':
+/tmp/cc8z7mGo.o: In function `main':
 conftest.c:(.text+0xf): undefined reference to `_doprnt'
 collect2: ld returned 1 exit status
 configure:28394: $? = 1
@@ -1674,7 +1674,7 @@ configure:28503: $? = 0
 configure:28517: result: yes
 configure:28549: checking for BSDgettimeofday
 configure:28605: gcc -std=gnu99 -o conftest -O3 -fomit-frame-pointer -malign-double -fstrict-aliasing -ffast-math -march=pentiumpro   conftest.c -lm  >&5
-/tmp/ccK4QjGc.o: In function `main':
+/tmp/cccyNYXO.o: In function `main':
 conftest.c:(.text+0xf): undefined reference to `BSDgettimeofday'
 collect2: ld returned 1 exit status
 configure:28611: $? = 1
@@ -1770,7 +1770,7 @@ configure:28631: $? = 0
 configure:28645: result: yes
 configure:28549: checking for gethrtime
 configure:28605: gcc -std=gnu99 -o conftest -O3 -fomit-frame-pointer -malign-double -fstrict-aliasing -ffast-math -march=pentiumpro   conftest.c -lm  >&5
-/tmp/ccqCfhFB.o: In function `main':
+/tmp/ccgorLEk.o: In function `main':
 conftest.c:(.text+0xf): undefined reference to `gethrtime'
 collect2: ld returned 1 exit status
 configure:28611: $? = 1
@@ -1859,7 +1859,7 @@ configure: failed program was:
 configure:28645: result: no
 configure:28549: checking for read_real_time
 configure:28605: gcc -std=gnu99 -o conftest -O3 -fomit-frame-pointer -malign-double -fstrict-aliasing -ffast-math -march=pentiumpro   conftest.c -lm  >&5
-/tmp/ccObaaFL.o: In function `main':
+/tmp/ccyyPJOz.o: In function `main':
 conftest.c:(.text+0xf): undefined reference to `read_real_time'
 collect2: ld returned 1 exit status
 configure:28611: $? = 1
@@ -1948,7 +1948,7 @@ configure: failed program was:
 configure:28645: result: no
 configure:28549: checking for time_base_to_time
 configure:28605: gcc -std=gnu99 -o conftest -O3 -fomit-frame-pointer -malign-double -fstrict-aliasing -ffast-math -march=pentiumpro   conftest.c -lm  >&5
-/tmp/ccAJJmKX.o: In function `main':
+/tmp/ccGlY3gI.o: In function `main':
 conftest.c:(.text+0xf): undefined reference to `time_base_to_time'
 collect2: ld returned 1 exit status
 configure:28611: $? = 1
@@ -2079,7 +2079,7 @@ configure:28631: $? = 0
 configure:28645: result: yes
 configure:28549: checking for _mm_malloc
 configure:28605: gcc -std=gnu99 -o conftest -O3 -fomit-frame-pointer -malign-double -fstrict-aliasing -ffast-math -march=pentiumpro   conftest.c -lm  >&5
-/tmp/ccMrUyga.o: In function `main':
+/tmp/ccqcRRbY.o: In function `main':
 conftest.c:(.text+0xf): undefined reference to `_mm_malloc'
 collect2: ld returned 1 exit status
 configure:28611: $? = 1
@@ -2173,7 +2173,7 @@ configure: failed program was:
 configure:28645: result: no
 configure:28549: checking for _mm_free
 configure:28605: gcc -std=gnu99 -o conftest -O3 -fomit-frame-pointer -malign-double -fstrict-aliasing -ffast-math -march=pentiumpro   conftest.c -lm  >&5
-/tmp/cc22PEHk.o: In function `main':
+/tmp/cc05qGEa.o: In function `main':
 conftest.c:(.text+0xf): undefined reference to `_mm_free'
 collect2: ld returned 1 exit status
 configure:28611: $? = 1
@@ -2267,7 +2267,7 @@ configure: failed program was:
 configure:28645: result: no
 configure:28549: checking for clock_gettime
 configure:28605: gcc -std=gnu99 -o conftest -O3 -fomit-frame-pointer -malign-double -fstrict-aliasing -ffast-math -march=pentiumpro   conftest.c -lm  >&5
-/tmp/ccWhdUqg.o: In function `main':
+/tmp/ccwHOqcm.o: In function `main':
 conftest.c:(.text+0xf): undefined reference to `clock_gettime'
 collect2: ld returned 1 exit status
 configure:28611: $? = 1
@@ -2361,7 +2361,7 @@ configure: failed program was:
 configure:28645: result: no
 configure:28549: checking for mach_absolute_time
 configure:28605: gcc -std=gnu99 -o conftest -O3 -fomit-frame-pointer -malign-double -fstrict-aliasing -ffast-math -march=pentiumpro   conftest.c -lm  >&5
-/tmp/ccOwOgGq.o: In function `main':
+/tmp/ccutc0RA.o: In function `main':
 conftest.c:(.text+0xf): undefined reference to `mach_absolute_time'
 collect2: ld returned 1 exit status
 configure:28611: $? = 1
@@ -2831,7 +2831,7 @@ configure:29078: checking for _rtc intrinsic
 configure:29104: gcc -std=gnu99 -o conftest -O3 -fomit-frame-pointer -malign-double -fstrict-aliasing -ffast-math -march=pentiumpro   conftest.c -lm  >&5
 conftest.c: In function 'main':
 conftest.c:64: warning: implicit declaration of function '_rtc'
-/tmp/ccsdbxxe.o: In function `main':
+/tmp/ccYdCtpV.o: In function `main':
 conftest.c:(.text+0xf): undefined reference to `_rtc'
 collect2: ld returned 1 exit status
 configure:29110: $? = 1
@@ -2966,13 +2966,13 @@ Target: i586-suse-linux
 Configured with: ../configure --enable-threads=posix --prefix=/usr --with-local-prefix=/usr/local --infodir=/usr/share/info --mandir=/usr/share/man --libdir=/usr/lib --libexecdir=/usr/lib --enable-languages=c,c++,objc,fortran,obj-c++,java,ada --enable-checking=release --with-gxx-include-dir=/usr/include/c++/4.2.1 --enable-ssp --disable-libssp --disable-libgcj --with-slibdir=/lib --with-system-zlib --enable-shared --enable-__cxa_atexit --enable-libstdcxx-allocator=new --disable-libstdcxx-pch --program-suffix=-4.2 --enable-version-specific-runtime-libs --without-system-libunwind --with-cpu=generic --host=i586-suse-linux
 Thread model: posix
 gcc version 4.2.1 (SUSE Linux)
- /usr/lib/gcc/i586-suse-linux/4.2.1/f951 conftest.f -ffixed-form -quiet -dumpbase conftest.f -mtune=generic -auxbase conftest -g -O2 -version -I /usr/lib/gcc/i586-suse-linux/4.2.1/finclude -o /tmp/ccePWqkm.s
+ /usr/lib/gcc/i586-suse-linux/4.2.1/f951 conftest.f -ffixed-form -quiet -dumpbase conftest.f -mtune=generic -auxbase conftest -g -O2 -version -I /usr/lib/gcc/i586-suse-linux/4.2.1/finclude -o /tmp/ccTOIxJn.s
 GNU F95 version 4.2.1 (SUSE Linux) (i586-suse-linux)
 	compiled by GNU C version 4.2.1 (SUSE Linux).
 GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
- /usr/lib/gcc/i586-suse-linux/4.2.1/../../../../i586-suse-linux/bin/as -V -Qy -o /tmp/cci2abFB.o /tmp/ccePWqkm.s
+ /usr/lib/gcc/i586-suse-linux/4.2.1/../../../../i586-suse-linux/bin/as -V -Qy -o /tmp/ccoWtCAA.o /tmp/ccTOIxJn.s
 GNU assembler version 2.17.50 (i586-suse-linux) using BFD version (GNU Binutils) 2.17.50.20070726-14 (SUSE Linux)
- /usr/lib/gcc/i586-suse-linux/4.2.1/collect2 --eh-frame-hdr -m elf_i386 -dynamic-linker /lib/ld-linux.so.2 -o conftest /usr/lib/gcc/i586-suse-linux/4.2.1/../../../crt1.o /usr/lib/gcc/i586-suse-linux/4.2.1/../../../crti.o /usr/lib/gcc/i586-suse-linux/4.2.1/crtbegin.o -L/usr/lib/gcc/i586-suse-linux/4.2.1 -L/usr/lib/gcc/i586-suse-linux/4.2.1 -L/usr/lib/gcc/i586-suse-linux/4.2.1/../../../../i586-suse-linux/lib -L/usr/lib/gcc/i586-suse-linux/4.2.1/../../.. /tmp/cci2abFB.o -lgfortranbegin -lgfortran -lm -lgfortran -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/i586-suse-linux/4.2.1/crtend.o /usr/lib/gcc/i586-suse-linux/4.2.1/../../../crtn.o
+ /usr/lib/gcc/i586-suse-linux/4.2.1/collect2 --eh-frame-hdr -m elf_i386 -dynamic-linker /lib/ld-linux.so.2 -o conftest /usr/lib/gcc/i586-suse-linux/4.2.1/../../../crt1.o /usr/lib/gcc/i586-suse-linux/4.2.1/../../../crti.o /usr/lib/gcc/i586-suse-linux/4.2.1/crtbegin.o -L/usr/lib/gcc/i586-suse-linux/4.2.1 -L/usr/lib/gcc/i586-suse-linux/4.2.1 -L/usr/lib/gcc/i586-suse-linux/4.2.1/../../../../i586-suse-linux/lib -L/usr/lib/gcc/i586-suse-linux/4.2.1/../../.. /tmp/ccoWtCAA.o -lgfortranbegin -lgfortran -lm -lgfortran -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/i586-suse-linux/4.2.1/crtend.o /usr/lib/gcc/i586-suse-linux/4.2.1/../../../crtn.o
 configure:30062: result: -v
 configure:30064: checking for Fortran 77 libraries of gfortran
 configure:30087: gfortran -o conftest -g -O2 -v conftest.f -lm
@@ -2981,13 +2981,13 @@ Target: i586-suse-linux
 Configured with: ../configure --enable-threads=posix --prefix=/usr --with-local-prefix=/usr/local --infodir=/usr/share/info --mandir=/usr/share/man --libdir=/usr/lib --libexecdir=/usr/lib --enable-languages=c,c++,objc,fortran,obj-c++,java,ada --enable-checking=release --with-gxx-include-dir=/usr/include/c++/4.2.1 --enable-ssp --disable-libssp --disable-libgcj --with-slibdir=/lib --with-system-zlib --enable-shared --enable-__cxa_atexit --enable-libstdcxx-allocator=new --disable-libstdcxx-pch --program-suffix=-4.2 --enable-version-specific-runtime-libs --without-system-libunwind --with-cpu=generic --host=i586-suse-linux
 Thread model: posix
 gcc version 4.2.1 (SUSE Linux)
- /usr/lib/gcc/i586-suse-linux/4.2.1/f951 conftest.f -ffixed-form -quiet -dumpbase conftest.f -mtune=generic -auxbase conftest -g -O2 -version -I /usr/lib/gcc/i586-suse-linux/4.2.1/finclude -o /tmp/ccbztRis.s
+ /usr/lib/gcc/i586-suse-linux/4.2.1/f951 conftest.f -ffixed-form -quiet -dumpbase conftest.f -mtune=generic -auxbase conftest -g -O2 -version -I /usr/lib/gcc/i586-suse-linux/4.2.1/finclude -o /tmp/ccoKzBRq.s
 GNU F95 version 4.2.1 (SUSE Linux) (i586-suse-linux)
 	compiled by GNU C version 4.2.1 (SUSE Linux).
 GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
- /usr/lib/gcc/i586-suse-linux/4.2.1/../../../../i586-suse-linux/bin/as -V -Qy -o /tmp/ccqnCYVK.o /tmp/ccbztRis.s
+ /usr/lib/gcc/i586-suse-linux/4.2.1/../../../../i586-suse-linux/bin/as -V -Qy -o /tmp/ccGKzn1H.o /tmp/ccoKzBRq.s
 GNU assembler version 2.17.50 (i586-suse-linux) using BFD version (GNU Binutils) 2.17.50.20070726-14 (SUSE Linux)
- /usr/lib/gcc/i586-suse-linux/4.2.1/collect2 --eh-frame-hdr -m elf_i386 -dynamic-linker /lib/ld-linux.so.2 -o conftest /usr/lib/gcc/i586-suse-linux/4.2.1/../../../crt1.o /usr/lib/gcc/i586-suse-linux/4.2.1/../../../crti.o /usr/lib/gcc/i586-suse-linux/4.2.1/crtbegin.o -L/usr/lib/gcc/i586-suse-linux/4.2.1 -L/usr/lib/gcc/i586-suse-linux/4.2.1 -L/usr/lib/gcc/i586-suse-linux/4.2.1/../../../../i586-suse-linux/lib -L/usr/lib/gcc/i586-suse-linux/4.2.1/../../.. /tmp/ccqnCYVK.o -lgfortranbegin -lgfortran -lm -lgfortran -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/i586-suse-linux/4.2.1/crtend.o /usr/lib/gcc/i586-suse-linux/4.2.1/../../../crtn.o
+ /usr/lib/gcc/i586-suse-linux/4.2.1/collect2 --eh-frame-hdr -m elf_i386 -dynamic-linker /lib/ld-linux.so.2 -o conftest /usr/lib/gcc/i586-suse-linux/4.2.1/../../../crt1.o /usr/lib/gcc/i586-suse-linux/4.2.1/../../../crti.o /usr/lib/gcc/i586-suse-linux/4.2.1/crtbegin.o -L/usr/lib/gcc/i586-suse-linux/4.2.1 -L/usr/lib/gcc/i586-suse-linux/4.2.1 -L/usr/lib/gcc/i586-suse-linux/4.2.1/../../../../i586-suse-linux/lib -L/usr/lib/gcc/i586-suse-linux/4.2.1/../../.. /tmp/ccGKzn1H.o -lgfortranbegin -lgfortran -lm -lgfortran -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/i586-suse-linux/4.2.1/crtend.o /usr/lib/gcc/i586-suse-linux/4.2.1/../../../crtn.o
 configure:30261: result:  -L/usr/lib/gcc/i586-suse-linux/4.2.1 -L/usr/lib/gcc/i586-suse-linux/4.2.1/../../../../i586-suse-linux/lib -L/usr/lib/gcc/i586-suse-linux/4.2.1/../../.. -lgfortranbegin -lgfortran -lm -lgcc_s
 configure:30277: checking for dummy main to link with Fortran 77 libraries
 configure:30321: gcc -std=gnu99 -o conftest -O3 -fomit-frame-pointer -malign-double -fstrict-aliasing -ffast-math -march=pentiumpro   conftest.c -lm   -L/usr/lib/gcc/i586-suse-linux/4.2.1 -L/usr/lib/gcc/i586-suse-linux/4.2.1/../../../../i586-suse-linux/lib -L/usr/lib/gcc/i586-suse-linux/4.2.1/../../.. -lgfortranbegin -lgfortran -lm -lgcc_s >&5
@@ -3005,7 +3005,7 @@ configure:30520: $? = 0
 configure:30527: test -s conftest.o
 configure:30530: $? = 0
 configure:30582: gcc -std=gnu99 -o conftest -O3 -fomit-frame-pointer -malign-double -fstrict-aliasing -ffast-math -march=pentiumpro   conftest.c cfortran_test.o -lm   -L/usr/lib/gcc/i586-suse-linux/4.2.1 -L/usr/lib/gcc/i586-suse-linux/4.2.1/../../../../i586-suse-linux/lib -L/usr/lib/gcc/i586-suse-linux/4.2.1/../../.. -lgfortranbegin -lgfortran -lm -lgcc_s >&5
-/tmp/ccuBwBw6.o: In function `main':
+/tmp/ccycSFOe.o: In function `main':
 conftest.c:(.text+0xf): undefined reference to `foobar'
 collect2: ld returned 1 exit status
 configure:30588: $? = 1
@@ -3126,35 +3126,6 @@ generated by GNU Autoconf 2.59e.  Invocation command line was
 on tumbao
 
 config.status:721: creating Makefile
-config.status:721: creating support/Makefile
-config.status:721: creating genfft/Makefile
-config.status:721: creating genfft-k7/Makefile
-config.status:721: creating kernel/Makefile
-config.status:721: creating simd/Makefile
-config.status:721: creating simd/nonportable/Makefile
-config.status:721: creating dft/Makefile
-config.status:721: creating dft/codelets/Makefile
-config.status:721: creating dft/codelets/standard/Makefile
-config.status:721: creating dft/simd/Makefile
-config.status:721: creating dft/simd/codelets/Makefile
-config.status:721: creating dft/k7/Makefile
-config.status:721: creating dft/k7/codelets/Makefile
-config.status:721: creating rdft/Makefile
-config.status:721: creating rdft/codelets/Makefile
-config.status:721: creating rdft/codelets/r2hc/Makefile
-config.status:721: creating rdft/codelets/hc2r/Makefile
-config.status:721: creating rdft/codelets/r2r/Makefile
-config.status:721: creating reodft/Makefile
-config.status:721: creating threads/Makefile
-config.status:721: creating api/Makefile
-config.status:721: creating libbench2/Makefile
-config.status:721: creating tests/Makefile
-config.status:721: creating doc/Makefile
-config.status:721: creating doc/FAQ/Makefile
-config.status:721: creating tools/Makefile
-config.status:721: creating tools/fftw_wisdom.1
-config.status:721: creating tools/fftw-wisdom-to-conf
-config.status:721: creating fftw.pc
 config.status:721: creating config.h
 config.status:992: config.h is unchanged
 config.status:1038: executing depfiles commands
@@ -3300,7 +3271,7 @@ ax_cv_c_flags__march_pentiumpro=yes
 ax_cv_c_flags__mpreferred_stack_boundary_4=yes
 ax_cv_gcc_archflag=-march=pentiumpro
 ax_cv_gcc_x86_cpuid_0=a:756e6547:6c65746e:49656e69
-ax_cv_gcc_x86_cpuid_1=6fb:20800:e3bd:bfebfbff
+ax_cv_gcc_x86_cpuid_1=6fb:1020800:e3bd:bfebfbff
 lt_cv_deplibs_check_method=pass_all
 lt_cv_file_magic_cmd='$MAGIC_CMD'
 lt_cv_file_magic_test_file=
@@ -3331,18 +3302,18 @@ lt_lt_cv_sys_global_symbol_to_cdecl='"sed -n -e '\''s/^. .* \\(.*\\)\$/extern in
 ## Output variables. ##
 ## ----------------- ##
 
-ACLOCAL='${SHELL} /home/roberto/tmp/fftw/fftw-3.1.2/missing --run aclocal-1.9'
+ACLOCAL='${SHELL} /home/roberto/xmipp/external/fftw-3.1.2/missing --run aclocal-1.9'
 ALLOCA=''
 AMDEPBACKSLASH='\'
 AMDEP_FALSE='#'
 AMDEP_TRUE=''
-AMTAR='${SHELL} /home/roberto/tmp/fftw/fftw-3.1.2/missing --run tar'
+AMTAR='${SHELL} /home/roberto/xmipp/external/fftw-3.1.2/missing --run tar'
 AR='ar'
 AS='gcc -std=gnu99'
 ASFLAGS=''
-AUTOCONF='${SHELL} /home/roberto/tmp/fftw/fftw-3.1.2/missing --run autoconf'
-AUTOHEADER='${SHELL} /home/roberto/tmp/fftw/fftw-3.1.2/missing --run autoheader'
-AUTOMAKE='${SHELL} /home/roberto/tmp/fftw/fftw-3.1.2/missing --run automake-1.9'
+AUTOCONF='${SHELL} /home/roberto/xmipp/external/fftw-3.1.2/missing --run autoconf'
+AUTOHEADER='${SHELL} /home/roberto/xmipp/external/fftw-3.1.2/missing --run autoheader'
+AUTOMAKE='${SHELL} /home/roberto/xmipp/external/fftw-3.1.2/missing --run automake-1.9'
 AWK='gawk'
 CC='gcc -std=gnu99'
 CCAS='gcc -std=gnu99'
@@ -3392,7 +3363,7 @@ LTLIBOBJS=''
 MAINT='#'
 MAINTAINER_MODE_FALSE=''
 MAINTAINER_MODE_TRUE='#'
-MAKEINFO='${SHELL} /home/roberto/tmp/fftw/fftw-3.1.2/missing --run makeinfo'
+MAKEINFO='${SHELL} /home/roberto/xmipp/external/fftw-3.1.2/missing --run makeinfo'
 OBJDUMP='objdump'
 OBJEXT='o'
 OCAMLC=''
@@ -3463,7 +3434,7 @@ host_vendor='pc'
 htmldir='${docdir}'
 includedir='${prefix}/include'
 infodir='${datarootdir}/info'
-install_sh='/home/roberto/tmp/fftw/fftw-3.1.2/install-sh'
+install_sh='/home/roberto/xmipp/external/fftw-3.1.2/install-sh'
 libdir='${exec_prefix}/lib'
 libexecdir='${exec_prefix}/libexec'
 localedir='${datarootdir}/locale'
