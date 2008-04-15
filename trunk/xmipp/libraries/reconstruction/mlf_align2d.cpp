@@ -1444,11 +1444,13 @@ void Prog_MLFalign2D_prm::appendFTtoVector(const Matrix2D<std::complex<double> >
 {
 
     // First, store the points used in the probability calculations
+    std::complex<double> * tmp_in;
+    tmp_in = MULTIDIM_ARRAY(in);
     for (int ipoint = 0; ipoint < nr_points_2d; ipoint++)
     {
 	int ii = pointer_2d[ipoint];
-	out.push_back((DIRECT_MULTIDIM_ELEM(in,ii)).real());
-	out.push_back((DIRECT_MULTIDIM_ELEM(in,ii)).imag());
+	out.push_back(tmp_in[ii].real());
+	out.push_back(tmp_in[ii].imag());
     }
 }
 
@@ -1459,17 +1461,17 @@ void Prog_MLFalign2D_prm::getFTfromVector(const std::vector<double> &in,
 {
 
     out.resize(hdim + 1, dim);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(out)
-    {
-	dMij(out,i,j) = 0.;
-    }
+    out.initZeros();
+    std::complex<double> * tmp_out;
+    tmp_out = MULTIDIM_ARRAY(out);
+
     if (only_real)
     {
 	for (int ipoint = 0; ipoint < nr_points_2d; ipoint++)
 	{
 	    int ii = pointer_2d[ipoint];
 	    std::complex<double> aux(in[start_point+ipoint],0.);
-	    DIRECT_MULTIDIM_ELEM(out,ii) = aux;
+            tmp_out[ii] = aux;
 	}
     }
     else
@@ -1478,9 +1480,11 @@ void Prog_MLFalign2D_prm::getFTfromVector(const std::vector<double> &in,
 	{
 	    int ii = pointer_2d[ipoint];
 	    std::complex<double> aux(in[start_point+2*ipoint],in[start_point+2*ipoint+1]);
-	    DIRECT_MULTIDIM_ELEM(out,ii) = aux;
+            tmp_out[ii] = aux;
 	}
     }
+
+    
 }
 
 // Rotate reference for all models and rotations and fill Fref vectors =============
@@ -1753,13 +1757,19 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
     sigma2.clear();
     ctf.clear();
     decctf.clear();
+    int * tmp_res;
+    double * tmp_sig, * tmp_dec, * tmp_ctf;
+    tmp_res = MULTIDIM_ARRAY(Mresol_int);
+    tmp_sig = MULTIDIM_ARRAY(Vsig[focus]);
+    tmp_ctf = MULTIDIM_ARRAY(Vctf[focus]);
+    tmp_dec = MULTIDIM_ARRAY(Vdec[focus]);
     for (int ipoint = 0; ipoint < nr_points_2d; ipoint++)
     {
 	int ii = pointer_2d[ipoint];
-	int ires = DIRECT_MULTIDIM_ELEM(Mresol_int,ii);
-	sigma2.push_back(2.* DIRECT_MULTIDIM_ELEM(Vsig[focus],ires));
-	decctf.push_back(DIRECT_MULTIDIM_ELEM(Vdec[focus],ires));
-	ctf.push_back(DIRECT_MULTIDIM_ELEM(Vctf[focus],ires));
+	int ires = tmp_res[ii];
+	sigma2.push_back(2.* tmp_sig[ires]);
+	decctf.push_back(tmp_dec[ires]);
+	ctf.push_back(tmp_ctf[ires]);
     }
     if (!apply_ctf)
     {
