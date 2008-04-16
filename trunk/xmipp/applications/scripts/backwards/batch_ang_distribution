@@ -6,7 +6,3 @@ NEW_NAME=xmipp_angular_distribution_show
 # Warn user
 echo "** Warning! This program name is deprecated as of Xmipp version" $VERSION
 echo "** Please use" $NEW_NAME "instead"
-echo "** Continuing execution..."
-
-# Call real program
-$NEW_NAME "$@"
