@@ -222,7 +222,7 @@ class RCT_class:
         ml2d_abs_rootname=self.PreviousDirML2D+'/'+self.PreviousML2DRoot
         
         # Check whether the ML2D run has written docfiles already
-        docfiles=glob.glob(ml2d_abs_rootname+'_it?????.doc')
+        docfiles=glob.glob(ml2d_abs_rootname+'_it??????.doc')
         if len(docfiles)==0:
             message='No ML2D selfiles yet. Continue script after ML2D job completion... '
             print '* ',message

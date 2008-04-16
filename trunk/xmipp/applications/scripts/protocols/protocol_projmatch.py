@@ -49,7 +49,7 @@ CleanUpFiles=True
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/home/sjors/work/projmatch/phantom_ribosome'
+ProjectDir='/home/sjors/work/projmatch/ribosome'
 
 # {expert} Directory name for logfiles:
 LogDir='Logs'
@@ -786,13 +786,6 @@ class projection_matching_class:
                         ' | grep -v \ -1 >' + ForReconstructionSel
           self._mylog.info(command)
           os.system(command)
-          print '*********************************************************************'
-          print '* Extracting angles from ' + ForReconstructionSel
-          command='xmipp_header_extract -i ' + ForReconstructionSel + \
-                                      ' -o ' + ForReconstructionDoc
-          self._mylog.info(command)
-          os.system(command)
-
 
           self._ReconstructionMethod=arg.getComponentFromVector(_ReconstructionMethod,\
                                                         _iteration_number-1)
@@ -910,7 +903,7 @@ def execute_ctf_groups (_InPutSelfile,
    _mylog.info(command)
    os.system(command)
 
-   ctflist=glob.glob(CtfGroupDirectory + '/' + CtfGroupRootName+'_group?????.ctf')
+   ctflist=glob.glob(CtfGroupDirectory + '/' + CtfGroupRootName+'_group??????.ctf')
    return len(ctflist)
 
 #------------------------------------------------------------------------
@@ -1004,7 +997,7 @@ def execute_projection_matching(_mylog,
                                            
    _mylog.debug("execute_projection_matching")
    import os,shutil,string
-   import launch_parallel_job,selfile
+   import launch_parallel_job,selfile, docfiles
    RunInBackground=False
 
    print '*********************************************************************'
@@ -1158,6 +1151,8 @@ def execute_projection_matching(_mylog,
          # THEN ON-THE-FLY CORRECT WIENER FILTER FOR EACH CTFGROUP AND ADD TO AVERAGE
          # DELETE ALL FILES FOR THIS CTFGROUP TO PREVENT FILLING THE DISC
 
+         # TODO: WHAT HAPPENS WITH SPLITS???????
+
          # Apply Wiener filter to the class averages (overwrite originals)
          import utils_xmipp
          wienername = composeFileName(CtfGroupRootName+'_group',ictf,'wien')
@@ -1172,7 +1167,7 @@ def execute_projection_matching(_mylog,
 
          import glob
          for classaverage in glob.glob(ProjMatchRootName + \
-                                          '_' + CtfGroupName+'_' + str(ictf) + '_class?????.xmp'):
+                                          '_' + CtfGroupName+'_' + str(ictf) + '_class??????.xmp'):
             
             # Add classaverage to sum of classaverages over all CTF groups
             # and delete current classaverage
@@ -1194,17 +1189,21 @@ def execute_projection_matching(_mylog,
    # End loop over all CTF groups
 
    if (_DoCtfCorrection):
-      # remake classes selfile
+      # remake classes selfile and docfile
       command = 'xmipp_selfile_create " ' + ProjMatchRootName + \
-                '_class?????.xmp " >' + ProjMatchRootName + '_classes.sel'
+                '_class??????.xmp " >' + ProjMatchRootName + '_classes.sel'
       print '* ',command
       _mylog.info(command) 
       os.system(command)
- 
-   # Make absolute path so visualization protocol can be run from
-   # the same directory
-   
+      print '*********************************************************************'
+      print '* Extracting angles from ' + ProjMatchRootName + '_classes.sel'
+      command='xmipp_header_extract -i ' + ProjMatchRootName + '_classes.sel' + \
+          ' -o ' + ProjMatchRootName + '_classes.doc'
+      self._mylog.info(command)
+      os.system(command)
+      
 
+   # Make absolute path so visualization protocol can be run from the same directory
    # Make selfile with reference projections, class averages and realigned averages
    classes_sel_file=selfile.selfile()
    classes_sel_file.read(ProjMatchRootName+'_classes.sel')
@@ -1216,6 +1215,10 @@ def execute_projection_matching(_mylog,
    compare_sel_file=ProjMatchRootName+'_compare.sel'
    newsel=newsel.make_abspath()
    newsel.write(MultiAlign2dSel)
+   # Also make abspath in classes docfile
+   newdoc=docfile(ProjMatchRootName + '_classes.doc')
+   newdoc.make_abspath()
+   newdoc.write(ProjMatchRootName + '_classes.doc')
 
    if (_DisplayProjectionMatching):
       command='xmipp_show -sel '+ "../"+'Iter_'+\
@@ -1259,6 +1262,7 @@ def execute_reconstruction(_mylog,
       program = 'xmipp_reconstruct_wbp'
       mpi_program = 'xmipp_mpi_reconstruct_wbp'
       parameters= ' -i '    + ForReconstructionSel + \
+                  ' -doc '  + ProjMatchRootName + '_classes.doc' + \
                   ' -o '    + Outputvolume + \
                   ' -sym '  + _SymmetryGroup + \
                   ' -weight -use_each_image '
@@ -1327,6 +1331,9 @@ def  execute_resolution(_mylog,
     Selfiles=[]
     Selfiles.append(split_sel_root_name+'_1_classes.sel')
     Selfiles.append(split_sel_root_name+'_2_classes.sel')
+    Docfiles=[]
+    Docfiles.append(split_sel_root_name+'_1_classes.doc')
+    Docfiles.append(split_sel_root_name+'_2_classes.doc')
     for i in range(len(Outputvolumes)):
        print '*********************************************************************'
        print '* Reconstruct volume'
@@ -1335,6 +1342,7 @@ def  execute_resolution(_mylog,
           program = 'xmipp_reconstruct_wbp'
           mpi_program = 'xmipp_mpi_reconstruct_wbp'
           parameters= ' -i '    + Selfiles[i] + \
+                      ' -doc '  + Docfiles[i] + \
                       ' -o '    + Outputvolumes[i] + ".vol" + \
                       ' -sym '  + _SymmetryGroup + \
                       ' -weight -use_each_image '
@@ -1475,18 +1483,18 @@ def execute_cleanup(_mylog,
       message=' CleanUp: deleting all class average files'
       print '* ',message
       _mylog.info(message)
-      for file in glob.glob(ProjMatchRootName+'_class?????.med.xmp'):
+      for file in glob.glob(ProjMatchRootName+'_class??????.med.xmp'):
          os.remove(file)
-      for file in glob.glob(ProjMatchRootName+'_class?????.xmp'):
+      for file in glob.glob(ProjMatchRootName+'_class??????.xmp'):
          os.remove(file)
-      for file in glob.glob(ProjMatchRootName+'_class?????.sel'):
+      for file in glob.glob(ProjMatchRootName+'_class??????.sel'):
          os.remove(file)
 
    if (_DeleteReferenceProjections):
       message=' CleanUp: deleting all reference projections '
       print '* ',message
       _mylog.info(message)
-      for file in glob.glob(ProjectLibraryRootName + '?????.xmp'):
+      for file in glob.glob(ProjectLibraryRootName + '??????.xmp'):
          os.remove(file)
 
    if (_DeleteSplitReconstructions):

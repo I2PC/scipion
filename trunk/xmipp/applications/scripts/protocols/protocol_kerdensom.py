@@ -182,7 +182,7 @@ class kerdensom_class:
             os.makedirs('local_images')
 
         # Check whether the ML2D run has written docfiles already
-        docfiles=glob.glob(self.ML2DWorkingDir+'/*_it?????.doc')
+        docfiles=glob.glob(self.ML2DWorkingDir+'/*_it??????.doc')
         if len(docfiles)==0:
             message='No ML2D docfiles yet. Continue script after ML2D job completion... '
             print '* ',message
@@ -213,7 +213,7 @@ class kerdensom_class:
     def make_local_copy_docfile(self,oldsel,newsel):
 
         import os,glob
-        docfiles=glob.glob(self.ML2DWorkingDir+'/*_it?????.doc')
+        docfiles=glob.glob(self.ML2DWorkingDir+'/*_it??????.doc')
         docfile=docfiles[-1]
         fh=open(docfile,'r')
         doclines=fh.readlines()
