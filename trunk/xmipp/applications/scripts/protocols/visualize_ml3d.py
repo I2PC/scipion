@@ -170,9 +170,11 @@ class visualize_ML3D_class:
 
     def visualize_ML3D(self):
         import os,glob
+        import utils_xmipp
         iters=self.SelectIterations.split(',')
         for iter in iters:
-            selfiles=glob.glob('RunML3D/ml3d_it'+str(iter).zfill(5)+'_vol?????.sel')
+            patt=composeFileName('RunML3D/ml3d_it',iter,'')
+            selfiles=glob.glob(composeFileName(patt+'_vol??????.sel'))
             selfiles.sort()
             if (self.VisualizeML3DAvgs):
                 for selfile in selfiles:
@@ -189,7 +191,7 @@ class visualize_ML3D_class:
                     self.show_class_distribution(selfiles,iter)
 
             if (self.VisualizeML3DReferences):
-                volumes=glob.glob('RunML3D/ml3d_it'+str(iter).zfill(5)+'_vol?????.vol')
+                volumes=glob.glob(patt+'_vol??????.vol')
                 volumes.sort()
                 for volume in volumes:
                     self.ShowVolumes.append(volume)
@@ -202,7 +204,7 @@ class visualize_ML3D_class:
 
     def visualize_matrix_last_iter(self):
         import os,glob
-        selfiles=glob.glob('RunML3D/ml3d_it?????.sel')
+        selfiles=glob.glob('RunML3D/ml3d_it??????.sel')
         selfiles.sort()
         if len(selfiles)==0:
             print "No selfiles yet. Visualize only after job completion..."
@@ -215,8 +217,9 @@ class visualize_ML3D_class:
             
     def prepare_distribution_docfiles(self,selfiles):
         import os
+        import utils_xmipp
         for i in range(len(selfiles)):
-            docname='ang_distribution_ref'+str(i+1).zfill(5)+'.doc'
+            docname=composeFileName('ang_distribution_ref',i+1,'doc')
             command='xmipp_header_extract -i '+selfiles[i]+' -o '+docname
             print '* ',command
             os.system(command)
@@ -224,12 +227,13 @@ class visualize_ML3D_class:
     def show_class_distribution(self,selfiles,iter):
         import os
         import docfiles
-        import visualization
+        import visualization        
+        import utils_xmipp
 
         newlines=[]
         newlines.append('reference | sum weights (# images) \n')
         for i in range(len(selfiles)):
-            docname='ang_distribution_ref'+str(i+1).zfill(5)+'.doc'
+            docname=composeFileName('ang_distribution_ref',i+1,'doc')
             doc=docfiles.docfile(docname)
             newlines.append(str(i+1)+' '+str(doc.sum_of_column(7))+'\n')
 
@@ -250,8 +254,9 @@ class visualize_ML3D_class:
         import os
         import docfiles
         import visualization
+        import utils_xmipp
 
-        docname='ang_distribution_ref'+str(ref).zfill(5)
+        docname=composeFileName('ang_distribution_ref',ref,'')
         doc=docfiles.docfile(docname+'.doc')
         newname=docname+'_bin_'
         doc.check_angle_range()
@@ -271,7 +276,7 @@ class visualize_ML3D_class:
     def show_convergence_stats(self):
         import os,glob
         import visualization
-        logfiles=glob.glob('RunML3D/ml3d_it?????.log')
+        logfiles=glob.glob('RunML3D/ml3d_it??????.log')
         logfiles.sort()
         if len(logfiles)==0:
             print "No logfiles yet. Visualize after job completion..."
