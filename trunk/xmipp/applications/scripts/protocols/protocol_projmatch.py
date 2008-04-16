@@ -1216,7 +1216,7 @@ def execute_projection_matching(_mylog,
    newsel=newsel.make_abspath()
    newsel.write(MultiAlign2dSel)
    # Also make abspath in classes docfile
-   newdoc=docfile(ProjMatchRootName + '_classes.doc')
+   newdoc=docfiles.docfile(ProjMatchRootName + '_classes.doc')
    newdoc.make_abspath()
    newdoc.write(ProjMatchRootName + '_classes.doc')
 
