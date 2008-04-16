@@ -256,7 +256,7 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
             DFexp.go_beginning();
             DFexp.remove_current();
             DFexp.go_beginning();
-            DFexp.insert_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Refno (6), Flip (7), maxCC (8)");
+            DFexp.insert_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), maxCC (8)");
             DFexp.set(1,7,0);
             while(1)
             {

@@ -58,7 +58,7 @@ int main(int argc, char **argv)
     {
 
         DFo.clear();
-        DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Refno (6), Flip (7), maxCC (8)");
+        DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), maxCC (8)");
 
         // Process all images
 	input_images[0]=nr_images;
