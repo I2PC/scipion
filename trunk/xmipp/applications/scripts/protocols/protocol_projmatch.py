@@ -228,8 +228,19 @@ SymmetryGroup='c1'
     An alternative compact notation would be ("2x0.3 2x0.5").
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
+    Set to -1 to prevent discarding any images
 """    
-MinimumCrossCorrelation='0.'
+MinimumCrossCorrelation='-1'
+
+# Discard percentage of images with ccf below
+""" Provide a sequence of numbers (for instance, "20 20 10 10" specifies 4 iterations,
+    the first two set the value to 20%, then two with 10%
+    An alternative compact notation would be ("2x20 2x10").
+    Note: if there are less values than iterations the last value is reused
+    Note: if there are more values than iterations the extra value are ignored
+    Set to zero to prevent discarding any images
+"""    
+DiscardPercentage='10'
 
 # {expert} Additional options for Projection_Matching
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Projection_matching and
@@ -470,6 +481,7 @@ class projection_matching_class:
                 _MaxChangeOffset,
                 _MaxChangeInAngles,
                 _MinimumCrossCorrelation,
+                _DiscardPercentage,
                 _DoAlign2D,
                 _InnerRadius,
                 _OuterRadius,
@@ -708,6 +720,8 @@ class projection_matching_class:
                                                            _iteration_number-1)
              self._MinimumCrossCorrelation=arg.getComponentFromVector(_MinimumCrossCorrelation,\
                                                            _iteration_number-1)
+             self._DiscardPercentage=arg.getComponentFromVector(_DiscardPercentage,\
+                                                           _iteration_number-1)
              self._DoAlign2D=arg.getComponentFromVector(_DoAlign2D,\
                                                            _iteration_number-1)
              self._Align2dMaxChangeOffset=arg.getComponentFromVector(_Align2dMaxChangeOffset,\
@@ -745,6 +759,7 @@ class projection_matching_class:
                                          self._MaxChangeInAngles,
                                          self._ProjMatchingExtra,
                                          self._MinimumCrossCorrelation,
+                                         self._DiscardPercentage,
                                          self._DisplayProjectionMatching,
                                          self._DoParallel,
                                          self._MyNumberOfCPUs,
@@ -971,6 +986,7 @@ def execute_projection_matching(_mylog,
                                 _MaxChangeInAngles,
                                 _ProjMatchingExtra,
                                 _MinimumCrossCorrelation,
+                                _DiscardPercentage,
                                 _DisplayProjectionMatching,
                                 _DoParallel,
                                 _MyNumberOfCPUs,
@@ -1092,7 +1108,7 @@ def execute_projection_matching(_mylog,
                     ' -lib '    + ProjectLibraryRootName + '_angles.doc' + \
                     ' -o '      + outputname + \
                     ' -limit0 ' + str(MinimumCrossCorrelation) + \
-                    ' -mirror 7 '
+                    ' -limitR ' + str(DiscardPercentage)
       if (_DoAlign2D == '1'):
          parameters += \
                     ' -iter '             + str(_Align2DIterNr) + \
@@ -1523,6 +1539,7 @@ if __name__ == '__main__':
                 MaxChangeOffset,
                 MaxChangeInAngles,
                 MinimumCrossCorrelation,
+                DiscardPercentage,
                 DoAlign2D,                      
                 InnerRadius,                    
                 OuterRadius,                    
