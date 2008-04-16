@@ -641,6 +641,7 @@ public:
      */
     int getColNumberFromHeader(const char * pattern);
 
+        
     /** Number of columns of the first data line.
      * @ingroup DocFileInfo
      *
@@ -1168,6 +1169,15 @@ public:
      * @endcode
      */
     DocFile random_discard(int N);
+
+    /** Sort based on filename comments (only for NewXmuipp-style docfiles)
+     * @ingroup DocFileHelpful
+     *
+     * Sort entries based on alphabetical sorting of comments with filenames
+     * If this docfile doesn't have a NewXmipp-style header
+     * (starting with "Headerinfo"), an error is raised. 
+     */
+    DocFile sort_by_filenames();
 
     /** Column to vector.
      * @ingroup DocFileHelpful

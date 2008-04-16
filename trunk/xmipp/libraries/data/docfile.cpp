@@ -1271,6 +1271,36 @@ DocFile DocFile::random_discard(int n)
     return result;
 }
 
+DocFile DocFile::sort_by_filenames()
+{
+    DocFile result;
+    SelFile SF1, SF2;
+    FileName fn_img, head;
+    DocLine DL;
+    
+    // Copy header
+    go_beginning();
+    head = (*current_line).get_text();
+    result.append_comment(head.without(" ; "));
+
+    // Sort filenames through selfile
+    get_selfile(SF1);
+    SF2=SF1.sort_by_filenames();
+
+    // Fill result
+    SF2.go_beginning();
+    while (!SF2.eof())
+    {
+        fn_img = SF2.NextImg();
+        result.append_comment(fn_img);
+        search_comment(fn_img);
+        DL = get_current_line();
+        result.append_line(DL);
+    }
+
+    return result;
+}
+
 Matrix1D< double > DocFile::col(int c)
 {
     Matrix1D< double > result(no_lines);
