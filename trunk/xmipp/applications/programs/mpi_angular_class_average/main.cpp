@@ -84,6 +84,8 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
     {
         Prog_angular_class_average_prm::read(argc,argv);
         //mpi_job_size=textToInteger(getParameter(argc,argv,"-mpi_job_size","10"));
+        Prog_angular_class_average_prm::produceSideInfo();
+
     }
 
     /* Usage ------------------------------------------------------------------- */
@@ -107,7 +109,6 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
     /* Pre Run --------------------------------------------------------------------- */
     void preRun()
     {
-        produceSideInfo();
 //        MPI_Bcast(&max_number_of_images_in_around_a_sampling_point, 
 //                  1, MPI_INT, 0, MPI_COMM_WORLD);
 
@@ -446,7 +447,6 @@ int main(int argc, char *argv[])
         {
             prm.read(argc, argv);
         }
-
         catch (Xmipp_error XE)
         {
             std::cerr << XE;

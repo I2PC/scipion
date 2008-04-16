@@ -45,17 +45,14 @@ int main(int argc, char **argv)
     try
     {
         // Read command line & produce side info
-        prm.read(argc, argv); //all nodes
-        prm.show(); // only rank =0
-
-        // Project reference volume etc.
-        prm.produceSideInfo();// prerun, ONCE PER WORKING NODE
-
+        prm.read(argc, argv);
+        prm.produceSideInfo();
+        prm.show();
     }
     catch (Xmipp_error XE)
     {
         std::cout << XE;
-        prm.usage(); //only rank = 0 
+        prm.usage();
         exit(0);
     }
 

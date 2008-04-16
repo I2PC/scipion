@@ -32,33 +32,23 @@ void Prog_angular_class_average_prm::read(int argc, char **argv)  {
     DF.read(getParameter(argc, argv, "-i"));
     DFlib.read(getParameter(argc, argv, "-lib"));
     fn_out = getParameter(argc, argv, "-o");
-
-    // Columns numbers
-    int i;
-    if ((i = paremeterPosition(argc, argv, "-columns")) != -1)
+    col_ref = textToInteger(getParameter(argc, argv, "-refno","6"));
+    col_ref--;
+    col_select = textToInteger(getParameter(argc, argv, "-select", "8"));
+    col_select--;
+    if (checkParameter(argc, argv, "-limitR"))
     {
-	if (i + 6 >= argc)
-	{
-	    REPORT_ERROR(1, "Not enough integers after -columns");
-	}
-	col_rot = textToInteger(argv[i+1]);
-	col_tilt = textToInteger(argv[i+2]);
-	col_psi = textToInteger(argv[i+3]);
-	col_xshift = textToInteger(argv[i+4]);
-	col_yshift = textToInteger(argv[i+5]);
-	col_ref  = textToInteger(argv[i+6]);
+	limitR = textToFloat(getParameter(argc, argv, "-limitR"));
+        if (limitR < -100. || limitR > 100.)
+            REPORT_ERROR(1,"limitR should be a percentage: provide values between -100 and 100.");
+        if (limitR > 0.)
+            do_limitR0 = true;
+        else if (limitR < 0.)
+        {
+            limitR *= -1.;
+            do_limitRF = true;
+        }
     }
-    else
-    {
-	col_rot    = 1;
-	col_tilt   = 2;
-	col_psi    = 3;
-	col_xshift = 4;
-	col_yshift = 5;
-	col_ref    = 6;
-    }
-
-    // TODO: INSTEAD OF FIXED VALUE TO DISCARD IMAGES, DISCARD BOTTOM X% FOR EACH CLASS
     do_limit0=checkParameter(argc, argv, "-limit0");
     if (do_limit0)
     {
@@ -69,14 +59,7 @@ void Prog_angular_class_average_prm::read(int argc, char **argv)  {
     {
 	limitF = textToFloat(getParameter(argc, argv, "-limitF"));
     }
-    col_select = textToInteger(getParameter(argc, argv, "-select", "8"));
     
-
-    // Also assign weights or mirror flags?
-    do_mirrors = checkParameter(argc, argv, "-mirror");
-    if (do_mirrors)
-	col_mirror = textToInteger(getParameter(argc, argv, "-mirror", "7"));
-
     // Perform splitting of the data?
     do_split = checkParameter(argc, argv, "-split"); 
 
@@ -102,22 +85,34 @@ void Prog_angular_class_average_prm::show() {
 	std::cerr << "     -> Split data in random halves and output class averages "<<std::endl;
     if (do_mirrors)
 	std::cerr << "     -> Take mirror operation into account "<<std::endl;
-    if (do_limit0)
-	std::cerr << "     -> Discard images with value in column "<<col_select<<" below "<<limit0<<std::endl;
-    if (do_limitF)
-	std::cerr << "     -> Discard images with value in column "<<col_select<<" above "<<limitF<<std::endl;
     if (dont_write_selfiles)
 	std::cerr << "     -> Do not write class selfiles to disc "<<std::endl;
+    // election
+    if (do_limit0 || do_limitF || do_limitR0 || do_limitRF)
+    {
+        std::cerr << "  PERFORM IMAGE SELECTION BASED ON INPUT DOCFILE"<<std::endl;
+        std::cerr << "    Column number to use    : "<<col_select+1<<std::endl;
+        if (do_limitR0)
+            std::cerr << "    Discard lowest          : "<<limitR<<" %"<<std::endl;
+        else if (do_limitRF)
+            std::cerr << "    Discard highest         : "<<limitR<<" %"<<std::endl;
+        if (do_limit0)
+            std::cerr << "    Discard images below    : "<<limit0<<std::endl;
+        if (do_limitF)
+            std::cerr << "    Discard images above    : "<<limitF<<std::endl;
+    }
+    // Realignment
     if (nr_iter > 0)
     {
-        std::cerr << "     -> Re-align class averages in "<<nr_iter<<" iterations"<<std::endl;
-        std::cerr << "  Maximum shift           : "<<max_shift<<std::endl;
-        std::cerr << "  Maximum shift change    : "<<max_shift_change<<std::endl;
-        std::cerr << "  Maximum psi change      : "<<max_psi_change<<std::endl;
+        std::cerr << "  PERFORM REALIGNMENT OF CLASSES"<<std::endl;
+        std::cerr << "    Number of iterations    : "<<nr_iter<<std::endl;
+        std::cerr << "    Maximum shift           : "<<max_shift<<std::endl;
+        std::cerr << "    Maximum shift change    : "<<max_shift_change<<std::endl;
+        std::cerr << "    Maximum psi change      : "<<max_psi_change<<std::endl;
         if (Ri>0)
-            std::cerr << "  Inner radius rot-search : "<<Ri<<std::endl;
+            std::cerr << "    Inner radius rot-search : "<<Ri<<std::endl;
         if (Ro>0)
-            std::cerr << "  Outer radius rot-search : "<<Ro<<std::endl;
+            std::cerr << "    Outer radius rot-search : "<<Ro<<std::endl;
     }
 
     std::cerr << " ================================================================="<<std::endl;
@@ -132,27 +127,23 @@ void Prog_angular_class_average_prm::usage() {
     printf("   angular_class_average \n");
     printf("        -i <docfile>        : docfile with assigned angles for all experimental particles\n");
     printf("        -lib <docfile>      : docfile with angles used to generate the projection matching library\n");
-    printf("        -o <rootname=class> : output rootname for class averages and selfiles\n");
-    printf("        -split              : also output averages of random halves of the data\n");
-    printf("       [-columns] <rot=1> <tilt=2> <psi=3> <Xoff=4> <Yoff=5> "
-           "<ref=6> \n"
-           "                           : where the 6 integers are the column numbers for the \n"
-           "                           : respective angles and offsets and optimal reference \n"
-           "                           : number in the docfile\n"
-           "                           : Note that rot & tilt are used to determine the classes \n"
-           "                           : and psi, xoff & yoff are applied to calculate the class averages\n");
-    printf("       [-mirror <col_m=7>] : Apply mirror operation (from docfile column col_m) (0=no-flip; 1=flip)\n");
-    printf("       [-select <col_s=8>] : Column number to use for limit0/F selection\n");
-    printf("       [-limit0 <limit0>]  : Values in column <col_s> below this are discarded\n");
-    printf("       [-limitF <limitF>]  : Values in column <col_s> above this are discarded\n");
+    printf("       [-o <rootname=class>]: output rootname for class averages and selfiles\n");
+    printf("       [-split ]            : also output averages of random halves of the data\n");
+    printf("       [-refno  <int=6>]    : Column number in docfile to use for class number\n");
     printf("       [-dont_write_selfiles]  : Do not write class selfiles to disc\n");
+    printf(" IMAGE SELECTION BASED ON INPUT DOCFILE \n");
+    printf("       [-select <int=8>]    : Column number to use for image selection (limit0, limitF or limitR)\n");
+    printf("       [-limit0 <float>]    : Discard images below <limit0>\n");
+    printf("       [-limitF <float>]    : Discard images above <limitF>\n");
+    printf("       [-limitR <float>     : if (limitR>0 && limitR< 100): discard lowest  <limitR> % in each class\n");
+    printf("                            : if (limitR<0 && limitR>-100): discard highest <limitR> % in each class\n");
     printf(" REALIGNMENT OF CLASSES \n");
     printf("       [-iter <int=0>]                  : Number of iterations for re-alignment\n");
     printf("       [-Ri <int=1>]                    : Inner radius to limit rotational search\n");
     printf("       [-Ro <int=dim/2-1>]              : Outer radius to limit rotational search\n");
     printf("       [-max_shift <float=999.>]        : Maximum shift (larger shifts will be set to 0)\n");
-    printf("       [-max_shift_change <float=999.>] : Maximum change in shift in last iteration \n");
-    printf("       [-max_psi_change <float=360.>]   : Maximum change in rotation in last iteration \n");
+    printf("       [-max_shift_change <float=999.>] : Discard images that change shift more in the last iteration \n");
+    printf("       [-max_psi_change <float=360.>]   : Discard images that change psi more in the last iteration \n");
     exit(1);
 }
 
@@ -169,8 +160,19 @@ void Prog_angular_class_average_prm::produceSideInfo() {
     }
     fn_out += "_class";
 
-    // Check that DF is of NewXmipp-type
+    // get column numbers from NewXmipp-type docfile header
     DF.go_beginning();
+    col_rot    = DF.getColNumberFromHeader("rot")  - 1;
+    col_tilt   = DF.getColNumberFromHeader("tilt") - 1;
+    col_psi    = DF.getColNumberFromHeader("psi")  - 1;
+    col_xshift = DF.getColNumberFromHeader("Xoff") - 1;
+    col_yshift = DF.getColNumberFromHeader("Yoff") - 1;
+    col_mirror = DF.getColNumberFromHeader("Flip") - 1;
+    if (col_mirror < 0)
+        do_mirrors = false;
+    else
+        do_mirrors = true;
+
     if (DF.get_current_line().Is_comment()) fn_tst = (DF.get_current_line()).get_text();
     if (strstr(fn_tst.c_str(), "Headerinfo") == NULL)
     {
@@ -188,6 +190,43 @@ void Prog_angular_class_average_prm::produceSideInfo() {
     // Set ring defaults
     if (Ri<1) Ri=1;
     if (Ro<0) Ro=(XSIZE(Iempty())/2)-1;
+
+    // Set limitR
+    if (do_limitR0 || do_limitRF)
+    {
+        std::vector<double> vals;
+        DF.go_beginning();
+        for (int n = 0; n < DF.dataLineNo(); n++)
+        {
+            DF.adjust_to_data_line();
+            vals.push_back(DF(col_select));
+            DF.next();
+        }
+        int nn = vals.size();
+        std::sort(vals.begin(), vals.end());
+        if (do_limitR0)
+        {
+            double val = vals[ROUND((limitR/100.) * vals.size())];
+            if (do_limit0)
+                limit0 = XMIPP_MAX(limit0, val);
+            else
+            {
+                limit0 = val;
+                do_limit0 = true;
+            }
+        }
+        else if (do_limitRF)
+        {
+            double val = vals[ROUND(((100. - limitR)/100.) * vals.size())];
+            if (do_limitF)
+                limitF = XMIPP_MIN(limitF, val);
+            else
+            {
+                limitF = val;
+                do_limitF = true;
+            }
+        }
+    }
 
     // Randomization
     if (do_split) randomize_random_generator();
@@ -280,15 +319,17 @@ void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
 		}
 	    }
 
-#ifdef DEBUG
-            std::cout<<" imgno= "<<imgno<<" Psi()= "<<imgs[imgno].Psi()<<" opt_psi= "<<opt_psi<<" flip()= "<<imgs[imgno].flip()<<" opt_flip= "<<opt_flip<<std::endl;
-#endif      
             // Check max_psi_change in last iteration
             if (iter == nr_iter - 1)
             {
                 diff_psi = ABS(realWRAP(imgs[imgno].Psi() - opt_psi, -180., 180.));
                 if (diff_psi > max_psi_change) 
+                {
                     do_discard = true;
+#ifdef DEBUG
+                    std::cerr<<"discard psi: "<<diff_psi<<opt_psi<<" "<<opt_flip<<" "<<imgs[imgno].Psi()<<std::endl;
+#endif
+                }
             }
 
             // Translationally align
@@ -310,56 +351,56 @@ void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
                 }
                 if (max_shift > 0) 
                 {
-                    // STILL CHECK THIS!!!
                     best_shift(Mref,Mimg,opt_xoff,opt_yoff);
                     if (opt_xoff * opt_xoff + opt_yoff * opt_yoff > max_shift * max_shift) 
                     {
-                        opt_xoff = opt_yoff = 0.;
+                        new_xoff = new_yoff = 0.;
                     }
                     else
                     {
                         Mimg.selfTranslate(vectorR2(opt_xoff,opt_yoff),true);
+                        new_xoff =  opt_xoff*COSD(opt_psi) + opt_yoff*SIND(opt_psi);
+                        new_yoff = -opt_xoff*SIND(opt_psi) + opt_yoff*COSD(opt_psi);
                     }
-                    new_xoff =  opt_xoff*COSD(opt_psi) + opt_yoff*SIND(opt_psi);
-                    new_yoff = -opt_xoff*SIND(opt_psi) + opt_yoff*COSD(opt_psi);
 
-#ifdef DEBUG
-     std::cout<<" imgno= "<<imgno<<" Xoff()= "<<imgs[imgno].Xoff()<<" opt_xoff= "<<opt_xoff<<" new_xoff= "<<new_xoff<<std::endl;
-     std::cout<<" imgno= "<<imgno<<" Yoff()= "<<imgs[imgno].Yoff()<<" opt_yoff= "<<opt_yoff<<" new_yoff= "<<new_yoff<<std::endl;
-#endif      
                     // Check max_shift_change in last iteration
                     if (iter == nr_iter - 1)
                     {
+                        opt_yoff = imgs[imgno].Yoff();
+                        opt_xoff = imgs[imgno].Xoff();
+                        if (imgs[imgno].flip() == 1.)                
+                            opt_xoff *= -1.;
                         diff_shift = (new_xoff - opt_xoff) * (new_xoff - opt_xoff) +
                                      (new_yoff - opt_yoff) * (new_yoff - opt_yoff);
                         if (diff_shift > max_shift_change * max_shift_change) 
+                        {
                             do_discard = true;
+#ifdef DEBUG
+                            std::cerr <<"discard shift: "<<diff_shift<<" "<<new_xoff<<" "<<opt_xoff<<" "<<imgs[imgno].Xoff()<<" "<<new_yoff<<" "<<opt_yoff<<" "<<imgs[imgno].Yoff()<<std::endl;
+#endif
+                        }
                     }
                 }
             }
 
             if (!do_discard)
             {
+                ccfs[imgno] = correlation_index(Mref,Mimg);
                 imgs[imgno].Psi() =  opt_psi;
                 imgs[imgno].flip() = opt_flip;
-                if (opt_flip==1.)                
-                    imgs[imgno].Xoff() = -new_xoff;
-                else                
-                    imgs[imgno].Xoff() = new_xoff;
                 imgs[imgno].Yoff() = new_yoff;
-                ccfs[imgno] = correlation_index(Mref,Mimg);
+                imgs[imgno].Xoff() = new_xoff;
+                if (opt_flip==1.)                
+                    imgs[imgno].Xoff() *= -1.;
 
- #ifdef DEBUG
-                std::cout<<" imgno= "<<imgno<<" Psi()= "<<imgs[imgno].Psi()<<" Xoff()= "<<imgs[imgno].Xoff()<<" Yoff()= "<<imgs[imgno].Yoff()<<" flip()= "<<imgs[imgno].flip()<<" ccf= "<<ccfs[imgno]<<std::endl;
-#endif      
-                    // Check max_shift_change in last iteration
-               // Add to averages
-                if (splits[imgno]==0)
+                // Check max_shift_change in last iteration
+                // Add to averages
+                if (splits[imgno] == 0)
                 {
                     w1 += 1.;
                     avg1() += Mimg;
                 }
-                else if (splits[imgno]==1)
+                else if (splits[imgno] == 1)
                 {
                     w2 += 1.;
                     avg2() += Mimg;
@@ -414,7 +455,7 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
     ImageXmipp img, avg, avg1, avg2;
     FileName   fn_img, fn_tmp;
     SelFile    SFclass, SFclass1, SFclass2;
-    double     rot, tilt, psi, xshift, yshift, mirror, val, w, w1, w2;
+    double     rot, tilt, psi, xshift, yshift, mirror, val, w, w1, w2, my_limitR;
     int        ref_number, this_image;
     int        isplit;
     Matrix2D<double> A(3,3);
@@ -424,8 +465,8 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
     
     // Get reference angles and preset to averages
     DFlib.locate(dirno);
-    rot = DFlib(col_rot - 1);
-    tilt = DFlib(col_tilt - 1);
+    rot = DFlib(col_rot);
+    tilt = DFlib(col_tilt);
     Iempty.set_eulerAngles((float)rot, (float)tilt, (float)0.);
     Iempty.set_originOffsets(0., 0.);
     Iempty.flip() = 0.;
@@ -445,18 +486,20 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
         else  REPORT_ERROR(1, "Problem with NewXmipp-type document file");
         DF.adjust_to_data_line();
         this_image = DF.get_current_key();
-        ref_number = ROUND(DF(col_ref - 1));
+        ref_number = ROUND(DF(col_ref));
         if (ref_number == dirno)
         {
             bool is_select = true;
-            val = DF(col_select - 1);
-            if ( (do_limit0 && val < limit0) || (do_limitF && val > limitF) ) is_select = false;
+            if (do_limit0)
+                if (DF(col_select) < limit0) is_select = false;
+            if (do_limitF)
+                if (DF(col_select) > limitF) is_select = false;
             if (is_select)
             {
-                psi    = DF(col_psi - 1);
-                xshift = DF(col_xshift - 1);
-                yshift = DF(col_yshift - 1);
-                if (do_mirrors) mirror = DF(col_mirror - 1);
+                psi    = DF(col_psi);
+                xshift = DF(col_xshift);
+                yshift = DF(col_yshift);
+                if (do_mirrors) mirror = DF(col_mirror);
                 img.read(fn_img, false, false, false, false);
                 img().setXmippOrigin();
                 img.set_eulerAngles((float)0., (float)0., (float)psi);

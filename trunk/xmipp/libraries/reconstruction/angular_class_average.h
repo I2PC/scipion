@@ -52,11 +52,11 @@ public:
     /** Output rootnames */
     FileName         fn_out, fn_out1, fn_out2;
     /** Column numbers */
-    int              col_rot, col_tilt, col_psi, col_xshift, col_yshift, col_mirror, col_select,col_ref;          
-    /** Upper and lower selection limits */
-    double           limit0, limitF;
-    /** Flags wether to use limit0 and limitF selection */
-    bool             do_limit0, do_limitF;
+    int              col_rot, col_tilt, col_psi, col_xshift, col_yshift, col_mirror, col_select, col_ref;          
+    /** Upper and lower absolute and relative selection limits */
+    double           limit0, limitF, limitR;
+    /** Flags wether to use limit0, limitF and limitR selection */
+    bool             do_limit0, do_limitF, do_limitR0, do_limitRF;
     /** Flag whether to apply mirror operations */
     bool             do_mirrors;
     /** Flag whether also to write out class averages of random halves of the data */
@@ -65,7 +65,6 @@ public:
     ImageXmipp       Iempty;
     /** Skip writing of selfiles */
     bool             dont_write_selfiles;
-
     
     /** Re-alignment of classes */
 
