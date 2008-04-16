@@ -12,7 +12,7 @@
 # {section} Global parameters
 #-----------------------------------------------------------------------------
 # {file} Selfile with the input images:
-SelFileName='10.sel'
+SelFileName='noefg.sel'
 
 # {file} {expert} Docfile with the input angles:
 """ Do not provide anything if there are no angles yet. 
@@ -20,10 +20,10 @@ SelFileName='10.sel'
     This docfile should be in newXmipp-style format (with filenames as comments)
     Note that all filenames in this docfile should be with absolute paths!
 """
-DocFileName=''
+DocFileName='noefg_reset.doc'
 
 # {file} Initial 3D reference map:
-ReferenceFileName='ml04_nfilt_norm.gt2'
+ReferenceFileName='ml3d_it00020_vol00004_sc128_ff80.vol'
 
 # Working subdirectory: 
 WorkDirectory='ProjMatch/TestNoCtf1Realign2D'
@@ -32,7 +32,7 @@ WorkDirectory='ProjMatch/TestNoCtf1Realign2D'
 DoDeleteWorkingDir=False
 
 # Number of iterations to perform
-NumberofIterations=1
+NumberofIterations=10
 
 # Resume at iteration
 """ This option may be used to finish a previously performed run.
@@ -44,12 +44,12 @@ ContinueAtIteration=1
 # {expert} Save disc space by cleaning up intermediate files?
 """ Be careful, many options of the visualization protocol will not work anymore, since all class averages, selfiles etc will be deleted.
 """
-CleanUpFiles=False
+CleanUpFiles=True
 
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/home/scheres/work/projmatch/phantom_ribosome'
+ProjectDir='/home/sjors/work/projmatch/phantom_ribosome'
 
 # {expert} Directory name for logfiles:
 LogDir='Logs'
@@ -93,7 +93,7 @@ ReferenceIsCtfCorrected=False
     Do not provide a very tight mask.
     See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mask for details
 """
-DoMask=False
+DoMask=True
 
 # {expert} Show masked volume
 """ Masked volume will be shown. Do not set ths option to true for non-interactive processing (jobs sent to queues)
@@ -101,7 +101,7 @@ DoMask=False
 DisplayMask=False
 
 # {file} Binary mask-file used to mask the reference volume
-MaskFileName='mask.vol'
+MaskFileName='circular_maskwi128.vol'
 
 #-----------------------------------------------------------------------------
 # {section} Projection Matching
@@ -125,7 +125,7 @@ InnerRadius=0
 # {expert} Outer radius for rotational correlation
 """ In pixels from the image center. Use a negative number to use the entire image.
 """
-OuterRadius=-1
+OuterRadius=60
 
 # {expert} Available memory to store all references (Gb)
 """ This is only for the storage of the references. If yuor memories so not fit in memory, the projection matching program will run MUCH slower. But, keep in mind that probably some additional memory is needed for the operating system etc.
@@ -143,7 +143,7 @@ AvailableMemory='1.5'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-AngSamplingRateDeg='4x20 5 3'
+AngSamplingRateDeg='4x10 2x5 2x3 2x2'
 
 # Angular search range 
 """Maximum change in rot & tilt  (in +/- degrees)
@@ -156,7 +156,7 @@ AngSamplingRateDeg='4x20 5 3'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-MaxChangeInAngles='4x1000 1x20 1x10'
+MaxChangeInAngles='4x1000 2x20 2x10 2x5'
 
 # {expert} Perturb projection directions?
 """ If set to true, this option will result to a Gaussian perturbation to the 
@@ -193,7 +193,7 @@ MaxChangeOffset='1000'
     Note: if there are more values than iterations the extra value are ignored
     
 """
-Search5DShift='0'
+Search5DShift='5 0'
 
 # {expert} Step size for 5D translational search
 """ Provide a sequence of numbers (for instance, "2 2 1 1" specifies 4 iterations,
@@ -230,7 +230,7 @@ SymmetryGroup='c1'
     Note: if there are more values than iterations the extra value are ignored
     Set to -1 to prevent discarding any images
 """    
-MinimumCrossCorrelation='-1'
+MinimumCrossCorrelation='0.05'
 
 # Discard percentage of images with ccf below
 """ Provide a sequence of numbers (for instance, "20 20 10 10" specifies 4 iterations,
@@ -272,7 +272,7 @@ ProjMatchingExtra=''
     IMPORTANT: if you set this variable to 0 the output  of the projection
     muching step will be copied as output of align2d
 """
-DoAlign2D='1'
+DoAlign2D='4x1 0'
 
 # {expert} Number of align2d iterations:
 """ Use at least 3
@@ -290,7 +290,7 @@ Align2DIterNr=4
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-Align2dMaxChangeOffset='2x15 2x10'
+Align2dMaxChangeOffset='2x1000 2x10'
 
 # {expert} Maximum change in rotation (+/- degrees)
 """Maximum change in shift  (+/- pixels)
@@ -303,7 +303,7 @@ Align2dMaxChangeOffset='2x15 2x10'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-Align2dMaxChangeRot='2x1000 2x10'
+Align2dMaxChangeRot='2x1000 2x20'
 
 #-----------------------------------------------------------------------------
 # {section} 3D Reconstruction
@@ -419,13 +419,13 @@ ConstantToAddToFiltration='4x0.15 0.1'
 DoParallel=True
 
 # Number of processors to use:
-NumberOfCPUs=3
+NumberOfCPUs=-1
 
 # {file} A list of all available CPUs (the MPI-machinefile):
 """ Depending on your system, your standard script to launch MPI-jobs may require this
     if your queueing system using an environment variable, give it here (with the leading $, e.g. $PBS_NODEFILE
 """
-MachineFile='mach.dat'
+MachineFile='$PBS_NODEFILE'
 
 # {expert} Control file
 """ This is an ugly solution to have improved killing control over the mpi jobs.
@@ -591,7 +591,6 @@ class projection_matching_class:
 
        create_working_directory(self._mylog,self._WorkDirectory)
        log.make_backup_of_script_file(sys.argv[0],self._WorkDirectory)
-       log.make_backup_of_script_file(AnalysisScript,self._WorkDirectory)
        
        # Create a CONTROL file for improved killing control
        if (self._DoControl):
