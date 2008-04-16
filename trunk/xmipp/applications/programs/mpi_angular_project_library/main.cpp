@@ -395,7 +395,6 @@ std::cerr << "Wr" << rank << " " << "TAG_WORKFORWORKER" << std::endl;
 
 int main(int argc, char *argv[])
 {
-std::cerr << "0\n";
     if (MPI_Init(&argc, &argv) != MPI_SUCCESS)
     {
         fprintf(stderr, "MPI initialization error\n");
