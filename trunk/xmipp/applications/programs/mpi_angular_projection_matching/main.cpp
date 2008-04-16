@@ -253,6 +253,10 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
             //DocFile DFo;
             FileName                         fn_tmp;
             
+            // Initialize progress bar
+            int c = XMIPP_MAX(1, total_number_of_images / 80);
+            init_progress_bar(total_number_of_images);
+
             DFexp.go_beginning();
             DFexp.remove_current();
             DFexp.go_beginning();
@@ -313,7 +317,7 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
                     #endif
                     #undef DEBUG
                     if(number_of_processed_images>=total_number_of_images)
-                        {
+                    {
                         MPI_Send(0, 0, MPI_INT, status.MPI_SOURCE, TAG_STOP, MPI_COMM_WORLD);
                         stopTagsSent++;
                         #ifdef DEBUG
@@ -321,7 +325,7 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
                                  << std::endl;
                         #endif
                         break;
-                        }
+                    }
                     if(tip==-1)
                     {
                         index=index_counter;
@@ -361,8 +365,12 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
                               << "with index " << index%N
                               << std::endl;
                     #endif
+                    // Update progress bar
+                    if (number_of_processed_images % c == 0) progress_bar(number_of_processed_images);
+
                     }//TAG_FREEWORKER
             }//while       
+            progress_bar(total_number_of_images);
 
             while (stopTagsSent < (nProcs-1))
             {
