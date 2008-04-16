@@ -72,7 +72,7 @@ class visualize_RCT_class:
         import os,sys,shutil
         scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
         sys.path.append(scriptdir) # add default search path
-        import visualization
+        import visualization, utils_xmipp
      
         # Import the corresponding protocol, get WorkingDir and go there
         pardir=os.path.abspath(os.getcwd())
@@ -88,7 +88,7 @@ class visualize_RCT_class:
         refs=SelectClasses.split(',')
         for ref in refs:
 
-            basename='rct_ref'+str(ref).zfill(5)
+            basename=composeFileName('rct_ref',ref,'')
             if VisualizeUntiltedAverages:
                 ShowImages.append(basename+'_untilted.med.xmp')
 
