@@ -71,16 +71,25 @@ class docfile:
            print "sort not implemented"
            exit(1)   
 
+   def make_abspath(self):
+      import os
+      size = len(self.lineLst[0])
+      for i in range(len(self.lineLst)):
+         self.lineLst[i][size-1] = os.path.abspath(self.lineLst[i][size-1])
+         
+
    def write(self, docfilename):
        fh = open(docfilename, 'w')
        newline=self.firstline
-       size = len(self.lineLst[0])
+       size = len(self.lineLst[0])-1
        
-       for i in range(len(self.lineLst)):
-          newline = newline + ' ; ' + self.lineLst[i][size-1] + '\n'
-          newline = newline + ' ' + str(i) + ' ' + str(size) 
-          for j in range(0,size-2):
-              newline=newline + ' ' +self.lineLst[i][j]
+       i=0
+       for ii in range(len(self.lineLst)):
+          i=i+1
+          newline = newline + ' ; ' + self.lineLst[ii][size] + '\n'
+          newline = newline + ' ' + str(i) + ' ' + str(size-2) 
+          for j in range(2,size):
+              newline=newline + ' ' +self.lineLst[ii][j]
           newline=newline + '\n'
        fh.writelines(newline)
        fh.close()
