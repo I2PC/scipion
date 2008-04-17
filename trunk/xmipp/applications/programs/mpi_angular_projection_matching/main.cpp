@@ -284,11 +284,11 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
                              TAG_WORKFROMWORKER,
                              MPI_COMM_WORLD, 
                              &status);
-                    int number= round(output_values[0]/MY_OUPUT_SIZE);        
+                    int number= ROUND(output_values[0]/MY_OUPUT_SIZE);        
                     //create doc file
                     for (int i = 0; i < number; i++)
 	                {
-                        int lineNumber=round(output_values[i*MY_OUPUT_SIZE+1]+1);
+                        int lineNumber=ROUND(output_values[i*MY_OUPUT_SIZE+1]+1);
 	                    DFexp.locate(lineNumber);
 	                    DFexp.set(0,output_values[i*MY_OUPUT_SIZE+2]);
 	                    DFexp.set(1,output_values[i*MY_OUPUT_SIZE+3]);
@@ -384,11 +384,11 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
                              TAG_WORKFROMWORKER,
                              MPI_COMM_WORLD, 
                              &status);
-                    int number= round(output_values[0]/MY_OUPUT_SIZE);        
+                    int number= ROUND(output_values[0]/MY_OUPUT_SIZE);        
                     //create doc file
                     for (int i = 0; i < number; i++)
 	                {
-                        int lineNumber=round(output_values[i*MY_OUPUT_SIZE+1]+1);
+                        int lineNumber=ROUND(output_values[i*MY_OUPUT_SIZE+1]+1);
 	                    DFexp.locate(lineNumber);
 	                    DFexp.set(0,output_values[i*MY_OUPUT_SIZE+2]);
 	                    DFexp.set(1,output_values[i*MY_OUPUT_SIZE+3]);
