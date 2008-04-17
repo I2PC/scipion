@@ -5,7 +5,6 @@ Import('env')
 # Required for custom functions
 import os
 
-
 def AddMatchingFiles((pattern, blacklist, sources), directory, files):
     ''' Callback, adds all matching files in dir '''
     import fnmatch
@@ -330,13 +329,18 @@ INRIASources = Glob('external/inria', '*.cc', [])
 AddLibrary('XmippExternal', 'external',
    INRIASources + BilibSources,
    ['bilib', 'bilib/headers', 'bilib/types'])
-   
-AddLibrary('XmippFftw', 'external/fftw-3.1.2',
-   FftwSources,['.','kernel','rdft','dft','rdft/codelets','simd','dft/simd','dft/codelets','reodft'])
+
+if int(env['fftw']):
+   AddLibrary('XmippFftw', 'external/fftw-3.1.2',
+      FftwSources,['.','kernel','rdft','dft','rdft/codelets','simd','dft/simd','dft/codelets','reodft'])
 
 # XmippData
 DataSources = Glob('libraries/data','*.cpp',[])
-AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],['lib'],['XmippExternal','XmippFftw'])
+if int(env['fftw']):
+   AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],['lib'],['XmippExternal','XmippFftw'])
+else:
+   DataSources.remove('libraries/data/fftw.cpp');
+   AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],['lib'],['XmippExternal'])
 SwigDataSources = ['libraries/data/swig/swigXmippData.i'] 	 
 AddSwigLibrary('XmippData', 'libraries/data', SwigDataSources, ['#'], 	 
     [], ['XmippData'])
