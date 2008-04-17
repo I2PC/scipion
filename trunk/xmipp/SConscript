@@ -330,17 +330,12 @@ AddLibrary('XmippExternal', 'external',
    INRIASources + BilibSources,
    ['bilib', 'bilib/headers', 'bilib/types'])
 
-if int(env['fftw']):
-   AddLibrary('XmippFftw', 'external/fftw-3.1.2',
-      FftwSources,['.','kernel','rdft','dft','rdft/codelets','simd','dft/simd','dft/codelets','reodft'])
+AddLibrary('XmippFftw', 'external/fftw-3.1.2',
+   FftwSources,['.','kernel','rdft','dft','rdft/codelets','simd','dft/simd','dft/codelets','reodft'])
 
 # XmippData
 DataSources = Glob('libraries/data','*.cpp',[])
-if int(env['fftw']):
-   AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],['lib'],['XmippExternal','XmippFftw'])
-else:
-   DataSources.remove('libraries/data/fftw.cpp');
-   AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],['lib'],['XmippExternal'])
+AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],['lib'],['XmippExternal','XmippFftw'])
 SwigDataSources = ['libraries/data/swig/swigXmippData.i'] 	 
 AddSwigLibrary('XmippData', 'libraries/data', SwigDataSources, ['#'], 	 
     [], ['XmippData'])
