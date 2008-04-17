@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
     int ysize = YSIZE(img());
     
     img().initZeros();
-    ii=0;
+    long int ii=0;
     for (int i=0;i<ysize;i++)
         for (int j=0;j<xsize;j++)
         {
