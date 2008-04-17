@@ -70,23 +70,17 @@ int main(int argc, char *argv[])
     complex<double> * IMG;
     IMG = (complex<double> *)fft_img.fOut;
 
-    double * img_ptr;
-    img_ptr=MULTIDIM_ARRAY(img());
     int xsize = (int)(((double)XSIZE(img()) / 2.) +1.);
     int ysize = YSIZE(img());
     
-    int ii=0;
-    for(int i=0; i<img().xdim; i++)
-       for(int j=0; j<img().ydim; j++)
-          img_ptr[ii++]=0.;
-
+    img().initZeros();
     ii=0;
     for (int i=0;i<ysize;i++)
         for (int j=0;j<xsize;j++)
-           {
+        {
            DIRECT_MAT_ELEM(img(),i,j) = abs(IMG[ii]);
            ii++;
-           }
+        }
     #ifdef  DEBUGTIME
     printf ("computed abs value in  %f mseconds\n", (double)(clock()-clo)/1000 );
     clo = clock();
