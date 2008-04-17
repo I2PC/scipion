@@ -5,6 +5,7 @@ Import('env')
 # Required for custom functions
 import os
 
+
 def AddMatchingFiles((pattern, blacklist, sources), directory, files):
     ''' Callback, adds all matching files in dir '''
     import fnmatch
@@ -143,9 +144,9 @@ def AddMPIProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
 
 # Add a program integrated in the Xmipp structure
 def AddXmippProgram(name, libs=[]):
-    finalLibPath = ['libraries/data', 'external']
+    finalLibPath = ['libraries/data', 'external','external/fftw-3.1.2']
     finalIncludePath = ['libraries','#']
-    finalLibs = libs + ['XmippData', 'XmippExternal']
+    finalLibs = libs + ['XmippData', 'XmippExternal','XmippFftw']
     for i in range(len(libs)):
        if libs[i] == 'XmippRecons':
           finalLibPath += ['libraries/reconstruction']
@@ -160,9 +161,9 @@ def AddXmippProgram(name, libs=[]):
         finalIncludePath, finalLibPath, finalLibs, [], [])
 
 def AddXmippMPIProgram(name, libs=[]):
-    finalLibPath = ['libraries/data', 'external']
+    finalLibPath = ['libraries/data', 'external','external/fftw-3.1.2']
     finalIncludePath = ['libraries','#']
-    finalLibs = libs + ['XmippData', 'XmippExternal']
+    finalLibs = libs + ['XmippData', 'XmippExternal','XmippFftw']
     for i in range(len(libs)):
        if libs[i] == 'XmippRecons':
           finalLibPath += ['libraries/reconstruction']
@@ -329,7 +330,7 @@ INRIASources = Glob('external/inria', '*.cc', [])
 AddLibrary('XmippExternal', 'external',
    INRIASources + BilibSources,
    ['bilib', 'bilib/headers', 'bilib/types'])
-
+   
 AddLibrary('XmippFftw', 'external/fftw-3.1.2',
    FftwSources,['.','kernel','rdft','dft','rdft/codelets','simd','dft/simd','dft/codelets','reodft'])
 
@@ -447,8 +448,8 @@ AddLibrary('OldXmipp', 'libraries/legacy', OldXmippSources,['#libraries'])
 
 # FindSCenter
 AddProgram('find_center2d', 'applications/legacy/find_center2d', '*.cpp', [],
-    ['libraries', '#'], ['libraries/data', 'libraries/legacy', 'external'],
-    ['XmippData', 'OldXmipp', 'XmippExternal'], [], [])
+    ['libraries', '#'], ['libraries/data', 'libraries/legacy', 'external','external/fftw-3.1.2'],
+    ['XmippData', 'OldXmipp', 'XmippExternal','XmippFftw'], [], [])
 
 # Src (apps)
 
@@ -826,9 +827,9 @@ if int(env['gui']):
     # Add a program integrated in the Xmipp structure
     def AddXmippQtProgram(name, mocs=[], libs=[]):
         finalLibPath = ['libraries/data', 'libraries/graphics',
-            'libraries/classification', 'libraries/reconstruction', 'external']
+            'libraries/classification', 'libraries/reconstruction', 'external','external/fftw-3.1.2']
         finalIncludePath = ['libraries','#']
-        finalLibs = ['XmippData', 'XmippExternal', 'XmippGraphics',
+        finalLibs = ['XmippData', 'XmippExternal','XmippFftw', 'XmippGraphics',
             'XmippRecons', 'XmippClassif']+libs
         for i in range(len(libs)):
            if libs[i] == 'XmippInterface':
