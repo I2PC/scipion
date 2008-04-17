@@ -547,7 +547,7 @@ Lock::Lock (std::string basefilename)
     // Attempt to create a new lockFile...
     // ------------------------------
     int   count = 0;
-    long delta, current_time;
+    time_t delta, current_time;
     struct stat statptr;
     filename = basefilename + "LOCK";
 
