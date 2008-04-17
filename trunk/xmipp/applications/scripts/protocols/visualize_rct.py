@@ -88,7 +88,7 @@ class visualize_RCT_class:
         refs=SelectClasses.split(',')
         for ref in refs:
 
-            basename=composeFileName('rct_ref',ref,'')
+            basename=utils_xmipp.composeFileName('rct_ref',ref,'')
             if VisualizeUntiltedAverages:
                 ShowImages.append(basename+'_untilted.med.xmp')
 

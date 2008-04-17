@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 FILENAMENUMBERLENTGH=6
 #---------------------------------------------------------------------------
-# composeFileName (Xmipp-like)
+# utils_xmipp.composeFileName (Xmipp-like)
 #---------------------------------------------------------------------------
 def composeFileName(rootname,number,extension):
    if (number != -1):

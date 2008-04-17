@@ -173,8 +173,8 @@ class visualize_ML3D_class:
         import utils_xmipp
         iters=self.SelectIterations.split(',')
         for iter in iters:
-            patt=composeFileName('RunML3D/ml3d_it',iter,'')
-            selfiles=glob.glob(composeFileName(patt+'_vol??????.sel'))
+            patt=utils_xmipp.composeFileName('RunML3D/ml3d_it',iter,'')
+            selfiles=glob.glob(utils_xmipp.composeFileName(patt+'_vol??????.sel'))
             selfiles.sort()
             if (self.VisualizeML3DAvgs):
                 for selfile in selfiles:
@@ -219,7 +219,7 @@ class visualize_ML3D_class:
         import os
         import utils_xmipp
         for i in range(len(selfiles)):
-            docname=composeFileName('ang_distribution_ref',i+1,'doc')
+            docname=utils_xmipp.composeFileName('ang_distribution_ref',i+1,'doc')
             command='xmipp_header_extract -i '+selfiles[i]+' -o '+docname
             print '* ',command
             os.system(command)
@@ -233,7 +233,7 @@ class visualize_ML3D_class:
         newlines=[]
         newlines.append('reference | sum weights (# images) \n')
         for i in range(len(selfiles)):
-            docname=composeFileName('ang_distribution_ref',i+1,'doc')
+            docname=utils_xmipp.composeFileName('ang_distribution_ref',i+1,'doc')
             doc=docfiles.docfile(docname)
             newlines.append(str(i+1)+' '+str(doc.sum_of_column(7))+'\n')
 
@@ -256,7 +256,7 @@ class visualize_ML3D_class:
         import visualization
         import utils_xmipp
 
-        docname=composeFileName('ang_distribution_ref',ref,'')
+        docname=utils_xmipp.composeFileName('ang_distribution_ref',ref,'')
         doc=docfiles.docfile(docname+'.doc')
         newname=docname+'_bin_'
         doc.check_angle_range()

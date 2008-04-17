@@ -320,7 +320,7 @@ class ML3D_class:
             newlines=[]
             for line in lines:
                 i = i + 1
-                oname=composeFileName('initial_seed',i,'vol')
+                oname=utils_xmipp.composeFileName('initial_seed',i,'vol')
                 words=line.split()
                 if words[0][0]=="/":
                     shutil.copy(words[0],oname)
@@ -570,7 +570,7 @@ class ML3D_class:
 
         print '*********************************************************************'
         print '*  Restarting ml(f)_refine3d program :' 
-        restartname = composeFileName('RunML3D/ml3d_it',iter,'log')
+        restartname = utils_xmipp.composeFileName('RunML3D/ml3d_it',iter,'log')
         params= ' -restart ' + restartname
 
         if (self.DoMlf):

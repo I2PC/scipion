@@ -246,13 +246,13 @@ class RCT_class:
             import utils_xmipp
             for ref in refs:
                 # Copy selfile and average image of ML2DDir to WorkingDir
-                unt_selfile=composeFileName(ml2d_abs_rootname+'_ref',ref,'sel')
-                local_unt_selfile=composeFileName('rct_ref',ref,'')
+                unt_selfile=utils_xmipp.composeFileName(ml2d_abs_rootname+'_ref',ref,'sel')
+                local_unt_selfile=utils_xmipp.composeFileName('rct_ref',ref,'')
                 local_unt_selfile += '_untilted.sel'
-                local_til_selfile=composeFileName('rct_ref',ref,'')
+                local_til_selfile=utils_xmipp.composeFileName('rct_ref',ref,'')
                 local_til_selfile += '_tilted.sel'
-                refavg=composeFileName(lastitername+'_ref',ref,'xmp')
-                local_refavg=composeFileName('rct_ref',ref,'')
+                refavg=utils_xmipp.composeFileName(lastitername+'_ref',ref,'xmp')
+                local_refavg=utils_xmipp.composeFileName('rct_ref',ref,'')
                 local_refavg += '_untilted_avg.xmp'
                 self.untiltclasslist[ref]=[local_unt_selfile,]
                 self.untiltclasslist[ref].append(local_refavg)

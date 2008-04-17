@@ -1155,7 +1155,7 @@ def execute_projection_matching(_mylog,
 
          # Apply Wiener filter to the class averages (overwrite originals)
          import utils_xmipp
-         wienername = composeFileName(CtfGroupRootName+'_group',ictf,'wien')
+         wienername = utils_xmipp.composeFileName(CtfGroupRootName+'_group',ictf,'wien')
          wiener_filter = '../' + CtfGroupDirectory + '/' + wienername
          command = 'xmipp_fourier_filter ' + \
                    ' -i ' + outputname + '_classes.sel' + \

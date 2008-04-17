@@ -245,7 +245,7 @@ class ML2D_class:
         import launch_parallel_job, utils_xmipp
         print '*********************************************************************'
         print '*  Restarting ml(f)_align2d program :' 
-        params= ' -restart ' + composeFileName('ml2d_it',iter,'log')
+        params= ' -restart ' + utils_xmipp.composeFileName('ml2d_it',iter,'log')
 
         if (self.DoMlf):
             program="xmipp_ml_alignd"
