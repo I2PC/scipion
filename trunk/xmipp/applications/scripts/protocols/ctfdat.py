@@ -27,6 +27,22 @@ class ctfdat:
 	      CTFDir+"/"+splitFnCTF[-1])
        return newctfdat
 
+   # Makes filenames with absolute paths
+   def make_abspath(self):
+      import os
+      newctfdat=ctfdat()
+      for line in self.lines:
+         # Read a line
+         aux=line.split()
+         fnProjection=aux[0]
+         fnCTF=aux[1]
+         if not (fnProjection[0]=="/"):
+            fnProjection=os.path.abspath(fnProjection)
+         if not (fnCTF[0]=="/"):
+            fnCTF=os.path.abspath(fnCTF)
+         newctfdat.append(fnProjection, fnCTF)
+      return newctfdat
+
    # Produce a list with the ctfs
    def produceCTFList(self):
        CTFList=[]
