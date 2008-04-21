@@ -78,11 +78,18 @@ void Prog_angular_projection_matching_prm::show() {
     }
     if (fn_ctf!="")
     {
-	std::cerr << "  CTF parameter file      :  " <<fn_ctf<<std::endl;
-	if (phase_flipped)
-	    std::cerr << "    + Assuming images have been phase flipped " << std::endl;
-	else
-	    std::cerr << "    + Assuming images have not been phase flipped " << std::endl;
+        if (Is_ImageXmipp(fn_ctf))
+        {
+            std::cerr << "  CTF image               :  " <<fn_ctf<<std::endl;
+        }
+        else
+        {
+            std::cerr << "  CTF parameter file      :  " <<fn_ctf<<std::endl;
+            if (phase_flipped)
+                std::cerr << "    + Assuming images have been phase flipped " << std::endl;
+            else
+                std::cerr << "    + Assuming images have not been phase flipped " << std::endl;
+        }
     }
     std::cerr << " ================================================================="<<std::endl;
   }
@@ -105,7 +112,8 @@ void Prog_angular_projection_matching_prm::extendedUsage() {
   std::cerr << "Additional options: \n"
             << " [ -mem <float=1> ]            : Available memory for reference library (Gb)\n"
 	    << " [ -max_shift <float=-1> ]     : Max. change in origin offset (+/- pixels; neg= no limit) \n"
-	    << " [ -ctf <ctfparam-file> ]      : Apply this CTF to the reference projections \n"
+	    << " [ -ctf <filename> ]           : CTF to apply to the reference projections, either a  \n"
+            << "                                 CTF parameter file or a 2D image with the CTF amplitudes\n"
 	    << " [ -phase_flipped ]            : Use this if the experimental images have been phase flipped\n";
   exit(1);
 }
@@ -200,22 +208,31 @@ void Prog_angular_projection_matching_prm::produceSideInfo() {
     // CTF stuff
     if (fn_ctf != "")
     {
-	XmippCTF ctf;
-	Matrix2D<std::complex<double> >  ctfmask;
-	ctf.read(fn_ctf);
-	if (ABS(ctf.DeltafV - ctf.DeltafU) >1.) 
-	{
-	    REPORT_ERROR(1, "ERROR%% Only non-astigmatic CTFs are allowed!");
-	}
-	ctf.enable_CTF = true;
-	ctf.Produce_Side_Info();
-	ctf.Generate_CTF(dim, dim, ctfmask);
-	Mctf.resize(dim,dim);
-	FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mctf)
-	{
-	    if (phase_flipped) dMij(Mctf, i, j) = fabs(dMij(ctfmask, i, j).real());
-	    else dMij(Mctf, i, j) = dMij(ctfmask, i, j).real();
-	}
+        if (Is_ImageXmipp(fn_ctf))
+        {
+            ImageXmipp img;
+            img.read(fn_ctf);
+            Mctf=img();
+        }
+        else
+        {
+            XmippCTF ctf;
+            Matrix2D<std::complex<double> >  ctfmask;
+            ctf.read(fn_ctf);
+            if (ABS(ctf.DeltafV - ctf.DeltafU) >1.) 
+            {
+                REPORT_ERROR(1, "ERROR%% Only non-astigmatic CTFs are allowed!");
+            }
+            ctf.enable_CTF = true;
+            ctf.Produce_Side_Info();
+            ctf.Generate_CTF(dim, dim, ctfmask);
+            Mctf.resize(dim,dim);
+            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mctf)
+            {
+                if (phase_flipped) dMij(Mctf, i, j) = fabs(dMij(ctfmask, i, j).real());
+                else dMij(Mctf, i, j) = dMij(ctfmask, i, j).real();
+            }
+        }
     }
 
 }
