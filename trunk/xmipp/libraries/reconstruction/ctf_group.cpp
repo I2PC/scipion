@@ -175,12 +175,16 @@ void CtfGroupParams::produceSideInfo()
                     if (is_first)
                     {
                         pixel_size = ctf.Tm;
-                        // Set resolution limits in dig freq:
-                        resol_error = pixel_size / resol_error;
-                        resol_error = XMIPP_MIN(0.5, resol_error);
-                        // and in pixels:
-                        iresol_error = ROUND(resol_error * dim);
-                        std::cerr<<" Resolution for error limit = "<<resol_error<< " (dig. freq.) = "<<iresol_error<<" (pixels)"<<std::endl;
+                        if (do_auto)
+                        {
+                            // Set resolution limits in dig freq:
+                            resol_error = pixel_size / resol_error;
+                            resol_error = XMIPP_MIN(0.5, resol_error);
+                            // and in pixels:
+                            
+                            iresol_error = ROUND(resol_error * dim);
+                            std::cerr<<" Resolution for error limit = "<<resol_error<< " (dig. freq.) = "<<iresol_error<<" (pixels)"<<std::endl;
+                        }
                         is_first=false;
                     }
                     else if (pixel_size != ctf.Tm)
