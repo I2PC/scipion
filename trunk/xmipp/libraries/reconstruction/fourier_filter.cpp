@@ -236,7 +236,6 @@ void FourierMask::read_mask(const FileName &fn)
     fn_mask = fn;
     if (Is_ImageXmipp(fn_mask))
     {
-        std::cerr<<"Converting real-valued mask in "<<fn_mask<<" to complex values..."<<std::endl;
         ImageXmipp  I;
         I.read(fn_mask);
         FourierImageXmipp If;
@@ -250,7 +249,6 @@ void FourierMask::read_mask(const FileName &fn)
     }
     else if (Is_VolumeXmipp(fn_mask))
     {
-        std::cerr<<"Converting real-valued mask in "<<fn_mask<<" to complex values..."<<std::endl;
         VolumeXmipp  V;
         V.read(fn_mask);
         FourierVolumeXmipp Vf;
