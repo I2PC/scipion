@@ -460,7 +460,8 @@ void FileName::compose(const std::string &str, int no, const std::string &ext)
     *this = (FileName) str;
     if (no != -1)
     {
-        char aux_str[FILENAMENUMBERLENGTH];
+
+        char aux_str[FILENAMENUMBERLENGTH+1];
         std::string tmp_fileformat;
         tmp_fileformat = (std::string) "%0" +
                          integerToString(FILENAMENUMBERLENGTH)+
@@ -470,7 +471,7 @@ void FileName::compose(const std::string &str, int no, const std::string &ext)
     }
 
     if (ext != "")
-        *this += "." + ext;
+        *this += (std::string)"." + ext;
 }
 
 // Get the root name of a filename .........................................
