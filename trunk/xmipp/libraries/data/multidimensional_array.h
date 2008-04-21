@@ -218,7 +218,7 @@ extern std::string integerToString(int I, int _width, char fill_with);
  * @code
  * FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v)
  * {
- *     std::cout << DIRECT_MULTIDIM_ELEM(v,k,n) << " ";
+ *     std::cout << DIRECT_MULTIDIM_ELEM(v,n) << " ";
  * }
  * @endcode
  */
