@@ -244,7 +244,6 @@ void FourierMask::read_mask(const FileName &fn)
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(If())
         {
             dMij(If(),i,j) = std::complex<double>(dMij(I(),i,j),0.);
-            std::cout<< dMij(If(),i,j)<<" "<<dMij(I(),i,j)<<std::endl;
         }
         mask2D = If();
         mask2D.setXmippOrigin();
