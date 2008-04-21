@@ -454,6 +454,7 @@ AddProgram('find_center2d', 'applications/legacy/find_center2d', '*.cpp', [],
 # Src (apps)
 
 AddXmippProgram('add_noise')
+AddXmippProgram('adapt_for_spider', ['XmippInterface'])
 AddXmippProgram('adjust_volume_grey_levels', ['XmippRecons'])
 AddXmippProgram('align2d', ['XmippRecons'])
 AddXmippProgram('align_tilt_pairs', ['XmippRecons'])
