@@ -45,7 +45,7 @@ int main(int argc, char **argv)
 	    fn2    = getParameter(argc, argv, "-i2");
 	}
         fn_out = getParameter(argc, argv, "-o");
-	remove_multiple = getParameter(argc, argv, "-remove_multiple");
+	remove_multiple = getParameter(argc, argv, "-remove_multiple","");
 
     }
     catch (Xmipp_error XE)
