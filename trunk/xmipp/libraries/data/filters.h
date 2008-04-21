@@ -454,6 +454,31 @@ void best_shift(const Matrix2D< double >& I1,
                 double& shiftY,
                 const Matrix2D< int >* mask = NULL);
 
+/** Unnormalized 2D gaussian value using covariance
+ * @ingroup NumericalFunctions
+ *
+ * This function returns the value of a multivariate (2D) gaussian function at
+ * the point r (column vector of dimension 2).
+ *
+ * G(r,mu,sigma)=exp(-0.5 * (r-mu)^t sigma^-1 (r-mu))
+ */
+double unnormalizedGaussian2D(const Matrix1D<double> &r,
+    const Matrix1D<double> &mu,
+    const Matrix2D<double> &sigmainv);
+
+/** Fit Gaussian spot to an image.
+ * @ingroup Filters
+ *
+ * The fitted Gaussian is a*G(r,mu,sigma)+b where
+ * G(r,mu,sigma)=exp(-0.5 * (r-mu)^t sigma^-1 (r-mu))
+ *
+ * You can choose if the center is estimated or it is assumed to be 0.
+ * You can choose the number of iterations for the estiamtion.
+ */
+void estimateGaussian2D(const Matrix2D<double> &I,
+    double &a, double &b, Matrix1D<double> &mu, Matrix2D<double> &sigma,
+    bool estimateMu=true, int iterations=10);
+
 /** euclidian_distance 1D
  * @ingroup Filters
  *

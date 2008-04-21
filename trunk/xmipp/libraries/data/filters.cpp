@@ -379,6 +379,96 @@ void best_shift(const Matrix2D<double> &I1, const Matrix2D<double> &I2,
     shiftY = ymax / sumcorr;
 }
 
+/* Estimate 2D Gaussian ---------------------------------------------------- */
+/* See Brandle, Chen, Bischof, Lapp. Robust parametric and semi-parametric
+   spot fitting for spot array images. 2000 */
+double unnormalizedGaussian2D(const Matrix1D<double> &r,
+                  const Matrix1D<double> &mu,
+                  const Matrix2D<double> &sigmainv)
+{
+    double x=XX(r)-XX(mu);
+    double y=YY(r)-YY(mu);
+    return exp(-0.5*(DIRECT_MAT_ELEM(sigmainv,0,0)*x*x+
+                   2*DIRECT_MAT_ELEM(sigmainv,0,1)*x*y+
+                     DIRECT_MAT_ELEM(sigmainv,1,1)*y*y));
+}
+
+void estimateGaussian2D(const Matrix2D<double> &I,
+    double &a, double &b, Matrix1D<double> &mu, Matrix2D<double> &sigma,
+    bool estimateMu, int iterations)
+{
+    Matrix2D<double> z(I);
+
+    // Estimate b
+    histogram1D hist;
+    compute_hist(z,hist,100);
+    b=hist.percentil(5);
+
+    // Iteratively estimate all parameters
+    for (int n=0; n<iterations; n++)
+    {
+        // Reestimate z
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(z)
+           z(i,j)=XMIPP_MAX(I(i,j)-b,0);
+
+        // Sum of z
+        double T=z.sum();
+        
+        // Estimate center
+        mu.initZeros(2);
+        if (estimateMu)
+        {
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(z)
+            {
+                double val=z(i,j);
+                XX(mu)+=val*j;
+                YY(mu)+=val*i;
+            }
+            mu/=T;
+        }
+        
+        // Estimate sigma
+        sigma.initZeros(2,2);
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(z)
+        {
+            double val=z(i,j);
+            double j_mu=j-XX(mu);
+            double i_mu=i-YY(mu);
+            DIRECT_MAT_ELEM(sigma,0,0)+=val*j_mu*j_mu;
+            DIRECT_MAT_ELEM(sigma,0,1)+=val*i_mu*j_mu;
+            DIRECT_MAT_ELEM(sigma,1,1)+=val*i_mu*i_mu;
+        }
+        DIRECT_MAT_ELEM(sigma,1,0)=DIRECT_MAT_ELEM(sigma,0,1);
+        sigma/=T;
+        
+        // Estimate amplitude
+        Matrix2D<double> sigmainv=sigma.inv();
+        Matrix1D<double> r(2);
+        double G2=0;
+        a=0;
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(z)
+        {
+            XX(r)=j;
+            YY(r)=i;
+            double G=unnormalizedGaussian2D(r,mu,sigmainv);
+            a+=z(i,j)*G;
+            G2+=G*G;
+        }
+        a/=G2;
+
+        // Reestimate b
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(z)
+        {
+            XX(r)=j;
+            YY(r)=i;
+            double G=unnormalizedGaussian2D(r,mu,sigmainv);
+            z(i,j)=I(i,j)-a*G;
+        }
+        compute_hist(z,hist,100);
+        b=hist.percentil(5);
+    }
+}
+
 /* Fourier-Bessel decomposition. ------------------------------------------- */
 void Fourier_Bessel_decomposition(const Matrix2D<double> &img_in,
                                   Matrix2D<double> &m_out, double r1, double r2, int k1, int k2)
