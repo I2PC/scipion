@@ -14,3 +14,13 @@ def composeFileName(rootname,number,extension):
 
    return output
 
+def composeWildcardFileName(rootname,extension):
+   output = rootname
+   for i in range(FILENAMENUMBERLENTGH):
+      output += '?'
+
+   if (extension != ''):
+      output += '.' + extension 
+
+   return output
+
