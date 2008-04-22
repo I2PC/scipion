@@ -358,8 +358,8 @@ void compute_hist(const T& v, histogram1D& hist,
                   double min, double max, int no_steps)
 {
     hist.init(min, max, no_steps);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(v)
-    	hist.insert_value(DIRECT_VEC_ELEM(v, i));
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v)
+    	hist.insert_value(DIRECT_MULTIDIM_ELEM(v, n));
 }
 
 /** Compute histogram within a region
@@ -379,7 +379,7 @@ void compute_hist(const Matrix2D< T >& v, histogram1D& hist,
 
     Matrix1D< int > r(2);
     FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
-    hist.insert_value(v(r));
+        hist.insert_value(v(r));
 }
 
 /** Compute histogram within a region 3D
@@ -399,7 +399,7 @@ void compute_hist(const Matrix3D< T >& v, histogram1D& hist,
 
     Matrix1D< int >r(3);
     FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1, corner2)
-    hist.insert_value(v(r));
+        hist.insert_value(v(r));
 }
 
 /** Compute the detectability error between two pdf's
@@ -490,10 +490,9 @@ void histogram_equalization(MultidimArray<T>& v, int bins = 8)
     // Compute the distribution function of the pdf
     Matrix1D< double > norm_sum(hist_steps);
     norm_sum(0) = hist(0);
-
+    
     for (int i = 1; i < hist_steps; i++)
-        norm_sum(i) = norm_sum(i - 1) + hist(i);
-
+        norm_sum(i) = norm_sum(i - 1) + hist(i);    
     norm_sum /= MULTIDIM_SIZE(v);
 
     // array to store the boundary pixels of bins
@@ -503,13 +502,11 @@ void histogram_equalization(MultidimArray<T>& v, int bins = 8)
     for (int current_bin = 1; current_bin < bins; current_bin++)
     {
         double current_value = (double) current_bin / bins;
-
-        while (norm_sum(index) < current_value)
+        while (norm_sum(index) < current_value && index < FINISHINGX(norm_sum))
             index++;
-
         hist.index2val((double) index, div(current_bin - 1));
     }
-
+    
     // requantize and equalize histogram
     T* ptr=NULL;
     unsigned long int n;
