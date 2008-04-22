@@ -65,10 +65,13 @@ LogDir='Logs'
 """
 DoCtfCorrection=False
 
-# {file} CTFDat file with CTF groups:
+# {file} CTFDat file with CTF data:
 """ The input selfile may be a subset of the images in the CTFDat file, but all images in the input selfile must be present in the CTFDat file. This field is obligatory if CTF correction is to be performed.
 """
 CTFDatName=''
+
+# {file } Docfile with defocus values where to split into groups
+SplitDefocusDocFile='Ctfs/CTF_groups_split.doc'
 
 # {expert} Wiener constant
 """ Term that will be added to the denominator of the Wiener filter.
@@ -80,7 +83,7 @@ CTFDatName=''
 WienerConstant=-1
 
 # Images have been phase flipped?
-DataArePhaseFlipped=False;
+DataArePhaseFlipped=False
 
 # Is the initial reference map CTF (amplitude) corrected?
 ReferenceIsCtfCorrected=False
