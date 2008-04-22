@@ -38,7 +38,7 @@ void CtfGroupParams::read(int argc, char **argv)
     if (do_auto)
     {
         max_error     = textToFloat(getParameter(argc, argv, "-error","0.5"));
-        resol_error   = textToFloat(getParameter(argc, argv, "-resol"));
+        resol_error   = textToFloat(getParameter(argc, argv, "-resol","-1"));
     }
     else
     {
@@ -177,6 +177,11 @@ void CtfGroupParams::produceSideInfo()
                         pixel_size = ctf.Tm;
                         if (do_auto)
                         {
+                            if (resol_error < 0)
+                            {
+                                // Set to Nyquist
+                                resol_error = 2. * pixel_size;
+                            }
                             // Set resolution limits in dig freq:
                             resol_error = pixel_size / resol_error;
                             resol_error = XMIPP_MIN(0.5, resol_error);
