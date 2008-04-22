@@ -347,14 +347,13 @@ CDAB;
 void quadraticProgramming_obj32(int nparam, int j, double* x, double* fj, void* cd)
 {
     CDAB* in = (CDAB *)cd;
-    Matrix2D<double> X(1,nparam);
+    Matrix2D<double> X(nparam,1);
     for (int i=0; i<nparam; ++i)
-       X(0,i)=x[i];
-
+       X(i,0)=x[i];
     Matrix2D<double> result;
     result = 0.5 * X.transpose() * in->C * X + in->D.transpose() * X;
 
-    *fj = result(0, 0);
+    *fj = result(0, 0);    
 }
 
 /* To calculate the value of the jth constraint */
@@ -499,14 +498,14 @@ void leastSquare(const Matrix2D<double> &C, const Matrix1D<double> &d,
             Matrix1D<double> &x)
 {
     // Convert d to Matrix2D for multiplication
-    Matrix2D<double> P;
+    Matrix2D<double> P;    
     P.fromVector(d);
     P = -2 * P.transpose() * C;
     P = P.transpose();
-
+    
     //Convert back to vector for passing it to quadraticProgramming
     Matrix1D<double> newd;
     P.toVector(newd);
 
-    quadraticProgramming(C.transpose()*C, newd, A, b, Aeq, beq, bl, bu, x);
+    quadraticProgramming(C.transpose()*C, newd, A, b, Aeq, beq, bl, bu, x);    
 }
