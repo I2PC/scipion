@@ -484,11 +484,6 @@ void CtfGroupParams::writeOutputToDisc()
             fh2.width(10);
             fh2 << floatToString(dMij(Mavg,i,0));
             fh2.width(10);
-            if (do_wiener)
-            {
-                fh2 << floatToString(dMij(Mavg,i,0)/dMij(Mwien,i,0));
-                fh2.width(10);
-            }
             for (int igmic=0; igmic < pointer_group2mic[igroup].size(); igmic++)
             {
                 imic = pointer_group2mic[igroup][igmic];
