@@ -236,19 +236,16 @@ void CtfGroupParams::produceSideInfo()
                 dMij(Mwien,i,j) += mics_count[imic] * dMij(mics_ctf2d[imic],i,j) * dMij(mics_ctf2d[imic],i,j); 
             }
         }
-        // Use Grigorieff's default for Wiener filter constant: 10% of average over all Mwien terms
-        // Grigorieff JSB 157(1) (2006), pp 117-125
+        // Divide by sumimg (Wiener filter is for summing images, not averaging!)
+        Mwien /= sumimg;
+        // Add Wiener constant
         if (wiener_constant < 0.) 
         {
+            // Use Grigorieff's default for Wiener filter constant: 10% of average over all Mwien terms
+            // Grigorieff JSB 157(1) (2006), pp 117-125
             wiener_constant = 0.1 * Mwien.computeAvg();
         }
-        // Also divide by sumimg (Wiener filter is for summing images, not averaging!)
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mwien)
-        {
-            dMij(Mwien,i,j) += wiener_constant;
-            dMij(Mwien,i,j) /= sumimg;
-        }
-        
+        Mwien += wiener_constant;
     }
  
     // Now that we have all information, sort micrographs on defocus value
@@ -415,7 +412,7 @@ void CtfGroupParams::writeOutputToDisc()
     Matrix2D<double> Mavg;
     double sumw, avgdef, mindef, maxdef, split, oldmin=99.e99;
     int imic;
-    std::ofstream fh, fh2, fh3;
+    std::ofstream fh, fh2, fh3, fh4;
 
     
     DFo.append_comment("Defocus values to split into "+integerToString(pointer_group2mic.size())+" ctf groups");
@@ -480,13 +477,18 @@ void CtfGroupParams::writeOutputToDisc()
         }
         oldmin = mindef;
         // 6. Write file with 1D profiles
-        fh2.open((fnt+".profiles").c_str(), std::ios::out);
+        fh2.open((fnt+".ctf_profiles").c_str(), std::ios::out);
         for (int i=0; i < dim/2; i++)
         {
             fh2 << floatToString((double)i / (pixel_size*dim));
             fh2.width(10);
             fh2 << floatToString(dMij(Mavg,i,0));
             fh2.width(10);
+            if (do_wiener)
+            {
+                fh2 << floatToString(dMij(Mavg,i,0)/dMij(Mwien,i,0));
+                fh2.width(10);
+            }
             for (int igmic=0; igmic < pointer_group2mic[igroup].size(); igmic++)
             {
                 imic = pointer_group2mic[igroup][igmic];
@@ -506,7 +508,18 @@ void CtfGroupParams::writeOutputToDisc()
             img() = Mavg;
             img.weight() = sumw;
             img.write(fnt+".wien");
-        }
+            fh4.open((fnt+".wien_profile").c_str(), std::ios::out);
+            for (int i=0; i < dim/2; i++)
+            {
+                fh4 << floatToString((double)i / (pixel_size*dim));
+                fh4.width(10);
+                fh4 << floatToString(dMij(Mavg,i,0));
+                fh4.width(10);
+                fh4 << std::endl;
+            }
+            fh4.close();
+         }
+
     }
     
     // 3. Write file with number of images per group
