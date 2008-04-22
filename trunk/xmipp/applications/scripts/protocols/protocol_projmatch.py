@@ -1166,16 +1166,6 @@ def execute_projection_matching(_mylog,
          # THEN ON-THE-FLY CORRECT WIENER FILTER FOR EACH CTFGROUP AND ADD TO AVERAGE
          # DELETE ALL FILES FOR THIS CTFGROUP TO PREVENT FILLING THE DISC
 
-         # Apply Wiener filter to the class averages (overwrite originals)
-         wiener_filter = '../' + CtfGroupDirectory + '/' + CtfGroupName + '.wien'
-         command = 'xmipp_fourier_filter ' + \
-                   ' -i ' + outputname + '_classes.sel' + \
-                   ' -fourier_mask ' + wiener_filter 
-         print '*********************************************************************'
-         print '* ',command
-         _mylog.info(command) 
-         os.system(command)
-
          # Join Wiener-filter corrected class averages of all CTF groups
          inputrootname=ProjMatchRootName + '_' + CtfGroupName + '_class'
          join_ctf_corrected_class_averages(_mylog,
@@ -1249,6 +1239,17 @@ def join_ctf_corrected_class_averages(_mylog,
 
    import os, glob
    import utils_xmipp
+
+   # Apply Wiener filter to the class averages (overwrite originals)
+   wiener_filter = '../' + CtfGroupDirectory + '/' + _CtfGroupName + '.wien'
+   outputname = _rootname.replace('_class','')
+   command = 'xmipp_fourier_filter ' + \
+             ' -i ' + outputname + '_classes.sel' + \
+             ' -fourier_mask ' + wiener_filter 
+   print '*********************************************************************'
+   print '* ',command
+   _mylog.info(command) 
+   os.system(command)
 
    wildcardname=utils_xmipp.composeWildcardFileName(_rootname,'xmp')
    print " * Joining class averages from ", wildcardname," to the Wiener-corrected sums"
