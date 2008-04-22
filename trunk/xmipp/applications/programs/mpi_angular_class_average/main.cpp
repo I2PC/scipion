@@ -126,26 +126,8 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
         int number_of_references_image=1;
         if (rank == 0)
         {
-            int nr_ref;
-            SelFile          SFclasses, SFclasses1, SFclasses2;
-            DocFile          DFclasses, DFclasses1, DFclasses2;
-            Matrix1D<double> docline(7);
-            FileName         fn_tmp;
-            
-            SFclasses.clear(); 
-            SFclasses1.clear(); 
-            SFclasses2.clear(); 
-
-            // Prepare docfiles with all classes
-            std::string header="Headerinfo columns: rot (1) , tilt (2), psi (3), Xoff (4), Yoff (5), Weight (6), Flip (7)";
-            DFclasses.append_comment(header);
-            if (do_split)
-            {
-                DFclasses1.append_comment(header);
-                DFclasses2.append_comment(header);
-            }
-
-            nr_ref = DFlib.dataLineNo();
+            FileName fn_tmp;
+            int nr_ref = DFlib.dataLineNo();
             int c = XMIPP_MAX(1, nr_ref / 80);
             init_progress_bar(nr_ref);  
 
@@ -175,14 +157,12 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
                              &status);
                     double w, w1, w2;
                     int myref_number;                             
-                    myref_number = ROUND(output_values[0]);        
                     // Output classes sel and doc files
-                    DFlib.locate(myref_number);
-                    docline(0) = DFlib(col_rot);
-                    docline(1) = DFlib(col_tilt);
+                    myref_number = ROUND(output_values[0]);        
                     w  = output_values[1];
                     w1 = output_values[2];
                     w2 = output_values[3]; 
+                    addClassAverage(myref_number,w,w1,w2);
                     #ifdef DEBUG
                     std::cerr << "Mr2.5 received work from worker " <<  status.MPI_SOURCE << std::endl;
                     std::cerr << " w w1 w2 myref_number" 
@@ -191,33 +171,6 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
                               << w2 << " "
                               << myref_number <<  std::endl;  
                     #endif
-                    if (w > 0.)
-                    {
-                        fn_tmp.compose(fn_out,myref_number,"xmp");
-                        SFclasses.insert(fn_tmp);
-                        DFclasses.append_comment(fn_tmp);
-                        docline(5) = w;
-                        DFclasses.append_data_line(docline);
-                    }
-                    if (do_split)
-                    {
-                        if (w1 > 0.)
-                        {
-                            fn_tmp.compose(fn_out1,myref_number,"xmp");
-                            SFclasses1.insert(fn_tmp);
-                            DFclasses1.append_comment(fn_tmp);
-                            docline(5) = w1;
-                            DFclasses1.append_data_line(docline);
-                        }
-                        if (w2 > 0.)
-                        {
-                            fn_tmp.compose(fn_out2,myref_number,"xmp");
-                            SFclasses2.insert(fn_tmp);
-                            DFclasses2.append_comment(fn_tmp);
-                            docline(5) = w2;
-                            DFclasses2.append_data_line(docline);
-                        }
-                    }
                     if (nr_iter > 0 )
                     {
                         int nr_images = ROUND(output_values[4] / AVG_OUPUT_SIZE);
@@ -295,14 +248,12 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
                              &status);
                     double w, w1, w2;
                     int myref_number;                             
-                    myref_number = ROUND(output_values[0]);        
                     // Output classes sel and doc files
-                    DFlib.locate(myref_number);
-                    docline(0) = DFlib(col_rot);
-                    docline(1) = DFlib(col_tilt);
+                    myref_number = ROUND(output_values[0]);        
                     w  = output_values[1];
                     w1 = output_values[2];
                     w2 = output_values[3]; 
+                    addClassAverage(myref_number,w,w1,w2);
                     #ifdef DEBUG
                     std::cerr << "Mr2.5 received work from worker " <<  status.MPI_SOURCE << std::endl;
                     std::cerr << " w w1 w2 myref_number" 
@@ -311,33 +262,6 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
                               << w2 << " "
                               << myref_number <<  std::endl;  
                     #endif
-                    if (w > 0.)
-                    {
-                        fn_tmp.compose(fn_out,myref_number,"xmp");
-                        SFclasses.insert(fn_tmp);
-                        DFclasses.append_comment(fn_tmp);
-                        docline(5) = w;
-                        DFclasses.append_data_line(docline);
-                   }
-                    if (do_split)
-                    {
-                        if (w1 > 0.)
-                        {
-                            fn_tmp.compose(fn_out1,myref_number,"xmp");
-                            SFclasses1.insert(fn_tmp);
-                            DFclasses1.append_comment(fn_tmp);
-                            docline(5) = w1;
-                            DFclasses1.append_data_line(docline);
-                        }
-                        if (w2 > 0.)
-                        {
-                            fn_tmp.compose(fn_out2,myref_number,"xmp");
-                            SFclasses2.insert(fn_tmp);
-                            DFclasses2.append_comment(fn_tmp);
-                            docline(5) = w2;
-                            DFclasses2.append_data_line(docline);
-                        }
-                    }
                     if (nr_iter > 0 )
                     {
                         int nr_images = ROUND(output_values[4] / AVG_OUPUT_SIZE);
@@ -371,29 +295,8 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
                 }    
             }         
 
-            SelFile          auxSF;
-            DocFile          auxDF;
-            fn_tmp=fn_out+"es.sel";
-            auxSF=SFclasses.sort_by_filenames();
-            auxSF.write(fn_tmp);
-            fn_tmp=fn_out+"es.doc";
-            auxDF=DFclasses.sort_by_filenames();
-            auxDF.write(fn_tmp);
-            if (do_split)
-            {
-                fn_tmp=fn_out1+"es.sel";
-                auxSF=SFclasses1.sort_by_filenames();
-                auxSF.write(fn_tmp);
-                fn_tmp=fn_out1+"es.doc";
-                auxDF=DFclasses1.sort_by_filenames();
-                auxDF.write(fn_tmp);
-                fn_tmp=fn_out2+"es.sel";
-                auxSF=SFclasses2.sort_by_filenames();
-                auxSF.write(fn_tmp);
-                fn_tmp=fn_out2+"es.doc";
-                auxDF=DFclasses2.sort_by_filenames();
-                auxDF.write(fn_tmp);
-            }
+            // Write selfiles and docfiles with all class averages
+            finalWriteToDisc();
             if (nr_iter > 0)
             {
                 // Write new document file

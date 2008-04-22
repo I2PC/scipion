@@ -50,7 +50,7 @@ public:
     /** Input and library docfiles */
     DocFile          DF, DFlib;
     /** Output rootnames */
-    FileName         fn_out, fn_out1, fn_out2;
+    FileName         fn_out, fn_out1, fn_out2, fn_wien;
     /** Column numbers */
     int              col_rot, col_tilt, col_psi, col_xshift, col_yshift, col_mirror, col_select, col_ref;          
     /** Upper and lower absolute and relative selection limits */
@@ -65,7 +65,15 @@ public:
     ImageXmipp       Iempty;
     /** Skip writing of selfiles */
     bool             dont_write_selfiles;
-    
+    /** Add output to existing files */
+    bool             do_add;
+    /** Wiener filter image */
+    Matrix2D<double> Mwien;
+    /** Selfiles containing all class averages */
+    SelFile          SFclasses, SFclasses1, SFclasses2;
+    /** Docfiles containing information about all class averages */
+    DocFile          DFclasses, DFclasses1, DFclasses2;
+
     /** Re-alignment of classes */
 
     /** Inner and outer radius for rotational alignment */
@@ -107,6 +115,9 @@ public:
                     int dirno,
                     double * my_output);
 
+  /** Apply Wiener filter */
+  void applyWienerFilter(Matrix2D<double> &img);
+
   /** Process a single class */
   void processOneClass(int &dirno, 
                        double * my_output);
@@ -118,6 +129,20 @@ public:
                    FileName   fn,                                                 
                    bool       write_selfile,
                    FileName   oext="xmp");
+
+  /** Add an image to the selfile and docfile of all class averages */
+  void addClassAverage(int dirno,
+                       double w,
+                       double w1,
+                       double w2);
+
+  /** Merge existing docfile for all class averages with current one
+      sum weights for entries occurring in both docfiles! */
+  void mergeDocfiles(FileName fn_old, DocFile &DF);
+
+  /** Write selfile and docfile of all class averages to disc */
+  void finalWriteToDisc();
+ 
 
 };
 //@}

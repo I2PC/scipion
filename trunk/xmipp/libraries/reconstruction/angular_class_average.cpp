@@ -31,7 +31,15 @@ void Prog_angular_class_average_prm::read(int argc, char **argv)  {
     // Read command line
     DF.read(getParameter(argc, argv, "-i"));
     DFlib.read(getParameter(argc, argv, "-lib"));
-    fn_out = getParameter(argc, argv, "-o");
+    if (checkParameter(argc, argv, "-add_to"))
+    {
+        do_add = true;
+        fn_out = getParameter(argc, argv, "-add_to");
+    }
+    else
+    {
+        fn_out = getParameter(argc, argv, "-o");
+    }
     col_ref = textToInteger(getParameter(argc, argv, "-refno","6"));
     col_ref--;
     col_select = textToInteger(getParameter(argc, argv, "-select", "8"));
@@ -62,6 +70,9 @@ void Prog_angular_class_average_prm::read(int argc, char **argv)  {
     
     // Perform splitting of the data?
     do_split = checkParameter(argc, argv, "-split"); 
+
+    // Perform Wiener filtering of average?
+    fn_wien = getParameter(argc, argv, "-wien","");
 
     // Skip writing selfiles?
     dont_write_selfiles = checkParameter(argc, argv, "-dont_write_selfiles"); 
@@ -127,8 +138,10 @@ void Prog_angular_class_average_prm::usage() {
     printf("   angular_class_average \n");
     printf("        -i <docfile>        : docfile with assigned angles for all experimental particles\n");
     printf("        -lib <docfile>      : docfile with angles used to generate the projection matching library\n");
-    printf("       [-o <rootname=class>]: output rootname for class averages and selfiles\n");
-    printf("       [-split ]            : also output averages of random halves of the data\n");
+    printf("        -o <rootname>       : output rootname for class averages and selfiles\n");
+    printf("    OR: -add_to <rootname>  : Add output to existing files\n");
+    printf("       [-split ]            : Also output averages of random halves of the data\n");
+    printf("       [-wien <img=\"\"> ]    : Apply this Wiener filter to the averages\n");    
     printf("       [-refno  <int=6>]    : Column number in docfile to use for class number\n");
     printf("       [-dont_write_selfiles]  : Do not write class selfiles to disc\n");
     printf(" IMAGE SELECTION BASED ON INPUT DOCFILE \n");
@@ -153,6 +166,16 @@ void Prog_angular_class_average_prm::produceSideInfo() {
     
     FileName fn_tst, fn_img;
 
+    // Initialize selfiles and docfiles for all class averages
+    std::string header="Headerinfo columns: rot (1) , tilt (2), psi (3), Xoff (4), Yoff (5), Weight (6), Flip (7)";
+    DFclasses.append_comment(header);
+    if (do_split)
+    {
+        DFclasses1.append_comment(header);
+        DFclasses2.append_comment(header);
+    }
+
+    // Set up output rootnames
     if (do_split)
     {
 	fn_out1 = fn_out+"_split_1_class";
@@ -186,6 +209,9 @@ void Prog_angular_class_average_prm::produceSideInfo() {
     Iempty.read(fn_img);
     Iempty().setXmippOrigin();
     Iempty().initZeros();
+
+    // Read Wiener filter image
+    if (fn_wien!="") Mwien.read(fn_wien);
 
     // Set ring defaults
     if (Ri<1) Ri=1;
@@ -448,6 +474,17 @@ void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
 
 
 }
+void Prog_angular_class_average_prm::applyWienerFilter(Matrix2D<double> &img)
+{
+    Matrix2D<std::complex<double> > Faux;
+    FourierTransform(img,Faux);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mwien)
+    {
+        dMij(Faux,i,j) *= dMij(Mwien,i,j);
+    }
+    InverseFourierTransform(Faux,img);
+}
+
 
 void Prog_angular_class_average_prm::processOneClass(int &dirno, 
                                                      double * my_output) {
@@ -554,6 +591,13 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
         w2 = avg2.weight();
     }
 
+    // Apply Wiener filters
+    if (fn_wien != "")
+    {
+        applyWienerFilter(avg1());
+        applyWienerFilter(avg2());
+    }
+
     // Output total and split averages and selfiles to disc
     SFclass = SFclass1 + SFclass2;
     avg() = avg1() + avg2();
@@ -582,20 +626,41 @@ void Prog_angular_class_average_prm::writeToDisc(ImageXmipp avg,
                                                  bool       write_selfile,
                                                  FileName   oext)
 {
-    FileName fn_tmp;
-    double w = avg.weight();
+    FileName   fn_tmp;
+    double     w = avg.weight(), w_old;
+    ImageXmipp old;
+    SelFile    SFold;
 
     if (w > 0.)
     {
 	avg()/=w;
-	// Write class average to disc
-	fn_tmp.compose(fn,dirno,oext);
-	avg.write(fn_tmp);
+        // Write class average to disc
+        fn_tmp.compose(fn,dirno,oext);
+        if (do_add && exists(fn_tmp) )
+        {
+            old.read(fn_tmp);
+            w_old = old.weight();
+            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(old())
+            {
+                dMij(old(),i,j) = ( w_old * dMij(old(),i,j) + w * dMij(avg(),i,j) ) / (w_old + w);
+            }
+            old.weight() = w_old + w;
+            old.write(fn_tmp);
+        }
+        else
+        {
+            avg.write(fn_tmp);
+        }
 	// Write class selfile to disc
 	if (write_selfile)
 	{
 	    fn_tmp.compose(fn,dirno,"sel");
-	    SF.write(fn_tmp);
+            if (do_add && exists(fn_tmp) ) 
+            {
+                SF.merge(fn_tmp);
+                SF.sort_by_filenames();
+            }
+            SF.write(fn_tmp);
 	}
         
         if (ROUND(w) != SF.ImgNo())
@@ -604,4 +669,126 @@ void Prog_angular_class_average_prm::writeToDisc(ImageXmipp avg,
             REPORT_ERROR(1,"Selfile and average weight do not correspond!");
         }
     }
+}
+
+
+void Prog_angular_class_average_prm::addClassAverage(int dirno,
+                                                     double w,
+                                                     double w1,
+                                                     double w2)
+{
+    
+    Matrix1D<double> docline(7);
+    FileName fn_tmp;
+
+    DFlib.locate(dirno);
+    docline(0) = DFlib(col_rot);
+    docline(1) = DFlib(col_tilt);
+
+    if (w > 0.)
+    {
+        fn_tmp.compose(fn_out,dirno,"xmp");
+        SFclasses.insert(fn_tmp);
+        DFclasses.append_comment(fn_tmp);
+        docline(5) = w;
+        DFclasses.append_data_line(docline);
+    }
+    if (do_split)
+    {
+        if (w1 > 0.)
+        {
+            fn_tmp.compose(fn_out1,dirno,"xmp");
+            SFclasses1.insert(fn_tmp);
+            DFclasses1.append_comment(fn_tmp);
+            docline(5) = w1;
+            DFclasses1.append_data_line(docline);
+        }
+        if (w2 > 0.)
+        {
+            fn_tmp.compose(fn_out2,dirno,"xmp");
+            SFclasses2.insert(fn_tmp);
+            DFclasses2.append_comment(fn_tmp);
+            docline(5) = w2;
+            DFclasses2.append_data_line(docline);
+        }
+    }
+
+}
+
+void Prog_angular_class_average_prm::mergeDocfiles(FileName fn_old, DocFile &DF)
+{
+    DocFile  DFold;
+    DocLine  DL;
+    SelFile  SF;
+    FileName fn_img;
+    double   w;
+
+    DFold.read(fn_old);
+    DFold.get_selfile(SF);
+
+    SF.go_beginning();
+    while (!SF.eof())
+    {
+        fn_img=SF.NextImg();
+        DFold.search_comment(fn_img);
+        DL=DFold.get_current_line();
+        if (DF.search_comment(fn_img))
+        {
+            // Just add weights
+            w = DF(5) + DFold(5);
+            DF.set(5,w);
+        }        
+        else
+        {
+            // Add new line
+            DF.append_comment(fn_img);
+            DF.append_line(DL);
+        }
+    }
+
+}
+
+void Prog_angular_class_average_prm::finalWriteToDisc()
+{
+
+    FileName fn_tmp;
+    SelFile  auxSF;
+    DocFile  auxDF;
+
+    // Write selfiles containing all classes
+    fn_tmp=fn_out+"es.sel";
+    if (do_add && exists(fn_tmp)) SFclasses.merge(fn_tmp);
+    auxSF=SFclasses.sort_by_filenames();
+    auxSF.write(fn_tmp);
+    if (do_split)
+    {
+        fn_tmp=fn_out1+"es.sel";
+        if (do_add && exists(fn_tmp)) SFclasses1.merge(fn_tmp);
+        auxSF=SFclasses1.sort_by_filenames();
+        auxSF.write(fn_tmp);
+        fn_tmp=fn_out2+"es.sel";
+        if (do_add && exists(fn_tmp)) SFclasses2.merge(fn_tmp);
+        auxSF=SFclasses2.sort_by_filenames();
+        auxSF.write(fn_tmp);
+    }
+
+    // Write docfiles with angles and weights of all classes
+    // TODO: STILL HANDLE DO_ADD!!!!
+    // I WILL HAVE TO SUM WEIGHTS IF DOUBLE ENTRIES!!
+    fn_tmp=fn_out+"es.doc";
+    if (do_add && exists(fn_tmp)) mergeDocfiles(fn_tmp, DFclasses);
+    auxDF=DFclasses.sort_by_filenames();
+    auxDF.write(fn_tmp);
+    if (do_split)
+    {
+        fn_tmp=fn_out1+"es.doc";
+        if (do_add && exists(fn_tmp)) mergeDocfiles(fn_tmp, DFclasses1);
+        auxDF=DFclasses1.sort_by_filenames();
+        auxDF.write(fn_tmp);
+        fn_tmp=fn_out2+"es.doc";
+        if (do_add && exists(fn_tmp)) mergeDocfiles(fn_tmp, DFclasses2);
+        auxDF=DFclasses2.sort_by_filenames();
+        auxDF.write(fn_tmp);
+    }
+
 }
