@@ -505,6 +505,7 @@ class projection_matching_class:
                 _DoCtfCorrection,
                 _CTFDatName,
                 _WienerConstant,
+                _SplitDefocusDocFile,
                 _DataArePhaseFlipped,
                 _ReferenceIsCtfCorrected,
                 _WorkDirectory,
@@ -551,6 +552,7 @@ class projection_matching_class:
        self._ResolSam=_ResolSam
        self._DoCtfCorrection=_DoCtfCorrection
        self._WienerConstant=_WienerConstant
+       self._SplitDefocusDocFile=os.path.abspath(_SplitDefocusDocFile)
        self._DataArePhaseFlipped=_DataArePhaseFlipped
        self._DoParallel=_DoParallel
        self._MyNumberOfCPUs=_MyNumberOfCPUs
@@ -609,6 +611,15 @@ class projection_matching_class:
        self._SelFileName=os.path.abspath(self._WorkDirectory + '/' + _SelFileName)
        newsel.write(self._SelFileName)
        
+       # For ctf groups, also create a CTFdat file with absolute pathname in the WorkingDir
+       if (self._DoCtfCorrection):
+          import ctfdat
+          myctfdat=ctfdat.ctfdat()
+          myctfdat.read(_CTFDatName)
+          newctfdat=myctfdat.make_abspath()
+          self._CTFDatName=os.path.abspath(self._WorkDirectory + '/' + _CTFDatName)
+          newctfdat.write(self._CTFDatName)
+
        # Set self._OuterRadius
        if (_OuterRadius < 0):
           xdim,ydim=newsel.imgSize()
@@ -636,10 +647,12 @@ class projection_matching_class:
 
        # Make CTF groups
        if (self._DoCtfCorrection):
-          self._NumberOfCtfGroups=execute_ctf_groups(self._SelFileName,
-                                                     self._CtfDatName,
+          self._NumberOfCtfGroups=execute_ctf_groups(self._mylog,
+                                                     self._SelFileName,
+                                                     self._CTFDatName,
                                                      self._DataArePhaseFlipped,
-                                                     self._WienerConstant)
+                                                     self._WienerConstant,
+                                                     self._SplitDefocusDocFile)
        else:
           self._NumberOfCtfGroups=1
 
@@ -682,10 +695,10 @@ class projection_matching_class:
           self._mylog.info(debug_string)
 
           # Never allow DoAlign2D and DoCtfCorrection together
-          if (arg.getComponentFromVector(_DoAlign2D,_iteration_number-1) and
+          if (arg.getComponentFromVector(_DoAlign2D,_iteration_number-1)==1 and
               self._DoCtfCorrection):
              error_message="You cannot realign classes AND perform CTF-correction. Switch either of them off!"
-             _mylog.error(error_message)
+             self._mylog.error(error_message)
              print error_message
              exit(1)
 
@@ -744,7 +757,6 @@ class projection_matching_class:
                                          self._NumberOfCtfGroups,
                                          self._WienerConstant,
                                          self._ReferenceIsCtfCorrected,
-                                         self._DataArePhaseFlipped,
                                          self._AngSamplingRateDeg,
                                          self._PerturbProjectionDirections,
                                          self._DoRetricSearchbyTiltAngle,
@@ -844,6 +856,7 @@ class projection_matching_class:
           # Remove all class averages and reference projections
           if (self._CleanUpFiles):
              execute_cleanup(self._mylog,
+                             self._DoCtfCorrection,
                              True,
                              True,
                              True)
@@ -878,12 +891,15 @@ def create_working_directory(_mylog,_WorkDirectory):
 #------------------------------------------------------------------------
 #make ctf groups
 #------------------------------------------------------------------------
-def execute_ctf_groups (_InPutSelfile,
+def execute_ctf_groups (_mylog,
+                        _InPutSelfile,
                         _CtfDatFile,
                         _DataArePhaseFlipped,
-                        _WienerConstant):
+                        _WienerConstant,
+                        _SplitDefocusDocFile):
 
    import os,glob
+   import utils_xmipp
 
    if not os.path.exists(CtfGroupDirectory):
       os.makedirs(CtfGroupDirectory)
@@ -903,7 +919,8 @@ def execute_ctf_groups (_InPutSelfile,
    _mylog.info(command)
    os.system(command)
 
-   ctflist=glob.glob(CtfGroupDirectory + '/' + CtfGroupRootName+'_group??????.ctf')
+   wildcardname=utils_xmipp.composeWildcardFileName(CtfGroupDirectory + '/' + CtfGroupRootName+'_group','ctf')
+   ctflist=glob.glob(wildcardname)
    return len(ctflist)
 
 #------------------------------------------------------------------------
@@ -964,7 +981,6 @@ def execute_projection_matching(_mylog,
                                 _NumberOfCtfGroups,
                                 _WienerConstant,
                                 _ReferenceIsCtfCorrected,
-                                _DataArePhaseFlipped,
                                 _AngSamplingRateDeg,
                                 _PerturbProjectionDirections,
                                 _DoRetricSearchbyTiltAngle,
@@ -996,8 +1012,8 @@ def execute_projection_matching(_mylog,
                                 _iteration_number):
                                            
    _mylog.debug("execute_projection_matching")
-   import os,shutil,string
-   import launch_parallel_job,selfile, docfiles
+   import os, shutil, string, glob, math
+   import launch_parallel_job, selfile, docfiles, utils_xmipp
    RunInBackground=False
 
    print '*********************************************************************'
@@ -1017,7 +1033,6 @@ def execute_projection_matching(_mylog,
               ' -angular_distance -1'
 
    if (_PerturbProjectionDirections):
-      import math
       # Just follow Roberto's suggestion
       perturb=math.sin(math.radians(float(_AngSamplingRateDeg)))/4.
       parameters+= \
@@ -1046,13 +1061,15 @@ def execute_projection_matching(_mylog,
    for ictf in range(_NumberOfCtfGroups):
    
       if (_DoCtfCorrection):
-         outputname=ProjMatchRootName + '_' + CtfGroupName + '_' + str(ictf)
-         selfile = '../' + CtfGroupDirectory + '/' + CtfGroupName + '_' + str(ictf) + '.sel'
-         inputdocfile = (os.path.basename(selfile)).replace('.sel','.doc')
+         CtfGroupName=CtfGroupRootName + '_group'
+         CtfGroupName=utils_xmipp.composeFileName(CtfGroupName,ictf+1,'')
+         outputname=ProjMatchRootName + '_' + CtfGroupName 
+         inselfile = '../' + CtfGroupDirectory + '/' + CtfGroupName + '.sel'
+         inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
          command='xmipp_docfile_select_subset ' + \
-                 '-i   ' + _InputDocFileName + \
-                 '-sel ' + selfile + \
-                 '-o   ' + inputdocfile
+                 ' -i   ' + _InputDocFileName + \
+                 ' -sel ' + inselfile + \
+                 ' -o   ' + inputdocfile
          print '*********************************************************************'
          print '* ',command
          _mylog.info(command) 
@@ -1074,12 +1091,9 @@ def execute_projection_matching(_mylog,
                   ' -mem '            + str(_AvailableMemory)
 
       if (_DoCtfCorrection and _ReferenceIsCtfCorrected):
-         ctfparamfile = '../' + CtfGroupDirectory + '/' + CtfGroupName + '_' + str(ictf) + '.ctfparam'
+         ctffile = '../' + CtfGroupDirectory + '/' + CtfGroupName + '.ctf'
          parameters += \
-                  ' -ctf '            + ctfparamfile
-         if (_DataArePhaseFlipped):
-            parameters += \
-                  ' -phase_flipped '
+                  ' -ctf '            + ctffile
 
       if (_DoControl):
          parameters += \
@@ -1099,6 +1113,7 @@ def execute_projection_matching(_mylog,
       parameters =  ' -i '      + outputname + '.doc'  + \
                     ' -lib '    + ProjectLibraryRootName + '_angles.doc' + \
                     ' -o '      + outputname + \
+                    ' -dont_write_selfiles ' + \
                     ' -limit0 ' + str(MinimumCrossCorrelation) + \
                     ' -limitR ' + str(DiscardPercentage)
       if (_DoAlign2D == '1'):
@@ -1133,13 +1148,13 @@ def execute_projection_matching(_mylog,
          shutil.move(outputdocfile,_OutputDocFileName)
       else:
          # Append ctf-group docfile to a single one called _OutputDocFileName
-         mydocfile = ProjMatchRootName + '_' + CtfGroupName 
+         mydocfile = ProjMatchRootName + '_' + CtfGroupRootName 
          if (os.path.exists(_OutputDocFileName)):
             command='xmipp_docfile_append ' + \
                     ' -i1 ' + _OutputDocFileName + \
                     ' -i2 ' + outputdocfile + \
-                    '-remove_multiple Headerinfo ' + \
-                    '-o ' + _OutputDocFileName
+                    ' -remove_multiple Headerinfo ' + \
+                    ' -o ' + _OutputDocFileName
             print '* ',command
             _mylog.info(command) 
             os.system(command)
@@ -1151,12 +1166,8 @@ def execute_projection_matching(_mylog,
          # THEN ON-THE-FLY CORRECT WIENER FILTER FOR EACH CTFGROUP AND ADD TO AVERAGE
          # DELETE ALL FILES FOR THIS CTFGROUP TO PREVENT FILLING THE DISC
 
-         # TODO: WHAT HAPPENS WITH SPLITS???????
-
          # Apply Wiener filter to the class averages (overwrite originals)
-         import utils_xmipp
-         wienername = utils_xmipp.composeFileName(CtfGroupRootName+'_group',ictf,'wien')
-         wiener_filter = '../' + CtfGroupDirectory + '/' + wienername
+         wiener_filter = '../' + CtfGroupDirectory + '/' + CtfGroupName + '.wien'
          command = 'xmipp_fourier_filter ' + \
                    ' -i ' + outputname + '_classes.sel' + \
                    ' -fourier_mask ' + wiener_filter 
@@ -1165,53 +1176,51 @@ def execute_projection_matching(_mylog,
          _mylog.info(command) 
          os.system(command)
 
-         import glob
-         for classaverage in glob.glob(ProjMatchRootName + \
-                                          '_' + CtfGroupName+'_' + str(ictf) + '_class??????.xmp'):
-            
-            # Add classaverage to sum of classaverages over all CTF groups
-            # and delete current classaverage
-            sumaverage=classaverage.replace(CtfGroupName+'_' + str(ictf) + '_class', 'class')
-            tmpselfile = sumaverage.replace('.xmp','.sel')
-            if (os.path.exists(sumaverage)):
-               command = 'xmipp_selfile_create " ' + classaverage + ' ' + sumaverage + ' " > ' + tmpselfile
-               print '* ',command
-               _mylog.info(command) 
-               os.system(command)
-               command = 'xmipp_average -only_avg -weighted_avg -keep_first_header -i ' + tmpselfile 
-               print '* ',command
-               _mylog.info(command) 
-               os.system(command)
-               os.remove(classaverage)
-            else:
-               os.move(classaverage, sumaverage);
+         # Join Wiener-filter corrected class averages of all CTF groups
+         inputrootname=ProjMatchRootName + '_' + CtfGroupName + '_class'
+         join_ctf_corrected_class_averages(_mylog,
+                                           inputrootname,
+                                           CtfGroupName)
+
+         # Also join class averages of slpit_1 and split_2
+         if (_DoComputeResolution):
+            inputrootname=ProjMatchRootName + '_' + CtfGroupName + '_split_1_class'
+            join_ctf_corrected_class_averages(_mylog,
+                                              inputrootname,
+                                              CtfGroupName)
+            inputrootname=ProjMatchRootName + '_' + CtfGroupName + '_split_2_class'
+            join_ctf_corrected_class_averages(_mylog,
+                                              inputrootname,
+                                              CtfGroupName)
+              
 
    # End loop over all CTF groups
 
    if (_DoCtfCorrection):
       # remake classes selfile and docfile
-      command = 'xmipp_selfile_create " ' + ProjMatchRootName + \
-                '_class??????.xmp " >' + ProjMatchRootName + '_classes.sel'
-      print '* ',command
-      _mylog.info(command) 
-      os.system(command)
-      print '*********************************************************************'
-      print '* Extracting angles from ' + ProjMatchRootName + '_classes.sel'
-      command='xmipp_header_extract -i ' + ProjMatchRootName + '_classes.sel' + \
-          ' -o ' + ProjMatchRootName + '_classes.doc'
-      self._mylog.info(command)
-      os.system(command)
-      
-
+      wildcardname=utils_xmipp.composeWildcardFileName(ProjMatchRootName + '_class', 'xmp')
+      remake_ctf_corrected_class_average_selfile_and_docfile(_mylog,
+                                                             wildcardname,
+                                                             ProjMatchRootName)
+      if (_DoComputeResolution):
+        wildcardname=utils_xmipp.composeWildcardFileName(ProjMatchRootName + '_split_1_class', 'xmp')
+        remake_ctf_corrected_class_average_selfile_and_docfile(_mylog,
+                                                               wildcardname,
+                                                               ProjMatchRootName + '_split_1')
+        wildcardname=utils_xmipp.composeWildcardFileName(ProjMatchRootName + '_split_2_class', 'xmp')
+        remake_ctf_corrected_class_average_selfile_and_docfile(_mylog,
+                                                               wildcardname,
+                                                               ProjMatchRootName + '_split_2')
+                
    # Make absolute path so visualization protocol can be run from the same directory
    # Make selfile with reference projections, class averages and realigned averages
-   classes_sel_file=selfile.selfile()
-   classes_sel_file.read(ProjMatchRootName+'_classes.sel')
-   library_sel_file=classes_sel_file.replace_string(ProjMatchRootName+'_class',
+   classselfile=selfile.selfile()
+   classselfile.read(ProjMatchRootName+'_classes.sel')
+   library_sel_file=classselfile.replace_string(ProjMatchRootName+'_class',
                                                         ProjectLibraryRootName);
-   before_alignment_sel_file=classes_sel_file.replace_string('.xmp','.ref.xmp');
+   before_alignment_sel_file=classselfile.replace_string('.xmp','.ref.xmp');
    before_alignment_sel_file.deactivate_all_images()
-   newsel=library_sel_file.intercalate_union_3(before_alignment_sel_file, classes_sel_file)
+   newsel=library_sel_file.intercalate_union_3(before_alignment_sel_file, classselfile)
    compare_sel_file=ProjMatchRootName+'_compare.sel'
    newsel=newsel.make_abspath()
    newsel.write(MultiAlign2dSel)
@@ -1230,6 +1239,61 @@ def execute_projection_matching(_mylog,
       print '* ',command
       _mylog.info(command) 
       os.system(command)
+
+#------------------------------------------------------------------------
+#join Wiener-filter corrected class averages of all CTF groups
+#------------------------------------------------------------------------
+def join_ctf_corrected_class_averages(_mylog,
+                                      _rootname,
+                                      _CtfGroupName):
+
+   import os, glob
+   import utils_xmipp
+
+   wildcardname=utils_xmipp.composeWildcardFileName(_rootname,'xmp')
+   print " * Joining class averages from ", wildcardname," to the Wiener-corrected sums"
+   for classaverage in glob.glob(wildcardname):
+      
+      # Add classaverage to sum of classaverages over all CTF groups
+      # and delete current classaverage
+      sumaverage=classaverage.replace('_' + _CtfGroupName, '')
+      tmpselfile = sumaverage.replace('.xmp','.sel')
+      if (os.path.exists(sumaverage)):
+         command = 'xmipp_selfile_create " ' + classaverage + ' ' + sumaverage + ' " > ' + tmpselfile
+         #print '* ',command
+         _mylog.info(command) 
+         os.system(command)
+         command = 'xmipp_average -only_avg -weighted_avg -keep_first_header -i ' + tmpselfile 
+         #print '* ',command
+         _mylog.info(command) 
+         os.system(command)
+         os.remove(classaverage)
+      else:
+         os.rename(classaverage, sumaverage);
+
+   # Also remove corresponding classes.sel and classes.doc
+   os.remove(_rootname+'es.sel')
+   os.remove(_rootname+'es.doc')
+
+
+#------------------------------------------------------------------------
+#join Wiener-filter corrected class averages of all CTF groups
+#------------------------------------------------------------------------
+def remake_ctf_corrected_class_average_selfile_and_docfile(_mylog,
+                                                           _wildcardname,
+                                                           _outputname):
+   import os
+   # remake classes selfile and docfile
+   command = 'xmipp_selfile_create " ' + _wildcardname + ' " >' + _outputname + '_classes.sel'
+   print '* ',command
+   _mylog.info(command) 
+   os.system(command)
+   print '*********************************************************************'
+   print '* Extracting angles from ' + _outputname + '_classes.sel'
+   command='xmipp_header_extract -i ' + _outputname + '_classes.sel' + \
+       ' -o ' + _outputname + '_classes.doc'
+   _mylog.info(command)
+   os.system(command)
 
 #------------------------------------------------------------------------
 #execute_reconstruction
@@ -1474,27 +1538,33 @@ def filter_at_given_resolution(_DoComputeResolution,
 #create_working directory
 #------------------------------------------------------------------------
 def execute_cleanup(_mylog,
+                    _DoCtfCorrection,
                     _DeleteClassAverages,
                     _DeleteReferenceProjections,
                     _DeleteSplitReconstructions):
    import os,glob
-
+   import utils_xmipp
+   
    if (_DeleteClassAverages):
       message=' CleanUp: deleting all class average files'
       print '* ',message
       _mylog.info(message)
-      for file in glob.glob(ProjMatchRootName+'_class??????.med.xmp'):
+      wildcardname=utils_xmipp.composeWildcardFileName(ProjMatchRootName+'_class','med.xmp')
+      for file in glob.glob(wildcardname):
          os.remove(file)
-      for file in glob.glob(ProjMatchRootName+'_class??????.xmp'):
+      wildcardname=utils_xmipp.composeWildcardFileName(ProjMatchRootName+'_class','xmp')
+      for file in glob.glob(wildcardname):
          os.remove(file)
-      for file in glob.glob(ProjMatchRootName+'_class??????.sel'):
+      wildcardname=utils_xmipp.composeWildcardFileName(ProjMatchRootName+'_class','sel')
+      for file in glob.glob(wildcardname):
          os.remove(file)
 
    if (_DeleteReferenceProjections):
       message=' CleanUp: deleting all reference projections '
       print '* ',message
       _mylog.info(message)
-      for file in glob.glob(ProjectLibraryRootName + '??????.xmp'):
+      wildcardname=utils_xmipp.composeWildcardFileName(ProjectLibraryRootName, 'xmp')
+      for file in glob.glob(wildcardname):
          os.remove(file)
 
    if (_DeleteSplitReconstructions):
@@ -1570,6 +1640,7 @@ if __name__ == '__main__':
                 DoCtfCorrection,
                 CTFDatName,
                 WienerConstant,
+                SplitDefocusDocFile,
                 DataArePhaseFlipped,
                 ReferenceIsCtfCorrected,
                 WorkDirectory,                  
