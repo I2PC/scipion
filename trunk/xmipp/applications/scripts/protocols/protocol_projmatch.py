@@ -869,7 +869,6 @@ class projection_matching_class:
           # Remove all class averages and reference projections
           if (self._CleanUpFiles):
              execute_cleanup(self._mylog,
-                             self._DoCtfCorrection,
                              True,
                              True,
                              True)
@@ -1031,6 +1030,14 @@ def execute_projection_matching(_mylog,
    import os, shutil, string, glob, math
    import launch_parallel_job, selfile, docfiles, utils_xmipp
    RunInBackground=False
+
+   # To use -add_to in angular_class_average correctly, 
+   # there should be no proj_match_class* files from previous runs. 
+   if (_DoCtfCorrection):
+      execute_cleanup(_mylog,
+                      True,
+                      False,
+                      False)
 
    print '*********************************************************************'
    print '* Create projection library'
@@ -1447,7 +1454,6 @@ def filter_at_given_resolution(_DoComputeResolution,
 #create_working directory
 #------------------------------------------------------------------------
 def execute_cleanup(_mylog,
-                    _DoCtfCorrection,
                     _DeleteClassAverages,
                     _DeleteReferenceProjections,
                     _DeleteSplitReconstructions):
