@@ -1482,7 +1482,7 @@ def execute_cleanup(_mylog,
       filenames.append(ProjectLibraryRootName+"_sampling.txt")
       filenames.append(ProjectLibraryRootName+"_vectors.doc")
       filenames.append(ProjectLibraryRootName+".sel")
-      for file in glob.glob(filenames):
+      for file in filenames:
          if os.path.exists(file):
             os.remove(file)
 
