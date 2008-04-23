@@ -61,6 +61,10 @@ public:
     bool             do_mirrors;
     /** Flag whether also to write out class averages of random halves of the data */
     bool             do_split;
+    /** Image dimensions before and after padding (only for Wiener correction) */
+    int              dim, paddim;
+    /** Padding factor */
+    double           pad;
     /** One empty image with correct dimensions */
     ImageXmipp       Iempty;
     /** Skip writing of selfiles */

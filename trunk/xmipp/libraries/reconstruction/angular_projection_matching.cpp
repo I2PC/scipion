@@ -37,6 +37,7 @@ void Prog_angular_projection_matching_prm::read(int argc, char **argv)  {
   fn_root = getParameter(argc,argv,"-o","out");
 
   // Additional commands
+  pad=XMIPP_MAX(1.,textToFloat(getParameter(argc,argv,"-pad","1.")));
   Ri=textToInteger(getParameter(argc,argv,"-Ri","-1"));
   Ro=textToInteger(getParameter(argc,argv,"-Ro","-1"));
   search5d_shift  = textToInteger(getParameter(argc,argv,"-search5d_shift","0"));
@@ -57,6 +58,8 @@ void Prog_angular_projection_matching_prm::show() {
   if (verb>0) {
     std::cerr << "  Input images            : "<< fn_exp << std::endl;
     std::cerr << "  Output rootname         : "<< fn_root << std::endl;
+    if (pad > 1.)
+        std::cerr << "  Padding factor          : "<< pad << std::endl;
     if (Ri>0)
 	std::cerr << "  Inner radius rot-search : "<<Ri<<std::endl;
     if (Ro>0)
@@ -114,6 +117,7 @@ void Prog_angular_projection_matching_prm::extendedUsage() {
 	    << " [ -max_shift <float=-1> ]     : Max. change in origin offset (+/- pixels; neg= no limit) \n"
 	    << " [ -ctf <filename> ]           : CTF to apply to the reference projections, either a  \n"
             << "                                 CTF parameter file or a 2D image with the CTF amplitudes\n"
+            << " [-pad <float=1>]              : Padding factor (for CTF correction only)\n"
 	    << " [ -phase_flipped ]            : Use this if the experimental images have been phase flipped\n";
   exit(1);
 }
@@ -146,6 +150,9 @@ void Prog_angular_projection_matching_prm::produceSideInfo() {
 	REPORT_ERROR(1,"BUG: no comment in DFexp where expected....");
     img.read(fn_img);
     dim = XSIZE(img());
+    
+    // Set padding dimension
+    paddim=ROUND(pad*dim);
 
     // Set max_shift
     if (max_shift<0) max_shift = dim/2;
@@ -213,6 +220,11 @@ void Prog_angular_projection_matching_prm::produceSideInfo() {
             ImageXmipp img;
             img.read(fn_ctf);
             Mctf=img();
+            if (XSIZE(Mctf) != paddim)
+            {
+                std::cerr<<"image size= "<<dim<<" padding factor= "<<pad<<" padded image size= "<<paddim<<" Wiener filter size= "<<XSIZE(Mctf)<<std::endl;
+                REPORT_ERROR(1,"Incompatible padding factor for this CTF filter");
+            }
         }
         else
         {
@@ -225,8 +237,8 @@ void Prog_angular_projection_matching_prm::produceSideInfo() {
             }
             ctf.enable_CTF = true;
             ctf.Produce_Side_Info();
-            ctf.Generate_CTF(dim, dim, ctfmask);
-            Mctf.resize(dim,dim);
+            ctf.Generate_CTF(paddim, paddim, ctfmask);
+            Mctf.resize(paddim,paddim);
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mctf)
             {
                 if (phase_flipped) dMij(Mctf, i, j) = fabs(dMij(ctfmask, i, j).real());
@@ -290,17 +302,30 @@ int Prog_angular_projection_matching_prm::getCurrentReference(int refno)
     img.read(fnt);
     img().setXmippOrigin();
 
-    // Apply CTF (this takes approx as long as calculating the polar
-    // transform etc.)
+    // Apply CTF
     if (fn_ctf!="")
     {
 	Matrix2D<std::complex<double> > Faux;
-	FourierTransform(img(),Faux);
+        if (paddim > dim)
+        {
+            // pad real-space image
+            int x0 = FIRST_XMIPP_INDEX(paddim);
+            int xF = LAST_XMIPP_INDEX(paddim);
+            img().window(x0, x0, xF,xF, 0.);
+        }
+        FourierTransform(img(),Faux);
 	FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mctf)
 	{
 	    dMij(Faux,i,j) *= dMij(Mctf,i,j);
 	}
 	InverseFourierTransform(Faux,img());
+        if (paddim > dim)
+        {
+            // de-pad real-space image
+            int x0 = FIRST_XMIPP_INDEX(dim);
+            int xF = LAST_XMIPP_INDEX(dim);
+            img().window(x0, x0, xF,xF, 0.);
+        }
     }
 
     // Calculate FTs of polar rings and its stddev

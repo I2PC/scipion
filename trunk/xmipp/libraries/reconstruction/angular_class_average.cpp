@@ -73,6 +73,7 @@ void Prog_angular_class_average_prm::read(int argc, char **argv)  {
 
     // Perform Wiener filtering of average?
     fn_wien = getParameter(argc, argv, "-wien","");
+    pad = XMIPP_MAX(1.,textToFloat(getParameter(argc, argv, "-pad","1.")));
 
     // Skip writing selfiles?
     dont_write_selfiles = checkParameter(argc, argv, "-dont_write_selfiles"); 
@@ -91,7 +92,10 @@ void Prog_angular_class_average_prm::show() {
 
     std::cerr << "  Input docfile           : "<< DF.name()<<std::endl;
     std::cerr << "  Library docfile         : "<< DFlib.name()<<std::endl;
-    std::cerr << "  Output rootname         : "<< fn_out<<std::endl;
+    if (do_add)
+        std::cerr << "  Add class averages to   : "<< fn_out<<std::endl;
+    else
+        std::cerr << "  Output rootname         : "<< fn_out<<std::endl;
     if (do_split)
 	std::cerr << "     -> Split data in random halves and output class averages "<<std::endl;
     if (do_mirrors)
@@ -125,6 +129,12 @@ void Prog_angular_class_average_prm::show() {
         if (Ro>0)
             std::cerr << "    Outer radius rot-search : "<<Ro<<std::endl;
     }
+    // Wiener filter correction
+    if (fn_wien != "")
+    {
+        std::cerr << "  PERFORM WIENER CORRECTION ON CLASS AVERAGES"<<std::endl;
+        std::cerr << "    Padding factor          : "<<pad<<std::endl;
+    }
 
     std::cerr << " ================================================================="<<std::endl;
 
@@ -142,6 +152,7 @@ void Prog_angular_class_average_prm::usage() {
     printf("    OR: -add_to <rootname>  : Add output to existing files\n");
     printf("       [-split ]            : Also output averages of random halves of the data\n");
     printf("       [-wien <img=\"\"> ]    : Apply this Wiener filter to the averages\n");    
+    printf("       [-pad <float=1.> ]   : Padding factor for Wiener correction\n");
     printf("       [-refno  <int=6>]    : Column number in docfile to use for class number\n");
     printf("       [-dont_write_selfiles]  : Do not write class selfiles to disc\n");
     printf(" IMAGE SELECTION BASED ON INPUT DOCFILE \n");
@@ -209,13 +220,23 @@ void Prog_angular_class_average_prm::produceSideInfo() {
     Iempty.read(fn_img);
     Iempty().setXmippOrigin();
     Iempty().initZeros();
+    dim = XSIZE(Iempty());
 
     // Read Wiener filter image
-    if (fn_wien!="") Mwien.read(fn_wien);
-
+    if (fn_wien!="") 
+    {
+        // Get padding dimensions
+        paddim = ROUND(pad * dim);
+        Mwien.read(fn_wien);
+        if (XSIZE(Mwien) != paddim)
+        {
+            std::cerr<<"image size= "<<dim<<" padding factor= "<<pad<<" padded image size= "<<paddim<<" Wiener filter size= "<<XSIZE(Mwien)<<std::endl;
+            REPORT_ERROR(1,"Incompatible padding factor for this Wiener filter");
+        }
+    }
     // Set ring defaults
     if (Ri<1) Ri=1;
-    if (Ro<0) Ro=(XSIZE(Iempty())/2)-1;
+    if (Ro<0) Ro=(dim/2)-1;
 
     // Set limitR
     if (do_limitR0 || do_limitRF)
@@ -477,12 +498,26 @@ void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
 void Prog_angular_class_average_prm::applyWienerFilter(Matrix2D<double> &img)
 {
     Matrix2D<std::complex<double> > Faux;
+    if (paddim > dim)
+    {
+        // pad real-space image
+        int x0 = FIRST_XMIPP_INDEX(paddim);
+        int xF = LAST_XMIPP_INDEX(paddim);
+        img.window(x0, x0, xF,xF, 0.);
+    }
     FourierTransform(img,Faux);
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mwien)
     {
         dMij(Faux,i,j) *= dMij(Mwien,i,j);
     }
     InverseFourierTransform(Faux,img);
+    if (paddim > dim)
+    {
+        // de-pad real-space image
+        int x0 = FIRST_XMIPP_INDEX(dim);
+        int xF = LAST_XMIPP_INDEX(dim);
+        img.window(x0, x0, xF,xF, 0.);
+    }
 }
 
 

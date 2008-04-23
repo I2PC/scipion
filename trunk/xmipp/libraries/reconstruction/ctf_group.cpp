@@ -35,6 +35,7 @@ void CtfGroupParams::read(int argc, char **argv)
     phase_flipped = checkParameter(argc, argv, "-phase_flipped");
     do_discard_anisotropy = checkParameter(argc, argv, "-discard_anisotropy");
     do_auto       = !checkParameter(argc, argv, "-split");
+    pad           = XMIPP_MAX(1., textToFloat(getParameter(argc, argv, "-pad","1")));
     if (do_auto)
     {
         max_error     = textToFloat(getParameter(argc, argv, "-error","0.5"));
@@ -56,7 +57,10 @@ void CtfGroupParams::show()
     std::cerr << "  Input sel file          : "<< fn_sel << std::endl;
     std::cerr << "  Input ctfdat file       : "<< fn_ctfdat << std::endl;
     std::cerr << "  Output rootname         : "<< fn_root << std::endl;
-    
+    if (pad > 1.)
+    {
+        std::cerr << "  Padding factor          : "<< pad << std::endl;
+    }
     if (do_discard_anisotropy)
     {
         std::cerr << " -> Exclude anisotropic CTFs from the groups"<<std::endl;
@@ -92,6 +96,7 @@ void CtfGroupParams::usage()
     std::cerr << "   -i <selfile>             : Input selfile \n"
               << "   -ctfdat <ctfdat file>    : Input CTFdat file for all data\n"
               << "  [-o <oext=\"ctf\">]        : Output root name\n"
+              << "  [-pad <float=1>]          : Padding factor \n"
 	      << "  [-phase_flipped]          : Output filters for phase-flipped data\n"
               << "  [-discard_anisotropy]     : Exclude anisotropic CTFs from groups\n"
               << "  [-wiener]                 : Also calculate Wiener filters\n"
@@ -127,12 +132,14 @@ void CtfGroupParams::produceSideInfo()
     SF.ImgSize(dim,ydim);
     if ( dim != ydim )
 	REPORT_ERROR(1,"ctfgroup ERROR%% Only squared images are allowed!");
-    Mctf.resize(dim,dim);
+
+    paddim = ROUND(pad*dim);
+    Mctf.resize(paddim,paddim);
     ctfdat.read(fn_ctfdat);
 
     if (do_wiener)
     {
-        Mwien.resize(dim,dim);
+        Mwien.resize(paddim,paddim);
         Mwien.initZeros();
     }
 
@@ -187,7 +194,7 @@ void CtfGroupParams::produceSideInfo()
                             resol_error = XMIPP_MIN(0.5, resol_error);
                             // and in pixels:
                             
-                            iresol_error = ROUND(resol_error * dim);
+                            iresol_error = ROUND(resol_error * paddim);
                             std::cerr<<" Resolution for error limit = "<<resol_error<< " (dig. freq.) = "<<iresol_error<<" (pixels)"<<std::endl;
                         }
                         is_first=false;
@@ -201,7 +208,7 @@ void CtfGroupParams::produceSideInfo()
                         avgdef = (ctf.DeltafU + ctf.DeltafV)/2.;
                         ctf.DeltafU = avgdef;
                         ctf.DeltafV = avgdef;
-                        ctf.Generate_CTF(dim, dim, ctfmask);
+                        ctf.Generate_CTF(paddim, paddim, ctfmask);
                         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(ctfmask)
                         {
                             if (phase_flipped) dMij(Mctf, i, j) = fabs(dMij(ctfmask, i, j).real());
@@ -429,7 +436,7 @@ void CtfGroupParams::writeOutputToDisc()
     for (int igroup=0; igroup < pointer_group2mic.size(); igroup++)
     {
         SFo.clear();
-        Mavg.initZeros(dim,dim);
+        Mavg.initZeros(paddim,paddim);
         sumw = 0.;
         avgdef = 0.;
         mindef = 99.e99;
@@ -483,9 +490,9 @@ void CtfGroupParams::writeOutputToDisc()
         oldmin = mindef;
         // 6. Write file with 1D profiles
         fh2.open((fnt+".ctf_profiles").c_str(), std::ios::out);
-        for (int i=0; i < dim/2; i++)
+        for (int i=0; i < paddim/2; i++)
         {
-            fh2 << floatToString((double)i / (pixel_size*dim));
+            fh2 << floatToString((double)i / (pixel_size*paddim));
             fh2.width(10);
             fh2 << floatToString(dMij(Mavg,i,0));
             fh2.width(10);
@@ -509,9 +516,9 @@ void CtfGroupParams::writeOutputToDisc()
             img.weight() = sumw;
             img.write(fnt+".wien");
             fh4.open((fnt+".wien_profile").c_str(), std::ios::out);
-            for (int i=0; i < dim/2; i++)
+            for (int i=0; i < paddim/2; i++)
             {
-                fh4 << floatToString((double)i / (pixel_size*dim));
+                fh4 << floatToString((double)i / (pixel_size*paddim));
                 fh4.width(10);
                 fh4 << floatToString(dMij(Mavg,i,0));
                 fh4.width(10);

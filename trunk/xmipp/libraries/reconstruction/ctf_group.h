@@ -58,8 +58,11 @@ public:
     /// Flag for phase-flipped data
     bool phase_flipped;
 
-    // Size of the images
-    int dim;
+    // Size of the images and of the output CTFs
+    int dim, paddim;
+
+    // Padding factor
+    double pad;
 
     // Flag whether to use automated
     bool do_auto;

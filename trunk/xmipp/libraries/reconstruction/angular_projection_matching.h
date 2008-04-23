@@ -57,8 +57,10 @@ public:
     DocFile DFexp;
     /** Selfile with experimental images */
     SelFile SFexp;
-    /** dimension of the images */
-    int dim;
+    /** dimension of the images and padded images */
+    int dim, paddim;
+    /** Padding factor (only for applying CTF to references) */
+    double pad;
     /** Maximum allowed shift */
     double max_shift;
     /** Inner and outer radii to limit the rotational search */
