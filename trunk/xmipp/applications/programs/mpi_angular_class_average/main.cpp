@@ -116,6 +116,23 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
         if (nr_iter > 0) reserve = DF.dataLineNo();
         output_values_size=AVG_OUPUT_SIZE*reserve+5;
         output_values = (double *) malloc(output_values_size*sizeof(double));
+        
+        // Only for do_add: append input docfile to add_to docfile
+        if (rank == 0 && do_add)
+        {
+            FileName fn_tmp=fn_out+".doc";
+            if (exists(fn_tmp)) 
+            {
+                DocFile DFaux = DF;
+                DFaux.merge(fn_tmp,DOCMERGE_ERROR);
+                DFaux.sort_by_filenames();
+                DFaux.write(fn_tmp);
+            }
+            else
+            {
+                DF.write(fn_tmp); 
+            }
+        }
     }
 
     /* Run --------------------------------------------------------------------- */
@@ -297,13 +314,7 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
 
             // Write selfiles and docfiles with all class averages
             finalWriteToDisc();
-            if (nr_iter > 0)
-            {
-                // Write new document file
-                fn_tmp=fn_out+"es_realigned.doc";
-                DF.write(fn_tmp);
-            }
-//            }
+
         }
         else //rank !=0
         {

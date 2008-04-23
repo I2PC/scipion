@@ -58,8 +58,6 @@ void Prog_angular_projection_matching_prm::show() {
   if (verb>0) {
     std::cerr << "  Input images            : "<< fn_exp << std::endl;
     std::cerr << "  Output rootname         : "<< fn_root << std::endl;
-    if (pad > 1.)
-        std::cerr << "  Padding factor          : "<< pad << std::endl;
     if (Ri>0)
 	std::cerr << "  Inner radius rot-search : "<<Ri<<std::endl;
     if (Ro>0)
@@ -84,6 +82,8 @@ void Prog_angular_projection_matching_prm::show() {
         if (Is_ImageXmipp(fn_ctf))
         {
             std::cerr << "  CTF image               :  " <<fn_ctf<<std::endl;
+            if (pad > 1.)
+                std::cerr << "  Padding factor          : "<< pad << std::endl;
         }
         else
         {

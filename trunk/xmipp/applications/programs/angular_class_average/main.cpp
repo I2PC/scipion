@@ -37,7 +37,6 @@ int main(int argc, char **argv)
     int              i, nmax, nr_ref, nr_images, reserve;
     double           ref_number, rot, tilt, psi, xshift, yshift, mirror;
     double           w, w1, w2;
-    FileName         fn_tmp;
     Matrix1D<double> dataline(8);
 
     // Get input parameters
@@ -47,7 +46,25 @@ int main(int argc, char **argv)
         prm.read(argc, argv);
         prm.produceSideInfo();
         prm.show();
+
+        // Only for do_add: append input docfile to add_to docfile
+        if (prm.do_add)
+        {
+            FileName fn_tmp=prm.fn_out+".doc";
+            if (exists(fn_tmp)) 
+            {
+                DocFile DFaux = prm.DF;
+                DFaux.merge(fn_tmp,DOCMERGE_ERROR);
+                DFaux.sort_by_filenames();
+                DFaux.write(fn_tmp);
+            }
+            else
+            {
+                prm.DF.write(fn_tmp); 
+            }
+        }
     }
+
     catch (Xmipp_error XE)
     {
         std::cout << XE;
@@ -106,13 +123,6 @@ int main(int argc, char **argv)
             
         }
         progress_bar(nr_ref);
-        
-        // Write new document file
-        if (prm.nr_iter > 0)
-        {
-            fn_tmp=prm.fn_out+"es_realigned.doc";
-            prm.DF.write(fn_tmp);
-        }
         
         // Write selfiles and docfiles with all class averages
         prm.finalWriteToDisc();

@@ -189,10 +189,9 @@ void Prog_angular_class_average_prm::produceSideInfo() {
     // Set up output rootnames
     if (do_split)
     {
-	fn_out1 = fn_out+"_split_1_class";
-	fn_out2 = fn_out+"_split_2_class";
+	fn_out1 = fn_out+"_split_1";
+	fn_out2 = fn_out+"_split_2";
     }
-    fn_out += "_class";
 
     // get column numbers from NewXmipp-type docfile header
     DF.go_beginning();
@@ -227,7 +226,9 @@ void Prog_angular_class_average_prm::produceSideInfo() {
     {
         // Get padding dimensions
         paddim = ROUND(pad * dim);
-        Mwien.read(fn_wien);
+        ImageXmipp It;
+        It.read(fn_wien);
+        Mwien=It();
         if (XSIZE(Mwien) != paddim)
         {
             std::cerr<<"image size= "<<dim<<" padding factor= "<<pad<<" padded image size= "<<paddim<<" Wiener filter size= "<<XSIZE(Mwien)<<std::endl;
@@ -640,11 +641,11 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
     avg.weight() = w;
     avg1.weight() = w1;
     avg2.weight() = w2;
-    writeToDisc(avg,dirno,SFclass,fn_out,!dont_write_selfiles);
+    writeToDisc(avg,dirno,SFclass,fn_out+"_class",!dont_write_selfiles);
     if (do_split)
     {
-        writeToDisc(avg1,dirno,SFclass1,fn_out1,!dont_write_selfiles);
-        writeToDisc(avg2,dirno,SFclass2,fn_out2,!dont_write_selfiles);
+        writeToDisc(avg1,dirno,SFclass1,fn_out1+"_class",!dont_write_selfiles);
+        writeToDisc(avg2,dirno,SFclass2,fn_out2+"_class",!dont_write_selfiles);
     }
     
     my_output[0] = (double)dirno;
@@ -722,7 +723,7 @@ void Prog_angular_class_average_prm::addClassAverage(int dirno,
 
     if (w > 0.)
     {
-        fn_tmp.compose(fn_out,dirno,"xmp");
+        fn_tmp.compose(fn_out+"_class",dirno,"xmp");
         SFclasses.insert(fn_tmp);
         DFclasses.append_comment(fn_tmp);
         docline(5) = w;
@@ -732,7 +733,7 @@ void Prog_angular_class_average_prm::addClassAverage(int dirno,
     {
         if (w1 > 0.)
         {
-            fn_tmp.compose(fn_out1,dirno,"xmp");
+            fn_tmp.compose(fn_out1+"_class",dirno,"xmp");
             SFclasses1.insert(fn_tmp);
             DFclasses1.append_comment(fn_tmp);
             docline(5) = w1;
@@ -740,7 +741,7 @@ void Prog_angular_class_average_prm::addClassAverage(int dirno,
         }
         if (w2 > 0.)
         {
-            fn_tmp.compose(fn_out2,dirno,"xmp");
+            fn_tmp.compose(fn_out2+"_class",dirno,"xmp");
             SFclasses2.insert(fn_tmp);
             DFclasses2.append_comment(fn_tmp);
             docline(5) = w2;
@@ -791,39 +792,45 @@ void Prog_angular_class_average_prm::finalWriteToDisc()
     DocFile  auxDF;
 
     // Write selfiles containing all classes
-    fn_tmp=fn_out+"es.sel";
+    fn_tmp=fn_out+"_classes.sel";
     if (do_add && exists(fn_tmp)) SFclasses.merge(fn_tmp);
     auxSF=SFclasses.sort_by_filenames();
     auxSF.write(fn_tmp);
     if (do_split)
     {
-        fn_tmp=fn_out1+"es.sel";
+        fn_tmp=fn_out1+"_classes.sel";
         if (do_add && exists(fn_tmp)) SFclasses1.merge(fn_tmp);
         auxSF=SFclasses1.sort_by_filenames();
         auxSF.write(fn_tmp);
-        fn_tmp=fn_out2+"es.sel";
+        fn_tmp=fn_out2+"_classes.sel";
         if (do_add && exists(fn_tmp)) SFclasses2.merge(fn_tmp);
         auxSF=SFclasses2.sort_by_filenames();
         auxSF.write(fn_tmp);
     }
 
     // Write docfiles with angles and weights of all classes
-    // TODO: STILL HANDLE DO_ADD!!!!
-    // I WILL HAVE TO SUM WEIGHTS IF DOUBLE ENTRIES!!
-    fn_tmp=fn_out+"es.doc";
-    if (do_add && exists(fn_tmp)) mergeDocfiles(fn_tmp, DFclasses);
+    fn_tmp=fn_out+"_classes.doc";
+    if (do_add && exists(fn_tmp)) DFclasses.merge(fn_tmp,DOCMERGE_SUM_COLUMN,5);
     auxDF=DFclasses.sort_by_filenames();
     auxDF.write(fn_tmp);
     if (do_split)
     {
-        fn_tmp=fn_out1+"es.doc";
-        if (do_add && exists(fn_tmp)) mergeDocfiles(fn_tmp, DFclasses1);
+        fn_tmp=fn_out1+"_classes.doc";
+        if (do_add && exists(fn_tmp)) DFclasses1.merge(fn_tmp,DOCMERGE_SUM_COLUMN,5);
         auxDF=DFclasses1.sort_by_filenames();
         auxDF.write(fn_tmp);
-        fn_tmp=fn_out2+"es.doc";
-        if (do_add && exists(fn_tmp)) mergeDocfiles(fn_tmp, DFclasses2);
+        fn_tmp=fn_out2+"_classes.doc";
+        if (do_add && exists(fn_tmp)) DFclasses2.merge(fn_tmp,DOCMERGE_SUM_COLUMN,5);
         auxDF=DFclasses2.sort_by_filenames();
         auxDF.write(fn_tmp);
+    }
+
+    // Write docfile with data for all realigned individual images
+    if (nr_iter > 0)
+    {
+        fn_tmp=fn_out+"_realigned.doc";
+        if (do_add && exists(fn_tmp)) DF.merge(fn_tmp,DOCMERGE_ERROR);
+        DF.write(fn_tmp);
     }
 
 }
