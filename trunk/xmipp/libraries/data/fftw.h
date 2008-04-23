@@ -1,4 +1,5 @@
-// @(#)root/fft:$Id: xmippFftw.h 20882 2007-11-19 11:31:26Z rdm $
+
+// class based in previous fftw wrapper by
 // Author: Anna Kreshuk   07/4/2006
 
 /*************************************************************************
@@ -61,6 +62,8 @@ class xmippFftw{
    double     *fOut;  
    /* size of fft_output array */
    int sizeout ;
+   /* total size of the transform */
+   int     fTotalSize;  
        
    unsigned MapFlag(std::string flag);
  protected:
@@ -72,8 +75,6 @@ class xmippFftw{
    int    *fN;         
    /** number of dimensions */
    int     fNdim;       
-   /* total size of the transform */
-   int     fTotalSize;  
    /** transform flags */
    std::string fFlags;    
    /**sign of the exponent of the transform 
@@ -264,11 +265,14 @@ specifying `FFTW_PATIENT' first plans in `FFTW_ESTIMATE' mode, then in
        or Transform */
    xmippFftw(Matrix3D<double> &img, bool my_inPlace, 
                                             bool already_reserved=true);
-
+                                            
    /** Modify Real Data so the Fourier trnasform is at the center
        Same function must be applied after Fourier inversion
     */
    void CenterRealDataBeforeTransform(void);
+   /** Delete fIn vector while keeping fOut. This is usefull if you
+       want to save memory */
+   void delete_fIn(void);
 
 };
 #include <sys/stat.h>
