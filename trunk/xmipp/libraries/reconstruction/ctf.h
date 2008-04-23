@@ -379,6 +379,19 @@ public:
         }
         return -K*(sine_part + Q0*cosine_part)*E;
     }
+    /// Compute CTF at (U,V) with no dumping. Continuous frequencies
+    inline double CTFpureNodumping_at(double X, double Y, bool show = false) const
+    {
+        double u2 = X * X + Y * Y;
+        double u = sqrt(u2);
+        double u4 = u2 * u2;
+        // if (u2>=ua2) return 0;
+        double deltaf = Deltaf(X, Y);
+        double argument = K1 * deltaf * u2 + K2 * u4;
+        double sine_part = sin(argument); // OK
+        double cosine_part = cos(argument);
+        return -K*(sine_part + Q0*cosine_part);
+    }
 
     /// Compute noise at (X,Y). Continuous frequencies, notice it is squared
     //#define DEBUG
