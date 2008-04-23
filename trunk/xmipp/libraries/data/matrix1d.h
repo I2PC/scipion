@@ -109,8 +109,8 @@ template <typename T> class Matrix2D;
  * @endcode
  */
 #define FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX1D(v1, v2) \
-    ispduptmp4 = MAX(STARTINGX(v1), STARTINGX(v2)); \
-    ispduptmp5 = MIN(FINISHINGX(v1), FINISHINGX(v2)); \
+    ispduptmp4 = XMIPP_MAX(STARTINGX(v1), STARTINGX(v2)); \
+    ispduptmp5 = XMIPP_MIN(FINISHINGX(v1), FINISHINGX(v2)); \
     for (int i=ispduptmp4; i<=ispduptmp5; i++)
 
 /** For all elements in the array, accessed physically
@@ -1562,8 +1562,8 @@ bool operator!=(const Matrix1D<T>& op1, const Matrix1D<T>& op2)
 template<typename T>
 void cutToCommonSize(Matrix1D<T>& V1, Matrix1D<T>& V2)
 {
-    int x0 = MAX(STARTINGX(V1), STARTINGX(V2));
-    int xF = MIN(FINISHINGX(V1), FINISHINGX(V2));
+    int x0 = XMIPP_MAX(STARTINGX(V1), STARTINGX(V2));
+    int xF = XMIPP_MIN(FINISHINGX(V1), FINISHINGX(V2));
     V1.window(x0, xF);
     V2.window(x0, xF);
 }
