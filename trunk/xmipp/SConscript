@@ -376,6 +376,7 @@ ReconsSources = [
     'foms_evaluate.cpp',
     'fourier_filter.cpp',
     'grids.cpp',
+    'micrograph_phase_flipping.cpp',
     'ml_align2d.cpp',
     'mlf_align2d.cpp',
     'ml_refine3d.cpp',
@@ -528,6 +529,7 @@ AddXmippProgram('make_spectra')
 AddXmippProgram('mask')
 AddXmippProgram('micrograph_denoise')
 AddXmippProgram('micrograph_downsample')
+AddXmippProgram('micrograph_phase_flipping',['XmippRecons'])
 AddXmippProgram('micrograph_scissor')
 AddXmippProgram('micrograph_window')
 AddXmippProgram('mirror')
