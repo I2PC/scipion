@@ -1249,6 +1249,68 @@ void DocFile::perturb_column(int col, double sigma)
 
 }
 
+//merge
+void DocFile::merge(const FileName& name, int mode, int sumcol)
+{
+    DocFile DFaux(name);
+    merge(DFaux, mode, sumcol);
+}
+
+//merge
+void DocFile::merge(DocFile& DF, int mode, int sumcol)
+{
+
+    DocLine  DL, DLold;
+    SelFile  SF;
+    FileName fn_img;
+    double   w;
+
+    DF.get_selfile(SF);
+    SF.go_beginning();
+    while (!SF.eof())
+    {
+        fn_img=SF.NextImg();
+        DF.search_comment(fn_img);
+        DL=DF.get_current_line();
+        if (search_comment(fn_img))
+        {
+            switch (mode)
+            {
+            case(DOCMERGE_KEEP_OLD):
+            {
+                // just keep what's there and do nothing
+                break;
+            }
+            case(DOCMERGE_KEEP_NEW):
+            {
+                //Replace current data line with the new one
+                (*current_line) = DL;
+                break;
+            }
+            case(DOCMERGE_SUM_COLUMN):
+            {
+                // Just sum column
+                w = (*current_line).data[sumcol] + DF(sumcol);
+                (*current_line).set(sumcol, w);
+                break;
+            }
+            case(DOCMERGE_ERROR):
+                std::cerr<<"image name = "<<fn_img;
+                REPORT_ERROR(1,"Image occured in two docfiles to be merged");
+            }
+        }        
+        else
+        {
+            // Just add new line at the end of the file
+            current_line = m.end();
+            append_comment(fn_img);
+            append_line(DL);
+        }
+    }
+
+}
+
+
 DocFile DocFile::random_discard(int n)
 {
     DocFile result;

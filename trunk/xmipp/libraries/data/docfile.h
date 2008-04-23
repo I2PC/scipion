@@ -1155,6 +1155,39 @@ public:
      */
     void perturb_column(int col, double sigma);
 
+
+    /** Merge a file from disk with an already read one.
+     * @ingroup DocFileHelpful
+     *
+     * This only works for NewXmipp-style docfiles.
+     * All image names in the docfile to be read and their corresponding data 
+     * lines  are added at the end of the current one if the image name was 
+     * not already present in the current one.
+     * In case image names occur in both files, there are three modes
+     * 
+     * DOCMERGE_KEEP_OLD: the dataline in the current docfile will be used
+     * DOCMERGE_KEEP_NEW: the dataline in the new docfile will be used
+     * DOCMERGE_SUM_COLUMN: the dataline in the current docfile will be used, 
+     *                     except for column number sumcol, whose value will 
+     *                     be summed over the old and new dataline.
+     *
+     * @code
+     * DF.read("g1t.sdoc");
+     * DF.merge("g2t.doc",DOCMERGE_KEEP_NEW);
+     * @endcode
+     */
+# define DOCMERGE_KEEP_OLD 1
+# define DOCMERGE_KEEP_NEW 2
+# define DOCMERGE_SUM_COLUMN 3
+# define DOCMERGE_ERROR 4
+
+    void merge(const FileName& name, int mode=DOCMERGE_KEEP_OLD, int sumcol=5);
+
+    /** Merge this file with another docfile.
+     * @ingroup DocFileHelpful
+     */
+    void merge(DocFile& DF, int mode=DOCMERGE_KEEP_OLD, int sumcol=5);
+
     /** Discard randomly N lines.
      * @ingroup DocFileHelpful
      *
