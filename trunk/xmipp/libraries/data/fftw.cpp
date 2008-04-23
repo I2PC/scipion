@@ -49,7 +49,9 @@ void xmippFftw::myxmippFftw(void)
    fPlan = NULL;
    fN    = NULL;
    sizeout=0;
-   destroy_fIn=true;
+   destroy_fIn=true;   
+   fTotalSize=1;
+
    wisdom_name="/tmp/myfftw";
 }
 
@@ -156,7 +158,6 @@ void xmippFftw::myxmippFftw(int ndim, int *n, bool my_inPlace,
       check_size*= (double)n[i];
    }
    check_size *= (double) sizeof(double);
-   std::cerr << "check_size INT_MAX " << check_size << " " << INT_MAX << std::endl;
    if (check_size > (double)INT_MAX)
       {
         std::cout << "Error allocating memory." << std::endl;
@@ -172,8 +173,8 @@ void xmippFftw::myxmippFftw(int ndim, int *n, bool my_inPlace,
    for (int i=0; i<fNdim; i++){
       fN[i] = n[i];
       fTotalSize*=n[i];
-   }
-   sizeout = int(double(fTotalSize)*(n[ndim-1]/2+1)/n[ndim-1]);
+   } 
+   sizeout = int(double(fTotalSize)*(int)(n[ndim-1]/2+1)/n[ndim-1])
    if (!inPlace){
       //fIn =malloc(sizeof(double)*fTotalSize);
       try
@@ -262,14 +263,14 @@ xmippFftw::~xmippFftw()
 
    fftw_destroy_plan((fftw_plan)fPlan);
    fPlan = 0;
-   if(destroy_fIn)
+   if(fIn!=NULL)
    {
        delete [] fIn;
        fIn = 0;
    }
    else
        fIn = 0;
-   if (!inPlace)
+   if (fOut!=NULL)
    {
        delete [] fOut;
    }
@@ -283,8 +284,19 @@ xmippFftw::~xmippFftw()
    }
    else
       fN = 0;
-
 }
+
+//_____________________________________________________________________________
+//sometimes memory is importan and you want to free fIn while keeping fOut
+void xmippFftw::delete_fIn()
+{
+   if(fIn!=NULL)
+   {
+       delete [] fIn;
+       fIn = 0;
+   }
+}
+
 
 //_____________________________________________________________________________
 void xmippFftw::Init(std::string flags,int sign,bool wisdom_flag)
@@ -312,6 +324,9 @@ void xmippFftw::Init(std::string flags,int sign,bool wisdom_flag)
 //save wishdon using a lock mechanism and 
 //delete when xmipp recompile -> ¿/tmp/fftw?
     /* Get any accumulated wisdom. */
+    if (fPlan != NULL)
+         fftw_destroy_plan((fftw_plan)fPlan);
+
     FILE *wisdom;
     if(wisdom_flag)
     {
@@ -331,11 +346,6 @@ void xmippFftw::Init(std::string flags,int sign,bool wisdom_flag)
        }
        else
        {
-          std::cerr << "Creating plan with: \n" 
-                    << "fNdim " <<  fNdim
-                    << " fN    " <<  fN[0] << " " << fN[1]    
-                    << " flags " <<  flags
-                    << "\n" ;
           fPlan = (void*)fftw_plan_dft_r2c(fNdim, fN, (double*)fIn, (fftw_complex*)fOut, MapFlag(flags));
        }
     }
