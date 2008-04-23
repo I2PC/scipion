@@ -1169,6 +1169,7 @@ def execute_projection_matching(_mylog,
 
       if (_DoCtfCorrection):
          os.remove(outputname + '.doc')
+         os.remove(inputdocfile)
 
    # End loop over all CTF groups
 
@@ -1463,6 +1464,9 @@ def execute_cleanup(_mylog,
       wildcardname=utils_xmipp.composeWildcardFileName(ProjMatchRootName+'_class','xmp')
       for file in glob.glob(wildcardname):
          os.remove(file)
+      wildcardname=ProjMatchRootName+'_split_?_class*'
+      for file in glob.glob(wildcardname):
+         os.remove(file)
       wildcardname=utils_xmipp.composeWildcardFileName(ProjMatchRootName+'_class','sel')
       for file in glob.glob(wildcardname):
          os.remove(file)
@@ -1474,6 +1478,13 @@ def execute_cleanup(_mylog,
       wildcardname=utils_xmipp.composeWildcardFileName(ProjectLibraryRootName, 'xmp')
       for file in glob.glob(wildcardname):
          os.remove(file)
+      filenames=[]
+      filenames.append(ProjectLibraryRootName+"_sampling.txt")
+      filenames.append(ProjectLibraryRootName+"_vectors.doc")
+      filenames.append(ProjectLibraryRootName+".sel")
+      for file in glob.glob(filenames):
+         if os.path.exists(file):
+            os.remove(file)
 
    if (_DeleteSplitReconstructions):
       message=' CleanUp: deleting reconstructions from random halves (for FSC)'
