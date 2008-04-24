@@ -174,8 +174,8 @@ void xmippFftw::myxmippFftw(int ndim, int *n, bool my_inPlace,
       fN[i] = n[i];
       fTotalSize*=n[i];
    } 
-   sizeout = int(double(fTotalSize)*(int)(n[ndim-1]/2+1)/n[ndim-1])
-   if (!inPlace){
+   sizeout = int(double(fTotalSize)*(int)(n[ndim-1]/2+1)/n[ndim-1]);
+   if (!inPlace) {
       //fIn =malloc(sizeof(double)*fTotalSize);
       try
       {
