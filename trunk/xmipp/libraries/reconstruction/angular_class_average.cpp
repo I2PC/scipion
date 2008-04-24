@@ -38,6 +38,7 @@ void Prog_angular_class_average_prm::read(int argc, char **argv)  {
     }
     else
     {
+	do_add = false;
         fn_out = getParameter(argc, argv, "-o");
     }
     col_ref = textToInteger(getParameter(argc, argv, "-refno","6"));
