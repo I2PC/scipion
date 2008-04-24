@@ -125,7 +125,7 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
             {
                 DocFile DFaux = DF;
                 DFaux.merge(fn_tmp,DOCMERGE_ERROR);
-                DFaux.sort_by_filenames();
+                DFaux = DFaux.sort_by_filenames();
                 DFaux.write(fn_tmp);
             }
             else

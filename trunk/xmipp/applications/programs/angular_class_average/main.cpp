@@ -55,7 +55,7 @@ int main(int argc, char **argv)
             {
                 DocFile DFaux = prm.DF;
                 DFaux.merge(fn_tmp,DOCMERGE_ERROR);
-                DFaux.sort_by_filenames();
+                DFaux = DFaux.sort_by_filenames();
                 DFaux.write(fn_tmp);
             }
             else
