@@ -2283,16 +2283,25 @@ std::ostream& operator<<(std::ostream& ostrm, const MultidimArray<T>& v)
 
     int prec = bestPrecision(max_val, 10);
 
-    for (int k = STARTINGZ(v); k <= FINISHINGZ(v); k++)
+    if (YSIZE(v)==1 && ZSIZE(v)==1)
     {
-        ostrm << "Slice No. " << k << std::endl;
-        for (int i = STARTINGY(v); i <= FINISHINGY(v); i++)
+        for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
+            ostrm << floatToString((double) DIRECT_VOL_ELEM(v, 0, 0, j), 10, prec)
+                  << std::endl;
+    }
+    else
+    {
+        for (int k = STARTINGZ(v); k <= FINISHINGZ(v); k++)
         {
-            for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
+            if (ZSIZE(v)>1) ostrm << "Slice No. " << k << std::endl;
+            for (int i = STARTINGY(v); i <= FINISHINGY(v); i++)
             {
-                ostrm << floatToString((double) DIRECT_VOL_ELEM(v, k, i, j), 10, prec) << ' ';
+                for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
+                {
+                    ostrm << floatToString((double) DIRECT_VOL_ELEM(v, k, i, j), 10, prec) << ' ';
+                }
+                ostrm << std::endl;
             }
-            ostrm << std::endl;
         }
     }
 
