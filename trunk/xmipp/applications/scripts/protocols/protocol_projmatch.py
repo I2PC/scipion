@@ -1040,7 +1040,9 @@ def execute_projection_matching(_mylog,
                       False,
                       False)
       # Create docfiles for each defocus group and corresponding selfile containing all of them      
-      make_subset_docfiles(_NumberOfCtfGroups)
+      make_subset_docfiles(_mylog,
+                           _InputDocFileName,
+                           _NumberOfCtfGroups)
       
    # Project all references
    print '*********************************************************************'
@@ -1093,19 +1095,22 @@ def execute_projection_matching(_mylog,
    for ictf in range(_NumberOfCtfGroups):
    
       if (_DoCtfCorrection):
-         CtfGroupName=utils_xmipp.composeFileName(CtfGroupRootName + '_group',ictf+1,'')
-         outputname=ProjMatchRootName + '_' + CtfGroupName 
+         CtfGroupName = utils_xmipp.composeFileName(CtfGroupRootName + '_group',ictf+1,'')
+         outputname   = ProjMatchRootName + '_' + CtfGroupName 
          CtfGroupName = '../' + CtfGroupDirectory + '/' + CtfGroupName
+         inselfile    = CtfGroupName + '.sel'
          inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
+         refname      = utils_xmipp.composeFileName(ProjectLibraryRootName + '_group',ictf+1,'')
       else:
-         outputname=ProjMatchRootName
-         inputdocfile=_InputDocFileName
+         outputname   = ProjMatchRootName
+         inputdocfile = _InputDocFileName
+         refname      = ProjectLibraryRootName
 
       print '*********************************************************************'
       print '* Perform projection matching'
       parameters= ' -i '              + inputdocfile + \
                   ' -o '              + outputname + \
-                  ' -ref '            + ProjectLibraryRootName +\
+                  ' -ref '            + refname + \
                   ' -Ri '             + str(_Ri)           + \
                   ' -Ro '             + str(_Ro)           + \
                   ' -max_shift '      + str(_MaxChangeOffset) + \
@@ -1212,7 +1217,9 @@ def execute_projection_matching(_mylog,
       _mylog.info(command) 
       os.system(command)
 
-def make_subset_docfiles(_NumberOfCtfGroups):
+def make_subset_docfiles(_mylog,
+                         _InputDocFileName,
+                         _NumberOfCtfGroups):
 
    import os;
    import utils_xmipp
@@ -1233,11 +1240,11 @@ def make_subset_docfiles(_NumberOfCtfGroups):
       print '* ',command
       _mylog.info(command) 
       os.system(command)
-      docselfile.append(inputdocfilename+' 1\n')
+      docselfile.append(inputdocfile+' 1\n')
 
    # Write the selfile of all these docfiles
    fh = open(CtfGroupSubsetFileName,'w')
-   fh.writelines(self.docselfile)
+   fh.writelines(docselfile)
    fh.close()
 
 
