@@ -68,5 +68,6 @@ void Usage(char *argv[])
     << " -i <input_micrograph>            : Either 8, 16 or 32 bits\n"
     << " -o <output_micrograph>           : Spider Format\n"
     << " -ctf <ctf_param_file>            : CTf param file\n"
+    << " -reverse_endian                  : assumme no native endianess\n"
     << std::endl;
 }
