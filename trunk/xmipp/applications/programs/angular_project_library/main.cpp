@@ -50,6 +50,8 @@ int main(int argc, char *argv[])
     try
     {
         prm.run();
+        if (prm.fn_groups!="")
+            prm.createGroupSamplingFiles();
     }
     catch (Xmipp_error XE)
     {

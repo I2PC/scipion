@@ -63,6 +63,9 @@ public:
     /** root for output files */
     FileName output_file_root;
 
+    /** Name of selfile for groups */
+    FileName fn_groups;
+
     /** Quiet */
     bool quiet;
 #ifdef NEVERDEFINED
@@ -136,6 +139,9 @@ public:
     /** Run. */
     void run();
 
+	/** Create separate sampling files for subsets of the -experimental_images docfile */
+    void createGroupSamplingFiles(void);
+    
     /** get all directions related by symmetry to (1,0,0)  */
     void get_sym_vectors(std::vector< Matrix1D<double > > &sym_points);
 

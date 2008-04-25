@@ -89,6 +89,7 @@ void Prog_angular_project_library_Parameters::read(int argc, char **argv)
              exit(0);
          } 
         
+    fn_groups = getParameter(argc, argv, "-groups","");
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -107,15 +108,16 @@ void Prog_angular_project_library_Parameters::usage()
     << "  [-psi_sampling 360]          : sampling in psi, 360 -> no sampling in psi\n"
     << "  [-max_tilt_angle  91]        : maximum tilt angle in degrees\n"
     << "  [-min_tilt_angle -91]        : minimum tilt angle in degrees\n"
-    << "  [-experimental_images \"\"]  : doc file with experimental data\n"
+    << "  [-experimental_images \"\"]    : doc file with experimental data\n"
     << "  [-angular_distance 20]       : do not search a distance larger than...\n"
     << "  [-closer_sampling_points]    : create doc file with closest sampling points\n"
     << "  [-compute_neighbors]         : create doc file with sampling point neighbors\n"
     << "  [-quiet]                     : do not show messages\n"
     << "  [-near_exp_data]             : remove points far away from experimental data\n"
-    << "  [-perturb default=0.0]       : gaussian noise projection unit vectors \n"
+    << "  [-perturb 0.0]               : gaussian noise projection unit vectors \n"
     << "			         a value=sin(sampling_rate)/4  \n"
     << "			         may be a good starting point \n"
+    << "   [-groups \"\"]                : selfile with groups\n"
     << "\n"
     << "Example of use: Sample at 2 degrees and use c6 symmetry\n"
     << "   xmipp_angular_project_library -i in.vol -o out "
@@ -200,7 +202,6 @@ void Prog_angular_project_library_Parameters::run()
     time_t start,end;
     double time_dif;
     time (&start);
-
     #endif
     /////////////////////////////
     // PreRun for all nodes but not for all works
@@ -291,8 +292,7 @@ void Prog_angular_project_library_Parameters::run()
     #endif
     if (compute_neighbors_bool)
         {
-	    mysampling.compute_neighbors(output_file_root+ 
-                                     "_closest_sampling_points.doc");
+	    mysampling.compute_neighbors();
 	    #ifdef  DEBUGTIME
 	    time (&end);
 	    time_dif = difftime (end,start); start=end;
@@ -335,3 +335,59 @@ void Prog_angular_project_library_Parameters::run()
     mySF.write(fn_temp);         
 }
 
+void Prog_angular_project_library_Parameters::createGroupSamplingFiles(void)
+{ 
+
+    #define DEBUGTIME
+    #ifdef  DEBUGTIME
+    #include <ctime>
+    
+    time_t start,end;
+    double time_dif;
+    time (&start);
+    #endif
+
+    SelFile  mySF(fn_groups);
+    FileName fn_temp;
+    FileName my_output_file_root;
+    int igrp = 0;
+    mySF.go_beginning();
+    while (!mySF.eof())
+    {
+        igrp++;
+        fn_temp = mySF.NextImg();
+        my_output_file_root.compose(output_file_root + "_group",igrp,"");
+    
+        std::cerr<<"Writing group sampling file "<< my_output_file_root<<std::endl;           
+        //load txt file
+        mysampling.read_sampling_file(output_file_root,false);
+        #ifdef  DEBUGTIME
+        time (&end);
+        time_dif = difftime (end,start); start=end;
+        printf ("re-read entire sampling file after %.2lf seconds\n", time_dif );
+        #endif
+       
+        if (fn_temp.size() > 0)	
+        {
+            mysampling.fill_exp_data_projection_direction_by_L_R(fn_temp);
+            //keep only sampling points near to experimental images
+            mysampling.remove_points_far_away_from_experimental_data(fn_temp);
+            if(compute_closer_sampling_point_bool)
+	        {
+	        //find sampling point closer to experimental point (only 0) and bool
+	        //and save docfile with this information
+	        mysampling.find_closest_sampling_point(fn_temp,my_output_file_root);
+            }
+   
+            //save save_sampling_file
+           if (compute_neighbors_bool)
+               {
+	           mysampling.compute_neighbors();
+	           mysampling.save_sampling_file(my_output_file_root,false);
+	           }
+         }
+
+
+    }
+
+}

@@ -61,7 +61,7 @@ class Prog_mpi_angular_project_library_Parameters:Prog_angular_project_library_P
         /** computing node number. Master=0 */
         int rank;
 
-        /** status after am MPI call */
+        /** status after am MPI call */ 
         MPI_Status status;
                 
         /** verbose mode on/off.  */
@@ -109,7 +109,7 @@ class Prog_mpi_angular_project_library_Parameters:Prog_angular_project_library_P
     /* Pre Run PreRun for all nodes but not for all works */
     void preRun()
     {
-//#define DEBUGTIME
+#define DEBUGTIME
 #ifdef  DEBUGTIME
 #include <ctime>
      
@@ -215,7 +215,7 @@ class Prog_mpi_angular_project_library_Parameters:Prog_angular_project_library_P
         {
             if (compute_neighbors_bool)
                 {
-	            mysampling.compute_neighbors(FnexperimentalImages);
+	            mysampling.compute_neighbors();
 	            mysampling.save_sampling_file(output_file_root,false);
                 }
 	    }
@@ -384,6 +384,12 @@ std::cerr << "Wr" << rank << " " << "TAG_WORKFORWORKER" << std::endl;
         MPI_Finalize();
     }
 
+    void createGroupSamplingFiles(void)
+    {
+        if (rank==0 && fn_groups!="")
+            Prog_angular_project_library_Parameters::createGroupSamplingFiles();
+    }
+
     /* a short function to print a message and exit */
     void error_exit(char * msg)
     {
@@ -419,6 +425,7 @@ int main(int argc, char *argv[])
     {
         prm.preRun();
         prm.run();
+        prm.createGroupSamplingFiles();
     }
     catch (Xmipp_error XE)
     {
