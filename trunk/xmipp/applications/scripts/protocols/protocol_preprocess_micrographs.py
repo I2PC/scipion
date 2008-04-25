@@ -3,7 +3,8 @@
 # General script for Xmipp-based pre-processing of micrographs: 
 #  - tif2raw conversion, 
 #  - downsampling
-#  - power spectral density (PSD) estimation on the micrograph
+#  - power spectral density (PSD) and CTF estimation on the micrograph
+#  - CTF phase flipping on the micrograph
 #
 # For each file <micrograph>.tif given, this script will perform 
 # the requested operations below.
@@ -122,6 +123,13 @@ MaxFocus=100000
 """
 StepFocus=500
 #------------------------------------------------------------------------------------------------
+# {section} CTF phase flipping
+#------------------------------------------------------------------------------------------------
+# Perform CTF phase flipping on the micrographs?
+""" The phase-flipped micrographs will be saved with a different format (spider) than the original raw-format.
+"""
+DoCtfPhaseFlipping=False
+#------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
 """
@@ -165,7 +173,8 @@ class preprocess_A_class:
                  MaxResFactor,
                  MinFocus,
                  MaxFocus,
-                 StepFocus
+                 StepFocus,
+                 DoCtfPhaseFlipping
                  ):
         
         import os,sys,shutil
@@ -200,6 +209,7 @@ class preprocess_A_class:
         self.MinFocus=MinFocus
         self.MaxFocus=MaxFocus
         self.StepFocus=StepFocus
+        self.DoCtfPhaseFlipping=DoCtfPhaseFlipping
         self.MicrographSelfile=MicrographSelfile
 
         # Setup logging
@@ -279,6 +289,9 @@ class preprocess_A_class:
                 else:
                     self.perform_ctfestimate_ctffind()
 
+            if (self.DoCtfPhaseFlipping):
+                self.perform_ctf_phase_flipping()
+                    
             self.append_micrograph_selfile()
 
     def perform_tif2raw(self):
@@ -511,8 +524,25 @@ class preprocess_A_class:
         fh.close()
 
 
+    def perform_ctf_phase_flipping(self):
+        import os
+        iname=self.shortname+'/'+self.downname+'.raw'
+        oname=self.shortname+'/'+self.downname+'.spi'
+        paramname=self.shortname+'/'+self.downname+'_Periodogramavg.ctfparam'
+        command='xmipp_micrograph_phase_flipping ' + \
+                 ' -i   ' + iname + \
+                 ' -o   ' + oname + \
+                 ' -ctf ' + paramname
+        print '* ',command
+        self.log.info(command)
+        os.system(command )
+
+
     def append_micrograph_selfile(self):
-        name=self.shortname+'/'+self.downname+'.raw'
+        if self.DoCtfPhaseFlipping:
+            name=self.shortname+'/'+self.downname+'.spi'
+        else:
+            name=self.shortname+'/'+self.downname+'.raw'
         self.micselfile.append(name+' 1\n')
         fh = open(self.MicrographSelfile,'w')
         fh.writelines(self.micselfile)
@@ -559,7 +589,8 @@ if __name__ == '__main__':
                                    MaxResFactor,
                                    MinFocus,
                                    MaxFocus,
-                                   StepFocus)
+                                   StepFocus,
+                                   DoCtfPhaseFlipping)
 
     # close 
     preprocessA.close()
