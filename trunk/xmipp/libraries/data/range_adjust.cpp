@@ -29,24 +29,29 @@
 /* Read parameters --------------------------------------------------------- */
 void Prog_Range_adjust_Parameters::read(int argc, char **argv)
 {
+	Prog_parameters::read(argc,argv);
     min_val = textToFloat(getParameter(argc, argv, "-min"));
     max_val = textToFloat(getParameter(argc, argv, "-max"));
     sigma = textToFloat(getParameter(argc, argv, "-noise", "0"));
     randomize_random_generator();
+    mask_prm.read(argc, argv);
 }
 
 /* Usage ------------------------------------------------------------------- */
 void Prog_Range_adjust_Parameters::usage()
 {
+	Prog_parameters::usage();
     std::cerr << "   -min <min_val>       : Output minimum value\n"
               << "   -max <max_val>       : Output maximum value\n"
               << "  [-noise <sigma %>]    : Variation of the minimum value\n"
     ;
+    mask_prm.usage();
 }
 
 /* Show -------------------------------------------------------------------- */
 void Prog_Range_adjust_Parameters::show()
 {
+	Prog_parameters::show();
     std::cout << "Min:   " << min_val << std::endl
               << "Max:   " << max_val << std::endl
               << "Noise: " << sigma   << std::endl;
@@ -59,7 +64,13 @@ void Prog_Range_adjust_Parameters::apply(Matrix2D<double> &I)
     double amax = rnd_gaus(0, sigma);
     double minval = min_val + amin;
     double maxval = max_val + amax;
-    I.rangeAdjust(minval, maxval);
+	if (mask_prm.type == NO_MASK)
+		I.rangeAdjust(minval, maxval);
+	else
+	{
+		mask_prm.generate_2Dmask(I);
+		I.rangeAdjust(minval, maxval,mask_prm.get_binary_mask2D());
+	}
 }
 
 void Prog_Range_adjust_Parameters::apply(Matrix3D<double> &V)
@@ -68,5 +79,11 @@ void Prog_Range_adjust_Parameters::apply(Matrix3D<double> &V)
     double amax = rnd_gaus(0, sigma);
     double minval = min_val + amin;
     double maxval = max_val + amax;
-    V.rangeAdjust(minval, maxval);
+	if (mask_prm.type == NO_MASK)
+		V.rangeAdjust(minval, maxval);
+	else
+	{
+		mask_prm.generate_3Dmask(V);
+		V.rangeAdjust(minval, maxval,mask_prm.get_binary_mask3D());
+	}
 }

@@ -858,7 +858,6 @@ public:
      * // The array is now ranging from 0 to 1
      * @endcode
      */
-    // This function must be explictly implemented outside
     void rangeAdjust(T minF, T maxF)
     {
         if (MULTIDIM_SIZE(*this) <= 0)
@@ -877,7 +876,7 @@ public:
             slope = 0;
 
         T* ptr=NULL;
-	unsigned long int n;
+	    unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
             *ptr = minF + static_cast< T >(slope *
                 static_cast< double >(*ptr - min0));

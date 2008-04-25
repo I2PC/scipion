@@ -1693,23 +1693,95 @@ public:
      */
     void centerOfMass(Matrix1D< double >& center, void* mask=NULL)
     {
-	center.initZeros(2);
-	double mass = 0;
-	Matrix2D< int>* imask = (Matrix2D< int >*) mask;
+		center.initZeros(2);
+		double mass = 0;
+		Matrix2D< int>* imask = (Matrix2D< int >*) mask;
 
-	FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
-	{
-            if ((imask == NULL || MAT_ELEM(*imask, i, j)) &&
-		MAT_ELEM(*this, i, j) > 0)
-            {
-        	XX(center) += j * MAT_ELEM(*this, i, j);
-        	YY(center) += i * MAT_ELEM(*this, i, j);
-        	mass += MAT_ELEM(*this, i, j);
-            }
-	}
+		FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
+		{
+            	if ((imask == NULL || MAT_ELEM(*imask, i, j)) &&
+			MAT_ELEM(*this, i, j) > 0)
+            	{
+        		XX(center) += j * MAT_ELEM(*this, i, j);
+        		YY(center) += i * MAT_ELEM(*this, i, j);
+        		mass += MAT_ELEM(*this, i, j);
+            	}
+		}
 
-	if (mass != 0)
-            center /= mass;
+		if (mass != 0)
+            	center /= mass;
+    }
+
+    /** Adjust the range of the array to a given one within a mask.
+     * @ingroup MatricesUtilities
+     *
+     * A linear operation is performed on the values of the array such that
+     * after it, the values of the array are comprissed between the two values
+     * set. The actual array is modified itself. The linear transformation
+	 * is computed within the mask, but it is applied everywhere.
+     *
+     * @code
+     * v.rangeAdjust(0, 1, mask);
+     * // The array is now ranging from 0 to 1
+     * @endcode
+     */
+    // This function must be explictly implemented outside
+    void rangeAdjust(T minF, T maxF, Matrix2D<int> &mask)
+    {
+        if (MULTIDIM_SIZE(*this) <= 0)
+            return;
+
+        double min0, max0;
+		bool first=true;
+		FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
+		{
+			if (mask(i,j))
+			{
+				T val=(*this)(i,j);
+				if (first)
+				{
+					min0=max0=(double)val;
+					first=false;
+				}
+				else
+				{
+					min0=XMIPP_MIN(min0,val);
+					max0=XMIPP_MAX(max0,val);
+				}
+			}
+		}
+
+        // If max0==min0, it means that the vector is a constant one, so the
+        // only possible transformation is to a fixed minF
+        double slope;
+        if (max0 != min0)
+            slope = static_cast< double >(maxF - minF) /
+                    static_cast< double >(max0 - min0);
+        else
+            slope = 0;
+
+        T* ptr=NULL;
+	    unsigned long int n;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
+            *ptr = minF + static_cast< T >(slope *
+                static_cast< double >(*ptr - min0));
+    }
+
+    /** Adjust the range of the array to a given one.
+     * @ingroup MatricesUtilities
+     *
+     * A linear operation is performed on the values of the array such that
+     * after it, the values of the array are comprissed between the two values
+     * set. The actual array is modified itself
+     *
+     * @code
+     * v.rangeAdjust(0, 1);
+     * // The array is now ranging from 0 to 1
+     * @endcode
+     */
+    void rangeAdjust(T minF, T maxF)
+    {
+        MultidimArray<T>::rangeAdjust(minF,maxF);
     }
 
     /** Compute statistics.
