@@ -1388,7 +1388,7 @@ void XmippSampling::read_sampling_file(FileName infilename, bool read_vectors)
     infile.close();
 }
 
-void XmippSampling::compute_neighbors(FileName FnexperimentalImages)
+void XmippSampling::compute_neighbors(void)
 {
     double rot,  tilt,  psi;
     double rotp, tiltp, psip;
@@ -1400,7 +1400,10 @@ void XmippSampling::compute_neighbors(FileName FnexperimentalImages)
     std::vector <Matrix1D<double> > exp_data_projection_direction;
     Matrix1D<double>  direction(3);  
     bool new_reference=true; 
-    
+    my_neighbors.clear();
+    #ifdef MYPSI    
+    my_neighbors_psi.clear();
+    #endif
     for(int j=0;j< exp_data_projection_direction_by_L_R.size();)
     {
 #ifdef MYPSI    
@@ -1847,7 +1850,10 @@ void XmippSampling::fill_exp_data_projection_direction_by_L_R(FileName Fnexperim
     }
 
     exp_data_projection_direction_by_L_R.clear();
-    for (int i = 0; i < exp_data_projection_direction.size(); i++)
+    #ifdef MYPSI    
+        exp_data_projection_direction_by_L_R_psi.clear();   
+    #endif
+   for (int i = 0; i < exp_data_projection_direction.size(); i++)
         for (int j = 0; j < R_repository.size(); j++)
         {
         direction =  L_repository[j] *  

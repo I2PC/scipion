@@ -182,7 +182,7 @@ public:
     save not only the neighbors but the angle psi
     */
 
-    void compute_neighbors(FileName FnexperimentalImages);
+    void compute_neighbors(void);
    /** Save neighbors in a propietary ascii file. The structure is as
        follows 
       [vnum]
