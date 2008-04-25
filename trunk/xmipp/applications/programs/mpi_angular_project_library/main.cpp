@@ -109,7 +109,7 @@ class Prog_mpi_angular_project_library_Parameters:Prog_angular_project_library_P
     /* Pre Run PreRun for all nodes but not for all works */
     void preRun()
     {
-#define DEBUGTIME
+//#define DEBUGTIME
 #ifdef  DEBUGTIME
 #include <ctime>
      
@@ -240,7 +240,7 @@ class Prog_mpi_angular_project_library_Parameters:Prog_angular_project_library_P
                 verbose=false;
             else    
                 verbose = true;
-            #define DEBUG
+            //#define DEBUG
             #ifdef DEBUG
             std::cerr << "numberOfJobs: " << numberOfJobs << std::endl
                  << "number of projections to be created: " <<  mysampling.no_redundant_sampling_points_angles.size()

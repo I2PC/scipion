@@ -338,7 +338,7 @@ void Prog_angular_project_library_Parameters::run()
 void Prog_angular_project_library_Parameters::createGroupSamplingFiles(void)
 { 
 
-    #define DEBUGTIME
+    //#define DEBUGTIME
     #ifdef  DEBUGTIME
     #include <ctime>
     
