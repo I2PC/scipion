@@ -3,7 +3,6 @@
 #
 # General script for Xmipp-based pre-processing of single-particles: 
 #  - extraction of particles
-#  - phase flipping
 #  - normalization
 #  - sort_junk
 #
@@ -82,11 +81,6 @@ DoRemoveBlackDust=False
 """
 DoRemoveWhiteDust=False
 #------------------------------------------------------------------------------------------------
-# {section} Phase correction
-#------------------------------------------------------------------------------------------------
-# Perform CTF-phase flipping?
-DoPhaseFlipping=True
-#------------------------------------------------------------------------------------------------
 # {section} Particle sorting
 #------------------------------------------------------------------------------------------------
 # Perform particle sorting to identify junk particles?
@@ -122,7 +116,6 @@ class preprocess_particles_class:
                  DoUseRamp,
                  DoRemoveBlackDust,
                  DoRemoveWhiteDust,
-                 DoPhaseFlipping,
                  DoSorting,
                  ):
 	     
@@ -145,7 +138,6 @@ class preprocess_particles_class:
         self.DoUseRamp=DoUseRamp
         self.DoRemoveBlackDust=DoRemoveBlackDust
         self.DoRemoveWhiteDust=DoRemoveWhiteDust
-        self.DoPhaseFlipping=DoPhaseFlipping
         self.DoSorting=DoSorting
         self.OutSelFile=OutSelFile
 
@@ -173,10 +165,6 @@ class preprocess_particles_class:
         if (not self.IsPairList):
             self.process_all_micrographs()
         else:
-            if (self.DoPhaseFlipping):
-                message='Warning: CTF phases will not be flipped for tilted pairs!'
-                print '*',message
-                self.log.error(message)
             if (self.DoSorting):
                 message='Warning: images will not be sorted for tilted pairs!'
                 print '*',message
@@ -213,15 +201,11 @@ class preprocess_particles_class:
             if (state.find('-1') < 0):
                 if (self.check_have_marked()):
                     if (self.DoExtract):
-                        self.perform_extract(self.DoPhaseFlipping)
+                        self.perform_extract()
 
-                    # Normalize before phase flipping to remove dust particles
                     if (self.DoNormalize):
                         self.perform_normalize(self.shortname+'/'+self.downname+'.raw.sel')
                               
-                    if (self.DoPhaseFlipping):
-                        self.perform_phaseflip()
-
         if (self.DoSorting):
             self.perform_sort_junk()
 
@@ -381,7 +365,7 @@ class preprocess_particles_class:
         self.log.info(message)
 
 
-    def perform_extract(self,is_for_flipping):
+    def perform_extract(self):
         import os
         iname=self.shortname+'/'+self.downname+'.raw' 
         selname=self.downname+'.raw.sel' 
@@ -390,12 +374,7 @@ class preprocess_particles_class:
         imgsubdir=self.ProjectDir+'/'+self.ImagesDir+'/'+self.shortname
         rootname=imgsubdir+'/'+self.shortname+'_'
         logname=self.shortname+'/scissor.log'
-
-        # Use double image size for phase flipping
-        if (is_for_flipping):
-            size=2*self.Size
-        else:
-            size=self.Size
+        size=self.Size
 
         # Make directory if necessary
         if not os.path.exists(imgsubdir):
@@ -480,44 +459,6 @@ class preprocess_particles_class:
         self.log.info(command)
         os.system(command)
 
-
-    def perform_phaseflip(self):
-        import os
-        import spider_header, selfile
-
-        selname=self.shortname+'/'+self.downname+'.raw.sel' 
-        ctfparam=self.shortname+'/'+self.downname+'_Periodogramavg.ctfparam'
-
-        # Check that images are 2 times self.Size, if not: re-extract and re-normalize them
-        fh=open(selname,"r")
-        text = fh.readlines()
-        fh.close()
-        args=text[0].split()
-        myheader=spider_header.spiderheader(args[0])
-        if not myheader.nx==2*self.Size:
-            self.perform_extract(True)
-            self.perform_normalize(self.shortname+'/'+self.downname+'.raw.sel')
-            
-        # Make ctfdat file for this micrograph
-        mysel=selfile.selfile()
-        mysel.read(selname)
-        ctfdatname=selname.replace('.sel','.ctfdat')
-        mysel.write_ctfdat(ctfdatname,ctfparam)
-        
-        # Perform phase flipping operation
-        print '*********************************************************************'
-        print '*  Flipping phases for images in: '+ctfdatname
-        command='xmipp_ctf_correct_phase -ctfdat '+ctfdatname
-        print '* ',command
-        self.log.info(command)
-        os.system(command)
-
-        # Re-window the images to their original size
-        command='xmipp_window -i '+selname+' -size '+str(self.Size)
-        print '* ',command
-        self.log.info(command)
-        os.system(command)
-        
     def perform_sort_junk(self):
         import os
         print '*********************************************************************'
@@ -556,7 +497,6 @@ if __name__ == '__main__':
                                                         DoUseRamp,
                                                         DoRemoveBlackDust,
                                                         DoRemoveWhiteDust,
-                                                        DoPhaseFlipping,
                                                         DoSorting)
 
 	# close 
