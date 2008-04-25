@@ -49,6 +49,8 @@ public:
     bool            do_not_generate_subgroup;
     /// wrap or don't wrap input file during symmetrisation
     bool            wrap;
+    /// use Bsplines for interpolating
+    bool            useBsplines;
 public:
     /** Read parameters from command line. */
     void read(int argc, char **argv);

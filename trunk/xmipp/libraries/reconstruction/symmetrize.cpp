@@ -35,33 +35,36 @@ void Symmetrize_Parameters::read(int argc, char **argv)
     fn_sym = getParameter(argc, argv, "-sym");
     do_not_generate_subgroup = checkParameter(argc, argv, "-no_group");
     wrap = !checkParameter(argc, argv, "-dont_wrap");
+    useBsplines = checkParameter(argc, argv, "-splines");
 }
 
 /* Usage ------------------------------------------------------------------- */
 void Symmetrize_Parameters::usage()
 {
     std::cout
-    << "Usage: symmetrize [Purpose and Parameters]\n"
-    << "Purpose: Symmetrize a 3D volume\n"
-    << "Parameter Values: (notice space before value)\n"
-    << "    -i <file_in>        : input 3D Xmipp file\n"
-    << "   [-o <file_out>]      : if no name is given then the input file is\n"
-    << "                          rewritten\n"
-    << "    -sym <sym_file>     : symmetry file (see the manual)\n"
-    << "   [-no_group]          : do not generate symmetry subgroup\n"
-    << "   [-dont_wrap]         : by default, the volume is wrapped\n";
+        << "Usage: symmetrize [Purpose and Parameters]\n"
+        << "Purpose: Symmetrize a 3D volume\n"
+        << "Parameter Values: (notice space before value)\n"
+        << "    -i <file_in>        : input 3D Xmipp file\n"
+        << "   [-o <file_out>]      : if no name is given then the input file is\n"
+        << "                          rewritten\n"
+        << "    -sym <sym_file>     : symmetry file (see the manual)\n"
+        << "   [-no_group]          : do not generate symmetry subgroup\n"
+        << "   [-dont_wrap]         : by default, the volume is wrapped\n"
+        << "   [-splines]           : by default, trilinear interpolation\n";
 }
 
 /* Show -------------------------------------------------------------------- */
 std::ostream & operator << (std::ostream &out, const Symmetrize_Parameters &prm)
 {
     out << "File in:       " << prm.fn_in  << std::endl
-    << "File out:      " << prm.fn_out << std::endl
-    << "Symmetry file: " << prm.fn_sym << std::endl
-    << "Generate group:" << !prm.do_not_generate_subgroup << std::endl
-    << "Wrapping:      ";
-    print(out, prm.wrap);
-    out << std::endl;
+        << "File out:      " << prm.fn_out << std::endl
+        << "Symmetry file: " << prm.fn_sym << std::endl
+        << "Generate group:" << !prm.do_not_generate_subgroup << std::endl
+        << "Wrapping:      ";
+    print(out, prm.wrap); out << std::endl;
+    out << "Splines:       ";
+    print(out, prm.useBsplines); out << std::endl;
     return out;
 }
 
@@ -164,11 +167,14 @@ void ROUT_symmetrize(const Symmetrize_Parameters &prm)
 
     double accuracy = (prm.do_not_generate_subgroup) ? -1 : 1e-6;
     SL.read_sym_file(prm.fn_sym, accuracy);
-std::cerr << " read_sym_file" << std::endl;       
+    std:: cout << "Number of symmetries: " << SL.SymsNo() << std::endl;
     V_in.read(prm.fn_in);
 
     std::cerr << prm;
-    symmetrize(SL, V_in, V_out, prm.wrap, true);
+    if (!prm.useBsplines)
+        symmetrize(SL, V_in, V_out, prm.wrap, true);
+    else
+        symmetrize_Bspline(SL, V_in, V_out, 3, prm.wrap, true);
     if (prm.fn_out == "") fn_out = V_in.name();
     else fn_out = prm.fn_out;
     V_out.write(fn_out);
