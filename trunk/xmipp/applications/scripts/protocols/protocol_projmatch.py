@@ -466,6 +466,7 @@ ReconstructedVolume="reconstruction"
 OutputFsc="resolution.fsc"
 CtfGroupDirectory="CtfGroups"
 CtfGroupRootName="ctf"
+CtfGroupSubsetFileName="ctf_groups_subset_docfiles.sel"
 
 class projection_matching_class:
 
@@ -1031,14 +1032,17 @@ def execute_projection_matching(_mylog,
    import launch_parallel_job, selfile, docfiles, utils_xmipp
    RunInBackground=False
 
-   # To use -add_to in angular_class_average correctly, 
-   # there should be no proj_match_class* files from previous runs. 
    if (_DoCtfCorrection):
+      # To use -add_to in angular_class_average correctly, 
+      # make sure there are no proj_match_class* files from previous runs. 
       execute_cleanup(_mylog,
                       True,
                       False,
                       False)
-
+      # Create docfiles for each defocus group and corresponding selfile containing all of them      
+      make_subset_docfiles(_NumberOfCtfGroups)
+      
+   # Project all references
    print '*********************************************************************'
    print '* Create projection library'
    parameters=' -i '                   + _ReferenceVolume + \
@@ -1066,6 +1070,10 @@ def execute_projection_matching(_mylog,
               ' -min_tilt_angle '      + str(_Tilt0) + \
               ' -max_tilt_angle '      + str(_TiltF)
   
+   if (_DoCtfCorrection):
+     parameters+=  \
+              ' -groups '              + CtfGroupSubsetFileName
+
    if (_DoControl):
       parameters += \
           ' -control '                 + _MyControlFile
@@ -1080,6 +1088,7 @@ def execute_projection_matching(_mylog,
                        _MyMachineFile,
                        RunInBackground)
 
+
    # Loop over all CTF groups
    for ictf in range(_NumberOfCtfGroups):
    
@@ -1087,16 +1096,7 @@ def execute_projection_matching(_mylog,
          CtfGroupName=utils_xmipp.composeFileName(CtfGroupRootName + '_group',ictf+1,'')
          outputname=ProjMatchRootName + '_' + CtfGroupName 
          CtfGroupName = '../' + CtfGroupDirectory + '/' + CtfGroupName
-         inselfile = CtfGroupName + '.sel'
          inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
-         command='xmipp_docfile_select_subset ' + \
-                 ' -i   ' + _InputDocFileName + \
-                 ' -sel ' + inselfile + \
-                 ' -o   ' + inputdocfile
-         print '*********************************************************************'
-         print '* ',command
-         _mylog.info(command) 
-         os.system(command)
       else:
          outputname=ProjMatchRootName
          inputdocfile=_InputDocFileName
@@ -1111,7 +1111,8 @@ def execute_projection_matching(_mylog,
                   ' -max_shift '      + str(_MaxChangeOffset) + \
                   ' -search5d_shift ' + str(_Search5DShift) + \
                   ' -search5d_step  ' + str(_Search5DStep) + \
-                  ' -mem '            + str(_AvailableMemory)
+                  ' -mem '            + str(_AvailableMemory) + \
+                  ' -sym '            + _SymmetryGroup + 'h'
 
       if (_DoCtfCorrection and _ReferenceIsCtfCorrected):
          ctffile = CtfGroupName + '.ctf'
@@ -1210,6 +1211,35 @@ def execute_projection_matching(_mylog,
       print '* ',command
       _mylog.info(command) 
       os.system(command)
+
+def make_subset_docfiles(_NumberOfCtfGroups):
+
+   import os;
+   import utils_xmipp
+
+   # Loop over all CTF groups
+   docselfile = []
+   for ictf in range(_NumberOfCtfGroups):
+      
+      CtfGroupName=utils_xmipp.composeFileName(CtfGroupRootName + '_group',ictf+1,'')
+      CtfGroupName = '../' + CtfGroupDirectory + '/' + CtfGroupName
+      inselfile = CtfGroupName + '.sel'
+      inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
+      command='xmipp_docfile_select_subset ' + \
+              ' -i   ' + _InputDocFileName + \
+              ' -sel ' + inselfile + \
+              ' -o   ' + inputdocfile
+      print '*********************************************************************'
+      print '* ',command
+      _mylog.info(command) 
+      os.system(command)
+      docselfile.append(inputdocfilename+' 1\n')
+
+   # Write the selfile of all these docfiles
+   fh = open(CtfGroupSubsetFileName,'w')
+   fh.writelines(self.docselfile)
+   fh.close()
+
 
 #------------------------------------------------------------------------
 #execute_reconstruction
