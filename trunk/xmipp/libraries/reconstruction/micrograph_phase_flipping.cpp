@@ -33,7 +33,7 @@ void Prog_micrograph_phase_flipping::show(void)
     std::cout
     << "input_micrograph:      " << fn_in    << std::endl
     << "output_micrograph:     " << fn_out << std::endl
-    << "ctf_param_file:        " << fn_out << std::endl
+    << "ctf_param_file:        " << fnt_ctf << std::endl
     ;
 }
 /********
@@ -72,11 +72,6 @@ void Prog_micrograph_phase_flipping::run(void)
     fN[0] = Xdim;
     fN[1] = Ydim;
     
-    std::cerr  << "Xdim Ydim " << Xdim << " " 
-                               << Ydim << " " 
-                               << fN[0] << " " 
-                               << fN[1] 
-                               << std::endl;
     //get access to output image 1D array
     //init fourier transform object
     bool inplace=false;
