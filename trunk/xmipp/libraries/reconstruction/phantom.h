@@ -54,13 +54,14 @@
  *  "#Type +/= Density X_Center Y_Center Z_Center\n"
  *  " sph   +     1      <x0>     <y0>     <z0>    <radius>\n"
  *  " blo   +     1      <x0>     <y0>     <z0>    <radius>   <alpha> <order>\n"
+ *  " gau   +     1      <x0>     <y0>     <z0>    <sigma>\n"
  *  " cyl   +     1      <x0>     <y0>     <z0>    <xradius> <yradius> <height>               <rot> <tilt> <psi>\n"
  *  " dcy   +     1      <x0>     <y0>     <z0>    <radius>            <height>  <separation> <rot> <tilt> <psi>\n"
  *  " cub   =     1      <x0>     <y0>     <z0>    <xdim>     <ydim>    <zdim>                <rot> <tilt> <psi>\n"
  *  " ell   =     1      <x0>     <y0>     <z0>    <xradius> <yradius> <zradius>              <rot> <tilt> <psi>\n"
  *  " con   +     1      <x0>     <y0>     <z0>    <radius>            <height>               <rot> <tilt> <psi>\n"
  *  @endcode
- *  where spheres, blobs,cylinders, double cylinders, cubes, ellipsoids and cones
+ *  where spheres, blobs, gaussians, cylinders, double cylinders, cubes, ellipsoids and cones
  *  are defined (in this order). The '+' sign means that this feature will
  *  be added at those positions of the volume ocuupied by it. '=' instead
  *  means that those voxels will be set to the value of the density of this
@@ -547,6 +548,7 @@ public:
         double miny0 = 0,     double maxy0 = 0,
         double minz0 = 0,     double maxz0 = 0);
 };
+
 /* BLOB ================================================================= */
 /** Blobs.
     The blobs are defined by its center, radius, alpha and m (bessel function
@@ -580,7 +582,7 @@ public:
         Computes the maximum distance, in this case, equal to "radius" */
     void prepare();
 
-/// Assignment
+    /// Assignment
     Blob & operator = (const Blob &F);
 
     /** Another function for assignment.*/
@@ -608,7 +610,6 @@ public:
     /** Intersection of a ray with a blob.
         See \ref Feature::intersection to know more about the parameters
         meaning. */
-//ROB pending
     double intersection(const Matrix1D<double> &direction,
                         const Matrix1D<double> &passing_point,
                         Matrix1D<double> &r, Matrix1D<double> &u) const;
@@ -620,9 +621,7 @@ public:
     {
         return basvolume(radius, alpha, m, 3);
     }
-///
-//check this for alpha 0 should be an sphere
-///
+
     /** Read specific description for a blob.
         An exception is thrown if the line doesn't conform the standard
         specification. See \ref Feature::read_specific */
@@ -648,6 +647,101 @@ public:
         double minradius,   double maxradius,
         double minalpha,    double maxalpha,
         double minorder,    double maxorder,
+        double minden = 1.0,  double maxden = 1.0,
+        double minx0 = 0,     double maxx0 = 0,
+        double miny0 = 0,     double maxy0 = 0,
+        double minz0 = 0,     double maxz0 = 0);
+};
+
+/* GAUSSIAN ================================================================ */
+/** Gaussians.
+    The Gaussians are defined by its center, and sigma. The label is "gau".
+
+    A point (r) in the universal coordinate system, where Gaussians are defined
+    in general, can be expressed (rp) with respect to a system where the Gaussian
+    is centered at the origin and its sigma is unity by
+    @code
+    V3_MINUS_V3(rp,r,gau.Center);
+    V3_BY_CT(rp, rp, 1/sigma);
+    @endcode
+    Directions (free vectors) are transformed in the same fashion except
+    that for the first vector substraction (referring to the origin).
+*/
+
+class Gaussian: public Feature
+{
+public:
+
+    /// Sigma
+    double             sigma;
+public:
+    /** Prepare Gaussian for work.
+        Computes the maximum distance, in this case, equal to "4sigma" */
+    void prepare();
+
+    /// Assignment
+    Gaussian & operator = (const Gaussian &F);
+
+    /** Another function for assignment.*/
+    void assign(const Gaussian &F);
+
+    /** Speeded up point inside a Gaussian.
+        This function tells you if a point is inside the Gaussian or not.
+        See \ref Feature::point_inside */
+    int point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const;
+
+    /** Density inside a Gaussian.
+        This function tells you the density of the Gaussian at point r  */
+    double density_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const;
+
+    /** Return a scaled Gaussian.
+        The center, density, and behaviour of the new Gaussian is exactly the
+        same as the actual one. The radius is multiplied by the scale factor
+        and the maximum distance is recalculated for the new sphere. Alpha
+        is kept constant*/
+    Feature *scale(double factor) const;
+
+    /** Another function for return a scaled Blob.*/
+    void scale(double factor, Feature *_f) const;
+
+    /** Intersection of a ray with a Gaussian.
+        See \ref Feature::intersection to know more about the parameters
+        meaning. */
+    double intersection(const Matrix1D<double> &direction,
+                        const Matrix1D<double> &passing_point,
+                        Matrix1D<double> &r, Matrix1D<double> &u) const;
+
+    /** Mass of a Gaussian.
+        This function returns mass inside a Gaussian. 3 is the dimension
+        See \ref Feature::volume */
+    double volume() const
+    {
+        return 1;
+    }
+
+    /** Read specific description for a Gaussian.
+        An exception is thrown if the line doesn't conform the standard
+        specification. See \ref Feature::read_specific */
+    void read_specific(char *line);
+
+    /** Print Gaussian in the standard feature format.
+        \ See {Feature::feat_printf}, \ref Phantoms */
+    void feat_printf(FILE *fh) const;
+
+    /** Show feature not in the standard format but more informatively.
+        This function only shows the non common part of the feature. Use
+        the << operator of Feature to show the whole feature. */
+    friend std::ostream& operator << (std::ostream &o, const Gaussian &f);
+
+    /** Generate a random Gaussian.
+        A sphere is generated randomly within the range of the parameters
+        given. Notice that most of them are set by default. The exact
+        parameters are picked uniformly from the range. The maximum distance
+        is adjusted properly according to the randomly generated feature. 'den'
+        stands for density and (x0,y0,z0) is the center of the feature. The
+        behaviour of the new sphere is always Add */
+    void init_rnd(
+        double minsigma,   double maxsigma,
         double minden = 1.0,  double maxden = 1.0,
         double minx0 = 0,     double maxx0 = 0,
         double miny0 = 0,     double maxy0 = 0,

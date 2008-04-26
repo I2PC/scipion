@@ -49,6 +49,11 @@ void Blob::prepare()
     max_distance = radius;
 }
 
+void Gaussian::prepare()
+{
+    max_distance = 4*sigma;
+}
+
 void Cylinder::prepare()
 {
     prepare_Euler();
@@ -139,6 +144,19 @@ Blob & Blob::operator = (const Blob &F)
 }
 
 void Blob::assign(const Blob &F)
+{
+    *this = F;
+}
+
+Gaussian & Gaussian::operator = (const Gaussian &F)
+{
+    if (this == &F) return *this;
+    Feature::operator = (F);
+    sigma = F.sigma;
+    return *this;
+}
+
+void Gaussian::assign(const Gaussian &F)
 {
     *this = F;
 }
@@ -284,6 +302,16 @@ void Blob::read_specific(char *line)
     prepare();
 }
 
+/* Read a Gaussian --------------------------------------------------------- */
+void Gaussian::read_specific(char *line)
+{
+    int stat;
+    stat = sscanf(line, "%*s %*c %*f %*f %*f %*f %lf", &sigma);
+    if (stat != 1)
+        REPORT_ERROR(3003, (std::string)"Error when reading a Gaussian:" + line);
+    prepare();
+}
+
 /* Read a Cylinder --------------------------------------------------------- */
 void Cylinder::read_specific(char *line)
 {
@@ -356,6 +384,14 @@ void  Blob::feat_printf(FILE *fh) const
             radius, alpha, m);
 }
 
+/* Show a Gaussian --------------------------------------------------------- */
+void  Gaussian::feat_printf(FILE *fh) const
+{
+    fprintf(fh, "blo    %c     %1.4f    % 7.2f   % 7.2f    % 7.2f    % 7.2f\n",
+            Add_Assign, Density, XX(Center), YY(Center), ZZ(Center),
+            sigma);
+}
+
 /* Show a cylinder --------------------------------------------------------- */
 void  Cylinder::feat_printf(FILE *fh) const
 {
@@ -418,6 +454,7 @@ std::ostream& operator << (std::ostream &o, const Feature *F)
         o << "   Center:      " << F->Center.transpose() << std::endl;
         if (F->Type == "sph") o << *((Sphere *) F);
         else if (F->Type == "blo") o << *((Blob *) F);
+        else if (F->Type == "gau") o << *((Gaussian *) F);
         else if (F->Type == "cyl") o << *((Cylinder *) F);
         else if (F->Type == "dcy") o << *((DCylinder *) F);
         else if (F->Type == "cub") o << *((Cube *) F);
@@ -440,6 +477,13 @@ std::ostream& operator << (std::ostream &o, const Blob &f)
     o << "   Radius: "  << f.radius << std::endl;
     o << "   Alpha:  "  << f.alpha << std::endl;
     o << "   m:      "  << f.m << std::endl;
+    return o;
+}
+
+/* Show Gaussian ----------------------------------------------------------- */
+std::ostream& operator << (std::ostream &o, const Gaussian &f)
+{
+    o << "   Sigma: "  << f.sigma << std::endl;
     return o;
 }
 
@@ -522,7 +566,7 @@ int Sphere::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
     DEF_Sph_Blob_point_inside
 }
 
-/* Point inside a Blob --------------------------------------------------- */
+/* Point inside a Blob ----------------------------------------------------- */
 int Blob::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
 {
     DEF_Sph_Blob_point_inside
@@ -536,6 +580,27 @@ double Blob::density_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) co
     V3_MINUS_V3(aux, r, Center);
     /*Calculate density*/
     return (kaiser_value(aux.module(), radius,  alpha,  m));
+}
+
+/* Point inside a Gaussian ------------------------------------------------- */
+int Gaussian::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
+{
+        V3_MINUS_V3(aux,r,Center);
+        if (XX(aux)*XX(aux) + YY(aux)*YY(aux) +ZZ(aux)*ZZ(aux) <= 16*sigma*sigma)
+            return 1;
+        return 0;
+}
+
+/* Density inside a Gaussian ----------------------------------------------- */
+double Gaussian::density_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
+{
+    /*Express r in the feature coord. system*/
+    V3_MINUS_V3(aux, r, Center);
+    /*Calculate density*/
+    const double norm=1.0/sqrt(2.0*PI);
+    double rmod=aux.module();
+    double sigma2=sigma*sigma;
+    return norm/(sigma2*sigma)*exp(-0.5*rmod*rmod/sigma2);
 }
 
 /* Point inside a cylinder ------------------------------------------------- */
@@ -901,28 +966,27 @@ double Sphere::intersection(
     V3_BY_CT(u, direction, 1 / radius);
     return intersection_unit_sphere(u, r) / norm;
 }
+
 double Blob::intersection(
     const Matrix1D<double> &direction,
     const Matrix1D<double> &passing_point,
     Matrix1D<double> &r,
     Matrix1D<double> &u) const
 {
-#ifdef NEVERDEFINED
-    // This is done in order to correct the different lengths seen by
-    // rays with different "speed". It is related to the jacobian of
-    // the transformation from a non-unit direction to a unit one.
-    double norm = direction.module();
-
-    // Set the passing point in the ellipsoid coordinate system
-    // and normalise to a unit sphere
-    V3_MINUS_V3(r, passing_point, Center);
-    V3_BY_CT(r, r, 1 / radius);
-    V3_BY_CT(u, direction, 1 / radius);
-    return intersection_unit_sphere(u, r) / norm;
-#endif
     return(kaiser_proj(point_line_distance_3D(Center, passing_point, direction),
                        radius, alpha, m));
+}
 
+double Gaussian::intersection(
+    const Matrix1D<double> &direction,
+    const Matrix1D<double> &passing_point,
+    Matrix1D<double> &r,
+    Matrix1D<double> &u) const
+{
+    double rmod=point_line_distance_3D(Center, passing_point, direction);
+    const double norm=1.0/sqrt(2.0*PI);
+    double sigma2=sigma*sigma;
+    return norm/sigma2*exp(-0.5*rmod*rmod/sigma2);
 }
 
 //#define DEBUG
@@ -1290,6 +1354,23 @@ void Blob::scale(double factor, Feature *_f) const
     _f = scale(factor);
 }
 
+/* Scale a Gaussian -------------------------------------------------------- */
+Feature * Gaussian::scale(double factor) const
+{
+    Gaussian *f;
+    f = new Gaussian;
+    COPY_COMMON_PART;
+
+    f->sigma = factor * sigma;
+    f->prepare();
+    return (Feature *)f;
+}
+
+void Gaussian::scale(double factor, Feature *_f) const
+{
+    _f = scale(factor);
+}
+
 /* Scale a cylinder -------------------------------------------------------- */
 Feature * Cylinder::scale(double factor) const
 {
@@ -1440,7 +1521,6 @@ void Sphere::init_rnd(
     double miny0,     double maxy0,
     double minz0,     double maxz0)
 {
-
     randomize_random_generator();
     Center.resize(3);
     Type           = "sph";
@@ -1454,6 +1534,7 @@ void Sphere::init_rnd(
 
     max_distance   = radius;
 }
+
 void Blob::init_rnd(
     double minradius, double maxradius,
     double minalpha,  double maxalpha,
@@ -1463,7 +1544,6 @@ void Blob::init_rnd(
     double miny0,     double maxy0,
     double minz0,     double maxz0)
 {
-
     randomize_random_generator();
     Center.resize(3);
     Type           = "blo";
@@ -1479,6 +1559,26 @@ void Blob::init_rnd(
     max_distance   = radius;
 }
 
+void Gaussian::init_rnd(
+    double minsigma, double maxsigma,
+    double minden,   double maxden,
+    double minx0,    double maxx0,
+    double miny0,    double maxy0,
+    double minz0,    double maxz0)
+{
+    randomize_random_generator();
+    Center.resize(3);
+    Type           = "gau";
+    Add_Assign     = '+';
+    Density        = rnd_unif(minden, maxden);
+    XX(Center)     = rnd_unif(minx0, maxx0);
+    YY(Center)     = rnd_unif(miny0, maxy0);
+    ZZ(Center)     = rnd_unif(minz0, maxz0);
+
+    sigma          = rnd_unif(minsigma, maxsigma);
+    max_distance   = 4*sigma;
+}
+
 void Cylinder::init_rnd(
     double minxradius,  double maxxradius,
     double minyradius,  double maxyradius,
@@ -1491,7 +1591,6 @@ void Cylinder::init_rnd(
     double mintilt,     double maxtilt,
     double minpsi,      double maxpsi)
 {
-
     randomize_random_generator();
     Center.resize(3);
     Type           = "cyl";
@@ -1525,7 +1624,6 @@ void DCylinder::init_rnd(
     double mintilt,     double maxtilt,
     double minpsi,      double maxpsi)
 {
-
     randomize_random_generator();
     Center.resize(3);
     Type           = "dcy";
@@ -1560,7 +1658,6 @@ void Cube::init_rnd(
     double mintilt,     double maxtilt,
     double minpsi,      double maxpsi)
 {
-
     randomize_random_generator();
     Center.resize(3);
     Type           = "cub";
@@ -1598,7 +1695,6 @@ void Ellipsoid::init_rnd(
     double mintilt,     double maxtilt,
     double minpsi,      double maxpsi)
 {
-
     randomize_random_generator();
     Center.resize(3);
     Type           = "ell";
@@ -1635,7 +1731,6 @@ void Cone::init_rnd(
     double mintilt,     double maxtilt,
     double minpsi,      double maxpsi)
 {
-
     randomize_random_generator();
     Center.resize(3);
     Type           = "con";
@@ -1724,6 +1819,7 @@ Phantom & Phantom::operator = (const Phantom &P)
     Background_Density = P.Background_Density;
     Sphere     *sph;
     Blob       *blo;
+    Gaussian   *gau;
     Cylinder   *cyl;
     DCylinder  *dcy;
     Cube       *cub;
@@ -1739,8 +1835,14 @@ Phantom & Phantom::operator = (const Phantom &P)
         else if (P.VF[i]->Type == "blo")
         {
             blo = new Blob;
-            *blo = *((Blob *)          P.VF[i]);
+            *blo = *((Blob *)      P.VF[i]);
             add(blo);
+        }
+        else if (P.VF[i]->Type == "gau")
+        {
+            gau = new Gaussian;
+            *gau = *((Gaussian *)  P.VF[i]);
+            add(gau);
         }
         else if (P.VF[i]->Type == "cyl")
         {
@@ -1810,6 +1912,7 @@ void Phantom::read(const FileName &fn_phantom, bool apply_scale)
     int        stat;
     Sphere     *sph;
     Blob       *blo;
+    Gaussian   *gau;
     Cylinder   *cyl;
     DCylinder  *dcy;
     Cube       *cub;
@@ -1877,6 +1980,13 @@ void Phantom::read(const FileName &fn_phantom, bool apply_scale)
             feat = blo;
             blo->read_common(line);
             blo->read_specific(line);
+        }
+        else if (feat_type == "gau")
+        {
+            gau = new Gaussian;
+            feat = gau;
+            gau->read_common(line);
+            gau->read_specific(line);
         }
         else if (feat_type == "cyl")
         {
