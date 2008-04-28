@@ -1628,47 +1628,47 @@ void XmippSampling::find_closest_sampling_point(FileName FnexperimentalImages,
         my_dotProduct=-2; 
         for (int k = 0; k < R_repository.size(); k++,i++)
         {
-        #ifdef  DEBUG3
-        //experimental points plus symmetry
-        if( i>(exp_image*R_repository.size()-1) && i< ((exp_image+1)*R_repository.size()))
+            #ifdef  DEBUG3
+            //experimental points plus symmetry
+            if( i>(exp_image*R_repository.size()-1) && i< ((exp_image+1)*R_repository.size()))
             {
-            filestr    <<  ".color red" << std::endl
-                       <<  ".sphere "   << exp_data_projection_direction_by_L_R[i].transpose()  
-		               <<  " .019"      << std::endl;
+                filestr    <<  ".color red" << std::endl
+                           <<  ".sphere "   << exp_data_projection_direction_by_L_R[i].transpose()  
+                           <<  " .019"      << std::endl;
             }
-        #endif
+            #endif
             for(int j=0;j< no_redundant_sampling_points_vector.size();j++)
             {
                 my_dotProduct_aux =
-                dotProduct(exp_data_projection_direction_by_L_R[i],
-                            no_redundant_sampling_points_vector[j]);
+                    dotProduct(exp_data_projection_direction_by_L_R[i],
+                               no_redundant_sampling_points_vector[j]);
 
                 if ( my_dotProduct_aux > my_dotProduct)
                 {
-		            my_dotProduct = my_dotProduct_aux;
-		            winner_sampling = j;
+                    my_dotProduct = my_dotProduct_aux;
+                    winner_sampling = j;
                     winner_exp_L_R  = i;
                 }
             }//for j
-       }//for k
+        }//for k
 #ifdef  DEBUG3
-            if( i==  ((exp_image+1)*R_repository.size()) )
-            {  
-                filestr    <<  ".color yellow" << std::endl
-                           <<  ".sphere "   << no_redundant_sampling_points_vector[winner_sampling].transpose()  
-		                   <<  " .020"      << std::endl;
-             }
+        if( i==  ((exp_image+1)*R_repository.size()) )
+        {  
+            filestr    <<  ".color yellow" << std::endl
+                       <<  ".sphere "   << no_redundant_sampling_points_vector[winner_sampling].transpose()  
+                       <<  " .020"      << std::endl;
+        }
 #endif
         //add winner to the DOC fILE
-	    DFi.set(5, winner_sampling);
+        DFi.set(5, winner_sampling);
         #ifdef MYPSI    
-	    DFi.set(6, exp_data_projection_direction_by_L_R_psi[winner_exp_L_R]);
-	    #else
+        DFi.set(6, exp_data_projection_direction_by_L_R_psi[winner_exp_L_R]);
+        #else
         DFi.set(6,0.); 
         #endif
         DFi.set(7,XX(no_redundant_sampling_points_angles[winner_sampling]));  
-	    DFi.set(8,YY(no_redundant_sampling_points_angles[winner_sampling]));  
-	    DFi.set(9,ZZ(no_redundant_sampling_points_angles[winner_sampling]));  
+        DFi.set(8,YY(no_redundant_sampling_points_angles[winner_sampling]));  
+        DFi.set(9,ZZ(no_redundant_sampling_points_angles[winner_sampling]));  
         DFi.next_data_line();
     }//for i 
     if(output_file_root.size() > 0)
