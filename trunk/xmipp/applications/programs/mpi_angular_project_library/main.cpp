@@ -232,22 +232,17 @@ class Prog_mpi_angular_project_library_Parameters:Prog_angular_project_library_P
             mpi_job_size=ceil((double)mysampling.no_redundant_sampling_points_angles.size()/numberOfJobs);
         } 
            
-        //only one node will write in the console
         verbose=false;
+        //#define DEBUG
+        #ifdef DEBUG
         if (rank == 1)
         {
-            if(quiet)
-                verbose=false;
-            else    
-                verbose = true;
-            //#define DEBUG
-            #ifdef DEBUG
             std::cerr << "numberOfJobs: " << numberOfJobs << std::endl
-                 << "number of projections to be created: " <<  mysampling.no_redundant_sampling_points_angles.size()
-                 <<std::endl;
-            #endif
-            #undef DEBUG
+                      << "number of projections to be created: " <<  mysampling.no_redundant_sampling_points_angles.size()
+                      <<std::endl;
         }
+        #endif
+        #undef DEBUG
         
     }
     /* Run --------------------------------------------------------------------- */
@@ -256,6 +251,8 @@ class Prog_mpi_angular_project_library_Parameters:Prog_angular_project_library_P
         if (rank == 0)
         {
             int stopTagsSent =0;
+            int c = XMIPP_MAX(1, numberOfJobs / 60);
+            init_progress_bar(numberOfJobs);
             for (int i=0;i<numberOfJobs;)
             {
                 //collect data if available
@@ -290,8 +287,10 @@ std::cerr << "Sent jobNo " <<  i << std::endl;
                     std::cerr << "M_f Received unknown TAG" << std::endl;
                     exit(0);
                     }           
+
+                if (i % c == 0)  progress_bar(i);
             }
-            
+            progress_bar(numberOfJobs);
 
         //send TAG_STOP
         while (stopTagsSent < (nProcs-1))
