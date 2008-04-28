@@ -489,7 +489,7 @@ class ML3D_class:
                                     self.RefForSeedsIsAmplitudeCorrected,
                                     self.ExtraParamsMLrefine3D)
             seedname=utils_xmipp.composeFileName(outname+'_it',1,'vol')
-            newsel.insert(seedname)
+            newsel.insert(seedname,'1')
         newsel.write('ml3d_seeds.sel')
 
         # Seed generation with MLF always does amplitude correction
