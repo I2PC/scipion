@@ -85,14 +85,14 @@ class Prog_mpi_angular_project_library_Parameters:Prog_angular_project_library_P
     void read(int argc, char **argv)
     {
         Prog_angular_project_library_Parameters::read(argc,argv);
-        mpi_job_size=textToInteger(getParameter(argc,argv,"-mpi_job_size","-1"));
+        mpi_job_size=textToInteger(getParameter(argc,argv,"-mpi_job_size","10"));
     }
 
     /* Usage ------------------------------------------------------------------- */
     void usage()
     {
         Prog_angular_project_library_Parameters::usage();
-        std::cerr << " [ -mpi_job_size default=-1]    : Number of images sent to a cpu in a single job \n";
+        std::cerr << " [ -mpi_job_size default=10]    : Number of images sent to a cpu in a single job \n";
         std::cerr << "                                  10 may be a good value";
         std::cerr << "                                  if  -1 the computer will put the maximum";
         std::cerr << "                                  posible value that may not be the best option";

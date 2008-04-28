@@ -119,17 +119,17 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
     void usage()
     {
         Prog_angular_projection_matching_prm::usage();
-        std::cerr << " [ -mpi_job_size default=-1]    : Number of images sent to a cpu in a single job \n";
-        std::cerr << "                                  10 may be a good value\n";
+        std::cerr << " [ -mpi_job_size default=10]   : Number of images sent to a cpu in a single job \n";
+        std::cerr << "                                 10 may be a good value\n";
         std::cerr << "                                 if  -1 the computer will fill the value for you\n";
-        std::cerr << " [ -chunk_angular_distance N]    : sample the projection sphere with this \n";
-        std::cerr << "                                   sampling rate and create subsets of experimental\n";
-        std::cerr << "                                   using the voronoi regions\n";
-        std::cerr << "  [-sym cn]   :One of the 17 possible symmetries in\n"
-                  << "                                single particle electronmicroscopy\n"
-                  << "                                i.e.  ci, cs, cn, cnv, cnh, sn, dn, dnv,\n "
-                  << "                                dnh, t, td, th, o, oh, i1 (default MDB), i2, i3, i4, ih\n"
-                  << "                                i1h (default MDB), i2h, i3h, i4h\n"
+        std::cerr << " [ -chunk_angular_distance N]  : sample the projection sphere with this \n";
+        std::cerr << "                                 sampling rate and create subsets of experimental\n";
+        std::cerr << "                                 using the voronoi regions\n";
+        std::cerr << "  [-sym cn]                    : One of the 17 possible symmetries in\n"
+                  << "                                 single particle electronmicroscopy\n"
+                  << "                                 i.e.  ci, cs, cn, cnv, cnh, sn, dn, dnv,\n "
+                  << "                                 dnh, t, td, th, o, oh, i1 (default MDB), i2, i3, i4, ih\n"
+                  << "                                 i1h (default MDB), i2h, i3h, i4h\n"
                   << "                               : where n may change from 1 to 99\n"
                   ;
      }
