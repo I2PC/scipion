@@ -453,7 +453,7 @@ class ML3D_class:
     # Splits selfile and performs a single cycle of ML3D-classification for each subset
     def generate_seeds(self):
         import os
-        import selfile
+        import selfile, utils_xmipp
         print '*********************************************************************'
         print '*  Generating seeds:' 
         newsel=selfile.selfile()
@@ -488,7 +488,8 @@ class ML3D_class:
                                     self.Symmetry,
                                     self.RefForSeedsIsAmplitudeCorrected,
                                     self.ExtraParamsMLrefine3D)
-            newsel.insert(outname+'_it00001.vol','1')
+            seedname=utils_xmipp.composeFileName(outname+'_it',1,'vol')
+            newsel.insert(seedname)
         newsel.write('ml3d_seeds.sel')
 
         # Seed generation with MLF always does amplitude correction
