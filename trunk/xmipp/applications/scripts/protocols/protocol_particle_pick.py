@@ -17,7 +17,7 @@
 # {dir} Working subdirectory:
 """ Use the same directory where you executed xmipp_protocol_preprocess_micrographs.py
 """
-WorkingDir="Preprocessing"
+WorkingDir='Preprocessing'
 # {file} Selfile with all micrographs to pick particles from:
 MicrographSelfile='Preprocessing/all_micrographs.sel'
 # Is this selfile a list of untilted-tilted pairs?
@@ -157,6 +157,7 @@ class particle_pick_class:
         total=0
         if not self.IsPairList:
             for micrograph,state in self.sellines:
+                micrograph=micrograph.replace('.spi','.raw')
                 if (state.find('-1') == -1):
                     c=self.CountPicked(micrograph)
                     total+=c
@@ -164,6 +165,8 @@ class particle_pick_class:
                     self.row[micrograph]=row
         else:
             for micrograph,tilted,state in self.sellines:
+                micrograph=micrograph.replace('.spi','.raw')
+                tilted=tilted.replace('.spi','.raw')
                 if (state.find('-1') == -1):
                     c=self.CountPicked(micrograph)
                     total+=c
