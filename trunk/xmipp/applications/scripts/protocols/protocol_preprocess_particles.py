@@ -165,10 +165,6 @@ class preprocess_particles_class:
         if (not self.IsPairList):
             self.process_all_micrographs()
         else:
-            if (self.DoSorting):
-                message='Warning: images will not be sorted for tilted pairs!'
-                print '*',message
-                self.log.error(message)
             if (not self.PosFile=="Common"):
                 message='Error: for tilted pairs The coordinate family name has to be Common!'
                 print '*',message
@@ -196,16 +192,17 @@ class preprocess_particles_class:
         mysel=selfile.selfile()
         mysel.read(self.MicrographSelfile)
         for name,state in mysel.sellines:
-            self.shortname,self.downname=os.path.split(name)
-            self.downname=self.downname.replace('.raw','')
+            self.shortname,self.allname=os.path.split(name)
+            self.downname=self.allname.replace('.raw','')
+            self.downname=self.downname.replace('.spi','')
             if (state.find('-1') < 0):
                 if (self.check_have_marked()):
                     if (self.DoExtract):
                         self.perform_extract()
 
                     if (self.DoNormalize):
-                        self.perform_normalize(self.shortname+'/'+self.downname+'.raw.sel')
-                              
+                        self.perform_normalize(self.shortname+'/'+self.allname+'.sel')
+                             
         if (self.DoSorting):
             self.perform_sort_junk()
 
@@ -220,6 +217,8 @@ class preprocess_particles_class:
 
         self.allselfile = []
         self.allselfile2 = []
+        self.allselfileboth = []
+        self.allctfdatfile = []
 
         fh=open(self.MicrographSelfile,'r')
         self.pairlines=fh.readlines()
@@ -232,10 +231,12 @@ class preprocess_particles_class:
             sys.exit()
         for line in self.pairlines:
             words=line.split()
-            self.shortname,self.downname=os.path.split(words[0])
-            self.shortname2,self.downname2=os.path.split(words[1])
-            self.downname=self.downname.replace('.raw','')
-            self.downname2=self.downname2.replace('.raw','')
+            self.shortname,self.allname=os.path.split(words[0])
+            self.shortname2,self.allname2=os.path.split(words[1])
+            self.downname=self.allname.replace('.raw','')
+            self.downname2=self.allname2.replace('.raw','')
+            self.downname=self.downname.replace('.spi','')
+            self.downname2=self.downname2.replace('.spi','')
             state=words[2]
             if (state.find('-1') < 0):
                 if (self.check_have_marked()):
@@ -243,9 +244,11 @@ class preprocess_particles_class:
                         self.perform_extract_pairs()
 
                     if (self.DoNormalize):
-                        self.perform_normalize(self.shortname+'/'+self.downname+'.raw.sel')
-                        self.perform_normalize(self.shortname2+'/'+self.downname2+'.raw.sel')
+                        self.perform_normalize(self.shortname+'/'+self.allname+'.sel')
+                        self.perform_normalize(self.shortname2+'/'+self.allname2+'.sel')
 
+        if (self.DoSorting):
+            self.perform_sort_junk()
 
     def check_file_exists(self,name):
         import os
@@ -266,20 +269,27 @@ class preprocess_particles_class:
 
 
     def perform_extract_pairs(self):
-        import os
+        import os,shutil
         
-        iname=self.shortname+'/'+self.downname+'.raw' 
-        iname2=self.shortname2+'/'+self.downname2+'.raw' 
+        iname=self.shortname+'/'+self.allname
+        iname2=self.shortname2+'/'+self.allname2
         imgsubdir=self.ProjectDir+'/'+self.ImagesDir+'/'+self.shortname
         imgsubdir2=self.ProjectDir+'/'+self.ImagesDir+'/'+self.shortname2
         rootname=imgsubdir+'/'+self.shortname+'_' 
         rootname2=imgsubdir2+'/'+self.shortname2+'_'
-        selname=self.downname+'.raw.sel' 
-        selname2=self.downname2+'.raw.sel' 
-        selnameb=self.shortname+'/'+self.downname+'.raw.sel' 
-        selnameb2=self.shortname2+'/'+self.downname2+'.raw.sel' 
-        posname=self.shortname+'/'+self.downname+'.raw.'+self.PosFile+'.pos'
-        posname2=self.shortname2+'/'+self.downname2+'.raw.'+self.PosFile+'.pos'
+        selname=self.allname+'.sel' 
+        selname2=self.allname2+'.sel' 
+        selnameb=self.shortname+'/'+self.allname+'.sel' 
+        selnameb2=self.shortname2+'/'+self.allname2+'.sel' 
+        # micrograph_mark with tilt pairs expects <micrographname>.Common.pos files
+        unpos   = self.shortname+'/'+self.allname+'.'+self.PosFile+'.pos'
+        tilpos  = self.shortname2+'/'+self.allname2+'.'+self.PosFile+'.pos'
+        posname = self.shortname+'/'+self.downname+'.raw.'+self.PosFile+'.pos'
+        posname2= self.shortname2+'/'+self.downname2+'.raw.'+self.PosFile+'.pos'
+        if (not os.path.exists(self.shortname+'/'+unpos)):
+            shutil.copy(posname,unpos)
+        if (not os.path.exists(self.shortname2+'/'+tilpos)):
+            shutil.copy(posname2,tilpos)
         angname=self.shortname+'/'+self.downname+'.ang'
         logname=self.shortname+'/scissor.log'
 
@@ -338,10 +348,23 @@ class preprocess_particles_class:
                 newsel.append(sel[i])
                 newsel2.append(sel2[i])
                 # For allselfiles, use relative paths wrt ProjectDir
-                name= self.ImagesDir+'/'+self.shortname +'/'+os.path.basename(args[0]) +" 1\n"
-                name2=self.ImagesDir+'/'+self.shortname2+'/'+os.path.basename(args2[0])+" 1\n"
-                self.allselfile.append(name)
-                self.allselfile2.append(name2)
+                name= self.ImagesDir+'/'+self.shortname +'/'+os.path.basename(args[0]) 
+                name2=self.ImagesDir+'/'+self.shortname2+'/'+os.path.basename(args2[0])
+                self.allselfile.append(name + " 1\n")
+                self.allselfile2.append(name2 + " 1\n")
+                self.allselfileboth.append(name + " 1\n")
+                self.allselfileboth.append(name2 + " 1\n")
+                # Update all_images.ctfdat (relative paths from ProjectDir)
+                self.allctfdatfile.append(name + ' ' + \
+                                          self.WorkingDir + '/' + \
+                                          self.shortname + '/' + \
+                                          self.downname + '_Periodogramavg.ctfparam\n')
+                self.allctfdatfile.append(name2 + ' ' + \
+                                          self.WorkingDir + '/' + \
+                                          self.shortname2 + '/' + \
+                                          self.downname2 + '_Periodogramavg.ctfparam\n')
+
+
 
         # write new selfiles
         fh=open(selname, 'w')
@@ -350,6 +373,7 @@ class preprocess_particles_class:
         fh=open(selname2, 'w')
         fh.writelines(newsel2)
         fh.close()
+
         # Update allselfiles
         outselfname=self.ProjectDir+'/'+self.OutSelFile.replace('.sel','_untilted.sel')
         fh=open(outselfname, 'w')
@@ -359,6 +383,18 @@ class preprocess_particles_class:
         fh=open(outselfname, 'w')
         fh.writelines(self.allselfile2)
         fh.close()
+
+        # Also write out a self.OutSelFile for sorting
+        fh=open(self.ProjectDir+'/'+self.OutSelFile, 'w')
+        fh.writelines(self.allselfileboth)
+        fh.close()
+
+        # Write updated all_images.ctfdat
+        ctfdatname=self.ProjectDir+'/'+self.OutSelFile.replace('.sel','.ctfdat')
+        fh=open(ctfdatname,'w')
+        fh.writelines(self.allctfdatfile)
+        fh.close()
+ 
         # Output to screen
         message='Removed '+str(count)+' pairs from selfiles because at least one of the particles was too near to the border'
         print '* ',message
@@ -367,9 +403,9 @@ class preprocess_particles_class:
 
     def perform_extract(self):
         import os
-        iname=self.shortname+'/'+self.downname+'.raw' 
-        selname=self.downname+'.raw.sel' 
-        selnameb=self.shortname+'/'+self.downname+'.raw.sel' 
+        iname=self.shortname+'/'+self.allname
+        selname=self.allname+'.sel' 
+        selnameb=self.shortname+'/'+self.allname+'.sel' 
         posname=self.shortname+'/'+self.downname+'.raw.'+self.PosFile+'.pos' 
         imgsubdir=self.ProjectDir+'/'+self.ImagesDir+'/'+self.shortname
         rootname=imgsubdir+'/'+self.shortname+'_'
@@ -414,7 +450,7 @@ class preprocess_particles_class:
                 # Update all_images.sel     (relative paths wrt ProjectDir)
                 name=self.ImagesDir+'/'+self.shortname+'/'+os.path.basename(args[0])
                 self.allselfile.append(name+" 1\n")
-                # Update all_images_ctf.dat (relative paths from ProjectDir)
+                # Update all_images.ctfdat (relative paths from ProjectDir)
                 self.allctfdatfile.append(name + ' ' + \
                                           self.WorkingDir + '/' + \
                                           self.shortname + '/' + \
@@ -431,7 +467,7 @@ class preprocess_particles_class:
         fh.writelines(self.allselfile)
         fh.close()
 
-        # Write updated all_images_ctf.dat
+        # Write updated all_images.ctfdat
         ctfdatname=self.ProjectDir+'/'+self.OutSelFile.replace('.sel','.ctfdat')
         fh=open(ctfdatname,'w')
         fh.writelines(self.allctfdatfile)
