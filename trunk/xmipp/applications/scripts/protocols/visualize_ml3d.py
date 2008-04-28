@@ -28,20 +28,20 @@ MatrixWidth=10
 # {section} Visualization of seeds preparation steps
 #------------------------------------------------------------------------------------------------
 # Visualize the library projections and the averages of the grey-scale correction?
-DoVisualizeMatrixCorrectReference=False
+DoVisualizeMatrixCorrectReference=True
 # Visualize the grey-scale corrected reference volume?
-DoVisualizeCorrectReference=False
+DoVisualizeCorrectReference=True
 # Visualize the low-pass filtered reference volume?
-DoVisualizeFilteredReference=False
+DoVisualizeFilteredReference=True
 # Visualize the library projections and the averages of the seed generation runs?
-DoVisualizeMatrixSeeds=False
+DoVisualizeMatrixSeeds=True
 # Visualize the generated seed volumes?
-DoVisualizeGeneratedSeeds=False
+DoVisualizeGeneratedSeeds=True
 #------------------------------------------------------------------------------------------------
 # {section} Per-iteration ML3D Visualization
 #------------------------------------------------------------------------------------------------
 # Which iterations to visualize? (Separate numbers by comma's)
-SelectIterations="1,2"
+SelectIterations='1,2'
 # Visualize the reference volumes for the given iterations?
 VisualizeML3DReferences=True
 # Visualize weighted 2D-averages?
@@ -137,14 +137,14 @@ class visualize_ML3D_class:
         import os
         if (self.DoVisualizeMatrixCorrectReference):
             dirname='CorrectGreyscale/'
-            selfile1=dirname+'corrected_reference_lib.sel'
+            selfile1=dirname+'ref.sel'
             selfile2=dirname+'corrected_reference_classes.sel'
             if not os.path.exists(dirname):
                 message='Warning: directory '+dirname+' does not exist, skipping...'
                 print '* ',message
             else:
-                self.join_selfiles(selfile1,selfile2,'matrixview_greyscale_correction.sel')
-                self.ShowSelfiles.append('matrixview_greyscale_correction.sel')
+                self.ShowSelfiles.append(selfile1)
+                self.ShowSelfiles.append(selfile2)
         if (self.DoVisualizeCorrectReference):
             self.ShowVolumes.append('corrected_reference.vol')
         if (self.DoVisualizeFilteredReference):
@@ -152,17 +152,18 @@ class visualize_ML3D_class:
 
     def visualize_seed_generation(self):
         import glob
+        import utils_xmipp
         seeddirs=glob.glob('GenerateSeed_*/')
         seeddirs.sort()
         for i in range(len(seeddirs)):
             dirname=seeddirs[i]
             outname='seeds_split_'+str(i+1)
             if (self.DoVisualizeGeneratedSeeds):
-                seedname=dirname+outname+'_it00001.vol'
+                seedname=utils_xmipp.composeFileName(dirname+outname+'_it',1,'vol')
                 self.ShowVolumes.append(seedname)
             if (self.DoVisualizeMatrixSeeds):
                 selfile1=dirname+outname+'_lib.sel'
-                selfile2=dirname+outname+'_it00001.sel'
+                selfile2=utils_xmipp.composeFileName(dirname+outname+'_it',1,'sel')
                 matrixname='matrixview_'+outname+'.sel'
                 self.join_selfiles(selfile1,selfile2,matrixname)
                 self.ShowSelfiles.append(matrixname)
@@ -174,7 +175,7 @@ class visualize_ML3D_class:
         iters=self.SelectIterations.split(',')
         for iter in iters:
             patt=utils_xmipp.composeFileName('RunML3D/ml3d_it',iter,'')
-            selfiles=glob.glob(utils_xmipp.composeFileName(patt+'_vol??????.sel'))
+            selfiles=glob.glob(utils_xmipp.composeWildcardFileName(patt+'_vol','sel'))
             selfiles.sort()
             if (self.VisualizeML3DAvgs):
                 for selfile in selfiles:
@@ -191,7 +192,7 @@ class visualize_ML3D_class:
                     self.show_class_distribution(selfiles,iter)
 
             if (self.VisualizeML3DReferences):
-                volumes=glob.glob(patt+'_vol??????.vol')
+                volumes=glob.glob(utils_xmipp.composeWildcardFileName(patt+'_vol','vol'))
                 volumes.sort()
                 for volume in volumes:
                     self.ShowVolumes.append(volume)
@@ -204,7 +205,8 @@ class visualize_ML3D_class:
 
     def visualize_matrix_last_iter(self):
         import os,glob
-        selfiles=glob.glob('RunML3D/ml3d_it??????.sel')
+        import utils_xmipp
+        selfiles=glob.glob(utils_xmipp.composeWildcardFileName('RunML3D/ml3d_it','sel'))
         selfiles.sort()
         if len(selfiles)==0:
             print "No selfiles yet. Visualize only after job completion..."
@@ -275,8 +277,8 @@ class visualize_ML3D_class:
 
     def show_convergence_stats(self):
         import os,glob
-        import visualization
-        logfiles=glob.glob('RunML3D/ml3d_it??????.log')
+        import visualization, utils_xmipp
+        logfiles=glob.glob(utils_xmipp.composeWildcardFileName('RunML3D/ml3d_it','log'))
         logfiles.sort()
         if len(logfiles)==0:
             print "No logfiles yet. Visualize after job completion..."
