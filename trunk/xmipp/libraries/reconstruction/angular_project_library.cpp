@@ -347,6 +347,14 @@ void Prog_angular_project_library_Parameters::createGroupSamplingFiles(void)
     time (&start);
     #endif
 
+    //load txt file
+    mysampling.read_sampling_file(output_file_root,false);
+#ifdef  DEBUGTIME
+    time (&end);
+    time_dif = difftime (end,start); start=end;
+    printf ("re-read entire sampling file after %.2lf seconds\n", time_dif );
+#endif
+
     SelFile  mySF(fn_groups);
     FileName fn_temp;
     FileName my_output_file_root;
@@ -357,37 +365,31 @@ void Prog_angular_project_library_Parameters::createGroupSamplingFiles(void)
         igrp++;
         fn_temp = mySF.NextImg();
         my_output_file_root.compose(output_file_root + "_group",igrp,"");
-    
         std::cerr<<"Writing group sampling file "<< my_output_file_root<<std::endl;           
-        //load txt file
-        mysampling.read_sampling_file(output_file_root,false);
-        #ifdef  DEBUGTIME
-        time (&end);
-        time_dif = difftime (end,start); start=end;
-        printf ("re-read entire sampling file after %.2lf seconds\n", time_dif );
-        #endif
        
         if (fn_temp.size() > 0)	
         {
             mysampling.fill_exp_data_projection_direction_by_L_R(fn_temp);
-            //keep only sampling points near to experimental images
-            mysampling.remove_points_far_away_from_experimental_data(fn_temp);
             if(compute_closer_sampling_point_bool)
-	        {
+            {
 	        //find sampling point closer to experimental point (only 0) and bool
 	        //and save docfile with this information
 	        mysampling.find_closest_sampling_point(fn_temp,my_output_file_root);
             }
    
             //save save_sampling_file
-           if (compute_neighbors_bool)
-               {
-	           mysampling.compute_neighbors();
-	           mysampling.save_sampling_file(my_output_file_root,false);
-	           }
-         }
-
-
+            if (compute_neighbors_bool)
+            {
+                mysampling.compute_neighbors();
+                mysampling.save_sampling_file(my_output_file_root,false);
+            }
+        }
     }
+#ifdef  DEBUGTIME
+    time (&end);
+    time_dif = difftime (end,start); start=end;
+    printf ("Written all group sampling files after %.2lf seconds\n", time_dif );
+#endif
+
 
 }
