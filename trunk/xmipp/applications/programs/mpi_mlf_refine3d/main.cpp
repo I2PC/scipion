@@ -175,8 +175,11 @@ int main(int argc, char **argv)
 		    MPI_Allreduce(&Mwsum_sigma2[ifocus][ii], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 		    Mwsum_sigma2[ifocus][ii] = aux;
 		}
-		MPI_Allreduce(&sumw_defocus[ifocus], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-		sumw_defocus[ifocus] = aux;
+                if (ML2D_prm.do_student)
+                {
+                    MPI_Allreduce(&sumw_defocus[ifocus], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                    sumw_defocus[ifocus] = aux;
+                }
 	    }
 	    for (int refno = 0;refno < ML2D_prm.n_ref; refno++)
 	    {
