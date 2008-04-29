@@ -581,8 +581,8 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
             #endif
             #undef DEBUG
             //chuck should not be bigger than a triangle in the icosahedra 
-            if(chunk_angular_distance > cte_w)
-               chunk_angular_distance  = cte_w;
+            if(chunk_angular_distance >= 0.5 * cte_w)
+               chunk_angular_distance  = 0.5 * cte_w;
             chunk_angular_distance *= (180./PI);
             //#define DEBUG        
             #ifdef DEBUG

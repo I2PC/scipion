@@ -100,10 +100,10 @@ void XmippSampling::SetSampling(double sampling)
 {
     sampling_rate_rad = DEG2RAD(sampling);
     number_of_samples = ROUND(cte_w / sampling_rate_rad)+1;
-    if (sampling_rate_rad > cte_w)
+    if (number_of_samples < 3)
     {    
         std::cerr << "maximun value of sampling rate is " 
-                  << cte_w*180./PI
+                  << cte_w*0.5*180./PI
                   << std::endl;
         exit(1);
     }
