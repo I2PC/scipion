@@ -509,7 +509,6 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
                     }           
              }//while(1)
         }//worker    
-        MPI_Finalize();
     }
 
     /* a short function to print a message and exit */
@@ -641,6 +640,7 @@ int main(int argc, char *argv[])
     {
         prm.preRun();
         prm.run();
+        MPI_Finalize();
     }
     catch (Xmipp_error XE)
     {

@@ -366,7 +366,6 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
                     }         
             }
         }    
-        MPI_Finalize();
     }
 
     /* a short function to print a message and exit */
@@ -419,6 +418,7 @@ int main(int argc, char *argv[])
     {
         prm.preRun();
         prm.run();
+        MPI_Finalize();
     }
     catch (Xmipp_error XE)
     {
