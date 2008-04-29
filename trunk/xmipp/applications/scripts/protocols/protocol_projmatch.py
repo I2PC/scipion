@@ -1158,6 +1158,7 @@ def execute_projection_matching(_mylog,
                     ' -pad '              + str(_PaddingFactor) + \
                     ' -add_to '           + ProjMatchRootName
       else:
+         parameters += \
                     ' -o '                + ProjMatchRootName
       if (_DoAlign2D == '1'):
          parameters += \
@@ -1210,7 +1211,7 @@ def execute_projection_matching(_mylog,
    # Also make abspath in classes docfile
    newdoc=docfiles.docfile(ProjMatchRootName + '_classes.doc')
    newdoc.make_abspath()
-   newdoc.write(ProjMatchRootName + '_classes.doc')
+   newdoc.write(ForReconstructionDoc)
 
    if (_DisplayProjectionMatching):
       command='xmipp_show -sel '+ "../"+'Iter_'+\
@@ -1285,7 +1286,7 @@ def execute_reconstruction(_mylog,
       program = 'xmipp_reconstruct_wbp'
       mpi_program = 'xmipp_mpi_reconstruct_wbp'
       parameters= ' -i '    + ForReconstructionSel + \
-                  ' -doc '  + ProjMatchRootName + '_classes.doc' + \
+                  ' -doc '  + ForReconstructionDoc + \
                   ' -o '    + Outputvolume + \
                   ' -sym '  + _SymmetryGroup + \
                   ' -weight -use_each_image '
@@ -1400,6 +1401,7 @@ def  execute_resolution(_mylog,
                            _MyMachineFile,
                            RunInBackground)
 
+    # Prevent high-resolution correlation because of discrete mask from wbp
     innerrad = _OuterRadius - 2
     for i in range(len(Outputvolumes)):
        Outputvolumes[i]+=".vol"
@@ -1624,3 +1626,4 @@ if __name__ == '__main__':
                 SetResolutiontoZero,
                 ConstantToAddToFiltration
                 )
+
