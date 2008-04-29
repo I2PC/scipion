@@ -848,7 +848,8 @@ class projection_matching_class:
                                                   self._SymmetryGroup,
                                                   self._DisplayResolution,
                                                   self._ReconstructedVolume[_iteration_number],
-                                                  self._ARTLambda
+                                                  self._ARTLambda,
+                                                  self._OuterRadius
                                                   )
           else:
              self._mylog.info("Skipped Resolution") 
@@ -1094,17 +1095,22 @@ def execute_projection_matching(_mylog,
    # Loop over all CTF groups
    for ictf in range(_NumberOfCtfGroups):
    
+      refname          = ProjectLibraryRootName
       if (_DoCtfCorrection):
          CtfGroupName = utils_xmipp.composeFileName(CtfGroupRootName + '_group',ictf+1,'')
          outputname   = ProjMatchRootName + '_' + CtfGroupName 
          CtfGroupName = '../' + CtfGroupDirectory + '/' + CtfGroupName
          inselfile    = CtfGroupName + '.sel'
          inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
-         refname      = utils_xmipp.composeFileName(ProjectLibraryRootName + '_group',ictf+1,'')
+         txtfile      = ProjectLibraryRootName + '_sampling.txt'
+         if (os.path.exists(txtfile)):
+            os.remove(txtfile)
+         txtfileb     = utils_xmipp.composeFileName(ProjectLibraryRootName + '_group',ictf+1,'')
+         txtfileb     += '_sampling.txt'
+         os.symlink(txtfileb, txtfile)
       else:
          outputname   = ProjMatchRootName
          inputdocfile = _InputDocFileName
-         refname      = ProjectLibraryRootName
 
       print '*********************************************************************'
       print '* Perform projection matching'
@@ -1337,7 +1343,8 @@ def  execute_resolution(_mylog,
                         _SymmetryGroup,
                         _DisplayResolution,
                         _ReconstructedVolume,
-                        _ARTLambda):
+                        _ARTLambda,
+                        _OuterRadius):
     import os,shutil
 
     split_sel_root_name=ProjMatchRootName+'_split'
@@ -1393,18 +1400,18 @@ def  execute_resolution(_mylog,
                            _MyMachineFile,
                            RunInBackground)
 
-    # Now that we have the volumes, remove the class averages and selfiles
-    #my_pattern=split_sel_root_name+'_[1,2]_class*'
-    #print '**************************************************************'
-    #print '* Removing all temporary files called ' + my_pattern
-    #import glob
-    #for file in glob.glob(my_pattern):
-    #   os.remove(file)
-    #_mylog.info('Deleted all files called '+my_pattern)
-
+    innerrad = _OuterRadius - 2
     for i in range(len(Outputvolumes)):
        Outputvolumes[i]+=".vol"
-
+       print '*********************************************************************'
+       print '* Applying a soft mask'
+       command = "xmipp_mask -i " + Outputvolumes[i] + \
+                           " -mask  raised_cosine -" + str(innerrad) + \
+                           " -" + str(_OuterRadius)
+       print '* ',command
+       _mylog.info(command)
+       os.system(command)
+  
     print '**************************************************************'
     print '* Compute resolution ' 
     command = "xmipp_resolution_fsc -ref " + Outputvolumes[0] +\
