@@ -17,49 +17,52 @@
     This can be done by a sequence of numbers (for instance, "2 8" 
     specifies iteration 2 and 8 (but not 3, 4, 5, 6 and 7)
 """
-DisplayIterationsNo='1 2'
+DisplayIterationsNo='1 2 3 4'
 #------------------------------------------------------------------------------------------------
-# {section} Volume visualization
-#------------------------------------------------------------------------------------------------
-# Visualize volumes in slices along Z?
-VisualizeVolZ=True
-# Visualize volumes in slices along X?
-VisualizeVolX=False
-# Visualize volumes in slices along Y?
-VisualizeVolY=False
-# Visualize volumes in UCSF Chimera?
-""" For this to work, you need to have chimera installed!
-"""
-VisualizeVolChimera=False
-# {expert} Width of xmipp_show (multiple of 3!):
-MatrixWidth=9
-#------------------------------------------------------------------------------------------------
-# {section}Reference volume 
+# {section} Display 3D volumes
 #------------------------------------------------------------------------------------------------
 #display reference volume
 """ Volume after filtration and masking
 """
 DisplayReference=False
-#display angular distribution after projection matching
-DisplayAngularDistribution=False
-#Show projection maching library and aligned classes
-DisplayProjectionMatchingAlign2d=False
-#display angular distribution after align2d
-DisplayAngularDistributionAlign2d=False
 #display reconstructed volume
 """ Volume as given by the reconstruction algorithm
 """
-DisplayReconstruction=False
+DisplayReconstruction=True
 #display reconstructed volume after filtration
 """ Volume after filtration
 """
 DisplayFilteredReconstruction=False
+#------------------------------------------------------------------------------------------------
+# {section} Display 2D projection galleries
+#------------------------------------------------------------------------------------------------
+#Show projection matching library and aligned classes
+DisplayProjectionMatchingAlign2d=True
+#------------------------------------------------------------------------------------------------
+# {section} Display 2D-plots
+#------------------------------------------------------------------------------------------------
+#display angular distribution after projection matching
+DisplayAngularDistribution=True
 #display resolution plots (FSC)
-DisplayResolutionPlots=False
-#print number of particles used in the reconstruction
-PrintParticlesReconstruction=True
-
-
+DisplayResolutionPlots=True
+#------------------------------------------------------------------------------------------------
+# {section} Display options
+#------------------------------------------------------------------------------------------------
+# Visualize volumes in slices along Z?
+VisualizeVolZ=True
+# {expert} Visualize volumes in slices along X?
+VisualizeVolX=False
+# {expert} Visualize volumes in slices along Y?
+VisualizeVolY=False
+# Visualize volumes in UCSF Chimera?
+""" For this to work, you need to have chimera installed!
+"""
+VisualizeVolChimera=False
+# {expert} Width of projection galleries
+""" In number of reference projections. This number will be multiplied by 3 if re-alignment of 
+    classes was performed and multiplied by 2 otherwise.
+"""
+MatrixWidth=3
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
@@ -77,13 +80,11 @@ class visualize_projmatch_class:
                 _DisplayIterationsNo,
                 _DisplayReference,
                 _DisplayProjectionMatchingAlign2d,
-                _PrintParticlesReconstruction,
                 _DisplayReconstruction,
                 _DisplayFilteredReconstruction,
                 _DisplayResolutionPlots,
                 _MatrixWidth,
                 _DisplayAngularDistribution,
-                _DisplayAngularDistributionAlign2d,
                 _ProtocolName
                 ):
 	     
@@ -102,49 +103,43 @@ class visualize_projmatch_class:
         self._WorkDirectory=protocol.WorkDirectory
         self._LogDir=protocol.LogDir
         self._ProjectDir=protocol.ProjectDir
-        self._multi_align2d_sel=protocol.multi_align2d_sel
-        self._align2d_sel=protocol.align2d_sel
-        self._align2d_doc=protocol.align2d_doc
+        self._multi_align2d_sel=protocol.MultiAlign2dSel
         self._SelFileName=self._ProjectDir+'/'+str(protocol.SelFileName)
-        self._Filtered_Image=protocol.Filtered_Image
-        self._Proj_Maching_Output_Root_Name=protocol.Proj_Maching_Output_Root_Name
-        self._Proj_Maching_Output_Root_Name + '.doc'
+        self._Filtered_Image=protocol.FilteredReconstruction
         self._mylog=log.init_log_system(self._ProjectDir,
                                        self._LogDir,
                                        sys.argv[0],
                                        self._WorkDirectory)
         self._mylog.setLevel(logging.DEBUG)
         self._DisplayIterationsNo=arg.getListFromVector(_DisplayIterationsNo)
-        self._ReconstrucedVolume=protocol.ReconstrucedVolume
+        self._ReconstrucedVolume=protocol.ReconstructedVolume
         _user_suplied_Filtered_Image=os.path.abspath(
-                                 protocol.ReferenceFileName)
+                                 protocol.ReferenceVolumeName)
         protocol.NumberofIterations += 1                         
         self._Reference_volume=[]
         protocol.fill_name_vector(
                         "",
                         self._Reference_volume,
                         protocol.NumberofIterations,
-                        protocol.ReferenceVolume)
+                        protocol.ReferenceVolumeName)
         self._mylog.debug ( "_Reference_volume "+str(self._Reference_volume))
         self._Filtered_Image=[]
         protocol.fill_name_vector(
                           "",
                           self._Filtered_Image,
                           protocol.NumberofIterations,
-                          protocol.Filtered_Image)
+                          protocol.FilteredReconstruction)
         self._mylog.debug ( "_Filtered_Image "+str(self._Filtered_Image))
         
         self._DisplayReference_list=[]
         self._ShowPlotsList=[]
         self._TitleList=[]
         self._ShowSelfilesProjMachingAlign2d=[] 
-        self._ShowPlotsafteralig2dList=[]
-        self._Titleafteralig2dList=[]
+        self._ShowSelfilesProjMaching=[]
         self._DisplayReconstruction_list=[]
         self._DisplayResolutionPlots_list=[]
         self._TitleResolution=[]
         self._DisplayFilteredReconstruction_list=[]
-        self._PrintParticlesReconstruction=[]
         
         self._mylog.debug ("_DisplayIterationsNo " + _DisplayIterationsNo)
         for self._iteration_number in self._DisplayIterationsNo:
@@ -155,53 +150,47 @@ class visualize_projmatch_class:
               self._DisplayReference_list.append(
                            self._Reference_volume[int(self._iteration_number)])
            
-           if (_DisplayAngularDistribution):
-              self._ShowPlotsList.append('..'+'/Iter_'+\
-                                      str(self._iteration_number)+
-                                      '/'+\
-                                     protocol.Proj_Maching_Output_Root_Name+\
-                                     '_classes.doc')
-              self._TitleList.append('Angular distribution after *projection matching* for iteration '+\
-                       str(self._iteration_number))
-
-           if (_DisplayProjectionMatchingAlign2d):
-              self._ShowSelfilesProjMachingAlign2d.append('..'+'/Iter_'+\
-                                      str(self._iteration_number)+
-                                      '/'+\
-                                       self._multi_align2d_sel)
-
-           if (_DisplayAngularDistributionAlign2d):
-              self._ShowPlotsafteralig2dList.append('..'+'/Iter_'+\
-                                      str(self._iteration_number)+
-                                      '/'+\
-                                       self._align2d_doc)
-              self._Titleafteralig2dList.append('Angular distribution after *alig2d* for iteration '+\
-                       str(self._iteration_number))
-
            if (_DisplayReconstruction):
               self._DisplayReconstruction_list.append('..'+'/Iter_'+\
                                       str(self._iteration_number)+\
                                       '/Iter_'+str(self._iteration_number)+\
                                       '_'+self._ReconstrucedVolume+'.vol')
 
-           if (_DisplayResolutionPlots):
-              self._DisplayResolutionPlots_list.append('..'+'/Iter_'+\
-                                         str(self._iteration_number)+\
-                                         '/'+'split_sel_2.vol.frc')
-              self._TitleResolution.append('Resolution')
-
            if (_DisplayFilteredReconstruction):
               self._DisplayFilteredReconstruction_list.append(
                           self._Filtered_Image[int(self._iteration_number)]+'.vol')
 
-           if (_PrintParticlesReconstruction):
-              self._PrintParticlesReconstruction.append('..'+'/Iter_'+\
+
+           if (_DisplayProjectionMatchingAlign2d):
+               self._doAlign2d = arg.getComponentFromVector(protocol.DoAlign2D,\
+                                                                int(self._iteration_number)-1)
+               if (self._doAlign2d == 1):
+                   self._ShowSelfilesProjMachingAlign2d.append('..'+'/Iter_'+\
+                                                                   str(self._iteration_number)+\
+                                                                   '/'+ self._multi_align2d_sel)
+               else:
+                   self._ShowSelfilesProjMaching.append('..'+'/Iter_'+\
+                                                            str(self._iteration_number)+\
+                                                            '/'+ self._multi_align2d_sel)
+    
+           if (_DisplayAngularDistribution):
+              self._ShowPlotsList.append('..'+'/Iter_'+\
                                       str(self._iteration_number)+
                                       '/'+\
-                                       self._align2d_doc)
+                                     protocol.ForReconstructionDoc)
+              self._TitleList.append('Angular distribution after *projection matching* for iteration '+\
+                       str(self._iteration_number))
+
+           if (_DisplayResolutionPlots):
+              self._DisplayResolutionPlots_list.append('..'+'/Iter_'+\
+                                         str(self._iteration_number)+\
+                                         '/Iter_'+str(self._iteration_number)+\
+                                         '_resolution.fsc')
+              self._TitleResolution.append('Fourier shell correlation for iteration '+\
+                       str(self._iteration_number))
 
 
-        #NAMES ARE RELATIVE TO iTER DIRECTORY  
+        #NAMES ARE RELATIVE TO ITER DIRECTORY  
         self._Iteration_Working_Directory=self._WorkDirectory+'/Iter_1'
         self._mylog.debug ("cd " + self._Iteration_Working_Directory)
         os.chdir(self._Iteration_Working_Directory)
@@ -215,31 +204,6 @@ class visualize_projmatch_class:
                                            _VisualizeVolChimera)
 
 
-        if (_DisplayAngularDistribution):
-           self._mylog.debug ( "_ShowPlotsList "+str(self._ShowPlotsList))
-           self._mylog.debug ( "_TitleList "+str(self._TitleList))
-           show_ang_distribution(self._ShowPlotsList,
-                                 self._iteration_number,
-                                 self._TitleList,
-                                 self._mylog)
-
-        if (_DisplayProjectionMatchingAlign2d):
-           self._mylog.debug ( "_ShowSelfilesProjMachingAlign2d "+\
-                              str(self._ShowSelfilesProjMachingAlign2d))
-           visualization.visualize_images(self._ShowSelfilesProjMachingAlign2d,
-                                          True,
-                                          self._MatrixWidth,
-                                          "",
-                                          True)
-
-        if (_DisplayAngularDistributionAlign2d):
-           self._mylog.debug ( "_ShowPlotsafteralig2dList "+str(self._ShowPlotsafteralig2dList))
-           self._mylog.debug ( "_Titleafteralig2dList "+str(self._Titleafteralig2dList))
-           show_ang_distribution(self._ShowPlotsafteralig2dList,
-                                 self._iteration_number,
-                                 self._Titleafteralig2dList,
-                                 self._mylog)
-
         if (_DisplayReconstruction):
            self._mylog.debug ( "_DisplayReconstruction_list "+str(self._DisplayReconstruction_list))
            visualization.visualize_volumes(self._DisplayReconstruction_list,
@@ -247,13 +211,6 @@ class visualize_projmatch_class:
                                            _VisualizeVolX,
                                            _VisualizeVolY,
                                            _VisualizeVolChimera)
-
-        if (_DisplayResolutionPlots):
-           self._mylog.debug ( "_DisplayResolutionPlots_list "+str(self._DisplayResolutionPlots_list))
-           show_plots(self._DisplayResolutionPlots_list,
-                      self._iteration_number,
-                      self._TitleResolution,
-                      self._mylog)
 
         if (_DisplayFilteredReconstruction):
            self._mylog.debug ( "_DisplayFilteredReconstruction_list "+\
@@ -264,8 +221,39 @@ class visualize_projmatch_class:
                                            _VisualizeVolY,
                                            _VisualizeVolChimera)
 
-        if (_PrintParticlesReconstruction):
-            plot_number_particles(self._PrintParticlesReconstruction)
+        if (_DisplayProjectionMatchingAlign2d):
+            if (protocol.CleanUpFiles==True):
+                print '* You cannot visualize class averages after performing a cleanup! '
+            else:
+                self._mylog.debug ( "_ShowSelfilesProjMachingAlign2d "+\
+                                        str(self._ShowSelfilesProjMachingAlign2d))
+                visualization.visualize_images(self._ShowSelfilesProjMachingAlign2d,
+                                               True,
+                                               3*self._MatrixWidth,
+                                               "",
+                                               True)
+                visualization.visualize_images(self._ShowSelfilesProjMaching,
+                                               True,
+                                               2*self._MatrixWidth,
+                                               "",
+                                               False)
+
+        if (_DisplayAngularDistribution):
+           self._mylog.debug ( "_ShowPlotsList "+str(self._ShowPlotsList))
+           self._mylog.debug ( "_TitleList "+str(self._TitleList))
+           show_ang_distribution(self._ShowPlotsList,
+                                 self._iteration_number,
+                                 self._TitleList,
+                                 self._mylog)
+
+        if (_DisplayResolutionPlots):
+           self._mylog.debug ( "_DisplayResolutionPlots_list "+str(self._DisplayResolutionPlots_list))
+           show_plots(self._DisplayResolutionPlots_list,
+                      self._iteration_number,
+                      self._TitleResolution,
+                      self._mylog)
+
+
 
     def close(self):
         message='Done!'
@@ -319,23 +307,6 @@ def show_plots(_ShowPlots,_iteration_number,_title,_mylog):
            else:
               plot.send(" replot '" + _ShowPlots[i] + "' using "+str(X_col)+":"+str(Y_col)+" with lines")   
 
-def plot_number_particles(_PrintParticlesReconstruction):
-        import os
-        import docfiles
-        import visualization
-        plot=visualization.gnuplot()
-        plot.prepare_empty_plot("",
-                                "Iteration",
-                                "Number of particles")
-        plot.send('plot "-" using 1:2 with lines')   
-        for i in range(len(_PrintParticlesReconstruction)):
-             doc=docfiles.docfile(_PrintParticlesReconstruction[i])
-             no_particles=doc.sum_of_column(7)
-             print str(i+1)+' '+str(no_particles)
-             plot.send(str(i+1)+' '+str(no_particles))   
-        plot.send('e')   
-            
-
 #		
 # Main
 #      
@@ -352,13 +323,11 @@ if __name__ == '__main__':
                                                   DisplayIterationsNo,
                                                   DisplayReference,
                                                   DisplayProjectionMatchingAlign2d,
-                                                  PrintParticlesReconstruction,
                                                   DisplayReconstruction,
                                                   DisplayFilteredReconstruction,
                                                   DisplayResolutionPlots,
                                                   MatrixWidth,
                                                   DisplayAngularDistribution,
-                                                  DisplayAngularDistributionAlign2d,
                                                   ProtocolName)
     # close 
     visualize_projmatch.close()
