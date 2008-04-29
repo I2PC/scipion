@@ -334,7 +334,7 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
                         index=tip;
                     while( chunk_mysampling.my_exp_img_per_sampling_point[index].size()<=0)
                     {
-                        index_counter = index_counter++;
+                        index_counter++;
                         index_counter = index_counter%N;
                         index = index_counter;
                     }
