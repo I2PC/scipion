@@ -380,7 +380,6 @@ std::cerr << "Wr" << rank << " " << "TAG_WORKFORWORKER" << std::endl;
                    }           
             }
         }
-        MPI_Finalize();
     }
 
     void createGroupSamplingFiles(void)
@@ -425,6 +424,7 @@ int main(int argc, char *argv[])
         prm.preRun();
         prm.run();
         prm.createGroupSamplingFiles();
+        MPI_Finalize();
     }
     catch (Xmipp_error XE)
     {
