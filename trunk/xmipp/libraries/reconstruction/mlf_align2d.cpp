@@ -342,7 +342,6 @@ void Prog_MLFalign2D_prm::produceSideInfo()
     hdim = dim / 2;
     dim2 = dim * dim;
     nr_exp_images = SF.ImgNo();
-    if (do_student) df2 = - ( df + dim2 ) / 2. ;
 
     // Get number of references
     if (do_ML3D)
@@ -1753,6 +1752,8 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
     // Convert 1D Vsig vectors to the correct vector size for the 2D FTHalfs
     if (!do_scale) opt_scale =1.;
     ldim = (double)nr_points_prob;
+    // For t-student: df2 changes with effective resolution!
+    if (do_student) df2 = - ( df +  ldim ) / 2. ;
     sum_refw2 = 0.;
     sigma2.clear();
     ctf.clear();
