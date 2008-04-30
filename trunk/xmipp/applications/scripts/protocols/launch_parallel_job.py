@@ -55,7 +55,9 @@ def launch_parallel_job(mpiprogramname,
                 machinefile= os.environ.get(MyMachineFile[1:])
             else:
                 machinefile= MyMachineFile
-            machineParam=' -machinefile ' +  machinefile
+            machinefile_flag = str(os.environ.get('XMIPP_MACHINEFILE_FLAG','machinefile'))
+            machineParam=' -' + machinefile_flag + ' ' +  machinefile
+            #machineParam=' -machinefile ' +  machinefile
 
             if (MyNumberOfCPUs<0):
                 # use the number of entries in the machinefile
