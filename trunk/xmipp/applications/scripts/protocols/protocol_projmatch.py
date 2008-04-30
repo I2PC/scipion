@@ -11,7 +11,9 @@
 #-----------------------------------------------------------------------------
 # {section} Global parameters
 #-----------------------------------------------------------------------------
-# {file} Selfile with the input images:
+# {file} Selfile with the input images (in ProjectDir!):
+""" Note that this file should be positioned in the ProjectDir!!
+"""
 SelFileName='noefg.sel'
 
 # {file} {expert} Docfile with the input angles:
@@ -65,8 +67,9 @@ LogDir='Logs'
 """
 DoCtfCorrection=False
 
-# {file} CTFDat file with CTF data:
+# {file} CTFDat file with CTF data (in ProjectDir!):
 """ The input selfile may be a subset of the images in the CTFDat file, but all images in the input selfile must be present in the CTFDat file. This field is obligatory if CTF correction is to be performed.
+Note that this file should be positioned in the ProjectDir!!
 """
 CTFDatName=''
 
