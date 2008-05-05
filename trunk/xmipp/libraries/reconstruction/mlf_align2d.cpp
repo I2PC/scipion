@@ -1832,24 +1832,6 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                     diff = 0.;
 		    // get the starting point in the Fref vector
 		    ref_start = refno*nr_psi*dnr_points_2d + ipsi*dnr_points_2d;
-		    /*
-		    if (debug==99)
-		    {
-			annotate_time(&t0);
-			for (int repeat=0; repeat<10000000; repeat++)
-			{
-			    diff=0.;
-			    for (int ii = 0; ii < nr_points_prob; ii++)
-			    {
-				tmpr = Fimg_trans[img_start + 2*ii] - ctf[ii] * Fref[ref_start + 2*ii];	
-				tmpi = Fimg_trans[img_start + 2*ii+1] - ctf[ii] * Fref[ref_start + 2*ii+1];	
-				diff += (tmpr * tmpr + tmpi * tmpi) / sigma2[ii];
-			    }
-			}
-			std::cerr<<"normal: diff= "<<diff; print_elapsed_time(t0); 
-			exit(0);
-		    }
-		    */
 		    if (do_ctf_correction)
 		    {
 			for (int ii = 0; ii < nr_points_prob; ii++)
@@ -1938,11 +1920,12 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 			// pdfc = (1 + diff2/df)^df2 / (1 + mindiff2/df)^df2
 			//      = ( (1 + diff2/df)/(1 + mindiff2/df) )^df2
 			//      = ( (df + diff2) / (df + mindiff2) )^df2
-			aux = (df + diff) / (df + mindiff2);
+                        // Extra factor two because we saved diff = | X - A |^2 / TWO * sigma
+			aux = (df + 2. * diff) / (df + 2. * mindiff2);
 			weight1 = pow(aux, df2) * pdf;
 			// Calculate extra weight acc. to Eq (10) Wang et al.
 			// Patt. Recognition Lett. 25, 701-710 (2004)
-			weight2 = ( df + ldim ) / ( df + diff  );
+			weight2 = ( df + ldim ) / ( df + 2. * diff  );
 			// total weight
 			weight = weight1 * weight2;
 			// Store weight
@@ -1955,7 +1938,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 			sum_refw2 += weight;
 			if (debug == 11 && weight > maxweight)
 			{
-			    std::cerr<<"refno= "<<refno<<" irot= "<<irot<<" diff= "<<diff<<" mindiff2= "<<mindiff2<<" weight1= "<<weight1<<" weight2= "<<weight2<<" dfsigma2= "<<dfsigma2<<" ldim= "<<ldim<<std::endl;
+			    std::cerr<<"refno= "<<refno<<" irot= "<<irot<<" diff= "<<diff<<" mindiff2= "<<mindiff2<<" weight1= "<<weight1<<" weight2= "<<weight2<<" ldim= "<<ldim<<std::endl;
 			}
 		    }
 		    if (do_scale)
@@ -2072,7 +2055,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 					aux = diff - mindiff2;
 					// next line because of numerical precision of exp-function
 					if (aux > 100.) weight = 0.;
-					else weight = exp(-aux) * fracpdf * MAT_ELEM(P_phi, iy, ix);
+					else weight = exp(-aux) * pdf;
 					// Store weight
 					dVkij(Mweight, itrans, refno, irot) = weight;
 					// Accumulate sum weights
@@ -2084,16 +2067,17 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 				    {
 					// t-student distribution 
 					// now diff2 and mindiff2 are already divided by sigma2!!
-					// pdf = (1 + diff2*df)^df2
+					// pdf = (1 + diff2/df)^df2
 					// Correcting for mindiff2:
 					// pdfc = (1 + diff2/df)^df2 / (1 + mindiff2/df)^df2
 					//      = ( (1 + diff2/df)/(1 + mindiff2/df) )^df2
 					//      = ( (df + diff2) / (df + mindiff2) )^df2
-					aux = (df + diff) / (df + mindiff2);
+                                        // Extra factor two because we saved diff = | X - A |^2 / TWO * sigma
+					aux = (df + 2. * diff) / (df + 2. * mindiff2);
 					weight1 = pow(aux, df2) * pdf;
 					// Calculate extra weight acc. to Eq (10) Wang et al.
 					// Patt. Recognition Lett. 25, 701-710 (2004)
-					weight2 = ( df + ldim ) / ( df + diff);
+					weight2 = ( df + ldim ) / ( df + 2. * diff);
 					// Total weight
 					weight = weight1 * weight2;
 					// Store weight
@@ -2506,7 +2490,10 @@ void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, std::vector< ImageXmippT
             dataline(6) = opt_flip;                  // Mirror
             dataline(7) = maxcorr;                   // P_max/P_tot or Corr
 	    dataline(8) = opt_scale;                 // Optimal scale
-	    dataline(9) = maxweight2;                // robustness weight 
+            if (do_student)
+                dataline(9) = maxweight2;                // robustness weight 
+            else
+                dataline(9) = 1.0;
             DFo.append_comment(img.name());
             DFo.append_data_line(dataline);
         }
