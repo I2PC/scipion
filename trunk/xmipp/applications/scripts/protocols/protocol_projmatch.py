@@ -1096,8 +1096,10 @@ def execute_projection_matching(_mylog,
 
 
    # Loop over all CTF groups
-   for ictf in range(_NumberOfCtfGroups):
-   
+   # Use reverse order to have same order in add_to docfiles from angular_class_average
+   for ii in range(_NumberOfCtfGroups):
+      ictf = _NumberOfCtfGroups + 1 - ii
+
       refname          = ProjectLibraryRootName
       if (_DoCtfCorrection):
          CtfGroupName = utils_xmipp.composeFileName(CtfGroupRootName + '_group',ictf+1,'')
