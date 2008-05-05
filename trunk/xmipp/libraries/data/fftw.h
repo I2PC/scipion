@@ -202,7 +202,12 @@ The MEASURE flag
    virtual void       Transform();
 
    /** Fills the array data with the computed transform.
-       or the initial points
+       or the initial points.
+       IMPORTANT note that fftw and xmipp use different access order.
+       first coordiante is contigous in memory
+       in fftw last coordinate is contigous in memory.
+       This routine performs a blind copy and will not
+       take care of this difference
        Only (roughly) a half of the transform is copied (exactly the output of FFTW),
        the rest being Hermitian symmetric with the first half
    */
@@ -211,6 +216,11 @@ The MEASURE flag
    /**Set all input points.
    The values are copied. If inverse points should be ordered as follows:
    [re_0, im_0, re_1, im_1, ..., re_n, im_n) in the input array
+       IMPORTANT note that fftw and xmipp use different access order.
+       first coordiante is contigous in memory
+       in fftw last coordinate is contigous in memory.
+       This routine performs a blind copy and will not
+       take care of this difference
    */
    
    void       SetPoints(const double *data);
