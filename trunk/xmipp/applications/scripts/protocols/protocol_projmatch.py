@@ -1098,7 +1098,7 @@ def execute_projection_matching(_mylog,
    # Loop over all CTF groups
    # Use reverse order to have same order in add_to docfiles from angular_class_average
    for ii in range(_NumberOfCtfGroups):
-      ictf = _NumberOfCtfGroups + 1 - ii
+      ictf = _NumberOfCtfGroups - ii - 1
 
       refname          = ProjectLibraryRootName
       if (_DoCtfCorrection):
