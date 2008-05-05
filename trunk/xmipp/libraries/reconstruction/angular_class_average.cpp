@@ -752,38 +752,6 @@ void Prog_angular_class_average_prm::addClassAverage(int dirno,
 
 }
 
-void Prog_angular_class_average_prm::mergeDocfiles(FileName fn_old, DocFile &DF)
-{
-    DocFile  DFold;
-    DocLine  DL;
-    SelFile  SF;
-    FileName fn_img;
-    double   w;
-
-    DFold.read(fn_old);
-    DFold.get_selfile(SF);
-
-    SF.go_beginning();
-    while (!SF.eof())
-    {
-        fn_img=SF.NextImg();
-        DFold.search_comment(fn_img);
-        DL=DFold.get_current_line();
-        if (DF.search_comment(fn_img))
-        {
-            // Just add weights
-            w = DF(5) + DFold(5);
-            DF.set(5,w);
-        }        
-        else
-        {
-            // Add new line
-            DF.append_comment(fn_img);
-            DF.append_line(DL);
-        }
-    }
-
-}
 
 void Prog_angular_class_average_prm::finalWriteToDisc()
 {
@@ -830,7 +798,12 @@ void Prog_angular_class_average_prm::finalWriteToDisc()
     if (nr_iter > 0)
     {
         fn_tmp=fn_out+"_realigned.doc";
-        if (do_add && exists(fn_tmp)) DF.merge(fn_tmp,DOCMERGE_ERROR);
+        if (do_add && exists(fn_tmp)) 
+        {
+            // Don't do any fancy merging or sorting because those functions are really slow... 
+            DF.append(fn_tmp);
+            DF.remove_multiple_strings("Headerinfo");
+        }
         DF.write(fn_tmp);
     }
 

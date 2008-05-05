@@ -124,8 +124,9 @@ class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
             if (exists(fn_tmp)) 
             {
                 DocFile DFaux = DF;
-                DFaux.merge(fn_tmp,DOCMERGE_ERROR);
-                DFaux = DFaux.sort_by_filenames();
+                // Don't do any fancy merging or sorting because those functions are really slow... 
+                DFaux.append(fn_tmp);
+                DFaux.remove_multiple_strings("Headerinfo");
                 DFaux.write(fn_tmp);
             }
             else

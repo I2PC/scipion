@@ -54,8 +54,9 @@ int main(int argc, char **argv)
             if (exists(fn_tmp)) 
             {
                 DocFile DFaux = prm.DF;
-                DFaux.merge(fn_tmp,DOCMERGE_ERROR);
-                DFaux = DFaux.sort_by_filenames();
+                // Don't do any fancy merging or sorting because those functions are really slow... 
+                DFaux.append(fn_tmp);
+                DFaux.remove_multiple_strings("Headerinfo");
                 DFaux.write(fn_tmp);
             }
             else

@@ -140,10 +140,6 @@ public:
                        double w1,
                        double w2);
 
-  /** Merge existing docfile for all class averages with current one
-      sum weights for entries occurring in both docfiles! */
-  void mergeDocfiles(FileName fn_old, DocFile &DF);
-
   /** Write selfile and docfile of all class averages to disc */
   void finalWriteToDisc();
  
