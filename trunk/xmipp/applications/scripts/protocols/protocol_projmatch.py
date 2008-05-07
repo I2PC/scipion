@@ -433,6 +433,9 @@ DoParallel=True
 # Number of processors to use:
 NumberOfCPUs=-1
 
+# minumum size of jobs in mpi processe. Set to 1 for large images a 10 for small
+MpiJobSize='1'
+
 # {file} A list of all available CPUs (the MPI-machinefile):
 """ Depending on your system, your standard script to launch MPI-jobs may require this
     if your queueing system using an environment variable, give it here (with the leading $, e.g. $PBS_NODEFILE
@@ -528,6 +531,7 @@ class projection_matching_class:
                 _DoParallel,
                 _MyNumberOfCPUs,
                 _MyMachineFile,
+                _MyMpiJobSize,
                 _MyControlFile,
                 _SymmetryGroup,
                 _SetResolutiontoZero,
@@ -583,7 +587,7 @@ class projection_matching_class:
            self._DoControl=False
        else:
            self._DoControl=True
-
+       self._MyMpiJobSize =_MyMpiJobSize
        self._user_suplied_ReferenceVolume=self._ReferenceFileName
 
        # Set up logging
@@ -792,6 +796,7 @@ class projection_matching_class:
                                          self._DoParallel,
                                          self._MyNumberOfCPUs,
                                          self._MyMachineFile,
+                                         self._MyMpiJobSize,
                                          self._WorkDirectory,
                                          self._SymmetryGroup,
                                          self._AvailableMemory,
@@ -1019,6 +1024,7 @@ def execute_projection_matching(_mylog,
                                 _DoParallel,
                                 _MyNumberOfCPUs,
                                 _MyMachineFile,
+                                _MyMpiJobSize,
                                 _WorkDirectory,
                                 _SymmetryGroup,
                                 _AvailableMemory,
@@ -1084,6 +1090,9 @@ def execute_projection_matching(_mylog,
       parameters += \
           ' -control '                 + _MyControlFile
 
+   if (len(_MyMpiJobSize)>0 and _DoParallel):
+      parameters = parameters + ' -mpi_job_size ' + str(_MyMpiJobSize)
+
    launch_parallel_job.launch_job(
                        _DoParallel,
                        'xmipp_angular_project_library',
@@ -1139,6 +1148,9 @@ def execute_projection_matching(_mylog,
       if (_DoControl):
          parameters += \
                   ' -control '        + self.MyControlFile
+
+      if (len(_MyMpiJobSize)>0 and _DoParallel):
+         parameters = parameters + ' -mpi_job_size ' + str(_MyMpiJobSize)
 
       launch_parallel_job.launch_job(
                                      _DoParallel,
@@ -1626,6 +1638,7 @@ if __name__ == '__main__':
                 DoParallel,                     
                 NumberOfCPUs,                   
                 MachineFile,
+                MpiJobSize,
                 MyControlFile,
                 SymmetryGroup,                        
                 SetResolutiontoZero,
