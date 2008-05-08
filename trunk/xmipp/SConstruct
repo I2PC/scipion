@@ -243,6 +243,7 @@ elif (ARGUMENTS['mode'] == 'compile'):
         env.Append(CXXFLAGS = ['-O2'])
         env.Append(LINKFLAGS = ['-s'])
 
+    # Add threads
     env.Append(LINKFLAGS = ['-pthread'])
     env.Append(CXXFLAGS = ['-pthread'])
 
