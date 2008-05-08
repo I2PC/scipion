@@ -408,7 +408,7 @@ ReconsSources = [
     'volume_labelling.cpp']
 
 AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
-           ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData'])
+           ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','pthread'])
 
 # ReconsInterface
 ReconsInterfaceSources = [
@@ -435,7 +435,7 @@ AddLibrary('XmippClassif', 'libraries/classification', ClassificationSources,
 # Interface
 InterfaceSources = Glob('libraries/interface', '*.cpp', [])
 AddLibrary('XmippInterface', 'libraries/interface', InterfaceSources,
-    ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData'])
+    ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','pthread'])
 
 # Recons Interface
 AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
@@ -555,7 +555,7 @@ AddXmippProgram('project_tomography', ['XmippRecons'])
 AddXmippProgram('psd_enhance', ['XmippRecons'])
 AddXmippProgram('psd_sort', ['XmippRecons'])
 AddXmippProgram('range_adjust')
-AddXmippProgram('reconstruct_art', ['XmippRecons'])
+AddXmippProgram('reconstruct_art', ['XmippRecons','pthread'])
 AddXmippProgram('reconstruct_wbp', ['XmippRecons'])
 AddXmippProgram('resolution_fsc')
 AddXmippProgram('resolution_ssnr', ['XmippRecons'])
