@@ -12,7 +12,7 @@
 # {section} Global parameters
 #-----------------------------------------------------------------------------
 # {file} Selfile with the input images (in ProjectDir!):
-""" Note that this file should be positioned in the ProjectDir!!
+""" Note that this file should be positioned in the projection directory.
 """
 SelFileName='noefg.sel'
 
@@ -22,7 +22,7 @@ SelFileName='noefg.sel'
     This docfile should be in newXmipp-style format (with filenames as comments)
     Note that all filenames in this docfile should be with absolute paths!
 """
-DocFileName='noefg_reset.doc'
+DocFileName=''
 
 # {file} Initial 3D reference map:
 ReferenceFileName='ml3d_it00020_vol00004_sc128_ff80.vol'
@@ -69,7 +69,7 @@ DoCtfCorrection=False
 
 # {file} CTFDat file with CTF data (in ProjectDir!):
 """ The input selfile may be a subset of the images in the CTFDat file, but all images in the input selfile must be present in the CTFDat file. This field is obligatory if CTF correction is to be performed.
-Note that this file should be positioned in the ProjectDir!!
+Note that this file should be positioned in the project directory.
 """
 CTFDatName=''
 
@@ -433,7 +433,7 @@ DoParallel=True
 # Number of processors to use:
 NumberOfCPUs=-1
 
-# minumum size of jobs in mpi processe. Set to 1 for large images a 10 for small
+# minumum size of jobs in mpi processe. Set to 1 for large images and to 10 for small
 MpiJobSize='1'
 
 # {file} A list of all available CPUs (the MPI-machinefile):
