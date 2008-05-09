@@ -162,42 +162,41 @@ std::ostream & operator << (std::ostream &out, const XmippCTF &ctf)
 {
     if (ctf.enable_CTF)
     {
-        out
-        << "sampling_rate=        " << ctf.Tm    << std::endl
-        << "voltage=              " << ctf.kV    << std::endl
-        << "defocusU=             " << ctf.DeltafU   << std::endl
-        << "defocusV=             " << ctf.DeltafV   << std::endl
-        << "azimuthal_angle=      " << ctf.azimuthal_angle << std::endl
-        << "spherical_aberration= " << ctf.Cs              << std::endl
-        << "chromatic_aberration= " << ctf.Ca              << std::endl
-        << "energy_loss=          " << ctf.espr            << std::endl
-        << "lens_stability=       " << ctf.ispr            << std::endl
-        << "convergence_cone=     " << ctf.alpha           << std::endl
-        << "longitudinal_displace=" << ctf.DeltaF          << std::endl
-        << "transversal_displace= " << ctf.DeltaR          << std::endl
-        << "Q0=                   " << ctf.Q0              << std::endl
-        << "K=                    " << ctf.K               << std::endl
+        out << "sampling_rate=        " << ctf.Tm              << std::endl
+            << "voltage=              " << ctf.kV              << std::endl
+            << "defocusU=             " << ctf.DeltafU         << std::endl
+            << "defocusV=             " << ctf.DeltafV         << std::endl
+            << "azimuthal_angle=      " << ctf.azimuthal_angle << std::endl
+            << "spherical_aberration= " << ctf.Cs              << std::endl
+            << "chromatic_aberration= " << ctf.Ca              << std::endl
+            << "energy_loss=          " << ctf.espr            << std::endl
+            << "lens_stability=       " << ctf.ispr            << std::endl
+            << "convergence_cone=     " << ctf.alpha           << std::endl
+            << "longitudinal_displace=" << ctf.DeltaF          << std::endl
+            << "transversal_displace= " << ctf.DeltaR          << std::endl
+            << "Q0=                   " << ctf.Q0              << std::endl
+            << "K=                    " << ctf.K               << std::endl
         ;
     }
     if (ctf.enable_CTFnoise)
     {
         out << "gaussian_K=           " << ctf.gaussian_K      << std::endl
-        << "sigmaU=               " << ctf.sigmaU      << std::endl
-        << "sigmaV=               " << ctf.sigmaV      << std::endl
-        << "cU=                   " << ctf.cU       << std::endl
-        << "cV=                   " << ctf.cV       << std::endl
-        << "gaussian_angle=       " << ctf.gaussian_angle  << std::endl
-        << "sqrt_K=               " << ctf.sqrt_K      << std::endl
-        << "sqU=                  " << ctf.sqU      << std::endl
-        << "sqV=                  " << ctf.sqV      << std::endl
-        << "sqrt_angle=           " << ctf.sqrt_angle      << std::endl
-        << "base_line=            " << ctf.base_line       << std::endl
-        << "gaussian_K2=          " << ctf.gaussian_K2     << std::endl
-        << "sigmaU2=              " << ctf.sigmaU2      << std::endl
-        << "sigmaV2=              " << ctf.sigmaV2      << std::endl
-        << "cU2=                  " << ctf.cU2      << std::endl
-        << "cV2=                  " << ctf.cV2       << std::endl
-        << "gaussian_angle2=      " << ctf.gaussian_angle2 << std::endl
+            << "sigmaU=               " << ctf.sigmaU          << std::endl
+            << "sigmaV=               " << ctf.sigmaV          << std::endl
+            << "cU=                   " << ctf.cU              << std::endl
+            << "cV=                   " << ctf.cV              << std::endl
+            << "gaussian_angle=       " << ctf.gaussian_angle  << std::endl
+            << "sqrt_K=               " << ctf.sqrt_K          << std::endl
+            << "sqU=                  " << ctf.sqU             << std::endl
+            << "sqV=                  " << ctf.sqV             << std::endl
+            << "sqrt_angle=           " << ctf.sqrt_angle      << std::endl
+            << "base_line=            " << ctf.base_line       << std::endl
+            << "gaussian_K2=          " << ctf.gaussian_K2     << std::endl
+            << "sigmaU2=              " << ctf.sigmaU2         << std::endl
+            << "sigmaV2=              " << ctf.sigmaV2         << std::endl
+            << "cU2=                  " << ctf.cU2             << std::endl
+            << "cV2=                  " << ctf.cV2             << std::endl
+            << "gaussian_angle2=      " << ctf.gaussian_angle2 << std::endl
         ;
     }
     return out;
