@@ -2211,7 +2211,7 @@ void coreArrayByScalar(const MultidimArray<T>& op1,
     T* ptrOp1=NULL;
     unsigned long int n;
     for (n=0, ptrResult=result.data, ptrOp1=op1.data;
-         n<op1.yxdim; ++n, ++ptrResult, ++ptrOp1)
+         n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1)
         switch (operation)
         {
         case '+':
