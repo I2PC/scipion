@@ -2239,7 +2239,7 @@ void coreScalarByArray(const T& op1,
     T* ptrOp2=NULL;
     unsigned long int n;
     for (n=0, ptrResult=result.data, ptrOp2=op2.data;
-         n<op2.yxdim; ++n, ++ptrResult, ++ptrOp2)
+         n<op2.zyxdim; ++n, ++ptrResult, ++ptrOp2)
         switch (operation)
         {
         case '+':
