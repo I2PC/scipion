@@ -124,7 +124,7 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
                        prm.IMG_Inf[iact_proj].rot,
                        prm.IMG_Inf[iact_proj].tilt,
                        prm.IMG_Inf[iact_proj].psi, BACKWARD, prm.eq_mode,
-                       prm.GVNeq, NULL, prm.ray_length);
+                       prm.GVNeq, NULL, prm.ray_length, prm.threads);
 
         if (!(prm.tell&TELL_SHOW_ERROR))
             if (iact_proj % XMIPP_MAX(1, prm.numIMG / 60) == 0) progress_bar(iact_proj);
@@ -164,7 +164,7 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
                        prm.IMG_Inf[iact_proj].rot,
                        prm.IMG_Inf[iact_proj].tilt,
                        prm.IMG_Inf[iact_proj].psi, FORWARD, prm.eq_mode,
-                       prm.GVNeq, A, prm.ray_length);
+                       prm.GVNeq, A, prm.ray_length, prm.threads);
 
         sqrtweight = sqrt(prm.residual_imgs[iact_proj].weight() / prm.sum_weight);
 
