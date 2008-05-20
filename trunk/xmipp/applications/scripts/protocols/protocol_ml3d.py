@@ -108,12 +108,12 @@ DoML3DClassification=True
 AngularSampling=10
 # Number of ML(F)3D iterations to perform:
 NumberOfIterations=25
-# {file} In the case of symmetry supply the symmetry description file:
-""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetrize
-    for a description of the symmetry file format
-    dont give anything, if no symmetry is present
+# Point group symmetry:
+""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
+    for a description of the point group symmetries
+    Give c1 if no symmetry is present
 """
-Symmetry=""
+Symmetry="c1"
 # {expert} Restart after iteration:
 """ For previous runs that stopped before convergence,
     resume the calculations after the completely finished iteration,
