@@ -128,6 +128,37 @@ double gasdev(int *idum)
     }
 }
 
+// t-distribution (nor Numerical Recipes, but Mathematics of Computation, vol. 62, 779-781.
+// I downloaded sem-code from http://ideas.repec.org/c/ega/comcod/200703.html
+// Sjors May 2008
+double tdev(double nu, int *idum)
+{
+    static int iset = 0;
+    static double gset;
+    double fac, r, v1, v2;
+
+    if (iset == 0)
+    {
+        do
+        {
+            v1 = 2.0 * ran1(idum) - 1.0;
+            v2 = 2.0 * ran1(idum) - 1.0;
+            r = v1 * v1 + v2 * v2;
+        }
+        while (r >= 1.0);
+        fac = sqrt(nu*(pow(r,-2.0/nu) -1.0)/r);
+        gset = v1 * fac;
+        iset = 1;
+        return v2*fac;
+    }
+    else
+    {
+        iset = 0;
+        return gset;
+    }
+}
+
+
 /* SORTING ----------------------------------------------------------------- */
 /* Chapter 8, Section 3: Indexing */
 void indexx(int n, double arrin[], int indx[])

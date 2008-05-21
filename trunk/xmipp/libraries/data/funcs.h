@@ -449,6 +449,26 @@ float rnd_unif();
  */
 float rnd_unif(float a, float b);
 
+/** Produce a t-distributed random number with mean 0 and standard deviation 1 and nu degrees of freedom
+ * @ingroup RandomFunctions
+ *
+ * @code
+ * std::cout << "This random number should follow t(0,1) with 3 degrees of freedon: " << rnd_student_t(3.)
+ * << std::endl;
+ * @endcode
+ */
+float rnd_student_t(double nu);
+
+/** Produce a gaussian random number with mean a and standard deviation b and nu degrees of freedom
+ * @ingroup RandomFunctions
+ *
+ * @code
+ * std::cout << "This random number should follow t(1,4) with 3 d.o.f.: " << rnd_gaus(3,1,2)
+ * << std::endl;
+ * @endcode
+ */
+float rnd_student_t(double nu, float a, float b);
+
 /** Produce a gaussian random number with mean 0 and standard deviation 1
  * @ingroup RandomFunctions
  *

@@ -42,6 +42,7 @@ void nrerror(const char error_text[]);
 // Random numbers ---------------------------------------------------------
 double ran1(int *idum);                                 // Uniform random
 double gasdev(int *idum);                               // Gaussian random
+double tdev(double nu, int *idum);                      // t-student random
 
 // FFT ---------------------------------------------------------------------
 void four1(double data[], int nn, int isign);           // Complex FFT 1D

@@ -231,6 +231,19 @@ float rnd_unif(float a, float b)
         return a + (b - a)*ran1(&idum);
 }
 
+// t-distribution
+float rnd_student_t(double nu)
+{
+    return tdev(nu, &idum);
+}
+float rnd_student_t(double nu, float a, float b)
+{
+    if (b == 0)
+        return a;
+    else
+        return b*tdev(nu, &idum) + a;
+}
+
 // Gaussian distribution ...................................................
 float rnd_gaus()
 {

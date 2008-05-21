@@ -31,12 +31,13 @@ class Add_noise_parameters: public Prog_parameters
 public:
     double noise_min, noise_max;
     double noise_avg, noise_stddev;
-    bool   gaussian,  uniform;
+    double df;
+    bool   gaussian,  uniform, student;
 
     void read(int argc, char **argv)
     {
         Prog_parameters::read(argc, argv);
-        gaussian = uniform = false;
+        gaussian = uniform = student = false;
         if (checkParameter(argc, argv, "-gaussian"))
         {
             gaussian = true;
@@ -46,6 +47,19 @@ public:
             if (i + 2 < argc)
             {
                 noise_avg = textToFloat(argv[i+2]);
+            }
+            else noise_avg = 0;
+        }
+        else if (checkParameter(argc, argv, "-student"))
+        {
+            student = true;
+            int i = paremeterPosition(argc, argv, "-student");
+            if (i + 2 >= argc) REPORT_ERROR(1, "Not enough parameters after -student");
+            df = textToFloat(argv[i+1]);
+            noise_stddev = textToFloat(argv[i+2]);
+            if (i + 3 < argc)
+            {
+                noise_avg = textToFloat(argv[i+3]);
             }
             else noise_avg = 0;
         }
@@ -67,6 +81,10 @@ public:
         if (gaussian)
             std::cout << "Noise avg=" << noise_avg << std::endl
             << "Noise stddev=" << noise_stddev << std::endl;
+        else if (student)
+            std::cout << "Degrees of freedom= "<<df<< std::endl
+                      << "Noise avg=" << noise_avg << std::endl
+                      << "Noise stddev=" << noise_stddev << std::endl;
         else if (uniform)
             std::cout << "Noise min=" << noise_min << std::endl
             << "Noise max=" << noise_max << std::endl;
@@ -75,8 +93,10 @@ public:
     void usage()
     {
         Prog_parameters::usage();
-        std::cerr << "  [-gaussian <stddev> [<avg>=0]] : Gaussian noise parameters\n"
-        << "  [-uniform  <min> <max>]   : Uniform noise parameters\n";
+        std::cerr 
+            << "  [-gaussian <stddev> [<avg>=0]] : Gaussian noise parameters\n"
+            << "  [-student <df> <stddev> [<avg>=0]] : t-student noise parameters\n"
+            << "  [-uniform  <min> <max>]   : Uniform noise parameters\n";
     }
 };
 
@@ -85,6 +105,8 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
     Add_noise_parameters *eprm = (Add_noise_parameters *) prm;
     if (eprm->gaussian)
         img().addNoise(eprm->noise_avg, eprm->noise_stddev, "gaussian");
+    else if (eprm->student)
+        img().addNoise(eprm->noise_avg, eprm->noise_stddev, "student", eprm->df);
     else if (eprm->uniform)
         img().addNoise(eprm->noise_min, eprm->noise_max, "uniform");
     return true;
@@ -95,6 +117,8 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
     Add_noise_parameters *eprm = (Add_noise_parameters *) prm;
     if (eprm->gaussian)
         vol().addNoise(eprm->noise_avg, eprm->noise_stddev, "gaussian");
+    else if (eprm->student)
+        vol().addNoise(eprm->noise_avg, eprm->noise_stddev, "student", eprm->df);
     else if (eprm->uniform)
         vol().addNoise(eprm->noise_min, eprm->noise_max, "uniform");
     return true;

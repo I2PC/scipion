@@ -1397,11 +1397,17 @@ public:
      *
      * v1.addNoise(0, 1, "gaussian");
      * // gaussian distribution with 0 mean and stddev=1
+     *
+     * v1.addNoise(0, 1, "student", 3);
+     * // t-student distribution with 0 mean and stddev=1, and 3 degrees of freedom
+     *
+
      * @endcode
      */
     void addNoise(double op1,
-                   double op2,
-                   const std::string& mode = "uniform") const
+                  double op2,
+                  const std::string& mode = "uniform",
+                  double df = 3) const
     {
         T* ptr=NULL;
 	unsigned long int n;
@@ -1411,6 +1417,9 @@ public:
         else if (mode == "gaussian")
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
                 *ptr += static_cast< T >(rnd_gaus(op1, op2));
+        else if (mode == "student")
+            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
+                *ptr += static_cast< T >(rnd_student_t(df, op1, op2));
         else
             REPORT_ERROR(1005,
                          static_cast< std::string >("AddNoise: Mode not supported (" +
