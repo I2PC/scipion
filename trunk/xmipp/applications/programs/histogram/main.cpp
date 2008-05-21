@@ -25,6 +25,7 @@
 
 #include <data/args.h>
 #include <data/image.h>
+#include <data/selfile.h>
 #include <data/volume.h>
 #include <data/mask.h>
 #include <data/histogram.h>
@@ -34,21 +35,24 @@ void Usage();
 int main(int argc, char **argv)
 {
     VolumeXmipp     volume;
+    SelFile         SF;
     ImageXmipp      image;
-    bool            image_mode;
-    FileName        fn_in, fn_out;
+    bool            image_mode, volume_mode;
+    FileName        fn_in, fn_out, fn_sel;
     Mask_Params     mask_prm(INT_MASK);
-    bool            automatic_range;
+    bool            automatic_range, is_first = true;
     double          m, M; // range for histogram
     int             StepsNo;
-    histogram1D     hist;
+    histogram1D     hist, histb;
 #define         V VOLMATRIX(volume)
 #define         I IMGMATRIX(image)
 
     // Read arguments --------------------------------------------------------
     try
     {
-        fn_in      = getParameter(argc, argv, "-i");
+        fn_sel      = getParameter(argc, argv, "-sel","");
+        if (fn_sel=="")
+            fn_in     = getParameter(argc, argv, "-i");
         fn_out     = getParameter(argc, argv, "-o", "");
 
         StepsNo = textToInteger(getParameter(argc, argv, "-steps", "100"));
@@ -75,41 +79,64 @@ int main(int argc, char **argv)
 
     try
     {
-        if (Is_ImageXmipp(fn_in))
+        if (fn_sel!="")
         {
-            image_mode = true;
-            image.read(fn_in);
-        }
-        else if (Is_VolumeXmipp(fn_in))
-        {
-            image_mode = false;
-            volume.read(fn_in);
-        }
-        else EXIT_ERROR(1, "Histogram: Input file is not an image nor a volume");
-
-        // Compute histogram ----------------------------------------------------
-        if (image_mode)
-        {
-            I.setXmippOrigin();
-            mask_prm.generate_2Dmask(I);
-            const Matrix2D<int> & mask2D = mask_prm.get_binary_mask2D();
-            if (automatic_range)
-                compute_hist_within_binary_mask(mask2D, I, hist, StepsNo);
-            else
-                compute_hist_within_binary_mask(mask2D, I, hist, m, M, StepsNo);
+            SF.read(fn_sel);
         }
         else
         {
-            V.setXmippOrigin();
-            mask_prm.generate_3Dmask(V);
-            const Matrix3D<int> & mask3D = mask_prm.get_binary_mask3D();
-            if (automatic_range)
-                compute_hist_within_binary_mask(mask3D, V, hist, StepsNo);
-            else
-                compute_hist_within_binary_mask(mask3D, V, hist, m, M, StepsNo);
+            SF.insert(fn_in);
         }
+        SF.go_beginning();
+        while (!SF.eof())
+        {
+            fn_in = SF.NextImg();
 
-        if (fn_out != "") hist.write(fn_out);
+            if (Is_ImageXmipp(fn_in))
+            {
+                image_mode = true;
+                image.read(fn_in);
+            }
+            else if (Is_VolumeXmipp(fn_in))
+            {
+                image_mode = false;
+                volume.read(fn_in);
+            }
+            else EXIT_ERROR(1, "Histogram: Input file is not an image nor a volume");
+
+            // Compute histogram ----------------------------------------------------
+            if (image_mode)
+            {
+                I.setXmippOrigin();
+                mask_prm.generate_2Dmask(I);
+                const Matrix2D<int> & mask2D = mask_prm.get_binary_mask2D();
+                if (automatic_range)
+                    compute_hist_within_binary_mask(mask2D, I, hist, StepsNo);
+                else
+                    compute_hist_within_binary_mask(mask2D, I, hist, m, M, StepsNo);
+            }
+            else
+            {
+                V.setXmippOrigin();
+                mask_prm.generate_3Dmask(V);
+                const Matrix3D<int> & mask3D = mask_prm.get_binary_mask3D();
+                if (automatic_range)
+                    compute_hist_within_binary_mask(mask3D, V, hist, StepsNo);
+                else
+                    compute_hist_within_binary_mask(mask3D, V, hist, m, M, StepsNo);
+            }
+            if (is_first)
+            {
+                is_first = false;
+                histb = hist;
+            }
+            else
+            {
+                histb += hist;
+            }
+        }
+        
+        if (fn_out != "") histb.write(fn_out);
         else            std::cout << hist;
     }
     catch (Xmipp_error Xe)
@@ -123,7 +150,7 @@ int main(int argc, char **argv)
 void Usage()
 {
     std::cout << "histogram [Parameters]:\n"
-    << "   -i <File_in>                : Input Xmipp Volume or Image\n"
+    << "   -i <File_in> / -sel <selfile> : Input Xmipp Volume, Image or selfile\n"
     << "  [-o <File_out>]              : Text file with histogram\n"
     << "  [-range <m> <M>]             : range for the histogram\n"
     << "                                 by default, it is automatic\n"
