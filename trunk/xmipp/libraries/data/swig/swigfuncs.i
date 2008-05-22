@@ -20,7 +20,7 @@ class std::string {};
 %ignore elapsed_time;
 %ignore print_elapsed_time;
 %ignore time_to_go;
-%ignore XmippBaseListener;
+%ignore xmippBaseListener;
 %ignore xmippTextualListener;
 %ignore FREAD;
 %ignore FWRITE;
