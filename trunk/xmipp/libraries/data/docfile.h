@@ -321,11 +321,6 @@ public:
      */
     DocFile& operator=(const DocFile &DF);
 
-    /** Another function for assigment.
-     * @ingroup DocFileOperator
-     */
-    void assign(const DocFile &DF);
-
     /** Assignment from matrix.
      * @ingroup DocFileOperator
      *
@@ -338,11 +333,6 @@ public:
      * @endcode
      */
     DocFile& operator=(const Matrix2D< double >& A);
-
-    /** Another function for assignment from matrix.
-     * @ingroup DocFileOperator
-     */
-    void assign(const Matrix2D< double >& A);
 
     /** Show a document file.
      * @ingroup DocFileOperator
@@ -719,28 +709,14 @@ public:
         return first_key;
     }
 
-    /** Set first key of the file.
+    /** Another function for set first key of the file.
      * @ingroup DocFileInfo
      *
      * This is not the first existing key of the file (the line with this key
      * might be deleted), but the key where all renumerations start. No
      * renumeration is performed at this point.
-     *
-     * @code
-     * DF.FirstKey()=700;
-     * @endcode
-     *
-     * This function is not ported to Python. Use set_FirstKey instead.
      */
-    int& FirstKey()
-    {
-        return first_key;
-    }
-
-    /** Another function for set first key of the file.
-     * @ingroup DocFileInfo
-     */
-    void set_FirstKey(int& _first_key)
+    void set_FirstKey(int _first_key)
     {
         first_key = _first_key;
     }

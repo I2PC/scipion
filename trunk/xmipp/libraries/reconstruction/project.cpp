@@ -628,7 +628,7 @@ int Assign_angles(DocFile &DF, const Projection_Parameters &prm,
     // projections
 
     DF.clear();
-    DF.FirstKey() = prm.starting;
+    DF.set_FirstKey(prm.starting);
 
 // External generation mode
     if (prm.fn_angle != "NULL")

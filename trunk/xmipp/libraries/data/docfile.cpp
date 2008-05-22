@@ -224,12 +224,6 @@ DocFile& DocFile::operator=(const DocFile& doc)
     return *this;
 }
 
-void DocFile::assign(const DocFile& doc)
-{
-    // Call the previous one, as in this->operator=(doc)
-    *this = doc;
-}
-
 DocFile& DocFile::operator=(const Matrix2D< double >& A)
 {
     clear();
@@ -253,12 +247,6 @@ DocFile& DocFile::operator=(const Matrix2D< double >& A)
     go_beginning();
 
     return *this;
-}
-
-void DocFile::assign(const Matrix2D< double >& mat)
-{
-    // Call the previous one, as in this->operator=(mat)
-    *this = mat;
 }
 
 //NOTE: MPI PROGRAMS USE << TP PASS DOCFILES
