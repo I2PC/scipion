@@ -467,7 +467,8 @@ void Adjust_CTF_Parameters::read(const FileName &fn_param)
     max_freq = textToFloat(getParameter(fh_param, "max_freq", 0, "0.35"));
     defocus_range = textToFloat(getParameter(fh_param, "defocus_range", 0, "8000"));
     initial_Ca = textToFloat(getParameter(fh_param, "initial_Ca", 0, "2"));
-    modelSimplification = textToInteger(getParameter(fh_param, "model_simplification", 0, "0"));
+    modelSimplification = textToInteger(getParameter(fh_param, "model_simplification", 0, "1"));
+    bootstrap = checkParameter(fh_param, "bootstrap");
 
     ctfmodelSize = textToInteger(getParameter(fh_param, "ctfmodelSize", 0, "128"));
 
@@ -516,7 +517,9 @@ void Adjust_CTF_Parameters::write(const FileName &fn_prm, bool rewrite)
     fh_param << "enhance_min_freq="     << f1                      << std::endl
              << "enhance_max_freq="     << f2                      << std::endl
              << "enhance_weight="       << enhanced_weight         << std::endl
-             << "model_simplification=" << modelSimplification     << std::endl;
+             << "model_simplification=" << modelSimplification     << std::endl
+             << "bootstrap="            << bootstrap               << std::endl
+    ;
 
     fh_param << initial_ctfmodel << std::endl;
     fh_param.close();
@@ -536,6 +539,7 @@ void Adjust_CTF_Parameters::show()
 	 << "Enhance min freq:    " << f1                  << std::endl
  	 << "Enhance max freq:    " << f2                  << std::endl
          << "Model simplification:" << modelSimplification << std::endl
+         << "Bootstrap:           " << bootstrap           << std::endl
 	 << "Starting:\n"           << initial_ctfmodel    << std::endl
     ;
 }
@@ -619,6 +623,27 @@ void Adjust_CTF_Parameters::produce_side_info()
         int r = FLOOR(global_w_digfreq(i, j) * (double)YSIZE(global_w_digfreq));
         global_w_count(r)++;
     }
+    
+    // Bootstrap
+    if (bootstrap)
+    {
+        double N=global_mask.sum();
+        std::vector< Matrix1D<int> > positions;
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(global_mask)
+            if (global_mask(i,j))
+            {
+                Matrix1D<int> r(2);
+                XX(r)=j;
+                YY(r)=i;
+                positions.push_back(r);
+            }
+        global_mask.initZeros();
+        for (int n=0; n<N; n++)
+        {
+            int idx=ROUND(rnd_unif(0,N-1));
+            global_mask(YY(positions[idx]),XX(positions[idx]))+=1;
+        }
+    }
 
     // Enhance PSD for ctfmodels
     Prog_Enhance_PSD_Parameters prm;
@@ -646,10 +671,10 @@ void Adjust_CTF_Parameters::produce_side_info()
     // and mask between min_freq and max_freq
     double max_val = enhanced_ctftomodel().computeMax();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(global_mask)
-    	if (!global_mask(i, j)) enhanced_ctftomodel(i, j) = max_val;
+    	if (global_mask(i, j)>0) enhanced_ctftomodel(i, j) = max_val;
     double min_val = enhanced_ctftomodel().computeMin();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(global_mask)
-    	if (!global_mask(i, j)) enhanced_ctftomodel(i, j) = min_val;
+    	if (global_mask(i, j)>0) enhanced_ctftomodel(i, j) = min_val;
     Matrix2D<double> aux;
     median_filter3x3(enhanced_ctftomodel(), aux);
     enhanced_ctftomodel() = aux;
@@ -748,7 +773,7 @@ void save_intermediate_results(const FileName &fn_root, bool
     // Generate cut along X
     for (int i = STARTINGY(save()); i <= FINISHINGY(save()) / 2; i++)
     {
-        if (!global_mask(i, 0)) continue;
+        if (global_mask(i, 0)<=0) continue;
         plotY << global_w_digfreq(i, 0) << " " << global_w_contfreq(i, 0)
         << " " << save(i, 0) << " "
         << (*f)(i, 0) << " "
@@ -759,7 +784,7 @@ void save_intermediate_results(const FileName &fn_root, bool
     // Generate cut along Y
     for (int j = STARTINGX(save()); j <= FINISHINGX(save()) / 2; j++)
     {
-        if (!global_mask(0, j)) continue;
+        if (global_mask(0, j)<=0) continue;
         plotX << global_w_digfreq(0, j) << " " << global_w_contfreq(0, j)
         << " " << save(0, j) << " "
         << (*f)(0, j) << " "
@@ -774,7 +799,7 @@ void save_intermediate_results(const FileName &fn_root, bool
     Matrix1D<int>    radial_N(YSIZE(save()) / 2);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
     {
-        if (!global_mask(i, j)) continue;
+        if (global_mask(i, j)<=0) continue;
         double model2 = save(i, j);
 
         int r = FLOOR(global_w_digfreq(i, j) * (double)YSIZE(*f));
@@ -995,7 +1020,7 @@ double CTF_fitness(double *p)
     for (int i = 0; i < YSIZE(global_w_digfreq); i += global_evaluation_reduction)
         for (int j = 0; j < XSIZE(global_w_digfreq); j += global_evaluation_reduction)
         {
-            if (!DIRECT_MAT_ELEM(global_mask, i, j)) continue;
+            if (DIRECT_MAT_ELEM(global_mask, i, j)<=0) continue;
 
             // Compute each component
             double f_x = DIRECT_MAT_ELEM(global_x_contfreq, i, j);
@@ -1094,7 +1119,7 @@ double CTF_fitness(double *p)
                 }
                 break;
             }
-            distsum += dist;
+            distsum += dist*global_mask(i,j);
             N++;
         }
     if (N > 0) retval = distsum / N;
@@ -1237,7 +1262,7 @@ void estimate_background_sqrt_parameters()
     b.initZeros();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
     {
-        if (!global_mask(i, j)) continue;
+        if (global_mask(i, j)<=0) continue;
 
         // Compute weight for this point
         double weight = 1 + global_max_freq - global_w_digfreq(i, j);
@@ -1331,7 +1356,7 @@ void estimate_background_gauss_parameters()
     double w_max_gauss = 0.25;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
     {
-        if (!global_mask(i, j)) continue;
+        if (global_mask(i, j)<=0) continue;
         double w = global_w_digfreq(i, j);
         if (w > w_max_gauss) continue;
 
@@ -1441,7 +1466,7 @@ void estimate_background_gauss_parameters()
     b.initZeros();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
     {
-        if (!global_mask(i, j)) continue;
+        if (global_mask(i, j)<=0) continue;
         if (global_w_digfreq(i, j) > wmin) continue;
         double fmod = global_w_contfreq(i, j);
 
@@ -1496,7 +1521,7 @@ void estimate_background_gauss_parameters2()
     double w_max_gauss = 0.25;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
     {
-        if (!global_mask(i, j)) continue;
+        if (global_mask(i, j)<=0) continue;
         double w = global_w_digfreq(i, j);
         if (w > w_max_gauss) continue;
 
@@ -1556,7 +1581,7 @@ void estimate_background_gauss_parameters2()
     int N = 0;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
     {
-        if (!global_mask(i, j)) continue;
+        if (global_mask(i, j)<=0) continue;
         if (global_w_digfreq(i, j) > wmin) continue;
         double fmod = global_w_contfreq(i, j);
 
@@ -1614,7 +1639,7 @@ void estimate_background_gauss_parameters2()
     // Check
     FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
     {
-        if (!global_mask(i, j)) continue;
+        if (global_mask(i, j)<=0) continue;
         if (global_w_digfreq(i, j) > wmin) continue;
         double fmod = global_w_contfreq(i, j);
 
@@ -1838,7 +1863,7 @@ void estimate_defoci()
                                 for (int i = 0; i < YSIZE(global_w_digfreq); i += 1)
                                     for (int j = 0; j < XSIZE(global_w_digfreq); j += 1)
                                     {
-                                        if (!DIRECT_MAT_ELEM(global_mask, i, j)) continue;
+                                        if (DIRECT_MAT_ELEM(global_mask, i, j)<=0) continue;
                                         double f_x = DIRECT_MAT_ELEM(global_x_contfreq, i, j);
                                         double f_y = DIRECT_MAT_ELEM(global_y_contfreq, i, j);
                                         double envelope = global_ctfmodel.CTFdamping_at(f_x, f_y);
@@ -2140,5 +2165,5 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, XmippCTF &output_ctfmodel,
     }
     output_ctfmodel=global_ctfmodel;
 
-    return 0.0;
+    return fitness;
 }

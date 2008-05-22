@@ -52,6 +52,8 @@ public:
     bool                 show_optimization;
     /// X dimension of particle projections (-1=the same as the psd)
     int   ctfmodelSize;
+    /// Bootstrap estimation
+    bool                 bootstrap;
 
     /// Minimum frequency to adjust
     double               min_freq;
