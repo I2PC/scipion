@@ -804,6 +804,12 @@ void TimeMessage(const std::string & message)
            T->tm_min, T->tm_sec, T->tm_mday, message.c_str());
 }
 
+// Init progress bar
+void init_progress_bar(long total)
+{
+    progress_bar(-(total));
+}
+
 // Show a bar with the progress in time ....................................
 // When the input is negative then we are setting the progress bar, this
 // will be the total of elements to process. Afterwards the call to this
@@ -985,22 +991,16 @@ void ByteSwap(unsigned char * b, int n)
     }
 }
 
-/** Returns 1 if machine is little endian else 0*/
-
-int IsLittleEndian(void)
+/** Returns true if machine is little endian else false */
+bool IsLittleEndian(void)
 {
     static const unsigned long ul = 0x00000001;
-
-    return ((int)(*((unsigned char *) &ul)));
+    return ((int)(*((unsigned char *) &ul)))!=0;
 }
 
-/** Returns 1 if machine is big endian else 0*/
-
-int IsBigEndian(void)
+/** Returns true if machine is big endian else false*/
+bool IsBigEndian(void)
 {
     static const unsigned long ul = 0x01000000;
-
-    return ((int)(*((unsigned char *) &ul)));
+    return ((int)(*((unsigned char *) &ul)))!=0;
 }
-
-

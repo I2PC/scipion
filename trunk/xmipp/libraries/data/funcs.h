@@ -49,7 +49,6 @@
 #endif
 #endif
 
-#ifndef SWIG
 #include "numerical_recipes.h"
 #include "macros.h"
 #include "error.h"
@@ -94,7 +93,7 @@ public:
     }
 
     // Destructor
-    ~Tabsinc()
+    virtual ~Tabsinc()
     {
         delete tabulatedsinc;
     }
@@ -146,8 +145,6 @@ public:
  *  double wx = kb.sinhwin(32);
  *  double tablex1 = kb.i0win_tab(delx-inxold+3);
  * @endcode
- *
- * This class is not ported to Python.
  */
 class KaiserBessel 
 {
@@ -200,7 +197,6 @@ public:
     /** Return the size of the I0 window */
     int get_window_size() const { return K; }
 };
-#endif
 
 /** Solve second degree equation
  * @ingroup NumericalFunctions
@@ -245,8 +241,6 @@ double gaussian2D(double x,
 
 /// @defgroup MiscellaneousFunctions Miscellaneous functions
 /// @ingroup GeneralFunctions
-
-#ifndef SWIG
 /** Print a boolean value
  * @ingroup MiscellaneousFunctions
  *
@@ -379,7 +373,6 @@ void Complex2AmplPhase(const std::complex< double >* _complex,
         *aux_phase++ = atan2(im, re);
     }
 }
-#endif
 
 /** @defgroup RandomFunctions Random functions
  * @ingroup GeneralFunctions
@@ -899,7 +892,6 @@ public:
     FileName remove_directories(int keep = 0) const;
 };
 
-#ifndef SWIG
 /** This class is used for comparing filenames.
  * @ingroup Filenames
  *
@@ -917,7 +909,6 @@ public:
     	return fn1<fn2;
     }
 };
-#endif
 
 /** True if the file exists in the current directory
  * @ingroup Filenames
@@ -929,7 +920,6 @@ public:
  */
 int exists(const FileName& fn);
 
-#ifndef SWIG
 /** This function raised an ERROR if the filename if not empty and if
  * the corresponding file does not exist. 
  * This may be useful to have a better (killing) control on (mpi-regulated) jobs
@@ -942,7 +932,6 @@ int exists(const FileName& fn);
  * This function is not ported to Python.
  */
 void exit_if_not_exists(const FileName &fn);
-#endif
 
 /** Waits until the given filename has a stable size
  * @ingroup Filenames
@@ -970,7 +959,6 @@ void create_empty_file(const FileName& fn,
  */
 FileName xmippBaseDir();
 
-#ifndef SWIG
 /** @defgroup TimeManaging Time managing
  * @ingroup GeneralFunctions
  *
@@ -1169,10 +1157,8 @@ float time_to_go(TimeStamp& time, float fraction_done);
  * @code
  * init_progress_bar(60);
  * @endcode
- *
- * This function is not ported to Python.
  */
-#define init_progress_bar(total) progress_bar(-(total));
+void init_progress_bar(long total);
 
 /** Update progress bar
  * @ingroup TimeManaging
@@ -1190,8 +1176,6 @@ float time_to_go(TimeStamp& time, float fraction_done);
  * of the progress bar, nobody prints anything to stdout as it is being used by
  * the progress bar. At the end you could make a call to progress_bar with the
  * total amount of work just to make sure that the printout is pretty enough.
- *
- * This function is not ported to Python.
  */
 void progress_bar(long act_time);
 
@@ -1384,18 +1368,14 @@ void ByteSwap(unsigned char* b, int n);
 
 /** Returns 1 if machine is big endian else 0
  * @ingroup LittleBigEndian
- *
- * This function is not ported to Python.
  */
-int IsBigEndian(void);
+bool IsBigEndian(void);
 
 /** Returns 1 if machine is little endian else 0
  * @ingroup LittleBigEndian
  *  little-endian format (sometimes called the Intel format
- *
- * This function is not ported to Python.
  */
-int IsLittleEndian(void);
+bool IsLittleEndian(void);
 
 /** @defgroup Marsaglia Marsaglia random functions
  * @ingroup RandomFunctions
@@ -1618,6 +1598,4 @@ private:
                                       (double) MaxInteger);
     }
 };
-#endif
-
 #endif
