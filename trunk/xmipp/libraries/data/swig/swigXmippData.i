@@ -24,6 +24,47 @@
 using namespace std;
 %}
 
+// Map reference types and pointers
+%typemap(out) int &
+{
+$result=PyInt_FromLong((long)*$1);
+}
+
+%typemap(out) double &
+{
+$result=PyInt_FromLong((long)*$1);
+}
+
+%typemap(out) bool &
+{
+$result=PyInt_FromLong((long)*$1);
+}
+
+%typemap(out) float &
+{
+$result=PyInt_FromLong((long)*$1);
+}
+
+%typemap(out) double *
+{
+$result=PyInt_FromLong((long)*$1);
+}
+
+%typemap(out) bool *
+{
+$result=PyInt_FromLong((long)*$1);
+}
+
+%typemap(out) int *
+{
+$result=PyInt_FromLong((long)*$1);
+}
+
+%typemap(out) float *
+{
+$result=PyInt_FromLong((long)*$1);
+}
+
 // The C++ insertion operator cannot be ported to Python. Instead, use the
 // SWIG macro PRINT(type) to add printing capabilities to a class.
 %ignore operator<<;
