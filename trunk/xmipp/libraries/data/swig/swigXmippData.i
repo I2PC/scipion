@@ -95,5 +95,6 @@ $result=PyInt_FromLong((long)*$1);
 %include swigfuncs.i
 %include swigdenoise.i
 %include swigdocfile.i
+%include swigargs.i
 
 // rm libraries/data/swig/libXmippDataSwig.so libraries/data/swig/XmippData.py libraries/data/swig/swigXmippData_wrap.os libraries/data/swig/swigXmippData_wrap.cc ; ./scons.compile
