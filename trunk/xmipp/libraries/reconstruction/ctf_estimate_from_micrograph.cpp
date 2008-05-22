@@ -56,6 +56,7 @@ void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files)
         PSD_mode = Periodogram;
     else PSD_mode = ARMA;
     dont_adjust_CTF      = checkParameter(fh_param, "dont_adjust_CTF");
+    bootstrapN           = textToInteger(getParameter(fh_param, "bootstrapN", 0, "-1"));
 
     if (!do_not_read_files)
     {
@@ -108,6 +109,7 @@ void Prog_assign_CTF_prm::write(const FileName &fn_prm,
     }
     if (PSD_mode == Periodogram) fh_param << "Periodogram=yes\n";
     if (dont_adjust_CTF) fh_param << "dont_adjust_CTF=yes\n";
+    if (bootstrapN>-1) fh_param << "bootstrapN=" << bootstrapN << std::endl;
 
     fh_param << std::endl;
     fh_param.close();
@@ -225,7 +227,7 @@ void Prog_assign_CTF_prm::process()
     if (selfile_fn != "") OutputFile_ctf.open(
             (selfile_fn.without_extension() + ".ctfdat").c_str());
 
-    // Open the micograph
+    // Open the micrograph
     Micrograph M_in;
     int bits; // Micrograph depth
     int Ydim, Xdim; // Micrograph dimensions
@@ -402,6 +404,10 @@ void Prog_assign_CTF_prm::process()
         // Compute the theoretical model if not averaging ....................
         if (!micrograph_averaging)
         {
+            if (bootstrapN!=-1)
+                REPORT_ERROR(1,
+                    "Bootstrapping is only available for micrograph averages");
+
             FileName piece_fn, piece_fn_root;
             if (compute_at_particle)
             {
@@ -449,8 +455,73 @@ void Prog_assign_CTF_prm::process()
             std::cerr << "Adjusting CTF model to the PSD ...\n";
             adjust_CTF_prm.fn_psd = fn_avg;
             XmippCTF ctfmodel;
-            double fitting_error = ROUT_Adjust_CTF(adjust_CTF_prm,
-                ctfmodel, false);
+            if (bootstrapN==-1)
+            {
+                double fitting_error = ROUT_Adjust_CTF(adjust_CTF_prm,
+                    ctfmodel, false);
+            }
+            else
+            {
+                Matrix2D<double> CTFs(bootstrapN,32);
+                adjust_CTF_prm.bootstrap=true;
+                adjust_CTF_prm.show_optimization=true;
+                FileName fnBase=fn_avg.without_extension();
+                std::cerr << "Computing bootstrap ...\n";
+                init_progress_bar(bootstrapN);
+                for (int n=0; n<bootstrapN; n++)
+                {
+                    CTFs(n,31) = ROUT_Adjust_CTF(adjust_CTF_prm,
+                        ctfmodel, false);
+                    CTFs(n, 0)=ctfmodel.Tm;
+                    CTFs(n, 1)=ctfmodel.kV;
+                    CTFs(n, 2)=ctfmodel.DeltafU;
+                    CTFs(n, 3)=ctfmodel.DeltafV;
+                    CTFs(n, 4)=ctfmodel.azimuthal_angle;
+                    CTFs(n, 5)=ctfmodel.Cs;
+                    CTFs(n, 6)=ctfmodel.Ca;
+                    CTFs(n, 7)=ctfmodel.espr;
+                    CTFs(n, 8)=ctfmodel.ispr;
+                    CTFs(n, 9)=ctfmodel.alpha;
+                    CTFs(n,10)=ctfmodel.DeltaF;
+                    CTFs(n,11)=ctfmodel.DeltaR;
+                    CTFs(n,12)=ctfmodel.Q0;
+                    CTFs(n,13)=ctfmodel.K;
+                    CTFs(n,14)=ctfmodel.gaussian_K;
+                    CTFs(n,15)=ctfmodel.sigmaU;
+                    CTFs(n,16)=ctfmodel.sigmaV;
+                    CTFs(n,17)=ctfmodel.cU;
+                    CTFs(n,18)=ctfmodel.cV;
+                    CTFs(n,19)=ctfmodel.gaussian_angle;
+                    CTFs(n,20)=ctfmodel.sqrt_K;
+                    CTFs(n,21)=ctfmodel.sqU;
+                    CTFs(n,22)=ctfmodel.sqV;
+                    CTFs(n,23)=ctfmodel.sqrt_angle;
+                    CTFs(n,24)=ctfmodel.base_line;
+                    CTFs(n,25)=ctfmodel.gaussian_K2;
+                    CTFs(n,26)=ctfmodel.sigmaU2;
+                    CTFs(n,27)=ctfmodel.sigmaV2;
+                    CTFs(n,28)=ctfmodel.cU2;
+                    CTFs(n,29)=ctfmodel.cV2;
+                    CTFs(n,30)=ctfmodel.gaussian_angle2;
+                    
+                    std::string command=(std::string)"mv -i "+fnBase+
+                        ".ctfparam "+fnBase+"_bootstrap_"+
+                        integerToString(n,4)+".ctfparam";
+                    system(command.c_str());
+                    command=(std::string)"mv -i "+fnBase+
+                        ".ctfmodel_quadrant "+fnBase+"_bootstrap_"+
+                        integerToString(n,4)+".ctfmodel_quadrant";
+                    system(command.c_str());
+                    command=(std::string)"mv -i "+fnBase+
+                        ".ctfmodel_halfplane "+fnBase+"_bootstrap_"+
+                        integerToString(n,4)+".ctfmodel_halfplane";
+                    system(command.c_str());
+
+                    progress_bar(n);
+                }
+                progress_bar(bootstrapN);
+                CTFs.write("bootstrap.txt");
+            }
         }
     }
 

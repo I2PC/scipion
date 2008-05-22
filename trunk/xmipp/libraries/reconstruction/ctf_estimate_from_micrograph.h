@@ -76,6 +76,8 @@ public:
     /** Don't adjust CTF.
         That is, only compute the PSD */
     bool                    dont_adjust_CTF;
+    /** Bootstrap N */
+    int                     bootstrapN;
 public:
     /** Selfile mode.
         If image_fn finishes in .sel, then the selfile_mode is on,
