@@ -3,8 +3,6 @@
 %}
 
 %ignore DocLine::operator[](int);
-%ignore DocFile::FirstKey();
-%ignore DocFile::operator=;
 %ignore DocFile::show_line;
 %rename("get") DocLine::operator[](int) const;
 %include "../docfile.h"
@@ -15,7 +13,7 @@ PRINT(DocFile)
 python
 import XmippData
 df=XmippData.DocFile()
-df.read(XmippData.FileName("docfile.txt"))
+df.read(XmippData.FileName("g0ta_movements.txt"))
 print df
 df.go_beginning()
 line=0
@@ -25,4 +23,8 @@ while not df.eof():
         print df(1)
     df.next()
     line=line+1
+df.go_beginning()
+df.next()
+print df.get_current_line()
+print df.get_current_line().get(6)
 */
