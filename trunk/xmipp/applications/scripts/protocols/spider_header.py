@@ -7,8 +7,8 @@ class spiderheader:
       import os
       import struct
 
-      format_little = '<12f'
-      format_big    = '>12f'
+      format_little = '<67f'
+      format_big    = '>67f'
       fsize = struct.calcsize(format_little)
       raw_data_fh = open(filename,'rb')
       raw_data = raw_data_fh.read(fsize)
@@ -18,9 +18,14 @@ class spiderheader:
       if(return_value==0):
          data =struct.unpack(format_big,raw_data)
 
-      self.nz = data[0]
-      self.ny = data[1]
-      self.nx = data[11]
+      self.nz       = data[0]
+      self.ny       = data[1]
+      self.nx       = data[11]
+      self.rot      = data[14]
+      self.tilt     = data[15]
+      self.psi      = data[16]
+      self.weight   = data[65]
+      self.flip     = data[66]
 
    # mode should be an small integer
    def check_endianess(self):
