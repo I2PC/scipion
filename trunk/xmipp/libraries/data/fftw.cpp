@@ -180,7 +180,7 @@ void xmippFftw::myxmippFftw(int ndim, int *n, bool my_inPlace,
       try
       {
           fOut = new double [2*sizeout];
-      }
+       }
       catch (std::bad_alloc&)
       {
         std::cout << "Error allocating memory." << std::endl;
@@ -209,8 +209,7 @@ xmippFftw::xmippFftw(Matrix1D<double> &img, bool my_inPlace,
                                             bool already_reserved)
 {
     int * myfN; 
-    int ndim    = 1; //useless for one dimension
-                 //the funtion getdimension resturns size for 1D!!
+    int ndim    = 1;
     myfN    = new int [ndim];     
     myfN[0] = XSIZE(img);
 
@@ -221,37 +220,69 @@ xmippFftw::xmippFftw(Matrix1D<double> &img, bool my_inPlace,
     
 }
 //_____________________________________________________________________________
-xmippFftw::xmippFftw(Matrix2D<double> &img, bool my_inPlace, 
-                                            bool already_reserved)
+/*
+
+If you have an array stored in column-major order and wish to transform it using FFTW,
+it is quite easy to do. When creating the plan, simply pass the dimensions of the
+array to the planner in reverse order. For example, if your array is a rank three N x
+M x L matrix in column-major order, you should pass the dimensions of the array as if
+it were an L x M x N matrix (which it is, from the perspective of FFTW).
+
+Be Aware that you will get the transpose Fourier transform,
+*/
+xmippFftw::xmippFftw(Matrix2D<double> &img, bool init_and_do_transform)
 {
     int * myfN; 
-    int ndim    = 2; //useless for one dimension
-                 //the funtion getdimension resturns size for 1D!!
+    int ndim    = 2; 
     myfN    = new int [ndim];     
-    myfN[0] = XSIZE(img);
-    myfN[1] = YSIZE(img);
-
-    if(already_reserved)
-        myxmippFftw(ndim, myfN, my_inPlace,MULTIDIM_ARRAY(img));
-    else
-        myxmippFftw(ndim, myfN, my_inPlace,NULL);
+    /* map y to x dim */
+    myfN[0] = YSIZE(img);
+    myfN[1] = XSIZE(img);
+    //#define xmippFftw_Matrix2D
+    #ifdef  xmippFftw_Matrix2D
+    std::cerr << "XSIZE(img) YSIZE(img) " << XSIZE(img) << " " 
+                                          << YSIZE(img) << std::endl;
+    #endif
+    #undef xmippFftw_Matrix2D
+    bool my_inPlace = false;//no implace transform for 2D
+    myxmippFftw(ndim, myfN, my_inPlace,MULTIDIM_ARRAY(img));
+    // I presume if you call this routine with a matrix you 
+    // want to do a forward fourier transform
+    if(init_and_do_transform)
+        {
+        Init("ES",FFTW_FORWARD,false);
+        Transform();
+        }
 }
 
-xmippFftw::xmippFftw(Matrix3D<double> &img, bool my_inPlace, 
-                                            bool already_reserved)
+/*
+
+If you have an array stored in column-major order and wish to transform it using FFTW,
+it is quite easy to do. When creating the plan, simply pass the dimensions of the
+array to the planner in reverse order. For example, if your array is a rank three N x
+M x L matrix in column-major order, you should pass the dimensions of the array as if
+it were an L x M x N matrix (which it is, from the perspective of FFTW).
+
+*/
+xmippFftw::xmippFftw(Matrix3D<double> &img, bool init_and_do_transform)
 {
     int * myfN; 
-    int ndim    = 3; //useless for one dimension
-                 //the funtion getdimension resturns size for 1D!!
+    int ndim    = 3; 
     myfN    = new int [ndim];     
-    myfN[0] = XSIZE(img);
+    //map x to z dim
+    myfN[0] = ZSIZE(img);
     myfN[1] = YSIZE(img);
-    myfN[2] = ZSIZE(img);
+    myfN[2] = XSIZE(img);
 
-    if(already_reserved)
-        myxmippFftw(ndim, myfN, my_inPlace,MULTIDIM_ARRAY(img));
-    else
-        myxmippFftw(ndim, myfN, my_inPlace,NULL);
+    bool my_inPlace = false;//no implace transform for 2D
+    myxmippFftw(ndim, myfN, my_inPlace,MULTIDIM_ARRAY(img));
+    // I presume if you call this routine with a matrix you 
+    // want to do a forward fourier transform
+    if(init_and_do_transform)
+        {
+        Init("ES",FFTW_FORWARD,false);
+        Transform();
+        }
 }
 
 //_____________________________________________________________________________
@@ -262,28 +293,28 @@ xmippFftw::~xmippFftw()
 //created
 
    fftw_destroy_plan((fftw_plan)fPlan);
-   fPlan = 0;
+   fPlan = NULL;
    if(fIn!=NULL)
    {
        delete [] fIn;
-       fIn = 0;
+       fIn = NULL;
    }
    else
-       fIn = 0;
+       fIn = NULL;
    if (fOut!=NULL)
    {
        delete [] fOut;
    }
    else
-       fOut = 0;
+       fOut = NULL;
 
    if (fN!=NULL)
    {
       delete[] fN;
-      fN = 0;
+      fN = NULL;
    }
    else
-      fN = 0;
+      fN = NULL;
 }
 
 //_____________________________________________________________________________
@@ -324,9 +355,14 @@ void xmippFftw::Init(std::string flags,int sign,bool wisdom_flag)
 //save wishdon using a lock mechanism and 
 //delete when xmipp recompile -> ¿/tmp/fftw?
     /* Get any accumulated wisdom. */
+/*
+std::cerr << "Init_-3" << "plan= " << fPlan << std::endl;   
     if (fPlan != NULL)
+    {
+          std::cerr << "Init_-2" << "plan= " << fPlan << std::endl;   
          fftw_destroy_plan((fftw_plan)fPlan);
-
+    }
+*/
     FILE *wisdom;
     if(wisdom_flag)
     {
@@ -544,6 +580,86 @@ void xmippFftw::CenterRealDataBeforeTransform(void)
        ii++;
        }
 }
+
+/* Applies a bandpass filter to an image. */
+/* frecuencies in range 0-0.5 */
+void xmippFftw::img_bandpass_filter(double res_hi, double width)
+{
+    int Xdim,Xsize;
+    int Ydim=1,Ysize=1;
+    int Zdim=1,Zsize=1;
+    /* rememebr to transpose de matrix */
+    if(fNdim==1)
+    {   
+        Zdim=Zsize=1;
+        Ydim=Ysize=1;
+        Xsize=fN[0];
+        Xdim = (int) fN[0]/2 +1;        
+    }
+    else if (fNdim==2)
+    {
+        Zdim=Zsize=1;
+        Ydim=Ysize=fN[0];
+        Xsize=fN[1];
+        Xdim = (int) fN[1]/2 +1;
+    
+    }    
+    else if (fNdim==3)
+    {
+        Zdim=Zsize=fN[0];
+        Ydim=Ysize=fN[1];
+        Xsize=fN[2];
+        Xdim = (int)  fN[2]/2 +1;
+    }
+    else
+    {
+        std::cerr << "Error in img_bandpass_filter\n";
+        exit(0);
+    }
+    int zz, yy, xx;
+    double sz2,sy2,sx2,s;   
+
+	double res_hi2= res_hi*res_hi;
+    std::complex<double> * cfOut, *cfIn;
+    cfOut = (std::complex<double> *)fOut; //fOut is double *
+    cfIn  = (std::complex<double> *)fIn;  //fIn is double *
+    for ( int z=0, i=0; z<Zdim; z++ ) {
+		if ( z > (Zsize - 1)/2 ) zz = Zsize-z;//this line can be deleted
+		else zz = z;
+        sz2 = (double)zz/Zsize;
+		sz2 *= sz2;
+		for ( int y=0; y<Ydim; y++ ) {
+			if ( y > (Ysize - 1)/2 ) yy = Ysize-y;
+			else yy = y;
+			sy2 = (double)yy/Ysize;
+			sy2 *= sy2;
+			for ( int x=0; x<Xdim; x++, i++ ) {
+				if ( x > (Xsize - 1)/2 ) xx = Xsize-x;
+				else xx = x;
+				sx2 = (double)xx/Xsize;
+				sx2 *= sx2;
+				s = (sx2 + sy2 + sz2);
+                if (s > res_hi2) 
+				    cfOut[i] = 0.;
+/*                else    
+				    cfOut[i] = 1.;
+
+std::cerr << "i xx yy s res_hi2 z y x " 
+          << i << " " << sy2 << " " << sx2 
+          << " " << s << " " 
+          << res_hi2 << " "
+          << z << " "
+          << y << " "
+          << x << " "
+          << fOut[2*i] << "\n";
+*/
+			}
+		}
+	}
+
+}
+
+
 //
 // lockFile is the filename to use to represent the lock.  Basically, if the
 // file exists, then someone has the lock (in this case to prtsuffix.data

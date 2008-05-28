@@ -1,21 +1,12 @@
 
-// class based in previous fftw wrapper by
-// Author: Anna Kreshuk   07/4/2006
-
-/*************************************************************************
- * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
- * All rights reserved.                                                  *
- *                                                                       *
- * For the licensing terms see $ROOTSYS/LICENSE.                         *
- * For the list of contributors see $ROOTSYS/README/CREDITS.             *
- *************************************************************************/
+// class based in previous fftw wrapper by  Anna Kreshuk   07/4/2006
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      
 // xmippFftw                                                       
 //                                                                      
-// One of the interface classes to the FFTW package, can be used directly
-// or via the TVirtualFFT class. Only the basic interface of FFTW is implemented.
+// An interface classes to the FFTW package
+// Only the basic interface of FFTW is implemented.
 //
 // Computes a real input/complex output discrete Fourier transform in 1 or more
 // dimensions. However, only out-of-place transforms are now supported for transforms
@@ -107,7 +98,7 @@ class xmippFftw{
       
    /* For ndim-dimensional transforms, Second argurment contains sizes of the
    transform in each dimension */
-   xmippFftw(int ndim, int *n, bool inPlace, double * already_reserved=NULL);
+   xmippFftw(int ndim, int *n, bool inPlace=false, double * already_reserved=NULL);
    /** Initialization ND constructor */
    void myxmippFftw(int ndim, int *n, bool my_inPlace, 
                      double * already_reserved);
@@ -263,18 +254,42 @@ specifying `FFTW_PATIENT' first plans in `FFTW_ESTIMATE' mode, then in
    /** Wrapper for Matrix 1D, calls to constructor
        with appropiate values. Does NOT call to plan
        or Transform */
-   xmippFftw(Matrix1D<double> &img, bool my_inPlace, 
+   xmippFftw(Matrix1D<double> &img, bool my_inPlace=false, 
                                             bool already_reserved=true);
    /** Wrapper for Matrix 2D, calls to constructor
-       with appropiate values. Does NOT call to plan
-       or Transform */
-   xmippFftw(Matrix2D<double> &img, bool my_inPlace, 
-                                            bool already_reserved=true);
+       with appropiate values and perform the Fourier transform 
+       if init_and_do_transform = true. For 1 single image is OK for
+       a sel file reusing old fftw structure may be faster
+        
+       If you have an array stored in column-major order (as xmipp does) and wish to
+       transform it using FFTW, it is quite easy to do. When creating the object, simply
+       pass the dimensions of the array to the planner in reverse order. For example,
+       if your array is a rank three N x M x L matrix in column-major order, you
+       should pass the dimensions of the array as if it were an L x M x N matrix
+       (which it is, from the perspective of FFTW). Of course the FFT
+       will be transposed
+       Not tested for non square images
+        */
+
+    xmippFftw(Matrix2D<double> &img, bool init_and_do_transform=true);
+
    /** Wrapper for Matrix 3D, calls to constructor
-       with appropiate values. Does NOT call to plan
-       or Transform */
-   xmippFftw(Matrix3D<double> &img, bool my_inPlace, 
-                                            bool already_reserved=true);
+       with appropiate values and perform the Fourier transform 
+       if init_and_do_transform = true. For I single image is OK for
+       a sel file reusing old aatw structure may be faster
+        
+        
+       If you have an array stored in column-major order (as xmipp does) and wish to
+       transform it using FFTW, it is quite easy to do. When creating the object, simply
+       pass the dimensions of the array to the planner in reverse order. For example,
+       if your array is a rank three N x M x L matrix in column-major order, you
+       should pass the dimensions of the array as if it were an L x M x N matrix
+       (which it is, from the perspective of FFTW). Of course the FFT
+       will be transposed
+       Not tested for non square images
+        */
+
+    xmippFftw(Matrix3D<double> &img, bool init_and_do_transform=true);
                                             
    /** Modify Real Data so the Fourier trnasform is at the center
        Same function must be applied after Fourier inversion
@@ -283,6 +298,12 @@ specifying `FFTW_PATIENT' first plans in `FFTW_ESTIMATE' mode, then in
    /** Delete fIn vector while keeping fOut. This is usefull if you
        want to save memory */
    void delete_fIn(void);
+
+   /** Applies a bandpass filter to an image (either  2 or 3 D). 
+       frecuencies in range 0-0.5 */
+   
+   void img_bandpass_filter(double res_hi, double width);
+
 
 };
 #include <sys/stat.h>
