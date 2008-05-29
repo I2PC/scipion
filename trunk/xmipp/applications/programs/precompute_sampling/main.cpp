@@ -44,31 +44,81 @@ int main(int argc, char *argv[])
     #endif
 
     bool inplace = false; 
-    ImageXmipp img;
-    img.read("proj00001.xmp");
-
+    VolumeXmipp img;
+    img.read("kk.vol");
+    //img().transpose();
     #ifdef  DEBUGTIME
     printf ("image read in  %f mseconds\n", (double)(clock()-clo)/1000 );
     clo = clock();
     #endif
     
     #define DIMENSION 2
-    xmippFftw fft_img(img(), false, true);
-    fft_img.Init("ES",FFTW_FORWARD,false);
-    #ifdef  DEBUGTIME
-    printf ("Plan created in  %f mseconds\n", (double)(clock()-clo)/1000 );
-    clo = clock();
-    #endif
-    fft_img.CenterRealDataBeforeTransform();
-
-    fft_img.Transform();
+    xmippFftw fft_img(img());
     #ifdef  DEBUGTIME
     printf ("image transformed in  %f mseconds\n", (double)(clock()-clo)/1000 );
     clo = clock();
     #endif
-
-    complex<double> * IMG;
-    IMG = (complex<double> *)fft_img.fOut;
+#ifdef NEVERDEFINE
+    std::complex<double> * IMG;
+    IMG = (std::complex<double> *)fft_img.fOut;
+    
+    int ysize = (int)(((double)YSIZE(img()) / 2.) +1.);
+    int xsize = XSIZE(img());
+    
+    img().initZeros();
+    long int ii=0;
+    //xmipp y contigous, fftw x contigous
+    for (int j=0;j<xsize;j++)
+        for (int i=0;i<ysize;i++)
+        {
+           DIRECT_MAT_ELEM(img(),i,j) = abs(IMG[ii]);
+           ii++;
+        }
+    img.write("pp.xmp");
+#endif
+   fft_img.img_bandpass_filter(.1,0.);
+#ifdef NEVERDEFINE
+    std::complex<double> * IMG;
+    IMG = (std::complex<double> *)fft_img.fOut;
+    
+    int ysize = (int)(((double)YSIZE(img()) / 2.) +1.);
+    int xsize = XSIZE(img());
+    
+    img().initZeros();
+    long int ii=0;
+    //xmipp y contigous, fftw x contigous
+    for (int j=0;j<xsize;j++)
+        for (int i=0;i<ysize;i++)
+        {
+           DIRECT_MAT_ELEM(img(),i,j) = abs(IMG[ii]);
+           ii++;
+        }
+    img.write("pp.xmp");
+#endif
+    #ifdef  DEBUGTIME
+    printf ("image filtered in  %f mseconds\n", (double)(clock()-clo)/1000 );
+    clo = clock();
+    #endif
+    
+    double * tmp;
+    tmp = fft_img.fIn;
+    fft_img.fIn=fft_img.fOut;
+    fft_img.fOut=tmp;
+    
+    fft_img.Init("ES",FFTW_BACKWARD);
+    #ifdef  DEBUGTIME
+    printf ("backwards init in  %f mseconds\n", (double)(clock()-clo)/1000 );
+    clo = clock();
+    #endif
+    
+    fft_img.Transform();
+    #ifdef  DEBUGTIME
+    printf ("image backtransformed in  %f mseconds\n", (double)(clock()-clo)/1000 );
+    clo = clock();
+    #endif
+/*
+    double * IMG;
+    IMG = fft_img.fOut;
 
     int xsize = (int)(((double)XSIZE(img()) / 2.) +1.);
     int ysize = YSIZE(img());
@@ -81,17 +131,9 @@ int main(int argc, char *argv[])
            DIRECT_MAT_ELEM(img(),i,j) = abs(IMG[ii]);
            ii++;
         }
-    #ifdef  DEBUGTIME
-    printf ("computed abs value in  %f mseconds\n", (double)(clock()-clo)/1000 );
-    clo = clock();
-    #endif
-       
-    img.write("proj00001_fftwmod.xmp");
-    #ifdef  DEBUGTIME
-    printf ("write in  %f mseconds\n", (double)(clock()-clo)/1000 );
-    clo = clock();
-    #endif
-
+*/
+    img.write("kk.xmp");
+    fft_img.fOut=NULL;//do not free, matrix2d destructor will do it
 /**
 For processing a second image read again and call to Transform, no need to create another fourier
 object
