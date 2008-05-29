@@ -2093,7 +2093,7 @@ public:
         T* ptr;
 	unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-            in.read(static_cast< char* >(ptr), sizeof(T));
+            in.read(reinterpret_cast< char* >(ptr), sizeof(T));
 
         in.close();
     }
@@ -2130,7 +2130,7 @@ public:
         T* ptr;
 	unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-            out.write(static_cast< char* >(ptr), sizeof(T));
+            out.write(reinterpret_cast< char* >(ptr), sizeof(T));
 
         out.close();
     }
