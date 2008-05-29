@@ -356,9 +356,7 @@ template<typename T>
 class Matrix1D: public MultidimArray<T>
 {
 public:
-#ifndef SWIG
     bool row; ///< 0=column vector (default), 1=row vector
-#endif
 
     /// @defgroup VectorsConstructors Constructors
     /// @ingroup Vectors
@@ -571,7 +569,6 @@ public:
     	MultidimArray<T>::resize(M);
     }
 
-#ifndef SWIG
     /** Produce a vector suitable for working with Numerical Recipes
      * @ingroup VectorsSize
      *
@@ -596,7 +593,6 @@ public:
      */
     void killAdaptationForNumericalRecipes(T* m) const
         {}
-#endif
 
     /** Outside
      * @ingroup VectorsSize
@@ -1597,7 +1593,6 @@ void sortTwoVectors(Matrix1D<T>& v1, Matrix1D<T>& v2)
     }
 }
 
-#ifndef SWIG
 /** Optimize using Powell's method.
   * @ingroup VectorsMiscellaneous
   *
@@ -1642,7 +1637,6 @@ void powellOptimizer(Matrix1D< double >& p,
                      int& iter,
                      const Matrix1D< double >& steps,
                      bool show = false);
-#endif
 
 /** Show a vector.
   * @ingroup VectorsUtilities */
