@@ -335,7 +335,7 @@ void Prog_projection_matching_crystal_prm::PM_loop_over_all_images(DocFile &DFo,
         // Perform the projection matching for each image separately
         // NOTE (float)1. should be the scale but since
         // scale field in the image is not reliable a put 1
-        PM_process_one_image(img(), img.Phi(), img.Theta(), img.Psi(), (float)1.,
+        PM_process_one_image(img(), img.Phi(), img.Theta(), img.psi(), (float)1.,
                              opt_dirno, opt_psi, opt_scale, opt_xoff, opt_yoff, maxCC);
 
 

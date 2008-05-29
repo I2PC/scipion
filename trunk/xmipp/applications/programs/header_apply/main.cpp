@@ -76,11 +76,11 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
     }
 
     //Reset in-plane transformations of the header
-    img.Xoff() = 0.;
-    img.Yoff() = 0.;
-    img.psi() = 0.;
-    if (img.tilt() == 0) img.rot() = 0;
-    img.flip() = 0.;
+    img.set_Xoff(0.);
+    img.set_Yoff(0.);
+    img.set_psi(0.);
+    if (img.tilt() == 0) img.set_rot(0.);
+    img.set_flip(0.);
 
     return true;
 }

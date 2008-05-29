@@ -155,11 +155,11 @@ void Statis_parameters::final_process()
         if (weighted_avg)
         {
             sumI() /= sumweight;
-            sumI.weight() = sumweight;
+            sumI.set_weight(sumweight);
         }
         else if (set_weight)
         {
-            sumI.weight() = (double)nI;
+            sumI.set_weight((double)nI);
             std::cerr << " Setting weight in the header of the average image to " << integerToString(nI) << std::endl;
         }
 	if (only_avg)

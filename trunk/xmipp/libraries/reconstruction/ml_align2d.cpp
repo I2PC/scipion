@@ -568,7 +568,7 @@ void Prog_MLalign2D_prm::produce_Side_info2(int nr_vols)
         if (!save_mem3) Iold.push_back(img);
         // Default start is all equal model fractions
         alpha_k.push_back((double)1 / SFr.ImgNo());
-        Iref[refno].weight() = alpha_k[refno] * (double)nr_exp_images;
+        Iref[refno].set_weight(alpha_k[refno] * (double)nr_exp_images);
         // Default start is half-half mirrored images
         if (do_mirror) mirror_fraction.push_back(0.5);
         else mirror_fraction.push_back(0.);
@@ -2263,20 +2263,20 @@ void Prog_MLalign2D_prm::update_parameters(std::vector<Matrix2D<double> > &wsum_
         {
             Iref[refno]() = wsum_Mref[refno];
 	    Iref[refno]() /= sumw[refno];
-	    Iref[refno].weight() = sumw[refno];
+	    Iref[refno].set_weight(sumw[refno]);
 	    sumw_allrefs += sumw[refno];
         }
 	else if (do_student && sumw2[refno] > 0.)	{
 //	    std::cerr<<" refno= "<<refno<<" sumw= "<<sumw[refno]<<" sumw2= "<<sumw2[refno]<<std::endl;
 	    Iref[refno]() = wsum_Mref[refno];
 	    Iref[refno]() /= sumw2[refno];
-	    Iref[refno].weight() = sumw2[refno];
+	    Iref[refno].set_weight(sumw2[refno]);
 	    sumw_allrefs += sumw[refno];
 	    sumw_allrefs2 += sumw2[refno];
  	}
         else
         {
-            Iref[refno].weight() = 0.;
+            Iref[refno].set_weight(0.);
             Iref[refno]().initZeros(dim, dim);
         }
     }

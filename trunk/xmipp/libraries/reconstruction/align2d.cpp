@@ -211,8 +211,8 @@ bool Prog_align2d_prm::align_rot(ImageXmippT<double> &img, const Matrix2D<double
         // Store new rotation in the header of the image
         // beware: for untilted images (phi+psi) is rotated, and phi can be non-zero!
         // Add new rotation to psi only!
-        psi += img.Psi();
-        img.Psi() = realWRAP(psi, 0., 360.);
+        psi += img.psi();
+        img.set_psi(realWRAP(psi, 0., 360.));
         return true;
     }
     else return false;
@@ -315,10 +315,10 @@ bool Prog_align2d_prm::align_trans(ImageXmippT<double> &img, const Matrix2D<doub
     if ((max_shift < XMIPP_EQUAL_ACCURACY) || (shift < max_shift))
     {
         // Store shift in the header of the image
-        img.Xoff() += xshift * DIRECT_MAT_ELEM(A, 0, 0) + yshift * DIRECT_MAT_ELEM(A, 0, 1);
-        img.Yoff() += xshift * DIRECT_MAT_ELEM(A, 1, 0) + yshift * DIRECT_MAT_ELEM(A, 1, 1);
-        img.Xoff() = realWRAP(img.Xoff(), (float) - dim / 2., (float)dim / 2.);
-        img.Yoff() = realWRAP(img.Yoff(), (float) - dim / 2., (float)dim / 2.);
+        img.set_Xoff(img.Xoff() + xshift * DIRECT_MAT_ELEM(A, 0, 0) + yshift * DIRECT_MAT_ELEM(A, 0, 1));
+        img.set_Yoff(img.Yoff() + xshift * DIRECT_MAT_ELEM(A, 1, 0) + yshift * DIRECT_MAT_ELEM(A, 1, 1));
+        img.set_Xoff(realWRAP(img.Xoff(), (float) - dim / 2., (float)dim / 2.));
+        img.set_Yoff(realWRAP(img.Yoff(), (float) - dim / 2., (float)dim / 2.));
         return true;
     }
     else return false;
@@ -389,12 +389,12 @@ bool Prog_align2d_prm::align_complete_search(ImageXmippT<double> &img, const Mat
     if (OK)
     {
         // Store rotation & translation in the header of the image
-        img.Psi() += psi_max;
-        img.Psi() = realWRAP(img.Psi(), 0., 360.);
-        img.Xoff() += xshift * DIRECT_MAT_ELEM(A, 0, 0) + yshift * DIRECT_MAT_ELEM(A, 0, 1);
-        img.Yoff() += xshift * DIRECT_MAT_ELEM(A, 1, 0) + yshift * DIRECT_MAT_ELEM(A, 1, 1);
-        img.Xoff() = realWRAP(img.Xoff(), (float) - dim / 2., (float)dim / 2.);
-        img.Yoff() = realWRAP(img.Yoff(), (float) - dim / 2., (float)dim / 2.);
+        img.set_psi(img.psi() + psi_max);
+        img.set_psi(realWRAP(img.psi(), 0., 360.));
+        img.set_Xoff(img.Xoff() + xshift * DIRECT_MAT_ELEM(A, 0, 0) + yshift * DIRECT_MAT_ELEM(A, 0, 1));
+        img.set_Yoff(img.Yoff() + xshift * DIRECT_MAT_ELEM(A, 1, 0) + yshift * DIRECT_MAT_ELEM(A, 1, 1));
+        img.set_Xoff(realWRAP(img.Xoff(), (float) - dim / 2., (float)dim / 2.));
+        img.set_Yoff(realWRAP(img.Yoff(), (float) - dim / 2., (float)dim / 2.));
         return true;
     }
     else return false;
@@ -471,9 +471,9 @@ void Prog_align2d_prm::do_pspc()
             Maux.setXmippOrigin();
             Mref = (Mref + Maux) / 2;
             imgpspc[j]() = Mref;
-            imgpspc[j].Psi() = 0.;
-            imgpspc[j].Xoff() = 0.;
-            imgpspc[j].Yoff() = 0.;
+            imgpspc[j].set_psi(0.);
+            imgpspc[j].set_Xoff(0.);
+            imgpspc[j].set_Yoff(0.);
 
             imgno++;
             if (imgno % barf == 0) progress_bar(imgno);
@@ -750,9 +750,9 @@ void Prog_align2d_prm::align2d()
         if (do_filter)
         {
             Itmp.read(fn_img);
-            Itmp.Xoff() = images[imgno].Xoff();
-            Itmp.Yoff() = images[imgno].Yoff();
-            Itmp.Psi() = images[imgno].Psi();
+            Itmp.set_Xoff(images[imgno].Xoff());
+            Itmp.set_Yoff(images[imgno].Yoff());
+            Itmp.set_psi(images[imgno].psi());
             Itmp.write(fn_out);
         }
         else images[imgno].write(fn_out);
@@ -783,7 +783,7 @@ void Prog_align2d_prm::align2d()
     fn_img = fn_sel.without_extension() + ".xmp";
     if (oext != "") fn_img = fn_img.insert_before_extension("_" + oext);
     fn_img = fn_img.insert_before_extension(".med");
-    med.weight() = SFo.ImgNo(SelLine::ACTIVE);
+    med.set_weight(SFo.ImgNo(SelLine::ACTIVE));
     med.write(fn_img);
     fn_img = fn_sel.without_extension() + ".xmp";
     if (oext != "") fn_img = fn_img.insert_before_extension("_" + oext);
@@ -804,7 +804,7 @@ void Prog_align2d_prm::align2d()
         {
             dataline(0) = images[imgno].Phi();
             dataline(1) = images[imgno].Theta();
-            dataline(2) = images[imgno].Psi();
+            dataline(2) = images[imgno].psi();
             dataline(3) = images[imgno].Xoff();
             dataline(4) = images[imgno].Yoff();
             dataline(5) = corr[imgno];

@@ -466,7 +466,7 @@ void CtfGroupParams::writeOutputToDisc()
         SFo.write(fnt+".sel");
         // 2. write average Mctf
         img() = Mavg;
-        img.weight() = sumw;
+        img.set_weight(sumw);
         img.write(fnt+".ctf");
         // 3. Output to file with number of images per group
         fh << integerToString(igroup+1);
@@ -513,7 +513,7 @@ void CtfGroupParams::writeOutputToDisc()
                 dMij(Mavg,i,j) /= dMij(Mwien,i,j);
             }
             img() = Mavg;
-            img.weight() = sumw;
+            img.set_weight(sumw);
             img.write(fnt+".wien");
             fh4.open((fnt+".wien_profile").c_str(), std::ios::out);
             for (int i=0; i < paddim/2; i++)

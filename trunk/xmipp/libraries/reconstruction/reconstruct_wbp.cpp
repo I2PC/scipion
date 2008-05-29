@@ -462,13 +462,13 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
         {
             proj.read(fn_img, false);
             get_angles_for_image(fn_img, rot, tilt, psi, xoff, yoff, flip, weight);
-            proj.rot() = rot;
-            proj.tilt() = tilt;
-            proj.psi() = psi;
-            proj.Xoff() = xoff;
-            proj.Yoff() = yoff;
-            proj.flip() = flip;
-            proj.weight() = weight;
+            proj.set_rot(rot);
+            proj.set_tilt(tilt);
+            proj.set_psi(psi);
+            proj.set_Xoff(xoff);
+            proj.set_Yoff(yoff);
+            proj.set_flip(flip);
+            proj.set_weight(weight);
             A = proj.get_transformation_matrix(true);
             if (!A.isIdentity())
                 proj().selfApplyGeometryBSpline(A, 3, IS_INV, WRAP);

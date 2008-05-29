@@ -332,9 +332,9 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
           }
 	  read_proj.read(prm.IMG_Inf[iact_proj].fn_proj,prm.apply_shifts);
           read_proj.moveOriginTo_center();
-          read_proj.rot ()=prm.IMG_Inf[iact_proj].rot;
-          read_proj.tilt()=prm.IMG_Inf[iact_proj].tilt;
-          read_proj.psi ()=prm.IMG_Inf[iact_proj].psi;
+          read_proj.set_rot (prm.IMG_Inf[iact_proj].rot);
+          read_proj.set_tilt(prm.IMG_Inf[iact_proj].tilt);
+          read_proj.set_psi (prm.IMG_Inf[iact_proj].psi);
 
       	  // If noisy reconstruction
 	  if (prm.noisy_reconstruction) {
@@ -342,9 +342,9 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 	     noisy_projection().resize(read_proj());
 	     noisy_projection().initRandom(0,1,"gaussian");
              noisy_projection.moveOriginTo_center();
-             noisy_projection.rot ()=prm.IMG_Inf[iact_proj].rot;
-             noisy_projection.tilt()=prm.IMG_Inf[iact_proj].tilt;
-             noisy_projection.psi ()=prm.IMG_Inf[iact_proj].psi;
+             noisy_projection.set_rot (prm.IMG_Inf[iact_proj].rot);
+             noisy_projection.set_tilt(prm.IMG_Inf[iact_proj].tilt);
+             noisy_projection.set_psi (prm.IMG_Inf[iact_proj].psi);
 	     if (prm.IMG_Inf[iact_proj].sym==-1 && it==0) {
 	        FileName fn_noise=prm.fn_root+"_noise_proj"+
 		   integerToString(read_proj.name().get_number(),5)+".xmp";

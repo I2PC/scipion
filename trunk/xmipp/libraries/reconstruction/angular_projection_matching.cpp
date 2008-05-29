@@ -274,12 +274,12 @@ void Prog_angular_projection_matching_prm::getCurrentImage(int imgno, ImageXmipp
     img().setXmippOrigin();
 
     // Store translation in header and apply it to the actual image
-    img.Xoff() = DL[3];
-    img.Yoff() = DL[4];
-    img.rot()  = 0.;
-    img.tilt() = 0.;
-    img.psi()  = 0.;
-    img.flip() = 0.;
+    img.set_Xoff(DL[3]);
+    img.set_Yoff(DL[4]);
+    img.set_rot(0.);
+    img.set_tilt(0.);
+    img.set_psi(0.);
+    img.set_flip(0.);
 
     A = img.get_transformation_matrix(true);
     if (!A.isIdentity())

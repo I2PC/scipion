@@ -139,7 +139,7 @@ int main(int argc, char **argv)
                 fn_img = ((DFo.get_current_line()).get_text()).erase(0, 3);
                 sumimg.read(fn_img);
                 sumimg().initZeros();
-                sumimg.weight() = 0.;
+                sumimg.set_weight(0.);
             }
             else REPORT_ERROR(1, "MLalign2D-log files does not have expected format");
             fn_img = fn_oroot + "_ref";
@@ -165,7 +165,7 @@ int main(int argc, char **argv)
                 img.read(fn_img2);
                 if (img.weight() < 0.) REPORT_ERROR(1, "MLwp<0: Weights are not set correctly!");
                 sumimg() += img() * img.weight();
-                sumimg.weight() += img.weight();
+                sumimg.set_weight(sumimg.weight()+img.weight());
                 allDFs[n].adjust_to_data_line();
                 DLi = allDFs[n].get_current_line();
                 outdataline(0) += DLi[0] * weight;

@@ -149,9 +149,9 @@ bool Prog_centilt_prm::center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It,
     {
         // Store shift in the header of the image
 	// Take rotation into account for shifts
-	It.Xoff() = -xshift*COSD(It.Psi()) - yshift*SIND(It.Psi());
-	It.Yoff() = xshift*SIND(It.Psi()) - yshift*COSD(It.Psi());
-        It.Phi() = Iu.Psi();
+	It.set_Xoff(-xshift*COSD(It.psi()) - yshift*SIND(It.psi()));
+	It.set_Yoff( xshift*SIND(It.psi()) - yshift*COSD(It.psi()));
+        It.set_Phi(Iu.psi());
         return true;
     }
     else return false;
@@ -204,7 +204,7 @@ void Prog_centilt_prm::centilt()
         // Store original matrix for later output
         Maux.resize(It());
         Maux = It();
-        Euler_angles2matrix(0., 0., It.Psi(), A);
+        Euler_angles2matrix(0., 0., It.psi(), A);
         outside = dMij(It(), 0, 0);
         It().selfApplyGeometry(A, IS_INV, DONT_WRAP, outside);
         It().setXmippOrigin();
@@ -214,7 +214,7 @@ void Prog_centilt_prm::centilt()
         {
             OK = true;
             ccf = 1.;
-            It.Phi() = Iu.Psi();
+            It.set_Phi(Iu.psi());
         }
         if (OK)
         {
@@ -228,7 +228,7 @@ void Prog_centilt_prm::centilt()
             {
                 dataline(0) = It.Phi();
                 dataline(1) = It.Theta();
-                dataline(2) = It.Psi();
+                dataline(2) = It.psi();
                 dataline(3) = It.Xoff();
                 dataline(4) = It.Yoff();
                 dataline(5) = ccf;

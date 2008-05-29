@@ -371,7 +371,7 @@ void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
             // Check max_psi_change in last iteration
             if (iter == nr_iter - 1)
             {
-                diff_psi = ABS(realWRAP(imgs[imgno].Psi() - opt_psi, -180., 180.));
+                diff_psi = ABS(realWRAP(imgs[imgno].psi() - opt_psi, -180., 180.));
                 if (diff_psi > max_psi_change) 
                 {
                     do_discard = true;
@@ -435,12 +435,12 @@ void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
             if (!do_discard)
             {
                 ccfs[imgno] = correlation_index(Mref,Mimg);
-                imgs[imgno].Psi() =  opt_psi;
-                imgs[imgno].flip() = opt_flip;
-                imgs[imgno].Yoff() = new_yoff;
-                imgs[imgno].Xoff() = new_xoff;
+                imgs[imgno].set_psi(opt_psi);
+                imgs[imgno].set_flip(opt_flip);
+                imgs[imgno].set_Yoff(new_yoff);
+                imgs[imgno].set_Xoff(new_xoff);
                 if (opt_flip==1.)                
-                    imgs[imgno].Xoff() *= -1.;
+                    imgs[imgno].set_Xoff(-imgs[imgno].Xoff());
 
                 // Check max_shift_change in last iteration
                 // Add to averages
@@ -469,8 +469,8 @@ void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
 #endif
     }
 
-    avg1.weight() = w1;
-    avg2.weight() = w2;
+    avg1.set_weight(w1);
+    avg2.set_weight(w2);
     
     // Report the new angles, offsets and selfiles
     my_output[4] = imgs.size() * AVG_OUPUT_SIZE;
@@ -543,7 +543,7 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
     tilt = DFlib(col_tilt);
     Iempty.set_eulerAngles((float)rot, (float)tilt, (float)0.);
     Iempty.set_originOffsets(0., 0.);
-    Iempty.flip() = 0.;
+    Iempty.set_flip(0.);
     avg=Iempty;
     avg1=Iempty;
     avg2=Iempty;
@@ -578,7 +578,7 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
                 img().setXmippOrigin();
                 img.set_eulerAngles((float)0., (float)0., (float)psi);
                 img.set_originOffsets(xshift, yshift);
-                if (do_mirrors) img.flip() = mirror;
+                if (do_mirrors) img.set_flip(mirror);
                 
                 if (do_split) isplit = ROUND(rnd_unif());
                 else isplit = 0;
@@ -619,7 +619,7 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
         SFclass = SFclass1 + SFclass2;
         avg() = avg1() + avg2();
         w = w1 + w2;
-        avg.weight() = w;
+        avg.set_weight(w);
         writeToDisc(avg,dirno,SFclass,fn_out,false,"ref.xmp");
         reAlignClass(avg1, avg2, SFclass1, SFclass2, 
                      exp_imgs, exp_split, exp_number, 
@@ -639,9 +639,9 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
     SFclass = SFclass1 + SFclass2;
     avg() = avg1() + avg2();
     w = w1 + w2;
-    avg.weight() = w;
-    avg1.weight() = w1;
-    avg2.weight() = w2;
+    avg.set_weight(w);
+    avg1.set_weight(w1);
+    avg2.set_weight(w2);
     writeToDisc(avg,dirno,SFclass,fn_out+"_class",!dont_write_selfiles);
     if (do_split)
     {
@@ -681,7 +681,7 @@ void Prog_angular_class_average_prm::writeToDisc(ImageXmipp avg,
             {
                 dMij(old(),i,j) = ( w_old * dMij(old(),i,j) + w * dMij(avg(),i,j) ) / (w_old + w);
             }
-            old.weight() = w_old + w;
+            old.set_weight(w_old + w);
             old.write(fn_tmp);
         }
         else

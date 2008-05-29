@@ -224,13 +224,6 @@ public:
         return *this;
     }
 
-    /** Another function for assignment
-     */
-    void assign(const ImageT& I)
-    {
-        *this = I;
-    }
-
     /** Assignment from matrix
      */
     template<typename T1>
@@ -242,14 +235,6 @@ public:
             typeCast(m, img);
         }
         return *this;
-    }
-
-    /** Another function for assignment from matrix
-     */
-    template<typename T1>
-    void assign(const Matrix2D< T1 >& m)
-    {
-        *this = m;
     }
 
     /** Rename image
@@ -781,13 +766,6 @@ public:
         return *this;
     }
 
-    /** Another function for assignment from another Xmipp image
-     */
-    void assign(const ImageXmippT< T >& op1)
-    {
-        *this = op1;
-    }
-
     /** Assignment from a generic image
      *
      * The Euler angles are set to 0.
@@ -810,13 +788,6 @@ public:
         return *this;
     }
 
-    /** Another function for assignment from a generic image
-     */
-    void assign(const ImageT< T >& op1)
-    {
-        *this = op1;
-    }
-
     /** Assignment from a matrix
      *
      * The Euler angles are set to 0 and the image filename is set to "".
@@ -834,14 +805,6 @@ public:
         clear_header();
         adjust_header();
         return *this;
-    }
-
-    /** Another function for assignment from a matrix
-     */
-    template<typename T1>
-    void assign(const Matrix2D< T1 >& op1)
-    {
-        *this = op1;
     }
 
     /** Assignment from any kind of image
@@ -1139,20 +1102,9 @@ public:
         header.get_originOffsets(_Xoff, _Yoff);
     }
 
-    /** Set Xoff
-     *
-     * @code
-     * IX.Xoff() = 3.50;
-     * @endcode
-     */
-    float& Xoff()
-    {
-        return header.fXoff();
-    }
-
     /** Another function for set Xoff
      */
-    void set_Xoff(float& _Xoff)
+    void set_Xoff(float _Xoff)
     {
         header.fXoff() = _Xoff;
     }
@@ -1168,20 +1120,9 @@ public:
         return header.fXoff();
     }
 
-    /** Set Yoff
-     *
-     * @code
-     * IX.Yoff() = 3.50;
-     * @endcode
-     */
-    float& Yoff()
-    {
-        return header.fYoff();
-    }
-
     /** Another function for set Yoff
      */
-    void set_Yoff(float& _Yoff)
+    void set_Yoff(float _Yoff)
     {
         header.fYoff() = _Yoff;
     }
@@ -1197,20 +1138,9 @@ public:
         return header.fYoff();
     }
 
-    /** Set weight
-     *
-     * @code
-     * IX.weight() = 3.50;
-     * @endcode
-     */
-    float& weight()
-    {
-        return header.Weight();
-    }
-
     /** Another function for set weight
      */
-    void set_weight(float& _Weight)
+    void set_weight(float _Weight)
     {
         header.Weight() = _Weight;
     }
@@ -1221,27 +1151,14 @@ public:
      * std::cout << "Weight: " << IX.weight() << std::endl;
      * @endcode
      */
-    float  weight() const
+    float weight() const
     {
         return header.Weight();
     }
 
-    /** Set flip
-     *
-     * @code
-     * IX.flip() = 1; // flip image
-     *
-     * IX.flip() = 0; // do NOT flip image
-     * @endcode
-     */
-    float& flip()
-    {
-        return header.Flip();
-    }
-
     /** Another function for set flip
      */
-    void set_flip(float&  _Flip)
+    void set_flip(float  _Flip)
     {
         header.Flip() = _Flip;
     }
@@ -1363,20 +1280,9 @@ public:
         return(header.Is_flag_set());
     }
 
-    /** Set old rotational angle
-     *
-     * @code
-     * IX.old_rot() = 30;
-     * @endcode
-     */
-    float& old_rot()
-    {
-        return header.old_rot();
-    }
-
     /** Another function for set old rotational angle
      */
-    void set_old_rot(float& _old_rot)
+    void set_old_rot(float _old_rot)
     {
         header.old_rot() = _old_rot;
     }
@@ -1392,20 +1298,9 @@ public:
         return header.old_rot();
     }
 
-    /** Set Phi
-     *
-     * @code
-     * IX.Phi() = 30;
-     * @endcode
-     */
-    float& Phi()
-    {
-        return header.Phi();
-    }
-
     /** Another function for set Phi
      */
-    void set_Phi(float& _Phi)
+    void set_Phi(float _Phi)
     {
         header.Phi() = _Phi;
     }
@@ -1421,20 +1316,9 @@ public:
         return header.Phi();
     }
 
-    /** Set Rotational angle
-     *
-     * @code
-     * IX.rot() = 30;
-     * @endcode
-     */
-    float& rot()
-    {
-        return header.Phi();
-    }
-
     /** Another function for set Rotational angle
      */
-    void set_rot(float& _rot)
+    void set_rot(float _rot)
     {
         header.Phi() = _rot;
     }
@@ -1450,20 +1334,9 @@ public:
         return header.Phi();
     }
 
-    /** Set Phi1. First alternative phi angle
-     *
-     * @code
-     * IX.Phi1() = 30;
-     * @endcode
-     */
-    float& Phi1()
-    {
-        return header.Phi1();
-    }
-
     /** Another function for set Phi1
      */
-    void set_Phi1(float& _Phi1)
+    void set_Phi1(float _Phi1)
     {
         header.Phi1() = _Phi1;
     }
@@ -1479,20 +1352,9 @@ public:
         return header.Phi1();
     }
 
-    /** Set 1st Rotational angle. First alternative phi angle
-     *
-     * @code
-     * IX.rot1() = 30;
-     * @endcode
-     */
-    float& rot1()
-    {
-        return header.Phi1();
-    }
-
     /** Another function for set 1st Rotational angle
      */
-    void set_rot1(float& _rot1)
+    void set_rot1(float _rot1)
     {
         header.Phi1() = _rot1;
     }
@@ -1508,49 +1370,9 @@ public:
         return header.Phi1();
     }
 
-    /** Set Phi2. First alternative phi angle
-     *
-     * @code
-     * IX.Phi()=30;
-     * @endcode
-     */
-    float& Phi2()
-    {
-        return header.Phi2();
-    }
-
-    /** Another function for set Phi2
-     */
-    void set_Phi2(float& _Phi2)
-    {
-        header.Phi2() = _Phi2;
-    }
-
-    /** Get Phi2. Second alternative phi angle
-     *
-     * @code
-     * std::cout << "First Euler angle " << IX.Phi2() << std::endl;
-     * @endcode
-     */
-    float Phi2() const
-    {
-        return header.Phi2();
-    }
-
-    /** Set 2sd Rotational angle. First alternative phi angle
-     *
-     * @code
-     * IX.rot() = 30;
-     * @endcode
-     */
-    float& rot2()
-    {
-        return header.Phi2();
-    }
-
     /** Another function for set rot2
      */
-    void set_rot2(float& _rot2)
+    void set_rot2(float _rot2)
     {
         header.Phi2() = _rot2;
     }
@@ -1566,20 +1388,9 @@ public:
         return header.Phi2();
     }
 
-    /** Set Theta
-     *
-     * @code
-     * IX.Theta() = -10;
-     * @endcode
-     */
-    float& Theta()
-    {
-        return header.Theta();
-    }
-
     /** Another function for set Theta
      */
-    void set_Theta(float& _Theta)
+    void set_Theta(float _Theta)
     {
         header.Theta() = _Theta;
     }
@@ -1595,20 +1406,9 @@ public:
         return header.Theta();
     }
 
-    /** Set Tilting angle
-     *
-     * @code
-     * IX.tilt() = -10;
-     * @endcode
-     */
-    float& tilt()
-    {
-        return header.Theta();
-    }
-
     /** Another function for set Tilting angle
      */
-    void set_tilt(float& _tilt)
+    void set_tilt(float _tilt)
     {
         header.Theta() = _tilt;
     }
@@ -1624,19 +1424,8 @@ public:
         return header.Theta();
     }
 
-    /** Set Theta1
-     *
-     * @code
-     * IX.Theta1() = -10;
-     * @endcode
-     */
-    float& Theta1()
-    {
-        return header.Theta1();
-    }
-
     /** Another function for set Theta1.*/
-    void set_Theta1(float& _Theta1)
+    void set_Theta1(float _Theta1)
     {
         header.Theta1() = _Theta1;
     }
@@ -1652,20 +1441,9 @@ public:
         return header.Theta1();
     }
 
-    /** Set 1st Tilting angle
-     *
-     * @code
-     * IX.tilt1() = -10;
-     * @endcode
-     */
-    float& tilt1()
-    {
-        return header.Theta1();
-    }
-
     /** Another function for set 1st Tilting angle
      */
-    void set_tilt1(float& _tilt1)
+    void set_tilt1(float _tilt1)
     {
         header.Theta1() = _tilt1;
     }
@@ -1681,48 +1459,9 @@ public:
         return header.Theta1();
     }
 
-    /** Set Theta2
-     *
-     * @code
-     * IX.Theta2() = -10;
-     * @endcode
-     */
-    float& Theta2()
-    {
-        return header.Theta2();
-    }
-
-    /** Another function for set Theta2.*/
-    void set_Theta2(float& _Theta2)
-    {
-        header.Theta2() = _Theta2;
-    }
-
-    /** Get Theta2
-     *
-     * @code
-     * std::cout << "Second Euler angle " << IX.Theta2() << std::endl;
-     * @endcode
-     */
-    float Theta2() const
-    {
-        return header.Theta2();
-    }
-
-    /** Set 2sd Tilting angle
-     *
-     * @code
-     * IX.tilt2() = -10;
-     * @endcode
-     */
-    float& tilt2()
-    {
-        return header.Theta2();
-    }
-
     /** Another function for set 2sd Tilting angle
      */
-    void set_tilt2(float& _tilt2)
+    void set_tilt2(float _tilt2)
     {
         header.Theta2() = _tilt2;
     }
@@ -1738,49 +1477,9 @@ public:
         return header.Theta2();
     }
 
-    /** Set Psi
-     *
-     * @code
-     * IX.Psi() = 350;
-     * @endcode
-     */
-    float& Psi()
-    {
-        return header.Psi();
-    }
-
-    /** Another function for set Psi
-     */
-    void set_Psi(float& _Psi)
-    {
-        header.Psi() = _Psi;
-    }
-
-    /** Get Psi
-     *
-     * @code
-     * std::cout << "Third Euler angle " << IX.psi() << std::endl;
-     * @endcode
-     */
-    float Psi() const
-    {
-        return header.Psi();
-    }
-
-    /** Set psi
-     *
-     * @code
-     * IX.psi() = 350;
-     * @endcode
-     */
-    float& psi()
-    {
-        return header.Psi();
-    }
-
     /** Another function for set Phi
      */
-    void set_psi(float& _psi)
+    void set_psi(float _psi)
     {
         header.Psi() = _psi;
     }
@@ -1796,49 +1495,9 @@ public:
         return header.Psi();
     }
 
-    /** Set Psi1
-     *
-     * @code
-     * IX.Psi1() = 350;
-     * @endcode
-     */
-    float& Psi1()
-    {
-        return header.Psi1();
-    }
-
     /** Another function for set Psi1
      */
-    void set_Psi1(float & _Psi1)
-    {
-        header.Psi1() = _Psi1;
-    }
-
-    /** Get Psi1
-     *
-     * @code
-     * std::cout << "Third Euler angle " << IX.psi1() << std::endl;
-     * @endcode
-     */
-    float Psi1() const
-    {
-        return header.Psi1();
-    }
-
-    /** Set psi1
-     *
-     * @code
-     * IX.psi1() = 350;
-     * @endcode
-     */
-    float& psi1()
-    {
-        return header.Psi1();
-    }
-
-    /** Another function for set psi1
-     */
-    void set_psi1(float& _psi1)
+    void set_psi1(float _psi1)
     {
         header.Psi1() = _psi1;
     }
@@ -1854,49 +1513,9 @@ public:
         return header.Psi1();
     }
 
-    /** Set Psi2
-     *
-     * @code
-     * IX.Psi2() = 350;
-     * @endcode
-     */
-    float& Psi2()
-    {
-        return header.Psi2();
-    }
-
     /** Another function for set Psi2
      */
-    void set_Psi2(float& _Psi2)
-    {
-        header.Psi2() = _Psi2;
-    }
-
-    /** Get Psi2
-     *
-     * @code
-     * std::cout << "Third Euler angle " << IX.psi2() << std::endl;
-     * @endcode
-     */
-    float Psi2() const
-    {
-        return header.Psi2();
-    }
-
-    /** Set psi2
-     *
-     * @code
-     * IX.psi2() = 350;
-     * @endcode
-     */
-    float& psi2()
-    {
-        return header.Psi2();
-    }
-
-    /** Another function for set psi2
-     */
-    void set_psi2(float& _psi2)
+    void set_psi2(float _psi2)
     {
         header.Psi2() = _psi2;
     }
@@ -2379,6 +1998,7 @@ public:
 //@{
 /* Extensions for the Imagic header and image files
  */
+ #ifndef SWIG
 static const char* IMAGIC_HEADER_EXT = "hed";
 static const char* IMAGIC_IMAGE_EXT = "img";
 
@@ -2857,5 +2477,5 @@ bool ImagicWriteImagicFile(const FileName& hed_fname,
 template<>
 bool ImageImagicT< std::complex< double > >::read(const FileName&);
 //@}
-
+#endif
 #endif

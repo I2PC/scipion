@@ -262,9 +262,9 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
 #endif
 
             // Set angles
-            SSNR2D.rot() = Is.rot();
-            SSNR2D.tilt() = Is.tilt();
-            SSNR2D.psi() = Is.psi();
+            SSNR2D.set_rot(Is.rot());
+            SSNR2D.set_tilt(Is.tilt());
+            SSNR2D.set_psi(Is.psi());
 
             // Save image
             FileName fn_img_out = fn_out_images + integerToString(Is.name().get_number(), 5) + ".xmp";

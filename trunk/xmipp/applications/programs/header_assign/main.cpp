@@ -165,8 +165,8 @@ int main(int argc, char *argv[])
                 // Assign angles
                 img.set_eulerAngles(rot, tilt, psi);
                 img.set_originOffsets(xshift, yshift);
-                if (do_weights) img.weight() = weight;
-                if (do_mirrors) img.flip() = mirror;
+                if (do_weights) img.set_weight(weight);
+                if (do_mirrors) img.set_flip(mirror);
                 if (verb)
                 {
                     std::cout << fn_img  << " : rot = " << rot << " tilt = " << tilt
@@ -224,8 +224,8 @@ int main(int argc, char *argv[])
                 // Assign angles
                 img.set_eulerAngles(rot, tilt, psi);
                 img.set_originOffsets(xshift, yshift);
-                if (do_weights) img.weight() = weight;
-                if (do_mirrors) img.flip() = mirror;
+                if (do_weights) img.set_weight(weight);
+                if (do_mirrors) img.set_flip(mirror);
                 if (verb)
                 {
                     std::cout << fn_img  << " : rot = " << rot << " tilt = " << tilt
