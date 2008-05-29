@@ -39,6 +39,7 @@ int main(int argc, char **argv)
     VolumeXmipp     volume;
     int             zdim, ydim, xdim;
     bool            gridding;
+    bool            linear;
     Matrix2D< double > A(3, 3), B(4, 4);
     A.initIdentity();
     B.initIdentity();
@@ -55,6 +56,7 @@ int main(int argc, char **argv)
         ydim = textToInteger(getParameter(argc, argv, "-ydim", "0"));
         xdim = textToInteger(getParameter(argc, argv, "-xdim"));
         gridding = checkParameter(argc, argv, "-gridding");
+        linear = checkParameter(argc, argv, "-linear");
 
         if (ydim == 0) ydim = xdim;
         if (zdim == 0) zdim = xdim;
@@ -82,6 +84,10 @@ int main(int argc, char **argv)
 		DIRECT_MAT_ELEM(A, 1, 1) = (double) ydim / (double) YSIZE(image());
 		applyGeometryReverseGridding(image(), A, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim);
 	    }
+            else if (linear)
+            {
+		image().selfScaleToSize(ydim, xdim);
+            }
 	    else
 	    {
 		image().selfScaleToSizeBSpline(3, ydim, xdim);
@@ -104,6 +110,10 @@ int main(int argc, char **argv)
 		DIRECT_MAT_ELEM(B, 2, 2) = (double) zdim / (double) ZSIZE(volume());
 		applyGeometryReverseGridding(volume(), B, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim, zdim);
 	    }
+            else if (linear)
+            {
+		volume().selfScaleToSize(zdim, ydim, xdim);
+            }
 	    else
 	    {
 		volume().selfScaleToSizeBSpline(3, zdim, ydim, xdim);
@@ -139,6 +149,10 @@ int main(int argc, char **argv)
 			DIRECT_MAT_ELEM(A, 1, 1) = (double) ydim / (double) YSIZE(image());
 			applyGeometryReverseGridding(image(), A, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim);
 		    }
+                    else if (linear)
+                    {
+			image().selfScaleToSize(ydim, xdim);
+                    }
 		    else
 		    {
 			image().selfScaleToSizeBSpline(3, ydim, xdim);
@@ -159,6 +173,10 @@ int main(int argc, char **argv)
 			DIRECT_MAT_ELEM(B, 2, 2) = (double) zdim / (double) ZSIZE(volume());
 			applyGeometryReverseGridding(volume(), B, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim, zdim);
 		    }
+                    else if (linear)
+                    {
+			volume().selfScaleToSize(zdim, ydim, xdim);
+                    }
 		    else
 		    {
 			volume().selfScaleToSizeBSpline(3, zdim, ydim, xdim);
@@ -193,33 +211,7 @@ void Usage()
     << "   -xdim <new x dimension>\n"
     << "  [-ydim <new y dimension=new x dimension>\n"
     << "  [-zdim <new z dimension=new x dimension>\n"
-    << "  [-gridding]       : Use reverse gridding for interpolation\n";
+    << "  [-gridding]       : Use reverse gridding for interpolation\n"
+    << "  [-linear]         : Use bilinear/trilinear interpolation\n";
+    
 }
-
-/* Menus ------------------------------------------------------------------- */
-/*Colimate:
-   PROGRAM Scale {
-      url="http://www.cnb.uam.es/~bioinfo/NewXmipp/Applications/Src/Scale/Help/scale.html";
-      help="Scale volumes and images to a new size";
-      OPEN MENU menu_scale;
-      COMMAND LINES {
- + usual: xmipp_scale
-               #include "prog_line.mnu"
-               -xdim $XDIM [-ydim $YDIM] [-zdim $ZDIM]
-      }
-      PARAMETER DEFINITIONS {
-        #include "prog_vars.mnu"
-        $XDIM {type=natural; label="New X dimension";}
-        $YDIM {type=natural; label="New Y dimension"; by default=$XDIM;}
-        $ZDIM {type=natural; label="New Z dimension"; by default=$XDIM;}
-      }
-   }
-
-   MENU menu_scale {
-      #include "prog_menu.mnu"
-      "Scaling parameters"
-      $XDIM
-      OPT($YDIM)
-      OPT($ZDIM)
-   }
-*/
