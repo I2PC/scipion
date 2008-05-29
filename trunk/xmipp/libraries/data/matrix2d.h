@@ -35,6 +35,7 @@
 #include "multidimensional_array.h"
 #include "error.h"
 
+#ifndef SWIG
 template<typename T>
 void multiplyElements(const Matrix2D<T>& op1, const Matrix2D<T>& op2,
     Matrix2D<T>& result);
@@ -95,6 +96,7 @@ Matrix2D< double > rotation2DMatrix(double ang);
 Matrix2D< double > translation2DMatrix(const Matrix1D< double > v);
 
 int bestPrecision(float F, int _width);
+#endif
 
 /// @defgroup Matrices Matrices
 /// @ingroup MultidimensionalArrays
@@ -2874,7 +2876,7 @@ void solveBySVD(const Matrix2D< T >& A, const Matrix1D< T >& b,
         w(i) = 0;
 
     // Set size of matrices
-    result.resize(b.getDimension());
+    result.resize(XSIZE(b));
 
     // Xmipp interface that calls to svdksb of numerical recipes
     Matrix1D< double > bd;
