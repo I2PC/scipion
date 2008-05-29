@@ -566,9 +566,9 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
             else
                 SF.insert(fn_out);
             //  if (ang!=0) I().rotate(-ang);
-            I.rot() = (float)ang;
-            I.tilt() = (float)tilt;
-            I.psi() = (float)psi;
+            I.set_rot((float)ang);
+            I.set_tilt((float)tilt);
+            I.set_psi((float)psi);
             I.write(fn_out);
         }
     if (labels[label] != "")
@@ -774,7 +774,7 @@ void normalize_Near_OldXmipp(Image *I, const Matrix2D<int> &bg_mask)
     (*I)() /= stddevbg;
 }
 
-void normalize_Oldmipp_decomposition(Image *I, const Matrix2D<int> &bg_mask,
+void normalize_OldXmipp_decomposition(Image *I, const Matrix2D<int> &bg_mask,
                                      const Matrix2D<double> *mask)
 {
     double avgbg, stddevbg, minbg, maxbg;
