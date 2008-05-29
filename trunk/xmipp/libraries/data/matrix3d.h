@@ -40,6 +40,7 @@
 #include "matrix2d.h"
 #include "error.h"
 
+#ifndef SWIG
 template<typename T> class Matrix3D;
 
 template<typename T>
@@ -50,6 +51,7 @@ template<typename T>
 void applyGeometryBSpline(Matrix3D<T>& V2, Matrix2D< double > A,
     const Matrix3D<T>& V1, int Splinedegree, bool inv, bool wrap,
     T outside = 0);
+#endif
 
 /// @defgroup Volumes Volumes
 /// @ingroup MultidimensionalArrays
