@@ -138,6 +138,7 @@ void Prog_PDBPhantom_Parameters::usage()
 	      << "  [-high_sampling_rate <highTs=1/12>]: Sampling rate before downsampling\n"
 	      << "  [-size <output_dim>]	       : Final size in pixels (must be a power of 2, if blobs are used)\n"
 	      << "  [-blobs]                           : Use blobs instead of scattering factors\n"
+              << "  [-poor_Gaussian]                   : Use a simple Gaussian\n"
 	      << "\n"
 	      << "Example of use: Sample at 1.6A and limit the frequency to 10A\n"
 	      << "   xmipp_convert_pdb2vol -i 1o7d.pdb -sampling_rate 1.6\n"
