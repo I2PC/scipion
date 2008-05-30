@@ -36,6 +36,8 @@ public:
     ImageXmipp  refI;
     VolumeXmipp refV;
     float       sam;
+    bool        do_phase_residual;
+
 public:
     Resolution_parameters()
     {}
@@ -44,6 +46,7 @@ public:
         Prog_parameters::read(argc, argv);
         fn_ref = getParameter(argc, argv, "-ref");
         sam = textToFloat(getParameter(argc, argv, "-sam"));
+        do_phase_residual = checkParameter(argc, argv, "-phase_residual");
         if (Is_ImageXmipp(fn_ref))
         {
             refI.read(fn_ref, false, false, apply_geo);
@@ -71,6 +74,7 @@ public:
         std::cerr << "   -set_of_images <selfile> : SelFile containing a set of 2D-images\n";
         std::cerr << " For both modes:\n";
         std::cerr << "   -sam <sampling rate>     : i.e. pixel size (in Angstrom) \n";
+        std::cerr << "  [-phase_residual]         : Calculate phase residual instead of FRC \n";
         std::cerr << "  [-dont_apply_geo]         : for 2D-images: do not apply transformation stored in the header\n";
     }
 };
@@ -119,38 +123,48 @@ void process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
     Resolution_parameters *eprm = (Resolution_parameters *) prm;
 
     Matrix1D<double> freq, frc, dpr, frc_noise;
-
-    fourier_ring_correlation(eprm->refV(), vol(), eprm->sam, freq, frc, frc_noise);
-    differential_phase_residual(eprm->refV(), vol(), eprm->sam, freq, dpr);
-
-    // Write output
     FileName fn_dpr, fn_frc;
-    fn_dpr = vol.name() + ".dpr";
-    fn_frc = vol.name() + ".frc";
-    std::ofstream out(fn_dpr.c_str(), std::ios::out);
-    std::ofstream out2(fn_frc.c_str(), std::ios::out);
-    out  << "# Resol. [1/Ang]   DPR [deg]" << std::endl;
-    out2 << "# Resol. [1/Ang]      FSC      FSC_random_noise     Resol. [Ang]" << std::endl;
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(freq)
+
+    if (eprm->do_phase_residual)
     {
-        if (i > 0)
+        differential_phase_residual(eprm->refV(), vol(), eprm->sam, freq, dpr);
+        fn_dpr = vol.name() + ".dpr";
+        std::ofstream out(fn_dpr.c_str(), std::ios::out);
+        out  << "# Resol. [1/Ang]   DPR [deg]" << std::endl;
+        FOR_ALL_ELEMENTS_IN_MATRIX1D(freq)
         {
-            out.width(10);
-            out  << VEC_ELEM(freq, i);
-            out.width(17);
-            out << VEC_ELEM(dpr, i)  << std::endl;
-            out2.width(10);
-            out2  << VEC_ELEM(freq, i);
-            out2.width(17);
-            out2  << VEC_ELEM(frc, i);
-            out2.width(17);
-            out2  << VEC_ELEM(frc_noise, i);
-            out2.width(17);
-            out2  << 1./VEC_ELEM(freq, i) << std::endl;
+            if (i > 0)
+            {
+                out.width(10);
+                out  << VEC_ELEM(freq, i);
+                out.width(17);
+                out << VEC_ELEM(dpr, i)  << std::endl;
+            }
         }
+        out.close();
     }
-    out.close();
-    out2.close();
+    else 
+    {
+        fourier_ring_correlation(eprm->refV(), vol(), eprm->sam, freq, frc, frc_noise);
+        fn_frc = vol.name() + ".frc";
+        std::ofstream out2(fn_frc.c_str(), std::ios::out);
+        out2 << "# Resol. [1/Ang]      FSC      FSC_random_noise     Resol. [Ang]" << std::endl;
+        FOR_ALL_ELEMENTS_IN_MATRIX1D(freq)
+        {
+            if (i > 0)
+            {
+                out2.width(10);
+                out2  << VEC_ELEM(freq, i);
+                out2.width(17);
+                out2  << VEC_ELEM(frc, i);
+                out2.width(17);
+                out2  << VEC_ELEM(frc_noise, i);
+                out2.width(17);
+                out2  << 1./VEC_ELEM(freq, i) << std::endl;
+            }
+        }
+        out2.close();
+    }
 }
 
 
