@@ -141,7 +141,7 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     fn_scratch = getParameter(argc2, argv2, "-scratch", "");
     zero_offsets = checkParameter(argc2, argv2, "-zero_offsets");
     debug = textToInteger(getParameter(argc2, argv2, "-debug","0"));
-    do_student = checkParameter(argc2, argv2, "-robust");
+    do_student = checkParameter(argc2, argv2, "-student");
     df = (double) textToInteger(getParameter(argc2, argv2, "-df", "6"));
     do_scale = checkParameter(argc2, argv2, "-scale");
 
@@ -231,7 +231,7 @@ void Prog_MLalign2D_prm::show(bool ML3D)
         }
         if (do_student)
         {
-            std::cerr << "  -> Use t-student distribution for improved robustness; df = " <<df<< std::endl;
+            std::cerr << "  -> Use t-student distribution with df = " <<df<< std::endl;
         }
         if (do_scale)
         {
@@ -1149,18 +1149,6 @@ void Prog_MLalign2D_prm::calculate_realspace_offsets(
     Moffsets_mirror.resize(dim, dim);
     Moffsets_mirror.setXmippOrigin();
     Moffsets_mirror.initConstant(-1);
-    Maux.resize(dim, dim);
-    Maux.setXmippOrigin();
-    Mimg_trans.clear();
-
-    // Pre-calculate flipped image matrices
-    Mflip.clear();
-    FOR_ALL_FLIPS()
-    {
-        Maux.setXmippOrigin();
-        applyGeometry(Maux, F[iflip], Mimg, IS_INV, WRAP);
-        Mflip.push_back(Maux);
-    }
 
     // Calculate inverted flipping matrices
     // This is to have the offsets consistent with those in fast_mode
@@ -1170,7 +1158,20 @@ void Prog_MLalign2D_prm::calculate_realspace_offsets(
         Finv.push_back(Maux);
     }
 
+    // Pre-calculate flipped image matrices
+    Maux.resize(dim, dim);
+    Maux.setXmippOrigin();
+    Mflip.clear();
+    FOR_ALL_FLIPS()
+    {
+        Maux.setXmippOrigin();
+        applyGeometry(Maux, F[iflip], Mimg, IS_INV, WRAP);
+        Mflip.push_back(Maux);
+    }
+
+
     // If offsets > max_shift: reset to zero...
+    Mimg_trans.clear();
     count = 0;
     FOR_ALL_MODELS()
     {
@@ -1622,8 +1623,8 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
     std::vector <std::vector< Matrix2D<double> > > Mweight;
     std::vector<double> refw(n_ref), refw2(n_ref), refw_mirror(n_ref);
     double sigma_noise2, XiA, Xi2, aux, pdf, fracpdf, A2_plus_Xi2, maxw, mind, dfsigma2, mindiff2 = 99.e99;
-    double wsum_sc = 0. , wsum_sc2 = 0.;
-    double weight, weight1, weight2, diff, sum, sum2, wsum_corr = 0., sum_refw = 0., sum_refw2 = 0., maxweight = -99.e99;
+    double wsum_sc = 0. , wsum_sc2 = 0., wsum_offset = 0.;
+    double weight, weight1, weight2, diff, sum, sum2, wsum_corr = 0., sum_refw = 0., maxweight = -99.e99;
     int irot, irefmir, sigdim, xmax, ymax;
     int ioptx = 0, iopty = 0, ioptpsi = 0, ioptflip = 0, imax = 0;
     if (fast_mode) imax = n_ref * nr_flip / nr_nomirror_flips;
@@ -1743,36 +1744,31 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
 				// next line because of numerical precision of exp-function
 				if (aux > 1000.) weight = 0.;
 				else weight = exp(-aux) * pdf;
-				// calculate weighted sum of (X-A)^2 for sigma_noise update
-				wsum_corr += weight * diff;
 				// store weight
 				MAT_ELEM(Mweight[refno][irot], i, j) = weight;
-				// Accumulate sum weights
-				if (iflip < nr_nomirror_flips) refw[refno] += weight;
-				else refw_mirror[refno] += weight;
-				sum_refw += weight;
+				// calculate weighted sum of (X-A)^2 for sigma_noise update
+				wsum_corr += weight * diff;
 			    }
 			    else
 			    {
 				// t-student distribution
 				aux = (dfsigma2 + 2. * diff) / (dfsigma2 + 2. * mindiff2);
-				weight1 = pow(aux, df2) * pdf;
+				weight = pow(aux, df2) * pdf;
 				// Calculate extra weight acc. to Eq (10) Wang et al.
 				// Patt. Recognition Lett. 25, 701-710 (2004)
 				weight2 = ( df + dim2 ) / ( df + (2. * diff / sigma_noise2) );
-				// Total weight
-				weight = weight1 * weight2;
-				// Store running sum for new sigma_noise
-				wsum_corr += weight * diff;
 				// Store probability weights
-				MAT_ELEM(Mweight[refno][irot], i, j) = weight;
-				// Accumulate sum weights
-				if (iflip < nr_nomirror_flips) refw[refno] += weight1;
-				else refw_mirror[refno] += weight1;
-				sum_refw += weight1;
-				refw2[refno] += weight;
-				sum_refw2+= weight;
+				MAT_ELEM(Mweight[refno][irot], i, j) = weight * weight2;
+				// calculate weighted sum of (X-A)^2 for sigma_noise update
+				wsum_corr += weight * weight2 * diff;
+                                refw2[refno] += weight * weight2;
 			    }
+                            // calculated weighted sum of offsets as well
+                            wsum_offset += weight * MAT_ELEM(Mr2, i, j);
+                            // Accumulate sum weights
+                            if (iflip < nr_nomirror_flips) refw[refno] += weight;
+                            else refw_mirror[refno] += weight;
+                            sum_refw += weight;
 			    if (do_scale)
 			    {
 				// weighted sum of Sum_j ( X_ij*A_kj )
@@ -1815,6 +1811,9 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
     // Normalize all weighted sums by sum_refw such that sum over all weights is one!
     // And accumulate the FT of the weighted, shifted images.
     wsum_sigma_noise += (2 * wsum_corr / sum_refw);
+    wsum_sigma_offset += (wsum_offset / sum_refw);
+    // Initialize Maux outside the expensive loop
+    Maux.initZeros();
     FOR_ALL_MODELS()
     {
         if (!limit_rot || pdf_directions[refno] > 0.)
@@ -1831,18 +1830,15 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
                     {
                         if (Mweight[refno][irot].computeMax() > SIGNIFICANT_WEIGHT_LOW*maxweight)
                         {
-                            Mweight[refno][irot] /= sum_refw;
                             // Use Maux, because Mweight is smaller than dim x dim!
-                            Maux.initZeros();
 			    FOR_ALL_ELEMENTS_IN_MATRIX2D(Mweight[refno][irot])
 			    {
-				MAT_ELEM(Maux, i, j) = MAT_ELEM(Mweight[refno][irot], i, j);
-				wsum_sigma_offset += MAT_ELEM(Maux, i, j) * MAT_ELEM(Mr2, i, j);
+				MAT_ELEM(Maux, i, j) = MAT_ELEM(Mweight[refno][irot], i, j) / sum_refw;
 			    }
 			    FourierTransformHalf(Maux, Faux);
-                            Faux *= dim * dim;
                             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
                             {
+                                dMij(Faux,i,j) *= dim * dim;
                                 dMij(Fwsum_imgs[refno][ipsi], i, j) += conj(dMij(Faux, i, j)) * dMij(Fimg_flip[iflip], i, j);
                             }
                         }
@@ -1873,10 +1869,7 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
         opt_psi = -ioptflip * 360. / nr_flip - SMALLANGLE;
     else
 	opt_psi = -psi_step * (ioptflip * nr_psi + ioptpsi) - SMALLANGLE;
-    if (!do_student)
-	fracweight = maxweight / sum_refw;
-    else
-	fracweight = maxweight / sum_refw2;
+    fracweight = maxweight / sum_refw;
 
     if (!do_student)
 	// 1st term: log(refw_i)
@@ -2305,17 +2298,14 @@ void Prog_MLalign2D_prm::update_parameters(std::vector<Matrix2D<double> > &wsum_
     // Update sigma of the origin offsets
     if (!fix_sigma_offset) 
     {
-	if (do_student)
-	    sigma_offset = sqrt(wsum_sigma_offset / (2. * sumw_allrefs2));
-	else
-	    sigma_offset = sqrt(wsum_sigma_offset / (2. * sumw_allrefs));
+        sigma_offset = sqrt(wsum_sigma_offset / (2. * sumw_allrefs));
     }
 
     // Update the noise parameters
     if (!fix_sigma_noise)
     {
 //      The following converges faster according to McLachlan&Peel (2000)
-//	Finite Mixture MOdels, Wiley pp. 228!
+//	Finite Mixture Models, Wiley pp. 228!
 	if (do_student)
 	    sigma_noise = sqrt(wsum_sigma_noise / (sumw_allrefs2 * dim * dim));
 	else
@@ -2445,6 +2435,7 @@ void Prog_MLalign2D_prm::write_output_files(const int iter, DocFile &DFo,
 	    comment+= " <scale>= " + floatToString(avescale, 10, 5);
         DFl.insert_comment(comment);
         comment = "-noise " + floatToString(sigma_noise, 15, 12) + " -offset " + floatToString(sigma_offset, 15, 12) + " -istart " + integerToString(iter + 1);
+        comment += " -doc " + fn_base + ".doc";
         if (anneal > 1.) comment += " -anneal " + floatToString(anneal, 10, 7);
     }
     DFl.insert_comment(comment);
