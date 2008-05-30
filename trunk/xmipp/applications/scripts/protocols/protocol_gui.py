@@ -400,14 +400,15 @@ class automated_gui_class:
         self.master.title('Xmipp protocols')
 
         # Reference
-        #headertext="Read more about Xmipp protocols in:\n"
-        #headertext+="The Xmipp team (2007) Nature Protocols xx, xx-xx\n"
-        #self.l2=Label(self.frame, text=headertext, fg="dark green")
-        #self.l2.grid(row=0, column=0,columnspan=5,sticky=EW)
+        row=(self.frame.grid_size()[1])
+        headertext="If Xmipp Protocols is useful to you, please cite:\n"
+        headertext+="Scheres et al. (2008) Nature Protocols 3, 977-990\n"
+        self.l2=Label(self.frame, text=headertext, fg="dark green")
+        self.l2.grid(row=0, column=0,columnspan=5,sticky=EW)
 
         # Message which protocol
         row=(self.frame.grid_size()[1])
-        headertext="Which Xmipp protocol do you want to run?"
+        headertext="Which protocol do you want to run?"
         self.l1=Label(self.frame, text=headertext, fg="medium blue")
         self.l1.grid(row=row, column=0,columnspan=5,sticky=EW)
         self.AddSeparator(2)
