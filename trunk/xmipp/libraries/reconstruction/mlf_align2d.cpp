@@ -153,7 +153,7 @@ void Prog_MLFalign2D_prm::read(int argc, char **argv, bool ML3D)
     debug = textToInteger(getParameter(argc2, argv2, "-debug","0"));
     do_variable_psi = checkParameter(argc2, argv2, "-var_psi");
     do_variable_trans = checkParameter(argc2, argv2, "-var_trans");
-    do_student = checkParameter(argc2, argv2, "-robust");
+    do_student = checkParameter(argc2, argv2, "-student");
     df = (double) textToInteger(getParameter(argc2, argv2, "-df", "6"));
     do_scale = checkParameter(argc2, argv2, "-scale");
 
@@ -255,7 +255,7 @@ void Prog_MLFalign2D_prm::show(bool ML3D)
         }
         if (do_student)
         {
-            std::cerr << "  -> Use t-student distribution for improved robustness; df = " <<df<< std::endl;
+            std::cerr << "  -> Use t-student distribution with df = " <<df<< std::endl;
         }
         if (do_scale)
         {
@@ -1751,7 +1751,10 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 
     // Convert 1D Vsig vectors to the correct vector size for the 2D FTHalfs
     if (!do_scale) opt_scale =1.;
-    ldim = (double)nr_points_prob;
+    // Multiply by two because we only consider half the points in the FourierTransform
+    // Multiply by another factor of two because we consider both the real and the imaginary parts
+    // (i.e. the distribution is 2D instead of 1D)
+    ldim = (double) 2 * 2 * nr_points_prob;
     // For t-student: df2 changes with effective resolution!
     if (do_student) df2 = - ( df +  ldim ) / 2. ;
     sum_refw2 = 0.;
@@ -1851,6 +1854,12 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 			    diff += (tmpr * tmpr + tmpi * tmpi) / sigma2[ii];
 			}
 		    }
+                    // Sjors 5 may 2008
+                    // Multiply by two because we only consider HALF the FourierTransform
+                    diff *= 2.;
+                    // Multiply by two for t-student, because we divided by 2*sigma2 instead of sigma2!
+                    if (do_student)
+                        diff *= 2.;
                     dVkij(Mweight, zero_trans, refno, irot) = diff;
 		    if (debug == 9)
 		    {
@@ -1921,11 +1930,11 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 			//      = ( (1 + diff2/df)/(1 + mindiff2/df) )^df2
 			//      = ( (df + diff2) / (df + mindiff2) )^df2
                         // Extra factor two because we saved diff = | X - A |^2 / TWO * sigma
-			aux = (df + 2. * diff) / (df + 2. * mindiff2);
+			aux = (df + diff) / (df + mindiff2);
 			weight1 = pow(aux, df2) * pdf;
 			// Calculate extra weight acc. to Eq (10) Wang et al.
 			// Patt. Recognition Lett. 25, 701-710 (2004)
-			weight2 = ( df + ldim ) / ( df + 2. * diff  );
+			weight2 = ( df + ldim ) / ( df + diff  );
 			// total weight
 			weight = weight1 * weight2;
 			// Store weight
@@ -2049,6 +2058,9 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 					    diff += (tmpr * tmpr + tmpi * tmpi) / sigma2[ii];
 					}
 				    }
+                                    // Sjors 5 may 2008
+                                    // Multiply by two because we only consider HALF the FourierTransform
+                                    diff *= 2.;
 				    if (!do_student)
 				    {
 					// Normal distribution
@@ -2072,12 +2084,14 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 					// pdfc = (1 + diff2/df)^df2 / (1 + mindiff2/df)^df2
 					//      = ( (1 + diff2/df)/(1 + mindiff2/df) )^df2
 					//      = ( (df + diff2) / (df + mindiff2) )^df2
+                                        // Multiply by two for t-student, because we divided by 2*sigma2 
+                                        diff *= 2.;
                                         // Extra factor two because we saved diff = | X - A |^2 / TWO * sigma
-					aux = (df + 2. * diff) / (df + 2. * mindiff2);
+					aux = (df + diff) / (df + mindiff2);
 					weight1 = pow(aux, df2) * pdf;
 					// Calculate extra weight acc. to Eq (10) Wang et al.
 					// Patt. Recognition Lett. 25, 701-710 (2004)
-					weight2 = ( df + ldim ) / ( df + 2. * diff);
+					weight2 = ( df + ldim ) / ( df + diff);
 					// Total weight
 					weight = weight1 * weight2;
 					// Store weight
@@ -2651,10 +2665,11 @@ void Prog_MLFalign2D_prm::updateParameters(std::vector<Matrix2D<double> > &wsum_
 	    FFT_magnitude(Faux, Maux);
 	    CenterFFT(Maux, true);
 	    Maux *= Maux;
-	    if (!do_student)
-		Maux *= sumw[refno];
-	    else
-		Maux *= sumw2[refno];
+	    //if (!do_student)
+            //Maux *= sumw[refno];
+	    //else
+            //Maux *= sumw2[refno];
+            Maux *= sumw[refno];
 	    center.initZeros();
 	    rmean_signal2.initZeros();
 	    Maux.setXmippOrigin();
