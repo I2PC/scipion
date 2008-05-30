@@ -13,7 +13,7 @@
 # Example use:
 # ./setup_protocols.py
 #
-# {please cite} The Xmipp team (2007) Nature Protocols, xx,xx-xx
+# {please cite} The Xmipp team (2007) Nature Protocols, 3, 977-990
 #
 # Author: Sjors Scheres, March 2007
 #------------------------------------------------------------------------
