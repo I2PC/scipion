@@ -340,12 +340,14 @@ class automated_gui_class:
         headertext='GUI for Xmipp '+programname+'\n'
         headertext+="Executed in directory: "+str(os.getcwd())
         self.l1=Label(self.frame, text=headertext, fg="medium blue")
-        self.l1.grid(row=0, column=0,columnspan=6,sticky=EW)
+        self.l1.configure(wraplength=400)
+        self.l1.grid(row=0, column=0,columnspan=6,sticky=E+W)
         if (self.have_publication):
             headertext="If you publish results obtained with this protocol, please cite:"
             for pub in self.publications:
                 headertext+='\n'+pub.replace('\n','')
             self.l2=Label(self.frame, text=headertext, fg="dark green")
+            self.l2.configure(wraplength=400)
             self.l2.grid(row=1, column=0,columnspan=5,sticky=EW)
             self.AddSeparator(2)
         else:
