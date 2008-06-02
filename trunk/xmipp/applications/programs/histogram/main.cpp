@@ -66,6 +66,9 @@ int main(int argc, char **argv)
             automatic_range = false;
         }
         else automatic_range = true;
+        
+        if (fn_sel!="" && automatic_range)
+            REPORT_ERROR(1,"Error: only use selfile in combination with fixed range!");
 
         mask_prm.read(argc, argv);
     }
