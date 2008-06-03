@@ -223,6 +223,23 @@ int solve_2nd_degree_eq(double a,
  */
 double gaussian1D(double x, double sigma, double mu = 0);
 
+/** Cumulative distribution function for a Gaussian
+ * @ingroup NumericalFunctions
+ *
+ * This function returns the value of the CDF of a univariate gaussian function at the
+ * point x.
+ */
+double cdf_gauss(double x); 
+
+/** Cumulative distribution function for a t-distribution
+ * @ingroup NumericalFunctions
+ *
+ * This function returns the value of the CDF of a univariate t-distribution 
+ * with k degrees of freedom  at the point t.
+ *  Adapted by Sjors from: http://www.alglib.net/specialfunctions/distributions/student.php
+ */
+double cdf_tstudent(int k, double t);
+
 /** 2D gaussian value
  * @ingroup NumericalFunctions
  *
