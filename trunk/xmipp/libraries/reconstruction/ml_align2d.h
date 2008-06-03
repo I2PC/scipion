@@ -170,6 +170,8 @@ public:
     bool do_scale;
     /** Grey-scale correction values */
     std::vector<double> imgs_optscale;
+    /** Do sigma-division trick in student-t*/
+    bool do_student_sigma_trick;
 
     /** debug flag */
     int debug;
