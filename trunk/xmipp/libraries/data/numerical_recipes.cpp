@@ -159,6 +159,44 @@ double tdev(double nu, int *idum)
 }
 
 
+// Kolmogorov-Smirnov test 
+void ksone(double data[], int n, double(*func)(double), double * d, double * prob)
+{
+    qcksrt(n, data);
+    double fn, ff, en, dt, fo=0.;
+    en = (double)n;
+    *d = 0.;
+    for (int j=1; j<=n; j++)
+    {
+        fn = j / en;
+        ff = (*func)(data[j]);
+        dt = XMIPP_MAX(fabs(fo - ff), fabs(fn - ff));
+        if (dt> *d) *d = dt;
+        fo = fn;
+    } 
+    *prob = probks(sqrt(en)*(*d));
+}
+
+// Calculate KS-confidence level
+double probks(double alam)
+{
+    int j;
+    double a2, fac=2.0, sum=0.0, term, termbf=0.0;
+    double EPS1=0.001, EPS2=1.0e-8;
+
+    a2 = -2.0 * alam * alam;
+    for (j = 1; j<= 100; j++)
+    {
+        term = fac * exp(a2*j*j);
+        sum += term;
+        if (fabs(term) <= EPS1*termbf || fabs(term) <= EPS2*sum) return sum;
+        fac = -fac;
+        termbf = fabs(term);
+    }
+    return 1.0;
+
+}
+
 /* SORTING ----------------------------------------------------------------- */
 /* Chapter 8, Section 3: Indexing */
 void indexx(int n, double arrin[], int indx[])

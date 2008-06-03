@@ -44,6 +44,10 @@ double ran1(int *idum);                                 // Uniform random
 double gasdev(int *idum);                               // Gaussian random
 double tdev(double nu, int *idum);                      // t-student random
 
+// Cumulative distribution functions and Kolmogorov-Smirnov test
+void   ksone(double data[], int n, double(*func)(double), double * d, double * prob);  // Chapter 13.5 
+double probks(double alam);  // Chapter 13.5 
+
 // FFT ---------------------------------------------------------------------
 void four1(double data[], int nn, int isign);           // Complex FFT 1D
 void realft(double data[], int n, int isign);           // Real FFT 1D
