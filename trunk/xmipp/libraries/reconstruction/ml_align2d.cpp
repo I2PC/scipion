@@ -144,6 +144,7 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     do_student = checkParameter(argc2, argv2, "-student");
     df = (double) textToInteger(getParameter(argc2, argv2, "-df", "6"));
     do_scale = checkParameter(argc2, argv2, "-scale");
+    do_student_sigma_trick = checkParameter(argc2, argv2, "-sigma_trick");
 
     // Only for interaction with refine3d:
     search_rot = textToFloat(getParameter(argc2, argv2, "-search_rot", "999."));
@@ -1591,13 +1592,16 @@ void Prog_MLalign2D_prm::ML_integrate_locally(
 	// 1st term: log(refw_i)
 	// 2nd term: for subtracting mindiff2
 	// 3rd term: for (sqrt(2pi)*sigma_noise)^-1 term in formula (12) Sigworth (1998)
-	LL += log(sum_refw) - mindiff2 / sigma_noise2 - dim * dim * log(2.50663 * sigma_noise);
+	LL += log(sum_refw) - mindiff2 / sigma_noise2 - dim * dim * log(sqrt(2. * PI) * sigma_noise);
     else
+    {
 	// 1st term: log(refw_i)
-	// 2nd term: for dividing by mindiff2
-	// 3rd term: for constant term in t-student distribution
-	// (ignoring constants due to gamma functions!)
-	LL += log(sum_refw) - log(1. + ( mindiff2 / df )) - log(sigma_noise * sigma_noise);
+	// 2nd term: for dividing by (1 + mindiff2/sigma2*df)^df2
+	// 3rd term: for sigma-dependent normalization term in t-student distribution
+	// 4th&5th terms: gamma functions in t-distribution
+        LL += log(sum_refw) + df2 * log( 1. + (  2. * mindiff2 / dfsigma2 )) - dim * dim * log( sqrt(PI * df) * sigma_noise) 
+            + gammln(-df2) - gammln(df/2.);
+    }
 
 }
 
@@ -1752,6 +1756,12 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
 			    else
 			    {
 				// t-student distribution
+                                // pdf = (1 + diff2/sigma2*df)^df2
+                                // Correcting for mindiff2:
+                                // pdfc = (1 + diff2/sigma2*df)^df2 / (1 + mindiff2/sigma2*df)^df2
+                                //      = ( (1 + diff2/sigma2*df)/(1 + mindiff2/sigma2*df) )^df2
+                                //      = ( (sigma2*df + diff2) / (sigma2*df + mindiff2) )^df2
+                                // Extra factor two because we saved 0.5*diff2!!
 				aux = (dfsigma2 + 2. * diff) / (dfsigma2 + 2. * mindiff2);
 				weight = pow(aux, df2) * pdf;
 				// Calculate extra weight acc. to Eq (10) Wang et al.
@@ -1875,13 +1885,16 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
 	// 1st term: log(refw_i)
 	// 2nd term: for subtracting mindiff2
 	// 3rd term: for (sqrt(2pi)*sigma_noise)^-1 term in formula (12) Sigworth (1998)
-	LL += log(sum_refw) - mindiff2 / sigma_noise2 - dim * dim * log(2.50663 * sigma_noise);
+	LL += log(sum_refw) - mindiff2 / sigma_noise2 - dim * dim * log( sqrt(2. * PI) * sigma_noise);
     else
+   {
 	// 1st term: log(refw_i)
-	// 2nd term: for dividing by mindiff2
-	// 3rd term: for constant term in t-student distribution
-	// (ignoring constants due to gamma functions!)
-	LL += log(sum_refw) - log(1. + ( mindiff2 / df )) - log(sigma_noise * sigma_noise);
+	// 2nd term: for dividing by (1 + 2. * mindiff2/dfsigma2)^df2
+	// 3rd term: for sigma-dependent normalization term in t-student distribution
+	// 4th&5th terms: gamma functions in t-distribution
+       LL += log(sum_refw) + df2 * log( 1. + (  2. * mindiff2 / dfsigma2 )) - dim * dim * log( sqrt(PI * df) * sigma_noise) 
+           + gammln(-df2) - gammln(df/2.);
+    }
 
 }
 
@@ -2306,7 +2319,7 @@ void Prog_MLalign2D_prm::update_parameters(std::vector<Matrix2D<double> > &wsum_
     {
 //      The following converges faster according to McLachlan&Peel (2000)
 //	Finite Mixture Models, Wiley pp. 228!
-	if (do_student)
+	if (do_student && do_student_sigma_trick)
 	    sigma_noise = sqrt(wsum_sigma_noise / (sumw_allrefs2 * dim * dim));
 	else
 	    sigma_noise = sqrt(wsum_sigma_noise / (sumw_allrefs * dim * dim));
