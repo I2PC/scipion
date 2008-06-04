@@ -304,6 +304,22 @@ specifying `FFTW_PATIENT' first plans in `FFTW_ESTIMATE' mode, then in
    
    void img_bandpass_filter(double res_hi, double width);
 
+/** Fourier-Ring-Correlation between two 2D-matrices using FFT
+ * @ingroup FourierOperations
+ */
+    void fourier_ring_correlation(xmippFftw& fft_m2,
+                              double sampling_rate,
+                              Matrix1D< double >& freq,
+                              Matrix1D< double >& frc,
+                              Matrix1D< double >& frc_noise);
+                              
+/* Radial average for Fourier transforms*/
+void fftwRadialAverage(double *AUX,
+                                  Matrix1D< double >& radial_mean,
+                                  Matrix1D< int >& radial_count,
+                                  bool rounding =true );
+                              
+
 
 };
 #include <sys/stat.h>

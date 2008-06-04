@@ -294,7 +294,7 @@ xmippFftw::~xmippFftw()
 
    fftw_destroy_plan((fftw_plan)fPlan);
    fPlan = NULL;
-   if(fIn!=NULL)
+   if(fIn!=NULL && destroy_fIn==true)
    {
        delete [] fIn;
        fIn = NULL;
@@ -624,7 +624,7 @@ void xmippFftw::img_bandpass_filter(double res_hi, double width)
     cfOut = (std::complex<double> *)fOut; //fOut is double *
     cfIn  = (std::complex<double> *)fIn;  //fIn is double *
     for ( int z=0, i=0; z<Zdim; z++ ) {
-		if ( z > (Zsize - 1)/2 ) zz = Zsize-z;//this line can be deleted
+		if ( z > (Zsize - 1)/2 ) zz = Zsize-z;
 		else zz = z;
         sz2 = (double)zz/Zsize;
 		sz2 *= sz2;
@@ -659,6 +659,186 @@ std::cerr << "i xx yy s res_hi2 z y x "
 
 }
 
+/** Fourier-Ring-Correlation between two 2D-matrices using FFT
+ * @ingroup FourierOperations
+ */
+void xmippFftw::fourier_ring_correlation(xmippFftw & fft_m2,
+                              double sampling_rate,
+                              Matrix1D< double >& freq,
+                              Matrix1D< double >& frc,
+                              Matrix1D< double >& frc_noise)
+{
+    int dim;
+    /* remember to transpose de matrix */
+    if(fNdim==1)
+    {
+        dim = (int)  fN[0]/2;
+    }
+    else if (fNdim==2)
+    {
+        dim = (int)  fN[1]/2;
+    }
+    else if (fNdim==3)
+    {
+        dim = (int)  fN[2]/2;
+    }
+    else
+    {
+        std::cerr << "Error in fftwRadialAverage\n";
+        exit(0);
+    }
+
+    double     *aux, *realFT1;
+    int sizeout = int(double(fTotalSize)*(int)(fN[fNdim-1]/2+1)/fN[fNdim-1]);
+    try
+    {
+       aux = new double [2*sizeout];
+       realFT1 = new double [2*sizeout];
+    }
+    catch (std::bad_alloc&)
+    {
+        std::cout << "Error allocating memory." << std::endl;
+        exit(1);
+    }
+
+    Matrix1D< int >    radial_count;
+    Matrix1D< double > tmp1, tmp2;
+    //xmipp y contigous, fftw x contigous
+    std::complex<double> * IMG1, * IMG2;//,*AUX;
+    IMG1 = (std::complex<double> *)fOut;
+    //AUX = (std::complex<double> *)aux;
+    for (int ii=0;ii<sizeout;ii++)
+    {
+       aux[ii] = abs(IMG1[ii])*abs(IMG1[ii]);
+    }
+    tmp1.initZeros();
+    fftwRadialAverage(aux, tmp1, radial_count,true);
+    IMG2 = (std::complex<double> *)fft_m2.fOut;
+    for (int ii=0;ii<sizeout;ii++)
+    {
+       aux[ii] = abs(IMG2[ii])*abs(IMG2[ii]);
+    }
+    tmp2.initZeros();
+    fftwRadialAverage(aux, tmp2, radial_count, true);
+    //radialAverageHalf
+
+    //std::complex<double> * REALFT1;
+    //REALFT1 = (std::complex<double> *)realFT1;
+    for (int ii=0;ii<sizeout;ii++)
+    {
+       realFT1[ii] = real(conj(IMG1[ii]) * IMG2[ii]);
+    }
+    
+    frc.initZeros();
+    fftwRadialAverage(realFT1, frc, radial_count, true);
+    frc.resize(dim);
+    frc_noise.resize(dim);
+    freq.resize(dim);
+    
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(freq)
+    {
+        int j = i;
+        VEC_ELEM(freq, i) = (double) j / (dim * 2 * sampling_rate);
+        
+        VEC_ELEM(frc, i) = VEC_ELEM(frc, i) / sqrt(VEC_ELEM(tmp1, i)
+                           * VEC_ELEM(tmp2, i));
+        VEC_ELEM(frc_noise, i) = 2 / sqrt((double) VEC_ELEM(radial_count, i));
+    }
+}
+
+
+/* Radial average for Fourier transforms*/
+void xmippFftw::fftwRadialAverage(double * AUX,
+                                  Matrix1D< double >& radial_mean,
+                                  Matrix1D< int >& radial_count,
+                                  bool rounding /*=true*/ )
+{
+    int Xdim,Xsize;
+    int Ydim=1,Ysize=1;
+    int Zdim=1,Zsize=1;
+    int maxDistance;
+    /* remember to transpose de matrix */
+    if(fNdim==1)
+    {   
+        Zdim=Zsize=1;
+        Ydim=Ysize=1;
+        Xsize=fN[0];
+        Xdim = (int) fN[0]/2 +1;
+        maxDistance=Xdim;        
+    }
+    else if (fNdim==2)
+    {
+        Zdim=Zsize=1;
+        Ydim=Ysize=fN[0];
+        Xsize=fN[1];
+        Xdim = (int) fN[1]/2 +1;
+        maxDistance = (int) FLOOR(sqrt(Xdim*Xdim+(Ydim/2)*(Ydim/2)));
+    }    
+    else if (fNdim==3)
+    {
+        Zdim=Zsize=fN[0];
+        Ydim=Ysize=fN[1];
+        Xsize=fN[2];
+        Xdim = (int)  fN[2]/2 +1;
+        maxDistance = (int) FLOOR(sqrt(Xdim*Xdim+
+                                  (Ydim/2)*(Ydim/2)+
+                                  (Zdim/2)*(Zdim/2)));
+    }
+    else
+    {
+        std::cerr << "Error in fftwRadialAverage\n";
+        exit(0);
+    }
+    // Define the vectors
+    radial_mean.resize(maxDistance+1);//I think +1 will be needed for rounding
+                                      //case. ROB
+    radial_mean.initZeros();
+    radial_count.resize(maxDistance+1);
+    radial_count.initZeros();
+
+    int zz, yy, xx;
+    double sz2,sy2,sx2,s;   
+    /* maximun distance*/
+    std::complex<double> * cfOut;
+    cfOut = (std::complex<double> *)fOut; //fOut is double *
+    for ( int z=0, ii=0; z<Zdim; z++ ) {
+		if ( z > (Zsize - 1)/2 ) zz = Zsize-z;
+		else zz = z;
+		for ( int y=0; y<Ydim; y++ ) {
+			if ( y > (Ysize - 1)/2 ) yy = Ysize-y;
+			else yy = y;
+			for ( int x=0; x<Xdim; x++, ii++ ) {
+				if ( x > (Xsize - 1)/2 ) xx = Xsize-x;
+				else xx = x;
+				s = sqrt(xx*xx+yy*yy+zz*zz);
+                // Determine distance to the center
+                int distance;
+                if (rounding)
+                    distance = (int) ROUND(s);
+                else
+                    distance = (int) FLOOR(s);
+                // Sum the value to the pixels with the same distance
+                radial_mean(distance) += AUX[ii];
+
+                // Count the pixel
+                radial_count(distance)++;
+                //each point counts by two
+                //except those in the redundant part
+                if (xx!=0)
+                {
+                    radial_mean(distance) += AUX[ii];
+                    radial_count(distance)++;
+                }
+			}
+		}
+	}
+    // Perfor the mean
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_mean)
+    {
+        radial_mean(i) /= (double) radial_count(i);
+    }
+
+}
 
 //
 // lockFile is the filename to use to represent the lock.  Basically, if the
