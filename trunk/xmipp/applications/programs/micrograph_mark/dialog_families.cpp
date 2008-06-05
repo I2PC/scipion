@@ -30,10 +30,17 @@
 
 #include <data/micrograph.h>
 
+#ifdef QT3_SUPPORT
+#include <q3listbox.h>
+#include <q3vbox.h>
+#include <q3hbox.h>
+#else
 #include <qlistbox.h>
-#include <qpushbutton.h>
 #include <qvbox.h>
 #include <qhbox.h>
+#endif
+
+#include <qpushbutton.h>
 #include <qlabel.h>
 #include <qlineedit.h>
 
@@ -41,17 +48,26 @@
 QtDialogFamilies::QtDialogFamilies(QWidget *_parent,
                                    const char *_name,
                                    bool _modal,
-                                   WFlags _f) :
+                                   Qt::WFlags _f) :
         QDialog(_parent, _name, _modal, _f)
 {
 
     __m               = NULL;
     __mTilted         = NULL;
+#ifdef QT3_SUPPORT
+    __vBoxLayout      = new Q3VBox(this);
+#else
     __vBoxLayout      = new QVBox(this);
+#endif
+
     __vBoxLayout->setMinimumSize(300, 300);
 
     __addFamilyButton = new QPushButton("Add family", __vBoxLayout);
+#ifdef QT3_SUPPORT
+    __familyList      = new Q3ListBox(__vBoxLayout);
+#else
     __familyList      = new QListBox(__vBoxLayout);
+#endif
 
     connect(__addFamilyButton, SIGNAL(clicked(void)),
             this, SLOT(slotAddFamily(void)));
@@ -110,7 +126,11 @@ void QtDialogFamilies::slotAddFamily()
     if (__m == NULL) return;
 
     QDialog    familyNameDialog(this, 0, TRUE);
+#ifdef QT3_SUPPORT
+    Q3HBox      qhbox(&familyNameDialog);
+#else
     QHBox      qhbox(&familyNameDialog);
+#endif
     qhbox.setMinimumSize(200, 20);
     QLabel     familyNameLabel("Family name: ", &qhbox);
     QLineEdit  familyNameLineEdit(&qhbox);
@@ -144,7 +164,11 @@ void QtDialogFamilies::slotEditFamily(int _f)
     if (__m == NULL) return;
 
     QDialog    familyNameDialog(this, 0, TRUE);
+#ifdef QT3_SUPPORT
+    Q3HBox      qhbox(&familyNameDialog);
+#else
     QHBox      qhbox(&familyNameDialog);
+#endif
     qhbox.setMinimumSize(200, 20);
     QLabel     familyNameLabel("Family name: ", &qhbox);
     QLineEdit  familyNameLineEdit(&qhbox);

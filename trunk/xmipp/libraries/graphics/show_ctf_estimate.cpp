@@ -27,6 +27,11 @@
 
 #include <qpainter.h>
 
+#ifdef QT3_SUPPORT
+//Added by qt3to4:
+#include <QPaintEvent>
+#endif
+
 // Constructor -------------------------------------------------------------
 AssignCTFViewer::AssignCTFViewer(const FileName &_fn_psd,
                                  Prog_assign_CTF_prm &_assign_ctf_prm):
@@ -74,7 +79,7 @@ AssignCTFViewer::AssignCTFViewer(const FileName &_fn_psd,
 
     // Open window for scrolls
     select_prm = new ScrollParam(min, max, initial_value, prm_name,
-                                 "Recompute CTF model", 0, "new window", WDestructiveClose, 0);
+                                 "Recompute CTF model", 0, "new window", Qt::WDestructiveClose, 0);
     connect(select_prm, SIGNAL(new_value(std::vector<float>)),
             this,       SLOT(set_prm(std::vector<float>)));
     connect(select_prm, SIGNAL(signal_ok_clicked()),
@@ -145,11 +150,13 @@ void AssignCTFViewer::drawFirstZero(std::vector<float> &prm)
     double fx = (double)(width()) / (double)image.width();
 
     QPainter painter(this);
-    QBrush brush(NoBrush);
-    QPen myPen(red, 3);
+    QBrush brush(Qt::NoBrush);
+    QPen myPen(Qt::red, 3);
     painter.setPen(myPen);
     painter.setBrush(brush);
-    painter.setRasterOp(XorROP);
+    /*
+     * painter.setRasterOp(XorROP);
+     */
 
     Matrix1D<int> previous_point(2);
     for (double ang = 0; ang <= 360; ang += 1)

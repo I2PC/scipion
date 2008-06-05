@@ -24,9 +24,14 @@
 #include <qdialog.h>
 
 /* Forward declarations ---------------------------------------------------- */
+#ifdef QT3_SUPPORT
+class Q3ListBox;
+class Q3VBox;
+#else
 class QListBox;
-class QPushButton;
 class QVBox;
+#endif
+class QPushButton;
 class Micrograph;
 
 /* Widget for the micrograph ----------------------------------------------- */
@@ -37,14 +42,20 @@ class QtDialogFamilies : public QDialog
 private:
     Micrograph  *__m;
     Micrograph  *__mTilted;
-    QListBox    *__familyList;
     QPushButton *__addFamilyButton;
+#ifdef QT3_SUPPORT
+    Q3ListBox    *__familyList;
+    Q3VBox       *__vBoxLayout;
+#else
+    QListBox    *__familyList;
     QVBox       *__vBoxLayout;
+#endif
+    
 
 public:
     // Constructor
     QtDialogFamilies(QWidget *_parent = 0, const char *_name = 0,
-                     bool _modal = FALSE, WFlags _f = 0);
+                     bool _modal = FALSE, Qt::WFlags _f = 0);
     ~QtDialogFamilies();
 
     // Set the micrograph

@@ -1,4 +1,4 @@
-# vi:syntax=python
+#!/usr/bin/env python
 
 Import('env')
 
@@ -757,13 +757,27 @@ if int(env['tiff']):
 # QT
 if int(env['gui']):
     envQT = env.Copy()
-    envQT.Tool('qt')
+    
+    if int(env['QT4']):
+        # FIXME see SConstruct
+        env['QTDIR']=''
+        env['QT_LIB']=''
 
-    # Once again, just in case, Copy() does not work too well
-    envQT.Replace(QT_LIB = env['QT_LIB'])
+        envQT.Tool('qt4')
+        envQT.EnableQt4Modules(['QtCore', 'QtGui', 'Qt3Support'], debug=False)
 
-    # QT_AUTOSCAN does not work because .h and .cpp are not in the same dir
-    envQT.SetDefault(QT_AUTOSCAN = 1)
+        # Fix for moc and #ifdefs (qt3 uses MOC_SKIP_*)
+        envQT['QT4_MOCFROMHFLAGS'] += ['-DQT3_SUPPORT']
+        envQT['QT4_MOCFROMCXXFLAGS'] += ['-DQT3_SUPPORT']
+        
+    else:
+        envQT.Tool('qt')
+    
+        # QT_AUTOSCAN does not work because .h and .cpp are not in the same dir
+        # envQT.SetDefault(QT_AUTOSCAN = 1)
+
+        # Once again, just in case, Copy() does not work too well
+        envQT.Replace(QT_LIB = env['QT_LIB'])
 
     def AddQtProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
         mocs = [], includes = [], libpath =[], libs = [], cxxflags = [],
@@ -775,8 +789,13 @@ if int(env['gui']):
         binprefix =  os.path.join(env['prefix'], 'bin')
 
         extra = []
-        for i in mocs:
-            extra.append(envQT.Moc(basedir + i))
+        
+        if int(env['QT4']):
+            for i in mocs:
+                extra.append(envQT.Moc4(basedir + i))
+        else:
+            for i in mocs:
+                extra.append(envQT.Moc(basedir + i))
 
         sources = Glob(basedir, sources_pattern, skip_list)
 

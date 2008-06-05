@@ -32,8 +32,14 @@
 
 #include <data/funcs.h>
 
+#ifdef QT3_SUPPORT
+#include <q3filedialog.h>
+#include <q3grid.h>
+#else
 #include <qfiledialog.h>
 #include <qgrid.h>
+#endif
+
 #include <qlabel.h>
 #include <qpushbutton.h>
 #include <qmessagebox.h>

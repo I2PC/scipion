@@ -30,10 +30,17 @@
 
 #include <data/micrograph.h>
 
-#include <qlistbox.h>
 #include <qpushbutton.h>
+
+#ifdef QT3_SUPPORT
+#include <q3listbox.h>
+#include <q3vbox.h>
+#include <q3hbox.h>
+#else
+#include <qlistbox.h>
 #include <qvbox.h>
 #include <qhbox.h>
+#endif
 
 /* Constructor ------------------------------------------------------------- */
 QtDialogProperties::QtDialogProperties(Micrograph *_m,
@@ -42,7 +49,7 @@ QtDialogProperties::QtDialogProperties(Micrograph *_m,
                                        QWidget *_parent,
                                        const char *_name,
                                        bool _modal,
-                                       WFlags _f) :
+                                       Qt::WFlags _f) :
         QDialog(_parent, _name, _modal, _f)
 {
 
@@ -51,11 +58,19 @@ QtDialogProperties::QtDialogProperties(Micrograph *_m,
     __wm           = _wm;
     __coord        = _coord;
     __moving       = false;
+#ifdef QT3_SUPPORT
+    __vBoxLayout   = new Q3VBox(this);
+#else
     __vBoxLayout   = new QVBox(this);
+#endif
     __vBoxLayout->setMinimumSize(300, 300);
     __moveButton   = new QPushButton("Move", __vBoxLayout);
     __deleteButton = new QPushButton("Delete", __vBoxLayout);
+#ifdef QT3_SUPPORT
+    __familyList   = new Q3ListBox(__vBoxLayout);
+#else
     __familyList   = new QListBox(__vBoxLayout);
+#endif
 
     for (int i = 0; i < __m->LabelNo(); i++)
         __familyList->insertItem(__m->get_label(i).c_str());

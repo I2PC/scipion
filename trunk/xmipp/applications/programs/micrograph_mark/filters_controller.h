@@ -29,7 +29,11 @@
 class QImage;
 class QtFilter;
 class QDialog;
+#ifdef QT3_SUPPORT
+class Q3ListBox;
+#else
 class QListBox;
+#endif
 
 /* Filters generic class --------------------------------------------------- */
 class QtFiltersController : public QWidget
@@ -39,7 +43,11 @@ class QtFiltersController : public QWidget
 private:
     std::vector<QtFilter*>  __filterList;
     QDialog           *__addFilterDialog;
+#ifdef QT3_SUPPORT
+    Q3ListBox          *__listFilters;
+#else
     QListBox          *__listFilters;
+#endif
     const Micrograph  *__M;
 
     enum filters

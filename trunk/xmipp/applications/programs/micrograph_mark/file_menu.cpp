@@ -33,12 +33,20 @@
 #include <data/micrograph.h>
 #include <data/funcs.h>
 
-#include <qfiledialog.h>
-#include <qgrid.h>
 #include <qlabel.h>
 #include <qpushbutton.h>
 #include <qmessagebox.h>
 #include <qlineedit.h>
+
+#ifdef QT3_SUPPORT
+#include <q3filedialog.h>
+#include <q3grid.h>
+//Added by qt3to4:
+#include <Q3PopupMenu>
+#else
+#include <qfiledialog.h>
+#include <qgrid.h>
+#endif
 
 /* Constructor ------------------------------------------------------------- */
 QtFileMenu::QtFileMenu(QtWidgetMicrograph* _parent) :
@@ -52,7 +60,11 @@ QtFileMenu::QtFileMenu(QtWidgetMicrograph* _parent) :
     insertItem("Generate images", this, SLOT(slotGenerateImages()));
 
     insertSeparator();
+#ifdef QT3_SUPPORT
+    options =  new Q3PopupMenu();
+#else
     options =  new QPopupMenu();
+#endif
     insertItem("Change mark type", options);
     circle = options->insertItem("Circle");
     square = options->insertItem("Square");
@@ -106,7 +118,11 @@ void QtFileMenu::slotLoadCoords()
 
     try
     {
+#ifdef QT3_SUPPORT
+        Q3FileDialog coordFileDialog(this, 0, TRUE);
+#else
         QFileDialog coordFileDialog(this, 0, TRUE);
+#endif
         coordFileDialog.setCaption("Coordinates filename");
         coordFileDialog.setFilter("*.pos");
         if (coordFileDialog.exec())
@@ -182,7 +198,11 @@ void QtFileMenu::slotGenerateImages()
     {
         QDialog   setPropertiesDialog(this, 0, TRUE);
         setPropertiesDialog.setCaption("Generate images");
+#ifdef QT3_SUPPORT
+        Q3Grid     qgrid(2, &setPropertiesDialog);
+#else
         QGrid     qgrid(2, &setPropertiesDialog);
+#endif
         qgrid.setMinimumSize(250, 170);
         QLabel    windowSizeXLabel("X window size: ", &qgrid);
         QLineEdit windowSizeXLineEdit(&qgrid);

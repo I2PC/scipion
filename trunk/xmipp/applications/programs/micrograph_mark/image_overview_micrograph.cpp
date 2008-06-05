@@ -32,6 +32,11 @@
 
 #include <qpainter.h>
 
+#ifdef QT3_SUPPORT
+//Added by qt3to4:
+#include <QMouseEvent>
+#endif
+
 /* Coordiantes transformations --------------------------------------------- */
 void QtImageOverviewMicrograph::micrographToOverview(const int _x, const int _y,
         int &_rx, int &_ry)
@@ -84,7 +89,7 @@ void QtImageOverviewMicrograph::exact_overviewToMicrograph(int _x, int _y,
 /* Constructor ------------------------------------------------------------- */
 QtImageOverviewMicrograph::QtImageOverviewMicrograph(QWidget *_parent,
         const char *_name,
-        WFlags _f) :
+        Qt::WFlags _f) :
         QtImage(_parent, _name, _f)
 {
     __x = 0;
@@ -208,7 +213,7 @@ void QtImageOverviewMicrograph::loadSymbols()
     if ((x + w) > image()->width())  w = image()->width() - x;
     if ((y + h) > image()->height()) h = image()->height() - y;
 
-    __paint->setPen(yellow);
+    __paint->setPen(Qt::yellow);
     __paint->drawRect(x , y, w, h);
 
     for (int i = 0; i < getMicrograph()->ParticleNo(); i++)
@@ -224,7 +229,7 @@ void QtImageOverviewMicrograph::loadSymbols()
         int x0_crop, y0_crop, xF_crop, yF_crop;
         micrographToOverview(__x0_crop, __y0_crop, x0_crop, y0_crop);
         micrographToOverview(__xF_crop, __yF_crop, xF_crop, yF_crop);
-        __paint->setPen(blue);
+        __paint->setPen(Qt::blue);
         __paint->drawRect(x0_crop , y0_crop, xF_crop - x0_crop, yF_crop - y0_crop);
     }
 }
@@ -234,7 +239,7 @@ void QtImageOverviewMicrograph::mouseMoveEvent(QMouseEvent *e)
     int mX, mY, x, y;
 
     if (getMicrograph() == NULL) return;
-    if (e->button() != LeftButton) return;
+    if (e->button() != Qt::LeftButton) return;
 
     x = e->pos().x();
     y = e->pos().y();
@@ -256,7 +261,7 @@ void QtImageOverviewMicrograph::mouseMoveEvent(QMouseEvent *e)
 
 void QtImageOverviewMicrograph::mouseReleaseEvent(QMouseEvent *e)
 {
-    if (e->button() != LeftButton) return;
+    if (e->button() != Qt::LeftButton) return;
     mouseMoveEvent(e);
 }
 

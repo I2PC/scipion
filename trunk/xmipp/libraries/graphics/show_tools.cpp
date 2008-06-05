@@ -26,12 +26,22 @@
 
 #include "show_tools.h"
 
-#include <qdragobject.h>
+
 #include <qfile.h>
 #include <qlayout.h>
 #include <qmime.h>
 #include <qpushbutton.h>
 #include <qtooltip.h>
+#ifdef QT3_SUPPORT
+#include <q3dragobject.h>
+//Added by qt3to4:
+#include <Q3GridLayout>
+#include <QPixmap>
+#include <QLabel>
+#include <Q3VBoxLayout>
+#else
+#include <qdragobject.h>
+#endif
 
 #include <data/fft.h>
 #include <data/histogram.h>
@@ -40,7 +50,11 @@
 ScrollParam::ScrollParam(float min , float max, float initial_value,
                          char* prm_name, char *caption, QWidget *parent, const char *name,
                          int wFlags, int precision) :
+#ifdef QT3_SUPPORT
+        QWidget(parent, name, (Qt::WindowFlags) wFlags)
+#else
         QWidget(parent, name, wFlags)
+#endif
 {
     std::vector<float> vmin;
     vmin.push_back(min);
@@ -56,7 +70,11 @@ ScrollParam::ScrollParam(float min , float max, float initial_value,
 ScrollParam::ScrollParam(std::vector<float> &min , std::vector<float> &max,
                          std::vector<float> &initial_value, std::vector<char *> &prm_name,
                          char *caption, QWidget *parent, const char *name, int wFlags, int precision) :
+#ifdef QT3_SUPPORT
+        QWidget(parent, name, (Qt::WindowFlags) wFlags)
+#else
         QWidget(parent, name, wFlags)
+#endif
 {
     init(min, max, initial_value, prm_name, caption, precision);
 }
@@ -73,8 +91,13 @@ void ScrollParam::init(std::vector<float> &min, std::vector<float> &max,
     my_precision = (int)pow((double)10, (double)precision);
 
     // Create a layout to position the widgets
+#ifdef QT3_SUPPORT
+    Q3BoxLayout *Layout = new Q3VBoxLayout(this, 10);
+    Q3GridLayout *grid = new Q3GridLayout(3 + min.size(), 5);
+#else
     QBoxLayout *Layout = new QVBoxLayout(this, 10);
     QGridLayout *grid = new QGridLayout(3 + min.size(), 5);
+#endif
     Layout->addLayout(grid, 5);
 
     // Title
@@ -97,17 +120,17 @@ void ScrollParam::init(std::vector<float> &min, std::vector<float> &max,
         lab1->setFont(QFont("times", 12, QFont::Bold));
         lab1->setText(prm_name[i]);
         lab1->setFixedSize(lab1->sizeHint());
-        grid->addWidget(lab1, i + 1, 0, AlignLeft);
+        grid->addWidget(lab1, i + 1, 0, Qt::AlignLeft);
 
         // Add range
         QLabel     *lab2 = new QLabel(this, "lab2");
         lab2->setFont(QFont("times", 12));
         lab2->setText(((std::string)"[" + floatToString(min[i], 0) + "," + floatToString(max[i], 0) + "]").c_str());
         lab2->setFixedSize(lab2->sizeHint());
-        grid->addWidget(lab2, i + 1, 1, AlignCenter);
+        grid->addWidget(lab2, i + 1, 1, Qt::AlignCenter);
 
         // Add Scroll Bar
-        QScrollBar  *scroll_aux = new QScrollBar(tmp_min, tmp_max, 1, 1, (int)value[i], QScrollBar::Horizontal, this, "scroll");
+        QScrollBar  *scroll_aux = new QScrollBar(tmp_min, tmp_max, 1, 1, (int)value[i], Qt::Horizontal, this, "scroll");
         scroll_aux->setFixedWidth(100);
         scroll_aux->setFixedHeight(15);
         grid->addMultiCellWidget(scroll_aux, i + 1, i + 1, 2, 3);
@@ -118,7 +141,7 @@ void ScrollParam::init(std::vector<float> &min, std::vector<float> &max,
         value_lab_aux = new QLabel(this, "value_lab");
         value_lab_aux->setFont(QFont("times", 12));
         value_lab_aux->setNum(value[i] / my_precision);
-        grid->addWidget(value_lab_aux, i + 1, 4, AlignLeft);
+        grid->addWidget(value_lab_aux, i + 1, 4, Qt::AlignLeft);
         value_lab.push_back(value_lab_aux);
 
         connect(scroll_aux, SIGNAL(valueChanged(int)), SLOT(scrollValueChanged(int)));
@@ -130,7 +153,7 @@ void ScrollParam::init(std::vector<float> &min, std::vector<float> &max,
     close->setFont(QFont("times", 12, QFont::Bold));
     close->setText("Close");
     close->setFixedSize(close->sizeHint());
-    grid->addWidget(close, 1 + min.size(), 0, AlignVCenter);
+    grid->addWidget(close, 1 + min.size(), 0, Qt::AlignVCenter);
     QToolTip::add(close, "Close the window");
     connect(close, SIGNAL(clicked()), SLOT(slot_close_clicked()));
 
@@ -141,7 +164,7 @@ void ScrollParam::init(std::vector<float> &min, std::vector<float> &max,
     do_it->setText("Ok");
     do_it->setFixedHeight(do_it->sizeHint().height());
     do_it->setFixedWidth(80);
-    grid->addWidget(do_it, 1 + min.size(), 3, AlignVCenter);
+    grid->addWidget(do_it, 1 + min.size(), 3, Qt::AlignVCenter);
     QToolTip::add(do_it, "Commit action");
     connect(do_it, SIGNAL(clicked()), SLOT(slot_ok_clicked()));
 }
@@ -190,7 +213,11 @@ void ScrollParam::slot_ok_clicked()
 
 ExclusiveParam::ExclusiveParam(std::vector<std::string> &list_values, int initial_value,
                                char *caption, QWidget *parent, const char *name, int wFlags) :
+#ifdef QT3_SUPPORT
+        QWidget(parent, name, (Qt::WindowFlags) wFlags)
+#else
         QWidget(parent, name, wFlags)
+#endif
 {
     float my_precision = 0;
     int tmp_min = (int) 0;
@@ -202,13 +229,20 @@ ExclusiveParam::ExclusiveParam(std::vector<std::string> &list_values, int initia
     setCaption(caption);
 
     // Create a layout to position the widgets
-
-    QBoxLayout *Layout = new QVBoxLayout(this, 10);
+#ifdef QT3_SUPPORT
+    Q3BoxLayout *Layout = new Q3VBoxLayout(this, 10);
+#else
+    QBoxLayout* Layout = new QVBoxLayout(this, 10);
+#endif
 
     // Create a grid layout to hold most of the widgets
-    QGridLayout *grid = new QGridLayout(5 + list_values.size(), 3);
-    // This layout will get all of the stretch
+#ifdef QT3_SUPPORT
+    Q3GridLayout *grid = new Q3GridLayout(5 + list_values.size(), 3);
+#else
+    QGridLayout* grid = new QGridLayout(5 + list_values.size(), 3);
+#endif
 
+    // This layout will get all of the stretch
     Layout->addLayout(grid, 5);
 
     //title
@@ -233,7 +267,7 @@ ExclusiveParam::ExclusiveParam(std::vector<std::string> &list_values, int initia
     close->setFont(QFont("times", 12, QFont::Bold));
     close->setText("Close");
     close->setFixedSize(close->sizeHint());
-    grid->addWidget(close, 3 + list_values.size(), 0, AlignVCenter);
+    grid->addWidget(close, 3 + list_values.size(), 0, Qt::AlignVCenter);
     QToolTip::add(close, "Close the window");
     connect(close, SIGNAL(clicked()), SLOT(but_close_clicked()));
 
@@ -243,7 +277,7 @@ ExclusiveParam::ExclusiveParam(std::vector<std::string> &list_values, int initia
     do_it->setText("Ok");
     do_it->setFixedHeight(do_it->sizeHint().height());
     do_it->setFixedWidth(80);
-    grid->addWidget(do_it, 3 + list_values.size(), 2, AlignVCenter);
+    grid->addWidget(do_it, 3 + list_values.size(), 2, Qt::AlignVCenter);
     QToolTip::add(do_it, "Commit action");
     connect(do_it, SIGNAL(clicked()), SLOT(but_ok_clicked()));
 }
@@ -403,7 +437,11 @@ void xmipp2CTF(const Matrix2D<double> &input, Matrix2D<double> &output)
 /* Pixmap from MIME source ------------------------------------------------- */
 QPixmap xmipp_qPixmapFromMimeSource(const QString &abs_name)
 {
+#ifdef QT3_SUPPORT
+    const QMimeSource *m = Q3MimeSourceFactory::defaultFactory()->data(abs_name);
+#else
     const QMimeSource *m = QMimeSourceFactory::defaultFactory()->data(abs_name);
+#endif
     if (!m)
     {
         if (QFile::exists(abs_name))
@@ -411,6 +449,10 @@ QPixmap xmipp_qPixmapFromMimeSource(const QString &abs_name)
         return QPixmap();
     }
     QPixmap pix;
+#ifdef QT3_SUPPORT
+    Q3ImageDrag::decode(m, pix);
+#else
     QImageDrag::decode(m, pix);
+#endif
     return pix;
 }

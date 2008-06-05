@@ -32,6 +32,11 @@
 #include <data/selfile.h>
 #include <data/fft.h>
 
+#ifdef QT3_SUPPORT
+//Added by qt3to4:
+#include <QMouseEvent>
+#endif
+
 /**@defgroup ShowSelfile Show Selection File
    @ingroup GraphicsLibrary */
 //@{

@@ -27,6 +27,11 @@
 
 #include <qradiobutton.h>
 
+#ifdef QT3_SUPPORT
+//Added by qt3to4:
+#include <Q3PopupMenu>
+#endif
+
 /* Forward declarations ---------------------------------------------------- */
 class QtWidgetMicrograph;
 
@@ -37,7 +42,11 @@ class QtFileMenu : public QtPopupMenuMark
     Q_OBJECT
 
     // For changing mark type 
-    QPopupMenu *options;
+#ifdef QT3_SUPPORT
+    Q3PopupMenu *options;
+#else
+    QPopupMenu* options;
+#endif
     int circle, square;
 
     // Coordinates have been saved

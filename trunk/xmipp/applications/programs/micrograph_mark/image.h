@@ -23,6 +23,12 @@
 #include <qwidget.h>
 #include <qimage.h>
 
+#ifdef QT3_SUPPORT
+//Added by qt3to4:
+#include <QResizeEvent>
+#include <QPaintEvent>
+#endif
+
 #include "color_label.h"
 #include "filters_controller.h"
 
@@ -47,7 +53,7 @@ private:
     float               __gamma;
 public:
     // Constructor
-    QtImage(QWidget *_parent = 0, const char *_name = 0, WFlags _f = 0);
+    QtImage(QWidget *_parent = 0, const char *_name = 0, Qt::WFlags _f = 0);
     ~QtImage();
 
     // Set the micrograph

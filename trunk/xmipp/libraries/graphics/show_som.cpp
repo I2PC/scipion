@@ -33,8 +33,16 @@
 
 #include <classification/training_vector.h>
 
-#include <qfiledialog.h>
 #include <qmessagebox.h>
+
+#ifdef QT3_SUPPORT
+#include <q3filedialog.h>
+//Added by qt3to4:
+#include <QPixmap>
+#include <Q3PopupMenu>
+#else
+#include <qfiledialog.h>
+#endif
 
 /* Init/Clear data --------------------------------------------------------- */
 void ShowSOM::init()
@@ -192,17 +200,26 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root)
 /* Initialize right click menubar ------------------------------------------ */
 void ShowSOM::initRightclickMenubar()
 {
+#ifdef QT3_SUPPORT
+    menubar = new Q3PopupMenu();
+    Q3PopupMenu * file = new Q3PopupMenu();
+#else
     menubar = new QPopupMenu();
     QPopupMenu * file = new QPopupMenu();
+#endif
     file->insertItem("Open...", this,  SLOT(GUIopenFile()));
     file->insertItem("Save assigned images in a sel file...",
-                     this, SLOT(saveAssigned()), CTRL + Key_N);
+                     this, SLOT(saveAssigned()), Qt::CTRL + Qt::Key_N);
     file->insertItem("Save assigned images in separate sel files...",
                      this, SLOT(saveAssignedSeparately()));
     menubar->insertItem("&File", file);
 
     // Options .............................................................
-    options =  new QPopupMenu();
+#ifdef QT3_SUPPORT
+    options =  new Q3PopupMenu();
+#else
+    options = new QPopupMenu();
+#endif
     setCommonOptionsRightclickMenubar();
 
     // What kind of labels
@@ -221,10 +238,10 @@ void ShowSOM::initRightclickMenubar()
     options->insertItem("View average and SD of the Selected Codevectors",  this,  SLOT(showStats()));
     options->insertItem("View average and SD of the Assigned Images", this,  SLOT(showRepresentedStats()));
     options->insertItem("View average of the Assigned Images together", this, SLOT(showRepresentedAverageTogether()));
-    options->insertItem("View assigned images", this,  SLOT(showRepresentedSel()), CTRL + Key_A);
-    options->insertItem("View error Image", this,  SLOT(showErrorImage()), CTRL + Key_E);
+    options->insertItem("View assigned images", this,  SLOT(showRepresentedSel()), Qt::CTRL + Qt::Key_A);
+    options->insertItem("View error Image", this,  SLOT(showErrorImage()), Qt::CTRL + Qt::Key_E);
     options->insertSeparator();
-    options->insertItem("Show Algorithm Information", this,  SLOT(showAlgoInfo()), CTRL + Key_G);
+    options->insertItem("Show Algorithm Information", this,  SLOT(showAlgoInfo()), Qt::CTRL + Qt::Key_G);
     options->insertSeparator();
 
     // Insert options the menu
@@ -262,7 +279,11 @@ void ShowSOM::saveAssignedSeparately()
             if (basename.isNull())
             {
                 basename =
+#ifdef QT3_SUPPORT
+                    Q3FileDialog::getSaveFileName(QString::null, QString::null,
+#else
                     QFileDialog::getSaveFileName(QString::null, QString::null,
+#endif
                                                  this, "Save images",
                                                  "Enter base filename for sel files");
                 if (basename.isEmpty())

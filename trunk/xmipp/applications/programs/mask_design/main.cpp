@@ -76,7 +76,7 @@ int main(int argc, char **argv)
 
     if (imgname != "")
     {
-        maskImg *w = new maskImg(0, imgname.c_str(), QWidget::WDestructiveClose);
+        maskImg *w = new maskImg(0, imgname.c_str(), Qt::WDestructiveClose);
         w->apply_geo = apply_geo;
         w->saveasname = saveasname;
         w->loadImage(imgname.c_str());
@@ -91,9 +91,9 @@ int main(int argc, char **argv)
         SF.get_statistics(ave, sd, min, max, apply_geo);
         maskImg* w;
         if (sdflag)
-            w = new maskImg(NULL, &sd, CIRCLE, selname.c_str(), QWidget::WDestructiveClose);
+            w = new maskImg(NULL, &sd, CIRCLE, selname.c_str(), Qt::WDestructiveClose);
         else
-            w = new maskImg(NULL, &ave, CIRCLE, selname.c_str(), QWidget::WDestructiveClose);
+            w = new maskImg(NULL, &ave, CIRCLE, selname.c_str(), Qt::WDestructiveClose);
         w->apply_geo = apply_geo;
         w->saveasname = saveasname;
         w->show();

@@ -33,6 +33,12 @@
 #include <qpainter.h>
 #include <qimage.h>
 
+#ifdef QT3_SUPPORT
+//Added by qt3to4:
+#include <QResizeEvent>
+#include <QPaintEvent>
+#endif
+
 double QtImage::__zoom = 1.0;
 
 /* Coordiantes transformations --------------------------------------------- */
@@ -61,7 +67,7 @@ void QtImage::exact_imageToMicrograph(int _x, int _y, double &_rx, double &_ry)
 }
 
 /* Constructor ------------------------------------------------------------- */
-QtImage::QtImage(QWidget *_parent, const char *_name, WFlags _f) :
+QtImage::QtImage(QWidget *_parent, const char *_name, Qt::WFlags _f) :
         QWidget(_parent, _name, _f)
 {
     __m                 = NULL;

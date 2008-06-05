@@ -34,9 +34,27 @@
 #include <reconstruction/psd_enhance.h>
 
 #include <qmenubar.h>
-#include <qfiledialog.h>
 #include <qmessagebox.h>
 #include <qpainter.h>
+
+#ifdef QT3_SUPPORT
+//Added by qt3to4:
+#include <QKeyEvent>
+#include <Q3StrList>
+#include <QLabel>
+#include <QPixmap>
+#include <Q3Frame>
+#include <QResizeEvent>
+#include <Q3PopupMenu>
+#include <QMouseEvent>
+#include <QPaintEvent>
+#include <q3filedialog.h>
+#include <QImageReader>
+#else
+#include <qfiledialog.h>
+#endif
+
+
 
 #include <cstring>
 
@@ -60,9 +78,14 @@ void ImageViewer::Init()
     down = false;
     spacing = 1;
 
+#ifdef QT3_SUPPORT
+    menubar = new Q3PopupMenu();
+    file = new Q3PopupMenu();
+#else
     menubar = new QPopupMenu();
-
     file = new QPopupMenu();
+#endif
+
     menubar->insertItem("&File", file);
     file->insertItem("New window", this,  SLOT(newWindow()));
     file->insertItem("Open...", this,  SLOT(openFile()));
@@ -72,7 +95,12 @@ void ImageViewer::Init()
     pi = file->insertItem("Print", this, SLOT(printIt()));
     printer = new QPrinter;
 
-    options =  new QPopupMenu();
+#ifdef QT3_SUPPORT
+    options =  new Q3PopupMenu();
+#else
+    options = new QPopupMenu();
+#endif
+
     menubar->insertItem("&Options", options);
     ss = options->insertItem("Set spacing");
     ravg = options->insertItem("Radial average");
@@ -91,7 +119,12 @@ void ImageViewer::Init()
 
     menubar->insertSeparator();
 
+#ifdef QT3_SUPPORT
+    Q3PopupMenu* help = new Q3PopupMenu();
+#else
     QPopupMenu* help = new QPopupMenu();
+#endif
+
     menubar->insertItem("&Help", help);
     help->insertItem("&About", this, SLOT(about()));
     help->insertItem("About &Xmipp", this, SLOT(aboutXmipp()));
@@ -104,7 +137,11 @@ void ImageViewer::Init()
     connect(options, SIGNAL(activated(int)), this, SLOT(doOption(int)));
 
     status = new QLabel(this);
+#ifdef QT3_SUPPORT
+    status->setFrameStyle(Q3Frame::WinPanel | Q3Frame::Sunken);
+#else
     status->setFrameStyle(QFrame::WinPanel | QFrame::Sunken);
+#endif
     status->setFixedHeight(fontMetrics().height() + 4);
 
     xi = yi = xf = yf = 0;
@@ -122,7 +159,11 @@ void ImageViewer::Init()
 
 /****************************************************/
 ImageViewer::ImageViewer(const char *name, bool _check_file_change):
-        QWidget(NULL, name, QWidget::WDestructiveClose),
+#ifdef QT3_SUPPORT
+                         QWidget(NULL, name, Qt::WDestructiveClose),
+#else
+                         QWidget(NULL, name, QWidget::WDestructiveClose),
+#endif
         filename(0),
         helpmsg(0)
 {
@@ -136,7 +177,11 @@ ImageViewer::ImageViewer(const char *name, bool _check_file_change):
 /****************************************************/
 
 ImageViewer::ImageViewer(QImage *_image, const char *name)
+#ifdef QT3_SUPPORT
+        : QWidget(NULL, name, Qt::WDestructiveClose),
+#else
         : QWidget(NULL, name, QWidget::WDestructiveClose),
+#endif
         filename(0),
         helpmsg(0)
 {
@@ -152,7 +197,11 @@ ImageViewer::ImageViewer(QImage *_image, const char *name)
 /****************************************************/
 
 ImageViewer::ImageViewer(ImageT<double> *_image, const char *name)
+#ifdef QT3_SUPPORT
+        : QWidget(NULL, name, Qt::WDestructiveClose),
+#else
         : QWidget(NULL, name, QWidget::WDestructiveClose),
+#endif
         filename(0),
         helpmsg(0)
 {
@@ -168,7 +217,11 @@ ImageViewer::ImageViewer(ImageT<double> *_image, const char *name)
 /****************************************************/
 
 ImageViewer::ImageViewer(FourierImageXmipp *_FFTimage, const char *name)
+#ifdef QT3_SUPPORT
+        : QWidget(NULL, name, Qt::WDestructiveClose),
+#else
         : QWidget(NULL, name, QWidget::WDestructiveClose),
+#endif
         filename(0),
         helpmsg(0)
 {
@@ -244,8 +297,10 @@ void ImageViewer::generateFFTImage(Matrix2D<double> &out)
 
 ImageViewer::~ImageViewer()
 {
+#ifndef QT3_SUPPORT
     if (alloc_context)
         QColor::destroyAllocContext(alloc_context);
+#endif
     if (other == this)
         other = 0;
 }
@@ -261,7 +316,7 @@ void ImageViewer::doOption(int item)
     {
         ScrollParam* param_window;
         param_window = new ScrollParam(0.1, 10, spacing, "Set spacing", "spacing",
-                                       0, "new window", WDestructiveClose);
+                                       0, "new window", Qt::WDestructiveClose);
         connect(param_window, SIGNAL(new_value(float)), this, SLOT(set_spacing(float)));
         param_window->setFixedSize(250, 150);
         param_window->show();
@@ -278,7 +333,7 @@ void ImageViewer::doOption(int item)
         list_values.push_back("phase(z)");
 
         param_window = new ExclusiveParam(list_values, fft_show_mode, "Set FFT show mode",
-                                          0, "new window", WDestructiveClose);
+                                          0, "new window", Qt::WDestructiveClose);
         connect(param_window, SIGNAL(new_value(int)), this, SLOT(set_fft_show_mode(int)));
         param_window->setFixedSize(250, 200);
         param_window->show();
@@ -342,7 +397,7 @@ void ImageViewer::doOption(int item)
         prm_name.push_back("Mask w1");
         prm_name.push_back("Mask w2");
         param_window = new ScrollParam(min, max, initial_value, prm_name,
-                                       "Enhance PSD", 0, "new window", WDestructiveClose, 2);
+                                       "Enhance PSD", 0, "new window", Qt::WDestructiveClose, 2);
 
         // Connect its output to my input (set_spacing)
         connect(param_window, SIGNAL(new_value(std::vector<float>)),
@@ -380,7 +435,7 @@ void ImageViewer::refineProfileLine()
     prm_name.push_back("Y final");
 
     ScrollParam* param_window = new ScrollParam(min, max, initial_value, prm_name,
-                                "Setup profile line", 0, "new window", WDestructiveClose, 0);
+                                "Setup profile line", 0, "new window", Qt::WDestructiveClose, 0);
 
     // Connect its output to my input (set_spacing)
     connect(param_window, SIGNAL(new_value(std::vector<float>)),
@@ -460,8 +515,11 @@ void ImageViewer::updateStatus()
 */
 void ImageViewer::saveImage(int item)
 {
-//    QString savefilename = QFileDialog::getSaveFileName(0, 0, 0, filename);
-    QString savefilename = QFileDialog::getSaveFileName(QString::null, "*.xmp", this);
+#ifdef QT3_SUPPORT
+    QString savefilename = Q3FileDialog::getSaveFileName(QString::null, "*.xmp", this);
+#else
+    QString savefilename = QFileDialog::getSaveFileName(0, 0, 0, filename);
+#endif
 
     if (!savefilename.isEmpty())
     {
@@ -500,7 +558,12 @@ void ImageViewer::newWindow()
 */
 void ImageViewer::openFile()
 {
+#ifdef QT3_SUPPORT
+    QString newfilename = Q3FileDialog::getOpenFileName();
+#else
     QString newfilename = QFileDialog::getOpenFileName();
+#endif
+
     if (!newfilename.isEmpty())
     {
         loadImage(newfilename) ;
@@ -530,7 +593,7 @@ void ImageViewer::printIt()
 bool ImageViewer::showImage()
 {
     bool ok = FALSE;
-    QApplication::setOverrideCursor(waitCursor);   // this might take time
+    QApplication::setOverrideCursor(Qt::waitCursor);   // this might take time
     pickx = -1;
     ok = reconvertImage();
     if (ok)
@@ -781,7 +844,7 @@ bool ImageViewer::reconvertImage()
 
     if (image.isNull()) return FALSE;
 
-    QApplication::setOverrideCursor(waitCursor);   // this might take time
+    QApplication::setOverrideCursor(Qt::waitCursor);   // this might take time
     if (pm.convertFromImage(image))
     {
         pmScaled = QPixmap();
@@ -813,14 +876,18 @@ void ImageViewer::scale()
 
     if (image.isNull()) return;
 
-    QApplication::setOverrideCursor(waitCursor);   // this might take time
+    QApplication::setOverrideCursor(Qt::waitCursor);   // this might take time
     if (width() == pm.width() && h == pm.height())
     {      // no need to scale if widget
         pmScaled = pm;    // size equals pixmap size
     }
     else
     {
-        QWMatrix m;      // transformation matrix
+#ifdef QT3_SUPPORT
+        QMatrix m; // transformation matrix
+#else
+        QWMatrix m;
+#endif
         m.scale(((double)width()) / pm.width(),// define scale factors
                 ((double)h) / pm.height());
         pmScaled = pm.xForm(m);      // create scaled pixmap
@@ -882,7 +949,7 @@ bool ImageViewer::convertEvent(QMouseEvent* e, int& x, int& y)
 void ImageViewer::mousePressEvent(QMouseEvent *e)
 {
     QPoint clickedPos = e->pos();  // extract pointer position
-    if (e->button() == RightButton)
+    if (e->button() == Qt::RightButton)
     {
         menubar->exec(clickedPos);
         down = false;
@@ -962,36 +1029,36 @@ void ImageViewer::keyPressEvent(QKeyEvent* e)
 {
     switch (e->key())
     {   // Look at the key code
-    case Key_F1:
+    case Qt::Key_F1:
         menubar->exec();
         break;
-    case Key_R:
-        if (e->state() == ControlButton)
+    case Qt::Key_R:
+        if (e->state() == Qt::ControlButton)
         { // If 'Ctrol R' key,
             xmippImage().moveOriginTo(-xmippImage().startingY(), -xmippImage().startingX());// sets origin at the upper left corner
         }
         break;
-    case Key_Q:
-        if (e->state() == ControlButton)
+    case Qt::Key_Q:
+        if (e->state() == Qt::ControlButton)
         { // If 'Ctrol Q' key,
             exit(0); // Terminate program
         }
         break;
-    case Key_O:    // Xmipp origin
-        if (e->state() == ControlButton)
+    case Qt::Key_O:    // Xmipp origin
+        if (e->state() == Qt::ControlButton)
         { // If 'Ctrol N' key,
             xmippImage().setXmippOrigin(); // sets origin at the center of the iamge.
         }
         break;
-    case Key_N:    // Natural size (original size)
-        if (e->state() == ControlButton)
+    case Qt::Key_N:    // Natural size (original size)
+        if (e->state() == Qt::ControlButton)
         { // If 'Ctrol N' key,
             resize(xmippImage().colNumber(), xmippImage().rowNumber() + status->height());
         }
         break;
-    case Key_M:
-    case Key_Minus:    // Half size
-        if (e->state() == ControlButton)
+    case Qt::Key_M:
+    case Qt::Key_Minus:    // Half size
+        if (e->state() == Qt::ControlButton)
         { // If 'Ctrol-' key,
             // Aspect ratio of the original image
             double ratio_original = (double)xmippImage().colNumber() / xmippImage().rowNumber();
@@ -1000,9 +1067,9 @@ void ImageViewer::keyPressEvent(QKeyEvent* e)
             resize(new_width, new_height + status->height());
         }
         break;
-    case Key_P:
-    case Key_Plus:    // Double size
-        if (e->state() == ControlButton)
+    case Qt::Key_P:
+    case Qt::Key_Plus:    // Double size
+        if (e->state() == Qt::ControlButton)
         { // If 'Ctrol+' key,
             double ratio_original = (double)xmippImage().colNumber() / xmippImage().rowNumber();
             int new_width = width() * 2;
@@ -1010,8 +1077,8 @@ void ImageViewer::keyPressEvent(QKeyEvent* e)
             resize(new_width, new_height + status->height());
         }
         break;
-    case Key_A:        // Aspect ratio
-        if (e->state() == ControlButton)
+    case Qt::Key_A:        // Aspect ratio
+        if (e->state() == Qt::ControlButton)
         { // If 'Ctrol+' key,
             double ratio = (double) xmippImage().colNumber() / (double) xmippImage().rowNumber();
             resize(width(), (int)(width() / ratio + status->height()));
@@ -1042,11 +1109,13 @@ void ImageViewer::paintEvent(QPaintEvent *e)
 void ImageViewer::drawLine(int x1, int y1, int x2, int y2)
 {
     QPainter painter(this);
-    QBrush brush(NoBrush);
-    QPen myPen(red, 3);
+    QBrush brush(Qt::NoBrush);
+    QPen myPen(Qt::red, 3);
     painter.setPen(myPen);
     painter.setBrush(brush);
-    painter.setRasterOp(XorROP);
+    /*
+     * painter.setRasterOp(XorROP);
+     */
     painter.drawLine(x1, y1, x2, y2);
 }
 
@@ -1098,7 +1167,11 @@ void ImageViewer::giveHelp()
     if (!helpmsg)
     {
         QString helptext = "Usage: xmipp_iv [filename]\n\n ";
+#ifdef QT3_SUPPORT
+        Q3StrList support = QImageReader::supportedImageFormats();
+#else
         QStrList support = QImage::outputFormats();
+#endif
         helptext += "\n\nSupported input formats:\n";
         int lastnl = helptext.length();
 

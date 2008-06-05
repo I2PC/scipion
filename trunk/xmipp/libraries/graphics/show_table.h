@@ -32,11 +32,21 @@
 #define TABLE_H
 
 #include <qglobal.h>
-#include <qtable.h>
 #include <qlabel.h>
 #include <qpainter.h>
-#include <qpopupmenu.h>
 #include <qtimer.h>
+
+#ifdef QT3_SUPPORT
+//Added by qt3to4:
+#include <QPixmap>
+#include <QMouseEvent>
+#include <QKeyEvent>
+#include <q3table.h>
+#include <q3popupmenu.h>
+#else
+#include <qtable.h>
+#include <qpopupmenu.h>
+#endif
 
 #include <data/funcs.h>
 #include <data/matrix2d.h>
@@ -52,7 +62,16 @@
     This is a general class that is inherited by real show classes
     like ShowSel or ShowVol.
 */
+
+
+#ifdef QT3_SUPPORT
+// MOC_SKIP_BEGIN
+class ShowTable : public Q3Table
+// MOC_SKIP_END
+#else
 class ShowTable : public QTable
+#endif
+
 {
     Q_OBJECT
 
@@ -98,10 +117,16 @@ protected:
     // Current scale factor
     double      currScale;
 
+#ifdef QT3_SUPPORT
     // Rightclick menubar
-    QPopupMenu *menubar;
+    Q3PopupMenu *menubar;
     // Options of the menubar
+    Q3PopupMenu *options;
+#else
+    QPopupMenu *menubar;
     QPopupMenu *options;
+#endif
+
     // Status label. Need not be used
     QLabel     *status;
     // Tempfiles that need to be deleted on destruction
@@ -237,7 +262,11 @@ protected slots:
     /* Process mouse move events */
     virtual void contentsMouseMoveEvent(QMouseEvent* e)
     {
+#ifdef QT3_SUPPORT
+        Q3Table::contentsMouseMoveEvent(e);
+#else
         QTable::contentsMouseMoveEvent(e);
+#endif
     };
     /* Check the change of file */
     virtual void check_file();

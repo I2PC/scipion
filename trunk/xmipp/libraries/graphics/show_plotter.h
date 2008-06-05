@@ -32,10 +32,21 @@
 
 #include <qevent.h>
 #include <qlabel.h>
-#include <qmainwindow.h>
 #include <qpixmap.h>
 #include <qtoolbutton.h>
 #include <qwidget.h>
+
+#ifdef QT3_SUPPORT
+#include <q3mainwindow.h>
+//Added by qt3to4:
+#include <QResizeEvent>
+#include <QWheelEvent>
+#include <QMouseEvent>
+#include <QKeyEvent>
+#include <QPaintEvent>
+#else
+#include <qmainwindow.h>
+#endif
 
 #include <data/matrix2d.h>
 
@@ -127,7 +138,16 @@ public:
          }
     @endcode
 */
+
+
+#ifdef QT3_SUPPORT
+// MOC_SKIP_BEGIN
+class Plotter : public Q3MainWindow
+// MOC_SKIP_END
+#else
 class Plotter : public QMainWindow
+#endif
+
 {
     Q_OBJECT
 public:

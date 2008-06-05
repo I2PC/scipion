@@ -34,7 +34,13 @@
 #include <data/geometry.h>
 #include <data/selfile.h>
 
+#ifdef QT3_SUPPORT
+#include <q3accel.h>
+//Added by qt3to4:
+#include <Q3GridLayout>
+#else
 #include <qaccel.h>
+#endif
 
 /* Constructor ------------------------------------------------------------- */
 QtMainWidgetMark::QtMainWidgetMark(Micrograph *_m, Micrograph *_mTilted)
@@ -79,7 +85,11 @@ QtMainWidgetMark::QtMainWidgetMark(Micrograph *_m, Micrograph *_mTilted)
     __tilted_generated = false;
     __untilted_generated = false;
 
+#ifdef QT3_SUPPORT
+    __gridLayout         = new Q3GridLayout(this, 1, 2, 0);
+#else
     __gridLayout         = new QGridLayout(this, 1, 2, 0);
+#endif
     __filtersController  = new QtFiltersController(this , _m);
 
     __mWidget            = new QtWidgetMicrograph(this, __filtersController);
@@ -94,22 +104,28 @@ QtMainWidgetMark::QtMainWidgetMark(Micrograph *_m, Micrograph *_mTilted)
     __familyDialog->setCaption("Families");
     __familyDialog->show();
 
+#ifdef QT3_SUPPORT
+    __ctrlPlus    = new Q3Accel(this);
+    __ctrlMinus   = new Q3Accel(this);
+    __otherCtrl   = new Q3Accel(this);
+#else
     __ctrlPlus    = new QAccel(this);
     __ctrlMinus   = new QAccel(this);
     __otherCtrl   = new QAccel(this);
+#endif
 
     connect(__familyDialog, SIGNAL(signalActiveFamily(int)),
             __mWidget, SLOT(slotActiveFamily(int)));
     connect(__mWidget, SIGNAL(signalAddFamily(const char*)),
             __familyDialog, SLOT(slotAddFamily(const char*)));
 
-    __ctrlPlus->connectItem(__ctrlPlus->insertItem(Key_Plus + CTRL, 200),
+    __ctrlPlus->connectItem(__ctrlPlus->insertItem(Qt::Key_Plus + Qt::CTRL, 200),
                             __mWidget->image(), SLOT(slotZoomIn(void)));
-    __ctrlMinus->connectItem(__ctrlMinus->insertItem(Key_Minus + CTRL, 201),
+    __ctrlMinus->connectItem(__ctrlMinus->insertItem(Qt::Key_Minus + Qt::CTRL, 201),
                              __mWidget->image(), SLOT(slotZoomOut(void)));
-    __otherCtrl->connectItem(__otherCtrl->insertItem(Key_Q + CTRL, 200),
+    __otherCtrl->connectItem(__otherCtrl->insertItem(Qt::Key_Q + Qt::CTRL, 200),
                              __mWidget, SLOT(slotQuit(void)));
-    __otherCtrl->connectItem(__otherCtrl->insertItem(Key_S + CTRL, 201),
+    __otherCtrl->connectItem(__otherCtrl->insertItem(Qt::Key_S + Qt::CTRL, 201),
                              this, SLOT(slotSaveCoords(void)));
 
     if (_mTilted != NULL)

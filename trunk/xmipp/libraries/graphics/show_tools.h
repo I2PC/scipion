@@ -33,7 +33,12 @@
 #include <qimage.h>
 #include <qpixmap.h>
 #include <qradiobutton.h>
+
+#ifdef QT3_SUPPORT
+#include <q3textedit.h>
+#else
 #include <qtextedit.h>
+#endif
 
 #include <data/image.h>
 

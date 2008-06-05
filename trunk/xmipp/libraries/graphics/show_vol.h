@@ -31,6 +31,11 @@
 
 #include <data/volume.h>
 
+#ifdef QT3_SUPPORT
+//Added by qt3to4:
+#include <QMouseEvent>
+#endif
+
 /**@defgroup ShowVolumes Show Volumes
    @ingroup GraphicsLibrary */
 //@{

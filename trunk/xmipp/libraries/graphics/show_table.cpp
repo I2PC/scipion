@@ -38,13 +38,24 @@
 #include "show_2d.h"
 
 #include <qpainter.h>
-#include <qkeycode.h>
+#include <qnamespace.h>
 #include <qscrollbar.h>
 #include <qmessagebox.h>
 #include <qmenubar.h>
-#include <qfiledialog.h>
 #include <qfontdialog.h>
 #include <qcolordialog.h>
+
+#ifdef QT3_SUPPORT
+#include <q3filedialog.h>
+//Added by qt3to4:
+#include <QKeyEvent>
+#include <QLabel>
+#include <QPixmap>
+#include <Q3Frame>
+#include <Q3PopupMenu>
+#else
+#include <qfiledialog.h>
+#endif
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -81,7 +92,7 @@ void ShowTable::init()
     menubar         = NULL;
     status          = NULL;
     QFont tmpFont("Fixed", 12);
-    fontColor       = white;
+    fontColor       = Qt::white;
     content_queue.clear();
 }
 
@@ -163,8 +174,12 @@ void ShowTable::initTable()
         maxRows = CEIL((double)listSize / numCols);
     }
 
-    setBackgroundMode(PaletteBase);      // set widgets background
-    setSelectionMode(QTable::NoSelection); // do not accept Qt managed selections
+    setBackgroundMode(Qt::PaletteBase);      // set widgets background
+#ifdef QT3_SUPPORT
+    setSelectionMode(Q3Table::NoSelection); // do not accept Qt managed selections
+#else
+    setSelectionMode(QTable::NoSelection);
+#endif
     setReadOnly(true);
     setNumCols(maxCols);              // set number of cols in table
     setNumRows(maxRows);       // set number of rows in table
@@ -229,12 +244,20 @@ void ShowTable::changeFont()
 void ShowTable::insertGeneralItemsInRightclickMenubar()
 {
     //Colors................................................................
+#ifdef QT3_SUPPORT
+    Q3PopupMenu* colorMenu = new Q3PopupMenu();
+#else
     QPopupMenu* colorMenu = new QPopupMenu();
+#endif
     colorMenu->insertItem("&Font color", this, SLOT(changeFontColor()));
     menubar->insertItem("&Change color...", colorMenu);
     menubar->insertItem("&Change font...", this, SLOT(changeFont()));
     // Help ................................................................
+#ifdef QT3_SUPPORT
+    Q3PopupMenu* help = new Q3PopupMenu();
+#else
     QPopupMenu* help = new QPopupMenu();
+#endif
     help->insertItem("About &Xmipp", this, SLOT(aboutXmipp()));
     help->insertSeparator();
     help->insertItem("Help!", this, SLOT(giveHelp()));
@@ -266,7 +289,11 @@ void ShowTable::changeBoolOption(int _mi, int _mic)
 void ShowTable::adjustStatusLabel()
 {
     if (status == NULL) status = new QLabel(this);
+#ifdef QT3_STATUS
+    status->setFrameStyle(Q3Frame::WinPanel | Q3Frame::Sunken);
+#else
     status->setFrameStyle(QFrame::WinPanel | QFrame::Sunken);
+#endif
     status->setFixedHeight(fontMetrics().height() + 4);
     status->setFixedWidth(maxWidth);
     status->move(0, maxHeight);
@@ -298,14 +325,14 @@ void ShowTable::drawFrameAndLabel(QPainter *p, int row, int col, int i,
     if (cellMarks[i])
     { // if the cell is marked
         QPen pen;
-        pen.setColor(red);
+        pen.setColor(Qt::red);
         pen.setWidth(3);
         p->setPen(pen);            // paint it in red
         p->drawRect(0, 0, x2, y2);        // draw rect. along cell edges
     }
     else
     {
-        p->setPen(white);          // restore to normal
+        p->setPen(Qt::white);          // restore to normal
         p->drawLine(x2, 0, x2, y2);       // draw vertical line on right
         p->drawLine(0, y2, x2, y2);       // draw horiz. line at bottom
     }
@@ -383,35 +410,40 @@ void ShowTable::contentsMousePressEvent(int row, int col, int button,
                                         const QPoint & mousePos)
 {
     setCurrentCell(row, col);
-    if (button == RightButton) menubar->exec(mousePos);
+    if (button == Qt::RightButton)
+        menubar->exec(mousePos);
 }
 
 void ShowTable::keyPressEvent(QKeyEvent* e)
 {
     switch (e->key())
     { // Look at the key code
-    case Key_F1:
+    case Qt::Key_F1:
         menubar->exec();
         break;
-    case Key_Space:
+    case Qt::Key_Space:
         changeMark(currentRow(), currentColumn());
         break;
-    case Key_M:
-    case Key_Minus:
-        if (e->state() == ControlButton) // If 'Ctrol+'-key,
+    case Qt::Key_M:
+    case Qt::Key_Minus:
+        if (e->state() == Qt::ControlButton) // If 'Ctrol+'-key,
             if (currScale > 10) changeScale(currScale - 10);
         break;
-    case Key_P:
-    case Key_Plus:
-        if (e->state() == ControlButton) // If 'Ctrol+'-key,
+    case Qt::Key_P:
+    case Qt::Key_Plus:
+        if (e->state() == Qt::ControlButton) // If 'Ctrol+'-key,
             changeScale(currScale + 10);
         break;
-    case Key_Q:
-        if (e->state() == ControlButton) // If 'Ctrol Q' key,
+    case Qt::Key_Q:
+        if (e->state() == Qt::ControlButton) // If 'Ctrol Q' key,
             exit(0); // Terminate program
         break;
     default:
+#ifdef QT3_SUPPORT
+        Q3Table::keyPressEvent(e);
+#else
         QTable::keyPressEvent(e);
+#endif
         break;
     }
 }
@@ -419,7 +451,11 @@ void ShowTable::keyPressEvent(QKeyEvent* e)
 /* Open File --------------------------------------------------------------- */
 void ShowTable::GUIopenFile()
 {
+#ifdef QT3_SUPPORT
+    QString newfilename = Q3FileDialog::getOpenFileName(QString::null, "*", this, "Sel files");
+#else
     QString newfilename = QFileDialog::getOpenFileName(QString::null, "*", this, "Sel files");
+#endif
     if (!newfilename.isEmpty())
         openNewFile((std::string)((const char *)newfilename));
 }

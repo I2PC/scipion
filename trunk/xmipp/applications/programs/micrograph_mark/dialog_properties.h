@@ -23,9 +23,14 @@
 #include <qdialog.h>
 
 /* Forward declarations ---------------------------------------------------- */
+#ifdef QT3_SUPPORT
+class Q3ListBox;
+class Q3VBox;
+#else
 class QListBox;
-class QPushButton;
 class QVBox;
+#endif
+class QPushButton;
 class Micrograph;
 class QtWidgetMicrograph;
 
@@ -39,16 +44,21 @@ private:
     QtWidgetMicrograph *__wm;
     int                 __coord;
     bool                __moving;
+#ifdef QT3_SUPPORT
+    Q3ListBox           *__familyList;
+    Q3VBox              *__vBoxLayout;
+#else
     QListBox           *__familyList;
+    QVBox              *__vBoxLayout;
+#endif
     QPushButton        *__moveButton;
     QPushButton        *__deleteButton;
-    QVBox              *__vBoxLayout;
 
 public:
     // Constructor
     QtDialogProperties(Micrograph *_m, QtWidgetMicrograph *_wm,
                        int _coord, QWidget *_parent = 0,
-                       const char *_name = 0, bool _modal = FALSE, WFlags _f = 0);
+                       const char *_name = 0, bool _modal = FALSE, Qt::WFlags _f = 0);
     ~QtDialogProperties();
 
 public slots:

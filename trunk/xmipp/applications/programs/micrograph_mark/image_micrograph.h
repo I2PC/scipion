@@ -25,6 +25,12 @@
 
 #include "image.h"
 
+#ifdef QT3_SUPPORT
+//Added by qt3to4:
+#include <QResizeEvent>
+#include <QMouseEvent>
+#endif
+
 /* Forward declarations ---------------------------------------------------- */
 class Micrograph;
 
@@ -42,7 +48,7 @@ private:
 
 public:
     // Constructor
-    QtImageMicrograph(QWidget *_parent = 0, const char *_name = 0, WFlags _f = 0);
+    QtImageMicrograph(QWidget *_parent = 0, const char *_name = 0, Qt::WFlags _f = 0);
 
     // Set the micrograph
     void setMicrograph(Micrograph *_m);

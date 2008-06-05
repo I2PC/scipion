@@ -34,10 +34,16 @@
 
 #include <qpainter.h>
 
+#ifdef QT3_SUPPORT
+//Added by qt3to4:
+#include <QResizeEvent>
+#include <QMouseEvent>
+#endif
+
 /* Constructor ------------------------------------------------------------- */
 QtImageMicrograph::QtImageMicrograph(QWidget *_parent,
                                      const char *_name,
-                                     WFlags _f) :
+                                     Qt::WFlags _f) :
         QtImage(_parent, _name, _f)
 {
     __x          = 0;
@@ -151,7 +157,7 @@ void QtImageMicrograph::drawEllipse(int _x, int _y, int _color, float _ellipse_r
 	{
             REPORT_ERROR(1, "QtImageMicrograph::drawEllipse: unrecognized type");
 	}
-        __paint->flush();
+        /*__paint->flush();*/
     }
 }
 
@@ -195,7 +201,7 @@ void QtImageMicrograph::resizeEvent(QResizeEvent *e)
 
 void QtImageMicrograph::mousePressEvent(QMouseEvent *e)
 {
-    if (e->button() == LeftButton) __pressed = true;
+    if (e->button() == Qt::LeftButton) __pressed = true;
 }
 
 void QtImageMicrograph::mouseReleaseEvent(QMouseEvent *e)
@@ -217,7 +223,7 @@ void QtImageMicrograph::mouseReleaseEvent(QMouseEvent *e)
     int mX, mY;
     imageToMicrograph(e->pos().x(), e->pos().y(), mX, mY);
 
-    if (e->button() == RightButton) changeProperties(mX, mY);
+    if (e->button() == Qt::RightButton) changeProperties(mX, mY);
     else if (__pressed == true)
     {
         if (isTilted())

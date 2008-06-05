@@ -30,8 +30,13 @@
 
 #include <data/image.h>
 
-#include <qdialog.h>
+#ifdef QT3_SUPPORT
+#include <q3listbox.h>
+#else
 #include <qlistbox.h>
+#endif
+
+#include <qdialog.h>
 #include <qmessagebox.h>
 #include <qimage.h>
 
@@ -44,7 +49,11 @@ QtFiltersController::QtFiltersController(QWidget *_parent,
 
     __addFilterDialog = new QDialog(this, 0, TRUE);
     __addFilterDialog->setCaption("Add filter");
+#ifdef QT3_SUPPORT
+    __listFilters     = new Q3ListBox(__addFilterDialog);
+#else
     __listFilters     = new QListBox(__addFilterDialog);
+#endif
     __listFilters->setMinimumSize(300, 300);
 
     __listFilters->insertItem(QtInvertContrastFilter::name);

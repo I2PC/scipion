@@ -31,6 +31,11 @@
 
 #include <reconstruction/ctf_estimate_from_micrograph.h>
 
+#ifdef QT3_SUPPORT
+//Added by qt3to4:
+#include <QPaintEvent>
+#endif
+
 /**@defgroup AssignCTFViewer Assign CTF Viewer
    @ingroup GraphicsLibrary */
 //@{

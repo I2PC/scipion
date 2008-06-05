@@ -27,6 +27,10 @@
 #include "show_spectra_som.h"
 
 #include <qmessagebox.h>
+#ifdef QT3_SUPPORT
+//Added by qt3to4:
+#include <Q3PopupMenu>
+#endif
 
 // Init/Clear -------------------------------------------------------------- */
 void ShowSpectraSOM::init()
@@ -200,15 +204,25 @@ void ShowSpectraSOM::readSOMFiles(const FileName &_fn_root)
 /* Initialize right click menubar ------------------------------------------ */
 void ShowSpectraSOM::initRightclickMenubar()
 {
+#ifdef QT3_SUPPORT
+    menubar = new Q3PopupMenu();
+    Q3PopupMenu * file = new Q3PopupMenu();
+#else
     menubar = new QPopupMenu();
-    QPopupMenu * file = new QPopupMenu();
+    QPopupMenu* file = new QPopupMenu();
+#endif
+
     file->insertItem("Open...", this,  SLOT(GUIopenFile()));
     file->insertItem("Save assigned images in a sel file...",
-                     this, SLOT(saveAssigned()), CTRL + Key_N);
+                     this, SLOT(saveAssigned()), Qt::CTRL + Qt::Key_N);
     menubar->insertItem("&File", file);
 
     // Options .............................................................
-    options =  new QPopupMenu();
+#ifdef QT3_SUPPORT
+    options =  new Q3PopupMenu();
+#else
+    options = new QPopupMenu();
+#endif
     setCommonOptionsRightclickMenubar();
 
     setCommonSpectraOptionsRightclickMenubar();
@@ -230,9 +244,9 @@ void ShowSpectraSOM::initRightclickMenubar()
     options->insertItem("View average and SD Represented Images", this,  SLOT(showRepresentedImagesStats()));
     options->insertItem("View Represented Spectra", this,  SLOT(showRepresentedSpectra()));
     options->insertItem("View Represented Images", this,  SLOT(showRepresentedSel()));
-    options->insertItem("View error spectrum", this,  SLOT(showErrorSpectrum()), CTRL + Key_E);
+    options->insertItem("View error spectrum", this,  SLOT(showErrorSpectrum()), Qt::CTRL + Qt::Key_E);
     options->insertSeparator();
-    options->insertItem("Show Algorithm Information", this,  SLOT(showAlgoInfo()), CTRL + Key_G);
+    options->insertItem("Show Algorithm Information", this,  SLOT(showAlgoInfo()), Qt::CTRL + Qt::Key_G);
     options->insertSeparator();
 
     // Insert options the menu

@@ -23,6 +23,17 @@
 #include <qimage.h>
 #include <qpainter.h>
 
+#ifdef QT3_SUPPORT
+//Added by qt3to4:
+#include <QPaintEvent>
+#include <QResizeEvent>
+#include <QPixmap>
+#include <QLabel>
+#include <QMouseEvent>
+#include <Q3PopupMenu>
+#include <QKeyEvent>
+#endif
+
 #include <data/selfile.h>
 #include <data/image.h>
 
@@ -164,8 +175,8 @@ public:
     */
     virtual void paint()
     {
-        QBrush brush(NoBrush);    // void brush
-        QPen myPen(red);
+        QBrush brush(Qt::NoBrush);    // void brush
+        QPen myPen(Qt::red);
         setPen(myPen);
         setBrush(brush);
     };
@@ -1814,7 +1825,11 @@ protected:
 
 class QLabel;
 class QMenuBar;
+#ifdef QT3_SUPPORT
+class Q3PopupMenu;
+#else
 class QPopupMenu;
+#endif
 
 class maskImg : public QWidget
 {
@@ -1850,11 +1865,19 @@ private:
     int  xmippFlag;  // stands for:
     // -1: No Xmipp image
     //  0: Xmipp image
+#ifdef QT3_SUPPORT
+    Q3PopupMenu *menubar;
+    Q3PopupMenu *file;
+    Q3PopupMenu *options;
+    Q3PopupMenu *saveimage;
+    Q3PopupMenu *savepixmap;
+#else
     QPopupMenu *menubar;
     QPopupMenu *file;
     QPopupMenu *options;
     QPopupMenu *saveimage;
     QPopupMenu *savepixmap;
+#endif
     QWidget    *helpmsg;
     QLabel     *status;
     int         circle, rect, ellip, squ, ring, ellipring, rectframe,

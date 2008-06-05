@@ -29,11 +29,26 @@
 #include "show_tools.h"
 
 #include <qpainter.h>
-#include <qfiledialog.h>
 #include <qstyle.h>
 #include <qstatusbar.h>
 #include <qmime.h>
 #include <qapplication.h>
+
+#ifdef QT3_SUPPORT
+#include <q3filedialog.h>
+//Added by qt3to4:
+#include <QKeyEvent>
+#include <QLabel>
+#include <Q3PointArray>
+#include <QResizeEvent>
+#include <QMouseEvent>
+#include <QPaintEvent>
+#include <QWheelEvent>
+#include <Q3MemArray>
+#include <QStyleOptionFocusRect>
+#else
+#include <qfiledialog.h>
+#endif
 
 #include <cmath>
 
@@ -94,23 +109,35 @@ void PlotSettings::adjustAxis(double &min, double &max)
 
 /*****************************************************************************/
 /* Empty constructor ------------------------------------------------------- */
+#ifdef QT3_SUPPORT
+Plotter::Plotter(QWidget *parent, const char *name) : Q3MainWindow(parent, name)
+#else
 Plotter::Plotter(QWidget *parent, const char *name) : QMainWindow(parent, name)
+#endif
 {
     // To use white component to provide easy printing
-    setBackgroundMode(PaletteBase);
+    setBackgroundMode(Qt::PaletteBase);
 
     // It makes the layout manager responsible for the widget willing to
     // grow or shrink
     setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
 
     // Makes the widget accept focus by clicking or by pressing Tab
+#ifdef QT3_SUPPORT
+    setFocusPolicy(Qt::StrongFocus);
+#else
     setFocusPolicy(StrongFocus);
+#endif
 
     // Initially there is no rubber band
     rubberBandIsShown = false;
 
     // Add XmippGraphics/images to the MIME Path
+#ifdef QT3_SUPPORT
+    Q3MimeSourceFactory::defaultFactory()->addFilePath(
+#else
     QMimeSourceFactory::defaultFactory()->addFilePath(
+#endif
         (xmippBaseDir() + "/libraries/graphics/images").c_str());
 
     // Initialize save button
@@ -288,7 +315,12 @@ QSize Plotter::sizeHint() const
 void Plotter::paintEvent(QPaintEvent *event)
 {
     // rect() returns an array of QRects that define the region to repaint
-    QMemArray <QRect> rects = event ->region().rects();
+#ifdef QT3_SUPPORT
+    Q3MemArray <QRect> rects = event ->region().rects();
+#else
+    QMemArray< QRect > rects = event->region().rects();
+#endif
+
     for (int i = 0; i < (int)rects.size(); i++)
         // Copy each rectangular area from the pixmap to the widget
         bitBlt(this, rects[i].topLeft(), &pixmap, rects[i]);
@@ -305,9 +337,16 @@ void Plotter::paintEvent(QPaintEvent *event)
     }
 
     if (hasFocus())
+    {
+#ifdef QT3_SUPPORT
+        QStyleOptionFocusRect option;
+        style()->drawPrimitive(QStyle::PE_FrameFocusRect, &option, &painter);
+#else
         style().drawPrimitive(QStyle::PE_FocusRect, &painter,
                               rect(), colorGroup(), QStyle::Style_FocusAtBorder,
                               colorGroup().dark());
+#endif
+    }
 }
 
 /* Resize event ------------------------------------------------------------ */
@@ -328,7 +367,7 @@ void Plotter::resizeEvent(QResizeEvent *)
    - Right Button : Show the position of the mouse at StatusBar */
 void Plotter::mousePressEvent(QMouseEvent *event)
 {
-    if (event->button() == LeftButton)
+    if (event->button() == Qt::LeftButton)
     {
         rubberBandIsShown = true;
         rubberBandRect.setLeft(event->pos().x());
@@ -336,12 +375,12 @@ void Plotter::mousePressEvent(QMouseEvent *event)
         rubberBandRect.setRight(event->pos().x());
         rubberBandRect.setBottom(event->pos().y());
         updateRubberBandRegion();
-        setCursor(crossCursor); // and we change the cursor to a crosshair
+        setCursor(Qt::crossCursor); // and we change the cursor to a crosshair
     }
 
-    if (event->button() == RightButton)
+    if (event->button() == Qt::RightButton)
     {
-        setCursor(crossCursor); // and we change the cursor to a crosshair
+        setCursor(Qt::crossCursor); // and we change the cursor to a crosshair
         rubberBandRect.setLeft(event->pos().x());
         rubberBandRect.setTop(event->pos().y());
         rubberBandRect.setRight(event->pos().x());
@@ -378,7 +417,7 @@ void Plotter::mouseMoveEvent(QMouseEvent *event)
     updateCellIndicators(Possettings.posX, Possettings.posY);
 
     //When the user moves the cursor while holding the left button
-    if (event->state() & LeftButton)
+    if (event->state() & Qt::LeftButton)
     {
         // Repaint the rubber band in the new position
         updateRubberBandRegion();
@@ -386,7 +425,7 @@ void Plotter::mouseMoveEvent(QMouseEvent *event)
         rubberBandRect.setBottom(event->pos().y());
         updateRubberBandRegion();
     }
-    if (event->state() & RightButton)
+    if (event->state() & Qt::RightButton)
     {
         rubberBandRect.setRight(event->pos().x());
         rubberBandRect.setBottom(event->pos().y());
@@ -419,7 +458,7 @@ void Plotter::updateModLabel(const QString & message)
 /* Mouse release event ----------------------------------------------------- */
 void Plotter::mouseReleaseEvent(QMouseEvent *event)
 {
-    if (event->button() == LeftButton)
+    if (event->button() == Qt::LeftButton)
     {
         //When the user releases the button we erase the rubberband
         rubberBandIsShown = false;
@@ -449,7 +488,7 @@ void Plotter::mouseReleaseEvent(QMouseEvent *event)
         zoomIn();
     }
 
-    if (event->button() == RightButton)
+    if (event->button() == Qt::RightButton)
     {
         QRect rect = rubberBandRect.normalize();
         rect.moveBy(-Margin, -Margin);
@@ -484,35 +523,35 @@ void Plotter::keyPressEvent(QKeyEvent *event)
     PlotSettings Settings = zoomStack [curZoom];
     switch (event->key())
     {
-    case Key_Q:
-        if (event->state() == ControlButton) // If 'Ctrol Q' key,
+    case Qt::Key_Q:
+        if (event->state() == Qt::ControlButton) // If 'Ctrol Q' key,
             exit(0); // Terminate program
         break;
-    case Key_Plus:
+    case Qt::Key_Plus:
         zoomIn();
         break;
-    case Key_Minus:
+    case Qt::Key_Minus:
         zoomOut();
         break;
-    case Key_Left:
+    case Qt::Key_Left:
         if (Settings.minX > 0.01)
         {
             zoomStack[curZoom].scroll(-1, 0);
             refreshCurves();
         }
         break;
-    case Key_Right:
+    case Qt::Key_Right:
         zoomStack[curZoom].scroll( + 1, 0);
         refreshCurves();
         break;
-    case Key_Down:
+    case Qt::Key_Down:
         if (Settings.minY > 0.01)
         {
             zoomStack[curZoom].scroll(0, -1);
             refreshCurves();
         }
         break;
-    case Key_Up:
+    case Qt::Key_Up:
         zoomStack[curZoom].scroll(0, + 1);
         refreshCurves();
         break;
@@ -529,7 +568,7 @@ void Plotter::wheelEvent(QWheelEvent * event)
     int numDegrees = event->delta() / 8;
     int numTicks = numDegrees / 15; //mice tipically work in steps of 15 degrees
 
-    if (event->orientation() == Horizontal)
+    if (event->orientation() == Qt::Horizontal)
         zoomStack[curZoom].scroll(numTicks, 0);
     else
         zoomStack[curZoom].scroll(0, numTicks);
@@ -551,7 +590,10 @@ void Plotter::refreshPixmap()
 {
     pixmap.resize(size()); // Resize the pixmap to the same size as the widget
     pixmap.fill(this, 0, 0); // Fill it with the widget erase color
-    QPainter painter(&pixmap, this); //To draw on the pixmap
+    /*
+     * QPainter painter(&pixmap, this); //To draw on the pixmap
+     */
+    QPainter painter(&pixmap);
     drawGrid(&painter); // to perform the drawing
     drawCurves(&painter); // to perform the drawing
     update(); // To schedule a paint event for the whole widget
@@ -564,8 +606,8 @@ void Plotter::drawGrid(QPainter *painter)
     PlotSettings settings = zoomStack[curZoom];
     QPen quiteDark;
     QPen light;
-    light.setColor(white);
-    quiteDark.setColor(black);
+    light.setColor(Qt::white);
+    quiteDark.setColor(Qt::black);
 
     for (int i = 0;i <= settings.numXTicks;i++)
     {
@@ -578,7 +620,7 @@ void Plotter::drawGrid(QPainter *painter)
         //it is to draw the numbers corresponding to the tick mark
         double label = settings.minX + (i * settings.spanX() / settings.numXTicks);
         painter->drawText(x - 50, rect.bottom() + 5, 100, 15,
-                          AlignHCenter | AlignTop,
+                          Qt::AlignHCenter | Qt::AlignTop,
                           QString::number(label, 'f', 2));
 
         /* COSS: This is showing the inverse of the X axis. Valid only for
@@ -602,7 +644,7 @@ void Plotter::drawGrid(QPainter *painter)
         painter->setPen(quiteDark);
         painter->drawLine(rect.left(), y, rect.right(), y);
         painter->drawLine(rect.left() - 5, y, rect.left(), y);
-        painter->drawText(rect.left() - Margin, y - 10, Margin - 5, 20, AlignRight | AlignVCenter, QString::number(label, 'f', 2));
+        painter->drawText(rect.left() - Margin, y - 10, Margin - 5, 20, Qt::AlignRight | Qt::AlignVCenter, QString::number(label, 'f', 2));
     }
     painter->drawRect(rect);
 }
@@ -610,10 +652,10 @@ void Plotter::drawGrid(QPainter *painter)
 /* Draw curves ------------------------------------------------------------- */
 void Plotter::drawCurves(QPainter *painter)
 {
-    QPen pen1(red,   1, SolidLine);
-    QPen pen2(blue , 1, DotLine);
-    QPen pen3(green, 1, DashLine);
-    QPen pen4(black, 1, DashDotLine);
+    QPen pen1(Qt::red, 1, Qt::SolidLine);
+    QPen pen2(Qt::blue, 1, Qt::DotLine);
+    QPen pen3(Qt::green, 1, Qt::DashLine);
+    QPen pen4(Qt::black, 1, Qt::DashDotLine);
 
     QPen penForIds[4] = {pen1, pen2, pen3, pen4};
     PlotSettings settings = zoomStack[curZoom];
@@ -634,7 +676,11 @@ void Plotter::drawCurves(QPainter *painter)
             const Matrix2D<double> &data = (*it).second;
             int numPoints = 0;
             int maxPoints = YSIZE(data);
+#ifdef QT3_SUPPORT
+            Q3PointArray points(maxPoints);
+#else
             QPointArray points(maxPoints);
+#endif
 
             for (int i = 0; i < maxPoints; ++i)
             {
@@ -650,7 +696,10 @@ void Plotter::drawCurves(QPainter *painter)
                     points[numPoints++] = QPoint((int)x, (int)y);
             }
 
-            points.truncate(numPoints);
+            /*
+             * points.truncate(numPoints);
+             */
+            points.resize(numPoints);
             painter->setPen(penForIds[(uint) id % 4]);
             painter->drawPolyline(points);
         }
@@ -665,7 +714,10 @@ void Plotter::refreshCurves()
     // Resize the pixmap to have the same size as the widget
     pixmap.resize(size());
     pixmap.fill(this, 0, 0); //and fill it with the widget erase color
-    QPainter painter(&pixmap, this); //To draw on the pixmap
+    /*
+     * QPainter painter(&pixmap, this); //To draw on the pixmap
+     */
+    QPainter painter(&pixmap);
     drawGrid(&painter); // to perform the drawing
     drawCurves(&painter); //to perform the drawing
     update(); // to schedule a paint event for the whole widget
@@ -674,11 +726,11 @@ void Plotter::refreshCurves()
 void Plotter::createStatusBar()
 {
     locationLabelX = new QLabel("X Value", this);
-    locationLabelX->setAlignment(AlignHCenter);
+    locationLabelX->setAlignment(Qt::AlignHCenter);
     locationLabelX->setMinimumSize(locationLabelX->sizeHint());
 
     locationLabelY = new QLabel("Y Value", this);
-    locationLabelY->setAlignment(AlignHCenter);
+    locationLabelY->setAlignment(Qt::AlignHCenter);
     locationLabelY->setMinimumSize(locationLabelY->sizeHint());
 
     statusBar()->addWidget(locationLabelX);
@@ -692,7 +744,11 @@ void Plotter::saveToFile()
     int length;
     FileName file;
 
+#ifdef QT3_SUPPORT
+    QString fileName = Q3FileDialog::getSaveFileName("", "*.png", this);
+#else
     QString fileName = QFileDialog::getSaveFileName("", "*.png", this);
+#endif
     if (!fileName.isEmpty())
     {
         length = fileName.length();

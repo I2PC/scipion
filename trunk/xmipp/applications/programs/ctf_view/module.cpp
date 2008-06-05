@@ -27,13 +27,27 @@
 
 #include "module.h"
 
+#ifdef QT3_SUPPORT
+#include <q3groupbox.h>
+#include <q3hbox.h>
+#include <q3filedialog.h>
+//Added by qt3to4:
+#include <QKeyEvent>
+#include <QLabel>
+#else
 #include <qgroupbox.h>
 #include <qhbox.h>
 #include <qfiledialog.h>
+#endif
 
 /* Empty constructor ------------------------------------------------------- */
 CTFViewer::CTFViewer(QWidget *parent, const char *name,
-                     const FileName &fn_ctfparam): QMainWindow(parent, name)
+#ifdef QT3_SUPPORT
+                     const FileName &fn_ctfparam) : Q3MainWindow(parent, name)
+#else
+                     const FileName& fn_ctfparam) : QMainWindow(parent, name)
+#endif
+
 {
     // Initialize variables
     firstSettings = plotter.zoomStack[plotter.curZoom];
@@ -52,11 +66,19 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
 
     // Set parameter window layout
     // Group A
-    QGroupBox *GroupA = new QGroupBox("Delta fU", this);
+#ifdef QT3_SUPPORT
+    Q3GroupBox *GroupA = new Q3GroupBox("Delta fU", this);
+#else
+    QGroupBox* GroupA = new QGroupBox("Delta fU", this);
+#endif
     GroupA->setGeometry(10, 10, 130, 50);
     GroupA->show();
 
-    QHBox *hboxA = new QHBox(GroupA);
+#ifdef QT3_SUPPORT
+    Q3HBox *hboxA = new Q3HBox(GroupA);
+#else
+    QHBox* hboxA = new QHBox(GroupA);
+#endif
     hboxA->setCaption("Enter value for DfU");
     hboxA->setMargin(6);
     hboxA->setSpacing(6);
@@ -73,11 +95,19 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
             this, SLOT(changeMainCTFVariables()));
 
     // Group B
-    QGroupBox *GroupB = new QGroupBox("Delta fV", this);
+#ifdef QT3_SUPPORT
+    Q3GroupBox *GroupB = new Q3GroupBox("Delta fV", this);
+#else
+    QGroupBox* GroupB = new QGroupBox("Delta fV", this);
+#endif
     GroupB->setGeometry(140, 10, 130, 50);
     GroupB->show();
 
-    QHBox *hboxB = new QHBox(GroupB);
+#ifdef QT3_SUPPORT
+    Q3HBox *hboxB = new Q3HBox(GroupB);
+#else
+    QHBox* hboxB = new QHBox(GroupB);
+#endif
     hboxB->setCaption("Enter value for DfV");
     hboxB->setMargin(6);
     hboxB->setSpacing(6);
@@ -92,11 +122,19 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
             this, SLOT(changeMainCTFVariables()));
 
     // Group C
-    QGroupBox *GroupC = new QGroupBox("Azimuthal Angle", this);
+#ifdef QT3_SUPPORT
+    Q3GroupBox *GroupC = new Q3GroupBox("Azimuthal Angle", this);
+#else
+    QGroupBox* GroupC = new QGroupBox("Azimuthal Angle", this);
+#endif
     GroupC->setGeometry(10, 70, 130, 50);
     GroupC->show();
 
-    QHBox *hboxC = new QHBox(GroupC);
+#ifdef QT3_SUPPORT
+    Q3HBox *hboxC = new Q3HBox(GroupC);
+#else
+    QHBox* hboxC = new QHBox(GroupC);
+#endif
     hboxC->setCaption("Enter value for Azimuthal Angle");
     hboxC->setMargin(6);
     hboxC->setSpacing(6);
@@ -152,7 +190,11 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     connect(lineEditVar, SIGNAL(lostFocus()), this, SLOT(changeVar()));
 
     // Plot settings
-    QGroupBox *GroupSet = new QGroupBox("Plot Settings", this);
+#ifdef QT3_SUPPORT
+    Q3GroupBox *GroupSet = new Q3GroupBox("Plot Settings", this);
+#else
+    QGroupBox* GroupSet = new QGroupBox("Plot Settings", this);
+#endif
     GroupSet->setGeometry(10, 130, 260, 130);
     GroupSet->show();
 
@@ -242,7 +284,11 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
                      this, SLOT(setPlotSettings()));
 
     // Radio buttons
-    QGroupBox *GroupRadio = new QGroupBox("View Options", this);
+#ifdef QT3_SUPPORT
+    Q3GroupBox *GroupRadio = new Q3GroupBox("View Options", this);
+#else
+    QGroupBox* GroupRadio = new QGroupBox("View Options", this);
+#endif
     GroupRadio->setGeometry(10, 270, 260, 110);
     GroupRadio->show();
 
@@ -299,7 +345,11 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     connect(ShowExperimental, SIGNAL(clicked()), this, SLOT(refreshCurves()));
 
     // Select file
-    QGroupBox *InputFile = new QGroupBox("Input file", this);
+#ifdef QT3_SUPPORT
+    Q3GroupBox *InputFile = new Q3GroupBox("Input file", this);
+#else
+    QGroupBox* InputFile = new QGroupBox("Input file", this);
+#endif
     InputFile->setGeometry(10, 390, 260, 70);
     InputFile->show();
 
@@ -368,8 +418,13 @@ void CTFViewer::selectFile()
 {
     int lastSlashPos;
     int length;
+#ifdef QT3_SUPPORT
+    QString fn_ctfparam = Q3FileDialog::getOpenFileName(QDir::currentDirPath(),
+                          "Parameter files (*.ctfparam)", this);
+#else
     QString fn_ctfparam = QFileDialog::getOpenFileName(QDir::currentDirPath(),
                           "Parameter files (*.ctfparam)", this);
+#endif
     if (!fn_ctfparam.isEmpty())
     {
         selectedFile->setText(fn_ctfparam);
@@ -796,8 +851,8 @@ void CTFViewer::keyPressEvent(QKeyEvent *event)
 {
     switch (event->key())
     {
-    case Key_Q:
-        if (event->state() == ControlButton) // If 'Ctrol Q' key,
+    case Qt::Key_Q:
+        if (event->state() == Qt::ControlButton) // If 'Ctrol Q' key,
             exit(0);
         break;
     }

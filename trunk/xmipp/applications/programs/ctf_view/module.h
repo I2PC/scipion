@@ -46,6 +46,11 @@
 #include <qradiobutton.h>
 #include <qspinbox.h>
 
+#ifdef QT3_SUPPORT
+//Added by qt3to4:
+#include <QKeyEvent>
+#endif
+
 /* ************************************************************************* */
 /* CLASS DEFINITION AND PROTOTYPES                                           */
 /* ************************************************************************* */
@@ -54,7 +59,13 @@
     numXTicks,etc and allows the user to load files, make photos of the plotter,
     change the variables that define the CTF and select  the angle that defines
     the section it has represented in the plotter. */
-class CTFViewer: public QMainWindow
+#ifdef QT3_SUPPORT
+// MOC_SKIP_BEGIN
+class CTFViewer: public Q3MainWindow
+// MOC_SKIP_END
+#else
+class CTFViewer : public QMainWindow
+#endif
 {
     // The Q_OBJECT macro is necessary for all clases that defines signals or
     // slots.

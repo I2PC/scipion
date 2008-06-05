@@ -28,13 +28,29 @@
 #define SHOWIMG_H
 
 #include <qwidget.h>
+
+#ifdef QT3_SUPPORT
+#include <q3multilineedit.h>
+#else
 #include <qmultilineedit.h>
+#endif
+
 #include <qimage.h>
 #include <qlabel.h>
 #include <qprinter.h>
-#include <qkeycode.h>
+#include <qnamespace.h>
 #include <qapplication.h>
 #include <qtimer.h>
+
+#ifdef QT3_SUPPORT
+//Added by qt3to4:
+#include <QPaintEvent>
+#include <QResizeEvent>
+#include <QPixmap>
+#include <QMouseEvent>
+#include <Q3PopupMenu>
+#include <QKeyEvent>
+#endif
 
 #include <sys/stat.h>
 
@@ -154,10 +170,19 @@ protected:
     bool        isFourierImage;         // True if the image is in Fourier
     TLoadMode   load_mode;
     time_t      modification_time;      // of the file
+
+#ifdef QT3_SUPPORT
+    Q3PopupMenu *menubar;
+    Q3PopupMenu *file;
+    Q3PopupMenu *options;
+    Q3PopupMenu *saveimage;
+#else
     QPopupMenu *menubar;
     QPopupMenu *file;
     QPopupMenu *options;
     QPopupMenu *saveimage;
+#endif
+
     QWidget    *helpmsg;
     QPrinter   *printer;
     QLabel     *status;
@@ -179,7 +204,12 @@ protected:
     int  xi, yi, xf, yf;
     int  xir, yir, xfr, yfr, old_xfr, old_yfr;
     float       spacing;
+
+#ifdef QT3_SUPPORT
+    Q3MultiLineEdit *ed1;
+#else
     QMultiLineEdit *ed1;
+#endif
 
     // Assign CTF file
     FileName    fn_assign;

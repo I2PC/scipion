@@ -34,6 +34,15 @@
 #include <qpushbutton.h>
 #include <qtooltip.h>
 
+#ifdef QT3_SUPPORT
+//Added by qt3to4:
+#include <QLabel>
+#include <Q3GridLayout>
+#include <QPixmap>
+#include <Q3PopupMenu>
+#include <Q3VBoxLayout>
+#endif
+
 /* Init/Clear data --------------------------------------------------------- */
 void ShowSpectra::init()
 {
@@ -42,9 +51,9 @@ void ShowSpectra::init()
     offY = 10;
     spacing = 3;
     x_tick_off = 1;
-    backColor = black;
-    axisColor = white;
-    curveColor = white;
+    backColor = Qt::black;
+    axisColor = Qt::white;
+    curveColor = Qt::white;
     QFont tmpFont("Clean", 6);
     axisFont = tmpFont;
     ShowSel::init();
@@ -124,11 +133,19 @@ void ShowSpectra::initFromVectors()
 /* Init Rightclick menubar ------------------------------------------------- */
 void ShowSpectra::initRightclickMenubar()
 {
+#ifdef QT3_SUPPORT
+    menubar = new Q3PopupMenu();
+#else
     menubar = new QPopupMenu();
+#endif
     setFileRightclickMenubar();
 
     // Options .............................................................
-    options =  new QPopupMenu();
+#ifdef QT3_SUPPORT
+    options =  new Q3PopupMenu();
+#else
+    options = new QPopupMenu();
+#endif
     setCommonOptionsRightclickMenubar();
     labeltype = Filename_LABEL;
     // spectra common options (pased to spectraSOM too)
@@ -243,14 +260,14 @@ void ShowSpectra::paintCell(QPainter *p, int row, int col, const QRect & cr,
     int      x = offX;
     double myY = offY + slope * (V->theItems[i][0] - myMinValue);
     int      y = scprojYdim - (int) myY;
-    p->moveTo(x, y);
+    p->translate(x, y);
     p->drawPoint(x, y);
     for (int l = 1; l < N; l++)
     {
         x = offX + (int)(l * scaleX);
         myY = offY + slope * (V->theItems[i][l] - myMinValue);
         y = scprojYdim - (int) myY;
-        p->lineTo(x, y);
+        p->drawLine(offX, offY, x, y);
     }
     // Draw Frame and label
     drawFrameAndLabel(p, row, col, i, 1);
@@ -270,7 +287,7 @@ void ShowSpectra::selectByValues()
 {
     SpectraFilter* filter_window = new SpectraFilter(
                                        FLOOR(minPixel), CEIL(maxPixel), V->theItems[0], this,
-                                       0, "new window", WDestructiveClose);
+                                       0, "new window", Qt::WDestructiveClose);
     filter_window->show();
 }
 
@@ -398,7 +415,7 @@ void ShowSpectra::changeXstep()
     prm_name.push_back("spacing");
     prm_name.push_back("Tick offset");
     param_window = new ScrollParam(min, max, initial_value, prm_name,
-                                   "Set spacing", 0, "new window", WDestructiveClose, 0);
+                                   "Set spacing", 0, "new window", Qt::WDestructiveClose, 0);
     connect(param_window, SIGNAL(new_value(std::vector<float>)), this,
             SLOT(set_spacing(std::vector<float>)));
     param_window->setFixedSize(200, 175);
@@ -443,7 +460,11 @@ void ShowSpectra::setCommonSpectraOptionsRightclickMenubar()
     options->insertSeparator();
 
     // Colors and change font
+#ifdef QT3_SUPPORT
+    Q3PopupMenu* colorMenu = new Q3PopupMenu();
+#else
     QPopupMenu* colorMenu = new QPopupMenu();
+#endif
     colorMenu->insertItem("&Background", this, SLOT(changeBackColor()));
     colorMenu->insertItem("&Curve", this, SLOT(changeCurveColor()));
     colorMenu->insertItem("&Axis", this, SLOT(changeAxisColor()));
@@ -456,7 +477,11 @@ void ShowSpectra::setCommonSpectraOptionsRightclickMenubar()
 SpectraFilter::SpectraFilter(int min, int max,
                              const std::vector<float> &_x, ShowSpectra *_show_spectra,
                              QWidget *parent, const char *name, int wflags):
+#ifdef QT3_SUPPORT
+        QWidget(parent, name, (Qt::WindowFlags) wflags)
+#else
         QWidget(parent, name, wflags)
+#endif
 {
     __N = _x.size();
     __show_spectra = _show_spectra;
@@ -482,10 +507,18 @@ SpectraFilter::SpectraFilter(int min, int max,
     setCaption("Spectra Filter");
 
     // Create a layout to position the widgets
-    QBoxLayout *Layout = new QVBoxLayout(this, 10);
+#ifdef QT3_SUPPORT
+    Q3BoxLayout *Layout = new Q3VBoxLayout(this, 10);
+#else
+    QBoxLayout* Layout = new QVBoxLayout(this, 10);
+#endif
 
     // Create a grid layout to hold most of the widgets
-    QGridLayout *grid = new QGridLayout(__N + 2, 5);
+#ifdef QT3_SUPPORT
+    Q3GridLayout *grid = new Q3GridLayout(__N + 2, 5);
+#else
+    QGridLayout* grid = new QGridLayout(__N + 2, 5);
+#endif
     Layout->addLayout(grid, 5);
 
     // Label
@@ -493,14 +526,14 @@ SpectraFilter::SpectraFilter(int min, int max,
     label_min->setFont(QFont("times", 12, QFont::Bold));
     label_min->setText("Minimum value");
     label_min->setFixedSize(label_min->sizeHint());
-    grid->addWidget(label_min, 0, 1, AlignCenter);
+    grid->addWidget(label_min, 0, 1, Qt::AlignCenter);
 
     // Label
     QLabel     *label_max = new QLabel(this, "label");
     label_max->setFont(QFont("times", 12, QFont::Bold));
     label_max->setText("Maximum value");
     label_max->setFixedSize(label_max->sizeHint());
-    grid->addWidget(label_max, 0, 3, AlignCenter);
+    grid->addWidget(label_max, 0, 3, Qt::AlignCenter);
 
     // Create all sliders
     for (int i = 0; i < __N; i++)
@@ -511,14 +544,14 @@ SpectraFilter::SpectraFilter(int min, int max,
         __label_min[i]->setFont(QFont("courier", 14));
         __label_min[i]->setText(integerToString(min, 3).c_str());
         __label_min[i]->setFixedSize(__label_min[i]->sizeHint());
-        grid->addWidget(__label_min[i], i + 1, 0, AlignCenter);
+        grid->addWidget(__label_min[i], i + 1, 0, Qt::AlignCenter);
 
         //Scroll Bar
         __scroll_min[i] = new QScrollBar(min, max, 1, 1, min,
-                                         QScrollBar::Horizontal, this, "scroll");
+                                         Qt::Horizontal, this, "scroll");
         __scroll_min[i]->setFixedWidth(100);
         __scroll_min[i]->setFixedHeight(15);
-        grid->addWidget(__scroll_min[i], i + 1, 1, AlignCenter);
+        grid->addWidget(__scroll_min[i], i + 1, 1, Qt::AlignCenter);
         connect(__scroll_min[i], SIGNAL(valueChanged(int)),
                 SLOT(scrollValueChanged(int)));
 
@@ -527,14 +560,14 @@ SpectraFilter::SpectraFilter(int min, int max,
         label->setFont(QFont("times", 12));
         label->setText(((std::string)"Harmonic " + integerToString(i + 1, 2)).c_str());
         label->setFixedSize(label->sizeHint());
-        grid->addWidget(label, i + 1, 2, AlignCenter);
+        grid->addWidget(label, i + 1, 2, Qt::AlignCenter);
 
         //Scroll Bar
         __scroll_max[i] = new QScrollBar(min, max, 1, 1, max,
-                                         QScrollBar::Horizontal, this, "scroll");
+                                         Qt::Horizontal, this, "scroll");
         __scroll_max[i]->setFixedWidth(100);
         __scroll_max[i]->setFixedHeight(15);
-        grid->addWidget(__scroll_max[i], i + 1, 3, AlignCenter);
+        grid->addWidget(__scroll_max[i], i + 1, 3, Qt::AlignCenter);
         connect(__scroll_max[i], SIGNAL(valueChanged(int)),
                 SLOT(scrollValueChanged(int)));
 
@@ -543,7 +576,7 @@ SpectraFilter::SpectraFilter(int min, int max,
         __label_max[i]->setFont(QFont("courier", 14));
         __label_max[i]->setText(integerToString(max, 3).c_str());
         __label_max[i]->setFixedSize(__label_max[i]->sizeHint());
-        grid->addWidget(__label_max[i], i + 1, 4, AlignCenter);
+        grid->addWidget(__label_max[i], i + 1, 4, Qt::AlignCenter);
 
     }
 
@@ -553,7 +586,7 @@ SpectraFilter::SpectraFilter(int min, int max,
     do_it->setFont(QFont("times", 12, QFont::Bold));
     do_it->setText("Filter");
     do_it->setFixedSize(do_it->sizeHint());
-    grid->addWidget(do_it, __N + 1, 0, AlignCenter);
+    grid->addWidget(do_it, __N + 1, 0, Qt::AlignCenter);
     QToolTip::add(do_it, "Select Spectra according to filter");
     connect(do_it, SIGNAL(clicked()), SLOT(but_ok_clicked()));
 }

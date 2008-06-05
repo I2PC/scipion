@@ -27,6 +27,13 @@
 #include "show_vol.h"
 #include "show_tools.h"
 
+#ifdef QT3_SUPPORT
+//Added by qt3to4:
+#include <QPixmap>
+#include <QMouseEvent>
+#include <Q3PopupMenu>
+#endif
+
 /* Initialize with a volume file.------------------------------------------- */
 void ShowVol::initWithFile(int _numRows, int _numCols,
                            const FileName &_fn, double _minGray, double _maxGray)
@@ -109,7 +116,11 @@ void ShowVol::readFile(const FileName &_fn,
 void ShowVol::initTable()
 {
     ShowTable::initTable();
-    setFocusPolicy(NoFocus);   // no keyboard focus is accepted
+#ifdef QT3_SUPPORT
+    setFocusPolicy(Qt::NoFocus);   // no keyboard focus is accepted
+#else
+    setFocusPolicy(NoFocus);
+#endif
     // Really set size
     setMaximumSize(maxWidth, maxHeight);
     resize(maxWidth, maxHeight);
@@ -118,10 +129,14 @@ void ShowVol::initTable()
 /* Init Rightclick menubar ------------------------------------------------- */
 void ShowVol::initRightclickMenubar()
 {
-    menubar = new QPopupMenu();
-
+#ifdef QT3_SUPPORT
+    menubar = new Q3PopupMenu();
     // File ................................................................
+    Q3PopupMenu * file = new Q3PopupMenu();
+#else
+    menubar = new QPopupMenu();
     QPopupMenu * file = new QPopupMenu();
+#endif
     file->insertItem("Open...", this,  SLOT(GUIopenFile()));
 
     // Form the menu

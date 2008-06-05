@@ -32,10 +32,18 @@
 #include <qpainter.h>
 #include <qlayout.h>
 #include <qmenubar.h>
-#include <qaccel.h>
 #include <qscrollbar.h>
 #include <qlabel.h>
 #include <qlineedit.h>
+
+#ifdef QT3_SUPPORT
+#include <q3accel.h>
+//Added by qt3to4:
+#include <Q3PopupMenu>
+#include <Q3VBoxLayout>
+#else
+#include <qaccel.h>
+#endif
 
 #include "image_micrograph.h"
 #include "image_overview_micrograph.h"
@@ -153,7 +161,12 @@ private:
     QMenuBar                  *__menuBar;
     QtImageMicrograph         *__mImage;
     QtImageOverviewMicrograph *__mImageOverview;
+#ifdef QT3_SUPPORT
+    Q3VBoxLayout               *__gridLayout;
+#else
     QVBoxLayout               *__gridLayout;
+#endif
+
     QtFileMenu                *__file_menu;
     bool                       __tilted;
     int                        __mingray;
@@ -263,7 +276,11 @@ public:
     // Add menu item
     void addMenuItem(const char *_msg, const QtPopupMenuMark *_item)
     {
-        __menuBar->insertItem(_msg, (QPopupMenu*)_item);
+#ifdef QT3_SUPPORT
+        __menuBar->insertItem(_msg, (Q3PopupMenu*)_item);
+#else
+        __menuBar->insertItem(_msg, (QPopupMenu*) _item);
+#endif
     }
 
     // Draw axis

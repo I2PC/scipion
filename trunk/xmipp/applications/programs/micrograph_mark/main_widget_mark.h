@@ -30,13 +30,22 @@
 #include <qwidget.h>
 #include <qlayout.h>
 
+#ifdef QT3_SUPPORT
+//Added by qt3to4:
+#include <Q3GridLayout>
+#endif
+
 #include <data/micrograph.h>
 
 /* Forward declarations ---------------------------------------------------- */
 class QtWidgetMicrograph;
 class QtDialogFamilies;
 class QtFiltersController;
+#ifdef QT3_SUPPORT
+class Q3Accel;
+#else
 class QAccel;
+#endif
 
 /* Main mark widget -------------------------------------------------------- */
 class QtMainWidgetMark : public QWidget
@@ -48,10 +57,17 @@ private:
     QtWidgetMicrograph  *__mWidget;
     QtWidgetMicrograph  *__mTiltedWidget;
     QtDialogFamilies    *__familyDialog;
+#ifdef QT3_SUPPORT
+    Q3GridLayout         *__gridLayout;
+    Q3Accel              *__ctrlPlus;
+    Q3Accel              *__ctrlMinus;
+    Q3Accel              *__otherCtrl;
+#else
     QGridLayout         *__gridLayout;
     QAccel              *__ctrlPlus;
     QAccel              *__ctrlMinus;
     QAccel              *__otherCtrl;
+#endif
     QtFiltersController *__filtersController;
 
     // For tilted-untilted correspondance

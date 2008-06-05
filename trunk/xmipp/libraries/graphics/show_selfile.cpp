@@ -33,7 +33,16 @@
 
 #include <data/args.h>
 #include <qmessagebox.h>
+
+#ifdef QT3_SUPPORT
+#include <q3filedialog.h>
+//Added by qt3to4:
+#include <QPixmap>
+#include <Q3PopupMenu>
+#include <QMouseEvent>
+#else
 #include <qfiledialog.h>
+#endif
 
 /* Empty constructor ------------------------------------------------------- */
 ShowSel::ShowSel(): ShowTable()
@@ -179,7 +188,11 @@ void ShowSel::compute_global_normalization_params()
 void ShowSel::initTable()
 {
     ShowTable::initTable();
-    setFocusPolicy(StrongFocus);   // keyboard focus is accepted
+#ifdef QT3_SUPPORT
+    setFocusPolicy(Qt::StrongFocus);   // keyboard focus is accepted
+#else
+    setFocusPolicy(StrongFocus);
+#endif
     // Really set size
     setMaximumSize(maxWidth, maxHeight);
     resize(maxWidth, maxHeight);
@@ -188,11 +201,19 @@ void ShowSel::initTable()
 /* Init Rightclick menubar ------------------------------------------------- */
 void ShowSel::initRightclickMenubar()
 {
+#ifdef QT3_SUPPORT
+    menubar = new Q3PopupMenu();
+#else
     menubar = new QPopupMenu();
+#endif
     setFileRightclickMenubar();
 
     // Options .............................................................
-    options =  new QPopupMenu();
+#ifdef QT3_SUPPORT
+    options =  new Q3PopupMenu();
+#else
+    options = new QPopupMenu();
+#endif
     setCommonOptionsRightclickMenubar();
 
     // What kind of labels
@@ -232,9 +253,15 @@ void ShowSel::initRightclickMenubar()
 
 void ShowSel::setFileRightclickMenubar()
 {
+#ifdef QT3_SUPPORT
+    Q3PopupMenu * file = new Q3PopupMenu();
+    Q3PopupMenu * fileSave = new Q3PopupMenu();
+#else
     QPopupMenu * file = new QPopupMenu();
-    file->insertItem("Open...", this,  SLOT(GUIopenFile()));
     QPopupMenu * fileSave = new QPopupMenu();
+#endif
+    file->insertItem("Open...", this,  SLOT(GUIopenFile()));
+
     fileSave->insertItem("As discarded...",
                          this, SLOT(saveSelFileDiscarded()));
     fileSave->insertItem("As active and the rest as discarded...",
@@ -486,7 +513,11 @@ void ShowSel::writeSelFile(SelFile &_SF, bool overwrite)
         _SF.write((std::string)((const char *)selfile_fn.c_str()));
     else
     {
-        QString newfilename = QFileDialog::getSaveFileName(
+#ifdef QT3_SUPPORT
+         QString newfilename = Q3FileDialog::getSaveFileName(
+#else
+         QString newfilename = QFileDialog::getSaveFileName(    
+#endif
                                   selfile_fn.c_str(), "*.sel", this, "Sel files");
         if (!newfilename.isEmpty())
         {

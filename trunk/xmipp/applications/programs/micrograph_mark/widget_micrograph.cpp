@@ -44,7 +44,15 @@
 #include <qlabel.h>
 #include <qlayout.h>
 #include <qpushbutton.h>
+
+#ifdef QT3_SUPPORT
+#include <q3grid.h>
+//Added by qt3to4:
+#include <Q3GridLayout>
+#include <Q3VBoxLayout>
+#else
 #include <qgrid.h>
+#endif
 
 /* Show -------------------------------------------------------------------- */
 std::ostream & operator << (std::ostream &_out, const Particle &_p)
@@ -263,7 +271,11 @@ QtWidgetMicrograph::QtWidgetMicrograph(QtMainWidgetMark *_mainWidget,
     __numax = 15;
     __use_background = false;
 
+#ifdef QT3_SUPPORT
+    __gridLayout     = new Q3VBoxLayout(this);
+#else
     __gridLayout     = new QVBoxLayout(this);
+#endif
     __menuBar        = new QMenuBar(this);
     __menuBar->setSeparator(QMenuBar::InWindowsStyle);
     __mImage         = new QtImageMicrograph(0);
@@ -299,11 +311,19 @@ QtWidgetMicrograph::QtWidgetMicrograph(QtMainWidgetMark *_mainWidget,
     connect(this, SIGNAL(signalActiveFamily(int)),
             __mImageOverview, SLOT(slotActiveFamily(int)));
 
+#ifdef QT3_SUPPORT
+    Q3Accel *ctrl = new Q3Accel(this);
+#else
     QAccel *ctrl = new QAccel(this);
-    ctrl->connectItem(ctrl->insertItem(Key_G + CTRL, 200),
+#endif
+    ctrl->connectItem(ctrl->insertItem(Qt::Key_G + Qt::CTRL, 200),
                       this, SLOT(slotChangeContrast(void)));
+#ifdef QT3_SUPPORT
+    Q3Accel *ctrl2 = new Q3Accel(this);
+#else
     QAccel *ctrl2 = new QAccel(this);
-    ctrl2->connectItem(ctrl2->insertItem(Key_R + CTRL, 200),
+#endif
+    ctrl2->connectItem(ctrl2->insertItem(Qt::Key_R + Qt::CTRL, 200),
                        this, SLOT(slotChangeCircleRadius(void)));
 
     setMicrograph(_m);
@@ -1625,7 +1645,12 @@ void QtWidgetMicrograph::configure_auto()
 
     QDialog   setPropertiesDialog(this, 0, TRUE);
     setPropertiesDialog.setCaption("Configure AutoSelect");
+#ifdef QT3_SUPPORT
+    Q3Grid     qgrid(2, &setPropertiesDialog);
+#else
     QGrid     qgrid(2, &setPropertiesDialog);
+#endif
+
     qgrid.setMinimumSize(250, 400);
 
     QLabel    lpiecexsize("Piece X size: ", &qgrid);
@@ -1792,13 +1817,13 @@ void QtWidgetMicrograph::slotChangeContrast()
 {
     AdjustContrastWidget *adjustContrast = new
                                            AdjustContrastWidget(0, 255, 1.0F, this,
-                                                                0, "new window", WDestructiveClose);
+                                                                0, "new window", Qt::WDestructiveClose);
     adjustContrast->show();
 }
 
 void QtWidgetMicrograph::slotChangeCrop()
 {
-    CropWidget *crop = new CropWidget(this, 0, "new window", WDestructiveClose);
+    CropWidget *crop = new CropWidget(this, 0, "new window", Qt::WDestructiveClose);
     connect(crop, SIGNAL(new_value(std::vector<int>)),
             __mImageOverview, SLOT(slotDrawCropArea(std::vector<int>)));
     crop->show();
@@ -1808,7 +1833,7 @@ void QtWidgetMicrograph::slotChangeCircleRadius()
 {
     AdjustCircleRadiustWidget *adjustCircleRadius = new
             AdjustCircleRadiustWidget(0, 255, 10, this,
-                                      0, "new window", WDestructiveClose);
+                                      0, "new window", Qt::WDestructiveClose);
     adjustCircleRadius->show();
 }
 
@@ -1817,7 +1842,11 @@ void QtWidgetMicrograph::slotChangeCircleRadius()
 AdjustContrastWidget::AdjustContrastWidget(int min, int max, float gamma,
         QtWidgetMicrograph *_qtwidgetmicrograph,
         QWidget *parent, const char *name, int wflags):
-        QWidget(parent, name, wflags)
+#ifdef QT3_SUPPORT
+    QWidget(parent, name, (Qt::WindowFlags) wflags)
+#else
+    QWidget(parent, name, wflags)
+#endif
 {
     __qtwidgetmicrograph = _qtwidgetmicrograph;
 
@@ -1825,10 +1854,18 @@ AdjustContrastWidget::AdjustContrastWidget(int min, int max, float gamma,
     setCaption("Adjust Contrast");
 
     // Create a layout to position the widgets
+#ifdef QT3_SUPPORT
+    Q3BoxLayout *Layout = new Q3VBoxLayout(this, 10);
+#else
     QBoxLayout *Layout = new QVBoxLayout(this, 10);
+#endif
 
     // Create a grid layout to hold most of the widgets
+#ifdef QT3_SUPPORT
+    Q3GridLayout *grid = new Q3GridLayout(3, 3);
+#else
     QGridLayout *grid = new QGridLayout(3, 3);
+#endif
     Layout->addLayout(grid, 5);
 
     // Minimum
@@ -1836,13 +1873,13 @@ AdjustContrastWidget::AdjustContrastWidget(int min, int max, float gamma,
     label_min->setFont(QFont("times", 12, QFont::Bold));
     label_min->setText("Minimum");
     label_min->setFixedSize(label_min->sizeHint());
-    grid->addWidget(label_min, 0, 0, AlignCenter);
+    grid->addWidget(label_min, 0, 0, Qt::AlignCenter);
 
     __scroll_min = new QScrollBar(0, 255, 1, 1, min,
-                                  QScrollBar::Horizontal, this, "scroll");
+                                  Qt::Horizontal, this, "scroll");
     __scroll_min->setFixedWidth(100);
     __scroll_min->setFixedHeight(15);
-    grid->addWidget(__scroll_min, 0, 1, AlignCenter);
+    grid->addWidget(__scroll_min, 0, 1, Qt::AlignCenter);
     connect(__scroll_min, SIGNAL(valueChanged(int)),
             SLOT(scrollValueChanged(int)));
 
@@ -1850,20 +1887,20 @@ AdjustContrastWidget::AdjustContrastWidget(int min, int max, float gamma,
     __label_min->setFont(QFont("courier", 14));
     __label_min->setText(integerToString(min, 3).c_str());
     __label_min->setFixedSize(__label_min->sizeHint());
-    grid->addWidget(__label_min, 0, 2, AlignCenter);
+    grid->addWidget(__label_min, 0, 2, Qt::AlignCenter);
 
     // Maximum
     QLabel     *label_max = new QLabel(this, "label");
     label_max->setFont(QFont("times", 12, QFont::Bold));
     label_max->setText("Maximum");
     label_max->setFixedSize(label_max->sizeHint());
-    grid->addWidget(label_max, 1, 0, AlignCenter);
+    grid->addWidget(label_max, 1, 0, Qt::AlignCenter);
 
     __scroll_max = new QScrollBar(0, 255, 1, 1, max,
-                                  QScrollBar::Horizontal, this, "scroll");
+                                  Qt::Horizontal, this, "scroll");
     __scroll_max->setFixedWidth(100);
     __scroll_max->setFixedHeight(15);
-    grid->addWidget(__scroll_max, 1, 1, AlignCenter);
+    grid->addWidget(__scroll_max, 1, 1, Qt::AlignCenter);
     connect(__scroll_max, SIGNAL(valueChanged(int)),
             SLOT(scrollValueChanged(int)));
 
@@ -1871,20 +1908,20 @@ AdjustContrastWidget::AdjustContrastWidget(int min, int max, float gamma,
     __label_max->setFont(QFont("courier", 14));
     __label_max->setText(integerToString(max, 3).c_str());
     __label_max->setFixedSize(__label_max->sizeHint());
-    grid->addWidget(__label_max, 1, 2, AlignCenter);
+    grid->addWidget(__label_max, 1, 2, Qt::AlignCenter);
 
     // Gamma
     QLabel     *label_gamma = new QLabel(this, "label");
     label_gamma->setFont(QFont("times", 12, QFont::Bold));
     label_gamma->setText("Gamma");
     label_gamma->setFixedSize(label_gamma->sizeHint());
-    grid->addWidget(label_gamma, 2, 0, AlignCenter);
+    grid->addWidget(label_gamma, 2, 0, Qt::AlignCenter);
 
     __scroll_gamma = new QScrollBar(0, 40, 1, 1, (int)(10*gamma),
-                                    QScrollBar::Horizontal, this, "scroll");
+                                    Qt::Horizontal, this, "scroll");
     __scroll_gamma->setFixedWidth(100);
     __scroll_gamma->setFixedHeight(15);
-    grid->addWidget(__scroll_gamma, 2, 1, AlignCenter);
+    grid->addWidget(__scroll_gamma, 2, 1, Qt::AlignCenter);
     connect(__scroll_gamma, SIGNAL(valueChanged(int)),
             SLOT(scrollValueChanged(int)));
 
@@ -1892,7 +1929,7 @@ AdjustContrastWidget::AdjustContrastWidget(int min, int max, float gamma,
     __label_gamma->setFont(QFont("courier", 14));
     __label_gamma->setText(floatToString(gamma, 3, 2).c_str());
     __label_gamma->setFixedSize(__label_gamma->sizeHint());
-    grid->addWidget(__label_gamma, 2, 2, AlignCenter);
+    grid->addWidget(__label_gamma, 2, 2, Qt::AlignCenter);
 
 }
 
@@ -1910,7 +1947,11 @@ void AdjustContrastWidget::scrollValueChanged(int new_val)
 // Constructor
 CropWidget::CropWidget(QtWidgetMicrograph *_qtwidgetmicrograph,
                        QWidget *parent, const char *name, int wflags):
+#ifdef QT3_SUPPORT
+        QWidget(parent, name, (Qt::WindowFlags) wflags)
+#else
         QWidget(parent, name, wflags)
+#endif
 {
     __qtwidgetmicrograph = _qtwidgetmicrograph;
     int Xdim, Ydim;
@@ -1920,10 +1961,19 @@ CropWidget::CropWidget(QtWidgetMicrograph *_qtwidgetmicrograph,
     setCaption("Crop micrograph");
 
     // Create a layout to position the widgets
+#ifdef QT3_SUPPORT
+    Q3BoxLayout *Layout = new Q3VBoxLayout(this, 10);
+#else
     QBoxLayout *Layout = new QVBoxLayout(this, 10);
+#endif
 
     // Create a grid layout to hold most of the widgets
+#ifdef QT3_SUPPORT
+    Q3GridLayout *grid = new Q3GridLayout(6, 3);
+#else
     QGridLayout *grid = new QGridLayout(6, 3);
+#endif
+
     Layout->addLayout(grid, 5);
 
     // Layout the four bars
@@ -1953,13 +2003,13 @@ CropWidget::CropWidget(QtWidgetMicrograph *_qtwidgetmicrograph,
         lab1->setFont(QFont("times", 12, QFont::Bold));
         lab1->setText(prm_name[i]);
         lab1->setFixedSize(lab1->sizeHint());
-        grid->addWidget(lab1, i, 0, AlignLeft);
+        grid->addWidget(lab1, i, 0, Qt::AlignLeft);
 
         // Add Scroll Bar
-        QScrollBar  *scroll_aux = new QScrollBar(min[i], max[i], 1, 50, (int)init_value[i], QScrollBar::Horizontal, this, "scroll");
+        QScrollBar  *scroll_aux = new QScrollBar(min[i], max[i], 1, 50, (int)init_value[i], Qt::Horizontal, this, "scroll");
         scroll_aux->setFixedWidth(100);
         scroll_aux->setFixedHeight(15);
-        grid->addWidget(scroll_aux, i, 1, AlignCenter);
+        grid->addWidget(scroll_aux, i, 1, Qt::AlignCenter);
         __scroll.push_back(scroll_aux);
 
         // Label for the current value
@@ -1967,7 +2017,7 @@ CropWidget::CropWidget(QtWidgetMicrograph *_qtwidgetmicrograph,
         value_lab_aux = new QLabel(this, "value_lab");
         value_lab_aux->setFont(QFont("times", 12));
         value_lab_aux->setNum(init_value[i]);
-        grid->addWidget(value_lab_aux, i, 2, AlignLeft);
+        grid->addWidget(value_lab_aux, i, 2, Qt::AlignLeft);
         __label.push_back(value_lab_aux);
 
         connect(scroll_aux, SIGNAL(valueChanged(int)), SLOT(scrollValueChanged(int)));
@@ -1978,9 +2028,9 @@ CropWidget::CropWidget(QtWidgetMicrograph *_qtwidgetmicrograph,
     lab2->setFont(QFont("times", 12, QFont::Bold));
     lab2->setText("Output image");
     lab2->setFixedSize(lab2->sizeHint());
-    grid->addWidget(lab2, min.size() + 1, 0, AlignLeft);
+    grid->addWidget(lab2, min.size() + 1, 0, Qt::AlignLeft);
     __outputNameLineEdit = new QLineEdit(this, "output name");
-    grid->addWidget(__outputNameLineEdit, min.size() + 1, 1, AlignLeft);
+    grid->addWidget(__outputNameLineEdit, min.size() + 1, 1, Qt::AlignLeft);
 
     // Cancel Button
     QPushButton *cancel;
@@ -1988,7 +2038,7 @@ CropWidget::CropWidget(QtWidgetMicrograph *_qtwidgetmicrograph,
     cancel->setFont(QFont("times", 12, QFont::Bold));
     cancel->setText("Cancel");
     cancel->setFixedSize(cancel->sizeHint());
-    grid->addWidget(cancel, min.size() + 2, 0, AlignVCenter);
+    grid->addWidget(cancel, min.size() + 2, 0, Qt::AlignVCenter);
     connect(cancel, SIGNAL(clicked()), this, SLOT(cancel()));
 
     // OK button
@@ -1998,7 +2048,7 @@ CropWidget::CropWidget(QtWidgetMicrograph *_qtwidgetmicrograph,
     do_it->setText("Ok");
     do_it->setFixedHeight(do_it->sizeHint().height());
     do_it->setFixedWidth(80);
-    grid->addWidget(do_it, min.size() + 2, 2, AlignVCenter);
+    grid->addWidget(do_it, min.size() + 2, 2, Qt::AlignVCenter);
     connect(do_it, SIGNAL(clicked()), this, SLOT(accept()));
 
     __qtwidgetmicrograph->overview()->init_crop_area();
@@ -2086,7 +2136,11 @@ void CropWidget::cancel()
 AdjustCircleRadiustWidget::AdjustCircleRadiustWidget(int min, int max,
         int start_with, QtWidgetMicrograph *_qtwidgetmicrograph,
         QWidget *parent, const char *name, int wflags):
+#ifdef QT3_SUPPORT
+        QWidget(parent, name, (Qt::WindowFlags) wflags)
+#else
         QWidget(parent, name, wflags)
+#endif
 {
     __qtwidgetmicrograph = _qtwidgetmicrograph;
 
@@ -2094,10 +2148,19 @@ AdjustCircleRadiustWidget::AdjustCircleRadiustWidget(int min, int max,
     setCaption("Change Circle Radius");
 
     // Create a layout to position the widgets
+#ifdef QT3_SUPPORT
+    Q3BoxLayout *Layout = new Q3VBoxLayout(this, 3);
+#else
     QBoxLayout *Layout = new QVBoxLayout(this, 3);
+#endif
 
     // Create a grid layout to hold most of the widgets
+#ifdef QT3_SUPPORT
+    Q3GridLayout *grid = new Q3GridLayout(1, 3);
+#else
     QGridLayout *grid = new QGridLayout(1, 3);
+#endif
+
     Layout->addLayout(grid);
 
     // Radius
@@ -2105,13 +2168,13 @@ AdjustCircleRadiustWidget::AdjustCircleRadiustWidget(int min, int max,
     label_radius->setFont(QFont("times", 12, QFont::Bold));
     label_radius->setText("Radius");
     label_radius->setFixedSize(label_radius->sizeHint());
-    grid->addWidget(label_radius, 0, 0, AlignCenter);
+    grid->addWidget(label_radius, 0, 0, Qt::AlignCenter);
 
     __scroll_radius = new QScrollBar(0, 255, 1, 10, start_with,
-                                     QScrollBar::Horizontal, this, "scroll");
+                                     Qt::Horizontal, this, "scroll");
     __scroll_radius->setFixedWidth(100);
     __scroll_radius->setFixedHeight(15);
-    grid->addWidget(__scroll_radius, 0, 1, AlignCenter);
+    grid->addWidget(__scroll_radius, 0, 1, Qt::AlignCenter);
     connect(__scroll_radius, SIGNAL(valueChanged(int)),
             SLOT(scrollValueChanged(int)));
 
@@ -2119,7 +2182,7 @@ AdjustCircleRadiustWidget::AdjustCircleRadiustWidget(int min, int max,
     __label_radius->setFont(QFont("courier", 14));
     __label_radius->setText(integerToString(start_with, 3).c_str());
     __label_radius->setFixedSize(__label_radius->sizeHint());
-    grid->addWidget(__label_radius, 0, 2, AlignCenter);
+    grid->addWidget(__label_radius, 0, 2, Qt::AlignCenter);
 }
 
 void AdjustCircleRadiustWidget::scrollValueChanged(int new_val)
