@@ -40,7 +40,7 @@ int main(int argc, char **argv)
     bool            image_mode, volume_mode;
     FileName        fn_in, fn_out, fn_sel;
     Mask_Params     mask_prm(INT_MASK);
-    bool            automatic_range, is_first = true;
+    bool            automatic_range, do_normalize, is_first = true;
     double          m, M; // range for histogram
     int             StepsNo;
     histogram1D     hist, histb;
@@ -56,6 +56,7 @@ int main(int argc, char **argv)
         fn_out     = getParameter(argc, argv, "-o", "");
 
         StepsNo = textToInteger(getParameter(argc, argv, "-steps", "100"));
+        do_normalize = checkParameter(argc, argv, "-norm");
         int i;
         if ((i = paremeterPosition(argc, argv, "-range")) != -1)
         {
@@ -139,6 +140,9 @@ int main(int argc, char **argv)
             }
         }
         
+        if (do_normalize)
+            histb /= (histb.sum() * histb.step_size);
+
         if (fn_out != "") histb.write(fn_out);
         else            std::cout << hist;
     }
@@ -157,7 +161,8 @@ void Usage()
     << "  [-o <File_out>]              : Text file with histogram\n"
     << "  [-range <m> <M>]             : range for the histogram\n"
     << "                                 by default, it is automatic\n"
-    << "  [-steps <N=100>]             : number of subdivisions\n";
+    << "  [-steps <N=100>]             : number of subdivisions\n"
+    << "  [-norm]                      : normalize histogram \n";
 }
 
 /* Menus ------------------------------------------------------------------- */
