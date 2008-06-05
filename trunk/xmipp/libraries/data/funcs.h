@@ -223,6 +223,14 @@ int solve_2nd_degree_eq(double a,
  */
 double gaussian1D(double x, double sigma, double mu = 0);
 
+/** 1D t-student value
+ * @ingroup NumericalFunctions
+ *
+ * This function returns the value of a univariate t-student function at the
+ * point x, and with df degrees of freedom
+ */
+double tstudent1D(double x, double df, double sigma, double mu = 0);
+
 /** Cumulative distribution function for a Gaussian
  * @ingroup NumericalFunctions
  *

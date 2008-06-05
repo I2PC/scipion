@@ -162,6 +162,16 @@ double gaussian1D(double x, double sigma, double mu)
     return 1 / sqrt(2*PI*sigma*sigma)*exp(-0.5*((x / sigma)*(x / sigma)));
 }
 
+/* t-student value -------------------------------------------------------- */
+double tstudent1D(double x, double df, double sigma, double mu)
+{
+    x -= mu;
+    double norm = exp(gammln((df+1.)/2.)) / exp(gammln(df/2.));
+    norm /= sqrt(df*PI*sigma*sigma);
+    return norm * pow((1 + (x/sigma)*(x/sigma)/df),-((df+1.)/2.));
+                                               
+}
+
 double gaussian2D(double x, double y, double sigmaX, double sigmaY,
                   double ang, double muX, double muY)
 {
