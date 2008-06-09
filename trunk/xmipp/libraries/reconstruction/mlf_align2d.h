@@ -179,14 +179,29 @@ public:
     int current_highres_limit;
 
     /// IN DEVELOPMENT
+    
+    /// USe t-distribution instead of normal one
     /** Use t-student distribution instead of normal one */
     bool do_student;
     /** Degrees of freedom for the t-student distribution */
     double df, df2;
-    /** Flag to refine grey-scale for each experimental image */
-    bool do_scale;
+    /** Perform sigma-trick for faster convergence (Mclachlan&Peel, p. 228)*/
+    bool do_student_sigma_trick;
+
+    /// Re-normalize internally
+    /** Flag to refine normalization of each experimental image */
+    bool do_norm;
     /** Grey-scale correction values */
-    std::vector<double> imgs_optscale;
+    std::vector<double> imgs_scale;
+    /** Overall average scale (to be forced to one)*/
+    double average_scale;
+
+    /// Statistical analysis of the noise distributions
+    /** Perform Kolmogorov-Smirnov test on noise distribution */    
+    bool do_kstest;
+    /** Iteration at which to write out histograms */
+    int iter_write_histograms;
+
     /** debug flag */
     int debug;
 
@@ -289,12 +304,23 @@ public:
 			 double &wsum_sigma_offset, 
 			 std::vector<double> &sumw,
 			 std::vector<double> &sumw2,
+                         std::vector<double> &sumwsc2, 
 			 std::vector<double> &sumw_mirror,
 			 double &LL, double &fracweight,  double &maxweight2, double &sum_refw2,
-			 double &opt_scale, int &opt_refno, double &opt_psi,
+			 double &opt_scale, int &opt_refno, double &opt_psi, 
+                         int &opt_ipsi, int &opt_iflip, 
 			 Matrix1D<double> &opt_offsets, 
 			 std::vector<double> &opt_offsets_ref,
-			 std::vector<double > &pdf_directions);
+			 std::vector<double > &pdf_directions,
+                         bool do_kstest, bool write_histograms, 
+                         FileName fn_img, double &KSprob);
+
+    /// Perform Kolmogorov-Smirnov test
+    double performKSTest(Matrix2D<double> &Mimg,  const int focus, bool apply_ctf, 
+                         FileName &fn_img, bool write_histogram,
+                         std::vector <std::vector< Matrix2D<std::complex<double> > > > &Fref,
+                         double &opt_scale, int &opt_refno, int &opt_ipsi, int &opt_iflip,
+                         Matrix1D<double> &opt_offsets);
 
     /// Integrate over all experimental images
     void sumOverAllImages(SelFile &SF, std::vector< ImageXmippT<double> > &Iref, int iter,
@@ -303,7 +329,9 @@ public:
 			  std::vector<Matrix2D<double> > &wsum_ctfMref,
 			  std::vector<std::vector<double> > &Mwsum_sigma2,
 			  double &wsum_sigma_offset, 
-			  std::vector<double> &sumw, std::vector<double> &sumw2, 
+			  std::vector<double> &sumw, 
+                          std::vector<double> &sumw2, 
+                          std::vector<double> &sumwsc2, 
 			  std::vector<double> &sumw_mirror,
 			  std::vector<double> &sumw_defocus);
 
@@ -312,7 +340,9 @@ public:
 			  std::vector<Matrix2D<double> > &wsum_ctfMref,
 			  std::vector<std::vector<double> > &Mwsum_sigma2,
 			  double &wsum_sigma_offset,
-			  std::vector<double> &sumw, std::vector<double> &sumw2, 
+			  std::vector<double> &sumw, 
+                          std::vector<double> &sumw2, 
+                          std::vector<double> &sumwsc2, 
 			  std::vector<double> &sumw_mirror,
 			  std::vector<double> &sumw_defocus,
 			  double &sumcorr, double &sumscale, double &sumw_allrefs,
@@ -323,7 +353,7 @@ public:
 
     /// Write out reference images, selfile and logfile
     void writeOutputFiles(const int iter, DocFile &DFo,
-			  double &sumw_allrefs, double &LL, double &avecorr, double &avescale,
+			  double &sumw_allrefs, double &LL, double &avecorr,
 			  std::vector<double> &conv);
 
 

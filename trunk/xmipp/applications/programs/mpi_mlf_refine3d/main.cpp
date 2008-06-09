@@ -36,7 +36,7 @@ int main(int argc, char **argv)
     std::vector<double>              conv;
     std::vector<Matrix2D<double> >   wsum_Mref, wsum_ctfMref;
     std::vector<std::vector<double> >     Mwsum_sigma2;
-    std::vector<double>              sumw, sumw2, sumw_mirror, sumw_defocus;
+    std::vector<double>              sumw, sumw2, sumwsc2, sumw_mirror, sumw_defocus;
     Matrix1D<double>            spectral_signal;
     DocFile                     DFo;
 
@@ -144,7 +144,7 @@ int main(int argc, char **argv)
             conv.clear();
             if (rank == 0)
             {
-		DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8) Intensity (9) w-robust (10)");
+                DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), w_robust (9), scale (10), KSprob (11)");
             }
 
             // Pre-calculate pdfs
@@ -155,7 +155,7 @@ int main(int argc, char **argv)
 				      LL, sumcorr, sumscale, DFo, 
 				      wsum_Mref, wsum_ctfMref,
 				      Mwsum_sigma2, wsum_sigma_offset, 
-				      sumw, sumw2, sumw_mirror, sumw_defocus);
+				      sumw, sumw2, sumwsc2, sumw_mirror, sumw_defocus);
 
             // Here MPI_allreduce of all weighted sums, LL, etc.
             // All nodes need the answer to calculate internally
@@ -196,6 +196,8 @@ int main(int argc, char **argv)
                 sumw[refno] = aux;
                 MPI_Allreduce(&sumw2[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 sumw2[refno] = aux;
+                MPI_Allreduce(&sumwsc2[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                sumwsc2[refno] = aux;
                 MPI_Allreduce(&sumw_mirror[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 sumw_mirror[refno] = aux;
             }
@@ -203,7 +205,7 @@ int main(int argc, char **argv)
             // Update model parameters
             ML2D_prm.updateParameters(wsum_Mref, wsum_ctfMref,
 				      Mwsum_sigma2, wsum_sigma_offset, 
-				      sumw, sumw2, sumw_mirror, sumw_defocus, 
+				      sumw, sumw2, sumwsc2, sumw_mirror, sumw_defocus, 
 				      sumcorr, sumscale, sumw_allrefs,
 				      spectral_signal);
 
@@ -225,7 +227,7 @@ int main(int argc, char **argv)
                     DFo.remove_current();
                     system(((std::string)"rm -f " + fn_tmp).c_str());
                 }
-                ML2D_prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, sumscale, conv);
+                ML2D_prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
                 prm.concatenate_selfiles(iter);
 
                 // Write noise images to disc
@@ -294,7 +296,7 @@ int main(int argc, char **argv)
             iter++;
         } // end loop iterations
 	if (rank == 0)
-	    ML2D_prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, sumscale, conv);
+	    ML2D_prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
 
         if (!converged && prm.verb > 0)
             std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;

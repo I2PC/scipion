@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     std::vector<double>              conv;
     std::vector<Matrix2D<double> >   wsum_Mref, wsum_ctfMref;
     std::vector<std::vector<double> >     Mwsum_sigma2;
-    std::vector<double>              sumw, sumw2, sumw_cv, sumw_mirror, sumw_defocus;
+    std::vector<double>              sumw, sumw2, sumwsc2, sumw_cv, sumw_mirror, sumw_defocus;
     Matrix1D<double>            spectral_signal;
     DocFile                     DFo;
 
@@ -96,7 +96,7 @@ int main(int argc, char **argv)
             }
 
             DFo.clear();
-	    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8) Intensity (9) w-robust (10)");
+            DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), w_robust (9), scale (10), KSprob (11)");
 
             // Pre-calculate pdfs
             ML2D_prm.calculateInPlanePDF();
@@ -106,17 +106,17 @@ int main(int argc, char **argv)
 				      LL, sumcorr, sumscale, DFo, 
 				      wsum_Mref, wsum_ctfMref,
 				      Mwsum_sigma2, wsum_sigma_offset, 
-				      sumw, sumw2, sumw_mirror, sumw_defocus);
+				      sumw, sumw2, sumwsc2, sumw_mirror, sumw_defocus);
 
             // Update model parameters
             ML2D_prm.updateParameters(wsum_Mref, wsum_ctfMref,
 				      Mwsum_sigma2, wsum_sigma_offset, 
-				      sumw, sumw2, sumw_mirror, sumw_defocus, 
+				      sumw, sumw2, sumwsc2, sumw_mirror, sumw_defocus, 
 				      sumcorr, sumscale, sumw_allrefs,
 				      spectral_signal);
 
             // Write intermediate output files
-            ML2D_prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, sumscale, conv);
+            ML2D_prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
             prm.concatenate_selfiles(iter);
 
 	    // Jump out before 3D reconstruction 
@@ -171,7 +171,7 @@ int main(int argc, char **argv)
         } // end loop iterations
 
 	// Write out converged doc and logfiles
-	ML2D_prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, sumscale, conv);
+	ML2D_prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
 
         if (!converged && prm.verb > 0) std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;
     }
