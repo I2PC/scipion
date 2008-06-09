@@ -159,19 +159,40 @@ public:
     /** Vector to store optimal origin offsets (if not written to disc) */
     std::vector<std::vector<double> > imgs_offsets;
 
-    /** IN DEVELOPMENT
-        Deterministic annealing */
+    /** IN DEVELOPMENT */
+
+    /// Deterministic annealing
     double anneal, anneal_step;
+
+    /// Students t-distribution
     /** Use t-student distribution instead of normal one */
     bool do_student;
     /** Degrees of freedom for the t-student distribution */
     double df, df2;
-    /** Flag to refine grey-scale for each experimental image */
-    bool do_scale;
-    /** Grey-scale correction values */
-    std::vector<double> imgs_optscale;
     /** Do sigma-division trick in student-t*/
     bool do_student_sigma_trick;
+
+    /// Re-normalize internally
+    /** Flag to refine normalization of each experimental image */
+    bool do_norm;
+    /** Grey-scale correction values */
+    std::vector<double> imgs_scale, imgs_bgmean;
+    /** Overall average scale (to be forced to one)*/
+    double average_scale;
+
+    /// Each image has its own sigma for the noise
+    /** Flag to de per-image noise model */
+    bool do_per_image_noise;
+    /** Per-image noise models */
+    std::vector<double> imgs_noise_sigma;
+
+    /// Statistical analysis of the noise distributions
+    /** Perform Kolmogorov-Smirnov test on noise distribution */
+    bool do_kstest;
+    /** Iteration at which to write out histograms */
+    int iter_write_histograms;
+
+
 
     /** debug flag */
     int debug;
@@ -246,6 +267,7 @@ public:
                               double &wsum_sigma_noise, double &wsum_sigma_offset,
                               std::vector<double> &sumw, std::vector<double> &sumw2, std::vector<double> &sumw_mirror,
                               double &LL, double &fracweight, double &maxweight2, double &opt_scale,
+                              double &per_image_mean, double &per_image_sigma,
                               int &opt_refno, double &opt_psi,
                               Matrix1D<double> &opt_offsets,
                               std::vector<double> &opt_offsets_ref,
@@ -257,11 +279,20 @@ public:
                                Matrix2D<int> &Msignificant,
                                std::vector <std::vector< Matrix2D<std::complex<double> > > > &Fwsum_imgs,
                                double &wsum_sigma_noise, double &wsum_sigma_offset,
-                               std::vector<double> &sumw, std::vector<double> &sumw2, std::vector<double> &sumw_mirror,
+                               std::vector<double> &sumw, std::vector<double> &sumw2,
+                               std::vector<double> &sumwsc2, std::vector<double> &sumw_mirror,
                                double &LL, double &fracweight, double &maxweight2, double &opt_scale, 
-                               int &opt_refno, double &opt_psi,
+                               double &per_image_mean, double &per_image_sigma,
+                               int &opt_refno, double &opt_psi, int &iopt_psi, int &iopt_flip, 
                                Matrix1D<double> &opt_offsets, std::vector<double> &opt_offsets_ref,
                                std::vector<double > &pdf_directions);
+
+    /// Perform Kolmogorov-Smirnov test
+    double performKSTest(Matrix2D<double> &Mimg, FileName &fn_img, bool write_histogram,
+                         std::vector <std::vector< Matrix2D<std::complex<double> > > > &Fref,
+                         double &per_image_mean, double &per_image_sigma, double &opt_scale,
+                         int &opt_refno, int &iopt_psi, int &iopt_flip,
+                         Matrix1D<double> &opt_offsets);
 
     /// Calculate maxCC averages for new model and new model parameters
     void maxCC_search_complete(Matrix2D<double> &Mimg,
@@ -279,12 +310,14 @@ public:
                                 double &LL, double &sumcorr, double &sumscale, DocFile &DFo,
                                 std::vector<Matrix2D<double> > &wsum_Mref,
                                 double &wsum_sigma_noise, double &wsum_sigma_offset,
-                                std::vector<double> &sumw, std::vector<double> &sum2, std::vector<double> &sumw_mirror);
+                                std::vector<double> &sumw, std::vector<double> &sum2, 
+                                std::vector<double> &sumwsc2, std::vector<double> &sumw_mirror);
 
     /// Update all model parameters
     void update_parameters(std::vector<Matrix2D<double> > &wsum_Mref,
                            double &wsum_sigma_noise, double &wsum_sigma_offset, 
-			   std::vector<double> &sumw, std::vector<double> &sumw2, std::vector<double> &sumw_mirror,
+			   std::vector<double> &sumw, std::vector<double> &sumw2, 
+                           std::vector<double> &sumwsc2, std::vector<double> &sumw_mirror,
                            double &sumcorr, double &sumscale, double &sumw_allrefs);
 
     /// check convergence
@@ -295,7 +328,7 @@ public:
 
     /// Write out reference images, selfile and logfile
     void write_output_files(const int iter, DocFile &DFo,
-                            double &sumw_allrefs, double &LL, double &avecorr, double &avescale,
+                            double &sumw_allrefs, double &LL, double &avecorr,
                             std::vector<double> &conv);
 
 };

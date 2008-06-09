@@ -35,7 +35,7 @@ int main(int argc, char **argv)
     double                      LL, sumw_allrefs, convv, sumcorr, sumscale, wsum_sigma_noise, wsum_sigma_offset;
     std::vector<double>              conv;
     std::vector<Matrix2D<double> >   wsum_Mref;
-    std::vector<double>              sumw, sumw2, sumw_cv, sumw_mirror;
+    std::vector<double>              sumw, sumw2, sumwsc2, sumw_cv, sumw_mirror;
     DocFile                     DFo;
 
     // For parallelization
@@ -146,7 +146,7 @@ int main(int argc, char **argv)
                 if (ML2D_prm.maxCC_rather_than_ML)
                     DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Corr (8)");
                 else
-                    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), w_robust (9), scale (10)");
+                    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), w_robust (9), bgmean (10), scale (11), sigma (12), KSprob (13)");
             }
 
             // Pre-calculate pdfs
@@ -156,7 +156,7 @@ int main(int argc, char **argv)
             ML2D_prm.ML_sum_over_all_images(ML2D_prm.SF, ML2D_prm.Iref, iter,
                                             LL, sumcorr, sumscale, DFo, wsum_Mref,
                                             wsum_sigma_noise, wsum_sigma_offset, 
-					    sumw, sumw2, sumw_mirror);
+					    sumw, sumw2, sumwsc2, sumw_mirror);
 
             // Here MPI_allreduce of all weighted sums, LL, etc.
             // All nodes need the answer to calculate internally
@@ -182,12 +182,14 @@ int main(int argc, char **argv)
                 sumw_mirror[refno] = aux;
                 MPI_Allreduce(&sumw2[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 sumw2[refno] = aux;
+                MPI_Allreduce(&sumwsc2[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                sumwsc2[refno] = aux;
             }
 
             // Update model parameters
             ML2D_prm.update_parameters(wsum_Mref, 
                                        wsum_sigma_noise, wsum_sigma_offset, 
-				       sumw, sumw2, sumw_mirror, 
+				       sumw, sumw2, sumwsc2, sumw_mirror, 
 				       sumcorr, sumscale, sumw_allrefs);
 
             // All nodes write out temporary DFo
@@ -208,7 +210,7 @@ int main(int argc, char **argv)
                     DFo.remove_current();
                     system(((std::string)"rm -f " + fn_tmp).c_str());
                 }
-                ML2D_prm.write_output_files(iter, DFo, sumw_allrefs, LL, sumcorr, sumscale, conv);
+                ML2D_prm.write_output_files(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
                 prm.concatenate_selfiles(iter);
 
             }
@@ -263,7 +265,7 @@ int main(int argc, char **argv)
             iter++;
         } // end loop iterations
 	if (rank == 0)
-	    ML2D_prm.write_output_files(-1, DFo, sumw_allrefs, LL, sumcorr, sumscale, conv);
+	    ML2D_prm.write_output_files(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
 
         if (!converged && prm.verb > 0)
             std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;
