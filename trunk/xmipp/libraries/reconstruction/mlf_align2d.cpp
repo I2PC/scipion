@@ -1760,7 +1760,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
     double tmpr, tmpi, sum_refw = 0.;
     double diff, maxweight = -99.e99, mindiff2 = 99.e99;
     double logsigma2, ldim;
-    double weight1, weight2, dfsigma2;
+    double weight1, weight2;
     double scale_denom, scale_numer, wsum_sc = 0., wsum_sc2 = 0.;
     int    irot, opt_irot, irefmir, opt_irefmir, ix, iy, ii;
     int    nr_uniq, point_trans, zscore;
@@ -2401,12 +2401,12 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 	LL += log(sum_refw) - mindiff2 - logsigma2;
     else
 	// 1st term: log(refw_i)
-	// 2nd term: for dividing by (1 + 2. * mindiff2/dfsigma2)^df2
+	// 2nd term: for dividing by (1 + mindiff2/df)^df2
 	// 3rd term: for sigma-dependent normalization term in t-student distribution
 	// 4th&5th terms: gamma functions in t-distribution
 	//LL += log(sum_refw) - log(1. + ( mindiff2 / df )) - log(sigma_noise * sigma_noise);
         LL += log(sum_refw) 
-            + df2 * log( 1. + ( mindiff2 / dfsigma2 )) 
+            + df2 * log( 1. + ( mindiff2 / df )) 
             - logsigma2
             + gammln(-df2) - gammln(df/2.);
 
