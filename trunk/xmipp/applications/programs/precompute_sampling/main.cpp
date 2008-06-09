@@ -23,119 +23,54 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-/* ------------------------------------------------------------------------- */
-/* Includes                                                                  */
-/* ------------------------------------------------------------------------- */
-#include <reconstruction/precompute_sampling.h>
-#include <data/fftw.h>
-#include <data/error.h>
-#include <iostream>
 
-/* ------------------------------------------------------------------------- */
-/* Program                                                                   */
-/* ------------------------------------------------------------------------- */
-#define MYSIZE 10000000
+#include <data/args.h>
+#include <data/image.h>
+#include <data/selfile.h>
+#include <data/docfile.h>
+
+
+/* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    #define DEBUGTIME
-    #ifdef  DEBUGTIME
-    #include <ctime>
-    int clo = clock();
-    #endif
+    DocFile         DFi;
+    DocLine Angles;
+    Matrix2D<double> Euler(3, 3), Euler_i(3, 3),data(3,3),data1(3,3);
+    double rot, tilt,psi;
+    double rot1, tilt1,psi1;
+    tilt1 = 31.7175;
+    rot1=psi1=0.;
 
-    bool inplace = false; 
-    VolumeXmipp img;
-    img.read("kk.vol");
-    //img().transpose();
-    #ifdef  DEBUGTIME
-    printf ("image read in  %f mseconds\n", (double)(clock()-clo)/1000 );
-    clo = clock();
-    #endif
-    
-    #define DIMENSION 2
-    xmippFftw fft_img(img());
-    #ifdef  DEBUGTIME
-    printf ("image transformed in  %f mseconds\n", (double)(clock()-clo)/1000 );
-    clo = clock();
-    #endif
-#ifdef NEVERDEFINE
-    std::complex<double> * IMG;
-    IMG = (std::complex<double> *)fft_img.fOut;
-    
-    int ysize = (int)(((double)YSIZE(img()) / 2.) +1.);
-    int xsize = XSIZE(img());
-    
-    img().initZeros();
-    long int ii=0;
-    //xmipp y contigous, fftw x contigous
-    for (int j=0;j<xsize;j++)
-        for (int i=0;i<ysize;i++)
-        {
-           DIRECT_MAT_ELEM(img(),i,j) = abs(IMG[ii]);
-           ii++;
-        }
-    img.write("pp.xmp");
-#endif
-   fft_img.img_bandpass_filter(.1,0.);
-#ifdef NEVERDEFINE
-    std::complex<double> * IMG;
-    IMG = (std::complex<double> *)fft_img.fOut;
-    
-    int ysize = (int)(((double)YSIZE(img()) / 2.) +1.);
-    int xsize = XSIZE(img());
-    
-    img().initZeros();
-    long int ii=0;
-    //xmipp y contigous, fftw x contigous
-    for (int j=0;j<xsize;j++)
-        for (int i=0;i<ysize;i++)
-        {
-           DIRECT_MAT_ELEM(img(),i,j) = abs(IMG[ii]);
-           ii++;
-        }
-    img.write("pp.xmp");
-#endif
-    #ifdef  DEBUGTIME
-    printf ("image filtered in  %f mseconds\n", (double)(clock()-clo)/1000 );
-    clo = clock();
-    #endif
-    
-    double * tmp;
-    tmp = fft_img.fIn;
-    fft_img.fIn=fft_img.fOut;
-    fft_img.fOut=tmp;
-    
-    fft_img.Init("ES",FFTW_BACKWARD);
-    #ifdef  DEBUGTIME
-    printf ("backwards init in  %f mseconds\n", (double)(clock()-clo)/1000 );
-    clo = clock();
-    #endif
-    
-    fft_img.Transform();
-    #ifdef  DEBUGTIME
-    printf ("image backtransformed in  %f mseconds\n", (double)(clock()-clo)/1000 );
-    clo = clock();
-    #endif
-/*
-    double * IMG;
-    IMG = fft_img.fOut;
+    Euler_angles2matrix(rot1, tilt1, psi1, Euler);
+    Euler_i=Euler.transpose();
+    try
+    {
 
-    int xsize = (int)(((double)XSIZE(img()) / 2.) +1.);
-    int ysize = YSIZE(img());
-    
-    img().initZeros();
-    long int ii=0;
-    for (int i=0;i<ysize;i++)
-        for (int j=0;j<xsize;j++)
-        {
-           DIRECT_MAT_ELEM(img(),i,j) = abs(IMG[ii]);
-           ii++;
-        }
-*/
-    img.write("kk.xmp");
-    fft_img.fOut=NULL;//do not free, matrix2d destructor will do it
-/**
-For processing a second image read again and call to Transform, no need to create another fourier
-object
-*/
+        DFi.read(getParameter(argc, argv, "-i"));
+
+    }
+    catch (Xmipp_error XE)
+    {
+        std::cout << XE;
+    }
+    DFi.go_beginning();
+    DFi.go_first_data_line();
+    while (!DFi.eof())
+    {
+        rot = DFi(0);
+        tilt = DFi(1);
+        psi = DFi(2);
+        rot = realWRAP(rot, -180, 180);
+        tilt = realWRAP(tilt, -180, 180);
+        psi = realWRAP(psi, -180, 180);
+        Euler_angles2matrix(rot, tilt, psi, data);
+        data1 = /*Euler * */(data * Euler_i);
+        Euler_matrix2angles(data1,rot,tilt,psi);
+std::cout << Euler << data << data1;
+        DFi.set(0, rot);
+        DFi.set(1, tilt);
+        DFi.set(2, psi);
+        DFi.next_data_line();
+    }
+DFi.write("kk.doc");
 }
