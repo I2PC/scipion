@@ -1655,14 +1655,18 @@ void Prog_MLalign2D_prm::ML_integrate_locally(
 	// 1st term: log(refw_i)
 	// 2nd term: for subtracting mindiff2
 	// 3rd term: for (sqrt(2pi)*sigma_noise)^-1 term in formula (12) Sigworth (1998)
-	LL += log(sum_refw) - mindiff2 / sigma_noise2 - dim * dim * log(sqrt(2. * PI * sigma_noise2));
+	LL += log(sum_refw) 
+            - mindiff2 / sigma_noise2 
+            - dim * dim * log(sqrt(2. * PI * sigma_noise2));
     else
     {
 	// 1st term: log(refw_i)
 	// 2nd term: for dividing by (1 + mindiff2/sigma2*df)^df2
 	// 3rd term: for sigma-dependent normalization term in t-student distribution
 	// 4th&5th terms: gamma functions in t-distribution
-        LL += log(sum_refw) + df2 * log( 1. + (  2. * mindiff2 / dfsigma2 )) - dim * dim * log( sqrt(PI * df * sigma_noise2)) 
+        LL += log(sum_refw) 
+            + df2 * log( 1. + (  2. * mindiff2 / dfsigma2 ))
+            - dim * dim * log( sqrt(PI * df * sigma_noise2)) 
             + gammln(-df2) - gammln(df/2.);
     }
 
@@ -1964,7 +1968,10 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
         {
             sumw[refno] += (refw[refno] + refw_mirror[refno]) / sum_refw;
 	    sumw2[refno] += refw2[refno] / sum_refw;
-            sumwsc2[refno] += (refw[refno] + refw_mirror[refno]) * (opt_scale * opt_scale) / sum_refw;
+            if (do_student)
+                sumwsc2[refno] += refw2[refno] * (opt_scale * opt_scale) / sum_refw;
+            else
+                sumwsc2[refno] += (refw[refno] + refw_mirror[refno]) * (opt_scale * opt_scale) / sum_refw;
             sumw_mirror[refno] += refw_mirror[refno] / sum_refw;
             FOR_ALL_ROTATIONS()
             {
@@ -2004,14 +2011,18 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
 	// 1st term: log(refw_i)
 	// 2nd term: for subtracting mindiff2
 	// 3rd term: for (sqrt(2pi)*sigma_noise)^-1 term in formula (12) Sigworth (1998)
-	LL += log(sum_refw) - mindiff2 / sigma_noise2 - dim * dim * log( sqrt(2. * PI * sigma_noise2));
+	LL += log(sum_refw) 
+            - mindiff2 / sigma_noise2 
+            - dim * dim * log( sqrt(2. * PI * sigma_noise2));
     else
    {
 	// 1st term: log(refw_i)
 	// 2nd term: for dividing by (1 + 2. * mindiff2/dfsigma2)^df2
 	// 3rd term: for sigma-dependent normalization term in t-student distribution
 	// 4th&5th terms: gamma functions in t-distribution
-       LL += log(sum_refw) + df2 * log( 1. + (  2. * mindiff2 / dfsigma2 )) - dim * dim * log( sqrt(PI * df * sigma_noise2)) 
+       LL += log(sum_refw) 
+           + df2 * log( 1. + (  2. * mindiff2 / dfsigma2 )) 
+           - dim * dim * log( sqrt(PI * df * sigma_noise2)) 
            + gammln(-df2) - gammln(df/2.);
     }
 
@@ -2446,7 +2457,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, std::vector< ImageX
             }
             if (do_per_image_noise)
             {
-                dataline(11) = per_image_sigma;       // sigma_noise
+                dataline(11) = per_image_sigma;      // sigma_noise
             }
             if (do_kstest)                           // KS-probability
             {
@@ -2495,7 +2506,7 @@ void Prog_MLalign2D_prm::update_parameters(std::vector<Matrix2D<double> > &wsum_
     {
         if (!do_student && sumw[refno] > 0.)
         {
-            std::cerr<<" refno= "<<refno<<" sumw= "<<sumw[refno]<<" sumwsc2= "<<sumwsc2[refno]<<std::endl;
+            //std::cerr<<" refno= "<<refno<<" sumw= "<<sumw[refno]<<" sumwsc2= "<<sumwsc2[refno]<<std::endl;
             Iref[refno]() = wsum_Mref[refno];
 	    Iref[refno]() /= sumwsc2[refno];
 	    Iref[refno].set_weight(sumw[refno]);
@@ -2504,7 +2515,7 @@ void Prog_MLalign2D_prm::update_parameters(std::vector<Matrix2D<double> > &wsum_
 	else if (do_student && sumw2[refno] > 0.)	{
 //	    std::cerr<<" refno= "<<refno<<" sumw= "<<sumw[refno]<<" sumw2= "<<sumw2[refno]<<std::endl;
 	    Iref[refno]() = wsum_Mref[refno];
-	    Iref[refno]() /= sumw2[refno];
+	    Iref[refno]() /= sumwsc2[refno];
 	    Iref[refno].set_weight(sumw2[refno]);
 	    sumw_allrefs += sumw[refno];
 	    sumw_allrefs2 += sumw2[refno];
@@ -2547,7 +2558,7 @@ void Prog_MLalign2D_prm::update_parameters(std::vector<Matrix2D<double> > &wsum_
     if (!fix_sigma_noise)
     {
 //      The following converges faster according to McLachlan&Peel (2000)
-//	Finite Mixture Models, Wiley pp. 228!
+//	Finite Mixture Models, Wiley p. 228!
 	if (do_student && do_student_sigma_trick)
 	    sigma_noise = sqrt(wsum_sigma_noise / (sumw_allrefs2 * dim * dim));
 	else
@@ -2679,8 +2690,8 @@ void Prog_MLalign2D_prm::write_output_files(const int iter, DocFile &DFo,
     else
     {
         comment += " LL= " + floatToString(LL, 15, 10) + " <Pmax/sumP>= " + floatToString(avecorr, 10, 5);
-	if (do_norm)
-	    comment+= " <scale>= " + floatToString(average_scale, 10, 5);
+        if (do_norm)
+            comment+= " <scale>= " + floatToString(average_scale, 10, 5);
         DFl.insert_comment(comment);
         comment = "-noise " + floatToString(sigma_noise, 15, 12) + " -offset " + floatToString(sigma_offset, 15, 12) + " -istart " + integerToString(iter + 1);
         if (anneal > 1.) comment += " -anneal " + floatToString(anneal, 10, 7);
