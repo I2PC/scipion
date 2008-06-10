@@ -172,6 +172,8 @@ public:
     bool do_divide_ctf;
     /** Include all frequencies in the refinement */
     bool do_include_allfreqs;
+    /** Fix high-resolution limit */
+    double fix_high;
     /** Pointers to the 2D matrices (in FourierTransformHalf format) */
     std::vector<int> pointer_2d, pointer_i, pointer_j;
     int nr_points_prob, nr_points_2d, dnr_points_2d;
@@ -192,7 +194,7 @@ public:
     /** Flag to refine normalization of each experimental image */
     bool do_norm;
     /** Grey-scale correction values */
-    std::vector<double> imgs_scale;
+    std::vector<double> imgs_scale, refs_avgscale;
     /** Overall average scale (to be forced to one)*/
     double average_scale;
 
@@ -304,6 +306,7 @@ public:
 			 double &wsum_sigma_offset, 
 			 std::vector<double> &sumw,
 			 std::vector<double> &sumw2,
+                         std::vector<double> &sumwsc, 
                          std::vector<double> &sumwsc2, 
 			 std::vector<double> &sumw_mirror,
 			 double &LL, double &fracweight,  double &maxweight2, double &sum_refw2,
@@ -324,13 +327,14 @@ public:
 
     /// Integrate over all experimental images
     void sumOverAllImages(SelFile &SF, std::vector< ImageXmippT<double> > &Iref, int iter,
-			  double &LL, double &sumcorr, double &sumscale, DocFile &DFo,
+			  double &LL, double &sumcorr, DocFile &DFo,
 			  std::vector<Matrix2D<double> > &wsum_Mref,
 			  std::vector<Matrix2D<double> > &wsum_ctfMref,
 			  std::vector<std::vector<double> > &Mwsum_sigma2,
 			  double &wsum_sigma_offset, 
 			  std::vector<double> &sumw, 
                           std::vector<double> &sumw2, 
+                          std::vector<double> &sumwsc, 
                           std::vector<double> &sumwsc2, 
 			  std::vector<double> &sumw_mirror,
 			  std::vector<double> &sumw_defocus);
@@ -342,10 +346,11 @@ public:
 			  double &wsum_sigma_offset,
 			  std::vector<double> &sumw, 
                           std::vector<double> &sumw2, 
+                          std::vector<double> &sumwsc, 
                           std::vector<double> &sumwsc2, 
 			  std::vector<double> &sumw_mirror,
 			  std::vector<double> &sumw_defocus,
-			  double &sumcorr, double &sumscale, double &sumw_allrefs,
+			  double &sumcorr, double &sumw_allrefs,
 			  Matrix1D<double> &spectral_signal);
 
     /// check convergence

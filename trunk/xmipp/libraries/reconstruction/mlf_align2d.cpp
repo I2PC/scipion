@@ -142,6 +142,7 @@ void Prog_MLFalign2D_prm::read(int argc, char **argv, bool ML3D)
     C_fast = textToFloat(getParameter(argc2, argv2, "-C", "1e-12"));
     fn_doc = getParameter(argc2, argv2, "-doc", "");
     do_include_allfreqs=checkParameter(argc2,argv2,"-include_allfreqs");
+    fix_high = textToFloat(getParameter(argc2, argv2, "-fix_high", "-1")); 
 
     // Only for interaction with Refine3D:
     do_ML3D = ML3D;
@@ -759,9 +760,9 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
 
     // integer resolution limits (in shells)
     int_lowres_limit      = sampling * dim / lowres_limit;
-    if (highres_limit > 0.) int_highres_limit = sampling * dim / highres_limit;
+    if (highres_limit > 0.) int_highres_limit = ROUND(sampling * dim / highres_limit);
     else int_highres_limit = hdim;
-    if (ini_highres_limit>  0.) int_ini_highres_limit = sampling * dim / ini_highres_limit;
+    if (ini_highres_limit>  0.) int_ini_highres_limit = ROUND(sampling * dim / ini_highres_limit);
     else int_ini_highres_limit = hdim;
 
     // Pre-calculate average CTF^2 and initialize Vsnr
@@ -910,8 +911,13 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
     // Set the current resolution limits
     if (do_include_allfreqs) 
     {
-	current_probres_limit = hdim;
-	current_highres_limit = hdim;
+	current_probres_limit = hdim-1;
+	current_highres_limit = hdim-1;
+    }
+    else if (fix_high > 0.)
+    {
+        current_probres_limit = ROUND((sampling*dim)/fix_high);
+        current_highres_limit = ROUND((sampling*dim)/fix_high);
     }
     else
     {
@@ -1181,6 +1187,11 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols)
 	    imgs_scale.push_back(1.);
 	}
         average_scale = 1.;
+        refs_avgscale.clear();
+        FOR_ALL_MODELS() 
+        {
+            refs_avgscale.push_back(1.);
+        }
     }
 
     // If we don't write offsets to disc, fill imgs_offsets vectors
@@ -1454,13 +1465,12 @@ void Prog_MLFalign2D_prm::appendFTtoVector(const Matrix2D<std::complex<double> >
 {
 
     // First, store the points used in the probability calculations
-    std::complex<double> * tmp_in;
-    tmp_in = MULTIDIM_ARRAY(in);
+    std::complex<double> * tmp_in = MULTIDIM_ARRAY(in);
     for (int ipoint = 0; ipoint < nr_points_2d; ipoint++)
     {
 	int ii = pointer_2d[ipoint];
-	out.push_back(tmp_in[ii].real());
-	out.push_back(tmp_in[ii].imag());
+        out.push_back(tmp_in[ii].real());
+        out.push_back(tmp_in[ii].imag());
     }
 }
 
@@ -1472,9 +1482,7 @@ void Prog_MLFalign2D_prm::getFTfromVector(const std::vector<double> &in,
 
     out.resize(hdim + 1, dim);
     out.initZeros();
-    std::complex<double> * tmp_out;
-    tmp_out = MULTIDIM_ARRAY(out);
-
+    std::complex<double> * tmp_out = MULTIDIM_ARRAY(out);
     if (only_real)
     {
 	for (int ipoint = 0; ipoint < nr_points_2d; ipoint++)
@@ -1735,6 +1743,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 					  double &wsum_sigma_offset, 
 					  std::vector<double> &sumw,
 					  std::vector<double> &sumw2, 
+					  std::vector<double> &sumwsc, 
 					  std::vector<double> &sumwsc2, 
 					  std::vector<double> &sumw_mirror,
 					  double &LL, double &fracweight, double &maxweight2, 
@@ -1759,7 +1768,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
     double XiA, Xi2, aux, fracpdf, pdf, weight;
     double tmpr, tmpi, sum_refw = 0.;
     double diff, maxweight = -99.e99, mindiff2 = 99.e99;
-    double logsigma2, ldim;
+    double logsigma2, ldim, ref_scale = 1.;
     double weight1, weight2;
     double scale_denom, scale_numer, wsum_sc = 0., wsum_sc2 = 0.;
     int    irot, opt_irot, irefmir, opt_irefmir, ix, iy, ii;
@@ -1775,10 +1784,8 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
     if (!do_norm) opt_scale =1.;
 
     // Convert 1D Vsig vectors to the correct vector size for the 2D FTHalfs
-    // Multiply by two because we only consider half the points in the FourierTransform
-    // Multiply by another factor of two because we consider both the real and the imaginary parts
-    // (i.e. the distribution is 2D instead of 1D)
-    ldim = (double) 2 * 2 * nr_points_prob;
+    // Multiply by a factor of two because we consider both the real and the imaginary parts
+    ldim = (double) 2 * nr_points_prob;
     // For t-student: df2 changes with effective resolution!
     if (do_student) df2 = - ( df +  ldim ) / 2. ;
 
@@ -1812,10 +1819,11 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
     logsigma2 = 0.;
     for (int ipoint = 0; ipoint < nr_points_prob; ipoint++)
     {
+        // Multiply by two because we treat real and imaginary parts!
         if (do_student)
-            logsigma2 += log( sqrt(PI * df * 0.5 * sigma2[ipoint]));
+            logsigma2 += 2 * log( sqrt(PI * df * 0.5 * sigma2[ipoint]));
         else
-            logsigma2 += log( sqrt(PI * sigma2[ipoint]));
+            logsigma2 += 2 * log( sqrt(PI * sigma2[ipoint]));
     }
 
     // Precalculate Fimg_trans, on pruned and expanded offset list
@@ -1828,6 +1836,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
     {
         if (!limit_rot || pdf_directions[refno] > 0.)
         {
+            if (do_norm) ref_scale = opt_scale / refs_avgscale[refno];
             FOR_ALL_FLIPS()
             {
                 irefmir = FLOOR(iflip / nr_nomirror_flips) * n_ref + refno;
@@ -1867,8 +1876,8 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 		    {
 			for (int ii = 0; ii < nr_points_prob; ii++)
 			{
-			    tmpr = Fimg_trans[img_start + 2*ii] - ctf[ii] * opt_scale * Fref[ref_start + 2*ii];	
-			    tmpi = Fimg_trans[img_start + 2*ii+1] - ctf[ii] * opt_scale * Fref[ref_start + 2*ii+1];	
+			    tmpr = Fimg_trans[img_start + 2*ii] - ctf[ii] * ref_scale * Fref[ref_start + 2*ii];	
+			    tmpi = Fimg_trans[img_start + 2*ii+1] - ctf[ii] * ref_scale * Fref[ref_start + 2*ii+1];	
 			    tmpr = (tmpr * tmpr + tmpi * tmpi) / sigma2[ii];
 			    diff += tmpr;
 			}
@@ -1877,19 +1886,13 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 		    {
 			for (int ii = 0; ii < nr_points_prob; ii++)
 			{
-			    tmpr = Fimg_trans[img_start + 2*ii] - opt_scale * Fref[ref_start + 2*ii];	
-			    tmpi = Fimg_trans[img_start + 2*ii+1] - opt_scale * Fref[ref_start + 2*ii+1];	
+			    tmpr = Fimg_trans[img_start + 2*ii] - ref_scale * Fref[ref_start + 2*ii];	
+			    tmpi = Fimg_trans[img_start + 2*ii+1] - ref_scale * Fref[ref_start + 2*ii+1];	
 			    diff += (tmpr * tmpr + tmpi * tmpi) / sigma2[ii];
 			}
 		    }
-                    // Sjors 5 may 2008
-                    // Multiply by two because we only consider HALF the FourierTransform
-                    // diff *= 2.;
-
                     // Multiply by two for t-student, because we divided by 2*sigma2 instead of sigma2!
-                    if (do_student)
-                        diff *= 2.;
-
+                    if (do_student) diff *= 2.;
                     dVkij(Mweight, zero_trans, refno, irot) = diff;
 		    if (debug == 9)
 		    {
@@ -1946,10 +1949,6 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 			else weight = exp(-aux) * pdf;
 			// Store weight
 			dVkij(Mweight, zero_trans, refno, irot) = weight;
-			// Accumulate sum weights
-			if (iflip < nr_nomirror_flips) refw[refno] += weight;
-			else refw_mirror[refno] += weight;
-			sum_refw += weight;
 		    }
 		    else
 		    {
@@ -1961,25 +1960,19 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 			//      = ( (df + diff2) / (df + mindiff2) )^df2
                         // Extra factor two because we saved diff = | X - A |^2 / TWO * sigma
 			aux = (df + diff) / (df + mindiff2);
-			weight1 = pow(aux, df2) * pdf;
+			weight = pow(aux, df2) * pdf;
 			// Calculate extra weight acc. to Eq (10) Wang et al.
 			// Patt. Recognition Lett. 25, 701-710 (2004)
 			weight2 = ( df + ldim ) / ( df + diff  );
-			// total weight
-			weight = weight1 * weight2;
-			// Store weight
-			dVkij(Mweight, zero_trans, refno, irot) = weight;
-			// Accumulate sum weights
-			if (iflip < nr_nomirror_flips) refw[refno] += weight1;
-			else refw_mirror[refno] += weight1;
-			sum_refw += weight1;
-			refw2[refno] += weight;
-			sum_refw2 += weight;
-			if (debug == 11 && weight > maxweight)
-			{
-			    std::cerr<<"refno= "<<refno<<" irot= "<<irot<<" diff= "<<diff<<" mindiff2= "<<mindiff2<<" weight1= "<<weight1<<" weight2= "<<weight2<<" ldim= "<<ldim<<std::endl;
-			}
+			// Store probability weights
+			dVkij(Mweight, zero_trans, refno, irot) = weight * weight2;
+			refw2[refno] += weight * weight2;
+                        sum_refw2 += weight * weight2; 
 		    }
+                    // Accumulate sum weights
+                    if (iflip < nr_nomirror_flips) refw[refno] += weight;
+                    else refw_mirror[refno] += weight;
+                    sum_refw += weight;
 		    if (do_norm)
 		    {
 			scale_numer = 0.;
@@ -2006,8 +1999,8 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 				scale_denom += Fref[ref_start + 2*ii+1] * Fref[ref_start + 2*ii+1];
 			    }
 			}
-			wsum_sc += weight * scale_numer;
-			wsum_sc2 += weight * scale_denom;
+			wsum_sc += dVkij(Mweight, zero_trans, refno, irot) * scale_numer;
+			wsum_sc2 += dVkij(Mweight, zero_trans, refno, irot) * scale_denom;
 		    }
                     if (weight > Pmax_refmir[irefmir]) Pmax_refmir[irefmir] = weight;
                     if (weight > maxweight)
@@ -2033,6 +2026,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
     {
         if (!limit_rot || pdf_directions[refno] > 0.)
         {
+            if (do_norm) ref_scale = opt_scale / refs_avgscale[refno];
             FOR_ALL_FLIPS()
             {
                 irefmir = FLOOR(iflip / nr_nomirror_flips) * n_ref + refno;
@@ -2043,7 +2037,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                     irot = iflip * nr_psi + ipsi;
 		    // Note that for t-students distribution we now do something 
 		    // a little bit different compared to ML_integrate_complete! 
-		    // Instead of comparing "weight1", we compare "weight1*weight2"!!
+		    // Instead of comparing "weight", we compare "weight*weight2"!!
                     if (dVkij(Mweight, zero_trans, refno, irot) > C_fast*Pmax_refmir[irefmir])
                     {
 			// get the starting point in the Fref vector
@@ -2074,8 +2068,8 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 				    {
 					for (int ii = 0; ii < nr_points_prob; ii++)
 					{
-					    tmpr = Fimg_trans[img_start + 2*ii] - ctf[ii] * opt_scale * Fref[ref_start + 2*ii];	
-					    tmpi = Fimg_trans[img_start + 2*ii+1] - ctf[ii] * opt_scale * Fref[ref_start + 2*ii+1];	
+					    tmpr = Fimg_trans[img_start + 2*ii] - ctf[ii] * ref_scale * Fref[ref_start + 2*ii];	
+					    tmpi = Fimg_trans[img_start + 2*ii+1] - ctf[ii] * ref_scale * Fref[ref_start + 2*ii+1];	
 					    diff += (tmpr * tmpr + tmpi * tmpi) / sigma2[ii];
 					}
 				    }
@@ -2083,14 +2077,11 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 				    {
 					for (int ii = 0; ii < nr_points_prob; ii++)
 					{
-					    tmpr = Fimg_trans[img_start + 2*ii] - opt_scale * Fref[ref_start + 2*ii];	
-					    tmpi = Fimg_trans[img_start + 2*ii+1] - opt_scale * Fref[ref_start + 2*ii+1];	
+					    tmpr = Fimg_trans[img_start + 2*ii] - ref_scale * Fref[ref_start + 2*ii];	
+					    tmpi = Fimg_trans[img_start + 2*ii+1] - ref_scale * Fref[ref_start + 2*ii+1];	
 					    diff += (tmpr * tmpr + tmpi * tmpi) / sigma2[ii];
 					}
 				    }
-                                    // Sjors 5 may 2008
-                                    // Multiply by two because we only consider HALF the FourierTransform
-                                    //diff *= 2.;
 				    if (!do_student)
 				    {
 					// Normal distribution
@@ -2100,10 +2091,6 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 					else weight = exp(-aux) * pdf;
 					// Store weight
 					dVkij(Mweight, itrans, refno, irot) = weight;
-					// Accumulate sum weights
-					if (iflip < nr_nomirror_flips) refw[refno] += weight;
-					else refw_mirror[refno] += weight;
-					sum_refw += weight;
 				    }
 				    else
 				    {
@@ -2118,21 +2105,19 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                                         diff *= 2.;
                                         // Extra factor two because we saved diff = | X - A |^2 / TWO * sigma
 					aux = (df + diff) / (df + mindiff2);
-					weight1 = pow(aux, df2) * pdf;
+					weight = pow(aux, df2) * pdf;
 					// Calculate extra weight acc. to Eq (10) Wang et al.
 					// Patt. Recognition Lett. 25, 701-710 (2004)
 					weight2 = ( df + ldim ) / ( df + diff);
-					// Total weight
-					weight = weight1 * weight2;
-					// Store weight
-					dVkij(Mweight, itrans, refno, irot) = weight;
-					// Accumulate sum weights
-					if (iflip < nr_nomirror_flips) refw[refno] += weight1;
-					else refw_mirror[refno] += weight1;
-					sum_refw += weight1;
-					refw2[refno] += weight;
-					sum_refw2 += weight;
+					// Store probability weights
+					dVkij(Mweight, itrans, refno, irot) = weight * weight2;
+					refw2[refno] += weight * weight2;
+					sum_refw2 += weight * weight2;
 				    }
+                                    // Accumulate sum weights
+                                    if (iflip < nr_nomirror_flips) refw[refno] += weight;
+                                    else refw_mirror[refno] += weight;
+                                    sum_refw += weight;
 				    if (do_norm)
 				    {
 					scale_numer = 0.;
@@ -2167,8 +2152,8 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 						    * Fref[ref_start + 2*ii+1];
 					    }
 					}
-					wsum_sc += weight * scale_numer;
-					wsum_sc2 += weight * scale_denom;
+					wsum_sc += dVkij(Mweight, itrans, refno, irot) * scale_numer;
+					wsum_sc2 += dVkij(Mweight, itrans, refno, irot) * scale_denom;
 				    }
                                     if (weight > maxweight)
                                     {
@@ -2182,10 +2167,6 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                                     }
                                 }
                                 else dVkij(Mweight, itrans, refno, irot) = 0.;
-				if (debug == 9)
-				{
-				    std::cerr<<"refno= "<<refno<<" irot= "<<irot<<" itrans= "<<itrans<<" weight= "<<dVkij(Mweight, itrans, refno, irot)<<" maxweight= "<<maxweight<<std::endl;
-				}
                             }
                         }
                     }
@@ -2202,7 +2183,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
     // Perform KS-test on difference image of optimal hidden parameters
     if (do_kstest)
     {
-        Matrix1D<double> diff(nr_points_prob);
+        Matrix1D<double> diff(2*nr_points_prob);
         if (opt_iflip < nr_nomirror_flips) 
             point_trans = MAT_ELEM(Moffsets, (int)opt_offsets(1), (int)opt_offsets(0));
         else
@@ -2210,15 +2191,40 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
         img_start = point_trans*4*dnr_points_2d + (opt_iflip%nr_nomirror_flips)*dnr_points_2d;
         ref_start = opt_refno*nr_psi*dnr_points_2d + opt_ipsi*dnr_points_2d;
         
+        if (do_norm) ref_scale = opt_scale / refs_avgscale[opt_refno];
         for (int ii = 0; ii < nr_points_prob; ii++)
         {
             int ires = tmp_res[ii];
             if (do_ctf_correction)
-                dVi(diff,ii) = (Fimg_trans[img_start + 2*ii] - 
-                                ctf[ii] * opt_scale * Fref[ref_start + 2*ii]) / sqrt(tmp_sig[ires]);
+            {
+                dVi(diff,2*ii) = (Fimg_trans[img_start + 2*ii] - 
+                                  ctf[ii] * ref_scale * Fref[ref_start + 2*ii]) / sqrt(tmp_sig[ires]);
+                dVi(diff,2*ii+1) = (Fimg_trans[img_start + 2*ii+1] - 
+                                ctf[ii] * ref_scale * Fref[ref_start + 2*ii+1]) / sqrt(tmp_sig[ires]);
+            }
             else
-                dVi(diff,ii) = (Fimg_trans[img_start + 2*ii] - 
-                                opt_scale * Fref[ref_start + 2*ii]) / sqrt(tmp_sig[ires]);
+            {
+                dVi(diff,2*ii) = (Fimg_trans[img_start + 2*ii] - 
+                                  ref_scale * Fref[ref_start + 2*ii]) / sqrt(tmp_sig[ires]);
+                dVi(diff,2*ii+1) = (Fimg_trans[img_start + 2*ii+1] - 
+                                  ref_scale * Fref[ref_start + 2*ii+1]) / sqrt(tmp_sig[ires]);
+            }
+        }
+
+        double * aux_array = MULTIDIM_ARRAY(diff) - 1;
+        double KSD =0.; 
+        if (do_student)
+        {
+            if (df==3)
+                ksone(aux_array, 2*nr_points_prob, &lcdf_tstudent_mlf3, &KSD, &KSprob);
+            else if (df==6)
+                ksone(aux_array, 2*nr_points_prob, &lcdf_tstudent_mlf6, &KSD, &KSprob);
+            else
+                REPORT_ERROR(1,"KS-test for t-distribution only implemented for df=3 r df=6!");
+        }
+        else
+        {
+            ksone(aux_array, 2*nr_points_prob, &cdf_gauss, &KSD, &KSprob);
         }
 
         if (write_histograms)
@@ -2244,29 +2250,11 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
             fh_hist.close();
         }
 
-        double * aux_array = MULTIDIM_ARRAY(diff) - 1;
-        double KSD =0.; 
-        if (do_student)
-        {
-            if (df==3)
-                ksone(aux_array, nr_points_prob, &lcdf_tstudent_mlf3, &KSD, &KSprob);
-            else if (df==6)
-                ksone(aux_array, nr_points_prob, &lcdf_tstudent_mlf6, &KSD, &KSprob);
-            else
-                REPORT_ERROR(1,"KS-test for t-distribution only implemented for df=3 r df=6!");
-        }
-        else
-        {
-            ksone(aux_array, nr_points_prob, &cdf_gauss, &KSD, &KSprob);
-        }
-    }
+     }
 
     // Update opt_scale
     if (do_norm)
     {
-	if (debug==12) std::cerr<<"scale= "<<opt_scale<<" changes to "<<wsum_sc / wsum_sc2<<std::endl;
-
-	// introduce a relaxation factor to avoid flipping scales
 	opt_scale = wsum_sc / wsum_sc2;
     }
 
@@ -2281,9 +2269,15 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
             sumw[refno] += (refw[refno] + refw_mirror[refno]) / sum_refw;
 	    sumw2[refno] += refw2[refno] / sum_refw;
             if (do_student)
-                sumwsc2[refno] += refw2[refno] * (opt_scale * opt_scale) / sum_refw;
+            {
+                sumwsc[refno] += refw2[refno] * opt_scale / sum_refw;
+                sumwsc2[refno] += refw2[refno] * opt_scale * opt_scale / sum_refw;
+            }
             else
+            {
+                sumwsc[refno] += (refw[refno] + refw_mirror[refno]) * (opt_scale) / sum_refw;
                 sumwsc2[refno] += (refw[refno] + refw_mirror[refno]) * (opt_scale * opt_scale) / sum_refw;
+            }
             sumw_mirror[refno] += refw_mirror[refno] / sum_refw;
             FOR_ALL_FLIPS()
             {
@@ -2387,10 +2381,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
     if (debug==1) {std::cout<<"processOneImage 4 "; print_elapsed_time(t0); annotate_time(&t0);}
 
     // Distribution widths
-    if (!do_student)
-	fracweight = maxweight / sum_refw;
-    else
-	fracweight = maxweight / sum_refw2;
+    fracweight = maxweight / sum_refw;
     sum_refw2 /= sum_refw;
 
     // Compute Log Likelihood
@@ -2398,7 +2389,9 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 	// 1st term: log(refw_i)
 	// 2nd term: for subtracting mindiff2
 	// 3rd term: for missing normalization constant
-	LL += log(sum_refw) - mindiff2 - logsigma2;
+	LL += log(sum_refw) 
+            - mindiff2 
+            - logsigma2;
     else
 	// 1st term: log(refw_i)
 	// 2nd term: for dividing by (1 + mindiff2/df)^df2
@@ -2414,13 +2407,14 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 
 
 void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, std::vector< ImageXmippT<double> > &Iref, int iter,
-					   double &LL, double &sumcorr, double &sumscale, DocFile &DFo,
+					   double &LL, double &sumcorr, DocFile &DFo,
 					   std::vector<Matrix2D<double> > &wsum_Mref,
 					   std::vector<Matrix2D<double> > &wsum_ctfMref,
 					   std::vector<std::vector<double> > &Mwsum_sigma2,
 					   double &wsum_sigma_offset, 
 					   std::vector<double> &sumw, 
                                            std::vector<double> &sumw2, 
+                                           std::vector<double> &sumwsc, 
                                            std::vector<double> &sumwsc2, 
 					   std::vector<double> &sumw_mirror,
 					   std::vector<double> &sumw_defocus)
@@ -2451,6 +2445,7 @@ void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, std::vector< ImageXmippT
     // Set all weighted sums to zero
     sumw.clear();
     sumw2.clear();
+    sumwsc.clear();
     sumwsc2.clear();
     sumw_mirror.clear();
     sumw_defocus.clear();
@@ -2460,7 +2455,6 @@ void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, std::vector< ImageXmippT
     LL = 0.;
     wsum_sigma_offset = 0.;
     sumcorr = 0.;
-    sumscale = 0.;
     FOR_ALL_DEFOCUS_GROUPS()
     {
         if (do_student && do_student_sigma_trick)
@@ -2478,6 +2472,7 @@ void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, std::vector< ImageXmippT
     {
         sumw.push_back(0.);
         sumw2.push_back(0.);
+        sumwsc.push_back(0.);
         sumwsc2.push_back(0.);
         sumw_mirror.push_back(0.);
         FOR_ALL_ROTATIONS()
@@ -2545,7 +2540,7 @@ void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, std::vector< ImageXmippT
 
 	if (do_norm)
 	{
-            opt_scale = imgs_scale[imgno] / average_scale;
+            opt_scale = imgs_scale[imgno];
 	}
 
         // For limited orientational search: preselect relevant directions
@@ -2556,7 +2551,7 @@ void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, std::vector< ImageXmippT
 	else apply_ctf = true;
 	processOneImage(img(), focus, apply_ctf, Fref,
 			Fwsum_imgs, Fwsum_ctfimgs, Mwsum_sigma2[focus], wsum_sigma_offset,
-			sumw, sumw2, sumwsc2, sumw_mirror, LL, maxcorr, maxweight2, w2, 
+			sumw, sumw2, sumwsc,sumwsc2, sumw_mirror, LL, maxcorr, maxweight2, w2, 
 			opt_scale, opt_refno, opt_psi, opt_ipsi, opt_iflip, opt_offsets,
 			allref_offsets, pdf_directions, 
                         do_kstest, iter==iter_write_histograms, fn_img, KSprob);
@@ -2572,7 +2567,6 @@ void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, std::vector< ImageXmippT
 	if (do_norm)
 	{
 	    imgs_scale[imgno] = opt_scale;
-	    sumscale += opt_scale;
 	}
 
 	// Store optimal translations
@@ -2639,10 +2633,11 @@ void Prog_MLFalign2D_prm::updateParameters(std::vector<Matrix2D<double> > &wsum_
 					   double &wsum_sigma_offset,
 					   std::vector<double> &sumw, 
                                            std::vector<double> &sumw2, 
+                                           std::vector<double> &sumwsc, 
                                            std::vector<double> &sumwsc2, 
 					   std::vector<double> &sumw_mirror,
 					   std::vector<double> &sumw_defocus,
-					   double &sumcorr, double &sumscale, double &sumw_allrefs,
+					   double &sumcorr, double &sumw_allrefs,
 					   Matrix1D<double> &spectral_signal)
 {
 
@@ -2704,6 +2699,19 @@ void Prog_MLFalign2D_prm::updateParameters(std::vector<Matrix2D<double> > &wsum_
         }
     }
 
+    // Adjust average scale of each reference
+    if (do_norm) {
+        average_scale = 0.;
+        FOR_ALL_MODELS()
+        {
+            average_scale += sumwsc[refno];
+            refs_avgscale[refno] = sumwsc[refno]/sumw[refno];
+            Iref[refno]() *= refs_avgscale[refno];
+            Ictf[refno]() *= refs_avgscale[refno];
+        }
+        average_scale /= sumw_allrefs;
+    }
+
     // Average corr
     sumcorr /= sumw_allrefs;
 
@@ -2754,16 +2762,6 @@ void Prog_MLFalign2D_prm::updateParameters(std::vector<Matrix2D<double> > &wsum_
 		}
 	    }
 	}
-    }
-
-    // Adjust average scale 
-    if (do_norm) {
-        average_scale = sumscale / sumw_allrefs;
-        FOR_ALL_MODELS()
-        {
-            Iref[refno]() *= average_scale;
-            Ictf[refno]() *= average_scale;
-        }
     }
 
     // Calculate average spectral signal
@@ -2860,6 +2858,8 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, DocFile &DFo,
     
     }
 
+    if (do_norm) fracline.resize(4);
+
     // Write out current reference images and fill sel & log-file
     FOR_ALL_MODELS()
     {
@@ -2876,6 +2876,7 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, DocFile &DFo,
         fracline(0) = alpha_k[refno];
         fracline(1) = mirror_fraction[refno];
         fracline(2) = 1000 * conv[refno]; // Output 1000x the change for precision
+        if (do_norm) fracline(3) = refs_avgscale[refno];
         DFl.insert_comment(fn_tmp);
         DFl.insert_data_line(fracline);
     }
@@ -2895,7 +2896,10 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, DocFile &DFo,
     comment = " -offset " + floatToString(sigma_offset, 15, 12) + " -istart " + integerToString(iter + 1);
     DFl.insert_comment(comment);
     DFl.insert_comment(cline);
-    DFl.insert_comment("columns: model fraction (1); mirror fraction (2); 1000x signal change (3)");
+    if (do_norm) 
+        DFl.insert_comment("columns: model fraction (1); mirror fraction (2); 1000x signal change (3); avg scale (4)");
+    else
+        DFl.insert_comment("columns: model fraction (1); mirror fraction (2); 1000x signal change (3)");
     fn_tmp = fn_base + ".log";
     DFl.write(fn_tmp);
 

@@ -154,6 +154,10 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
 
     // For improved control of MPI jobs
     fn_control = getParameter(argc2, argv2, "-control", "");
+
+    if (search_shift<999. && do_norm)
+        REPORT_ERROR(1,"Limited translational searches AND normalization not tested yet");
+
 }
 
 // Show ====================================================================
@@ -635,6 +639,11 @@ void Prog_MLalign2D_prm::produce_Side_info2(int nr_vols)
 	    imgs_scale.push_back(1.);
 	}
         average_scale = 1.;
+        refs_avgscale.clear();
+        FOR_ALL_MODELS()
+        {
+            refs_avgscale.push_back(1.);
+        }
     }
 
     // Fill per-image noise models
@@ -1263,7 +1272,8 @@ void Prog_MLalign2D_prm::ML_integrate_locally(
     Matrix2D<double> &Mimg, std::vector <std::vector< Matrix2D<double> > > &Mref,
     std::vector <std::vector< Matrix2D<double> > > &Mwsum_imgs,
     double &wsum_sigma_noise, double &wsum_sigma_offset,
-    std::vector<double> &sumw, std::vector<double> &sumw2, std::vector<double> &sumw_mirror,
+    std::vector<double> &sumw, std::vector<double> &sumw2, 
+    std::vector<double> &sumwsc, std::vector<double> &sumwsc2, std::vector<double> &sumw_mirror,
     double &LL, double &fracweight, double &maxweight2, double &opt_scale,
     double &bgmean, double &per_image_sigma, 
     int &opt_refno, double &opt_psi,
@@ -1281,6 +1291,7 @@ void Prog_MLalign2D_prm::ML_integrate_locally(
     std::vector<std::vector<Matrix2D<double> > > Mimg_trans;
     std::vector<double> refw(n_ref), refw2(n_ref), refw_mirror(n_ref);
     double sigma_noise2, Xi2, aux, fracpdf, A2_plus_Xi2, weight, weight1, weight2;
+    double ref_scale = 1.;
     double wsum_sc = 0. , wsum_sc2 = 0.;
     double maxw, pdf, diff, dfsigma2, mindiff2 = 99.e99;
     double sum, wsum_corr = 0., wsum_mean = 0., sum_refw = 0., sum_refw2 = 0., maxweight = -99.e99;
@@ -1319,7 +1330,8 @@ void Prog_MLalign2D_prm::ML_integrate_locally(
     {
         if (!limit_rot || pdf_directions[refno] > 0.)
         {
-            A2_plus_Xi2 = 0.5 * (opt_scale*opt_scale*A2[refno] + Xi2);
+            if (do_norm) ref_scale = opt_scale / refs_avgscale[refno];
+            A2_plus_Xi2 = 0.5 * (ref_scale*ref_scale*A2[refno] + Xi2);
             FOR_ALL_FLIPS()
             {
                 irefmir = FLOOR(iflip / nr_nomirror_flips) * n_ref + refno;
@@ -1335,7 +1347,7 @@ void Prog_MLalign2D_prm::ML_integrate_locally(
                     diff = A2_plus_Xi2;
                     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Maux)
                     {
-                        diff -= opt_scale * DIRECT_MAT_ELEM(Maux,i,j) *
+                        diff -= ref_scale * DIRECT_MAT_ELEM(Maux,i,j) *
                                 DIRECT_MAT_ELEM(Mtrans,i,j);
                     }
                     dVkij(Mweight, zero_trans, refno, irot) = diff;
@@ -1351,9 +1363,10 @@ void Prog_MLalign2D_prm::ML_integrate_locally(
     // Now that we have mindiff2 calculate the weighting matrices and maxweight
     FOR_ALL_MODELS()
     {
+        if (do_norm) ref_scale = opt_scale / refs_avgscale[refno];
         refw[refno] = 0.;
         refw_mirror[refno] = 0.;
-	A2_plus_Xi2 = 0.5 * (opt_scale*opt_scale*A2[refno] + Xi2);
+	A2_plus_Xi2 = 0.5 * (ref_scale*ref_scale*A2[refno] + Xi2);
         if (!limit_rot || pdf_directions[refno] > 0.)
         {
             FOR_ALL_FLIPS()
@@ -1414,7 +1427,7 @@ void Prog_MLalign2D_prm::ML_integrate_locally(
 		    if (do_norm)
 		    {
 			// weighted sum of Sum_j ( X_ij*A_kj )
-			wsum_sc += weight * (A2_plus_Xi2 - diff) / opt_scale;
+			wsum_sc += weight * (A2_plus_Xi2 - diff) / ref_scale;
 			// weighted sum of Sum_j ( A_kj*A_kj )
 			wsum_sc2 += weight * A2[refno];
 		    }				
@@ -1440,7 +1453,8 @@ void Prog_MLalign2D_prm::ML_integrate_locally(
     {
         if (!limit_rot || pdf_directions[refno] > 0.)
         {
-            A2_plus_Xi2 = 0.5 * (opt_scale*opt_scale*A2[refno] + Xi2);
+            if (do_norm) ref_scale = opt_scale / refs_avgscale[refno];
+            A2_plus_Xi2 = 0.5 * (ref_scale*ref_scale*A2[refno] + Xi2);
             FOR_ALL_FLIPS()
             {
                 irefmir = FLOOR(iflip / nr_nomirror_flips) * n_ref + refno;
@@ -1470,7 +1484,7 @@ void Prog_MLalign2D_prm::ML_integrate_locally(
 				pdf = fracpdf * MAT_ELEM(P_phi, iyy, ixx);
                                 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Maux)
                                 {
-                                    diff -= opt_scale * DIRECT_MAT_ELEM(Maux,i,j) *
+                                    diff -= ref_scale * DIRECT_MAT_ELEM(Maux,i,j) *
                                             DIRECT_MAT_ELEM(Mtrans,i,j);
                                 }
 				if (!do_student)
@@ -1516,7 +1530,7 @@ void Prog_MLalign2D_prm::ML_integrate_locally(
 				if (do_norm)
 				{
 				    // weighted sum of Sum_j ( X_ij*A_kj )
-				    wsum_sc += weight * (A2_plus_Xi2 - diff) / opt_scale;
+				    wsum_sc += weight * (A2_plus_Xi2 - diff) / ref_scale;
 				    // weighted sum of Sum_j ( A_kj*A_kj )
 				    wsum_sc2 += weight * A2[refno];
 				}
@@ -1557,6 +1571,16 @@ void Prog_MLalign2D_prm::ML_integrate_locally(
         {
             sumw[refno] += (refw[refno] + refw_mirror[refno]) / sum_refw;
 	    sumw2[refno] += refw2[refno] / sum_refw;
+            if (do_student)
+            {
+                sumwsc[refno] += refw2[refno] * (opt_scale) / sum_refw;
+                sumwsc2[refno] += refw2[refno] * (opt_scale * opt_scale) / sum_refw;
+            }
+            else
+            {
+                sumwsc[refno] += (refw[refno] + refw_mirror[refno]) * (opt_scale) / sum_refw;
+                sumwsc2[refno] += (refw[refno] + refw_mirror[refno]) * (opt_scale * opt_scale) / sum_refw;
+            }
             sumw_mirror[refno] += refw_mirror[refno] / sum_refw;
             FOR_ALL_FLIPS()
             {
@@ -1680,7 +1704,8 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
     Matrix2D<int> &Msignificant,
     std::vector <std::vector< Matrix2D<std::complex<double> > > > &Fwsum_imgs,
     double &wsum_sigma_noise, double &wsum_sigma_offset,
-    std::vector<double> &sumw, std::vector<double> &sumw2, std::vector<double> &sumwsc2, std::vector<double> &sumw_mirror,
+    std::vector<double> &sumw, std::vector<double> &sumw2, 
+    std::vector<double> &sumwsc, std::vector<double> &sumwsc2, std::vector<double> &sumw_mirror,
     double &LL, double &fracweight, double &maxweight2, double &opt_scale,
     double &bgmean, double &per_image_sigma, 
     int &opt_refno, double &opt_psi, int &iopt_psi, int &iopt_flip, Matrix1D<double> &opt_offsets,
@@ -1697,6 +1722,7 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
     double sigma_noise2, XiA, Xi2, aux, pdf, fracpdf, A2_plus_Xi2, maxw, mind, dfsigma2, mindiff2 = 99.e99;
     double wsum_sc = 0. , wsum_sc2 = 0., wsum_offset = 0., old_bgmean;
     double weight, weight1, weight2, diff, sum, sum2, wsum_corr = 0., sum_refw = 0., sum_refw2 = 0., maxweight = -99.e99;
+    double ref_scale = 1.;
     int irot, irefmir, sigdim, xmax, ymax;
     int ioptx = 0, iopty = 0, imax = 0;
     if (fast_mode) imax = n_ref * nr_flip / nr_nomirror_flips;
@@ -1771,7 +1797,8 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
             Mweight.push_back(dumM);
             if (!limit_rot || pdf_directions[refno] > 0.)
             {
-                A2_plus_Xi2 = 0.5 * (opt_scale*opt_scale*A2[refno] + Xi2);
+                if (do_norm) ref_scale = opt_scale / refs_avgscale[refno];
+                A2_plus_Xi2 = 0.5 * (ref_scale*ref_scale*A2[refno] + Xi2);
                 FOR_ALL_ROTATIONS()
                 {
                     irot = iflip * nr_psi + ipsi;
@@ -1786,7 +1813,7 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
                         Mweight[refno][irot].setXmippOrigin();
                         FOR_ALL_ELEMENTS_IN_MATRIX2D(Mweight[refno][irot])
                         {
-                            MAT_ELEM(Mweight[refno][irot], i, j) = A2_plus_Xi2 - opt_scale* MAT_ELEM(Maux, i, j);
+                            MAT_ELEM(Mweight[refno][irot], i, j) = A2_plus_Xi2 - ref_scale* MAT_ELEM(Maux, i, j);
                         }
                         mind = Mweight[refno][irot].computeMin();
                         if (mind < mindiff2) mindiff2 = mind;
@@ -1805,7 +1832,8 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
     {
         refw[refno] = 0.;
         refw_mirror[refno] = 0.;
-	A2_plus_Xi2 = 0.5 * (opt_scale*opt_scale*A2[refno] + Xi2);
+        if (do_norm) ref_scale = opt_scale / refs_avgscale[refno];
+	A2_plus_Xi2 = 0.5 * (ref_scale*ref_scale*A2[refno] + Xi2);
         if (!limit_rot || pdf_directions[refno] > 0.)
         {
             FOR_ALL_ROTATIONS()
@@ -1864,9 +1892,9 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
 			    if (do_norm)
 			    {
 				// weighted sum of Sum_j ( X_ij*A_kj )
-				wsum_sc += weight * (A2_plus_Xi2 - diff) / opt_scale;
+				wsum_sc += MAT_ELEM(Mweight[refno][irot], i, j) * (A2_plus_Xi2 - diff) / ref_scale;
 				// weighted sum of Sum_j ( A_kj*A_kj )
-				wsum_sc2 += weight * A2[refno];
+				wsum_sc2 += MAT_ELEM(Mweight[refno][irot], i, j) * A2[refno];
 			    }				
 			    // keep track of optimal parameters
 			    if (weight > maxweight)
@@ -1969,9 +1997,15 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
             sumw[refno] += (refw[refno] + refw_mirror[refno]) / sum_refw;
 	    sumw2[refno] += refw2[refno] / sum_refw;
             if (do_student)
+            {
+                sumwsc[refno] += refw2[refno] * (opt_scale) / sum_refw;
                 sumwsc2[refno] += refw2[refno] * (opt_scale * opt_scale) / sum_refw;
+            }
             else
+            {
+                sumwsc[refno] += (refw[refno] + refw_mirror[refno]) * (opt_scale) / sum_refw;
                 sumwsc2[refno] += (refw[refno] + refw_mirror[refno]) * (opt_scale * opt_scale) / sum_refw;
+            }
             sumw_mirror[refno] += refw_mirror[refno] / sum_refw;
             FOR_ALL_ROTATIONS()
             {
@@ -2000,7 +2034,6 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
         }
     }
 
-    // Sjors 16jul07: repaired bug for -save_memC?
     if (save_mem3)
         opt_psi = -iopt_flip * 360. / nr_flip - SMALLANGLE;
     else
@@ -2213,11 +2246,11 @@ void Prog_MLalign2D_prm::maxCC_search_complete(Matrix2D<double> &Mimg,
 
 
 void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, std::vector< ImageXmippT<double> > &Iref, int iter,
-        double &LL, double &sumcorr, double &sumscale, DocFile &DFo,
+        double &LL, double &sumcorr, DocFile &DFo,
         std::vector<Matrix2D<double> > &wsum_Mref,
         double &wsum_sigma_noise, double &wsum_sigma_offset, 
 	std::vector<double> &sumw, std::vector<double> &sumw2, 
-        std::vector<double> &sumwsc2, std::vector<double> &sumw_mirror)
+        std::vector<double> &sumwsc, std::vector<double> &sumwsc2, std::vector<double> &sumw_mirror)
 {
 
     ImageXmipp img;
@@ -2269,6 +2302,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, std::vector< ImageX
     Msum_imgs.clear();
     sumw.clear();
     sumw2.clear();
+    sumwsc.clear();
     sumwsc2.clear();
     sumw_mirror.clear();
     Fdzero.resize(hdim + 1, dim);
@@ -2278,12 +2312,12 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, std::vector< ImageX
     wsum_sigma_noise = 0.;
     wsum_sigma_offset = 0.;
     sumcorr = 0.;
-    sumscale = 0.;
     trans.initZeros();
     FOR_ALL_MODELS()
     {
         sumw.push_back(0.);
         sumw2.push_back(0.);
+        sumwsc.push_back(0.);
         sumwsc2.push_back(0.);
         sumw_mirror.push_back(0.);
         if ((maxCC_rather_than_ML || limit_trans))
@@ -2328,7 +2362,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, std::vector< ImageX
 	if (do_norm)
 	{
             bgmean=imgs_bgmean[imgno];
-	    opt_scale = imgs_scale[imgno] / average_scale;
+	    opt_scale = imgs_scale[imgno];
 	}
         if (do_per_image_noise)
         {
@@ -2382,7 +2416,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, std::vector< ImageX
             //    with limited translational searches
 
             ML_integrate_locally(img(), Mref, Msum_imgs, wsum_sigma_noise, wsum_sigma_offset,
-                                 sumw, sumw2, sumw_mirror, LL, maxcorr, maxweight2, opt_scale,
+                                 sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, LL, maxcorr, maxweight2, opt_scale,
                                  bgmean, per_image_sigma, opt_refno, opt_psi, opt_offsets,
                                  allref_offsets, pdf_directions);
 
@@ -2397,7 +2431,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, std::vector< ImageX
             else Msignificant.initConstant(1);
             ML_integrate_complete(img(), Fref, Msignificant,
                                   Fwsum_imgs, wsum_sigma_noise, wsum_sigma_offset, 
-                                  sumw, sumw2, sumwsc2, sumw_mirror, LL, maxcorr, maxweight2, opt_scale,
+                                  sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, LL, maxcorr, maxweight2, opt_scale,
                                   bgmean, per_image_sigma, opt_refno, opt_psi,
                                   iopt_psi, iopt_flip, opt_offsets, allref_offsets, pdf_directions);
 
@@ -2422,7 +2456,6 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, std::vector< ImageX
 	{
 	    imgs_scale[imgno] = opt_scale;
             imgs_bgmean[imgno]  = bgmean;
-	    sumscale += opt_scale;
 	}
 
         // Store optimal per-image noise parameters
@@ -2488,8 +2521,8 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, std::vector< ImageX
 void Prog_MLalign2D_prm::update_parameters(std::vector<Matrix2D<double> > &wsum_Mref,
         double &wsum_sigma_noise, double &wsum_sigma_offset,
         std::vector<double> &sumw, std::vector<double> &sumw2, 
-        std::vector<double> &sumwsc2, std::vector<double> &sumw_mirror,
-        double &sumcorr, double &sumscale, double &sumw_allrefs)
+        std::vector<double> &sumwsc, std::vector<double> &sumwsc2, std::vector<double> &sumw_mirror,
+        double &sumcorr, double &sumw_allrefs)
 {
 
     Matrix1D<double> rmean_sigma2, rmean_signal2;
@@ -2506,14 +2539,12 @@ void Prog_MLalign2D_prm::update_parameters(std::vector<Matrix2D<double> > &wsum_
     {
         if (!do_student && sumw[refno] > 0.)
         {
-            //std::cerr<<" refno= "<<refno<<" sumw= "<<sumw[refno]<<" sumwsc2= "<<sumwsc2[refno]<<std::endl;
             Iref[refno]() = wsum_Mref[refno];
 	    Iref[refno]() /= sumwsc2[refno];
 	    Iref[refno].set_weight(sumw[refno]);
 	    sumw_allrefs += sumw[refno];
         }
 	else if (do_student && sumw2[refno] > 0.)	{
-//	    std::cerr<<" refno= "<<refno<<" sumw= "<<sumw[refno]<<" sumw2= "<<sumw2[refno]<<std::endl;
 	    Iref[refno]() = wsum_Mref[refno];
 	    Iref[refno]() /= sumwsc2[refno];
 	    Iref[refno].set_weight(sumw2[refno]);
@@ -2525,6 +2556,18 @@ void Prog_MLalign2D_prm::update_parameters(std::vector<Matrix2D<double> > &wsum_
             Iref[refno].set_weight(0.);
             Iref[refno]().initZeros(dim, dim);
         }
+    }
+
+    // Adjust average scale 
+    if (do_norm) {
+        average_scale = 0.;
+        FOR_ALL_MODELS()
+        {
+            average_scale += sumwsc[refno];
+            refs_avgscale[refno] = sumwsc[refno]/sumw[refno];
+            Iref[refno]() *= refs_avgscale[refno];
+        }
+        average_scale /= sumw_allrefs;
     }
 
     // Average corr
@@ -2563,15 +2606,6 @@ void Prog_MLalign2D_prm::update_parameters(std::vector<Matrix2D<double> > &wsum_
 	    sigma_noise = sqrt(wsum_sigma_noise / (sumw_allrefs2 * dim * dim));
 	else
 	    sigma_noise = sqrt(wsum_sigma_noise / (sumw_allrefs * dim * dim));
-    }
-
-    // Adjust average scale 
-    if (do_norm) {
-        average_scale = sumscale / sumw_allrefs;
-        FOR_ALL_MODELS()
-        {
-            Iref[refno]() *= average_scale;
-        }
     }
 
     // Update annealing parameter
@@ -2665,6 +2699,7 @@ void Prog_MLalign2D_prm::write_output_files(const int iter, DocFile &DFo,
     
     }
 
+    if (do_norm) fracline.resize(4);
     // Write out current reference images and fill sel & log-file
     FOR_ALL_MODELS()
     {
@@ -2676,6 +2711,7 @@ void Prog_MLalign2D_prm::write_output_files(const int iter, DocFile &DFo,
         fracline(0) = alpha_k[refno];
         fracline(1) = mirror_fraction[refno];
         fracline(2) = 1000 * conv[refno]; // Output 1000x the change for precision
+        if (do_norm) fracline(3) = refs_avgscale[refno];
         DFl.insert_comment(fn_tmp);
         DFl.insert_data_line(fracline);
     }
@@ -2698,7 +2734,10 @@ void Prog_MLalign2D_prm::write_output_files(const int iter, DocFile &DFo,
     }
     DFl.insert_comment(comment);
     DFl.insert_comment(cline);
-    DFl.insert_comment("columns: model fraction (1); mirror fraction (2); 1000x signal change (3)");
+    if (do_norm) 
+        DFl.insert_comment("columns: model fraction (1); mirror fraction (2); 1000x signal change (3); avg scale (4)");
+    else
+        DFl.insert_comment("columns: model fraction (1); mirror fraction (2); 1000x signal change (3)");
     fn_tmp = fn_base + ".log";
     DFl.write(fn_tmp);
 

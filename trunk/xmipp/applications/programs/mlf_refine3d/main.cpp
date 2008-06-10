@@ -30,11 +30,11 @@ int main(int argc, char **argv)
 
     int                         c, iter, volno, converged = 0, argc2 = 0;
     char                        **argv2=NULL;
-    double                      LL, sumw_allrefs, convv, sumcorr, sumscale, wsum_sigma_noise, wsum_sigma_offset;
+    double                      LL, sumw_allrefs, convv, sumcorr, wsum_sigma_noise, wsum_sigma_offset;
     std::vector<double>              conv;
     std::vector<Matrix2D<double> >   wsum_Mref, wsum_ctfMref;
     std::vector<std::vector<double> >     Mwsum_sigma2;
-    std::vector<double>              sumw, sumw2, sumwsc2, sumw_cv, sumw_mirror, sumw_defocus;
+    std::vector<double>              sumw, sumw2, sumwsc, sumwsc2, sumw_cv, sumw_mirror, sumw_defocus;
     Matrix1D<double>            spectral_signal;
     DocFile                     DFo;
 
@@ -103,16 +103,16 @@ int main(int argc, char **argv)
 
             // Integrate over all images
             ML2D_prm.sumOverAllImages(ML2D_prm.SF, ML2D_prm.Iref, iter,
-				      LL, sumcorr, sumscale, DFo, 
+				      LL, sumcorr, DFo, 
 				      wsum_Mref, wsum_ctfMref,
 				      Mwsum_sigma2, wsum_sigma_offset, 
-				      sumw, sumw2, sumwsc2, sumw_mirror, sumw_defocus);
+				      sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus);
 
             // Update model parameters
             ML2D_prm.updateParameters(wsum_Mref, wsum_ctfMref,
 				      Mwsum_sigma2, wsum_sigma_offset, 
-				      sumw, sumw2, sumwsc2, sumw_mirror, sumw_defocus, 
-				      sumcorr, sumscale, sumw_allrefs,
+				      sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus, 
+				      sumcorr, sumw_allrefs,
 				      spectral_signal);
 
             // Write intermediate output files

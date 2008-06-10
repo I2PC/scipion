@@ -176,7 +176,7 @@ public:
     /** Flag to refine normalization of each experimental image */
     bool do_norm;
     /** Grey-scale correction values */
-    std::vector<double> imgs_scale, imgs_bgmean;
+    std::vector<double> imgs_scale, imgs_bgmean, refs_avgscale;
     /** Overall average scale (to be forced to one)*/
     double average_scale;
 
@@ -265,7 +265,8 @@ public:
                               std::vector <std::vector< Matrix2D<double> > > &Mref,
                               std::vector <std::vector< Matrix2D<double> > > &Mwsum_imgs,
                               double &wsum_sigma_noise, double &wsum_sigma_offset,
-                              std::vector<double> &sumw, std::vector<double> &sumw2, std::vector<double> &sumw_mirror,
+                              std::vector<double> &sumw, std::vector<double> &sumw2, 
+                              std::vector<double> &sumwsc, std::vector<double> &sumwsc2, std::vector<double> &sumw_mirror,
                               double &LL, double &fracweight, double &maxweight2, double &opt_scale,
                               double &per_image_mean, double &per_image_sigma,
                               int &opt_refno, double &opt_psi,
@@ -280,7 +281,7 @@ public:
                                std::vector <std::vector< Matrix2D<std::complex<double> > > > &Fwsum_imgs,
                                double &wsum_sigma_noise, double &wsum_sigma_offset,
                                std::vector<double> &sumw, std::vector<double> &sumw2,
-                               std::vector<double> &sumwsc2, std::vector<double> &sumw_mirror,
+                               std::vector<double> &sumwsc, std::vector<double> &sumwsc2, std::vector<double> &sumw_mirror,
                                double &LL, double &fracweight, double &maxweight2, double &opt_scale, 
                                double &per_image_mean, double &per_image_sigma,
                                int &opt_refno, double &opt_psi, int &iopt_psi, int &iopt_flip, 
@@ -307,18 +308,18 @@ public:
 
     /// Integrate over all experimental images
     void ML_sum_over_all_images(SelFile &SF, std::vector< ImageXmippT<double> > &Iref, int iter,
-                                double &LL, double &sumcorr, double &sumscale, DocFile &DFo,
+                                double &LL, double &sumcorr, DocFile &DFo,
                                 std::vector<Matrix2D<double> > &wsum_Mref,
                                 double &wsum_sigma_noise, double &wsum_sigma_offset,
                                 std::vector<double> &sumw, std::vector<double> &sum2, 
-                                std::vector<double> &sumwsc2, std::vector<double> &sumw_mirror);
+                                std::vector<double> &sumwsc, std::vector<double> &sumwsc2, std::vector<double> &sumw_mirror);
 
     /// Update all model parameters
     void update_parameters(std::vector<Matrix2D<double> > &wsum_Mref,
                            double &wsum_sigma_noise, double &wsum_sigma_offset, 
 			   std::vector<double> &sumw, std::vector<double> &sumw2, 
-                           std::vector<double> &sumwsc2, std::vector<double> &sumw_mirror,
-                           double &sumcorr, double &sumscale, double &sumw_allrefs);
+                           std::vector<double> &sumwsc, std::vector<double> &sumwsc2, std::vector<double> &sumw_mirror,
+                           double &sumcorr, double &sumw_allrefs);
 
     /// check convergence
     bool check_convergence(std::vector<double> &conv);

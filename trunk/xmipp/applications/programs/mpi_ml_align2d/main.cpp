@@ -32,11 +32,11 @@ int main(int argc, char **argv)
     Prog_MLalign2D_prm prm;
 
     int c, nn, imgno, opt_refno, iaux;
-    double LL, sumw_allrefs, convv, sumcorr, sumscale;
+    double LL, sumw_allrefs, convv, sumcorr;
     std::vector<double> conv;
     double aux, wsum_sigma_noise, wsum_sigma_offset;
     std::vector<Matrix2D<double > > wsum_Mref;
-    std::vector<double> sumw, sumw2, sumwsc2, sumw_mirror;
+    std::vector<double> sumw, sumw2, sumwsc, sumwsc2, sumw_mirror;
     Matrix2D<double> P_phi, Mr2, Maux, Maux2;
     FileName fn_img, fn_tmp;
     Matrix1D<double> oneline(0);
@@ -138,17 +138,15 @@ int main(int argc, char **argv)
 
             // Integrate over all images
             prm.ML_sum_over_all_images(prm.SF, prm.Iref, iter,
-                                       LL, sumcorr, sumscale, DFo, wsum_Mref,
+                                       LL, sumcorr, DFo, wsum_Mref,
                                        wsum_sigma_noise, wsum_sigma_offset, 
-				       sumw,  sumw2, sumwsc2, sumw_mirror);
+				       sumw,  sumw2, sumwsc, sumwsc2, sumw_mirror);
 
             // Here MPI_allreduce of all wsums,LL and sumcorr !!!
             MPI_Allreduce(&LL, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             LL = aux;
             MPI_Allreduce(&sumcorr, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             sumcorr = aux;
-            MPI_Allreduce(&sumscale, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-            sumscale = aux;
             MPI_Allreduce(&wsum_sigma_noise, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             wsum_sigma_noise = aux;
             MPI_Allreduce(&wsum_sigma_offset, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -164,6 +162,8 @@ int main(int argc, char **argv)
                 sumw_mirror[refno] = aux;
                 MPI_Allreduce(&sumw2[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 sumw2[refno] = aux;
+                MPI_Allreduce(&sumwsc[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                sumwsc[refno] = aux;
                 MPI_Allreduce(&sumwsc2[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 sumwsc2[refno] = aux;
             }
@@ -171,8 +171,8 @@ int main(int argc, char **argv)
             // Update model parameters
             prm.update_parameters(wsum_Mref, 
                                   wsum_sigma_noise, wsum_sigma_offset, 
-				  sumw, sumw2, sumwsc2, sumw_mirror, 
-				  sumcorr, sumscale, sumw_allrefs);
+				  sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, 
+				  sumcorr, sumw_allrefs);
 
             // Check convergence
             converged = prm.check_convergence(conv);
