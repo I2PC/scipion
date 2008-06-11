@@ -84,10 +84,9 @@ x=XmippData.intP()
 v.maxIndex(x)
 x.value()
 
-vsplines=XmippData.Matrix1D()
-# COSS
-# v.produceSplineCoefficients(vsplines)
-# v.interpolatedElementBSpline(0.5)
+vsplines=XmippData.Matrix1Dd()
+v.produceSplineCoefficients(vsplines)
+v.interpolatedElementBSpline(0.5)
 
 v2d=XmippData.vectorR2(1,2)
 print v2d
