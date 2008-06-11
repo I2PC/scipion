@@ -633,8 +633,9 @@ void Micrograph::move_last_coord_to(int x, int y)
 }
 
 /* Downsample -------------------------------------------------------------- */
-void downsample(const Micrograph &M, int Xstep, int Ystep,
-                const Matrix2D<double> &kernel, Micrograph &Mp)
+void downsample(const Micrograph &M/*input*/, int Xstep, int Ystep,
+                const Matrix2D<double> &kernel, Micrograph &Mp/*output*/,
+                bool do_fourier)
 {
     // Find first and last indexes in each direction
     // it is assumed that (0,0) is within the kernel
@@ -654,104 +655,231 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
     double a = 1;
     double b = 0;
     double scale = 1;
-
-    if (Mp.depth() != 32)
+    if(do_fourier)
     {
-        double imin, imax;
-        double omin, omax;
-        bool ifirst = true, ofirst = true;
+        std::cerr << "Creating Fourier Transform ...\n";
+        //create fourier object (Input)
+        //image dimension
+        int fNdim = 2;
+        int * fN ;
+        fN = new int[fNdim];
+        //image size
+        fN[0] = Ydim;//Xdim;transpose
+        fN[1] = Xdim;//Ydim;
 
-        if (M.depth() != 32)
-            scale = (pow(2.0, Mp.depth()) - 1.0) / (pow(2.0, M.depth()) - 1.0);
-        else if (M.depth() == 32)
-            scale = 1;
+        //get access to output image 1D array
+        //init fourier transform object
+        bool inplace=false;
+        xmippFftw      M_fft(fNdim, // transform dimension 
+                             fN, // size of each dimension
+                             inplace, //inplace transformation (only for 1D)
+                             NULL); // if NULL fftw will alloc input 
+                                    // and output memory
+        //create plan (fftw stuff)
+        M_fft.Init("ES",FFTW_FORWARD,false);
+        //copy data
+        for(int i=0;i<Ydim;i++)
+            for(int j=0;j<Xdim;j++)
+                {                               //x,y
+                M_fft.fIn[j + Xdim * i]=(double)M(j,i) / M_fft.fTotalSize;//x,y
+                }
+//#define DEBUG                
+#ifdef DEBUG
+{
+ImageXmipp img(Ydim,Xdim);                
+double * img_ptr;
+img_ptr=MULTIDIM_ARRAY(img());
+for (int i=0;i<Ydim;i++)
+    for (int j=0;j<Xdim;j++)
+       {
+       DIRECT_MAT_ELEM(img(),i,j) = M_fft.fIn[j + Xdim * i];
+       }
+img.write("kk.xmp");
+}
+#endif
+#undef DEBUG
+        //do the forward transform.
+        M_fft.Transform();
+        //create fourier object (Output)
+        //image size
+        fN[0] = Ypdim;//Xdim;
+        fN[1] = Xpdim;//Ydim;
+        std::cerr << "Inverting Fourier Transform ...\n";
 
+        //get access to output image 1D array
+        //init fourier transform object
+        xmippFftw      Mp_fft(fNdim, // transform dimension 
+                             fN, // size of each dimensio
+                             inplace, //inplace transformation (only for 1D)
+                             NULL); // if NULL fftw will alloc input 
+                                    // and output memory
+        //copy out fourier transform a windowed transform
+        int xsizeM = Ydim;
+        int ysizeM = (int) Xdim/2 +1;
+        int xsizeMp = Ypdim;
+        int ysizeMp = (int) Xpdim/2 +1;
+        complex<double> * cMfOut, * cMpfIn;
+        cMfOut =  (complex<double> *) M_fft.fOut; //fOut is double *
+        cMpfIn  = (complex<double> *) Mp_fft.fIn;  //fIn is double *
+
+        for (int j=0;j<xsizeMp/2;j++)
+            for (int i=0;i<ysizeMp;i++)
+            {
+                cMpfIn[(j*ysizeMp+i)] = cMfOut[(j*ysizeM+i)];//*(complex<double>)(+1,0);
+            }
+        for (int j=xsizeMp-1,jj=xsizeM-1;j>=xsizeMp/2;j--,jj--)
+            for (int i=0;i<ysizeMp;i++)
+            {
+                cMpfIn[(j*ysizeMp+i)] = (cMfOut[(jj*ysizeM+i)]);//*(complex<double>)(+1,0);
+            }
+
+        //create plan (fftw stuff)
+        Mp_fft.Init("ES",FFTW_BACKWARD,false);
+        //transform data
+        Mp_fft.Transform();
+//#define DEBUG                
+#ifdef DEBUG
+{
+ImageXmipp img(Ypdim,Xpdim);                
+double * img_ptr;
+img_ptr=MULTIDIM_ARRAY(img());
+for (int i=0;i<Ypdim;i++)
+    for (int j=0;j<Xpdim;j++)
+       {
+       DIRECT_MAT_ELEM(img(),i,j) = Mp_fft.fOut[j + Xpdim * i];
+       }
+img.write("kk2.xmp");
+}
+#endif
+#undef DEBUG
+        //find minimun and range in output data
+        double omax,omin;
+        omax=omin=Mp_fft.fOut[0];
+        for (int i=0; i<xsizeMp*ysizeMp; i++)
+        {
+            pixval=Mp_fft.fOut[i];
+            omin = XMIPP_MIN(omin, pixval);
+            omax = XMIPP_MAX(omax, pixval);
+        }
+        double orange = omax - omin;
+        a = (pow(2.0, Mp.depth()) - 1.0) / orange;
+        scale = 1;
+        b = -omin;
+
+        
+        //copy back data
+        for(int i=0;i<Ypdim;i++)
+            for(int j=0;j<Xpdim;j++)
+            {
+                pixval=Mp_fft.fOut[j + Xpdim * i];//there is a scale factor!!!!
+                              //x,y
+                if (Mp.depth() != 32)
+                    Mp.set_val(j, i, FLOOR(a*(pixval*scale + b)));
+                 else
+                    Mp.set_val(j, i, pixval);
+            }
+        
+    }
+    else
+    {
+        if (Mp.depth() != 32)
+        {
+            double imin, imax;
+            double omin, omax;
+            bool ifirst = true, ofirst = true;
+
+            if (M.depth() != 32)
+                scale = (pow(2.0, Mp.depth()) - 1.0) / (pow(2.0, M.depth()) - 1.0);
+            else if (M.depth() == 32)
+                scale = 1;
+            if(do_fourier)
+            init_progress_bar(yF / Ystep);
+            for (ii = 0, y = y0; y < yF; y += Ystep, ii++)
+            {
+                for (jj = 0, x = x0; x < xF; x += Xstep, jj++)
+                {
+                    pixval = 0;
+                    FOR_ALL_ELEMENTS_IN_MATRIX2D(kernel)
+                    {
+                        int j2 = intWRAP(j + x, 0, xF - 1);
+                        int i2 = intWRAP(i + y, 0, yF - 1);
+                        if (ifirst)
+                        {
+                            imin = imax = M(j2, i2);
+                            ifirst = false;
+                        }
+                        else
+                        {
+                            imin = XMIPP_MIN(imin, M(j2, i2));
+                            imax = XMIPP_MAX(imax, M(j2, i2));
+                        }
+                        pixval += kernel(i, j) * M(j2, i2);
+                    }
+                    pixval *= scale;
+                    if (ii < Ypdim && jj < Xpdim)
+                    {
+                        if (ofirst)
+                        {
+                            omin = omax = pixval;
+                            ofirst = false;
+                        }
+                        else
+                        {
+                            omin = XMIPP_MIN(omin, pixval);
+                            omax = XMIPP_MAX(omax, pixval);
+                        }
+                    }
+                }
+                if (ii % 50 == 0)
+                    progress_bar(ii);
+            }
+            progress_bar(yF / Ystep);
+
+            // Compute range transformation
+            double irange = imax - imin;
+            double orange = omax - omin;
+
+            if (M.depth() != 32)
+            {
+                a = scale * irange / orange;
+                b = -omin;
+            }
+            else
+            {
+                a = (pow(2.0, Mp.depth()) - 1.0) / orange;
+                scale = 1;
+                b = -omin;
+            }
+        }
+
+        // Really downsample
         init_progress_bar(yF / Ystep);
         for (ii = 0, y = y0; y < yF; y += Ystep, ii++)
         {
             for (jj = 0, x = x0; x < xF; x += Xstep, jj++)
             {
                 pixval = 0;
-                FOR_ALL_ELEMENTS_IN_MATRIX2D(kernel)
+                for (int i=STARTINGY(kernel); i<=FINISHINGY(kernel); i++)
                 {
-                    int j2 = intWRAP(j + x, 0, xF - 1);
                     int i2 = intWRAP(i + y, 0, yF - 1);
-                    if (ifirst)
+                    for (int j=STARTINGX(kernel); j<=FINISHINGX(kernel); j++)
                     {
-                        imin = imax = M(j2, i2);
-                        ifirst = false;
+                        int j2 = intWRAP(j + x, 0, xF - 1);
+                        pixval += kernel(i, j) * M(j2, i2);
                     }
-                    else
-                    {
-                        imin = XMIPP_MIN(imin, M(j2, i2));
-                        imax = XMIPP_MAX(imax, M(j2, i2));
-                    }
-                    pixval += kernel(i, j) * M(j2, i2);
                 }
-                pixval *= scale;
+
                 if (ii < Ypdim && jj < Xpdim)
-                {
-                    if (ofirst)
-                    {
-                        omin = omax = pixval;
-                        ofirst = false;
-                    }
+                    if (Mp.depth() != 32)
+                        Mp.set_val(jj, ii, FLOOR(a*(pixval*scale + b)));
                     else
-                    {
-                        omin = XMIPP_MIN(omin, pixval);
-                        omax = XMIPP_MAX(omax, pixval);
-                    }
-                }
+                        Mp.set_val(jj, ii, pixval);
             }
             if (ii % 50 == 0)
                 progress_bar(ii);
         }
         progress_bar(yF / Ystep);
-
-        // Compute range transformation
-        double irange = imax - imin;
-        double orange = omax - omin;
-
-        if (M.depth() != 32)
-        {
-            a = scale * irange / orange;
-            b = -omin;
-        }
-        else
-        {
-            a = (pow(2.0, Mp.depth()) - 1.0) / orange;
-            scale = 1;
-            b = -omin;
-        }
-    }
-
-    // Really downsample
-    init_progress_bar(yF / Ystep);
-    for (ii = 0, y = y0; y < yF; y += Ystep, ii++)
-    {
-        for (jj = 0, x = x0; x < xF; x += Xstep, jj++)
-        {
-            pixval = 0;
-            for (int i=STARTINGY(kernel); i<=FINISHINGY(kernel); i++)
-            {
-                int i2 = intWRAP(i + y, 0, yF - 1);
-                for (int j=STARTINGX(kernel); j<=FINISHINGX(kernel); j++)
-                {
-                    int j2 = intWRAP(j + x, 0, xF - 1);
-                    pixval += kernel(i, j) * M(j2, i2);
-                }
-            }
-
-            if (ii < Ypdim && jj < Xpdim)
-                if (Mp.depth() != 32)
-                    Mp.set_val(jj, ii, FLOOR(a*(pixval*scale + b)));
-                else
-                    Mp.set_val(jj, ii, pixval);
-        }
-        if (ii % 50 == 0)
-            progress_bar(ii);
-    }
-    progress_bar(yF / Ystep);
+    }//no_fourier    
 }
 
 /* Normalizations ---------------------------------------------------------- */
