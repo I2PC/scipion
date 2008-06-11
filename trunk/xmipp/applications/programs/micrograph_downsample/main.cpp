@@ -51,7 +51,9 @@ int main(int argc, char **argv)
 
     try
     {
-        prm.generate_kernel();
+    
+        if(!prm.do_fourier)
+           prm.generate_kernel();
         prm.open_input_micrograph();
         prm.create_empty_output_file();
         if (smooth)
