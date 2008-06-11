@@ -34,6 +34,7 @@
 #include "funcs.h"
 #include "image.h"
 #include "matrix2d.h"
+#include "fftw.h"
 
 /* ************************************************************************* */
 /* FORWARD DEFINITIONS                                                       */
@@ -543,7 +544,7 @@ public:
     different bit size, then the range is scaled by the bit difference, ie,
     if the input ranges 0-255, the output will range between 0 and 65535 */
 void downsample(const Micrograph &M, int Xstep, int Ystep,
-                const Matrix2D<double> &kernel, Micrograph &Mp);
+                const Matrix2D<double> &kernel, Micrograph &Mp,bool do_fourier=false);
 //@}
 
 /**@defgroup Normalization Image normalization
