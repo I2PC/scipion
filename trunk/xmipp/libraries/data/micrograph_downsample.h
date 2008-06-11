@@ -46,6 +46,8 @@ public:
     int      Xstep;
     /// Ystep
     int      Ystep;
+    /// Scale. Alternative way to give output dimensions.
+    double scale;
 
 #define KER_RECTANGLE  0
 #define KER_CIRCLE     1
@@ -69,6 +71,9 @@ public:
 
     /// Deltaw
     double   Deltaw;
+    
+    /// fourier interpolation
+    bool do_fourier;
 
     /// Rectangular X size
     int      Xrect;
@@ -98,10 +103,10 @@ public:
 
     /// Usage
     void usage() const;
-
+#ifdef NEVERDEFINED
     /// Produce command line parameters
     std::string command_line() const;
-
+#endif
     /// Generate kernel
     void generate_kernel();
 
