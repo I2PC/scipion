@@ -71,7 +71,7 @@ void QtWidgetPSD::set_assign_CTF_file(Micrograph &m,
                 fn_avg = fn_root + "_ARMAavg.ctfmodel_halfplane";
             else fn_avg = fn_root + "_Periodogramavg.ctfmodel_halfplane";
         }
-        system(((std::string)"xmipp_do_selfile " + fn_avg + " > " + fn_random).c_str());
+        system(((std::string)"xmipp_selfile_create " + fn_avg + " > " + fn_random).c_str());
         div_NumberX = div_NumberY = 1;
     }
     else
@@ -83,9 +83,9 @@ void QtWidgetPSD::set_assign_CTF_file(Micrograph &m,
         else PSDfn_root = fn_root + "_Periodogram";
         std::string command;
         if (!ctf_mode)
-            command = (std::string)"xmipp_do_selfile \"" + PSDfn_root + "?????.psd\" > " + fn_random;
+            command = (std::string)"xmipp_selfile_create \"" + PSDfn_root + "?????.psd\" > " + fn_random;
         else
-            command = (std::string)"xmipp_do_selfile \"" + PSDfn_root + "?????.ctfmodel_halfplane\" > " + fn_random;
+            command = (std::string)"xmipp_selfile_create \"" + PSDfn_root + "?????.ctfmodel_halfplane\" > " + fn_random;
         system(command.c_str());
 
         int Ydim, Xdim;
@@ -93,7 +93,7 @@ void QtWidgetPSD::set_assign_CTF_file(Micrograph &m,
         div_NumberX = CEIL((double)Xdim / assign_ctf_prm.N_horizontal);
         div_NumberY = CEIL((double)Ydim / assign_ctf_prm.N_vertical);
     }
-
+    
     // Show the selfile
     ShowSel *showsel = new ShowSel;
     showsel->apply_geo = false;
