@@ -37,7 +37,7 @@ int main(int argc, char **argv)
     std::vector<Matrix2D<double> >   wsum_Mref, wsum_ctfMref;
     std::vector<std::vector<double> >     Mwsum_sigma2;
     std::vector<double>              sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus;
-    Matrix1D<double>            spectral_signal;
+    Matrix1D<double>            spectral_signal, Vaux;
     DocFile                     DFo;
 
     // For parallelization
@@ -166,6 +166,14 @@ int main(int argc, char **argv)
             sumcorr = aux;
             MPI_Allreduce(&wsum_sigma_offset, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             wsum_sigma_offset = aux;
+            if (ML2D_prm.do_kstest)
+            {
+                Vaux.resize(ML2D_prm.sumhist);
+                MPI_Allreduce(MULTIDIM_ARRAY(ML2D_prm.sumhist), MULTIDIM_ARRAY(Vaux),
+                              MULTIDIM_SIZE(ML2D_prm.sumhist), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Vaux)
+                    DIRECT_MULTIDIM_ELEM(ML2D_prm.sumhist, n) = DIRECT_MULTIDIM_ELEM(Vaux, n);
+            }
 	    for (int ifocus = 0; ifocus < ML2D_prm.nr_focus; ifocus++)
 	    {
 		for (int ii = 0; ii <  Mwsum_sigma2[ifocus].size(); ii++)

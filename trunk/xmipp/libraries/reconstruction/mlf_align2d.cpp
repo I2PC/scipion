@@ -271,6 +271,8 @@ void Prog_MLFalign2D_prm::show(bool ML3D)
         if (do_kstest)
         {
             std::cerr << "  -> Developmental: perform KS-test on noise distributions "<<std::endl;
+            if (iter_write_histograms >0.)
+                std::cerr << "  -> Developmental: write noise histograms at iteration "<<iter_write_histograms<<std::endl;
         }
 	std::cerr << " -----------------------------------------------------------------" << std::endl;
 
@@ -1793,19 +1795,12 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
     sigma2.clear();
     ctf.clear();
     decctf.clear();
-    int * tmp_res;
-    double * tmp_sig, * tmp_dec, * tmp_ctf;
-    tmp_res = MULTIDIM_ARRAY(Mresol_int);
-    tmp_sig = MULTIDIM_ARRAY(Vsig[focus]);
-    tmp_ctf = MULTIDIM_ARRAY(Vctf[focus]);
-    tmp_dec = MULTIDIM_ARRAY(Vdec[focus]);
     for (int ipoint = 0; ipoint < nr_points_2d; ipoint++)
     {
-	int ii = pointer_2d[ipoint];
-	int ires = tmp_res[ii];
-	sigma2.push_back(2.* tmp_sig[ires]);
-	decctf.push_back(tmp_dec[ires]);
-	ctf.push_back(tmp_ctf[ires]);
+	int ires = DIRECT_MULTIDIM_ELEM(Mresol_int,pointer_2d[ipoint]);
+	sigma2.push_back(2.* DIRECT_MULTIDIM_ELEM(Vsig[focus],ires));
+	decctf.push_back(DIRECT_MULTIDIM_ELEM(Vdec[focus],ires));
+	ctf.push_back(DIRECT_MULTIDIM_ELEM(Vctf[focus],ires));
     }
     if (!apply_ctf)
     {
@@ -2181,9 +2176,12 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
     opt_psi = -psi_step * (opt_iflip * nr_psi + opt_ipsi) - SMALLANGLE;
 
     // Perform KS-test on difference image of optimal hidden parameters
+    // And calculate noise distribution histograms
     if (do_kstest)
     {
         Matrix1D<double> diff(2*nr_points_prob);
+        std::vector<std::vector<double> > res_diff;
+        res_diff.resize(hdim);
         if (opt_iflip < nr_nomirror_flips) 
             point_trans = MAT_ELEM(Moffsets, (int)opt_offsets(1), (int)opt_offsets(0));
         else
@@ -2194,21 +2192,24 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
         if (do_norm) ref_scale = opt_scale / refs_avgscale[opt_refno];
         for (int ii = 0; ii < nr_points_prob; ii++)
         {
-            int ires = tmp_res[ii];
             if (do_ctf_correction)
             {
                 dVi(diff,2*ii) = (Fimg_trans[img_start + 2*ii] - 
-                                  ctf[ii] * ref_scale * Fref[ref_start + 2*ii]) / sqrt(tmp_sig[ires]);
+                                  ctf[ii] * ref_scale * Fref[ref_start + 2*ii]) / sqrt(0.5*sigma2[ii]);
                 dVi(diff,2*ii+1) = (Fimg_trans[img_start + 2*ii+1] - 
-                                ctf[ii] * ref_scale * Fref[ref_start + 2*ii+1]) / sqrt(tmp_sig[ires]);
+                                ctf[ii] * ref_scale * Fref[ref_start + 2*ii+1]) / sqrt(0.5*sigma2[ii]);
             }
             else
             {
                 dVi(diff,2*ii) = (Fimg_trans[img_start + 2*ii] - 
-                                  ref_scale * Fref[ref_start + 2*ii]) / sqrt(tmp_sig[ires]);
+                                  ref_scale * Fref[ref_start + 2*ii]) / sqrt(0.5*sigma2[ii]);
                 dVi(diff,2*ii+1) = (Fimg_trans[img_start + 2*ii+1] - 
-                                  ref_scale * Fref[ref_start + 2*ii+1]) / sqrt(tmp_sig[ires]);
+                                  ref_scale * Fref[ref_start + 2*ii+1]) / sqrt(0.5*sigma2[ii]);
             }
+            // Fill vectors for resolution-depedent histograms
+            int ires = DIRECT_MULTIDIM_ELEM(Mresol_int, pointer_2d[ii]);
+            res_diff[ires].push_back(dVi(diff,2*ii));
+            res_diff[ires].push_back(dVi(diff,2*ii+1));
         }
 
         double * aux_array = MULTIDIM_ARRAY(diff) - 1;
@@ -2220,27 +2221,46 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
             else if (df==6)
                 ksone(aux_array, 2*nr_points_prob, &lcdf_tstudent_mlf6, &KSD, &KSprob);
             else
-                REPORT_ERROR(1,"KS-test for t-distribution only implemented for df=3 r df=6!");
+                REPORT_ERROR(1,"KS-test for t-distribution only implemented for df=3 or df=6!");
         }
         else
         {
             ksone(aux_array, 2*nr_points_prob, &cdf_gauss, &KSD, &KSprob);
         }
 
+        // Compute resolution-dependent histograms
+        for (int ires = 0; ires < hdim; ires++)
+        {
+            if (res_diff[ires].size()>0)
+            {
+                if (resolhist.size() < ires+1) resolhist.resize(ires+1);
+                if (resolhist[ires].sampleNo()==0) 
+                    resolhist[ires].init(HISTMIN, HISTMAX, HISTSTEPS);
+                for (int j=0; j<res_diff[ires].size(); j++)
+                    resolhist[ires].insert_value(res_diff[ires][j]);
+            }
+        }
+
+        // Overall average histogram
+        if (sumhist.sampleNo()==0) 
+            sumhist.init(HISTMIN, HISTMAX, HISTSTEPS);
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(diff)
+            sumhist.insert_value(DIRECT_MULTIDIM_ELEM(diff, n));
+
         if (write_histograms)
         {
             histogram1D     hist;
-            double val;
+            double          val;
+            hist.init(HISTMIN, HISTMAX, HISTSTEPS);
+            compute_hist(diff,hist,HISTMIN, HISTMAX, HISTSTEPS);
             FileName fn_hist = fn_img + ".hist";
             std::ofstream fh_hist;
-            
             fh_hist.open((fn_hist).c_str(), std::ios::out);
             if (!fh_hist) REPORT_ERROR(1, (std::string)"Cannot write histogram file "+ fn_hist);
-            compute_hist(diff, hist, -6., 6., 120);
-            hist /= (hist.sum()*hist.step_size);
             FOR_ALL_ELEMENTS_IN_MATRIX1D(hist)
             {
                 hist.index2val(i, val);
+                val += 0.5*hist.step_size;
                 fh_hist << val<<" "<<VEC_ELEM(hist, i)<<" ";
                 if (do_student)
                     fh_hist << tstudent1D(val, df, 1., 0.)<<"\n";
@@ -2252,13 +2272,13 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 
      }
 
+    if (debug==1) {std::cout<<"processOneImage 3 "; print_elapsed_time(t0); annotate_time(&t0);}
+
     // Update opt_scale
     if (do_norm)
     {
 	opt_scale = wsum_sc / wsum_sc2;
     }
-
-    if (debug==1) {std::cout<<"processOneImage 3 "; print_elapsed_time(t0); annotate_time(&t0);}
 
     // Acummulate all weighted sums
     // and normalize them by sum_refw, such that sum over all weights is one!
@@ -2902,6 +2922,53 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, DocFile &DFo,
         DFl.insert_comment("columns: model fraction (1); mirror fraction (2); 1000x signal change (3)");
     fn_tmp = fn_base + ".log";
     DFl.write(fn_tmp);
+
+    // Write out average and resolution-dependent histograms
+    if (do_kstest)
+    {
+      double          val;
+      std::ofstream fh_hist;
+
+      fn_tmp = fn_base + "_avg.hist";  
+      fh_hist.open((fn_tmp).c_str(), std::ios::out);
+      if (!fh_hist) REPORT_ERROR(1, (std::string)"Cannot write histogram file "+ fn_tmp);
+      sumhist /= (sumhist.sum()*sumhist.step_size);
+      FOR_ALL_ELEMENTS_IN_MATRIX1D(sumhist)
+      {
+          sumhist.index2val(i, val);
+          val += 0.5*sumhist.step_size;
+          fh_hist << val<<" "<<VEC_ELEM(sumhist, i)<<" ";
+          if (do_student)
+              fh_hist << tstudent1D(val, df, 1., 0.)<<"\n";
+          else
+              fh_hist << gaussian1D(val, 1., 0.)<<"\n";
+      }
+      fh_hist.close();
+
+      fn_tmp = fn_base + "_resol.hist";  
+      fh_hist.open((fn_tmp).c_str(), std::ios::out);
+      if (!fh_hist) REPORT_ERROR(1, (std::string)"Cannot write histogram file "+ fn_tmp);
+      FOR_ALL_ELEMENTS_IN_MATRIX1D(sumhist)
+      {
+          sumhist.index2val(i, val);
+          val += 0.5*sumhist.step_size;
+          fh_hist << val<<" ";
+          if (do_student)
+              fh_hist << tstudent1D(val, df, 1., 0.)<<" ";
+          else
+              fh_hist << gaussian1D(val, 1., 0.)<<" ";
+          for (int ires = 0; ires < hdim -1; ires++)
+          {
+              if (resolhist[ires].sampleNo() > 0)
+              {
+                  fh_hist <<VEC_ELEM(resolhist[ires], i)/(resolhist[ires].sum()*resolhist[ires].step_size)<<" "; 
+              }
+          }
+          fh_hist <<"\n";
+      }
+      fh_hist.close();
+
+    }
 
     if (write_docfile)
     {

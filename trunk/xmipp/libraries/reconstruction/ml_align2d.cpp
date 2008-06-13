@@ -2077,7 +2077,7 @@ double Prog_MLalign2D_prm::performKSTest(Matrix2D<double> &Mimg, FileName &fn_im
 {
     Matrix2D<double> MMimg = Mimg, Mref, Mdiff(Mimg);
     Matrix2D<std::complex<double> > FFref = Fref[opt_refno][iopt_psi];
-    double sigma = sigma_noise;
+    double ref_scale = 1., sigma = sigma_noise;
 
     if (do_per_image_noise)
     {
@@ -2089,10 +2089,11 @@ double Prog_MLalign2D_prm::performKSTest(Matrix2D<double> &Mimg, FileName &fn_im
     }
     MMimg.selfTranslate(opt_offsets, true);
     MMimg.selfApplyGeometry(F[iopt_flip], IS_INV, WRAP);
+    if (do_norm) ref_scale = opt_scale/refs_avgscale[opt_refno];
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(FFref)
     {
         dMij(FFref,i,j) = conj(dMij(FFref,i,j));
-        dMij(FFref,i,j) *= opt_scale/dim2;
+        dMij(FFref,i,j) *= ref_scale/dim2;
     }
     InverseFourierTransformHalf(FFref, Mref, dim);
     Mdiff = MMimg - Mref;
@@ -2100,20 +2101,28 @@ double Prog_MLalign2D_prm::performKSTest(Matrix2D<double> &Mimg, FileName &fn_im
     double * aux_array = MULTIDIM_ARRAY(Mdiff) - 1;
     double KSD=0., KSprob=0.;
 
+    histogram1D     hist;
+    double val;
+    FileName fn_hist = fn_img + ".hist";
+    std::ofstream fh_hist;
+
+    compute_hist(Mdiff, hist, -6., 6., 120);
+    hist /= (hist.sum()*hist.step_size);
+    if (XSIZE(sumhist) == 0)
+        sumhist.resize(120);
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(sumhist)
+    {
+        VEC_ELEM(sumhist,i) += VEC_ELEM(hist, i);
+    }
+        
     if (write_histogram)
     {
-        histogram1D     hist;
-        double val;
-        FileName fn_hist = fn_img + ".hist";
-        std::ofstream fh_hist;
-
         fh_hist.open((fn_hist).c_str(), std::ios::out);
         if (!fh_hist) REPORT_ERROR(1, (std::string)"Cannot write histogram file "+ fn_hist);
-        compute_hist(Mdiff, hist, -6., 6., 120);
-        hist /= (hist.sum()*hist.step_size);
         FOR_ALL_ELEMENTS_IN_MATRIX1D(hist)
         {
             hist.index2val(i, val);
+            val += 0.5*hist.step_size;
             fh_hist << val<<" "<<VEC_ELEM(hist, i)<<" ";
             if (do_student)
                 fh_hist << tstudent1D(val, df, 1., 0.)<<"\n";
@@ -2124,7 +2133,6 @@ double Prog_MLalign2D_prm::performKSTest(Matrix2D<double> &Mimg, FileName &fn_im
         ImageXmipp It;
         It()=Mdiff; It.write(fn_img+".diff");
     }
-
 
     if (!do_student)
     {
@@ -2272,7 +2280,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, std::vector< ImageX
     double opt_xoff, opt_yoff;
     int c, nn, imgno, opt_refno, iopt_psi, iopt_flip;
     bool fill_real_space, fill_fourier_space;
-    double bgmean=0., per_image_sigma=1.;
+    double KSprob = 0., bgmean=0., per_image_sigma=1.;
 
     // Generate (FT of) each rotated version of all references
     if (limit_trans || (maxCC_rather_than_ML && !(search_shift > 0.)))
@@ -2437,6 +2445,16 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, std::vector< ImageX
 
         }
 
+        // Calculate KS-probability for noise distribution 
+        if (do_kstest)
+        {
+            // Use old bgmean, per_image_sigma and scale to test noise distribution!
+            KSprob = performKSTest(img(), fn_img, iter==iter_write_histograms, 
+                                   Fref, imgs_bgmean[imgno], imgs_noise_sigma[imgno], imgs_scale[imgno],
+                                   opt_refno, iopt_psi, iopt_flip, opt_offsets);
+        }
+
+
         // Write optimal offsets for all references to disc
         if (fast_mode || limit_trans)
         {
@@ -2492,13 +2510,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, std::vector< ImageX
             {
                 dataline(11) = per_image_sigma;      // sigma_noise
             }
-            if (do_kstest)                           // KS-probability
-            {
-                dataline(12) = performKSTest(img(), fn_img, iter==iter_write_histograms, 
-                                             Fref, bgmean, per_image_sigma, opt_scale, 
-                                             opt_refno, iopt_psi, iopt_flip, opt_offsets);
-            }
-
+            dataline(12) = KSprob;                   // KS-probability
             DFo.append_comment(img.name());
             DFo.append_data_line(dataline);
         }
@@ -2740,6 +2752,31 @@ void Prog_MLalign2D_prm::write_output_files(const int iter, DocFile &DFo,
         DFl.insert_comment("columns: model fraction (1); mirror fraction (2); 1000x signal change (3)");
     fn_tmp = fn_base + ".log";
     DFl.write(fn_tmp);
+
+    // Write out average histogram
+    if (do_kstest)
+    {
+      double          val;
+      histogram1D     hist;
+      std::ofstream fh_hist;
+
+      fn_tmp = fn_base + "_avg.hist";  
+      fh_hist.open((fn_tmp).c_str(), std::ios::out);
+      if (!fh_hist) REPORT_ERROR(1, (std::string)"Cannot write histogram file "+ fn_tmp);
+      hist.init(-6., 6., 120);
+      sumhist /= (sumhist.sum()*hist.step_size);
+      FOR_ALL_ELEMENTS_IN_MATRIX1D(sumhist)
+      {
+          hist.index2val(i, val);
+          val += 0.5*hist.step_size;
+          fh_hist << val<<" "<<VEC_ELEM(sumhist, i)<<" ";
+          if (do_student)
+              fh_hist << tstudent1D(val, df, 1., 0.)<<"\n";
+          else
+              fh_hist << gaussian1D(val, 1., 0.)<<"\n";
+      }
+      fh_hist.close();
+    }
 
     if (write_docfile)
     {

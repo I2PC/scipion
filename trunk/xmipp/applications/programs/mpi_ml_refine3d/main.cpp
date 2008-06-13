@@ -42,6 +42,7 @@ int main(int argc, char **argv)
     int rank, size, num_img_tot;
     double                      aux;
     Matrix2D<double>            Maux;
+    Matrix1D<double>            Vaux;
     FileName                    fn_tmp;
     SelFile                     SFo;
 
@@ -169,6 +170,13 @@ int main(int argc, char **argv)
             wsum_sigma_noise = aux;
             MPI_Allreduce(&wsum_sigma_offset, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             wsum_sigma_offset = aux;
+            if (ML2D_prm.do_kstest)
+            {
+                Vaux.resize(ML2D_prm.sumhist);
+                MPI_Allreduce(MULTIDIM_ARRAY(ML2D_prm.sumhist), MULTIDIM_ARRAY(Vaux),
+                              MULTIDIM_SIZE(ML2D_prm.sumhist), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                ML2D_prm.sumhist = Vaux;
+            }
             for (int refno = 0;refno < ML2D_prm.n_ref; refno++)
             {
                 MPI_Allreduce(MULTIDIM_ARRAY(wsum_Mref[refno]), MULTIDIM_ARRAY(Maux),

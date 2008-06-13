@@ -37,9 +37,9 @@ int main(int argc, char **argv)
     double aux, wsum_sigma_noise, wsum_sigma_offset;
     std::vector<Matrix2D<double > > wsum_Mref;
     std::vector<double> sumw, sumw2, sumwsc, sumwsc2, sumw_mirror;
-    Matrix2D<double> P_phi, Mr2, Maux, Maux2;
+    Matrix2D<double> Maux;
+    Matrix1D<double> Vaux;
     FileName fn_img, fn_tmp;
-    Matrix1D<double> oneline(0);
     DocFile DFo;
     // For parallelization
     int rank, size, num_img_tot;
@@ -151,6 +151,13 @@ int main(int argc, char **argv)
             wsum_sigma_noise = aux;
             MPI_Allreduce(&wsum_sigma_offset, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             wsum_sigma_offset = aux;
+            if (prm.do_kstest)
+            {
+                Vaux.resize(prm.sumhist);
+                MPI_Allreduce(MULTIDIM_ARRAY(prm.sumhist), MULTIDIM_ARRAY(Vaux),
+                              MULTIDIM_SIZE(prm.sumhist), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                prm.sumhist = Vaux;
+            }
             for (int refno = 0;refno < prm.n_ref; refno++)
             {
                 MPI_Allreduce(MULTIDIM_ARRAY(wsum_Mref[refno]), MULTIDIM_ARRAY(Maux),

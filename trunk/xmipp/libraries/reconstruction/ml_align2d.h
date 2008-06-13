@@ -191,7 +191,8 @@ public:
     bool do_kstest;
     /** Iteration at which to write out histograms */
     int iter_write_histograms;
-
+    /** Average histogram */
+    Matrix1D<double> sumhist;
 
 
     /** debug flag */

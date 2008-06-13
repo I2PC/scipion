@@ -51,6 +51,9 @@
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
 #define SMALLVALUE 1e-4
 #define SMALLANGLE 1.75
+#define HISTMIN -6.
+#define HISTMAX 6.
+#define HISTSTEPS 120
 
 /** MLFalign2D parameters. */
 class Prog_MLFalign2D_prm
@@ -203,6 +206,9 @@ public:
     bool do_kstest;
     /** Iteration at which to write out histograms */
     int iter_write_histograms;
+    /** Average histogram */
+    histogram1D sumhist;
+    std::vector<histogram1D > resolhist;
 
     /** debug flag */
     int debug;
