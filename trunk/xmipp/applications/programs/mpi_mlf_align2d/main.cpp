@@ -157,6 +157,14 @@ int main(int argc, char **argv)
                               MULTIDIM_SIZE(prm.sumhist), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Vaux)
                     DIRECT_MULTIDIM_ELEM(prm.sumhist, n) = DIRECT_MULTIDIM_ELEM(Vaux, n);
+                for (int ires = 0; ires < prm.hdim; ires++)
+                {
+                    Vaux.resize(prm.sumhist);
+                    MPI_Allreduce(MULTIDIM_ARRAY(prm.resolhist[ires]), MULTIDIM_ARRAY(Vaux),
+                                  MULTIDIM_SIZE(prm.resolhist[ires]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Vaux)
+                        DIRECT_MULTIDIM_ELEM(prm.resolhist[ires], n) = DIRECT_MULTIDIM_ELEM(Vaux, n);
+                }
             }
             for (int refno = 0;refno < prm.n_ref; refno++)
             {
