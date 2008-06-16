@@ -2589,7 +2589,6 @@ void Prog_MLalign2D_prm::update_parameters(std::vector<Matrix2D<double> > &wsum_
             average_scale += sumwsc[refno];
             temp = ldiv( refno, refs_per_class );
             iclass = ROUND(temp.quot);
-            std::cerr<<"refno = "<<refno<<" iclass= "<<iclass<<" nr_classes= "<<nr_classes<<" refs_per_class= "<<refs_per_class<<std::endl;
             wsum_scale[iclass] += sumwsc[refno];
             sumw_scale[iclass] += sumw[refno];
         }
