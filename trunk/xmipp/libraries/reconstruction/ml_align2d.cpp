@@ -562,7 +562,7 @@ void Prog_MLalign2D_prm::produce_Side_info2(int nr_vols)
 {
 
     int                       c, idum, refno = 0;
-    DocFile                   DF, DF2;
+    DocFile                   DF;
     DocLine                   DL;
     double                    offx, offy, aux, sumfrac = 0.;
     FileName                  fn_tmp;
@@ -607,27 +607,6 @@ void Prog_MLalign2D_prm::produce_Side_info2(int nr_vols)
     	system(((std::string)"mkdir -p " + fn_scratch).c_str());
     }
 
-    // Read optimal origin offsets from fn_doc
-    if (fn_doc != "")
-    {
-        DF.read(fn_doc);
-        SF.go_beginning();
-        while (!SF.eof())
-        {
-            fn_tmp = SF.NextImg();
-            if (DF.search_comment(fn_tmp))
-            {
-                imgs_oldxoff.push_back(DF(3));
-                imgs_oldyoff.push_back(DF(4));
-            }
-            else
-            {
-                REPORT_ERROR(1, (std::string)"Prog_MLalign2D_prm: Cannot find " + fn_tmp + " in docfile " + fn_doc);
-            }
-        }
-        DF.go_beginning();
-    }
-
     // Fill scales (for now initialize to 1, later include doc)
     if (do_norm)
     {
@@ -646,17 +625,17 @@ void Prog_MLalign2D_prm::produce_Side_info2(int nr_vols)
         }
     }
 
-    // Fill per-image noise models
+    // Fill per-image noise models 
     if (do_per_image_noise)
     {
         imgs_noise_sigma.clear();
-         for (int imgno = 0; imgno < SF.ImgNo(); imgno++)
+        for (int imgno = 0; imgno < SF.ImgNo(); imgno++)
         {
 	    imgs_noise_sigma.push_back(sigma_noise);
 	}
     }
 
-    // If we don't write offsets to disc, fill imgs_offsets vectors
+    // If we don't write offsets to disc, initialize imgs_offsets vectors
     if (!do_write_offsets)
     {
         if (zero_offsets) offx = 0.;
@@ -673,36 +652,67 @@ void Prog_MLalign2D_prm::produce_Side_info2(int nr_vols)
         }
     }
 
-    // For limited orientational search: fill imgs_oldphi & imgs_oldtheta
-    // (either read from fn_doc or initialize to -999.)
+    // For limited orientational search: initialize imgs_oldphi & imgs_oldtheta to -999.
     if (limit_rot)
     {
         imgs_oldphi.clear();
         imgs_oldtheta.clear();
-        SF.go_beginning();
-        while (!SF.eof())
+        for (int imgno = 0; imgno < SF.ImgNo(); imgno++)
         {
-            fn_tmp = SF.NextImg();
-            if (fn_doc != "")
+            imgs_oldphi.push_back(-999.);
+            imgs_oldtheta.push_back(-999.);
+        }
+    }
+
+
+    // Read optimal image-parameters from fn_doc
+    if (fn_doc != "")
+    {
+        if (limit_rot || (!do_write_offsets && zero_offsets) || do_norm || do_per_image_noise)
+        {
+            DF.read(fn_doc);
+            DF.go_beginning();
+            SF.go_beginning();
+            int imgno = 0;
+            while (!SF.eof())
             {
+                fn_tmp = SF.NextImg();
                 if (DF.search_comment(fn_tmp))
                 {
-                    imgs_oldphi.push_back(DF(0));
-                    imgs_oldtheta.push_back(DF(1));
+                    if (limit_rot)
+                    {
+                        imgs_oldphi[imgno] = DF(0);
+                        imgs_oldtheta[imgno] = DF(1);
+                    }
+                    if (!do_write_offsets && zero_offsets)
+                    {
+                        if (do_mirror) idum = 2 * n_ref;
+                        else idum = n_ref;
+                        for (int refno = 0; refno < idum; refno++)
+                        {
+                            imgs_offsets[imgno][2*refno] = DF(3);
+                            imgs_offsets[imgno][2*refno+1] = DF(4);
+                        }
+                    }
+                    if (do_norm)
+                    {
+                        imgs_bgmean[imgno] = DF(9);
+                        imgs_scale[imgno] = DF(10);
+                    }
+                    if (do_per_image_noise)
+                    {
+                        imgs_noise_sigma[imgno] = DF(11);
+                    }
                 }
                 else
                 {
                     REPORT_ERROR(1, (std::string)"Prog_MLalign2D_prm: Cannot find " + fn_tmp + " in docfile " + fn_doc);
                 }
+                imgno++;
             }
-            else
-            {
-                imgs_oldphi.push_back(-999.);
-                imgs_oldtheta.push_back(-999.);
-            }
+            DF.clear();
         }
     }
-    DF.clear();
 
     // read in model fractions if given on command line
     if (fn_frac != "")
@@ -718,6 +728,10 @@ void Prog_MLalign2D_prm::produce_Side_info2(int nr_vols)
                 if (DL[1] > 1. || DL[1] < 0.)
                     REPORT_ERROR(1, "Prog_MLalign2D_prm: Mirror fraction (2nd column) should be [0,1]!");
                 mirror_fraction[refno] = DL[1];
+            }
+            if (do_norm)
+            {
+                refs_avgscale[refno] = DL[3];
             }
             sumfrac += alpha_k[refno];
             DF.next_data_line();
@@ -2361,12 +2375,6 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, std::vector< ImageX
 
         img.read(fn_img, false, false, false, false);
         img().setXmippOrigin();
-        if (fn_doc != "")
-        {
-            trans(0) = (double)ROUND(imgs_oldxoff[imgno]);
-            trans(1) = (double)ROUND(imgs_oldyoff[imgno]);
-            img().selfTranslate(trans, true);
-        }
 	if (do_norm)
 	{
             bgmean=imgs_bgmean[imgno];
@@ -2534,7 +2542,7 @@ void Prog_MLalign2D_prm::update_parameters(std::vector<Matrix2D<double> > &wsum_
         double &wsum_sigma_noise, double &wsum_sigma_offset,
         std::vector<double> &sumw, std::vector<double> &sumw2, 
         std::vector<double> &sumwsc, std::vector<double> &sumwsc2, std::vector<double> &sumw_mirror,
-        double &sumcorr, double &sumw_allrefs)
+        double &sumcorr, double &sumw_allrefs, int refs_per_class)
 {
 
     Matrix1D<double> rmean_sigma2, rmean_signal2;
@@ -2570,13 +2578,33 @@ void Prog_MLalign2D_prm::update_parameters(std::vector<Matrix2D<double> > &wsum_
         }
     }
 
-    // Adjust average scale 
+    // Adjust average scale (nr_classes will be smaller than n_ref for the 3D case!)
     if (do_norm) {
+        int iclass, nr_classes = ROUND(n_ref / refs_per_class);
+        std::vector<double> wsum_scale(nr_classes), sumw_scale(nr_classes);
+        ldiv_t temp;
         average_scale = 0.;
         FOR_ALL_MODELS()
         {
             average_scale += sumwsc[refno];
-            refs_avgscale[refno] = sumwsc[refno]/sumw[refno];
+            temp = ldiv( refno, refs_per_class );
+            iclass = ROUND(temp.quot);
+            std::cerr<<"refno = "<<refno<<" iclass= "<<iclass<<" nr_classes= "<<nr_classes<<" refs_per_class= "<<refs_per_class<<std::endl;
+            wsum_scale[iclass] += sumwsc[refno];
+            sumw_scale[iclass] += sumw[refno];
+        }
+        for (iclass = 0; iclass<nr_classes; iclass++)
+        {
+            if (sumw_scale[iclass]>0.)
+                wsum_scale[iclass] /= sumw_scale[iclass];
+            else
+                wsum_scale[iclass] = 1.;
+        }
+        FOR_ALL_MODELS()
+        {
+            temp = ldiv( refno, refs_per_class );
+            iclass = ROUND(temp.quot);
+            refs_avgscale[refno] = wsum_scale[iclass];
             Iref[refno]() *= refs_avgscale[refno];
         }
         average_scale /= sumw_allrefs;
@@ -2741,7 +2769,7 @@ void Prog_MLalign2D_prm::write_output_files(const int iter, DocFile &DFo,
         if (do_norm)
             comment+= " <scale>= " + floatToString(average_scale, 10, 5);
         DFl.insert_comment(comment);
-        comment = "-noise " + floatToString(sigma_noise, 15, 12) + " -offset " + floatToString(sigma_offset, 15, 12) + " -istart " + integerToString(iter + 1);
+        comment = "-noise " + floatToString(sigma_noise, 15, 12) + " -offset " + floatToString(sigma_offset, 15, 12) + " -istart " + integerToString(iter + 1) + " -doc " + fn_base + ".doc";
         if (anneal > 1.) comment += " -anneal " + floatToString(anneal, 10, 7);
     }
     DFl.insert_comment(comment);

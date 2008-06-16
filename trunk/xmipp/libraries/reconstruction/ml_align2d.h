@@ -147,7 +147,7 @@ public:
     /** Save memory options */
     bool save_mem1, save_mem2, save_mem3;
     /** Vectors to store old phi, theta, xoff and yoff for all images */
-    std::vector<float> imgs_oldphi, imgs_oldtheta, imgs_oldxoff, imgs_oldyoff;
+    std::vector<float> imgs_oldphi, imgs_oldtheta;
     /** Number of subdirectories to keep for unique offsets filenames */
     int offsets_keepdir;
     /** Flag for using ML3D */
@@ -320,7 +320,7 @@ public:
                            double &wsum_sigma_noise, double &wsum_sigma_offset, 
 			   std::vector<double> &sumw, std::vector<double> &sumw2, 
                            std::vector<double> &sumwsc, std::vector<double> &sumwsc2, std::vector<double> &sumw_mirror,
-                           double &sumcorr, double &sumw_allrefs);
+                           double &sumcorr, double &sumw_allrefs, int refs_per_class=1);
 
     /// check convergence
     bool check_convergence(std::vector<double> &conv);

@@ -114,7 +114,7 @@ int main(int argc, char **argv)
             ML2D_prm.update_parameters(wsum_Mref, 
                                        wsum_sigma_noise, wsum_sigma_offset, 
 				       sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, 
-				       sumcorr, sumw_allrefs);
+				       sumcorr, sumw_allrefs, prm.eachvol_end[0]+1);
 
             // Write intermediate output files
             ML2D_prm.write_output_files(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
