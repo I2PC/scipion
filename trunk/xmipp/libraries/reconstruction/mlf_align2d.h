@@ -136,8 +136,8 @@ public:
     bool limit_rot;
     /** Limited search range for projection directions */
     double search_rot;
-    /** Vectors to store old phi, theta, xoff and yoff for all images */
-    std::vector<float> imgs_oldphi, imgs_oldtheta, imgs_oldxoff, imgs_oldyoff;
+    /** Vectors to store old phi and theta for all images */
+    std::vector<float> imgs_oldphi, imgs_oldtheta;
     /** Number of subdirectories to keep for unique offsets filenames */
     int offsets_keepdir;
     /** Flag for using ML3D */
@@ -357,7 +357,8 @@ public:
 			  std::vector<double> &sumw_mirror,
 			  std::vector<double> &sumw_defocus,
 			  double &sumcorr, double &sumw_allrefs,
-			  Matrix1D<double> &spectral_signal);
+			  Matrix1D<double> &spectral_signal, 
+                          int refs_per_class=1);
 
     /// check convergence
     bool checkConvergence(std::vector<double> &conv);

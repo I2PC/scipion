@@ -173,6 +173,14 @@ int main(int argc, char **argv)
                               MULTIDIM_SIZE(ML2D_prm.sumhist), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Vaux)
                     DIRECT_MULTIDIM_ELEM(ML2D_prm.sumhist, n) = DIRECT_MULTIDIM_ELEM(Vaux, n);
+                for (int ires = 0; ires < ML2D_prm.hdim; ires++)
+                {
+                    Vaux.resize(ML2D_prm.sumhist);
+                    MPI_Allreduce(MULTIDIM_ARRAY(ML2D_prm.resolhist[ires]), MULTIDIM_ARRAY(Vaux),
+                                  MULTIDIM_SIZE(ML2D_prm.resolhist[ires]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Vaux)
+                        DIRECT_MULTIDIM_ELEM(ML2D_prm.resolhist[ires], n) = DIRECT_MULTIDIM_ELEM(Vaux, n);
+                }
             }
 	    for (int ifocus = 0; ifocus < ML2D_prm.nr_focus; ifocus++)
 	    {
@@ -215,7 +223,7 @@ int main(int argc, char **argv)
 				      Mwsum_sigma2, wsum_sigma_offset, 
 				      sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus, 
 				      sumcorr, sumw_allrefs,
-				      spectral_signal);
+				      spectral_signal, prm.eachvol_end[0]+1);
 
             // All nodes write out temporary DFo
             fn_tmp.compose(prm.fn_root, rank, "tmpdoc");

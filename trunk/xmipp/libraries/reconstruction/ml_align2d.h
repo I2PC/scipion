@@ -146,7 +146,7 @@ public:
     double search_rot;
     /** Save memory options */
     bool save_mem1, save_mem2, save_mem3;
-    /** Vectors to store old phi, theta, xoff and yoff for all images */
+    /** Vectors to store old phi and theta for all images */
     std::vector<float> imgs_oldphi, imgs_oldtheta;
     /** Number of subdirectories to keep for unique offsets filenames */
     int offsets_keepdir;

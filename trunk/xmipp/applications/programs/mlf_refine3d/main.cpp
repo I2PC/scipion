@@ -113,7 +113,7 @@ int main(int argc, char **argv)
 				      Mwsum_sigma2, wsum_sigma_offset, 
 				      sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus, 
 				      sumcorr, sumw_allrefs,
-				      spectral_signal);
+				      spectral_signal, prm.eachvol_end[0]+1);
 
             // Write intermediate output files
             ML2D_prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, conv);

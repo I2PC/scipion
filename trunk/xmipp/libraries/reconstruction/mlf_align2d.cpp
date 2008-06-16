@@ -461,6 +461,16 @@ void Prog_MLFalign2D_prm::produceSideInfo()
     if (search_rot < 180.) limit_rot = true;
     else limit_rot = false;
     
+    // Initialization of resolhist
+    if (do_kstest)
+    {
+        resolhist.resize(hdim);
+        for (int ires = 0; ires < hdim; ires++)
+        {
+            resolhist[ires].init(HISTMIN, HISTMAX, HISTSTEPS);
+        }
+    }
+
 
     // Fill limited translation shift-vectors
     nr_trans = 0;
@@ -1159,28 +1169,7 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols)
     	system(((std::string)"mkdir -p " + fn_scratch).c_str());
     }
 
-    // Read optimal origin offsets from fn_doc
-    if (fn_doc != "")
-    {
-        DF.read(fn_doc);
-        SF.go_beginning();
-        while (!SF.eof())
-        {
-            fn_tmp = SF.NextImg();
-            if (DF.search_comment(fn_tmp))
-            {
-                imgs_oldxoff.push_back(DF(3));
-                imgs_oldyoff.push_back(DF(4));
-            }
-            else
-            {
-                REPORT_ERROR(1, (std::string)"Prog_MLFalign2D_prm: Cannot find " + fn_tmp + " in docfile " + fn_doc);
-            }
-        }
-        DF.go_beginning();
-    }
-
-    // Fill scales (for now initialize to 1, later include doc)
+    // Initialize optimal scales to one.
     if (do_norm)
     {
 	imgs_scale.clear();
@@ -1196,8 +1185,7 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols)
         }
     }
 
-    // If we don't write offsets to disc, fill imgs_offsets vectors
-    // with zeros
+    // If we don't write offsets to disc, fill imgs_offsets vectors with zeros
     if (!do_write_offsets)
     {
         if (do_mirror) idum = 4 * n_ref;
@@ -1218,30 +1206,56 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols)
     {
         imgs_oldphi.clear();
         imgs_oldtheta.clear();
-        SF.go_beginning();
-        while (!SF.eof())
+        for (int imgno = 0; imgno < SF.ImgNo(); imgno++)
         {
-            fn_tmp = SF.NextImg();
-            if (fn_doc != "")
+            imgs_oldphi.push_back(-999.);
+            imgs_oldtheta.push_back(-999.);
+        }
+    }
+
+    // Read optimal origin offsets from fn_doc
+    if (fn_doc != "")
+    {
+        if (limit_rot || (!do_write_offsets) || do_norm)
+        {
+            DF.read(fn_doc);
+            DF.go_beginning();
+            SF.go_beginning();
+            int imgno = 0;
+            while (!SF.eof())
             {
+                fn_tmp = SF.NextImg();
                 if (DF.search_comment(fn_tmp))
                 {
-                    imgs_oldphi.push_back(DF(0));
-                    imgs_oldtheta.push_back(DF(1));
+                    if (limit_rot)
+                    {
+                        imgs_oldphi[imgno] = DF(0);
+                        imgs_oldtheta[imgno] = DF(1);
+                    }
+                    if (!do_write_offsets)
+                    {
+                        if (do_mirror) idum = 2 * n_ref;
+                        else idum = n_ref;
+                        for (int refno = 0; refno < idum; refno++)
+                        {
+                            imgs_offsets[imgno][2*refno] = DF(3);
+                            imgs_offsets[imgno][2*refno+1] = DF(4);
+                        }
+                    }
+                    if (do_norm)
+                    {
+                        imgs_scale[imgno] = DF(9);
+                    }
                 }
                 else
                 {
                     REPORT_ERROR(1, (std::string)"Prog_MLFalign2D_prm: Cannot find " + fn_tmp + " in docfile " + fn_doc);
                 }
+                imgno++;
             }
-            else
-            {
-                imgs_oldphi.push_back(-999.);
-                imgs_oldtheta.push_back(-999.);
-            }
+            DF.clear();
         }
     }
-    DF.clear();
 
     // read in model fractions if given on command line
     if (fn_frac != "")
@@ -1257,6 +1271,10 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols)
                 if (DL[1] > 1. || DL[1] < 0.)
                     REPORT_ERROR(1, "Prog_MLFalign2D_prm: Mirror fraction (2nd column) should be [0,1]!");
                 mirror_fraction[refno] = DL[1];
+            }
+            if (do_norm)
+            {
+                refs_avgscale[refno] = DL[3];
             }
             sumfrac += alpha_k[refno];
             DF.next_data_line();
@@ -2231,14 +2249,8 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
         // Compute resolution-dependent histograms
         for (int ires = 0; ires < hdim; ires++)
         {
-            if (res_diff[ires].size()>0)
-            {
-                if (resolhist.size() < ires+1) resolhist.resize(ires+1);
-                if (resolhist[ires].sampleNo()==0) 
-                    resolhist[ires].init(HISTMIN, HISTMAX, HISTSTEPS);
-                for (int j=0; j<res_diff[ires].size(); j++)
-                    resolhist[ires].insert_value(res_diff[ires][j]);
-            }
+            for (int j=0; j<res_diff[ires].size(); j++)
+                resolhist[ires].insert_value(res_diff[ires][j]);
         }
 
         // Overall average histogram
@@ -2253,6 +2265,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
             double          val;
             hist.init(HISTMIN, HISTMAX, HISTSTEPS);
             compute_hist(diff,hist,HISTMIN, HISTMAX, HISTSTEPS);
+            hist /= hist.sum()*hist.step_size;
             FileName fn_hist = fn_img + ".hist";
             std::ofstream fh_hist;
             fh_hist.open((fn_hist).c_str(), std::ios::out);
@@ -2525,12 +2538,6 @@ void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, std::vector< ImageXmippT
         fn_trans = fn_root + "_offsets/" + fn_trans + ".off";
         img.read(fn_img, false, false, false, false);
         img().setXmippOrigin();
-        if (fn_doc != "")
-        {
-            trans(0) = (double)ROUND(imgs_oldxoff[imgno]);
-            trans(1) = (double)ROUND(imgs_oldyoff[imgno]);
-            img().selfTranslate(trans, true);
-        }
 
         // Get optimal offsets for all references
 	if (do_write_offsets)
@@ -2658,7 +2665,8 @@ void Prog_MLFalign2D_prm::updateParameters(std::vector<Matrix2D<double> > &wsum_
 					   std::vector<double> &sumw_mirror,
 					   std::vector<double> &sumw_defocus,
 					   double &sumcorr, double &sumw_allrefs,
-					   Matrix1D<double> &spectral_signal)
+					   Matrix1D<double> &spectral_signal,
+                                           int refs_per_class)
 {
 
     Matrix1D<double> rmean_sigma2, rmean_signal2;
@@ -2719,15 +2727,34 @@ void Prog_MLFalign2D_prm::updateParameters(std::vector<Matrix2D<double> > &wsum_
         }
     }
 
-    // Adjust average scale of each reference
+    // Adjust average scale (nr_classes will be smaller than n_ref for the 3D case!)
     if (do_norm) {
+        int iclass, nr_classes = ROUND(n_ref / refs_per_class);
+        std::vector<double> wsum_scale(nr_classes), sumw_scale(nr_classes);
+        ldiv_t temp;
         average_scale = 0.;
         FOR_ALL_MODELS()
         {
             average_scale += sumwsc[refno];
-            refs_avgscale[refno] = sumwsc[refno]/sumw[refno];
-            Iref[refno]() *= refs_avgscale[refno];
-            Ictf[refno]() *= refs_avgscale[refno];
+            temp = ldiv( refno, refs_per_class );
+            iclass = ROUND(temp.quot);
+            wsum_scale[iclass] += sumwsc[refno];
+            sumw_scale[iclass] += sumw[refno];
+        }
+        FOR_ALL_MODELS()
+        {
+            temp = ldiv( refno, refs_per_class );
+            iclass = ROUND(temp.quot);
+            if (sumw_scale[iclass]>0.)
+            {
+                refs_avgscale[refno] = wsum_scale[iclass]/sumw_scale[iclass];
+                Iref[refno]() *= refs_avgscale[refno];
+                Ictf[refno]() *= refs_avgscale[refno];
+            }
+            else
+            {
+                refs_avgscale[refno] = 1.;
+            }
         }
         average_scale /= sumw_allrefs;
     }
@@ -2957,7 +2984,7 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, DocFile &DFo,
               fh_hist << tstudent1D(val, df, 1., 0.)<<" ";
           else
               fh_hist << gaussian1D(val, 1., 0.)<<" ";
-          for (int ires = 0; ires < hdim -1; ires++)
+          for (int ires = 0; ires < hdim; ires++)
           {
               if (resolhist[ires].sampleNo() > 0)
               {

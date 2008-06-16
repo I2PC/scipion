@@ -668,7 +668,7 @@ void Prog_MLalign2D_prm::produce_Side_info2(int nr_vols)
     // Read optimal image-parameters from fn_doc
     if (fn_doc != "")
     {
-        if (limit_rot || (!do_write_offsets && zero_offsets) || do_norm || do_per_image_noise)
+        if (limit_rot || (!do_write_offsets && zero_offsets) || do_norm)
         {
             DF.read(fn_doc);
             DF.go_beginning();
@@ -2592,19 +2592,19 @@ void Prog_MLalign2D_prm::update_parameters(std::vector<Matrix2D<double> > &wsum_
             wsum_scale[iclass] += sumwsc[refno];
             sumw_scale[iclass] += sumw[refno];
         }
-        for (iclass = 0; iclass<nr_classes; iclass++)
-        {
-            if (sumw_scale[iclass]>0.)
-                wsum_scale[iclass] /= sumw_scale[iclass];
-            else
-                wsum_scale[iclass] = 1.;
-        }
         FOR_ALL_MODELS()
         {
             temp = ldiv( refno, refs_per_class );
             iclass = ROUND(temp.quot);
-            refs_avgscale[refno] = wsum_scale[iclass];
-            Iref[refno]() *= refs_avgscale[refno];
+            if (sumw_scale[iclass]>0.)
+            {
+                refs_avgscale[refno] = wsum_scale[iclass]/sumw_scale[iclass];
+                Iref[refno]() *= refs_avgscale[refno];
+            }
+            else
+            {
+                refs_avgscale[refno] = 1.;
+            }
         }
         average_scale /= sumw_allrefs;
     }
