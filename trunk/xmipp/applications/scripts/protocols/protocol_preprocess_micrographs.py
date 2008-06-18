@@ -56,6 +56,8 @@ DoSpi2Raw=False
 # Perform downsampling?
 DoDownSample=True
 # Downsampling factor 
+"""Downsampling should be a real number grater than 1.0
+"""
 Down=3
 #------------------------------------------------------------------------------------------------
 # {section} CTF estimation
@@ -336,7 +338,8 @@ class preprocess_A_class:
         oname=self.shortname+'/'+self.downname+'.raw'
         print '*********************************************************************'
         print '*  Downsampling micrograph: '+iname
-        command='xmipp_micrograph_downsample -i '+iname+' -o '+oname+' -output_bits 32 -Xstep '+str(self.Down)+' -kernel rectangle '+str(self.Down)+' '+str(self.Down)
+        scale = 1./self.Down
+        command='xmipp_micrograph_downsample -i '+iname+' -o '+oname+' -output_bits 32 -fourier '+str(scale)
         print '* ',command
         self.log.info(command)
         os.system(command )
