@@ -72,7 +72,7 @@ DoCtfCorrection=False
 """
 CTFDatName=''
 
-# {file } Docfile with defocus values where to split into groups
+# {file} Docfile with defocus values where to split into groups
 SplitDefocusDocFile='Ctfs/CTF_groups_split.doc'
 
 # {expert} Padding factor
@@ -1199,7 +1199,7 @@ def execute_projection_matching(_mylog,
                                      RunInBackground)
 
       if (_DoAlign2D == '1'):
-         outputdocfile =  ProjMatchRootName + '_classes_realigned.doc'
+         outputdocfile =  ProjMatchRootName + '_realigned.doc'
       else:
          outputdocfile =  ProjMatchRootName + '.doc'
 
