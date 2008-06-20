@@ -132,8 +132,8 @@ void process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 
     // Write output
     FileName fn_dpr, fn_frc;
-    fn_dpr = vol.name() + ".dpr";
-//    fn_frc = vol.name() + ".frc";
+//    fn_dpr = vol.name() + ".dpr";
+    fn_frc = vol.name() + ".frc";
 //    std::ofstream out(fn_dpr.c_str(), std::ios::out);
     std::ofstream out2(fn_frc.c_str(), std::ios::out);
 //    out  << "# Resol. [1/Ang]   DPR [deg]" << std::endl;
