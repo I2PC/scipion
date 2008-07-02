@@ -214,13 +214,6 @@ void Prog_MLalign2D_prm::show(bool ML3D)
             std::cerr << "  -> Save_memory B: limit translations to 3 sigma_offset " << std::endl;
         if (save_mem3)
             std::cerr << "  -> Save_memory C: do not store rotated references; rotate experimental image instead " << std::endl;
-
-
-        // Hidden stuff
-        if (!write_intermediate)
-        {
-            std::cerr << "  -> Do not write out images after each iteration." << std::endl;
-        }
         if (fix_fractions && !maxCC_rather_than_ML)
         {
             std::cerr << "  -> Do not update estimates of model fractions." << std::endl;
@@ -232,10 +225,6 @@ void Prog_MLalign2D_prm::show(bool ML3D)
         if (fix_sigma_noise && !maxCC_rather_than_ML)
         {
             std::cerr << "  -> Do not update sigma-estimate of noise." << std::endl;
-        }
-        if (do_esthetics)
-        {
-            std::cerr << "  -> Perform esthetics on (0,0)-pixel artifacts" << std::endl;
         }
         if (do_student)
         {
@@ -249,13 +238,22 @@ void Prog_MLalign2D_prm::show(bool ML3D)
         {
             std::cerr << "  -> Developmental: refine normalization for each experimental image"<<std::endl;
         }
-        if (do_per_image_noise)
-        {
-            std::cerr << "  -> Developmental: use a per-image sigma_noise parameter "<<std::endl;
-        }
         if (do_kstest)
         {
             std::cerr << "  -> Developmental: perform KS-test on noise distributions "<<std::endl;
+        }
+        // Hidden stuff
+        if (!write_intermediate)
+        {
+            std::cerr << "  -> Do not write out images after each iteration." << std::endl;
+        }
+        if (do_esthetics)
+        {
+            std::cerr << "  -> Perform esthetics on (0,0)-pixel artifacts" << std::endl;
+        }
+        if (do_per_image_noise)
+        {
+            std::cerr << "  -> Developmental: use a per-image sigma_noise parameter "<<std::endl;
         }
 
         std::cerr << " -----------------------------------------------------------------" << std::endl;
@@ -300,6 +298,10 @@ void Prog_MLalign2D_prm::extended_usage(bool ML3D)
     std::cerr << " [ -max_shift <float=dim/4>]   : Dont trust shifts larger than max_shift \n";
     std::cerr << " [ -doc <docfile=\"\"> ]         : Read initial angles and offsets from docfile \n";
     std::cerr << " [ -write_offsets ]            : Save memory by writing optimal offsets to disc (disc-access intensive) \n";
+    std::cerr << " [ -student ]                  : Use t-distributed instead of Gaussian model for the noise \n";
+    std::cerr << " [ -df <int=6> ]               : Degrees of freedom for the t-distribution \n";
+    std::cerr << " [ -norm ]                     : Refined normalization parameters for each particle \n";
+    std::cerr << " [ -kstest ]                   : Perform KS-tests to test the noise model vs the observed residuals \n";
     std::cerr << std::endl;
     exit(1);
 }

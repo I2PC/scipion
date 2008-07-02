@@ -159,11 +159,6 @@ public:
     /** Vector to store optimal origin offsets (if not written to disc) */
     std::vector<std::vector<double> > imgs_offsets;
 
-    /** IN DEVELOPMENT */
-
-    /// Deterministic annealing
-    double anneal, anneal_step;
-
     /// Students t-distribution
     /** Use t-student distribution instead of normal one */
     bool do_student;
@@ -180,20 +175,26 @@ public:
     /** Overall average scale (to be forced to one)*/
     double average_scale;
 
+    /// Statistical analysis of the noise distributions
+    /** Perform Kolmogorov-Smirnov test on noise distribution */
+    bool do_kstest;
+    /** Average histogram */
+    Matrix1D<double> sumhist;
+
+    /** IN DEVELOPMENT */
+
+    /// Deterministic annealing
+    double anneal, anneal_step;
+
+    /// Write out a histogram of the noise distribution for each particle 
+    /** Iteration at which to write out histograms */
+    int iter_write_histograms;
+
     /// Each image has its own sigma for the noise
     /** Flag to de per-image noise model */
     bool do_per_image_noise;
     /** Per-image noise models */
     std::vector<double> imgs_noise_sigma;
-
-    /// Statistical analysis of the noise distributions
-    /** Perform Kolmogorov-Smirnov test on noise distribution */
-    bool do_kstest;
-    /** Iteration at which to write out histograms */
-    int iter_write_histograms;
-    /** Average histogram */
-    Matrix1D<double> sumhist;
-
 
     /** debug flag */
     int debug;
