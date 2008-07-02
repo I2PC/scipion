@@ -768,30 +768,30 @@ void Prog_angular_class_average_prm::finalWriteToDisc()
     if (do_split)
     {
         fn_tmp=fn_out1+"_classes.sel";
-        if (do_add && exists(fn_tmp)) SFclasses1.merge(fn_tmp);
-        auxSF=SFclasses1.sort_by_filenames();
-        auxSF.write(fn_tmp);
+        if (do_add && exists(fn_tmp)) 
+            SFclasses1.merge(fn_tmp);
+        SFclasses1.write(fn_tmp);
         fn_tmp=fn_out2+"_classes.sel";
-        if (do_add && exists(fn_tmp)) SFclasses2.merge(fn_tmp);
-        auxSF=SFclasses2.sort_by_filenames();
-        auxSF.write(fn_tmp);
+        if (do_add && exists(fn_tmp)) 
+            SFclasses2.merge(fn_tmp);
+        SFclasses2.write(fn_tmp);
     }
 
     // Write docfiles with angles and weights of all classes
     fn_tmp=fn_out+"_classes.doc";
-    if (do_add && exists(fn_tmp)) DFclasses.merge(fn_tmp,DOCMERGE_SUM_COLUMN,5);
-    auxDF=DFclasses.sort_by_filenames();
-    auxDF.write(fn_tmp);
+    if (do_add && exists(fn_tmp)) 
+        DFclasses.merge(fn_tmp,DOCMERGE_SUM_COLUMN,5);
+    DFclasses.write(fn_tmp);
     if (do_split)
     {
         fn_tmp=fn_out1+"_classes.doc";
-        if (do_add && exists(fn_tmp)) DFclasses1.merge(fn_tmp,DOCMERGE_SUM_COLUMN,5);
-        auxDF=DFclasses1.sort_by_filenames();
-        auxDF.write(fn_tmp);
+        if (do_add && exists(fn_tmp)) 
+            DFclasses1.merge(fn_tmp,DOCMERGE_SUM_COLUMN,5);
+        DFclasses1.write(fn_tmp);
         fn_tmp=fn_out2+"_classes.doc";
-        if (do_add && exists(fn_tmp)) DFclasses2.merge(fn_tmp,DOCMERGE_SUM_COLUMN,5);
-        auxDF=DFclasses2.sort_by_filenames();
-        auxDF.write(fn_tmp);
+        if (do_add && exists(fn_tmp)) 
+            DFclasses2.merge(fn_tmp,DOCMERGE_SUM_COLUMN,5);
+        DFclasses2.write(fn_tmp);
     }
 
     // Write docfile with data for all realigned individual images
