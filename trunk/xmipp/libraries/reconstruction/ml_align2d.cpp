@@ -131,22 +131,22 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     save_mem3 = checkParameter(argc2, argv2, "-save_memC");
     search_shift = textToFloat(getParameter(argc2, argv2, "-search_shift", "999."));
     fn_doc = getParameter(argc2, argv2, "-doc", "");
+    zero_offsets = checkParameter(argc2, argv2, "-zero_offsets");
+    do_write_offsets = checkParameter(argc2, argv2, "-write_offsets");
+    do_student = checkParameter(argc2, argv2, "-student");
+    df = (double) textToInteger(getParameter(argc2, argv2, "-df", "6"));
+    do_norm = checkParameter(argc2, argv2, "-norm");
+    do_kstest = checkParameter(argc2, argv2, "-kstest");
     do_ML3D = ML3D;
 
     // Hidden arguments
     do_esthetics = checkParameter(argc2, argv2, "-esthetics");
     anneal = textToFloat(getParameter(argc2, argv2, "-anneal", "1"));
     anneal_step = textToFloat(getParameter(argc2, argv2, "-anneal_step", "1"));
-    do_write_offsets = checkParameter(argc2, argv2, "-write_offsets");
     fn_scratch = getParameter(argc2, argv2, "-scratch", "");
-    zero_offsets = checkParameter(argc2, argv2, "-zero_offsets");
     debug = textToInteger(getParameter(argc2, argv2, "-debug","0"));
-    do_student = checkParameter(argc2, argv2, "-student");
-    df = (double) textToInteger(getParameter(argc2, argv2, "-df", "6"));
-    do_norm = checkParameter(argc2, argv2, "-norm");
     do_student_sigma_trick = !checkParameter(argc2, argv2, "-no_sigma_trick");
     do_per_image_noise = checkParameter(argc2, argv2, "-per_image_noise");
-    do_kstest = checkParameter(argc2, argv2, "-kstest");
     iter_write_histograms = textToInteger(getParameter(argc2, argv2, "-iter_histogram","-1"));
 
     // Only for interaction with refine3d:
@@ -286,6 +286,7 @@ void Prog_MLalign2D_prm::extended_usage(bool ML3D)
     std::cerr << " [ -offset <float=3> ]         : Expected standard deviation for origin offset [pix]\n";
     std::cerr << " [ -frac <docfile=\"\"> ]        : Docfile with expected model fractions (default: even distr.)\n";
     std::cerr << " [ -C <double=1e-12> ]         : Significance criterion for fast approach \n";
+    std::cerr << " [ -zero_offsets ]             : Kick-start the fast algorithm from all-zero offsets \n";
     if (!ML3D) std::cerr << " [ -restart <logfile> ]        : restart a run with all parameters as in the logfile \n";
     if (!ML3D) std::cerr << " [ -istart <int> ]             : number of initial iteration \n";
     std::cerr << " [ -fix_sigma_noise]           : Do not re-estimate the standard deviation in the pixel noise \n";
@@ -321,7 +322,7 @@ void Prog_MLalign2D_prm::produce_Side_info()
     Matrix2D<double>            A(3, 3), Maux, Maux2;
     Matrix2D<std::complex<double> >  Faux;
     Matrix1D<int>               center(2), radial_count;
-    std::vector<int>                 tmppointp, tmppointp_nolow, tmppointi, tmppointj;
+    std::vector<int>            tmppointp, tmppointp_nolow, tmppointi, tmppointj;
     bool                        uniqname, nomoredirs;
     float                       xx, yy;
     double                      av, psi, aux, Q0;
