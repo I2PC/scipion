@@ -432,8 +432,8 @@ DoParallel=True
 # Number of processors to use:
 NumberOfCPUs=-1
 
-# minumum size of jobs in mpi processe. Set to 1 for large images and to 10 for small
-MpiJobSize='1'
+# minumum size of jobs in mpi processe. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)
+MpiJobSize='10'
 
 # {file} A list of all available CPUs (the MPI-machinefile):
 """ Depending on your system, your standard script to launch MPI-jobs may require this
@@ -459,8 +459,10 @@ AnalysisScript='visualize_projmatch.py'
 #-----------------------------------------------------------------------------
 #Do not change these variables
 ReferenceVolumeName='reference_volume.vol'
-ProjMatchRootName="proj_match"
-ProjectLibraryRootName="ref"
+LibraryDir = "ReferenceLibrary"
+ProjectLibraryRootName= LibraryDir + "/ref"
+ProjMatchDir = "ProjMatchClasses"
+ProjMatchRootName= ProjMatchDir + "/proj_match"
 ForReconstructionSel="reconstruction.sel"
 ForReconstructionDoc="reconstruction.doc"
 MultiAlign2dSel="multi_align2d.sel"
@@ -879,7 +881,6 @@ class projection_matching_class:
           if (self._CleanUpFiles):
              execute_cleanup(self._mylog,
                              True,
-                             True,
                              True)
 
 
@@ -907,7 +908,9 @@ def create_working_directory(_mylog,_WorkDirectory):
 
     if not os.path.exists(_WorkDirectory):
        os.makedirs(_WorkDirectory)
-
+       # Also create subdirectories
+       os.makedirs(_WorkDirectory + "/" + LibraryDir)
+       os.makedirs(_WorkDirectory + "/" + ProjMatchDir)
 
 #------------------------------------------------------------------------
 #make ctf groups
@@ -1044,10 +1047,9 @@ def execute_projection_matching(_mylog,
    if (_DoCtfCorrection):
       # To use -add_to in angular_class_average correctly, 
       # make sure there are no proj_match_class* files from previous runs. 
-      execute_cleanup(_mylog,
-                      True,
-                      False,
-                      False)
+      print ' * CleanUp: deleting directory '+ ProjMatchDir
+      os.system(' rm -r ' + ProjMatchDir)
+      os.makedirs(ProjMatchDir)
       # Create docfiles for each defocus group and corresponding selfile containing all of them      
       make_subset_docfiles(_mylog,
                            _InputDocFileName,
@@ -1120,7 +1122,7 @@ def execute_projection_matching(_mylog,
             os.remove(txtfile)
          txtfileb     = utils_xmipp.composeFileName(ProjectLibraryRootName + '_group',ictf+1,'')
          txtfileb     += '_sampling.txt'
-         os.symlink(txtfileb, txtfile)
+         shutil.copy(txtfileb, txtfile)
       else:
          outputname   = ProjMatchRootName
          inputdocfile = _InputDocFileName
@@ -1517,50 +1519,21 @@ def filter_at_given_resolution(_DoComputeResolution,
 #------------------------------------------------------------------------
 def execute_cleanup(_mylog,
                     _DeleteClassAverages,
-                    _DeleteReferenceProjections,
-                    _DeleteSplitReconstructions):
+                    _DeleteReferenceProjections):
    import os,glob
    import utils_xmipp
    
    if (_DeleteClassAverages):
-      message=' CleanUp: deleting all class average files'
+      message=' CleanUp: deleting directory '+ ProjMatchDir
       print '* ',message
       _mylog.info(message)
-      wildcardname=utils_xmipp.composeWildcardFileName(ProjMatchRootName+'_class','ref.xmp')
-      for file in glob.glob(wildcardname):
-         os.remove(file)
-      wildcardname=utils_xmipp.composeWildcardFileName(ProjMatchRootName+'_class','xmp')
-      for file in glob.glob(wildcardname):
-         os.remove(file)
-      wildcardname=ProjMatchRootName+'_split_?_class*'
-      for file in glob.glob(wildcardname):
-         os.remove(file)
-      wildcardname=utils_xmipp.composeWildcardFileName(ProjMatchRootName+'_class','sel')
-      for file in glob.glob(wildcardname):
-         os.remove(file)
+      os.system(' rm -r ' + ProjMatchDir + ' &')
 
    if (_DeleteReferenceProjections):
-      message=' CleanUp: deleting all reference projections '
+      message=' CleanUp: deleting directory '+ LibraryDir
       print '* ',message
       _mylog.info(message)
-      wildcardname=utils_xmipp.composeWildcardFileName(ProjectLibraryRootName, 'xmp')
-      for file in glob.glob(wildcardname):
-         os.remove(file)
-      filenames=[]
-      filenames.append(ProjectLibraryRootName+"_sampling.txt")
-      filenames.append(ProjectLibraryRootName+"_vectors.doc")
-      filenames.append(ProjectLibraryRootName+".sel")
-      for file in filenames:
-         if os.path.exists(file):
-            os.remove(file)
-
-   if (_DeleteSplitReconstructions):
-      message=' CleanUp: deleting reconstructions from random halves (for FSC)'
-      print '* ',message
-      _mylog.info(message)
-      for file in glob.glob(ProjMatchRootName+'_split_?.vol'):
-         os.remove(file)
-
+      os.system(' rm -r ' + LibraryDir + ' &')
 
 def  fill_name_vector(_user_suplied_name,
                       _volume_name_list,
