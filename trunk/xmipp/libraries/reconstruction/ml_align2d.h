@@ -26,6 +26,13 @@
 #ifndef _MLALIGN3D_H
 #define _MLALIGN3D_H
 
+// This program will run 3x faster with FFTW routines than with Xmipp's own FFT routines
+// However, in some cases the FFTW may not be available (although it comes with Xmipp)
+// In that case, comment out the next line to use Xmipp's routines
+#define HAVE_FFTW
+#ifdef HAVE_FFTW
+#include <data/fftw.h>
+#endif
 #include <data/fft.h>
 #include <data/args.h>
 #include <data/funcs.h>
@@ -195,6 +202,13 @@ public:
     bool do_per_image_noise;
     /** Per-image noise models */
     std::vector<double> imgs_noise_sigma;
+
+#ifdef HAVE_FFTW
+    /// Use fftw
+    /** Use the FFTW libraries instead of Xmipps FFT routines */
+    /** FFTW objects */
+    xmippFftw forwfftw, backfftw;
+#endif
 
     /** debug flag */
     int debug;

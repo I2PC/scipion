@@ -27,7 +27,6 @@
 // Read arguments ==========================================================
 void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
 {
-
     // Generate new command line for restart procedure
     cline = "";
     int argc2 = 0;
@@ -236,13 +235,16 @@ void Prog_MLalign2D_prm::show(bool ML3D)
         }
         if (do_norm)
         {
-            std::cerr << "  -> Developmental: refine normalization for each experimental image"<<std::endl;
+            std::cerr << "  -> Refine normalization for each experimental image"<<std::endl;
         }
         if (do_kstest)
         {
-            std::cerr << "  -> Developmental: perform KS-test on noise distributions "<<std::endl;
+            std::cerr << "  -> Perform KS-test on noise distributions "<<std::endl;
         }
         // Hidden stuff
+#ifdef HAVE_FFTW
+        std::cerr << "  -> Use FFTW for fourier transforms"<<std::endl;
+#endif
         if (!write_intermediate)
         {
             std::cerr << "  -> Do not write out images after each iteration." << std::endl;
@@ -315,7 +317,6 @@ void Prog_MLalign2D_prm::produce_Side_info()
 
     FileName                    fn_img, fn_tmp, fn_base, fn_tmp2;
     ImageXmipp                  img;
-    FourierImageXmipp           fourimg;
     SelLine                     SL;
     SelFile                     SFtmp, SFpart;
     Matrix1D<double>            offsets(2), dum;
@@ -599,6 +600,22 @@ void Prog_MLalign2D_prm::produce_Side_info2(int nr_vols)
         n_ref++;
         refno++;
     }
+
+    // Set up a FFTW plan
+#ifdef HAVE_FFTW
+    int fNdim = 2;
+    int * fN ;
+    fN = new int[fNdim];
+    //image size
+    fN[0] = XSIZE(Iref[0]());
+    fN[1] = YSIZE(Iref[0]());
+    bool inplace=false;
+    forwfftw.myxmippFftw(fNdim, fN, inplace, NULL);
+    backfftw.myxmippFftw(fNdim, fN, inplace, NULL);
+    //create plan (fftw stuff)
+    forwfftw.Init("ES",FFTW_FORWARD,false);
+    backfftw.Init("ES",FFTW_BACKWARD,false);
+#endif
 
     // Make scratch directory for the temporary origin offsets
     if (fn_scratch!="")
@@ -888,6 +905,7 @@ void Prog_MLalign2D_prm::rotate_reference(std::vector< ImageXmippT<double> > &Ir
     Mref.clear();
     A2.clear();
 
+    Faux.resize(dim/2 + 1,dim);
     // prepare masks
     mask.resize(dim, dim);
     mask.setXmippOrigin();
@@ -930,12 +948,19 @@ void Prog_MLalign2D_prm::rotate_reference(std::vector< ImageXmippT<double> > &Ir
             }
             if (fill_fourier_space)
             {
+                // Do the forward FFT 
+#ifdef HAVE_FFTW
+                forwfftw.SetPoints(MULTIDIM_ARRAY(Maux));
+                forwfftw.Transform();
+                forwfftw.GetPoints(MULTIDIM_ARRAY(Faux));
+#else
                 FourierTransformHalf(Maux, Faux);
-		Faux *= dim * dim;
-		FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
+                Faux *= dim * dim;
+#endif
+                FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
                 {
-		    dMij(Faux, i, j) = conj(dMij(Faux, i, j));
-		}
+                    dMij(Faux, i, j) = conj(dMij(Faux, i, j));
+                }
                 Fref[refno].push_back(Faux);
                 if (AA > 0) Fref[refno][ipsi] *= sqrt(stdAA / AA);
             }
@@ -984,8 +1009,17 @@ void Prog_MLalign2D_prm::reverse_rotate_reference(
             }
             else
             {
+                // Do the forward FFT 
+#ifdef HAVE_FFTW
+                backfftw.SetPoints(MULTIDIM_ARRAY(Fref[refno][ipsi]));
+                backfftw.Transform();
+                backfftw.Normalize();
+                backfftw.Normalize();
+                backfftw.GetPoints(MULTIDIM_ARRAY(Maux));
+#else
                 InverseFourierTransformHalf(Fref[refno][ipsi], Maux, dim);
-		Maux /= dim * dim;
+                Maux /= dim * dim;
+#endif
 		CenterFFT(Maux, true);
             }
             computeStats_within_binary_mask(omask, Maux, dum, dum, avg, dum);
@@ -1757,6 +1791,7 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
        even-sized images, where the origin is not exactly in the center, and 1 pixel wrapping is required.
        Anyway, the total number of (I)FFT's is determined in much greater extent by n_ref and n_rot!
     */
+    
 
 
     // Only translations smaller than save_mem2 (default=6) sigma_offset are considered!
@@ -1799,15 +1834,23 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
     {
         Maux.setXmippOrigin();
         applyGeometry(Maux, F[iflip], Mimg, IS_INV, WRAP);
+#ifdef HAVE_FFTW
+        Fimg.resize(dim/2 + 1,dim);
+        forwfftw.SetPoints(MULTIDIM_ARRAY(Maux));
+        forwfftw.Transform();
+        forwfftw.GetPoints(MULTIDIM_ARRAY(Fimg));
+#else
         FourierTransformHalf(Maux, Fimg);
+        Fimg *= dim * dim;
+#endif
+
         // Do this on Maux, not to mess up the original Mimg 
         // (for subsequent KS-test or whatever may come...)
         // Also this is much faster in Fourier-space 
         if (do_norm)
         {
-            dMij(Fimg,0,0) -= bgmean;
+            dMij(Fimg,0,0) -= bgmean * dim * dim;
         }
-        Fimg *= dim * dim;
         Fimg_flip.push_back(Fimg);
         FOR_ALL_MODELS()
         {
@@ -1823,8 +1866,15 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
                     if (dMij(Msignificant, refno, irot))
                     {
                         multiplyElements(Fimg, Fref[refno][ipsi], Faux);
+#ifdef HAVE_FFTW
+                        backfftw.SetPoints(MULTIDIM_ARRAY(Faux));
+                        backfftw.Transform();
+                        backfftw.Normalize();
+                        backfftw.GetPoints(MULTIDIM_ARRAY(Maux));
+#else
                         InverseFourierTransformHalf(Faux, Maux, dim);
                         Maux /= dim * dim;
+#endif
                         CenterFFT(Maux, true);
                         Mweight[refno][irot].resize(sigdim, sigdim);
                         Mweight[refno][irot].setXmippOrigin();
@@ -1879,6 +1929,10 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
 				MAT_ELEM(Mweight[refno][irot], i, j) = weight;
 				// calculate weighted sum of (X-A)^2 for sigma_noise update
 				wsum_corr += weight * diff;
+                                //std::cerr<<" aux= "<<aux<<" "<<diff<<" "<<mindiff2<<" "<<anneal<<" "<<sigma_noise2<<" "<<pdf<<" "<<fracpdf<<" "<<MAT_ELEM(P_phi, i, j)<<std::endl;
+                                //std::cerr<<"w= "<<weight<<" diff= "<<diff<<" wsum_corr= "<<wsum_corr<<std::endl; exit(0);
+                                //if (refno==n_ref-1 && irot==nr_psi-1 && i==0 && j==0) 
+                                //    std::cerr<<"w= "<<weight<<" diff= "<<diff<<" wsum_corr= "<<wsum_corr<<std::endl;
 			    }
 			    else
 			    {
@@ -1991,7 +2045,13 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
             dMij(Faux,i,j) = conj(dMij(Fref[opt_refno][iopt_psi],i,j));
             dMij(Faux,i,j) *= opt_scale/dim2;
         }
+#ifdef HAVE_FFTW
+        backfftw.SetPoints(MULTIDIM_ARRAY(Faux));
+        backfftw.Transform();
+        backfftw.GetPoints(MULTIDIM_ARRAY(Maux2));
+#else
         InverseFourierTransformHalf(Faux, Maux2, dim);
+#endif
         Maux = Maux - Maux2;
         bgmean = Maux.computeAvg();
         // Already apply new bgmean to Fimg:
@@ -2038,7 +2098,13 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
 			    {
 				MAT_ELEM(Maux, i, j) = opt_scale * MAT_ELEM(Mweight[refno][irot], i, j) / sum_refw;
 			    }
-			    FourierTransformHalf(Maux, Faux);
+#ifdef HAVE_FFTW
+                            forwfftw.SetPoints(MULTIDIM_ARRAY(Maux));
+                            forwfftw.Transform();
+                            forwfftw.GetPoints(MULTIDIM_ARRAY(Faux));
+#else
+                            FourierTransformHalf(Maux, Faux);
+#endif
                             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
                             {
                                 dMij(Faux,i,j) *= dim * dim;
@@ -2092,7 +2158,7 @@ double Prog_MLalign2D_prm::performKSTest(Matrix2D<double> &Mimg, FileName &fn_im
                          int &opt_refno, int &iopt_psi, int &iopt_flip,
                          Matrix1D<double> &opt_offsets)
 {
-    Matrix2D<double> MMimg = Mimg, Mref, Mdiff(Mimg);
+    Matrix2D<double> MMimg = Mimg, Mref(Mimg), Mdiff(Mimg);
     Matrix2D<std::complex<double> > FFref = Fref[opt_refno][iopt_psi];
     double ref_scale = 1., sigma = sigma_noise;
 
@@ -2112,7 +2178,13 @@ double Prog_MLalign2D_prm::performKSTest(Matrix2D<double> &Mimg, FileName &fn_im
         dMij(FFref,i,j) = conj(dMij(FFref,i,j));
         dMij(FFref,i,j) *= ref_scale/dim2;
     }
+#ifdef HAVE_FFTW
+    backfftw.SetPoints(MULTIDIM_ARRAY(FFref));
+    backfftw.Transform();
+    backfftw.GetPoints(MULTIDIM_ARRAY(Mref));
+#else
     InverseFourierTransformHalf(FFref, Mref, dim);
+#endif
     Mdiff = MMimg - Mref;
     Mdiff /= sigma;
     double * aux_array = MULTIDIM_ARRAY(Mdiff) - 1;
