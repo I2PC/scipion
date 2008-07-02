@@ -487,6 +487,46 @@ void xmippFftw::GetPoints(double * data, bool fromInput) const
 }
 
 //_____________________________________________________________________________
+void xmippFftw::GetPoints(std::complex<double> * data, bool fromInput) const
+{
+//Fills the array data with the computed transform.
+//or the initial points
+//Only (roughly) a half of the transform is copied (exactly the output of FFTW),
+//the rest being Hermitian symmetric with the first half
+// from input mens get original input data
+   if(fSign == FFTW_FORWARD)
+   {
+       if (fromInput){
+           REPORT_ERROR(1,"FFTW: Not implemented 1");
+       } else {
+          int realN = 2*int(double(fTotalSize)*(fN[fNdim-1]/2+1)/fN[fNdim-1]);
+          if (fOut){
+             for (int i=0; i<realN; i+=2){
+                 ((fftw_complex*)data)[i/2][0]=fOut[i];
+                 ((fftw_complex*)data)[i/2][1]=fOut[i+1];
+
+             }
+          }
+          else {
+             REPORT_ERROR(1,"FFTW: Not implemented 2");
+          }
+       }
+    }   
+    else if (fSign == FFTW_BACKWARD)
+    {
+        REPORT_ERROR(1,"FFTW: Not implemented 3");
+    }   
+    else
+    {
+       std::cerr << "Invalid sign value:" 
+                 << fSign 
+                 << " in xmippFftw::GetPoints "
+                 <<std::endl;
+    }
+
+}
+
+//_____________________________________________________________________________
 void xmippFftw::SetPoints(const double *data)
 {
 //Set all input points
@@ -507,6 +547,27 @@ void xmippFftw::SetPoints(const double *data)
        for (int i=0; i<2*(sizein); i+=2){
           ((fftw_complex*)fIn)[i/2][0]=data[i];
           ((fftw_complex*)fIn)[i/2][1]=data[i+1];
+       }
+    }       
+}
+
+//_____________________________________________________________________________
+void xmippFftw::SetPoints(const std::complex<double> *data)
+{
+//Set all input points
+
+   if(fSign == FFTW_FORWARD)
+   {
+       REPORT_ERROR(1,"FFTW: Not implemented 4");
+   }    
+//set all points. the values are copied. points should be ordered as follows:
+//[re_0, im_0, re_1, im_1, ..., re_n, im_n)
+    else if (fSign == FFTW_BACKWARD)
+    {
+
+       int sizein = int(double(fTotalSize)*(fN[fNdim-1]/2+1)/fN[fNdim-1]);
+       for (int i=0; i<(sizein); i++){
+           ((std::complex<double>*)fIn)[i]=data[i];
        }
     }       
 }
