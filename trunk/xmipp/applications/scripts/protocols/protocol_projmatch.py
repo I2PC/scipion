@@ -12,7 +12,7 @@
 # {section} Global parameters
 #-----------------------------------------------------------------------------
 # {file} Selfile with the input images:
-""" Note that this file should be positioned in the projection directory.
+""" This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
 SelFileName='noefg.sel'
 
@@ -28,9 +28,13 @@ DocFileName=''
 ReferenceFileName='ml3d_it00020_vol00004_sc128_ff80.vol'
 
 # Working subdirectory: 
+""" This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
+"""
 WorkDirectory='ProjMatch/TestNoCtf1Realign2D'
 
 # Delete working subdirectory if it already exists?
+""" Just be careful with this option...
+"""
 DoDeleteWorkingDir=False
 
 # Number of iterations to perform
@@ -49,7 +53,7 @@ ContinueAtIteration=1
 CleanUpFiles=True
 
 # {expert} Root directory name for this project:
-""" Absolute path to the root directory for this project
+""" Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
 ProjectDir='/home/sjors/work/projmatch/ribosome'
 

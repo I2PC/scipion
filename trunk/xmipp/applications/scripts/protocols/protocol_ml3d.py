@@ -13,17 +13,25 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # {file} Selfile with the input images:
+""" This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
+"""
 InSelFile="all_images.sel"
 # {file} Initial 3D reference map:
+""" Spider-format 3D density map with the same dimensions as your particles. This file may be in any directory.
+"""
 InitialReference="my_ref.vol"
 # Working subdirectory:
+""" This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
+"""
 WorkingDir="ML3D/test1"
 # Delete working subdirectory if it already exists?
+""" Just be careful with this option...
+"""
 DoDeleteWorkingDir=False
 # {expert} Root directory name for this project:
-""" Absolute path to the root directory for this project
+""" Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
-ProjectDir="/home/scheres"
+ProjectDir="/home/scheres/proteinA/dataset1"
 # {expert} Directory name for logfiles:
 LogDir="Logs"
 #------------------------------------------------------------------------------------------------
@@ -32,7 +40,7 @@ LogDir="Logs"
 # Perform MLF3D instead of ML3D classification?
 DoMlf=False
 # {file} CTFdat file with the input images:
-""" The names of both the images and the ctf-parameter files should be with absolute paths.
+""" The names of both the images and the ctf-parameter files should be with absolute paths. If you want to use this, make sure also the images in the input selfile (see above) are with absolute paths.
 """
 InCtfDatFile="all_images.ctfdat"
 # Is the initial 3D reference map CTF-amplitude corrected?

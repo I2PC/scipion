@@ -12,11 +12,15 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # Working subdirectory:
+""" This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
+"""
 WorkingDir="SOM/ML2ref_ref1"
 # Delete working subdirectory if it already exists?
+""" Just be careful with this option...
+"""
 DoDeleteWorkingDir=False
 # {expert} Root directory name for this project:
-""" Absolute path to the root directory for this project
+""" Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
 ProjectDir="/home2/bioinfo/scheres/work/protocols"
 # {expert} Directory name for logfiles (relative path from ProjectDir):
