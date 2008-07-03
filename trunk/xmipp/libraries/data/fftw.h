@@ -314,11 +314,15 @@ specifying `FFTW_PATIENT' first plans in `FFTW_ESTIMATE' mode, then in
 
     xmippFftw(Matrix3D<double> &img, bool init_and_do_transform=true);
                                             
-   /** Modify Real Data so the Fourier trnasform is at the center
-       Same function must be applied after Fourier inversion
+   /** Modify Real Data so the Fourier trasform is at the center
+       CenterRealDataAfterTransform function must be applied after Fourier inversion
     */
    void CenterRealDataBeforeTransform(void);
-   /** Delete fIn vector while keeping fOut. This is usefull if you
+    /** Modify Output Real Data so the Fourier transform is at the center
+       CenterRealDataBeforeTransform function must be applied before Fourier inversion
+    */
+   void CenterRealDataAfterTransform(void);
+  /** Delete fIn vector while keeping fOut. This is usefull if you
        want to save memory */
    void delete_fIn(void);
 

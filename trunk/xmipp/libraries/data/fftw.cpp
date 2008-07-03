@@ -146,6 +146,7 @@ void xmippFftw::myxmippFftw(int ndim, int *n, bool my_inPlace,
                 << std::endl;
       exit(1);
    }
+   
    fNdim = ndim;
    fTotalSize = 1;
    fN = new int[fNdim];
@@ -180,7 +181,7 @@ void xmippFftw::myxmippFftw(int ndim, int *n, bool my_inPlace,
       try
       {
           fOut = new double [2*sizeout];
-       }
+      }
       catch (std::bad_alloc&)
       {
         std::cout << "Error allocating memory." << std::endl;
@@ -633,13 +634,60 @@ fftw_set_timelimit( seconds);
 
 void xmippFftw::CenterRealDataBeforeTransform(void)
 {
-  int ii=0;
-  for(int i=0; i<fN[1]; i++)
-     for(int j=0; j<fN[0]; j++)
+   int ii=0;
+   double par=-1;
+   if (fNdim==2)
+   {
+       for(int i=0; i<fN[1]; i++)
        {
-       if(((i+j)%2) == 1) fIn[ii] *= (-1.);
-       ii++;
-       }
+           for(int j=0; j<fN[0]; j++)
+           {
+           par *= -1.0;
+           fIn[ii] *= par;
+           ii++;
+           }
+           if(fN[1]%2==0)par *= -1.0;
+       }  
+   }
+   else if (fNdim==3)
+   {
+       for(int k=0; k<fN[2]; k++)
+       {    
+           for(int i=0; i<fN[1]; i++)
+           {
+              for(int j=0; j<fN[0]; j++)
+              {
+              fIn[ii] *= par;
+              ii++;
+              }
+              if(fN[1]%2==0)par *= -1.0;
+           }
+           if(fN[1]%2==0)par *= -1.0;
+       }     
+   }
+}
+void xmippFftw::CenterRealDataAfterTransform(void)
+{
+   int ii=0;
+   if (fNdim==2)
+   {
+       for(int i=0; i<fN[1]; i++)
+         for(int j=0; j<fN[0]; j++)
+           {
+           if(((i+j)%2) == 1) fOut[ii] *= (-1.);
+           ii++;
+           }
+   }
+   else if (fNdim==3)
+   {
+       for(int k=0; k<fN[2]; k++)
+           for(int i=0; i<fN[1]; i++)
+               for(int j=0; j<fN[0]; j++)
+              {
+              if(((i+j+k)%2) == 1) fOut[ii] *= (-1.);
+              ii++;
+              }
+   }
 }
 
 /* Applies a bandpass filter to an image. */
