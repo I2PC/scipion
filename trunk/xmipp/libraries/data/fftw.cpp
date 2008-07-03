@@ -949,6 +949,73 @@ void xmippFftw::fftwRadialAverage(double * AUX,
 
 }
 
+void xmippFftw::read(FileName fn)
+{
+    std::ifstream filestr;
+    int     aux_fNdim;
+    int    *aux_fN;
+    bool   FFT_equal=true;
+    
+    filestr.open (fn.c_str(), std::ios::in | std::ios::binary);
+    filestr.read(reinterpret_cast< char* >(&aux_fNdim), sizeof(int)*1);
+    aux_fN = new int [aux_fNdim];
+    filestr.read(reinterpret_cast< char* >(aux_fN), sizeof(int)*aux_fNdim);
+    if(aux_fNdim != fNdim ) FFT_equal=false;
+    for (int i=0; i<fNdim; i++){
+        if (fN[i]!=aux_fN[i]) 
+            FFT_equal=false;
+    } 
+    if (!FFT_equal)
+    {
+       fftw_destroy_plan((fftw_plan)fPlan);
+       fPlan = NULL;
+       if(fIn!=NULL && destroy_fIn==true)
+      {
+          delete [] fIn;
+          fIn = NULL;
+      }
+      else
+          fIn = NULL;
+      if (fOut!=NULL)
+      {
+          delete [] fOut;
+      }
+      else
+          fOut = NULL;
+
+      if (fN!=NULL)
+      {
+         delete[] fN;
+         fN = NULL;
+      }
+      else
+         fN = NULL;
+
+      myxmippFftw();
+      bool my_inPlace=false;
+      double * already_reserved=NULL;
+      
+      if(aux_fNdim==1)
+          myxmippFftw(aux_fN[0], my_inPlace, already_reserved);
+      else
+         myxmippFftw(aux_fNdim, aux_fN, my_inPlace, already_reserved);
+    }// end else
+    filestr.read(reinterpret_cast< char* >(fIn), sizeof(std::complex<double>)*sizeout);
+  
+    filestr.close();
+}
+
+void xmippFftw::write(FileName fn)
+{
+    std::ofstream filestr;
+    filestr.open (fn.c_str(), std::ios::out | std::ios::binary);
+    filestr.write(reinterpret_cast< char* >(&fNdim), sizeof(int)*1);
+    filestr.write(reinterpret_cast< char* >(fN), sizeof(int)*fNdim);
+    filestr.write(reinterpret_cast< char* >(fOut), sizeof(std::complex<double>)*sizeout);
+    filestr.close();
+}
+
+
 //
 // lockFile is the filename to use to represent the lock.  Basically, if the
 // file exists, then someone has the lock (in this case to prtsuffix.data
