@@ -473,7 +473,7 @@ void xmippFftw::GetPoints(double * data, bool fromInput) const
                 data[i+1]  = ((fftw_complex*)fIn)[i/2][1];
              }
         }
-        if (fOut){
+        else if (fOut){
            for (int i=0; i<fTotalSize; i++)
               data[i] = ((double*)fOut)[i];
         }
@@ -755,7 +755,7 @@ void xmippFftw::img_bandpass_filter(double res_hi, double width)
     int zz, yy, xx;
     double sz2,sy2,sx2,s;   
 
-	double res_hi2= res_hi*res_hi;
+    double res_hi2= res_hi*res_hi;
     std::complex<double> * cfOut, *cfIn;
     cfOut = (std::complex<double> *)fOut; //fOut is double *
     cfIn  = (std::complex<double> *)fIn;  //fIn is double *
@@ -808,7 +808,7 @@ void xmippFftw::fourier_ring_correlation(xmippFftw & fft_m2,
     }
     else
     {
-        std::cerr << "Error in fftwRadialAverage\n";
+        std::cerr << "Error in fftw:fourier_ring_correlation\n";
         exit(0);
     }
 
