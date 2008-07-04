@@ -651,7 +651,7 @@ void xmippFftw::CenterRealDataBeforeTransform(void)
            fIn[ii] *= par;
            ii++;
            }
-           if(fN[1]%2==0)par *= -1.0;
+           if(fN[0]%2==0)par *= -1.0;
        }  
    }
    else if (fNdim==3)
@@ -662,10 +662,11 @@ void xmippFftw::CenterRealDataBeforeTransform(void)
            {
               for(int j=0; j<fN[0]; j++)
               {
+              par *= -1.0;
               fIn[ii] *= par;
               ii++;
               }
-              if(fN[1]%2==0)par *= -1.0;
+              if(fN[0]%2==0)par *= -1.0;
            }
            if(fN[1]%2==0)par *= -1.0;
        }     
@@ -674,24 +675,45 @@ void xmippFftw::CenterRealDataBeforeTransform(void)
 void xmippFftw::CenterRealDataAfterTransform(void)
 {
    int ii=0;
+   double par=-1;
    if (fNdim==2)
    {
+/*
        for(int i=0; i<fN[1]; i++)
          for(int j=0; j<fN[0]; j++)
            {
            if(((i+j)%2) == 1) fOut[ii] *= (-1.);
            ii++;
            }
+*/
+       for(int i=0; i<fN[1]; i++)
+       {
+           for(int j=0; j<fN[0]; j++)
+           {
+           par *= -1.0;
+           fIn[ii] *= par;
+           ii++;
+           }
+           if(fN[0]%2==0)par *= -1.0;
+       }  
    }
    else if (fNdim==3)
    {
        for(int k=0; k<fN[2]; k++)
+       {    
            for(int i=0; i<fN[1]; i++)
-               for(int j=0; j<fN[0]; j++)
+           {
+              for(int j=0; j<fN[0]; j++)
               {
-              if(((i+j+k)%2) == 1) fOut[ii] *= (-1.);
+              par *= -1.0;
+              fOut[ii] *= par;
+              //if(((i+j+k)%2) == 1) fOut[ii] *= (-1.);
               ii++;
               }
+              if(fN[0]%2==0)par *= -1.0;
+           }
+           if(fN[1]%2==0)par *= -1.0;
+       }
    }
 }
 
@@ -755,18 +777,6 @@ void xmippFftw::img_bandpass_filter(double res_hi, double width)
 				s = (sx2 + sy2 + sz2);
                 if (s > res_hi2) 
 				    cfOut[i] = 0.;
-/*                else    
-				    cfOut[i] = 1.;
-
-std::cerr << "i xx yy s res_hi2 z y x " 
-          << i << " " << sy2 << " " << sx2 
-          << " " << s << " " 
-          << res_hi2 << " "
-          << z << " "
-          << y << " "
-          << x << " "
-          << fOut[2*i] << "\n";
-*/
 			}
 		}
 	}
