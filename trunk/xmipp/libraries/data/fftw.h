@@ -102,9 +102,15 @@ class xmippFftw{
    /** Initialization ND constructor */
    void myxmippFftw(int ndim, int *n, bool my_inPlace, 
                      double * already_reserved);
- 
+   /** Destroy... */
    ~xmippFftw();
    
+   /** Destroys the data arrays and the plan. However, some plan 
+   information stays around until the root session is over, 
+   and is reused if other plans of the same size are created
+   */
+
+   void deleteXmippFftw(void);
    /**Creates the fftw-plan
    
    NOTE:  input and output arrays are overwritten during initialisation,

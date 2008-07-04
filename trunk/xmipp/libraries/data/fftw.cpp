@@ -289,6 +289,11 @@ xmippFftw::xmippFftw(Matrix3D<double> &img, bool init_and_do_transform)
 //_____________________________________________________________________________
 xmippFftw::~xmippFftw()
 {
+//destroy object
+deleteXmippFftw();
+}
+void xmippFftw::deleteXmippFftw(void)
+{
 //Destroys the data arrays and the plan. However, some plan information stays around
 //until the root session is over, and is reused if other plans of the same size are
 //created
@@ -967,30 +972,7 @@ void xmippFftw::read(FileName fn)
     } 
     if (!FFT_equal)
     {
-       fftw_destroy_plan((fftw_plan)fPlan);
-       fPlan = NULL;
-       if(fIn!=NULL && destroy_fIn==true)
-      {
-          delete [] fIn;
-          fIn = NULL;
-      }
-      else
-          fIn = NULL;
-      if (fOut!=NULL)
-      {
-          delete [] fOut;
-      }
-      else
-          fOut = NULL;
-
-      if (fN!=NULL)
-      {
-         delete[] fN;
-         fN = NULL;
-      }
-      else
-         fN = NULL;
-
+      deleteXmippFftw();
       myxmippFftw();
       bool my_inPlace=false;
       double * already_reserved=NULL;
@@ -999,7 +981,7 @@ void xmippFftw::read(FileName fn)
           myxmippFftw(aux_fN[0], my_inPlace, already_reserved);
       else
          myxmippFftw(aux_fNdim, aux_fN, my_inPlace, already_reserved);
-    }// end else
+    }// if (!FFT_equal)
     filestr.read(reinterpret_cast< char* >(fIn), sizeof(std::complex<double>)*sizeout);
   
     filestr.close();
