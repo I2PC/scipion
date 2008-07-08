@@ -332,6 +332,9 @@ specifying `FFTW_PATIENT' first plans in `FFTW_ESTIMATE' mode, then in
        want to save memory */
    void delete_fIn(void);
 
+   /** Fill the fOut array with the frequency values (0-0.5) for each pixel */
+   void getResolutionAllPoints(void);
+
    /** Applies a bandpass filter to an image (either  2 or 3 D). 
        frecuencies in range 0-0.5 */
    
@@ -351,7 +354,13 @@ void fftwRadialAverage(double *AUX,
                                   Matrix1D< double >& radial_mean,
                                   Matrix1D< int >& radial_count,
                                   bool rounding =true );
-                              
+/** Directly calculate radial average of the squared amplitudes 
+    of the fOut vector (if FFT_FORWARD) 
+    and of the fIn vector (if FFT_BACKWARD) */
+void fftwRadialAverageSquaredAmplitudes(Matrix1D< double >& radial_mean,
+                                        Matrix1D< int >& radial_count,
+                                        bool rounding  =true);
+
 /** Read Fourier transform from disk*/
 void read(FileName fn);
 

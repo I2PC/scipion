@@ -717,6 +717,67 @@ void xmippFftw::CenterRealDataAfterTransform(void)
    }
 }
 
+/* Fills the fOut array with the resolution vales at every pixel
+/* i.e. frecuencies in range 0-0.5 */
+void xmippFftw::getResolutionAllPoints()
+{
+    int Xdim,Xsize;
+    int Ydim=1,Ysize=1;
+    int Zdim=1,Zsize=1;
+    /* rememebr to transpose de matrix */
+    if(fNdim==1)
+    {   
+        Zdim=Zsize=1;
+        Ydim=Ysize=1;
+        Xsize=fN[0];
+        Xdim = (int) fN[0]/2 +1;        
+    }
+    else if (fNdim==2)
+    {
+        Zdim=Zsize=1;
+        Ydim=Ysize=fN[0];
+        Xsize=fN[1];
+        Xdim = (int) fN[1]/2 +1;
+    
+    }    
+    else if (fNdim==3)
+    {
+        Zdim=Zsize=fN[0];
+        Ydim=Ysize=fN[1];
+        Xsize=fN[2];
+        Xdim = (int)  fN[2]/2 +1;
+    }
+    else
+    {
+        std::cerr << "Error in getResolutionAllPoints\n";
+        exit(0);
+    }
+    int zz, yy, xx;
+    double sz2,sy2,sx2;   
+    std::complex<double> * cfOut, *cfIn;
+    cfOut = (std::complex<double> *)fOut;
+    for ( int z=0, i=0; z<Zdim; z++ ) {
+        if ( z > (Zsize - 1)/2 ) zz = Zsize-z;
+        else zz = z;
+        sz2 = (double)zz/Zsize;
+        sz2 *= sz2;
+        for ( int y=0; y<Ydim; y++ ) {
+            if ( y > (Ysize - 1)/2 ) yy = Ysize-y;
+            else yy = y;
+            sy2 = (double)yy/Ysize;
+            sy2 *= sy2;
+            for ( int x=0; x<Xdim; x++, i++ ) {
+                if ( x > (Xsize - 1)/2 ) xx = Xsize-x;
+                else xx = x;
+                sx2 = (double)xx/Xsize;
+                sx2 *= sx2;
+                cfOut[i] = sqrt(sx2 + sy2 + sz2);
+            }
+        }
+    }
+
+}
+
 /* Applies a bandpass filter to an image. */
 /* frecuencies in range 0-0.5 */
 void xmippFftw::img_bandpass_filter(double res_hi, double width)
@@ -922,19 +983,18 @@ void xmippFftw::fftwRadialAverage(double * AUX,
 
     int zz, yy, xx;
     double sz2,sy2,sx2,s;   
+
     /* maximun distance*/
-    std::complex<double> * cfOut;
-    cfOut = (std::complex<double> *)fOut; //fOut is double *
     for ( int z=0, ii=0; z<Zdim; z++ ) {
-		if ( z > (Zsize - 1)/2 ) zz = Zsize-z;
-		else zz = z;
-		for ( int y=0; y<Ydim; y++ ) {
-			if ( y > (Ysize - 1)/2 ) yy = Ysize-y;
-			else yy = y;
-			for ( int x=0; x<Xdim; x++, ii++ ) {
-				if ( x > (Xsize - 1)/2 ) xx = Xsize-x;
-				else xx = x;
-				s = sqrt(xx*xx+yy*yy+zz*zz);
+        if ( z > (Zsize - 1)/2 ) zz = Zsize-z;
+        else zz = z;
+        for ( int y=0; y<Ydim; y++ ) {
+            if ( y > (Ysize - 1)/2 ) yy = Ysize-y;
+            else yy = y;
+            for ( int x=0; x<Xdim; x++, ii++ ) {
+                if ( x > (Xsize - 1)/2 ) xx = Xsize-x;
+                else xx = x;
+                s = sqrt(xx*xx+yy*yy+zz*zz);
                 // Determine distance to the center
                 int distance;
                 if (rounding)
@@ -943,9 +1003,10 @@ void xmippFftw::fftwRadialAverage(double * AUX,
                     distance = (int) FLOOR(s);
                 // Sum the value to the pixels with the same distance
                 radial_mean(distance) += AUX[ii];
-
+                
                 // Count the pixel
                 radial_count(distance)++;
+
                 //each point counts by two
                 //except those in the redundant part
                 if (xx!=0)
@@ -953,14 +1014,36 @@ void xmippFftw::fftwRadialAverage(double * AUX,
                     radial_mean(distance) += AUX[ii];
                     radial_count(distance)++;
                 }
-			}
-		}
-	}
+            }
+        }
+    }
     // Perfor the mean
     FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_mean)
     {
         radial_mean(i) /= (double) radial_count(i);
     }
+
+}
+
+/* Radial average for Fourier transforms*/
+void xmippFftw::fftwRadialAverageSquaredAmplitudes(Matrix1D< double >& radial_mean,
+                                                   Matrix1D< int >& radial_count,
+                                                   bool rounding /*=true*/ )
+{
+
+   double * aux2;
+   aux2 = new double[sizeout];
+   std::complex<double> *aux;
+   if(fSign == FFTW_FORWARD)
+       aux = (std::complex<double> *) fOut;
+   else if (fSign == FFTW_BACKWARD)
+       aux = (std::complex<double> *) fIn;
+
+   // Calculate squared amplitudes and radial average
+   for (int i=0; i<sizeout; i++)
+       aux2[i] = abs(aux[i])*abs(aux[i]);
+
+   fftwRadialAverage(aux2, radial_mean, radial_count, rounding);
 
 }
 
