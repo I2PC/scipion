@@ -24,24 +24,25 @@
  ***************************************************************************/
 
 /* INCLUDES ---------------------------------------------------------------- */
-#include <reconstruction/mlf_tomo.h>
+#include <reconstruction/mlf_newtomo.h>
 
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char **argv)
 {
 
     int c, nn, imgno, opt_refno;
-    double LL, sumw_allrefs, sumcorr;
-    double aux, wsum_sigma_offset, wsum_sigma_noise2;
-    std::vector<Matrix3D<double > > wsum_Mref, Mref;
-    std::vector<Matrix3D<double > > wsum_Mwedge;
-    std::vector<double> sumw, wsum_sigma2, sum_nonzero_pixels;
-    Matrix3D<double> Maux;
-    std::vector<int> count_defocus;
-    FileName fn_img, fn_tmp;
-    Matrix1D<double> oneline(0);
-    DocFile DFo, DFf;
+    double aux, LL, sumw_allrefs, avePmax;
+    std::vector<double> conv;
     SelFile SFa;
+    double * dataRefs;
+    double * dataSigma;
+    double * dataWsumRefs;
+    double * dataWsumWedsPerRef;
+    double * dataWsumWedsPerGroup;
+    double * dataWsumDist;
+    double * dataSumWRefs;
+    double * imgsPmax;
+    int    * imgsOptRefNos;
 
     Prog_mlf_tomo_prm prm;
 
@@ -49,11 +50,8 @@ int main(int argc, char **argv)
     try
     {
         prm.read(argc, argv);
-        prm.produce_Side_info();
+        prm.produceSideInfo();
         prm.show();
-        if (prm.fn_sig == "") prm.estimate_initial_sigma2();
-        prm.produce_Side_info2();
-
     }
     catch (Xmipp_error XE)
     {
@@ -62,50 +60,92 @@ int main(int argc, char **argv)
         exit(0);
     }
 
+    // Reserve memory for all the required data structures
     try
     {
-        Maux.resize(prm.dim, prm.dim, prm.dim);
-        Maux.setXmippOrigin();
-        DFo.reserve(2*prm.SF.ImgNo() + 1);
-        DFf.reserve(2*prm.SFr.ImgNo() + 4);
-        SFa.reserve(prm.Niter*prm.nr_ref);
-        SFa.clear();
+        dataSumWRefs         = new double[prm.nr_ref];
+        dataRefs             = new double[prm.nr_ref * prm.size];
+        dataWsumRefs         = new double[prm.nr_ref * prm.size];
+        dataWsumWedsPerRef   = new double[prm.nr_ref * prm.hsize];
+        dataSigma            = new double[prm.nr_group * prm.hsize];
+        dataWsumWedsPerGroup = new double[prm.nr_group * prm.hsize];
+        dataWsumDist         = new double[prm.nr_group * prm.hsize];
+        imgsPmax             = new double[prm.SFi.ImgNo()];
+        imgsOptRefNos        = new int   [prm.SFi.ImgNo()];
+    }
+    catch (std::bad_alloc&)
+    {
+        REPORT_ERROR(1,"Error allocating memory in main");
+    }
+
+    try
+    {
+        // Read references in memory and store their FTs
+        prm.readAndFftwAllReferences(dataRefs);
+        // For later parallellization: split here prm.SFi and prm.SFw!
+        //SFa = prm.SFi + prm.SFw;
+        prm.calculateAllFFTWs(prm.SFi);
+        prm.estimateInitialNoiseSpectra(dataSigma);
 
         // Loop over all iterations
         for (int iter = prm.istart; iter <= prm.Niter; iter++)
         {
 
-            if (prm.verb > 0) std::cerr << "  Sub-tomogram refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
+            if (prm.verb > 0) std::cerr << "  Sub-tomogram classification:  iteration " << iter << " of " << prm.Niter << std::endl;
 
-            DFo.clear();
-            DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Zoff (6), WedNo (7) Ref (8), Pmax/sumP (9)");
+            prm.expectation(prm.SFi, 
+                            prm.SFw, 
+                            dataRefs,
+                            dataSigma,
+                            dataWsumRefs, 
+                            dataWsumWedsPerRef,
+                            dataWsumWedsPerGroup,
+                            dataWsumDist,
+                            dataSumWRefs,
+                            imgsPmax,
+                            imgsOptRefNos,
+                            LL, 
+                            avePmax);
 
-            // Integrate over all images
-            prm.sum_over_all_images(prm.SF, wsum_Mref, wsum_Mwedge, sum_nonzero_pixels, wsum_sigma2,
-                                    wsum_sigma_offset, sumw, LL, sumcorr, DFo);
+            prm.maximization(dataRefs,
+                             dataSigma,
+                             dataWsumRefs,
+                             dataWsumWedsPerRef,
+                             dataWsumWedsPerGroup,
+                             dataWsumDist,
+                             dataSumWRefs,
+                             imgsPmax,
+                             imgsOptRefNos,
+                             sumw_allrefs, 
+                             avePmax );
 
-            // Update model parameters
-            prm.update_parameters(wsum_Mref, wsum_Mwedge, sum_nonzero_pixels, wsum_sigma2,
-                                  wsum_sigma_offset, sumw, sumcorr, sumw_allrefs, iter);
-
-            // Do some post-processing and calculate real-space references
-            prm.post_process_references(Mref);
-
-            prm.write_output_files(iter, SFa, DFf, Mref, sumw_allrefs, sumw, LL, sumcorr);
-
-            // Write out docfile with optimal transformation & references
-            fn_tmp = prm.fn_root + "_it";
-            fn_tmp.compose(fn_tmp, iter, "doc");
-            DFo.write(fn_tmp);
+            prm.writeOutputFiles(iter, 
+                                 dataRefs,
+                                 sumw_allrefs, 
+                                 LL, 
+                                 avePmax,
+                                 conv);
 
         } // end loop iterations
 
         // Write out converged structures
-        prm.write_output_files(-1, SFa, DFf, Mref, sumw_allrefs, sumw, LL, sumcorr);
+        prm.writeOutputFiles(-1, 
+                             dataRefs,
+                             sumw_allrefs, 
+                             LL, 
+                             avePmax,
+                             conv);
 
-        // Write out docfile with optimal transformation & references
-        fn_img = prm.fn_root + ".doc";
-        DFo.write(fn_img);
+        // Free the memory (is this necessary?)
+        delete [] dataSumWRefs;
+        delete [] dataWsumRefs;
+        delete [] dataWsumWedsPerRef;
+        delete [] dataWsumWedsPerGroup;
+        delete [] dataWsumDist;
+        delete [] imgsPmax;
+        delete [] imgsOptRefNos;
+        delete [] dataRefs;
+        delete [] dataSigma;
 
     }
     catch (Xmipp_error XE)
