@@ -520,8 +520,8 @@ void Prog_mlf_tomo_prm::expectationSingleImage(int igroup,
             {
                 aux = abs(DATAIMG[i] - DATAREFS[iiref]);
                 diff2 += (aux * aux)/dataSigma[iig];
-//#define DEBUG_EXPSINGLE 
-#ifdef DEBUG_EXPSINGLE                
+//#define DEBUG_ALOT_EXPSINGLE 
+#ifdef DEBUG_ALOT_EXPSINGLE                
                 std::cerr<<i<<" abs2= "<<aux<<" "<<DATAIMG[i]<<" "<<DATAREFS[iiref]<<" sigma2= "<<dataSigma[iig]<<" diff2= "<<diff2<<" mindiff2= "<<mindiff2<<std::endl;
 #endif
             }
@@ -551,14 +551,17 @@ void Prog_mlf_tomo_prm::expectationSingleImage(int igroup,
 
     // Store Pmax/sumP
     Pmax = maxweight / sumweight;
+#ifdef DEBUG_EXPSINGLE                
     std::cerr<<"Pmax= "<<Pmax<<" mindiff2= "<<mindiff2<<std::endl;
+#endif
 
     // Then, store the sum of all weights
     for (int refno = 0; refno < nr_ref; refno++)
     {
         weight = weights[refno] / sumweight;
+#ifdef DEBUG_EXPSINGLE                
         std::cerr<<" refno= "<<refno<<" w= "<< weight<<" ";
-
+#endif
         if (weight > SIGNIFICANT_WEIGHT_LOW)
         {
             dataSumWRefs[refno] += weight;
@@ -574,16 +577,6 @@ void Prog_mlf_tomo_prm::expectationSingleImage(int igroup,
                     DATAWSUMREFS[iiref] += weight * DATAIMG[i];
                     dataWsumWedsPerRef[iiref] += weight;
                 }
-#ifdef DEBUG_EXPSINGLE                
-                if (i==7425)
-                    std::cerr<<" dataImg[320]= "<<DATAIMG[i]
-                             <<" dataRefs[320]= "<<DATAREFS[iiref]
-                             <<" dataWsumDist[iig]= "<<dataWsumDist[iig]
-                             <<" dataWsumWedsPerGroup[iig]= "<<dataWsumWedsPerGroup[iig]
-                             <<" dataWsumRefs[iiref]= "<<DATAWSUMREFS[iiref]
-                             <<" dataWsumWedsPerRef[iiref]= "<<dataWsumWedsPerRef[iiref]
-                             <<std::endl;
-#endif
             }
         }
     }
@@ -705,10 +698,6 @@ void Prog_mlf_tomo_prm::expectation(SelFile &mySFi,
         imgsPmax[imgno] = Pmax;
         avePmax += Pmax;
 
-#ifdef DEBUG
-        std::cerr<<fn<<" belongs to class "<<opt_refno + 1 <<std::endl;
-#endif
-
         imgno++;
         if (verb > 0) progress_bar(imgno);
 
@@ -766,9 +755,6 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
         }
     }
 
-    // Average Pmax
-    avePmax /= sumw_allrefs;
-
     // Update fractions
     if (!fix_fractions)
     {
@@ -818,6 +804,9 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
             }
         
     }
+
+    // Average Pmax
+    avePmax /= sumw_allrefs;
 
 #ifdef DEBUG
     std::cerr<<"done maximization"<<std::endl;
