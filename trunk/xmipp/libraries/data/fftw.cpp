@@ -581,18 +581,23 @@ void xmippFftw::SetPoints(const std::complex<double> *data)
 //_____________________________________________________________________________
 void xmippFftw::Normalize(void)
 {
-   if (inPlace)   
-   {
-      for (int i=0; i<fTotalSize; i++)
-         ((double*)fIn)[i]  /= fTotalSize;
-   }
-   else   
-   {
-       for (int i=0; i<fTotalSize; i++)
-         ((double*)fOut)[i]   /= fTotalSize;
-   }
-}
+    int mysize;
+    if(fSign == FFTW_FORWARD)
+        mysize = 2 * sizeout;
+    else if (fSign == FFTW_BACKWARD)
+        mysize = fTotalSize;
 
+    if (inPlace)   
+    {
+        for (int i=0; i<mysize; i++)
+            ((double*)fIn)[i]  /= fTotalSize;
+    }
+    else   
+    {
+        for (int i=0; i<mysize; i++)
+            ((double*)fOut)[i]   /= fTotalSize;
+    }
+}
 //_____________________________________________________________________________
 unsigned xmippFftw::MapFlag(std::string opt)
 {
@@ -1001,6 +1006,7 @@ void xmippFftw::fftwRadialAverage(double * AUX,
                     distance = (int) ROUND(s);
                 else
                     distance = (int) FLOOR(s);
+
                 // Sum the value to the pixels with the same distance
                 radial_mean(distance) += AUX[ii];
                 
@@ -1022,7 +1028,7 @@ void xmippFftw::fftwRadialAverage(double * AUX,
     {
         radial_mean(i) /= (double) radial_count(i);
     }
-
+    
 }
 
 /* Radial average for Fourier transforms*/
