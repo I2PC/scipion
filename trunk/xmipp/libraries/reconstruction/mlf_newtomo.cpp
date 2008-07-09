@@ -46,9 +46,8 @@ void Prog_mlf_tomo_prm::read(int argc, char **argv)
     fix_fractions = checkParameter(argc, argv, "-fix_fractions");
     fix_sigma_noise = checkParameter(argc, argv, "-fix_sigma_noise");
     verb = textToInteger(getParameter(argc, argv, "-verb", "1"));
-    highres = textToFloat(getParameter(argc, argv, "-highres", "-1"));
-    lowres = textToFloat(getParameter(argc, argv, "-lowres", "-1"));
-
+    highres = textToFloat(getParameter(argc, argv, "-highres", "0.5"));
+    lowres = textToFloat(getParameter(argc, argv, "-lowres", "0.0001"));
     debug = checkParameter(argc, argv, "-debug");
 
 }
@@ -110,14 +109,13 @@ void Prog_mlf_tomo_prm::extendedUsage()
 }
 
 // This routine is for SF-independent side-info calculations
-void Prog_mlf_tomo_prm::produceSideInfo(double * dataRefs, double * dataSigma)
+void Prog_mlf_tomo_prm::produceSideInfo()
 {
 
     headerXmipp head;
     Matrix3D<double> Maux, Faux_real, Faux_imag;
     Matrix3D<std::complex<double> > Faux, Faux2;
     int xdim, ydim, zdim, c, iaux, ifound;
-    float xx, yy;
     double dum, avg;
 
     // Get SFr
@@ -146,7 +144,7 @@ void Prog_mlf_tomo_prm::produceSideInfo(double * dataRefs, double * dataSigma)
     Xdim = XSIZE(vol());
     Ydim = YSIZE(vol());
     Zdim = ZSIZE(vol());
-    dim3 = Xdim * Ydim * Zdim;
+    dim3 = (double) (Xdim * Ydim * Zdim);
 
     // Make FFTW objects and plans for forward and backward fftw objects
     int fNdim = 3;
@@ -159,9 +157,52 @@ void Prog_mlf_tomo_prm::produceSideInfo(double * dataRefs, double * dataSigma)
     forwfftw.Init("ES",FFTW_FORWARD,false);
     backfftw.myxmippFftw(fNdim, fN, false, NULL);
     backfftw.Init("ES",FFTW_BACKWARD,false);
-    // Just for now (without resolution limits)
-    // next line copied from fftw.cpp
-    size = 2*int(double(forwfftw.GetSize())*(fN[fNdim-1]/2+1)/fN[fNdim-1]);
+    // Get size right for the resolution limits
+    fftw_hsize = forwfftw.GetSize()*(fN[fNdim-1]/2+1)/fN[fNdim-1];
+    // Get an array of booleans whether Fourier components are within resolution range
+    // TODO: Also exclude double x==0 axis!!
+    is_in_range = new bool [fftw_hsize];
+    int zz, yy, xx;
+    double sz,sy,sx,res;
+    hsize = 0;
+    for ( int z=0, ii=0; z<Zdim; z++ ) {
+        if ( z > (Zdim - 1)/2 ) zz = Zdim-z;
+        else zz = z;
+        for ( int y=0; y<Ydim; y++ ) {
+            if ( y > (Ydim - 1)/2 ) yy = Ydim-y;
+            else yy = y;
+            for ( int x=0; x<Xdim/2 + 1; x++,ii++ ) {
+                if ( x > (Xdim - 1)/2 ) xx = Xdim-x;
+                else xx = x;
+                // Think about non-cubic volumes here: resolution in dig.freq.
+                sx = (double)xx / (double)Xdim;
+                sy = (double)yy / (double)Ydim;
+                sz = (double)zz / (double)Zdim;
+                res = sqrt(sx*sx+sy*sy+sz*sz);
+                if (res <= highres && res >= lowres)
+                {
+                    is_in_range[ii] = true;
+                    hsize++;
+                }
+                else
+                    is_in_range[ii] = false;
+            }
+        }
+    }
+    size = 2 * hsize;
+    std::cerr<<" lowres-highres hsize= "<<hsize<<" fftw hsize= "<<fftw_hsize<<std::endl;
+
+    /*
+    vol().initZeros();
+    for(int i=0, ii=0;i<Zdim;i++)
+        for(int j=0;j<Ydim;j++)
+            for(int k=0;k<Xdim/2 +1;k++, ii++)
+            {                                          //x,y
+                vol(k,i,j)=dist_fftw[ii];
+            }
+    vol.write("dist.fft");
+    std::cerr<<"written dist.fft"<<std::endl;
+    */
 
     // Get groups structure from SFg and store into SFi
     SelFile SFtmp;
@@ -183,9 +224,12 @@ void Prog_mlf_tomo_prm::produceSideInfo(double * dataRefs, double * dataSigma)
 
  }
 
-
 void Prog_mlf_tomo_prm::generateInitialReferences()
 {
+
+#ifdef DEBUG
+    std::cerr<<"start generateInitialReferences"<<std::endl;
+#endif
 
     SelFile SFtmp;
     VolumeXmipp Vave, Vtmp;
@@ -235,6 +279,9 @@ void Prog_mlf_tomo_prm::generateInitialReferences()
     fn_ref.compose(fn_ref, 0, "sel");
     SFr.write(fn_ref);
 
+#ifdef DEBUG
+    std::cerr<<"done generateInitialReferences"<<std::endl;
+#endif
 }
 
 void Prog_mlf_tomo_prm::readAndFftwAllReferences(double * dataRefs)
@@ -246,7 +293,6 @@ void Prog_mlf_tomo_prm::readAndFftwAllReferences(double * dataRefs)
 
     // Read references in memory and calculate their FFTW
     VolumeXmipp vol;
-    Matrix1D<double> data(size);
 
     alpha_k.clear();
     int refno = 0;
@@ -257,12 +303,15 @@ void Prog_mlf_tomo_prm::readAndFftwAllReferences(double * dataRefs)
         vol.read(SFr.NextImg());
         forwfftw.SetPoints(MULTIDIM_ARRAY(vol()));
         forwfftw.Transform();
-        // TODO: GetPoints for certain resolution range...
-        forwfftw.GetPoints(MULTIDIM_ARRAY(data));
-        // Store all references in dataRefs structure
-        for (int i = 0; i < size; i++)
+        forwfftw.Normalize();
+        // Get only points within resolution range
+        for (int i = 0, ii=0; i< 2*fftw_hsize; i++)
         {
-            dataRefs[refno*size + i] = data(i);
+            if (is_in_range[i/2]) 
+            {
+                dataRefs[refno*size + ii] = forwfftw.fOut[i];
+                ii++;
+            }
         }
         refno++;
     }
@@ -301,6 +350,7 @@ void Prog_mlf_tomo_prm::calculateAllFFTWs(SelFile &SF)
             Vin.read(fni);
             forwfftw.SetPoints(MULTIDIM_ARRAY(Vin()));
             forwfftw.Transform();
+            forwfftw.Normalize();
             forwfftw.write(fno);
         }
         if (verb > 0) if (imgno % c == 0) progress_bar(imgno);
@@ -320,58 +370,113 @@ void Prog_mlf_tomo_prm::estimateInitialNoiseSpectra(double * dataSigma)
     std::cerr<<"start estimateInitialNoiseSpectra"<<std::endl;
 #endif
 
-    FileName fn;
-    Matrix1D<double> data;
-    std::vector<Matrix1D<double> > sum, sum2;
-    Matrix1D< int > radial_count;
-    SelLine SL;
+    FileName                         fn, fnw;
+    Matrix1D< int >                  radial_count, group_count;
+    Matrix1D< double >               dummy;
+    SelLine                          SL;
+    std::ofstream                    fh;
+    std::complex<double>             * IMG, * SUM;
+    double                           * sum2, * ave;
+
+    // THIS IS NOT CORRECT YET: TAKE MISSING WEDGES INTO ACCOUNT!!!!
 
     if (verb > 0)
-    {
         std::cerr << "  Estimating initial noise spectra ... " << std::endl;
-    }
 
-    // Initialize data, sum and sum2
-    data.initZeros(size);
-    for (int ig = 0; ig < nr_group; ig++)
+    // Initialize sigma_noise, sum and sum2
+    SUM  = new std::complex<double> [hsize*nr_group];
+    sum2 = new double [hsize*nr_group];
+    ave = new double [hsize];
+    for (int i=0; i<hsize*nr_group; i++)
     {
-        sum.push_back(data);
-        sum2.push_back(data);
+        SUM[i] = 0.;
+        sum2[i] = 0.;
     }
+    for (int ig = 0; ig < nr_group; ig++)
+        sigma_noise.push_back(dummy);
+
+    group_count.resize(nr_group);
 
     SFi.go_beginning();
+    std::cerr<<"hola0"<<std::endl;
     while (!SFi.eof())
     {
         SL = SFi.current();
         int igg = SL.get_number() - 1;
+        group_count(igg)++;
         fn = SFi.NextImg();
         fn += ".fftw";
         backfftw.read(fn);
-        backfftw.GetPoints(MULTIDIM_ARRAY(data), true);//TODO: add resolutionlimits!);
-        for (int i=0; i<size; i++)
+        IMG =  (std::complex<double> *) backfftw.fIn;
+        for (int i=0, ii=0; i < fftw_hsize; i++)
         {
-            sum[igg](i) += data(i);
-            sum2[igg](i) += data(i) * data(i);
-        }
+            if (is_in_range[i])
+            {
+                SUM[igg*hsize+ii] += IMG[i];
+                sum2[igg*hsize+ii] += abs(IMG[i]) * abs(IMG[i]);
+                ii++;
+            }
+        } 
     }
-
+    std::cerr<<"hola1"<<std::endl;
     // Subtract squared amplitudes of the average subtomogram 
     // to prevent overestimated noise at low resolutions
     for (int ig = 0; ig < nr_group; ig++)
     {
-        for (int i=0; i<size; i++)
+        for (int i=0; i<hsize; i++)
         {
-            sum2[ig](i) -= sum[ig](i) * sum[ig](i);
+            sum2[ig*hsize+i] /= (double)group_count(ig);
+            SUM[ig*hsize+i] /= (double)group_count(ig);
+            sum2[ig*hsize+i] -= abs(SUM[ig*hsize+i]) * abs(SUM[ig*hsize+i]);
         }
-        // Perform radial averaging in FFTW 
-        // forwfftw.fftwRadialAverage(MULTIDIM_ARRAY(sum2[ig]), sigma_noise[ig], radial_count);
-        // TODO: put radial average values in sum2[ig]
-        // Now store in dataSigma structure (TODO: resolution limits!)
-        for (int i=0; i<size; i++)
+        for (int i=0, ii=0; i < fftw_hsize; i++)
         {
-            dataSigma[ig * size + i] = 2. * sum2[ig](i);
+            if (is_in_range[i])
+            {
+                ave[i] = sum2[ig*hsize+ii];
+                ii++;
+            }
+            else
+            {
+                ave[i] = 0;
+            }
         }
-        // TODO: Write sigma_noise[ig] to disc
+
+        std::cerr<<"hola2"<<std::endl;
+        std::cerr<<sigma_noise.size()<<std::endl;
+        sigma_noise[ig].resize(100);
+        std::cerr<<"hola2b"<<std::endl;
+
+        forwfftw.fftwRadialAverage(ave, sigma_noise[ig], radial_count);
+        std::cerr<<"hola3"<<std::endl;
+
+        // TODO: store radialAverage, not ave
+
+        // Now store in dataSigma structure
+        for (int i = 0, ii=0; i< fftw_hsize; i++)
+            if (is_in_range[i]) 
+            {
+                dataSigma[ig * hsize + ii] = 2. * ave[i]; // Store already TWO SIGMA^2
+                ii++;
+            }
+
+    std::cerr<<"hola4"<<std::endl;
+        // Write sigma spectra to disc
+        fn = fn_root + "_it";
+        fn.compose(fn, istart - 1, "");
+        if (nr_group > 1) 
+        {
+            fn.compose(fn+"_gr", ig + 1, "");
+        }
+        fn += ".noise";
+        fh.open((fn).c_str(), std::ios::out);
+        if (!fh) REPORT_ERROR(1, (std::string)"Error: Cannot write file: " + fn);
+        for (int irr = 0; irr < XSIZE(sigma_noise[ig]); irr++)
+        {
+            fh << (double)irr/Xdim << " " << dVi(sigma_noise[ig], irr) << "\n";
+        }
+        fh.close();
+
     }
 
 #ifdef DEBUG
@@ -402,15 +507,22 @@ void Prog_mlf_tomo_prm::expectationSingleImage(int igroup,
     double * weights;
     weights = new double [nr_ref];
 
+    std::complex<double> *DATAREFS, *DATAWSUMREFS, *DATAIMG;
+    DATAIMG      = (std::complex<double> *) dataImg;
+    DATAREFS     = (std::complex<double> *) dataRefs;
+    DATAWSUMREFS = (std::complex<double> *) dataWsumRefs;
+
+    // TODO: Adapt dataSigma arrays to take into account that (x==0) is double in the fftw!
     for (int refno = 0; refno < nr_ref; refno++)
     {
         diff2 = 0.;
-        for (int i = 0; i < size; i++)
+        for (int i = 0; i < hsize; i++)
         {
             if (dataWedge[i] > 0. && dataSigma[igroup * size + i] > 0.)
             {
-                aux = dataImg[i] - dataRefs[refno * size + i];
+                aux = abs(DATAIMG[i] - DATAREFS[refno * size + i]);
                 diff2 += (aux * aux)/dataSigma[igroup * size + i];
+//                std::cerr<<"abs2= "<<aux<<" "<<DATAIMG[i]<<" "<<DATAREFS[refno * size + i]<<" sigma2= "<<dataSigma[igroup * size + i]<<" diff2= "<<diff2<<std::endl;
             }
         }
         weights[refno] = diff2;
@@ -433,39 +545,42 @@ void Prog_mlf_tomo_prm::expectationSingleImage(int igroup,
         }
         weights[refno] = aux;
         sumweight += aux;
-        std::cerr<<"refno= "<<refno<<" w= "<< aux<<std::endl;
     }
 
 
     // Store Pmax/sumP
     Pmax = maxweight / sumweight;
-    std::cerr<<"Pmax= "<<Pmax<<std::endl;
+    std::cerr<<"Pmax= "<<Pmax<<" mindiff2= "<<mindiff2<<std::endl;
 
     // Then, store the sum of all weights
     for (int refno = 0; refno < nr_ref; refno++)
     {
         weight = weights[refno] / sumweight;
+        std::cerr<<" refno= "<<refno<<" w= "<< weight<<" ";
+
         if (weight > SIGNIFICANT_WEIGHT_LOW)
         {
             dataSumWRefs[refno] += weight;
-            for (int i = 0; i < size; i++)
+            for (int i = 0; i < hsize; i++)
             {
-                int iiref = refno * size + i;
-                int iig = igroup * size + i;
+                int iiref = refno * hsize + i;
+                int iig = igroup * hsize + i;
                 if (dataWedge[i] > 0.)
                 {
-                    aux = dataImg[i] - dataRefs[iiref];
+                    aux = abs(DATAIMG[i] - DATAREFS[iiref]);
                     dataWsumDist[iig] += weight * aux * aux;
                     dataWsumWedsPerGroup[iig] += weight;
-                    dataWsumRefs[iiref] += weight * dataImg[i];
+                    DATAWSUMREFS[iiref] += weight * DATAIMG[i];
                     dataWsumWedsPerRef[iiref] += weight;
                 }
-                if (i==320)
-                    std::cerr<<" dataImg[320]= "<<dataImg[i]
+                if (i==7425)
+                    std::cerr<<" dataImg[320]= "<<DATAIMG[i]
+                             <<" dataRefs[320]= "<<DATAREFS[refno * size + i]
                              <<" dataWsumDist[iig]= "<<dataWsumDist[iig]
                              <<" dataWsumWedsPerGroup[iig]= "<<dataWsumWedsPerGroup[iig]
-                             <<" dataWsumRefs[iiref]= "<<dataWsumRefs[iiref]
-                             <<" dataWsumWedsPerRef[iiref]= "<<dataWsumWedsPerRef[iiref]<<std::endl;
+                             <<" dataWsumRefs[iiref]= "<<DATAWSUMREFS[iiref]
+                             <<" dataWsumWedsPerRef[iiref]= "<<dataWsumWedsPerRef[iiref]
+                             <<std::endl;
             }
         }
     }
@@ -494,7 +609,7 @@ void Prog_mlf_tomo_prm::expectation(SelFile &mySFi,
 #ifdef DEBUG
     std::cerr<<"start expectation"<<std::endl;
 #endif
-    int opt_refno, nn, imgno, nr_imgs, igroup;
+    int opt_refno, nn, imgno, nr_imgs, igroup, idum;
     double Pmax;
     double *dataImg, *dataWedge;
     SelLine SL;
@@ -509,23 +624,26 @@ void Prog_mlf_tomo_prm::expectation(SelFile &mySFi,
     try
     {
         dataImg = new double[size];
-        dataWedge = new double[size];
+        dataWedge = new double[hsize];
     }
     catch (std::bad_alloc&)
     {
         REPORT_ERROR(1,"Error allocating memory in expectation");
     }
     // FOR NOW ALL WEGDES ARE 1:
-    for (int i = 0; i < size; i++)
+    for (int i = 0; i < hsize; i++)
         dataWedge[i] = 1.;
 
     // Initialize weighted sums to zero
     for (int i = 0; i < nr_ref * size; i++)
     {
         dataWsumRefs[i] = 0.;
+    }        
+    for (int i = 0; i < nr_ref * hsize; i++)
+    {
         dataWsumWedsPerRef[i] = 0.;
     }        
-    for (int i = 0; i < nr_group * size; i++)
+    for (int i = 0; i < nr_group * hsize; i++)
     {
         dataWsumWedsPerGroup[i] = 0.;
         dataWsumDist[i] = 0.;
@@ -551,31 +669,13 @@ void Prog_mlf_tomo_prm::expectation(SelFile &mySFi,
         // read tomogram from disc
         fn = mySFi.NextImg();
         backfftw.read(fn + ".fftw");
-        backfftw.GetPoints(dataImg,true);
-        //Again somehow limit resolution
-
-/*
-        VolumeXmipp vol(Xdim,Ydim,Zdim);
-        double * data;
-        data = new double[size];
-        for (int i=0; i< size; i++)
-        {
-            data[i] = dataImg[i];
-        }
-        backfftw.SetPoints(dataImg);
-        backfftw.Transform();
-        backfftw.Normalize();
-        backfftw.GetPoints(MULTIDIM_ARRAY(vol()));
-        vol.write("img.vol"); exit(0);
-        VolumeXmipp vol(Xdim,Ydim,Zdim);
-        std::cerr<<"set dataimg in backfft"<<std::endl;
-        backfftw.SetPoints(dataImg);
-        backfftw.Transform();
-        backfftw.Normalize();
-        std::cerr<<"get the volume "<<std::endl;
-        backfftw.GetPoints(MULTIDIM_ARRAY(vol()));
-        vol.write("img.vol"); exit(0);
-*/
+        // Get only points within resolution range
+        for (int i = 0, ii=0; i< 2*fftw_hsize; i++)
+            if (is_in_range[i/2]) 
+            {
+                dataImg[ii] = backfftw.fIn[i]/dim3;
+                ii++;
+            }
 
         // read corresponding wedge as well
         //backfftw.read(mySFw.NextImg(), true);
@@ -631,17 +731,31 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
 #endif
 
     // Update References
+    std::complex<double> *DATAREFS, *DATAWSUMREFS;
+    DATAREFS     = (std::complex<double> *) dataRefs;
+    DATAWSUMREFS = (std::complex<double> *) dataWsumRefs;
     sumw_allrefs = 0;
     for (int refno = 0;refno < nr_ref; refno++)
     {
         sumw_allrefs += dataSumWRefs[refno];
-        for (int i = 0; i < size; i++)
+        if (dataSumWRefs[refno] > 0.)
         {
-            int ii = refno * size + i;
-            // Impute old reference for missing pixels
-            dataRefs[ii] *= 1. - (dataWsumWedsPerRef[ii] / dataSumWRefs[refno]);
-            // And sum the weighted sum for observed pixels
-            dataRefs[ii] += dataWsumRefs[ii] / dataSumWRefs[refno];
+            for (int i = 0; i < hsize; i++)
+            {
+                int ii = refno * hsize + i;
+                // Impute old reference for missing pixels
+                DATAREFS[ii] *= 1. - (dataWsumWedsPerRef[ii] / dataSumWRefs[refno]);
+                // And sum the weighted sum for observed pixels
+                DATAREFS[ii] += DATAWSUMREFS[ii] / dataSumWRefs[refno];
+            }
+        }
+        else
+        {
+            for (int i = 0; i < hsize; i++)
+            {
+                int ii = refno * hsize + i;
+                DATAREFS[ii] = 0.;
+            }
         }
     }
 
@@ -653,17 +767,41 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
     }
 
     // Update sigma of the noise
-    /////// TODO: radial averaging etc again
+    Matrix1D<int> radial_count;
+    double *ave, *ave2;
+    ave = new double [hsize];
+    ave2 = new double [fftw_hsize];
+    
     for (int ig = 0; ig < nr_group; ig++)
     {
-        for (int i = 0; i < size; i++)
+        for (int i = 0; i < hsize; i++)
         {
-            int ii = ig * size + i;
+            int ii = ig * hsize + i;
+            // Return from two*SIGMA^2
+            dataSigma[ii] /= 2;
             // Impute old sigma values for missing pixels
             dataSigma[ii] *= 1. - (dataWsumWedsPerGroup[ii] / sumw_allrefs);
             //  And sum the weighted sum for observedpixels
             dataSigma[ii] += dataWsumDist[ii] / sumw_allrefs;
+            // For radial average
+            ave[i] = dataSigma[ii];
         }
+
+        // Set points within resolution range
+        for (int i=0, ii=0; i<fftw_hsize; i++)
+        {
+            if (is_in_range[i])
+            {
+                ave2[i] = ave[ii];
+                ii++;
+            }
+            else
+            {
+                ave2[i] = 0.;
+            }
+        }
+        forwfftw.fftwRadialAverage(ave2, sigma_noise[ig], radial_count);
+        // TODO SET RADIALAVG IN DATASIGMA2  (factor 2!!)
     }
 
 #ifdef DEBUG
@@ -703,7 +841,7 @@ void Prog_mlf_tomo_prm::writeOutputFiles(int iter,
     double * dataOut;
     try
     {
-        dataOut = new double[size];
+        dataOut = new double[2*fftw_hsize];
     }
     catch (std::bad_alloc&)
     {
@@ -715,15 +853,22 @@ void Prog_mlf_tomo_prm::writeOutputFiles(int iter,
         fn_tmp = fn_base + "_ref";
         fn_tmp.compose(fn_tmp, refno + 1, "");
         fn_tmp = fn_tmp + ".vol";
-        
-        for (int i = 0; i < size; i++)
+        // Set points within resolution range
+        for (int i = 0, ii=0; i< 2*fftw_hsize; i++)
         {
-            dataOut[i] = dataRefs[refno*size + i];
+            if (is_in_range[i/2]) 
+            {
+                dataOut[i] = dataRefs[refno*size + ii];
+                ii++;
+            }
+            else
+            {
+                dataOut[i] = 0.;
+            }
         }
         // Somehow only setpoints within resolution limits
         backfftw.SetPoints(dataOut);
         backfftw.Transform();
-        backfftw.Normalize();
         backfftw.GetPoints(MULTIDIM_ARRAY(vol()));
         vol.write(fn_tmp);
         // Fill selfile and docfile
@@ -747,6 +892,27 @@ void Prog_mlf_tomo_prm::writeOutputFiles(int iter,
     DFl.insert_comment("columns: model fraction (1); 1000x signal change (3)");
     fn_tmp = fn_base + ".log";
     DFl.write(fn_tmp);
+
+    // Write out updated sigma2 vectors
+    if (!fix_sigma_noise)
+    {
+        for (int ig = 0; ig < nr_group; ig++)
+        {
+	    fn_tmp = fn_base;
+            if (nr_group > 1) 
+            {
+                fn_tmp.compose(fn_tmp+"_gr", ig + 1, "");
+            }
+            fn_tmp += ".noise";
+            fh.open((fn_tmp).c_str(), std::ios::out);
+            if (!fh) REPORT_ERROR(1, (std::string)"Error: Cannot write file: " + fn_tmp);
+            for (int irr = 0; irr < XSIZE(sigma_noise[ig]); irr++)
+            {
+                fh << (double)irr/Xdim << " " << dVi(sigma_noise[ig], irr) << "\n";
+            }
+            fh.close();
+	}
+    }
 
 #ifdef DEBUG
     std::cerr<<"done writeOutputFiles"<<std::endl;
