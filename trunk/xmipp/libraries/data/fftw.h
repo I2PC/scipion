@@ -351,9 +351,10 @@ specifying `FFTW_PATIENT' first plans in `FFTW_ESTIMATE' mode, then in
                               
 /** Radial average for Fourier transforms*/
 void fftwRadialAverage(double *AUX,
-                                  Matrix1D< double >& radial_mean,
-                                  Matrix1D< int >& radial_count,
-                                  bool rounding =true );
+                       Matrix1D< double >& radial_mean,
+                       Matrix1D< int >& radial_count,
+                       bool rounding =true,
+                       bool apply = false);
 
 /** Read Fourier transform from disk*/
 void read(FileName fn);

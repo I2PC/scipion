@@ -941,7 +941,8 @@ void xmippFftw::fourier_ring_correlation(xmippFftw & fft_m2,
 void xmippFftw::fftwRadialAverage(double * AUX,
                                   Matrix1D< double >& radial_mean,
                                   Matrix1D< int >& radial_count,
-                                  bool rounding /*=true*/ )
+                                  bool rounding /*=true*/,
+                                  bool apply /*=false*/ )
 {
     int Xdim,Xsize;
     int Ydim=1,Ysize=1;
@@ -1027,6 +1028,32 @@ void xmippFftw::fftwRadialAverage(double * AUX,
     FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_mean)
     {
         radial_mean(i) /= (double) radial_count(i);
+    }
+
+    // Apply the radial average to the input data array
+    if (apply)
+    {
+        for ( int z=0, ii=0; z<Zdim; z++ ) {
+            if ( z > (Zsize - 1)/2 ) zz = Zsize-z;
+            else zz = z;
+            for ( int y=0; y<Ydim; y++ ) {
+                if ( y > (Ysize - 1)/2 ) yy = Ysize-y;
+                else yy = y;
+                for ( int x=0; x<Xdim; x++, ii++ ) {
+                    if ( x > (Xsize - 1)/2 ) xx = Xsize-x;
+                    else xx = x;
+                    s = sqrt(xx*xx+yy*yy+zz*zz);
+                    // Determine distance to the center
+                    int distance;
+                    if (rounding)
+                        distance = (int) ROUND(s);
+                    else
+                        distance = (int) FLOOR(s);
+
+                    AUX[ii] = radial_mean(distance);
+                }
+            }
+        }
     }
     
 }
