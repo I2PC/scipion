@@ -158,7 +158,8 @@ public:
                      double * dataSumWRefs,
                      double * imgsPmax,
                      int * imgsOptRefNos,
-                     double &LL);
+                     double &LL,
+                     double &avePmax);
 
     /// Update all model parameters
     void maximization(double * dataRefs,
@@ -170,7 +171,8 @@ public:
                       double * dataSumWRefs,
                       double * imgsPmax,
                       int * imgsOptRefNos,
-                      double &sumw_allrefs);
+                      double &sumw_allrefs,
+                      double &avePmax);
 
     /// Write out reference images, selfile and logfile
     void writeOutputFiles(int iter, 
