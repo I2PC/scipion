@@ -27,6 +27,7 @@
 #define _MLF_TOMO_H
 
 #include <data/fftw.h>
+#include <data/fft.h>
 #include <data/args.h>
 #include <data/funcs.h>
 #include <data/selfile.h>
@@ -65,9 +66,12 @@ public:
     /** Flag whether to fix estimate for sigma of noise */
     bool fix_sigma_noise;
 
-    /** Size of all data vectors */
-    int size;
-
+    /** Use FFTW for Fts */
+    bool do_fftw;
+    /** Sizes of all data vectors (size for complex-double, hsize for double) */
+    int size, hsize, fftw_hsize;
+    /** Array with booleans whether this point is inside the resolution range */
+    bool * is_in_range;
     /** Vector containing estimated fraction for each model */
     std::vector<double> alpha_k;
     /** Vector containing resolution-depedent noise sigma values for each tomogram group */
@@ -77,7 +81,8 @@ public:
     /** Number of iterations to be performed */
     int Niter;
     /** dimensions of the images  */
-    int Xdim, Ydim, Zdim, dim3;
+    int Xdim, Ydim, Zdim;
+    double dim3;
     /** Number of references */
     int nr_ref;
     /** Number of groups (e.g. one group for each tomogram) */
@@ -90,9 +95,7 @@ public:
     int verb;
 
     /* High/low and probability-calculation resolution limits */
-    double highres, lowres, probres;
-    /* Integer high/low resolution limits*/
-    int resol_max, resol_min;
+    double highres, lowres;
 
     xmippFftw forwfftw, backfftw;
 
@@ -114,12 +117,12 @@ public:
     void extendedUsage();
 
     /// splitted SF-INdependent side-info calculations
-    void produceSideInfo(double * dataRefs, double * dataSigma);
+    void produceSideInfo();
 
     /// Generate initial references as averages over random subsets
     void generateInitialReferences();
  
-    /// Read all references into memory and store their FFTWs
+     /// Read all references into memory and store their FFTWs
     void readAndFftwAllReferences(double * dataRefs);
 
     /// Calculate FFTWs for images in a selfile and write to disc
@@ -128,7 +131,7 @@ public:
     /// initial sigma2-estimation for fourier-mode
     void estimateInitialNoiseSpectra(double * dataSigma);
 
-    /// parameters using fourier-space likelihood functions
+   /// parameters using fourier-space likelihood functions
     void expectationSingleImage(int igroup,
                                 double * dataImg,
                                 double * dataWedge,
