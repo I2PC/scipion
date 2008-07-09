@@ -1031,28 +1031,6 @@ void xmippFftw::fftwRadialAverage(double * AUX,
     
 }
 
-/* Radial average for Fourier transforms*/
-void xmippFftw::fftwRadialAverageSquaredAmplitudes(Matrix1D< double >& radial_mean,
-                                                   Matrix1D< int >& radial_count,
-                                                   bool rounding /*=true*/ )
-{
-
-   double * aux2;
-   aux2 = new double[sizeout];
-   std::complex<double> *aux;
-   if(fSign == FFTW_FORWARD)
-       aux = (std::complex<double> *) fOut;
-   else if (fSign == FFTW_BACKWARD)
-       aux = (std::complex<double> *) fIn;
-
-   // Calculate squared amplitudes and radial average
-   for (int i=0; i<sizeout; i++)
-       aux2[i] = abs(aux[i])*abs(aux[i]);
-
-   fftwRadialAverage(aux2, radial_mean, radial_count, rounding);
-
-}
-
 void xmippFftw::read(FileName fn)
 {
     std::ifstream filestr;

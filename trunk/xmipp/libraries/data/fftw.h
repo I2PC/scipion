@@ -354,12 +354,6 @@ void fftwRadialAverage(double *AUX,
                                   Matrix1D< double >& radial_mean,
                                   Matrix1D< int >& radial_count,
                                   bool rounding =true );
-/** Directly calculate radial average of the squared amplitudes 
-    of the fOut vector (if FFT_FORWARD) 
-    and of the fIn vector (if FFT_BACKWARD) */
-void fftwRadialAverageSquaredAmplitudes(Matrix1D< double >& radial_mean,
-                                        Matrix1D< int >& radial_count,
-                                        bool rounding  =true);
 
 /** Read Fourier transform from disk*/
 void read(FileName fn);
