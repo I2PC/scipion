@@ -130,6 +130,14 @@ public:
     /// splitted SF-dependent side-info calculations
     void produceSideInfo2();
 
+    /// Get binary missing wedge (or pyramid) 
+    void getMissingWedge(bool * measured,
+                         Matrix2D<double> A,
+                         const double theta0_alongy, 
+                         const double thetaF_alongy,
+                         const double theta0_alongx = 0.,
+                         const double thetaF_alongx = 0.);
+
     /// Generate initial references as averages over random subsets
     void generateInitialReferences();
  
@@ -145,7 +153,7 @@ public:
    /// parameters using fourier-space likelihood functions
     void expectationSingleImage(int igroup,
                                 double * dataImg,
-                                double * dataWedge,
+                                bool   * dataMeasured,
                                 double * dataRefs,
                                 double * dataSigma,
                                 double * dataWsumRefs,

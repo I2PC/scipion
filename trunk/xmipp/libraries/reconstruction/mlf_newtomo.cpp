@@ -326,6 +326,134 @@ void Prog_mlf_tomo_prm::produceSideInfo2()
 }
 
 
+/// Get binary missing wedge (or pyramid) 
+void Prog_mlf_tomo_prm::getMissingWedge(bool * measured,
+                                        Matrix2D<double> A,
+                                        const double theta0_alongy, 
+                                        const double thetaF_alongy,
+                                        const double theta0_alongx /*= 0.*/,
+                                        const double thetaF_alongx /*= 0.*/)
+{
+
+    // We assume A is already inverted!!
+
+    double xp, yp, zp;
+    double tg0_y, tgF_y, tg0_x, tgF_x, limx0, limxF, limy0, limyF;
+
+    tg0_y = -tan(PI * (-90. - thetaF_alongy) / 180.);
+    tgF_y = -tan(PI * (90. - theta0_alongy) / 180.);
+    tg0_x = -tan(PI * (90. - theta0_alongx) / 180.);
+    tgF_x = -tan(PI * (90. - theta0_alongx) / 180.);
+#define DEBUG_WEDGE
+#ifdef DEBUG_WEDGE
+    std::cerr<<"tg0_y= "<<tg0_y<<std::endl;
+    std::cerr<<"tgF_y= "<<tgF_y<<std::endl;
+    std::cerr<<"tg0_x= "<<tg0_x<<std::endl;
+    std::cerr<<"tgF_x= "<<tgF_x<<std::endl;
+#endif
+
+    // Initialize all to true;
+    for (int i=0; i < hsize; i++)
+        measured[i] = false;
+
+
+
+
+    int zz, yy, xx,i = 0;
+    double sz,sy,sx,res;
+    for ( int z=0, ii=0; z<Zdim; z++ ) {
+        if ( z > (Zdim - 1)/2 ) zz = Zdim-z;
+        else zz = z;
+        for ( int y=0; y<Ydim; y++ ) {
+            if ( y > (Ydim - 1)/2 ) yy = Ydim-y;
+            else yy = y;
+            for ( int x=0; x<Xdim/2 + 1; x++,ii++ ) {
+                if ( x > (Xdim - 1)/2 ) xx = Xdim-x;
+                else xx = x;
+
+                // Only concerned with those components within resolution limits
+                if (is_in_range[ii])
+                {
+                    xp = dMij(A, 0, 0) * x + dMij(A, 0, 1) * y + dMij(A, 0, 2) * z;
+                    yp = dMij(A, 1, 0) * x + dMij(A, 1, 1) * y + dMij(A, 1, 2) * z;
+                    zp = dMij(A, 2, 0) * x + dMij(A, 2, 1) * y + dMij(A, 2, 2) * z;
+                    limx0 = tg0_y * zp;
+                    limxF = tgF_y * zp;
+                    limy0 = tg0_x * zp;
+                    limyF = tgF_x * zp;
+                    
+                    if (zp >= 0)
+                    {
+                        if (xp <= limx0 || xp >= limxF)
+                            measured[i] = true;
+                    }
+                    else
+                    {
+                        if (xp <= limxF || xp >= limx0)
+                            measured[i] = true;
+                        else
+                            measured[i] = false;
+                    }
+#ifdef DEBUG_WEDGE
+                    std::cerr<<" x,y,z= "<<x<<" "<<y<<" "<<z<<std::endl;
+                    std::cerr<<" xp,yp,zp= "<<xp<<" "<<yp<<" "<<zp<<std::endl;
+                    std::cerr<<"limx0, limxF= "<<limx0<<" "<<limxF<<std::endl;
+                    if (measured[i])
+                        std::cerr<<"true"<<std::endl;
+                    else 
+                        std::cerr<<"false"<<std::endl;
+#endif
+                    i++;
+                } 
+            }
+        }
+    }
+#ifdef DEBUG_WEDGE
+    std::cerr<<"i= "<<i<<std::endl;
+    VolumeXmipp test(Xdim,Ydim,Zdim), rot;
+    
+    Matrix2D<double> I(4,4), AA(4,4);
+    AA=Euler_rotation3DMatrix(0,0,30);
+    I.initIdentity();
+    BinaryWedgeMask(test(),0.,60.,I);
+    test.write("before.vol");
+    rot=test;
+    rot().selfApplyGeometryBSpline(AA,3,IS_NOT_INV,DONT_WRAP,0.);
+    rot.write("rotated.vol");
+    Matrix3D<std::complex<double> > Faux, Faux2;
+    Matrix3D<double> Mr(test()), Mi(test());
+    FourierTransform(test(),Faux);
+    CenterFFT(Faux,true);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
+    {
+        dVkij(Mr,k,i,j) = real(dVkij(Faux,k,i,j));
+        dVkij(Mi,k,i,j) = imag(dVkij(Faux,k,i,j));
+    }
+    //Mr.selfApplyGeometryBSpline(AA,3,IS_NOT_INV,DONT_WRAP,0.);
+    //Mi.selfApplyGeometryBSpline(AA,3,IS_NOT_INV,DONT_WRAP,0.);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
+    {
+        dVkij(Faux,k,i,j) = (std::complex<double>)(dVkij(Mr,k,i,j), dVkij(Mi,k,i,j));
+    }
+
+    CenterFFT(Faux,false);
+    InverseFourierTransform(Faux,test());
+    test.write("after.vol");
+    
+    
+    for(int i=0;i<Zdim;i++)
+        for(int j=0;j<Ydim;j++)
+            for(int k=0;k<Xdim;k++)
+                if (measured[k + j*Xdim +i*Ydim*Xdim ])
+                    test(i,j,k)=1.;
+    test.write("wedge.ftt");
+    exit(0);
+#endif
+
+
+}
+
+
 void Prog_mlf_tomo_prm::generateInitialReferences()
 {
 
@@ -585,7 +713,7 @@ void Prog_mlf_tomo_prm::estimateInitialNoiseSpectra(double * dataSigma)
 // rotations, translations and classes of the given image
 void Prog_mlf_tomo_prm::expectationSingleImage(int igroup,
                                                double * dataImg,
-                                               double * dataWedge,
+                                               bool   * dataMeasured,
                                                double * dataRefs,
                                                double * dataSigma,
                                                double * dataWsumRefs,
@@ -616,7 +744,7 @@ void Prog_mlf_tomo_prm::expectationSingleImage(int igroup,
         {
             int iiref = refno * hsize + i;
             int iig = igroup * hsize + i;
-            if (dataWedge[i] > 0. && dataSigma[iig] > 0.)
+            if (dataMeasured[i])
             {
                 aux = abs(DATAIMG[i] - DATAREFS[iiref]);
                 diff2 += (aux * aux)/dataSigma[iig];
@@ -668,7 +796,7 @@ void Prog_mlf_tomo_prm::expectationSingleImage(int igroup,
             {
                 int iiref = refno * hsize + i;
                 int iig = igroup * hsize + i;
-                if (dataWedge[i] > 0.)
+                if (dataMeasured[i])
                 {
                     aux = abs(DATAIMG[i] - DATAREFS[iiref]);
                     dataWsumDist[iig] += weight * aux * aux;
@@ -703,7 +831,8 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
     std::cerr<<"start expectation"<<std::endl;
 #endif
     int              opt_refno, nn, imgno, igroup, idum;
-    double           *dataImg, *dataWedge;
+    double           *dataImg;
+    bool             *dataMeasured;
     SelLine          SL;
     FileName         fn;
     Matrix1D<double> dataline(9), opt_offsets(3);  
@@ -715,8 +844,8 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
     // Reserve memory for dataImg and dataWedge
     try
     {
-        dataImg = new double[size];
-        dataWedge = new double[hsize];
+        dataImg      = new double[size];
+        dataMeasured = new bool[hsize];
     }
     catch (std::bad_alloc&)
     {
@@ -766,9 +895,15 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
                 dataImg[ii] = backfftw.fIn[i];
                 ii++;
             }
+        // get missing wedge
+        getMissingWedge(dataMeasured,
+                        A_img,
+                        -60.,
+                        60.);
+
         // FOR NOW ALL WEGDES ARE 1:
         for (int i = 0; i < hsize; i++)
-            dataWedge[i] = 1.;
+            dataMeasured[i] = true;
 
         // Create missing wedge on-the-fly? or also read from disc?
         // If only classifying: faster from disc? or maybe I/O limited?
@@ -776,7 +911,7 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
         // Perform expectation step 
         expectationSingleImage(igroup,
                                dataImg, 
-                               dataWedge,
+                               dataMeasured,
                                dataRefs,
                                dataSigma,
                                dataWsumRefs,
