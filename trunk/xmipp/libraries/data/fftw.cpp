@@ -659,7 +659,7 @@ void xmippFftw::CenterFourierTransformInRealSpace(bool false_for_fIn)
            for(int j=0; j<fN[0]; j++)
            {
            par *= -1.0;
-           fIn[ii] *= par;
+           aux[ii] *= par;
            ii++;
            }
            if(fN[0]%2==0)par *= -1.0;
@@ -674,7 +674,7 @@ void xmippFftw::CenterFourierTransformInRealSpace(bool false_for_fIn)
               for(int j=0; j<fN[0]; j++)
               {
               par *= -1.0;
-              fIn[ii] *= par;
+              aux[ii] *= par;
               ii++;
               }
               if(fN[0]%2==0)par *= -1.0;
@@ -683,7 +683,6 @@ void xmippFftw::CenterFourierTransformInRealSpace(bool false_for_fIn)
        }     
    }
 }
-
 void xmippFftw::CenterRealImageInFourierSpace(bool false_for_fIn)
 {
 
