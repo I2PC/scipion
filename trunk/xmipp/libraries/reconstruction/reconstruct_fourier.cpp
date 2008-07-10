@@ -204,8 +204,8 @@ void Prog_RecFourier_prm::fill_L_R_repository(void)
         SL.get_matrices(isym, L, R);
         R.resize(3, 3);
         L.resize(3, 3);
-        R_repository.push_back(R.inv());
-        L_repository.push_back(L.inv());
+        R_repository.push_back(R);
+        L_repository.push_back(L);
     }
 //#define DEBUG3
 #ifdef  DEBUG3
@@ -233,7 +233,7 @@ void Prog_RecFourier_prm::get_angles_for_image(FileName fn, double &rot, double 
         yoff   = head.fYoff();
         flip   = head.Flip();
         weight = head.Weight();
-    #define ANGLES
+    //#define ANGLES
     #ifdef ANGLES
     std::cerr << "\nFrom header\n";
     #endif
@@ -264,7 +264,7 @@ void Prog_RecFourier_prm::get_angles_for_image(FileName fn, double &rot, double 
             REPORT_ERROR(1, (std::string)"Prog_RecFourier_prm: Cannot find " + fn + " in docfile " + fn_doc);
         }
     }
-    #define ANGLES
+    //#define ANGLES
     #ifdef ANGLES
     std::cerr << "\nrot, tilt,psi " << rot << " " << tilt << " " << psi << "\n";
     #endif
@@ -332,14 +332,14 @@ void Prog_RecFourier_prm::ProcessOneImage(FileName &fn_img,
     for(int i=0;i<Ydim;i++)
         for(int j=0;j<Xdim;j++)
             {                                          //x,y
-////            fftPaddedImg.fIn[(center_shift+j) + 
-////                             (center_shift+i) * paddim_proj]=(double)proj(j,i) / 
-////                             fftPaddedImg.fTotalSize;//x,y
-            fftPaddedImg.fIn[(j)                  + 
-                             (i)  * paddim_proj]=(double)proj(j,i) / 
-                             fftPaddedImg.fTotalSize;//x,y;
+            fftPaddedImg.fIn[(center_shift+j) + 
+                             (center_shift+i) * paddim_proj]=(double)proj(i,j) / 
+                             fftPaddedImg.fTotalSize;//x,y
+////            fftPaddedImg.fIn[(j)                  + 
+////                             (i)  * paddim_proj]=(double)proj(j,i) / 
+////                             fftPaddedImg.fTotalSize;//x,y;
             }
-    #define DEBUG_PADD
+    //#define DEBUG_PADD
     #ifdef DEBUG_PADD
     {
         ImageXmipp test(paddim_proj,paddim_proj);
@@ -351,9 +351,12 @@ void Prog_RecFourier_prm::ProcessOneImage(FileName &fn_img,
        test.write("padded_image.xmp");
     }
     #endif
-    
-    fftPaddedImg.CenterRealDataBeforeTransform();
-    #define DEBUG_PADD_FFT
+    //#ifdef MYNEW
+    fftPaddedImg.CenterFourierTransformInRealSpace(false);//ok MOVE TRANSFORM TO THE CENTER
+    //#else
+    //fftPaddedImg.CenterRealDataBeforeTransform();
+    //#endif
+    //#define DEBUG_PADD_FFT
     #ifdef DEBUG_PADD_FFT
     {
         ImageXmipp test(paddim_proj,paddim_proj);
@@ -370,7 +373,12 @@ void Prog_RecFourier_prm::ProcessOneImage(FileName &fn_img,
     }
     #endif
     fftPaddedImg.Transform();
-    #define DEBUG_PADD_FFT
+
+    //#ifdef MYNEW
+    fftPaddedImg.CenterRealImageInFourierSpace(true) ;//Change phases 
+    //#endif
+
+    //#define DEBUG_PADD_FFT
     #ifdef DEBUG_PADD_FFT
     {
         ImageXmipp test(paddim_proj,paddim_proj);
@@ -398,10 +406,11 @@ void Prog_RecFourier_prm::ProcessOneImage(FileName &fn_img,
     //APPLY MIRROR WHEN: if flip activated then selfApplyGeometryBSpline will apply mirror
     //compute euler matrix
     Euler_angles2matrix(rot, tilt, psi, A);
-    A_inv = A.inv();
+    //A_inv = A.inv();
     for (int isym = 0; isym < R_repository.size(); isym++)
         {
-        A_SL=  A_inv * R_repository[isym];
+        A_SL=  R_repository[isym] * A;
+        
         //std::cout << "A*R" << A_SL;
         ////std::cout << "R"   << R_repository[isym];
         // L is only needed for h cases  L_repository[isym];
@@ -465,7 +474,7 @@ void Prog_RecFourier_prm::placeInFourerVolumeOneImage(
     #endif
     #undef DEBUG
 
-    #define CHIMERA
+    //#define CHIMERA
     #ifdef CHIMERA
     static std::ofstream filestr;
     static int my_open=0;
@@ -474,7 +483,7 @@ void Prog_RecFourier_prm::placeInFourerVolumeOneImage(
     filestr << ".color yellow\n" ;
     int my_counter2=0;
     #endif
-    #define CHIMERA2
+    //#define CHIMERA2
     #ifdef CHIMERA2
     static std::ofstream filestr2;
     static int my_open2=0;
@@ -483,7 +492,7 @@ void Prog_RecFourier_prm::placeInFourerVolumeOneImage(
     filestr2 << ".color magenta\n" ;
     int my_counter22=0;
     #endif
-    #define CHIMERA3
+    //#define CHIMERA3
     #ifdef CHIMERA3
     static std::ofstream filestr3;
     static int my_open3=0;
@@ -599,7 +608,10 @@ void Prog_RecFourier_prm::placeInFourerVolumeOneImage(
             int yyF = int(yp+BRadius);
             int zzF = int(zp+BRadius);
             bool my_conjugate_flag;
-            
+/*
+SEGMENTATION FAULT if symmetry one.sel
+i3 does no symmetrice properlly z OK            
+*/
             for (zz=zz0; zz <= zzF; zz++)
                 for (yy=yy0; yy <= yyF; yy++)
                    for (xx=xx0; xx <= xxF; xx++)
@@ -608,8 +620,6 @@ void Prog_RecFourier_prm::placeInFourerVolumeOneImage(
 //xx=int(xp);
                    {
                        my_conjugate_flag = conjugate_flag;
-                       if(u==63 && v== 80)
-                           std::cerr<< "my_conjugate_flag" << my_conjugate_flag << "\n" ;
                        xxCentered = xx+XCenter;
                        //border of x axis
 
@@ -622,8 +632,6 @@ void Prog_RecFourier_prm::placeInFourerVolumeOneImage(
                            yyCentered = YCenter-yy;
                            zzCentered = ZCenter-zz;
                            my_conjugate_flag = !my_conjugate_flag;
-                           if(u==63 && v== 80)
-                               std::cerr<< " Inside xxCentered>=Xdim\n" ;
                        } 
                        else
                        {
@@ -637,8 +645,6 @@ void Prog_RecFourier_prm::placeInFourerVolumeOneImage(
                              yyCentered >= Ydim  || 
                              zzCentered >= Zdim )//Xdim half 
                            continue;
-if(xxCentered>=Xdim)
-   std::cerr << " This should never happend xxCentered>=Xdim " << std::endl;
 //OUT SPHERE
                        r2=    (xp-(double)xx)*(xp-(double)xx)+
                               (yp-(double)yy)*(yp-(double)yy)+
@@ -688,57 +694,17 @@ if(xxCentered>=Xdim)
                        FourierVolWeight[xxCentered+
                                         yyCentered*Xdim+
                                         zzCentered*Xdim*Ydim] += weight;
-                       //std::cerr << "xx=" << xx <<"\n";
-                       //#define DATA
-                       #ifdef DATA
-                       {
-                       
-                            //if(u==20 && v== 40)
-                          //if(u==38 && v== 80)
-                          {  
-                            std::cerr << " u v xp yp zp xx yy zz xxCentered yyCentered zzCentered aux_complex weight: ";
-                            std::cerr.width(10);
-                            std::cerr << u << "\t";
-                            std::cerr.width(10);
-                            std::cerr << v << "\t";
-                            std::cerr.width(10);
-                            std::cerr << xp << "\t";
-                            std::cerr.width(10);
-                            std::cerr << yp << "\t";
-                            std::cerr.width(10);
-                            std::cerr << zp << "\t";
-                            std::cerr.width(10);
-                            std::cerr << xx << "\t";
-                            std::cerr.width(10);
-                            std::cerr << yy << "\t";
-                            std::cerr.width(10);
-                            std::cerr << zz << "\t";
-                            std::cerr.width(10);
-                            std::cerr << xxCentered   << "\t";
-                            std::cerr.width(10);
-                            std::cerr << yyCentered   << "\t";
-                            std::cerr.width(10);
-                            std::cerr << zzCentered   << "\t";
-                            std::cerr.width(20);
-                            std::cerr << aux_complex  << "\t";
-                            std::cerr.width(10);
-                            std::cerr << weight       << std::endl;
-                           }
-                       }
-                       #endif DATA
-                       #undef DATA
-                       #ifdef NEVERDEFINED
                        if(xx==0)//the line xx=0 mut be antiymmetric
                        {
                            if(my_conjugate_flag)
                            {
-                              yyCentered = -yy+YCenter;
-                              zzCentered = -zz+ZCenter;
+                              yyCentered = +yy+YCenter;
+                              zzCentered = +zz+ZCenter;
                            }
                            else
                            {
-                              yyCentered = +yy+YCenter;
-                              zzCentered = +zz+ZCenter;
+                              yyCentered = -yy+YCenter;
+                              zzCentered = -zz+ZCenter;
                            }
                            aux_complex = conj(aux_complex);
 
@@ -752,7 +718,6 @@ if(xxCentered>=Xdim)
                                             zzCentered*Xdim*Ydim] += weight;
 
                        }
-                       #endif
                        //LINE x=0 and warp arround this line
                        
                        //#define DEBUG
@@ -943,13 +908,13 @@ void Prog_RecFourier_prm::MainLoop(VolumeXmipp &vol)
     }
     #endif
     #undef VOL
-
+    double dZdim = (double) Zdim;
     for ( int z=0, i=0; z<Zdim; z++ ) 
 		for ( int y=0; y<Ydim; y++ ) 
 			for ( int x=0; x<Xdim; x++, i++ ) 
             {
                 if( FourierVolWeight[i] > 0)//MINIMUMWEIGHT)
-                     FOURIERVOL[i] /= FourierVolWeight[i];
+                     FOURIERVOL[i] /= FourierVolWeight[i] * dZdim;
             }
     #define DEBUG_VOL
     #ifdef DEBUG_VOL
@@ -1006,53 +971,21 @@ void Prog_RecFourier_prm::MainLoop(VolumeXmipp &vol)
         bool inplace = false;
         xmippFftw Volfft(ndim, myfN, inplace,FourierVol);
         Volfft.Init("ES",FFTW_BACKWARD,false);
-        Volfft.CenterfIn();
+//#ifdef MYNEW
+        Volfft.CenterRealImageInFourierSpace(false) ;//Change phases
+//#else
+        //Volfft.CenterfIn();
+//#endif
         Volfft.Transform();
-        Volfft.CenterRealDataAfterTransform();
+//#ifdef MYNEW
+        Volfft.CenterFourierTransformInRealSpace(true);//ok MOVE TRANSFORM TO THE CENTER
+//#else
+        //Volfft.CenterRealDataAfterTransform();
+//#endif
         //copy volume to original volume
-        //I will take care about resizing latter the chan voldim by dim
         int xdim=dim;
         int ydim=dim;
         int zdim=dim;
-//int xdim=paddim_vol;
-//int ydim=paddim_vol;
-//int zdim=paddim_vol;  
-////        int center_shiftx = (paddim_vol-xdim)/2+xdim%2;// add one if odd
-////        int center_shifty = (paddim_vol-ydim)/2+ydim%2;// add one if odd
-////        int center_shiftz = (paddim_vol-zdim)/2+zdim%2;// add one if odd
-/*
-        vol().resize(zdim,ydim,xdim);
-        for(int i=0;i<xdim;i++)
-           for(int j=0;j<ydim;j++)
-               for(int k=0;k<zdim;k++)
-                {           
-                ////vol(i,j,k)=Volfft.fOut[(center_shiftz + k) + 
-                ////                       (center_shifty + j) * paddim_vol +
-                ////                       (center_shiftx + i) * paddim_vol * paddim_vol ];
-                                               //x,y
-                vol(i,k,j)=Volfft.fOut[( k) + 
-                                       ( j) * paddim_vol +
-                                       ( i) * paddim_vol * paddim_vol ];
-                                               //x,y
-                }
-*/ 
-/*
-        int center_shiftz = (paddim_vol-zdim)/2+zdim%2;
-        vol().resize(zdim,ydim,xdim);
-        for(int i=0;i<zdim;i++)
-           for(int j=0;j<ydim;j++)
-               for(int k=0;k<xdim;k++)
-                {           
-                ////vol(i,j,k)=Volfft.fOut[(center_shiftz + k) + 
-                ////                       (center_shifty + j) * paddim_vol +
-                ////                       (center_shiftx + i) * paddim_vol * paddim_vol ];
-                                               //x,y
-                vol(i,k,j)=Volfft.fOut[( k) + 
-                                       ( j) * paddim_vol +
-                                       ( i+center_shiftz) * paddim_vol * paddim_vol ];
-                                               //x,y
-                }
-*/       
 #ifdef NEVERDEFINED
         int center_shiftx = (paddim_vol-xdim)/2+xdim%2;// add one if odd
         int center_shifty = (paddim_vol-ydim)/2+ydim%2;// add one if odd
@@ -1073,7 +1006,7 @@ void Prog_RecFourier_prm::MainLoop(VolumeXmipp &vol)
            for(int j=0;j<paddim_vol;j++)
                for(int k=0;k<paddim_vol;k++)
                 {           
-                vol(i,k,j)=Volfft.fOut[(  k) + 
+                vol(i,j,k)=Volfft.fOut[(  k) + 
                                        (  j) * paddim_vol +
                                        (  i) * paddim_vol * paddim_vol ];
                                                //x,y
