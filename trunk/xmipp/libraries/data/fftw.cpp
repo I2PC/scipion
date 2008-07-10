@@ -642,10 +642,16 @@ specifying `FFTW_PATIENT' first plans in `FFTW_ESTIMATE' mode, then in
 fftw_set_timelimit( seconds);
 }
 
-void xmippFftw::CenterRealDataBeforeTransform(void)
+void xmippFftw::CenterFourierTransformInRealSpace(bool false_for_fIn)
 {
+   double * aux;
    int ii=0;
    double par=-1;
+   if (false_for_fIn)
+       aux = fOut;
+   else
+       aux = fIn;
+           
    if (fNdim==2)
    {
        for(int i=0; i<fN[1]; i++)
@@ -677,65 +683,23 @@ void xmippFftw::CenterRealDataBeforeTransform(void)
        }     
    }
 }
-void xmippFftw::CenterRealDataAfterTransform(void)
-{
-   int ii=0;
-   double par=-1;
-   if (fNdim==2)
-   {
-/*
-       for(int i=0; i<fN[1]; i++)
-         for(int j=0; j<fN[0]; j++)
-           {
-           if(((i+j)%2) == 1) fOut[ii] *= (-1.);
-           ii++;
-           }
-*/
-       for(int i=0; i<fN[1]; i++)
-       {
-           for(int j=0; j<fN[0]; j++)
-           {
-           par *= -1.0;
-           fIn[ii] *= par;
-           ii++;
-           }
-           if(fN[0]%2==0)par *= -1.0;
-       }  
-   }
-   else if (fNdim==3)
-   {
-       for(int k=0; k<fN[2]; k++)
-       {    
-           for(int i=0; i<fN[1]; i++)
-           {
-              for(int j=0; j<fN[0]; j++)
-              {
-              par *= -1.0;
-              fOut[ii] *= par;
-              //if(((i+j+k)%2) == 1) fOut[ii] *= (-1.);
-              ii++;
-              }
-              if(fN[0]%2==0)par *= -1.0;
-           }
-           if(fN[1]%2==0)par *= -1.0;
-       }
-   }
-}
 
-/* Fills the fOut array with the resolution vales at every pixel
-/* i.e. frecuencies in range 0-0.5 */
-void xmippFftw::getResolutionAllPoints()
+void xmippFftw::CenterRealImageInFourierSpace(bool false_for_fIn)
 {
+
     int Xdim,Xsize;
     int Ydim=1,Ysize=1;
     int Zdim=1,Zsize=1;
-    /* rememebr to transpose de matrix */
+    int maxDistance;
+    int ii;
+    double par=-1;
+    /* remember to transpose de matrix */
     if(fNdim==1)
     {   
         Zdim=Zsize=1;
         Ydim=Ysize=1;
         Xsize=fN[0];
-        Xdim = (int) fN[0]/2 +1;        
+        Xdim = (int) fN[0]/2 +1;
     }
     else if (fNdim==2)
     {
@@ -743,7 +707,6 @@ void xmippFftw::getResolutionAllPoints()
         Ydim=Ysize=fN[0];
         Xsize=fN[1];
         Xdim = (int) fN[1]/2 +1;
-    
     }    
     else if (fNdim==3)
     {
@@ -754,33 +717,25 @@ void xmippFftw::getResolutionAllPoints()
     }
     else
     {
-        std::cerr << "Error in getResolutionAllPoints\n";
+        std::cerr << "Error in fftwRadialAverage\n";
         exit(0);
     }
-    int zz, yy, xx;
-    double sz2,sy2,sx2;   
-    std::complex<double> * cfOut, *cfIn;
-    cfOut = (std::complex<double> *)fOut;
-    for ( int z=0, i=0; z<Zdim; z++ ) {
-        if ( z > (Zsize - 1)/2 ) zz = Zsize-z;
-        else zz = z;
-        sz2 = (double)zz/Zsize;
-        sz2 *= sz2;
-        for ( int y=0; y<Ydim; y++ ) {
-            if ( y > (Ysize - 1)/2 ) yy = Ysize-y;
-            else yy = y;
-            sy2 = (double)yy/Ysize;
-            sy2 *= sy2;
-            for ( int x=0; x<Xdim; x++, i++ ) {
-                if ( x > (Xsize - 1)/2 ) xx = Xsize-x;
-                else xx = x;
-                sx2 = (double)xx/Xsize;
-                sx2 *= sx2;
-                cfOut[i] = sqrt(sx2 + sy2 + sz2);
-            }
-        }
-    }
-
+    std::complex<double> * cfaux;
+    if(false_for_fIn)
+         cfaux = (std::complex<double> *)fOut; //fOut is double *
+    else
+         cfaux = (std::complex<double> *)fIn; //fOut is double *
+     
+    for ( int z=0, ii=0; z<Zdim; z++ ) {
+		for ( int y=0; y<Ydim; y++ ) {
+			for ( int x=0; x<Xdim; x++, ii++ ) {
+                par *= -1.0;
+                cfaux[ii] *= par;
+			}
+            if(Xdim%2==0)par *= -1.0;
+		}
+        if(Ydim%2==0)par *= -1.0;
+	}
 }
 
 /* Applies a bandpass filter to an image. */

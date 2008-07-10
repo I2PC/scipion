@@ -321,19 +321,24 @@ specifying `FFTW_PATIENT' first plans in `FFTW_ESTIMATE' mode, then in
     xmippFftw(Matrix3D<double> &img, bool init_and_do_transform=true);
                                             
    /** Modify Real Data so the Fourier trasform is at the center
-       CenterRealDataAfterTransform function must be applied after Fourier inversion
+       if false_for_fIn = false rouitine transforms fIn otherwise fOut
     */
-   void CenterRealDataBeforeTransform(void);
+   void CenterFourierTransformInRealSpace(bool false_for_fIn);
+
+   /** Modify Fourier Data so the real image is a shifted n/2
+       if false_for_fIn = false rouitine transforms fIn otherwise fOut
+    */
+   void CenterRealImageInFourierSpace(bool false_for_fIn);
+
     /** Modify Output Real Data so the Fourier transform is at the center
        CenterRealDataBeforeTransform function must be applied before Fourier inversion
     */
    void CenterRealDataAfterTransform(void);
+
+
   /** Delete fIn vector while keeping fOut. This is usefull if you
        want to save memory */
    void delete_fIn(void);
-
-   /** Fill the fOut array with the frequency values (0-0.5) for each pixel */
-   void getResolutionAllPoints(void);
 
    /** Applies a bandpass filter to an image (either  2 or 3 D). 
        frecuencies in range 0-0.5 */
