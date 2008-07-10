@@ -34,6 +34,8 @@ int main(int argc, char **argv)
     double aux, LL, sumw_allrefs, avePmax;
     std::vector<double> conv;
     SelFile SFa;
+    DocFile DFo;
+    FileName fn_tmp;
     double * dataRefs;
     double * dataSigma;
     double * dataWsumRefs;
@@ -82,9 +84,9 @@ int main(int argc, char **argv)
     {
         // Read references in memory and store their FTs
         prm.readAndFftwAllReferences(dataRefs);
-        // For later parallellization: split here prm.SFi and prm.SFw!
-        //SFa = prm.SFi + prm.SFw;
-        prm.calculateAllFFTWs(prm.SFi);
+        // For later parallellization: split here prm.SFi
+        prm.produceSideInfo2();
+        prm.calculateAllFFTWs();
         prm.estimateInitialNoiseSpectra(dataSigma);
 
         // Loop over all iterations
@@ -93,19 +95,19 @@ int main(int argc, char **argv)
 
             if (prm.verb > 0) std::cerr << "  Sub-tomogram classification:  iteration " << iter << " of " << prm.Niter << std::endl;
 
-            prm.expectation(prm.SFi, 
-                            prm.SFw, 
-                            dataRefs,
+            DFo.clear();
+            DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Zoff (6), WedNo (7) Ref (8), Pmax/sumP (9)");
+
+            prm.expectation(dataRefs,
                             dataSigma,
                             dataWsumRefs, 
                             dataWsumWedsPerRef,
                             dataWsumWedsPerGroup,
                             dataWsumDist,
                             dataSumWRefs,
-                            imgsPmax,
-                            imgsOptRefNos,
                             LL, 
-                            avePmax);
+                            avePmax,
+                            DFo);
 
             prm.maximization(dataRefs,
                              dataSigma,
@@ -114,8 +116,6 @@ int main(int argc, char **argv)
                              dataWsumWedsPerGroup,
                              dataWsumDist,
                              dataSumWRefs,
-                             imgsPmax,
-                             imgsOptRefNos,
                              sumw_allrefs, 
                              avePmax );
 
@@ -126,6 +126,11 @@ int main(int argc, char **argv)
                                  avePmax,
                                  conv);
 
+            // Write out docfile with optimal transformation & references
+            fn_tmp=prm.fn_root+"_it";
+            fn_tmp.compose(fn_tmp,iter,"doc");
+            DFo.write(fn_tmp);
+
         } // end loop iterations
 
         // Write out converged structures
@@ -135,6 +140,10 @@ int main(int argc, char **argv)
                              LL, 
                              avePmax,
                              conv);
+
+        // Write out docfile with optimal transformation & references
+        fn_tmp=prm.fn_root+".doc";
+        DFo.write(fn_tmp);
 
         // Free the memory (is this necessary?)
         delete [] dataSumWRefs;

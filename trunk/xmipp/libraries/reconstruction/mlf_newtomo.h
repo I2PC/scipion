@@ -59,12 +59,16 @@ class Prog_mlf_tomo_prm
 
 public:
     /** Filenames reference selfile/image, fraction docfile & output rootname */
-    SelFile SFi, SFw, SFr, SFg;
-    FileName fn_ref, fn_root, fn_group;
+    SelFile SFi, SFr, SFg;
+    FileName fn_ref, fn_root, fn_doc, fn_wlist, fn_group;
     /** Flag whether to fix estimates for model fractions */
     bool fix_fractions;
     /** Flag whether to fix estimate for sigma of noise */
     bool fix_sigma_noise;
+  // For all tomograms: angles, offsets and wedge parameters
+    std::vector<double> img_rot,img_tilt,img_psi;
+    std::vector<double> img_xoff,img_yoff,img_zoff;
+    std::vector<double> img_th0,img_thF,img_wednr;
 
     /** Use FFTW for Fts */
     bool do_fftw;
@@ -87,6 +91,10 @@ public:
     int nr_ref;
     /** Number of groups (e.g. one group for each tomogram) */
     int nr_group;
+    /** Number of different wedges */
+    int nr_wedge;
+    /** wedgelist */
+    std::vector<wedgelist> wedges;
 
     /** Verbose level:
         2: gives debug statements
@@ -119,6 +127,9 @@ public:
     /// splitted SF-INdependent side-info calculations
     void produceSideInfo();
 
+    /// splitted SF-dependent side-info calculations
+    void produceSideInfo2();
+
     /// Generate initial references as averages over random subsets
     void generateInitialReferences();
  
@@ -126,7 +137,7 @@ public:
     void readAndFftwAllReferences(double * dataRefs);
 
     /// Calculate FFTWs for images in a selfile and write to disc
-    void calculateAllFFTWs(SelFile &SF);
+    void calculateAllFFTWs();
 
     /// initial sigma2-estimation for fourier-mode
     void estimateInitialNoiseSpectra(double * dataSigma);
@@ -142,24 +153,21 @@ public:
                                 double * dataWsumWedsPerGroup,
                                 double * dataWsumDist,
                                 double * dataSumWRefs,
-                                int &opt_refno, 
-                                double &LL, 
-                                double &Pmax);
+                                int    & opt_refno, 
+                                double & LL, 
+                                double & Pmax);
 
     /// Integrate over all experimental images
-    void expectation(SelFile &mySFi, 
-                     SelFile &mySFw,
-                     double * dataRefs,
+    void expectation(double * dataRefs,
                      double * dataSigma,
                      double * dataWsumRefs,
                      double * dataWsumWedsPerRef,
                      double * dataWsumWedsPerGroup,
                      double * dataWsumDist,
                      double * dataSumWRefs,
-                     double * imgsPmax,
-                     int * imgsOptRefNos,
-                     double &LL,
-                     double &avePmax);
+                     double & LL,
+                     double & avePmax,
+                     DocFile & DFo);
 
     /// Update all model parameters
     void maximization(double * dataRefs,
@@ -169,17 +177,15 @@ public:
                       double * dataWsumWedsPerGroup,
                       double * dataWsumDist,
                       double * dataSumWRefs,
-                      double * imgsPmax,
-                      int * imgsOptRefNos,
-                      double &sumw_allrefs,
-                      double &avePmax);
+                      double & sumw_allrefs,
+                      double & avePmax);
 
     /// Write out reference images, selfile and logfile
     void writeOutputFiles(int iter, 
                           double * dataRefs,
-                          double &sumw_allrefs, 
-                          double &LL, 
-                          double &avePmax,
+                          double & sumw_allrefs, 
+                          double & LL, 
+                          double & avePmax,
                           std::vector<double> &conv);
 
 };

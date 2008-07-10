@@ -36,8 +36,9 @@ void Prog_mlf_tomo_prm::read(int argc, char **argv)
         extendedUsage();
     }
     SFi.read(getParameter(argc, argv, "-i"));
-    SFw.read(getParameter(argc, argv, "-wedge"));
+    fn_wlist=getParameter(argc,argv,"-wedge","");
     fn_group = getParameter(argc, argv, "-groups","");
+    fn_doc = getParameter(argc,argv,"-doc","");
     nr_ref = textToInteger(getParameter(argc, argv, "-nref", "0"));
     fn_ref = getParameter(argc, argv, "-ref", "");
     fn_root = getParameter(argc, argv, "-o", "out");
@@ -47,7 +48,7 @@ void Prog_mlf_tomo_prm::read(int argc, char **argv)
     fix_sigma_noise = checkParameter(argc, argv, "-fix_sigma_noise");
     verb = textToInteger(getParameter(argc, argv, "-verb", "1"));
     highres = textToFloat(getParameter(argc, argv, "-highres", "0.5"));
-    lowres = textToFloat(getParameter(argc, argv, "-lowres", "0.0001"));
+    lowres = textToFloat(getParameter(argc, argv, "-lowres", "0.02"));
     debug = checkParameter(argc, argv, "-debug");
 
 }
@@ -66,6 +67,8 @@ void Prog_mlf_tomo_prm::show()
         else
             std::cerr << "  Number of references:   : " << nr_ref << std::endl;
         std::cerr << "  Output rootname         : " << fn_root << std::endl;
+        std::cerr << "  Low resolution limit    : " <<lowres << " pix^-1 "<< std::endl;
+        std::cerr << "  High resolution limit   : " <<highres << " pix^-1 "<< std::endl;
         std::cerr << "  Number of iterations    : " << Niter << std::endl;
         if (fix_fractions)
         {
@@ -74,10 +77,6 @@ void Prog_mlf_tomo_prm::show()
         if (fix_sigma_noise)
         {
             std::cerr << "  -> Do not update sigma-estimate of noise." << std::endl;
-        }
-        if (lowres > 0. || highres > 0.)
-        {
-            std::cerr << "  -> Limit to resolutions between " << lowres << " and " << highres << std::endl;
         }
         std::cerr << " -----------------------------------------------------------------" << std::endl;
     }
@@ -89,11 +88,13 @@ void Prog_mlf_tomo_prm::usage()
 {
     std::cerr << "Usage:  mlf_tomo [options] " << std::endl;
     std::cerr << "   -i <selfile>                : Selfile with the input sub-tomograms \n";
-    std::cerr << "   -wedge <selfile>            : Selfile with the point-spread function of the missing wedges \n";
-    std::cerr << "  [ -groups <selfile> ]         : Selfile with the group numbers for all subtomograms \n";
     std::cerr << "   -nref <int>                 : Number of references to generate automatically (recommended)\n";
     std::cerr << "   OR -ref <selfile/volume>         OR selfile with initial references/single reference image \n";
     std::cerr << " [ -o <rootname=\"out\"> ]       : Output rootname \n";
+    std::cerr << " [ -wedge <docfile> ]          : Docfile with missing wedge parameters \n";
+    std::cerr << " [ -groups <selfile> ]         : Selfile with the group numbers for all subtomograms \n";
+    std::cerr << " [ -lowres <=0.02> ]           : Low-resolution limit (in 1/pixel) \n";
+    std::cerr << " [ -highres <=0.5> ]           : High-resolution limit (in 1/pixel) \n";
     std::cerr << " [ -more_options ]             : Show all possible input parameters \n";
 }
 
@@ -199,19 +200,27 @@ void Prog_mlf_tomo_prm::produceSideInfo()
         }
     }
     size = 2 * hsize;
+#ifdef DEBUG
     std::cerr<<" lowres-highres hsize= "<<hsize<<" fftw hsize= "<<fftw_hsize<<std::endl;
+#endif
 
-    /*
-    vol().initZeros();
-    for(int i=0, ii=0;i<Zdim;i++)
-        for(int j=0;j<Ydim;j++)
-            for(int k=0;k<Xdim/2 +1;k++, ii++)
-            {                                          //x,y
-                vol(k,i,j)=dist_fftw[ii];
-            }
-    vol.write("dist.fft");
-    std::cerr<<"written dist.fft"<<std::endl;
-    */
+    // Store angles for missing wedges
+    nr_wedge = 0;
+    if (fn_wlist != "") {
+        wedgelist ww;
+        DocFile DF1;
+        DF1.read(fn_wlist);
+        DF1.go_beginning();
+        while (!DF1.eof()) {
+            ww.num = ROUND(DF1(0));
+            ww.th0 = (double)DF1(1);
+            ww.thF = (double)DF1(2);
+            wedges.push_back(ww);
+            nr_wedge++;
+            DF1.next();
+        }
+        DF1.clear();
+    }
 
     // Get groups structure from SFg and store into SFi
     SelFile SFtmp;
@@ -231,7 +240,91 @@ void Prog_mlf_tomo_prm::produceSideInfo()
         SFi = SFtmp;
     }
 
- }
+}
+
+void Prog_mlf_tomo_prm::produceSideInfo2()
+{
+
+    DocFile DF;
+    FileName fn_vol;
+    int iaux;
+    bool found;
+
+    // Store tomogram angles, offset vectors and missing wedge parameters
+    if (fn_doc!="") {
+        DF.read(fn_doc);
+    
+        SFi.go_beginning();
+        while (!SFi.eof()) 
+        {
+            fn_vol=SFi.NextImg();
+            if (DF.search_comment(fn_vol)) 
+            {
+                img_rot.push_back( DF(0));
+                img_tilt.push_back(DF(1));
+                img_psi.push_back( DF(2));
+                img_xoff.push_back(DF(3));
+                img_yoff.push_back(DF(4));
+                img_zoff.push_back(DF(5));
+                if (nr_wedge>0) 
+                {
+                    img_wednr.push_back(DF(6));
+                    iaux=ROUND(DF(6));
+                    found = false;
+                    for (int iw=0; iw<nr_wedge; iw++) 
+                    {
+                        if ( iaux==wedges[iw].num) 
+                        {
+                            img_th0.push_back(wedges[iw].th0);
+                            img_thF.push_back(wedges[iw].thF);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) 
+                    {
+                        std::cerr << "ERROR% wedge "<<iaux
+                                  <<" for tomogram "<<fn_vol
+                                  <<" was not found in wedge-list"
+                                  <<std::endl;
+                        exit(0);
+                    }
+                } 
+                else 
+                {
+                    img_wednr.push_back(0.);
+                    img_th0.push_back(0.);
+                    img_thF.push_back(0.);
+                }
+            } else 
+            {
+                std::cerr << "ERROR% "<<fn_vol
+                          <<" not found in document file"
+                          <<std::endl;
+                exit(0);
+            }
+        }
+    } 
+    else 
+    {
+        SFi.go_beginning();
+        while (!SFi.eof()) 
+        {
+            SFi.NextImg();
+            img_rot.push_back(  0.);
+            img_tilt.push_back( 0.);
+            img_psi.push_back(  0.);
+            img_xoff.push_back( 0.);
+            img_yoff.push_back( 0.);
+            img_zoff.push_back( 0.);
+            img_wednr.push_back(0.);
+            img_th0.push_back(  0.);
+            img_thF.push_back(  0.);
+        }
+    }
+
+}
+
 
 void Prog_mlf_tomo_prm::generateInitialReferences()
 {
@@ -332,7 +425,7 @@ void Prog_mlf_tomo_prm::readAndFftwAllReferences(double * dataRefs)
 
 
 // This routine is for (splitted) SF-dependent side-info calculations
-void Prog_mlf_tomo_prm::calculateAllFFTWs(SelFile &SF)
+void Prog_mlf_tomo_prm::calculateAllFFTWs()
 {
 #ifdef DEBUG
     std::cerr<<"start calculateAllFFTWs"<<std::endl;
@@ -340,7 +433,8 @@ void Prog_mlf_tomo_prm::calculateAllFFTWs(SelFile &SF)
 
     FileName fni, fno;
     VolumeXmipp vol;
-    int c, nn = SF.ImgNo(), imgno = 0;
+    Matrix2D<double> A_img(4,4), A_wed(4,4);
+    int c, nn = SFi.ImgNo(), imgno = 0;
 
     if (verb > 0)
     {
@@ -349,19 +443,25 @@ void Prog_mlf_tomo_prm::calculateAllFFTWs(SelFile &SF)
         c = XMIPP_MAX(1, nn / 60);
     }
 
-    SF.go_beginning();
-    while (!SF.eof())
+    SFi.go_beginning();
+    while (!SFi.eof())
     {
-        fni = SF.NextImg();
+        fni = SFi.NextImg();
+        vol.read(fni);
+
+        // Still test this!!! (just copied from image.h for now...)
+        A_wed = Euler_rotation3DMatrix(img_rot[imgno],img_tilt[imgno],img_psi[imgno]);
+        A_img = A_wed;
+        A_img(0,3) = -img_xoff[imgno];
+        A_img(1,3) = -img_yoff[imgno];
+        A_img(2,3) = -img_zoff[imgno];
+        vol().selfApplyGeometryBSpline(A_img,3,IS_INV,DONT_WRAP,0.);
+
+        forwfftw.SetPoints(MULTIDIM_ARRAY(vol()));
+        forwfftw.Transform();
+        forwfftw.Normalize();
         fno = fni + ".fftw";
-        if (!exists(fno))
-        {
-            vol.read(fni);
-            forwfftw.SetPoints(MULTIDIM_ARRAY(vol()));
-            forwfftw.Transform();
-            forwfftw.Normalize();
-            forwfftw.write(fno);
-        }
+        forwfftw.write(fno);
         if (verb > 0) if (imgno % c == 0) progress_bar(imgno);
         imgno++;
     }
@@ -493,9 +593,9 @@ void Prog_mlf_tomo_prm::expectationSingleImage(int igroup,
                                                double * dataWsumWedsPerGroup,
                                                double * dataWsumDist,
                                                double * dataSumWRefs,
-                                               int &opt_refno, 
-                                               double &LL, 
-                                               double &Pmax)
+                                               int    & opt_refno, 
+                                               double & LL, 
+                                               double & Pmax)
 
 {
 
@@ -548,7 +648,6 @@ void Prog_mlf_tomo_prm::expectationSingleImage(int igroup,
         sumweight += aux;
     }
 
-
     // Store Pmax/sumP
     Pmax = maxweight / sumweight;
 #ifdef DEBUG_EXPSINGLE                
@@ -588,34 +687,30 @@ void Prog_mlf_tomo_prm::expectationSingleImage(int igroup,
 
 
 
-void Prog_mlf_tomo_prm::expectation(SelFile &mySFi, 
-                                    SelFile &mySFw,
-                                    double * dataRefs,
+void Prog_mlf_tomo_prm::expectation(double * dataRefs,
                                     double * dataSigma,
                                     double * dataWsumRefs,
                                     double * dataWsumWedsPerRef,
                                     double * dataWsumWedsPerGroup,
                                     double * dataWsumDist,
                                     double * dataSumWRefs,
-                                    double * imgsPmax,
-                                    int * imgsOptRefNos,
-                                    double &LL,
-                                    double &avePmax)
+                                    double & LL,
+                                    double & avePmax,
+                                    DocFile & DFo)
 {
 
 #ifdef DEBUG
     std::cerr<<"start expectation"<<std::endl;
 #endif
-    int opt_refno, nn, imgno, nr_imgs, igroup, idum;
-    double Pmax;
-    double *dataImg, *dataWedge;
-    SelLine SL;
-    FileName fn;
-
-    // Check that selfiles are of equal length
-    nr_imgs = mySFi.ImgNo();
-    if (mySFi.ImgNo() != mySFw.ImgNo())
-        REPORT_ERROR(1,"Selfiles of images and wedges have unequal lengths");
+    int              opt_refno, nn, imgno, igroup, idum;
+    double           *dataImg, *dataWedge;
+    SelLine          SL;
+    FileName         fn;
+    Matrix1D<double> dataline(9), opt_offsets(3);  
+    Matrix2D<double> A_img(4,4);
+    double           Pmax, th0,thF;
+    //double           opt_rot,opt_tilt,opt_psi;
+    //double           opt_xoff,opt_yoff,opt_zoff;
 
     // Reserve memory for dataImg and dataWedge
     try
@@ -627,45 +722,42 @@ void Prog_mlf_tomo_prm::expectation(SelFile &mySFi,
     {
         REPORT_ERROR(1,"Error allocating memory in expectation");
     }
-    // FOR NOW ALL WEGDES ARE 1:
-    for (int i = 0; i < hsize; i++)
-        dataWedge[i] = 1.;
 
     // Initialize weighted sums to zero
     for (int i = 0; i < nr_ref * size; i++)
-    {
         dataWsumRefs[i] = 0.;
-    }        
     for (int i = 0; i < nr_ref * hsize; i++)
-    {
         dataWsumWedsPerRef[i] = 0.;
-    }        
     for (int i = 0; i < nr_group * hsize; i++)
-    {
         dataWsumWedsPerGroup[i] = 0.;
+    for (int i = 0; i < nr_group * hsize; i++)
         dataWsumDist[i] = 0.;
-    }
     for (int i = 0; i < nr_ref; i++)
-    {
         dataSumWRefs[i] = 0.;
-    }
     LL = 0.;
     avePmax = 0.;
 
     // Loop over all images
     imgno = 0;
-    nn = mySFi.ImgNo();
+    nn = SFi.ImgNo();
     if (verb > 0) init_progress_bar(nn);
-    mySFi.go_beginning();
-    mySFw.go_beginning();
-    while ((!mySFi.eof()))
+    SFi.go_beginning();
+    while ((!SFi.eof()))
     {
         // Get the group
-        SL = mySFi.current();
+        SL = SFi.current();
         igroup = SL.get_number() - 1;        
+        fn = SFi.NextImg();
+
+        // Get the geometrical information
+        A_img=Euler_rotation3DMatrix(img_rot[imgno],img_tilt[imgno],img_psi[imgno]);
+        opt_offsets(0)=ROUND(img_xoff[imgno]);
+        opt_offsets(1)=ROUND(img_yoff[imgno]);
+        opt_offsets(2)=ROUND(img_zoff[imgno]);
+        th0=img_th0[imgno];
+        thF=img_thF[imgno];
 
         // read tomogram from disc
-        fn = mySFi.NextImg();
         backfftw.read(fn + ".fftw");
         // Get only points within resolution range
         for (int i = 0, ii=0; i< 2*fftw_hsize; i++)
@@ -674,11 +766,13 @@ void Prog_mlf_tomo_prm::expectation(SelFile &mySFi,
                 dataImg[ii] = backfftw.fIn[i];
                 ii++;
             }
+        // FOR NOW ALL WEGDES ARE 1:
+        for (int i = 0; i < hsize; i++)
+            dataWedge[i] = 1.;
 
-        // read corresponding wedge as well
-        //backfftw.read(mySFw.NextImg(), true);
-        //Again someghow limit resolution
-      
+        // Create missing wedge on-the-fly? or also read from disc?
+        // If only classifying: faster from disc? or maybe I/O limited?
+
         // Perform expectation step 
         expectationSingleImage(igroup,
                                dataImg, 
@@ -694,8 +788,19 @@ void Prog_mlf_tomo_prm::expectation(SelFile &mySFi,
                                LL, 
                                Pmax);
 
-        imgsOptRefNos[imgno] = opt_refno;
-        imgsPmax[imgno] = Pmax;
+        // Output to docfile
+        dataline(0)=img_rot[imgno];                  // rot
+        dataline(1)=img_tilt[imgno];                 // tilt
+        dataline(2)=img_psi[imgno];                  // psi
+        dataline(3)=img_xoff[imgno];                 // Xoff
+        dataline(4)=img_yoff[imgno];                 // Yoff
+        dataline(5)=img_zoff[imgno];                 // Zoff
+        if (nr_wedge>0) dataline(6)=img_wednr[imgno];// missing wedge number
+        else dataline(6)=0.;
+        dataline(7)=(double)(opt_refno+1);           // Ref
+        dataline(8)=Pmax;                            // P_max/P_tot
+        DFo.append_comment(fn);
+        DFo.append_data_line(dataline);
         avePmax += Pmax;
 
         imgno++;
@@ -716,10 +821,8 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
                                      double * dataWsumWedsPerGroup,
                                      double * dataWsumDist,
                                      double * dataSumWRefs,
-                                     double * imgsPmax,
-                                     int * imgsOptRefNos,
-                                     double &sumw_allrefs,
-                                     double &avePmax)
+                                     double & sumw_allrefs,
+                                     double & avePmax)
 {
 
 #ifdef DEBUG
