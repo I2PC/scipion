@@ -51,6 +51,7 @@ void Prog_mlf_tomo_prm::read(int argc, char **argv)
     lowres = textToFloat(getParameter(argc, argv, "-lowres", "0.02"));
     debug = checkParameter(argc, argv, "-debug");
 
+    ang= textToFloat(getParameter(argc, argv, "-ang", "0"));
 }
 
 // Show ====================================================================
@@ -172,18 +173,16 @@ void Prog_mlf_tomo_prm::produceSideInfo()
     }
 
 
-    int zz, yy, xx;
+    int zz, yy;
     double sz,sy,sx,res;
     hsize = 0;
     for ( int z=0, ii=0; z<Zdim; z++ ) {
-        if ( z > (Zdim - 1)/2 ) zz = Zdim-z;
+        if ( z > (Zdim - 1)/2 ) zz = z-Zdim;
         else zz = z;
         for ( int y=0; y<Ydim; y++ ) {
-            if ( y > (Ydim - 1)/2 ) yy = Ydim-y;
+            if ( y > (Ydim - 1)/2 ) yy = y-Ydim;
             else yy = y;
-            for ( int x=0; x<Xdim/2 + 1; x++,ii++ ) {
-                if ( x > (Xdim - 1)/2 ) xx = Xdim-x;
-                else xx = x;
+            for ( int xx=0; xx<Xdim/2 + 1; xx++,ii++ ) {
                 // Think about non-cubic volumes here: resolution in dig.freq.
                 sx = (double)xx / (double)Xdim;
                 sy = (double)yy / (double)Ydim;
@@ -335,16 +334,25 @@ void Prog_mlf_tomo_prm::getMissingWedge(bool * measured,
                                         const double thetaF_alongx /*= 0.*/)
 {
 
-    // We assume A is already inverted!!
+    if (theta0_alongy==0. && thetaF_alongy==0. && theta0_alongx==0. && thetaF_alongx==0.)
+    {
+        for (int i=0; i < hsize; i++)
+            measured[i] = true;
+        return;
+    }
+
+    //  Or maybe not invert ??????????? In ml_align3d/mask it was inverted!! Check!!
+    A=A.inv();
 
     double xp, yp, zp;
     double tg0_y, tgF_y, tg0_x, tgF_x, limx0, limxF, limy0, limyF;
 
     tg0_y = -tan(PI * (-90. - thetaF_alongy) / 180.);
     tgF_y = -tan(PI * (90. - theta0_alongy) / 180.);
-    tg0_x = -tan(PI * (90. - theta0_alongx) / 180.);
+    tg0_x = -tan(PI * (-90. - thetaF_alongx) / 180.);
     tgF_x = -tan(PI * (90. - theta0_alongx) / 180.);
-#define DEBUG_WEDGE
+
+//#define DEBUG_WEDGE
 #ifdef DEBUG_WEDGE
     std::cerr<<"tg0_y= "<<tg0_y<<std::endl;
     std::cerr<<"tgF_y= "<<tgF_y<<std::endl;
@@ -352,31 +360,24 @@ void Prog_mlf_tomo_prm::getMissingWedge(bool * measured,
     std::cerr<<"tgF_x= "<<tgF_x<<std::endl;
 #endif
 
-    // Initialize all to true;
-    for (int i=0; i < hsize; i++)
-        measured[i] = false;
-
-
-
-
-    int zz, yy, xx,i = 0;
-    double sz,sy,sx,res;
-    for ( int z=0, ii=0; z<Zdim; z++ ) {
-        if ( z > (Zdim - 1)/2 ) zz = Zdim-z;
-        else zz = z;
+    int zz, yy;
+    for ( int z=0, i=0, ii=0; z<Zdim; z++ ) {
+        if ( z > (Zdim - 1)/2 ) 
+            zz = z-Zdim;
+        else 
+            zz = z;
         for ( int y=0; y<Ydim; y++ ) {
-            if ( y > (Ydim - 1)/2 ) yy = Ydim-y;
+            if ( y > (Ydim - 1)/2 ) yy = y-Ydim;
             else yy = y;
-            for ( int x=0; x<Xdim/2 + 1; x++,ii++ ) {
-                if ( x > (Xdim - 1)/2 ) xx = Xdim-x;
-                else xx = x;
-
+            for ( int xx=0; xx<Xdim/2 + 1; xx++,ii++ ) {
                 // Only concerned with those components within resolution limits
                 if (is_in_range[ii])
                 {
-                    xp = dMij(A, 0, 0) * x + dMij(A, 0, 1) * y + dMij(A, 0, 2) * z;
-                    yp = dMij(A, 1, 0) * x + dMij(A, 1, 1) * y + dMij(A, 1, 2) * z;
-                    zp = dMij(A, 2, 0) * x + dMij(A, 2, 1) * y + dMij(A, 2, 2) * z;
+                    // Rotate the wedge
+                    xp = dMij(A, 0, 0) * xx + dMij(A, 0, 1) * yy + dMij(A, 0, 2) * zz;
+                    yp = dMij(A, 1, 0) * xx + dMij(A, 1, 1) * yy + dMij(A, 1, 2) * zz;
+                    zp = dMij(A, 2, 0) * xx + dMij(A, 2, 1) * yy + dMij(A, 2, 2) * zz;
+                    // Calculate the limits
                     limx0 = tg0_y * zp;
                     limxF = tgF_y * zp;
                     limy0 = tg0_x * zp;
@@ -384,18 +385,21 @@ void Prog_mlf_tomo_prm::getMissingWedge(bool * measured,
                     
                     if (zp >= 0)
                     {
-                        if (xp <= limx0 || xp >= limxF)
-                            measured[i] = true;
-                    }
-                    else
-                    {
-                        if (xp <= limxF || xp >= limx0)
-                            measured[i] = true;
+                        if ((xp <= limx0 || xp >= limxF) && (yp <= limy0 || yp >= limyF))
+                            measured[i] = true; 
                         else
                             measured[i] = false;
                     }
-#ifdef DEBUG_WEDGE
-                    std::cerr<<" x,y,z= "<<x<<" "<<y<<" "<<z<<std::endl;
+                    else
+                    {
+                         if ((xp <= limxF || xp >= limx0) && (yp <= limyF || yp >= limy0))
+                            measured[i] = true; 
+                        else
+                            measured[i] = false;
+                    }
+//#define DEBUG_WEDGE2
+#ifdef DEBUG_WEDGE2
+                    std::cerr<<" xx,yy,zz= "<<xx<<" "<<yy<<" "<<zz<<std::endl;
                     std::cerr<<" xp,yp,zp= "<<xp<<" "<<yp<<" "<<zp<<std::endl;
                     std::cerr<<"limx0, limxF= "<<limx0<<" "<<limxF<<std::endl;
                     if (measured[i])
@@ -408,45 +412,40 @@ void Prog_mlf_tomo_prm::getMissingWedge(bool * measured,
             }
         }
     }
-#ifdef DEBUG_WEDGE
-    std::cerr<<"i= "<<i<<std::endl;
-    VolumeXmipp test(Xdim,Ydim,Zdim), rot;
-    
-    Matrix2D<double> I(4,4), AA(4,4);
-    AA=Euler_rotation3DMatrix(0,0,30);
-    I.initIdentity();
-    BinaryWedgeMask(test(),0.,60.,I);
-    test.write("before.vol");
-    rot=test;
-    rot().selfApplyGeometryBSpline(AA,3,IS_NOT_INV,DONT_WRAP,0.);
-    rot.write("rotated.vol");
-    Matrix3D<std::complex<double> > Faux, Faux2;
-    Matrix3D<double> Mr(test()), Mi(test());
-    FourierTransform(test(),Faux);
-    CenterFFT(Faux,true);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
-    {
-        dVkij(Mr,k,i,j) = real(dVkij(Faux,k,i,j));
-        dVkij(Mi,k,i,j) = imag(dVkij(Faux,k,i,j));
-    }
-    //Mr.selfApplyGeometryBSpline(AA,3,IS_NOT_INV,DONT_WRAP,0.);
-    //Mi.selfApplyGeometryBSpline(AA,3,IS_NOT_INV,DONT_WRAP,0.);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
-    {
-        dVkij(Faux,k,i,j) = (std::complex<double>)(dVkij(Mr,k,i,j), dVkij(Mi,k,i,j));
-    }
 
-    CenterFFT(Faux,false);
-    InverseFourierTransform(Faux,test());
-    test.write("after.vol");
-    
-    
-    for(int i=0;i<Zdim;i++)
+#ifdef DEBUG_WEDGE
+    VolumeXmipp test(Xdim,Ydim,Zdim), rot(Xdim,Ydim,Zdim);
+    test().initZeros();
+
+    for(int i=0,ii=0,iii=0;i<Zdim;i++)
         for(int j=0;j<Ydim;j++)
-            for(int k=0;k<Xdim;k++)
-                if (measured[k + j*Xdim +i*Ydim*Xdim ])
-                    test(i,j,k)=1.;
+            for(int k=0;k<Xdim/2 + 1; k++,ii++)
+                if (is_in_range[ii])
+                {
+                    if (measured[iii])
+                    {
+                        test(i,j,k)=1.;
+                    }
+                    iii++;
+                }
     test.write("wedge.ftt");
+    Matrix1D<double> off(3);
+    off.initConstant(Xdim/2);
+    test().selfTranslate(off);
+    test.write("Fwedge.vol");
+    test().setXmippOrigin();
+    Matrix3D<int> ress(Xdim,Ydim,Zdim);
+    ress.setXmippOrigin();
+    A=A.inv();
+    BinaryWedgeMask(test(),theta0_alongy,thetaF_alongy, A);
+    FOR_ALL_ELEMENTS_IN_MATRIX3D(test())
+    {
+        double res = (double)(i*i+j*j+k*k);
+        res = sqrt(res)/Xdim;
+        if (!(res <= highres && res >= lowres))
+            VOL_ELEM(test(),k,i,j) = 0;
+    }
+    test.write("Mwedge.vol");
     exit(0);
 #endif
 
@@ -896,10 +895,7 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
                 ii++;
             }
         // get missing wedge
-        getMissingWedge(dataMeasured,
-                        A_img,
-                        -60.,
-                        60.);
+        getMissingWedge(dataMeasured,A_img,th0,thF);
 
         // FOR NOW ALL WEGDES ARE 1:
         for (int i = 0; i < hsize; i++)

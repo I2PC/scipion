@@ -105,6 +105,8 @@ public:
     /* High/low and probability-calculation resolution limits */
     double highres, lowres;
 
+
+    double ang;
     xmippFftw forwfftw, backfftw;
 
     //// DEBUGGING
