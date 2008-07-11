@@ -78,6 +78,8 @@ public:
     bool * is_in_range;
     /** Vector containing estimated fraction for each model */
     std::vector<double> alpha_k;
+    /** Matrix1d with number of images per group */
+    Matrix1D<double> nr_imgs_per_group;
     /** Vector containing resolution-depedent noise sigma values for each tomogram group */
     std::vector< Matrix1D< double > > sigma_noise;
     /** Starting iteration */
@@ -89,12 +91,16 @@ public:
     double dim3;
     /** Number of references */
     int nr_ref;
+    /** Number of input images */
+    double nr_imgs;
     /** Number of groups (e.g. one group for each tomogram) */
     int nr_group;
     /** Number of different wedges */
     int nr_wedge;
     /** wedgelist */
     std::vector<wedgelist> wedges;
+    /** Regularisation constants */
+    double reg0, regF, reg_steps, reg, delta_reg;
 
     /** Verbose level:
         2: gives debug statements
@@ -189,6 +195,10 @@ public:
                       double * dataSumWRefs,
                       double & sumw_allrefs,
                       double & avePmax);
+
+    // Regularisation
+    void regularise(double * dataRefs,
+                    double * dataSigma);
 
     /// Write out reference images, selfile and logfile
     void writeOutputFiles(int iter, 

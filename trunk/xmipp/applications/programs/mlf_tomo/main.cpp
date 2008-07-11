@@ -43,6 +43,7 @@ int main(int argc, char **argv)
     double * dataWsumWedsPerGroup;
     double * dataWsumDist;
     double * dataSumWRefs;
+    double * dataSumWGroups;
     double * imgsPmax;
     int    * imgsOptRefNos;
 
@@ -66,6 +67,7 @@ int main(int argc, char **argv)
     try
     {
         dataSumWRefs         = new double[prm.nr_ref];
+        dataSumWGroups       = new double[prm.nr_group];
         dataRefs             = new double[prm.nr_ref * prm.size];
         dataWsumRefs         = new double[prm.nr_ref * prm.size];
         dataWsumWedsPerRef   = new double[prm.nr_ref * prm.hsize];
@@ -88,6 +90,7 @@ int main(int argc, char **argv)
         prm.produceSideInfo2();
         prm.calculateAllFFTWs();
         prm.estimateInitialNoiseSpectra(dataSigma);
+        prm.regularise(dataRefs, dataSigma);
 
         // Loop over all iterations
         for (int iter = prm.istart; iter <= prm.Niter; iter++)
@@ -117,7 +120,7 @@ int main(int argc, char **argv)
                              dataWsumDist,
                              dataSumWRefs,
                              sumw_allrefs, 
-                             avePmax );
+                             avePmax);
 
             prm.writeOutputFiles(iter, 
                                  dataRefs,

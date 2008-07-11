@@ -50,6 +50,10 @@ void Prog_mlf_tomo_prm::read(int argc, char **argv)
     highres = textToFloat(getParameter(argc, argv, "-highres", "0.5"));
     lowres = textToFloat(getParameter(argc, argv, "-lowres", "0.02"));
     debug = checkParameter(argc, argv, "-debug");
+    reg0 = textToFloat(getParameter(argc, argv, "-reg0", "0"));
+    regF = textToFloat(getParameter(argc, argv, "-regF", "0"));
+    reg_steps = textToInteger(getParameter(argc, argv, "-steps", "10"));
+    
 
     ang= textToFloat(getParameter(argc, argv, "-ang", "0"));
 }
@@ -71,6 +75,9 @@ void Prog_mlf_tomo_prm::show()
         std::cerr << "  Low resolution limit    : " <<lowres << " pix^-1 "<< std::endl;
         std::cerr << "  High resolution limit   : " <<highres << " pix^-1 "<< std::endl;
         std::cerr << "  Number of iterations    : " << Niter << std::endl;
+        std::cerr << "  Initial regularisation  : " << reg0 << std::endl;
+        std::cerr << "  Final regularisation    : " << regF << std::endl;
+        std::cerr << "  Number of reg. steps    : " << reg_steps << std::endl;
         if (fix_fractions)
         {
             std::cerr << "  -> Do not update estimates of model fractions." << std::endl;
@@ -113,6 +120,9 @@ void Prog_mlf_tomo_prm::extendedUsage()
 // This routine is for SF-independent side-info calculations
 void Prog_mlf_tomo_prm::produceSideInfo()
 {
+#ifdef DEBUG
+    std::cerr<<"start produceSideInfo"<<std::endl;
+#endif
 
     headerXmipp head;
     Matrix3D<double> Maux, Faux_real, Faux_imag;
@@ -224,7 +234,11 @@ void Prog_mlf_tomo_prm::produceSideInfo()
     // Get groups structure from SFg and store into SFi
     SelFile SFtmp;
     SelLine SL;
+    int igroup;
     nr_group = 1;
+    nr_imgs = (double)SFi.ImgNo();
+    nr_imgs_per_group.resize(1);
+    nr_imgs_per_group(0) = nr_imgs;
     if (fn_group != "")
     {
         SFg.read(fn_group);
@@ -234,15 +248,32 @@ void Prog_mlf_tomo_prm::produceSideInfo()
             SFg.search(SFi.NextImg());
             SL = SFg.current();
             SFtmp.insert(SL);
-            nr_group = XMIPP_MAX(nr_group, SL.get_number());
+            igroup = SL.get_number();
+            if (igroup > nr_group)
+            {
+                nr_group = igroup;
+                nr_imgs_per_group.resize(nr_group);
+            }
+            nr_imgs_per_group(igroup-1) += 1.;
         }
         SFi = SFtmp;
     }
+
+    // Regularisation (from reg0 to regF in steps linear steps)
+    delta_reg = (reg0 - regF) / reg_steps;
+    reg = reg0;
+
+#ifdef DEBUG
+    std::cerr<<"done produceSideInfo"<<std::endl;
+#endif
 
 }
 
 void Prog_mlf_tomo_prm::produceSideInfo2()
 {
+#ifdef DEBUG
+    std::cerr<<"start produceSideInfo2"<<std::endl;
+#endif
 
     DocFile DF;
     FileName fn_vol;
@@ -322,6 +353,9 @@ void Prog_mlf_tomo_prm::produceSideInfo2()
         }
     }
 
+#ifdef DEBUG
+    std::cerr<<"done produceSideInfo2"<<std::endl;
+#endif
 }
 
 
@@ -544,12 +578,12 @@ void Prog_mlf_tomo_prm::readAndFftwAllReferences(double * dataRefs)
         }
         refno++;
     }
+
 #ifdef DEBUG
     std::cerr<<"done readAndFftwAllReferences"<<std::endl;
 #endif
 
 }
-
 
 // This routine is for (splitted) SF-dependent side-info calculations
 void Prog_mlf_tomo_prm::calculateAllFFTWs()
@@ -862,6 +896,7 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
         dataWsumDist[i] = 0.;
     for (int i = 0; i < nr_ref; i++)
         dataSumWRefs[i] = 0.;
+    
     LL = 0.;
     avePmax = 0.;
 
@@ -894,15 +929,9 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
                 dataImg[ii] = backfftw.fIn[i];
                 ii++;
             }
+
         // get missing wedge
         getMissingWedge(dataMeasured,A_img,th0,thF);
-
-        // FOR NOW ALL WEGDES ARE 1:
-        for (int i = 0; i < hsize; i++)
-            dataMeasured[i] = true;
-
-        // Create missing wedge on-the-fly? or also read from disc?
-        // If only classifying: faster from disc? or maybe I/O limited?
 
         // Perform expectation step 
         expectationSingleImage(igroup,
@@ -1002,6 +1031,7 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
     double *ave;
     ave = new double [fftw_hsize];
     
+    // TODO replace sumw_allrefs by number of images per group!!!
     for (int ig = 0; ig < nr_group; ig++)
     {
         for (int i = 0; i < hsize; i++)
@@ -1010,9 +1040,9 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
             // Return from two*SIGMA^2
             dataSigma[ii] /= 2;
             // Impute old sigma values for missing pixels
-            dataSigma[ii] *= 1. - (dataWsumWedsPerGroup[ii] / sumw_allrefs);
+            dataSigma[ii] *= 1. - (dataWsumWedsPerGroup[ii] / nr_imgs_per_group(ig));
             //  And sum the weighted sum for observedpixels
-            dataSigma[ii] += dataWsumDist[ii] / sumw_allrefs;
+            dataSigma[ii] += dataWsumDist[ii] / nr_imgs_per_group(ig);
         }
 
         // Set points within resolution range
@@ -1036,8 +1066,15 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
                 dataSigma[ig * hsize + ii] = 2. * ave[i]; // Store again TWO SIGMA^2
                 ii++;
             }
-        
     }
+
+    // Apply regularisation
+    // Regularisation
+    // For now on all references
+    // Later-on add organisation like in SOMs (and increase size of regref to nr_ref*size
+    reg -= delta_reg;
+    reg = XMIPP_MAX(reg,0.);
+    regularise(dataRefs,dataSigma);
 
     // Average Pmax
     avePmax /= sumw_allrefs;
@@ -1047,6 +1084,75 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
 #endif
 }
 
+
+void Prog_mlf_tomo_prm::regularise(double * dataRefs,
+                                   double * dataSigma)
+{
+#ifdef DEBUG
+    std::cerr<<"start regularise"<<std::endl;
+#endif
+
+    if (reg > 0.)
+    {
+        double * regRef, *regSigma;
+        double reg_norm = reg * nr_imgs / (nr_ref * nr_ref);
+        std::complex<double> * REGREF, * DATAREFS;
+        try
+        {
+            regRef = new double [size];
+            regSigma = new double [hsize];
+        }
+        catch (std::bad_alloc&)
+        {
+            REPORT_ERROR(1,"Error allocating memory in regularise");
+        }
+        REGREF = (std::complex<double> *)regRef;
+        DATAREFS = (std::complex<double> *)dataRefs;
+        for (int i=0; i< size; i++)
+            regRef[i] = 0.; 
+        for (int i=0; i< hsize; i++)
+            regSigma[i] = 0.; 
+
+        // First, calculate average of updated references and the qsuared distance between them
+        for (int refno = 0; refno < nr_ref; refno++)
+        {
+            for (int i=0; i< size; i++)
+                regRef[i] += dataRefs[refno*size + i];
+            for (int refno_b = 0; refno_b < nr_ref; refno_b++)
+                if (refno != refno_b)
+                    for (int i=0; i< hsize; i++)
+                    {
+                        double aux = abs(DATAREFS[refno*hsize + i] - DATAREFS[refno_b*hsize + i]);
+                        regSigma[i] += aux*aux;
+                    }
+        }
+
+        // Then, update the references
+        for (int refno = 0; refno < nr_ref; refno++)
+            for (int i = 0; i < hsize; i++)
+            {
+                int ii = refno * hsize + i;
+                double sumw = alpha_k[refno] * nr_imgs;
+                DATAREFS[ii] = DATAREFS[ii] * sumw + reg_norm * REGREF[i];
+                DATAREFS[ii] /= sumw + reg_norm * nr_ref;
+            }
+
+        // and the noise spectra
+        for (int ig = 0; ig < nr_group; ig++)
+            //reg_norm = reg * nr_imgs_per_group(ig) / (nr_ref * nr_ref);
+            for (int i = 0; i < hsize; i++)
+                //int ii = ig * hsize + i;
+                //double sumw = nr_imgs_per_group(ig);
+                //dataSigma[ii] = dataSigma[ii] * sumw + reg_norm * regSigma[i];
+                //dataSigma[ii] /= sumw;
+                dataSigma[ig * hsize + i] += (reg_norm / nr_imgs) * regSigma[i];
+    }
+
+#ifdef DEBUG
+    std::cerr<<"done regularise"<<std::endl;
+#endif
+
+}
 
 void Prog_mlf_tomo_prm::writeOutputFiles(int iter, 
                                          double * dataRefs,
@@ -1122,8 +1228,8 @@ void Prog_mlf_tomo_prm::writeOutputFiles(int iter,
     SFo.write(fn_tmp);
 
     DFl.go_beginning();
-    comment = "MLF_tomo: Number of images= " + floatToString(sumw_allrefs);
-    comment += " LL= " + floatToString(LL, 15, 10) + " <Pmax/sumP>= " + floatToString(avePmax, 10, 5);
+    comment = "MLF_tomo: nr. imgs= " + floatToString(sumw_allrefs,8,8);
+    comment += " LL= " + floatToString(LL, 13, 10) + " <Pmax>= " + floatToString(avePmax, 8, 5) + " reg= " + floatToString(reg, 5, 3);
     //if (anneal > 1.) comment += " -anneal " + floatToString(anneal, 10, 7);
     DFl.insert_comment(comment);
     DFl.insert_comment("columns: model fraction (1); 1000x signal change (3)");
