@@ -33,6 +33,7 @@ void Prog_RecFourier_prm::read(int argc, char **argv)
     fn_doc = getParameter(argc, argv, "-doc","");
     fn_out = getParameter(argc, argv, "-o", "rec_fourier.vol");
     fn_sym = getParameter(argc, argv, "-sym", "");
+    fn_sym_vol = getParameter(argc, argv, "-sym_vol", "");
     do_resolution = checkParameter(argc, argv, "-do_resolution");
     verb = textToInteger(getParameter(argc, argv, "-verb", "1"));
     do_weights = checkParameter(argc, argv, "-weight");
@@ -63,7 +64,7 @@ void Prog_RecFourier_prm::show()
     {
         // To screen
         std::cerr << " =================================================================" << std::endl;
-        std::cerr << " Direct 3D reconstruction method using Kaiser windows " << std::endl;
+        std::cerr << " Direct 3D reconstruction method using Kaiser windows as interpolators" << std::endl;
         std::cerr << " =================================================================" << std::endl;
         std::cerr << " Input selfile             : "  << fn_sel << std::endl;
         std::cerr << " padding_factor_proj       : "  << padding_factor_proj << std::endl;
@@ -72,13 +73,17 @@ void Prog_RecFourier_prm::show()
             std::cerr << " Input docfile         : "  << fn_doc << std::endl;
         std::cerr << " Output volume             : "  << fn_out << std::endl;
         if (fn_sym != "")
-            std::cerr << " Symmetry file:        : "  << fn_sym << std::endl;
+            std::cerr << " Symmetry file for projections : "  << fn_sym << std::endl;
+        if (fn_sym_vol != "")
+            std::cerr << " Symmetry file for volume      : "  << fn_sym_vol << std::endl;
         if (do_resolution)
             std::cerr << " Compute resolution" << std::endl;
         else
             std::cerr << " Do NOT compute resolution" << std::endl;
         if (do_weights)
-            std::cerr << " --> Use weights stored in the image headers or doc file" << std::endl;
+            std::cerr << " Use weights stored in the image headers or doc file" << std::endl;
+        else
+            std::cerr << " Do NOT use weights" << std::endl;
         std::cerr << "\n Interpolation Function" 
                   << "\n   blrad                 : "  << blob.radius
                   << "\n   blord                 : "  << blob.order
@@ -105,7 +110,8 @@ void Prog_RecFourier_prm::usage()
     std::cerr << "   -pad_vol  <1.0>             : volume padding factor \n";
     std::cerr << " [ -o <name=\"rec_fourier.vol\">       : filename for output volume \n";
     std::cerr << " [ -doc <docfile>              : Ignore headers and get angles from this docfile \n";
-    std::cerr << " [ -sym <symfile> ]            : Enforce symmetry \n";
+    std::cerr << " [ -sym     <symfile> ]        : Enforce symmetry in projections\n";
+    std::cerr << " [ -sym_vol <symfile> ]        : Enforce symmetry in volume \n";
     std::cerr << " [ -do_resolution]             : compute resolution while you reconstruct \n";
     std::cerr << " -----------------------------------------------------------------" << std::endl;
     if (do_weights)
@@ -163,7 +169,8 @@ void Prog_RecFourier_prm::produce_Side_info()
         SF.read(fn_sel);
 
     SF.ImgSize(dim, dim);
-    if (fn_sym != "") SL.read_sym_file(fn_sym);
+    if (fn_sym != "")     SL.read_sym_file(fn_sym);
+    if (fn_sym_vol != "") SL_vol.read_sym_file(fn_sym_vol);
     //precompute blob matrix
     blob_table = new double [BLOB_TABLE_SIZE];
     //convert index to pixel
@@ -189,30 +196,30 @@ void Prog_RecFourier_prm::produce_Side_info()
       #endif
       #undef DEBUG
     }
-    fill_L_R_repository();
+    fill_L_R_repository(SL);
 }
 
-void Prog_RecFourier_prm::fill_L_R_repository(void)
+void Prog_RecFourier_prm::fill_L_R_repository(SymList & mySL)
 {
     Matrix2D<double>  L(4, 4), R(4, 4);
     Matrix2D<double>  Identity(3,3);
     Identity.initIdentity();
     R_repository.push_back(Identity);
-    L_repository.push_back(Identity);
-    for (int isym = 0; isym < SL.SymsNo(); isym++)
+    //L_repository.push_back(Identity);
+    for (int isym = 0; isym < mySL.SymsNo(); isym++)
     {
-        SL.get_matrices(isym, L, R);
+        mySL.get_matrices(isym, L, R);
         R.resize(3, 3);
-        L.resize(3, 3);
+        //L.resize(3, 3);
         R_repository.push_back(R);
-        L_repository.push_back(L);
+        //L_repository.push_back(L);
     }
 //#define DEBUG3
 #ifdef  DEBUG3
     for (int isym = 0; isym < R_repository.size(); isym++)
         {
         std::cout << R_repository[isym];
-        std::cout << L_repository[isym];
+        //std::cout << L_repository[isym];
         }
 #endif
 #undef DEBUG3
@@ -289,6 +296,7 @@ void Prog_RecFourier_prm::ProcessOneImage(FileName &fn_img,
         rot  = proj.rot();
         tilt = proj.tilt();
         psi  = proj.psi();
+        weight = proj.weight();
     }
     else
     {
@@ -409,18 +417,21 @@ void Prog_RecFourier_prm::ProcessOneImage(FileName &fn_img,
     //A_inv = A.inv();
     for (int isym = 0; isym < R_repository.size(); isym++)
         {
-        A_SL=  R_repository[isym] * A;
+        A_SL=  A * R_repository[isym] ;
         
-        //std::cout << "A*R" << A_SL;
+        //std::cout << "A*R" << A_SL << A_SL.det() << std::endl;
         ////std::cout << "R"   << R_repository[isym];
         // L is only needed for h cases  L_repository[isym];
+        if(do_weights==false)
+             weight=1.0;
         placeInFourerVolumeOneImage(A_SL,//3*3 euler matrix
                                     FOURIERVOL,//vector
                                     fftPaddedImg,//fft object
                                     FourierVolWeight,//vector
                                     paddim_proj,
                                     paddim_vol,
-                                    FOURIERPROJ
+                                    FOURIERPROJ,
+                                    weight
                                     );
         }
 }
@@ -433,7 +444,8 @@ void Prog_RecFourier_prm::placeInFourerVolumeOneImage(
                                      double * FourierVolWeight,//vector
                                      int paddim_proj,
                                      int paddim_vol,
-                                     std::complex<double> * FOURIERPROJ)
+                                     std::complex<double> * FOURIERPROJ,
+                                     double proj_weight)
 {
     //dim, no padded proj dimension, vol dimension
     int dim2 = dim / 2;
@@ -526,7 +538,7 @@ void Prog_RecFourier_prm::placeInFourerVolumeOneImage(
             zp = (double)vv * A(1,2) + (double)uu * A(0,2);
             #ifdef CHIMERA
             {
-                if(my_counter2%1==0)
+                if(my_counter2%2==0)
                 {
                     filestr << ".sphere " <<  xp<< " " <<
                                             yp<< " " <<
@@ -564,7 +576,7 @@ void Prog_RecFourier_prm::placeInFourerVolumeOneImage(
 
             #ifdef CHIMERA2
             {
-                if(my_counter22%1==0)
+                if(my_counter22%2==0)
                 {
                     /*
                     if(conjugate_flag==true)
@@ -646,6 +658,8 @@ i3 does no symmetrice properlly z OK
                              zzCentered >= Zdim )//Xdim half 
                            continue;
 //OUT SPHERE
+
+
                        r2=    (xp-(double)xx)*(xp-(double)xx)+
                               (yp-(double)yy)*(yp-(double)yy)+
                               (zp-(double)zz)*(zp-(double)zz);//distance from projection grid point to volume grid point projection
@@ -677,6 +691,7 @@ i3 does no symmetrice properlly z OK
                        #endif
                        r = sqrt(r2);
                        double weight = blob_table[(int)(r*BLOB_TABLE_SIZE/BRadius)];
+                       weight *= proj_weight;
                        /*
                        if(weight < MINIMUMWEIGHT)//max is 1
                           continue;
@@ -707,6 +722,9 @@ i3 does no symmetrice properlly z OK
                               zzCentered = -zz+ZCenter;
                            }
                            aux_complex = conj(aux_complex);
+                           if (  yyCentered >= Ydim  || 
+                                 zzCentered >= Zdim ) 
+                               continue;
 
                            FOURIERVOL[xxCentered+
                                       yyCentered*Xdim+
@@ -887,7 +905,7 @@ void Prog_RecFourier_prm::MainLoop(VolumeXmipp &vol)
     Ydim=Ysize=paddim_vol;
     Xsize=paddim_vol;
     Xdim = (int)  paddim_vol/2  +1;
-    #define DEBUG_VOL
+    //#define DEBUG_VOL
     #ifdef DEBUG_VOL
     {
         double aux_double;
@@ -916,7 +934,7 @@ void Prog_RecFourier_prm::MainLoop(VolumeXmipp &vol)
                 if( FourierVolWeight[i] > 0)//MINIMUMWEIGHT)
                      FOURIERVOL[i] /= FourierVolWeight[i] * dZdim;
             }
-    #define DEBUG_VOL
+    //#define DEBUG_VOL
     #ifdef DEBUG_VOL
     {
         double aux_double;
@@ -986,7 +1004,6 @@ void Prog_RecFourier_prm::MainLoop(VolumeXmipp &vol)
         int xdim=dim;
         int ydim=dim;
         int zdim=dim;
-#ifdef NEVERDEFINED
         int center_shiftx = (paddim_vol-xdim)/2+xdim%2;// add one if odd
         int center_shifty = (paddim_vol-ydim)/2+ydim%2;// add one if odd
         int center_shiftz = (paddim_vol-zdim)/2+zdim%2;// add one if odd
@@ -995,12 +1012,12 @@ void Prog_RecFourier_prm::MainLoop(VolumeXmipp &vol)
            for(int j=0;j<ydim;j++)
                for(int k=0;k<xdim;k++)
                 {           
-                vol(i,k,j)=Volfft.fOut[(center_shiftz + k) + 
+                vol(i,j,k)=Volfft.fOut[(center_shiftz + k) + 
                                        (center_shifty + j) * paddim_vol +
                                        (center_shiftx + i) * paddim_vol * paddim_vol ];
                                                //x,y
                 }
-#endif
+#ifdef NEVERDEFINED
         vol().resize(paddim_vol,paddim_vol,paddim_vol);
         for(int i=0;i<paddim_vol;i++)
            for(int j=0;j<paddim_vol;j++)
@@ -1011,16 +1028,29 @@ void Prog_RecFourier_prm::MainLoop(VolumeXmipp &vol)
                                        (  i) * paddim_vol * paddim_vol ];
                                                //x,y
                 }
+#endif
                 
- /*
-for (int i=0;i<10;i++)
-    std::cerr << Volfft.fOut[i] << " " << std::endl;
-std::cerr << "paddim_vol " << paddim_vol << std::endl;
-std::cerr << " myfN[0] myfN[1]  myfN[2]" << myfN[0] << " " 
-                                         << myfN[1] << " " 
-                                         << myfN[2] <<std::endl;     
-*/
     }    
+    //symmetrize in reaL SPACE IF Needed 
+    if (fn_sym_vol == "")
+    {
+       vol.write(fn_out);
+    }
+    else 
+    {
+       std::cout << "Symmetrizing volume (using Bsplines)" << std::endl;
+       VolumeXmipp     V_out;
+       symmetrize_Bspline(SL_vol, vol, V_out, 3, false, true);
+       V_out.write(fn_out);
+    }
+        /*
+       for (int i=0;i<10;i++)
+           std::cerr << Volfft.fOut[i] << " " << std::endl;
+       std::cerr << "paddim_vol " << paddim_vol << std::endl;
+       std::cerr << " myfN[0] myfN[1]  myfN[2]" << myfN[0] << " " 
+                                                << myfN[1] << " " 
+                                                << myfN[2] <<std::endl;     
+       */
     // free memory
     //free(mat_g);
     //free(mat_f);
