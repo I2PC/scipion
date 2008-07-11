@@ -48,7 +48,7 @@ class Prog_RecFourier_prm
 {
 public:
     /** Filenames */
-    FileName fn_out, fn_sym, fn_sel, fn_doc, fn_control;
+    FileName fn_out, fn_sym, fn_sel, fn_doc, fn_control,fn_sym_vol;
     /** SelFile containing all projections */
     SelFile SF;
     /** DocFile containing all angles */
@@ -67,8 +67,11 @@ public:
     int col_rot, col_tilt, col_psi, col_xoff, col_yoff, col_flip, col_weight;
     /** dimensions of the images */
     int dim;
-    /** Symmetry list for symmetric volumes */
+    /** Symmetry list for projections */
     SymList SL;
+    /** Symmetry list for volume */
+    SymList SL_vol;
+    
     /** vector with R symmetry matrices */
     std::vector <Matrix2D<double> > R_repository;
     /** vector with L symmetry matrices */
@@ -120,7 +123,7 @@ public:
     void get_angles_for_image(FileName fn, double &rot, double &tilt, double &psi,
                               double &xoff, double &yoff, double &flip, double &weight);
     /// fill R and L Repository (vector with symmetry matrices)
-    void fill_L_R_repository(void);
+    void fill_L_R_repository(SymList & mySL);
     /// Main Loop 
     void MainLoop(VolumeXmipp &vol);
     /// Process one image
@@ -139,7 +142,8 @@ public:
                                      double * FourierVolWeight,//vector
                                      int paddim_proj,
                                      int paddim_vol,
-                                     std::complex<double> * FOURIERPROJ
+                                     std::complex<double> * FOURIERPROJ,
+                                     double proj_weight
                                      );    
 
 #ifdef NEVERDEFINED
