@@ -1743,6 +1743,10 @@ void Prog_MLFalign2D_prm::calculateFourierOffsets(const Matrix2D<double> &Mimg,
     }
 }
 
+double lcdf_tstudent_mlf1(double t) 
+{ 
+    return cdf_tstudent(1,t); 
+}
 double lcdf_tstudent_mlf3(double t) 
 { 
     return cdf_tstudent(3,t); 
@@ -1751,6 +1755,15 @@ double lcdf_tstudent_mlf6(double t)
 { 
     return cdf_tstudent(6,t); 
 }
+double lcdf_tstudent_mlf9(double t) 
+{ 
+    return cdf_tstudent(9,t); 
+}
+double lcdf_tstudent_mlf30(double t) 
+{ 
+    return cdf_tstudent(30,t); 
+}
+
 
 // Exclude translations from the MLF_integration
 // For significantly contributing refno+psi: re-calculate optimal shifts
@@ -2234,12 +2247,18 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
         double KSD =0.; 
         if (do_student)
         {
-            if (df==3)
+            if (df==1)
+                ksone(aux_array, 2*nr_points_prob, &lcdf_tstudent_mlf1, &KSD, &KSprob);
+            else if (df==3)
                 ksone(aux_array, 2*nr_points_prob, &lcdf_tstudent_mlf3, &KSD, &KSprob);
             else if (df==6)
                 ksone(aux_array, 2*nr_points_prob, &lcdf_tstudent_mlf6, &KSD, &KSprob);
+            else if (df==9)
+                ksone(aux_array, 2*nr_points_prob, &lcdf_tstudent_mlf9, &KSD, &KSprob);
+            else if (df==30)
+                ksone(aux_array, 2*nr_points_prob, &lcdf_tstudent_mlf30, &KSD, &KSprob);
             else
-                REPORT_ERROR(1,"KS-test for t-distribution only implemented for df=3 or df=6!");
+                REPORT_ERROR(1,"KS-test for t-distribution only implemented for df=1,3,6,9 or 30!");
         }
         else
         {

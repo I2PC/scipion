@@ -2145,9 +2145,25 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
 }
 
 /// Local t-student with corresponding degrees of freedom
-double lcdf_tstudent(double t) 
+double lcdf_tstudent_ml1(double t) 
+{ 
+    return cdf_tstudent(1,t); 
+}
+double lcdf_tstudent_ml3(double t) 
+{ 
+    return cdf_tstudent(3,t); 
+}
+double lcdf_tstudent_ml6(double t) 
 { 
     return cdf_tstudent(6,t); 
+}
+double lcdf_tstudent_ml9(double t) 
+{ 
+    return cdf_tstudent(9,t); 
+}
+double lcdf_tstudent_ml30(double t) 
+{ 
+    return cdf_tstudent(30,t); 
 }
 
 
@@ -2230,7 +2246,18 @@ double Prog_MLalign2D_prm::performKSTest(Matrix2D<double> &Mimg, FileName &fn_im
     }
     else
     {
-        ksone(aux_array, dim*dim, &lcdf_tstudent, &KSD, &KSprob);
+        if (df==1)
+            ksone(aux_array, dim*dim, &lcdf_tstudent_ml1, &KSD, &KSprob);
+        else if (df==3)
+            ksone(aux_array, dim*dim, &lcdf_tstudent_ml3, &KSD, &KSprob);
+        else if (df==6)
+            ksone(aux_array, dim*dim, &lcdf_tstudent_ml6, &KSD, &KSprob);
+        else if (df==9)
+            ksone(aux_array, dim*dim, &lcdf_tstudent_ml9, &KSD, &KSprob);
+        else if (df==30)
+            ksone(aux_array, dim*dim, &lcdf_tstudent_ml30, &KSD, &KSprob);
+        else
+            REPORT_ERROR(1,"KS-test for t-distribution only implemented for df=1,3,6,9 or 30!");
         return KSprob;
     }
 
