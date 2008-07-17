@@ -121,7 +121,7 @@ void Prog_angular_project_library_Parameters::usage()
     << "\n"
     << "Example of use: Sample at 2 degrees and use c6 symmetry\n"
     << "   xmipp_angular_project_library -i in.vol -o out "
-    << "    -symmetry cn -sym_order 6 -sampling_rate 2\n"
+    << "    -sym c6  -sampling_rate 2\n"
     ;
 }
 
