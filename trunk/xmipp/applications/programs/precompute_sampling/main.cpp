@@ -23,54 +23,111 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-
+#include <data/fftw.h>
+#include <data/fft.h>
 #include <data/args.h>
-#include <data/image.h>
+#include <data/funcs.h>
 #include <data/selfile.h>
 #include <data/docfile.h>
+#include <data/image.h>
+#include <data/filters.h>
+#include <data/mask.h>
+#include <data/geometry.h>
+#include <vector>
 
 
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    DocFile         DFi;
-    DocLine Angles;
-    Matrix2D<double> Euler(3, 3), Euler_i(3, 3),data(3,3),data1(3,3);
-    double rot, tilt,psi;
-    double rot1, tilt1,psi1;
-    tilt1 = 31.7175;
-    rot1=psi1=0.;
 
-    Euler_angles2matrix(rot1, tilt1, psi1, Euler);
-    Euler_i=Euler.transpose();
-    try
-    {
+   ImageXmipp test(4,4);
+   ImageXmipp rot(4,4);
+   Matrix2D<double> I(4,4), AA(3,3);
+   Euler_angles2matrix(0,0,-90,AA);
+   
+   I.initIdentity();
+   test(0,0)=1;
+   test(0,1)=2;
+   test(0,2)=0;
+   test(0,3)=0;
 
-        DFi.read(getParameter(argc, argv, "-i"));
+   test(1,0)=3;
+   test(1,1)=4;
+   test(1,2)=0;
+   test(1,3)=0;
 
-    }
-    catch (Xmipp_error XE)
-    {
-        std::cout << XE;
-    }
-    DFi.go_beginning();
-    DFi.go_first_data_line();
-    while (!DFi.eof())
-    {
-        rot = DFi(0);
-        tilt = DFi(1);
-        psi = DFi(2);
-        rot = realWRAP(rot, -180, 180);
-        tilt = realWRAP(tilt, -180, 180);
-        psi = realWRAP(psi, -180, 180);
-        Euler_angles2matrix(rot, tilt, psi, data);
-        data1 = /*Euler * */(data * Euler_i);
-        Euler_matrix2angles(data1,rot,tilt,psi);
-std::cout << Euler << data << data1;
-        DFi.set(0, rot);
-        DFi.set(1, tilt);
-        DFi.set(2, psi);
-        DFi.next_data_line();
-    }
-DFi.write("kk.doc");
+   test(2,0)=0;
+   test(2,1)=0;
+   test(2,2)=0;
+   test(2,3)=0;
+
+   test(3,0)=0;
+   test(3,1)=0;
+   test(3,2)=0;
+   test(3,3)=0;
+   
+   test().setXmippOrigin();
+   //BinaryWedgeMask(test(),-60.,60.,I);
+   ////test.write("before.vol");
+   std::cerr << "test" <<  test() << std::endl;
+ 
+   rot=test;
+   rot().selfApplyGeometryBSpline(AA,3,IS_NOT_INV,DONT_WRAP,0.);
+   
+   std::cerr << "rot real space" <<  rot() << std::endl;
+   //rot.write("rotated.vol");
+   Matrix2D<std::complex<double> > Faux, Faux2;
+   Matrix2D<double> Mr(test()), Mi(test());
+   FourierTransform(test(),Faux);
+   Mr.setXmippOrigin();
+   Mi.setXmippOrigin();
+   FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
+   {
+       dMij(Mr,i,j) = (dMij(Faux,i,j)).real();
+       dMij(Mi,i,j) = (dMij(Faux,i,j)).imag();
+   }
+   std::cerr << "FourierTransform" <<  Mr*4 << Mi*4 << std::endl;
+   
+   //CenterOriginFFT(Faux,true);
+        ShiftFFT(Faux, 2, 2);
+   FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
+   {
+       dMij(Mr,i,j) = (dMij(Faux,i,j)).real();
+       dMij(Mi,i,j) = (dMij(Faux,i,j)).imag();
+   }
+   std::cerr << "ShiftFourierTransform" <<  Mr*4 << Mi*4 << std::endl;
+        CenterFFT(Faux, true);
+   FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
+   {
+       dMij(Mr,i,j) = (dMij(Faux,i,j)).real();
+       dMij(Mi,i,j) = (dMij(Faux,i,j)).imag();
+   }
+   std::cerr << "CenterShiftFourierTransform" <<  Mr*4 << Mi*4 << std::endl;   
+   
+   Mr.selfApplyGeometryBSpline(AA,3,IS_NOT_INV,DONT_WRAP,0.);
+   Mi.selfApplyGeometryBSpline(AA,3,IS_NOT_INV,DONT_WRAP,0.);
+   FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
+   {
+       dMij(Faux,i,j) = std::complex<double>(dMij(Mr,i,j), dMij(Mi,i,j));
+   }
+   std::cerr<<"done rot in Fourier"<< Mr*4 << Mi*4 << std::endl;
+        CenterFFT(Faux, false);
+   FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
+   {
+       dMij(Mr,i,j) = (dMij(Faux,i,j)).real();
+       dMij(Mi,i,j) = (dMij(Faux,i,j)).imag();
+   }
+   std::cerr << "Anti_CenterShiftFourierTransform" <<  Mr*4 << Mi*4 << std::endl;   
+        ShiftFFT(Faux, -2, -2);
+   FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
+   {
+       dMij(Mr,i,j) = (dMij(Faux,i,j)).real();
+       dMij(Mi,i,j) = (dMij(Faux,i,j)).imag();
+   }
+   std::cerr << "Anti_ShiftFourierTransform" <<  Mr*4 << Mi*4 << std::endl;
+
+
+      InverseFourierTransform(Faux,test());
+   //test.write("after.vol");
+   std::cerr << "rot fourier space" <<  test() << std::endl;
 }
