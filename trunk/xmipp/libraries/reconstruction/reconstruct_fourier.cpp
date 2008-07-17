@@ -926,13 +926,37 @@ void Prog_RecFourier_prm::MainLoop(VolumeXmipp &vol)
     }
     #endif
     #undef VOL
+    /*Let us do some magic now. 
+    what we have implement (afer dividing by FourierVolWeight[i] is a 
+    Nadaraya-Watson kernel regression as described in 
+    http://en.wikipedia.org/wiki/Kernel_regression
+    
+    I do not know why but there is a clear dumping efect in the reconstructed
+    volume as we move from the center.
+    
+    I am going to divide by the FT¯1 of the kernel function
+    since this seems to fix this problem.
+    This division makes sense if you use a gridding technique
+    but  simply I can not justify it in a kernel regresion approach.
+    
+    By the way the difference between kernel regression
+    and gridding is that in the second case you do not divide by
+    the sum of the weight and you DO multiply
+    by a term related with the voronoi region of each projection
+    Fourier transform term (that is, take into account the Fourier
+    space density).
+    
+    spider in its command bp 3f has implement this same incongruence
+    
+    */
+    
     double dZdim = (double) Zdim;
     for ( int z=0, i=0; z<Zdim; z++ ) 
 		for ( int y=0; y<Ydim; y++ ) 
 			for ( int x=0; x<Xdim; x++, i++ ) 
             {
                 if( FourierVolWeight[i] > 0)//MINIMUMWEIGHT)
-                     FOURIERVOL[i] /= FourierVolWeight[i] * dZdim;
+                     FOURIERVOL[i] /= FourierVolWeight[i] * dZdim ;
             }
     //#define DEBUG_VOL
     #ifdef DEBUG_VOL
@@ -989,17 +1013,37 @@ void Prog_RecFourier_prm::MainLoop(VolumeXmipp &vol)
         bool inplace = false;
         xmippFftw Volfft(ndim, myfN, inplace,FourierVol);
         Volfft.Init("ES",FFTW_BACKWARD,false);
-//#ifdef MYNEW
         Volfft.CenterRealImageInFourierSpace(false) ;//Change phases
-//#else
-        //Volfft.CenterfIn();
-//#endif
         Volfft.Transform();
-//#ifdef MYNEW
         Volfft.CenterFourierTransformInRealSpace(true);//ok MOVE TRANSFORM TO THE CENTER
-//#else
-        //Volfft.CenterRealDataAfterTransform();
-//#endif
+        
+        /* create table with 3D blob fourier transform */
+        //precompute blob fourier transform values close to origin
+        fourier_blob_table = new double [BLOB_TABLE_SIZE];
+        /*it should be divided by 2 not by 4
+          but 4 seems to work. I do not know why */
+        double ww = 1/(4*(double)(BLOB_TABLE_SIZE-1));
+        
+        //acces to the blob table should take into account 
+        //pad factor but not sampling
+        double w;
+        double w0= blob_Fourier_val(0., blob);
+        for (int i=0; i<BLOB_TABLE_SIZE; i++)
+        {
+          w = ww*(double)i;
+          fourier_blob_table[i] =  blob_Fourier_val(w, blob)/w0;
+          //#define DEBUG
+          #ifdef DEBUG
+          std::cout.setf(std::ios::scientific); 
+          std::cout.width(12); 
+          std::cout /*<< i << " " 
+                    */<< w*paddim_vol <<  "\t" 
+                    << "\t"<< fourier_blob_table[i] << " "
+                    <<  blob.radius
+                    << std::endl;
+          #endif
+          #undef DEBUG
+        }
         //copy volume to original volume
         int xdim=dim;
         int ydim=dim;
@@ -1017,6 +1061,31 @@ void Prog_RecFourier_prm::MainLoop(VolumeXmipp &vol)
                                        (center_shiftx + i) * paddim_vol * paddim_vol ];
                                                //x,y
                 }
+        vol().setXmippOrigin();
+        for (int k = STARTINGZ(vol()); k <= FINISHINGZ(vol()); k++)
+        {
+            for (int i = STARTINGY(vol()); i <= FINISHINGY(vol()); i++)
+            {
+                for (int j = STARTINGX(vol()); j <= FINISHINGX(vol()); j++)
+                {
+                    double r      = sqrt(k*k+i*i+j*j);
+                    if(r>paddim_vol/2)
+                        vol(i,j,k)=0.;
+                    else
+                    {
+                        double factor = fourier_blob_table[(int)(r*BLOB_TABLE_SIZE/(paddim_vol/2.))];
+                        if (factor > 0.001)
+                        {
+                            vol(i,j,k)   /=  factor;
+                        }
+                    }
+                }
+            }
+        }
+        /*        
+        CENTER XMIPP VOLUME   
+        APPLY FILTER
+        */     
 #ifdef NEVERDEFINED
         vol().resize(paddim_vol,paddim_vol,paddim_vol);
         for(int i=0;i<paddim_vol;i++)

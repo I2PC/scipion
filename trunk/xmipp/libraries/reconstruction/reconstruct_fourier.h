@@ -63,6 +63,8 @@ public:
     struct blobtype blob; 
     /** table with blob values */
     double *blob_table;
+    /** table with blob fourier transform values*/
+    double *fourier_blob_table;
     /** Column numbers in the docfile */
     int col_rot, col_tilt, col_psi, col_xoff, col_yoff, col_flip, col_weight;
     /** dimensions of the images */
