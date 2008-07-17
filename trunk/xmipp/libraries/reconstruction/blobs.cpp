@@ -57,6 +57,12 @@ double kaiser_value(double r, double a, double alpha, int m)
                 w = 1.0 - rdas;
             else
                 w = sqrt(1.0 - rdas) * bessi1(arg) / bessi1(alpha);
+            std::cout << "\narg/alpha " << arg/alpha
+                      << " besi1(arg) " << bessi1(arg)
+                      << " bessi1(alpha) " << bessi1(alpha)
+                      << "to " << (arg/alpha) * bessi1(arg) / bessi1(alpha)
+                      << std::endl
+                      ;    
         }
         else if (m == 2)
         {
@@ -125,15 +131,27 @@ double kaiser_proj(double s, double a, double alpha, int m)
 /* Fourier value of a blob ------------------------------------------------- */
 double kaiser_Fourier_value(double w, double a, double alpha, int m)
 {
-    if (m != 2)
+    if (m != 2 && m !=0)
         REPORT_ERROR(2, "m out of range in kaiser_Fourier_value()");
     double sigma = sqrt(ABS(alpha * alpha - (2 * PI * a * w) * (2 * PI * a * w)));
-    if (2*PI*a*w > alpha)
-        return  pow(2*PI, 3 / 2)*pow(a, 3)*pow(alpha, 2)*bessj3_5(sigma)
-                / (bessi3_5(alpha)*pow(sigma, 3.5));
-    else
-        return  pow(2*PI, 3 / 2)*pow(a, 3)*pow(alpha, 2)*bessi3_5(sigma)
-                / (bessi3_5(alpha)*pow(sigma, 3.5));
+    if (m == 2)
+    {
+        if (2*PI*a*w > alpha)
+            return  pow(2*PI, 3 / 2)*pow(a, 3)*pow(alpha, 2)*bessj3_5(sigma)
+                    / (bessi0(alpha)*pow(sigma, 3.5));
+        else
+            return  pow(2*PI, 3 / 2)*pow(a, 3)*pow(alpha, 2)*bessi3_5(sigma)
+                    / (bessi0(alpha)*pow(sigma, 3.5));
+    }
+    else if (m == 0)
+    {
+        if (2*PI*a*w > alpha)
+            return  pow(2*PI, 3 / 2)*pow(a, 3)*bessj1_5(sigma)
+                    / (bessi0(alpha)*pow(sigma, 1.5));
+        else
+            return  pow(2*PI, 3 / 2)*pow(a, 3)*bessi1_5(sigma)
+                    / (bessi0(alpha)*pow(sigma, 1.5));
+    }
 }
 
 

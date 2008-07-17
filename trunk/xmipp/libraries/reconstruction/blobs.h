@@ -170,7 +170,7 @@ double kaiser_proj(double r, double a, double alpha, int m);
     a blob at 1/Ts (Ts in Amstrongs) you must provide the frequency Tm/Ts,
     where Tm is the sampling rate.
 
-    The Fourier Transform can be computed only for blobs with m=2. */
+    The Fourier Transform can be computed only for blobs with m=2 or m=0. */
 #define blob_Fourier_val(w, blob) \
     kaiser_Fourier_value(w, blob.radius, blob.alpha, blob.order)
 double kaiser_Fourier_value(double w, double a, double alpha, int m);
