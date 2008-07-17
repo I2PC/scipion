@@ -60,6 +60,7 @@ void qcksrt(int n, double arr[]);                       // Sorting
 // Bessel functions --------------------------------------------------------
 double bessj0(double x);
 double bessj3_5(double x);
+double bessj1_5(double x);
 
 double bessi0(double x);
 double bessi1(double x);

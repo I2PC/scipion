@@ -642,6 +642,12 @@ double bessi3_5(double x)
 {
     return (x == 0) ? 0 : bessi1_5(x) - (2*2.5) / x*bessi2_5(x);
 }
+double bessj1_5(double x)
+{
+    double rj, ry, rjp, ryp;
+    bessjy(x, 1.5, &rj, &ry, &rjp, &ryp);
+    return rj;
+}
 double bessj3_5(double x)
 {
     double rj, ry, rjp, ryp;
