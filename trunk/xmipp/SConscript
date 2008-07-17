@@ -395,6 +395,7 @@ ReconsSources = [
     'recons_misc.cpp',
     'reconstruct_art.cpp',
     'reconstruct_wbp.cpp',
+    'reconstruct_fourier.cpp',
     'refinement.cpp',
     'resolution_ssnr.cpp',
     'sampling.cpp',
@@ -557,6 +558,7 @@ AddXmippProgram('psd_sort', ['XmippRecons'])
 AddXmippProgram('range_adjust')
 AddXmippProgram('reconstruct_art', ['XmippRecons','pthread'])
 AddXmippProgram('reconstruct_wbp', ['XmippRecons'])
+AddXmippProgram('reconstruct_fourier', ['XmippRecons'])
 AddXmippProgram('resolution_fsc')
 AddXmippProgram('resolution_ssnr', ['XmippRecons'])
 AddXmippProgram('reverse_endian')
@@ -744,6 +746,7 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_mlf_refine3d', ['XmippRecons'])
     AddXmippMPIProgram('mpi_reconstruct_art', ['XmippRecons'])
     AddXmippMPIProgram('mpi_reconstruct_wbp', ['XmippRecons'])
+    #AddXmippMPIProgram('mpi_reconstruct_fourier', ['XmippRecons'])
     AddXmippMPIProgram('mpi_run', ['XmippRecons'])
 
 # TIFF
