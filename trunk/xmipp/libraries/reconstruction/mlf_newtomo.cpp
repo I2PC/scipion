@@ -36,10 +36,10 @@ void Prog_mlf_tomo_prm::read(int argc, char **argv)
         extendedUsage();
     }
     SFi.read(getParameter(argc, argv, "-i"));
-    fn_wlist=getParameter(argc,argv,"-wedge","");
     fn_group = getParameter(argc, argv, "-groups","");
     fn_doc = getParameter(argc,argv,"-doc","");
     nr_ref = textToInteger(getParameter(argc, argv, "-nref", "0"));
+    fn_prior = getParameter(argc, argv, "-prior", "");
     fn_ref = getParameter(argc, argv, "-ref", "");
     fn_root = getParameter(argc, argv, "-o", "out");
     Niter = textToInteger(getParameter(argc, argv, "-iter", "100"));
@@ -53,7 +53,8 @@ void Prog_mlf_tomo_prm::read(int argc, char **argv)
     reg0 = textToFloat(getParameter(argc, argv, "-reg0", "0"));
     regF = textToFloat(getParameter(argc, argv, "-regF", "0"));
     reg_steps = textToInteger(getParameter(argc, argv, "-steps", "10"));
-    
+    dont_recalc_fftw = checkParameter(argc, argv, "-dont_recalc_fftw");
+    use_tom_conventions = checkParameter(argc, argv, "-tom_conventions");
 
     ang= textToFloat(getParameter(argc, argv, "-ang", "0"));
 }
@@ -71,6 +72,7 @@ void Prog_mlf_tomo_prm::show()
             std::cerr << "  References              : " << fn_ref << std::endl;
         else
             std::cerr << "  Number of references:   : " << nr_ref << std::endl;
+        std::cerr << "  Prior map               : " << fn_prior << std::endl;
         std::cerr << "  Output rootname         : " << fn_root << std::endl;
         std::cerr << "  Low resolution limit    : " <<lowres << " pix^-1 "<< std::endl;
         std::cerr << "  High resolution limit   : " <<highres << " pix^-1 "<< std::endl;
@@ -78,6 +80,10 @@ void Prog_mlf_tomo_prm::show()
         std::cerr << "  Initial regularisation  : " << reg0 << std::endl;
         std::cerr << "  Final regularisation    : " << regF << std::endl;
         std::cerr << "  Number of reg. steps    : " << reg_steps << std::endl;
+        if (use_tom_conventions)
+        {
+            std::cerr << "  -> Using TOM Toolbox's euler angle and offset conventions "<<std::endl;
+        }
         if (fix_fractions)
         {
             std::cerr << "  -> Do not update estimates of model fractions." << std::endl;
@@ -98,11 +104,12 @@ void Prog_mlf_tomo_prm::usage()
     std::cerr << "   -i <selfile>                : Selfile with the input sub-tomograms \n";
     std::cerr << "   -nref <int>                 : Number of references to generate automatically (recommended)\n";
     std::cerr << "   OR -ref <selfile/volume>         OR selfile with initial references/single reference image \n";
+    std::cerr << " [ -prior <volume> ]           : Name for prior map (only relevant for -nref option) \n";
     std::cerr << " [ -o <rootname=\"out\"> ]       : Output rootname \n";
-    std::cerr << " [ -wedge <docfile> ]          : Docfile with missing wedge parameters \n";
-    std::cerr << " [ -groups <selfile> ]         : Selfile with the group numbers for all subtomograms \n";
+    std::cerr << " [ -doc <docfile>]             : Docfile with angles, offsets and wedge information \n";
     std::cerr << " [ -lowres <=0.02> ]           : Low-resolution limit (in 1/pixel) \n";
     std::cerr << " [ -highres <=0.5> ]           : High-resolution limit (in 1/pixel) \n";
+    std::cerr << " [ -tom_conventions ]          : Use TOM Toolbox's conventions for euler angles and offsets \n";
     std::cerr << " [ -more_options ]             : Show all possible input parameters \n";
 }
 
@@ -130,29 +137,10 @@ void Prog_mlf_tomo_prm::produceSideInfo()
     int xdim, ydim, zdim, c, iaux, ifound;
     double dum, avg;
 
-    // Get SFr
-    if (fn_ref != "")
-    {
-        if (Is_VolumeXmipp(fn_ref)) 
-        {
-            nr_ref = 1;
-            SFr.insert(fn_ref);
-        }
-        else
-        {
-            SFr.read(fn_ref);
-            nr_ref = SFr.ImgNo();
-        }
-    }
-    else
-    {
-        generateInitialReferences();
-    }
-
     // image sizes
     VolumeXmipp vol;
-    SFr.go_beginning();
-    vol.read(SFr.NextImg());
+    SFi.go_beginning();
+    vol.read(SFi.NextImg());
     Xdim = XSIZE(vol());
     Ydim = YSIZE(vol());
     Zdim = ZSIZE(vol());
@@ -172,7 +160,6 @@ void Prog_mlf_tomo_prm::produceSideInfo()
     // Get size right for the resolution limits
     fftw_hsize = forwfftw.GetSize()*(fN[fNdim-1]/2+1)/fN[fNdim-1];
     // Get an array of booleans whether Fourier components are within resolution range
-    // TODO: Also exclude double x==0 axis!!
     try
     {
         is_in_range = new bool [fftw_hsize];
@@ -198,6 +185,9 @@ void Prog_mlf_tomo_prm::produceSideInfo()
                 sy = (double)yy / (double)Ydim;
                 sz = (double)zz / (double)Zdim;
                 res = sqrt(sx*sx+sy*sy+sz*sz);
+
+// TODO: Also exclude double x==0 axis!!
+
                 if (res <= highres && res >= lowres)
                 {
                     is_in_range[ii] = true;
@@ -212,24 +202,6 @@ void Prog_mlf_tomo_prm::produceSideInfo()
 #ifdef DEBUG
     std::cerr<<" lowres-highres hsize= "<<hsize<<" fftw hsize= "<<fftw_hsize<<std::endl;
 #endif
-
-    // Store angles for missing wedges
-    nr_wedge = 0;
-    if (fn_wlist != "") {
-        wedgelist ww;
-        DocFile DF1;
-        DF1.read(fn_wlist);
-        DF1.go_beginning();
-        while (!DF1.eof()) {
-            ww.num = ROUND(DF1(0));
-            ww.th0 = (double)DF1(1);
-            ww.thF = (double)DF1(2);
-            wedges.push_back(ww);
-            nr_wedge++;
-            DF1.next();
-        }
-        DF1.clear();
-    }
 
     // Get groups structure from SFg and store into SFi
     SelFile SFtmp;
@@ -283,50 +255,23 @@ void Prog_mlf_tomo_prm::produceSideInfo2()
     // Store tomogram angles, offset vectors and missing wedge parameters
     if (fn_doc!="") {
         DF.read(fn_doc);
-    
         SFi.go_beginning();
         while (!SFi.eof()) 
         {
             fn_vol=SFi.NextImg();
+            DF.go_beginning();
             if (DF.search_comment(fn_vol)) 
             {
-                img_rot.push_back( DF(0));
-                img_tilt.push_back(DF(1));
-                img_psi.push_back( DF(2));
+                img_ang1.push_back(DF(0));
+                img_ang2.push_back(DF(1));
+                img_ang3.push_back(DF(2));
                 img_xoff.push_back(DF(3));
                 img_yoff.push_back(DF(4));
                 img_zoff.push_back(DF(5));
-                if (nr_wedge>0) 
-                {
-                    img_wednr.push_back(DF(6));
-                    iaux=ROUND(DF(6));
-                    found = false;
-                    for (int iw=0; iw<nr_wedge; iw++) 
-                    {
-                        if ( iaux==wedges[iw].num) 
-                        {
-                            img_th0.push_back(wedges[iw].th0);
-                            img_thF.push_back(wedges[iw].thF);
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) 
-                    {
-                        std::cerr << "ERROR% wedge "<<iaux
-                                  <<" for tomogram "<<fn_vol
-                                  <<" was not found in wedge-list"
-                                  <<std::endl;
-                        exit(0);
-                    }
-                } 
-                else 
-                {
-                    img_wednr.push_back(0.);
-                    img_th0.push_back(0.);
-                    img_thF.push_back(0.);
-                }
-            } else 
+                img_th0.push_back( DF(6));
+                img_thF.push_back( DF(7));
+            } 
+            else 
             {
                 std::cerr << "ERROR% "<<fn_vol
                           <<" not found in document file"
@@ -341,13 +286,12 @@ void Prog_mlf_tomo_prm::produceSideInfo2()
         while (!SFi.eof()) 
         {
             SFi.NextImg();
-            img_rot.push_back(  0.);
-            img_tilt.push_back( 0.);
-            img_psi.push_back(  0.);
+            img_ang1.push_back( 0.);
+            img_ang2.push_back( 0.);
+            img_ang3.push_back( 0.);
             img_xoff.push_back( 0.);
             img_yoff.push_back( 0.);
             img_zoff.push_back( 0.);
-            img_wednr.push_back(0.);
             img_th0.push_back(  0.);
             img_thF.push_back(  0.);
         }
@@ -359,6 +303,93 @@ void Prog_mlf_tomo_prm::produceSideInfo2()
 }
 
 
+/// Get Transformation matrix 
+Matrix2D< double > Prog_mlf_tomo_prm::getTransformationMatrix(double ang1, 
+                                                              double ang2, 
+                                                              double ang3, 
+                                                              double xoff, /* = 0. */
+                                                              double yoff, /* = 0. */
+                                                              double zoff) /* = 0. */
+{
+    Matrix2D<double>  A(4,4);
+    if (use_tom_conventions)
+    {
+        // Use TOM Toolbox conventions
+        double cosphi = COSD(ang1);
+        double cospsi = COSD(ang2);
+        double costheta = COSD(ang3);
+        double sinphi = SIND(ang1);
+        double sinpsi = SIND(ang2);
+        double sintheta = SIND(ang3);
+
+        /* The following piece of code is in TOM: Sptrans/tom_rotatec.c
+          rm00=cospsi*cosphi-costheta*sinpsi*sinphi;
+          rm10=sinpsi*cosphi+costheta*cospsi*sinphi;
+          rm20=sintheta*sinphi;
+          rm01=-cospsi*sinphi-costheta*sinpsi*cosphi;
+          rm11=-sinpsi*sinphi+costheta*cospsi*cosphi;
+          rm21=sintheta*cosphi;
+          rm02=sintheta*sinpsi;
+          rm12=-sintheta*cospsi;
+          rm22=costheta;
+        */
+
+        A(0, 0) =  cospsi*cosphi-costheta*sinpsi*sinphi;
+        A(1, 0) =  sinpsi*cosphi+costheta*cospsi*sinphi;
+        A(2, 0) =  sintheta*sinphi;
+        A(0, 1) = -cospsi*sinphi-costheta*sinpsi*cosphi;
+        A(1, 1) = -sinpsi*sinphi+costheta*cospsi*cosphi; 
+        A(2, 1) =  sintheta*cosphi; 
+        A(0, 2) =  sintheta*sinpsi;
+        A(1, 2) = -sintheta*cospsi;
+        A(2, 2) =  costheta;
+
+        A(0,3) = xoff;
+        A(1,3) = yoff;
+        A(2,3) = zoff;
+
+//#define DEBUG_TOM_CONVENTIONS
+#ifdef  DEBUG_TOM_CONVENTIONS
+/*
+XMIPP  =      TOM
+rot    =      90. + psi
+tilt   =      -theta 
+psi    =      -90 + phi
+xoff   =      -x
+yoff   =      -y
+zoff   =      -z
+*/
+            Matrix2D<double> B=A;
+            double r,t,p;
+            B.resize(3,3);
+            std::cerr<<"------"<<std::endl;
+            std::cerr<< "angles TOM= "<<ang1<<" "<<ang2<<" "<<ang3<<std::endl;
+            std::cerr<< "angles XMIPP= "<<90. + ang2<<" "<<-ang3<<" "<<-90. + ang1<<std::endl;
+            std::cerr<<"TOM matrix = "<<B<<std::endl;
+            Euler_angles2matrix(90. + ang2, -ang3, -90. + ang1, B);
+            std::cerr<<"XMIPP matrix = "<<B<<std::endl;
+            Euler_matrix2angles(B,r,t,p);
+            std::cerr<<"angle XMIPP again= "<<r<<" "<<t<<" "<<p<<std::endl;
+            B=B.transpose();
+            std::cerr<<"XMIPP transposed matrix = "<<B<<std::endl;
+            Euler_matrix2angles(B,r,t,p);
+            std::cerr<<"angles XMIPP transposed matrix= "<<r<<" "<<t<<" "<<p<<std::endl;
+          
+#endif
+
+    }
+    else
+    {
+        // Use XMIPP conventions
+        A = Euler_rotation3DMatrix(ang1, ang2, ang3);
+        A(0,3) = -xoff;
+        A(1,3) = -yoff;
+        A(2,3) = -zoff;
+    }
+
+    return A;
+}
+ 
 /// Get binary missing wedge (or pyramid) 
 void Prog_mlf_tomo_prm::getMissingWedge(bool * measured,
                                         Matrix2D<double> A,
@@ -374,9 +405,6 @@ void Prog_mlf_tomo_prm::getMissingWedge(bool * measured,
             measured[i] = true;
         return;
     }
-
-    //  Or maybe not invert ??????????? In ml_align3d/mask it was inverted!! Check!!
-    A=A.inv();
 
     double xp, yp, zp;
     double tg0_y, tgF_y, tg0_x, tgF_x, limx0, limxF, limy0, limyF;
@@ -487,102 +515,215 @@ void Prog_mlf_tomo_prm::getMissingWedge(bool * measured,
 }
 
 
-void Prog_mlf_tomo_prm::generateInitialReferences()
+void Prog_mlf_tomo_prm::generateInitialReferences(double * dataRefs, double * dataWsumWedsPerRef)
 {
 
 #ifdef DEBUG
     std::cerr<<"start generateInitialReferences"<<std::endl;
 #endif
 
-    SelFile SFtmp;
-    VolumeXmipp Vave, Vtmp;
-    double dummy;
-    FileName fn_tmp;
-    SelLine line;
-
-    if (verb > 0)
+    if (fn_ref != "")
     {
-        std::cerr << "  Generating initial references by averaging over random subsets" << std::endl;
-        init_progress_bar(nr_ref);
-    }
-
-    // Make random subsets and calculate average images
-    FileName fnt;
-    SFtmp = SFi.randomize();
-    int Nsub = ROUND((double)SFtmp.ImgNo() / nr_ref);
-    for (int refno = 0; refno < nr_ref; refno++)
-    {
-        SFtmp.go_beginning();
-        if (Nsub*refno>0)
-            SFtmp.jump_lines(Nsub*refno);
-        if (refno == nr_ref - 1) Nsub = SFtmp.ImgNo() - refno * Nsub;
-        for (int nn = 0; nn < Nsub; nn++)
+        // A. User-provided reference(s)
+        if (Is_VolumeXmipp(fn_ref)) 
         {
-            fnt = SFtmp.NextImg();
-            if (nn==0) 
-                Vave.read(fnt);
-            else
+            nr_ref = 1;
+            SFr.insert(fn_ref);
+        }
+        else
+        {
+            SFr.read(fn_ref);
+            nr_ref = SFr.ImgNo();
+        }
+        
+        // Read Xmipp volumes and calculate their FTTws        
+        VolumeXmipp vol;
+        int refno = 0;
+        SFr.go_beginning();
+        while (!SFr.eof())
+        {
+            vol.read(SFr.NextImg());
+            if (XSIZE(vol()) != Xdim ||
+                XSIZE(vol()) != Xdim ||
+                XSIZE(vol()) != Xdim )
+                REPORT_ERROR(1,"Wrong dimensions for reference volume!");
+            forwfftw.SetPoints(MULTIDIM_ARRAY(vol()));
+            forwfftw.Transform();
+            forwfftw.Normalize();
+            // Get only points within resolution range
+            for (int i = 0, ii=0; i< 2*fftw_hsize; i++)
             {
-                Vtmp.read(fnt);
-                Vave() += Vtmp();
+                if (is_in_range[i/2]) 
+                {
+                    dataRefs[refno*size + ii] = forwfftw.fOut[i];
+                    ii++;
+                }
+            }
+            refno++;
+        }
+
+    }
+    else
+    {
+
+        // B. Random subsets of the data
+        double               *dataImg, *dataPrior;
+        std::complex<double> *DATAIMG, *DATAREFS, *DATAPRIOR, *IMG;
+        bool                 *dataMeasured;
+        FileName             fn;
+        std::vector<double>  count_refs;
+        Matrix2D<double>     A_img(4,4);
+        double               th0,thF;
+        int                  refno, c, nn = SFi.ImgNo(), imgno = 0;
+
+        // Reserve memory for dataImg and dataWedge
+        try
+        {
+            dataImg      = new double[size];
+            dataPrior    = new double[size];
+            dataMeasured = new bool[hsize];
+        }
+        catch (std::bad_alloc&)
+        {
+            REPORT_ERROR(1,"Error allocating memory in expectation");
+        }
+        DATAREFS  = (std::complex<double> *) dataRefs;
+        DATAIMG   = (std::complex<double> *) dataImg;
+        DATAPRIOR = (std::complex<double> *) dataPrior;
+
+        // Read and transform the prior map
+        if (fn_prior != "")
+        {
+            VolumeXmipp prior;
+            prior.read(fn_prior);
+            if (XSIZE(prior()) != Xdim ||
+                XSIZE(prior()) != Xdim ||
+                XSIZE(prior()) != Xdim )
+                REPORT_ERROR(1,"Wrong dimensions for prior volume!");
+
+            forwfftw.SetPoints(MULTIDIM_ARRAY(prior()));
+            forwfftw.Transform();
+            forwfftw.Normalize();
+            IMG =  (std::complex<double> *) forwfftw.fOut;
+            // Get only points within resolution range
+            for (int i = 0, ii=0; i < fftw_hsize; i++)
+                if (is_in_range[i]) 
+                {
+                    DATAPRIOR[ii] = IMG[i];
+                    ii++;
+                }
+        }
+        else
+        {
+            // If no prior is given: assume all-zero prior
+            for (int i=0; i<hsize; i++)
+                DATAPRIOR[i] = 0.;
+        }
+
+        // Initialize sums to zero
+        for (int i = 0; i < nr_ref * hsize; i++)
+        {
+            DATAREFS[i] = 0.;
+            dataWsumWedsPerRef[i] = 0.;
+        }
+        count_refs.resize(nr_ref);
+
+        if (verb > 0)
+        {
+            std::cerr << "  Generating initial references by averaging over random subsets" << std::endl;
+            init_progress_bar(nn);
+            c = XMIPP_MAX(1, nn / 60);
+        }
+        SFi.go_beginning();
+        randomize_random_generator();
+        while (!SFi.eof())
+        {
+            // read tomogram from disc
+            fn = SFi.NextImg();
+            backfftw.read(fn + ".fftw");
+            IMG =  (std::complex<double> *) backfftw.fIn;
+            // Get only points within resolution range
+            for (int i = 0, ii=0; i < fftw_hsize; i++)
+                if (is_in_range[i]) 
+                {
+                    DATAIMG[ii] = IMG[i];
+                    ii++;
+                }
+
+            // Get the missing wedge
+            getMissingWedge(dataMeasured,
+                            getTransformationMatrix(img_ang1[imgno],img_ang2[imgno],img_ang3[imgno]),
+                            img_th0[imgno],
+                            img_thF[imgno]);
+
+            // Randomly choose a reference
+            refno = FLOOR(rnd_unif(0,nr_ref));
+            count_refs[refno] += 1.;
+
+            // Store sum and sum of weights
+            for (int i = 0; i < hsize; i++)
+            {
+                int ii = refno*hsize + i;
+                DATAREFS[ii] += DATAIMG[i];
+                if (dataMeasured[i])
+                    dataWsumWedsPerRef[ii] += 1.;
+            }
+
+            if (verb > 0) if (imgno % c == 0) progress_bar(imgno);
+            imgno++;
+        }
+        if (verb > 0) progress_bar(nn);
+
+#ifdef DEBUG
+        std::cerr<<" Distribution of initial random sets= "<<std::endl;
+        for (int r=0; r<nr_ref; r++)
+            std::cerr<<" -> reference "<<r<<" has "<<count_refs[r]<<" particles."<<std::endl;
+#endif
+
+        // Calculate dataRefs with imputation of the prior
+        for (int refno = 0; refno < nr_ref; refno++)
+        {
+            for (int i=0; i < hsize; i++)
+            {
+                int ii = refno * hsize + i;
+                // Observed values
+                DATAREFS[ii] /= count_refs[refno];
+                // Impute missing values with the prior
+                DATAREFS[ii] += DATAPRIOR[i] * (1. - dataWsumWedsPerRef[ii] / count_refs[refno]);
             }
         }
-        Vave() /= Nsub;
-        fn_tmp = fn_root + "_it";
-        fn_tmp.compose(fn_tmp, 0, "");
-        fn_tmp = fn_tmp + "_ref";
-        fn_tmp.compose(fn_tmp, refno + 1, "");
-        fn_tmp = fn_tmp + ".vol";
-        Vave.write(fn_tmp);
-        SFr.insert(fn_tmp, SelLine::ACTIVE);
-        if (verb > 0) progress_bar(refno);
     }
-    if (verb > 0) progress_bar(nr_ref);
-    fn_ref = fn_root + "_it";
-    fn_ref.compose(fn_ref, 0, "sel");
-    SFr.write(fn_ref);
+
+#ifdef DEBUG
+    VolumeXmipp test(Xdim,Ydim,Zdim);
+    for (int refno=0; refno < nr_ref; refno++)
+    {
+        test().initZeros();
+        for(int i=0,ii=0,iii=0;i<Zdim;i++)
+            for(int j=0;j<Ydim;j++)
+                for(int k=0;k<Xdim/2 + 1; k++,ii++)
+                    if (is_in_range[ii])
+                    {
+                        test(i,j,k)=dataWsumWedsPerRef[refno*hsize + iii];
+                        iii++;
+                    }
+        CenterFFT(test(),true);
+        FileName fnt;
+        fnt.compose("sumwedges_ref",refno,"vol");
+        test.write(fnt);
+    }
+#endif
+
+    // Initialize model fractions
+    alpha_k.clear();
+    for (int refno = 0; refno < nr_ref; refno++)
+    {
+        alpha_k.push_back(1./nr_ref);
+    }
 
 #ifdef DEBUG
     std::cerr<<"done generateInitialReferences"<<std::endl;
 #endif
-}
-
-void Prog_mlf_tomo_prm::readAndFftwAllReferences(double * dataRefs)
-{
-
-#ifdef DEBUG
-    std::cerr<<"start readAndFftwAllReferences"<<std::endl;
-#endif
-
-    // Read references in memory and calculate their FFTW
-    VolumeXmipp vol;
-
-    alpha_k.clear();
-    int refno = 0;
-    SFr.go_beginning();
-    while (!SFr.eof())
-    {
-        alpha_k.push_back(1./nr_ref);
-        vol.read(SFr.NextImg());
-        forwfftw.SetPoints(MULTIDIM_ARRAY(vol()));
-        forwfftw.Transform();
-        forwfftw.Normalize();
-        // Get only points within resolution range
-        for (int i = 0, ii=0; i< 2*fftw_hsize; i++)
-        {
-            if (is_in_range[i/2]) 
-            {
-                dataRefs[refno*size + ii] = forwfftw.fOut[i];
-                ii++;
-            }
-        }
-        refno++;
-    }
-
-#ifdef DEBUG
-    std::cerr<<"done readAndFftwAllReferences"<<std::endl;
-#endif
-
 }
 
 // This routine is for (splitted) SF-dependent side-info calculations
@@ -594,8 +735,13 @@ void Prog_mlf_tomo_prm::calculateAllFFTWs()
 
     FileName fni, fno;
     VolumeXmipp vol;
-    Matrix2D<double> A_img(4,4), A_wed(4,4);
+    Matrix2D<double> A_img(4,4);
     int c, nn = SFi.ImgNo(), imgno = 0;
+
+#define DEBUG_EULER
+#ifdef DEBUG_EULER
+    VolumeXmipp ave(Xdim,Ydim,Zdim);
+#endif
 
     if (verb > 0)
     {
@@ -603,30 +749,45 @@ void Prog_mlf_tomo_prm::calculateAllFFTWs()
         init_progress_bar(nn);
         c = XMIPP_MAX(1, nn / 60);
     }
-
     SFi.go_beginning();
     while (!SFi.eof())
     {
         fni = SFi.NextImg();
-        vol.read(fni);
+        if ( !(exists(fni) && dont_recalc_fftw))
+        {
+            vol.read(fni);
+            if (XSIZE(vol()) != Xdim ||
+                XSIZE(vol()) != Xdim ||
+                XSIZE(vol()) != Xdim )
+                REPORT_ERROR(1,"Wrong dimensions for input volume!");
 
-        // Still test this!!! (just copied from image.h for now...)
-        A_wed = Euler_rotation3DMatrix(img_rot[imgno],img_tilt[imgno],img_psi[imgno]);
-        A_img = A_wed;
-        A_img(0,3) = -img_xoff[imgno];
-        A_img(1,3) = -img_yoff[imgno];
-        A_img(2,3) = -img_zoff[imgno];
-        vol().selfApplyGeometryBSpline(A_img,3,IS_INV,DONT_WRAP,0.);
+            // Still test this!!! (just copied from image.h for now...)
+            A_img = getTransformationMatrix(img_ang1[imgno], img_ang2[imgno], img_ang3[imgno],
+                                            img_xoff[imgno], img_yoff[imgno], img_zoff[imgno]);
 
-        forwfftw.SetPoints(MULTIDIM_ARRAY(vol()));
-        forwfftw.Transform();
-        forwfftw.Normalize();
-        fno = fni + ".fftw";
-        forwfftw.write(fno);
-        if (verb > 0) if (imgno % c == 0) progress_bar(imgno);
-        imgno++;
+            // IS_INV to be consistent with Xmipp conventions
+            // if some day want to swith to IS_NOT_INV, do A=A.inv() in getMissingWedge!!!!
+            vol().selfApplyGeometryBSpline(A_img,3,IS_INV,DONT_WRAP,0.);
+#ifdef DEBUG_EULER
+            ave() += vol();
+#endif
+            forwfftw.SetPoints(MULTIDIM_ARRAY(vol()));
+            forwfftw.Transform();
+            forwfftw.Normalize();
+            fno = fni + ".fftw";
+            forwfftw.write(fno);
+            if (verb > 0) if (imgno % c == 0) progress_bar(imgno);
+            imgno++;
+        }
     }
     if (verb > 0) progress_bar(nn);
+
+#ifdef DEBUG_EULER
+    std::cerr<<" Writing normal average of subtomograms as ave.vol"<<std::endl; 
+    ave() /= (double)imgno;
+    ave.write("ave.vol");
+#endif 
+
 
 #ifdef DEBUG
     std::cerr<<"done calculateAllFFTWs"<<std::endl;
@@ -718,6 +879,7 @@ void Prog_mlf_tomo_prm::estimateInitialNoiseSpectra(double * dataSigma)
                 ii++;
             }
 
+        /*
         // Write sigma spectra to disc
         fn = fn_root + "_it";
         fn.compose(fn, istart - 1, "");
@@ -733,6 +895,7 @@ void Prog_mlf_tomo_prm::estimateInitialNoiseSpectra(double * dataSigma)
             fh << (double)irr/Xdim << " " << dVi(sigma_noise[ig], irr) << "\n";
         }
         fh.close();
+        */
 
     }
 
@@ -868,11 +1031,9 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
     bool             *dataMeasured;
     SelLine          SL;
     FileName         fn;
-    Matrix1D<double> dataline(9), opt_offsets(3);  
+    Matrix1D<double> dataline(10);
     Matrix2D<double> A_img(4,4);
     double           Pmax, th0,thF;
-    //double           opt_rot,opt_tilt,opt_psi;
-    //double           opt_xoff,opt_yoff,opt_zoff;
 
     // Reserve memory for dataImg and dataWedge
     try
@@ -884,6 +1045,13 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
     {
         REPORT_ERROR(1,"Error allocating memory in expectation");
     }
+
+    // Initialize docfile header
+    DFo.clear();
+    if (use_tom_conventions)
+        DFo.append_comment("Headerinfo columns: phi (1), psi (2), theta (3), Xoff (4), Yoff (5), Zoff (6), WedTh0 (7), WedThF (8), Ref (9), Pmax/sumP (10)");
+    else
+        DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Zoff (6), WedTh0 (7), WedThF (8), Ref (9), Pmax/sumP (10)");
 
     // Initialize weighted sums to zero
     for (int i = 0; i < nr_ref * size; i++)
@@ -913,10 +1081,7 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
         fn = SFi.NextImg();
 
         // Get the geometrical information
-        A_img=Euler_rotation3DMatrix(img_rot[imgno],img_tilt[imgno],img_psi[imgno]);
-        opt_offsets(0)=ROUND(img_xoff[imgno]);
-        opt_offsets(1)=ROUND(img_yoff[imgno]);
-        opt_offsets(2)=ROUND(img_zoff[imgno]);
+        A_img=getTransformationMatrix(img_ang1[imgno],img_ang2[imgno],img_ang3[imgno]);
         th0=img_th0[imgno];
         thF=img_thF[imgno];
 
@@ -933,6 +1098,38 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
         // get missing wedge
         getMissingWedge(dataMeasured,A_img,th0,thF);
 
+//#define EXP_DEBUG_WEDGE 
+#ifdef EXP_DEBUG_WEDGE
+    VolumeXmipp img(Xdim,Ydim,Zdim), wed(Xdim,Ydim,Zdim);
+    img().initZeros();
+    wed().initZeros();
+
+    std::complex<double> * iaux;
+    iaux = (std::complex<double> *) dataImg;
+    for(int i=0,ii=0,iii=0;i<Zdim;i++)
+        for(int j=0;j<Ydim;j++)
+            for(int k=0;k<Xdim/2 + 1; k++,ii++)
+                if (is_in_range[ii])
+                {
+                    img(i,j,k)=abs(iaux[iii]);
+                    if (dataMeasured[iii])
+                    {
+                        wed(i,j,k)=1.;
+                    }
+                    iii++;
+                }
+    CenterFFT(wed(),true);
+    CenterFFT(img(),true);
+    wed.write("wed.ftt");
+    img.write("img.ftt");
+    std::cerr<<" Euler angles= "<<img_ang1[imgno]<<" "<<img_ang2[imgno]<<" "<<img_ang3[imgno]<<std::endl;
+    std::cerr<<" Wedge angles= "<<th0<<" "<<thF<<std::endl;
+    std::cerr<<"EXP_DEBUG_WEDGE: wrote wed.fft and img.fft for subtomogram "<<fn<<std::endl;
+    std::cerr<<"Press any key to continue.. "<<std::endl;
+    char a;
+    std::cin >>a;
+#endif
+
         // Perform expectation step 
         expectationSingleImage(igroup,
                                dataImg, 
@@ -948,17 +1145,17 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
                                LL, 
                                Pmax);
 
-        // Output to docfile
-        dataline(0)=img_rot[imgno];                  // rot
-        dataline(1)=img_tilt[imgno];                 // tilt
-        dataline(2)=img_psi[imgno];                  // psi
+        // Output to docfile                            XMIPP or  TOM
+        dataline(0)=img_ang1[imgno];                 // rot   or  phi
+        dataline(1)=img_ang2[imgno];                 // tilt  or  psi
+        dataline(2)=img_ang3[imgno];                 // psi   or  theta
         dataline(3)=img_xoff[imgno];                 // Xoff
         dataline(4)=img_yoff[imgno];                 // Yoff
         dataline(5)=img_zoff[imgno];                 // Zoff
-        if (nr_wedge>0) dataline(6)=img_wednr[imgno];// missing wedge number
-        else dataline(6)=0.;
-        dataline(7)=(double)(opt_refno+1);           // Ref
-        dataline(8)=Pmax;                            // P_max/P_tot
+        dataline(6)=img_th0[imgno];                  // Wedge th0
+        dataline(7)=img_thF[imgno];                  // Wedge thF
+        dataline(8)=(double)(opt_refno+1);           // Ref
+        dataline(9)=Pmax;                            // P_max/P_tot
         DFo.append_comment(fn);
         DFo.append_data_line(dataline);
         avePmax += Pmax;

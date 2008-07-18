@@ -42,15 +42,6 @@
 /**@defgroup mlf_tomo mlf_tomo (Maximum likelihood in Fourier space for tomography)
    @ingroup ReconsLibraryPrograms */
 //@{
-/// Structure for storing a wedgelist
-typedef struct Wedgelist
-{
-    int num;
-    double th0;
-    double thF;
-}
-wedgelist;
-
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
 
 /** mlf_tomo parameters. */
@@ -60,15 +51,19 @@ class Prog_mlf_tomo_prm
 public:
     /** Filenames reference selfile/image, fraction docfile & output rootname */
     SelFile SFi, SFr, SFg;
-    FileName fn_ref, fn_root, fn_doc, fn_wlist, fn_group;
+    FileName fn_ref, fn_root, fn_doc, fn_wlist, fn_group, fn_prior;
     /** Flag whether to fix estimates for model fractions */
     bool fix_fractions;
     /** Flag whether to fix estimate for sigma of noise */
     bool fix_sigma_noise;
+    /** Calculate FFTW files again if they exist? */
+    bool dont_recalc_fftw;
+    /** Use TOM Toolbox Euler angle and translation conventions */
+    bool use_tom_conventions;
   // For all tomograms: angles, offsets and wedge parameters
-    std::vector<double> img_rot,img_tilt,img_psi;
-    std::vector<double> img_xoff,img_yoff,img_zoff;
-    std::vector<double> img_th0,img_thF,img_wednr;
+    std::vector<double> img_ang1, img_ang2, img_ang3;
+    std::vector<double> img_xoff, img_yoff, img_zoff;
+    std::vector<double> img_th0, img_thF;
 
     /** Use FFTW for Fts */
     bool do_fftw;
@@ -95,10 +90,6 @@ public:
     double nr_imgs;
     /** Number of groups (e.g. one group for each tomogram) */
     int nr_group;
-    /** Number of different wedges */
-    int nr_wedge;
-    /** wedgelist */
-    std::vector<wedgelist> wedges;
     /** Regularisation constants */
     double reg0, regF, reg_steps, reg, delta_reg;
 
@@ -138,6 +129,15 @@ public:
     /// splitted SF-dependent side-info calculations
     void produceSideInfo2();
 
+    // Get Transformation matrix (acc to XMIPP or TOM conventions, depending on use_tom_conventions flag)
+    // For XMIPP ang1-3 are: rot, tilt, psi
+    // For TOM   ang1-3 are: phi, psi, theta
+    Matrix2D< double > getTransformationMatrix(double ang1, 
+                                               double ang2, 
+                                               double ang3, 
+                                               double xoff = 0.,
+                                               double yoff = 0.,
+                                               double zoff = 0.);
     /// Get binary missing wedge (or pyramid) 
     void getMissingWedge(bool * measured,
                          Matrix2D<double> A,
@@ -147,11 +147,8 @@ public:
                          const double thetaF_alongx = 0.);
 
     /// Generate initial references as averages over random subsets
-    void generateInitialReferences();
+    void generateInitialReferences(double * dataRefs, double * dataWsumWedsPerRef);
  
-     /// Read all references into memory and store their FFTWs
-    void readAndFftwAllReferences(double * dataRefs);
-
     /// Calculate FFTWs for images in a selfile and write to disc
     void calculateAllFFTWs();
 
