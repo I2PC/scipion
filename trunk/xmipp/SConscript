@@ -349,6 +349,7 @@ ReconsSources = [
     'align2d.cpp',
     'align_tilt_pairs.cpp',
     'angular_assign_for_tomogram.cpp',
+    'angular_assign_for_tilt_series.cpp',
     'angular_continuous_assign.cpp',
     'angular_discrete_assign.cpp',
     'angular_distance.cpp',
@@ -461,6 +462,7 @@ AddXmippProgram('adjust_volume_grey_levels', ['XmippRecons'])
 AddXmippProgram('align2d', ['XmippRecons'])
 AddXmippProgram('align_tilt_pairs', ['XmippRecons'])
 AddXmippProgram('align_volumes')
+AddXmippProgram('angular_assign_for_tilt_series', ['XmippRecons'])
 AddXmippProgram('angular_assign_for_tomogram', ['XmippRecons'])
 AddXmippProgram('angular_class_average', ['XmippRecons'])
 AddXmippProgram('angular_continuous_assign', ['XmippRecons'])
