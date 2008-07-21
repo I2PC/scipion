@@ -48,55 +48,59 @@ double CTF_fitness(double *);
 #define FIRST_DEFOCUS_PARAMETER     0
 
 /* Global variables -------------------------------------------------------- */
-// Some aliases
-Adjust_CTF_Parameters *global_prm;
-Matrix2D<double>      *f;               // The CTF to model
-Matrix1D<double>      *global_adjust;   // Current theoretical adjustment
+namespace AdjustCTF {
+    // Some aliases
+    Adjust_CTF_Parameters *global_prm;
+    Matrix2D<double>      *f;               // The CTF to model
+    Matrix1D<double>      *global_adjust;   // Current theoretical adjustment
 
-// Frequency of each point in digital units
-Matrix2D<double>       global_x_digfreq;
-Matrix2D<double>       global_y_digfreq;
-Matrix2D<double>       global_w_digfreq;
-Matrix2D<double>       global_x_contfreq;
-Matrix2D<double>       global_y_contfreq;
-Matrix2D<double>       global_w_contfreq;
-Matrix2D<double>       global_mask;
-Matrix1D<double>       global_w_count;
+    // Frequency of each point in digital units
+    Matrix2D<double>       global_x_digfreq;
+    Matrix2D<double>       global_y_digfreq;
+    Matrix2D<double>       global_w_digfreq;
+    Matrix2D<double>       global_x_contfreq;
+    Matrix2D<double>       global_y_contfreq;
+    Matrix2D<double>       global_w_contfreq;
+    Matrix2D<double>       global_mask;
+    Matrix1D<double>       global_w_count;
 
-// Penalization for forbidden values of the parameters
-double         global_heavy_penalization;
+    // Penalization for forbidden values of the parameters
+    double         global_heavy_penalization;
 
-// Penalization factor for the background
-bool                   global_penalize;
-double                 global_current_penalty;
-const double           global_penalty = 32; // Maximum penalization
+    // Penalization factor for the background
+    bool                   global_penalize;
+    double                 global_current_penalty;
+    const double           global_penalty = 32; // Maximum penalization
 
-// Speed up factor
-int                    global_evaluation_reduction;
+    // Speed up factor
+    int                    global_evaluation_reduction;
 
-// CTF model and noise model
-XmippCTF               global_ctfmodel;
-XmippCTF               global_ctfmodel_defoci;
+    // CTF model and noise model
+    XmippCTF               global_ctfmodel;
+    XmippCTF               global_ctfmodel_defoci;
 
-// Maximum of the gaussian
-double                 global_max_gauss_freq;
+    // Maximum of the gaussian
+    double                 global_max_gauss_freq;
 
-// Autofocus
-double                 global_value_th;
-double                 global_min_freq;
-double                 global_max_freq;
+    // Autofocus
+    double                 global_value_th;
+    double                 global_min_freq;
+    double                 global_max_freq;
 
-// Program status
-int                    global_action; // 0: Computing the background (sqrt)
-// 1: Computing the full background
-// 2: Computing the envelope
-// 3: Computing defoci
-// 4: Computing all CTF parameters
-// 5: Computing all CTF parameters + Gaussian2
-// 6: Produce output
-int                    global_show;   // 0: Do not show
-// 1: Partially detailed
-// 2: Very detailed
+    // Program status
+    int                    global_action; // 0: Computing the background (sqrt)
+    // 1: Computing the full background
+    // 2: Computing the envelope
+    // 3: Computing defoci
+    // 4: Computing all CTF parameters
+    // 5: Computing all CTF parameters + Gaussian2
+    // 6: Produce output
+    int                    global_show;   // 0: Do not show
+    // 1: Partially detailed
+    // 2: Very detailed
+}
+
+using namespace AdjustCTF;
 
 /* Assign ctfmodel from a vector and viceversa ----------------------------- */
 void assign_CTF_from_parameters(double *p, XmippCTF &ctfmodel,
