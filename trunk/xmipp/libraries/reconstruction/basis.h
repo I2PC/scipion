@@ -106,20 +106,19 @@ public:
         its further point. */
     double max_length() const
     {
-        double retval;
         switch (type)
         {
         case blobs:
-            retval = blob.radius;
+            return blob.radius;
             break;
         case voxels:
-            retval = sqrt(3.0) * 0.5;
+            return sqrt(3.0) * 0.5;
             break;
         case splines:
-            retval = sqrt(3.0) * 2.0;
+            return sqrt(3.0) * 2.0;
             break;
         }
-        return retval;
+        return 0.0;
     }
 
     /** Change basis to voxels.
@@ -142,28 +141,28 @@ public:
     /** Basis value at a given point. */
     double value_at(const Matrix1D<double> &r) const
     {
-        double module_r, retval;
+        double module_r;
         switch (type)
         {
         case (blobs):
-                        module_r = sqrt(XX(r) * XX(r) + YY(r) * YY(r) + ZZ(r) * ZZ(r));
-            retval = blob_val(module_r, blob);
+            module_r = sqrt(XX(r) * XX(r) + YY(r) * YY(r) + ZZ(r) * ZZ(r));
+            return blob_val(module_r, blob);
             break;
         case (voxels):
-                        if (-0.5 <= XX(r) && XX(r) < 0.5 &&
-                            -0.5 <= YY(r) && YY(r) < 0.5 &&
-                            -0.5 <= ZZ(r) && ZZ(r) < 0.5) retval = 1.0;
-                else retval = 0.0;
+            if (-0.5 <= XX(r) && XX(r) < 0.5 &&
+                -0.5 <= YY(r) && YY(r) < 0.5 &&
+                -0.5 <= ZZ(r) && ZZ(r) < 0.5) return 1.0;
+            else return 0.0;
             break;
         case (splines):
-                        if (-2 <= XX(r) && XX(r) < 2 &&
-                            -2 <= YY(r) && YY(r) < 2 &&
-                            -2 <= ZZ(r) && ZZ(r) < 2)
-                            retval = spatial_Bspline03LUT(r);
-                else retval = 0.0;
+            if (-2 <= XX(r) && XX(r) < 2 &&
+                -2 <= YY(r) && YY(r) < 2 &&
+                -2 <= ZZ(r) && ZZ(r) < 2)
+                return spatial_Bspline03LUT(r);
+            else return 0.0;
             break;
         }
-        return retval;
+        return 0.0;
     }
 
     /** Projection at a given direction (u) with a given point (r). */
@@ -173,31 +172,33 @@ public:
         const double p0 = 1.0 / (2 * PIXEL_SUBSAMPLING) - 0.5;
         const double pStep = 1.0 / PIXEL_SUBSAMPLING;
         const double pAvg = 1.0 / (PIXEL_SUBSAMPLING * PIXEL_SUBSAMPLING);
-        double module_r, retval, px, py;
+        double module_r, px, py;
         int i, j;
         switch (type)
         {
-        case (blobs):
-                        module_r = sqrt(XX(r) * XX(r) + YY(r) * YY(r) + ZZ(r) * ZZ(r));
-            retval = blob_proj(module_r, blob);
-            break;
-        case (voxels):
-                        retval = 0;
-            ZZ(aux) = ZZ(r);
-            for (i = 0, px = p0; i < PIXEL_SUBSAMPLING; i++, px += pStep)
-                for (j = 0, py = p0; j < PIXEL_SUBSAMPLING; j++, py += pStep)
-        {
-                    XX(aux) = XX(r) + px;
-                    YY(aux) = YY(r) + py;
-                    retval += intersection_unit_cube(u, aux);
-                }
-            retval *= pAvg;
-            break;
-        case (splines):
-                        retval = spatial_Bspline03_proj(r, u);
-            break;
+            case (blobs):
+                module_r = sqrt(XX(r) * XX(r) + YY(r) * YY(r) + ZZ(r) * ZZ(r));
+                return blob_proj(module_r, blob);
+                break;
+            case (voxels):
+            {
+                double retval = 0;
+                ZZ(aux) = ZZ(r);
+                for (i = 0, px = p0; i < PIXEL_SUBSAMPLING; i++, px += pStep)
+                    for (j = 0, py = p0; j < PIXEL_SUBSAMPLING; j++, py += pStep)
+                    {
+                        XX(aux) = XX(r) + px;
+                        YY(aux) = YY(r) + py;
+                        retval += intersection_unit_cube(u, aux);
+                    }
+                return retval*pAvg;
+                break;
+            }
+            case (splines):
+                return spatial_Bspline03_proj(r, u);
+                break;
         }
-        return retval;
+        return 0.0;
     }
 public:
     /// Blob footprint
