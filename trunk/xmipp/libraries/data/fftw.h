@@ -1,5 +1,5 @@
 
-// class based in previous fftw wrapper by  Anna Kreshuk   07/4/2006
+// iclass based in previous fftw wrapper by  Anna Kreshuk   07/4/2006
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      
