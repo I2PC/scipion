@@ -42,7 +42,7 @@ void Prog_RecFourier_prm::read(int argc, char **argv)
     padding_factor_vol=padding_factor_proj;    
     // For improved killing control
     fn_control = getParameter(argc, argv, "-control", "");
-    blob.radius        = textToFloat(getParameter(argc, argv,  "-r","2.5"));
+    blob.radius        = textToFloat(getParameter(argc, argv,  "-r","2.0"));
     blob.order         = textToFloat(getParameter(argc, argv,    "-m","0"));
     blob.alpha         = textToFloat(getParameter(argc, argv,   "-a","15"));
     sampling_rate      = textToFloat(getParameter(argc, argv, "-sampling_rate", "1"));
@@ -116,7 +116,7 @@ void Prog_RecFourier_prm::usage()
     if (do_weights)
         std::cerr << " --> Use weights stored in the image headers or doc file" << std::endl;
     std::cerr << "\n Interpolation Function"
-              << "\n   [-r blrad=2.5]        blob radius in pixels"
+              << "\n   [-r blrad=2.0]        blob radius in pixels"
               << "\n   [-m blord=0]          order of Bessel function in blob"
               << "\n   [-a blalpha=15]       blob parameter alpha"
               << "\n   [-sampling_rate =1>]            : Sampling rate (Angstroms/pixel)\n"
