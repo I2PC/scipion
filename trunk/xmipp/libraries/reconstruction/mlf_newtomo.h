@@ -51,7 +51,7 @@ class Prog_mlf_tomo_prm
 public:
     /** Filenames reference selfile/image, fraction docfile & output rootname */
     SelFile SFi, SFr, SFg;
-    FileName fn_ref, fn_root, fn_doc, fn_wlist, fn_group, fn_prior;
+    FileName fn_ref, fn_root, fn_doc, fn_wlist, fn_group, fn_prior, fn_mask;
     /** Flag whether to fix estimates for model fractions */
     bool fix_fractions;
     /** Flag whether to fix estimate for sigma of noise */
@@ -199,11 +199,12 @@ public:
 
     /// Write out reference images, selfile and logfile
     void writeOutputFiles(int iter, 
-                          double * dataRefs,
-                          double & sumw_allrefs, 
-                          double & LL, 
-                          double & avePmax,
-                          std::vector<double> &conv);
+                          double  * dataRefs,
+                          double  * dataWsumWedsPerRef,
+                          DocFile & DFo,
+                          double  & sumw_allrefs, 
+                          double  & LL, 
+                          double  & avePmax);
 
 };
 //@}

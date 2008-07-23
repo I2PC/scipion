@@ -40,6 +40,7 @@ void Prog_mlf_tomo_prm::read(int argc, char **argv)
     fn_doc = getParameter(argc,argv,"-doc","");
     nr_ref = textToInteger(getParameter(argc, argv, "-nref", "0"));
     fn_prior = getParameter(argc, argv, "-prior", "");
+    fn_mask = getParameter(argc, argv, "-mask", "");
     fn_ref = getParameter(argc, argv, "-ref", "");
     fn_root = getParameter(argc, argv, "-o", "out");
     Niter = textToInteger(getParameter(argc, argv, "-iter", "100"));
@@ -82,7 +83,7 @@ void Prog_mlf_tomo_prm::show()
         std::cerr << "  Number of reg. steps    : " << reg_steps << std::endl;
         if (use_tom_conventions)
         {
-            std::cerr << "  -> Using TOM Toolbox's euler angle and offset conventions "<<std::endl;
+            std::cerr << "  -> Using TOM Toolbox's geometrical conventions "<<std::endl;
         }
         if (fix_fractions)
         {
@@ -109,7 +110,7 @@ void Prog_mlf_tomo_prm::usage()
     std::cerr << " [ -doc <docfile>]             : Docfile with angles, offsets and wedge information \n";
     std::cerr << " [ -lowres <=0.02> ]           : Low-resolution limit (in 1/pixel) \n";
     std::cerr << " [ -highres <=0.5> ]           : High-resolution limit (in 1/pixel) \n";
-    std::cerr << " [ -tom_conventions ]          : Use TOM Toolbox's conventions for euler angles and offsets \n";
+    std::cerr << " [ -tom_conventions ]          : Use TOM Toolbox's geometrical conventions \n";
     std::cerr << " [ -more_options ]             : Show all possible input parameters \n";
 }
 
@@ -145,6 +146,22 @@ void Prog_mlf_tomo_prm::produceSideInfo()
     Ydim = YSIZE(vol());
     Zdim = ZSIZE(vol());
     dim3 = (double) (Xdim * Ydim * Zdim);
+
+    // Get number of references if selfile/volume given
+    if (fn_ref != "")
+    {
+        // A. User-provided reference(s)
+        if (Is_VolumeXmipp(fn_ref)) 
+        {
+            nr_ref = 1;
+            SFr.insert(fn_ref);
+        }
+        else
+        {
+            SFr.read(fn_ref);
+            nr_ref = SFr.ImgNo();
+        }
+    }        
 
     // Make FFTW objects and plans for forward and backward fftw objects
     int fNdim = 3;
@@ -322,7 +339,7 @@ Matrix2D< double > Prog_mlf_tomo_prm::getTransformationMatrix(double ang1,
         double sinpsi = SIND(ang2);
         double sintheta = SIND(ang3);
 
-        /* The following piece of code is in TOM: Sptrans/tom_rotatec.c
+        /* The following piece of code is fromTOM: Sptrans/tom_rotatec.c
           rm00=cospsi*cosphi-costheta*sinpsi*sinphi;
           rm10=sinpsi*cosphi+costheta*cospsi*sinphi;
           rm20=sintheta*sinphi;
@@ -525,18 +542,10 @@ void Prog_mlf_tomo_prm::generateInitialReferences(double * dataRefs, double * da
     if (fn_ref != "")
     {
         // A. User-provided reference(s)
-        if (Is_VolumeXmipp(fn_ref)) 
-        {
-            nr_ref = 1;
-            SFr.insert(fn_ref);
-        }
-        else
-        {
-            SFr.read(fn_ref);
-            nr_ref = SFr.ImgNo();
-        }
-        
+
         // Read Xmipp volumes and calculate their FTTws        
+        std::complex<double> *DATAREFS, *REF;
+        DATAREFS  = (std::complex<double> *) dataRefs;
         VolumeXmipp vol;
         int refno = 0;
         SFr.go_beginning();
@@ -551,11 +560,12 @@ void Prog_mlf_tomo_prm::generateInitialReferences(double * dataRefs, double * da
             forwfftw.Transform();
             forwfftw.Normalize();
             // Get only points within resolution range
-            for (int i = 0, ii=0; i< 2*fftw_hsize; i++)
+            REF = (std::complex<double> *) forwfftw.fOut;
+            for (int i = 0, ii=0; i< fftw_hsize; i++)
             {
-                if (is_in_range[i/2]) 
+                if (is_in_range[i]) 
                 {
-                    dataRefs[refno*size + ii] = forwfftw.fOut[i];
+                    DATAREFS[refno*hsize + ii] = REF[i];
                     ii++;
                 }
             }
@@ -677,7 +687,7 @@ void Prog_mlf_tomo_prm::generateInitialReferences(double * dataRefs, double * da
 #ifdef DEBUG
         std::cerr<<" Distribution of initial random sets= "<<std::endl;
         for (int r=0; r<nr_ref; r++)
-            std::cerr<<" -> reference "<<r<<" has "<<count_refs[r]<<" particles."<<std::endl;
+            std::cerr<<" -> reference "<<r+1<<" has "<<count_refs[r]<<" particles."<<std::endl;
 #endif
 
         // Calculate dataRefs with imputation of the prior
@@ -734,14 +744,14 @@ void Prog_mlf_tomo_prm::calculateAllFFTWs()
 #endif
 
     FileName fni, fno;
-    VolumeXmipp vol;
+    VolumeXmipp vol, ave(Xdim,Ydim,Zdim), mask;
     Matrix2D<double> A_img(4,4);
     int c, nn = SFi.ImgNo(), imgno = 0;
 
-#define DEBUG_EULER
-#ifdef DEBUG_EULER
-    VolumeXmipp ave(Xdim,Ydim,Zdim);
-#endif
+    if (fn_mask != "")
+    {
+        mask.read(fn_mask);
+    }
 
     if (verb > 0)
     {
@@ -753,7 +763,7 @@ void Prog_mlf_tomo_prm::calculateAllFFTWs()
     while (!SFi.eof())
     {
         fni = SFi.NextImg();
-        if ( !(exists(fni) && dont_recalc_fftw))
+        if ( ! (exists(fni) && dont_recalc_fftw) )
         {
             vol.read(fni);
             if (XSIZE(vol()) != Xdim ||
@@ -768,9 +778,9 @@ void Prog_mlf_tomo_prm::calculateAllFFTWs()
             // IS_INV to be consistent with Xmipp conventions
             // if some day want to swith to IS_NOT_INV, do A=A.inv() in getMissingWedge!!!!
             vol().selfApplyGeometryBSpline(A_img,3,IS_INV,DONT_WRAP,0.);
-#ifdef DEBUG_EULER
+            if (fn_mask != "")
+                vol() *= mask();
             ave() += vol();
-#endif
             forwfftw.SetPoints(MULTIDIM_ARRAY(vol()));
             forwfftw.Transform();
             forwfftw.Normalize();
@@ -782,12 +792,14 @@ void Prog_mlf_tomo_prm::calculateAllFFTWs()
     }
     if (verb > 0) progress_bar(nn);
 
-#ifdef DEBUG_EULER
-    std::cerr<<" Writing normal average of subtomograms as ave.vol"<<std::endl; 
-    ave() /= (double)imgno;
-    ave.write("ave.vol");
-#endif 
-
+    if (!dont_recalc_fftw)
+    {
+        // Write out normal average map of all subtomograms
+        ave() /= (double)imgno;
+        fno = fn_root + "_average.vol"; 
+        std::cerr<<" Writing normal average of all subtomograms as "<<fno<<std::endl; 
+        ave.write(fno);
+    }
 
 #ifdef DEBUG
     std::cerr<<"done calculateAllFFTWs"<<std::endl;
@@ -1068,6 +1080,31 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
     LL = 0.;
     avePmax = 0.;
 
+//#define DEBUG_TOM
+#ifdef DEBUG_TOM
+    use_tom_conventions=true;
+    std::cerr<<"tom angles = 31, 152, 47";
+    A_img=getTransformationMatrix(31,152,47);
+    std::cerr<<"TOM matrix= "<<A_img;
+    std::cerr<<"inverse TOM matrix= "<<A_img.inv();
+    std::cerr<<"tom angles = -152, -31, -47";
+    A_img=getTransformationMatrix(-152,-31,-47);
+    std::cerr<<"TOM matrix= "<<A_img;
+    std::cerr<<"inverse TOM matrix= "<<A_img.inv();
+
+    use_tom_conventions=false;
+    std::cerr<<"xmipp angles = 31, 47, 152";
+    A_img=getTransformationMatrix(31,47,152);
+    std::cerr<<"XMIPP matrix= "<<A_img;
+    std::cerr<<"inverse XMIPP matrix= "<<A_img.inv();
+    std::cerr<<"xmipp angles = -152, -47, -31";
+    A_img=getTransformationMatrix(-152,-47,-31);
+    std::cerr<<"XMIPP matrix= "<<A_img;
+    std::cerr<<"inverse XMIPP matrix= "<<A_img.inv();
+    exit(0);
+
+#endif 
+
     // Loop over all images
     imgno = 0;
     nn = SFi.ImgNo();
@@ -1196,13 +1233,17 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
         sumw_allrefs += dataSumWRefs[refno];
         if (dataSumWRefs[refno] > 0.)
         {
+
+            //std::cerr<<"refno= "<<refno<<std::endl;
             for (int i = 0; i < hsize; i++)
             {
                 int ii = refno * hsize + i;
                 // Impute old reference for missing pixels
+                //if (i==0) std::cerr<<abs(DATAREFS[ii])<<" "<<dataWsumWedsPerRef[ii]<<" "<<dataSumWRefs[refno]<<" "<<abs(DATAWSUMREFS[ii])/ dataSumWRefs[refno]<<" ";
                 DATAREFS[ii] *= 1. - (dataWsumWedsPerRef[ii] / dataSumWRefs[refno]);
                 // And sum the weighted sum for observed pixels
                 DATAREFS[ii] += DATAWSUMREFS[ii] / dataSumWRefs[refno];
+                //if (i==0) std::cerr<<" new= "<<abs(DATAREFS[ii]) <<std::endl;
             }
         }
         else
@@ -1352,11 +1393,12 @@ void Prog_mlf_tomo_prm::regularise(double * dataRefs,
 }
 
 void Prog_mlf_tomo_prm::writeOutputFiles(int iter, 
-                                         double * dataRefs,
-                                         double &sumw_allrefs, 
-                                         double &LL, 
-                                         double &avePmax,
-                                         std::vector<double> &conv)
+                                         double  * dataRefs,
+                                         double  * dataWsumWedsPerRef,
+                                         DocFile & DFo,
+                                         double  & sumw_allrefs, 
+                                         double  & LL, 
+                                         double  & avePmax)
 {
 
 #ifdef DEBUG
@@ -1382,7 +1424,7 @@ void Prog_mlf_tomo_prm::writeOutputFiles(int iter,
     double * dataOut;
     try
     {
-        dataOut = new double[2*fftw_hsize];
+        dataOut  = new double[2*fftw_hsize];
     }
     catch (std::bad_alloc&)
     {
@@ -1404,7 +1446,7 @@ void Prog_mlf_tomo_prm::writeOutputFiles(int iter,
             }
             else
             {
-                dataOut[i] = 0.;
+               dataOut[i] = 0.;
             }
         }
         // Somehow only setpoints within resolution limits
@@ -1415,9 +1457,27 @@ void Prog_mlf_tomo_prm::writeOutputFiles(int iter,
         // Fill selfile and docfile
         SFo.insert(fn_tmp, SelLine::ACTIVE);
         fracline(0) = alpha_k[refno];
-        //fracline(1) = 1000 * conv[refno]; // Output 1000x the change for precision
         DFl.insert_comment(fn_tmp);
         DFl.insert_data_line(fracline);
+
+        if (iter != 0)
+        {
+            // Also write out sum of wedges
+            vol().initZeros();
+            for(int i=0,ii=0,iii=0;i<Zdim;i++)
+                for(int j=0;j<Ydim;j++)
+                    for(int k=0;k<Xdim/2 + 1; k++,ii++)
+                        if (is_in_range[ii])
+                        {
+                            vol(i,j,k)=dataWsumWedsPerRef[refno*hsize + iii];
+                            iii++;
+                        }
+            CenterFFT(vol(),true);
+            fn_tmp = fn_base + "_ref";
+            fn_tmp.compose(fn_tmp, refno + 1, "");
+            fn_tmp = fn_tmp + "_sumwedge.vol";
+            vol.write(fn_tmp);
+        }
     }
     
     // Write out sel & log-file
@@ -1452,6 +1512,30 @@ void Prog_mlf_tomo_prm::writeOutputFiles(int iter,
             }
             fh.close();
 	}
+    }
+
+    if (iter != 0)
+    {
+        // Write out docfile with optimal transformation & references
+        fn_tmp=fn_base + ".doc";
+        DFo.write(fn_tmp);
+        
+        // Write out class selfiles
+        for (int refno = 0;refno < nr_ref; refno++)
+        {
+            DFo.go_beginning();
+            SFo.clear();
+            for (int n = 0; n < DFo.dataLineNo(); n++)
+            {
+                DFo.next();
+                fn_tmp = ((DFo.get_current_line()).get_text()).erase(0, 3);
+                DFo.adjust_to_data_line();
+                if ((refno + 1) == (int)DFo(8)) SFo.insert(fn_tmp, SelLine::ACTIVE);
+            }
+            fn_tmp = fn_base + "_class";
+            fn_tmp.compose(fn_tmp, refno + 1, "sel");
+            SFo.write(fn_tmp);
+        }
     }
 
 #ifdef DEBUG
