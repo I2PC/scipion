@@ -61,7 +61,7 @@ std::ostream& operator <<(std::ostream& o, const SimpleGrid &grid)
     o << "   Vector 2: " << ((grid.basis).Col(1)).transpose() << std::endl;
     o << "   Vector 3: " << ((grid.basis).Col(2)).transpose() << std::endl;
     o << "   Relative size:         " << grid.relative_size       << std::endl;
-    o << "   Interest radius�:      " << grid.R2                  << std::endl;
+    o << "   Interest radius:       " << grid.R2                  << std::endl;
     o << "   Origin (univ.coords)   " << grid.origin.transpose()  << std::endl;
     o << "   Highest (grid. coord)  " << grid.highest.transpose() << std::endl;
     o << "   Lowest (grid. coord)   " << grid.lowest.transpose()  << std::endl;
@@ -241,7 +241,11 @@ Grid Create_CC_grid(double relative_size, const Matrix1D<double> &corner1,
     SimpleGrid      aux_grid;
 
     Matrix1D<double> origin = (corner1 + corner2) / 2;
-    origin.selfROUNDnD();
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(origin)
+        if (ABS(ROUND(origin(i))-origin(i))<0.45)
+            origin(i)=ROUND(origin(i));
+        else
+            origin(i)=CEIL(origin(i));
     aux_grid = Create_CC_grid(relative_size, corner1, corner2, origin);
     result.add_grid(aux_grid);
     return result;
