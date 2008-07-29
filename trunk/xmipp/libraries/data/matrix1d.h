@@ -1216,7 +1216,10 @@ public:
     {
         double m = module();
         if (ABS(m) > XMIPP_EQUAL_ACCURACY)
-            *this /= (T) m;
+        {
+            T im=(T) (1.0/m);
+            *this *= im;
+        }
         else
             MultidimArray<T>::initZeros();
     }
@@ -1418,6 +1421,23 @@ public:
         system((static_cast<std::string>("(gnuplot PPP") + fn_tmp +
             ".gpl; rm PPP" + fn_tmp + ".txt PPP" + fn_tmp + ".gpl) &").c_str());
     }
+
+    /** Compute numerical derivative
+     * @ingroup VectorsUtilities
+     *
+     * The numerical derivative is of the same size as the input vector.
+     * However, the first two and the last two samples are set to 0,
+     * because the numerical method is not able to correctly estimate the
+     * derivative there.
+     */
+    void numericalDerivative(Matrix1D<double> &result)
+    {
+        const double i12=1.0/12.0;
+	result.initZeros(*this);
+	for (int i=STARTINGX(*this)+2; i<=FINISHINGX(*this)-2; i++)
+            result(i)=i12*(-(*this)(i+2)+8*(*this)(i+1)
+                           -8*(*this)(i-1)+(*this)(i+2));
+    }
 };
 
 /**@defgroup VectorsRelated Related functions
@@ -1511,11 +1531,28 @@ Matrix1D< T > vectorProduct(const Matrix1D< T >& v1, const Matrix1D< T >& v2)
         REPORT_ERROR(1007, "Vector_product: vectors are of different shape");
 
     Matrix1D< T > result(3);
-    result.X() = v1.Y() * v2.Z() - v1.Z() * v2.Y();
-    result.Y() = v1.Z() * v2.X() - v1.X() * v2.Z();
-    result.Z() = v1.X() * v2.Y() - v1.Y() * v2.X();
+    XX(result) = YY(v1) * ZZ(v2) - ZZ(v1) * YY(v2);
+    YY(result) = ZZ(v1) * XX(v2) - XX(v1) * ZZ(v2);
+    ZZ(result) = XX(v1) * YY(v2) - YY(v1) * XX(v2);
 
     return result;
+}
+
+/** Vector product in R3
+ * @ingroup VectorsUtilities
+ *
+ * This function computes the vector product of two R3 vectors.
+ * No check is performed, it is assumed that the output vector
+ * is already resized
+ *
+ */
+template<typename T>
+void vectorProduct(const Matrix1D< T >& v1, const Matrix1D< T >& v2,
+   Matrix1D<T> &result)
+{
+    XX(result) = YY(v1) * ZZ(v2) - ZZ(v1) * YY(v2);
+    YY(result) = ZZ(v1) * XX(v2) - XX(v1) * ZZ(v2);
+    ZZ(result) = XX(v1) * YY(v2) - YY(v1) * XX(v2);
 }
 
 /// @defgroup VectorsMiscellaneous Miscellaneous
