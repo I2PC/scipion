@@ -223,4 +223,3 @@ void Basis::changeFromVoxels(const Matrix3D<double> &vol_voxels,
         break;
     }
 }
-
