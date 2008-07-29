@@ -160,6 +160,9 @@ public:
     /// Refine the translation alignement after n projection presentations
     double ref_trans_step;
 
+    /// Sparse reconstruction
+    double sparseEps;
+
     /// Force the reconstruction to be symmetric this number of times
     int force_sym;
 

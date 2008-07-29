@@ -89,11 +89,12 @@ void Basic_ART_Parameters::default_values()
     sym_each           = 0;
     ref_trans_after    = -1;
     ref_trans_step     = -1;
+    sparseEps          = -1;
     max_tilt           = 10.e6;
     grid_relative_size = 1.41;
     fn_control         = "";
 	
-	threads			   = 1;
+    threads            = 1;
 }
 
 /* Read ART parameters ===================================================== */
@@ -149,6 +150,7 @@ void Basic_ART_Parameters::default_values()
     max_tilt           = textToFloat(GET_PARAM_WITH_DEF("max_tilt",  "10E6"      )); \
     ref_trans_after    = textToInteger(GET_PARAM_WITH_DEF("ref_trans_after", "-1"  )); \
     ref_trans_step     = textToFloat(GET_PARAM_WITH_DEF("ref_trans_step", "-1"    )); \
+    sparseEps          = textToFloat(GET_PARAM_WITH_DEF("sparse", "-1"  )); \
     grid_relative_size = textToFloat(GET_PARAM_WITH_DEF("g",         "1.41"      )); \
     R                  = textToFloat(GET_PARAM_WITH_DEF("R",         "-1"        )); \
     POCS_freq          = textToInteger(GET_PARAM_WITH_DEF("POCS_freq", "1"         )); \
@@ -314,6 +316,7 @@ void Basic_ART_Parameters::usage_more()
     << "\n                         n times at each projection"
     << "\n   [-no_group]           Do not generate symmetry subgroup"
     << "\n   [-no_symproj]         Do not use symmetrized projections"
+    << "\n   [-sparse <eps=-1>]    Sparsity threshold"
     << "\n   [-surface surf_mask]  Use this file as a surface mask"
     << "\n   [-POCS_freq <f=1>]    Impose POCS conditions every <f> projections"
     << "\n   [-known_volume <vol=-1>] Volume of the reconstruction"

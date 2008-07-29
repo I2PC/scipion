@@ -28,6 +28,7 @@
 
 #include <data/docfile.h>
 #include <data/mask.h>
+#include <data/wavelet.h>
 #include <sys/time.h>
 
 class POCSClass;
@@ -122,6 +123,7 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
    else
        *prm.fh_hist << "Sort with last " << prm.sort_last_N << " images\n";
    *prm.fh_hist << " Variability analysis: " << prm.variability_analysis << std::endl;
+   *prm.fh_hist << " Sparsity epsilon: " << prm.sparseEps << std::endl;
    if (prm.SL.SymsNo()!=0) {
       Matrix2D<double> L(4,4),R(4,4); // A matrix from the list
       *prm.fh_hist << "Symmetry matrices -------\n";
@@ -295,7 +297,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
    int images=0;
    double mean_error_2ndblock,pow_residual_imgs;
    bool iv_launched=false;
-    for (int it = 0; it < prm.no_it; it++) {
+   for (int it = 0; it < prm.no_it; it++) {
       // Initialisation of some variables
       global_mean_error = 0;
       global_mean_error_1stblock = 0;
@@ -568,6 +570,20 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
          if (prm.tell&TELL_SAVE_BASIS)
             vol_basis.write(prm.fn_root+"it"+integerToString(it)+".basis");
       }
+      
+      // Apply sparsity constraint
+      if (prm.sparseEps>0)
+      {
+         prm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
+            Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
+         VolumeXmipp vol_wavelets;
+         set_DWT_type(DAUB12);
+         DWT(vol_voxels(),vol_wavelets());
+         vol_wavelets().threshold("abs_below",prm.sparseEps,0.0);
+         IDWT(vol_wavelets(),vol_voxels());
+         prm.basis.changeFromVoxels(vol_voxels(),vol_basis,prm.grid_type,
+            prm.grid_relative_size, NULL, NULL, prm.R, prm.threads);
+      }
 
       // Check if algorithm must stop via stop_at
       if (images==prm.stop_at) break;
@@ -597,23 +613,23 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
    // projecting/backprojecting a new projection. Here we set the flag destroy=true so
    // thre threads won't process a projections but will return.
    
-   	for( int c = 0 ; c < prm.threads ; c++ )
-	{
-		project_threads[c].destroy = true;
-	}
+   for( int c = 0 ; c < prm.threads ; c++ )
+   {
+           project_threads[c].destroy = true;
+   }
 
-	// Trigger threads "self-destruction"
-	barrier_wait( &project_barrier );
-	
-	// Wait for effective threads death
-   	for( int c = 0 ; c < prm.threads ; c++ )
-	{
-		pthread_join(*(th_ids+c),NULL);
-	}
-	
-	// Destroy barrier and mutex, as they are no longer needed.
-	pthread_mutex_destroy( &project_mutex );
-	barrier_destroy( &project_barrier );
+   // Trigger threads "self-destruction"
+   barrier_wait( &project_barrier );
+
+   // Wait for effective threads death
+   for( int c = 0 ; c < prm.threads ; c++ )
+   {
+           pthread_join(*(th_ids+c),NULL);
+   }
+
+   // Destroy barrier and mutex, as they are no longer needed.
+   pthread_mutex_destroy( &project_mutex );
+   barrier_destroy( &project_barrier );
 }
 
 /* ------------------------------------------------------------------------- */
