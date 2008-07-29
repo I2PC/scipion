@@ -363,6 +363,7 @@ ReconsSources = [
     'basis.cpp',
     'blobs.cpp',
     'break_symmetry.cpp',
+    'create_projection_library.cpp',
     'crystal_create_surface.cpp',
     'ctf_correct_idr.cpp',
     'ctf_correct_phase.cpp',
