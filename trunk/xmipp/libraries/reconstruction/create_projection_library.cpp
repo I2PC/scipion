@@ -292,8 +292,11 @@ void Prog_create_projection_library_Parameters::run()
     #endif
     if (compute_neighbors_bool)
         {
+            /* COSS 
 	    mysampling.compute_neighbors(output_file_root+ 
                                      "_closest_sampling_points.doc");
+            */
+	    mysampling.compute_neighbors();
 	    #ifdef  DEBUGTIME
 	    time (&end);
 	    time_dif = difftime (end,start); start=end;
