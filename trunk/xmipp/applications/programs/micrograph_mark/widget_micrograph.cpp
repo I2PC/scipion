@@ -452,12 +452,14 @@ void QtWidgetMicrograph::buildSelectionModel()
     __selection_model = __training_model;
 }
 
-/*Get Features--------------------------------------------------------------*/
-std::vector < Matrix2D<double> > QtWidgetMicrograph::getFeatures(
-                                                   Classification_model &_model)
+/* produceFeatures --------------------------------------------------------- */
+void QtWidgetMicrograph::produceFeatures(
+    const Classification_model &_model,
+    std::vector < Matrix2D<double> > &_features)
 {
-    std::vector < Matrix2D<double> > _features(__classNo);
-    std::vector < std::vector<Particle> > _particles= _model.__training_particles;
+    _features.clear();
+    std::vector < std::vector<Particle> > _particles=
+        _model.__training_particles;
     int vec_size = XSIZE(_particles[0][0].vec);
     
     for(int j = 0; j < __classNo; j++)
@@ -469,6 +471,7 @@ std::vector < Matrix2D<double> > QtWidgetMicrograph::getFeatures(
             _features.resize(__classNo - 1);
             break;
         }
+        _features.push_back(*(new Matrix2D<double>));
         _features[j].initZeros(imax, vec_size);
         for(int i = 0; i < imax; i++)
         {
@@ -476,17 +479,16 @@ std::vector < Matrix2D<double> > QtWidgetMicrograph::getFeatures(
             _features[j].setRow(i, _particles[j][i].vec);	  
         }
     }
-    return _features;
 }
 
-/*Get Classes Probabilities-------------------------------------------------*/
-Matrix1D<double> QtWidgetMicrograph::getClassesProbabilities(
-                                     Classification_model &_model)
+/* produceClassesProbabilities --------------------------------------------- */
+void QtWidgetMicrograph::produceClassesProbabilities(
+    const Classification_model &_model, Matrix1D<double> &probabilities)
 {
     double micrographsArea = 0.0;
     double particlesMarked = 0.0;
     double falsePositives = 0.0;
-    Matrix1D<double> probs(__classNo);
+    probabilities.initZeros(__classNo);
     
     for (int i = 0; i < _model.__micrographs_number; i++)
     {
@@ -498,18 +500,10 @@ Matrix1D<double> QtWidgetMicrograph::getClassesProbabilities(
     double particlesArea = particlesMarked * PI * pow(__particle_radius, 2.0);
     double falsePositivesArea = falsePositives * PI * pow(__particle_radius, 2.0);
     
-    probs(0) = particlesArea / micrographsArea;    
-    probs(1) = (micrographsArea - particlesArea - falsePositivesArea) / micrographsArea;
-    probs(2) = falsePositivesArea / micrographsArea;
-    
-#ifdef DEBUG_GETPROBS
-	std::cout << "Probs=" << probs << std::endl;
-#endif
-    
-    return probs;
+    probabilities(0) = particlesArea / micrographsArea;    
+    probabilities(1) = (micrographsArea - particlesArea - falsePositivesArea) / micrographsArea;
+    probabilities(2) = falsePositivesArea / micrographsArea;
 }
-#undef DEBUG_GETPROBS
-
 
 /* Automatic phase ----------------------------------------------------------*/
 void QtWidgetMicrograph::automaticallySelectParticles()
@@ -526,8 +520,10 @@ void QtWidgetMicrograph::automaticallySelectParticles()
     __auto_candidates.resize(0);
     const Matrix2D<int> &mask = __mask.get_binary_mask2D();
     
-    std::vector < Matrix2D<double> > _features = getFeatures(__selection_model);
-    Matrix1D<double> _probs = getClassesProbabilities(__selection_model);
+    std::vector < Matrix2D<double> > _features;
+    produceFeatures(__selection_model,_features);
+    Matrix1D<double> _probs;
+    produceClassesProbabilities(__selection_model,_probs);
     bool success;
     
 #ifdef DEBUG_AUTO
@@ -831,7 +827,7 @@ void QtWidgetMicrograph::buildVectors(std::vector<int> &_idx,
        std::vector< Matrix1D<int> > nbr;
        nbr.reserve(num_part);
 
-       find_nbr(_idx, part_i, x, y, posx, posy, visited, nbr);
+       find_neighbour(_idx, part_i, x, y, posx, posy, visited, nbr);
 
        for (int i = 0; i < nbr.size(); i++)
        {
@@ -1334,9 +1330,9 @@ bool QtWidgetMicrograph::prepare_piece()
 
 /* Get neighbours ---------------------------------------------------------- */
 //To get the neighbours and their positions in the piece image
-void QtWidgetMicrograph::find_nbr(std::vector<int> &_idx, int _index, int _x, int _y,
-                                  int _posx, int _posy, Matrix1D<char> &_visited,
-                                  std::vector< Matrix1D<int> > &_nbr)
+void QtWidgetMicrograph::find_neighbour(std::vector<int> &_idx, int _index,
+    int _x, int _y, int _posx, int _posy, Matrix1D<char> &_visited,
+    std::vector< Matrix1D<int> > &_nbr)
 {
     int piece_xsize = XSIZE(__piece);
     int piece_ysize = YSIZE(__piece);
@@ -1777,13 +1773,7 @@ void QtWidgetMicrograph::loadModels()
     
     fh_training >> __training_loaded_model;
     fh_training.close();
-#ifdef DEBUG_LOAD
-    std::cout << "Model loaded..." << __training_loaded_model << std::endl;
-    std::cout << "Press any key and ENTER to continue..." << std::endl;
-    char c;
-    std::cin >> c;
-#endif
-    
+
     if(__learn_particles_done == true || __is_model_loaded == true) __training_model.clear();
     // Build the selection model
     //buildSelectionModel();
@@ -1793,7 +1783,7 @@ void QtWidgetMicrograph::loadModels()
     __is_model_loaded = true;
     std::cout << "The model has been loaded..." << std::endl;
 }
-#undef DEBUG_LOAD
+
 /* Save models ------------------------------------------------------------- */
 void QtWidgetMicrograph::saveModels()
 {
@@ -1806,33 +1796,6 @@ void QtWidgetMicrograph::saveModels()
 
     // Write results to a file
     write();
-}
-
-/* Rebuild automatic vectors that have been moved -------------------------- */
-void QtWidgetMicrograph::rebuild_moved_automatic_vectors()
-{
-    if(!__autoselection_done) return;
-    // Rebuild vectors
-    std::vector<int> indexes_to_rebuild, indexes_to_rebuild_in_micrograph;
-    int imax = __auto_candidates.size();
-    int x, y, posx, posy;
-    bool success;
-    for (int i = 0; i < imax; i++)
-        if (__auto_candidates[i].status == 2)
-        {
-            x = __m->coord(i).X;
-            y = __m->coord(i).Y;
-            get_centered_piece(x, y, posx, posy);
-            
-            success = prepare_piece();
-            if (!success) break;
-            
-            posx = ROUND(posx / __reduction);
-            posy = ROUND(posy / __reduction);
-
-            success = build_vector(posx, posy, __auto_candidates[i].vec);
-            __auto_candidates[i].status = 1;
-        }
 }
 
 /* Get the false-positive particles----------------------------------------- */

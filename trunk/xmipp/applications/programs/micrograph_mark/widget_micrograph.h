@@ -347,7 +347,7 @@ public:
     // Build vectors
     void buildVectors(std::vector<int> &_idx, Classification_model &_model);
     
-    //Build vector from non particles
+    // Build vector from non particles
     void buildNegativeVectors(Classification_model &__model);
     
     // Build classfication vector
@@ -383,15 +383,15 @@ public:
     //To get the neighbours of the particle at position (x,y) in the micrograph
     // (with actual coordinates in the piece posx,posy)
     // and their positions in the piece image
-    void find_nbr(std::vector<int> &_idx, int _index,
-                  int _x, int _y,
-                  int _posx, int _posy, Matrix1D<char> &_visited,
-                  std::vector< Matrix1D<int> > &_nbr);
+    void find_neighbour(std::vector<int> &_idx, int _index,
+                        int _x, int _y,
+                        int _posx, int _posy, Matrix1D<char> &_visited,
+                        std::vector< Matrix1D<int> > &_nbr);
 
     // Automatically Select Particles
     void automaticallySelectParticles();
     
-    //check if there are any particles in the actual scanning position
+    // check if there are any particles in the actual scanning position
     bool anyParticle(int posx, int posy, int rect_size);
 
     // Given a current scanning position, this function returns
@@ -432,17 +432,11 @@ public:
     // The input index is the index of the moved particle in the micrograph list
     void delete_particle(int _idx);
 
-    // Rebuild the automatic vectors that have been moved
-    void rebuild_moved_automatic_vectors();
-
     // load models
     void loadModels();
 
     // Save models
     void saveModels();
-
-    // Classify errors
-    void classify_errors();
 
     // Write all important information for particle selecting to a file
     void write();
@@ -450,10 +444,15 @@ public:
     // Configure auto
     void configure_auto();
         
-    std::vector < Matrix2D<double> > getFeatures(Classification_model &_model);
+    // Get Features of the classification model
+    void produceFeatures(const Classification_model &_model,
+        std::vector < Matrix2D<double> > &_features);
+
+    // Get classes probabilities
+    void produceClassesProbabilities(const Classification_model &_model,
+        Matrix1D<double> &probabilities);
     
-    Matrix1D<double> getClassesProbabilities(Classification_model &_model);
-    
+    // Get false positives automatically selected
     void getAutoFalsePositives();
 
 public slots:
