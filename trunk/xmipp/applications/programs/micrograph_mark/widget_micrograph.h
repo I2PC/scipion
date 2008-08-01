@@ -173,9 +173,6 @@ public:
     // Read
     friend std::istream & operator >> (std::istream &_in,
         Classification_model &_m);
-
-    // Print model
-    void print_model(std::ostream &_out);
 };
 
 /* Widget for the micrograph ----------------------------------------------- */
@@ -410,11 +407,6 @@ public:
     // that are still candidates.
     int reject_within_distance(
         std::vector<Particle> &_Input, double _min_dist, bool _reject_both);
-
-    // Reject those automatically selected particles that are very close
-    // to manually selected ones.
-    void reject_prev_selected(const Classification_model &_model,
-                                    std::vector<Particle> &_candidate_vec);
 
     // Refine the position of a particle within the current piece
     void refine_center(Particle &my_P);

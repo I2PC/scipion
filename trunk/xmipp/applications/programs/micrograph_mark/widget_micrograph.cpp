@@ -57,7 +57,6 @@
 
 //#define DEBUG_AUTO
 //#define DEBUG_MORE_AUTO
-//#define DEBUG_CIN
 //#define DEBUG_GETPROBS
 //#define DEBUG_REFINE
 //#define DEBUG_LOAD
@@ -73,7 +72,6 @@
 //#define DEBUG_GETCORNER
 //#define DEBUG_GETSCANNING
 //#define DEBUG_MORE_GETSCANNING
-//#define DEBUG_REJECT
 
 /* Show -------------------------------------------------------------------- */
 std::ostream & operator << (std::ostream &_out, const Particle &_p)
@@ -133,6 +131,7 @@ void Classification_model::import_model(const Classification_model &_model)
         addFalsePositives(_model.__falsePositives[i]);
     }
 
+    // Update the number of micrographs
     __micrographs_number += _model.__micrographs_number;
 }
 
@@ -174,79 +173,37 @@ std::ostream & operator << (std::ostream &_out, const Classification_model &_m)
     return _out;
 }
 
-/* Save ---------------------------------------------------------------------*/
+/* Read ---------------------------------------------------------------------*/
 std::istream & operator >> (std::istream &_in, Classification_model &_m)
 {
     std::string dummy;
     int classNo, vec_size;
     _in >> dummy;
     _in >> dummy >> _m.__micrographs_number;
-#ifdef DEBUG_CIN
-    std::cout << "Micrograph processed..." << _m.__micrographs_number 
-	          << std::endl;
-    std::cout << "Press a key to continue..." << std::endl;
-    char c;
-    std::cin >> c;
-#endif
     _in >> dummy;
 
     _m.__micrographs_area.resize(_m.__micrographs_number);
     for(int i = 0; i < _m.__micrographs_number; i++)
-    {
         _in >> _m.__micrographs_area[i];
-#ifdef DEBUG_CIN
-        std::cout << "Micrograph " << i <<" Area=" 
-	              << _m.__micrographs_area[i] << std::endl;
-        std::cout << "Press a key to continue..."
-	              << std::endl;
-        std::cin >> c;
-#endif
-    }
     _in >> dummy;
 
     _m.__particles_picked.resize(_m.__micrographs_number);
     for(int i = 0; i < _m.__micrographs_number; i++)
-    {
         _in >> _m.__particles_picked[i];
-#ifdef DEBUG_CIN
-        std::cout << "Micrograph " << i <<" Picked=" 
-	              << _m.__particles_picked[i] << std::endl;
-        std::cout << "Press a key to continue..." << std::endl;
-        std::cin >> c;
-#endif
-    }
     _in >> dummy;
     
     _m.__falsePositives.resize(_m.__micrographs_number);
     for(int i = 0; i < _m.__micrographs_number; i++)
-    {
         _in >> _m.__falsePositives[i];
-#ifdef DEBUG_CIN
-        std::cout << "Micrograph " << i <<" FalsePositives=" 
-	              << _m.__falsePositives[i] << std::endl;
-        std::cout << "Press a key to continue..." << std::endl;
-        std::cin >> c;
-#endif
-    }
     _in >> dummy;
 
     _in >> dummy >> vec_size;
     _in >> dummy >> _m.__classNo;
-#ifdef DEBUG_CIN
-    std::cout << "Number of classes=" << _m.__classNo << std::endl;
-    std::cout << "Press a key to continue..." << std::endl;
-    std::cin >> c;
-#endif
     _m.__training_particles.resize(_m.__classNo);
     for (int i = 0; i < _m.__classNo; i++)
     {
         int particlesNo;
 	    _in >> dummy >> particlesNo;
-#ifdef DEBUG_CIN
-            std::cout << "Number of particles=" << particlesNo << std::endl;
-            std::cout << "Press a key to continue..." << std::endl;
-            std::cin >> c;
-#endif
 	    for (int j = 0; j < particlesNo; j++)
 	    {
 	        Particle *P = new Particle;
@@ -256,18 +213,12 @@ std::istream & operator >> (std::istream &_in, Classification_model &_m)
     }
     return _in;
 }
-#undef DEBUG_CIN
-
-/* Print model -------------------------------------------------------------*/
-void Classification_model::print_model(std::ostream &_out)
-{
-}
 
 /* Constructor -------------------------------------------------------------*/
 QtWidgetMicrograph::QtWidgetMicrograph(QtMainWidgetMark *_mainWidget,
                                        QtFiltersController *_f,
                                        Micrograph *_m) :
-                                        QWidget((QWidget*) _mainWidget)
+                                       QWidget((QWidget*) _mainWidget)
 {
     __filtersController = _f;
     __m              = NULL;
@@ -629,9 +580,6 @@ void QtWidgetMicrograph::automaticallySelectParticles()
    }
    std::cout << "Scanning Process Finished..." << std::endl;
     
-   // Reject manually selected particles
-   //reject_prev_selected(__training_model, __auto_candidates);
-   //reject_prev_selected(__auto_model, __auto_candidates);
 #ifdef DEBUG_AUTO
    std::cerr << "Number of automatically selected particles = " 
              << __auto_candidates.size() << std::endl;
@@ -642,12 +590,7 @@ void QtWidgetMicrograph::automaticallySelectParticles()
    std::cerr << "Number of automatically selected particles = " 
              << Nalive << std::endl;
 #endif
-   // reject the candidates that are too close to each other
-/*   Nalive = reject_within_distance(__auto_candidates,
-                                    __min_distance_between_particles, false);
-   std::cerr << "Number of automatically selected particles = " 
-             << Nalive << std::endl;
-*/
+
    //insert selected particles in the result
    int imax = __auto_candidates.size();
    for (int i = 0; i < imax; i++)
@@ -1447,7 +1390,7 @@ bool QtWidgetMicrograph::get_next_scanning_pos(
 
 /* Filter particles --------------------------------------------------------*/
 //To calculate the euclidean distance between to points
-double dist_euc(const Particle &p1, const Particle &p2)
+double euclidean_distance(const Particle &p1, const Particle &p2)
 {
     return sqrt((double)(p1.x -p2.x)*(p1.x - p2.x) + (double)(p1.y - p2.y)*
                 (p1.y - p2.y));
@@ -1458,9 +1401,6 @@ int QtWidgetMicrograph::reject_within_distance(
     bool _reject_both)
 {
     int imax = _Input.size();
-#ifdef DEBUG_REJECT
-    std::cout << "Particles before filtering: " << imax << std::endl;
-#endif
     int n = 0;
     for (int i = 0; i < imax; i++)
     {
@@ -1468,7 +1408,7 @@ int QtWidgetMicrograph::reject_within_distance(
         for (int j = i + 1; j < imax; j++)
         {
             if (_Input.at(j).status == 0) continue;
-            double dist = dist_euc(_Input.at(i), _Input.at(j));
+            double dist = euclidean_distance(_Input.at(i), _Input.at(j));
             if (dist < _min_dist)
             {
                 _Input.at(j).status = 0;
@@ -1478,29 +1418,6 @@ int QtWidgetMicrograph::reject_within_distance(
         if (_Input.at(i).status == 1) n++;
     }
     return n;
-}
-#undef DEBUG_REJECT
-
-/* Reject manually selected ------------------------------------------------ */
-void QtWidgetMicrograph::reject_prev_selected(
-    const Classification_model &_model,
-    std::vector<Particle> &_candidate_vec)
-{
-    int imax = _candidate_vec.size();
-    int jmax = _model.__training_particles[0].size();
-    if (jmax == 0) return;
-    for (int i = 0; i < imax; i++)
-    {    
-        for (int j = 0; j < jmax; j++)
-        {    
-	    if (dist_euc(_candidate_vec.at(i), _model.__training_particles[0][j])
-                < __min_distance_between_particles)
-            {
-                _candidate_vec.at(i).status = 0;
-                break;
-            }
-	}
-    }
 }
 
 void QtWidgetMicrograph::refine_center(Particle &my_P)
