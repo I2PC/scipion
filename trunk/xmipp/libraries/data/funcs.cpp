@@ -507,6 +507,13 @@ float rnd_log(float a, float b)
         return exp(rnd_unif(log(a), log(b)));
 }
 
+/* Log2 -------------------------------------------------------------------- */
+double log2(double value)
+{
+    return 3.32192809488736*log10(value);
+    // log10(value)/log10(2)
+}
+
 /* Check if a file exists -------------------------------------------------- */
 int exists(const FileName &fn)
 {

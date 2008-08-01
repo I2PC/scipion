@@ -296,6 +296,11 @@ void printb(std::ostream& o, T value)
     o << buf;
 }
 
+/** Compute the logarithm in base 2
+ * @ingroup MiscellaneousFunctions
+ */
+double log2(double value);
+
 /// @defgroup ComplexFunctions Complex functions
 /// @ingroup GeneralFunctions
 
