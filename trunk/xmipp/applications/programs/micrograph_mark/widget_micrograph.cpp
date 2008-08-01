@@ -57,9 +57,7 @@
 
 //#define DEBUG_AUTO
 //#define DEBUG_MORE_AUTO
-//#define DEBUG_IMPORT
 //#define DEBUG_CIN
-//#define DEBUG_BUILD
 //#define DEBUG_GETPROBS
 //#define DEBUG_REFINE
 //#define DEBUG_LOAD
@@ -82,22 +80,22 @@
 std::ostream & operator << (std::ostream &_out, const Particle &_p)
 {
     _out << _p.x      << " " << _p.y << " "
-    << _p.idx    << " "
-    << (int)_p.status << " "
-    << _p.prob   << " "
-    << _p.vec.transpose()
-    << std::endl
+         << _p.idx    << " "
+         << (int)_p.status << " "
+         << _p.prob   << " "
+         << _p.vec.transpose()
+         << std::endl
     ;
     return _out;
 }
 
-/*Read-----------------------------------------------------------------------*/
+/* Read--------------------------------------------------------------------- */
 void Particle::read(std::istream &_in, int _vec_size)
 {
     _in >> x >> y
-    >> idx
-    >> status
-    >> prob;
+        >> idx
+        >> status
+        >> prob;
     status -= '0';
     vec.resize(_vec_size);
     _in >> vec;
@@ -115,29 +113,19 @@ void Classification_model::clear()
         __training_particles[i].clear();
 }
 
-/* import_particles--------------------------------------------------------- */
-void Classification_model::import_particles(const Classification_model &_model)
+/* Import model ------------------------------------------------------------ */
+void Classification_model::import_model(const Classification_model &_model)
 {
+    // Import particles
     int jmax = _model.__classNo;
     for (int j = 0; j < jmax; j++)
     {
         int imax = _model.__training_particles[j].size();
-
-#ifdef DEBUG_IMPORT
-	    std::cout << "Number of class " << j << " particles from loaded model..."
-            << imax << std::endl;
-#endif
-
 	    for (int i = 0; i < imax; i++)
-            addParticle(_model.__training_particles[j][i], j);
+            addParticleTraining(_model.__training_particles[j][i], j);
     }
-}
-#undef DEBUG_IMPORT
 
-/*import_params--------------------------------------------------------------*/
-void Classification_model::import_params(const Classification_model &_model)
-{
-    //the size of the particles_picked and the micrographs_area is the same
+    // Import parameters
     int imax = _model.__micrographs_number;
     for (int i = 0; i < imax; i++)
     {
@@ -145,14 +133,8 @@ void Classification_model::import_params(const Classification_model &_model)
         addMicrographArea(_model.__micrographs_area[i]);
         addFalsePositives(_model.__falsePositives[i]);
     }
-}
 
-/*import_data----------------------------------------------------------------*/
-void Classification_model::import_data(const Classification_model &_model)
-{
-    import_particles(_model);
-    import_params(_model);
-    refresh_micrographs_number(_model);
+    __micrographs_number += _model.__micrographs_number;
 }
 
 /* Show ---------------------------------------------------------------------*/
@@ -270,7 +252,7 @@ std::istream & operator >> (std::istream &_in, Classification_model &_m)
 	    {
 	        Particle *P = new Particle;
             P->read(_in, vec_size);
-            _m.addParticle(*P, i);
+            _m.addParticleTraining(*P, i);
 	    }
     }
     return _in;
@@ -295,7 +277,6 @@ QtWidgetMicrograph::QtWidgetMicrograph(QtMainWidgetMark *_mainWidget,
     __learn_particles_done = FALSE;
     __autoselection_done = FALSE;
     __auto_label     = -1;
-    __use_euclidean_distance_for_errors = true;
     __gray_bins = 8;
     __radial_bins = 16;
     __keep = 0.95;
@@ -467,19 +448,9 @@ void QtWidgetMicrograph::learnParticles()
 /*Build Selection Model-----------------------------------------------------*/
 void QtWidgetMicrograph::buildSelectionModel()
 {
-    //here, we have only 1 micrograph in the model.
-    //rebuild_moved_automatic_vectors();
-    //we get the data from the other micrographs stored in __training_model
-    __training_model.import_data(__training_loaded_model);
+    __training_model.import_model(__training_loaded_model);
     __selection_model = __training_model;
-        
-#ifdef DEBUG_BUILD
-    for (int j = 0; j < __classNo; j++)
-        std::cout << "Number of training particles for class " << j << ":: "
-                  << __selection_model.__training_particles[j].size() << std::endl;
-#endif
 }
-#undef DEBUG_BUILD
 
 /*Get Features--------------------------------------------------------------*/
 std::vector < Matrix2D<double> > QtWidgetMicrograph::getFeatures(
@@ -852,7 +823,7 @@ void QtWidgetMicrograph::buildVectors(std::vector<int> &_idx,
            p.vec = v;
            p.status = 1;
            p.prob = 1.0;
-           _model.addParticle(p, 0);
+           _model.addParticleTraining(p, 0);
            numParticles++;
        }
 
@@ -879,7 +850,7 @@ void QtWidgetMicrograph::buildVectors(std::vector<int> &_idx,
               p.vec = v;
               p.status = 1;
               p.prob = 1.0;
-              _model.addParticle(p, 0);
+              _model.addParticleTraining(p, 0);
               numParticles++;
           }
        }
@@ -998,7 +969,7 @@ void QtWidgetMicrograph::buildNegativeVectors(Classification_model &__model)
                     P.status = 1;
                     P.vec = v;
                     P.prob = 0.0;
-	                __model.addParticle(P, 1);            
+	                __model.addParticleTraining(P, 1);            
             }
 	    }
 	    // Go to next scanning position
@@ -1870,7 +1841,7 @@ void QtWidgetMicrograph::getAutoFalsePositives()
     int imax = __rejected_particles.size();
     __training_model.addFalsePositives(imax);
     for (int i = 0; i < imax; i++)
-        __training_model.addParticle(__rejected_particles[i], 2);
+        __training_model.addParticleTraining(__rejected_particles[i], 2);
 }
 
 /* Write to a file --------------------------------------------------------- */

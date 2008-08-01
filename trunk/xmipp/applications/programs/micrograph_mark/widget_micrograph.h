@@ -67,11 +67,11 @@ class Particle
 {
 public:
     int x, y;             // position in micrograph
-    int idx;                // Index of this particle within the micrograph
-    // list of coordinates
+    int idx;              // Index of this particle within the micrograph
+                          // list of coordinates
     char status;          // rejected=0, selected=1 or moved=2
-    Matrix1D<double> vec;   // vector of that particle
-    double prob;          // distance from the avg vector
+    Matrix1D<double> vec; // vector of that particle
+    double prob;          // Associated probability
 
     // Print
     friend std::ostream & operator << (std::ostream &_out, const Particle &_p);
@@ -92,32 +92,36 @@ public:
     std::vector<int>                              __particles_picked;
     std::vector<int>                              __falsePositives;
 
-private:
-    //naive Bayes Network
+public:
     xmippNaiveBayes *                             __bayesNet;
 
 public:
-    // Clear
-    Classification_model(){
+    // Constructor
+    Classification_model() {
         init();
     }
+
+    // Clear
     void clear();
+
+    // Initialize
     void init()
     {
         __classNo = 3;
-	    __training_particles.resize(__classNo);
-	    __micrographs_number = 0;
+	__training_particles.resize(__classNo);
+	__micrographs_number = 0;
         __falsePositives.resize(0);
     }
 
-    void reserve_examples(int my_N, int classIdx)
-    {
-        __training_particles[classIdx].resize(my_N);
-    }
-    
+    // Different additions
     void addMicrographArea(int micrographArea)
     {
 	    __micrographs_area.push_back(micrographArea);
+    }
+    
+    void addParticleTraining(const Particle &p, int classIdx)
+    {
+        __training_particles[classIdx].push_back(p);
     }
     
     void addParticlePicked(int particlePicked)
@@ -135,32 +139,8 @@ public:
 	    __micrographs_number++;
     }
     
-    void import_data(const Classification_model &_model);
-
-    void import_MicrographParams(int particlesPicked, int micrographArea);
-
-    void refresh_micrographs_number(const Classification_model &_model)
-    {
-        __micrographs_number += _model.__micrographs_number;
-    }
-
-    // Add example particle to model
-    void addParticle(const Particle &p, int classIdx)
-    {
-        __training_particles[classIdx].push_back(p);
-    }
-    
-    // Import particles from another model
-    void import_particles(const Classification_model &_model);
-    
-    void import_params(const Classification_model &_model);
-
-    // Build average and sigma
-    void build_model(const std::vector < Matrix2D<double> > &_features,
-                     const Matrix1D<double> &_probs, int _classNo);
-
-    // Distance between two vectors
-    double distance(const Matrix1D<double> &my_X, const Matrix1D<double> &my_Y);
+    // Import classification model
+    void import_model(const Classification_model &_model);
 
     //get the probability that _features belong to a positive particle
     double getParticleProbability(const Matrix1D<double> &_features)
@@ -170,27 +150,14 @@ public:
         return p;
     }
     
-    //get the corresponding class for new_features
-    int getClass(const Matrix1D<double>	&new_features)
-    {
-        double p;
-        return __bayesNet->doInference(new_features,p);
-    }
-    //is a positive particle?
-    //#define DEBUG_FALSEPOSITIVES
+    // Is a particle?
     bool isParticle(const Matrix1D<double> &new_features)
     {
-    #ifdef DEBUG_FALSEPOSITIVES        
-        int classBelong = getClass(new_features);
-        if(classBelong == 2)
-        {
-            char c;
-            std::cout << "False positive found..." << std::endl;
-            //std::cin >> c;
-        }
-    #endif
-        return (getClass(new_features) == 0) ? true : false;
+        double p;
+        int k=__bayesNet->doInference(new_features,p);
+        return (k==0) ? true : false;
     }
+    
     //init the naive bayesian network
     void initNaiveBayes(const std::vector < Matrix2D<double> > 
 			&features, const Matrix1D<double> &probs,
@@ -200,14 +167,15 @@ public:
     }
 
     // Print
-    friend std::ostream & operator << (std::ostream &_out, const Classification_model &_m);
+    friend std::ostream & operator << (std::ostream &_out,
+        const Classification_model &_m);
 
     // Read
-    friend std::istream & operator >> (std::istream &_in, Classification_model &_m);
+    friend std::istream & operator >> (std::istream &_in,
+        Classification_model &_m);
 
     // Print model
     void print_model(std::ostream &_out);
-    
 };
 
 /* Widget for the micrograph ----------------------------------------------- */
@@ -238,19 +206,12 @@ private:
     bool                       __learn_particles_done;
     bool                       __autoselection_done;
     Mask_Params                __mask;
-    std::vector < Matrix2D<int> * > __mask_classification;
     bool                       __use_background;
-    std::vector < Matrix1D<int> * > __radial_val;
     Classification_model       __training_model;
     Classification_model       __training_loaded_model;
-    Classification_model       __auto_model;
-    Classification_model       __auto_loaded_model;
     Classification_model       __selection_model;
-    std::vector<Classification_model> __error_model;
-    int                        __Nerror_models;
     bool                       __use_euclidean_distance_for_errors;
     int                        __auto_label;
-    std::vector<int>                __error_index;
     Matrix2D<double>           __piece;
     Matrix2D<double>           __original_piece;
     int                        __gray_bins;
@@ -270,17 +231,13 @@ private:
     int                        __learn_overlap;
     int                        __numin;
     int                        __numax;
-    double                     __th1; // 0.6
-    double                     __th2; // 0.9
-    int                        __th3; // 50
-    double                     __th4; // 0.8
-    int                        __th5; // 10
     int                        __classNo;
-    bool                       __is_model_loaded;
-    bool		               debugging;
     std::vector<Particle>      __auto_candidates;
     std::vector<Particle>      __rejected_particles;
-
+    bool                       __is_model_loaded;
+    bool		       debugging;
+    std::vector < Matrix2D<int> * > __mask_classification;
+    std::vector < Matrix1D<int> * > __radial_val;
 
 public:
     // Constructor
