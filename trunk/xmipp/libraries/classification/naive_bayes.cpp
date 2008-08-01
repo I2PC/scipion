@@ -30,7 +30,7 @@
 
 bool debugging = true;
 //#define DEBUG_SPLITTING_USING_ENTROPY
-//#define DEBUG_WEIGHTS
+#define DEBUG_WEIGHTS
 //#define DEBUG_CLASSIFICATION
 //#define DEBUG_FINE_CLASSIFICATION
 
@@ -228,7 +228,7 @@ double LeafNode::computeWeight() const
 std::ostream & operator << (std::ostream &_out, const LeafNode &leaf)
 {
     for (int k=0; k<leaf.K; k++)
-        _out << "Histogram of class " << k << "="
+        _out << "Histogram of class " << k << "=\n"
              << leaf.__leafPDF[k] << std::endl;
     _out << "Classification power=" << leaf.computeWeight() << std::endl;
     return _out;
@@ -259,10 +259,8 @@ xmippNaiveBayes::xmippNaiveBayes(
         #ifdef DEBUG_WEIGHTS
             if(debugging == true)
             {
-                std::cout << *(__leafs[f]) << std::endl;
-                char x;
-                std::cin >> x;
-                if(x == 'q') debugging = false;
+                std::cout << "Node " << f << std::endl
+                          << *(__leafs[f]) << std::endl;
             }
         #endif            
     }
