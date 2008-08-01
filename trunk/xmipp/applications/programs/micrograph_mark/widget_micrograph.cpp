@@ -3,6 +3,7 @@
  * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
  *              Carlos Manzanares       (cmanzana@cnb.uam.es)
  *              Arun Kulshreshth        (arun_2000_iitd@yahoo.com)
+ *              Enrique Recarte Llorens (erecallo@hotmail.com)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -54,25 +55,49 @@
 #include <qgrid.h>
 #endif
 
+//#define DEBUG_AUTO
+//#define DEBUG_MORE_AUTO
+//#define DEBUG_IMPORT
+//#define DEBUG_CIN
+//#define DEBUG_BUILD
+//#define DEBUG_GETPROBS
+//#define DEBUG_REFINE
+//#define DEBUG_LOAD
+//#define DEBUG_PREPARE
+//#define DEBUG_BUILDVECTORS
+//#define DEBUG_CLASSIFY
+//#define DEBUG_BUILDNEGATIVE
+//#define DEBUG_MORE_BUILDNEGATIVE
+//#define DEBUG_ANYPARTICLE
+//#define DEBUG_BUILDVECTOR
+//#define DEBUG_IMG_BUILDVECTOR
+//#define DEBUG_GETCENTERED
+//#define DEBUG_GETCORNER
+//#define DEBUG_GETSCANNING
+//#define DEBUG_MORE_GETSCANNING
+//#define DEBUG_REJECT
+//#define DEBUG_DELETE
+
 /* Show -------------------------------------------------------------------- */
 std::ostream & operator << (std::ostream &_out, const Particle &_p)
 {
     _out << _p.x      << " " << _p.y << " "
     << _p.idx    << " "
     << (int)_p.status << " "
-    << _p.dist   << " "
+    << _p.prob   << " "
     << _p.vec.transpose()
     << std::endl
     ;
     return _out;
 }
 
+/*Read-----------------------------------------------------------------------*/
 void Particle::read(std::istream &_in, int _vec_size)
 {
     _in >> x >> y
     >> idx
     >> status
-    >> dist;
+    >> prob;
     status -= '0';
     vec.resize(_vec_size);
     _in >> vec;
@@ -81,169 +106,187 @@ void Particle::read(std::istream &_in, int _vec_size)
 /* Clear ------------------------------------------------------------------- */
 void Classification_model::clear()
 {
-    __avg.clear();
-    __sigma.clear();
-    __sigma_inv.clear();
-    __training_particle.clear();
-    __largest_distance = -1;
+    __particles_picked.clear();
+    __micrographs_number = 0;
+    __falsePositives.clear();
+    
+    int imax = __training_particles.size();
+    for (int i = 0; i < imax; i++)
+        __training_particles[i].clear();
 }
 
-/* Import particles -------------------------------------------------------- */
+/* import_particles--------------------------------------------------------- */
 void Classification_model::import_particles(const Classification_model &_model)
 {
-    int imax = _model.__training_particle.size();
-    for (int i = 0;i < imax;i++)
-        if (_model.__training_particle.at(i).status == 1)
-            add_particle(_model.__training_particle.at(i));
-}
-
-/* Build statistical model ------------------------------------------------- */
-void Classification_model::build_model()
-{
-    int N = __training_particle.size();
-    if (N == 0)
+    int jmax = _model.__classNo;
+    for (int j = 0; j < jmax; j++)
     {
-        clear();
-        return;
-    }
-    if (N == 1)
-    {
-        __avg = __training_particle.at(0).vec;
-        __sigma.initIdentity(XSIZE(__avg));
-        __sigma_inv = __sigma;
-        __training_particle.at(0).dist = 0;
-        return;
-    }
+        int imax = _model.__training_particles[j].size();
 
-    // Compute the average
-    __avg.initZeros(XSIZE(__training_particle.at(0).vec));
-    for (int i = 0; i < N; i++) __avg += __training_particle.at(i).vec;
-    __avg /= N;
-
-    // Compute the covariance
-    __sigma.initZeros(XSIZE(__avg), XSIZE(__avg));
-    for (int i = 0;i < N;i++)
-    {
-        Matrix2D<double> X;
-        X.fromVector(__training_particle.at(i).vec - __avg);
-        __sigma += (X * X.transpose());
-    }
-    __sigma /= N - 1;
-
-    __well_posed = well_posed();
-    if (__well_posed) __sigma_inv = __sigma.inv();
-    else
-    {
-        // Keep only the diagonal
-        std::cout << "The training model is not well posed.\n"
-        << "A weak independent model used instead\n";
-        __sigma_inv.initZeros(__sigma);
-        for (int i = 0; i < XSIZE(__sigma); i++)
-            __sigma_inv(i, i) = 1 / __sigma(i, i);
-    }
-
-    //compute the distance of each training vector from average
-    for (int i = 0;i < N;i++)
-    {
-        __training_particle.at(i).dist = distance_to_average(
-                                             __training_particle.at(i).vec);
-    }
-}
-
-double Classification_model::distance(const Matrix1D<double> &X,
-                                      const Matrix1D<double> &Y)
-{
-    if (XSIZE(__sigma_inv) == 0) return 1e30;
-    Matrix2D<double> dif;
-    dif.fromVector(X - Y);
-    double dist2;
-    dist2 = (dif.transpose() * __sigma_inv * dif)(0, 0);
-    return sqrt(dist2);
-}
-
-double Classification_model::euclidean_distance_to_average(
-    const Matrix1D<double> &my_X)
-{
-    if (XSIZE(__avg) == 0) return 1e30;
-    Matrix1D<double> dif = my_X - __avg;
-    return dif.sum2();
-}
-
-#define DEBUG
-void Classification_model::compute_largest_distance()
-{
-    __largest_distance = 0.0;
-    int N = __training_particle.size();
-    Matrix1D<double> dist(N);
-#ifdef DEBUG
-    std::cout << "Computing largest distance ...\n";
+#ifdef DEBUG_IMPORT
+	    std::cout << "Number of class " << j << " particles from loaded model..."
+            << imax << std::endl;
 #endif
-    for (int i = 0;i < N;i++)
-    {
-        dist(i) = distance_to_average(__training_particle.at(i).vec);
-#ifdef DEBUG
-        std::cout << "   Distance of " << i << " = " << dist(i) << std::endl;
-#endif
+
+	    for (int i = 0; i < imax; i++)
+            addParticle(_model.__training_particles[j][i], j);
     }
-    histogram1D hist;
-    compute_hist(dist, hist, 50);
-    __largest_distance = hist.percentil(90);
-
-#ifdef DEBUG
-    std::cout << "Largest distance = " << __largest_distance << std::endl;
-#endif
 }
-#undef DEBUG
+#undef DEBUG_IMPORT
 
-/* Show -------------------------------------------------------------------- */
+/*import_params--------------------------------------------------------------*/
+void Classification_model::import_params(const Classification_model &_model)
+{
+    //the size of the particles_picked and the micrographs_area is the same
+    int imax = _model.__micrographs_number;
+    for (int i = 0; i < imax; i++)
+    {
+        addParticlePicked(_model.__particles_picked[i]);    
+        addMicrographArea(_model.__micrographs_area[i]);
+        addFalsePositives(_model.__falsePositives[i]);
+    }
+}
+
+/*import_data----------------------------------------------------------------*/
+void Classification_model::import_data(const Classification_model &_model)
+{
+    import_particles(_model);
+    import_params(_model);
+    refresh_micrographs_number(_model);
+}
+
+/* Show ---------------------------------------------------------------------*/
 std::ostream & operator << (std::ostream &_out, const Classification_model &_m)
 {
-    int imax = _m.__training_particle.size();
-    int N = 0;
-    for (int i = 0; i < imax; i++)
-        if (_m.__training_particle.at(i).status != 0) N++;
-    _out << "#N.particles= " << N << std::endl;
-    if (imax > 0)
-        _out << "#Vector_size= " << XSIZE(_m.__training_particle.at(0).vec) << std::endl;
-    else
-        _out << "#Vector_size= 0\n";
-    _out << "#x y index_in_micrograph status dist_to_average vector\n";
-    for (int i = 0; i < imax; i++)
-        if (_m.__training_particle.at(i).status != 0)
-            _out << _m.__training_particle.at(i);
+    _out << "#Already_processed_parameters...\n";
+    _out << "#Micrographs_processed= " << _m.__micrographs_number << std::endl;
+    _out << "#Micrographs_processed_areas= ";
+    
+    for (int i = 0; i < _m.__micrographs_number; i++)
+        _out << _m.__micrographs_area[i] << " ";
+        
+    _out << "\n";
+    _out << "#Particles_picked_per_micrograph= ";
+    for (int i = 0; i < _m.__micrographs_number; i++)
+        _out << _m.__particles_picked[i] << " ";
+        
+    _out << "\n";
+    
+    _out << "#FalsePos_Picked= ";
+    for (int i = 0; i < _m.__micrographs_number; i++)
+        _out << _m.__falsePositives[i] << " ";
+    
+    _out << "\n";
+       
+    _out << "#Model_parameters..." << std::endl;
+    _out << "#Vector_size= " << XSIZE(_m.__training_particles[0][0].vec) << std::endl;
+    _out << "#Class_Number= " << _m.__classNo << std::endl;
+    
+    for (int i = 0; i < _m.__classNo; i++)
+    {
+        int particlesNo = _m.__training_particles[i].size();
+	    _out << "#Particles_No= " << particlesNo << std::endl;
+	    for (int j = 0; j < particlesNo; j++)
+	        _out << _m.__training_particles[i][j];
+    }
+    
     return _out;
 }
 
+/* Save ---------------------------------------------------------------------*/
 std::istream & operator >> (std::istream &_in, Classification_model &_m)
 {
     std::string dummy;
-    int imax, vec_size;
-    _in >> dummy >> imax;
-    _in >> dummy >> vec_size;
-    for (int i = 0; i < 6; i++) _in >> dummy;
-    for (int i = 0; i < imax; i++)
-    {
-        Particle *P = new Particle;
-        P->read(_in, vec_size);
-        _m.add_particle(*P);
-    }
+    int classNo, vec_size;
+    _in >> dummy;
+    _in >> dummy >> _m.__micrographs_number;
+#ifdef DEBUG_CIN
+    std::cout << "Micrograph processed..." << _m.__micrographs_number 
+	          << std::endl;
+    std::cout << "Press a key to continue..." << std::endl;
+    char c;
+    std::cin >> c;
+#endif
+    _in >> dummy;
 
+    _m.__micrographs_area.resize(_m.__micrographs_number);
+    for(int i = 0; i < _m.__micrographs_number; i++)
+    {
+        _in >> _m.__micrographs_area[i];
+#ifdef DEBUG_CIN
+        std::cout << "Micrograph " << i <<" Area=" 
+	              << _m.__micrographs_area[i] << std::endl;
+        std::cout << "Press a key to continue..."
+	              << std::endl;
+        std::cin >> c;
+#endif
+    }
+    _in >> dummy;
+
+    _m.__particles_picked.resize(_m.__micrographs_number);
+    for(int i = 0; i < _m.__micrographs_number; i++)
+    {
+        _in >> _m.__particles_picked[i];
+#ifdef DEBUG_CIN
+        std::cout << "Micrograph " << i <<" Picked=" 
+	              << _m.__particles_picked[i] << std::endl;
+        std::cout << "Press a key to continue..." << std::endl;
+        std::cin >> c;
+#endif
+    }
+    _in >> dummy;
+    
+    _m.__falsePositives.resize(_m.__micrographs_number);
+    for(int i = 0; i < _m.__micrographs_number; i++)
+    {
+        _in >> _m.__falsePositives[i];
+#ifdef DEBUG_CIN
+        std::cout << "Micrograph " << i <<" FalsePositives=" 
+	              << _m.__falsePositives[i] << std::endl;
+        std::cout << "Press a key to continue..." << std::endl;
+        std::cin >> c;
+#endif
+    }
+    _in >> dummy;
+
+    _in >> dummy >> vec_size;
+    _in >> dummy >> _m.__classNo;
+#ifdef DEBUG_CIN
+    std::cout << "Number of classes=" << _m.__classNo << std::endl;
+    std::cout << "Press a key to continue..." << std::endl;
+    std::cin >> c;
+#endif
+    _m.__training_particles.resize(_m.__classNo);
+    for (int i = 0; i < _m.__classNo; i++)
+    {
+        int particlesNo;
+	    _in >> dummy >> particlesNo;
+#ifdef DEBUG_CIN
+            std::cout << "Number of particles=" << particlesNo << std::endl;
+            std::cout << "Press a key to continue..." << std::endl;
+            std::cin >> c;
+#endif
+	    for (int j = 0; j < particlesNo; j++)
+	    {
+	        Particle *P = new Particle;
+            P->read(_in, vec_size);
+            _m.addParticle(*P, i);
+	    }
+    }
     return _in;
 }
+#undef DEBUG_CIN
 
-/* Print model ------------------------------------------------------------- */
+/* Print model -------------------------------------------------------------*/
 void Classification_model::print_model(std::ostream &_out)
 {
-    _out << "Average of the model: " << __avg.transpose() << std::endl;
-    _out << "Covariance of the model:\n" << __sigma << std::endl;
-    _out << "Largest distance:" << __largest_distance << std::endl;
 }
 
-/* Constructor ------------------------------------------------------------- */
+/* Constructor -------------------------------------------------------------*/
 QtWidgetMicrograph::QtWidgetMicrograph(QtMainWidgetMark *_mainWidget,
                                        QtFiltersController *_f,
                                        Micrograph *_m) :
-        QWidget((QWidget*) _mainWidget)
+                                        QWidget((QWidget*) _mainWidget)
 {
     __filtersController = _f;
     __m              = NULL;
@@ -254,23 +297,27 @@ QtWidgetMicrograph::QtWidgetMicrograph(QtMainWidgetMark *_mainWidget,
     __auto_label     = -1;
     __use_euclidean_distance_for_errors = true;
     __gray_bins = 8;
-    __radial_bins = 24;
+    __radial_bins = 16;
     __keep = 0.95;
     __piece_xsize = 512;
     __piece_ysize = 512;
     __output_scale = 1;
     __highpass_cutoff = 0.02;
-    __reduction = (int)pow(2.0, __output_scale);
-    __particle_radius = 110;
-    __min_distance_between_particles = 2 * __particle_radius;
-    __Nerror_models = 1;
-    __mask_size = 4 * __particle_radius;
-    __piece_overlap = ROUND(__mask_size * 2);
-    __particle_overlap = (int)(__mask_size * 9.0 / 10.0);
+    __reduction = (int)std::pow(2.0, __output_scale);
+    //__particle_radius = 110;
+    __particle_radius = 128;
+    __min_distance_between_particles = 0.5 * __particle_radius;
+    //__mask_size = 4 * __particle_radius;
+    __mask_size = 2 * __particle_radius;
+    __piece_overlap = 2 * __particle_radius;
+    __scan_overlap = (int)(2 * __particle_radius * (9.0 / 10.0));
+    __learn_overlap = (int)(2 * __particle_radius * (5.0 / 10.0));
     __numin = 1;
     __numax = 15;
     __use_background = false;
-
+    __classNo = 3;
+    __is_model_loaded = false;
+    
 #ifdef QT3_SUPPORT
     __gridLayout     = new Q3VBoxLayout(this);
 #else
@@ -335,6 +382,7 @@ QtWidgetMicrograph::QtWidgetMicrograph(QtMainWidgetMark *_mainWidget,
     openMenus();
 }
 
+/*Destructor----------------------------------------------------------------*/
 QtWidgetMicrograph::~QtWidgetMicrograph()
 {
     delete __mImage;
@@ -343,7 +391,7 @@ QtWidgetMicrograph::~QtWidgetMicrograph()
     delete __gridLayout;
 }
 
-/* Set Micrograph ---------------------------------------------------------- */
+/* Set Micrograph ----------------------------------------------------------*/
 void QtWidgetMicrograph::setMicrograph(Micrograph *_m)
 {
     if (_m != NULL)
@@ -354,7 +402,7 @@ void QtWidgetMicrograph::setMicrograph(Micrograph *_m)
     }
 }
 
-/* Open menus -------------------------------------------------------------- */
+/* Open menus --------------------------------------------------------------*/
 void QtWidgetMicrograph::openMenus()
 {
     __file_menu = new QtFileMenu(this);
@@ -367,13 +415,10 @@ void QtWidgetMicrograph::openMenus()
 
     addMenuItem("&File", (QtPopupMenuMark *)(__file_menu));
     addMenuItem("F&ilters", (QtPopupMenuMark *)(filterMenu));
-    // Sjors 31oct07: because this only gives core dumps, remove the
-    // menu for now (just until it works)
-    //addMenuItem("&AutoSelection", (QtPopupMenuMark *)(autoMenu));
+    addMenuItem("&AutoSelection", (QtPopupMenuMark *)(autoMenu));
 
     connect(__file_menu, SIGNAL(signalAddFamily(const char *)),
             this, SLOT(slotAddFamily(const char*)));
-
     connect((QObject*)filterMenu, SIGNAL(signalAdjustContrast()),
             this, SLOT(slotChangeContrast(void)));
     connect((QObject*)filterMenu, SIGNAL(signalCrop()),
@@ -388,81 +433,158 @@ void QtWidgetMicrograph::openMenus()
     // *** Add your own menus
 }
 
-/* Learn particles --------------------------------------------------------- */
+/* Learn particles ---------------------------------------------------------*/
 void QtWidgetMicrograph::learnParticles()
 {
-    std::cerr << "\n------------------Learning Phase---------------------------\n";
+    std::cerr << "\n------------------Learning Phase-----------------------\n";
     createMask();
-
+    
     std::vector<int> all_idx;
     int num_part = __m->ParticleNo();
     for (int i = 0; i < num_part; i++)
         if (__m->coord(i).valid && __m->coord(i).label != __auto_label)
             all_idx.push_back(i);
+    
+    if(all_idx.size() == 0 && __is_model_loaded == false)
+    {
+        std::cerr << "No valid particles marked." << std::endl;
+	    return;
+    }
+    
+    if(__learn_particles_done == true || __autoselection_done == true)
+        __training_model.clear();    
+    
+    buildSelectionModel();    
     buildVectors(all_idx, __training_model);
-    buildSelectionModel();
-    __learn_particles_done = true;
-
-    classify_errors();
+    buildNegativeVectors(__training_model);
+    
+    getAutoFalsePositives();
+    
+    __learn_particles_done = true;    
+    std::cerr << "Learning process finished..." << std::endl;
 }
 
+/*Build Selection Model-----------------------------------------------------*/
 void QtWidgetMicrograph::buildSelectionModel()
 {
+    //here, we have only 1 micrograph in the model.
+    //rebuild_moved_automatic_vectors();
+    //we get the data from the other micrographs stored in __training_model
+    __training_model.import_data(__training_loaded_model);
     __selection_model = __training_model;
-    rebuild_moved_automatic_vectors();
-    __selection_model.import_particles(__auto_model);
-    __selection_model.import_particles(__training_loaded_model);
-    __selection_model.import_particles(__auto_loaded_model);
-
-    std::cerr << "Number of training particles :: "
-    << __selection_model.__training_particle.size() << std::endl;
-
-    __selection_model.build_model();
-    __selection_model.compute_largest_distance();
+        
+#ifdef DEBUG_BUILD
+    for (int j = 0; j < __classNo; j++)
+        std::cout << "Number of training particles for class " << j << ":: "
+                  << __selection_model.__training_particles[j].size() << std::endl;
+#endif
 }
+#undef DEBUG_BUILD
 
-/* Automatic phase --------------------------------------------------------- */
-// This function used for sorting particles
-bool sort_criteria(const Particle &p1, const Particle &p2)
+/*Get Features--------------------------------------------------------------*/
+std::vector < Matrix2D<double> > QtWidgetMicrograph::getFeatures(
+                                                   Classification_model &_model)
 {
-    return (p1.dist < p2.dist);
+    std::vector < Matrix2D<double> > _features(__classNo);
+    std::vector < std::vector<Particle> > _particles= _model.__training_particles;
+    int vec_size = XSIZE(_particles[0][0].vec);
+    
+    for(int j = 0; j < __classNo; j++)
+    {
+        int imax = _particles[j].size();
+        //if we do not have false-positives, then we only use 2 classes.
+        if (imax == 0)
+        {
+            _features.resize(__classNo - 1);
+            break;
+        }
+        _features[j].initZeros(imax, vec_size);
+        for(int i = 0; i < imax; i++)
+        {
+            _particles[j][i].vec.setRow();
+            _features[j].setRow(i, _particles[j][i].vec);	  
+        }
+    }
+    return _features;
 }
 
-//#define DEBUG
-//#define DEBUG_MORE
-//#define DEBUG_EVEN_MORE
+/*Get Classes Probabilities-------------------------------------------------*/
+Matrix1D<double> QtWidgetMicrograph::getClassesProbabilities(
+                                     Classification_model &_model)
+{
+    double micrographsArea = 0.0;
+    double particlesMarked = 0.0;
+    double falsePositives = 0.0;
+    Matrix1D<double> probs(__classNo);
+    
+    for (int i = 0; i < _model.__micrographs_number; i++)
+    {
+        micrographsArea += _model.__micrographs_area[i];
+	    particlesMarked += _model.__particles_picked[i];
+        falsePositives += _model.__falsePositives[i];
+    }
+    
+    double particlesArea = particlesMarked * PI * pow(__particle_radius, 2.0);
+    double falsePositivesArea = falsePositives * PI * pow(__particle_radius, 2.0);
+    
+    probs(0) = particlesArea / micrographsArea;    
+    probs(1) = (micrographsArea - particlesArea - falsePositivesArea) / micrographsArea;
+    probs(2) = falsePositivesArea / micrographsArea;
+    
+#ifdef DEBUG_GETPROBS
+	std::cout << "Probs=" << probs << std::endl;
+#endif
+    
+    return probs;
+}
+#undef DEBUG_GETPROBS
+
+
+/* Automatic phase ----------------------------------------------------------*/
 void QtWidgetMicrograph::automaticallySelectParticles()
 {
-    if (XSIZE(__selection_model.__sigma_inv) == 0) return;
-    std::cerr << "------------------Automatic Phase---------------------------" << std::endl;
+    if (__is_model_loaded == false)
+    {
+        std::cerr << "No model has been loaded." << std::endl;
+	    return;
+    }
+    if (__learn_particles_done == false) buildSelectionModel();
+        
+    std::cerr << "------------------Automatic Phase--------------------------\n";
 
+    __auto_candidates.resize(0);
     const Matrix2D<int> &mask = __mask.get_binary_mask2D();
-
-    //get the threshold distance
-    double threshold = __selection_model.__largest_distance;
-
-    //define a vector to store automatically selected particles
-    std::vector< Particle > candidate_vec, all_vec;
-
+    
+    std::vector < Matrix2D<double> > _features = getFeatures(__selection_model);
+    Matrix1D<double> _probs = getClassesProbabilities(__selection_model);
+    bool success;
+    
+#ifdef DEBUG_AUTO
+        std::cout << "Probabilities of the classes:" << std::endl;
+	    std::cout << "Class_prob=" << _probs(0) << ", No_Class_prob=" 
+	        << _probs(1) << std::endl;
+#endif
+    __selection_model.initNaiveBayes(_features, _probs, 8);
+    
     //top,left corner of the piece
     int top = 0, left = 0, next_top = 0, next_left = 0;
-
+    //top=900;
     //If the piece available is small then include the scanned part
     //because we need bigger image for denoising but for scanning
     //particles we skip the already scanned part
     int skip_x = 0, skip_y = 0, next_skip_x = 0, next_skip_y = 0;
     Matrix1D<double> v;
-    int N = 1;
+    int N = 1, particle_idx = 0;
     while (get_corner_piece(top, left, skip_y,
-                            next_skip_x, next_skip_y, next_top, next_left))
+                            next_skip_x, next_skip_y, next_top,
+			                next_left, __piece_overlap))
     {
-        std::cerr << "Processing piece number " << N << "...\n";
-#ifdef DEBUG
+        std::cerr << "Processing piece " << N << "...\n";
+#ifdef DEBUG_MORE_AUTO
         std::cerr << "    (top,left)=" << top << "," << left
-        << " skip y,x=" << next_skip_y << "," << next_skip_x
-        << " next=" << next_top << "," << next_left << std::endl;
+            << " skip y,x=" << next_skip_y << "," << next_skip_x
+            << " next=" << next_top << "," << next_left << std::endl;
 #endif
-
         // Get a piece and prepare it
         if (!prepare_piece())
         {
@@ -482,156 +604,120 @@ void QtWidgetMicrograph::automaticallySelectParticles()
         next_posx = posx = skip_x + XSIZE(mask) / 2;
         next_posy = posy = skip_y + YSIZE(mask) / 2;
 
-#ifdef DEBUG_MORE
+#ifdef DEBUG_MORE_AUTO
         std::cerr << "Skip(y,x)=" << skip_y << "," << skip_x << std::endl;
 #endif
-        while (get_next_scanning_pos(next_posx, next_posy, skip_x, skip_y))
+        while (get_next_scanning_pos(next_posx, next_posy, skip_x, skip_y,
+	                             __scan_overlap))
         {
-#ifdef DEBUG_MORE
-            std::cerr << "Pos(y,x)=" << posy << "," << posx
-            << " Micro(y,x)=" << posy*__reduction + top
-            << "," << posx*__reduction + left
-            << " Next pos(y,x)=" << next_posy << "," << next_posx;
+#ifdef DEBUG_MORE_AUTO
+               std::cerr << "Pos(y,x)=" << posy << "," << posx
+                         << " Micro(y,x)=" << posy*__reduction + top
+                         << "," << posx*__reduction + left
+                         << " Next pos(y,x)=" << next_posy << "," << next_posx;
 #endif
-            bool success = build_vector(posx, posy, v);
-            if (success)
+	   
+	        //posx=103;
+	        //posy=90;
+	        success = build_vector(posx, posy, v);
+            //v=__selection_model.__training_particles[0][0].vec;
+	        if (success)
             {
-                double dist = __selection_model.distance_to_average(v);
-#ifdef DEBUG_MORE
-                std::cerr << " Success " << dist;
+	            bool ispart = __selection_model.isParticle(v);
+#ifdef DEBUG_AUTO
+	            std::cout << " IS PARTICLE? " << ispart << std::endl;
 #endif
-
-                // Build the Particle structure
-                Particle P;
-                P.x = left + posx * __reduction;
-                P.y = top + posy * __reduction;
-                P.idx = -1;
-                P.status = 1;
-                P.vec = v;
-                P.dist = dist;
-
-                // Insert it in the list of visited positions
-                all_vec.push_back(P);
-
-                // If it is likely to belong to the model
-                if (dist < threshold)
-                {
-#ifdef DEBUG_MORE
-                    std::cerr << "   Initial";
+	            if(ispart)
+	            {
+#ifdef DEBUG_MORE_AUTO
+                    char c;
+		            std::cout << "Particle Found: " << left + posx * __reduction 
+		                << "," << top + posy * __reduction << std::endl;
+                    std::cout << "Press any key to continue..." << std::endl;
+		            std::cin >> c;
 #endif
-                    // Refine the particle position
-                    P.x = posx;
-                    P.y = posy;
-                    refine_center(P);
-                    P.x = left + P.x * __reduction;
-                    P.y = top + P.y * __reduction;
-
-                    // Insert it in the list of candidates
-                    candidate_vec.push_back(P);
-#ifdef DEBUG_EVEN_MORE
-                    std::cout << "\n   " << P.vec.transpose() << std::endl;
-#endif
+                    // Build the Particle structure
+                    Particle P;
+                    P.x = left + posx * __reduction;
+                    P.y = top + posy * __reduction;
+                    P.idx = -1;
+                    P.status = 1;
+                    P.vec = v;
+                    P.prob = 1.0;
+                    //P.prob = __selection_model.getParticleProbability(v);
+                    //refine_center(P);
+		            __auto_candidates.push_back(P);
                 }
             }
-#ifdef DEBUG_MORE
-            std::cerr << std::endl;
-#endif
-
             // Go to next scanning position
             posx = next_posx;
             posy = next_posy;
-        }
-
-        // Go to next piece in the micrograph
-        top = next_top;
-        left = next_left;
-        skip_x = next_skip_x;
-        skip_y = next_skip_y;
-        N++;
-        //break; //Uncomment for a single patch
-    }
-#ifdef DEBUG
-    //int iall_scanned=add_family(all_vec,"all_scanned");
-    //__m->write_coordinates(iall_scanned, __m->micrograph_name()+
-    //   ".all_scanned.pos");
-    int iinitial    = add_family(candidate_vec, "initial");
-    __m->write_coordinates(iinitial, __m->micrograph_name() +
-                           ".initial.pos");
+       }
+       // Go to next piece in the micrograph
+       top = next_top;
+       left = next_left;
+       skip_x = next_skip_x;
+       skip_y = next_skip_y;
+       N++;
+       //break; //Uncomment for a single patch
+   }
+   std::cout << "Scanning Process Finished..." << std::endl;
+    
+   // Reject manually selected particles
+   //reject_prev_selected(__training_model, __auto_candidates);
+   //reject_prev_selected(__auto_model, __auto_candidates);
+#ifdef DEBUG_AUTO
+   std::cerr << "Number of automatically selected particles = " 
+             << __auto_candidates.size() << std::endl;
 #endif
-
-    // Reject manually selected particles
-    reject_previously_selected(__training_model, candidate_vec);
-    reject_previously_selected(__auto_model, candidate_vec);
-
-    //sort the particles in order of increasing distance
-    sort(candidate_vec.begin(), candidate_vec.end(), sort_criteria);
-
-    // reject the candidates that are pointing to the same particle
-    int Nalive = reject_within_distance(candidate_vec, __particle_radius, false);
-    std::cout << "Nalive=" << Nalive << std::endl;
-
-    // reject the candidates that are two close to each other
-    Nalive = reject_within_distance(candidate_vec, __min_distance_between_particles, true);
-    std::cout << "Nalive=" << Nalive << std::endl;
-
-    //insert selected particles in the result
-    int imax = candidate_vec.size();
-    int Nmax = FLOOR(Nalive * __keep);
-    int n = 0;
-    for (int i = 0;i < imax && n < Nmax; i++)
-        if (candidate_vec.at(i).status == 1)
-        {
-            // Get the distance of the vector to the training set
-            double dist_to_training;
-            if (__use_euclidean_distance_for_errors)
-                dist_to_training = __selection_model.euclidean_distance_to_average(
-                                       candidate_vec.at(i).vec);
-            else
-                dist_to_training = candidate_vec.at(i).dist;
-
-            bool is_error = false;
-            for (int j = 0; j < __Nerror_models && !is_error; j++)
-            {
-                double dist_to_error_j;
-                if (__use_euclidean_distance_for_errors)
-                    dist_to_error_j = __error_model.at(j).euclidean_distance_to_average(
-                                          candidate_vec.at(i).vec);
-                else
-                    dist_to_error_j = __error_model.at(j).distance_to_average(
-                                          candidate_vec.at(i).vec);
-                if (dist_to_error_j < dist_to_training) is_error = true;
-            }
-
-            if (!is_error)
-            {
-                __auto_model.add_particle(candidate_vec.at(i));
-                n++;
-            }
-            else
-            {
-                candidate_vec.at(i).status = 0;
-                std::cout << "Error found:" << candidate_vec.at(i).x << ","
-                << candidate_vec.at(i).y << std::endl;
-            }
-        }
-
-    std::cerr << "Number of automatically selected particles = " << n << std::endl;
-
-    __auto_label = add_family(__auto_model.__training_particle, "auto");
-
+   // reject the candidates that are pointing to the same particle
+   int Nalive = reject_within_distance(__auto_candidates, __particle_radius, false);
+#ifdef DEBUG_AUTO
+   std::cerr << "Number of automatically selected particles = " 
+             << Nalive << std::endl;
+#endif
+   // reject the candidates that are too close to each other
+/*   Nalive = reject_within_distance(__auto_candidates,
+                                    __min_distance_between_particles, false);
+   std::cerr << "Number of automatically selected particles = " 
+             << Nalive << std::endl;
+*/
+   //insert selected particles in the result
+   int imax = __auto_candidates.size();
+   for (int i = 0; i < imax; i++)
+   {
+       if(__auto_candidates[i].status == 1)
+	   {
+	     
+	        //refine_center(__auto_candidates[i]);
+	        __auto_candidates[i].idx = i;
+	        //__auto_model.addParticle(__auto_candidates[i], 0);
+#ifdef DEBUG_AUTO
+	        std::cout << "Particle coords " << __auto_candidates[i].x << ", "
+	                  << __auto_candidates[i].y << std::endl;
+#endif
+            getMicrograph()->add_coord(__auto_candidates[i].x, 
+	                                   __auto_candidates[i].y, __activeFamily);
+	    }
+    }
+    
+    //__auto_label = add_family(__auto_model.__training_particles, "auto");
+    
+    repaint(0);
     __autoselection_done = true;
+    std::cout << "Automatic process finished. Number of found particles: "
+              << Nalive << std::endl;
 }
-#undef DEBUG
-#undef DEBUG_MORE
-#undef DEBUG_EVEN_MORE
+#undef DEBUG_AUTO
+#undef DEBUG_MORE_AUTO
 
-/* Add family -------------------------------------------------------------- */
+/* Add family ---------------------------------------------------------------*/
 int QtWidgetMicrograph::add_family(std::vector<Particle> &_list,
                                    const std::string &_family_name)
 {
     int ilabel = __m->add_label(_family_name);
     int imax = _list.size();
-    for (int i = 0;i < imax;i++)
+    for (int i = 0; i < imax; i++)
     {
         int idx = __m->add_coord(_list.at(i).x, _list.at(i).y, ilabel);
         _list.at(i).idx = idx;
@@ -639,7 +725,7 @@ int QtWidgetMicrograph::add_family(std::vector<Particle> &_list,
     return ilabel;
 }
 
-/* Create mask for learning particles -------------------------------------- */
+/* Create mask for learning particles ---------------------------------------*/
 void QtWidgetMicrograph::createMask()
 {
     if (XSIZE(__mask.get_binary_mask2D()) != 0) return;
@@ -658,8 +744,7 @@ void QtWidgetMicrograph::createMask()
     classifyMask();
 }
 
-/* Classify the mask pixels ------------------------------------------------ */
-//#define DEBUG
+/* Classify the mask pixels -------------------------------------------------*/
 void QtWidgetMicrograph::classifyMask()
 {
     const Matrix2D<int> &mask = __mask.get_binary_mask2D();
@@ -691,7 +776,8 @@ void QtWidgetMicrograph::classifyMask()
         if (radius < max_radius)
         {
             int radius_idx;
-            if (radius > 6) radius_idx = XMIPP_MIN(__radial_bins - 1, 1 + FLOOR((radius - 6) / radial_step));
+            if (radius > 6) radius_idx = XMIPP_MIN(__radial_bins - 1, 1 + 
+	                                 FLOOR((radius - 6) / radial_step));
             else          radius_idx = 0;
             (*classif1)(i, j) = radius_idx;
             Nrad(radius_idx)++;
@@ -707,98 +793,290 @@ void QtWidgetMicrograph::classifyMask()
         __radial_val.push_back(aux);
     }
 
-#ifdef DEBUG
+#ifdef DEBUG_CLASSIFY
     ImageXmipp save;
-    type_cast(*classif1, save());
+    typeCast(*classif1, save());
     save.write("PPPclassif1.xmp");
 #endif
 }
-#undef DEBUG
+#undef DEBUG_CLASSIFY
 
-/* Build training vectors -------------------------------------------------- */
+/* Build training vectors ---------------------------------------------------*/
 void QtWidgetMicrograph::buildVectors(std::vector<int> &_idx,
-                                      Classification_model &__model)
+                                      Classification_model &_model)
 {
-    __model.clear();
+    std::cerr << "Building particle vectors. Please wait..." << std::endl;
+    _model.addMicrographItem();
     int num_part = _idx.size();
-    __model.reserve_examples(num_part);
+    int width, height;
+    __m->size(width, height);
+    int micrograph_area = width * height;
+    _model.addMicrographArea(micrograph_area);
     Matrix1D<double> v;
+    int numParticles = 0;
 
+#ifdef DEBUG_BUILDVECTORS
+        std::cout << "Number of particles marked " << num_part << std::endl;
+#endif
     Matrix1D<char> visited(num_part);
     while (visited.sum() < num_part)
     {
-        int part_i = 0;
+       int part_i = 0;
+       // get the first un-visited particle in the array
+       while (visited(part_i) == 1) part_i++;
+       if (part_i >= num_part) break;
+       visited(part_i) = 1;
+       // Get the piece containing that particle
+       int part_idx = _idx.at(part_i);
+       int x = __m->coord(part_idx).X;
+       int y = __m->coord(part_idx).Y;
 
-        // get the first un-visited particle in the array
-        while (visited(part_i) == 1) part_i++;
-        if (part_i >= num_part) break;
-        visited(part_i) = 1;
+       int posx, posy;
+       get_centered_piece(x, y, posx, posy);
 
-        // Get the piece containing that particle
-        int part_idx = _idx.at(part_i);
-        int x = __m->coord(part_idx).X;
-        int y = __m->coord(part_idx).Y;
+       // Denoise, reduce, reject outliers and equalize histogram
+       bool success = prepare_piece();
+       
+       if (!success) continue;
+       posx = ROUND(posx / __reduction);
+       posy = ROUND(posy / __reduction);
+       
+       //make vector from this particle
+       success = build_vector(posx, posy, v);
+       if (success)
+       {
+           Particle p;
+           p.x = x;
+           p.y = y;
+           p.idx = part_idx;
+           p.vec = v;
+           p.status = 1;
+           p.prob = 1.0;
+           _model.addParticle(p, 0);
+           numParticles++;
+       }
 
-        int posx, posy;
-        get_centered_piece(x, y, posx, posy);
+       //make vector from the neighbours
+       std::vector< Matrix1D<int> > nbr;
+       nbr.reserve(num_part);
 
-        // Denoise, reduce, reject outliers and equalize histogram
-        bool success = prepare_piece();
-        if (!success) continue;
-        posx = ROUND(posx / __reduction);
-        posy = ROUND(posy / __reduction);
+       find_nbr(_idx, part_i, x, y, posx, posy, visited, nbr);
 
-        //make vector from this particle
-        success = build_vector(posx, posy, v);
-        if (success)
+       for (int i = 0; i < nbr.size(); i++)
+       {
+          part_i = nbr.at(i)(0);
+          part_idx = _idx.at(part_i);
+          posx = nbr.at(i)(1);
+          posy = nbr.at(i)(2);
+          success = build_vector(posx, posy, v);
+          visited(part_i) = 1;
+          if (success)
+          {
+              Particle p;
+              p.x = __m->coord(part_idx).X;
+              p.y = __m->coord(part_idx).Y;
+              p.idx = part_idx;
+              p.vec = v;
+              p.status = 1;
+              p.prob = 1.0;
+              _model.addParticle(p, 0);
+              numParticles++;
+          }
+       }
+
+#ifdef DEBUG_BUILDVECTORS
+       std::cout << "Processed particle: " << numParticles << std::endl;
+#endif       
+    }
+    _model.addParticlePicked(numParticles);
+}
+#undef DEBUG_BUILDVECTORS
+
+/*Build vector from non particles--------------------------------------------*/
+void QtWidgetMicrograph::buildNegativeVectors(Classification_model &__model)
+{
+
+    std::cerr << "Building non particle vectors. Please wait..." << std::endl;
+    
+#ifdef DEBUG_BUILDNEGATIVE
+    bool debugging = false;
+#endif
+    
+    const Matrix2D<int> &mask = __mask.get_binary_mask2D();
+
+    //top,left corner of the piece
+    int top = 0, left = 0, next_top = 0, next_left = 0;
+
+    //If the piece available is small then include the scanned part
+    //because we need bigger image for denoising but for scanning
+    //particles we skip the already scanned part
+    int skip_x = 0, skip_y = 0, next_skip_x = 0, next_skip_y = 0;
+    Matrix1D<double> v;
+    
+    int N = 1;
+    int particlesFound = 0;
+ 
+    //we do not want any overlap for this process,since it is only for 
+    //counting the non particles and calculating their features. For 
+    //the process of automatic selecting we will want an overlap so we
+    //do not miss any particle.
+    while (get_corner_piece(top, left, skip_y,
+                            next_skip_x, next_skip_y, next_top, next_left, 0))
+    {
+
+#ifdef DEBUG_BUILDNEGATIVE
+        std::cerr << "Processing piece number " << N << "..." << std::endl;;
+        std::cerr << "Position of piece (top,left)=" << top << "," << left
+        << " skip y,x=" << next_skip_y << "," << next_skip_x
+        << " next(top, left)=" << next_top << "," << next_left << std::endl;
+#endif
+
+        // Get a piece and prepare it
+        if (!prepare_piece())
         {
-            Particle p;
-            p.x = x;
-            p.y = y;
-            p.idx = part_idx;
-            p.vec = v;
-            p.status = 1;
-            p.dist = 0.0;
-            __model.add_particle(p);
+            top = next_top;
+            left = next_left;
+            std::cerr << "bad piece...skipping" << std::endl;
+            N++;
+            continue;
         }
 
-        //make vector from the neighbours
-        std::vector< Matrix1D<int> > nbr;
-        nbr.reserve(num_part);
-        find_nbr(_idx, part_i, x, y, posx, posy, visited, nbr);
-        for (int i = 0;i < nbr.size();i++)
+        // Express the skip values in the reduced image
+        skip_x /= __reduction;
+        skip_y /= __reduction;
+
+        // Scan this piece
+        int posx = 0, next_posx = 0, posy = 0, next_posy = 0;
+        next_posx = posx = skip_x + XSIZE(mask) / 2;
+        next_posy = posy = skip_y + YSIZE(mask) / 2;
+
+#ifdef DEBUG_MORE_BUILDNEGATIVE
+        std::cerr << "Skip(y,x)=" << skip_y << "," << skip_x << std::endl;
+#endif
+        
+	    //we do not want any overlap for this process, since it is only for
+	    //counting the non particles and calculating their features. For
+	    //the process of automatic selecting we will want an overlap so we
+	    //do not miss any particle.
+        while (get_next_scanning_pos(next_posx, next_posy, skip_x, skip_y, __learn_overlap))
         {
-            part_i = nbr.at(i)(0);
-            part_idx = _idx.at(part_i);
-            posx = nbr.at(i)(1);
-            posy = nbr.at(i)(2);
-            success = build_vector(posx, posy, v);
-            visited(part_i) = 1;
+#ifdef DEBUG_MORE_BUILDNEGATIVE
+            std::cerr << "Position(y,x)=" << posy << "," << posx
+                      << " Micrograph(y,x)=" << posy*__reduction + top
+                      << "," << posx*__reduction + left
+                      << " Next pos(y,x)=" << next_posy << "," 
+		              << next_posx << std::endl;
+#endif
+            //need to define a function to see if there is a particle
+	        //in the actual pice. if there is a particle we 
+	        //should skip that piece.
+	        bool areParticles = anyParticle(left + posx * __reduction,
+	                top + posy * __reduction, XSIZE(mask) * __reduction);
+	    
+#ifdef DEBUG_MORE_BUILDNEGATIVE
+            if(areParticles)
+	        {
+	            std::cout << "Particle found. Skiping position..." << std::endl;
+		        particlesFound++;
+            }
+#endif
+	    	    
+	    if(!areParticles)
+	    {
+#ifdef DEBUG_MORE_BUILDNEGATIVE
+            std::cout << "Calculating features of non particle..." << std::endl;
+#endif
+		    bool success = build_vector(posx, posy, v);
+
             if (success)
             {
-                Particle p;
-                p.x = __m->coord(part_idx).X;
-                p.y = __m->coord(part_idx).Y;
-                p.idx = part_idx;
-                p.vec = v;
-                p.status = 1;
-                p.dist = 0.0;
-                __model.add_particle(p);
+                    // Build the Particle structure
+                    Particle P;
+                    P.x = left + posx * __reduction;
+                    P.y = top + posy * __reduction;
+                    P.idx = -1;
+                    P.status = 1;
+                    P.vec = v;
+                    P.prob = 0.0;
+	                __model.addParticle(P, 1);            
             }
-        }
+	    }
+	    // Go to next scanning position
+            posx = next_posx;
+            posy = next_posy;
+	}
+        // Go to next piece in the micrograph
+        top = next_top;
+        left = next_left;
+        skip_x = next_skip_x;
+        skip_y = next_skip_y;
+        N++;
+        
+#ifdef DEBUG_BUILDNEGATIVE
+        if(debugging)
+	{
+	    std::cout << "Press any key and ENTER to continue..." << std::endl;
+	    char c;
+	    std::cin >> c;
+	    if(c == 'q') debugging = false;
+	}
+#endif
+	//break; //Uncomment for a single patch	 
     }
+#ifdef DEBUG_MORE_BUILDNEGATIVE
+    std::cout << "Scanning process finished. Number of particles found: " 
+              << particlesFound << std::endl;
+#endif
+ 
 }
+#undef DEBUG_BUILDNEGATIVE
+#undef DEBUG_MORE_BUILDNEGATIVE
+
+bool QtWidgetMicrograph::anyParticle(int posx, int posy, int rect_size)
+{
+#ifdef DEBUG_ANYPARTICLE
+    std::cout << "anyParticle(" << posx << "," << posy << "," << rect_size << ")" 
+              << std::endl;
+#endif
+    int num_part = __m->ParticleNo();
+    std::vector<Particle_coords> selected_particles = __m->Particles();
+    for (int i = 0; i < num_part; i++)
+    {
+        if (__m->coord(i).valid && __m->coord(i).label != __auto_label)
+	    {
+	        int _x = selected_particles[i].X;
+            int _y = selected_particles[i].Y;
+    
+            if((_x > posx - rect_size) && (_x < posx + rect_size))
+	        {
+	            if((_y > posy - rect_size) && (_y < posy + rect_size))
+		        {
+#ifdef DEBUG_ANYPARTICLE
+                    std::cout << "Particle found in (x,y)" << _x << "," << _y 
+		                      << std::endl; 
+#endif
+		            return true;
+		        }
+	        }   
+	    }
+    }
+    return false;
+}
+#undef DEBUG_ANYPARTICLE
 
 /* Build classification vector --------------------------------------------- */
-//#define DEBUG
 bool QtWidgetMicrograph::build_vector(int _x, int _y,
                                       Matrix1D<double> &_result)
 {
+#ifdef DEBUG_BUILDVECTOR
+    std::cout << "build_vector(" << _x << "," << _y << "," << "_result)" << std::endl;
+#endif
+
     // First part is the foreground histogram
     // Second part is the background histogram
     // Third part is the radial mass distribution
     // The input image is supposed to be between 0 and bins-1
-    _result.initZeros(__radial_bins*(__gray_bins - 1) + (__numax - __numin + 1));
+    _result.initZeros(__radial_bins*(__gray_bins-1) + (2*__gray_bins-1) + (__numax - __numin + 1));
     const Matrix2D<int> &mask = __mask.get_binary_mask2D();
 
     if (STARTINGX(mask) + _x < STARTINGX(__piece)) return false;
@@ -806,21 +1084,21 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
     if (FINISHINGX(mask) + _x > FINISHINGX(__piece)) return false;
     if (FINISHINGY(mask) + _y > FINISHINGY(__piece)) return false;
 
-#ifdef DEBUG
+#ifdef DEBUG_IMG_BUILDVECTOR
     bool debug_go = false;
-    ImageXmipp save, savefg, savebig;
+    ImageXmipp save, savefg, savebig, saveOrig;
     if (true)
     {
         save() = __piece;
         save.write("PPP0.xmp");
-        std::cout << "Particle is at (y,x)=" << _y << "," << _x << std::endl;
         save().initZeros(YSIZE(mask), XSIZE(mask));
         STARTINGY(save()) = STARTINGY(mask);
         STARTINGX(save()) = STARTINGX(mask);
         savefg() = save();
-        savefg().init_constant(-1);
+        savefg().initConstant(-1);
         savebig() = savefg();
-        debug_go = true;
+        saveOrig() = savebig();
+	    debug_go = true;
     }
 #endif
 
@@ -829,6 +1107,9 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
     particle.initZeros(YSIZE(mask), XSIZE(mask));
     STARTINGY(particle) = STARTINGY(mask);
     STARTINGX(particle) = STARTINGX(mask);
+    Matrix2D<double> original_particle = particle;
+    Matrix1D<double> original_particle_values((int)(mask.sum()));
+    int idx_original_particle_values = 0;
 
     FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
     {
@@ -836,24 +1117,41 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
         bool foreground = mask(i, j);
 
         // Classif 1 -> Histogram of the radial bins
+        
         int idx0 = (*__mask_classification[0])(i, j);
         if (idx0 != -1)
             (*__radial_val[idx0])(radial_idx(idx0)++) = val;
 
         // Get particle
-        if (foreground) particle(i, j) = val;
+        if (foreground) 
+	    {
+	        particle(i, j) = val;
+	        original_particle_values(idx_original_particle_values++) =
+	                original_particle(i , j) = __original_piece(_y+i, _x+j);
+	    }
 
-#ifdef DEBUG
+#ifdef DEBUG_IMG_BUILDVECTOR
         if (debug_go)
         {
-            save(i, j) = val;
-            if (foreground) savefg(i, j) = val;
+            
+	        save(i, j) = val;
+            if (foreground) 
+	        {
+	            savefg(i, j) = val;
+	            saveOrig(i, j) = original_particle(i, j);
+	        }
         }
 #endif
     }
 
-    // Compute the histogram of the radial bins and store them
     int idx_result = 0;
+    histogram1D hist_original;
+    compute_hist(original_particle_values, hist_original, 2 * __gray_bins);
+    
+    for (int i = 0; i < 2 * __gray_bins - 1; i++)
+       _result(idx_result++) = hist_original(i);
+				     
+    // Compute the histogram of the radial bins and store them  
     for (int i = 0; i < __radial_bins; i++)
     {
         histogram1D hist;
@@ -872,25 +1170,31 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
     spt.numax = __numax;
     spt.x0 = (double)XSIZE(particle) / 2;
     spt.y0 = (double)YSIZE(particle) / 2;
-    spt.compute_rotational_spectrum(particle, spt.rl, spt.rh, dr, spt.rh - spt.rl);
+    spt.compute_rotational_spectrum(particle, spt.rl, spt.rh, dr, 
+                                    spt.rh - spt.rl);
+    
     FOR_ALL_ELEMENTS_IN_MATRIX1D(spt.rot_spectrum)
     _result(idx_result++) = spt.rot_spectrum(i);
 
-#ifdef DEBUG
+#ifdef DEBUG_IMG_BUILDVECTOR
     if (debug_go)
     {
         save.write("PPP1.xmp");
         savefg.write("PPP2.xmp");
-        std::cout << _result.transpose() << std::endl;
-        std::cout << "Distance=" << __selection_model.distance_to_average(_result);
-        std::cout << "Press any key\n";
-        char c;
-        cin >> c;
+        saveOrig.write("PPP7.xmp");
     }
+#endif
+
+#ifdef DEBUG_BUILDVECTOR
+    std::cout << _result.transpose() << std::endl;
+    std::cout << "Press any key\n";
+    char c;
+    std::cin >> c;
 #endif
     return true;
 }
-#undef DEBUG
+#undef DEBUG_BUILDVECTOR
+#undef DEBUG_IMG_BUILDVECTOR
 
 /* Get piece --------------------------------------------------------------- */
 // to get the piece containing (x,y) of size xsize,ysize
@@ -898,8 +1202,11 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
 void QtWidgetMicrograph::get_centered_piece(int _x, int _y,
         int &_posx, int &_posy)
 {
+#ifdef DEBUG_GETCENTERED
+    std::cout << "get_centered_piece(" << _x << "," << _y << "," << _posx 
+ 	      << "," << _posy << ")" << std::endl;
+#endif
     __piece.resize(__piece_ysize, __piece_xsize);
-
     int startx = _x - ROUND(__piece_xsize / 2);
     int endx  = _x + ROUND(__piece_xsize / 2);
     int starty = _y - ROUND(__piece_ysize / 2);
@@ -908,7 +1215,7 @@ void QtWidgetMicrograph::get_centered_piece(int _x, int _y,
     __m->size(maxx, maxy);
     _posx = ROUND(__piece_xsize / 2);
     _posy = ROUND(__piece_ysize / 2);
-
+    
     // boundry adjustments
     if (startx < 0)
     {
@@ -934,82 +1241,55 @@ void QtWidgetMicrograph::get_centered_piece(int _x, int _y,
         endy = maxy - 1;
         starty = endy - __piece_ysize;
     }
-
     //read the matrix from the micrograph
-    for (int i = 0;i < __piece_ysize;i++)
-        for (int j = 0;j < __piece_xsize;j++)
+    for (int i = 0; i < __piece_ysize; i++)
+        for (int j = 0; j < __piece_xsize; j++)
             __piece(i, j) = (*__m)(startx + j, starty + i);
+	    
 }
-
+#undef DEBUG_GETCENTERED
 // Get a piece whose top-left corner is at the desired position (if possible)
-bool QtWidgetMicrograph::get_corner_piece(
-    int _top, int _left, int _skip_y,
-    int &_next_skip_x, int &_next_skip_y, int &_next_top, int &_next_left)
+bool QtWidgetMicrograph::get_corner_piece(int _top, int _left, int _skip_y,
+          int &_next_skip_x, int &_next_skip_y, int &_next_top, int &_next_left,
+	  int overlap)
 {
+#ifdef DEBUG_GETCORNER
+    std::cout << "get_corner_piece(" << _top << "," << _left << "," << _skip_y 
+	      << "," << _next_skip_x 
+              << "," << _next_skip_y << "," << _next_top << "," << _next_left
+	      << "," << overlap << ")" << std::endl;
+#endif
+
     const Matrix2D<int> &mask = __mask.get_binary_mask2D();
+
     int maxx, maxy;
     __m->size(maxx, maxy);
 
-    if (maxx < _left + __piece_xsize || maxy < _top + __piece_ysize) return false;
+    if (maxx < _left + __piece_xsize || maxy < _top + __piece_ysize)
+        return false;
 
-#ifdef NEVER_DEFINED
-    _skip_x = _skip_y = 0;
-    _next_left = _left + __piece_xsize - __piece_overlap;
-    if (_next_left + __piece_xsize >= maxx)
-    {
-        if (maxx - _next_left < XSIZE(mask)*__reduction)
-        {
-            _next_left = 0;
-            _next_top = _top + __piece_ysize - __piece_overlap;
-            _skip_x = _skip_y = 0;
-        }
-        else
-        {
-            _skip_x = _next_left + __piece_xsize - maxx;
-            _next_left -= _skip_x;
-            if (_next_left != _left)_next_top = _top;
-            else
-            {
-                _next_left = 0;
-                _next_top = _top + __piece_ysize - __piece_overlap;
-                _skip_x = _skip_y = 0;
-            }
-        }
-    }
-    else
-    {
-        _next_top = _top;
-    }
-
-    if ((_next_top + __piece_ysize >= maxy) &&
-        (maxy - _next_top >= YSIZE(mask)*__reduction))
-    {
-        _skip_y = _next_top + __piece_ysize - maxy;
-        _next_top -= _skip_y;
-    }
-#endif
-
-    _next_skip_x = _next_skip_y = 0;
+   _next_skip_x = _next_skip_y = 0;
     bool increase_Y = false;
     if (_left + __piece_xsize != maxx)
     {
-        _next_left = _left + __piece_xsize - __piece_overlap;
+        _next_left = _left + __piece_xsize - overlap;
         if (_next_left + __piece_xsize >= maxx)
-        {
             _next_left = maxx - __piece_xsize;
-        }
     }
     else
     {
+#ifdef DEBUG_GETCORNER
+    std::cout << "We have reached the end of the row...(left, top)=" 
+	          << _left << "," << _top << std::endl;
+#endif
         _next_left = 0;
         increase_Y = true;
     }
-
     if (increase_Y)
     {
         if (_top + __piece_ysize != maxy)
         {
-            _next_top = _top + __piece_ysize - __piece_overlap;
+            _next_top = _top + __piece_ysize - overlap;
             if (_next_top + __piece_ysize >= maxy)
                 _next_top = maxy - __piece_ysize;
         }
@@ -1018,39 +1298,33 @@ bool QtWidgetMicrograph::get_corner_piece(
             _next_top = maxy;
         }
     }
-
-    /* COSS: still To fix */
-    /*
-    if (_next_left+__piece_xsize==maxx)
-       _next_skip_x=_left+__piece_xsize-_next_left-XSIZE(mask)/2;
-    if (_next_top +__piece_ysize==maxy)
-       if (_top==_next_top) _next_skip_y=_skip_y;
-       else _next_skip_y=_top +__piece_ysize-_next_top-YSIZE(mask)/2;
-    */
-
     //read the matrix from the micrograph
     __piece.resize(__piece_ysize, __piece_xsize);
-    for (int i = 0;i < __piece_ysize;i++)
-        for (int j = 0;j < __piece_xsize;j++)
+    for (int i = 0; i < __piece_ysize; i++)
+        for (int j = 0; j < __piece_xsize; j++)
             __piece(i, j) = (*__m)(_left + j, _top + i);
+	    
     return true;
 }
+#undef DEBUG_GETCORNER
 
 
 /* Prepare piece ----------------------------------------------------------- */
 bool QtWidgetMicrograph::prepare_piece()
 {
+    __piece.setXmippOrigin();   
+    __original_piece = __piece;
+    ImageXmipp save,savepiece;
     // High pass filter
     FourierMask Filter;
     Filter.FilterShape = RAISED_COSINE;
     Filter.FilterBand = HIGHPASS;
     Filter.w1 = __highpass_cutoff;
     Filter.raised_w = XMIPP_MIN(0.02, __highpass_cutoff);
-    __piece.setXmippOrigin();
     Filter.generate_mask(__piece);
     Filter.apply_mask_Space(__piece);
     STARTINGX(__piece) = STARTINGY(__piece) = 0;
-
+    
     // Denoise the piece
     Denoising_parameters denoiser;
     denoiser.denoising_type = Denoising_parameters::BAYESIAN;
@@ -1062,9 +1336,27 @@ bool QtWidgetMicrograph::prepare_piece()
 
     // Reject 5% of the outliers
     reject_outliers(__piece, 5.0);
+    savepiece() = __piece;
 
-    // Equalize histogram
+    // Equalize histogram    
     histogram_equalization(__piece, __gray_bins);
+    savepiece() = __piece;
+    
+#ifdef DEBUG_PREPARE    
+    savepiece() = __piece;
+    savepiece.write("PPP8.xmp");
+#endif    
+    __original_piece.selfScaleToSize(YSIZE(__piece), XSIZE(__piece));
+
+    // Reject 5% of the outliers
+    reject_outliers(__original_piece, 5.0);
+    __original_piece.statisticsAdjust(0,1);
+    __original_piece-=__original_piece.computeAvg();
+
+#ifdef DEBUG_PREPARE    
+    save() = __original_piece;
+    save.write("PPP9.xmp");
+#endif
 
     return true;
 }
@@ -1121,24 +1413,47 @@ void QtWidgetMicrograph::find_nbr(std::vector<int> &_idx, int _index, int _x, in
 
 /* Get next scanning position ---------------------------------------------- */
 bool QtWidgetMicrograph::get_next_scanning_pos(
-    int &_x, int &_y, int _skip_x, int _skip_y)
+    int &_x, int &_y, int _skip_x, int _skip_y, int overlap)
 {
+#ifdef DEBUG_GETSCANNING
+    std::cout << "get_next_scanning_pos(" << _x << "," << _y << "," << _skip_x 
+	      << "," << _skip_y << "," << overlap << ")" << std::endl;
+#endif
     const Matrix2D<int> &mask = __mask.get_binary_mask2D();
-    if (_x + XSIZE(mask) / 2 >= XSIZE(__piece) ||
-        _y + YSIZE(mask) / 2 >= YSIZE(__piece)) return false;
+
+    if (_x + XSIZE(mask) / 2 > XSIZE(__piece) ||
+        _y + YSIZE(mask) / 2 > YSIZE(__piece)) 
+    {
+#ifdef DEBUG_MORE_GETSCANNING
+        std::cout << "We do not do anything. We would get out of the piece." << std::endl;
+#endif
+	return false;
+    }
 
     if (_x == 0 && _y == 0)
     {
-        _x = _skip_x + XSIZE(mask) / 2;
-        _y = _skip_y + YSIZE(mask) / 2;
+        _x += XSIZE(mask) - overlap / __reduction;
+        _y += YSIZE(mask) - overlap / __reduction;
+	//_x = _skip_x + XSIZE(mask) / 2;
+        //_y = _skip_y + YSIZE(mask) / 2;
+#ifdef DEBUG_MORE_GETSCANNING
+        std::cout << "We are at the beginning. next scaning pos(x,y)=" 
+	              << _x << "," << _y << std::endl;
+#endif
+	
     }
     else
     {
-        int nextx = _x + XSIZE(mask) - __particle_overlap / __reduction; // COSS: he a�adido __reduction
-        int nexty = _y + YSIZE(mask) - __particle_overlap / __reduction; // COSS: he a�adido __reduction
-        if (nextx + (XSIZE(mask) / 2) >= XSIZE(__piece))
+        int nextx = _x + XSIZE(mask) - overlap / __reduction;
+        int nexty = _y + YSIZE(mask) - overlap / __reduction;
+#ifdef DEBUG_MORE_GETSCANNING
+        std::cout << "We set the next positions to (nextx,nexty)=" 
+	          << nextx << "," << nexty << std::endl;
+#endif
+	   
+	if (nextx + (XSIZE(mask) / 2) > XSIZE(__piece))
         {
-            if (nexty + (YSIZE(mask) / 2) >= YSIZE(__piece))
+	    if (nexty + (YSIZE(mask) / 2) > YSIZE(__piece))
             {
                 _x = nextx;
                 _y = nexty;
@@ -1154,14 +1469,22 @@ bool QtWidgetMicrograph::get_next_scanning_pos(
             _x = nextx;
         }
     }
+#ifdef DEBUG_MORE_GETSCANNING
+    std::cout << "We set the next positions to (x,y)=" 
+              << _x << "," << _y << std::endl;
+#endif
+	
     return true;
 }
+#undef DEBUG_GETSCANNING
+#undef DEBUG_MORE_GETSCANNING
 
 /* Filter particles --------------------------------------------------------*/
 //To calculate the euclidean distance between to points
 double dist_euc(const Particle &p1, const Particle &p2)
 {
-    return sqrt((double)(p1.x -p2.x)*(p1.x - p2.x) + (double)(p1.y - p2.y)*(p1.y - p2.y));
+    return sqrt((double)(p1.x -p2.x)*(p1.x - p2.x) + (double)(p1.y - p2.y)*
+                (p1.y - p2.y));
 }
 
 int QtWidgetMicrograph::reject_within_distance(
@@ -1169,11 +1492,14 @@ int QtWidgetMicrograph::reject_within_distance(
     bool _reject_both)
 {
     int imax = _Input.size();
+#ifdef DEBUG_REJECT
+    std::cout << "Particles before filtering: " << imax << std::endl;
+#endif
     int n = 0;
-    for (int i = 0;i < imax;i++)
+    for (int i = 0; i < imax; i++)
     {
         if (_Input.at(i).status == 0) continue;
-        for (int j = i + 1;j < imax;j++)
+        for (int j = i + 1; j < imax; j++)
         {
             if (_Input.at(j).status == 0) continue;
             double dist = dist_euc(_Input.at(i), _Input.at(j));
@@ -1187,51 +1513,77 @@ int QtWidgetMicrograph::reject_within_distance(
     }
     return n;
 }
+#undef DEBUG_REJECT
 
 /* Reject manually selected ------------------------------------------------ */
-void QtWidgetMicrograph::reject_previously_selected(
+void QtWidgetMicrograph::reject_prev_selected(
     const Classification_model &_model,
     std::vector<Particle> &_candidate_vec)
 {
     int imax = _candidate_vec.size();
-    int jmax = _model.__training_particle.size();
+    int jmax = _model.__training_particles[0].size();
     if (jmax == 0) return;
-    for (int i = 0;i < imax;i++)
+    for (int i = 0; i < imax; i++)
+    {    
         for (int j = 0; j < jmax; j++)
-            if (dist_euc(_candidate_vec.at(i), _model.__training_particle.at(j))
+        {    
+	    if (dist_euc(_candidate_vec.at(i), _model.__training_particles[0][j])
                 < __min_distance_between_particles)
             {
                 _candidate_vec.at(i).status = 0;
                 break;
             }
+	}
+    }
 }
 
-/* Refine center of a particle --------------------------------------------- */
 void QtWidgetMicrograph::refine_center(Particle &my_P)
 {
+    static int counter = 0;
     int previous_direction = -1;
-    double dist_at_previous = 0, dist_left, dist_right, dist_top, dist_bottom;
+    double prob_at_previous = 0.0, prob_left, prob_right, prob_top, prob_bottom;
     bool improvement = true;
     Matrix1D<double> current_vec;
-    double current_dist = my_P.dist;
-    int    current_x = my_P.x, current_y = my_P.y;
-    const Matrix2D<int> &mask = __mask.get_binary_mask2D();
+    double current_prob = my_P.prob;
+    int current_x = my_P.x, current_y = my_P.y;
+    int posx, posy;
     bool success;
+    const Matrix2D<int> &mask = __mask.get_binary_mask2D();
+    double best_prob = current_prob;
     do
     {
-        double best_dist = current_dist;
-        int    source   = -1;
+#ifdef DEBUG_REFINE
+  	std::cout << "Current Probability: " << current_prob << std::endl;
+#endif
+        int source = -1;
         // Check at left
         int xpos = current_x - 1;
         if (previous_direction != 0 && xpos >= XSIZE(mask) / 2)
         {
-            success = build_vector(xpos, current_y, current_vec);
-            if (success)
+#ifdef DEBUG_REFINE
+	        std::cout << "Checking at left..." << std::endl;
+#endif
+	        get_centered_piece(xpos, current_y, posx, posy);
+            success = prepare_piece();
+            if (!success) break;
+            posx = ROUND(posx / __reduction);
+            posy = ROUND(posy / __reduction);
+
+            success = build_vector(posx, posy, current_vec);
+	        if (success)
             {
-                dist_left = __selection_model.distance_to_average(current_vec);
-                if (dist_left < best_dist)
+                prob_left = __selection_model.getParticleProbability(current_vec);
+#ifdef DEBUG_REFINE
+  	            std::cout << "Probability at left: " 
+		                  << prob_left << std::endl;
+#endif
+                if (prob_left > best_prob)
                 {
-                    best_dist = dist_left;
+#ifdef DEBUG_REFINE
+	                std::cout << "Better prob. at left..." 
+		                      << prob_left << std::endl;
+#endif
+                    best_prob = prob_left;
                     source = 0;
                 }
             }
@@ -1241,13 +1593,30 @@ void QtWidgetMicrograph::refine_center(Particle &my_P)
         xpos = current_x + 1;
         if (previous_direction != 1 && xpos <= XSIZE(__piece) - XSIZE(mask) / 2)
         {
-            success = build_vector(xpos, current_y, current_vec);
+#ifdef DEBUG_REFINE
+	    std::cout << "Checking at right..." << std::endl;
+#endif
+            get_centered_piece(xpos, current_y, posx, posy);
+            success = prepare_piece();
+            if (!success) break;
+            posx = ROUND(posx / __reduction);
+            posy = ROUND(posy / __reduction);
+
+            success = build_vector(posx, posy, current_vec);
             if (success)
             {
-                dist_right = __selection_model.distance_to_average(current_vec);
-                if (dist_right < best_dist)
+                prob_right = __selection_model.getParticleProbability(current_vec);
+#ifdef DEBUG_REFINE
+  	            std::cout << "Probability at right: " 
+		                  << prob_right << std::endl;
+#endif
+                if (prob_right > best_prob)
                 {
-                    best_dist = dist_right;
+#ifdef DEBUG_REFINE
+	                std::cout << "Better prob. at right..." 
+		                      << prob_right << std::endl;
+#endif
+                    best_prob = prob_right;
                     source = 1;
                 }
             }
@@ -1257,13 +1626,30 @@ void QtWidgetMicrograph::refine_center(Particle &my_P)
         int ypos = current_y - 1;
         if (previous_direction != 2 && ypos >= YSIZE(mask) / 2)
         {
-            success = build_vector(current_x, ypos, current_vec);
+#ifdef DEBUG_REFINE
+	        std::cout << "Checking at top..." << std::endl;
+#endif
+            get_centered_piece(current_x, ypos, posx, posy);
+            success = prepare_piece();
+            if (!success) break;
+            posx = ROUND(posx / __reduction);
+            posy = ROUND(posy / __reduction);
+
+            success = build_vector(posx, posy, current_vec);
             if (success)
             {
-                dist_top = __selection_model.distance_to_average(current_vec);
-                if (dist_top < best_dist)
+                prob_top = __selection_model.getParticleProbability(current_vec);
+#ifdef DEBUG_REFINE
+  	            std::cout << "Probability at top: " 
+		                  << prob_top << std::endl;
+#endif
+                if (prob_top > best_prob)
                 {
-                    best_dist = dist_top;
+#ifdef DEBUG_REFINE
+	                std::cout << "Better prob. at top..." 
+		                      << prob_top << std::endl;
+#endif
+                    best_prob = prob_top;
                     source = 2;
                 }
             }
@@ -1273,13 +1659,30 @@ void QtWidgetMicrograph::refine_center(Particle &my_P)
         ypos = current_y + 1;
         if (previous_direction != 3 && ypos <= YSIZE(__piece) - YSIZE(mask) / 2)
         {
-            success = build_vector(current_x, ypos, current_vec);
+#ifdef DEBUG_REFINE
+	        std::cout << "Checking at bottom..." << std::endl;
+#endif
+            get_centered_piece(current_x, ypos, posx, posy);
+            success = prepare_piece();
+            if (!success) break;
+            posx = ROUND(posx / __reduction);
+            posy = ROUND(posy / __reduction);
+
+            success = build_vector(posx, posy, current_vec);
             if (success)
             {
-                dist_bottom = __selection_model.distance_to_average(current_vec);
-                if (dist_bottom < best_dist)
+                prob_bottom = __selection_model.getParticleProbability(current_vec);
+#ifdef DEBUG_REFINE
+  	            std::cout << "Probability at bottom: " 
+		                  << prob_bottom << std::endl;
+#endif
+                if (prob_bottom > best_prob)
                 {
-                    best_dist = dist_bottom;
+#ifdef DEBUG_REFINE
+	                std::cout << "Better prob. at bottom..."
+		                      << prob_bottom << std::endl;
+#endif
+                    best_prob = prob_bottom;
                     source = 3;
                 }
             }
@@ -1294,59 +1697,60 @@ void QtWidgetMicrograph::refine_center(Particle &my_P)
         {
             switch (source)
             {
-            case 0:
-                current_x--;
-                previous_direction = 1;
-                break;
-            case 1:
-                current_x++;
-                previous_direction = 0;
-                break;
-            case 2:
-                current_y--;
-                previous_direction = 3;
-                break;
-            case 3:
-                current_y++;
-                previous_direction = 2;
-                break;
+                case 0:
+                    current_x--;
+                    previous_direction = 1;
+                    break;
+                case 1:
+                    current_x++;
+                    previous_direction = 0;
+                    break;
+                case 2:
+                    current_y--;
+                    previous_direction = 3;
+                    break;
+                case 3:
+                    current_y++;
+                    previous_direction = 2;
+                    break;
             }
-            current_dist = best_dist;
+            current_prob = best_prob;
         }
     }
     while (improvement);
     my_P.x = current_x;
     my_P.y = current_y;
-    my_P.dist = current_dist;
+    my_P.prob = current_prob;
+#ifdef DEBUG_REFINE
+    char c;
+    std::cout << "Number of refined centers: " << counter++ << std::endl;
+    std::cout << "Press any KEY to continue..." << std::endl;
+    std::cin >> c;
+#endif
 }
+#undef DEBUG_REFINE
 
 /* Correct particles ------------------------------------------------------- */
 void QtWidgetMicrograph::move_particle(int _idx)
 {
     if (!__autoselection_done) return;
-    int imax = __auto_model.__training_particle.size();
-    for (int i = 0; i < imax; i++)
-        if (__auto_model.__training_particle.at(i).idx == _idx)
-        {
-            __auto_model.__training_particle.at(i).status = 2;
-            __auto_model.__training_particle.at(i).x = __m->coord(_idx).X;
-            __auto_model.__training_particle.at(i).y = __m->coord(_idx).Y;
-            break;
-        }
+    __auto_candidates[_idx].status = 2;
+    __auto_candidates[_idx].x = __m->coord(_idx).X;
+    __auto_candidates[_idx].y = __m->coord(_idx).Y;
 }
 
+/* Delete particles ---------------------------------------------------------*/
 void QtWidgetMicrograph::delete_particle(int _idx)
 {
+#ifdef DEBUG_DELETE
+    std::cout << "Deleted Particle: idx=" << _idx << std::endl;
+#endif    
     if (!__autoselection_done) return;
-    int imax = __auto_model.__training_particle.size();
-    for (int i = 0; i < imax; i++)
-        if (__auto_model.__training_particle.at(i).idx == _idx)
-        {
-            __auto_model.__training_particle.at(i).status = 0;
-            __error_index.push_back(i);
-            break;
-        }
+    __auto_candidates[_idx].status = 0;
+    __auto_candidates[_idx].prob = 0.0;
+    __rejected_particles.push_back(__auto_candidates[_idx]);
 }
+#undef DEBUG_DELETE
 
 /* Load models ------------------------------------------------------------- */
 void QtWidgetMicrograph::loadModels()
@@ -1354,8 +1758,8 @@ void QtWidgetMicrograph::loadModels()
     // Get the rootname
     bool ok;
     QString qfn_root = QInputDialog::getText("Loading model",
-                       "Model filename root", QLineEdit::Normal,
-                       __m->micrograph_name().c_str(), &ok);
+                       "Model", QLineEdit::Normal,
+                       "Model", &ok);
     if (!ok || qfn_root.isEmpty()) return;
     std::string fn_root = qfn_root.ascii();
 
@@ -1370,19 +1774,18 @@ void QtWidgetMicrograph::loadModels()
         return;
     }
     fh_params >> dummy >> __gray_bins
-              >> dummy >> __radial_bins
-              >> dummy >> __keep
-              >> dummy >> __piece_xsize
-              >> dummy >> __piece_ysize
-              >> dummy >> __particle_radius
-              >> dummy >> __min_distance_between_particles
-              >> dummy >> __output_scale
-              >> dummy >> __reduction
-              >> dummy >> __piece_overlap
-              >> dummy >> __particle_overlap
-              >> dummy >> __numin
-              >> dummy >> __numax
-              >> dummy >> __Nerror_models
+    >> dummy >> __radial_bins
+    >> dummy >> __keep
+    >> dummy >> __piece_xsize
+    >> dummy >> __piece_ysize
+    >> dummy >> __particle_radius
+    >> dummy >> __min_distance_between_particles
+    >> dummy >> __output_scale
+    >> dummy >> __reduction
+    >> dummy >> __piece_overlap
+    >> dummy >> __scan_overlap
+    >> dummy >> __numin
+    >> dummy >> __numax
     ;
     fh_params.close();
 
@@ -1400,46 +1803,26 @@ void QtWidgetMicrograph::loadModels()
     if (!fh_training)
         REPORT_ERROR(1, (std::string)"QtWidgetMicrograph::write: Cannot open file " +
                      fn_root + ".training" + " for input");
+    
     fh_training >> __training_loaded_model;
     fh_training.close();
-
-    // Load auto vectors
-    std::ifstream fh_auto;
-    fh_auto.open((fn_root + ".auto").c_str());
-    if (!fh_auto)
-        REPORT_ERROR(1, (std::string)"QtWidgetMicrograph::write: Cannot open file " +
-                     fn_root + ".auto" + " for input");
-    fh_auto >> __auto_loaded_model;
-    fh_auto.close();
-
+#ifdef DEBUG_LOAD
+    std::cout << "Model loaded..." << __training_loaded_model << std::endl;
+    std::cout << "Press any key and ENTER to continue..." << std::endl;
+    char c;
+    std::cin >> c;
+#endif
+    
+    if(__learn_particles_done == true || __is_model_loaded == true) __training_model.clear();
     // Build the selection model
-    buildSelectionModel();
-
-    // Load error vectors
-    for (int i = 0; i < __Nerror_models; i++)
-    {
-        Classification_model error;
-        __error_model.push_back(error);
-    }
-
-    std::ifstream fh_error;
-    __use_euclidean_distance_for_errors = false;
-    for (int i = 0; i < __Nerror_models; i++)
-    {
-        fh_error.open((fn_root + ".error" + integerToString(i, 1)).c_str());
-        if (!fh_error)
-            REPORT_ERROR(1, (std::string)"QtWidgetMicrograph::write: Cannot open file " +
-                         fn_root + ".error" + integerToString(i, 1) + " for input");
-        fh_error >> __error_model.at(i);
-        fh_error.close();
-        __error_model.at(i).build_model();
-        __use_euclidean_distance_for_errors |= !__error_model.at(i).well_posed();
-    }
+    //buildSelectionModel();
 
     // Particles have not been learnt but loaded from a file
     __learn_particles_done = false;
+    __is_model_loaded = true;
+    std::cout << "The model has been loaded..." << std::endl;
 }
-
+#undef DEBUG_LOAD
 /* Save models ------------------------------------------------------------- */
 void QtWidgetMicrograph::saveModels()
 {
@@ -1448,10 +1831,7 @@ void QtWidgetMicrograph::saveModels()
                                ".auto.pos");
 
     // Rebuild automatic vectors that have been moved
-    rebuild_moved_automatic_vectors();
-
-    // Classify errors
-    classify_errors();
+    //rebuild_moved_automatic_vectors();
 
     // Write results to a file
     write();
@@ -1460,110 +1840,37 @@ void QtWidgetMicrograph::saveModels()
 /* Rebuild automatic vectors that have been moved -------------------------- */
 void QtWidgetMicrograph::rebuild_moved_automatic_vectors()
 {
+    if(!__autoselection_done) return;
     // Rebuild vectors
     std::vector<int> indexes_to_rebuild, indexes_to_rebuild_in_micrograph;
-    int imax = __auto_model.__training_particle.size();
+    int imax = __auto_candidates.size();
+    int x, y, posx, posy;
+    bool success;
     for (int i = 0; i < imax; i++)
-        if (__auto_model.__training_particle.at(i).status == 2)
+        if (__auto_candidates[i].status == 2)
         {
-            indexes_to_rebuild.push_back(i);
-            indexes_to_rebuild_in_micrograph.push_back(__auto_model.__training_particle.at(i).idx);
-        }
-    Classification_model rebuilt_vectors;
-    buildVectors(indexes_to_rebuild_in_micrograph, rebuilt_vectors);
+            x = __m->coord(i).X;
+            y = __m->coord(i).Y;
+            get_centered_piece(x, y, posx, posy);
+            
+            success = prepare_piece();
+            if (!success) break;
+            
+            posx = ROUND(posx / __reduction);
+            posy = ROUND(posy / __reduction);
 
-    // Update the vectors in auto_vec
-    imax = indexes_to_rebuild.size();
-    for (int i = 0; i < imax; i++)
-    {
-        int idx = indexes_to_rebuild.at(i);
-        __auto_model.__training_particle.at(idx).status = 1;
-        __auto_model.__training_particle.at(idx).vec =
-            rebuilt_vectors.__training_particle.at(i).vec;
-    }
+            success = build_vector(posx, posy, __auto_candidates[i].vec);
+            __auto_candidates[i].status = 1;
+        }
 }
 
-/* Error classification ---------------------------------------------------- */
-void QtWidgetMicrograph::classify_errors()
+/* Get the false-positive particles----------------------------------------- */
+void QtWidgetMicrograph::getAutoFalsePositives()
 {
-    // Initialize error models
-    if (__error_model.size() == 0)
-    {
-        // Create the error models
-        for (int i = 0; i < __Nerror_models; i++)
-        {
-            Classification_model error;
-            __error_model.push_back(error);
-        }
-    }
-
-    // Assign randomly the errors to the models
-    int imax = __error_index.size();
+    int imax = __rejected_particles.size();
+    __training_model.addFalsePositives(imax);
     for (int i = 0; i < imax; i++)
-        __error_model.at(i % __Nerror_models).
-        add_particle(__auto_model.__training_particle.at(__error_index.at(i)));
-
-    // Set all the particles to an active status within the error models
-    for (int i = 0; i < __Nerror_models; i++)
-    {
-        int jmax = __error_model.at(i).__training_particle.size();
-        for (int j = 0; j < jmax; j++)
-            __error_model.at(i).__training_particle.at(j).status = 1;
-    }
-
-    // Iterate until no change
-    bool change;
-    do
-    {
-        change = false;
-
-        // Compute the average and covariance of each class
-        __use_euclidean_distance_for_errors = false;
-        for (int i = 0; i < __Nerror_models; i++)
-        {
-            __error_model.at(i).build_model();
-            __use_euclidean_distance_for_errors |= !__error_model.at(i).well_posed();
-        }
-
-        // Reassign each of the vectors in each class
-        for (int i = 0; i < __Nerror_models && !change; i++)
-        {
-            Classification_model &error_class = __error_model.at(i);
-            int lmax = error_class.__training_particle.size();
-            std::vector<Particle>::iterator ptr = error_class.__training_particle.begin();
-            for (int l = 0; l < lmax; l++, ptr++)
-            {
-                double best_dist = 0;
-                Matrix1D<double> &current_vec =
-                    error_class.__training_particle.at(l).vec;
-                int source = -1;
-                for (int j = 0; j < __Nerror_models; j++)
-                {
-                    double dist;
-                    if (__use_euclidean_distance_for_errors)
-                        dist = __error_model.at(j).euclidean_distance_to_average(current_vec);
-                    else
-                        dist = __error_model.at(j).distance_to_average(current_vec);
-                    if (dist < best_dist || source == -1)
-                    {
-                        source = j;
-                        best_dist = dist;
-                    }
-                }
-                error_class.__training_particle.at(l).dist = best_dist;
-                if (source != i)
-                {
-                    change = true;
-                    __error_model.at(source).add_particle(
-                        error_class.__training_particle.at(l));
-                    error_class.__training_particle.erase(ptr);
-                    break;
-                }
-            }
-        }
-    }
-    while (change);
-    __error_index.clear();
+        __training_model.addParticle(__rejected_particles[i], 2);
 }
 
 /* Write to a file --------------------------------------------------------- */
@@ -1571,9 +1878,18 @@ void QtWidgetMicrograph::write()
 {
     // Get the rootname
     bool ok;
-    std::string fn_root = (QInputDialog::getText("Saving model",
-                                            "Model filename root", QLineEdit::Normal, __m->micrograph_name().c_str(), &ok)).ascii();
-    if (!ok) return;
+    QString qfn_root = QInputDialog::getText("Saving model",
+                       "Model", QLineEdit::Normal,
+                       "Model", &ok);
+    if (!ok || qfn_root.isEmpty()) return;
+    std::string fn_root = qfn_root.ascii();
+
+
+
+
+/*    std::string fn_root = (QInputDialog::getText("Saving model",
+                                            "Model", QLineEdit::Normal, "Model", &ok)).ascii();
+    if (!ok) return;*/
 
     // Save the mask
     ImageXmipp save;
@@ -1596,17 +1912,16 @@ void QtWidgetMicrograph::write()
     << "output_scale=                   " << __output_scale                   << std::endl
     << "reduction_factor=               " << __reduction                      << std::endl
     << "piece_overlap=                  " << __piece_overlap                  << std::endl
-    << "particle_overlap=               " << __particle_overlap               << std::endl
+    << "particle_overlap=               " << __scan_overlap               << std::endl
     << "numin=                          " << __numin                          << std::endl
     << "numax=                          " << __numax                          << std::endl
-    << "Nerror_models=                  " << __Nerror_models                  << std::endl
     ;
     fh_params.close();
 
     // Save training vectors
     Classification_model aux_model;
     aux_model = __training_model;
-    aux_model.import_particles(__training_loaded_model);
+    //aux_model.import_data(__training_loaded_model);
     std::ofstream fh_training;
     fh_training.open((fn_root + ".training").c_str());
     if (!fh_training)
@@ -1614,29 +1929,7 @@ void QtWidgetMicrograph::write()
                      fn_root + ".training" + " for output");
     fh_training << aux_model << std::endl;
     fh_training.close();
-
-    // Save auto vectors
-    aux_model = __auto_model;
-    aux_model.import_particles(__auto_loaded_model);
-    std::ofstream fh_auto;
-    fh_auto.open((fn_root + ".auto").c_str());
-    if (!fh_auto)
-        REPORT_ERROR(1, (std::string)"QtWidgetMicrograph::write: Cannot open file " +
-                     fn_root + ".auto" + " for output");
-    fh_auto << aux_model << std::endl;
-    fh_auto.close();
-
-    // Save error vectors
-    std::ofstream fh_error;
-    for (int i = 0; i < __Nerror_models; i++)
-    {
-        fh_error.open((fn_root + ".error" + integerToString(i, 1)).c_str());
-        if (!fh_error)
-            REPORT_ERROR(1, (std::string)"QtWidgetMicrograph::write: Cannot open file " +
-                         fn_root + ".error" + integerToString(i, 1) + " for output");
-        fh_error << __error_model.at(i) << std::endl;
-        fh_error.close();
-    }
+    std::cout << "The model has been saved..." << std::endl;
 }
 
 /* Configure auto ---------------------------------------------------------- */
@@ -1646,11 +1939,10 @@ void QtWidgetMicrograph::configure_auto()
     QDialog   setPropertiesDialog(this, 0, TRUE);
     setPropertiesDialog.setCaption("Configure AutoSelect");
 #ifdef QT3_SUPPORT
-    Q3Grid     qgrid(2, &setPropertiesDialog);
+    Q3Grid    qgrid(2, &setPropertiesDialog);
 #else
     QGrid     qgrid(2, &setPropertiesDialog);
 #endif
-
     qgrid.setMinimumSize(250, 400);
 
     QLabel    lpiecexsize("Piece X size: ", &qgrid);
@@ -1691,7 +1983,7 @@ void QtWidgetMicrograph::configure_auto()
 
     QLabel    lmask_overlap("Mask overlap: ", &qgrid);
     QLineEdit mask_overlap(&qgrid);
-    mask_overlap.setText(integerToString(__particle_overlap).c_str());
+    mask_overlap.setText(integerToString(__scan_overlap).c_str());
 
     QLabel    lnumin("Min. Harmonic: ", &qgrid);
     QLineEdit numin(&qgrid);
@@ -1708,10 +2000,6 @@ void QtWidgetMicrograph::configure_auto()
     QLabel    lkeep("Keep: ", &qgrid);
     QLineEdit keep(&qgrid);
     keep.setText(floatToString(__keep).c_str());
-
-    QLabel    lNerror_models("#Error models: ", &qgrid);
-    QLineEdit Nerror_models(&qgrid);
-    Nerror_models.setText(integerToString(__Nerror_models).c_str());
 
     QPushButton okButton("Ok", &qgrid);
     QPushButton cancelButton("Cancel", &qgrid);
@@ -1733,12 +2021,11 @@ void QtWidgetMicrograph::configure_auto()
         __gray_bins = graybins.text().toInt();
         __radial_bins = radialbins.text().toInt();
         __particle_radius = particle_radius.text().toInt();
-        __particle_overlap = mask_overlap.text().toInt();
+        __scan_overlap = mask_overlap.text().toInt();
         __numin = numin.text().toInt();
         __numax = numax.text().toInt();
         __min_distance_between_particles = min_dist.text().toInt();
         __keep = keep.text().toFloat();
-        __Nerror_models = Nerror_models.text().toInt();
     }
 }
 
@@ -1802,6 +2089,12 @@ void QtWidgetMicrograph::slotDeleteMarkOther(int _coord)
     repaint();
 }
 
+void QtWidgetMicrograph::slotDeleteAutomatic(int _coord)
+{
+    __m->coord(_coord).valid = false;
+    repaint();
+}
+
 void QtWidgetMicrograph::slotChangeFamilyOther(int _coord, int _f)
 {
     __m->coord(_coord).label = _f;
@@ -1843,9 +2136,9 @@ AdjustContrastWidget::AdjustContrastWidget(int min, int max, float gamma,
         QtWidgetMicrograph *_qtwidgetmicrograph,
         QWidget *parent, const char *name, int wflags):
 #ifdef QT3_SUPPORT
-    QWidget(parent, name, (Qt::WindowFlags) wflags)
+        QWidget(parent, name, (Qt::WindowFlags) wflags)
 #else
-    QWidget(parent, name, wflags)
+        QWidget(parent, name, wflags)
 #endif
 {
     __qtwidgetmicrograph = _qtwidgetmicrograph;
@@ -1948,9 +2241,9 @@ void AdjustContrastWidget::scrollValueChanged(int new_val)
 CropWidget::CropWidget(QtWidgetMicrograph *_qtwidgetmicrograph,
                        QWidget *parent, const char *name, int wflags):
 #ifdef QT3_SUPPORT
-        QWidget(parent, name, (Qt::WindowFlags) wflags)
+                       QWidget(parent, name, (Qt::WindowFlags) wflags)
 #else
-        QWidget(parent, name, wflags)
+                       QWidget(parent, name, wflags)
 #endif
 {
     __qtwidgetmicrograph = _qtwidgetmicrograph;
@@ -1973,7 +2266,6 @@ CropWidget::CropWidget(QtWidgetMicrograph *_qtwidgetmicrograph,
 #else
     QGridLayout *grid = new QGridLayout(6, 3);
 #endif
-
     Layout->addLayout(grid, 5);
 
     // Layout the four bars
@@ -2160,7 +2452,6 @@ AdjustCircleRadiustWidget::AdjustCircleRadiustWidget(int min, int max,
 #else
     QGridLayout *grid = new QGridLayout(1, 3);
 #endif
-
     Layout->addLayout(grid);
 
     // Radius

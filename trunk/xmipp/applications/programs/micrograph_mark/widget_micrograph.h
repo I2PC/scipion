@@ -3,6 +3,7 @@
  * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
  *              Carlos Manzanares       (cmanzana@cnb.uam.es)
  *              Arun Kulshreshth        (arun_2000_iitd@yahoo.com)
+ *              Enrique Recarte Llorens (erecallo@hotmail.com)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -50,6 +51,7 @@
 #include "file_menu.h"
 
 #include <data/mask.h>
+#include <classification/naive_bayes.h>
 
 #include <vector>
 
@@ -69,7 +71,7 @@ public:
     // list of coordinates
     char status;          // rejected=0, selected=1 or moved=2
     Matrix1D<double> vec;   // vector of that particle
-    double dist;          // distance from the avg vector
+    double prob;          // distance from the avg vector
 
     // Print
     friend std::ostream & operator << (std::ostream &_out, const Particle &_p);
@@ -82,62 +84,120 @@ public:
 class Classification_model
 {
 public:
-    // Average of the model
-    Matrix1D<double>           __avg;
-    // Covariance of the model
-    Matrix2D<double>           __sigma;
-    // Inverse of sigma
-    Matrix2D<double>           __sigma_inv;
     // Example vectors
-    std::vector< Particle >         __training_particle;
-    // largest distance in the example set
-    double                     __largest_distance;
-    // Well posed
-    bool                       __well_posed;
+    std::vector< std::vector< Particle > >        __training_particles;
+    int                                           __classNo;
+    int                                           __micrographs_number;
+    std::vector<int>                              __micrographs_area;
+    std::vector<int>                              __particles_picked;
+    std::vector<int>                              __falsePositives;
+
+private:
+    //naive Bayes Network
+    xmippNaiveBayes *                             __bayesNet;
+
 public:
     // Clear
+    Classification_model(){
+        init();
+    }
     void clear();
-
-    // Reserve space for a number of example particles
-    void reserve_examples(int my_N)
+    void init()
     {
-        __training_particle.reserve(my_N);
+        __classNo = 3;
+	    __training_particles.resize(__classNo);
+	    __micrographs_number = 0;
+        __falsePositives.resize(0);
+    }
+
+    void reserve_examples(int my_N, int classIdx)
+    {
+        __training_particles[classIdx].resize(my_N);
+    }
+    
+    void addMicrographArea(int micrographArea)
+    {
+	    __micrographs_area.push_back(micrographArea);
+    }
+    
+    void addParticlePicked(int particlePicked)
+    {
+	    __particles_picked.push_back(particlePicked);
+    }
+    
+    void addFalsePositives(int falsePositives)
+    {
+	    __falsePositives.push_back(falsePositives);
+    }
+    
+    void addMicrographItem()
+    {
+	    __micrographs_number++;
+    }
+    
+    void import_data(const Classification_model &_model);
+
+    void import_MicrographParams(int particlesPicked, int micrographArea);
+
+    void refresh_micrographs_number(const Classification_model &_model)
+    {
+        __micrographs_number += _model.__micrographs_number;
     }
 
     // Add example particle to model
-    void add_particle(const Particle &p)
+    void addParticle(const Particle &p, int classIdx)
     {
-        __training_particle.push_back(p);
+        __training_particles[classIdx].push_back(p);
     }
-
+    
     // Import particles from another model
     void import_particles(const Classification_model &_model);
+    
+    void import_params(const Classification_model &_model);
 
     // Build average and sigma
-    void build_model();
-
-    // Well posed. The model is well posed if the determinant of the covariance
-    // matrix is different from zero
-    bool well_posed()
-    {
-        __well_posed = (XSIZE(__sigma) > 0) ? (__sigma.det() > 1e-1) : false;
-        return __well_posed;
-    }
-
-    // Compute the largest distance within the example set
-    void compute_largest_distance();
+    void build_model(const std::vector < Matrix2D<double> > &_features,
+                     const Matrix1D<double> &_probs, int _classNo);
 
     // Distance between two vectors
     double distance(const Matrix1D<double> &my_X, const Matrix1D<double> &my_Y);
 
-    // Distance between a vector and the average
-    double distance_to_average(const Matrix1D<double> &my_X)
+    //get the probability that _features belong to a positive particle
+    double getParticleProbability(const Matrix1D<double> &_features)
     {
-        return distance(__avg, my_X);
+        double p;
+        int k=__bayesNet->doInference(_features,p);
+        return p;
     }
-
-    // Euclidean distance between a vector and the average
-    double euclidean_distance_to_average(const Matrix1D<double> &my_X);
+    
+    //get the corresponding class for new_features
+    int getClass(const Matrix1D<double>	&new_features)
+    {
+        double p;
+        return __bayesNet->doInference(new_features,p);
+    }
+    //is a positive particle?
+    //#define DEBUG_FALSEPOSITIVES
+    bool isParticle(const Matrix1D<double> &new_features)
+    {
+    #ifdef DEBUG_FALSEPOSITIVES        
+        int classBelong = getClass(new_features);
+        if(classBelong == 2)
+        {
+            char c;
+            std::cout << "False positive found..." << std::endl;
+            //std::cin >> c;
+        }
+    #endif
+        return (getClass(new_features) == 0) ? true : false;
+    }
+    //init the naive bayesian network
+    void initNaiveBayes(const std::vector < Matrix2D<double> > 
+			&features, const Matrix1D<double> &probs,
+                        int discreteLevels)
+    {
+        __bayesNet=new xmippNaiveBayes(features, probs, discreteLevels);
+    }
 
     // Print
     friend std::ostream & operator << (std::ostream &_out, const Classification_model &_m);
@@ -147,6 +207,7 @@ public:
 
     // Print model
     void print_model(std::ostream &_out);
+    
 };
 
 /* Widget for the micrograph ----------------------------------------------- */
@@ -166,7 +227,6 @@ private:
 #else
     QVBoxLayout               *__gridLayout;
 #endif
-
     QtFileMenu                *__file_menu;
     bool                       __tilted;
     int                        __mingray;
@@ -192,6 +252,7 @@ private:
     int                        __auto_label;
     std::vector<int>                __error_index;
     Matrix2D<double>           __piece;
+    Matrix2D<double>           __original_piece;
     int                        __gray_bins;
     int                        __radial_bins;
     double                     __keep;
@@ -203,9 +264,10 @@ private:
     int                        __min_distance_between_particles;
     int                        __output_scale;
     int                        __reduction; // Of the piece with respect
-    // to the micrograph
+                                            // to the micrograph
     int                        __piece_overlap;
-    int                        __particle_overlap;
+    int                        __scan_overlap;
+    int                        __learn_overlap;
     int                        __numin;
     int                        __numax;
     double                     __th1; // 0.6
@@ -213,6 +275,12 @@ private:
     int                        __th3; // 50
     double                     __th4; // 0.8
     int                        __th5; // 10
+    int                        __classNo;
+    bool                       __is_model_loaded;
+    bool		               debugging;
+    std::vector<Particle>      __auto_candidates;
+    std::vector<Particle>      __rejected_particles;
+
 
 public:
     // Constructor
@@ -321,7 +389,10 @@ public:
 
     // Build vectors
     void buildVectors(std::vector<int> &_idx, Classification_model &_model);
-
+    
+    //Build vector from non particles
+    void buildNegativeVectors(Classification_model &__model);
+    
     // Build classfication vector
     // x,y are in the coordinate system of the piece (that might be
     // a reduced version of a piece in the micrograph)
@@ -342,8 +413,9 @@ public:
     // part of the piece has been already scanned. This happens towards the
     // right and bottom boundaries of the micrograph, where the pieces
     // need to be shifted in order to fit with the required size.
+    // The overlap parameter defines what piece overlap we want.
     bool get_corner_piece(int _top, int _left, int _skip_y,
-                          int &_next_skip_x, int &_next_skip_y, int &_next_top, int &_next_left);
+                          int &_next_skip_x, int &_next_skip_y, int &_next_top, int &_next_left, int overlap);
 
     // Denoise, reject outliers and equalize histogram
     // Returns true, if successful. False if unsuccessful (skip this piece)
@@ -361,15 +433,19 @@ public:
 
     // Automatically Select Particles
     void automaticallySelectParticles();
+    
+    //check if there are any particles in the actual scanning position
+    bool anyParticle(int posx, int posy, int rect_size);
 
     // Given a current scanning position, this function returns
     // the next scanning position whithin the current piece.
     // The skips are given by get_corner_piece.
     // It returns true, if the next scanning position can be computed.
     // Otherwise, if the piece has been completely scanned, it returns false
-    // Initialize _x,_y to 0,0 to scan the full piece (even if there are skips)
+    // Initialize _x,_y to 0,0 to scan the full piece (even if there are skips).
+    // The overlap parameter defines what particle overlap we want.
     bool get_next_scanning_pos(
-        int &_x, int &_y, int _skip_x, int _skip_y);
+        int &_x, int &_y, int _skip_x, int _skip_y, int overlap);
 
     // Run over the list sorted by distances. If two particles are within
     // a given distance then either reject both or the one with largest distance
@@ -380,7 +456,7 @@ public:
 
     // Reject those automatically selected particles that are very close
     // to manually selected ones.
-    void reject_previously_selected(const Classification_model &_model,
+    void reject_prev_selected(const Classification_model &_model,
                                     std::vector<Particle> &_candidate_vec);
 
     // Refine the position of a particle within the current piece
@@ -416,11 +492,18 @@ public:
 
     // Configure auto
     void configure_auto();
+        
+    std::vector < Matrix2D<double> > getFeatures(Classification_model &_model);
+    
+    Matrix1D<double> getClassesProbabilities(Classification_model &_model);
+    
+    void getAutoFalsePositives();
 
 public slots:
     void slotActiveFamily(int _f);
     void slotAddFamily(const char *_familyName);
     void slotDeleteMarkOther(int _coord);
+    void slotDeleteAutomatic(int _coord);
     void slotChangeFamilyOther(int _coord, int _f);
     void slotRepaint()
     {
