@@ -884,135 +884,107 @@ bool QtWidgetMicrograph::anyParticle(int posx, int posy, int rect_size)
 
 /* Build classification vector --------------------------------------------- */
 bool QtWidgetMicrograph::build_vector(int _x, int _y,
-                                      Matrix1D<double> &_result)
+    Matrix1D<double> &_result)
 {
-#ifdef DEBUG_BUILDVECTOR
-    std::cout << "build_vector(" << _x << "," << _y << "," << "_result)" << std::endl;
-#endif
+    #ifdef DEBUG_BUILDVECTOR
+        std::cout << "build_vector(" << _x << "," << _y << "," << "_result)" << std::endl;
+    #endif
 
     // First part is the foreground histogram
     // Second part is the background histogram
     // Third part is the radial mass distribution
     // The input image is supposed to be between 0 and bins-1
-    _result.initZeros(__radial_bins*(__gray_bins-1) + (2*__gray_bins-1) + (__numax - __numin + 1));
-    const Matrix2D<int> &mask = __mask.get_binary_mask2D();
+    _result.initZeros(__radial_bins*(__gray_bins-1));
+    const Matrix2D<int> &mask =      __mask.get_binary_mask2D();
+    const Matrix2D<int> &classif1 =  (*(__mask_classification[0]));
 
     if (STARTINGX(mask) + _x < STARTINGX(__piece)) return false;
     if (STARTINGY(mask) + _y < STARTINGY(__piece)) return false;
     if (FINISHINGX(mask) + _x > FINISHINGX(__piece)) return false;
     if (FINISHINGY(mask) + _y > FINISHINGY(__piece)) return false;
 
-#ifdef DEBUG_IMG_BUILDVECTOR
-    bool debug_go = false;
-    ImageXmipp save, savefg, savebig, saveOrig;
-    if (true)
-    {
-        save() = __piece;
-        save.write("PPP0.xmp");
-        save().initZeros(YSIZE(mask), XSIZE(mask));
-        STARTINGY(save()) = STARTINGY(mask);
-        STARTINGX(save()) = STARTINGX(mask);
-        savefg() = save();
-        savefg().initConstant(-1);
-        savebig() = savefg();
-        saveOrig() = savebig();
-	    debug_go = true;
-    }
-#endif
+    #ifdef DEBUG_IMG_BUILDVECTOR
+        bool debug_go = false;
+        ImageXmipp save, savefg, saveOrig;
+        if (true)
+        {
+            save() = __piece;
+            save.write("PPP0.xmp");
+            save().initZeros(YSIZE(mask), XSIZE(mask));
+            STARTINGY(save()) = STARTINGY(mask);
+            STARTINGX(save()) = STARTINGX(mask);
+            savefg() = save();
+            savefg().initConstant(-1);
+            saveOrig() = savefg();
+            debug_go = true;
+        }
+    #endif
 
     Matrix1D<int> radial_idx(__radial_bins);
     Matrix2D<double> particle;
     particle.initZeros(YSIZE(mask), XSIZE(mask));
     STARTINGY(particle) = STARTINGY(mask);
     STARTINGX(particle) = STARTINGX(mask);
-    Matrix2D<double> original_particle = particle;
-    Matrix1D<double> original_particle_values((int)(mask.sum()));
-    int idx_original_particle_values = 0;
+    // Matrix2D<double> original_particle = particle;
 
+    // Put the image values into the corresponding radial bins
+    // And draw the particle foreground
     FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
     {
         int val = (int)__piece(_y + i, _x + j);
         bool foreground = mask(i, j);
 
-        // Classif 1 -> Histogram of the radial bins
-        
-        int idx0 = (*__mask_classification[0])(i, j);
+        int idx0 = classif1(i, j);
         if (idx0 != -1)
             (*__radial_val[idx0])(radial_idx(idx0)++) = val;
 
         // Get particle
-        if (foreground) 
-	    {
-	        particle(i, j) = val;
-	        original_particle_values(idx_original_particle_values++) =
-	                original_particle(i , j) = __original_piece(_y+i, _x+j);
-	    }
+        /*if (foreground) 
+	{
+	    particle(i, j) = val;
+            // original_particle(i , j) = __original_piece(_y+i, _x+j);
+	}*/
 
-#ifdef DEBUG_IMG_BUILDVECTOR
-        if (debug_go)
-        {
-            
-	        save(i, j) = val;
-            if (foreground) 
+        #ifdef DEBUG_IMG_BUILDVECTOR
+            if (debug_go)
+            {
+                save(i, j) = val;
+                if (foreground) 
 	        {
 	            savefg(i, j) = val;
-	            saveOrig(i, j) = original_particle(i, j);
+	            saveOrig(i, j) =  __original_piece(_y+i, _x+j);
 	        }
-        }
-#endif
+            }
+        #endif
     }
 
-    int idx_result = 0;
-    histogram1D hist_original;
-    compute_hist(original_particle_values, hist_original, 2 * __gray_bins);
-    
-    for (int i = 0; i < 2 * __gray_bins - 1; i++)
-       _result(idx_result++) = hist_original(i);
-				     
     // Compute the histogram of the radial bins and store them  
+    int idx_result=0;
     for (int i = 0; i < __radial_bins; i++)
     {
-        histogram1D hist;
+        static histogram1D hist;
         compute_hist(*__radial_val[i], hist, 0, __gray_bins - 1, __gray_bins);
         for (int j = 0; j < __gray_bins - 1; j++)
             _result(idx_result++) = hist(j);
     }
 
-    // Compute the rotational spectrum
-    int dr = 1;
-    Rotational_Spectrum spt;
-    spt.rl = 3;
-    spt.rh = __particle_radius / __reduction;
-    spt.dr = dr;
-    spt.numin = __numin;
-    spt.numax = __numax;
-    spt.x0 = (double)XSIZE(particle) / 2;
-    spt.y0 = (double)YSIZE(particle) / 2;
-    spt.compute_rotational_spectrum(particle, spt.rl, spt.rh, dr, 
-                                    spt.rh - spt.rl);
-    
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(spt.rot_spectrum)
-    _result(idx_result++) = spt.rot_spectrum(i);
+    #ifdef DEBUG_IMG_BUILDVECTOR
+        if (debug_go)
+        {
+            save.write("PPP1.xmp");
+            savefg.write("PPP2.xmp");
+            saveOrig.write("PPP3.xmp");
+        }
+    #endif
 
-#ifdef DEBUG_IMG_BUILDVECTOR
-    if (debug_go)
-    {
-        save.write("PPP1.xmp");
-        savefg.write("PPP2.xmp");
-        saveOrig.write("PPP7.xmp");
-    }
-#endif
-
-#ifdef DEBUG_BUILDVECTOR
-    std::cout << _result.transpose() << std::endl;
-    std::cout << "Press any key\n";
-    char c;
-    std::cin >> c;
-#endif
+    #ifdef DEBUG_BUILDVECTOR
+        std::cout << _result.transpose() << std::endl;
+        std::cout << "Press any key\n";
+        char c;
+        std::cin >> c;
+    #endif
     return true;
 }
-#undef DEBUG_BUILDVECTOR
-#undef DEBUG_IMG_BUILDVECTOR
 
 /* Get piece --------------------------------------------------------------- */
 // to get the piece containing (x,y) of size xsize,ysize
