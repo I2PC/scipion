@@ -250,6 +250,18 @@ double detectability_error(const histogram1D &h1, const histogram1D &h2)
     return error;
 }
 
+/* Kullback Leibler distance ----------------------------------------------- */
+double KLDistance(const histogram1D& h1, const histogram1D& h2)
+{
+    if (XSIZE(h1)!=XSIZE(h2))
+        REPORT_ERROR(1,"KLDistance: Histograms of different sizes");
+    
+    double retval=0;
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(h1)
+        if (h2(i)!=0.0) retval += h1(i)*log10(h1(i)/h2(i)); 
+    return retval;
+}
+
 /* ------------------------------------------------------------------------- */
 /* IRREGULAR HISTOGRAMS                                                      */
 /* ------------------------------------------------------------------------- */
@@ -302,6 +314,12 @@ std::ostream & operator << (std::ostream &_out,
 double IrregularHistogram1D::operator()(int i) const
 {
     return __hist(i);
+}
+
+/* Get value --------------------------------------------------------------- */
+const histogram1D& IrregularHistogram1D::getHistogram() const
+{
+    return __hist;
 }
 
 /* ------------------------------------------------------------------------- */

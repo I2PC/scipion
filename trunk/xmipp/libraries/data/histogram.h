@@ -343,6 +343,9 @@ class IrregularHistogram1D
         
         /// Get value
         double operator()(int i) const;
+        
+        /// Get histogram
+        const histogram1D& getHistogram() const;
 };
 
 /// @defgroup HistogramFunctions1D Functions related to histograms 1D
@@ -453,6 +456,17 @@ void compute_hist(const Matrix3D< T >& v, histogram1D& hist,
  * @endcode
  */
 double detectability_error(const histogram1D& h1, const histogram1D& h2);
+
+/** Compute the Kullback-Leibler distance between two pdf's
+ * @ingroup HistogramFunctions1D
+ *
+ * The input histograms are expressed as probability density functions.
+ *
+ * @code
+ * distance = KLDistance(hist1, hist2);
+ * @endcode
+ */
+double KLDistance(const histogram1D& h1, const histogram1D& h2);
 
 /** Returns the effective range of a multidimensional array
  * @ingroup HistogramFunctions1D
