@@ -280,7 +280,7 @@ xmippNaiveBayes::~xmippNaiveBayes()
 int xmippNaiveBayes::doInference(const Matrix1D<double>	&newFeatures,
     double &probability)
 {
-    debugging = true;
+    debugging = false;
     static Matrix1D<double> classesProbs;
     classesProbs = __priorProbsLog10;
     for(int f=0; f<Nfeatures; f++)
