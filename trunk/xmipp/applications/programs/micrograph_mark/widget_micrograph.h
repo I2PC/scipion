@@ -151,9 +151,8 @@ public:
     }
     
     // Is a particle?
-    bool isParticle(const Matrix1D<double> &new_features)
+    bool isParticle(const Matrix1D<double> &new_features, double &p)
     {
-        double p;
         int k=__bayesNet->doInference(new_features,p);
         return (k==0) ? true : false;
     }
