@@ -297,6 +297,8 @@ void Prog_create_projection_library_Parameters::run()
                                      "_closest_sampling_points.doc");
             */
 	    mysampling.compute_neighbors();
+	    mysampling.save_sampling_file(output_file_root+ 
+		"_closest_sampling_points.doc");
 	    #ifdef  DEBUGTIME
 	    time (&end);
 	    time_dif = difftime (end,start); start=end;
