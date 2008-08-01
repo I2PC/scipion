@@ -61,7 +61,6 @@
 //#define DEBUG_MORE_AUTO
 //#define DEBUG_REFINE
 //#define DEBUG_PREPARE
-//#define DEBUG_BUILDVECTORS
 //#define DEBUG_CLASSIFY
 //#define DEBUG_BUILDVECTOR
 //#define DEBUG_IMG_BUILDVECTOR
@@ -232,11 +231,10 @@ QtWidgetMicrograph::QtWidgetMicrograph(QtMainWidgetMark *_mainWidget,
     __piece_overlap                  = 2 * __particle_radius;
     __scan_overlap                   = (int)(2 * __particle_radius * 0.9);
     __learn_overlap                  = (int)(2 * __particle_radius * 0.5);
-    __numin                          = 1;
-    __numax                          = 15;
     __use_background                 = false;
     __classNo                        = 3;
     __is_model_loaded                = false;
+    __NCorrelationFeatures           = -1;
     
 #ifdef QT3_SUPPORT
     __gridLayout                     = new Q3VBoxLayout(this);
@@ -660,6 +658,12 @@ void QtWidgetMicrograph::classifyMask()
     Matrix2D<int> *classif1 = new Matrix2D<int>;
     classif1->resize(mask);
     classif1->initConstant(-1);
+
+    Matrix2D<int> *classif2 = new Matrix2D<int>;
+    classif2->resize(mask);
+    classif2->initConstant(-1);
+    const double deltaAng=(PI/8.0);
+
     Matrix1D<int> Nrad(__radial_bins);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
     {
@@ -667,31 +671,47 @@ void QtWidgetMicrograph::classifyMask()
         double angle = atan2((double)i, (double)j);
         if (angle < 0) angle += 2 * PI;
 
-        // Classif1 is the classification for the radial mass distribution
         if (radius < max_radius)
         {
+            // Classif1 is the classification for the radial mass distribution
             int radius_idx;
             if (radius > 6) radius_idx = XMIPP_MIN(__radial_bins - 1, 1 + 
 	                                 FLOOR((radius - 6) / radial_step));
-            else          radius_idx = 0;
+            else            radius_idx = 0;
             (*classif1)(i, j) = radius_idx;
             Nrad(radius_idx)++;
+
+            // Classif2 is the classification by angles
+            (*classif2)(i, j) = FLOOR(angle/deltaAng);
         }
     }
     __mask_classification.push_back(classif1);
+    __mask_classification.push_back(classif2);
 
-    // Create the holders for the radius values in classif1
+    // Create the holders for the radius values in classif1 and classif2
     for (int i = 0; i < __radial_bins; i++)
     {
-        Matrix1D<int> *aux = new Matrix1D<int>;
-        aux->initZeros(Nrad(i));
-        __radial_val.push_back(aux);
+        Matrix1D<int> *aux1 = new Matrix1D<int>;
+        aux1->initZeros(Nrad(i));
+        __radial_val.push_back(aux1);
+        
+        Matrix1D<double> *aux2 = new Matrix1D<double>;
+        aux2->initZeros(ROUND(2*PI/deltaAng));
+        __angular_radial_val.push_back(aux2);
     }
+
+    // Count how many features are there by correlation
+    __NCorrelationFeatures = 0;
+    for (int i = CEIL(__radial_bins/4); i < __radial_bins; i+=2)
+        __NCorrelationFeatures += ROUND(2*PI/deltaAng);
 
     #ifdef DEBUG_CLASSIFY
         ImageXmipp save;
         typeCast(*classif1, save());
-        save.write("PPPmaskClassification.xmp");
+        save.write("PPPmaskClassification1.xmp");
+
+        typeCast(*classif2, save());
+        save.write("PPPmaskClassification2.xmp");
     #endif
 }
 
@@ -709,9 +729,6 @@ void QtWidgetMicrograph::buildVectors(std::vector<int> &_idx,
     Matrix1D<double> v;
     int numParticles = 0;
 
-    #ifdef DEBUG_BUILDVECTORS
-        std::cout << "Number of particles marked " << num_part << std::endl;
-    #endif
     Matrix1D<char> visited(num_part);
     while (visited.sum() < num_part)
     {
@@ -778,10 +795,6 @@ void QtWidgetMicrograph::buildVectors(std::vector<int> &_idx,
                 numParticles++;
             }
         }
-
-        #ifdef DEBUG_BUILDVECTORS
-            std::cout << "Processed particle: " << numParticles << std::endl;
-        #endif       
     }
     _model.addParticlePicked(numParticles);
 }
@@ -896,13 +909,11 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
         std::cout << "build_vector(" << _x << "," << _y << "," << "_result)" << std::endl;
     #endif
 
-    // First part is the foreground histogram
-    // Second part is the background histogram
-    // Third part is the radial mass distribution
-    // The input image is supposed to be between 0 and bins-1
-    _result.initZeros(__radial_bins*(__gray_bins-1));
+    // Resize the output and make same aliases
+    _result.initZeros(__radial_bins*(__gray_bins-1)+__NCorrelationFeatures);
     const Matrix2D<int> &mask =      __mask.get_binary_mask2D();
     const Matrix2D<int> &classif1 =  (*(__mask_classification[0]));
+    const Matrix2D<int> &classif2 =  (*(__mask_classification[1]));
 
     if (STARTINGX(mask) + _x < STARTINGX(__piece)) return false;
     if (STARTINGY(mask) + _y < STARTINGY(__piece)) return false;
@@ -934,15 +945,19 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
     // Matrix2D<double> original_particle = particle;
 
     // Put the image values into the corresponding radial bins
-    // And draw the particle foreground
     FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
     {
         int val = (int)__piece(_y + i, _x + j);
         bool foreground = mask(i, j);
 
-        int idx0 = classif1(i, j);
-        if (idx0 != -1)
-            (*__radial_val[idx0])(radial_idx(idx0)++) = val;
+        int idx1 = classif1(i, j);
+        if (idx1 != -1)
+        {
+            (*__radial_val[idx1])(radial_idx(idx1)++) = val;
+            int idx2 = classif2(i, j);
+            if (idx2 != -1)
+                (*__angular_radial_val[idx1])(idx2) += val;
+        }
 
         // Get particle
         /*if (foreground) 
@@ -972,6 +987,21 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
         compute_hist(*__radial_val[i], hist, 0, __gray_bins - 1, __gray_bins);
         for (int j = 0; j < __gray_bins - 1; j++)
             _result(idx_result++) = hist(j);
+    }
+
+    // Compute the autocorrelation of the rings
+    for (int i = CEIL(__radial_bins/4); i < __radial_bins; i+=2)
+    {
+        // Normalize the radial profile
+        *(__angular_radial_val[i])/=(*(__angular_radial_val[i])).sum();
+
+        // Compute autocorrelation
+        static Matrix1D<double> autocorr;
+        auto_correlation_vector(*(__angular_radial_val[i]),autocorr);
+        
+        // Store
+        for (int j = 0; j < XSIZE(autocorr); j++)
+            _result(idx_result++) = autocorr(j);
     }
 
     #ifdef DEBUG_IMG_BUILDVECTOR
@@ -1526,8 +1556,6 @@ void QtWidgetMicrograph::loadModels()
               >> dummy >> __reduction
               >> dummy >> __piece_overlap
               >> dummy >> __scan_overlap
-              >> dummy >> __numin
-              >> dummy >> __numax
     ;
     fh_params.close();
 
@@ -1597,8 +1625,6 @@ void QtWidgetMicrograph::saveModels()
               << "reduction_factor=               " << __reduction                      << std::endl
               << "piece_overlap=                  " << __piece_overlap                  << std::endl
               << "particle_overlap=               " << __scan_overlap               << std::endl
-              << "numin=                          " << __numin                          << std::endl
-              << "numax=                          " << __numax                          << std::endl
     ;
     fh_params.close();
 
@@ -1668,14 +1694,6 @@ void QtWidgetMicrograph::configure_auto()
     QLineEdit mask_overlap(&qgrid);
     mask_overlap.setText(integerToString(__scan_overlap).c_str());
 
-    QLabel    lnumin("Min. Harmonic: ", &qgrid);
-    QLineEdit numin(&qgrid);
-    numin.setText(integerToString(__numin).c_str());
-
-    QLabel    lnumax("Max. Harmonic: ", &qgrid);
-    QLineEdit numax(&qgrid);
-    numax.setText(integerToString(__numax).c_str());
-
     QLabel    lmin_dist("Min. Distance: ", &qgrid);
     QLineEdit min_dist(&qgrid);
     min_dist.setText(integerToString(__min_distance_between_particles).c_str());
@@ -1705,8 +1723,6 @@ void QtWidgetMicrograph::configure_auto()
         __radial_bins = radialbins.text().toInt();
         __particle_radius = particle_radius.text().toInt();
         __scan_overlap = mask_overlap.text().toInt();
-        __numin = numin.text().toInt();
-        __numax = numax.text().toInt();
         __min_distance_between_particles = min_dist.text().toInt();
         __keep = keep.text().toFloat();
     }
