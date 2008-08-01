@@ -40,6 +40,8 @@
 #include <data/denoise.h>
 #include <reconstruction/fourier_filter.h>
 
+#include <algorithm>
+
 #include <qinputdialog.h>
 #include <qmessagebox.h>
 #include <qlabel.h>
@@ -576,6 +578,10 @@ void QtWidgetMicrograph::automaticallySelectParticles()
                  << __auto_candidates.size() << std::endl;
     #endif
 
+    // Sort particles by probability
+    std::sort(__auto_candidates.begin(),__auto_candidates.end(),
+        SDescendingParticleSort());
+    
     // Reject the candidates that are pointing to the same particle
     int Nalive = reject_within_distance(__auto_candidates, __particle_radius,
         false);

@@ -80,6 +80,14 @@ public:
     void read(std::istream &_in, int _vec_size);
 };
 
+struct SDescendingParticleSort
+{
+     bool operator()(const Particle& rpStart, const Particle& rpEnd)
+     {
+          return rpStart.prob > rpEnd.prob;
+     }
+};
+
 /* Classification model ---------------------------------------------------- */
 class Classification_model
 {
