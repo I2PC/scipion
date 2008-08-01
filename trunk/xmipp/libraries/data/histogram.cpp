@@ -251,6 +251,60 @@ double detectability_error(const histogram1D &h1, const histogram1D &h2)
 }
 
 /* ------------------------------------------------------------------------- */
+/* IRREGULAR HISTOGRAMS                                                      */
+/* ------------------------------------------------------------------------- */
+/* Initialization ---------------------------------------------------------- */
+void IrregularHistogram1D::init(const histogram1D &hist,
+    const Matrix1D<int> &bins)
+{
+    int steps_no = XSIZE(bins);
+    __binsRightLimits.initZeros(steps_no);
+    __hist.initZeros(steps_no);
+
+    int k = 0;
+    for (int i = 0; i < steps_no; i++)
+    {
+        hist.index2val(bins(i), __binsRightLimits(i));
+        __hist(i) = 0;
+        for (int j = k; j <= bins(i); j++)
+            __hist(i) += hist(j);
+        k = bins(i) + 1;
+    }
+}
+
+/* val2index --------------------------------------------------------------- */
+int IrregularHistogram1D::val2Index(double value)
+{
+    int binsNo = XSIZE(__binsRightLimits);
+    for (int i = 0; i < binsNo; i++)
+        if(value <= __binsRightLimits(i)) return i;
+    
+    //In case the value is greater, we return the last bin
+    return binsNo - 1;
+}
+
+/* Normalization ----------------------------------------------------------- */
+void IrregularHistogram1D::selfNormalize()
+{
+    __hist /= __hist.sum();
+}
+
+/* Show -------------------------------------------------------------------- */
+std::ostream & operator << (std::ostream &_out,
+    const IrregularHistogram1D &_hist)
+{
+    for (int i = 0; i < XSIZE(_hist.__binsRightLimits); i++)
+        _out << "\t" << _hist.__binsRightLimits(i) << "\t\t" << _hist.__hist(i) << std::endl;
+    return _out;
+}
+
+/* Get value --------------------------------------------------------------- */
+double IrregularHistogram1D::operator()(int i) const
+{
+    return __hist(i);
+}
+
+/* ------------------------------------------------------------------------- */
 /* HISTOGRAMS 2D                                                             */
 /* ------------------------------------------------------------------------- */
 /* Clear ------------------------------------------------------------------- */

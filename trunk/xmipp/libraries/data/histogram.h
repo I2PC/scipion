@@ -315,6 +315,36 @@ public:
     }
 };
 
+/** Irregular histogram.
+ * @ingroup Histograms
+ *
+ *  This class is initialized with a regular histogram and a set of bins.
+ *  The class builds a new histogram in which the values within bins of
+ *  the original histogram are gathered.
+ *  The class provides the standard operations with histograms. */
+class IrregularHistogram1D
+{
+    public:
+        histogram1D         __hist;
+        Matrix1D<double>    __binsRightLimits;
+    public:
+        /// Initialize class
+        void init(const histogram1D &oldHistogram, const Matrix1D<int> &bins);
+        
+        /// Return the index corresponding to a certain value
+        int val2Index(double value);
+        
+        /// Normalize to be a probability density function
+        void selfNormalize();
+        
+        /// Show
+        friend std::ostream & operator << (std::ostream &_out,
+            const IrregularHistogram1D &_h);
+        
+        /// Get value
+        double operator()(int i) const;
+};
+
 /// @defgroup HistogramFunctions1D Functions related to histograms 1D
 /// @ingroup Histograms
 
