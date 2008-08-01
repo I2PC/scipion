@@ -277,7 +277,8 @@ xmippNaiveBayes::~xmippNaiveBayes()
 }
 
 //#define DEBUG_MORE
-int xmippNaiveBayes::doInference(const Matrix1D<double>	&newFeatures)
+int xmippNaiveBayes::doInference(const Matrix1D<double>	&newFeatures,
+    double &probability)
 {
     debugging = true;
     static Matrix1D<double> classesProbs;
@@ -302,7 +303,14 @@ int xmippNaiveBayes::doInference(const Matrix1D<double>	&newFeatures)
                 }
             #endif        	        
         }
-    int bestk; classesProbs.maxIndex(bestk);
+    int bestk=0;
+    probability=classesProbs(0);
+    for (int k=1; k<K; k++)
+        if (classesProbs(k)>probability)
+        {
+            probability=classesProbs(k);
+            bestk=k;
+        }
 
     #ifdef DEBUG_CLASSIFICATION
         if(debugging == true)
