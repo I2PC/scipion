@@ -74,7 +74,6 @@
 //#define DEBUG_GETSCANNING
 //#define DEBUG_MORE_GETSCANNING
 //#define DEBUG_REJECT
-//#define DEBUG_DELETE
 
 /* Show -------------------------------------------------------------------- */
 std::ostream & operator << (std::ostream &_out, const Particle &_p)
@@ -1709,15 +1708,20 @@ void QtWidgetMicrograph::move_particle(int _idx)
 /* Delete particles ---------------------------------------------------------*/
 void QtWidgetMicrograph::delete_particle(int _idx)
 {
-#ifdef DEBUG_DELETE
-    std::cout << "Deleted Particle: idx=" << _idx << std::endl;
-#endif    
     if (!__autoselection_done) return;
     __auto_candidates[_idx].status = 0;
     __auto_candidates[_idx].prob = 0.0;
     __rejected_particles.push_back(__auto_candidates[_idx]);
 }
-#undef DEBUG_DELETE
+
+/* Get the false-positive particles----------------------------------------- */
+void QtWidgetMicrograph::getAutoFalsePositives()
+{
+    int imax = __rejected_particles.size();
+    __training_model.addFalsePositives(imax);
+    for (int i = 0; i < imax; i++)
+        __training_model.addParticleTraining(__rejected_particles[i], 2);
+}
 
 /* Load models ------------------------------------------------------------- */
 void QtWidgetMicrograph::loadModels()
@@ -1741,18 +1745,18 @@ void QtWidgetMicrograph::loadModels()
         return;
     }
     fh_params >> dummy >> __gray_bins
-    >> dummy >> __radial_bins
-    >> dummy >> __keep
-    >> dummy >> __piece_xsize
-    >> dummy >> __piece_ysize
-    >> dummy >> __particle_radius
-    >> dummy >> __min_distance_between_particles
-    >> dummy >> __output_scale
-    >> dummy >> __reduction
-    >> dummy >> __piece_overlap
-    >> dummy >> __scan_overlap
-    >> dummy >> __numin
-    >> dummy >> __numax
+              >> dummy >> __radial_bins
+              >> dummy >> __keep
+              >> dummy >> __piece_xsize
+              >> dummy >> __piece_ysize
+              >> dummy >> __particle_radius
+              >> dummy >> __min_distance_between_particles
+              >> dummy >> __output_scale
+              >> dummy >> __reduction
+              >> dummy >> __piece_overlap
+              >> dummy >> __scan_overlap
+              >> dummy >> __numin
+              >> dummy >> __numax
     ;
     fh_params.close();
 
@@ -1775,8 +1779,6 @@ void QtWidgetMicrograph::loadModels()
     fh_training.close();
 
     if(__learn_particles_done == true || __is_model_loaded == true) __training_model.clear();
-    // Build the selection model
-    //buildSelectionModel();
 
     // Particles have not been learnt but loaded from a file
     __learn_particles_done = false;
@@ -1787,29 +1789,6 @@ void QtWidgetMicrograph::loadModels()
 /* Save models ------------------------------------------------------------- */
 void QtWidgetMicrograph::saveModels()
 {
-    if (__autoselection_done)
-        __m->write_coordinates(__auto_label, __m->micrograph_name() +
-                               ".auto.pos");
-
-    // Rebuild automatic vectors that have been moved
-    //rebuild_moved_automatic_vectors();
-
-    // Write results to a file
-    write();
-}
-
-/* Get the false-positive particles----------------------------------------- */
-void QtWidgetMicrograph::getAutoFalsePositives()
-{
-    int imax = __rejected_particles.size();
-    __training_model.addFalsePositives(imax);
-    for (int i = 0; i < imax; i++)
-        __training_model.addParticleTraining(__rejected_particles[i], 2);
-}
-
-/* Write to a file --------------------------------------------------------- */
-void QtWidgetMicrograph::write()
-{
     // Get the rootname
     bool ok;
     QString qfn_root = QInputDialog::getText("Saving model",
@@ -1818,12 +1797,10 @@ void QtWidgetMicrograph::write()
     if (!ok || qfn_root.isEmpty()) return;
     std::string fn_root = qfn_root.ascii();
 
-
-
-
-/*    std::string fn_root = (QInputDialog::getText("Saving model",
-                                            "Model", QLineEdit::Normal, "Model", &ok)).ascii();
-    if (!ok) return;*/
+    // Save the automatically selected particles
+    if (__autoselection_done)
+        __m->write_coordinates(__auto_label, __m->micrograph_name() +
+                               ".auto.pos");
 
     // Save the mask
     ImageXmipp save;
@@ -1836,26 +1813,25 @@ void QtWidgetMicrograph::write()
     if (!fh_params)
         REPORT_ERROR(1, (std::string)"QtWidgetMicrograph::write: Cannot open file " +
                      fn_root + ".param" + " for output");
-    fh_params << "gray_bins=                    " << __gray_bins                     << std::endl
-    << "radial_bins=                    " << __radial_bins                   << std::endl
-    << "keep=                         " << __keep                          << std::endl
-    << "piece_xsize=                  " << __piece_xsize                   << std::endl
-    << "piece_ysize=                  " << __piece_ysize                   << std::endl
-    << "particle_radius=                " << __particle_radius               << std::endl
-    << "min_distance_between_particles= " << __min_distance_between_particles << std::endl
-    << "output_scale=                   " << __output_scale                   << std::endl
-    << "reduction_factor=               " << __reduction                      << std::endl
-    << "piece_overlap=                  " << __piece_overlap                  << std::endl
-    << "particle_overlap=               " << __scan_overlap               << std::endl
-    << "numin=                          " << __numin                          << std::endl
-    << "numax=                          " << __numax                          << std::endl
+    fh_params << "gray_bins=                      " << __gray_bins                     << std::endl
+              << "radial_bins=                    " << __radial_bins                   << std::endl
+              << "keep=                           " << __keep                          << std::endl
+              << "piece_xsize=                    " << __piece_xsize                   << std::endl
+              << "piece_ysize=                    " << __piece_ysize                   << std::endl
+              << "particle_radius=                " << __particle_radius               << std::endl
+              << "min_distance_between_particles= " << __min_distance_between_particles << std::endl
+              << "output_scale=                   " << __output_scale                   << std::endl
+              << "reduction_factor=               " << __reduction                      << std::endl
+              << "piece_overlap=                  " << __piece_overlap                  << std::endl
+              << "particle_overlap=               " << __scan_overlap               << std::endl
+              << "numin=                          " << __numin                          << std::endl
+              << "numax=                          " << __numax                          << std::endl
     ;
     fh_params.close();
 
     // Save training vectors
     Classification_model aux_model;
     aux_model = __training_model;
-    //aux_model.import_data(__training_loaded_model);
     std::ofstream fh_training;
     fh_training.open((fn_root + ".training").c_str());
     if (!fh_training)
@@ -2064,6 +2040,9 @@ void QtWidgetMicrograph::slotChangeCircleRadius()
     adjustCircleRadius->show();
 }
 
+/* ------------------------------------------------------------------------- */
+/* Adjust contrast widget                                                    */
+/* ------------------------------------------------------------------------- */
 /* AdjustContrastWidget ---------------------------------------------------- */
 // Constructor
 AdjustContrastWidget::AdjustContrastWidget(int min, int max, float gamma,
@@ -2170,6 +2149,9 @@ void AdjustContrastWidget::scrollValueChanged(int new_val)
                                          __scroll_max->value(), __scroll_gamma->value() / 10.0);
 }
 
+/* ------------------------------------------------------------------------- */
+/* Crop widget                                                               */
+/* ------------------------------------------------------------------------- */
 /* CropWidget -------------------------------------------------------------- */
 // Constructor
 CropWidget::CropWidget(QtWidgetMicrograph *_qtwidgetmicrograph,
@@ -2356,7 +2338,9 @@ void CropWidget::cancel()
     close();
 }
 
-
+/* ------------------------------------------------------------------------- */
+/* Adjust circle widget                                                      */
+/* ------------------------------------------------------------------------- */
 /* AdjustCircleWidget ------------------------------------------------------ */
 // Constructor
 AdjustCircleRadiustWidget::AdjustCircleRadiustWidget(int min, int max,

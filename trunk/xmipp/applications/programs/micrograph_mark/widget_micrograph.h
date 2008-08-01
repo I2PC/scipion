@@ -438,9 +438,6 @@ public:
     // Save models
     void saveModels();
 
-    // Write all important information for particle selecting to a file
-    void write();
-
     // Configure auto
     void configure_auto();
         
