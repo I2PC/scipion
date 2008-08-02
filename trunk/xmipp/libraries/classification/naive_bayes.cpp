@@ -322,3 +322,12 @@ int xmippNaiveBayes::doInference(const Matrix1D<double>	&newFeatures,
     #endif
     return bestk;
 }
+
+/* Show -------------------------------------------------------------------- */
+std::ostream & operator << (std::ostream &_out, const xmippNaiveBayes &naive)
+{
+    for (int f=0; f<naive.Nfeatures; f++)
+        _out << "Node " << f << std::endl
+             << *(naive.__leafs[f]) << std::endl;
+    return _out;
+}

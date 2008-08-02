@@ -108,6 +108,10 @@ public:
 
     // Returns the class with the largest probability given a set of features
     int doInference(const Matrix1D<double> &newFeatures, double &probability);
+    
+    /// Show
+    friend std::ostream & operator << (std::ostream &_out,
+        const xmippNaiveBayes &naive);
 };
 //@}
 #endif
