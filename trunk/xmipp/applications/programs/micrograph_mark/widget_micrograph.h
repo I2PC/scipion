@@ -105,17 +105,17 @@ public:
 
 public:
     // Constructor
-    Classification_model() {
-        init();
+    Classification_model(int _classNo=3) {
+        init(_classNo);
     }
 
     // Clear
     void clear();
 
     // Initialize
-    void init()
+    void init(int _classNo=3)
     {
-        __classNo = 3;
+        __classNo = _classNo;
 	__training_particles.resize(__classNo);
 	__micrographs_number = 0;
         __falsePositives.resize(0);
@@ -214,6 +214,7 @@ private:
     Classification_model       __training_model;
     Classification_model       __training_loaded_model;
     Classification_model       __selection_model;
+    Classification_model       __selection_model2;
     bool                       __use_euclidean_distance_for_errors;
     int                        __auto_label;
     Matrix2D<double>           __piece;

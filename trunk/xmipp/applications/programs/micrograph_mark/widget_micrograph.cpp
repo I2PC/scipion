@@ -57,7 +57,7 @@
 #include <qgrid.h>
 #endif
 
-//#define DEBUG_AUTO
+#define DEBUG_AUTO
 //#define DEBUG_MORE_AUTO
 //#define DEBUG_REFINE
 //#define DEBUG_PREPARE
@@ -584,8 +584,42 @@ void QtWidgetMicrograph::automaticallySelectParticles()
     int Nalive = reject_within_distance(__auto_candidates, __particle_radius,
         false);
 
-    // Insert selected particles in the result
+    // Apply a second classifier for classifying between particle
+    // and false positive. For that, remove the middle class (background)
+    __selection_model2.clear();
+    __selection_model2.init(2);
+    std::vector < Matrix2D<double> >::iterator featuresIterator=
+        features.begin();
+    featuresIterator++;
+    features.erase(featuresIterator);
+    probs(1)=probs(2);
+    probs.resize(2);
+    probs/=probs.sum();
+    __selection_model2.initNaiveBayes(features, probs, 8);
+    #ifdef DEBUG_AUTO
+	std::cout << "Second classification\n"
+                  << *(__selection_model2.__bayesNet) << std::endl;
+    #endif
     int imax = __auto_candidates.size();
+    Nalive = 0;
+    for (int i = 0; i < imax; i++)
+        if (__auto_candidates[i].status == 1)
+        {
+            double p;
+	    if (!__selection_model2.isParticle(__auto_candidates[i].vec,p))
+            {
+                __auto_candidates[i].status=0;
+                #ifdef DEBUG_AUTO
+	            std::cout << __auto_candidates[i].x << ", "
+	                      << __auto_candidates[i].y
+                              << " is considered as a false positive\n";
+                #endif
+            }
+            else
+                Nalive++;
+        }
+
+    // Insert selected particles in the result
     for (int i = 0; i < imax; i++)
         if (__auto_candidates[i].status == 1)
         {
