@@ -722,22 +722,34 @@ void QtWidgetMicrograph::classifyMask()
     __mask_classification.push_back(classif1);
     __mask_classification.push_back(classif2);
 
-    // Create the holders for the radius values in classif1 and classif2
+    // Create the holders for the radius values in classif1
     for (int i = 0; i < __radial_bins; i++)
     {
         Matrix1D<int> *aux1 = new Matrix1D<int>;
         aux1->initZeros(Nrad(i));
         __radial_val.push_back(aux1);
-        
-        Matrix1D<double> *aux2 = new Matrix1D<double>;
-        aux2->initZeros(ROUND(2*PI/deltaAng));
-        __angular_radial_val.push_back(aux2);
     }
 
-    // Count how many features are there by correlation
+    // Create the holders for the radius values in classif1 and classif2
+    int angleBins=classif2->computeMax()+1;
+    for (int i = 0; i < angleBins; i++)
+    {
+        Matrix1D<double> *aux2 = new Matrix1D<double>;
+        aux2->initZeros(__radial_bins);
+        __angular_radial_val.push_back(aux2);
+        
+        Matrix1D<int> *iaux2 = new Matrix1D<int>;
+        iaux2->initZeros(__radial_bins);
+        __Nangular_radial_val.push_back(iaux2);
+    }
+
+    // Count how many features are there by correlation among rings
     __NCorrelationFeatures = 0;
     for (int i = CEIL(__radial_bins/4); i < __radial_bins; i+=2)
-        __NCorrelationFeatures += ROUND(2*PI/deltaAng);
+        __NCorrelationFeatures += angleBins;
+    
+    // Count how many features are there by sector correlation
+    __NCorrelationFeatures += angleBins-1;
 
     #ifdef DEBUG_CLASSIFY
         ImageXmipp save;
@@ -990,7 +1002,10 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
             (*__radial_val[idx1])(radial_idx(idx1)++) = val;
             int idx2 = classif2(i, j);
             if (idx2 != -1)
-                (*__angular_radial_val[idx1])(idx2) += val;
+            {
+                (*__angular_radial_val[idx2])(idx1) += val;
+                (*__Nangular_radial_val[idx2])(idx1)++;
+            }
         }
 
         // Get particle
@@ -1013,6 +1028,17 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
         #endif
     }
 
+    // Compute the sector averages
+    int angleBins=__angular_radial_val.size();
+    for (int j = 0; j < angleBins; j++)
+        FOR_ALL_ELEMENTS_IN_MATRIX1D(*(__angular_radial_val[j]))
+            (*(__angular_radial_val[j]))(i)/=(*(__Nangular_radial_val[j]))(i);
+
+    // Normalize the circular profiles
+    for (int i = CEIL(__radial_bins/4)-2; i < __radial_bins; i+=2)
+        // Normalize the radial profile
+        *(__angular_radial_val[i])/=(*(__angular_radial_val[i])).sum();
+
     // Compute the histogram of the radial bins and store them  
     int idx_result=0;
     for (int i = 0; i < __radial_bins; i++)
@@ -1026,16 +1052,37 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
     // Compute the autocorrelation of the rings
     for (int i = CEIL(__radial_bins/4); i < __radial_bins; i+=2)
     {
-        // Normalize the radial profile
-        *(__angular_radial_val[i])/=(*(__angular_radial_val[i])).sum();
-
-        // Compute autocorrelation
         static Matrix1D<double> autocorr;
         auto_correlation_vector(*(__angular_radial_val[i]),autocorr);
-        
-        // Store
         for (int j = 0; j < XSIZE(autocorr); j++)
             _result(idx_result++) = autocorr(j);
+    }
+
+    // Compute the correlation of the sectors
+    for (int step = 1; step<angleBins; step++)
+    {
+        double averageCorrelationForThisStep=0;
+        for (int i = 0; i<angleBins; i++)
+        {
+            averageCorrelationForThisStep+=correlation_index(
+                *__angular_radial_val[i],
+                *__angular_radial_val[intWRAP(i+step,0,angleBins-1)]);
+            #ifdef DEBUG_IMG_BUILDVECTOR
+                if (debug_go)
+                {
+                    std::cout << "Computing correlation between "
+                              << i << " and " << intWRAP(i+step,0,angleBins-1)
+                              << " -> "
+                              << correlation_index(
+                                    *__angular_radial_val[i],
+                                    *__angular_radial_val[
+                                        intWRAP(i+step,0,angleBins-1)])
+                              << std::endl;
+                }
+            #endif
+        }
+        averageCorrelationForThisStep/=angleBins;
+        _result(idx_result++) = averageCorrelationForThisStep;
     }
 
     #ifdef DEBUG_IMG_BUILDVECTOR

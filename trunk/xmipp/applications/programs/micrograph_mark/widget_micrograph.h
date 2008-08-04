@@ -243,6 +243,7 @@ private:
     std::vector < Matrix2D<int> * >    __mask_classification;
     std::vector < Matrix1D<int> * >    __radial_val;
     std::vector < Matrix1D<double> * > __angular_radial_val;
+    std::vector < Matrix1D<int> * >    __Nangular_radial_val;
 
 public:
     // Constructor
