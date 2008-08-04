@@ -749,7 +749,7 @@ void QtWidgetMicrograph::classifyMask()
         __NCorrelationFeatures += angleBins;
     
     // Count how many features are there by sector correlation
-    __NCorrelationFeatures += angleBins-1;
+    __NCorrelationFeatures += (angleBins-1)+(angleBins-1)*angleBins;
 
     #ifdef DEBUG_CLASSIFY
         ImageXmipp save;
@@ -1061,10 +1061,11 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
     // Compute the correlation of the sectors
     for (int step = 1; step<angleBins; step++)
     {
-        double averageCorrelationForThisStep=0;
+        static Matrix1D<double> sectorCorr;
+        sectorCorr.initZeros(angleBins);
         for (int i = 0; i<angleBins; i++)
         {
-            averageCorrelationForThisStep+=correlation_index(
+            sectorCorr(i)=correlation_index(
                 *__angular_radial_val[i],
                 *__angular_radial_val[intWRAP(i+step,0,angleBins-1)]);
             #ifdef DEBUG_IMG_BUILDVECTOR
@@ -1081,8 +1082,11 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
                 }
             #endif
         }
-        averageCorrelationForThisStep/=angleBins;
-        _result(idx_result++) = averageCorrelationForThisStep;
+        _result(idx_result++) = sectorCorr.computeAvg();
+        static Matrix1D<double> sectorAutocorr;
+        auto_correlation_vector(sectorCorr,sectorAutocorr);
+        for (int j = 0; j < XSIZE(sectorAutocorr); j++)
+            _result(idx_result++) = sectorAutocorr(j);
     }
 
     #ifdef DEBUG_IMG_BUILDVECTOR
