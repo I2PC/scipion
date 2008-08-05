@@ -56,7 +56,7 @@ public:
     std::vector < IrregularHistogram1D > __leafPDF;
     
     // Number of classes
-    int K; 
+    int K;
 public:			
     /// Constructor
     LeafNode(const std::vector < Matrix1D<double> > &leafFeatures,
@@ -96,6 +96,11 @@ public:
 
     // The vector containing the Leafs (as many leafs as features)   
     std::vector<LeafNode*>  __leafs;
+    
+    // Cost matrix
+    // C(i,j) is the cost of predicting class j when the true
+    // class is class i.
+    Matrix2D<double> __cost;
 public:	
     // Constructor
     xmippNaiveBayes(
@@ -106,8 +111,11 @@ public:
     // Destructor
     ~xmippNaiveBayes();
 
+    // Set cost matrix
+    void setCostMatrix(const Matrix2D<double> &cost);
+
     // Returns the class with the largest probability given a set of features
-    int doInference(const Matrix1D<double> &newFeatures, double &probability);
+    int doInference(const Matrix1D<double> &newFeatures, double &cost);
     
     /// Show
     friend std::ostream & operator << (std::ostream &_out,

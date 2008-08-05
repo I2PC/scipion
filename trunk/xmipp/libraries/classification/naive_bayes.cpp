@@ -242,10 +242,11 @@ xmippNaiveBayes::xmippNaiveBayes(
     const Matrix1D<double> &priorProbs,
     int discreteLevels)
 { 
-    __priorProbsLog10 = priorProbs;
-    __priorProbsLog10.selfLog10();
     K = features.size();
     Nfeatures=XSIZE(features[0]);
+    __priorProbsLog10 = priorProbs;
+    __priorProbsLog10.selfLog10();
+    __priorProbsLog10.resize(K);
 
     // Build a leafnode for each feature and assign a weight
     __weights.initZeros(Nfeatures);
@@ -265,6 +266,11 @@ xmippNaiveBayes::xmippNaiveBayes(
         #endif            
     }
     __weights /= __weights.computeMax();
+    
+    // Set default cost matrix
+    __cost.resize(K,K);
+    __cost.initConstant(1);
+    for (int i=0; i<K; i++) __cost(i,i)=0;
 }
 
 /* Destructor -------------------------------------------------------------- */
@@ -274,9 +280,18 @@ xmippNaiveBayes::~xmippNaiveBayes()
       delete __leafs[i];
 }
 
+/* Set cost matrix --------------------------------------------------------- */
+void xmippNaiveBayes::setCostMatrix(const Matrix2D<double> &cost)
+{
+    if (XSIZE(cost)!=K || YSIZE(cost)!=K)
+        REPORT_ERROR(1,"Cost matrix does not have the apropriate size");
+    __cost=cost;
+}
+
+/* Do inference ------------------------------------------------------------ */
 //#define DEBUG_MORE
 int xmippNaiveBayes::doInference(const Matrix1D<double>	&newFeatures,
-    double &probability)
+    double &cost)
 {
     debugging = false;
     static Matrix1D<double> classesProbs;
@@ -301,19 +316,30 @@ int xmippNaiveBayes::doInference(const Matrix1D<double>	&newFeatures,
                 }
             #endif        	        
         }
+    for (int k=0; k<K; k++)
+        classesProbs(k)=pow(10.0,classesProbs(k));
+    
+    static Matrix1D<double> allCosts;
+    allCosts=__cost*classesProbs;
+    for (int k=0; k<K; k++)
+        allCosts(k)=log10(allCosts(k));
+
     int bestk=0;
-    probability=classesProbs(0);
+    cost=allCosts(0);
     for (int k=1; k<K; k++)
-        if (classesProbs(k)>probability)
+        if (allCosts(k)<cost)
         {
-            probability=classesProbs(k);
+            cost=allCosts(k);
             bestk=k;
         }
 
     #ifdef DEBUG_CLASSIFICATION
         if(debugging == true)
         {
+            for (int k=0; k<K; k++)
+                classesProbs(k)=log10(classesProbs(k));
             std::cout << "Class probababilities=" << classesProbs.transpose()
+                      << "  costs=" << allCosts.transpose()
                       << "  best class=" << bestk << std::endl;
             char c;
             std::cin >> c;
