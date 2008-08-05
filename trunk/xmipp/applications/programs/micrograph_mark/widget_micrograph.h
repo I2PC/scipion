@@ -71,7 +71,7 @@ public:
                           // list of coordinates
     char status;          // rejected=0, selected=1 or moved=2
     Matrix1D<double> vec; // vector of that particle
-    double prob;          // Associated probability
+    double cost;          // Associated cost
 
     // Print
     friend std::ostream & operator << (std::ostream &_out, const Particle &_p);
@@ -80,11 +80,11 @@ public:
     void read(std::istream &_in, int _vec_size);
 };
 
-struct SDescendingParticleSort
+struct SAscendingParticleSort
 {
      bool operator()(const Particle& rpStart, const Particle& rpEnd)
      {
-          return rpStart.prob > rpEnd.prob;
+          return rpStart.cost < rpEnd.cost;
      }
 };
 
@@ -151,27 +151,24 @@ public:
     void import_model(const Classification_model &_model);
 
     //get the probability that _features belong to a positive particle
-    double getParticleProbability(const Matrix1D<double> &_features)
+    double getParticleCost(const Matrix1D<double> &_features)
     {
-        double p;
-        int k=__bayesNet->doInference(_features,p);
-        return p;
+        double cost;
+        int k=__bayesNet->doInference(_features,cost);
+        return cost;
     }
     
     // Is a particle?
-    bool isParticle(const Matrix1D<double> &new_features, double &p)
+    bool isParticle(const Matrix1D<double> &new_features, double &cost)
     {
-        int k=__bayesNet->doInference(new_features,p);
+        int k=__bayesNet->doInference(new_features,cost);
         return (k==0) ? true : false;
     }
     
     //init the naive bayesian network
     void initNaiveBayes(const std::vector < Matrix2D<double> > 
 			&features, const Matrix1D<double> &probs,
-                        int discreteLevels)
-    {
-        __bayesNet=new xmippNaiveBayes(features, probs, discreteLevels);
-    }
+                        int discreteLevels, double penalization);
 
     // Print
     friend std::ostream & operator << (std::ostream &_out,
@@ -223,6 +220,7 @@ private:
     int                        __radial_bins;
     double                     __keep;
     double                     __highpass_cutoff;
+    double                     __penalization;
     int                        __piece_xsize;
     int                        __piece_ysize;
     int                        __particle_radius;
@@ -418,7 +416,9 @@ public:
         std::vector<Particle> &_Input, double _min_dist, bool _reject_both);
 
     // Refine the position of a particle within the current piece
+    /*
     void refine_center(Particle &my_P);
+    */
 
     // Add family.
     // The family label is returned

@@ -71,7 +71,7 @@ std::ostream & operator << (std::ostream &_out, const Particle &_p)
     _out << _p.x      << " " << _p.y << " "
          << _p.idx    << " "
          << (int)_p.status << " "
-         << _p.prob   << " "
+         << _p.cost   << " "
          << _p.vec.transpose()
          << std::endl
     ;
@@ -84,7 +84,7 @@ void Particle::read(std::istream &_in, int _vec_size)
     _in >> x >> y
         >> idx
         >> status
-        >> prob;
+        >> cost;
     status -= '0';
     vec.resize(_vec_size);
     _in >> vec;
@@ -127,7 +127,23 @@ void Classification_model::import_model(const Classification_model &_model)
     __micrographs_number += _model.__micrographs_number;
 }
 
-/* Show ---------------------------------------------------------------------*/
+/* Initialize -------------------------------------------------------------- */
+void Classification_model::initNaiveBayes(
+    const std::vector < Matrix2D<double> > &features,
+    const Matrix1D<double> &probs, int discreteLevels,
+    double penalization)
+{
+    __bayesNet=new xmippNaiveBayes(features, probs, discreteLevels);
+    int K=features.size();
+    Matrix2D<double> cost(K,K);
+    cost.initConstant(1);
+    for (int i=0; i<XSIZE(cost); i++)
+       cost(i,i)=0;
+    cost(0,K-1)=penalization;
+    __bayesNet->setCostMatrix(cost);
+}
+
+/* Show -------------------------------------------------------------------- */
 std::ostream & operator << (std::ostream &_out, const Classification_model &_m)
 {
     _out << "#Already_processed_parameters...\n";
@@ -163,7 +179,7 @@ std::ostream & operator << (std::ostream &_out, const Classification_model &_m)
     return _out;
 }
 
-/* Read ---------------------------------------------------------------------*/
+/* Read -------------------------------------------------------------------- */
 std::istream & operator >> (std::istream &_in, Classification_model &_m)
 {
     std::string dummy;
@@ -204,7 +220,7 @@ std::istream & operator >> (std::istream &_in, Classification_model &_m)
     return _in;
 }
 
-/* Constructor -------------------------------------------------------------*/
+/* Constructor ------------------------------------------------------------ */
 QtWidgetMicrograph::QtWidgetMicrograph(QtMainWidgetMark *_mainWidget,
                                        QtFiltersController *_f,
                                        Micrograph *_m) :
@@ -224,6 +240,7 @@ QtWidgetMicrograph::QtWidgetMicrograph(QtMainWidgetMark *_mainWidget,
     __piece_ysize                    = 512;
     __output_scale                   = 1;
     __highpass_cutoff                = 0.02;
+    __penalization                   = 10;
     __reduction                      = (int)std::pow(2.0, __output_scale);
     __particle_radius                = 128;
     __min_distance_between_particles = 0.5 * __particle_radius;
@@ -449,6 +466,7 @@ void QtWidgetMicrograph::produceClassesProbabilities(
 /* Automatic phase ----------------------------------------------------------*/
 void QtWidgetMicrograph::automaticallySelectParticles()
 {
+try {
     // Check that there is a valid model
     if (!__is_model_loaded)
     {
@@ -478,7 +496,7 @@ void QtWidgetMicrograph::automaticallySelectParticles()
     #endif
 
     // Initialize classifier
-    __selection_model.initNaiveBayes(features, probs, 8);
+    __selection_model.initNaiveBayes(features, probs, 8, __penalization);
     
     //top,left corner of the piece
     int top = 0, left = 0, next_top = 0, next_left = 0;
@@ -533,8 +551,8 @@ void QtWidgetMicrograph::automaticallySelectParticles()
 	   
 	    if (build_vector(posx, posy, v))
             {
-                double p;
-	        if (__selection_model.isParticle(v,p))
+                double cost;
+	        if (__selection_model.isParticle(v,cost))
 	        {
                     #ifdef DEBUG_MORE_AUTO
 		        std::cout << "Particle Found: "
@@ -552,7 +570,7 @@ void QtWidgetMicrograph::automaticallySelectParticles()
                     P.idx = -1;
                     P.status = 1;
                     P.vec = v;
-                    P.prob = p;
+                    P.cost = cost;
                     //refine_center(P);
                     __auto_candidates.push_back(P);
                 }
@@ -576,66 +594,78 @@ void QtWidgetMicrograph::automaticallySelectParticles()
                  << __auto_candidates.size() << std::endl;
     #endif
 
-    // Sort particles by probability
+    // Sort particles by cost
     std::sort(__auto_candidates.begin(),__auto_candidates.end(),
-        SDescendingParticleSort());
+        SAscendingParticleSort());
     
     // Reject the candidates that are pointing to the same particle
     int Nalive = reject_within_distance(__auto_candidates, __particle_radius,
         false);
 
+    std::cout << "Aqui3\n"; std::cout.flush();
     // Apply a second classifier for classifying between particle
     // and false positive. For that, remove the middle class (background)
-    __selection_model2.clear();
-    __selection_model2.init(2);
-    std::vector < Matrix2D<double> >::iterator featuresIterator=
-        features.begin();
-    featuresIterator++;
-    features.erase(featuresIterator);
-    probs(1)=probs(2);
-    probs.resize(2);
-    probs/=probs.sum();
-    __selection_model2.initNaiveBayes(features, probs, 8);
-    #ifdef DEBUG_AUTO
-	std::cout << "Second classification\n"
-                  << *(__selection_model2.__bayesNet) << std::endl;
-    #endif
-    int imax = __auto_candidates.size();
-    Nalive = 0;
-    for (int i = 0; i < imax; i++)
-        if (__auto_candidates[i].status == 1)
-        {
-            double p;
-	    if (!__selection_model2.isParticle(__auto_candidates[i].vec,p))
+    int imax;
+    if (Nalive > 0)
+    {
+        __selection_model2.clear();
+        __selection_model2.init(2);
+        std::vector < Matrix2D<double> >::iterator featuresIterator=
+            features.begin();
+        featuresIterator++;
+        features.erase(featuresIterator);
+        probs(1)=probs(2);
+        probs.resize(2);
+        probs/=probs.sum();
+        __selection_model2.initNaiveBayes(features, probs, 8, __penalization);
+        #ifdef DEBUG_AUTO
+	    std::cout << "Second classification\n"
+                      << *(__selection_model2.__bayesNet) << std::endl;
+        #endif
+        imax = __auto_candidates.size();
+        Nalive = 0;
+        for (int i = 0; i < imax; i++)
+            if (__auto_candidates[i].status == 1)
             {
-                __auto_candidates[i].status=0;
-                #ifdef DEBUG_AUTO
-	            std::cout << __auto_candidates[i].x << ", "
-	                      << __auto_candidates[i].y
-                              << " is considered as a false positive\n";
-                #endif
+                double p;
+	        if (!__selection_model2.isParticle(__auto_candidates[i].vec,p))
+                {
+                    __auto_candidates[i].status=0;
+                    #ifdef DEBUG_AUTO
+	                std::cout << __auto_candidates[i].x << ", "
+	                          << __auto_candidates[i].y
+                                  << " is considered as a false positive\n";
+                    #endif
+                }
+                else
+                    Nalive++;
             }
-            else
-                Nalive++;
-        }
+    }
 
-    // Insert selected particles in the result
-    for (int i = 0; i < imax; i++)
-        if (__auto_candidates[i].status == 1)
-        {
-            __auto_candidates[i].idx = i;
-            #ifdef DEBUG_AUTO
-	        std::cout << "Particle coords " << __auto_candidates[i].x << ", "
-	                  << __auto_candidates[i].y << std::endl;
-            #endif
-            getMicrograph()->add_coord(__auto_candidates[i].x, 
-	                               __auto_candidates[i].y, __activeFamily);
-        }
+    if (Nalive>0)
+    {
+        // Insert selected particles in the result
+        for (int i = 0; i < imax; i++)
+            if (__auto_candidates[i].status == 1)
+            {
+                __auto_candidates[i].idx = i;
+                #ifdef DEBUG_AUTO
+	            std::cout << "Particle coords " << __auto_candidates[i].x << ", "
+	                      << __auto_candidates[i].y << std::endl;
+                #endif
+                getMicrograph()->add_coord(__auto_candidates[i].x, 
+	                                   __auto_candidates[i].y, __activeFamily);
+            }
+    }
     
     repaint(0);
     __autoselection_done = true;
     std::cout << "Automatic process finished. Number of particles found: "
               << Nalive << std::endl;
+} catch (Xmipp_error XE) {
+    std::cout << XE << std::endl;
+    exit(0);
+}
 }
 
 /* Add family ---------------------------------------------------------------*/
@@ -809,7 +839,7 @@ void QtWidgetMicrograph::buildVectors(std::vector<int> &_idx,
             p.idx = part_idx;
             p.vec = v;
             p.status = 1;
-            p.prob = 1.0;
+            p.cost = 1.0;
             _model.addParticleTraining(p, 0);
             numParticles++;
         }
@@ -836,7 +866,7 @@ void QtWidgetMicrograph::buildVectors(std::vector<int> &_idx,
                 p.idx = part_idx;
                 p.vec = v;
                 p.status = 1;
-                p.prob = 1.0;
+                p.cost = 1.0;
                 _model.addParticleTraining(p, 0);
                 numParticles++;
             }
@@ -909,7 +939,7 @@ void QtWidgetMicrograph::buildNegativeVectors(Classification_model &__model)
                     P.idx = -1;
                     P.status = 1;
                     P.vec = v;
-                    P.prob = 0.0;
+                    P.cost = -1;
 	            __model.addParticleTraining(P, 1);            
                 }
 	    // Go to next scanning position
@@ -1389,6 +1419,7 @@ int QtWidgetMicrograph::reject_within_distance(
     return n;
 }
 
+/*
 void QtWidgetMicrograph::refine_center(Particle &my_P)
 {
     static int counter = 0;
@@ -1396,7 +1427,7 @@ void QtWidgetMicrograph::refine_center(Particle &my_P)
     double prob_at_previous = 0.0, prob_left, prob_right, prob_top, prob_bottom;
     bool improvement = true;
     Matrix1D<double> current_vec;
-    double current_prob = my_P.prob;
+    double current_prob = my_P.cost;
     int current_x = my_P.x, current_y = my_P.y;
     int posx, posy;
     bool success;
@@ -1581,6 +1612,7 @@ void QtWidgetMicrograph::refine_center(Particle &my_P)
 #endif
 }
 #undef DEBUG_REFINE
+*/
 
 /* Correct particles ------------------------------------------------------- */
 void QtWidgetMicrograph::move_particle(int _idx)
@@ -1596,7 +1628,7 @@ void QtWidgetMicrograph::delete_particle(int _idx)
 {
     if (!__autoselection_done) return;
     __auto_candidates[_idx].status = 0;
-    __auto_candidates[_idx].prob = 0.0;
+    __auto_candidates[_idx].cost = -1;
     __rejected_particles.push_back(__auto_candidates[_idx]);
 }
 
@@ -1787,6 +1819,10 @@ void QtWidgetMicrograph::configure_auto()
     QLineEdit keep(&qgrid);
     keep.setText(floatToString(__keep).c_str());
 
+    QLabel    lpenalization("Penalization: ", &qgrid);
+    QLineEdit penalization(&qgrid);
+    penalization.setText(floatToString(__penalization).c_str());
+
     QPushButton okButton("Ok", &qgrid);
     QPushButton cancelButton("Cancel", &qgrid);
 
@@ -1810,6 +1846,7 @@ void QtWidgetMicrograph::configure_auto()
         __scan_overlap = mask_overlap.text().toInt();
         __min_distance_between_particles = min_dist.text().toInt();
         __keep = keep.text().toFloat();
+        __penalization = penalization.text().toFloat();
     }
 }
 
