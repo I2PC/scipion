@@ -46,14 +46,20 @@ class Prog_Angular_CommonLine;
 class EulerSolver: public DESolver {
 public:
     bool show;
-    int NToSolve, Ndim, firstImage;
+    int NToSolve, Ndim, Nimg;
     double roti, tilti, psii;
     double rotj, tiltj, psij;
     Matrix1D<double> normali, normalj, commonline, commonlinei, commonlinej;
     const Prog_Angular_CommonLine *parent;
+    const Matrix1D<int> * alreadyOptimized;
+    const Matrix1D<double> * currentSolution;
+    const Matrix1D<int> * imgIdx;
 public:
     // Constructor
-    EulerSolver(int newFirstImage, int dim, int pop,
+    EulerSolver(int dim, int pop,
+        const Matrix1D<int> &newAlreadyOptimized,
+        const Matrix1D<double> &newCurrentSolution,
+        const Matrix1D<int> &newImgIdx,
         const Prog_Angular_CommonLine *newParent);
 
     // Energy function for the solver
@@ -100,7 +106,8 @@ public:
     void produceSideInfo();
     
     /** Optimize */
-    double optimizeGroup(int firstImage, Matrix1D<double> &solution);
+    double optimizeGroup(const Matrix1D<int> &imgIdx,
+        Matrix1D<double> &solution);
     
     /** Optimize */
     void optimize(Matrix1D<double> &solution);
@@ -122,6 +129,13 @@ public:
     
     // Initial solution
     Matrix1D<double> initialSolution;
+    
+    // Already optimized images
+    Matrix1D<int> alreadyOptimized;
+    
+    // Current optimized solution, angles of the already
+    // optimized images
+    Matrix1D<double> currentSolution;
     
     // Symmetry list
     SymList SL;
