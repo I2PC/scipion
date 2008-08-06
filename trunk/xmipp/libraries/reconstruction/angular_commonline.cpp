@@ -361,7 +361,7 @@ void Prog_Angular_CommonLine::produceSideInfo()
     }
     
     // Set current solution
-    // Te first image is already optimized and its angles are 0,0,0
+    // The first image is already optimized and its angles are 0,0,0
     currentSolution.initZeros(3*Nimg);
     alreadyOptimized.initZeros(Nimg);
     alreadyOptimized(0)=2;
@@ -408,6 +408,88 @@ void Prog_Angular_CommonLine::produceSideInfo()
         progress_bar(n);
     }
     progress_bar(Nimg);
+    
+    // Form image groups
+    Matrix1D<int> grouped(Nimg);
+    grouped(0)=1;
+    
+    std::cout << "Grouping images ...\n";
+    while (grouped.sum()!=Nimg)
+    {
+        // Look for the first image ungrouped
+        int idx=1;
+        while (grouped(idx)) idx++;
+
+        // Form the group starting with this one
+        std::vector<int> group;
+        group.clear();
+        group.push_back(idx);
+        grouped(idx)=1;
+        
+        // Now let's go for the rest of the group
+        double groupCorr=-2;
+        while (group.size()<NGroup && grouped.sum()<Nimg)
+        {
+            // Look for the image with the smallest maximum correlation
+            // with the rest of the group
+            double bestCorr=2;
+            int bestCandidate=-1;
+            int idxCandidate=idx+1;
+            while (idxCandidate<Nimg)
+            {
+                // If the candidate is not in any group,
+                // compute its correlation with the rest
+                // of images in this group
+                if (!grouped(idxCandidate))
+                {
+                    // Rotate the image from 0 to 360 degrees
+                    double bestCorrCandidate=-2;
+                    for (int ang=0; ang<360; ang+=5)
+                    {
+                        Matrix2D<double> rotatedCandidate;
+                        img[idxCandidate].rotate(ang,rotatedCandidate);
+                        
+                        // For each rotation, compute the similarity
+                        // with the rest of the group
+                        for (int i=0; i<group.size(); i++)
+                        {
+                            double correlation=correlation_index(
+                                rotatedCandidate,img[group[i]]);
+                            if (correlation>bestCorrCandidate)
+                                bestCorrCandidate=correlation;
+                        }
+                    }
+                    if (bestCorrCandidate<bestCorr)
+                    {
+                        bestCorr=bestCorrCandidate;
+                        bestCandidate=idxCandidate;
+                    }
+                }
+                
+                // Explore next image
+                idxCandidate++;
+            }
+            
+            // Push the best candidate into the group
+            if (bestCandidate!=-1)
+            {
+                group.push_back(bestCandidate);
+                grouped(bestCandidate)=1;
+                if (bestCorr>groupCorr)
+                    groupCorr=bestCorr;
+            }
+        }
+        
+        // Copy the std::vector into a Matrix1D
+        Matrix1D<int> idxImg;
+        idxImg.initZeros(group.size());
+        FOR_ALL_ELEMENTS_IN_MATRIX1D(idxImg)
+            idxImg(i)=group[i];
+        groups.push_back(idxImg);
+        std::cout << "Group formed by images " << idxImg.transpose()
+                  << std::endl
+                  << "   Correlation=" << groupCorr << std::endl;
+    }
 }
 
 /* OptimizeGroup ----------------------------------------------------------- */
@@ -488,18 +570,11 @@ double Prog_Angular_CommonLine::optimizeGroup(const Matrix1D<int> &imgIdx,
 /* Optimize ---------------------------------------------------------------- */
 void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
 {
-    int firstImage=1;
     int Nimg = SF.ImgNo();
     solution.initZeros(3*Nimg);
 
     // Compute the number of groups to try
-    std::vector<int> groupsToTry;
-    while (firstImage<Nimg)
-    {
-        groupsToTry.push_back(firstImage);
-        int NToSolve=XMIPP_MIN(NGroup,Nimg-firstImage);
-        firstImage+=NToSolve;
-    }
+    std::vector< Matrix1D<int> > groupsToTry=groups;
 
     // Align all groups
     while (groupsToTry.size()!=0)
@@ -515,13 +590,12 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
         FOR_ALL_ELEMENTS_IN_MATRIX1D(scores)
         {
             // Prepare the set of images to optimize
-            firstImage=groupsToTry[i];
-            int NToSolve=XMIPP_MIN(NGroup,Nimg-firstImage);
-            std::cout << "Processing group from " << firstImage << " to "
-                      << firstImage+NToSolve-1 << std::endl;
+            Matrix1D<int> imgIdx;
+            imgIdx=groupsToTry[i];
+            int NToSolve=XSIZE(imgIdx);
+            std::cout << "Processing group " << imgIdx.transpose() << std::endl;
 
-            Matrix1D<int> imgIdx(NToSolve);
-            imgIdx.initLinear(firstImage,firstImage+NToSolve-1,1,"incr");
+            // Prepare the vector of images to optimize
             alreadyOptimized=backupAlreadyOptimized;
             FOR_ALL_ELEMENTS_IN_MATRIX1D(imgIdx)
                 alreadyOptimized(imgIdx(i))=1;
@@ -565,7 +639,8 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
         }
         
         // Remove the best group from the list of groups to try
-        std::vector <int>::iterator groupIterator=groupsToTry.begin();
+        std::vector < Matrix1D<int> >::iterator groupIterator=
+            groupsToTry.begin();
         for (int i=0; i<imin; i++)
             groupIterator++;
         groupsToTry.erase(groupIterator);

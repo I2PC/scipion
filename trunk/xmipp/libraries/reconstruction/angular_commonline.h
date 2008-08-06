@@ -137,6 +137,9 @@ public:
     // optimized images
     Matrix1D<double> currentSolution;
     
+    // List of groups
+    std::vector< Matrix1D<int> > groups;
+    
     // Symmetry list
     SymList SL;
 
