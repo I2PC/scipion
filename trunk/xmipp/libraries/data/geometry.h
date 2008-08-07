@@ -538,6 +538,14 @@ int line_plane_intersection(const Matrix1D< double > normal_plane,
  */
 void Euler_angles2matrix(double a, double b, double g, Matrix2D< double >& A);
 
+/** Distance between two Euler matrices.
+ * @ingroup EulerOperations
+ *
+ * The distance is defined as 1/3*(X1.X2 + Y1.Y2 + Z1.Z2)
+ */
+double Euler_distanceBetweenMatrices(const Matrix2D<double> &E1,
+    const Matrix2D<double> &E2);
+
 /** Angles after compresion
  * @ingroup EulerOperations
  *

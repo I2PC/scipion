@@ -504,6 +504,16 @@ void Euler_angles2matrix(double alpha, double beta, double gamma,
     A(2, 2) = cb;
 }
 
+/* Euler distance ---------------------------------------------------------- */
+double Euler_distanceBetweenMatrices(const Matrix2D<double> &E1,
+    const Matrix2D<double> &E2)
+{
+    double retval=0;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(E1)
+        retval+=DIRECT_MAT_ELEM(E1,i,j)*DIRECT_MAT_ELEM(E2,i,j);
+    return retval/3.0;
+}
+
 /* Euler direction --------------------------------------------------------- */
 void Euler_direction(double alpha, double beta, double gamma,
                      Matrix1D<double> &v)
