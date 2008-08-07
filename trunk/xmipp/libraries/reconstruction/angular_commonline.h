@@ -105,12 +105,15 @@ public:
     /** Produce side info */
     void produceSideInfo();
     
-    /** Optimize */
+    /** Optimize a single group*/
     double optimizeGroup(const Matrix1D<int> &imgIdx,
-        Matrix1D<double> &solution);
+        Matrix1D<double> &solution, bool show=false);
     
-    /** Optimize */
+    /** Optimize all images */
     void optimize(Matrix1D<double> &solution);
+    
+    /** Optimize what we have done so far */
+    void realignCurrentSolution();
     
     /** Try a solution */
     double trySolution(const Matrix1D<double> &solution);
@@ -136,9 +139,6 @@ public:
     // Current optimized solution, angles of the already
     // optimized images
     Matrix1D<double> currentSolution;
-    
-    // List of groups
-    std::vector< Matrix1D<int> > groups;
     
     // Symmetry list
     SymList SL;
