@@ -833,6 +833,8 @@ void Prog_tomograph_alignment::readLandmarkSet(const FileName &fnLandmark)
     int Nlandmark;
     fhIn >> dummyStr >> dummyStr >> dummyStr >> dummyStr >> dummyStr
          >> Nlandmark >> Nimg;
+    if (Nlandmark<=0)
+        REPORT_ERROR(1,(std::string)"No landmarks are found in "+fnLandmark);
     allLandmarksX.resize(Nlandmark,Nimg);
     allLandmarksY.resize(Nlandmark,Nimg);
     allLandmarksX.initConstant(XSIZE(*img[0]));
@@ -846,6 +848,8 @@ void Prog_tomograph_alignment::readLandmarkSet(const FileName &fnLandmark)
         allLandmarksY(j,i)=y+STARTINGY(*img[0]);
     }
     fhIn.close();
+    std::cout << "The file " << fnLandmark << " has been read for the landmarks\n"
+              << Nlandmark << " landmarks are read\n";
 }
 
 /* Align images ------------------------------------------------------------ */
