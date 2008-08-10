@@ -54,6 +54,8 @@ public:
     const Matrix1D<int> * alreadyOptimized;
     const Matrix1D<double> * currentSolution;
     const Matrix1D<int> * imgIdx;
+    
+    Matrix1D<double> imgCorrelation;
 public:
     // Constructor
     EulerSolver(int dim, int pop,
@@ -113,7 +115,7 @@ public:
     void optimize(Matrix1D<double> &solution);
     
     /** Optimize what we have done so far */
-    void realignCurrentSolution();
+    double realignCurrentSolution();
     
     /** Try a solution */
     double trySolution(const Matrix1D<double> &solution);
@@ -139,6 +141,9 @@ public:
     // Current optimized solution, angles of the already
     // optimized images
     Matrix1D<double> currentSolution;
+
+    // Correlation of the images individually
+    Matrix1D<double> currentImageCorrelation;
     
     // Symmetry list
     SymList SL;
