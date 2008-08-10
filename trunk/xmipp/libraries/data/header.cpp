@@ -458,7 +458,6 @@ void headerXmipp::set_header()
        Things were defined in acient time for ancient computers
        and operating systems so never try to understand it. ;-)
     */
-
     if ((header.fNcol != 0) && (header.fNrow != 0))
     {
         header.fNlabel = (float)((int)(256 / header.fNcol + 1));
@@ -479,7 +478,6 @@ void headerXmipp::set_header()
     }
 
     // file type
-
     switch (im)
     {
     case IMG_XMIPP:
@@ -502,9 +500,7 @@ void headerXmipp::set_header()
         break;
     }
 
-
     // Set scale to 1 (never used by XMipp)
-
     header.fScale = 1;
 
     // Set Angle of rotation used by Xmipp = 0 (won't be used again)
@@ -512,7 +508,6 @@ void headerXmipp::set_header()
     // CO: it's used sometimes to interact with old Xmipp programs
 
     // Set Geometrical transformation Matrix to Identity (won't be used again)
-
     for (unsigned i = 0; i < 3; i++)
         for (unsigned j = 0; j < 3; j++)
             if (i == j)
@@ -521,7 +516,6 @@ void headerXmipp::set_header()
                 header.fGeo_matrix[i][j] = (double)0.0;
 
     // Sets statistical information flags to be compatible with Spider
-
     header.fSig = -1;
     header.fImami = 0;
 }
