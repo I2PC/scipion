@@ -98,9 +98,12 @@ public:
 
     /// Correlation threshold for a good landmark
     double corrThreshold;
-
-    /// Ratio threshold for a good landmark
-    double ratioThreshold;
+    
+    /// Show affine transformations
+    bool showAffine;
+    
+    /// Threshold affine
+    double thresholdAffine;
 
     /// Read parameters from argument line
     void read(int argc, char **argv);

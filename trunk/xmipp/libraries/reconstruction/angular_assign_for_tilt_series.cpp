@@ -139,23 +139,12 @@ private:
    int count;
 };
 
-//#define DEBUG
 void computeAffineTransformation(const Matrix2D<double> &I1,
     const Matrix2D<double> &I2, int maxShift, int maxIterDE,
     const FileName &fn_affine, 
-    Matrix2D<double> &A12, Matrix2D<double> &A21)
+    Matrix2D<double> &A12, Matrix2D<double> &A21, bool show,
+    double thresholdAffine)
 {
-    std::ifstream fh_in;
-    fh_in.open(fn_affine.c_str());
-    if (fh_in) {
-    	A12.resize(3,3);
-	A21.resize(3,3);
-	fh_in >> A12 >> A21;
-	fh_in.close();
-	std::cout << "A12\n" << A12 << "A21\n" << A21 << std::endl;
-	return;
-    }
-
     // Set images
     AffineFitness::I1=I1;
     AffineFitness::I1.setXmippOrigin();
@@ -186,69 +175,78 @@ void computeAffineTransformation(const Matrix2D<double> &I1,
     // Shifts
     AffineFitness::minAllowed(4)=AffineFitness::minAllowed(5)=-maxShift;
     AffineFitness::maxAllowed(4)=AffineFitness::maxAllowed(5)= maxShift;
-    
-    // Optimize with differential evolution
-    #define REALLY_OPTIMIZE
-    #ifdef REALLY_OPTIMIZE
-    Matrix1D<double> A(6);
-    double bestEnergy=2, energy;
-    int n=0;
-    do
-    {
-        AffineSolver solver(6,6*10);
-        solver.Setup(MULTIDIM_ARRAY(AffineFitness::minAllowed),
-                     MULTIDIM_ARRAY(AffineFitness::maxAllowed),
-		     stBest2Bin, 0.5, 0.8);
-        solver.Solve(maxIterDE);
-        energy=solver.Energy();
-        if (n==0 || bestEnergy>energy)
+
+    std::ifstream fh_in;
+    fh_in.open(fn_affine.c_str());
+    if (fh_in) {
+    	A12.resize(3,3);
+	A21.resize(3,3);
+	fh_in >> A12 >> A21;
+	fh_in.close();
+	std::cout << "A12\n" << A12 << "A21\n" << A21 << std::endl;
+    } else {
+        // Optimize with differential evolution
+        #define REALLY_OPTIMIZE
+        #ifdef REALLY_OPTIMIZE
+        Matrix1D<double> A(6);
+        double bestEnergy=2, energy;
+        int n=0;
+        do
         {
-            FOR_ALL_ELEMENTS_IN_MATRIX1D(A)
-               A(i)=solver.Solution()[i];
-            bestEnergy=energy;
-        }
-        n++;
-    } while (n<3 || (n>=3 && n<10 && bestEnergy>0.15));
-    #else
-    Matrix1D<double> A(6);
-    A(0)=A(3)=1;
-    double tx, ty;
-    best_shift(I1,I2,tx,ty);
-    A(4)=-tx;
-    A(5)=-ty;
-    #endif
+            AffineSolver solver(6,6*10);
+            solver.Setup(MULTIDIM_ARRAY(AffineFitness::minAllowed),
+                         MULTIDIM_ARRAY(AffineFitness::maxAllowed),
+		         stBest2Bin, 0.5, 0.8);
+            solver.Solve(maxIterDE);
+            energy=solver.Energy();
+            if (n==0 || bestEnergy>energy)
+            {
+                FOR_ALL_ELEMENTS_IN_MATRIX1D(A)
+                   A(i)=solver.Solution()[i];
+                bestEnergy=energy;
+            }
+            n++;
+        } while (n<3 || (n>=3 && n<10 && bestEnergy>thresholdAffine));
+        #else
+        Matrix1D<double> A(6);
+        A(0)=A(3)=1;
+        double tx, ty;
+        best_shift(I1,I2,tx,ty);
+        A(4)=-tx;
+        A(5)=-ty;
+        #endif
 
-    // Optimize with Powell
-    Matrix1D<double> steps(A);
-    steps.initConstant(1);
-    double cost;
-    int iter;
-    powellOptimizer(A, 1, XSIZE(A),
-        AffineFitness::Powell_affine_fitness_individual, 0.005,
-        cost, iter, steps, true);
-   
-    // Separate solution
-    A12.initIdentity(3);
-    A12(0,0)=A(0); A12(0,1)=A(1); A12(0,2)=A(4);
-    A12(1,0)=A(2); A12(1,1)=A(3); A12(1,2)=A(5);
+        // Optimize with Powell
+        Matrix1D<double> steps(A);
+        steps.initConstant(1);
+        double cost;
+        int iter;
+        powellOptimizer(A, 1, XSIZE(A),
+            AffineFitness::Powell_affine_fitness_individual, 0.005,
+            cost, iter, steps, true);
 
-    A21=A12.inv();
+        // Separate solution
+        A12.initIdentity(3);
+        A12(0,0)=A(0); A12(0,1)=A(1); A12(0,2)=A(4);
+        A12(1,0)=A(2); A12(1,1)=A(3); A12(1,2)=A(5);
 
-    std::ofstream fh_out;
-    fh_out.open(fn_affine.c_str());
-    fh_out << A12 << std::endl << A21;
-    fh_out.close();
-   
-    #ifdef DEBUG
+        A21=A12.inv();
+
+        std::ofstream fh_out;
+        fh_out.open(fn_affine.c_str());
+        fh_out << A12 << std::endl << A21;
+        fh_out.close();
+    }   
+    if (show)
+    {
     	AffineFitness::showMode=true;
         Matrix1D<double> p(6);
         p(0)=A12(0,0); p(1)=A12(0,1); p(4)=A12(0,2);
         p(2)=A12(1,0); p(3)=A12(1,1); p(5)=A12(1,2);
 	AffineFitness::affine_fitness_individual(MULTIDIM_ARRAY(p));
     	AffineFitness::showMode=false;
-    #endif
+    }
 }
-#undef DEBUG
 
 /* Parameters -------------------------------------------------------------- */
 void Prog_tomograph_alignment::read(int argc, char **argv) {
@@ -264,9 +262,10 @@ void Prog_tomograph_alignment::read(int argc, char **argv) {
    localSize=textToFloat(getParameter(argc,argv,"-localSize","0.04"));
    optimizeTiltAngle=checkParameter(argc,argv,"-optimizeTiltAngle");
    corrThreshold=textToFloat(getParameter(argc,argv,"-threshold","0.9"));
-   ratioThreshold=textToFloat(getParameter(argc,argv,"-ratioThreshold","0.5"));
    maxShiftPercentage=textToFloat(getParameter(argc,argv,"-maxShiftPercentage","0.2"));
    maxIterDE=textToInteger(getParameter(argc,argv,"-maxIterDE","30"));
+   showAffine=checkParameter(argc,argv,"-showAffine");
+   thresholdAffine=textToFloat(getParameter(argc,argv,"-thresholdAffine","0.85"));
 }
 
 void Prog_tomograph_alignment::show() {
@@ -280,9 +279,10 @@ void Prog_tomograph_alignment::show() {
              << "Local size:         " << localSize          << std::endl
              << "Optimize tilt angle:" << optimizeTiltAngle  << std::endl
              << "Threshold:          " << corrThreshold      << std::endl
-             << "Ratio Threshold:    " << ratioThreshold     << std::endl
              << "MaxShift Percentage:" << maxShiftPercentage << std::endl
              << "MaxIterDE:          " << maxIterDE          << std::endl
+             << "Show Affine:        " << showAffine         << std::endl
+             << "Threshold Affine:   " << thresholdAffine    << std::endl
    ;
 }
 
@@ -299,9 +299,10 @@ void Prog_tomograph_alignment::usage() const {
              << "  [-localSize <size=0.04>]        : In percentage\n"
              << "  [-optimizeTiltAngle]            : Optimize tilt angle\n"
              << "  [-threshold <th=0.9>]           : threshold\n"
-             << "  [-ratioThreshold <th=0.5>]      : ratio threshold\n"
              << "  [-maxShiftPercentage <p=0.2>]   : Maximum shift as percentage of image size\n"
              << "  [-maxIterDE <n=30>]             : Maximum number of iteration in Differential Evolution\n"
+             << "  [-showAffine]                   : Show affine transformations as PPP*\n"
+             << "  [-thresholdAffine <th=0.85>]    : Threshold affine\n"
    ;
 }
 
@@ -399,7 +400,8 @@ void Prog_tomograph_alignment::generateLandmarkSet() {
                             computeAffineTransformation(img_i, img_j, maxShift,
                                 maxIterDE,
                                 (std::string)"affine_"+integerToString(jj,3)+
-                                "_"+integerToString(jj+1,3)+".txt", Aij, Aji);
+                                "_"+integerToString(jj+1,3)+".txt", Aij, Aji,
+                                showAffine, thresholdAffine);
                             affineTransformations[jj][jj+1]=Aij;
 	                    affineTransformations[jj+1][jj]=Aji;
                         }
@@ -439,7 +441,8 @@ void Prog_tomograph_alignment::generateLandmarkSet() {
                             computeAffineTransformation(img_i, img_j, maxShift,
                                 maxIterDE,
                                 (std::string)"affine_"+integerToString(jj-1,3)+
-                                "_"+integerToString(jj,3)+".txt", Aij, Aji);
+                                "_"+integerToString(jj,3)+".txt", Aij, Aji,
+                                showAffine, thresholdAffine);
                             affineTransformations[jj-1][jj]=Aij;
 	                    affineTransformations[jj][jj-1]=Aji;
                         }
@@ -665,7 +668,7 @@ bool Prog_tomograph_alignment::refineLandmark(int ii, int jj,
             XX(rjj)+=jmax;
             accept=true;
 
-            if (showRefinement && accept)
+            if (showRefinement)
             {
                 ImageXmipp save;
                 save()=pieceii; save.write("PPPpieceii.xmp");
@@ -717,7 +720,7 @@ bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain)
             }
 
             #ifdef DEBUG
-                showRefinement=(step==4);
+                showRefinement=(step==maxStep);
             #endif
             // Refine backwards all images
             for (int i=chainLength-1; i>=1; i--)
