@@ -41,7 +41,8 @@ public:
     static Matrix1D<double> maxAllowed;
     static Matrix2D<double> I1;
     static Matrix2D<double> I2;
-    static Matrix2D<double> constantMask;
+    static Matrix2D<double> Mask1;
+    static Matrix2D<double> Mask2;
     static bool showMode;
     
     static double affine_fitness_individual(double *p)
@@ -74,13 +75,13 @@ public:
        // Produce masks for the comparison
        Matrix2D<int> maskInTheSpaceOf1, maskInTheSpaceOf2;
        Matrix2D<double> maskAux;
-       applyGeometry(maskAux,A12,constantMask,IS_NOT_INV,DONT_WRAP);
+       applyGeometry(maskAux,A12,Mask1,IS_NOT_INV,DONT_WRAP);
        maskInTheSpaceOf2.initZeros(YSIZE(maskAux),XSIZE(maskAux));
        maskInTheSpaceOf2.setXmippOrigin();
        FOR_ALL_ELEMENTS_IN_MATRIX2D(maskAux)
             maskInTheSpaceOf2(i,j)=ROUND(maskAux(i,j));
        maskAux.initZeros();
-       applyGeometry(maskAux,A21,constantMask,IS_NOT_INV,DONT_WRAP);
+       applyGeometry(maskAux,A21,Mask2,IS_NOT_INV,DONT_WRAP);
        maskInTheSpaceOf1.initZeros(YSIZE(maskAux),XSIZE(maskAux));
        maskInTheSpaceOf1.setXmippOrigin();
        FOR_ALL_ELEMENTS_IN_MATRIX2D(maskAux)
@@ -120,7 +121,8 @@ Matrix1D<double> AffineFitness::minAllowed;
 Matrix1D<double> AffineFitness::maxAllowed;
 Matrix2D<double> AffineFitness::I1;
 Matrix2D<double> AffineFitness::I2;
-Matrix2D<double> AffineFitness::constantMask;
+Matrix2D<double> AffineFitness::Mask1;
+Matrix2D<double> AffineFitness::Mask2;
 bool AffineFitness::showMode=false;
 
 class AffineSolver: public DESolver {
@@ -155,8 +157,13 @@ void computeAffineTransformation(const Matrix2D<double> &I1,
     //AffineFitness::I2.window(-YSIZE(I1)-maxShift,-XSIZE(I1)-maxShift,
     //                          YSIZE(I1)+maxShift, XSIZE(I1)+maxShift);
 
-    AffineFitness::constantMask=AffineFitness::I1;
-    AffineFitness::constantMask.initConstant(1);
+    AffineFitness::Mask1=AffineFitness::I1;
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(I1)
+    	if (I1(i,j)!=0) AffineFitness::Mask1(i,j)=1;
+
+    AffineFitness::Mask2=AffineFitness::I2;
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(I2)
+    	if (I2(i,j)!=0) AffineFitness::Mask2(i,j)=1;
 
     // Set limits for the affine matrices
     // Order: 1->2: 4 affine params+2 translations
@@ -206,7 +213,7 @@ void computeAffineTransformation(const Matrix2D<double> &I1,
                 bestEnergy=energy;
             }
             n++;
-        } while (n<3 || (n>=3 && n<10 && bestEnergy>thresholdAffine));
+        } while (n<3 || (n>=3 && n<10 && bestEnergy>1-thresholdAffine));
         #else
         Matrix1D<double> A(6);
         A(0)=A(3)=1;
