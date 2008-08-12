@@ -1894,9 +1894,9 @@ std::ostream& operator<<(std::ostream& ostrm, const Matrix3D<T>& v)
             for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
             {
                 if (typeid(T) == typeid(std::complex<double>))
-                    ostrm << DIRECT_VOL_ELEM(v, k, i, j) << ' ';
+                    ostrm << VOL_ELEM(v, k, i, j) << ' ';
                 else
-                    ostrm << floatToString((double) DIRECT_VOL_ELEM(v, k, i, j), 10, prec) << ' ';
+                    ostrm << floatToString((double) VOL_ELEM(v, k, i, j), 10, prec) << ' ';
             }
             ostrm << std::endl;
         }

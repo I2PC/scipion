@@ -2294,7 +2294,7 @@ std::ostream& operator<<(std::ostream& ostrm, const MultidimArray<T>& v)
     if (YSIZE(v)==1 && ZSIZE(v)==1)
     {
         for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
-            ostrm << floatToString((double) DIRECT_VOL_ELEM(v, 0, 0, j), 10, prec)
+            ostrm << floatToString((double) VOL_ELEM(v, 0, 0, j), 10, prec)
                   << std::endl;
     }
     else
@@ -2306,7 +2306,7 @@ std::ostream& operator<<(std::ostream& ostrm, const MultidimArray<T>& v)
             {
                 for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
                 {
-                    ostrm << floatToString((double) DIRECT_VOL_ELEM(v, k, i, j), 10, prec) << ' ';
+                    ostrm << floatToString((double) VOL_ELEM(v, k, i, j), 10, prec) << ' ';
                 }
                 ostrm << std::endl;
             }

@@ -41,7 +41,7 @@ std::ostream& operator<<(std::ostream& ostrm,
         {
             for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
             {
-                ostrm << DIRECT_VOL_ELEM(v, k, i, j) << ' ';
+                ostrm << VOL_ELEM(v, k, i, j) << ' ';
             }
             ostrm << std::endl;
         }
