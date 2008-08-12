@@ -54,8 +54,11 @@ DocLine& DocLine::operator=(const DocLine& line)
 double& DocLine::operator[](int i)
 {
     if (i+1 > data.size())
+    {
+        std::cout << "Docline=" << *this << std::endl;
         REPORT_ERROR(1604, "Trying to access to non-existing element " +
                      integerToString(i) + " of a document line");
+    }
 
     return data[i];
 }
@@ -63,8 +66,11 @@ double& DocLine::operator[](int i)
 double DocLine::operator[](int i) const
 {
     if (i+1 > data.size())
+    {
+        std::cout << "Docline=" << *this << std::endl;
         REPORT_ERROR(1604, "Trying to access to non-existing element " +
                      integerToString(i) + " of a document line");
+    }
 
     return data[i];
 }
