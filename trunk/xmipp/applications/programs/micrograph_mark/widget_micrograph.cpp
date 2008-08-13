@@ -526,7 +526,7 @@ try {
     // particles we skip the already scanned part
     int skip_x = 0, skip_y = 0, next_skip_x = 0, next_skip_y = 0;
     Matrix1D<double> v;
-    int N = 1, particle_idx = 0;
+    int N = 1, particle_idx = 0, Nscanned=0;
     while (get_corner_piece(top, left, skip_y,
                             next_skip_x, next_skip_y, next_top,
 			    next_left, __piece_overlap))
@@ -595,6 +595,7 @@ try {
                     //refine_center(P);
                     __auto_candidates.push_back(P);
                 }
+                Nscanned++;
             }
             // Go to next scanning position
             posx = next_posx;
@@ -608,7 +609,8 @@ try {
         skip_y = next_skip_y;
         N++;
     }
-    std::cout << "Scanning Process Finished..." << std::endl;
+    std::cout << "Scanning Process Finished: "
+              << Nscanned << " positions scanned\n";
     
     #ifdef DEBUG_AUTO
        std::cerr << "Number of automatically selected particles = " 
