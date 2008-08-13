@@ -511,9 +511,9 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
     assigned.initZeros(Nimg);
     assigned(0)=1;
 
-    // Assign all images except the last 3
+    // Assign all images
     int removalCounter=0;
-    while (assigned.sum()<Nimg-3)
+    while (assigned.sum()<Nimg)
     {
         // Initialize the list of Euler vectors
         // There is a std::vector< Matrix1D<double> > for each image
@@ -543,16 +543,24 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
             Matrix1D<int> comparedTo;
             comparedTo=assigned;
             comparedTo(i)=1;
+            bool allowComparisonWithFixedImages=false;
             // Perform NGroup experiments
             for (int n=0; n<NGroup; n++)
             {
                 if (comparedTo.sum()==XSIZE(comparedTo))
-                    break;
+                    allowComparisonWithFixedImages=true;
 
                 // Look for an image to which we have not compared
                 int j;
-                do {j=ROUND(rnd_unif(0,Nimg-1));} while (comparedTo(j));
-                comparedTo(j)=1;
+                bool tryAgain=true;
+                do {
+                    j=ROUND(rnd_unif(0,Nimg-1));
+                    if (!allowComparisonWithFixedImages && comparedTo(j)==0)
+                        tryAgain=false;
+                    else if (allowComparisonWithFixedImages && comparedTo(j)==1)
+                        tryAgain=false;
+                } while (tryAgain);
+                comparedTo(j)++;
 
                 // Prepare the vector of images to optimize
                 alreadyOptimized=backupAlreadyOptimized;
@@ -572,9 +580,12 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
 
                 // Keep results
                 eulerAngles[i].push_back(anglesi);
-                eulerAngles[j].push_back(anglesj);
                 correlations[i].push_back(-energy);
-                correlations[j].push_back(-energy);
+                if (!allowComparisonWithFixedImages)
+                {
+                    eulerAngles[j].push_back(anglesj);
+                    correlations[j].push_back(-energy);
+                }
                 alreadyOptimized=backupAlreadyOptimized;
             }
             progress_bar(i);
@@ -593,7 +604,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
         {
             // If the particle has  already been assigned skip it
             if (assigned(i)) continue;
-        
+            
             // Sort the images by ascending correlation
             Matrix1D<double> aux;
             aux.initZeros(eulerAngles[i].size());
@@ -640,7 +651,9 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
             }
             else
                 distance=1.0;
-            std::cout << "Image " << i << " distance=" << distance << std::endl;
+            std::cout << "Image " << i << " distance=" << distance << " "
+                      << " Ncomparisons= " << eulerAngles[i].size() 
+                      << " topN=" << topN << std::endl;
             std::cout.flush();
 
             if (distance>bestDistance)
@@ -820,38 +833,6 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
                           << worseCorrelation << std::endl;
             }
         }
-    }
-    
-    // Align what is left
-    while (assigned.sum()<Nimg)
-    {
-        // Look for the first image that has not bee aligned
-        Matrix1D<int> imgIdx;
-        imgIdx.initZeros(1);
-        for (int i=0; i<Nimg; i++)
-            if (!assigned(i))
-            {
-                imgIdx(0)=i;
-                alreadyOptimized(i)=1;
-                break;
-            }
-        
-        // Align it
-        Matrix1D<double> auxSolution;
-        double energy=optimizeGroup(imgIdx,auxSolution,false);
-        
-        // Keep results
-        assigned(imgIdx(0))=1;
-        alreadyOptimized(imgIdx(0))=2;
-        currentSolution(3*imgIdx(0))   = auxSolution(0);
-        currentSolution(3*imgIdx(0)+1) = auxSolution(1);
-        currentSolution(3*imgIdx(0)+2) = auxSolution(2);
-        std::cout << "The energy of the alignment of "
-                  << imgIdx.transpose() << " is " << energy << std::endl
-                  << "Angles " << auxSolution.transpose() << std::endl;
-
-        // Realign everything again
-        realignCurrentSolution();
     }
     
     solution=currentSolution;
