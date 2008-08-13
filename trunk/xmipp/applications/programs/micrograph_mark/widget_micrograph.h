@@ -101,7 +101,9 @@ public:
     std::vector<int>                              __falsePositives;
 
 public:
-    xmippNaiveBayes *                             __bayesNet;
+    NaiveBayes *                                  __bayesNet;
+    EnsembleNaiveBayes *                          __bayesEnsembleNet;
+    int                                           __bayesClassifier;
 
 public:
     // Constructor
@@ -150,18 +152,18 @@ public:
     // Import classification model
     void import_model(const Classification_model &_model);
 
-    //get the probability that _features belong to a positive particle
-    double getParticleCost(const Matrix1D<double> &_features)
-    {
-        double cost;
-        int k=__bayesNet->doInference(_features,cost);
-        return cost;
-    }
-    
     // Is a particle?
     bool isParticle(const Matrix1D<double> &new_features, double &cost)
     {
-        int k=__bayesNet->doInference(new_features,cost);
+        int k;
+        if (__bayesClassifier==0)
+            k=__bayesNet->doInference(new_features,cost);
+        else
+        {
+            k=__bayesEnsembleNet->doInference(new_features,cost);
+            const Matrix1D<int> &votes=__bayesEnsembleNet->getVotes();
+	    if ((double)(votes(0))/votes.sum()<0.97) k=1;
+        }
         return (k==0) ? true : false;
     }
     
@@ -169,6 +171,14 @@ public:
     void initNaiveBayes(const std::vector < Matrix2D<double> > 
 			&features, const Matrix1D<double> &probs,
                         int discreteLevels, double penalization);
+
+    //init the naive bayesian network
+    void initNaiveBayesEnsemble(const std::vector < Matrix2D<double> > 
+			&features, const Matrix1D<double> &probs,
+                        int discreteLevels, double penalization,
+                        int numberOfClassifiers,
+                        double samplingFeatures, double samplingIndividuals,
+                        const std::string &newJudgeCombination);
 
     // Print
     friend std::ostream & operator << (std::ostream &_out,
@@ -212,6 +222,7 @@ private:
     Classification_model       __training_loaded_model;
     Classification_model       __selection_model;
     Classification_model       __selection_model2;
+    Classification_model       __selection_model3;
     bool                       __use_euclidean_distance_for_errors;
     int                        __auto_label;
     Matrix2D<double>           __piece;

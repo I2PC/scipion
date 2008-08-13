@@ -133,7 +133,7 @@ void Classification_model::initNaiveBayes(
     const Matrix1D<double> &probs, int discreteLevels,
     double penalization)
 {
-    __bayesNet=new xmippNaiveBayes(features, probs, discreteLevels);
+    __bayesNet=new NaiveBayes(features, probs, discreteLevels);
     int K=features.size();
     Matrix2D<double> cost(K,K);
     cost.initConstant(1);
@@ -141,6 +141,27 @@ void Classification_model::initNaiveBayes(
        cost(i,i)=0;
     cost(0,K-1)=penalization;
     __bayesNet->setCostMatrix(cost);
+    __bayesClassifier=0;
+}
+
+void Classification_model::initNaiveBayesEnsemble(
+    const std::vector < Matrix2D<double> > &features,
+    const Matrix1D<double> &probs, int discreteLevels,
+    double penalization, int numberOfClassifiers,
+    double samplingFeatures, double samplingIndividuals,
+    const std::string &newJudgeCombination)
+{
+    __bayesEnsembleNet=new EnsembleNaiveBayes(features, probs, discreteLevels,
+        numberOfClassifiers, samplingFeatures, samplingIndividuals,
+        newJudgeCombination);
+    int K=features.size();
+    Matrix2D<double> cost(K,K);
+    cost.initConstant(1);
+    for (int i=0; i<XSIZE(cost); i++)
+       cost(i,i)=0;
+    cost(0,K-1)=penalization;
+    __bayesEnsembleNet->setCostMatrix(cost);
+    __bayesClassifier=1;
 }
 
 /* Show -------------------------------------------------------------------- */
@@ -602,48 +623,107 @@ try {
     int Nalive = reject_within_distance(__auto_candidates, __particle_radius,
         false);
 
-    std::cout << "Aqui3\n"; std::cout.flush();
     // Apply a second classifier for classifying between particle
     // and false positive. For that, remove the middle class (background)
-    int imax;
-    if (Nalive > 0)
+    if (features.size()==3)
     {
-        __selection_model2.clear();
-        __selection_model2.init(2);
-        std::vector < Matrix2D<double> >::iterator featuresIterator=
-            features.begin();
-        featuresIterator++;
-        features.erase(featuresIterator);
-        probs(1)=probs(2);
-        probs.resize(2);
-        probs/=probs.sum();
-        __selection_model2.initNaiveBayes(features, probs, 8, __penalization);
-        #ifdef DEBUG_AUTO
-	    std::cout << "Second classification\n"
-                      << *(__selection_model2.__bayesNet) << std::endl;
-        #endif
-        imax = __auto_candidates.size();
-        Nalive = 0;
-        for (int i = 0; i < imax; i++)
-            if (__auto_candidates[i].status == 1)
-            {
-                double p;
-	        if (!__selection_model2.isParticle(__auto_candidates[i].vec,p))
+        int imax;
+        if (Nalive > 0)
+        {
+            __selection_model2.clear();
+            __selection_model2.init(2);
+            std::vector < Matrix2D<double> >::iterator featuresIterator=
+                features.begin();
+            featuresIterator++;
+            features.erase(featuresIterator);
+            probs(1)=probs(2);
+            probs.resize(2);
+            probs/=probs.sum();
+            __selection_model2.initNaiveBayes(features, probs, 8, __penalization);
+            #ifdef DEBUG_AUTO
+	        std::cout << "Second classification\n"
+                          << *(__selection_model2.__bayesNet) << std::endl;
+            #endif
+            imax = __auto_candidates.size();
+            Nalive = 0;
+            for (int i = 0; i < imax; i++)
+                if (__auto_candidates[i].status == 1)
                 {
-                    __auto_candidates[i].status=0;
-                    #ifdef DEBUG_AUTO
-	                std::cout << __auto_candidates[i].x << ", "
-	                          << __auto_candidates[i].y
-                                  << " is considered as a false positive\n";
-                    #endif
+                    double p;
+	            if (!__selection_model2.isParticle(__auto_candidates[i].vec,p))
+                    {
+                        __auto_candidates[i].status=0;
+                        #ifdef DEBUG_AUTO
+	                    std::cout << __auto_candidates[i].x << ", "
+	                              << __auto_candidates[i].y
+                                      << " is considered as a false positive\n";
+                        #endif
+                    }
+                    else
+                        Nalive++;
                 }
-                else
-                    Nalive++;
+        }
+
+        // Apply a third classifier to distinguish between particles and
+        // very tough particles
+        if (Nalive > 0)
+        {
+            __selection_model3.clear();
+            __selection_model3.init(2);
+            // Remove from the error class, all those errors that
+            // the previous classifier was able to classify correctly
+            std::vector<int> toKeep;
+            for (int i=0; i<YSIZE(features[1]); i++)
+            {
+                Matrix1D<double> trialFeatures;
+                features[1].getRow(i,trialFeatures);
+                double cost;
+                if (!__selection_model2.isParticle(trialFeatures,cost))
+                    toKeep.push_back(i);
             }
+            
+            if (toKeep.size()>0)
+            {
+                Matrix2D<double> difficultParticles;
+                difficultParticles.initZeros(toKeep.size(),XSIZE(features[1]));
+                FOR_ALL_ELEMENTS_IN_MATRIX2D(difficultParticles)
+                    difficultParticles(i,j)=features[1](toKeep[i],j);
+                int NErrors=YSIZE(features[1]);
+                features.pop_back();
+                features.push_back(difficultParticles);
+
+                __selection_model3.initNaiveBayesEnsemble(features, probs, 8,
+                    __penalization, 100, 1, 1, "mm");
+                #ifdef DEBUG_AUTO
+	            std::cout << "Third classification: " << YSIZE(difficultParticles)
+                              << " difficult particles out of " << NErrors << "\n"
+                              << "Before filtering there were " << Nalive << " particles\n";
+                #endif
+                imax = __auto_candidates.size();
+                Nalive = 0;
+                for (int i = 0; i < imax; i++)
+                    if (__auto_candidates[i].status == 1)
+                    {
+                        double p;
+	                if (!__selection_model3.isParticle(__auto_candidates[i].vec,p))
+                        {
+                            __auto_candidates[i].status=0;
+                            #ifdef DEBUG_AUTO
+	                        std::cout << __auto_candidates[i].x << ", "
+	                                  << __auto_candidates[i].y
+                                          << " is considered as a false positive 2\n";
+                            #endif
+                        }
+                        else
+                            Nalive++;
+                    }
+            }
+        }
     }
 
     if (Nalive>0)
     {
+        int imax = __auto_candidates.size();
         // Insert selected particles in the result
         for (int i = 0; i < imax; i++)
             if (__auto_candidates[i].status == 1)
