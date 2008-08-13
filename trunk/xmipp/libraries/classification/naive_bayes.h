@@ -79,7 +79,7 @@ public:
 /** Naive Bayes classifier class.
  * @ingroup NaiveBayesClassifier
  */
-class xmippNaiveBayes
+class NaiveBayes
 {
 public:
     // Number of classes
@@ -103,13 +103,13 @@ public:
     Matrix2D<double> __cost;
 public:	
     // Constructor
-    xmippNaiveBayes(
+    NaiveBayes(
         const std::vector < Matrix2D<double> >  &features,
         const Matrix1D<double> &priorProbs,
         int discreteLevels);
 
     // Destructor
-    ~xmippNaiveBayes();
+    ~NaiveBayes();
 
     // Set cost matrix
     void setCostMatrix(const Matrix2D<double> &cost);
@@ -119,7 +119,48 @@ public:
     
     /// Show
     friend std::ostream & operator << (std::ostream &_out,
-        const xmippNaiveBayes &naive);
+        const NaiveBayes &naive);
+};
+
+/** Ensemble NaiveBayes classifier.
+ * @ingroup NaiveBayesClassifier
+ */
+class EnsembleNaiveBayes
+{
+public:
+    // Ensemble of classifiers
+    std::vector< NaiveBayes * > ensemble;
+    
+    // Ensemble of features for each classifier
+    std::vector< Matrix1D<int> > ensembleFeatures;
+    
+    // Number of classes
+    int K;
+    
+    // Judge combination
+    std::string judgeCombination;
+public:
+    // Constructor
+    EnsembleNaiveBayes(
+        const std::vector < Matrix2D<double> >  &features,
+        const Matrix1D<double> &priorProbs,
+        int discreteLevels, int numberOfClassifiers,
+        double samplingFeatures, double samplingIndividuals,
+        const std::string &newJudgeCombination);
+
+    // Destructor
+    ~EnsembleNaiveBayes();
+
+    // Set cost matrix
+    void setCostMatrix(const Matrix2D<double> &cost);
+
+    // Returns the class with the largest probability given a set of features
+    int doInference(const Matrix1D<double> &newFeatures, double &cost);
+
+    // Get access to the votes in the last inference
+    const Matrix1D<int>& getVotes() const;
+public:
+    Matrix1D<int> votes;
 };
 //@}
 #endif

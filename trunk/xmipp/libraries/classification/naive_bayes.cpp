@@ -30,7 +30,7 @@
 
 bool debugging = true;
 //#define DEBUG_SPLITTING_USING_ENTROPY
-#define DEBUG_WEIGHTS
+//#define DEBUG_WEIGHTS
 //#define DEBUG_CLASSIFICATION
 //#define DEBUG_FINE_CLASSIFICATION
 
@@ -237,7 +237,7 @@ std::ostream & operator << (std::ostream &_out, const LeafNode &leaf)
 /* ------------------------------------------------------------------------- */
 /* Naive Bayes classifier                                                    */
 /* ------------------------------------------------------------------------- */
-xmippNaiveBayes::xmippNaiveBayes(
+NaiveBayes::NaiveBayes(
     const std::vector< Matrix2D<double> > &features,
     const Matrix1D<double> &priorProbs,
     int discreteLevels)
@@ -274,14 +274,14 @@ xmippNaiveBayes::xmippNaiveBayes(
 }
 
 /* Destructor -------------------------------------------------------------- */
-xmippNaiveBayes::~xmippNaiveBayes()
+NaiveBayes::~NaiveBayes()
 {
    for (int i = 0; i < __leafs.size(); i++)
       delete __leafs[i];
 }
 
 /* Set cost matrix --------------------------------------------------------- */
-void xmippNaiveBayes::setCostMatrix(const Matrix2D<double> &cost)
+void NaiveBayes::setCostMatrix(const Matrix2D<double> &cost)
 {
     if (XSIZE(cost)!=K || YSIZE(cost)!=K)
         REPORT_ERROR(1,"Cost matrix does not have the apropriate size");
@@ -290,7 +290,7 @@ void xmippNaiveBayes::setCostMatrix(const Matrix2D<double> &cost)
 
 /* Do inference ------------------------------------------------------------ */
 //#define DEBUG_MORE
-int xmippNaiveBayes::doInference(const Matrix1D<double>	&newFeatures,
+int NaiveBayes::doInference(const Matrix1D<double>	&newFeatures,
     double &cost)
 {
     debugging = false;
@@ -350,10 +350,114 @@ int xmippNaiveBayes::doInference(const Matrix1D<double>	&newFeatures,
 }
 
 /* Show -------------------------------------------------------------------- */
-std::ostream & operator << (std::ostream &_out, const xmippNaiveBayes &naive)
+std::ostream & operator << (std::ostream &_out, const NaiveBayes &naive)
 {
     for (int f=0; f<naive.Nfeatures; f++)
         _out << "Node " << f << std::endl
              << *(naive.__leafs[f]) << std::endl;
     return _out;
+}
+
+/* Ensemble constructor ---------------------------------------------------- */
+EnsembleNaiveBayes::EnsembleNaiveBayes(
+    const std::vector < Matrix2D<double> >  &features,
+    const Matrix1D<double> &priorProbs,
+    int discreteLevels, int numberOfClassifiers, 
+    double samplingFeatures, double samplingIndividuals,
+    const std::string &newJudgeCombination)
+{
+    int NFeatures=XSIZE(features[0]);
+    int NsubFeatures=CEIL(NFeatures*samplingFeatures);
+    K=features.size();
+    judgeCombination=newJudgeCombination;
+    for (int n=0; n<numberOfClassifiers; n++)
+    {
+        // Produce the set of features for this subclassifier
+        Matrix1D<int> subFeatures(NsubFeatures);
+        FOR_ALL_ELEMENTS_IN_MATRIX1D(subFeatures)
+            subFeatures(i)=ROUND(rnd_unif(0,NFeatures-1));
+
+        // Container for the new training sample
+        std::vector< Matrix2D<double> >  newFeatures;
+
+        // Produce the data set for each class
+        for (int k=0; k<K; k++)
+        {
+            int NIndividuals=YSIZE(features[k]);
+            int NsubIndividuals=CEIL(NIndividuals*samplingIndividuals);
+            Matrix1D<int> subIndividuals(NsubIndividuals);
+            FOR_ALL_ELEMENTS_IN_MATRIX1D(subIndividuals)
+                subIndividuals(i)=ROUND(rnd_unif(0,NsubIndividuals-1));
+
+            Matrix2D<double> newFeaturesK;
+            newFeaturesK.initZeros(NsubIndividuals,NsubFeatures);
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(newFeaturesK)
+                newFeaturesK(i,j)=features[k](subIndividuals(i),subFeatures(j));
+            
+            newFeatures.push_back(newFeaturesK);
+        }
+        
+        // Create a Naive Bayes classifier with this data
+        NaiveBayes *nb=new NaiveBayes(newFeatures, priorProbs, discreteLevels);
+        ensemble.push_back(nb);
+        ensembleFeatures.push_back(subFeatures);
+    }
+}
+
+/* Destructor -------------------------------------------------------------- */
+EnsembleNaiveBayes::~EnsembleNaiveBayes()
+{
+    int nmax=ensemble.size();
+    for (int n=0; n<nmax; n++)
+        delete ensemble[n];
+}
+
+/* Set cost matrix --------------------------------------------------------- */
+void EnsembleNaiveBayes::setCostMatrix(const Matrix2D<double> &cost)
+{
+    int nmax=ensemble.size();
+    for (int n=0; n<nmax; n++)
+        ensemble[n]->setCostMatrix(cost);
+}
+
+/* Do inference ------------------------------------------------------------ */
+int EnsembleNaiveBayes::doInference(const Matrix1D<double> &newFeatures,
+    double &cost)
+{
+    int nmax=ensemble.size();
+    Matrix1D<double> minCost, maxCost;
+    votes.initZeros(K);
+    minCost.initZeros(K); minCost.initConstant(1);
+    maxCost.initZeros(K); maxCost.initConstant(1);
+    double bestMinCost=0;
+    int bestClass;
+    Matrix1D<double> newFeaturesn;
+    for (int n=0; n<nmax; n++)
+    {
+        double costn;
+        newFeaturesn.initZeros(XSIZE(ensembleFeatures[n]));
+        FOR_ALL_ELEMENTS_IN_MATRIX1D(newFeaturesn)
+            newFeaturesn(i)=newFeatures(ensembleFeatures[n](i));
+        int k=ensemble[n]->doInference(newFeaturesn, costn);
+        votes(k)++;
+        if (minCost(k)>0 || minCost(k)>costn) minCost(k)=costn;
+        if (maxCost(k)>0 || maxCost(k)<costn) maxCost(k)=costn;
+        if (minCost(k)<bestMinCost)
+        {
+            bestMinCost=minCost(k);
+            bestClass=k;
+        }
+    }
+    if      (judgeCombination[bestClass]=='m') cost=minCost(bestClass);
+    else if (judgeCombination[bestClass]=='M') cost=maxCost(bestClass);
+    else    cost=minCost(bestClass);
+    std::cout << "votes=" << votes.transpose() << std::endl
+              << "minCost=" << minCost.transpose() << std::endl
+              << "maxCost=" << maxCost.transpose() << std::endl;
+    return bestClass;
+}
+
+const Matrix1D<int>& EnsembleNaiveBayes::getVotes() const
+{
+    return votes;
 }
