@@ -869,8 +869,19 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment) const
    for (int i=0;i<Nimg; i++) {
 	ImageXmipp I;
 	I.read(name_list[i]);
+        Matrix2D<int> mask;
+        mask.initZeros(I());
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
+            if (I(i,j)!=0) mask(i,j)=0;
 	I().selfTranslate(-alignment.di[i],DONT_WRAP);
 	I().selfRotate(90-alignment.rot+alignment.psi(i),DONT_WRAP);
+	mask.selfTranslate(-alignment.di[i],DONT_WRAP);
+	mask.selfRotate(90-alignment.rot+alignment.psi(i),DONT_WRAP);
+        double minval, maxval, avg, stddev;
+        computeStats_within_binary_mask(mask,I(),minval, maxval, avg, stddev);
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
+            if (mask(i,j)==0) I(i,j)=0;
+            else I(i,j)=(I(i,j)-avg)/stddev;
         double rot=0;
         double tilt=tiltList[i];
         double psi=0;
