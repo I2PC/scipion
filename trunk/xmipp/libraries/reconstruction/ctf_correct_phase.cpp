@@ -62,7 +62,7 @@ void CorrectPhaseParams::show()
 /* Usage ------------------------------------------------------------------- */
 void CorrectPhaseParams::usage()
 {
-    std::cerr << "   -ctfdat <CTF descr file or selfile> : It must not be centered\n"
+    std::cerr << "   -ctfdat <CTF descr file or selfile> : list of particles and CTFs\n"
               << "  [-small <epsilon=0>]                 : Values under epsilon are small\n"
               << "  [-method <mth=leave>]                : Valid methods are: remove, leave\n"
               << "                                         divide\n";
