@@ -511,13 +511,16 @@ try {
     produceFeatures(__selection_model,features);
     produceClassesProbabilities(__selection_model,probs);
     
-    #ifdef DEBUG_AUTO
-        std::cout << "Probabilities of the classes:"
-                  << probs.transpose() << std::endl;
-    #endif
-
     // Initialize classifier
     __selection_model.initNaiveBayes(features, probs, 8, __penalization);
+
+    #ifdef DEBUG_AUTO
+        std::cout << "Probabilities of the classes:"
+                  << probs.transpose() << std::endl
+                  << "First classifier\n"
+                  << *(__selection_model.__bayesNet) << std::endl;
+    #endif
+
     
     //top,left corner of the piece
     int top = 0, left = 0, next_top = 0, next_left = 0;
@@ -1146,11 +1149,6 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
         FOR_ALL_ELEMENTS_IN_MATRIX1D(*(__angular_radial_val[j]))
             (*(__angular_radial_val[j]))(i)/=(*(__Nangular_radial_val[j]))(i);
 
-    // Normalize the circular profiles
-    for (int i = CEIL(__radial_bins/4)-2; i < __radial_bins; i+=2)
-        // Normalize the radial profile
-        *(__angular_radial_val[i])/=(*(__angular_radial_val[i])).sum();
-
     // Compute the histogram of the radial bins and store them  
     int idx_result=0;
     for (int i = 0; i < __radial_bins; i++)
@@ -1180,19 +1178,6 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
             sectorCorr(i)=correlation_index(
                 *__angular_radial_val[i],
                 *__angular_radial_val[intWRAP(i+step,0,angleBins-1)]);
-            #ifdef DEBUG_IMG_BUILDVECTOR
-                if (debug_go)
-                {
-                    std::cout << "Computing correlation between "
-                              << i << " and " << intWRAP(i+step,0,angleBins-1)
-                              << " -> "
-                              << correlation_index(
-                                    *__angular_radial_val[i],
-                                    *__angular_radial_val[
-                                        intWRAP(i+step,0,angleBins-1)])
-                              << std::endl;
-                }
-            #endif
         }
         _result(idx_result++) = sectorCorr.computeAvg();
         static Matrix1D<double> sectorAutocorr;
@@ -1211,6 +1196,23 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
     #endif
 
     #ifdef DEBUG_BUILDVECTOR
+        Matrix2D<double> A;
+        A.resize(angleBins,XSIZE(*__angular_radial_val[0]));
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(A)
+            A(i,j)=(*__angular_radial_val[i])(j);
+        A.write("PPPangularradial.txt");
+
+        save().initZeros(savefg());
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(save())
+        {
+            int idx1 = classif1(i, j);
+            if (idx1 == -1) continue;
+            int idx2 = classif2(i, j);
+            if (idx2 == -1) continue;
+            save(i,j)=(*__angular_radial_val[idx2])(idx1);
+        }
+        save.write("PPP4.xmp");
+
         std::cout << _result.transpose() << std::endl;
         std::cout << "Press any key\n";
         char c;
