@@ -166,7 +166,7 @@ double Prog_angular_predict_tomography_prm::predict_angles(ImageXmipp &I,
                         Ip().computeStats(read_avg, read_stddev, min_val, max_val);
                         double correlation_index = 0;
                         FOR_ALL_ELEMENTS_IN_MATRIX2D(Ip())
-                        correlation_index += (Ip(i, j) - read_avg) * theo(i, j);
+                            correlation_index += (Ip(i, j) - read_avg) * theo(i, j);
                         correlation_index /= XSIZE(Ip()) * YSIZE(Ip());
                         correlation_index /= read_stddev * theo_stddev;
 
