@@ -366,9 +366,10 @@ ReconsSources = [
     'break_symmetry.cpp',
     'create_projection_library.cpp',
     'crystal_create_surface.cpp',
+    'ctf_correct_amplitude2d.cpp',
+    'ctf_correct_amplitude3d.cpp',
     'ctf_correct_idr.cpp',
     'ctf_correct_phase.cpp',
-    'ctf_correct_amplitude3d.cpp',
     'ctf.cpp',
     'ctf_estimate_from_micrograph.cpp',
     'ctf_group.cpp',
@@ -509,10 +510,11 @@ AddXmippProgram('crystal_lattice_vectors')
 AddXmippProgram('crystal_shear', ['XmippRecons','XmippInterface'])
 AddXmippProgram('crystal_skew', ['XmippRecons'])
 AddXmippProgram('crystal_unbend', ['XmippRecons', 'XmippRecons_Interface'])
+AddXmippProgram('ctf_correct_amplitude2d', ['XmippRecons'])
+#AddXmippProgram('ctf_correct_amplitude3d', ['XmippRecons'])
 AddXmippProgram('ctf_correct_idr', ['XmippRecons'])
 AddXmippProgram('ctf_create_ctfdat', ['XmippRecons'])
 AddXmippProgram('ctf_correct_phase', ['XmippRecons'])
-#AddXmippProgram('ctf_correct_amplitude3d', ['XmippRecons'])
 AddXmippProgram('ctf_estimate_from_micrograph', ['XmippRecons'])
 AddXmippProgram('ctf_estimate_from_psd', ['XmippRecons'])
 AddXmippProgram('ctf_profile', ['XmippRecons'])
