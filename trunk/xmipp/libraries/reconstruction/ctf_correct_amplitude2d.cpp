@@ -31,8 +31,8 @@
 void CorrectAmplitude2DParams::read(int argc, char **argv)
 {
     fnCtfdat = getParameter(argc, argv, "-ctfdat");
-    beta = textToFloat(getParameter(argc, argv, "-relax","0.1"));
-    Niterations = textToInteger(getParameter(argc, argv, "-iterations","100"));
+    beta = textToFloat(getParameter(argc, argv, "-relax","1"));
+    Niterations = textToInteger(getParameter(argc, argv, "-iterations","300"));
 }
 
 /* Show -------------------------------------------------------------------- */
@@ -47,8 +47,8 @@ void CorrectAmplitude2DParams::show()
 void CorrectAmplitude2DParams::usage()
 {
     std::cerr << "   -ctfdat <CTF descr file or selfile> : list of particles and CTFs\n"
-              << "  [-relax <beta=0.1>]                  : relaxation factor\n"
-              << "  [-iterations <N=100>]                : number of iterations\n"
+              << "  [-relax <beta=1>]                    : relaxation factor\n"
+              << "  [-iterations <N=300>]                : number of iterations\n"
     ;
 }
 
