@@ -119,7 +119,7 @@ void Classification_model::import_model(const Classification_model &_model)
     for (int i = 0; i < imax; i++)
     {
         addParticlePicked(_model.__particles_picked[i]);    
-        addMicrographArea(_model.__micrographs_area[i]);
+        addMicrographScanned(_model.__micrographs_scanned[i]);
         addFalsePositives(_model.__falsePositives[i]);
     }
 
@@ -169,10 +169,10 @@ std::ostream & operator << (std::ostream &_out, const Classification_model &_m)
 {
     _out << "#Already_processed_parameters...\n";
     _out << "#Micrographs_processed= " << _m.__micrographs_number << std::endl;
-    _out << "#Micrographs_processed_areas= ";
+    _out << "#Micrographs_processed_points= ";
     
     for (int i = 0; i < _m.__micrographs_number; i++)
-        _out << _m.__micrographs_area[i] << " ";
+        _out << _m.__micrographs_scanned[i] << " ";
     _out << "\n";
 
     _out << "#Particles_picked_per_micrograph= ";
@@ -209,9 +209,9 @@ std::istream & operator >> (std::istream &_in, Classification_model &_m)
     _in >> dummy >> _m.__micrographs_number;
     _in >> dummy;
 
-    _m.__micrographs_area.resize(_m.__micrographs_number);
+    _m.__micrographs_scanned.resize(_m.__micrographs_number);
     for(int i = 0; i < _m.__micrographs_number; i++)
-        _in >> _m.__micrographs_area[i];
+        _in >> _m.__micrographs_scanned[i];
     _in >> dummy;
 
     _m.__particles_picked.resize(_m.__micrographs_number);
@@ -419,6 +419,38 @@ void QtWidgetMicrograph::learnParticles()
     buildNegativeVectors(__training_model);
     getAutoFalsePositives();
 
+    // Count the number of points scanned in a micrograph
+    const Matrix2D<int> &mask = __mask.get_binary_mask2D();
+    int top = 0, left = 0, next_top = 0, next_left = 0;
+    int skip_x = 0, skip_y = 0, next_skip_x = 0, next_skip_y = 0;
+    int Nscanned=0;
+    while (get_corner_piece(top, left, skip_y,
+                            next_skip_x, next_skip_y, next_top,
+			    next_left, __piece_overlap))
+    {
+        top = next_top;
+        left = next_left;
+        skip_x /= __reduction;
+        skip_y /= __reduction;
+        int posx = 0, next_posx = 0, posy = 0, next_posy = 0;
+        next_posx = posx = skip_x + XSIZE(mask) / 2;
+        next_posy = posy = skip_y + YSIZE(mask) / 2;
+
+        while (get_next_scanning_pos(next_posx, next_posy, skip_x, skip_y,
+	                             __scan_overlap))
+        {
+            Nscanned++;
+            posx = next_posx;
+            posy = next_posy;
+        }
+
+        top = next_top;
+        left = next_left;
+        skip_x = next_skip_x;
+        skip_y = next_skip_y;
+    }
+    __training_model.addMicrographScanned(Nscanned);
+
     __learn_particles_done = true;    
     std::cerr << "Learning process finished..." << std::endl;
 }
@@ -463,25 +495,22 @@ void QtWidgetMicrograph::produceFeatures(
 void QtWidgetMicrograph::produceClassesProbabilities(
     const Classification_model &_model, Matrix1D<double> &probabilities)
 {
-    double micrographsArea = 0.0;
+    double micrographsScanned = 0.0;
     double particlesMarked = 0.0;
     double falsePositives = 0.0;
     probabilities.initZeros(__classNo);
     
     for (int i = 0; i < _model.__micrographs_number; i++)
     {
-        micrographsArea += _model.__micrographs_area[i];
+        micrographsScanned += _model.__micrographs_scanned[i];
         particlesMarked += _model.__particles_picked[i];
         falsePositives += _model.__falsePositives[i];
     }
     
-    double particlesArea = particlesMarked*PI*pow(__particle_radius,2.0);
-    double falsePositivesArea = falsePositives*PI*pow(__particle_radius,2.0);
-    
-    probabilities(0) = particlesArea / micrographsArea;    
-    probabilities(1) = (micrographsArea - particlesArea - falsePositivesArea) /
-                       micrographsArea;
-    probabilities(2) = falsePositivesArea / micrographsArea;
+    probabilities(0) = particlesMarked / micrographsScanned;    
+    probabilities(1) = (micrographsScanned - particlesMarked - falsePositives)/
+                       micrographsScanned;
+    probabilities(2) = falsePositives / micrographsScanned;
 }
 
 /* Automatic phase ----------------------------------------------------------*/
@@ -612,8 +641,6 @@ try {
         skip_y = next_skip_y;
         N++;
     }
-    std::cout << "Scanning Process Finished: "
-              << Nscanned << " positions scanned\n";
     
     #ifdef DEBUG_AUTO
        std::cerr << "Number of automatically selected particles = " 
@@ -858,13 +885,8 @@ void QtWidgetMicrograph::classifyMask()
         __Nangular_radial_val.push_back(iaux2);
     }
 
-    // Count how many features are there by correlation among rings
-    __NCorrelationFeatures = 0;
-    for (int i = CEIL(__radial_bins/4); i < __radial_bins; i+=2)
-        __NCorrelationFeatures += angleBins;
-    
     // Count how many features are there by sector correlation
-    __NCorrelationFeatures += (angleBins-1)+(angleBins-1)*angleBins;
+    __NCorrelationFeatures = (angleBins-1)+(angleBins-1)*angleBins;
 
     #ifdef DEBUG_CLASSIFY
         ImageXmipp save;
@@ -885,8 +907,6 @@ void QtWidgetMicrograph::buildVectors(std::vector<int> &_idx,
     int num_part = _idx.size();
     int width, height;
     __m->size(width, height);
-    int micrograph_area = width * height;
-    _model.addMicrographArea(micrograph_area);
     Matrix1D<double> v;
     int numParticles = 0;
 
@@ -1157,15 +1177,6 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
         compute_hist(*__radial_val[i], hist, 0, __gray_bins - 1, __gray_bins);
         for (int j = 0; j < __gray_bins - 1; j++)
             _result(idx_result++) = hist(j);
-    }
-
-    // Compute the autocorrelation of the rings
-    for (int i = CEIL(__radial_bins/4); i < __radial_bins; i+=2)
-    {
-        static Matrix1D<double> autocorr;
-        auto_correlation_vector(*(__angular_radial_val[i]),autocorr);
-        for (int j = 0; j < XSIZE(autocorr); j++)
-            _result(idx_result++) = autocorr(j);
     }
 
     // Compute the correlation of the sectors

@@ -96,7 +96,7 @@ public:
     std::vector< std::vector< Particle > >        __training_particles;
     int                                           __classNo;
     int                                           __micrographs_number;
-    std::vector<int>                              __micrographs_area;
+    std::vector<int>                              __micrographs_scanned;
     std::vector<int>                              __particles_picked;
     std::vector<int>                              __falsePositives;
 
@@ -124,9 +124,9 @@ public:
     }
 
     // Different additions
-    void addMicrographArea(int micrographArea)
+    void addMicrographScanned(int micrographScanned)
     {
-	    __micrographs_area.push_back(micrographArea);
+	    __micrographs_scanned.push_back(micrographScanned);
     }
     
     void addParticleTraining(const Particle &p, int classIdx)
