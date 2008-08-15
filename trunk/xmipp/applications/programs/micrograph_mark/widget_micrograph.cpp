@@ -35,7 +35,6 @@
 #include <data/micrograph.h>
 #include <data/args.h>
 #include <data/filters.h>
-#include <data/morphology.h>
 #include <data/rotational_spectrum.h>
 #include <data/denoise.h>
 #include <reconstruction/fourier_filter.h>
@@ -272,7 +271,6 @@ QtWidgetMicrograph::QtWidgetMicrograph(QtMainWidgetMark *_mainWidget,
     __use_background                 = false;
     __classNo                        = 3;
     __is_model_loaded                = false;
-    __NCorrelationFeatures           = -1;
     
 #ifdef QT3_SUPPORT
     __gridLayout                     = new Q3VBoxLayout(this);
@@ -878,16 +876,32 @@ void QtWidgetMicrograph::classifyMask()
     {
         Matrix1D<double> *aux2 = new Matrix1D<double>;
         aux2->initZeros(__radial_bins);
-        __angular_radial_val.push_back(aux2);
+        __sector.push_back(aux2);
         
         Matrix1D<int> *iaux2 = new Matrix1D<int>;
         iaux2->initZeros(__radial_bins);
-        __Nangular_radial_val.push_back(iaux2);
+        __Nsector.push_back(iaux2);
     }
 
-    // Count how many features are there by sector correlation
-    __NCorrelationFeatures = (angleBins-1)+(angleBins-1)*angleBins;
+    // Compute the number of elements in each sector
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(*classif1)
+    {
+        int idx1 = (*classif1)(i, j);
+        if (idx1 != -1)
+        {
+            int idx2 = (*classif2)(i, j);
+            if (idx2 != -1)
+                (*__Nsector[idx2])(idx1)++;
+        }
+    }
 
+    for (int i = 0; i < __radial_bins; i++)
+    {
+        Matrix1D<double> *aux3 = new Matrix1D<double>;
+        aux3->initZeros(angleBins);
+        __ring.push_back(aux3);
+    }
+        
     #ifdef DEBUG_CLASSIFY
         ImageXmipp save;
         typeCast(*classif1, save());
@@ -1091,7 +1105,11 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
     #endif
 
     // Resize the output and make same aliases
-    _result.initZeros(__radial_bins*(__gray_bins-1)+__NCorrelationFeatures);
+    int angleBins=__sector.size();
+    _result.initZeros(__radial_bins*(__gray_bins-1) // radial histograms
+        +(angleBins-1)+(angleBins-1)*angleBins // sector correlations
+        +(int)(0.5*(__radial_bins-8)*(__radial_bins-9)*angleBins) // ring correlations
+        );
     const Matrix2D<int> &mask =      __mask.get_binary_mask2D();
     const Matrix2D<int> &classif1 =  (*(__mask_classification[0]));
     const Matrix2D<int> &classif2 =  (*(__mask_classification[1]));
@@ -1137,10 +1155,7 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
             (*__radial_val[idx1])(radial_idx(idx1)++) = val;
             int idx2 = classif2(i, j);
             if (idx2 != -1)
-            {
-                (*__angular_radial_val[idx2])(idx1) += val;
-                (*__Nangular_radial_val[idx2])(idx1)++;
-            }
+                (*__sector[idx2])(idx1) += val;
         }
 
         // Get particle
@@ -1163,11 +1178,13 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
         #endif
     }
 
-    // Compute the sector averages
-    int angleBins=__angular_radial_val.size();
+    // Compute the sector averages and reorganize the data in rings
     for (int j = 0; j < angleBins; j++)
-        FOR_ALL_ELEMENTS_IN_MATRIX1D(*(__angular_radial_val[j]))
-            (*(__angular_radial_val[j]))(i)/=(*(__Nangular_radial_val[j]))(i);
+        FOR_ALL_ELEMENTS_IN_MATRIX1D(*(__sector[j]))
+        {
+            (*(__sector[j]))(i)/=(*(__Nsector[j]))(i);
+            (*(__ring[i]))(j)=(*(__sector[j]))(i);
+        }
 
     // Compute the histogram of the radial bins and store them  
     int idx_result=0;
@@ -1187,8 +1204,8 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
         for (int i = 0; i<angleBins; i++)
         {
             sectorCorr(i)=correlation_index(
-                *__angular_radial_val[i],
-                *__angular_radial_val[intWRAP(i+step,0,angleBins-1)]);
+                *__sector[i],
+                *__sector[intWRAP(i+step,0,angleBins-1)]);
         }
         _result(idx_result++) = sectorCorr.computeAvg();
         static Matrix1D<double> sectorAutocorr;
@@ -1197,32 +1214,53 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
             _result(idx_result++) = sectorAutocorr(j);
     }
 
+    // Compute the correlation in rings
+    for (int step = 1; step<__radial_bins-8; step++)
+        for (int i = 8; i<__radial_bins-step; i++)
+        {
+            static Matrix1D<double> ringCorr;
+            correlation_vector(*__ring[i],*__ring[i+step],ringCorr);
+            for (int j = 0; j < XSIZE(ringCorr); j++)
+                _result(idx_result++) = ringCorr(j);
+        }
+
     #ifdef DEBUG_IMG_BUILDVECTOR
         if (debug_go)
         {
             save.write("PPP1.xmp");
             savefg.write("PPP2.xmp");
             saveOrig.write("PPP3.xmp");
+
+            save().initZeros(savefg());
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(save())
+            {
+                int idx1 = classif1(i, j);
+                if (idx1 == -1) continue;
+                int idx2 = classif2(i, j);
+                if (idx2 == -1) continue;
+                save(i,j)=(*__sector[idx2])(idx1);
+            }
+            save.write("PPP4.xmp");
+
+            save().initZeros();
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(save())
+            {
+                int idx1 = classif1(i, j);
+                if (idx1 == -1) continue;
+                int idx2 = classif2(i, j);
+                if (idx2 == -1) continue;
+                save(i,j)=(*__ring[idx1])(idx2);
+            }
+            save.write("PPP5.xmp");
         }
     #endif
 
     #ifdef DEBUG_BUILDVECTOR
         Matrix2D<double> A;
-        A.resize(angleBins,XSIZE(*__angular_radial_val[0]));
+        A.resize(angleBins,XSIZE(*__sector[0]));
         FOR_ALL_ELEMENTS_IN_MATRIX2D(A)
-            A(i,j)=(*__angular_radial_val[i])(j);
-        A.write("PPPangularradial.txt");
-
-        save().initZeros(savefg());
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(save())
-        {
-            int idx1 = classif1(i, j);
-            if (idx1 == -1) continue;
-            int idx2 = classif2(i, j);
-            if (idx2 == -1) continue;
-            save(i,j)=(*__angular_radial_val[idx2])(idx1);
-        }
-        save.write("PPP4.xmp");
+            A(i,j)=(*__sector[i])(j);
+        A.write("PPPsector.txt");
 
         std::cout << _result.transpose() << std::endl;
         std::cout << "Press any key\n";

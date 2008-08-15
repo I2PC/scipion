@@ -244,15 +244,15 @@ private:
     int                        __scan_overlap;
     int                        __learn_overlap;
     int                        __classNo;
-    int                        __NCorrelationFeatures;
     std::vector<Particle>      __auto_candidates;
     std::vector<Particle>      __rejected_particles;
     bool                       __is_model_loaded;
     bool		       debugging;
     std::vector < Matrix2D<int> * >    __mask_classification;
     std::vector < Matrix1D<int> * >    __radial_val;
-    std::vector < Matrix1D<double> * > __angular_radial_val;
-    std::vector < Matrix1D<int> * >    __Nangular_radial_val;
+    std::vector < Matrix1D<double> * > __sector;
+    std::vector < Matrix1D<double> * > __ring;
+    std::vector < Matrix1D<int> * >    __Nsector;
 
 public:
     // Constructor
