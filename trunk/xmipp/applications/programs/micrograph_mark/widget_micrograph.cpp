@@ -1108,7 +1108,7 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
     int angleBins=__sector.size();
     _result.initZeros(__radial_bins*(__gray_bins-1) // radial histograms
         +(angleBins-1)+(angleBins-1)*angleBins // sector correlations
-        +(int)(0.5*(__radial_bins-8)*(__radial_bins-9)*angleBins) // ring correlations
+        +(2*__radial_bins-19)*angleBins // ring correlations
         );
     const Matrix2D<int> &mask =      __mask.get_binary_mask2D();
     const Matrix2D<int> &classif1 =  (*(__mask_classification[0]));
@@ -1215,7 +1215,7 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
     }
 
     // Compute the correlation in rings
-    for (int step = 1; step<__radial_bins-8; step++)
+    for (int step = 1; step<=2; step++)
         for (int i = 8; i<__radial_bins-step; i++)
         {
             static Matrix1D<double> ringCorr;
