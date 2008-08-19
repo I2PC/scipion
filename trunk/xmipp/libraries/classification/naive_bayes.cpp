@@ -424,6 +424,7 @@ void EnsembleNaiveBayes::setCostMatrix(const Matrix2D<double> &cost)
 int EnsembleNaiveBayes::doInference(const Matrix1D<double> &newFeatures,
     double &cost)
 {
+
     int nmax=ensemble.size();
     Matrix1D<double> minCost, maxCost;
     votes.initZeros(K);
@@ -451,9 +452,10 @@ int EnsembleNaiveBayes::doInference(const Matrix1D<double> &newFeatures,
     if      (judgeCombination[bestClass]=='m') cost=minCost(bestClass);
     else if (judgeCombination[bestClass]=='M') cost=maxCost(bestClass);
     else    cost=minCost(bestClass);
-    std::cout << "votes=" << votes.transpose() << std::endl
-              << "minCost=" << minCost.transpose() << std::endl
-              << "maxCost=" << maxCost.transpose() << std::endl;
+/*    if (K==2)
+        std::cout << "votes=" << votes.transpose() << std::endl
+                  << "minCost=" << minCost.transpose() << std::endl
+                  << "maxCost=" << maxCost.transpose() << std::endl;*/
     return bestClass;
 }
 
