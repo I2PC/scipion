@@ -66,6 +66,9 @@ public:
     /// SelFile with all images
     FileName fnSel;
    
+    /// SelFile with all images at the original scale
+    FileName fnSelOrig;
+   
     /// Output root
     FileName fnRoot;
    
@@ -145,7 +148,7 @@ public:
     void removeOutlierLandmarks(const Alignment &alignment);
 
     /// Align images
-    void alignImages(const Alignment &alignment) const;
+    void alignImages(const Alignment &alignment);
 
     /// Run: do the real work
     void run();
@@ -153,6 +156,9 @@ public:
 public:
     // Selfile with the input images
     SelFile SF;
+
+    // Selfile with the input images
+    SelFile SForig;
 
     // List of image pointers
     std::vector < Matrix2D<double> *> img;

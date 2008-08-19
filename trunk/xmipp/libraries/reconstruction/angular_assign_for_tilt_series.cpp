@@ -258,6 +258,7 @@ void computeAffineTransformation(const Matrix2D<double> &I1,
 /* Parameters -------------------------------------------------------------- */
 void Prog_tomograph_alignment::read(int argc, char **argv) {
    fnSel=getParameter(argc,argv,"-i");
+   fnSelOrig=getParameter(argc,argv,"-iorig","");
    fnRoot=getParameter(argc,argv,"-oroot","");
    if (fnRoot=="")
       fnRoot=fnSel.without_extension();
@@ -277,6 +278,7 @@ void Prog_tomograph_alignment::read(int argc, char **argv) {
 
 void Prog_tomograph_alignment::show() {
    std::cout << "Input images:       " << fnSel              << std::endl
+             << "Original images:    " << fnSelOrig          << std::endl
              << "Output rootname:    " << fnRoot             << std::endl
              << "SeqLength:          " << seqLength          << std::endl
              << "MaxStep:            " << maxStep            << std::endl
@@ -296,6 +298,7 @@ void Prog_tomograph_alignment::show() {
 void Prog_tomograph_alignment::usage() const {
    std::cerr << "tomograph_alignment\n"
              << "   -i <selfile>                   : Input images\n"
+             << "  [-iorig <selfile>]              : Selfile with images at original scale\n"
              << "  [-oroot <fn_out>]               : Output alignment\n"
              << "  [-seqLength <n=5>]              : Sequence length\n"
              << "  [-maxStep <step=4>]             : Maximum step for chain refinement\n"
@@ -346,6 +349,11 @@ void Prog_tomograph_alignment::produceSideInfo() {
        progress_bar(Nimg);
    }
    
+   // Read images at original scale
+   SForig.read(fnSelOrig);
+   if (SForig.ImgNo()!=SF.ImgNo())
+        REPORT_ERROR(1,"The number of images in both selfiles (-i and -iorig) is different");
+
    // Fill the affine transformations with empty matrices
    std::vector< Matrix2D<double> > emptyRow;
    for (int i=0; i<Nimg; i++)
@@ -863,10 +871,13 @@ void Prog_tomograph_alignment::readLandmarkSet(const FileName &fnLandmark)
 }
 
 /* Align images ------------------------------------------------------------ */
-void Prog_tomograph_alignment::alignImages(const Alignment &alignment) const
+void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
 {
    DocFile DF;
+   if (fnSelOrig!="")
+      SForig.go_first_ACTIVE();
    for (int i=0;i<Nimg; i++) {
+        // Align the normal image
 	ImageXmipp I;
 	I.read(name_list[i]);
         Matrix2D<double> mask;
@@ -892,6 +903,30 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment) const
 	FileName fn_corrected=fnRoot+"_corrected_"+integerToString(i,3)+".xmp";
 	I.write(fn_corrected);
 	
+        // Align the original image
+	ImageXmipp Iorig;
+	Iorig.read(SForig.NextImg());
+        mask.initZeros(Iorig());
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(Iorig())
+            if (Iorig(i,j)!=0) mask(i,j)=1;
+	Iorig().selfTranslate(-alignment.di[i]*XSIZE(Iorig())/XSIZE(I()),
+            DONT_WRAP);
+	Iorig().selfRotate(90-alignment.rot+alignment.psi(i),DONT_WRAP);
+	mask.selfTranslate(-alignment.di[i]*XSIZE(Iorig())/XSIZE(I()),
+            DONT_WRAP);
+	mask.selfRotate(90-alignment.rot+alignment.psi(i),DONT_WRAP);
+	mask.binarize(0.5);
+	typeCast(mask,iMask);
+        computeStats_within_binary_mask(iMask,Iorig(),minval, maxval,
+            avg, stddev);
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(iMask)
+            if (iMask(i,j)==0) Iorig(i,j)=0;
+            else Iorig(i,j)=(Iorig(i,j)-avg)/stddev;
+	Iorig.set_eulerAngles(rot, tilt, psi);
+	fn_corrected=fnRoot+"_corrected_originalsize_"+integerToString(i,3)+".xmp";
+	I.write(fn_corrected);
+
+        // Prepare data for the docfile
         Matrix1D<double> alignment(5);
         alignment(0)=rot;
         alignment(1)=tilt;
