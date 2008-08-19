@@ -326,7 +326,7 @@ double wrapperSolverEnergy(double trial[]) {
 void Prog_Angular_CommonLine::read(int argc, char **argv)
 {
     fnSel = getParameter(argc,argv,"-i");
-    fnOut = getParameter(argc,argv,"-o");
+    fnOut = getParameter(argc,argv,"-oang");
     fnSym = getParameter(argc,argv,"-sym","");
     NGen   = textToInteger(getParameter(argc,argv,"-NGen","50000"));
     NGroup = textToInteger(getParameter(argc,argv,"-NGroup","7"));
@@ -348,7 +348,7 @@ void Prog_Angular_CommonLine::usage() const
 {
     std::cerr << "angular_commonline\n"
               << "   -i <selfile>     : SelFile with input images\n"
-              << "   -o <docfile>     : Docfile with the angular assignment\n"
+              << "   -oang <docfile>  : Docfile with the angular assignment\n"
               << "  [-NGen <g=50000>] : Number of generations\n"
               << "  [-NGroup <g=7>]   : Number of generations\n"
               << "  [-tryInitial]     : Do not optimize\n"
