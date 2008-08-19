@@ -539,13 +539,12 @@ try {
     produceClassesProbabilities(__selection_model,probs);
     
     // Initialize classifier
-    __selection_model.initNaiveBayes(features, probs, 8, __penalization);
+    __selection_model.initNaiveBayesEnsemble(features, probs, 8,
+        __penalization, 10, 1, 1, "mm");
 
     #ifdef DEBUG_AUTO
         std::cout << "Probabilities of the classes:"
-                  << probs.transpose() << std::endl
-                  << "First classifier\n"
-                  << *(__selection_model.__bayesNet) << std::endl;
+                  << probs.transpose() << std::endl;
     #endif
 
     
@@ -640,11 +639,6 @@ try {
         N++;
     }
     
-    #ifdef DEBUG_AUTO
-       std::cerr << "Number of automatically selected particles = " 
-                 << __auto_candidates.size() << std::endl;
-    #endif
-
     // Sort particles by cost
     std::sort(__auto_candidates.begin(),__auto_candidates.end(),
         SAscendingParticleSort());
@@ -652,6 +646,11 @@ try {
     // Reject the candidates that are pointing to the same particle
     int Nalive = reject_within_distance(__auto_candidates, __particle_radius,
         false);
+
+    #ifdef DEBUG_AUTO
+       std::cerr << "Number of automatically selected particles = " 
+                 << __auto_candidates.size() << std::endl;
+    #endif
 
     // Apply a second classifier for classifying between particle
     // and false positive. For that, remove the middle class (background)
@@ -669,10 +668,10 @@ try {
             probs(1)=probs(2);
             probs.resize(2);
             probs/=probs.sum();
-            __selection_model2.initNaiveBayes(features, probs, 8, __penalization);
+            __selection_model2.initNaiveBayesEnsemble(features, probs, 8,
+                __penalization,10,1,1,"mm");
             #ifdef DEBUG_AUTO
-	        std::cout << "Second classification\n"
-                          << *(__selection_model2.__bayesNet) << std::endl;
+	        std::cout << "Second classification\n";
             #endif
             imax = __auto_candidates.size();
             Nalive = 0;
@@ -723,7 +722,7 @@ try {
                 features.push_back(difficultParticles);
 
                 __selection_model3.initNaiveBayesEnsemble(features, probs, 8,
-                    __penalization, 100, 1, 1, "mm");
+                    __penalization, 10, 1, 1, "mm");
                 #ifdef DEBUG_AUTO
 	            std::cout << "Third classification: " << YSIZE(difficultParticles)
                               << " difficult particles out of " << NErrors << "\n"
@@ -1216,13 +1215,13 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
 
     // Compute the correlation in rings
     for (int step = 1; step<=2; step++)
-        for (int i = 8; i<__radial_bins-step; i++)
-        {
-            static Matrix1D<double> ringCorr;
-            correlation_vector(*__ring[i],*__ring[i+step],ringCorr);
-            for (int j = 0; j < XSIZE(ringCorr); j++)
-                _result(idx_result++) = ringCorr(j);
-        }
+         for (int i = 8; i<__radial_bins-step; i++)
+         {
+             static Matrix1D<double> ringCorr;
+             correlation_vector(*__ring[i],*__ring[i+step],ringCorr);
+             for (int j = 0; j < XSIZE(ringCorr); j++)
+                 _result(idx_result++) = ringCorr(j);
+         }    for (int i = 8; i<__radial_bins-1; i++)
 
     #ifdef DEBUG_IMG_BUILDVECTOR
         if (debug_go)
