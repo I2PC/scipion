@@ -329,7 +329,7 @@ void Prog_Angular_CommonLine::read(int argc, char **argv)
     fnOut = getParameter(argc,argv,"-oang");
     fnSym = getParameter(argc,argv,"-sym","");
     NGen   = textToInteger(getParameter(argc,argv,"-NGen","50000"));
-    NGroup = textToInteger(getParameter(argc,argv,"-NGroup","7"));
+    NGroup = textToInteger(getParameter(argc,argv,"-NGroup","10"));
     tryInitial = checkParameter(argc,argv,"-tryInitial");
 }
 
@@ -350,7 +350,7 @@ void Prog_Angular_CommonLine::usage() const
               << "   -i <selfile>     : SelFile with input images\n"
               << "   -oang <docfile>  : Docfile with the angular assignment\n"
               << "  [-NGen <g=50000>] : Number of generations\n"
-              << "  [-NGroup <g=7>]   : Number of generations\n"
+              << "  [-NGroup <N=10>]  : Number of group comparisons\n"
               << "  [-tryInitial]     : Do not optimize\n"
               << "  [-sym <symfile>]  : Symmetry\n"
     ;
