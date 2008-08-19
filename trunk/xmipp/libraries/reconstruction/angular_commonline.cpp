@@ -507,12 +507,15 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
 {
     int Nimg = SF.ImgNo();
     solution.initZeros(3*Nimg);
-    Matrix1D<int> assigned;
+    Matrix1D<int> assigned, tabuPenalization;
     assigned.initZeros(Nimg);
     assigned(0)=1;
+    tabuPenalization.initZeros(Nimg);
 
     // Assign all images
-    int removalCounter=0;
+    Matrix1D<int> removalCounter;
+    removalCounter.initZeros(2);
+    removalCounter(1)=2;
     while (assigned.sum()<Nimg)
     {
         // Initialize the list of Euler vectors
@@ -537,7 +540,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
         init_progress_bar(Nimg);
         for (int i=1; i<Nimg; i++)
         {
-            if (assigned(i)) continue;
+            if (assigned(i) || tabuPenalization(i)>0) continue;
             Matrix1D<int> backupAlreadyOptimized=alreadyOptimized;
 
             Matrix1D<int> comparedTo;
@@ -555,10 +558,13 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
                 bool tryAgain=true;
                 do {
                     j=ROUND(rnd_unif(0,Nimg-1));
-                    if (!allowComparisonWithFixedImages && comparedTo(j)==0)
-                        tryAgain=false;
-                    else if (allowComparisonWithFixedImages && comparedTo(j)==1)
-                        tryAgain=false;
+		    if (tabuPenalization(j)==0)
+		    {
+                        if (!allowComparisonWithFixedImages && comparedTo(j)==0)
+                            tryAgain=false;
+                        else if (allowComparisonWithFixedImages && comparedTo(j)==1)
+                            tryAgain=false;
+                    }
                 } while (tryAgain);
                 comparedTo(j)++;
 
@@ -598,12 +604,13 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
         int besti=-1;
         int topN=NGroup;
         for (int i=1; i<Nimg; i++)
-            if (eulerAngles[i].size()<2*topN && !assigned(i))
+            if (eulerAngles[i].size()<2*topN && !assigned(i) &&
+                tabuPenalization(i)==0)
                 topN=CEIL(eulerAngles[i].size()/2);
         for (int i=1; i<Nimg; i++)
         {
             // If the particle has  already been assigned skip it
-            if (assigned(i)) continue;
+            if (assigned(i) || tabuPenalization(i)>0) continue;
             
             // Sort the images by ascending correlation
             Matrix1D<double> aux;
@@ -810,29 +817,44 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
         
         // Every two images remove the worse one in the list
         int totalAssigned=assigned.sum();
-        removalCounter=(removalCounter+1)%2;
-        if (totalAssigned>4 && removalCounter==0)
+        FOR_ALL_ELEMENTS_IN_MATRIX1D(removalCounter)
         {
-            int imin=-1;
-            double worseCorrelation=2;
-            FOR_ALL_ELEMENTS_IN_MATRIX1D(currentImageCorrelation)
-                if (currentImageCorrelation(i)>0 &&
-                    currentImageCorrelation(i)<worseCorrelation &&
-                    i>0)
-                {
-                    worseCorrelation=currentImageCorrelation(i);
-                    imin=i;
-                }
-            if (imin!=-1)
+            int N=4*i+2;
+            removalCounter(i)=(removalCounter(i)+1)%N;
+	    std::cout << "removal i=" << i << " removal(i)=" << removalCounter(i)
+	              << " N=" << N << " totalAssigned=" << totalAssigned
+		      << std::endl;
+            if (totalAssigned>N && removalCounter(i)==0)
             {
-                alreadyOptimized(imin)=assigned(imin)=0;
-                currentSolution(3*imin)=currentSolution(3*imin+1)=
-                    currentSolution(3*imin+2)=0;
-                std::cout << "Image " << imin << " removed from the "
-                          << "current assignment because its correlation was "
-                          << worseCorrelation << std::endl;
+                for (int removed=0; removed<i+1; removed++)
+                {
+                    int imin=-1;
+                    double worseCorrelation=2;
+                    FOR_ALL_ELEMENTS_IN_MATRIX1D(currentImageCorrelation)
+                        if (currentImageCorrelation(i)>0 &&
+                            currentImageCorrelation(i)<worseCorrelation)
+                        {
+                            worseCorrelation=currentImageCorrelation(i);
+                            imin=i;
+                        }
+                    if (imin!=-1)
+                    {
+                        alreadyOptimized(imin)=assigned(imin)=0;
+                        currentSolution(3*imin)=currentSolution(3*imin+1)=
+                            currentSolution(3*imin+2)=0;
+			currentImageCorrelation(imin)=0;
+                        std::cout << "Image " << imin << " removed from the "
+                                  << "current assignment because its correlation was "
+                                  << worseCorrelation << std::endl;
+			tabuPenalization(imin)+=10;
+                    }
+                }
             }
         }
+	
+	// Remove one from the penalization of every image
+	FOR_ALL_ELEMENTS_IN_MATRIX1D(tabuPenalization)
+	    if (tabuPenalization(i)>0) tabuPenalization(i)--;
     }
     
     solution=currentSolution;
