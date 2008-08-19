@@ -162,7 +162,15 @@ public:
         {
             k=__bayesEnsembleNet->doInference(new_features,cost);
             const Matrix1D<int> &votes=__bayesEnsembleNet->getVotes();
-	    if ((double)(votes(0))/votes.sum()<0.97) k=1;
+            switch (__classNo)
+            {
+                case 2:
+	            if ((double)(votes(0))/votes.sum()<=0.9) k=1;
+                    break;
+                case 3:
+	            if ((double)(votes(0))/votes.sum()>=0.1) k=0;
+                    break;
+            }
         }
         return (k==0) ? true : false;
     }
