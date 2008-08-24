@@ -621,7 +621,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
 
             // Among the top, compute the distance between
             // the different Euler angles
-            double distance=0;
+            double distance=-2;
             if (topN!=1)
             {
                 for (int j1=XSIZE(idx)-topN; j1<XSIZE(idx); j1++)
@@ -639,15 +639,15 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
                         double psi=eulerAngles[i][m](2);
                         double otherrot, othertilt, otherpsi;
                         Euler_angles2matrix(rot,tilt,psi,E2);
-                        double maxDistance=ABS(E1(2,0)*E2(2,0)+
-                            E1(2,1)*E2(2,1)+E1(2,2)*E2(2,2));
+                        double maxDistance=E1(2,0)*E2(2,0)+
+                            E1(2,1)*E2(2,1)+E1(2,2)*E2(2,2);
                         for (int sym=0; sym<Nsym; sym++)
                         {
                             Euler_apply_transf(L[sym],R[sym],
                                 rot, tilt, psi, otherrot, othertilt, otherpsi);
                             Euler_angles2matrix(otherrot,othertilt,otherpsi,E2);
-                            double symDistance=ABS(E1(2,0)*E2(2,0)+
-                                E1(2,1)*E2(2,1)+E1(2,2)*E2(2,2));
+                            double symDistance=E1(2,0)*E2(2,0)+
+                                E1(2,1)*E2(2,1)+E1(2,2)*E2(2,2);
                             if (symDistance>maxDistance)
                                 maxDistance=symDistance;
                         }
