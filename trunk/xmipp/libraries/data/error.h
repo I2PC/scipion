@@ -25,6 +25,8 @@
 
 #ifndef ERROR_H
 #define ERROR_H
+//ROB
+#include "cstdlib"
 
 #include <string>
 #include <iostream>

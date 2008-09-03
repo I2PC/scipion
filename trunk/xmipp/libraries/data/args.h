@@ -29,6 +29,8 @@
 #include <cstdio>
 #include <string>
 #include <vector>
+//ROB
+#include <string.h>
 
 #include "funcs.h"
 template <typename T> class Matrix1D;

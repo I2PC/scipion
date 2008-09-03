@@ -38,7 +38,8 @@
 
 #include <string>
 #include <iostream>
-#include <complex.h> 
+//ROB remove h
+#include <complex> 
 #include "../../external/fftw-3.1.2/api/fftw3.h"
 #include <climits>
 #include "matrix3d.h"

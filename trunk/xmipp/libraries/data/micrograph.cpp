@@ -718,9 +718,9 @@ img.write("kk.xmp");
         int ysizeM = (int) Xdim/2 +1;
         int xsizeMp = Ypdim;
         int ysizeMp = (int) Xpdim/2 +1;
-        complex<double> * cMfOut, * cMpfIn;
-        cMfOut =  (complex<double> *) M_fft.fOut; //fOut is double *
-        cMpfIn  = (complex<double> *) Mp_fft.fIn;  //fIn is double *
+        std::complex<double> * cMfOut, * cMpfIn;
+        cMfOut =  (std::complex<double> *) M_fft.fOut; //fOut is double *
+        cMpfIn  = (std::complex<double> *) Mp_fft.fIn;  //fIn is double *
 
         for (int j=0;j<xsizeMp/2;j++)
             for (int i=0;i<ysizeMp;i++)

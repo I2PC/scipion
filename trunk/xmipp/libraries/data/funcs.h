@@ -36,6 +36,8 @@
 #include <climits>
 #include <algorithm>
 #include <vector>
+//ROB
+#include <typeinfo>
 
 // For timing functions
 // Uncomment next line timing functions are giving problems in your system
