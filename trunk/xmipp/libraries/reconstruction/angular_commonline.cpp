@@ -1,7 +1,7 @@
 /***************************************************************************
  *
- * Authors:     Ignacio Fernández Moreno (hellmoon666@gmail.com)
- *              Carlos Oscar Sanchez Sorzano (coss@cnb.csic.es)
+ * Authors:     Carlos Oscar Sanchez Sorzano (coss@cnb.csic.es)
+ *              Ignacio Fernández Moreno (hellmoon666@gmail.com)
  *
  * Universidad San Pablo C.E.U.
  *
@@ -515,7 +515,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
     // Assign all images
     Matrix1D<int> removalCounter;
     removalCounter.initZeros(2);
-    removalCounter(1)=2;
+    removalCounter(1)=1;
     while (assigned.sum()<Nimg)
     {
         // Initialize the list of Euler vectors
@@ -538,7 +538,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
         std::cout << "Aligning image pairs, "
                   << Nimg-assigned.sum() << " images remaining ...\n";
         init_progress_bar(Nimg);
-        for (int i=1; i<Nimg; i++)
+        for (int i=0; i<Nimg; i++)
         {
             if (assigned(i) || tabuPenalization(i)>0) continue;
             Matrix1D<int> backupAlreadyOptimized=alreadyOptimized;
@@ -571,7 +571,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
                 // Prepare the vector of images to optimize
                 alreadyOptimized=backupAlreadyOptimized;
                 alreadyOptimized(i)=alreadyOptimized(j)=1;
-
+                
                 // Align these two images
                 Matrix1D<int> imgIdx(2);
                 VECTOR_R2(imgIdx,i,j);
@@ -603,11 +603,11 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
         double bestDistance=0;
         int besti=-1;
         int topN=NGroup;
-        for (int i=1; i<Nimg; i++)
+        for (int i=0; i<Nimg; i++)
             if (eulerAngles[i].size()<2*topN && !assigned(i) &&
                 tabuPenalization(i)==0)
                 topN=CEIL(eulerAngles[i].size()/2);
-        for (int i=1; i<Nimg; i++)
+        for (int i=0; i<Nimg; i++)
         {
             // If the particle has  already been assigned skip it
             if (assigned(i) || tabuPenalization(i)>0) continue;
@@ -759,7 +759,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
             }
         }
 
-        // Set the status of these images to optimized 
+        // Set the status of this image to optimized 
         alreadyOptimized(besti) = 2;
         assigned(besti)         = 1;
         
@@ -865,8 +865,7 @@ double Prog_Angular_CommonLine::realignCurrentSolution()
     // Realign all images that have already been optimized
     FOR_ALL_ELEMENTS_IN_MATRIX1D(alreadyOptimized)
         if (alreadyOptimized(i)==2) alreadyOptimized(i)=1;
-    alreadyOptimized(0)=2;
-    int NToSolve=alreadyOptimized.sum()-2;
+    int NToSolve=alreadyOptimized.sum();
     Matrix1D<int> imgIdx(NToSolve);
     int idx=0;
     FOR_ALL_ELEMENTS_IN_MATRIX1D(alreadyOptimized)
