@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:    Sjors Scheres           scheres@cnb.uam.es (2004)
+ * Authors:     Roberto Marabini roberto@cnb.uam.es
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -29,8 +29,8 @@
 #include <data/selfile.h>
 #include <data/docfile.h>
 #include <data/image.h>
-#include <data/filters.h>
 #include <data/projection.h>
+#include <data/filters.h>
 
 #include <reconstruction/projection.h>
 #include <reconstruction/directions.h>
