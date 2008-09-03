@@ -840,7 +840,7 @@ void Prog_RecFourier_prm::MainLoop(VolumeXmipp &vol)
     //
     // init volumes with zeros
     std::complex<double> * FOURIERVOL;
-    FOURIERVOL = (complex<double> *)FourierVol;
+    FOURIERVOL = (std::complex<double> *)FourierVol;
     for (int i=0; i<sizeout;i++)
     {
         FOURIERVOL[i]=(std::complex<double>)0.0;
@@ -863,7 +863,7 @@ void Prog_RecFourier_prm::MainLoop(VolumeXmipp &vol)
     
     // pointer for output matrix
     std::complex<double> * FOURIERPROJ;
-    FOURIERPROJ = (complex<double> *)fftPaddedImg.fOut;
+    FOURIERPROJ = (std::complex<double> *)fftPaddedImg.fOut;
     int i_counter=0;
     int screen_size=XMIPP_MIN(60,SF.ImgNo());
     int step_counter=(int)(SF.ImgNo()/screen_size);

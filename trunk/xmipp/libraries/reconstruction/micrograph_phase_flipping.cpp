@@ -127,10 +127,10 @@ void Prog_micrograph_phase_flipping::run(void)
     Matrix1D<int>    idx(2);  // Indexes for Fourier plane
     Matrix1D<double> freq(2); // Frequencies for Fourier plane
 
-
-    complex<double> * cfOut, * cfIn;
-    cfOut = (complex<double> *)myfft.fOut; //fOut is double *
-    cfIn  = (complex<double> *)myfft.fIn;  //fIn is double *
+    //ROB add std::
+    std::complex<double> * cfOut, * cfIn;
+    cfOut = (std::complex<double> *)myfft.fOut; //fOut is double *
+    cfIn  = (std::complex<double> *)myfft.fIn;  //fIn is double *
     //complex<double> * aux_cfOut, * aux_cfIn;
     int xsize = Xdim;
     int ysize = (int) Ydim/2 +1;
