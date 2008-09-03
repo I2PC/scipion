@@ -43,6 +43,8 @@ public:
     FileName fn_ctfdat;
     /// Relaxation factor
     double mu;
+    /// Output filename root
+    FileName fnRoot;
 
     /// Side Info: volume
     VolumeXmipp V;
