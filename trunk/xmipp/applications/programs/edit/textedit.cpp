@@ -312,7 +312,7 @@ void TextEdit::fileClose()
     if (currentEditor())
         currentEditor()->viewport()->setFocus();
 }
-
+#include <cstdlib>
 void TextEdit::fileExit()
 {
     if (remove)
