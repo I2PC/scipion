@@ -30,6 +30,7 @@ void Prog_IDR_ART_Parameters::read(int argc, char **argv)
 {
     fn_vol = getParameter(argc, argv, "-vol");
     fn_ctfdat = getParameter(argc, argv, "-ctfdat");
+    fnRoot = getParameter(argc, argv, "-oroot");
     mu = textToFloat(getParameter(argc, argv, "-mu", "1.8"));
 }
 
@@ -44,6 +45,7 @@ void Prog_IDR_ART_Parameters::show()
 {
     std::cout << "Input volume: " << fn_vol << std::endl
 	      << "CTFDat: " << fn_ctfdat << std::endl
+              << "Oroot: " << fnRoot << std::endl
 	      << "Relaxation factor: " << mu << std::endl
     ;
 
@@ -52,9 +54,10 @@ void Prog_IDR_ART_Parameters::show()
 void Prog_IDR_ART_Parameters::Usage()
 {
     std::cerr << "Usage: IDR\n"
-	      << "   -vol <volume>	  : Voxel volume with the current reconstruction\n"
-	      << "   -ctfdat <ctfdat>	  : List of projections and CTFs\n"
-	      << "  [-mu <mu=1.8>]	  : Relaxation factor\n"
+	      << "   -vol <volume>        : Voxel volume with the current reconstruction\n"
+	      << "   -ctfdat <ctfdat>     : List of projections and CTFs\n"
+              << "   -oroot <root>        : Rootname of the output files\n"
+	      << "  [-mu <mu=1.8>]        : Relaxation factor\n"
     ;
 }
 
@@ -120,7 +123,7 @@ void Prog_IDR_ART_Parameters::IDR_correction()
                                 	(IMGPIXEL(Itheo, i, j) - mu * IMGPIXEL(Itheo_CTF, i, j));
 
             // Save output image
-            Itheo.write(fn_img);
+            Itheo.write(fnRoot+integerToString(imgs,6)+".xmp");
 
 #ifdef DEBUG
             ImageXmipp save;
