@@ -1389,6 +1389,17 @@ void Smoothing_Shah(Matrix2D< double >& img,
                     int RefinementLoops,
                     bool adjust_range = true);
 
+/** Tomographic diffusion
+ * @ingroup Filters
+ *
+ * The direction of the tilt axis must be taken into account in the
+ * definition of the diffusion constants alpha.
+ *
+ * The function returns the value of the regularization term.
+ */
+double tomographicDiffusion(Matrix3D< double >& V,
+    const Matrix1D< double >& alpha, double lambda);
+ 
 /** Rotational invariant moments
  * @ingroup Filters
  *

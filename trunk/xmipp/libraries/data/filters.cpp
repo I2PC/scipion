@@ -717,6 +717,125 @@ void Smoothing_Shah(Matrix2D<double> &img,
     }
 }
 
+/* Tomographic diffusion --------------------------------------------------- */
+//#define DEBUG
+double tomographicDiffusion(Matrix3D< double >& V,
+    const Matrix1D< double >& alpha, double lambda)
+{
+    double alphax=XX(alpha);
+    double alphay=YY(alpha);
+    double alphaz=ZZ(alpha);
+    double diffx, diffy, diffz;
+
+    // Compute regularization error
+    double regError=0;
+    for (int z=1; z<ZSIZE(V)-1; z++)
+        for (int y=1; y<YSIZE(V)-1; y++)
+            for (int x=1; x<XSIZE(V)-1; x++)
+            {
+                diffx=DIRECT_VOL_ELEM(V,z,y,x+1)-DIRECT_VOL_ELEM(V,z,y,x-1);
+                diffy=DIRECT_VOL_ELEM(V,z,y+1,x)-DIRECT_VOL_ELEM(V,z,y-1,x);
+                diffz=DIRECT_VOL_ELEM(V,z+1,y,x)-DIRECT_VOL_ELEM(V,z-1,y,x);
+                regError+=sqrt(alphax*diffx*diffx+
+                               alphay*diffy*diffy+
+                               alphaz*diffz*diffz);
+            }
+    regError*=0.5;
+    
+    // Compute the gradient of the regularization error
+    Matrix3D<double> gradient;
+    gradient.initZeros(V);
+    for (int z=2; z<ZSIZE(V)-2; z++)
+        for (int y=2; y<YSIZE(V)-2; y++)
+            for (int x=2; x<XSIZE(V)-2; x++)
+            {
+                // First term
+                double V000=DIRECT_VOL_ELEM(V,z,y,x);
+                double V_200=DIRECT_VOL_ELEM(V,z,y,x-2);
+                double V_110=DIRECT_VOL_ELEM(V,z,y+1,x-1);
+                double V_1_10=DIRECT_VOL_ELEM(V,z,y-1,x-1);
+                double V_101=DIRECT_VOL_ELEM(V,z+1,y,x-1);
+                double V_10_1=DIRECT_VOL_ELEM(V,z-1,y,x-1);
+                diffx=V000-V_200;
+                diffy=V_110-V_1_10;
+                diffz=V_101-V_10_1;
+                double t1=diffx/sqrt(alphax*diffx*diffx+
+                    alphay*diffy*diffy+alphaz*diffz*diffz);
+                
+                // Second term
+                double V200=DIRECT_VOL_ELEM(V,z,y,x+2);
+                double V110=DIRECT_VOL_ELEM(V,z,y+1,x+1);
+                double V1_10=DIRECT_VOL_ELEM(V,z,y-1,x+1);
+                double V101=DIRECT_VOL_ELEM(V,z+1,y,x+1);
+                double V10_1=DIRECT_VOL_ELEM(V,z-1,y,x+1);
+                diffx=V200-V000;
+                diffy=V110-V1_10;
+                diffz=V101-V10_1;
+                double t2=diffx/sqrt(alphax*diffx*diffx+
+                    alphay*diffy*diffy+alphaz*diffz*diffz);
+                
+                // Third term
+                double V0_20=DIRECT_VOL_ELEM(V,z,y-2,x);
+                double V0_11=DIRECT_VOL_ELEM(V,z+1,y-1,x);
+                double V0_1_1=DIRECT_VOL_ELEM(V,z-1,y-1,x);
+                diffx=V1_10-V_1_10;
+                diffy=V000-V0_20;
+                diffz=V0_11-V0_1_1;
+                double t3=diffy/sqrt(alphax*diffx*diffx+
+                    alphay*diffy*diffy+alphaz*diffz*diffz);
+                
+                // Fourth term
+                double V020=DIRECT_VOL_ELEM(V,z,y+2,x);
+                double V011=DIRECT_VOL_ELEM(V,z+1,y+1,x);
+                double V01_1=DIRECT_VOL_ELEM(V,z-1,y+1,x);
+                diffx=V110-V_110;
+                diffy=V020-V000;
+                diffz=V011-V01_1;
+                double t4=diffy/sqrt(alphax*diffx*diffx+
+                    alphay*diffy*diffy+alphaz*diffz*diffz);
+
+                // Fifth term
+                double V00_2=DIRECT_VOL_ELEM(V,z-2,y,x);
+                diffx=V10_1-V_10_1;
+                diffy=V01_1-V0_1_1;
+                diffz=V000-V00_2;
+                double t5=diffz/sqrt(alphax*diffx*diffx+
+                    alphay*diffy*diffy+alphaz*diffz*diffz);
+
+                // Sixth term
+                double V002=DIRECT_VOL_ELEM(V,z+2,y,x);
+                diffx=V101-V_101;
+                diffy=V011-V0_11;
+                diffz=V002-V000;
+                double t6=diffz/sqrt(alphax*diffx*diffx+
+                    alphay*diffy*diffy+alphaz*diffz*diffz);
+                
+                // Compute gradient
+                DIRECT_VOL_ELEM(gradient,z,y,x)=
+                    0.5*(alphax*(t1-t2)+alphay*(t3-t4)+alphaz*(t5-t6));
+            }
+    #ifdef DEBUG
+        VolumeXmipp save;
+        save()=V;
+        save.write("PPPvolume.vol");
+        save()=gradient;
+        save.write("PPPgradient.vol");
+        std::cout << "Press any key\n";
+        char c; std::cin >> c;
+    #endif
+    
+    // Update volume
+    for (int z=2; z<ZSIZE(V)-2; z++)
+        for (int y=2; y<YSIZE(V)-2; y++)
+            for (int x=2; x<XSIZE(V)-2; x++)
+                DIRECT_VOL_ELEM(V,z,y,x)-=
+                    lambda*DIRECT_VOL_ELEM(gradient,z,y,x);
+
+    // Finish
+    return regError;
+}
+#undef DEBUG
+
 /* Rotational invariant moments -------------------------------------------- */
 void rotational_invariant_moments(const Matrix2D<double> &img,
                                   const Matrix2D<int> *mask,
