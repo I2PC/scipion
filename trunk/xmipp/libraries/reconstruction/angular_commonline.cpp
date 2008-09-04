@@ -537,7 +537,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
         // For each image try different pairs and get different alignments
         std::cout << "Aligning image pairs, "
                   << Nimg-assigned.sum() << " images remaining ...\n";
-        init_progress_bar(Nimg);
+        init_progress_bar(Nimg-assigned.sum());
         for (int i=0; i<Nimg; i++)
         {
             if (assigned(i) || tabuPenalization(i)>0) continue;
@@ -564,6 +564,29 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
                             tryAgain=false;
                         else if (allowComparisonWithFixedImages && comparedTo(j)==1)
                             tryAgain=false;
+                    }
+                    
+                    // Check that there are really "free" images
+                    if (tryAgain)
+                    {
+                        bool freeImgs=false;
+                        for (j=0; j<Nimg && !freeImgs; j++)
+                            if (tabuPenalization(j)==0 && comparedTo(j)==0)
+                                freeImgs=true;
+                        if (!freeImgs)
+                        {
+                            bool tryAgainToFree=true;
+                            do
+                            {
+                                j=ROUND(rnd_unif(0,Nimg-1));
+                                if (comparedTo(j)==1)
+                                {
+                                    comparedTo(j)=0;
+                                    tryAgainToFree=false;
+                                    tryAgain=false;
+                                }
+                            } while (tryAgainToFree);
+                        }
                     }
                 } while (tryAgain);
                 comparedTo(j)++;
@@ -596,11 +619,11 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
             }
             progress_bar(i);
         }
-        progress_bar(Nimg);
+        progress_bar(Nimg-assigned.sum());
 
         // Compute for each image the variance in the top assignment
         int Nsym=SL.SymsNo();
-        double bestDistance=0;
+        double bestDistance=-2;
         int besti=-1;
         int topN=NGroup;
         for (int i=0; i<Nimg; i++)
@@ -670,183 +693,186 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
             }
         }
 
-        // Sort the images by ascending correlation in the best cluster
-        Matrix1D<double> aux;
-        aux.initZeros(eulerAngles[besti].size());
-        for (int n=0; n<eulerAngles[besti].size(); n++)
-            aux(n)=correlations[besti][n];
-        Matrix1D<int> idx=aux.indexSort();
-
-        // Keep only the topN
-        std::vector< Matrix1D<double> > bestEulerAngles;
-        std::vector< double > bestCorrelations;
-        for (int n=XSIZE(idx)-topN; n<XSIZE(idx); n++)
+        if (bestDistance>-2)
         {
-            bestEulerAngles.push_back(eulerAngles[besti][idx(n)-1]);
-            bestCorrelations.push_back(correlations[besti][idx(n)-1]);
-        }
+            // Sort the images by ascending correlation in the best cluster
+            Matrix1D<double> aux;
+            aux.initZeros(eulerAngles[besti].size());
+            for (int n=0; n<eulerAngles[besti].size(); n++)
+                aux(n)=correlations[besti][n];
+            Matrix1D<int> idx=aux.indexSort();
 
-        // Show best resolved image
-        std::cout << "Candidates for image " << besti << " distance="
-                  << bestDistance << std::endl;
-        for (int n=0; n<bestEulerAngles.size(); n++)
-        {
-            Matrix1D<double> direction;
-            Euler_direction(bestEulerAngles[n](0),
-                bestEulerAngles[n](1),bestEulerAngles[n](2),
-                direction);
-            std::cout << bestEulerAngles[n].transpose() << " corr= "
-                      << bestCorrelations[n] << " dir= "
-                      << direction.transpose() << std::endl;
-        }
-
-        // Cluster the different solutions
-        std::vector< int > clusterBestAssignment;
-        std::vector< double > clusterBestCorrelation;
-        Matrix1D<int> alreadyClustered;
-        alreadyClustered.initZeros(topN);
-        for (int j1=0; j1<topN; j1++)
-        {
-            if (!alreadyClustered(j1))
+            // Keep only the topN
+            std::vector< Matrix1D<double> > bestEulerAngles;
+            std::vector< double > bestCorrelations;
+            for (int n=XSIZE(idx)-topN; n<XSIZE(idx); n++)
             {
-                alreadyClustered(j1)=1;
+                bestEulerAngles.push_back(eulerAngles[besti][idx(n)-1]);
+                bestCorrelations.push_back(correlations[besti][idx(n)-1]);
+            }
 
-                Matrix2D<double> E1;
-                Euler_angles2matrix(bestEulerAngles[j1](0),
-                    bestEulerAngles[j1](1),bestEulerAngles[j1](2),
-                    E1);
-                double bestCorrelation=bestCorrelations[j1];
-                int bestAssignment=j1;
-                for (int j2=j1+1; j2<topN; j2++)
+            // Show best resolved image
+            std::cout << "Candidates for image " << besti << " distance="
+                      << bestDistance << std::endl;
+            for (int n=0; n<bestEulerAngles.size(); n++)
+            {
+                Matrix1D<double> direction;
+                Euler_direction(bestEulerAngles[n](0),
+                    bestEulerAngles[n](1),bestEulerAngles[n](2),
+                    direction);
+                std::cout << bestEulerAngles[n].transpose() << " corr= "
+                          << bestCorrelations[n] << " dir= "
+                          << direction.transpose() << std::endl;
+            }
+
+            // Cluster the different solutions
+            std::vector< int > clusterBestAssignment;
+            std::vector< double > clusterBestCorrelation;
+            Matrix1D<int> alreadyClustered;
+            alreadyClustered.initZeros(topN);
+            for (int j1=0; j1<topN; j1++)
+            {
+                if (!alreadyClustered(j1))
                 {
-                    if (!alreadyClustered(j2))
+                    alreadyClustered(j1)=1;
+
+                    Matrix2D<double> E1;
+                    Euler_angles2matrix(bestEulerAngles[j1](0),
+                        bestEulerAngles[j1](1),bestEulerAngles[j1](2),
+                        E1);
+                    double bestCorrelation=bestCorrelations[j1];
+                    int bestAssignment=j1;
+                    for (int j2=j1+1; j2<topN; j2++)
                     {
-                        Matrix2D<double> E2;
-                        Euler_angles2matrix(bestEulerAngles[j2](0),
-                            bestEulerAngles[j2](1),
-                            bestEulerAngles[j2](2),E2);
-                        double bestCorrE1E2=
-                            Euler_distanceBetweenMatrices(E1,E2);
-                        for (int sym=0; sym<Nsym; sym++)
+                        if (!alreadyClustered(j2))
                         {
-                            double otherrot, othertilt, otherpsi;
-                            Euler_apply_transf(L[sym],R[sym],
-                                bestEulerAngles[j2](0), bestEulerAngles[j2](1),
-                                bestEulerAngles[j2](2), otherrot, othertilt,
-                                otherpsi);
-                            Euler_angles2matrix(otherrot,othertilt,otherpsi,E2);
-                            double aux=Euler_distanceBetweenMatrices(E1,E2);
-                            if (aux>bestCorrE1E2) bestCorrE1E2=aux;
-                        }
-                        if (bestCorrE1E2>0.97)
-                        {
-                            alreadyClustered(j2)=1;
-                            if (bestCorrelation<bestCorrelations[j2])
+                            Matrix2D<double> E2;
+                            Euler_angles2matrix(bestEulerAngles[j2](0),
+                                bestEulerAngles[j2](1),
+                                bestEulerAngles[j2](2),E2);
+                            double bestCorrE1E2=
+                                Euler_distanceBetweenMatrices(E1,E2);
+                            for (int sym=0; sym<Nsym; sym++)
                             {
-                                bestCorrelation=bestCorrelations[j2];
-                                bestAssignment=j2;
+                                double otherrot, othertilt, otherpsi;
+                                Euler_apply_transf(L[sym],R[sym],
+                                    bestEulerAngles[j2](0), bestEulerAngles[j2](1),
+                                    bestEulerAngles[j2](2), otherrot, othertilt,
+                                    otherpsi);
+                                Euler_angles2matrix(otherrot,othertilt,otherpsi,E2);
+                                double aux=Euler_distanceBetweenMatrices(E1,E2);
+                                if (aux>bestCorrE1E2) bestCorrE1E2=aux;
+                            }
+                            if (bestCorrE1E2>0.97)
+                            {
+                                alreadyClustered(j2)=1;
+                                if (bestCorrelation<bestCorrelations[j2])
+                                {
+                                    bestCorrelation=bestCorrelations[j2];
+                                    bestAssignment=j2;
+                                }
                             }
                         }
                     }
-                }
 
-                clusterBestAssignment.push_back(bestAssignment);
-                clusterBestCorrelation.push_back(bestCorrelation);
-                
-                std::cout << "Cluster headed by "
-                    << bestEulerAngles[bestAssignment].transpose()
-                    << " corr= " << bestCorrelation << std::endl;
-            }
-        }
+                    clusterBestAssignment.push_back(bestAssignment);
+                    clusterBestCorrelation.push_back(bestCorrelation);
 
-        // Set the status of this image to optimized 
-        alreadyOptimized(besti) = 2;
-        assigned(besti)         = 1;
-        
-        // Try all the solutions in the cluster just to make sure
-        int bestCluster=-1;
-        double bestEnergy=0;
-        Matrix1D<double> bestCurrentSolution, bestCurrentImageCorrelation;
-        if (clusterBestAssignment.size()>1)
-        {
-            Matrix1D<double> backupCurrentSolution;
-            backupCurrentSolution=currentSolution;
-            for (int n=0; n<clusterBestAssignment.size(); n++)
-            {
-                std::cout << "Trying solution of cluster " << n << std::endl;
-                currentSolution(3*besti)   = bestEulerAngles[
-                    clusterBestAssignment[n]](0);
-                currentSolution(3*besti+1) = bestEulerAngles[
-                    clusterBestAssignment[n]](1);
-                currentSolution(3*besti+2) = bestEulerAngles[
-                    clusterBestAssignment[n]](2);
-                double energy=realignCurrentSolution();
-                if (energy<bestEnergy)
-                {
-                    bestEnergy=energy;
-                    bestCluster=n;
-                    bestCurrentSolution=currentSolution;
-                    bestCurrentImageCorrelation=currentImageCorrelation;
+                    std::cout << "Cluster headed by "
+                        << bestEulerAngles[bestAssignment].transpose()
+                        << " corr= " << bestCorrelation << std::endl;
                 }
-                currentSolution=backupCurrentSolution;
             }
-        }
-        else
-        {
-            currentSolution(3*besti)   = bestEulerAngles[
-                clusterBestAssignment[0]](0);
-            currentSolution(3*besti+1) = bestEulerAngles[
-                clusterBestAssignment[0]](1);
-            currentSolution(3*besti+2) = bestEulerAngles[
-                clusterBestAssignment[0]](2);
-            double energy=realignCurrentSolution();
-            bestEnergy=energy;
-            bestCluster=0;
-            bestCurrentSolution=currentSolution;
-            bestCurrentImageCorrelation=currentImageCorrelation;
-        }
-        
-        // Realign the current solution
-        std::cout << "Cluster chosen " << bestCluster << " angles="
-                  <<  bestEulerAngles[clusterBestAssignment[
-                        bestCluster]].transpose() << std::endl;
-        currentSolution=bestCurrentSolution;
-        currentImageCorrelation=bestCurrentImageCorrelation;
-        std::cout << "Image Correlation: " << currentImageCorrelation
-                  << std::endl;
-        
-        // Every two images remove the worse one in the list
-        int totalAssigned=assigned.sum();
-        FOR_ALL_ELEMENTS_IN_MATRIX1D(removalCounter)
-        {
-            int N=4*i+2;
-            removalCounter(i)=(removalCounter(i)+1)%N;
-	    std::cout << "removal i=" << i << " removal(i)=" << removalCounter(i)
-	              << " N=" << N << " totalAssigned=" << totalAssigned
-		      << std::endl;
-            if (totalAssigned>N && removalCounter(i)==0)
+
+            // Set the status of this image to optimized 
+            alreadyOptimized(besti) = 2;
+            assigned(besti)         = 1;
+
+            // Try all the solutions in the cluster just to make sure
+            int bestCluster=-1;
+            double bestEnergy=0;
+            Matrix1D<double> bestCurrentSolution, bestCurrentImageCorrelation;
+            if (clusterBestAssignment.size()>1)
             {
-                for (int removed=0; removed<i+1; removed++)
+                Matrix1D<double> backupCurrentSolution;
+                backupCurrentSolution=currentSolution;
+                for (int n=0; n<clusterBestAssignment.size(); n++)
                 {
-                    int imin=-1;
-                    double worseCorrelation=2;
-                    FOR_ALL_ELEMENTS_IN_MATRIX1D(currentImageCorrelation)
-                        if (currentImageCorrelation(i)>0 &&
-                            currentImageCorrelation(i)<worseCorrelation)
-                        {
-                            worseCorrelation=currentImageCorrelation(i);
-                            imin=i;
-                        }
-                    if (imin!=-1)
+                    std::cout << "Trying solution of cluster " << n << std::endl;
+                    currentSolution(3*besti)   = bestEulerAngles[
+                        clusterBestAssignment[n]](0);
+                    currentSolution(3*besti+1) = bestEulerAngles[
+                        clusterBestAssignment[n]](1);
+                    currentSolution(3*besti+2) = bestEulerAngles[
+                        clusterBestAssignment[n]](2);
+                    double energy=realignCurrentSolution();
+                    if (energy<bestEnergy)
                     {
-                        alreadyOptimized(imin)=assigned(imin)=0;
-                        currentSolution(3*imin)=currentSolution(3*imin+1)=
-                            currentSolution(3*imin+2)=0;
-			currentImageCorrelation(imin)=0;
-                        std::cout << "Image " << imin << " removed from the "
-                                  << "current assignment because its correlation was "
-                                  << worseCorrelation << std::endl;
-			tabuPenalization(imin)+=10;
+                        bestEnergy=energy;
+                        bestCluster=n;
+                        bestCurrentSolution=currentSolution;
+                        bestCurrentImageCorrelation=currentImageCorrelation;
+                    }
+                    currentSolution=backupCurrentSolution;
+                }
+            }
+            else
+            {
+                currentSolution(3*besti)   = bestEulerAngles[
+                    clusterBestAssignment[0]](0);
+                currentSolution(3*besti+1) = bestEulerAngles[
+                    clusterBestAssignment[0]](1);
+                currentSolution(3*besti+2) = bestEulerAngles[
+                    clusterBestAssignment[0]](2);
+                double energy=realignCurrentSolution();
+                bestEnergy=energy;
+                bestCluster=0;
+                bestCurrentSolution=currentSolution;
+                bestCurrentImageCorrelation=currentImageCorrelation;
+            }
+
+            // Realign the current solution
+            std::cout << "Cluster chosen " << bestCluster << " angles="
+                      <<  bestEulerAngles[clusterBestAssignment[
+                            bestCluster]].transpose() << std::endl;
+            currentSolution=bestCurrentSolution;
+            currentImageCorrelation=bestCurrentImageCorrelation;
+            std::cout << "Image Correlation: " << currentImageCorrelation
+                      << std::endl;
+
+            // Every two images remove the worse one in the list
+            int totalAssigned=assigned.sum();
+            FOR_ALL_ELEMENTS_IN_MATRIX1D(removalCounter)
+            {
+                int N=4*i+2;
+                removalCounter(i)=(removalCounter(i)+1)%N;
+	        std::cout << "removal i=" << i << " removal(i)=" << removalCounter(i)
+	                  << " N=" << N << " totalAssigned=" << totalAssigned
+		          << std::endl;
+                if (totalAssigned>N && removalCounter(i)==0)
+                {
+                    for (int removed=0; removed<i+1; removed++)
+                    {
+                        int imin=-1;
+                        double worseCorrelation=2;
+                        FOR_ALL_ELEMENTS_IN_MATRIX1D(currentImageCorrelation)
+                            if (currentImageCorrelation(i)>0 &&
+                                currentImageCorrelation(i)<worseCorrelation)
+                            {
+                                worseCorrelation=currentImageCorrelation(i);
+                                imin=i;
+                            }
+                        if (imin!=-1)
+                        {
+                            alreadyOptimized(imin)=assigned(imin)=0;
+                            currentSolution(3*imin)=currentSolution(3*imin+1)=
+                                currentSolution(3*imin+2)=0;
+			    currentImageCorrelation(imin)=0;
+                            std::cout << "Image " << imin << " removed from the "
+                                      << "current assignment because its correlation was "
+                                      << worseCorrelation << std::endl;
+			    tabuPenalization(imin)+=10;
+                        }
                     }
                 }
             }
