@@ -29,6 +29,7 @@
 #include <data/docfile.h>
 #include <data/mask.h>
 #include <data/wavelet.h>
+#include <data/filters.h>
 #include <sys/time.h>
 
 class POCSClass;
@@ -124,6 +125,7 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
        *prm.fh_hist << "Sort with last " << prm.sort_last_N << " images\n";
    *prm.fh_hist << " Variability analysis: " << prm.variability_analysis << std::endl;
    *prm.fh_hist << " Sparsity epsilon: " << prm.sparseEps << std::endl;
+   *prm.fh_hist << " Diffusion weight: " << prm.diffusionWeight << std::endl;
    if (prm.SL.SymsNo()!=0) {
       Matrix2D<double> L(4,4),R(4,4); // A matrix from the list
       *prm.fh_hist << "Symmetry matrices -------\n";
@@ -435,6 +437,22 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 	  if (prm.variability_analysis)
 	     VC.newUpdateVolume(ptr_vol_out,read_proj);
 
+          // Apply anisotropic diffusion ...................................
+          if (it>=1 && prm.diffusionWeight>-1)
+          {
+             prm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
+                Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
+             Matrix1D<double> alpha;
+             alpha=vectorR3(1.0,1.0,prm.diffusionWeight);
+             double regError=tomographicDiffusion(vol_voxels(),alpha,
+                prm.lambda(it)/100);
+             if (prm.tell&TELL_SHOW_ERROR)
+                std::cout << "Regularization error = " << regError << std::endl;
+             *prm.fh_hist << "Regularization error = " << regError << std::endl;
+             prm.basis.changeFromVoxels(vol_voxels(),vol_basis,prm.grid_type,
+                prm.grid_relative_size, NULL, NULL, prm.R, prm.threads);
+          }
+
           // Show results ..................................................
           *prm.fh_hist << prm.IMG_Inf[iact_proj].fn_proj << ", sym="
              << prm.IMG_Inf[iact_proj].sym << "\t\t" << mean_error;
@@ -584,7 +602,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
          prm.basis.changeFromVoxels(vol_voxels(),vol_basis,prm.grid_type,
             prm.grid_relative_size, NULL, NULL, prm.R, prm.threads);
       }
-
+      
       // Check if algorithm must stop via stop_at
       if (images==prm.stop_at) break;
    }

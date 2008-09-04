@@ -163,6 +163,9 @@ public:
     /// Sparse reconstruction
     double sparseEps;
 
+    /// Tomographic diffussion
+    double diffusionWeight;
+
     /// Force the reconstruction to be symmetric this number of times
     int force_sym;
 
