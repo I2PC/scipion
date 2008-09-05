@@ -31,6 +31,7 @@
 #include <data/wavelet.h>
 #include <data/filters.h>
 #include <sys/time.h>
+#include <algorithm>
 
 class POCSClass;
 class VariabilityClass;
@@ -453,6 +454,29 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
                 prm.grid_relative_size, NULL, NULL, prm.R, prm.threads);
           }
 
+          // Apply sparsity constraint .....................................
+          if (it>=1 && prm.sparseEps>0)
+          {
+             prm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
+                Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
+             VolumeXmipp vol_wavelets, vol_wavelets_abs;
+             set_DWT_type(DAUB12);
+             DWT(vol_voxels(),vol_wavelets());
+             vol_wavelets_abs()=vol_wavelets();
+             vol_wavelets_abs().selfABSnD();
+             double *begin=MULTIDIM_ARRAY(vol_wavelets_abs());
+             double *end=MULTIDIM_ARRAY(vol_wavelets_abs())+
+                 MULTIDIM_SIZE(vol_wavelets_abs());
+             std::sort(begin,end);
+             double threshold1=DIRECT_MULTIDIM_ELEM(vol_wavelets_abs(),
+                (long int)((1-prm.sparseEps)*MULTIDIM_SIZE(vol_wavelets_abs())));
+             std::cout << "Threshold=" << threshold1 << std::endl;
+             vol_wavelets().threshold("abs_below", threshold1, 0.0);
+             IDWT(vol_wavelets(),vol_voxels());
+             prm.basis.changeFromVoxels(vol_voxels(),vol_basis,prm.grid_type,
+                prm.grid_relative_size, NULL, NULL, prm.R, prm.threads);
+          }
+
           // Show results ..................................................
           *prm.fh_hist << prm.IMG_Inf[iact_proj].fn_proj << ", sym="
              << prm.IMG_Inf[iact_proj].sym << "\t\t" << mean_error;
@@ -587,20 +611,6 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 
          if (prm.tell&TELL_SAVE_BASIS)
             vol_basis.write(prm.fn_root+"it"+integerToString(it)+".basis");
-      }
-      
-      // Apply sparsity constraint
-      if (prm.sparseEps>0)
-      {
-         prm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
-            Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
-         VolumeXmipp vol_wavelets;
-         set_DWT_type(DAUB12);
-         DWT(vol_voxels(),vol_wavelets());
-         vol_wavelets().threshold("abs_below",prm.sparseEps,0.0);
-         IDWT(vol_wavelets(),vol_voxels());
-         prm.basis.changeFromVoxels(vol_voxels(),vol_basis,prm.grid_type,
-            prm.grid_relative_size, NULL, NULL, prm.R, prm.threads);
       }
       
       // Check if algorithm must stop via stop_at
