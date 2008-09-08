@@ -854,6 +854,8 @@ public:
     void adapt_to_grid(const Grid &_grid)
     {
         // Clear old list of volumes
+        for (int i = 0; i < VolumesNo(); i++)
+            if (LV[i]!=NULL) delete LV[i];
         LV.clear();
 
         // Keep the incoming Grid at the same time the old grid is forgotten
