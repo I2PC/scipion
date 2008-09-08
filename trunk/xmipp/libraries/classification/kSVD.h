@@ -29,6 +29,7 @@
 /* Includes ---------------------------------------------------------------- */
 #include <data/matrix2d.h>
 #include <data/matrix1d.h>
+#include <vector>
 
 /**@defgroup kSVD
    @ingroup ClassificationLibrary */
@@ -43,5 +44,14 @@
  */
 double orthogonalMatchingPursuit(const Matrix1D<double> &x,
     const Matrix2D<double> &D, int S, Matrix1D<double> &alpha);
+
+/** kSVD
+ * @ingroup kSVD
+ *  This function optimizes the dictionary input and the representation
+ *  of a set of vectors in this dictionary using at most S atoms.
+ */
+double kSVD(const std::vector< Matrix1D<double> > &X, int S,
+    Matrix2D<double> &D, std::vector< Matrix1D<double> > &Alpha,
+    bool keepFirstColumn=true);
 //@}
 #endif

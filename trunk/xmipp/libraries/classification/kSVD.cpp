@@ -24,7 +24,6 @@
  ***************************************************************************/
 
 #include "kSVD.h"
-#include <vector>
 
 /* ------------------------------------------------------------------------- */
 /* Orthogonal Matching Pursuit                                               */
@@ -140,3 +139,129 @@ double orthogonalMatchingPursuit(const Matrix1D<double> &x,
     
     return sqrt(ABS(approximationError));
 }
+
+/* ------------------------------------------------------------------------- */
+/* kSVD                                                                      */
+/* ------------------------------------------------------------------------- */
+//#define DEBUG
+double kSVD(const std::vector< Matrix1D<double> > &X, int S,
+    Matrix2D<double> &D, std::vector< Matrix1D<double> > &Alpha,
+    bool keepFirstColumn)
+{
+    int Nvectors=X.size();
+    int K=XSIZE(D); // Number of atoms
+    int N=YSIZE(D); // Dimension of the atoms
+
+    // Ask for memory for Alpha if necessary
+    if (Alpha.size()!=Nvectors)
+    {
+        int Nalpha=Alpha.size();
+        Matrix1D<double> dummy;
+        dummy.initZeros(K);
+        for (int i=0; i<Nvectors-Nalpha; i++)
+            Alpha.push_back(dummy);
+    }
+
+    // Ask for memory for which vectors use which atoms
+    std::vector< std::vector<int> > listUsers;
+    for (int k=0; k<K; k++)
+    {
+        std::vector<int> dummy;
+        listUsers.push_back(dummy);
+    }
+
+    // Perform kSVD
+    int iterations=0;
+    double error;
+    do {
+        // Sparse coding step
+        error=0;
+        for (int n=0; n<Nvectors; n++)
+        {
+            // Compute alpha
+            error+=orthogonalMatchingPursuit(X[n],D,S,Alpha[n]);
+            
+            // Check which are the atoms this vector is using
+            for (int k=0; k<K; k++)
+                if (Alpha[n](k)!=0)
+                    listUsers[k].push_back(n);
+        }
+        error/=Nvectors;
+        #ifdef DEBUG
+            std::cout << "kSVD error=" << error << std::endl;
+        #endif
+        
+        // Codebook update
+        Matrix2D<double> EkR, U, V;
+        Matrix1D<double> xp, W;
+        int firstKtoUpdate=0;
+        if (keepFirstColumn) firstKtoUpdate=1;
+        for (int k=firstKtoUpdate; k<K; k++)
+        {
+            // Compute the error that would be commited if the
+            // atom k were not used
+            int Nk=listUsers[k].size();
+            EkR.initZeros(N,Nk);
+            for (int nk=0; nk<Nk; nk++)
+            {
+                // Select vector nk
+                int n=listUsers[k][nk];
+                
+                // Compute the represented vector if atom is not used
+                xp.initZeros(N);
+                for (int kp=0; kp<K; kp++)
+                {
+                    double w=DIRECT_VEC_ELEM(Alpha[n],kp);
+                    if (kp!=k && w!=0)
+                        for (int j=0; j<N; j++)
+                            DIRECT_VEC_ELEM(xp,j)+=
+                                w*DIRECT_MAT_ELEM(D,j,kp);
+                }
+                
+                // Fill the error matrix EkR
+                const Matrix1D<double> &x=X[n];
+                for (int j=0; j<N; j++)
+                    EkR(j,nk)=DIRECT_VEC_ELEM(x,j)-DIRECT_VEC_ELEM(xp,j);
+            }
+            
+            // Compute the SVD decomposition of the EkR matrix
+            svdcmp(EkR,U,W,V); // EkR=U * diag(W) * V^t
+            
+            // Update the dictionary with the first column of U
+            double normU0=0;
+            for (int j=0; j<N; j++)
+            {
+                double uj0=DIRECT_MAT_ELEM(U,j,0);
+                normU0+=uj0*uj0;
+            }
+            normU0=sqrt(normU0);
+            double inormU0=1/normU0;
+            for (int j=0; j<N; j++)
+                DIRECT_MAT_ELEM(D,j,k)=DIRECT_MAT_ELEM(U,j,0)*inormU0;
+            
+            // Update the coefficients of the users of atom k
+            double W0=DIRECT_VEC_ELEM(W,0)*normU0;
+            for (int nk=0; nk<Nk; nk++)
+            {
+                // Select vector nk
+                int n=listUsers[k][nk];
+                DIRECT_VEC_ELEM(Alpha[n],k)=DIRECT_MAT_ELEM(V,nk,0)*W0;
+            }
+            
+            #ifdef DEBUG
+                for (int n=0; n<Nvectors; n++)
+                {
+                    Matrix1D<double> xp=D*Alpha[n];
+                    std::cout << "x= " << X[n].transpose() << std::endl
+                              << "xp=" << xp.transpose() << std::endl
+                              << "diff norm=" << (X[n]-xp).module() << std::endl;
+                }
+            #endif
+        }
+        
+        // Prepare for next iteration
+        iterations++;
+    } while (iterations<10);
+    return error;
+}
+#undef DEBUG
