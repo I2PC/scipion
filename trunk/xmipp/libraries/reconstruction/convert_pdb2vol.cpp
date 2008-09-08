@@ -177,7 +177,6 @@ void Prog_PDBPhantom_Parameters::compute_protein_geometry()
             output_dim = (int)NEXT_POWER_OF_2(max_dim);
         else 
             output_dim = max_dim+10;
-        std::cout << "Setting output_dim to " << output_dim << std::endl;
     }
 }
 
@@ -380,8 +379,6 @@ void Prog_PDBPhantom_Parameters::run()
 {
     produceSideInfo();
     compute_protein_geometry();
-    std::cout << "Center of mass: " << centerOfMass.transpose() << std::endl
-              << "Limits: " << limit.transpose() << std::endl;
     if (useBlobs) {
 	create_protein_at_high_sampling_rate();
 	create_protein_at_low_sampling_rate();
@@ -394,5 +391,5 @@ void Prog_PDBPhantom_Parameters::run()
     } else {
     	create_protein_using_scattering_profiles();
     }
-    Vlow.write(fn_out + ".vol");
+    if (fn_out!="") Vlow.write(fn_out + ".vol");
 }
