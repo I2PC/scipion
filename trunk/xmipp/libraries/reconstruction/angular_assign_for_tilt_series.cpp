@@ -213,7 +213,8 @@ void computeAffineTransformation(const Matrix2D<double> &I1,
                 bestEnergy=energy;
             }
             n++;
-        } while (n<3 || (n>=3 && n<10 && bestEnergy>1-thresholdAffine));
+        } while ((n<3 || (n>=3 && n<10 && bestEnergy>1-thresholdAffine))
+                 && bestEnergy>=0.07);
         #else
         Matrix1D<double> A(6);
         A(0)=A(3)=1;
