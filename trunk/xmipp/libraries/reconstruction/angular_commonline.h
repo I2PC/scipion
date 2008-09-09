@@ -55,7 +55,9 @@ public:
     const Matrix1D<double> * currentSolution;
     const Matrix1D<int> * imgIdx;
     
-    Matrix1D<double> imgCorrelation;
+    Matrix1D<double> imgAvgCorrelation;
+    Matrix1D<double> imgMinCorrelation;
+    Matrix1D<double> imgStdCorrelation;
 public:
     // Constructor
     EulerSolver(int dim, int pop,
@@ -143,7 +145,13 @@ public:
     Matrix1D<double> currentSolution;
 
     // Correlation of the images individually
-    Matrix1D<double> currentImageCorrelation;
+    Matrix1D<double> currentImgAvgCorrelation;
+    
+    // Correlation of the images individually
+    Matrix1D<double> currentImgMinCorrelation;
+    
+    // Correlation of the images individually
+    Matrix1D<double> currentImgStdCorrelation;
     
     // Symmetry list
     SymList SL;
