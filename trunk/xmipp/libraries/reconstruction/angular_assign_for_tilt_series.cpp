@@ -350,9 +350,12 @@ void Prog_tomograph_alignment::produceSideInfo() {
    }
    
    // Read images at original scale
-   SForig.read(fnSelOrig);
-   if (SForig.ImgNo()!=SF.ImgNo())
-        REPORT_ERROR(1,"The number of images in both selfiles (-i and -iorig) is different");
+   if (fnSelOrig!="")
+   {
+       SForig.read(fnSelOrig);
+       if (SForig.ImgNo()!=SF.ImgNo())
+            REPORT_ERROR(1,"The number of images in both selfiles (-i and -iorig) is different");
+   }
 
    // Fill the affine transformations with empty matrices
    std::vector< Matrix2D<double> > emptyRow;
