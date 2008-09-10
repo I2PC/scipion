@@ -572,78 +572,25 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
             if (assigned(i) || tabuPenalization(i)>0) continue;
             Matrix1D<int> backupAlreadyOptimized=alreadyOptimized;
 
-            Matrix1D<int> comparedTo;
-            comparedTo=assigned;
-            comparedTo(i)=1;
-            bool allowComparisonWithFixedImages=false;
             // Perform NGroup experiments
             for (int n=0; n<NGroup; n++)
             {
-                if (comparedTo.sum()==XSIZE(comparedTo))
-                    allowComparisonWithFixedImages=true;
-
-                // Look for an image to which we have not compared
-                int j;
-                bool tryAgain=true;
-                do {
-                    j=ROUND(rnd_unif(0,Nimg-1));
-		    if (tabuPenalization(j)==0)
-		    {
-                        if (!allowComparisonWithFixedImages && comparedTo(j)==0)
-                            tryAgain=false;
-                        else if (allowComparisonWithFixedImages && comparedTo(j)==1)
-                            tryAgain=false;
-                    }
-                    
-                    // Check that there are really "free" images
-                    if (tryAgain)
-                    {
-                        bool freeImgs=false;
-                        for (j=0; j<Nimg && !freeImgs; j++)
-                            if (tabuPenalization(j)==0 && comparedTo(j)==0)
-                                freeImgs=true;
-                        if (!freeImgs)
-                        {
-                            bool tryAgainToFree=true;
-                            do
-                            {
-                                j=ROUND(rnd_unif(0,Nimg-1));
-                                if (comparedTo(j)==1)
-                                {
-                                    comparedTo(j)=0;
-                                    tryAgainToFree=false;
-                                    tryAgain=false;
-                                }
-                            } while (tryAgainToFree);
-                        }
-                    }
-                } while (tryAgain);
-                comparedTo(j)++;
-
                 // Prepare the vector of images to optimize
                 alreadyOptimized=backupAlreadyOptimized;
-                alreadyOptimized(i)=alreadyOptimized(j)=1;
+                alreadyOptimized(i)=1;
                 
                 // Align these two images
-                Matrix1D<int> imgIdx(2);
-                VECTOR_R2(imgIdx,i,j);
-                Matrix1D<double> auxSolution, anglesi(3), anglesj(3);
+                Matrix1D<int> imgIdx(1);
+                imgIdx(0)=i;
+                Matrix1D<double> auxSolution, anglesi(3);
                 double energy=optimizeGroup(imgIdx,auxSolution,false);
                 anglesi(0)=auxSolution(0);
                 anglesi(1)=auxSolution(1);
                 anglesi(2)=auxSolution(2);
-                anglesj(0)=auxSolution(3);
-                anglesj(1)=auxSolution(4);
-                anglesj(2)=auxSolution(5);
 
                 // Keep results
                 eulerAngles[i].push_back(anglesi);
                 correlations[i].push_back(-energy);
-                if (!allowComparisonWithFixedImages)
-                {
-                    eulerAngles[j].push_back(anglesj);
-                    correlations[j].push_back(-energy);
-                }
                 alreadyOptimized=backupAlreadyOptimized;
             }
             progress_bar(i);
@@ -673,7 +620,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
 
             // Among the top, compute the distance between
             // the different Euler angles
-            double distance=-2;
+            double distance=0;
             if (topN!=1)
             {
                 for (int j1=XSIZE(idx)-topN; j1<XSIZE(idx); j1++)
@@ -720,7 +667,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
             }
         }
 
-        if (bestDistance>-2)
+        if (bestDistance>0)
         {
             // Sort the images by ascending correlation in the best cluster
             Matrix1D<double> aux;
@@ -900,18 +847,18 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
             {
                 int imin=-1;
                 double worseCorrelation=2;
-                if (removalCounter!=4)
+                if (removalCounter==1 || removalCounter==3)
                 {
-                    if (removalCounter==3) worseCorrelation=0;
+                    //if (removalCounter==3) worseCorrelation=0;
                     FOR_ALL_ELEMENTS_IN_MATRIX1D(currentImgAvgCorrelation)
                         if (currentImgAvgCorrelation(i)>0 &&
-                            currentImgAvgCorrelation(i)<worseCorrelation &&
-                            removalCounter==1)
+                            currentImgAvgCorrelation(i)<worseCorrelation/* &&
+                            removalCounter==1*/)
                         {
                             worseCorrelation=currentImgAvgCorrelation(i);
                             imin=i;
                         }
-                        else if (currentImgMinCorrelation(i)<2 &&
+/*                        else if (currentImgMinCorrelation(i)<2 &&
                             currentImgMinCorrelation(i)<worseCorrelation &&
                             removalCounter==2)
                         {
@@ -924,7 +871,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
                         {
                             worseCorrelation=currentImgStdCorrelation(i);
                             imin=i;
-                        }
+                        }*/
                 }
                 else
                     imin=removeViaClusters(currentCorrelationMatrix);
