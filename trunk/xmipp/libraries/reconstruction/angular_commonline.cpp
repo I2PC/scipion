@@ -889,65 +889,65 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
                           << "\nImage Min Correlation: " << currentImgMinCorrelation
                           << "\nImage Std Correlation: " << currentImgStdCorrelation
                           << std::endl;
-
-                // Cleaning of the "garbage"
-                int totalAssigned=assigned.sum();
-	        std::cout << "removal=" << removalCounter
-	                  << " totalAssigned=" << totalAssigned
-		          << std::endl;
-                if (removalCounter!=0 && totalAssigned>3)
-                {
-                    int imin=-1;
-                    double worseCorrelation=2;
-                    if (removalCounter!=4)
-                    {
-                        if (removalCounter==3) worseCorrelation=0;
-                        FOR_ALL_ELEMENTS_IN_MATRIX1D(currentImgAvgCorrelation)
-                            if (currentImgAvgCorrelation(i)>0 &&
-                                currentImgAvgCorrelation(i)<worseCorrelation &&
-                                removalCounter==1)
-                            {
-                                worseCorrelation=currentImgAvgCorrelation(i);
-                                imin=i;
-                            }
-                            else if (currentImgMinCorrelation(i)<2 &&
-                                currentImgMinCorrelation(i)<worseCorrelation &&
-                                removalCounter==2)
-                            {
-                                worseCorrelation=currentImgMinCorrelation(i);
-                                imin=i;
-                            }
-                            else if (currentImgStdCorrelation(i)>0 &&
-                                currentImgStdCorrelation(i)>worseCorrelation &&
-                                removalCounter==3)
-                            {
-                                worseCorrelation=currentImgStdCorrelation(i);
-                                imin=i;
-                            }
-                    }
-                    else
-                        imin=removeViaClusters(currentCorrelationMatrix);
-
-                    if (imin!=-1)
-                    {
-                        alreadyOptimized(imin)=assigned(imin)=0;
-                        currentSolution(3*imin)=currentSolution(3*imin+1)=
-                            currentSolution(3*imin+2)=0;
-		        currentImgAvgCorrelation(imin)=0;
-		        currentImgMinCorrelation(imin)=2;
-		        currentImgStdCorrelation(imin)=0;
-                        for (int i=0; i<XSIZE(currentCorrelationMatrix); i++)
-                            currentCorrelationMatrix(i,imin)=
-                            currentCorrelationMatrix(imin,i)=0;
-                        std::cout << "Image " << imin << " removed from the "
-                                  << "current assignment because its correlation was "
-                                  << worseCorrelation << std::endl;
-		        tabuPenalization(imin)+=10;
-                    }
-
-                }
-                removalCounter=(removalCounter+1)%5;
             }
+
+            // Cleaning of the "garbage"
+            int totalAssigned=assigned.sum();
+	    std::cout << "removal=" << removalCounter
+	              << " totalAssigned=" << totalAssigned
+		      << std::endl;
+            if (removalCounter!=0 && totalAssigned>3)
+            {
+                int imin=-1;
+                double worseCorrelation=2;
+                if (removalCounter!=4)
+                {
+                    if (removalCounter==3) worseCorrelation=0;
+                    FOR_ALL_ELEMENTS_IN_MATRIX1D(currentImgAvgCorrelation)
+                        if (currentImgAvgCorrelation(i)>0 &&
+                            currentImgAvgCorrelation(i)<worseCorrelation &&
+                            removalCounter==1)
+                        {
+                            worseCorrelation=currentImgAvgCorrelation(i);
+                            imin=i;
+                        }
+                        else if (currentImgMinCorrelation(i)<2 &&
+                            currentImgMinCorrelation(i)<worseCorrelation &&
+                            removalCounter==2)
+                        {
+                            worseCorrelation=currentImgMinCorrelation(i);
+                            imin=i;
+                        }
+                        else if (currentImgStdCorrelation(i)>0 &&
+                            currentImgStdCorrelation(i)>worseCorrelation &&
+                            removalCounter==3)
+                        {
+                            worseCorrelation=currentImgStdCorrelation(i);
+                            imin=i;
+                        }
+                }
+                else
+                    imin=removeViaClusters(currentCorrelationMatrix);
+
+                if (imin!=-1)
+                {
+                    alreadyOptimized(imin)=assigned(imin)=0;
+                    currentSolution(3*imin)=currentSolution(3*imin+1)=
+                        currentSolution(3*imin+2)=0;
+		    currentImgAvgCorrelation(imin)=0;
+		    currentImgMinCorrelation(imin)=2;
+		    currentImgStdCorrelation(imin)=0;
+                    for (int i=0; i<XSIZE(currentCorrelationMatrix); i++)
+                        currentCorrelationMatrix(i,imin)=
+                        currentCorrelationMatrix(imin,i)=0;
+                    std::cout << "Image " << imin << " removed from the "
+                              << "current assignment because its correlation was "
+                              << worseCorrelation << std::endl;
+		    tabuPenalization(imin)+=10;
+                }
+
+            }
+            removalCounter=(removalCounter+1)%5;
         }
 	
 	// Remove one from the penalization of every image
