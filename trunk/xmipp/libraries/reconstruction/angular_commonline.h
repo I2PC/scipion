@@ -58,6 +58,7 @@ public:
     Matrix1D<double> imgAvgCorrelation;
     Matrix1D<double> imgMinCorrelation;
     Matrix1D<double> imgStdCorrelation;
+    Matrix2D<double> correlationMatrix;
 public:
     // Constructor
     EulerSolver(int dim, int pop,
@@ -122,6 +123,9 @@ public:
     /** Try a solution */
     double trySolution(const Matrix1D<double> &solution);
     
+    /** Split the alignment in two clusters and find an image to remove */
+    int removeViaClusters(const Matrix2D<double> &correlationMatrix);
+
     /** Run */
     void run();
 public:
@@ -147,11 +151,14 @@ public:
     // Correlation of the images individually
     Matrix1D<double> currentImgAvgCorrelation;
     
-    // Correlation of the images individually
+    // Worse Correlation of the images individually
     Matrix1D<double> currentImgMinCorrelation;
     
-    // Correlation of the images individually
+    // Standard Deviation of the Correlation of the images individually
     Matrix1D<double> currentImgStdCorrelation;
+    
+    // Correlation between any pair of images
+    Matrix2D<double> currentCorrelationMatrix;
     
     // Symmetry list
     SymList SL;

@@ -45,6 +45,7 @@ EulerSolver::EulerSolver(int dim, int pop,
     imgAvgCorrelation.initZeros(Nimg);
     imgMinCorrelation.initZeros(Nimg);
     imgStdCorrelation.initZeros(Nimg);
+    correlationMatrix.initZeros(Nimg,Nimg);
     commonline.initZeros(3);
     alreadyOptimized=&newAlreadyOptimized;
     currentSolution=&newCurrentSolution;
@@ -81,6 +82,7 @@ double EulerSolver::EnergyFunction(double trial[], bool &bAtSolution)
     imgMinCorrelation.initZeros(Nimg);
     imgMinCorrelation.initConstant(2);
     imgStdCorrelation.initZeros(Nimg);
+    correlationMatrix.resize(Nimg,Nimg);
     imgCorrelationN.initZeros(Nimg);
     for (int imgi=0; imgi<Nimg; imgi++)
     {
@@ -153,6 +155,8 @@ double EulerSolver::EnergyFunction(double trial[], bool &bAtSolution)
                     imgMinCorrelation(imgi));
                 imgMinCorrelation(imgj)=XMIPP_MIN(similarity,
                     imgMinCorrelation(imgj));
+                correlationMatrix(imgi,imgj)=correlationMatrix(imgj,imgi)=
+                    similarity;
                 imgCorrelationN(imgi)++;
                 imgCorrelationN(imgj)++;
             }
@@ -180,6 +184,8 @@ double EulerSolver::EnergyFunction(double trial[], bool &bAtSolution)
                         imgMinCorrelation(imgi));
                     imgMinCorrelation(imgj)=XMIPP_MIN(similarity,
                         imgMinCorrelation(imgj));
+                    correlationMatrix(imgi,imgj)=correlationMatrix(imgj,imgi)=
+                        similarity;
                     imgCorrelationN(imgi)++;
                     imgCorrelationN(imgj)++;
                 }
@@ -805,120 +811,143 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
                 }
             }
 
-            // Set the status of this image to optimized 
-            alreadyOptimized(besti) = 2;
-            assigned(besti)         = 1;
-
-            // Try all the solutions in the cluster just to make sure
-            int bestCluster=-1;
-            double bestEnergy=0;
-            Matrix1D<double> bestCurrentSolution,
-                bestCurrentImgAvgCorrelation,
-                bestCurrentImgMinCorrelation,
-                bestCurrentImgStdCorrelation;
-            if (clusterBestAssignment.size()>1)
+            if (clusterBestAssignment.size()>=5 && assigned.sum()>5)
             {
-                Matrix1D<double> backupCurrentSolution;
-                backupCurrentSolution=currentSolution;
-                for (int n=0; n<clusterBestAssignment.size(); n++)
-                {
-                    std::cout << "Trying solution of cluster " << n << std::endl;
-                    currentSolution(3*besti)   = bestEulerAngles[
-                        clusterBestAssignment[n]](0);
-                    currentSolution(3*besti+1) = bestEulerAngles[
-                        clusterBestAssignment[n]](1);
-                    currentSolution(3*besti+2) = bestEulerAngles[
-                        clusterBestAssignment[n]](2);
-                    double energy=realignCurrentSolution();
-                    if (energy<bestEnergy)
-                    {
-                        bestEnergy=energy;
-                        bestCluster=n;
-                        bestCurrentSolution=currentSolution;
-                        bestCurrentImgAvgCorrelation=currentImgAvgCorrelation;
-                        bestCurrentImgMinCorrelation=currentImgMinCorrelation;
-                        bestCurrentImgStdCorrelation=currentImgStdCorrelation;
-                    }
-                    currentSolution=backupCurrentSolution;
-                }
+                alreadyOptimized(besti) = 0;
+                assigned(besti)         = 0;
+                tabuPenalization(besti)+=10;
             }
             else
             {
-                currentSolution(3*besti)   = bestEulerAngles[
-                    clusterBestAssignment[0]](0);
-                currentSolution(3*besti+1) = bestEulerAngles[
-                    clusterBestAssignment[0]](1);
-                currentSolution(3*besti+2) = bestEulerAngles[
-                    clusterBestAssignment[0]](2);
-                double energy=realignCurrentSolution();
-                bestEnergy=energy;
-                bestCluster=0;
-                bestCurrentSolution=currentSolution;
-                bestCurrentImgAvgCorrelation=currentImgAvgCorrelation;
-                bestCurrentImgMinCorrelation=currentImgMinCorrelation;
-                bestCurrentImgStdCorrelation=currentImgStdCorrelation;
-            }
+                // Set the status of this image to optimized 
+                alreadyOptimized(besti) = 2;
+                assigned(besti)         = 1;
 
-            // Realign the current solution
-            std::cout << "Cluster chosen " << bestCluster << " angles="
-                      <<  bestEulerAngles[clusterBestAssignment[
-                            bestCluster]].transpose() << std::endl;
-            currentSolution=bestCurrentSolution;
-            currentImgAvgCorrelation=bestCurrentImgAvgCorrelation;
-            currentImgMinCorrelation=bestCurrentImgMinCorrelation;
-            currentImgStdCorrelation=bestCurrentImgStdCorrelation;
-            std::cout << "Image Avg Correlation: " << currentImgAvgCorrelation
-                      << "\nImage Min Correlation: " << currentImgMinCorrelation
-                      << "\nImage Std Correlation: " << currentImgStdCorrelation
-                      << std::endl;
-
-            // Every two images remove the worse one in the list
-            int totalAssigned=assigned.sum();
-	    std::cout << "removal=" << removalCounter
-	              << " totalAssigned=" << totalAssigned
-		      << std::endl;
-            if (removalCounter!=0 && totalAssigned>3)
-            {
-                int imin=-1;
-                double worseCorrelation=2;
-                if (removalCounter==3) worseCorrelation=0;
-                FOR_ALL_ELEMENTS_IN_MATRIX1D(currentImgAvgCorrelation)
-                    if (currentImgAvgCorrelation(i)>0 &&
-                        currentImgAvgCorrelation(i)<worseCorrelation &&
-                        removalCounter==1)
-                    {
-                        worseCorrelation=currentImgAvgCorrelation(i);
-                        imin=i;
-                    }
-                    else if (currentImgMinCorrelation(i)<2 &&
-                        currentImgMinCorrelation(i)<worseCorrelation &&
-                        removalCounter==2)
-                    {
-                        worseCorrelation=currentImgMinCorrelation(i);
-                        imin=i;
-                    }
-                    else if (currentImgStdCorrelation(i)>0 &&
-                        currentImgStdCorrelation(i)>worseCorrelation &&
-                        removalCounter==3)
-                    {
-                        worseCorrelation=currentImgStdCorrelation(i);
-                        imin=i;
-                    }
-                if (imin!=-1)
+                // Try all the solutions in the cluster just to make sure
+                int bestCluster=-1;
+                double bestEnergy=0;
+                Matrix1D<double> bestCurrentSolution,
+                    bestCurrentImgAvgCorrelation,
+                    bestCurrentImgMinCorrelation,
+                    bestCurrentImgStdCorrelation;
+                Matrix2D<double> bestCurrentCorrelationMatrix;
+                if (clusterBestAssignment.size()>1)
                 {
-                    alreadyOptimized(imin)=assigned(imin)=0;
-                    currentSolution(3*imin)=currentSolution(3*imin+1)=
-                        currentSolution(3*imin+2)=0;
-		    currentImgAvgCorrelation(imin)=0;
-		    currentImgMinCorrelation(imin)=2;
-		    currentImgStdCorrelation(imin)=0;
-                    std::cout << "Image " << imin << " removed from the "
-                              << "current assignment because its correlation was "
-                              << worseCorrelation << std::endl;
-		    tabuPenalization(imin)+=10;
+                    Matrix1D<double> backupCurrentSolution;
+                    backupCurrentSolution=currentSolution;
+                    for (int n=0; n<clusterBestAssignment.size(); n++)
+                    {
+                        std::cout << "Trying solution of cluster " << n << std::endl;
+                        currentSolution(3*besti)   = bestEulerAngles[
+                            clusterBestAssignment[n]](0);
+                        currentSolution(3*besti+1) = bestEulerAngles[
+                            clusterBestAssignment[n]](1);
+                        currentSolution(3*besti+2) = bestEulerAngles[
+                            clusterBestAssignment[n]](2);
+                        double energy=realignCurrentSolution();
+                        if (energy<bestEnergy)
+                        {
+                            bestEnergy=energy;
+                            bestCluster=n;
+                            bestCurrentSolution=currentSolution;
+                            bestCurrentImgAvgCorrelation=currentImgAvgCorrelation;
+                            bestCurrentImgMinCorrelation=currentImgMinCorrelation;
+                            bestCurrentImgStdCorrelation=currentImgStdCorrelation;
+                            bestCurrentCorrelationMatrix=currentCorrelationMatrix;
+                        }
+                        currentSolution=backupCurrentSolution;
+                    }
                 }
+                else
+                {
+                    currentSolution(3*besti)   = bestEulerAngles[
+                        clusterBestAssignment[0]](0);
+                    currentSolution(3*besti+1) = bestEulerAngles[
+                        clusterBestAssignment[0]](1);
+                    currentSolution(3*besti+2) = bestEulerAngles[
+                        clusterBestAssignment[0]](2);
+                    double energy=realignCurrentSolution();
+                    bestEnergy=energy;
+                    bestCluster=0;
+                    bestCurrentSolution=currentSolution;
+                    bestCurrentImgAvgCorrelation=currentImgAvgCorrelation;
+                    bestCurrentImgMinCorrelation=currentImgMinCorrelation;
+                    bestCurrentImgStdCorrelation=currentImgStdCorrelation;
+                    bestCurrentCorrelationMatrix=currentCorrelationMatrix;
+                }
+
+                // Realign the current solution
+                std::cout << "Cluster chosen " << bestCluster << " angles="
+                          <<  bestEulerAngles[clusterBestAssignment[
+                                bestCluster]].transpose() << std::endl;
+                currentSolution=bestCurrentSolution;
+                currentImgAvgCorrelation=bestCurrentImgAvgCorrelation;
+                currentImgMinCorrelation=bestCurrentImgMinCorrelation;
+                currentImgStdCorrelation=bestCurrentImgStdCorrelation;
+                currentCorrelationMatrix=bestCurrentCorrelationMatrix;
+                std::cout << "Image Avg Correlation: " << currentImgAvgCorrelation
+                          << "\nImage Min Correlation: " << currentImgMinCorrelation
+                          << "\nImage Std Correlation: " << currentImgStdCorrelation
+                          << std::endl;
+
+                // Cleaning of the "garbage"
+                int totalAssigned=assigned.sum();
+	        std::cout << "removal=" << removalCounter
+	                  << " totalAssigned=" << totalAssigned
+		          << std::endl;
+                if (removalCounter!=0 && totalAssigned>3)
+                {
+                    int imin=-1;
+                    double worseCorrelation=2;
+                    if (removalCounter!=4)
+                    {
+                        if (removalCounter==3) worseCorrelation=0;
+                        FOR_ALL_ELEMENTS_IN_MATRIX1D(currentImgAvgCorrelation)
+                            if (currentImgAvgCorrelation(i)>0 &&
+                                currentImgAvgCorrelation(i)<worseCorrelation &&
+                                removalCounter==1)
+                            {
+                                worseCorrelation=currentImgAvgCorrelation(i);
+                                imin=i;
+                            }
+                            else if (currentImgMinCorrelation(i)<2 &&
+                                currentImgMinCorrelation(i)<worseCorrelation &&
+                                removalCounter==2)
+                            {
+                                worseCorrelation=currentImgMinCorrelation(i);
+                                imin=i;
+                            }
+                            else if (currentImgStdCorrelation(i)>0 &&
+                                currentImgStdCorrelation(i)>worseCorrelation &&
+                                removalCounter==3)
+                            {
+                                worseCorrelation=currentImgStdCorrelation(i);
+                                imin=i;
+                            }
+                    }
+                    else
+                        imin=removeViaClusters(currentCorrelationMatrix);
+
+                    if (imin!=-1)
+                    {
+                        alreadyOptimized(imin)=assigned(imin)=0;
+                        currentSolution(3*imin)=currentSolution(3*imin+1)=
+                            currentSolution(3*imin+2)=0;
+		        currentImgAvgCorrelation(imin)=0;
+		        currentImgMinCorrelation(imin)=2;
+		        currentImgStdCorrelation(imin)=0;
+                        for (int i=0; i<XSIZE(currentCorrelationMatrix); i++)
+                            currentCorrelationMatrix(i,imin)=
+                            currentCorrelationMatrix(imin,i)=0;
+                        std::cout << "Image " << imin << " removed from the "
+                                  << "current assignment because its correlation was "
+                                  << worseCorrelation << std::endl;
+		        tabuPenalization(imin)+=10;
+                    }
+
+                }
+                removalCounter=(removalCounter+1)%5;
             }
-            removalCounter=(removalCounter+1)%4;
         }
 	
 	// Remove one from the penalization of every image
@@ -927,6 +956,107 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
     }
     
     solution=currentSolution;
+}
+
+// Performs a HCA to see which image to remove
+int Prog_Angular_CommonLine::removeViaClusters(
+    const Matrix2D<double> &correlationMatrix)
+{
+    // Extract the list of images currently optimized and a smaller
+    // correlation matrix
+    std::vector<int> idxImgs;
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(alreadyOptimized)
+        if (alreadyOptimized(i)!=0) 
+            idxImgs.push_back(i);
+    int Noptimized=idxImgs.size();
+
+    // Initially every element is a cluster
+    Matrix2D<double> shortCorrelationMatrix(Noptimized,Noptimized);
+    std::vector< std::vector<int> > clusters;
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(shortCorrelationMatrix)
+        shortCorrelationMatrix(i,j)=correlationMatrix(idxImgs[i],idxImgs[j]);
+    for (int i=0; i<Noptimized; i++)
+    {
+        std::vector<int> singleElement;
+        singleElement.clear();
+        singleElement.push_back(i);
+        clusters.push_back(singleElement);
+    }
+    
+    // Start the real clustering
+    while (clusters.size()>2)
+    {
+        // Look for the two closest clusters
+        int besti=-1, bestj=-1;
+        double bestCorr=-1;
+        for (int i=0; i<YSIZE(shortCorrelationMatrix); i++)
+            for (int j=i+1; j<XSIZE(shortCorrelationMatrix); j++)
+                if (shortCorrelationMatrix(i,j)>bestCorr)
+                {
+                    bestCorr=shortCorrelationMatrix(i,j);
+                    besti=i;
+                    bestj=j;
+                }
+        
+        // Join them in the list
+        for (int n=0; n<clusters[bestj].size(); n++)
+            clusters[besti].push_back(clusters[bestj][n]);
+        clusters.erase(clusters.begin()+bestj);
+        
+        // Readjust the distance between this new cluster and the rest
+        // of the existing
+        for (int i=0; i<YSIZE(shortCorrelationMatrix); i++)
+        {
+            if (i!=besti && i!=bestj)
+                shortCorrelationMatrix(besti,i)=
+                shortCorrelationMatrix(i,besti)=XMIPP_MIN(
+                    shortCorrelationMatrix(i,besti),
+                    shortCorrelationMatrix(i,bestj));
+        }
+
+        // Move everything from bestj to the left
+        for (int i=0; i<YSIZE(shortCorrelationMatrix); i++)
+            for (int j=bestj; j<XSIZE(shortCorrelationMatrix)-1; j++)
+                shortCorrelationMatrix(i,j)=shortCorrelationMatrix(i,j+1);
+
+        // Move everything from bestj to the top
+        for (int i=bestj; i<YSIZE(shortCorrelationMatrix)-1; i++)
+            for (int j=0; j<XSIZE(shortCorrelationMatrix); j++)
+                shortCorrelationMatrix(i,j)=shortCorrelationMatrix(i+1,j);
+
+        // Remove the last row and column of shortCorrelation
+        shortCorrelationMatrix.resize(YSIZE(shortCorrelationMatrix)-1,
+            XSIZE(shortCorrelationMatrix)-1);
+    }
+
+    for (int n=0; n<2; n++)
+    {
+        std::cout << "Cluster " << n << ": ";
+        for (int i=0;i<clusters[n].size(); i++)
+            std::cout << idxImgs[clusters[n][i]] << " ";
+        std::cout << std::endl;
+    }
+    
+    // Choose the less populated cluster
+    int nmin=0;
+    if (clusters[0].size()>clusters[1].size()) nmin=1;
+    
+    // Look for the worse image within this cluster
+    int imin=-1;
+    double worseCorrelation=2;
+    for (int i=0;i<clusters[nmin].size(); i++)
+    {
+        int imgIndex=idxImgs[clusters[nmin][i]];
+        if (currentImgMinCorrelation(imgIndex)<worseCorrelation)
+        {
+            worseCorrelation=currentImgMinCorrelation(imgIndex);
+            imin=imgIndex;
+        }
+    }
+    std::cout << "Remove image " << imin << std::endl;
+    
+    // Return which image to remove
+    return imin;
 }
 
 double Prog_Angular_CommonLine::realignCurrentSolution()
@@ -973,6 +1103,7 @@ double Prog_Angular_CommonLine::realignCurrentSolution()
     currentImgAvgCorrelation=solver->imgAvgCorrelation.transpose();
     currentImgMinCorrelation=solver->imgMinCorrelation.transpose();
     currentImgStdCorrelation=solver->imgStdCorrelation.transpose();
+    currentCorrelationMatrix=solver->correlationMatrix;
     delete solver;
     return energy;
 }
