@@ -258,7 +258,7 @@ double KLDistance(const histogram1D& h1, const histogram1D& h2)
     
     double retval=0;
     FOR_ALL_ELEMENTS_IN_MATRIX1D(h1)
-        if (h2(i)!=0.0) retval += h1(i)*log10(h1(i)/h2(i)); 
+        if (h2(i)!=0.0 && h1(i)!=0.0) retval += h1(i)*log10(h1(i)/h2(i)); 
     return retval;
 }
 
