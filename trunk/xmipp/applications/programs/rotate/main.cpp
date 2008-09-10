@@ -39,6 +39,7 @@ public:
     double ang;
     bool wrap;
     bool gridding;
+    bool write_matrix;
 
     Matrix2D<double> A3D, A2D;
 
@@ -77,6 +78,7 @@ public:
         }
         wrap = !checkParameter(argc, argv, "-dont_wrap");
         gridding = checkParameter(argc, argv, "-gridding");
+        write_matrix = checkParameter(argc, argv, "-write_matrix");
 
     }
 
@@ -95,6 +97,9 @@ public:
 	   std::cout << "Do not wrap."<<std::endl;
        if (gridding)
 	   std::cout << "Use reverse gridding for interpolation."<<std::endl;
+       if (write_matrix)
+	   std::cout << "Write out transformation matrix to the screen."<<std::endl;
+
     }
 
     void usage()
@@ -108,6 +113,7 @@ public:
         << "  [-axis \"[<x>,<y>,<z>]\" -ang <ang>]: Rotate <ang> degrees around (x,y,z),\n"
         << "                                      by default (0,0,1)\n"
         << "  [-dont_wrap]                      : By default, the image/volume is wrapped\n"
+        << "  [-write_matrix]                   : Print transformation matrix to screen\n"
 	<< "  [-gridding]                       : Use reverse gridding for interpolation\n";
     }
 };
@@ -118,6 +124,8 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
     Image img_out;
     if (XSIZE(eprm->A2D) != 0)
     {
+        if (eprm->write_matrix)
+            std::cerr<<"Transformation matrix = "<<eprm->A2D<<std::endl;
 	if (eprm->gridding)
 	{
 	    KaiserBessel kb;
@@ -137,6 +145,8 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
     Rotate_parameters *eprm = (Rotate_parameters *) prm;
     Volume vol_out;
+    if (eprm->write_matrix)
+        std::cerr<<"Transformation matrix = "<<eprm->A3D<<std::endl;
     if (eprm->gridding)
     {
 	KaiserBessel kb;
