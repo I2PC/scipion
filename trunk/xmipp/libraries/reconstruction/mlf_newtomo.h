@@ -43,6 +43,7 @@
    @ingroup ReconsLibraryPrograms */
 //@{
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
+#define OBSERVED_THRESHOLD 3
 
 /** mlf_tomo parameters. */
 class Prog_mlf_tomo_prm
@@ -51,7 +52,7 @@ class Prog_mlf_tomo_prm
 public:
     /** Filenames reference selfile/image, fraction docfile & output rootname */
     SelFile SFi, SFr, SFg;
-    FileName fn_ref, fn_root, fn_doc, fn_wlist, fn_group, fn_prior, fn_mask;
+    FileName fn_ref, fn_root, fn_doc, fn_wlist, fn_group, fn_prior, fn_mask, fn_sym;
     /** Flag whether to fix estimates for model fractions */
     bool fix_fractions;
     /** Flag whether to fix estimate for sigma of noise */
@@ -92,6 +93,10 @@ public:
     int nr_group;
     /** Regularisation constants */
     double reg0, regF, reg_steps, reg, delta_reg;
+    /** Convergence criterium */
+    double eps;
+    /** Perform imputation */
+    bool do_impute;
 
     /** Verbose level:
         2: gives debug statements
@@ -102,6 +107,7 @@ public:
     /* High/low and probability-calculation resolution limits */
     double highres, lowres;
 
+    SymList SL;
 
     double ang;
     xmippFftw forwfftw, backfftw;
@@ -197,8 +203,13 @@ public:
     void regularise(double * dataRefs,
                     double * dataSigma);
 
+    // Convergence check
+    bool checkConvergence(double * dataRefs,
+                          double * oldDataRefs);
+
     /// Write out reference images, selfile and logfile
-    void writeOutputFiles(int iter, 
+    void writeOutputFiles(int step, 
+                          int iter, 
                           double  * dataRefs,
                           double  * dataWsumWedsPerRef,
                           DocFile & DFo,

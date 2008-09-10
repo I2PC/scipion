@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #include "mlf_newtomo.h"
-#define DEBUG
+//#define DEBUG
 
 // Read arguments ==========================================================
 void Prog_mlf_tomo_prm::read(int argc, char **argv)
@@ -42,6 +42,7 @@ void Prog_mlf_tomo_prm::read(int argc, char **argv)
     fn_prior = getParameter(argc, argv, "-prior", "");
     fn_mask = getParameter(argc, argv, "-mask", "");
     fn_ref = getParameter(argc, argv, "-ref", "");
+    //fn_sym = getParameter(argc, argv, "-sym", "");
     fn_root = getParameter(argc, argv, "-o", "out");
     Niter = textToInteger(getParameter(argc, argv, "-iter", "100"));
     istart = textToInteger(getParameter(argc, argv, "-istart", "1"));
@@ -54,8 +55,10 @@ void Prog_mlf_tomo_prm::read(int argc, char **argv)
     reg0 = textToFloat(getParameter(argc, argv, "-reg0", "0"));
     regF = textToFloat(getParameter(argc, argv, "-regF", "0"));
     reg_steps = textToInteger(getParameter(argc, argv, "-steps", "10"));
+    eps =  textToFloat(getParameter(argc, argv, "-eps", "0"));
     dont_recalc_fftw = checkParameter(argc, argv, "-dont_recalc_fftw");
     use_tom_conventions = checkParameter(argc, argv, "-tom_conventions");
+    do_impute = !checkParameter(argc, argv, "-dont_impute");
 
     ang= textToFloat(getParameter(argc, argv, "-ang", "0"));
 }
@@ -80,6 +83,7 @@ void Prog_mlf_tomo_prm::show()
         std::cerr << "  Number of iterations    : " << Niter << std::endl;
         std::cerr << "  Initial regularisation  : " << reg0 << std::endl;
         std::cerr << "  Final regularisation    : " << regF << std::endl;
+        std::cerr << "  Convergence criterium   : " << eps <<std::endl;
         std::cerr << "  Number of reg. steps    : " << reg_steps << std::endl;
         if (use_tom_conventions)
         {
@@ -162,6 +166,12 @@ void Prog_mlf_tomo_prm::produceSideInfo()
             nr_ref = SFr.ImgNo();
         }
     }        
+
+    // Read SymList
+    //if (fn_sym!="") 
+    //    SL.read_sym_file(fn_sym);
+    //else
+    //    SL.read_sym_file("c1");
 
     // Make FFTW objects and plans for forward and backward fftw objects
     int fNdim = 3;
@@ -249,7 +259,7 @@ void Prog_mlf_tomo_prm::produceSideInfo()
     }
 
     // Regularisation (from reg0 to regF in steps linear steps)
-    delta_reg = (reg0 - regF) / reg_steps;
+    delta_reg = (reg0 - regF) / (reg_steps - 1);
     reg = reg0;
 
 #ifdef DEBUG
@@ -399,6 +409,7 @@ zoff   =      -z
     {
         // Use XMIPP conventions
         A = Euler_rotation3DMatrix(ang1, ang2, ang3);
+        A = A.inv();
         A(0,3) = -xoff;
         A(1,3) = -yoff;
         A(2,3) = -zoff;
@@ -771,13 +782,15 @@ void Prog_mlf_tomo_prm::calculateAllFFTWs()
                 XSIZE(vol()) != Xdim )
                 REPORT_ERROR(1,"Wrong dimensions for input volume!");
 
-            // Still test this!!! (just copied from image.h for now...)
+            // Get the transformation matrix
             A_img = getTransformationMatrix(img_ang1[imgno], img_ang2[imgno], img_ang3[imgno],
                                             img_xoff[imgno], img_yoff[imgno], img_zoff[imgno]);
 
             // IS_INV to be consistent with Xmipp conventions
-            // if some day want to swith to IS_NOT_INV, do A=A.inv() in getMissingWedge!!!!
+            // if some day want to switch to IS_NOT_INV, do A=A.inv() in getMissingWedge!!!!
             vol().selfApplyGeometryBSpline(A_img,3,IS_INV,DONT_WRAP,0.);
+
+            // Mask if necessary
             if (fn_mask != "")
                 vol() *= mask();
             ave() += vol();
@@ -788,6 +801,7 @@ void Prog_mlf_tomo_prm::calculateAllFFTWs()
             forwfftw.write(fno);
             if (verb > 0) if (imgno % c == 0) progress_bar(imgno);
             imgno++;
+
         }
     }
     if (verb > 0) progress_bar(nn);
@@ -1107,8 +1121,8 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
 
     // Loop over all images
     imgno = 0;
-    nn = SFi.ImgNo();
-    if (verb > 0) init_progress_bar(nn);
+    //nn = SFi.ImgNo();
+    //if (verb > 0) init_progress_bar(nn);
     SFi.go_beginning();
     while ((!SFi.eof()))
     {
@@ -1198,10 +1212,10 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
         avePmax += Pmax;
 
         imgno++;
-        if (verb > 0) progress_bar(imgno);
+        //if (verb > 0) progress_bar(imgno);
 
     }
-    if (verb > 0) progress_bar(nn);
+    //if (verb > 0) progress_bar(nn);
 #ifdef DEBUG
     std::cerr<<"done expectation"<<std::endl;
 #endif
@@ -1231,27 +1245,46 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
     for (int refno = 0;refno < nr_ref; refno++)
     {
         sumw_allrefs += dataSumWRefs[refno];
-        if (dataSumWRefs[refno] > 0.)
+        if (do_impute)
         {
-
-            //std::cerr<<"refno= "<<refno<<std::endl;
-            for (int i = 0; i < hsize; i++)
+            if (dataSumWRefs[refno] > 0.)
             {
-                int ii = refno * hsize + i;
-                // Impute old reference for missing pixels
-                //if (i==0) std::cerr<<abs(DATAREFS[ii])<<" "<<dataWsumWedsPerRef[ii]<<" "<<dataSumWRefs[refno]<<" "<<abs(DATAWSUMREFS[ii])/ dataSumWRefs[refno]<<" ";
-                DATAREFS[ii] *= 1. - (dataWsumWedsPerRef[ii] / dataSumWRefs[refno]);
-                // And sum the weighted sum for observed pixels
-                DATAREFS[ii] += DATAWSUMREFS[ii] / dataSumWRefs[refno];
-                //if (i==0) std::cerr<<" new= "<<abs(DATAREFS[ii]) <<std::endl;
+                for (int i = 0; i < hsize; i++)
+                {
+                    int ii = refno * hsize + i;
+                    // Impute old reference for missing pixels
+                    //if (i==0) std::cerr<<abs(DATAREFS[ii])<<" "<<dataWsumWedsPerRef[ii]<<" "<<dataSumWRefs[refno]<<" "<<abs(DATAWSUMREFS[ii])/ dataSumWRefs[refno]<<" ";
+                    DATAREFS[ii] *= 1. - (dataWsumWedsPerRef[ii] / dataSumWRefs[refno]);
+                    // And sum the weighted sum for observed pixels
+                    DATAREFS[ii] += DATAWSUMREFS[ii] / dataSumWRefs[refno];
+                    //if (i==0) std::cerr<<" new= "<<abs(DATAREFS[ii]) <<std::endl;
+                }
+            }
+            else
+            {
+                // Do nothing (i.e. impute the old DATAREFS)
+                /*
+                  for (int i = 0; i < hsize; i++)
+                  {
+                  int ii = refno * hsize + i;
+                  DATAREFS[ii] = 0.;
+                  }
+                */
             }
         }
-        else
-        {
+        else // No imputation: divide by number of times a pixel has been observed 
+        { 
             for (int i = 0; i < hsize; i++)
             {
                 int ii = refno * hsize + i;
-                DATAREFS[ii] = 0.;
+                if (dataWsumWedsPerRef[ii] > OBSERVED_THRESHOLD)
+                {
+                    DATAREFS[ii] = DATAWSUMREFS[ii] / dataWsumWedsPerRef[ii];
+                }
+                else
+                {
+                    DATAREFS[ii] = 0.;
+                }
             }
         }
     }
@@ -1275,12 +1308,22 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
         for (int i = 0; i < hsize; i++)
         {
             int ii = ig * hsize + i;
-            // Return from two*SIGMA^2
-            dataSigma[ii] /= 2;
-            // Impute old sigma values for missing pixels
-            dataSigma[ii] *= 1. - (dataWsumWedsPerGroup[ii] / nr_imgs_per_group(ig));
-            //  And sum the weighted sum for observedpixels
-            dataSigma[ii] += dataWsumDist[ii] / nr_imgs_per_group(ig);
+            if (do_impute)
+            {
+                // Return from two*SIGMA^2
+                dataSigma[ii] /= 2;
+                // Impute old sigma values for missing pixels
+                dataSigma[ii] *= 1. - (dataWsumWedsPerGroup[ii] / nr_imgs_per_group(ig));
+                //  And sum the weighted sum for observedpixels
+                dataSigma[ii] += dataWsumDist[ii] / nr_imgs_per_group(ig);
+            }
+            else
+            {
+                if (dataWsumWedsPerGroup[ii] > OBSERVED_THRESHOLD)
+                    dataSigma[ii] = dataWsumDist[ii] / dataWsumWedsPerGroup[ii];
+                else
+                    dataSigma[ii] = 0.;
+            }
         }
 
         // Set points within resolution range
@@ -1296,6 +1339,7 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
                 ave[i] = 0.;
             }
         }
+        // If I am not imputing, then just taking a radial average here will go WRONG!!
         forwfftw.fftwRadialAverage(ave, sigma_noise[ig], radial_count, true, true);
         // Now store again in dataSigma structure
         for (int i = 0, ii=0; i< fftw_hsize; i++)
@@ -1307,11 +1351,8 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
     }
 
     // Apply regularisation
-    // Regularisation
     // For now on all references
     // Later-on add organisation like in SOMs (and increase size of regref to nr_ref*size
-    reg -= delta_reg;
-    reg = XMIPP_MAX(reg,0.);
     regularise(dataRefs,dataSigma);
 
     // Average Pmax
@@ -1392,7 +1433,77 @@ void Prog_mlf_tomo_prm::regularise(double * dataRefs,
 
 }
 
-void Prog_mlf_tomo_prm::writeOutputFiles(int iter, 
+    // Convergence check
+bool Prog_mlf_tomo_prm::checkConvergence(double * dataRefs,
+                                         double * oldDataRefs)
+{
+
+    double * dataOut;
+    double diff2;
+    VolumeXmipp vol;
+    bool converged = true;
+    vol().resize(Xdim,Ydim,Zdim);
+
+    try
+    {
+        dataOut  = new double[2*fftw_hsize];
+    }
+    catch (std::bad_alloc&)
+    {
+        REPORT_ERROR(1,"Error allocating memory in maximization");
+    }
+
+    // Do convergence check in real space...
+    // Calculate difference volumes for all references
+    for (int refno = 0; refno < nr_ref; refno++)
+    {
+        // Set points within resolution range
+        for (int i = 0, ii=0; i< 2*fftw_hsize; i++)
+        {
+            if (is_in_range[i/2]) 
+            {
+                dataOut[i] = oldDataRefs[refno*size + ii] - dataRefs[refno*size + ii];
+                ii++;
+            }
+            else
+            {
+               dataOut[i] = 0.;
+            }
+        }
+        // Somehow only setpoints within resolution limits
+        backfftw.SetPoints(dataOut);
+        backfftw.Transform();
+        backfftw.GetPoints(MULTIDIM_ARRAY(vol()));
+        diff2 = vol().sum2() / dim3;
+#define DEBUG_CONVERGENCE
+#ifdef DEBUG_CONVERGENCE
+        FileName fnt;
+        fnt.compose("diff",refno,"vol");
+        vol.write(fnt);
+        //std::cerr<<"diff volume= "<<fnt<<" diff2= "<<diff2<<" eps= "<<eps<<std::endl;
+#endif
+        if (diff2 > eps)
+        {
+            converged = false;
+            break;
+        }
+    }
+
+    // Set oldDataRefs again to dataRefs
+    for (int refno = 0; refno < nr_ref; refno++)
+        for (int i = 0; i < size; i++)
+        {
+            int ii = refno * size + i;
+            oldDataRefs[ii] = dataRefs[ii];
+        }
+
+    return converged;
+
+}        
+
+
+void Prog_mlf_tomo_prm::writeOutputFiles(int step,
+                                         int iter, 
                                          double  * dataRefs,
                                          double  * dataWsumWedsPerRef,
                                          DocFile & DFo,
@@ -1414,6 +1525,11 @@ void Prog_mlf_tomo_prm::writeOutputFiles(int iter,
 
 
     fn_base = fn_root;
+    if (step >= 0)
+    {
+        fn_base += "_step";
+        fn_base.compose(fn_base, step, "");
+    }
     if (iter >= 0)
     {
         fn_base += "_it";

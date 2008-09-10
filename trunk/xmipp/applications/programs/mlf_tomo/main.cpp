@@ -31,12 +31,12 @@ int main(int argc, char **argv)
 {
 
     int c, nn, imgno, opt_refno;
-    double aux, LL, sumw_allrefs, avePmax;
-    std::vector<double> conv;
+    double aux, LL=0., sumw_allrefs=0., avePmax=0.;
     SelFile SFa;
     DocFile DFo;
     FileName fn_tmp;
     double * dataRefs;
+    double * oldDataRefs;
     double * dataSigma;
     double * dataWsumRefs;
     double * dataWsumWedsPerRef;
@@ -69,6 +69,7 @@ int main(int argc, char **argv)
         dataSumWRefs         = new double[prm.nr_ref];
         dataSumWGroups       = new double[prm.nr_group];
         dataRefs             = new double[prm.nr_ref * prm.size];
+        oldDataRefs          = new double[prm.nr_ref * prm.size];
         dataWsumRefs         = new double[prm.nr_ref * prm.size];
         dataWsumWedsPerRef   = new double[prm.nr_ref * prm.hsize];
         dataSigma            = new double[prm.nr_group * prm.hsize];
@@ -84,80 +85,95 @@ int main(int argc, char **argv)
 
     try
     {
-        // Read references in memory and store their FTs
-        prm.readAndFftwAllReferences(dataRefs);
         // For later parallellization: split here prm.SFi
         prm.produceSideInfo2();
         prm.calculateAllFFTWs();
+        prm.generateInitialReferences(dataRefs, dataWsumWedsPerRef);
         prm.estimateInitialNoiseSpectra(dataSigma);
         prm.regularise(dataRefs, dataSigma);
+        prm.writeOutputFiles(0,0,dataRefs,dataWsumWedsPerRef,DFo,sumw_allrefs,LL,avePmax);
 
-        // Loop over all iterations
-        for (int iter = prm.istart; iter <= prm.Niter; iter++)
+        // Loop over all regularization steps
+        for (int step = 1; step <= prm.reg_steps; step++)
         {
 
-            if (prm.verb > 0) std::cerr << "  Sub-tomogram classification:  iteration " << iter << " of " << prm.Niter << std::endl;
+            if (prm.verb > 0) init_progress_bar(prm.Niter);
 
-            DFo.clear();
-            DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Zoff (6), WedNo (7) Ref (8), Pmax/sumP (9)");
+            // Initiaze oldDataRefs for convergence check to all-zeros 
+            for (int ii=0; ii < prm.nr_ref * prm.size; ii++)
+                oldDataRefs[ii] = 0.;
 
-            prm.expectation(dataRefs,
-                            dataSigma,
-                            dataWsumRefs, 
-                            dataWsumWedsPerRef,
-                            dataWsumWedsPerGroup,
-                            dataWsumDist,
-                            dataSumWRefs,
-                            LL, 
-                            avePmax,
-                            DFo);
+            // Albertop-like decrease
+            prm.reg = exp(log(prm.reg0) - (log(prm.reg0) - log(XMIPP_MAX(prm.regF,0.001)))*(step-1)/(prm.reg_steps-1));
+            if (prm.verb > 0) 
+                std::cerr<<std::endl;
+                std::cerr << "  Sub-tomogram classification:  step "<<step<<" of "<<prm.reg_steps<<" with regularisation= "<<prm.reg<<std::endl;
 
-            prm.maximization(dataRefs,
-                             dataSigma,
-                             dataWsumRefs,
-                             dataWsumWedsPerRef,
-                             dataWsumWedsPerGroup,
-                             dataWsumDist,
-                             dataSumWRefs,
-                             sumw_allrefs, 
-                             avePmax);
+            // Iterate until convergence (or Niter) is reached
+            for (int iter = prm.istart; iter <= prm.Niter; iter++)
+            {
 
-            prm.writeOutputFiles(iter, 
-                                 dataRefs,
+                //if (prm.verb > 0) std::cerr << "  Sub-tomogram classification:  step "<<step<<" iteration " << iter << " of " << prm.Niter << std::endl;
+
+                prm.expectation(dataRefs,
+                                dataSigma,
+                                dataWsumRefs, 
+                                dataWsumWedsPerRef,
+                                dataWsumWedsPerGroup,
+                                dataWsumDist,
+                                dataSumWRefs,
+                                LL, 
+                                avePmax,
+                                DFo);
+
+                prm.maximization(dataRefs,
+                                 dataSigma,
+                                 dataWsumRefs,
+                                 dataWsumWedsPerRef,
+                                 dataWsumWedsPerGroup,
+                                 dataWsumDist,
+                                 dataSumWRefs,
                                  sumw_allrefs, 
-                                 LL, 
-                                 avePmax,
-                                 conv);
+                                 avePmax);
 
-            // Write out docfile with optimal transformation & references
-            fn_tmp=prm.fn_root+"_it";
-            fn_tmp.compose(fn_tmp,iter,"doc");
-            DFo.write(fn_tmp);
+                prm.writeOutputFiles(step, 
+                                     iter, 
+                                     dataRefs,
+                                     dataWsumWedsPerRef,
+                                     DFo,
+                                     sumw_allrefs, 
+                                     LL, 
+                                     avePmax);
 
-        } // end loop iterations
+
+                if (prm.checkConvergence(dataRefs,
+                                         oldDataRefs) )
+                    break;
+
+                if (prm.verb > 0) progress_bar(iter);
+
+            } // end loop iterations
+            if (prm.verb > 0) progress_bar(prm.Niter);
+
+            // linear decrease of regularisation parameter
+            //prm.reg -= prm.delta_reg;
+            //prm.reg = XMIPP_MAX(prm.reg,0.);
+
+        } // end loop regularization steps
 
         // Write out converged structures
-        prm.writeOutputFiles(-1, 
+        prm.writeOutputFiles(-1,
+                             -1, 
                              dataRefs,
+                             dataWsumWedsPerRef,
+                             DFo,
                              sumw_allrefs, 
                              LL, 
-                             avePmax,
-                             conv);
+                             avePmax);
 
         // Write out docfile with optimal transformation & references
         fn_tmp=prm.fn_root+".doc";
         DFo.write(fn_tmp);
-
-        // Free the memory (is this necessary?)
-        delete [] dataSumWRefs;
-        delete [] dataWsumRefs;
-        delete [] dataWsumWedsPerRef;
-        delete [] dataWsumWedsPerGroup;
-        delete [] dataWsumDist;
-        delete [] imgsPmax;
-        delete [] imgsOptRefNos;
-        delete [] dataRefs;
-        delete [] dataSigma;
 
     }
     catch (Xmipp_error XE)
