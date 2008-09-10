@@ -908,27 +908,30 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
 	I.write(fn_corrected);
 	
         // Align the original image
-	ImageXmipp Iorig;
-	Iorig.read(SForig.NextImg());
-        mask.initZeros(Iorig());
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(Iorig())
-            if (Iorig(i,j)!=0) mask(i,j)=1;
-	Iorig().selfTranslate(-alignment.di[i]*XSIZE(Iorig())/XSIZE(I()),
-            DONT_WRAP);
-	Iorig().selfRotate(90-alignment.rot+alignment.psi(i),DONT_WRAP);
-	mask.selfTranslate(-alignment.di[i]*XSIZE(Iorig())/XSIZE(I()),
-            DONT_WRAP);
-	mask.selfRotate(90-alignment.rot+alignment.psi(i),DONT_WRAP);
-	mask.binarize(0.5);
-	typeCast(mask,iMask);
-        computeStats_within_binary_mask(iMask,Iorig(),minval, maxval,
-            avg, stddev);
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(iMask)
-            if (iMask(i,j)==0) Iorig(i,j)=0;
-            else Iorig(i,j)=(Iorig(i,j)-avg)/stddev;
-	Iorig.set_eulerAngles(rot, tilt, psi);
-	fn_corrected=fnRoot+"_corrected_originalsize_"+integerToString(i,3)+".xmp";
-	I.write(fn_corrected);
+        if (fnSelOrig!="")
+        {
+	    ImageXmipp Iorig;
+	    Iorig.read(SForig.NextImg());
+            mask.initZeros(Iorig());
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(Iorig())
+                if (Iorig(i,j)!=0) mask(i,j)=1;
+	    Iorig().selfTranslate(-alignment.di[i]*XSIZE(Iorig())/XSIZE(I()),
+                DONT_WRAP);
+	    Iorig().selfRotate(90-alignment.rot+alignment.psi(i),DONT_WRAP);
+	    mask.selfTranslate(-alignment.di[i]*XSIZE(Iorig())/XSIZE(I()),
+                DONT_WRAP);
+	    mask.selfRotate(90-alignment.rot+alignment.psi(i),DONT_WRAP);
+	    mask.binarize(0.5);
+	    typeCast(mask,iMask);
+            computeStats_within_binary_mask(iMask,Iorig(),minval, maxval,
+                avg, stddev);
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(iMask)
+                if (iMask(i,j)==0) Iorig(i,j)=0;
+                else Iorig(i,j)=(Iorig(i,j)-avg)/stddev;
+	    Iorig.set_eulerAngles(rot, tilt, psi);
+	    fn_corrected=fnRoot+"_corrected_originalsize_"+integerToString(i,3)+".xmp";
+	    I.write(fn_corrected);
+        }
 
         // Prepare data for the docfile
         Matrix1D<double> alignment(5);
@@ -1099,7 +1102,7 @@ double Alignment::optimizeGivenAxisDirection()
         else
         {
             finish=((error>bestError) || (Niterations>1000) ||
-               (ABS(error-bestError)/bestError<0.0001)) && Niterations>20;
+               (ABS(error-bestError)/bestError<0.001)) && Niterations>20;
             if (error<bestError) bestError=error;
         }
     } while (!finish);
