@@ -146,7 +146,7 @@ double orthogonalMatchingPursuit(const Matrix1D<double> &x,
 //#define DEBUG
 double kSVD(const std::vector< Matrix1D<double> > &X, int S,
     Matrix2D<double> &D, std::vector< Matrix1D<double> > &Alpha,
-    bool keepFirstColumn)
+    bool keepFirstColumn, int maxIter, double minChange)
 {
     int Nvectors=X.size();
     int K=XSIZE(D); // Number of atoms
@@ -172,24 +172,25 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
 
     // Perform kSVD
     int iterations=0;
-    double error;
+    Matrix1D<double> error;
+    error.initZeros(Nvectors);
+    double previousError=0, currentError=0;
+    bool limitAchieved=false;
     do {
         // Sparse coding step
-        error=0;
         for (int n=0; n<Nvectors; n++)
         {
             // Compute alpha
-            error+=orthogonalMatchingPursuit(X[n],D,S,Alpha[n]);
+            error(n)=orthogonalMatchingPursuit(X[n],D,S,Alpha[n]);
             
             // Check which are the atoms this vector is using
             for (int k=0; k<K; k++)
                 if (Alpha[n](k)!=0)
                     listUsers[k].push_back(n);
         }
-        error/=Nvectors;
-        #ifdef DEBUG
-            std::cout << "kSVD error=" << error << std::endl;
-        #endif
+//        #ifdef DEBUG
+            std::cout << "kSVD error=" << error.computeAvg() << std::endl;
+//        #endif
         
         // Codebook update
         Matrix2D<double> EkR, U, V;
@@ -201,67 +202,87 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
             // Compute the error that would be commited if the
             // atom k were not used
             int Nk=listUsers[k].size();
-            EkR.initZeros(N,Nk);
-            for (int nk=0; nk<Nk; nk++)
+            if (Nk>1)
             {
-                // Select vector nk
-                int n=listUsers[k][nk];
-                
-                // Compute the represented vector if atom is not used
-                xp.initZeros(N);
-                for (int kp=0; kp<K; kp++)
+                EkR.initZeros(N,Nk);
+                for (int nk=0; nk<Nk; nk++)
                 {
-                    double w=DIRECT_VEC_ELEM(Alpha[n],kp);
-                    if (kp!=k && w!=0)
-                        for (int j=0; j<N; j++)
-                            DIRECT_VEC_ELEM(xp,j)+=
-                                w*DIRECT_MAT_ELEM(D,j,kp);
+                    // Select vector nk
+                    int n=listUsers[k][nk];
+
+                    // Compute the represented vector if atom is not used
+                    xp.initZeros(N);
+                    for (int kp=0; kp<K; kp++)
+                    {
+                        double w=DIRECT_VEC_ELEM(Alpha[n],kp);
+                        if (kp!=k && w!=0)
+                            for (int j=0; j<N; j++)
+                                DIRECT_VEC_ELEM(xp,j)+=
+                                    w*DIRECT_MAT_ELEM(D,j,kp);
+                    }
+
+                    // Fill the error matrix EkR
+                    const Matrix1D<double> &x=X[n];
+                    for (int j=0; j<N; j++)
+                        EkR(j,nk)=DIRECT_VEC_ELEM(x,j)-DIRECT_VEC_ELEM(xp,j);
                 }
-                
-                // Fill the error matrix EkR
-                const Matrix1D<double> &x=X[n];
+
+                // Compute the SVD decomposition of the EkR matrix
+                svdcmp(EkR,U,W,V); // EkR=U * diag(W) * V^t
+
+                // Update the dictionary with the first column of U
+                double normU0=0;
                 for (int j=0; j<N; j++)
-                    EkR(j,nk)=DIRECT_VEC_ELEM(x,j)-DIRECT_VEC_ELEM(xp,j);
-            }
-            
-            // Compute the SVD decomposition of the EkR matrix
-            svdcmp(EkR,U,W,V); // EkR=U * diag(W) * V^t
-            
-            // Update the dictionary with the first column of U
-            double normU0=0;
-            for (int j=0; j<N; j++)
-            {
-                double uj0=DIRECT_MAT_ELEM(U,j,0);
-                normU0+=uj0*uj0;
-            }
-            normU0=sqrt(normU0);
-            double inormU0=1/normU0;
-            for (int j=0; j<N; j++)
-                DIRECT_MAT_ELEM(D,j,k)=DIRECT_MAT_ELEM(U,j,0)*inormU0;
-            
-            // Update the coefficients of the users of atom k
-            double W0=DIRECT_VEC_ELEM(W,0)*normU0;
-            for (int nk=0; nk<Nk; nk++)
-            {
-                // Select vector nk
-                int n=listUsers[k][nk];
-                DIRECT_VEC_ELEM(Alpha[n],k)=DIRECT_MAT_ELEM(V,nk,0)*W0;
-            }
-            
-            #ifdef DEBUG
-                for (int n=0; n<Nvectors; n++)
                 {
-                    Matrix1D<double> xp=D*Alpha[n];
-                    std::cout << "x= " << X[n].transpose() << std::endl
-                              << "xp=" << xp.transpose() << std::endl
-                              << "diff norm=" << (X[n]-xp).module() << std::endl;
+                    double uj0=DIRECT_MAT_ELEM(U,j,0);
+                    normU0+=uj0*uj0;
                 }
-            #endif
+                normU0=sqrt(normU0);
+                double inormU0=1/normU0;
+                for (int j=0; j<N; j++)
+                    DIRECT_MAT_ELEM(D,j,k)=DIRECT_MAT_ELEM(U,j,0)*inormU0;
+
+                // Update the coefficients of the users of atom k
+                double W0=DIRECT_VEC_ELEM(W,0)*normU0;
+                for (int nk=0; nk<Nk; nk++)
+                {
+                    // Select vector nk
+                    int n=listUsers[k][nk];
+                    DIRECT_VEC_ELEM(Alpha[n],k)=DIRECT_MAT_ELEM(V,nk,0)*W0;
+                }
+
+                #ifdef DEBUG
+                    for (int n=0; n<Nvectors; n++)
+                    {
+                        Matrix1D<double> xp=D*Alpha[n];
+                        std::cout << "x= " << X[n].transpose() << std::endl
+                                  << "xp=" << xp.transpose() << std::endl
+                                  << "diff norm=" << (X[n]-xp).module() << std::endl;
+                    }
+                #endif
+            }
+            else if (Nk==0)
+            {
+                // Pick the vector that is worse represented
+                int iworse;
+                error.maxIndex(iworse);
+                error(iworse)=0;
+                for (int j=0; j<N; j++)
+                    DIRECT_MAT_ELEM(D,j,k)=DIRECT_VEC_ELEM(X[iworse],j);
+            }
         }
         
         // Prepare for next iteration
         iterations++;
-    } while (iterations<10);
-    return error;
+        currentError=error.computeAvg();
+        if (previousError==0) previousError=currentError;
+        else {
+            limitAchieved=
+                ((previousError-currentError)/previousError)<minChange;
+            std::cout << "Change=" << ((previousError-currentError)/previousError) << std::endl;
+            previousError=currentError;
+        }
+    } while (iterations<maxIter && !limitAchieved);
+    return currentError;
 }
 #undef DEBUG

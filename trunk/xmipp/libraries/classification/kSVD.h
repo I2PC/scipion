@@ -52,6 +52,6 @@ double orthogonalMatchingPursuit(const Matrix1D<double> &x,
  */
 double kSVD(const std::vector< Matrix1D<double> > &X, int S,
     Matrix2D<double> &D, std::vector< Matrix1D<double> > &Alpha,
-    bool keepFirstColumn=true);
+    bool keepFirstColumn=true, int maxIter=20, double minChange=0.005);
 //@}
 #endif
