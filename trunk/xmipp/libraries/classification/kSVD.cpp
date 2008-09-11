@@ -170,6 +170,14 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
         listUsers.push_back(dummy);
     }
 
+    // Compute the power of the input vectors
+    Matrix1D<double> power;
+    power.initZeros(Nvectors);
+    for (int n=0; n<Nvectors; n++)
+        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(X[n])
+            power(n)+=DIRECT_VEC_ELEM(X[n],i)*DIRECT_VEC_ELEM(X[n],i);
+    double avgPower=power.computeAvg();
+
     // Perform kSVD
     int iterations=0;
     Matrix1D<double> error;
@@ -188,9 +196,9 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
                 if (Alpha[n](k)!=0)
                     listUsers[k].push_back(n);
         }
-//        #ifdef DEBUG
-            std::cout << "kSVD error=" << error.computeAvg() << std::endl;
-//        #endif
+        double Noise=error.computeAvg();
+        std::cout << "kSVD error=" << Noise << " "
+                  << " (" << 100*Noise/avgPower << "%)" << std::endl;
         
         // Codebook update
         Matrix2D<double> EkR, U, V;
