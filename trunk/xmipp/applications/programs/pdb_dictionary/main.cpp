@@ -30,8 +30,9 @@
 #include <classification/kSVD.h>
 #include <fstream>
 
+//#define DEBUG
 void extractTrainingPatches(const FileName &fnPDB, int patchSize,
-    int step, double Ts, double resolution,
+    int step, double Ts, double resolution1, double resolution2,
     std::vector< Matrix1D<double> > &training)
 {
     // Convert PDB to volume
@@ -40,31 +41,45 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
     pdbconverter.fn_out="";
     pdbconverter.Ts=Ts;
     pdbconverter.run();
-    Matrix3D<double> &V0=pdbconverter.Vlow();
     
-    // Filter the volume to the desired resolution
-    FourierMask Filter;
-    Filter.FilterShape=RAISED_COSINE;
-    Filter.FilterBand=LOWPASS;
-    Filter.w1=Ts/resolution;
-    Filter.raised_w=0.05;
+    // Filter the volume to the final resolution
+    Matrix3D<double> V0=pdbconverter.Vlow();
+    FourierMask Filter1;
+    Filter1.FilterShape=RAISED_COSINE;
+    Filter1.FilterBand=LOWPASS;
+    Filter1.w1=Ts/resolution1;
+    Filter1.raised_w=0.05;
     V0.setXmippOrigin();
-    Filter.generate_mask(V0);
-    Filter.apply_mask_Space(V0);
+    Filter1.generate_mask(V0);
+    Filter1.apply_mask_Space(V0);
     V0.threshold("below",0,0);
 
+    // Filter the volume to the restoration resolution
+    Matrix3D<double> V0R=pdbconverter.Vlow();
+    FourierMask Filter2;
+    Filter2.FilterShape=RAISED_COSINE;
+    Filter2.FilterBand=LOWPASS;
+    Filter2.w1=Ts/resolution2;
+    Filter2.raised_w=0.05;
+    V0R.setXmippOrigin();
+    Filter2.generate_mask(V0R);
+    Filter2.apply_mask_Space(V0R);
+    V0R.threshold("below",0,0);
+
     // Build the pyramid and the differences between pyramid approximations
-    V0.resize(4*FLOOR(ZSIZE(V0)/4.0),4*FLOOR(YSIZE(V0)/4.0),
-        4*FLOOR(XSIZE(V0)/4.0));
+    V0.resize(2*FLOOR(ZSIZE(V0)/2.0),2*FLOOR(YSIZE(V0)/2.0),
+        2*FLOOR(XSIZE(V0)/2.0));
+    V0R.resize(V0);
     Matrix3D<double> V1;
     V0.pyramidReduce(V1);
     STARTINGX(V0)=STARTINGY(V0)=STARTINGZ(V0)=0;
+    STARTINGX(V0R)=STARTINGY(V0R)=STARTINGZ(V0R)=0;
 
     // Extract the training vectors from the volume
-    const int L1=2;
-    const int L0=2;
-    const int N1=2*L1+1;
-    const int N0=2*L0+1;
+    int N1=patchSize;
+    int N0=patchSize;
+    int L1=(patchSize-1)/2;
+    int L0=(patchSize-1)/2;
     Matrix1D<double> v(N1*N1*N1+N0*N0*N0);
     std::vector< Matrix1D<double> > auxTraining;
     std::vector<double> energy;
@@ -92,7 +107,14 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
                         for (int jj=-L1; jj<=L1; jj++)
                             DIRECT_VEC_ELEM(v,idx++)=
                                 DIRECT_VOL_ELEM(V1,k1+kk,i1+ii,j1+jj);
-                
+/*                
+                // Copy the pixels at level 0R
+                for (int kk=-L0; kk<=L0; kk++)
+                    for (int ii=-L0; ii<=L0; ii++)
+                        for (int jj=-L0; jj<=L0; jj++)
+                            DIRECT_VEC_ELEM(v,idx++)=
+                                DIRECT_VOL_ELEM(V0R,k0+kk,i0+ii,j0+jj);
+*/
                 auxTraining.push_back(v);
                 energy.push_back(v.module());
                 if (energy[energy.size()-1]>bestEnergy)
@@ -105,8 +127,39 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
     int imax=energy.size();
     for (int i=0; i<imax; i++)
         if (energy[i]>energyThreshold)
+        {
             training.push_back(auxTraining[i]);
+            #ifdef DEBUG
+                VolumeXmipp save(5*3,5,5);
+                int k0=0, idx=0;
+                for (int kk=0; kk<N0; kk++)
+                    for (int ii=0; ii<N0; ii++)
+                        for (int jj=0; jj<N0; jj++)
+                            save(k0+kk,ii,jj)=
+                                DIRECT_VEC_ELEM(auxTraining[i],idx++);
+                k0=5;
+                for (int kk=0; kk<N0; kk++)
+                    for (int ii=0; ii<N0; ii++)
+                        for (int jj=0; jj<N0; jj++)
+                            save(k0+kk,ii,jj)=
+                                DIRECT_VEC_ELEM(auxTraining[i],idx++);
+                k0=10;
+                for (int kk=0; kk<N0; kk++)
+                    for (int ii=0; ii<N0; ii++)
+                        for (int jj=0; jj<N0; jj++)
+                            save(k0+kk,ii,jj)=
+                                DIRECT_VEC_ELEM(auxTraining[i],idx++);
+                std::cout << save();
+                save.write("PPPtrainingVector.vol");
+                save()=V0; save.write("PPPLevel0.vol");
+                save()=V0R; save.write("PPPLevel0_Restoration.vol");
+                save()=V1; save.write("PPPLevel1.vol");
+                std::cout << "Press any key\n";
+                char c; std::cin >> c;
+            #endif
+        }
 }
+#undef DEBUG
 
 int main(int argc, char *argv[])
 {
@@ -117,7 +170,8 @@ int main(int argc, char *argv[])
     int patchSize;     // Size of the window centered at a voxel
     int step;          // Step between patches
     double Ts;         // Sampling rate
-    double resolution; // Final resolution
+    double resolution1;// Final resolution
+    double resolution2;// Restoration resolution
     // Read Parameters
     try
     {
@@ -128,20 +182,22 @@ int main(int argc, char *argv[])
         patchSize = textToInteger(getParameter(argc,argv,"-patchSize","5"));
         step = textToInteger(getParameter(argc,argv,"-patchSize","2"));
         Ts = textToFloat(getParameter(argc,argv,"-sampling","2"));
-        resolution = textToFloat(getParameter(argc,argv,"-resolution","10"));
+        resolution1 = textToFloat(getParameter(argc,argv,"-resolution1","10"));
+        resolution2 = textToFloat(getParameter(argc,argv,"-resolution2"," 7"));
     }
     catch (Xmipp_error &XE)
     {
         std::cout << XE;
         std::cout << "Usage: xmipp_pdb_dictionary\n"
-                  << "    -sel <selfile>     : Set of PDB files\n"
-                  << "    -o <dictionary>    : Name of the dictionary\n"
-                  << "   [-S <S=3>]          : Number of allowed atoms\n"
-                  << "   [-dictSize <N=400>] : Size of the dictionary\n"
-                  << "   [-patchSize <W=5>]  : Size of the patch around a voxel\n"
-                  << "   [-step <s=2>]       : Distance between learning patches\n"
-                  << "   [-sampling <Ts=2>]  : Sampling rate in Angstroms/pixel\n"
-                  << "   [-resolution <A=10>]: Final resolution in Angstroms\n"
+                  << "    -sel <selfile>      : Set of PDB files\n"
+                  << "    -o <dictionary>     : Name of the dictionary\n"
+                  << "   [-S <S=3>]           : Number of allowed atoms\n"
+                  << "   [-dictSize <N=400>]  : Size of the dictionary\n"
+                  << "   [-patchSize <W=5>]   : Size of the patch around a voxel\n"
+                  << "   [-step <s=2>]        : Distance between learning patches\n"
+                  << "   [-sampling <Ts=2>]   : Sampling rate in Angstroms/pixel\n"
+                  << "   [-resolution1 <A=10>]: Final resolution in Angstroms\n"
+                  << "   [-resolution2 <A=7>] : Restoration resolution in Angstroms\n"
         ;
         exit(1);
     }
@@ -150,14 +206,15 @@ int main(int argc, char *argv[])
     try
     {
         // Show parameters
-        std::cout << "Selfile:   " << fnSel      << std::endl
-                  << "Output:    " << fnOut      << std::endl
-                  << "S:         " << S          << std::endl
-                  << "DictSize:  " << dictSize   << std::endl
-                  << "patchSize: " << patchSize  << std::endl
-                  << "step:      " << step       << std::endl
-                  << "sampling:  " << Ts         << std::endl
-                  << "resolution:" << resolution << std::endl
+        std::cout << "Selfile:    " << fnSel       << std::endl
+                  << "Output:     " << fnOut       << std::endl
+                  << "S:          " << S           << std::endl
+                  << "DictSize:   " << dictSize    << std::endl
+                  << "patchSize:  " << patchSize   << std::endl
+                  << "step:       " << step        << std::endl
+                  << "sampling:   " << Ts          << std::endl
+                  << "resolution1:" << resolution1 << std::endl
+                  << "resolution2:" << resolution2 << std::endl
         ;
 
         // Define variables
@@ -169,8 +226,8 @@ int main(int argc, char *argv[])
         while (!SF.eof())
         {
             FileName fnPDB=SF.NextImg();
-            extractTrainingPatches(fnPDB, patchSize, step, Ts, resolution,
-                training);
+            extractTrainingPatches(fnPDB, patchSize, step, Ts, resolution1,
+                resolution2, training);
         }
         
         // Initialize the dictionary at random
@@ -182,8 +239,8 @@ int main(int argc, char *argv[])
         
         // Fill the first column to DC
         D(0,0)=1/sqrt(N);
-        for (int j=1; j<N; j++) D(j,0)=D(0,0);
-        
+        for (int j=0; j<N; j++) D(j,0)=D(0,0);
+
         // Fill the rest of columns chosing one of the data samples randomly
         for (int d=1; d<dictSize; d++)
         {
@@ -198,18 +255,19 @@ int main(int argc, char *argv[])
                 D(j,d)=training[selected](j)*inorm;
         }
         used.clear();
-        
+
         // Now optimize the dictionary
         std::vector< Matrix1D<double> > Alpha;
         std::cout << "Learning dictionary ...\n";
-        kSVD(training, S, D, Alpha);
-        
+        kSVD(training, S, D, Alpha, true);
+
         // Write the dictionary
         std::ofstream fhOut;
         fhOut.open(fnOut.c_str());
         if (!fhOut)
             REPORT_ERROR(1,(std::string)"Cannot open "+fnOut+" for output");
-        fhOut << S << " " << dictSize << " " << N << std::endl << D;
+        fhOut << S << " " << dictSize << " " << N << " " << patchSize
+              << std::endl << D << std::endl;
         fhOut.close();
     }
     catch (Xmipp_error XE)
