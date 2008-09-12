@@ -145,7 +145,7 @@ void computeAffineTransformation(const Matrix2D<double> &I1,
     const Matrix2D<double> &I2, int maxShift, int maxIterDE,
     const FileName &fn_affine, 
     Matrix2D<double> &A12, Matrix2D<double> &A21, bool show,
-    double thresholdAffine)
+    double thresholdAffine, bool localAffine)
 {
     // Set images
     AffineFitness::I1=I1;
@@ -193,36 +193,37 @@ void computeAffineTransformation(const Matrix2D<double> &I1,
 	std::cout << "A12\n" << A12 << "A21\n" << A21 << std::endl;
     } else {
         // Optimize with differential evolution
-        #define REALLY_OPTIMIZE
-        #ifdef REALLY_OPTIMIZE
         Matrix1D<double> A(6);
-        double bestEnergy=2, energy;
-        int n=0;
-        do
+        if (!localAffine)
         {
-            AffineSolver solver(6,6*10);
-            solver.Setup(MULTIDIM_ARRAY(AffineFitness::minAllowed),
-                         MULTIDIM_ARRAY(AffineFitness::maxAllowed),
-		         stBest2Bin, 0.5, 0.8);
-            solver.Solve(maxIterDE);
-            energy=solver.Energy();
-            if (n==0 || bestEnergy>energy)
+            double bestEnergy=2, energy;
+            int n=0;
+            do
             {
-                FOR_ALL_ELEMENTS_IN_MATRIX1D(A)
-                   A(i)=solver.Solution()[i];
-                bestEnergy=energy;
-            }
-            n++;
-        } while ((n<3 || (n>=3 && n<10 && bestEnergy>1-thresholdAffine))
-                 && bestEnergy>=0.07);
-        #else
-        Matrix1D<double> A(6);
-        A(0)=A(3)=1;
-        double tx, ty;
-        best_shift(I1,I2,tx,ty);
-        A(4)=-tx;
-        A(5)=-ty;
-        #endif
+                AffineSolver solver(6,6*10);
+                solver.Setup(MULTIDIM_ARRAY(AffineFitness::minAllowed),
+                             MULTIDIM_ARRAY(AffineFitness::maxAllowed),
+		             stBest2Bin, 0.5, 0.8);
+                solver.Solve(maxIterDE);
+                energy=solver.Energy();
+                if (n==0 || bestEnergy>energy)
+                {
+                    FOR_ALL_ELEMENTS_IN_MATRIX1D(A)
+                       A(i)=solver.Solution()[i];
+                    bestEnergy=energy;
+                }
+                n++;
+            } while ((n<3 || (n>=3 && n<10 && bestEnergy>1-thresholdAffine))
+                     && bestEnergy>=0.07);
+        }
+        else
+        {
+            A(0)=A(3)=1;
+            double tx, ty;
+            best_shift(I1,I2,tx,ty);
+            A(4)=-tx;
+            A(5)=-ty;
+        }
 
         // Optimize with Powell
         Matrix1D<double> steps(A);
@@ -263,6 +264,7 @@ void Prog_tomograph_alignment::read(int argc, char **argv) {
    fnRoot=getParameter(argc,argv,"-oroot","");
    if (fnRoot=="")
       fnRoot=fnSel.without_extension();
+   localAffine=checkParameter(argc,argv,"-localAffine");
    seqLength=textToInteger(getParameter(argc,argv,"-seqLength","5"));
    maxStep=textToInteger(getParameter(argc,argv,"-maxStep","4"));
    gridSamples=textToInteger(getParameter(argc,argv,"-gridSamples","40"));
@@ -281,6 +283,7 @@ void Prog_tomograph_alignment::show() {
    std::cout << "Input images:       " << fnSel              << std::endl
              << "Original images:    " << fnSelOrig          << std::endl
              << "Output rootname:    " << fnRoot             << std::endl
+             << "Local affine:       " << localAffine        << std::endl
              << "SeqLength:          " << seqLength          << std::endl
              << "MaxStep:            " << maxStep            << std::endl
              << "Grid samples:       " << gridSamples        << std::endl
@@ -301,6 +304,7 @@ void Prog_tomograph_alignment::usage() const {
              << "   -i <selfile>                   : Input images\n"
              << "  [-iorig <selfile>]              : Selfile with images at original scale\n"
              << "  [-oroot <fn_out>]               : Output alignment\n"
+             << "  [-localAffine]                  : Look for affine transformations close to I\n"
              << "  [-seqLength <n=5>]              : Sequence length\n"
              << "  [-maxStep <step=4>]             : Maximum step for chain refinement\n"
              << "  [-gridSamples <n=40>]           : Total number of samples=n*n\n"
@@ -420,7 +424,7 @@ void Prog_tomograph_alignment::generateLandmarkSet() {
                                 maxIterDE,
                                 (std::string)"affine_"+integerToString(jj,3)+
                                 "_"+integerToString(jj+1,3)+".txt", Aij, Aji,
-                                showAffine, thresholdAffine);
+                                showAffine, thresholdAffine, localAffine);
                             affineTransformations[jj][jj+1]=Aij;
 	                    affineTransformations[jj+1][jj]=Aji;
                         }
@@ -461,7 +465,7 @@ void Prog_tomograph_alignment::generateLandmarkSet() {
                                 maxIterDE,
                                 (std::string)"affine_"+integerToString(jj-1,3)+
                                 "_"+integerToString(jj,3)+".txt", Aij, Aji,
-                                showAffine, thresholdAffine);
+                                showAffine, thresholdAffine, localAffine);
                             affineTransformations[jj-1][jj]=Aij;
 	                    affineTransformations[jj][jj-1]=Aji;
                         }

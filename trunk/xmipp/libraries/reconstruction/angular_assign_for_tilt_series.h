@@ -72,6 +72,9 @@ public:
     /// Output root
     FileName fnRoot;
    
+    /// Look for local affine transformation
+    bool localAffine;
+   
     /// Sequence Length
     int seqLength;
 
