@@ -59,6 +59,7 @@ void Prog_mlf_tomo_prm::read(int argc, char **argv)
     dont_recalc_fftw = checkParameter(argc, argv, "-dont_recalc_fftw");
     use_tom_conventions = checkParameter(argc, argv, "-tom_conventions");
     do_impute = !checkParameter(argc, argv, "-dont_impute");
+    do_ravg_sigma = checkParameter(argc, argv, "-ravg");
 
     ang= textToFloat(getParameter(argc, argv, "-ang", "0"));
 }
@@ -97,6 +98,15 @@ void Prog_mlf_tomo_prm::show()
         {
             std::cerr << "  -> Do not update sigma-estimate of noise." << std::endl;
         }
+        if (!do_impute)
+        {
+            std::cerr << "  -> Do not use imputation EM-agorithm." << std::endl;
+        }
+        if (do_ravg_sigma)
+        {
+            std::cerr << "  -> Radial average the sigma estimates." << std::endl;
+        }
+
         std::cerr << " -----------------------------------------------------------------" << std::endl;
     }
 
@@ -794,6 +804,7 @@ void Prog_mlf_tomo_prm::calculateAllFFTWs()
             if (fn_mask != "")
                 vol() *= mask();
             ave() += vol();
+
             forwfftw.SetPoints(MULTIDIM_ARRAY(vol()));
             forwfftw.Transform();
             forwfftw.Normalize();
@@ -1339,8 +1350,11 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
                 ave[i] = 0.;
             }
         }
+
         // If I am not imputing, then just taking a radial average here will go WRONG!!
-        forwfftw.fftwRadialAverage(ave, sigma_noise[ig], radial_count, true, true);
+        if (do_ravg_sigma) 
+            forwfftw.fftwRadialAverage(ave, sigma_noise[ig], radial_count, true, true);
+
         // Now store again in dataSigma structure
         for (int i = 0, ii=0; i< fftw_hsize; i++)
             if (is_in_range[i]) 
@@ -1348,6 +1362,7 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
                 dataSigma[ig * hsize + ii] = 2. * ave[i]; // Store again TWO SIGMA^2
                 ii++;
             }
+
     }
 
     // Apply regularisation

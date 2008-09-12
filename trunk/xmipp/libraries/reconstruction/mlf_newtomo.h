@@ -112,6 +112,9 @@ public:
     double ang;
     xmippFftw forwfftw, backfftw;
 
+    /* Perform radial averaging on sigma estimates */
+    bool do_ravg_sigma;
+
     //// DEBUGGING
     bool debug;
 
