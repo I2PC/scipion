@@ -44,22 +44,25 @@ void Prog_mlf_tomo_prm::read(int argc, char **argv)
     fn_ref = getParameter(argc, argv, "-ref", "");
     //fn_sym = getParameter(argc, argv, "-sym", "");
     fn_root = getParameter(argc, argv, "-o", "out");
-    Niter = textToInteger(getParameter(argc, argv, "-iter", "100"));
+    Niter = textToInteger(getParameter(argc, argv, "-iter", "25"));
     istart = textToInteger(getParameter(argc, argv, "-istart", "1"));
     fix_fractions = checkParameter(argc, argv, "-fix_fractions");
     fix_sigma_noise = checkParameter(argc, argv, "-fix_sigma_noise");
     verb = textToInteger(getParameter(argc, argv, "-verb", "1"));
-    highres = textToFloat(getParameter(argc, argv, "-highres", "0.5"));
+    highres = textToFloat(getParameter(argc, argv, "-highres", "0.45"));
     lowres = textToFloat(getParameter(argc, argv, "-lowres", "0.02"));
     debug = checkParameter(argc, argv, "-debug");
-    reg0 = textToFloat(getParameter(argc, argv, "-reg0", "0"));
+    reg0 = textToFloat(getParameter(argc, argv, "-reg0", "0.99"));
     regF = textToFloat(getParameter(argc, argv, "-regF", "0"));
-    reg_steps = textToInteger(getParameter(argc, argv, "-steps", "10"));
+    reg_steps = textToInteger(getParameter(argc, argv, "-steps", "5"));
     eps =  textToFloat(getParameter(argc, argv, "-eps", "0"));
     dont_recalc_fftw = checkParameter(argc, argv, "-dont_recalc_fftw");
     use_tom_conventions = checkParameter(argc, argv, "-tom_conventions");
     do_impute = !checkParameter(argc, argv, "-dont_impute");
     do_ravg_sigma = checkParameter(argc, argv, "-ravg");
+    do_som = checkParameter(argc, argv, "-som");
+    som_xdim = textToInteger(getParameter(argc, argv, "-xdim", "5"));
+    som_ydim = textToInteger(getParameter(argc, argv, "-ydim", "4"));
 
     ang= textToFloat(getParameter(argc, argv, "-ang", "0"));
 }
@@ -119,6 +122,7 @@ void Prog_mlf_tomo_prm::usage()
     std::cerr << "   -i <selfile>                : Selfile with the input sub-tomograms \n";
     std::cerr << "   -nref <int>                 : Number of references to generate automatically (recommended)\n";
     std::cerr << "   OR -ref <selfile/volume>         OR selfile with initial references/single reference image \n";
+    std::cerr << "   OR -som -xdim <int> -ydim <int>  OR self-organizing map of given dimensions \n";
     std::cerr << " [ -prior <volume> ]           : Name for prior map (only relevant for -nref option) \n";
     std::cerr << " [ -o <rootname=\"out\"> ]       : Output rootname \n";
     std::cerr << " [ -doc <docfile>]             : Docfile with angles, offsets and wedge information \n";
@@ -175,7 +179,16 @@ void Prog_mlf_tomo_prm::produceSideInfo()
             SFr.read(fn_ref);
             nr_ref = SFr.ImgNo();
         }
-    }        
+    }     
+    else if (do_som)
+    {
+        nr_ref = som_xdim * som_ydim;
+    }
+    else if (nr_ref <= 0)
+        REPORT_ERROR(1,"Please provide either -ref, -nref or -som");
+
+    // Initialize regularization matrix
+    initializeRegularizationMatrix();
 
     // Read SymList
     //if (fn_sym!="") 
@@ -268,8 +281,7 @@ void Prog_mlf_tomo_prm::produceSideInfo()
         SFi = SFtmp;
     }
 
-    // Regularisation (from reg0 to regF in steps linear steps)
-    delta_reg = (reg0 - regF) / (reg_steps - 1);
+    // Initialize reg
     reg = reg0;
 
 #ifdef DEBUG
@@ -277,6 +289,49 @@ void Prog_mlf_tomo_prm::produceSideInfo()
 #endif
 
 }
+
+void Prog_mlf_tomo_prm::initializeRegularizationMatrix()
+{
+    som_reg_matrix.resize(nr_ref,nr_ref);
+    som_reg_matrix.initZeros();
+    if (do_som)
+    {
+        for (int iref1=0; iref1<nr_ref; iref1++)
+        {
+            int x1 = iref1%som_xdim;
+            int y1 = (iref1 - x1)/som_xdim;
+            int count = 0;
+            for (int iref2=0; iref2<nr_ref; iref2++)
+            {
+                int x2 = iref2%som_xdim;
+                int y2 = (iref2 - x2)/som_xdim;
+                int r2 = (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
+                if (r2 <= 1)
+                {
+                    dMij(som_reg_matrix,iref1,iref2) = 1.;
+                    count++;
+                }
+            }
+            for (int iref2=0; iref2<nr_ref; iref2++)
+            {
+                dMij(som_reg_matrix,iref1,iref2) /= (double)count;
+            }
+        }
+    }
+    else
+    {
+        for (int iref1=0; iref1<nr_ref; iref1++)
+            for (int iref2=0; iref2<nr_ref; iref2++)
+                if (iref1 != iref2)
+                    dMij(som_reg_matrix,iref1,iref2) = 1./(double)(nr_ref-1);
+    }
+
+#ifdef DEBUG_REG_MATRIX
+    std::cerr<<"Regularization matrix= "<<som_reg_matrix<<std::endl;
+#endif
+
+}
+
 
 void Prog_mlf_tomo_prm::produceSideInfo2()
 {
@@ -915,25 +970,6 @@ void Prog_mlf_tomo_prm::estimateInitialNoiseSpectra(double * dataSigma)
                 dataSigma[ig * hsize + ii] = 2. * ave[i]; // Store already TWO SIGMA^2
                 ii++;
             }
-
-        /*
-        // Write sigma spectra to disc
-        fn = fn_root + "_it";
-        fn.compose(fn, istart - 1, "");
-        if (nr_group > 1) 
-        {
-            fn.compose(fn+"_gr", ig + 1, "");
-        }
-        fn += ".noise";
-        fh.open((fn).c_str(), std::ios::out);
-        if (!fh) REPORT_ERROR(1, (std::string)"Error: Cannot write file: " + fn);
-        for (int irr = 0; irr < XSIZE(sigma_noise[ig]); irr++)
-        {
-            fh << (double)irr/Xdim << " " << dVi(sigma_noise[ig], irr) << "\n";
-        }
-        fh.close();
-        */
-
     }
 
 #ifdef DEBUG
@@ -1386,15 +1422,18 @@ void Prog_mlf_tomo_prm::regularise(double * dataRefs,
     std::cerr<<"start regularise"<<std::endl;
 #endif
 
+    // Do a kerdenSOM like regularization (see Pascual et al., JSB, 2001)
     if (reg > 0.)
     {
         double * regRef, *regSigma;
-        double reg_norm = reg * nr_imgs / (nr_ref * nr_ref);
+        // ??? Divide by nr_ref*nr_ref??
+        //double reg_norm = reg * nr_imgs / (nr_ref * nr_ref);
+        double reg_norm = reg * nr_imgs / nr_ref;
         std::complex<double> * REGREF, * DATAREFS;
         try
         {
-            regRef = new double [size];
-            regSigma = new double [hsize];
+            regRef = new double [nr_ref * size];
+            regSigma = new double [nr_ref * hsize];
         }
         catch (std::bad_alloc&)
         {
@@ -1402,44 +1441,60 @@ void Prog_mlf_tomo_prm::regularise(double * dataRefs,
         }
         REGREF = (std::complex<double> *)regRef;
         DATAREFS = (std::complex<double> *)dataRefs;
-        for (int i=0; i< size; i++)
+        // Initialize
+        for (int i=0; i< nr_ref * size; i++)
             regRef[i] = 0.; 
-        for (int i=0; i< hsize; i++)
+        for (int i=0; i< nr_ref * hsize; i++)
             regSigma[i] = 0.; 
 
-        // First, calculate average of updated references and the qsuared distance between them
+        // First, calculate averages of updated references and the squared distance between them
         for (int refno = 0; refno < nr_ref; refno++)
         {
-            for (int i=0; i< size; i++)
-                regRef[i] += dataRefs[refno*size + i];
-            for (int refno_b = 0; refno_b < nr_ref; refno_b++)
-                if (refno != refno_b)
+            for (int refno2 = 0; refno2 < nr_ref; refno2++)
+            {
+                if (refno != refno2)
+                {
+                    for (int i=0; i< size; i++)
+                        regRef[refno*size + i] += dMij(som_reg_matrix,refno,refno2) * dataRefs[refno2*size + i];
+                        
                     for (int i=0; i< hsize; i++)
                     {
-                        double aux = abs(DATAREFS[refno*hsize + i] - DATAREFS[refno_b*hsize + i]);
-                        regSigma[i] += aux*aux;
+                        double aux = abs(DATAREFS[refno*hsize + i] - DATAREFS[refno2*hsize + i]);
+                        regSigma[refno*hsize + i] += dMij(som_reg_matrix,refno,refno2) * aux*aux;
                     }
+                }
+            }
         }
 
         // Then, update the references
         for (int refno = 0; refno < nr_ref; refno++)
+        {
+            double sumw = alpha_k[refno] * nr_imgs;
+//#define DEBUG_REGULARISE
+#ifdef DEBUG_REGULARISE
+            std::cerr<<"refno= "<<refno<<" sumw = "<<sumw<<" reg_norm= "<<reg_norm<<" data11= "<<DATAREFS[refno * hsize + 11]<<" reg11= "<<REGREF[refno * hsize + 11];
+#endif
             for (int i = 0; i < hsize; i++)
             {
                 int ii = refno * hsize + i;
-                double sumw = alpha_k[refno] * nr_imgs;
-                DATAREFS[ii] = DATAREFS[ii] * sumw + reg_norm * REGREF[i];
-                DATAREFS[ii] /= sumw + reg_norm * nr_ref;
+                DATAREFS[ii] = DATAREFS[ii] * sumw + reg_norm * REGREF[ii];
+                DATAREFS[ii] /= sumw + reg_norm;
             }
-
+#ifdef DEBUG_REGULARISE
+            std::cerr<<" reged= "<<DATAREFS[refno * hsize + 11]<<std::endl;
+#endif
+        }
         // and the noise spectra
         for (int ig = 0; ig < nr_group; ig++)
-            //reg_norm = reg * nr_imgs_per_group(ig) / (nr_ref * nr_ref);
             for (int i = 0; i < hsize; i++)
+            {
                 //int ii = ig * hsize + i;
                 //double sumw = nr_imgs_per_group(ig);
                 //dataSigma[ii] = dataSigma[ii] * sumw + reg_norm * regSigma[i];
                 //dataSigma[ii] /= sumw;
-                dataSigma[ig * hsize + i] += (reg_norm / nr_imgs) * regSigma[i];
+                int ii = ig * hsize + i;
+                dataSigma[ii] += (reg_norm / nr_imgs) * regSigma[ii];
+            }
     }
 
 #ifdef DEBUG

@@ -92,7 +92,7 @@ public:
     /** Number of groups (e.g. one group for each tomogram) */
     int nr_group;
     /** Regularisation constants */
-    double reg0, regF, reg_steps, reg, delta_reg;
+    double reg0, regF, reg_steps, reg;
     /** Convergence criterium */
     double eps;
     /** Perform imputation */
@@ -115,8 +115,16 @@ public:
     /* Perform radial averaging on sigma estimates */
     bool do_ravg_sigma;
 
+    /* kerdenSOM-like regularization */
+    bool do_som;
+    /* Organization of the SOM */
+    Matrix2D<double> som_reg_matrix;
+    /* Size of the SOM */
+    int som_xdim, som_ydim;
+
     //// DEBUGGING
     bool debug;
+
 
 public:
 
@@ -134,6 +142,9 @@ public:
 
     /// splitted SF-INdependent side-info calculations
     void produceSideInfo();
+
+    /// Initialize regularization matrix
+    void initializeRegularizationMatrix();
 
     /// splitted SF-dependent side-info calculations
     void produceSideInfo2();

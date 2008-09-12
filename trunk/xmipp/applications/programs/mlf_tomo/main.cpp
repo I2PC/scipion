@@ -91,7 +91,7 @@ int main(int argc, char **argv)
         prm.generateInitialReferences(dataRefs, dataWsumWedsPerRef);
         prm.estimateInitialNoiseSpectra(dataSigma);
         prm.regularise(dataRefs, dataSigma);
-        prm.writeOutputFiles(0,0,dataRefs,dataWsumWedsPerRef,DFo,sumw_allrefs,LL,avePmax);
+        prm.writeOutputFiles(0,-1,dataRefs,dataWsumWedsPerRef,DFo,sumw_allrefs,LL,avePmax);
 
         // Loop over all regularization steps
         for (int step = 1; step <= prm.reg_steps; step++)
@@ -136,15 +136,6 @@ int main(int argc, char **argv)
                                  sumw_allrefs, 
                                  avePmax);
 
-                prm.writeOutputFiles(step, 
-                                     iter, 
-                                     dataRefs,
-                                     dataWsumWedsPerRef,
-                                     DFo,
-                                     sumw_allrefs, 
-                                     LL, 
-                                     avePmax);
-
 
                 if (prm.checkConvergence(dataRefs,
                                          oldDataRefs) )
@@ -154,6 +145,15 @@ int main(int argc, char **argv)
 
             } // end loop iterations
             if (prm.verb > 0) progress_bar(prm.Niter);
+
+            prm.writeOutputFiles(step, 
+                                 -1,
+                                 dataRefs,
+                                 dataWsumWedsPerRef,
+                                 DFo,
+                                 sumw_allrefs, 
+                                 LL, 
+                                 avePmax);
 
             // linear decrease of regularisation parameter
             //prm.reg -= prm.delta_reg;
