@@ -488,8 +488,8 @@ void quadraticProgramming(const Matrix2D<double> &C, const Matrix1D<double> &d,
    Solves the least square problem
 
   min 0.5*(Norm(C*x-d))   subject to:  A*x <= b
-   x                                Aeq*x=beq
-                                bl<=x<=bu
+   x                                   Aeq*x=beq
+                                       bl<=x<=bu
 **************************************************************************/
 void leastSquare(const Matrix2D<double> &C, const Matrix1D<double> &d,
             const Matrix2D<double> &A,   const Matrix1D<double> &b,
@@ -508,4 +508,50 @@ void leastSquare(const Matrix2D<double> &C, const Matrix1D<double> &d,
     P.toVector(newd);
 
     quadraticProgramming(C.transpose()*C, newd, A, b, Aeq, beq, bl, bu, x);    
+}
+
+/* Regularized least squares ----------------------------------------------- */
+void regularizedLeastSquare(const Matrix2D< double >& A,
+    const Matrix1D< double >& d, double lambda,
+    const Matrix2D< double >& G, Matrix1D< double >& x)
+{
+    int Nd=YSIZE(A); // Number of data samples
+    int Nx=XSIZE(A); // Number of variables
+
+    Matrix2D<double> X(Nx,Nx); // X=(A^t * A +lambda *G^t G)
+    // Compute A^t*A
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(X)
+        // Compute the dot product of the i-th and j-th columns of A
+        for (int k=0; k<YSIZE(A); k++)
+            DIRECT_MAT_ELEM(X,i,j)+=
+                DIRECT_MAT_ELEM(A,k,i)*DIRECT_MAT_ELEM(A,k,j);
+
+    // Compute lambda*G^t*G
+    if (XSIZE(G)==0)
+        for (int i=0; i<Nx; i++)
+            DIRECT_MAT_ELEM(X,i,i)+=lambda;
+    else
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(X)
+            // Compute the dot product of the i-th and j-th columns of G
+            for (int k=0; k<YSIZE(G); k++)
+                DIRECT_MAT_ELEM(X,i,j)+=
+                    DIRECT_MAT_ELEM(G,k,i)*DIRECT_MAT_ELEM(G,k,j);
+
+    // Compute A^t*d
+    Matrix1D<double> Atd(Nx);
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(Atd)
+        // Compute the dot product of the i-th column of A and d
+        for (int k=0; k<YSIZE(A); k++)
+            DIRECT_VEC_ELEM(Atd,i)+=
+                DIRECT_MAT_ELEM(A,k,i)*DIRECT_VEC_ELEM(d,k);
+
+    // Compute the inverse of X
+    Matrix2D<double> Xinv;
+    X.inv(Xinv);
+
+    // Now multiply Xinv * A^t * d
+    x.initZeros(Nx);
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(Xinv)
+        DIRECT_VEC_ELEM(x,i)+=DIRECT_MAT_ELEM(Xinv,i,j)*
+            DIRECT_VEC_ELEM(Atd,j);
 }

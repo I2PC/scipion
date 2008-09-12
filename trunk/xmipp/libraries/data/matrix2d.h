@@ -2786,6 +2786,20 @@ void leastSquare(const Matrix2D< double >& C, const Matrix1D< double >& d,
             Matrix1D< double >& bl, Matrix1D< double >& bu,
             Matrix1D< double >& x);
 
+/** Solves the regularized least squares problem
+ * @ingroup MatricesMisc
+ *
+ * @code
+ * min Norm(A*x-d) + lambda * norm (G*x) 
+ * @endcode
+ *
+ * Give an empty G matrix (NULL matrix) if G is the identity matrix
+ * If AtA is not a NULL matrix, then the product AtA is not computed.
+ */
+void regularizedLeastSquare(const Matrix2D< double >& A,
+    const Matrix1D< double >& d, double lambda,
+    const Matrix2D< double >& G, Matrix1D< double >& x);
+
 /// Show matrix
 template<typename T>
 std::ostream& operator<<(std::ostream& ostrm, const Matrix2D<T>& v)
