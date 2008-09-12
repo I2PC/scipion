@@ -30,7 +30,8 @@
 #include <fstream>
 
 double projectOntoDictionary(const Matrix2D<double> &D, 
-    double lambda, int S, bool restore, int patchSize,
+    double lambda, int S, double lambdaDictionary,
+    bool restore, int patchSize,
     Matrix3D<double> &Vin, Matrix3D<double> &Vout)
 {
     // Some initialization
@@ -38,6 +39,23 @@ double projectOntoDictionary(const Matrix2D<double> &D,
     Vout.initZeros(Vin);
     Matrix3D<double> Weight;
     Weight=Vout;
+
+    // Check if LASSO
+    Matrix2D<double> DtD, DtDlambda, DtDlambdaInv;
+    if (S==0)
+    {
+        int K=XSIZE(D);
+        DtD.initZeros(K,K);
+        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(DtD)
+            // Compute the dot product between the columns i and j of D
+            for (int k=0; k<YSIZE(D); k++)
+                DIRECT_MAT_ELEM(DtD,i,j)+=
+                    DIRECT_MAT_ELEM(D,k,i)*DIRECT_MAT_ELEM(D,k,j);
+        DtDlambda=DtD;
+        for (int i=0; i<K; i++)
+            DIRECT_MAT_ELEM(DtDlambda,i,i)+=lambda;
+        DtDlambda.inv(DtDlambdaInv);
+    }
 
     // Separate the two dictionaries
     Matrix2D<double> D1, D2;
@@ -121,7 +139,8 @@ double projectOntoDictionary(const Matrix2D<double> &D,
                     DIRECT_VEC_ELEM(v1,idx)-=avg1;
 
                 // Project this vector onto the dictionary
-                orthogonalMatchingPursuit(v1,D,S,alpha);
+                if (S!=0) orthogonalMatchingPursuit(v1,D,S,alpha);
+                else lasso(v1,D,DtD,DtDlambdaInv,lambdaDictionary,alpha);
                 vp1.initZeros(); // vp1=D1*alpha
                 for (int j=0; j<XSIZE(D); j++)
                     if (DIRECT_VEC_ELEM(alpha,j)!=0)
@@ -242,7 +261,8 @@ int main(int argc, char *argv[])
         if (!fhDict)
             REPORT_ERROR(1,(std::string)"Cannot open "+fnDict+" for output");
         int S, dictSize, N;
-        fhDict >> S >> dictSize >> N >> patchSize;
+        double lambdaDictionary;
+        fhDict >> S >> lambdaDictionary >> dictSize >> N >> patchSize;
         Matrix2D<double> D;
         D.resize(N,dictSize);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(D)
@@ -255,8 +275,8 @@ int main(int argc, char *argv[])
         
         // Project the volume
         VolumeXmipp Vout;
-        double error=projectOntoDictionary(D,lambda,S,restore, patchSize,
-            Vin(),Vout());
+        double error=projectOntoDictionary(D,lambda,S,lambdaDictionary,
+            restore, patchSize, Vin(),Vout());
         std::cout << "Projection error= " << error << std::endl;
         
         // And write results

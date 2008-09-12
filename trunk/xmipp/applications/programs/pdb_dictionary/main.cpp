@@ -184,44 +184,55 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
 
 int main(int argc, char *argv[])
 {
-    FileName fnSel;    // Selfile with the PDBs
-    FileName fnOut;    // Name of the dictionary
-    int S;             // Number of allowed atoms for a patch
-    int dictSize;      // Number of atoms in the dictionary
-    int patchSize;     // Size of the window centered at a voxel
-    int step;          // Step between patches
-    double Ts;         // Sampling rate
-    double resolution1;// Final resolution
-    double resolution2;// Restoration resolution
-    bool initRandom;   // Initalize randomly the dictionary
+    FileName fnSel;      // Selfile with the PDBs
+    FileName fnOut;      // Name of the dictionary
+    int S;               // Number of allowed atoms for a patch (OMP)
+    double lambda;       // Regularization parameter (LASSO)
+    int dictSize;        // Number of atoms in the dictionary
+    int patchSize;       // Size of the window centered at a voxel
+    int step;            // Step between patches
+    double Ts;           // Sampling rate
+    double resolution1;  // Final resolution
+    double resolution2;  // Restoration resolution
+    bool initRandom;     // Initalize randomly the dictionary
+    int projectionMethod;// Projection method
     // Read Parameters
     try
     {
         fnSel = getParameter(argc,argv,"-sel");
         fnOut = getParameter(argc,argv,"-o");
         S = textToInteger(getParameter(argc,argv,"-S","3"));
+        lambda = textToFloat(getParameter(argc,argv,"-l","0.2"));
         dictSize = textToInteger(getParameter(argc,argv,"-dictSize","400"));
         patchSize = textToInteger(getParameter(argc,argv,"-patchSize","5"));
-        step = textToInteger(getParameter(argc,argv,"-patchSize","2"));
+        step = textToInteger(getParameter(argc,argv,"-step","2"));
         Ts = textToFloat(getParameter(argc,argv,"-sampling","2"));
         resolution1 = textToFloat(getParameter(argc,argv,"-resolution1","10"));
         resolution2 = textToFloat(getParameter(argc,argv,"-resolution2"," 7"));
         initRandom = checkParameter(argc,argv,"-initRandom");
+        projectionMethod = textToInteger(getParameter(argc,argv,
+            "-projectionMethod","1"));
+        if (projectionMethod==LASSO_PROJECTION) S=0;
+        else lambda=0;
     }
     catch (Xmipp_error &XE)
     {
         std::cout << XE;
         std::cout << "Usage: xmipp_pdb_dictionary\n"
-                  << "    -sel <selfile>      : Set of PDB files\n"
-                  << "    -o <dictionary>     : Name of the dictionary\n"
-                  << "   [-S <S=3>]           : Number of allowed atoms\n"
-                  << "   [-dictSize <N=400>]  : Size of the dictionary\n"
-                  << "   [-patchSize <W=5>]   : Size of the patch around a voxel\n"
-                  << "   [-step <s=2>]        : Distance between learning patches\n"
-                  << "   [-sampling <Ts=2>]   : Sampling rate in Angstroms/pixel\n"
-                  << "   [-resolution1 <A=10>]: Final resolution in Angstroms\n"
-                  << "   [-resolution2 <A=7>] : Restoration resolution in Angstroms\n"
-                  << "   [-initRandom]        : Initialize the dictionary randomly\n"
+                  << "    -sel <selfile>          : Set of PDB files\n"
+                  << "    -o <dictionary>         : Name of the dictionary\n"
+                  << "   [-S <S=3>]               : Number of allowed atoms (OMP)\n"
+                  << "   [-l <l=0.2>]             : Sparsity regularization weight (LASSO)\n"
+                  << "   [-dictSize <N=400>]      : Size of the dictionary\n"
+                  << "   [-patchSize <W=5>]       : Size of the patch around a voxel\n"
+                  << "   [-step <s=2>]            : Distance between learning patches\n"
+                  << "   [-sampling <Ts=2>]       : Sampling rate in Angstroms/pixel\n"
+                  << "   [-resolution1 <A=10>]    : Final resolution in Angstroms\n"
+                  << "   [-resolution2 <A=7>]     : Restoration resolution in Angstroms\n"
+                  << "   [-initRandom]            : Initialize the dictionary randomly\n"
+                  << "   [-projectionMethod <m=1>]: Projection method\n"
+                  << "                              1=OMP\n"
+                  << "                              2=LASSO\n"
         ;
         exit(1);
     }
@@ -230,16 +241,18 @@ int main(int argc, char *argv[])
     try
     {
         // Show parameters
-        std::cout << "Selfile:    " << fnSel       << std::endl
-                  << "Output:     " << fnOut       << std::endl
-                  << "S:          " << S           << std::endl
-                  << "DictSize:   " << dictSize    << std::endl
-                  << "patchSize:  " << patchSize   << std::endl
-                  << "step:       " << step        << std::endl
-                  << "sampling:   " << Ts          << std::endl
-                  << "resolution1:" << resolution1 << std::endl
-                  << "resolution2:" << resolution2 << std::endl
-                  << "initRandom: " << initRandom  << std::endl
+        std::cout << "Selfile:         " << fnSel            << std::endl
+                  << "Output:          " << fnOut            << std::endl
+                  << "S:               " << S                << std::endl
+                  << "lambda:          " << lambda           << std::endl
+                  << "DictSize:        " << dictSize         << std::endl
+                  << "patchSize:       " << patchSize        << std::endl
+                  << "step:            " << step             << std::endl
+                  << "sampling:        " << Ts               << std::endl
+                  << "resolution1:     " << resolution1      << std::endl
+                  << "resolution2:     " << resolution2      << std::endl
+                  << "initRandom:      " << initRandom       << std::endl
+                  << "projectionMethod:" << projectionMethod << std::endl
         ;
 
         // Define variables
@@ -307,15 +320,15 @@ int main(int argc, char *argv[])
         // Now optimize the dictionary
         std::vector< Matrix1D<double> > Alpha;
         std::cout << "Learning dictionary ...\n";
-        kSVD(training, S, D, Alpha, false);
+        kSVD(training, S, D, Alpha, false, 20, 0.01, projectionMethod, lambda);
 
         // Write the dictionary
         std::ofstream fhOut;
         fhOut.open(fnOut.c_str());
         if (!fhOut)
             REPORT_ERROR(1,(std::string)"Cannot open "+fnOut+" for output");
-        fhOut << S << " " << dictSize << " " << N << " " << patchSize
-              << std::endl << D << std::endl;
+        fhOut << S << " " << " " << lambda << " " << dictSize << " " << N
+              << " " << patchSize << std::endl << D << std::endl;
         fhOut.close();
     }
     catch (Xmipp_error XE)
