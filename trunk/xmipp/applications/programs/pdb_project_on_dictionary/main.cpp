@@ -69,6 +69,8 @@ double projectOntoDictionary(const Matrix2D<double> &D,
     // Extract the training vectors from the volume
     int N1=patchSize;
     int N0=patchSize;
+    int N0_3=N0*N0*N0;
+    int N1_3=N1*N1*N1;
     int L1=(patchSize-1)/2;
     int L0=(patchSize-1)/2;
     double error=0, Nerror=0;
@@ -86,20 +88,38 @@ double projectOntoDictionary(const Matrix2D<double> &D,
                 int j1=ROUND(j0/2.0);
                 
                 int idx=0;
+                double avg0=0;
                 // Copy the pixels at level 0
                 for (int kk=-L0; kk<=L0; kk++)
                     for (int ii=-L0; ii<=L0; ii++)
                         for (int jj=-L0; jj<=L0; jj++)
-                            DIRECT_VEC_ELEM(v1,idx++)=
+                        {
+                            DIRECT_VEC_ELEM(v1,idx)=
                                 DIRECT_VOL_ELEM(V0,k0+kk,i0+ii,j0+jj);
+                            avg0+=DIRECT_VEC_ELEM(v1,idx);
+                            idx++;
+                        }
+                avg0/=N0_3;
 
                 // Copy the pixels at level 1
+                double avg1=0;
                 for (int kk=-L1; kk<=L1; kk++)
                     for (int ii=-L1; ii<=L1; ii++)
                         for (int jj=-L1; jj<=L1; jj++)
-                            DIRECT_VEC_ELEM(v1,idx++)=
+                        {
+                            DIRECT_VEC_ELEM(v1,idx)=
                                 DIRECT_VOL_ELEM(V1,k1+kk,i1+ii,j1+jj);
+                            avg1+=DIRECT_VEC_ELEM(v1,idx);
+                            idx++;
+                        }
+                avg1/=N0_3;
                 
+                // Substract the mean
+                for (idx=0; idx<N0; idx++)
+                    DIRECT_VEC_ELEM(v1,idx)-=avg0;
+                for (idx=N0; idx<XSIZE(v1); idx++)
+                    DIRECT_VEC_ELEM(v1,idx)-=avg1;
+
                 // Project this vector onto the dictionary
                 orthogonalMatchingPursuit(v1,D,S,alpha);
                 vp1.initZeros(); // vp1=D1*alpha
@@ -109,6 +129,13 @@ double projectOntoDictionary(const Matrix2D<double> &D,
                             DIRECT_VEC_ELEM(vp1,i)+=
                                 DIRECT_MAT_ELEM(D,i,j)*
                                 DIRECT_VEC_ELEM(alpha,j);
+
+                // Add the mean
+                for (idx=0; idx<N0; idx++)
+                    DIRECT_VEC_ELEM(vp1,idx)+=avg0;
+                for (idx=N0; idx<XSIZE(vp1); idx++)
+                    DIRECT_VEC_ELEM(vp1,idx)+=avg1;
+
 /*
                 orthogonalMatchingPursuit(v1,D1,S,alpha);
                 vp1.initZeros(); // vp1=D1*alpha
@@ -129,6 +156,7 @@ double projectOntoDictionary(const Matrix2D<double> &D,
                                     DIRECT_VEC_ELEM(normD1,j);
                     }
 */                
+
                 // Measure the projection error
                 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(vp1)
                     error+=ABS(DIRECT_VEC_ELEM(v1,i)-DIRECT_VEC_ELEM(vp1,i));
