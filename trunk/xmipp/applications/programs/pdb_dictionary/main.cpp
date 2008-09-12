@@ -78,6 +78,8 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
     // Extract the training vectors from the volume
     int N1=patchSize;
     int N0=patchSize;
+    int N0_3=N0*N0*N0;
+    int N1_3=N1*N1*N1;
     int L1=(patchSize-1)/2;
     int L0=(patchSize-1)/2;
     Matrix1D<double> v(N1*N1*N1+N0*N0*N0);
@@ -94,19 +96,31 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
                 int j1=ROUND(j0/2.0);
                 
                 int idx=0;
+                double avg0=0;
                 // Copy the pixels at level 0
                 for (int kk=-L0; kk<=L0; kk++)
                     for (int ii=-L0; ii<=L0; ii++)
                         for (int jj=-L0; jj<=L0; jj++)
-                            DIRECT_VEC_ELEM(v,idx++)=
+                        {
+                            DIRECT_VEC_ELEM(v,idx)=
                                 DIRECT_VOL_ELEM(V0,k0+kk,i0+ii,j0+jj);
+                            avg0+=DIRECT_VEC_ELEM(v,idx);
+                            idx++;
+                        }
+                avg0/=N0_3;
 
                 // Copy the pixels at level 1
+                double avg1=0;
                 for (int kk=-L1; kk<=L1; kk++)
                     for (int ii=-L1; ii<=L1; ii++)
                         for (int jj=-L1; jj<=L1; jj++)
-                            DIRECT_VEC_ELEM(v,idx++)=
+                        {
+                            DIRECT_VEC_ELEM(v,idx)=
                                 DIRECT_VOL_ELEM(V1,k1+kk,i1+ii,j1+jj);
+                            avg1+=DIRECT_VEC_ELEM(v,idx);
+                            idx++;
+                        }
+                avg1/=N1_3;
 /*                
                 // Copy the pixels at level 0R
                 for (int kk=-L0; kk<=L0; kk++)
@@ -115,6 +129,13 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
                             DIRECT_VEC_ELEM(v,idx++)=
                                 DIRECT_VOL_ELEM(V0R,k0+kk,i0+ii,j0+jj);
 */
+
+                // Substract the mean
+                for (idx=0; idx<N0; idx++)
+                    DIRECT_VEC_ELEM(v,idx)-=avg0;
+                for (idx=N0; idx<XSIZE(v); idx++)
+                    DIRECT_VEC_ELEM(v,idx)-=avg1;
+
                 auxTraining.push_back(v);
                 energy.push_back(v.module());
                 if (energy[energy.size()-1]>bestEnergy)
@@ -172,6 +193,7 @@ int main(int argc, char *argv[])
     double Ts;         // Sampling rate
     double resolution1;// Final resolution
     double resolution2;// Restoration resolution
+    bool initRandom;   // Initalize randomly the dictionary
     // Read Parameters
     try
     {
@@ -184,6 +206,7 @@ int main(int argc, char *argv[])
         Ts = textToFloat(getParameter(argc,argv,"-sampling","2"));
         resolution1 = textToFloat(getParameter(argc,argv,"-resolution1","10"));
         resolution2 = textToFloat(getParameter(argc,argv,"-resolution2"," 7"));
+        initRandom = checkParameter(argc,argv,"-initRandom");
     }
     catch (Xmipp_error &XE)
     {
@@ -198,6 +221,7 @@ int main(int argc, char *argv[])
                   << "   [-sampling <Ts=2>]   : Sampling rate in Angstroms/pixel\n"
                   << "   [-resolution1 <A=10>]: Final resolution in Angstroms\n"
                   << "   [-resolution2 <A=7>] : Restoration resolution in Angstroms\n"
+                  << "   [-initRandom]        : Initialize the dictionary randomly\n"
         ;
         exit(1);
     }
@@ -215,6 +239,7 @@ int main(int argc, char *argv[])
                   << "sampling:   " << Ts          << std::endl
                   << "resolution1:" << resolution1 << std::endl
                   << "resolution2:" << resolution2 << std::endl
+                  << "initRandom: " << initRandom  << std::endl
         ;
 
         // Define variables
@@ -230,36 +255,59 @@ int main(int argc, char *argv[])
                 resolution2, training);
         }
         
-        // Initialize the dictionary at random
+        // Initialize the dictionary
         int N=XSIZE(training[0]);
         Matrix2D<double> D;
         D.initZeros(N,dictSize);
-        Matrix1D<int> used;
-        used.initZeros(training.size());
         
-        // Fill the first column to DC
-        D(0,0)=1/sqrt(N);
-        for (int j=0; j<N; j++) D(j,0)=D(0,0);
-
-        // Fill the rest of columns chosing one of the data samples randomly
-        for (int d=1; d<dictSize; d++)
+        if (!initRandom)
         {
-            int selected;
-            do
+            // Fill the columns chosing one of the data samples randomly
+            Matrix1D<int> used;
+            used.initZeros(training.size());
+            for (int d=0; d<dictSize; d++)
             {
-                selected=ROUND(rnd_unif(0,XSIZE(used)-1));
-            } while (used(selected));
-            used(selected)=1;
-            double inorm=1.0/training[selected].module();
-            for (int j=0; j<N; j++)
-                D(j,d)=training[selected](j)*inorm;
+                int selected;
+                do
+                {
+                    selected=ROUND(rnd_unif(0,XSIZE(used)-1));
+                } while (used(selected));
+                used(selected)=1;
+                double inorm=1.0/training[selected].module();
+                for (int j=0; j<N; j++)
+                    D(j,d)=training[selected](j)*inorm;
+            }
+            used.clear();
         }
-        used.clear();
+        else
+        {
+            D.initRandom(0,1,"gaussian");
+
+            // Normalize the dictionary
+            for (int j=0; j<XSIZE(D); j++)
+            {
+                // Make sure that the atoms are 0 mean
+                double avg=0;
+                for (int i=0; i<YSIZE(D); i++)
+                    avg+=D(i,j);
+                avg/=YSIZE(D);
+                for (int i=0; i<YSIZE(D); i++)
+                    D(i,j)-=avg;
+
+                // Make them unitary
+                double norm=0;
+                for (int i=0; i<YSIZE(D); i++)
+                    norm+=D(i,j)*D(i,j);
+                norm=1/sqrt(norm);
+                for (int i=0; i<YSIZE(D); i++)
+                    D(i,j)*=norm;
+            }
+        }
 
         // Now optimize the dictionary
         std::vector< Matrix1D<double> > Alpha;
         std::cout << "Learning dictionary ...\n";
-        kSVD(training, S, D, Alpha, true);
+        kSVD(training, S, D, Alpha, false);
 
         // Write the dictionary
         std::ofstream fhOut;
