@@ -222,26 +222,23 @@ private:
     float                      __ellipse_radius;
     int                        __ellipse_type;
 
+    FileName                   __modelRootName;
     bool                       __learn_particles_done;
     bool                       __autoselection_done;
     Mask_Params                __mask;
-    bool                       __use_background;
     Classification_model       __training_model;
     Classification_model       __training_loaded_model;
     Classification_model       __selection_model;
     Classification_model       __selection_model2;
     Classification_model       __selection_model3;
-    bool                       __use_euclidean_distance_for_errors;
     int                        __auto_label;
     Matrix2D<double>           __piece;
     Matrix2D<double>           __original_piece;
     int                        __gray_bins;
     int                        __radial_bins;
-    double                     __keep;
     double                     __highpass_cutoff;
     double                     __penalization;
     int                        __piece_xsize;
-    int                        __piece_ysize;
     int                        __particle_radius;
     int                        __mask_size;
     int                        __min_distance_between_particles;
@@ -456,7 +453,7 @@ public:
     void loadModels();
 
     // Save models
-    void saveModels();
+    void saveModels(bool askFilename);
 
     // Configure auto
     void configure_auto();

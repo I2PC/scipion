@@ -255,9 +255,7 @@ QtWidgetMicrograph::QtWidgetMicrograph(QtMainWidgetMark *_mainWidget,
     __auto_label                     = -1;
     __gray_bins                      = 8;
     __radial_bins                    = 16;
-    __keep                           = 0.95;
     __piece_xsize                    = 512;
-    __piece_ysize                    = 512;
     __output_scale                   = 1;
     __highpass_cutoff                = 0.02;
     __penalization                   = 10;
@@ -268,7 +266,6 @@ QtWidgetMicrograph::QtWidgetMicrograph(QtMainWidgetMark *_mainWidget,
     __piece_overlap                  = 2 * __particle_radius;
     __scan_overlap                   = (int)(2 * __particle_radius * 0.9);
     __learn_overlap                  = (int)(2 * __particle_radius * 0.5);
-    __use_background                 = false;
     __classNo                        = 3;
     __is_model_loaded                = false;
     
@@ -818,11 +815,7 @@ void QtWidgetMicrograph::classifyMask()
     double max_radius_particle = __particle_radius / __reduction;
 
     // Determine max_radius
-    double max_radius;
-    if (__use_background) max_radius =
-            sqrt((double)((XSIZE(mask) / 2) * (XSIZE(mask) / 2) +
-                          (YSIZE(mask) / 2) * (YSIZE(mask) / 2)));
-    else max_radius = max_radius_particle;
+    double max_radius = max_radius_particle;
 
     // Initialize some variables
     // 6 is the minimum radius to be informative
@@ -1275,15 +1268,15 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
 void QtWidgetMicrograph::get_centered_piece(int _x, int _y,
     int &_posx, int &_posy)
 {
-    __piece.resize(__piece_ysize, __piece_xsize);
+    __piece.resize(__piece_xsize, __piece_xsize);
     int startx = _x - ROUND(__piece_xsize / 2);
     int endx   = _x + ROUND(__piece_xsize / 2);
-    int starty = _y - ROUND(__piece_ysize / 2);
-    int endy   = _y + ROUND(__piece_ysize / 2);
+    int starty = _y - ROUND(__piece_xsize / 2);
+    int endy   = _y + ROUND(__piece_xsize / 2);
     int maxx, maxy;
     __m->size(maxx, maxy);
     _posx = ROUND(__piece_xsize / 2);
-    _posy = ROUND(__piece_ysize / 2);
+    _posy = ROUND(__piece_xsize / 2);
     
     // boundary adjustments
     if (startx < 0)
@@ -1296,7 +1289,7 @@ void QtWidgetMicrograph::get_centered_piece(int _x, int _y,
     {
         _posy += starty;
         starty = 0;
-        endy = __piece_ysize - 1;
+        endy = __piece_xsize - 1;
     }
     if (endx > maxx - 1)
     {
@@ -1308,11 +1301,11 @@ void QtWidgetMicrograph::get_centered_piece(int _x, int _y,
     {
         _posy += endy - (maxy - 1);
         endy = maxy - 1;
-        starty = endy - __piece_ysize;
+        starty = endy - __piece_xsize;
     }
     
     //read the matrix from the micrograph
-    for (int i = 0; i < __piece_ysize; i++)
+    for (int i = 0; i < __piece_xsize; i++)
         for (int j = 0; j < __piece_xsize; j++)
             __piece(i, j) = (*__m)(startx + j, starty + i);	    
 }
@@ -1327,7 +1320,7 @@ bool QtWidgetMicrograph::get_corner_piece(int _top, int _left, int _skip_y,
     int maxx, maxy;
     __m->size(maxx, maxy);
 
-    if (maxx < _left + __piece_xsize || maxy < _top + __piece_ysize)
+    if (maxx < _left + __piece_xsize || maxy < _top + __piece_xsize)
         return false;
 
     _next_skip_x = _next_skip_y = 0;
@@ -1345,11 +1338,11 @@ bool QtWidgetMicrograph::get_corner_piece(int _top, int _left, int _skip_y,
     }
     if (increase_Y)
     {
-        if (_top + __piece_ysize != maxy)
+        if (_top + __piece_xsize != maxy)
         {
-            _next_top = _top + __piece_ysize - overlap;
-            if (_next_top + __piece_ysize >= maxy)
-                _next_top = maxy - __piece_ysize;
+            _next_top = _top + __piece_xsize - overlap;
+            if (_next_top + __piece_xsize >= maxy)
+                _next_top = maxy - __piece_xsize;
         }
         else
         {
@@ -1358,8 +1351,8 @@ bool QtWidgetMicrograph::get_corner_piece(int _top, int _left, int _skip_y,
     }
 
     //read the matrix from the micrograph
-    __piece.resize(__piece_ysize, __piece_xsize);
-    for (int i = 0; i < __piece_ysize; i++)
+    __piece.resize(__piece_xsize, __piece_xsize);
+    for (int i = 0; i < __piece_xsize; i++)
         for (int j = 0; j < __piece_xsize; j++)
             __piece(i, j) = (*__m)(_left + j, _top + i);
 	    
@@ -1782,35 +1775,35 @@ void QtWidgetMicrograph::loadModels()
                        "Model", QLineEdit::Normal,
                        "Model", &ok);
     if (!ok || qfn_root.isEmpty()) return;
-    std::string fn_root = qfn_root.ascii();
+    __modelRootName = qfn_root.ascii();
 
     // Load parameters
     std::string dummy;
     std::ifstream fh_params;
-    fh_params.open((fn_root + ".param").c_str());
+    fh_params.open((__modelRootName + ".param").c_str());
     if (!fh_params)
     {
         std::cerr << (std::string)"QtWidgetMicrograph::write: Cannot open file " +
-        fn_root + ".param for input" << std::endl;
+                      __modelRootName + ".param for input" << std::endl;
         return;
     }
     fh_params >> dummy >> __gray_bins
               >> dummy >> __radial_bins
-              >> dummy >> __keep
               >> dummy >> __piece_xsize
-              >> dummy >> __piece_ysize
+              >> dummy >> __highpass_cutoff
               >> dummy >> __particle_radius
               >> dummy >> __min_distance_between_particles
-              >> dummy >> __output_scale
-              >> dummy >> __reduction
-              >> dummy >> __piece_overlap
               >> dummy >> __scan_overlap
+              >> dummy >> __penalization
     ;
     fh_params.close();
+    __piece_overlap=2*__particle_radius;
+    __output_scale=1;
+    __reduction=2;
 
     // Load the mask
     __mask.type = READ_MASK;
-    __mask.fn_mask = fn_root + ".mask";
+    __mask.fn_mask = __modelRootName + ".mask";
     __mask.generate_2Dmask();
     __mask.get_binary_mask2D().setXmippOrigin();
     __mask_size = XSIZE(__mask.get_binary_mask2D()) * __reduction;
@@ -1818,10 +1811,10 @@ void QtWidgetMicrograph::loadModels()
 
     // Load training vectors
     std::ifstream fh_training;
-    fh_training.open((fn_root + ".training").c_str());
+    fh_training.open((__modelRootName + ".training").c_str());
     if (!fh_training)
         REPORT_ERROR(1, (std::string)"QtWidgetMicrograph::write: Cannot open file " +
-                     fn_root + ".training" + " for input");
+                     __modelRootName + ".training" + " for input");
     
     fh_training >> __training_loaded_model;
     fh_training.close();
@@ -1837,19 +1830,25 @@ void QtWidgetMicrograph::loadModels()
 }
 
 /* Save models ------------------------------------------------------------- */
-void QtWidgetMicrograph::saveModels()
+void QtWidgetMicrograph::saveModels(bool askFilename)
 {
     // Get the rootname
-    bool ok;
-    QString qfn_root = QInputDialog::getText("Saving model",
-                       "Model", QLineEdit::Normal,
-                       "Model", &ok);
-    if (!ok || qfn_root.isEmpty()) return;
-    std::string fn_root = qfn_root.ascii();
+    std::string fn_root;
+    if (askFilename)
+    {
+        bool ok;
+        QString qfn_root = QInputDialog::getText("Saving model",
+                           "Model", QLineEdit::Normal,
+                           "Model", &ok);
+        if (!ok || qfn_root.isEmpty()) return;
+        fn_root = qfn_root.ascii();
+    }
+    else
+        fn_root=__modelRootName;
 
     // Save the automatically selected particles
     if (__autoselection_done)
-        __m->write_coordinates(__auto_label, __m->micrograph_name() +
+        __m->write_coordinates(__activeFamily, __m->micrograph_name() +
                                ".auto.pos");
 
     // Save the mask
@@ -1863,17 +1862,14 @@ void QtWidgetMicrograph::saveModels()
     if (!fh_params)
         REPORT_ERROR(1, (std::string)"QtWidgetMicrograph::write: Cannot open file " +
                      fn_root + ".param" + " for output");
-    fh_params << "gray_bins=                      " << __gray_bins                     << std::endl
-              << "radial_bins=                    " << __radial_bins                   << std::endl
-              << "keep=                           " << __keep                          << std::endl
-              << "piece_xsize=                    " << __piece_xsize                   << std::endl
-              << "piece_ysize=                    " << __piece_ysize                   << std::endl
-              << "particle_radius=                " << __particle_radius               << std::endl
+    fh_params << "gray_bins=                      " << __gray_bins                      << std::endl
+              << "radial_bins=                    " << __radial_bins                    << std::endl
+              << "piece_xsize=                    " << __piece_xsize                    << std::endl
+              << "highpass=                       " << __highpass_cutoff                << std::endl
+              << "particle_radius=                " << __particle_radius                << std::endl
               << "min_distance_between_particles= " << __min_distance_between_particles << std::endl
-              << "output_scale=                   " << __output_scale                   << std::endl
-              << "reduction_factor=               " << __reduction                      << std::endl
-              << "piece_overlap=                  " << __piece_overlap                  << std::endl
-              << "particle_overlap=               " << __scan_overlap               << std::endl
+              << "particle_overlap=               " << __scan_overlap                   << std::endl
+              << "penalization=                   " << __penalization                   << std::endl
     ;
     fh_params.close();
 
@@ -1907,21 +1903,9 @@ void QtWidgetMicrograph::configure_auto()
     QLineEdit piece_xsize(&qgrid);
     piece_xsize.setText(integerToString(__piece_xsize).c_str());
 
-    QLabel    lpieceysize("Piece Y size: ", &qgrid);
-    QLineEdit piece_ysize(&qgrid);
-    piece_ysize.setText(integerToString(__piece_ysize).c_str());
-
-    QLabel    lpiece_overlap("Piece overlap: ", &qgrid);
-    QLineEdit piece_overlap(&qgrid);
-    piece_overlap.setText(integerToString(__piece_overlap).c_str());
-
     QLabel    lcutoff("High pass cut-off: ", &qgrid);
     QLineEdit cutoff(&qgrid);
     cutoff.setText(floatToString(__highpass_cutoff).c_str());
-
-    QLabel    loutput_scale("Output scale: ", &qgrid);
-    QLineEdit output_scale(&qgrid);
-    output_scale.setText(integerToString(__output_scale).c_str());
 
     QLabel    lmask_size("Mask size: ", &qgrid);
     QLineEdit mask_size(&qgrid);
@@ -1939,17 +1923,13 @@ void QtWidgetMicrograph::configure_auto()
     QLineEdit particle_radius(&qgrid);
     particle_radius.setText(integerToString(__particle_radius).c_str());
 
-    QLabel    lmask_overlap("Mask overlap: ", &qgrid);
+    QLabel    lmask_overlap("Grid distance: ", &qgrid);
     QLineEdit mask_overlap(&qgrid);
     mask_overlap.setText(integerToString(__scan_overlap).c_str());
 
     QLabel    lmin_dist("Min. Distance: ", &qgrid);
     QLineEdit min_dist(&qgrid);
     min_dist.setText(integerToString(__min_distance_between_particles).c_str());
-
-    QLabel    lkeep("Keep: ", &qgrid);
-    QLineEdit keep(&qgrid);
-    keep.setText(floatToString(__keep).c_str());
 
     QLabel    lpenalization("Penalization: ", &qgrid);
     QLineEdit penalization(&qgrid);
@@ -1965,19 +1945,14 @@ void QtWidgetMicrograph::configure_auto()
 
     if (setPropertiesDialog.exec())
     {
-        __piece_xsize = piece_xsize.text().toInt();
-        __piece_ysize = piece_ysize.text().toInt();
-        __piece_overlap = piece_overlap.text().toInt();
-        __highpass_cutoff = cutoff.text().toFloat();
-        __output_scale = output_scale.text().toInt();
-        __reduction = (int)pow(2.0, __output_scale);
-        __mask_size = mask_size.text().toInt();
         __gray_bins = graybins.text().toInt();
         __radial_bins = radialbins.text().toInt();
+        __piece_xsize = piece_xsize.text().toInt();
+        __highpass_cutoff = cutoff.text().toFloat();
+        __mask_size = mask_size.text().toInt();
         __particle_radius = particle_radius.text().toInt();
-        __scan_overlap = mask_overlap.text().toInt();
         __min_distance_between_particles = min_dist.text().toInt();
-        __keep = keep.text().toFloat();
+        __scan_overlap = mask_overlap.text().toInt();
         __penalization = penalization.text().toFloat();
     }
 }
