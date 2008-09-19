@@ -42,14 +42,20 @@ public slots:
     // Load models of particles
     void slotLoadModels();
 
-    // Learn particles
-    void slotLearnParticles();
-
     // Automatically select particles
     void slotAutoSelectParticles();
 
+    // Load and Automatically select particles
+    void slotLoadAutoSelect();
+
+    // Learn particles
+    void slotLearnParticles();
+
     // Save models of particles
     void slotSaveModels();
+
+    // Learn and save
+    void slotLearnSaveQuit();
 signals:
     void signalAddFamily(const char *);
 };

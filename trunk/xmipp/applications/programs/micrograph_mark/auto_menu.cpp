@@ -50,10 +50,12 @@ QtAutoMenu::QtAutoMenu(QtWidgetMicrograph* _parent) :
         QtPopupMenuMark(_parent)
 {
     insertItem("Configure", this, SLOT(slotConfig()));
-    insertItem("Load models", this, SLOT(slotLoadModels()));
-    insertItem("Learn particles", this, SLOT(slotLearnParticles()));
+    insertItem("Load model", this, SLOT(slotLoadModels()));
     insertItem("AutoSelect", this, SLOT(slotAutoSelectParticles()));
-    insertItem("Save models", this, SLOT(slotSaveModels()));
+    insertItem("Load, AutoSelect", this, SLOT(slotLoadAutoSelect()));
+    insertItem("Learn particles", this, SLOT(slotLearnParticles()));
+    insertItem("Save model as", this, SLOT(slotSaveModels()));
+    insertItem("Learn, Save, Quit", this, SLOT(slotLearnSaveQuit()));
 }
 
 /* Configure --------------------------------------------------------------- */
@@ -68,20 +70,35 @@ void QtAutoMenu::slotLoadModels()
     ((QtWidgetMicrograph *)parentWidget())->loadModels();
 }
 
-/* Learn Particles --------------------------------------------------------- */
-void QtAutoMenu::slotLearnParticles()
-{
-    ((QtWidgetMicrograph *)parentWidget())->learnParticles();
-}
-
 /* AutoSelect Particles ---------------------------------------------------- */
 void QtAutoMenu::slotAutoSelectParticles()
 {
     ((QtWidgetMicrograph *)parentWidget())->automaticallySelectParticles();
 }
 
+/* AutoSelect Particles ---------------------------------------------------- */
+void QtAutoMenu::slotLoadAutoSelect()
+{
+    ((QtWidgetMicrograph *)parentWidget())->loadModels();
+    ((QtWidgetMicrograph *)parentWidget())->automaticallySelectParticles();
+}
+
+/* Learn Particles --------------------------------------------------------- */
+void QtAutoMenu::slotLearnParticles()
+{
+    ((QtWidgetMicrograph *)parentWidget())->learnParticles();
+}
+
 /* Save models of Particles ------------------------------------------------ */
 void QtAutoMenu::slotSaveModels()
 {
-    ((QtWidgetMicrograph *)parentWidget())->saveModels();
+    ((QtWidgetMicrograph *)parentWidget())->saveModels(true);
+}
+
+/* Save models of Particles ------------------------------------------------ */
+void QtAutoMenu::slotLearnSaveQuit()
+{
+    ((QtWidgetMicrograph *)parentWidget())->learnParticles();
+    ((QtWidgetMicrograph *)parentWidget())->saveModels(false);
+    exit(0);
 }
