@@ -43,7 +43,7 @@ int main(int argc, char **argv)
     FileName        fn_in, fn_out, fn_dist, fn_label;
     double          th_below, th_above, th;
     double          dmin, dmax;
-    int             enable_th_below, enable_th_above;
+    int             enable_th_below, enable_th_above, enable_th_abs_below;
     int             enable_dmin, enable_dmax;
     int             binarize;
     bool            enable_substitute;
@@ -63,6 +63,8 @@ int main(int argc, char **argv)
         fn_out     = getParameter(argc, argv, "-o", fn_in.c_str());
         fn_dist    = getParameter(argc, argv, "-dist", "");
         fn_label   = getParameter(argc, argv, "-label", "");
+        if ((enable_th_abs_below = checkParameter(argc, argv, "-abs_below")))
+            th_below = textToFloat(getParameter(argc, argv, "-abs_below"));
         if ((enable_th_below = checkParameter(argc, argv, "-below")))
             th_below = textToFloat(getParameter(argc, argv, "-below"));
         if ((enable_th_above = checkParameter(argc, argv, "-above")))
@@ -74,9 +76,10 @@ int main(int argc, char **argv)
         binarize = checkParameter(argc, argv, "-binarize");
         if (binarize)
         {
-            if (enable_th_above) th = th_above;
-            else if (enable_th_below) th = th_below;
-            else                      th = 0;
+            if (enable_th_above)          th = th_above;
+            else if (enable_th_below)     th = th_below;
+            else if (enable_th_abs_below) th = th_below;
+            else                          th = 0;
         }
         int i;
         if ((i = paremeterPosition(argc, argv, "-substitute")) != -1)
@@ -138,11 +141,13 @@ int main(int argc, char **argv)
         {
             if (enable_th_below) I().threshold("below", th_below, th_below, mask2D);
             if (enable_th_above) I().threshold("above", th_above, th_above, mask2D);
+            if (enable_th_abs_below) I().threshold("abs_below", th_below, 0, mask2D);
         }
         else
         {
             if (enable_th_below) V().threshold("below", th_below, th_below, mask3D);
             if (enable_th_above) V().threshold("above", th_above, th_above, mask3D);
+            if (enable_th_abs_below) V().threshold("abs_below", th_below, 0, mask3D);
         }
 
         // Apply substitution ---------------------------------------------------
@@ -210,6 +215,8 @@ void Usage()
     << "  [-dmax <dmax>]]                 : remove voxels whose distance is greater\n"
     << "  [-below <th>]                   : remove voxels below this threshold\n"
     << "  [-above <th>]                   : remove voxels above this threshold\n"
+    << "  [-abs_below <th>]               : remove voxels below this threshold\n"
+    << "                                  : they will be set to 0\n"
     << "  [-binarize]]                    : binarize output\n"
     << "  [-substitute <old_val> <new_val>: where a value can be\n"
     << "                                    (<val>|min|max)\n"
