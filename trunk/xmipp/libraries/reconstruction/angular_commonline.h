@@ -123,8 +123,15 @@ public:
     /** Try a solution */
     double trySolution(const Matrix1D<double> &solution);
     
+    /** Compute clusters */
+    double computeClusters(const Matrix2D<double> &correlationMatrix,
+        std::vector< std::vector<int> > &clusters, 
+        Matrix2D<double> &worseCorrelationMatrix,
+        Matrix2D<double> &bestCorrelationMatrix, bool show=false) const;
+
     /** Split the alignment in two clusters and find an image to remove */
-    int removeViaClusters(const Matrix2D<double> &correlationMatrix);
+    std::vector<int> removeViaClusters(
+        const Matrix2D<double> &correlationMatrix);
 
     /** Run */
     void run();
