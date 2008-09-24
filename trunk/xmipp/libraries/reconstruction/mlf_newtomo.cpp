@@ -63,7 +63,9 @@ void Prog_mlf_tomo_prm::read(int argc, char **argv)
     do_som = checkParameter(argc, argv, "-som");
     som_xdim = textToInteger(getParameter(argc, argv, "-xdim", "5"));
     som_ydim = textToInteger(getParameter(argc, argv, "-ydim", "4"));
-
+    do_norm = checkParameter(argc, argv, "-norm");
+    do_scale = checkParameter(argc, argv, "-scale");
+   
     ang= textToFloat(getParameter(argc, argv, "-ang", "0"));
 }
 
@@ -108,6 +110,14 @@ void Prog_mlf_tomo_prm::show()
         if (do_ravg_sigma)
         {
             std::cerr << "  -> Radial average the sigma estimates." << std::endl;
+        }
+        if (do_norm)
+        {
+            std::cerr << "  -> Internally normalize the subtomograms." << std::endl;
+        }
+        if (do_scale)
+        {
+            std::cerr << "  -> Internally rescale brightness of the subtomograms." << std::endl;
         }
 
         std::cerr << " -----------------------------------------------------------------" << std::endl;
@@ -188,7 +198,7 @@ void Prog_mlf_tomo_prm::produceSideInfo()
         REPORT_ERROR(1,"Please provide either -ref, -nref or -som");
 
     // Initialize regularization matrix
-    initializeRegularizationMatrix();
+    initializeRegularizationMatrix(false);
 
     // Read SymList
     //if (fn_sym!="") 
@@ -281,6 +291,17 @@ void Prog_mlf_tomo_prm::produceSideInfo()
         SFi = SFtmp;
     }
 
+    // Initialize optimal scales to one.
+    if (do_scale)
+    {
+	imgs_scale.clear();
+        for (int i = 0; i < SFi.ImgNo(); i++)
+	    imgs_scale.push_back(1.);
+        for (int i = 0; i < nr_ref; i++)
+	    refs_avgscale.push_back(1.);
+        average_scale = 1.;
+    }
+
     // Initialize reg
     reg = reg0;
 
@@ -290,11 +311,11 @@ void Prog_mlf_tomo_prm::produceSideInfo()
 
 }
 
-void Prog_mlf_tomo_prm::initializeRegularizationMatrix()
+void Prog_mlf_tomo_prm::initializeRegularizationMatrix(bool is_som)
 {
     som_reg_matrix.resize(nr_ref,nr_ref);
     som_reg_matrix.initZeros();
-    if (do_som)
+    if (is_som)
     {
         for (int iref1=0; iref1<nr_ref; iref1++)
         {
@@ -306,7 +327,7 @@ void Prog_mlf_tomo_prm::initializeRegularizationMatrix()
                 int x2 = iref2%som_xdim;
                 int y2 = (iref2 - x2)/som_xdim;
                 int r2 = (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
-                if (r2 <= 1)
+                if (r2 == 1)
                 {
                     dMij(som_reg_matrix,iref1,iref2) = 1.;
                     count++;
@@ -322,10 +343,10 @@ void Prog_mlf_tomo_prm::initializeRegularizationMatrix()
     {
         for (int iref1=0; iref1<nr_ref; iref1++)
             for (int iref2=0; iref2<nr_ref; iref2++)
-                if (iref1 != iref2)
-                    dMij(som_reg_matrix,iref1,iref2) = 1./(double)(nr_ref-1);
+                dMij(som_reg_matrix,iref1,iref2) = 1./(double)(nr_ref);
     }
 
+//#define DEBUG_REG_MATRIX
 #ifdef DEBUG_REG_MATRIX
     std::cerr<<"Regularization matrix= "<<som_reg_matrix<<std::endl;
 #endif
@@ -820,13 +841,20 @@ void Prog_mlf_tomo_prm::calculateAllFFTWs()
 #endif
 
     FileName fni, fno;
-    VolumeXmipp vol, ave(Xdim,Ydim,Zdim), mask;
+    VolumeXmipp vol, ave(Xdim,Ydim,Zdim), mask(Xdim,Ydim,Zdim);
     Matrix2D<double> A_img(4,4);
     int c, nn = SFi.ImgNo(), imgno = 0;
 
+    ave().setXmippOrigin();
     if (fn_mask != "")
     {
         mask.read(fn_mask);
+        mask().setXmippOrigin();
+    }
+    else
+    {
+        mask().setXmippOrigin();
+        RaisedCosineMask(mask(),(double)Xdim-2,(double)Xdim);
     }
 
     if (verb > 0)
@@ -842,6 +870,7 @@ void Prog_mlf_tomo_prm::calculateAllFFTWs()
         if ( ! (exists(fni) && dont_recalc_fftw) )
         {
             vol.read(fni);
+            vol().setXmippOrigin();
             if (XSIZE(vol()) != Xdim ||
                 XSIZE(vol()) != Xdim ||
                 XSIZE(vol()) != Xdim )
@@ -856,8 +885,28 @@ void Prog_mlf_tomo_prm::calculateAllFFTWs()
             vol().selfApplyGeometryBSpline(A_img,3,IS_INV,DONT_WRAP,0.);
 
             // Mask if necessary
-            if (fn_mask != "")
-                vol() *= mask();
+            vol() *= mask();
+
+            // Normalize if necessary
+            if (do_norm)
+            {
+                double avg = 0., stddev = 0., c = 0.;
+                FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(vol())
+                {
+                    if (dVkij(mask(),k,i,j) > 0.)
+                    {
+                        avg += dVkij(vol(),k,i,j);
+                        stddev += dVkij(vol(),k,i,j) * dVkij(vol(),k,i,j);
+                        c+= 1.;
+                    }
+                }
+                avg /= c;
+                stddev = stddev / c - avg * avg;
+                stddev *= c / (c - 1.);
+                vol() -= avg;
+                vol() /= stddev;
+            }
+            // Store average of the (masked and/or normalized) maps
             ave() += vol();
 
             forwfftw.SetPoints(MULTIDIM_ARRAY(vol()));
@@ -990,13 +1039,17 @@ void Prog_mlf_tomo_prm::expectationSingleImage(int igroup,
                                                double * dataWsumWedsPerGroup,
                                                double * dataWsumDist,
                                                double * dataSumWRefs,
+                                               double * dataWsumScale,
+                                               double * dataWsumScale2,
                                                int    & opt_refno, 
                                                double & LL, 
-                                               double & Pmax)
+                                               double & Pmax,
+                                               double & opt_scale )
 
 {
 
-    double aux, weight, diff2, sumweight = 0., maxweight=0., mindiff2=99.e99;
+    double aux, weight, diff2, sumweight = 0., maxweight = 0., mindiff2 = 99.e99;
+    double ref_scale, wsum_sc = 0., wsum_sc2 = 0.;
     double * weights;
     weights = new double [nr_ref];
 
@@ -1005,17 +1058,23 @@ void Prog_mlf_tomo_prm::expectationSingleImage(int igroup,
     DATAREFS     = (std::complex<double> *) dataRefs;
     DATAWSUMREFS = (std::complex<double> *) dataWsumRefs;
 
+    if (!do_scale) 
+    {
+        opt_scale = 1.;
+        ref_scale = 1.;
+    }
     // TODO: Adapt dataSigma arrays to take into account that (x==0) is double in the fftw!
     for (int refno = 0; refno < nr_ref; refno++)
     {
         diff2 = 0.;
+        if (do_scale) ref_scale = opt_scale / refs_avgscale[refno];
         for (int i = 0; i < hsize; i++)
         {
             int iiref = refno * hsize + i;
             int iig = igroup * hsize + i;
             if (dataMeasured[i])
             {
-                aux = abs(DATAIMG[i] - DATAREFS[iiref]);
+                aux = abs(DATAIMG[i] - ref_scale * DATAREFS[iiref]);
                 diff2 += (aux * aux)/dataSigma[iig];
 //#define DEBUG_ALOT_EXPSINGLE 
 #ifdef DEBUG_ALOT_EXPSINGLE                
@@ -1043,14 +1102,37 @@ void Prog_mlf_tomo_prm::expectationSingleImage(int igroup,
         }
         weights[refno] = aux;
         sumweight += aux;
+
+        if (do_scale)
+        {
+            for (int i = 0; i < hsize; i++)
+            {
+                int iiref = refno * size + 2*i;
+                if (dataMeasured[i])
+                {
+                    wsum_sc  += weights[refno] * dataImg[2*i] * dataRefs[iiref];
+                    wsum_sc  += weights[refno] * dataImg[2*i+1] * dataRefs[iiref+1];
+                    wsum_sc2 += weights[refno] * dataRefs[iiref] * dataRefs[iiref];
+                    wsum_sc2 += weights[refno] * dataRefs[iiref+1] * dataRefs[iiref+1];
+                }
+            }
+        }
+    }
+
+    // Update the internal scale
+    if (do_scale)
+    {
+        opt_scale = wsum_sc / wsum_sc2;
     }
 
     // Store Pmax/sumP
     Pmax = maxweight / sumweight;
+//#define DEBUG_EXPSINGLE 
 #ifdef DEBUG_EXPSINGLE                
     std::cerr<<"Pmax= "<<Pmax<<" mindiff2= "<<mindiff2<<std::endl;
 #endif
 
+    
     // Then, store the sum of all weights
     for (int refno = 0; refno < nr_ref; refno++)
     {
@@ -1061,24 +1143,35 @@ void Prog_mlf_tomo_prm::expectationSingleImage(int igroup,
         if (weight > SIGNIFICANT_WEIGHT_LOW)
         {
             dataSumWRefs[refno] += weight;
+            dataWsumScale[refno] += weight * opt_scale;
+            dataWsumScale2[refno] += weight * opt_scale * opt_scale;
             for (int i = 0; i < hsize; i++)
             {
                 int iiref = refno * hsize + i;
                 int iig = igroup * hsize + i;
                 if (dataMeasured[i])
                 {
-                    aux = abs(DATAIMG[i] - DATAREFS[iiref]);
+                    aux = abs(DATAIMG[i] - opt_scale * DATAREFS[iiref]);
                     dataWsumDist[iig] += weight * aux * aux;
                     dataWsumWedsPerGroup[iig] += weight;
-                    DATAWSUMREFS[iiref] += weight * DATAIMG[i];
+                    DATAWSUMREFS[iiref] += weight * opt_scale * DATAIMG[i];
                     dataWsumWedsPerRef[iiref] += weight;
                 }
             }
         }
     }
     
+    // Precalculate normalization constant for LL update
+    double logsigma2 = 0.;
+    for (int i = 0; i < hsize; i++)
+        if (dataMeasured[i])
+            logsigma2 += 2 * log( sqrt(PI * dataSigma[igroup * hsize + i]));
+
     // Update the log-likelihood function value
-    LL+= 1.; //TODO;
+    // 1st term: log(refw_i)
+    // 2nd term: for subtracting mindiff2
+    // 3rd term: for missing normalization constant
+    LL += log(sumweight) - mindiff2 - logsigma2;
 
 }
 
@@ -1091,6 +1184,8 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
                                     double * dataWsumWedsPerGroup,
                                     double * dataWsumDist,
                                     double * dataSumWRefs,
+                                    double * dataWsumScale,
+                                    double * dataWsumScale2,
                                     double & LL,
                                     double & avePmax,
                                     DocFile & DFo)
@@ -1104,9 +1199,10 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
     bool             *dataMeasured;
     SelLine          SL;
     FileName         fn;
-    Matrix1D<double> dataline(10);
+    Matrix1D<double> dataline(11);
     Matrix2D<double> A_img(4,4);
     double           Pmax, th0,thF;
+    double           opt_scale = 1.;
 
     // Reserve memory for dataImg and dataWedge
     try
@@ -1122,9 +1218,9 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
     // Initialize docfile header
     DFo.clear();
     if (use_tom_conventions)
-        DFo.append_comment("Headerinfo columns: phi (1), psi (2), theta (3), Xoff (4), Yoff (5), Zoff (6), WedTh0 (7), WedThF (8), Ref (9), Pmax/sumP (10)");
+        DFo.append_comment("Headerinfo columns: phi (1), psi (2), theta (3), Xoff (4), Yoff (5), Zoff (6), WedTh0 (7), WedThF (8), Ref (9), Pmax/sumP (10), brightness (11)");
     else
-        DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Zoff (6), WedTh0 (7), WedThF (8), Ref (9), Pmax/sumP (10)");
+        DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Zoff (6), WedTh0 (7), WedThF (8), Ref (9), Pmax/sumP (10), brightness (11)");
 
     // Initialize weighted sums to zero
     for (int i = 0; i < nr_ref * size; i++)
@@ -1136,8 +1232,11 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
     for (int i = 0; i < nr_group * hsize; i++)
         dataWsumDist[i] = 0.;
     for (int i = 0; i < nr_ref; i++)
+    {
         dataSumWRefs[i] = 0.;
-    
+        dataWsumScale[i] = 0.;
+        dataWsumScale2[i] = 0.;
+    }
     LL = 0.;
     avePmax = 0.;
 
@@ -1193,6 +1292,10 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
                 ii++;
             }
 
+        // Get optimal internal scale factor for this subtomogram
+	if (do_scale)
+            opt_scale = imgs_scale[imgno];
+
         // get missing wedge
         getMissingWedge(dataMeasured,A_img,th0,thF);
 
@@ -1239,9 +1342,16 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
                                dataWsumWedsPerGroup,
                                dataWsumDist,
                                dataSumWRefs,
+                               dataWsumScale,
+                               dataWsumScale2,
                                opt_refno, 
                                LL, 
-                               Pmax);
+                               Pmax,
+                               opt_scale);
+
+	// Store optimal scale in memory
+	if (do_scale)
+	    imgs_scale[imgno] = opt_scale;
 
         // Output to docfile                            XMIPP or  TOM
         dataline(0)=img_ang1[imgno];                 // rot   or  phi
@@ -1254,6 +1364,7 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
         dataline(7)=img_thF[imgno];                  // Wedge thF
         dataline(8)=(double)(opt_refno+1);           // Ref
         dataline(9)=Pmax;                            // P_max/P_tot
+        dataline(10)=opt_scale;                      // internal scale
         DFo.append_comment(fn);
         DFo.append_data_line(dataline);
         avePmax += Pmax;
@@ -1276,6 +1387,8 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
                                      double * dataWsumWedsPerGroup,
                                      double * dataWsumDist,
                                      double * dataSumWRefs,
+                                     double * dataWsumScale,
+                                     double * dataWsumScale2,
                                      double & sumw_allrefs,
                                      double & avePmax)
 {
@@ -1303,7 +1416,9 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
                     //if (i==0) std::cerr<<abs(DATAREFS[ii])<<" "<<dataWsumWedsPerRef[ii]<<" "<<dataSumWRefs[refno]<<" "<<abs(DATAWSUMREFS[ii])/ dataSumWRefs[refno]<<" ";
                     DATAREFS[ii] *= 1. - (dataWsumWedsPerRef[ii] / dataSumWRefs[refno]);
                     // And sum the weighted sum for observed pixels
-                    DATAREFS[ii] += DATAWSUMREFS[ii] / dataSumWRefs[refno];
+                    
+                    //DATAREFS[ii] += DATAWSUMREFS[ii] / dataSumWRefs[refno];
+                    DATAREFS[ii] += DATAWSUMREFS[ii] / dataWsumScale2[refno];
                     //if (i==0) std::cerr<<" new= "<<abs(DATAREFS[ii]) <<std::endl;
                 }
             }
@@ -1334,6 +1449,27 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
                 }
             }
         }
+    }
+
+    // Adjust average scale
+    if (do_scale) 
+    {
+        for (int refno = 0; refno < nr_ref; refno++)
+        {
+            average_scale += dataWsumScale[refno];
+            if (dataWsumScale[refno]>0.)
+            {
+                refs_avgscale[refno] =  dataWsumScale[refno] / dataSumWRefs[refno];
+                for (int i = 0; i < hsize; i++)
+                {
+                    int ii = refno * hsize + i;
+                    DATAREFS[ii] *= refs_avgscale[refno];
+                }
+            }
+            else
+                refs_avgscale[refno] = 1.;
+        }
+        average_scale /= sumw_allrefs;
     }
 
     // Update fractions
@@ -1402,8 +1538,6 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
     }
 
     // Apply regularisation
-    // For now on all references
-    // Later-on add organisation like in SOMs (and increase size of regref to nr_ref*size
     regularise(dataRefs,dataSigma);
 
     // Average Pmax
@@ -1452,16 +1586,13 @@ void Prog_mlf_tomo_prm::regularise(double * dataRefs,
         {
             for (int refno2 = 0; refno2 < nr_ref; refno2++)
             {
-                if (refno != refno2)
-                {
-                    for (int i=0; i< size; i++)
-                        regRef[refno*size + i] += dMij(som_reg_matrix,refno,refno2) * dataRefs[refno2*size + i];
+                for (int i=0; i< size; i++)
+                    regRef[refno*size + i] += dMij(som_reg_matrix,refno,refno2) * dataRefs[refno2*size + i];
                         
-                    for (int i=0; i< hsize; i++)
-                    {
-                        double aux = abs(DATAREFS[refno*hsize + i] - DATAREFS[refno2*hsize + i]);
-                        regSigma[refno*hsize + i] += dMij(som_reg_matrix,refno,refno2) * aux*aux;
-                    }
+                for (int i=0; i< hsize; i++)
+                {
+                    double aux = abs(DATAREFS[refno*hsize + i] - DATAREFS[refno2*hsize + i]);
+                    regSigma[refno*hsize + i] += dMij(som_reg_matrix,refno,refno2) * aux*aux;
                 }
             }
         }

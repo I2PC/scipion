@@ -115,6 +115,9 @@ public:
     /* Perform radial averaging on sigma estimates */
     bool do_ravg_sigma;
 
+    /* Perform internal normalization of the sub-tomograms*/
+    bool do_norm;
+
     /* kerdenSOM-like regularization */
     bool do_som;
     /* Organization of the SOM */
@@ -124,6 +127,12 @@ public:
 
     //// DEBUGGING
     bool debug;
+
+    /// Internally scale all individual subtomograms
+    bool do_scale;
+    /** Grey-scale correction values */
+    std::vector<double> imgs_scale, refs_avgscale;
+    double average_scale;
 
 
 public:
@@ -144,7 +153,7 @@ public:
     void produceSideInfo();
 
     /// Initialize regularization matrix
-    void initializeRegularizationMatrix();
+    void initializeRegularizationMatrix(bool is_som);
 
     /// splitted SF-dependent side-info calculations
     void produceSideInfo2();
@@ -186,9 +195,12 @@ public:
                                 double * dataWsumWedsPerGroup,
                                 double * dataWsumDist,
                                 double * dataSumWRefs,
+                                double * dataWsumScale,
+                                double * dataWsumScale2,
                                 int    & opt_refno, 
                                 double & LL, 
-                                double & Pmax);
+                                double & Pmax,
+                                double & opt_scale);
 
     /// Integrate over all experimental images
     void expectation(double * dataRefs,
@@ -198,6 +210,8 @@ public:
                      double * dataWsumWedsPerGroup,
                      double * dataWsumDist,
                      double * dataSumWRefs,
+                     double * dataWsumScale,
+                     double * dataWsumScale2,
                      double & LL,
                      double & avePmax,
                      DocFile & DFo);
@@ -210,6 +224,8 @@ public:
                       double * dataWsumWedsPerGroup,
                       double * dataWsumDist,
                       double * dataSumWRefs,
+                      double * dataWsumScale,
+                      double * dataWsumScale2,
                       double & sumw_allrefs,
                       double & avePmax);
 

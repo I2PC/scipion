@@ -44,6 +44,8 @@ int main(int argc, char **argv)
     double * dataWsumDist;
     double * dataSumWRefs;
     double * dataSumWGroups;
+    double * dataWsumScale;
+    double * dataWsumScale2;
     double * imgsPmax;
     int    * imgsOptRefNos;
 
@@ -67,6 +69,8 @@ int main(int argc, char **argv)
     try
     {
         dataSumWRefs         = new double[prm.nr_ref];
+        dataWsumScale        = new double[prm.nr_ref];
+        dataWsumScale2       = new double[prm.nr_ref];
         dataSumWGroups       = new double[prm.nr_group];
         dataRefs             = new double[prm.nr_ref * prm.size];
         oldDataRefs          = new double[prm.nr_ref * prm.size];
@@ -91,6 +95,8 @@ int main(int argc, char **argv)
         prm.generateInitialReferences(dataRefs, dataWsumWedsPerRef);
         prm.estimateInitialNoiseSpectra(dataSigma);
         prm.regularise(dataRefs, dataSigma);
+        // Re-make regularisation matrix, now with SOM if appropriate
+        prm.initializeRegularizationMatrix(prm.do_som);
         prm.writeOutputFiles(0,-1,dataRefs,dataWsumWedsPerRef,DFo,sumw_allrefs,LL,avePmax);
 
         // Loop over all regularization steps
@@ -104,7 +110,10 @@ int main(int argc, char **argv)
                 oldDataRefs[ii] = 0.;
 
             // Albertop-like decrease
-            prm.reg = exp(log(prm.reg0) - (log(prm.reg0) - log(XMIPP_MAX(prm.regF,0.001)))*(step-1)/(prm.reg_steps-1));
+            if (prm.reg0 == 0)
+                prm.reg = 0;
+            else
+                prm.reg = exp(log(prm.reg0) - (log(prm.reg0) - log(XMIPP_MAX(prm.regF,0.001)))*(step-1)/(prm.reg_steps-1));
             if (prm.verb > 0) 
                 std::cerr<<std::endl;
                 std::cerr << "  Sub-tomogram classification:  step "<<step<<" of "<<prm.reg_steps<<" with regularisation= "<<prm.reg<<std::endl;
@@ -122,6 +131,8 @@ int main(int argc, char **argv)
                                 dataWsumWedsPerGroup,
                                 dataWsumDist,
                                 dataSumWRefs,
+                                dataWsumScale,
+                                dataWsumScale2,
                                 LL, 
                                 avePmax,
                                 DFo);
@@ -133,17 +144,21 @@ int main(int argc, char **argv)
                                  dataWsumWedsPerGroup,
                                  dataWsumDist,
                                  dataSumWRefs,
+                                 dataWsumScale,
+                                 dataWsumScale2,
                                  sumw_allrefs, 
                                  avePmax);
 
+                fprintf(stderr, "\rIteration %3i of %3i AvePmax= %6.5f", iter, prm.Niter, avePmax);
 
                 if (prm.checkConvergence(dataRefs,
                                          oldDataRefs) )
                     break;
 
-                if (prm.verb > 0) progress_bar(iter);
+                //if (prm.verb > 0) progress_bar(iter);
 
             } // end loop iterations
+            std::cerr<<std::endl;
             if (prm.verb > 0) progress_bar(prm.Niter);
 
             prm.writeOutputFiles(step, 
