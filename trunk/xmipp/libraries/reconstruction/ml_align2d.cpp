@@ -1771,7 +1771,7 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
     std::vector <std::vector< Matrix2D<double> > > Mweight;
     std::vector<double> refw(n_ref), refw2(n_ref), refwsc2(n_ref), refw_mirror(n_ref);
     double sigma_noise2, XiA, Xi2, aux, pdf, fracpdf, A2_plus_Xi2, maxw, mind, dfsigma2, mindiff2 = 99.e99;
-    double wsum_sc = 0. , wsum_sc2 = 0., wsum_offset = 0., old_bgmean;
+    double wsum_sc = 0. , wsum_sc2 = 0., wsum_offset = 0., old_bgmean, old_opt_scale;
     double weight, weight1, weight2, diff, sum, sum2, wsum_corr = 0., sum_refw = 0., sum_refw2 = 0., maxweight = -99.e99;
     double ref_scale = 1.;
     int irot, irefmir, sigdim, xmax, ymax;
@@ -1992,13 +1992,6 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
         }
     }
 
-    // Update opt_scale
-    if (do_norm)
-    {
-	if (debug==12) std::cerr<<"scale= "<<opt_scale<<" changes to "<<wsum_sc / wsum_sc2<<std::endl;
-	opt_scale = wsum_sc / wsum_sc2;
-    }
-
     // Calculate optimal transformation parameters
     if (fast_mode)
     {
@@ -2034,6 +2027,9 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
 
     if (do_norm)
     {
+	if (debug==12) std::cerr<<"scale= "<<opt_scale<<" changes to "<<wsum_sc / wsum_sc2<<std::endl;
+        old_opt_scale = opt_scale;
+	opt_scale = wsum_sc / wsum_sc2;
         // perform "non-ML" update of bgmean
         Matrix2D<double> Maux2(Maux);
         old_bgmean = bgmean;
@@ -2043,7 +2039,7 @@ void Prog_MLalign2D_prm::ML_integrate_complete(
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
         {
             dMij(Faux,i,j) = conj(dMij(Fref[opt_refno][iopt_psi],i,j));
-            dMij(Faux,i,j) *= opt_scale/dim2;
+            dMij(Faux,i,j) *= old_opt_scale/dim2;
         }
 #ifdef HAVE_FFTW
         backfftw.SetPoints(MULTIDIM_ARRAY(Faux));
