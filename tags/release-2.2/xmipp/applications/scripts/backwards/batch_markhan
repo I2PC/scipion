@@ -1,0 +1,8 @@
+#!/bin/sh
+
+VERSION=2.0
+NEW_NAME=xmipp_try_symmetry
+
+# Warn user
+echo "** Warning! This program name is deprecated as of Xmipp version" $VERSION
+echo "** Please use" $NEW_NAME "instead"
