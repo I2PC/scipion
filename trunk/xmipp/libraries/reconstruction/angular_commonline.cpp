@@ -78,6 +78,7 @@ double EulerSolver::EnergyFunction(double trial[], bool &bAtSolution)
     double worseSimilarity=2;
     int idx;
     static Matrix1D<int> imgCorrelationN;
+    static double minval=0;
     imgAvgCorrelation.initZeros(Nimg);
     imgMinCorrelation.initZeros(Nimg);
     imgMinCorrelation.initConstant(2);
@@ -216,6 +217,11 @@ double EulerSolver::EnergyFunction(double trial[], bool &bAtSolution)
             << std::endl
             << std::endl
         ;
+    if (retval<minval)
+    {
+        minval=retval;
+        std::cout << "MinEnergy=" << minval << std::endl;
+    }
     return retval;
 //    return 0.5*(retval-worseSimilarity);
 }
@@ -262,11 +268,11 @@ double EulerSolver::similarityBetweenTwoLines(int imgi, int imgj)
     int idxAngi = (int)intWRAP(-((int)angi),0,359);
     int idxAngj = (int)intWRAP(-((int)angj),0,359);
     
-    double retval1=0.5*(
+    double retval1=//0.5*(
         correlation_index(parent->radon[imgi][idxAngi],
-                          parent->radon[imgj][idxAngj])+
-        correlation_index(parent->radonDerivative[imgi][idxAngi],
-                          parent->radonDerivative[imgj][idxAngj]));
+                          parent->radon[imgj][idxAngj])//+
+       /* correlation_index(parent->radonDerivative[imgi][idxAngi],
+                          parent->radonDerivative[imgj][idxAngj]))*/;
 
     if (show)
     {
@@ -288,6 +294,8 @@ double EulerSolver::similarityBetweenTwoLines(int imgi, int imgj)
         parent->radon[imgj][idxAngj].write("PPPradonj1.txt");
         parent->radonDerivative[imgi][idxAngi].write("PPPradonDerivativei1.txt");
         parent->radonDerivative[imgj][idxAngj].write("PPPradonDerivativej1.txt");
+        std::cout << "Press any key\n";
+        char c; std::cin >> c;
     }
 
     #ifdef DEBUG
@@ -826,23 +834,37 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
                 std::vector<int> imgsToRemove;
                 int imin=-1;
                 double worseCorrelation=2;
-                if ((removalCounter==1 || removalCounter==3))
+                double bestCorrelation=-2;
+                if (removalCounter!=0)
                 {
                     double meanCorr=0;
                     double stdCorr=0;
                     double Ncorr=0;
+                    
                     FOR_ALL_ELEMENTS_IN_MATRIX1D(currentImgAvgCorrelation)
                     {
-                        if (currentImgAvgCorrelation(i)>0)
+                        if (currentImgAvgCorrelation(i)!=0)
                         {
                             meanCorr+=currentImgAvgCorrelation(i);
                             stdCorr+=currentImgAvgCorrelation(i)*
                                 currentImgAvgCorrelation(i);
                             Ncorr++;
-                            if (currentImgAvgCorrelation(i)<worseCorrelation)
+                            switch (removalCounter)
                             {
-                                worseCorrelation=currentImgAvgCorrelation(i);
-                                imin=i;
+                                case 1:
+                                    if (currentImgAvgCorrelation(i)<worseCorrelation)
+                                    {
+                                        worseCorrelation=currentImgAvgCorrelation(i);
+                                        imin=i;
+                                    }
+                                    break;
+                                case 2:
+                                    if (currentImgAvgCorrelation(i)>bestCorrelation)
+                                    {
+                                        bestCorrelation=currentImgAvgCorrelation(i);
+                                        imin=i;
+                                    }
+                                    break;
                             }
                         }
                     }
@@ -859,6 +881,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
                 }
                 else
                     imgsToRemove=removeViaClusters(currentCorrelationMatrix);
+                removeViaClusters(currentCorrelationMatrix);
 
                 if (imgsToRemove.size()!=0)
                 {
@@ -884,7 +907,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
                 }
 
             }
-            removalCounter=(removalCounter+1)%2;
+            removalCounter=(removalCounter+1)%3;
         }
 	
 	// Remove one from the penalization of every image
@@ -894,6 +917,20 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
     
     solution=currentSolution;
 }
+
+#ifdef NEVERDEFINED
+void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
+{
+    int Nimg = SF.ImgNo();
+    alreadyOptimized.initZeros(Nimg);
+    alreadyOptimized.initConstant(1);
+    alreadyOptimized(0)=2;
+    Matrix1D<int> imgIdx(Nimg-1);
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(imgIdx)
+        imgIdx(i)=i+1;
+    double energy=optimizeGroup(imgIdx,solution,true);
+}
+#endif
 
 // Compute clusters 
 double Prog_Angular_CommonLine::computeClusters(
@@ -923,6 +960,8 @@ double Prog_Angular_CommonLine::computeClusters(
         singleElement.push_back(i);
         clusters.push_back(singleElement);
     }
+    std::cout << "Corrlation matrix\n"
+              << worseCorrelationMatrix << std::endl;
     
     // Compute the average distance between all elements
     double avgDistance=0;
@@ -1179,8 +1218,10 @@ double Prog_Angular_CommonLine::trySolution(const Matrix1D<double> &solution)
         maxAllowed(idx++)=360;
     }
 
+    alreadyOptimized.initZeros(Nimg);
+    alreadyOptimized.initConstant(1);
     Matrix1D<int> imgIdx(Nimg);
-    imgIdx.initLinear(1,Nimg-1,1,"incr");
+    imgIdx.initLinear(0,Nimg-1,1,"incr");
     bool bAtSolution;
     solver=new EulerSolver(XSIZE(solution),1,
         alreadyOptimized,currentSolution,imgIdx,this);
@@ -1188,6 +1229,8 @@ double Prog_Angular_CommonLine::trySolution(const Matrix1D<double> &solution)
         stBest2Bin, 0.5, 0.8);
     solver->setShow(true);
     double energy=solver->EnergyFunction(MULTIDIM_ARRAY(solution),bAtSolution);
+    std::cout << "Correlation matrix\n" << solver->correlationMatrix
+              << std::endl;
     return energy;
 }
 
