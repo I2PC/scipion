@@ -153,8 +153,6 @@ int main(int argc, char **argv)
         }
 
         if (rank == 0) prm.finish_processing();
-        MPI_Finalize();
-        return 0 ;
     }
     catch (Xmipp_error XE)
     {
@@ -162,4 +160,6 @@ int main(int argc, char **argv)
         MPI_Finalize();
 	return 1 ;
     }
+    MPI_Finalize();
+    return 0 ;
 }
