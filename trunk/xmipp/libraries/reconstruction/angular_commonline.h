@@ -57,7 +57,6 @@ public:
     
     Matrix1D<double> imgAvgCorrelation;
     Matrix1D<double> imgMinCorrelation;
-    Matrix1D<double> imgStdCorrelation;
     Matrix2D<double> correlationMatrix;
 public:
     // Constructor
@@ -161,20 +160,20 @@ public:
     // Worse Correlation of the images individually
     Matrix1D<double> currentImgMinCorrelation;
     
-    // Standard Deviation of the Correlation of the images individually
-    Matrix1D<double> currentImgStdCorrelation;
-    
     // Correlation between any pair of images
     Matrix2D<double> currentCorrelationMatrix;
     
+    // Best line in image i matching with image j
+    Matrix2D<int> bestLine;
+
+    // Best correlation of a line in image i matching with image j
+    Matrix2D<double> bestLineCorrelation;
+
     // Symmetry list
     SymList SL;
 
     // Radon transform of the images
     std::vector< std::vector< Matrix1D<double> > > radon;
-
-    // Derivatives of the Radon transform of the images
-    std::vector< std::vector< Matrix1D<double> > > radonDerivative;
 
     // Left matrices for the symmetry transformations
     std::vector< Matrix2D<double> > L;

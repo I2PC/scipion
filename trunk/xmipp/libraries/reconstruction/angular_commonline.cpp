@@ -44,7 +44,6 @@ EulerSolver::EulerSolver(int dim, int pop,
     Nimg=XSIZE(newAlreadyOptimized);
     imgAvgCorrelation.initZeros(Nimg);
     imgMinCorrelation.initZeros(Nimg);
-    imgStdCorrelation.initZeros(Nimg);
     correlationMatrix.initZeros(Nimg,Nimg);
     commonline.initZeros(3);
     alreadyOptimized=&newAlreadyOptimized;
@@ -82,7 +81,6 @@ double EulerSolver::EnergyFunction(double trial[], bool &bAtSolution)
     imgAvgCorrelation.initZeros(Nimg);
     imgMinCorrelation.initZeros(Nimg);
     imgMinCorrelation.initConstant(2);
-    imgStdCorrelation.initZeros(Nimg);
     correlationMatrix.resize(Nimg,Nimg);
     imgCorrelationN.initZeros(Nimg);
     for (int imgi=0; imgi<Nimg; imgi++)
@@ -150,8 +148,6 @@ double EulerSolver::EnergyFunction(double trial[], bool &bAtSolution)
                 worseSimilarity=XMIPP_MIN(worseSimilarity,similarity);
                 imgAvgCorrelation(imgi)+=similarity;
                 imgAvgCorrelation(imgj)+=similarity;
-                imgStdCorrelation(imgi)+=similarity*similarity;
-                imgStdCorrelation(imgj)+=similarity*similarity;
                 imgMinCorrelation(imgi)=XMIPP_MIN(similarity,
                     imgMinCorrelation(imgi));
                 imgMinCorrelation(imgj)=XMIPP_MIN(similarity,
@@ -179,8 +175,6 @@ double EulerSolver::EnergyFunction(double trial[], bool &bAtSolution)
                     worseSimilarity=XMIPP_MIN(worseSimilarity,similarity);
                     imgAvgCorrelation(imgi)+=similarity;
                     imgAvgCorrelation(imgj)+=similarity;
-                    imgStdCorrelation(imgi)+=similarity*similarity;
-                    imgStdCorrelation(imgj)+=similarity*similarity;
                     imgMinCorrelation(imgi)=XMIPP_MIN(similarity,
                         imgMinCorrelation(imgi));
                     imgMinCorrelation(imgj)=XMIPP_MIN(similarity,
@@ -196,24 +190,13 @@ double EulerSolver::EnergyFunction(double trial[], bool &bAtSolution)
     if (Ncomparisons>0) retval/=Ncomparisons;
     FOR_ALL_ELEMENTS_IN_MATRIX1D(imgAvgCorrelation)
         if (imgCorrelationN(i)!=0)
-        {
             imgAvgCorrelation(i)/=imgCorrelationN(i);
-            imgStdCorrelation(i)=sqrt(
-                ABS(imgStdCorrelation(i)/imgCorrelationN(i)
-                -imgAvgCorrelation(i)*imgAvgCorrelation(i)));
-        }
-//    Matrix2D<double> worseCorrelationMatrix, bestCorrelationMatrix;
-//    std::vector< std::vector<int> > clusters;
-//    double mergeDistance=-(parent->computeClusters(correlationMatrix,
-//        clusters, worseCorrelationMatrix, bestCorrelationMatrix, false));
-//    retval=0.5*(retval+mergeDistance);
     if (show)
         std::cout
             << "Average Distance  = " << retval << std::endl
             << "Worse   Distance  = " << -worseSimilarity << std::endl
             << "imgAvgCorrelation = " << imgAvgCorrelation.transpose() << std::endl
             << "imgMinCorrelation = " << imgMinCorrelation.transpose() << std::endl
-            << "imgStdCorrelation = " << imgStdCorrelation.transpose() << std::endl
             << std::endl
             << std::endl
         ;
@@ -268,11 +251,20 @@ double EulerSolver::similarityBetweenTwoLines(int imgi, int imgj)
     int idxAngi = (int)intWRAP(-((int)angi),0,359);
     int idxAngj = (int)intWRAP(-((int)angj),0,359);
     
-    double retval1=//0.5*(
+    double retval1=
         correlation_index(parent->radon[imgi][idxAngi],
-                          parent->radon[imgj][idxAngj])//+
-       /* correlation_index(parent->radonDerivative[imgi][idxAngi],
-                          parent->radonDerivative[imgj][idxAngj]))*/;
+                          parent->radon[imgj][idxAngj]);
+    int idxBesti=parent->bestLine(imgi,imgj);
+    int idxBestj=parent->bestLine(imgj,imgi);
+    int retvali=ABS(idxBesti-idxAngi);
+    if (retvali>180) retvali=ABS(retvali-360);
+    int retvalj=ABS(idxBestj-idxAngj);
+    if (retvalj>180) retvalj=ABS(retvalj-360);
+    retvali=XMIPP_MIN(retvali,10);
+    retvalj=XMIPP_MIN(retvalj,10);
+    
+    const double i180=0.5*1.0/180.0;
+    double retval2=1-(retvali+retvalj)*i180;
 
     if (show)
     {
@@ -288,12 +280,11 @@ double EulerSolver::similarityBetweenTwoLines(int imgi, int imgj)
             << " (" << idxAngi << ")\n"
             << "in imgj=" << commonlinej.transpose() << " anglej=" << angj
             << " (" << idxAngj << ")\n"
-            << "Distance between lines = " << retval1 << std::endl
+            << "Distance between lines = " << retval1 << " " << retval2
+            << std::endl
         ;
         parent->radon[imgi][idxAngi].write("PPPradoni1.txt");
         parent->radon[imgj][idxAngj].write("PPPradonj1.txt");
-        parent->radonDerivative[imgi][idxAngi].write("PPPradonDerivativei1.txt");
-        parent->radonDerivative[imgj][idxAngj].write("PPPradonDerivativej1.txt");
         std::cout << "Press any key\n";
         char c; std::cin >> c;
     }
@@ -301,11 +292,9 @@ double EulerSolver::similarityBetweenTwoLines(int imgi, int imgj)
     #ifdef DEBUG
     for (idxAngi=0; idxAngi<360; idxAngi++)
     {
-        double retval3=0.5*(
+        double retval3=
             correlation_index(parent->radon[imgi][idxAngi],
-                              parent->radon[imgj][idxAngj])+
-            correlation_index(parent->radonDerivative[imgi][idxAngi],
-                              parent->radonDerivative[imgj][idxAngj]));
+                              parent->radon[imgj][idxAngj]);;
 
         if (show)
         {
@@ -324,7 +313,7 @@ double EulerSolver::similarityBetweenTwoLines(int imgi, int imgj)
         }
     }
     #endif
-    return retval1;
+    return retval1*retval2;
 }
 #undef DEBUG
 
@@ -410,10 +399,10 @@ void Prog_Angular_CommonLine::produceSideInfo()
         }
     }
 
-    // Compute the Radon transform and its derivative of each image
+    // Compute the Radon transform of each image
     const double deltaRot=1.0;
     Matrix2D<double> RT;
-    Matrix1D<double> projection, projectionDerivative;
+    Matrix1D<double> projection;
     std::cout << "Preprocessing images ...\n";
     init_progress_bar(Nimg);
     for (int n=0; n<Nimg; n++)
@@ -421,7 +410,6 @@ void Prog_Angular_CommonLine::produceSideInfo()
         // Initialize list of projection and derivatives for this image
         std::vector< Matrix1D<double> > dummyList;
         radon.push_back(dummyList);
-        radonDerivative.push_back(dummyList);
 
         // Compute Radon transform of each image
         Radon_Transform(img[n],deltaRot,RT);
@@ -430,11 +418,39 @@ void Prog_Angular_CommonLine::produceSideInfo()
         for (int i=0; i<YSIZE(RT); i++)
         {
             RT.getRow(i,projection);
-            projection.numericalDerivative(projectionDerivative);
             radon[n].push_back(projection);
-            radonDerivative[n].push_back(projectionDerivative);
         }
         progress_bar(n);
+    }
+    progress_bar(Nimg);
+    
+    // Compute the best line in image i that correlates with image j
+    bestLine.initZeros(Nimg,Nimg);
+    bestLineCorrelation.initZeros(Nimg,Nimg);
+    std::cout << "Computing common lines ...\n";
+    init_progress_bar(Nimg);
+    for (int n1=0; n1<Nimg; n1++)
+    {
+        bestLineCorrelation(n1,n1)=1;
+        bestLine(n1,n1)=-1;
+        for (int n2=n1+1; n2<Nimg; n2++)
+        {
+            int lmax=radon[n1].size();
+            for (int l1=0; l1<lmax; l1++)
+                for (int l2=0; l2<lmax; l2++)
+                {
+                    double corrl1l2=correlation_index(radon[n1][l1],
+                        radon[n2][l2]);
+                    if (corrl1l2>bestLineCorrelation(n1,n2))
+                    {
+                        bestLineCorrelation(n1,n2)=
+                            bestLineCorrelation(n2,n1)=corrl1l2;
+                        bestLine(n1,n2)=l1;
+                        bestLine(n2,n1)=l2;
+                    }
+                }
+        }
+        progress_bar(n1);
     }
     progress_bar(Nimg);
 }
@@ -761,8 +777,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
                 double bestEnergy=0;
                 Matrix1D<double> bestCurrentSolution,
                     bestCurrentImgAvgCorrelation,
-                    bestCurrentImgMinCorrelation,
-                    bestCurrentImgStdCorrelation;
+                    bestCurrentImgMinCorrelation;
                 Matrix2D<double> bestCurrentCorrelationMatrix;
                 if (clusterBestAssignment.size()>1)
                 {
@@ -785,7 +800,6 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
                             bestCurrentSolution=currentSolution;
                             bestCurrentImgAvgCorrelation=currentImgAvgCorrelation;
                             bestCurrentImgMinCorrelation=currentImgMinCorrelation;
-                            bestCurrentImgStdCorrelation=currentImgStdCorrelation;
                             bestCurrentCorrelationMatrix=currentCorrelationMatrix;
                         }
                         currentSolution=backupCurrentSolution;
@@ -805,7 +819,6 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
                     bestCurrentSolution=currentSolution;
                     bestCurrentImgAvgCorrelation=currentImgAvgCorrelation;
                     bestCurrentImgMinCorrelation=currentImgMinCorrelation;
-                    bestCurrentImgStdCorrelation=currentImgStdCorrelation;
                     bestCurrentCorrelationMatrix=currentCorrelationMatrix;
                 }
 
@@ -816,11 +829,9 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
                 currentSolution=bestCurrentSolution;
                 currentImgAvgCorrelation=bestCurrentImgAvgCorrelation;
                 currentImgMinCorrelation=bestCurrentImgMinCorrelation;
-                currentImgStdCorrelation=bestCurrentImgStdCorrelation;
                 currentCorrelationMatrix=bestCurrentCorrelationMatrix;
                 std::cout << "Image Avg Correlation: " << currentImgAvgCorrelation
                           << "\nImage Min Correlation: " << currentImgMinCorrelation
-                          << "\nImage Std Correlation: " << currentImgStdCorrelation
                           << std::endl;
             }
 
@@ -829,13 +840,14 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
 	    std::cout << "removal=" << removalCounter
 	              << " totalAssigned=" << totalAssigned
 		      << std::endl;
+            removeViaClusters(currentCorrelationMatrix);
             if (removalCounter!=0 && totalAssigned>3)
             {
                 std::vector<int> imgsToRemove;
                 int imin=-1;
                 double worseCorrelation=2;
                 double bestCorrelation=-2;
-                if (removalCounter!=0)
+                if (removalCounter==0)
                 {
                     double meanCorr=0;
                     double stdCorr=0;
@@ -843,7 +855,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
                     
                     FOR_ALL_ELEMENTS_IN_MATRIX1D(currentImgAvgCorrelation)
                     {
-                        if (currentImgAvgCorrelation(i)!=0)
+                        if (currentImgAvgCorrelation(i)==1)
                         {
                             meanCorr+=currentImgAvgCorrelation(i);
                             stdCorr+=currentImgAvgCorrelation(i)*
@@ -881,7 +893,6 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
                 }
                 else
                     imgsToRemove=removeViaClusters(currentCorrelationMatrix);
-                removeViaClusters(currentCorrelationMatrix);
 
                 if (imgsToRemove.size()!=0)
                 {
@@ -898,7 +909,6 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
                             currentSolution(3*imin+2)=0;
 		        currentImgAvgCorrelation(imin)=0;
 		        currentImgMinCorrelation(imin)=2;
-		        currentImgStdCorrelation(imin)=0;
                         for (int i=0; i<XSIZE(currentCorrelationMatrix); i++)
                             currentCorrelationMatrix(i,imin)=
                             currentCorrelationMatrix(imin,i)=0;
@@ -960,7 +970,7 @@ double Prog_Angular_CommonLine::computeClusters(
         singleElement.push_back(i);
         clusters.push_back(singleElement);
     }
-    std::cout << "Corrlation matrix\n"
+    std::cout << "Correlation matrix\n"
               << worseCorrelationMatrix << std::endl;
     
     // Compute the average distance between all elements
@@ -1199,7 +1209,6 @@ double Prog_Angular_CommonLine::realignCurrentSolution()
 
     currentImgAvgCorrelation=solver->imgAvgCorrelation.transpose();
     currentImgMinCorrelation=solver->imgMinCorrelation.transpose();
-    currentImgStdCorrelation=solver->imgStdCorrelation.transpose();
     currentCorrelationMatrix=solver->correlationMatrix;
     delete solver;
     return energy;
