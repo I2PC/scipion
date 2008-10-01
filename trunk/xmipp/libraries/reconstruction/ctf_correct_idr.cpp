@@ -26,6 +26,15 @@
 #include "ctf_correct_idr.h"
 #include "projection.h"
 
+Prog_IDR_ART_Parameters::Prog_IDR_ART_Parameters()
+{
+    fn_vol=fn_ctfdat=fnRoot="";
+    mu=1.8;
+    MPIversion=false;
+    numberOfProcessors=1;
+    MPIrank=0;
+}
+
 void Prog_IDR_ART_Parameters::read(int argc, char **argv)
 {
     fn_vol = getParameter(argc, argv, "-vol");
@@ -67,8 +76,11 @@ void Prog_IDR_ART_Parameters::IDR_correction()
 {
     Projection Ireal, Inorm, Itheo, Itheo_CTF;
 
-    std::cerr << "Modifying input data ...\n";
-    init_progress_bar(ctfdat.lineNo());
+    if (MPIrank==0)
+    {
+        std::cerr << "Modifying input data ...\n";
+        init_progress_bar(ctfdat.lineNo());
+    }
     int istep = CEIL((double)ctfdat.lineNo() / 60.0);
     int imgs = 0;
     ctfdat.goFirstLine();
@@ -76,7 +88,7 @@ void Prog_IDR_ART_Parameters::IDR_correction()
     {
     	FileName fn_img, fn_ctf;
 	ctfdat.getCurrentLine(fn_img,fn_ctf);
-	if (fn_img!="")
+	if (fn_img!="" && (imgs%numberOfProcessors==MPIrank))
 	{
             // Read current input image
             Ireal.read(fn_img);
@@ -136,8 +148,8 @@ void Prog_IDR_ART_Parameters::IDR_correction()
 #endif
     	}
 
-        if (imgs++ % istep == 0) progress_bar(imgs);
+        if (imgs++ % istep == 0 && MPIrank==0) progress_bar(imgs);
 	ctfdat.nextLine();
     }
-    progress_bar(ctfdat.lineNo());
+    if (MPIrank==0) progress_bar(ctfdat.lineNo());
 }
