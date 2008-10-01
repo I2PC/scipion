@@ -788,9 +788,17 @@ class MultiResClass:
           self.execute("xmipp_header_assign -i "+\
         	       self.getAlignmentFFilename(_iteration)+" -o preproc_assign.sel"+\
         	       " -force")
-          self.execute("xmipp_ctf_correct_idr -vol "+\
-        	       self.getModelFFilename(_iteration)+\
-		       " -ctfdat preproc_assign_ctfdat.txt")
+          params="-vol "+\
+        	 self.getModelFFilename(_iteration)+\
+		 " -ctfdat preproc_assign_ctfdat.txt"
+	  launch_parallel_job.launch_job(self.doParallel,
+        			       "xmipp_ctf_correct_idr",
+        			       "xmipp_mpi_ctf_correct_idr",
+        			       params,
+        			       self.mylog,
+        			       self.myNumberOfCPUs,
+        			       self.myMachineFile,
+        			       False)
 
        # Scale if necessary
        if not self.getPyramidLevel(_iteration)=="0":
