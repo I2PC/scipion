@@ -102,6 +102,9 @@ public:
     /// Optimize tilt angle of tilt axis
     bool optimizeTiltAngle;
 
+    /// This tilt series comes from a capillar
+    bool isCapillar;
+
     /// Correlation threshold for a good landmark
     double corrThreshold;
     
@@ -346,6 +349,7 @@ public:
 void computeAffineTransformation(const Matrix2D<double> &I1,
     const Matrix2D<double> &I2, int maxShift, int maxIterDE,
     const FileName &fn_affine,
-    Matrix2D<double> &A12, Matrix2D<double> &A21);
+    Matrix2D<double> &A12, Matrix2D<double> &A21, bool show,
+    double thresholdAffine, bool localAffine, bool isMirror);
 //@}
 #endif

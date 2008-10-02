@@ -145,7 +145,7 @@ void computeAffineTransformation(const Matrix2D<double> &I1,
     const Matrix2D<double> &I2, int maxShift, int maxIterDE,
     const FileName &fn_affine, 
     Matrix2D<double> &A12, Matrix2D<double> &A21, bool show,
-    double thresholdAffine, bool localAffine)
+    double thresholdAffine, bool localAffine, bool isMirror)
 {
     // Set images
     AffineFitness::I1=I1;
@@ -174,6 +174,11 @@ void computeAffineTransformation(const Matrix2D<double> &I1,
     // Scale factors
     AffineFitness::minAllowed(0)=AffineFitness::minAllowed(3)=0.5;
     AffineFitness::maxAllowed(0)=AffineFitness::maxAllowed(3)=1.5;
+    if (isMirror)
+    {
+        AffineFitness::minAllowed(3)=-1.5;
+        AffineFitness::maxAllowed(3)=-0.5;
+    }
 
     // Rotation factors
     AffineFitness::minAllowed(1)=AffineFitness::minAllowed(2)=-0.5;
@@ -219,8 +224,17 @@ void computeAffineTransformation(const Matrix2D<double> &I1,
         else
         {
             A(0)=A(3)=1;
+            if (isMirror)
+                A(3)*=-1;
             double tx, ty;
-            best_shift(I1,I2,tx,ty);
+            if (!isMirror) best_shift(I1,I2,tx,ty);
+            else
+            {
+                Matrix2D<double> auxI2=I2;
+                auxI2.selfReverseY();
+                best_shift(I1,auxI2,tx,ty);
+                ty=-ty;
+            }
             A(4)=-tx;
             A(5)=-ty;
         }
@@ -272,6 +286,7 @@ void Prog_tomograph_alignment::read(int argc, char **argv) {
    deltaRot=textToFloat(getParameter(argc,argv,"-deltaRot","5"));
    localSize=textToFloat(getParameter(argc,argv,"-localSize","0.04"));
    optimizeTiltAngle=checkParameter(argc,argv,"-optimizeTiltAngle");
+   isCapillar=checkParameter(argc,argv,"-isCapillar");
    corrThreshold=textToFloat(getParameter(argc,argv,"-threshold","0.9"));
    maxShiftPercentage=textToFloat(getParameter(argc,argv,"-maxShiftPercentage","0.2"));
    maxIterDE=textToInteger(getParameter(argc,argv,"-maxIterDE","30"));
@@ -291,6 +306,7 @@ void Prog_tomograph_alignment::show() {
              << "Delta rot:          " << deltaRot           << std::endl
              << "Local size:         " << localSize          << std::endl
              << "Optimize tilt angle:" << optimizeTiltAngle  << std::endl
+             << "isCapillar:         " << isCapillar         << std::endl
              << "Threshold:          " << corrThreshold      << std::endl
              << "MaxShift Percentage:" << maxShiftPercentage << std::endl
              << "MaxIterDE:          " << maxIterDE          << std::endl
@@ -313,6 +329,7 @@ void Prog_tomograph_alignment::usage() const {
              << "  [-deltaRot <rot=5>]             : In degrees. For the first optimization stage\n"
              << "  [-localSize <size=0.04>]        : In percentage\n"
              << "  [-optimizeTiltAngle]            : Optimize tilt angle\n"
+             << "  [-isCapillar]                   : Set this flag if the tilt series is of a capillar\n"
              << "  [-threshold <th=0.9>]           : threshold\n"
              << "  [-maxShiftPercentage <p=0.2>]   : Maximum shift as percentage of image size\n"
              << "  [-maxIterDE <n=30>]             : Maximum number of iteration in Differential Evolution\n"
@@ -408,33 +425,40 @@ void Prog_tomograph_alignment::generateLandmarkSet() {
                     
                     // Follow this landmark backwards
                     bool acceptLandmark=true;
-                    int jj=ii-1, jjleft=ii;
+                    int jjleft=ii, jj;
+                    if (isCapillar) jj=intWRAP(ii-1,0,Nimg-1);
+                    else            jj=ii-1;
                     Matrix2D<double> Aij, Aji;
                     Matrix1D<double> rcurrent=rii;
-                    while (jj>=0 && acceptLandmark)
+                    while (jj>=0 && acceptLandmark && jj!=ii)
                     {
                         // Compute the affine transformation between ii and jj
-                        if (XSIZE(affineTransformations[jj+1][jj])==0)
+                        int jj_1;
+                        if (isCapillar) jj_1=intWRAP(jj+1,0,Nimg-1);
+                        else            jj_1=jj+1;
+                        if (XSIZE(affineTransformations[jj_1][jj])==0)
                         {
                             Matrix2D<double>& img_i=*img[jj];
-                            Matrix2D<double>& img_j=*img[jj+1];
+                            Matrix2D<double>& img_j=*img[jj_1];
+                            bool isMirror=(jj==Nimg-1) && (jj_1==0);
                             std::cout << "Computing transformation between "
-                                      << jj << " and " << jj+1 << std::endl;
+                                      << jj << " and " << jj_1 << std::endl;
                             computeAffineTransformation(img_i, img_j, maxShift,
                                 maxIterDE,
                                 (std::string)"affine_"+integerToString(jj,3)+
-                                "_"+integerToString(jj+1,3)+".txt", Aij, Aji,
-                                showAffine, thresholdAffine, localAffine);
-                            affineTransformations[jj][jj+1]=Aij;
-	                    affineTransformations[jj+1][jj]=Aji;
+                                "_"+integerToString(jj_1,3)+".txt", Aij, Aji,
+                                showAffine, thresholdAffine, localAffine,
+                                isMirror);
+                            affineTransformations[jj][jj_1]=Aij;
+	                    affineTransformations[jj_1][jj]=Aji;
                         }
                         else
                         {
-                            Aij=affineTransformations[jj][jj+1];
-	                    Aji=affineTransformations[jj+1][jj];
+                            Aij=affineTransformations[jj][jj_1];
+	                    Aji=affineTransformations[jj_1][jj];
                         }
                         rjj=Aji*rcurrent;
-                        acceptLandmark=refineLandmark(jj+1,jj,rcurrent,rjj);
+                        acceptLandmark=refineLandmark(jj_1,jj,rcurrent,rjj);
                         if (acceptLandmark)
                         {
                             l.x=XX(rjj);
@@ -442,40 +466,47 @@ void Prog_tomograph_alignment::generateLandmarkSet() {
                             l.imgIdx=jj;
                             chain.push_back(l);
                             jjleft=jj;
-                            jj--;
+                            if (isCapillar) jj=intWRAP(jj-1,0,Nimg-1);
+                            else            jj=jj-1;
                             rcurrent=rjj;
                         }
                     }
 
                     // Follow this landmark forward
                     acceptLandmark=true;
-                    jj=ii+1;
+                    if (isCapillar) jj=intWRAP(ii+1,0,Nimg-1);
+                    else jj=ii+1;
                     rcurrent=rii;
                     int jjright=ii;
-                    while (jj<Nimg && acceptLandmark)
+                    while (jj<Nimg && acceptLandmark && jj!=ii)
                     {
                         // Compute the affine transformation between ii and jj
-                        if (XSIZE(affineTransformations[jj-1][jj])==0)
+                        int jj_1;
+                        if (isCapillar) jj_1=intWRAP(jj-1,0,Nimg-1);
+                        else            jj_1=jj-1;
+                        if (XSIZE(affineTransformations[jj_1][jj])==0)
                         {
-                            Matrix2D<double>& img_i=*img[jj-1];
+                            Matrix2D<double>& img_i=*img[jj_1];
                             Matrix2D<double>& img_j=*img[jj];
                             std::cout << "Computing transformation between "
-                                      << jj-1 << " and " << jj << std::endl;
+                                      << jj_1 << " and " << jj << std::endl;
+                            bool isMirror=(jj==0) && (jj_1==Nimg-1);
                             computeAffineTransformation(img_i, img_j, maxShift,
                                 maxIterDE,
-                                (std::string)"affine_"+integerToString(jj-1,3)+
+                                (std::string)"affine_"+integerToString(jj_1,3)+
                                 "_"+integerToString(jj,3)+".txt", Aij, Aji,
-                                showAffine, thresholdAffine, localAffine);
-                            affineTransformations[jj-1][jj]=Aij;
-	                    affineTransformations[jj][jj-1]=Aji;
+                                showAffine, thresholdAffine, localAffine,
+                                isMirror);
+                            affineTransformations[jj_1][jj]=Aij;
+	                    affineTransformations[jj][jj_1]=Aji;
                         }
                         else
                         {
-                            Aij=affineTransformations[jj-1][jj];
-	                    Aji=affineTransformations[jj][jj-1];
+                            Aij=affineTransformations[jj_1][jj];
+	                    Aji=affineTransformations[jj][jj_1];
                         }
                         rjj=Aij*rcurrent;
-                        acceptLandmark=refineLandmark(jj-1,jj,rcurrent,rjj);
+                        acceptLandmark=refineLandmark(jj_1,jj,rcurrent,rjj);
                         if (acceptLandmark)
                         {
                             l.x=XX(rjj);
@@ -483,7 +514,8 @@ void Prog_tomograph_alignment::generateLandmarkSet() {
                             l.imgIdx=jj;
                             chain.push_back(l);
                             jjright=jj;
-                            jj++;
+                            if (isCapillar) jj=intWRAP(jj+1,0,Nimg-1);
+                            else            jj=jj+1;
                             rcurrent=rjj;
                         }
                     }
