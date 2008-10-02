@@ -58,10 +58,16 @@ DoDownSample=True
 # Downsampling factor 
 Down=3
 # {expert} Use Fourier-space window to downsample
+""" This is theoretically the best option, but it may take more memory than your machine can handle.
+"""
 UseDownFourier=True
 # {expert} Use real-space rectangle kernel to downsample
+""" This is the fastest, and therefore perhaps the most used option. However, it is also the least accurate one.
+"""
 UseDownRectangle=False
 # {expert} Use real-space sinc kernel to downsample
+""" This is the slowest option, but it approximates the accurracy of the Fourier-window option without the need for so much memory.
+"""
 UseDownSinc=False
 
 #------------------------------------------------------------------------------------------------
