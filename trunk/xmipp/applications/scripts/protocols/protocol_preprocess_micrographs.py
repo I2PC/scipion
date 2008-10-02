@@ -56,9 +56,14 @@ DoSpi2Raw=False
 # Perform downsampling?
 DoDownSample=True
 # Downsampling factor 
-"""Downsampling should be a real number grater than 1.0
-"""
 Down=3
+# {expert} Use Fourier-space window to downsample
+UseDownFourier=True
+# {expert} Use real-space rectangle kernel to downsample
+UseDownRectangle=False
+# {expert} Use real-space sinc kernel to downsample
+UseDownSinc=False
+
 #------------------------------------------------------------------------------------------------
 # {section} CTF estimation
 #------------------------------------------------------------------------------------------------
@@ -159,6 +164,9 @@ class preprocess_A_class:
                  DoSpi2Raw,
                  DoDownSample,
                  Down,
+                 UseDownFourier,
+                 UseDownRectangle,
+                 UseDownSinc,
                  DoCtfEstimate,
                  Voltage,
                  SphericalAberration,
@@ -194,6 +202,9 @@ class preprocess_A_class:
         self.DoSpi2Raw=DoSpi2Raw
         self.DoDownSample=DoDownSample
         self.Down=Down
+        self.UseDownFourier=UseDownFourier
+        self.UseDownRectangle=UseDownRectangle
+        self.UseDownSinc=UseDownSinc
         self.DoCtfEstimate=DoCtfEstimate
         self.Voltage=Voltage
         self.SphericalAberration=SphericalAberration
@@ -338,8 +349,13 @@ class preprocess_A_class:
         oname=self.shortname+'/'+self.downname+'.raw'
         print '*********************************************************************'
         print '*  Downsampling micrograph: '+iname
-        scale = 1./self.Down
-        command='xmipp_micrograph_downsample -i '+iname+' -o '+oname+' -output_bits 32 -fourier '+str(scale)
+        if (self.UseDownFourier):
+            scale = 1./self.Down
+            command='xmipp_micrograph_downsample -i '+iname+' -o '+oname+' -output_bits 32 -fourier '+str(scale)
+        elif (self.UseDownSinc):
+            command='xmipp_micrograph_downsample -i '+iname+' -o '+oname+' -output_bits 32 -Xstep '+str(self.Down)+' -kernel sinc 0.02 0.1'
+        else:
+            command='xmipp_micrograph_downsample -i '+iname+' -o '+oname+' -output_bits 32 -Xstep '+str(self.Down)+' -kernel rectangle '+str(self.Down)+' '+str(self.Down)
         print '* ',command
         self.log.info(command)
         os.system(command )
@@ -576,6 +592,9 @@ if __name__ == '__main__':
                                    DoSpi2Raw,
                                    DoDownSample,
                                    Down,
+                                   UseDownFourier,
+                                   UseDownRectangle,
+                                   UseDownSinc,
                                    DoCtfEstimate,
                                    Voltage,
                                    SphericalAberration,
