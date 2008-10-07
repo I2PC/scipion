@@ -56,9 +56,23 @@ DoSpi2Raw=False
 # Perform downsampling?
 DoDownSample=True
 # Downsampling factor 
-"""Downsampling should be a real number grater than 1.0
-"""
 Down=3
+# {expert} Use Fourier-space window to downsample
+""" This is theoretically the best option, but it may take more memory than your
+ machine can handle.
+"""
+UseDownFourier=True
+# {expert} Use real-space rectangle kernel to downsample
+""" This is the fastest, and perhaps therefore the most used option. However, it
+ is also the least accurate one.
+"""
+UseDownRectangle=False
+# {expert} Use real-space sinc kernel to downsample
+""" This is the slowest option, but it approximates the accurracy of the Fourier
+-window option without the need for so much memory.
+"""
+UseDownSinc=False
+
 #------------------------------------------------------------------------------------------------
 # {section} CTF estimation
 #------------------------------------------------------------------------------------------------
@@ -159,6 +173,9 @@ class preprocess_A_class:
                  DoSpi2Raw,
                  DoDownSample,
                  Down,
+                 UseDownFourier,
+                 UseDownRectangle,
+                 UseDownSinc,
                  DoCtfEstimate,
                  Voltage,
                  SphericalAberration,
@@ -194,6 +211,9 @@ class preprocess_A_class:
         self.DoSpi2Raw=DoSpi2Raw
         self.DoDownSample=DoDownSample
         self.Down=Down
+        self.UseDownFourier=UseDownFourier
+        self.UseDownRectangle=UseDownRectangle
+        self.UseDownSinc=UseDownSinc
         self.DoCtfEstimate=DoCtfEstimate
         self.Voltage=Voltage
         self.SphericalAberration=SphericalAberration
@@ -338,8 +358,13 @@ class preprocess_A_class:
         oname=self.shortname+'/'+self.downname+'.raw'
         print '*********************************************************************'
         print '*  Downsampling micrograph: '+iname
-        scale = 1./self.Down
-        command='xmipp_micrograph_downsample -i '+iname+' -o '+oname+' -output_bits 32 -fourier '+str(scale)
+        if (self.UseDownFourier):
+            scale = 1./self.Down
+            command='xmipp_micrograph_downsample -i '+iname+' -o '+oname+' -output_bits 32 -fourier '+str(scale)
+        elif (self.UseDownSinc):
+            command='xmipp_micrograph_downsample -i '+iname+' -o '+oname+' -output_bits 32 -Xstep '+str(self.Down)+' -kernel sinc 0.02 0.1'
+        else:
+            command='xmipp_micrograph_downsample -i '+iname+' -o '+oname+' -output_bits 32 -Xstep '+str(self.Down)+' -kernel rectangle '+str(self.Down)+' '+str(self.Down)
         print '* ',command
         self.log.info(command)
         os.system(command )
@@ -425,6 +450,10 @@ class preprocess_A_class:
         self.convert_raw_to_mrc()
 
         # Execute CTFFIND
+        # next line tells ctffind to skip endian checking
+        # I could have modified the program spi22ccp4 but
+        # I do not agree with cctfind interpretation of the flag
+        os.putenv('NATIVEMTZ', "kk")
         command=  self.CtffindExec+'  << eof > '+self.shortname+'/ctffind_'+self.downname+'.log\n'
         command+= self.shortname+'/tmp.mrc\n'
         command+= self.shortname+'/spectrum.mrc\n'
@@ -576,6 +605,9 @@ if __name__ == '__main__':
                                    DoSpi2Raw,
                                    DoDownSample,
                                    Down,
+                                   UseDownFourier,
+                                   UseDownRectangle,
+                                   UseDownSinc,
                                    DoCtfEstimate,
                                    Voltage,
                                    SphericalAberration,
