@@ -320,7 +320,7 @@ double EulerSolver::similarityBetweenTwoLines(int imgi, int imgj)
 /* Wrapper for Powell ------------------------------------------------------ */
 EulerSolver *global_Eulersolver=NULL;
 
-double wrapperSolverEnergy(double trial[]) {
+double wrapperSolverEnergy(double trial[], void *prm) {
    bool bAtSolution;
    return global_Eulersolver->EnergyFunction(trial+1,bAtSolution);
 }
@@ -525,7 +525,7 @@ double Prog_Angular_CommonLine::optimizeGroup(const Matrix1D<int> &imgIdx,
    	DIRECT_VEC_ELEM(solution,i) = solver->Solution()[i];
     int iter;
     double retval;
-    powellOptimizer(solution,1,3*NToSolve,wrapperSolverEnergy,
+    powellOptimizer(solution,1,3*NToSolve,wrapperSolverEnergy,NULL,
         0.001,retval,iter,steps,show);
 
     delete solver;
@@ -1193,7 +1193,7 @@ double Prog_Angular_CommonLine::realignCurrentSolution()
     }
     int iter;
     double energy;
-    powellOptimizer(solution,1,3*NToSolve,wrapperSolverEnergy,
+    powellOptimizer(solution,1,3*NToSolve,wrapperSolverEnergy,NULL,
         0.001,energy,iter,steps,true);
 
     idx=0;

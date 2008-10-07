@@ -93,7 +93,7 @@ double fitness(double *p)
     return fit;
 }
 
-double wrapperFitness(double *p)
+double wrapperFitness(double *p, void *prm)
 {
     return fitness(p+1);
 }
@@ -270,7 +270,8 @@ int main(int argc, char **argv)
 	    x(6)=(y0+yF)/2;
 	    x(7)=(x0+xF)/2;
 	    
-	    powellOptimizer(x,1,8,&wrapperFitness,0.01,fitness,iter,steps,true);
+	    powellOptimizer(x,1,8,&wrapperFitness,NULL,
+                0.01,fitness,iter,steps,true);
 	    best_align=x;
 	}
 

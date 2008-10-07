@@ -78,7 +78,7 @@ void Prog_Adjust_Volume_Parameters::produce_side_info()
 /* Goal function -----------------------------------------------------------  */
 Prog_Adjust_Volume_Parameters *global_adjust_volume_prm;
 
-double projection_mismatching(double *p)
+double projection_mismatching(double *p, void *prm)
 {
     return global_adjust_volume_prm->mismatching(p[1], p[2]);
 }
@@ -210,7 +210,8 @@ void Prog_Adjust_Volume_Parameters::apply(Matrix3D<double> &out)
         double ftol = 0.01, fret;
         int iter;
         global_adjust_volume_prm = this;
-        powellOptimizer(p, 1, 2, &projection_mismatching, ftol, fret, iter, steps, true);
+        powellOptimizer(p, 1, 2, &projection_mismatching, NULL,
+            ftol, fret, iter, steps, true);
         a = p(0);
         b = p(1);
     }

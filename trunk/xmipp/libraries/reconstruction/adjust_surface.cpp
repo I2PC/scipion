@@ -459,7 +459,7 @@ Prog_Adjust_Surface_Parameters *gasprm;
 #define prmsij gasprm->surface(i,j)
 #define    sij gasprm->wsurface(i,j)
 #define ZDIM   ZSIZE(gasprm->V())
-double eval_surface(double *p)
+double eval_surface(double *p, void *prm)
 {
     // Check valid ranges
     Matrix1D<double> shift(2);
@@ -566,7 +566,7 @@ void ROUT_adjust_surface(Prog_Adjust_Surface_Parameters &prm)
                                         std::cin >> prm.p(6);
                                     }
 
-                                    corr = eval_surface(p_aux);
+                                    corr = eval_surface(p_aux, NULL);
                                     // Best correlation?
                                     if (corr < best_corr)
                                     {
@@ -608,7 +608,7 @@ void ROUT_adjust_surface(Prog_Adjust_Surface_Parameters &prm)
         Matrix1D<double> steps(7);
         steps.initConstant(1);
         int iter = 0;
-        powellOptimizer(prm.p, 1, 7, &eval_surface,
+        powellOptimizer(prm.p, 1, 7, &eval_surface, NULL,
                          0.01, corr, iter, steps, true);
         best_corr = corr;
         best_ktop = ROUND(prm.p(3));

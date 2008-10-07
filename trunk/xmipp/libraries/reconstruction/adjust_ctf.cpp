@@ -33,7 +33,7 @@
 #include <data/filters.h>
 
 /* prototypes */
-double CTF_fitness(double *);
+double CTF_fitness(double *, void *);
 
 /* Number of CTF parameters */
 #define ALL_CTF_PARAMETERS         30
@@ -923,7 +923,7 @@ void Adjust_CTF_Parameters::generate_model_halfplane(int Ydim, int Xdim,
 /* CTF fitness ------------------------------------------------------------- */
 /* This function measures the distance between the estimated CTF and the
    measured CTF */
-double CTF_fitness(double *p)
+double CTF_fitness(double *p, void *)
 {
     double retval;
 
@@ -1313,7 +1313,7 @@ void estimate_background_sqrt_parameters()
     global_penalize = false;
     int iter;
     powellOptimizer(*global_adjust, FIRST_SQRT_PARAMETER + 1, SQRT_CTF_PARAMETERS,
-                     &CTF_fitness, 0.05, fitness, iter, steps,
+                     &CTF_fitness, NULL, 0.05, fitness, iter, steps,
                      global_prm->show_optimization);
 
     // Optimize with penalization
@@ -1328,7 +1328,7 @@ void estimate_background_sqrt_parameters()
             std::cout << "     Iteration " << i
             << " penalty=" << global_current_penalty << std::endl;
         powellOptimizer(*global_adjust, FIRST_SQRT_PARAMETER + 1,
-                         SQRT_CTF_PARAMETERS, &CTF_fitness,
+                         SQRT_CTF_PARAMETERS, &CTF_fitness, NULL,
                          0.05, fitness, iter, steps, global_prm->show_optimization);
         global_current_penalty *= 2;
         global_current_penalty = XMIPP_MIN(global_current_penalty, global_penalty);
@@ -1712,7 +1712,7 @@ void estimate_envelope_parameters()
     if (global_prm->modelSimplification>=1)
         steps(6) = steps(7) = 0; // Do not optimize DeltaF and DeltaR
     powellOptimizer(*global_adjust, FIRST_ENVELOPE_PARAMETER + 1, ENVELOPE_PARAMETERS,
-                     &CTF_fitness, 0.05, fitness, iter, steps,
+                     &CTF_fitness, NULL, 0.05, fitness, iter, steps,
                      global_prm->show_optimization);
 
     // Keep the result in global_prm->adjust
@@ -1737,7 +1737,7 @@ void estimate_envelope_parameters()
             std::cout << "     Iteration " << i
             << " penalty=" << global_current_penalty << std::endl;
         powellOptimizer(*global_adjust, FIRST_ENVELOPE_PARAMETER + 1,
-                         ENVELOPE_PARAMETERS, &CTF_fitness,
+                         ENVELOPE_PARAMETERS, &CTF_fitness, NULL,
                          0.05, fitness, iter, steps, global_prm->show_optimization);
         global_current_penalty *= 2;
         global_current_penalty = XMIPP_MIN(global_current_penalty, global_penalty);
@@ -1832,7 +1832,7 @@ void estimate_defoci()
                     (*global_adjust)(4) = K_so_far;
 
                     powellOptimizer(*global_adjust, FIRST_DEFOCUS_PARAMETER + 1,
-                                     DEFOCUS_PARAMETERS, &CTF_fitness,
+                                     DEFOCUS_PARAMETERS, &CTF_fitness, NULL,
                                      0.05, fitness, iter, steps, false);
 
                     if ((first_angle || fitness < error(i, j)) &&
@@ -2026,7 +2026,7 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, XmippCTF &output_ctfmodel,
     if (!global_prm->modelSimplification>=3)
         steps(7) = steps(8) = steps(10) = 0;
     powellOptimizer(*global_adjust, FIRST_SQRT_PARAMETER + 1,
-                     BACKGROUND_CTF_PARAMETERS, &CTF_fitness,
+                     BACKGROUND_CTF_PARAMETERS, &CTF_fitness, NULL,
                      0.01, fitness, iter, steps, global_prm->show_optimization);
 
     // Make sure that the model has physical meaning
@@ -2094,7 +2094,7 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, XmippCTF &output_ctfmodel,
     if (prm.modelSimplification>=1)
         steps(10) = steps(11) = 0;
     powellOptimizer(*global_adjust, 0 + 1,
-                     CTF_PARAMETERS, &CTF_fitness,
+                     CTF_PARAMETERS, &CTF_fitness, NULL,
                      0.01, fitness, iter, steps, global_prm->show_optimization);
     global_ctfmodel.force_physical_meaning();
     COPY_ctfmodel_TO_CURRENT_GUESS;
@@ -2126,7 +2126,7 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, XmippCTF &output_ctfmodel,
     if (prm.modelSimplification>=1)
         steps(10) = steps(11) = 0;
     powellOptimizer(*global_adjust, 0 + 1,
-                     ALL_CTF_PARAMETERS, &CTF_fitness,
+                     ALL_CTF_PARAMETERS, &CTF_fitness, NULL,
                      0.01, fitness, iter, steps, global_prm->show_optimization);
     global_ctfmodel.force_physical_meaning();
     COPY_ctfmodel_TO_CURRENT_GUESS;
@@ -2139,14 +2139,14 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, XmippCTF &output_ctfmodel,
 
     global_evaluation_reduction = 2;
     powellOptimizer(*global_adjust, 0 + 1,
-                     ALL_CTF_PARAMETERS, &CTF_fitness,
+                     ALL_CTF_PARAMETERS, &CTF_fitness, NULL,
                      0.01, fitness, iter, steps, global_prm->show_optimization);
     global_ctfmodel.force_physical_meaning();
     COPY_ctfmodel_TO_CURRENT_GUESS;
 
     global_evaluation_reduction = 1;
     powellOptimizer(*global_adjust, 0 + 1,
-                     ALL_CTF_PARAMETERS, &CTF_fitness,
+                     ALL_CTF_PARAMETERS, &CTF_fitness, NULL,
                      0.005, fitness, iter, steps, global_prm->show_optimization);
     global_ctfmodel.force_physical_meaning();
     COPY_ctfmodel_TO_CURRENT_GUESS;

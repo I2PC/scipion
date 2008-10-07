@@ -111,7 +111,7 @@ public:
        return dist;
     }
 
-    static double Powell_affine_fitness_individual(double *p)
+    static double Powell_affine_fitness_individual(double *p, void *prm)
     {
        return affine_fitness_individual(p+1);
     }
@@ -245,7 +245,7 @@ void computeAffineTransformation(const Matrix2D<double> &I1,
         double cost;
         int iter;
         powellOptimizer(A, 1, XSIZE(A),
-            AffineFitness::Powell_affine_fitness_individual, 0.005,
+            AffineFitness::Powell_affine_fitness_individual, NULL, 0.005,
             cost, iter, steps, true);
 
         // Separate solution
@@ -389,6 +389,31 @@ void Prog_tomograph_alignment::produceSideInfo() {
    for (int i=0; i<Nimg; i++)
     	affineTransformations.push_back(emptyRow);
 
+    // Compute all transformations
+    int maxShift=FLOOR(XSIZE(*img[0])*maxShiftPercentage);
+    int initjj=1;
+    if (isCapillar) initjj=0;
+    for (int jj=initjj; jj<Nimg; jj++)
+    {
+        int jj_1;
+        if (isCapillar) jj_1=intWRAP(jj-1,0,Nimg-1);
+        else            jj_1=jj-1;
+        Matrix2D<double>& img_i=*img[jj_1];
+        Matrix2D<double>& img_j=*img[jj];
+        std::cout << "Computing transformation between "
+                  << jj_1 << " and " << jj << std::endl;
+        bool isMirror=(jj==0) && (jj_1==Nimg-1);
+        Matrix2D<double> Aij, Aji;
+        computeAffineTransformation(img_i, img_j, maxShift,
+            maxIterDE,
+            (std::string)"affine_"+integerToString(jj_1,3)+
+            "_"+integerToString(jj,3)+".txt", Aij, Aji,
+            showAffine, thresholdAffine, localAffine,
+            isMirror);
+        affineTransformations[jj_1][jj]=Aij;
+	affineTransformations[jj][jj_1]=Aji;
+    }
+
     // Do not show refinement
     showRefinement=false;
 }
@@ -399,7 +424,6 @@ void Prog_tomograph_alignment::generateLandmarkSet() {
     if (!exists(fnRoot+"_landmarks.txt"))
     {
         int deltaShift=FLOOR(XSIZE(*img[0])/gridSamples);
-        int maxShift=FLOOR(XSIZE(*img[0])*maxShiftPercentage);
         std::vector<LandmarkChain> chainList;
         Matrix1D<double> rii(3), rjj(3);
         ZZ(rii)=1;
@@ -436,27 +460,8 @@ void Prog_tomograph_alignment::generateLandmarkSet() {
                         int jj_1;
                         if (isCapillar) jj_1=intWRAP(jj+1,0,Nimg-1);
                         else            jj_1=jj+1;
-                        if (XSIZE(affineTransformations[jj_1][jj])==0)
-                        {
-                            Matrix2D<double>& img_i=*img[jj];
-                            Matrix2D<double>& img_j=*img[jj_1];
-                            bool isMirror=(jj==Nimg-1) && (jj_1==0);
-                            std::cout << "Computing transformation between "
-                                      << jj << " and " << jj_1 << std::endl;
-                            computeAffineTransformation(img_i, img_j, maxShift,
-                                maxIterDE,
-                                (std::string)"affine_"+integerToString(jj,3)+
-                                "_"+integerToString(jj_1,3)+".txt", Aij, Aji,
-                                showAffine, thresholdAffine, localAffine,
-                                isMirror);
-                            affineTransformations[jj][jj_1]=Aij;
-	                    affineTransformations[jj_1][jj]=Aji;
-                        }
-                        else
-                        {
-                            Aij=affineTransformations[jj][jj_1];
-	                    Aji=affineTransformations[jj_1][jj];
-                        }
+                        Aij=affineTransformations[jj][jj_1];
+	                Aji=affineTransformations[jj_1][jj];
                         rjj=Aji*rcurrent;
                         acceptLandmark=refineLandmark(jj_1,jj,rcurrent,rjj);
                         if (acceptLandmark)
@@ -484,27 +489,8 @@ void Prog_tomograph_alignment::generateLandmarkSet() {
                         int jj_1;
                         if (isCapillar) jj_1=intWRAP(jj-1,0,Nimg-1);
                         else            jj_1=jj-1;
-                        if (XSIZE(affineTransformations[jj_1][jj])==0)
-                        {
-                            Matrix2D<double>& img_i=*img[jj_1];
-                            Matrix2D<double>& img_j=*img[jj];
-                            std::cout << "Computing transformation between "
-                                      << jj_1 << " and " << jj << std::endl;
-                            bool isMirror=(jj==0) && (jj_1==Nimg-1);
-                            computeAffineTransformation(img_i, img_j, maxShift,
-                                maxIterDE,
-                                (std::string)"affine_"+integerToString(jj_1,3)+
-                                "_"+integerToString(jj,3)+".txt", Aij, Aji,
-                                showAffine, thresholdAffine, localAffine,
-                                isMirror);
-                            affineTransformations[jj_1][jj]=Aij;
-	                    affineTransformations[jj][jj_1]=Aji;
-                        }
-                        else
-                        {
-                            Aij=affineTransformations[jj_1][jj];
-	                    Aji=affineTransformations[jj][jj_1];
-                        }
+                        Aij=affineTransformations[jj_1][jj];
+	                Aji=affineTransformations[jj][jj_1];
                         rjj=Aij*rcurrent;
                         acceptLandmark=refineLandmark(jj_1,jj,rcurrent,rjj);
                         if (acceptLandmark)
@@ -1032,7 +1018,7 @@ namespace TomographAlignment {
     const Prog_tomograph_alignment* global_prm;
 }
 
-double wrapperError(double *p)
+double wrapperError(double *p, void *prm)
 {
     Alignment alignment(TomographAlignment::global_prm);
     alignment=*(TomographAlignment::global_prm->bestPreviousAlignment);
@@ -1075,7 +1061,8 @@ void Prog_tomograph_alignment::run() {
     double fitness;
     int iter;
     TomographAlignment::global_prm=this;
-    powellOptimizer(axisAngles,1,2,&wrapperError,0.01,fitness,iter,steps,true);
+    powellOptimizer(axisAngles,1,2,&wrapperError, NULL,
+        0.01,fitness,iter,steps,true);
 
     // Outlier removal
     for (int i=0; i<3; i++)
@@ -1097,7 +1084,8 @@ void Prog_tomograph_alignment::run() {
 
         // Optimize again
         bestPreviousAlignment->optimizePsi=true;
-        powellOptimizer(axisAngles,1,2,&wrapperError,0.01,fitness,iter,steps,true);
+        powellOptimizer(axisAngles,1,2,&wrapperError,NULL,
+            0.01,fitness,iter,steps,true);
     }
     bestPreviousAlignment->rot=axisAngles(0);
     bestPreviousAlignment->tilt=axisAngles(1);

@@ -278,15 +278,15 @@ double Prog_nma_alignment_prm::computeFitness(Matrix1D<double> &trial) const
 }
 
 // Assign NMA and alignment parameters =====================================
-double wrapperFitness(double *prm)
+double wrapperFitness(double *p, void *prm)
 {
     Matrix1D<double> trial;
     trial.initZeros(global_NMA_prog->modeList.size()+5);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(trial)
-        trial(i)=prm[i+1];
+        trial(i)=p[i+1];
     double fitness=global_NMA_prog->computeFitness(trial);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(trial)
-        prm[i+1]=trial(i);
+        p[i+1]=trial(i);
     std::cout << "Trial=" << trial.transpose() << " ---> " << fitness << std::endl;
     return fitness;
 }
@@ -304,11 +304,11 @@ Matrix1D<double> Prog_nma_alignment_prm::assignParameters(const ImageXmipp &img)
     for (int i=1; i<=5; ++i)
         steps(XSIZE(steps)-i)=0;
     currentStage=1;
-    powellOptimizer(parameters, 1, XSIZE(steps), &wrapperFitness,
+    powellOptimizer(parameters, 1, XSIZE(steps), &wrapperFitness, NULL,
         0.01, fitness, iter, steps, true);
     bestStage1=parameters;
     currentStage=2;
-    powellOptimizer(parameters, 1, XSIZE(steps), &wrapperFitness,
+    powellOptimizer(parameters, 1, XSIZE(steps), &wrapperFitness, NULL,
         0.1, fitness, iter, steps, true);
     parameters.resize(XSIZE(parameters)+1);
     parameters(XSIZE(parameters)-1)=fitness;

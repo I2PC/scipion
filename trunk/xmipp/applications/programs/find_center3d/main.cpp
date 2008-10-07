@@ -32,7 +32,7 @@
 #include <cstdio>
 
 void Usage();
-double evaluateSymmetry(double *p);
+double evaluateSymmetry(double *p, void *prm);
 VolumeXmipp volume, volume_sym, volume_aux;
 Mask_Params mask_prm(INT_MASK);
 int rot_sym;
@@ -143,7 +143,7 @@ int main(int argc, char **argv)
 				    	Matrix1D<double> p(2);
 						p(0)=rot;
 						p(1)=tilt;
-                    	double corr=-evaluateSymmetry(MULTIDIM_ARRAY(p)-1);
+                    	double corr=-evaluateSymmetry(MULTIDIM_ARRAY(p)-1,NULL);
                     	if (corr > best_corr)
                     	{
                         	best_corr = corr;
@@ -168,7 +168,7 @@ int main(int argc, char **argv)
                 double fitness;
                 int iter;
                 steps.initConstant(1);
-                powellOptimizer(p,1,2,&evaluateSymmetry,0.01,
+                powellOptimizer(p,1,2,&evaluateSymmetry,NULL,0.01,
                    fitness,iter,steps,true);
                 best_rot=p(0);
                 best_tilt=p(1);
@@ -226,7 +226,7 @@ void Usage()
 }
 
 /* Evaluate symmetry ------------------------------------------------------- */
-double evaluateSymmetry(double *p)
+double evaluateSymmetry(double *p, void *prm)
 {
     double rot=p[1];
 	double tilt=p[2];
