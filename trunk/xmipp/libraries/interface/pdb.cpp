@@ -473,7 +473,7 @@ int globalM;
 double globalT;
 std::string globalAtom;
 
-double Hlpf_fitness(double *p)
+double Hlpf_fitness(double *p, void *prm)
 {
     double reductionFactor=p[1];
     double ripple=p[2];
@@ -563,7 +563,7 @@ void optimizeHlpf(Matrix1D<double> &f, int M, double T, const std::string &atom,
     int iter;
     Matrix1D<double> steps(3); steps.initConstant(1);
     powellOptimizer(globalHlpfPrm, 1, 3,
-                      &Hlpf_fitness, 0.05, fitness, iter, steps, false);
+                      &Hlpf_fitness, NULL, 0.05, fitness, iter, steps, false);
     bestPrm=globalHlpfPrm;
     hlpf(f, M, T, "SincKaiser", filter, bestPrm(0), bestPrm(1), bestPrm(2));
 }
