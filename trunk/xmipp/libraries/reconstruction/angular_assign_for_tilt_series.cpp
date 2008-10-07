@@ -37,15 +37,20 @@
 class AffineFitness
 {
 public:
-    static Matrix1D<double> minAllowed;
-    static Matrix1D<double> maxAllowed;
-    static Matrix2D<double> I1;
-    static Matrix2D<double> I2;
-    static Matrix2D<double> Mask1;
-    static Matrix2D<double> Mask2;
-    static bool showMode;
+	Matrix1D<double> minAllowed;
+	Matrix1D<double> maxAllowed;
+	Matrix2D<double> I1;
+	Matrix2D<double> I2;
+	Matrix2D<double> Mask1;
+	Matrix2D<double> Mask2;
+	bool showMode;
     
-    static double affine_fitness_individual(double *p)
+	AffineFitness()
+	{
+		showMode=false;
+	}
+	
+	double affine_fitness_individual(double *p)
     {
        // Check limits
        if (!showMode)
@@ -102,10 +107,10 @@ public:
           save()=I1-transformedI2; save.write("PPPDiffImg1.xmp");
           save()=I2-transformedI1; save.write("PPPDiffImg2.xmp");
           std::cout << "A12=\n" << A12 << "A21=\n" << A21 << std::endl;
-	  std::cout << "dist=" << dist << std::endl;
+	      std::cout << "dist=" << dist << std::endl;
           std::cout << "Press any key\n";
-	  char c;
-	  std::cin >> c;
+	      char c;
+	      std::cin >> c;
        }
 
        return dist;
@@ -113,23 +118,16 @@ public:
 
     static double Powell_affine_fitness_individual(double *p, void *prm)
     {
-       return affine_fitness_individual(p+1);
+       return ((AffineFitness*)prm)->affine_fitness_individual(p+1);
     }
 };
 
-Matrix1D<double> AffineFitness::minAllowed;
-Matrix1D<double> AffineFitness::maxAllowed;
-Matrix2D<double> AffineFitness::I1;
-Matrix2D<double> AffineFitness::I2;
-Matrix2D<double> AffineFitness::Mask1;
-Matrix2D<double> AffineFitness::Mask2;
-bool AffineFitness::showMode=false;
-
 class AffineSolver: public DESolver {
+   AffineFitness *fitness;
 public:
-   AffineSolver(int dim,int pop) : DESolver(dim,pop), count(0) {;}
+   AffineSolver(AffineFitness *newFitness, int dim,int pop) : DESolver(dim,pop), count(0), fitness(newFitness) {;}
    double EnergyFunction(double trial[], bool &bAtSolution) {
-      double result=AffineFitness::affine_fitness_individual(trial);
+      double result=fitness->affine_fitness_individual(trial);
       if (count++ % nPop == 0)
           std::cout << "EvaluationsAffine= " << count/nPop
                     << " energyAffine= " << Energy()
@@ -147,46 +145,44 @@ void computeAffineTransformation(const Matrix2D<double> &I1,
     Matrix2D<double> &A12, Matrix2D<double> &A21, bool show,
     double thresholdAffine, bool localAffine, bool isMirror)
 {
+    AffineFitness fitness;
+
     // Set images
-    AffineFitness::I1=I1;
-    AffineFitness::I1.setXmippOrigin();
-    //AffineFitness::I1.window(-YSIZE(I1)-maxShift,-XSIZE(I1)-maxShift,
-    //                          YSIZE(I1)+maxShift, XSIZE(I1)+maxShift);
-    AffineFitness::I2=I2;
-    AffineFitness::I2.setXmippOrigin();
-    //AffineFitness::I2.window(-YSIZE(I1)-maxShift,-XSIZE(I1)-maxShift,
-    //                          YSIZE(I1)+maxShift, XSIZE(I1)+maxShift);
-
-    AffineFitness::Mask1=AffineFitness::I1;
+    fitness.I1=I1;
+    fitness.I1.setXmippOrigin();
+	fitness.I2=I2;
+    fitness.I2.setXmippOrigin();
+   
+    fitness.Mask1=fitness.I1;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(I1)
-    	if (I1(i,j)!=0) AffineFitness::Mask1(i,j)=1;
+    	if (I1(i,j)!=0) fitness.Mask1(i,j)=1;
 
-    AffineFitness::Mask2=AffineFitness::I2;
+    fitness.Mask2=fitness.I2;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(I2)
-    	if (I2(i,j)!=0) AffineFitness::Mask2(i,j)=1;
+    	if (I2(i,j)!=0) fitness.Mask2(i,j)=1;
 
     // Set limits for the affine matrices
     // Order: 1->2: 4 affine params+2 translations
     // Order: 2->1: 4 affine params+2 translations
-    AffineFitness::minAllowed.resize(6);
-    AffineFitness::maxAllowed.resize(6);
+    fitness.minAllowed.resize(6);
+    fitness.maxAllowed.resize(6);
 
     // Scale factors
-    AffineFitness::minAllowed(0)=AffineFitness::minAllowed(3)=0.5;
-    AffineFitness::maxAllowed(0)=AffineFitness::maxAllowed(3)=1.5;
+    fitness.minAllowed(0)=fitness.minAllowed(3)=0.5;
+    fitness.maxAllowed(0)=fitness.maxAllowed(3)=1.5;
     if (isMirror)
     {
-        AffineFitness::minAllowed(3)=-1.5;
-        AffineFitness::maxAllowed(3)=-0.5;
+        fitness.minAllowed(3)=-1.5;
+        fitness.maxAllowed(3)=-0.5;
     }
 
     // Rotation factors
-    AffineFitness::minAllowed(1)=AffineFitness::minAllowed(2)=-0.5;
-    AffineFitness::maxAllowed(1)=AffineFitness::maxAllowed(2)= 0.5;
+    fitness.minAllowed(1)=fitness.minAllowed(2)=-0.5;
+    fitness.maxAllowed(1)=fitness.maxAllowed(2)= 0.5;
 
     // Shifts
-    AffineFitness::minAllowed(4)=AffineFitness::minAllowed(5)=-maxShift;
-    AffineFitness::maxAllowed(4)=AffineFitness::maxAllowed(5)= maxShift;
+    fitness.minAllowed(4)=fitness.minAllowed(5)=-maxShift;
+    fitness.maxAllowed(4)=fitness.maxAllowed(5)= maxShift;
 
     std::ifstream fh_in;
     fh_in.open(fn_affine.c_str());
@@ -205,9 +201,9 @@ void computeAffineTransformation(const Matrix2D<double> &I1,
             int n=0;
             do
             {
-                AffineSolver solver(6,6*10);
-                solver.Setup(MULTIDIM_ARRAY(AffineFitness::minAllowed),
-                             MULTIDIM_ARRAY(AffineFitness::maxAllowed),
+                AffineSolver solver(&fitness,6,6*10);
+                solver.Setup(MULTIDIM_ARRAY(fitness.minAllowed),
+                             MULTIDIM_ARRAY(fitness.maxAllowed),
 		             stBest2Bin, 0.5, 0.8);
                 solver.Solve(maxIterDE);
                 energy=solver.Energy();
@@ -245,7 +241,7 @@ void computeAffineTransformation(const Matrix2D<double> &I1,
         double cost;
         int iter;
         powellOptimizer(A, 1, XSIZE(A),
-            AffineFitness::Powell_affine_fitness_individual, NULL, 0.005,
+            AffineFitness::Powell_affine_fitness_individual, &fitness, 0.005,
             cost, iter, steps, true);
 
         // Separate solution
@@ -262,12 +258,12 @@ void computeAffineTransformation(const Matrix2D<double> &I1,
     }   
     if (show)
     {
-    	AffineFitness::showMode=true;
+    	fitness.showMode=true;
         Matrix1D<double> p(6);
         p(0)=A12(0,0); p(1)=A12(0,1); p(4)=A12(0,2);
         p(2)=A12(1,0); p(3)=A12(1,1); p(5)=A12(1,2);
-	AffineFitness::affine_fitness_individual(MULTIDIM_ARRAY(p));
-    	AffineFitness::showMode=false;
+	    fitness.affine_fitness_individual(MULTIDIM_ARRAY(p));
+    	fitness.showMode=false;
     }
 }
 
