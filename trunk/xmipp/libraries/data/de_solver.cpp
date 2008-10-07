@@ -5,10 +5,8 @@
 #define RowVector(a,b)  (&a[b*nDim])
 #define CopyVector(a,b) memcpy((a),(b),nDim*sizeof(double))
 
-DESolver *global_ptr_desolver = NULL;
-
-DESolver::DESolver(int dim, int popSize, double _pGrad) :
-        nDim(dim), nPop(popSize), pGrad(_pGrad),
+DESolver::DESolver(int dim, int popSize) :
+        nDim(dim), nPop(popSize),
         generations(0), strategy(stRand1Exp),
         scale(0.7), probability(0.5), bestEnergy(0.0),
         trialSolution(0), bestSolution(0),
@@ -16,13 +14,12 @@ DESolver::DESolver(int dim, int popSize, double _pGrad) :
 {
     trialSolution = new double[nDim];
     bestSolution  = new double[nDim];
-    trialGrad.resize(nDim);
-    stepsGrad.resize(nDim);
-    stepsGrad.initConstant(1);
     popEnergy   = new double[nPop];
     population   = new double[nPop * nDim];
 
-    return;
+    // For the random generator
+    idum2 = 123456789;
+    iy = 0;
 }
 
 DESolver::~DESolver(void)
@@ -120,20 +117,6 @@ bool DESolver::Solve(int maxGenerations)
 
             if (trialEnergy < popEnergy[candidate])
             {
-                // Follow gradient?
-                if (RandomUniform(0, 1) < pGrad)
-                {
-                    int iter;
-                    global_ptr_desolver = this;
-                    FOR_ALL_ELEMENTS_IN_MATRIX1D(trialGrad)
-                    trialGrad(i) = trialSolution[i];
-                    powellOptimizer(
-                        trialGrad, 0, XSIZE(trialGrad),
-                        EnergyFunctionGrad,
-                        0.01, trialEnergy,
-                        iter, stepsGrad);
-                }
-
                 // New low for this candidate
                 popEnergy[candidate] = trialEnergy;
                 CopyVector(RowVector(population, candidate), trialSolution);
@@ -428,7 +411,6 @@ void DESolver::SelectSamples(int candidate, int *r1, int *r2,
 #define IQ2 52774
 #define IR1 12211
 #define IR2 3791
-#define NTAB 32
 #define NDIV (1+IMM1/NTAB)
 #define EPS 1.2e-7
 #define RNMX (1.0-EPS)
@@ -437,11 +419,6 @@ double DESolver::RandomUniform(double minValue, double maxValue)
 {
     long j;
     long k;
-    static long idum;
-    static long idum2 = 123456789;
-    static long iy = 0;
-    static long iv[NTAB];
-    double result;
 
     if (iy == 0)
         idum = SEED;
@@ -487,19 +464,11 @@ double DESolver::RandomUniform(double minValue, double maxValue)
     if (iy < 1)
         iy += IMM1;
 
-    result = AM * iy;
+    double result = AM * iy;
 
     if (result > RNMX)
         result = RNMX;
 
     result = minValue + result * (maxValue - minValue);
     return(result);
-}
-
-// Energy function for the gradient -----------------------------------------
-double EnergyFunctionGrad(double *trialSolution)
-{
-    bool bAtSolution = false;
-    return global_ptr_desolver->EnergyFunction(trialSolution + 1, bAtSolution);
-    // +1 because of the shift of numerical recipes
 }

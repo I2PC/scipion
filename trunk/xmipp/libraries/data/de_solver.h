@@ -73,7 +73,7 @@ class DESolver
 {
 public:
     /// Empty constructor
-    DESolver(int dim, int popSize, double _pGrad = 0.0);
+    DESolver(int dim, int popSize);
     
     /// Destructor
     ~DESolver(void);
@@ -127,12 +127,6 @@ public:
         return (generations);
     }
 
-    /// Enable gradient
-    void enable_grad(double _pGrad)
-    {
-        pGrad = _pGrad;
-    }
-
 protected:
     void SelectSamples(int candidate,
                        int* r1,
@@ -141,12 +135,13 @@ protected:
                        int* r4 = 0,
                        int* r5 = 0);
 
+    #define NTAB 32
+    long idum, idum2, iy, iv[NTAB];
     double RandomUniform(double min, double max);
 
     int nDim;
     int nPop;
     int generations;
-    double pGrad;
 
     int strategy;
     StrategyFunction calcTrialSolution;
@@ -160,9 +155,6 @@ protected:
     double* bestSolution;
     double* popEnergy;
     double* population;
-    Matrix1D< double > trialGrad;
-    Matrix1D< double > stepsGrad;
-
 private:
     void Best1Exp(int candidate);
     void Rand1Exp(int candidate);
@@ -174,10 +166,6 @@ private:
     void RandToBest1Bin(int candidate);
     void Best2Bin(int candidate);
     void Rand2Bin(int candidate);
-
 };
 //@}
-
-double EnergyFunctionGrad(double*);
-
 #endif
