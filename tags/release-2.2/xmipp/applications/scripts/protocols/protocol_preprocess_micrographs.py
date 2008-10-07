@@ -69,7 +69,7 @@ UseDownFourier=True
 UseDownRectangle=False
 # {expert} Use real-space sinc kernel to downsample
 """ This is the slowest option, but it approximates the accurracy of the Fourier
--window option without the need for so much memory.
+ window option without the need for so much memory.
 """
 UseDownSinc=False
 
