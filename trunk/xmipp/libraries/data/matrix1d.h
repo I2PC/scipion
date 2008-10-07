@@ -1654,6 +1654,9 @@ void sortTwoVectors(Matrix1D<T>& v1, Matrix1D<T>& v2)
   *
   * The option show forces the routine to show the convergence path
   *
+  * If your function needs extra parameters you can pass them through 
+  * the void pointer prm. If you don't need this feature set it to NULL.
+  *
   * Example of use:
   *
   * @code
@@ -1662,13 +1665,14 @@ void sortTwoVectors(Matrix1D<T>& v1, Matrix1D<T>& v2)
   * int iter;
   * steps.initConstant(1);
   * x,initZeros();
-  * powellOptimizer(x,1,8,&wrapperFitness,0.01,fitness,iter,steps,true);
+  * powellOptimizer(x,NULL,1,8,&wrapperFitness,0.01,fitness,iter,steps,true);
   * @endcode
   *
   */
 void powellOptimizer(Matrix1D< double >& p,
                      int i0, int n,
-                     double(*f)(double* x),
+                     double(*f)(double* , void *),
+                     void *prm, 
                      double ftol,
                      double& fret,
                      int& iter,

@@ -57,7 +57,8 @@ Matrix1D<int> vectorR3(int x, int y, int z)
 
 /* Powell's optimizer ------------------------------------------------------ */
 void powellOptimizer(Matrix1D<double> &p, int i0, int n,
-                      double(*f)(double *x), double ftol, double &fret,
+                      double(*f)(double *x, void *), void * prm,
+                      double ftol, double &fret,
                       int &iter, const Matrix1D<double> &steps, bool show)
 {
     double *xi = NULL;
@@ -75,7 +76,7 @@ void powellOptimizer(Matrix1D<double> &p, int i0, int n,
 
     // Optimize
     xi -= n; // This is because NR works with matrices starting at [1,1]
-    powell(auxpptr, xi, n, ftol, iter, fret, f, show);
+    powell(auxpptr, xi, n, ftol, iter, fret, f, prm, show);
     xi += n;
 
     // Exit
