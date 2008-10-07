@@ -89,7 +89,12 @@ void four1(double *data, int nn, int isign);
 
 // Optimization ------------------------------------------------------------
 void powell(double *p, double *xi, int n, double ftol, int &iter,
-            double &fret, double(*func)(double *), bool show);
+            double &fret, double(*func)(double *, void *), void *prm, 
+            bool show);
+
+void amebsa(double **p, double y[], int ndim, double pb[], double *yb,
+    double ftol, double (*funk)(double []), int *iter, double temptr);
+
 // These two routines have been taken from
 // http://users.utu.fi/vesoik/userdocs/programs/libpet
 // and they implement an algorithm of Lawson-Hanson of

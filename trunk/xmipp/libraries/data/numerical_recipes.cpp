@@ -764,49 +764,36 @@ void instantiate_recipes()
 }
 
 /* Optimization ------------------------------------------------------------ */
-#define TOL 2.0e-4
-
-int ncom = 0; /* defining declarations */
-double *pcom = NULL, *xicom = NULL;
-double(*nrfunc)(double *) = NULL;
-
-double f1dim(double x)
-{
-    int j;
-    double f, *xt;
-
-    ask_Tvector(xt, 1, ncom);
-    for (j = 1;j <= ncom;j++)
-        xt[j] = pcom[j] + x * xicom[j];
-    f = (*nrfunc)(xt);
-    free_Tvector(xt, 1, ncom);
-    return f;
-}
-
 #undef MAX
 #undef SIGN
-
 #define GOLD 1.618034
 #define GLIMIT 100.0
 #define TINY 1.0e-20
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #define SIGN(a,b) ((b) > 0.0 ? fabs(a) : -fabs(a))
 #define SHFT(a,b,c,d) (a)=(b);(b)=(c);(c)=(d);
+#define F1DIM(x,f) {\
+    for (int j = 1; j<=ncom; j++) \
+        xt[j] = pcom[j] + x * xicom[j]; \
+    f = (*func)(xt,prm);}
 
 void mnbrak(double *ax, double *bx, double *cx,
-            double *fa, double *fb, double *fc, double(*func)(double))
+            double *fa, double *fb, double *fc, double(*func)(double *, void*),
+            void *prm, int ncom, double *pcom, double *xicom)
 {
     double ulim, u, r, q, fu, dum;
+    double *xt=NULL;
+    ask_Tvector(xt, 1, ncom);
 
-    *fa = (*func)(*ax);
-    *fb = (*func)(*bx);
+    F1DIM(*ax,*fa);
+    F1DIM(*bx,*fb);
     if (*fb > *fa)
     {
         SHFT(dum, *ax, *bx, dum)
         SHFT(dum, *fb, *fa, dum)
     }
     *cx = (*bx) + GOLD * (*bx - *ax);
-    *fc = (*func)(*cx);
+    F1DIM(*cx,*fc);
     while (*fb > *fc)
     {
         r = (*bx - *ax) * (*fb - *fc);
@@ -816,7 +803,7 @@ void mnbrak(double *ax, double *bx, double *cx,
         ulim = (*bx) + GLIMIT * (*cx - *bx);
         if ((*bx - u)*(u - *cx) > 0.0)
         {
-            fu = (*func)(u);
+            F1DIM(u,fu);
             if (fu < *fc)
             {
                 *ax = (*bx);
@@ -832,54 +819,57 @@ void mnbrak(double *ax, double *bx, double *cx,
                 return;
             }
             u = (*cx) + GOLD * (*cx - *bx);
-            fu = (*func)(u);
+            F1DIM(u,fu);
         }
         else if ((*cx - u)*(u - ulim) > 0.0)
         {
-            fu = (*func)(u);
+            F1DIM(u,fu);
             if (fu < *fc)
             {
                 SHFT(*bx, *cx, u, *cx + GOLD*(*cx - *bx))
-                SHFT(*fb, *fc, fu, (*func)(u))
+                double aux; F1DIM(u,aux);
+                SHFT(*fb, *fc, fu, aux)
             }
         }
         else if ((u - ulim)*(ulim - *cx) >= 0.0)
         {
             u = ulim;
-            fu = (*func)(u);
+            F1DIM(u,fu);
         }
         else
         {
             u = (*cx) + GOLD * (*cx - *bx);
-            fu = (*func)(u);
+            F1DIM(u,fu);
         }
         SHFT(*ax, *bx, *cx, u)
         SHFT(*fa, *fb, *fc, fu)
     }
+    free_Tvector(xt, 1, ncom);
 }
 
 #undef GOLD
 #undef GLIMIT
 #undef TINY
 #undef MAX
-#undef SHFT
 
 #define ITMAX 100
 #define CGOLD 0.3819660
 #define ZEPS 1.0e-10
-#define SHFT(a,b,c,d) (a)=(b);(b)=(c);(c)=(d);
-
-double brent(double ax, double bx, double cx, double(*f)(double), double tol,
-             double *xmin)
+double brent(double ax, double bx, double cx, double(*func)(double *,void*),
+             void *prm, double tol, double *xmin,
+             int ncom, double *pcom, double *xicom)
 {
     int iter;
     double a, b, d, etemp, fu, fv, fw, fx, p, q, r, tol1, tol2, u, v, w, x, xm;
     double e = 0.0;
+    double *xt=NULL;
+    ask_Tvector(xt, 1, ncom);
 
     a = (ax < cx ? ax : cx);
     b = (ax > cx ? ax : cx);
     x = w = v = bx;
-    fw = fv = fx = (*f)(x);
+    F1DIM(x,fx);
+    fw = fv = fx;
     for (iter = 1;iter <= ITMAX;iter++)
     {
         xm = 0.5 * (a + b);
@@ -887,6 +877,7 @@ double brent(double ax, double bx, double cx, double(*f)(double), double tol,
         if (fabs(x - xm) <= (tol2 - 0.5*(b - a)))
         {
             *xmin = x;
+            free_Tvector(xt, 1, ncom);
             return fx;
         }
         if (fabs(e) > tol1)
@@ -915,7 +906,7 @@ double brent(double ax, double bx, double cx, double(*f)(double), double tol,
             d = CGOLD * (e = (x >= xm ? a - x : b - x));
         }
         u = (fabs(d) >= tol1 ? x + d : x + SIGN(tol1, d));
-        fu = (*f)(u);
+        F1DIM(u,fu);
         if (fu <= fx)
         {
             if (u >= x)
@@ -947,21 +938,25 @@ double brent(double ax, double bx, double cx, double(*f)(double), double tol,
     }
     nrerror("Too many iterations in brent");
     *xmin = x;
+    free_Tvector(xt, 1, ncom);
     return fx;
 }
 #undef ITMAX
 #undef CGOLD
 #undef ZEPS
 #undef SHFT
+#undef F1DIM
 
+#define TOL 2.0e-4
 void linmin(double *p, double *xi, int n, double &fret,
-            double(*func)(double *))
+            double(*func)(double *, void*), void *prm)
 {
     int j;
     double xx, xmin, fx, fb, fa, bx, ax;
 
-    ncom = n;
-    nrfunc = func;
+    int ncom = n;
+    double *pcom=NULL;
+    double *xicom=NULL;
     ask_Tvector(pcom, 1, n);
     ask_Tvector(xicom, 1, n);
     for (j = 1;j <= n;j++)
@@ -972,8 +967,8 @@ void linmin(double *p, double *xi, int n, double &fret,
     ax = 0.0;
     xx = 1.0;
     bx = 2.0;
-    mnbrak(&ax, &xx, &bx, &fa, &fx, &fb, f1dim);
-    fret = brent(ax, xx, bx, f1dim, TOL, &xmin);
+    mnbrak(&ax, &xx, &bx, &fa, &fx, &fb, func, prm, ncom, pcom, xicom);
+    fret = brent(ax, xx, bx, func, prm, TOL, &xmin, ncom, pcom, xicom);
     for (j = 1;j <= n;j++)
     {
         xi[j] *= xmin;
@@ -982,15 +977,12 @@ void linmin(double *p, double *xi, int n, double &fret,
     free_Tvector(xicom, 1, n);
     free_Tvector(pcom, 1, n);
 }
-
 #undef TOL
 
 #define ITMAX 200
-static double sqrarg;
-#define SQR(a) (sqrarg=(a),sqrarg*sqrarg)
-
 void powell(double *p, double *xi, int n, double ftol, int &iter,
-            double &fret, double(*func)(double *), bool show)
+            double &fret, double(*func)(double *, void *), void *prm,
+            bool show)
 {
     int i, ibig, j;
     double t, fptt, fp, del;
@@ -1000,7 +992,7 @@ void powell(double *p, double *xi, int n, double ftol, int &iter,
     ask_Tvector(pt, 1, n);
     ask_Tvector(ptt, 1, n);
     ask_Tvector(xit, 1, n);
-    fret = (*func)(p);
+    fret = (*func)(p,prm);
     for (j = 1;j <= n;j++)
         pt[j] = p[j];
 
@@ -1031,7 +1023,7 @@ void powell(double *p, double *xi, int n, double ftol, int &iter,
             if (different_from_0)
             {
                 fptt = fret;
-                linmin(p, xit, n, fret, func);
+                linmin(p, xit, n, fret, func, prm);
                 if (fabs(fptt - fret) > del)
                 {
                     del = fabs(fptt - fret);
@@ -1071,20 +1063,20 @@ void powell(double *p, double *xi, int n, double ftol, int &iter,
             xit[j] = p[j] - pt[j];
             pt[j] = p[j];
         }
-        fptt = (*func)(ptt);
+        fptt = (*func)(ptt,prm);
         if (fptt < fp)
         {
+            #define SQR(a) ((a)*(a))
             t = 2.0 * (fp - 2.0 * fret + fptt) * SQR(fp - fret - del) - del * SQR(fp - fptt);
             if (t < 0.0)
             {
-                linmin(p, xit, n, fret, func);
+                linmin(p, xit, n, fret, func, prm);
                 for (j = 1;j <= n;j++)
                     xi[j*n+ibig] = xit[j];
             }
         }
     }
 }
-
 #undef ITMAX
 #undef SQR
 
@@ -9665,4 +9657,114 @@ void polint(double *xa, double *ya, int n, double x, double &y, double &dy)
     }
     free_Tvector(d, 1, n);
     free_Tvector(c, 1, n);
+}
+
+/* Simulated annealing ----------------------------------------------------- */
+double amotsa(double **p, double y[], double psum[], int ndim, double pb[],
+    double *yb, double (*funk)(double []), int ihi, double *yhi, double fac,
+    double tt, int &idum)
+{
+    int j;
+    double fac1,fac2,yflu,ytry,*ptry;
+
+    ask_Tvector(ptry,1,ndim);
+    fac1=(1.0-fac)/ndim;
+    fac2=fac1-fac;
+    for (j=1;j<=ndim;j++)
+	ptry[j]=psum[j]*fac1-p[ihi][j]*fac2;
+    ytry=(*funk)(ptry);
+    if (ytry <= *yb) {
+	for (j=1;j<=ndim;j++) pb[j]=ptry[j];
+	*yb=ytry;
+    }
+    yflu=ytry-tt*log(ran1(&idum));
+    if (yflu < *yhi) {
+	y[ihi]=ytry;
+	*yhi=yflu;
+	for (j=1;j<=ndim;j++) {
+	    psum[j] += ptry[j]-p[ihi][j];
+	    p[ihi][j]=ptry[j];
+	}
+    }
+    free_Tvector(ptry,1,ndim);
+    return yflu;
+}
+
+void amebsa(double **p, double y[], int ndim, double pb[], double *yb,
+    double ftol, double (*funk)(double []), int *iter, double temptr)
+{
+    int i,ihi,ilo,j,m,n,mpts=ndim+1;
+    double rtol,sum,swap,yhi,ylo,ynhi,ysave,yt,ytry,*psum;
+    int idum=-1;
+
+    ask_Tvector(psum,1,ndim);
+    double tt = -temptr;
+    for (n=1;n<=ndim;n++) {
+        for (sum=0.0,m=1;m<=mpts;m++) sum += p[m][n];
+        psum[n]=sum;
+    }
+    for (;;) {
+	ilo=1;
+	ihi=2;
+	ynhi=ylo=y[1]+tt*log(ran1(&idum));
+	yhi=y[2]+tt*log(ran1(&idum));
+	if (ylo > yhi) {
+	    ihi=1;
+	    ilo=2;
+	    ynhi=yhi;
+	    yhi=ylo;
+	    ylo=ynhi;
+	}
+	for (i=3;i<=mpts;i++) {
+	    yt=y[i]+tt*log(ran1(&idum));
+	    if (yt <= ylo) {
+		ilo=i;
+		ylo=yt;
+	    }
+	    if (yt > yhi) {
+		ynhi=yhi;
+		ihi=i;
+		yhi=yt;
+	    } else if (yt > ynhi) {
+		ynhi=yt;
+	    }
+	}
+	rtol=2.0*fabs(yhi-ylo)/(fabs(yhi)+fabs(ylo));
+	if (rtol < ftol || *iter < 0) {
+	    swap=y[1];
+	    y[1]=y[ilo];
+	    y[ilo]=swap;
+	    for (n=1;n<=ndim;n++) {
+		swap=p[1][n];
+		p[1][n]=p[ilo][n];
+		p[ilo][n]=swap;
+	    }
+	    break;
+	}
+	*iter -= 2;
+	ytry=amotsa(p,y,psum,ndim,pb,yb,funk,ihi,&yhi,-1.0,tt,idum);
+	if (ytry <= ylo) {
+	    ytry=amotsa(p,y,psum,ndim,pb,yb,funk,ihi,&yhi,2.0,tt,idum);
+	} else if (ytry >= ynhi) {
+	    ysave=yhi;
+	    ytry=amotsa(p,y,psum,ndim,pb,yb,funk,ihi,&yhi,0.5,tt,idum);
+	    if (ytry >= ysave) {
+		for (i=1;i<=mpts;i++) {
+		    if (i != ilo) {
+			for (j=1;j<=ndim;j++) {
+			    psum[j]=0.5*(p[i][j]+p[ilo][j]);
+			    p[i][j]=psum[j];
+			}
+			y[i]=(*funk)(psum);
+		    }
+		}
+		*iter -= ndim;
+                for (n=1;n<=ndim;n++) {
+                    for (sum=0.0,m=1;m<=mpts;m++) sum += p[m][n];
+                    psum[n]=sum;
+                }
+	    }
+	} else ++(*iter);
+    }
+    free_Tvector(psum,1,ndim);
 }
