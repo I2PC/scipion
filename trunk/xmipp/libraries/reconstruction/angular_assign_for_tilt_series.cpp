@@ -139,6 +139,7 @@ private:
    int count;
 };
 
+
 void computeAffineTransformation(const Matrix2D<double> &I1,
     const Matrix2D<double> &I2, int maxShift, int maxIterDE,
     const FileName &fn_affine, 
