@@ -69,6 +69,7 @@ int main(int argc, char *argv[])
         while (!SF.eof())
         {
             fn_img = SF.NextImg();
+            if (SF.eof()) break;
             head.read(fn_img);
             head.get_originOffsets(xx, yy);
             if (round_shifts)
