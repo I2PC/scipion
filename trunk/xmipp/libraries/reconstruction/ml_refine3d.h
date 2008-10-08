@@ -40,11 +40,13 @@
 
 #include "grids.h"
 #include "symmetries.h"
+#include "sampling.h"
 #include "blobs.h"
 #include "projection.h"
 #include "directions.h"
 #include "reconstruct_art.h"
 #include "reconstruct_wbp.h"
+#include "reconstruct_fourier.h"
 #include "ml_align2d.h"
 #include "mlf_align2d.h"
 #include "symmetrize.h"
@@ -77,8 +79,8 @@ public:
     double angular;
     /// File handler for the history file
     std::ofstream fh_hist;
-    // Use WBP instead of WLS-ART for reconstruction in ML
-    bool do_wbp;
+    // Use WBP or fourier-interpolation instead of WLS-ART for reconstruction in ML
+    bool reconstruct_wbp, reconstruct_fourier;
     // Low-pass filter digital frequency
     double lowpass;
     // For user-provided tilt range
@@ -100,6 +102,11 @@ public:
     bool skip_reconstruction;
     // Perturb angles of reference projections
     bool do_perturb;
+    // sampling object
+    XmippSampling mysampling;
+    // Symmetry setup
+    int symmetry, sym_order;
+
 
 public:
 
@@ -118,8 +125,11 @@ public:
     /// Show
     void show();
 
+    // Fill sampling and create DFlib
+    void produceSideInfo(int rank = 0);
+
     /// Project the reference volume in evenly sampled directions
-    void project_reference_volume(SelFile &SFlib, int rank = 0) ;
+    void project_reference_volume(SelFile &SFlib, int rank = 0, int size = 1) ;
 
     /// (For mpi-version only:) calculate noise averages and write to disc
     void make_noise_images(std::vector<ImageXmipp> &Iref) ;

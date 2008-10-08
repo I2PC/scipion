@@ -166,8 +166,8 @@ void Prog_Refine3d_prm::read(int argc, char ** argv, int &argc2, char ** &argv2)
     verb = textToInteger(getParameter(argc2, argv2, "-verb", "1"));
     Niter = textToInteger(getParameter(argc2, argv2, "-iter", "25"));
     istart = textToInteger(getParameter(argc2, argv2, "-istart", "1"));
-    tilt_range0 = textToFloat(getParameter(argc2, argv2, "-tilt0", "0."));
-    tilt_rangeF = textToFloat(getParameter(argc2, argv2, "-tiltF", "90."));
+    tilt_range0 = textToFloat(getParameter(argc2, argv2, "-tilt0", "-91."));
+    tilt_rangeF = textToFloat(getParameter(argc2, argv2, "-tiltF", "91."));
     fn_symmask = getParameter(argc2, argv2, "-sym_mask", "");
     lowpass = textToFloat(getParameter(argc2, argv2, "-filter", "-1"));
     wlsart_no_start = checkParameter(argc2, argv2, "-nostart");
@@ -175,7 +175,8 @@ void Prog_Refine3d_prm::read(int argc, char ** argv, int &argc2, char ** &argv2)
 
     // Hidden for now
     fn_solv = getParameter(argc2, argv2, "-solvent", "");
-    do_wbp = checkParameter(argc2, argv2, "-WBP");
+    reconstruct_wbp = checkParameter(argc2, argv2, "-WBP");
+    reconstruct_fourier = checkParameter(argc2, argv2, "-fourier");
     do_prob_solvent = checkParameter(argc2, argv2, "-prob_solvent");
     threshold_solvent = textToFloat(getParameter(argc2, argv2, "-threshold_solvent", "999"));
     do_deblob_solvent = checkParameter(argc2, argv2, "-deblob_solvent");
@@ -236,8 +237,8 @@ void Prog_Refine3d_prm::extended_usage()
     << " [ -sym <symfile> ]            : Enforce symmetry \n"
     << " [ -filter <dig.freq.=-1> ]    : Low-pass filter volume every iteration \n"
     << " [ -sym_mask <maskfile> ]      : Local symmetry (only inside mask) \n"
-    << " [ -tilt0 <float=0.> ]         : Lower-value for restricted tilt angle search \n"
-    << " [ -tiltF <float=90.> ]        : Higher-value for restricted tilt angle search \n"
+    << " [ -tilt0 <float=-91.> ]       : Lower-value for restricted tilt angle search \n"
+    << " [ -tiltF <float=91.> ]        : Higher-value for restricted tilt angle search \n"
     << " [ -perturb ]                  : Randomly perturb reference projection directions \n"
     << " [ -show_all_ML_options ]      : Show all parameters for the ML-refinement\n"
     << " [ -show_all_ART_options ]     : Show all parameters for the wlsART reconstruction \n";
@@ -279,12 +280,14 @@ void Prog_Refine3d_prm::show()
         std::cerr << "  Convergence criterion    : " << eps << std::endl;
         if (lowpass > 0)
             std::cerr << "  Low-pass filter          : " << lowpass << std::endl;
-        if (tilt_range0 > 0. || tilt_rangeF < 90.)
+        if (tilt_range0 > -91. || tilt_rangeF < 91.)
             std::cerr << "  Limited tilt range       : " << tilt_range0 << "  " << tilt_rangeF << std::endl;
         if (wlsart_no_start)
             std::cerr << "  -> Start wlsART reconstructions from all-zero volumes " << std::endl;
-        if (do_wbp)
-            std::cerr << "  -> Use weighted back-projection instead of ART for reconstruction" << std::endl;
+        if (reconstruct_wbp)
+            std::cerr << "  -> Use weighted back-projection instead of wlsART for reconstruction" << std::endl;
+        else if (reconstruct_fourier)
+            std::cerr << "  -> Use fourier-interpolation instead of wlsART for reconstruction" << std::endl;
         if (do_prob_solvent)
             std::cerr << "  -> Perform probabilistic solvent flattening" << std::endl;
         std::cerr << " -----------------------------------------------------------------" << std::endl;
@@ -313,12 +316,14 @@ void Prog_Refine3d_prm::show()
         fh_hist << "  Convergence criterion    : " << eps << std::endl;
         if (lowpass > 0)
             fh_hist << "  Low-pass filter          : " << lowpass << std::endl;
-        if (tilt_range0 > 0. || tilt_rangeF < 90.)
+        if (tilt_range0 > -91. || tilt_rangeF < 91.)
             fh_hist << "  Limited tilt range       : " << tilt_range0 << "  " << tilt_rangeF << std::endl;
         if (wlsart_no_start)
             fh_hist << "  -> Start wlsART reconstructions from all-zero volumes " << std::endl;
-        if (do_wbp)
+        if (reconstruct_wbp)
             fh_hist << "  -> Use weighted back-projection instead of wlsART for reconstruction" << std::endl;
+        else if (reconstruct_fourier)
+            fh_hist << "  -> Use fourier-interpolation instead of wlsART for reconstruction" << std::endl;
         if (do_prob_solvent)
             fh_hist << "  -> Perform probabilistic solvent flattening" << std::endl;
         fh_hist << " -----------------------------------------------------------------" << std::endl;
@@ -327,55 +332,57 @@ void Prog_Refine3d_prm::show()
 
 }
 
+// Fill sampling and create DFlib
+void Prog_Refine3d_prm::produceSideInfo(int rank)
+{
+    // Precalculate sampling
+    mysampling.SetSampling(angular);
+    if (!mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
+        REPORT_ERROR(3005, (std::string)"ml_refine3d::run Invalid symmetry" +  fn_sym);
+    // by default max_tilt= +91., min_tilt= -91.
+    mysampling.Compute_sampling_points(true,tilt_rangeF,tilt_range0);
+    mysampling.remove_redundant_points(symmetry, sym_order);
+
+    //Only the master creates a docfile with the library angles
+    if (rank == 0)
+    {
+        DocFile  DFlib;
+        for (int ilib = 0; ilib < mysampling.no_redundant_sampling_points_angles.size(); ilib++)
+        {
+            double rot=XX(mysampling.no_redundant_sampling_points_angles[ilib]);
+            double tilt=YY(mysampling.no_redundant_sampling_points_angles[ilib]);
+            double psi = 0.;
+            DFlib.append_angles(rot,tilt,psi,"rot","tilt","psi");
+        }
+        FileName fn_tmp = fn_root + "_lib.doc";
+        DFlib.write(fn_tmp);
+    }
+
+}
+
 // Projection of the reference (blob) volume =================================
-void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank)
+void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank, int size)
 {
 
     VolumeXmipp                   vol;
-    SymList                       SL;
-    DocFile                       DFlib;
     FileName                      fn_proj, fn_tmp;
     Projection                    proj;
     double                        rot, tilt, psi = 0.;
-    int                           nvol, nl, nr_dir;
+    int                           nvol, nl, nr_dir, my_rank;
 
-    if (fn_sym != "" && fn_symmask == "") SL.read_sym_file(fn_sym);
-    make_even_distribution(DFlib, angular, SL, false);
-    if (tilt_range0 > 0. || tilt_rangeF < 90.)
-        limit_tilt_range(DFlib, tilt_range0, tilt_rangeF);
-    // Select use-provided tilt range
-    if (tilt_range0 > 0. || tilt_rangeF < 90.)
-    {
-        DocLine DL;
-        DocFile Dt;
-        DFlib.go_first_data_line();
-        while (!DFlib.eof())
-        {
-            DL = DFlib.get_current_line();
-            tilt = DFlib(1);
-            if (tilt >= tilt_range0 && tilt <= tilt_rangeF) Dt.append_line(DL);
-            DFlib.next_data_line();
-        }
-        DFlib = Dt;
-        Dt.clear();
-    }
-    nl = Nvols * DFlib.dataLineNo();
 
+    // Here all nodes fill SFlib and DFlib, but each node actually projects 
+    // only a part of the projections. In this way parallellization is obtained
+
+    // Total number of projections
+    nl = Nvols * mysampling.no_redundant_sampling_points_angles.size();
+
+    // Initialize
     SFlib.clear();
     eachvol_start.clear();
     eachvol_end.clear();
 
-    // Only the master will actually project (and thus perturb if requested)
-    if (rank == 0 && do_perturb)
-    {   
-	DocFile DFt;
-	DFt=DFlib;
-	DFt.perturb_column(0,angular/3.);
-	DFlib=DFt;
-	DFlib.perturb_column(1,angular/3.);
-    }
-
-    if (verb > 0 && rank == 0)
+    if (verb > 0)
     {
         std::cerr << "--> projecting reference library ..." << std::endl;
         init_progress_bar(nl);
@@ -391,40 +398,41 @@ void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank)
         eachvol_start.push_back(nr_dir);
         vol.read(SFvol.NextImg());
         vol().setXmippOrigin();
-        DFlib.go_beginning();
-        DFlib.adjust_to_data_line();
-        while (!DFlib.eof())
+        
+        for (int ilib = 0; ilib < mysampling.no_redundant_sampling_points_angles.size(); ilib++)
         {
             fn_proj.compose(fn_tmp, nr_dir + 1, "proj");
-            rot  = DFlib(0);
-            tilt = DFlib(1);
-            // In parallel case: only master actually projects and writes to disc
-            if (rank == 0)
+            rot=XX(mysampling.no_redundant_sampling_points_angles[ilib]);
+            tilt=YY(mysampling.no_redundant_sampling_points_angles[ilib]);
+
+            // Parallellization: each rank projects and writes a different direction
+            my_rank = nr_dir % size;
+            if (rank == my_rank)
             {
                 project_Volume(vol(), proj, vol().rowNumber(), vol().colNumber(), rot, tilt, psi);
                 proj.set_eulerAngles(rot, tilt, psi);
                 proj.write(fn_proj);
             }
+
+            // But all ranks gather the information in SFlib (and in eachvol_end and eachvol_start)
             SFlib.insert(fn_proj, SelLine::ACTIVE);
-            DFlib.next_data_line();
             nr_dir++;
-            if (verb > 0  && rank == 0 && (nr_dir % XMIPP_MAX(1, nl / 60) == 0)) progress_bar(nr_dir);
+            if (verb > 0 && (nr_dir % XMIPP_MAX(1, nl / 60) == 0)) progress_bar(nr_dir);
         }
         eachvol_end.push_back(nr_dir - 1);
         nvol++;
     }
-    if (verb > 0 && rank == 0)
+    if (verb > 0)
     {
         progress_bar(nl);
         std::cerr << " -----------------------------------------------------------------" << std::endl;
     }
 
+    // Only the master write the complete SFlib
     if (rank == 0)
     {
         fn_tmp = fn_root + "_lib.sel";
         SFlib.write(fn_tmp);
-        fn_tmp = fn_root + "_lib.doc";
-        DFlib.write(fn_tmp);
     }
 
 }
@@ -505,7 +513,41 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
         if (fn_blob != "") fn_blob += ".basis";
     }
 
-    if (!do_wbp)
+    if (reconstruct_wbp)
+    {
+        Prog_WBP_prm           wbp_prm;
+        if (verb > 0) std::cerr << "--> WBP reconstruction " << std::endl;
+
+        // read command line (fn_sym, angular etc.)
+        wbp_prm.read(argc, argv);
+        wbp_prm.fn_sel = fn_insel;
+        wbp_prm.do_weights = true;
+        wbp_prm.do_all_matrices = true;
+        wbp_prm.show();
+        wbp_prm.verb = verb;
+        if (volno > 0) wbp_prm.verb = 0;
+        wbp_prm.fn_out = fn_tmp + ".vol";
+        wbp_prm.produce_Side_info();
+        wbp_prm.apply_2Dfilter_arbitrary_geometry(wbp_prm.SF, new_vol);
+        new_vol.write(wbp_prm.fn_out);
+    }
+    else if (reconstruct_fourier)
+    {
+        // read command line (fn_sym, angular etc.)
+        Prog_RecFourier_prm   fourier_prm;
+        if (verb > 0) std::cerr << "--> Fourier-interpolation reconstruction " << std::endl;
+        fourier_prm.read(argc, argv);
+        fourier_prm.fn_sel = fn_insel;
+        fourier_prm.do_weights = true;
+        fourier_prm.fn_sym_vol = fourier_prm.fn_sym;
+        fourier_prm.fn_out = fn_tmp + ".vol";
+        fourier_prm.verb = verb;
+        if (volno > 0) fourier_prm.verb = 0;
+        fourier_prm.show();
+        fourier_prm.produce_Side_info();
+        fourier_prm.MainLoop(new_vol);
+    }
+    else // use wlsART
     {
         Basic_ART_Parameters   art_prm;
         Plain_ART_Parameters   dummy;
@@ -544,24 +586,6 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
         // Reconstruct using weighted least-squares ART
         Basic_ROUT_Art(art_prm, dummy, new_vol, new_blobs);
 
-    }
-    else
-    {
-
-        Prog_WBP_prm           wbp_prm;
-        if (verb > 0) std::cerr << "--> WBP reconstruction " << std::endl;
-
-        // read command line (fn_sym, angular etc.)
-        wbp_prm.read(argc, argv);
-        wbp_prm.fn_sel = fn_insel;
-        wbp_prm.do_weights = true;
-        wbp_prm.do_all_matrices = true;
-        wbp_prm.show();
-        wbp_prm.verb = verb;
-        wbp_prm.fn_out = fn_tmp + ".vol";
-        wbp_prm.produce_Side_info();
-        wbp_prm.apply_2Dfilter_arbitrary_geometry(wbp_prm.SF, new_vol);
-        new_vol.write(wbp_prm.fn_out);
     }
 
     if (verb > 0) std::cerr << " -----------------------------------------------------------------" << std::endl;
