@@ -1102,14 +1102,15 @@ void Prog_RecFourier_prm::MainLoop(VolumeXmipp &vol)
     //symmetrize in reaL SPACE IF Needed 
     if (fn_sym_vol == "")
     {
-       vol.write(fn_out);
+        vol.write(fn_out);
     }
     else 
     {
-       std::cout << "Symmetrizing volume (using Bsplines)" << std::endl;
-       VolumeXmipp     V_out;
-       symmetrize_Bspline(SL_vol, vol, V_out, 3, false, true);
-       V_out.write(fn_out);
+        if (verb > 0) 
+            std::cout << std::endl << "Symmetrizing volume (using Bsplines)" << std::endl;
+        VolumeXmipp     V_out;
+        symmetrize_Bspline(SL_vol, vol, V_out, 3, false, true);
+        V_out.write(fn_out);
     }
         /*
        for (int i=0;i<10;i++)
