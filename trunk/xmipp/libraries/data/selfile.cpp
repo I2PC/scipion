@@ -555,10 +555,11 @@ void SelFile::adjust_to_label(SelLine::Label label)
 const std::string& SelFile::NextImg(SelLine::Label label)
 {
     adjust_to_label(label);
+    static const std::string emptyString;
     if (current_line != text_line.end())
         return (*current_line++).text;
     else
-        return "";
+        return emptyString;
 }
 
 /* Jump over a certain number of data lines (disregarding any label) ------- */
