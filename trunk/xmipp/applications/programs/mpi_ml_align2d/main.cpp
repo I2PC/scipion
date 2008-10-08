@@ -26,6 +26,9 @@
 #include <reconstruction/ml_align2d.h>
 #include <mpi.h>
 
+#define TAG_DOCFILE 12
+#define TAG_DOCFILESIZE 13
+ 
 int main(int argc, char **argv)
 {
 
@@ -39,7 +42,7 @@ int main(int argc, char **argv)
     std::vector<double> sumw, sumw2, sumwsc, sumwsc2, sumw_mirror;
     Matrix2D<double> Maux;
     Matrix1D<double> Vaux;
-    FileName fn_img, fn_tmp;
+    FileName fn_img;
     DocFile DFo;
     // For parallelization
     int rank, size, num_img_tot;
@@ -49,6 +52,7 @@ int main(int argc, char **argv)
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Status status;
 
     // Get input parameters
     try
@@ -123,16 +127,6 @@ int main(int argc, char **argv)
             // Save old reference images
             for (int refno = 0;refno < prm.n_ref; refno++) prm.Iold[refno]() = prm.Iref[refno]();
 
-            // Prepare DFo header
-            DFo.clear();
-            if (rank == 0)
-            {
-                if (prm.maxCC_rather_than_ML)
-                    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Corr (8)");
-                else
-                    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), w_robust (9), bgmean (10), scale (11), sigma (12), KSprob (13)");
-            }
-
             // Pre-calculate pdfs
             if (!prm.maxCC_rather_than_ML) prm.calculate_pdf_phi();
 
@@ -184,44 +178,67 @@ int main(int argc, char **argv)
             // Check convergence
             converged = prm.check_convergence(conv);
 
-            // Write out intermediate files
-            if (prm.write_docfile)
+            // Write intermediate files 
+            if (rank != 0)
             {
-                // All nodes write out temporary DFo
-                fn_img.compose(prm.fn_root, rank, "tmpdoc");
-                DFo.write(fn_img);
+                // All slaves send docfile to the master
+                std::ostringstream doc;
+                doc << DFo;
+                int s_size=  doc.str().size();
+                char results[s_size];
+                strncpy(results,doc.str().c_str(),s_size);
+                results[s_size]='\0';
+                MPI_Send(&s_size, 1, MPI_INT, 0, TAG_DOCFILESIZE, MPI_COMM_WORLD);
+                MPI_Send(results, s_size, MPI_CHAR, 0, TAG_DOCFILE, MPI_COMM_WORLD);
             }
-            MPI_Barrier(MPI_COMM_WORLD);
-
-            if (rank == 0)
+            else
             {
-                if (prm.write_intermediate)
+                // Master fills docfile 
+                std::ofstream myDocFile;
+                FileName fn_tmp;
+                fn_tmp.compose(prm.fn_root + "_it",iter,"doc");
+                myDocFile.open (fn_tmp.c_str());
+                if (prm.maxCC_rather_than_ML)
+                    myDocFile << " ; Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Corr (8)\n";
+                else
+                    myDocFile << " ; Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), w_robust (9), bgmean (10), scale (11), sigma (12), KSprob (13)\n";
+
+                // Master's own contribution
+                myDocFile << DFo;
+                int docCounter=1;
+                while (docCounter < size)
                 {
-                    if (prm.write_docfile)
-                    {
-                        // Write out docfile with optimal transformation & references
-                        DFo.clear();
-                        for (int rank2 = 0; rank2 < size; rank2++)
-                        {
-                            fn_img.compose(prm.fn_root, rank2, "tmpdoc");
-                            int ln = DFo.LineNo();
-                            DFo.append(fn_img);
-                            DFo.locate(DFo.get_last_key());
-                            DFo.next();
-                            DFo.remove_current();
-                            system(((std::string)"rm -f " + fn_img).c_str());
-                        }
-                    }
-                    prm.write_output_files(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
+                    // receive in order
+                    int iNumber, s_size;
+                    MPI_Recv(&s_size, 1, MPI_INT, docCounter, TAG_DOCFILESIZE, MPI_COMM_WORLD, &status);
+                    char results[s_size];
+                    MPI_Recv(results, s_size, MPI_CHAR, docCounter, TAG_DOCFILE, MPI_COMM_WORLD, &status);
+                    results[s_size]='\0';
+                    myDocFile<<results ;
+                    docCounter++;
                 }
-                else prm.output_to_screen(iter, sumcorr, LL);
+
+                //save doc_file and renumber it
+                myDocFile.close();
+                DFo.clear();
+                DFo.read(fn_tmp);
+                DFo.renum();
+
+                // Output all intermediate files
+                if (prm.write_intermediate)
+                    prm.write_output_files(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
             }
             MPI_Barrier(MPI_COMM_WORLD);
-
+            
             if (converged)
             {
                 if (prm.verb > 0) std::cerr << " Optimization converged!" << std::endl;
                 break;
+            }
+            else
+            {
+                // reset DFo
+                DFo.clear();
             }
             MPI_Barrier(MPI_COMM_WORLD);
 
