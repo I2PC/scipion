@@ -281,6 +281,7 @@ void SF_main(int argc, char **argv,
             {
                 FileName fn_read;
                 fn_read = SF_in.NextImg();
+                if (SF_in.eof()) break;
                 if (prm->each_image_produces_an_output)
                     if (prm->oext == "" && prm->oroot == "")
                         prm->fn_out = fn_read;

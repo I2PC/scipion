@@ -617,6 +617,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
         while (!SF.eof())
         {
             FileName fn_proj = SF.NextImg();
+            if (SF.eof()) break;
             ImageXmipp I;
             I.read(fn_proj);
             I().setXmippOrigin();
@@ -646,6 +647,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
         while (!SF.eof())
         {
             FileName fn_proj = SF.NextImg();
+            if (SF.eof()) break;
             ImageXmipp I;
             I.read(fn_proj);
             I().setXmippOrigin();
@@ -681,6 +683,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
         while (!SF.eof())
         {
             FileName fn_proj = SF.NextImg();
+            if (SF.eof()) break;
             ImageXmipp I;
             I.read(fn_proj);
             I().setXmippOrigin();

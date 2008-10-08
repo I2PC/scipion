@@ -213,7 +213,9 @@ void Prog_WBP_prm::get_sampled_matrices(SelFile &SF)
     SF.go_beginning();
     while (!SF.eof())
     {
-        get_angles_for_image(SF.NextImg(), rot, tilt, dum, dum, dum, dum, weight);
+        FileName fn_img=SF.NextImg();
+        if (SF.eof()) break;
+        get_angles_for_image(fn_img, rot, tilt, dum, dum, dum, dum, weight);
         if (do_weights)
             count_imgs[find_nearest_direction(rot,tilt,DFlib,0,1,SL)] += weight;
         else count_imgs[find_nearest_direction(rot,tilt,DFlib,0,1,SL)] += 1.;
@@ -278,7 +280,9 @@ void Prog_WBP_prm::get_all_matrices(SelFile &SF)
 
     while (!SF.eof())
     {
-        get_angles_for_image(SF.NextImg(), rot, tilt, psi, dum, dum, dum, weight);
+        FileName fn_img=SF.NextImg();
+        if (SF.eof()) break;
+        get_angles_for_image(fn_img, rot, tilt, psi, dum, dum, dum, weight);
         Euler_angles2matrix(rot, -tilt, psi, A);
         mat_g[no_mats].zero = A(2, 0);
         mat_g[no_mats].one = A(2, 1);
@@ -454,6 +458,7 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
 	// Check whether to kill job
 	exit_if_not_exists(fn_control);
         fn_img = SF.NextImg();
+        if (SF.eof()) break;
         if (fn_doc == "")
         {
             proj.read(fn_img, true);

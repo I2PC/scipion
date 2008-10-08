@@ -364,6 +364,7 @@ void Prog_angular_project_library_Parameters::createGroupSamplingFiles(void)
     {
         igrp++;
         fn_temp = mySF.NextImg();
+        if (mySF.eof()) break;
         my_output_file_root.compose(output_file_root + "_group",igrp,"");
         std::cerr<<"Writing group sampling file "<< my_output_file_root<<std::endl;           
        

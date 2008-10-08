@@ -233,7 +233,9 @@ void Prog_mlf_tomo_prm::produce_Side_info()
     Fref.clear();
     while (!SFr.eof())
     {
-        vol.read(SFr.NextImg());
+        FileName fn_img=SFr.NextImg();
+        if (SFr.eof()) break;
+        vol.read(fn_img);
         vol().setXmippOrigin();
         //computeStats_within_binary_mask(outside_mask,vol(),dum,dum,avg,dum);
         //apply_binary_mask(mask,vol(),vol(),avg);
@@ -357,6 +359,7 @@ void Prog_mlf_tomo_prm::produce_Side_info2()
         while (!SF.eof())
         {
             fn_vol = SF.NextImg();
+            if (SF.eof()) break;
             if (DF.search_comment(fn_vol))
             {
                 img_rot.push_back(DF(0));
@@ -406,6 +409,7 @@ void Prog_mlf_tomo_prm::produce_Side_info2()
         while (!SF.eof())
         {
             SF.NextImg();
+            if (SF.eof()) break;
             img_rot.push_back(0.);
             img_tilt.push_back(0.);
             img_psi.push_back(0.);
@@ -431,6 +435,7 @@ void Prog_mlf_tomo_prm::produce_Side_info2()
         while (!SF.eof())
         {
             fn_vol = SF.NextImg();
+            if (SF.eof()) break;
             if (DFmis.search_comment(fn_vol))
             {
                 mis_rot = DFmis(0);
@@ -504,6 +509,7 @@ void Prog_mlf_tomo_prm::estimate_initial_sigma2()
             while (!SF.eof())
             {
                 fn_vol = SF.NextImg();
+                if (SF.eof()) break;
                 vol.read(fn_vol);
                 vol().setXmippOrigin();
                 if (DF.search_comment(fn_vol))
@@ -1022,6 +1028,7 @@ void Prog_mlf_tomo_prm::sum_over_all_images(SelFile &SF,
     {
         // read tomogram from disc
         fn_img = SF.NextImg();
+        if (SF.eof()) break;
         img.read(fn_img);
         img().setXmippOrigin();
 

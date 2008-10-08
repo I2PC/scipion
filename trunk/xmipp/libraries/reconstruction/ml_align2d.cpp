@@ -374,6 +374,7 @@ void Prog_MLalign2D_prm::produce_Side_info()
         while (!SF.eof())
         {
             fn_tmp = SF.NextImg();
+            if (SF.eof()) break;
             fn_tmp2 = fn_tmp.remove_directories(offsets_keepdir);
             if (fn_tmp == fn_tmp2) nomoredirs = true;
             SFtmp.insert(fn_tmp2);
@@ -385,6 +386,7 @@ void Prog_MLalign2D_prm::produce_Side_info()
         {
             fn_tmp = SFtmp.NextImg();
             fn_tmp2 = SFtmp.NextImg();
+            if (SFtmp.eof()) break;
             if (fn_tmp == fn_tmp2)
             {
                 uniqname = false;
@@ -587,7 +589,9 @@ void Prog_MLalign2D_prm::produce_Side_info2(int nr_vols)
     SFr.go_beginning();
     while ((!SFr.eof()))
     {
-        img.read(SFr.NextImg(), false, false, true, false);
+        FileName fn_img=SFr.NextImg();
+        if (SFr.eof()) break;
+        img.read(fn_img, false, false, true, false);
         img().setXmippOrigin();
         Iref.push_back(img);
         if (!save_mem3) Iold.push_back(img);
@@ -697,6 +701,7 @@ void Prog_MLalign2D_prm::produce_Side_info2(int nr_vols)
             while (!SF.eof())
             {
                 fn_tmp = SF.NextImg();
+                if (SF.eof()) break;
                 if (DF.search_comment(fn_tmp))
                 {
                     if (limit_rot)
@@ -2468,6 +2473,7 @@ void Prog_MLalign2D_prm::ML_sum_over_all_images(SelFile &SF, std::vector< ImageX
 	exit_if_not_exists(fn_control);
 
         fn_img = SF.NextImg();
+        if (SF.eof()) break;
         fn_trans = fn_img.remove_directories(offsets_keepdir);
         fn_trans = fn_root + "_offsets/" + fn_trans + ".off";
 

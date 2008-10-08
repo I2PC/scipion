@@ -388,6 +388,7 @@ void Prog_MLFalign2D_prm::produceSideInfo()
         while (!SF.eof())
         {
             fn_tmp = SF.NextImg();
+            if (SF.eof()) break;
             fn_tmp2 = fn_tmp.remove_directories(offsets_keepdir);
             if (fn_tmp == fn_tmp2) nomoredirs = true;
             SFtmp.insert(fn_tmp2);
@@ -399,6 +400,7 @@ void Prog_MLFalign2D_prm::produceSideInfo()
         {
             fn_tmp = SFtmp.NextImg();
             fn_tmp2 = SFtmp.NextImg();
+            if (SFtmp.eof()) break;
             if (fn_tmp == fn_tmp2)
             {
                 uniqname = false;
@@ -549,6 +551,7 @@ void Prog_MLFalign2D_prm::produceSideInfo()
 	{
 	    SL=SF.current();
 	    fnt=SF.NextImg();
+            if (SF.eof()) break;
 	    // Find which CTF group it belongs to
 	    found = false;
 	    ctfdat.goFirstLine();
@@ -688,12 +691,14 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
         int imgno = 0;
         while (!SF.eof())
         {
+            FileName fn_img=SF.NextImg()
+            if (SF.eof()) break;
 	    if (do_ctf_correction)
 	    {
 		SL = SF.current();
 		focus = SL.get_number() - 1;
 	    }
-            img.read(SF.NextImg(), false, false, false, false);
+            img.read(fn_img, false, false, false, false);
             img().setXmippOrigin();
             FourierTransform(img(), Fimg);
             FFT_magnitude(Fimg, Maux);
@@ -1144,7 +1149,9 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols)
     SFr.go_beginning();
     while ((!SFr.eof()))
     {
-        img.read(SFr.NextImg(), false, false, true, false);
+        FileName fn_img=SFr.NextImg();
+        if (SFr.eof()) break;
+        img.read(fn_img, false, false, true, false);
         img().setXmippOrigin();
         Iref.push_back(img);
         Iold.push_back(img);
@@ -1225,6 +1232,7 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols)
             while (!SF.eof())
             {
                 fn_tmp = SF.NextImg();
+                if (SF.eof()) break;
                 if (DF.search_comment(fn_tmp))
                 {
                     if (limit_rot)
@@ -2542,7 +2550,6 @@ void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, std::vector< ImageXmippT
     SF.go_beginning();
     while ((!SF.eof()))
     {
-
 	// Check whether to kill job
 	exit_if_not_exists(fn_control);
 
@@ -2553,6 +2560,7 @@ void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, std::vector< ImageXmippT
 	    focus = line.get_number() - 1;
 	}
         fn_img = SF.NextImg();
+        if (SF.eof()) break;
         fn_trans = fn_img.remove_directories(offsets_keepdir);
         fn_trans = fn_root + "_offsets/" + fn_trans + ".off";
         img.read(fn_img, false, false, false, false);

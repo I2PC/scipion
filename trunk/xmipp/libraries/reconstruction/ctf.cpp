@@ -668,5 +668,9 @@ void CTFDat::createFromSelfileAndSingleCTF(SelFile &SF, const FileName &fnCtf)
 {
     SF.go_first_ACTIVE();
     while (!SF.eof())
-    	append(SF.NextImg(),fnCtf);
+    {
+        FileName fn_img=SF.NextImg();
+        if (SF.eof()) break;
+    	append(fn_img,fnCtf);
+    }
 }

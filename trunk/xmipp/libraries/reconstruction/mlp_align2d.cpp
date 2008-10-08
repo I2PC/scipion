@@ -349,7 +349,9 @@ void Prog_MLPalign2D_prm::produceSideInfo2(int nr_vols)
     SFr.go_beginning();
     while ((!SFr.eof()))
     {
-        img.read(SFr.NextImg(), false, false, true, false);
+        FileName fn_img=SFr.NextImg();
+        if (SFr.eof()) break;
+        img.read(fn_img, false, false, true, false);
         img().setXmippOrigin();
         Iref.push_back(img);
 	Iold.push_back(img);
@@ -379,6 +381,7 @@ void Prog_MLPalign2D_prm::produceSideInfo2(int nr_vols)
     while (!SF.eof())
     {
 	fn_tmp = SF.NextImg();
+        if (SF.eof()) break;
 	if (fn_doc != "")
 	{
 	    if (DF.search_comment(fn_tmp))
@@ -840,6 +843,7 @@ void Prog_MLPalign2D_prm::sumOverAllImages(SelFile &SF, const std::vector< Image
     while ((!SF.eof()))
     {
         fn_img = SF.NextImg();
+        if (SF.eof()) break;
         img.read(fn_img, false, false, false, false);
         img().setXmippOrigin();
 

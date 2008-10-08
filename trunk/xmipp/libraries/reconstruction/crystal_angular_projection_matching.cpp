@@ -110,7 +110,9 @@ void Prog_projection_matching_crystal_prm::produce_Side_info()
     while (!SFref.eof())
     {
         //readimage
-        proj.read(SFref.NextImg());
+        FileName fn_img=SFref.NextImg();
+        if (SFref.eof()) break;
+        proj.read(fn_img);
         proj().setXmippOrigin();
         ref_rot[nr_dir] = proj.rot();
         ref_tilt[nr_dir]  = proj.tilt();
@@ -329,6 +331,7 @@ void Prog_projection_matching_crystal_prm::PM_loop_over_all_images(DocFile &DFo,
     {
         imgno++;
         fn_img = SFexp.NextImg();
+        if (SFexp.eof()) break;
         //last true means shift are applied but not psi
         img.read(fn_img, false, false, false, true);
         img().setXmippOrigin();

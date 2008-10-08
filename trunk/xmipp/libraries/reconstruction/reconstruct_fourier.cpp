@@ -876,9 +876,9 @@ void Prog_RecFourier_prm::MainLoop(VolumeXmipp &vol)
     while (!SF.eof())
     {
 	// Check whether to kill job
-	    exit_if_not_exists(fn_control);
+        exit_if_not_exists(fn_control);
         fn_img = SF.NextImg();
-        //std::cerr << fn_img << std::endl;
+        if (SF.eof()) break;
 
         ProcessOneImage(fn_img,
                         fftPaddedImg,

@@ -100,6 +100,7 @@ double Prog_Adjust_Volume_Parameters::mismatching(double a, double b)
     {
         // Read next image
         FileName fn = SF.NextImg();
+        if (SF.eof()) break;
 
         // Skip randomly some images
         double x = rnd_unif(0, 1);
@@ -149,6 +150,7 @@ void Prog_Adjust_Volume_Parameters::apply(Matrix3D<double> &out)
     {
         // Read image
         FileName fn = SF.NextImg();
+        if (SF.eof()) break;
         ImageXmipp I;
         I.read(fn);
         projXdim = XSIZE(I());

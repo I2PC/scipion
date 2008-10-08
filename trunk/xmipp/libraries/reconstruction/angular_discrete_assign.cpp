@@ -307,7 +307,9 @@ void Prog_angular_predict_prm::produce_library(int rank)
     int n = 0, nstep = XMIPP_MAX(1, number_of_imgs / 60); // For progress bar
     while (!SF_ref.eof())
     {
-        I.read(SF_ref.NextImg(), false, false, true, true);
+        FileName fn_img=SF_ref.NextImg();
+        if (SF_ref.eof()) break;
+        I.read(fn_img, false, false, true, true);
         library_name.push_back(I.name());
 
         // Make and distribute its DWT coefficients in the different PCA bins

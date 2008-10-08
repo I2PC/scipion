@@ -75,6 +75,7 @@ void build_recons_info(SelFile &selfile, SelFile &selctf,
     while (!selfile.eof())
     {
         fn_proj = selfile.NextImg();
+        if (selfile.eof()) break;
         if (is_there_ctf && !is_ctf_unique) fn_ctf1 = selctf.NextImg();
         if (fn_proj != "")
         {

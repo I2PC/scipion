@@ -125,7 +125,9 @@ void Prog_Evaluate_FSCs_Parameters::compute_average_resolution(
     init_progress_bar(XSIZE(resol));
     while (!SF_recons.eof())
     {
-        reconstruction.read(SF_recons.NextImg());
+        FileName fn_img=SF_recons.NextImg();
+        if (SF_recons.eof()) break;
+        reconstruction.read(fn_img);
         resol(i) =
             compute_FSC(phantom, reconstruction, sampling_rate, frequency, FSC);
         i++;
@@ -151,7 +153,9 @@ void Prog_Evaluate_FSCs_Parameters::compute_average_FSC(
     init_progress_bar(N);
     while (!SF_recons.eof())
     {
-        reconstruction.read(SF_recons.NextImg());
+        FileName fn_img=SF_recons.NextImg();
+        if (SF_recons.eof()) break;
+        reconstruction.read(fn_img);
         compute_FSC(phantom, reconstruction, sampling_rate, frequency, FSC);
         if (n == 0)
         {
@@ -185,8 +189,12 @@ void Prog_Evaluate_FSCs_Parameters::compare_two_sets(
     init_progress_bar(N);
     while (!SF_recons.eof())
     {
-        reconstruction.read(SF_recons.NextImg());
-        reconstruction2.read(SF_recons2.NextImg());
+        FileName fn_img=SF_recons.NextImg();
+        FileName fn_img2=SF_recons2.NextImg();
+        if (SF_recons.eof()) break;
+        if (SF_recons2.eof()) break;
+        reconstruction.read(fn_img);
+        reconstruction2.read(fn_img2);
         compute_FSC(phantom, reconstruction,  sampling_rate, frequency, FSC1);
         compute_FSC(phantom, reconstruction2, sampling_rate, frequency, FSC2);
         if (n == 0)
