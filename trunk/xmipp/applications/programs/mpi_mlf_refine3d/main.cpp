@@ -65,6 +65,7 @@ int main(int argc, char **argv)
 
         // Read command line
         prm.read(argc, argv, argc2, argv2);
+        prm.produceSideInfo(rank);
 
         // Write starting volumes to disc with correct name for iteration loop
         if (rank == 0)
@@ -91,7 +92,7 @@ int main(int argc, char **argv)
             REPORT_ERROR(1, "mpi_mlf_refine3d requires that you use three times more CPUs than reference volumes");
 
         // Project the reference volume
-        prm.project_reference_volume(ML2D_prm.SFr, rank);
+        prm.project_reference_volume(ML2D_prm.SFr, rank, size);
         MPI_Barrier(MPI_COMM_WORLD);
 
         // All nodes produce general side-info
@@ -297,7 +298,7 @@ int main(int argc, char **argv)
             if (!converged && iter + 1 <= prm.Niter)
             {
                 // All nodes again: project and read new references from disc
-                prm.project_reference_volume(ML2D_prm.SFr, rank);
+                prm.project_reference_volume(ML2D_prm.SFr, rank, size);
                 MPI_Barrier(MPI_COMM_WORLD);
                 ML2D_prm.SFr.go_beginning();
                 c = 0;

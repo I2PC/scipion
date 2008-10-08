@@ -50,6 +50,8 @@ int main(int argc, char **argv)
 
         // Read command line
         prm.read(argc, argv, argc2, argv2);
+        prm.produceSideInfo();
+
         prm.show();
         // Write starting volume(s) to disc with correct name for iteration loop
         prm.remake_SFvol(prm.istart - 1, true);
