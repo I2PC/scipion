@@ -100,6 +100,7 @@ int main(int argc, char **argv)
     while (!SF.eof())
     {
         std::string image_name = SF.NextImg();
+        if (SF.eof()) break;
         if (verb)
             std::cout << "generating points for image " << image_name << "......" << std::endl;
         VolumeXmipp image(image_name);      // reads image

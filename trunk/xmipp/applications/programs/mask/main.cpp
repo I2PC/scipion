@@ -211,6 +211,7 @@ int main(int argc, char **argv)
             {
                 // In and out filenames ...........................................
                 fn_in = SF_in.NextImg();
+                if (SF_in.eof()) break;
 
                 if (oext == "") fn_out = fn_in;
                 else

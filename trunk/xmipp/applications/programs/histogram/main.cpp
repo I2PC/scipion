@@ -95,6 +95,7 @@ int main(int argc, char **argv)
         while (!SF.eof())
         {
             fn_in = SF.NextImg();
+            if (SF.eof()) break;
 
             if (Is_ImageXmipp(fn_in))
             {

@@ -95,7 +95,9 @@ void extract_angles(SelFile &SF_in, DocFile &DF_out,
     {
         // Read image
         ImageXmipp P;
-        P.read(SF_in.NextImg());
+        FileName fn_img=SF_in.NextImg();
+        if (SF_in.eof()) break;
+        P.read(fn_img);
         if (P.Is_flag_set() == 0 || P.Is_flag_set() > 2)
             DF_out.append_angles(P.rot(), P.tilt(), P.psi(),
                                  ang1, ang2, ang3);
@@ -137,7 +139,9 @@ void write_angles(SelFile &SF_in, DocFile &DF_in,
     {
         // Read image
         ImageXmipp P;
-        P.read(SF_in.NextImg());
+        FileName fn_img=SF_in.NextImg();
+        if (SF_in.eof()) break;
+        P.read(fn_img);
         P.clear_fFlag_flag();
         if (FirstLine_colNumber >= 3)
         {
@@ -174,6 +178,7 @@ void rename_for_Spider(SelFile &SF_in, SelFile &SF_out, const FileName &fn_root,
     while (!SF_in.eof())
     {
         fn_in = SF_in.NextImg();
+        if (SF_in.eof()) break;
         fn_out = fn_root + integerToString(counter, 5);
         if (out_ext == "") fn_out = fn_out.add_extension(fn_in.get_extension());
         else             fn_out = fn_out.add_extension(out_ext);

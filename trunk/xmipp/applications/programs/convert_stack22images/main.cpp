@@ -84,7 +84,9 @@ int main(int argc, char **argv)
                 SF.read(fn_sel);
                 while (!SF.eof())
                 {
-                    ImageXmipp I(SF.NextImg());
+                    FileName fn_img=SF.NextImg()
+                    if (SF.eof()) break;
+                    ImageXmipp I(fn_img);
                     stack.appendImage(I);
                 }
             }

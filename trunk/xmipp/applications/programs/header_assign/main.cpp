@@ -135,6 +135,7 @@ int main(int argc, char *argv[])
             while (!SF.eof())
             {
                 fn_img = SF.get_current_file();
+                if (SF.eof()) break;
                 img.read(fn_img);
                 img.clear_fFlag_flag();
                 DF.adjust_to_data_line();

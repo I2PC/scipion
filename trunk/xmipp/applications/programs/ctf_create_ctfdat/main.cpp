@@ -134,11 +134,14 @@ int main(int argc, char **argv)
         {
             fnsel = SFsel.NextImg();
             fnctf = SFctf.NextImg();
+            if (SFsel.eof()) break;
+            if (SFctf.eof()) break;
             SFind.read(fnsel);
             SFind.go_beginning();
             while (!SFind.eof())
             {
                 fnimg = SFind.NextImg();
+                if (SFind.eof()) break;
                 ctfdat.append(fnimg,fnctf);
             }
         }

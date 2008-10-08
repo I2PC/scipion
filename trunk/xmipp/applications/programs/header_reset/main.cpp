@@ -58,7 +58,9 @@ int main(int argc, char *argv[])
         SF.go_beginning();
         while (!SF.eof())
         {
-            img.read(SF.NextImg());
+            FileName fn_img=SF.NextImg();
+            if (SF.eof()) break;
+            img.read(fn_img);
             img.clear_header();
             img.write(img.name());
         }
