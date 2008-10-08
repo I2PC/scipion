@@ -26,6 +26,8 @@
 #include <reconstruction/ml_refine3d.h>
 
 #include <mpi.h>
+#define TAG_DOCFILE 12
+#define TAG_DOCFILESIZE 13
 
 int main(int argc, char **argv)
 {
@@ -140,13 +142,9 @@ int main(int argc, char **argv)
                 prm.fh_hist << "--> 3D-EM volume refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
             }
 
-            // Prepare DFo header
+            // initialize
             DFo.clear();
             conv.clear();
-            if (rank == 0)
-            {
-                DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), w_robust (9), scale (10), KSprob (11)");
-            }
 
             // Pre-calculate pdfs
             ML2D_prm.calculateInPlanePDF();
@@ -226,28 +224,52 @@ int main(int argc, char **argv)
 				      sumcorr, sumw_allrefs,
 				      spectral_signal, prm.eachvol_end[0]+1);
 
-            // All nodes write out temporary DFo
-            fn_tmp.compose(prm.fn_root, rank, "tmpdoc");
-            DFo.write(fn_tmp);
-            MPI_Barrier(MPI_COMM_WORLD);
-
-            // Only the master outputs intermediate files
-            if (rank == 0)
+            // Write intermediate files 
+            if (rank != 0)
             {
-                DFo.clear();
-                for (int rank2 = 0; rank2 < size; rank2++)
+                // All slaves send docfile to the master
+                std::ostringstream doc;
+                doc << DFo;
+                int s_size=  doc.str().size();
+                char results[s_size];
+                strncpy(results,doc.str().c_str(),s_size);
+                results[s_size]='\0';
+                MPI_Send(&s_size, 1, MPI_INT, 0, TAG_DOCFILESIZE, MPI_COMM_WORLD);
+                MPI_Send(results, s_size, MPI_CHAR, 0, TAG_DOCFILE, MPI_COMM_WORLD);
+            }
+            else
+            {
+                // Master fills docfile 
+                std::ofstream myDocFile;
+                FileName fn_tmp;
+                fn_tmp.compose(prm.fn_root + "_it",iter,"doc");
+                myDocFile.open (fn_tmp.c_str());
+                myDocFile << " ; Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), w_robust (9), scale (10), KSprob (11)\n";
+
+                // Master's own contribution
+                myDocFile << DFo;
+                int docCounter=1;
+                while (docCounter < size)
                 {
-                    fn_tmp.compose(prm.fn_root, rank2, "tmpdoc");
-                    DFo.append(fn_tmp);
-                    DFo.locate(DFo.get_last_key());
-                    DFo.next();
-                    DFo.remove_current();
-                    system(((std::string)"rm -f " + fn_tmp).c_str());
+                    // receive in order
+                    int iNumber, s_size;
+                    MPI_Recv(&s_size, 1, MPI_INT, docCounter, TAG_DOCFILESIZE, MPI_COMM_WORLD, &status);
+                    char results[s_size];
+                    MPI_Recv(results, s_size, MPI_CHAR, docCounter, TAG_DOCFILE, MPI_COMM_WORLD, &status);
+                    results[s_size]='\0';
+                    myDocFile<<results ;
+                    docCounter++;
                 }
+
+                //save doc_file and renumber it
+                myDocFile.close();
+                DFo.clear();
+                DFo.read(fn_tmp);
+                DFo.renum();
+
+                // Output all intermediate files
                 ML2D_prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
                 prm.concatenate_selfiles(iter);
-
-                // Write noise images to disc
                 prm.make_noise_images(ML2D_prm.Iref);
             }
             MPI_Barrier(MPI_COMM_WORLD);
@@ -314,6 +336,7 @@ int main(int argc, char **argv)
 
             iter++;
         } // end loop iterations
+
 	if (rank == 0)
 	    ML2D_prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
 

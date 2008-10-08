@@ -142,18 +142,10 @@ int main(int argc, char **argv)
                 prm.fh_hist << "--> 3D-EM volume refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
             }
 
-            // Prepare DFo header
+            // Initialize
             DFo.clear();
             conv.clear();
-            if (rank == 0)
-            {
-                if (ML2D_prm.maxCC_rather_than_ML)
-                    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Corr (8)");
-                else
-                    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), w_robust (9), bgmean (10), scale (11), sigma (12), KSprob (13)");
-            }
 
-            // Pre-calculate pdfs
             if (!ML2D_prm.maxCC_rather_than_ML) ML2D_prm.calculate_pdf_phi();
 
             // Integrate over all images
@@ -290,7 +282,6 @@ int main(int argc, char **argv)
             if (!converged && iter + 1 <= prm.Niter)
             {
                 // All nodes again: project and read new references from disc
-                DFo.clear();
                 prm.project_reference_volume(ML2D_prm.SFr, rank, size);
                 MPI_Barrier(MPI_COMM_WORLD);
                 ML2D_prm.SFr.go_beginning();
@@ -304,14 +295,10 @@ int main(int argc, char **argv)
                     c++;
                 }
             }
-            else
-            {
-                if (prm.verb > 0) std::cerr << " Optimization converged!" << std::endl;
-                break;
-            }
 
             iter++;
         } // end loop iterations
+
 	if (rank == 0)
 	    ML2D_prm.write_output_files(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
 
