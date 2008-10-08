@@ -691,7 +691,7 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
         int imgno = 0;
         while (!SF.eof())
         {
-            FileName fn_img=SF.NextImg()
+            FileName fn_img=SF.NextImg();
             if (SF.eof()) break;
 	    if (do_ctf_correction)
 	    {
