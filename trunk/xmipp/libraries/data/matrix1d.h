@@ -431,6 +431,22 @@ public:
     /// @defgroup VectorsInitialization Initialization
     /// @ingroup Vectors
 
+    /** Alias a multidimarray.
+     * @ingroup VectorsInitialization
+     *
+     * Treat the multidimarray as if it were a vector. The data is not copied
+     * into new memory, but a pointer to the multidimarray is copied.
+     * You should not make any operation on this vector such that the
+     * memory locations are changed
+     */
+     void alias(const MultidimArray<T> &m)
+     {
+         this->row=false;
+         copyShape(m);
+         this->data=m.data;
+         this->destroyData=false;
+     }
+
     /** Linear initialization
      * @ingroup VectorsInitialization
      *

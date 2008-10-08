@@ -454,6 +454,21 @@ public:
     /// @defgroup MatricesInitialization Initialization
     /// @ingroup Matrices
 
+    /** Alias a multidimarray.
+     * @ingroup MatricesInitialization
+     *
+     * Treat the multidimarray as if it were a matrix. The data is not copied
+     * into new memory, but a pointer to the multidimarray is copied.
+     * You should not make any operation on this matrix such that the
+     * memory locations are changed
+     */
+     void alias(const MultidimArray<T> &m)
+     {
+         copyShape(m);
+         this->data=m.data;
+         this->destroyData=false;
+     }
+
     /** Identity matrix of current size
      * @ingroup MatricesInitialization
      *

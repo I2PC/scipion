@@ -247,6 +247,21 @@ public:
      * @ingroup Volumes
      */
 
+    /** Alias a multidimarray.
+     * @ingroup VolumesInitialization
+     *
+     * Treat the multidimarray as if it were a volume. The data is not copied
+     * into new memory, but a pointer to the multidimarray is copied.
+     * You should not make any operation on this volume such that the
+     * memory locations are changed
+     */
+     void alias(const MultidimArray<T> &m)
+     {
+         copyShape(m);
+         this->data=m.data;
+         this->destroyData=false;
+     }
+
     /** Zero initialisation with a new dimension.
      * @ingroup VolumesInitialization
      *
