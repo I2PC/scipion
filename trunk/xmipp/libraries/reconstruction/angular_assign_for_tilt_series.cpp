@@ -32,6 +32,7 @@
 #include <data/de_solver.h>
 #include <fstream>
 #include <queue>
+#include <iostream.h>
 
 /* Compute affine matrix --------------------------------------------------- */
 class AffineFitness
@@ -128,19 +129,23 @@ public:
    AffineSolver(AffineFitness *newFitness, int dim,int pop) : DESolver(dim,pop), count(0), fitness(newFitness) {;}
    double EnergyFunction(double trial[], bool &bAtSolution) {
       double result=fitness->affine_fitness_individual(trial);
-      if (count++ % nPop == 0)
-          std::cout << "EvaluationsAffine= " << count/nPop
-                    << " energyAffine= " << Energy()
-		    << std::endl;
-      bAtSolution=false;
+      #ifdef DEBUG
+		if (count++ % nPop == 0)
+		{
+			std::cout << "EvaluationsAffine= " << count/nPop
+						<< " energyAffine= " << Energy()
+				<< std::endl;
+		}
+	  #endif
+	  bAtSolution=false;
       return(result);
    }
 private:
    int count;
 };
+#undef DEBUG
 
-
-void computeAffineTransformation(const Matrix2D<double> &I1,
+double computeAffineTransformation(const Matrix2D<double> &I1,
     const Matrix2D<double> &I2, int maxShift, int maxIterDE,
     const FileName &fn_affine, 
     Matrix2D<double> &A12, Matrix2D<double> &A21, bool show,
@@ -187,12 +192,15 @@ void computeAffineTransformation(const Matrix2D<double> &I1,
 
     std::ifstream fh_in;
     fh_in.open(fn_affine.c_str());
+	
+	// Return result
+	double cost;
+	
     if (fh_in) {
     	A12.resize(3,3);
-	A21.resize(3,3);
-	fh_in >> A12 >> A21;
-	fh_in.close();
-	std::cout << "A12\n" << A12 << "A21\n" << A21 << std::endl;
+	    A21.resize(3,3);
+     	fh_in >> A12 >> A21 >> cost;
+	    fh_in.close();
     } else {
         // Optimize with differential evolution
         Matrix1D<double> A(6);
@@ -239,11 +247,10 @@ void computeAffineTransformation(const Matrix2D<double> &I1,
         // Optimize with Powell
         Matrix1D<double> steps(A);
         steps.initConstant(1);
-        double cost;
         int iter;
         powellOptimizer(A, 1, XSIZE(A),
             AffineFitness::Powell_affine_fitness_individual, &fitness, 0.005,
-            cost, iter, steps, true);
+            cost, iter, steps, false);
 
         // Separate solution
         A12.initIdentity(3);
@@ -254,7 +261,7 @@ void computeAffineTransformation(const Matrix2D<double> &I1,
 
         std::ofstream fh_out;
         fh_out.open(fn_affine.c_str());
-        fh_out << A12 << std::endl << A21;
+        fh_out << A12 << std::endl << A21 << std::endl << cost;
         fh_out.close();
     }   
     if (show)
@@ -266,6 +273,8 @@ void computeAffineTransformation(const Matrix2D<double> &I1,
 	    fitness.affine_fitness_individual(MULTIDIM_ARRAY(p));
     	fitness.showMode=false;
     }
+	
+	return cost;
 }
 
 /* Parameters -------------------------------------------------------------- */
@@ -289,6 +298,9 @@ void Prog_tomograph_alignment::read(int argc, char **argv) {
    maxIterDE=textToInteger(getParameter(argc,argv,"-maxIterDE","30"));
    showAffine=checkParameter(argc,argv,"-showAffine");
    thresholdAffine=textToFloat(getParameter(argc,argv,"-thresholdAffine","0.85"));
+   numThreads = textToInteger(getParameter(argc, argv, "-thnum", "1"));
+   if( numThreads < 1 )
+	numThreads = 1;
 }
 
 void Prog_tomograph_alignment::show() {
@@ -309,6 +321,7 @@ void Prog_tomograph_alignment::show() {
              << "MaxIterDE:          " << maxIterDE          << std::endl
              << "Show Affine:        " << showAffine         << std::endl
              << "Threshold Affine:   " << thresholdAffine    << std::endl
+			 << "Threads to use:     " << numThreads		 << std::endl
    ;
 }
 
@@ -332,6 +345,7 @@ void Prog_tomograph_alignment::usage() const {
              << "  [-maxIterDE <n=30>]             : Maximum number of iteration in Differential Evolution\n"
              << "  [-showAffine]                   : Show affine transformations as PPP*\n"
              << "  [-thresholdAffine <th=0.85>]    : Threshold affine\n"
+			 << "  [-thr <num=1>]				   : Parallel processing using \"num\" threads\n"
    ;
 }
 
@@ -386,35 +400,82 @@ void Prog_tomograph_alignment::produceSideInfo() {
    for (int i=0; i<Nimg; i++)
     	affineTransformations.push_back(emptyRow);
 
-    // Compute all transformations
-    int maxShift=FLOOR(XSIZE(*img[0])*maxShiftPercentage);
+   pthread_t * th_ids = (pthread_t *)malloc( numThreads * sizeof( pthread_t));
+   ThreadParams * th_args= (ThreadParams *) malloc ( numThreads * sizeof( ThreadParams ) );
+	
+   for( int nt = 0 ; nt < numThreads ; nt ++ )
+   {
+			// Passing parameters to each thread
+			th_args[nt].parent = this;
+			th_args[nt].myThreadID = nt;
+			pthread_create( (th_ids+nt) , NULL, threadComputeTransform, (void *)(th_args+nt) );
+	}
+		
+	// Waiting for threads to finish
+	for( int nt = 0 ; nt < numThreads ; nt ++ )
+	{
+		pthread_join(*(th_ids+nt), NULL);
+	}	
+
+	// Threads structures are not needed any more
+	
+	delete( th_ids );
+	delete( th_args );
+
+    // Do not show refinement
+    showRefinement=false;
+}
+
+void * threadComputeTransform( void * args )
+{
+	ThreadParams * master = (ThreadParams *) args;
+	
+	Prog_tomograph_alignment * parent = master->parent;
+	int thread_id = master->myThreadID;
+	int localnumThreads = parent->numThreads;
+	bool isCapillar = parent->isCapillar;
+	int Nimg = parent->Nimg;
+	double maxShiftPercentage = parent->maxShiftPercentage;
+	int maxIterDE = parent->maxIterDE;
+	bool showAffine = parent->showAffine;
+    double thresholdAffine = parent->thresholdAffine;
+	std::vector < Matrix2D<double> *> img = parent->img;
+	std::vector< std::vector< Matrix2D<double> > > affineTransformations = parent->affineTransformations;
+	double localAffine = parent->localAffine;
+	
+	int maxShift=FLOOR(XSIZE(*img[0])*maxShiftPercentage);
     int initjj=1;
     if (isCapillar) initjj=0;
-    for (int jj=initjj; jj<Nimg; jj++)
+	
+	initjj += thread_id;
+	
+	double cost;
+    for (int jj=initjj; jj<Nimg; jj+= localnumThreads)
     {
         int jj_1;
         if (isCapillar) jj_1=intWRAP(jj-1,0,Nimg-1);
         else            jj_1=jj-1;
         Matrix2D<double>& img_i=*img[jj_1];
         Matrix2D<double>& img_j=*img[jj];
-        std::cout << "Computing transformation between "
-                  << jj_1 << " and " << jj << std::endl;
         bool isMirror=(jj==0) && (jj_1==Nimg-1);
         Matrix2D<double> Aij, Aji;
-        computeAffineTransformation(img_i, img_j, maxShift,
+        cost = computeAffineTransformation(img_i, img_j, maxShift,
             maxIterDE,
             (std::string)"affine_"+integerToString(jj_1,3)+
             "_"+integerToString(jj,3)+".txt", Aij, Aji,
             showAffine, thresholdAffine, localAffine,
             isMirror);
-        affineTransformations[jj_1][jj]=Aij;
-	affineTransformations[jj][jj_1]=Aji;
+        
+		pthread_mutex_lock( &printingMutex );
+		cout << "Cost for [" << jj_1 << "] - [" << jj << "] = " << cost << endl;
+		pthread_mutex_unlock( &printingMutex );
+		affineTransformations[jj_1][jj]=Aij;
+		affineTransformations[jj][jj_1]=Aji;
     }
-
-    // Do not show refinement
-    showRefinement=false;
+	
+	return NULL;
 }
-
+ 
 /* Generate landmark set --------------------------------------------------- */
 #define DEBUG
 void Prog_tomograph_alignment::generateLandmarkSet() {

@@ -28,6 +28,7 @@
 #include <vector>
 #include <data/matrix1d.h>
 #include <data/selfile.h>
+#include <pthread.h>
 
 /**@defgroup AngularAssignTiltSeries angular_assign_for_tilt_series
              (Simultaneous assignment)
@@ -71,6 +72,9 @@ public:
    
     /// Output root
     FileName fnRoot;
+   
+    /// Number of threads to use for parallel computing
+    int numThreads;
    
     /// Look for local affine transformation
     bool localAffine;
@@ -206,6 +210,20 @@ public:
     // Show refinement
     bool showRefinement;
 };
+
+/// This struct is used to pass different parameters to each thread
+struct ThreadParams
+{
+	int myThreadID;
+	Prog_tomograph_alignment * parent;
+};
+
+/// Threads processing is done here
+void * threadComputeTransform( void * args );
+
+/// This mutex is used by previous function to avoid concurrent screen
+/// printing at a time by different threads
+static pthread_mutex_t printingMutex = PTHREAD_MUTEX_INITIALIZER;
 
 class Alignment {
 public:
@@ -346,7 +364,7 @@ public:
     The maximum shift is limited. 
     A12 is the homogeneous matrix that transforms coordinates of 1
     into coordinates of 2, A21 is just the opposite.*/
-void computeAffineTransformation(const Matrix2D<double> &I1,
+double computeAffineTransformation(const Matrix2D<double> &I1,
     const Matrix2D<double> &I2, int maxShift, int maxIterDE,
     const FileName &fn_affine,
     Matrix2D<double> &A12, Matrix2D<double> &A21, bool show,
