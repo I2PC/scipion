@@ -132,15 +132,15 @@ DoProjectionMatching=True
 """
 DisplayProjectionMatching=False
 
-# {expert} Inner radius for rotational correlation:
+# Inner radius for rotational correlation:
 """ In pixels from the image center
 """
 InnerRadius=0
 
-# {expert} Outer radius for rotational correlation
+# Outer radius for rotational correlation
 """ In pixels from the image center. Use a negative number to use the entire image.
 """
-OuterRadius=60
+OuterRadius=-1
 
 # {expert} Available memory to store all references (Gb)
 """ This is only for the storage of the references. If yuor memories so not fit in memory, the projection matching program will run MUCH slower. But, keep in mind that probably some additional memory is needed for the operating system etc.
