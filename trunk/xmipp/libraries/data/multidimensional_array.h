@@ -276,6 +276,9 @@ public:
     */
     T* data;
 
+    // Destroy data
+    bool destroyData;
+
     // Number of elements in Z
     int zdim;
 
@@ -356,6 +359,7 @@ public:
         zdim=ydim=xdim=yxdim=zyxdim=0;
         zinit=yinit=xinit=0;
         data=NULL;
+        destroyData=true;
     }
 
     /** Core allocate.
@@ -386,13 +390,29 @@ public:
      */
     void coreDeallocate()
     {
-        if (data != NULL)
+        if (data != NULL && destroyData)
             delete[] data;
         data=NULL;
     }
 
     /// @defgroup MultidimSize Size
     /// @ingroup MultidimensionalArrays
+    /** Copy the shape parameters
+     * @ingroup MultidimSize
+     *
+     */
+    void copyShape(const MultidimArray<T> m)
+    {
+        zdim=m.zdim;
+        ydim=m.ydim;
+        xdim=m.xdim;
+        yxdim=m.yxdim;
+        zyxdim=m.zyxdim;
+        zinit=m.zinit;
+        yinit=m.yinit;
+        xinit=m.xinit;
+    }
+
     /** Resize according to a pattern.
      * @ingroup MultidimSize
      *
