@@ -106,7 +106,7 @@ void Prog_RecFourier_prm::usage()
     std::cerr << "  Usage:\n";
     std::cerr << "  reconstruct_fourier_interpolation  <options>\n";
     std::cerr << "   -i <input selfile>          : selection file with input images \n";
-    std::cerr << "   -pad_proj <2.0>             : projection padding factor \n";
+    std::cerr << " [ -pad_proj <2.0>  ]           : projection padding factor \n";
     std::cerr << " [ -o <name=\"rec_fourier.vol\">       : filename for output volume \n";
     std::cerr << " [ -doc <docfile>              : Ignore headers and get angles from this docfile \n";
     std::cerr << " [ -sym     <symfile> ]        : Enforce symmetry in projections\n";
