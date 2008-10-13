@@ -114,7 +114,7 @@ void Prog_RecFourier_prm::usage()
     //std::cerr << " [ -do_resolution]             : compute resolution while you reconstruct \n";
     std::cerr << " -----------------------------------------------------------------" << std::endl;
     if (do_weights)
-        std::cerr << " --> Use weights stored in the image headers or doc file" << std::endl;
+        std::cerr << "-weight                   :  Use weights stored in the image headers or doc file" << std::endl;
     std::cerr << "\n Interpolation Function"
               << "\n   [-r blrad=2.0]        blob radius in pixels"
               << "\n   [-m blord=0]          order of Bessel function in blob"
