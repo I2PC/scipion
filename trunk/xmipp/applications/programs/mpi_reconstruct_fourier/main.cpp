@@ -118,9 +118,6 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 	{
 		Prog_RecFourier_prm::usage();
 		std::cerr << " [ -mpi_job_size default=5]    : Number of images sent to a cpu in a single job \n";
-		std::cerr << "                                  10 may be a good value";
-		std::cerr << "                                  if  -1 the computer will put the maximum";
-		std::cerr << "                                  posible value that may not be the best option";
 	}
 
 
