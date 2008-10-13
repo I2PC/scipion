@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:    Sjors Scheres           scheres@cnb.uam.es (2004)
+ * Authors:    Roberto Marabini           roberto@cnb.uam.es (2008)
  *
  * Unidad de Bioinformatica del Centro Nacional de Biotecnologia , CSIC
  *
@@ -68,7 +68,7 @@ void Prog_RecFourier_prm::show()
         std::cerr << " =================================================================" << std::endl;
         std::cerr << " Input selfile             : "  << fn_sel << std::endl;
         std::cerr << " padding_factor_proj       : "  << padding_factor_proj << std::endl;
-        std::cerr << " padding_factor_vol        : "  << padding_factor_vol << std::endl;
+        //std::cerr << " padding_factor_vol        : "  << padding_factor_vol << std::endl;
         if (fn_doc != "")
             std::cerr << " Input docfile         : "  << fn_doc << std::endl;
         std::cerr << " Output volume             : "  << fn_out << std::endl;
@@ -76,10 +76,10 @@ void Prog_RecFourier_prm::show()
             std::cerr << " Symmetry file for projections : "  << fn_sym << std::endl;
         if (fn_sym_vol != "")
             std::cerr << " Symmetry file for volume      : "  << fn_sym_vol << std::endl;
-        if (do_resolution)
-            std::cerr << " Compute resolution" << std::endl;
-        else
-            std::cerr << " Do NOT compute resolution" << std::endl;
+        //if (do_resolution)
+        //    std::cerr << " Compute resolution" << std::endl;
+        //else
+        //    std::cerr << " Do NOT compute resolution" << std::endl;
         if (do_weights)
             std::cerr << " Use weights stored in the image headers or doc file" << std::endl;
         else
@@ -111,7 +111,7 @@ void Prog_RecFourier_prm::usage()
     std::cerr << " [ -doc <docfile>              : Ignore headers and get angles from this docfile \n";
     std::cerr << " [ -sym     <symfile> ]        : Enforce symmetry in projections\n";
     std::cerr << " [ -sym_vol <symfile> ]        : Enforce symmetry in volume \n";
-    std::cerr << " [ -do_resolution]             : compute resolution while you reconstruct \n";
+    //std::cerr << " [ -do_resolution]             : compute resolution while you reconstruct \n";
     std::cerr << " -----------------------------------------------------------------" << std::endl;
     if (do_weights)
         std::cerr << " --> Use weights stored in the image headers or doc file" << std::endl;
