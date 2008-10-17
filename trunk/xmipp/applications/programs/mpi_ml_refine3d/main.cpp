@@ -87,7 +87,6 @@ int main(int argc, char **argv)
         ML2D_prm.save_mem2 = true;
         ML2D_prm.write_docfile = true;
         ML2D_prm.write_selfiles = true;
-        ML2D_prm.write_intermediate = true;
         ML2D_prm.fn_ref = prm.fn_root + "_lib.sel";
 
         // Check that there are enough computing nodes
@@ -99,14 +98,14 @@ int main(int argc, char **argv)
         MPI_Barrier(MPI_COMM_WORLD);
 
         // All nodes produce general side-info
-        ML2D_prm.produce_Side_info();
+        ML2D_prm.produceSideInfo();
         MPI_Barrier(MPI_COMM_WORLD);
 
         // Select only relevant part of selfile for this rank
         ML2D_prm.SF.mpi_select_part(rank, size, num_img_tot);
 
         // All nodes read node-specific side-info into memory
-        ML2D_prm.produce_Side_info2(prm.Nvols);
+        ML2D_prm.produceSideInfo2(prm.Nvols);
         ML2D_prm.Iold.clear(); // To save memory
 
         // Some output to screen
@@ -146,13 +145,11 @@ int main(int argc, char **argv)
             DFo.clear();
             conv.clear();
 
-            if (!ML2D_prm.maxCC_rather_than_ML) ML2D_prm.calculate_pdf_phi();
-
             // Integrate over all images
-            ML2D_prm.ML_sum_over_all_images(ML2D_prm.SF, ML2D_prm.Iref, iter,
-                                            LL, sumcorr, DFo, wsum_Mref,
-                                            wsum_sigma_noise, wsum_sigma_offset, 
-					    sumw, sumw2, sumwsc, sumwsc2, sumw_mirror);
+            ML2D_prm.expectation(ML2D_prm.SF, ML2D_prm.Iref, iter,
+                                 LL, sumcorr, DFo, wsum_Mref,
+                                 wsum_sigma_noise, wsum_sigma_offset, 
+                                 sumw, sumw2, sumwsc, sumwsc2, sumw_mirror);
 
             // Here MPI_allreduce of all weighted sums, LL, etc.
             // All nodes need the answer to calculate internally
@@ -165,13 +162,6 @@ int main(int argc, char **argv)
             wsum_sigma_noise = aux;
             MPI_Allreduce(&wsum_sigma_offset, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             wsum_sigma_offset = aux;
-            if (ML2D_prm.do_kstest)
-            {
-                Vaux.resize(ML2D_prm.sumhist);
-                MPI_Allreduce(MULTIDIM_ARRAY(ML2D_prm.sumhist), MULTIDIM_ARRAY(Vaux),
-                              MULTIDIM_SIZE(ML2D_prm.sumhist), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                ML2D_prm.sumhist = Vaux;
-            }
             for (int refno = 0;refno < ML2D_prm.n_ref; refno++)
             {
                 MPI_Allreduce(MULTIDIM_ARRAY(wsum_Mref[refno]), MULTIDIM_ARRAY(Maux),
@@ -190,11 +180,10 @@ int main(int argc, char **argv)
             }
 
             // Update model parameters
-            ML2D_prm.update_parameters(wsum_Mref, 
-                                       wsum_sigma_noise, wsum_sigma_offset, 
-				       sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, 
-				       sumcorr, sumw_allrefs, prm.eachvol_end[0]+1);
-
+            ML2D_prm.maximization(wsum_Mref, wsum_sigma_noise, wsum_sigma_offset, 
+                                  sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, 
+                                  sumcorr, sumw_allrefs, prm.eachvol_end[0]+1);
+            
 
             // Write intermediate files 
             if (rank != 0)
@@ -216,10 +205,7 @@ int main(int argc, char **argv)
                 FileName fn_tmp;
                 fn_tmp.compose(prm.fn_root + "_it",iter,"doc");
                 myDocFile.open (fn_tmp.c_str());
-                if (ML2D_prm.maxCC_rather_than_ML)
-                    myDocFile << " ; Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Corr (8)\n";
-                else
-                    myDocFile << " ; Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), w_robust (9), bgmean (10), scale (11), sigma (12), KSprob (13)\n";
+                myDocFile << " ; Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)\n";
 
                 // Master's own contribution
                 myDocFile << DFo;
@@ -243,7 +229,7 @@ int main(int argc, char **argv)
                 DFo.renum();
 
                 // Output all intermediate files
-                ML2D_prm.write_output_files(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
+                ML2D_prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
                 prm.concatenate_selfiles(iter);
             }
             MPI_Barrier(MPI_COMM_WORLD);
@@ -300,7 +286,7 @@ int main(int argc, char **argv)
         } // end loop iterations
 
 	if (rank == 0)
-	    ML2D_prm.write_output_files(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
+	    ML2D_prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
 
         if (!converged && prm.verb > 0)
             std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;

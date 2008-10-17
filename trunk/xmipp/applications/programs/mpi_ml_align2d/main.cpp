@@ -67,7 +67,7 @@ int main(int argc, char **argv)
         if (rank != 0) prm.verb = 0;
 
         // All nodes produce general side-info
-        prm.produce_Side_info();
+        prm.produceSideInfo();
 
         // Some output to screen
         if (rank == 0) prm.show();
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
             {
                 if (rank == 0)
                 {
-                    prm.generate_initial_references();
+                    prm.generateInitialReferences();
                 }
                 else
                 {
@@ -99,7 +99,7 @@ int main(int argc, char **argv)
         prm.SF.mpi_select_part(rank, size, num_img_tot);
 
         // And produce selfile-specific side-info
-        prm.produce_Side_info2();
+        prm.produceSideInfo2();
         MPI_Barrier(MPI_COMM_WORLD);
 
     }
@@ -127,14 +127,11 @@ int main(int argc, char **argv)
             // Save old reference images
             for (int refno = 0;refno < prm.n_ref; refno++) prm.Iold[refno]() = prm.Iref[refno]();
 
-            // Pre-calculate pdfs
-            if (!prm.maxCC_rather_than_ML) prm.calculate_pdf_phi();
-
             // Integrate over all images
-            prm.ML_sum_over_all_images(prm.SF, prm.Iref, iter,
-                                       LL, sumcorr, DFo, wsum_Mref,
-                                       wsum_sigma_noise, wsum_sigma_offset, 
-				       sumw,  sumw2, sumwsc, sumwsc2, sumw_mirror);
+            prm.expectation(prm.SF, prm.Iref, iter,
+                            LL, sumcorr, DFo, wsum_Mref,
+                            wsum_sigma_noise, wsum_sigma_offset, 
+                            sumw,  sumw2, sumwsc, sumwsc2, sumw_mirror);
 
             // Here MPI_allreduce of all wsums,LL and sumcorr !!!
             MPI_Allreduce(&LL, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -145,13 +142,6 @@ int main(int argc, char **argv)
             wsum_sigma_noise = aux;
             MPI_Allreduce(&wsum_sigma_offset, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             wsum_sigma_offset = aux;
-            if (prm.do_kstest)
-            {
-                Vaux.resize(prm.sumhist);
-                MPI_Allreduce(MULTIDIM_ARRAY(prm.sumhist), MULTIDIM_ARRAY(Vaux),
-                              MULTIDIM_SIZE(prm.sumhist), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                prm.sumhist = Vaux;
-            }
             for (int refno = 0;refno < prm.n_ref; refno++)
             {
                 MPI_Allreduce(MULTIDIM_ARRAY(wsum_Mref[refno]), MULTIDIM_ARRAY(Maux),
@@ -170,13 +160,12 @@ int main(int argc, char **argv)
             }
 
             // Update model parameters
-            prm.update_parameters(wsum_Mref, 
-                                  wsum_sigma_noise, wsum_sigma_offset, 
-				  sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, 
-				  sumcorr, sumw_allrefs);
+            prm.maximization(wsum_Mref, wsum_sigma_noise, wsum_sigma_offset, 
+                             sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, 
+                             sumcorr, sumw_allrefs);
 
             // Check convergence
-            converged = prm.check_convergence(conv);
+            converged = prm.checkConvergence(conv);
 
             // Write intermediate files 
             if (rank != 0)
@@ -198,10 +187,7 @@ int main(int argc, char **argv)
                 FileName fn_tmp;
                 fn_tmp.compose(prm.fn_root + "_it",iter,"doc");
                 myDocFile.open (fn_tmp.c_str());
-                if (prm.maxCC_rather_than_ML)
-                    myDocFile << " ; Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Corr (8)\n";
-                else
-                    myDocFile << " ; Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), w_robust (9), bgmean (10), scale (11), sigma (12), KSprob (13)\n";
+                myDocFile << " ; Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)\n";
 
                 // Master's own contribution
                 myDocFile << DFo;
@@ -225,8 +211,7 @@ int main(int argc, char **argv)
                 DFo.renum();
 
                 // Output all intermediate files
-                if (prm.write_intermediate)
-                    prm.write_output_files(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
+                prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
             }
             MPI_Barrier(MPI_COMM_WORLD);
             
@@ -244,7 +229,7 @@ int main(int argc, char **argv)
 
         } // end loop iterations
 	if (rank == 0)  
-	    prm.write_output_files(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
+	    prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
 
     }
     catch (Xmipp_error XE)

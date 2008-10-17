@@ -62,12 +62,11 @@ int main(int argc, char **argv)
         ML2D_prm.save_mem2 = true;
         ML2D_prm.write_docfile = true;
         ML2D_prm.write_selfiles = true;
-        ML2D_prm.write_intermediate = true;
         ML2D_prm.fn_ref = prm.fn_root + "_lib.sel";
         // Project volume and read lots of stuff into memory
         prm.project_reference_volume(ML2D_prm.SFr);
-        ML2D_prm.produce_Side_info();
-        ML2D_prm.produce_Side_info2(prm.Nvols);
+        ML2D_prm.produceSideInfo();
+        ML2D_prm.produceSideInfo2(prm.Nvols);
         ML2D_prm.show(true);
 
         // Initialize some stuff
@@ -97,28 +96,21 @@ int main(int argc, char **argv)
             }
 
             DFo.clear();
-            if (ML2D_prm.maxCC_rather_than_ML)
-                DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Corr (8)");
-            else
-                DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), w_robust (9), bgmean (10), scale (11), sigma (12), KSprob (13)");
-
-            // Pre-calculate pdfs
-            if (!ML2D_prm.maxCC_rather_than_ML) ML2D_prm.calculate_pdf_phi();
+            DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)");
 
             // Integrate over all images
-            ML2D_prm.ML_sum_over_all_images(ML2D_prm.SF, ML2D_prm.Iref, iter,
-                                            LL, sumcorr, DFo, wsum_Mref, 
-                                            wsum_sigma_noise, wsum_sigma_offset, 
-					    sumw, sumw2, sumwsc, sumwsc2, sumw_mirror);
+            ML2D_prm.expectation(ML2D_prm.SF, ML2D_prm.Iref, iter,
+                                 LL, sumcorr, DFo, wsum_Mref, 
+                                 wsum_sigma_noise, wsum_sigma_offset, 
+                                 sumw, sumw2, sumwsc, sumwsc2, sumw_mirror);
 
             // Update model parameters
-            ML2D_prm.update_parameters(wsum_Mref, 
-                                       wsum_sigma_noise, wsum_sigma_offset, 
-				       sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, 
-				       sumcorr, sumw_allrefs, prm.eachvol_end[0]+1);
+            ML2D_prm.maximization(wsum_Mref, wsum_sigma_noise, wsum_sigma_offset, 
+                                  sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, 
+                                  sumcorr, sumw_allrefs, prm.eachvol_end[0]+1);
 
             // Write intermediate output files
-            ML2D_prm.write_output_files(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
+            ML2D_prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
             prm.concatenate_selfiles(iter);
 
 	    // Jump out before 3D reconstruction 
@@ -162,7 +154,7 @@ int main(int argc, char **argv)
         } // end loop iterations
 
 	// Write out converged doc and logfiles
-	ML2D_prm.write_output_files(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
+	ML2D_prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
 
         if (!converged && prm.verb > 0) std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;
     }

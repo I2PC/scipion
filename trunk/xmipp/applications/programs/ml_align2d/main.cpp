@@ -46,22 +46,20 @@ int main(int argc, char **argv)
     try
     {
         prm.read(argc, argv);
-        prm.produce_Side_info();
+        prm.produceSideInfo();
         prm.show();
-
         if (prm.fn_ref == "")
         {
             if (prm.n_ref != 0)
             {
-                prm.generate_initial_references();
+                prm.generateInitialReferences();
             }
             else
             {
                 REPORT_ERROR(1, "Please provide -ref or -nref");
             }
         }
-
-        prm.produce_Side_info2();
+        prm.produceSideInfo2();
 
     }
     catch (Xmipp_error XE)
@@ -85,50 +83,33 @@ int main(int argc, char **argv)
             for (int refno = 0;refno < prm.n_ref; refno++) prm.Iold[refno]() = prm.Iref[refno]();
 
             DFo.clear();
-            if (prm.maxCC_rather_than_ML)
-                DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Corr (8)");
-            else
-		DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), w_robust (9), bgmean (10), scale (11), sigma (12), KSprob (13)");
-
-            // Pre-calculate pdfs
-            if (!prm.maxCC_rather_than_ML) prm.calculate_pdf_phi();
+            DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)");
 
             // Integrate over all images
-            prm.ML_sum_over_all_images(prm.SF, prm.Iref, iter,
-                                       LL, sumcorr, DFo, wsum_Mref,
-                                       wsum_sigma_noise, wsum_sigma_offset, 
-				       sumw, sumw2, sumwsc, sumwsc2, sumw_mirror);
+            prm.expectation(prm.SF, prm.Iref, iter,
+                            LL, sumcorr, DFo, wsum_Mref,
+                            wsum_sigma_noise, wsum_sigma_offset, 
+                            sumw, sumw2, sumwsc, sumwsc2, sumw_mirror);
 
             // Update model parameters
-            prm.update_parameters(wsum_Mref, 
-                                  wsum_sigma_noise, wsum_sigma_offset, 
-				  sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, 
-				  sumcorr, sumw_allrefs);
+            prm.maximization(wsum_Mref, 
+                             wsum_sigma_noise, wsum_sigma_offset, 
+                             sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, 
+                             sumcorr, sumw_allrefs);
 
             // Check convergence
-            converged = prm.check_convergence(conv);
+            converged = prm.checkConvergence(conv);
 
-            if (prm.write_intermediate)
-                prm.write_output_files(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
-            else prm.output_to_screen(iter, sumcorr, LL);
+            prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
 
             if (converged)
             {
-                if (prm.anneal - 1. < 1e-5)
-                {
-                    if (prm.verb > 0) std::cerr << " Optimization converged!" << std::endl;
-                    break;
-                }
-                else
-                {
-                    prm.anneal -= prm.anneal_step;
-                    if (prm.verb > 0) std::cerr << " Lowering annealing parameter to " << prm.anneal << std::endl;
-                }
-
+                if (prm.verb > 0) std::cerr << " Optimization converged!" << std::endl;
+                break;
             }
 
         } // end loop iterations
-        prm.write_output_files(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
+        prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
 
     }
     catch (Xmipp_error XE)
