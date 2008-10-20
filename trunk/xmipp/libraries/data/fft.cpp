@@ -55,7 +55,6 @@ void Half2Whole(const Matrix1D<std::complex<double> > &in,
 void Whole2Half(const Matrix2D<std::complex<double> > &in,
                 Matrix2D<std::complex<double> > &out)
 {
-
     // This assumes squared images...
     int ldim = (int)(YSIZE(in) / 2) + 1;
 
@@ -67,13 +66,11 @@ void Whole2Half(const Matrix2D<std::complex<double> > &in,
     for (int i = 1; i < ldim; i++)
         for (int j = 0; j < XSIZE(in); j++)
             dMij(out, i, j) = dMij(in, i, j);
-
 }
 
 /** Convert half -> whole of (centro-symmetric) Fourier transforms 2D. -- */
 void Half2Whole(const Matrix2D<std::complex<double> > &in, Matrix2D<std::complex<double> > &out, int oriydim)
 {
-
     out.resize(oriydim, XSIZE(in));
 
     // Old part
@@ -92,13 +89,11 @@ void Half2Whole(const Matrix2D<std::complex<double> > &in, Matrix2D<std::complex
     }
 }
 
-
 /** Convert complex -> real,imag Fourier transforms 3D. -- */
 void Complex2RealImag(const Matrix3D< std::complex< double > > & in,
                       Matrix3D< double > & real,
                       Matrix3D< double > & imag)
 {
-
     real.resize(in);
     imag.resize(in);
     Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(real),
@@ -460,63 +455,6 @@ void FFT_phase(const Matrix3D< std::complex<double> > &v,
     phase.resize(v);
     FOR_ALL_ELEMENTS_IN_MATRIX3D(v) phase(k, i, j) = atan2(v(k, i, j).imag(),
             v(k, i, j).real());
-}
-
-/****************************************************************************/
-/*            Square distance from the point (x,y) to (m/2,m/2)             */
-/****************************************************************************/
-double distancia2(int x, int y, int m)
-{
-    double x1, y1;
-
-    x1 = (x - m / 2) * (x - m / 2);
-    y1 = (y - m / 2) * (y - m / 2);
-
-    return(x1 + y1);
-}
-
-/* SSNR process single image */
-void my_ssnr_step(const Matrix2D< std::complex<double> > &FTAverageImage,
-                  const Matrix2D< std::complex<double> > &FTaverageSubGroup,
-                  Matrix1D<double> &ssnr,
-                  Matrix1D<double> &pixel,
-                  int z)
-{
-    //n -> number of images in the subset
-    int top, cont;
-    double d, w2, w12;
-    double w = 0.0;
-    float preal1, preal2, pimag1, pimag2;
-    float resta_real, resta_imag;
-    float mod2_diferencia, mod2_media;
-
-    //   int dim (int)FTAverageImage.rowNumber()/2;
-    int n = (int)FTAverageImage.rowNumber();
-    top = (int)(n / 2);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(ssnr)
-    {
-        mod2_media = 0.0;
-        mod2_diferencia = 0.0;
-        w = i + 0.5;
-        w2 = w * w;
-        w12 = (w + 1) * (w + 1);
-        cont = 0;
-        for (int ii = 0; ii < n; ii++)
-            for (int jj = 0; jj <= top; jj++)
-            {
-                d = distancia2(ii, jj, n);
-                if (d >= w2 && d < w12)
-                {
-                    cont++;
-                    mod2_diferencia += norm(dMij(FTAverageImage, ii, jj) -
-                                            dMij(FTaverageSubGroup, ii, jj));
-                    mod2_media += norm(dMij(FTAverageImage, ii, jj));
-                }
-            }
-        mod2_diferencia *= z;
-        VEC_ELEM(ssnr, i) += mod2_diferencia / mod2_media;
-        VEC_ELEM(pixel, i) = cont;
-    }
 }
 
 /* Numerical derivative of a matrix ----------------------------- */
