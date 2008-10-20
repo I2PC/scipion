@@ -709,15 +709,8 @@ void Prog_align2d_prm::align2d()
         fmask.raised_w = 0.1;
         fmask.FilterShape = RAISED_COSINE;
         fmask.FilterBand = LOWPASS;
-        Matrix2D< std::complex<double> > fft;
-        FourierTransform(images[0](), fft);
-        fmask.generate_mask(fft);
         for (int imgno = 0;imgno < n_images;imgno++)
-        {
-            FourierTransform(images[imgno](), fft);
-            fmask.apply_mask_Fourier(fft);
-            InverseFourierTransform(fft, images[imgno]());
-        }
+            fmask.apply_mask_Space(images[imgno]());
     }
 
     // Get Reference (either from file or from piramidal combination of images)
