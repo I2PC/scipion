@@ -62,15 +62,15 @@ typedef struct{
     double *wsum_sigma_offset;
     double *sumfracweight;
     double *LL;
-    double *wsumimgs;
-    double *mref;
-    double *fref;
+    std::vector<Matrix2D<std::complex<double> > > *wsumimgs;
+    std::vector<Matrix2D<std::complex<double> > > *fref;
+    std::vector<Matrix2D<double> > *mref;
+    std::vector<Matrix1D<double> > *docfiledata;
     std::vector<double> *sumw;
     std::vector<double> *sumw2;
     std::vector<double> *sumwsc;
     std::vector<double> *sumwsc2;
     std::vector<double> *sumw_mirror;
-    double *docfiledata;
 } structThreadExpectationSingleImage ;
 
 /**@defgroup MLalign2D ml_align2d (Maximum likelihood in 2D)
@@ -234,10 +234,12 @@ public:
 
     /// Fill vector of matrices with all rotations of reference
     void rotateReference(std::vector< ImageXmippT<double> > &Iref,
-                         bool fill_real_space, double * mref, double * fref);
+                         bool fill_real_space, 
+                         std::vector<Matrix2D<double> > &mref, 
+                         std::vector<Matrix2D<std::complex<double > > > &fref);
 
     /// Apply reverse rotations to all matrices in vector and fill new matrix with their sum
-    void reverseRotateReference(double * fnew, 
+    void reverseRotateReference(std::vector<Matrix2D<std::complex<double > > > &fnew, 
                                 std::vector<Matrix2D<double> > &Mref);
 
     /** Calculate which references have projection directions close to
@@ -248,14 +250,14 @@ public:
     /** Pre-calculate which model and phi have significant probabilities
        without taking translations into account! */
     void preselectFastSignificant(Matrix2D<double> &Mimg, std::vector<double> &offsets,
-                                  double * mref,
+                                  std::vector<Matrix2D<double> > &mref,
                                   Matrix2D<int> &Msignificant,
                                   std::vector<double > &pdf_directions);
 
     /// ML-integration over all (or -fast) translations
     void expectationSingleImage(Matrix2D<double> &Mimg,
-                                double * fref,
-                                double * wsumimgs,
+                                std::vector<Matrix2D<std::complex<double> > > &fref,
+                                std::vector<Matrix2D<std::complex<double> > > &wsumimgs,
                                 Matrix2D<int> &Msignificant,
                                 double &wsum_sigma_noise, double &wsum_sigma_offset,
                                 std::vector<double> &sumw, std::vector<double> &sumw2,

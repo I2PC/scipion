@@ -821,19 +821,21 @@ void Prog_MLalign2D_prm::calculatePdfInplane()
 
 // Rotate reference for all models and rotations and fill Fref vectors =============
 void Prog_MLalign2D_prm::rotateReference(std::vector< ImageXmippT<double> > &Iref,
-                                             bool fill_real_space, double * mref, double * fref)
+                                         bool fill_real_space, 
+                                         std::vector<Matrix2D<double> > &mref,
+                                         std::vector<Matrix2D<std::complex<double> > > &fref)
 {
 
     double AA, stdAA, psi, dum, avg, mean_ref, stddev_ref, dummy;
-    Matrix2D<double> Maux;
+    Matrix2D<double> Maux(dim,dim);
+    Matrix2D<std::complex<double> > Faux(dim,hdim+1);
     Matrix2D<int> mask, omask;
     Matrix2D<double> cmask;
-    double * fft;
-    std::complex<double> * FREF, * FFT;
 
-    Maux.initZeros(dim, dim);
     Maux.setXmippOrigin();
     A2.clear();
+    fref.clear();
+    mref.clear();
 
     // prepare masks
     mask.resize(dim, dim);
@@ -842,8 +844,6 @@ void Prog_MLalign2D_prm::rotateReference(std::vector< ImageXmippT<double> > &Ire
     omask.resize(dim, dim);
     omask.setXmippOrigin();
     BinaryCircularMask(omask, hdim, OUTSIDE_MASK);
-
-    FREF =(std::complex<double>* ) fref;
 
     for (int refno = 0; refno < n_ref; refno++)
     {
@@ -863,25 +863,19 @@ void Prog_MLalign2D_prm::rotateReference(std::vector< ImageXmippT<double> > &Ire
                 stdAA = AA;
                 A2.push_back(AA);
             }
+            if (AA > 0) Maux *= sqrt(stdAA / AA);
             if (fill_real_space)
-            {
-                int istart = refno*nr_psi*dim2 + ipsi*dim2;
-                for (int i = 0; i < dim2; i++)
-                {
-                    mref[istart + i] = DIRECT_MULTIDIM_ELEM(Maux,i);
-                    if (AA > 0) mref[istart + i] *= sqrt(stdAA / AA);
-                }
-            }
+                mref.push_back(Maux);
             // Do the forward FFT 
             forwfftw.SetPoints(MULTIDIM_ARRAY(Maux));
             forwfftw.Transform();
-            FFT = (std::complex<double> *) forwfftw.fOut;
-            int istart = refno*nr_psi*fftw_hsize + ipsi*fftw_hsize;
-            for (int i = 0; i < fftw_hsize; i++)
+            forwfftw.GetPoints(MULTIDIM_ARRAY(Faux));
+            // With the old code I had to multiply by dim2!!! Roberto's code: no longer so...
+            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
             {
-                FREF[istart + i] = conj(FFT[i]);
-                if (AA > 0) FREF[istart + i] *= sqrt(stdAA / AA);
+                dMij(Faux, i, j) = conj(dMij(Faux, i, j));
             }
+            fref.push_back(Faux);
         }
         // If we dont use save_mem1 Iref[refno] is useless from here on
         if (!save_mem1) Iref[refno]().resize(0, 0);
@@ -891,21 +885,17 @@ void Prog_MLalign2D_prm::rotateReference(std::vector< ImageXmippT<double> > &Ire
 
 // Collect all rotations and sum to update Iref() for all models ==========
 void Prog_MLalign2D_prm::reverseRotateReference(
-    double * fnew, std::vector<Matrix2D<double > > &Mnew)
+    std::vector<Matrix2D<std::complex<double> > > &fnew, 
+    std::vector<Matrix2D<double > > &Mnew)
 {
 
     double psi, dum, avg, ang;
-    Matrix2D<double> Maux, Maux2;
-    Matrix2D<std::complex<double> > Faux;
+    Matrix2D<double> Maux(dim, dim), Maux2(dim, dim);
+    Matrix2D<std::complex<double> > Faux(dim,hdim+1);
     Matrix2D<int> mask, omask;
-    Maux.resize(dim, dim);
-    Maux2.resize(dim, dim);
     Maux.setXmippOrigin();
     Maux2.setXmippOrigin();
     
-    double * fft;
-    fft = new double[2*fftw_hsize];
-
     Mnew.clear();
     mask.resize(dim, dim);
     mask.setXmippOrigin();
@@ -920,18 +910,18 @@ void Prog_MLalign2D_prm::reverseRotateReference(
         Mnew.push_back(Maux);
         for (int ipsi = 0; ipsi < nr_psi; ipsi++)
         {
+            int refnoipsi = refno*nr_psi + ipsi;
             // Add arbitrary number to avoid 0-degree rotation without interpolation effects
             psi = (double)(ipsi * psi_max / nr_psi) + SMALLANGLE;
-            // Do the backward FFT
-            int istart = refno*nr_psi*2*fftw_hsize + ipsi*2*fftw_hsize;
-            for (int i = 0; i < 2*fftw_hsize; i++)
-                fft[i] = fnew[istart + i];
 
-            backfftw.SetPoints(fft);
+            // Do the backward FFT
+            Faux = fnew[refnoipsi];
+            backfftw.SetPoints(MULTIDIM_ARRAY(Faux));
             backfftw.Transform();
             backfftw.Normalize();
             backfftw.Normalize();
             backfftw.GetPoints(MULTIDIM_ARRAY(Maux));
+            // Old-code: Maux /= dim * dim;
             CenterFFT(Maux, true);
             computeStats_within_binary_mask(omask, Maux, dum, dum, avg, dum);
             Maux.rotateBSpline(3, -psi, Maux2, WRAP);
@@ -945,8 +935,6 @@ void Prog_MLalign2D_prm::reverseRotateReference(
                                            MAT_ELEM(Mnew[refno], -1, 0) + MAT_ELEM(Mnew[refno], 0, -1)) / 4;
 
     }
-
-    delete fft;
 
 }
 
@@ -986,7 +974,7 @@ void Prog_MLalign2D_prm::preselectLimitedDirections(float &phi, float &theta,
 // Pre-selection of significant refno and ipsi, based on current optimal translation =======
 void Prog_MLalign2D_prm::preselectFastSignificant(
     Matrix2D<double> &Mimg, std::vector<double > &offsets,
-    double * MREF,
+    std::vector<Matrix2D<double> > &mref,
     Matrix2D<int> &Msignificant,
     std::vector<double> &pdf_directions)
 {
@@ -1000,7 +988,7 @@ void Prog_MLalign2D_prm::preselectFastSignificant(
     int irot, irefmir;
     std::vector<double> maxw_ref(2*n_ref);
     Matrix1D<double> trans(2);
-    double * MROT;
+    std::vector<Matrix2D<double> > Mrot;
 
     Maux.resize(dim, dim);
     Maux.setXmippOrigin();
@@ -1011,19 +999,6 @@ void Prog_MLalign2D_prm::preselectFastSignificant(
     Msignificant.initZeros();
     dfsigma2 = df * sigma_noise2;
 
-    if (save_mem1)
-    {
-        try
-        {
-            MROT = new double[nr_psi*dim2];
-        }
-        catch (std::bad_alloc&)
-        {
-            REPORT_ERROR(1,"Error allocating memory for MROT");
-        }
-    }
-    
-
     // Flip images and calculate correlations and maximum correlation
     for (int refno = 0; refno < n_ref; refno++)
     {
@@ -1032,13 +1007,12 @@ void Prog_MLalign2D_prm::preselectFastSignificant(
             A2_plus_Xi2 = 0.5 * (A2[refno] + Xi2);
             if (save_mem1)
             {
+                Mrot.clear();
                 for (int ipsi = 0; ipsi < nr_psi; ipsi++)
                 {
                     double psi = (double)(ipsi * psi_max / nr_psi) + SMALLANGLE;
                     Iref[refno]().rotateBSpline(3, psi, Maux, WRAP);
-                    int istart = ipsi*dim2;
-                    for (int i = 0; i < dim2; i++)
-                        MROT[istart+ i] = DIRECT_MULTIDIM_ELEM(Maux,i);
+                    Mrot.push_back(Maux);
                 }
             }
             for (int iflip = 0; iflip < nr_flip; iflip++)
@@ -1065,18 +1039,11 @@ void Prog_MLalign2D_prm::preselectFastSignificant(
                         irot = iflip * nr_psi + ipsi;
                         dMij(Msignificant, refno, irot) = 0;
                         CC = A2_plus_Xi2;
-                        if (save_mem1)
+                        if (save_mem1) Mrefl = Mrot[ipsi];
+                        else Mrefl = mref[refno*nr_psi + ipsi];
+                        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Maux2)
                         {
-                            int istart = ipsi*dim2;
-                            for (int i = 0; i < dim2; i++)
-                                CC -= DIRECT_MULTIDIM_ELEM(Maux2,i) * MROT[istart + i];
-
-                        }
-                        else
-                        {
-                            int istart = refno*dim2*nr_psi + ipsi*dim2;
-                            for (int i = 0; i < dim2; i++)
-                                CC -= DIRECT_MULTIDIM_ELEM(Maux2,i) * MREF[istart + i];
+                            CC -= dMij(Maux2, i, j) * dMij(Mrefl, i, j);
                         }
                         dMij(Mdsig, refno, irot) = CC;
                         if (CC < mindiff) mindiff = CC;
@@ -1085,6 +1052,7 @@ void Prog_MLalign2D_prm::preselectFastSignificant(
             }
         }
     }
+  
 
     // Now that we have mindiff calculate the weighting matrices and maxweight
     for (int refno=0;refno<n_ref; refno++)
@@ -1146,15 +1114,15 @@ void Prog_MLalign2D_prm::preselectFastSignificant(
         }
     }
 
-    if (save_mem1)
-        delete MROT;
-
 }
 
 // Maximum Likelihood calculation for one image ============================================
 // Integration over all translation, given  model and in-plane rotation
 void Prog_MLalign2D_prm::expectationSingleImage(
-    Matrix2D<double> &Mimg, double * fref, double * wsumimgs, Matrix2D<int> &Msignificant,
+    Matrix2D<double> &Mimg, 
+    std::vector<Matrix2D<std::complex<double> > > &fref,
+    std::vector<Matrix2D<std::complex<double> > > &wsumimgs,
+    Matrix2D<int> &Msignificant,
     double &wsum_sigma_noise, double &wsum_sigma_offset,
     std::vector<double> &sumw, std::vector<double> &sumw2, 
     std::vector<double> &sumwsc, std::vector<double> &sumwsc2, std::vector<double> &sumw_mirror,
@@ -1165,7 +1133,8 @@ void Prog_MLalign2D_prm::expectationSingleImage(
 {
 
     Matrix2D<double> Maux, Mweight, Mdzero;
-    Matrix2D<std::complex<double> > Fimg, Faux;
+    Matrix2D<std::complex<double> > Fimg(dim,hdim+1), Faux(dim,hdim+1), Fzero(dim,hdim+1);
+    std::vector<Matrix2D<std::complex<double> > > Fimg_flip, mysumimgs;
     std::vector<double> refw(n_ref), refw2(n_ref), refwsc2(n_ref), refw_mirror(n_ref), sumw_refpsi(n_ref*nr_psi);
     double sigma_noise2, XiA, Xi2, aux, pdf, fracpdf, A2_plus_Xi2;
     double mind, dfsigma2, diff, mindiff, my_mindiff;
@@ -1181,10 +1150,6 @@ void Prog_MLalign2D_prm::expectationSingleImage(
     if (fast_mode) imax = n_ref * nr_flip / nr_nomirror_flips;
     std::vector<int> ioptx_ref(imax), iopty_ref(imax), ioptflip_ref(imax);
     std::vector<double> maxw_ref(imax);
-
-    std::complex<double> * WSUMIMGS, * FREF;
-    FREF = (std::complex<double> *) fref;
-    WSUMIMGS = (std::complex<double> *) wsumimgs;
 
     // Set up a FFTW plan
     // This peace of code will disappear soon!
@@ -1211,24 +1176,7 @@ void Prog_MLalign2D_prm::expectationSingleImage(
     Mdzero.setXmippOrigin();
     Mweight.initZeros(sigdim, sigdim);
     Mweight.setXmippOrigin();
-
-    // Use new to allocate memory
-    double * mysumimgs = NULL, * imgflip = NULL, * fft = NULL;
-    std::complex<double> * MYSUMIMGS, * IMGFLIP, * FFT, * OUT;
-    try
-    {
-        mysumimgs  = new double[n_ref*nr_psi*2*fftw_hsize];
-        imgflip = new double[nr_flip*2*fftw_hsize];
-        fft = new double[2*fftw_hsize];
-    }
-    catch (std::bad_alloc&)
-    {
-        REPORT_ERROR(1,"Error allocating memory for mysumimgs");
-    }
-
-    MYSUMIMGS  = (std::complex<double> *) mysumimgs;
-    IMGFLIP = (std::complex<double> *) imgflip;
-    FFT = (std::complex<double> *) fft;
+    Fzero.initZeros();
 
     sigma_noise2 = sigma_noise * sigma_noise;
     dfsigma2 = df * sigma_noise2;
@@ -1243,18 +1191,18 @@ void Prog_MLalign2D_prm::expectationSingleImage(
         trymindiff = trymindiff_factor * 0.5 * Xi2; 
 
     // precalculate all flipped versions of the image
+    Fimg_flip.clear();
     for (int iflip = 0; iflip < nr_flip; iflip++)
     {
         Maux.setXmippOrigin();
         applyGeometry(Maux, F[iflip], Mimg, IS_INV, WRAP);
         local_forwfftw.SetPoints(MULTIDIM_ARRAY(Maux));
         local_forwfftw.Transform();
-        OUT = (std::complex<double> *) local_forwfftw.fOut;
-        // Subtract bgmean in Fourier space  (CHECK THIS!!!)
-        OUT[0] -= bgmean * dim2;
-        int istart = iflip*fftw_hsize;
-        for (int i = 0; i < fftw_hsize; i++)
-            IMGFLIP[istart + i] = OUT[i];
+        local_forwfftw.GetPoints(MULTIDIM_ARRAY(Fimg));
+        // Old code: Fimg *= dim * dim; (Roberto no)
+        if (do_norm)
+            dMij(Fimg,0,0) -= bgmean * dim * dim;
+         Fimg_flip.push_back(Fimg);
     }
 
     // The real stuff: loop over all references, rotations and translations
@@ -1265,10 +1213,12 @@ void Prog_MLalign2D_prm::expectationSingleImage(
         mindiff = 99.e99;
         wsum_corr = wsum_offset = wsum_sc = wsum_sc2 = 0.;
         maxweight = maxweight2 = sum_refw = sum_refw2 = 0.;
-        for (int i = 0; i <n_ref*nr_psi*2*fftw_hsize; i++)
-            mysumimgs[i] = 0.;
+        mysumimgs.clear();
         for (int i = 0; i < n_ref*nr_psi; i++)
+        {
+            mysumimgs.push_back(Fzero); 
             sumw_refpsi[i] = 0.;
+        }
         for (int i = 0; i < n_ref; i++)
             refw[i] = refw2[i] = refw_mirror[i] = 0.;
         if (fast_mode)
@@ -1302,6 +1252,7 @@ void Prog_MLalign2D_prm::expectationSingleImage(
                     int iflipstart = iflip*fftw_hsize;
                     for (int ipsi = 0; ipsi < nr_psi; ipsi++)
                     {
+                        int refnoipsi = refno*nr_psi + ipsi;
                         irot = iflip * nr_psi + ipsi;
                         irefmir = FLOOR(iflip / nr_nomirror_flips) * n_ref + refno;
                         int irefpsistart = refno*nr_psi*fftw_hsize + ipsi*fftw_hsize;
@@ -1314,9 +1265,13 @@ void Prog_MLalign2D_prm::expectationSingleImage(
                                 fracpdf = alpha_k[refno] * mirror_fraction[refno];
                             
                             // A. Backward FFT to calculate weights in real-space
-                            for (int i = 0; i < fftw_hsize; i++)
-                                FFT[i] = IMGFLIP[iflipstart + i] * FREF[irefpsistart + i];
-                            local_backfftw.SetPoints(fft);
+                            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
+                            {
+                                dMij(Faux,i,j) = 
+                                    dMij(Fimg_flip[iflip],i,j) * 
+                                    dMij(fref[refnoipsi],i,j);
+                            }
+                            local_backfftw.SetPoints(MULTIDIM_ARRAY(Faux));
                             local_backfftw.Transform();
                             local_backfftw.Normalize();
                             local_backfftw.GetPoints(MULTIDIM_ARRAY(Maux));
@@ -1324,7 +1279,6 @@ void Prog_MLalign2D_prm::expectationSingleImage(
                             
                             // B. Calculate weights for each pixel within sigdim (Mweight)
                             my_sumweight = my_sumstoredweight = my_maxweight = 0.;
-                            //std::cerr<<" diff= "<<MAT_ELEM(Maux,0,0)<<" A2_plus_Xi2= "<<A2_plus_Xi2<<" ref_scale= "<<ref_scale<<" mindiff= "<<mindiff<<" sigma_noise2= "<<sigma_noise2<<std::endl;
                             FOR_ALL_ELEMENTS_IN_MATRIX2D(Mweight)
                             {
                                 diff = A2_plus_Xi2 - ref_scale* MAT_ELEM(Maux, i, j);
@@ -1416,9 +1370,13 @@ void Prog_MLalign2D_prm::expectationSingleImage(
                                 // Use forward FFT in convolution theorem again
                                 local_forwfftw.SetPoints(MULTIDIM_ARRAY(Mdzero));
                                 local_forwfftw.Transform();
-                                OUT =  (std::complex<double> *) local_forwfftw.fOut;
-                                for (int i = 0; i < fftw_hsize; i++)
-                                    MYSUMIMGS[irefpsistart+i] += conj(OUT[i]) * IMGFLIP[iflipstart + i];
+                                local_forwfftw.GetPoints(MULTIDIM_ARRAY(Faux));
+                                FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
+                                {
+                                    dMij(mysumimgs[refnoipsi],i,j) +=
+                                        conj(dMij(Faux,i,j)) * 
+                                        dMij(Fimg_flip[iflip],i,j);
+                                }
                             }
                         } // close if Msignificant
                     } // close for ipsi
@@ -1427,13 +1385,11 @@ void Prog_MLalign2D_prm::expectationSingleImage(
         } // close for refno
 
         // Now check whether our trymindiff was OK.
-        // The limit of the exp-function lies around exp(700)=1.01423e+304, exp(800)=inf; tt= 700 exp(-tt) = 9.85968e-305; tt= 800 exp(-tt) = 0
+        // The limit of the exp-function lies around 
+        // exp(700)=1.01423e+304, exp(800)=inf; exp(-700) = 9.85968e-305; exp(-88) = 0
         // Use 500 to be on the save side?
         if (ABS((mindiff - trymindiff) / sigma_noise2) > 500.)
         {
-            std::cerr<< std::endl
-                     << "WARNING: trymindiff= " << trymindiff << " mindiff= " << mindiff << std::endl;
-            std::cerr<< "Your results will still be correct, but if you see this warning very often, you may try to provide the following option for improved performance: -trymindiff_factor "<<trymindiff_factor * mindiff/trymindiff<<std::endl;
             // Re-do whole calculation now with the real mindiff
             trymindiff = mindiff;
             redo_counter++;
@@ -1482,14 +1438,14 @@ void Prog_MLalign2D_prm::expectationSingleImage(
         Maux.selfTranslate(opt_offsets, true);
         Maux.selfApplyGeometry(F[iopt_flip], IS_INV, WRAP);
         // 2. Calculate optimal setting of Mref
-        int irefpsistart = opt_refno*nr_psi*fftw_hsize + iopt_psi*fftw_hsize;
-        for (int i = 0; i < fftw_hsize; i++)
+        int refnoipsi = opt_refno*nr_psi + iopt_psi;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
         {
-            FFT[i] = conj(FREF[irefpsistart + i]);
-            FFT[i] *= opt_scale/dim2;
+            dMij(Faux,i,j) = conj(dMij(fref[refnoipsi],i,j));
+            dMij(Faux,i,j) *= opt_scale/dim2;
         }
         Matrix2D<double> Maux2(Maux);
-        local_backfftw.SetPoints(fft);
+        local_backfftw.SetPoints(MULTIDIM_ARRAY(Faux));
         local_backfftw.Transform();
         local_backfftw.GetPoints(MULTIDIM_ARRAY(Maux2));
         Maux = Maux - Maux2;
@@ -1531,14 +1487,15 @@ void Prog_MLalign2D_prm::expectationSingleImage(
                 sumwsc[refno] += (refw[refno] + refw_mirror[refno]) * (opt_scale) / sum_refw;
                 sumwsc2[refno] += (refw[refno] + refw_mirror[refno]) * (opt_scale * opt_scale) / sum_refw;
             }
-            // Correct weighted sum of images for new bgmean (only first element=origin in Fimg)
             for (int ipsi = 0; ipsi < nr_psi; ipsi++)
-                MYSUMIMGS[refno*nr_psi*fftw_hsize + ipsi*fftw_hsize] -= 
-                    sumw_refpsi[refno*nr_psi + ipsi] * dim2 *(bgmean - old_bgmean);
-            // Sum mysumimgs to the global weighted sum
-            int irefstart = refno*nr_psi*2*fftw_hsize;
-            for (int i = 0; i < 2*fftw_hsize*nr_psi; i++)
-                wsumimgs[irefstart + i] += scale_dim2_sumw * mysumimgs[irefstart + i];
+            {
+                int refnoipsi = refno*nr_psi + ipsi;
+                // Correct weighted sum of images for new bgmean (only first element=origin in Fimg)
+                dMij(mysumimgs[refnoipsi],0,0) -= 
+                    sumw_refpsi[refnoipsi] * dim2 * (bgmean - old_bgmean); 
+                // Sum mysumimgs to the global weighted sum
+                wsumimgs[refnoipsi] += (scale_dim2_sumw * mysumimgs[refnoipsi]);
+            }
         }
     }
 
@@ -1562,11 +1519,6 @@ void Prog_MLalign2D_prm::expectationSingleImage(
 
     pthread_mutex_unlock(  &weightedsum_update_mutex );
 
-    // Free memory
-    delete mysumimgs;
-    delete imgflip;
-    delete fft;
-
 }
 
 
@@ -1585,15 +1537,15 @@ void * threadExpectationSingleImage( void * data )
     double *wsum_sigma_offset = thread_data->wsum_sigma_offset;
     double *sumfracweight = thread_data->sumfracweight;
     double *LL = thread_data->LL;
-    double *wsumimgs = thread_data->wsumimgs;
-    double *mref = thread_data->mref;
-    double *fref = thread_data->fref;
+    std::vector<Matrix2D<std::complex<double > > > *wsumimgs = thread_data->wsumimgs;
+    std::vector<Matrix2D<std::complex<double > > > *fref = thread_data->fref; 
+    std::vector<Matrix2D<double > > *mref = thread_data->mref;
+    std::vector<Matrix1D<double > > *docfiledata = thread_data->docfiledata;
     std::vector<double> *sumw = thread_data->sumw;
     std::vector<double> *sumw2 = thread_data->sumw2;
     std::vector<double> *sumwsc = thread_data->sumwsc;
     std::vector<double> *sumwsc2 = thread_data->sumwsc2;
     std::vector<double> *sumw_mirror = thread_data->sumw_mirror;
-    double * docfiledata = thread_data->docfiledata;
 
     // Local variables
     ImageXmipp img;
@@ -1601,7 +1553,7 @@ void * threadExpectationSingleImage( void * data )
     std::vector<double> allref_offsets, pdf_directions(prm->n_ref);
     Matrix2D<int> Msignificant;
     Msignificant.resize(prm->n_ref, prm->nr_psi*prm->nr_flip);
-    Matrix1D<double> dataline(12), opt_offsets(2);
+    Matrix1D<double> opt_offsets(2);
     float old_phi = -999., old_theta = -999.;
     double opt_psi, opt_flip, fracweight, maxweight2, trymindiff, dLL;
     double opt_xoff, opt_yoff, opt_scale = 1., bgmean = 0.;
@@ -1691,10 +1643,10 @@ void * threadExpectationSingleImage( void * data )
         // Use a maximum-likelihood target function in real space
         // with complete or reduced-space translational searches (-fast)
         
-        if (prm->fast_mode) (*prm).preselectFastSignificant(img(), allref_offsets, mref,
+        if (prm->fast_mode) (*prm).preselectFastSignificant(img(), allref_offsets, *mref,
                                                             Msignificant, pdf_directions);
         else Msignificant.initConstant(1);
-        (*prm).expectationSingleImage(img(), fref, wsumimgs, Msignificant,
+        (*prm).expectationSingleImage(img(), *fref, *wsumimgs, Msignificant,
                                       *wsum_sigma_noise, *wsum_sigma_offset, 
                                       *sumw, *sumw2, *sumwsc, *sumwsc2, 
                                       *sumw_mirror, *LL, dLL, fracweight, *sumfracweight, 
@@ -1736,23 +1688,23 @@ void * threadExpectationSingleImage( void * data )
                 opt_psi += 360.;
                 opt_flip = 1.;
             }
-            docfiledata[imgno*DATALINELENGTH+0] = prm->Iref[opt_refno].Phi();     // rot
-            docfiledata[imgno*DATALINELENGTH+1] = prm->Iref[opt_refno].Theta();   // tilt
-            docfiledata[imgno*DATALINELENGTH+2] = opt_psi + 360.;            // psi
-            docfiledata[imgno*DATALINELENGTH+3] = opt_offsets(0);            // Xoff
-            docfiledata[imgno*DATALINELENGTH+4] = opt_offsets(1);            // Yoff
-            docfiledata[imgno*DATALINELENGTH+5] = (double)(opt_refno + 1);   // Ref
-            docfiledata[imgno*DATALINELENGTH+6] = opt_flip;                  // Mirror
-            docfiledata[imgno*DATALINELENGTH+7] = fracweight;                // P_max/P_tot
-            docfiledata[imgno*DATALINELENGTH+8] = dLL;                       // log-likelihood
+            (*docfiledata)[imgno](0) = prm->Iref[opt_refno].Phi();     // rot
+            (*docfiledata)[imgno](1) = prm->Iref[opt_refno].Theta();   // tilt
+            (*docfiledata)[imgno](2) = opt_psi + 360.;            // psi
+            (*docfiledata)[imgno](3) = opt_offsets(0);            // Xoff
+            (*docfiledata)[imgno](4) = opt_offsets(1);            // Yoff
+            (*docfiledata)[imgno](5) = (double)(opt_refno + 1);   // Ref
+            (*docfiledata)[imgno](6) = opt_flip;                  // Mirror
+            (*docfiledata)[imgno](7) = fracweight;                // P_max/P_tot
+            (*docfiledata)[imgno](8) = dLL;                       // log-likelihood
             if (prm->do_norm)
             {
-                docfiledata[imgno*DATALINELENGTH+9]  = bgmean;               // background mean
-                docfiledata[imgno*DATALINELENGTH+10] = opt_scale;            // image scale 
+                (*docfiledata)[imgno](9)  = bgmean;               // background mean
+                (*docfiledata)[imgno](10) = opt_scale;            // image scale 
             }
             if (prm->do_student)
             {
-                docfiledata[imgno*DATALINELENGTH+11] = maxweight2;           // Robustness weight
+                (*docfiledata)[imgno](11) = maxweight2;           // Robustness weight
             }
         }
             
@@ -1772,29 +1724,20 @@ void Prog_MLalign2D_prm::expectation(
 {
 
     Matrix1D<double> dataline(DATALINELENGTH);
-    double * mref = NULL, * wsumimgs = NULL, * fref = NULL, * docfiledata = NULL;
+    Matrix2D<std::complex<double> > Fdzero(dim,hdim+1); 
+    std::vector<Matrix2D<double> > mref;
+    std::vector<Matrix2D<std::complex<double> > > fref, wsumimgs;
+    std::vector<Matrix1D<double> > docfiledata;
     bool fill_real_space;
     int num_img_tot;
 
+
+    
+    // Generate (FT of) each rotated version of all references
     if (fast_mode && !save_mem1)
         fill_real_space = true;
     else
         fill_real_space = false;
-
-    try
-    {
-        if (fill_real_space) 
-            mref  = new double[n_ref*nr_psi*dim2];
-        fref = new double[n_ref*nr_psi*2*fftw_hsize];
-        wsumimgs = new double[n_ref*nr_psi*2*fftw_hsize];
-        docfiledata = new double[SF.ImgNo()*DATALINELENGTH];
-    }
-    catch (std::bad_alloc&)
-    {
-        REPORT_ERROR(1,"ml_align2d: Error allocating memory for wsumimgs, mref and fref");
-    }
-
-    // Generate (FT of) each rotated version of all references
     rotateReference(Iref, fill_real_space, mref, fref);
 
     // Pre-calculate pdf of all in-plane transformations
@@ -1810,10 +1753,12 @@ void Prog_MLalign2D_prm::expectation(
     wsum_sigma_noise = 0.;
     wsum_sigma_offset = 0.;
     sumfracweight = 0.;
-    for (int i = 0; i < SF.ImgNo()*DATALINELENGTH; i++)
-        docfiledata[i] = 0.;
-    for (int i = 0; i <n_ref*nr_psi*2*fftw_hsize; i++)
-        wsumimgs[i] = 0.;
+    dataline.initZeros();
+    for (int i = 0; i < SF.ImgNo(); i++)
+        docfiledata.push_back(dataline);
+    Fdzero.initZeros();
+    for (int i = 0; i <n_ref*nr_psi; i++)
+        wsumimgs.push_back(Fdzero);
     for (int refno = 0; refno < n_ref; refno++)
     {
         sumw.push_back(0.);
@@ -1838,15 +1783,15 @@ void Prog_MLalign2D_prm::expectation(
         threads_d[c].wsum_sigma_offset=&wsum_sigma_offset;
         threads_d[c].sumfracweight=&sumfracweight;
         threads_d[c].LL=&LL;
-        threads_d[c].wsumimgs=wsumimgs;
-        threads_d[c].mref=mref;
-        threads_d[c].fref=fref;
+        threads_d[c].wsumimgs=&wsumimgs;
+        threads_d[c].fref=&fref;
+        threads_d[c].mref=&mref;
+        threads_d[c].docfiledata=&docfiledata;
         threads_d[c].sumw=&sumw;
         threads_d[c].sumw2=&sumw2;
         threads_d[c].sumwsc=&sumwsc;
         threads_d[c].sumwsc2=&sumwsc2;
         threads_d[c].sumw_mirror=&sumw_mirror;
-        threads_d[c].docfiledata=docfiledata;
         pthread_create( (th_ids+c), NULL, threadExpectationSingleImage, (void *)(threads_d+c) );
     }
 
@@ -1863,16 +1808,8 @@ void Prog_MLalign2D_prm::expectation(
     for (int imgno = 0; imgno < SF.ImgNo(); imgno++)
     {
         DFo.append_comment(SF.NextImg());
-        for (int i = 0; i < DATALINELENGTH; i++)
-            dataline(i) = docfiledata[imgno*DATALINELENGTH+i];
-        DFo.append_data_line(dataline);
+        DFo.append_data_line(docfiledata[imgno]);
     }
-
-    delete wsumimgs;
-    delete fref;
-    delete docfiledata;
-    if (mref != NULL) 
-        delete mref;
 
 }
 
