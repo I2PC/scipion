@@ -585,6 +585,16 @@ public:
     	MultidimArray<T>::resize(M);
     }
 
+    /** Resize taking the shape from another vector which
+        is given as a MultidimArray
+     * @ingroup VectorsSize
+     */
+    template <typename T1>
+    void resize(const MultidimArray<T1> &M)
+    {
+    	MultidimArray<T>::resize(M);
+    }
+
     /** Produce a vector suitable for working with Numerical Recipes
      * @ingroup VectorsSize
      *
