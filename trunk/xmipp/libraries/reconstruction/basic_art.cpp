@@ -579,19 +579,11 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
     // Read CTF
     if (fn_ctf != "")
     {
-        if (Is_FourierImageXmipp(fn_ctf))
-        {
-            ctf.read_mask(fn_ctf);
-            multiple_CTFs = false;
-        }
-        else
-        {
-            selctf.read(fn_ctf);
-            if (selctf.ImgNo() != selfile.ImgNo())
-                REPORT_ERROR(1, "Basic_ART_Parameters: The number of images in "
-                             "the ctf and original selfiles do not match");
-            multiple_CTFs = true;
-        }
+        selctf.read(fn_ctf);
+        if (selctf.ImgNo() != selfile.ImgNo())
+            REPORT_ERROR(1, "Basic_ART_Parameters: The number of images in "
+                         "the ctf and original selfiles do not match");
+        multiple_CTFs = true;
     }
 
     /* Read symmetry file ------------------------------------------------------ */
