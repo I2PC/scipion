@@ -542,13 +542,13 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
         fourier_prm.fn_sel = fn_insel;
         fourier_prm.fn_doc="";
         fourier_prm.do_weights = true;
-        fourier_prm.fn_sym_vol = fourier_prm.fn_sym;
         fourier_prm.fn_out = fn_tmp + ".vol";
         fourier_prm.verb = verb;
         if (volno > 0) fourier_prm.verb = 0;
         fourier_prm.show();
         fourier_prm.produce_Side_info();
-        fourier_prm.MainLoop(new_vol);
+        fourier_prm.run();
+        new_vol=fourier_prm.Vout;
     }
     else // use wlsART
     {
