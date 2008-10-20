@@ -540,6 +540,7 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
         if (verb > 0) std::cerr << "--> Fourier-interpolation reconstruction " << std::endl;
         fourier_prm.read(argc, argv);
         fourier_prm.fn_sel = fn_insel;
+        fourier_prm.fn_doc="";
         fourier_prm.do_weights = true;
         fourier_prm.fn_sym_vol = fourier_prm.fn_sym;
         fourier_prm.fn_out = fn_tmp + ".vol";
