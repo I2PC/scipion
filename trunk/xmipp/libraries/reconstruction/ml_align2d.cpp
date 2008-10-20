@@ -312,7 +312,6 @@ void Prog_MLalign2D_prm::produceSideInfo()
     SF.ImgSize(dim, dim);
     hdim = dim / 2;
     dim2 = dim * dim;
-    fftw_hsize = (hdim + 1)*dim;
     nr_exp_images = SF.ImgNo();
     if (do_student) df2 = - ( df + dim2 ) / 2. ;
 
@@ -544,20 +543,6 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
         n_ref++;
         refno++;
     }
-
-    // Set up a FFTW plan
-    int fNdim = 2;
-    int * fN ;
-    fN = new int[fNdim];
-    //image size
-    fN[0] = XSIZE(Iref[0]());
-    fN[1] = YSIZE(Iref[0]());
-    bool inplace=false;
-    forwfftw.myxmippFftw(fNdim, fN, inplace, NULL);
-    backfftw.myxmippFftw(fNdim, fN, inplace, NULL);
-    //create plan (fftw stuff)
-    forwfftw.Init("ES",FFTW_FORWARD,false);
-    backfftw.Init("ES",FFTW_BACKWARD,false);
 
     // Make scratch directory for the temporary origin offsets
     if (fn_scratch!="")
@@ -828,7 +813,7 @@ void Prog_MLalign2D_prm::rotateReference(std::vector< ImageXmippT<double> > &Ire
 
     double AA, stdAA, psi, dum, avg, mean_ref, stddev_ref, dummy;
     Matrix2D<double> Maux(dim,dim);
-    Matrix2D<std::complex<double> > Faux(dim,hdim+1);
+    Matrix2D<std::complex<double> > Faux;
     Matrix2D<int> mask, omask;
     Matrix2D<double> cmask;
 
@@ -867,13 +852,11 @@ void Prog_MLalign2D_prm::rotateReference(std::vector< ImageXmippT<double> > &Ire
             if (fill_real_space)
                 mref.push_back(Maux);
             // Do the forward FFT 
-            forwfftw.SetPoints(MULTIDIM_ARRAY(Maux));
-            forwfftw.Transform();
-            forwfftw.GetPoints(MULTIDIM_ARRAY(Faux));
-            // With the old code I had to multiply by dim2!!! Roberto's code: no longer so...
+            transformer.FourierTransform(Maux,Faux,false);
+            double ddim2=(double)dim2;
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
             {
-                dMij(Faux, i, j) = conj(dMij(Faux, i, j));
+                dMij(Faux, i, j) = conj(dMij(Faux, i, j))*ddim2;
             }
             fref.push_back(Faux);
         }
@@ -891,7 +874,6 @@ void Prog_MLalign2D_prm::reverseRotateReference(
 
     double psi, dum, avg, ang;
     Matrix2D<double> Maux(dim, dim), Maux2(dim, dim);
-    Matrix2D<std::complex<double> > Faux(dim,hdim+1);
     Matrix2D<int> mask, omask;
     Maux.setXmippOrigin();
     Maux2.setXmippOrigin();
@@ -915,13 +897,8 @@ void Prog_MLalign2D_prm::reverseRotateReference(
             psi = (double)(ipsi * psi_max / nr_psi) + SMALLANGLE;
 
             // Do the backward FFT
-            Faux = fnew[refnoipsi];
-            backfftw.SetPoints(MULTIDIM_ARRAY(Faux));
-            backfftw.Transform();
-            backfftw.Normalize();
-            backfftw.Normalize();
-            backfftw.GetPoints(MULTIDIM_ARRAY(Maux));
-            // Old-code: Maux /= dim * dim;
+            transformer.inverseFourierTransform(fnew[refnoipsi],Maux);
+            Maux /= dim2;
             CenterFFT(Maux, true);
             computeStats_within_binary_mask(omask, Maux, dum, dum, avg, dum);
             Maux.rotateBSpline(3, -psi, Maux2, WRAP);
@@ -1132,8 +1109,8 @@ void Prog_MLalign2D_prm::expectationSingleImage(
     std::vector<double> &opt_offsets_ref, std::vector<double> &pdf_directions)
 {
 
-    Matrix2D<double> Maux, Mweight, Mdzero;
-    Matrix2D<std::complex<double> > Fimg(dim,hdim+1), Faux(dim,hdim+1), Fzero(dim,hdim+1);
+    Matrix2D<double> Maux, Mweight;
+    Matrix2D<std::complex<double> > Faux, Fzero(dim,hdim+1);
     std::vector<Matrix2D<std::complex<double> > > Fimg_flip, mysumimgs;
     std::vector<double> refw(n_ref), refw2(n_ref), refwsc2(n_ref), refw_mirror(n_ref), sumw_refpsi(n_ref*nr_psi);
     double sigma_noise2, XiA, Xi2, aux, pdf, fracpdf, A2_plus_Xi2;
@@ -1151,18 +1128,7 @@ void Prog_MLalign2D_prm::expectationSingleImage(
     std::vector<int> ioptx_ref(imax), iopty_ref(imax), ioptflip_ref(imax);
     std::vector<double> maxw_ref(imax);
 
-    // Set up a FFTW plan
-    // This peace of code will disappear soon!
-    xmippFftw local_forwfftw, local_backfftw;
-    int fNdim = 2;
-    int * fN ;
-    fN = new int[fNdim];
-    fN[0] = fN[1] = dim;
-    bool inplace=false;
-    local_forwfftw.myxmippFftw(fNdim, fN, inplace, NULL);
-    local_backfftw.myxmippFftw(fNdim, fN, inplace, NULL);
-    local_forwfftw.Init("ES",FFTW_FORWARD,false);
-    local_backfftw.Init("ES",FFTW_BACKWARD,false);
+    XmippFftw local_transformer;
 
     // Only translations smaller than 6 sigma_offset (save_mem2: 3) are considered!
     if (save_mem2) sigdim = 2 * CEIL(sigma_offset * 3);
@@ -1172,8 +1138,6 @@ void Prog_MLalign2D_prm::expectationSingleImage(
     // Setup matrices
     Maux.resize(dim, dim);
     Maux.setXmippOrigin();
-    Mdzero.initZeros(dim, dim);
-    Mdzero.setXmippOrigin();
     Mweight.initZeros(sigdim, sigdim);
     Mweight.setXmippOrigin();
     Fzero.initZeros();
@@ -1196,13 +1160,11 @@ void Prog_MLalign2D_prm::expectationSingleImage(
     {
         Maux.setXmippOrigin();
         applyGeometry(Maux, F[iflip], Mimg, IS_INV, WRAP);
-        local_forwfftw.SetPoints(MULTIDIM_ARRAY(Maux));
-        local_forwfftw.Transform();
-        local_forwfftw.GetPoints(MULTIDIM_ARRAY(Fimg));
-        // Old code: Fimg *= dim * dim; (Roberto no)
+        local_transformer.FourierTransform(Maux,Faux,false);
+        Faux*= dim2;
         if (do_norm)
-            dMij(Fimg,0,0) -= bgmean * dim * dim;
-         Fimg_flip.push_back(Fimg);
+            dMij(Faux,0,0) -= bgmean * dim2;
+         Fimg_flip.push_back(Faux);
     }
 
     // The real stuff: loop over all references, rotations and translations
@@ -1249,13 +1211,11 @@ void Prog_MLalign2D_prm::expectationSingleImage(
                 A2_plus_Xi2 = 0.5 * (ref_scale*ref_scale*A2[refno] + Xi2);
                 for (int iflip = 0; iflip < nr_flip; iflip++)
                 {
-                    int iflipstart = iflip*fftw_hsize;
                     for (int ipsi = 0; ipsi < nr_psi; ipsi++)
                     {
                         int refnoipsi = refno*nr_psi + ipsi;
                         irot = iflip * nr_psi + ipsi;
                         irefmir = FLOOR(iflip / nr_nomirror_flips) * n_ref + refno;
-                        int irefpsistart = refno*nr_psi*fftw_hsize + ipsi*fftw_hsize;
                         // This if is the speed-up caused by the -fast options
                         if (dMij(Msignificant, refno, irot))
                         {
@@ -1271,10 +1231,9 @@ void Prog_MLalign2D_prm::expectationSingleImage(
                                     dMij(Fimg_flip[iflip],i,j) * 
                                     dMij(fref[refnoipsi],i,j);
                             }
-                            local_backfftw.SetPoints(MULTIDIM_ARRAY(Faux));
-                            local_backfftw.Transform();
-                            local_backfftw.Normalize();
-                            local_backfftw.GetPoints(MULTIDIM_ARRAY(Maux));
+                            // Takes the input from Faux, and leaves the output
+                            // in Maux
+                            local_transformer.inverseFourierTransform();
                             CenterFFT(Maux, true);
                             
                             // B. Calculate weights for each pixel within sigdim (Mweight)
@@ -1362,15 +1321,16 @@ void Prog_MLalign2D_prm::expectationSingleImage(
                                 else 
                                     refw_mirror[refno] += my_sumweight;
                                 
-                                // Back from smaller Mweight to original size of Mdzero
+                                // Back from smaller Mweight to original size of Maux
+                                Maux.initZeros();
                                 FOR_ALL_ELEMENTS_IN_MATRIX2D(Mweight)
                                 {
-                                    MAT_ELEM(Mdzero, i, j) = MAT_ELEM(Mweight, i, j);
+                                    MAT_ELEM(Maux, i, j) = MAT_ELEM(Mweight, i, j);
                                 }
                                 // Use forward FFT in convolution theorem again
-                                local_forwfftw.SetPoints(MULTIDIM_ARRAY(Mdzero));
-                                local_forwfftw.Transform();
-                                local_forwfftw.GetPoints(MULTIDIM_ARRAY(Faux));
+                                // Takes the input from Maux and leaves it in
+                                // Faux
+                                local_transformer.FourierTransform();
                                 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
                                 {
                                     dMij(mysumimgs[refnoipsi],i,j) +=
@@ -1445,9 +1405,7 @@ void Prog_MLalign2D_prm::expectationSingleImage(
             dMij(Faux,i,j) *= opt_scale/dim2;
         }
         Matrix2D<double> Maux2(Maux);
-        local_backfftw.SetPoints(MULTIDIM_ARRAY(Faux));
-        local_backfftw.Transform();
-        local_backfftw.GetPoints(MULTIDIM_ARRAY(Maux2));
+        local_transformer.inverseFourierTransform(Faux,Maux2);
         Maux = Maux - Maux2;
 	if (debug==12) 
         {  

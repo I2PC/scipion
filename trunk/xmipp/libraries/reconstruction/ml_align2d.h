@@ -105,7 +105,7 @@ public:
     /** Number of iterations to be performed */
     int Niter;
     /** dimension of the images */
-    int dim, dim2, hdim, fftw_hsize;
+    int dim, dim2, hdim;
     /** Number of steps to sample in-plane rotation in 90 degrees */
     int nr_psi;
     /** Number of operations in "flip-array" (depending on do_mirror) */
@@ -196,7 +196,7 @@ public:
     int threads;
 
     /** FFTW objects */
-    xmippFftw forwfftw, backfftw;
+    XmippFftw transformer;
 
     /** debug flag */
     int debug;
