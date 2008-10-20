@@ -29,6 +29,34 @@
 #include <data/fftw.h>
 #include <data/selfile.h>
 
+void writeFiles(const FileName &fnRoot,
+    const Matrix1D<double> freq, const Matrix1D<double> frc, 
+    const Matrix1D<double> frc_noise, const Matrix1D<double> dpr)
+{
+    FileName fn_dpr, fn_frc;
+    fn_dpr = fnRoot + ".dpr";
+    fn_frc = fnRoot + ".frc";
+    std::ofstream out(fn_dpr.c_str(), std::ios::out);
+    std::ofstream out2(fn_frc.c_str(), std::ios::out);
+    out  << "# Resol. [1/Ang]   DPR [deg]" << std::endl;
+    out2 << "# Resol. [1/Ang]      FRC      FRC_random_noise" << std::endl;
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(freq)
+    {
+        out.width(10);
+        out  << VEC_ELEM(freq, i);
+        out.width(17);
+        out << VEC_ELEM(dpr, i)  << std::endl;
+        out2.width(10);
+        out2  << VEC_ELEM(freq, i);
+        out2.width(17);
+        out2  << VEC_ELEM(frc, i);
+        out2.width(17);
+        out2  << VEC_ELEM(frc_noise, i) << std::endl;
+    }
+    out.close();
+    out2.close();
+}
+
 class Resolution_parameters: public Prog_parameters
 {
 public:
@@ -78,84 +106,18 @@ public:
 void process_img(ImageXmipp &img, const Prog_parameters *prm)
 {
     Resolution_parameters *eprm = (Resolution_parameters *) prm;
-
     Matrix1D<double> freq, frc, dpr, frc_noise;
-    if (!eprm->refI().sameShape(img()))
-        REPORT_ERROR(1,
-                     "Fourier_ring_correlation: arrays have different shapes!");
-    xmippFftw fft_m1(eprm->refI());
-    xmippFftw fft_m2(img());
-
-    fft_m1.fourier_ring_correlation(fft_m2, eprm->sam, freq, frc, frc_noise);
-    //differential_phase_residual(eprm->refI(), img(), eprm->sam, freq, dpr);
-
-    // Write output
-    FileName fn_dpr, fn_frc;
-    //fn_dpr = img.name() + ".dpr";
-    fn_frc = img.name() + ".frc";
-    //std::ofstream out(fn_dpr.c_str(), std::ios::out);
-    std::ofstream out2(fn_frc.c_str(), std::ios::out);
-    //out  << "# Resol. [1/Ang]   DPR [deg]" << std::endl;
-    out2 << "# Resol. [1/Ang]      FRC      FRC_random_noise     Resol. [Ang]" << std::endl;
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(freq)
-    {
-        if (i > 0)
-        {
-            //out.width(10);
-            //out  << VEC_ELEM(freq, i);
-            //out.width(17);
-            //out << VEC_ELEM(dpr, i)  << std::endl;
-            out2.width(10);
-            out2  << VEC_ELEM(freq, i);
-            out2.width(17);
-            out2  << VEC_ELEM(frc, i);
-            out2.width(17);
-            out2  << VEC_ELEM(frc_noise, i);
-            out2.width(17);
-            out2  << 1./VEC_ELEM(freq, i) << std::endl;
-        }
-    }
-    //out.close();
-    out2.close();
+    frc_dpr(eprm->refI(), img(), eprm->sam, freq, frc, frc_noise, dpr);
+    writeFiles(img.name(), freq, frc, frc_noise, dpr);
 }
 
 void process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
     Resolution_parameters *eprm = (Resolution_parameters *) prm;
-
     Matrix1D<double> freq, frc, dpr, frc_noise;
-    xmippFftw fft_m1(eprm->refV());
-    xmippFftw fft_m2(vol());
-    fft_m1.fourier_ring_correlation(fft_m2, eprm->sam, freq, frc, frc_noise);
-
-    //differential_phase_residual(eprm->refV(), vol(), eprm->sam, freq, dpr);
-
-    // Write output
-    FileName fn_dpr, fn_frc;
-//    fn_dpr = vol.name() + ".dpr";
-    fn_frc = vol.name() + ".frc";
-//    std::ofstream out(fn_dpr.c_str(), std::ios::out);
-    std::ofstream out2(fn_frc.c_str(), std::ios::out);
-//    out  << "# Resol. [1/Ang]   DPR [deg]" << std::endl;
-    out2 << "# Resol. [1/Ang]      FSC      FSC_random_noise     Resol. [Ang]" << std::endl;
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(freq)
-    {
-        if (i > 0)
-        {
-            out2.width(10);
-            out2  << VEC_ELEM(freq, i);
-            out2.width(17);
-            out2  << VEC_ELEM(frc, i);
-            out2.width(17);
-            out2  << VEC_ELEM(frc_noise, i);
-            out2.width(17);
-            out2  << 1./VEC_ELEM(freq, i) << std::endl;
-        }
-    }
-//    out.close();
-    out2.close();
+    frc_dpr(eprm->refV(), vol(), eprm->sam, freq, frc, frc_noise,dpr);
+    writeFiles(vol.name(), freq, frc, frc_noise, dpr);
 }
-
 
 int main(int argc, char **argv)
 {
@@ -165,81 +127,17 @@ int main(int argc, char **argv)
         prm.each_image_produces_an_output = false;
         prm.apply_geo = true;
         SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
-
     }
     else
     {
-
-        SelFile     SF, SF1, SF2;
-        //Image       It; 
-        Image       I1, I2, Id;
         FileName    fn_sel;
         float       sam;
-        double      dummy;
         bool        apply_geo;
-        Matrix1D<double> freq, frc, dpr, frc_noise, ssnr, pixel;
-
         try
         {
             fn_sel = getParameter(argc, argv, "-set_of_images");
-            SF.read(fn_sel);
             sam = textToFloat(getParameter(argc, argv, "-sam"));
             apply_geo = !checkParameter(argc, argv, "-dont_apply_geo");
-            SF.split_in_two(SF1, SF2);
-            //SF.get_statistics(It, Id, dummy, dummy, apply_geo);
-            SF1.get_statistics(I1, Id, dummy, dummy, apply_geo);
-            SF2.get_statistics(I2, Id, dummy, dummy, apply_geo);
-            //It().setXmippOrigin();
-            I1().setXmippOrigin();
-            I2().setXmippOrigin();
-
-            xmippFftw fft_m1(I1());
-            xmippFftw fft_m2(I2());
-
-            fft_m1.fourier_ring_correlation(fft_m2, sam, freq, frc, frc_noise);
-
-//            differential_phase_residual(I1(), I2(), sam, freq, dpr);
-#ifdef NEVERDEFINED
-//I believe nobody has use this ever
-            //ssnr follows a totally different aproach from FRC and SPR,
-            //now we need to pass the whole sel file,
-            //The only reason why I send I1 is to keep the
-            //feed the template system (ROB March 2005)
-            my_ssnr(It(), SF, (double)sam, freq, ssnr, pixel, apply_geo);
-#endif
-            // Write output
-            FileName fn_dpr, fn_frc, fn_ssnr;
-            //fn_dpr = fn_sel + ".dpr";
-            fn_frc = fn_sel + ".frc";
-            //fn_ssnr = fn_sel + ".snr";
-            //std::ofstream out(fn_dpr.c_str(), std::ios::out);
-            std::ofstream out2(fn_frc.c_str(), std::ios::out);
-            //std::ofstream out3(fn_ssnr.c_str(), std::ios::out);
-            //out  << "# Resol. [1/Ang]   DPR [deg]" << std::endl;
-            out2 << "# Resol. [1/Ang]      FRC      FRC_random_noise" << std::endl;
-            //out3 << "# Resol. [1/Ang]       SSNR          #Pixels" << std::endl;
-            FOR_ALL_ELEMENTS_IN_MATRIX1D(freq)
-            {
-                //out.width(10);
-                //out  << VEC_ELEM(freq, i);
-                //out.width(17);
-                //out << VEC_ELEM(dpr, i)  << std::endl;
-                out2.width(10);
-                out2  << VEC_ELEM(freq, i);
-                out2.width(17);
-                out2  << VEC_ELEM(frc, i);
-                out2.width(17);
-                out2  << VEC_ELEM(frc_noise, i) << std::endl;
-                //out3.width(10);
-                //out3  << VEC_ELEM(freq, i);
-                //out3.width(17);
-                //out3  << VEC_ELEM(ssnr, i);
-                //out3.width(17);
-                //out3  << VEC_ELEM(pixel, i) << std::endl;
-            }
-            //out.close();
-            out2.close();
-            //out3.close();
         }
         catch (Xmipp_error XE)
         {
@@ -248,6 +146,25 @@ int main(int argc, char **argv)
             prm.usage();
         }
 
+        try
+        {
+            SelFile     SF, SF1, SF2;
+            Image       I1, I2, Id;
+            double      dummy;
+            Matrix1D<double> freq, frc, dpr, frc_noise, ssnr, pixel;
+            SF.read(fn_sel);
+            SF.split_in_two(SF1, SF2);
+            SF1.get_statistics(I1, Id, dummy, dummy, apply_geo);
+            SF2.get_statistics(I2, Id, dummy, dummy, apply_geo);
+            I1().setXmippOrigin();
+            I2().setXmippOrigin();
+
+            frc_dpr(I1(), I2(), sam, freq, frc, frc_noise, dpr);
+            writeFiles(fn_sel, freq, frc, frc_noise, dpr);
+        }
+        catch (Xmipp_error XE)
+        {
+            std::cout << XE;
+        }
     }
 }
-
