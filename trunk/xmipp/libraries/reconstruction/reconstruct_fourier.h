@@ -1,6 +1,7 @@
 /***************************************************************************
  *
- * Authors:     Roberto Marabini roberto@cnb.uam.es
+ * Authors:     Roberto Marabini (roberto@cnb.csic.es)
+ *              Carlos Oscar S. Sorzano (coss@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -22,9 +23,12 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
+
+#ifndef __RECONSTRUCT_FOURIER_H
+#define __RECONSTRUCT_FOURIER_H
+
 #include <iostream>
 #include <data/fftw.h>
-#include <data/args.h>
 #include <data/funcs.h>
 #include <data/selfile.h>
 #include <data/docfile.h>
@@ -38,77 +42,80 @@
 #define BLOB_TABLE_SIZE 5000
 #define MINIMUMWEIGHT 0.001
 #define ACCURACY 0.000001
-/**@defgroup WBP reconstruct_wbp (Weighted Back Projection)
+/**@defgroup Fourier reconstruction reconstruct_fourier (Fourier reconstruction)
    @ingroup ReconsLibraryPrograms */
 //@{
 
-
-/** WBP parameters. */
+/** Fourier reconstruction parameters. */
 class Prog_RecFourier_prm
 {
 public:
     /** Filenames */
-    FileName fn_out, fn_sym, fn_sel, fn_doc, fn_control,fn_sym_vol;
+    FileName fn_out, fn_sym, fn_sel, fn_doc, fn_control;
+
     /** SelFile containing all projections */
     SelFile SF;
+
     /** DocFile containing all angles */
     DocFile DF;
-    /** if true compute resolution */
-    bool do_resolution;
+
     /** verbosity flag */
     int verb;
+
     /** Flag whether to use the weights in the image headers */
     bool do_weights;
-    /** Definition of the blob */
-    struct blobtype blob; 
-    /** table with blob values */
-    double *blob_table;
-    /** table with blob fourier transform values*/
-    double *fourier_blob_table;
-    /** Column numbers in the docfile */
-    int col_rot, col_tilt, col_psi, col_xoff, col_yoff, col_flip, col_weight;
-    /** dimensions of the images */
-    int dim;
-    /** Symmetry list for projections */
-    SymList SL;
-    /** Symmetry list for volume */
-    SymList SL_vol;
-    
-    /** vector with R symmetry matrices */
-    std::vector <Matrix2D<double> > R_repository;
-    /** vector with L symmetry matrices */
-    std::vector <Matrix2D<double> > L_repository;
-    /** volume in Fourier space */
-    double * FourierVol;
+
     /** Projection padding Factor */
     double padding_factor_proj;
+
     /** Volume padding Factor */
     double padding_factor_vol;
+
     /** Sampling rate in Angstroms/pixel */
     double sampling_rate;
-    /** Max resolution in Angstroms, 2*sampling_rate is the maximum resolution
-    */
-    double maxResolution;
-    /** maximum resolution in Fourier, maximun is 0.5*/
-    double maxResolution_normalize;    
-#ifdef NEVERDEFINED
-    /** Lower threshold for the filter */
-    double threshold;
-    /** Counter for how many times the threshold was not reached */
-    int count_thr;
-    /** Diameter for reconstruction */
-    int diameter;
-    /** Number of elements in matrix array */
-    int no_mats;
-    /** columns of matrices*/
-    column * mat_g, * mat_f;
-    /** Angular sampling for projection directions of arbitrary geometry filter */
-    double sampling;
-    /** Flag whether to use all experimental projection directions instead of
-        sampled projection directions for arbitrary geometry filter */
-    bool do_all_matrices;
-#endif 
 
+    /// Max resolution in Angstroms
+    double maxResolution;
+
+public: // Internal members
+    // Size of the original images
+    int imgSize;
+
+    // Column numbers in the docfile
+    int col_rot, col_tilt, col_psi, col_xoff, col_yoff, col_flip, col_weight;
+
+    // Table with blob values
+    Matrix1D<double> blob_table, Fourier_blob_table;
+
+    // Inverse of the delta and deltaFourier used in the tables
+    double iDelta, iDeltaFourier;
+
+    // Maximum interesting resolution squared
+    double maxResolution2;
+
+    // Definition of the blob
+    struct blobtype blob; 
+
+    // vector with R symmetry matrices
+    std::vector <Matrix2D<double> > R_repository;
+
+    // Fourier transformer for the volume
+    XmippFftw transformerVol;
+
+    // Fourier transformer for the images
+    XmippFftw transformerImg;
+
+    // An alias to the Fourier transform in transformerVol
+    Matrix3D< std::complex<double> > VoutFourier;
+
+    // Volume of Fourier weights
+    Matrix3D<double> FourierWeights;
+
+    // Padded image
+    Matrix2D<double> paddedImg;
+
+    // Output volume
+    VolumeXmipp Vout;
 public:
     /// Read arguments from command line
     void read(int argc, char **argv);
@@ -118,55 +125,19 @@ public:
 
     /// Usage
     void usage();
+
     /// Produce side info: fill arrays with relevant transformation matrices
     void produce_Side_info() ;
 
     /// Get angles (either from reading the header or from a docfile)
-    void get_angles_for_image(FileName fn, double &rot, double &tilt, double &psi,
-                              double &xoff, double &yoff, double &flip, double &weight);
-    /// fill R and L Repository (vector with symmetry matrices)
-    void fill_L_R_repository(SymList & mySL);
+    void get_angles_for_image(const FileName &fn, double &rot, double &tilt,
+        double &psi, double &xoff, double &yoff, double &flip, double &weight);
+
     /// Main Loop 
-    void MainLoop(VolumeXmipp &vol);
+    void run();
+
     /// Process one image
-    void ProcessOneImage(FileName &fn_img, 
-                         xmippFftw &fftPaddedImg,
-                         int paddin_proj,
-                         int paddim_vol,
-                         Projection &proj,
-                         std::complex<double> * FOURIERVOL,
-                         double * FourierVolWeight,
-                         std::complex<double> * FOURIERPROJ);
-    ///place one projection in the 3D volume (Fourier space )
-    void placeInFourerVolumeOneImage(Matrix2D<double> &A,//3*3 euler matrix
-                                     std::complex<double> * FOURIERVOL,//vector
-                                     xmippFftw &fftPaddedImg,//fft object
-                                     double * FourierVolWeight,//vector
-                                     int paddim_proj,
-                                     int paddim_vol,
-                                     std::complex<double> * FOURIERPROJ,
-                                     double proj_weight
-                                     );    
-
-#ifdef NEVERDEFINED
-
-    /// Fill array with transformation matrices needed for arbitrary geometry filter
-    void get_all_matrices(SelFile &SF) ;
-
-    /// Fill array with transformation matrices for representative
-    /// evenly sampled projection directions
-    void get_sampled_matrices(SelFile &SF) ;
-
-    // Simple (i.e. unfiltered) backprojection of a single image
-    void simple_backprojection(Projection &img, VolumeXmipp &vol,
-                               int diameter) ;
-
-    // Calculate the filter and apply it to a projection
-    void filter_one_image(Projection &proj);
-
-    // Calculate the filter for arbitrary tilt geometry in 2D and apply
-    void apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &vol) ;
-#endif 
-
+    void processImage(const FileName &fn_img);
 };
 //@}
+#endif
