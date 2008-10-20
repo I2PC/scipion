@@ -378,6 +378,16 @@ public:
     	MultidimArray<T>::resize(M);
     }
 
+    /** Resize taking the shape from another volume which
+        is given as a MultidimArray
+     * @ingroup VolumesSizeShape
+     */
+    template <typename T1>
+    void resize(const MultidimArray<T1> &M)
+    {
+    	MultidimArray<T>::resize(M);
+    }
+
     /** Outside.
      * @ingroup VolumesSizeShape
      *
@@ -1892,14 +1902,17 @@ std::ostream& operator<<(std::ostream& ostrm, const Matrix3D<T>& v)
     else
         ostrm << std::endl;
 
-    double max_val = ABS(DIRECT_VOL_ELEM(v , 0, 0, 0));
-
-    T* ptr;
-    unsigned long int n;
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v,n,ptr)
-    	max_val = XMIPP_MAX(max_val, ABS(*ptr));
-
-    int prec = bestPrecision(max_val, 10);
+    double max_val;
+    int prec;
+    if (typeid(T)!=typeid(std::complex<double>))
+    {
+        max_val = std::abs(DIRECT_VOL_ELEM(v, 0, 0, 0));
+    	T* ptr;
+	unsigned long int n;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v,n,ptr)
+            max_val = XMIPP_MAX(max_val, std::abs(*ptr));
+        prec = bestPrecision(max_val, 10);
+    }
 
     for (int k = STARTINGZ(v); k <= FINISHINGZ(v); k++)
     {
@@ -1919,6 +1932,10 @@ std::ostream& operator<<(std::ostream& ostrm, const Matrix3D<T>& v)
 
     return ostrm;
 }
+
+// Specialization for complex matrices
+std::ostream& operator<<(std::ostream& ostrm,
+    const Matrix3D< std::complex<double> >& v);
 
 //#define DEBUG
 template<typename T>

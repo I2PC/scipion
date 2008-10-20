@@ -70,3 +70,26 @@ void applyGeometryBSpline(Matrix3D< std::complex<double> > &M2,
 {
     REPORT_ERROR(1, "applyGeometryBSpline: Not yet implemented for complex matrices\n");
 }
+
+// Show a complex volume ---------------------------------------------------
+std::ostream& operator<<(std::ostream& ostrm,
+    const Matrix3D< std::complex<double> >& v)
+{
+    if (v.xdim == 0)
+        ostrm << "NULL Matrix3D\n";
+    else
+        ostrm << std::endl;
+
+    for (int k = STARTINGZ(v); k <= FINISHINGZ(v); k++)
+    {
+        ostrm << "Slice No. " << k << std::endl;
+        for (int i = STARTINGY(v); i <= FINISHINGY(v); i++)
+        {
+            for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
+                ostrm << VOL_ELEM(v, k, i, j) << ' ';
+            ostrm << std::endl;
+        }
+    }
+
+    return ostrm;
+}
