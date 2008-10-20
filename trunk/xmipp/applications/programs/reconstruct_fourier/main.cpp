@@ -22,54 +22,35 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-/*
-read command line sel file, symmetry, output vol, pad factor image, pad factor
-volume use_up_resolution_ams sampling
-
-
-loop thorough all images
-    pad image by factor 
-    Fourier transform
-    create Euler matrix
-    loop over pixels in fourier transform
-        multiply point position for euler matrix
-        use kaiser besel interpolator
-            m=2, radius=2.7,alpha=6.8
-        remember simetries
-        volume and projection at different scale
-        you will need an extra volume for normalization
-normalize by sum of (1-distance)
-apply symmetry again   
-
-what happens when no point is assigned. leave as zero
-If point Z negative compute conjugate
-
-when compute resolution do not compute extra volumes but
-save data in vector
-*/
 #include <reconstruction/reconstruct_fourier.h>
 
 int main(int argc, char **argv)
 {
 
-    VolumeXmipp vol;
     Prog_RecFourier_prm prm;
 
     try
     {
-
         prm.read(argc, argv);
-        prm.show();
-        prm.produce_Side_info();
-        prm.MainLoop(vol);
     }
     catch (Xmipp_error XE)
     {
         std::cout << XE;
         prm.usage();
-        exit(0);
+        return 1;
     }
 
-
+    try
+    {
+        prm.show();
+        prm.produce_Side_info();
+        prm.run();
+    }
+    catch (Xmipp_error XE)
+    {
+        std::cout << XE;
+        return 1;
+    }
+    return 0;
 }
 
