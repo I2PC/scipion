@@ -30,11 +30,11 @@
 /* ------------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-// Variables
+    // Variables
     Prog_IDR_ART_Parameters   idr_art_prm;
     VolumeXmipp               vol_recons;
 
-// Read Art Parameters
+    // Read Art Parameters
     try
     {
         idr_art_prm.read(argc, argv);
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-// Call main ART routine
+    // Call main ART routine
     try
     {
         idr_art_prm.produce_side_info();
