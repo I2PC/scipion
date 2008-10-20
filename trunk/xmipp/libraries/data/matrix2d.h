@@ -705,6 +705,16 @@ public:
     	MultidimArray<T>::resize(M);
     }
 
+    /** Resize taking the shape from another matrix which
+        is given as a MultidimArray
+     * @ingroup MatricesSize
+     */
+    template <typename T1>
+    void resize(const MultidimArray<T1> &M)
+    {
+    	MultidimArray<T>::resize(M);
+    }
+
     /** Produce an array suitable for working with Numerical Recipes
      * @ingroup MatricesSize
      *
@@ -2837,10 +2847,7 @@ std::ostream& operator<<(std::ostream& ostrm, const Matrix2D<T>& v)
         {
             for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
             {
-                if (typeid(T)==typeid(std::complex<double>))
-                    ostrm << MAT_ELEM(v, i, j) << ' ';
-                else
-                    ostrm << floatToString((double) MAT_ELEM(v, i, j), 10, prec) << ' ';
+                ostrm << floatToString((double) MAT_ELEM(v, i, j), 10, prec) << ' ';
             }
             ostrm << std::endl;
         }
@@ -2848,6 +2855,10 @@ std::ostream& operator<<(std::ostream& ostrm, const Matrix2D<T>& v)
 
     return ostrm;
 }
+
+// Specialization for complex matrices
+std::ostream& operator<<(std::ostream& ostrm,
+    const Matrix2D< std::complex<double> >& v);
 
 // TODO Document
 template<typename T>

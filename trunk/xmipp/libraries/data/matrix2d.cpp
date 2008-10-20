@@ -299,6 +299,25 @@ Matrix2D<double> scale3DMatrix(const Matrix1D<double> &sc)
     return result;
 }
 
+// Show a complex matrix ---------------------------------------------------
+std::ostream& operator<<(std::ostream& ostrm,
+    const Matrix2D< std::complex<double> >& v)
+{
+    if (XSIZE(v) == 0 || YSIZE(v) == 0)
+        ostrm << "NULL matrix\n";
+    else
+    {
+        for (int i = STARTINGY(v); i <= FINISHINGY(v); i++)
+        {
+            for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
+                ostrm << MAT_ELEM(v, i, j) << ' ';
+            ostrm << std::endl;
+        }
+    }
+
+    return ostrm;
+}
+
 /* Quadratic form ---------------------------------------------------------- */
 void evaluateQuadratic(const Matrix1D<double> &x, const Matrix1D<double> &c,
                     const Matrix2D<double> &H, double &val, Matrix1D<double> &grad)
