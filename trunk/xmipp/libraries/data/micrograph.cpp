@@ -40,7 +40,6 @@
 #include <unistd.h>
 #endif
 
-
 /* Clear ------------------------------------------------------------------- */
 void Micrograph::clear()
 {
@@ -633,8 +632,8 @@ void Micrograph::move_last_coord_to(int x, int y)
 }
 
 /* Downsample -------------------------------------------------------------- */
-void downsample(const Micrograph &M/*input*/, int Xstep, int Ystep,
-                const Matrix2D<double> &kernel, Micrograph &Mp/*output*/,
+void downsample(const Micrograph &M, int Xstep, int Ystep,
+                const Matrix2D<double> &kernel, Micrograph &Mp,
                 bool do_fourier)
 {
     // Find first and last indexes in each direction
@@ -655,130 +654,56 @@ void downsample(const Micrograph &M/*input*/, int Xstep, int Ystep,
     double a = 1;
     double b = 0;
     double scale = 1;
-    if(do_fourier)
+    if (do_fourier)
     {
-        std::cerr << "Creating Fourier Transform ...\n";
-        //create fourier object (Input)
-        //image dimension
-        int fNdim = 2;
-        int * fN ;
-        fN = new int[fNdim];
-        //image size
-        fN[0] = Ydim;//Xdim;transpose
-        fN[1] = Xdim;//Ydim;
+        std::cout << "Performing the Fourier downsampling\n";
+        // Read the micrograph in memory as doubles
+        Matrix2D<double> Mmem(Ydim,Xdim);
+        Matrix2D<std::complex<double> > MmemFourier;
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(Mmem)
+            Mmem(i,j)=(double)M(j,i);
 
-        //get access to output image 1D array
-        //init fourier transform object
-        bool inplace=false;
-        xmippFftw      M_fft(fNdim, // transform dimension 
-                             fN, // size of each dimension
-                             inplace, //inplace transformation (only for 1D)
-                             NULL); // if NULL fftw will alloc input 
-                                    // and output memory
-        //create plan (fftw stuff)
-        M_fft.Init("ES",FFTW_FORWARD,false);
-        //copy data
-        for(int i=0;i<Ydim;i++)
-            for(int j=0;j<Xdim;j++)
-                {                               //x,y
-                M_fft.fIn[j + Xdim * i]=(double)M(j,i) / M_fft.fTotalSize;//x,y
-                }
-//#define DEBUG                
-#ifdef DEBUG
-{
-ImageXmipp img(Ydim,Xdim);                
-double * img_ptr;
-img_ptr=MULTIDIM_ARRAY(img());
-for (int i=0;i<Ydim;i++)
-    for (int j=0;j<Xdim;j++)
-       {
-       DIRECT_MAT_ELEM(img(),i,j) = M_fft.fIn[j + Xdim * i];
-       }
-img.write("kk.xmp");
-}
-#endif
-#undef DEBUG
-        //do the forward transform.
-        M_fft.Transform();
-        //create fourier object (Output)
-        //image size
-        fN[0] = Ypdim;//Xdim;
-        fN[1] = Xpdim;//Ydim;
-        std::cerr << "Inverting Fourier Transform ...\n";
+        // Perform the Fourier transform
+        XmippFftw transformerM;
+        transformerM.FourierTransform(Mmem, MmemFourier, false);
 
-        //get access to output image 1D array
-        //init fourier transform object
-        xmippFftw      Mp_fft(fNdim, // transform dimension 
-                             fN, // size of each dimensio
-                             inplace, //inplace transformation (only for 1D)
-                             NULL); // if NULL fftw will alloc input 
-                                    // and output memory
-        //copy out fourier transform a windowed transform
-        int xsizeM = Ydim;
-        int ysizeM = (int) Xdim/2 +1;
-        int xsizeMp = Ypdim;
-        int ysizeMp = (int) Xpdim/2 +1;
-        std::complex<double> * cMfOut, * cMpfIn;
-        cMfOut =  (std::complex<double> *) M_fft.fOut; //fOut is double *
-        cMpfIn  = (std::complex<double> *) Mp_fft.fIn;  //fIn is double *
+        // Create space for the downsampled image and its Fourier transform
+        Matrix2D<double> Mpmem(Ypdim,Xpdim);
+        Matrix2D<std::complex<double> > MpmemFourier;
+        XmippFftw transformerMp;
+        transformerMp.setReal(Mpmem);
+        transformerMp.getFourierAlias(MpmemFourier);
 
-        for (int j=0;j<xsizeMp/2;j++)
-            for (int i=0;i<ysizeMp;i++)
-            {
-                cMpfIn[(j*ysizeMp+i)] = cMfOut[(j*ysizeM+i)];//*(complex<double>)(+1,0);
-            }
-        for (int j=xsizeMp-1,jj=xsizeM-1;j>=xsizeMp/2;j--,jj--)
-            for (int i=0;i<ysizeMp;i++)
-            {
-                cMpfIn[(j*ysizeMp+i)] = (cMfOut[(jj*ysizeM+i)]);//*(complex<double>)(+1,0);
-            }
-
-        //create plan (fftw stuff)
-        Mp_fft.Init("ES",FFTW_BACKWARD,false);
-        //transform data
-        Mp_fft.Transform();
-//#define DEBUG                
-#ifdef DEBUG
-{
-ImageXmipp img(Ypdim,Xpdim);                
-double * img_ptr;
-img_ptr=MULTIDIM_ARRAY(img());
-for (int i=0;i<Ypdim;i++)
-    for (int j=0;j<Xpdim;j++)
-       {
-       DIRECT_MAT_ELEM(img(),i,j) = Mp_fft.fOut[j + Xpdim * i];
-       }
-img.write("kk2.xmp");
-}
-#endif
-#undef DEBUG
-        //find minimun and range in output data
-        double omax,omin;
-        omax=omin=Mp_fft.fOut[0];
-        for (int i=0; i<xsizeMp*ysizeMp; i++)
+        int ihalf=YSIZE(MpmemFourier)/2+1;
+        for (int i=0; i<ihalf; i++)
+            for (int j=0; j<XSIZE(MpmemFourier); j++)
+                MpmemFourier(i,j)=MmemFourier(i,j);
+        for (int i=ihalf; i<YSIZE(MpmemFourier); i++)
         {
-            pixval=Mp_fft.fOut[i];
-            omin = XMIPP_MIN(omin, pixval);
-            omax = XMIPP_MAX(omax, pixval);
+            int ip=YSIZE(MmemFourier)-YSIZE(MpmemFourier)+i;
+            for (int j=0; j<XSIZE(MpmemFourier); j++)
+                MpmemFourier(i,j)=MmemFourier(ip,j);
         }
+
+        // Transform data
+        transformerMp.inverseFourierTransform();
+
+        // Find minimun and range in output data
+        double omin,omax;
+        Mpmem.computeDoubleMinMax(omin,omax);
         double orange = omax - omin;
         a = (pow(2.0, Mp.depth()) - 1.0) / orange;
-        scale = 1;
         b = -omin;
 
-        
-        //copy back data
-        for(int i=0;i<Ypdim;i++)
-            for(int j=0;j<Xpdim;j++)
-            {
-                pixval=Mp_fft.fOut[j + Xpdim * i];//there is a scale factor!!!!
-                              //x,y
-                if (Mp.depth() != 32)
-                    Mp.set_val(j, i, FLOOR(a*(pixval*scale + b)));
-                 else
-                    Mp.set_val(j, i, pixval);
-            }
-        
+        // Copy back data
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(Mpmem)
+        {
+            pixval=Mpmem(i,j);
+            if (Mp.depth() != 32)
+                Mp.set_val(j, i, FLOOR(a*(pixval*scale + b)));
+             else
+                Mp.set_val(j, i, pixval);
+        }
     }
     else
     {
@@ -879,7 +804,7 @@ img.write("kk2.xmp");
                 progress_bar(ii);
         }
         progress_bar(yF / Ystep);
-    }//no_fourier    
+    }
 }
 
 /* Normalizations ---------------------------------------------------------- */
