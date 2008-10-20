@@ -85,7 +85,7 @@ int main(int argc, char **argv)
                 while (!SF.eof())
                 {
                     FileName fn_img=SF.NextImg();
-                    if (SF.eof()) break;
+                    if (fn_img=="") break;
                     ImageXmipp I(fn_img);
                     stack.appendImage(I);
                 }

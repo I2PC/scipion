@@ -111,7 +111,7 @@ int main(int argc, char **argv)
             while (!SF.eof())
             {
                 fn_in = SF.NextImg();
-                if (SF.eof()) break;
+                if (fn_in=="") break;
                 if (fn_oext == "") fn_out = fn_in;
                 else             fn_out = fn_in.without_extension() + "." + fn_oext;
                 // Process an image ...............................................

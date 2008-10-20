@@ -67,7 +67,7 @@ int main(int argc, char **argv)
         while (!SF.eof())
         {
             FileName file_name = SF.NextImg();
-            if (SF.eof()) break;
+            if (file_name=="") break;
 
             // For volumes ........................................................
             if (Is_VolumeXmipp(file_name))

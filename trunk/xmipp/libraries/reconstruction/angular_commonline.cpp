@@ -370,7 +370,7 @@ void Prog_Angular_CommonLine::produceSideInfo()
     while (!SF.eof())
     {
         FileName fn_img=SF.NextImg();
-        if (SF.eof()) break;
+        if (fn_img=="") break;
         ImageXmipp I;
         I.read(fn_img);
         img.push_back(I());
@@ -1267,7 +1267,7 @@ void Prog_Angular_CommonLine::run()
         {
             ImageXmipp I;
             FileName fn_img=SF.NextImg();
-            if (SF.eof()) break;
+            if (fn_img=="") break;
             I.read(fn_img);
             I.set_rot ((float)(currentSolution(idx++)));
             I.set_tilt((float)(currentSolution(idx++)));

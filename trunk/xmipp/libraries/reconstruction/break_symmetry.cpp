@@ -65,7 +65,7 @@ void Prog_Break_Sym_prm::read(int argc, char **argv)
     while ((!SFvol.eof()))
     {
         FileName fn_img=SFvol.NextImg();
-        if (SFvol.eof()) break;
+        if (fn_img=="") break;
         vol.read(fn_img);
         vol().setXmippOrigin();
         vols.push_back(vol());
@@ -299,7 +299,7 @@ void Prog_Break_Sym_prm::process_selfile(SelFile &SF, std::vector<SelFile> &SFou
     while ((!SF.eof()))
     {
         fn_img = SF.NextImg();
-        if (SF.eof()) break;
+        if (fn_img=="") break;
         // read image, only applying the shifts
         img.read(fn_img, false, false, false, true);
         img().setXmippOrigin();

@@ -670,7 +670,7 @@ void CTFDat::createFromSelfileAndSingleCTF(SelFile &SF, const FileName &fnCtf)
     while (!SF.eof())
     {
         FileName fn_img=SF.NextImg();
-        if (SF.eof()) break;
+        if (fn_img=="") break;
     	append(fn_img,fnCtf);
     }
 }

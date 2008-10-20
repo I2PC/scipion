@@ -369,7 +369,7 @@ void Prog_tomograph_alignment::produceSideInfo() {
        SF.go_first_ACTIVE();
        while (!SF.eof()) {
           FileName fn=SF.NextImg();
-          if (SF.eof()) break;
+          if (fn=="") break;
           ImageXmipp imgaux(fn);
           Matrix2D<double>* img_i=new Matrix2D<double>;
           *img_i=imgaux();

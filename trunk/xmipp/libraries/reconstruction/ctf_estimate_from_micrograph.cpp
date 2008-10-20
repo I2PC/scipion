@@ -541,7 +541,7 @@ void Prog_assign_CTF_prm::process()
         while (!SF.eof())
         {
 	    FileName fn_img=SF.NextImg();
-            if (SF.eof()) break;
+            if (fn_img=="") break;
             if (!selfile_mode)
             {
                 std::string line;

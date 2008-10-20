@@ -674,7 +674,7 @@ void ROUT_Evaluate(Prog_Evaluate_Parameters &prm,
         {
             std::cerr << "Perfoming measure for test number " << k << std::endl;
             prm.fn_recons = SF.NextImg();
-            if (SF.eof()) break;
+            if (prm.fn_recons=="") break;
             if (prm.fnPhantom == "")
             {
                 mathematical_phantom = true;

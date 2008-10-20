@@ -76,7 +76,7 @@ int main(int argc, char **argv)
         while (!SFlog.eof())
         {
             fn_tmp = SFlog.NextImg();
-            if (SFlog.eof()) break;
+            if (fn_tmp=="") break;
             DFi.read(fn_tmp);
             if (nlog > 0)
                 if (DFi.dataLineNo() != nimg) REPORT_ERROR(1, "MLalign2D-log files are not of equal length!");
@@ -113,7 +113,7 @@ int main(int argc, char **argv)
                 while (!SFlog.eof())
                 {
                     fn_tmp = SFlog.NextImg();
-                    if (SFlog.eof()) break;
+                    if (fn_tmp=="") break;
                     fn_tmp = fn_tmp.remove_extension("log");
                     fn_tmp += "_ref";
                     fn_tmp.compose(fn_tmp, ref, "sel");

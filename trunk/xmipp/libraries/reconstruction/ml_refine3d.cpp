@@ -396,7 +396,7 @@ void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank, int s
     while (!SFvol.eof())
     {
         FileName fn_img=SFvol.NextImg();
-        if (SFvol.eof()) break;
+        if (fn_img=="") break;
         eachvol_start.push_back(nr_dir);
         vol.read(fn_img);
         vol().setXmippOrigin();
@@ -766,7 +766,7 @@ void Prog_Refine3d_prm::remake_SFvol(int iter, bool rewrite, bool include_noise)
         while (!SFvol.eof())
         {
             FileName fn_img=SFvol.NextImg();
-            if (SFvol.eof()) break;
+            if (fn_img=="") break;
             ref_vol.read(fn_img);
             ref_vol().setXmippOrigin();
             if (Nvols > 1)
@@ -883,7 +883,7 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv)
         {
             // Read corresponding volume from disc
             fn_vol = SFvol.NextImg();
-            if (SFvol.eof()) break;
+            if (fn_vol=="") break;
             vol.read(fn_vol);
             vol().setXmippOrigin();
             dim = vol().rowNumber();

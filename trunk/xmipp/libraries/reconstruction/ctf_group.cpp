@@ -150,7 +150,7 @@ void CtfGroupParams::produceSideInfo()
     while (!SF.eof())
     {
 	fnt=SF.NextImg();
-        if (SF.eof()) break;
+        if (fnt=="") break;
 	// Find which CTF group it belongs to
 	found = false;
 	ctfdat.goFirstLine();

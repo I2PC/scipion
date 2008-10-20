@@ -182,11 +182,11 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
     {
         ImageXmipp Is, In, Inp;
         FileName fn_img=SF_S.NextImg();
-        if (SF_S.eof()) break;
+        if (fn_img=="") break;
         Is.read(fn_img);
         Is().setXmippOrigin();
         fn_img=SF_N.NextImg();
-        if (SF_N.eof()) break;
+        if (fn_img=="") break;
         In.read(fn_img);
         In().setXmippOrigin();
         Inp() = In();

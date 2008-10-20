@@ -308,7 +308,7 @@ void Prog_angular_predict_prm::produce_library(int rank)
     while (!SF_ref.eof())
     {
         FileName fn_img=SF_ref.NextImg();
-        if (SF_ref.eof()) break;
+        if (fn_img=="") break;
         I.read(fn_img, false, false, true, true);
         library_name.push_back(I.name());
 

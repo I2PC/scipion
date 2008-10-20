@@ -116,7 +116,7 @@ public:
         while (!SF.eof())
         {
             fn = SF.NextImg();
-            if (SF.eof()) break;
+            if (fn=="") break;
             img.read(fn);
             img().setXmippOrigin();
 

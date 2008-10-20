@@ -107,7 +107,7 @@ void JDLFile::write()
         while (!SF.eof())
         {
             FileName fn_img = SF.NextImg();
-            if (SF.eof()) break;
+            if (fn_img=="") break;
             fh_sh << "cp " << fn_img << " .\n";
         }
     }
@@ -250,7 +250,7 @@ void JDLFile::write()
         while (!SF.eof())
         {
             FileName fn_img = SF.NextImg();
-            if (SF.eof()) break;
+            if (fn_img=="") break;
             fh_sh << "cp " << fn_img << " .\n";
         }
     }

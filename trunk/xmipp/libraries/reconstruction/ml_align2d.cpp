@@ -347,7 +347,7 @@ void Prog_MLalign2D_prm::produceSideInfo()
         while (!SF.eof())
         {
             fn_tmp = SF.NextImg();
-            if (SF.eof() && fn_tmp=="") break;
+            if (fn_tmp=="") break;
             fn_tmp2 = fn_tmp.remove_directories(offsets_keepdir);
             if (fn_tmp == fn_tmp2) nomoredirs = true;
             SFtmp.insert(fn_tmp2);

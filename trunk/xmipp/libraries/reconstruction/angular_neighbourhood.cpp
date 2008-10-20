@@ -61,7 +61,7 @@ void Prog_projection_neighbourhood_prm::get_angles(SelFile &SF_in, DocFile &DF_o
     {
         headerXmipp H;
         FileName fn_img=SF_in.NextImg();
-        if (SF_in.eof()) break;
+        if (fn_img=="") break;
         H.read(fn_img);
         H.get_eulerAngles(phi, theta, psi);
         DF_out.append_angles(phi, theta, psi, "rot", "tilt", "psi");

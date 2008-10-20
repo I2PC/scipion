@@ -278,7 +278,7 @@ void Prog_mlf_tomo_prm::produceSideInfo()
         while (!SFi.eof())
         {
             FileName fn_img=SFi.NextImg();
-            if (SFi.eof()) break;
+            if (fn_img=="") break;
             SFg.search(fn_img);
             SL = SFg.current();
             SFtmp.insert(SL);
@@ -374,7 +374,7 @@ void Prog_mlf_tomo_prm::produceSideInfo2()
         while (!SFi.eof()) 
         {
             fn_vol=SFi.NextImg();
-            if (SFi.eof()) break;
+            if (fn_vol=="") break;
             DF.go_beginning();
             if (DF.search_comment(fn_vol)) 
             {
@@ -401,8 +401,8 @@ void Prog_mlf_tomo_prm::produceSideInfo2()
         SFi.go_beginning();
         while (!SFi.eof()) 
         {
-            SFi.NextImg();
-            if (SFi.eof()) break;
+            FileName fnAux=SFi.NextImg();
+            if (fnAux=="") break;
             img_ang1.push_back( 0.);
             img_ang2.push_back( 0.);
             img_ang3.push_back( 0.);
@@ -653,7 +653,7 @@ void Prog_mlf_tomo_prm::generateInitialReferences(double * dataRefs, double * da
         while (!SFr.eof())
         {
             FileName fn_img=SFr.NextImg();
-            if (SFr.eof()) break;
+            if (fn_img=="") break;
             vol.read(fn_img);
             if (XSIZE(vol()) != Xdim ||
                 XSIZE(vol()) != Xdim ||
@@ -753,7 +753,7 @@ void Prog_mlf_tomo_prm::generateInitialReferences(double * dataRefs, double * da
         {
             // read tomogram from disc
             fn = SFi.NextImg();
-            if (SFi.eof()) break;
+            if (fn=="") break;
             backfftw.read(fn + ".fftw");
             IMG =  (std::complex<double> *) backfftw.fIn;
             // Get only points within resolution range
@@ -874,7 +874,7 @@ void Prog_mlf_tomo_prm::calculateAllFFTWs()
     while (!SFi.eof())
     {
         fni = SFi.NextImg();
-        if (SFi.eof()) break;
+        if (fni=="") break;
         if ( ! (exists(fni) && dont_recalc_fftw) )
         {
             vol.read(fni);
@@ -981,7 +981,7 @@ void Prog_mlf_tomo_prm::estimateInitialNoiseSpectra(double * dataSigma)
         int igg = SL.get_number() - 1;
         group_count(igg)++;
         fn = SFi.NextImg();
-        if (SFi.eof()) break;
+        if (fn=="") break;
         fn += ".fftw";
         backfftw.read(fn);
         IMG =  (std::complex<double> *) backfftw.fIn;
@@ -1285,7 +1285,7 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
         SL = SFi.current();
         igroup = SL.get_number() - 1;        
         fn = SFi.NextImg();
-        if (SFi.eof()) break;
+        if (fn=="") break;
 
         // Get the geometrical information
         A_img=getTransformationMatrix(img_ang1[imgno],img_ang2[imgno],img_ang3[imgno]);

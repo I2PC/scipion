@@ -192,7 +192,7 @@ void Prog_MLalign3D_prm::produce_Side_info() {
   SFr.go_beginning();
   while ((!SFr.eof())) {
     FileName fn_img=SFr.NextImg();
-    if (SFr.eof()) break;
+    if (fn_img=="") break;
     vol.read(fn_img);
     vol().setXmippOrigin();
     computeStats_within_binary_mask(outside_mask,vol(),dum,dum,avg,dum);
@@ -274,7 +274,7 @@ void Prog_MLalign3D_prm::produce_Side_info() {
     SF.go_beginning();
     while (!SF.eof()) {
       fn_vol=SF.NextImg();
-      if (SF.eof()) break;
+      if (fn_vol=="") break;
       if (DF.search_comment(fn_vol)) {
 	img_rot.push_back( DF(0));
 	img_tilt.push_back(DF(1));
@@ -311,8 +311,8 @@ void Prog_MLalign3D_prm::produce_Side_info() {
   } else {
     SF.go_beginning();
     while (!SF.eof()) {
-      SF.NextImg();
-      if (SF.eof()) break;
+      FileName fnAux=SF.NextImg();
+      if (fnAux=="") break;
       img_rot.push_back( 0.);
       img_tilt.push_back(0.);
       img_psi.push_back( 0.);
@@ -837,7 +837,7 @@ void Prog_MLalign3D_prm::ML_sum_over_all_images(SelFile &SF, std::vector<Matrix3
 
     // get tomogram and geometric information
     fn_img=SF.NextImg();
-    if (SF.eof()) break;
+    if (fn_img=="") break;
     img.read(fn_img);
     img().setXmippOrigin();
     A_img=Euler_rotation3DMatrix(img_rot[imgno],img_tilt[imgno],img_psi[imgno]);

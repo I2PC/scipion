@@ -74,7 +74,7 @@ int main(int argc, char **argv)
 	    while (!SF.eof())
 	    {
                 FileName fn_img=SF.NextImg();
-                if (SF.eof()) break;
+                if (fn_img=="") break;
 		DF.append(fn_img);
 	    }
 	}

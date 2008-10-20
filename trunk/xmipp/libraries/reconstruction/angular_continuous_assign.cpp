@@ -110,7 +110,7 @@ void Prog_angular_predict_continuous_prm::produce_side_info()
         while (!SF.eof())
         {
             FileName fn_img = SF.NextImg();
-            if (SF.eof()) break;
+            if (fn_img=="") break;
             ImageXmipp I;
             I.read(fn_img);
             Matrix1D<double> aux(5);
