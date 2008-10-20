@@ -220,7 +220,6 @@ double  basvolume(double a, double alpha, int m, int n)
 
 /* Bessel function I_n (x),  n = 0, 1, 2, ...
  Use ONLY for small values of n     */
-
 double i_n(int n, double x)
 {
     int i;
@@ -242,7 +241,6 @@ double i_n(int n, double x)
 }
 
 /*.....Bessel function I_(n+1/2) (x),  n = 0, 1, 2, ..........................*/
-
 double i_nph(int n, double x)
 {
     int i;
@@ -277,7 +275,6 @@ double in_zeroarg(int n)
 }
 
 /*.......Limit (z->0) of (1/z)^(n+1/2) I_(n+1/2) (z)..........................*/
-
 double inph_zeroarg(int n)
 {
     int i;
