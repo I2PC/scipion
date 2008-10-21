@@ -126,6 +126,8 @@ public:
     /** Apply mask in 3D. */
     void apply_mask_Space(Matrix3D<double> &v);
 
+    /** Get the power of the 2D mask. */
+    double mask2D_power();
 public:
     // Auxiliary vector for representing frequency values
     Matrix1D<double> w;

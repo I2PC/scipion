@@ -330,3 +330,9 @@ void FourierMask::apply_mask_Space(Matrix3D<double> &v)
     }
     transformer.inverseFourierTransform();
 }
+
+/* Mask power -------------------------------------------------------------- */
+double FourierMask::mask2D_power()
+{
+    return maskFourier2D.sum2()/MULTIDIM_SIZE(maskFourier2D);
+}
