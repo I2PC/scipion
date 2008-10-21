@@ -158,11 +158,6 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
 
         // CTF correction
         correct_phase = checkParameter(fh_param, "correct CTF phase");
-        str = getParameter(fh_param, "CTF phase method", 0, "leave");
-        if (str == "remove")           phase_correction_method = CORRECT_SETTING_SMALL_TO_ZERO;
-        else if (str == "leave" || str == "") phase_correction_method = CORRECT_LEAVING_SMALL;
-        else if (str == "divide")           phase_correction_method = CORRECT_AMPLIFYING_NOT_SMALL;
-        phase_correction_param = textToFloat(getParameter(fh_param, "CTF phase small", 0, "0"));
         correct_amplitude = checkParameter(fh_param, "correct CTF amplitude");
         mu = textToFloat(getParameter(fh_param, "mu", 0, "1.8"));
         unmatched = checkParameter(fh_param, "unmatched");
@@ -373,23 +368,7 @@ std::ostream & operator << (std::ostream &out, const Recons_test_Parameters &prm
             std::cout << "   Background mode: Circle, radius " << prm.bg_radius << std::endl;
     }
     if (prm.correct_phase)
-    {
-        out << "   Correcting CTF phase\n"
-        << "   Small is under " << prm.phase_correction_param << std::endl
-        << "   Correcting method: ";
-        switch (prm.phase_correction_method)
-        {
-        case CORRECT_SETTING_SMALL_TO_ZERO:
-            out << "Set small values to 0\n";
-            break;
-        case CORRECT_LEAVING_SMALL:
-            out << "Leave small values as they are\n";
-            break;
-        case CORRECT_AMPLIFYING_NOT_SMALL:
-            out << "Correct amplitude except for the small values\n";
-            break;
-        }
-    }
+        out << "   Correcting CTF phase\n";
 
     if (prm.correct_amplitude)
         out << "   Correcting CTF amplitude\n"
@@ -712,8 +691,6 @@ void single_recons_test(const Recons_test_Parameters &prm,
     
         CorrectPhaseParams correct;
         correct.fnCtfdat = prm.fn_CTF;
-        correct.method = prm.phase_correction_method;
-        correct.epsilon = prm.phase_correction_param;
         correct.produceSideInfo();
         correct.run();
 	

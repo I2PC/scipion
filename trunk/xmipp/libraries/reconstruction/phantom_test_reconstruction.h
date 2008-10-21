@@ -211,10 +211,6 @@ public:
 
     /// Correct CTF phase
     bool correct_phase;
-    /// Phase correction method
-    int phase_correction_method;
-    /// Phase correction param
-    double phase_correction_param;
     /// Correct amplitude via IDR
     bool correct_amplitude;
     /// IDR relaxation factor
