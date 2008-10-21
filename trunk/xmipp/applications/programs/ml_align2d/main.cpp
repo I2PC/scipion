@@ -27,7 +27,6 @@
 
 int main(int argc, char **argv)
 {
-
     int c, nn, imgno, opt_refno;
     double LL, sumw_allrefs, convv, sumcorr;
     bool converged;
@@ -118,9 +117,4 @@ int main(int argc, char **argv)
         prm.usage();
         exit(0);
     }
-
 }
-
-
-
-
