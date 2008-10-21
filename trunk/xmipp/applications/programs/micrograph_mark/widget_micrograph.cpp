@@ -37,6 +37,7 @@
 #include <data/filters.h>
 #include <data/rotational_spectrum.h>
 #include <data/denoise.h>
+#include <data/fft.h>
 #include <reconstruction/fourier_filter.h>
 
 #include <algorithm>
