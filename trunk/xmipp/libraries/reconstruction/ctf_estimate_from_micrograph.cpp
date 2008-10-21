@@ -30,6 +30,7 @@
 #include <data/micrograph.h>
 #include <data/selfile.h>
 #include <data/header.h>
+#include <data/fft.h>
 
 /* Read parameters ========================================================= */
 void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files)
