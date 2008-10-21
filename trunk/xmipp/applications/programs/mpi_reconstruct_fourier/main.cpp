@@ -23,8 +23,6 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-//#include "mpi_run.h"
-
 #include <data/args.h>
 #include <reconstruction/reconstruct_fourier.h>
 #include <data/header.h>
@@ -48,6 +46,7 @@
 // divided into smaller chunks of size ...
 #define BUFFSIZE 10000000
 
+#ifdef NEVERDEFINED
 class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 	{
     public:
@@ -620,7 +619,6 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 								proj,
 								FOURIERVOL,
 								FourierVolWeight,
-								FOURIERPROJ);
 					}
             			}
 				else
@@ -641,9 +639,11 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 	}
 
 };
+#endif
 
 int main(int argc, char *argv[])
 {
+#ifdef NEVER_DEFINED
     std::cerr << "0\n";
     if (MPI_Init(&argc, &argv) != MPI_SUCCESS)
     {
@@ -677,6 +677,5 @@ int main(int argc, char *argv[])
     }
     
     exit(0);
+#endif
 }
-
-
