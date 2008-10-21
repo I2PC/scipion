@@ -55,9 +55,8 @@ void Prog_IDR_ART_Parameters::show()
     std::cout << "Input volume: " << fn_vol << std::endl
 	      << "CTFDat: " << fn_ctfdat << std::endl
               << "Oroot: " << fnRoot << std::endl
-	      << "Relaxation factor: " << mu << std::endl
+              << "Relaxation factor: " << mu << std::endl
     ;
-
 }
 
 void Prog_IDR_ART_Parameters::Usage()
