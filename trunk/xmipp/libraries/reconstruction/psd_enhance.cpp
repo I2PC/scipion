@@ -35,6 +35,7 @@
 
 #include <data/args.h>
 #include <data/filters.h>
+#include <data/fft.h>
 
 /* Read parameters --------------------------------------------------------- */
 void Prog_Enhance_PSD_Parameters::read(int argc, char **argv)
