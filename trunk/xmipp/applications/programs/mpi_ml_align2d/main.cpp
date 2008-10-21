@@ -31,7 +31,6 @@
  
 int main(int argc, char **argv)
 {
-
     Prog_MLalign2D_prm prm;
 
     int c, nn, imgno, opt_refno, iaux;
@@ -245,9 +244,4 @@ int main(int argc, char **argv)
 
     MPI_Finalize();
     return 0;
-
 }
-
-
-
-
