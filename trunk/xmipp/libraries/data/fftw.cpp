@@ -27,6 +27,9 @@
 #include "fftw.h"
 #include "fft.h"
 #include <string.h>
+#include <pthread.h>
+
+pthread_mutex_t fftw_plan_mutex = PTHREAD_MUTEX_INITIALIZER; 
 
 // Constructors and destructors --------------------------------------------
 XmippFftw::XmippFftw()
@@ -89,19 +92,21 @@ void XmippFftw::setReal(MultidimArray<double> &input)
                 break;
         }
 
-        if (fPlanForward!=NULL)  fftw_destroy_plan(fPlanForward);
-        fPlanForward=NULL;
-        fPlanForward = fftw_plan_dft_r2c(ndim, N, MULTIDIM_ARRAY(*fReal),
-            (fftw_complex*) MULTIDIM_ARRAY(fFourier), FFTW_ESTIMATE);
-        if (fPlanBackward!=NULL) fftw_destroy_plan(fPlanBackward);
-        fPlanBackward=NULL;
-        fPlanBackward = fftw_plan_dft_c2r(ndim, N,
-            (fftw_complex*) MULTIDIM_ARRAY(fFourier), MULTIDIM_ARRAY(*fReal),
-            FFTW_ESTIMATE);
-        if (fPlanForward == NULL || fPlanForward == NULL)
-            REPORT_ERROR(1, "FFTW plans cannot be created");
-        delete [] N;
-        dataPtr=MULTIDIM_ARRAY(*fReal);
+        pthread_mutex_lock(&fftw_plan_mutex);
+            if (fPlanForward!=NULL)  fftw_destroy_plan(fPlanForward);
+            fPlanForward=NULL;
+            fPlanForward = fftw_plan_dft_r2c(ndim, N, MULTIDIM_ARRAY(*fReal),
+                (fftw_complex*) MULTIDIM_ARRAY(fFourier), FFTW_ESTIMATE);
+            if (fPlanBackward!=NULL) fftw_destroy_plan(fPlanBackward);
+            fPlanBackward=NULL;
+            fPlanBackward = fftw_plan_dft_c2r(ndim, N,
+                (fftw_complex*) MULTIDIM_ARRAY(fFourier), MULTIDIM_ARRAY(*fReal),
+                FFTW_ESTIMATE);
+            if (fPlanForward == NULL || fPlanForward == NULL)
+                REPORT_ERROR(1, "FFTW plans cannot be created");
+            delete [] N;
+            dataPtr=MULTIDIM_ARRAY(*fReal);
+        pthread_mutex_unlock(&fftw_plan_mutex);
     }
 }
 
