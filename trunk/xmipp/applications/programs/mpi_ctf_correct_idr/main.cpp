@@ -31,14 +31,11 @@
 /* ------------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    std::cout << "Empiezo\n"; std::cout.flush();
     // Initialize MPI
     int rank, NProcessors;
     MPI_Init(&argc, &argv);
-    std::cout << "Init\n"; std::cout.flush();
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &NProcessors);
-    std::cout << "Inicializado\n" << rank << " " << NProcessors << std::endl; std::cout.flush();
 
     // Variables
     Prog_IDR_ART_Parameters   idr_art_prm;
@@ -51,7 +48,6 @@ int main(int argc, char *argv[])
         idr_art_prm.numberOfProcessors=NProcessors;
         idr_art_prm.MPIrank=rank;
         idr_art_prm.read(argc, argv);
-    std::cout << "Adios try\n"; std::cout.flush();
     }
     catch (Xmipp_error &XE)
     {
@@ -62,7 +58,6 @@ int main(int argc, char *argv[])
         MPI_Finalize();
         exit(1);
     }
-    std::cout << "Sigo\n"; std::cout.flush();
 
     // Call main routine
     try
