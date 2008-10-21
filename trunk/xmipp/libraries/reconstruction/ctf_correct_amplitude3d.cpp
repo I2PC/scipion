@@ -26,6 +26,7 @@
 #include "ctf_correct_amplitude3d.h"
 
 #include <data/args.h>
+#include <data/fft.h>
 
 /* Read parameters from command line. -------------------------------------- */
 void CorrectAmplitude3DParams::read(int argc, char **argv)
