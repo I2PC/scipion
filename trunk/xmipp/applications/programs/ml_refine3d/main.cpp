@@ -27,7 +27,6 @@
 
 int main(int argc, char **argv)
 {
-
     int                         c, iter, volno, converged = 0, argc2 = 0;
     char                        **argv2=NULL;
     double                      LL, sumw_allrefs, convv, sumcorr, wsum_sigma_noise, wsum_sigma_offset;
@@ -164,9 +163,4 @@ int main(int argc, char **argv)
         prm.usage();
         exit(0);
     }
-
 }
-
-
-
-
