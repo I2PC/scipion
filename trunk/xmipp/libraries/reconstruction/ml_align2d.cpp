@@ -1392,9 +1392,9 @@ void Prog_MLalign2D_prm::expectationSingleImage(
     if (do_norm)
     {
         // 1. Calculate optimal setting of Mimg
-        Maux = Mimg;
-        Maux.selfTranslate(opt_offsets, true);
-        Maux.selfApplyGeometry(F[iopt_flip], IS_INV, WRAP);
+        Matrix2D<double> Maux2 = Mimg;
+        Maux2.selfTranslate(opt_offsets, true);
+        Maux2.selfApplyGeometry(F[iopt_flip], IS_INV, WRAP);
         // 2. Calculate optimal setting of Mref
         int refnoipsi = opt_refno*nr_psi + iopt_psi;
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
@@ -1402,18 +1402,18 @@ void Prog_MLalign2D_prm::expectationSingleImage(
             dMij(Faux,i,j) = conj(dMij(fref[refnoipsi],i,j));
             dMij(Faux,i,j) *= opt_scale/ddim2;
         }
-        Matrix2D<double> Maux2(Maux);
-        local_transformer.inverseFourierTransform(Faux,Maux2);
-        Maux = Maux - Maux2;
+        // Still take input from Faux and leave output in Maux
+        local_transformer.inverseFourierTransform();
+        Maux2 = Maux2 - Maux;
 	if (debug==12) 
         {  
             std::cout<<std::endl;
             std::cout<<"scale= "<<opt_scale<<" changes to "<<wsum_sc/wsum_sc2<<std::endl;
-            std::cout<<"bgmean= "<<bgmean<<" changes to "<<Maux.computeAvg()<<std::endl;
+            std::cout<<"bgmean= "<<bgmean<<" changes to "<<Maux2.computeAvg()<<std::endl;
         }
         // non-ML update of bgmean (this is much cheaper than true-ML update...)
         old_bgmean = bgmean;
-        bgmean = Maux.computeAvg();
+        bgmean = Maux2.computeAvg();
         // ML-update of opt_scale
         opt_scale = wsum_sc / wsum_sc2;
     }
