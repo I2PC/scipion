@@ -336,3 +336,10 @@ double FourierMask::mask2D_power()
 {
     return maskFourier2D.sum2()/MULTIDIM_SIZE(maskFourier2D);
 }
+
+// Correct phase -----------------------------------------------------------
+void FourierMask::correct_phase()
+{
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(maskFourier2D)
+        if (maskFourier2D(i, j) < 0) maskFourier2D(i, j) *= -1;
+}

@@ -128,6 +128,9 @@ public:
 
     /** Get the power of the 2D mask. */
     double mask2D_power();
+    
+    /** Correct phase */
+    void correct_phase();
 public:
     // Auxiliary vector for representing frequency values
     Matrix1D<double> w;
