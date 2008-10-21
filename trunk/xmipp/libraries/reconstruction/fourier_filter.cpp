@@ -28,6 +28,8 @@
 #include <data/args.h>
 #include <data/volume.h>
 #include <data/image.h>
+#include <data/mask.h>
+#include <data/fft.h>
 
 /* Clear ------------------------------------------------------------------- */
 void FourierMask::clear()
@@ -38,9 +40,7 @@ void FourierMask::clear()
     raised_w = 0;
     ctf.clear();
     ctf.enable_CTFnoise = false;
-    mask1D.clear();
-    mask2D.clear();
-    mask3D.clear();
+    correctPhase = false;
 }
 
 /* Assignment -------------------------------------------------------------- */
@@ -56,9 +56,6 @@ FourierMask & FourierMask::operator = (const FourierMask &F)
         w1 = F.w1;
         raised_w = F.raised_w;
         ctf = F.ctf;
-        mask1D = F.mask1D;
-        mask2D = F.mask2D;
-        mask3D = F.mask3D;
     }
     return *this;
 }
@@ -114,12 +111,7 @@ void FourierMask::read(int argc, char **argv)
         ctf.Produce_Side_Info();
     }
     else
-    {
-        if (i + 1 >= argc)
-            REPORT_ERROR(3000, "FourierMask: you haven't supplied a file");
-        fn_mask = argv[i+1];
-        FilterShape = FilterBand = FROM_FILE;
-    }
+        REPORT_ERROR(3000, "FourierMask: Unknown filter type");
 
     // Filter band ..........................................................
     if (checkParameter(argc, argv, "-low_pass"))
@@ -149,8 +141,6 @@ void FourierMask::read(int argc, char **argv)
         double sampling_rate = textToFloat(getParameter(argc, argv, "-sampling"));
         if (w1 != 0)       w1 = sampling_rate / w1;
         if (w2 != 0)       w2 = sampling_rate / w2;
-        /*CO: I think it is more confusing */
-        //if (raised_w!=0) raised_w=sampling_rate/raised_w;
     }
 }
 
@@ -181,9 +171,6 @@ void FourierMask::show()
         case CTF:
             std::cout << "CTF\n";
             break;
-        case FROM_FILE:
-            std::cout << "From file " << fn_mask << std::endl;
-            break;
         }
         std::cout << "Filter Shape: ";
         switch (FilterShape)
@@ -198,9 +185,6 @@ void FourierMask::show()
         case CTF:
             std::cout << "CTF\n" << ctf;
             break;
-        case FROM_FILE:
-            std::cout << "From file " << fn_mask << std::endl;
-            break;
         }
     }
 }
@@ -209,241 +193,140 @@ void FourierMask::show()
 void FourierMask::usage()
 {
     std::cerr << "   -low_pass  <w1>                   : Cutoff freq (<1/2 or A)\n"
-    << "   -high_pass <w1>                   : Cutoff freq (<1/2 or A)\n"
-    << "   -band_pass <w1> <w2>              : Cutoff freq (<1/2 or A)\n"
-    << "   -stop_band <w1> <w2>              : Cutoff freq (<1/2 or A)\n"
-    << "   -fourier_mask <file>              : Provide a Fourier file\n"
-    << "   -fourier_mask raised_cosine <raisedw>: Use raised cosine edges (in dig.freq.)\n"
-    << "   -fourier_mask wedge <th0> <thF>   : Missing wedge for data between th0-thF \n"
-    << "   -fourier_mask gaussian            : sigma=<w1>\n"
-    << "   -fourier_mask ctf                 : Provide a .ctfparam file\n"
-    << "  [-sampling <sampling_rate>]        : If provided pass frequencies\n"
-    << "                                       are taken in Angstroms\n"
+              << "   -high_pass <w1>                   : Cutoff freq (<1/2 or A)\n"
+              << "   -band_pass <w1> <w2>              : Cutoff freq (<1/2 or A)\n"
+              << "   -stop_band <w1> <w2>              : Cutoff freq (<1/2 or A)\n"
+              << "   -fourier_mask raised_cosine <raisedw>: Use raised cosine edges (in dig.freq.)\n"
+              << "   -fourier_mask wedge <th0> <thF>   : Missing wedge for data between th0-thF \n"
+              << "   -fourier_mask gaussian            : sigma=<w1>\n"
+              << "   -fourier_mask ctf                 : Provide a .ctfparam file\n"
+              << "  [-sampling <sampling_rate>]        : If provided pass frequencies\n"
+              << "                                       are taken in Angstroms\n"
     ;
 }
 
-// Correct phase -----------------------------------------------------------
-void FourierMask::correct_phase()
+/* Get mask value ---------------------------------------------------------- */
+double FourierMask::maskValue(const Matrix1D<double> &w)
 {
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(mask2D)
-    if (real(mask2D(i, j)) < 0) mask2D(i, j) = -mask2D(i, j);
-}
-
-// Read mask from file -----------------------------------------------------
-void FourierMask::read_mask(const FileName &fn)
-{
-    FilterBand = FilterShape = FROM_FILE;
-    fn_mask = fn;
-    if (Is_ImageXmipp(fn_mask))
+    double absw=w.module();
+    
+    // Generate mask
+    switch (FilterBand)
     {
-        ImageXmipp  I;
-        I.read(fn_mask);
-        FourierImageXmipp If;
-        If().resize(I());
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(If())
-        {
-            dMij(If(),i,j) = std::complex<double>(dMij(I(),i,j),0.);
-        }
-        mask2D = If();
-        mask2D.setXmippOrigin();
-    }
-    else if (Is_VolumeXmipp(fn_mask))
-    {
-        VolumeXmipp  V;
-        V.read(fn_mask);
-        FourierVolumeXmipp Vf;
-        Vf().resize(V());
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Vf())
-        {
-            dVkij(Vf(),k,i,j) = std::complex<double>(dVkij(V(),k,i,j),0.);
-        }
-        mask3D = Vf();
-        mask3D.setXmippOrigin();
-    }
-    else if (Is_FourierImageXmipp(fn_mask))
-    {
-        FourierImageXmipp  I;
-        I.read(fn_mask);
-        mask2D = I();
-        mask2D.setXmippOrigin();
-    }
-    else if (Is_FourierVolumeXmipp(fn_mask))
-    {
-        FourierVolumeXmipp V;
-        V.read(fn_mask);
-        mask3D = V();
-        mask3D.setXmippOrigin();
-    }
-    else
-    {
-        REPORT_ERROR(1,"Please provide fourier mask as a (Fourier) image/volume\n");
-    }
-}
-
-/* Save -------------------------------------------------------------------- */
-void FourierMask::write_amplitude(const FileName &fn, int dim,
-                                  bool do_not_center)
-{
-    Matrix1D< std::complex<double> > aux1D;
-    Matrix2D< std::complex<double> > aux2D;
-    Matrix3D< std::complex<double> > aux3D;
-    switch (dim)
-    {
-    case 1:
-        aux1D = mask1D;
-        break;
-    case 2:
-        aux2D = mask2D;
-        break;
-    case 3:
-        aux3D = mask3D;
-        break;
-    }
-    if (!do_not_center)
-    {
-        switch (dim)
-        {
-        case 1:
-            CenterFFT(aux1D, true);
+        case LOWPASS:
+            switch (FilterShape)
+            {
+                case RAISED_COSINE:
+                    if (absw<w1)
+                        return 1;
+                    else if (absw<w1+raised_w)
+                        return (1+cos(PI/raised_w*(absw-w1)))/2;
+                    else return 0;
+                    break;
+                case WEDGE:
+                    {
+                        double angle=atan2(ZZ(w),XX(w));
+                        if (angle>=w1 && angle<=w2) return 1;
+                        else return 0;
+                    }
+                    break;
+                case GAUSSIAN:
+                    return 1/sqrt(2*PI*w1)*exp(-0.5*absw*absw/(w1*w1));
+                    break;
+            }
             break;
-        case 2:
-            CenterFFT(aux2D, true);
+        case HIGHPASS:
+            switch (FilterShape)
+            {
+                case RAISED_COSINE:
+                    if (absw>w1)
+                        return 1;
+                    else if (absw>w1-raised_w)
+                        return (1+cos(PI/raised_w*(w1-absw)))/2;
+                    else return 0;
+                    break;
+            }
             break;
-        case 3:
-            CenterFFT(aux3D, true);
+        case BANDPASS:
+            switch (FilterShape)
+            {
+                case RAISED_COSINE:
+                    if (absw>=w1 && absw<=w2)
+                        return 1;
+                    else if (absw>w1-raised_w && absw<w1)
+                        return (1+cos(PI/raised_w*(w1-absw)))/2;
+                    else if (absw<w2+raised_w && absw>w2)
+                        return (1+cos(PI/raised_w*(w2-absw)))/2;
+                    else return 0;
+                    break;
+            }
+            break;
+        case STOPBAND:
+            switch (FilterShape)
+            {
+                case RAISED_COSINE:
+                    if (absw>=w1 && absw<=w2)
+                        return 0;
+                    else if (absw>w1-raised_w && absw<w1)
+                        return 1-(1+cos(PI/raised_w*(w1-absw)))/2;
+                    else if (absw<w2+raised_w && absw>w2)
+                        return 1-(1+cos(PI/raised_w*(w2-absw)))/2;
+                    else return 1;
+                    break;
+            }
+            break;
+        case CTF:
+            return ctf.CTF_at(XX(w)/ctf.Tm,YY(w)/ctf.Tm);
             break;
         }
-    }
-    if (dim == 1)
-    {
-        Matrix1D<double> v;
-        FFT_magnitude(aux1D, v);
-        FOR_ALL_ELEMENTS_IN_MATRIX1D(v)
-        v(i) = log10(1 + v(i) * v(i));
-        v.write(fn);
-    }
-    else if (dim == 2)
-    {
-        ImageXmipp  I;
-        FFT_magnitude(aux2D, I());
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
-        I(i, j) = log10(1 + I(i, j) * I(i, j));
-        I.write(fn);
-    }
-    else
-    {
-        VolumeXmipp V;
-        FFT_magnitude(aux3D, V());
-        FOR_ALL_ELEMENTS_IN_MATRIX3D(V())
-        V(k, i, j) = log10(1 + V(k, i, j) * V(k, i, j));
-        V.write(fn);
-    }
 }
 
-void FourierMask::write_mask(const FileName &fn, int dim)
+/* Generate mask ----------------------------------------------------------- */
+void FourierMask::generate_mask(Matrix2D<double> &v)
 {
-    FourierImageXmipp  I;
-    FourierVolumeXmipp V;
-    switch (dim)
+    transformer.setReal(v);
+    Matrix2D< std::complex<double> > Fourier;
+    transformer.getFourierAlias(Fourier);
+    maskFourier2D.resize(Fourier);
+    w.resize(2);
+    for (int i=0; i<YSIZE(maskFourier2D); i++)
     {
-    case 1:
-        mask1D.write(fn);
-        break;
-    case 2:
-        I() = mask2D;
-        I.write(fn);
-        break;
-    case 3:
-        V() = mask3D;
-        V.write(fn);
-        break;
+        FFT_IDX2DIGFREQ(i,YSIZE(v),YY(w));
+        for (int j=0; j<XSIZE(maskFourier2D); j++)
+        {
+            FFT_IDX2DIGFREQ(j,XSIZE(v),XX(w));
+            DIRECT_MAT_ELEM(maskFourier2D,i,j)=maskValue(w);
+        }
     }
-}
-
-/* Center mask ------------------------------------------------------------- */
-void FourierMask::centerMaskCorners()
-{
-    CenterFFT(mask1D,false);
-    CenterFFT(mask2D,false);
-    CenterFFT(mask3D,false);
-}
-
-void FourierMask::centerMaskMiddle()
-{
-    CenterFFT(mask1D,true);
-    CenterFFT(mask2D,true);
-    CenterFFT(mask3D,true);
 }
 
 /* Apply mask -------------------------------------------------------------- */
-void FourierMask::apply_mask_Fourier(Matrix1D< std::complex<double> > &v)
-{
-    v *= mask1D;
-}
-void FourierMask::apply_mask_Fourier(Matrix2D< std::complex<double> > &v)
-{
-    v *= mask2D;
-}
-void FourierMask::apply_mask_Fourier(Matrix3D< std::complex<double> > &v)
-{
-    v *= mask3D;
-}
-
-void FourierMask::apply_mask_Space(Matrix1D<double> &v)
-{
-    Matrix1D< std::complex<double> > aux1D;
-    FourierTransform(v, aux1D);
-    aux1D *= mask1D;
-    InverseFourierTransform(aux1D, v);
-}
 void FourierMask::apply_mask_Space(Matrix2D<double> &v)
 {
     Matrix2D< std::complex<double> > aux2D;
-    FourierTransform(v, aux2D);
-    if (XSIZE(mask2D) == 0) generate_mask(v);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(aux2D)
-    DIRECT_MAT_ELEM(aux2D, i, j) *= DIRECT_MAT_ELEM(mask2D, i, j);
-    InverseFourierTransform(aux2D, v);
+    transformer.FourierTransform(v, aux2D, false);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(aux2D)
+        DIRECT_MULTIDIM_ELEM(aux2D,n)*=DIRECT_MULTIDIM_ELEM(maskFourier2D,n);
+    transformer.inverseFourierTransform();
 }
+
 void FourierMask::apply_mask_Space(Matrix3D<double> &v)
 {
     Matrix3D< std::complex<double> > aux3D;
-    FourierTransform(v, aux3D);
-    if (XSIZE(mask3D) == 0) generate_mask(v);
-    aux3D *= mask3D;
-    InverseFourierTransform(aux3D, v);
-}
-
-/* Resize ------------------------------------------------------------------ */
-void FourierMask::resize_mask(int Ydim, int Xdim)
-{
-    mask2D.selfScaleToSize(Ydim, Xdim);
-}
-void FourierMask::resize_mask(int Zdim, int Ydim, int Xdim)
-{
-    mask3D.selfScaleToSize(Zdim, Ydim, Xdim);
-}
-
-/* Mask power -------------------------------------------------------------- */
-double FourierMask::mask2D_power(double wmin, double wmax)
-{
-    Matrix1D<int>    idx(2);
-    Matrix1D<double> freq(2);
-    double retval = 0, N = 0;
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(mask2D)
+    transformer.FourierTransform(v, aux3D, false);
+    w.resize(3);
+    for (int k=0; k<ZSIZE(aux3D); k++)
     {
-        XX(idx) = j;
-        YY(idx) = i;
-        FFT_idx2digfreq(mask2D, idx, freq);
-        double w = freq.module();
-        if (w > wmin && w < wmax)
+        FFT_IDX2DIGFREQ(k,ZSIZE(v),ZZ(w));
+        for (int i=0; i<YSIZE(aux3D); i++)
         {
-            double mag = abs(mask2D(i, j));
-            retval += mag * mag;
-            N++;
+            FFT_IDX2DIGFREQ(i,YSIZE(v),YY(w));
+            for (int j=0; j<XSIZE(aux3D); j++)
+            {
+                FFT_IDX2DIGFREQ(j,XSIZE(v),XX(w));
+                DIRECT_VOL_ELEM(aux3D,k,i,j)*=maskValue(w);
+            }
         }
     }
-
-    if (N != 0) return retval / N;
-    else      return 0;
+    transformer.inverseFourierTransform();
 }

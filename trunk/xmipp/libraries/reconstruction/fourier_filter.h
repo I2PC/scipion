@@ -29,8 +29,7 @@
 #include "ctf.h"
 
 #include <data/matrix3d.h>
-#include <data/fft.h>
-#include <data/mask.h>
+#include <data/fftw.h>
 
 /**@defgroup FourierMasks Masks in Fourier space
    @ingroup ReconsLibrary */
@@ -41,7 +40,6 @@
    @code
       ImageXmipp I("image.xmp");
       FourierMask Filter;
-      Filter.FilterShape=RAISED_COSINE;
       Filter.FilterBand=HIGHPASS;
       Filter.w1=w_cutoff;
       Filter.raised_w=slope;
@@ -50,24 +48,16 @@
       Filter.apply_mask_Space(I());
       I.write("filtered_image.xmp");
    @endcode
-
-   Example of use reading a mask from file
-   @code
-      ImageXmipp I("image.xmp");
-      I().setXmippOrigin();
-      FourierMask Filter;
-      Filter.read_mask("mask.fft");
-      Filter.apply_mask_Space(I());
-      I.write("filtered_image.xmp");
-   @endcode
+   
+   For volumes you the mask is always computed on the fly and
+   in this way memory is saved.
 */
 class FourierMask
 {
 public:
 #define RAISED_COSINE 1
-#define FROM_FILE     6
     /** Shape of the decay in the filter.
-       Valid types are RAISED_COSINE, FROM_FILE. */
+       Valid types are RAISED_COSINE. */
     int FilterShape;
 
 #define LOWPASS       1
@@ -91,29 +81,14 @@ public:
     /** Pixels around the central frequency for the raised cosine */
     double raised_w;
 
-    /** File from which the mask is read */
-    FileName fn_mask;
-
     /** CTF parameters. */
     XmippCTF ctf;
-
-    /** Mask1D */
-    Matrix1D< std::complex<double> > mask1D;
-
-    /** Mask2D */
-    Matrix2D< std::complex<double> > mask2D;
-
-    /** Mask3D */
-    Matrix3D< std::complex<double> > mask3D;
+    
+    /** Correct phase before applying CTF */
+    bool correctPhase;
 public:
     /** Empty constructor */
     FourierMask()
-    {
-        clear();
-    }
-
-    /** Destructor */
-    ~FourierMask()
     {
         clear();
     }
@@ -137,184 +112,13 @@ public:
     /** Usage. */
     void usage();
 
-    /** Generate mask for a resized image.
-    It is supposed that the image is already resized and with its logical
-    origin set. If the filter is a CTF it must be already read and prepared
-    in the ctf variable.
+    /** Compute the mask value at a given frequency.
+        The frequency must be normalized so that the maximum frequency
+        in each direction is 0.5 */
+    double maskValue(const Matrix1D<double> &w);
 
-    The dimension is 1, 2 or 3 depending it is a signal,
-    an image or a volume.
-
-    This function cannot be used to generate CTF masks.*/
-    template <class T>
-    void generate_mask(T &v)
-    {
-        int dim;
-	if      (YSIZE(v)==1 && ZSIZE(v)==1) dim=1;
-	else if (ZSIZE(v)==1)                dim=2;
-	else                                 dim=3;
-        // Resize Xmipp real mask
-        bool copy_from_Xmipp_real_mask = true;
-        Mask_Params real_mask;
-        double N1 = w1 * XSIZE(v);
-        double N2 = w2 * XSIZE(v);
-        double raised_pixels = raised_w * XSIZE(v);
-
-        // Generate mask
-        switch (FilterBand)
-        {
-        case FROM_FILE:
-            read_mask(fn_mask);
-            copy_from_Xmipp_real_mask = false;
-            break;
-        case LOWPASS:
-            switch (FilterShape)
-            {
-            case RAISED_COSINE:
-                real_mask.type = RAISED_COSINE_MASK;
-                real_mask.mode = INNER_MASK;
-                real_mask.R1 = N1;
-                real_mask.R2 = N1 + raised_pixels;
-                real_mask.x0 = real_mask.y0 = real_mask.z0 = 0;
-                break;
-            case WEDGE:
-                real_mask.type = BINARY_WEDGE_MASK;
-                real_mask.R1 = w1;
-                real_mask.R2 = w2;
-                break;
-            case GAUSSIAN:
-                real_mask.type = GAUSSIAN_MASK;
-                real_mask.sigma = N1;
-                real_mask.x0 = real_mask.y0 = real_mask.z0 = 0;
-                break;
-            }
-            break;
-        case HIGHPASS:
-            switch (FilterShape)
-            {
-            case RAISED_COSINE:
-                real_mask.type = RAISED_COSINE_MASK;
-                real_mask.mode = OUTSIDE_MASK;
-                real_mask.R1 = N1 - raised_pixels;
-                real_mask.R2 = N1;
-                real_mask.x0 = real_mask.y0 = real_mask.z0 = 0;
-                break;
-            }
-            break;
-        case BANDPASS:
-            switch (FilterShape)
-            {
-            case RAISED_COSINE:
-                real_mask.type = RAISED_CROWN_MASK;
-                real_mask.mode = INNER_MASK;
-                real_mask.R1 = N1;
-                real_mask.R2 = N2;
-                real_mask.x0 = real_mask.y0 = real_mask.z0 = 0;
-                real_mask.pix_width = raised_pixels;
-                break;
-            }
-            break;
-        case STOPBAND:
-            switch (FilterShape)
-            {
-            case RAISED_COSINE:
-                real_mask.type = RAISED_CROWN_MASK;
-                real_mask.mode = OUTSIDE_MASK;
-                real_mask.R1 = N1;
-                real_mask.R2 = N2;
-                real_mask.x0 = real_mask.y0 = real_mask.z0 = 0;
-                real_mask.pix_width = raised_pixels;
-                break;
-            }
-            break;
-        case CTF:
-            generate_CTF_mask(v);
-            copy_from_Xmipp_real_mask = false;
-            break;
-        }
-
-        // Copy mask from real Xmipp mask
-        if (copy_from_Xmipp_real_mask)
-        {
-            real_mask.resize(v);
-            if (dim == 1)
-            {
-                real_mask.generate_1Dmask();
-                typeCast(real_mask.get_cont_mask1D(), mask1D);
-                CenterFFT(mask1D, false);
-            }
-            else if (dim == 2)
-            {
-                real_mask.generate_2Dmask();
-                typeCast(real_mask.get_cont_mask2D(), mask2D);
-                CenterFFT(mask2D, false);
-            }
-            else
-            {
-                real_mask.generate_3Dmask();
-                typeCast(real_mask.get_cont_mask3D(), mask3D);
-                CenterFFT(mask3D, false);
-            }
-        }
-    }
-
-    /** Read mask from file. */
-    void read_mask(const FileName &fn);
-
-    /** Generate CTF mask for images */
-    template <class T>
-    void generate_CTF_mask(T &v)
-    {
-        STARTINGX(mask2D) = STARTINGY(mask2D) = 0;
-	int dim;
-	if      (YSIZE(v)==1 && ZSIZE(v)==1) dim=1;
-	else if (ZSIZE(v)==1)                dim=2;
-	else                                 dim=3;
-        if (dim != 2)
-            REPORT_ERROR(1,
-                         "generate_CTF_mask is intended only for images");
-        FilterBand = CTF;
-        ctf.Generate_CTF(YSIZE(v), XSIZE(v), mask2D);
-        STARTINGX(mask2D) = STARTINGX(v);
-        STARTINGY(mask2D) = STARTINGY(v);
-    }
-
-    /** Flip the phase of an already generated 2D mask.
-        Those frequencies that have negative amplitude are flipped. */
-    void correct_phase();
-
-    /** Save mask as a text file.
-        Indicate which is the dimension od the mask to save */
-    void write_mask(const FileName &fn, int dim);
-
-    /** Save amplitude as a text file, Indicate
-        which is the dimension of the mask to save. */
-    void write_amplitude(const FileName &fn, int dim,
-                         bool do_not_center = false);
-
-    /** Center mask in the corners */
-    void centerMaskCorners();
-
-    /** Center mask in the middle */
-    void centerMaskMiddle();
-
-    /** Apply mask (argument is in Fourier space).
-        It should have been already generated. The given image is modified.
-        An exception is thrown if the mask do not fit the size and shape of
-        the */
-    void apply_mask_Fourier(Matrix1D< std::complex<double> > &v);
-
-    /** Apply mask in 2D. */
-    void apply_mask_Fourier(Matrix2D< std::complex<double> > &v);
-
-    /** Apply mask in 3D. */
-    void apply_mask_Fourier(Matrix3D< std::complex<double> > &v);
-
-    /** Apply mask (argument is in real space)..
-        It doesn't need to have a mask already generated. If the mask is equal
-        to NULL, the apropiate mask is generated if not, nothing is done with
-        the mask except filtering. The given image is modified. */
-    void apply_mask_Space(Matrix1D<double> &v);
+    /** Generate 2D mask. */
+    void generate_mask(Matrix2D<double> &mask);
 
     /** Apply mask in 2D. */
     void apply_mask_Space(Matrix2D<double> &v);
@@ -322,15 +126,15 @@ public:
     /** Apply mask in 3D. */
     void apply_mask_Space(Matrix3D<double> &v);
 
-    /** Resize fourier mask to a desired scale. */
-    void resize_mask(int Ydim, int Xdim);
+public:
+    // Auxiliary vector for representing frequency values
+    Matrix1D<double> w;
 
-    /** Resize fourier mask to a desired scale. */
-    void resize_mask(int Zdim, int Ydim, int Xdim);
-
-    /** Mask power. Return the power of the Fourier Image contained in mask
-    within the given frequencies. */
-    double mask2D_power(double wmin = 0, double wmax = 1);
+    // Auxiliary mask for the filter in 2D
+    Matrix2D<double> maskFourier2D;
+    
+    // Transformer
+    XmippFftw transformer;
 };
 //@}
 #endif
