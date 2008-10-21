@@ -26,47 +26,24 @@
 #include "ctf_correct_phase.h"
 
 #include <data/args.h>
+#include <data/fftw.h>
 
 /* Read parameters from command line. -------------------------------------- */
 void CorrectPhaseParams::read(int argc, char **argv)
 {
     fnCtfdat = getParameter(argc, argv, "-ctfdat");
-    epsilon = textToFloat(getParameter(argc, argv, "-small", "0"));
-    std::string aux;
-    aux = getParameter(argc, argv, "-method", "");
-    if (aux == "remove")                  method = CORRECT_SETTING_SMALL_TO_ZERO;
-    else if (aux == "leave" || aux == "") method = CORRECT_LEAVING_SMALL;
-    else if (aux == "divide")             method = CORRECT_AMPLIFYING_NOT_SMALL;
 }
 
 /* Show -------------------------------------------------------------------- */
 void CorrectPhaseParams::show()
 {
-    std::cout << "ctfdat: " << fnCtfdat << std::endl
-              << "Small is under " << epsilon << std::endl
-              << "Correcting method: ";
-    switch (method)
-    {
-    case CORRECT_SETTING_SMALL_TO_ZERO:
-        std::cout << "Set small values to 0\n";
-        break;
-    case CORRECT_LEAVING_SMALL:
-        std::cout << "Leave small values as they are\n";
-        break;
-    case CORRECT_AMPLIFYING_NOT_SMALL:
-        std::cout << "Correct amplitude except for the small values\n";
-        break;
-    }
+    std::cout << "ctfdat: " << fnCtfdat << std::endl;
 }
 
 /* Usage ------------------------------------------------------------------- */
 void CorrectPhaseParams::usage()
 {
-    std::cerr << "   -ctfdat <CTF descr file or selfile> : list of particles and CTFs\n"
-              << "  [-small <epsilon=0>]                 : Values under epsilon are small\n"
-              << "  [-method <mth=leave>]                : Valid methods are: remove, leave\n"
-              << "                                         divide\n";
-    ;
+    std::cerr << "   -ctfdat <CTF descr file or selfile> : list of particles and CTFs\n";
 }
 
 /* Produce Side information ------------------------------------------------ */
@@ -75,57 +52,11 @@ void CorrectPhaseParams::produceSideInfo()
     ctfdat.read(fnCtfdat);
 }
 
-void CorrectPhaseParams::readCTF(const FileName &fnCTF)
-{
-    ctf.FilterBand = CTF;
-    ctf.ctf.enable_CTFnoise = false;
-    ctf.ctf.read(fnCTF);
-    ctf.ctf.Produce_Side_Info();
-}
-
-/* Correct a single image -------------------------------------------------- */
-//#define DEBUG
-void CorrectPhaseParams::correct(Matrix2D< std::complex<double> > &v)
-{
-    ctf.generate_mask(v);
-#ifdef DEBUG
-    std::cout << "New image ----------------------------\n";
-#endif
-
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(v)
-    {
-        std::complex<double> m = ctf.mask2D(i, j);
-        if (m.imag() != 0)
-            REPORT_ERROR(1, "CorrectPhase::correct: CTF is not real\n");
-#ifdef DEBUG
-        std::cout << "CTF at (" << j << "," << i << ")="
-                  << m << " Value there " << v(i, j);
-#endif
-        switch (method)
-        {
-        case CORRECT_SETTING_SMALL_TO_ZERO:
-            if (m.real() < 0)
-                if (v(i, j).real() < -epsilon) v(i, j) *= -1;
-                else                           v(i, j) = 0;
-            break;
-        case CORRECT_LEAVING_SMALL:
-            if (m.real() < -epsilon) v(i, j) *= -1;
-            break;
-        case CORRECT_AMPLIFYING_NOT_SMALL:
-            if (ABS(m.real()) > epsilon) v(i, j) /= m.real();
-            break;
-        }
-#ifdef DEBUG
-        std::cout << " Final value " << v(i, j) << std::endl;
-#endif
-    }
-}
-#undef DEBUG
-
 /* Correct a set of images ------------------------------------------------- */
 void CorrectPhaseParams::run()
 {
     Matrix2D< std::complex<double> > fft;
+    XmippFftw transformer;
     ctfdat.goFirstLine();
     std::cerr << "Correcting CTF phase ...\n";
     int istep = CEIL((double)ctfdat.lineNo() / 60.0);
@@ -136,12 +67,24 @@ void CorrectPhaseParams::run()
         FileName fnProjection, fnCTF;
 	ctfdat.getCurrentLine(fnProjection,fnCTF);
 	if (fnProjection!="") {
+            // Read input image and compute its Fourier transform
             ImageXmipp I;
             I.read(fnProjection);
-            FourierTransform(I(), fft);
-	    readCTF(fnCTF);
-            correct(fft);
-            InverseFourierTransform(fft, I());
+            transformer.FourierTransform(I(), fft, false);
+
+            // Read the CTF
+            ctf.FilterBand = CTF;
+            ctf.ctf.enable_CTFnoise = false;
+            ctf.ctf.read(fnCTF);
+            ctf.ctf.Produce_Side_Info();
+            ctf.generate_mask(I());
+
+            // Apply the phase correction
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(fft)
+                if (ctf.maskFourier2D(i, j)<0) fft(i, j) *= -1;
+
+            // Go back to real space
+            transformer.inverseFourierTransform();
             I.write();
 	}
         if (i++ % istep == 0) progress_bar(i);

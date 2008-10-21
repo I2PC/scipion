@@ -40,32 +40,12 @@ public:
     /// ctfdat
     FileName fnCtfdat;
 
-    /// Epsilon=minimum CTF value to correct
-    double epsilon;
-
-#define CORRECT_SETTING_SMALL_TO_ZERO 0
-#define CORRECT_LEAVING_SMALL         1
-#define CORRECT_AMPLIFYING_NOT_SMALL  2
-    /** Correcting method. Valid methods are:
-       \\CORRECT_SETTING_SMALL_TO_ZERO: Values where the CTF<epsilon are
-          set to 0
-       \\CORRECT_LEAVING_SMALL: Values where the CTF<epsilon are
-          left as they are
-       \\CORRECT_AMPLIFYING_NOT_SMALL: Values where the ABS(CTF)>epsilon are
-          divided by the CTF
-    */
-    int method;
-
     /// Side Info: CTF
     FourierMask ctf;
     
     /// Side Info: ctfdat
     CTFDat ctfdat;
 public:
-    /** Empty constructor */
-    CorrectPhaseParams(): epsilon(0), method(0)
-    {}
-
     /** Read parameters from command line. */
     void read(int argc, char **argv);
 
@@ -79,16 +59,8 @@ public:
         The CTFdat is read. */
     void produceSideInfo();
 
-    /** Read a CTF.. */
-    void readCTF(const FileName &fnCTF);
-
     /** Correct phase of the images in the ctfdat.*/
     void run();
-
-    /** Correct phase of an image.
-        An exception is thrown if the input image is not of the same size
-        as the ctf or if the CTF is not real */
-    void correct(Matrix2D< std::complex<double> > &v);
 };
 //@}
 #endif
