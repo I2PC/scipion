@@ -312,8 +312,9 @@ void Prog_MLalign2D_prm::produceSideInfo()
     SF.ImgSize(dim, dim);
     hdim = dim / 2;
     dim2 = dim * dim;
+    ddim2 = (double)dim2;
     nr_exp_images = SF.ImgNo();
-    if (do_student) df2 = - ( df + dim2 ) / 2. ;
+    if (do_student) df2 = - ( df + ddim2 ) / 2. ;
 
     // Get number of references
     if (do_ML3D)
@@ -853,7 +854,6 @@ void Prog_MLalign2D_prm::rotateReference(std::vector< ImageXmippT<double> > &Ire
                 mref.push_back(Maux);
             // Do the forward FFT 
             transformer.FourierTransform(Maux,Faux,false);
-            double ddim2=(double)dim2;
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
             {
                 dMij(Faux, i, j) = conj(dMij(Faux, i, j))*ddim2;
@@ -898,7 +898,7 @@ void Prog_MLalign2D_prm::reverseRotateReference(
 
             // Do the backward FFT
             transformer.inverseFourierTransform(fnew[refnoipsi],Maux);
-            Maux /= dim2;
+            Maux /= ddim2 * ddim2;
             CenterFFT(Maux, true);
             computeStats_within_binary_mask(omask, Maux, dum, dum, avg, dum);
             Maux.rotateBSpline(3, -psi, Maux2, WRAP);
@@ -1161,9 +1161,9 @@ void Prog_MLalign2D_prm::expectationSingleImage(
         Maux.setXmippOrigin();
         applyGeometry(Maux, F[iflip], Mimg, IS_INV, WRAP);
         local_transformer.FourierTransform(Maux,Faux,false);
-        Faux*= dim2;
+        Faux*= ddim2;
         if (do_norm)
-            dMij(Faux,0,0) -= bgmean * dim2;
+            dMij(Faux,0,0) -= bgmean * ddim2;
          Fimg_flip.push_back(Faux);
     }
 
@@ -1231,8 +1231,7 @@ void Prog_MLalign2D_prm::expectationSingleImage(
                                     dMij(Fimg_flip[iflip],i,j) * 
                                     dMij(fref[refnoipsi],i,j);
                             }
-                            // Takes the input from Faux, and leaves the output
-                            // in Maux
+                            // Takes the input from Faux, and leaves the output in Maux
                             local_transformer.inverseFourierTransform();
                             CenterFFT(Maux, true);
                             
@@ -1240,7 +1239,7 @@ void Prog_MLalign2D_prm::expectationSingleImage(
                             my_sumweight = my_sumstoredweight = my_maxweight = 0.;
                             FOR_ALL_ELEMENTS_IN_MATRIX2D(Mweight)
                             {
-                                diff = A2_plus_Xi2 - ref_scale* MAT_ELEM(Maux, i, j);
+                                diff = A2_plus_Xi2 - ref_scale * MAT_ELEM(Maux, i, j) / ddim2;
                                 mindiff = XMIPP_MIN(mindiff,diff);
                                 pdf = fracpdf * MAT_ELEM(P_phi, i, j);
                                 if (!do_student)
@@ -1269,7 +1268,7 @@ void Prog_MLalign2D_prm::expectationSingleImage(
                                     weight = pow(aux, df2) * pdf;
                                     // Calculate extra weight acc. to Eq (10) Wang et al.
                                     // Patt. Recognition Lett. 25, 701-710 (2004)
-                                    weight2 = ( df + dim2 ) / ( df + (2. * diff / sigma_noise2) );
+                                    weight2 = ( df + ddim2 ) / ( df + (2. * diff / sigma_noise2) );
                                     // Store probability weights
                                     stored_weight = weight * weight2;
                                     MAT_ELEM(Mweight, i, j) = stored_weight;
@@ -1328,13 +1327,12 @@ void Prog_MLalign2D_prm::expectationSingleImage(
                                     MAT_ELEM(Maux, i, j) = MAT_ELEM(Mweight, i, j);
                                 }
                                 // Use forward FFT in convolution theorem again
-                                // Takes the input from Maux and leaves it in
-                                // Faux
+                                // Takes the input from Maux and leaves it in Faux
                                 local_transformer.FourierTransform();
                                 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
                                 {
                                     dMij(mysumimgs[refnoipsi],i,j) +=
-                                        conj(dMij(Faux,i,j)) * 
+                                        conj(dMij(Faux,i,j)) * ddim2 *
                                         dMij(Fimg_flip[iflip],i,j);
                                 }
                             }
@@ -1402,7 +1400,7 @@ void Prog_MLalign2D_prm::expectationSingleImage(
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
         {
             dMij(Faux,i,j) = conj(dMij(fref[refnoipsi],i,j));
-            dMij(Faux,i,j) *= opt_scale/dim2;
+            dMij(Faux,i,j) *= opt_scale/ddim2;
         }
         Matrix2D<double> Maux2(Maux);
         local_transformer.inverseFourierTransform(Faux,Maux2);
@@ -1427,7 +1425,7 @@ void Prog_MLalign2D_prm::expectationSingleImage(
     wsum_sigma_noise += (2 * wsum_corr / sum_refw);
     wsum_sigma_offset += (wsum_offset / sum_refw);
     sumfracweight += fracweight;
-    scale_dim2_sumw = (opt_scale * dim2) / sum_refw;
+    scale_dim2_sumw = (opt_scale * ddim2) / sum_refw;
     for (int refno = 0; refno < n_ref; refno++)
     {
         if (!limit_rot || pdf_directions[refno] > 0.)
@@ -1450,7 +1448,7 @@ void Prog_MLalign2D_prm::expectationSingleImage(
                 int refnoipsi = refno*nr_psi + ipsi;
                 // Correct weighted sum of images for new bgmean (only first element=origin in Fimg)
                 dMij(mysumimgs[refnoipsi],0,0) -= 
-                    sumw_refpsi[refnoipsi] * dim2 * (bgmean - old_bgmean); 
+                    sumw_refpsi[refnoipsi] * ddim2 * (bgmean - old_bgmean); 
                 // Sum mysumimgs to the global weighted sum
                 wsumimgs[refnoipsi] += (scale_dim2_sumw * mysumimgs[refnoipsi]);
             }
@@ -1463,7 +1461,7 @@ void Prog_MLalign2D_prm::expectationSingleImage(
 	// 3rd term: for (sqrt(2pi)*sigma_noise)^-1 term in formula (12) Sigworth (1998)
         dLL = log(sum_refw) 
             - my_mindiff / sigma_noise2 
-            - dim2 * log( sqrt(2. * PI * sigma_noise2));
+            - ddim2 * log( sqrt(2. * PI * sigma_noise2));
     else
 	// 1st term: log(refw_i)
 	// 2nd term: for dividing by (1 + 2. * mindiff/dfsigma2)^df2
@@ -1471,7 +1469,7 @@ void Prog_MLalign2D_prm::expectationSingleImage(
 	// 4th&5th terms: gamma functions in t-distribution
         dLL = log(sum_refw) 
             + df2 * log( 1. + (  2. * my_mindiff / dfsigma2 )) 
-            - dim2 * log( sqrt(PI * df * sigma_noise2)) 
+            - ddim2 * log( sqrt(PI * df * sigma_noise2)) 
             + gammln(-df2) - gammln(df/2.);
     LL += dLL;
 

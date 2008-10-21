@@ -26,9 +26,6 @@
 #ifndef _MLALIGN2D_H
 #define _MLALIGN2D_H
 
-// This program will run 3x faster with FFTW routines than with Xmipp's own FFT routines
-// However, in some cases the FFTW may not be available (although it comes with Xmipp)
-// In that case, comment out the next line to use Xmipp's routines
 #include <data/fftw.h>
 #include <data/fft.h>
 #include <data/args.h>
@@ -106,6 +103,7 @@ public:
     int Niter;
     /** dimension of the images */
     int dim, dim2, hdim;
+    double ddim2;
     /** Number of steps to sample in-plane rotation in 90 degrees */
     int nr_psi;
     /** Number of operations in "flip-array" (depending on do_mirror) */
