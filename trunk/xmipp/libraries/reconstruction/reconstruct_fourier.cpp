@@ -46,6 +46,7 @@ void Prog_RecFourier_prm::read(int argc, char **argv)
     sampling_rate = textToFloat(getParameter(argc, argv, "-sampling_rate", "1"));
     maxResolution = textToFloat(getParameter(argc, argv,
         "-max_resolution","2"));
+    NiterWeight = textToInteger(getParameter(argc, argv, "-n","20"));
 }
 
 // Show ====================================================================
@@ -58,7 +59,7 @@ void Prog_RecFourier_prm::show()
         std::cerr << " =====================================================================" << std::endl;
         std::cerr << " Input selfile             : "  << fn_sel << std::endl;
         std::cerr << " padding_factor_proj       : "  << padding_factor_proj << std::endl;
-        //std::cerr << " padding_factor_vol        : "  << padding_factor_vol << std::endl;
+        std::cerr << " padding_factor_vol        : "  << padding_factor_vol << std::endl;
         if (fn_doc != "")
             std::cerr << " Input docfile         : "  << fn_doc << std::endl;
         std::cerr << " Output volume             : "  << fn_out << std::endl;
@@ -68,13 +69,13 @@ void Prog_RecFourier_prm::show()
             std::cerr << " Use weights stored in the image headers or doc file" << std::endl;
         else
             std::cerr << " Do NOT use weights" << std::endl;
+        std::cerr << " Iterations weight         : " << NiterWeight << std::endl;
         std::cerr << "\n Interpolation Function" 
                   << "\n   blrad                 : "  << blob.radius
                   << "\n   blord                 : "  << blob.order
                   << "\n   blalpha               : "  << blob.alpha
                   << "\n sampling_rate           : "  << sampling_rate
                   << "\n max_resolution          : "  << maxResolution
-       
                   << "\n -----------------------------------------------------------------" << std::endl;
     }
 }
@@ -93,6 +94,7 @@ void Prog_RecFourier_prm::usage()
     std::cerr << " [ -doc <docfile>              : Ignore headers and get angles from this docfile \n";
     std::cerr << " [ -sym     <symfile> ]        : Enforce symmetry in projections\n";
     std::cerr << " [ -sym_vol <symfile> ]        : Enforce symmetry in volume \n";
+    std::cerr << " [ -n <iter=20>]               : Iterations for computing the weight\n";
     std::cerr << " -----------------------------------------------------------------" << std::endl;
     std::cerr << " [ -do_weights ]               : Use weights stored in the image headers or doc file" << std::endl;
     std::cerr << "\n Interpolation Function"
@@ -157,8 +159,26 @@ void Prog_RecFourier_prm::produce_Side_info()
     double delta = blob.radius/(BLOB_TABLE_SIZE-1);
     double deltaFourier = 2.0/((BLOB_TABLE_SIZE-1));
     // The interpolation kernel must integrate to 1
-    double iw0 = 1.0/blob_Fourier_val(0., blob); 
-    double iFourierw0 = 1.0/blob_Fourier_val(0., blobFourier);
+    // The interpolation kernel must integrate to 1
+/*
+    double iw0 = 1.0 / blob_Fourier_val(0., blob);
+    iw0 = iw0*iw0*iw0;
+    double Fb0 = blob_Fourier_val(0., blobFourier);
+    Fb0= Fb0*Fb0*Fb0;
+    double iFourierw0 = iw0/Fb0;
+
+    double iw0 = 1.0/blob_Fourier_val(0., blob);     
+    double iFourierw0 = iw0*1/blob_Fourier_val(0., blobFourier);
+*/
+
+    double iw0 = 1.0 / blob_Fourier_val(0., blob);
+    iw0 = iw0*iw0*iw0;
+    double Fb0 = blob_Fourier_val(0., blobFourier);
+    std::cerr << " before Fb0" << Fb0;
+    Fb0= Fb0*Fb0*Fb0;
+    std::cerr << " after Fb0" << Fb0;
+    double iFourierw0 = iw0/Fb0;
+    
     FOR_ALL_ELEMENTS_IN_MATRIX1D(blob_table)
     {
         DIRECT_VEC_ELEM(blob_table,i) = blob_val(delta*i, blob)*iw0;
@@ -167,6 +187,17 @@ void Prog_RecFourier_prm::produce_Side_info()
     }
     iDelta=1/delta;
     iDeltaFourier=1/(deltaFourier*Xdim/2);
+
+    // Kernel for the weight correction
+    int L=CEIL(blob.radius);
+    kernel.resize(2*L+1,2*L+1,2*L+1);
+    kernel.setXmippOrigin();
+    FOR_ALL_ELEMENTS_IN_MATRIX3D(kernel)
+    {
+        double r=sqrt(k*k+i*i+j*j);
+        if (r>=blob.radius) kernel(k,i,j)=0;
+        else kernel(k,i,j)=blob_table(ROUND(r*iDelta));
+    }
 
     // Get symmetries
     Matrix2D<double>  Identity(3,3);
@@ -270,7 +301,6 @@ void Prog_RecFourier_prm::processImage(const FileName &fn_img)
     transformerImg.FourierTransform();
     Matrix2D< std::complex<double> > paddedFourier;
     transformerImg.getFourierAlias(paddedFourier);
-//    std::cout << "Aqui1\n" << paddedFourier << std::endl;
 
     // Compute the coordinate axes associated to this image
     Matrix2D<double>  A(3, 3), Ainv;
@@ -333,7 +363,9 @@ void Prog_RecFourier_prm::processImage(const FileName &fn_img)
                                  YY(gcurrent) * YY(gcurrent) +
                                  ZZ(gcurrent) * ZZ(gcurrent));
                         if (d > blob.radius) continue;
-                        double w = blob_table(ROUND(d*iDelta));
+                        double w = blob_table(ROUND(ABS(XX(gcurrent))*iDelta))*
+                                   blob_table(ROUND(ABS(YY(gcurrent))*iDelta))*
+                                   blob_table(ROUND(ABS(ZZ(gcurrent))*iDelta));
                         
                         // Look for the location of this logical index
                         // in the physical layout
@@ -376,6 +408,60 @@ void Prog_RecFourier_prm::processImage(const FileName &fn_img)
     }
 }
 #undef DEBUG
+
+// Correct weight ----------------------------------------------------------
+void Prog_RecFourier_prm::correctWeight()
+{
+    FourierWeights.printStats(); std::cout << std::endl;
+    FourierWeightsConvolved.initZeros(FourierWeights);
+
+    // Compute the convolution of the kernel with the weights
+    FOR_ALL_ELEMENTS_IN_MATRIX3D(kernel)
+    {
+        double wkij=kernel(k,i,j);
+        if (wkij==0) continue;
+        for (int kp=STARTINGZ(FourierWeights); kp<=FINISHINGZ(FourierWeights); kp++)
+        {
+            int iz=intWRAP(kp-k,0,ZSIZE(VoutFourier)-1);
+            for (int ip=STARTINGY(FourierWeights); ip<=FINISHINGY(FourierWeights); ip++)
+            {
+                int iy=intWRAP(ip-i,0,ZSIZE(VoutFourier)-1);
+                for (int jp=STARTINGX(FourierWeights); jp<=FINISHINGX(FourierWeights); jp++)
+                {
+                    int ix=intWRAP(jp-j,0,ZSIZE(VoutFourier)-1);
+                    if (ix>=XSIZE(VoutFourier))
+                    {
+                        iz=intWRAP(-iz,0,ZSIZE(VoutFourier)-1);
+                        iy=intWRAP(-iy,0,ZSIZE(VoutFourier)-1);
+                        ix=intWRAP(-ix,0,ZSIZE(VoutFourier)-1);
+                    }
+                    FourierWeightsConvolved(iz,iy,ix)+=wkij*
+                        VOL_ELEM(FourierWeights,kp,ip,jp);
+                }
+            }
+        }
+    }
+
+/*
+    VolumeXmipp save;
+    save()=FourierWeights; 
+    FOR_ALL_ELEMENTS_IN_MATRIX3D(save())
+        save(k,i,j)=log10(save(k,i,j)+1);
+    save.write("PPPweights.vol");
+    save()=FourierWeightsConvolved;
+    FOR_ALL_ELEMENTS_IN_MATRIX3D(save())
+        save(k,i,j)=log10(save(k,i,j)+1);
+    save.write("PPPweightsConvolved.vol");
+    std::cout << "kernel=\n" << kernel << std::endl;
+    std::cout << "Press any key\n";
+    char c; std::cin >> c;
+*/
+    
+    // Update the weights with the convolved values
+    FOR_ALL_ELEMENTS_IN_MATRIX3D(FourierWeights)
+        if (FourierWeightsConvolved(k,i,j)>XMIPP_EQUAL_ACCURACY)
+            FourierWeights(k,i,j)/=FourierWeightsConvolved(k,i,j);
+}
 
 // Main routine ------------------------------------------------------------
 void Prog_RecFourier_prm::run()
@@ -424,12 +510,27 @@ void Prog_RecFourier_prm::run()
             DIRECT_VOL_ELEM(FourierWeights,ksym,0,0)=mean;
     }
 
+    // Correct weights
+    std::cerr << "Correcting the weight ...\n";
+    FOR_ALL_ELEMENTS_IN_MATRIX3D(FourierWeights)
+        if (FourierWeights(k,i,j)>XMIPP_EQUAL_ACCURACY)
+            FourierWeights(k,i,j)=1/FourierWeights(k,i,j);
+/*
+    verb=false;
+    if (verb) init_progress_bar(NiterWeight);
+    for (int n=0; n<NiterWeight; n++)
+    {
+        correctWeight();
+        if (verb) progress_bar(n);
+    }
+    if (verb > 0) progress_bar(NiterWeight);
+*/
     // Get a first approximation of the reconstruction
-    int Zdim=ZSIZE(VoutFourier); // Divide by Zdim because of the
+    double iZdim=1.0/ZSIZE(VoutFourier); // Divide by Zdim because of the
                                  // the extra dimension added
     FOR_ALL_ELEMENTS_IN_MATRIX3D(FourierWeights)
         if (VOL_ELEM(FourierWeights,k,i,j)!=0)
-            VOL_ELEM(VoutFourier,k,i,j)/=Zdim*VOL_ELEM(FourierWeights,k,i,j);
+            VOL_ELEM(VoutFourier,k,i,j)*=iZdim*VOL_ELEM(FourierWeights,k,i,j);
 //    std::cout << "Aqui2\n" << FourierWeights << std::endl;
 //    std::cout << "Aqui3\n" << VoutFourier << std::endl;
     transformerVol.inverseFourierTransform();
@@ -442,8 +543,9 @@ void Prog_RecFourier_prm::run()
         LAST_XMIPP_INDEX(imgSize),LAST_XMIPP_INDEX(imgSize));
     FOR_ALL_ELEMENTS_IN_MATRIX3D(Vout())
     {
-        double r = sqrt(k*k+i*i+j*j);
-        double factor = Fourier_blob_table(ROUND(r*iDeltaFourier));
+        double factor = Fourier_blob_table(ROUND(ABS(k)*iDeltaFourier))*
+                        Fourier_blob_table(ROUND(ABS(i)*iDeltaFourier))*
+                        Fourier_blob_table(ROUND(ABS(j)*iDeltaFourier));
         Vout(k,i,j) /= factor;
     }
     Vout.write(fn_out);

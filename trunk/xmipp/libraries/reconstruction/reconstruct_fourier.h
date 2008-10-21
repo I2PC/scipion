@@ -42,6 +42,7 @@
 #define BLOB_TABLE_SIZE 5000
 #define MINIMUMWEIGHT 0.001
 #define ACCURACY 0.000001
+
 /**@defgroup Fourier reconstruction reconstruct_fourier (Fourier reconstruction)
    @ingroup ReconsLibraryPrograms */
 //@{
@@ -77,6 +78,9 @@ public:
     /// Max resolution in Angstroms
     double maxResolution;
 
+    /// Number of iterations for the weight
+    int NiterWeight;
+
 public: // Internal members
     // Size of the original images
     int imgSize;
@@ -111,6 +115,12 @@ public: // Internal members
     // Volume of Fourier weights
     Matrix3D<double> FourierWeights;
 
+    // Volume of Fourier weights convolved with the kernel
+    Matrix3D<double> FourierWeightsConvolved;
+
+    // Kernel used in Fourier
+    Matrix3D<double> kernel;
+
     // Padded image
     Matrix2D<double> paddedImg;
 
@@ -138,6 +148,9 @@ public:
 
     /// Process one image
     void processImage(const FileName &fn_img);
+    
+    /// Correct weight
+    void correctWeight();
 };
 //@}
 #endif
