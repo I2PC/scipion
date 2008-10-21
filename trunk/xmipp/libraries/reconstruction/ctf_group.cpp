@@ -25,6 +25,7 @@
  ***************************************************************************/
  
 #include "ctf_group.h"
+#include <data/fft.h>
 
 /* Read parameters from command line. -------------------------------------- */
 void CtfGroupParams::read(int argc, char **argv)
