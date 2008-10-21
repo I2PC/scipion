@@ -868,7 +868,6 @@ void single_recons_test(const Recons_test_Parameters &prm,
             Filter.w1 = prm.starting_low_pass;
             Filter.raised_w = 0.02;
             Filter.show();
-            Filter.generate_mask(starting_vol());
             Filter.apply_mask_Space(starting_vol());
             starting_vol.write(fn_recons_root + "_starting.vol");
 
