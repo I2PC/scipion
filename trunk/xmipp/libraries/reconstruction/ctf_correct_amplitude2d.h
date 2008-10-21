@@ -65,19 +65,8 @@ public:
         The CTFdat is read. */
     void produceSideInfo();
 
-    /** Read a CTF.. */
-    void readCTF(const FileName &fnCTF);
-
     /** Correct phase of the images in the ctfdat.*/
     void run();
-
-    /** Correct amplitude of an image.
-        An exception is thrown if the input image is not of the same size
-        as the ctf or if the CTF is not real.
-        
-        See Biemond, Lagendijk, Merserau. Iterative methods for image
-        deblurring. Proc. IEEE 78, 856-883. 1990. */
-    void correct(Matrix2D< std::complex<double> > &g);
 };
 //@}
 #endif

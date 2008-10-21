@@ -26,6 +26,7 @@
 #include "ctf_correct_amplitude2d.h"
 
 #include <data/args.h>
+#include <data/fft.h>
 
 /* Read parameters from command line. -------------------------------------- */
 void CorrectAmplitude2DParams::read(int argc, char **argv)
@@ -58,31 +59,11 @@ void CorrectAmplitude2DParams::produceSideInfo()
     ctfdat.read(fnCtfdat);
 }
 
-void CorrectAmplitude2DParams::readCTF(const FileName &fnCTF)
-{
-    ctf.FilterBand = CTF;
-    ctf.ctf.enable_CTFnoise = false;
-    ctf.ctf.read(fnCTF);
-    ctf.ctf.Produce_Side_Info();
-}
-
-/* Correct a single image -------------------------------------------------- */
-void CorrectAmplitude2DParams::correct(Matrix2D< std::complex<double> > &g)
-{
-    ctf.generate_mask(g);
-
-    Matrix2D< std::complex<double> > f;
-    f=g;
-    for (int n=0; n<Niterations; n++)
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(f)
-            f(i,j)=f(i,j)+beta*ctf.mask2D(i, j)*(g(i,j)-ctf.mask2D(i, j)*f(i,j));
-    g=f;
-}
-
 /* Correct a set of images ------------------------------------------------- */
 void CorrectAmplitude2DParams::run()
 {
     Matrix2D< std::complex<double> > fft;
+    XmippFftw transformer;
     ctfdat.goFirstLine();
     std::cerr << "Correcting CTF amplitude in 2D ...\n";
     int istep = CEIL((double)ctfdat.lineNo() / 60.0);
@@ -93,12 +74,31 @@ void CorrectAmplitude2DParams::run()
         FileName fnProjection, fnCTF;
 	ctfdat.getCurrentLine(fnProjection,fnCTF);
 	if (fnProjection!="") {
+            // Read input image and compute its Fourier transform
             ImageXmipp I;
             I.read(fnProjection);
-            FourierTransform(I(), fft);
-	    readCTF(fnCTF);
-            correct(fft);
-            InverseFourierTransform(fft, I());
+            transformer.FourierTransform(I(), fft, false);
+
+            // Read the CTF
+            ctf.FilterBand = CTF;
+            ctf.ctf.enable_CTFnoise = false;
+            ctf.ctf.read(fnCTF);
+            ctf.ctf.Produce_Side_Info();
+            ctf.generate_mask(I());
+
+            // Apply the amplitude correction
+            // See Biemond, Lagendijk, Merserau. Iterative methods for image
+            // deblurring. Proc. IEEE 78, 856-883. 1990.
+            Matrix2D< std::complex<double> > f;
+            f=fft;
+            for (int n=0; n<Niterations; n++)
+                FOR_ALL_ELEMENTS_IN_MATRIX2D(f)
+                    f(i,j)=f(i,j)+beta*ctf.maskFourier2D(i, j)*
+                        (fft(i,j)-ctf.maskFourier2D(i, j)*f(i,j));
+            fft=f;
+
+            // Go back to real space
+            transformer.inverseFourierTransform();
             I.write();
 	}
         if (i++ % istep == 0) progress_bar(i);
