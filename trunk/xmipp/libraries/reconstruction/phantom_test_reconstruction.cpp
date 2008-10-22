@@ -672,7 +672,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
             FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
             IMGPIXEL(I, i, j) = a * IMGPIXEL(I, i, j) + b;
 
-            norm_prm.apply(&I);
+            norm_prm.apply(I);
             I.write();
             n++;
             if (n % 20 == 0) progress_bar(n);
