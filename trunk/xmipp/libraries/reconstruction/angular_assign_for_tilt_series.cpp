@@ -961,6 +961,9 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
    DocFile DF;
    if (fnSelOrig!="")
       SForig.go_first_ACTIVE();
+   DF.append_comment("in-plane rotation    Xshift      Yshift");
+   DF.append_comment("First shift by -(Xshift,Yshift)");
+   DF.append_comment("Then, rotate by in-plane rotation");
    for (int i=0;i<Nimg; i++) {
         // Align the normal image
 	ImageXmipp I;
@@ -1015,14 +1018,14 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
         }
 
         // Prepare data for the docfile
-        Matrix1D<double> alignment(5);
-        alignment(0)=rot;
-        alignment(1)=tilt;
-        alignment(2)=psi;
+        Matrix1D<double> params(3);
+        params(0)=90-alignment.rot+alignment.psi(i);
+        params(1)=XX(alignment.di[i]);
+        params(2)=YY(alignment.di[i]);
         DF.append_comment(fn_corrected);
-        DF.append_data_line(alignment);
+        DF.append_data_line(params);
    }
-   DF.write(fnRoot+"_corrected_angles.txt");
+   DF.write(fnRoot+"_correction_parameters.txt");
 }
 
 /* Remove outliers ---------------------------------------------------------*/
