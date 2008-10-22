@@ -250,6 +250,25 @@ double cdf_gauss(double x);
  */
 double cdf_tstudent(int k, double t);
 
+/** Cumulative distribution function for a Snedecor's F-distribution.
+ * @ingroup NumericalFunctions
+ *
+ * This function returns the value of the CDF of a univariate Snedecor's 
+ * F-distribution 
+ * with d1, d2 degrees of freedom  at the point x.
+ */
+double cdf_FSnedecor(int d1, int d2, double x);
+
+/** Inverse Cumulative distribution function for a Snedecor's F-distribution.
+ * @ingroup NumericalFunctions
+ *
+ * This function returns the value of the ICDF of a univariate Snedecor's 
+ * F-distribution 
+ * with d1, d2 degrees of freedom with probability p, i.e., it returns
+ * x such that CDF(d1,d2,x)=p
+ */
+double icdf_FSnedecor(int d1, int d2, double p);
+
 /** 2D gaussian value
  * @ingroup NumericalFunctions
  *
@@ -268,13 +287,6 @@ double gaussian2D(double x,
 
 /// @defgroup MiscellaneousFunctions Miscellaneous functions
 /// @ingroup GeneralFunctions
-/** Print a boolean value
- * @ingroup MiscellaneousFunctions
- *
- * This function is not ported to Python.
-*/
-void print(std::ostream& o, const bool b);
-
 /** Print a value in binary
  * @ingroup MiscellaneousFunctions
  *

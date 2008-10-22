@@ -308,14 +308,34 @@ double cdf_tstudent(int k, double t)
     return result;
 }
 
-
-/* Print a boolean value --------------------------------------------------- */
-void print(std::ostream &o, const bool b)
+/* Snedecor's F ------------------------------------------------------------ */
+// http://en.wikipedia.org/wiki/F-distribution
+double cdf_FSnedecor(int d1, int d2, double x)
 {
-    if (b)
-        o << "TRUE";
-    else
-        o << "FALSE";
+    return betai(0.5*d1,0.5*d2,(d1*x)/(d1*x+d2));
+}
+
+double icdf_FSnedecor(int d1, int d2, double p)
+{
+    double xl=0, xr=1e6;
+    double pl=cdf_FSnedecor(d1,d2,xl);
+    double pr=cdf_FSnedecor(d1,d2,xr);
+    double xm, pm;
+    do {
+        xm=(xl+xr)*0.5;
+        pm=cdf_FSnedecor(d1,d2,xm);
+        if (pm>p)
+        {
+            xr=xm;
+            pr=pm;
+        }
+        else
+        {
+            xl=xm;
+            pl=pm;
+        }
+    } while (ABS(pm-p)/p>0.001);
+    return xm;
 }
 
 /* Random functions -------------------------------------------------------- */
