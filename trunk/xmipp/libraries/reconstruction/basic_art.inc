@@ -103,18 +103,16 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
    *prm.fh_hist << " Surface mask: " << prm.fn_surface_mask << std::endl;
    *prm.fh_hist << " POCS freq: " << prm.POCS_freq << std::endl;
    *prm.fh_hist << " Known volume: " << prm.known_volume << std::endl;
-   *prm.fh_hist << " Positivity: "; print(*prm.fh_hist,prm.positivity);
-   *prm.fh_hist << " Apply shifts in images headers: "; print(*prm.fh_hist,prm.apply_shifts);
-      *prm.fh_hist << std::endl;
+   *prm.fh_hist << " Positivity: " <<prm.positivity << std::endl;
+   *prm.fh_hist << " Apply shifts in images headers: " << prm.apply_shifts << std::endl;
    *prm.fh_hist << " Symmetry file: " << prm.fn_sym << std::endl;
    *prm.fh_hist << " Force Symmetry each: " << prm.sym_each << " projections"
-                                                           <<std::endl;
+                <<std::endl;
    *prm.fh_hist << " Maximun absolute tilt angle: " << prm.max_tilt << " degrees"
-                                                           <<std::endl;
-   *prm.fh_hist << " Generating symmetry group: ";
-       print(*prm.fh_hist,!prm.do_not_generate_subgroup); *prm.fh_hist << std::endl;
-   *prm.fh_hist << " Do not use symmetrized projections: ";
-       print(*prm.fh_hist,!prm.do_not_use_symproj); *prm.fh_hist << std::endl;
+                <<std::endl;
+   *prm.fh_hist << " Generating symmetry group: " << !prm.do_not_generate_subgroup << std::endl;
+   *prm.fh_hist << " Do not use symmetrized projections: "
+       << !prm.do_not_use_symproj << std::endl;
    *prm.fh_hist << " Number of total projections (including symmetrized): "
       << prm.numIMG << std::endl;
    *prm.fh_hist << " Number of different projections: " << prm.trueIMG << std::endl;

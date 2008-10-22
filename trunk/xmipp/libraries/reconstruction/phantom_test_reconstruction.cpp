@@ -298,9 +298,7 @@ std::ostream & operator << (std::ostream &out, const Recons_test_Parameters &prm
     out << "   Voxel Phantom: "  << prm.fn_voxel_phantom  << std::endl;
     out << "   Projection parameters: " << prm.fn_proj_params << std::endl;
     out << "   Crystal parameters: " << prm.fn_crystal << std::endl;
-    out << "   Random Sort: ";
-    print(out, prm.random_sort);
-    out << std::endl;
+    out << "   Random Sort: " << prm.random_sort << std::endl;
     out << "   Sort with last: " << prm.sort_last_N << std::endl;
     out << "   Measurements: " << prm.MeasNo << std::endl;
     out << "   Accuracy: " << prm.accuracy << std::endl;
@@ -324,16 +322,13 @@ std::ostream & operator << (std::ostream &out, const Recons_test_Parameters &prm
     if (prm.enable_bottom_surface)
         out << "true z0=" << prm.bottom0 << " zF=" << prm.bottomF << std::endl;
     else out << "false\n";
-    out << "   Start from phantom: ";
-    print(out, prm.start_from_phantom);
-    out << std::endl;
+    out << "   Start from phantom: " << prm.start_from_phantom << std::endl;
     out << "   Start from lowpass filter: " << prm.starting_low_pass << std::endl;
     out << "   Start noise: " << prm.starting_noise << std::endl;
     out << "   Stop at: " << prm.stop_at << std::endl;
     out << "   Reconstruction radius: " << prm.reconstruction_radius << std::endl;
-    out << "   Run also without constraints: ";
-    print(out, prm.run_also_without_constraints);
-    out << std::endl;
+    out << "   Run also without constraints: "
+        << prm.run_also_without_constraints << std::endl;
     if (prm.enable_normalization)
     {
         out << "   Y=AX+B: A follows N(" << prm.a_avg << "," << prm.a_stddev
@@ -394,9 +389,7 @@ std::ostream & operator << (std::ostream &out, const Recons_test_Parameters &prm
         }
         else
             out << "   Voxel basis\n";
-        out << "   Succesive parameters: ";
-        print(out, prm.succesive_params);
-        out << std::endl;
+        out << "   Succesive parameters: " << prm.succesive_params << std::endl;
         if (prm.POCS_positivity) out << "   Positivity constraint allowed\n";
         if (prm.force_sym != -1)   out << "   Symmetry forced=" << prm.force_sym << "\n";
         if (prm.do_not_use_symproj) out << "   Do not use symmetrized projections\n";

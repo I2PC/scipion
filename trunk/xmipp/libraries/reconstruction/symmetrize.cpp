@@ -61,10 +61,8 @@ std::ostream & operator << (std::ostream &out, const Symmetrize_Parameters &prm)
         << "File out:      " << prm.fn_out << std::endl
         << "Symmetry file: " << prm.fn_sym << std::endl
         << "Generate group:" << !prm.do_not_generate_subgroup << std::endl
-        << "Wrapping:      ";
-    print(out, prm.wrap); out << std::endl;
-    out << "Splines:       ";
-    print(out, prm.useBsplines); out << std::endl;
+        << "Wrapping:      " << prm.wrap   << std::endl;
+    out << "Splines:       " << prm.useBsplines << std::endl;
     return out;
 }
 
