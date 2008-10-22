@@ -35,6 +35,8 @@ int main(int argc, char *argv[])
     SelFile         SF;
     ImageXmipp      img;
     FileName        fn_input;
+    bool            tiltSeries;
+    double          firstAngle, angularStep;
 
     try
     {
@@ -45,6 +47,16 @@ int main(int argc, char *argv[])
         }
         else
             SF.read(fn_input);
+
+        tiltSeries=checkParameter(argc,argv,"-tiltSeries");
+        if (tiltSeries)
+        {
+            int i=paremeterPosition(argc,argv,"-tiltSeries");
+            if (i+2>=argc)
+                REPORT_ERROR(1,"Not enough parameters after -tiltSeries");
+            firstAngle=textToFloat(argv[i+1]);
+            angularStep=textToFloat(argv[i+2]);
+        }
     }
     catch (Xmipp_error XE)
     {
@@ -55,16 +67,25 @@ int main(int argc, char *argv[])
     try
     {
         std::cerr << " Resetting all angles, origin offsets, weights and mirror flags to zero ... " << std::endl;
+        if (tiltSeries)
+            std::cerr << "Setting the tilt angles to a tilt series\n"
+                      << "First angle=" << firstAngle << std::endl
+                      << "Angular step=" << angularStep << std::endl;
         SF.go_beginning();
+        double angle=firstAngle;
         while (!SF.eof())
         {
             FileName fn_img=SF.NextImg();
             if (fn_img=="") break;
             img.read(fn_img);
             img.clear_header();
+            if (tiltSeries)
+            {
+                img.set_tilt(angle);
+                angle+=angularStep;
+            }
             img.write(img.name());
         }
-        std::cerr << " done!" << std::endl;
     }
     catch (Xmipp_error XE)
     {
@@ -80,7 +101,8 @@ void Usage()
     printf(" Reset the geometric transformation (angles & shifts) in the header of 2D-images.\n");
     printf("Usage:\n");
     printf("   header_reset \n");
-    printf("    -i               : Selfile with images or individual image\n");
+    printf("    -i                                   : Selfile with images or individual image\n");
+    printf("   [-tiltSeries <firstAngle> <angleStep>]: Assign a regularly spaced angular distribution\n");
     exit(1);
 }
 
