@@ -50,7 +50,6 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
     Filter1.w1=Ts/resolution1;
     Filter1.raised_w=0.05;
     V0.setXmippOrigin();
-    Filter1.generate_mask(V0);
     Filter1.apply_mask_Space(V0);
     V0.threshold("below",0,0);
 
@@ -62,7 +61,6 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
     Filter2.w1=Ts/resolution2;
     Filter2.raised_w=0.05;
     V0R.setXmippOrigin();
-    Filter2.generate_mask(V0R);
     Filter2.apply_mask_Space(V0R);
     V0R.threshold("below",0,0);
 
@@ -82,7 +80,7 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
     int N1_3=N1*N1*N1;
     int L1=(patchSize-1)/2;
     int L0=(patchSize-1)/2;
-    Matrix1D<double> v(N1*N1*N1+N0*N0*N0);
+    Matrix1D<double> v(N1*N1*N1+2*N0*N0*N0);
     std::vector< Matrix1D<double> > auxTraining;
     std::vector<double> energy;
     double bestEnergy=0;
@@ -121,20 +119,27 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
                             idx++;
                         }
                 avg1/=N1_3;
-/*                
+                
                 // Copy the pixels at level 0R
+                double avg0R=0;
                 for (int kk=-L0; kk<=L0; kk++)
                     for (int ii=-L0; ii<=L0; ii++)
                         for (int jj=-L0; jj<=L0; jj++)
-                            DIRECT_VEC_ELEM(v,idx++)=
+                        {
+                            DIRECT_VEC_ELEM(v,idx)=
                                 DIRECT_VOL_ELEM(V0R,k0+kk,i0+ii,j0+jj);
-*/
+                            avg0R+=DIRECT_VEC_ELEM(v,idx);
+                            idx++;
+                        }
+                avg0R/=N0_3;
 
                 // Substract the mean
                 for (idx=0; idx<N0; idx++)
                     DIRECT_VEC_ELEM(v,idx)-=avg0;
-                for (idx=N0; idx<XSIZE(v); idx++)
+                for (idx=N0; idx<N0+N1; idx++)
                     DIRECT_VEC_ELEM(v,idx)-=avg1;
+                for (idx=N0+N1; idx<XSIZE(v); idx++)
+                    DIRECT_VEC_ELEM(v,idx)-=avg0R;
 
                 auxTraining.push_back(v);
                 energy.push_back(v.module());
