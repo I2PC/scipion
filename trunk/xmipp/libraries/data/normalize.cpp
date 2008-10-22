@@ -64,9 +64,80 @@ void normalize_OldXmipp_decomposition(Matrix2D<double> &I, const Matrix2D<int> &
     normalize_OldXmipp(I);
 }
 
+// #define DEBUG
 void normalize_tomography(Matrix2D<double> &I, double tilt)
 {
+    const int L=2;
+    double Npiece=(2*L+1)*(2*L+1);
+
+    // Build a mask using the tilt angle
+    I.setXmippOrigin();
+    Matrix2D<int> mask;
+    mask.initZeros(I);
+    int Xdimtilt=XMIPP_MIN(FLOOR(0.5*(XSIZE(I)*cos(DEG2RAD(tilt)))),
+        0.5*(XSIZE(I)-(2*L+1)));
+    double N=0;
+    for (int i=STARTINGY(I)+L; i<=FINISHINGY(I)-L; i++)
+        for (int j=-Xdimtilt+L; j<=Xdimtilt-L;j++)
+        {
+            mask(i,j)=1;
+            N++;
+        }
+
+    // Estimate the local variance
+    Matrix2D<double> localVariance;
+    localVariance.initZeros(I);
+    double meanVariance=0;
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
+    {
+        if (mask(i,j)==0) continue;
+        // Center a mask of size 5x5 and estimate the variance within the mask
+        double meanPiece=0, variancePiece=0;
+        for (int ii=i-L; ii<=i+L; ii++)
+            for (int jj=j-L; jj<=j+L; jj++)
+            {
+                meanPiece+=I(ii,jj);
+                variancePiece+=I(ii,jj)*I(ii,jj);
+            }
+        meanPiece/=Npiece;
+        variancePiece=variancePiece/(Npiece-1)-
+            Npiece/(Npiece-1)*meanPiece*meanPiece;
+        localVariance(i,j)=variancePiece;
+        meanVariance+=variancePiece;
+    }
+    meanVariance/=N;
+
+    // Test the hypothesis that the variance in this piece is
+    // the same as the variance in the whole image
+    double iFu=1/icdf_FSnedecor(4*L*L+4*L,N-1,0.975);
+    double iFl=1/icdf_FSnedecor(4*L*L+4*L,N-1,0.025);
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(localVariance)
+    {
+        if (localVariance(i,j)==0) mask(i,j)=0;
+        else
+        {
+            double ratio=localVariance(i,j)/meanVariance;
+            double thl=ratio*iFu;
+            double thu=ratio*iFl;
+            if (thl>1 || thu<1)
+                mask(i,j)=0;
+        }
+    }
+    #ifdef DEBUG
+        ImageXmipp save;
+        save()=I; save.write("PPP.xmp");
+        typeCast(mask,save()); save.write("PPPmask.xmp");
+        std::cout << "Press any key\n";
+        char c; std::cin >> c;
+    #endif
+
+    // Compute the statistics again in the reduced mask
+    double avg, stddev, min, max;
+    computeStats_within_binary_mask(mask, I, min, max, avg, stddev);
+    I -= avg;
+    I /= stddev*cos(DEG2RAD(tilt));
 }
+#undef DEBUG
 
 void normalize_Michael(Matrix2D<double> &I, const Matrix2D<int> &bg_mask)
 {
