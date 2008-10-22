@@ -26,12 +26,155 @@
 #ifndef NORMALIZE_H
 #define NORMALIZE_H
 
-#include "matrix2d.h"
 #include "progs.h"
 #include "mask.h"
 
 /// @defgroup Normalize Normalization of images and volumes
 /// @ingroup DataLibraryPrograms
+
+/**@defgroup NormalizationProcedures Image normalization procedures
+   @ingroup Normalize
+   This functions implement the normalization of a single image. They should
+   be called with all images in the corresponding SelFile. In the
+   following documentation m(x) is the mean of x, v(x) is the variance,
+   bg(x) is its background.
+
+   The original image is X and is supposed to be related to each single
+   projection by I=a*(X+n)+b where a and b are different for every projection.
+
+   Noise is assumed to follow a gaussian distribution N(0,sqrt(v(n)))
+
+   In general the background mask is used only to compute statistics, while
+   the mask is the one which is really applied to the image. Supply NULL if
+   you don't want any mask to be applied
+
+   When b is used
+   it is measured as the mean in the background, while a*sqrt(v(n)) is the
+   standard deviation in the same area.
+   */
+//@{
+/** OldXmipp normalization.
+   Formula:
+   @code
+   I'=(I-m(I))/sqrt(v(I))
+   @endcode
+   Properties:
+   @code
+   m(I')=0                             m(bg(I'))=-m(x)/sqrt((v(X)+v(n)))
+   v(I')=1                             v(bg(I'))=v(n)/(v(X)+v(n))
+   @endcode
+   Comments: it's not bad but positivity constraints cannot be imposed
+*/
+void normalize_OldXmipp(Matrix2D<double> &I);
+
+/** Near_OldXmipp normalization.
+   Formula:
+   @code
+   I'=(I-m(I))/a*v(n)
+   @endcode
+   Properties:
+   @code
+   m(I')=0                             m(bg(I'))=-m(x)/sqrt(v(n))
+   v(I')=(v(X)+v(n))/v(n)              v(bg(I'))=1
+   @endcode
+   Comments: it's not bad but positivity constraints cannot be imposed
+*/
+void normalize_Near_OldXmipp(Matrix2D<double> &I, const Matrix2D<int> &bg_mask);
+
+/** OldXmipp decomposition.
+   Formula:
+   @code
+   I'=(I-b)/a*sqrt(v(n))
+   I''=I'*mask
+   I'''=(I''-m(I''))/sqrt(v(I''))
+   @endcode
+   Properties:
+   @code
+   m(I')=m(X)/sqrt(v(n))               m(bg(I'))=0
+   v(I')=(v(X)+v(n))/v(n)              v(bg(I'))=1
+   @endcode
+   Comments: it's not bad but positivity constraints cannot be imposed.
+      If no mask is applied, then this formula is a beautiful decomposition
+      of the OldXmipp method in two steps.
+*/
+void normalize_OldXmipp_decomposition(Matrix2D<double> &I,
+                                      const Matrix2D<int> &bg_mask, const Matrix2D<double> *mask = NULL);
+
+/** Tomography normalization.
+   This is similar to the OldXmipp normalization, but the mean and
+   standard deviation of the images are computed only within a region
+   determined by the tilt angle.
+   Formula:
+   @code
+   I'=(I-m(I))/(sqrt(v(I))*cos(tilt))
+   @endcode
+*/
+void normalize_tomography(Matrix2D<double> &I, double tilt);
+
+/** Michael's normalization.
+   Formula:
+   @code
+   I'=(I-b)/b
+   @endcode
+   Properties:
+   @code
+   m(I')=0                             m(bg(I'))=-a*m(x)/b
+   v(I')=a^2*(v(X)+v(n))/b^2           v(bg(I'))=a^2*v(n)/b^2
+   @endcode
+   Comments: it's not bad but positivity constraints cannot be imposed and
+      the statistical properties are not so good.
+*/
+void normalize_Michael(Matrix2D<double> &I, const Matrix2D<int> &bg_mask);
+
+/** NewXmipp's normalization.
+   Formula:
+   @code
+   I'=(I-b)/a*sqrt(v(n))
+   // I''=(I'>0)? I':0
+   // I'''=I''-a*sqrt(v(n)/2*PI)
+   I''''=I'''*mask
+   @endcode
+   Properties:
+   @code
+   m(I')=m(X)/sqrt(v(n))               m(bg(I'))=0
+   v(I')=(v(X)+v(n))/v(n)              v(bg(I'))=1
+   @endcode
+   Comments: In general, we cannot assure that mass projects into positive
+      numbers, so the "denoising" capability directly on the images is
+disabled. However, a positivity constraint can be applied on the 3D
+volume.
+*/
+void normalize_NewXmipp(Matrix2D<double> &I, const Matrix2D<int> &bg_mask);
+
+/** NewXmipp 2's normalization.
+   Formula:
+   @code
+   I'=(I-m(bg))/(m(I)-m(bg))
+   @endcode
+   Properties:
+   @code
+   m(I')=m(X)/sqrt(v(n))               m(bg(I'))=0
+   v(I')=(v(X)+v(n))/v(n)              v(bg(I'))=1
+   @endcode
+   Comments: In general, we cannot assure that mass projects into positive
+      numbers, so the "denoising" capability directly on the images is
+disabled. However, a positivity constraint can be applied on the 3D
+volume.
+*/
+void normalize_NewXmipp2(Matrix2D<double> &I, const Matrix2D<int> &bg_mask);
+
+/** Removal of inclined background densities (ramps):
+    fitting of a least squares plane throught the pixels in the
+    bg_mask, then subtraction of the plane, and division by the
+    standard deviation of the pixels in the bg_mask */
+void normalize_ramp(Matrix2D<double> &I, const Matrix2D<int> &bg_mask);
+
+/** Removal of neighbouring particles
+    .... */
+void normalize_remove_neighbours(Matrix2D<double> &I, 
+				 const Matrix2D<int> &bg_mask,
+                                 const double &threshold);
+//@}
 
 /** Normalize parameters
  * @ingroup Normalize
@@ -50,10 +193,11 @@ public:
 #define RANDOM 6
 #define RAMP 7
 #define NEIGHBOUR 8
+#define TOMOGRAPHY 9
 
     /** Normalizing method.
      * Valid methods are OLDXMIPP, NEAR_OLDXMIPP, NEWXMIPP, NEWXMIPP2, MICHAEL,
-     * NONE, RANDOM.
+     * NONE, RANDOM, RAMP, NEIGHBOUR, TOMOGRAPHY.
      */
     int method;
 
@@ -138,7 +282,7 @@ public:
     /** Apply to an image.
      * The input image is modified.
      */
-    void apply(Image* img);
+    void apply(ImageXmipp &img);
 };
 
 #endif

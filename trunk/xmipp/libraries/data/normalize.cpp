@@ -31,6 +31,196 @@
 #include <string>
 #include <iostream>
 
+/* Normalizations ---------------------------------------------------------- */
+void normalize_OldXmipp(Matrix2D<double> &I)
+{
+    double avg, stddev, min, max;
+    I.computeStats(avg, stddev, min, max);
+    I -= avg;
+    I /= stddev;
+}
+
+void normalize_Near_OldXmipp(Matrix2D<double> &I, const Matrix2D<int> &bg_mask)
+{
+    double avg, stddev, min, max;
+    double avgbg, stddevbg, minbg, maxbg;
+    I.computeStats(avg, stddev, min, max);
+    computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,
+                                     stddevbg);
+    I -= avg;
+    I /= stddevbg;
+}
+
+void normalize_OldXmipp_decomposition(Matrix2D<double> &I, const Matrix2D<int> &bg_mask,
+                                     const Matrix2D<double> *mask)
+{
+    double avgbg, stddevbg, minbg, maxbg;
+    computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,
+                                     stddevbg);
+    I -= avgbg;
+    I /= stddevbg;
+    if (mask != NULL)
+        I *= *mask;
+    normalize_OldXmipp(I);
+}
+
+void normalize_tomography(Matrix2D<double> &I, double tilt)
+{
+}
+
+void normalize_Michael(Matrix2D<double> &I, const Matrix2D<int> &bg_mask)
+{
+    double avg, stddev, min, max;
+    double avgbg, stddevbg, minbg, maxbg;
+    I.computeStats(avg, stddev, min, max);
+    computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,
+                                     stddevbg);
+    if (avgbg > 0)
+    {
+        I -= avgbg;
+        I /= avgbg;
+    }
+    else
+    { // To avoid the contrast inversion
+        I -= (avgbg - min);
+        I /= (avgbg - min);
+    }
+}
+
+void normalize_NewXmipp(Matrix2D<double> &I, const Matrix2D<int> &bg_mask)
+{
+    double avgbg, stddevbg, minbg, maxbg;
+    computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,
+                                     stddevbg);
+    I -= avgbg;
+    I /= stddevbg;
+}
+
+void normalize_NewXmipp2(Matrix2D<double> &I, const Matrix2D<int> &bg_mask)
+{
+    double avg, stddev, min, max;
+    double avgbg, stddevbg, minbg, maxbg;
+    I.computeStats(avg, stddev, min, max);
+    computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,
+                                     stddevbg);
+    I -= avgbg;
+    I /= ABS(avg - avgbg);
+}
+
+void normalize_ramp(Matrix2D<double> &I, const Matrix2D<int> &bg_mask)
+{
+    fit_point          onepoint;
+    std::vector<fit_point>  allpoints;
+    double             pA, pB, pC;
+    double             avgbg, stddevbg, minbg, maxbg;
+
+    // Fit a least squares plane through the background pixels
+    allpoints.clear();
+    I.setXmippOrigin();
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(I)
+    {
+        if (MAT_ELEM(bg_mask, i, j))
+        {
+            onepoint.x = j;
+            onepoint.y = i;
+            onepoint.z = MAT_ELEM(I, i, j);
+            onepoint.w = 1.;
+            allpoints.push_back(onepoint);
+        }
+    }
+    least_squares_plane_fit(allpoints, pA, pB, pC);
+    // Substract the plane from the image
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(I)
+    {
+        MAT_ELEM(I, i, j) -= pA * j + pB * i + pC;
+    }
+    // Divide by the remaining std.dev. in the background region
+    computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,
+                                     stddevbg);
+    I /= stddevbg;
+
+}
+
+void normalize_remove_neighbours(Matrix2D<double> &I, 
+				 const Matrix2D<int> &bg_mask,
+                                 const double &threshold)
+{
+    fit_point          onepoint;
+    std::vector<fit_point>  allpoints;
+    double             pA, pB, pC;
+    double             avgbg, stddevbg, minbg, maxbg, aux, newstddev;
+    double             sum1 = 0.;
+    double             sum2 = 0;
+    int                N = 0;
+
+    // Fit a least squares plane through the background pixels
+    allpoints.clear();
+    I.setXmippOrigin();
+    
+    // Get initial statistics
+    computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,stddevbg);
+
+    // Fit plane through those pixels within +/- threshold*sigma
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(I)
+    {
+        if (MAT_ELEM(bg_mask, i, j))
+        {
+	    if ( ABS(avgbg - MAT_ELEM(I, i, j)) < threshold * stddevbg)
+	    {
+		onepoint.x = j;
+		onepoint.y = i;
+		onepoint.z = MAT_ELEM(I, i, j);
+		onepoint.w = 1.;
+		allpoints.push_back(onepoint);
+	    }
+	}
+    }
+    least_squares_plane_fit(allpoints, pA, pB, pC);
+
+    // Substract the plane from the image
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(I)
+    {
+        MAT_ELEM(I, i, j) -= pA * j + pB * i + pC;
+    }
+
+    // Get std.dev. of the background pixels within +/- threshold*sigma 
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(I)
+    {
+        if (MAT_ELEM(bg_mask, i, j))
+        {
+	    if ( ABS(MAT_ELEM(I, i, j)) < threshold * stddevbg)
+	    {
+		N++;
+		sum1 +=  (double) MAT_ELEM(I, i, j);
+		sum2 += ((double) MAT_ELEM(I, i, j)) * 
+		    ((double) MAT_ELEM(I, i, j));
+	    }
+	}
+    }
+    // average and standard deviation
+    aux = sum1 / (double) N;
+    newstddev = sqrt(ABS(sum2 / N - aux*aux) * N / (N - 1));
+
+    // Replace pixels outside +/- threshold*sigma by samples from 
+    // a gaussian with avg-plane and newstddev
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(I)
+    {
+        if (MAT_ELEM(bg_mask, i, j))
+        {
+	    if ( ABS(MAT_ELEM(I, i, j)) > threshold * stddevbg)
+	    {
+		// get local average
+		aux = pA * j + pB * i + pC;
+		MAT_ELEM(I, i, j)=rnd_gaus(aux, newstddev );
+	    }
+	}
+    }
+
+    // Divide the entire image by the new background
+    I /= newstddev;
+
+}
+
 void Normalize_parameters::read(int argc, char** argv)
 {
     Prog_parameters::read(argc, argv);
@@ -57,6 +247,8 @@ void Normalize_parameters::read(int argc, char** argv)
         method = RAMP;
     else if (aux == "Neighbour")
         method = NEIGHBOUR;
+    else if (aux == "Tomography")
+        method = TOMOGRAPHY;
     else
         REPORT_ERROR(1, "Normalize: Unknown normalizing method");
 
@@ -197,6 +389,9 @@ void Normalize_parameters::show()
         case NEIGHBOUR:
             std::cout << "Neighbour\n";
             break;
+        case TOMOGRAPHY:
+            std::cout << "Tomography\n";
+            break;
         case RANDOM:
             std::cout << "Random a=[" << a0 << "," << aF << "], " << "b=[" <<
             b0 << "," << bF << "]\n";
@@ -251,7 +446,7 @@ void Normalize_parameters::usage()
 
     std::cerr << "NORMALIZATION OF IMAGES\n"
     << "  [-method <mth=NewXmipp>   : Normalizing method. Valid ones are:\n"
-    << "                              OldXmipp, Near_OldXmipp, NewXmipp\n"
+    << "                              OldXmipp, Near_OldXmipp, NewXmipp, Tomography\n"
     << "                              NewXmipp2, Michael, None, Random, Ramp, Neighbour\n"
     << "                              Methods NewXmipp, Michael, Near_OldXmipp\n"
     << "                              and Ramp need a background mask:\n"
@@ -280,41 +475,39 @@ void Normalize_parameters::apply_geo_mask(ImageXmipp& img)
     // Instead of IS_INV for images use IS_NOT_INV for masks!
     tmp.selfApplyGeometryBSpline(img.get_transformation_matrix(), 3, IS_NOT_INV,
                                 DONT_WRAP, outside);
-    // The type cast gives strange results here, using round instead
-    //typeCast(tmp, bg_mask);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(bg_mask) {
-      dMij(bg_mask,i,j)=ROUND(dMij(tmp,i,j));
-    }
+
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(bg_mask)
+        dMij(bg_mask,i,j)=ROUND(dMij(tmp,i,j));
 }
 
-void Normalize_parameters::apply(Image* img)
+void Normalize_parameters::apply(ImageXmipp &img)
 {
     double a, b;
     if (invert_contrast)
-	(*img)() *= -1.;
+	img() *= -1.;
     
     if (remove_black_dust || remove_white_dust)
     {
         double avg, stddev, min, max, zz;
-        (*img)().computeStats(avg, stddev, min, max);
+        img().computeStats(avg, stddev, min, max);
 
         if ((min - avg) / stddev < thresh_black_dust && remove_black_dust)
         {
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D((*img)())
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(img())
             {
-                zz = (dMij((*img)(), i, j) - avg) / stddev;
+                zz = (img(i, j) - avg) / stddev;
                 if (zz < thresh_black_dust)
-                    dMij((*img)(), i, j) = rnd_gaus(avg,stddev);
+                    img(i, j) = rnd_gaus(avg,stddev);
             }
         }
 
         if ((max - avg) / stddev > thresh_white_dust && remove_white_dust)
         {
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D((*img)())
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(img())
             {
-                zz = (dMij((*img)(), i, j) - avg) / stddev;
+                zz = (img(i, j) - avg) / stddev;
                 if (zz > thresh_white_dust)
-                    dMij((*img)(), i, j) = rnd_gaus(avg,stddev);
+                    img(i, j) = rnd_gaus(avg,stddev);
             }
         }
     }
@@ -322,33 +515,34 @@ void Normalize_parameters::apply(Image* img)
     switch (method)
     {
     case OLDXMIPP:
-        normalize_OldXmipp(img);
+        normalize_OldXmipp(img());
         break;
     case NEAR_OLDXMIPP:
-        normalize_Near_OldXmipp(img, bg_mask);
+        normalize_Near_OldXmipp(img(), bg_mask);
         break;
     case NEWXMIPP:
-        normalize_NewXmipp(img, bg_mask);
+        normalize_NewXmipp(img(), bg_mask);
         break;
     case NEWXMIPP2:
-        normalize_NewXmipp2(img, bg_mask);
+        normalize_NewXmipp2(img(), bg_mask);
         break;
     case RAMP:
-        normalize_ramp(img, bg_mask);
+        normalize_ramp(img(), bg_mask);
         break;
     case NEIGHBOUR:
-        normalize_remove_neighbours(img, bg_mask, thresh_neigh);
+        normalize_remove_neighbours(img(), bg_mask, thresh_neigh);
+        break;
+    case TOMOGRAPHY:
+        normalize_tomography(img(), img.tilt());
         break;
     case MICHAEL:
-        normalize_Michael(img, bg_mask);
+        normalize_Michael(img(), bg_mask);
         break;
     case RANDOM:
         a = rnd_unif(a0, aF);
         b = rnd_unif(b0, bF);
-
-        FOR_ALL_ELEMENTS_IN_MATRIX2D((*img)())
-        (*img)(i, j) = a * (*img)(i, j) + b;
-
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(img())
+            img(i, j) = a * img(i, j) + b;
         break;
     }
 }
