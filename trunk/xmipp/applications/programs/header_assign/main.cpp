@@ -57,7 +57,6 @@ int main(int argc, char *argv[])
 // Check command line options ===========================================
     try
     {
-
         round_shifts = checkParameter(argc, argv, "-round_shifts");
         levels = textToInteger(getParameter(argc, argv, "-levels", "0"));
 
