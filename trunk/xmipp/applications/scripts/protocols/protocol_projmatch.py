@@ -14,7 +14,7 @@
 # {file} Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
-SelFileName='noefg.sel'
+SelFileName='good_images.sel'
 
 # {file} {expert} Docfile with the input angles:
 """ Do not provide anything if there are no angles yet. 
@@ -25,12 +25,12 @@ SelFileName='noefg.sel'
 DocFileName=''
 
 # {file} Initial 3D reference map:
-ReferenceFileName='ml3d_it00020_vol00004_sc128_ff80.vol'
+ReferenceFileName='val16_GLfil_norm_mask_scaled.spi'
 
 # Working subdirectory: 
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
-WorkDirectory='ProjMatch/TestNoCtf1Realign2D'
+WorkDirectory='ProjMatch/Test1'
 
 # Delete working subdirectory if it already exists?
 """ Just be careful with this option...
@@ -55,7 +55,7 @@ CleanUpFiles=True
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
-ProjectDir='/home/sjors/work/projmatch/ribosome'
+ProjectDir='/home/carmen/datos/Test'
 
 # {expert} Directory name for logfiles:
 LogDir='Logs'
@@ -116,7 +116,7 @@ DoMask=True
 DisplayMask=False
 
 # {file} Binary mask-file used to mask the reference volume
-MaskFileName='circular_maskwi128.vol'
+MaskFileName='mask3D.mask'
 
 #-----------------------------------------------------------------------------
 # {section} Projection Matching
@@ -158,7 +158,7 @@ AvailableMemory='1.5'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-AngSamplingRateDeg='4x10 2x5 2x3 2x2'
+AngSamplingRateDeg='5'
 
 # Angular search range 
 """Maximum change in rot & tilt  (in +/- degrees)
@@ -178,7 +178,7 @@ MaxChangeInAngles='4x1000 2x20 2x10 2x5'
     evenly sampled projection directions of the reference library. 
     This may serve to decrease the effects of model bias.
 """
-PerturbProjectionDirections=True
+PerturbProjectionDirections=False
 
 # Maximum change in origin offset
 """ Maximum allowed change in shift in the 3D+2D searches (in +/- pixels).
@@ -208,7 +208,7 @@ MaxChangeOffset='1000'
     Note: if there are more values than iterations the extra value are ignored
     
 """
-Search5DShift='5 0'
+Search5DShift='0'
 
 # {expert} Step size for 5D translational search
 """ Provide a sequence of numbers (for instance, "2 2 1 1" specifies 4 iterations,
@@ -235,7 +235,7 @@ TiltF=90
     for a description of the symmetry groups format
     If no symmetry is present, give c1
 """
-SymmetryGroup='c1'
+SymmetryGroup='i3'
 
 # Discard images with ccf below
 """ Provide a sequence of numbers (for instance, "0.3 0.3 0.5 0.5" specifies 4 iterations,
@@ -287,7 +287,7 @@ ProjMatchingExtra=''
     IMPORTANT: if you set this variable to 0 the output  of the projection
     muching step will be copied as output of align2d
 """
-DoAlign2D='4x1 0'
+DoAlign2D=' 0'
 
 # {expert} Number of align2d iterations:
 """ Use at least 3
@@ -327,6 +327,8 @@ Align2dMaxChangeRot='2x1000 2x20'
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Wbp and
         http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_wbp and
         http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Art
+        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Fourier
+        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_fourier
         for details
 """
 DoReconstruction=True
@@ -335,7 +337,7 @@ DoReconstruction=True
 DisplayReconstruction=False
 
 # Reconstructiom method
-""" Choose between wbp or art
+""" Choose between wbp, art or fourier
     You must specify this option for each iteration. 
     This can be done by a sequence of numbers (for instance, "wbp wbp wbp art " 
     specifies 4 iterations, the first three set the value to wbp (no restriction)
@@ -345,7 +347,7 @@ DisplayReconstruction=False
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-ReconstructionMethod='wbp'
+ReconstructionMethod='fourier'
 
 # {expert} Values of lambda for art
 """ IMPORTANT: ou must specify a value of lambda for each iteration even
@@ -377,6 +379,13 @@ ARTReconstructionExtraCommand='-k 0.5 -n 10 '
         for details
 """
 WBPReconstructionExtraCommand=' '
+
+# {expert} Additional reconstruction parameters for Fourier
+""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Fourier and
+        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_Fourier and
+        for details
+"""
+FourierReconstructionExtraCommand=' '
 
 #-----------------------------------------------------------------------------
 # {section} Compute Resolution
@@ -434,16 +443,16 @@ ConstantToAddToFiltration='4x0.15 0.1'
 DoParallel=True
 
 # Number of processors to use:
-NumberOfCPUs=-1
+NumberOfCPUs=4
 
 # minumum size of jobs in mpi processe. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)
-MpiJobSize='10'
+MpiJobSize='1'
 
 # {file} A list of all available CPUs (the MPI-machinefile):
 """ Depending on your system, your standard script to launch MPI-jobs may require this
     if your queueing system using an environment variable, give it here (with the leading $, e.g. $PBS_NODEFILE
 """
-MachineFile='$PBS_NODEFILE'
+MachineFile='machinefile'
 
 # {expert} Control file
 """ This is an ugly solution to have improved killing control over the mpi jobs.
@@ -519,6 +528,7 @@ class projection_matching_class:
                 _ARTLambda,
                 _ARTReconstructionExtraCommand,
                 _WBPReconstructionExtraCommand,
+                _FourierReconstructionExtraCommand,
                 _DoComputeResolution,
                 _ResolSam,
                 _SelFileName,
@@ -583,6 +593,7 @@ class projection_matching_class:
        self._SymmetryGroup=_SymmetryGroup
        self._ARTReconstructionExtraCommand=_ARTReconstructionExtraCommand
        self._WBPReconstructionExtraCommand=_WBPReconstructionExtraCommand
+       self._FourierReconstructionExtraCommand=_FourierReconstructionExtraCommand
        self._SetResolutiontoZero=_SetResolutiontoZero
        if (_MyMachineFile[0]=="$"):
            self._MyMachineFile=_MyMachineFile
@@ -834,6 +845,7 @@ class projection_matching_class:
              execute_reconstruction(self._mylog, 
                                     self._ARTReconstructionExtraCommand,
                                     self._WBPReconstructionExtraCommand,
+                                    self._FourierReconstructionExtraCommand,
                                     _iteration_number,
                                     self._DisplayReconstruction,
                                     self._DoParallel,
@@ -851,6 +863,7 @@ class projection_matching_class:
               filter_frequence=execute_resolution(self._mylog,
                                                   self._ARTReconstructionExtraCommand,
                                                   self._WBPReconstructionExtraCommand,
+                                                  self._FourierReconstructionExtraCommand,
                                                   self._ReconstructionMethod,
                                                   _iteration_number,
                                                   self._DisplayReconstruction,
@@ -1283,6 +1296,7 @@ def make_subset_docfiles(_mylog,
 def execute_reconstruction(_mylog,
                            _ARTReconstructionExtraCommand,
                            _WBPReconstructionExtraCommand,
+                           _FourierReconstructionExtraCommand,
                            _iteration_number,
                            _DisplayReconstruction,
                            _DoParallel,
@@ -1325,6 +1339,18 @@ def execute_reconstruction(_mylog,
       if len(_ARTLambda)>1:
          parameters = parameters + ' -l '   + _ARTLambda + ' '
       parameters = parameters + _ARTReconstructionExtraCommand
+   elif _ReconstructionMethod=='fourier':
+      #####
+      ## MPI IS  NOt IMPLEMENTED YET.
+      ####
+      #mpi_program = 'xmipp_mpi_reconstruct_fourier'
+      mpi_program = 'NULL'
+      program = 'xmipp_reconstruct_fourier'
+      parameters=' -i '    + ForReconstructionSel + \
+                 ' -o '    + Outputvolume + '.vol ' + \
+                 ' -sym '  + _SymmetryGroup + \
+                 ' -weight '
+      parameters = parameters + _FourierReconstructionExtraCommand 
    else:
       _mylog.error("Reconstruction method unknown. Quiting")
       print "Reconstruction method unknown. Quiting"
@@ -1356,6 +1382,7 @@ def execute_reconstruction(_mylog,
 def  execute_resolution(_mylog,
                         _ARTReconstructionExtraCommand,
                         _WBPReconstructionExtraCommand,
+                        _FourierReconstructionExtraCommand,
                         _ReconstructionMethod,
                         _iteration_number,
                         _DisplayReconstruction,
@@ -1407,6 +1434,19 @@ def  execute_resolution(_mylog,
           if len(_ARTLambda)>1:
              parameters = parameters + ' -l '   + _ARTLambda + ' '
           parameters = parameters + _ARTReconstructionExtraCommand
+       elif _ReconstructionMethod=='fourier':
+          RunInBackground=False
+          ###
+	  # MPI not jet implemented
+	  ###
+	  #mpi_program = 'xmipp_mpi_reconstruct_fourier'
+          mpi_program = 'NULL'
+          program = 'xmipp_reconstruct_fourier'
+          parameters=' -i '    +  Selfiles[i] + \
+                     ' -o '    +  Outputvolumes[i] + '.vol ' + \
+                     ' -sym '  + _SymmetryGroup + \
+                     ' -weight '
+          parameters = parameters + _FourierReconstructionExtraCommand
        else:
           _mylog.error("Reconstruction method unknown. Quiting")
           print "Reconstruction method unknown. Quiting"
@@ -1597,6 +1637,7 @@ if __name__ == '__main__':
                 ARTLambda,
                 ARTReconstructionExtraCommand,
                 WBPReconstructionExtraCommand,
+                FourierReconstructionExtraCommand,
                 DoComputeResolution,
                 ResolSam,
                 SelFileName,                    
