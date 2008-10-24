@@ -295,13 +295,13 @@ QtWidgetMicrograph::QtWidgetMicrograph(QtMainWidgetMark *_mainWidget,
     connect(__mImage, SIGNAL(signalSetWidthHeight(int, int)),
             __mImageOverview, SLOT(slotSetWidthHeight(int, int)));
     connect(__mImage, SIGNAL(signalRepaint(void)),
-            __mImageOverview, SLOT(slotRepaint(void)));
+            __mImageOverview, SLOT(repaint(void)));
     connect(__mImageOverview, SIGNAL(signalRepaint(void)),
-            __mImage, SLOT(slotRepaint(void)));
+            __mImage, SLOT(repaint(void)));
     connect(__mImage, SIGNAL(signalRepaint(void)),
-            __mImage, SLOT(slotRepaint(void)));
+            __mImage, SLOT(repaint(void)));
     connect(__mImageOverview, SIGNAL(signalRepaint(void)),
-            __mImageOverview, SLOT(slotRepaint(void)));
+            __mImageOverview, SLOT(repaint(void)));
     connect(__mImage, SIGNAL(signalAddCoordOther(int, int, int)),
             this, SLOT(slotDrawEllipse(int, int, int)));
 
@@ -386,7 +386,7 @@ void QtWidgetMicrograph::openMenus()
     connect((QObject*)filterMenu, SIGNAL(signalCleanFilters()),
             (QObject*)__filtersController, SLOT(slotCleanFilters()));
     connect((QObject*)filterMenu, SIGNAL(signalCleanFilters()),
-            this, SLOT(slotRepaint()));
+            this, SLOT(repaint()));
 
     // *** Add your own menus
 }
@@ -1915,43 +1915,15 @@ void QtWidgetMicrograph::configure_auto()
 #else
     QGrid     qgrid(2, &setPropertiesDialog);
 #endif
-    qgrid.setMinimumSize(250, 400);
-
-    QLabel    lpiecexsize("Piece X size: ", &qgrid);
-    QLineEdit piece_xsize(&qgrid);
-    piece_xsize.setText(integerToString(__piece_xsize).c_str());
-
-    QLabel    lcutoff("High pass cut-off: ", &qgrid);
-    QLineEdit cutoff(&qgrid);
-    cutoff.setText(floatToString(__highpass_cutoff).c_str());
-
-    QLabel    lmask_size("Mask size: ", &qgrid);
-    QLineEdit mask_size(&qgrid);
-    mask_size.setText(integerToString(__mask_size).c_str());
-
-    QLabel    lgraybins("Gray bins: ", &qgrid);
-    QLineEdit graybins(&qgrid);
-    graybins.setText(integerToString(__gray_bins).c_str());
-
-    QLabel    lradialbins("Radial bins: ", &qgrid);
-    QLineEdit radialbins(&qgrid);
-    radialbins.setText(integerToString(__radial_bins).c_str());
+    qgrid.setMinimumSize(250, 100);
 
     QLabel    lparticle_radius("Particle radius: ", &qgrid);
     QLineEdit particle_radius(&qgrid);
     particle_radius.setText(integerToString(__particle_radius).c_str());
 
-    QLabel    lmask_overlap("Grid distance: ", &qgrid);
-    QLineEdit mask_overlap(&qgrid);
-    mask_overlap.setText(integerToString(__scan_overlap).c_str());
-
-    QLabel    lmin_dist("Min. Distance: ", &qgrid);
-    QLineEdit min_dist(&qgrid);
-    min_dist.setText(integerToString(__min_distance_between_particles).c_str());
-
     QLabel    lpenalization("Penalization: ", &qgrid);
     QLineEdit penalization(&qgrid);
-    penalization.setText(floatToString(__penalization).c_str());
+    penalization.setText(removeSpaces(floatToString(__penalization)).c_str());
 
     QPushButton okButton("Ok", &qgrid);
     QPushButton cancelButton("Cancel", &qgrid);
@@ -1963,15 +1935,16 @@ void QtWidgetMicrograph::configure_auto()
 
     if (setPropertiesDialog.exec())
     {
-        __gray_bins = graybins.text().toInt();
-        __radial_bins = radialbins.text().toInt();
-        __piece_xsize = piece_xsize.text().toInt();
-        __highpass_cutoff = cutoff.text().toFloat();
-        __mask_size = mask_size.text().toInt();
         __particle_radius = particle_radius.text().toInt();
-        __min_distance_between_particles = min_dist.text().toInt();
-        __scan_overlap = mask_overlap.text().toInt();
         __penalization = penalization.text().toFloat();
+
+        __gray_bins = 8;
+        __radial_bins = 16;
+        __piece_xsize = 4*__particle_radius;
+        __highpass_cutoff = 0.02;
+        __mask_size = 2*__particle_radius;
+        __min_distance_between_particles = __particle_radius/2;
+        __scan_overlap = ROUND(__mask_size*0.9);
     }
 }
 
