@@ -34,8 +34,8 @@ QtColorLabel::QtColorLabel()
 {
     __col = new QColor[__numColors];
     __col[0]  = Qt::red;
-    __col[1]  = Qt::green;
-    __col[2]  = Qt::blue;
+    __col[1]  = Qt::blue;
+    __col[2]  = Qt::green;
     __col[3]  = Qt::black;
     __col[4]  = Qt::cyan;
     __col[5]  = Qt::magenta;
