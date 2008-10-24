@@ -51,11 +51,11 @@ QtAutoMenu::QtAutoMenu(QtWidgetMicrograph* _parent) :
 {
     insertItem("Configure", this, SLOT(slotConfig()));
     insertItem("Load model", this, SLOT(slotLoadModels()));
-    insertItem("AutoSelect", this, SLOT(slotAutoSelectParticles()));
+    insertItem("AutoSelect", this, SLOT(slotAutoSelectParticles()), Qt::Key_F2);
     insertItem("Load, AutoSelect", this, SLOT(slotLoadAutoSelect()));
     insertItem("Learn particles", this, SLOT(slotLearnParticles()));
     insertItem("Save model as", this, SLOT(slotSaveModels()));
-    insertItem("Learn, Save, Quit", this, SLOT(slotLearnSaveQuit()));
+    insertItem("Learn, Save, Quit", this, SLOT(slotLearnSaveQuit()), Qt::Key_F3);
 }
 
 /* Configure --------------------------------------------------------------- */
