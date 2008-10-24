@@ -234,8 +234,8 @@ std::istream & operator >> (std::istream &_in, Classification_model &_m)
 	    for (int j = 0; j < particlesNo; j++)
 	    {
 	        Particle *P = new Particle;
-            P->read(_in, vec_size);
-            _m.addParticleTraining(*P, i);
+                P->read(_in, vec_size);
+                _m.addParticleTraining(*P, i);
 	    }
     }
     return _in;
@@ -405,7 +405,7 @@ void QtWidgetMicrograph::learnParticles()
             all_idx.push_back(i);
     
     // If there is nothing to learn, return
-    if(all_idx.size() == 0 && !__is_model_loaded)
+    if (all_idx.size() == 0 && !__is_model_loaded)
     {
         std::cerr << "No valid particles marked." << std::endl;
 	return;
@@ -518,219 +518,164 @@ void QtWidgetMicrograph::produceClassesProbabilities(
 /* Automatic phase ----------------------------------------------------------*/
 void QtWidgetMicrograph::automaticallySelectParticles()
 {
-try {
-    // Check that there is a valid model
-    if (!__is_model_loaded)
-    {
-        std::cerr << "No model has been loaded." << std::endl;
-        return;
-    }
+    try {
+        // Check that there is a valid model
+        if (!__is_model_loaded)
+        {
+            std::cerr << "No model has been loaded." << std::endl;
+            return;
+        }
 
-    std::cerr << "-----------------Automatic Phase--------------------------\n";
+        std::cerr << "-----------------Automatic Phase--------------------------\n";
 
-    // If there is nothing learnt, at least take the training vectors loaded
-    if (!__learn_particles_done)
-        buildSelectionModel();
-        
-    // Initialize some variables
-    __auto_candidates.resize(0);
-    const Matrix2D<int> &mask = __mask.get_binary_mask2D();
+        // If there is nothing learnt, at least take the training vectors loaded
+        if (!__learn_particles_done)
+            buildSelectionModel();
 
-    // Get the training features and the a priori probabilities    
-    std::vector < Matrix2D<double> > features;
-    Matrix1D<double> probs;
-    produceFeatures(__selection_model,features);
-    produceClassesProbabilities(__selection_model,probs);
-    
-    // Initialize classifier
-    __selection_model.initNaiveBayesEnsemble(features, probs, 8,
-        __penalization, 10, 1, 1, "mm");
+        // Initialize some variables
+        __auto_candidates.resize(0);
+        const Matrix2D<int> &mask = __mask.get_binary_mask2D();
 
-    #ifdef DEBUG_AUTO
-        std::cout << "Probabilities of the classes:"
-                  << probs.transpose() << std::endl;
-    #endif
+        // Get the training features and the a priori probabilities    
+        std::vector < Matrix2D<double> > features;
+        Matrix1D<double> probs;
+        produceFeatures(__selection_model,features);
+        produceClassesProbabilities(__selection_model,probs);
 
-    
-    //top,left corner of the piece
-    int top = 0, left = 0, next_top = 0, next_left = 0;
-    // If the piece available is small then include the scanned part
-    // because we need bigger image for denoising but for scanning
-    // particles we skip the already scanned part
-    int skip_x = 0, skip_y = 0, next_skip_x = 0, next_skip_y = 0;
-    Matrix1D<double> v;
-    int N = 1, particle_idx = 0, Nscanned=0;
-    while (get_corner_piece(top, left, skip_y,
-                            next_skip_x, next_skip_y, next_top,
-			    next_left, __piece_overlap))
-    {
-        std::cerr << "Processing piece " << N << "...\n";
-        #ifdef DEBUG_MORE_AUTO
-            std::cerr << "    (top,left)=" << top << "," << left
-                      << " skip y,x=" << next_skip_y << "," << next_skip_x
-                      << " next=" << next_top << "," << next_left << std::endl;
+        // Initialize classifier
+        __selection_model.initNaiveBayesEnsemble(features, probs, 8,
+            __penalization, 10, 1, 1, "mm");
+
+        #ifdef DEBUG_AUTO
+            std::cout << "Probabilities of the classes:"
+                      << probs.transpose() << std::endl;
         #endif
 
-        // Get a piece and prepare it
-        if (!prepare_piece())
+
+        //top,left corner of the piece
+        int top = 0, left = 0, next_top = 0, next_left = 0;
+        // If the piece available is small then include the scanned part
+        // because we need bigger image for denoising but for scanning
+        // particles we skip the already scanned part
+        int skip_x = 0, skip_y = 0, next_skip_x = 0, next_skip_y = 0;
+        Matrix1D<double> v;
+        int N = 1, particle_idx = 0, Nscanned=0;
+        while (get_corner_piece(top, left, skip_y,
+                                next_skip_x, next_skip_y, next_top,
+			        next_left, __piece_overlap))
         {
+            std::cerr << "Processing piece " << N << "...\n";
+            #ifdef DEBUG_MORE_AUTO
+                std::cerr << "    (top,left)=" << top << "," << left
+                          << " skip y,x=" << next_skip_y << "," << next_skip_x
+                          << " next=" << next_top << "," << next_left << std::endl;
+            #endif
+
+            // Get a piece and prepare it
+            if (!prepare_piece())
+            {
+                top = next_top;
+                left = next_left;
+                std::cerr << "bad piece...skipping" << std::endl;
+                N++;
+                continue;
+            }
+
+            // Express the skip values in the reduced image
+            skip_x /= __reduction;
+            skip_y /= __reduction;
+            #ifdef DEBUG_MORE_AUTO
+                std::cerr << "Skip(y,x)=" << skip_y << "," << skip_x << std::endl;
+            #endif
+
+            // Scan this piece
+            int posx = 0, next_posx = 0, posy = 0, next_posy = 0;
+            next_posx = posx = skip_x + XSIZE(mask) / 2;
+            next_posy = posy = skip_y + YSIZE(mask) / 2;
+
+            while (get_next_scanning_pos(next_posx, next_posy, skip_x, skip_y,
+	                                 __scan_overlap))
+            {
+                #ifdef DEBUG_MORE_AUTO
+                   std::cerr << "Pos(y,x)=" << posy << "," << posx
+                             << " Micro(y,x)=" << posy*__reduction + top
+                             << "," << posx*__reduction + left
+                             << " Next pos(y,x)=" << next_posy << "," << next_posx;
+                #endif
+
+	        if (build_vector(posx, posy, v))
+                {
+                    double cost;
+	            if (__selection_model.isParticle(v,cost))
+	            {
+                        #ifdef DEBUG_MORE_AUTO
+		            std::cout << "Particle Found: "
+                                << left + posx * __reduction << ","
+                                << top  + posy * __reduction << std::endl;
+                            std::cout << "Press any key to continue...\n";
+                            char c;
+                            std::cin >> c;
+                        #endif
+
+                        // Build the Particle structure
+                        Particle P;
+                        P.x = left + posx * __reduction;
+                        P.y = top + posy * __reduction;
+                        P.idx = -1;
+                        P.status = 1;
+                        P.vec = v;
+                        P.cost = cost;
+                        //refine_center(P);
+                        __auto_candidates.push_back(P);
+                    }
+                    Nscanned++;
+                }
+                // Go to next scanning position
+                posx = next_posx;
+                posy = next_posy;
+            }
+
+            // Go to next piece in the micrograph
             top = next_top;
             left = next_left;
-            std::cerr << "bad piece...skipping" << std::endl;
+            skip_x = next_skip_x;
+            skip_y = next_skip_y;
             N++;
-            continue;
         }
 
-        // Express the skip values in the reduced image
-        skip_x /= __reduction;
-        skip_y /= __reduction;
-        #ifdef DEBUG_MORE_AUTO
-            std::cerr << "Skip(y,x)=" << skip_y << "," << skip_x << std::endl;
+        // Sort particles by cost
+        std::sort(__auto_candidates.begin(),__auto_candidates.end(),
+            SAscendingParticleSort());
+
+        // Reject the candidates that are pointing to the same particle
+        int Nalive = reject_within_distance(__auto_candidates, __particle_radius,
+            false);
+
+        #ifdef DEBUG_AUTO
+           std::cerr << "Number of automatically selected particles = " 
+                     << __auto_candidates.size() << std::endl;
         #endif
 
-        // Scan this piece
-        int posx = 0, next_posx = 0, posy = 0, next_posy = 0;
-        next_posx = posx = skip_x + XSIZE(mask) / 2;
-        next_posy = posy = skip_y + YSIZE(mask) / 2;
-
-        while (get_next_scanning_pos(next_posx, next_posy, skip_x, skip_y,
-	                             __scan_overlap))
+        // Apply a second classifier for classifying between particle
+        // and false positive. For that, remove the middle class (background)
+        if (features.size()==3)
         {
-            #ifdef DEBUG_MORE_AUTO
-               std::cerr << "Pos(y,x)=" << posy << "," << posx
-                         << " Micro(y,x)=" << posy*__reduction + top
-                         << "," << posx*__reduction + left
-                         << " Next pos(y,x)=" << next_posy << "," << next_posx;
-            #endif
-	   
-	    if (build_vector(posx, posy, v))
+            int imax;
+            if (Nalive > 0)
             {
-                double cost;
-	        if (__selection_model.isParticle(v,cost))
-	        {
-                    #ifdef DEBUG_MORE_AUTO
-		        std::cout << "Particle Found: "
-                            << left + posx * __reduction << ","
-                            << top  + posy * __reduction << std::endl;
-                        std::cout << "Press any key to continue...\n";
-                        char c;
-                        std::cin >> c;
-                    #endif
-
-                    // Build the Particle structure
-                    Particle P;
-                    P.x = left + posx * __reduction;
-                    P.y = top + posy * __reduction;
-                    P.idx = -1;
-                    P.status = 1;
-                    P.vec = v;
-                    P.cost = cost;
-                    //refine_center(P);
-                    __auto_candidates.push_back(P);
-                }
-                Nscanned++;
-            }
-            // Go to next scanning position
-            posx = next_posx;
-            posy = next_posy;
-        }
-
-        // Go to next piece in the micrograph
-        top = next_top;
-        left = next_left;
-        skip_x = next_skip_x;
-        skip_y = next_skip_y;
-        N++;
-    }
-    
-    // Sort particles by cost
-    std::sort(__auto_candidates.begin(),__auto_candidates.end(),
-        SAscendingParticleSort());
-    
-    // Reject the candidates that are pointing to the same particle
-    int Nalive = reject_within_distance(__auto_candidates, __particle_radius,
-        false);
-
-    #ifdef DEBUG_AUTO
-       std::cerr << "Number of automatically selected particles = " 
-                 << __auto_candidates.size() << std::endl;
-    #endif
-
-    // Apply a second classifier for classifying between particle
-    // and false positive. For that, remove the middle class (background)
-    if (features.size()==3)
-    {
-        int imax;
-        if (Nalive > 0)
-        {
-            __selection_model2.clear();
-            __selection_model2.init(2);
-            std::vector < Matrix2D<double> >::iterator featuresIterator=
-                features.begin();
-            featuresIterator++;
-            features.erase(featuresIterator);
-            probs(1)=probs(2);
-            probs.resize(2);
-            probs/=probs.sum();
-            __selection_model2.initNaiveBayesEnsemble(features, probs, 8,
-                __penalization,10,1,1,"mm");
-            #ifdef DEBUG_AUTO
-	        std::cout << "Second classification\n";
-            #endif
-            imax = __auto_candidates.size();
-            Nalive = 0;
-            for (int i = 0; i < imax; i++)
-                if (__auto_candidates[i].status == 1)
-                {
-                    double p;
-	            if (!__selection_model2.isParticle(__auto_candidates[i].vec,p))
-                    {
-                        __auto_candidates[i].status=0;
-                        #ifdef DEBUG_AUTO
-	                    std::cout << __auto_candidates[i].x << ", "
-	                              << __auto_candidates[i].y
-                                      << " is considered as a false positive\n";
-                        #endif
-                    }
-                    else
-                        Nalive++;
-                }
-        }
-
-        // Apply a third classifier to distinguish between particles and
-        // very tough particles
-        if (Nalive > 0)
-        {
-            __selection_model3.clear();
-            __selection_model3.init(2);
-            // Remove from the error class, all those errors that
-            // the previous classifier was able to classify correctly
-            std::vector<int> toKeep;
-            for (int i=0; i<YSIZE(features[1]); i++)
-            {
-                Matrix1D<double> trialFeatures;
-                features[1].getRow(i,trialFeatures);
-                double cost;
-                if (!__selection_model2.isParticle(trialFeatures,cost))
-                    toKeep.push_back(i);
-            }
-            
-            if (toKeep.size()>0)
-            {
-                Matrix2D<double> difficultParticles;
-                difficultParticles.initZeros(toKeep.size(),XSIZE(features[1]));
-                FOR_ALL_ELEMENTS_IN_MATRIX2D(difficultParticles)
-                    difficultParticles(i,j)=features[1](toKeep[i],j);
-                int NErrors=YSIZE(features[1]);
-                features.pop_back();
-                features.push_back(difficultParticles);
-
-                __selection_model3.initNaiveBayesEnsemble(features, probs, 8,
-                    __penalization, 10, 1, 1, "mm");
+                __selection_model2.clear();
+                __selection_model2.init(2);
+                std::vector < Matrix2D<double> >::iterator featuresIterator=
+                    features.begin();
+                featuresIterator++;
+                features.erase(featuresIterator);
+                probs(1)=probs(2);
+                probs.resize(2);
+                probs/=probs.sum();
+                __selection_model2.initNaiveBayesEnsemble(features, probs, 8,
+                    __penalization,10,1,1,"mm");
                 #ifdef DEBUG_AUTO
-	            std::cout << "Third classification: " << YSIZE(difficultParticles)
-                              << " difficult particles out of " << NErrors << "\n"
-                              << "Before filtering there were " << Nalive << " particles\n";
+	            std::cout << "Second classification\n";
                 #endif
                 imax = __auto_candidates.size();
                 Nalive = 0;
@@ -738,47 +683,124 @@ try {
                     if (__auto_candidates[i].status == 1)
                     {
                         double p;
-	                if (!__selection_model3.isParticle(__auto_candidates[i].vec,p))
+	                if (!__selection_model2.isParticle(__auto_candidates[i].vec,p))
                         {
                             __auto_candidates[i].status=0;
                             #ifdef DEBUG_AUTO
 	                        std::cout << __auto_candidates[i].x << ", "
 	                                  << __auto_candidates[i].y
-                                          << " is considered as a false positive 2\n";
+                                          << " is considered as a false positive\n";
                             #endif
                         }
                         else
                             Nalive++;
                     }
             }
-        }
-    }
 
-    if (Nalive>0)
-    {
-        int imax = __auto_candidates.size();
-        // Insert selected particles in the result
-        for (int i = 0; i < imax; i++)
-            if (__auto_candidates[i].status == 1)
+            // Apply a third classifier to distinguish between particles and
+            // very tough particles
+            if (Nalive > 0)
             {
-                __auto_candidates[i].idx = i;
-                #ifdef DEBUG_AUTO
-	            std::cout << "Particle coords " << __auto_candidates[i].x << ", "
-	                      << __auto_candidates[i].y << std::endl;
-                #endif
-                getMicrograph()->add_coord(__auto_candidates[i].x, 
-	                                   __auto_candidates[i].y, __activeFamily);
+                __selection_model3.clear();
+                __selection_model3.init(2);
+                // Remove from the error class, all those errors that
+                // the previous classifier was able to classify correctly
+                std::vector<int> toKeep;
+                for (int i=0; i<YSIZE(features[1]); i++)
+                {
+                    Matrix1D<double> trialFeatures;
+                    features[1].getRow(i,trialFeatures);
+                    double cost;
+                    if (!__selection_model2.isParticle(trialFeatures,cost))
+                        toKeep.push_back(i);
+                }
+
+                if (toKeep.size()>0)
+                {
+                    Matrix2D<double> difficultParticles;
+                    difficultParticles.initZeros(toKeep.size(),XSIZE(features[1]));
+                    FOR_ALL_ELEMENTS_IN_MATRIX2D(difficultParticles)
+                        difficultParticles(i,j)=features[1](toKeep[i],j);
+                    int NErrors=YSIZE(features[1]);
+                    features.pop_back();
+                    features.push_back(difficultParticles);
+
+                    __selection_model3.initNaiveBayesEnsemble(features, probs, 8,
+                        __penalization, 10, 1, 1, "mm");
+                    #ifdef DEBUG_AUTO
+	                std::cout << "Third classification: " << YSIZE(difficultParticles)
+                                  << " difficult particles out of " << NErrors << "\n"
+                                  << "Before filtering there were " << Nalive << " particles\n";
+                    #endif
+                    imax = __auto_candidates.size();
+                    Nalive = 0;
+                    for (int i = 0; i < imax; i++)
+                        if (__auto_candidates[i].status == 1)
+                        {
+                            double p;
+	                    if (!__selection_model3.isParticle(__auto_candidates[i].vec,p))
+                            {
+                                __auto_candidates[i].status=0;
+                                #ifdef DEBUG_AUTO
+	                            std::cout << __auto_candidates[i].x << ", "
+	                                      << __auto_candidates[i].y
+                                              << " is considered as a false positive 2\n";
+                                #endif
+                            }
+                            else
+                                Nalive++;
+                        }
+                }
             }
+        }
+
+        if (Nalive>0)
+        {
+            // Add a family to the micrograph is necessary
+            bool addFamily=true;
+            for (int i = 0; i < __m->LabelNo(); i++)
+                if (__m->get_label(i)=="auto")
+                {
+                    addFamily=false;
+                    break;
+                }
+            if (addFamily)
+            {
+                __m->add_label("auto");
+                emit signalAddFamily("auto");
+            }
+            __auto_label=-1;
+            for (int i = 0; i < __m->LabelNo(); i++)
+                if (__m->get_label(i)=="auto")
+                {
+                    __auto_label=i;
+                    break;
+                }
+
+            int imax = __auto_candidates.size();
+            // Insert selected particles in the result
+            for (int i = 0; i < imax; i++)
+                if (__auto_candidates[i].status == 1)
+                {
+                    __auto_candidates[i].idx = i;
+                    #ifdef DEBUG_AUTO
+	                std::cout << "Particle coords " << __auto_candidates[i].x << ", "
+	                          << __auto_candidates[i].y << std::endl;
+                    #endif
+                    getMicrograph()->add_coord(__auto_candidates[i].x, 
+	                                       __auto_candidates[i].y,
+                                               __auto_label);
+                }
+        }
+
+        repaint(false);
+        __autoselection_done = true;
+        std::cout << "Automatic process finished. Number of particles found: "
+                  << Nalive << std::endl;
+    } catch (Xmipp_error XE) {
+        std::cout << XE << std::endl;
+        exit(0);
     }
-    
-    repaint(0);
-    __autoselection_done = true;
-    std::cout << "Automatic process finished. Number of particles found: "
-              << Nalive << std::endl;
-} catch (Xmipp_error XE) {
-    std::cout << XE << std::endl;
-    exit(0);
-}
 }
 
 /* Add family ---------------------------------------------------------------*/
@@ -1844,8 +1866,8 @@ void QtWidgetMicrograph::loadModels(const FileName &fn)
 /* Save particles ---------------------------------------------------------- */
 void QtWidgetMicrograph::saveAutoParticles()
 {
-    if (__autoselection_done)
-        __m->write_coordinates(__activeFamily, __m->micrograph_name() +
+    if (__autoselection_done && __auto_label!=-1)
+        __m->write_coordinates(__auto_label, __m->micrograph_name() +
                                ".auto.pos");
 }
 
