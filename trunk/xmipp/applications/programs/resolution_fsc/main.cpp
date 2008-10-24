@@ -31,30 +31,39 @@
 
 void writeFiles(const FileName &fnRoot,
     const Matrix1D<double> freq, const Matrix1D<double> frc, 
-    const Matrix1D<double> frc_noise, const Matrix1D<double> dpr)
+    const Matrix1D<double> frc_noise, const Matrix1D<double> dpr,
+    bool do_dpr)
 {
     FileName fn_dpr, fn_frc;
+    std::ofstream outDpr;
     fn_dpr = fnRoot + ".dpr";
+    if(do_dpr)
+    {
+        outDpr.open(fn_dpr.c_str(), std::ios::out);
+        outDpr  << "# Resol. [1/Ang]   DPR [deg]" << std::endl;
+    }
     fn_frc = fnRoot + ".frc";
-    std::ofstream out(fn_dpr.c_str(), std::ios::out);
-    std::ofstream out2(fn_frc.c_str(), std::ios::out);
-    out  << "# Resol. [1/Ang]   DPR [deg]" << std::endl;
-    out2 << "# Resol. [1/Ang]      FRC      FRC_random_noise" << std::endl;
+    std::ofstream outFsc(fn_frc.c_str(), std::ios::out);
+    outFsc << "# Resol. [1/Ang]      FRC      FRC_random_noise" << std::endl;
     FOR_ALL_ELEMENTS_IN_MATRIX1D(freq)
     {
-        out.width(10);
-        out  << VEC_ELEM(freq, i);
-        out.width(17);
-        out << VEC_ELEM(dpr, i)  << std::endl;
-        out2.width(10);
-        out2  << VEC_ELEM(freq, i);
-        out2.width(17);
-        out2  << VEC_ELEM(frc, i);
-        out2.width(17);
-        out2  << VEC_ELEM(frc_noise, i) << std::endl;
+        if(do_dpr)
+        {
+            outDpr.width(10);
+            outDpr  << VEC_ELEM(freq, i);
+            outDpr.width(17);
+            outDpr << VEC_ELEM(dpr, i)  << std::endl;
+        }
+        outFsc.width(10);
+        outFsc  << VEC_ELEM(freq, i);
+        outFsc.width(17);
+        outFsc  << VEC_ELEM(frc, i);
+        outFsc.width(17);
+        outFsc  << VEC_ELEM(frc_noise, i) << std::endl;
     }
-    out.close();
-    out2.close();
+    if(do_dpr)
+        outDpr.close();
+    outFsc.close();
 }
 
 class Resolution_parameters: public Prog_parameters
@@ -64,6 +73,7 @@ public:
     ImageXmipp  refI;
     VolumeXmipp refV;
     float       sam;
+    bool        do_dpr;
 public:
     Resolution_parameters()
     {}
@@ -89,6 +99,8 @@ public:
         Prog_parameters::show();
         std::cout << "Reference file = " << fn_ref << std::endl;
         std::cout << "Sampling rate  = " << sam << std::endl;
+        if(do_dpr)
+            std::cout << "-do_dpr is ON  = " << std::endl;
     }
     void usage()
     {
@@ -100,6 +112,7 @@ public:
         std::cerr << " For both modes:\n";
         std::cerr << "   -sam <sampling rate>     : i.e. pixel size (in Angstrom) \n";
         std::cerr << "  [-dont_apply_geo]         : for 2D-images: do not apply transformation stored in the header\n";
+        std::cerr << "  [-do_dpr]                 : compute dpr, by default only frc is computed\n";
     }
 };
 
@@ -107,25 +120,27 @@ void process_img(ImageXmipp &img, const Prog_parameters *prm)
 {
     Resolution_parameters *eprm = (Resolution_parameters *) prm;
     Matrix1D<double> freq, frc, dpr, frc_noise;
-    frc_dpr(eprm->refI(), img(), eprm->sam, freq, frc, frc_noise, dpr);
-    writeFiles(img.name(), freq, frc, frc_noise, dpr);
+    frc_dpr(eprm->refI(), img(), eprm->sam, freq, frc, frc_noise, dpr,eprm->do_dpr);
+    writeFiles(img.name(), freq, frc, frc_noise, dpr,eprm->do_dpr);
 }
 
 void process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
     Resolution_parameters *eprm = (Resolution_parameters *) prm;
     Matrix1D<double> freq, frc, dpr, frc_noise;
-    frc_dpr(eprm->refV(), vol(), eprm->sam, freq, frc, frc_noise,dpr);
-    writeFiles(vol.name(), freq, frc, frc_noise, dpr);
+    frc_dpr(eprm->refV(), vol(), eprm->sam, freq, frc, frc_noise,dpr,eprm->do_dpr);
+    writeFiles(vol.name(), freq, frc, frc_noise, dpr,eprm->do_dpr);
 }
 
 int main(int argc, char **argv)
-{
+{   
+    bool do_dpr=checkParameter(argc, argv, "-do_dpr");
     if (!checkParameter(argc, argv, "-set_of_images"))
     {
         Resolution_parameters prm;
         prm.each_image_produces_an_output = false;
         prm.apply_geo = true;
+        prm.do_dpr=do_dpr;
         SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
     }
     else
@@ -158,9 +173,8 @@ int main(int argc, char **argv)
             SF2.get_statistics(I2, Id, dummy, dummy, apply_geo);
             I1().setXmippOrigin();
             I2().setXmippOrigin();
-
-            frc_dpr(I1(), I2(), sam, freq, frc, frc_noise, dpr);
-            writeFiles(fn_sel, freq, frc, frc_noise, dpr);
+            frc_dpr(I1(), I2(), sam, freq, frc, frc_noise, dpr,do_dpr);
+            writeFiles(fn_sel, freq, frc, frc_noise, dpr,do_dpr);
         }
         catch (Xmipp_error XE)
         {
