@@ -122,10 +122,13 @@ protected:
 
     // Set pixel
     void setPixel(int _x, int _y, int _value);
+
+    void resizeEvent(QResizeEvent *);
+    void paintEvent(QPaintEvent *);
 public slots:
     void slotRepaint()
     {
-        repaint(FALSE);
+        repaint(false);
     }
     void slotActiveFamily(int _f);
     void slotSetCoords(int _x, int _y);
@@ -133,10 +136,6 @@ public slots:
 signals:
     void signalRepaint();
     void signalSetCoords(int _x, int _y);
-
-protected:
-    void resizeEvent(QResizeEvent *);
-    void paintEvent(QPaintEvent *);
 };
 
 #endif
