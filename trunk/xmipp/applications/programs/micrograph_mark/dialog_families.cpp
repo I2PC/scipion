@@ -149,10 +149,11 @@ void QtDialogFamilies::slotAddFamily()
 /* Add family -------------------------------------------------------------- */
 void QtDialogFamilies::slotAddFamily(const char *_familyName)
 {
-    if (findFamily(_familyName) != -1) return;
-
-    __m->add_label(_familyName);
-    if (__mTilted != NULL) __mTilted->add_label(_familyName);
+    if (findFamily(_familyName) == -1)
+    {
+        __m->add_label(_familyName);
+        if (__mTilted != NULL) __mTilted->add_label(_familyName);
+    }
     __familyList->insertItem(_familyName);
     __familyList->setSelected(__familyList->count() - 1, TRUE);
     emit signalActiveFamily(__familyList->count() - 1);
