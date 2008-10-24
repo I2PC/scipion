@@ -200,7 +200,8 @@ void frc_dpr(Matrix2D< double > & m1,
              Matrix1D< double >& freq,
              Matrix1D< double >& frc,
              Matrix1D< double >& frc_noise,
-             Matrix1D< double >& dpr)
+             Matrix1D< double >& dpr,
+             bool skipdpr)
 {
     if (!m1.sameShape(m2))
         REPORT_ERROR(1,"Matrices have different shapes!");
@@ -219,8 +220,12 @@ void frc_dpr(Matrix2D< double > & m1,
     num.initZeros(radial_count);
     den1.initZeros(radial_count);
     den2.initZeros(radial_count);
-
-    dpr.initZeros(radial_count);
+     
+    //dpr calculation takes for ever in large volumes
+    //since atan2 is called many times
+    //untill atan2 is changed by a table let us make dpr an option
+    if (skipdpr)
+        dpr.initZeros(radial_count);
     freq.initZeros(radial_count);
     frc.initZeros(radial_count);
     frc_noise.initZeros(radial_count);
@@ -239,9 +244,12 @@ void frc_dpr(Matrix2D< double > & m1,
         num(idx)+=real(conj(z1) * z2);
         den1(idx)+= absz1*absz1;
         den2(idx)+= absz2*absz2;
-        double phaseDiff=realWRAP(RAD2DEG((atan2(z1.imag(), z1.real())) -
-                (atan2(z2.imag(), z2.real()))),-180, 180);
-        dpr(idx)+=sqrt((absz1+absz2)*phaseDiff*phaseDiff/(absz1+absz2));
+        if (skipdpr)
+        {
+            double phaseDiff=realWRAP(RAD2DEG((atan2(z1.imag(), z1.real())) -
+                    (atan2(z2.imag(), z2.real()))),-180, 180);
+            dpr(idx)+=sqrt((absz1+absz2)*phaseDiff*phaseDiff/(absz1+absz2));
+        }
         radial_count(idx)++;
     }
 
@@ -250,7 +258,8 @@ void frc_dpr(Matrix2D< double > & m1,
         freq(i) = (double) i / (XSIZE(m1) * sampling_rate);
         frc(i) = num(i)/sqrt(den1(i)*den2(i));
         frc_noise(i) = 2 / sqrt((double) radial_count(i));
-        dpr(i)/=radial_count(i);
+        if (skipdpr)
+            dpr(i)/=radial_count(i);
     }
 }
 
@@ -259,7 +268,8 @@ void frc_dpr(Matrix3D< double > & m1,
              Matrix1D< double >& freq,
              Matrix1D< double >& frc,
              Matrix1D< double >& frc_noise,
-             Matrix1D< double >& dpr)
+             Matrix1D< double >& dpr,
+             bool skipdpr)
 {
     if (!m1.sameShape(m2))
         REPORT_ERROR(1,"Volumes have different shapes!");
@@ -278,7 +288,8 @@ void frc_dpr(Matrix3D< double > & m1,
     den1.initZeros(radial_count);
     den2.initZeros(radial_count);
 
-    dpr.initZeros(radial_count);
+    if (skipdpr)
+        dpr.initZeros(radial_count);
     freq.initZeros(radial_count);
     frc.initZeros(radial_count);
     frc_noise.initZeros(radial_count);
@@ -298,9 +309,12 @@ void frc_dpr(Matrix3D< double > & m1,
         num(idx)+=real(conj(z1) * z2);
         den1(idx)+= absz1*absz1;
         den2(idx)+= absz2*absz2;
-        double phaseDiff=realWRAP(RAD2DEG((atan2(z1.imag(), z1.real())) -
-                (atan2(z2.imag(), z2.real()))),-180, 180);
-        dpr(idx)+=sqrt((absz1+absz2)*phaseDiff*phaseDiff/(absz1+absz2));
+        if (skipdpr)
+        {    
+            double phaseDiff=realWRAP(RAD2DEG((atan2(z1.imag(), z1.real())) -
+                    (atan2(z2.imag(), z2.real()))),-180, 180);
+            dpr(idx)+=sqrt((absz1+absz2)*phaseDiff*phaseDiff/(absz1+absz2));
+        }
         radial_count(idx)++;
     }
 
@@ -313,6 +327,7 @@ void frc_dpr(Matrix3D< double > & m1,
         freq(i) = (double) i / (XSIZE(m1) * sampling_rate);
         frc(i) = num(i)/sqrt(den1(i)*den2(i));
         frc_noise(i) = 2 / sqrt((double) radial_count(i));
-        dpr(i)/=radial_count(i);
+        if (skipdpr)
+            dpr(i)/=radial_count(i);
     }
 }
