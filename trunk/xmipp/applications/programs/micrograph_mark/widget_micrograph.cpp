@@ -327,7 +327,6 @@ QtWidgetMicrograph::QtWidgetMicrograph(QtMainWidgetMark *_mainWidget,
 
     setMicrograph(_m);
 
-    __mImage->show();
     __gridLayout->setMenuBar(__menuBar);
     __gridLayout->addWidget(__mImageOverview);
 
@@ -341,6 +340,13 @@ QtWidgetMicrograph::~QtWidgetMicrograph()
     delete __mImageOverview;
     delete __menuBar;
     delete __gridLayout;
+}
+
+/* Open all windows -------------------------------------------------------- */
+void QtWidgetMicrograph::openAllWindows()
+{
+    __mImage->show();
+    __mImageOverview->show();
 }
 
 /* Set Micrograph ---------------------------------------------------------- */
@@ -1776,7 +1782,12 @@ void QtWidgetMicrograph::loadModels()
                        "Model", QLineEdit::Normal,
                        "Model", &ok);
     if (!ok || qfn_root.isEmpty()) return;
-    __modelRootName = qfn_root.ascii();
+    loadModels(qfn_root.ascii());
+}
+
+void QtWidgetMicrograph::loadModels(const FileName &fn)
+{
+    __modelRootName = fn;
 
     // Load parameters
     std::string dummy;
@@ -1830,6 +1841,14 @@ void QtWidgetMicrograph::loadModels()
     std::cout << "The model has been loaded..." << std::endl;
 }
 
+/* Save particles ---------------------------------------------------------- */
+void QtWidgetMicrograph::saveAutoParticles()
+{
+    if (__autoselection_done)
+        __m->write_coordinates(__activeFamily, __m->micrograph_name() +
+                               ".auto.pos");
+}
+
 /* Save models ------------------------------------------------------------- */
 void QtWidgetMicrograph::saveModels(bool askFilename)
 {
@@ -1848,9 +1867,7 @@ void QtWidgetMicrograph::saveModels(bool askFilename)
         fn_root=__modelRootName;
 
     // Save the automatically selected particles
-    if (__autoselection_done)
-        __m->write_coordinates(__activeFamily, __m->micrograph_name() +
-                               ".auto.pos");
+    saveAutoParticles();
 
     // Save the mask
     ImageXmipp save;

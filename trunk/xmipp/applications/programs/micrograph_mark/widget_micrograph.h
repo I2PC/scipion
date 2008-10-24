@@ -266,6 +266,9 @@ public:
                        Micrograph *_m = NULL);
     ~QtWidgetMicrograph();
 
+    // Open all windows
+    void openAllWindows();
+
     // Set Micrograph
     void setMicrograph(Micrograph *_m);
 
@@ -449,11 +452,17 @@ public:
     // The input index is the index of the moved particle in the micrograph list
     void delete_particle(int _idx);
 
-    // load models
+    // load models (ask the user about the name)
     void loadModels();
+
+    // load models with a name
+    void loadModels(const FileName &fn);
 
     // Save models
     void saveModels(bool askFilename);
+
+    // Save automatically selected particles
+    void saveAutoParticles();
 
     // Configure auto
     void configure_auto();
