@@ -30,6 +30,7 @@
 
 #include "main_widget_mark.h"
 #include "widget_psd.h"
+#include "widget_micrograph.h"
 
 void Usage();
 
@@ -37,9 +38,11 @@ int main(int argc, char **argv)
 {
     FileName fnRaw;
     FileName fnRawTilted;
+    FileName fnAutomaticModel;
     bool     reversed;
     FileName fn_assign_CTF;
     bool     ctf_mode = false;
+    bool     autoSelect = false;
 
     // Get input parameters .................................................
     try
@@ -53,6 +56,10 @@ int main(int argc, char **argv)
             ctf_mode = true;
             fn_assign_CTF = getParameter(argc, argv, "-ctf");
         }
+        fnAutomaticModel = getParameter(argc, argv, "-auto", "");
+        autoSelect = checkParameter(argc, argv, "-autoSelect");
+        if (fnRawTilted!="" && autoSelect)
+            REPORT_ERROR(1,"Automatic particle picking cannot be performed on tilt pairs");
     }
     catch (Xmipp_error XE)
     {
@@ -67,48 +74,51 @@ int main(int argc, char **argv)
         FileName fn8bits="", fn8bitsTilted="";
 
         m.open_micrograph(fnRaw, reversed);
-	// Sjors & Roberto: 25jan08
-	// The following is a "chapuza" because the 8-bit
-	// visualization routine from XVsmooth is much nicer than our
-	// own routine. We save the micrograph with name fn8bits,
-	// re-read it in 8bit-format, and then set the name explicitly
-	// to the original fnRaw to get the correct .pos, .ang etc
-	// files.
-	// Note that this also requires that the name of the original
-	// micrograph in the dialog window under "generate images"
-	// should be the original fnRaw (and not be left blank as before!)
-        if (m.depth()!=8)
+        if (!autoSelect)
         {
-            fn8bits=fnRaw+".8bits";
-            m.write_as_8_bits(fn8bits);
-            m.close_micrograph();
-            m.open_micrograph(fn8bits,false);
-	    m.set_micrograph_name(fnRaw);
-            m.compute_8_bit_scaling();
-	    system(((std::string)"rm -rf "+fn8bits+"*").c_str());
-        }
-	else
-	{
-	    m.compute_8_bit_scaling();
-	}
-        
-        if (fnRawTilted != "")
-        {
-            mTilted.open_micrograph(fnRawTilted, reversed);
-            if (mTilted.depth()!=8)
+	    // Sjors & Roberto: 25jan08
+	    // The following is a "chapuza" because the 8-bit
+	    // visualization routine from XVsmooth is much nicer than our
+	    // own routine. We save the micrograph with name fn8bits,
+	    // re-read it in 8bit-format, and then set the name explicitly
+	    // to the original fnRaw to get the correct .pos, .ang etc
+	    // files.
+	    // Note that this also requires that the name of the original
+	    // micrograph in the dialog window under "generate images"
+	    // should be the original fnRaw (and not be left blank as before!)
+            if (m.depth()!=8)
             {
-                fn8bitsTilted=fnRawTilted+".8bits";
-                mTilted.write_as_8_bits(fn8bitsTilted);
-                mTilted.close_micrograph();
-                mTilted.open_micrograph(fn8bitsTilted,false);
-		mTilted.set_micrograph_name(fnRawTilted);
-                mTilted.compute_8_bit_scaling();
-		system(((std::string)"rm -rf "+fn8bitsTilted+"*").c_str());
+                fn8bits=fnRaw+".8bits";
+                m.write_as_8_bits(fn8bits);
+                m.close_micrograph();
+                m.open_micrograph(fn8bits,false);
+	        m.set_micrograph_name(fnRaw);
+                m.compute_8_bit_scaling();
+	        system(((std::string)"rm -rf "+fn8bits+"*").c_str());
             }
 	    else
 	    {
-		mTilted.compute_8_bit_scaling();
+	        m.compute_8_bit_scaling();
 	    }
+
+            if (fnRawTilted != "")
+            {
+                mTilted.open_micrograph(fnRawTilted, reversed);
+                if (mTilted.depth()!=8)
+                {
+                    fn8bitsTilted=fnRawTilted+".8bits";
+                    mTilted.write_as_8_bits(fn8bitsTilted);
+                    mTilted.close_micrograph();
+                    mTilted.open_micrograph(fn8bitsTilted,false);
+		    mTilted.set_micrograph_name(fnRawTilted);
+                    mTilted.compute_8_bit_scaling();
+		    system(((std::string)"rm -rf "+fn8bitsTilted+"*").c_str());
+                }
+	        else
+	        {
+		    mTilted.compute_8_bit_scaling();
+	        }
+            }
         }
 
         // Configure application .............................................
@@ -127,22 +137,22 @@ int main(int argc, char **argv)
             PSDshow.show();
         }
 
+        // Check if a model has been provided ................................
+        if (fnAutomaticModel!="")
+            mainWidget->untilted_widget()->loadModels(fnAutomaticModel);
+
         // Run application ...................................................
         app.setMainWidget(mainWidget);
-        mainWidget->show();
-	
-        app.exec();
-
-	// SJORS&ROBERTO: when clicking QUIT from the File Menu, we
-        // never reach this part of the code. There is an exit before!!
-        // Finish ............................................................
-	/*
-        m.close_micrograph();
-        if (fnRawTilted != "") mTilted.close_micrograph();
-        delete mainWidget;
-        if (fn8bits!="") system(((std::string)"rm -rf "+fn8bits+"*").c_str());
-        if (fn8bitsTilted!="") system(((std::string)"rm -rf "+fn8bitsTilted+"*").c_str());
-	*/
+        if (!autoSelect)
+        {
+            mainWidget->openAllWindows();
+            app.exec();
+        }
+        else
+        {
+            mainWidget->untilted_widget()->automaticallySelectParticles();
+            mainWidget->untilted_widget()->saveAutoParticles();
+        }
     }
     catch (Xmipp_error XE)
     {
@@ -155,13 +165,15 @@ int main(int argc, char **argv)
 void Usage()
 {
     std::cerr << "Purpose: Mark particles in a Raw image\n"
-    << "         There must exist the image and the corresponding .inf file\n"
-    << "\n"
-    << "Usage: mark [options]\n"
-    << "   -i <input raw file>                : File with the image\n"
-    << "  [-tilted <tilted raw file>]         : Image with the tilted pair\n"
-    << "  [-reverse_endian]                   : Raw 16-bit file with reversed endian\n"
-    << "  [-psd <assign_CTF_prm_file>]        : Show the PSDs\n"
-    << "  [-ctf <assign_CTF_prm_file>]        : Show the CTF models\n"
+              << "         There must exist the image and the corresponding .inf file\n"
+              << "\n"
+              << "Usage: mark [options]\n"
+              << "   -i <input raw file>                : File with the image\n"
+              << "  [-tilted <tilted raw file>]         : Image with the tilted pair\n"
+              << "  [-reverse_endian]                   : Raw 16-bit file with reversed endian\n"
+              << "  [-psd <assign_CTF_prm_file>]        : Show the PSDs\n"
+              << "  [-ctf <assign_CTF_prm_file>]        : Show the CTF models\n"
+              << "  [-auto <model rootname>]            : For autoselection\n"
+              << "  [-autoSelect]                       : Autoselect without user interaction\n"
     ;
 }
