@@ -131,9 +131,13 @@ void QtFileMenu::slotLoadCoords()
             FileName fn;
             fn = (char*)coordFileDialog.selectedFile().ascii();
             fn = fn.without_extension();
-            fn = fn.remove_extension("raw");
-            const char *familyName = fn.get_extension().c_str();
-            emit signalAddFamily(familyName);
+            FileName familyName;
+            int i=fn.find(m->micrograph_name()+".");
+            if (i!=-1)
+                familyName=fn.substr(i+m->micrograph_name().length()+1,
+                    fn.length()-(i+m->micrograph_name().length()+1));
+            else familyName=fn.get_extension().c_str();
+            emit signalAddFamily(familyName.c_str());
 
             int activeFamily = ((QtWidgetMicrograph*)parentWidget())->activeFamily();
             m->read_coordinates(activeFamily,
