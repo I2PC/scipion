@@ -209,7 +209,8 @@ void frc_dpr(Matrix2D< double > & m1,
              Matrix1D< double >& freq,
              Matrix1D< double >& frc,
              Matrix1D< double >& frc_noise,
-             Matrix1D< double >& dpr);
+             Matrix1D< double >& dpr,
+             bool skipdpr=false);
 
 /** Fourier-Ring-Correlation between two 3D-matrices using FFT
  * @ingroup FourierOperations
@@ -220,5 +221,6 @@ void frc_dpr(Matrix3D< double > & m1,
              Matrix1D< double >& freq,
              Matrix1D< double >& frc,
              Matrix1D< double >& frc_noise,
-             Matrix1D< double >& dpr);
+             Matrix1D< double >& dpr,
+             bool skipdpr=false);
 #endif
