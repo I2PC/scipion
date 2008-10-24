@@ -102,7 +102,6 @@ QtMainWidgetMark::QtMainWidgetMark(Micrograph *_m, Micrograph *_mTilted)
 
     __familyDialog       = new QtDialogFamilies(this);
     __familyDialog->setCaption("Families");
-    __familyDialog->show();
 
 #ifdef QT3_SUPPORT
     __ctrlPlus    = new Q3Accel(this);
@@ -230,6 +229,15 @@ QtMainWidgetMark::~QtMainWidgetMark()
     if (__mTiltedWidget != NULL) delete __mTiltedWidget;
 }
 
+// Open all windows --------------------------------------------------------
+void QtMainWidgetMark::openAllWindows()
+{
+    __familyDialog->show();
+    __mWidget->openAllWindows();
+    if (__mTiltedWidget != NULL) __mTiltedWidget->openAllWindows();
+    show();
+}
+
 //#define _DEBUG
 /* Add point to least squares matrices ------------------------------------- */
 void QtMainWidgetMark::add_point(const Particle_coords &U,
@@ -278,9 +286,6 @@ void QtMainWidgetMark::adjust_passing_matrix(const Particle_coords &U,
     {
         solve(__Au, __Bt, __Put);
         __Put = __Put.transpose();
-#ifdef _DEBUG
-        std::cout << "Solved " << __Put;
-#endif
         __Ptu = __Put.inv();
     }
 }
@@ -299,9 +304,6 @@ void QtMainWidgetMark::recalculate_passing_matrix()
     {
         solve(__Au, __Bt, __Put);
         __Put = __Put.transpose();
-#ifdef _DEBUG
-        std::cout << "Solved " << __Put;
-#endif
         __Ptu = __Put.inv();
     }
 }
@@ -316,14 +318,7 @@ void QtMainWidgetMark::pass_to_tilted(int _muX, int _muY,
         SPEED_UP_temps;
 
         VECTOR_R3(m, _muX, _muY, 1);
-#ifdef _DEBUG
-        std::cout << "Input=" << m.transpose() << std::endl;
-        std::cout << "Matrix=\n" << __Put;
-#endif
         M3x3_BY_V3x1(m, __Put, m);
-#ifdef _DEBUG
-        std::cout << "Output=" << m.transpose() << std::endl;
-#endif
 
         _mtX = (int)XX(m);
         _mtY = (int)YY(m);
@@ -343,7 +338,6 @@ void QtMainWidgetMark::pass_to_tilted(int _muX, int _muY,
         adjust_passing_matrix(U, T);
     }
 }
-#undef DEBUG
 
 /* Passing to tilted ------------------------------------------------------- */
 void QtMainWidgetMark::pass_to_untilted(int _mtX, int _mtY, int &_muX,

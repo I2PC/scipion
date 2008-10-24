@@ -90,12 +90,15 @@ public:
     QtMainWidgetMark(Micrograph *_m, Micrograph *_mTilted = NULL);
     ~QtMainWidgetMark();
 
+    // Open all windows
+    void openAllWindows();
+
     // Access to WidgetMicrographs
-    const QtWidgetMicrograph * untilted_widget()
+    QtWidgetMicrograph * untilted_widget()
     {
         return __mWidget;
     }
-    const QtWidgetMicrograph * tilted_widget()
+    QtWidgetMicrograph * tilted_widget()
     {
         return __mTiltedWidget;
     }
