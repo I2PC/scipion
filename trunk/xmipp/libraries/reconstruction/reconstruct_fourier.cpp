@@ -152,41 +152,26 @@ void Prog_RecFourier_prm::produce_Side_info()
     blob_table.resize(BLOB_TABLE_SIZE);
     Fourier_blob_table.resize(BLOB_TABLE_SIZE);
 
-    struct blobtype blobFourier;
+    struct blobtype blobFourier,blobnormalized;
     blobFourier=blob;
-    blobFourier.radius/=Xdim;
-
+    blobFourier.radius/=(padding_factor_proj*Xdim);
+    blobnormalized=blob;
+    blobnormalized.radius/=((double)padding_factor_proj/padding_factor_vol);
     double delta = blob.radius/(BLOB_TABLE_SIZE-1);
-    double deltaFourier = 2.0/((BLOB_TABLE_SIZE-1));
-    // The interpolation kernel must integrate to 1
-    // The interpolation kernel must integrate to 1
-/*
-    double iw0 = 1.0 / blob_Fourier_val(0., blob);
-    iw0 = iw0*iw0*iw0;
-    double Fb0 = blob_Fourier_val(0., blobFourier);
-    Fb0= Fb0*Fb0*Fb0;
-    double iFourierw0 = iw0/Fb0;
-
-    double iw0 = 1.0/blob_Fourier_val(0., blob);     
-    double iFourierw0 = iw0*1/blob_Fourier_val(0., blobFourier);
-*/
-
-    double iw0 = 1.0 / blob_Fourier_val(0., blob);
-    iw0 = iw0*iw0*iw0;
-    double Fb0 = blob_Fourier_val(0., blobFourier);
-    std::cerr << " before Fb0" << Fb0;
-    Fb0= Fb0*Fb0*Fb0;
-    std::cerr << " after Fb0" << Fb0;
-    double iFourierw0 = iw0/Fb0;
+    double deltaFourier = (sqrt(3.)*Xdim/2.)/(BLOB_TABLE_SIZE-1);
     
+    // The interpolation kernel must integrate to 1
+    double iw0 = 1.0 / blob_Fourier_val(0.0, blobnormalized);
+    double padXdim3 = padding_factor_proj * Xdim;
+    padXdim3 = padXdim3 * padXdim3 * padXdim3;
     FOR_ALL_ELEMENTS_IN_MATRIX1D(blob_table)
     {
-        DIRECT_VEC_ELEM(blob_table,i) = blob_val(delta*i, blob)*iw0;
+        DIRECT_VEC_ELEM(blob_table,i) = blob_val(delta*i, blob)  *iw0;
         DIRECT_VEC_ELEM(Fourier_blob_table,i) =
-            blob_Fourier_val(deltaFourier*i, blobFourier)*iFourierw0;
+            blob_Fourier_val(deltaFourier*i, blobFourier)*padXdim3  *iw0;
     }
     iDelta=1/delta;
-    iDeltaFourier=1/(deltaFourier*Xdim/2);
+    iDeltaFourier=1/deltaFourier;
 
     // Kernel for the weight correction
     int L=CEIL(blob.radius);
@@ -363,9 +348,7 @@ void Prog_RecFourier_prm::processImage(const FileName &fn_img)
                                  YY(gcurrent) * YY(gcurrent) +
                                  ZZ(gcurrent) * ZZ(gcurrent));
                         if (d > blob.radius) continue;
-                        double w = blob_table(ROUND(ABS(XX(gcurrent))*iDelta))*
-                                   blob_table(ROUND(ABS(YY(gcurrent))*iDelta))*
-                                   blob_table(ROUND(ABS(ZZ(gcurrent))*iDelta));
+                        double w = blob_table(ROUND(gcurrent.module()*iDelta));
                         
                         // Look for the location of this logical index
                         // in the physical layout
@@ -469,6 +452,7 @@ void Prog_RecFourier_prm::run()
     // Process all images in the selfile
     if (verb) init_progress_bar(SF.ImgNo());
     int imgno = 0;
+    int repaint = ceil(SF.ImgNo()/60);
     while (!SF.eof())
     {
         exit_if_not_exists(fn_control);
@@ -477,7 +461,7 @@ void Prog_RecFourier_prm::run()
         if (fn_img=="") break;
         processImage(fn_img);
 
-        if (verb && imgno++%60==0) progress_bar(imgno++);
+        if (verb && imgno++%repaint==0) progress_bar(imgno);
     }
     if (verb > 0) progress_bar(SF.ImgNo());
 
@@ -526,11 +510,14 @@ void Prog_RecFourier_prm::run()
     if (verb > 0) progress_bar(NiterWeight);
 */
     // Get a first approximation of the reconstruction
-    double iZdim=1.0/ZSIZE(VoutFourier); // Divide by Zdim because of the
-                                 // the extra dimension added
+    double corr2D_3D=pow(padding_factor_proj,2.)/
+                        (imgSize* pow(padding_factor_vol,3.)); 
+                                   // Divide by Zdim because of the
+                                   // the extra dimension added
+                                   // and padding differences
     FOR_ALL_ELEMENTS_IN_MATRIX3D(FourierWeights)
         if (VOL_ELEM(FourierWeights,k,i,j)!=0)
-            VOL_ELEM(VoutFourier,k,i,j)*=iZdim*VOL_ELEM(FourierWeights,k,i,j);
+            VOL_ELEM(VoutFourier,k,i,j)*=corr2D_3D*VOL_ELEM(FourierWeights,k,i,j);
 //    std::cout << "Aqui2\n" << FourierWeights << std::endl;
 //    std::cout << "Aqui3\n" << VoutFourier << std::endl;
     transformerVol.inverseFourierTransform();
@@ -541,12 +528,13 @@ void Prog_RecFourier_prm::run()
     Vout().window(FIRST_XMIPP_INDEX(imgSize),FIRST_XMIPP_INDEX(imgSize),
         FIRST_XMIPP_INDEX(imgSize),LAST_XMIPP_INDEX(imgSize),
         LAST_XMIPP_INDEX(imgSize),LAST_XMIPP_INDEX(imgSize));
+    double pad_relation= ((double)padding_factor_proj/padding_factor_vol);
+    pad_relation = (pad_relation * pad_relation * pad_relation);
     FOR_ALL_ELEMENTS_IN_MATRIX3D(Vout())
     {
-        double factor = Fourier_blob_table(ROUND(ABS(k)*iDeltaFourier))*
-                        Fourier_blob_table(ROUND(ABS(i)*iDeltaFourier))*
-                        Fourier_blob_table(ROUND(ABS(j)*iDeltaFourier));
-        Vout(k,i,j) /= factor;
+        double factor = Fourier_blob_table(ROUND(sqrt(k*k+i*i+j*j)
+                                                *iDeltaFourier));
+        Vout(k,i,j) /= (factor/pad_relation);
     }
     Vout.write(fn_out);
 }
