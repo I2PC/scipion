@@ -133,23 +133,23 @@ double kaiser_Fourier_value(double w, double a, double alpha, int m)
 {
     if (m != 2 && m !=0)
         REPORT_ERROR(2, "m out of range in kaiser_Fourier_value()");
-    double sigma = sqrt(ABS(alpha * alpha - (2 * PI * a * w) * (2 * PI * a * w)));
+    double sigma = sqrt(ABS(alpha * alpha - (2. * PI * a * w) * (2. * PI * a * w)));
     if (m == 2)
     {
-        if (2*PI*a*w > alpha)
-            return  pow(2*PI, 3 / 2)*pow(a, 3)*pow(alpha, 2)*bessj3_5(sigma)
+        if (2.*PI*a*w > alpha)
+            return  pow(2.*PI, 3. / 2.)*pow(a, 3.)*pow(alpha, 2.)*bessj3_5(sigma)
                     / (bessi0(alpha)*pow(sigma, 3.5));
         else
-            return  pow(2*PI, 3 / 2)*pow(a, 3)*pow(alpha, 2)*bessi3_5(sigma)
+            return  pow(2.*PI, 3. / 2.)*pow(a, 3.)*pow(alpha, 2.)*bessi3_5(sigma)
                     / (bessi0(alpha)*pow(sigma, 3.5));
     }
     else if (m == 0)
     {
         if (2*PI*a*w > alpha)
-            return  pow(2*PI, 3 / 2)*pow(a, 3)*bessj1_5(sigma)
+            return  pow(2.*PI, 3. / 2.)*pow(a, 3)*bessj1_5(sigma)
                     / (bessi0(alpha)*pow(sigma, 1.5));
         else
-            return  pow(2*PI, 3 / 2)*pow(a, 3)*bessi1_5(sigma)
+            return  pow(2.*PI, 3. / 2.)*pow(a, 3)*bessi1_5(sigma)
                     / (bessi0(alpha)*pow(sigma, 1.5));
     }
 }
