@@ -925,8 +925,10 @@ def create_working_directory(_mylog,_WorkDirectory):
 
     if not os.path.exists(_WorkDirectory):
        os.makedirs(_WorkDirectory)
-       # Also create subdirectories
+    # Also create subdirectories
+    if not os.path.exists(_WorkDirectory + "/" + LibraryDir):
        os.makedirs(_WorkDirectory + "/" + LibraryDir)
+    if not os.path.exists(_WorkDirectory + "/" + ProjMatchDir):
        os.makedirs(_WorkDirectory + "/" + ProjMatchDir)
 
 #------------------------------------------------------------------------
