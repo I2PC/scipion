@@ -38,7 +38,7 @@ void Prog_RecFourier_prm::read(int argc, char **argv)
     verb = textToInteger(getParameter(argc, argv, "-verb", "1"));
     do_weights = checkParameter(argc, argv, "-weight");
     padding_factor_proj = textToFloat(getParameter(argc, argv, "-pad_proj","2"));
-    padding_factor_vol = textToFloat(getParameter(argc, argv, "-pad_vol","1"));
+    padding_factor_vol = textToFloat(getParameter(argc, argv, "-pad_vol","2"));
     fn_control    = getParameter(argc, argv, "-control", "");
     blob.radius   = textToFloat(getParameter(argc, argv, "-r","0.9"));
     blob.order    = textToFloat(getParameter(argc, argv, "-m","0"));
