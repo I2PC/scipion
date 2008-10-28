@@ -23,6 +23,8 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
+//#include "mpi_run.h"
+
 #include <data/args.h>
 #include <reconstruction/reconstruct_fourier.h>
 #include <data/header.h>
@@ -31,6 +33,7 @@
 #include <cstdlib>
 #include <data/funcs.h>
 #include <data/matrix2d.h>
+#include <sys/time.h>
 #include <mpi.h>
 #include <iostream>
 #include <sstream>
@@ -42,31 +45,11 @@
 #define TAG_TRANSFER 2
 #define TAG_FREEWORKER   3
 
-// Really big things to transfer are 
-// divided into smaller chunks of size ...
-#define BUFFSIZE 10000000
-
-#ifdef NEVERDEFINED
 class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
-	{
+{
     public:
-	//int rank, size, num_img_tot;
 
-	/** Contains the resulting volume in Fourier space **/ 
-	double * FourierVol;
-	int paddim_proj;
-	int paddim_vol;
-	/** Contains normalization (weight) values for 'FourierVol' **/
-	double * FourierVolWeight;
-
-	Projection        proj;
-
-	/** Symmetrization variables **/
-	Matrix2D<double>  L, R, A;
-	Mask_Params       mask_prm;
 	FileName          fn_img;            
-
-	ImageXmipp paddedImg;
 
 	/** Fourier transform size for volumes **/
 	long int sizeout;
@@ -92,8 +75,6 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 	/*  constructor ------------------------------------------------------- */
 	Prog_mpi_RecFourier_prm()
 	{
-		L.resize(4,4);
-		R.resize(4,4);
 		//parent class constructor will be called by deault without parameters
 		MPI_Comm_size(MPI_COMM_WORLD, &(nProcs));
 		MPI_Comm_rank(MPI_COMM_WORLD, &(rank));
@@ -117,6 +98,9 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 	{
 		Prog_RecFourier_prm::usage();
 		std::cerr << " [ -mpi_job_size default=5]    : Number of images sent to a cpu in a single job \n";
+		std::cerr << "                                  10 may be a good value";
+		std::cerr << "                                  if  -1 the computer will put the maximum";
+		std::cerr << "                                  posible value that may not be the best option";
 	}
 
 
@@ -134,82 +118,11 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 		{
 			show();
 		}
+		
 		produce_Side_info();
-		int               c, nn, imgno;
-		double            rot, tilt, psi, newrot, newtilt, newpsi, xoff, yoff, flip, weight;
-
-		//vol().resize(dim, dim, dim);
-		//vol().initZeros();
-		//alloc memory for volume in Fourier space
-		//the allocation is a bit wier but can be reused for fftw
-		//I do not want to create a fourier object yet
-		//because I only need it at the end of the program
-		//and requires to alloc the doble amount of memory
-		paddim_vol=ROUND(dim*padding_factor_vol);
-		if(paddim_vol%2!=0)
-			REPORT_ERROR(1, "\n\nvolume dim * padding_factor must be even.\n\n");
-		padding_factor_vol=(double)paddim_vol/(double)dim;
-		{
-			int ndim    = 3;
-			int * myfN;
-			try
-			{
-				myfN = new int [ndim];
-			}
-			catch (std::bad_alloc&)
-			{
-				std::cout << "Error allocating memory." << std::endl;
-				exit(1);
-			}    
-			myfN[0]=paddim_vol;
-			myfN[1]=paddim_vol;
-			myfN[2]=paddim_vol;
-			// Set padding dimension
-			long int fTotalSize=(long int)myfN[0]*(long int)myfN[1]*(long int)myfN[2];
-			sizeout = long(double(fTotalSize)*(long int)(myfN[ndim-1]/2+1)/(long int)myfN[ndim-1]);
-			try
-			{
-				FourierVol = new double[2*sizeout];
-			}
-			catch (std::bad_alloc&)
-			{
-				std::cout << "Error allocating memory." << std::endl;
-				exit(1);
-			}
-			for (int i=0; i< 2*sizeout; i++) FourierVol[i]=0.;
-
-			//we will need a volume for weight with same size in x and y and half in z
-			try
-			{                                 //the 2 factor is not needed
-				FourierVolWeight = new double[sizeout];
-			}
-			catch (std::bad_alloc&)
-			{
-				std::cout << "Error allocating memory." << std::endl;
-				exit(1);
-			} 
-		}
-		//
-		// init volumes with zeros
-		std::complex<double> * FOURIERVOL;
-		FOURIERVOL = (std::complex<double> *)FourierVol;
-		for (int i=0; i<sizeout;i++)
-		{
-			FOURIERVOL[i]=(std::complex<double>)0.0;
-			FourierVolWeight[i]=0.;
-		}
 
 		SF.go_beginning();
-		imgno = 0;
-		//create Fourier object of padded size
-		//I want to reuse it so I will create it by hand
-		paddim_proj=ROUND(dim*padding_factor_proj);
-		if(paddim_proj%2!=0)
-			REPORT_ERROR(1, "\n\nprojection dim * padding_factor must be even.\n\n");
-		padding_factor_proj=(double)paddim_proj/(double)dim;
-		paddedImg = ImageXmipp(paddim_proj,paddim_proj);
-		paddedImg().initZeros();
-
+		
 		//leer sel file / dividir por mpi_job_size 
 		numberOfJobs=ceil(SF.ImgNo()/mpi_job_size);
 
@@ -229,18 +142,19 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 	/* Run --------------------------------------------------------------------- */
 	void run()
 	{   
-                xmippFftw fftPaddedImg(paddedImg(), false);
-		
-		std::complex<double> * FOURIERPROJ;
-		FOURIERPROJ = (std::complex<double> *)(fftPaddedImg.fOut);
+        	struct timeval start_time, end_time;
+  		long int total_usecs;
+		double total_time;
 
-		std::complex<double> * FOURIERVOL;
-		FOURIERVOL = (std::complex<double> *)FourierVol;
-		
-		fftPaddedImg.Init("ES",FFTW_FORWARD,false);
+		double * fourierVolume = (double *)VoutFourier.data;
+		double * fourierWeights = FourierWeights.data;
+
+		sizeout = MULTIDIM_SIZE(FourierWeights);
 
 		if (rank == 0)
-		{			
+		{	
+		 	gettimeofday(&start_time,NULL);
+
 			if( verb )
 				init_progress_bar(numberOfJobs);
 
@@ -268,244 +182,56 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 					progress_bar(i);      
        			}
 
+  			gettimeofday(&end_time,NULL);
+  
+  			total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
+  			total_time=(double)total_usecs/(double)1000000;		
 
-			int transfersCompleted = 0;
+			std::cout << std::flush;
+			std::cout << "\nProcessing time: " << total_time << " secs." << std::endl;
 
-			double * recBuffer = (double *) malloc( sizeof(double) * BUFFSIZE );
-			int receivedSize;
 			int currentSource;
-			double * pointer;
+
+			gettimeofday(&start_time,NULL);
 
 			// Start collecting results
 			while(1)
 			{
-				MPI_Recv(0, 0, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
+				for( int works=0; works < (nProcs-1); works++)
+				{ 
+					MPI_Recv(0, 0, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
 						 MPI_COMM_WORLD, &status);
+					currentSource = status.MPI_SOURCE;
 
-				currentSource = status.MPI_SOURCE;
-
-				// Signal the worker to start sending back the results
-				MPI_Send(0, 0, MPI_INT, currentSource, TAG_TRANSFER, MPI_COMM_WORLD);
-				
-				// Just for convenience, use another "sliding" pointer
-				pointer = FourierVol;
-				while(1)
-				{
-					MPI_Probe( currentSource, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-					
-					// worker is free
-					if (status.MPI_TAG == TAG_FREEWORKER)
-					{	
-						MPI_Recv(0, 0, MPI_INT, currentSource, TAG_FREEWORKER,
-							 MPI_COMM_WORLD, &status);
-						
-						break;
-					}
-
-					MPI_Recv( recBuffer, 
-							 BUFFSIZE, 
-							 MPI_DOUBLE, 
-							 currentSource, 
-							 MPI_ANY_TAG, 
-							 MPI_COMM_WORLD, 
-							 &status );
-					
-					MPI_Get_count(&status,MPI_DOUBLE,&receivedSize);
-						
-					for( int i = 0; i < receivedSize ; i ++ )
-					{
-						pointer[i] += recBuffer[i];
-					}
-
-					pointer += receivedSize; 
+					// Signal the worker to start sending back the results
+					MPI_Send(0, 0, MPI_INT, currentSource, TAG_TRANSFER, MPI_COMM_WORLD);
 				}
-				
-				pointer = FourierVolWeight;
-
-				while(1)
-				{
-					MPI_Probe( currentSource, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-
-					// worker is free
-					if (status.MPI_TAG == TAG_FREEWORKER)
-					{
-						// Clear buffer
-						MPI_Recv(0, 0, MPI_INT, currentSource, TAG_FREEWORKER,
-							 MPI_COMM_WORLD, &status);
 						
-						break;
-					}
-					
-					MPI_Recv( recBuffer, 
-							 BUFFSIZE, 
-							 MPI_DOUBLE, 
-							 currentSource, 
-							 MPI_ANY_TAG, 
-							 MPI_COMM_WORLD, 
-							 &status );
+				MPI_Reduce( MPI_IN_PLACE, fourierVolume, 2 * sizeout, MPI_DOUBLE, MPI_SUM,
+				0, MPI_COMM_WORLD);
+				
+				MPI_Reduce( MPI_IN_PLACE, fourierWeights, sizeout, MPI_DOUBLE, MPI_SUM,
+				0, MPI_COMM_WORLD);
+				
+				gettimeofday(&end_time,NULL);
 
-					MPI_Get_count(&status,MPI_DOUBLE,&receivedSize);                    
+  				total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
+  				total_time=(double)total_usecs/(double)1000000;		
 
-					for( int i = 0; i < receivedSize ; i ++ )
-					{
-						pointer[i] += recBuffer[i];
-					}
+				std::cout << "Transfers time: " << total_time << " secs." << std::endl;
+				
+				// Normalize global volume and store data
+				gettimeofday(&start_time,NULL);
+				finishComputations();
+    				gettimeofday(&end_time,NULL);
 
-					pointer += receivedSize;
-				}         
-		
-				transfersCompleted++;
+  				total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
+  				total_time=(double)total_usecs/(double)1000000;		
 
-				if( transfersCompleted == (nProcs-1) )
-				{
-					// All threads have finished their job, calculating
-					// final volume and storing it.
-					
-					int Xdim,Xsize;
-    					int Ydim=1,Ysize=1;
-    					int Zdim=1,Zsize=1;
-    					Zdim=Zsize=paddim_vol;
-    					Ydim=Ysize=paddim_vol;
-    					Xsize=paddim_vol;
-    					Xdim = (int)  paddim_vol/2  +1;
-
-					double dZdim = (double) Zdim;
-    					for ( int z=0, i=0; z<Zdim; z++ ) 
-						for ( int y=0; y<Ydim; y++ ) 
-							for ( int x=0; x<Xdim; x++, i++ ) 
-            						{
-               							if( FourierVolWeight[i] > 0)//MINIMUMWEIGHT)
-									FOURIERVOL[i] /= FourierVolWeight[i] * dZdim ;
-            						}
-					
-    					// release memory for weights and create xmippfourier object for volume
-    					delete [] FourierVolWeight;
-    					VolumeXmipp vol;
-					{
-        					int ndim    = 3;
-        					int * myfN;
-        					try
-        					{	
-            						myfN = new int [ndim];
-        					}
-        					catch (std::bad_alloc&)
-        					{
-          						std::cout << "Error allocating memory." << std::endl;
-          						exit(1);
-        					}    
-        					myfN[0]=paddim_vol;
-        					myfN[1]=paddim_vol;
-        					myfN[2]=paddim_vol;
-        					// Set padding dimension
-        					int fTotalSize=myfN[0]*myfN[1]*myfN[2];
-        					bool inplace = false;
-        					xmippFftw Volfft(ndim, myfN, inplace,FourierVol);
-        					Volfft.Init("ES",FFTW_BACKWARD,false);
-        					Volfft.CenterRealImageInFourierSpace(false) ;//Change phases
-        					Volfft.Transform();
-        					Volfft.CenterFourierTransformInRealSpace(true);//ok MOVE TRANSFORM TO THE CENTER
-
-        					/* create table with 3D blob fourier transform */
-        					//precompute blob fourier transform values close to origin
-        					fourier_blob_table = new double [BLOB_TABLE_SIZE];
-        					/*it should be divided by 2 not by 4
-          					but 4 seems to work. I do not know why */
-        					double ww = 1/(4*(double)(BLOB_TABLE_SIZE-1));
-        
-        					//acces to the blob table should take into account 
-        					//pad factor but not sampling
-        					double w;
-        					double w0= blob_Fourier_val(0., blob);
-        					for (int i=0; i<BLOB_TABLE_SIZE; i++)
-        					{
-          						w = ww*(double)i;
-          						fourier_blob_table[i] =  blob_Fourier_val(w, blob)/w0;
-          						//#define DEBUG
-          						#ifdef DEBUG
-          						std::cout.setf(std::ios::scientific); 
-          						std::cout.width(12); 
-          						std::cout /*<< i << " " 
-                    						*/<< w*paddim_vol <<  "\t" 
-                    						<< "\t"<< fourier_blob_table[i] << " "
-                    						<<  blob.radius
-                    						<< std::endl;
-          						#endif
-          						#undef DEBUG
-        					}
-        					//copy volume to original volume
-        					int xdim=dim;
-        					int ydim=dim;
-        					int zdim=dim;
-        					int center_shiftx = (paddim_vol-xdim)/2+xdim%2;// add one if odd
-        					int center_shifty = (paddim_vol-ydim)/2+ydim%2;// add one if odd
-        					int center_shiftz = (paddim_vol-zdim)/2+zdim%2;// add one if odd
-        					
-						vol().resize(dim,dim,dim);
-        					for(int i=0;i<zdim;i++)
-           						for(int j=0;j<ydim;j++)
-            					   		for(int k=0;k<xdim;k++)
-                						{           
-                							vol(i,j,k)=Volfft.fOut[(center_shiftz + k) + 
-                                       					(center_shifty + j) * paddim_vol +
-                                       					(center_shiftx + i) * paddim_vol * paddim_vol ];
- 	                                              		}
-        					vol().setXmippOrigin();
-
-        					for (int k = STARTINGZ(vol()); k <= FINISHINGZ(vol()); k++)
-        					{
-            						for (int i = STARTINGY(vol()); i <= FINISHINGY(vol()); i++)
-            						{
-                						for (int j = STARTINGX(vol()); j <= FINISHINGX(vol()); j++)
-                						{
-                    							double r      = sqrt(k*k+i*i+j*j);
-                    							if(r>paddim_vol/2)
-                        							vol(i,j,k)=0.;
-                    							else
-                    							{
-                        							double factor = fourier_blob_table[(int)(r*BLOB_TABLE_SIZE/(paddim_vol/2.))];
-                        							if (factor > 0.001)
-                        							{
-                            								vol(i,j,k)   /=  factor;
-                        							}
-                   							}
-                						}
-            						}
-        					}
-        					/*        
-        					CENTER XMIPP VOLUME   
-        					APPLY FILTER
-        					*/     
-	
-						#ifdef NEVERDEFINED
-        					vol().resize(paddim_vol,paddim_vol,paddim_vol);
-        					for(int i=0;i<paddim_vol;i++)
-           						for(int j=0;j<paddim_vol;j++)
-               							for(int k=0;k<paddim_vol;k++)
-                						{           
-                							vol(i,j,k)=Volfft.fOut[(  k) + 
-                                       						(  j) * paddim_vol +
-                                       						(  i) * paddim_vol * paddim_vol ];
-                						}
-						#endif
-    					}    
-    
-    					//symmetrize in reaL SPACE IF Needed 
-    					if (fn_sym_vol == "")
-    					{
-        					vol.write(fn_out);
-    					}
-    					else 
-    					{
-        					if (verb > 0) 
-            						std::cout << std::endl << "Symmetrizing volume (using Bsplines)" << std::endl;
-        					VolumeXmipp     V_out;
-        					symmetrize_Bspline(SL_vol, vol, V_out, 3, false, true);
-        					V_out.write(fn_out);
-    					}
-    
-    					cout << "Execution completed successfully\n" << endl;
-					break;
-				}
+				std::cout << "Weighting time: " << total_time << " secs." << std::endl;
+				
+				std::cout << "Execution completed successfully\n" << std::endl;
+				break;
 			}   
 		}
 		else
@@ -532,64 +258,12 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 #ifdef DEBUG
 					std::cerr << "Wr" << rank << " " << "TAG_STOP" << std::endl;
 #endif
-					double * pointer = FourierVol;
-					int totalSize = 2 * sizeout;	
-					int numChunks = ceil( (double)totalSize / (double)BUFFSIZE );
-					int packetSize;
-
-					// Send Fourier Transform
-					for( int i = 0 ; i < numChunks ; i ++ )
-					{	
-						if( i == (numChunks-1))
-						{
-							packetSize = totalSize-i*BUFFSIZE;
-						}
-						else
-						{
-							packetSize = BUFFSIZE;
-						}
-						
-						MPI_Send( pointer, 
-								 packetSize,
-								 MPI_DOUBLE,
-								 0,
-								 0,
-								 MPI_COMM_WORLD
-								 );
-						pointer += BUFFSIZE;
-					}
-					
-					MPI_Send(0, 0, MPI_INT, 0, TAG_FREEWORKER, MPI_COMM_WORLD);
-					
-					pointer = FourierVolWeight;
-					totalSize = sizeout;
-					numChunks = ceil( (double)totalSize / (double)BUFFSIZE);
-					// Send Weights
-
-					for( int i = 0 ; i < numChunks ; i ++ )
-					{	
-						if( i == (numChunks-1))
-						{
-							packetSize = totalSize-i*BUFFSIZE;
-						}
-						else
-						{
-							packetSize = BUFFSIZE;
-						}
-
-						MPI_Send( pointer, 
-								 packetSize,
-								 MPI_DOUBLE,
-								 0,
-								 0,
-								 MPI_COMM_WORLD
-								 );
-
-						pointer += BUFFSIZE;
-					}
-					
-					MPI_Send(0, 0, MPI_INT, 0, TAG_FREEWORKER, MPI_COMM_WORLD);
-
+					MPI_Reduce( fourierVolume, NULL, 2*sizeout, MPI_DOUBLE, MPI_SUM,
+					0, MPI_COMM_WORLD);
+			
+					MPI_Reduce( fourierWeights, NULL, sizeout, MPI_DOUBLE, MPI_SUM,
+					0, MPI_COMM_WORLD);
+			
 					break;
             			}
 				else if (status.MPI_TAG == TAG_WORKFORWORKER)
@@ -612,13 +286,7 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 
 						fn_img = SF.get_file_number(i);
 
-						ProcessOneImage(fn_img,
-								fftPaddedImg,
-								paddim_proj,
-								paddim_vol,
-								proj,
-								FOURIERVOL,
-								FourierVolWeight,
+						processImage(fn_img );
 					}
             			}
 				else
@@ -639,19 +307,14 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 	}
 
 };
-#endif
 
 int main(int argc, char *argv[])
 {
-#ifdef NEVER_DEFINED
-    std::cerr << "0\n";
     if (MPI_Init(&argc, &argv) != MPI_SUCCESS)
     {
         fprintf(stderr, "MPI initialization error\n");
         exit(EXIT_FAILURE);
     }
-    //size of the mpi block, number of images
-    //mpi_job_size=!checkParameter(argc,argv,"-mpi_job_size","-1");
 
     Prog_mpi_RecFourier_prm prm;
     try
@@ -677,5 +340,6 @@ int main(int argc, char *argv[])
     }
     
     exit(0);
-#endif
 }
+
+
