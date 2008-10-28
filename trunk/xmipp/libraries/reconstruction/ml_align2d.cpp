@@ -1447,8 +1447,8 @@ void Prog_MLalign2D_prm::expectationSingleImage(
             {
                 int refnoipsi = refno*nr_psi + ipsi;
                 // Correct weighted sum of images for new bgmean (only first element=origin in Fimg)
-                dMij(mysumimgs[refnoipsi],0,0) -= 
-                    sumw_refpsi[refnoipsi] * ddim2 * (bgmean - old_bgmean); 
+                if (do_norm)
+                    dMij(mysumimgs[refnoipsi],0,0) -= sumw_refpsi[refnoipsi] * ddim2 * (bgmean - old_bgmean); 
                 // Sum mysumimgs to the global weighted sum
                 wsumimgs[refnoipsi] += (scale_dim2_sumw * mysumimgs[refnoipsi]);
             }
