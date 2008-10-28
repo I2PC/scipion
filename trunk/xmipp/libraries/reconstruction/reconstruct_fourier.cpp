@@ -464,7 +464,9 @@ void Prog_RecFourier_prm::run()
         if (verb && imgno++%repaint==0) progress_bar(imgno);
     }
     if (verb > 0) progress_bar(SF.ImgNo());
+}
 
+void Prog_RecFourier_prm::finishComputations()
     // Enforce symmetry in the Fourier values as well as the weights
     transformerVol.enforceHermitianSymmetry();
     int yHalf=YSIZE(FourierWeights)/2;

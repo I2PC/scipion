@@ -146,7 +146,9 @@ public:
     /// Main Loop 
     void run();
 
-    /// Process one image
+	void finishComputations();
+    
+	/// Process one image
     void processImage(const FileName &fn_img);
     
     /// Correct weight
