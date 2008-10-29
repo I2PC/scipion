@@ -22,9 +22,6 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-
-//#include "mpi_run.h"
-
 #include <data/args.h>
 #include <reconstruction/reconstruct_fourier.h>
 #include <data/header.h>
@@ -45,6 +42,8 @@
 #define TAG_TRANSFER 2
 #define TAG_FREEWORKER   3
 
+#define BUFFSIZE 10000000
+
 class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 {
     public:
@@ -53,7 +52,8 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 
 	/** Fourier transform size for volumes **/
 	long int sizeout;
-		
+
+	
         /** Number of Procesors **/
         int nProcs;
         
@@ -124,13 +124,17 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 		SF.go_beginning();
 		
 		//leer sel file / dividir por mpi_job_size 
-		numberOfJobs=ceil(SF.ImgNo()/mpi_job_size);
+		numberOfJobs=ceil((double)SF.ImgNo()/mpi_job_size);
 
 		//only one node will write in the console
 		if (rank == 0 )
 		{
 //#define DEBUG
 #ifdef DEBUG
+		        std::cerr << "SF.ImgNo() mpi_job_size " 
+			          << SF.ImgNo() << " "
+				  << mpi_job_size
+				  << std::endl;
 			std::cerr << "numberOfJobs: " << numberOfJobs << std::endl <<std::endl;
 #endif
 #undef DEBUG
@@ -159,8 +163,16 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 				init_progress_bar(numberOfJobs);
 
 			int stopTagsSent =0;
+			
 			for (int i=0;i<numberOfJobs;)
 			{
+
+//#define DEBUG
+#ifdef DEBUG
+		        std::cerr << "master-recv  i=" << i << std::endl;
+			std::cerr << "numberOfJobs: " << numberOfJobs << std::endl <<std::endl;
+#endif
+#undef DEBUG
 				MPI_Recv(0, 0, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
 							 MPI_COMM_WORLD, &status);
 				
@@ -170,6 +182,11 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 					exit(-1);
 				}
 				
+//#define DEBUG
+#ifdef DEBUG
+		        std::cerr << "master-send i=" << i << std::endl;
+#endif
+#undef DEBUG
 				MPI_Send(&i,
 					 1,
 					 MPI_INT,
@@ -187,51 +204,124 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
   			total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
   			total_time=(double)total_usecs/(double)1000000;		
 
-			std::cout << std::flush;
-			std::cout << "\nProcessing time: " << total_time << " secs." << std::endl;
+			std::cout << std::flush << endl;
+			std::cout << "Processing time: " << total_time << " secs." << std::endl;
 
 			int currentSource;
-
+			int transfersCompleted=0;
+			// Reserve memory for the buffer
+			double * recBuffer = (double *) malloc (sizeof(double)*BUFFSIZE);
+			int receivedSize;
+			double * pointer;
+			
 			gettimeofday(&start_time,NULL);
 
 			// Start collecting results
 			while(1)
 			{
-				for( int works=0; works < (nProcs-1); works++)
-				{ 
+				//for( int works=0; works < (nProcs-1); works++)
+				//{ 
 					MPI_Recv(0, 0, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
 						 MPI_COMM_WORLD, &status);
+					
 					currentSource = status.MPI_SOURCE;
 
 					// Signal the worker to start sending back the results
 					MPI_Send(0, 0, MPI_INT, currentSource, TAG_TRANSFER, MPI_COMM_WORLD);
-				}
+				//}
+				
+				pointer = fourierVolume;
+					
+				while(1)
+				{
+					MPI_Probe( currentSource, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
+				
+					if( status.MPI_TAG == TAG_FREEWORKER )
+					{
+						MPI_Recv(0,0, MPI_INT, currentSource, TAG_FREEWORKER, MPI_COMM_WORLD, &status );
 						
-				MPI_Reduce( MPI_IN_PLACE, fourierVolume, 2 * sizeout, MPI_DOUBLE, MPI_SUM,
-				0, MPI_COMM_WORLD);
+						break;
+					}
+					
 				
-				MPI_Reduce( MPI_IN_PLACE, fourierWeights, sizeout, MPI_DOUBLE, MPI_SUM,
-				0, MPI_COMM_WORLD);
+					MPI_Recv( recBuffer,
+						BUFFSIZE,
+						MPI_DOUBLE,
+						currentSource,
+						MPI_ANY_TAG,
+						MPI_COMM_WORLD,
+						&status );
 				
-				gettimeofday(&end_time,NULL);
-
-  				total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
-  				total_time=(double)total_usecs/(double)1000000;		
-
-				std::cout << "Transfers time: " << total_time << " secs." << std::endl;
+					MPI_Get_count( &status, MPI_DOUBLE, &receivedSize );
 				
-				// Normalize global volume and store data
-				gettimeofday(&start_time,NULL);
-				finishComputations();
-    				gettimeofday(&end_time,NULL);
-
-  				total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
-  				total_time=(double)total_usecs/(double)1000000;		
-
-				std::cout << "Weighting time: " << total_time << " secs." << std::endl;
+					for( int i = 0 ; i < receivedSize ; i ++ )
+					{
+						pointer[i] += recBuffer[i];
+					}
 				
-				std::cout << "Execution completed successfully\n" << std::endl;
-				break;
+					pointer += receivedSize;	
+				}
+				
+				pointer = fourierWeights;
+				
+				while(1)
+				{
+					MPI_Probe( currentSource, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
+					
+					if( status.MPI_TAG == TAG_FREEWORKER )
+					{
+						MPI_Recv( 0,0,MPI_INT,currentSource,TAG_FREEWORKER, MPI_COMM_WORLD,&status );
+					
+						break;
+					}
+					
+					MPI_Recv( recBuffer,
+						BUFFSIZE,
+						MPI_DOUBLE,
+						currentSource,
+						MPI_ANY_TAG,
+						MPI_COMM_WORLD,
+						&status );
+						
+					MPI_Get_count( &status, MPI_DOUBLE, &receivedSize );
+					
+					for( int i = 0 ; i < receivedSize ; i ++ )
+					{
+						pointer[i] += recBuffer[i];
+					}
+					
+					pointer += receivedSize;
+				}
+				
+				transfersCompleted++;
+				
+				if( transfersCompleted == (nProcs-1) )
+				{
+					/*MPI_Reduce( MPI_IN_PLACE, fourierVolume, 2 * sizeout, MPI_DOUBLE, MPI_SUM,
+					0, MPI_COMM_WORLD);
+				
+					MPI_Reduce( MPI_IN_PLACE, fourierWeights, sizeout, MPI_DOUBLE, MPI_SUM,
+					0, MPI_COMM_WORLD);*/
+				
+					gettimeofday(&end_time,NULL);
+
+  					total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
+  					total_time=(double)total_usecs/(double)1000000;		
+
+					std::cout << "Transfers time: " << total_time << " secs." << std::endl;
+				
+					// Normalize global volume and store data
+					gettimeofday(&start_time,NULL);
+					finishComputations();
+    					gettimeofday(&end_time,NULL);
+	
+  					total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
+  					total_time=(double)total_usecs/(double)1000000;		
+	
+					std::cout << "Weighting time: " << total_time << " secs." << std::endl;
+					std::cout << "Execution completed successfully\n" << std::endl;
+					break;
+				}
 			}   
 		}
 		else
@@ -244,6 +334,11 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 			{
 				int jobNumber;
 				//I am free
+//#define DEBUG
+#ifdef DEBUG
+		        std::cerr << "slave-send TAG_FREEWORKER rank=" << rank << std::endl;
+#endif
+#undef DEBUG
 				MPI_Send(0, 0, MPI_INT, 0, TAG_FREEWORKER, MPI_COMM_WORLD);
 				
 				MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
@@ -258,32 +353,102 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 #ifdef DEBUG
 					std::cerr << "Wr" << rank << " " << "TAG_STOP" << std::endl;
 #endif
-					MPI_Reduce( fourierVolume, NULL, 2*sizeout, MPI_DOUBLE, MPI_SUM,
+					double * pointer = fourierVolume;
+					int totalSize = 2 * sizeout;
+					int numChunks = ceil((double)totalSize/(double)BUFFSIZE);
+					int packetSize;
+					
+					for( int i = 0 ; i < numChunks ; i ++ )
+					{
+						if( i == (numChunks-1))
+						{
+							packetSize = totalSize-i*BUFFSIZE;
+						}
+						else
+						{
+							packetSize = BUFFSIZE;
+						}
+						
+						MPI_Send( pointer,
+							packetSize,
+							MPI_DOUBLE,
+							0,
+							0,
+							MPI_COMM_WORLD
+							);
+						
+						pointer += packetSize;
+					}
+					
+					MPI_Send( 0,0,MPI_INT,0,TAG_FREEWORKER, MPI_COMM_WORLD );
+					
+					pointer = fourierWeights;
+					totalSize = sizeout;
+					numChunks = ceil((double)totalSize / (double)BUFFSIZE);
+					
+					for( int i=0; i < numChunks ; i++ )
+					{
+						if( i == (numChunks -1))
+						{
+							packetSize=totalSize-i*BUFFSIZE;
+						}
+						else
+						{
+							packetSize = BUFFSIZE;
+						}
+						
+						MPI_Send( pointer,
+							packetSize,
+							MPI_DOUBLE,
+							0,
+							0,
+							MPI_COMM_WORLD
+							);
+						
+						pointer += packetSize;
+					}
+					
+					MPI_Send(0,0,MPI_INT,0,TAG_FREEWORKER,MPI_COMM_WORLD);
+					
+					/*MPI_Reduce( fourierVolume, NULL, 2*sizeout, MPI_DOUBLE, MPI_SUM,
 					0, MPI_COMM_WORLD);
 			
 					MPI_Reduce( fourierWeights, NULL, sizeout, MPI_DOUBLE, MPI_SUM,
-					0, MPI_COMM_WORLD);
+					0, MPI_COMM_WORLD);*/
 			
 					break;
             			}
 				else if (status.MPI_TAG == TAG_WORKFORWORKER)
-					//there is still some work to be done    
             			{		
+//#define DEBUG
+#ifdef DEBUG
+		        std::cerr << "slave-rece TAG_WORKFORWORKER rank=" << rank << std::endl;
+			
+#endif
+#undef DEBUG
 					//get the jobs number
 					MPI_Recv(&jobNumber, 1, MPI_INT, 0, TAG_WORKFORWORKER, MPI_COMM_WORLD, &status);
 					int min_i, max_i;
 
 					min_i = jobNumber*mpi_job_size;
 					max_i = min_i + mpi_job_size;
+//#define DEBUG
+#ifdef DEBUG
+		        std::cerr << "slave-rece-AFTER TAG_WORKFORWORKER rank= min and max" 
+			          << rank << " "
+				  << min_i << " "
+				  << max_i
+				  << std::endl;		
+#endif
+#undef DEBUG
 
 					// Process all images
 					for( int i = min_i ; i < max_i ; i ++ )
 					{
 						// Check whether all projections have already 
 						// been processed. If so, break loop
-						if( i > SF.ImgNo() )
+						if( i == SF.ImgNo() )
 							break;
-
 						fn_img = SF.get_file_number(i);
 
 						processImage(fn_img );
@@ -296,6 +461,7 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 				}           
 			}
 		}
+		
 		MPI_Finalize();
 	}
 
