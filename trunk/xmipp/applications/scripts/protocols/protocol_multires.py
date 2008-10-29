@@ -17,15 +17,15 @@
 # {file} Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
-SelFileName='noefg.sel'
+SelFileName='imgsToUse.sel'
 
 # {file} Initial 3D reference map:
-ReferenceFileName='ml3d_it00020_vol00001_sc128.vol'
+ReferenceFileName='Src/emd_1356_256.vol'
 
 # {dir} Working subdirectory: 
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
-WorkDirectory='MultiRes/noefg_repeated'
+WorkDirectory='MultiRes/Test1'
 
 # Delete working directory if it already exists?
 """ Just be careful with this option...
@@ -40,12 +40,12 @@ NumberofIterations=30
     Set to 1 to start a new run 
     Note: Do NOT delete working directory if this option is not set to 1
 """
-ResumeIteration=1
+ResumeIteration=19
 
 # {expert} {dir} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
-ProjectDir='/home2/bioinfo/coss/noefg'
+ProjectDir='/home/coss/Johan'
 
 # {expert} {dir} Directory name for logfiles:
 LogDir='Logs'
@@ -60,7 +60,7 @@ SkipPrealignment=True
 ParticleRadius=60
 
 # Particle mass (Daltons)
-ParticleMass=2000000
+ParticleMass=280000
 
 # {file} In the case of symmetry supply the symmetry description file:
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetrize
@@ -70,7 +70,7 @@ ParticleMass=2000000
 SymmetryFile=''
 
 # Sampling rate (Angstrom/pixel)
-SamplingRate=2.8
+SamplingRate=1.96
 
 #-----------------------------------------------------------------------------
 # {section} Iteration parameters
@@ -89,7 +89,7 @@ SamplingRate=2.8
     Scaling is done via spline pyramids, please visit:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Pyramid
 """
-PyramidLevels='5x1 20x0'
+PyramidLevels='10x1 20x0'
 
 # Angular steps
 """ Angular steps for each of the iterations. This parameter is used to build
@@ -100,10 +100,10 @@ PyramidLevels='5x1 20x0'
     The discrete angular assignment is done with xmipp_angular_predict:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Angular_predict
 """
-AngularSteps='5x5 20x3'
+AngularSteps='5x5 3'
 
 # {expert} Reconstruction method
-""" Choose between wbp or art
+""" Choose between fourier, wbp or art
     You must specify this option for each iteration. 
     This can be done by a sequence of numbers (for instance, "wbp wbp wbp art " 
     specifies 4 iterations, the first three set the value to wbp (no restriction)
@@ -113,7 +113,7 @@ AngularSteps='5x5 20x3'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-ReconstructionMethod='wbp'
+ReconstructionMethod='18xwbp fourier'
 
 # {expert} Serial ART
 """ Do serial ART even if parallel execution is available. This parameter
@@ -154,7 +154,7 @@ DiscreteAssignment='50x1'
     The discrete angular assignment is done with xmipp_angular_predict:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Angular_predict_continuous
 """
-ContinuousAssignment='4x0 1'
+ContinuousAssignment='0 1'
 
 # {expert} Compute resolution
 """ Computation of the spectral signal-to-noise ratio is slow, do not abuse it.
@@ -175,19 +175,19 @@ DoComputeResolution='0'
     if you have run this other protocol, you simply have to provide
     the name generated at that stage.
 """
-CTFDat=''
+CTFDat='ctf.dat'
 
 # {expert} Phase correction
 """ Specify whether a phase correction must be done or not.
 """
-PhaseCorrection=False
+PhaseCorrection=True
 
 # {expert} Amplitude correction
 """ Specify whether amplitude correction is performed or not at each
     iteration.
     E.g. 45x0 5x1
 """
-AmplitudeCorrection='50x0'
+AmplitudeCorrection='16x0 1'
 
 #-----------------------------------------------------------------------------
 # {section} Post-processing
@@ -203,7 +203,7 @@ AmplitudeCorrection='50x0'
 DoReferenceMask='50x1'
 
 # {file} Initial Reference Mask Volume
-InitialReferenceMask='circular_maskwi128.vol'
+InitialReferenceMask='Src/referenceMaskDilated.vol'
 
 # {expert} Reference Lowpass filter (Normalized digital freq.)
 """ This vector specifies the frequency at which each reference volume
@@ -223,7 +223,7 @@ FilterLowPassReference='50x0.25'
     For more information about Fourier filtering, please visit:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/FourierFilter
 """
-FilterHighPassReference='50x0.05'
+FilterHighPassReference='0'
 
 # {expert} Segment reference using particle mass
 """ This vector specifies which iterations will use the particle mass
@@ -249,13 +249,13 @@ Recenter=True
 DoParallel=True
 
 # Number of processors to use:
-MyNumberOfCPUs=15
+MyNumberOfCPUs=16
 
 # {file} A list of all available CPUs (the MPI-machinefile):
 """ Depending on your system, your standard script to launch MPI-jobs may require this
     if your queueing system using an environment variable, give it here (with the leading $, e.g. $PBS_NODEFILE
 """
-MyMachineFile='/home2/bioinfo/coss/machines.dat'
+MyMachineFile=''
 
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
@@ -788,9 +788,11 @@ class MultiResClass:
           self.execute("xmipp_header_assign -i "+\
         	       self.getAlignmentFFilename(_iteration)+" -o preproc_assign.sel"+\
         	       " -force")
+          self.createDirectory("preproc_assign_IDR");
           params="-vol "+\
         	 self.getModelFFilename(_iteration)+\
-		 " -ctfdat preproc_assign_ctfdat.txt"
+		 " -ctfdat preproc_assign_ctfdat.txt"+\
+		       " -oroot preproc_assign_IDR/preproc_assign_IDR_")
 	  launch_parallel_job.launch_job(self.doParallel,
         			       "xmipp_ctf_correct_idr",
         			       "xmipp_mpi_ctf_correct_idr",
@@ -799,6 +801,7 @@ class MultiResClass:
         			       self.myNumberOfCPUs,
         			       self.myMachineFile,
         			       False)
+          self.execute('xmipp_selfile_create "preproc_assign_IDR/*" > preproc_assign.sel')
 
        # Scale if necessary
        if not self.getPyramidLevel(_iteration)=="0":
@@ -822,7 +825,7 @@ class MultiResClass:
                     self.getModelFilename(_iteration))
 		  
       # Low Pass Filter
-      if not self.getFilterLowReference(_iteration)=="0":
+      if not self.getFilterLowPassReference(_iteration)=="0":
          self.execute("xmipp_fourier_filter -i "+\
 	              self.getModelFilename(_iteration)+" "+\
 		      "-low_pass "+self.getFilterLowPassReference(_iteration)+" "+\
@@ -848,7 +851,7 @@ class MultiResClass:
                        "-center_volume")
 
       # High Pass Filter
-      if not self.getFilterHighReference(_iteration)=="0":
+      if not self.getFilterHighPassReference(_iteration)=="0":
          self.execute("xmipp_fourier_filter -i "+\
 	              self.getModelFilename(_iteration)+" "+\
 		      "-high_pass "+self.getFilterHighPassReference(_iteration)+" "+\
@@ -1125,6 +1128,13 @@ class MultiResClass:
         			       self.myNumberOfCPUs,
         			       self.myMachineFile,
         			       False)
+       elif self.getReconstructionMethod(_iteration)=="fourier":
+          params="-i "+_selfile+" "+\
+	         "-o "+_outputRootName+".vol "
+          if not self.symmetryFile=="":
+	     params+="-sym "+self.symmetryFile+\
+	             " -symvol "+self.symmetryFile+" "
+	  self.execute("xmipp_reconstruct_fourier "+params)
        else:
           raise RuntimeError,"Unknown reconstruction method"+\
 	        self.getReconstructionMethod(_iteration)
