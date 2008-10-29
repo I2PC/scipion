@@ -104,12 +104,22 @@ void normalize_OldXmipp_decomposition(Matrix2D<double> &I,
    This is similar to the OldXmipp normalization, but the mean and
    standard deviation of the images are computed only within a region
    determined by the tilt angle.
-   Formula:
+   Formula for tomography:
    @code
-   I'=(I-m(I))/(sqrt(v(I))*cos(tilt))
+   I'=(I-m(I))/(sqrt(v(I))*cos^2(tilt))
    @endcode
+   
+   Formula for tomography0:
+   @code
+   I'=(I/cos(tilt)-m0)/(sqrt(v(I))*cos(tilt))
+   @endcode
+   
+   The estimated mean of the image and the local variance are returned in
+   sigmai and mui.
 */
-void normalize_tomography(Matrix2D<double> &I, double tilt);
+void normalize_tomography(Matrix2D<double> &I, double tilt, double &mui,
+    double &sigmai, bool tiltMask,
+    bool tomography0=false, double mu0=0, double sigma0=1);
 
 /** Michael's normalization.
    Formula:
@@ -193,11 +203,12 @@ public:
 #define RANDOM 6
 #define RAMP 7
 #define NEIGHBOUR 8
-#define TOMOGRAPHY 9
+#define TOMOGRAPHY   9
+#define TOMOGRAPHY0 10
 
     /** Normalizing method.
      * Valid methods are OLDXMIPP, NEAR_OLDXMIPP, NEWXMIPP, NEWXMIPP2, MICHAEL,
-     * NONE, RANDOM, RAMP, NEIGHBOUR, TOMOGRAPHY.
+     * NONE, RANDOM, RAMP, NEIGHBOUR, TOMOGRAPHY, TOMOGRAPHY0.
      */
     int method;
 
@@ -239,7 +250,11 @@ public:
      */
     bool invert_contrast;
 
-    /** Flags for remving balck/white spots due to dust.
+    /** Flag for applying a mask depending on the tilt
+     */
+    bool tiltMask;
+
+    /** Flags for removing balck/white spots due to dust.
      */
     bool remove_black_dust;
     bool remove_white_dust;
@@ -283,6 +298,9 @@ public:
      * The input image is modified.
      */
     void apply(ImageXmipp &img);
+public:
+    // Mean and standard deviation of the image 0. Used for tomography
+    double mu0, sigma0;
 };
 
 #endif

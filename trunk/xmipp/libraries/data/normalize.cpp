@@ -23,10 +23,11 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "normalize.h"
 #include "args.h"
 #include "micrograph.h"
 #include "mask.h"
+#include "normalize.h"
+#include "selfile.h"
 
 #include <string>
 #include <iostream>
@@ -64,8 +65,9 @@ void normalize_OldXmipp_decomposition(Matrix2D<double> &I, const Matrix2D<int> &
     normalize_OldXmipp(I);
 }
 
-// #define DEBUG
-void normalize_tomography(Matrix2D<double> &I, double tilt)
+//#define DEBUG
+void normalize_tomography(Matrix2D<double> &I, double tilt, double &mui,
+    double &sigmai, bool tiltMask, bool tomography0, double mu0, double sigma0)
 {
     const int L=2;
     double Npiece=(2*L+1)*(2*L+1);
@@ -134,8 +136,30 @@ void normalize_tomography(Matrix2D<double> &I, double tilt)
     // Compute the statistics again in the reduced mask
     double avg, stddev, min, max;
     computeStats_within_binary_mask(mask, I, min, max, avg, stddev);
-    I -= avg;
-    I /= stddev*cos(DEG2RAD(tilt));
+    double cosTilt=cos(DEG2RAD(tilt));
+    if (tomography0)
+    {
+        double adjustedStddev=sigma0*cosTilt;
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(I)
+            if (!tiltMask || ABS(j)<Xdimtilt)
+                I(i,j)=(I(i,j)/cosTilt-mu0)/adjustedStddev;
+            else if (tiltMask)
+                I(i,j)=0;
+    }
+    else
+    {
+        double adjustedStddev=sqrt(meanVariance)*cosTilt;
+        adjustedStddev=stddev*cosTilt;
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(I)
+            if (!tiltMask || ABS(j)<Xdimtilt)
+                I(i,j)=(I(i,j)-avg)/adjustedStddev;
+            else if (tiltMask)
+                I(i,j)=0;
+    }
+    
+    // Prepare values for returning
+    mui=avg;
+    sigmai=sqrt(meanVariance);
 }
 #undef DEBUG
 
@@ -320,6 +344,8 @@ void Normalize_parameters::read(int argc, char** argv)
         method = NEIGHBOUR;
     else if (aux == "Tomography")
         method = TOMOGRAPHY;
+    else if (aux == "Tomography0")
+        method = TOMOGRAPHY0;
     else
         REPORT_ERROR(1, "Normalize: Unknown normalizing method");
 
@@ -328,6 +354,9 @@ void Normalize_parameters::read(int argc, char** argv)
 
     // Invert contrast?
     invert_contrast = checkParameter(argc, argv, "-invert");
+
+    // Apply a mask depending on the tilt
+    tiltMask = checkParameter(argc, argv, "-tiltMask");
 
     // Remove dust particles?
     remove_black_dust = checkParameter(argc, argv, "-remove_black_dust");
@@ -369,8 +398,6 @@ void Normalize_parameters::read(int argc, char** argv)
                     REPORT_ERROR(1, "Normalize: Unknown background mode");
             }
 
-            produce_side_info();
-
             // Default is NOT to apply inverse transformation from image header to the mask
             apply_geo = checkParameter(argc, argv, "-apply_geo");
         }
@@ -389,6 +416,8 @@ void Normalize_parameters::read(int argc, char** argv)
             b0 = textToFloat(argv[i + 3]);
             bF = textToFloat(argv[i + 4]);
         }
+
+        produce_side_info();
     }
 }
 
@@ -398,9 +427,6 @@ void Normalize_parameters::produce_side_info()
     get_input_size(Zdim, Ydim, Xdim);
     if (!volume)
     {
-        if (Zdim != 1)
-            REPORT_ERROR(1, "Normalize: This program works only with images");
-
         if (!enable_mask)
         {
             bg_mask.resize(Ydim, Xdim);
@@ -423,6 +449,41 @@ void Normalize_parameters::produce_side_info()
             bg_mask = mask_prm.imask2D;
 	    // backup a copy of the mask for apply_geo mode
 	    bg_mask_bck = bg_mask;
+        }
+        
+        // Get the parameters from the 0 degrees 
+        if (method==TOMOGRAPHY0)
+        {
+            // Look for the image at 0 degrees
+            SelFile SF;
+            try {
+                SF.read(fn_in);
+            } catch (Xmipp_error XE)
+            {
+                REPORT_ERROR(1,(std::string)"There is a problem opening the selfile"+
+                    fn_in+". Make sure it is a correct selfile");
+            }
+            SF.go_first_ACTIVE();
+            double bestTilt=1000;
+            FileName bestImage;
+            while (!SF.eof())
+            {
+                FileName fn_img=SF.NextImg();
+                if (fn_img=="") break;
+                ImageXmipp I;
+                I.read(fn_img);
+                if (ABS(I.tilt())<bestTilt)
+                {
+                    bestTilt=ABS(I.tilt());
+                    bestImage=fn_img;
+                }
+            }
+            if (bestImage=="")
+                REPORT_ERROR(1,"Cannot find the image at 0 degrees");
+            
+            // Compute the mu0 and sigma0 for this image
+            ImageXmipp I(bestImage);
+            normalize_tomography(I(), I.tilt(), mu0, sigma0, tiltMask);
         }
     }
 }
@@ -463,6 +524,9 @@ void Normalize_parameters::show()
         case TOMOGRAPHY:
             std::cout << "Tomography\n";
             break;
+        case TOMOGRAPHY0:
+            std::cout << "Tomography0\n";
+            break;
         case RANDOM:
             std::cout << "Random a=[" << a0 << "," << aF << "], " << "b=[" <<
             b0 << "," << bF << "]\n";
@@ -495,6 +559,9 @@ void Normalize_parameters::show()
         if (invert_contrast)
             std::cout << "Invert contrast "<< std::endl;
 
+        if (tiltMask)
+            std::cout << "Applying a mask depending on tilt "<< std::endl;
+
         if (remove_black_dust)
             std::cout << "Remove black dust particles, using threshold " <<
             floatToString(thresh_black_dust) << std::endl;
@@ -517,7 +584,7 @@ void Normalize_parameters::usage()
 
     std::cerr << "NORMALIZATION OF IMAGES\n"
     << "  [-method <mth=NewXmipp>   : Normalizing method. Valid ones are:\n"
-    << "                              OldXmipp, Near_OldXmipp, NewXmipp, Tomography\n"
+    << "                              OldXmipp, Near_OldXmipp, NewXmipp, Tomography, Tomography0\n"
     << "                              NewXmipp2, Michael, None, Random, Ramp, Neighbour\n"
     << "                              Methods NewXmipp, Michael, Near_OldXmipp\n"
     << "                              and Ramp need a background mask:\n"
@@ -531,7 +598,8 @@ void Normalize_parameters::usage()
     << "  [-thr_black_dust=-3.5]    : Sigma threshold for black dust particles \n"
     << "  [-thr_white_dust=3.5]     : Sigma threshold for white dust particles \n"
     << "  [-thr_neigh]              : Sigma threshold for neighbour removal \n"
-    << "  [-prm a0 aF b0 bF]        : Only in random mode. y=ax+b\n";
+    << "  [-prm a0 aF b0 bF]        : Only in random mode. y=ax+b\n"
+    << "  [-tiltMask]               : Apply a mask depending on the tilt\n";
 }
 
 void Normalize_parameters::apply_geo_mask(ImageXmipp& img)
@@ -583,6 +651,7 @@ void Normalize_parameters::apply(ImageXmipp &img)
         }
     }
 
+    double mui, sigmai;
     switch (method)
     {
     case OLDXMIPP:
@@ -604,7 +673,11 @@ void Normalize_parameters::apply(ImageXmipp &img)
         normalize_remove_neighbours(img(), bg_mask, thresh_neigh);
         break;
     case TOMOGRAPHY:
-        normalize_tomography(img(), img.tilt());
+        normalize_tomography(img(), img.tilt(), mui, sigmai, tiltMask);
+        break;
+    case TOMOGRAPHY0:
+        normalize_tomography(img(), img.tilt(), mui, sigmai, tiltMask,
+            true, mu0, sigma0);
         break;
     case MICHAEL:
         normalize_Michael(img(), bg_mask);
