@@ -520,9 +520,9 @@ void QtWidgetMicrograph::automaticallySelectParticles()
 {
     try {
         // Check that there is a valid model
-        if (!__is_model_loaded)
+        if (!__is_model_loaded && !__learn_particles_done)
         {
-            std::cerr << "No model has been loaded." << std::endl;
+            std::cerr << "No model has been created." << std::endl;
             return;
         }
 
