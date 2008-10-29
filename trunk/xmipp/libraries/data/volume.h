@@ -35,6 +35,7 @@
 #include "funcs.h"
 #include "matrix3d.h"
 #include "header.h"
+#include "selfile.h"
 
 /** @defgroup VolumesSpeedUp Speed up macros for volumes
  *  @ingroup XmippVolumes
@@ -542,6 +543,21 @@ public:
                 break;
             }
         }
+    }
+    
+    /** Write a volume as a collection of images. */
+    void writeAsSelFile(const FileName &rootname) const
+    {
+        SelFile SF;
+        for (int k=0; k<ZSIZE((*this)()); k++)
+        {
+            ImageXmipp I;
+            (*this)().getSlice(k,I());
+            I.rename(rootname+integerToString(k+1,5)+".xmp");
+            I.write();
+            SF.insert(I.name());
+        }
+        SF.write(rootname+".sel");
     }
 };
 
