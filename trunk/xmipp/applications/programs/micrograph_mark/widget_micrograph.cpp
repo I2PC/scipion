@@ -452,6 +452,7 @@ void QtWidgetMicrograph::learnParticles()
         skip_y = next_skip_y;
     }
     __training_model.addMicrographScanned(Nscanned);
+    __selection_model = __training_model;
 
     __learn_particles_done = true;    
     std::cerr << "Learning process finished..." << std::endl;
@@ -527,10 +528,6 @@ void QtWidgetMicrograph::automaticallySelectParticles()
         }
 
         std::cerr << "-----------------Automatic Phase--------------------------\n";
-
-        // If there is nothing learnt, at least take the training vectors loaded
-        if (!__learn_particles_done)
-            buildSelectionModel();
 
         // Initialize some variables
         __auto_candidates.resize(0);
@@ -937,7 +934,8 @@ void QtWidgetMicrograph::classifyMask()
 void QtWidgetMicrograph::buildVectors(std::vector<int> &_idx,
                                       Classification_model &_model)
 {
-    std::cerr << "Building particle vectors. Please wait..." << std::endl;
+    std::cerr << "Building " << _idx.size()
+              << " particle vectors for this image. Please wait..." << std::endl;
     _model.addMicrographItem();
     int num_part = _idx.size();
     int width, height;
@@ -1018,7 +1016,7 @@ void QtWidgetMicrograph::buildVectors(std::vector<int> &_idx,
 /* Build vector from non particles------------------------------------------ */
 void QtWidgetMicrograph::buildNegativeVectors(Classification_model &__model)
 {
-    std::cerr << "Building non particle vectors. Please wait..." << std::endl;
+    std::cerr << "Building non particle vectors for this image. Please wait..." << std::endl;
     const Matrix2D<int> &mask = __mask.get_binary_mask2D();
 
     // top,left corner of the piece
@@ -1030,8 +1028,7 @@ void QtWidgetMicrograph::buildNegativeVectors(Classification_model &__model)
     int skip_x = 0, skip_y = 0, next_skip_x = 0, next_skip_y = 0;
     Matrix1D<double> v;
     
-    int N = 1;
-    int particlesFound = 0;
+    int N = 1, Nnonparticles=0;
  
     // We do not want any overlap for this process,since it is only for 
     // counting the non particles and calculating their features. For 
@@ -1080,7 +1077,8 @@ void QtWidgetMicrograph::buildNegativeVectors(Classification_model &__model)
                     P.status = 1;
                     P.vec = v;
                     P.cost = -1;
-	            __model.addParticleTraining(P, 1);            
+	            __model.addParticleTraining(P, 1);
+                    Nnonparticles++;         
                 }
 	    // Go to next scanning position
             posx = next_posx;
@@ -1094,6 +1092,7 @@ void QtWidgetMicrograph::buildNegativeVectors(Classification_model &__model)
         skip_y = next_skip_y;
         N++;
     }
+    std::cout << Nnonparticles << " non particles randomly chosen\n";
 }
 
 bool QtWidgetMicrograph::anyParticle(int posx, int posy, int rect_size)
@@ -1793,6 +1792,7 @@ void QtWidgetMicrograph::getAutoFalsePositives()
     __training_model.addFalsePositives(imax);
     for (int i = 0; i < imax; i++)
         __training_model.addParticleTraining(__rejected_particles[i], 2);
+    std::cout << imax << " false positives are considered\n";
 }
 
 /* Load models ------------------------------------------------------------- */
