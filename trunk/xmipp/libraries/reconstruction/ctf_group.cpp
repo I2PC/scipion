@@ -70,7 +70,7 @@ void CtfGroupParams::show()
     {
 	std::cerr << " -> Using automated mode for making groups"<<std::endl;
         std::cerr << " -> With a maximum allowed error of "<<max_error
-                  <<" at "<<resol_error<<" Ang resolution"<<std::endl; 
+                  <<" at "<<resol_error<<" dig. freq."<<std::endl; 
     }
     else
     {
@@ -197,7 +197,7 @@ void CtfGroupParams::produceSideInfo()
                             // and in pixels:
                             
                             iresol_error = ROUND(resol_error * paddim);
-                            std::cerr<<" Resolution for error limit = "<<resol_error<< " (dig. freq.) = "<<iresol_error<<" (pixels)"<<std::endl;
+                            //std::cerr<<" Resolution for error limit = "<<resol_error<< " (dig. freq.) = "<<iresol_error<<" (pixels)"<<std::endl;
                         }
                         is_first=false;
                     }
@@ -278,12 +278,20 @@ void CtfGroupParams::produceSideInfo()
                 newmics_ctf2d[isort]  = mics_ctf2d[imic];
                 newmics_count[isort]  = mics_count[imic];
                 newmics_fnimgs[isort] = mics_fnimgs[imic];
+                // Make sure this micrograph never gets counted again
+                // (This could happen if two mics have exactly the same defocus value!)
+                mics_defocus[imic] = sorted_defocus[0] + 1.;
                 break;
             }
     mics_ctf2d   = newmics_ctf2d;
     mics_count   = newmics_count;
     mics_fnimgs  = newmics_fnimgs;
     mics_defocus = sorted_defocus;
+    
+    /*
+    for (int isort = 0; isort < sorted_defocus.size(); isort++)
+        std::cerr<<"sorted mic "<<isort<<" has "<<mics_count[isort]<<" images, and defocus "<<mics_defocus[isort] <<std::endl;
+    */
 }
 
 // Check whether a CTF is anisotropic
