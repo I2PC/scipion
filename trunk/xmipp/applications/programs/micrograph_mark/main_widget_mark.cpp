@@ -223,10 +223,14 @@ QtMainWidgetMark::~QtMainWidgetMark()
 // Open all windows --------------------------------------------------------
 void QtMainWidgetMark::openAllWindows()
 {
-    __familyDialog->show();
     __mWidget->openAllWindows();
     if (__mTiltedWidget != NULL) __mTiltedWidget->openAllWindows();
     show();
+}
+
+void QtMainWidgetMark::showFamilies()
+{
+    __familyDialog->show();
 }
 
 //#define _DEBUG

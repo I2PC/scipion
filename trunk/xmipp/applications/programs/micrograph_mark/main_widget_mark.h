@@ -93,6 +93,9 @@ public:
     // Open all windows
     void openAllWindows();
 
+    // Show families
+    void showFamilies();
+
     // Access to WidgetMicrographs
     QtWidgetMicrograph * untilted_widget()
     {
