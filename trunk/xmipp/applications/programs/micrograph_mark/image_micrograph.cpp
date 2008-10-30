@@ -26,7 +26,6 @@
 
 #include "image_micrograph.h"
 #include "color_label.h"
-#include "dialog_properties.h"
 #include "widget_micrograph.h"
 
 #include <data/micrograph.h>
@@ -157,7 +156,6 @@ void QtImageMicrograph::drawEllipse(int _x, int _y, int _color, float _ellipse_r
 	{
             REPORT_ERROR(1, "QtImageMicrograph::drawEllipse: unrecognized type");
 	}
-        /*__paint->flush();*/
     }
 }
 
@@ -182,11 +180,6 @@ void QtImageMicrograph::loadSymbols()
 void QtImageMicrograph::slotDeleteMarkOther(int _coord)
 {
     emit signalDeleteMarkOther(_coord);
-}
-
-void QtImageMicrograph::slotChangeFamilyOther(int _coord, int _f)
-{
-    emit signalChangeFamilyOther(_coord, _f);
 }
 
 void QtImageMicrograph::resizeEvent(QResizeEvent *e)
@@ -223,8 +216,11 @@ void QtImageMicrograph::mouseReleaseEvent(QMouseEvent *e)
     int mX, mY;
     imageToMicrograph(e->pos().x(), e->pos().y(), mX, mY);
 
-    if (e->button() == Qt::RightButton) changeProperties(mX, mY);
-    else if (__pressed == true)
+    if (e->button() == Qt::RightButton) 
+    {
+        int coord = getMicrograph()->search_coord_near(mX, mY, 10);
+        if (coord != -1) movingMark(coord);
+    } else if (__pressed == true)
     {
         if (isTilted())
         {
@@ -236,10 +232,22 @@ void QtImageMicrograph::mouseReleaseEvent(QMouseEvent *e)
         }
         else
         {
-            std::cout << "Particle marked at (X,Y)=(" << mX << "," << mY << ")\n";
-            getMicrograph()->add_coord(mX, mY, __activeFamily);
-            __pressed = false;
-            emit signalAddCoordOther(mX, mY, __activeFamily);
+            int coord = getMicrograph()->search_coord_near(mX, mY, 10);
+            if (coord == -1)
+            {
+                std::cout << "Particle marked at (X,Y)=(" << mX << "," << mY << ")\n";
+                getMicrograph()->add_coord(mX, mY, __activeFamily);
+                __pressed = false;
+                emit signalAddCoordOther(mX, mY, __activeFamily);
+            } else {
+                std::cout << "Particle deleted at (X,Y)=("
+                          << getMicrograph()->coord(coord).X << ","
+                          << getMicrograph()->coord(coord).Y << ")\n";
+                getMicrograph()->coord(coord).valid = false;
+                getWidgetMicrograph()->delete_particle(coord);
+                emit signalDeleteMarkOther(coord);
+            }
+            emit signalRepaint();
         }
     }
 }
@@ -254,22 +262,6 @@ void QtImageMicrograph::mouseMoveEvent(QMouseEvent *e)
     getMicrograph()->coord(__movingMark).Y = mY;
 
     emit signalRepaint();
-}
-
-void QtImageMicrograph::changeProperties(int mX, int mY)
-{
-    int coord = getMicrograph()->search_coord_near(mX, mY, 10);
-    if (coord == -1) return;
-
-    QtDialogProperties dialogProperties(getMicrograph(), getWidgetMicrograph(),
-                                        coord, this, 0, TRUE);
-
-    connect(&dialogProperties, SIGNAL(signalDeleteMarkOther(int)),
-            this, SLOT(slotDeleteMarkOther(int)));
-    connect(&dialogProperties, SIGNAL(signalChangeFamilyOther(int, int)),
-            this, SLOT(slotChangeFamilyOther(int, int)));
-
-    dialogProperties.exec();
 }
 
 void QtImageMicrograph::slotZoomIn()
