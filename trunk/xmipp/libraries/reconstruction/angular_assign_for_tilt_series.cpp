@@ -756,7 +756,7 @@ bool Prog_tomograph_alignment::refineLandmark(int ii, int jj,
                             newshifty<=FINISHINGY(corr) &&
                             newshiftx>=STARTINGX(corr) &&
                             newshiftx<=FINISHINGX(corr))
-                            if (corr(newshifty,newshiftx)>-1.1)
+                            if (corr(newshifty,newshiftx)<-1)
                                 Q.push(vectorR2(newshifty,newshiftx));
                     }
             }
