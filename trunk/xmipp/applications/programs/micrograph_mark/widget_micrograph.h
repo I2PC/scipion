@@ -352,7 +352,7 @@ public:
     void changeCircleRadius(float _circle_radius);
 
     // Repaint
-    void repaint(int t = FALSE);
+    void repaint();
 
     // Learn particles
     void learnParticles();
@@ -483,10 +483,9 @@ public slots:
     void slotAddFamily(const char *_familyName);
     void slotDeleteMarkOther(int _coord);
     void slotDeleteAutomatic(int _coord);
-    void slotChangeFamilyOther(int _coord, int _f);
     void slotRepaint()
     {
-        repaint(FALSE);
+        repaint();
     }
     void slotDrawEllipse(int _x, int _y, int _f);
     void slotDrawLastEllipse(int _x, int _y, int _f);
@@ -497,6 +496,7 @@ public slots:
 signals:
     void signalActiveFamily(int _f);
     void signalAddFamily(const char *_familyName);
+    void signalRepaint();
 };
 
 /** Class to adjust contrast

@@ -309,6 +309,8 @@ QtWidgetMicrograph::QtWidgetMicrograph(QtMainWidgetMark *_mainWidget,
             __mImage, SLOT(slotActiveFamily(int)));
     connect(this, SIGNAL(signalActiveFamily(int)),
             __mImageOverview, SLOT(slotActiveFamily(int)));
+    connect(this, SIGNAL(signalRepaint()),
+            this, SLOT(slotRepaint()));
 
 #ifdef QT3_SUPPORT
     Q3Accel *ctrl = new Q3Accel(this);
@@ -790,7 +792,7 @@ void QtWidgetMicrograph::automaticallySelectParticles()
                 }
         }
 
-        repaint(false);
+        emit signalRepaint();
         __autoselection_done = true;
         std::cout << "Automatic process finished. Number of particles found: "
                   << Nalive << std::endl;
@@ -1575,19 +1577,23 @@ int QtWidgetMicrograph::reject_within_distance(
 /* Correct particles ------------------------------------------------------- */
 void QtWidgetMicrograph::move_particle(int _idx)
 {
-    if (!__autoselection_done) return;
-    __auto_candidates[_idx].status = 2;
-    __auto_candidates[_idx].x = __m->coord(_idx).X;
-    __auto_candidates[_idx].y = __m->coord(_idx).Y;
+    if (__autoselection_done)
+    {
+        __auto_candidates[_idx].status = 2;
+        __auto_candidates[_idx].x = __m->coord(_idx).X;
+        __auto_candidates[_idx].y = __m->coord(_idx).Y;
+    }
 }
 
 /* Delete particles ---------------------------------------------------------*/
 void QtWidgetMicrograph::delete_particle(int _idx)
 {
-    if (!__autoselection_done) return;
-    __auto_candidates[_idx].status = 0;
-    __auto_candidates[_idx].cost = -1;
-    __rejected_particles.push_back(__auto_candidates[_idx]);
+    if (__autoselection_done)
+    {
+        __auto_candidates[_idx].status = 0;
+        __auto_candidates[_idx].cost = -1;
+        __rejected_particles.push_back(__auto_candidates[_idx]);
+    }
 }
 
 /* Get the false-positive particles----------------------------------------- */
@@ -1788,20 +1794,20 @@ void QtWidgetMicrograph::changeMarkType(int _type)
 {
     __ellipse_type = _type;
     __mImage->__ellipse_type = __ellipse_type;
-    __mImage->repaint(FALSE);
+    __mImage->repaint(true);
 }
 
 void QtWidgetMicrograph::changeCircleRadius(float _circle_radius)
 {
     __ellipse_radius = _circle_radius;
     __mImage->__ellipse_radius = __ellipse_radius;
-    __mImage->repaint(FALSE);
+    __mImage->repaint(true);
 }
 
-void QtWidgetMicrograph::repaint(int t)
+void QtWidgetMicrograph::repaint()
 {
-    __mImage->repaint(FALSE);
-    __mImageOverview->repaint(FALSE);
+    __mImage->repaint(true);
+    __mImageOverview->repaint(true);
 }
 
 void QtWidgetMicrograph::slotDrawEllipse(int _x, int _y, int _f)
@@ -1832,19 +1838,13 @@ void QtWidgetMicrograph::slotAddFamily(const char *_familyName)
 void QtWidgetMicrograph::slotDeleteMarkOther(int _coord)
 {
     __m->coord(_coord).valid = false;
-    repaint();
+    emit signalRepaint();
 }
 
 void QtWidgetMicrograph::slotDeleteAutomatic(int _coord)
 {
     __m->coord(_coord).valid = false;
-    repaint();
-}
-
-void QtWidgetMicrograph::slotChangeFamilyOther(int _coord, int _f)
-{
-    __m->coord(_coord).label = _f;
-    repaint();
+    emit signalRepaint();
 }
 
 void QtWidgetMicrograph::slotQuit()
