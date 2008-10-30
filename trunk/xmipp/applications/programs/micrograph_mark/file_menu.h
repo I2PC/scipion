@@ -55,7 +55,6 @@ public:
     // Constructor
     QtFileMenu(QtWidgetMicrograph* _parent);
 
-
 public slots:
 
     // Change mark type
@@ -63,6 +62,9 @@ public slots:
 
     // Change circle radius
     void slotChangeCircleRadius();
+
+    // Show families
+    void slotShowFamilies();
 
      // Load coords
     void slotLoadCoords();

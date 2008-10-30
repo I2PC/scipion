@@ -73,6 +73,7 @@ QtFileMenu::QtFileMenu(QtWidgetMicrograph* _parent) :
     setMouseTracking(TRUE);
     options->setItemChecked(circle, true);
     insertItem("Change mark radius", this, SLOT(slotChangeCircleRadius()));
+    insertItem("Show families", this, SLOT(slotShowFamilies()));
     insertSeparator();
 
     insertItem("Quit", this, SLOT(slotQuit()));
@@ -108,6 +109,13 @@ void QtFileMenu::slotChangeCircleRadius()
     Micrograph *m = ((QtWidgetMicrograph*)parentWidget())->getMicrograph();
     if (m == NULL) return;
     ((QtWidgetMicrograph*)parentWidget())->slotChangeCircleRadius();
+}
+
+/* Show families ----------------------------------------------------------- */
+void QtFileMenu::slotShowFamilies()
+{
+    ((QtMainWidgetMark*) ((QtWidgetMicrograph*)parentWidget())->parentWidget())
+        ->showFamilies();
 }
 
 /* Load coordinates -------------------------------------------------------- */
