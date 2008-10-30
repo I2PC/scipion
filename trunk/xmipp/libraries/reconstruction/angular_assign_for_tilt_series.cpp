@@ -814,8 +814,8 @@ bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain)
                 bool accepted=refineLandmark(ii,jj,rii,newrjj);
                 if ((newrjj-rjj).module()<4 && accepted)
                 {
-                    chain[i+step].x=XX(rjj);
-                    chain[i+step].y=YY(rjj);
+                    chain[i+step].x=XX(newrjj);
+                    chain[i+step].y=YY(newrjj);
                 }
             }
 
@@ -833,8 +833,8 @@ bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain)
                 bool accepted=refineLandmark(ii,jj,rii,newrjj);
                 if ((newrjj-rjj).module()<4 && accepted)
                 {
-                    chain[i-1].x=XX(rjj);
-                    chain[i-1].y=YY(rjj);
+                    chain[i-1].x=XX(newrjj);
+                    chain[i-1].y=YY(newrjj);
                 }
             }
             #ifdef DEBUG
