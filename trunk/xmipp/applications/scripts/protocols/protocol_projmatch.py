@@ -1350,6 +1350,7 @@ def execute_reconstruction(_mylog,
       program = 'xmipp_reconstruct_fourier'
       parameters=' -i '    + ForReconstructionSel + \
                  ' -o '    + Outputvolume + '.vol ' + \
+                 ' -doc '  + ForReconstructionDoc + \
                  ' -sym '  + _SymmetryGroup + \
                  ' -weight '
       parameters = parameters + _FourierReconstructionExtraCommand 
@@ -1445,6 +1446,7 @@ def  execute_resolution(_mylog,
           mpi_program = 'NULL'
           program = 'xmipp_reconstruct_fourier'
           parameters=' -i '    +  Selfiles[i] + \
+                     ' -doc '  + ForReconstructionDoc + \
                      ' -o '    +  Outputvolumes[i] + '.vol ' + \
                      ' -sym '  + _SymmetryGroup + \
                      ' -weight '
