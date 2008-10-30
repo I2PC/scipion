@@ -296,8 +296,7 @@ void Prog_RecFourier_prm::processImage(const FileName &fn_img)
     for (int isym = 0; isym < R_repository.size(); isym++)
     {
         // Compute the coordinate axes of the symmetrized projection
-        Matrix2D<double> A_SL=Ainv * R_repository[isym];
-        
+        Matrix2D<double> A_SL= R_repository[isym] * Ainv;
         // Loop over all Fourier coefficients in the padded image
         Matrix1D<double> freq(3), gcurrent(3), real_position(3);
         Matrix1D<int> corner1(3), corner2(3);
