@@ -175,15 +175,6 @@ QtMainWidgetMark::QtMainWidgetMark(Micrograph *_m, Micrograph *_mTilted)
                 SLOT(slotDeleteMarkOther(int)));
 
         connect((QObject*)__mWidget->image(),
-                SIGNAL(signalChangeFamilyOther(int, int)),
-                (QObject*)__mTiltedWidget,
-                SLOT(slotChangeFamilyOther(int, int)));
-        connect((QObject*)__mTiltedWidget->image(),
-                SIGNAL(signalChangeFamilyOther(int, int)),
-                (QObject*)__mWidget,
-                SLOT(slotChangeFamilyOther(int, int)));
-
-        connect((QObject*)__mWidget->image(),
                 SIGNAL(signalRecalculateTiltMatrix()),
                 this,
                 SLOT(slotRecalculateTiltMatrix()));
