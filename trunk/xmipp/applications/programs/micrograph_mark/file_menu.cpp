@@ -32,6 +32,7 @@
 
 #include <data/micrograph.h>
 #include <data/funcs.h>
+#include <data/args.h>
 
 #include <qlabel.h>
 #include <qpushbutton.h>
@@ -74,6 +75,7 @@ QtFileMenu::QtFileMenu(QtWidgetMicrograph* _parent) :
     options->setItemChecked(circle, true);
     insertItem("Change mark radius", this, SLOT(slotChangeCircleRadius()));
     insertItem("Show families", this, SLOT(slotShowFamilies()));
+    insertItem("Micrograph Info", this, SLOT(slotMicrographInfo()));
     insertSeparator();
 
     insertItem("Quit", this, SLOT(slotQuit()));
@@ -116,6 +118,22 @@ void QtFileMenu::slotShowFamilies()
 {
     ((QtMainWidgetMark*) ((QtWidgetMicrograph*)parentWidget())->parentWidget())
         ->showFamilies();
+}
+
+/* Show Micrograph info ---------------------------------------------------- */
+void QtFileMenu::slotMicrographInfo()
+{
+    Micrograph *m = ((QtWidgetMicrograph*)parentWidget())->getMicrograph();
+    if (m == NULL) return;
+
+    int Xdim, Ydim;
+    m->size(Xdim,Ydim);
+    std::string message = (std::string)"Micrograph name: "+m->micrograph_name();
+    message+=(std::string)"\nSize YxX: "+integerToString(Ydim)+"x"+
+        integerToString(Xdim);
+    QMessageBox helpmsg("Information", message,
+        QMessageBox::Information, QMessageBox::Ok, 0, 0, 0, 0, false);
+    helpmsg.exec();
 }
 
 /* Load coordinates -------------------------------------------------------- */

@@ -66,6 +66,9 @@ public slots:
     // Show families
     void slotShowFamilies();
 
+    // Show micrograph info
+    void slotMicrographInfo();
+
      // Load coords
     void slotLoadCoords();
 
