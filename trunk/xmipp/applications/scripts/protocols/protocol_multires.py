@@ -518,7 +518,7 @@ class MultiResClass:
         			       self.myNumberOfCPUs,
         			       self.myMachineFile,
         			       False)
-      	  self.execute("find . -name \"ref*\" -exec rm -f {} \;")
+      	  self.execute("find . -name \"ref*\" -exec rm -f {} \; &")
        else:
           self.linkFile(removeDirectories(self.getAlignmentFFilename(_iteration)),
 	                self.getDiscreteAnglesFilename(_iteration))
