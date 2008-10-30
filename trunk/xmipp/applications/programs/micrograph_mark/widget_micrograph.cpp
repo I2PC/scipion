@@ -528,7 +528,7 @@ void QtWidgetMicrograph::automaticallySelectParticles()
 {
     try {
         // Check that there is a valid model
-        if (!__learn_particles_done)
+        if (__selection_model.isEmpty())
         {
             std::cerr << "No model has been created." << std::endl;
             return;
@@ -1141,7 +1141,7 @@ bool QtWidgetMicrograph::build_vector(const Matrix2D<double> &piece,
         +(angleBins-1)+(angleBins-1)*angleBins // sector correlations
         +(2*__radial_bins-19)*angleBins // ring correlations
         );
-    const Matrix2D<int> &mask =      __mask.get_binary_mask2D();
+    const Matrix2D<int> &mask =         __mask.get_binary_mask2D();
     const Matrix2D<int> &classif1 =  (*(__mask_classification[0]));
     const Matrix2D<int> &classif2 =  (*(__mask_classification[1]));
 
@@ -1172,7 +1172,25 @@ bool QtWidgetMicrograph::build_vector(const Matrix2D<double> &piece,
     particle.initZeros(YSIZE(mask), XSIZE(mask));
     STARTINGY(particle) = STARTINGY(mask);
     STARTINGX(particle) = STARTINGX(mask);
-    // Matrix2D<double> original_particle = particle;
+
+    // Copy __radial_val, __sector, and __ring into local structures
+    // so that threads are applicable
+    std::vector< Matrix1D<int> > radial_val;
+    for (int i=0; i<__radial_val.size(); i++)
+    {
+        Matrix1D<int> dummyi=*(__radial_val[i]);
+        radial_val.push_back(dummyi);
+    }
+
+    std::vector< Matrix1D<double> > sector;
+    Matrix1D<double> dummyd=*(__sector[0]);
+    for (int i=0; i<__sector.size(); i++)
+        sector.push_back(dummyd);
+
+    std::vector< Matrix1D<double> > ring;
+    dummyd=*(__ring[0]);
+    for (int i=0; i<__ring.size(); i++)
+        ring.push_back(dummyd);
 
     // Put the image values into the corresponding radial bins
     FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
@@ -1183,10 +1201,10 @@ bool QtWidgetMicrograph::build_vector(const Matrix2D<double> &piece,
         int idx1 = classif1(i, j);
         if (idx1 != -1)
         {
-            (*__radial_val[idx1])(radial_idx(idx1)++) = val;
+            radial_val[idx1](radial_idx(idx1)++) = val;
             int idx2 = classif2(i, j);
             if (idx2 != -1)
-                (*__sector[idx2])(idx1) += val;
+                sector[idx2](idx1) += val;
         }
 
         // Get particle
@@ -1205,18 +1223,18 @@ bool QtWidgetMicrograph::build_vector(const Matrix2D<double> &piece,
 
     // Compute the sector averages and reorganize the data in rings
     for (int j = 0; j < angleBins; j++)
-        FOR_ALL_ELEMENTS_IN_MATRIX1D(*(__sector[j]))
+        FOR_ALL_ELEMENTS_IN_MATRIX1D(sector[j])
         {
-            (*(__sector[j]))(i)/=(*(__Nsector[j]))(i);
-            (*(__ring[i]))(j)=(*(__sector[j]))(i);
+            sector[j](i)/=(*(__Nsector[j]))(i);
+            ring[i](j)=sector[j](i);
         }
 
     // Compute the histogram of the radial bins and store them  
     int idx_result=0;
     for (int i = 0; i < __radial_bins; i++)
     {
-        static histogram1D hist;
-        compute_hist(*__radial_val[i], hist, 0, __gray_bins - 1, __gray_bins);
+        histogram1D hist;
+        compute_hist(radial_val[i], hist, 0, __gray_bins - 1, __gray_bins);
         for (int j = 0; j < __gray_bins - 1; j++)
             _result(idx_result++) = hist(j);
     }
@@ -1229,8 +1247,8 @@ bool QtWidgetMicrograph::build_vector(const Matrix2D<double> &piece,
         for (int i = 0; i<angleBins; i++)
         {
             sectorCorr(i)=correlation_index(
-                *__sector[i],
-                *__sector[intWRAP(i+step,0,angleBins-1)]);
+                sector[i],
+                sector[intWRAP(i+step,0,angleBins-1)]);
         }
         _result(idx_result++) = sectorCorr.computeAvg();
         static Matrix1D<double> sectorAutocorr;
@@ -1244,10 +1262,10 @@ bool QtWidgetMicrograph::build_vector(const Matrix2D<double> &piece,
          for (int i = 8; i<__radial_bins-step; i++)
          {
              static Matrix1D<double> ringCorr;
-             correlation_vector(*__ring[i],*__ring[i+step],ringCorr);
+             correlation_vector(ring[i],ring[i+step],ringCorr);
              for (int j = 0; j < XSIZE(ringCorr); j++)
                  _result(idx_result++) = ringCorr(j);
-         }    for (int i = 8; i<__radial_bins-1; i++)
+         }
 
     #ifdef DEBUG_IMG_BUILDVECTOR
         if (debug_go)
@@ -1263,7 +1281,7 @@ bool QtWidgetMicrograph::build_vector(const Matrix2D<double> &piece,
                 if (idx1 == -1) continue;
                 int idx2 = classif2(i, j);
                 if (idx2 == -1) continue;
-                save(i,j)=(*__sector[idx2])(idx1);
+                save(i,j)=sector[idx2](idx1);
             }
             save.write("PPP4.xmp");
 
@@ -1274,7 +1292,7 @@ bool QtWidgetMicrograph::build_vector(const Matrix2D<double> &piece,
                 if (idx1 == -1) continue;
                 int idx2 = classif2(i, j);
                 if (idx2 == -1) continue;
-                save(i,j)=(*__ring[idx1])(idx2);
+                save(i,j)=ring[idx1](idx2);
             }
             save.write("PPP5.xmp");
         }
@@ -1282,9 +1300,9 @@ bool QtWidgetMicrograph::build_vector(const Matrix2D<double> &piece,
 
     #ifdef DEBUG_BUILDVECTOR
         Matrix2D<double> A;
-        A.resize(angleBins,XSIZE(*__sector[0]));
+        A.resize(angleBins,XSIZE(sector[0]));
         FOR_ALL_ELEMENTS_IN_MATRIX2D(A)
-            A(i,j)=(*__sector[i])(j);
+            A(i,j)=sector[i](j);
         A.write("PPPsector.txt");
 
         std::cout << _result.transpose() << std::endl;
@@ -1679,6 +1697,7 @@ void QtWidgetMicrograph::loadModels(const FileName &fn)
     // Particles have not been learnt but loaded from a file
     __learn_particles_done = false;
     __is_model_loaded = true;
+    buildSelectionModel();
     std::cout << "The model has been loaded..." << std::endl;
 }
 

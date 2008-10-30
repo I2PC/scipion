@@ -114,6 +114,11 @@ public:
     // Clear
     void clear();
 
+    // Is empy
+    bool isEmpty() {
+        return __micrographs_number==0;
+    }
+
     // Initialize
     void init(int _classNo=3)
     {
