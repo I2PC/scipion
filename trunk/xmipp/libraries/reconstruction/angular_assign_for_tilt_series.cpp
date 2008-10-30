@@ -298,9 +298,8 @@ void Prog_tomograph_alignment::read(int argc, char **argv) {
    maxIterDE=textToInteger(getParameter(argc,argv,"-maxIterDE","30"));
    showAffine=checkParameter(argc,argv,"-showAffine");
    thresholdAffine=textToFloat(getParameter(argc,argv,"-thresholdAffine","0.85"));
-   numThreads = textToInteger(getParameter(argc, argv, "-thnum", "1"));
-   if( numThreads < 1 )
-	numThreads = 1;
+   numThreads = textToInteger(getParameter(argc, argv, "-thr", "1"));
+   if (numThreads<1) numThreads = 1;
 }
 
 void Prog_tomograph_alignment::show() {
@@ -321,7 +320,7 @@ void Prog_tomograph_alignment::show() {
              << "MaxIterDE:          " << maxIterDE          << std::endl
              << "Show Affine:        " << showAffine         << std::endl
              << "Threshold Affine:   " << thresholdAffine    << std::endl
-			 << "Threads to use:     " << numThreads		 << std::endl
+             << "Threads to use:     " << numThreads         << std::endl
    ;
 }
 
@@ -345,7 +344,7 @@ void Prog_tomograph_alignment::usage() const {
              << "  [-maxIterDE <n=30>]             : Maximum number of iteration in Differential Evolution\n"
              << "  [-showAffine]                   : Show affine transformations as PPP*\n"
              << "  [-thresholdAffine <th=0.85>]    : Threshold affine\n"
-			 << "  [-thr <num=1>]				   : Parallel processing using \"num\" threads\n"
+             << "  [-thr <num=1>]                  : Parallel processing using \"num\" threads\n"
    ;
 }
 
@@ -383,45 +382,42 @@ void Prog_tomograph_alignment::produceSideInfo() {
        progress_bar(Nimg);
    }
    
-   // Read images at original scale
-   if (fnSelOrig!="")
-   {
-       SForig.read(fnSelOrig);
-       if (SForig.ImgNo()!=SF.ImgNo())
+    // Read images at original scale
+    if (fnSelOrig!="")
+    {
+        SForig.read(fnSelOrig);
+        if (SForig.ImgNo()!=SF.ImgNo())
             REPORT_ERROR(1,"The number of images in both selfiles (-i and -iorig) is different");
-   }
+    }
 
-   // Fill the affine transformations with empty matrices
-   std::vector< Matrix2D<double> > emptyRow;
-   for (int i=0; i<Nimg; i++)
-   {
-    	Matrix2D<double> A;
-	emptyRow.push_back(A);
-   }
-   for (int i=0; i<Nimg; i++)
+    // Fill the affine transformations with empty matrices
+    std::vector< Matrix2D<double> > emptyRow;
+    for (int i=0; i<Nimg; i++)
+    {
+        Matrix2D<double> A;
+        emptyRow.push_back(A);
+    }
+    for (int i=0; i<Nimg; i++)
     	affineTransformations.push_back(emptyRow);
 
-   pthread_t * th_ids = (pthread_t *)malloc( numThreads * sizeof( pthread_t));
-   ThreadParams * th_args= (ThreadParams *) malloc ( numThreads * sizeof( ThreadParams ) );
+    pthread_t * th_ids = new pthread_t[numThreads];
+    ThreadParams * th_args= new ThreadParams[numThreads];
 	
-   for( int nt = 0 ; nt < numThreads ; nt ++ )
-   {
-			// Passing parameters to each thread
-			th_args[nt].parent = this;
-			th_args[nt].myThreadID = nt;
-			pthread_create( (th_ids+nt) , NULL, threadComputeTransform, (void *)(th_args+nt) );
-	}
+    for( int nt = 0 ; nt < numThreads ; nt ++ )
+    {
+        // Passing parameters to each thread
+        th_args[nt].parent = this;
+        th_args[nt].myThreadID = nt;
+        pthread_create( (th_ids+nt) , NULL, threadComputeTransform, (void *)(th_args+nt) );
+    }
 		
-	// Waiting for threads to finish
-	for( int nt = 0 ; nt < numThreads ; nt ++ )
-	{
-		pthread_join(*(th_ids+nt), NULL);
-	}	
+    // Waiting for threads to finish
+    for( int nt = 0 ; nt < numThreads ; nt ++ )
+        pthread_join(*(th_ids+nt), NULL);
 
-	// Threads structures are not needed any more
-	
-	delete( th_ids );
-	delete( th_args );
+    // Threads structures are not needed any more
+    delete( th_ids );
+    delete( th_args );
 
     // Do not show refinement
     showRefinement=false;
@@ -429,28 +425,28 @@ void Prog_tomograph_alignment::produceSideInfo() {
 
 void * threadComputeTransform( void * args )
 {
-	ThreadParams * master = (ThreadParams *) args;
-	
-	Prog_tomograph_alignment * parent = master->parent;
-	int thread_id = master->myThreadID;
-	int localnumThreads = parent->numThreads;
-	bool isCapillar = parent->isCapillar;
-	int Nimg = parent->Nimg;
-	double maxShiftPercentage = parent->maxShiftPercentage;
-	int maxIterDE = parent->maxIterDE;
-	bool showAffine = parent->showAffine;
+    ThreadParams * master = (ThreadParams *) args;
+
+    Prog_tomograph_alignment * parent = master->parent;
+    int thread_id = master->myThreadID;
+    int localnumThreads = parent->numThreads;
+    bool isCapillar = parent->isCapillar;
+    int Nimg = parent->Nimg;
+    double maxShiftPercentage = parent->maxShiftPercentage;
+    int maxIterDE = parent->maxIterDE;
+    bool showAffine = parent->showAffine;
     double thresholdAffine = parent->thresholdAffine;
-	std::vector < Matrix2D<double> *> img = parent->img;
-	std::vector< std::vector< Matrix2D<double> > > affineTransformations = parent->affineTransformations;
-	double localAffine = parent->localAffine;
-	
-	int maxShift=FLOOR(XSIZE(*img[0])*maxShiftPercentage);
+    std::vector < Matrix2D<double> *> img = parent->img;
+    std::vector< std::vector< Matrix2D<double> > > affineTransformations = parent->affineTransformations;
+    double localAffine = parent->localAffine;
+
+    int maxShift=FLOOR(XSIZE(*img[0])*maxShiftPercentage);
     int initjj=1;
     if (isCapillar) initjj=0;
 	
-	initjj += thread_id;
-	
-	double cost;
+    initjj += thread_id;
+
+    double cost;
     for (int jj=initjj; jj<Nimg; jj+= localnumThreads)
     {
         int jj_1;
@@ -474,7 +470,7 @@ void * threadComputeTransform( void * args )
 		affineTransformations[jj][jj_1]=Aji;
     }
 	
-	return NULL;
+    return NULL;
 }
  
 /* Generate landmark set --------------------------------------------------- */
