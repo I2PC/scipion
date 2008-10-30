@@ -428,7 +428,8 @@ void QtWidgetMicrograph::learnParticles()
     int top = 0, left = 0, next_top = 0, next_left = 0;
     int skip_x = 0, skip_y = 0, next_skip_x = 0, next_skip_y = 0;
     int Nscanned=0;
-    while (get_corner_piece(top, left, skip_y,
+    Matrix2D<double> piece;
+    while (get_corner_piece(piece, top, left, skip_y,
                             next_skip_x, next_skip_y, next_top,
 			    next_left, __piece_overlap))
     {
@@ -440,8 +441,8 @@ void QtWidgetMicrograph::learnParticles()
         next_posx = posx = skip_x + XSIZE(mask) / 2;
         next_posy = posy = skip_y + YSIZE(mask) / 2;
 
-        while (get_next_scanning_pos(next_posx, next_posy, skip_x, skip_y,
-	                             __scan_overlap))
+        while (get_next_scanning_pos(piece, next_posx, next_posy, skip_x, 
+            skip_y, __scan_overlap))
         {
             Nscanned++;
             posx = next_posx;
@@ -519,11 +520,15 @@ void QtWidgetMicrograph::produceClassesProbabilities(
 }
 
 /* Automatic phase ----------------------------------------------------------*/
+void * QtWidgetMicrograph::automaticallySelectParticlesThread(void * args)
+{
+}
+
 void QtWidgetMicrograph::automaticallySelectParticles()
 {
     try {
         // Check that there is a valid model
-        if (!__is_model_loaded && !__learn_particles_done)
+        if (!__learn_particles_done)
         {
             std::cerr << "No model has been created." << std::endl;
             return;
@@ -559,7 +564,8 @@ void QtWidgetMicrograph::automaticallySelectParticles()
         int skip_x = 0, skip_y = 0, next_skip_x = 0, next_skip_y = 0;
         Matrix1D<double> v;
         int N = 1, particle_idx = 0, Nscanned=0;
-        while (get_corner_piece(top, left, skip_y,
+        Matrix2D<double> piece, original_piece;
+        while (get_corner_piece(piece, top, left, skip_y,
                                 next_skip_x, next_skip_y, next_top,
 			        next_left, __piece_overlap))
         {
@@ -571,7 +577,7 @@ void QtWidgetMicrograph::automaticallySelectParticles()
             #endif
 
             // Get a piece and prepare it
-            if (!prepare_piece())
+            if (!prepare_piece(piece, original_piece))
             {
                 top = next_top;
                 left = next_left;
@@ -592,8 +598,8 @@ void QtWidgetMicrograph::automaticallySelectParticles()
             next_posx = posx = skip_x + XSIZE(mask) / 2;
             next_posy = posy = skip_y + YSIZE(mask) / 2;
 
-            while (get_next_scanning_pos(next_posx, next_posy, skip_x, skip_y,
-	                                 __scan_overlap))
+            while (get_next_scanning_pos(piece, next_posx, next_posy,
+                skip_x, skip_y, __scan_overlap))
             {
                 #ifdef DEBUG_MORE_AUTO
                    std::cerr << "Pos(y,x)=" << posy << "," << posx
@@ -602,7 +608,7 @@ void QtWidgetMicrograph::automaticallySelectParticles()
                              << " Next pos(y,x)=" << next_posy << "," << next_posx;
                 #endif
 
-	        if (build_vector(posx, posy, v))
+	        if (build_vector(piece, original_piece, posx, posy, v))
                 {
                     double cost;
 	            if (__selection_model.isParticle(v,cost))
@@ -960,17 +966,18 @@ void QtWidgetMicrograph::buildVectors(std::vector<int> &_idx,
         int x = __m->coord(part_idx).X;
         int y = __m->coord(part_idx).Y;
         int posx, posy;
-        get_centered_piece(x, y, posx, posy);
+        Matrix2D<double> piece, original_piece;
+        get_centered_piece(piece, x, y, posx, posy);
 
         // Denoise, reduce, reject outliers and equalize histogram
-        bool success = prepare_piece();
+        bool success = prepare_piece(piece, original_piece);
        
         if (!success) continue;
         posx = ROUND(posx / __reduction);
         posy = ROUND(posy / __reduction);
        
         //make vector from this particle
-        success = build_vector(posx, posy, v);
+        success = build_vector(piece, original_piece, posx, posy, v);
         if (success)
         {
             Particle p;
@@ -988,7 +995,7 @@ void QtWidgetMicrograph::buildVectors(std::vector<int> &_idx,
         std::vector< Matrix1D<int> > nbr;
         nbr.reserve(num_part);
 
-        find_neighbour(_idx, part_i, x, y, posx, posy, visited, nbr);
+        find_neighbour(piece, _idx, part_i, x, y, posx, posy, visited, nbr);
 
         for (int i = 0; i < nbr.size(); i++)
         {
@@ -996,7 +1003,7 @@ void QtWidgetMicrograph::buildVectors(std::vector<int> &_idx,
             part_idx = _idx.at(part_i);
             posx = nbr.at(i)(1);
             posy = nbr.at(i)(2);
-            success = build_vector(posx, posy, v);
+            success = build_vector(piece, original_piece, posx, posy, v);
             visited(part_i) = 1;
             if (success)
             {
@@ -1036,11 +1043,12 @@ void QtWidgetMicrograph::buildNegativeVectors(Classification_model &__model)
     // counting the non particles and calculating their features. For 
     // the process of automatic selecting we will want an overlap so we
     // do not miss any particle.
-    while (get_corner_piece(top, left, skip_y,
+    Matrix2D<double> piece, original_piece;
+    while (get_corner_piece(piece, top, left, skip_y,
                             next_skip_x, next_skip_y, next_top, next_left, 0))
     {
         // Get a piece and prepare it
-        if (!prepare_piece())
+        if (!prepare_piece(piece, original_piece))
         {
             top = next_top;
             left = next_left;
@@ -1062,14 +1070,14 @@ void QtWidgetMicrograph::buildNegativeVectors(Classification_model &__model)
 	// counting the non particles and calculating their features. For
 	// the process of automatic selecting we will want an overlap so we
 	// do not miss any particle.
-        while (get_next_scanning_pos(next_posx, next_posy, skip_x,
+        while (get_next_scanning_pos(piece, next_posx, next_posy, skip_x,
             skip_y, __learn_overlap))
         {
             // Check if there is any particle around
 	    if (!anyParticle(left + posx  * __reduction,
 	                      top + posy  * __reduction,
                               XSIZE(mask) * __reduction))
-                if (build_vector(posx, posy, v))
+                if (build_vector(piece, original_piece, posx, posy, v))
                 {
                     // Build the Particle structure
                     Particle P;
@@ -1119,7 +1127,8 @@ bool QtWidgetMicrograph::anyParticle(int posx, int posy, int rect_size)
 }
 
 /* Build classification vector --------------------------------------------- */
-bool QtWidgetMicrograph::build_vector(int _x, int _y,
+bool QtWidgetMicrograph::build_vector(const Matrix2D<double> &piece,
+    const Matrix2D<double> &original_piece, int _x, int _y,
     Matrix1D<double> &_result)
 {
     #ifdef DEBUG_BUILDVECTOR
@@ -1136,17 +1145,17 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
     const Matrix2D<int> &classif1 =  (*(__mask_classification[0]));
     const Matrix2D<int> &classif2 =  (*(__mask_classification[1]));
 
-    if (STARTINGX(mask) + _x < STARTINGX(__piece)) return false;
-    if (STARTINGY(mask) + _y < STARTINGY(__piece)) return false;
-    if (FINISHINGX(mask) + _x > FINISHINGX(__piece)) return false;
-    if (FINISHINGY(mask) + _y > FINISHINGY(__piece)) return false;
+    if (STARTINGX(mask) + _x < STARTINGX(piece)) return false;
+    if (STARTINGY(mask) + _y < STARTINGY(piece)) return false;
+    if (FINISHINGX(mask) + _x > FINISHINGX(piece)) return false;
+    if (FINISHINGY(mask) + _y > FINISHINGY(piece)) return false;
 
     #ifdef DEBUG_IMG_BUILDVECTOR
         bool debug_go = false;
         ImageXmipp save, savefg, saveOrig;
         if (true)
         {
-            save() = __piece;
+            save() = piece;
             save.write("PPP0.xmp");
             save().initZeros(YSIZE(mask), XSIZE(mask));
             STARTINGY(save()) = STARTINGY(mask);
@@ -1168,7 +1177,7 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
     // Put the image values into the corresponding radial bins
     FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
     {
-        int val = (int)__piece(_y + i, _x + j);
+        int val = (int)piece(_y + i, _x + j);
         bool foreground = mask(i, j);
 
         int idx1 = classif1(i, j);
@@ -1181,12 +1190,6 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
         }
 
         // Get particle
-        /*if (foreground) 
-	{
-	    particle(i, j) = val;
-            // original_particle(i , j) = __original_piece(_y+i, _x+j);
-	}*/
-
         #ifdef DEBUG_IMG_BUILDVECTOR
             if (debug_go)
             {
@@ -1194,7 +1197,7 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
                 if (foreground) 
 	        {
 	            savefg(i, j) = val;
-	            saveOrig(i, j) =  __original_piece(_y+i, _x+j);
+	            saveOrig(i, j) =  original_piece(_y+i, _x+j);
 	        }
             }
         #endif
@@ -1295,10 +1298,10 @@ bool QtWidgetMicrograph::build_vector(int _x, int _y,
 /* Get piece --------------------------------------------------------------- */
 // to get the piece containing (x,y) of size xsize,ysize
 // return the position of x,y in the piece in posx,posy
-void QtWidgetMicrograph::get_centered_piece(int _x, int _y,
-    int &_posx, int &_posy)
+void QtWidgetMicrograph::get_centered_piece(Matrix2D<double> &piece,
+    int _x, int _y, int &_posx, int &_posy)
 {
-    __piece.resize(__piece_xsize, __piece_xsize);
+    piece.resize(__piece_xsize, __piece_xsize);
     int startx = _x - ROUND(__piece_xsize / 2);
     int endx   = _x + ROUND(__piece_xsize / 2);
     int starty = _y - ROUND(__piece_xsize / 2);
@@ -1337,11 +1340,13 @@ void QtWidgetMicrograph::get_centered_piece(int _x, int _y,
     //read the matrix from the micrograph
     for (int i = 0; i < __piece_xsize; i++)
         for (int j = 0; j < __piece_xsize; j++)
-            __piece(i, j) = (*__m)(startx + j, starty + i);	    
+            piece(i, j) = (*__m)(startx + j, starty + i);	    
 }
 
 // Get a piece whose top-left corner is at the desired position (if possible)
-bool QtWidgetMicrograph::get_corner_piece(int _top, int _left, int _skip_y,
+bool QtWidgetMicrograph::get_corner_piece(
+    Matrix2D<double> &piece,
+    int _top, int _left, int _skip_y,
     int &_next_skip_x, int &_next_skip_y, int &_next_top, int &_next_left,
     int overlap)
 {
@@ -1381,22 +1386,23 @@ bool QtWidgetMicrograph::get_corner_piece(int _top, int _left, int _skip_y,
     }
 
     //read the matrix from the micrograph
-    __piece.resize(__piece_xsize, __piece_xsize);
+    piece.resize(__piece_xsize, __piece_xsize);
     for (int i = 0; i < __piece_xsize; i++)
         for (int j = 0; j < __piece_xsize; j++)
-            __piece(i, j) = (*__m)(_left + j, _top + i);
+            piece(i, j) = (*__m)(_left + j, _top + i);
 	    
     return true;
 }
 
 /* Prepare piece ----------------------------------------------------------- */
-bool QtWidgetMicrograph::prepare_piece()
+bool QtWidgetMicrograph::prepare_piece(Matrix2D<double> &piece,
+    Matrix2D<double> &original_piece)
 {
-    __piece.setXmippOrigin();   
-    __original_piece = __piece;
+    piece.setXmippOrigin();   
+    original_piece = piece;
     #ifdef DEBUG_PREPARE    
         ImageXmipp save;
-        save() = __piece;
+        save() = piece;
         save.write("PPPpiece0.xmp");
     #endif    
 
@@ -1406,11 +1412,11 @@ bool QtWidgetMicrograph::prepare_piece()
     Filter.FilterBand = HIGHPASS;
     Filter.w1 = __highpass_cutoff;
     Filter.raised_w = XMIPP_MIN(0.02, __highpass_cutoff);
-    Filter.generate_mask(__piece);
-    Filter.apply_mask_Space(__piece);
-    STARTINGX(__piece) = STARTINGY(__piece) = 0;
+    Filter.generate_mask(piece);
+    Filter.apply_mask_Space(piece);
+    STARTINGX(piece) = STARTINGY(piece) = 0;
     #ifdef DEBUG_PREPARE    
-        save() = __piece;
+        save() = piece;
         save.write("PPPpiece1.xmp");
     #endif    
     
@@ -1420,32 +1426,32 @@ bool QtWidgetMicrograph::prepare_piece()
     denoiser.scale = __output_scale + 3;
     denoiser.output_scale = __output_scale;
     denoiser.produce_side_info();
-    denoiser.denoise(__piece);
-    if (!(__piece(0, 0) == __piece(0, 0))) return false;
+    denoiser.denoise(piece);
+    if (!(piece(0, 0) == piece(0, 0))) return false;
     #ifdef DEBUG_PREPARE    
-        save() = __piece;
+        save() = piece;
         save.write("PPPpiece2.xmp");
     #endif    
 
     // Reject 5% of the outliers
-    reject_outliers(__piece, 5.0);
+    reject_outliers(piece, 5.0);
 
     // Equalize histogram    
-    histogram_equalization(__piece, __gray_bins);
+    histogram_equalization(piece, __gray_bins);
     
     #ifdef DEBUG_PREPARE    
-        save() = __piece;
+        save() = piece;
         save.write("PPPpiece3.xmp");
     #endif    
-    __original_piece.selfScaleToSize(YSIZE(__piece), XSIZE(__piece));
+    original_piece.selfScaleToSize(YSIZE(piece), XSIZE(piece));
 
     // Reject 5% of the outliers
-    reject_outliers(__original_piece, 5.0);
-    __original_piece.statisticsAdjust(0,1);
-    __original_piece-=__original_piece.computeAvg();
+    reject_outliers(original_piece, 5.0);
+    original_piece.statisticsAdjust(0,1);
+    original_piece-=original_piece.computeAvg();
 
     #ifdef DEBUG_PREPARE    
-        save() = __original_piece;
+        save() = original_piece;
         save.write("PPPpiece4.xmp");
     #endif
     return true;
@@ -1453,12 +1459,13 @@ bool QtWidgetMicrograph::prepare_piece()
 
 /* Get neighbours ---------------------------------------------------------- */
 //To get the neighbours and their positions in the piece image
-void QtWidgetMicrograph::find_neighbour(std::vector<int> &_idx, int _index,
+void QtWidgetMicrograph::find_neighbour(const Matrix2D<double> &piece,
+    std::vector<int> &_idx, int _index,
     int _x, int _y, int _posx, int _posy, Matrix1D<char> &_visited,
     std::vector< Matrix1D<int> > &_nbr)
 {
-    int piece_xsize = XSIZE(__piece);
-    int piece_ysize = YSIZE(__piece);
+    int piece_xsize = XSIZE(piece);
+    int piece_ysize = YSIZE(piece);
     const Matrix2D<int> &mask = __mask.get_binary_mask2D();
 
     //if all the particles are visited
@@ -1503,12 +1510,13 @@ void QtWidgetMicrograph::find_neighbour(std::vector<int> &_idx, int _index,
 
 /* Get next scanning position ---------------------------------------------- */
 bool QtWidgetMicrograph::get_next_scanning_pos(
+    const Matrix2D<double> &piece,
     int &_x, int &_y, int _skip_x, int _skip_y, int overlap)
 {
     const Matrix2D<int> &mask = __mask.get_binary_mask2D();
 
-    if (_x + XSIZE(mask) / 2 > XSIZE(__piece) ||
-        _y + YSIZE(mask) / 2 > YSIZE(__piece)) 
+    if (_x + XSIZE(mask) / 2 > XSIZE(piece) ||
+        _y + YSIZE(mask) / 2 > YSIZE(piece)) 
 	return false;
 
     if (_x == 0 && _y == 0)
@@ -1521,9 +1529,9 @@ bool QtWidgetMicrograph::get_next_scanning_pos(
         int nextx = _x + XSIZE(mask) - overlap / __reduction;
         int nexty = _y + YSIZE(mask) - overlap / __reduction;
 	   
-	if (nextx + (XSIZE(mask) / 2) > XSIZE(__piece))
+	if (nextx + (XSIZE(mask) / 2) > XSIZE(piece))
         {
-	    if (nexty + (YSIZE(mask) / 2) > YSIZE(__piece))
+	    if (nexty + (YSIZE(mask) / 2) > YSIZE(piece))
             {
                 _x = nextx;
                 _y = nexty;

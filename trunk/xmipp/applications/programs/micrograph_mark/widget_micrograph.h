@@ -232,8 +232,6 @@ private:
     Classification_model       __selection_model2;
     Classification_model       __selection_model3;
     int                        __auto_label;
-    Matrix2D<double>           __piece;
-    Matrix2D<double>           __original_piece;
     int                        __gray_bins;
     int                        __radial_bins;
     double                     __highpass_cutoff;
@@ -378,11 +376,14 @@ public:
     // a reduced version of a piece in the micrograph)
     // (0,0) is the top-left corner
     // Returns true if the vector is successfully built
-    bool build_vector(int _x, int _y, Matrix1D<double> &_result);
+    bool build_vector(const Matrix2D<double> &piece,
+        const Matrix2D<double> &original_piece,
+        int _x, int _y, Matrix1D<double> &_result);
 
     // Get a piece of the micrograph centered at position x,y (if possible)
     // the position of (x,y) in the piece is returned in (posx, posy)
-    void get_centered_piece(int _x, int _y, int &_posx, int &_posy);
+    void get_centered_piece(Matrix2D<double> &piece,
+        int _x, int _y, int &_posx, int &_posy);
 
     // Get a piece whose top-left corner is at the desired position (if possible)
     // Returns true if the piece could be taken, and false if the whole
@@ -394,25 +395,32 @@ public:
     // right and bottom boundaries of the micrograph, where the pieces
     // need to be shifted in order to fit with the required size.
     // The overlap parameter defines what piece overlap we want.
-    bool get_corner_piece(int _top, int _left, int _skip_y,
-                          int &_next_skip_x, int &_next_skip_y, int &_next_top, int &_next_left, int overlap);
+    bool get_corner_piece(Matrix2D<double> &piece,
+        int _top, int _left, int _skip_y,
+        int &_next_skip_x, int &_next_skip_y, int &_next_top,
+        int &_next_left, int overlap);
 
     // Denoise, reject outliers and equalize histogram
     // Returns true, if successful. False if unsuccessful (skip this piece)
     // Usually, it is unsuccessful if the denoising fails to work because
     // some "weird" features of the piece
-    bool prepare_piece();
+    bool prepare_piece(Matrix2D<double> &piece,
+        Matrix2D<double> &original_piece);
 
     //To get the neighbours of the particle at position (x,y) in the micrograph
     // (with actual coordinates in the piece posx,posy)
     // and their positions in the piece image
-    void find_neighbour(std::vector<int> &_idx, int _index,
+    void find_neighbour(const Matrix2D<double> &piece,
+                        std::vector<int> &_idx, int _index,
                         int _x, int _y,
                         int _posx, int _posy, Matrix1D<char> &_visited,
                         std::vector< Matrix1D<int> > &_nbr);
 
     // Automatically Select Particles
     void automaticallySelectParticles();
+    
+    // Automatically Select Particles thread
+    static void * automaticallySelectParticlesThread(void *);
     
     // check if there are any particles in the actual scanning position
     bool anyParticle(int posx, int posy, int rect_size);
@@ -425,6 +433,7 @@ public:
     // Initialize _x,_y to 0,0 to scan the full piece (even if there are skips).
     // The overlap parameter defines what particle overlap we want.
     bool get_next_scanning_pos(
+        const Matrix2D<double> &piece,
         int &_x, int &_y, int _skip_x, int _skip_y, int overlap);
 
     // Run over the list sorted by distances. If two particles are within
