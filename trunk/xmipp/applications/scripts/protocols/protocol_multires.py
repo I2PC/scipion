@@ -249,7 +249,7 @@ Recenter=True
 DoParallel=True
 
 # Number of processors to use:
-MyNumberOfCPUs=16
+MyNumberOfCPUs=32
 
 # {file} A list of all available CPUs (the MPI-machinefile):
 """ Depending on your system, your standard script to launch MPI-jobs may require this
@@ -792,7 +792,7 @@ class MultiResClass:
           params="-vol "+\
         	 self.getModelFFilename(_iteration)+\
 		 " -ctfdat preproc_assign_ctfdat.txt"+\
-		       " -oroot preproc_assign_IDR/preproc_assign_IDR_")
+		 " -oroot preproc_assign_IDR/preproc_assign_IDR_";
 	  launch_parallel_job.launch_job(self.doParallel,
         			       "xmipp_ctf_correct_idr",
         			       "xmipp_mpi_ctf_correct_idr",
@@ -1132,9 +1132,15 @@ class MultiResClass:
           params="-i "+_selfile+" "+\
 	         "-o "+_outputRootName+".vol "
           if not self.symmetryFile=="":
-	     params+="-sym "+self.symmetryFile+\
-	             " -symvol "+self.symmetryFile+" "
-	  self.execute("xmipp_reconstruct_fourier "+params)
+	     params+="-sym "+self.symmetryFile
+	  launch_parallel_job.launch_job(self.doParallel,
+        			       "xmipp_reconstruct_fourier",
+        			       "xmipp_mpi_reconstruct_fourier",
+        			       params,
+        			       self.mylog,
+        			       self.myNumberOfCPUs,
+        			       self.myMachineFile,
+        			       False)
        else:
           raise RuntimeError,"Unknown reconstruction method"+\
 	        self.getReconstructionMethod(_iteration)
