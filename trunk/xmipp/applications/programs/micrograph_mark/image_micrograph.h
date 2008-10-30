@@ -77,7 +77,6 @@ protected:
 
 public slots:
     void slotDeleteMarkOther(int _coord);
-    void slotChangeFamilyOther(int _coord, int _f);
     void slotZoomIn();
     void slotZoomOut();
 
@@ -85,7 +84,6 @@ signals:
     void signalSetWidthHeight(int _w, int _h);
     void signalAddCoordOther(int _mX, int _mY, int _f);
     void signalDeleteMarkOther(int _coord);
-    void signalChangeFamilyOther(int _coord, int _f);
     void signalRecalculateTiltMatrix();
 
 protected:
@@ -93,7 +91,6 @@ protected:
     void mousePressEvent(QMouseEvent *e);
     void mouseReleaseEvent(QMouseEvent *e);
     void mouseMoveEvent(QMouseEvent *e);
-    void changeProperties(int mX, int mY);
 };
 
 #endif
