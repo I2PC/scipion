@@ -452,7 +452,7 @@ void Prog_RecFourier_prm::run()
     // Process all images in the selfile
     if (verb) init_progress_bar(SF.ImgNo());
     int imgno = 0;
-    int repaint = ceil(SF.ImgNo()/60);
+    int repaint = ceil((double)SF.ImgNo()/60);
     while (!SF.eof())
     {
         exit_if_not_exists(fn_control);
@@ -464,6 +464,7 @@ void Prog_RecFourier_prm::run()
         if (verb && imgno++%repaint==0) progress_bar(imgno);
     }
     if (verb > 0) progress_bar(SF.ImgNo());
+    finishComputations();
 }
 
 void Prog_RecFourier_prm::finishComputations()
