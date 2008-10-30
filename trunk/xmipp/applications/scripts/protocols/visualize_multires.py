@@ -128,6 +128,7 @@ class VisualizeMultires3DClass:
 		xmipp_protocol_multires.Recenter,
 		xmipp_protocol_multires.DoParallel,
 		xmipp_protocol_multires.MyNumberOfCPUs,
+		xmipp_protocol_multires.MyNumberOfCPUsReduced,
 		xmipp_protocol_multires.MyMachineFile,
 		
 		False

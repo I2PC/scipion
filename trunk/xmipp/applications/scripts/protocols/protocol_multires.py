@@ -251,6 +251,11 @@ DoParallel=True
 # Number of processors to use:
 MyNumberOfCPUs=32
 
+# Number of processors to use by large memory demanding algorithms:
+""" In fact only the Fourier reconstruction method is so large memory demanding
+"""
+MyNumberOfCPUsReduced=16
+
 # {file} A list of all available CPUs (the MPI-machinefile):
 """ Depending on your system, your standard script to launch MPI-jobs may require this
     if your queueing system using an environment variable, give it here (with the leading $, e.g. $PBS_NODEFILE
@@ -324,6 +329,7 @@ class MultiResClass:
 
 		_DoParallel,
 		_MyNumberOfCPUs,
+		_MyNumberOfCPUsReduced,
 		_MyMachineFile,
 		
 		_Verbose
@@ -378,6 +384,7 @@ class MultiResClass:
 
        self.doParallel=_DoParallel
        self.myNumberOfCPUs=_MyNumberOfCPUs
+       self.myNumberOfCPUsReduced=_MyNumberOfCPUsReduced
        if _MyMachineFile=='':
           self.myMachineFile=''
        elif _MyMachineFile[0]=='/':
@@ -1138,7 +1145,7 @@ class MultiResClass:
         			       "xmipp_mpi_reconstruct_fourier",
         			       params,
         			       self.mylog,
-        			       self.myNumberOfCPUs,
+        			       self.myNumberOfCPUsReduced,
         			       self.myMachineFile,
         			       False)
        else:
@@ -1257,6 +1264,7 @@ if __name__ == '__main__':
 
 		DoParallel,
 		MyNumberOfCPUs,
+		MyNumberOfCPUsReduced,
 		MyMachineFile,
 		
 		True
