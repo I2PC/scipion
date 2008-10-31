@@ -233,7 +233,6 @@ public:
     Matrix1D<double> psi;
     double rot;
     double tilt;
-    bool optimizePsi;
 
 public:
     Alignment(const Prog_tomograph_alignment *_prm)
@@ -250,7 +249,6 @@ public:
         psi.initZeros(Nimg);
         rot=90;
         tilt=90;
-        optimizePsi=false;
         
         Ai.clear();
         Ait.clear();
@@ -291,7 +289,6 @@ public:
             psi=op.psi;
             rot=op.rot;
             tilt=op.tilt;
-            optimizePsi=op.optimizePsi;
             Ai=op.Ai;
             Ait=op.Ait;
             Aip=op.Aip;

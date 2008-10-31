@@ -1141,7 +1141,6 @@ void Prog_tomograph_alignment::run() {
         fitness=bestPreviousAlignment->optimizeGivenAxisDirection();
 
         // Optimize again
-        bestPreviousAlignment->optimizePsi=true;
         powellOptimizer(axisAngles,1,2,&wrapperError,NULL,
             0.01,fitness,iter,steps,true);
     }
@@ -1360,7 +1359,7 @@ void Alignment::updateModel()
     // double error2=computeError();
     
     // Update rotations
-    if (prm->psiMax>0 /*&& optimizePsi*/)
+    if (prm->psiMax>0)
     {
         Matrix2D<double> tmp1(2,2), tmp2(2,2), Ri(2,2);
         Matrix2D<double> Aiprj(2,1), Aiprjt(1,2), dim(2,1), Pij(2,1);
