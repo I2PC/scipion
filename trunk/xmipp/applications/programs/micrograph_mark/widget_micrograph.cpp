@@ -427,7 +427,6 @@ void QtWidgetMicrograph::learnParticles()
         __training_model.clear();    
     
     // Actually learn
-    buildSelectionModel();    
     buildVectors(all_idx, __training_model);
     buildNegativeVectors(__training_model);
     getAutoFalsePositives();
