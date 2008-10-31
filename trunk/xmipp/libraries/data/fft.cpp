@@ -36,7 +36,6 @@ void Whole2Half(const Matrix1D<std::complex<double> > &in,
     out.resize(ldim);
     for (int j = 0; j < ldim; j++)
 	out(j) = in(j);
-
 }
 
 /** Convert half -> whole of (centro-symmetric) Fourier transforms 2D. -- */
@@ -48,7 +47,6 @@ void Half2Whole(const Matrix1D<std::complex<double> > &in,
 	out(j) = in(j);
     for (int j = XSIZE(in); j < orixdim; j++)
 	out(j) = conj(in(orixdim - j));
-    
 }
 
 /** Convert whole -> half of (centro-symmetric) Fourier transforms 2D. -- */
@@ -77,9 +75,11 @@ void Half2Whole(const Matrix2D<std::complex<double> > &in, Matrix2D<std::complex
     for (int i = 0; i < YSIZE(in); i++)
         for (int j = 0; j < XSIZE(in); j++)
             dMij(out, i, j) = dMij(in, i, j);
+
     // Complete first column of old part
     for (int j = YSIZE(in); j < XSIZE(in); j++)
         dMij(out, 0, j) = conj(dMij(in, 0, XSIZE(in) - j));
+
     // New part
     for (int i = YSIZE(in); i < oriydim; i++)
     {
