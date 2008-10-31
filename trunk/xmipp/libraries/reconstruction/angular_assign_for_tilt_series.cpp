@@ -145,6 +145,7 @@ private:
 };
 #undef DEBUG
 
+static pthread_mutex_t localAffineMutex = PTHREAD_MUTEX_INITIALIZER;
 double computeAffineTransformation(const Matrix2D<double> &I1,
     const Matrix2D<double> &I2, int maxShift, int maxIterDE,
     const FileName &fn_affine, 
@@ -232,6 +233,7 @@ double computeAffineTransformation(const Matrix2D<double> &I1,
             if (isMirror)
                 A(3)*=-1;
             double tx, ty;
+            pthread_mutex_lock( &localAffineMutex );
             if (!isMirror) best_shift(I1,I2,tx,ty);
             else
             {
@@ -240,6 +242,7 @@ double computeAffineTransformation(const Matrix2D<double> &I1,
                 best_shift(I1,auxI2,tx,ty);
                 ty=-ty;
             }
+            pthread_mutex_unlock( &localAffineMutex );
             A(4)=-tx;
             A(5)=-ty;
         }
@@ -423,6 +426,7 @@ void Prog_tomograph_alignment::produceSideInfo() {
     showRefinement=false;
 }
 
+static pthread_mutex_t printingMutex = PTHREAD_MUTEX_INITIALIZER;
 void * threadComputeTransform( void * args )
 {
     ThreadParams * master = (ThreadParams *) args;
@@ -463,11 +467,11 @@ void * threadComputeTransform( void * args )
             showAffine, thresholdAffine, localAffine,
             isMirror);
         
-		pthread_mutex_lock( &printingMutex );
-		cout << "Cost for [" << jj_1 << "] - [" << jj << "] = " << cost << endl;
-		pthread_mutex_unlock( &printingMutex );
-		affineTransformations[jj_1][jj]=Aij;
-		affineTransformations[jj][jj_1]=Aji;
+	pthread_mutex_lock( &printingMutex );
+	cout << "Cost for [" << jj_1 << "] - [" << jj << "] = " << cost << endl;
+	pthread_mutex_unlock( &printingMutex );
+	affineTransformations[jj_1][jj]=Aij;
+	affineTransformations[jj][jj_1]=Aji;
     }
 	
     return NULL;

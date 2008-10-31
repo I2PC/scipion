@@ -221,10 +221,6 @@ struct ThreadParams
 /// Threads processing is done here
 void * threadComputeTransform( void * args );
 
-/// This mutex is used by previous function to avoid concurrent screen
-/// printing at a time by different threads
-static pthread_mutex_t printingMutex = PTHREAD_MUTEX_INITIALIZER;
-
 class Alignment {
 public:
     const Prog_tomograph_alignment *prm;
