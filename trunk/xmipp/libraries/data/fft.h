@@ -648,8 +648,9 @@ void auto_correlation_vector(Matrix1D< T > const & Img, Matrix1D< double >& R)
     FourierTransform(Img, FFT1);
 
     // Multiply FFT1 * FFT1'
+    double dSize=XSIZE(Img);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(FFT1)
-        FFT1(i) *= conj(FFT1(i));
+        FFT1(i) *= dSize * conj(FFT1(i));
 
     // Invert the product, in order to obtain the correlation image
     InverseFourierTransform(FFT1, R);
@@ -677,14 +678,34 @@ void correlation_vector(Matrix1D< T > const & m1,
     FourierTransform(m2, FFT2);
 
     // Multiply FFT1 * FFT2'
+    double dSize=XSIZE(m1);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(FFT1)
-        FFT1(i) *= conj(FFT2(i));
+        FFT1(i) *= dSize * conj(FFT2(i));
 
     // Invert the product, in order to obtain the correlation image
     InverseFourierTransform(FFT1, R);
 
     // Center the resulting image to obtain a centered autocorrelation
     CenterFFT(R, true);
+}
+
+/** Compute the correlation vector without using Fourier.
+    The results are the same as the previous ones but this function
+    is threadsafe while the previous one is not.
+    
+    It is assumed that the two vectors v1, and v2 are of the same size. */
+template <class T>
+void correlation_vector_no_Fourier(const Matrix1D<T> &v1, const Matrix1D<T> &v2,
+    Matrix1D<T> &result)
+{
+    result.initZeros(v1);
+    result.setXmippOrigin();
+    int N=XSIZE(v1)-1;
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(result)
+        for (int k=0; k<XSIZE(v1); k++)
+            result(i)+=DIRECT_VEC_ELEM(v1,intWRAP(k+i,0,N))*
+                       DIRECT_VEC_ELEM(v2,k);
+    STARTINGX(result)=0;
 }
 
 /** Autocorrelation function of a Xmipp matrix
@@ -701,8 +722,9 @@ void auto_correlation_matrix(Matrix2D< T > const & Img, Matrix2D< double >& R)
     FourierTransform(Img, FFT1);
 
     // Multiply FFT1 * FFT1'
+    double dSize=MULTIDIM_SIZE(Img);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(FFT1)
-        FFT1(i, j) *= conj(FFT1(i, j));
+        FFT1(i, j) *= dSize * conj(FFT1(i, j));
 
     // Invert the product, in order to obtain the correlation image
     InverseFourierTransform(FFT1, R);
@@ -730,8 +752,9 @@ void correlation_matrix(Matrix2D< T > const & m1,
     FourierTransform(m2, FFT2);
 
     // Multiply FFT1 * FFT2'
+    double dSize=MULTIDIM_SIZE(m1);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(FFT1)
-        FFT1(i, j) *= conj(FFT2(i, j));
+        FFT1(i, j) *= dSize * conj(FFT2(i, j));
 
     // Invert the product, in order to obtain the correlation image
     InverseFourierTransform(FFT1, R);
@@ -777,7 +800,9 @@ void series_convolution(Matrix1D< T >& series1,
 
     // Multiply the vectors element by element to do the convolution in the
     // Fourier space
-    FFT1 *= FFT2;
+    double dSize=XSIZE(series1);
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(FFT1)
+        FFT1(i) *= dSize * FFT2(i);
 
     // Recover the convolution result by inverse FFT
     InverseFourierTransform(FFT1, result);
