@@ -1342,11 +1342,7 @@ def execute_reconstruction(_mylog,
          parameters = parameters + ' -l '   + _ARTLambda + ' '
       parameters = parameters + _ARTReconstructionExtraCommand
    elif _ReconstructionMethod=='fourier':
-      #####
-      ## MPI IS  NOt IMPLEMENTED YET.
-      ####
-      #mpi_program = 'xmipp_mpi_reconstruct_fourier'
-      mpi_program = 'NULL'
+      mpi_program = 'xmipp_mpi_reconstruct_fourier'
       program = 'xmipp_reconstruct_fourier'
       parameters=' -i '    + ForReconstructionSel + \
                  ' -o '    + Outputvolume + '.vol ' + \
@@ -1439,14 +1435,10 @@ def  execute_resolution(_mylog,
           parameters = parameters + _ARTReconstructionExtraCommand
        elif _ReconstructionMethod=='fourier':
           RunInBackground=False
-          ###
-	  # MPI not jet implemented
-	  ###
-	  #mpi_program = 'xmipp_mpi_reconstruct_fourier'
-          mpi_program = 'NULL'
+	  mpi_program = 'xmipp_mpi_reconstruct_fourier'
           program = 'xmipp_reconstruct_fourier'
           parameters=' -i '    +  Selfiles[i] + \
-                     ' -doc '  + ForReconstructionDoc + \
+                     ' -doc '  + Docfiles[i] + \
                      ' -o '    +  Outputvolumes[i] + '.vol ' + \
                      ' -sym '  + _SymmetryGroup + \
                      ' -weight '
