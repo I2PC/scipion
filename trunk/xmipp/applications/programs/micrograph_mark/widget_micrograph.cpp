@@ -41,6 +41,7 @@
 #include <reconstruction/fourier_filter.h>
 
 #include <algorithm>
+#include <sys/time.h>
 
 #include <qinputdialog.h>
 #include <qmessagebox.h>
@@ -57,7 +58,7 @@
 #include <qgrid.h>
 #endif
 
-#define DEBUG_AUTO
+//#define DEBUG_AUTO
 //#define DEBUG_MORE_AUTO
 //#define DEBUG_REFINE
 //#define DEBUG_PREPARE
@@ -253,6 +254,8 @@ QtWidgetMicrograph::QtWidgetMicrograph(QtMainWidgetMark *_mainWidget,
     __tilted                         = false;
     __learn_particles_done           = false;
     __autoselection_done             = false;
+    __modelRootName                  = "";
+    __numThreads                     = 1;
     __auto_label                     = -1;
     __gray_bins                      = 8;
     __radial_bins                    = 16;
@@ -393,7 +396,13 @@ void QtWidgetMicrograph::openMenus()
     // *** Add your own menus
 }
 
-/* Learn particles ---------------------------------------------------------*/
+/* Set the number of threads ----------------------------------------------- */
+void QtWidgetMicrograph::setNumThreads(int _numThreads)
+{
+    __numThreads=_numThreads;
+}
+
+/* Learn particles --------------------------------------------------------- */
 void QtWidgetMicrograph::learnParticles()
 {
     std::cerr << "\n------------------Learning Phase-----------------------\n";
@@ -431,7 +440,7 @@ void QtWidgetMicrograph::learnParticles()
     Matrix2D<double> piece;
     while (get_corner_piece(piece, top, left, skip_y,
                             next_skip_x, next_skip_y, next_top,
-			    next_left, __piece_overlap))
+			    next_left, __piece_overlap, true))
     {
         top = next_top;
         left = next_left;
@@ -520,8 +529,125 @@ void QtWidgetMicrograph::produceClassesProbabilities(
 }
 
 /* Automatic phase ----------------------------------------------------------*/
-void * QtWidgetMicrograph::automaticallySelectParticlesThread(void * args)
+static pthread_mutex_t particleAdditionMutex = PTHREAD_MUTEX_INITIALIZER;
+
+void * automaticallySelectParticlesThread(void * args)
 {
+    // Pick the input parameters
+    AutomaticallySelectThreadParams * prm=
+        (AutomaticallySelectThreadParams *)args;
+    QtWidgetMicrograph *widgetmicrograph=prm->widgetmicrograph;
+    int idThread=prm->idThread;
+
+    //top,left corner of the piece
+    int top = 0, left = 0, next_top = 0, next_left = 0;
+    // If the piece available is small then include the scanned part
+    // because we need bigger image for denoising but for scanning
+    // particles we skip the already scanned part
+    int skip_x = 0, skip_y = 0, next_skip_x = 0, next_skip_y = 0;
+    Matrix1D<double> v;
+    int N = 1, particle_idx = 0, Nscanned=0;
+    Matrix2D<double> piece, original_piece;
+    const Matrix2D<int> &mask = widgetmicrograph->__mask.get_binary_mask2D();
+    std::vector< Particle > threadCandidates;
+    do
+    {
+        bool isMine=(N%widgetmicrograph->__numThreads==idThread);
+        bool pieceOK=widgetmicrograph->get_corner_piece(piece, top, left,
+            skip_y, next_skip_x, next_skip_y, next_top, next_left,
+            widgetmicrograph->__piece_overlap,isMine);
+        if (!pieceOK) break;
+        if (isMine)
+        {
+            #ifdef DEBUG_MORE_AUTO
+                std::cerr << "thread " << idThread
+                          << " processing piece " << N << "...\n";
+                std::cerr << "    (top,left)=" << top << "," << left
+                          << " skip y,x=" << next_skip_y << "," << next_skip_x
+                          << " next=" << next_top << "," << next_left << std::endl;
+            #endif
+
+            // Get a piece and prepare it
+            if (!widgetmicrograph->prepare_piece(piece, original_piece))
+            {
+                top = next_top;
+                left = next_left;
+                std::cerr << "bad piece...skipping" << std::endl;
+                N++;
+                continue;
+            }
+
+            // Express the skip values in the reduced image
+            skip_x /= widgetmicrograph->__reduction;
+            skip_y /= widgetmicrograph->__reduction;
+            #ifdef DEBUG_MORE_AUTO
+                std::cerr << "Skip(y,x)=" << skip_y << "," << skip_x << std::endl;
+            #endif
+
+            // Scan this piece
+            int posx = 0, next_posx = 0, posy = 0, next_posy = 0;
+            next_posx = posx = skip_x + XSIZE(mask) / 2;
+            next_posy = posy = skip_y + YSIZE(mask) / 2;
+
+            while (widgetmicrograph->get_next_scanning_pos(
+                piece, next_posx, next_posy, skip_x, skip_y,
+                widgetmicrograph->__scan_overlap))
+            {
+                #ifdef DEBUG_MORE_AUTO2
+                   std::cerr << "Pos(y,x)=" << posy << "," << posx
+                             << " Micro(y,x)=" << posy*widgetmicrograph->__reduction + top
+                             << "," << posx*widgetmicrograph->__reduction + left
+                             << " Next pos(y,x)=" << next_posy << "," << next_posx
+                             << std::endl;
+                #endif
+
+	        if (widgetmicrograph->build_vector(piece, original_piece,
+                    posx, posy, v))
+                {
+                    double cost;
+	            if (widgetmicrograph->__selection_model.isParticle(v,cost))
+	            {
+                        #ifdef DEBUG_MORE_AUTO2
+		            std::cout << "Particle Found: "
+                                << left + posx * widgetmicrograph->__reduction << ","
+                                << top  + posy *widgetmicrograph->__reduction << std::endl;
+                            std::cout << "Press any key to continue...\n";
+                            char c;
+                            std::cin >> c;
+                        #endif
+
+                        // Build the Particle structure
+                        Particle P;
+                        P.x = left + posx * widgetmicrograph->__reduction;
+                        P.y = top + posy * widgetmicrograph->__reduction;
+                        P.idx = -1;
+                        P.status = 1;
+                        P.vec = v;
+                        P.cost = cost;
+                        threadCandidates.push_back(P);
+                    }
+                    Nscanned++;
+                }
+
+                // Go to next scanning position
+                posx = next_posx;
+                posy = next_posy;
+            }
+        }
+
+        // Go to next piece in the micrograph
+        top = next_top;
+        left = next_left;
+        skip_x = next_skip_x;
+        skip_y = next_skip_y;
+        N++;
+    } while (true);
+
+    int imax=threadCandidates.size();
+    pthread_mutex_lock( &particleAdditionMutex );
+    for (int i=0; i<imax; i++)
+        widgetmicrograph->__auto_candidates.push_back(threadCandidates[i]);
+    pthread_mutex_unlock( &particleAdditionMutex );
 }
 
 void QtWidgetMicrograph::automaticallySelectParticles()
@@ -549,104 +675,30 @@ void QtWidgetMicrograph::automaticallySelectParticles()
         // Initialize classifier
         __selection_model.initNaiveBayesEnsemble(features, probs, 8,
             __penalization, 10, 1, 1, "mm");
-
         #ifdef DEBUG_AUTO
             std::cout << "Probabilities of the classes:"
                       << probs.transpose() << std::endl;
         #endif
 
-
-        //top,left corner of the piece
-        int top = 0, left = 0, next_top = 0, next_left = 0;
-        // If the piece available is small then include the scanned part
-        // because we need bigger image for denoising but for scanning
-        // particles we skip the already scanned part
-        int skip_x = 0, skip_y = 0, next_skip_x = 0, next_skip_y = 0;
-        Matrix1D<double> v;
-        int N = 1, particle_idx = 0, Nscanned=0;
-        Matrix2D<double> piece, original_piece;
-        while (get_corner_piece(piece, top, left, skip_y,
-                                next_skip_x, next_skip_y, next_top,
-			        next_left, __piece_overlap))
+        // Automatically select particles with threads
+        pthread_t * th_ids = new pthread_t[__numThreads];
+        AutomaticallySelectThreadParams * th_args=
+            new AutomaticallySelectThreadParams[__numThreads];
+        for( int nt = 0 ; nt < __numThreads ; nt ++ )
         {
-            std::cerr << "Processing piece " << N << "...\n";
-            #ifdef DEBUG_MORE_AUTO
-                std::cerr << "    (top,left)=" << top << "," << left
-                          << " skip y,x=" << next_skip_y << "," << next_skip_x
-                          << " next=" << next_top << "," << next_left << std::endl;
-            #endif
-
-            // Get a piece and prepare it
-            if (!prepare_piece(piece, original_piece))
-            {
-                top = next_top;
-                left = next_left;
-                std::cerr << "bad piece...skipping" << std::endl;
-                N++;
-                continue;
-            }
-
-            // Express the skip values in the reduced image
-            skip_x /= __reduction;
-            skip_y /= __reduction;
-            #ifdef DEBUG_MORE_AUTO
-                std::cerr << "Skip(y,x)=" << skip_y << "," << skip_x << std::endl;
-            #endif
-
-            // Scan this piece
-            int posx = 0, next_posx = 0, posy = 0, next_posy = 0;
-            next_posx = posx = skip_x + XSIZE(mask) / 2;
-            next_posy = posy = skip_y + YSIZE(mask) / 2;
-
-            while (get_next_scanning_pos(piece, next_posx, next_posy,
-                skip_x, skip_y, __scan_overlap))
-            {
-                #ifdef DEBUG_MORE_AUTO
-                   std::cerr << "Pos(y,x)=" << posy << "," << posx
-                             << " Micro(y,x)=" << posy*__reduction + top
-                             << "," << posx*__reduction + left
-                             << " Next pos(y,x)=" << next_posy << "," << next_posx;
-                #endif
-
-	        if (build_vector(piece, original_piece, posx, posy, v))
-                {
-                    double cost;
-	            if (__selection_model.isParticle(v,cost))
-	            {
-                        #ifdef DEBUG_MORE_AUTO
-		            std::cout << "Particle Found: "
-                                << left + posx * __reduction << ","
-                                << top  + posy * __reduction << std::endl;
-                            std::cout << "Press any key to continue...\n";
-                            char c;
-                            std::cin >> c;
-                        #endif
-
-                        // Build the Particle structure
-                        Particle P;
-                        P.x = left + posx * __reduction;
-                        P.y = top + posy * __reduction;
-                        P.idx = -1;
-                        P.status = 1;
-                        P.vec = v;
-                        P.cost = cost;
-                        //refine_center(P);
-                        __auto_candidates.push_back(P);
-                    }
-                    Nscanned++;
-                }
-                // Go to next scanning position
-                posx = next_posx;
-                posy = next_posy;
-            }
-
-            // Go to next piece in the micrograph
-            top = next_top;
-            left = next_left;
-            skip_x = next_skip_x;
-            skip_y = next_skip_y;
-            N++;
+            th_args[nt].widgetmicrograph = this;
+            th_args[nt].idThread = nt;
+            pthread_create( &th_ids[nt], NULL,
+                automaticallySelectParticlesThread, &th_args[nt]);
         }
+
+        // Waiting for threads to finish
+        for( int nt=0; nt<__numThreads; nt++)
+            pthread_join(th_ids[nt], NULL);
+
+        // Thread structures are not needed any more
+        delete [] th_ids;
+        delete [] th_args;
 
         // Sort particles by cost
         std::sort(__auto_candidates.begin(),__auto_candidates.end(),
@@ -1045,7 +1097,8 @@ void QtWidgetMicrograph::buildNegativeVectors(Classification_model &__model)
     // do not miss any particle.
     Matrix2D<double> piece, original_piece;
     while (get_corner_piece(piece, top, left, skip_y,
-                            next_skip_x, next_skip_y, next_top, next_left, 0))
+                            next_skip_x, next_skip_y, next_top, next_left, 0,
+                            true))
     {
         // Get a piece and prepare it
         if (!prepare_piece(piece, original_piece))
@@ -1242,7 +1295,7 @@ bool QtWidgetMicrograph::build_vector(const Matrix2D<double> &piece,
     // Compute the correlation of the sectors
     for (int step = 1; step<angleBins; step++)
     {
-        static Matrix1D<double> sectorCorr;
+        Matrix1D<double> sectorCorr;
         sectorCorr.initZeros(angleBins);
         for (int i = 0; i<angleBins; i++)
         {
@@ -1251,8 +1304,8 @@ bool QtWidgetMicrograph::build_vector(const Matrix2D<double> &piece,
                 sector[intWRAP(i+step,0,angleBins-1)]);
         }
         _result(idx_result++) = sectorCorr.computeAvg();
-        static Matrix1D<double> sectorAutocorr;
-        auto_correlation_vector(sectorCorr,sectorAutocorr);
+        Matrix1D<double> sectorAutocorr;
+        correlation_vector_no_Fourier(sectorCorr,sectorCorr,sectorAutocorr);
         for (int j = 0; j < XSIZE(sectorAutocorr); j++)
             _result(idx_result++) = sectorAutocorr(j);
     }
@@ -1261,8 +1314,8 @@ bool QtWidgetMicrograph::build_vector(const Matrix2D<double> &piece,
     for (int step = 1; step<=2; step++)
          for (int i = 8; i<__radial_bins-step; i++)
          {
-             static Matrix1D<double> ringCorr;
-             correlation_vector(ring[i],ring[i+step],ringCorr);
+             Matrix1D<double> ringCorr;
+             correlation_vector_no_Fourier(ring[i],ring[i+step],ringCorr);
              for (int j = 0; j < XSIZE(ringCorr); j++)
                  _result(idx_result++) = ringCorr(j);
          }
@@ -1366,7 +1419,7 @@ bool QtWidgetMicrograph::get_corner_piece(
     Matrix2D<double> &piece,
     int _top, int _left, int _skip_y,
     int &_next_skip_x, int &_next_skip_y, int &_next_top, int &_next_left,
-    int overlap)
+    int overlap, bool copyPiece)
 {
     const Matrix2D<int> &mask = __mask.get_binary_mask2D();
 
@@ -1404,15 +1457,19 @@ bool QtWidgetMicrograph::get_corner_piece(
     }
 
     //read the matrix from the micrograph
-    piece.resize(__piece_xsize, __piece_xsize);
-    for (int i = 0; i < __piece_xsize; i++)
-        for (int j = 0; j < __piece_xsize; j++)
-            piece(i, j) = (*__m)(_left + j, _top + i);
+    if (copyPiece)
+    {
+        piece.resize(__piece_xsize, __piece_xsize);
+        for (int i = 0; i < __piece_xsize; i++)
+            for (int j = 0; j < __piece_xsize; j++)
+                piece(i, j) = (*__m)(_left + j, _top + i);
+    }
 	    
     return true;
 }
 
 /* Prepare piece ----------------------------------------------------------- */
+static pthread_mutex_t preparePieceMutex = PTHREAD_MUTEX_INITIALIZER;
 bool QtWidgetMicrograph::prepare_piece(Matrix2D<double> &piece,
     Matrix2D<double> &original_piece)
 {
@@ -1425,6 +1482,7 @@ bool QtWidgetMicrograph::prepare_piece(Matrix2D<double> &piece,
     #endif    
 
     // High pass filter
+    pthread_mutex_lock( &preparePieceMutex );
     FourierMask Filter;
     Filter.FilterShape = RAISED_COSINE;
     Filter.FilterBand = HIGHPASS;
@@ -1437,6 +1495,7 @@ bool QtWidgetMicrograph::prepare_piece(Matrix2D<double> &piece,
         save() = piece;
         save.write("PPPpiece1.xmp");
     #endif    
+    pthread_mutex_unlock( &preparePieceMutex );
     
     // Denoise the piece
     Denoising_parameters denoiser;

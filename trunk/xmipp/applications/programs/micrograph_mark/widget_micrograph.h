@@ -160,13 +160,14 @@ public:
     // Is a particle?
     bool isParticle(const Matrix1D<double> &new_features, double &cost)
     {
+        
         int k;
         if (__bayesClassifier==0)
             k=__bayesNet->doInference(new_features,cost);
         else
         {
-            k=__bayesEnsembleNet->doInference(new_features,cost);
-            const Matrix1D<int> &votes=__bayesEnsembleNet->getVotes();
+            Matrix1D<int> votes;
+            k=__bayesEnsembleNet->doInference(new_features,cost,votes);
             switch (__classNo)
             {
                 case 2:
@@ -207,7 +208,7 @@ class QtWidgetMicrograph : public QWidget
 {
     Q_OBJECT
 
-private:
+public:
     Micrograph                *__m;
     QtFiltersController       *__filtersController;
     int                        __activeFamily;
@@ -228,6 +229,7 @@ private:
     int                        __ellipse_type;
 
     FileName                   __modelRootName;
+    int                        __numThreads;
     bool                       __learn_particles_done;
     bool                       __autoselection_done;
     Mask_Params                __mask;
@@ -357,6 +359,9 @@ public:
     // Repaint
     void repaint();
 
+    // Set the number of threads
+    void setNumThreads(int _numThreads);
+
     // Learn particles
     void learnParticles();
 
@@ -403,7 +408,7 @@ public:
     bool get_corner_piece(Matrix2D<double> &piece,
         int _top, int _left, int _skip_y,
         int &_next_skip_x, int &_next_skip_y, int &_next_top,
-        int &_next_left, int overlap);
+        int &_next_left, int overlap, bool copyPiece);
 
     // Denoise, reject outliers and equalize histogram
     // Returns true, if successful. False if unsuccessful (skip this piece)
@@ -423,9 +428,6 @@ public:
 
     // Automatically Select Particles
     void automaticallySelectParticles();
-    
-    // Automatically Select Particles thread
-    static void * automaticallySelectParticlesThread(void *);
     
     // check if there are any particles in the actual scanning position
     bool anyParticle(int posx, int posy, int rect_size);
@@ -512,6 +514,16 @@ signals:
     void signalAddFamily(const char *_familyName);
     void signalRepaint();
 };
+
+// AutomaticallySelectThreadParams
+struct AutomaticallySelectThreadParams {
+    QtWidgetMicrograph *widgetmicrograph;
+    int idThread;
+};
+
+// Automatically Select Particles thread
+void * automaticallySelectParticlesThread(void *);
+
 
 /** Class to adjust contrast
 */

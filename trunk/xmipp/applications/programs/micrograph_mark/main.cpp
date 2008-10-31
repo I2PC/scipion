@@ -43,6 +43,7 @@ int main(int argc, char **argv)
     FileName fn_assign_CTF;
     bool     ctf_mode = false;
     bool     autoSelect = false;
+    int      numThreads = 1;
 
     // Get input parameters .................................................
     try
@@ -60,6 +61,7 @@ int main(int argc, char **argv)
         autoSelect = checkParameter(argc, argv, "-autoSelect");
         if (fnRawTilted!="" && autoSelect)
             REPORT_ERROR(1,"Automatic particle picking cannot be performed on tilt pairs");
+        numThreads = textToInteger(getParameter(argc, argv, "-thr","1"));
     }
     catch (Xmipp_error XE)
     {
@@ -147,6 +149,7 @@ int main(int argc, char **argv)
         }
         else
         {
+            mainWidget->untilted_widget()->setNumThreads(numThreads);
             mainWidget->untilted_widget()->automaticallySelectParticles();
             mainWidget->untilted_widget()->saveAutoParticles();
         }
