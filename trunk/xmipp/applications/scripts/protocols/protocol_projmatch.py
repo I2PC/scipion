@@ -1167,7 +1167,7 @@ def execute_projection_matching(_mylog,
 
       if (_DoControl):
          parameters += \
-                  ' -control '        + self.MyControlFile
+                  ' -control '        + _MyControlFile
 
       if (len(_MyMpiJobSize)>0 and _DoParallel):
          parameters = parameters + ' -mpi_job_size ' + str(_MyMpiJobSize)
