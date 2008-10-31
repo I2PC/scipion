@@ -38,20 +38,20 @@
 class AffineFitness
 {
 public:
-	Matrix1D<double> minAllowed;
-	Matrix1D<double> maxAllowed;
-	Matrix2D<double> I1;
-	Matrix2D<double> I2;
-	Matrix2D<double> Mask1;
-	Matrix2D<double> Mask2;
-	bool showMode;
-    
-	AffineFitness()
-	{
-		showMode=false;
-	}
+    Matrix1D<double> minAllowed;
+    Matrix1D<double> maxAllowed;
+    Matrix2D<double> I1;
+    Matrix2D<double> I2;
+    Matrix2D<double> Mask1;
+    Matrix2D<double> Mask2;
+    bool showMode;
+
+    AffineFitness()
+    {
+	showMode=false;
+    }
 	
-	double affine_fitness_individual(double *p)
+    double affine_fitness_individual(double *p)
     {
        // Check limits
        if (!showMode)
@@ -194,14 +194,14 @@ double computeAffineTransformation(const Matrix2D<double> &I1,
     std::ifstream fh_in;
     fh_in.open(fn_affine.c_str());
 	
-	// Return result
-	double cost;
+    // Return result
+    double cost;
 	
     if (fh_in) {
     	A12.resize(3,3);
-	    A21.resize(3,3);
+	A21.resize(3,3);
      	fh_in >> A12 >> A21 >> cost;
-	    fh_in.close();
+	fh_in.close();
     } else {
         // Optimize with differential evolution
         Matrix1D<double> A(6);
@@ -273,11 +273,11 @@ double computeAffineTransformation(const Matrix2D<double> &I1,
         Matrix1D<double> p(6);
         p(0)=A12(0,0); p(1)=A12(0,1); p(4)=A12(0,2);
         p(2)=A12(1,0); p(3)=A12(1,1); p(5)=A12(1,2);
-	    fitness.affine_fitness_individual(MULTIDIM_ARRAY(p));
+        fitness.affine_fitness_individual(MULTIDIM_ARRAY(p));
     	fitness.showMode=false;
     }
 	
-	return cost;
+    return cost;
 }
 
 /* Parameters -------------------------------------------------------------- */
@@ -440,8 +440,8 @@ void * threadComputeTransform( void * args )
     int maxIterDE = parent->maxIterDE;
     bool showAffine = parent->showAffine;
     double thresholdAffine = parent->thresholdAffine;
-    std::vector < Matrix2D<double> *> img = parent->img;
-    std::vector< std::vector< Matrix2D<double> > > affineTransformations = parent->affineTransformations;
+    std::vector < Matrix2D<double> *> & img = parent->img;
+    std::vector< std::vector< Matrix2D<double> > > & affineTransformations = parent->affineTransformations;
     double localAffine = parent->localAffine;
 
     int maxShift=FLOOR(XSIZE(*img[0])*maxShiftPercentage);
@@ -461,13 +461,14 @@ void * threadComputeTransform( void * args )
         bool isMirror=(jj==0) && (jj_1==Nimg-1);
         Matrix2D<double> Aij, Aji;
         cost = computeAffineTransformation(img_i, img_j, maxShift,
-            maxIterDE,
-            (std::string)"affine_"+integerToString(jj_1,3)+
+            maxIterDE,(std::string)"affine_"+integerToString(jj_1,3)+
             "_"+integerToString(jj,3)+".txt", Aij, Aji,
             showAffine, thresholdAffine, localAffine,
             isMirror);
         
 	pthread_mutex_lock( &printingMutex );
+        affineTransformations[jj_1][jj]=Aij;
+        affineTransformations[jj][jj_1]=Aji;
 	cout << "Cost for [" << jj_1 << "] - [" << jj << "] = " << cost << endl;
 	pthread_mutex_unlock( &printingMutex );
 	affineTransformations[jj_1][jj]=Aij;
@@ -478,7 +479,7 @@ void * threadComputeTransform( void * args )
 }
  
 /* Generate landmark set --------------------------------------------------- */
-#define DEBUG
+//#define DEBUG
 void Prog_tomograph_alignment::generateLandmarkSet() {
     if (!exists(fnRoot+"_landmarks.txt"))
     {
@@ -505,7 +506,7 @@ void Prog_tomograph_alignment::generateLandmarkSet() {
                     l.y=YY(rii);
                     l.imgIdx=ii;
                     chain.push_back(l);
-                    
+
                     // Follow this landmark backwards
                     bool acceptLandmark=true;
                     int jjleft=ii, jj;
@@ -564,22 +565,28 @@ void Prog_tomograph_alignment::generateLandmarkSet() {
                             rcurrent=rjj;
                         }
                     }
-                    
-                    std::cout << "img=" << ii << " chain length="
-                              << chain.size() << " [" << jjleft 
-                              << " - " << jjright << "]";
+
+                    #ifdef DEBUG
+                        std::cout << "img=" << ii << " chain length="
+                                  << chain.size() << " [" << jjleft 
+                                  << " - " << jjright << "]";
+                    #endif
                     if (chain.size()>seqLength)
                     {
                         bool accepted=refineChain(chain);
                         if (accepted)
                         {
-                            std::cout << " Accepted with length= "
-                                      << chain.size();
+                            #ifdef DEBUG
+                                std::cout << " Accepted with length= "
+                                          << chain.size();
+                            #endif
                             chainList.push_back(chain);
                             includedPoints+=chain.size();
                         }
                     }
-                    std::cout << std::endl;
+                    #ifdef DEBUG
+                        std::cout << std::endl;
+                    #endif
                 }
                 #ifdef DEBUG
                     std::cout << "Point nx=" << nx << " ny=" << ny
@@ -609,6 +616,10 @@ void Prog_tomograph_alignment::generateLandmarkSet() {
         
         // Write landmarks
         writeLandmarkSet(fnRoot+"_landmarks.txt");
+        std::cout << " Number of points="
+                  << includedPoints
+                  << " Number of chains=" << chainList.size()
+                  << " ( " << ((double) includedPoints)/chainList.size() << " )\n";
     }
     else
     {
@@ -1089,6 +1100,7 @@ double wrapperError(double *p, void *prm)
     return alignment.optimizeGivenAxisDirection();
 }
 
+//#define DEBUG
 void Prog_tomograph_alignment::run() {
     generateLandmarkSet();
     produceInformationFromLandmarks();
@@ -1102,8 +1114,10 @@ void Prog_tomograph_alignment::run() {
         alignment->clear();
         alignment->rot=rot;
         double error=alignment->optimizeGivenAxisDirection();
-        std::cout << "rot= " << rot
-                  << " error= " << error << std::endl;
+        #ifdef DEBUG
+            std::cout << "rot= " << rot
+                      << " error= " << error << std::endl;
+        #endif
         if (bestRot<0 || bestError>error)
         {
             bestRot=rot;
@@ -1111,8 +1125,8 @@ void Prog_tomograph_alignment::run() {
             *bestPreviousAlignment=*alignment;
         }
     }
-    std::cout << "Final bestRot=" << bestRot
-              << " Final bestError=" << bestError << std::endl;
+    std::cout << "Best rot=" << bestRot
+              << " Best error=" << bestError << std::endl;
     
     // Continuous optimization for the axis direction
     Matrix1D<double> axisAngles(2), steps(2);
@@ -1162,9 +1176,10 @@ void Prog_tomograph_alignment::run() {
     // Correct the input images
     alignImages(*bestPreviousAlignment);
 }
+#undef DEBUG
 
 /* Optimize for rot -------------------------------------------------------- */
-#define DEBUG
+//#define DEBUG
 double Alignment::optimizeGivenAxisDirection()
 {
     double bestError;
