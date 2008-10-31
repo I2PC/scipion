@@ -294,7 +294,7 @@ int NaiveBayes::doInference(const Matrix1D<double>	&newFeatures,
     double &cost)
 {
     debugging = false;
-    static Matrix1D<double> classesProbs;
+    Matrix1D<double> classesProbs;
     classesProbs = __priorProbsLog10;
     for(int f=0; f<Nfeatures; f++)
         for (int k=0; k<K; k++)
@@ -319,7 +319,7 @@ int NaiveBayes::doInference(const Matrix1D<double>	&newFeatures,
     for (int k=0; k<K; k++)
         classesProbs(k)=pow(10.0,classesProbs(k));
     
-    static Matrix1D<double> allCosts;
+    Matrix1D<double> allCosts;
     allCosts=__cost*classesProbs;
     for (int k=0; k<K; k++)
         allCosts(k)=log10(allCosts(k));
@@ -422,7 +422,7 @@ void EnsembleNaiveBayes::setCostMatrix(const Matrix2D<double> &cost)
 
 /* Do inference ------------------------------------------------------------ */
 int EnsembleNaiveBayes::doInference(const Matrix1D<double> &newFeatures,
-    double &cost)
+    double &cost, Matrix1D<int> &votes)
 {
 
     int nmax=ensemble.size();
@@ -452,14 +452,5 @@ int EnsembleNaiveBayes::doInference(const Matrix1D<double> &newFeatures,
     if      (judgeCombination[bestClass]=='m') cost=minCost(bestClass);
     else if (judgeCombination[bestClass]=='M') cost=maxCost(bestClass);
     else    cost=minCost(bestClass);
-/*    if (K==2)
-        std::cout << "votes=" << votes.transpose() << std::endl
-                  << "minCost=" << minCost.transpose() << std::endl
-                  << "maxCost=" << maxCost.transpose() << std::endl;*/
     return bestClass;
-}
-
-const Matrix1D<int>& EnsembleNaiveBayes::getVotes() const
-{
-    return votes;
 }

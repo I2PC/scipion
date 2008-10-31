@@ -155,12 +155,8 @@ public:
     void setCostMatrix(const Matrix2D<double> &cost);
 
     // Returns the class with the largest probability given a set of features
-    int doInference(const Matrix1D<double> &newFeatures, double &cost);
-
-    // Get access to the votes in the last inference
-    const Matrix1D<int>& getVotes() const;
-public:
-    Matrix1D<int> votes;
+    int doInference(const Matrix1D<double> &newFeatures, double &cost,
+        Matrix1D<int> &votes);
 };
 //@}
 #endif
