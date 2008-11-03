@@ -330,6 +330,20 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 			// job number
 			// job size
 			// aux variable
+                        
+                        barrier_init( &barrier, numThreads+1);
+                        pthread_mutex_init( &workLoadMutex, NULL );
+                        statusArray = NULL;
+                        th_ids = (pthread_t *)malloc(numThreads * sizeof(pthread_t));
+                        th_args = (ImageThreadParams *)malloc(numThreads * sizeof(ImageThreadParams));
+                        
+                        for( int nt = 0 ; nt < numThreads ; nt++ )
+                        {
+                            th_args[nt].parent=this;
+                            th_args[nt].myThreadID = nt;
+                            pthread_create((th_ids+nt),NULL,processImageThread,(void*)(th_args+nt));
+                        }
+                        
 			while (1)
 			{
 				int jobNumber;
@@ -419,7 +433,8 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 					break;
             			}
 				else if (status.MPI_TAG == TAG_WORKFORWORKER)
-            			{		
+            			{	
+                                        threadOpCode=PROCESS_IMAGE;	
 //#define DEBUG
 #ifdef DEBUG
 		        std::cerr << "slave-rece TAG_WORKFORWORKER rank=" << rank << std::endl;
@@ -441,7 +456,6 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 				  << std::endl;		
 #endif
 #undef DEBUG
-
 					// Process all images
 					for( int i = min_i ; i < max_i ; i ++ )
 					{
@@ -451,7 +465,7 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 							break;
 						fn_img = SF.get_file_number(i);
 
-						processImage(fn_img );
+						processImage( fn_img );
 					}
             			}
 				else
@@ -461,7 +475,21 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 				}           
 			}
 		}
-		
+                
+                // Kill threads used on workers
+                if( rank > 0 )
+                {
+                    threadOpCode=EXIT_THREAD;
+                    barrier_wait( &barrier );
+                    
+                    for( int nt=0; nt<numThreads; nt++)
+                    {
+                        pthread_join(*(th_ids+nt),NULL);
+                    }
+                    
+                    barrier_destroy( &barrier );
+                }
+                
 		MPI_Finalize();
 	}
 
