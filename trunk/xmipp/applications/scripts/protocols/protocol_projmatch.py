@@ -374,8 +374,9 @@ ARTLambda='0.2'
 ARTReconstructionExtraCommand='-k 0.5 -n 10 '
 
 #max frequency used by reconstruct fourier
-#fOR EACH ITERATION It will be set to resolution computed in the 
-#resolution section
+"""fOR EACH ITERATION It will be set to resolution computed in the 
+resolution section
+"""
 FourierMaxFrequencyOfInterest='0.25'
 
 # {expert} Additional reconstruction parameters for WBP
