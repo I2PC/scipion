@@ -401,7 +401,7 @@ public:
      * @ingroup MultidimSize
      *
      */
-    void copyShape(const MultidimArray<T> m)
+    void copyShape(const MultidimArray<T> &m)
     {
         zdim=m.zdim;
         ydim=m.ydim;
