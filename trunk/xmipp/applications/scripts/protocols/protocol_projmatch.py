@@ -1384,6 +1384,15 @@ def execute_reconstruction(_mylog,
       print "Reconstruction method unknown. Quiting"
       exit(1)
     
+   # if using threads number of parallel jobs must be
+   # floor(_MyNumberOfCPUs/_ThreadsNumber)
+   # if zero print error message
+   mpiThreadMyNumberOfCPUs = str(floor(float(_MyNumberOfCPUs)/
+                                   float(_ThreadsNumber)))
+   if(int(_ThreadsNumber) > int(_MyNumberOfCPUs)):
+       print "ThreadsNumber cannot be greater than NumberOfCPUs)"
+       exit(1)
+
    launch_parallel_job.launch_job(
                        _DoParallel,
                        program,
@@ -1475,14 +1484,21 @@ def  execute_resolution(_mylog,
                      ' -sym '  + _SymmetryGroup + \
 		     ' -thr '  + _ThreadsNumber + \
                      ' -weight ' + \
-                 '-max_resolution ' + \
+                     '-max_resolution ' + \
 	         str(_FourierMaxFrequencyOfInterest) + ' '	 
           parameters = parameters + _FourierReconstructionExtraCommand
        else:
           _mylog.error("Reconstruction method unknown. Quiting")
           print "Reconstruction method unknown. Quiting"
           exit(1)
-
+       # if using threads number of parallel jobs must be
+       # floor(_MyNumberOfCPUs/_ThreadsNumber)
+       # if zero print error message
+       mpiThreadMyNumberOfCPUs = str(floor(float(_MyNumberOfCPUs)/
+                                       float(_ThreadsNumber)))
+       if(int(_ThreadsNumber) > int(_MyNumberOfCPUs)):
+           print "ThreadsNumber cannot be greater than NumberOfCPUs)"
+           exit(1)
        import launch_parallel_job
        launch_parallel_job.launch_job(
                            _DoParallel,
@@ -1490,7 +1506,7 @@ def  execute_resolution(_mylog,
                            mpi_program,
                            parameters,
                            _mylog,
-                           _MyNumberOfCPUs,
+                           mpiThreadMyNumberOfCPUs,
                            _MyMachineFile,
                            RunInBackground)
 
