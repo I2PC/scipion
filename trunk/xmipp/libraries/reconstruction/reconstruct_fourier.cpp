@@ -48,6 +48,7 @@ void Prog_RecFourier_prm::read(int argc, char **argv)
         "-max_resolution","2"));
     NiterWeight = textToInteger(getParameter(argc, argv, "-n","20"));
     numThreads = textToInt(getParameter(argc, argv, "-thr", "1"));
+    thrWidth = textToInt(getParameter(argc,argv, "-thr_width", "-1"));
 }
 
 // Show ====================================================================
@@ -97,6 +98,7 @@ void Prog_RecFourier_prm::usage()
     std::cerr << " [ -sym_vol <symfile> ]        : Enforce symmetry in volume \n";
     std::cerr << " [ -n <iter=20>]               : Iterations for computing the weight\n";
     std::cerr << " [ -thr <threads=1> ]          : Number of concurrent threads\n";
+    std::cerr << " [ -thr_width <width=blob_radius> : Number of image rows processed at a time by a thread\n";
     std::cerr << " -----------------------------------------------------------------" << std::endl;
     std::cerr << " [ -do_weights ]               : Use weights stored in the image headers or doc file" << std::endl;
     std::cerr << "\n Interpolation Function"
@@ -139,11 +141,17 @@ void Prog_RecFourier_prm::produce_Side_info()
     if (Ydim!=Xdim)
         REPORT_ERROR(1,"This algorithm only works for squared images");
     imgSize=Xdim;
+
     Vout().initZeros(Xdim*padding_factor_vol,Xdim*padding_factor_vol,
         Xdim*padding_factor_vol);
+
     transformerVol.setReal(Vout());
     transformerVol.getFourierAlias(VoutFourier);
-    FourierWeights.initZeros(VoutFourier);
+
+    // Avoids to make a bigger memory reservation by
+    // re-using the volume storing weights to store
+    // the final reconstructed volume
+    FourierWeights.alias(Vout());
 
     // Ask for memory for the padded images
     paddedImg.resize(Xdim*padding_factor_proj,Xdim*padding_factor_proj);
@@ -250,7 +258,17 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
     ImageThreadParams * threadParams = (ImageThreadParams *) threadArgs;
     Prog_RecFourier_prm * parent = threadParams->parent;
     barrier_t * barrier = &(parent->barrier);
+    int minSeparation;
     
+    if( (int)ceil(parent->blob.radius) > parent->thrWidth )
+    {
+        minSeparation = (int)ceil(parent->blob.radius);
+    }
+    else
+    {
+        minSeparation = parent->thrWidth;
+    }        
+
     do
     {
         barrier_wait( barrier );
@@ -263,14 +281,18 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
             {
                 Matrix2D< std::complex<double> > *paddedFourier = threadParams->paddedFourier;
                 int * statusArray = parent->statusArray;
-                int minSeparation = (int)ceil(parent->blob.radius);                
-		int assignedRow;
+                //int minSeparation = (int)ceil(parent->blob.radius);                
+		int minAssignedRow;
+                int maxAssignedRow;
                 bool breakCase;
+                bool assigned;
                 do
                 {
-                    assignedRow = -1;
+                    minAssignedRow = -1;
+                    maxAssignedRow = -1;
                     breakCase = false;
-
+                    assigned = false;
+                    
                     do
 		    {
                             pthread_mutex_lock( &(parent->workLoadMutex) );
@@ -284,32 +306,50 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
 
                             for(int w = 0 ; w < paddedFourier->ydim ; w++ )
 			    {
-                                    if( statusArray[w]==0 )
-				    {
-					    statusArray[w] = -1;
-					    assignedRow = w;
-					    parent->rowsProcessed++;
+                                if( statusArray[w]==0 )
+				{
+                                    assigned = true;
+                                    minAssignedRow = w;
+                                    maxAssignedRow = w+minSeparation-1;
 
-					    for( int in = (w - minSeparation+1) ; in <= (w + minSeparation-1 ) ; in ++ )
-					    {
-						    if( in != w )
-						    {
-							    if( ( in >= 0 ) && ( in < paddedFourier->ydim ))
-							    {
-								    if( statusArray[in] != -1 )
-									    statusArray[in]++;
-							    }
-						    }  
-					    } 	
-					    break;
-				    }
+                                    if( maxAssignedRow >= paddedFourier->ydim )
+                                        maxAssignedRow = paddedFourier->ydim-1;
+
+                                    for( int in = (minAssignedRow - minSeparation) ; in < minAssignedRow ; in ++ )
+				    {                                            
+                                        if( ( in >= 0 ) && ( in < paddedFourier->ydim ))
+					{
+					    if( statusArray[in] != -1 )
+				                statusArray[in]++;
+					}
+                                    }                                    
+                                    
+                                    for( int in = minAssignedRow ; in <= maxAssignedRow ; in ++ )
+                                    {
+                                        statusArray[in] = -1;
+                                        parent->rowsProcessed++;   
+                                    }
+				    
+                                    for( int in = maxAssignedRow+1 ; in <= (maxAssignedRow+minSeparation) ; in ++ )
+				    {
+                                        if( ( in >= 0 ) && ( in < paddedFourier->ydim ))
+				        {
+				            if( statusArray[in] != -1 )
+				                statusArray[in]++;
+					}
+                                    }
+				    
+                                    break;
+                                }
 			    }
 
 			    pthread_mutex_unlock( &(parent->workLoadMutex) );
-		    }while( assignedRow == -1);
-
+		    }while( !assigned );
+                
                     if( breakCase == true )
+                    {
                         break;
+                    }
 
                     Matrix2D<double> * A_SL = threadParams->symmetry;
 
@@ -319,10 +359,9 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
 
                     // Get i value for the thread
                     
-                    int i = assignedRow;
-	            //for (int i=STARTINGY(paddedFourier); i<=FINISHINGY(paddedFourier); i++) 
+                    for (int i = minAssignedRow; i <= maxAssignedRow ; i ++ )
                     {
-                        for (int j=STARTINGX(*paddedFourier); j<=FINISHINGX(*paddedFourier); j++)
+	                for (int j=STARTINGX(*paddedFourier); j<=FINISHINGX(*paddedFourier); j++)
 	                {
                             // Compute the frequency of this coefficient in the
                             // universal coordinate system
@@ -417,15 +456,24 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                     
                     pthread_mutex_lock( &(parent->workLoadMutex) );
                     
-                    for( int w = (assignedRow-minSeparation+1); w <= (assignedRow+minSeparation-1); w++)
-                    {
-                        if( w != assignedRow )
-                        {
-                            if( (w>=0) && (w < paddedFourier->ydim ))
-                            {
-                                if( statusArray[w] != -1)
-                                    statusArray[w]--;
+                    for( int w = (minAssignedRow - minSeparation) ; w < minAssignedRow ; w ++ )
+		    {           
+                        if( ( w >= 0 ) && ( w < paddedFourier->ydim ))
+			{
+			    if( statusArray[w] != -1 )
+			    {
+                        	statusArray[w]--;
                             }
+                        }
+                    }
+                    for( int w = maxAssignedRow+1 ; w <= (maxAssignedRow+minSeparation) ; w ++ )
+		    {
+                        if( ( w >= 0 ) && ( w < paddedFourier->ydim ))
+			{
+			    if( statusArray[w] != -1 )
+			    {
+                            	statusArray[w]--;
+                           }
                         }
                     }
                     
