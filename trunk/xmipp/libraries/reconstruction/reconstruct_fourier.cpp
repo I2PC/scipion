@@ -1,4 +1,4 @@
-/***************************************************************************
+    /***************************************************************************
  *
  * Authors:     Roberto Marabini (roberto@cnb.csic.es)
  *              Carlos Oscar S. Sorzano (coss@cnb.csic.es)
@@ -47,6 +47,7 @@ void Prog_RecFourier_prm::read(int argc, char **argv)
     maxResolution = textToFloat(getParameter(argc, argv,
         "-max_resolution","2"));
     NiterWeight = textToInteger(getParameter(argc, argv, "-n","20"));
+    numThreads = textToInt(getParameter(argc, argv, "-thr", "1"));
 }
 
 // Show ====================================================================
@@ -95,6 +96,7 @@ void Prog_RecFourier_prm::usage()
     std::cerr << " [ -sym     <symfile> ]        : Enforce symmetry in projections\n";
     std::cerr << " [ -sym_vol <symfile> ]        : Enforce symmetry in volume \n";
     std::cerr << " [ -n <iter=20>]               : Iterations for computing the weight\n";
+    std::cerr << " [ -thr <threads=1> ]          : Number of concurrent threads\n";
     std::cerr << " -----------------------------------------------------------------" << std::endl;
     std::cerr << " [ -do_weights ]               : Use weights stored in the image headers or doc file" << std::endl;
     std::cerr << "\n Interpolation Function"
@@ -243,6 +245,203 @@ void Prog_RecFourier_prm::get_angles_for_image(const FileName &fn, double &rot,
     }
 }
 
+void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
+{
+    ImageThreadParams * threadParams = (ImageThreadParams *) threadArgs;
+    Prog_RecFourier_prm * parent = threadParams->parent;
+    barrier_t * barrier = &(parent->barrier);
+    
+    do
+    {
+        barrier_wait( barrier );
+                
+        switch ( parent->threadOpCode )
+        {
+            case EXIT_THREAD: 
+                return NULL;
+            case PROCESS_IMAGE:
+            {
+                Matrix2D< std::complex<double> > *paddedFourier = threadParams->paddedFourier;
+                int * statusArray = parent->statusArray;
+                int minSeparation = (int)ceil(parent->blob.radius);                
+		int assignedRow;
+                bool breakCase;
+                do
+                {
+                    assignedRow = -1;
+                    breakCase = false;
+
+                    do
+		    {
+                            pthread_mutex_lock( &(parent->workLoadMutex) );
+
+                            if( parent->rowsProcessed == paddedFourier->ydim )
+			    {
+				    pthread_mutex_unlock( &(parent->workLoadMutex) );
+                                    breakCase = true;
+                                    break;
+                            }
+
+                            for(int w = 0 ; w < paddedFourier->ydim ; w++ )
+			    {
+                                    if( statusArray[w]==0 )
+				    {
+					    statusArray[w] = -1;
+					    assignedRow = w;
+					    parent->rowsProcessed++;
+
+					    for( int in = (w - minSeparation+1) ; in <= (w + minSeparation-1 ) ; in ++ )
+					    {
+						    if( in != w )
+						    {
+							    if( ( in >= 0 ) && ( in < paddedFourier->ydim ))
+							    {
+								    if( statusArray[in] != -1 )
+									    statusArray[in]++;
+							    }
+						    }  
+					    } 	
+					    break;
+				    }
+			    }
+
+			    pthread_mutex_unlock( &(parent->workLoadMutex) );
+		    }while( assignedRow == -1);
+
+                    if( breakCase == true )
+                        break;
+
+                    Matrix2D<double> * A_SL = threadParams->symmetry;
+
+                    // Loop over all Fourier coefficients in the padded image
+                    Matrix1D<double> freq(3), gcurrent(3), real_position(3);
+                    Matrix1D<int> corner1(3), corner2(3);
+
+                    // Get i value for the thread
+                    
+                    int i = assignedRow;
+	            //for (int i=STARTINGY(paddedFourier); i<=FINISHINGY(paddedFourier); i++) 
+                    {
+                        for (int j=STARTINGX(*paddedFourier); j<=FINISHINGX(*paddedFourier); j++)
+	                {
+                            // Compute the frequency of this coefficient in the
+                            // universal coordinate system
+                            FFT_IDX2DIGFREQ(j,XSIZE(parent->paddedImg),XX(freq));
+                            FFT_IDX2DIGFREQ(i,YSIZE(parent->paddedImg),YY(freq));
+                            ZZ(freq)=0;
+                            if (XX(freq)*XX(freq)+YY(freq)*YY(freq)>parent->maxResolution2)
+                                continue;
+                            SPEED_UP_temps;
+                            M3x3_BY_V3x1(freq,*A_SL,freq);
+
+                            // Look for the corresponding index in the volume Fourier transform
+                            DIGFREQ2FFT_IDX_DOUBLE(XX(freq),XSIZE(VOLMATRIX(parent->Vout)),XX(real_position));
+                            DIGFREQ2FFT_IDX_DOUBLE(YY(freq),YSIZE(VOLMATRIX(parent->Vout)),YY(real_position));
+                            DIGFREQ2FFT_IDX_DOUBLE(ZZ(freq),ZSIZE(VOLMATRIX(parent->Vout)),ZZ(real_position));
+
+                            // Put a box around that coefficient
+                            XX(corner1)=CEIL (XX(real_position)-parent->blob.radius);
+                            YY(corner1)=CEIL (YY(real_position)-parent->blob.radius);
+                            ZZ(corner1)=CEIL (ZZ(real_position)-parent->blob.radius);
+                            XX(corner2)=FLOOR(XX(real_position)+parent->blob.radius);
+                            YY(corner2)=FLOOR(YY(real_position)+parent->blob.radius);
+                            ZZ(corner2)=FLOOR(ZZ(real_position)+parent->blob.radius);
+
+                            #ifdef DEBUG
+                                std::cout << "Idx Img=(0," << i << "," << j << ") -> Freq Img=("
+                                          << freq.transpose() << ") ->\n    Idx Vol=("
+                                          << real_position.transpose() << ")\n"
+                                          << "   Corner1=" << corner1.transpose() << std::endl
+                                          << "   Corner2=" << corner2.transpose() << std::endl;
+                            #endif
+
+                            // Loop within the box
+                            double *ptrIn =(double *)&((*paddedFourier)(i,j));
+                            for (int intz = ZZ(corner1); intz <= ZZ(corner2); intz++)
+                            {    
+                                for (int inty = YY(corner1); inty <= YY(corner2); inty++)
+                                {
+                                    for (int intx = XX(corner1); intx <= XX(corner2); intx++)
+                                    {
+                                        // Compute distance to the center of the blob
+                                        // Compute blob value at that distance
+                                        VECTOR_R3(gcurrent, intx, inty, intz);
+                                        V3_MINUS_V3(gcurrent, real_position, gcurrent);
+                                        double d = sqrt(XX(gcurrent) * XX(gcurrent) +
+                                                 YY(gcurrent) * YY(gcurrent) +
+                                                 ZZ(gcurrent) * ZZ(gcurrent));
+                                        if (d > parent->blob.radius) continue;
+                                        double w = parent->blob_table(ROUND(gcurrent.module()*parent->iDelta));
+
+                                        // Look for the location of this logical index
+                                        // in the physical layout
+                                        #ifdef DEBUG
+                                            std::cout << "   gcurrent=" << gcurrent.transpose()
+                                                      << " d=" << d << std::endl;
+                                            std::cout << "   1: intx=" << intx
+                                                      << " inty=" << inty
+                                                      << " intz=" << intz << std::endl;
+                                        #endif
+                                        int iz=intWRAP(intz,0,ZSIZE(parent->VoutFourier)-1);
+                                        int iy=intWRAP(inty,0,ZSIZE(parent->VoutFourier)-1);
+                                        int ix=intWRAP(intx,0,ZSIZE(parent->VoutFourier)-1);
+                                        #ifdef DEBUG
+                                            std::cout << "   2: ix=" << ix << " iy=" << iy
+                                                      << " iz=" << iz << std::endl;
+                                        #endif
+                                        bool conjugate=false;
+                                        if (ix>=XSIZE(parent->VoutFourier))
+                                        {
+                                            iz=intWRAP(-iz,0,ZSIZE(parent->VoutFourier)-1);
+                                            iy=intWRAP(-iy,0,ZSIZE(parent->VoutFourier)-1);
+                                            ix=intWRAP(-ix,0,ZSIZE(parent->VoutFourier)-1);
+                                            conjugate=true;
+                                        }
+                                        #ifdef DEBUG
+                                            std::cout << "   3: ix=" << ix << " iy=" << iy
+                                                      << " iz=" << iz << " conj="
+                                                      << conjugate << std::endl;
+                                        #endif
+
+                                        // Add the weighted coefficient
+                                        double *ptrOut=(double *)&((parent->VoutFourier)(iz,iy,ix));
+                                        ptrOut[0]+=w*ptrIn[0];
+                                        if (conjugate) ptrOut[1]-=w*ptrIn[1];
+                                        else           ptrOut[1]+=w*ptrIn[1];
+                                        (parent->FourierWeights)(iz,iy,ix)+=w;
+                                    }
+                                }
+                            }
+                        }
+                    }   
+                    
+                    pthread_mutex_lock( &(parent->workLoadMutex) );
+                    
+                    for( int w = (assignedRow-minSeparation+1); w <= (assignedRow+minSeparation-1); w++)
+                    {
+                        if( w != assignedRow )
+                        {
+                            if( (w>=0) && (w < paddedFourier->ydim ))
+                            {
+                                if( statusArray[w] != -1)
+                                    statusArray[w]--;
+                            }
+                        }
+                    }
+                    
+                    pthread_mutex_unlock( &(parent->workLoadMutex) );
+                    
+                }while(!breakCase);  
+                break;
+            }
+            default: break;
+        }
+    
+        barrier_wait( barrier );
+    
+    }while( 1 );
+}
+
 //#define DEBUG
 void Prog_RecFourier_prm::processImage(const FileName &fn_img)
 {
@@ -287,106 +486,51 @@ void Prog_RecFourier_prm::processImage(const FileName &fn_img)
     Matrix2D< std::complex<double> > paddedFourier;
     transformerImg.getFourierAlias(paddedFourier);
 
+    if( statusArray == NULL )
+    {
+        if( paddedFourier.xdim > paddedFourier.ydim )
+        {
+            statusArray = (int *) malloc ( sizeof(int) * paddedFourier.xdim );
+        }
+        else
+        {
+            statusArray = (int *) malloc ( sizeof(int) * paddedFourier.ydim );
+        }
+    }
+    
     // Compute the coordinate axes associated to this image
     Matrix2D<double>  A(3, 3), Ainv;
     Euler_angles2matrix(rot, tilt, psi, A);
     Ainv=A.transpose();
-
+	
+    threadOpCode = PROCESS_IMAGE;
+    rowsProcessed = 0;
+    
     // Loop over all symmetries
     for (int isym = 0; isym < R_repository.size(); isym++)
     {
         // Compute the coordinate axes of the symmetrized projection
-        Matrix2D<double> A_SL= R_repository[isym] * Ainv;
-        // Loop over all Fourier coefficients in the padded image
-        Matrix1D<double> freq(3), gcurrent(3), real_position(3);
-        Matrix1D<int> corner1(3), corner2(3);
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(paddedFourier)
+        Matrix2D<double> A_SL=R_repository[isym]*Ainv;
+        
+        // Poner lo necesario en la estructura de cada hilo.
+        for( int nt = 0 ; nt < numThreads ; nt ++ )
         {
-            // Compute the frequency of this coefficient in the
-            // universal coordinate system
-            FFT_IDX2DIGFREQ(j,XSIZE(paddedImg),XX(freq));
-            FFT_IDX2DIGFREQ(i,YSIZE(paddedImg),YY(freq));
-            ZZ(freq)=0;
-            if (XX(freq)*XX(freq)+YY(freq)*YY(freq)>maxResolution2)
-                continue;
-            SPEED_UP_temps;
-            M3x3_BY_V3x1(freq,A_SL,freq);
-
-            // Look for the corresponding index in the volume Fourier transform
-            DIGFREQ2FFT_IDX_DOUBLE(XX(freq),XSIZE(VOLMATRIX(Vout)),XX(real_position));
-            DIGFREQ2FFT_IDX_DOUBLE(YY(freq),YSIZE(VOLMATRIX(Vout)),YY(real_position));
-            DIGFREQ2FFT_IDX_DOUBLE(ZZ(freq),ZSIZE(VOLMATRIX(Vout)),ZZ(real_position));
-            
-            // Put a box around that coefficient
-            XX(corner1)=CEIL (XX(real_position)-blob.radius);
-            YY(corner1)=CEIL (YY(real_position)-blob.radius);
-            ZZ(corner1)=CEIL (ZZ(real_position)-blob.radius);
-            XX(corner2)=FLOOR(XX(real_position)+blob.radius);
-            YY(corner2)=FLOOR(YY(real_position)+blob.radius);
-            ZZ(corner2)=FLOOR(ZZ(real_position)+blob.radius);
-
-            #ifdef DEBUG
-                std::cout << "Idx Img=(0," << i << "," << j << ") -> Freq Img=("
-                          << freq.transpose() << ") ->\n    Idx Vol=("
-                          << real_position.transpose() << ")\n"
-                          << "   Corner1=" << corner1.transpose() << std::endl
-                          << "   Corner2=" << corner2.transpose() << std::endl;
-            #endif
-
-            // Loop within the box
-            double *ptrIn =(double *)&(paddedFourier(i,j));
-            for (int intz = ZZ(corner1); intz <= ZZ(corner2); intz++)
-                for (int inty = YY(corner1); inty <= YY(corner2); inty++)
-                    for (int intx = XX(corner1); intx <= XX(corner2); intx++)
-                    {
-                        // Compute distance to the center of the blob
-                        // Compute blob value at that distance
-                        VECTOR_R3(gcurrent, intx, inty, intz);
-                        V3_MINUS_V3(gcurrent, real_position, gcurrent);
-                        double d = sqrt(XX(gcurrent) * XX(gcurrent) +
-                                 YY(gcurrent) * YY(gcurrent) +
-                                 ZZ(gcurrent) * ZZ(gcurrent));
-                        if (d > blob.radius) continue;
-                        double w = blob_table(ROUND(gcurrent.module()*iDelta));
-                        
-                        // Look for the location of this logical index
-                        // in the physical layout
-                        #ifdef DEBUG
-                            std::cout << "   gcurrent=" << gcurrent.transpose()
-                                      << " d=" << d << std::endl;
-                            std::cout << "   1: intx=" << intx
-                                      << " inty=" << inty
-                                      << " intz=" << intz << std::endl;
-                        #endif
-                        int iz=intWRAP(intz,0,ZSIZE(VoutFourier)-1);
-                        int iy=intWRAP(inty,0,ZSIZE(VoutFourier)-1);
-                        int ix=intWRAP(intx,0,ZSIZE(VoutFourier)-1);
-                        #ifdef DEBUG
-                            std::cout << "   2: ix=" << ix << " iy=" << iy
-                                      << " iz=" << iz << std::endl;
-                        #endif
-                        bool conjugate=false;
-                        if (ix>=XSIZE(VoutFourier))
-                        {
-                            iz=intWRAP(-iz,0,ZSIZE(VoutFourier)-1);
-                            iy=intWRAP(-iy,0,ZSIZE(VoutFourier)-1);
-                            ix=intWRAP(-ix,0,ZSIZE(VoutFourier)-1);
-                            conjugate=true;
-                        }
-                        #ifdef DEBUG
-                            std::cout << "   3: ix=" << ix << " iy=" << iy
-                                      << " iz=" << iz << " conj="
-                                      << conjugate << std::endl;
-                        #endif
-                        
-                        // Add the weighted coefficient
-                        double *ptrOut=(double *)&(VoutFourier(iz,iy,ix));
-                        ptrOut[0]+=w*ptrIn[0];
-                        if (conjugate) ptrOut[1]-=w*ptrIn[1];
-                        else           ptrOut[1]+=w*ptrIn[1];
-                        FourierWeights(iz,iy,ix)+=w;
-                    }
+	    // Passing parameters to each thread
+	    th_args[nt].symmetry = &A_SL;
+            th_args[nt].paddedFourier = &paddedFourier;
         }
+        
+        // Init status array
+        for(int i = 0 ; i < paddedFourier.ydim ; i ++ )
+        {
+            statusArray[i] = 0;
+        }
+        
+        // Awaking sleeping threads
+        barrier_wait( &barrier );
+        // Threads are working now, wait for them to finish
+        // processing current projection
+        barrier_wait( &barrier );
     }
 }
 #undef DEBUG
@@ -452,8 +596,25 @@ void Prog_RecFourier_prm::run()
     if (verb) init_progress_bar(SF.ImgNo());
     int imgno = 0;
     int repaint = ceil((double)SF.ImgNo()/60);
-    while (!SF.eof())
+
+    // Create threads stuff
+    barrier_init( &barrier, numThreads+1 );
+    pthread_mutex_init( &workLoadMutex, NULL );
+    statusArray = NULL;
+    th_ids = (pthread_t *)malloc( numThreads * sizeof( pthread_t));
+    th_args = (ImageThreadParams *) malloc ( numThreads * sizeof( ImageThreadParams ) );
+   
+     // Create threads
+    for( int nt = 0 ; nt < numThreads ; nt ++ )
     {
+	// Passing parameters to each thread
+	th_args[nt].parent = this;
+	th_args[nt].myThreadID = nt;
+        pthread_create( (th_ids+nt) , NULL, processImageThread, (void *)(th_args+nt) );
+    }
+     
+    while (!SF.eof())
+    { 
         exit_if_not_exists(fn_control);
 
         FileName fn_img = SF.NextImg();
@@ -463,6 +624,18 @@ void Prog_RecFourier_prm::run()
         if (verb && imgno++%repaint==0) progress_bar(imgno);
     }
     if (verb > 0) progress_bar(SF.ImgNo());
+    
+    threadOpCode = EXIT_THREAD;
+    barrier_wait( &barrier );
+    
+    // Waiting for threads to finish
+    for( int nt = 0 ; nt < numThreads ; nt ++ )
+    {
+	pthread_join(*(th_ids+nt), NULL);
+    }
+    
+    barrier_destroy( &barrier );
+
     finishComputations();
 }
 

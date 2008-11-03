@@ -34,6 +34,7 @@
 #include <data/docfile.h>
 #include <data/image.h>
 #include <data/projection.h>
+#include <data/threads.h>
 
 #include <reconstruction/projection.h>
 #include <reconstruction/directions.h>
@@ -43,9 +44,21 @@
 #define MINIMUMWEIGHT 0.001
 #define ACCURACY 0.000001
 
+#define EXIT_THREAD 0
+#define PROCESS_IMAGE 1
+
 /**@defgroup Fourier reconstruction reconstruct_fourier (Fourier reconstruction)
    @ingroup ReconsLibraryPrograms */
 //@{
+class Prog_RecFourier_prm;
+
+struct ImageThreadParams
+{
+	int myThreadID;
+	Prog_RecFourier_prm * parent;
+        Matrix2D< std::complex<double> > *paddedFourier;
+	Matrix2D<double> * symmetry;
+};
 
 /** Fourier reconstruction parameters. */
 class Prog_RecFourier_prm
@@ -80,7 +93,34 @@ public:
 
     /// Number of iterations for the weight
     int NiterWeight;
-
+    
+    /// Number of threads to use in parallel to process a single image
+    int numThreads;
+    
+    /// IDs for the threads
+    pthread_t * th_ids;
+    
+    /// Contains parameters passed to each thread
+    ImageThreadParams * th_args;
+    
+    /// Tells the threads what to do next
+    int threadOpCode;
+    
+    /// Number of rows already processed on an image
+    int rowsProcessed;
+    
+    /// Defines what a thread should do
+    static void * processImageThread( void * threadArgs );
+    
+    /// Controls mutual exclusion on critical zones of code
+    pthread_mutex_t workLoadMutex;
+    
+    /// To create a barrier synchronization for threads
+    barrier_t barrier;
+    
+    /// A status array for each row in an image (processing, processed,etc..)
+    int * statusArray;
+    
 public: // Internal members
     // Size of the original images
     int imgSize;
@@ -145,12 +185,12 @@ public:
 
     /// Main Loop 
     void run();
-
-	void finishComputations();
     
-	/// Process one image
+    void finishComputations();
+    
+    /// Process one image
     void processImage(const FileName &fn_img);
-    
+
     /// Correct weight
     void correctWeight();
 };
