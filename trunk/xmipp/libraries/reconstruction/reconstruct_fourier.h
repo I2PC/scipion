@@ -103,6 +103,9 @@ public:
     /// Contains parameters passed to each thread
     ImageThreadParams * th_args;
     
+    ///Number of image rows processed at a time by a thread
+    int thrWidth;
+    
     /// Tells the threads what to do next
     int threadOpCode;
     
