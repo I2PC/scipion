@@ -450,6 +450,7 @@ ConstantToAddToFiltration='4x0.15 0.1'
 DoParallel=True
 
 # Number of processors to use:
+"""must be equal or larger than number of threads"""
 NumberOfCPUs=4
 
 # minumum size of jobs in mpi processe. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)
