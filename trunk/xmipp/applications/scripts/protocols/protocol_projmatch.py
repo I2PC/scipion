@@ -1689,7 +1689,7 @@ if __name__ == '__main__':
                 NumberOfCPUs,                   
                 MachineFile,
                 MpiJobSize,
-		ThreadsNumber
+		ThreadsNumber,
                 MyControlFile,
                 SymmetryGroup,                        
                 SetResolutiontoZero,
