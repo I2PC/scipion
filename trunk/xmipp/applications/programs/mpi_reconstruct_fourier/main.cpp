@@ -283,9 +283,11 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
                                 {
                                     MPI_Recv(0,0, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
                                         MPI_COMM_WORLD, &status);
-
+                                   
                                     currentSource = status.MPI_SOURCE;
-
+                                
+                                    pointer = fourierVolume;
+									
 			            while(1)
 			            {
                                         MPI_Probe( currentSource, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
@@ -314,7 +316,7 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 
 				        pointer += receivedSize;	
 			            }
-
+                                   
 			            pointer = fourierWeights;
 
 			            while(1)
@@ -345,7 +347,7 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 
 				        pointer += receivedSize;
 			            }
-			        }
+                                }
                             }
                             
 			    free( recBuffer );
