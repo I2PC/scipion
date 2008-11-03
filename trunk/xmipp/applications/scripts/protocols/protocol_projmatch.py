@@ -373,6 +373,11 @@ ARTLambda='0.2'
 """
 ARTReconstructionExtraCommand='-k 0.5 -n 10 '
 
+#max frequency used by reconstruct fourier
+#fOR EACH ITERATION It will be set to resolution computed in the 
+#resolution section
+FourierMaxFrequencyOfInterest='0.25'
+
 # {expert} Additional reconstruction parameters for WBP
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Wbp and
         http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_wbp and
@@ -382,8 +387,9 @@ WBPReconstructionExtraCommand=' '
 
 # {expert} Additional reconstruction parameters for Fourier
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Fourier and
-        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_Fourier and
-        for details
+        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_Fourier
+        for details 
+	-thr_width 
 """
 FourierReconstructionExtraCommand=' '
 
@@ -454,6 +460,12 @@ MpiJobSize='1'
 """
 MachineFile='machinefile'
 
+#{expert}Number of threads
+"""Parallel implementation has been made either using mpi or threads
+
+"""
+ThreadsNumber='1'
+
 # {expert} Control file
 """ This is an ugly solution to have improved killing control over the mpi jobs.
     The script will create this file, and any mpi-job will be killed as soon as this file doesn't exist anymore. This is required with certain queueing systems.
@@ -487,7 +499,6 @@ OutputFsc="resolution.fsc"
 CtfGroupDirectory="CtfGroups"
 CtfGroupRootName="ctf"
 CtfGroupSubsetFileName="ctf_groups_subset_docfiles.sel"
-
 class projection_matching_class:
 
    #init variables
@@ -529,6 +540,7 @@ class projection_matching_class:
                 _ARTReconstructionExtraCommand,
                 _WBPReconstructionExtraCommand,
                 _FourierReconstructionExtraCommand,
+		_FourierMaxFrequencyOfInterest,
                 _DoComputeResolution,
                 _ResolSam,
                 _SelFileName,
@@ -547,6 +559,7 @@ class projection_matching_class:
                 _MyNumberOfCPUs,
                 _MyMachineFile,
                 _MyMpiJobSize,
+		_ThreadsNumber,
                 _MyControlFile,
                 _SymmetryGroup,
                 _SetResolutiontoZero,
@@ -595,6 +608,7 @@ class projection_matching_class:
        self._WBPReconstructionExtraCommand=_WBPReconstructionExtraCommand
        self._FourierReconstructionExtraCommand=_FourierReconstructionExtraCommand
        self._SetResolutiontoZero=_SetResolutiontoZero
+       globalFourierMaxFrequencyOfInterest=float(_FourierMaxFrequencyOfInterest)
        if (_MyMachineFile[0]=="$"):
            self._MyMachineFile=_MyMachineFile
        else:
@@ -604,6 +618,7 @@ class projection_matching_class:
        else:
            self._DoControl=True
        self._MyMpiJobSize =_MyMpiJobSize
+       self._ThreadsNumber =_ThreadsNumber
        self._user_suplied_ReferenceVolume=self._ReferenceFileName
 
        # Set up logging
@@ -851,7 +866,10 @@ class projection_matching_class:
                                     self._DoParallel,
                                     self._MyNumberOfCPUs,
                                     self._MyMachineFile,
+				    self._MyMpiJobSize,
+				    self._ThreadsNumber,
                                     self._ReconstructionMethod,
+				    globalFourierMaxFrequencyOfInterest,
                                     self._ARTLambda,
                                     self._SymmetryGroup,
                                     self._ReconstructedVolume[_iteration_number]
@@ -864,13 +882,17 @@ class projection_matching_class:
                                                   self._ARTReconstructionExtraCommand,
                                                   self._WBPReconstructionExtraCommand,
                                                   self._FourierReconstructionExtraCommand,
+				                  self._ThreadsNumber,
                                                   self._ReconstructionMethod,
+				                  globalFourierMaxFrequencyOfInterest,
                                                   _iteration_number,
                                                   self._DisplayReconstruction,
                                                   self._ResolSam,
                                                   self._DoParallel,
                                                   self._MyNumberOfCPUs,
                                                   self._MyMachineFile,
+						  self._MyMpiJobSize,
+				                  self._ThreadsNumber,
                                                   self._SymmetryGroup,
                                                   self._DisplayResolution,
                                                   self._ReconstructedVolume[_iteration_number],
@@ -884,7 +906,7 @@ class projection_matching_class:
                                                ConstantToAddToFiltration,\
                                                   _iteration_number-1)
 
-          filter_at_given_resolution(_DoComputeResolution,
+          globalFourierMaxFrequencyOfInterest=filter_at_given_resolution(_DoComputeResolution,
                                      self._mylog, 
                                      _iteration_number,
                                      self._SetResolutiontoZero,
@@ -1304,7 +1326,10 @@ def execute_reconstruction(_mylog,
                            _DoParallel,
                            _MyNumberOfCPUs,
                            _MyMachineFile,
+			   _MyMpiJobSize,
+			   _ThreadsNumber,
                            _ReconstructionMethod,
+			   _FourierMaxFrequencyOfInterest,
                            _ARTLambda,
                            _SymmetryGroup,
                            _ReconstructedandfilteredVolume):
@@ -1337,6 +1362,7 @@ def execute_reconstruction(_mylog,
       parameters=' -i '    + ForReconstructionSel + \
                  ' -o '    + Outputvolume + ' ' + \
                  ' -sym '  + _SymmetryGroup + \
+		 ' -thr '  + _ThreadsNumber + \
                  ' -WLS '
       if len(_ARTLambda)>1:
          parameters = parameters + ' -l '   + _ARTLambda + ' '
@@ -1348,7 +1374,10 @@ def execute_reconstruction(_mylog,
                  ' -o '    + Outputvolume + '.vol ' + \
                  ' -doc '  + ForReconstructionDoc + \
                  ' -sym '  + _SymmetryGroup + \
-                 ' -weight '
+		 ' -thr '  + _ThreadsNumber + \
+                 ' -weight ' + \
+                 '-max_resolution ' + \
+	         str(_FourierMaxFrequencyOfInterest) + ' '	 
       parameters = parameters + _FourierReconstructionExtraCommand 
    else:
       _mylog.error("Reconstruction method unknown. Quiting")
@@ -1382,7 +1411,9 @@ def  execute_resolution(_mylog,
                         _ARTReconstructionExtraCommand,
                         _WBPReconstructionExtraCommand,
                         _FourierReconstructionExtraCommand,
+			_ThreadsNumber,
                         _ReconstructionMethod,
+			_FourierMaxFrequencyOfInterest,
                         _iteration_number,
                         _DisplayReconstruction,
                         _ResolSam,
@@ -1429,6 +1460,7 @@ def  execute_resolution(_mylog,
           parameters=' -i '    + Selfiles[i] + \
                      ' -o '    + Outputvolumes[i] + \
                      ' -sym '  + _SymmetryGroup + \
+		     ' -thr '  + _ThreadsNumber + \
                      ' -WLS '
           if len(_ARTLambda)>1:
              parameters = parameters + ' -l '   + _ARTLambda + ' '
@@ -1441,7 +1473,10 @@ def  execute_resolution(_mylog,
                      ' -doc '  + Docfiles[i] + \
                      ' -o '    +  Outputvolumes[i] + '.vol ' + \
                      ' -sym '  + _SymmetryGroup + \
-                     ' -weight '
+		     ' -thr '  + _ThreadsNumber + \
+                     ' -weight ' + \
+                 '-max_resolution ' + \
+	         str(_FourierMaxFrequencyOfInterest) + ' '	 
           parameters = parameters + _FourierReconstructionExtraCommand
        else:
           _mylog.error("Reconstruction method unknown. Quiting")
@@ -1552,6 +1587,7 @@ def filter_at_given_resolution(_DoComputeResolution,
         print '* ',command
         os.system(command)
     _mylog.info(command)
+    return filter_in_pixels_at
 
 
 #------------------------------------------------------------------------
@@ -1634,6 +1670,7 @@ if __name__ == '__main__':
                 ARTReconstructionExtraCommand,
                 WBPReconstructionExtraCommand,
                 FourierReconstructionExtraCommand,
+		FourierMaxFrequencyOfInterest,
                 DoComputeResolution,
                 ResolSam,
                 SelFileName,                    
@@ -1652,6 +1689,7 @@ if __name__ == '__main__':
                 NumberOfCPUs,                   
                 MachineFile,
                 MpiJobSize,
+		ThreadsNumber
                 MyControlFile,
                 SymmetryGroup,                        
                 SetResolutiontoZero,
