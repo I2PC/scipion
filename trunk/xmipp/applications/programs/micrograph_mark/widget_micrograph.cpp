@@ -264,7 +264,7 @@ QtWidgetMicrograph::QtWidgetMicrograph(QtMainWidgetMark *_mainWidget,
     __highpass_cutoff                = 0.02;
     __penalization                   = 10;
     __reduction                      = (int)std::pow(2.0, __output_scale);
-    __particle_radius                = 128;
+    __particle_radius                = 0;
     __min_distance_between_particles = 0.5 * __particle_radius;
     __mask_size                      = 2 * __particle_radius;
     __piece_overlap                  = 2 * __particle_radius;
@@ -405,6 +405,14 @@ void QtWidgetMicrograph::setNumThreads(int _numThreads)
 /* Learn particles --------------------------------------------------------- */
 void QtWidgetMicrograph::learnParticles()
 {
+    if (__particle_radius==0) {
+        QMessageBox helpmsg("Information",
+            "You cannot learn particles without configuring the model",
+            QMessageBox::Information, QMessageBox::Ok, 0, 0, 0, 0, false);
+        helpmsg.exec();
+        return;
+    }
+        
     std::cerr << "\n------------------Learning Phase-----------------------\n";
     createMask();
     
@@ -558,6 +566,7 @@ void * automaticallySelectParticlesThread(void * args)
         if (!pieceOK) break;
         if (isMine)
         {
+            if (idThread==0) std::cerr << ".";
             #ifdef DEBUG_MORE_AUTO
                 std::cerr << "thread " << idThread
                           << " processing piece " << N << "...\n";
@@ -1129,6 +1138,7 @@ void QtWidgetMicrograph::buildNegativeVectors(Classification_model &__model)
 	    if (!anyParticle(left + posx  * __reduction,
 	                      top + posy  * __reduction,
                               XSIZE(mask) * __reduction))
+            {
                 if (build_vector(piece, original_piece, posx, posy, v))
                 {
                     // Build the Particle structure
@@ -1142,6 +1152,7 @@ void QtWidgetMicrograph::buildNegativeVectors(Classification_model &__model)
 	            __model.addParticleTraining(P, 1);
                     Nnonparticles++;         
                 }
+            }
 	    // Go to next scanning position
             posx = next_posx;
             posy = next_posy;
@@ -1166,9 +1177,9 @@ bool QtWidgetMicrograph::anyParticle(int posx, int posy, int rect_size)
         if (__m->coord(i).valid && __m->coord(i).label != __auto_label)
 	    {
 	        int _x = selected_particles[i].X;
-            int _y = selected_particles[i].Y;
+                int _y = selected_particles[i].Y;
     
-            if((_x > posx - rect_size) && (_x < posx + rect_size))
+                if((_x > posx - rect_size) && (_x < posx + rect_size))
 	        {
 	            if((_y > posy - rect_size) && (_y < posy + rect_size))
    	            return true;
@@ -1472,7 +1483,6 @@ static pthread_mutex_t preparePieceMutex = PTHREAD_MUTEX_INITIALIZER;
 bool QtWidgetMicrograph::prepare_piece(Matrix2D<double> &piece,
     Matrix2D<double> &original_piece)
 {
-    piece.setXmippOrigin();   
     original_piece = piece;
     #ifdef DEBUG_PREPARE    
         ImageXmipp save;
@@ -1544,7 +1554,7 @@ void QtWidgetMicrograph::find_neighbour(const Matrix2D<double> &piece,
     int piece_ysize = YSIZE(piece);
     const Matrix2D<int> &mask = __mask.get_binary_mask2D();
 
-    //if all the particles are visited
+    // If all the particles are visited
     if (_visited.sum() == XSIZE(_visited)) return;
 
     int current_part = _index + 1;
@@ -1554,15 +1564,20 @@ void QtWidgetMicrograph::find_neighbour(const Matrix2D<double> &piece,
 
     int top = CEIL((double)_y / __reduction) - _posy;
     int left = CEIL((double)_x / __reduction) - _posx;
-    int bottom = top + FLOOR((double)piece_ysize / __reduction);
-    int right = left + FLOOR((double)piece_xsize / __reduction);
+    int bottom = top + FLOOR((double)piece_ysize / __reduction)-1;
+    int right = left + FLOOR((double)piece_xsize / __reduction)-1;
     int xmask2 = CEIL(XSIZE(mask) / 2);
     int ymask2 = CEIL(YSIZE(mask) / 2);
 
     while (current_part < XSIZE(_visited))
     {
         //find the next unvisited particle
-        while (_visited(current_part)) current_part++;
+        while (_visited(current_part))
+        {
+            current_part++;
+            if (current_part==XSIZE(_visited)) break;
+        }
+        if (current_part==XSIZE(_visited)) break;
         current_part_idx = _idx.at(current_part);
 
         //check if it is neighbour or not
@@ -1727,8 +1742,9 @@ void QtWidgetMicrograph::loadModels(const FileName &fn)
     ;
     fh_params.close();
     __piece_overlap=2*__particle_radius;
-    __output_scale=1;
-    __reduction=2;
+    if (__particle_radius>100) __output_scale=1;
+    else __output_scale=0;
+    __reduction=(int)std::pow(2.0, __output_scale);
 
     // Load the mask
     __mask.type = READ_MASK;
@@ -1767,8 +1783,7 @@ void QtWidgetMicrograph::saveAutoParticles()
                                ".auto.pos");
 }
 
-/* Save models ------------------------------------------------------------- */
-void QtWidgetMicrograph::saveModels(bool askFilename)
+/* Save models ------------------------------------------------------------- */void QtWidgetMicrograph::saveModels(bool askFilename)
 {
     // Get the rootname
     std::string fn_root;
@@ -1858,11 +1873,18 @@ void QtWidgetMicrograph::configure_auto()
 
         __gray_bins = 8;
         __radial_bins = 16;
-        __piece_xsize = 4*__particle_radius;
+        if (4*__particle_radius<512)
+            __piece_xsize = 512;
+        else
+            __piece_xsize = NEXT_POWER_OF_2(6*__particle_radius);
         __highpass_cutoff = 0.02;
         __mask_size = 2*__particle_radius;
         __min_distance_between_particles = __particle_radius/2;
         __scan_overlap = ROUND(__mask_size*0.9);
+        __learn_overlap = __particle_radius;
+        if (__particle_radius>100) __output_scale=1;
+        else __output_scale=0;
+        __reduction=(int)std::pow(2.0, __output_scale);
     }
 }
 
