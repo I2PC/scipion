@@ -1,4 +1,4 @@
-    /***************************************************************************
+ /***************************************************************************
  *
  * Authors:     Roberto Marabini (roberto@cnb.csic.es)
  *              Carlos Oscar S. Sorzano (coss@cnb.csic.es)
@@ -43,9 +43,9 @@ void Prog_RecFourier_prm::read(int argc, char **argv)
     blob.radius   = textToFloat(getParameter(argc, argv, "-r","1.9"));
     blob.order    = textToFloat(getParameter(argc, argv, "-m","0"));
     blob.alpha    = textToFloat(getParameter(argc, argv, "-a","15"));
-    sampling_rate = textToFloat(getParameter(argc, argv, "-sampling_rate", "1"));
+    //sampling_rate = textToFloat(getParameter(argc, argv, "-sampling_rate", "1"));
     maxResolution = textToFloat(getParameter(argc, argv,
-        "-max_resolution","2"));
+        "-max_resolution",".5"));
     NiterWeight = textToInteger(getParameter(argc, argv, "-n","20"));
     numThreads = textToInt(getParameter(argc, argv, "-thr", "1"));
     thrWidth = textToInt(getParameter(argc,argv, "-thr_width", "-1"));
@@ -76,7 +76,7 @@ void Prog_RecFourier_prm::show()
                   << "\n   blrad                 : "  << blob.radius
                   << "\n   blord                 : "  << blob.order
                   << "\n   blalpha               : "  << blob.alpha
-                  << "\n sampling_rate           : "  << sampling_rate
+                  //<< "\n sampling_rate           : "  << sampling_rate
                   << "\n max_resolution          : "  << maxResolution
                   << "\n -----------------------------------------------------------------" << std::endl;
     }
@@ -104,16 +104,16 @@ void Prog_RecFourier_prm::usage()
               << "\n   [-r blrad=1.9]        blob radius in pixels"
               << "\n   [-m blord=0]          order of Bessel function in blob"
               << "\n   [-a blalpha=15]       blob parameter alpha"
-              << "\n   [-sampling_rate =1>]            : Sampling rate (Angstroms/pixel)\n"
-              << "\n   [-max_resolution 2>]            : Max resolution in "
-              << "\n\t\tAngstroms, 2*sampling_rate is the maximum resolution)\n"
+              //<< "\n   [-sampling_rate =1>]            : Sampling rate (Angstroms/pixel)\n"
+              << "\n   [-max_resolution=0.5>]            : Max resolution"
+              << "\n\t\t0.5 is the maximum resolution)\n"
               << " -----------------------------------------------------------------" << std::endl;
 }
 
 void Prog_RecFourier_prm::produce_Side_info()
 {
     // Translate the maximum resolution to digital frequency
-    maxResolution=sampling_rate/maxResolution;
+    //maxResolution=sampling_rate/maxResolution;
     maxResolution2=maxResolution*maxResolution;
 
     // Read docfile and get column numbers
