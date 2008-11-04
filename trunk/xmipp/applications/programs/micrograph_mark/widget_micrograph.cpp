@@ -58,13 +58,13 @@
 #include <qgrid.h>
 #endif
 
-#define DEBUG_AUTO
-#define DEBUG_MORE_AUTO
+//#define DEBUG_AUTO
+//#define DEBUG_MORE_AUTO
 //#define DEBUG_REFINE
 //#define DEBUG_PREPARE
 //#define DEBUG_CLASSIFY
 //#define DEBUG_BUILDVECTOR
-#define DEBUG_IMG_BUILDVECTOR
+//#define DEBUG_IMG_BUILDVECTOR
 
 /* Show -------------------------------------------------------------------- */
 std::ostream & operator << (std::ostream &_out, const Particle &_p)
@@ -615,7 +615,7 @@ void * automaticallySelectParticlesThread(void * args)
                     double cost;
 	            if (widgetmicrograph->__selection_model.isParticle(v,cost))
 	            {
-                        #ifdef DEBUG_MORE_AUTO2
+                        #ifdef DEBUG_MORE_AUTO
 		            std::cout << "Particle Found: "
                                 << left + posx * widgetmicrograph->__reduction << ","
                                 << top  + posy *widgetmicrograph->__reduction << std::endl;
@@ -1490,35 +1490,48 @@ bool QtWidgetMicrograph::prepare_piece(Matrix2D<double> &piece,
         save.write("PPPpiece0.xmp");
     #endif    
 
-    // High pass filter
+    // Denoise the piece
+    Denoising_parameters denoiser;
+    denoiser.denoising_type = Denoising_parameters::BAYESIAN;
+    denoiser.scale = 3;
+    denoiser.output_scale = 1;
+//    denoiser.scale = __output_scale + 3;
+//    denoiser.output_scale = __output_scale;
+    denoiser.produce_side_info();
+    denoiser.denoise(piece);
+    if (!(piece(0, 0) == piece(0, 0))) return false;
+    #ifdef DEBUG_PREPARE    
+        save() = piece;
+        save.write("PPPpiece1.xmp");
+    #endif    
+    if (__output_scale==0)
+    {
+        Matrix2D<double> auxPiece;
+        piece.pyramidExpand(auxPiece);
+        piece=auxPiece;
+        #ifdef DEBUG_PREPARE    
+            save() = piece;
+            save.write("PPPpiece1.5.xmp");
+        #endif
+    }
+
+    // Band pass filter
     pthread_mutex_lock( &preparePieceMutex );
     FourierMask Filter;
     Filter.FilterShape = RAISED_COSINE;
-    Filter.FilterBand = HIGHPASS;
+    Filter.FilterBand = BANDPASS;
     Filter.w1 = __highpass_cutoff;
+    Filter.w2 = 1.0/(__particle_radius/5.0);
     Filter.raised_w = XMIPP_MIN(0.02, __highpass_cutoff);
     Filter.generate_mask(piece);
     Filter.apply_mask_Space(piece);
     STARTINGX(piece) = STARTINGY(piece) = 0;
     #ifdef DEBUG_PREPARE    
         save() = piece;
-        save.write("PPPpiece1.xmp");
+        save.write("PPPpiece2.xmp");
     #endif    
     pthread_mutex_unlock( &preparePieceMutex );
     
-    // Denoise the piece
-    Denoising_parameters denoiser;
-    denoiser.denoising_type = Denoising_parameters::BAYESIAN;
-    denoiser.scale = __output_scale + 3;
-    denoiser.output_scale = __output_scale;
-    denoiser.produce_side_info();
-    denoiser.denoise(piece);
-    if (!(piece(0, 0) == piece(0, 0))) return false;
-    #ifdef DEBUG_PREPARE    
-        save() = piece;
-        save.write("PPPpiece2.xmp");
-    #endif    
-
     // Reject 5% of the outliers
     reject_outliers(piece, 5.0);
 
