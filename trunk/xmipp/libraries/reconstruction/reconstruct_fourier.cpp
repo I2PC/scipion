@@ -95,7 +95,6 @@ void Prog_RecFourier_prm::usage()
     std::cerr << " [ -o <name=\"rec_fourier.vol\">  : filename for output volume \n";
     std::cerr << " [ -doc <docfile>              : Ignore headers and get angles from this docfile \n";
     std::cerr << " [ -sym     <symfile> ]        : Enforce symmetry in projections\n";
-    std::cerr << " [ -sym_vol <symfile> ]        : Enforce symmetry in volume \n";
     std::cerr << " [ -n <iter=20>]               : Iterations for computing the weight\n";
     std::cerr << " [ -thr <threads=1> ]          : Number of concurrent threads\n";
     std::cerr << " [ -thr_width <width=blob_radius> : Number of image rows processed at a time by a thread\n";
