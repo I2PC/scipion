@@ -138,7 +138,10 @@ int main(int argc, char **argv)
 
         // Check if a model has been provided ................................
         if (fnAutomaticModel!="")
+        {
+            mainWidget->untilted_widget()->setNumThreads(numThreads);
             mainWidget->untilted_widget()->loadModels(fnAutomaticModel);
+        }
 
         // Run application ...................................................
         app.setMainWidget(mainWidget);
@@ -149,7 +152,6 @@ int main(int argc, char **argv)
         }
         else
         {
-            mainWidget->untilted_widget()->setNumThreads(numThreads);
             mainWidget->untilted_widget()->automaticallySelectParticles();
             mainWidget->untilted_widget()->saveAutoParticles();
         }
