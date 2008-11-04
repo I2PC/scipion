@@ -124,6 +124,9 @@ public:
     /// A status array for each row in an image (processing, processed,etc..)
     int * statusArray;
     
+    /// How many image rows are processed at a time by a single thread.
+    int thrWidth;
+	
 public: // Internal members
     // Size of the original images
     int imgSize;
