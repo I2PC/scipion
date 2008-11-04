@@ -78,11 +78,13 @@ public:
     /// High pass filter cutoff
     double w_hp;
 
-#define use_ART       1
+#define use_ART         1
 #define use_SIRT        2
 #define use_WBP         3
 #define use_SIRT_Spider 4
-    /// Reconstruction mode: use_ART, use_SIRT, use_WBP or use_SIRT_Spider
+#define use_FOURIER     5
+    /** Reconstruction mode: use_ART, use_SIRT, use_WBP, use_SIRT_Spider or
+        use_FOURIER */
     int recons_method;
 
     /// Random sort of projections (TRUE or FALSE)?
@@ -108,6 +110,12 @@ public:
 
     /// Threshold for WBP
     std::vector<double> WBP_threshold;
+
+    /// Padding for the projections (Fourier reconstruction)
+    int pad_proj;
+
+    /// Padding for the volume (Fourier reconstruction)
+    int pad_vol;
 
     /// Maximum expected resolution (<1/2), used to filter reconstruction
     double max_resolution;

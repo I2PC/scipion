@@ -128,8 +128,9 @@ void test_training(Recons_test_Parameters &prm, int nvol,
     // Some initialisation
     int TestNo;
     if (prm.recons_method == use_WBP) TestNo = prm.WBP_threshold.size();
+    else if (prm.recons_method == use_FOURIER) TestNo = prm.MeasNo;
     else if (!prm.succesive_params) TestNo = prm.lambda0.size();
-    else                       TestNo = 1;
+    else TestNo = 1;
     training_avgs.resize(TestNo);
     training_devs.resize(TestNo);
     training_N.resize(TestNo);
@@ -181,8 +182,9 @@ void test_all_FOMs(Recons_test_Parameters &prm, int nvol,
     // Some initialisation
     int TestNo;
     if (prm.recons_method == use_WBP) TestNo = prm.WBP_threshold.size();
+    else if (prm.recons_method == use_FOURIER) TestNo = prm.MeasNo;
     else if (!prm.succesive_params) TestNo = prm.lambda0.size();
-    else                       TestNo = 1;
+    else TestNo = 1;
     FOMs foms_mean(TestNo), foms_stddev(TestNo);
 
     // Perform measures
@@ -223,39 +225,3 @@ void Usage()
     printf("[-training]              : tests are performed only on scL2(1)\n");
     printf("[-dont_rewrite]          : tests are performed using different filenames\n");
 }
-
-/* Menus ------------------------------------------------------------------- */
-/*Colimate:
-   PROGRAM Recons_test {
-      url="http://www.cnb.uam.es/~bioinfo/NewXmipp/Applications/Src/Recons_test/Help/recons_test.html";
-      help="Perform a reconstruction statistical test";
-      OPEN MENU menu_recons_test;
-      COMMAND LINES {
- + single: recons_test -i $TEST_PRM_FILE [-training] [-dont_rewrite]
-      }
-      PARAMETER DEFINITIONS {
-        $TEST_PRM_FILE {
-    label="Test parameter file";
-    help="This file has got a complex structure, better see
-                 the Web help";
-    type=file existing;
- }
-        OPT(-training) {
-           label="Training";
-           help="Only compute Structural FOMs";
-        }
-        OPT(-dont_rewrite) {
-           label="Don't rewrite";
-           help="Phantom, reconstructed volume and evaluation results are not rewritten";
-        }
-      }
-   }
-
-   MENU menu_recons_test {
-      "I/O variables"
-      $TEST_PRM_FILE
-      "Options"
-      OPT(-training)
-      OPT(-dont_rewrite)
-   }
-*/

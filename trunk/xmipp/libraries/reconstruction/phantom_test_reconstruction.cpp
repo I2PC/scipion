@@ -67,10 +67,11 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
         // Reconstruction method
         str = getParameter(fh_param, "reconstruction method", 0, NULL,
                         3007, "Recons_test_Parameters::read: Reconstruction method not found");
-        if (str == "ART")         recons_method = use_ART;
+        if (str == "ART")              recons_method = use_ART;
         else if (str == "SIRT")        recons_method = use_SIRT;
         else if (str == "WBP")         recons_method = use_WBP;
         else if (str == "SIRT_Spider") recons_method = use_SIRT_Spider;
+        else if (str == "Fourier")     recons_method = use_FOURIER;
         else
             REPORT_ERROR(3007, (std::string)"Recons_test_Parameters::read: "
                          "reconstruction mode " + str + " not supported");
@@ -254,6 +255,11 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
             }
             while (true);
         }
+        else if (recons_method == use_FOURIER)
+        {
+            pad_proj=textToInteger(getParameter(fh_param,"pad_proj", 0, "2"));
+            pad_vol=textToInteger(getParameter(fh_param,"pad_vol", 0, "2"));
+        }
 
         // Tomography
         tomography = checkParameter(fh_param, "tomography");
@@ -281,18 +287,21 @@ std::ostream & operator << (std::ostream &out, const Recons_test_Parameters &prm
     out << "   Reconstruction method=";
     switch (prm.recons_method)
     {
-    case use_ART:
-        out << "ART\n";
-        break;
-    case use_SIRT:
-        out << "SIRT\n";
-        break;
-    case use_WBP:
-        out << "WBP\n";
-        break;
-    case use_SIRT_Spider:
-        out << "SIRT Spider\n";
-        break;
+        case use_ART:
+            out << "ART\n";
+            break;
+        case use_SIRT:
+            out << "SIRT\n";
+            break;
+        case use_WBP:
+            out << "WBP\n";
+            break;
+        case use_SIRT_Spider:
+            out << "SIRT Spider\n";
+            break;
+        case use_FOURIER:
+            out << "Fourier\n";
+            break;
     }
     out << "   Phantom family: " << prm.fn_random_phantom << std::endl;
     out << "   Voxel Phantom: "  << prm.fn_voxel_phantom  << std::endl;
@@ -401,6 +410,9 @@ std::ostream & operator << (std::ostream &out, const Recons_test_Parameters &prm
     if (prm.recons_method == use_WBP)
         for (int i = 0; i < prm.WBP_threshold.size(); i++)
             out << "   Threshold=" << prm.WBP_threshold[i] << std::endl;
+    else if (prm.recons_method == use_FOURIER)
+        out << "   Pad_proj=" << prm.pad_proj << std::endl
+            << "   Pad_vol=" << prm.pad_vol << std::endl;
     else
         for (int i = 0; i < prm.lambda0.size(); i++)
             out << "   Lambda0=" << prm.lambda0[i]
@@ -509,8 +521,8 @@ void single_recons_test(const Recons_test_Parameters &prm,
     Projection_Parameters          proj_prm;
     Crystal_Projection_Parameters  crystal_proj_prm;
 
-
     Prog_proj_prm.fn_proj_param = prm.fn_proj_params;
+std::cout << "Estoy aqui3: " <<  prm.fn_proj_params << "\n";
     proj_prm.from_prog_params(Prog_proj_prm);
     if (prm.fn_crystal != "") crystal_proj_prm.read(prm.fn_crystal);
     FileName fn_root, fn_recons_root;
@@ -518,7 +530,6 @@ void single_recons_test(const Recons_test_Parameters &prm,
     if (nvol != -1) fn_recons_root = fn_root + "exp" + integerToString(nvol, 2);
     else          fn_recons_root = fn_root;
     FileName fn_ext = proj_prm.fn_projection_extension;
-
 
 // Generate random phantom -------------------------------------------------
     Prog_Random_Phantom_Parameters rp_prm;
@@ -877,7 +888,8 @@ void single_recons_test(const Recons_test_Parameters &prm,
     }
     else if (prm.recons_method == use_WBP)
     {
-        std::string command_line = (std::string)"xmipp_wbp -i " + Prog_proj_prm.fn_sel_file +
+        std::string command_line = (std::string)"xmipp_reconstruct_wbp -i " +
+              Prog_proj_prm.fn_sel_file +
               " -o " + fn_recons_root + ".vol " +
               " -radius " + integerToString((int)(proj_prm.proj_Xdim / 2)) +
               " -threshold " + floatToString(prm.WBP_threshold[i], 0);
@@ -890,9 +902,19 @@ void single_recons_test(const Recons_test_Parameters &prm,
         double no_it = (int)rnd_log(prm.no_it0[i], prm.no_itF[i]);
         int radius = (int)(proj_prm.proj_Xdim / 2) - 2;
         std::cout << "Selected: Lambda= " << lambda
-        << " No_it= " << no_it << std::endl;
+                  << " No_it= " << no_it << std::endl;
         SIRT_Spider(SF, lambda, no_it, radius, fn_root, fn_ext, fn_recons_root,
                     "b73");
+    }
+    else if (prm.recons_method == use_FOURIER)
+    {
+        std::string command_line = (std::string)"xmipp_reconstruct_fourier -i " +
+              Prog_proj_prm.fn_sel_file +
+              " -o " + fn_recons_root + ".vol " +
+              " -pad_proj " + integerToString(prm.pad_proj) +
+              " -pad_vol" + integerToString(prm.pad_vol);
+        std::cerr << "Reconstructing with Fourier ...\n";
+        system(command_line.c_str());
     }
 
 // Filter result -----------------------------------------------------------
