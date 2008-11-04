@@ -175,5 +175,6 @@ void Usage()
               << "  [-ctf <assign_CTF_prm_file>]        : Show the CTF models\n"
               << "  [-auto <model rootname>]            : For autoselection\n"
               << "  [-autoSelect]                       : Autoselect without user interaction\n"
+              << "  [-thr <p=1>]                        : Number of threads for automatic picking\n"
     ;
 }
