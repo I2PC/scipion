@@ -58,13 +58,13 @@
 #include <qgrid.h>
 #endif
 
-//#define DEBUG_AUTO
-//#define DEBUG_MORE_AUTO
+#define DEBUG_AUTO
+#define DEBUG_MORE_AUTO
 //#define DEBUG_REFINE
 //#define DEBUG_PREPARE
 //#define DEBUG_CLASSIFY
 //#define DEBUG_BUILDVECTOR
-//#define DEBUG_IMG_BUILDVECTOR
+#define DEBUG_IMG_BUILDVECTOR
 
 /* Show -------------------------------------------------------------------- */
 std::ostream & operator << (std::ostream &_out, const Particle &_p)
@@ -601,7 +601,7 @@ void * automaticallySelectParticlesThread(void * args)
                 piece, next_posx, next_posy, skip_x, skip_y,
                 widgetmicrograph->__scan_overlap))
             {
-                #ifdef DEBUG_MORE_AUTO2
+                #ifdef DEBUG_MORE_AUTO
                    std::cerr << "Pos(y,x)=" << posy << "," << posx
                              << " Micro(y,x)=" << posy*widgetmicrograph->__reduction + top
                              << "," << posx*widgetmicrograph->__reduction + left
