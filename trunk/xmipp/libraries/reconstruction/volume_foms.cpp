@@ -1152,7 +1152,7 @@ double compute_FSC(VolumeXmipp &vol_phantom,
     else vol_recons.write("superfeo2.vol");
 
     // Run bresolve of bsoft to compute resolution
-    std::string command = (std::string)"xmipp_resolution -sam " + floatToString(sampling_rate) +
+    std::string command = (std::string)"xmipp_resolution_fsc -sam " + floatToString(sampling_rate) +
                           " -ref superfeo.vol -i superfeo2.vol";
     system(command.c_str());
 
