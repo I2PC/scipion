@@ -1338,7 +1338,7 @@ def execute_reconstruction(_mylog,
 
    _mylog.debug("execute_reconstruction")
 
-   import os,shutil
+   import os,shutil,math
    import launch_parallel_job
    RunInBackground=False
 
