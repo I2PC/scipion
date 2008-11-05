@@ -276,6 +276,29 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
         {
             case EXIT_THREAD: 
                 return NULL;
+            case PROCESS_WEIGHTS:
+            {
+                for (int k=threadParams->myThreadID; k<=FINISHINGZ(parent->FourierWeights); k+=parent->numThreads) 
+                    for (int i=STARTINGY(parent->FourierWeights); i<=FINISHINGY(parent->FourierWeights); i++) 
+                        for (int j=STARTINGX(parent->FourierWeights); j<=FINISHINGX(parent->FourierWeights); j++)
+                            if (parent->FourierWeights(k,i,j)>XMIPP_EQUAL_ACCURACY)
+                                parent->FourierWeights(k,i,j)=1/parent->FourierWeights(k,i,j);
+
+                // Get a first approximation of the reconstruction
+                double corr2D_3D=pow(parent->padding_factor_proj,2.)/
+                        (parent->imgSize* pow(parent->padding_factor_vol,3.)); 
+                                   // Divide by Zdim because of the
+                                   // the extra dimension added
+                                   // and padding differences
+                
+                for (int k=threadParams->myThreadID; k<=FINISHINGZ(parent->FourierWeights); k+=parent->numThreads) 
+                    for (int i=STARTINGY(parent->FourierWeights); i<=FINISHINGY(parent->FourierWeights); i++) 
+                        for (int j=STARTINGX(parent->FourierWeights); j<=FINISHINGX(parent->FourierWeights); j++)
+                            if (VOL_ELEM(parent->FourierWeights,k,i,j)!=0)
+                                VOL_ELEM(parent->VoutFourier,k,i,j)*=corr2D_3D*VOL_ELEM(parent->FourierWeights,k,i,j);
+
+                break;
+            }
             case PROCESS_IMAGE:
             {
                 Matrix2D< std::complex<double> > *paddedFourier = threadParams->paddedFourier;
@@ -695,6 +718,8 @@ void Prog_RecFourier_prm::run()
     }
     if (verb > 0) progress_bar(SF.ImgNo());
     
+    finishComputations();
+    
     threadOpCode = EXIT_THREAD;
     barrier_wait( &barrier );
     
@@ -706,7 +731,6 @@ void Prog_RecFourier_prm::run()
     
     barrier_destroy( &barrier );
 
-    finishComputations();
 }
 
 void Prog_RecFourier_prm::finishComputations()
@@ -742,9 +766,16 @@ void Prog_RecFourier_prm::finishComputations()
 
     // Correct weights
     std::cerr << "Correcting the weight ...\n";
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(FourierWeights)
+    
+    threadOpCode = PROCESS_WEIGHTS;
+    
+    barrier_wait( &barrier );
+    barrier_wait( &barrier );
+
+    
+/*    FOR_ALL_ELEMENTS_IN_MATRIX3D(FourierWeights)
         if (FourierWeights(k,i,j)>XMIPP_EQUAL_ACCURACY)
-            FourierWeights(k,i,j)=1/FourierWeights(k,i,j);
+            FourierWeights(k,i,j)=1/FourierWeights(k,i,j);*/
 /*
     verb=false;
     if (verb) init_progress_bar(NiterWeight);
@@ -756,7 +787,7 @@ void Prog_RecFourier_prm::finishComputations()
     if (verb > 0) progress_bar(NiterWeight);
 */
     // Get a first approximation of the reconstruction
-    double corr2D_3D=pow(padding_factor_proj,2.)/
+/*    double corr2D_3D=pow(padding_factor_proj,2.)/
                         (imgSize* pow(padding_factor_vol,3.)); 
                                    // Divide by Zdim because of the
                                    // the extra dimension added
@@ -765,7 +796,7 @@ void Prog_RecFourier_prm::finishComputations()
         if (VOL_ELEM(FourierWeights,k,i,j)!=0)
             VOL_ELEM(VoutFourier,k,i,j)*=corr2D_3D*VOL_ELEM(FourierWeights,k,i,j);
 //    std::cout << "Aqui2\n" << FourierWeights << std::endl;
-//    std::cout << "Aqui3\n" << VoutFourier << std::endl;
+//    std::cout << "Aqui3\n" << VoutFourier << std::endl;*/
     transformerVol.inverseFourierTransform();
     CenterFFT(Vout(),false);
 
