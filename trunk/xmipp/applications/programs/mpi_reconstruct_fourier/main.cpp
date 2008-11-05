@@ -35,7 +35,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
-#include <iomanip.h>  
+#include <iomanip>  
 
 #define TAG_WORKFORWORKER   0
 #define TAG_STOP   1
@@ -175,7 +175,7 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 
 		    if( status.MPI_TAG != TAG_FREEWORKER )
 		    {
-			cout << "Unexpected TAG, please contact developers " << endl;
+			std::cout << "Unexpected TAG, please contact developers " << std::endl;
 			exit(-1);
 		    }
 
@@ -201,7 +201,7 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
   		total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
   		total_time=(double)total_usecs/(double)1000000;		
 
-		std::cout << std::flush << endl;
+		std::cout << std::flush << std::endl;
 		std::cout << "Processing time: " << total_time << " secs." << std::endl;
 
 		int currentSource;
