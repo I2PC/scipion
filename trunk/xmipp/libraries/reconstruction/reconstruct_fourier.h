@@ -46,6 +46,7 @@
 
 #define EXIT_THREAD 0
 #define PROCESS_IMAGE 1
+#define PROCESS_WEIGHTS 2
 
 /**@defgroup Fourier reconstruction reconstruct_fourier (Fourier reconstruction)
    @ingroup ReconsLibraryPrograms */
