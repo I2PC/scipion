@@ -535,14 +535,7 @@ void Prog_RecFourier_prm::processImage(const FileName &fn_img)
 
     if( statusArray == NULL )
     {
-        if( paddedFourier.xdim > paddedFourier.ydim )
-        {
-            statusArray = (int *) malloc ( sizeof(int) * paddedFourier.xdim );
-        }
-        else
-        {
-            statusArray = (int *) malloc ( sizeof(int) * paddedFourier.ydim );
-        }
+        statusArray = (int *) malloc ( sizeof(int) * paddedFourier.ydim );
     }
     
     // Compute the coordinate axes associated to this image
@@ -553,6 +546,12 @@ void Prog_RecFourier_prm::processImage(const FileName &fn_img)
     threadOpCode = PROCESS_IMAGE;
     rowsProcessed = 0;
     
+    // Determine how many rows of the fourier 
+    // transform are of interest for us. This is because
+    // the user can avoid to explore at certain resolutions
+    int conserveRows= ceil((double)paddedFourier.ydim * maxResolution * 2.0);
+    conserveRows= ceil((double)conserveRows/2.0);
+
     // Loop over all symmetries
     for (int isym = 0; isym < R_repository.size(); isym++)
     {
@@ -570,9 +569,33 @@ void Prog_RecFourier_prm::processImage(const FileName &fn_img)
         // Init status array
         for(int i = 0 ; i < paddedFourier.ydim ; i ++ )
         {
-            statusArray[i] = 0;
+            if( i >= conserveRows && i < (paddedFourier.ydim-conserveRows))
+            {
+                statusArray[i] = -1;
+                rowsProcessed++;
+            }
+            else
+                statusArray[i] = 0;
         }
-        
+//    #define DEBUG_PADD
+    #ifdef DEBUG_PADD
+{
+     ImageXmipp test(paddedFourier.ydim,paddedFourier.xdim);
+     ImageXmipp test2(paddedFourier.ydim,paddedFourier.xdim);
+     for(int i=0;i<paddedFourier.xdim;i++)
+         for(int j=0;j<paddedFourier.ydim;j++)
+             {                    //x,y
+             DIRECT_MAT_ELEM(test(),j,i) =
+             log(1+abs(DIRECT_MAT_ELEM(paddedFourier,j,i)));
+              DIRECT_MAT_ELEM(test2(),i,j) =
+             log(1+abs(DIRECT_MAT_ELEM(paddedFourier,i,j)));
+            //std::cerr<< i << " " << j << " " << IMG[ii] << "\n";
+             }
+     test.write("test.fft");
+     test.write("test2.fft");
+     exit(1);
+}
+    #endif
         // Awaking sleeping threads
         barrier_wait( &barrier );
         // Threads are working now, wait for them to finish
