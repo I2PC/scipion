@@ -32,7 +32,8 @@
 #include <data/de_solver.h>
 #include <fstream>
 #include <queue>
-#include <iostream.h>
+//gcc4 need iostream with no h
+#include <iostream>
 
 /* Compute affine matrix --------------------------------------------------- */
 class AffineFitness
