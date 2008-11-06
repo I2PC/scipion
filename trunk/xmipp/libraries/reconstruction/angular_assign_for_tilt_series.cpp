@@ -470,7 +470,7 @@ void * threadComputeTransform( void * args )
 	pthread_mutex_lock( &printingMutex );
         affineTransformations[jj_1][jj]=Aij;
         affineTransformations[jj][jj_1]=Aji;
-	cout << "Cost for [" << jj_1 << "] - [" << jj << "] = " << cost << endl;
+	std::cout << "Cost for [" << jj_1 << "] - [" << jj << "] = " << std::cost << endl;
 	pthread_mutex_unlock( &printingMutex );
 	affineTransformations[jj_1][jj]=Aij;
 	affineTransformations[jj][jj_1]=Aji;
