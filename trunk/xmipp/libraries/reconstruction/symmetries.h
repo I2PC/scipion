@@ -227,9 +227,9 @@ void fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgOrder,
     /** Read a symmetry file into a symmetry list.
         The former symmetry list is overwritten with the new one. All the
         subgroup members are added to the list. If the accuracy is negative
-        then the subgroup is not generated.
+        then the subgroup is not generated. return symmetry group 
         \\ Ex: SL.read_sym_file("sym.txt");*/
-    void read_sym_file(FileName fn_sym, double accuracy = SYM_ACCURACY);
+    int read_sym_file(FileName fn_sym, double accuracy = SYM_ACCURACY);
 
     /** Add symmetry matrices to the symmetry list.
         The given matrix must specify a point of view equivalent to the
@@ -287,7 +287,6 @@ void fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgOrder,
     int  crystallographic_space_group(double mag_a,
                                       double mag_b,
                                       double ang_a2b_deg) const;
-
 /** Retuen the area of the non redundant part of the Ewald sphere
 */
 double  non_redundant_evald_sphere(int pgGroup, int pgOrder);
@@ -358,6 +357,7 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
                  const Matrix1D<double> &eprm_bint,
                  const Matrix2D<int> &mask, int volume_no,
                  int grid_type);
+
 
 //@}
 #endif

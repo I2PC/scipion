@@ -29,7 +29,7 @@
 
 // Read Symmetry file ======================================================
 // crystal symmetry matices from http://cci.lbl.gov/asu_gallery/
-void SymList::read_sym_file(FileName fn_sym, double accuracy)
+int SymList::read_sym_file(FileName fn_sym, double accuracy)
 {
     int i, j, k, l;
     FILE *fpoii;
@@ -333,7 +333,7 @@ void SymList::read_sym_file(FileName fn_sym, double accuracy)
         space_group = sym_P1;
     else
         space_group = sym_undefined;
-
+    return pgGroup;
 }
 
 // Get matrix ==============================================================
