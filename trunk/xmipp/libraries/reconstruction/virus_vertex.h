@@ -58,6 +58,10 @@ public:
     void get_angles_for_image(const FileName &fn, double &rot,
     double &tilt, double &psi, double &xoff, double &yoff, double &flip,
     double &weight);
+    /** Process one set of angles */
+    void processAngles();
+    /** Relate vertex and projection matrices   */
+    void assignSymmetryMatricesToVertex();
 public:
     /** Filenames */
     FileName fn_sel, fn_doc, fn_root, fn_sym;
@@ -81,11 +85,12 @@ public:
     SymList  SL;
     /** symmetry group */
     int symmetry;
-    /** Process one set of angles */
-    void ProcessAngles();
     // Column numbers in the docfile
     int col_rot, col_tilt, col_psi, col_xoff, col_yoff, col_flip, col_weight;
-
+    // Symmetry Matrices
+    std::vector <Matrix2D<double> > R_repository;
+    //relation between symmetry matrices and vertex
+    Matrix2D<int> symmetryMatrixVertex;//12 vertex, 60 symmetry matrices, 5-fold symmetry
 };
 
 
