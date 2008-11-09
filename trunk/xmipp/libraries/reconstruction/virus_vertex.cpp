@@ -134,16 +134,22 @@ void VirusVertex::loadIcosahedronVertex()
     #undef CHIMERA
 }
 
-void VirusVertex::ProcessAngles()
+void VirusVertex::processAngles()
 {
-    double rot, tilt, psi, xoff, yoff, flip, weight;
+    double rot, tilt, psi, xoff, yoff, flip, weight,rotp,tiltp,psip;
     rot = tilt = psi = xoff = yoff = flip = weight = 0.;
     SF.go_beginning();
     Projection proj,proj_aux;
     int Ydim, Xdim;
     SF.ImgSize(Ydim, Xdim);
     SelFile SFout;
-    SFout.clear();
+    DocFile DFout;
+    DFout.append_comment("Headerinfo columns: rot (1) , tilt (2),\
+                          psi (3), Xoff (4), Yoff (5), Weight (6), Flip (7)");
+    Matrix1D<double> docline;
+    docline.initZeros(7);
+
+SFout.clear();
     while (!SF.eof())
     {
         FileName fn_img = SF.NextImg();
@@ -180,10 +186,11 @@ void VirusVertex::ProcessAngles()
             YY(projected_point_2D)=YY(projected_point);
             proj_vectors.push_back(projected_point_2D);
         }
-        bool scissor;
+        bool scissor;//if true extract this vertex
         for (int i = 0; i < 12; i++)
         {
             scissor=1;
+            //Remove vertex if they are close to another vertex
             if (removeCloseVertex)
             {
                 for (int j = 0; j < 12; j++)
@@ -195,14 +202,13 @@ void VirusVertex::ProcessAngles()
                         scissor=0;
                         break;
                     }
-    
                 }
             }
             if (!scissor)
             {
                 continue;
             }
-            int radius =      proj_vectors[i].module()*virusRadius;
+            int radius = proj_vectors[i].module()*virusRadius;
             if (radius > minVirusRadius)
             {            
                 proj_aux=proj;
@@ -217,15 +223,41 @@ void VirusVertex::ProcessAngles()
                 proj_aux.set_Xoff(0);//shift already aplied, same for flip? I do not think so
                 proj_aux.set_Yoff(0);
                 proj_aux().window((Ydim-dim)/2,(Xdim-dim)/2,(Ydim+dim)/2,(Xdim+dim)/2,0);
+                Matrix2D<double>  Identity(3,3);
+                Identity.initIdentity();
+                int irandom;
+                irandom=rnd_unif(0, 4);
+                Matrix2D<double> euler(3, 3), temp;
+                Euler_angles2matrix(rot, tilt, psi, euler);
+                temp = R_repository[symmetryMatrixVertex(i,irandom)].transpose() * 
+                       euler //* 
+                       //R_repository[symmetryMatrixVertex(i,irandom)]
+                        ;
+                std::cerr << i << " " << irandom<< " " << temp << std::endl;
+                Euler_matrix2angles(temp, rotp, tiltp, psip);
+
+                proj_aux.set_rot(rotp);
+                proj_aux.set_tilt(tiltp);
+                proj_aux.set_psi(psip);
                 proj_aux.write(fn_tmp);
                 SFout.insert(fn_tmp, SelLine::ACTIVE);
-            }
+                docline(0) = rotp;
+                docline(1) = tiltp;
+                docline(2) = psip;
+                docline(3) = 0.;
+                docline(4) = 0.;
+                docline(5) = weight;
+                docline(6) = flip;
+                DFout.append_comment(fn_tmp);
+                DFout.append_data_line(docline);
+           }
         }
     }
     FileName fn_tmp1;
     fn_tmp1= fn_sel.without_extension()+"_out.sel";
     SFout.write(fn_tmp1);
-}
+    fn_tmp1= fn_doc.without_extension()+"_out.doc";
+    DFout.write(fn_tmp1);}
 
 void VirusVertex::get_angles_for_image(const FileName &fn, double &rot,
     double &tilt, double &psi, double &xoff, double &yoff, double &flip,
@@ -253,12 +285,42 @@ void VirusVertex::get_angles_for_image(const FileName &fn, double &rot,
     }
     
 }
+void VirusVertex::assignSymmetryMatricesToVertex()
+{
+    /** vector with symmetry matrices */
+    Matrix2D<double>  R(4, 4),L(4,4);
+    Matrix2D<double>  Identity(3,3);
+    Identity.initIdentity();
+    symmetryMatrixVertex.resize(12, 5);
+    R_repository.push_back(Identity);
+    for (int isym = 0; isym < SL.SymsNo(); isym++)
+    {
+        SL.get_matrices(isym, L, R);
+        R.resize(3, 3);
+        R_repository.push_back(R);
+    }
+    Matrix1D<double> r(3);
+    int k;
 
+    for (int i = 0; i < 12; i++)
+    {
+        k=0;
+        for (int j = 0; j < R_repository.size(); j++)
+        {
+            if( (vertices_vectors[i]-vectorR3(0., 0., 1.).transpose() * R_repository[j]).module() < 0.00001)
+            {
+                symmetryMatrixVertex(i,k)=j;
+                k++;
+            }
+        }
+    }
+    //std::cerr<< symmetryMatrixVertex << std::endl;
+}
 /* Main program ------------------------------------------------------------ */
 void VirusVertex::run()
 {
-
     double accuracy=1e-6;
+    randomize_random_generator();
     show();
     //read doc and sel files file
     if (fn_doc != "")
@@ -275,8 +337,10 @@ void VirusVertex::run()
     //load icosahedron vertex
     symmetry=SL.read_sym_file(fn_sym, accuracy);
     loadIcosahedronVertex();
+    assignSymmetryMatricesToVertex();
+    //Assign symmetry matrices to vertex
     //process one set of angles
-    ProcessAngles();
+    processAngles();
 }
 
 
