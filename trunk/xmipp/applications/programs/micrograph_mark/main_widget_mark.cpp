@@ -50,11 +50,11 @@ QtMainWidgetMark::QtMainWidgetMark(Micrograph *_m, Micrograph *_mTilted)
     float maspect_ratio = (float)mYdim / mXdim;
     if (_mTilted == NULL)
     {
-        int suggested_X = 600;
+        int suggested_X = 300;
         int suggested_Y = (int)(suggested_X * maspect_ratio);
-        if (suggested_Y > 600)
+        if (suggested_Y > 300)
         {
-            suggested_Y = 600;
+            suggested_Y = 300;
             suggested_X = (int)(suggested_Y / maspect_ratio);
         }
         setMinimumSize(suggested_X, suggested_Y);
@@ -68,12 +68,12 @@ QtMainWidgetMark::QtMainWidgetMark(Micrograph *_m, Micrograph *_mTilted)
         int tXdim, tYdim;
         _m->size(tXdim, tYdim);
         float taspect_ratio = (float)tYdim / tXdim;
-        int suggested_Y = 400;
+        int suggested_Y = 150;
         int suggested_X = (int)(suggested_Y * (1 / maspect_ratio + 1 / taspect_ratio));
-        if (suggested_X > 800)
+        if (suggested_X > 300)
         {
-            int suggested_YU = (int)(400 * maspect_ratio);
-            int suggested_YT = (int)(400 * taspect_ratio);
+            int suggested_YU = (int)(150 * maspect_ratio);
+            int suggested_YT = (int)(150 * taspect_ratio);
             suggested_Y = XMIPP_MAX(suggested_YU, suggested_YT);
         }
         setMinimumSize(suggested_X, suggested_Y);
@@ -554,28 +554,27 @@ void QtMainWidgetMark::generated(bool _this_is_tilted,
     }
 }
 
-void QtMainWidgetMark::slotAddCoordTilted(int _muX, int _muY, int _f)
+void QtMainWidgetMark::slotAddCoordTilted(int _muX, int _muY, int _f,
+double _cost)
 {
     int mtX, mtY;
 
     pass_to_tilted(_muX, _muY, mtX, mtY, true);
     std::cout << "     --> in the tilted image (" << mtX << "," << mtY << ")\n";
-    __mTiltedWidget->getMicrograph()->add_coord(mtX, mtY, _f);
+    __mTiltedWidget->getMicrograph()->add_coord(mtX, mtY, _f, _cost);
 
     __mTiltedWidget->slotDrawEllipse(mtX, mtY, _f);
     slotActualizeTiltedOverview(_muX, _muY);
-// CO:   __mWidget->slotDrawEllipse( _muX, _muY, _f);
     __mTiltedWidget->slotDrawLastEllipse(mtX, mtY, _f);
 }
 
-void QtMainWidgetMark::slotAddCoordUntilted(int _mtX, int _mtY, int _f)
+void QtMainWidgetMark::slotAddCoordUntilted(int _mtX, int _mtY, int _f,
+    double _cost)
 {
     int muX, muY;
 
     pass_to_untilted(_mtX, _mtY, muX, muY);
-    __mWidget->getMicrograph()->add_coord(muX, muY, _f);
-
-// CO:   __mTiltedWidget->slotDrawEllipse(_mtX, _mtY, _f);
+    __mWidget->getMicrograph()->add_coord(muX, muY, _f, _cost);
     __mWidget->slotDrawEllipse(muX, muY, _f);
 }
 
