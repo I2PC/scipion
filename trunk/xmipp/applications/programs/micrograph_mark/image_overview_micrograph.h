@@ -40,6 +40,9 @@ private:
     int     __x0_crop, __y0_crop, __xF_crop, __yF_crop;
 
 public:
+    // Minimum cost for drawing
+    float __minCost;
+
     // Constructor
     QtImageOverviewMicrograph(QWidget *_parent = 0, const char *_name = 0, Qt::WFlags _f = 0);
 
