@@ -96,6 +96,7 @@ QtImageOverviewMicrograph::QtImageOverviewMicrograph(QWidget *_parent,
     __y = 0;
     __w = 0;
     __h = 0;
+    __minCost = 0;
     __axis_ang = 0;
     __enable_axis = FALSE;
     __x0_crop = __y0_crop = __xF_crop = __yF_crop = -1;
@@ -218,7 +219,8 @@ void QtImageOverviewMicrograph::loadSymbols()
 
     for (int i = 0; i < getMicrograph()->ParticleNo(); i++)
     {
-        if (!getMicrograph()->coord(i).valid) continue;
+        if (!getMicrograph()->coord(i).valid ||
+            getMicrograph()->coord(i).cost<__minCost) continue;
         drawEllipse(getMicrograph()->coord(i).X,
                     getMicrograph()->coord(i).Y, getMicrograph()->coord(i).label);
     }
