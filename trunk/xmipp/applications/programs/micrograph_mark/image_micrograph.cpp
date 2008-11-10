@@ -52,6 +52,7 @@ QtImageMicrograph::QtImageMicrograph(QWidget *_parent,
     __tilted     = false;
     __ellipse_radius = 5;
     __ellipse_type   = MARK_CIRCLE;
+    __minCost    = 0;
 
     emit signalSetWidthHeight(image()->width(), image()->height());
 }
@@ -170,7 +171,8 @@ void QtImageMicrograph::loadSymbols()
     if (getMicrograph() == NULL) return;
     for (int i = 0; i < getMicrograph()->ParticleNo(); i++)
     {
-        if (!getMicrograph()->coord(i).valid) continue;
+        if (!getMicrograph()->coord(i).valid ||
+            getMicrograph()->coord(i).cost<__minCost) continue;
         drawEllipse(getMicrograph()->coord(i).X,
                     getMicrograph()->coord(i).Y, getMicrograph()->coord(i).label,
                     __ellipse_radius, __ellipse_type);
@@ -224,7 +226,6 @@ void QtImageMicrograph::mouseReleaseEvent(QMouseEvent *e)
     {
         if (isTilted())
         {
-            std::cout << "Moving last particle to (X,Y)=(" << mX << "," << mY << ")\n";
             getMicrograph()->move_last_coord_to(mX, mY);
             __pressed = false;
             emit signalRepaint();
@@ -235,14 +236,10 @@ void QtImageMicrograph::mouseReleaseEvent(QMouseEvent *e)
             int coord = getMicrograph()->search_coord_near(mX, mY, 10);
             if (coord == -1)
             {
-                std::cout << "Particle marked at (X,Y)=(" << mX << "," << mY << ")\n";
-                getMicrograph()->add_coord(mX, mY, __activeFamily);
+                getMicrograph()->add_coord(mX, mY, __activeFamily,1);
                 __pressed = false;
                 emit signalAddCoordOther(mX, mY, __activeFamily);
             } else {
-                std::cout << "Particle deleted at (X,Y)=("
-                          << getMicrograph()->coord(coord).X << ","
-                          << getMicrograph()->coord(coord).Y << ")\n";
                 getMicrograph()->coord(coord).valid = false;
                 getWidgetMicrograph()->delete_particle(coord);
                 emit signalDeleteMarkOther(coord);
