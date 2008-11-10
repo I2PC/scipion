@@ -60,6 +60,8 @@ struct Particle_coords
     int Y;
     /// Valid
     bool valid;
+    /// Cost, scaled between 0 and 1
+    double cost;
 };
 
 /** Micrography class.
@@ -477,7 +479,7 @@ public:
 
     /** Add coordinate.
         It returns the index of the particle added within the coordinate list. */
-    int add_coord(int x, int y, int label);
+    int add_coord(int x, int y, int label, double cost);
 
     /** Move last coordinate to this position. */
     void move_last_coord_to(int x, int y);

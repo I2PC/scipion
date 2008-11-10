@@ -394,6 +394,7 @@ void Micrograph::read_coordinates(int label, const FileName &_fn_coords)
     struct Particle_coords aux;
     aux.valid = true;
     aux.label = label;
+    aux.cost = 1;
     fh.peek();
     while (!fh.eof())
     {
@@ -531,12 +532,6 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
     if (compute_transmitance || compute_inverse)
     {
         (*this).computeDoubleMinMax(Dmin, Dmax);
-        //#define DEBUG66
-#ifdef DEBUG66
-
-        std::cout << "Min= " << Dmin << " Dmax" << Dmax << std::endl;
-#endif
-#undef DEBUG66
 
         if (compute_transmitance)
         {
@@ -610,13 +605,14 @@ void Micrograph::invalidate_coord(int n)
 }
 
 /* Add coordinate ---------------------------------------------------------- */
-int Micrograph::add_coord(int x, int y, int label)
+int Micrograph::add_coord(int x, int y, int label, double cost)
 {
     struct Particle_coords aux;
     aux.valid = true;
     aux.X = x;
     aux.Y = y;
     aux.label = label;
+    aux.cost = cost;
     coords.push_back(aux);
     return coords.size() - 1;
 }
