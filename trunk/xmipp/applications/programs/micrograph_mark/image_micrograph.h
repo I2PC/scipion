@@ -41,6 +41,7 @@ class QtImageMicrograph : public QtImage
 public:
     float   __ellipse_radius;
     int     __ellipse_type;
+    float   __minCost;
 private:
     bool    __pressed;
     int     __movingMark;
