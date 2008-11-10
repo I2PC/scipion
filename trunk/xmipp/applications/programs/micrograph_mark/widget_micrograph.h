@@ -171,7 +171,7 @@ public:
             switch (__classNo)
             {
                 case 2:
-	            if ((double)(votes(0))/votes.sum()<=0.9) k=1;
+	            if ((double)(votes(0))/votes.sum()<=0.6) k=1;
                     break;
                 case 3:
 	            if ((double)(votes(0))/votes.sum()>=0.1) k=0;
@@ -197,6 +197,9 @@ public:
     // Print
     friend std::ostream & operator << (std::ostream &_out,
         const Classification_model &_m);
+
+    // Print Shape
+    void printShape() const;
 
     // Read
     friend std::istream & operator >> (std::istream &_in,
@@ -243,6 +246,7 @@ public:
     int                        __radial_bins;
     double                     __highpass_cutoff;
     double                     __penalization;
+    float                      __minCost;
     int                        __piece_xsize;
     int                        __particle_radius;
     int                        __mask_size;
@@ -379,7 +383,8 @@ public:
     void buildVectors(std::vector<int> &_idx, Classification_model &_model);
     
     // Build vector from non particles
-    void buildNegativeVectors(Classification_model &__model);
+    void buildNegativeVectors(Classification_model &__model,
+        bool checkForPalsePostives);
     
     // Build classfication vector
     // x,y are in the coordinate system of the piece (that might be
@@ -492,7 +497,10 @@ public:
         Matrix1D<double> &probabilities);
     
     // Get false positives automatically selected
-    void getAutoFalsePositives();
+    void getAutoFalsePositives(Classification_model &_training_model);
+
+    // Get true positives automatically selected
+    void getAutoTruePositives(Classification_model &_training_model);
 
 public slots:
     void slotActiveFamily(int _f);
@@ -509,6 +517,7 @@ public slots:
     void slotChangeContrast();
     void slotChangeCrop();
     void slotChangeCircleRadius();
+    void slotRestrictSelection(float _cost);
 signals:
     void signalActiveFamily(int _f);
     void signalAddFamily(const char *_familyName);
