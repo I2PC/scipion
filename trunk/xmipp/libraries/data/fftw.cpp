@@ -33,7 +33,7 @@ pthread_mutex_t fftw_plan_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // Constructors and destructors --------------------------------------------
 XmippFftw::XmippFftw()
-{
+{    
     fPlanForward=NULL;
     fPlanBackward=NULL;
     fReal=NULL;
