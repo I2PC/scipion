@@ -128,6 +128,11 @@ public:
 public: // Internal members
     // Size of the original images
     int imgSize;
+    
+    // Padded volume size
+    int volPadSizeX;
+    int volPadSizeY;
+    int volPadSizeZ;
 
     // Column numbers in the docfile
     int col_rot, col_tilt, col_psi, col_xoff, col_yoff, col_flip, col_weight;

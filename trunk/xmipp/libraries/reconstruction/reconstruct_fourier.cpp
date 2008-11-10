@@ -140,17 +140,12 @@ void Prog_RecFourier_prm::produce_Side_info()
     if (Ydim!=Xdim)
         REPORT_ERROR(1,"This algorithm only works for squared images");
     imgSize=Xdim;
-
-    Vout().initZeros(Xdim*padding_factor_vol,Xdim*padding_factor_vol,
-        Xdim*padding_factor_vol);
-
+    volPadSizeX = volPadSizeY = volPadSizeZ=Xdim*padding_factor_vol;
+    Vout().initZeros(volPadSizeZ,volPadSizeY,volPadSizeX);
     transformerVol.setReal(Vout());
+    Vout().clear(); // Free the memory so that it is available for FourierWeights
     transformerVol.getFourierAlias(VoutFourier);
-
-    // Avoids to make a bigger memory reservation by
-    // re-using the volume storing weights to store
-    // the final reconstructed volume
-    FourierWeights.alias(Vout());
+    FourierWeights.initZeros(VoutFourier);
 
     // Ask for memory for the padded images
     paddedImg.resize(Xdim*padding_factor_proj,Xdim*padding_factor_proj);
@@ -260,13 +255,9 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
     int minSeparation;
     
     if( (int)ceil(parent->blob.radius) > parent->thrWidth )
-    {
         minSeparation = (int)ceil(parent->blob.radius);
-    }
     else
-    {
         minSeparation = parent->thrWidth;
-    }        
 
     do
     {
@@ -277,26 +268,24 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
             case EXIT_THREAD: 
                 return NULL;
             case PROCESS_WEIGHTS:
-            {
-                for (int k=threadParams->myThreadID; k<=FINISHINGZ(parent->FourierWeights); k+=parent->numThreads) 
-                    for (int i=STARTINGY(parent->FourierWeights); i<=FINISHINGY(parent->FourierWeights); i++) 
-                        for (int j=STARTINGX(parent->FourierWeights); j<=FINISHINGX(parent->FourierWeights); j++)
-                            if (parent->FourierWeights(k,i,j)>XMIPP_EQUAL_ACCURACY)
-                                parent->FourierWeights(k,i,j)=1/parent->FourierWeights(k,i,j);
-
-                // Get a first approximation of the reconstruction
+            {// Get a first approximation of the reconstruction
                 double corr2D_3D=pow(parent->padding_factor_proj,2.)/
                         (parent->imgSize* pow(parent->padding_factor_vol,3.)); 
                                    // Divide by Zdim because of the
                                    // the extra dimension added
                                    // and padding differences
-                
+
                 for (int k=threadParams->myThreadID; k<=FINISHINGZ(parent->FourierWeights); k+=parent->numThreads) 
                     for (int i=STARTINGY(parent->FourierWeights); i<=FINISHINGY(parent->FourierWeights); i++) 
                         for (int j=STARTINGX(parent->FourierWeights); j<=FINISHINGX(parent->FourierWeights); j++)
+                        { 
+                            if (parent->FourierWeights(k,i,j)>XMIPP_EQUAL_ACCURACY)
+                                parent->FourierWeights(k,i,j)=1/parent->FourierWeights(k,i,j);
+                        
                             if (VOL_ELEM(parent->FourierWeights,k,i,j)!=0)
                                 VOL_ELEM(parent->VoutFourier,k,i,j)*=corr2D_3D*VOL_ELEM(parent->FourierWeights,k,i,j);
-
+                        }
+                                       
                 break;
             }
             case PROCESS_IMAGE:
@@ -396,9 +385,9 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                             M3x3_BY_V3x1(freq,*A_SL,freq);
 
                             // Look for the corresponding index in the volume Fourier transform
-                            DIGFREQ2FFT_IDX_DOUBLE(XX(freq),XSIZE(VOLMATRIX(parent->Vout)),XX(real_position));
-                            DIGFREQ2FFT_IDX_DOUBLE(YY(freq),YSIZE(VOLMATRIX(parent->Vout)),YY(real_position));
-                            DIGFREQ2FFT_IDX_DOUBLE(ZZ(freq),ZSIZE(VOLMATRIX(parent->Vout)),ZZ(real_position));
+                            DIGFREQ2FFT_IDX_DOUBLE(XX(freq),parent->volPadSizeX,XX(real_position));
+                            DIGFREQ2FFT_IDX_DOUBLE(YY(freq),parent->volPadSizeY,YY(real_position));
+                            DIGFREQ2FFT_IDX_DOUBLE(ZZ(freq),parent->volPadSizeZ,ZZ(real_position));
 
                             // Put a box around that coefficient
                             XX(corner1)=CEIL (XX(real_position)-parent->blob.radius);
@@ -531,9 +520,7 @@ void Prog_RecFourier_prm::processImage(const FileName &fn_img)
         proj.read(fn_img, false); // do not apply shifts since they are not in
                                   // the header
         get_angles_for_image(fn_img, rot, tilt, psi, xoff, yoff, flip, weight);
-        proj.set_rot(rot);
-        proj.set_tilt(tilt);
-        proj.set_psi(psi);
+        proj.set_angles(rot, tilt, psi); 
         proj.set_Xoff(xoff);
         proj.set_Yoff(yoff);
         proj.set_flip(flip);
@@ -627,7 +614,7 @@ void Prog_RecFourier_prm::processImage(const FileName &fn_img)
     }
 }
 #undef DEBUG
-
+#ifdef NEVERDEFINED
 // Correct weight ----------------------------------------------------------
 void Prog_RecFourier_prm::correctWeight()
 {
@@ -660,7 +647,6 @@ void Prog_RecFourier_prm::correctWeight()
             }
         }
     }
-
 /*
     VolumeXmipp save;
     save()=FourierWeights; 
@@ -681,6 +667,7 @@ void Prog_RecFourier_prm::correctWeight()
         if (FourierWeightsConvolved(k,i,j)>XMIPP_EQUAL_ACCURACY)
             FourierWeights(k,i,j)/=FourierWeightsConvolved(k,i,j);
 }
+#endif
 
 // Main routine ------------------------------------------------------------
 void Prog_RecFourier_prm::run()
@@ -767,36 +754,33 @@ void Prog_RecFourier_prm::finishComputations()
     // Correct weights
     std::cerr << "Correcting the weight ...\n";
     
+    // Tell threads what to do
     threadOpCode = PROCESS_WEIGHTS;
     
+    // Awake threads
     barrier_wait( &barrier );
+    // Threads are working now, wait for them to finish
     barrier_wait( &barrier );
 
-    
-/*    FOR_ALL_ELEMENTS_IN_MATRIX3D(FourierWeights)
-        if (FourierWeights(k,i,j)>XMIPP_EQUAL_ACCURACY)
-            FourierWeights(k,i,j)=1/FourierWeights(k,i,j);*/
-/*
-    verb=false;
-    if (verb) init_progress_bar(NiterWeight);
-    for (int n=0; n<NiterWeight; n++)
-    {
-        correctWeight();
-        if (verb) progress_bar(n);
-    }
-    if (verb > 0) progress_bar(NiterWeight);
-*/
-    // Get a first approximation of the reconstruction
-/*    double corr2D_3D=pow(padding_factor_proj,2.)/
-                        (imgSize* pow(padding_factor_vol,3.)); 
-                                   // Divide by Zdim because of the
-                                   // the extra dimension added
-                                   // and padding differences
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(FourierWeights)
-        if (VOL_ELEM(FourierWeights,k,i,j)!=0)
-            VOL_ELEM(VoutFourier,k,i,j)*=corr2D_3D*VOL_ELEM(FourierWeights,k,i,j);
-//    std::cout << "Aqui2\n" << FourierWeights << std::endl;
-//    std::cout << "Aqui3\n" << VoutFourier << std::endl;*/
+    FourierWeights.clear();
+    Vout().initZeros(volPadSizeZ,volPadSizeY,volPadSizeX);
+    transformerVol.setReal(Vout());
+    //#define DEBUG_VOL
+    #ifdef DEBUG_VOL
+{
+     Matrix3D< std::complex<double> > kk;
+     transformerVol.getFourierAlias(kk);
+     std::cerr << "x y z " << XSIZE(kk) << " "
+               << YSIZE(kk) << " " 
+               << ZSIZE(kk) 
+               << std::endl;
+     VolumeXmipp test(ZSIZE(kk),YSIZE(kk),XSIZE(kk));
+     FOR_ALL_ELEMENTS_IN_MATRIX3D(kk) test(k, i, j) = log(1+abs(kk(k, i, j)));
+     test.write("test2.fft");
+     exit(1);
+}
+    #endif
+   
     transformerVol.inverseFourierTransform();
     CenterFFT(Vout(),false);
 
