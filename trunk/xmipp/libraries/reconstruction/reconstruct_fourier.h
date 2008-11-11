@@ -47,6 +47,7 @@
 #define EXIT_THREAD 0
 #define PROCESS_IMAGE 1
 #define PROCESS_WEIGHTS 2
+#define PRELOAD_IMAGE 3
 
 /**@defgroup Fourier reconstruction reconstruct_fourier (Fourier reconstruction)
    @ingroup ReconsLibraryPrograms */
@@ -58,7 +59,12 @@ struct ImageThreadParams
 	int myThreadID;
 	Prog_RecFourier_prm * parent;
         Matrix2D< std::complex<double> > *paddedFourier;
-	Matrix2D<double> * symmetry;
+	Matrix2D< std::complex<double> > *localPaddedFourier;
+        Matrix2D<double> * symmetry;
+        int read;
+        Matrix2D<double> * localAInv;
+        int imageIndex;
+        int lastIndex;
 };
 
 /** Fourier reconstruction parameters. */
@@ -198,7 +204,7 @@ public:
     void finishComputations();
     
     /// Process one image
-    void processImage(const FileName &fn_img);
+    void processImages( int firstImageIndex=-1, int lastImageIndex=-1 ); //const FileName &fn_img);
 
     /// Correct weight
     void correctWeight();
