@@ -437,38 +437,15 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 		    else if (status.MPI_TAG == TAG_WORKFORWORKER)
             	    {	
                         threadOpCode=PROCESS_IMAGE;	
-//#define DEBUG
-#ifdef DEBUG
-	std::cerr << "slave-rece TAG_WORKFORWORKER rank=" << rank << std::endl;
 
-#endif
-#undef DEBUG
 			//get the jobs number
 			MPI_Recv(&jobNumber, 1, MPI_INT, 0, TAG_WORKFORWORKER, MPI_COMM_WORLD, &status);
 			int min_i, max_i;
 
 			min_i = jobNumber*mpi_job_size;
 			max_i = min_i + mpi_job_size;
-//#define DEBUG
-#ifdef DEBUG
-	std::cerr << "slave-rece-AFTER TAG_WORKFORWORKER rank= min and max" 
-		  << rank << " "
-		  << min_i << " "
-		  << max_i
-		  << std::endl;		
-#endif
-#undef DEBUG
-			// Process all images
-			for( int i = min_i ; i < max_i ; i ++ )
-			{
-			    // Check whether all projections have already 
-			    // been processed. If so, break loop
-			    if( i == SF.ImgNo() )
-				    break;
-			    fn_img = SF.get_file_number(i);
 
-			    processImage( fn_img );
-			}
+			processImages( min_i, max_i );
             	    }
 		    else
 		    {
