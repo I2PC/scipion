@@ -1,7 +1,8 @@
 /***************************************************************************
  *
- * Authors:     Roberto Marabini (roberto@cnb.uam.es)
- *
+ * Authors:     Jose Roman Bilbao (jrbcast@ace.ual.es)
+ *				Roberto Marabini (roberto@cnb.uam.es)
+ *				
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
  * This program is free software; you can redistribute it and/or modify
