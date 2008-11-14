@@ -99,7 +99,7 @@ void Prog_RecFourier_prm::usage()
     std::cerr << " [ -thr <threads=1> ]          : Number of concurrent threads\n";
     std::cerr << " [ -thr_width <width=blob_radius> : Number of image rows processed at a time by a thread\n";
     std::cerr << " -----------------------------------------------------------------" << std::endl;
-    std::cerr << " [ -do_weights ]               : Use weights stored in the image headers or doc file" << std::endl;
+    std::cerr << " [ -weight ]               : Use weights stored in the image headers or doc file" << std::endl;
     std::cerr << "\n Interpolation Function"
               << "\n   [-r blrad=1.9]        blob radius in pixels"
               << "\n   [-m blord=0]          order of Bessel function in blob"
@@ -126,6 +126,7 @@ void Prog_RecFourier_prm::produce_Side_info()
         col_xoff   = DF.getColNumberFromHeader("Xoff") - 1;
         col_yoff   = DF.getColNumberFromHeader("Yoff") - 1;
         col_flip   = DF.getColNumberFromHeader("Flip") - 1;
+        col_weight=-1;
         if (do_weights)
             col_weight = DF.getColNumberFromHeader("Weight") - 1;
     }
@@ -210,41 +211,27 @@ void Prog_RecFourier_prm::get_angles_for_image(const FileName &fn, double &rot,
     double &tilt, double &psi, double &xoff, double &yoff, double &flip,
     double &weight)
 {
-    if (fn_doc == "")
-    {
-        headerXmipp head;
-        head.read(fn);
-        rot    = head.Phi();
-        tilt   = head.Theta();
-        psi    = head.Psi();
-        xoff   = head.fXoff();
-        yoff   = head.fYoff();
-        flip   = head.Flip();
-        weight = head.Weight();
-    } 
-    else
-    {
-        if (DF.search_comment(fn))
-        {
-            rot    = DF(col_rot);
-            tilt   = DF(col_tilt);
-            psi    = DF(col_psi);
-            xoff   = DF(col_xoff);
-            yoff   = DF(col_yoff);
-            if (col_flip < 0)
-                flip   = 0.;
-            else
-                flip   = DF(col_flip);
-            if (col_weight < 0)
-                weight = 0.;
-            else
-                weight = DF(col_weight);
-        }
-        else
-        {
-            REPORT_ERROR(1, (std::string)"Prog_RecFourier_prm: Cannot find " + fn + " in docfile " + fn_doc);
-        }
-    }
+
+	if (DF.search_comment(fn))
+	{
+		rot    = DF(col_rot);
+		tilt   = DF(col_tilt);
+		psi    = DF(col_psi);
+		xoff   = DF(col_xoff);
+		yoff   = DF(col_yoff);
+		if (col_flip < 0)
+			flip   = 0.;
+		else
+			flip   = DF(col_flip);
+		if (col_weight < 0)
+			weight = 0.;
+		else
+			weight = DF(col_weight);
+	}
+	else
+	{
+		REPORT_ERROR(1, (std::string)"Prog_RecFourier_prm: Cannot find " + fn + " in docfile " + fn_doc);
+	}
 }
 
 void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
@@ -311,7 +298,11 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                 {
                     proj.read(fn_img, false); // do not apply shifts since they are not in
                                               // the header
-                    parent->get_angles_for_image(fn_img, rot, tilt, psi, xoff, yoff, flip, weight);
+                    
+					pthread_mutex_lock( &mutexDocFile );
+					parent->get_angles_for_image(fn_img, rot, tilt, psi, xoff, yoff, flip, weight);
+					pthread_mutex_unlock( &mutexDocFile );
+					
                     proj.set_angles(rot, tilt, psi); 
                     proj.set_Xoff(xoff);
                     proj.set_Yoff(yoff);
