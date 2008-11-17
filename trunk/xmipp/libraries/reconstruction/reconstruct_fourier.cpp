@@ -651,6 +651,7 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
                 // Loop over all symmetries
                 for (int isym = 0; isym < R_repository.size(); isym++)
                 {
+					rowsProcessed = 0;
                     // Compute the coordinate axes of the symmetrized projection
                     Matrix2D<double> A_SL=R_repository[isym]*(*Ainv);
 
