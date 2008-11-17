@@ -40,7 +40,7 @@ public:
     DocFile          DF_scales;
     int              colX_shift;
     int              colX_scale;
-    int              Docfile;
+    bool             Docfile;
 
 
     void read(int argc, char **argv)
@@ -80,7 +80,7 @@ public:
         }
         else
         {
-            int my_dim;
+            int my_dim=0;
             if (checkParameter(argc, argv, "-shift"))
             {
                 shift = getVectorParameter(argc, argv, "-shift", -1);
@@ -94,7 +94,7 @@ public:
 
             if (!checkParameter(argc, argv, "-shift") && !center_mass)
                 shift.initZeros(my_dim);
-            if (!checkParameter(argc, argv, "-scale"))
+            if (!checkParameter(argc, argv, "-scale") && !center_mass)
             {
                 scale.resize(my_dim);
                 scale.initConstant(1);
@@ -133,7 +133,6 @@ public:
         Prog_parameters::usage();
         std::cerr << "   -shift \"[<x>,<y>[,<z>]]\" : Shift by (x,y,z) for volumes, (x,y) for images\n"
         << "   -scale \"[<x>,[<y>,<z>]]\" : Scale by (x,y,z)\n"
-//           << "   -Docfile                 : Shift and/or Scales are stored in a Docfile\n"
         << "   -shift <DocFile>         : Shifts are stored in a Docfile\n"
         << "   -scale <DocFile>         : Scales are stored in a Docfile (may be the same\n"
         << "                              Docfile used for shifts\n"
@@ -160,7 +159,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
         YY(eprm->shift) = eprm->DF_shifts(eprm->colX_shift + 1);
         eprm->DF_shifts.next_data_line();
     }
-    else if (eprm->Docfile != false)
+    else if (eprm->Docfile)
     {
         eprm->shift.resize(2);
         eprm->shift.initConstant(0.);
@@ -180,7 +179,7 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
         YY(eprm->scale) = eprm->DF_scales(eprm->colX_scale + 1);
         eprm->DF_scales.next_data_line();
     }
-    else if (eprm->Docfile != false || eprm->center_mass)
+    else if (eprm->Docfile || eprm->center_mass)
     {
         eprm->scale.resize(2);
         eprm->scale.initConstant(1.);
@@ -197,9 +196,6 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
     Matrix2D<double> A(4, 4);
     A.initIdentity();
     Shift_Scale_parameters *eprm = (Shift_Scale_parameters *) prm;
-//   if (eprm->DF_shifts.name()=="")
-//        ;//shift is already filled
-//   else
     if (eprm->DF_shifts.name() != "")
     {
         eprm->shift.resize(3);
@@ -208,17 +204,20 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
         ZZ(eprm->shift) = eprm->DF_shifts(eprm->colX_shift + 2);
         eprm->DF_shifts.next_data_line();
     }
-    else if (eprm->Docfile != false)
+    else if (eprm->Docfile)
     {
         eprm->shift.resize(3);
         eprm->shift.initConstant(1.);
     }
+    else if (eprm->center_mass)
+    {
+        vol().centerOfMass(eprm->shift);
+        eprm->shift = -eprm->shift;
+    }
     A(0, 3) = XX(eprm->shift);
     A(1, 3) = YY(eprm->shift);
     A(2, 3) = ZZ(eprm->shift);
-//   if(eprm->scale.getDimension()>1)
-//      ;//scale already filled
-//   else
+
     if (eprm->DF_scales.name() != "")
     {
         eprm->scale.resize(3);
@@ -227,7 +226,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
         ZZ(eprm->scale) = eprm->DF_scales(eprm->colX_scale + 2);
         eprm->DF_scales.next_data_line();
     }
-    else if (eprm->Docfile != false)
+    else if (eprm->Docfile || eprm->center_mass)
     {
         eprm->scale.resize(3);
         eprm->scale.initConstant(1.);
