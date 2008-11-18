@@ -171,7 +171,7 @@ public:
             switch (__classNo)
             {
                 case 2:
-	            if ((double)(votes(0))/votes.sum()<=0.6) k=1;
+	            if ((double)(votes(0))/votes.sum()<=0.8) k=1;
                     break;
                 case 3:
 	            if ((double)(votes(0))/votes.sum()>=0.1) k=0;
