@@ -1832,7 +1832,10 @@ void QtWidgetMicrograph::move_particle(int _idx)
             }
         if (idxAuto==-1) return;
 
-        __rejected_particles.push_back(__auto_candidates[idxAuto]);
+        double diffx=__auto_candidates[idxAuto].x - __m->coord(_idx).X;
+        double diffy=__auto_candidates[idxAuto].y - __m->coord(_idx).Y;
+        if (sqrt(diffx*diffx+diffy*diffy)>2*__particle_radius*0.1)
+             __rejected_particles.push_back(__auto_candidates[idxAuto]);
         __auto_candidates[idxAuto].x = __m->coord(_idx).X;
         __auto_candidates[idxAuto].y = __m->coord(_idx).Y;
     }
