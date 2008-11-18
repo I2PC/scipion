@@ -354,7 +354,7 @@ void QtFileMenu::slotQuit()
         { // Escape == button 2
         case 0: // Save clicked, Alt-S or Enter pressed.
             slotSaveCoords();
-            exit(1);
+            exit(0);
             break;
         case 1: // Don't Save clicked or Alt-D pressed
             exit(1);
