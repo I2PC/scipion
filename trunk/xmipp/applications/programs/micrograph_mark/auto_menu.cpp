@@ -100,5 +100,6 @@ void QtAutoMenu::slotLearnSaveQuit()
 {
     ((QtWidgetMicrograph *)parentWidget())->learnParticles();
     ((QtWidgetMicrograph *)parentWidget())->saveModels(false);
+    ((QtWidgetMicrograph *)parentWidget())->file_menu()->slotQuit();
     exit(0);
 }
