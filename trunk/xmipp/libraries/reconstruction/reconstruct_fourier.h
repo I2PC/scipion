@@ -65,7 +65,6 @@ struct ImageThreadParams
         int read;
         Matrix2D<double> * localAInv;
         int imageIndex;
-        int lastIndex;
 };
 
 /** Fourier reconstruction parameters. */
@@ -205,7 +204,7 @@ public:
     void finishComputations();
     
     /// Process one image
-    void processImages( int firstImageIndex=-1, int lastImageIndex=-1 ); //const FileName &fn_img);
+    void processImages( int firstImageIndex, int lastImageIndex ); //const FileName &fn_img);
 
     /// Correct weight
     void correctWeight();

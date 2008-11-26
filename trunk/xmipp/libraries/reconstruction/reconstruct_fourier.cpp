@@ -245,7 +245,6 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
     else
         minSeparation = parent->thrWidth;
 
-    int stepsCounter = threadParams->myThreadID;
     Matrix2D<double>  localA(3, 3), localAinv;
     Matrix2D< std::complex<double> > localPaddedFourier;
     Matrix2D<double> localPaddedImg;
@@ -263,87 +262,74 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
             
                 if( threadParams->imageIndex >= 0 )
                 {
-                    if( threadParams->imageIndex < threadParams->lastIndex )
-                        stepsCounter = threadParams->imageIndex;
+                    FileName fn_img;
+
+                    fn_img = parent->SF.get_file_number( threadParams->imageIndex );
+
+                    // Read input image
+                    double rot, tilt, psi, xoff,yoff,flip,weight;
+
+                    Projection proj;
+
+                    if (parent->fn_doc == "")
+                    {           
+                        proj.read(fn_img, true); //true means apply shifts 
+                        rot  = proj.rot();
+                        tilt = proj.tilt();
+                        psi  = proj.psi();
+                        weight = proj.weight();
+                    }
                     else
-                        break;
-                }
-                
-                FileName fn_img;
-               
-                if( stepsCounter < parent->SF.ImgNo())
-                { 
-                    fn_img = parent->SF.get_file_number( stepsCounter );
-                    stepsCounter += parent->numThreads;
-                }
-                else
-                {
-                    break;
-                }
-                               
-                // Read input image
-                double rot, tilt, psi, xoff,yoff,flip,weight;
-                
-                Projection proj;
-                
-                if (parent->fn_doc == "")
-                {           
-                    proj.read(fn_img, true); //true means apply shifts 
-                    rot  = proj.rot();
-                    tilt = proj.tilt();
-                    psi  = proj.psi();
-                    weight = proj.weight();
-                }
-                else
-                {
-                    proj.read(fn_img, false); // do not apply shifts since they are not in
-                                              // the header
-                    
-					pthread_mutex_lock( &mutexDocFile );
-					parent->get_angles_for_image(fn_img, rot, tilt, psi, xoff, yoff, flip, weight);
-					pthread_mutex_unlock( &mutexDocFile );
-					
-                    proj.set_angles(rot, tilt, psi); 
-                    proj.set_Xoff(xoff);
-                    proj.set_Yoff(yoff);
-                    proj.set_flip(flip);
-                    proj.set_weight(weight);
-                    Matrix2D<double> localA;
-                    localA = proj.get_transformation_matrix(true);
-                    if (!localA.isIdentity())
-                        proj().selfApplyGeometryBSpline(localA, 3, IS_INV, WRAP);
-                }
+                    {
+                        proj.read(fn_img, false); // do not apply shifts since they are not in
+                                                  // the header
+
+                        pthread_mutex_lock( &mutexDocFile );
+			parent->get_angles_for_image(fn_img, rot, tilt, psi, xoff, yoff, flip, weight);
+			pthread_mutex_unlock( &mutexDocFile );
+
+                        proj.set_angles(rot, tilt, psi); 
+                        proj.set_Xoff(xoff);
+                        proj.set_Yoff(yoff);
+                        proj.set_flip(flip);
+                        proj.set_weight(weight);
+                        Matrix2D<double> localA;
+                        localA = proj.get_transformation_matrix(true);
+                        if (!localA.isIdentity())
+                            proj().selfApplyGeometryBSpline(localA, 3, IS_INV, WRAP);
+                    }
          
-                if (!parent->do_weights) 
-                {
-                    weight=1.0;
+                    if (!parent->do_weights) 
+                    {
+                        weight=1.0;
+                    }
+                    else if (weight==0.0)
+                        break;
+
+                    // Copy the projection to the center of the padded image
+                    // and compute its Fourier transform
+                    proj().setXmippOrigin();
+                    localPaddedImg.resize(parent->imgSize*parent->padding_factor_proj,
+                                          parent->imgSize*parent->padding_factor_proj);
+                    localPaddedImg.setXmippOrigin();
+
+                    FOR_ALL_ELEMENTS_IN_MATRIX2D(proj())
+                        localPaddedImg(i,j)=weight*proj(i,j);
+                    CenterFFT(localPaddedImg,true);
+
+                    // Fourier transformer for the images
+                    localTransformerImg.setReal(localPaddedImg);
+                    localTransformerImg.FourierTransform();
+                    localTransformerImg.getFourierAlias(localPaddedFourier);
+
+                    // Compute the coordinate axes associated to this image
+                    Euler_angles2matrix(rot, tilt, psi, localA);
+                    localAinv=localA.transpose();
+
+                    threadParams->localAInv = &localAinv;             
+                    threadParams->localPaddedFourier = &localPaddedFourier;
+                    threadParams->read = 1;
                 }
-                else if (weight==0.0)
-                    break;
-                    
-                // Copy the projection to the center of the padded image
-                // and compute its Fourier transform
-                proj().setXmippOrigin();
-                localPaddedImg.resize(parent->imgSize*parent->padding_factor_proj,
-                                      parent->imgSize*parent->padding_factor_proj);
-                localPaddedImg.setXmippOrigin();
-
-                FOR_ALL_ELEMENTS_IN_MATRIX2D(proj())
-                    localPaddedImg(i,j)=weight*proj(i,j);
-                CenterFFT(localPaddedImg,true);
-
-                // Fourier transformer for the images
-                localTransformerImg.setReal(localPaddedImg);
-                localTransformerImg.FourierTransform();
-                localTransformerImg.getFourierAlias(localPaddedFourier);
-
-                // Compute the coordinate axes associated to this image
-                Euler_angles2matrix(rot, tilt, psi, localA);
-                localAinv=localA.transpose();
-                
-                threadParams->localAInv = &localAinv;             
-                threadParams->localPaddedFourier = &localPaddedFourier;
-                threadParams->read = 1;
                 break;
             }
             case EXIT_THREAD: 
@@ -602,11 +588,9 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
         
         for( int nt = 0 ; nt < numThreads ; nt ++ )
         {
-            th_args[nt].read = 0; 
-            if( firstImageIndex >= 0 )
+            if( imgIndex <= lastImageIndex )
             {
                 th_args[nt].imageIndex = imgIndex; 
-                th_args[nt].lastIndex = lastImageIndex;
                 imgIndex++;
             }
             else
@@ -765,7 +749,7 @@ void Prog_RecFourier_prm::run()
         pthread_create( (th_ids+nt) , NULL, processImageThread, (void *)(th_args+nt) );
     }
      
-    processImages();
+    processImages(0,SF.ImgNo()-1);
     finishComputations();
     
     threadOpCode = EXIT_THREAD;
