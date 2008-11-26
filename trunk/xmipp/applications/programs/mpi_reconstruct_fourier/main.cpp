@@ -444,7 +444,7 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 			int min_i, max_i;
 
 			min_i = jobNumber*mpi_job_size;
-			max_i = min_i + mpi_job_size;
+			max_i = min_i + mpi_job_size - 1;
 
 			processImages( min_i, max_i );
             	    }
