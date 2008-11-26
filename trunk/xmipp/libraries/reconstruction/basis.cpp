@@ -35,7 +35,6 @@ void Basis::set_default()
     D           = NULL;
     blobprint.clear();
     blobprint2.clear();
-    aux.resize(3);
 }
 
 // Read params -------------------------------------------------------------
