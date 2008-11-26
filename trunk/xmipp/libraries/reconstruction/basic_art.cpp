@@ -671,43 +671,57 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
                 if (R == -1)
                 {
                     Matrix1D<double> corner;
-                    if (Zoutput_volume_size == 0)
-                        corner = vectorR3((double)projXdim / 2, (double)projXdim / 2,
-                                           (double)projXdim / 2);
+                    if (basis.type == Basis::blobs)
+                    {
+                        if (Zoutput_volume_size == 0)
+                            corner = vectorR3((double)projXdim / 2, (double)projXdim / 2,
+                                               (double)projXdim / 2);
+                        else
+                            corner = vectorR3(
+                                         (double)Xoutput_volume_size / 2,
+                                         (double)Youtput_volume_size / 2,
+                                         (double)Zoutput_volume_size / 2);
+                    }
                     else
-                        corner = vectorR3(
-                                     (double)Xoutput_volume_size / 2,
-                                     (double)Youtput_volume_size / 2,
-                                     (double)Zoutput_volume_size / 2);
-                    /* If you substract half the basis radius, you are forstd::cing that the
+                    {
+                        if (Zoutput_volume_size == 0)
+                            corner = vectorR3(-(double)FIRST_XMIPP_INDEX(projXdim),
+                                -(double)FIRST_XMIPP_INDEX(projXdim),
+                                -(double)FIRST_XMIPP_INDEX(projXdim));
+                        else
+                            corner = vectorR3(-(double)FIRST_XMIPP_INDEX(Xoutput_volume_size),
+                                -(double)FIRST_XMIPP_INDEX(Youtput_volume_size),
+                                -(double)FIRST_XMIPP_INDEX(Zoutput_volume_size));
+                    }
+                    /* If you substract half the basis radius, you are forcing that the
                        last basis touches slightly the volume border. By not substracting
                        it there is a basis center as near the border as possible. */
                     corner = corner + proj_ext/*CO: -blob.radius/2*/;
                     switch (grid_type)
                     {
                     case (CC):
-                                    grid_basis = Create_CC_grid(grid_relative_size, -corner, corner);
+                        grid_basis = Create_CC_grid(grid_relative_size, -corner, corner);
                         break;
                     case (FCC):
-                                    grid_basis = Create_FCC_grid(grid_relative_size, -corner, corner);
+                        grid_basis = Create_FCC_grid(grid_relative_size, -corner, corner);
                         break;
                     case (BCC):
-                                    grid_basis = Create_BCC_grid(grid_relative_size, -corner, corner);
+                        grid_basis = Create_BCC_grid(grid_relative_size, -corner, corner);
                         break;
                     }
                 }
                 else
-        {
+                {
                     switch (grid_type)
                     {
                     case (CC):
-                                    grid_basis = Create_CC_grid(grid_relative_size, R);
+                        grid_basis = Create_CC_grid(grid_relative_size, R);
                         break;
                     case (FCC):
-                                    grid_basis = Create_FCC_grid(grid_relative_size, R);
+                        grid_basis = Create_FCC_grid(grid_relative_size, R);
                         break;
                     case (BCC):
-                                    grid_basis = Create_BCC_grid(grid_relative_size, R);
+                        grid_basis = Create_BCC_grid(grid_relative_size, R);
                         break;
                     }
                 }
