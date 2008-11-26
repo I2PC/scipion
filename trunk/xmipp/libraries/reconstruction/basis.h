@@ -173,6 +173,7 @@ public:
         const double pStep = 1.0 / PIXEL_SUBSAMPLING;
         const double pAvg = 1.0 / (PIXEL_SUBSAMPLING * PIXEL_SUBSAMPLING);
         double module_r, px, py;
+        Matrix1D<double> aux(3);
         int i, j;
         switch (type)
         {
@@ -185,12 +186,14 @@ public:
                 double retval = 0;
                 ZZ(aux) = ZZ(r);
                 for (i = 0, px = p0; i < PIXEL_SUBSAMPLING; i++, px += pStep)
+                {
+                    XX(aux) = XX(r) + px;
                     for (j = 0, py = p0; j < PIXEL_SUBSAMPLING; j++, py += pStep)
                     {
-                        XX(aux) = XX(r) + px;
                         YY(aux) = YY(r) + py;
                         retval += intersection_unit_cube(u, aux);
                     }
+                }
                 return retval*pAvg;
                 break;
             }
@@ -209,9 +212,6 @@ public:
 
     /// Sum of the basis on the grid points
     double          sum_on_grid;
-
-    /// Auxiliary vector to compute projections
-    Matrix1D<double> aux;
 };
 //@}
 #endif
