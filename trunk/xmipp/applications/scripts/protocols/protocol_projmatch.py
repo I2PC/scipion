@@ -77,7 +77,14 @@ DoCtfCorrection=False
 CTFDatName=''
 
 # {file} Docfile with defocus values where to split into groups
+""" Leave this field empty if you want automatic CTF grouping
+"""
 SplitDefocusDocFile='Ctfs/CTF_groups_split.doc'
+
+#{expert} user defined flag for the ctf_group program. 
+"""For example -error  number -resol number  
+"""
+CTFExtraCommands=''
 
 # {expert} Padding factor
 """ Application of CTFs to reference projections and of Wiener filter to class averages will be done using padded images.
@@ -374,7 +381,7 @@ ARTLambda='0.2'
 ARTReconstructionExtraCommand='-k 0.5 -n 10 '
 
 #max frequency used by reconstruct fourier
-"""fOR EACH ITERATION It will be set to resolution computed in the 
+"""For each iteration it will be set to resolution computed in the 
 resolution section
 """
 FourierMaxFrequencyOfInterest='0.25'
@@ -551,6 +558,7 @@ class projection_matching_class:
                 _CTFDatName,
                 _WienerConstant,
                 _SplitDefocusDocFile,
+                _CTFExtraCommands,
                 _PaddingFactor,
                 _DataArePhaseFlipped,
                 _ReferenceIsCtfCorrected,
@@ -600,7 +608,10 @@ class projection_matching_class:
        self._ResolSam=_ResolSam
        self._DoCtfCorrection=_DoCtfCorrection
        self._WienerConstant=_WienerConstant
-       self._SplitDefocusDocFile=os.path.abspath(_SplitDefocusDocFile)
+       self._SplitDefocusDocFile =''  
+       if(len(_SplitDefocusDocFile) > 1):
+            self._SplitDefocusDocFile=os.path.abspath(_SplitDefocusDocFile)
+       self._CTFExtraCommands=_CTFExtraCommands
        self._PaddingFactor=PaddingFactor
        self._DataArePhaseFlipped=_DataArePhaseFlipped
        self._DoParallel=_DoParallel
@@ -705,7 +716,8 @@ class projection_matching_class:
                                                      self._PaddingFactor,
                                                      self._DataArePhaseFlipped,
                                                      self._WienerConstant,
-                                                     self._SplitDefocusDocFile)
+                                                     self._SplitDefocusDocFile,
+                                                     self._CTFExtraCommands)
        else:
           self._NumberOfCtfGroups=1
 
@@ -964,7 +976,8 @@ def execute_ctf_groups (_mylog,
                         _PaddingFactor,
                         _DataArePhaseFlipped,
                         _WienerConstant,
-                        _SplitDefocusDocFile):
+                        _SplitDefocusDocFile,
+                        _CTFExtraCommands):
 
    import os,glob
    import utils_xmipp
@@ -979,10 +992,12 @@ def execute_ctf_groups (_mylog,
            ' -ctfdat ' + _CtfDatFile + \
            ' -o ' + CtfGroupDirectory + '/' + CtfGroupRootName + \
            ' -wiener -wc ' + str(_WienerConstant) + \
-           ' -split ' + _SplitDefocusDocFile + \
            ' -pad ' + str(_PaddingFactor)
+   if(len(_SplitDefocusDocFile) > 1):
+      command +=  ' -split ' + _SplitDefocusDocFile
    if (_DataArePhaseFlipped):
-      command += ' -phase_flipped'
+      command += ' -phase_flipped '
+   command += _CTFExtraCommands   
 
    print '* ',command
    _mylog.info(command)
@@ -1378,7 +1393,7 @@ def execute_reconstruction(_mylog,
                  ' -sym '  + _SymmetryGroup + \
 		 ' -thr '  + _ThreadsNumber + \
                  ' -weight ' + \
-                 '-max_resolution ' + \
+                 ' -max_resolution ' + \
 	         str(_FourierMaxFrequencyOfInterest) + ' '	 
       parameters = parameters + _FourierReconstructionExtraCommand 
    else:
@@ -1697,6 +1712,7 @@ if __name__ == '__main__':
                 CTFDatName,
                 WienerConstant,
                 SplitDefocusDocFile,
+                CTFExtraCommands,
                 PaddingFactor,
                 DataArePhaseFlipped,
                 ReferenceIsCtfCorrected,
