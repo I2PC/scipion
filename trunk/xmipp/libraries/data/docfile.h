@@ -111,7 +111,7 @@ public:
      * line[3] = 3; // line[3] must exist!!
      * @endcode
      *
-     * This function is ignored in the python wrapper. Use "set" instead.
+     * This function is ignored in the python per. Use "set" instead.
      */
     double& operator[](int i);
 

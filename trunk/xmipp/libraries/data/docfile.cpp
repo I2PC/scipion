@@ -471,23 +471,29 @@ void DocFile::jump(int count)
 
 int DocFile::search_comment(std::string comment)
 {
-    go_beginning();
+    int wrap=0;
     comment = " ; " + comment;
 
-    while (!eof())
+    do
     {
-        if ((*current_line).Is_comment())
+        while (!eof())
         {
-            if (strcmp(comment.c_str(), ((*current_line).get_text()).c_str())
-                == 0)
+            if ((*current_line).Is_comment())
             {
-                adjust_to_data_line();
-                return 1;
+                if (strcmp(comment.c_str(), ((*current_line).get_text()).c_str())
+                    == 0)
+                {
+                    adjust_to_data_line();
+                    return 1;
+                }
             }
+    
+            next();
         }
 
-        next();
-    }
+        go_beginning();
+        wrap++;
+    }while( wrap < 2 );
 
     return 0;
 }
