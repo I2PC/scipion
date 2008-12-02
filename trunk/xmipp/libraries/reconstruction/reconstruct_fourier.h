@@ -65,6 +65,7 @@ struct ImageThreadParams
         int read;
         Matrix2D<double> * localAInv;
         int imageIndex;
+        DocFile * docFile;
 };
 
 /** Fourier reconstruction parameters. */
@@ -196,7 +197,7 @@ public:
 
     /// Get angles (either from reading the header or from a docfile)
     void get_angles_for_image(const FileName &fn, double &rot, double &tilt,
-        double &psi, double &xoff, double &yoff, double &flip, double &weight);
+        double &psi, double &xoff, double &yoff, double &flip, double &weight, DocFile * docFile);
 
     /// Main Loop 
     void run();

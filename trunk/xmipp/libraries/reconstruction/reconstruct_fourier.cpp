@@ -27,7 +27,7 @@
 #include "reconstruct_fourier.h"
 #include <data/args.h>
 #include <data/fft.h>
-
+#include <sys/time.h>
 // Read arguments ==========================================================
 void Prog_RecFourier_prm::read(int argc, char **argv)
 {
@@ -116,7 +116,10 @@ void Prog_RecFourier_prm::produce_Side_info()
     //maxResolution=sampling_rate/maxResolution;
     maxResolution2=maxResolution*maxResolution;
 	
+    // Read the input images
+    SF.read(fn_sel);
     // Read docfile and get column numbers
+
     if (fn_doc != "")
     {
         DF.read(fn_doc);
@@ -129,10 +132,11 @@ void Prog_RecFourier_prm::produce_Side_info()
         col_weight=-1;
         if (do_weights)
             col_weight = DF.getColNumberFromHeader("Weight") - 1;
+        if (SF.ImgNo() != DF.get_last_key())
+            REPORT_ERROR(1, "docfile and corresponding selfile have unequal (active) entries");
     }
 	
-    // Read the input images
-    SF.read(fn_sel);
+
     SF.go_beginning();
 	
     // Ask for memory for the output volume and its Fourier transform
@@ -208,25 +212,25 @@ void Prog_RecFourier_prm::produce_Side_info()
 }
 
 void Prog_RecFourier_prm::get_angles_for_image(const FileName &fn, double &rot,
-											   double &tilt, double &psi, double &xoff, double &yoff, double &flip,
-											   double &weight)
+	double &tilt, double &psi, double &xoff, double &yoff, double &flip,
+	double &weight, DocFile * docFile)
 {
 	
-	if (DF.search_comment(fn))
+	if ((*docFile).search_comment(fn))
 	{
-		rot    = DF(col_rot);
-		tilt   = DF(col_tilt);
-		psi    = DF(col_psi);
-		xoff   = DF(col_xoff);
-		yoff   = DF(col_yoff);
+		rot    = (*docFile)(col_rot);
+		tilt   = (*docFile)(col_tilt);
+		psi    = (*docFile)(col_psi);
+		xoff   = (*docFile)(col_xoff);
+		yoff   = (*docFile)(col_yoff);
 		if (col_flip < 0)
 			flip   = 0.;
 		else
-			flip   = DF(col_flip);
+			flip   = (*docFile)(col_flip);
 		if (col_weight < 0)
 			weight = 0.;
 		else
-			weight = DF(col_weight);
+			weight = (*docFile)(col_weight);
 	}
 	else
 	{
@@ -249,7 +253,9 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
     Matrix2D< std::complex<double> > localPaddedFourier;
     Matrix2D<double> localPaddedImg;
     XmippFftw localTransformerImg;
-	
+
+    DocFile * docFile = threadParams->docFile;
+
     do
     {
         barrier_wait( barrier );
@@ -265,8 +271,8 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                     FileName fn_img;
 					
                     fn_img = parent->SF.get_file_number( threadParams->imageIndex );
-					
-                    // Read input image
+		
+	            // Read input image
                     double rot, tilt, psi, xoff,yoff,flip,weight;
 					
                     Projection proj;
@@ -283,11 +289,8 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                     {
                         proj.read(fn_img, false); // do not apply shifts since they are not in
 						// the header
-						
-                        pthread_mutex_lock( &mutexDocFile );
-						parent->get_angles_for_image(fn_img, rot, tilt, psi, xoff, yoff, flip, weight);
-						pthread_mutex_unlock( &mutexDocFile );
-						
+			parent->get_angles_for_image(fn_img, rot, tilt, psi, xoff, yoff, flip, weight, docFile);
+					
                         proj.set_angles(rot, tilt, psi); 
                         proj.set_Xoff(xoff);
                         proj.set_Yoff(yoff);
@@ -359,8 +362,8 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
             {
                 Matrix2D< std::complex<double> > *paddedFourier = threadParams->paddedFourier;
                 int * statusArray = parent->statusArray;
-                //int minSeparation = (int)ceil(parent->blob.radius);                
-				int minAssignedRow;
+                        
+		int minAssignedRow;
                 int maxAssignedRow;
                 bool breakCase;
                 bool assigned;
@@ -372,65 +375,64 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                     assigned = false;
                     
                     do
-					{
-						pthread_mutex_lock( &(parent->workLoadMutex) );
-						
-						if( parent->rowsProcessed == paddedFourier->ydim )
-						{
-							pthread_mutex_unlock( &(parent->workLoadMutex) );
-							breakCase = true;
-							break;
-						}
-						
-						for(int w = 0 ; w < paddedFourier->ydim ; w++ )
-						{
-							if( statusArray[w]==0 )
-							{
-								assigned = true;
-								minAssignedRow = w;
-								maxAssignedRow = w+minSeparation-1;
-								
-								if( maxAssignedRow > (paddedFourier->ydim-1) )
-									maxAssignedRow = paddedFourier->ydim-1;
-								
-								for( int in = (minAssignedRow - minSeparation) ; in < minAssignedRow ; in ++ )
-								{                                            
-									if( ( in >= 0 ) && ( in < paddedFourier->ydim ))
-									{
-										if( statusArray[in] != -1 )
-											statusArray[in]++;
-									}
-								}                                    
-								
-								for( int in = minAssignedRow ; in <= maxAssignedRow ; in ++ )
-								{
-									if( ( in >= 0 ) && ( in < paddedFourier->ydim ))
-									{
-										if( statusArray[in] != -1 )
-										{
-											statusArray[in] = -1;
-											parent->rowsProcessed++;   
-										}
-									}
-								}
-								
-								
-								for( int in = maxAssignedRow+1 ; in <= (maxAssignedRow+minSeparation) ; in ++ )
-								{
-									if( ( in >= 0 ) && ( in < paddedFourier->ydim ))
-									{
-										if( statusArray[in] != -1 )
-											statusArray[in]++;
-									}
-								}
-								
-								break;
-							}
-						}
-						
-						pthread_mutex_unlock( &(parent->workLoadMutex) );
-					}while( !assigned );
-					
+		    {
+			    pthread_mutex_lock( &(parent->workLoadMutex) );
+
+			    if( parent->rowsProcessed == paddedFourier->ydim )
+			    {
+				    pthread_mutex_unlock( &(parent->workLoadMutex) );
+				    breakCase = true;
+				    break;
+			    }
+
+			    for(int w = 0 ; w < paddedFourier->ydim ; w++ )
+			    {
+				    if( statusArray[w]==0 )
+				    {
+					    assigned = true;
+					    minAssignedRow = w;
+					    maxAssignedRow = w+minSeparation-1;
+
+					    if( maxAssignedRow > (paddedFourier->ydim-1) )
+						    maxAssignedRow = paddedFourier->ydim-1;
+
+					    for( int in = (minAssignedRow - minSeparation) ; in < minAssignedRow ; in ++ )
+					    {                                            
+						    if( ( in >= 0 ) && ( in < paddedFourier->ydim ))
+						    {
+							    if( statusArray[in] > -1 )
+								    statusArray[in]++;
+						    }
+					    }                                    
+
+					    for( int in = minAssignedRow ; in <= maxAssignedRow ; in ++ )
+					    {
+						    if( ( in >= 0 ) && ( in < paddedFourier->ydim ))
+						    {
+							    if( statusArray[in] == 0 )
+							    {
+								    statusArray[in] = -1;
+								    parent->rowsProcessed++;   
+							    }
+						    }
+					    }
+
+					    for( int in = maxAssignedRow+1 ; in <= (maxAssignedRow+minSeparation) ; in ++ )
+					    {
+						    if( ( in >= 0 ) && ( in < paddedFourier->ydim ))
+						    {
+							    if( statusArray[in] > -1 )
+								    statusArray[in]++;
+						    }
+					    }
+
+					    break;
+				    }
+			    }
+
+			    pthread_mutex_unlock( &(parent->workLoadMutex) );
+		    }while( !assigned );
+
                     if( breakCase == true )
                     {
                         break;
@@ -445,9 +447,10 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                     // Get i value for the thread
                     
                     for (int i = minAssignedRow; i <= maxAssignedRow ; i ++ )
-                    {                      
+                    {      
+		    	if( statusArray[i] == -1 )                
                         for (int j=STARTINGX(*paddedFourier); j<=FINISHINGX(*paddedFourier); j++)
-						{
+			   {
                             // Compute the frequency of this coefficient in the
                             // universal coordinate system
                             FFT_IDX2DIGFREQ(j,XSIZE(parent->paddedImg),XX(freq));
@@ -543,24 +546,24 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                     pthread_mutex_lock( &(parent->workLoadMutex) );
                     
                     for( int w = (minAssignedRow - minSeparation) ; w < minAssignedRow ; w ++ )
-					{           
+		    {           
                         if( ( w >= 0 ) && ( w < paddedFourier->ydim ))
-						{
-							if( statusArray[w] != -1 )
-							{
-								statusArray[w]--;
-                            }
-                        }
+			{
+				if( statusArray[w] > 0 )
+				{
+					statusArray[w]--;
+                        	}
+                    	}
                     }    
 					
                     for( int w = maxAssignedRow+1 ; w <= (maxAssignedRow+minSeparation) ; w ++ )
-					{
+		    {
                         if( ( w >= 0 ) && ( w < paddedFourier->ydim ))
-						{
-							if( statusArray[w] != -1 )
-							{
-                            	statusArray[w]--;
-							}
+			{
+				if( statusArray[w] > 0 )
+				{
+                 	           	statusArray[w]--;
+				}
                         }
                     }
 					
@@ -588,7 +591,9 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
     Matrix2D<double> *Ainv;
     int imgno = 0;
     int imgIndex = firstImageIndex;
-    
+ struct timeval start_time, end_time;
+long int total_usecs;
+double total_time; 
     do
     {
         threadOpCode = PRELOAD_IMAGE;
@@ -608,14 +613,22 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
 		
         // Awaking sleeping threads
         barrier_wait( &barrier );
+//gettimeofday(&start_time,NULL);
         // Threads are working now, wait for them to finish
         // processing current projection
         barrier_wait( &barrier );
-		
-        threadOpCode = PROCESS_IMAGE;
+//gettimeofday(&end_time,NULL );
+
+//total_usecs = (end_time.tv_sec - start_time.tv_sec)*1000000 +(end_time.tv_usec-start_time.tv_usec);
+//total_time=(double)total_usecs/(double)1000000;
+
+//std::cerr << "PRELOAD TIME: " << total_time << " secs." << std::endl;
+       threadOpCode = PROCESS_IMAGE;
 		
         processed = false;
-		
+	
+//gettimeofday(&start_time,NULL);
+ 	
         for( int nt = 0 ; nt < numThreads ; nt ++ )
         {
             if( th_args[nt].read > 0 )
@@ -660,7 +673,8 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
                     {
                         if( i >= conserveRows && i < (paddedFourier->ydim-conserveRows))
                         {
-                            statusArray[i] = -1;
+			    // -2 indicates "discarded"
+                            statusArray[i] = -2;
                             rowsProcessed++;
                         }
                         else
@@ -674,9 +688,17 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
                     // Threads are working now, wait for them to finish
                     // processing current projection
                     barrier_wait( &barrier );
-				}
+		}
             }
         }
+
+//gettimeofday(&end_time,NULL );
+
+//total_usecs = (end_time.tv_sec - start_time.tv_sec)*1000000 +(end_time.tv_usec-start_time.tv_usec);
+//total_time=(double)total_usecs/(double)1000000;
+
+//std::cerr << "RECONS TIME: " << total_time << " secs." << std::endl;
+
     }while( processed );
 }
 #undef DEBUG
@@ -756,6 +778,7 @@ void Prog_RecFourier_prm::run()
 		// Passing parameters to each thread
 		th_args[nt].parent = this;
 		th_args[nt].myThreadID = nt;
+        th_args[nt].docFile = new DocFile(DF);
         pthread_create( (th_ids+nt) , NULL, processImageThread, (void *)(th_args+nt) );
     }
 	
