@@ -230,8 +230,7 @@ void VirusVertex::processAngles()
                 Matrix2D<double> euler(3, 3), temp;
                 Euler_angles2matrix(rot, tilt, psi, euler);
                 temp = euler * 
-                       R_repository[symmetryMatrixVertex(i,0)]
-                       *euler.inv();
+                       R_repository[symmetryMatrixVertex(i,0)];
                 //temp = euler;
                 Euler_matrix2angles(temp, rotp, tiltp, psip);
 
@@ -356,14 +355,15 @@ void VirusVertex::assignSymmetryMatricesToVertex()
         k=0;
         for (int j = 0; j < R_repository.size(); j++)
         {
-            if( (vertices_vectors[i]-vectorR3(0., 0., 1.).transpose() * R_repository[j]).module() < 0.00001)
+            if( (vertices_vectors[i]-vectorR3(0., 0., 1.).transpose() * R_repository[j]).module() < 0.0001)
             {
                 symmetryMatrixVertex(i,k)=j;
                 k++;
             }
         }
     }
-    //std::cerr<< symmetryMatrixVertex << std::endl;
+    std::cerr<< symmetryMatrixVertex << std::endl;
+    std::cerr<< "k" << k << std::endl;
 }
 /* Main program ------------------------------------------------------------ */
 void VirusVertex::run()
