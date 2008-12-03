@@ -348,8 +348,8 @@ void VirusVertex::assignSymmetryMatricesToVertex()
     #endif
 
     Matrix1D<double> r(3);
-    int k;
-
+    int k,sixty;
+    sixty=0;
     for (int i = 0; i < 12; i++)
     {
         k=0;
@@ -359,6 +359,7 @@ void VirusVertex::assignSymmetryMatricesToVertex()
             {
                 symmetryMatrixVertex(i,k)=j;
                 k++;
+                sixty++;
             }
         }
     }
