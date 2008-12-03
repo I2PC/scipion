@@ -233,18 +233,16 @@ void VirusVertex::processAngles()
                        R_repository[symmetryMatrixVertex(i,0)];
                 //temp = euler;
                 Euler_matrix2angles(temp, rotp, tiltp, psip);
-                /*
                 for(int ii=0;ii< 12;ii++)
                     for(int jj=0;jj< 5;jj++)
                     {
-                        Euler_matrix2angles(R_repository[symmetryMatrixVertex(ii,jj)], 
+                        Euler_matrix2angles(R_repository[symmetryMatrixVertex(ii,jj)].inv(), 
                                     rotp, tiltp, psip);
                         std::cerr << rotp  << " " 
                                   << tiltp << " " 
                                   << psip  << std::endl;
 
                     }
-                */
                 proj_aux.set_rot(rotp);
                 proj_aux.set_tilt(tiltp);
                 proj_aux.set_psi(psip);
