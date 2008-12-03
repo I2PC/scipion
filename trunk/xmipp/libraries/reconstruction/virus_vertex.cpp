@@ -229,8 +229,7 @@ void VirusVertex::processAngles()
                 irandom=rnd_unif(0, 4);
                 Matrix2D<double> euler(3, 3), temp;
                 Euler_angles2matrix(rot, tilt, psi, euler);
-                temp = R_repository[symmetryMatrixVertex(i,1)].inv() * 
-                       euler * 
+                temp = euler * 
                        R_repository[symmetryMatrixVertex(i,1)];
                 //temp = euler;
                 Euler_matrix2angles(temp, rotp, tiltp, psip);
