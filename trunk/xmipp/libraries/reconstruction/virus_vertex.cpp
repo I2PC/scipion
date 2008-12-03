@@ -145,11 +145,11 @@ void VirusVertex::processAngles()
     SelFile SFout;
     DocFile DFout;
     DFout.append_comment("Headerinfo columns: rot (1) , tilt (2),\
-                          psi (3), Xoff (4), Yoff (5), Weight (6), Flip (7)");
+ psi (3), Xoff (4), Yoff (5), Weight (6), Flip (7)");
     Matrix1D<double> docline;
     docline.initZeros(7);
 
-SFout.clear();
+    SFout.clear();
     while (!SF.eof())
     {
         FileName fn_img = SF.NextImg();
@@ -229,11 +229,8 @@ SFout.clear();
                 irandom=rnd_unif(0, 4);
                 Matrix2D<double> euler(3, 3), temp;
                 Euler_angles2matrix(rot, tilt, psi, euler);
-                temp = R_repository[symmetryMatrixVertex(i,irandom)].transpose() * 
-                       euler //* 
-                       //R_repository[symmetryMatrixVertex(i,irandom)]
-                        ;
-                std::cerr << i << " " << irandom<< " " << temp << std::endl;
+                //temp = euler * R_repository[symmetryMatrixVertex(i,1)];
+                temp = euler;
                 Euler_matrix2angles(temp, rotp, tiltp, psip);
 
                 proj_aux.set_rot(rotp);
@@ -298,7 +295,57 @@ void VirusVertex::assignSymmetryMatricesToVertex()
         SL.get_matrices(isym, L, R);
         R.resize(3, 3);
         R_repository.push_back(R);
+        double rot,tilt,psi;
+        Euler_matrix2angles(R, rot, tilt, psi);
+        //std::cerr << R << std::endl;
     }
+    //#define CREATEICOSAHEDRALPHANTOM
+    #ifdef CREATEICOSAHEDRALPHANTOM
+    std::ofstream filestr;
+    double alpha, beta, gamma;
+    filestr.open ("ico.feat");
+    filestr    
+     << "# Phantom description file, (generated with phantom help)\n"
+     << "# General Volume Parameters:\n"
+     << "#      Xdim      Ydim      Zdim   Background_Density Scale\n"
+     << "      2    2    2    0  128\n" 
+     << "# Feature Parameters: \n";
+
+    for (int i = 0; i < 12; i++)
+    {
+        Euler_direction2angles(vertices_vectors[i], alpha, beta, gamma);
+        filestr    
+        << "cyl + 1 "
+        << XX(vertices_vectors[i])*0.8 << " "
+        << YY(vertices_vectors[i])*0.8 << " "
+        << ZZ(vertices_vectors[i])*0.8 << " "
+        << " .1 .1 .2 "
+        << alpha << " "
+        << beta  << " "
+        << gamma << " "
+        << std::endl
+        ;
+        // cyl  <+/=> <den>    <x0>     <y0>     <z0>    <xradius> <yradius> <height>               <rot> <tilt> <psi> 
+        // cyl + 1 15   0  0  5  5 15    0 90  0    ; Cylinder  in X
+    }
+    Matrix1D<double>  myvector(3);
+    for (int j = 0; j < R_repository.size(); j++)
+    {
+        myvector = vectorR3(0., 0.15, 0.9).transpose() * R_repository[j];
+        filestr    
+        << "sph + 1 "
+        << XX(myvector)*0.9 << " "
+        << YY(myvector)*0.9 << " "
+        << ZZ(myvector)*0.9 << " "
+        << " .05 "
+        << std::endl;
+    }
+
+
+    filestr.close();
+    
+    #endif
+
     Matrix1D<double> r(3);
     int k;
 
