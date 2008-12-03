@@ -233,7 +233,16 @@ void VirusVertex::processAngles()
                        R_repository[symmetryMatrixVertex(i,0)];
                 //temp = euler;
                 Euler_matrix2angles(temp, rotp, tiltp, psip);
+                for(int ii=0;ii< 12;ii++)
+                    for(int jj=0;jj< 5;jj++)
+                    {
+                        Euler_matrix2angles(R_repository[symmetryMatrixVertex(i,0)], 
+                                    rotp, tiltp, psip);
+                        std::cerr << rotp  << " " 
+                                  << tiltp << " " 
+                                  << psip  << std::endl;
 
+                    }
                 proj_aux.set_rot(rotp);
                 proj_aux.set_tilt(tiltp);
                 proj_aux.set_psi(psip);
@@ -365,7 +374,7 @@ void VirusVertex::assignSymmetryMatricesToVertex()
     }
     //std::cerr<< symmetryMatrixVertex << std::endl;
     //std::cerr<< "k, syxty :" << k << " " << sixty << std::endl;
-    if ((syxty>60)
+    if ((sixty>60)
     {
         REPORT_ERROR(1, (std::string)"assignSymmetryMatricesToVertex: more than 60 symmetries " );
     }
