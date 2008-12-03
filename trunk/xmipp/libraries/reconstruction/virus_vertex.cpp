@@ -364,7 +364,7 @@ void VirusVertex::assignSymmetryMatricesToVertex()
         }
     }
     std::cerr<< symmetryMatrixVertex << std::endl;
-    std::cerr<< "k" << k << std::endl;
+    std::cerr<< "k, syxty :" << k << " " << sixty << std::endl;
 }
 /* Main program ------------------------------------------------------------ */
 void VirusVertex::run()
