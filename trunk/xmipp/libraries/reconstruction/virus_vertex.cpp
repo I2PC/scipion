@@ -374,7 +374,7 @@ void VirusVertex::assignSymmetryMatricesToVertex()
     }
     //std::cerr<< symmetryMatrixVertex << std::endl;
     //std::cerr<< "k, syxty :" << k << " " << sixty << std::endl;
-    if ((sixty>60)
+    if (sixty>60)
     {
         REPORT_ERROR(1, (std::string)"assignSymmetryMatricesToVertex: more than 60 symmetries " );
     }
