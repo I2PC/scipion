@@ -113,7 +113,7 @@ void VirusVertex::loadIcosahedronVertex()
     {
         vertices_vectors[i]=A*vertices_vectors[i];
     }// for i
-    //#define CHIMERA
+    #define CHIMERA
     #ifdef CHIMERA
     std::ofstream filestr;
     filestr.open ("sym.bild");
@@ -230,33 +230,9 @@ void VirusVertex::processAngles()
                 Matrix2D<double> euler(3, 3), temp;
                 Euler_angles2matrix(rot, tilt, psi, euler);
                 temp = euler * 
-                       R_repository[symmetryMatrixVertex(i,0)];
+                       R_repository[symmetryMatrixVertex(i,0/*irandom*/)].inv();
                 //temp = euler;
                 Euler_matrix2angles(temp, rotp, tiltp, psip);
-                //for(int ii=0;ii< 12;ii++)
-                    {
-                        std::cerr << "i=" << i << std::endl;
-                        for (int jj=0;jj< 5;jj++)
-                        {
-                            Euler_matrix2angles(R_repository[symmetryMatrixVertex(i,jj)].inv(), 
-                                                rotp, tiltp, psip);
-                            //std::cerr << rotp  << " " 
-                            //          << tiltp << " " 
-                            //          << psip  << std::endl;
-                            std::cerr 
-                                               //<< euler 
-                                               << " " << rot  
-                                               << " " << tilt
-                                               << " " << psi 
-                                               << "        " << rotp  
-                                               << " " << tiltp
-                                               << " " << psip
-                                               << std::endl
-                                      //<< R_repository[symmetryMatrixVertex(i,jj)].inv()
-                                      //<< R_repository[symmetryMatrixVertex(i,jj)]
-                                      << std::endl;
-                        }
-                    }
                 proj_aux.set_rot(rotp);
                 proj_aux.set_tilt(tiltp);
                 proj_aux.set_psi(psip);
