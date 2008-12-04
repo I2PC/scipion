@@ -322,6 +322,9 @@ void VirusVertex::assignSymmetryMatricesToVertex()
         double rot,tilt,psi;
         Euler_matrix2angles(R, rot, tilt, psi);
         //std::cerr << R << std::endl;
+        /***/
+        std::cerr << "L=" << L ;
+        /***/
     }
     //#define CREATEICOSAHEDRALPHANTOM
     #ifdef CREATEICOSAHEDRALPHANTOM
