@@ -244,7 +244,7 @@ void VirusVertex::processAngles()
                             //          << tiltp << " " 
                             //          << psip  << std::endl;
                             std::cerr 
-                                               << euler 
+                                               //<< euler 
                                                << " " << rot  
                                                << " " << tilt
                                                << " " << psi 
@@ -252,8 +252,8 @@ void VirusVertex::processAngles()
                                                << " " << tiltp
                                                << " " << psip
                                                << std::endl
-                                      << R_repository[symmetryMatrixVertex(i,jj)].inv()
-                                      << R_repository[symmetryMatrixVertex(i,jj)]
+                                      //<< R_repository[symmetryMatrixVertex(i,jj)].inv()
+                                      //<< R_repository[symmetryMatrixVertex(i,jj)]
                                       << std::endl;
                         }
                     }
@@ -319,8 +319,8 @@ void VirusVertex::assignSymmetryMatricesToVertex()
         SL.get_matrices(isym, L, R);
         R.resize(3, 3);
         R_repository.push_back(R);
-        double rot,tilt,psi;
-        Euler_matrix2angles(R, rot, tilt, psi);
+        //double rot,tilt,psi;
+        //Euler_matrix2angles(R, rot, tilt, psi);
         //std::cerr << R << std::endl;
     }
     //#define CREATEICOSAHEDRALPHANTOM
