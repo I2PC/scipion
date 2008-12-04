@@ -148,11 +148,15 @@ void VirusVertex::processAngles()
  psi (3), Xoff (4), Yoff (5), Weight (6), Flip (7)");
     Matrix1D<double> docline;
     docline.initZeros(7);
+    int repaint = ceil((double)SF.ImgNo()/60);
 
     SFout.clear();
+    init_progress_bar(SF.ImgNo());
+    int imgno=0;
     while (!SF.eof())
     {
         FileName fn_img = SF.NextImg();
+        if (imgno++%repaint==0) progress_bar(imgno);
         if (fn_img=="") break;
         proj.read(fn_img, false); //true means apply shifts 
         if (fn_doc == "")
@@ -230,7 +234,7 @@ void VirusVertex::processAngles()
                 Matrix2D<double> euler(3, 3), temp;
                 Euler_angles2matrix(rot, tilt, psi, euler);
                 temp = euler * 
-                       R_repository[symmetryMatrixVertex(i,0/*irandom*/)].inv();
+                       R_repository[symmetryMatrixVertex(i,irandom)].inv();
                 //temp = euler;
                 Euler_matrix2angles(temp, rotp, tiltp, psip);
                 proj_aux.set_rot(rotp);
@@ -250,6 +254,7 @@ void VirusVertex::processAngles()
            }
         }
     }
+    progress_bar(SF.ImgNo());
     FileName fn_tmp1;
     fn_tmp1= fn_sel.without_extension()+"_out.sel";
     SFout.write(fn_tmp1);
