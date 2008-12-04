@@ -243,8 +243,11 @@ void VirusVertex::processAngles()
                             //std::cerr << rotp  << " " 
                             //          << tiltp << " " 
                             //          << psip  << std::endl;
-                            std::cerr << euler << R_repository[symmetryMatrixVertex(i,jj)]
-                            << std::endl;
+                            std::cerr << euler << " " << rot  
+                                               << " " << tilt
+                                               << " " << psi 
+                                      << R_repository[symmetryMatrixVertex(i,jj).inv()]
+                                      << std::endl;
                         }
                     }
                 proj_aux.set_rot(rotp);
