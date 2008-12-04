@@ -248,7 +248,7 @@ void VirusVertex::processAngles()
                                                << " " << rot  
                                                << " " << tilt
                                                << " " << psi 
-                                               << " " << rotp  
+                                               << "        " << rotp  
                                                << " " << tiltp
                                                << " " << psip
                                                //<< std::endl
