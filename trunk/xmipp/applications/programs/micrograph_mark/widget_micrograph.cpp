@@ -61,7 +61,6 @@
 
 //#define DEBUG_AUTO
 //#define DEBUG_MORE_AUTO
-//#define DEBUG_REFINE
 //#define DEBUG_PREPARE
 //#define DEBUG_CLASSIFY
 //#define DEBUG_BUILDVECTOR
@@ -569,7 +568,12 @@ void * automaticallySelectParticlesThread(void * args)
     QtWidgetMicrograph *widgetmicrograph=prm->widgetmicrograph;
     int idThread=prm->idThread;
 
-    //top,left corner of the piece
+    int thVotes=1;
+    if (widgetmicrograph->__selection_model.__training_particles.size()==2 ||
+        (widgetmicrograph->__selection_model.__training_particles.size()==3 &&
+         widgetmicrograph->__selection_model.__training_particles[2].size()==0))
+        thVotes=8;
+     //top,left corner of the piece
     int top = 0, left = 0, next_top = 0, next_left = 0;
     // If the piece available is small then include the scanned part
     // because we need bigger image for denoising but for scanning
@@ -639,12 +643,15 @@ void * automaticallySelectParticlesThread(void * args)
                     posx, posy, v))
                 {
                     double cost;
-	            if (widgetmicrograph->__selection_model.isParticle(v,cost))
+                    int votes=widgetmicrograph->__selection_model.isParticle(v,cost);
+	            if (votes>thVotes)
 	            {
                         #ifdef DEBUG_MORE_AUTO
 		            std::cout << "Particle Found: "
                                 << left + posx * widgetmicrograph->__reduction << ","
-                                << top  + posy *widgetmicrograph->__reduction << std::endl;
+                                << top  + posy *widgetmicrograph->__reduction
+                                << " votes=" << votes
+                                << std::endl;
                             std::cout << "Press any key to continue...\n";
                             char c;
                             std::cin >> c;
@@ -778,7 +785,8 @@ void QtWidgetMicrograph::automaticallySelectParticles()
                 if (__auto_candidates[i].status == 1)
                 {
                     double p;
-	            if (!__selection_model2.isParticle(__auto_candidates[i].vec,p))
+                    int votes=__selection_model2.isParticle(__auto_candidates[i].vec,p);
+	            if (votes<8)
                     {
                         __auto_candidates[i].status=0;
                         __auto_candidates[i].cost=-1;
@@ -807,7 +815,8 @@ void QtWidgetMicrograph::automaticallySelectParticles()
                 Matrix1D<double> trialFeatures;
                 features[1].getRow(i,trialFeatures);
                 double cost;
-                if (!__selection_model2.isParticle(trialFeatures,cost))
+                int votes=__selection_model2.isParticle(trialFeatures,cost);
+                if (votes<8)
                     toKeep.push_back(i);
             }
 
@@ -834,7 +843,8 @@ void QtWidgetMicrograph::automaticallySelectParticles()
                     if (__auto_candidates[i].status == 1)
                     {
                         double p;
-	                if (!__selection_model3.isParticle(__auto_candidates[i].vec,p))
+                        int votes=__selection_model3.isParticle(__auto_candidates[i].vec,p);
+	                if (votes<8)
                         {
                             __auto_candidates[i].status=0;
                             __auto_candidates[i].cost=-1;
@@ -1268,7 +1278,8 @@ void QtWidgetMicrograph::buildNegativeVectors(Classification_model &_model,
                     }
                     else
                     {
-                        if (__selection_model.isParticle(v,cost))
+                        int votes=__selection_model.isParticle(v,cost);
+                        if (votes>5)
                         {
                             _model.addParticleTraining(P, 2);
                             Nfalsepositives++;
@@ -1493,8 +1504,10 @@ bool QtWidgetMicrograph::build_vector(const Matrix2D<double> &piece,
         FOR_ALL_ELEMENTS_IN_MATRIX2D(A)
             A(i,j)=sector[i](j);
         A.write("PPPsector.txt");
-
         std::cout << _result.transpose() << std::endl;
+    #endif
+    
+    #if defined(DEBUG_BUILDVECTOR) || defined(DEBUG_IMG_BUILDVECTOR)
         std::cout << "Press any key\n";
         char c;
         std::cin >> c;
