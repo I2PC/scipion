@@ -289,11 +289,9 @@ void NaiveBayes::setCostMatrix(const Matrix2D<double> &cost)
 }
 
 /* Do inference ------------------------------------------------------------ */
-//#define DEBUG_MORE
-int NaiveBayes::doInference(const Matrix1D<double>	&newFeatures,
+int NaiveBayes::doInference(const Matrix1D<double> &newFeatures,
     double &cost)
 {
-    debugging = false;
     Matrix1D<double> classesProbs;
     classesProbs = __priorProbsLog10;
     for(int f=0; f<Nfeatures; f++)
@@ -307,22 +305,29 @@ int NaiveBayes::doInference(const Matrix1D<double>	&newFeatures,
             #ifdef DEBUG_FINE_CLASSIFICATION
                 if(debugging == true)
                 {
-                    std::cout << "\Probability for class " << k << " = "
+                    std::cout << "Feature " << f
+                              << " Probability for class " << k << " = "
                               << classesProbs(k) << " increase= " << p 
                               << std::endl;
                     char c;
-                    std::cin >> c;
-                    if (c=='q') debugging = false;
+// COSS                    std::cin >> c;
+//                    if (c=='q') debugging = false;
                 }
             #endif        	        
         }
+    classesProbs-=classesProbs.computeMax();
+//    std::cout << "classesProbs " << classesProbs.transpose() << std::endl;
+    
     for (int k=0; k<K; k++)
         classesProbs(k)=pow(10.0,classesProbs(k));
+    classesProbs/=classesProbs.sum();
+//    std::cout << "classesProbs norm " << classesProbs.transpose() << std::endl;
     
     Matrix1D<double> allCosts;
     allCosts=__cost*classesProbs;
     for (int k=0; k<K; k++)
         allCosts(k)=log10(allCosts(k));
+//    std::cout << "allCosts " << allCosts.transpose() << std::endl;
 
     int bestk=0;
     cost=allCosts(0);
@@ -339,11 +344,11 @@ int NaiveBayes::doInference(const Matrix1D<double>	&newFeatures,
             for (int k=0; k<K; k++)
                 classesProbs(k)=log10(classesProbs(k));
             std::cout << "Class probababilities=" << classesProbs.transpose()
-                      << "  costs=" << allCosts.transpose()
+                      << "\n  costs=" << allCosts.transpose()
                       << "  best class=" << bestk << std::endl;
             char c;
-            std::cin >> c;
-            if (c=='q') debugging = false;
+            // COSS std::cin >> c;
+            // if (c=='q') debugging = false;
         }
     #endif
     return bestk;
