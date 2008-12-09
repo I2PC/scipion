@@ -137,11 +137,9 @@ int main(int argc, char **argv)
         }
 
         // Check if a model has been provided ................................
+        mainWidget->untilted_widget()->setNumThreads(numThreads);
         if (fnAutomaticModel!="")
-        {
-            mainWidget->untilted_widget()->setNumThreads(numThreads);
             mainWidget->untilted_widget()->loadModels(fnAutomaticModel);
-        }
 
         // Run application ...................................................
         app.setMainWidget(mainWidget);
