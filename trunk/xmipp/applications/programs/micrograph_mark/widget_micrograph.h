@@ -158,27 +158,22 @@ public:
     void import_model(const Classification_model &_model);
 
     // Is a particle?
-    bool isParticle(const Matrix1D<double> &new_features, double &cost)
+    int isParticle(const Matrix1D<double> &new_features, double &cost)
     {
         
-        int k;
+        int retval;
         if (__bayesClassifier==0)
-            k=__bayesNet->doInference(new_features,cost);
+        {
+            if (__bayesNet->doInference(new_features,cost)==0)
+                retval=1;
+        }
         else
         {
             Matrix1D<int> votes;
-            k=__bayesEnsembleNet->doInference(new_features,cost,votes);
-            switch (__classNo)
-            {
-                case 2:
-	            if ((double)(votes(0))/votes.sum()<=0.8) k=1;
-                    break;
-                case 3:
-	            if ((double)(votes(0))/votes.sum()>=0.1) k=0;
-                    break;
-            }
+            __bayesEnsembleNet->doInference(new_features,cost,votes);
+            retval=votes(0);
         }
-        return (k==0) ? true : false;
+        return retval;
     }
     
     //init the naive bayesian network
