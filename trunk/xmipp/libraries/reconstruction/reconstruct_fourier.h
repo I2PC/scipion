@@ -2,6 +2,7 @@
  *
  * Authors:     Roberto Marabini (roberto@cnb.csic.es)
  *              Carlos Oscar S. Sorzano (coss@cnb.csic.es)
+ *              Jose Roman Bilbao-Castro (jrbcast@ace.ual.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -73,7 +74,7 @@ class Prog_RecFourier_prm
 {
 public:
     /** Filenames */
-    FileName fn_out, fn_sym, fn_sel, fn_doc, fn_control;
+    FileName fn_out, fn_sym, fn_sel, fn_doc, fn_control, fn_fsc;
 
     /** SelFile containing all projections */
     SelFile SF;
@@ -202,10 +203,10 @@ public:
     /// Main Loop 
     void run();
     
-    void finishComputations();
+    void finishComputations( FileName out_name );
     
     /// Process one image
-    void processImages( int firstImageIndex, int lastImageIndex ); //const FileName &fn_img);
+    void processImages( int firstImageIndex, int lastImageIndex, bool saveFSC=false ); //const FileName &fn_img);
 
     /// Correct weight
     void correctWeight();
