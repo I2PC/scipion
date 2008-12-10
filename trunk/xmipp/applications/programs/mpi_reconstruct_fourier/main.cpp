@@ -362,8 +362,8 @@ class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 
 			    // Normalize global volume and store data
 			    gettimeofday(&start_time,NULL);
-			    finishComputations();
-    			    gettimeofday(&end_time,NULL);
+			    finishComputations(fn_out);
+    			gettimeofday(&end_time,NULL);
 
   			    total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
   			    total_time=(double)total_usecs/(double)1000000;		
