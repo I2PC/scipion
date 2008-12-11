@@ -469,8 +469,10 @@ void DocFile::jump(int count)
         }
 }
 
-int DocFile::search_comment(std::string comment)
-{
+int DocFile::search_comment(std::string comment, bool gotobegining)
+{   
+    if(gotobegining)
+       go_beginning();
     int wrap=0;
     comment = " ; " + comment;
 
@@ -487,14 +489,14 @@ int DocFile::search_comment(std::string comment)
                     return 1;
                 }
             }
-    
-            next();
+            if (current_line != m.end()){
+                next();
+            }
         }
 
         go_beginning();
         wrap++;
     }while( wrap < 2 );
-
     return 0;
 }
 
@@ -1253,6 +1255,7 @@ void DocFile::perturb_column(int col, double sigma)
 void DocFile::merge(const FileName& name, int mode, int sumcol)
 {
     DocFile DFaux(name);
+    go_beginning();
     merge(DFaux, mode, sumcol);
 }
 
@@ -1270,9 +1273,9 @@ void DocFile::merge(DocFile& DF, int mode, int sumcol)
     while (!SF.eof())
     {
         fn_img=SF.NextImg();
-        DF.search_comment(fn_img);
+        DF.search_comment(fn_img,true);
         DL=DF.get_current_line();
-        if (search_comment(fn_img))
+        if (search_comment(fn_img,true))
         {
             switch (mode)
             {
@@ -1355,7 +1358,7 @@ DocFile DocFile::sort_by_filenames()
     {
         fn_img = SF2.NextImg();
         result.append_comment(fn_img);
-        search_comment(fn_img);
+        search_comment(fn_img,true);
         DL = get_current_line();
         result.append_line(DL);
     }
@@ -1503,7 +1506,7 @@ void get_subset_docfile(DocFile& DFin, SelFile& SF, DocFile& DFout)
     while (!SF.eof())
     {
 	fn_tmp = SF.NextImg();
-	if (DFin.search_comment(fn_tmp))
+	if (DFin.search_comment(fn_tmp,true))
 	{
             DFout.append_comment(fn_tmp);
 	    DL=DFin.get_current_line();

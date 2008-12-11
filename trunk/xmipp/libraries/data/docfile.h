@@ -539,13 +539,14 @@ public:
      *
      * If found, place the pointer to the next data line and return 1.
      * Otherwise, return 0.
-     *
+     * If gotobegining = true, doc file is read from begining
+     * if not from the last used entry
      * @code
      * if (DF.search_comment(fn_img))
      *     rot=DF(0);
      * @endcode
      */
-    int search_comment(std::string comment);
+    int search_comment(std::string comment, bool gotobegining=false);
 
     /** Search the entire file for the given string and remove all
      * lines that contain this string apart from the first one
