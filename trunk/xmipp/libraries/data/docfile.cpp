@@ -469,34 +469,26 @@ void DocFile::jump(int count)
         }
 }
 
-int DocFile::search_comment(std::string comment, bool gotobegining)
-{   
-    if(gotobegining)
-       go_beginning();
-    int wrap=0;
+int DocFile::search_comment(std::string comment)
+{
+    go_beginning();
     comment = " ; " + comment;
 
-    do
+    while (!eof())
     {
-        while (!eof())
+        if ((*current_line).Is_comment())
         {
-            if ((*current_line).Is_comment())
+            if (strcmp(comment.c_str(), ((*current_line).get_text()).c_str())
+                == 0)
             {
-                if (strcmp(comment.c_str(), ((*current_line).get_text()).c_str())
-                    == 0)
-                {
-                    adjust_to_data_line();
-                    return 1;
-                }
-            }
-            if (current_line != m.end()){
-                next();
+                adjust_to_data_line();
+                return 1;
             }
         }
 
-        go_beginning();
-        wrap++;
-    }while( wrap < 2 );
+        next();
+    }
+
     return 0;
 }
 
@@ -1255,7 +1247,6 @@ void DocFile::perturb_column(int col, double sigma)
 void DocFile::merge(const FileName& name, int mode, int sumcol)
 {
     DocFile DFaux(name);
-    go_beginning();
     merge(DFaux, mode, sumcol);
 }
 
@@ -1273,9 +1264,9 @@ void DocFile::merge(DocFile& DF, int mode, int sumcol)
     while (!SF.eof())
     {
         fn_img=SF.NextImg();
-        DF.search_comment(fn_img,true);
+        DF.search_comment(fn_img);
         DL=DF.get_current_line();
-        if (search_comment(fn_img,true))
+        if (search_comment(fn_img))
         {
             switch (mode)
             {
@@ -1358,7 +1349,7 @@ DocFile DocFile::sort_by_filenames()
     {
         fn_img = SF2.NextImg();
         result.append_comment(fn_img);
-        search_comment(fn_img,true);
+        search_comment(fn_img);
         DL = get_current_line();
         result.append_line(DL);
     }
@@ -1506,7 +1497,7 @@ void get_subset_docfile(DocFile& DFin, SelFile& SF, DocFile& DFout)
     while (!SF.eof())
     {
 	fn_tmp = SF.NextImg();
-	if (DFin.search_comment(fn_tmp,true))
+	if (DFin.search_comment(fn_tmp))
 	{
             DFout.append_comment(fn_tmp);
 	    DL=DFin.get_current_line();
