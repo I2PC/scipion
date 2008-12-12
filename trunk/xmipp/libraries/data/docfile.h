@@ -1,5 +1,5 @@
 /***************************************************************************
-*
+* 
 * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
 *
 * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -111,7 +111,7 @@ public:
      * line[3] = 3; // line[3] must exist!!
      * @endcode
      *
-     * This function is ignored in the python per. Use "set" instead.
+     * This function is ignored in the python wrapper. Use "set" instead.
      */
     double& operator[](int i);
 
@@ -539,14 +539,13 @@ public:
      *
      * If found, place the pointer to the next data line and return 1.
      * Otherwise, return 0.
-     * If gotobegining = true, doc file is read from begining
-     * if not from the last used entry
+     *
      * @code
      * if (DF.search_comment(fn_img))
      *     rot=DF(0);
      * @endcode
      */
-    int search_comment(std::string comment, bool gotobegining=false);
+    int search_comment(std::string comment);
 
     /** Search the entire file for the given string and remove all
      * lines that contain this string apart from the first one
