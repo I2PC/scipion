@@ -49,8 +49,8 @@ void Prog_RecFourier_prm::read(int argc, char **argv)
     maxResolution = textToFloat(getParameter(argc, argv,
                                              "-max_resolution",".5"));
     NiterWeight = textToInteger(getParameter(argc, argv, "-n","20"));
-    numThreads = textToInt(getParameter(argc, argv, "-thr", "1"));
-    thrWidth = textToInt(getParameter(argc,argv, "-thr_width", "-1"));
+    numThreads = textToInteger(getParameter(argc, argv, "-thr", "1"));
+    thrWidth = textToInteger(getParameter(argc,argv, "-thr_width", "-1"));
 }
 
 // Show ====================================================================
