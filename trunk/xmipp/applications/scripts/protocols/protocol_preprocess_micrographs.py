@@ -450,7 +450,7 @@ class preprocess_A_class:
         #next line tell ctfind to skip endian checking
         #I could have modified the program spi22ccp4 but
         #I do not agree with cctfind interpretation of the flag
-	    os.putenv('NATIVEMTZ', "kk")
+        os.putenv('NATIVEMTZ', "kk")
         command=  self.CtffindExec+'  << eof > '+self.shortname+'/ctffind_'+self.downname+'.log\n'
         command+= self.shortname+'/tmp.mrc\n'
         command+= self.shortname+'/spectrum.mrc\n'
