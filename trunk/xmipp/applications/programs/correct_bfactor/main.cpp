@@ -97,8 +97,8 @@ public:
         std::cerr 
             << " Use one of the three following modes: \n"
             << "  [-auto]                   : Use automated B-factor fit in flat Wilson region\n"
-            << "  [-ref <fn_ref>]           : Fit B-factor according to the reference image/volume \n"
-            << "  [-adhoc <B>]              : Use an ad-hoc (negative) B-factor\n"
+            << "  [-ref <fn_ref>]           : Fit B-factor according to the reference \n"
+            << "  [-adhoc <B>]              : Use a user-provided (negative) B-factor\n"
             << " Specific parameters: \n"
             << "  [-sampling <float> ]      : Pixel size (in Ang) \n"
             << "  [-maxres <float>]         : High-resolution limit for B-factor correction \n"
