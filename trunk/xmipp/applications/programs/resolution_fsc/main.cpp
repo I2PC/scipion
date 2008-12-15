@@ -40,26 +40,33 @@ void writeFiles(const FileName &fnRoot,
     if(do_dpr)
     {
         outDpr.open(fn_dpr.c_str(), std::ios::out);
-        outDpr  << "# Resol. [1/Ang]   DPR [deg]" << std::endl;
+        outDpr  << "# Resol. [1/Ang]   DPR [deg]     Resol. [Ang]" << std::endl;
     }
     fn_frc = fnRoot + ".frc";
     std::ofstream outFsc(fn_frc.c_str(), std::ios::out);
-    outFsc << "# Resol. [1/Ang]      FRC      FRC_random_noise" << std::endl;
+    outFsc << "# Resol. [1/Ang]      FRC      FRC_random_noise     Resol. [Ang]" << std::endl;
     FOR_ALL_ELEMENTS_IN_MATRIX1D(freq)
     {
-        if(do_dpr)
+        if (i>0)
         {
-            outDpr.width(10);
-            outDpr  << VEC_ELEM(freq, i);
-            outDpr.width(17);
-            outDpr << VEC_ELEM(dpr, i)  << std::endl;
+            if(do_dpr)
+            {
+                outDpr.width(10);
+                outDpr  << VEC_ELEM(freq, i);
+                outDpr.width(17);
+                outDpr << VEC_ELEM(dpr, i);
+                outDpr.width(17);
+                outDpr << 1./VEC_ELEM(freq, i)  << std::endl;
+            }
+            outFsc.width(10);
+            outFsc  << VEC_ELEM(freq, i);
+            outFsc.width(17);
+            outFsc  << VEC_ELEM(frc, i);
+            outFsc.width(17);
+            outFsc  << VEC_ELEM(frc_noise, i);
+            outFsc.width(17);
+            outFsc  << 1./VEC_ELEM(freq, i) << std::endl;
         }
-        outFsc.width(10);
-        outFsc  << VEC_ELEM(freq, i);
-        outFsc.width(17);
-        outFsc  << VEC_ELEM(frc, i);
-        outFsc.width(17);
-        outFsc  << VEC_ELEM(frc_noise, i) << std::endl;
     }
     if(do_dpr)
         outDpr.close();
