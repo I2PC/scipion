@@ -48,7 +48,7 @@ void Prog_RecFourier_prm::read(int argc, char **argv)
     //sampling_rate = textToFloat(getParameter(argc, argv, "-sampling_rate", "1"));
     maxResolution = textToFloat(getParameter(argc, argv,
                                              "-max_resolution",".5"));
-    NiterWeight = textToInteger(getParameter(argc, argv, "-n","20"));
+    //NiterWeight = textToInteger(getParameter(argc, argv, "-n","20"));
     numThreads = textToInteger(getParameter(argc, argv, "-thr", "1"));
     thrWidth = textToInteger(getParameter(argc,argv, "-thr_width", "-1"));
 }
@@ -100,7 +100,7 @@ void Prog_RecFourier_prm::usage()
     std::cerr << " [ -prepare_fsc <fscfile>      : filename root for FSC files \n";
     std::cerr << " [ -doc <docfile>              : Ignore headers and get angles from this docfile \n";
     std::cerr << " [ -sym     <symfile> ]        : Enforce symmetry in projections\n";
-    std::cerr << " [ -n <iter=20>]               : Iterations for computing the weight\n";
+    //std::cerr << " [ -n <iter=20>]               : Iterations for computing the weight\n";
     std::cerr << " [ -thr <threads=1> ]          : Number of concurrent threads\n";
     std::cerr << " [ -thr_width <width=blob_radius> : Number of image rows processed at a time by a thread\n";
     std::cerr << " -----------------------------------------------------------------" << std::endl;
