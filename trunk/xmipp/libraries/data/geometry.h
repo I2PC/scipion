@@ -221,6 +221,41 @@ void least_squares_plane_fit(const std::vector< fit_point >& IN_points,
                              double& plane_B,
                              double& plane_C);
 
+/** Structure of the points to do model fitting
+ * @ingroup GeometricalOperations
+ */
+struct fit_point2D
+{
+    /// x coordinate
+    double x;
+    /// y coordinate (assumed to be a fucntion of x)
+    double y;
+    /// Weight of the point in the Least-Squares problem
+    double w;
+};
+
+/** Least-squares-fit a line to an arbitrary number of (x,y) points
+ * @ingroup GeometricalOperations
+ *
+ * Plane described as Ax + B = y
+ *
+ * Points are defined using the struct
+ *
+ * @code
+ * struct fit_point2D
+ * {
+ *     double x;
+ *     double y;
+ *     double w;
+ * };
+ * @endcode
+ *
+ * where w is a weighting factor. Set it to 1 if you do not want to use it
+ */
+void least_squares_line_fit(const std::vector< fit_point2D >& IN_points,
+                             double& line_A,
+                             double& line_B);
+
 /** Bspline model class
  * @ingroup GeometricalOperations
  *

@@ -170,6 +170,35 @@ void least_squares_plane_fit(const std::vector<fit_point> & IN_points,
     plane_c = (F * G * J - E * H * J - E * F * K + D * H * K + E * E * L - D * G * L) / denom;
 }
 
+void least_squares_line_fit(const std::vector<fit_point2D> & IN_points,
+                             double &line_a,
+                             double &line_b)
+{
+
+    double  sumx = 0.;
+    double  sumy = 0.;
+    double  sumxy = 0.;
+    double  sumxx = 0.;
+    double  sumw = 0.;
+    double  W2;
+    const fit_point2D * point;
+
+    int n = IN_points.size();
+
+    for (int i = 0; i < n; i++)
+    {
+        point = &(IN_points[i]);
+        W2 = point->w * point->w;
+        sumx  += point->x * point->w ;
+        sumy  += point->y * point->w ;
+        sumxx += point->x * point->x * W2 ;
+        sumxy += point->x * point->y * W2 ;
+        sumw  += point->w ;
+    }
+    line_a = (sumx*sumy - sumw*sumxy) / (sumx*sumx - sumw*sumxx) ;
+    line_b = (sumy - line_a*sumx) / sumw ;
+}
+
 /* Bspline fitting --------------------------------------------------------- */
 /* See http://en.wikipedia.org/wiki/Weighted_least_squares */
 void Bspline_model_fitting(const std::vector<fit_point> &IN_points,
