@@ -53,13 +53,11 @@ public:
         {
             REPORT_ERROR(1,"Please provide -auto, -adhoc <B> or -ref <fn_ref> option");
         }
-        prmb.sampling_rate = textToFloat(getParameter(argc, argv, "-sampling","-1"));
-        prmb.apply_maxres = textToFloat(getParameter(argc, argv, "-maxres","-1"));
+        prmb.sampling_rate = textToFloat(getParameter(argc, argv, "-sampling"));
+        prmb.apply_maxres = textToFloat(getParameter(argc, argv, "-maxres"));
         prmb.fit_minres = textToFloat(getParameter(argc, argv, "-fit_minres","15"));
         prmb.fit_maxres = textToFloat(getParameter(argc, argv, "-fit_maxres","-1"));
 
-        if (prmb.apply_maxres < 0.)
-            prmb.apply_maxres = 2. * prmb.sampling_rate;
         if (prmb.fit_maxres < 0.)
             prmb.fit_maxres = prmb.apply_maxres;
         prmb.fn_fsc = getParameter(argc, argv, "-fsc","");
@@ -100,8 +98,8 @@ public:
             << "  [-ref <fn_ref>]           : Fit B-factor according to the reference \n"
             << "  [-adhoc <B>]              : Use a user-provided (negative) B-factor\n"
             << " Specific parameters: \n"
-            << "  [-sampling <float> ]      : Pixel size (in Ang) \n"
-            << "  [-maxres <float>]         : High-resolution limit for B-factor correction \n"
+            << "   -sampling <float>        : Pixel size (in Ang) \n"
+            << "   -maxres <float>          : High-resolution limit for B-factor correction \n"
             << "  [-fit_minres <f=15>]      : Low-resolution  limit (in Ang) for fit in -auto or -ref \n"
             << "  [-fit_maxres <f=maxres>]  : High-resolution limit (in Ang) for fit in -auto or -ref \n"
             ;
