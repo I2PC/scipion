@@ -83,7 +83,7 @@ public:
         }
         else
         {
-            std::cout << "Use automated B-factor fit (Rosenthal and Hendrickson, 2003) "<<std::endl;
+            std::cout << "Use automated B-factor fit (Rosenthal and Henderson, 2003) "<<std::endl;
         }
         if (prmb.fn_fsc != "")
             std::cout << "Use signal-to-noise weighted based on "<<prmb.fn_fsc<<std::endl;
@@ -102,6 +102,8 @@ public:
             << "   -maxres <float>          : High-resolution limit for B-factor correction \n"
             << "  [-fit_minres <f=15>]      : Low-resolution  limit (in Ang) for fit in -auto or -ref \n"
             << "  [-fit_maxres <f=maxres>]  : High-resolution limit (in Ang) for fit in -auto or -ref \n"
+            << "\n"
+            << " Note: do not use the automated mode for maps with resolutions lower than 12-15 Angstroms!\n"
             ;
     }
 };
