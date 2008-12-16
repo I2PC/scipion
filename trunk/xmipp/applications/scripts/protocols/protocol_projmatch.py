@@ -6,7 +6,7 @@
 # ./xmipp_protocol_projmatch.py
 #
 # Authors: Roberto Marabini,
-#          Sjors Scheres,    March 2008
+#          Sjors Scheres,    Dec 2008
 #
 #-----------------------------------------------------------------------------
 # {section} Global parameters
@@ -14,7 +14,7 @@
 # {file} Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
-SelFileName='good_images.sel'
+SelFileName='good_images_a.sel'
 
 # {file} {expert} Docfile with the input angles:
 """ Do not provide anything if there are no angles yet. 
@@ -25,12 +25,12 @@ SelFileName='good_images.sel'
 DocFileName=''
 
 # {file} Initial 3D reference map:
-ReferenceFileName='val16_GLfil_norm_mask_scaled.spi'
+ReferenceFileName='val16_GLfil_norm_mask_scaled_25.spi'
 
 # Working subdirectory: 
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
-WorkDirectory='ProjMatch/Test1'
+WorkDirectory='ProjMatch/only_b'
 
 # Delete working subdirectory if it already exists?
 """ Just be careful with this option...
@@ -38,7 +38,7 @@ WorkDirectory='ProjMatch/Test1'
 DoDeleteWorkingDir=False
 
 # Number of iterations to perform
-NumberofIterations=10
+NumberofIterations=15
 
 # Resume at iteration
 """ This option may be used to finish a previously performed run.
@@ -55,7 +55,7 @@ CleanUpFiles=True
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
-ProjectDir='/home/carmen/datos/Test'
+ProjectDir='/home/carmen/datos/Ad5GL_revisited'
 
 # {expert} Directory name for logfiles:
 LogDir='Logs'
@@ -69,17 +69,17 @@ LogDir='Logs'
     and the data will be processed in CTF groups.
     Note that you cannot combine CTF-correction with re-alignment of the classes.
 """
-DoCtfCorrection=False
+DoCtfCorrection=True
 
 # {file} CTFDat file with CTF data:
 """ The input selfile may be a subset of the images in the CTFDat file, but all images in the input selfile must be present in the CTFDat file. This field is obligatory if CTF correction is to be performed. Note that this file should be positioned in the project directory.
 """
-CTFDatName=''
+CTFDatName='good_images.ctfdat'
 
 # {file} Docfile with defocus values where to split into groups
 """ Leave this field empty if you want automatic CTF grouping
 """
-SplitDefocusDocFile='Ctfs/CTF_groups_split.doc'
+SplitDefocusDocFile=''
 
 #{expert} user defined flag for the ctf_group program. 
 """For example -error  number -resol number  
@@ -88,7 +88,7 @@ CTFExtraCommands=''
 
 # {expert} Padding factor
 """ Application of CTFs to reference projections and of Wiener filter to class averages will be done using padded images.
-    Use values larger than one to pad the images.
+    Use values larger than one to pad the images. Suggestion, use 1 for large image and 2 for small
 """
 PaddingFactor=2.
 
@@ -102,10 +102,10 @@ PaddingFactor=2.
 WienerConstant=-1
 
 # Images have been phase flipped?
-DataArePhaseFlipped=False
+DataArePhaseFlipped=True
 
 # Is the initial reference map CTF (amplitude) corrected?
-ReferenceIsCtfCorrected=False
+ReferenceIsCtfCorrected=True
 
 #-----------------------------------------------------------------------------
 # {section} Mask
@@ -147,12 +147,12 @@ InnerRadius=0
 # Outer radius for rotational correlation
 """ In pixels from the image center. Use a negative number to use the entire image.
 """
-OuterRadius=-1
+OuterRadius=130
 
 # {expert} Available memory to store all references (Gb)
 """ This is only for the storage of the references. If yuor memories so not fit in memory, the projection matching program will run MUCH slower. But, keep in mind that probably some additional memory is needed for the operating system etc.
 """
-AvailableMemory='1.5'
+AvailableMemory='2'
 
 # Angular sampling rate
 """Angular distance (in degrees) between neighboring projection  points
@@ -165,7 +165,7 @@ AvailableMemory='1.5'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-AngSamplingRateDeg='5'
+AngSamplingRateDeg='2.0 1.75 1.5 1.25 1 0.75 0.6 0.5 0.4 0.3 0.25 0.2'
 
 # Angular search range 
 """Maximum change in rot & tilt  (in +/- degrees)
@@ -178,7 +178,7 @@ AngSamplingRateDeg='5'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-MaxChangeInAngles='4x1000 2x20 2x10 2x5'
+MaxChangeInAngles='4x1000 6x8.5  5'
 
 # {expert} Perturb projection directions?
 """ If set to true, this option will result to a Gaussian perturbation to the 
@@ -199,7 +199,7 @@ PerturbProjectionDirections=False
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-MaxChangeOffset='1000'
+MaxChangeOffset='1000 14'
 
 # Search range for 5D translational search 
 """ Give search range from the image center for 5D searches (in +/- pixels).
@@ -215,7 +215,7 @@ MaxChangeOffset='1000'
     Note: if there are more values than iterations the extra value are ignored
     
 """
-Search5DShift='0'
+Search5DShift='5 5 5 5 0'
 
 # {expert} Step size for 5D translational search
 """ Provide a sequence of numbers (for instance, "2 2 1 1" specifies 4 iterations,
@@ -252,7 +252,7 @@ SymmetryGroup='i3'
     Note: if there are more values than iterations the extra value are ignored
     Set to -1 to prevent discarding any images
 """    
-MinimumCrossCorrelation='0.05'
+MinimumCrossCorrelation='-1'
 
 # Discard percentage of images with ccf below
 """ Provide a sequence of numbers (for instance, "20 20 10 10" specifies 4 iterations,
@@ -380,9 +380,9 @@ ARTLambda='0.2'
 """
 ARTReconstructionExtraCommand='-k 0.5 -n 10 '
 
-#max frequency used by reconstruct fourier
-"""For each iteration it will be set to resolution computed in the 
-resolution section
+#max frequency used by reconstruct fourier (first iteration)
+""" FOR EACH ITERATION It will be set to resolution computed in the
+    resolution section
 """
 FourierMaxFrequencyOfInterest='0.25'
 
@@ -395,8 +395,8 @@ WBPReconstructionExtraCommand=' '
 
 # {expert} Additional reconstruction parameters for Fourier
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Fourier and
-        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_Fourier
-        for details 
+        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_Fourier and
+        for details
 	-thr_width 
 """
 FourierReconstructionExtraCommand=' '
@@ -412,7 +412,7 @@ DoComputeResolution=True
 # Pixel size (in Ang.)
 """ This will make that the X-axis in the resolution plots has units 1/Angstrom
 """
-ResolSam=2.8
+ResolSam=4.2
 
 # {expert} Display resolution?
 DisplayResolution=False
@@ -448,7 +448,7 @@ SetResolutiontoZero=False
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-ConstantToAddToFiltration='4x0.15 0.1'
+ConstantToAddToFiltration='0.1'
 
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
@@ -457,11 +457,10 @@ ConstantToAddToFiltration='4x0.15 0.1'
 DoParallel=True
 
 # Number of processors to use:
-"""must be equal or larger than number of threads"""
 NumberOfCPUs=4
 
 # minumum size of jobs in mpi processe. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)
-MpiJobSize='1'
+MpiJobSize='5'
 
 # {file} A list of all available CPUs (the MPI-machinefile):
 """ Depending on your system, your standard script to launch MPI-jobs may require this
@@ -474,6 +473,7 @@ MachineFile='machinefile'
 
 """
 ThreadsNumber='1'
+
 
 # {expert} Control file
 """ This is an ugly solution to have improved killing control over the mpi jobs.
@@ -508,6 +508,7 @@ OutputFsc="resolution.fsc"
 CtfGroupDirectory="CtfGroups"
 CtfGroupRootName="ctf"
 CtfGroupSubsetFileName="ctf_groups_subset_docfiles.sel"
+
 class projection_matching_class:
 
    #init variables
@@ -549,7 +550,7 @@ class projection_matching_class:
                 _ARTReconstructionExtraCommand,
                 _WBPReconstructionExtraCommand,
                 _FourierReconstructionExtraCommand,
-		_FourierMaxFrequencyOfInterest,
+                _FourierMaxFrequencyOfInterest,
                 _DoComputeResolution,
                 _ResolSam,
                 _SelFileName,
@@ -569,7 +570,7 @@ class projection_matching_class:
                 _MyNumberOfCPUs,
                 _MyMachineFile,
                 _MyMpiJobSize,
-		_ThreadsNumber,
+                _ThreadsNumber,
                 _MyControlFile,
                 _SymmetryGroup,
                 _SetResolutiontoZero,
@@ -611,6 +612,9 @@ class projection_matching_class:
        self._SplitDefocusDocFile =''  
        if(len(_SplitDefocusDocFile) > 1):
             self._SplitDefocusDocFile=os.path.abspath(_SplitDefocusDocFile)
+       self._DocFileName =''  
+       if(len(_DocFileName) > 1):
+            self._DocFileName=os.path.abspath(_DocFileName)
        self._CTFExtraCommands=_CTFExtraCommands
        self._PaddingFactor=PaddingFactor
        self._DataArePhaseFlipped=_DataArePhaseFlipped
@@ -643,12 +647,35 @@ class projection_matching_class:
        # Uncomment next line to get Debug level logging
        self._mylog.setLevel(logging.DEBUG)
        self._mylog.debug("Debug level logging enabled")
-                                      
+
        _NumberofIterations +=1;
        if _ContinueAtIteration!=1 and DoDeleteWorkingDir==True:
           print "You can not delete the working directory"
           print " and start at iteration", _ContinueAtIteration
           exit(1)
+       #if not first iteration read fsc
+       if _ContinueAtIteration!=1 and _DoComputeResolution==True:
+            Iteration_Working_Directory=self._WorkDirectory+'/Iter_'+\
+                                      str(_ContinueAtIteration-1)+\
+                                      '/Iter_'+ str(_ContinueAtIteration-1)+\
+                                      '_'
+            resolution_fsc_file = Iteration_Working_Directory+OutputFsc
+            f = open(resolution_fsc_file, 'r')
+            #skip first line
+            fi=f.readline()
+      
+            filter_frequence=0. 
+            for line in f:
+                line = line.strip()
+                if not line.startswith('#'):
+                    mylist = (line.split())
+                    if( float(mylist[1]) < 0.5):
+                        break
+                    else:
+                        globalFourierMaxFrequencyOfInterest=float(mylist[0])
+
+            self._mylog.debug("reading previous Maximun frequency of interest: "+
+                               str(globalFourierMaxFrequencyOfInterest))
        if (DoDeleteWorkingDir): 
           delete_working_directory(self._mylog,self._WorkDirectory)
        else:
@@ -694,14 +721,16 @@ class projection_matching_class:
           self._OuterRadius=_OuterRadius
 
        # Create a docfile with the current angles in the WorkingDir
-       if (_DocFileName==''):
+       if (self._DocFileName==''):
           command='xmipp_header_extract -i ' + self._SelFileName + \
                                       ' -o ' + self._WorkDirectory + '/' + \
                                                DocFileWithOriginalAngles
           self._mylog.info(command)
           os.system(command)
        else:
-          shutil.copy(_DocFileName, self._WorkDirectory + '/' + DocFileWithOriginalAngles)
+          command = "copy" , self._DocFileName ,  self._WorkDirectory + '/' + DocFileWithOriginalAngles
+          self._mylog.info(command)
+          shutil.copy(self._DocFileName, self._WorkDirectory + '/' + DocFileWithOriginalAngles)
 
        # Change to working dir
        os.chdir(self._WorkDirectory)
@@ -880,10 +909,10 @@ class projection_matching_class:
                                     self._DoParallel,
                                     self._MyNumberOfCPUs,
                                     self._MyMachineFile,
-				    self._MyMpiJobSize,
-				    self._ThreadsNumber,
+                                    self._MyMpiJobSize,
+                                    self._ThreadsNumber,
                                     self._ReconstructionMethod,
-				    globalFourierMaxFrequencyOfInterest,
+                                    globalFourierMaxFrequencyOfInterest,
                                     self._ARTLambda,
                                     self._SymmetryGroup,
                                     self._ReconstructedVolume[_iteration_number]
@@ -896,17 +925,16 @@ class projection_matching_class:
                                                   self._ARTReconstructionExtraCommand,
                                                   self._WBPReconstructionExtraCommand,
                                                   self._FourierReconstructionExtraCommand,
-				                  self._ThreadsNumber,
+                                                  self._ThreadsNumber,
                                                   self._ReconstructionMethod,
-				                  globalFourierMaxFrequencyOfInterest,
+                                                  globalFourierMaxFrequencyOfInterest,
                                                   _iteration_number,
                                                   self._DisplayReconstruction,
                                                   self._ResolSam,
                                                   self._DoParallel,
                                                   self._MyNumberOfCPUs,
                                                   self._MyMachineFile,
-						  self._MyMpiJobSize,
-				                  self._ThreadsNumber,
+                                                  self._MyMpiJobSize,
                                                   self._SymmetryGroup,
                                                   self._DisplayResolution,
                                                   self._ReconstructedVolume[_iteration_number],
@@ -914,6 +942,7 @@ class projection_matching_class:
                                                   self._OuterRadius
                                                   )
           else:
+             filter_frequence=0
              self._mylog.info("Skipped Resolution") 
           
           self._ConstantToAddToFiltration=arg.getComponentFromVector(\
@@ -998,7 +1027,6 @@ def execute_ctf_groups (_mylog,
    if (_DataArePhaseFlipped):
       command += ' -phase_flipped '
    command += _CTFExtraCommands   
-
    print '* ',command
    _mylog.info(command)
    os.system(command)
@@ -1343,10 +1371,10 @@ def execute_reconstruction(_mylog,
                            _DoParallel,
                            _MyNumberOfCPUs,
                            _MyMachineFile,
-			   _MyMpiJobSize,
-			   _ThreadsNumber,
+                           _MyMpiJobSize,
+                           _ThreadsNumber,
                            _ReconstructionMethod,
-			   _FourierMaxFrequencyOfInterest,
+                           _FourierMaxFrequencyOfInterest,
                            _ARTLambda,
                            _SymmetryGroup,
                            _ReconstructedandfilteredVolume):
@@ -1386,15 +1414,22 @@ def execute_reconstruction(_mylog,
       parameters = parameters + _ARTReconstructionExtraCommand
    elif _ReconstructionMethod=='fourier':
       mpi_program = 'xmipp_mpi_reconstruct_fourier'
+      #mpi_program = 'NULL'
+      #untill we decide how to handle threads and mpi at the same time
+      #leave this as false when using threads or modify it
+      #at your own risk
+      if(int(_ThreadsNumber)>1):
+           _DoParallel=False
       program = 'xmipp_reconstruct_fourier'
       parameters=' -i '    + ForReconstructionSel + \
                  ' -o '    + Outputvolume + '.vol ' + \
-                 ' -doc '  + ForReconstructionDoc + \
                  ' -sym '  + _SymmetryGroup + \
 		 ' -thr '  + _ThreadsNumber + \
                  ' -weight ' + \
                  ' -max_resolution ' + \
 	         str(_FourierMaxFrequencyOfInterest) + ' '	 
+      if (len(_MyMpiJobSize)>0 and _DoParallel):
+         parameters = parameters + ' -mpi_job_size ' + str(_MyMpiJobSize)
       parameters = parameters + _FourierReconstructionExtraCommand 
    else:
       _mylog.error("Reconstruction method unknown. Quiting")
@@ -1404,7 +1439,7 @@ def execute_reconstruction(_mylog,
    # if using threads number of parallel jobs must be
    # floor(_MyNumberOfCPUs/_ThreadsNumber)
    # if zero print error message
-   mpiThreadMyNumberOfCPUs = str(floor(float(_MyNumberOfCPUs)/
+   mpiThreadMyNumberOfCPUs = str(math.floor(float(_MyNumberOfCPUs)/
                                    float(_ThreadsNumber)))
    if(int(_ThreadsNumber) > int(_MyNumberOfCPUs)):
        print "ThreadsNumber cannot be greater than NumberOfCPUs)"
@@ -1437,21 +1472,23 @@ def  execute_resolution(_mylog,
                         _ARTReconstructionExtraCommand,
                         _WBPReconstructionExtraCommand,
                         _FourierReconstructionExtraCommand,
-			_ThreadsNumber,
+                        _ThreadsNumber,
                         _ReconstructionMethod,
-			_FourierMaxFrequencyOfInterest,
+                        _FourierMaxFrequencyOfInterest,
                         _iteration_number,
                         _DisplayReconstruction,
                         _ResolSam,
                         _DoParallel,
                         _MyNumberOfCPUs,
                         _MyMachineFile,
+                        _MyMpiJobSize,
                         _SymmetryGroup,
                         _DisplayResolution,
                         _ReconstructedVolume,
                         _ARTLambda,
                         _OuterRadius):
-    import os,shutil
+
+    import os,shutil,math
 
     split_sel_root_name=ProjMatchRootName+'_split'
     Outputvolumes=[]
@@ -1494,15 +1531,22 @@ def  execute_resolution(_mylog,
        elif _ReconstructionMethod=='fourier':
           RunInBackground=False
 	  mpi_program = 'xmipp_mpi_reconstruct_fourier'
+	  #mpi_program = 'NULL'
+          #untill we decide how to handle threads and mpi at the same time
+          #leave this as false when using threads or modify it
+          #at your own risk
+	  if(int(_ThreadsNumber)>1):
+              _DoParallel=False
           program = 'xmipp_reconstruct_fourier'
           parameters=' -i '    +  Selfiles[i] + \
-                     ' -doc '  + Docfiles[i] + \
                      ' -o '    +  Outputvolumes[i] + '.vol ' + \
                      ' -sym '  + _SymmetryGroup + \
 		     ' -thr '  + _ThreadsNumber + \
                      ' -weight ' + \
-                     '-max_resolution ' + \
-	         str(_FourierMaxFrequencyOfInterest) + ' '	 
+                     ' -max_resolution ' + \
+	         str(_FourierMaxFrequencyOfInterest)
+          if (len(_MyMpiJobSize)>0 and _DoParallel):
+             parameters = parameters + ' -mpi_job_size ' + str(_MyMpiJobSize)
           parameters = parameters + _FourierReconstructionExtraCommand
        else:
           _mylog.error("Reconstruction method unknown. Quiting")
@@ -1511,7 +1555,7 @@ def  execute_resolution(_mylog,
        # if using threads number of parallel jobs must be
        # floor(_MyNumberOfCPUs/_ThreadsNumber)
        # if zero print error message
-       mpiThreadMyNumberOfCPUs = str(floor(float(_MyNumberOfCPUs)/
+       mpiThreadMyNumberOfCPUs = str(math.floor(float(_MyNumberOfCPUs)/
                                        float(_ThreadsNumber)))
        if(int(_ThreadsNumber) > int(_MyNumberOfCPUs)):
            print "ThreadsNumber cannot be greater than NumberOfCPUs)"
@@ -1523,7 +1567,7 @@ def  execute_resolution(_mylog,
                            mpi_program,
                            parameters,
                            _mylog,
-                           mpiThreadMyNumberOfCPUs,
+                           _MyNumberOfCPUs,
                            _MyMachineFile,
                            RunInBackground)
 
@@ -1703,7 +1747,7 @@ if __name__ == '__main__':
                 ARTReconstructionExtraCommand,
                 WBPReconstructionExtraCommand,
                 FourierReconstructionExtraCommand,
-		FourierMaxFrequencyOfInterest,
+                FourierMaxFrequencyOfInterest,
                 DoComputeResolution,
                 ResolSam,
                 SelFileName,                    
@@ -1723,10 +1767,9 @@ if __name__ == '__main__':
                 NumberOfCPUs,                   
                 MachineFile,
                 MpiJobSize,
-		ThreadsNumber,
+                ThreadsNumber,
                 MyControlFile,
                 SymmetryGroup,                        
                 SetResolutiontoZero,
                 ConstantToAddToFiltration
                 )
-
