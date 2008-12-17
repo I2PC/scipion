@@ -32,6 +32,7 @@
 #include "args.h"
 #include "matrix1d.h"
 #include "matrix2d.h"
+#include "image.h"
 #include "selfile.h"
 
 // Forward declaration
@@ -824,6 +825,22 @@ public:
                     const std::string& ang2,
                     const std::string& ang3);
 
+    /** Get image on key i
+     * @ingroup DocFileInfo
+     *
+     * The docfile is supposed to be an alignment docfile, and it is
+     * assumed that no key is missing from the file
+     */
+    void get_image(int key, ImageXmipp &I, bool apply_geo=false);
+
+    /** Get image name on key i
+     * @ingroup DocFileInfo
+     *
+     * The docfile is supposed to be an alignment docfile, and it is
+     * assumed that no key is missing from the file
+     */
+    FileName get_imagename(int key);
+
     /** Set a value in the current line.
      * @ingroup DocFileInfo
      *
@@ -1236,8 +1253,10 @@ public:
     void setCol(int _col, Matrix1D< double >& v);
 };
 
+/// @defgroup DocFileFunction Useful functions working with docfiles
+/// @ingroup DocFiles
 /** Read Document File with Euler angles.
- * @ingroup DocFileHelpful
+ * @ingroup DocFileFunction
  *
  * This function reads a document file with Euler angles. The Euler angles can
  * be in any order in the file (the order must be specified in the function
@@ -1262,7 +1281,7 @@ int read_Euler_document_file(FileName fn,
                              DocFile& DF);
 
 /** Select images from a selfile meeting some condition.
- * @ingroup DocFileHelpful
+ * @ingroup DocFileFunction
  *
  * If an image is discarded in the selfile it remains discarded in spite of it
  * meets the condition. If it is active then it is discarded if it doesn't meet
@@ -1282,7 +1301,7 @@ void select_images(DocFile& DF,
                    double limitF);
 
 /** Get a docfile containing only those images in the input selfile
- * @ingroup DocFileHelpful
+ * @ingroup DocFileFunction
  *
  * For this to work, the docfile should be in NewXmipp-like format
  * with all filenames in comments above each line

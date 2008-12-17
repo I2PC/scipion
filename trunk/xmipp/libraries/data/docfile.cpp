@@ -845,6 +845,52 @@ void DocFile::set_angles(int k, double rot, double tilt, double psi,
     }
 }
 
+void DocFile::get_image(int key, ImageXmipp &I, bool apply_geo)
+{
+    current_line = m.begin();
+    current_line += 2*key;
+    DocLine DL = get_current_line();
+    previous();
+    FileName fn_img;
+    if (get_current_line().Is_comment()) 
+	fn_img = ((get_current_line()).get_text()).erase(0, 3);
+    else
+	REPORT_ERROR(1,"The docfile provided is not of type Alignment");
+
+    // Read actual image
+    I.read(fn_img);
+    I().setXmippOrigin();
+
+    // Store translation in header and apply it to the actual image
+    I.set_rot(DL[0]);
+    I.set_tilt(DL[1]);
+    I.set_psi(DL[2]);
+    I.set_Xoff(DL[3]);
+    I.set_Yoff(DL[4]);
+    I.set_flip(0.);
+
+    if (apply_geo)
+    {
+        Matrix2D<double> A = I.get_transformation_matrix(true);
+        if (!A.isIdentity())
+	    I().selfApplyGeometryBSpline(A, 3, IS_INV, WRAP);
+    }
+}
+
+FileName DocFile::get_imagename(int key)
+{
+    current_line = m.begin();
+    current_line += 2*key;
+    DocLine DL = get_current_line();
+    previous();
+    FileName fn_img;
+    if (get_current_line().Is_comment()) 
+	fn_img = ((get_current_line()).get_text()).erase(0, 3);
+    else
+	REPORT_ERROR(1,"The docfile provided is not of type Alignment");
+    return fn_img;
+}
+
 void DocFile::set(int i, double val)
 {
     if (current_line != m.end())
