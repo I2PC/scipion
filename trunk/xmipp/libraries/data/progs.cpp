@@ -148,7 +148,7 @@ void SF_main(int argc, char **argv,
     {
         std::cerr << XE;
         std::cerr << "Usage: \n"
-        << "   " << argv[0] << " [options]\n";
+                  << "   " << argv[0] << " [options]\n";
         prm->usage();
         exit(1);
     }
