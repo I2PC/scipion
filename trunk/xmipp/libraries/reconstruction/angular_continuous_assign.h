@@ -38,15 +38,14 @@
    @ingroup ReconsLibraryPrograms */
 //@{
 /** Predict Continuous Parameters. */
-class Prog_angular_predict_continuous_prm: public Prog_parameters
+class Prog_angular_predict_continuous_prm
 {
 public:
     /** Filename of the reference volume */
     FileName fn_ref;
     /** Filename for the output angles.*/
     FileName fn_out_ang;
-    /** Filename for the input initial guess angles.
-        This file is used only when a continuous assignment is performed. */
+    /** Filename for the input initial guess angles. */
     FileName fn_ang;
     /** Gaussian weight sigma in Fourier space. */
     double   gaussian_DFT_sigma;
@@ -54,8 +53,12 @@ public:
     double   gaussian_Real_sigma;
     /** Maximum number of iterations */
     int      max_no_iter;
-    /** Do not modify headers */
-    bool     dont_modify_header;
+    /** Do not produce any output */
+    bool quiet;
+    /** Maximum shift allowed */
+    double max_shift;
+    /** Maximum angular change allowed */
+    double max_angular_change;
 public:
     // Real part of the Fourier transform
     Matrix3D<double> reDFTVolume;
@@ -84,9 +87,6 @@ public:
     // Vector of predicted corr
     std::vector<double>   predicted_cost;
 public:
-    /// Empty constructor
-    Prog_angular_predict_continuous_prm();
-
     /// Read argument from command line
     void read(int argc, char **argv);
 
@@ -100,12 +100,6 @@ public:
         An exception is thrown if any of the files is not found*/
     void produce_side_info();
 
-    /** Get initial guess of the pose.
-        This guess is taken from the input document file. An exception is
-        thrown if the initial guess cannot be taken from the file.*/
-    void get_initial_guess(double &shiftX, double &shiftY,
-                           double &rot, double &tilt, double &psi);
-
     /** Predict angles and shift.
         At the input the pose parameters must have an initial guess of the
         parameters. At the output they have the estimated pose.*/
@@ -116,6 +110,9 @@ public:
     /** Finish processing.
         Close all output files. */
     void finish_processing();
+    
+    /** Run the algorithm on all images */
+    void run();
 };
 
 /** Assign pose parameters for 1 image.

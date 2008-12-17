@@ -46,55 +46,49 @@
 // Prototypes
 int cstregistration(struct cstregistrationStruct *Data);
 
-// Empty constructor =======================================================
-Prog_angular_predict_continuous_prm::Prog_angular_predict_continuous_prm()
-{
-    each_image_produces_an_output = true;
-}
-
 // Read arguments ==========================================================
 void Prog_angular_predict_continuous_prm::read(int argc, char **argv)
 {
-    Prog_parameters::read(argc, argv);
     fn_ref = getParameter(argc, argv, "-ref");
     fn_ang = getParameter(argc, argv, "-ang", "");
     fn_out_ang = getParameter(argc, argv, "-oang");
     gaussian_DFT_sigma = textToFloat(getParameter(argc, argv, "-gaussian_Fourier", "0.5"));
     gaussian_Real_sigma = textToFloat(getParameter(argc, argv, "-gaussian_Real", "0.5"));
     max_no_iter = textToInteger(getParameter(argc, argv, "-max_iter", "60"));
-    dont_modify_header = checkParameter(argc, argv, "-dont_modify_header");
-    produce_side_info();
+    quiet = checkParameter(argc,argv,"-quiet");
+    max_shift = textToFloat(getParameter(argc, argv, "-max_shift", "-1"));
+    max_angular_change = textToFloat(getParameter(argc, argv, "-max_angular_change", "-1"));
 }
 
 // Show ====================================================================
 void Prog_angular_predict_continuous_prm::show()
 {
     if (quiet) return;
-    Prog_parameters::show();
-    std::cout << "Reference volume:   " << fn_ref              << std::endl
-              << "Initial angle file: " << fn_ang              << std::endl
-              << "Ouput angular file: " << fn_out_ang          << std::endl
-              << "Gaussian Fourier:   " << gaussian_DFT_sigma  << std::endl
-              << "Gaussian Real:      " << gaussian_Real_sigma << std::endl
-              << "Max. Iter:          " << max_no_iter         << std::endl
-              << "Modify header:  " << !dont_modify_header << std::endl
+    std::cout << "Reference volume:    " << fn_ref              << std::endl
+              << "Initial angle file:  " << fn_ang              << std::endl
+              << "Ouput angular file:  " << fn_out_ang          << std::endl
+              << "Gaussian Fourier:    " << gaussian_DFT_sigma  << std::endl
+              << "Gaussian Real:       " << gaussian_Real_sigma << std::endl
+              << "Max. Iter:           " << max_no_iter         << std::endl
+              << "Max. Shift:          " << max_shift           << std::endl
+              << "Max. Angular Change: " << max_angular_change  << std::endl
     ;
 }
 
 // usage ===================================================================
 void Prog_angular_predict_continuous_prm::usage()
 {
-    Prog_parameters::usage();
-    std::cerr << "   -ref <Xmipp Volume>      : Reference volume\n"
-    << "  [-ang <angle file>]       : DocFile with the initial angles\n"
-    << "                              otherwise, the angles and shifts\n"
-    << "                              are taken from the image headers\n"
-    << "   -oang <angle file>       : DocFile with output angles\n"
-    << "  [-gaussian_Fourier <s=0.5>]: Weighting sigma in Fourier space\n"
-    << "  [-gaussian_Real    <s=0.5>]: Weighting sigma in Real space\n"
-    << "  [-max_iter <max=60>]      : Maximum number of iterations\n"
-    << "  [-dont_modify_header]     : Don't save the parameters in the\n"
-    << "                              image header\n"
+    std::cerr
+        << " Usage:\n"
+        << "   -ref <Xmipp Volume>        : Reference volume\n"
+        << "   -ang <angle file>          : DocFile with the initial angles\n"
+        << "   -oang <angle file>         : DocFile with output angles\n"
+        << "  [-gaussian_Fourier <s=0.5>] : Weighting sigma in Fourier space\n"
+        << "  [-gaussian_Real    <s=0.5>] : Weighting sigma in Real space\n"
+        << "  [-max_iter <max=60>]        : Maximum number of iterations\n"
+        << "  [-max_shift <s=-1>          : Maximum shift allowed\n"
+        << "  [-max_angular_change <a=-1>]: Maximum angular change allowed\n"
+        << "  [-quiet]                    : Do not show messages\n"
     ;
 }
 
@@ -102,27 +96,7 @@ void Prog_angular_predict_continuous_prm::usage()
 void Prog_angular_predict_continuous_prm::produce_side_info()
 {
     // Read the initial angles
-    if (fn_ang != "") DF_initial.read(fn_ang);
-    else
-    {
-        SelFile SF;
-        SF.read(fn_in);
-        while (!SF.eof())
-        {
-            FileName fn_img = SF.NextImg();
-            if (fn_img=="") break;
-            ImageXmipp I;
-            I.read(fn_img);
-            Matrix1D<double> aux(5);
-            aux(0) = I.rot();
-            aux(1) = I.tilt();
-            aux(2) = I.psi();
-            aux(3) = I.Xoff();
-            aux(4) = I.Yoff();
-            DF_initial.append_data_line(aux);
-        }
-    }
-    DF_initial.go_first_data_line();
+    DF_initial.read(fn_ang);
 
     // Read the reference volume
     VolumeXmipp V;
@@ -130,7 +104,7 @@ void Prog_angular_predict_continuous_prm::produce_side_info()
     V().setXmippOrigin();
 
     // Resize the predicted vectors
-    int number_of_images = get_images_to_process();
+    int number_of_images = DF_initial.dataLineNo();
     current_image = 0;
     image_name.resize(number_of_images);
     predicted_rot.resize(number_of_images);
@@ -156,7 +130,6 @@ void Prog_angular_predict_continuous_prm::produce_side_info()
     mask_Fourier.sigma = gaussian_DFT_sigma * XSIZE(V());
     mask_Fourier.generate_2Dmask(YSIZE(V()), XSIZE(V()));
     mask_Fourier.get_cont_mask2D() *= sqrt(2 * PI) * gaussian_DFT_sigma * XSIZE(V());
-//   mask_Fourier.get_cont_mask2D().initConstant(1);
     mask_Fourier.get_cont_mask2D()(0, 0) = 0;
 
     // Weight the input volume in real space
@@ -172,26 +145,6 @@ void Prog_angular_predict_continuous_prm::produce_side_info()
                                  &Status);
     CenterFFT(reDFTVolume, true);
     CenterFFT(imDFTVolume, true);
-
-    // If dont_modify_header
-    if (dont_modify_header)
-        each_image_produces_an_output = false;
-}
-
-// Predict =================================================================
-void Prog_angular_predict_continuous_prm::get_initial_guess(
-    double &shiftX, double &shiftY,
-    double &rot, double &tilt, double &psi)
-{
-    if (DF_initial.eof())
-        REPORT_ERROR(1, "Prog_angular_predict_continuous_prm::get_initial_guess:"
-                     " Not enough angles in the initial angle file");
-    rot    = DF_initial(0);
-    tilt   = DF_initial(1);
-    psi    = DF_initial(2);
-    shiftX = DF_initial(3);
-    shiftY = DF_initial(4);
-    DF_initial.next_data_line();
 }
 
 // Predict =================================================================
@@ -199,6 +152,11 @@ double Prog_angular_predict_continuous_prm::predict_angles(ImageXmipp &I,
         double &shiftX, double &shiftY,
         double &rot, double &tilt, double &psi)
 {
+    double old_rot=rot;
+    double old_tilt=tilt;
+    double old_psi=psi;
+    double old_shiftX=shiftX;
+    double old_shiftY=shiftY;
 
     Matrix1D<double> pose(5);
     pose(0) = rot;
@@ -208,18 +166,42 @@ double Prog_angular_predict_continuous_prm::predict_angles(ImageXmipp &I,
     pose(4) = -shiftY; // for Slavica
     mask_Real.apply_mask(I(), I());
     double cost = CSTSplineAssignment(reDFTVolume, imDFTVolume,
-                                      I(), mask_Fourier.get_cont_mask2D(), pose, max_no_iter);
-    predicted_cost[current_image] = cost;
+        I(), mask_Fourier.get_cont_mask2D(), pose, max_no_iter);
+
+    Matrix2D<double> Eold, Enew;
+    Euler_angles2matrix(old_rot,old_tilt,old_psi,Eold);
+    Euler_angles2matrix(pose(0),pose(1),pose(2),Enew);
+    double angular_change=Euler_distanceBetweenMatrices(Eold,Enew);
+    double shift=sqrt(pose(3)*pose(3)+pose(4)*pose(4));
+    if (angular_change<max_angular_change || max_angular_change<0)
+    {
+        rot    =  pose(0);
+        tilt   =  pose(1);
+        psi    =  pose(2);
+    }
+    else
+        cost=-1;
+    if (shift<max_shift || max_shift<0)
+    {
+        shiftX = -pose(3);
+        shiftY = -pose(4);
+    }
+    else
+        cost=-1;
+    if (cost<0)
+    {
+        rot=old_rot;
+        tilt=old_tilt;
+        psi=old_psi;
+        shiftX=old_shiftX;
+        shiftY=old_shiftY;
+    }
+    predicted_cost  [current_image] = cost;
     image_name      [current_image] = I.name();
-    rot    = pose(0);
     predicted_rot   [current_image] = rot;
-    tilt   = pose(1);
     predicted_tilt  [current_image] = tilt;
-    psi    = pose(2);
     predicted_psi   [current_image] = psi;
-    shiftX = -pose(3);
     predicted_shiftX[current_image] = shiftX;
-    shiftY = -pose(4);
     predicted_shiftY[current_image] = shiftY;
     current_image++;
 
@@ -232,8 +214,8 @@ void Prog_angular_predict_continuous_prm::finish_processing()
     // Save predicted angles
     int p = predicted_rot.size();
     DocFile DF;
-    DF.reserve(p + 1);
-    DF.append_comment("Headerinfo columns: Predicted_Rot Predicted_Tilt Predicted_Psi Predicted_ShiftX Predicted_ShiftY Cost");
+    DF.reserve(2*p + 1);
+    DF.append_comment("Headerinfo columns: rot (1) , tilt (2), psi (3), Xoff (4), Yoff (5), Cost(6)");
     Matrix1D<double> v(6);
     for (int i = 0; i < p; i++)
     {
@@ -243,10 +225,32 @@ void Prog_angular_predict_continuous_prm::finish_processing()
         v(3) = predicted_shiftX[i];
         v(4) = predicted_shiftY[i];
         v(5) = predicted_cost[i];
-        DF.append_comment(image_name[i]);
+        DF.append_comment(DF_initial.get_imagename(i+1));
         DF.append_data_line(v);
     }
     DF.write(fn_out_ang);
+}
+
+// Run ---------------------------------------------------------------------
+void Prog_angular_predict_continuous_prm::run()
+{
+    int Nimg=DF_initial.dataLineNo();
+    if (!quiet) init_progress_bar(Nimg);
+    for (int key=1; key<=Nimg; key++)
+    {
+        ImageXmipp img;
+        DF_initial.get_image(key,img);
+        double shiftX = img.Xoff();
+        double shiftY = img.Yoff();
+        double rot    = img.rot();
+        double tilt   = img.tilt();
+        double psi    = img.psi();
+        double cost = predict_angles(img, shiftX, shiftY, rot, tilt, psi);
+        if (!quiet) progress_bar(key);
+    }
+    if (!quiet) progress_bar(Nimg);
+    
+    finish_processing();
 }
 
 /* ------------------------------------------------------------------------- */
