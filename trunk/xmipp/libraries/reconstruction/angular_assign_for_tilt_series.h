@@ -229,6 +229,7 @@ public:
     Matrix1D<double> psi;
     double rot;
     double tilt;
+    Matrix1D<double> raxis;
 
 public:
     Alignment(const Prog_tomograph_alignment *_prm)
@@ -245,15 +246,21 @@ public:
         psi.initZeros(Nimg);
         rot=90;
         tilt=90;
+        raxis.initZeros(3);
         
         Ai.clear();
         Ait.clear();
         Aip.clear();
         Aipt.clear();
         di.clear();
+        diaxis.clear();
+        B1i.clear();
+        B2i.clear();
         barri.clear();
         Matrix2D<double> dummy23(2,3);
         Matrix2D<double> dummy32(3,2);
+        Matrix2D<double> dummy33(3,3);
+        Matrix2D<double> dummy22(2,2);
         Matrix1D<double> dummy2(2);
         Matrix1D<double> dummy3(3);
         for (int i=0; i<Nimg; i++)
@@ -263,6 +270,9 @@ public:
             Aip.push_back(dummy23);
             Aipt.push_back(dummy32);
             di.push_back(dummy2);
+            diaxis.push_back(dummy2);
+            B1i.push_back(dummy33);
+            B2i.push_back(dummy33);
             barri.push_back(dummy3);
         }
         allLandmarksPredictedX.initZeros(Nlandmark,Nimg);
@@ -289,6 +299,10 @@ public:
             Ait=op.Ait;
             Aip=op.Aip;
             Aipt=op.Aipt;
+            diaxis=op.diaxis;
+            B1i=op.B1i;
+            B2i=op.B2i;
+            raxis=op.raxis;
             di=op.di;
             rj=op.rj;
             barri=op.barri;
@@ -342,6 +356,18 @@ public:
 
     // Set of bar ri
     std::vector< Matrix1D<double> > barri;
+
+    // Set of shifts due to raxis
+    std::vector< Matrix1D<double> > diaxis;
+    
+    // Set of B1i matrices
+    std::vector< Matrix2D<double> > B1i;
+    
+    // Set of B2i matrices
+    std::vector< Matrix2D<double> > B2i;
+    
+    // Matrix used for updating raxis
+    Matrix2D<double> Binvraxis;
 
     // Set of predicted landmarks (component X)
     Matrix2D<double> allLandmarksPredictedX;

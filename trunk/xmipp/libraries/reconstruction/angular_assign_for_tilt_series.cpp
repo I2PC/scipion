@@ -32,7 +32,6 @@
 #include <data/de_solver.h>
 #include <fstream>
 #include <queue>
-//gcc4 need iostream with no h
 #include <iostream>
 
 /* Compute affine matrix --------------------------------------------------- */
@@ -86,13 +85,13 @@ public:
        maskInTheSpaceOf2.initZeros(YSIZE(maskAux),XSIZE(maskAux));
        maskInTheSpaceOf2.setXmippOrigin();
        FOR_ALL_ELEMENTS_IN_MATRIX2D(maskAux)
-            maskInTheSpaceOf2(i,j)=ROUND(maskAux(i,j));
+            maskInTheSpaceOf2(i,j)=ROUND(maskAux(i,j))*Mask2(i,j);
        maskAux.initZeros();
        applyGeometry(maskAux,A21,Mask2,IS_NOT_INV,DONT_WRAP);
        maskInTheSpaceOf1.initZeros(YSIZE(maskAux),XSIZE(maskAux));
        maskInTheSpaceOf1.setXmippOrigin();
        FOR_ALL_ELEMENTS_IN_MATRIX2D(maskAux)
-            maskInTheSpaceOf1(i,j)=ROUND(maskAux(i,j));
+            maskInTheSpaceOf1(i,j)=ROUND(maskAux(i,j))*Mask1(i,j);
        
        // Compare the two images
        double dist=0.5*(1-correlation_index(transformedI1,I2,&maskInTheSpaceOf2)+
@@ -102,6 +101,8 @@ public:
           ImageXmipp save;
           save()=I1; save.write("PPPimg1.xmp");
           save()=I2; save.write("PPPimg2.xmp");
+          save()=Mask1; save.write("PPPmask1.xmp");
+          save()=Mask2; save.write("PPPmask2.xmp");
           save()=transformedI1; save.write("PPPTransformedImg1.xmp");
           save()=transformedI2; save.write("PPPTransformedImg2.xmp");
           typeCast(maskInTheSpaceOf1,save()); save.write("PPPmaskInTheSpaceOf1.xmp");
@@ -124,23 +125,24 @@ public:
     }
 };
 
+#define DEBUG
 class AffineSolver: public DESolver {
-   AffineFitness *fitness;
+    AffineFitness *fitness;
 public:
-   AffineSolver(AffineFitness *newFitness, int dim,int pop) : DESolver(dim,pop), count(0), fitness(newFitness) {;}
-   double EnergyFunction(double trial[], bool &bAtSolution) {
-      double result=fitness->affine_fitness_individual(trial);
-      #ifdef DEBUG
-		if (count++ % nPop == 0)
-		{
-			std::cout << "EvaluationsAffine= " << count/nPop
-						<< " energyAffine= " << Energy()
-				<< std::endl;
-		}
-	  #endif
-	  bAtSolution=false;
-      return(result);
-   }
+    AffineSolver(AffineFitness *newFitness, int dim,int pop) : DESolver(dim,pop), count(0), fitness(newFitness) {;}
+    double EnergyFunction(double trial[], bool &bAtSolution) {
+        double result=fitness->affine_fitness_individual(trial);
+        #ifdef DEBUG
+        if (count++ % nPop == 0)
+        {
+            std::cout << "EvaluationsAffine= " << count/nPop
+                      << " energyAffine= " << Energy()
+                      << std::endl;
+        }
+        #endif
+        bAtSolution=false;
+        return(result);
+    }
 private:
    int count;
 };
@@ -153,132 +155,136 @@ double computeAffineTransformation(const Matrix2D<double> &I1,
     Matrix2D<double> &A12, Matrix2D<double> &A21, bool show,
     double thresholdAffine, bool localAffine, bool isMirror)
 {
-    AffineFitness fitness;
+    try {
+        AffineFitness fitness;
 
-    // Set images
-    fitness.I1=I1;
-    fitness.I1.setXmippOrigin();
-	fitness.I2=I2;
-    fitness.I2.setXmippOrigin();
-   
-    fitness.Mask1=fitness.I1;
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(I1)
-    	if (I1(i,j)!=0) fitness.Mask1(i,j)=1;
+        // Set images
+        fitness.I1=I1;
+        fitness.I1.setXmippOrigin();
+	    fitness.I2=I2;
+        fitness.I2.setXmippOrigin();
 
-    fitness.Mask2=fitness.I2;
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(I2)
-    	if (I2(i,j)!=0) fitness.Mask2(i,j)=1;
+        fitness.Mask1=fitness.I1;
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(I1)
+    	    if (I1(i,j)!=0) fitness.Mask1(i,j)=1;
 
-    // Set limits for the affine matrices
-    // Order: 1->2: 4 affine params+2 translations
-    // Order: 2->1: 4 affine params+2 translations
-    fitness.minAllowed.resize(6);
-    fitness.maxAllowed.resize(6);
+        fitness.Mask2=fitness.I2;
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(I2)
+    	    if (I2(i,j)!=0) fitness.Mask2(i,j)=1;
 
-    // Scale factors
-    fitness.minAllowed(0)=fitness.minAllowed(3)=0.5;
-    fitness.maxAllowed(0)=fitness.maxAllowed(3)=1.5;
-    if (isMirror)
-    {
-        fitness.minAllowed(3)=-1.5;
-        fitness.maxAllowed(3)=-0.5;
-    }
+        // Set limits for the affine matrices
+        // Order: 1->2: 4 affine params+2 translations
+        // Order: 2->1: 4 affine params+2 translations
+        fitness.minAllowed.resize(6);
+        fitness.maxAllowed.resize(6);
 
-    // Rotation factors
-    fitness.minAllowed(1)=fitness.minAllowed(2)=-0.5;
-    fitness.maxAllowed(1)=fitness.maxAllowed(2)= 0.5;
-
-    // Shifts
-    fitness.minAllowed(4)=fitness.minAllowed(5)=-maxShift;
-    fitness.maxAllowed(4)=fitness.maxAllowed(5)= maxShift;
-
-    std::ifstream fh_in;
-    fh_in.open(fn_affine.c_str());
-	
-    // Return result
-    double cost;
-	
-    if (fh_in) {
-    	A12.resize(3,3);
-	A21.resize(3,3);
-     	fh_in >> A12 >> A21 >> cost;
-	fh_in.close();
-    } else {
-        // Optimize with differential evolution
-        Matrix1D<double> A(6);
-        if (!localAffine)
+        // Scale factors
+        fitness.minAllowed(0)=fitness.minAllowed(3)=0.5;
+        fitness.maxAllowed(0)=fitness.maxAllowed(3)=1.5;
+        if (isMirror)
         {
-            double bestEnergy=2, energy;
-            int n=0;
-            do
-            {
-                AffineSolver solver(&fitness,6,6*10);
-                solver.Setup(MULTIDIM_ARRAY(fitness.minAllowed),
-                             MULTIDIM_ARRAY(fitness.maxAllowed),
-		             stBest2Bin, 0.5, 0.8);
-                solver.Solve(maxIterDE);
-                energy=solver.Energy();
-                if (n==0 || bestEnergy>energy)
-                {
-                    FOR_ALL_ELEMENTS_IN_MATRIX1D(A)
-                       A(i)=solver.Solution()[i];
-                    bestEnergy=energy;
-                }
-                n++;
-            } while ((n<3 || (n>=3 && n<10 && bestEnergy>1-thresholdAffine))
-                     && bestEnergy>=0.07);
+            fitness.minAllowed(3)=-1.5;
+            fitness.maxAllowed(3)=-0.5;
         }
-        else
-        {
-            A(0)=A(3)=1;
-            if (isMirror)
-                A(3)*=-1;
-            double tx, ty;
-            pthread_mutex_lock( &localAffineMutex );
-            if (!isMirror) best_shift(I1,I2,tx,ty);
+
+        // Rotation factors
+        fitness.minAllowed(1)=fitness.minAllowed(2)=-0.5;
+        fitness.maxAllowed(1)=fitness.maxAllowed(2)= 0.5;
+
+        // Shifts
+        fitness.minAllowed(4)=fitness.minAllowed(5)=-maxShift;
+        fitness.maxAllowed(4)=fitness.maxAllowed(5)= maxShift;
+
+        std::ifstream fh_in;
+        fh_in.open(fn_affine.c_str());
+
+        // Return result
+        double cost;
+
+        if (fh_in) {
+    	    A12.resize(3,3);
+	    A21.resize(3,3);
+     	    fh_in >> A12 >> A21 >> cost;
+	    fh_in.close();
+        } else {
+            // Optimize with differential evolution
+            Matrix1D<double> A(6);
+            if (!localAffine)
+            {
+                double bestEnergy=2, energy;
+                int n=0;
+                do
+                {
+                    AffineSolver solver(&fitness,6,6*10);
+                    solver.Setup(MULTIDIM_ARRAY(fitness.minAllowed),
+                                 MULTIDIM_ARRAY(fitness.maxAllowed),
+		                 stBest2Bin, 0.5, 0.8);
+                    solver.Solve(maxIterDE);
+                    energy=solver.Energy();
+                    if (n==0 || bestEnergy>energy)
+                    {
+                        FOR_ALL_ELEMENTS_IN_MATRIX1D(A)
+                           A(i)=solver.Solution()[i];
+                        bestEnergy=energy;
+                    }
+                    n++;
+                } while ((n<3 || (n>=3 && n<10 && bestEnergy>1-thresholdAffine))
+                         && bestEnergy>=0.07);
+            }
             else
             {
-                Matrix2D<double> auxI2=I2;
-                auxI2.selfReverseY();
-                best_shift(I1,auxI2,tx,ty);
-                ty=-ty;
+                A(0)=A(3)=1;
+                if (isMirror)
+                    A(3)*=-1;
+                double tx, ty;
+                pthread_mutex_lock( &localAffineMutex );
+                if (!isMirror) best_shift(I1,I2,tx,ty);
+                else
+                {
+                    Matrix2D<double> auxI2=I2;
+                    auxI2.selfReverseY();
+                    STARTINGX(auxI2)=STARTINGX(I2);
+                    STARTINGY(auxI2)=STARTINGY(I2);
+                    best_shift(I1,auxI2,tx,ty);
+                    ty=-ty;
+                }
+                pthread_mutex_unlock( &localAffineMutex );
+                A(4)=-tx;
+                A(5)=-ty;
             }
-            pthread_mutex_unlock( &localAffineMutex );
-            A(4)=-tx;
-            A(5)=-ty;
+
+            // Optimize with Powell
+            Matrix1D<double> steps(A);
+            steps.initConstant(1);
+            int iter;
+            powellOptimizer(A, 1, XSIZE(A),
+                AffineFitness::Powell_affine_fitness_individual, &fitness, 0.005,
+                cost, iter, steps, false);
+
+            // Separate solution
+            A12.initIdentity(3);
+            A12(0,0)=A(0); A12(0,1)=A(1); A12(0,2)=A(4);
+            A12(1,0)=A(2); A12(1,1)=A(3); A12(1,2)=A(5);
+
+            A21=A12.inv();
+
+            std::ofstream fh_out;
+            fh_out.open(fn_affine.c_str());
+            fh_out << A12 << std::endl << A21 << std::endl << cost;
+            fh_out.close();
+        }   
+        if (show)
+        {
+    	    fitness.showMode=true;
+            Matrix1D<double> p(6);
+            p(0)=A12(0,0); p(1)=A12(0,1); p(4)=A12(0,2);
+            p(2)=A12(1,0); p(3)=A12(1,1); p(5)=A12(1,2);
+            fitness.affine_fitness_individual(MULTIDIM_ARRAY(p));
+    	    fitness.showMode=false;
         }
 
-        // Optimize with Powell
-        Matrix1D<double> steps(A);
-        steps.initConstant(1);
-        int iter;
-        powellOptimizer(A, 1, XSIZE(A),
-            AffineFitness::Powell_affine_fitness_individual, &fitness, 0.005,
-            cost, iter, steps, false);
-
-        // Separate solution
-        A12.initIdentity(3);
-        A12(0,0)=A(0); A12(0,1)=A(1); A12(0,2)=A(4);
-        A12(1,0)=A(2); A12(1,1)=A(3); A12(1,2)=A(5);
-
-        A21=A12.inv();
-
-        std::ofstream fh_out;
-        fh_out.open(fn_affine.c_str());
-        fh_out << A12 << std::endl << A21 << std::endl << cost;
-        fh_out.close();
-    }   
-    if (show)
-    {
-    	fitness.showMode=true;
-        Matrix1D<double> p(6);
-        p(0)=A12(0,0); p(1)=A12(0,1); p(4)=A12(0,2);
-        p(2)=A12(1,0); p(3)=A12(1,1); p(5)=A12(1,2);
-        fitness.affine_fitness_individual(MULTIDIM_ARRAY(p));
-    	fitness.showMode=false;
-    }
-	
-    return cost;
+        return cost;
+    } catch (Xmipp_error XE) {std::cout << XE; exit(1);}
 }
 
 /* Parameters -------------------------------------------------------------- */
@@ -470,7 +476,8 @@ void * threadComputeTransform( void * args )
 	pthread_mutex_lock( &printingMutex );
         affineTransformations[jj_1][jj]=Aij;
         affineTransformations[jj][jj_1]=Aji;
-	std::cout << "Cost for [" << jj_1 << "] - [" << jj << "] = " << cost << std::endl;
+	std::cout << "Cost for [" << jj_1 << "] - ["
+                  << jj << "] = " << cost << std::endl;
 	pthread_mutex_unlock( &printingMutex );
 	affineTransformations[jj_1][jj]=Aij;
 	affineTransformations[jj][jj_1]=Aji;
@@ -480,7 +487,7 @@ void * threadComputeTransform( void * args )
 }
  
 /* Generate landmark set --------------------------------------------------- */
-//#define DEBUG
+#define DEBUG
 void Prog_tomograph_alignment::generateLandmarkSet() {
     if (!exists(fnRoot+"_landmarks.txt"))
     {
@@ -492,6 +499,7 @@ void Prog_tomograph_alignment::generateLandmarkSet() {
         init_progress_bar(gridSamples);
         int totalPoints=0;
         int includedPoints=0;
+        Matrix1D<int> visited(Nimg);
         for (int nx=0; nx<gridSamples; ++nx)
         {
             XX(rii)=STARTINGX(*img[0])+ROUND(deltaShift*(0.5+nx));
@@ -507,6 +515,8 @@ void Prog_tomograph_alignment::generateLandmarkSet() {
                     l.y=YY(rii);
                     l.imgIdx=ii;
                     chain.push_back(l);
+                    visited.initZeros();
+                    visited(ii)=1;
 
                     // Follow this landmark backwards
                     bool acceptLandmark=true;
@@ -515,12 +525,13 @@ void Prog_tomograph_alignment::generateLandmarkSet() {
                     else            jj=ii-1;
                     Matrix2D<double> Aij, Aji;
                     Matrix1D<double> rcurrent=rii;
-                    while (jj>=0 && acceptLandmark && jj!=ii)
+                    while (jj>=0 && acceptLandmark && !visited(jj))
                     {
                         // Compute the affine transformation between ii and jj
                         int jj_1;
                         if (isCapillar) jj_1=intWRAP(jj+1,0,Nimg-1);
                         else            jj_1=jj+1;
+                        visited(jj)=1;
                         Aij=affineTransformations[jj][jj_1];
 	                Aji=affineTransformations[jj_1][jj];
                         rjj=Aji*rcurrent;
@@ -544,12 +555,13 @@ void Prog_tomograph_alignment::generateLandmarkSet() {
                     else jj=ii+1;
                     rcurrent=rii;
                     int jjright=ii;
-                    while (jj<Nimg && acceptLandmark && jj!=ii)
+                    while (jj<Nimg && acceptLandmark && !visited(jj))
                     {
                         // Compute the affine transformation between ii and jj
                         int jj_1;
                         if (isCapillar) jj_1=intWRAP(jj-1,0,Nimg-1);
                         else            jj_1=jj-1;
+                        visited(jj)=1;
                         Aij=affineTransformations[jj_1][jj];
 	                Aji=affineTransformations[jj][jj_1];
                         rjj=Aij*rcurrent;
@@ -579,7 +591,11 @@ void Prog_tomograph_alignment::generateLandmarkSet() {
                         {
                             #ifdef DEBUG
                                 std::cout << " Accepted with length= "
-                                          << chain.size();
+                                          << chain.size()
+                                          << " [" << chain[0].imgIdx << " - "
+                                          << chain[chain.size()-1].imgIdx << "]= ";
+                                for (int i=0; i<chain.size(); i++)
+                                    std::cout << chain[i].imgIdx << " ";
                             #endif
                             chainList.push_back(chain);
                             includedPoints+=chain.size();
@@ -629,61 +645,23 @@ void Prog_tomograph_alignment::generateLandmarkSet() {
 }
 #undef DEBUG
 
-/* Produce information from landmarks -------------------------------------- */
-void Prog_tomograph_alignment::produceInformationFromLandmarks()
-{
-    // Produce V sets
-    std::vector<int> emptyVector;
-
-    Vseti.clear();
-    for (int i=0; i<XSIZE(allLandmarksX); i++)
-       Vseti.push_back(emptyVector);
-
-    Vsetj.clear();
-    for (int j=0; j<YSIZE(allLandmarksX); j++)
-       Vsetj.push_back(emptyVector);
-
-    for (int j=0; j<YSIZE(allLandmarksX); j++)
-        for (int i=0; i<XSIZE(allLandmarksX); i++)
-            if (allLandmarksX(j,i)!=XSIZE(*img[0]))
-            {
-                Vseti[i].push_back(j);
-                Vsetj[j].push_back(i);
-            }
-    
-    // Count the number of landmarks per image and average projection
-    // of all landmarks in a given image
-    ni.initZeros(Nimg);
-    barpi.clear();
-    for (int i=0; i<Nimg; i++)
-    {
-        ni(i)=static_cast<int>(Vseti[i].size());
-        Matrix1D<double> pi(2);
-        for (int jj=0; jj<ni(i); jj++)
-        {
-            int j=Vseti[i][jj];
-            XX(pi)+=allLandmarksX(j,i);
-            YY(pi)+=allLandmarksY(j,i);
-        }
-        pi/=ni(i);
-        barpi.push_back(pi);
-    }
-}
-
 /* Refine landmark --------------------------------------------------------- */
 bool Prog_tomograph_alignment::refineLandmark(int ii, int jj,
     const Matrix1D<double> &rii, Matrix1D<double> &rjj) const
 {
-    int halfSize=ROUND(localSize*XSIZE(*img[ii]))/2;
-    if (XX(rii)<STARTINGX(*img[ii])+2.6*halfSize || 
-        XX(rii)>FINISHINGX(*img[ii])-2.6*halfSize ||
-        YY(rii)<STARTINGY(*img[ii])+2.6*halfSize || 
-        YY(rii)>FINISHINGY(*img[ii])-2.6*halfSize ||
-        XX(rjj)<STARTINGX(*img[jj])+2.6*halfSize || 
-        XX(rjj)>FINISHINGX(*img[jj])-2.6*halfSize ||
-        YY(rjj)<STARTINGY(*img[jj])+2.6*halfSize || 
-        YY(rjj)>FINISHINGY(*img[jj])-2.6*halfSize)
+    int halfSize=XMIPP_MAX(ROUND(localSize*XSIZE(*img[ii]))/2,4);
+    if (XX(rii)-halfSize<STARTINGX(*img[ii])  || 
+        XX(rii)+halfSize>FINISHINGX(*img[ii]) ||
+        YY(rii)-halfSize<STARTINGY(*img[ii])  || 
+        YY(rii)+halfSize>FINISHINGY(*img[ii]) ||
+        XX(rjj)-halfSize<STARTINGX(*img[jj])  || 
+        XX(rjj)+halfSize>FINISHINGX(*img[jj]) ||
+        YY(rjj)-halfSize<STARTINGY(*img[jj])  || 
+        YY(rjj)+halfSize>FINISHINGY(*img[jj]))
         return 0;
+
+    // Check if the two pieces are reversed
+    bool reversed=isCapillar && ABS(ii-jj)>Nimg/2;
 
     // Select piece in image ii, compute its statistics and normalize
     Matrix2D<double> pieceii(2*halfSize+1,2*halfSize+1),
@@ -707,7 +685,13 @@ bool Prog_tomograph_alignment::refineLandmark(int ii, int jj,
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pieceii)
            DIRECT_MULTIDIM_ELEM(pieceii,n)=
               (DIRECT_MULTIDIM_ELEM(pieceii,n)-mean_ii)/stddev_ii;
-
+    if (showRefinement)
+    {
+        ImageXmipp save;
+        save()=pieceii; save.write("PPPpieceii.xmp");
+        std::cout << "ii=" << ii << " jj=" << jj << std::endl;
+    }
+    
     // Try all possible shifts
     Matrix2D<double> corr((int)(1.5*(2*halfSize+1)),(int)(1.5*(2*halfSize+1)));
     corr.setXmippOrigin();
@@ -741,6 +725,8 @@ bool Prog_tomograph_alignment::refineLandmark(int ii, int jj,
             stddev_jj = stddev_jj / MULTIDIM_SIZE(piecejj) - mean_jj * mean_jj;
             stddev_jj *= MULTIDIM_SIZE(piecejj) / (MULTIDIM_SIZE(piecejj) - 1);
             stddev_jj = sqrt(static_cast<double>((ABS(stddev_jj))));
+            if (reversed)
+                piecejj.selfReverseY();
 
             // Compute the correlation
             corr(shifty,shiftx)=0;
@@ -767,7 +753,11 @@ bool Prog_tomograph_alignment::refineLandmark(int ii, int jj,
                         if (newshifty>=STARTINGY(corr) &&
                             newshifty<=FINISHINGY(corr) &&
                             newshiftx>=STARTINGX(corr) &&
-                            newshiftx<=FINISHINGX(corr))
+                            newshiftx<=FINISHINGX(corr) &&
+                            XX(rjj)+newshiftx-halfSize>=STARTINGX(*img[jj]) &&
+                            XX(rjj)+newshiftx+halfSize<=FINISHINGX(*img[jj]) &&
+                            YY(rjj)+newshifty-halfSize>=STARTINGY(*img[jj]) &&
+                            YY(rjj)+newshifty+halfSize<=FINISHINGY(*img[jj]))
                             if (corr(newshifty,newshiftx)<-1)
                                 Q.push(vectorR2(newshifty,newshiftx));
                     }
@@ -776,28 +766,32 @@ bool Prog_tomograph_alignment::refineLandmark(int ii, int jj,
 
         if (maxval>corrThreshold)
         {
-            YY(rjj)+=imax;
             XX(rjj)+=jmax;
+            if (reversed) YY(rjj)-=imax;
+            else          YY(rjj)+=imax;
             accept=true;
-
-            if (showRefinement)
-            {
-                ImageXmipp save;
-                save()=pieceii; save.write("PPPpieceii.xmp");
-                FOR_ALL_ELEMENTS_IN_MATRIX2D(piecejj)
-                    piecejj(i,j)=(*img[jj])((int)(YY(rjj)+i),(int)(XX(rjj)+j));
-                save()=piecejj; save.write("PPPpiecejj.xmp");
-                save()=corr; save.write("PPPcorr.xmp");
-                std::cout << "ii=" << ii << " jj=" << jj << std::endl;
-                std::cout << "rii=" << rii.transpose() << std::endl;
-                std::cout << "rjj=" << rjj.transpose() << std::endl;
-                std::cout << "imax=" << imax << " jmax=" << jmax << std::endl;
-                std::cout << "maxval=" << maxval << std::endl;
-                std::cout << "Press any key\n";
-                char c;
-                std::cin >> c;
-            }
         }
+        if (showRefinement)
+        {
+            ImageXmipp save;
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(piecejj)
+                piecejj(i,j)=(*img[jj])((int)(YY(rjj)+i),(int)(XX(rjj)+j));
+            if (reversed)
+                piecejj.selfReverseY();
+            save()=piecejj; save.write("PPPpiecejj.xmp");
+            save()=corr; save.write("PPPcorr.xmp");
+            std::cout << "rii=" << rii.transpose() << std::endl;
+            std::cout << "rjj=" << rjj.transpose() << std::endl;
+            std::cout << "imax=" << imax << " jmax=" << jmax << std::endl;
+            std::cout << "maxval=" << maxval << std::endl;
+        }
+    }
+    if (showRefinement)
+    {
+        std::cout << "Accepted=" << accept << std::endl;
+        std::cout << "Press any key\n";
+        char c;
+        std::cin >> c;
     }
     return (accept);
 }
@@ -806,6 +800,13 @@ bool Prog_tomograph_alignment::refineLandmark(int ii, int jj,
 //#define DEBUG
 bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain)
 {
+    #ifdef DEBUG
+        std::cout << "Chain for refinement: ";
+        for (int i=0; i<chain.size(); i++)
+            std::cout << chain[i].imgIdx << " ";
+        std::cout << std::endl;
+    #endif        
+
     for (int K=0; K<2 && chain.size()>seqLength; K++)
     {
         sort(chain.begin(), chain.end());
@@ -832,7 +833,7 @@ bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain)
             }
 
             #ifdef DEBUG
-                showRefinement=(step==maxStep);
+                // COSS showRefinement=(step==maxStep);
             #endif
             // Refine backwards all images
             for (int i=chainLength-1; i>=1; i--)
@@ -850,22 +851,26 @@ bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain)
                 }
             }
             #ifdef DEBUG
-                showRefinement=false;
+                // COSS: showRefinement=false;
             #endif
         }
 
         // Check that all images in the stack correlate well with the
         // average of all pieces
-        int halfSize=ROUND(localSize*XSIZE(*img[0]))/2;
-        Matrix2D<double> avgPiece(2*halfSize+1,2*halfSize+1);
+        int halfSize=XMIPP_MAX(ROUND(localSize*XSIZE(*img[0]))/2,4);
+        Matrix2D<double> avgPiece(2*halfSize+1,2*halfSize+1), pieceAux;
         avgPiece.setXmippOrigin();
+        pieceAux=avgPiece;
         // compute average piece
         for (int n=0; n<chainLength; n++)
         {
             int ii=chain[n].imgIdx;
             VECTOR_R2(rii,chain[n].x,chain[n].y);
             FOR_ALL_ELEMENTS_IN_MATRIX2D(avgPiece)
-                avgPiece(i,j)+=(*img[ii])((int)(YY(rii)+i),(int)(XX(rii)+j));
+                pieceAux(i,j)=(*img[ii])((int)(YY(rii)+i),(int)(XX(rii)+j));
+            if (isCapillar && ABS(chain[n].imgIdx-chain[0].imgIdx)>Nimg/2)
+                pieceAux.selfReverseY();
+            avgPiece+=pieceAux;
         }
         avgPiece/=chainLength;
 
@@ -881,6 +886,8 @@ bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain)
             VECTOR_R2(rii,chain[n].x,chain[n].y);
             FOR_ALL_ELEMENTS_IN_MATRIX2D(pieceii)
                 pieceii(i,j)=(*img[ii])((int)(YY(rii)+i),(int)(XX(rii)+j));
+            if (isCapillar && ABS(chain[n].imgIdx-chain[0].imgIdx)>Nimg/2)
+                pieceii.selfReverseY();
             double corr=correlation_index(pieceii,avgPiece);
             if (corr>corrThreshold)
             {
@@ -891,7 +898,7 @@ bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain)
                 ImageXmipp save;
                 save()=pieceii; save.write("PPPpieceiiRefine.xmp");
                 save()=avgPiece; save.write("PPPpieceAvg.xmp");
-                std::cout << "Corr=" << corr;
+                std::cout << "ii= " << ii << " corr=" << corr;
                 if (corr<=corrThreshold) std::cout << "  Removed!!";
                 std::cout << "\nAvgCorr=" << avgCorr/refinedChain.size() << std::endl
                           << "RefinedLength=" << refinedChain.size() << std::endl
@@ -906,9 +913,10 @@ bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain)
         chain=refinedChain;
     }
     
+    // Check that the chain is of the desired length
     double tilt0=tiltList[chain[0].imgIdx];
     double tiltF=tiltList[chain[chain.size()-1].imgIdx];
-    double lengthThreshold=FLOOR(seqLength*cos(DEG2RAD(0.5*(tilt0+tiltF))));
+    double lengthThreshold=XMIPP_MAX(3,FLOOR(seqLength*cos(DEG2RAD(0.5*(tilt0+tiltF)))));
     return chain.size()>lengthThreshold;
 }
 #undef DEBUG
@@ -984,9 +992,9 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
         mask.initZeros(I());
         FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
             if (I(i,j)!=0) mask(i,j)=1;
-	I().selfTranslate(-alignment.di[i],DONT_WRAP);
+	I().selfTranslate(-(alignment.di[i]+alignment.diaxis[i]),DONT_WRAP);
 	I().selfRotate(90-alignment.rot+alignment.psi(i),DONT_WRAP);
-	mask.selfTranslate(-alignment.di[i],DONT_WRAP);
+	mask.selfTranslate(-(alignment.di[i]+alignment.diaxis[i]),DONT_WRAP);
 	mask.selfRotate(90-alignment.rot+alignment.psi(i),DONT_WRAP);
 	mask.binarize(0.5);
 	Matrix2D<int> iMask;
@@ -1011,10 +1019,10 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
             mask.initZeros(Iorig());
             FOR_ALL_ELEMENTS_IN_MATRIX2D(Iorig())
                 if (Iorig(i,j)!=0) mask(i,j)=1;
-	    Iorig().selfTranslate(-alignment.di[i]*XSIZE(Iorig())/XSIZE(I()),
+	    Iorig().selfTranslate(-(alignment.di[i]+alignment.diaxis[i])*XSIZE(Iorig())/XSIZE(I()),
                 DONT_WRAP);
 	    Iorig().selfRotate(90-alignment.rot+alignment.psi(i),DONT_WRAP);
-	    mask.selfTranslate(-alignment.di[i]*XSIZE(Iorig())/XSIZE(I()),
+	    mask.selfTranslate(-(alignment.di[i]+alignment.diaxis[i])*XSIZE(Iorig())/XSIZE(I()),
                 DONT_WRAP);
 	    mask.selfRotate(90-alignment.rot+alignment.psi(i),DONT_WRAP);
 	    mask.binarize(0.5);
@@ -1032,12 +1040,53 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
         // Prepare data for the docfile
         Matrix1D<double> params(3);
         params(0)=90-alignment.rot+alignment.psi(i);
-        params(1)=XX(alignment.di[i]);
-        params(2)=YY(alignment.di[i]);
+        params(1)=XX(alignment.di[i]+alignment.diaxis[i]);
+        params(2)=YY(alignment.di[i]+alignment.diaxis[i]);
         DF.append_comment(fn_corrected);
         DF.append_data_line(params);
    }
    DF.write(fnRoot+"_correction_parameters.txt");
+}
+
+/* Produce information from landmarks -------------------------------------- */
+void Prog_tomograph_alignment::produceInformationFromLandmarks()
+{
+    // Produce V sets
+    std::vector<int> emptyVector;
+
+    Vseti.clear();
+    for (int i=0; i<XSIZE(allLandmarksX); i++)
+       Vseti.push_back(emptyVector);
+
+    Vsetj.clear();
+    for (int j=0; j<YSIZE(allLandmarksX); j++)
+       Vsetj.push_back(emptyVector);
+
+    for (int j=0; j<YSIZE(allLandmarksX); j++)
+        for (int i=0; i<XSIZE(allLandmarksX); i++)
+            if (allLandmarksX(j,i)!=XSIZE(*img[0]))
+            {
+                Vseti[i].push_back(j);
+                Vsetj[j].push_back(i);
+            }
+    
+    // Count the number of landmarks per image and average projection
+    // of all landmarks in a given image
+    ni.initZeros(Nimg);
+    barpi.clear();
+    for (int i=0; i<Nimg; i++)
+    {
+        ni(i)=static_cast<int>(Vseti[i].size());
+        Matrix1D<double> pi(2);
+        for (int jj=0; jj<ni(i); jj++)
+        {
+            int j=Vseti[i][jj];
+            XX(pi)+=allLandmarksX(j,i);
+            YY(pi)+=allLandmarksY(j,i);
+        }
+        pi/=ni(i);
+        barpi.push_back(pi);
+    }
 }
 
 /* Remove outliers ---------------------------------------------------------*/
@@ -1101,7 +1150,7 @@ double wrapperError(double *p, void *prm)
     return alignment.optimizeGivenAxisDirection();
 }
 
-//#define DEBUG
+#define DEBUG
 void Prog_tomograph_alignment::run() {
     generateLandmarkSet();
     produceInformationFromLandmarks();
@@ -1180,7 +1229,7 @@ void Prog_tomograph_alignment::run() {
 #undef DEBUG
 
 /* Optimize for rot -------------------------------------------------------- */
-//#define DEBUG
+#define DEBUG
 double Alignment::optimizeGivenAxisDirection()
 {
     double bestError;
@@ -1191,7 +1240,8 @@ double Alignment::optimizeGivenAxisDirection()
         computeGeometryDependentOfRotation();
         double error=computeError();
         #ifdef DEBUG
-            std::cout << "it=" << Niterations << " Error= " << error << std::endl;
+            std::cout << "it=" << Niterations << " Error= " << error
+                      << " raxis=" << raxis.transpose() << std::endl;
         #endif
         updateModel();
         Niterations++;
@@ -1218,30 +1268,62 @@ void Alignment::computeGeometryDependentOfAxis()
     Euler_direction(rot, tilt, 0, axis);
 
     // Compute Aip, Aipt
-    Matrix2D<double> Raxis;
+    Matrix2D<double> Raxis, I, Ip, B;
+    Binvraxis.initZeros(3,3);
+    I.initIdentity(3);
+    Ip=I; Ip(2,2)=0;
     for (int i=0; i<Nimg; i++)
     {
         Raxis=rotation3DMatrix(prm->tiltList[i],axis);
+        Raxis.resize(3,3);
         Aipt[i](0,0)=Aip[i](0,0)=Raxis(0,0);
         Aipt[i](1,0)=Aip[i](0,1)=Raxis(0,1);
         Aipt[i](2,0)=Aip[i](0,2)=Raxis(0,2); 
         Aipt[i](0,1)=Aip[i](1,0)=Raxis(1,0);
         Aipt[i](1,1)=Aip[i](1,1)=Raxis(1,1);
         Aipt[i](2,1)=Aip[i](1,2)=Raxis(1,2);
+        
+        B=I-Raxis;
+        B=B.transpose()*Ip*B;
+        Binvraxis+=prm->ni(i)*(B+B.transpose());
+        
+        B1i[i]=I-Raxis.transpose();
+        B2i[i]=B1i[i]*Ip*Raxis;
+/*COSS:
+        std::cout << "Dependent on axis i=" << i << std::endl
+                  << "tilt[i]=" << prm->tiltList[i] << std::endl
+                  << "Raxis=\n" << Raxis
+                  << "Aip[i]=\n" << Aip[i]
+                  << "B1i[i]=\n" << B1i[i] << std::endl
+                  << "B2i[i]=\n" << B2i[i] << std::endl;
+*/                  
     }
+    Binvraxis=Binvraxis.inv();
 }
 
 /* Compute the geometry part corresponding to axis ------------------------- */
 void Alignment::computeGeometryDependentOfRotation()
 {
     // Compute Ai, Ait
-    Matrix2D<double> Rinplane;
+    Matrix2D<double> Rinplane, I(2,3);
+    I(0,0)=I(1,1)=1;
     for (int i=0; i<Nimg; i++)
     {
         Rinplane=rotation3DMatrix(-psi(i),'Z');
+        Rinplane.resize(3,3);
+        B1i[i]=B1i[i]*Rinplane.transpose();
+
         Rinplane.resize(2,2);
         Ai[i]=Rinplane*Aip[i];
         Ait[i]=Ai[i].transpose();
+        diaxis[i]=Rinplane*(I-Aip[i])*raxis;
+/* COSS:        
+        std::cout << "Dependent on rotation i=" << i << std::endl
+                  << "B1i[i]=\n" << B1i[i] << std::endl
+                  << "I-Raxis=\n" << (I-Aip[i])
+                  << "raxis=" << raxis.transpose() << std::endl;
+        std::cout << "diaxis[" << i << "]=" << diaxis[i].transpose() << std::endl;
+*/
     }
 }
 
@@ -1257,7 +1339,7 @@ double Alignment::computeError() const
         for (int jj=0; jj<jjmax; jj++)
         {
             int j=prm->Vseti[i][jj];
-            pijp=Ai[i]*rj[j]+di[i];
+            pijp=Ai[i]*rj[j]+di[i]+diaxis[i];
             DIRECT_MAT_ELEM(allLandmarksPredictedX,j,i)=XX(pijp);
             DIRECT_MAT_ELEM(allLandmarksPredictedY,j,i)=YY(pijp);
             double diffx=DIRECT_MAT_ELEM(prm->allLandmarksX,j,i)-XX(pijp);
@@ -1300,66 +1382,32 @@ void Alignment::updateModel()
     Matrix2D<double> A(3,3), AitAi;
     Matrix1D<double> b(3);
 
-    // Average of all landmarks from 1 to N-1 as reconstructed from the last
-    // landmark
-    int iimax=prm->Vsetj[Nlandmark-1].size();
-    // double error0=computeError();
-/*
-    Matrix1D<double> rNlandmark(3);
-    for (int ii=0; ii<iimax; ii++)
-    {
-        int i=prm->Vsetj[Nlandmark-1][ii];
-        AitAi=Ait[i]*Ai[i];
-        for (int j=0; j<Nlandmark-1; j++)
-            rNlandmark+=AitAi*rj[j];
-    }
-    // std::cout << "rNlandmark=" << rNlandmark << std::endl;
-*/
+    #ifdef DEBUG
+        std::cout << "Step 0: error=" << computeError() << std::endl;
+    #endif
+
     // Update the 3D positions of the landmarks
-//    Matrix1D<double> sumLandmarks(3);
-//    for (int j=0; j<Nlandmark-1; j++)
     for (int j=0; j<Nlandmark; j++)
     {
         A.initZeros();
         b.initZeros();
         // Compute the part correponding to Vj
-        iimax=prm->Vsetj[j].size();
+        int iimax=prm->Vsetj[j].size();
         for (int ii=0; ii<iimax; ii++)
         {
             int i=prm->Vsetj[j][ii];
             XX(pij)=DIRECT_MAT_ELEM(prm->allLandmarksX,j,i);
             YY(pij)=DIRECT_MAT_ELEM(prm->allLandmarksY,j,i);
             A+=Ait[i]*Ai[i];
-            b+=Ait[i]*(pij-di[i]);
+            b+=Ait[i]*(pij-(di[i]+diaxis[i]));
         }
 
-        // Compute the part corresponding to V_N
-/*
-        // std::cout << "A before\n" << A << "b before: " << b.transpose() << std::endl;
-        iimax=prm->Vsetj[Nlandmark-1].size();
-        for (int ii=0; ii<iimax; ii++)
-        {
-            int i=prm->Vsetj[Nlandmark-1][ii];
-            XX(piN)=DIRECT_MAT_ELEM(prm->allLandmarksX,Nlandmark-1,i);
-            YY(piN)=DIRECT_MAT_ELEM(prm->allLandmarksY,Nlandmark-1,i);
-            AitAi=Ait[i]*Ai[i];
-            A+=AitAi;
-            b-=Ait[i]*(piN-di[i]);
-            for (int jp=0; jp<Nlandmark-1; jp++)
-            {
-               if (jp!=j) b-=AitAi*rj[jp];
-            }
-            // b+=AitAi*rj[j];
-        }
-        // b-=rNlandmark;
-        // std::cout << "A after\n" << A << "b after: " << b.transpose() << std::endl;
-*/
         // Update rj[j]
         rj[j]=A.inv()*b;
-//        sumLandmarks-=rj[j];
     }
-//    rj[Nlandmark-1]=sumLandmarks;
-    // double error1=computeError();
+    #ifdef DEBUG
+        std::cout << "Step 1: error=" << computeError() << std::endl;
+    #endif
 
     // Compute the average landmarks seen in each image
     for (int i=0; i<Nimg; i++)
@@ -1374,9 +1422,33 @@ void Alignment::updateModel()
     }
 
     // Update shifts
-    for (int i=0; i<Nimg; i++)
-        di[i]=prm->barpi[i]-Ai[i]*barri[i];
-    // double error2=computeError();
+    if (prm->isCapillar)
+    {
+        // Update the raxis
+        Matrix1D<double> tmp2(3), Pij(3);
+        for (int i=0; i<Nimg; i++)
+        {
+            for (int jj=0; jj<prm->ni(i); jj++)
+            {
+                int j=prm->Vseti[i][jj];
+                XX(Pij)=DIRECT_MAT_ELEM(prm->allLandmarksX,j,i);
+                YY(Pij)=DIRECT_MAT_ELEM(prm->allLandmarksY,j,i);
+                tmp2+=B1i[i]*Pij-B2i[i]*rj[j];
+            }
+        }
+        tmp2*=2.0;
+        tmp2=Binvraxis*tmp2;
+        XX(raxis)=XX(tmp2);
+        YY(raxis)=YY(tmp2);
+        computeGeometryDependentOfRotation();
+    }
+    else
+        // Update the individual di
+        for (int i=0; i<Nimg; i++)
+            di[i]=prm->barpi[i]-Ai[i]*barri[i];
+    #ifdef DEBUG
+        std::cout << "Step 2: error=" << computeError() << std::endl;
+    #endif
     
     // Update rotations
     if (prm->psiMax>0)
@@ -1387,7 +1459,7 @@ void Alignment::updateModel()
         {
             tmp1.initZeros();
             tmp2.initZeros();
-            dim.fromVector(di[i]);
+            dim.fromVector(di[i]+diaxis[i]);
             for (int jj=0; jj<prm->ni(i); jj++)
             {
                 int j=prm->Vseti[i][jj];
@@ -1397,7 +1469,6 @@ void Alignment::updateModel()
 
                 DIRECT_MAT_ELEM(Pij,0,0)=DIRECT_MAT_ELEM(prm->allLandmarksX,j,i);
                 DIRECT_MAT_ELEM(Pij,1,0)=DIRECT_MAT_ELEM(prm->allLandmarksY,j,i);
-                //tmp2+=Pij*Aiprjt+Aiprj*dit;
                 tmp2+=(dim-Pij)*Aiprjt;
             }
             Ri=tmp1.inv()*tmp2;
@@ -1407,17 +1478,14 @@ void Alignment::updateModel()
             Matrix2D<double> Rinplane;
             Rinplane=rotation3DMatrix(-psi(i),'Z');
             Rinplane.resize(2,2);
-            // std::cout << "image i=" << i << " psi=" << psi(i) << " Ri\n"
-            //          << Ri << "Rpsi\n" << Rinplane << std::endl;
         }
     }
+    #ifdef DEBUG
+        std::cout << "Step 3: error=" << computeError() << std::endl;
+    #endif
 
     // Update the rotation dependent part    
     computeGeometryDependentOfRotation();
-
-    // double error3=computeError();
-    // std::cout << "Error optimization: " << error0 << " "
-    //           << error1 << " " << error2 << " " << error3 << " " << std::endl;
 }
 #undef DEBUG
 
@@ -1425,11 +1493,13 @@ void Alignment::updateModel()
 std::ostream& operator << (std::ostream &out, Alignment &alignment)
 {
     out << "Alignment parameters ===========================================\n"
-        << "rot=" << alignment.rot << " tilt=" << alignment.tilt << std::endl;
+        << "rot=" << alignment.rot << " tilt=" << alignment.tilt << std::endl
+        << "raxis=" << alignment.raxis.transpose() << std::endl;
     out << "Images ---------------------------------------------------------\n";
     for (int i=0; i<alignment.Nimg; i++)
         out << "Image " << i << " psi= " << alignment.psi(i)
             << " di= " << alignment.di[i].transpose() 
+            << " diaxis= " << alignment.diaxis[i].transpose() 
             << " (" << alignment.prm->ni(i) << ")\n";
     out << "Landmarks ------------------------------------------------------\n";
     alignment.computeErrorForLandmarks();
