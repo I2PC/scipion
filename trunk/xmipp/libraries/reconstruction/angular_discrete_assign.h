@@ -40,18 +40,15 @@
    @ingroup ReconsLibraryPrograms */
 //@{
 /** Angular Predict parameters. */
-class Prog_angular_predict_prm: public Prog_parameters
+class Prog_angular_predict_prm
 {
 public:
     /** MPI version */
     bool MPIversion;
-    /** Number of processors if the MPI version */
-    int numberOfProcessors;
+    /** FileName with the images to be assigned */
+    FileName fn_exp;
     /** Selfile with the reference images */
     FileName fn_ref;
-    /** Filename with the angles. As provided by the movement file
-        provided by xmipp_project */
-    FileName fn_ang;
     /** Filename for the output angles.*/
     FileName fn_out_ang;
     /** Filename for the symmetry file */
@@ -75,37 +72,25 @@ public:
     int smin;
     /** Maximum scale. Coarsest level */
     int smax;
-    /** Angular step for the even projections in case a volume is provided */
-    double proj_step;
-    /** Check mirrors.
-       If 1 then mirror versions of the experimental images are also explored.*/
-    int check_mirrors;
     /** Way to pick views.
         0 maximum correlation of the first group.
         1 average of the most populated group.
         2 maximum correlation of the most populated group. */
     int pick;
-    /** Dont apply geo.*/
-    bool dont_apply_geo;
+    /** Do not produce any output */
+    bool quiet;
 #define TELL_ROT_TILT  1
 #define TELL_PSI_SHIFT 2
 #define TELL_OPTIONS   4
     /** Show level.*/
     int tell;
-    /** Do not modify headers */
-    bool dont_modify_header;
-    /** Random filename.
-        This is used for the internally generated projections. */
-    FileName fn_random;
     /** Extended usage */
     bool extended_usage;
     /** 5D search, instead of 3D+2D */
     bool search5D;
-    /** Rootname for summary */
-    FileName summaryRootname;
 public:
-    // A reference volume has been provided
-    bool volume_mode;
+    // Docfile with the experimental images
+    DocFile DFexp;
     // Number of subbands
     int SBNo;
     // Subband size
@@ -240,8 +225,8 @@ public:
         Close all output files. */
     void finish_processing();
 
-    /** Produce summary */
-    void produceSummary();
+    /** Run over all images */
+    void run();
 };
 //@}
 #endif

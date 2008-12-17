@@ -25,27 +25,23 @@
 
 #include <reconstruction/angular_discrete_assign.h>
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm)
-{
-    Prog_angular_predict_prm *eprm = (Prog_angular_predict_prm *) prm;
-    double shiftX, shiftY, psi, rot, tilt;
-    double corr = eprm->predict_angles(img, shiftX, shiftY, rot, tilt, psi);
-    img.read(img.name());
-    img.set_eulerAngles(rot, tilt, psi);
-    img.set_originOffsets(shiftX, shiftY);
-    return true;
-}
-
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
-{
-    std::cout << "This program is not intended for volumes\n";
-    return false;
-}
-
 int main(int argc, char **argv)
 {
     Prog_angular_predict_prm prm;
-    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
-    prm.finish_processing();
+    try {
+        prm.read(argc,argv);
+    } catch (Xmipp_error XE) {
+        std::cout << XE;
+        prm.usage();
+        exit(1);
+    }
+    try {
+        prm.produce_side_info();
+        prm.show();
+        prm.run();
+    } catch (Xmipp_error XE) {
+        std::cout << XE;
+        exit(1);
+    }
     return 0;
 }

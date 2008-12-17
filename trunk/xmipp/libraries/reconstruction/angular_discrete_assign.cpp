@@ -38,7 +38,6 @@
 Prog_angular_predict_prm::Prog_angular_predict_prm()
 {
     MPIversion = false;
-    each_image_produces_an_output = true;
 }
 
 // Read arguments ==========================================================
@@ -46,9 +45,8 @@ void Prog_angular_predict_prm::read(int argc, char **argv)
 {
     extended_usage = checkParameter(argc, argv, "-more_help");
     if (extended_usage) REPORT_ERROR(1, "");
-    Prog_parameters::read(argc, argv);
     fn_ref = getParameter(argc, argv, "-ref");
-    fn_ang = getParameter(argc, argv, "-ang", "");
+    fn_exp = getParameter(argc, argv, "-i");
     fn_out_ang = getParameter(argc, argv, "-oang");
     fn_sym = getParameter(argc, argv, "-sym", "");
     max_proj_change = textToFloat(getParameter(argc, argv, "-max_proj_change", "-1"));
@@ -59,139 +57,72 @@ void Prog_angular_predict_prm::read(int argc, char **argv)
     th_discard = textToFloat(getParameter(argc, argv, "-keep", "50"));
     smin = textToInteger(getParameter(argc, argv, "-smin", "1"));
     smax = textToInteger(getParameter(argc, argv, "-smax", "-1"));
-    check_mirrors = !checkParameter(argc, argv, "-do_not_check_mirrors");
     pick = textToInteger(getParameter(argc, argv, "-pick", "1"));
-    dont_apply_geo = checkParameter(argc, argv, "-dont_apply_geo");
-    dont_modify_header = checkParameter(argc, argv, "-dont_modify_header");
-    proj_step = textToFloat(getParameter(argc, argv, "-proj_step", "5"));
     tell = 0;
     if (checkParameter(argc, argv, "-show_rot_tilt")) tell |= TELL_ROT_TILT;
     if (checkParameter(argc, argv, "-show_psi_shift")) tell |= TELL_PSI_SHIFT;
     if (checkParameter(argc, argv, "-show_options")) tell |= TELL_OPTIONS;
+    quiet = checkParameter(argc,argv,"-quiet");
     search5D = checkParameter(argc, argv, "-5D");
-    summaryRootname = getParameter(argc, argv, "-summary", "");
-    // Sjors searching shifts in combination with mirrors has been
-    // implemented in the wrong way: it will give nonsense!
-    if (check_mirrors && !search5D) 
-	REPORT_ERROR(1, "Prog_angular_predict_prm:: read: because of a BUG you cannot do a 3D+2D seach without giving the -do_not_check_mirrors option.");
-    if (!MPIversion) produce_side_info();
 }
 
 // Show ====================================================================
 void Prog_angular_predict_prm::show()
 {
     if (quiet) return;
-    Prog_parameters::show();
     std::cout << "Reference images: " << fn_ref << std::endl
-              << "Angle file: " << fn_ang << std::endl
+              << "Input angular file: " << fn_exp << std::endl
               << "Ouput angular file: " << fn_out_ang << std::endl
               << "Max proj change: " << max_proj_change << std::endl
               << "Max psi change: " << max_psi_change << " step: " << psi_step << std::endl
               << "Max shift change: " << max_shift_change << " step: " << shift_step << std::endl
-              << "Proj step: " << proj_step << std::endl
               << "Keep %: " << th_discard << std::endl
               << "smin: " << smin << std::endl
               << "smax: " << smax << std::endl
-              << "Check mirrors: " << check_mirrors << std::endl
               << "Pick: " << pick << std::endl
-              << "Dont apply geo: " << dont_apply_geo << std::endl
               << "Show level: " << tell << std::endl
-              << "Modify header:  " << !dont_modify_header << std::endl
               << "5D search: " << search5D << std::endl
-              << "Summary: " << summaryRootname << std::endl
     ;
 }
 
 // usage ===================================================================
 void Prog_angular_predict_prm::usage()
 {
-    Prog_parameters::usage();
-    if (extended_usage) more_usage();
-    else
-    {
-        std::cerr << "   -ref <selfile|volume>    : Selfile with the reference images\n"
-                  << "                              If a volume is given, supply -proj_step\n"
-                  << "   -oang <angle file>       : DocFile with output angles\n"
-                  << "  [-sym <symmetry file>]    : Symmetry file if any\n"
-                  << "  [-dont_apply_geo]         : do not apply the translations in the header\n"
-                  << "  [-dont_modify_header]     : Don't save the parameters in the\n"
-                  << "                              image header\n"
-                  << "  [-more_help]              : Show all options\n"
-        ;
-    }
-}
-
-void Prog_angular_predict_prm::more_usage()
-{
-    std::cerr << "   -ref <selfile|volume>    : Selfile with the reference images\n"
-              << "                              If a volume is given, supply -proj_step\n"
-              << "  [-ang <angle file>]       : DocFile with the angles for the reference\n"
-              << "                              produced by xmipp_project\n"
+    std::cerr << "Usage:\n"
+              << "   -ref <selfile>           : Selfile with the reference images\n"
+              << "   -i <docfile>             : Docfile with input angles\n"
               << "   -oang <angle file>       : DocFile with output angles\n"
               << "  [-sym <symmetry file>]    : Symmetry file if any\n"
               << "  [-max_proj_change <ang=-1>]: Maximum change allowed in rot-tilt\n"
               << "  [-max_psi_change <ang=-1>]: Maximum change allowed in psi\n"
               << "  [-max_shift_change <r=0>] : Maximum change allowed in shift\n"
-              << "  [-proj_step <ang=5>]      : Projection (rot-tilt) step\n"
               << "  [-psi_step <ang=5>]       : Step in psi in degrees\n"
               << "  [-shift_step <r=1>]       : Step in shift in pixels\n"
-              << "  [-keep <th=50%>]          : How many images are kept each round\n"
+              << "  [-more_help]              : Show all options\n"
+    ;
+    if (extended_usage) more_usage();
+}
+
+void Prog_angular_predict_prm::more_usage()
+{
+    std::cerr << "  [-keep <th=50%>]          : How many images are kept each round\n"
               << "  [-smin <s=1>]             : Finest scale to consider (lowest value=0)\n"
               << "  [-smax <s=-1>]            : Coarsest scale to consider (highest value=log2(Xdim))\n"
-              << "  [-do_not_check_mirrors]   : Otherwise, mirror versions of the experimental\n"
-              << "                              images are also explored\n"
               << "  [-pick <mth=1>]           : 0 --> maximum of the first group\n"
               << "                              1 --> maximum of the most populated\n"
-              << "  [-dont_apply_geo]         : do not apply the translations in the header\n"
-              << "                              The header rotation is never applied\n"
               << "  [-show_rot_tilt]          : Show the rot-tilt process\n"
               << "  [-show_psi_shift]         : Show the psi-shift process\n"
               << "  [-show_options]           : Show final options among which\n"
               << "                              the angles are selected\n"
-              << "  [-dont_modify_header]     : Don't save the parameters in the\n"
-              << "                              image header\n"
+              << "  [-quiet]                  : Do not show any output\n"
               << "  [-5D]                     : Perform a 5D search instead of 3D+2D\n"
-              << "  [-summary <rootname>]     : Summary rootname\n"
     ;
 }
 
 // Produce side information ================================================
 void Prog_angular_predict_prm::produce_side_info(int rank)
 {
-    volume_mode = false;
-
-    // Information for the SF_main
-    allow_time_bar = (tell == 0 && rank == 0);
-
     // Read input reference image names
-    if (Is_VolumeXmipp(fn_ref))
-    {
-        volume_mode = true;
-        if (!quiet) std::cerr << "Generating reference projections ...\n";
-
-        // Generate the reference projections internally
-        randomize_random_generator();
-        fn_random = integerToString(ROUND(10000 * rnd_unif()));
-        std::string command = (std::string)"-i " + fn_ref + " -o ref" + fn_random +
-           "_ -sampling_rate " + integerToString(proj_step);
-        if (fn_sym != "") command += (std::string)" -sym " + fn_sym;
-        if (quiet) command += " -quiet";
-        if (MPIversion)
-            command=(std::string)"mpirun -np "+integerToString(numberOfProcessors)+
-                " `which xmipp_mpi_angular_project_library` -quiet "+command;
-        else
-            command=(std::string)"xmipp_angular_project_library "+command;
-        system(command.c_str());
-        fn_ang = (std::string) "ref"+fn_random + "__angles.doc";
-        fn_ref=(std::string) "ref"+fn_random + "_.sel";
-    }
-    else
-    {
-        if (fn_ang == "")
-            REPORT_ERROR(1, "Prog_angular_predict_prm::produce_side_info:"
-                         " using a reference selfile you must supply -ang option");
-    }
-
     SF_ref.read(fn_ref);
     int refYdim, refXdim;
     SF_ref.ImgSize(refYdim, refXdim);
@@ -204,9 +135,13 @@ void Prog_angular_predict_prm::produce_side_info(int rank)
     distance_prm.fn_sym = fn_sym;
     distance_prm.produce_side_info();
 
+    // Read the experimental images
+    DFexp.read(fn_exp);
+    DFexp.go_first_data_line();
+
     // Read the angle file
     DocFile DF;
-    DF.read(fn_ang);
+    DF.read(fn_ref.without_extension()+"_angles.doc");
     DF.go_first_data_line();
     rot.resize(DF.dataLineNo());
     tilt.resize(DF.dataLineNo());
@@ -220,7 +155,7 @@ void Prog_angular_predict_prm::produce_side_info(int rank)
     }
 
     // Resize the predicted vectors
-    int number_of_images = get_images_to_process();
+    int number_of_images = DFexp.dataLineNo();
     current_img = 0;
     image_name.resize(number_of_images);
     predicted_rot.resize(number_of_images);
@@ -258,11 +193,11 @@ void Prog_angular_predict_prm::produce_side_info(int rank)
             Mask.generate_2Dmask();
 
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mask.imask2D)
-            if (DIRECT_MAT_ELEM(Mask.imask2D, i, j))
-            {
-                Mask_no(i, j) = m;
-                SBsize(m)++;
-            }
+                if (DIRECT_MAT_ELEM(Mask.imask2D, i, j))
+                {
+                    Mask_no(i, j) = m;
+                    SBsize(m)++;
+                }
 
             m++;
         }
@@ -273,10 +208,6 @@ void Prog_angular_predict_prm::produce_side_info(int rank)
 
     // Save a little space
     SF_ref.clear();
-
-    // If dont_modify_header
-    if (dont_modify_header)
-        each_image_produces_an_output = false;
 }
 
 // Produce library -----------------------------------------------------------
@@ -745,14 +676,8 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
     Matrix1D<double> shift(2);
 
     // Get the 2D alignment shift
-    double Xoff, Yoff;
-    if (!dont_apply_geo)
-    {
-        Xoff = I.Xoff();
-        Yoff = I.Yoff();
-    }
-    else
-        Xoff = Yoff = 0.0;
+    double Xoff = I.Xoff();
+    double Yoff = I.Yoff();
 
     // Establish psi limits
     double psi0, psiF;
@@ -777,78 +702,68 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
     double backup_max_shift_change = max_shift_change;
     if (!search5D) max_shift_change = 0;
 
-    for (int mirror = 0; mirror <= check_mirrors; mirror++)
-        for (double shiftX = Xoff - max_shift_change; shiftX <= Xoff + max_shift_change; shiftX += shift_step)
-            for (double shiftY = Yoff - max_shift_change; shiftY <= Yoff + max_shift_change; shiftY += shift_step)
+#ifdef DEBUG
+    I.write("PPPoriginal.xmp");
+#endif
+    for (double shiftX = Xoff - max_shift_change; shiftX <= Xoff + max_shift_change; shiftX += shift_step)
+        for (double shiftY = Yoff - max_shift_change; shiftY <= Yoff + max_shift_change; shiftY += shift_step)
+        {
+            if ((shiftX - Xoff)*(shiftX - Xoff) + (shiftY - Yoff)*(shiftY - Yoff) > R2) continue;
+            for (double psi = psi0; psi <= psiF; psi += psi_step)
             {
-                if ((shiftX - Xoff)*(shiftX - Xoff) + (shiftY - Yoff)*(shiftY - Yoff) > R2) continue;
-                for (double psi = psi0; psi <= psiF; psi += psi_step)
+                N_trials++;
+
+                // Shift image if necessary
+                if (shiftX == 0 && shiftY == 0) Ip() = I();
+                else
                 {
-                    N_trials++;
-
-                    // Shift image if necessary
-                    if (shiftX == 0 && shiftY == 0) Ip() = I();
-                    else
-                    {
-                        VECTOR_R2(shift, shiftX, shiftY);
-                        I().translate(shift, Ip(), WRAP);
-                    }
-
-                    // Rotate image if necessary
-                    // Adding 2 is a trick to avoid that the 0, 90, 180 and 270
-                    // are treated in a different way
-                    Ip().selfRotate(psi + 2, WRAP);
-                    Ip().selfRotate(-2, WRAP);
-
-                    // Mirror the image if necessary
-                    if (mirror) Ip().selfReverseY();
-
-#ifdef DEBUG
-                    Ip.write("PPPbefore_denoising.xmp");
-#endif
-
-                    // Project the resulting image onto the visible space
-                    double proj_error = 0.0, proj_compact = 0.0;
-                    bool   look_for_rot_tilt = true;
-
-                    // Search for the best tilt, rot angles
-                    double rotp, tiltp;
-                    int best_ref_idx;
-                    double corrp =
-                        predict_rot_tilt_angles(Ip, rotp, tiltp, best_ref_idx);
-
-                    double aux_rot = rotp, aux_tilt = tiltp, aux_psi = psi;
-                    double ang_jump = distance_prm.check_symmetries(
-                                          I.rot(), I.tilt(), I.psi(),
-                                          aux_rot, aux_tilt, aux_psi, false);
-
-                    // Check if the image was mirrored
-                    double rotp_aux = rotp, tiltp_aux = tiltp, psi_aux = psi;
-                    if (mirror) Euler_up_down(rotp, tiltp, psi,
-                                                  rotp_aux, tiltp_aux, psi_aux);
-
-                    vshiftX.push_back(shiftX);
-                    vshiftY.push_back(shiftY);
-                    vrot.push_back(rotp_aux);
-                    vtilt.push_back(tiltp_aux);
-                    vpsi.push_back(psi_aux);
-                    vcorr.push_back(corrp);
-                    vproj_error.push_back(proj_error);
-                    vproj_compact.push_back(proj_compact);
-                    vang_jump.push_back(ang_jump);
-                    vref_idx.push_back(best_ref_idx);
-
-#ifdef DEBUG
-                    Ip.write("PPPafter_denoising.xmp");
-                    ImageXmipp Iref((std::string)"g0tb" + integerToString(best_ref_idx + 1, 5) + ".xmp");
-                    Iref.write("PPPref.xmp");
-                    std::cerr << "Press any key\n";
-                    char c;
-                    std::cin >> c;
-#endif
-
+                    VECTOR_R2(shift, shiftX, shiftY);
+                    I().translate(shift, Ip(), WRAP);
                 }
+
+                // Rotate image if necessary
+                // Adding 2 is a trick to avoid that the 0, 90, 180 and 270
+                // are treated in a different way
+                Ip().selfRotate(psi + 2, WRAP);
+                Ip().selfRotate(-2, WRAP);
+
+                // Project the resulting image onto the visible space
+                double proj_error = 0.0, proj_compact = 0.0;
+                bool   look_for_rot_tilt = true;
+
+                // Search for the best tilt, rot angles
+                double rotp, tiltp;
+                int best_ref_idx;
+                double corrp =
+                    predict_rot_tilt_angles(Ip, rotp, tiltp, best_ref_idx);
+
+                double aux_rot = rotp, aux_tilt = tiltp, aux_psi = psi;
+                double ang_jump = distance_prm.check_symmetries(
+                                      I.rot(), I.tilt(), I.psi(),
+                                      aux_rot, aux_tilt, aux_psi, false);
+
+                vshiftX.push_back(shiftX);
+                vshiftY.push_back(shiftY);
+                vrot.push_back(rotp);
+                vtilt.push_back(tiltp);
+                vpsi.push_back(psi);
+                vcorr.push_back(corrp);
+                vproj_error.push_back(proj_error);
+                vproj_compact.push_back(proj_compact);
+                vang_jump.push_back(ang_jump);
+                vref_idx.push_back(best_ref_idx);
+
+#ifdef DEBUG
+                Ip.write("PPPafter_denoising.xmp");
+                ImageXmipp Iref((std::string)"ref" + integerToString(best_ref_idx + 1, 6) + ".xmp");
+                Iref.write("PPPref.xmp");
+                std::cerr << "corrp=" << corrp << "\nPress any key\n";
+                char c;
+                std::cin >> c;
+#endif
+
             }
+        }
 
     // Compute extrema of all scoring factors
     double max_corr        = vcorr[0],         min_corr        = vcorr[0];
@@ -958,7 +873,6 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
     // Sort the candidates
     if (tell & TELL_PSI_SHIFT) std::cout << "\nSelecting image\n";
     Matrix1D<double> score(jmax);
-//   for (int j=0; j<jmax; j++) score(j)=candidate_rate[j];
     for (int j = 0; j < jmax; j++) score(j) = vscore[candidate_local_maxima[j]];
     Matrix1D<int> idx_score = score.indexSort();
 
@@ -1072,14 +986,14 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
     }
 
     // Save results
-    image_name[current_img]          = I.name();
-    assigned_rot    = predicted_rot[current_img]       = best_rot;
-    assigned_tilt   = predicted_tilt[current_img]      = best_tilt;
-    assigned_psi    = predicted_psi[current_img]       = best_psi;
-    assigned_shiftX = predicted_shiftX[current_img]    = best_shiftX;
-    assigned_shiftY = predicted_shiftY[current_img]    = best_shiftY;
-    predicted_corr[current_img]      = best_score;
-    predicted_reference[current_img] = vref_idx[ibest];
+    image_name[current_img]                         = I.name();
+    assigned_rot    = predicted_rot[current_img]    = best_rot;
+    assigned_tilt   = predicted_tilt[current_img]   = best_tilt;
+    assigned_psi    = predicted_psi[current_img]    = best_psi;
+    assigned_shiftX = predicted_shiftX[current_img] = best_shiftX;
+    assigned_shiftY = predicted_shiftY[current_img] = best_shiftY;
+    predicted_corr[current_img]                     = best_score;
+    predicted_reference[current_img]                = vref_idx[ibest];
     current_img++;
     return best_rate;
 }
@@ -1088,11 +1002,10 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
 // Finish processing ---------------------------------------------------------
 void Prog_angular_predict_prm::finish_processing()
 {
-    // Save predicted angles
     int p = predicted_rot.size();
     DocFile DF;
-    DF.reserve(p + 1);
-    DF.append_comment("Predicted_Rot Predicted_Tilt Predicted_Psi Predicted_ShiftX Predicted_ShiftY Corr");
+    DF.reserve(2*p + 1);
+    DF.append_comment("Headerinfo columns: rot (1) , tilt (2), psi (3), Xoff (4), Yoff (5), Score(6)");
     Matrix1D<double> v(6);
     for (int i = 0; i < p; i++)
     {
@@ -1102,101 +1015,26 @@ void Prog_angular_predict_prm::finish_processing()
         v(3) = predicted_shiftX[i];
         v(4) = predicted_shiftY[i];
         v(5) = predicted_corr[i];
-        DF.append_comment(image_name[i]);
+        DF.append_comment(DFexp.get_imagename(i+1));
         DF.append_data_line(v);
     }
     DF.write(fn_out_ang);
-
-    if (summaryRootname != "") produceSummary();
-
-    if (volume_mode)
-    {
-        FileName fn_root=fn_ref.without_extension();
-        system(((std::string)"xmipp_rmsel " + fn_ref + " > /dev/null").c_str());
-        system(((std::string)"rm -f " + fn_ang).c_str());
-        system(((std::string)"rm -f " + fn_root+"_vectors.doc").c_str());
-    }
 }
 
-// Produce summary ---------------------------------------------------------
-void Prog_angular_predict_prm::produceSummary()
+// Run ---------------------------------------------------------------------
+void Prog_angular_predict_prm::run()
 {
-    int L = library_name.size();
-    int N = predicted_rot.size();
-    int Xdim, Ydim;
-    SelFile SFin;
-    SFin.read(fn_in);
-    SFin.ImgSize(Ydim, Xdim);
-    SFin.go_first_ACTIVE();
-
-    // Initialize variables for storing the reference weights
-    // and the assigned averages
-    std::vector< std::vector<FileName> > referenceWeight;
-    std::vector< ImageXmipp >  assignedAvg;
-    referenceWeight.reserve(L);
-    assignedAvg.reserve(L);
-    ImageXmipp blankImage(Ydim, Xdim);
-    std::vector<FileName> blankList;
-    for (int l = 0; l < L; l++)
+    int Nimg=DFexp.dataLineNo();
+    if (!quiet) init_progress_bar(Nimg);
+    for (int key=1; key<=Nimg; key++)
     {
-        referenceWeight.push_back(blankList);
-        assignedAvg.push_back(blankImage);
+        ImageXmipp img;
+        DFexp.get_image(key,img);
+        double shiftX, shiftY, psi, rot, tilt;
+        double corr = predict_angles(img, shiftX, shiftY, rot, tilt, psi);
+        if (!quiet) progress_bar(key);
     }
-
-    // Count the images assigned to each reference
-    // And compute average
-    for (int n = 0; n < N; n++)
-    {
-        ImageXmipp I;
-        I.read(SFin.NextImg(), false, false, true);
-        referenceWeight[predicted_reference[n]].push_back(I.name());
-        I().selfRotate(I.psi());
-        assignedAvg[predicted_reference[n]]() += I();
-    }
-    for (int l = 0; l < L; l++)
-        if (referenceWeight[l].size() != 0)
-            assignedAvg[l]() /= referenceWeight[l].size();
-
-    // Construct summary
-    DocFile DFsummary;
-    SelFile SFsummary;
-    SelFile SFcomparison;
-    DFsummary.reserve(L + 1);
-    DFsummary.append_comment("Rot Tilt Psi X Y Weight");
-    Matrix1D<double> v(6);
-    for (int l = 0; l < L; l++)
-    {
-        // Write the reference and assigned reference
-        FileName fn_refl = summaryRootname + "_ref" + integerToString(l, 5) + ".xmp";
-        FileName fn_avgl = summaryRootname + "_avg" + integerToString(l, 5) + ".xmp";
-        ImageXmipp I;
-        I.read(library_name[l]);
-        I.write(fn_refl);
-        assignedAvg[l].write(fn_avgl);
-        SFcomparison.insert(fn_refl.remove_directories());
-        SFcomparison.insert(fn_avgl.remove_directories());
-
-        // Write corresponding line in the docfile
-        v(0) = rot[l];
-        v(1) = tilt[l];
-        v(2) = 0;
-        v(3) = 0;
-        v(4) = 0;
-        v(5) = referenceWeight[l].size();
-        DFsummary.append_comment(fn_refl);
-        DFsummary.append_data_line(v);
-
-        // Write the assigned images in a selfile
-        SFsummary.insert_comment((std::string)"Images assigned to " + fn_refl);
-        SFsummary.insert_comment((std::string)"rot=" + floatToString(rot[l]) + " tilt=" + floatToString(tilt[l]));
-        if (referenceWeight[l].size() != 0)
-        {
-            for (int i = 0; i < referenceWeight[l].size(); i++)
-                SFsummary.insert(referenceWeight[l][i]);
-            SFsummary.insert_comment("");
-        }
-    }
-    DFsummary.write(summaryRootname + "_summary.doc");
-    SFsummary.write(summaryRootname + "_summary.sel");
-    SFcomparison.write(summaryRootname + "_comparison.sel");
+    if (!quiet) progress_bar(Nimg);
+    
+    finish_processing();
 }
