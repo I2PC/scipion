@@ -378,6 +378,7 @@ ReconsSources = [
     'draw_surface.cpp',
     'euler.cpp',
     'evaluate_fscs.cpp',
+    'filter_projections.cpp',
     'foms_evaluate.cpp',
     'fourier_filter.cpp',
     'grids.cpp',
@@ -525,6 +526,7 @@ AddXmippProgram('denoise')
 AddXmippProgram('docfile_append')
 AddXmippProgram('docfile_select_subset')
 AddXmippProgram('docfile_histogram')
+AddXmippProgram('filter_projections', ['XmippRecons'])
 AddXmippProgram('find_center3d')
 AddXmippProgram('foms_evaluate', ['XmippRecons'])
 AddXmippProgram('fourier_filter', ['XmippRecons'])
