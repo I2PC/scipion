@@ -741,7 +741,7 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
     if (!(prm.tell&TELL_SHOW_ANGLES)) init_progress_bar(side.DF.dataLineNo());
     SF.reserve(side.DF.dataLineNo());
     DocFile DF_movements;
-    DF_movements.append_comment("True rot, tilt and psi; rot noise, tilt noise, psi noise, X and Y shifts applied");
+    DF_movements.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), noisy rot(4), noisy tilt (5), noisy psi (6), Xoff (7), Yoff (8)");
     Matrix1D<double> movements(8);
 
     while (!side.DF.eof())
@@ -761,8 +761,8 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
         // Choose Center displacement ........................................
         double shiftX = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
         double shiftY = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
-        movements(6) = shiftX;
-        movements(7) = shiftY;
+        movements(6) = -shiftX;
+        movements(7) = -shiftY;
 
         // Really project ....................................................
         if (side.phantomMode==PROJECT_Side_Info::VOXEL)
@@ -806,12 +806,14 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
         movements(4) = tilt - movements(1);
         movements(5) = psi - movements(2);
         proj.set_eulerAngles(rot, tilt, psi);
+        proj.set_originOffsets(-shiftX,-shiftY);
         IMGMATRIX(proj).addNoise(prm.Npixel_avg, prm.Npixel_dev, "gaussian");
 
         // Save ..............................................................
         proj.write(fn_proj);
         NumProjs++;
         SF.insert(fn_proj, SelLine::ACTIVE);
+        DF_movements.append_comment(fn_proj);
         DF_movements.append_data_line(movements);
 
         side.DF.next_data_line();
