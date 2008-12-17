@@ -46,8 +46,10 @@ int main(int argc, char **argv)
     try
     {
         prm.produce_side_info();
-        double dist = prm.compute_distance();
-        std::cout << "Global distance = " << dist << std::endl;
+        double angular_distance, shift_distance;
+        prm.compute_distance(angular_distance, shift_distance);
+        std::cout << "Global angular distance = " << angular_distance << std::endl;
+        std::cout << "Global shift   distance = " << shift_distance   << std::endl;
     }
     catch (Xmipp_error XE)
     {

@@ -97,7 +97,7 @@ public:
     /** Compute distance.
         Compute the distance between the two document files loaded. The
         average distance is returned.*/
-    double compute_distance();
+    void compute_distance(double &angular_distance, double &shift_distance);
 };
 //@}
 #endif
