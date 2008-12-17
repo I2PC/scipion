@@ -102,7 +102,7 @@ PyramidLevels='0'
 """
 AngularSteps='5'
 
-# Quality percentil
+# {expert} Quality percentil
 """ The quality percentil indicates what is the percentil of images to be
     discarded according to several criteria. You can use different quality
     criteria along iterations. For instance, 2 5 8x10 means that in the
@@ -111,7 +111,7 @@ AngularSteps='5'
 """
 QualityPercentil='10'
 
-# Quality angle movement
+# {expert} Quality angle movement
 """ If an image moves from one iteration to the next more than this
     threshold (expressed in degrees), it will not be considered for this
     reconstruction. However, the image is not removed from the dataset
@@ -119,9 +119,9 @@ QualityPercentil='10'
     You may use different thresholds for the different iterations.
     If you don't want to use this feature, set it to 360.
 """
-QualityAngleMovement='4x360 2x40 2x20 10'
+QualityAngleMovement='360'
 
-# Quality shift movement
+# {expert} Quality shift movement
 """ If an image moves from one iteration to the next more than this
     threshold (expressed as a percentage of the image size),
     it will not be considered for this reconstruction. However, the image
@@ -130,7 +130,7 @@ QualityAngleMovement='4x360 2x40 2x20 10'
     You may use different thresholds for the different iterations.
     If you don't want to use this feature, set it to 100.
 """
-QualityShiftMovement='4x100 2x8 2x6 4'
+QualityShiftMovement='100'
 
 # {expert} Reconstruction method
 """ Choose between fourier, wbp or art
