@@ -48,9 +48,9 @@ void Prog_RecFourier_prm::read(int argc, char **argv)
     //sampling_rate = textToFloat(getParameter(argc, argv, "-sampling_rate", "1"));
     maxResolution = textToFloat(getParameter(argc, argv,
                                              "-max_resolution",".5"));
-    //NiterWeight = textToInteger(getParameter(argc, argv, "-n","20"));
-    numThreads = textToInteger(getParameter(argc, argv, "-thr", "1"));
-    thrWidth = textToInteger(getParameter(argc,argv, "-thr_width", "-1"));
+    NiterWeight = textToInteger(getParameter(argc, argv, "-n","20"));
+    numThreads = textToInt(getParameter(argc, argv, "-thr", "1"));
+    thrWidth = textToInt(getParameter(argc,argv, "-thr_width", "-1"));
 }
 
 // Show ====================================================================
@@ -100,7 +100,7 @@ void Prog_RecFourier_prm::usage()
     std::cerr << " [ -prepare_fsc <fscfile>      : filename root for FSC files \n";
     std::cerr << " [ -doc <docfile>              : Ignore headers and get angles from this docfile \n";
     std::cerr << " [ -sym     <symfile> ]        : Enforce symmetry in projections\n";
-    //std::cerr << " [ -n <iter=20>]               : Iterations for computing the weight\n";
+    std::cerr << " [ -n <iter=20>]               : Iterations for computing the weight\n";
     std::cerr << " [ -thr <threads=1> ]          : Number of concurrent threads\n";
     std::cerr << " [ -thr_width <width=blob_radius> : Number of image rows processed at a time by a thread\n";
     std::cerr << " -----------------------------------------------------------------" << std::endl;
@@ -728,43 +728,37 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
     if( appliedFSC == 1 )
     {
         // Save Current Fourier, Reconstruction and Weights
-        VolumeXmipp save;
-        save().alias( FourierWeights );
-        save.write((std::string) fn_fsc + "_2_Weights.vol");
+        VolumeXmipp auxVolume;
+        FourierVolume auxFourierVolume;
 
-        FourierVolume save2;
-        save2().alias( VoutFourier );
-        save2.write((std::string) fn_fsc + "_2_Fourier.vol");
+        auxVolume().alias( FourierWeights );
+        auxVolume.write((std::string) fn_fsc + "_2_Weights.vol");
+
+        auxFourierVolume().alias( VoutFourier );
+        auxFourierVolume.write((std::string) fn_fsc + "_2_Fourier.vol");
 
         finishComputations(FileName((std::string) fn_fsc + "_2_recons.vol"));
 
         Vout().initZeros(volPadSizeZ,volPadSizeY,volPadSizeX);
         transformerVol.setReal(Vout());
         Vout().clear(); // Free the memory so that it is available for FourierWeights
+
         transformerVol.getFourierAlias(VoutFourier);
         FourierWeights.initZeros(VoutFourier);
         VoutFourier.initZeros();
 
         // Recover "old" values and sum to get final reconstruction
-        VolumeXmipp load;
-        FourierVolume load2;
         int x,y,z;
 
-        load.read((std::string) fn_fsc + "_1_Weights.vol" );
-        FourierWeights=FourierWeights+load();
-        load().clear();
-        load.read((std::string) fn_fsc + "_2_Weights.vol" );
-        FourierWeights=FourierWeights+load();
-        load().clear();
+        auxVolume.sumWithFile(FileName((std::string) fn_fsc + "_1_Weights.vol")); 
+        auxVolume.write((std::string) fn_fsc + "KKKK1.vol");
+
+        auxVolume.sumWithFile(FileName((std::string) fn_fsc + "_2_Weights.vol")); 
 
         VoutFourier.getDimension(y,x,z);
 
-        load2.read((std::string) fn_fsc + "_1_Fourier.vol",z,y,x);
-        VoutFourier=VoutFourier+load2();
-        load2.clear();
-        load2.read((std::string) fn_fsc + "_2_Fourier.vol",z,y,x);
-        VoutFourier=VoutFourier+load2();
-        load2.clear();
+        auxFourierVolume.sumWithFile((std::string) fn_fsc + "_1_Fourier.vol",z,y,x, false, VCOMPLEX); 
+        auxFourierVolume.sumWithFile((std::string) fn_fsc + "_2_Fourier.vol",z,y,x, false, VCOMPLEX); 
     }
 }
 #undef DEBUG
