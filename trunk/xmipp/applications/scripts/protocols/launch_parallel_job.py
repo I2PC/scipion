@@ -8,7 +8,7 @@ def launch_job(DoParallel,
                MyMachineFile,
                RunInBackground):
 
-    if DoParallel:
+    if DoParallel and MyNumberOfCPUs>1:
         launch_parallel_job(mpiprogramname,
                             params,
                             log,
