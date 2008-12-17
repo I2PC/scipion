@@ -59,11 +59,7 @@ int main(int argc, char **argv)
         prm.produce_side_info();
 
         // Divide the selfile in chunks
-        int imgNbr = prm.get_images_to_process();
-        int Nchunk = (int)((float)imgNbr / (float)(NProcessors - 1));
-        int myFirst = (rank - 1) * Nchunk;
-        int myLast = rank * Nchunk - 1;
-        if (rank == NProcessors - 1) myLast = imgNbr - 1;
+        int imgNbr = prm.DF_initial.dataLineNo();
 
         // Make the alignment, rank=0 receives all the assignments
         // The rest of the ranks compute the angular parameters for their
@@ -97,42 +93,29 @@ int main(int argc, char **argv)
         }
         else
         {
-            SelFile SF_in(prm.fn_in);
-            SF_in.go_beginning();
-            SF_in.jump(myFirst);
-            for (int i = myFirst; i <= myLast; i++)
+            for (int key=1; key<=imgNbr; key++)
             {
-                // Read image and estimate angular parameters
-                ImageXmipp I;
-                I.read(SF_in.NextImg(), false, false, false);
-                I().setXmippOrigin();
-                double shiftX, shiftY, psi, rot, tilt;
-                rot    = prm.DF_initial(i + 1, 0);
-                tilt   = prm.DF_initial(i + 1, 1);
-                psi    = prm.DF_initial(i + 1, 2);
-                shiftX = prm.DF_initial(i + 1, 3);
-                shiftY = prm.DF_initial(i + 1, 4);
-                prm.predict_angles(I, shiftX, shiftY, rot, tilt, psi);
-                double cost = prm.predicted_cost[i-myFirst];
-
-                // Rewrite the image header if necessary
-                if (!prm.dont_modify_header)
+                if (key%(NProcessors-1)+1==rank)
                 {
-                    I.read(I.name());
-                    I.set_eulerAngles(rot, tilt, psi);
-                    I.set_originOffsets(shiftX, shiftY);
-                    I.write();
-                }
+                    ImageXmipp img;
+                    prm.DF_initial.get_image(key,img);
+                    double shiftX = img.Xoff();
+                    double shiftY = img.Yoff();
+                    double rot    = img.rot();
+                    double tilt   = img.tilt();
+                    double psi    = img.psi();
+                    double cost = prm.predict_angles(img, shiftX, shiftY, rot, tilt, psi);
 
-                // Send the alignment parameters to the master
-                v[0] = i;
-                v[1] = rot;
-                v[2] = tilt;
-                v[3] = psi;
-                v[4] = shiftX;
-                v[5] = shiftY;
-                v[6] = cost;
-                MPI_Send(v, 7, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+                    // Send the alignment parameters to the master
+                    v[0] = key-1;
+                    v[1] = rot;
+                    v[2] = tilt;
+                    v[3] = psi;
+                    v[4] = shiftX;
+                    v[5] = shiftY;
+                    v[6] = cost;
+                    MPI_Send(v, 7, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+                }
             }
         }
 
