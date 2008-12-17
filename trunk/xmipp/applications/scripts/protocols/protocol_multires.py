@@ -17,10 +17,10 @@
 # {file} Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
-SelFileName='imgsToUse.sel'
+SelFileName='img.sel'
 
 # {file} Initial 3D reference map:
-ReferenceFileName='Src/emd_1356_256.vol'
+ReferenceFileName='Src/initial_reference.vol'
 
 # {dir} Working subdirectory: 
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
@@ -33,19 +33,19 @@ WorkDirectory='MultiRes/Test1'
 DoDeleteWorkingDir=False
 
 # Number of iterations to perform
-NumberofIterations=30
+NumberofIterations=10
 
 # Resume at iteration
 """ This option may be used to finish a previously performed run.
     Set to 1 to start a new run 
     Note: Do NOT delete working directory if this option is not set to 1
 """
-ResumeIteration=19
+ResumeIteration=2
 
 # {expert} {dir} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
-ProjectDir='/home/coss/Johan'
+ProjectDir='/media/usbdisk/Experiments/TestMuySencillo'
 
 # {expert} {dir} Directory name for logfiles:
 LogDir='Logs'
@@ -57,20 +57,20 @@ SkipPrealignment=True
 # {section} Particle description
 #-----------------------------------------------------------------------------
 # Particle radius (pixels)
-ParticleRadius=60
+ParticleRadius=32
 
 # Particle mass (Daltons)
-ParticleMass=280000
+ParticleMass=''
 
-# {file} In the case of symmetry supply the symmetry description file:
-""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetrize
-    for a description of the symmetry file format
-    dont give anything, if no symmetry is present
+# Symmetry group
+""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
+    for a description of the symmetry groups format
+    If no symmetry is present, give c1
 """
-SymmetryFile=''
+SymmetryGroup='c1'
 
 # Sampling rate (Angstrom/pixel)
-SamplingRate=1.96
+SamplingRate=1
 
 #-----------------------------------------------------------------------------
 # {section} Iteration parameters
@@ -89,7 +89,7 @@ SamplingRate=1.96
     Scaling is done via spline pyramids, please visit:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Pyramid
 """
-PyramidLevels='10x1 20x0'
+PyramidLevels='0'
 
 # Angular steps
 """ Angular steps for each of the iterations. This parameter is used to build
@@ -100,7 +100,37 @@ PyramidLevels='10x1 20x0'
     The discrete angular assignment is done with xmipp_angular_predict:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Angular_predict
 """
-AngularSteps='5x5 3'
+AngularSteps='5'
+
+# Quality percentil
+""" The quality percentil indicates what is the percentil of images to be
+    discarded according to several criteria. You can use different quality
+    criteria along iterations. For instance, 2 5 8x10 means that in the
+    first iteration 2% of the images will be discarded, then 5%, and 10%
+    in the following 8 iterations. Use 0% for not removing any image.
+"""
+QualityPercentil='10'
+
+# Quality angle movement
+""" If an image moves from one iteration to the next more than this
+    threshold (expressed in degrees), it will not be considered for this
+    reconstruction. However, the image is not removed from the dataset
+    and it might be reused in a latter iteration.
+    You may use different thresholds for the different iterations.
+    If you don't want to use this feature, set it to 360.
+"""
+QualityAngleMovement='4x360 2x40 2x20 10'
+
+# Quality shift movement
+""" If an image moves from one iteration to the next more than this
+    threshold (expressed as a percentage of the image size),
+    it will not be considered for this reconstruction. However, the image
+    is not removed from the dataset and it might be reused in a latter
+    iteration.
+    You may use different thresholds for the different iterations.
+    If you don't want to use this feature, set it to 100.
+"""
+QualityShiftMovement='4x100 2x8 2x6 4'
 
 # {expert} Reconstruction method
 """ Choose between fourier, wbp or art
@@ -113,13 +143,13 @@ AngularSteps='5x5 3'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-ReconstructionMethod='18xwbp fourier'
+ReconstructionMethod='fourier'
 
 # {expert} Serial ART
 """ Do serial ART even if parallel execution is available. This parameter
     is a vector specifying whether serial ART is used or not.
 """
-SerialART='50x1'
+SerialART=''
 
 # {expert} ART lambda
 """ ART relaxation factor for each of the iterations. There is a tradeoff
@@ -132,7 +162,7 @@ SerialART='50x1'
     For more information about art, visit:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Art
 """
-ARTLambda='50x0.01'
+ARTLambda=''
 
 # {expert} Discrete angular assignment
 """ Especify for each iteration whether there is discrete assignment
@@ -143,7 +173,7 @@ ARTLambda='50x0.01'
     The discrete angular assignment is done with xmipp_angular_predict:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Angular_predict
 """
-DiscreteAssignment='50x1'
+DiscreteAssignment='1'
 
 # {expert} Continuous angular assignment
 """ Especify for each iteration whether there is continuous assignment
@@ -154,13 +184,18 @@ DiscreteAssignment='50x1'
     The discrete angular assignment is done with xmipp_angular_predict:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Angular_predict_continuous
 """
-ContinuousAssignment='0 1'
+ContinuousAssignment='1'
 
-# {expert} Compute resolution
+# {expert} Compute resolution using FSC
+""" The resolution is always computed in the last iteration
+"""
+DoComputeFSC='1'
+
+# {expert} Compute resolution using SSNR
 """ Computation of the spectral signal-to-noise ratio is slow, do not abuse it.
     The resolution is always computed in the last iteration
 """
-DoComputeResolution='0'
+DoComputeSSNR='0'
 
 #-----------------------------------------------------------------------------
 # {section} CTF Amplitude Correction (assuming previous phase correction)
@@ -175,19 +210,14 @@ DoComputeResolution='0'
     if you have run this other protocol, you simply have to provide
     the name generated at that stage.
 """
-CTFDat='ctf.dat'
-
-# {expert} Phase correction
-""" Specify whether a phase correction must be done or not.
-"""
-PhaseCorrection=True
+CTFDat=''
 
 # {expert} Amplitude correction
 """ Specify whether amplitude correction is performed or not at each
     iteration.
     E.g. 45x0 5x1
 """
-AmplitudeCorrection='16x0 1'
+AmplitudeCorrection=''
 
 #-----------------------------------------------------------------------------
 # {section} Post-processing
@@ -200,10 +230,10 @@ AmplitudeCorrection='16x0 1'
     Masks for subsequent scales are generated by expansion, thresholding,
     opening, and closing of the initial mask.
 """
-DoReferenceMask='50x1'
+DoReferenceMask='1'
 
 # {file} Initial Reference Mask Volume
-InitialReferenceMask='Src/referenceMaskDilated.vol'
+InitialReferenceMask='Src/initial_mask.vol'
 
 # {expert} Reference Lowpass filter (Normalized digital freq.)
 """ This vector specifies the frequency at which each reference volume
@@ -240,7 +270,7 @@ SegmentUsingMass='50x0'
 """ Specify whether the reference for the next iteration must be recentered
     or not after each iteration.
 """
-Recenter=True
+Recenter=False
 
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
@@ -249,12 +279,17 @@ Recenter=True
 DoParallel=True
 
 # Number of processors to use:
-MyNumberOfCPUs=32
+MyNumberOfCPUs=3
 
 # Number of processors to use by large memory demanding algorithms:
 """ In fact only the Fourier reconstruction method is so large memory demanding
 """
-MyNumberOfCPUsReduced=16
+MyNumberOfCPUsReduced=2
+
+# Number of threads available on a single node
+""" Maximum number of threads that can be launched in a single node
+"""
+MyNumberOfThreads=2
 
 # {file} A list of all available CPUs (the MPI-machinefile):
 """ Depending on your system, your standard script to launch MPI-jobs may require this
@@ -287,6 +322,8 @@ import launch_parallel_job
 import log
 import selfile
 
+debugSteps = False
+
 class MultiResClass:
    #------------------------------------------------------------------------
    # Class constructor
@@ -303,21 +340,24 @@ class MultiResClass:
 		
 		_ParticleRadius,
 		_ParticleMass,
-		_SymmetryFile,
+		_SymmetryGroup,
 		_SamplingRate,
 		
 		_PyramidLevels,
 		_AngularSteps,
+                _QualityPercentil,
+                _QualityAngleMovement,
+                _QualityShiftMovement,
 		_ReconstructionMethod,
 		_SerialART,
 		_ARTLambda,
 		_DiscreteAssignment,
 		_ContinuousAssignment,
-		_DoComputeResolution,
+		_DoComputeFSC,
+		_DoComputeSSNR,
 		_ResumeIteration,
 		
 		_CTFDat,
-		_PhaseCorrection,
 		_AmplitudeCorrection,
 		
 		_DoReferenceMask,
@@ -330,6 +370,7 @@ class MultiResClass:
 		_DoParallel,
 		_MyNumberOfCPUs,
 		_MyNumberOfCPUsReduced,
+                _MyNumberOfThreads,
 		_MyMachineFile,
 		
 		_Verbose
@@ -346,29 +387,30 @@ class MultiResClass:
 		
        self.particleRadius=_ParticleRadius
        self.particleMass=_ParticleMass
-       if _SymmetryFile=="":
-          self.symmetryFile=""
+       if _SymmetryGroup=="":
+          self.symmetryGroup="c1"
        else:
-          self.symmetryFile=os.path.abspath(_SymmetryFile)
-          if not os.path.exists(self.symmetryFile):
-             self.symmetryFile=_SymmetryFile
+          self.symmetryGroup=_SymmetryGroup
        self.samplingRate=_SamplingRate
 
        self.pyramidLevels="0 "+_PyramidLevels
        self.angularSteps="0 "+_AngularSteps
+       self.qualityPercentil="0 "+_QualityPercentil
+       self.qualityAngleMovement="0 "+_QualityAngleMovement
+       self.qualityShiftMovement="0 "+_QualityShiftMovement
        self.reconstructionMethod="null "+_ReconstructionMethod
        self.serialART="0 "+_SerialART
        self.ARTLambda="0 "+_ARTLambda
        self.discreteAssignment="0 "+_DiscreteAssignment
        self.continuousAssignment="0 "+_ContinuousAssignment
-       self.doComputeResolution="0 "+_DoComputeResolution
+       self.doComputeFSC="0 "+_DoComputeFSC
+       self.doComputeSSNR="0 "+_DoComputeSSNR
        self.resumeIteration=_ResumeIteration
 
        if _CTFDat!="":
           self.CTFDat=os.path.abspath(_CTFDat)
        else:
           self.CTFDat=""
-       self.phaseCorrection=_PhaseCorrection
        self.amplitudeCorrection="0 "+_AmplitudeCorrection
 		
        self.doReferenceMask="0 "+_DoReferenceMask
@@ -385,6 +427,7 @@ class MultiResClass:
        self.doParallel=_DoParallel
        self.myNumberOfCPUs=_MyNumberOfCPUs
        self.myNumberOfCPUsReduced=_MyNumberOfCPUsReduced
+       self.myNumberOfThreads=_MyNumberOfThreads
        if _MyMachineFile=='':
           self.myMachineFile=''
        elif _MyMachineFile[0]=='/':
@@ -478,30 +521,22 @@ class MultiResClass:
    def angularAssignment(self,_iteration):
        self.log("# Angular assignment --------------------------------------------------")
        
-       # Take the last assignment to the image headers
-       self.execute("xmipp_header_assign -i "+\
-                    self.getAlignmentFFilename(_iteration)+\
-		    " -o preproc_assign.sel -force")
-       
        # Perform a discrete angular assignment
        if self.getDiscreteAssignment(_iteration)=="1":
           params0="-i "+self.getModelFFilename(_iteration)+" "+\
                    " -sampling_rate "+self.getAngularSteps(_iteration)+" "+\
-                   "-o ref"
-          if not self.symmetryFile=="":
-             params0+=" -sym "+self.symmetryFile
+                   "-o ref -sym "+self.symmetryGroup
              
-          params="-i preproc_assign.sel "+\
-                  "-ref ref.sel -ang ref_angles.doc "+\
+          params="-i "+self.getAlignmentFFilename(_iteration)+" "+\
+                  "-ref ref.sel "+\
                   "-oang "+self.getDiscreteAnglesFilename(_iteration)+" "+\
                   "-psi_step "+self.getAngularSteps(_iteration)+" "+\
-                  "-summary "+self.getDiscreteAnglesSummaryDir(_iteration)+\
-                  "/summary -dont_modify_header -do_not_check_mirrors"+\
-		  " -max_shift_change "+str(self.particleWorkingRadius/5)
-          if not self.symmetryFile=="":
-             params+=" -sym "+self.symmetryFile
+		  "-max_shift_change "+str(self.particleWorkingRadius/5)
+          if (_iteration==1):
+             params+=" -5D -shift_step 2"
+          if not self.symmetryGroup=="c1":
+             params+=" -sym "+self.symmetryGroup
 
-          self.createDirectory(self.getDiscreteAnglesSummaryDir(_iteration))
           launch_parallel_job.launch_job(self.doParallel,
                                          "xmipp_angular_project_library",
                                          "xmipp_mpi_angular_project_library",
@@ -527,10 +562,10 @@ class MultiResClass:
 
        # Perform a continuous angular assignment
        if self.getContinuousAssignment(_iteration)=="1":
-	  params="-i preproc_assign.sel "+\
-        	 "-ref "+self.getModelFFilename(_iteration)+" "+\
+	  params="-ref "+self.getModelFFilename(_iteration)+" "+\
 		 "-ang "+self.getDiscreteAnglesFilename(_iteration)+" "+\
-		 "-oang "+self.getContinuousAnglesFilename(_iteration)
+		 "-oang "+self.getContinuousAnglesFilename(_iteration)+" "+\
+		 "-max_shift "+str(self.particleWorkingRadius/5)
 	  launch_parallel_job.launch_job(self.doParallel,
         			       "xmipp_angular_continuous_assign",
         			       "xmipp_mpi_angular_continuous_assign",
@@ -551,11 +586,18 @@ class MultiResClass:
       	            self.getAlignmentFilename(_iteration)+\
 		    " -o Iteration"+itoa(_iteration,2)+"/diff_angles"+\
 		    itoa(_iteration,2)+" -check_mirrors"
-       if not self.symmetryFile=="":
-            angular_distance_command+=" -sym "+self.symmetryFile
-       self.execute(angular_distance_command+" | "+\
-		    " sed -n 's/Global distance = /"+str(_iteration)+" /p' "+\
-		    ">> angle_convergence.txt")
+       if not self.symmetryGroup=="":
+            angular_distance_command+=" -sym "+self.symmetryGroup
+       self.execute(angular_distance_command+" > inter ");
+       self.execute(" sed -n 's/Global angular distance = /"+str(_iteration)+" /p' "+\
+		    "< inter >> angle_convergence.txt")
+       self.execute(" sed -n 's/Global shift   distance = /"+str(_iteration)+" /p' "+\
+		    "< inter >> shift_convergence.txt")
+       self.execute("rm -f inter")
+       self.execute("mv Iteration"+itoa(_iteration,2)+"/diff_angles"+\
+		    itoa(_iteration,2)+"_vec_diff_hist.txt Iteration"+\
+                    itoa(_iteration,2)+"/angular_change_histogram.txt")
+       self.execute("rm Iteration"+itoa(_iteration,2)+"/diff_angles*")
 
    #------------------------------------------------------------------------
    # Change directory
@@ -571,53 +613,50 @@ class MultiResClass:
        self.log("# Computing resolution ------------------------------------------------")
        
        # FSC ...............................................................
-       # Split the data in two halves
-       self.execute("xmipp_selfile_split -i preproc_recons.sel -n 2 -o preproc_recons")
+       if self.getComputeFSC(_iteration)=="1" and \
+          not self.getReconstructionMethod(_iteration)=="fourier":
+          # Split the data in two halves
+          self.execute("xmipp_selfile_split -i preproc_recons.sel -n 2 -o preproc_recons")
 
-       # Make the two reconstructions
-       self.runReconstructionAlgorithm(_iteration,"preproc_recons_1.sel",
-	  self.getReconstructionRootname(_iteration)+"_1",False)
-       self.runReconstructionAlgorithm(_iteration,"preproc_recons_2.sel",
-	  self.getReconstructionRootname(_iteration)+"_2",False)
+          # Make the two reconstructions
+          self.runReconstructionAlgorithm(_iteration,"preproc_recons_1.sel",
+	     self.getReconstructionRootname(_iteration)+"_1",False)
+          self.runReconstructionAlgorithm(_iteration,"preproc_recons_2.sel",
+	     self.getReconstructionRootname(_iteration)+"_2",False)
 
-       # Compute the FSC
-       self.execute("xmipp_resolution_fsc "+\
-          "-ref "+self.getReconstructionRootname(_iteration)+"_1.vol "+\
-          "-i "+self.getReconstructionRootname(_iteration)+"_2.vol "+\
-	  "-sam "+str(self.workingSamplingRate*
-	              pow(2,int(self.getPyramidLevel(_iteration)))))
-       
-       # Remove unnecessary files
-       self.execute("rm -f preproc_recons_?.sel")
+          # Compute the FSC
+          self.execute("xmipp_resolution_fsc "+\
+             "-ref "+self.getReconstructionRootname(_iteration)+"_1.vol "+\
+             "-i "+self.getReconstructionRootname(_iteration)+"_2.vol "+\
+	     "-sam "+str(self.workingSamplingRate*
+	                 pow(2,int(self.getPyramidLevel(_iteration)))))
+          self.execute("mv "+self.getReconstructionRootname(_iteration)+\
+            "_2.vol.fsc "+self.getReconstructionRootname(_iteration)+".fsc")
+
+          # Remove unnecessary files
+          self.execute("rm -f preproc_recons_?.sel "+\
+             self.getReconstructionRootname(_iteration)+"_?.vol")
 
        # SSNR ..............................................................
-       # Reconstruct the signal volume
-       self.copySelFile("preproc_assign.sel","preproc_signal")
-       self.execute("xmipp_header_assign -i "+\
-                    self.getAlignmentFilename(_iteration)+\
-		    " -o preproc_signal.sel -force")
-       self.runReconstructionAlgorithm(_iteration,"preproc_signal.sel",
-	  self.getReconstructionRootname(_iteration)+"_signal",False)
-
        # Reconstruct the noise volume
-       self.copySelFile("preproc_signal.sel","preproc_noise")
+       self.copySelFile("preproc_recons.sel","preproc_noise")
        self.execute("xmipp_mask -i preproc_noise.sel -mask circular "+\
           str(self.workXDim))
        self.execute("xmipp_add_noise -i preproc_noise.sel -gaussian 1")
-       self.runReconstructionAlgorithm(_iteration,"preproc_noise.sel",
+       self.runReconstructionAlgorithm(_iteration,"preproc_noise",
 	  self.getReconstructionRootname(_iteration)+"_noise",False)
 
        # Compute the SSNR
-       self.execute("xmipp_ssnr "+\
-          "-S "+self.getReconstructionRootname(_iteration)+"_signal.vol "+\
+       self.execute("xmipp_resolution_ssnr "+\
+          "-S "+self.getReconstructionRootname(_iteration)+".vol "+\
           "-N "+self.getReconstructionRootname(_iteration)+"_noise.vol "+\
-	  "-selS preproc_signal.sel -selN preproc_noise.sel "+\
+	  "-selS preproc_recons.sel -selN preproc_noise.sel "+\
 	  "-sampling_rate "+str(self.workingSamplingRate*
 	     pow(2,int(self.getPyramidLevel(_iteration))))+" "+\
-	  "-o "+self.getReconstructionRootname(_iteration)+".vol.ssnr")
+	  "-o "+self.getReconstructionRootname(_iteration)+".ssnr")
        
        # Remove unnecessary files
-       self.execute("rm -rf preproc_signal* preproc_noise*")
+       self.execute("rm -rf preproc_noise*")
 
    #------------------------------------------------------------------------
    # Copy CTFs
@@ -765,6 +804,10 @@ class MultiResClass:
 	  if not self.xDim==self.workXDim:
 	     self.execute("xmipp_scale -i imgs.sel -xdim "+str(self.workXDim))
 	  
+          # Normalize images
+          self.execute("xmipp_normalize -i imgs.sel -method Ramp -background circle "+\
+        	       str(math.ceil(self.particleWorkingRadius*1.1)))
+
 	  # Rescale the reference volume and mask
 	  self.copyFile(self.referenceFileName,"Src/referenceScaledVolume.vol")
           if not self.initialReferenceMask=="":
@@ -782,7 +825,8 @@ class MultiResClass:
        factor=pow(2,-int(self.getPyramidLevel(_iteration)))
 
        # Generate images for assignment
-       self.copySelFile("preproc.sel","preproc_assign")
+       self.copySelFile("../imgs.sel","preproc_assign","preproc_assign.sel",
+          self.workDirectory+"/Results","..")
 
        # Correct for the amplitude
        if self.CTFDat!="" and self.getAmplitudeCorrection(_iteration)=="1" \
@@ -811,18 +855,15 @@ class MultiResClass:
           self.execute('xmipp_selfile_create "preproc_assign_IDR/*" > preproc_assign.sel')
 
        # Scale if necessary
-       if not self.getPyramidLevel(_iteration)=="0":
+       if (not self.getPyramidLevel(_iteration)=="0" and
+          (_iteration==1 or _iteration>1 and
+             not self.getPyramidLevel(_iteration)==
+                self.getPyramidLevel(_iteration))):
           self.execute("xmipp_scale_pyramid -i preproc_assign.sel -reduce -levels "+\
         	       str(self.getPyramidLevel(_iteration)))
           self.execute("xmipp_normalize -i preproc_assign.sel -method NewXmipp -background circle "+\
         	       str(math.ceil(self.particleWorkingRadius*1.1*factor)))
 
-       # Generate images for reconstruction
-       self.copySelFile("preproc_assign.sel","preproc_recons")
-       self.execute("xmipp_mask -i preproc_recons.sel -mask raised_cosine "+\
-        	    str(-(math.ceil(self.particleWorkingRadius*factor)))+" "+\
-        	    str(-(math.ceil(self.particleWorkingRadius*1.1*factor))))
-        
    #------------------------------------------------------------------------
    # Generate Next Reference
    #------------------------------------------------------------------------
@@ -866,6 +907,8 @@ class MultiResClass:
 	 if self.getDoReferenceMask(_iteration)=="1":
             self.execute("xmipp_mask -i "+self.getModelFilename(_iteration)+" "+\
 	        	 "-mask "+self.getMaskFilename(_iteration))
+      if (debugSteps):
+          a=input("Volume for next iteration prepared. Press a key")
 
    #------------------------------------------------------------------------
    # Get
@@ -880,16 +923,20 @@ class MultiResClass:
       return getComponentFromVector(self.angularSteps,_iteration)
    def getARTLambda(self,_iteration):
       return getComponentFromVector(self.ARTLambda,_iteration)
+   def getComputeFSC(self,_iteration):
+      return getComponentFromVector(self.doComputeFSC,_iteration)
    def getComputeResolution(self,_iteration):
-      return getComponentFromVector(self.doComputeResolution,_iteration)
+      if self.getComputeFSC(_iteration)=="1": return "1"
+      if self.getComputeSSNR(_iteration)=="1": return "1"
+      return "0"
+   def getComputeSSNR(self,_iteration):
+      return getComponentFromVector(self.doComputeSSNR,_iteration)
    def getContinuousAnglesFilename(self,_iteration):
       return self.getAlignmentFilename(_iteration)
    def getContinuousAssignment(self,_iteration):
       return getComponentFromVector(self.continuousAssignment,_iteration)
    def getDiscreteAnglesFilename(self,_iteration):
       return self.getIterationDirectory(_iteration)+"/angles"+itoa(_iteration,2)+".txt"
-   def getDiscreteAnglesSummaryDir(self,_iteration):
-      return self.getIterationDirectory(_iteration)+"/DiscreteAssignment"
    def getDiscreteAssignment(self,_iteration):
       return getComponentFromVector(self.discreteAssignment,_iteration)
    def getDoReferenceMask(self,_iteration):
@@ -910,6 +957,14 @@ class MultiResClass:
       return self.getIterationDirectory(_iteration)+"/volume"+itoa(_iteration,2)
    def getPyramidLevel(self,_iteration):
       return getComponentFromVector(self.pyramidLevels,_iteration)
+   def getQualityAngleMovement(self,_iteration):
+      return getComponentFromVector(self.qualityAngleMovement,_iteration)
+   def getQualityPercentil(self,_iteration):
+      return getComponentFromVector(self.qualityPercentil,_iteration)
+   def getQualityShiftMovement(self,_iteration):
+      return getComponentFromVector(self.qualityShiftMovement,_iteration)
+   def getReconstructionAnglesFilename(self,_iteration):
+      return self.getIterationDirectory(_iteration)+"/angles_reconstruction"+itoa(_iteration,2)+".txt"
    def getSegmentUsingMass(self,_iteration):
       return getComponentFromVector(self.segmentUsingMass,_iteration)
    def getSerialART(self,_iteration):
@@ -1013,36 +1068,21 @@ class MultiResClass:
        if self.resumeIteration==1:
           self.deleteDirectory("Iteration00")
           self.createDirectory("Iteration00")
-	  self.linkFile("../../Src/prealignment.txt",self.getAlignmentFilename(0))
+	  self.execute("sed 's/ScaledImgs/preproc_assign/' < ../Src/prealignment.txt > "+self.getAlignmentFilename(0))
 	  self.linkFile("../../Src/referenceScaledVolume.vol",self.getModelFilename(0))
 	  self.deleteFile("angle_convergence.txt")
 	  self.touchFile("angle_convergence.txt")
-
-          # Generate plain set of images
-          self.deleteDirectory("preproc")
-          self.copySelFile("../imgs.sel","preproc","preproc.sel",
-        		   self.workDirectory+"/Results","..")
-
-          # Normalize images
-          self.execute("xmipp_normalize -i preproc.sel -method Ramp -background circle "+\
-        	       str(math.ceil(self.particleWorkingRadius*1.1)))
-          self.execute("xmipp_normalize -i preproc.sel -method NewXmipp -background circle "+\
-        	       str(math.ceil(self.particleWorkingRadius*1.1)))
-
-          # Correct for the phase
-          if self.CTFDat!="":
-	     CTFs=ctfdat.ctfdat()
-	     CTFs.read("../ctfdat.txt")
-	     preprocCTFs=CTFs.changeDirectory("preproc","../ScaledCTFs")
-	     self.log("# Creating a ctfdat file for preproc")
-             preprocCTFs.write("preproc_ctfdat.txt")
-             if self.phaseCorrection:
-                self.execute("xmipp_ctf_correct_phase -ctfdat preproc_ctfdat.txt")
+	  self.deleteFile("shift_convergence.txt")
+	  self.touchFile("shift_convergence.txt")
        else:
           if not os.path.exists("angle_convergence.txt"):
 	     raise RuntimeError,"File angle_convergence.txt does not exist"
           self.execute("head -"+str(self.resumeIteration-1)+" angle_convergence.txt > inter")
 	  self.execute("mv inter angle_convergence.txt")
+          if not os.path.exists("shift_convergence.txt"):
+	     raise RuntimeError,"File shift_convergence.txt does not exist"
+          self.execute("head -"+str(self.resumeIteration-1)+" shift_convergence.txt > inter")
+	  self.execute("mv inter shift_convergence.txt")
        for it in range(self.resumeIteration,99):
 	  self.deleteDirectory("Iteration"+itoa(it,2))
        
@@ -1051,14 +1091,43 @@ class MultiResClass:
    #------------------------------------------------------------------------
    def reconstruct(self,_iteration):
        self.log("# 3D reconstruction ---------------------------------------------------")
+       factor=pow(2,-int(self.getPyramidLevel(_iteration)))
        
-       # Take the last assignment to the image headers
-       self.execute("xmipp_header_assign -i "+\
-                    self.getAlignmentFilename(_iteration)+\
-		    " -o preproc_recons.sel -force")
+       # Apply a quality criteria
+       cmd="xmipp_filter_projections"+\
+          " -i "+self.getAlignmentFilename(_iteration)+\
+          " -o preproc_recons -thr "+str(self.myNumberOfThreads)
+
+       if self.getQualityPercentil(_iteration)>0 and \
+          self.getDiscreteAssignment(_iteration):
+          cmd+=" -filter_score "+self.getDiscreteAnglesFilename(_iteration)+" "+\
+             self.getQualityPercentil(_iteration)
+
+       if self.getQualityPercentil(_iteration)>0 and \
+          self.getContinuousAssignment(_iteration):
+          cmd+=" -filter_cost "+self.getContinuousAnglesFilename(_iteration)+" "+\
+             self.getQualityPercentil(_iteration)
+
+       if self.getQualityPercentil(_iteration)>0:
+          cmd+=" -filter_normalization "+\
+               self.getModelFFilename(_iteration)+" "+\
+               str(math.ceil(self.particleWorkingRadius*factor))+" "+\
+               str(math.ceil(self.particleWorkingRadius*factor*1.1))+" "+\
+               self.getQualityPercentil(_iteration)
+
+       if _iteration>1:
+          cmd+=" -filter_movement "+\
+               self.getAlignmentFFilename(_iteration)+" "+\
+               self.getQualityAngleMovement(_iteration)+" "+\
+               str(math.ceil(self.particleWorkingRadius*factor*\
+                  float(self.getQualityShiftMovement(_iteration))/100.0))
+
+       self.execute(cmd)
+       self.execute("cp preproc_recons.doc "+\
+          self.getReconstructionAnglesFilename(_iteration))
        
-       self.runReconstructionAlgorithm(_iteration,"preproc_recons.sel",
-	         self.getReconstructionRootname(_iteration),True)
+       self.runReconstructionAlgorithm(_iteration,"preproc_recons",
+	  self.getReconstructionRootname(_iteration),True)
 
    #------------------------------------------------------------------------
    # Reconstruction iteration
@@ -1068,8 +1137,14 @@ class MultiResClass:
       self.createDirectory("Iteration"+itoa(_iteration,2))
       self.adaptScaleFromPreviousIteration(_iteration)
       self.generateImagesForThisIteration(_iteration)
+      if (debugSteps):
+          a=input("Images prepared. Press a key")
       self.angularAssignment(_iteration)
+      if (debugSteps):
+          a=input("Angular assignment done. Press a key")
       self.reconstruct(_iteration)
+      if (debugSteps):
+          a=input("Reconstruction done. Press a key")
       if self.getComputeResolution(_iteration)=="1":
          self.computeResolution(_iteration)
       
@@ -1082,6 +1157,8 @@ class MultiResClass:
        self.copyCTFs()
        self.prealignment()
        self.prepareForFirstIteration()
+       if (debugSteps):
+           a=input("Prepared for first iteration. Press a key")
        for it in range(self.numberOfIterations):
            if it>=self.resumeIteration:
               self.log("Iteration "+str(it),'info',True)
@@ -1093,16 +1170,19 @@ class MultiResClass:
    #------------------------------------------------------------------------
    # Run Reconstruction Algorithm
    #------------------------------------------------------------------------
-   def runReconstructionAlgorithm(self,_iteration,_selfile,_outputRootName,
+   def runReconstructionAlgorithm(self,_iteration,_rootname,_outputRootName,
        _applyMasks):
+
+       docfile = _rootname+".doc"
+       selfile = _rootname+".sel"
 
        # Reconstruct
        if self.getReconstructionMethod(_iteration)=="art":
-          params="-i "+_selfile+" "+\
+          params="-i "+selfile+" "+\
 	         "-o "+_outputRootName+" "+\
 		 "-l "+self.getARTLambda(_iteration)
-          if not self.symmetryFile=="":
-             params+=" -sym "+self.symmetryFile
+          if not self.symmetryGroup=="":
+             params+=" -sym "+self.symmetryGroup
 	  if _applyMasks:
 	     params+="-R "+str(math.ceil(self.particleWorkingRadius*1.1))
 	  doParallel=self.doParallel
@@ -1118,11 +1198,11 @@ class MultiResClass:
         			       False)
 	  self.deleteFile(_outputRootName+".hist")
        elif self.getReconstructionMethod(_iteration)=="wbp":
-          params="-i "+_selfile+" "+\
+          params="-i "+selfile+" "+\
 	         "-o "+_outputRootName+".vol "+\
 		 "-use_each_image"
-          if not self.symmetryFile=="":
-	     params+="-sym "+self.symmetryFile+" "
+          if not self.symmetryGroup=="":
+	     params+="-sym "+self.symmetryGroup+" "
 	  if not _applyMasks:
 	     params+=" -radius "+str(0.5*math.floor(math.sqrt(2.0)*
 	        self.workXDim/
@@ -1136,10 +1216,13 @@ class MultiResClass:
         			       self.myMachineFile,
         			       False)
        elif self.getReconstructionMethod(_iteration)=="fourier":
-          params="-i "+_selfile+" "+\
+          params="-i "+selfile+" "+\
 	         "-o "+_outputRootName+".vol "
-          if not self.symmetryFile=="":
-	     params+="-sym "+self.symmetryFile
+          if not self.symmetryGroup=="":
+	     params+="-sym "+self.symmetryGroup+" "
+          if self.getComputeFSC(_iteration):
+            params+="-prepare_fsc "+self.getReconstructionRootname(_iteration)+\
+               ".fsc "
 	  launch_parallel_job.launch_job(self.doParallel,
         			       "xmipp_reconstruct_fourier",
         			       "xmipp_mpi_reconstruct_fourier",
@@ -1161,9 +1244,9 @@ class MultiResClass:
 	               " "+str(-math.ceil(self.particleWorkingRadius*1.1)))
        
        # Symmetrize volume
-       if not self.symmetryFile=="":
+       if not self.symmetryGroup=="":
           self.execute("xmipp_symmetrize -i "+_outputRootName+".vol "+\
-	               "-sym "+self.symmetryFile)
+	               "-sym "+self.symmetryGroup)
       
        # Mask volume
        if (not self.initialReferenceMask=="") and _applyMasks:
@@ -1238,21 +1321,24 @@ if __name__ == '__main__':
 		
 		ParticleRadius,
 		ParticleMass,
-		SymmetryFile,
+		SymmetryGroup,
 		SamplingRate,
 		
 		PyramidLevels,
 		AngularSteps,
+                QualityPercentil,
+                QualityAngleMovement,
+                QualityShiftMovement,
 		ReconstructionMethod,
 		SerialART,
 		ARTLambda,
 		DiscreteAssignment,
 		ContinuousAssignment,
-		DoComputeResolution,
+		DoComputeFSC,
+		DoComputeSSNR,
 		ResumeIteration,
 		
 		CTFDat,
-		PhaseCorrection,
 		AmplitudeCorrection,
 		
 		DoReferenceMask,
@@ -1265,6 +1351,7 @@ if __name__ == '__main__':
 		DoParallel,
 		MyNumberOfCPUs,
 		MyNumberOfCPUsReduced,
+                MyNumberOfThreads,
 		MyMachineFile,
 		
 		True
