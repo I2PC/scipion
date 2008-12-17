@@ -42,10 +42,10 @@ void Prog_angular_distance_prm::read(int argc, char **argv)
 void Prog_angular_distance_prm::show()
 {
     std::cout << "Angular docfile 1: " << fn_ang1       << std::endl
-    << "Angular docfile 2: " << fn_ang2       << std::endl
-    << "Angular output   : " << fn_ang_out    << std::endl
-    << "Symmetry file    : " << fn_sym        << std::endl
-    << "Check mirrors    : " << check_mirrors << std::endl
+              << "Angular docfile 2: " << fn_ang2       << std::endl
+              << "Angular output   : " << fn_ang_out    << std::endl
+              << "Symmetry file    : " << fn_sym        << std::endl
+              << "Check mirrors    : " << check_mirrors << std::endl
     ;
 }
 
@@ -53,12 +53,12 @@ void Prog_angular_distance_prm::show()
 void Prog_angular_distance_prm::usage()
 {
     std::cerr << "   -ang1 <DocFile 1>         : Angular document file 1\n"
-    << "   -ang2 <DocFile 2>         : Angular document file 2\n"
-    << "  [-o <DocFile out>]         : Merge dcfile. If not given it is\n"
-    << "                               not generated\n"
-    << "  [-sym <symmetry file>]     : Symmetry file if any\n"
-    << "  [-check_mirrors]           : Check if mirrored axes give better\n"
-    << "                               fit (Spider, APMQ)\n"
+              << "   -ang2 <DocFile 2>         : Angular document file 2\n"
+              << "  [-o <DocFile out>]         : Merge dcfile. If not given it is\n"
+              << "                               not generated\n"
+              << "  [-sym <symmetry file>]     : Symmetry file if any\n"
+              << "  [-check_mirrors]           : Check if mirrored axes give better\n"
+              << "                               fit (Spider, APMQ)\n"
     ;
 }
 
@@ -206,27 +206,31 @@ double Prog_angular_distance_prm::check_symmetries(double rot1, double tilt1,
 #define DEBUG
 
 // Compute distance --------------------------------------------------------
-double Prog_angular_distance_prm::compute_distance()
+void Prog_angular_distance_prm::compute_distance(double &angular_distance,
+    double &shift_distance)
 {
     DocFile DF_out;
-    double dist = 0;
+    angular_distance = 0;
+    shift_distance = 0;
 
     DF1.go_first_data_line();
     DF2.go_first_data_line();
     DF_out.reserve(DF1.dataLineNo());
-
+    
     int dim = DF1.FirstLine_colNumber();
-    Matrix1D<double> aux(16);
-    Matrix1D<double> rot_diff, tilt_diff, psi_diff, vec_diff, X_diff, Y_diff;
+    Matrix1D<double> aux(17);
+    Matrix1D<double> rot_diff, tilt_diff, psi_diff, vec_diff,
+        X_diff, Y_diff, shift_diff;
     rot_diff.resize(DF1.dataLineNo());
     tilt_diff.resize(rot_diff);
     psi_diff.resize(rot_diff);
     vec_diff.resize(rot_diff);
     X_diff.resize(rot_diff);
     Y_diff.resize(rot_diff);
+    shift_diff.resize(rot_diff);
 
     // Build output comment
-    DF_out.append_comment("            rot1       rot2    diff_rot     tilt1      tilt2    diff_tilt    psi1       psi2     diff_psi   ang_dist      X1         X2        Xdiff       Y1          Y2       Ydiff");
+    DF_out.append_comment("            rot1       rot2    diff_rot     tilt1      tilt2    diff_tilt    psi1       psi2     diff_psi   ang_dist      X1         X2        Xdiff       Y1          Y2       Ydiff     ShiftDiff");
 
     int i = 0;
     while (!DF1.eof())
@@ -305,6 +309,7 @@ double Prog_angular_distance_prm::compute_distance()
         vec_diff(i) = distp;
         X_diff(i) = X1 - X2;
         Y_diff(i) = Y1 - Y2;
+        shift_diff(i) = sqrt(X_diff(i)*X_diff(i)+Y_diff(i)*Y_diff(i));
 
         // Fill the output result
         aux(0) = rot1;
@@ -323,7 +328,9 @@ double Prog_angular_distance_prm::compute_distance()
         aux(13) = Y1;
         aux(14) = Y2;
         aux(15) = Y_diff(i);
-        dist += distp;
+        aux(16) = shift_diff(i);
+        angular_distance += distp;
+        shift_distance += shift_diff(i);
         DF_out.append_data_line(aux);
 
         // Move to next data line
@@ -331,7 +338,8 @@ double Prog_angular_distance_prm::compute_distance()
         DF2.next_data_line();
         i++;
     }
-    dist /= i;
+    angular_distance /= i;
+    shift_distance /=i;
 
     if (fn_ang_out != "")
     {
@@ -343,12 +351,13 @@ double Prog_angular_distance_prm::compute_distance()
         hist.write(fn_ang_out + "_tilt_diff_hist.txt");
         compute_hist(psi_diff, hist, 100);
         hist.write(fn_ang_out + "_psi_diff_hist.txt");
-        compute_hist(vec_diff, hist, 0, 90, 91);
+        compute_hist(vec_diff, hist, 0, 180, 180);
         hist.write(fn_ang_out + "_vec_diff_hist.txt");
         compute_hist(X_diff, hist, 20);
         hist.write(fn_ang_out + "_X_diff_hist.txt");
         compute_hist(Y_diff, hist, 20);
         hist.write(fn_ang_out + "_Y_diff_hist.txt");
+        compute_hist(shift_diff, hist, 20);
+        hist.write(fn_ang_out + "_shift_diff_hist.txt");
     }
-    return dist;
 }
