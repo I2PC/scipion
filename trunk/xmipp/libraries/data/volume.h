@@ -102,7 +102,8 @@ typedef enum
     VFLOAT = 2,
     VINT = 3,
     VUCHAR = 4,
-    V16 = 5
+    V16 = 5,
+    VCOMPLEX = 6
 } Volume_Type;
 
 /** Basic volume class.
@@ -424,6 +425,82 @@ public:
         fclose(fh);
     }
 
+    void sumWithFile(FileName name,
+              int Zdim,
+              int Ydim,
+              int Xdim,
+              bool reversed = false,
+              Volume_Type volume_type = VBYTE,
+              int header_size = 0)
+    {
+        FILE* fh;
+
+        if ((fh = fopen(name.c_str(), "rb")) == NULL)
+            REPORT_ERROR(1501, "Volume::read: File " + name + " not found");
+
+        fseek(fh, header_size , SEEK_SET);
+
+        readAndSum(fh, Zdim, Ydim, Xdim, reversed, volume_type );
+
+        fclose(fh);
+    }
+
+       /** Read image from disk using a file pointer.
+     * This is the core routine of the previous one.
+     */
+    void readAndSum(FILE* fh,
+              int Zdim,
+              int Ydim,
+              int Xdim,
+              bool reversed,
+              Volume_Type volume_type)
+    {
+    	T* ptr;
+
+        unsigned long int n;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(img,n,ptr)
+            switch (volume_type)
+            {
+            case VBYTE:
+                unsigned char u;
+                FREAD(&u, sizeof(unsigned char), 1, fh, reversed);
+                *ptr = *ptr+static_cast< T >(u);
+                break;
+            case VINT:
+                int ii;
+                FREAD(&ii, sizeof(int), 1, fh, reversed);
+                *ptr = *ptr+static_cast< T >(ii);
+                break;
+                // Integers and floats need to be reversed in identical way
+            case V16:
+                unsigned short us;
+                FREAD(&us, sizeof(unsigned short), 1, fh, reversed);
+                *ptr = *ptr+static_cast< T >(us);
+                break;
+            case VFLOAT:
+                float f;
+                FREAD(&f, sizeof(float), 1, fh, reversed);
+                *ptr = *ptr+static_cast< T >(f);
+                break;
+            case VCOMPLEX:
+                {
+                    float p2,p3;
+
+                    FREAD(&p2, sizeof(float), 1, fh, reversed);
+                    FREAD(&p3, sizeof(float), 1, fh, reversed);
+                    
+                    std::complex<double> *p = (std::complex<double> *)ptr;
+
+                    (*p).real() += p2;
+                    (*p).imag() += p3;
+                }
+                break;
+           
+            default:
+                REPORT_ERROR(1503, "Invalid volume type");
+            }
+    }
+
     /** Read image from disk using a file pointer.
      * This is the core routine of the previous one.
      */
@@ -437,7 +514,7 @@ public:
         img.resize(Zdim, Ydim, Xdim);
 
     	T* ptr;
-	unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(img,n,ptr)
             switch (volume_type)
             {
@@ -842,7 +919,6 @@ public:
             REPORT_ERROR(1501,
                          static_cast< std::string >("VolumeXmipp::read: File " +
                                                     VolumeT< T >::fn_img + " not found"));
-
         // Read header
         if (!header.read(fp, skip_type_check, force_reversed))
             REPORT_ERROR(1502, "VolumeXmipp::read: File " +
@@ -856,6 +932,29 @@ public:
         header.set_header();  // Set header in a Xmipp consistent state
     }
 
+        void sumWithFile(const FileName& name,
+              bool skip_type_check = false,
+              bool force_reversed = false)
+    {
+        FILE* fp;
+
+        if ((fp = fopen(name.c_str(), "rb")) == NULL)
+            REPORT_ERROR(1501,
+                         static_cast< std::string >("VolumeXmipp::read: File " +
+                                                    name + " not found"));
+
+        headerXmipp dummyHeader;
+
+        // Read header
+        if (!dummyHeader.read(fp, skip_type_check, force_reversed))
+            REPORT_ERROR(1502, "VolumeXmipp::read: File " +
+                         name + " is not a valid Xmipp file");
+
+        // Read whole image and close file
+        VolumeT<T>::sumWithFile(name, dummyHeader.iSlices(), dummyHeader.iYdim(), dummyHeader.iXdim(),
+                         dummyHeader.reversed(), VFLOAT, dummyHeader.get_header_size() );
+        fclose(fp);
+    }
     /** Write Xmipp volume to disk.
      * If there is any problem in the writing, an exception is thrown. You can
      * give a name to the written volume different from the one used when it
