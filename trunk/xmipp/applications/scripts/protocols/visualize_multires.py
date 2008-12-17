@@ -22,8 +22,6 @@ DoShowModel=False
 DoShowAngleConvergence=False
 # Show vector difference
 DoShowVectorDifferences=False
-# Show discrete angular assignment summary
-DoShowDiscreteSummary=False
 # Show resolution
 DoShowResolution=False
 #------------------------------------------------------------------------------------------------
@@ -69,7 +67,6 @@ class VisualizeMultires3DClass:
                 _DoShowModel,
                 _DoShowAngleConvergence,
                 _DoShowVectorDifferences,
-                _DoShowDiscreteSummary,
 		_DoShowResolution,
 		_VisualizeVolZ,
 		_VisualizeVolX,
@@ -84,7 +81,6 @@ class VisualizeMultires3DClass:
        self.doShowModel=_DoShowModel
        self.doShowAngleConvergence=_DoShowAngleConvergence
        self.doShowVectorDifferences=_DoShowVectorDifferences
-       self.doShowDiscreteSummary=DoShowDiscreteSummary
        self.doShowResolution=_DoShowResolution
        self.visualizeVolZ=_VisualizeVolZ
        self.visualizeVolX=_VisualizeVolX
@@ -97,42 +93,53 @@ class VisualizeMultires3DClass:
 
        # Produce side info
        self.myMultiRes=xmipp_protocol_multires.MultiResClass(
-      	        xmipp_protocol_multires.SelFileName,
-		xmipp_protocol_multires.ReferenceFileName,
-		xmipp_protocol_multires.WorkDirectory,
-		xmipp_protocol_multires.DoDeleteWorkingDir,
-		xmipp_protocol_multires.NumberofIterations,
-		xmipp_protocol_multires.ProjectDir,
-		xmipp_protocol_multires.LogDir,
-		xmipp_protocol_multires.ParticleRadius,
-		xmipp_protocol_multires.ParticleMass,
-		xmipp_protocol_multires.SymmetryFile,
-		xmipp_protocol_multires.SamplingRate,
-		xmipp_protocol_multires.PyramidLevels,
-		xmipp_protocol_multires.AngularSteps,
-		xmipp_protocol_multires.ReconstructionMethod,
-		xmipp_protocol_multires.SerialART,
-		xmipp_protocol_multires.ARTLambda,
-		xmipp_protocol_multires.DiscreteAssignment,
-		xmipp_protocol_multires.ContinuousAssignment,
-		xmipp_protocol_multires.DoComputeResolution,
-		xmipp_protocol_multires.ResumeIteration,
-		xmipp_protocol_multires.CTFDat,
-		xmipp_protocol_multires.PhaseCorrection,
-		xmipp_protocol_multires.AmplitudeCorrection,
-		xmipp_protocol_multires.DoReferenceMask,
-		xmipp_protocol_multires.InitialReferenceMask,
-		xmipp_protocol_multires.FilterLowPassReference,
-		xmipp_protocol_multires.FilterHighPassReference,
-		xmipp_protocol_multires.SegmentUsingMass,
-		xmipp_protocol_multires.Recenter,
-		xmipp_protocol_multires.DoParallel,
-		xmipp_protocol_multires.MyNumberOfCPUs,
-		xmipp_protocol_multires.MyNumberOfCPUsReduced,
-		xmipp_protocol_multires.MyMachineFile,
-		
-		False
-              )
+       myMultiRes=MultiResClass(
+      	            xmipp_protocol_multires.SelFileName,
+		    xmipp_protocol_multires.ReferenceFileName,
+		    xmipp_protocol_multires.WorkDirectory,
+		    xmipp_protocol_multires.DoDeleteWorkingDir,
+		    xmipp_protocol_multires.NumberofIterations,
+		    xmipp_protocol_multires.ProjectDir,
+		    xmipp_protocol_multires.LogDir,
+                    xmipp_protocol_multires.SkipPrealignment,
+
+		    xmipp_protocol_multires.ParticleRadius,
+		    xmipp_protocol_multires.ParticleMass,
+		    xmipp_protocol_multires.SymmetryGroup,
+		    xmipp_protocol_multires.SamplingRate,
+
+		    xmipp_protocol_multires.PyramidLevels,
+		    xmipp_protocol_multires.AngularSteps,
+                    xmipp_protocol_multires.QualityPercentil,
+                    xmipp_protocol_multires.QualityAngleMovement,
+                    xmipp_protocol_multires.QualityShiftMovement,
+		    xmipp_protocol_multires.ReconstructionMethod,
+		    xmipp_protocol_multires.SerialART,
+		    xmipp_protocol_multires.ARTLambda,
+		    xmipp_protocol_multires.DiscreteAssignment,
+		    xmipp_protocol_multires.ContinuousAssignment,
+		    xmipp_protocol_multires.DoComputeFSC,
+		    xmipp_protocol_multires.DoComputeSSNR,
+		    xmipp_protocol_multires.ResumeIteration,
+
+		    xmipp_protocol_multires.CTFDat,
+		    xmipp_protocol_multires.AmplitudeCorrection,
+
+		    xmipp_protocol_multires.DoReferenceMask,
+		    xmipp_protocol_multires.InitialReferenceMask,
+		    xmipp_protocol_multires.FilterLowPassReference,
+		    xmipp_protocol_multires.FilterHighPassReference,
+		    xmipp_protocol_multires.SegmentUsingMass,
+		    xmipp_protocol_multires.Recenter,
+
+		    xmipp_protocol_multires.DoParallel,
+		    xmipp_protocol_multires.MyNumberOfCPUs,
+		    xmipp_protocol_multires.MyNumberOfCPUsReduced,
+                    xmipp_protocol_multires.MyNumberOfThreads,
+		    xmipp_protocol_multires.MyMachineFile,
+
+		    False
+                  )
 
        os.chdir(self.myMultiRes.workDirectory+"/Results")
        self.expandIterations()
@@ -187,7 +194,6 @@ class VisualizeMultires3DClass:
        if self.doShowModel:  self.showModels()
        if self.doShowAngleConvergence: self.showAngleConvergence()
        if self.doShowVectorDifferences: self.showVectorDifferences()
-       if self.doShowDiscreteSummary: self.showDiscreteSummary()
        if self.doShowResolution: self.showResolution()
 
    #------------------------------------------------------------------------
@@ -201,29 +207,6 @@ class VisualizeMultires3DClass:
                          Y_Label="Degrees",
                          X_col=1,
                          Y_col=2)
-	     
-   #------------------------------------------------------------------------
-   # Show Angular Assignment Discrete Summary
-   #------------------------------------------------------------------------
-   def showDiscreteSummary(self):
-       if not len(self.iterationList)==0:
- 	  import visualize_projmatch
-	  for i in range(len(self.iterationList)):
-              ShowPlots=[]
-	      ShowPlots.append(self.myMultiRes.getDiscreteAnglesSummaryDir(
- 	         self.iterationList[i])+"/summary_summary.doc")
-	      title=[]
-	      title.append('Angular distribution for iteration '+\
-        	 str(self.iterationList[i]))
-      	      visualize_projmatch.show_ang_distribution(
-	         ShowPlots,self.iterationList[i],title)
-
-	  for i in range(len(self.iterationList)):
-              command="( cd "+self.myMultiRes.workDirectory+"/Results/"+\
-	         self.myMultiRes.getDiscreteAnglesSummaryDir(
-	            self.iterationList[i])+\
-		    " ; xmipp_show -sel summary_comparison.sel ) &"
- 	      self.execute(command)
 	     
    #------------------------------------------------------------------------
    # Show Models
@@ -353,7 +336,6 @@ if __name__ == '__main__':
                 			       DoShowModel,
                 			       DoShowAngleConvergence,
                 			       DoShowVectorDifferences,
-                			       DoShowDiscreteSummary,
 					       DoShowResolution,
 					       VisualizeVolZ,
 					       VisualizeVolX,
