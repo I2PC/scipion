@@ -548,21 +548,21 @@ class Mask_Params
 {
 public:
 
-#define NO_MASK                  0
-#define BINARY_CIRCULAR_MASK     1
-#define BINARY_CROWN_MASK        2
-#define BINARY_CYLINDER_MASK     3
-#define BINARY_FRAME_MASK        4
-#define GAUSSIAN_MASK            5
-#define RAISED_COSINE_MASK       6
-#define BLACKMAN_MASK            7
-#define SINC_MASK                8
-#define SINC_BLACKMAN_MASK       9
-#define READ_MASK               10
+#define NO_MASK                   0
+#define BINARY_CIRCULAR_MASK      1
+#define BINARY_CROWN_MASK         2
+#define BINARY_CYLINDER_MASK      3
+#define BINARY_FRAME_MASK         4
+#define GAUSSIAN_MASK             5
+#define RAISED_COSINE_MASK        6
+#define BLACKMAN_MASK             7
+#define SINC_MASK                 8
+#define SINC_BLACKMAN_MASK        9
+#define READ_MASK                10
 #define RAISED_CROWN_MASK        11
 #define BINARY_DWT_CIRCULAR_MASK 12
-#define BINARY_CONE_MASK       13
-#define BINARY_WEDGE_MASK       14
+#define BINARY_CONE_MASK         13
+#define BINARY_WEDGE_MASK        14
 
     /** Mask Type
      *
