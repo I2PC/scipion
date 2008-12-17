@@ -137,10 +137,6 @@ public:
 				       const int &samplenr, const double &psi, const double &opt_flip,
 				       double &opt_xoff, double &opt_yoff, double &maxcorr);
 
-  /** Read current image into memory and translate accoring to
-      previous optimal Xoff and Yoff */
-  void getCurrentImage(int imgno, ImageXmipp &img);
-
   /** Get pointer to the current reference image 
       If this image wasn't stored in memory yet, read it from disc and
       store FT of the polar transform as well as the original image */
