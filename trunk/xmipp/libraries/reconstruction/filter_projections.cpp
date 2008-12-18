@@ -117,6 +117,7 @@ void Prog_Filter_Projections_Parameters::usage()
 {
     std::cerr
         << "Usage:\n"
+        << "  -i <docfile>                          : Name of the input docfile\n"
         << "  -o <rootname>                         : Name of the output docfile and selfile\n"
         << "  [-filter_score <docfile> <percentil>] : The lower percentil is removed\n"
         << "                                        : This file is produced by xmipp_angular_discrete_assign\n"
