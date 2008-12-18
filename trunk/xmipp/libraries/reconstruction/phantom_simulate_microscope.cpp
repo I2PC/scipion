@@ -37,7 +37,7 @@ void Prog_Microscope_Parameters::read(int argc, char **argv)
     after_ctf_noise = checkParameter(argc, argv, "-after_ctf_noise");
     defocus_change = textToFloat(getParameter(argc, argv, "-defocus_change", "0"));
 
-    produce_side_info();
+    if (command_line) produce_side_info();
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -68,7 +68,6 @@ void Prog_Microscope_Parameters::show()
 
 
 /* Produce side information ------------------------------------------------ */
-//#define DEBUG
 void Prog_Microscope_Parameters::produce_side_info()
 {
     int Zdim;
@@ -86,10 +85,6 @@ void Prog_Microscope_Parameters::produce_side_info()
         aux.resize(2*Ydim, 2*Xdim);
         aux.setXmippOrigin();
         ctf.generate_mask(aux);
-
-#ifdef DEBUG
-        ctf.write_amplitude("PPP.xmp");
-#endif
         before_power = ctf.mask2D_power();
     }
 
@@ -110,9 +105,6 @@ void Prog_Microscope_Parameters::produce_side_info()
         aux.resize(2*Ydim, 2*Xdim);
         aux.setXmippOrigin();
         after_ctf.generate_mask(aux);
-#ifdef DEBUG
-        after_ctf.write_amplitude("PPPafter.xmp");
-#endif
         after_power = after_ctf.mask2D_power();
     }
 
@@ -130,7 +122,6 @@ void Prog_Microscope_Parameters::produce_side_info()
         sigma_after_CTF = 0;
     }
 }
-#undef DEBUG
 
 /* Apply ------------------------------------------------------------------- */
 void Prog_Microscope_Parameters::apply(Matrix2D<double> &I)
