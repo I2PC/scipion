@@ -310,7 +310,7 @@ void Micrograph::compute_8_bit_scaling()
     __a = (maxF - minF) / (maxval - minval);
     __b = minF - __a * minval;
     __scaling_valid = true;
-    //std::cerr <<  "__a  " << __a  << "__b" << __b << std::endl;
+//    std::cerr <<  "__a  " << __a  << "__b" << __b << std::endl;
 
 }
 
@@ -495,6 +495,13 @@ int Micrograph::scissor(const Particle_coords &P, ImageT<double> &result,
                 }
         }
     return retval;
+}
+
+/* Get linear transformation ----------------------------------------------- */
+void Micrograph::getLinearTransformatioVal8(double &a, double &b) const
+{
+    a=__a;
+    b=__b;
 }
 
 /* Produce all images ------------------------------------------------------ */

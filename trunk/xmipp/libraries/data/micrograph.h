@@ -452,11 +452,14 @@ public:
     }
 
     /** Pixel value with 8 bits. */
-    unsigned char val8(int x, int y) const
+    inline unsigned char val8(int x, int y) const
     {
         if (!__scaling_valid) return(unsigned char)(*this)(x, y);
         else return(unsigned char)(__a*(*this)(x, y) + __b);
     }
+    
+    /** Get the linear transformation for scaling micrographs */
+    void getLinearTransformatioVal8(double &a, double &b) const;
 
     /** Produce all single particle images.
         The file fn_micrograph+".sel" is also generated. The angle is the angle
