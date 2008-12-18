@@ -47,6 +47,8 @@ public:
     bool     after_ctf_noise;
     /// Defocus change (%)
     double   defocus_change;
+    /// True if this program is directly called from the command line
+    bool command_line;
 public:
     /// CTF
     FourierMask ctf;

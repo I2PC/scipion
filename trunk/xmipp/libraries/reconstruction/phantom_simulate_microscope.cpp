@@ -30,7 +30,7 @@
 /* Read parameters --------------------------------------------------------- */
 void Prog_Microscope_Parameters::read(int argc, char **argv)
 {
-    Prog_parameters::read(argc, argv);
+    if (command_line) Prog_parameters::read(argc, argv);
     fn_ctf = getParameter(argc, argv, "-ctf", "");
     sigma = textToFloat(getParameter(argc, argv, "-noise", "0"));
     low_pass_before_CTF = textToFloat(getParameter(argc, argv, "-low_pass", "0"));
@@ -43,26 +43,26 @@ void Prog_Microscope_Parameters::read(int argc, char **argv)
 /* Usage ------------------------------------------------------------------- */
 void Prog_Microscope_Parameters::usage()
 {
-    Prog_parameters::usage();
+    if (command_line) Prog_parameters::usage();
     std::cerr << "  [-ctf <CTF descr>]        : a CTF description\n"
-    << "  [-defocus_change <v=0%>]  : change in the defocus value\n"
-    << "  [-low_pass <w=0>]         : low pass filter for noise before CTF\n"
-    << "  [-noise <stddev=0>]       : noise to be added\n"
-    << "  [-after_ctf_noise]        : generate noise after the CTF\n"
+              << "  [-defocus_change <v=0%>]  : change in the defocus value\n"
+              << "  [-low_pass <w=0>]         : low pass filter for noise before CTF\n"
+              << "  [-noise <stddev=0>]       : noise to be added\n"
+              << "  [-after_ctf_noise]        : generate noise after the CTF\n"
     ;
 }
 
 /* Show -------------------------------------------------------------------- */
 void Prog_Microscope_Parameters::show()
 {
-    Prog_parameters::show();
+    if (command_line) Prog_parameters::show();
     std::cout << "CTF file: " << fn_ctf << std::endl
-    << "Noise: " << sigma << std::endl
-    << "Noise before: " << sigma_before_CTF << std::endl
-    << "Noise after: " << sigma_after_CTF << std::endl
-    << "Low pass freq: " << low_pass_before_CTF << std::endl
-    << "After CTF noise: " << after_ctf_noise << std::endl
-    << "Defocus change: " << defocus_change << std::endl
+              << "Noise: " << sigma << std::endl
+              << "Noise before: " << sigma_before_CTF << std::endl
+              << "Noise after: " << sigma_after_CTF << std::endl
+              << "Low pass freq: " << low_pass_before_CTF << std::endl
+              << "After CTF noise: " << after_ctf_noise << std::endl
+              << "Defocus change: " << defocus_change << std::endl
     ;
 }
 
@@ -72,7 +72,7 @@ void Prog_Microscope_Parameters::show()
 void Prog_Microscope_Parameters::produce_side_info()
 {
     int Zdim;
-    get_input_size(Zdim, Ydim, Xdim);
+    if (command_line) get_input_size(Zdim, Ydim, Xdim);
     Matrix2D<double> aux;
 
     double before_power = 0, after_power = 0;
