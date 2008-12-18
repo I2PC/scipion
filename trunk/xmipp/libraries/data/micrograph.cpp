@@ -259,6 +259,7 @@ void Micrograph::close_micrograph()
 }
 
 /* Compute 8 bit scaling --------------------------------------------------- */
+//#define DEBUG
 void Micrograph::compute_8_bit_scaling()
 {
     std::cerr << "Computing 8 bit scaling ...\n";
@@ -283,9 +284,17 @@ void Micrograph::compute_8_bit_scaling()
             */
         }
     }
+    #ifdef DEBUG
+        std::cout << "minval=" << minval << " maxval=" << maxval << std::endl;
+    #endif
+    
     // Compute output range
     float minF, maxF;
-    if (minval < 0)
+    if (maxval - minval < 32)
+    {
+        minF = 0;
+        maxF = 255;
+    } else if (minval < 0)
     {
         minF = 0;
         maxF = XMIPP_MIN(255, maxval - minval);
@@ -295,24 +304,24 @@ void Micrograph::compute_8_bit_scaling()
         minF = XMIPP_MAX(0, minval - (maxval - 255));
         maxF = 255;
     }
-    else if (maxval - minval < 32)
-    {
-        minF = 0;
-        maxF = 255;
-    }
     else
     {
         minF = minval;
         maxF = maxval;
     }
+    #ifdef DEBUG
+        std::cout << "minF=" << minF << " maxF=" << maxF << std::endl;
+    #endif
 
     // Compute scaling
     __a = (maxF - minF) / (maxval - minval);
     __b = minF - __a * minval;
     __scaling_valid = true;
-//    std::cerr <<  "__a  " << __a  << "__b" << __b << std::endl;
-
+    #ifdef DEBUG
+        std::cerr <<  "__a  " << __a  << "__b" << __b << std::endl;
+    #endif
 }
+#undef DEBUG
 
 /* Write as 8 bits --------------------------------------------------------- */
 void Micrograph::write_as_8_bits(const FileName &fn8bits)
