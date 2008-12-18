@@ -204,7 +204,6 @@ void Prog_Phantom_Create_Micrograph_Parameters::run()
         create_empty_file(dir_micrograph+"/"+fn_micrograph+".raw",
             ((unsigned long long)Xdim)*Xdim*sizeof(float));
 
-        fh_inf;
         fh_inf.open((dir_micrograph+"/"+fn_micrograph + ".raw.inf").c_str());
         if (!fh_inf)
             REPORT_ERROR(1, (std::string)"Cannot open " + dir_micrograph+"/"+
@@ -223,6 +222,20 @@ void Prog_Phantom_Create_Micrograph_Parameters::run()
         FOR_ALL_ELEMENTS_IN_MATRIX2D(Md())
             Mctf.set_val(j,i,Md(i,j));
         Mctf.close_micrograph();
+
+        // Create the ctfdat
+        if (microscope.fn_ctf!="")
+        {
+            SF_out.go_beginning();
+            std::ofstream fh_ctfdat;
+            fh_ctfdat.open((dir_micrograph+"/"+fn_micrograph + ".ctfdat").c_str());
+            if (!fh_ctfdat)
+                REPORT_ERROR(1, (std::string)"Cannot open " + dir_micrograph+"/"+
+                    fn_micrograph + ".ctfdat");
+            while (!SF_out.eof())
+                fh_ctfdat << SF_out.NextImg() << " " << microscope.fn_ctf << std::endl;
+            fh_ctfdat.close();
+        }
 
         // Finish with this micrograph
         M.close_micrograph();
