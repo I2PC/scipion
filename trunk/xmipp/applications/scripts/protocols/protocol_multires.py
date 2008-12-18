@@ -638,25 +638,26 @@ class MultiResClass:
              self.getReconstructionRootname(_iteration)+"_?.vol")
 
        # SSNR ..............................................................
-       # Reconstruct the noise volume
-       self.copySelFile("preproc_recons.sel","preproc_noise")
-       self.execute("xmipp_mask -i preproc_noise.sel -mask circular "+\
-          str(self.workXDim))
-       self.execute("xmipp_add_noise -i preproc_noise.sel -gaussian 1")
-       self.runReconstructionAlgorithm(_iteration,"preproc_noise",
-	  self.getReconstructionRootname(_iteration)+"_noise",False)
+       if self.getComputeSSNR(_iteration)=="1":
+          # Reconstruct the noise volume
+          self.copySelFile("preproc_recons.sel","preproc_noise")
+          self.execute("xmipp_mask -i preproc_noise.sel -mask circular "+\
+             str(self.workXDim))
+          self.execute("xmipp_add_noise -i preproc_noise.sel -gaussian 1")
+          self.runReconstructionAlgorithm(_iteration,"preproc_noise",
+	     self.getReconstructionRootname(_iteration)+"_noise",False)
 
-       # Compute the SSNR
-       self.execute("xmipp_resolution_ssnr "+\
-          "-S "+self.getReconstructionRootname(_iteration)+".vol "+\
-          "-N "+self.getReconstructionRootname(_iteration)+"_noise.vol "+\
-	  "-selS preproc_recons.sel -selN preproc_noise.sel "+\
-	  "-sampling_rate "+str(self.workingSamplingRate*
-	     pow(2,int(self.getPyramidLevel(_iteration))))+" "+\
-	  "-o "+self.getReconstructionRootname(_iteration)+".ssnr")
-       
-       # Remove unnecessary files
-       self.execute("rm -rf preproc_noise*")
+          # Compute the SSNR
+          self.execute("xmipp_resolution_ssnr "+\
+             "-S "+self.getReconstructionRootname(_iteration)+".vol "+\
+             "-N "+self.getReconstructionRootname(_iteration)+"_noise.vol "+\
+	     "-selS preproc_recons.sel -selN preproc_noise.sel "+\
+	     "-sampling_rate "+str(self.workingSamplingRate*
+	        pow(2,int(self.getPyramidLevel(_iteration))))+" "+\
+	     "-o "+self.getReconstructionRootname(_iteration)+".ssnr")
+
+          # Remove unnecessary files
+          self.execute("rm -rf preproc_noise*")
 
    #------------------------------------------------------------------------
    # Copy CTFs
