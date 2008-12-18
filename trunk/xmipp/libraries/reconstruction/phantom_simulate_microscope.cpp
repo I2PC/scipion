@@ -133,7 +133,6 @@ void Prog_Microscope_Parameters::produce_side_info()
 #undef DEBUG
 
 /* Apply ------------------------------------------------------------------- */
-//#define DEBUG
 void Prog_Microscope_Parameters::apply(Matrix2D<double> &I)
 {
     I.setXmippOrigin();
@@ -160,12 +159,6 @@ void Prog_Microscope_Parameters::apply(Matrix2D<double> &I)
         ctf.generate_mask(aux);
         ctf.ctf.DeltafU = ctf.ctf.DeltafU;
         ctf.ctf.DeltafV = ctf.ctf.DeltafV;
-#ifdef DEBUG
-        ctf.write_amplitude("PPP_particular.xmp");
-        char c;
-        std::cout << "Press any key\n";
-        std::cin >> c;
-#endif
     }
 
     // Apply CTF
@@ -178,4 +171,3 @@ void Prog_Microscope_Parameters::apply(Matrix2D<double> &I)
     I.window(FIRST_XMIPP_INDEX(Ydim), FIRST_XMIPP_INDEX(Xdim),
              LAST_XMIPP_INDEX(Ydim), LAST_XMIPP_INDEX(Xdim));
 }
-#undef DEBUG
