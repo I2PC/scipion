@@ -458,7 +458,10 @@ void ImageViewer::set_profile_line(std::vector<float> prm)
     yf = (int)prm[3];
 
     // Remove current drawn line
-    drawLine(xir, yir, xfr, yfr);
+    // COSS, when only QT4 exists this will have to be back in the
+    // COSS: form of a QRubberBand. In the meantime, it seems that the only
+    // COSS: solution valid in Qt3 and Qt4 at the same time is to repaint
+    // COSS: drawLine(xir, yir, xfr, yfr);
 
     // Convert coordinates to real coordinates
     int h = height() - status->height();
@@ -468,6 +471,10 @@ void ImageViewer::set_profile_line(std::vector<float> prm)
     yfr = ROUND((double) yf * h      / image.height());
 
     // Draw the new line
+    // COSS, when only QT4 exists this will have to be back in the
+    // COSS: form of a QRubberBand. In the meantime, it seems that the only
+    // COSS: solution valid in Qt3 and Qt4 at the same time is to repaint
+    repaint(); // COSS: To remove when only Qt4
     drawLine(xir, yir, xfr, yfr);
 }
 
@@ -981,7 +988,11 @@ void ImageViewer::mouseReleaseEvent(QMouseEvent *e)
         {
             xfr = e->x();
             yfr = e->y();
-            drawLine(xir, yir, old_xfr, old_yfr);
+            // COSS, when only QT4 exists this will have to be back in the
+            // COSS: form of a QRubberBand. In the meantime, it seems that the only
+            // COSS: solution valid in Qt3 and Qt4 at the same time is to repaint
+            // drawLine(xir, yir, old_xfr, old_yfr); // COSS: To remove when only Qt4
+            repaint(); // COSS: To remove when only Qt4
             drawLine(xir, yir, xfr, yfr);
             old_xfr = xfr;
             old_yfr = yfr;
@@ -1009,7 +1020,11 @@ void ImageViewer::mouseMoveEvent(QMouseEvent *e)
                 yf = picky;
                 xfr = e->x();
                 yfr = e->y();
-                drawLine(xir, yir, old_xfr, old_yfr);
+                // COSS, when only QT4 exists this will have to be back in the
+                // COSS: form of a QRubberBand. In the meantime, it seems that the only
+                // COSS: solution valid in Qt3 and Qt4 at the same time is to repaint
+                // drawLine(xir, yir, old_xfr, old_yfr); // COSS: To remove when only Qt4
+                repaint(); // COSS: To remove when only Qt4
                 drawLine(xir, yir, xfr, yfr);
                 old_xfr = xfr;
                 old_yfr = yfr;
@@ -1113,9 +1128,6 @@ void ImageViewer::drawLine(int x1, int y1, int x2, int y2)
     QPen myPen(Qt::red, 3);
     painter.setPen(myPen);
     painter.setBrush(brush);
-    /*
-     * painter.setRasterOp(XorROP);
-     */
     painter.drawLine(x1, y1, x2, y2);
 }
 
