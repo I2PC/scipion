@@ -42,34 +42,6 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 int main(int argc, char **argv)
 {
     Prog_Microscope_Parameters prm;
+    prm.command_line=true;
     SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
 }
-
-/* Menus =================================================================== */
-/*Colimate:
-   PROGRAM Microscope {
-      url="http://www.cnb.uam.es/~bioinfo/NewXmipp/Applications/Src/Microscope/Help/microscope.html";
-      help="Apply CTF and after CTF noise to artificial projections";
-      OPEN MENU menu_Microscope;
-      COMMAND LINES {
- + usual: xmipp_microscope
-               #include "prog_line.mnu"
-          -ctf $CTF
-  [-noise $NOISE] [-low_pass $W]
-      }
-      PARAMETER DEFINITIONS {
-         #include "prog_vars.mnu"
-  $CTF {type=file existing; label="CTF file";
-        help="Xmipp Fourier Image";}
-  $NOISE {type=float; label="After CTF noise stddev"; by default=1;}
-  $W {type=float; label="Low pass filter for noise"; by default=0;}
-      }
-   }
-
-   MENU menu_Microscope {
-      #include "prog_menu.mnu"
-      $CTF
-      OPT($NOISE)
-      OPT($W)
-   }
-*/

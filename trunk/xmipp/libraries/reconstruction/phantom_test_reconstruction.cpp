@@ -522,7 +522,6 @@ void single_recons_test(const Recons_test_Parameters &prm,
     Crystal_Projection_Parameters  crystal_proj_prm;
 
     Prog_proj_prm.fn_proj_param = prm.fn_proj_params;
-std::cout << "Estoy aqui3: " <<  prm.fn_proj_params << "\n";
     proj_prm.from_prog_params(Prog_proj_prm);
     if (prm.fn_crystal != "") crystal_proj_prm.read(prm.fn_crystal);
     FileName fn_root, fn_recons_root;
@@ -586,12 +585,14 @@ std::cout << "Estoy aqui3: " <<  prm.fn_proj_params << "\n";
         prm.fn_CTF != "")
     {
         Prog_Microscope_Parameters prm_micro;
+        prm_micro.command_line=false;
         prm_micro.fn_in = Prog_proj_prm.fn_sel_file;
         prm_micro.fn_ctf = prm.fn_CTF;
         prm_micro.defocus_change = prm.defocus_change;
         prm_micro.sigma = prm.sigma;
         prm_micro.low_pass_before_CTF = prm.low_pass_before_CTF;
         prm_micro.after_ctf_noise = true;
+        SF.ImgSize(prm_micro.Ydim,prm_micro.Xdim);
         prm_micro.produce_side_info();
 
         std::cerr << "Applying microscope simulation ...\n";
