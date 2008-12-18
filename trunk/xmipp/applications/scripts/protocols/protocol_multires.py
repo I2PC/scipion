@@ -619,9 +619,9 @@ class MultiResClass:
           self.execute("xmipp_selfile_split -i preproc_recons.sel -n 2 -o preproc_recons")
 
           # Make the two reconstructions
-          self.runReconstructionAlgorithm(_iteration,"preproc_recons_1.sel",
+          self.runReconstructionAlgorithm(_iteration,"preproc_recons_1",
 	     self.getReconstructionRootname(_iteration)+"_1",False)
-          self.runReconstructionAlgorithm(_iteration,"preproc_recons_2.sel",
+          self.runReconstructionAlgorithm(_iteration,"preproc_recons_2",
 	     self.getReconstructionRootname(_iteration)+"_2",False)
 
           # Compute the FSC
