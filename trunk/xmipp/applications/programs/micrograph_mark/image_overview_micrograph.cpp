@@ -120,9 +120,14 @@ void QtImageOverviewMicrograph::loadImage()
                                     mMaxX, mMaxY, image()->width(), image()->height(),
                                     rgb, rgb, rgb, rgb, rgb, rgb, 256);
         byte *ptr = result;
+        double a,b;
+        getMicrograph()->getLinearTransformatioVal8(a,b);
         for (int y = 0; y < image()->height(); y++)
             for (int x = 0; x < image()->width(); x++)
-                setPixel(x, y, *ptr++);
+            {
+                byte proposedVal=(*ptr++);
+                setPixel(x, y, CLIP(a*proposedVal+b,0,255));
+            }
         free(result);
     }
     else
