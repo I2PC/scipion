@@ -1068,7 +1068,7 @@ class MultiResClass:
        if self.resumeIteration==1:
           self.deleteDirectory("Iteration00")
           self.createDirectory("Iteration00")
-	  self.execute("sed 's/ScaledImgs/preproc_assign/' < ../Src/prealignment.txt > "+self.getAlignmentFilename(0))
+	  self.execute("sed 's/preproc/preproc_assign/' < ../Src/prealignment.txt > "+self.getAlignmentFilename(0))
 	  self.linkFile("../../Src/referenceScaledVolume.vol",self.getModelFilename(0))
 	  self.deleteFile("angle_convergence.txt")
 	  self.touchFile("angle_convergence.txt")
