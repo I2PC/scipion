@@ -105,13 +105,19 @@ void AssignCTFViewer::set_prm(std::vector<float> new_prm)
         updateMask(new_prm);
 
     // If there is a change of defocus or angle
+    // COSS: Currently the only possibility I found to maintain
+    // compatibility between Qt3 and Qt4 is to repaint the image but
+    // when only Qt4 is around, this has to be done with QRubberBands
+    /*
     if (current_prm[2] != new_prm[2] || current_prm[3] != new_prm[3] ||
         current_prm[4] != new_prm[4])
     {
         drawFirstZero(current_prm); // To remove current ellipse
         drawFirstZero(new_prm);     // To draw a new one
     }
+    */
     current_prm = new_prm;
+    repaint(); // COSS: To remove when only Qt4
 }
 
 // Update mask -------------------------------------------------------------
@@ -154,9 +160,6 @@ void AssignCTFViewer::drawFirstZero(std::vector<float> &prm)
     QPen myPen(Qt::red, 3);
     painter.setPen(myPen);
     painter.setBrush(brush);
-    /*
-     * painter.setRasterOp(XorROP);
-     */
 
     Matrix1D<int> previous_point(2);
     for (double ang = 0; ang <= 360; ang += 1)
