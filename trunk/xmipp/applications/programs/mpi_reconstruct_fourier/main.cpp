@@ -197,7 +197,7 @@ public:
 
                 
                 i++; //increase job number 
-                if( i == FSC )
+                if( i == FSC && fn_fsc != "" )
                 {                
                     // sending every worker COLLECT_FOR_FSC
                     for ( int worker = 1 ; worker < nProcs ; worker ++ )
