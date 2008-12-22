@@ -158,7 +158,6 @@ AnalysisScript='visualize_preprocess_micrographs.py'
 #This script has been paralelized at python level
 """ This python script can be run as a parallel job,
     In orther to use several CPUs you will need to
-    "save and execute" the script and 
     answer yes to the "Use a job queing system" pop-up
     window and after the queueing command add
     mpirun -np N -machinefile machine.txt 
@@ -200,6 +199,8 @@ except ImportError:
             return 1
         def Get_processor_name(kk):
             return 'localhost' 
+        def Barrier():
+            return 1
     MPI = DummyMPI()
     mpi = DummyMPI()
     mpiActive=False
@@ -301,17 +302,19 @@ class preprocess_A_class:
                 print "and launch it as a serial job" 
                 print "that is, without mpirun" 
                 exit(1)
-        # Delete working directory if it exists, make a new one
-        if (DoDeleteWorkingDir): 
-            if os.path.exists(self.WorkingDir):
-                shutil.rmtree(self.WorkingDir)
-        if not os.path.exists(self.WorkingDir):
-            os.makedirs(self.WorkingDir)
+        # Delete working directory if exists, make a new one
+        if(self.myrank==0):
+            if (DoDeleteWorkingDir): 
+                if os.path.exists(self.WorkingDir):
+                    shutil.rmtree(self.WorkingDir)
+            if not os.path.exists(self.WorkingDir):
+                os.makedirs(self.WorkingDir)
 
-        # Backup script
-        log.make_backup_of_script_file(sys.argv[0],
+            # Backup script
+            log.make_backup_of_script_file(sys.argv[0],
                                        os.path.abspath(self.WorkingDir))
-    
+        #wait until myrank=0 has arrived here
+        mpi.Barrier() 
         # Execute protocol in the working directory
         os.chdir(self.WorkingDir)
         self.process_all_micrographs()
