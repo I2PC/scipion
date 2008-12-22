@@ -12,9 +12,13 @@
 #
 # Example use:
 # ./xmipp_preprocess_micrographs.py *.tif
-#
+#   or if you wish to use several CPUs
+# mpirun -np 8 ./xmipp_preprocess_micrographs.py *.tif
+# NOTE1: you need the packahe mpi4py in order to use the mpi extension
+# NOTE2: each process will create a different log file. The name is the same that
+#        the one used by the secuencial program plus the CPU number     
 # Author: Sjors Scheres, March 2007
-#
+#         Roberto Marabini (mpi extension)
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
@@ -36,7 +40,7 @@ MicrographSelfile='all_micrographs.sel'
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/home2/bioinfo/scheres/work/protocols'
+ProjectDir='/home/carmen/datos/Ad5_merge_GL_Luc'
 # {expert} Directory name for logfiles:
 LogDir='Logs'
 #------------------------------------------------------------------------------------------------
@@ -56,7 +60,7 @@ DoSpi2Raw=False
 # Perform downsampling?
 DoDownSample=True
 # Downsampling factor 
-Down=3
+Down=2
 # {expert} Use Fourier-space window to downsample
 """ This is theoretically the best option, but it may take more memory than your machine can handle.
 """
@@ -108,9 +112,9 @@ HighResolCutoff=0.35
 """ Some people prefer the faster CTFFIND program.
     Note however that this option will yield no information about the CTF envelope, and therefore this option cannot be used with the high-resolution refinement protocol.
 """
-DoCtffind=False
+DoCtffind=True
 # {file} Location of the CTFFIND executable
-CtffindExec='/home/cnbb13/indivi/bin/ctffind3b.exe'
+CtffindExec='../../bin/ctffind3.exe'
 # {expert} Window size
 WinSize=128
 # {expert} Minimum resolution (in Ang.)
@@ -149,10 +153,56 @@ DoCtfPhaseFlipping=False
 AnalysisScript='visualize_preprocess_micrographs.py'
 #
 #------------------------------------------------------------------------------------------------
+# {section} Parallelization issues
+#------------------------------------------------------------------------------------------------
+#This script has been paralelized at python level
+""" This python script can be run as a parallel job,
+    In orther to use several CPUs you will need to
+    "save and execute" the script and 
+    answer yes to the "Use a job queing system" pop-up
+    window and after the queueing command add
+    mpirun -np N -machinefile machine.txt 
+    or whatever is adecuate in your computer
+    (N is the number of CPUs).  Each process will create a
+    different log file. The names of this files are the
+    same that  the one used by the secuencial program 
+    plus the process number
+"""
+UselessVariable='read help'
+#Abort if mpi is not installed
+"""If set to True the script will
+   abort if mpi4py is not installed
+   this variable should be set to False
+   when mpi is not used and to True
+   for parallel jobs
+"""
+CheckMpi=False
+#------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
+#
+#Next lines will import mpi4py package, if import fails a dummy 
+#mpi class will be created. 
+#In this way the same file may be use for mpi and
+#serial jobs  
+try:
+    from mpi4py import MPI
+    mpi = MPI.COMM_WORLD
+    mpiActive=True
+except ImportError:
+    class DummyMPI:
+        '''A dummy MPI class for running serial jobs.'''
+        def Get_rank(kk):
+            return 0
+        def Get_size(kk):
+            return 1
+        def Get_processor_name(kk):
+            return 'localhost' 
+    MPI = DummyMPI()
+    mpi = DummyMPI()
+    mpiActive=False
 #
 class preprocess_A_class:
 
@@ -190,7 +240,8 @@ class preprocess_A_class:
                  MinFocus,
                  MaxFocus,
                  StepFocus,
-                 DoCtfPhaseFlipping
+                 DoCtfPhaseFlipping,
+                 CheckMpi
                  ):
         
         import os,sys,shutil
@@ -230,13 +281,26 @@ class preprocess_A_class:
         self.StepFocus=StepFocus
         self.DoCtfPhaseFlipping=DoCtfPhaseFlipping
         self.MicrographSelfile=MicrographSelfile
+        self.myrank = mpi.Get_rank()
+        self.nprocs = mpi.Get_size()
 
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
                                      LogDir,
-                                     sys.argv[0],
+                                     sys.argv[0]+"_"+str(self.myrank),
                                      self.WorkingDir)
-                
+        if(mpiActive):
+            print "Python has mpi4py package, python parallel jobs are possible"
+            self.log.info("Python has mpi4py package, python parallel jobs are possible")        
+        else:
+            print "Python has NOT mpi4py package, python parallel jobs are NOT possible"
+            self.log.info("Python has NOT mpi4py package, python parallel jobs are NOT possible")
+            if(CheckMpi):
+                print "mpi is not installed and checkmpi flag is set to True"
+                print "disable mpi checking flag in the script" 
+                print "and launch it as a serial job" 
+                print "that is, without mpirun" 
+                exit(1)
         # Delete working directory if it exists, make a new one
         if (DoDeleteWorkingDir): 
             if os.path.exists(self.WorkingDir):
@@ -268,11 +332,51 @@ class preprocess_A_class:
         self.psdselfile = []
         self.ctfselfile = []
         self.micselfile = []
+	job_index=0;
         for self.filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
             (self.filepath, self.name) = os.path.split(self.filename)
             (self.shortname,extension) = os.path.splitext(self.name)
             self.downname='down'+str(self.Down)+'_'+self.shortname
+            job_index = job_index + 1
+            #only one node should write sel file with micrographs
+	    if(self.myrank==0):
+	        self.append_micrograph_selfile()
+        	if (self.DoCtfEstimate):
+                    if not (self.DoCtffind):
+                	if (self.OnlyEstimatePSD):
+                            #self.perform_only_psdestimate()
+        		    oname=self.shortname+'/'+self.downname+'_Periodogramavg.psd'
+        		    self.psdselfile.append(oname+' 1\n')
+			    fh = open("all_psds.sel","w")
+        		    fh.writelines(self.psdselfile)
+        		    fh.close()
+                	else:
+                            #self.perform_ctfestimate_xmipp()
+        		    # Add entry to the ctfselfile (for visualization of all CTFs)
+        		    oname=self.shortname+'/'+self.downname+'_Periodogramavg.ctfmodel_halfplane'
+        		    self.ctfselfile.append(oname+' 1\n')
+        		    fh=open('all_ctfs.sel','w')
+        		    fh.writelines(self.ctfselfile)
+        		    fh.close()
 
+        		    #Also add enrty to psdselfile
+        		    oname=self.shortname+'/'+self.downname+'_Periodogramavg.psd'
+        		    self.psdselfile.append(oname+' 1\n')
+        		    fh = open("all_psds.sel","w")
+        		    fh.writelines(self.psdselfile)
+        		    fh.close()
+                    else:
+                	#self.perform_ctfestimate_ctffind()
+        		ctfname = self.shortname + '/ctffind_' + self.downname + '_ctfmodel.xmp'
+        		self.ctfselfile.append(ctfname+' 1 \n')
+			fh=open('all_ctfs.sel','w')
+        		fh.writelines(self.ctfselfile)
+        		fh.close()
+		
+	    #if I am not the right node skip this micrograph	
+            #print job_index, self.nprocs, job_index % self.nprocs , self.myrank
+	    if ((job_index % self.nprocs)!=self.myrank):
+	        continue
             if not os.path.exists(self.shortname):
                 os.makedirs(self.shortname)
 
@@ -311,7 +415,6 @@ class preprocess_A_class:
             if (self.DoCtfPhaseFlipping):
                 self.perform_ctf_phase_flipping()
                     
-            self.append_micrograph_selfile()
 
     def perform_tif2raw(self):
         import os
@@ -386,11 +489,11 @@ class preprocess_A_class:
         print '* ',command
         self.log.info(command)
         os.system(command )
-        oname=self.shortname+'/'+self.downname+'_Periodogramavg.psd'
-        self.psdselfile.append(oname+' 1\n')
-        fh = open("all_psds.sel","w")
-        fh.writelines(self.psdselfile)
-        fh.close()
+        #oname=self.shortname+'/'+self.downname+'_Periodogramavg.psd'
+        #self.psdselfile.append(oname+' 1\n')
+	#fh = open("all_psds.sel","w")
+        #fh.writelines(self.psdselfile)
+        #fh.close()
     
     def perform_ctfestimate_xmipp(self):
         import os
@@ -423,19 +526,19 @@ class preprocess_A_class:
         self.log.info(command)
         os.system(command )
 
-        # Add entry to the ctfselfile (for visualization of all CTFs)
-        oname=self.shortname+'/'+self.downname+'_Periodogramavg.ctfmodel_halfplane'
-        self.ctfselfile.append(oname+' 1\n')
-        fh=open('all_ctfs.sel','w')
-        fh.writelines(self.ctfselfile)
-        fh.close()
+        ## Add entry to the ctfselfile (for visualization of all CTFs)
+        #oname=self.shortname+'/'+self.downname+'_Periodogramavg.ctfmodel_halfplane'
+        #self.ctfselfile.append(oname+' 1\n')
+        #fh=open('all_ctfs.sel','w')
+        #fh.writelines(self.ctfselfile)
+        #fh.close()
 
         #Also add enrty to psdselfile
-        oname=self.shortname+'/'+self.downname+'_Periodogramavg.psd'
-        self.psdselfile.append(oname+' 1\n')
-        fh = open("all_psds.sel","w")
-        fh.writelines(self.psdselfile)
-        fh.close()
+        #oname=self.shortname+'/'+self.downname+'_Periodogramavg.psd'
+        #self.psdselfile.append(oname+' 1\n')
+        #fh = open("all_psds.sel","w")
+        #fh.writelines(self.psdselfile)
+        #fh.close()
 
 
     def perform_ctfestimate_ctffind(self):
@@ -450,7 +553,7 @@ class preprocess_A_class:
         #next line tell ctfind to skip endian checking
         #I could have modified the program spi22ccp4 but
         #I do not agree with cctfind interpretation of the flag
-        os.putenv('NATIVEMTZ', "kk")
+	os.putenv('NATIVEMTZ', "kk")
         command=  self.CtffindExec+'  << eof > '+self.shortname+'/ctffind_'+self.downname+'.log\n'
         command+= self.shortname+'/tmp.mrc\n'
         command+= self.shortname+'/spectrum.mrc\n'
@@ -529,10 +632,11 @@ class preprocess_A_class:
         os.system(command )
 
         # Add entry to the ctfselfile (for visualization of all CTFs)
-        self.ctfselfile.append(ctfname+' 1 \n')
-        fh=open('all_ctfs.sel','w')
-        fh.writelines(self.ctfselfile)
-        fh.close()
+        #ctfname = self.shortname + '/ctffind_' + self.downname + '_ctfmodel.xmp'
+        #self.ctfselfile.append(ctfname+' 1 \n')
+	#fh=open('all_ctfs.sel','w')
+        #fh.writelines(self.ctfselfile)
+        #fh.close()
   
         # Generate Xmipp .ctfparam file:
         paramname=self.shortname+'/'+self.downname+'_Periodogramavg.ctfparam'
@@ -622,7 +726,8 @@ if __name__ == '__main__':
                                    MinFocus,
                                    MaxFocus,
                                    StepFocus,
-                                   DoCtfPhaseFlipping)
+                                   DoCtfPhaseFlipping,
+                                   CheckMpi)
 
     # close 
     preprocessA.close()
