@@ -893,9 +893,6 @@ void Prog_RecFourier_prm::finishComputations( FileName out_name )
         DIRECT_VOL_ELEM(FourierWeights,ksym,0,0)=mean;
     }
 
-    // Correct weights
-    std::cerr << "\nCorrecting the weight ...\n";
-
     // Tell threads what to do
     threadOpCode = PROCESS_WEIGHTS;
 
