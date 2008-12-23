@@ -1100,12 +1100,12 @@ class MultiResClass:
           " -o preproc_recons -thr "+str(self.myNumberOfThreads)
 
        if self.getQualityPercentil(_iteration)>0 and \
-          self.getDiscreteAssignment(_iteration):
+          self.getDiscreteAssignment(_iteration)=="1":
           cmd+=" -filter_score "+self.getDiscreteAnglesFilename(_iteration)+" "+\
              self.getQualityPercentil(_iteration)
 
        if self.getQualityPercentil(_iteration)>0 and \
-          self.getContinuousAssignment(_iteration):
+          self.getContinuousAssignment(_iteration)=="1":
           cmd+=" -filter_cost "+self.getContinuousAnglesFilename(_iteration)+" "+\
              self.getQualityPercentil(_iteration)
 
