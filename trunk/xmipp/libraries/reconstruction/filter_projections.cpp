@@ -255,15 +255,25 @@ void * filterByNormalizationThread(void *args)
             ImageXmipp I;
             DF_in_local.get_image(i+1,I);
             I().selfTranslateBSpline(3,vectorR2(I.Xoff(),I.Yoff()));
+            I.set_Xoff(0.0f);
+            I.set_Yoff(0.0f);
         
             // Get the corresponding theoretical projection
             Projection P;
             project_Volume(prm->V(), P, YSIZE(I()), XSIZE(I()),
                 I.rot(), I.tilt(), I.psi());
 
-            // Adjust the two projections and compute correlation within mask
-            rangeAdjust_within_mask(&(prm->dhardMask),P(),I());
+            // Compute correlation within mask
             local_correlations[i]=correlation_index(P(),I(),&(prm->ihardMask));
+
+            // Make the noise within the mask to be zero mean and with
+            // standard deviation 1
+            P()-=I();
+            double min_val, max_val, avg, stddev;
+            computeStats_within_binary_mask(prm->ihardMask, P(),
+                min_val, max_val, avg, stddev);
+            I()+=avg;
+            I()*=1/stddev;
             
             // Mask the image with a raised cosine
             I()*=prm->softMask;
@@ -348,7 +358,8 @@ void Prog_Filter_Projections_Parameters::run()
             Matrix2D<double> E0, EF;
             Euler_angles2matrix(rot0,tilt0,psi0,E0);
             Euler_angles2matrix(rotF,tiltF,psiF,EF);
-            if (Euler_distanceBetweenMatrices(E0,EF)>angleLimit ||
+            double angularDistance=acos(Euler_distanceBetweenMatrices(E0,EF));
+            if (angularDistance>angleLimit ||
                 sqrt(diffX*diffX+diffY*diffY)>shiftLimit)
                 valid[i]=false;
 
