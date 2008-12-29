@@ -6,7 +6,7 @@
 # ./xmipp_protocol_projmatch.py
 #
 # Authors: Roberto Marabini,
-#          Sjors Scheres,    Dec 2008
+#          Sjors Scheres,    March 2008
 #
 #-----------------------------------------------------------------------------
 # {section} Global parameters
@@ -14,7 +14,7 @@
 # {file} Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
-SelFileName='good_images_a.sel'
+SelFileName='all_images.sel'
 
 # {file} {expert} Docfile with the input angles:
 """ Do not provide anything if there are no angles yet. 
@@ -25,17 +25,17 @@ SelFileName='good_images_a.sel'
 DocFileName=''
 
 # {file} Initial 3D reference map:
-ReferenceFileName='val16_GLfil_norm_mask_scaled_25.spi'
+ReferenceFileName='val16_GLfil_norm_mask_scaled_412.spi'
 
 # Working subdirectory: 
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
-WorkDirectory='ProjMatch/only_b'
+WorkDirectory='ProjMatch/Threads'
 
 # Delete working subdirectory if it already exists?
 """ Just be careful with this option...
 """
-DoDeleteWorkingDir=False
+DoDeleteWorkingDir=True
 
 # Number of iterations to perform
 NumberofIterations=15
@@ -50,12 +50,12 @@ ContinueAtIteration=1
 # {expert} Save disc space by cleaning up intermediate files?
 """ Be careful, many options of the visualization protocol will not work anymore, since all class averages, selfiles etc will be deleted.
 """
-CleanUpFiles=True
+CleanUpFiles=False
 
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
-ProjectDir='/home/carmen/datos/Ad5GL_revisited'
+ProjectDir='/home/carmen/datos/Ad5_merge_GL_Luc'
 
 # {expert} Directory name for logfiles:
 LogDir='Logs'
@@ -74,7 +74,7 @@ DoCtfCorrection=True
 # {file} CTFDat file with CTF data:
 """ The input selfile may be a subset of the images in the CTFDat file, but all images in the input selfile must be present in the CTFDat file. This field is obligatory if CTF correction is to be performed. Note that this file should be positioned in the project directory.
 """
-CTFDatName='good_images.ctfdat'
+CTFDatName='all_images.ctfdat'
 
 # {file} Docfile with defocus values where to split into groups
 """ Leave this field empty if you want automatic CTF grouping
@@ -84,13 +84,13 @@ SplitDefocusDocFile=''
 #{expert} user defined flag for the ctf_group program. 
 """For example -error  number -resol number  
 """
-CTFExtraCommands=''
+CTFExtraCommands='-resol 8'
 
 # {expert} Padding factor
 """ Application of CTFs to reference projections and of Wiener filter to class averages will be done using padded images.
     Use values larger than one to pad the images. Suggestion, use 1 for large image and 2 for small
 """
-PaddingFactor=2.
+PaddingFactor=1.
 
 # {expert} Wiener constant
 """ Term that will be added to the denominator of the Wiener filter.
@@ -123,7 +123,7 @@ DoMask=True
 DisplayMask=False
 
 # {file} Binary mask-file used to mask the reference volume
-MaskFileName='mask3D.mask'
+MaskFileName='mask3D'
 
 #-----------------------------------------------------------------------------
 # {section} Projection Matching
@@ -147,12 +147,12 @@ InnerRadius=0
 # Outer radius for rotational correlation
 """ In pixels from the image center. Use a negative number to use the entire image.
 """
-OuterRadius=130
+OuterRadius=195
 
 # {expert} Available memory to store all references (Gb)
 """ This is only for the storage of the references. If yuor memories so not fit in memory, the projection matching program will run MUCH slower. But, keep in mind that probably some additional memory is needed for the operating system etc.
 """
-AvailableMemory='2'
+AvailableMemory='4'
 
 # Angular sampling rate
 """Angular distance (in degrees) between neighboring projection  points
@@ -165,7 +165,7 @@ AvailableMemory='2'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-AngSamplingRateDeg='2.0 1.75 1.5 1.25 1 0.75 0.6 0.5 0.4 0.3 0.25 0.2'
+AngSamplingRateDeg='2.0 1.75 1.5 1.25 1 0.75 0.6 0.5 0.4 0.3 0.25 0.2 0.18 0.15 0.12 0.1'
 
 # Angular search range 
 """Maximum change in rot & tilt  (in +/- degrees)
@@ -199,7 +199,7 @@ PerturbProjectionDirections=False
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-MaxChangeOffset='1000 14'
+MaxChangeOffset='1000 28'
 
 # Search range for 5D translational search 
 """ Give search range from the image center for 5D searches (in +/- pixels).
@@ -412,7 +412,7 @@ DoComputeResolution=True
 # Pixel size (in Ang.)
 """ This will make that the X-axis in the resolution plots has units 1/Angstrom
 """
-ResolSam=4.2
+ResolSam=2.8
 
 # {expert} Display resolution?
 DisplayResolution=False
@@ -457,7 +457,7 @@ ConstantToAddToFiltration='0.1'
 DoParallel=True
 
 # Number of processors to use:
-NumberOfCPUs=4
+NumberOfCPUs=8
 
 # minumum size of jobs in mpi processe. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)
 MpiJobSize='5'
@@ -466,7 +466,7 @@ MpiJobSize='5'
 """ Depending on your system, your standard script to launch MPI-jobs may require this
     if your queueing system using an environment variable, give it here (with the leading $, e.g. $PBS_NODEFILE
 """
-MachineFile='machinefile'
+MachineFile=''
 
 #{expert}Number of threads
 """Parallel implementation has been made either using mpi or threads
@@ -550,7 +550,7 @@ class projection_matching_class:
                 _ARTReconstructionExtraCommand,
                 _WBPReconstructionExtraCommand,
                 _FourierReconstructionExtraCommand,
-                _FourierMaxFrequencyOfInterest,
+		_FourierMaxFrequencyOfInterest,
                 _DoComputeResolution,
                 _ResolSam,
                 _SelFileName,
@@ -570,7 +570,7 @@ class projection_matching_class:
                 _MyNumberOfCPUs,
                 _MyMachineFile,
                 _MyMpiJobSize,
-                _ThreadsNumber,
+		_ThreadsNumber,
                 _MyControlFile,
                 _SymmetryGroup,
                 _SetResolutiontoZero,
@@ -626,10 +626,11 @@ class projection_matching_class:
        self._FourierReconstructionExtraCommand=_FourierReconstructionExtraCommand
        self._SetResolutiontoZero=_SetResolutiontoZero
        globalFourierMaxFrequencyOfInterest=float(_FourierMaxFrequencyOfInterest)
-       if (_MyMachineFile[0]=="$"):
-           self._MyMachineFile=_MyMachineFile
-       else:
-           self._MyMachineFile=os.path.abspath(_MyMachineFile)
+       self._MyMachineFile=_MyMachineFile
+       if (len(_MyMachineFile) > 1):
+           if (_MyMachineFile[0]!="$"):
+                self._MyMachineFile=os.path.abspath(_MyMachineFile)
+       
        if (_MyControlFile==""):
            self._DoControl=False
        else:
@@ -647,35 +648,12 @@ class projection_matching_class:
        # Uncomment next line to get Debug level logging
        self._mylog.setLevel(logging.DEBUG)
        self._mylog.debug("Debug level logging enabled")
-
+                                      
        _NumberofIterations +=1;
        if _ContinueAtIteration!=1 and DoDeleteWorkingDir==True:
           print "You can not delete the working directory"
           print " and start at iteration", _ContinueAtIteration
           exit(1)
-       #if not first iteration read fsc
-       if _ContinueAtIteration!=1 and _DoComputeResolution==True:
-            Iteration_Working_Directory=self._WorkDirectory+'/Iter_'+\
-                                      str(_ContinueAtIteration-1)+\
-                                      '/Iter_'+ str(_ContinueAtIteration-1)+\
-                                      '_'
-            resolution_fsc_file = Iteration_Working_Directory+OutputFsc
-            f = open(resolution_fsc_file, 'r')
-            #skip first line
-            fi=f.readline()
-      
-            filter_frequence=0. 
-            for line in f:
-                line = line.strip()
-                if not line.startswith('#'):
-                    mylist = (line.split())
-                    if( float(mylist[1]) < 0.5):
-                        break
-                    else:
-                        globalFourierMaxFrequencyOfInterest=float(mylist[0])
-
-            self._mylog.debug("reading previous Maximun frequency of interest: "+
-                               str(globalFourierMaxFrequencyOfInterest))
        if (DoDeleteWorkingDir): 
           delete_working_directory(self._mylog,self._WorkDirectory)
        else:
@@ -925,16 +903,16 @@ class projection_matching_class:
                                                   self._ARTReconstructionExtraCommand,
                                                   self._WBPReconstructionExtraCommand,
                                                   self._FourierReconstructionExtraCommand,
-                                                  self._ThreadsNumber,
+						  self._ThreadsNumber,
                                                   self._ReconstructionMethod,
-                                                  globalFourierMaxFrequencyOfInterest,
+						  globalFourierMaxFrequencyOfInterest,
                                                   _iteration_number,
                                                   self._DisplayReconstruction,
                                                   self._ResolSam,
                                                   self._DoParallel,
                                                   self._MyNumberOfCPUs,
                                                   self._MyMachineFile,
-                                                  self._MyMpiJobSize,
+						  self._MyMpiJobSize,
                                                   self._SymmetryGroup,
                                                   self._DisplayResolution,
                                                   self._ReconstructedVolume[_iteration_number],
@@ -942,7 +920,7 @@ class projection_matching_class:
                                                   self._OuterRadius
                                                   )
           else:
-             filter_frequence=0
+	     filter_frequence=0
              self._mylog.info("Skipped Resolution") 
           
           self._ConstantToAddToFiltration=arg.getComponentFromVector(\
@@ -1472,9 +1450,9 @@ def  execute_resolution(_mylog,
                         _ARTReconstructionExtraCommand,
                         _WBPReconstructionExtraCommand,
                         _FourierReconstructionExtraCommand,
-                        _ThreadsNumber,
+			_ThreadsNumber,
                         _ReconstructionMethod,
-                        _FourierMaxFrequencyOfInterest,
+			_FourierMaxFrequencyOfInterest,
                         _iteration_number,
                         _DisplayReconstruction,
                         _ResolSam,
@@ -1747,7 +1725,7 @@ if __name__ == '__main__':
                 ARTReconstructionExtraCommand,
                 WBPReconstructionExtraCommand,
                 FourierReconstructionExtraCommand,
-                FourierMaxFrequencyOfInterest,
+		FourierMaxFrequencyOfInterest,
                 DoComputeResolution,
                 ResolSam,
                 SelFileName,                    
@@ -1767,7 +1745,7 @@ if __name__ == '__main__':
                 NumberOfCPUs,                   
                 MachineFile,
                 MpiJobSize,
-                ThreadsNumber,
+		ThreadsNumber,
                 MyControlFile,
                 SymmetryGroup,                        
                 SetResolutiontoZero,
