@@ -1537,7 +1537,7 @@ void get_subset_docfile(DocFile& DFin, SelFile& SF, DocFile& DFout)
 	REPORT_ERROR(1607,"Input docfile is not of NewXmipp-style");
     else
 	// append the same header to DFout
-	DFout.append_comment(fn_tmp);
+	DFout.append_comment(fn_tmp.without(" ; "));
 
     SF.go_beginning();
     while (!SF.eof())
