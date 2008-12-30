@@ -453,7 +453,8 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
 
                     for (int i = minAssignedRow; i <= maxAssignedRow ; i ++ )
                     {
-                        if ( statusArray[i] == -1 )
+						// Discarded rows can be between minAssignedRow and maxAssignedRow, check
+						if ( statusArray[i] == -1 )
                             for (int j=STARTINGX(*paddedFourier); j<=FINISHINGX(*paddedFourier); j++)
                             {
                                 // Compute the frequency of this coefficient in the
@@ -751,8 +752,6 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
         int x,y,z;
 
         auxVolume.sumWithFile(FileName((std::string) fn_fsc + "_1_Weights.vol")); 
-        auxVolume.write((std::string) fn_fsc + "KKKK1.vol");
-
         auxVolume.sumWithFile(FileName((std::string) fn_fsc + "_2_Weights.vol")); 
 
         VoutFourier.getDimension(y,x,z);
