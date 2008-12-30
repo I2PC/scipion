@@ -50,7 +50,7 @@ void Prog_micrograph_phase_flipping::run(void)
     // Perform the Fourier transform
     XmippFftw transformer;
     Matrix2D< std::complex<double> > M_inFourier;
-    transformer.FourierTransform(M_inmem(),M_inFourier);
+    transformer.FourierTransform(M_inmem(),M_inFourier,false);
 
     // Read CTF
     XmippCTF ctf;
@@ -66,7 +66,9 @@ void Prog_micrograph_phase_flipping::run(void)
         FFT_idx2digfreq(M_inmem(),idx,freq);
         digfreq2contfreq(freq, freq, ctf.Tm);
         if (ctf.CTFpure_without_damping_at(XX(freq),YY(freq))<0)
+        {
             M_inFourier(i,j)*=-1;
+        }
     }
     
     // Perform inverse Fourier transform and finish
