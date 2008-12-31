@@ -145,10 +145,13 @@ void Prog_angular_projection_matching_prm::produceSideInfo() {
     DFexp.go_first_data_line();
     DFexp.previous();
     if (DFexp.get_current_line().Is_comment()) 
+	{
 	fn_img = ((DFexp.get_current_line()).get_text()).erase(0, 3);
+	}
     else
 	REPORT_ERROR(1,"BUG: no comment in DFexp where expected....");
     img.read(fn_img);
+    
     dim = XSIZE(img());
     
     // Set padding dimension
@@ -219,7 +222,7 @@ void Prog_angular_projection_matching_prm::produceSideInfo() {
         {
             ImageXmipp img;
             img.read(fn_ctf);
-            Mctf=img();
+	    Mctf=img();
             if (XSIZE(Mctf) != paddim)
             {
                 std::cerr<<"image size= "<<dim<<" padding factor= "<<pad<<" padded image size= "<<paddim<<" Wiener filter size= "<<XSIZE(Mctf)<<std::endl;
@@ -579,7 +582,10 @@ void Prog_angular_projection_matching_prm::processSomeImages(int * my_images, do
       int this_image = my_images[imgno + 1]; 
 
       // read experimental image and all corresponding references in memory
-      DFexp.get_image(this_image,img,true);
+      //std::cerr << "get_image(this_image,img,true " <<  this_image << std::endl;
+      //DFexp.get_image IS NOT EQUIVALENT TO getCurrentImage
+      //DFexp.get_image(this_image,img,true); 
+      getCurrentImage(this_image,img);
 
       // Align the image (for now 3D+2D search only)
       rotationallyAlignOneImage(img(),this_image, opt_refno, opt_psi, opt_flip, maxcorr);
@@ -603,6 +609,44 @@ void Prog_angular_projection_matching_prm::processSomeImages(int * my_images, do
       my_output[imgno * MY_OUPUT_SIZE + 9] = maxcorr;
 
   }
+
+}
+
+void Prog_angular_projection_matching_prm::getCurrentImage(int imgno, ImageXmipp &img)
+{
+
+    FileName	     fn_img;
+    DocLine	     DL;
+    Matrix2D<double> A;
+
+    // jump to line imgno+1 in DFexp, get data and filename
+    DFexp.locate(imgno+1);
+    DL = DFexp.get_current_line();
+    DFexp.previous();
+    if (DFexp.get_current_line().Is_comment()) 
+    {
+       fn_img = ((DFexp.get_current_line()).get_text()).erase(0, 3);
+    }
+    else
+    {
+       REPORT_ERROR(1,"BUG: no comment in DFexp where expected....");
+    }
+
+    // Read actual image
+    img.read(fn_img);
+    img().setXmippOrigin();
+
+    // Store translation in header and apply it to the actual image
+    img.set_Xoff(DL[3]);
+    img.set_Yoff(DL[4]);
+    img.set_rot(0.);
+    img.set_tilt(0.);
+    img.set_psi(0.);
+    img.set_flip(0.);
+
+    A = img.get_transformation_matrix(true);
+    if (!A.isIdentity())
+       img().selfApplyGeometryBSpline(A, 3, IS_INV, WRAP);
 
 }
 
