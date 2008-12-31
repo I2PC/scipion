@@ -145,6 +145,10 @@ public:
   /** Loop over all images */
   void processSomeImages(int * my_images, double * my_output);
 
+  /** Read current image into memory and translate accoring to
+      previous optimal Xoff and Yoff */
+  void getCurrentImage(int imgno, ImageXmipp &img);
+
 };				
 //@}
 #endif
