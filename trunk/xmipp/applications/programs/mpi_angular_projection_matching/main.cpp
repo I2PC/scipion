@@ -468,8 +468,9 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
                              &status);
                     worker_tip =  input_images[0];
                     int number_of_transfered_images =  input_images[1];
-                    #ifdef DEBUG
-                    std::cerr << "Wr " << rank << " " << "TAG_WORKFROMWORKER" << std::endl;
+                    //#define DEBUG
+		    #ifdef DEBUG
+                    std::cerr << "Wr " << rank << " " << "TAG_WORKFORWORKER" << std::endl;
                     std::cerr << "\n rank, tip, input_images_size " 
                               << rank 
                               << " " 
@@ -481,6 +482,7 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
                         std::cerr << input_images[i] << " " ;   
                     std::cerr << std::endl;  
                     #endif
+		    #undef DEBUG
                     /////////////
                     processSomeImages(&(input_images[1]),output_values);
                     #ifdef DEBUG
