@@ -112,6 +112,8 @@ class automated_gui_class:
             self.is_analysis=True
         self.scriptname=scriptname
         self.master=Tk()
+        self.fontsize=10
+        self.master.option_add("*Font", "Arial "+str(self.fontsize)+" bold")
         self.expert_mode=False
         self.is_setupgui=False
         self.is_markgui=False
@@ -188,6 +190,7 @@ class automated_gui_class:
     def ScriptParseComments(self,i):
         import string
         morehelp=[]
+        radiooptions=[]
         found_comment=False
         j=i
         # comment will be the first line above the i^th line that begins with a "#"
@@ -220,6 +223,13 @@ class automated_gui_class:
                     comment=comment.replace ('{dir}', '' )
                 else:
                     browse="none"
+                # Check radio options
+                if not comment.find("{radio}")==-1:
+                    comment=comment.replace ('{file}', '' )
+                    words=comment.split('|')
+                    comment=words[len(words)-1]
+                    radiooptions=words[1:-1]
+
         # Checkout more help
         if (i-j>1):
             while (j<i-1):
@@ -228,7 +238,7 @@ class automated_gui_class:
 
         morehelp=string.join(morehelp,'')
         morehelp=morehelp.replace('\"\"\"','')
-        return comment,isexpert,morehelp,browse
+        return comment,isexpert,morehelp,browse,radiooptions
         
     def Is_a_number(self,string):
         try:
@@ -288,7 +298,9 @@ class automated_gui_class:
                     newvar=StringVar()
                     self.variables[args[0]].append(newvar)
             
-                comment,isexpert,morehelp,browse=self.ScriptParseComments(i)
+                comment,isexpert,morehelp,browse,radiooptions=self.ScriptParseComments(i)
+                if (len(radiooptions)>0):
+                    self.variables[args[0]][1]="Radio"
                 if (browse=="file"):
                     self.variables[args[0]][1]="File"
                 elif (browse=="dir"):
@@ -296,6 +308,7 @@ class automated_gui_class:
                 self.variables[args[0]].append(comment)
                 self.variables[args[0]].append(isexpert)
                 self.variables[args[0]].append(morehelp)
+                self.variables[args[0]].append(radiooptions)
                 row=0
                 self.variables[args[0]].append(row)
 
@@ -386,6 +399,16 @@ class automated_gui_class:
                                         self.variables[var][2],
                                         self.variables[var][4],
                                         self.variables[var][5])
+            elif (self.variables[var][1]=="Radio"):
+                newvar=StringVar()
+                self.variables[var].append(newvar)
+                self.GuiAddRadioEntry(self.variables[var][3],
+                                      self.variables[var][0],
+                                      self.variables[var][2],
+                                      self.variables[var][4],
+                                      self.variables[var][5],
+                                      self.variables[var][6])
+                
             else:
                 print "ERROR",self.variables[var][1]," variable type not recognized"
                 sys.exit()
@@ -520,6 +543,28 @@ class automated_gui_class:
             if (morehelp!=""):
                 self.widgetexpertlist.append(self.r)
 
+    def GuiAddRadioEntry(self,label,default,variable,expert,morehelp,radiooptions):
+        row,self.l,self.r=self.GuiPositionLabel(label,default,variable,expert,morehelp)
+        if (expert=="expert"):
+            self.widgetexpertlist.append(self.l)
+            if (morehelp!=""):
+                self.widgetexpertlist.append(self.r)
+        c = -1
+        found = False
+        for mode in radiooptions:
+            c = c + 1
+            self.r = Radiobutton(self.frame, text=mode, variable=variable, value=mode)
+            self.r.grid(row=row+c, column=self.columntextentry)
+            if (default==mode):
+                self.r.select()
+                found = True
+            if (expert=="expert"):
+                self.widgetexpertlist.append(self.r)
+        if not found:
+            print 'ERROR: Unknown radiobutton option for: ' + label
+            sys.exit()
+
+
     def GuiAddTextEntry(self,label,default,variable,expert,morehelp):
         row,self.l,self.r=self.GuiPositionLabel(label,default,variable,expert,morehelp)
         self.e = Entry(self.frame, text=label, textvariable=variable)
@@ -583,6 +628,9 @@ class automated_gui_class:
             self.bGet = Button(self.frame, text="Analyse Results", command=self.AnalyseResults,underline=0)
             self.bGet.grid(row=self.buttonrow+3,column=5)
             self.master.bind('<Alt_L><a>', self.AnalyseResults)
+        # Add bindings for changing font size
+        self.master.bind('<Alt_L><plus>', self.GuiIncreaseFontSize)
+        self.master.bind('<Alt_L><minus>', self.GuiDecreaseFontSize)
 
     def GuiAddRestSetupButtons(self):
         self.button = Button(self.frame, text="Close", command=self.GuiClose,underline=0)
@@ -625,7 +673,7 @@ class automated_gui_class:
     def GuiBrowseFile(self):
         import tkFileDialog
         import os
-        fileformats = [('All Files ','*')]
+        fileformats = [('All Files ','*.*')]
         fname = tkFileDialog.askopenfilename(title='Choose File',
                                              filetypes=fileformats)
         if (len(fname)>0):
@@ -673,6 +721,18 @@ class automated_gui_class:
                      visname+' '+protname+' &'
             print command
             os.system(command)
+
+    def GuiIncreaseFontSize(self,event=""):
+        print 'Increasing font size from ', self.fontsize,' to ', self.fontsize+2
+        self.fontsize=self.fontsize+2
+        self.master.option_add("*Font", "Arial "+str(self.fontsize)+" bold")
+        self.GuiFill()
+
+    def GuiDecreaseFontSize(self,event=""):
+        print 'Decreasing font size from ', self.fontsize,' to ', self.fontsize-2
+        self.fontsize=self.fontsize-2
+        self.master.option_add("*Font", "Arial "+str(self.fontsize)+" bold")
+        self.GuiFill()
 
     def GuiClose(self,event=""):
         self.master.destroy()
