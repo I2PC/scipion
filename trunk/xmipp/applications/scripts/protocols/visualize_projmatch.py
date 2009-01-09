@@ -37,7 +37,7 @@ DisplayFilteredReconstruction=False
 # {section} Display 2D projection galleries
 #------------------------------------------------------------------------------------------------
 #Show projection matching library and aligned classes
-DisplayProjectionMatchingAlign2d=True
+DisplayProjectionMatchingAlign2d=False
 #------------------------------------------------------------------------------------------------
 # {section} Display 2D-plots
 #------------------------------------------------------------------------------------------------
@@ -48,6 +48,23 @@ DisplayResolutionPlots=True
 #------------------------------------------------------------------------------------------------
 # {section} Display options
 #------------------------------------------------------------------------------------------------
+# Display a b_factor corrected volume
+""" This utility boost up the high frequencies. Do not use the automated 
+    mode [default] for maps with resolutions lower than 12-15 Angstroms.
+    It does not make sense to apply the Bfactor to the firsts iterations
+    see http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Correct_bfactor
+"""
+DisplayBFactorCorrectedVolume=False
+
+#Sampling rate (only needed for b_factor)
+SamplingRate=2.8
+#Maximum resolution to apply B-factor (in Angstrom)
+MaxRes=10
+# {expert} User defined flags for the correct_bfactor program 
+""" See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Correct_bfactor
+    for details. DEFAULT behaviour is -auto
+"""
+CorrectBfactorExtraCommand='-auto'
 # Visualize volumes in slices along Z?
 VisualizeVolZ=True
 # {expert} Visualize volumes in slices along X?
@@ -77,6 +94,10 @@ class visualize_projmatch_class:
                 _VisualizeVolX,
                 _VisualizeVolY,
                 _VisualizeVolChimera,
+                _DisplayBFactorCorrectedVolume,
+                _SamplingRate,
+                 _MaxRes,
+                _CorrectBfactorExtraCommand,
                 _DisplayIterationsNo,
                 _DisplayReference,
                 _DisplayProjectionMatchingAlign2d,
@@ -107,9 +128,9 @@ class visualize_projmatch_class:
         self._SelFileName=self._ProjectDir+'/'+str(protocol.SelFileName)
         self._Filtered_Image=protocol.FilteredReconstruction
         self._mylog=log.init_log_system(self._ProjectDir,
-                                       self._LogDir,
-                                       sys.argv[0],
-                                       self._WorkDirectory)
+                                        self._LogDir,
+                                        sys.argv[0],
+                                        self._WorkDirectory)
         self._mylog.setLevel(logging.DEBUG)
         self._DisplayIterationsNo=arg.getListFromVector(_DisplayIterationsNo)
         self._ReconstrucedVolume=protocol.ReconstructedVolume
@@ -142,6 +163,12 @@ class visualize_projmatch_class:
         self._DisplayFilteredReconstruction_list=[]
         
         self._mylog.debug ("_DisplayIterationsNo " + _DisplayIterationsNo)
+        volExtension='.vol'
+        bFactorExtension='Bfactor'
+        if(_DisplayBFactorCorrectedVolume):
+            self._mylog.debug("bfactor Correction activated")
+            volExtension=bFactorExtension+volExtension
+	   
         for self._iteration_number in self._DisplayIterationsNo:
            if self._iteration_number==' ':
               continue
@@ -154,7 +181,7 @@ class visualize_projmatch_class:
               self._DisplayReconstruction_list.append('..'+'/Iter_'+\
                                       str(self._iteration_number)+\
                                       '/Iter_'+str(self._iteration_number)+\
-                                      '_'+self._ReconstrucedVolume+'.vol')
+                                      '_'+self._ReconstrucedVolume+volExtension)
 
            if (_DisplayFilteredReconstruction):
               self._DisplayFilteredReconstruction_list.append(
@@ -195,6 +222,18 @@ class visualize_projmatch_class:
         self._mylog.debug ("cd " + self._Iteration_Working_Directory)
         os.chdir(self._Iteration_Working_Directory)
 
+        #Compute bfactor if needed
+	import apply_bfactor
+        if(_DisplayBFactorCorrectedVolume):
+	    apply_bfactor.apply_bfactor(self._DisplayReconstruction_list,
+                                        bFactorExtension,
+                                        _SamplingRate,
+                                        _MaxRes,
+                                        _CorrectBfactorExtraCommand,
+                                        volExtension,
+                                        self._mylog
+                                        )
+	
         if (_DisplayReference):
            self._mylog.debug ( "_DisplayReference_list "+str(self._DisplayReference_list))
            visualization.visualize_volumes(self._DisplayReference_list,
@@ -320,6 +359,10 @@ if __name__ == '__main__':
                                                   VisualizeVolX,
                                                   VisualizeVolY,
                                                   VisualizeVolChimera,
+                                                  DisplayBFactorCorrectedVolume,
+                                                  SamplingRate,
+                                                  MaxRes,
+                                                  CorrectBfactorExtraCommand,
                                                   DisplayIterationsNo,
                                                   DisplayReference,
                                                   DisplayProjectionMatchingAlign2d,
