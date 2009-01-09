@@ -54,6 +54,7 @@ Optional:
       variables by a blue line + the corresponding title in the GUI 
 
 """
+FontName="Helvetica "
 # A scrollbar that hides itself if it's not needed.
 class AutoScrollbar(Scrollbar):
     def set(self, lo, hi):
@@ -116,7 +117,7 @@ class automated_gui_class:
         self.scriptname=scriptname
         self.master=Tk()
         self.fontsize=10
-        self.master.option_add("*Font", "Arial "+str(self.fontsize)+" bold")
+        self.master.option_add("*Font", FontName+str(self.fontsize)+" bold")
         self.expert_mode=False
         self.is_setupgui=False
         self.is_markgui=False
@@ -728,13 +729,13 @@ class automated_gui_class:
     def GuiIncreaseFontSize(self,event=""):
         print 'Increasing font size from ', self.fontsize,' to ', self.fontsize+2
         self.fontsize=self.fontsize+2
-        self.master.option_add("*Font", "Arial "+str(self.fontsize)+" bold")
+        self.master.option_add("*Font", FontName+str(self.fontsize)+" bold")
         self.GuiFill()
 
     def GuiDecreaseFontSize(self,event=""):
         print 'Decreasing font size from ', self.fontsize,' to ', self.fontsize-2
         self.fontsize=self.fontsize-2
-        self.master.option_add("*Font", "Arial "+str(self.fontsize)+" bold")
+        self.master.option_add("*Font", FontName+str(self.fontsize)+" bold")
         self.GuiFill()
 
     def GuiClose(self,event=""):
