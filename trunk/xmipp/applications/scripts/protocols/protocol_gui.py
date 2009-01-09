@@ -39,6 +39,9 @@ Obligatory:
     * A {file} or {dir} label on the comment line (#) marks the option as a
       Filename or Directory, and will add a corresponding Browse-button to the GUI
       Note that this button return absolute paths
+    * A {radio}|option A|option B|option C| label on the comment line (#) marks 
+      the option as a radio button. The selected variable should be one of the options indicated.
+      The number of different options is not limited.
 
 Optional:
 
