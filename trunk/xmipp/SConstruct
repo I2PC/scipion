@@ -64,6 +64,9 @@ opts.Add('prefix', 'Base installation directory', Dir('.').abspath)
 opts.Add(BoolOption('matlab', 'Build the Matlab bindings?', 'no'))
 opts.Add('MATLAB_DIR', 'Matlab installation dir', '/usr/local/matlab')
 
+opts.Add(BoolOption('verbose_fftw', 'Verbose configuring of FFTW libraries?', 'no'))
+opts.Add('FFTWFLAGS', 'Additional flags for FFTW configure', '')
+
 opts.Update(env)
 
 # generate help for options
@@ -86,7 +89,7 @@ if (ARGUMENTS['mode'] == 'configure'):
 
     # Custom tests
     def CheckMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx):
-        context.Message('Checking for MPI ... ')
+        context.Message('* Checking for MPI ... ')
 
         lastLIBS = context.env['LIBS']
         lastLIBPATH = context.env['LIBPATH']
@@ -229,19 +232,23 @@ if (ARGUMENTS['mode'] == 'configure'):
 
     # MATLAB
     if int(env['matlab']):
-        print 'Checking for Matlab ... ',
-    if not os.path.exists(env['MATLAB_DIR'] + '/bin/matlab'):
-        print 'no'
-        print '* Did not find Matlab. Disabling ...'
-        env['matlab'] = 0
-    else:
-        print 'yes'
+        print '* Checking for Matlab ... ',
+        if not os.path.exists(env['MATLAB_DIR'] + '/bin/matlab'):
+            print 'no'
+            print '* Did not find Matlab. Disabling ...'
+            env['matlab'] = 0
+        else:
+            print 'yes'
          
     # FFTW
-    #sorry about this but I do not know how to do it inside scons
-    #create configuration file for fftw
-    print "* Configuring FFTW ... "
-    os.system("cd external/fftw-3.1.2;./configure --enable-threads --enable-mpi CC="+env['CC']);
+    # It is ugly to call configure from scons, but I do not know how to do it otherwise
+    # create configuration file for fftw
+    if int(env['verbose_fftw']):
+        print "* Configuring FFTW ... "
+        os.system("cd external/fftw-3.1.2;./configure " + env['FFTWFLAGS'])
+    else:
+        print "* Configuring FFTW (see build/fftw_configure.log for details) ... "
+        os.system("cd external/fftw-3.1.2;./configure " + env['FFTWFLAGS'] + " > ../../build/fftw_configure.log ")
 
     env = conf.Finish()
     opts.Save('options.cache', env)
