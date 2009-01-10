@@ -52,7 +52,9 @@ DisplayResolutionPlots=True
 """ This utility boost up the high frequencies. Do not use the automated 
     mode [default] for maps with resolutions lower than 12-15 Angstroms.
     It does not make sense to apply the Bfactor to the firsts iterations
-    see http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Correct_bfactor
+    see http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Correct_bfactor.
+    NOTE: bfactor will be applied ONLY to the reconstructed volumes NOT to
+    the reference ones
 """
 DisplayBFactorCorrectedVolume=False
 
@@ -185,7 +187,7 @@ class visualize_projmatch_class:
 
            if (_DisplayFilteredReconstruction):
               self._DisplayFilteredReconstruction_list.append(
-                          self._Filtered_Image[int(self._iteration_number)]+'.vol')
+                          self._Filtered_Image[int(self._iteration_number)]+volExtension)
 
 
            if (_DisplayProjectionMatchingAlign2d):
@@ -224,15 +226,6 @@ class visualize_projmatch_class:
 
         #Compute bfactor if needed
 	import apply_bfactor
-        if(_DisplayBFactorCorrectedVolume):
-	    apply_bfactor.apply_bfactor(self._DisplayReconstruction_list,
-                                        bFactorExtension,
-                                        _SamplingRate,
-                                        _MaxRes,
-                                        _CorrectBfactorExtraCommand,
-                                        volExtension,
-                                        self._mylog
-                                        )
 	
         if (_DisplayReference):
            self._mylog.debug ( "_DisplayReference_list "+str(self._DisplayReference_list))
@@ -244,6 +237,15 @@ class visualize_projmatch_class:
 
 
         if (_DisplayReconstruction):
+           if(_DisplayBFactorCorrectedVolume):
+	       apply_bfactor.apply_bfactor(self._DisplayReconstruction_list,
+                                           bFactorExtension,
+                                           _SamplingRate,
+                                           _MaxRes,
+                                           _CorrectBfactorExtraCommand,
+                                           volExtension,
+                                           self._mylog
+                                           )
            self._mylog.debug ( "_DisplayReconstruction_list "+str(self._DisplayReconstruction_list))
            visualization.visualize_volumes(self._DisplayReconstruction_list,
                                            _VisualizeVolZ,
@@ -252,6 +254,15 @@ class visualize_projmatch_class:
                                            _VisualizeVolChimera)
 
         if (_DisplayFilteredReconstruction):
+           if(_DisplayBFactorCorrectedVolume):
+	       apply_bfactor.apply_bfactor(self._DisplayFilteredReconstruction_list,
+                                           bFactorExtension,
+                                           _SamplingRate,
+                                           _MaxRes,
+                                           _CorrectBfactorExtraCommand,
+                                           volExtension,
+                                           self._mylog
+                                           )
            self._mylog.debug ( "_DisplayFilteredReconstruction_list "+\
                             str(self._DisplayFilteredReconstruction_list))
            visualization.visualize_volumes(self._DisplayFilteredReconstruction_list,
