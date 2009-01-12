@@ -172,6 +172,7 @@ class automated_gui_class:
                 # Add "" for strings
                 if (self.variables[args[0]][1]=="String" or
                     self.variables[args[0]][1]=="File" or
+                    self.variables[args[0]][1]=="Radio" or
                     self.variables[args[0]][1]=="Directory"):
                     lineb=str(args[0])+'=\''+str(self.variables[args[0]][2].get())+"\'\n"
                 # Write Boolean as True/False (for old python < 2.3)
@@ -465,6 +466,15 @@ class automated_gui_class:
                                      self.variables[var][2],
                                      self.variables[var][4],
                                      self.variables[var][5])
+            elif (self.variables[var][1]=="Radio"):
+                newvar=StringVar()
+                self.variables[var].append(newvar)
+                self.GuiAddRadioEntry(self.variables[var][3],
+                                      self.variables[var][0],
+                                      self.variables[var][2],
+                                      self.variables[var][4],
+                                      self.variables[var][5],
+                                      self.variables[var][6])
             elif (self.variables[var][1]=="Boolean"):
                 self.GuiAddLaunchButton(self.variables[var][3],
                                         var,
@@ -741,7 +751,7 @@ class automated_gui_class:
     def GuiClose(self,event=""):
         self.master.destroy()
         
-    def GuiSave(self):
+    def GuiSave(self,event=""):
         print "* Saving..."
         self.ScriptWrite()
 
