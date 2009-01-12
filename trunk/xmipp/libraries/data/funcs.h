@@ -313,7 +313,10 @@ void printb(std::ostream& o, T value)
 /** Compute the logarithm in base 2
  * @ingroup MiscellaneousFunctions
  */
+// Does not work with xlc compiler
+#ifndef __xlC__
 double log2(double value);
+#endif
 
 /// @defgroup ComplexFunctions Complex functions
 /// @ingroup GeneralFunctions
