@@ -34,20 +34,11 @@
 #include "matrix2d.h"
 #include "header.h"
 #include "geometry.h"
+#include "gcc_version.h"
 
 #include <typeinfo>
 #include <complex>
 #include <vector>
-
-#define GCC_VERSION (__GNUC__ * 10000 \
-                     + __GNUC_MINOR__ * 100 \
-                     + __GNUC_PATCHLEVEL__)
-/* Test for GCC > 3.3.0 */
-#if GCC_VERSION >= 30300
-#include <sstream>
-#else
-#include <strstream.h>
-#endif
 
 // This forward declarations are needed for defining operators functions that
 // use other clases type
@@ -2321,11 +2312,11 @@ typedef ImageImagicT< double > ImageImagic;
  */
 inline std::string ImagicMakeName(const char* hed_fname, unsigned int imgnum)
 {
+
 #if GCC_VERSION < 30300
     char aux[15];
     ostrstream ss(aux, sizeof(aux));
 #else
-
     std::ostringstream ss;
 #endif
 

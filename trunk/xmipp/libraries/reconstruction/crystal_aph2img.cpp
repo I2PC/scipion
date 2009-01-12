@@ -30,7 +30,7 @@
 #include "crystal_aph2img.h"
 #include "art_crystal.h"
 
-#include <strstream>
+#include <data/gcc_version.h>
 
 #define twoPI 2*M_PI
 

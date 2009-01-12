@@ -28,12 +28,13 @@
 #include "aph.h"
 
 #include <reconstruction/symmetries.h>
+#include <data/gcc_version.h>
 #include <data/args.h>
 #include <data/image.h>
 
 #include <fstream>
 #include <iomanip>
-#include <strstream>
+
 
 #define VERBOSE
 //#define DEBUG

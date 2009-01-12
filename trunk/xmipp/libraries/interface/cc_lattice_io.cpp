@@ -26,6 +26,7 @@
  ***************************************************************************/
 
 #include <reconstruction/symmetries.h>
+#include <data/gcc_version.h>
 #include <data/args.h>
 #include <data/image.h>
 
@@ -33,16 +34,6 @@
 #include <iomanip>
 
 #include "cc_lattice_io.h"
-
-#define GCC_VERSION (__GNUC__ * 10000 \
-                     + __GNUC_MINOR__ * 100 \
-                     + __GNUC_PATCHLEVEL__)
-/* Test for GCC > 3.3.0 */
-#if GCC_VERSION >= 30300
-#include <sstream>
-#else
-#include <strstream.h>
-#endif
 
 #define VERBOSE
 //#define DEBUG
