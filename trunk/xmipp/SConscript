@@ -154,7 +154,7 @@ def AddXmippProgram(name, libs=[]):
           finalLibPath += ['libraries/interface']
        elif libs[i] == 'XmippRecons_Interface':
           finalLibPath += ['libraries/interface']
-	  finalLibs += ['XmippInterface']
+	  finalLibs.insert(i+1,'XmippInterface')
        elif libs[i] == 'XmippClassif':
           finalLibPath += ['libraries/classification']
     AddProgram(name, 'applications/programs/' + name, '*.cpp', [],
@@ -171,7 +171,7 @@ def AddXmippMPIProgram(name, libs=[]):
           finalLibPath += ['libraries/interface']
        elif libs[i] == 'XmippRecons_Interface':
           finalLibPath += ['libraries/interface']
-	  finalLibs += ['XmippInterface']
+	  finalLibs.insert(i+1,'XmippInterface')
        elif libs[i] == 'XmippReconsMPI':
           finalLibPath += ['libraries/reconstruction_mpi']
        elif libs[i] == 'XmippClassif':
@@ -384,9 +384,11 @@ ReconsSources = [
     'grids.cpp',
     'micrograph_phase_flipping.cpp',
     'ml_align2d.cpp',
+#    'ml_align3d.cpp',
     'mlf_align2d.cpp',
     'ml_refine3d.cpp',
-#    'mlf_tomo.cpp',
+#    'ml_tomo.cpp',
+    'mlf_newtomo.cpp',
     'nma_alignment.cpp',
     'phantom.cpp',
     'phantom_create_micrograph.cpp',
@@ -497,23 +499,23 @@ AddXmippProgram('convert_data2img', ['XmippClassif'])
 AddXmippProgram('convert_data2pdb', ['XmippClassif'])
 AddXmippProgram('convert_data2vol', ['XmippClassif'])
 AddXmippProgram('convert_img2data')
-AddXmippProgram('convert_pdb2vol', ['XmippRecons','XmippRecons_Interface'])
+AddXmippProgram('convert_pdb2vol', ['XmippRecons_Interface','XmippRecons'])
 AddXmippProgram('convert_raw22spi')
-AddXmippProgram('convert_spi22em', ['XmippRecons','XmippRecons_Interface'])
-AddXmippProgram('convert_spi22ccp4', ['XmippRecons','XmippRecons_Interface'])
+AddXmippProgram('convert_spi22em', ['XmippInterface'])
+AddXmippProgram('convert_spi22ccp4', ['XmippInterface'])
 AddXmippProgram('convert_vol2data')
 AddXmippProgram('convert_vol2pseudo')
-AddXmippProgram('convert_voxels22blobs',      	['XmippRecons'])
-AddXmippProgram('correlation', ['XmippRecons','XmippInterface'])
+AddXmippProgram('convert_voxels22blobs', ['XmippRecons'])
 AddXmippProgram('correct_bfactor', ['XmippRecons'])
+AddXmippProgram('correlation')
 AddXmippProgram('crystal_angular_projection_matching',	['XmippRecons'])
-AddXmippProgram('crystal_aph2img', ['XmippRecons','XmippRecons_Interface'])
+AddXmippProgram('crystal_aph2img', ['XmippRecons_Interface','XmippRecons'])
 AddXmippProgram('crystal_create_surface', ['XmippRecons'])
-AddXmippProgram('crystal_euler2mrc', ['XmippRecons','XmippRecons_Interface'])
+AddXmippProgram('crystal_euler2mrc', ['XmippInterface'])
 AddXmippProgram('crystal_lattice_vectors')
-AddXmippProgram('crystal_shear', ['XmippRecons','XmippInterface'])
-AddXmippProgram('crystal_skew', ['XmippRecons'])
-AddXmippProgram('crystal_unbend', ['XmippRecons', 'XmippRecons_Interface'])
+AddXmippProgram('crystal_shear')
+AddXmippProgram('crystal_skew')
+AddXmippProgram('crystal_unbend', ['XmippRecons_Interface','XmippRecons'])
 AddXmippProgram('ctf_correct_amplitude2d', ['XmippRecons'])
 #AddXmippProgram('ctf_correct_amplitude3d', ['XmippRecons'])
 AddXmippProgram('ctf_correct_idr', ['XmippRecons'])
@@ -547,31 +549,32 @@ AddXmippProgram('micrograph_scissor')
 AddXmippProgram('micrograph_window')
 AddXmippProgram('mirror')
 AddXmippProgram('ml_align2d', ['XmippRecons'])
+#AddXmippProgram('ml_align3d', ['XmippRecons'])
 AddXmippProgram('mlf_align2d', ['XmippRecons'])
 AddXmippProgram('ml_align2d_combine', ['XmippRecons'])
 AddXmippProgram('ml_refine3d', ['XmippRecons'])
 AddXmippProgram('mlf_refine3d', ['XmippRecons'])
 #AddXmippProgram('mlf_tomo', ['XmippRecons'])
+#AddXmippProgram('ml_tomo', ['XmippRecons'])
 AddXmippProgram('morphology')
 AddXmippProgram('nma_alignment', ['XmippRecons'])
 AddXmippProgram('normalize')
 AddXmippProgram('operate')
-AddXmippProgram('pdb_dictionary', ['XmippRecons','XmippRecons_Interface','XmippClassif'])
+AddXmippProgram('pdb_dictionary', ['XmippRecons_Interface','XmippRecons','XmippClassif'])
 AddXmippProgram('pdb_project_on_dictionary', ['XmippRecons','XmippClassif'])
 AddXmippProgram('phantom_create', ['XmippRecons'])
 AddXmippProgram('phantom_create_micrograph', ['XmippRecons'])
 AddXmippProgram('phantom_create_random', ['XmippRecons'])
 AddXmippProgram('phantom_simulate_microscope', ['XmippRecons'])
-AddXmippProgram('phantom_test_reconstruction', ['XmippRecons_Interface',
-    'XmippRecons'])
-AddXmippProgram('phantom_transform', ['XmippRecons','XmippRecons_Interface'])
+AddXmippProgram('phantom_test_reconstruction', ['XmippRecons_Interface','XmippRecons'])
+AddXmippProgram('phantom_transform', ['XmippRecons_Interface','XmippRecons'])
 AddXmippProgram('precompute_sampling', ['XmippRecons'])
-AddXmippProgram('project', ['XmippRecons','XmippRecons_Interface'])
+AddXmippProgram('project', ['XmippRecons_Interface','XmippRecons'])
 AddXmippProgram('project_tomography', ['XmippRecons'])
 AddXmippProgram('psd_enhance', ['XmippRecons'])
 AddXmippProgram('psd_sort', ['XmippRecons'])
 AddXmippProgram('range_adjust')
-AddXmippProgram('reconstruct_art', ['XmippRecons','pthread'])
+AddXmippProgram('reconstruct_art', ['XmippRecons'])
 AddXmippProgram('reconstruct_wbp', ['XmippRecons'])
 AddXmippProgram('reconstruct_fourier', ['XmippRecons'])
 AddXmippProgram('resolution_fsc')
