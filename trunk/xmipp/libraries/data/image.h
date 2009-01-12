@@ -2035,6 +2035,10 @@ struct ImageImagicinfo
     std::vector< ImageImagicType > img_types;
 };
 
+/** Looks at an IMAGIC header file for information about the images it contains
+ */
+const ImageImagicinfo ImagicGetImgInfo(const FileName& hed_fname);
+
 /** Imagic Image class
  */
 template<typename T>
@@ -2042,10 +2046,6 @@ class ImageImagicT: public ImageT< T >
 {
 
 public:
-
-/** Looks at an IMAGIC header file for information about the images it contains
- */
-const ImageImagicinfo ImagicGetImgInfo(const FileName& hed_fname);
 
     /** Empty constructor
      */
