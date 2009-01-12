@@ -2040,7 +2040,13 @@ struct ImageImagicinfo
 template<typename T>
 class ImageImagicT: public ImageT< T >
 {
+
 public:
+
+/** Looks at an IMAGIC header file for information about the images it contains
+ */
+const ImageImagicinfo ImagicGetImgInfo(const FileName& hed_fname);
+
     /** Empty constructor
      */
     ImageImagicT() : ImageT< T >()
@@ -2323,10 +2329,6 @@ inline std::string ImagicMakeName(const char* hed_fname, unsigned int imgnum)
     ss << IMAGIC_TAG << hed_fname << IMAGIC_TAG_SEP << imgnum;
     return (ss.str());
 }
-
-/** Looks at an IMAGIC header file for information about the images it contains
- */
-const ImageImagicinfo ImagicGetImgInfo(const FileName& hed_fname);
 
 /** Creates a new Imagic header/image file pair, filling it with the data
  * pointed to by the vector parameter
