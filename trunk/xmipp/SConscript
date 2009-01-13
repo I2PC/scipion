@@ -388,7 +388,7 @@ ReconsSources = [
     'mlf_align2d.cpp',
     'ml_refine3d.cpp',
 #    'ml_tomo.cpp',
-    'mlf_newtomo.cpp',
+#    'mlf_newtomo.cpp',
     'nma_alignment.cpp',
     'phantom.cpp',
     'phantom_create_micrograph.cpp',
