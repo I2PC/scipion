@@ -146,6 +146,7 @@ InnerRadius=0
 
 # Outer radius for rotational correlation
 """ In pixels from the image center. Use a negative number to use the entire image.
+    WARNING: this radius will be use for masking before computing resoution
 """
 OuterRadius=195
 
@@ -625,7 +626,14 @@ class projection_matching_class:
        self._WBPReconstructionExtraCommand=_WBPReconstructionExtraCommand
        self._FourierReconstructionExtraCommand=_FourierReconstructionExtraCommand
        self._SetResolutiontoZero=_SetResolutiontoZero
-       globalFourierMaxFrequencyOfInterest=float(_FourierMaxFrequencyOfInterest)
+       # if we are not starting at the first iteration
+       # globalFourierMaxFrequencyOfInterest must be computed
+       # untill I fix this properlly let us set it at max_frequency,
+      
+       if _ContinueAtIteration==1:
+           globalFourierMaxFrequencyOfInterest=float(_FourierMaxFrequencyOfInterest)
+       else:
+           globalFourierMaxFrequencyOfInterest=0.5
        self._MyMachineFile=_MyMachineFile
        if (len(_MyMachineFile) > 1):
            if (_MyMachineFile[0]!="$"):
