@@ -856,7 +856,7 @@ void Prog_MLalign2D_prm::rotateReference(std::vector< ImageXmippT<double> > &Ire
             transformer.FourierTransform(Maux,Faux,false);
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
             {
-                dMij(Faux, i, j) = conj(dMij(Faux, i, j))*ddim2;
+                dMij(Faux, i, j) = conj(dMij(Faux, i, j));
             }
             fref.push_back(Faux);
         }
@@ -898,7 +898,6 @@ void Prog_MLalign2D_prm::reverseRotateReference(
 
             // Do the backward FFT
             transformer.inverseFourierTransform(fnew[refnoipsi],Maux);
-            Maux /= ddim2 * ddim2;
             CenterFFT(Maux, true);
             computeStats_within_binary_mask(omask, Maux, dum, dum, avg, dum);
             Maux.rotateBSpline(3, -psi, Maux2, WRAP);
@@ -1161,9 +1160,8 @@ void Prog_MLalign2D_prm::expectationSingleImage(
         Maux.setXmippOrigin();
         applyGeometry(Maux, F[iflip], Mimg, IS_INV, WRAP);
         local_transformer.FourierTransform(Maux,Faux,false);
-        Faux*= ddim2;
         if (do_norm)
-            dMij(Faux,0,0) -= bgmean * ddim2;
+            dMij(Faux,0,0) -= bgmean;
          Fimg_flip.push_back(Faux);
     }
 
@@ -1239,7 +1237,7 @@ void Prog_MLalign2D_prm::expectationSingleImage(
                             my_sumweight = my_sumstoredweight = my_maxweight = 0.;
                             FOR_ALL_ELEMENTS_IN_MATRIX2D(Mweight)
                             {
-                                diff = A2_plus_Xi2 - ref_scale * MAT_ELEM(Maux, i, j) / ddim2;
+                                diff = A2_plus_Xi2 - ref_scale * MAT_ELEM(Maux, i, j) * ddim2;
                                 mindiff = XMIPP_MIN(mindiff,diff);
                                 pdf = fracpdf * MAT_ELEM(P_phi, i, j);
                                 if (!do_student)
@@ -1332,7 +1330,7 @@ void Prog_MLalign2D_prm::expectationSingleImage(
                                 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
                                 {
                                     dMij(mysumimgs[refnoipsi],i,j) +=
-                                        conj(dMij(Faux,i,j)) * ddim2 *
+                                        conj(dMij(Faux,i,j)) * 
                                         dMij(Fimg_flip[iflip],i,j);
                                 }
                             }
@@ -1400,7 +1398,7 @@ void Prog_MLalign2D_prm::expectationSingleImage(
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
         {
             dMij(Faux,i,j) = conj(dMij(fref[refnoipsi],i,j));
-            dMij(Faux,i,j) *= opt_scale/ddim2;
+            dMij(Faux,i,j) *= opt_scale;
         }
         // Still take input from Faux and leave output in Maux
         local_transformer.inverseFourierTransform();
@@ -1448,7 +1446,7 @@ void Prog_MLalign2D_prm::expectationSingleImage(
                 int refnoipsi = refno*nr_psi + ipsi;
                 // Correct weighted sum of images for new bgmean (only first element=origin in Fimg)
                 if (do_norm)
-                    dMij(mysumimgs[refnoipsi],0,0) -= sumw_refpsi[refnoipsi] * ddim2 * (bgmean - old_bgmean); 
+                    dMij(mysumimgs[refnoipsi],0,0) -= sumw_refpsi[refnoipsi] * (bgmean - old_bgmean) / ddim2; 
                 // Sum mysumimgs to the global weighted sum
                 wsumimgs[refnoipsi] += (scale_dim2_sumw * mysumimgs[refnoipsi]);
             }
