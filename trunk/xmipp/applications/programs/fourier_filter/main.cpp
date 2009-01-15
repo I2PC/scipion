@@ -70,9 +70,13 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
     FourierFilter_parameters *eprm = (FourierFilter_parameters *) prm;
+    if (eprm->first)
+    {
+        eprm->fmask.generate_mask(vol());
+        eprm->first = false;
+    }
     eprm->fmask.apply_mask_Space(vol());
     eprm->dim = 3;
-    eprm->first = false;
     return true;
 }
 

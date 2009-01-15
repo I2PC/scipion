@@ -41,6 +41,7 @@ void FourierMask::clear()
     ctf.clear();
     ctf.enable_CTFnoise = false;
     correctPhase = false;
+    do_generate_3dmask = false;
 }
 
 /* Assignment -------------------------------------------------------------- */
@@ -94,7 +95,7 @@ void FourierMask::read(int argc, char **argv)
         w1 = textToFloat(argv[i+2]);
         w2 = textToFloat(argv[i+3]);
         FilterShape = WEDGE;
-        FilterBand = LOWPASS;
+        do_generate_3dmask = true;
     }
     else if (strcmp(argv[i+1], "gaussian") == 0)
     {
@@ -223,13 +224,6 @@ double FourierMask::maskValue(const Matrix1D<double> &w)
                         return (1+cos(PI/raised_w*(absw-w1)))/2;
                     else return 0;
                     break;
-                case WEDGE:
-                    {
-                        double angle=atan2(ZZ(w),XX(w));
-                        if (angle>=w1 && angle<=w2) return 1;
-                        else return 0;
-                    }
-                    break;
                 case GAUSSIAN:
                     return 1/sqrt(2*PI*w1)*exp(-0.5*absw*absw/(w1*w1));
                     break;
@@ -278,7 +272,7 @@ double FourierMask::maskValue(const Matrix1D<double> &w)
         case CTF:
             return ctf.CTF_at(XX(w)/ctf.Tm,YY(w)/ctf.Tm);
             break;
-        }
+    }
 }
 
 /* Generate mask ----------------------------------------------------------- */
@@ -300,6 +294,51 @@ void FourierMask::generate_mask(Matrix2D<double> &v)
     }
 }
 
+/* Generate mask ----------------------------------------------------------- */
+void FourierMask::generate_mask(Matrix3D<double> &v)
+{
+    
+    if (do_generate_3dmask)
+    {
+        transformer.setReal(v);
+        Matrix3D< std::complex<double> > Fourier;
+        transformer.getFourierAlias(Fourier);
+        maskFourier3D.resize(Fourier);
+        Matrix3D<double> mask(v);
+        mask.setXmippOrigin();
+
+        switch (FilterShape)
+        {
+            case WEDGE:
+                Matrix2D<double> A(3,3);
+                A.initIdentity();
+                BinaryWedgeMask(mask, w1, w2, A);
+                break;
+        }
+        
+        // Transfer mask to maskFourier3D
+        for (int z=0, ii=0, yy, zz; z<ZSIZE(maskFourier3D); z++)
+        {
+            if ( z > (ZSIZE(maskFourier3D) - 1)/2 ) 
+                zz = z-ZSIZE(maskFourier3D);
+            else 
+                zz = z;
+            for (int y=0; y<YSIZE(maskFourier3D); y++)
+            {
+                if ( y > (YSIZE(maskFourier3D) - 1)/2 ) 
+                    yy = y-YSIZE(maskFourier3D);
+                else 
+                    yy = y;
+                for (int xx=0; xx<XSIZE(maskFourier3D); xx++,ii++)
+                {
+                    DIRECT_MULTIDIM_ELEM(maskFourier3D,ii) = 
+                        VOL_ELEM(mask,zz,yy,xx);
+                }
+            }
+        }
+    }
+ }
+
 /* Apply mask -------------------------------------------------------------- */
 void FourierMask::apply_mask_Space(Matrix2D<double> &v)
 {
@@ -314,17 +353,26 @@ void FourierMask::apply_mask_Space(Matrix3D<double> &v)
 {
     Matrix3D< std::complex<double> > aux3D;
     transformer.FourierTransform(v, aux3D, false);
-    w.resize(3);
-    for (int k=0; k<ZSIZE(aux3D); k++)
+
+    if (do_generate_3dmask)
     {
-        FFT_IDX2DIGFREQ(k,ZSIZE(v),ZZ(w));
-        for (int i=0; i<YSIZE(aux3D); i++)
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(aux3D)
+            DIRECT_MULTIDIM_ELEM(aux3D,n)*=DIRECT_MULTIDIM_ELEM(maskFourier3D,n);
+    }
+    else
+    {
+        w.resize(3);
+        for (int k=0; k<ZSIZE(aux3D); k++)
         {
-            FFT_IDX2DIGFREQ(i,YSIZE(v),YY(w));
-            for (int j=0; j<XSIZE(aux3D); j++)
+            FFT_IDX2DIGFREQ(k,ZSIZE(v),ZZ(w));
+            for (int i=0; i<YSIZE(aux3D); i++)
             {
-                FFT_IDX2DIGFREQ(j,XSIZE(v),XX(w));
-                DIRECT_VOL_ELEM(aux3D,k,i,j)*=maskValue(w);
+                FFT_IDX2DIGFREQ(i,YSIZE(v),YY(w));
+                for (int j=0; j<XSIZE(aux3D); j++)
+                {
+                    FFT_IDX2DIGFREQ(j,XSIZE(v),XX(w));
+                    DIRECT_VOL_ELEM(aux3D,k,i,j)*=maskValue(w);
+                }
             }
         }
     }

@@ -49,8 +49,8 @@
       I.write("filtered_image.xmp");
    @endcode
    
-   For volumes you the mask is always computed on the fly and
-   in this way memory is saved.
+   For volumes you the mask is computed on the fly and
+   in this way memory is saved (unless do_generate_3dmask == true).
 */
 class FourierMask
 {
@@ -86,6 +86,10 @@ public:
     
     /** Correct phase before applying CTF */
     bool correctPhase;
+
+    /** Flag to generate 3D mask */
+    bool do_generate_3dmask;
+
 public:
     /** Empty constructor */
     FourierMask()
@@ -123,6 +127,9 @@ public:
     /** Apply mask in 2D. */
     void apply_mask_Space(Matrix2D<double> &v);
 
+    /** Generate 3D mask. */
+    void generate_mask(Matrix3D<double> &mask);
+
     /** Apply mask in 3D. */
     void apply_mask_Space(Matrix3D<double> &v);
 
@@ -137,7 +144,10 @@ public:
 
     // Auxiliary mask for the filter in 2D
     Matrix2D<double> maskFourier2D;
-    
+
+    // Auxiliary mask for the filter in 3D
+    Matrix3D<double> maskFourier3D;
+
     // Transformer
     XmippFftw transformer;
 };
