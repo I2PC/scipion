@@ -323,7 +323,7 @@ void *project_SimpleGridThread( void * params )
                 
 			pthread_mutex_lock( &project_mutex );
 
-                        (*global_proj)() = (*global_proj)() + (*proj)();
+			(*global_proj)() = (*global_proj)() + (*proj)();
 			(*global_norm_proj)() = (*global_norm_proj)() + (*norm_proj)();
 			
 			pthread_mutex_unlock( &project_mutex );
@@ -343,7 +343,7 @@ void project_SimpleGrid(VolumeT<T> *vol, const SimpleGrid *grid,
                         Projection *proj, Projection *norm_proj, int FORW, int eq_mode,
                         const VolumeT<int> *VNeq, Matrix2D<double> *M,
                         double ray_length, 
-			int thread_id, int numthreads)
+						int thread_id, int numthreads)
 {
     Matrix1D<double> zero(3);                // Origin (0,0,0)
     Matrix1D<double> prjPix(3);       // Position of the pixel within the
@@ -849,7 +849,7 @@ void project_Volume(
         norm_proj().initZeros(proj());
     }
 	
-	if( threads > 0 )
+	if( threads > 1 )
 	{
 		for( int c = 0 ; c < threads ; c++ )
 		{
