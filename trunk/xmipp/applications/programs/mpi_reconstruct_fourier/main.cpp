@@ -45,6 +45,23 @@
 #define TAG_COLLECT_FOR_FSC 4
 
 #define BUFFSIZE 10000000
+/*
+Discuss existing mpi.h files differences ¶
+
+    Types               HP                     IBM      Microsoft       MPICH2	OpenMPI 	                ABI
+    MPI_Datatype 	struct hpmp_dtype_s*	int 	int 	        int 	struct ompi_datatype_t* 	TBD
+    MPI_Op 	        struct hpmp_op_s* 	int 	int 	        int 	struct ompi_op_t* 	        TBD
+    MPI_Comm 	        struct hpmp_comm_s* 	int 	int 	        int 	struct ompi_communicator_t* 	TBD
+    MPI_Errhandler	struct hpmp_err_s* 	int 	int 	        int 	struct ompi_errhandler_t* 	TBD
+source: https://svn.mpi-forum.org/trac/mpi-forum-web/wiki/Compare_mpi_h
+*/    
+#ifdef HP_MPI
+ #define my_MPI_COMM  hpmp_comm_s* 
+#elif OPENMPI
+ #define my_MPI_COMM  ompi_mpi_comm_t*   
+#else
+ #define my_MPI_COMM  int
+#endif
 
 class Prog_mpi_RecFourier_prm:Prog_RecFourier_prm
 {
@@ -617,7 +634,7 @@ public:
         MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
 
-    int sendDataInChunks( double * pointer, int dest, int totalSize, int buffSize, ompi_communicator_t* comm )
+    int  sendDataInChunks( double * pointer, int dest, int totalSize, int buffSize, my_MPI_COMM comm )
     {
         double * localPointer = pointer;
 
