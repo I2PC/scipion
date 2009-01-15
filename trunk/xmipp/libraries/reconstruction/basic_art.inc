@@ -202,26 +202,30 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 									   
    // As this is a threaded implementation, create structures for threads, and
    // create threads
+   pthread_t * th_ids;
    
-	pthread_t * th_ids = (pthread_t *)malloc( prm.threads * sizeof( pthread_t));
+   if( prm.threads > 1 )
+   {
+		th_ids = (pthread_t *)malloc( prm.threads * sizeof( pthread_t));
 	
-	// Initialize the structures which will contain the parameters passed to different
-	// threads
-	project_threads= (project_thread_params *) malloc ( prm.threads * sizeof( project_thread_params ) );
+		// Initialize the structures which will contain the parameters passed to different
+		// threads
+		project_threads= (project_thread_params *) malloc ( prm.threads * sizeof( project_thread_params ) );
 	
-	// Initialize barrier to wait for working threads and the master thread.
-	barrier_init( &project_barrier, (prm.threads+1) );
+		// Initialize barrier to wait for working threads and the master thread.
+		barrier_init( &project_barrier, (prm.threads+1) );
 
-	// Threas are created in a waiting state. They can only run when master thread unlocks them by calling
-	// barrier_wait() 
+		// Threas are created in a waiting state. They can only run when master thread unlocks them by calling
+		// barrier_wait() 
 		
-	for( int c = 0 ; c < prm.threads ; c++ )
-	{
-		project_threads[c].thread_id = c;
-		project_threads[c].threads_count = prm.threads;
-		project_threads[c].destroy = false;
+		for( int c = 0 ; c < prm.threads ; c++ )
+		{
+			project_threads[c].thread_id = c;
+			project_threads[c].threads_count = prm.threads;
+			project_threads[c].destroy = false;
 		
-		pthread_create( (th_ids+c), NULL, project_SimpleGridThread<double>, (void *)(project_threads+c) );
+			pthread_create( (th_ids+c), NULL, project_SimpleGridThread<double>, (void *)(project_threads+c) );
+		}
 	}
    
    // Reconstruction results ...............................................
@@ -638,24 +642,26 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
    // are "slept" waiting for a barrier to be reached by the master thread to continue
    // projecting/backprojecting a new projection. Here we set the flag destroy=true so
    // thre threads won't process a projections but will return.
-   
-   for( int c = 0 ; c < prm.threads ; c++ )
+   if( prm.threads > 1 )
    {
-           project_threads[c].destroy = true;
-   }
+		for( int c = 0 ; c < prm.threads ; c++ )
+		{	
+			project_threads[c].destroy = true;
+		}	
 
-   // Trigger threads "self-destruction"
-   barrier_wait( &project_barrier );
+		// Trigger threads "self-destruction"
+		barrier_wait( &project_barrier );
 
-   // Wait for effective threads death
-   for( int c = 0 ; c < prm.threads ; c++ )
-   {
-           pthread_join(*(th_ids+c),NULL);
-   }
+		// Wait for effective threads death
+		for( int c = 0 ; c < prm.threads ; c++ )
+		{
+			pthread_join(*(th_ids+c),NULL);
+		}
 
-   // Destroy barrier and mutex, as they are no longer needed.
-   pthread_mutex_destroy( &project_mutex );
-   barrier_destroy( &project_barrier );
+		// Destroy barrier and mutex, as they are no longer needed.
+		pthread_mutex_destroy( &project_mutex );
+		barrier_destroy( &project_barrier );
+	}
 }
 
 /* ------------------------------------------------------------------------- */
