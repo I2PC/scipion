@@ -34,6 +34,7 @@
 /// @defgroup Wavelets Wavelets
 /// @ingroup DataLibrary
 
+#define HAAR 2
 #define DAUB4 4
 #define DAUB12 12
 #define DAUB20 20
@@ -80,7 +81,7 @@ void Bilib_DWT(const Matrix3D< double >& input,
  * @ingroup WaveletsRecipes
  *
  * The DWT type should be set before starting making transforms. Valid types
- * are: DAUB4, DAUB12, DAUB20
+ * are: HAAR, DAUB4, DAUB12, DAUB20
  */
 void set_DWT_type(int DWT_type);
 

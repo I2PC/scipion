@@ -9380,6 +9380,10 @@ void pwtset(int n)
 {
     int k;
     float sig = -1.0;
+    static double c2[3] =
+        {
+            0.0, 0.707106781186547, 0.707106781186547
+        };
     static double c4[5] =
         {
             0.0, 0.4829629131445341, 0.8365163037378079,
@@ -9402,10 +9406,15 @@ void pwtset(int n)
             0.001992405295, -0.000685856695, -0.000116466855,
             0.000093588670, -0.000013264203
         };
-    static double c4r[5], c12r[13], c20r[21];
+    static double c2r[2], c4r[5], c12r[13], c20r[21];
 
     wfilt.ncof = n;
-    if (n == 4)
+    if (n == 2)
+    {
+        wfilt.cc = c2;
+        wfilt.cr = c2r;
+    }
+    else if (n == 4)
     {
         wfilt.cc = c4;
         wfilt.cr = c4r;
