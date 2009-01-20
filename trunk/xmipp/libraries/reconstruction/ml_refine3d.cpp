@@ -161,7 +161,7 @@ void Prog_Refine3d_prm::read(int argc, char ** argv, int &argc2, char ** &argv2)
     }
 
     angular = textToFloat(getParameter(argc2, argv2, "-ang", "10"));
-    fn_sym = getParameter(argc2, argv2, "-sym", "");
+    fn_sym = getParameter(argc2, argv2, "-sym", "c1");
     eps = textToFloat(getParameter(argc2, argv2, "-eps", "5e-5"));
     verb = textToInteger(getParameter(argc2, argv2, "-verb", "1"));
     Niter = textToInteger(getParameter(argc2, argv2, "-iter", "25"));
