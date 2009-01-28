@@ -27,7 +27,7 @@
 #include "sparma.h"
 
 #include <data/args.h>
-#include <data/fft.h>
+#include <data/fftw.h>
 #include <data/filters.h>
 
 /* Read parameters from command line --------------------------------------- */
