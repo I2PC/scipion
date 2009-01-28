@@ -206,7 +206,6 @@ void FourierTransformHalf(const Matrix1D<double> &in,
     Matrix1D< std::complex<double> > aux;
     FourierTransform(in, aux);
     Whole2Half(aux, out);
-
 }
 
 /** Direct Fourier Transform 2D, output half of (centro-symmetric) transform ---- */
@@ -217,7 +216,6 @@ void FourierTransformHalf(const Matrix2D<double> &in,
     Matrix2D<std::complex<double> > aux;
     FourierTransform(in, aux);
     Whole2Half(aux, out);
-
 }
 
 /** Inverse Fourier Transform 1D, input half of (centro-symmetric) transform ---- */
@@ -288,7 +286,6 @@ void FourierTransformHalf(const Matrix1D<std::complex<double> > &in,
     Matrix1D<std::complex <double> > aux;
     FourierTransform(in, aux);
     Whole2Half(aux, out);
-
 }
 
 /** Complex Inverse Fourier Transform 1D, input half of (centro-symmetric) transform ---- */
@@ -410,51 +407,6 @@ void CenterOriginFFT(Matrix3D< std::complex< double > > & v, bool forward)
         CenterFFT(v, forward);
         ShiftFFT(v, -xshift, -yshift, -zshift);
     }
-}
-
-/* FFT Magnitude 1D. ------------------------------------------------------- */
-void FFT_magnitude(const Matrix1D< std::complex<double> > &v,
-                   Matrix1D<double> &mag)
-{
-    mag.resize(v);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(v) mag(i) = abs(v(i));
-}
-
-void FFT_magnitude(const Matrix2D< std::complex<double> > &v,
-                   Matrix2D<double> &mag)
-{
-    mag.resize(v);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(v) mag(i, j) = abs(v(i, j));
-}
-
-void FFT_magnitude(const Matrix3D< std::complex<double> > &v,
-                   Matrix3D<double> &mag)
-{
-    mag.resize(v);
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(v) mag(k, i, j) = abs(v(k, i, j));
-}
-
-/* FFT Phase 1D. ------------------------------------------------------- */
-void FFT_phase(const Matrix1D< std::complex<double> > &v,
-               Matrix1D<double> &phase)
-{
-    phase.resize(v);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(v) phase(i) = atan2(v(i).imag(), v(i).real());
-}
-
-void FFT_phase(const Matrix2D< std::complex<double> > &v,
-               Matrix2D<double> &phase)
-{
-    phase.resize(v);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(v) phase(i, j) = atan2(v(i, j).imag(), v(i, j).real());
-}
-
-void FFT_phase(const Matrix3D< std::complex<double> > &v,
-               Matrix3D<double> &phase)
-{
-    phase.resize(v);
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(v) phase(k, i, j) = atan2(v(k, i, j).imag(),
-            v(k, i, j).real());
 }
 
 /* Numerical derivative of a matrix ----------------------------- */
