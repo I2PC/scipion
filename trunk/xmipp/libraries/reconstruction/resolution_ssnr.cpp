@@ -27,7 +27,7 @@
 
 #include <data/args.h>
 #include <data/projection.h>
-#include <data/fft.h>
+#include <data/fftw.h>
 
 #include <reconstruction/projection.h>
 
