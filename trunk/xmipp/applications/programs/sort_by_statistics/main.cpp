@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include <data/image.h>
-#include <data/fft.h>
+#include <data/fftw.h>
 #include <data/args.h>
 
 #include <vector>
