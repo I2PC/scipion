@@ -239,7 +239,7 @@ public:
      * @endcode
      */
 
-    void rename(FileName newName)
+    void rename(const FileName &newName)
     {
         fn_pol = newName;
     }
@@ -817,7 +817,6 @@ void rotationalCorrelation(const Polar<std::complex<double> > &M1,
     angles.resize(nsam_last);
     for (int i = 0; i < nsam_last; i++)
 	angles(i)=(double)i*360./(nsam_last);
-
 }
 
 /** Inverse Fourier Transform of all rings
@@ -863,5 +862,14 @@ void convertSingleArrayToPolar(const Matrix1D<double> & in,
  */
 void convertSingleArrayToPolar(const Matrix1D<double> & in,
 			       Polar<double> & out);
+
+/** Compute a normalized polar Fourier transform of the input image.*/
+void normalizedPolarFourierTransform(const Matrix2D<double> &in,
+    Polar< std::complex<double> > &out, bool flag,
+    int first_ring, int last_ring);
+
+/** Best rotation between two normalized polar Fourier transforms. */
+double best_rotation(const Polar< std::complex<double> > &I1,
+    const Polar< std::complex<double> > &I2);
 //@}
 #endif

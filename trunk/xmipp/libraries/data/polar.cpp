@@ -141,3 +141,30 @@ void convertSingleArrayToPolar(const Matrix1D<double> & in,
 
 }
 
+// Compute the normalized Polar Fourier transform --------------------------
+void normalizedPolarFourierTransform(const Matrix2D<double> &in,
+    Polar< std::complex<double> > &out, bool flag,
+    int first_ring, int last_ring)
+{
+    Matrix2D<double> Maux;
+    in.produceSplineCoefficients(Maux,3);
+    Polar<double> polarIn;
+    polarIn.getPolarFromCartesianBSpline(Maux,first_ring,last_ring);
+    double mean = polarIn.computeSum(true);
+    double stddev = polarIn.computeSum2(true);
+    stddev = sqrt(stddev - mean * mean);
+    polarIn -= mean;
+    polarIn /= stddev;
+    out = polarIn.fourierTransformRings(flag);
+}
+
+// Best rotation -----------------------------------------------------------
+double best_rotation(const Polar< std::complex<double> > &I1,
+    const Polar< std::complex<double> > &I2)
+{
+    Matrix1D<double> angles, corr;
+    rotationalCorrelation(I1,I2,angles,corr);
+    int imax;
+    corr.maxIndex(imax);
+    return angles(imax);
+}
