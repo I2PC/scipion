@@ -28,7 +28,7 @@
 #include <data/args.h>
 #include <data/matrix2d.h>
 #include <data/mask.h>
-#include <data/fft.h>
+#include <data/fftw.h>
 #include <data/integration.h>
 
 /* Atom charge ------------------------------------------------------------- */
