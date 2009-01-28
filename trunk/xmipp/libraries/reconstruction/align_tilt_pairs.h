@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <data/fft.h>
+#include <data/fftw.h>
 #include <data/args.h>
 #include <data/funcs.h>
 #include <data/docfile.h>
