@@ -92,6 +92,15 @@ void region_growing(const Matrix3D< double >& V_in,
                     float filling_colour = 1,
                     bool less = true);
 
+/** L1 distance transform
+  * @ingroup Filters
+  *
+  * If wrap is set, the image borders are wrapped around.
+  * This is useful if the image coordinates represent angles
+  */
+void distance_transform(const Matrix2D<int> &in,
+    Matrix2D<int> &out, bool wrap=false);
+
 /** Label a binary image
  * @ingroup Filters
  *
@@ -439,6 +448,60 @@ double correlation_index(const Matrix3D< T >& x,
         return retval / ((stddev_x * stddev_y) * n);
     else
         return 0;
+}
+
+/** Correntropy 1D
+ * @ingroup Filters
+ */
+template <typename T>
+double correntropy(const Matrix1D<T> &x, const Matrix1D<T> &y,
+    double sigma)
+{
+    double retval=0;
+    double K=-0.5/(sigma*sigma);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(x)
+    {
+        double diff=DIRECT_VEC_ELEM(x,i)-DIRECT_VEC_ELEM(y,i);
+        retval+=exp(K*diff*diff);
+    }
+    retval/=XSIZE(x);
+    return retval;
+}
+
+/** Correntropy 2D
+ * @ingroup Filters
+ */
+template <typename T>
+double correntropy(const Matrix2D<T> &x, const Matrix2D<T> &y,
+    double sigma)
+{
+    double retval=0;
+    double K=-0.5/(sigma*sigma);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(x)
+    {
+        double diff=DIRECT_MAT_ELEM(x,i,j)-DIRECT_MAT_ELEM(y,i,j);
+        retval+=exp(K*diff*diff);
+    }
+    retval/=XSIZE(x)*YSIZE(x);
+    return retval;
+}
+
+/** Correntropy 3D
+ * @ingroup Filters
+ */
+template <typename T>
+double correntropy(const Matrix3D<T> &x, const Matrix3D<T> &y,
+    double sigma)
+{
+    double retval=0;
+    double K=-0.5/(sigma*sigma);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(x)
+    {
+        double diff=DIRECT_VOL_ELEM(x,k,i,j)-DIRECT_VOL_ELEM(y,k,i,j);
+        retval+=exp(K*diff*diff);
+    }
+    retval/=XSIZE(x)*YSIZE(x)*ZSIZE(x);
+    return retval;
 }
 
 /** Translational search
