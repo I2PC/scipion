@@ -163,7 +163,7 @@ static void PutZ_3D(
 			
 ---------------------------------------------------------------------------- */
 extern int GetPyramidFilter(
-					char *Filter, 				
+					const char *Filter, 				
 					long int Order, 				
 					double g[], long int *ng,
 					double h[], long int *nh,

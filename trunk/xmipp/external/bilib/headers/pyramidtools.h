@@ -45,7 +45,7 @@
    FALSE if it is not a centered filter
 */
 extern int GetPyramidFilter(
-        char *Filter,
+        const char *Filter,
         long int Order,
         double g[], long int *ng,
         double h[], long int *nh,
