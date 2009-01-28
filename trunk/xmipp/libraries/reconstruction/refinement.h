@@ -30,6 +30,7 @@
 #include <data/volume.h>
 #include <data/funcs.h>
 #include <data/matrix2d.h>
+#include <data/fftw.h>
 
 #include "projection.h"
 
