@@ -26,7 +26,7 @@
 #ifndef MLFALIGN2D_H
 #define MLFALIGN2D_H
 
-#include <data/fft.h>
+#include <data/fftw.h>
 #include <data/args.h>
 #include <data/funcs.h>
 #include <data/selfile.h>
