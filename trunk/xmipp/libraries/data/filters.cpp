@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include "filters.h"
-#include "fft.h"
+#include "fftw.h"
 #include <list>
 
 /* Substract background ---------------------------------------------------- */
@@ -105,7 +105,7 @@ void region_growing(const Matrix2D<double> &I_in, Matrix2D<double> &I_out,
             } \
     }
 
-        /* Make the exploration of the pixel�s neighbours */
+        /* Make the exploration of the pixel's neighbours */
         CHECK_POINT(iCurrenti  , iCurrentj - 1);
         CHECK_POINT(iCurrenti  , iCurrentj + 1);
         CHECK_POINT(iCurrenti - 1, iCurrentj);
@@ -195,6 +195,64 @@ void region_growing(const Matrix3D<double> &V_in, Matrix3D<double> &V_out,
         CHECK_POINT_3D(iCurrentk + 1, iCurrenti + 1, iCurrentj + 1);
         CHECK_POINT_3D(iCurrentk + 1, iCurrenti + 1, iCurrentj - 1);
         CHECK_POINT_3D(iCurrentk + 1, iCurrenti + 1, iCurrentj + 1);
+    }
+}
+
+void distance_transform(const Matrix2D<int> &in,
+    Matrix2D<int> &out, bool wrap)
+{
+    std::list<int> toExplore;   /* A list of points to explore */
+
+    out.resize(in);
+    out.initConstant(XSIZE(in)+YSIZE(in));
+
+#define CHECK_POINT(i,j,proposedDistance) \
+    { \
+        int ip=i; \
+        int jp=j; \
+        if (wrap) \
+        { \
+            ip=intWRAP(ip,STARTINGY(out),FINISHINGY(out));\
+            jp=intWRAP(jp,STARTINGX(out),FINISHINGX(out));\
+        } \
+        if (ip>=STARTINGY(out) && ip<=FINISHINGY(out) && \
+            jp>=STARTINGX(out) && jp<=FINISHINGX(out)) \
+            if (out(ip,jp)>proposedDistance) \
+            { \
+                out(ip,jp)=proposedDistance; \
+                toExplore.push_back(ip); \
+                toExplore.push_back(jp); \
+                toExplore.push_back(proposedDistance); \
+            } \
+    }
+
+    // Look for all elements in the binary mask and set the corresponding
+    // distance to 0
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(in)
+        if (in(i,j))
+        {
+            out(i,j)=0;
+            CHECK_POINT(i-1,j,1);
+            CHECK_POINT(i+1,j,1);
+            CHECK_POINT(i,j-1,1);
+            CHECK_POINT(i,j+1,1);
+        }
+
+    while (!toExplore.empty())
+    {
+        int i=toExplore.front(); toExplore.pop_front();
+        int j=toExplore.front(); toExplore.pop_front();
+        int proposedDistance=toExplore.front(); toExplore.pop_front();
+        
+        if (proposedDistance==out(i,j))
+        {
+            // If this is the current distance (i.e., it has not
+            // been supersceded by a later value
+            CHECK_POINT(i-1,j,proposedDistance+1);
+            CHECK_POINT(i+1,j,proposedDistance+1);
+            CHECK_POINT(i,j-1,proposedDistance+1);
+            CHECK_POINT(i,j+1,proposedDistance+1);
+        }
     }
 }
 
