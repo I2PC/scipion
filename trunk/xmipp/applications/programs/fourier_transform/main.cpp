@@ -25,7 +25,7 @@
 
 #include <data/progs.h>
 #include <data/args.h>
-#include <data/fft.h>
+#include <data/fftw.h>
 
 class FFT_parameters: public Prog_parameters
 {
