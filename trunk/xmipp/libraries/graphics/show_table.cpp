@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Alberto Pascual Montano (pascual@cnb.uam.es)
- *              Carlos Oscar S�nchez Sorzano (coss@cnb.uam.es)
+ *              Carlos Oscar Sanchez Sorzano (coss@cnb.uam.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
