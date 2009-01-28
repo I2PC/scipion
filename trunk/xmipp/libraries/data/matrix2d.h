@@ -2302,7 +2302,8 @@ public:
         short IsCentered; // Equal TRUE if the filter is a centered spline
 
         // Get the filter
-        if (GetPyramidFilter("Centered Spline", SplineDegree,
+        const char *splineType="Centered Spline";
+        if (GetPyramidFilter(splineType, SplineDegree,
                              g, &ng, h, &nh, &IsCentered))
             REPORT_ERROR(1, "Unable to load the filter coefficients");
 
