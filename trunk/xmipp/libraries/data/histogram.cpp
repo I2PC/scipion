@@ -195,6 +195,27 @@ double histogram1D::mass_below(double value)
     return acc;
 }
 
+/* Entropy ----------------------------------------------------------------- */
+double histogram1D::entropy() const
+{
+    Matrix1D<double> p;
+    p.initZeros(XSIZE(*this));
+    double pSum=0;
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(p)
+    {
+        VEC_ELEM(p,i)=VEC_ELEM(*this,i)+1;
+        pSum+=VEC_ELEM(p,i);
+    }
+    double entropy=0;
+    double ipSum=1.0/pSum;
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(p)
+    {
+        double pi=VEC_ELEM(p,i)*ipSum;
+        entropy-=pi*log(pi);
+    }
+    return entropy;
+}
+
 /* Detectability error ----------------------------------------------------- */
 // Given two histograms (probability density functions) this function returns
 // the detection error for using both, ie, the probability that given a sample

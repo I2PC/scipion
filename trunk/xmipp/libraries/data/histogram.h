@@ -313,6 +313,13 @@ public:
     {
         return no_samples;
     }
+
+    /** Measure the entropy of this histogram.
+     *
+     * Before computing the entropy, the histogram is corrected with a Laplace
+     * correction. The entropy is computed as sum(-p*log(p))
+     */
+    double entropy() const;
 };
 
 /** Irregular histogram.
