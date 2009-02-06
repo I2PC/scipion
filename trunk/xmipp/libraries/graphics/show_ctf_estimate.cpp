@@ -204,7 +204,7 @@ void AssignCTFViewer::okToProceed()
 
     // Write adjust_CTF parameters
     fh_adjust_param
-    << "ctf=         " << fn_psd             << std::endl
+    << "psd=         " << fn_psd             << std::endl
     << "min_freq=    " << current_prm[0] / 100 << std::endl
     << "max_freq=    " << current_prm[1] / 100 << std::endl
     ;
