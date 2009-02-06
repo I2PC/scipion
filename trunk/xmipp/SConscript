@@ -327,8 +327,11 @@ FftwSources = Glob('external/fftw-3.1.2/kernel', '*.c',[]) + \
 # INRIA
 INRIASources = Glob('external/inria', '*.cc', [])
 
+# Condor
+CondorSources = Glob('external/condor', '*.cpp', [])
+
 AddLibrary('XmippExternal', 'external',
-   INRIASources + BilibSources,
+   INRIASources + BilibSources + CondorSources,
    ['bilib', 'bilib/headers', 'bilib/types'])
    
 AddLibrary('XmippFftw', 'external/fftw-3.1.2',
