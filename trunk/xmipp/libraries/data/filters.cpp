@@ -206,7 +206,7 @@ void distance_transform(const Matrix2D<int> &in,
     out.resize(in);
     out.initConstant(XSIZE(in)+YSIZE(in));
 
-#define CHECK_POINT(i,j,proposedDistance) \
+#define CHECK_POINT_DIST(i,j,proposedDistance) \
     { \
         int ip=i; \
         int jp=j; \
@@ -232,10 +232,10 @@ void distance_transform(const Matrix2D<int> &in,
         if (in(i,j))
         {
             out(i,j)=0;
-            CHECK_POINT(i-1,j,1);
-            CHECK_POINT(i+1,j,1);
-            CHECK_POINT(i,j-1,1);
-            CHECK_POINT(i,j+1,1);
+            CHECK_POINT_DIST(i-1,j,1);
+            CHECK_POINT_DIST(i+1,j,1);
+            CHECK_POINT_DIST(i,j-1,1);
+            CHECK_POINT_DIST(i,j+1,1);
         }
 
     while (!toExplore.empty())
@@ -248,10 +248,10 @@ void distance_transform(const Matrix2D<int> &in,
         {
             // If this is the current distance (i.e., it has not
             // been supersceded by a later value
-            CHECK_POINT(i-1,j,proposedDistance+1);
-            CHECK_POINT(i+1,j,proposedDistance+1);
-            CHECK_POINT(i,j-1,proposedDistance+1);
-            CHECK_POINT(i,j+1,proposedDistance+1);
+            CHECK_POINT_DIST(i-1,j,proposedDistance+1);
+            CHECK_POINT_DIST(i+1,j,proposedDistance+1);
+            CHECK_POINT_DIST(i,j-1,proposedDistance+1);
+            CHECK_POINT_DIST(i,j+1,proposedDistance+1);
         }
     }
 }
