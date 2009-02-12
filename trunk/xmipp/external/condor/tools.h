@@ -98,11 +98,6 @@ inline double sqr( const double& t )
 	return t*t;
 }
 
-inline double round (double a)
-{
-    return (int)(a+.5);
-}
-
 unsigned long choose( unsigned n, unsigned k );
 double rand1();
 void initRandom(int i=0);
