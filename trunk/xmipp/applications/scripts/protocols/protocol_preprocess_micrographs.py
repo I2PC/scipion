@@ -155,25 +155,20 @@ AnalysisScript='visualize_preprocess_micrographs.py'
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
-#This script has been paralelized at python level
+# This script has been parallelized at python level
 """ This python script can be run as a parallel job,
-    In orther to use several CPUs you will need to
+    In order to use several CPUs you will need to
     answer yes to the "Use a job queing system" pop-up
     window and after the queueing command add
     mpirun -np N -machinefile machine.txt 
     or whatever is adecuate in your computer
     (N is the number of CPUs).  Each process will create a
-    different log file. The names of this files are the
-    same that  the one used by the secuencial program 
-    plus the process number
+    different log file. The names of these files are the
+    same as the ones used by the sequential program plus the process number
 """
 UselessVariable='read help'
-#Abort if mpi is not installed
-"""If set to True the script will
-   abort if mpi4py is not installed
-   this variable should be set to False
-   when mpi is not used and to True
-   for parallel jobs
+# {expert} Abort if mpi is not installed?
+"""If set to True the script will abort if mpi4py is not installed and one executes this script through mpirun
 """
 CheckMpi=False
 #------------------------------------------------------------------------------------------------
@@ -193,13 +188,13 @@ try:
 except ImportError:
     class DummyMPI:
         '''A dummy MPI class for running serial jobs.'''
-        def Get_rank(kk):
+        def Get_rank(dummy):
             return 0
-        def Get_size(kk):
+        def Get_size(dummy):
             return 1
-        def Get_processor_name(kk):
+        def Get_processor_name(dummy):
             return 'localhost' 
-        def Barrier():
+        def Barrier(dummy):
             return 1
     MPI = DummyMPI()
     mpi = DummyMPI()
@@ -334,6 +329,7 @@ class preprocess_A_class:
 
         self.psdselfile = []
         self.ctfselfile = []
+        self.inputselfile = []
         self.micselfile = []
 	job_index=0;
         for self.filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
@@ -360,6 +356,12 @@ class preprocess_A_class:
         		    self.ctfselfile.append(oname+' 1\n')
         		    fh=open('all_ctfs.sel','w')
         		    fh.writelines(self.ctfselfile)
+        		    fh.close()
+                            # Add entry to the inputparamselfile
+        		    oname=self.shortname+'/'+self.shortname+'_input.param'
+                            self.inputselfile.append(oname+' 1\n')
+        		    fh=open('all_inputparams.sel','w')
+        		    fh.writelines(self.inputselfile)
         		    fh.close()
 
         		    #Also add enrty to psdselfile

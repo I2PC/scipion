@@ -74,7 +74,10 @@ class visualize_micrographs_class:
         import os
         print '*********************************************************************'
         print '*  Visualizing all CTFs: '
-        command='xmipp_show -sel all_ctfs.sel'
+        if (os.path.exists('all_inputparams.sel')):
+            command='xmipp_show -ctfsel all_ctfs.sel -assignsel all_inputparams.sel'
+        else:
+            command='xmipp_show -ctfsel all_ctfs.sel'
         print '* ',command
         print '* '
         print '* You may select bad micrographs and save them as discarded.'
