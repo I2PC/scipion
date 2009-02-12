@@ -63,6 +63,10 @@ DoMirror=False
     http://dx.doi.org/10.1093/bioinformatics/bti1140
 """
 DoFast=True
+# Refine the normalization parameters for each image?
+""" This variant of the algorithm deals with normalization errors. For more info see (and please cite) Scheres et. al. (2009) J. Struc. Biol., in press
+"""
+DoNorm=False
 # {expert} Restart after iteration:
 """ For previous runs that stopped before convergence, resume the calculations
     after the completely finished iteration. (Use zero to start from the beginning)
@@ -76,13 +80,21 @@ ExtraParamsMLalign2D=""
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
-# Use multiple processors in parallel?
+# Number of (shared-memory) threads?
+""" This option provides shared-memory parallelization on multi-core machines. 
+    It does not require any additional software, other than xmipp
+"""
+NumberOfThreads=1
+# Use distributed-memory parallelization through MPI?
+""" This option provides parallelization on clusters with distributed memory architecture.
+    It requires mpi to be installed.
+"""
 DoParallel=False
-# Number of processors to use:
+# Number of MPI processes to use:
 """ If this value is set to -1, the number of CPUs will be determined automatically from the machinefile. This is especially useful for job-queueing systems.
 """
 MyNumberOfCPUs=10
-# {file} A list of all available CPUs (the MPI-machinefile):
+# {file} A list of all available nodes (the MPI-machinefile):
 """ Depending on your system, this file may be required. If not, just leave this entry blank.
     If your job submission system uses an environment variable, just type it here with the leading $
 """
@@ -118,8 +130,10 @@ class ML2D_class:
                  NumberOfReferences,
                  DoMirror,
                  DoFast,
+                 DoNorm,
                  RestartIter,
                  ExtraParamsMLalign2D,
+                 NumberOfThreads,
                  DoParallel,
                  MyNumberOfCPUs,
                  MyMachineFile,
@@ -137,7 +151,9 @@ class ML2D_class:
         self.NumberOfReferences=NumberOfReferences
         self.DoMirror=DoMirror
         self.DoFast=DoFast
+        self.DoNorm=DoNorm
         self.ExtraParamsMLalign2D=ExtraParamsMLalign2D
+        self.NumberOfThreads=NumberOfThreads
         self.DoParallel=DoParallel
         self.MyNumberOfCPUs=MyNumberOfCPUs
         if (MyMachineFile[0]=="$"):
@@ -223,8 +239,12 @@ class ML2D_class:
         params+=' '+self.ExtraParamsMLalign2D
         if (self.DoFast):
             params+= ' -fast '
+        if (self.DoNorm):
+            params+= ' -norm '
         if (self.DoMirror):
             params+= ' -mirror '
+        if (self.NumberOfThreads > 1):
+            params+= ' -thr ' + str(self.NumberOfThreads)
         if (self.DoMlf):
             params+= ' -ctfdat my.ctfdat'
             if (self.HighResLimit > 0):
@@ -295,8 +315,10 @@ if __name__ == '__main__':
                     NumberOfReferences,
                     DoMirror,
                     DoFast,
+                    DoNorm,
                     RestartIter,
                     ExtraParamsMLalign2D,
+                    NumberOfThreads,
                     DoParallel,
                     MyNumberOfCPUs,
                     MyMachineFile,

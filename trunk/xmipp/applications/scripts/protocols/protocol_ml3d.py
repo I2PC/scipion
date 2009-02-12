@@ -122,6 +122,10 @@ NumberOfIterations=25
     Give c1 if no symmetry is present
 """
 Symmetry="c1"
+# Refine the normalization parameters for each image?
+""" This variant of the algorithm deals with normalization errors. For more info see (and please cite) Scheres et. al. (2009) J. Struc. Biol., in press
+"""
+DoNorm=False
 # {expert} Restart after iteration:
 """ For previous runs that stopped before convergence,
     resume the calculations after the completely finished iteration,
@@ -139,9 +143,17 @@ ExtraParamsMLrefine3D=""
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
-# Use multiple processors in parallel?
+# Number of (shared-memory) threads?
+""" This option provides shared-memory parallelization on multi-core machines. 
+    It does not require any additional software, other than xmipp
+"""
+NumberOfThreads=1
+# Use distributed-memory parallelization through MPI?
+""" This option provides parallelization on clusters with distributed memory architecture.
+    It requires mpi to be installed.
+"""
 DoParallel=True
-# Number of processors to use:
+# Number of MPI processes to use:
 """ If this value is set to -1, the number of CPUs will be determined automatically from the machinefile. This is especially useful for job-queueing systems.
 """
 MyNumberOfCPUs=5
@@ -194,9 +206,11 @@ class ML3D_class:
                  AngularSampling,
                  NumberOfIterations,
                  Symmetry,
+                 DoNorm,
                  RestartIter,
                  ExtraParamsMLrefine3D,
                  SeedsSelfile,
+                 NumberOfThreads,
                  DoParallel,
                  MyNumberOfCPUs,
                  MyMachineFile,
@@ -226,9 +240,11 @@ class ML3D_class:
         self.PixelSize=PixelSize
         self.NumberOfIterations=NumberOfIterations
         self.Symmetry=Symmetry
+        self.DoNorm=DoNorm
         self.ExtraParamsMLrefine3D=ExtraParamsMLrefine3D
         self.ProjMatchSampling=ProjMatchSampling
         self.WbpThreshold=WbpThreshold
+        self.NumberOfThreads=NumberOfThreads
         self.DoParallel=DoParallel
         self.MyNumberOfCPUs=MyNumberOfCPUs
         if (MyMachineFile[0]=="$"):
@@ -549,6 +565,10 @@ class ML3D_class:
                 ' -sym '  + symmetry +\
                 ' -ang '  + str(sampling)
         params+=' '+extraparam
+        if (self.NumberOfThreads > 1):
+            params+=' -thr ' + str(self.NumberOfThreads)
+        if (self.DoNorm):
+            params+=' -norm '
         if (self.DoControl):
             params+=' -control ' + self.MyControlFile
         if (self.DoMlf):
@@ -634,9 +654,11 @@ if __name__ == '__main__':
                     AngularSampling,
                     NumberOfIterations,
                     Symmetry,
+                    DoNorm,
                     RestartIter,
                     ExtraParamsMLrefine3D,
                     SeedsSelfile,
+                    NumberOfThreads,
                     DoParallel,
                     MyNumberOfCPUs,
                     MyMachineFile,
