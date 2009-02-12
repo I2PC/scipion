@@ -79,6 +79,8 @@ ExtraParamsMLalign2D=""
 # Use multiple processors in parallel?
 DoParallel=False
 # Number of processors to use:
+""" If this value is set to -1, the number of CPUs will be determined automatically from the machinefile. This is especially useful for job-queueing systems.
+"""
 MyNumberOfCPUs=10
 # {file} A list of all available CPUs (the MPI-machinefile):
 """ Depending on your system, this file may be required. If not, just leave this entry blank.

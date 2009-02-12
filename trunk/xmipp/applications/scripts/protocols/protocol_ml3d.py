@@ -142,6 +142,8 @@ ExtraParamsMLrefine3D=""
 # Use multiple processors in parallel?
 DoParallel=True
 # Number of processors to use:
+""" If this value is set to -1, the number of CPUs will be determined automatically from the machinefile. This is especially useful for job-queueing systems.
+"""
 MyNumberOfCPUs=5
 # {file} A list of all available CPUs (the MPI-machinefile):
 """ Depending on your system, your standard script to launch MPI-jobs may require this

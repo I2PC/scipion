@@ -458,6 +458,8 @@ ConstantToAddToFiltration='0.1'
 DoParallel=True
 
 # Number of processors to use:
+""" If this value is set to -1, the number of CPUs will be determined automatically from the machinefile. This is especially useful for job-queueing systems.
+"""
 NumberOfCPUs=8
 
 # minumum size of jobs in mpi processe. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)
