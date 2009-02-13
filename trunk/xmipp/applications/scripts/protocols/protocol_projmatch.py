@@ -585,6 +585,7 @@ class projection_matching_class:
        scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
        sys.path.append(scriptdir)
        import arg,log,logging,selfile
+       import launch_parallel_job
 
        self._CleanUpFiles=_CleanUpFiles
        self._WorkDirectory=os.getcwd()+'/'+_WorkDirectory
@@ -710,11 +711,14 @@ class projection_matching_class:
 
        # Create a docfile with the current angles in the WorkingDir
        if (self._DocFileName==''):
-          command='xmipp_header_extract -i ' + self._SelFileName + \
-                                      ' -o ' + self._WorkDirectory + '/' + \
-                                               DocFileWithOriginalAngles
-          self._mylog.info(command)
-          os.system(command)
+
+          params=' -i ' + self._SelFileName + \
+                 ' -o ' + self._WorkDirectory + '/' + \
+                 DocFileWithOriginalAngles
+          launch_parallel_job.launch_sequential_job("xmipp_header_extract",
+                                                    params,
+                                                    self.log,
+                                                    False)
        else:
           command = "copy" , self._DocFileName ,  self._WorkDirectory + '/' + DocFileWithOriginalAngles
           self._mylog.info(command)
@@ -998,14 +1002,14 @@ def execute_ctf_groups (_mylog,
 
    import os,glob
    import utils_xmipp
+   import launch_parallel_job
 
    if not os.path.exists(CtfGroupDirectory):
       os.makedirs(CtfGroupDirectory)
 
    print '*********************************************************************'
    print '* Make CTF groups'
-   command='xmipp_ctf_group'+ \
-           ' -i '    + _InPutSelfile + \
+   command=' -i '    + _InPutSelfile + \
            ' -ctfdat ' + _CtfDatFile + \
            ' -o ' + CtfGroupDirectory + '/' + CtfGroupRootName + \
            ' -wiener -wc ' + str(_WienerConstant) + \
@@ -1015,9 +1019,10 @@ def execute_ctf_groups (_mylog,
    if (_DataArePhaseFlipped):
       command += ' -phase_flipped '
    command += _CTFExtraCommands   
-   print '* ',command
-   _mylog.info(command)
-   os.system(command)
+   launch_parallel_job.launch_sequential_job("xmipp_ctf_group",
+                                             command,
+                                             self.log,
+                                             False)
 
    wildcardname=utils_xmipp.composeWildcardFileName(CtfGroupDirectory + '/' + CtfGroupRootName+'_group','ctf')
    ctflist=glob.glob(wildcardname)
@@ -1035,6 +1040,7 @@ def execute_mask(_DoMask,
                  _iteration_number,
                  _ReferenceVolume):
    import os,shutil
+   import launch_parallel_job
    _mylog.debug("execute_mask")
    if(_iteration_number==1):
       InPutVolume=_ReferenceFileName
@@ -1045,14 +1051,14 @@ def execute_mask(_DoMask,
        MaskedVolume=_ReferenceVolume
        print '*********************************************************************'
        print '* Mask the reference volume'
-       command='xmipp_mask'+ \
-               ' -i '    + InPutVolume + \
+       command=' -i '    + InPutVolume + \
                ' -o '    + _ReferenceVolume + \
                ' -mask ' + MaskVolume 
+       launch_parallel_job.launch_sequential_job("xmipp_mask",
+                                                 command,
+                                                 self.log,
+                                                 False)
 
-       print '* ',command
-       _mylog.info(command)
-       os.system(command)
        if _DisplayMask==True:
           command='xmipp_show -vol '+ MaskedVolume +' -w 10 &'
           print '*********************************************************************'
@@ -1322,6 +1328,7 @@ def make_subset_docfiles(_mylog,
 
    import os;
    import utils_xmipp
+   import launch_parallel_job
 
    # Loop over all CTF groups
    docselfile = []
@@ -1331,14 +1338,14 @@ def make_subset_docfiles(_mylog,
       CtfGroupName = '../' + CtfGroupDirectory + '/' + CtfGroupName
       inselfile = CtfGroupName + '.sel'
       inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
-      command='xmipp_docfile_select_subset ' + \
-              ' -i   ' + _InputDocFileName + \
+      command=' -i   ' + _InputDocFileName + \
               ' -sel ' + inselfile + \
               ' -o   ' + inputdocfile
       print '*********************************************************************'
-      print '* ',command
-      _mylog.info(command) 
-      os.system(command)
+      launch_parallel_job.launch_sequential_job("xmipp_docfile_select_subset",
+                                                 command,
+                                                 self.log,
+                                                 False)
       docselfile.append(inputdocfile+' 1\n')
 
    # Write the selfile of all these docfiles
@@ -1565,20 +1572,22 @@ def  execute_resolution(_mylog,
        Outputvolumes[i]+=".vol"
        print '*********************************************************************'
        print '* Applying a soft mask'
-       command = "xmipp_mask -i " + Outputvolumes[i] + \
-                           " -mask  raised_cosine -" + str(innerrad) + \
-                           " -" + str(_OuterRadius)
-       print '* ',command
-       _mylog.info(command)
-       os.system(command)
+       command = " -i " + Outputvolumes[i] + \
+                 " -mask  raised_cosine -" + str(innerrad) + \
+                 " -" + str(_OuterRadius)
+       launch_parallel_job.launch_sequential_job("xmipp_mask",
+                                                 command,
+                                                 self.log,
+                                                 False)
   
     print '**************************************************************'
     print '* Compute resolution ' 
-    command = "xmipp_resolution_fsc -ref " + Outputvolumes[0] +\
+    command = " -ref " + Outputvolumes[0] +\
               " -i " +Outputvolumes[1]  + ' -sam ' + str(_ResolSam)
-    print '* ',command
-    _mylog.info(command)
-    os.system(command)
+    launch_parallel_job.launch_sequential_job("xmipp_resolution_fsc",
+                                              command,
+                                              self.log,
+                                              False)
     import visualization
     if _DisplayResolution==True:
       plot=visualization.gnuplot()
@@ -1633,6 +1642,7 @@ def filter_at_given_resolution(_DoComputeResolution,
                                ):
 
     import os,shutil
+    import launch_parallel_job
     Inputvolume   =_ReconstructedVolume+'.vol'
     Outputvolume  =_ReconstructedandfilteredVolume+'.vol'
     if (_SetResolutiontoZero):
@@ -1646,12 +1656,13 @@ def filter_at_given_resolution(_DoComputeResolution,
         shutil.copy(Inputvolume,Outputvolume) 
         command ="shutilcopy" + Inputvolume + ' ' + Outputvolume
     else:   
-        command = "xmipp_fourier_filter -i " + Inputvolume +\
+        command = " -i " + Inputvolume +\
                   " -o " + Outputvolume + ' -low_pass ' +\
                   str (filter_in_pixels_at)
-        print '* ',command
-        os.system(command)
-    _mylog.info(command)
+        launch_parallel_job.launch_sequential_job("xmipp_fourier_filter",
+                                                  command,
+                                                  self.log,
+                                                  False)
     return filter_in_pixels_at
 
 

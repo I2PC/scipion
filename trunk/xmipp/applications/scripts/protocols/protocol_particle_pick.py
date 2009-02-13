@@ -277,25 +277,29 @@ class particle_pick_class:
 
     def perform_picking(self,name):
         import os
+        import launch_parallel_job
         directory,micrograph=os.path.split(name)
         if (len(directory)>0):
             os.chdir(directory)
-        command='xmipp_micrograph_mark -i '+micrograph+' &'
-        print '* ',command
-        self.log.info(command)
-        os.system(command)
+        command=' -i '+micrograph
+        launch_parallel_job.launch_sequential_job("xmipp_micrograph_mark",
+                                                  command,
+                                                  self.log,
+                                                  True)
         os.chdir(os.pardir)
 
     def perform_picking_pair(self,untilted,tilted):
         import os
+        import launch_parallel_job
         directory,uname=os.path.split(untilted)
         if (len(directory)>0):
             os.chdir(directory)
         tname='../'+tilted
-        command='xmipp_micrograph_mark -i '+uname+' -tilted '+tname+' &'
-        print '* ',command
-        self.log.info(command)
-        os.system(command)
+        command=' -i '+uname+' -tilted '+tname
+        launch_parallel_job.launch_sequential_job("xmipp_micrograph_mark",
+                                                  command,
+                                                  self.log,
+                                                  True)
         os.chdir(os.pardir)
 
 

@@ -378,10 +378,12 @@ class ML3D_class:
             
         print '*********************************************************************'
         print '* Create initial docfile'
-        command='xmipp_header_extract -i ' + str(self.InSelFile) + \
-            ' -o ' + dirname + docfile
-        self.log.info(command)
-        os.system(command)
+        params= ' -i ' + str(self.InSelFile) + \
+                ' -o ' + dirname + docfile
+        launch_parallel_job.launch_sequential_job("xmipp_header_extract",
+                                                  params,
+                                                  self.log,
+                                                  False)
 
         print '*********************************************************************'
         print '* Create projection library'
@@ -459,6 +461,7 @@ class ML3D_class:
     # Low-pass filter
     def filter_reference(self):
         import os
+        import launch_parallel_job
         print '*********************************************************************'
         print '*  Low-pass filtering of the initial reference:'
 
@@ -467,30 +470,32 @@ class ML3D_class:
             reference='corrected_reference.vol'
         else:
             reference=self.InitialReference
-        command='xmipp_fourier_filter -o filtered_reference.vol' + \
-                 ' -i ' + reference  + \
-                 ' -sampling ' + str(self.PixelSize) + \
-                 ' -low_pass ' + str(self.LowPassFilter)
-
-        print '* ',command
-        self.log.info(command)
-        os.system(command)
+        params=' -o filtered_reference.vol' + \
+               ' -i ' + reference  + \
+               ' -sampling ' + str(self.PixelSize) + \
+               ' -low_pass ' + str(self.LowPassFilter)
+        launch_parallel_job.launch_sequential_job("xmipp_fourier_filter",
+                                                  params,
+                                                  self.log,
+                                                  False)
 
     # Splits selfile and performs a single cycle of ML3D-classification for each subset
     def generate_seeds(self):
         import os
+        import launch_parallel_job
         import selfile, utils_xmipp
         print '*********************************************************************'
         print '*  Generating seeds:' 
         newsel=selfile.selfile()
 
         # Split selfiles
-        command='xmipp_selfile_split -o seeds_split'+ \
-                 ' -i ' + str(self.InSelFile) + \
-                 ' -n ' + str(self.NumberOfReferences) +' \n'
-        print '* ',command
-        self.log.info(command)
-        os.system(command)
+        params=' -o seeds_split'+ \
+               ' -i ' + str(self.InSelFile) + \
+               ' -n ' + str(self.NumberOfReferences) +' \n'
+        launch_parallel_job.launch_sequential_job("xmipp_selfile_split",
+                                                  params,
+                                                  self.log,
+                                                  False)
 
         if os.path.exists('filtered_reference.vol'):
             reference='filtered_reference.vol'

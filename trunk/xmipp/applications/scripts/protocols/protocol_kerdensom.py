@@ -243,59 +243,67 @@ class kerdensom_class:
 
     def assign_header(self):
         import os
+        import launch_parallel_job
         import glob
-
-        command='xmipp_header_assign -i '+self.docfilename+' -mirror \n'
-        print '* ',command
-        self.log.info(command)
-        os.system(command)
+        command=' -i '+self.docfilename+' -mirror \n'
+        launch_parallel_job.launch_sequential_job("xmipp_header_assign",
+                                                  command,
+                                                  self.log,
+                                                  False)
 
     def execute_xmask(self,selfile):
         import os
-
+        import launch_parallel_job
         self.MaskFileName='mask_design.msk'
-        command='xmipp_mask_design -sel '+str(selfile) + ' -save_as mask_design.msk \n'
-        print '* ',command
-        self.log.info(command)
-        os.system(command)
+        command=' -sel '+str(selfile) + ' -save_as mask_design.msk \n'
+        launch_parallel_job.launch_sequential_job("xmipp_mask_design",
+                                                  command,
+                                                  self.log,
+                                                  False)
 
     def execute_img2data(self,selfile,maskname,outname):
         import os
+        import launch_parallel_job
         if (maskname==''):
-            command='xmipp_convert_img2data -i '+ str(selfile) + \
-                     ' -nomask '+ \
-                     ' -o ' + str(outname) + ' \n'
+            command=' -i '+ str(selfile) + \
+                    ' -nomask '+ \
+                    ' -o ' + str(outname) + ' \n'
         else:
-            command='xmipp_convert_img2data -i '+ str(selfile) + \
-                     ' -mask '+ str(maskname) + \
-                     ' -o ' + str(outname) + ' \n'
-        print '* ',command
-        self.log.info(command)
-        os.system(command)
+            command=' -i '+ str(selfile) + \
+                    ' -mask '+ str(maskname) + \
+                    ' -o ' + str(outname) + ' \n'
+        launch_parallel_job.launch_sequential_job("xmipp_convert_img2data",
+                                                  command,
+                                                  self.log,
+                                                  False)
 
     def execute_data2img(self,iname,maskname):
         import os
+        import launch_parallel_job
         if (maskname==''):
-            command='xmipp_convert_data2img -i '+ str(iname) + \
-                     ' -rows ' + str(self.xsize) + \
-                     ' -cols ' + str(self.ysize) + \
-                     ' -nomask \n'
+            command=' -i '+ str(iname) + \
+                    ' -rows ' + str(self.xsize) + \
+                    ' -cols ' + str(self.ysize) + \
+                    ' -nomask \n'
         else:
-            command='xmipp_convert_data2img -i '+ str(iname) + \
-                     ' -mask '+ str(maskname) + ' \n'
-        print '* ',command
-        self.log.info(command)
-        os.system(command)
+            command=' -i '+ str(iname) + \
+                    ' -mask '+ str(maskname) + ' \n'
+        launch_parallel_job.launch_sequential_job("xmipp_convert_data2img",
+                                                  command,
+                                                  self.log,
+                                                  False)
 
     def delete_existing_som(self,somname):
         import os
+        import launch_parallel_job
         # delete existing files with this somname
         if (os.path.exists(somname+'.sel')):
             print 'Deleting existing som...'
-            command= 'xmipp_selfile_delete '+somname+'.sel \n'
-            print '* ',command
-            self.log.info(command)
-            os.system(command)
+            command= ' '+somname+'.sel \n'
+            launch_parallel_job.launch_sequential_job("xmipp_selfile_delete",
+                                                      command,
+                                                      self.log,
+                                                      False)
             command= 'rm -f '+somname+'.* '+somname+'_* \n'
             print '* ',command
             self.log.info(command)
@@ -303,10 +311,11 @@ class kerdensom_class:
 
     def execute_kerdensom(self,datafile,somname):
         import os
-        
+        import launch_parallel_job
+       
         print '*********************************************************************'
         print '*  Executing kerdenSOM program :' 
-        command= 'xmipp_classify_kerdensom'+ ' -i ' + str(datafile) + \
+        command= ' -i ' + str(datafile) + \
                  ' -o '    + str(somname)  + \
                  ' -xdim ' + str(self.SomXdim) + \
                  ' -ydim ' + str(self.SomYdim) + \
@@ -314,9 +323,10 @@ class kerdensom_class:
                  ' -reg1 ' + str(self.SomReg1) + \
                  ' -steps ' + str(self.SomSteps) + \
                  ' '  + str(self.KerdensomExtraParams) + ' -verb 1 \n'
-        print '* ',command
-        self.log.info(command)
-        os.system(command)
+        launch_parallel_job.launch_sequential_job("xmipp_classify_kerdensom",
+                                                  command,
+                                                  self.log,
+                                                  False)
 
     def execute_whole_protocol(self):
         

@@ -423,59 +423,69 @@ class preprocess_A_class:
 
     def perform_tif2raw(self):
         import os
+        import launch_parallel_job
         oname=self.shortname+'/'+self.shortname+'.raw'
         print '*********************************************************************'
         print '*  Generating RAW for micrograph: '+self.name
-        command='xmipp_convert_tiff2raw '+self.filename+' '+oname
-        print '* ',command
-        self.log.info(command)
-        os.system(command)
+        command=' '+self.filename+' '+oname
+        launch_parallel_job.launch_sequential_job("xmipp_convert_tiff2raw",
+                                                  command,
+                                                  self.log,
+                                                  False)
 
     def perform_mrc2raw(self):
         import os
+        import launch_parallel_job
         oname=self.shortname+'/'+self.shortname+'.raw'
         tname=self.shortname+'/'+self.shortname+'.spi'
         print '*********************************************************************'
         print '*  Generating RAW for micrograph: '+self.name
-        command='xmipp_convert_spi22ccp4 -i '+self.filename+' -o '+tname
-        print '* ',command
-        self.log.info(command)
-        os.system(command)
-        command='xmipp_convert_raw22spi -generate_inf -f -i '+tname+' -o '+oname
-        print '* ',command
-        self.log.info(command)
-        os.system(command)
+        command=' -i '+self.filename+' -o '+tname
+        launch_parallel_job.launch_sequential_job("xmipp_convert_spi22ccp4",
+                                                  command,
+                                                  self.log,
+                                                  False)
+        command=' -generate_inf -f -i '+tname+' -o '+oname
+        launch_parallel_job.launch_sequential_job("xmipp_convert_raw22spi",
+                                                  command,
+                                                  self.log,
+                                                  False)
         os.remove(tname)
         
     def perform_spi2raw(self):
         import os
+        import launch_parallel_job
         oname=self.shortname+'/'+self.shortname+'.raw'
         print '*********************************************************************'
         print '*  Generating RAW for micrograph: '+self.name
-        command='xmipp_convert_raw22spi -generate_inf -f -i '+self.filename+' -o '+oname
-        print '* ',command
-        self.log.info(command)
-        os.system(command)
-    
+        command=' -generate_inf -f -i '+self.filename+' -o '+oname
+        launch_parallel_job.launch_sequential_job("xmipp_convert_raw22spi",
+                                                  command,
+                                                  self.log,
+                                                  False)
+
     def perform_downsample(self):
         import os
+        import launch_parallel_job
         iname=self.shortname+'/'+self.shortname+'.raw'
         oname=self.shortname+'/'+self.downname+'.raw'
         print '*********************************************************************'
         print '*  Downsampling micrograph: '+iname
         if (self.UseDownFourier):
             scale = 1./self.Down
-            command='xmipp_micrograph_downsample -i '+iname+' -o '+oname+' -output_bits 32 -fourier '+str(scale)
+            command=' -i '+iname+' -o '+oname+' -output_bits 32 -fourier '+str(scale)
         elif (self.UseDownSinc):
-            command='xmipp_micrograph_downsample -i '+iname+' -o '+oname+' -output_bits 32 -Xstep '+str(self.Down)+' -kernel sinc 0.02 0.1'
+            command=' -i '+iname+' -o '+oname+' -output_bits 32 -Xstep '+str(self.Down)+' -kernel sinc 0.02 0.1'
         else:
-            command='xmipp_micrograph_downsample -i '+iname+' -o '+oname+' -output_bits 32 -Xstep '+str(self.Down)+' -kernel rectangle '+str(self.Down)+' '+str(self.Down)
-        print '* ',command
-        self.log.info(command)
-        os.system(command )
+            command=' -i '+iname+' -o '+oname+' -output_bits 32 -Xstep '+str(self.Down)+' -kernel rectangle '+str(self.Down)+' '+str(self.Down)
+        launch_parallel_job.launch_sequential_job("xmipp_micrograph_downsample",
+                                                  command,
+                                                  self.log,
+                                                  False)
 
     def perform_only_psdestimate(self):
         import os
+        import launch_parallel_job
         iname=self.shortname+'/'+self.downname+'.raw'
         pname=self.shortname+'/'+self.shortname+'_psd.param'
         print '*********************************************************************'
@@ -490,10 +500,11 @@ class preprocess_A_class:
         fh = open(pname,"w")
         fh.writelines(paramlist)
         fh.close()
-        command='xmipp_ctf_estimate_from_micrograph -i '+pname
-        print '* ',command
-        self.log.info(command)
-        os.system(command )
+        command=' -i '+pname
+        launch_parallel_job.launch_sequential_job("xmipp_ctf_estimate_from_micrograph",
+                                                  command,
+                                                  self.log,
+                                                  False)
         #oname=self.shortname+'/'+self.downname+'_Periodogramavg.psd'
         #self.psdselfile.append(oname+' 1\n')
 	#fh = open("all_psds.sel","w")
@@ -502,6 +513,7 @@ class preprocess_A_class:
     
     def perform_ctfestimate_xmipp(self):
         import os
+        import launch_parallel_job
         iname=self.shortname+'/'+self.downname+'.raw'
         pname=self.shortname+'/'+self.shortname+'_input.param'
         print '*********************************************************************'
@@ -526,10 +538,11 @@ class preprocess_A_class:
         fh=open(pname,"w")
         fh.writelines(paramlist)
         fh.close()
-        command='xmipp_ctf_estimate_from_micrograph -i '+pname
-        print '* ',command
-        self.log.info(command)
-        os.system(command )
+        command=' -i '+pname
+        launch_parallel_job.launch_sequential_job("xmipp_ctf_estimate_from_micrograph",
+                                                  command,
+                                                  self.log,
+                                                  False)
 
         ## Add entry to the ctfselfile (for visualization of all CTFs)
         #oname=self.shortname+'/'+self.downname+'_Periodogramavg.ctfmodel_halfplane'
@@ -548,7 +561,6 @@ class preprocess_A_class:
 
     def perform_ctfestimate_ctffind(self):
         import os
-
         # Prepare stuff
         DStep = self.ScannedPixelSize * self.Down
         MaxRes = (self.MaxResFactor * 10000. * DStep) / self.Magnification
@@ -588,22 +600,24 @@ class preprocess_A_class:
 
     def convert_raw_to_mrc(self):
         import os
-        command='xmipp_convert_raw22spi ' + \
-                 ' -i '+ self.shortname+'/'+self.downname+'.raw ' + \
+        import launch_parallel_job
+        command= ' -i '+ self.shortname+'/'+self.downname+'.raw ' + \
                  ' -o '+ self.shortname+'/tmp.spi ' + \
                  ' -is_micrograph -f'
-        print '* ',command
-        self.log.info(command)
-        os.system(command )
-        command='xmipp_convert_spi22ccp4 ' + \
-                 ' -i '+ self.shortname+'/tmp.spi ' + \
+        launch_parallel_job.launch_sequential_job("xmipp_convert_raw22spi",
+                                                  command,
+                                                  self.log,
+                                                  False)
+        command= ' -i '+ self.shortname+'/tmp.spi ' + \
                  ' -o '+ self.shortname+'/tmp.mrc '
-        print '* ',command
-        self.log.info(command)
-        os.system(command )
+        launch_parallel_job.launch_sequential_job("xmipp_convert_spi22ccp4",
+                                                  command,
+                                                  self.log,
+                                                  False)
 
     def convert_ctffind_output_to_xmipp_style(self):
         import os;
+        import launch_parallel_job
         logfile=self.shortname+'/ctffind_'+self.downname+'.log'
         fh=open(logfile,'r')
         lines=fh.readlines()
@@ -629,12 +643,12 @@ class preprocess_A_class:
 
         # Convert MRC ctf model to Xmipp image
         ctfname = self.shortname + '/ctffind_' + self.downname + '_ctfmodel.xmp'
-        command='xmipp_convert_spi22ccp4 ' + \
-                 ' -i ' + self.shortname + '/spectrum.mrc ' + \
+        command= ' -i ' + self.shortname + '/spectrum.mrc ' + \
                  ' -o '+ ctfname
-        print '* ',command
-        self.log.info(command)
-        os.system(command )
+        launch_parallel_job.launch_sequential_job("xmipp_convert_spi22ccp4",
+                                                  command,
+                                                  self.log,
+                                                  False)
 
         # Add entry to the ctfselfile (for visualization of all CTFs)
         #ctfname = self.shortname + '/ctffind_' + self.downname + '_ctfmodel.xmp'
@@ -664,17 +678,17 @@ class preprocess_A_class:
 
     def perform_ctf_phase_flipping(self):
         import os
+        import launch_parallel_job
         iname=self.shortname+'/'+self.downname+'.raw'
         oname=self.shortname+'/'+self.downname+'.spi'
         paramname=self.shortname+'/'+self.downname+'_Periodogramavg.ctfparam'
-        command='xmipp_micrograph_phase_flipping ' + \
-                 ' -i   ' + iname + \
+        command= ' -i   ' + iname + \
                  ' -o   ' + oname + \
                  ' -ctf ' + paramname
-        print '* ',command
-        self.log.info(command)
-        os.system(command )
-
+        launch_parallel_job.launch_sequential_job("xmipp_micrograph_phase_flipping",
+                                                  command,
+                                                  self.log,
+                                                  False)
 
     def append_micrograph_selfile(self):
         if self.DoCtfPhaseFlipping:

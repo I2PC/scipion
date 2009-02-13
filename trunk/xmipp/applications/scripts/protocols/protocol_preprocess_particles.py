@@ -270,7 +270,7 @@ class preprocess_particles_class:
 
     def perform_extract_pairs(self):
         import os,shutil
-        
+        import launch_parallel_job
         iname=self.shortname+'/'+self.allname
         iname2=self.shortname2+'/'+self.allname2
         imgsubdir=self.ProjectDir+'/'+self.ImagesDir+'/'+self.shortname
@@ -304,13 +304,14 @@ class preprocess_particles_class:
         self.check_file_exists(posname2)
         self.check_file_exists(angname)
 
-        command='xmipp_micrograph_scissor -i ' + iname + ' -root ' + rootname + \
+        command=' -i ' + iname + ' -root ' + rootname + \
                  ' -tilted ' + iname2 + ' -root_tilted ' + rootname2 + \
                  ' -Xdim ' + str(self.Size) + \
                  '|grep "corresponding image is set to blank"> ' + logname            
-        print '* ',command
-        self.log.info(command)
-        os.system(command)
+        launch_parallel_job.launch_sequential_job("xmipp_micrograph_scissor",
+                                                  command,
+                                                  self.log,
+                                                  False)
 
         # Move output selfiles inside the sub-directory:
         os.rename(selname,selnameb)
@@ -403,6 +404,7 @@ class preprocess_particles_class:
 
     def perform_extract(self):
         import os
+        import launch_parallel_job
         iname=self.shortname+'/'+self.allname
         selname=self.allname+'.sel' 
         selnameb=self.shortname+'/'+self.allname+'.sel' 
@@ -416,12 +418,13 @@ class preprocess_particles_class:
         if not os.path.exists(imgsubdir):
             os.makedirs(imgsubdir)
 
-        command='xmipp_micrograph_scissor -i ' + iname + ' -pos ' + posname + \
+        command= ' -i ' + iname + ' -pos ' + posname + \
                  ' -root ' + rootname + ' -Xdim ' + str(size) + \
                  '|grep "corresponding image is set to blank"> ' + logname
-        print '* ',command
-        self.log.info(command)
-        os.system(command)
+        launch_parallel_job.launch_sequential_job("xmipp_micrograph_scissor",
+                                                  command,
+                                                  self.log,
+                                                  False)
         
         # Move selfile inside the subdirectory
         os.rename(selname,selnameb)
@@ -481,6 +484,7 @@ class preprocess_particles_class:
 
     def perform_normalize(self,iname):
         import os
+        import launch_parallel_job
         print '*********************************************************************'
         print '*  Normalize particles in: '+iname
         param=' -i ' +iname+' -background circle '+str(self.BackGroundRadius)
@@ -490,20 +494,22 @@ class preprocess_particles_class:
             param=param+'  -remove_black_dust'
         if (self.DoRemoveWhiteDust):
             param=param+'  -remove_white_dust'
-        command='xmipp_normalize '+param
-        print '* ',command
-        self.log.info(command)
-        os.system(command)
+        launch_parallel_job.launch_sequential_job("xmipp_normalize",
+                                                  param,
+                                                  self.log,
+                                                  False)
 
     def perform_sort_junk(self):
         import os
+        import launch_parallel_job
         print '*********************************************************************'
         print '*  Sorting images by statistics in: '+self.OutSelFile
         os.chdir(self.ProjectDir)
-        command='xmipp_sort_by_statistics -i '+self.OutSelFile
-        print '* ',command
-        self.log.info(command)
-        os.system(command)
+        command=' -i '+self.OutSelFile
+        launch_parallel_job.launch_sequential_job("xmipp_sort_by_statistics",
+                                                  command,
+                                                  self.log,
+                                                  False)
         os.chdir(os.pardir)
 
     def close(self):

@@ -314,6 +314,7 @@ class RCT_class:
     def set_headers_untilted(self):
         import os
         import selfile
+        import launch_parallel_job
 
         print '*********************************************************************'
         print '*  Re-aligning untilted images of each class to set image headers'
@@ -323,13 +324,15 @@ class RCT_class:
             # Perform a quick align2d to handle image headers correctly
             selfile=self.untiltclasslist[ref][0]
             reference=self.untiltclasslist[ref][1]
-            command='xmipp_align2d -i '+selfile+' -ref '+reference+' -iter 2'
-            print '* ',command
-            self.log.info(command)
-            os.system(command)
+            command=' -i '+selfile+' -ref '+reference+' -iter 2'
+            launch_parallel_job.launch_sequential_job("xmipp_align2d",
+                                                      command,
+                                                      self.log,
+                                                      False)
 
     def set_headers_tilted(self):
         import os,shutil
+        import launch_parallel_job
         print '*********************************************************************'
         print '*  Setting image headers of tilted images of each class'
         # Loop over all selected untilted classes
@@ -339,49 +342,53 @@ class RCT_class:
             docfile=til_selfile.replace('.sel','.doc')
             ori_til_selfile=til_selfile.replace('.sel','_all.sel')
             shutil.copy(ori_til_selfile,til_selfile)
-            command = 'xmipp_align_tilt_pairs -u ' + unt_selfile + \
+            command = ' -u ' + unt_selfile + \
                       ' -t '+til_selfile + \
                       ' -doc '+docfile + \
                       ' -max_shift ' + str(self.CenterMaxShift)
             command += self.AlignTiltPairsAdditionalParams
-            print '* ',command
-            self.log.info(command)
-            os.system(command)
+            launch_parallel_job.launch_sequential_job("xmipp_align_tilt_pairs",
+                                                      command,
+                                                      self.log,
+                                                      False)
                 
     def execute_art(self):
         import os
+        import launch_parallel_job
         for ref in self.untiltclasslist:
             til_selfile=self.untiltclasslist[ref][2]
             outname=til_selfile.replace('.sel','')
             outname='art_'+outname
-            command='xmipp_reconstruct_art -i ' + str(til_selfile) + \
+            command=' -i ' + str(til_selfile) + \
                      ' -o ' + str(outname) + \
                      ' -l ' + str(self.ArtLambda)
             if not self.ArtAdditionalParams=="":
                 command+=' '+str(self.ArtAdditionalParams)
-
-            print '* ',command
-            self.log.info(command)
-            os.system(command)
+            launch_parallel_job.launch_sequential_job("xmipp_reconstruct_art",
+                                                      command,
+                                                      self.log,
+                                                      False)
 
     def execute_wbp(self):
         import os
+        import launch_parallel_job
         for ref in self.untiltclasslist:
             til_selfile=self.untiltclasslist[ref][2]
             outname=til_selfile.replace('.sel','.vol')
             outname='wbp_'+outname
-            command='xmipp_reconstruct_wbp -i ' + til_selfile + \
-                     ' -o ' + outname + \
-                     ' -threshold ' + str(self.WbpThreshold)
+            command=' -i ' + til_selfile + \
+                    ' -o ' + outname + \
+                    ' -threshold ' + str(self.WbpThreshold)
             if not self.WbpAdditionalParams=="":
                 command+=' '+str(self.WbpAdditionalParams)
-
-            print '* ',command
-            self.log.info(command)
-            os.system(command)
+            launch_parallel_job.launch_sequential_job("xmipp_reconstruct_wbp",
+                                                      command,
+                                                      self.log,
+                                                      False)
 
     def execute_filter(self):
         import os
+        import launch_parallel_job
         for ref in self.untiltclasslist:
             til_selfile=self.untiltclasslist[ref][2]
             volname=til_selfile.replace('.sel','.vol')
@@ -389,22 +396,24 @@ class RCT_class:
             artname='art_'+volname
             if os.path.exists(wbpname):
                 filname=wbpname.replace('.vol','_filtered.vol')
-                command='xmipp_fourier_filter -o ' + filname + \
+                command=' -o ' + filname + \
                  ' -i ' + wbpname  + \
                  ' -sampling ' + str(self.PixelSize) + \
                  ' -low_pass ' + str(self.LowPassFilter)
-                print '* ',command
-                self.log.info(command)
-                os.system(command)
+                launch_parallel_job.launch_sequential_job("xmipp_fourier_filter",
+                                                          command,
+                                                          self.log,
+                                                          False)
             if os.path.exists(artname):
                 filname=wbpname.replace('.vol','_filtered.vol')
-                command='xmipp_fourier_filter -o ' + filname + \
+                command=' -o ' + filname + \
                  ' -i ' + artname  + \
                  ' -sampling ' + str(self.PixelSize) + \
                  ' -low_pass ' + str(self.LowPassFilter)
-                print '* ',command
-                self.log.info(command)
-                os.system(command)
+                launch_parallel_job.launch_sequential_job("xmipp_fourier_filter",
+                                                          command,
+                                                          self.log,
+                                                          False)
 
     def close(self):
         message='Done!'
