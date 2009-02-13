@@ -89,7 +89,7 @@ void ImageViewer::Init()
     menubar->insertItem("&File", file);
     file->insertItem("New window", this,  SLOT(newWindow()));
     file->insertItem("Open...", this,  SLOT(openFile()));
-    file->insertItem("Save image...", this,  SLOT(saveImage(int)));
+    file->insertItem("Save image in Xmipp format ...", this,  SLOT(saveImage(int)));
 
     // Create and setup the print button
     pi = file->insertItem("Print", this, SLOT(printIt()));
