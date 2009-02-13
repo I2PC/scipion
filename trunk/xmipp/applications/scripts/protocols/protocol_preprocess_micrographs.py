@@ -25,14 +25,14 @@
 # Working subdirectory:
 WorkingDir='Preprocessing'
 # Delete working subdirectory if it already exists?
-DoDeleteWorkingDir=False
+DoDeleteWorkingDir=True
 # {dir} Directory name from where to process all scanned micrographs
 DirMicrographs='Micrographs'
 # Which files in this directory to process
 """ This is typically *.tif, but may also be *.mrc or *.spi (see the expert options)
     Note that any wildcard is possible, e.g. *3[1,2].tif
 """
-ExtMicrographs='*.tif'
+ExtMicrographs='*.mrc'
 # Name for the output micrograph selfile:
 """ Be aware that this file will be overwritten if it already exists!
 """
@@ -40,7 +40,7 @@ MicrographSelfile='all_micrographs.sel'
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/home/carmen/datos/Ad5_merge_GL_Luc'
+ProjectDir='/home/coss/temp/Far_from_focus'
 # {expert} Directory name for logfiles:
 LogDir='Logs'
 #------------------------------------------------------------------------------------------------
@@ -49,11 +49,13 @@ LogDir='Logs'
 # Perform tiff to raw conversion?
 """ Some TIF formats are not recognized. In that case, save your micrographs as spider or mrc and see the expert options of this protocol to convert these to Xmipp-style raw.
 """
-DoTif2Raw=True
+DoTif2Raw=False
 # {expert} Or perform mrc to raw conversion?
 DoMrc2Raw=False
 # {expert} Or perform spider to raw conversion?
 DoSpi2Raw=False
+# {expert} Or data is already in raw?
+DoRaw2Raw=True
 #------------------------------------------------------------------------------------------------
 # {section} Downsampling
 #------------------------------------------------------------------------------------------------
@@ -64,11 +66,11 @@ Down=2
 # {expert} Use Fourier-space window to downsample
 """ This is theoretically the best option, but it may take more memory than your machine can handle.
 """
-UseDownFourier=True
+UseDownFourier=False
 # {expert} Use real-space rectangle kernel to downsample
 """ This is the fastest, and therefore perhaps the most used option. However, it is also the least accurate one.
 """
-UseDownRectangle=False
+UseDownRectangle=True
 # {expert} Use real-space sinc kernel to downsample
 """ This is the slowest option, but it approximates the accurracy of the Fourier-window option without the need for so much memory.
 """
@@ -78,7 +80,7 @@ UseDownSinc=False
 # {section} CTF estimation
 #------------------------------------------------------------------------------------------------
 # Perform CTF estimation?
-DoCtfEstimate=True
+DoCtfEstimate=False
 # Microscope voltage (in kV)
 Voltage=200
 # Spherical aberration
@@ -112,7 +114,7 @@ HighResolCutoff=0.35
 """ Some people prefer the faster CTFFIND program.
     Note however that this option will yield no information about the CTF envelope, and therefore this option cannot be used with the high-resolution refinement protocol.
 """
-DoCtffind=True
+DoCtffind=False
 # {file} Location of the CTFFIND executable
 CtffindExec='../../bin/ctffind3.exe'
 # {expert} Window size
@@ -201,8 +203,6 @@ except ImportError:
     mpiActive=False
 #
 class preprocess_A_class:
-
-
     def __init__(self,
                  WorkingDir,
                  DoDeleteWorkingDir,
@@ -214,6 +214,7 @@ class preprocess_A_class:
                  DoTif2Raw,
                  DoMrc2Raw,
                  DoSpi2Raw,
+                 DoRaw2Raw,
                  DoDownSample,
                  Down,
                  UseDownFourier,
@@ -253,6 +254,7 @@ class preprocess_A_class:
         self.DoTif2Raw=DoTif2Raw
         self.DoMrc2Raw=DoMrc2Raw
         self.DoSpi2Raw=DoSpi2Raw
+        self.DoRaw2Raw=DoRaw2Raw
         self.DoDownSample=DoDownSample
         self.Down=Down
         self.UseDownFourier=UseDownFourier
@@ -285,20 +287,20 @@ class preprocess_A_class:
                                      LogDir,
                                      sys.argv[0]+"_"+str(self.myrank),
                                      self.WorkingDir)
-        if(mpiActive):
+        if (mpiActive):
             print "Python has mpi4py package, python parallel jobs are possible"
             self.log.info("Python has mpi4py package, python parallel jobs are possible")        
         else:
             print "Python has NOT mpi4py package, python parallel jobs are NOT possible"
             self.log.info("Python has NOT mpi4py package, python parallel jobs are NOT possible")
-            if(CheckMpi):
+            if (CheckMpi):
                 print "mpi is not installed and checkmpi flag is set to True"
                 print "disable mpi checking flag in the script" 
                 print "and launch it as a serial job" 
                 print "that is, without mpirun" 
                 exit(1)
         # Delete working directory if exists, make a new one
-        if(self.myrank==0):
+        if (self.myrank==0):
             if (DoDeleteWorkingDir): 
                 if os.path.exists(self.WorkingDir):
                     shutil.rmtree(self.WorkingDir)
@@ -337,8 +339,48 @@ class preprocess_A_class:
             (self.shortname,extension) = os.path.splitext(self.name)
             self.downname='down'+str(self.Down)+'_'+self.shortname
             job_index = job_index + 1
+		
+	    #if I am not the right node skip this micrograph	
+            #print job_index, self.nprocs, job_index % self.nprocs , self.myrank
+	    if ((job_index % self.nprocs)==self.myrank):
+                if not os.path.exists(self.shortname):
+                    os.makedirs(self.shortname)
+
+                if (self.DoTif2Raw + self.DoMrc2Raw + self.DoSpi2Raw + self.DoRaw2Raw != 1):
+                    message='ERRROR: select either tif2raw, spi2raw, mrc2raw or raw2raw conversion! '
+                    print '*',message
+                    self.log.error(message)
+                    exit();
+                if (self.DoTif2Raw):
+                    self.perform_tif2raw()
+                elif (self.DoMrc2Raw):
+                    self.perform_mrc2raw()
+                elif (self.DoSpi2Raw): 
+                    self.perform_spi2raw()
+                elif (self.DoRaw2Raw): 
+                    self.perform_raw2raw()
+
+                if (self.DoDownSample):
+                    self.perform_downsample()
+
+            if not os.path.exists(self.shortname+'/'+self.downname+'.raw'):
+                self.downname=self.shortname
+
+	    if ((job_index % self.nprocs)==self.myrank):
+                if (self.DoCtfEstimate):
+                    if not (self.DoCtffind):
+                        if (self.OnlyEstimatePSD):
+                            self.perform_only_psdestimate()
+                        else:
+                            self.perform_ctfestimate_xmipp()
+                    else:
+                        self.perform_ctfestimate_ctffind()
+
+                if (self.DoCtfPhaseFlipping):
+                    self.perform_ctf_phase_flipping()
+
             #only one node should write sel file with micrographs
-	    if(self.myrank==0):
+	    if (self.myrank==0):
 	        self.append_micrograph_selfile()
         	if (self.DoCtfEstimate):
                     if not (self.DoCtffind):
@@ -377,49 +419,6 @@ class preprocess_A_class:
 			fh=open('all_ctfs.sel','w')
         		fh.writelines(self.ctfselfile)
         		fh.close()
-		
-	    #if I am not the right node skip this micrograph	
-            #print job_index, self.nprocs, job_index % self.nprocs , self.myrank
-	    if ((job_index % self.nprocs)!=self.myrank):
-	        continue
-            if not os.path.exists(self.shortname):
-                os.makedirs(self.shortname)
-
-            if (self.DoTif2Raw):
-                if (self.DoMrc2Raw or self.DoSpi2Raw):
-                    message='ERRROR: select either tif2raw, spi2raw or mrc2raw conversion! '
-                    print '*',message
-                    self.log.error(message)
-                    exit();
-                self.perform_tif2raw()
-            elif (self.DoMrc2Raw):
-                if (self.DoSpi2Raw):
-                    message='ERRROR: select either tif2raw, spi2raw or mrc2raw conversion! '
-                    print '*',message
-                    self.log.error(message)
-                    exit();
-                self.perform_mrc2raw()
-            elif (self.DoSpi2Raw): 
-                self.perform_spi2raw()
-
-            if (self.DoDownSample):
-                self.perform_downsample()
-
-            if not os.path.exists(self.shortname+'/'+self.downname+'.raw'):
-                self.downname=self.shortname
-                
-            if (self.DoCtfEstimate):
-                if not (self.DoCtffind):
-                    if (self.OnlyEstimatePSD):
-                        self.perform_only_psdestimate()
-                    else:
-                        self.perform_ctfestimate_xmipp()
-                else:
-                    self.perform_ctfestimate_ctffind()
-
-            if (self.DoCtfPhaseFlipping):
-                self.perform_ctf_phase_flipping()
-                    
 
     def perform_tif2raw(self):
         import os
@@ -464,6 +463,20 @@ class preprocess_A_class:
                                                   self.log,
                                                   False)
 
+    def perform_raw2raw(self):
+        import os
+        oname=self.shortname+'/'+self.shortname+'.raw'
+        print '*********************************************************************'
+        print '*  Generating RAW for micrograph: '+self.name
+        command='cp '+self.filename+' '+oname
+        print '* ',command
+        self.log.info(command)
+        os.system(command)
+        command='cp '+self.filename+'.inf '+oname+'.inf'
+        print '* ',command
+        self.log.info(command)
+        os.system(command)
+    
     def perform_downsample(self):
         import os
         import launch_parallel_job
@@ -723,6 +736,7 @@ if __name__ == '__main__':
                                    DoTif2Raw,
                                    DoMrc2Raw,
                                    DoSpi2Raw,
+                                   DoRaw2Raw,
                                    DoDownSample,
                                    Down,
                                    UseDownFourier,
