@@ -567,8 +567,8 @@ class automated_gui_class:
         found = False
         for mode in radiooptions:
             c = c + 1
-            self.r = Radiobutton(self.frame, text=mode, variable=variable, value=mode)
-            self.r.grid(row=row+c, column=self.columntextentry)
+            self.r = Radiobutton(self.frame, text=mode, variable=variable,relief=FLAT, indicatoron=1, value=mode,selectcolor="medium blue")
+            self.r.grid(row=row+c, column=self.columntextentry,sticky=W)
             if (default==mode):
                 self.r.select()
                 found = True
