@@ -25,14 +25,14 @@
 # Working subdirectory:
 WorkingDir='Preprocessing'
 # Delete working subdirectory if it already exists?
-DoDeleteWorkingDir=True
+DoDeleteWorkingDir=False
 # {dir} Directory name from where to process all scanned micrographs
 DirMicrographs='Micrographs'
 # Which files in this directory to process
 """ This is typically *.tif, but may also be *.mrc or *.spi (see the expert options)
     Note that any wildcard is possible, e.g. *3[1,2].tif
 """
-ExtMicrographs='*.mrc'
+ExtMicrographs='*.tif'
 # Name for the output micrograph selfile:
 """ Be aware that this file will be overwritten if it already exists!
 """
@@ -49,13 +49,13 @@ LogDir='Logs'
 # Perform tiff to raw conversion?
 """ Some TIF formats are not recognized. In that case, save your micrographs as spider or mrc and see the expert options of this protocol to convert these to Xmipp-style raw.
 """
-DoTif2Raw=False
+DoTif2Raw=True
 # {expert} Or perform mrc to raw conversion?
 DoMrc2Raw=False
 # {expert} Or perform spider to raw conversion?
 DoSpi2Raw=False
 # {expert} Or data is already in raw?
-DoRaw2Raw=True
+DoRaw2Raw=False
 #------------------------------------------------------------------------------------------------
 # {section} Downsampling
 #------------------------------------------------------------------------------------------------
@@ -66,11 +66,11 @@ Down=2
 # {expert} Use Fourier-space window to downsample
 """ This is theoretically the best option, but it may take more memory than your machine can handle.
 """
-UseDownFourier=False
+UseDownFourier=True
 # {expert} Use real-space rectangle kernel to downsample
 """ This is the fastest, and therefore perhaps the most used option. However, it is also the least accurate one.
 """
-UseDownRectangle=True
+UseDownRectangle=False
 # {expert} Use real-space sinc kernel to downsample
 """ This is the slowest option, but it approximates the accurracy of the Fourier-window option without the need for so much memory.
 """
@@ -80,7 +80,7 @@ UseDownSinc=False
 # {section} CTF estimation
 #------------------------------------------------------------------------------------------------
 # Perform CTF estimation?
-DoCtfEstimate=False
+DoCtfEstimate=True
 # Microscope voltage (in kV)
 Voltage=200
 # Spherical aberration
@@ -114,7 +114,7 @@ HighResolCutoff=0.35
 """ Some people prefer the faster CTFFIND program.
     Note however that this option will yield no information about the CTF envelope, and therefore this option cannot be used with the high-resolution refinement protocol.
 """
-DoCtffind=False
+DoCtffind=True
 # {file} Location of the CTFFIND executable
 CtffindExec='../../bin/ctffind3.exe'
 # {expert} Window size
