@@ -119,7 +119,7 @@ NumberOfIterations=25
 """
 Symmetry="c1"
 # Refine the normalization parameters for each image?
-""" This variant of the algorithm deals with normalization errors. ç
+""" This variant of the algorithm deals with normalization errors.
     For more info see (and please cite) Scheres et. al. (2009) J. Struc. Biol., in press
 """
 DoNorm=False
