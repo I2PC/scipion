@@ -25,12 +25,12 @@ SelFileName='all_images.sel'
 DocFileName=''
 
 # {file} Initial 3D reference map:
-ReferenceFileName='val16_GLfil_norm_mask_scaled_412.spi'
+ReferenceFileName='reference.vol'
 
 # Working subdirectory: 
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
-WorkDirectory='ProjMatch/Threads'
+WorkDirectory='ProjMatch/run1'
 
 # Delete working subdirectory if it already exists?
 """ Just be careful with this option...
@@ -38,7 +38,7 @@ WorkDirectory='ProjMatch/Threads'
 DoDeleteWorkingDir=True
 
 # Number of iterations to perform
-NumberofIterations=15
+NumberofIterations=10
 
 # Resume at iteration
 """ This option may be used to finish a previously performed run.
@@ -48,14 +48,15 @@ NumberofIterations=15
 ContinueAtIteration=1
 
 # {expert} Save disc space by cleaning up intermediate files?
-""" Be careful, many options of the visualization protocol will not work anymore, since all class averages, selfiles etc will be deleted.
+""" Be careful, many options of the visualization protocol will not work anymore, 
+    since all class averages, selfiles etc will be deleted.
 """
 CleanUpFiles=False
 
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
-ProjectDir='/home/carmen/datos/Ad5_merge_GL_Luc'
+ProjectDir='/home/scheres/work/test'
 
 # {expert} Directory name for logfiles:
 LogDir='Logs'
@@ -118,12 +119,13 @@ ReferenceIsCtfCorrected=True
 DoMask=True
 
 # {expert} Show masked volume
-""" Masked volume will be shown. Do not set ths option to true for non-interactive processing (jobs sent to queues)
+""" Masked volume will be shown. 
+    Do not set this option to true for non-interactive processing (jobs sent to queues)
 """
 DisplayMask=False
 
 # {file} Binary mask-file used to mask the reference volume
-MaskFileName='mask3D'
+MaskFileName='mask.vol'
 
 #-----------------------------------------------------------------------------
 # {section} Projection Matching
@@ -148,12 +150,12 @@ InnerRadius=0
 """ In pixels from the image center. Use a negative number to use the entire image.
     WARNING: this radius will be use for masking before computing resoution
 """
-OuterRadius=195
+OuterRadius=64
 
 # {expert} Available memory to store all references (Gb)
 """ This is only for the storage of the references. If yuor memories so not fit in memory, the projection matching program will run MUCH slower. But, keep in mind that probably some additional memory is needed for the operating system etc.
 """
-AvailableMemory='4'
+AvailableMemory='2'
 
 # Angular sampling rate
 """Angular distance (in degrees) between neighboring projection  points
@@ -166,7 +168,7 @@ AvailableMemory='4'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-AngSamplingRateDeg='2.0 1.75 1.5 1.25 1 0.75 0.6 0.5 0.4 0.3 0.25 0.2 0.18 0.15 0.12 0.1'
+AngSamplingRateDeg='4x10 2x5 2x3 2x2'
 
 # Angular search range 
 """Maximum change in rot & tilt  (in +/- degrees)
@@ -179,14 +181,14 @@ AngSamplingRateDeg='2.0 1.75 1.5 1.25 1 0.75 0.6 0.5 0.4 0.3 0.25 0.2 0.18 0.15 
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-MaxChangeInAngles='4x1000 6x8.5  5'
+MaxChangeInAngles='4x1000 2x20 2x9 2x6'
 
 # {expert} Perturb projection directions?
 """ If set to true, this option will result to a Gaussian perturbation to the 
     evenly sampled projection directions of the reference library. 
     This may serve to decrease the effects of model bias.
 """
-PerturbProjectionDirections=False
+PerturbProjectionDirections=True
 
 # Maximum change in origin offset
 """ Maximum allowed change in shift in the 3D+2D searches (in +/- pixels).
@@ -200,7 +202,7 @@ PerturbProjectionDirections=False
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-MaxChangeOffset='1000 28'
+MaxChangeOffset='1000 '
 
 # Search range for 5D translational search 
 """ Give search range from the image center for 5D searches (in +/- pixels).
@@ -216,7 +218,7 @@ MaxChangeOffset='1000 28'
     Note: if there are more values than iterations the extra value are ignored
     
 """
-Search5DShift='5 5 5 5 0'
+Search5DShift='4x5 0'
 
 # {expert} Step size for 5D translational search
 """ Provide a sequence of numbers (for instance, "2 2 1 1" specifies 4 iterations,
@@ -243,7 +245,7 @@ TiltF=90
     for a description of the symmetry groups format
     If no symmetry is present, give c1
 """
-SymmetryGroup='i3'
+SymmetryGroup='c1'
 
 # Discard images with ccf below
 """ Provide a sequence of numbers (for instance, "0.3 0.3 0.5 0.5" specifies 4 iterations,
@@ -298,7 +300,7 @@ ProjMatchingExtra=''
 DoAlign2D=' 0'
 
 # {expert} Number of align2d iterations:
-""" Use at least 3
+""" Use at least 3 iterations
 """
 Align2DIterNr=4
 
@@ -381,9 +383,9 @@ ARTLambda='0.2'
 """
 ARTReconstructionExtraCommand='-k 0.5 -n 10 '
 
-#max frequency used by reconstruct fourier (first iteration)
-""" FOR EACH ITERATION It will be set to resolution computed in the
-    resolution section
+# Initial maximum frequency used by reconstruct fourier
+""" This number os only used in the first iteration. 
+    From then on, it will be set to resolution computed in the resolution section
 """
 FourierMaxFrequencyOfInterest='0.25'
 
@@ -467,16 +469,16 @@ NumberOfThreads=1
 DoParallel=True
 
 # Number of MPI processes to use:
-NumberOfMpiProcesses=8
+NumberOfMpiProcesses=5
 
 # minumum size of jobs in mpi processe. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)
-MpiJobSize='5'
+MpiJobSize='10'
 
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
     Ask the person who installed your xmipp version, which option to use. Or read: xxx
 """
-SystemFlavour="SLURM-MPICH"
+SystemFlavour=""
 
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
@@ -693,7 +695,7 @@ class projection_matching_class:
                  DocFileWithOriginalAngles
           launch_job.launch_job("xmipp_header_extract",
                                 params,
-                                self.log,
+                                self._mylog,
                                 False,1,1,'')
        else:
           command = "copy" , self._DocFileName ,  self._WorkDirectory + '/' + DocFileWithOriginalAngles
@@ -837,7 +839,7 @@ class projection_matching_class:
                                          self._DisplayProjectionMatching,
                                          self._DoParallel,
                                          self._MyNumberOfMpiProcesses,
-                                         self._MyNumberOfThreads
+                                         self._MyNumberOfThreads,
                                          self._MySystemFlavour,
                                          self._MyMpiJobSize,
                                          self._WorkDirectory,
@@ -875,7 +877,7 @@ class projection_matching_class:
                                     self._DisplayReconstruction,
                                     self._DoParallel,
                                     self._MyNumberOfMpiProcesses,
-                                    self._NumberOfThreads,
+                                    self._MyNumberOfThreads,
                                     self._MySystemFlavour,
                                     self._MyMpiJobSize,
                                     self._ReconstructionMethod,
@@ -997,7 +999,7 @@ def execute_ctf_groups (_mylog,
    command += _CTFExtraCommands   
    launch_job.launch_job("xmipp_ctf_group",
                          command,
-                         self.log,
+                         _mylog,
                          False,1,1,'')
 
    wildcardname=utils_xmipp.composeWildcardFileName(CtfGroupDirectory + '/' + CtfGroupRootName+'_group','ctf')
@@ -1032,7 +1034,7 @@ def execute_mask(_DoMask,
                ' -mask ' + MaskVolume 
        launch_job.launch_job("xmipp_mask",
                              command,
-                             self.log,
+                             _mylog,
                              False,1,1,'')
 
        if _DisplayMask==True:
@@ -1141,7 +1143,7 @@ def execute_projection_matching(_mylog,
      parameters+=  \
               ' -groups '              + CtfGroupSubsetFileName
 
-   if (len(_MyMpiJobSize)>0 and _DoParallel):
+   if (_DoParallel):
       parameters = parameters + ' -mpi_job_size ' + str(_MyMpiJobSize)
 
    launch_job.launch_job('xmipp_angular_project_library',
@@ -1194,7 +1196,7 @@ def execute_projection_matching(_mylog,
                   ' -pad '            + str(_PaddingFactor) + \
                   ' -ctf '            + ctffile
 
-      if (len(_MyMpiJobSize)>0 and _DoParallel):
+      if (_DoParallel):
          parameters = parameters + ' -mpi_job_size ' + str(_MyMpiJobSize)
 
       launch_job.launch_job('xmipp_angular_projection_matching',
@@ -1304,7 +1306,7 @@ def make_subset_docfiles(_mylog,
       print '*********************************************************************'
       launch_job.launch_job("xmipp_docfile_select_subset",
                             command,
-                            self.log,
+                            _mylog,
                             False,1,1,'')
       docselfile.append(inputdocfile+' 1\n')
 
@@ -1338,7 +1340,6 @@ def execute_reconstruction(_mylog,
 
    import os,shutil,math
    import launch_job
-   RunInBackground=False
 
    Outputvolume = _ReconstructedandfilteredVolume
 
@@ -1347,7 +1348,6 @@ def execute_reconstruction(_mylog,
    if _ReconstructionMethod=='wbp':
       Outputvolume = Outputvolume+".vol"
       program = 'xmipp_reconstruct_wbp'
-      mpi_program = 'xmipp_mpi_reconstruct_wbp'
       parameters= ' -i '    + ForReconstructionSel + \
                   ' -doc '  + ForReconstructionDoc + \
                   ' -o '    + Outputvolume + \
@@ -1358,33 +1358,24 @@ def execute_reconstruction(_mylog,
               
    elif _ReconstructionMethod=='art':
       program = 'xmipp_reconstruct_art'
-      mpi_program = 'NULL'
       _DoParallel=False
       parameters=' -i '    + ForReconstructionSel + \
                  ' -o '    + Outputvolume + ' ' + \
                  ' -sym '  + _SymmetryGroup + \
-		 ' -thr '  + _MyNumberOfThreads + \
+		 ' -thr '  + str(_MyNumberOfThreads) + \
                  ' -WLS '
       if len(_ARTLambda)>1:
          parameters = parameters + ' -l '   + _ARTLambda + ' '
       parameters = parameters + _ARTReconstructionExtraCommand
    elif _ReconstructionMethod=='fourier':
-      mpi_program = 'xmipp_mpi_reconstruct_fourier'
-      #mpi_program = 'NULL'
-      #untill we decide how to handle threads and mpi at the same time
-      #leave this as false when using threads or modify it
-      #at your own risk
-      if(int(_MyNumberOfThreads)>1):
-           _DoParallel=False
       program = 'xmipp_reconstruct_fourier'
       parameters=' -i '    + ForReconstructionSel + \
                  ' -o '    + Outputvolume + '.vol ' + \
                  ' -sym '  + _SymmetryGroup + \
-		 ' -thr '  + _MyNumberOfThreads + \
+		 ' -thr '  + str(_MyNumberOfThreads) + \
                  ' -weight ' + \
-                 ' -max_resolution ' + \
-	         str(_FourierMaxFrequencyOfInterest) + ' '	 
-      if (len(_MyMpiJobSize)>0 and _DoParallel):
+                 ' -max_resolution ' + str(_FourierMaxFrequencyOfInterest)
+      if (_DoParallel):
          parameters = parameters + ' -mpi_job_size ' + str(_MyMpiJobSize)
       parameters = parameters + _FourierReconstructionExtraCommand 
    else:
@@ -1457,9 +1448,7 @@ def  execute_resolution(_mylog,
        print '*********************************************************************'
        print '* Reconstruct volume'
        if _ReconstructionMethod=='wbp':
-          RunInBackground=False
           program = 'xmipp_reconstruct_wbp'
-          mpi_program = 'xmipp_mpi_reconstruct_wbp'
           parameters= ' -i '    + Selfiles[i] + \
                       ' -doc '  + Docfiles[i] + \
                       ' -o '    + Outputvolumes[i] + ".vol" + \
@@ -1468,36 +1457,25 @@ def  execute_resolution(_mylog,
           parameters = parameters + _WBPReconstructionExtraCommand
           _MyNumberOfThreads = 1
        elif _ReconstructionMethod=='art':
-          RunInBackground=False
           program = 'xmipp_reconstruct_art'
-          mpi_program = 'NULL'
           _DoParallel=False
           parameters=' -i '    + Selfiles[i] + \
                      ' -o '    + Outputvolumes[i] + \
                      ' -sym '  + _SymmetryGroup + \
-		     ' -thr '  + _MyNumberOfThreads + \
+		     ' -thr '  + str(_MyNumberOfThreads) + \
                      ' -WLS '
           if len(_ARTLambda)>1:
              parameters = parameters + ' -l '   + _ARTLambda + ' '
           parameters = parameters + _ARTReconstructionExtraCommand
        elif _ReconstructionMethod=='fourier':
-          RunInBackground=False
-	  mpi_program = 'xmipp_mpi_reconstruct_fourier'
-	  #mpi_program = 'NULL'
-          #untill we decide how to handle threads and mpi at the same time
-          #leave this as false when using threads or modify it
-          #at your own risk
-	  if(int(_MyNumberOfThreads)>1):
-              _DoParallel=False
           program = 'xmipp_reconstruct_fourier'
           parameters=' -i '    +  Selfiles[i] + \
                      ' -o '    +  Outputvolumes[i] + '.vol ' + \
                      ' -sym '  + _SymmetryGroup + \
-		     ' -thr '  + _MyNumberOfThreads + \
+		     ' -thr '  + str(_MyNumberOfThreads) + \
                      ' -weight ' + \
-                     ' -max_resolution ' + \
-	         str(_FourierMaxFrequencyOfInterest)
-          if (len(_MyMpiJobSize)>0 and _DoParallel):
+                     ' -max_resolution ' + str(_FourierMaxFrequencyOfInterest)
+          if (_DoParallel):
              parameters = parameters + ' -mpi_job_size ' + str(_MyMpiJobSize)
           parameters = parameters + _FourierReconstructionExtraCommand
        else:
@@ -1532,7 +1510,7 @@ def  execute_resolution(_mylog,
                  " -" + str(_OuterRadius)
        launch_job.launch_job("xmipp_mask",
                              command,
-                             self.log,
+                             _mylog,
                              False,1,1,_MySystemFlavour)
   
     print '**************************************************************'
@@ -1541,7 +1519,7 @@ def  execute_resolution(_mylog,
               " -i " +Outputvolumes[1]  + ' -sam ' + str(_ResolSam)
     launch_job.launch_job("xmipp_resolution_fsc",
                           command,
-                          self.log,
+                          _mylog,
                           False,1,1,_MySystemFlavour)
     import visualization
     if _DisplayResolution==True:
@@ -1617,7 +1595,7 @@ def filter_at_given_resolution(_DoComputeResolution,
                   str (filter_in_pixels_at)
         launch_job.launch_job("xmipp_fourier_filter",
                               command,
-                              self.log,
+                              _mylog,
                               False,1,1,_MySystemFlavour)
     return filter_in_pixels_at
 

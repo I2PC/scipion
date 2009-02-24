@@ -17,15 +17,15 @@
 # {file} Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
-SelFileName='img.sel'
+SelFileName='all_images.sel'
 
 # {file} Initial 3D reference map:
-ReferenceFileName='Src/initial_reference.vol'
+ReferenceFileName='reference.vol'
 
 # {dir} Working subdirectory: 
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
-WorkDirectory='MultiRes/Test1'
+WorkDirectory='MultiRes/run1'
 
 # Delete working directory if it already exists?
 """ Just be careful with this option...
@@ -40,12 +40,12 @@ NumberofIterations=10
     Set to 1 to start a new run 
     Note: Do NOT delete working directory if this option is not set to 1
 """
-ResumeIteration=2
+ResumeIteration=1
 
 # {expert} {dir} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
-ProjectDir='/media/usbdisk/Experiments/TestMuySencillo'
+ProjectDir='/home/scheres/work/test'
 
 # {expert} {dir} Directory name for logfiles:
 LogDir='Logs'
@@ -89,7 +89,7 @@ SamplingRate=1
     Scaling is done via spline pyramids, please visit:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Pyramid
 """
-PyramidLevels='0'
+PyramidLevels='2 1 0'
 
 # Angular steps
 """ Angular steps for each of the iterations. This parameter is used to build
@@ -100,7 +100,7 @@ PyramidLevels='0'
     The discrete angular assignment is done with xmipp_angular_predict:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Angular_predict
 """
-AngularSteps='5'
+AngularSteps='10 5'
 
 # {expert} Quality percentil
 """ The quality percentil indicates what is the percentil of images to be
@@ -132,7 +132,7 @@ QualityAngleMovement='360'
 """
 QualityShiftMovement='100'
 
-# {expert} Reconstruction method
+# {expert} {list}|fourier|wbp|art| Reconstruction method
 """ Choose between fourier, wbp or art
     You must specify this option for each iteration. 
     This can be done by a sequence of numbers (for instance, "wbp wbp wbp art " 
@@ -233,7 +233,7 @@ AmplitudeCorrection=''
 DoReferenceMask='1'
 
 # {file} Initial Reference Mask Volume
-InitialReferenceMask='Src/initial_mask.vol'
+InitialReferenceMask='mask.vol'
 
 # {expert} Reference Lowpass filter (Normalized digital freq.)
 """ This vector specifies the frequency at which each reference volume
@@ -286,15 +286,18 @@ NumberOfThreads=1
     It requires mpi to be installed.
 """
 DoParallel=True
+
 # Number of MPI processes to use:
 """ This option provides distributed-memory parallelization on multi-node machines. 
     It requires the installation of some MPI flavour, possibly together with a queueing system
 """
-NumberOfMpiProcesses=5
+NumberOfMpiProcesses=4
+
 # Number of MPI processes to use by memory-demanding algorithms:
 """ In fact only the Fourier reconstruction method is so large memory demanding
 """
 NumberOfMpiProcessesReduced=2
+
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
     Ask the person who installed your xmipp version, which option to use. Or read: xxx
@@ -431,7 +434,7 @@ class MultiResClass:
        self.doParallel=_DoParallel
        self.NumberOfMpiProcesses=_NumberOfMpiProcesses
        self.NumberOfMpiProcessesReduced=_NumberOfMpiProcessesReduced
-       self.myNumberOfThreads=_NumberOfThreads
+       self.NumberOfThreads=_NumberOfThreads
        self.SystemFlavour=SystemFlavour
 
        self.verbose=_Verbose
@@ -539,16 +542,15 @@ class MultiResClass:
                                 self.mylog,
                                 self.doParallel,
                                 self.NumberOfMpiProcesses,
-                                self.myMachineFile,
-                                False)
-	  launch_job.launch_job(self.doParallel,
-        			       "xmipp_angular_discrete_assign",
-        			       "xmipp_mpi_angular_discrete_assign",
-        			       params,
-        			       self.mylog,
-        			       self.NumberOfMpiProcesses,
-        			       self.myMachineFile,
-        			       False)
+                                self.NumberOfThreads,
+                                self.SystemFlavour)
+	  launch_job.launch_job("xmipp_angular_discrete_assign",
+                                params,
+                                self.mylog,
+                                self.doParallel,
+                                self.NumberOfMpiProcesses,
+                                self.NumberOfThreads,
+                                self.SystemFlavour)
       	  self.execute("find . -name \"ref*\" -exec rm -f {} \; &")
        else:
           self.linkFile(removeDirectories(self.getAlignmentFFilename(_iteration)),
@@ -562,14 +564,13 @@ class MultiResClass:
 		 "-ang "+self.getDiscreteAnglesFilename(_iteration)+" "+\
 		 "-oang "+self.getContinuousAnglesFilename(_iteration)+" "+\
 		 "-max_shift "+str(self.particleWorkingRadius/5)
-	  launch_job.launch_job(self.doParallel,
-        			       "xmipp_angular_continuous_assign",
-        			       "xmipp_mpi_angular_continuous_assign",
-        			       params,
-        			       self.mylog,
-        			       self.NumberOfMpiProcesses,
-        			       self.myMachineFile,
-        			       False)
+	  launch_job.launch_job("xmipp_angular_continuous_assign",
+                                params,
+                                self.mylog,
+                                self.doParallel,
+                                self.NumberOfMpiProcesses,
+                                self.NumberOfThreads,
+                                self.SystemFlavour)
        else:
           self.linkFile(removeDirectories(self.getDiscreteAnglesFilename(_iteration)),
 	                self.getContinuousAnglesFilename(_iteration))
@@ -841,14 +842,13 @@ class MultiResClass:
         	 self.getModelFFilename(_iteration)+\
 		 " -ctfdat preproc_assign_ctfdat.txt"+\
 		 " -oroot preproc_assign_IDR/preproc_assign_IDR_";
-	  launch_job.launch_job(self.doParallel,
-        			       "xmipp_ctf_correct_idr",
-        			       "xmipp_mpi_ctf_correct_idr",
-        			       params,
-        			       self.mylog,
-        			       self.NumberOfMpiProcesses,
-        			       self.myMachineFile,
-        			       False)
+	  launch_job.launch_job("xmipp_ctf_correct_idr",
+                                params,
+                                self.mylog,
+                                self.doParallel,
+                                self.NumberOfMpiProcesses,
+                                self.NumberOfThreads,
+                                self.SystemFlavour)
           self.execute('xmipp_selfile_create "preproc_assign_IDR/*" > preproc_assign.sel')
 
        # Scale if necessary
@@ -1093,7 +1093,7 @@ class MultiResClass:
        # Apply a quality criteria
        cmd="xmipp_filter_projections"+\
           " -i "+self.getAlignmentFilename(_iteration)+\
-          " -o preproc_recons -thr "+str(self.myNumberOfThreads)
+          " -o preproc_recons -thr "+str(self.NumberOfThreads)
 
        if self.getQualityPercentil(_iteration)>0 and \
           self.getDiscreteAssignment(_iteration)=="1":
@@ -1185,14 +1185,13 @@ class MultiResClass:
 	  doParallel=self.doParallel
 	  if self.getSerialART(_iteration)=="1":
 	     doParallel=False
-	  launch_job.launch_job(doParallel,
-        			       "xmipp_reconstruct_art",
-        			       "xmipp_mpi_reconstruct_art",
-        			       params,
-        			       self.mylog,
-        			       self.NumberOfMpiProcesses,
-        			       self.myMachineFile,
-        			       False)
+	  launch_job.launch_job("xmipp_reconstruct_art",
+                                params,
+                                self.mylog,
+                                doParallel,
+                                self.NumberOfMpiProcesses,
+                                self.NumberOfThreads,
+                                self.SystemFlavour)
 	  self.deleteFile(_outputRootName+".hist")
        elif self.getReconstructionMethod(_iteration)=="wbp":
           params="-i "+selfile+" "+\
@@ -1204,14 +1203,13 @@ class MultiResClass:
 	     params+=" -radius "+str(0.5*math.floor(math.sqrt(2.0)*
 	        self.workXDim/
 	        math.pow(2.0,int(self.getPyramidLevel(_iteration)))))
-	  launch_job.launch_job(self.doParallel,
-        			       "xmipp_reconstruct_wbp",
-        			       "xmipp_mpi_reconstruct_wbp",
-        			       params,
-        			       self.mylog,
-        			       self.NumberOfMpiProcesses,
-        			       self.myMachineFile,
-        			       False)
+	  launch_job.launch_job("xmipp_reconstruct_wbp",
+                                params,
+                                self.mylog,
+                                self.doParallel,
+                                self.NumberOfMpiProcesses,
+                                self.NumberOfThreads,
+                                self.SystemFlavour)
        elif self.getReconstructionMethod(_iteration)=="fourier":
           params="-i "+selfile+" "+\
 	         "-o "+_outputRootName+".vol "
@@ -1220,14 +1218,13 @@ class MultiResClass:
           if self.getComputeFSC(_iteration):
             params+="-prepare_fsc "+self.getReconstructionRootname(_iteration)+\
                ".fsc "
-	  launch_job.launch_job(self.doParallel,
-        			       "xmipp_reconstruct_fourier",
-        			       "xmipp_mpi_reconstruct_fourier",
-        			       params,
-        			       self.mylog,
-        			       self.NumberOfMpiProcessesReduced,
-        			       self.myMachineFile,
-        			       False)
+	  launch_job.launch_job("xmipp_reconstruct_fourier",
+                                params,
+                                self.mylog,
+                                self.doParallel,
+                                self.NumberOfMpiProcessesReduced,
+                                self.NumberOfThreads,
+                                self.SystemFlavour)
        else:
           raise RuntimeError,"Unknown reconstruction method"+\
 	        self.getReconstructionMethod(_iteration)
