@@ -509,7 +509,7 @@ class preprocess_particles_class:
         launch_job.launch_job("xmipp_sort_by_statistics",
                               command,
                               self.log,
-                              False,1,1'')
+                              False,1,1,'')
         os.chdir(os.pardir)
 
     def close(self):

@@ -66,10 +66,6 @@ DoCorrectGreyScale=False
 """ As the resolution of the intial reference should be low, this sampling can be relatively crude, e.g. 15
 """
 ProjMatchSampling=15
-# {expert} Threshold for a quick weighted back-projection to obtain right grey scale
-""" As the resolution of the intial reference should be low, this value can be relatively high, e.g. 0.02
-"""
-WbpThreshold=0.02
 #------------------------------------------------------------------------------------------------
 # {section} Low-pass filter initial reference?
 #------------------------------------------------------------------------------------------------
@@ -123,9 +119,18 @@ NumberOfIterations=25
 """
 Symmetry="c1"
 # Refine the normalization parameters for each image?
-""" This variant of the algorithm deals with normalization errors. For more info see (and please cite) Scheres et. al. (2009) J. Struc. Biol., in press
+""" This variant of the algorithm deals with normalization errors. ç
+    For more info see (and please cite) Scheres et. al. (2009) J. Struc. Biol., in press
 """
 DoNorm=False
+# {expert} Use Fourier-interpolation instead of wlsART?
+""" The Fourier-interpolation reconstruction method is much faster than wlsART 
+    and may give similar results. It however is not guaranteed to optimize the 
+    likelihood function. This is an experimental feature. One may limit the 
+    maximum resolution of the fourier-interpolation using "-max_resolution 0.3"
+    (to 0.3 digital frequency). Use the extra parameter entry below for that. 
+"""
+DoFourier=False
 # {expert} Restart after iteration:
 """ For previous runs that stopped before convergence,
     resume the calculations after the completely finished iteration,
@@ -159,7 +164,8 @@ DoParallel=True
 """
 NumberOfMpiProcesses=5
 # MPI system Flavour 
-""" Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
+""" Depending on your queuing system and your mpi implementation, 
+    different mpirun-like commands have to be given.
     Ask the person who installed your xmipp version, which option to use. Or read: xxx
 """
 SystemFlavour=""
@@ -190,7 +196,6 @@ class ML3D_class:
                  HighResLimit,
                  DoCorrectGreyScale,
                  ProjMatchSampling,
-                 WbpThreshold,
                  DoLowPassFilterReference,
                  LowPassFilter,
                  PixelSize,
@@ -203,6 +208,7 @@ class ML3D_class:
                  NumberOfIterations,
                  Symmetry,
                  DoNorm,
+                 DoFourier,
                  RestartIter,
                  ExtraParamsMLrefine3D,
                  SeedsSelfile,
@@ -236,9 +242,9 @@ class ML3D_class:
         self.NumberOfIterations=NumberOfIterations
         self.Symmetry=Symmetry
         self.DoNorm=DoNorm
+        self.DoFourier=DoFourier
         self.ExtraParamsMLrefine3D=ExtraParamsMLrefine3D
         self.ProjMatchSampling=ProjMatchSampling
-        self.WbpThreshold=WbpThreshold
         self.NumberOfThreads=NumberOfThreads
         self.DoParallel=DoParallel
         self.NumberOfMpiProcesses=NumberOfMpiProcesses
@@ -328,7 +334,8 @@ class ML3D_class:
             fh.writelines(newlines)
             fh.close()
 
-    # Crude correction of grey-scale, by performing a single iteration of projection matching and wbp
+    # Crude correction of grey-scale, by performing a single iteration of 
+    # projection matching and fourier reconstruction
     def correct_greyscale(self):
         import os
         import launch_job
@@ -402,16 +409,17 @@ class ML3D_class:
 
 
         print '*********************************************************************'
-        print '* Perform WBP reconstruction '
+        print '* Perform Fourier-interpolation reconstruction '
         iname=dirname+basename+'_classes.sel'
         outname=basename+'.vol'
-        params= ' -i '    + str(iname) + \
-                ' -o '    + str(outname) + \
-                ' -threshold '+str(self.WbpThreshold) + \
-                ' -sym '+ self.Symmetry + \
-                '  -use_each_image -weight '
+        parameters= ' -i '    + str(iname) + \
+                    ' -o '    + str(outname) + \
+                    ' -sym '+ self.Symmetry + \
+                    '  -weight '
+        if (self.NumberOfThreads>1):
+            parameters += ' -thr ' + str(self.NumberOfThreads)
            
-        launch_job.launch_job("xmipp_reconstruct_wbp",
+        launch_job.launch_job("xmipp_reconstruct_fourier",
                               parameters,
                               self.log,
                               self.DoParallel,
@@ -537,6 +545,8 @@ class ML3D_class:
             params+=' -thr ' + str(self.NumberOfThreads)
         if (self.DoNorm):
             params+=' -norm '
+        if (self.DoFourier):
+            params+=' -fourier '
         if (self.DoMlf):
             params+= ' -ctfdat my.ctfdat'
             if (not amplitude_corrected):
@@ -550,7 +560,7 @@ class ML3D_class:
             program="xmipp_ml_refine3d"
            
         launch_job.launch_job(program,
-                              parameters,
+                              params,
                               self.log,
                               self.DoParallel,
                               self.NumberOfMpiProcesses,
@@ -574,7 +584,7 @@ class ML3D_class:
             program="xmipp_ml_refine3d"
 
         launch_job.launch_job(program,
-                              parameters,
+                              params,
                               self.log,
                               self.DoParallel,
                               self.NumberOfMpiProcesses,
@@ -603,7 +613,6 @@ if __name__ == '__main__':
                     HighResLimit,
                     DoCorrectGreyScale,
                     ProjMatchSampling,
-                    WbpThreshold,
                     DoLowPassFilterReference,
                     LowPassFilter,
                     PixelSize,
@@ -616,6 +625,7 @@ if __name__ == '__main__':
                     NumberOfIterations,
                     Symmetry,
                     DoNorm,
+                    DoFourier,
                     RestartIter,
                     ExtraParamsMLrefine3D,
                     SeedsSelfile,

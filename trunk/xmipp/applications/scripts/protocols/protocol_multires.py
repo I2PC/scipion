@@ -275,27 +275,31 @@ Recenter=False
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
-# Use multiple processors in parallel?
+# Number of (shared-memory) threads?
+""" This option provides shared-memory parallelization on multi-core machines. 
+    It does not require any additional software, other than xmipp
+"""
+NumberOfThreads=1
+
+# Use distributed-memory parallelization (MPI)?
+""" This option provides parallelization on clusters with distributed memory architecture.
+    It requires mpi to be installed.
+"""
 DoParallel=True
-
-# Number of processors to use:
-MyNumberOfCPUs=3
-
-# Number of processors to use by large memory demanding algorithms:
+# Number of MPI processes to use:
+""" This option provides distributed-memory parallelization on multi-node machines. 
+    It requires the installation of some MPI flavour, possibly together with a queueing system
+"""
+NumberOfMpiProcesses=5
+# Number of MPI processes to use by memory-demanding algorithms:
 """ In fact only the Fourier reconstruction method is so large memory demanding
 """
-MyNumberOfCPUsReduced=2
-
-# Number of threads available on a single node
-""" Maximum number of threads that can be launched in a single node
+NumberOfMpiProcessesReduced=2
+# MPI system Flavour 
+""" Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
+    Ask the person who installed your xmipp version, which option to use. Or read: xxx
 """
-MyNumberOfThreads=2
-
-# {file} A list of all available CPUs (the MPI-machinefile):
-""" Depending on your system, your standard script to launch MPI-jobs may require this
-    if your queueing system using an environment variable, give it here (with the leading $, e.g. $PBS_NODEFILE
-"""
-MyMachineFile=''
+SystemFlavour=""
 
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
@@ -318,7 +322,7 @@ import sys
 scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
 sys.path.append(scriptdir) # add default search path
 import ctfdat
-import launch_parallel_job
+import launch_job
 import log
 import selfile
 
@@ -368,10 +372,10 @@ class MultiResClass:
 		_Recenter,
 
 		_DoParallel,
-		_MyNumberOfCPUs,
-		_MyNumberOfCPUsReduced,
-                _MyNumberOfThreads,
-		_MyMachineFile,
+		_NumberOfMpiProcesses,
+		_NumberOfMpiProcessesReduced,
+                _NumberOfThreads,
+		_SystemFlavour,
 		
 		_Verbose
                 ):
@@ -425,17 +429,10 @@ class MultiResClass:
        self.recenter=_Recenter
 
        self.doParallel=_DoParallel
-       self.myNumberOfCPUs=_MyNumberOfCPUs
-       self.myNumberOfCPUsReduced=_MyNumberOfCPUsReduced
-       self.myNumberOfThreads=_MyNumberOfThreads
-       if _MyMachineFile=='':
-          self.myMachineFile=''
-       elif _MyMachineFile[0]=='/':
-          self.myMachineFile=os.path.abspath(_MyMachineFile)
-       elif _MyMachineFile[0]=='$':
-          self.myMachineFile=_MyMachineFile
-       else:
-          self.myMachineFile=os.path.abspath(self.projectDir+"/"+_MyMachineFile)
+       self.NumberOfMpiProcesses=_NumberOfMpiProcesses
+       self.NumberOfMpiProcessesReduced=_NumberOfMpiProcessesReduced
+       self.myNumberOfThreads=_NumberOfThreads
+       self.SystemFlavour=SystemFlavour
 
        self.verbose=_Verbose
        if self.verbose:
@@ -537,20 +534,19 @@ class MultiResClass:
           if not self.symmetryGroup=="c1":
              params+=" -sym "+self.symmetryGroup
 
-          launch_parallel_job.launch_job(self.doParallel,
-                                         "xmipp_angular_project_library",
-                                         "xmipp_mpi_angular_project_library",
-                                         params0,
-                                         self.mylog,
-                                         self.myNumberOfCPUs,
-                                         self.myMachineFile,
-                                         False)
-	  launch_parallel_job.launch_job(self.doParallel,
+          launch_job.launch_job("xmipp_angular_project_library",
+                                params0,
+                                self.mylog,
+                                self.doParallel,
+                                self.NumberOfMpiProcesses,
+                                self.myMachineFile,
+                                False)
+	  launch_job.launch_job(self.doParallel,
         			       "xmipp_angular_discrete_assign",
         			       "xmipp_mpi_angular_discrete_assign",
         			       params,
         			       self.mylog,
-        			       self.myNumberOfCPUs,
+        			       self.NumberOfMpiProcesses,
         			       self.myMachineFile,
         			       False)
       	  self.execute("find . -name \"ref*\" -exec rm -f {} \; &")
@@ -566,12 +562,12 @@ class MultiResClass:
 		 "-ang "+self.getDiscreteAnglesFilename(_iteration)+" "+\
 		 "-oang "+self.getContinuousAnglesFilename(_iteration)+" "+\
 		 "-max_shift "+str(self.particleWorkingRadius/5)
-	  launch_parallel_job.launch_job(self.doParallel,
+	  launch_job.launch_job(self.doParallel,
         			       "xmipp_angular_continuous_assign",
         			       "xmipp_mpi_angular_continuous_assign",
         			       params,
         			       self.mylog,
-        			       self.myNumberOfCPUs,
+        			       self.NumberOfMpiProcesses,
         			       self.myMachineFile,
         			       False)
        else:
@@ -845,12 +841,12 @@ class MultiResClass:
         	 self.getModelFFilename(_iteration)+\
 		 " -ctfdat preproc_assign_ctfdat.txt"+\
 		 " -oroot preproc_assign_IDR/preproc_assign_IDR_";
-	  launch_parallel_job.launch_job(self.doParallel,
+	  launch_job.launch_job(self.doParallel,
         			       "xmipp_ctf_correct_idr",
         			       "xmipp_mpi_ctf_correct_idr",
         			       params,
         			       self.mylog,
-        			       self.myNumberOfCPUs,
+        			       self.NumberOfMpiProcesses,
         			       self.myMachineFile,
         			       False)
           self.execute('xmipp_selfile_create "preproc_assign_IDR/*" > preproc_assign.sel')
@@ -1189,12 +1185,12 @@ class MultiResClass:
 	  doParallel=self.doParallel
 	  if self.getSerialART(_iteration)=="1":
 	     doParallel=False
-	  launch_parallel_job.launch_job(doParallel,
+	  launch_job.launch_job(doParallel,
         			       "xmipp_reconstruct_art",
         			       "xmipp_mpi_reconstruct_art",
         			       params,
         			       self.mylog,
-        			       self.myNumberOfCPUs,
+        			       self.NumberOfMpiProcesses,
         			       self.myMachineFile,
         			       False)
 	  self.deleteFile(_outputRootName+".hist")
@@ -1208,12 +1204,12 @@ class MultiResClass:
 	     params+=" -radius "+str(0.5*math.floor(math.sqrt(2.0)*
 	        self.workXDim/
 	        math.pow(2.0,int(self.getPyramidLevel(_iteration)))))
-	  launch_parallel_job.launch_job(self.doParallel,
+	  launch_job.launch_job(self.doParallel,
         			       "xmipp_reconstruct_wbp",
         			       "xmipp_mpi_reconstruct_wbp",
         			       params,
         			       self.mylog,
-        			       self.myNumberOfCPUs,
+        			       self.NumberOfMpiProcesses,
         			       self.myMachineFile,
         			       False)
        elif self.getReconstructionMethod(_iteration)=="fourier":
@@ -1224,12 +1220,12 @@ class MultiResClass:
           if self.getComputeFSC(_iteration):
             params+="-prepare_fsc "+self.getReconstructionRootname(_iteration)+\
                ".fsc "
-	  launch_parallel_job.launch_job(self.doParallel,
+	  launch_job.launch_job(self.doParallel,
         			       "xmipp_reconstruct_fourier",
         			       "xmipp_mpi_reconstruct_fourier",
         			       params,
         			       self.mylog,
-        			       self.myNumberOfCPUsReduced,
+        			       self.NumberOfMpiProcessesReduced,
         			       self.myMachineFile,
         			       False)
        else:
@@ -1350,10 +1346,10 @@ if __name__ == '__main__':
 		Recenter,
 
 		DoParallel,
-		MyNumberOfCPUs,
-		MyNumberOfCPUsReduced,
-                MyNumberOfThreads,
-		MyMachineFile,
+		NumberOfMpiProcesses,
+		NumberOfMpiProcessesReduced,
+                NumberOfThreads,
+		SystemFlavour,
 		
 		True
               )
