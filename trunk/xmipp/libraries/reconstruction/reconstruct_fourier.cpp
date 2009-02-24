@@ -48,7 +48,6 @@ void Prog_RecFourier_prm::read(int argc, char **argv)
     //sampling_rate = textToFloat(getParameter(argc, argv, "-sampling_rate", "1"));
     maxResolution = textToFloat(getParameter(argc, argv,
                                              "-max_resolution",".5"));
-    NiterWeight = textToInteger(getParameter(argc, argv, "-n","20"));
     numThreads = textToInt(getParameter(argc, argv, "-thr", "1"));
     thrWidth = textToInt(getParameter(argc,argv, "-thr_width", "-1"));
 }
@@ -75,7 +74,6 @@ void Prog_RecFourier_prm::show()
             std::cerr << " Use weights stored in the image headers or doc file" << std::endl;
         else
             std::cerr << " Do NOT use weights" << std::endl;
-        std::cerr << " Iterations weight         : " << NiterWeight << std::endl;
         std::cerr << "\n Interpolation Function" 
         << "\n   blrad                 : "  << blob.radius
         << "\n   blord                 : "  << blob.order
@@ -92,27 +90,24 @@ void Prog_RecFourier_prm::usage()
 
     // To screen
     std::cerr << "  Usage:\n";
-    std::cerr << "  reconstruct_fourier_interpolation  <options>\n";
-    std::cerr << "   -i <input selfile>          : selection file with input images \n";
-    std::cerr << " [ -pad_proj <p=2.0> ]         : projection padding factor \n";
-    std::cerr << " [ -pad_vol  <p=2.0> ]         : volume padding factor \n";
-    std::cerr << " [ -o <name=\"rec_fourier.vol\">  : filename for output volume \n";
-    std::cerr << " [ -prepare_fsc <fscfile>      : filename root for FSC files \n";
-    std::cerr << " [ -doc <docfile>              : Ignore headers and get angles from this docfile \n";
-    std::cerr << " [ -sym     <symfile> ]        : Enforce symmetry in projections\n";
-    std::cerr << " [ -n <iter=20>]               : Iterations for computing the weight\n";
+    std::cerr << "  reconstruct_fourier  <options>\n";
+    std::cerr << "   -i <input selfile>          : Selection file with input images \n";
+    std::cerr << " [ -o <\"rec_fourier.vol\">]     : Filename for output volume \n";
+    std::cerr << " [ -sym <symfile> ]            : Enforce symmetry in projections\n";
+    std::cerr << " [ -pad_proj <p=2.0> ]         : Projection padding factor \n";
+    std::cerr << " [ -pad_vol  <p=2.0> ]         : Volume padding factor \n";
+    std::cerr << " [ -prepare_fsc <fscfile> ]    : Filename root for FSC files \n";
+    std::cerr << " [ -doc <docfile> ]            : Ignore headers and get angles from this docfile \n";
+    std::cerr << " [ -max_resolution <p=0.5> ]   : Max resolution (Nyquist=0.5) \n";
+    std::cerr << " [ -weight ]                   : Use weights stored in the image headers or doc file\n";
     std::cerr << " [ -thr <threads=1> ]          : Number of concurrent threads\n";
     std::cerr << " [ -thr_width <width=blob_radius> : Number of image rows processed at a time by a thread\n";
-    std::cerr << " -----------------------------------------------------------------" << std::endl;
-    std::cerr << " [ -weight ]               : Use weights stored in the image headers or doc file" << std::endl;
-    std::cerr << "\n Interpolation Function"
-    << "\n   [-r blrad=1.9]        blob radius in pixels"
-    << "\n   [-m blord=0]          order of Bessel function in blob"
-    << "\n   [-a blalpha=15]       blob parameter alpha"
-    //<< "\n   [-sampling_rate =1>]            : Sampling rate (Angstroms/pixel)\n"
-    << "\n   [-max_resolution=0.5>]            : Max resolution"
-    << "\n\t\t0.5 is the maximum resolution)\n"
-    << " -----------------------------------------------------------------" << std::endl;
+    std::cerr << " -----------------------------------------------------------------\n";
+    std::cerr << "Interpolation Function\n ";
+    std::cerr << " [-r blrad=1.9]                : blob radius in pixels\n";
+    std::cerr << " [-m blord=0]                  : order of Bessel function in blob\n";
+    std::cerr << " [-a blalpha=15]               : blob parameter alpha\n";
+    std::cerr << " -----------------------------------------------------------------"<< std::endl;
 }
 
 void Prog_RecFourier_prm::produce_Side_info()
@@ -312,7 +307,10 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                         weight=1.0;
                     }
                     else if (weight==0.0)
+                    {
+                        threadParams->read = 2;
                         break;
+                    }
 
                     // Copy the projection to the center of the padded image
                     // and compute its Fourier transform
@@ -634,7 +632,9 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
 
         for ( int nt = 0 ; nt < numThreads ; nt ++ )
         {
-            if ( th_args[nt].read > 0 )
+            if ( th_args[nt].read == 2 )
+                processed = true;
+            else if ( th_args[nt].read == 1 )
             {
                 processed = true;
                 if (verb && imgno++%repaint==0) progress_bar(imgno);
