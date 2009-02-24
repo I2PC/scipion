@@ -39,8 +39,8 @@ Obligatory:
     * A {file} or {dir} label on the comment line (#) marks the option as a
       Filename or Directory, and will add a corresponding Browse-button to the GUI
       Note that this button return absolute paths
-    * A {radio}|option A|option B|option C| label on the comment line (#) marks 
-      the option as a radio button. The selected variable should be one of the options indicated.
+    * A {list}|option A|option B|option C| label on the comment line (#) marks 
+      the option as a radio-list button. The selected variable should be one of the options indicated.
       The number of different options is not limited.
 
 Optional:
@@ -229,7 +229,7 @@ class automated_gui_class:
                 else:
                     browse="none"
                 # Check radio options
-                if not comment.find("{radio}")==-1:
+                if not comment.find("{list}")==-1:
                     comment=comment.replace ('{file}', '' )
                     words=comment.split('|')
                     comment=words[len(words)-1]

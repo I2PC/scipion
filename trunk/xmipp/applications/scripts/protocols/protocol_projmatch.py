@@ -344,7 +344,7 @@ DoReconstruction=True
 # {expert} Display reconstructed volume?
 DisplayReconstruction=False
 
-# Reconstructiom method
+# {list}|fourier|art|wbp| Reconstruction method
 """ Choose between wbp, art or fourier
     You must specify this option for each iteration. 
     This can be done by a sequence of numbers (for instance, "wbp wbp wbp art " 
@@ -454,35 +454,29 @@ ConstantToAddToFiltration='0.1'
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
-# Use multiple processors in parallel?
+# Number of (shared-memory) threads?
+""" This option provides shared-memory parallelization on multi-core machines. 
+    It does not require any additional software, other than xmipp
+"""
+NumberOfThreads=1
+
+# distributed-memory parallelization (MPI)?
+""" This option provides distributed-memory parallelization on multi-node machines. 
+    It requires the installation of some MPI flavour, possibly together with a queueing system
+"""
 DoParallel=True
 
-# Number of processors to use:
-""" If this value is set to -1, the number of CPUs will be determined automatically from the machinefile. This is especially useful for job-queueing systems.
-"""
-NumberOfCPUs=8
+# Number of MPI processes to use:
+NumberOfMpiProcesses=8
 
 # minumum size of jobs in mpi processe. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)
 MpiJobSize='5'
 
-# {file} A list of all available CPUs (the MPI-machinefile):
-""" Depending on your system, your standard script to launch MPI-jobs may require this
-    if your queueing system using an environment variable, give it here (with the leading $, e.g. $PBS_NODEFILE
+# MPI system Flavour 
+""" Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
+    Ask the person who installed your xmipp version, which option to use. Or read: xxx
 """
-MachineFile=''
-
-#{expert}Number of threads
-"""Parallel implementation has been made either using mpi or threads
-
-"""
-ThreadsNumber='1'
-
-
-# {expert} Control file
-""" This is an ugly solution to have improved killing control over the mpi jobs.
-    The script will create this file, and any mpi-job will be killed as soon as this file doesn't exist anymore. This is required with certain queueing systems.
-"""
-MyControlFile=''
+SystemFlavour="SLURM-MPICH"
 
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
@@ -570,11 +564,10 @@ class projection_matching_class:
                 _ProjectDir,
                 _LogDir,
                 _DoParallel,
-                _MyNumberOfCPUs,
-                _MyMachineFile,
+                _MyNumberOfMpiProcesses,
+                _MySystemFlavour,
                 _MyMpiJobSize,
-		_ThreadsNumber,
-                _MyControlFile,
+		_MyNumberOfThreads,
                 _SymmetryGroup,
                 _SetResolutiontoZero,
                 _ConstantToAddToFiltration
@@ -585,7 +578,7 @@ class projection_matching_class:
        scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
        sys.path.append(scriptdir)
        import arg,log,logging,selfile
-       import launch_parallel_job
+       import launch_job
 
        self._CleanUpFiles=_CleanUpFiles
        self._WorkDirectory=os.getcwd()+'/'+_WorkDirectory
@@ -623,7 +616,7 @@ class projection_matching_class:
        self._PaddingFactor=PaddingFactor
        self._DataArePhaseFlipped=_DataArePhaseFlipped
        self._DoParallel=_DoParallel
-       self._MyNumberOfCPUs=_MyNumberOfCPUs
+       self._MyNumberOfMpiProcesses=_MyNumberOfMpiProcesses
        self._SymmetryGroup=_SymmetryGroup
        self._ARTReconstructionExtraCommand=_ARTReconstructionExtraCommand
        self._WBPReconstructionExtraCommand=_WBPReconstructionExtraCommand
@@ -637,17 +630,10 @@ class projection_matching_class:
            globalFourierMaxFrequencyOfInterest=float(_FourierMaxFrequencyOfInterest)
        else:
            globalFourierMaxFrequencyOfInterest=0.5
-       self._MyMachineFile=_MyMachineFile
-       if (len(_MyMachineFile) > 1):
-           if (_MyMachineFile[0]!="$"):
-                self._MyMachineFile=os.path.abspath(_MyMachineFile)
+       self._MySystemFlavour=_MySystemFlavour
        
-       if (_MyControlFile==""):
-           self._DoControl=False
-       else:
-           self._DoControl=True
        self._MyMpiJobSize =_MyMpiJobSize
-       self._ThreadsNumber =_ThreadsNumber
+       self._MyNumberOfThreads =_MyNumberOfThreads
        self._user_suplied_ReferenceVolume=self._ReferenceFileName
 
        # Set up logging
@@ -673,16 +659,6 @@ class projection_matching_class:
        create_working_directory(self._mylog,self._WorkDirectory)
        log.make_backup_of_script_file(sys.argv[0],self._WorkDirectory)
        
-       # Create a CONTROL file for improved killing control
-       if (self._DoControl):
-          self._MyControlFile=os.path.abspath(self._WorkDirectory + \
-                                             '/' + _MyControlFile)
-          FILE = open(self._MyControlFile,"w")
-          FILE.write("Delete this file to kill all current processes\n")
-          FILE.close()
-       else:
-          self._MyControlFile=""
-
        # Create a selfile with absolute pathname in the WorkingDir
        mysel=selfile.selfile()
        mysel.read(_SelFileName)
@@ -715,10 +691,10 @@ class projection_matching_class:
           params=' -i ' + self._SelFileName + \
                  ' -o ' + self._WorkDirectory + '/' + \
                  DocFileWithOriginalAngles
-          launch_parallel_job.launch_sequential_job("xmipp_header_extract",
-                                                    params,
-                                                    self.log,
-                                                    False)
+          launch_job.launch_job("xmipp_header_extract",
+                                params,
+                                self.log,
+                                False,1,1,'')
        else:
           command = "copy" , self._DocFileName ,  self._WorkDirectory + '/' + DocFileWithOriginalAngles
           self._mylog.info(command)
@@ -860,15 +836,14 @@ class projection_matching_class:
                                          self._DiscardPercentage,
                                          self._DisplayProjectionMatching,
                                          self._DoParallel,
-                                         self._MyNumberOfCPUs,
-                                         self._MyMachineFile,
+                                         self._MyNumberOfMpiProcesses,
+                                         self._MyNumberOfThreads
+                                         self._MySystemFlavour,
                                          self._MyMpiJobSize,
                                          self._WorkDirectory,
                                          self._SymmetryGroup,
                                          self._AvailableMemory,
                                          self._DoComputeResolution,
-                                         self._DoControl,
-                                         self._MyControlFile,
                                          self._DoAlign2D,
                                          self._Align2DIterNr,
                                          self._Align2dMaxChangeOffset,
@@ -899,10 +874,10 @@ class projection_matching_class:
                                     _iteration_number,
                                     self._DisplayReconstruction,
                                     self._DoParallel,
-                                    self._MyNumberOfCPUs,
-                                    self._MyMachineFile,
+                                    self._MyNumberOfMpiProcesses,
+                                    self._NumberOfThreads,
+                                    self._MySystemFlavour,
                                     self._MyMpiJobSize,
-                                    self._ThreadsNumber,
                                     self._ReconstructionMethod,
                                     globalFourierMaxFrequencyOfInterest,
                                     self._ARTLambda,
@@ -917,15 +892,15 @@ class projection_matching_class:
                                                   self._ARTReconstructionExtraCommand,
                                                   self._WBPReconstructionExtraCommand,
                                                   self._FourierReconstructionExtraCommand,
-						  self._ThreadsNumber,
                                                   self._ReconstructionMethod,
 						  globalFourierMaxFrequencyOfInterest,
                                                   _iteration_number,
                                                   self._DisplayReconstruction,
                                                   self._ResolSam,
                                                   self._DoParallel,
-                                                  self._MyNumberOfCPUs,
-                                                  self._MyMachineFile,
+                                                  self._MyNumberOfMpiProcesses,
+						  self._MyNumberOfThreads,
+                                                  self._MySystemFlavour,
 						  self._MyMpiJobSize,
                                                   self._SymmetryGroup,
                                                   self._DisplayResolution,
@@ -948,7 +923,8 @@ class projection_matching_class:
                                      self._ConstantToAddToFiltration,
                                      filter_frequence,
                                      self._ReconstructedVolume[_iteration_number],
-                                     self._ReconstructedandfilteredVolume[1+_iteration_number]
+                                     self._ReconstructedandfilteredVolume[1+_iteration_number],
+                                     self._MySystemFlavour
                                      )
 
           # Remove all class averages and reference projections
@@ -1002,7 +978,7 @@ def execute_ctf_groups (_mylog,
 
    import os,glob
    import utils_xmipp
-   import launch_parallel_job
+   import launch_job
 
    if not os.path.exists(CtfGroupDirectory):
       os.makedirs(CtfGroupDirectory)
@@ -1019,10 +995,10 @@ def execute_ctf_groups (_mylog,
    if (_DataArePhaseFlipped):
       command += ' -phase_flipped '
    command += _CTFExtraCommands   
-   launch_parallel_job.launch_sequential_job("xmipp_ctf_group",
-                                             command,
-                                             self.log,
-                                             False)
+   launch_job.launch_job("xmipp_ctf_group",
+                         command,
+                         self.log,
+                         False,1,1,'')
 
    wildcardname=utils_xmipp.composeWildcardFileName(CtfGroupDirectory + '/' + CtfGroupRootName+'_group','ctf')
    ctflist=glob.glob(wildcardname)
@@ -1040,7 +1016,7 @@ def execute_mask(_DoMask,
                  _iteration_number,
                  _ReferenceVolume):
    import os,shutil
-   import launch_parallel_job
+   import launch_job
    _mylog.debug("execute_mask")
    if(_iteration_number==1):
       InPutVolume=_ReferenceFileName
@@ -1054,10 +1030,10 @@ def execute_mask(_DoMask,
        command=' -i '    + InPutVolume + \
                ' -o '    + _ReferenceVolume + \
                ' -mask ' + MaskVolume 
-       launch_parallel_job.launch_sequential_job("xmipp_mask",
-                                                 command,
-                                                 self.log,
-                                                 False)
+       launch_job.launch_job("xmipp_mask",
+                             command,
+                             self.log,
+                             False,1,1,'')
 
        if _DisplayMask==True:
           command='xmipp_show -vol '+ MaskedVolume +' -w 10 &'
@@ -1104,15 +1080,14 @@ def execute_projection_matching(_mylog,
                                 _DiscardPercentage,
                                 _DisplayProjectionMatching,
                                 _DoParallel,
-                                _MyNumberOfCPUs,
-                                _MyMachineFile,
+                                _MyNumberOfMpiProcesses,
+                                _MyNumberOfThreads,
+                                _MySystemFlavour,
                                 _MyMpiJobSize,
                                 _WorkDirectory,
                                 _SymmetryGroup,
                                 _AvailableMemory,
                                 _DoComputeResolution,
-                                _DoControl,
-                                _MyControlFile,
                                 _DoAlign2D,
                                 _Align2DIterNr,
                                 _Align2dMaxChangeOffset,
@@ -1121,8 +1096,7 @@ def execute_projection_matching(_mylog,
                                            
    _mylog.debug("execute_projection_matching")
    import os, shutil, string, glob, math
-   import launch_parallel_job, selfile, docfiles, utils_xmipp
-   RunInBackground=False
+   import launch_job, selfile, docfiles, utils_xmipp
 
    if (_DoCtfCorrection):
       # To use -add_to in angular_class_average correctly, 
@@ -1167,22 +1141,16 @@ def execute_projection_matching(_mylog,
      parameters+=  \
               ' -groups '              + CtfGroupSubsetFileName
 
-   if (_DoControl):
-      parameters += \
-          ' -control '                 + _MyControlFile
-
    if (len(_MyMpiJobSize)>0 and _DoParallel):
       parameters = parameters + ' -mpi_job_size ' + str(_MyMpiJobSize)
 
-   launch_parallel_job.launch_job(
-                       _DoParallel,
-                       'xmipp_angular_project_library',
-                       'xmipp_mpi_angular_project_library',
-                       parameters,
-                       _mylog,
-                       _MyNumberOfCPUs,
-                       _MyMachineFile,
-                       RunInBackground)
+   launch_job.launch_job('xmipp_angular_project_library',
+                         parameters,
+                         _mylog,
+                         _DoParallel,
+                         _MyNumberOfMpiProcesses,
+                         _MyNumberOfThreads,
+                         _MySystemFlavour)
 
 
    # Loop over all CTF groups
@@ -1226,22 +1194,16 @@ def execute_projection_matching(_mylog,
                   ' -pad '            + str(_PaddingFactor) + \
                   ' -ctf '            + ctffile
 
-      if (_DoControl):
-         parameters += \
-                  ' -control '        + _MyControlFile
-
       if (len(_MyMpiJobSize)>0 and _DoParallel):
          parameters = parameters + ' -mpi_job_size ' + str(_MyMpiJobSize)
 
-      launch_parallel_job.launch_job(
-                                     _DoParallel,
-                                     'xmipp_angular_projection_matching',
-                                     'xmipp_mpi_angular_projection_matching',
-                                     parameters,
-                                     _mylog,
-                                     _MyNumberOfCPUs,
-                                     _MyMachineFile,
-                                     RunInBackground)
+      launch_job.launch_job('xmipp_angular_projection_matching',
+                            parameters,
+                            _mylog,
+                            _DoParallel,
+                            _MyNumberOfMpiProcesses,
+                            _MyNumberOfThreads,
+                            _MySystemFlavour)
 
       # Now make the class averages
       parameters =  ' -i '      + outputname + '.doc'  + \
@@ -1270,15 +1232,13 @@ def execute_projection_matching(_mylog,
          parameters += \
                     ' -split '
 
-      launch_parallel_job.launch_job(
-                                     _DoParallel,
-                                     'xmipp_angular_class_average',
-                                     'xmipp_mpi_angular_class_average',
-                                     parameters,
-                                     _mylog,
-                                     _MyNumberOfCPUs,
-                                     _MyMachineFile,
-                                     RunInBackground)
+      launch_job.launch_job('xmipp_angular_class_average',
+                            parameters,
+                            _mylog,
+                            _DoParallel,
+                            _MyNumberOfMpiProcesses,
+                            _MyNumberOfThreads,
+                            _MySystemFlavour)
 
       if (_DoAlign2D == '1'):
          outputdocfile =  ProjMatchRootName + '_realigned.doc'
@@ -1328,7 +1288,7 @@ def make_subset_docfiles(_mylog,
 
    import os;
    import utils_xmipp
-   import launch_parallel_job
+   import launch_job
 
    # Loop over all CTF groups
    docselfile = []
@@ -1342,10 +1302,10 @@ def make_subset_docfiles(_mylog,
               ' -sel ' + inselfile + \
               ' -o   ' + inputdocfile
       print '*********************************************************************'
-      launch_parallel_job.launch_sequential_job("xmipp_docfile_select_subset",
-                                                 command,
-                                                 self.log,
-                                                 False)
+      launch_job.launch_job("xmipp_docfile_select_subset",
+                            command,
+                            self.log,
+                            False,1,1,'')
       docselfile.append(inputdocfile+' 1\n')
 
    # Write the selfile of all these docfiles
@@ -1364,10 +1324,10 @@ def execute_reconstruction(_mylog,
                            _iteration_number,
                            _DisplayReconstruction,
                            _DoParallel,
-                           _MyNumberOfCPUs,
-                           _MyMachineFile,
+                           _MyNumberOfMpiProcesses,
+                           _MyNumberOfThreads,
+                           _MySystemFlavour,
                            _MyMpiJobSize,
-                           _ThreadsNumber,
                            _ReconstructionMethod,
                            _FourierMaxFrequencyOfInterest,
                            _ARTLambda,
@@ -1377,7 +1337,7 @@ def execute_reconstruction(_mylog,
    _mylog.debug("execute_reconstruction")
 
    import os,shutil,math
-   import launch_parallel_job
+   import launch_job
    RunInBackground=False
 
    Outputvolume = _ReconstructedandfilteredVolume
@@ -1394,6 +1354,7 @@ def execute_reconstruction(_mylog,
                   ' -sym '  + _SymmetryGroup + \
                   ' -weight -use_each_image '
       parameters = parameters + _WBPReconstructionExtraCommand
+      _MyNumberOfThreads = 1
               
    elif _ReconstructionMethod=='art':
       program = 'xmipp_reconstruct_art'
@@ -1402,7 +1363,7 @@ def execute_reconstruction(_mylog,
       parameters=' -i '    + ForReconstructionSel + \
                  ' -o '    + Outputvolume + ' ' + \
                  ' -sym '  + _SymmetryGroup + \
-		 ' -thr '  + _ThreadsNumber + \
+		 ' -thr '  + _MyNumberOfThreads + \
                  ' -WLS '
       if len(_ARTLambda)>1:
          parameters = parameters + ' -l '   + _ARTLambda + ' '
@@ -1413,13 +1374,13 @@ def execute_reconstruction(_mylog,
       #untill we decide how to handle threads and mpi at the same time
       #leave this as false when using threads or modify it
       #at your own risk
-      if(int(_ThreadsNumber)>1):
+      if(int(_MyNumberOfThreads)>1):
            _DoParallel=False
       program = 'xmipp_reconstruct_fourier'
       parameters=' -i '    + ForReconstructionSel + \
                  ' -o '    + Outputvolume + '.vol ' + \
                  ' -sym '  + _SymmetryGroup + \
-		 ' -thr '  + _ThreadsNumber + \
+		 ' -thr '  + _MyNumberOfThreads + \
                  ' -weight ' + \
                  ' -max_resolution ' + \
 	         str(_FourierMaxFrequencyOfInterest) + ' '	 
@@ -1432,25 +1393,21 @@ def execute_reconstruction(_mylog,
       exit(1)
     
    # if using threads number of parallel jobs must be
-   # floor(_MyNumberOfCPUs/_ThreadsNumber)
+   # floor(_MyNumberOfMpiProcesses/_NumberOfThreads)
    # if zero print error message
-   mpiThreadMyNumberOfCPUs = str(math.floor(float(_MyNumberOfCPUs)/
-                                   float(_ThreadsNumber)))
-   if(int(_ThreadsNumber) > int(_MyNumberOfCPUs)):
-       print "ThreadsNumber cannot be greater than NumberOfCPUs)"
+   mpiThreadMyNumberOfMpiProcesses = str(math.floor(float(_MyNumberOfMpiProcesses)/
+                                   float(_MyNumberOfThreads)))
+   if(int(_MyNumberOfThreads) > int(_MyNumberOfMpiProcesses)):
+       print "NumberOfThreads cannot be greater than NumberOfMpiProcesses)"
        exit(1)
 
-   launch_parallel_job.launch_job(
-                       _DoParallel,
-                       program,
-                       mpi_program,
-                       parameters,
-                       _mylog,
-                       _MyNumberOfCPUs,
-                       _MyMachineFile,
-                       RunInBackground)
-
-
+   launch_job.launch_job(program,
+                         parameters,
+                         _mylog,
+                         _DoParallel,
+                         _MyNumberOfMpiProcesses,
+                         _MyNumberOfThreads,
+                         _MySystemFlavour)
 
    #_mylog.info(command+ ' ' + parameters)
    if _DisplayReconstruction==True:
@@ -1467,15 +1424,15 @@ def  execute_resolution(_mylog,
                         _ARTReconstructionExtraCommand,
                         _WBPReconstructionExtraCommand,
                         _FourierReconstructionExtraCommand,
-			_ThreadsNumber,
                         _ReconstructionMethod,
 			_FourierMaxFrequencyOfInterest,
                         _iteration_number,
                         _DisplayReconstruction,
                         _ResolSam,
                         _DoParallel,
-                        _MyNumberOfCPUs,
-                        _MyMachineFile,
+                        _MyNumberOfMpiProcesses,
+			_MyNumberOfThreads,
+                        _MySystemFlavour,
                         _MyMpiJobSize,
                         _SymmetryGroup,
                         _DisplayResolution,
@@ -1509,7 +1466,7 @@ def  execute_resolution(_mylog,
                       ' -sym '  + _SymmetryGroup + \
                       ' -weight -use_each_image '
           parameters = parameters + _WBPReconstructionExtraCommand
-
+          _MyNumberOfThreads = 1
        elif _ReconstructionMethod=='art':
           RunInBackground=False
           program = 'xmipp_reconstruct_art'
@@ -1518,7 +1475,7 @@ def  execute_resolution(_mylog,
           parameters=' -i '    + Selfiles[i] + \
                      ' -o '    + Outputvolumes[i] + \
                      ' -sym '  + _SymmetryGroup + \
-		     ' -thr '  + _ThreadsNumber + \
+		     ' -thr '  + _MyNumberOfThreads + \
                      ' -WLS '
           if len(_ARTLambda)>1:
              parameters = parameters + ' -l '   + _ARTLambda + ' '
@@ -1530,13 +1487,13 @@ def  execute_resolution(_mylog,
           #untill we decide how to handle threads and mpi at the same time
           #leave this as false when using threads or modify it
           #at your own risk
-	  if(int(_ThreadsNumber)>1):
+	  if(int(_MyNumberOfThreads)>1):
               _DoParallel=False
           program = 'xmipp_reconstruct_fourier'
           parameters=' -i '    +  Selfiles[i] + \
                      ' -o '    +  Outputvolumes[i] + '.vol ' + \
                      ' -sym '  + _SymmetryGroup + \
-		     ' -thr '  + _ThreadsNumber + \
+		     ' -thr '  + _MyNumberOfThreads + \
                      ' -weight ' + \
                      ' -max_resolution ' + \
 	         str(_FourierMaxFrequencyOfInterest)
@@ -1548,23 +1505,21 @@ def  execute_resolution(_mylog,
           print "Reconstruction method unknown. Quiting"
           exit(1)
        # if using threads number of parallel jobs must be
-       # floor(_MyNumberOfCPUs/_ThreadsNumber)
+       # floor(_MyNumberOfMpiProcesses/_NumberOfThreads)
        # if zero print error message
-       mpiThreadMyNumberOfCPUs = str(math.floor(float(_MyNumberOfCPUs)/
-                                       float(_ThreadsNumber)))
-       if(int(_ThreadsNumber) > int(_MyNumberOfCPUs)):
-           print "ThreadsNumber cannot be greater than NumberOfCPUs)"
+       mpiThreadMyNumberOfMpiProcesses = str(math.floor(float(_MyNumberOfMpiProcesses)/
+                                       float(_MyNumberOfThreads)))
+       if(int(_MyNumberOfThreads) > int(_MyNumberOfMpiProcesses)):
+           print "NumberOfThreads cannot be greater than NumberOfMpiProcesses)"
            exit(1)
-       import launch_parallel_job
-       launch_parallel_job.launch_job(
-                           _DoParallel,
-                           program,
-                           mpi_program,
-                           parameters,
-                           _mylog,
-                           _MyNumberOfCPUs,
-                           _MyMachineFile,
-                           RunInBackground)
+       import launch_job
+       launch_job.launch_job(program,
+                             parameters,
+                             _mylog,
+                             _DoParallel,
+                             _MyNumberOfMpiProcesses,
+                             _MyNumberOfThreads,
+                             _MySystemFlavour)
 
     # Prevent high-resolution correlation because of discrete mask from wbp
     innerrad = _OuterRadius - 2
@@ -1575,19 +1530,19 @@ def  execute_resolution(_mylog,
        command = " -i " + Outputvolumes[i] + \
                  " -mask  raised_cosine -" + str(innerrad) + \
                  " -" + str(_OuterRadius)
-       launch_parallel_job.launch_sequential_job("xmipp_mask",
-                                                 command,
-                                                 self.log,
-                                                 False)
+       launch_job.launch_job("xmipp_mask",
+                             command,
+                             self.log,
+                             False,1,1,_MySystemFlavour)
   
     print '**************************************************************'
     print '* Compute resolution ' 
     command = " -ref " + Outputvolumes[0] +\
               " -i " +Outputvolumes[1]  + ' -sam ' + str(_ResolSam)
-    launch_parallel_job.launch_sequential_job("xmipp_resolution_fsc",
-                                              command,
-                                              self.log,
-                                              False)
+    launch_job.launch_job("xmipp_resolution_fsc",
+                          command,
+                          self.log,
+                          False,1,1,_MySystemFlavour)
     import visualization
     if _DisplayResolution==True:
       plot=visualization.gnuplot()
@@ -1638,11 +1593,12 @@ def filter_at_given_resolution(_DoComputeResolution,
                                _ConstantToAddToFiltration,
                                _filter_frequence,
                                _ReconstructedVolume,
-                               _ReconstructedandfilteredVolume
+                               _ReconstructedandfilteredVolume,
+                               _MySystemFlavour
                                ):
 
     import os,shutil
-    import launch_parallel_job
+    import launch_job
     Inputvolume   =_ReconstructedVolume+'.vol'
     Outputvolume  =_ReconstructedandfilteredVolume+'.vol'
     if (_SetResolutiontoZero):
@@ -1659,10 +1615,10 @@ def filter_at_given_resolution(_DoComputeResolution,
         command = " -i " + Inputvolume +\
                   " -o " + Outputvolume + ' -low_pass ' +\
                   str (filter_in_pixels_at)
-        launch_parallel_job.launch_sequential_job("xmipp_fourier_filter",
-                                                  command,
-                                                  self.log,
-                                                  False)
+        launch_job.launch_job("xmipp_fourier_filter",
+                              command,
+                              self.log,
+                              False,1,1,_MySystemFlavour)
     return filter_in_pixels_at
 
 
@@ -1763,11 +1719,10 @@ if __name__ == '__main__':
                 ProjectDir,                     
                 LogDir,                         
                 DoParallel,                     
-                NumberOfCPUs,                   
-                MachineFile,
+                NumberOfMpiProcesses,                   
+                SystemFlavour,
                 MpiJobSize,
-		ThreadsNumber,
-                MyControlFile,
+		NumberOfThreads,
                 SymmetryGroup,                        
                 SetResolutiontoZero,
                 ConstantToAddToFiltration

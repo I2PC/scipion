@@ -85,25 +85,18 @@ ExtraParamsMLalign2D=""
     It does not require any additional software, other than xmipp
 """
 NumberOfThreads=1
-# Use distributed-memory parallelization through MPI?
-""" This option provides parallelization on clusters with distributed memory architecture.
-    It requires mpi to be installed.
+# Use distributed-memory parallelization (MPI)?
+""" This option provides distributed-memory parallelization on multi-node machines. 
+    It requires the installation of some MPI flavour, possibly together with a queueing system
 """
 DoParallel=False
 # Number of MPI processes to use:
-""" If this value is set to -1, the number of CPUs will be determined automatically from the machinefile. This is especially useful for job-queueing systems.
+NumberOfMpiProcesses=5
+# MPI system Flavour 
+""" Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
+    Ask the person who installed your xmipp version, which option to use. Or read: xxx
 """
-MyNumberOfCPUs=10
-# {file} A list of all available nodes (the MPI-machinefile):
-""" Depending on your system, this file may be required. If not, just leave this entry blank.
-    If your job submission system uses an environment variable, just type it here with the leading $
-"""
-MyMachineFile="/home2/bioinfo/scheres/machines.dat"
-# {expert} Control file
-""" This is an ugly solution to have improved killing control over the mpi jobs.
-    The script will create this file, and any mpi-job will be killed as soon as this file doesn't exist anymore. This is required with certain queueing systems.
-"""
-MyControlFile=""
+SystemFlavour="SLURM-MPICH"
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
@@ -135,9 +128,8 @@ class ML2D_class:
                  ExtraParamsMLalign2D,
                  NumberOfThreads,
                  DoParallel,
-                 MyNumberOfCPUs,
-                 MyMachineFile,
-                 MyControlFile):
+                 NumberOfMpiProcesses,
+                 SystemFlavour):
 	     
         import os,sys,shutil
         scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
@@ -155,15 +147,8 @@ class ML2D_class:
         self.ExtraParamsMLalign2D=ExtraParamsMLalign2D
         self.NumberOfThreads=NumberOfThreads
         self.DoParallel=DoParallel
-        self.MyNumberOfCPUs=MyNumberOfCPUs
-        if (MyMachineFile[0]=="$"):
-            self.MyMachineFile=MyMachineFile
-        else:
-            self.MyMachineFile=os.path.abspath(MyMachineFile)
-        if (MyControlFile==""):
-            self.DoControl=False
-        else:
-            self.DoControl=True
+        self.NumberOfMpiProcesses=NumberOfMpiProcesses
+        self.SystemFlavour=SystemFlavour
    
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
@@ -180,13 +165,6 @@ class ML2D_class:
             if not os.path.exists(self.WorkingDir):
                 os.makedirs(self.WorkingDir)
 
-            # Create a CONTROL file for improved killing control
-            if (self.DoControl):
-                self.MyControlFile=os.path.abspath(self.WorkingDir+
-                                                   '/'+MyControlFile)
-                FILE = open(self.MyControlFile,"w")
-                FILE.write("Delete this file to kill all current processes\n")
-                FILE.close()
 
             # Create a selfile with absolute pathname in the WorkingDir
             mysel=selfile.selfile()
@@ -210,14 +188,6 @@ class ML2D_class:
 
         # Restarting a previous run...
         else:
-            # Create a CONTROL file for improved killing control
-            if (self.DoControl):
-                self.MyControlFile=os.path.abspath(self.WorkingDir+
-                                                   '/'+MyControlFile)
-                FILE = open(self.MyControlFile,"w")
-                FILE.write("Delete this file to kill current processes\n")
-                FILE.close()
-
             # Execute protocol in the working directory
             os.chdir(self.WorkingDir)
             self.restart_MLalign2D(RestartIter)
@@ -225,13 +195,9 @@ class ML2D_class:
         # Return to parent dir
         os.chdir(os.pardir)
 
-        # Delete the CONTROL file for improved killing control
-        if (self.DoControl):
-            os.remove(self.MyControlFile)
-
     def execute_MLalign2D(self):
         import os
-        import launch_parallel_job
+        import launch_job
         print '*********************************************************************'
         print '*  Executing ml(f)_align2d program :' 
         params= ' -o ml2d -i '    + str(self.InSelFile) + \
@@ -249,47 +215,39 @@ class ML2D_class:
             params+= ' -ctfdat my.ctfdat'
             if (self.HighResLimit > 0):
                 params += ' -high ' + str(self.HighResLimit)
-        if (self.DoControl):
-            params+=' -control ' + self.MyControlFile
 
         if (self.DoMlf):
-            program="xmipp_ml_alignd"
-            mpiprogram="xmipp_mpi_mlf_align2d"
+            program="xmipp_mlf_alignd"
         else:
             program="xmipp_ml_align2d"
-            mpiprogram="xmipp_mpi_ml_align2d"
            
-        launch_parallel_job.launch_job(self.DoParallel,
-                                       program,
-                                       mpiprogram,
-                                       params,
-                                       self.log,
-                                       self.MyNumberOfCPUs,
-                                       self.MyMachineFile,
-                                       False)
+        launch_job.launch_job(program,
+                              params,
+                              self.log,
+                              self.DoParallel,
+                              self.NumberOfMpiProcesses,
+                              self.NumberOfThreads,
+                              self.SystemFlavour)
 
     def restart_MLalign2D(self, iter):
         import os
-        import launch_parallel_job, utils_xmipp
+        import launch_job, utils_xmipp
         print '*********************************************************************'
         print '*  Restarting ml(f)_align2d program :' 
         params= ' -restart ' + utils_xmipp.composeFileName('ml2d_it',iter,'log')
 
         if (self.DoMlf):
-            program="xmipp_ml_alignd"
-            mpiprogram="xmipp_mpi_mlf_align2d"
+            program="xmipp_mlf_alignd"
         else:
             program="xmipp_ml_align2d"
-            mpiprogram="xmipp_mpi_ml_align2d"
            
-        launch_parallel_job.launch_job(self.DoParallel,
-                                       program,
-                                       mpiprogram,
-                                       params,
-                                       self.log,
-                                       self.MyNumberOfCPUs,
-                                       self.MyMachineFile,
-                                       False)
+        launch_job.launch_job(program,
+                              params,
+                              self.log,
+                              self.DoParallel,
+                              self.NumberOfMpiProcesses,
+                              self.NumberOfThreads,
+                              self.SystemFlavour)
 
     def close(self):
         message='Done!'
@@ -320,9 +278,8 @@ if __name__ == '__main__':
                     ExtraParamsMLalign2D,
                     NumberOfThreads,
                     DoParallel,
-                    MyNumberOfCPUs,
-                    MyMachineFile,
-                    MyControlFile)
+                    NumberOfMpiProcesses,
+                    SystemFlavour)
     # close 
     ML2D.close()
 

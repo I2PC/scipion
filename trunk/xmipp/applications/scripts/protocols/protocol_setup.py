@@ -21,7 +21,7 @@
 #------------------------------------------------------------------------
 # {setup-pre} Preprocess micrographs
 SetupPreProcessMicrographs=False
-# {setup-pre} Manual particle selection
+# {setup-pre} Particle selection
 SetupParticlePick=False
 # {setup-pre} Preprocess particles
 SetupPreProcessParticles=False

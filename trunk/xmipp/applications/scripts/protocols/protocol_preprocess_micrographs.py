@@ -46,16 +46,13 @@ LogDir='Logs'
 #------------------------------------------------------------------------------------------------
 # {section} Initial conversion to raw
 #------------------------------------------------------------------------------------------------
-# Perform tiff to raw conversion?
-""" Some TIF formats are not recognized. In that case, save your micrographs as spider or mrc and see the expert options of this protocol to convert these to Xmipp-style raw.
+# Perform micrograph conversion? 
+DoConversion=True
+# {list}|Tif2Raw|Mrc2Raw|Spi2Raw|Raw2Raw| Which conversion to perform?
+""" Some TIF formats are not recognized. In that case, save your micrographs as spider, mrc or raw and try to convert those. Note that raw2raw assumes the raw files have an Xmipp-like raw.info file with the same rootname, and that in this case no conversion takes place, but only the required directory structure is made.
+    
 """
-DoTif2Raw=True
-# {expert} Or perform mrc to raw conversion?
-DoMrc2Raw=False
-# {expert} Or perform spider to raw conversion?
-DoSpi2Raw=False
-# {expert} Or data is already in raw?
-DoRaw2Raw=False
+ConversionTask='Tif2Raw'
 #------------------------------------------------------------------------------------------------
 # {section} Downsampling
 #------------------------------------------------------------------------------------------------
@@ -63,19 +60,10 @@ DoRaw2Raw=False
 DoDownSample=True
 # Downsampling factor 
 Down=2
-# {expert} Use Fourier-space window to downsample
-""" This is theoretically the best option, but it may take more memory than your machine can handle.
+# {expert}{list}|Fourier|Rectangle|Sinc| Which method to use for downsampling?
+""" Fourier is theoretically the best option, but it may take more memory than your machine can handle. Then, Rectangle is the fastest, but least accurate. Since is reasonably accurate, but painfully slow...
 """
-UseDownFourier=True
-# {expert} Use real-space rectangle kernel to downsample
-""" This is the fastest, and therefore perhaps the most used option. However, it is also the least accurate one.
-"""
-UseDownRectangle=False
-# {expert} Use real-space sinc kernel to downsample
-""" This is the slowest option, but it approximates the accurracy of the Fourier-window option without the need for so much memory.
-"""
-UseDownSinc=False
-
+DownKernel='Fourier'
 #------------------------------------------------------------------------------------------------
 # {section} CTF estimation
 #------------------------------------------------------------------------------------------------
@@ -147,7 +135,7 @@ StepFocus=500
 # Perform CTF phase flipping on the micrographs?
 """ The phase-flipped micrographs will be saved with a different format (spider) than the original raw-format.
 """
-DoCtfPhaseFlipping=False
+DoCtfPhaseFlipping=True
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
@@ -211,15 +199,11 @@ class preprocess_A_class:
                  MicrographSelfile,
                  ProjectDir,
                  LogDir,
-                 DoTif2Raw,
-                 DoMrc2Raw,
-                 DoSpi2Raw,
-                 DoRaw2Raw,
+                 DoConversion,
+                 ConversionTask,
                  DoDownSample,
                  Down,
-                 UseDownFourier,
-                 UseDownRectangle,
-                 UseDownSinc,
+                 DownKernel,
                  DoCtfEstimate,
                  Voltage,
                  SphericalAberration,
@@ -251,15 +235,11 @@ class preprocess_A_class:
         self.ExtMicrographs=ExtMicrographs
         self.ProjectDir=os.path.abspath(ProjectDir)
         self.LogDir=LogDir
-        self.DoTif2Raw=DoTif2Raw
-        self.DoMrc2Raw=DoMrc2Raw
-        self.DoSpi2Raw=DoSpi2Raw
-        self.DoRaw2Raw=DoRaw2Raw
+        self.DoConversion=DoConversion
+        self.ConversionTask=ConversionTask
         self.DoDownSample=DoDownSample
         self.Down=Down
-        self.UseDownFourier=UseDownFourier
-        self.UseDownRectangle=UseDownRectangle
-        self.UseDownSinc=UseDownSinc
+        self.DownKernel=DownKernel
         self.DoCtfEstimate=DoCtfEstimate
         self.Voltage=Voltage
         self.SphericalAberration=SphericalAberration
@@ -346,19 +326,20 @@ class preprocess_A_class:
                 if not os.path.exists(self.shortname):
                     os.makedirs(self.shortname)
 
-                if (self.DoTif2Raw + self.DoMrc2Raw + self.DoSpi2Raw + self.DoRaw2Raw != 1):
-                    message='ERRROR: select either tif2raw, spi2raw, mrc2raw or raw2raw conversion! '
-                    print '*',message
-                    self.log.error(message)
-                    exit();
-                if (self.DoTif2Raw):
-                    self.perform_tif2raw()
-                elif (self.DoMrc2Raw):
-                    self.perform_mrc2raw()
-                elif (self.DoSpi2Raw): 
-                    self.perform_spi2raw()
-                elif (self.DoRaw2Raw): 
-                    self.perform_raw2raw()
+                if (self.DoConversion):
+                    if (self.ConversionTask=='Tif2Raw'):
+                        self.perform_tif2raw()
+                    elif (self.ConversionTask=='Mrc2Raw'):
+                        self.perform_mrc2raw()
+                    elif (self.ConversionTask=='Spi2Raw'):
+                        self.perform_spi2raw()
+                    elif (self.ConversionTask=='Raw2Raw'):
+                        self.perform_raw2raw()
+                    else:
+                        message="Unrecognized ConversionTask: choose from list options"
+                        print '*',message
+                        self.log.error(message)
+                        sys.exit()
 
                 if (self.DoDownSample):
                     self.perform_downsample()
@@ -422,46 +403,46 @@ class preprocess_A_class:
 
     def perform_tif2raw(self):
         import os
-        import launch_parallel_job
+        import launch_job
         oname=self.shortname+'/'+self.shortname+'.raw'
         print '*********************************************************************'
         print '*  Generating RAW for micrograph: '+self.name
         command=' '+self.filename+' '+oname
-        launch_parallel_job.launch_sequential_job("xmipp_convert_tiff2raw",
-                                                  command,
-                                                  self.log,
-                                                  False)
+        launch_job.launch_job("xmipp_convert_tiff2raw",
+                              command,
+                              self.log,
+                              False,1,1,'')
 
     def perform_mrc2raw(self):
         import os
-        import launch_parallel_job
+        import launch_job
         oname=self.shortname+'/'+self.shortname+'.raw'
         tname=self.shortname+'/'+self.shortname+'.spi'
         print '*********************************************************************'
         print '*  Generating RAW for micrograph: '+self.name
         command=' -i '+self.filename+' -o '+tname
-        launch_parallel_job.launch_sequential_job("xmipp_convert_spi22ccp4",
-                                                  command,
-                                                  self.log,
-                                                  False)
+        launch_job.launch_job("xmipp_convert_spi22ccp4",
+                              command,
+                              self.log,
+                              False,1,1,'')
         command=' -generate_inf -f -i '+tname+' -o '+oname
-        launch_parallel_job.launch_sequential_job("xmipp_convert_raw22spi",
-                                                  command,
-                                                  self.log,
-                                                  False)
+        launch_job.launch_job("xmipp_convert_raw22spi",
+                              command,
+                              self.log,
+                              False,1,1,'')
         os.remove(tname)
         
     def perform_spi2raw(self):
         import os
-        import launch_parallel_job
+        import launch_job
         oname=self.shortname+'/'+self.shortname+'.raw'
         print '*********************************************************************'
         print '*  Generating RAW for micrograph: '+self.name
         command=' -generate_inf -f -i '+self.filename+' -o '+oname
-        launch_parallel_job.launch_sequential_job("xmipp_convert_raw22spi",
-                                                  command,
-                                                  self.log,
-                                                  False)
+        launch_job.launch_job("xmipp_convert_raw22spi",
+                              command,
+                              self.log,
+                              False,1,1,'')
 
     def perform_raw2raw(self):
         import os
@@ -479,26 +460,32 @@ class preprocess_A_class:
     
     def perform_downsample(self):
         import os
-        import launch_parallel_job
+        import launch_job
         iname=self.shortname+'/'+self.shortname+'.raw'
         oname=self.shortname+'/'+self.downname+'.raw'
         print '*********************************************************************'
         print '*  Downsampling micrograph: '+iname
-        if (self.UseDownFourier):
+        if (self.DownKernel=='Fourier'):
             scale = 1./self.Down
             command=' -i '+iname+' -o '+oname+' -output_bits 32 -fourier '+str(scale)
-        elif (self.UseDownSinc):
+        elif (self.DownKernel=='Sinc'):
             command=' -i '+iname+' -o '+oname+' -output_bits 32 -Xstep '+str(self.Down)+' -kernel sinc 0.02 0.1'
-        else:
+        elif (self.DownKernel=='Rectangle'):
             command=' -i '+iname+' -o '+oname+' -output_bits 32 -Xstep '+str(self.Down)+' -kernel rectangle '+str(self.Down)+' '+str(self.Down)
-        launch_parallel_job.launch_sequential_job("xmipp_micrograph_downsample",
-                                                  command,
-                                                  self.log,
-                                                  False)
+        else:
+            message="Unrecognized DownKernel: choose from list options"
+            print '*',message
+            self.log.error(message)
+            sys.exit()
+
+        launch_job.launch_job("xmipp_micrograph_downsample",
+                              command,
+                              self.log,
+                              False,1,1,'')
 
     def perform_only_psdestimate(self):
         import os
-        import launch_parallel_job
+        import launch_job
         iname=self.shortname+'/'+self.downname+'.raw'
         pname=self.shortname+'/'+self.shortname+'_psd.param'
         print '*********************************************************************'
@@ -514,10 +501,10 @@ class preprocess_A_class:
         fh.writelines(paramlist)
         fh.close()
         command=' -i '+pname
-        launch_parallel_job.launch_sequential_job("xmipp_ctf_estimate_from_micrograph",
-                                                  command,
-                                                  self.log,
-                                                  False)
+        launch_job.launch_job("xmipp_ctf_estimate_from_micrograph",
+                              command,
+                              self.log,
+                              False,1,1,'')
         #oname=self.shortname+'/'+self.downname+'_Periodogramavg.psd'
         #self.psdselfile.append(oname+' 1\n')
 	#fh = open("all_psds.sel","w")
@@ -526,7 +513,7 @@ class preprocess_A_class:
     
     def perform_ctfestimate_xmipp(self):
         import os
-        import launch_parallel_job
+        import launch_job
         iname=self.shortname+'/'+self.downname+'.raw'
         pname=self.shortname+'/'+self.shortname+'_input.param'
         print '*********************************************************************'
@@ -552,10 +539,10 @@ class preprocess_A_class:
         fh.writelines(paramlist)
         fh.close()
         command=' -i '+pname
-        launch_parallel_job.launch_sequential_job("xmipp_ctf_estimate_from_micrograph",
-                                                  command,
-                                                  self.log,
-                                                  False)
+        launch_job.launch_job("xmipp_ctf_estimate_from_micrograph",
+                              command,
+                              self.log,
+                              False,1,1,'')
 
         ## Add entry to the ctfselfile (for visualization of all CTFs)
         #oname=self.shortname+'/'+self.downname+'_Periodogramavg.ctfmodel_halfplane'
@@ -613,24 +600,24 @@ class preprocess_A_class:
 
     def convert_raw_to_mrc(self):
         import os
-        import launch_parallel_job
+        import launch_job
         command= ' -i '+ self.shortname+'/'+self.downname+'.raw ' + \
                  ' -o '+ self.shortname+'/tmp.spi ' + \
                  ' -is_micrograph -f'
-        launch_parallel_job.launch_sequential_job("xmipp_convert_raw22spi",
-                                                  command,
-                                                  self.log,
-                                                  False)
+        launch_job.launch_job("xmipp_convert_raw22spi",
+                              command,
+                              self.log,
+                              False,1,1,'')
         command= ' -i '+ self.shortname+'/tmp.spi ' + \
                  ' -o '+ self.shortname+'/tmp.mrc '
-        launch_parallel_job.launch_sequential_job("xmipp_convert_spi22ccp4",
-                                                  command,
-                                                  self.log,
-                                                  False)
+        launch_job.launch_job("xmipp_convert_spi22ccp4",
+                              command,
+                              self.log,
+                              False,1,1,'')
 
     def convert_ctffind_output_to_xmipp_style(self):
         import os;
-        import launch_parallel_job
+        import launch_job
         logfile=self.shortname+'/ctffind_'+self.downname+'.log'
         fh=open(logfile,'r')
         lines=fh.readlines()
@@ -658,10 +645,10 @@ class preprocess_A_class:
         ctfname = self.shortname + '/ctffind_' + self.downname + '_ctfmodel.xmp'
         command= ' -i ' + self.shortname + '/spectrum.mrc ' + \
                  ' -o '+ ctfname
-        launch_parallel_job.launch_sequential_job("xmipp_convert_spi22ccp4",
-                                                  command,
-                                                  self.log,
-                                                  False)
+        launch_job.launch_job("xmipp_convert_spi22ccp4",
+                              command,
+                              self.log,
+                              False,1,1,'')
 
         # Add entry to the ctfselfile (for visualization of all CTFs)
         #ctfname = self.shortname + '/ctffind_' + self.downname + '_ctfmodel.xmp'
@@ -691,17 +678,17 @@ class preprocess_A_class:
 
     def perform_ctf_phase_flipping(self):
         import os
-        import launch_parallel_job
+        import launch_job
         iname=self.shortname+'/'+self.downname+'.raw'
         oname=self.shortname+'/'+self.downname+'.spi'
         paramname=self.shortname+'/'+self.downname+'_Periodogramavg.ctfparam'
         command= ' -i   ' + iname + \
                  ' -o   ' + oname + \
                  ' -ctf ' + paramname
-        launch_parallel_job.launch_sequential_job("xmipp_micrograph_phase_flipping",
-                                                  command,
-                                                  self.log,
-                                                  False)
+        launch_job.launch_job("xmipp_micrograph_phase_flipping",
+                              command,
+                              self.log,
+                              False,1,1,'')
 
     def append_micrograph_selfile(self):
         if self.DoCtfPhaseFlipping:
@@ -733,15 +720,11 @@ if __name__ == '__main__':
                                    MicrographSelfile,
                                    ProjectDir,
                                    LogDir,
-                                   DoTif2Raw,
-                                   DoMrc2Raw,
-                                   DoSpi2Raw,
-                                   DoRaw2Raw,
+                                   DoConversion,
+                                   ConversionTask,
                                    DoDownSample,
                                    Down,
-                                   UseDownFourier,
-                                   UseDownRectangle,
-                                   UseDownSinc,
+                                   DownKernel,
                                    DoCtfEstimate,
                                    Voltage,
                                    SphericalAberration,

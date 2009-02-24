@@ -148,25 +148,21 @@ ExtraParamsMLrefine3D=""
     It does not require any additional software, other than xmipp
 """
 NumberOfThreads=1
-# Use distributed-memory parallelization through MPI?
+# Use distributed-memory parallelization (MPI)?
 """ This option provides parallelization on clusters with distributed memory architecture.
     It requires mpi to be installed.
 """
 DoParallel=True
 # Number of MPI processes to use:
-""" If this value is set to -1, the number of CPUs will be determined automatically from the machinefile. This is especially useful for job-queueing systems.
+""" This option provides distributed-memory parallelization on multi-node machines. 
+    It requires the installation of some MPI flavour, possibly together with a queueing system
 """
-MyNumberOfCPUs=5
-# {file} A list of all available CPUs (the MPI-machinefile):
-""" Depending on your system, your standard script to launch MPI-jobs may require this
-    if your queueing system using an environment variable, give it here (with the leading $, e.g. $PBS_NODEFILE
+NumberOfMpiProcesses=5
+# MPI system Flavour 
+""" Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
+    Ask the person who installed your xmipp version, which option to use. Or read: xxx
 """
-MyMachineFile="/home2/bioinfo/scheres/machines.dat"
-# {expert} Control file
-""" This is an ugly solution to have improved killing control over the mpi jobs.
-    The script will create this file, and any mpi-job will be killed as soon as this file doesn't exist anymore. This is required with certain queueing systems.
-"""
-MyControlFile=""
+SystemFlavour=""
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
@@ -212,9 +208,8 @@ class ML3D_class:
                  SeedsSelfile,
                  NumberOfThreads,
                  DoParallel,
-                 MyNumberOfCPUs,
-                 MyMachineFile,
-                 MyControlFile):
+                 NumberOfMpiProcesses,
+                 SystemFlavour):
 	     
         import os,sys,shutil
         scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
@@ -246,15 +241,8 @@ class ML3D_class:
         self.WbpThreshold=WbpThreshold
         self.NumberOfThreads=NumberOfThreads
         self.DoParallel=DoParallel
-        self.MyNumberOfCPUs=MyNumberOfCPUs
-        if (MyMachineFile[0]=="$"):
-            self.MyMachineFile=MyMachineFile
-        else:
-            self.MyMachineFile=os.path.abspath(MyMachineFile)
-        if (MyControlFile==""):
-            self.DoControl=False
-        else:
-            self.DoControl=True
+        self.NumberOfMpiProcesses=NumberOfMpiProcesses
+        self.SystemFlavour=SystemFlavour
 
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
@@ -270,14 +258,6 @@ class ML3D_class:
                     shutil.rmtree(self.WorkingDir)
             if not os.path.exists(self.WorkingDir):
                 os.makedirs(self.WorkingDir)
-
-            # Create a CONTROL file for improved killing control
-            if (self.DoControl):
-                self.MyControlFile=os.path.abspath(self.WorkingDir+
-                                                   '/'+MyControlFile)
-                FILE = open(self.MyControlFile,"w")
-                FILE.write("Delete this file to kill all current processes\n")
-                FILE.close()
 
             # Create a selfile with absolute pathname in the WorkingDir
             mysel=selfile.selfile()
@@ -313,14 +293,6 @@ class ML3D_class:
 
         # Restarting a previous run...
         else:
-            # Create a CONTROL file for improved killing control
-            if (self.DoControl):
-                self.MyControlFile=os.path.abspath(self.WorkingDir+
-                                                   '/'+MyControlFile)
-                FILE = open(self.MyControlFile,"w")
-                FILE.write("Delete this file to kill current processes\n")
-                FILE.close()
-
             # Execute protocol in the working directory
             os.chdir(self.WorkingDir)
             self.restart_MLrefine3D(RestartIter)
@@ -328,9 +300,6 @@ class ML3D_class:
         # Return to parent dir
         os.chdir(os.pardir)
 
-        # Delete the CONTROL file for improved killing control
-        if (self.DoControl):
-            os.remove(self.MyControlFile)
 
     # Make a copy of the initial references:
     def copy_initial_refs(self):
@@ -362,7 +331,7 @@ class ML3D_class:
     # Crude correction of grey-scale, by performing a single iteration of projection matching and wbp
     def correct_greyscale(self):
         import os
-        import launch_parallel_job
+        import launch_job
         print '*********************************************************************'
         print '*  Correcting absolute grey scale of initial reference:'
 
@@ -380,10 +349,10 @@ class ML3D_class:
         print '* Create initial docfile'
         params= ' -i ' + str(self.InSelFile) + \
                 ' -o ' + dirname + docfile
-        launch_parallel_job.launch_sequential_job("xmipp_header_extract",
-                                                  params,
-                                                  self.log,
-                                                  False)
+        launch_job.launch_job("xmipp_header_extract",
+                              params,
+                              self.log,
+                              False,1,1,'')
 
         print '*********************************************************************'
         print '* Create projection library'
@@ -394,14 +363,13 @@ class ML3D_class:
                     ' -sym '                 + self.Symmetry + 'h' + \
                     ' -compute_neighbors -angular_distance -1 '
 
-        launch_parallel_job.launch_job(self.DoParallel,
-                                       "xmipp_angular_project_library",
-                                       "xmipp_mpi_angular_project_library",
-                                       parameters,
-                                       self.log,
-                                       self.MyNumberOfCPUs,
-                                       self.MyMachineFile,
-                                       False)
+        launch_job.launch_job("xmipp_angular_project_library",
+                              parameters,
+                              self.log,
+                              self.DoParallel,
+                              self.NumberOfMpiProcesses,
+                              self.NumberOfThreads,
+                              self.SystemFlavour)
 
 
         print '*********************************************************************'
@@ -410,14 +378,13 @@ class ML3D_class:
                     ' -o '              + dirname + basename + \
                     ' -ref '            + dirname + refname
 
-        launch_parallel_job.launch_job(self.DoParallel,
-                                       'xmipp_angular_projection_matching',
-                                       'xmipp_mpi_angular_projection_matching',
-                                       parameters,
-                                       self.log,
-                                       self.MyNumberOfCPUs,
-                                       self.MyMachineFile,
-                                       False)
+        launch_job.launch_job('xmipp_angular_projection_matching',
+                              parameters,
+                              self.log,
+                              self.DoParallel,
+                              self.NumberOfMpiProcesses,
+                              self.NumberOfThreads,
+                              self.SystemFlavour)
 
         print '*********************************************************************'
         print '* Make the class averages '
@@ -425,14 +392,13 @@ class ML3D_class:
                       ' -lib '    + dirname + refname  + '_angles.doc' + \
                       ' -o '      + dirname + basename 
 
-        launch_parallel_job.launch_job(self.DoParallel,
-                                       'xmipp_angular_class_average',
-                                       'xmipp_mpi_angular_class_average',
-                                       parameters,
-                                       self.log,
-                                       self.MyNumberOfCPUs,
-                                       self.MyMachineFile,
-                                       False)
+        launch_job.launch_job('xmipp_angular_class_average',
+                              parameters,
+                              self.log,
+                              self.DoParallel,
+                              self.NumberOfMpiProcesses,
+                              self.NumberOfThreads,
+                              self.SystemFlavour)
 
 
         print '*********************************************************************'
@@ -444,24 +410,21 @@ class ML3D_class:
                 ' -threshold '+str(self.WbpThreshold) + \
                 ' -sym '+ self.Symmetry + \
                 '  -use_each_image -weight '
-        if (self.DoControl):
-            params+=' -control ' + self.MyControlFile
            
-        launch_parallel_job.launch_job(self.DoParallel,
-                                       "xmipp_reconstruct_wbp",
-                                       "xmipp_mpi_reconstruct_wbp",
-                                       params,
-                                       self.log,
-                                       self.MyNumberOfCPUs,
-                                       self.MyMachineFile,
-                                       False)
-
+        launch_job.launch_job("xmipp_reconstruct_wbp",
+                              parameters,
+                              self.log,
+                              self.DoParallel,
+                              self.NumberOfMpiProcesses,
+                              self.NumberOfThreads,
+                              self.SystemFlavour)
+ 
         return outname
 
     # Low-pass filter
     def filter_reference(self):
         import os
-        import launch_parallel_job
+        import launch_job
         print '*********************************************************************'
         print '*  Low-pass filtering of the initial reference:'
 
@@ -474,15 +437,15 @@ class ML3D_class:
                ' -i ' + reference  + \
                ' -sampling ' + str(self.PixelSize) + \
                ' -low_pass ' + str(self.LowPassFilter)
-        launch_parallel_job.launch_sequential_job("xmipp_fourier_filter",
-                                                  params,
-                                                  self.log,
-                                                  False)
+        launch_job.launch_job("xmipp_fourier_filter",
+                              params,
+                              self.log,
+                              False,1,1,'')
 
     # Splits selfile and performs a single cycle of ML3D-classification for each subset
     def generate_seeds(self):
         import os
-        import launch_parallel_job
+        import launch_job
         import selfile, utils_xmipp
         print '*********************************************************************'
         print '*  Generating seeds:' 
@@ -492,10 +455,10 @@ class ML3D_class:
         params=' -o seeds_split'+ \
                ' -i ' + str(self.InSelFile) + \
                ' -n ' + str(self.NumberOfReferences) +' \n'
-        launch_parallel_job.launch_sequential_job("xmipp_selfile_split",
-                                                  params,
-                                                  self.log,
-                                                  False)
+        launch_job.launch_job("xmipp_selfile_split",
+                              params,
+                              self.log,
+                              False,1,1,'')
 
         if os.path.exists('filtered_reference.vol'):
             reference='filtered_reference.vol'
@@ -529,7 +492,7 @@ class ML3D_class:
     # Perform the actual classification
     def execute_ML3D_classification(self):
         import os
-        import launch_parallel_job
+        import launch_job
  
         dirname='RunML3D/'
         if not os.path.exists(dirname):
@@ -559,7 +522,7 @@ class ML3D_class:
     def execute_MLrefine3D(self,inselfile,outname,
                            volname,sampling,iter,symmetry,amplitude_corrected,extraparam):
         import os
-        import launch_parallel_job
+        import launch_job
 
         print '*********************************************************************'
         print '*  Executing ml_refine3d program :' 
@@ -574,8 +537,6 @@ class ML3D_class:
             params+=' -thr ' + str(self.NumberOfThreads)
         if (self.DoNorm):
             params+=' -norm '
-        if (self.DoControl):
-            params+=' -control ' + self.MyControlFile
         if (self.DoMlf):
             params+= ' -ctfdat my.ctfdat'
             if (not amplitude_corrected):
@@ -585,24 +546,22 @@ class ML3D_class:
 
         if (self.DoMlf):
             program="xmipp_mlf_refine3d"
-            mpiprogram="xmipp_mpi_mlf_refine3d"
         else:
             program="xmipp_ml_refine3d"
-            mpiprogram="xmipp_mpi_ml_refine3d"
            
-        launch_parallel_job.launch_job(self.DoParallel,
-                                       program,
-                                       mpiprogram,
-                                       params,
-                                       self.log,
-                                       self.MyNumberOfCPUs,
-                                       self.MyMachineFile,
-                                       False)
+        launch_job.launch_job(program,
+                              parameters,
+                              self.log,
+                              self.DoParallel,
+                              self.NumberOfMpiProcesses,
+                              self.NumberOfThreads,
+                              self.SystemFlavour)
+
 
     # Either for seeds generation or for ML3D-classification
     def restart_MLrefine3D(self,iter):
         import os
-        import launch_parallel_job, utils_xmipp
+        import launch_job, utils_xmipp
 
         print '*********************************************************************'
         print '*  Restarting ml(f)_refine3d program :' 
@@ -611,20 +570,17 @@ class ML3D_class:
 
         if (self.DoMlf):
             program="xmipp_mlf_refine3d"
-            mpiprogram="xmipp_mpi_mlf_refine3d"
         else:
             program="xmipp_ml_refine3d"
-            mpiprogram="xmipp_mpi_ml_refine3d"
 
-        launch_parallel_job.launch_job(self.DoParallel,
-                                       program,
-                                       mpiprogram,
-                                       params,
-                                       self.log,
-                                       self.MyNumberOfCPUs,
-                                       self.MyMachineFile,
-                                       False)
-        
+        launch_job.launch_job(program,
+                              parameters,
+                              self.log,
+                              self.DoParallel,
+                              self.NumberOfMpiProcesses,
+                              self.NumberOfThreads,
+                              self.SystemFlavour)
+
     def close(self):
         message='Done!'
         print '*',message
@@ -665,9 +621,8 @@ if __name__ == '__main__':
                     SeedsSelfile,
                     NumberOfThreads,
                     DoParallel,
-                    MyNumberOfCPUs,
-                    MyMachineFile,
-                    MyControlFile)
+                    NumberOfMpiProcesses,
+                    SystemFlavour)
     
     # close 
     ML3D.close()

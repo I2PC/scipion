@@ -314,7 +314,7 @@ class RCT_class:
     def set_headers_untilted(self):
         import os
         import selfile
-        import launch_parallel_job
+        import launch_job
 
         print '*********************************************************************'
         print '*  Re-aligning untilted images of each class to set image headers'
@@ -325,14 +325,14 @@ class RCT_class:
             selfile=self.untiltclasslist[ref][0]
             reference=self.untiltclasslist[ref][1]
             command=' -i '+selfile+' -ref '+reference+' -iter 2'
-            launch_parallel_job.launch_sequential_job("xmipp_align2d",
-                                                      command,
-                                                      self.log,
-                                                      False)
+            launch_job.launch_job("xmipp_align2d",
+                                  command,
+                                  self.log,
+                                  False,1,1,'')
 
     def set_headers_tilted(self):
         import os,shutil
-        import launch_parallel_job
+        import launch_job
         print '*********************************************************************'
         print '*  Setting image headers of tilted images of each class'
         # Loop over all selected untilted classes
@@ -347,14 +347,14 @@ class RCT_class:
                       ' -doc '+docfile + \
                       ' -max_shift ' + str(self.CenterMaxShift)
             command += self.AlignTiltPairsAdditionalParams
-            launch_parallel_job.launch_sequential_job("xmipp_align_tilt_pairs",
-                                                      command,
-                                                      self.log,
-                                                      False)
+            launch_job.launch_job("xmipp_align_tilt_pairs",
+                                  command,
+                                  self.log,
+                                  False,1,1,'')
                 
     def execute_art(self):
         import os
-        import launch_parallel_job
+        import launch_job
         for ref in self.untiltclasslist:
             til_selfile=self.untiltclasslist[ref][2]
             outname=til_selfile.replace('.sel','')
@@ -364,14 +364,14 @@ class RCT_class:
                      ' -l ' + str(self.ArtLambda)
             if not self.ArtAdditionalParams=="":
                 command+=' '+str(self.ArtAdditionalParams)
-            launch_parallel_job.launch_sequential_job("xmipp_reconstruct_art",
-                                                      command,
-                                                      self.log,
-                                                      False)
+            launch_job.launch_job("xmipp_reconstruct_art",
+                                  command,
+                                  self.log,
+                                  False,1,1,'')
 
     def execute_wbp(self):
         import os
-        import launch_parallel_job
+        import launch_job
         for ref in self.untiltclasslist:
             til_selfile=self.untiltclasslist[ref][2]
             outname=til_selfile.replace('.sel','.vol')
@@ -381,14 +381,14 @@ class RCT_class:
                     ' -threshold ' + str(self.WbpThreshold)
             if not self.WbpAdditionalParams=="":
                 command+=' '+str(self.WbpAdditionalParams)
-            launch_parallel_job.launch_sequential_job("xmipp_reconstruct_wbp",
-                                                      command,
-                                                      self.log,
-                                                      False)
+            launch_job.launch_job("xmipp_reconstruct_wbp",
+                                  command,
+                                  self.log,
+                                  False,1,1,'')
 
     def execute_filter(self):
         import os
-        import launch_parallel_job
+        import launch_job
         for ref in self.untiltclasslist:
             til_selfile=self.untiltclasslist[ref][2]
             volname=til_selfile.replace('.sel','.vol')
@@ -400,20 +400,20 @@ class RCT_class:
                  ' -i ' + wbpname  + \
                  ' -sampling ' + str(self.PixelSize) + \
                  ' -low_pass ' + str(self.LowPassFilter)
-                launch_parallel_job.launch_sequential_job("xmipp_fourier_filter",
-                                                          command,
-                                                          self.log,
-                                                          False)
+                launch_job.launch_job("xmipp_fourier_filter",
+                                      command,
+                                      self.log,
+                                      False,1,1,'')
             if os.path.exists(artname):
                 filname=wbpname.replace('.vol','_filtered.vol')
                 command=' -o ' + filname + \
                  ' -i ' + artname  + \
                  ' -sampling ' + str(self.PixelSize) + \
                  ' -low_pass ' + str(self.LowPassFilter)
-                launch_parallel_job.launch_sequential_job("xmipp_fourier_filter",
-                                                          command,
-                                                          self.log,
-                                                          False)
+                launch_job.launch_job("xmipp_fourier_filter",
+                                      command,
+                                      self.log,
+                                      False,1,1,'')
 
     def close(self):
         message='Done!'

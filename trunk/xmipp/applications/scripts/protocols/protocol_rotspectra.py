@@ -281,15 +281,15 @@ class rotational_spectra_class:
    #------------------------------------------------------------------------
    def execute_align2d(self):
       import os,selfile
-      import launch_parallel_job
+      import launch_job
       if self._DoAverageAsReference:
          print '*********************************************************************'
          print '* Computing initial reference using average'
          command = ' -i ' + os.path.basename(self._SelFileName)
-         launch_parallel_job.launch_sequential_job("xmipp_average",
-                                                   command,
-                                                   self.log,
-                                                   False)
+         launch_job.launch_job("xmipp_average",
+                               command,
+                               self.mylog,
+                               False,1,1,'')
       
       selfile_without_ext=(os.path.splitext(str(os.path.basename(self._SelFileName))))[0]
       print '*********************************************************************'
@@ -301,10 +301,10 @@ class rotational_spectra_class:
       if self._DoAverageAsReference:
               command = command + ' -ref ' + selfile_without_ext + '.med.xmp'
       command = command +' '  + self._Align2DExtraCommand
-      launch_parallel_job.launch_sequential_job("xmipp_align2d",
-                                                command,
-                                                self.log,
-                                                False)
+      launch_job.launch_job("xmipp_align2d",
+                            command,
+                            self.mylog,
+                            False,1,1,'')
       if self._DisplayResults==True:
          command='xmipp_show -sel '+ os.path.basename(self._SelFileName)
          print '*********************************************************************'
@@ -354,14 +354,14 @@ class rotational_spectra_class:
    #------------------------------------------------------------------------
    def execute_apply_geo(self):
       import os
-      import launch_parallel_job
+      import launch_job
       print '*********************************************************************'
       print '* Applying geometrical  information in the headers. Needed for makespectra'
       command=' -i ' +os.path.basename(self._SelFileName) 
-      launch_parallel_job.launch_sequential_job("xmipp_header_apply",
-                                                command,
-                                                self.log,
-                                                False)
+      launch_job.launch_job("xmipp_header_apply",
+                            command,
+                            self.mylog,
+                            False,1,1,'')
 
    #------------------------------------------------------------------------
    #true_if_file_is_NOT_in_native_endian
@@ -388,21 +388,21 @@ class rotational_spectra_class:
    #------------------------------------------------------------------------
    def execute_reverse_endian(self):
       import os
-      import launch_parallel_job
+      import launch_job
       print '*********************************************************************'
       print '* Changing endian format. Needed for makespectra'
       command=' -i ' + os.path.basename(self._SelFileName) 
-      launch_parallel_job.launch_sequential_job("xmipp_reverse_endian",
-                                                command,
-                                                self.log,
-                                                False)
+      launch_job.launch_job("xmipp_reverse_endian",
+                            command,
+                            self.mylog,
+                            False,1,1,'')
 
    #------------------------------------------------------------------------
    #execute_spectra
    #------------------------------------------------------------------------
    def execute_spectra(self):
       import os, string
-      import launch_parallel_job
+      import launch_job
       if (os.path.exists(self._SpectraName)):
           os.remove(self._SpectraName)
       print '*********************************************************************'
@@ -417,10 +417,10 @@ class rotational_spectra_class:
               ' -r2 '   + str(self._SpectraOuterRadius) + \
               ' -low ' + str(self._SpectraLowHarmonic) + \
               ' -high ' + str(self._SpectraHighHarmonic)
-      launch_parallel_job.launch_sequential_job("xmipp_make_spectra",
-                                                command,
-                                                self.log,
-                                                False)
+      launch_job.launch_job("xmipp_make_spectra",
+                            command,
+                            self.mylog,
+                            False,1,1,'')
       if(self._DisplayResults==True):
           print '*********************************************************************'
           print '* Display spectra'
@@ -437,18 +437,18 @@ class rotational_spectra_class:
    #------------------------------------------------------------------------
    def delete_existing_som(self):
        import os
-       import launch_parallel_job
+       import launch_job
        # delete existing files with this somname
        if (os.path.exists(self._SomName+'.sel')):
            print 'Deleting existing som...'
            command= ' '+self._SomName+'.sel \n'
-           launch_parallel_job.launch_sequential_job("xmipp_selfile_delete",
-                                                     command,
-                                                     self.log,
-                                                     False)
+           launch_job.launch_job("xmipp_selfile_delete",
+                                 command,
+                                 self.mylog,
+                                 False,1,1,'')
            command= 'rm -f '+self._SomName+'.* '+self._SomName+'_* \n'
            print '* ',command
-           self.log.info(command)
+           self.mylog.info(command)
            os.system(command)
 
    #------------------------------------------------------------------------
@@ -456,7 +456,7 @@ class rotational_spectra_class:
    #------------------------------------------------------------------------
    def execute_KerDenSOM(self):
       import os
-      import launch_parallel_job
+      import launch_job
 
       selFileName=os.path.basename(self._SelFileName)
       print '*********************************************************************'
@@ -469,10 +469,10 @@ class rotational_spectra_class:
               ' -reg1 ' + str(self._SomReg1) + \
               ' -steps ' + str(self._SomSteps) + \
               ' '  + str(self._KerdensomExtraCommand)
-      launch_parallel_job.launch_sequential_job("xmipp_classify_kerdensom",
-                                                command,
-                                                self.log,
-                                                False)
+      launch_job.launch_job("xmipp_classify_kerdensom",
+                            command,
+                            self.mylog,
+                            False,1,1,'')
       if self._DisplayResults==True:
          command='xmipp_show -spectsom ' + \
                   str(self._SomName) + \

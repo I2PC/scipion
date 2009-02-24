@@ -54,23 +54,11 @@ LogDir='Logs'
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues for automatic particle picking
 #------------------------------------------------------------------------------------------------
-# Use multiple processors in parallel?
-DoParallel=True
-
-# Number of processors to use:
-MyNumberOfCPUs=2
-
-# Number of threads available on a single node
-""" Maximum number of threads that can be launched in a single node
+# Number of (shared-memory) threads?
+""" This option provides shared-memory parallelization on multi-core machines. 
+    It does not require any additional software, other than xmipp
 """
-MyNumberOfThreads=1
-
-# {file} A list of all available CPUs (the MPI-machinefile):
-""" Depending on your system, your standard script to launch MPI-jobs may require this
-    if your queueing system using an environment variable, give it here (with the leading $, e.g. $PBS_NODEFILE
-"""
-MyMachineFile=''
-
+NumberOfThreads=1
 # This script has been parallelized at python level
 """ This python script can be run as a parallel job,
     In order to use several CPUs you will need to
@@ -134,10 +122,7 @@ class particle_pick_class:
                  AutomaticName,
                  ProjectDir,
                  LogDir,
-		 DoParallel,
-		 MyNumberOfCPUs,
-                 MyNumberOfThreads,
-		 MyMachineFile,
+                 NumberOfThreads,
                  CheckMpi
                  ):
 
@@ -155,10 +140,7 @@ class particle_pick_class:
         self.AutomaticName=AutomaticName
         self.ProjectDir=ProjectDir
         self.LogDir=LogDir
-        self.DoParallel=DoParallel
-        self.MyNumberOfCPUs=MyNumberOfCPUs
-        self.MyNumberOfThreads=MyNumberOfThreads
-        self.MyMachineFile=MyMachineFile
+        self.NumberOfThreads=NumberOfThreads
         self.myrank = mpi.Get_rank()
         self.nprocs = mpi.Get_size()
 
@@ -257,7 +239,6 @@ class particle_pick_class:
  
     def FillMarkGui(self):
         import os
-        import Numeric
 
         # Script title
         self.master.title("GUI for particle picking")
@@ -484,7 +465,7 @@ class particle_pick_class:
 
     def perform_picking(self,name,autoSelect):
         import os
-        import launch_parallel_job
+        import launch_job
         if name=='':
             return
         
@@ -494,28 +475,30 @@ class particle_pick_class:
         arguments='-i '+micrograph
         if (self.AutomaticPicking):
             arguments+=' -auto ../'+self.AutomaticName
-            if (self.MyNumberOfThreads>1):
-                arguments+=' -thr '+str(self.MyNumberOfThreads)
+            if (self.NumberOfThreads>1):
+                arguments+=' -thr '+str(self.NumberOfThreads)
             if (autoSelect):
                 arguments+=' -autoSelect'
-        launch_parallel_job.launch_sequential_job("xmipp_micrograph_mark",
-                                                  arguments,
-                                                  self.log,
-                                                  not autoSelect)
+            else:
+                arguments+=' &'
+        launch_job.launch_job("xmipp_micrograph_mark",
+                              arguments,
+                              self.log,
+                              False,1,1,'')
         os.chdir(os.pardir)
 
     def perform_picking_pair(self,untilted,tilted):
         import os
-        import launch_parallel_job
+        import launch_job
         directory,uname=os.path.split(untilted)
         if (len(directory)>0):
             os.chdir(directory)
         tname='../'+tilted
-        command=' -i '+uname+' -tilted '+tname
-        launch_parallel_job.launch_sequential_job("xmipp_micrograph_mark",
-                                                  command,
-                                                  self.log,
-                                                  True)
+        command=' -i '+uname+' -tilted '+tname + ' &'
+        launch_job.launch_job("xmipp_micrograph_mark",
+                              command,
+                              self.log,
+                              False,1,1,'')
         os.chdir(os.pardir)
 
 
@@ -539,10 +522,7 @@ if __name__ == '__main__':
                                           AutomaticName,
                                           ProjectDir,
                                           LogDir,
-		                          DoParallel,
-		                          MyNumberOfCPUs,
-                                          MyNumberOfThreads,
-		                          MyMachineFile,
+                                          NumberOfThreads,
                                           CheckMpi
                                           )
 

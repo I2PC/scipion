@@ -270,7 +270,7 @@ class preprocess_particles_class:
 
     def perform_extract_pairs(self):
         import os,shutil
-        import launch_parallel_job
+        import launch_job
         iname=self.shortname+'/'+self.allname
         iname2=self.shortname2+'/'+self.allname2
         imgsubdir=self.ProjectDir+'/'+self.ImagesDir+'/'+self.shortname
@@ -308,10 +308,10 @@ class preprocess_particles_class:
                  ' -tilted ' + iname2 + ' -root_tilted ' + rootname2 + \
                  ' -Xdim ' + str(self.Size) + \
                  '|grep "corresponding image is set to blank"> ' + logname            
-        launch_parallel_job.launch_sequential_job("xmipp_micrograph_scissor",
-                                                  command,
-                                                  self.log,
-                                                  False)
+        launch_job.launch_job("xmipp_micrograph_scissor",
+                              command,
+                              self.log,
+                              False,1,1,'')
 
         # Move output selfiles inside the sub-directory:
         os.rename(selname,selnameb)
@@ -404,7 +404,7 @@ class preprocess_particles_class:
 
     def perform_extract(self):
         import os
-        import launch_parallel_job
+        import launch_job
         iname=self.shortname+'/'+self.allname
         selname=self.allname+'.sel' 
         selnameb=self.shortname+'/'+self.allname+'.sel' 
@@ -421,10 +421,10 @@ class preprocess_particles_class:
         command= ' -i ' + iname + ' -pos ' + posname + \
                  ' -root ' + rootname + ' -Xdim ' + str(size) + \
                  '|grep "corresponding image is set to blank"> ' + logname
-        launch_parallel_job.launch_sequential_job("xmipp_micrograph_scissor",
-                                                  command,
-                                                  self.log,
-                                                  False)
+        launch_job.launch_job("xmipp_micrograph_scissor",
+                              command,
+                              self.log,
+                              False,1,1,'')
         
         # Move selfile inside the subdirectory
         os.rename(selname,selnameb)
@@ -484,7 +484,7 @@ class preprocess_particles_class:
 
     def perform_normalize(self,iname):
         import os
-        import launch_parallel_job
+        import launch_job
         print '*********************************************************************'
         print '*  Normalize particles in: '+iname
         param=' -i ' +iname+' -background circle '+str(self.BackGroundRadius)
@@ -494,22 +494,22 @@ class preprocess_particles_class:
             param=param+'  -remove_black_dust'
         if (self.DoRemoveWhiteDust):
             param=param+'  -remove_white_dust'
-        launch_parallel_job.launch_sequential_job("xmipp_normalize",
-                                                  param,
-                                                  self.log,
-                                                  False)
+        launch_job.launch_job("xmipp_normalize",
+                              param,
+                              self.log,
+                              False,1,1,'')
 
     def perform_sort_junk(self):
         import os
-        import launch_parallel_job
+        import launch_job
         print '*********************************************************************'
         print '*  Sorting images by statistics in: '+self.OutSelFile
         os.chdir(self.ProjectDir)
         command=' -i '+self.OutSelFile
-        launch_parallel_job.launch_sequential_job("xmipp_sort_by_statistics",
-                                                  command,
-                                                  self.log,
-                                                  False)
+        launch_job.launch_job("xmipp_sort_by_statistics",
+                              command,
+                              self.log,
+                              False,1,1'')
         os.chdir(os.pardir)
 
     def close(self):
