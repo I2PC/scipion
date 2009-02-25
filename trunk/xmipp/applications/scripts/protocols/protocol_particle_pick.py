@@ -132,6 +132,14 @@ class particle_pick_class:
         self.SYSTEMSCRIPTDIR=scriptdir
         import log
 
+        # get color definition from protocol_gui
+        import xmipp_protocol_gui
+        self.LabelBackgroundColour=xmipp_protocol_gui.LabelBackgroundColour
+        self.ButtonBackgroundColour=xmipp_protocol_gui.ButtonBackgroundColour
+        self.ButtonActiveBackgroundColour=xmipp_protocol_gui.ButtonActiveBackgroundColour
+        self.HighlightBackgroundColour=xmipp_protocol_gui.HighlightBackgroundColour
+        self.BooleanSelectColour=xmipp_protocol_gui.BooleanSelectColour
+
         self.WorkingDir=WorkingDir
         self.MicrographSelfile=os.path.abspath(MicrographSelfile)
         self.IsPairList=IsPairList
@@ -278,39 +286,54 @@ class particle_pick_class:
                     self.row[micrograph]=row
 
         row=(self.frame.grid_size()[1]+1)
-        Label(self.frame,text="").grid(row=row)
+        Label(self.frame,text="", 
+              bg=self.LabelBackgroundColour).grid(row=row)
         l2=Frame(self.frame, height=2, bd=1, bg="medium blue",relief=RIDGE)
         l2.grid(row=row+1, column=0,columnspan=6,sticky=EW)
-        Label(self.frame,text="").grid(row=row+2)
+        Label(self.frame,text="", 
+              bg=self.LabelBackgroundColour).grid(row=row+2)
         self.buttonrow=(self.frame.grid_size()[1]+1)
 
-        b = Button(self.frame, text="Close", command=self.GuiClose,underline=0)
+        b = Button(self.frame, text="Close", 
+                   command=self.GuiClose,underline=0, 
+                   bg=self.ButtonBackgroundColour, 
+                   activebackground=self.ButtonActiveBackgroundColour)
         b.grid(row=self.buttonrow,column=0,sticky=W)
         self.master.bind('<Control_L><c>', self.GuiClose)
 
         if (self.AutomaticPicking):
-            b = Button(self.frame, text="Invert Selection", command=self.InvertSelection,underline=0)
+            b = Button(self.frame, text="Invert Selection", 
+                       command=self.InvertSelection,underline=0, 
+                       bg=self.ButtonBackgroundColour, 
+                       activebackground=self.ButtonActiveBackgroundColour)
             b.grid(row=self.buttonrow,column=1,sticky=N+S+W+E)
             nextColumn=2
         else:
             nextColumn=1
 
-        b = Button(self.frame, text="Update Total Count:", command=self.GuiUpdateCount)
+        b = Button(self.frame, text="Update Total Count:", 
+                   command=self.GuiUpdateCount, 
+                   bg=self.ButtonBackgroundColour, 
+                   activebackground=self.ButtonActiveBackgroundColour)
         b.grid(row=self.buttonrow,column=nextColumn)
         nextColumn+=1
 
         label=str(total).zfill(5)
-        l = Label(self.frame, text=label)
+        l = Label(self.frame, text=label, 
+                  bg=self.LabelBackgroundColour)
         l.grid(row=self.buttonrow,column=nextColumn)
         nextColumn+=1
         
         if (self.AutomaticPicking):
             label=str(total_auto).zfill(5)
-            l = Label(self.frame, text=label)
+            l = Label(self.frame, text=label, 
+                      bg=self.LabelBackgroundColour)
             l.grid(row=self.buttonrow,column=nextColumn)
 
             b = Button(self.frame, text="Automatically\nDetect",
-                command=self.AutomaticallyDetect,underline=0)
+                       command=self.AutomaticallyDetect,underline=0, 
+                       bg=self.ButtonBackgroundColour, 
+                       activebackground=self.ButtonActiveBackgroundColour)
             b.grid(row=self.buttonrow+1,column=1,sticky=N+S+W+E)
         
     def GuiAddSingleMarkEntry(self,micrograph,count,count_auto):
@@ -318,12 +341,14 @@ class particle_pick_class:
         row=self.frame.grid_size()[1]
 
         label=os.path.basename(micrograph)
-        l=Label(self.frame, text=label)
+        l=Label(self.frame, text=label, 
+                bg=self.LabelBackgroundColour)
         l.grid(row=row, column=0, sticky=E)
 
         if (self.AutomaticPicking):
             control = IntVar()
-            c=Checkbutton(self.frame, text="Auto", variable=control)
+            c=Checkbutton(self.frame, text="Auto", variable=control,
+                          selectcolor=self.BooleanSelectColour)
             c.grid(row=row, column=1, sticky=N+S+W+E)
             self.selectedForAutomaticPicking.append(control)
             self.selectedForAutomaticPickingName.append(micrograph)
@@ -332,19 +357,25 @@ class particle_pick_class:
             nextColumn=1
 
         r=Radiobutton(self.frame,text="Mark!",variable=self.whichmark,
-                           value=micrograph,indicatoron=0,
-                           command=self.LaunchSingleMark)
+                      value=micrograph,indicatoron=0,
+                      command=self.LaunchSingleMark, 
+                      bg=self.ButtonBackgroundColour, 
+                      activebackground=self.ButtonActiveBackgroundColour,
+                      highlightbackground=self.HighlightBackgroundColour, 
+                      selectcolor=self.ButtonActiveBackgroundColour)
         r.grid(row=row, column=nextColumn,sticky=N+S+W+E)
         nextColumn+=1
 
         label=str(count).zfill(5)
-        l=Label(self.frame, text=label)
+        l=Label(self.frame, text=label, 
+                bg=self.LabelBackgroundColour)
         l.grid(row=row, column=nextColumn, sticky=N+S+W+E)
         nextColumn+=1
 
         if (self.AutomaticPicking):
             label=str(count_auto).zfill(5)
-            l=Label(self.frame, text=label)
+            l=Label(self.frame, text=label, 
+                    bg=self.LabelBackgroundColour)
             l.grid(row=row, column=nextColumn, sticky=N+S+W+E)
         return row
 
@@ -352,10 +383,12 @@ class particle_pick_class:
         import os
         row=self.frame.grid_size()[1]
         label=os.path.basename(micrograph)+' : '+os.path.basename(self.whichtilted[micrograph])
-        l=Label(self.frame, text=label)
+        l=Label(self.frame, text=label, 
+                bg=self.LabelBackgroundColour)
         l.grid(row=row, column=0, sticky=E)
         label=str(count).zfill(5)
-        l=Label(self.frame, text=label)
+        l=Label(self.frame, text=label, 
+                bg=self.LabelBackgroundColour)
         l.grid(row=row, column=3)
         r=Radiobutton(self.frame,text="Mark!",variable=self.whichmark,
                            value=micrograph, indicatoron=0,
@@ -405,7 +438,8 @@ class particle_pick_class:
                 c=self.CountPicked(mic,family)
             total=total+c
             label=str(c).zfill(5)
-            l=Label(self.frame, text=label)
+            l=Label(self.frame, text=label, 
+                    bg=self.LabelBackgroundColour)
             if (self.AutomaticPicking):
                 if family=='':
                     l.grid(row=row, column=3)
@@ -432,7 +466,8 @@ class particle_pick_class:
         print "* Updating count..."
         total=self.CountAll()
         label=str(total).zfill(5)
-        l=Label(self.frame, text=label)
+        l=Label(self.frame, text=label, 
+                bg=self.LabelBackgroundColour)
         if (self.AutomaticPicking):
             l.grid(row=self.buttonrow, column=3)
         else:
@@ -440,7 +475,8 @@ class particle_pick_class:
         if (self.AutomaticPicking):
             totalAuto=self.CountAll('auto')
             label=str(totalAuto).zfill(5)
-            l=Label(self.frame, text=label)
+            l=Label(self.frame, text=label, 
+                    bg=self.LabelBackgroundColour)
             l.grid(row=self.buttonrow, column=4)
 
     def GuiClose(self):
