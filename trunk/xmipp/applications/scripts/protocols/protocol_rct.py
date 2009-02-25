@@ -75,25 +75,20 @@ AlignTiltPairsAdditionalParams=""
 #------------------------------------------------------------------------------------------------
 # {section} Reconstruction for each of the classes
 #------------------------------------------------------------------------------------------------
-# Perform 3D-reconstructions with ART?
-DoArtReconstruct=False
-# Relaxation parameter for ART reconstruction:
-ArtLambda=0.2
-# {expert} Additional ART parameters
-""" See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Art
+# Perform 3D-reconstructions?
+DoReconstruct=True
+# {list}|fourier|art|wbp| Reconstruction method
+""" The art emthod is very slow, and the relaxation parameter (-l ) needs to be carefully tuned. 
+    The wbp and fourier methods are much faster, but wbp may give significantly worse results.
+    Therefore, the fourier method is the recommended one.
 """
-ArtAdditionalParams=""
-# Perform 3D-reconstructions with WBP?
-DoWbpReconstruct=True
-# Threshold parameter for WBP-reconstruction:
-""" Higher values give lower resolution reconstruction (but possibly less noisy)
-    For RCT reconstructions, values of 0.01-0.1 could be suitable
+ReconstructMethod='fourier'
+# {expert} Additional reconstruction parameters
+""" For fourier see: http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Fourier
+    For art see: http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Art
+    For wbp see: http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Wbp
 """
-WbpThreshold=0.02
-# {expert} Additional WBP parameters
-""" See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Wbp
-"""
-WbpAdditionalParams=""
+ReconstructAdditionalParams=""
 #------------------------------------------------------------------------------------------------
 # {section} Low-pass filter reconstructions
 #------------------------------------------------------------------------------------------------
@@ -133,12 +128,9 @@ class RCT_class:
                  DoTiltedHeaders,
                  CenterMaxShift,
                  AlignTiltPairsAdditionalParams,
-                 DoArtReconstruct,
-                 ArtLambda,
-                 ArtAdditionalParams,
-                 DoWbpReconstruct,
-                 WbpThreshold,
-                 WbpAdditionalParams,
+                 DoReconstruct,
+                 ReconstructMethod,
+                 ReconstructAdditionalParams,
                  DoLowPassFilter,
                  LowPassFilter,
                  PixelSize):
@@ -155,10 +147,8 @@ class RCT_class:
         self.SelectClasses=SelectClasses
         self.CenterMaxShift=CenterMaxShift
         self.AlignTiltPairsAdditionalParams=AlignTiltPairsAdditionalParams
-        self.ArtLambda=ArtLambda
-        self.ArtAdditionalParams=ArtAdditionalParams
-        self.WbpThreshold=WbpThreshold
-        self.WbpAdditionalParams=WbpAdditionalParams
+        self.ReconstructMethod=ReconstructMethod
+        self.ReconstructAdditionalParams=ReconstructAdditionalParams
         self.LowPassFilter=LowPassFilter
         self.PixelSize=PixelSize
         
@@ -202,11 +192,8 @@ class RCT_class:
         if (DoTiltedHeaders):
             self.set_headers_tilted()
 
-        if (DoArtReconstruct):
-            self.execute_art()
-
-        if (DoWbpReconstruct):
-            self.execute_wbp()
+        if (DoReconstruct):
+            self.execute_reconstruction()
 
         if (DoLowPassFilter):
             self.execute_filter()
@@ -352,36 +339,30 @@ class RCT_class:
                                   self.log,
                                   False,1,1,'')
                 
-    def execute_art(self):
+    def execute_reconstruction(self):
         import os
         import launch_job
         for ref in self.untiltclasslist:
             til_selfile=self.untiltclasslist[ref][2]
             outname=til_selfile.replace('.sel','')
-            outname='art_'+outname
-            command=' -i ' + str(til_selfile) + \
-                     ' -o ' + str(outname) + \
-                     ' -l ' + str(self.ArtLambda)
-            if not self.ArtAdditionalParams=="":
-                command+=' '+str(self.ArtAdditionalParams)
-            launch_job.launch_job("xmipp_reconstruct_art",
-                                  command,
-                                  self.log,
-                                  False,1,1,'')
+            if (self.ReconstructMethod=='art'):
+                program='xmipp_reconstruct_art'
+                command=' -i ' + til_selfile + \
+                        ' -o ' + outname
+            elif (self.ReconstructMethod=='wbp'):
+                program='xmipp_reconstruct_wbp'
+                command=' -i ' + til_selfile + \
+                        ' -o ' + outname+'.vol'
+            elif (self.ReconstructMethod=='fourier'):
+                program='xmipp_reconstruct_fourier'
+                command=' -i ' + til_selfile + \
+                        ' -o ' + outname+'.vol'
+            else:
+                message = "Error: unrecognized reconstruction method: ", self.ReconstructMethod
+            if not self.ReconstructAdditionalParams=="":
+                command += ' ' + self.ReconstructAdditionalParams
 
-    def execute_wbp(self):
-        import os
-        import launch_job
-        for ref in self.untiltclasslist:
-            til_selfile=self.untiltclasslist[ref][2]
-            outname=til_selfile.replace('.sel','.vol')
-            outname='wbp_'+outname
-            command=' -i ' + til_selfile + \
-                    ' -o ' + outname + \
-                    ' -threshold ' + str(self.WbpThreshold)
-            if not self.WbpAdditionalParams=="":
-                command+=' '+str(self.WbpAdditionalParams)
-            launch_job.launch_job("xmipp_reconstruct_wbp",
+            launch_job.launch_job(program,
                                   command,
                                   self.log,
                                   False,1,1,'')
@@ -392,22 +373,10 @@ class RCT_class:
         for ref in self.untiltclasslist:
             til_selfile=self.untiltclasslist[ref][2]
             volname=til_selfile.replace('.sel','.vol')
-            wbpname='wbp_'+volname
-            artname='art_'+volname
-            if os.path.exists(wbpname):
-                filname=wbpname.replace('.vol','_filtered.vol')
+            if os.path.exists(volname):
+                filname=volname.replace('.vol','_filtered.vol')
                 command=' -o ' + filname + \
-                 ' -i ' + wbpname  + \
-                 ' -sampling ' + str(self.PixelSize) + \
-                 ' -low_pass ' + str(self.LowPassFilter)
-                launch_job.launch_job("xmipp_fourier_filter",
-                                      command,
-                                      self.log,
-                                      False,1,1,'')
-            if os.path.exists(artname):
-                filname=wbpname.replace('.vol','_filtered.vol')
-                command=' -o ' + filname + \
-                 ' -i ' + artname  + \
+                 ' -i ' + volname  + \
                  ' -sampling ' + str(self.PixelSize) + \
                  ' -low_pass ' + str(self.LowPassFilter)
                 launch_job.launch_job("xmipp_fourier_filter",
@@ -439,12 +408,9 @@ if __name__ == '__main__':
                   DoTiltedHeaders,
                   CenterMaxShift,
                   AlignTiltPairsAdditionalParams,
-                  DoArtReconstruct,
-                  ArtLambda,
-                  ArtAdditionalParams,
-                  DoWbpReconstruct,
-                  WbpThreshold,
-                  WbpAdditionalParams,
+                  DoReconstruct,
+                  ReconstructMethod,
+                  ReconstructAdditionalParams,
                   DoLowPassFilter,
                   LowPassFilter,
                   PixelSize)
