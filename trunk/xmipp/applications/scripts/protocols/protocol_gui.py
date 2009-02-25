@@ -55,6 +55,18 @@ Optional:
 
 """
 FontName="Helvetica "
+TextSectionColour="blue4"
+TextCitationColour="dark olive green"
+BackgroundColour="white"
+LabelBackgroundColour=BackgroundColour
+HighlightBackgroundColour=BackgroundColour
+ButtonBackgroundColour="LightBlue"
+ButtonActiveBackgroundColour="LightSkyBlue"
+EntryBackgroundColour="lemon chiffon" 
+ExpertLabelBackgroundColour="light salmon"
+ListSelectColour="DeepSkyBlue4"
+BooleanSelectColour="DeepSkyBlue4"
+
 # A scrollbar that hides itself if it's not needed.
 class AutoScrollbar(Scrollbar):
     def set(self, lo, hi):
@@ -71,7 +83,7 @@ def PrepareCanvas(master):
     vscrollbar.grid(row=0, column=1, sticky=N+S)
     hscrollbar = AutoScrollbar(master, orient=HORIZONTAL)
     hscrollbar.grid(row=1, column=0, sticky=E+W)
-    canvas = Canvas(master,
+    canvas = Canvas(master, background=BackgroundColour,
                     yscrollcommand=vscrollbar.set,
                     xscrollcommand=hscrollbar.set)
     canvas.grid(row=0, column=0, sticky=N+S+E+W)
@@ -79,7 +91,7 @@ def PrepareCanvas(master):
     hscrollbar.config(command=canvas.xview)
     master.grid_rowconfigure(0, weight=1)
     master.grid_columnconfigure(0, weight=1)
-    frame = Frame(canvas)
+    frame = Frame(canvas, background=BackgroundColour)
     frame.rowconfigure(0, weight=1)
     frame.columnconfigure(0, weight=1)
     return canvas,frame
@@ -357,14 +369,14 @@ class automated_gui_class:
         self.master.title(programname)
         headertext='GUI for Xmipp '+programname+'\n'
         headertext+="Executed in directory: "+str(os.getcwd())
-        self.l1=Label(self.frame, text=headertext, fg="medium blue")
+        self.l1=Label(self.frame, text=headertext, fg=TextSectionColour, bg=LabelBackgroundColour)
         self.l1.configure(wraplength=400)
         self.l1.grid(row=0, column=0,columnspan=6,sticky=E+W)
         if (self.have_publication):
             headertext="If you publish results obtained with this protocol, please cite:"
             for pub in self.publications:
                 headertext+='\n'+pub.replace('\n','')
-            self.l2=Label(self.frame, text=headertext, fg="dark green")
+            self.l2=Label(self.frame, text=headertext, fg=TextCitationColour, bg=LabelBackgroundColour)
             self.l2.configure(wraplength=400)
             self.l2.grid(row=1, column=0,columnspan=5,sticky=EW)
             self.AddSeparator(2)
@@ -427,32 +439,36 @@ class automated_gui_class:
         self.morehelp=StringVar()
       
         # Script title
-        self.master.title('Xmipp protocols')
+        titletext = 'Xmipp protocols (v2.3)'
+        self.master.title(titletext)
 
         # Reference
         row=(self.frame.grid_size()[1])
-        headertext="If Xmipp Protocols is useful to you, please cite:\n"
-        headertext+="Scheres et al. (2008) Nature Protocols 3, 977-990\n"
-        self.l2=Label(self.frame, text=headertext, fg="blue")
+        self.l2=Label(self.frame, text=titletext, font=(FontName, self.fontsize+10, "bold"), 
+                      fg=TextSectionColour, bg=LabelBackgroundColour)
         self.l2.grid(row=0, column=0,columnspan=5,sticky=EW)
+        headertext="If Xmipp protocols is useful to you, please cite:\n"
+        headertext+="Scheres et al. (2008) Nature Protocols 3, 977-990\n"
+        self.l2=Label(self.frame, text=headertext, fg=TextCitationColour, bg=LabelBackgroundColour)
+        self.l2.grid(row=1, column=0,columnspan=5,sticky=EW)
 
         # Message which protocol
         #row=(self.frame.grid_size()[1])
         #headertext="Which protocol do you want to run?"
-        #self.l1=Label(self.frame, text=headertext, fg="medium blue")
+        #self.l1=Label(self.frame, text=headertext, fg=TextSectionColour, bg=LabelBackgroundColour)
         #self.l1.grid(row=row, column=0,columnspan=5,sticky=EW)
-        self.AddSeparator(0)
+        self.AddSeparator(1)
 
         # Add labels for different protocol categories
         row=(self.frame.grid_size()[1])
         self.row_pre=row
         self.row_2d=row
         self.row_3d=row
-        self.l=Label(self.frame, text="Preprocessing", fg="medium blue", width=30)
+        self.l=Label(self.frame, text="Preprocessing", fg=TextSectionColour, width=30, bg=LabelBackgroundColour)
         self.l.grid(row=row, column=self.column_pre,columnspan=1, sticky=E)
-        self.l=Label(self.frame, text="2D analysis", fg="medium blue", width=30)
+        self.l=Label(self.frame, text="2D analysis", fg=TextSectionColour, width=30, bg=LabelBackgroundColour)
         self.l.grid(row=row, column=self.column_2d,columnspan=1, sticky=E)
-        self.l=Label(self.frame, text="3D analysis", fg="medium blue", width=30)
+        self.l=Label(self.frame, text="3D analysis", fg=TextSectionColour, width=30, bg=LabelBackgroundColour)
         self.l.grid(row=row, column=self.column_3d,columnspan=1, sticky=E)
 
         # Add all the variables in the script header
@@ -490,17 +506,17 @@ class automated_gui_class:
     def GuiAddSection(self,label):
         row=(self.frame.grid_size()[1])
         line="-----------------------------------------------------------"
-        self.l1=Label(self.frame, text=label, fg="medium blue")
-        self.l2=Label(self.frame, text=line, fg="medium blue")
+        self.l1=Label(self.frame, text=label, fg=TextSectionColour, bg=LabelBackgroundColour)
+        self.l2=Label(self.frame, text=line, fg=TextSectionColour, bg=LabelBackgroundColour)
         self.l1.grid(row=row, column=0,columnspan=self.columnspantextlabel,sticky=E)
         self.l2.grid(row=row+1, column=0,columnspan=self.columnspantextlabel,sticky=E)
 
     def AddSeparator(self,row):
-        self.l1=Label(self.frame,text="")
+        self.l1=Label(self.frame,text="", bg=LabelBackgroundColour)
         self.l1.grid(row=row)
-        self.l2=Frame(self.frame, height=2, bd=1, bg="medium blue",relief=RIDGE)
+        self.l2=Frame(self.frame, height=2, bd=1, bg=TextSectionColour,relief=RIDGE)
         self.l2.grid(row=row+1, column=0,columnspan=self.columnspantextlabel+3,sticky=EW)
-        self.l3=Label(self.frame,text="")
+        self.l3=Label(self.frame,text="", bg=LabelBackgroundColour)
         self.l3.grid(row=row+2)
 
     def GuiAddLaunchButton(self,label,value,expert):
@@ -518,19 +534,26 @@ class automated_gui_class:
             row=self.row_3d
 
         self.bGet = Radiobutton(self.frame, text=label, variable=self.which_setup, width=30,
-                                value=value,  indicatoron=0, command=self.GuiLanchSetup)
+                                value=value,  indicatoron=0, command=self.GuiLanchSetup, 
+                                bg=ButtonBackgroundColour, 
+                                activebackground=ButtonActiveBackgroundColour,
+                                highlightbackground=HighlightBackgroundColour, 
+                                selectcolor=ButtonBackgroundColour)
         self.bGet.grid(row=row,column=column)
 
     def GuiPositionLabel(self,label,default,variable,expert,morehelp,has_browse=False):
         row=(self.frame.grid_size()[1])
         if (expert=="expert"):
-            self.l=Label(self.frame, text=label, bg="yellow")
+            self.l=Label(self.frame, text=label, bg=ExpertLabelBackgroundColour)
         else: 
-            self.l=Label(self.frame, text=label)
+            self.l=Label(self.frame, text=label, bg=LabelBackgroundColour)
         self.l.configure(wraplength=350)
         self.l.grid(row=row, column=0,columnspan=self.columnspantextlabel, sticky=E)
         self.r=Radiobutton(self.frame,text="Help",variable=self.morehelp,
-                           value=morehelp,indicatoron=0, command=self.GuiShowMoreHelp )
+                           value=morehelp,indicatoron=0, command=self.GuiShowMoreHelp, 
+                           bg=ButtonBackgroundColour,
+                           activebackground=ButtonActiveBackgroundColour,
+                           selectcolor=ButtonBackgroundColour)
         if (has_browse):
             column=self.columntextentry+3
         else:
@@ -542,9 +565,11 @@ class automated_gui_class:
 
     def GuiAddBooleanEntry(self,label,default,variable,expert,morehelp):
         row,self.l,self.r=self.GuiPositionLabel(label,default,variable,expert,morehelp)
-        self.r1 = Radiobutton(self.frame, text="Yes", variable=variable, value=True)
+        self.r1 = Radiobutton(self.frame, text="Yes", variable=variable, value=True, 
+                              bg=BackgroundColour, selectcolor=BooleanSelectColour)
         self.r1.grid(row=row, column=self.columntextentry)
-        self.r2 = Radiobutton(self.frame, text="No", variable=variable, value=False)
+        self.r2 = Radiobutton(self.frame, text="No", variable=variable, value=False, 
+                              bg=BackgroundColour, selectcolor=BooleanSelectColour)
         self.r2.grid(row=row, column=self.columntextentry+1)
         if (default=="True"):
             self.r1.select()
@@ -567,7 +592,9 @@ class automated_gui_class:
         found = False
         for mode in radiooptions:
             c = c + 1
-            self.r = Radiobutton(self.frame, text=mode, variable=variable,relief=FLAT, indicatoron=1, value=mode,selectcolor="medium blue")
+            self.r = Radiobutton(self.frame, text=mode, variable=variable,relief=FLAT, 
+                                 indicatoron=1, value=mode,selectcolor=ListSelectColour,
+                                 bg=BackgroundColour)
             self.r.grid(row=row+c, column=self.columntextentry,sticky=W)
             if (default==mode):
                 self.r.select()
@@ -581,7 +608,7 @@ class automated_gui_class:
 
     def GuiAddTextEntry(self,label,default,variable,expert,morehelp):
         row,self.l,self.r=self.GuiPositionLabel(label,default,variable,expert,morehelp)
-        self.e = Entry(self.frame, text=label, textvariable=variable)
+        self.e = Entry(self.frame, text=label, textvariable=variable, bg=EntryBackgroundColour)
         self.e.delete(0, END) 
         self.e.insert(0,default)
         self.e.grid(row=row, column=self.columntextentry,columnspan=2,sticky=W+E)
@@ -594,16 +621,22 @@ class automated_gui_class:
     def GuiAddBrowseEntry(self,varname,label,default,variable,expert,morehelp,is_file):
         row,self.l,self.r=self.GuiPositionLabel(label,default,variable,expert,morehelp,True)
         self.variables[varname][6]=row
-        self.e = Entry(self.frame, text=label, textvariable=variable)
+        self.e = Entry(self.frame, text=label, textvariable=variable, bg=EntryBackgroundColour)
         self.e.delete(0, END) 
         self.e.insert(0,default)
         self.e.grid(row=row, column=self.columntextentry,columnspan=2,sticky=W+E)
         if (is_file):
             self.b = Radiobutton(self.frame, text="Browse",indicatoron=0,variable=self.whichfile,
-                                 value=varname, command=self.GuiBrowseFile)
+                                 value=varname, command=self.GuiBrowseFile, 
+                                 bg=ButtonBackgroundColour,
+                                 activebackground=ButtonActiveBackgroundColour,
+                                 selectcolor=ButtonBackgroundColour)
         else:
             self.b = Radiobutton(self.frame, text="Browse",indicatoron=0,variable=self.whichfile,
-                                 value=varname, command=self.GuiBrowseDirectory)
+                                 value=varname, command=self.GuiBrowseDirectory, 
+                                 bg=ButtonBackgroundColour,
+                                 activebackground=ButtonActiveBackgroundColour,
+                                 selectcolor=ButtonBackgroundColour)
         self.b.grid(row=row, column=self.columntextentry+2,sticky=EW)
 
         if (expert=="expert"):
@@ -615,7 +648,9 @@ class automated_gui_class:
 
     def GuiAddRestProtocolButtons(self):
         self.AddSeparator(self.buttonrow)
-        self.button = Button(self.frame, text="Close", command=self.GuiClose,underline=0)
+        self.button = Button(self.frame, text="Close", command=self.GuiClose,underline=0, 
+                             bg=ButtonBackgroundColour, 
+                             activebackground=ButtonActiveBackgroundColour)
         self.button.grid(row=self.buttonrow+3,column=0, sticky=W)
         self.master.bind('<Alt_L><c>', self.GuiClose)
 
@@ -623,23 +658,33 @@ class automated_gui_class:
             text2="Hide Expert Options"
         else:
             text2="Show Expert Options"
-        self.bGet = Button(self.frame, text=text2, command=self.GuiTockleExpertMode,underline=12)
+        self.bGet = Button(self.frame, text=text2, command=self.GuiTockleExpertMode,
+                           underline=12, bg=ButtonBackgroundColour,
+                           activebackground=ButtonActiveBackgroundColour)
         self.bGet.grid(row=self.buttonrow+3,column=1,sticky=EW)
         self.master.bind('<Alt_L><o>', self.GuiTockleExpertMode)
 
         if not self.is_analysis:
-            self.bGet = Button(self.frame, text="Load", command=self.GuiLoad,underline=0)
+            self.bGet = Button(self.frame, text="Load", command=self.GuiLoad,
+                               underline=0, bg=ButtonBackgroundColour,
+                               activebackground=ButtonActiveBackgroundColour)
             self.bGet.grid(row=self.buttonrow+3,column=2)
             self.master.bind('<Alt_L><l>', self.GuiLoad)
-        self.bGet = Button(self.frame, text="Save", command=self.GuiSave,underline=0)
+        self.bGet = Button(self.frame, text="Save", command=self.GuiSave,
+                           underline=0, bg=ButtonBackgroundColour,
+                           activebackground=ButtonActiveBackgroundColour)
         self.bGet.grid(row=self.buttonrow+3,column=3)
         self.master.bind('<Alt_L><s>', self.GuiSave)
-        self.bGet = Button(self.frame, text="Save & Execute", command=self.GuiSaveExecute,underline=7)
+        self.bGet = Button(self.frame, text="Save & Execute", command=self.GuiSaveExecute,
+                           underline=7, bg=ButtonBackgroundColour,
+                           activebackground=ButtonActiveBackgroundColour)
         self.bGet.grid(row=self.buttonrow+3,column=4)
         self.master.bind('<Alt_L><e>', self.GuiSaveExecute)
         self.master.bind('<Alt_L><r>', self.GuiSaveExecute)
         if (self.have_analyse_results):
-            self.bGet = Button(self.frame, text="Analyse Results", command=self.AnalyseResults,underline=0)
+            self.bGet = Button(self.frame, text="Analyse Results", command=self.AnalyseResults,
+                               underline=0, bg=ButtonBackgroundColour,
+                               activebackground=ButtonActiveBackgroundColour)
             self.bGet.grid(row=self.buttonrow+3,column=5)
             self.master.bind('<Alt_L><a>', self.AnalyseResults)
         # Add bindings for changing font size
@@ -647,10 +692,14 @@ class automated_gui_class:
         self.master.bind('<Alt_L><minus>', self.GuiDecreaseFontSize)
 
     def GuiAddRestSetupButtons(self):
-        self.button = Button(self.frame, text="Close", command=self.GuiClose,underline=0)
+        self.button = Button(self.frame, text="Close", command=self.GuiClose,
+                             underline=0, bg=ButtonBackgroundColour, 
+                             activebackground=ButtonActiveBackgroundColour)
         self.button.grid(row=self.buttonrow,column=0, sticky=W)
         self.master.bind('<Alt_L><c>', self.GuiClose)
-        self.bGet = Button(self.frame, text="Analyse Results", command=self.AnalyseResults,underline=0)
+        self.bGet = Button(self.frame, text="Analyse Results", command=self.AnalyseResults,
+                           underline=0, bg=ButtonBackgroundColour,
+                           activebackground=ButtonActiveBackgroundColour)
         self.bGet.grid(row=self.buttonrow,column=2)
         self.master.bind('<Alt_L><a>', self.AnalyseResults)
 
@@ -692,7 +741,8 @@ class automated_gui_class:
                                              filetypes=fileformats)
         if (len(fname)>0):
             fname=self.relpath(fname,os.curdir)
-            self.e = Entry(self.frame,textvariable=self.variables[self.whichfile.get()][2])
+            self.e = Entry(self.frame,textvariable=self.variables[self.whichfile.get()][2],
+                           bg=EntryBackgroundColour)
             self.e.delete(0, END) 
             self.e.insert(0,fname)
             self.e.grid(row=self.variables[self.whichfile.get()][6],
@@ -706,7 +756,8 @@ class automated_gui_class:
         fname = tkFileDialog.askdirectory()       
         if (len(fname)>0):
             fname=self.relpath(fname,os.curdir)
-            self.e = Entry(self.frame,textvariable=self.variables[self.whichfile.get()][2])
+            self.e = Entry(self.frame,textvariable=self.variables[self.whichfile.get()][2],
+                           bg=EntryBackgroundColour)
             self.e.delete(0, END) 
             self.e.insert(0,fname)
             self.e.grid(row=self.variables[self.whichfile.get()][6],
@@ -814,11 +865,16 @@ class MyQueueLaunch:
     def __init__(self, parent,command):
         self.command=command
         self.top = Toplevel(parent)
-        Label(self.top, text="Job submission command \n (e.g. bsub -q 1week)").grid(row=0,column=0,columnspan=2)
-        self.e = Entry(self.top)
+        Label(self.top,  bg=LabelBackgroundColour,
+              text="Job submission command \n (e.g. bsub -q 1week)").grid(row=0,column=0,columnspan=2)
+        self.e = Entry(self.top, bg=EntryBackgroundColour)
         self.e.grid(row=1,column=0,columnspan=2)
-        Button(self.top, text="Submit", command=self.ok).grid(row=2,column=0)
-        Button(self.top, text="Cancel", command=self.cancel).grid(row=2,column=1)
+        Button(self.top, text="Submit", command=self.ok,
+               bg = ButtonBackgroundColour,
+               activebackground=ButtonActiveBackgroundColour).grid(row=2,column=0)
+        Button(self.top, text="Cancel", command=self.cancel,
+               bg = ButtonBackgroundColour,
+               activebackground=ButtonActiveBackgroundColour).grid(row=2,column=1)
 
     def ok(self):
         import os
@@ -851,7 +907,9 @@ class MyShowMoreHelp:
 
         text.config(height=len(lines)+1)
         text.grid(column=0,row=0)
-        Button(top, text="OK", command=self.top.destroy).grid(column=0,row=1)
+        Button(top, text="OK", command=self.top.destroy,
+               bg=ButtonBackgroundColour,
+               activebackground=ButtonActiveBackgroundColour).grid(column=0,row=1)
 
     def click(self,linkname):
         browser=self.get_browser()
