@@ -44,6 +44,8 @@ SetupMultiRes3d=False
 #------------------------------------------------------------------------
 # Absolute path to the root directory name for this project:
 ProjectDir='/home/scheres/xmipp/applications/scripts/protocols'
+# System flavour for parallelization
+SystemFlavour=''
 # Directory name for logfiles:
 LogDir='Logs'
 #
@@ -67,6 +69,7 @@ class setup_protocols_class:
                      SetupProjMatch,
                      SetupMultiRes3d,
                      ProjectDir,
+                     SystemFlavour,
                      LogDir,
                      AutoLaunch):
 
@@ -83,6 +86,7 @@ class setup_protocols_class:
             self.SetupMultiRes3d=SetupMultiRes3d
 
             self.ProjectDir=ProjectDir
+            self.SystemFlavour=SystemFlavour
             self.LogDir=LogDir
             self.AutoLaunch=AutoLaunch
 
@@ -117,7 +121,8 @@ class setup_protocols_class:
 
             # For automated editing of default directories in protocols
             self.DEFAULTDIRS={"ProjectDir":self.ProjectDir,
-                              "LogDir":self.LogDir
+                              "LogDir":self.LogDir,
+                              "SystemFlavour":self.SystemFlavour
                               }
             
 
@@ -219,6 +224,7 @@ if __name__ == '__main__':
                                 SetupProjMatch,
                                 SetupMultiRes3d,
                                 ProjectDir,
+                                SystemFlavour,
                                 LogDir,
                                 AutoLaunch)
 
