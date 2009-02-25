@@ -250,7 +250,6 @@ class preprocess_A_class:
         self.LowResolCutoff=LowResolCutoff
         self.HighResolCutoff=HighResolCutoff
         self.DoCtffind=DoCtffind
-        self.CtffindExec=os.path.abspath(CtffindExec)
         self.WinSize=WinSize
         self.MinRes=MinRes
         self.MaxResFactor=MaxResFactor
@@ -267,6 +266,16 @@ class preprocess_A_class:
                                      LogDir,
                                      sys.argv[0]+"_"+str(self.myrank),
                                      self.WorkingDir)
+        # Check ctffind executable
+        if (self.DoCtffind):
+            if (not os.path.exists(CtffindExec)):
+                message = "Error: cannot find ctffind executable: ",CtffindExec
+                print '*',message
+                self.log.error(message)
+                sys.exit()
+            else:
+                self.CtffindExec=os.path.abspath(CtffindExec)
+
         if (mpiActive):
             print "Python has mpi4py package, python parallel jobs are possible"
             self.log.info("Python has mpi4py package, python parallel jobs are possible")        
