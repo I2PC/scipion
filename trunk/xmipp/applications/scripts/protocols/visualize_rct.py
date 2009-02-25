@@ -35,14 +35,10 @@ VisualizeUntiltedAverages=True
 VisualizeUntiltedImages=True
 # Visualize aligned tilted images?
 VisualizeTiltedImages=True
-# Visualize ART reconstructions?
-VisualizeArtVols=True
-# Visualize WBP reconstructions?
-VisualizeWbpVols=True
-# Visualize filtered ART reconstructions?
-VisualizeFilteredArtVols=True
-# Visualize filtered WBP reconstructions?
-VisualizeFilteredWbpVols=True
+# Visualize reconstructions?
+VisualizeVols=True
+# Visualize filtered reconstructions?
+VisualizeFilteredVols=True
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
@@ -63,10 +59,8 @@ class visualize_RCT_class:
                  VisualizeUntiltedAverages,
                  VisualizeUntiltedImages,
                  VisualizeTiltedImages,
-                 VisualizeArtVols,
-                 VisualizeWbpVols,
-                 VisualizeFilteredArtVols,
-                 VisualizeFilteredWbpVols,
+                 VisualizeVols,
+                 VisualizeFilteredVols,
                  ProtocolName):
 	     
         import os,sys,shutil
@@ -98,17 +92,11 @@ class visualize_RCT_class:
             if VisualizeTiltedImages:
                 ShowSelfiles.append(basename+'_tilted.sel')
 
-            if VisualizeArtVols:
-                ShowVolumes.append('art_'+basename+'_tilted.vol')
+            if VisualizeVols:
+                ShowVolumes.append(basename+'_tilted.vol')
 
-            if VisualizeWbpVols:
-                ShowVolumes.append('wbp_'+basename+'_tilted.vol')
-
-            if VisualizeFilteredArtVols:
-                ShowVolumes.append('art_'+basename+'_tilted_filtered.vol')
-
-            if VisualizeFilteredWbpVols:
-                ShowVolumes.append('wbp_'+basename+'_tilted_filtered.vol')
+            if VisualizeFilteredVols:
+                ShowVolumes.append(basename+'_tilted_filtered.vol')
 
         visualization.visualize_volumes(ShowVolumes,
                                         VisualizeVolZ,
@@ -159,9 +147,7 @@ if __name__ == '__main__':
                                       VisualizeUntiltedAverages,
                                       VisualizeUntiltedImages,
                                       VisualizeTiltedImages,
-                                      VisualizeArtVols,
-                                      VisualizeWbpVols,
-                                      VisualizeFilteredArtVols,
-                                      VisualizeFilteredWbpVols,
+                                      VisualizeVols,
+                                      VisualizeFilteredVols,
                                       ProtocolName)
     visualize_RCT.close()
