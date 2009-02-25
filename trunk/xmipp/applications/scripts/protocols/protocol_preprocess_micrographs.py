@@ -102,7 +102,7 @@ HighResolCutoff=0.35
 """ Some people prefer the faster CTFFIND program.
     Note however that this option will yield no information about the CTF envelope, and therefore this option cannot be used with the high-resolution refinement protocol.
 """
-DoCtffind=False
+DoCtffind=True
 # {file} Location of the CTFFIND executable
 CtffindExec='../../bin/ctffind3.exe'
 # {expert} Window size
