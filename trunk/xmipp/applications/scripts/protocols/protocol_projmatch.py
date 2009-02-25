@@ -73,19 +73,40 @@ LogDir='Logs'
 DoCtfCorrection=True
 
 # {file} CTFDat file with CTF data:
-""" The input selfile may be a subset of the images in the CTFDat file, but all images in the input selfile must be present in the CTFDat file. This field is obligatory if CTF correction is to be performed. Note that this file should be positioned in the project directory.
+""" The input selfile may be a subset of the images in the CTFDat file, but all 
+    images in the input selfile must be present in the CTFDat file. This field is 
+    obligatory if CTF correction is to be performed. 
+    Note that this file should be positioned in the project directory, and that the
+    image names and ctf parameter filenames should be in absolute paths.
 """
 CTFDatName='all_images.ctfdat'
 
-# {file} Docfile with defocus values where to split into groups
-""" Leave this field empty if you want automatic CTF grouping
+# Make CTF groups automatically?
+""" Make CTF groups based on a maximum differences at a given resolution limit.
+    If this option is set to false, a docfile with the defocus values where to 
+    split the images in distinct defocus group has to be provided (see expert option below)
+"""
+DoAutoCtfGroup=True
+
+# Maximum difference in CTF-values in one group
+""" If the difference between the CTF-values up to the resolution limit specified 
+    below is larger than the value given here, two images will be placed in 
+    distinct CTF groups.
+"""
+CtfGroupMaxDiff=0.5
+
+# Resolution limit (Ang) for CTF-differences in one group
+""" Maximum resolution where to consider CTF-differences among different groups.
+    One should use somewhat higher resolutions than those aimed for in the refinement.
+"""
+CtfGroupMaxResol=15
+
+# {file} {expert} Docfile with defocus values where to split into groups
+""" This field is obligatory if you do not want to make the CTF groups automatically.
+    Note that the requested docfile can be made initially with the xmipp_ctf_group program,
+    and then it can be edited manually to suit your needs. 
 """
 SplitDefocusDocFile=''
-
-#{expert} user defined flag for the ctf_group program. 
-"""For example -error  number -resol number  
-"""
-CTFExtraCommands='-resol 8'
 
 # {expert} Padding factor
 """ Application of CTFs to reference projections and of Wiener filter to class averages will be done using padded images.
@@ -557,8 +578,10 @@ class projection_matching_class:
                 _DoCtfCorrection,
                 _CTFDatName,
                 _WienerConstant,
+                _DoAutoCtfGroup,
+                _CtfGroupMaxDiff,
+                _CtfGroupMaxResol,
                 _SplitDefocusDocFile,
-                _CTFExtraCommands,
                 _PaddingFactor,
                 _DataArePhaseFlipped,
                 _ReferenceIsCtfCorrected,
@@ -608,13 +631,15 @@ class projection_matching_class:
        self._ResolSam=_ResolSam
        self._DoCtfCorrection=_DoCtfCorrection
        self._WienerConstant=_WienerConstant
+       self._DoAutoCtfGroup=_DoAutoCtfGroup
+       self._CtfGroupMaxDiff=_CtfGroupMaxDiff
+       self._CtfGroupMaxResol=_CtfGroupMaxResol
        self._SplitDefocusDocFile =''  
        if(len(_SplitDefocusDocFile) > 1):
             self._SplitDefocusDocFile=os.path.abspath(_SplitDefocusDocFile)
        self._DocFileName =''  
        if(len(_DocFileName) > 1):
             self._DocFileName=os.path.abspath(_DocFileName)
-       self._CTFExtraCommands=_CTFExtraCommands
        self._PaddingFactor=PaddingFactor
        self._DataArePhaseFlipped=_DataArePhaseFlipped
        self._DoParallel=_DoParallel
@@ -715,8 +740,10 @@ class projection_matching_class:
                                                      self._PaddingFactor,
                                                      self._DataArePhaseFlipped,
                                                      self._WienerConstant,
-                                                     self._SplitDefocusDocFile,
-                                                     self._CTFExtraCommands)
+                                                     self._DoAutoCtfGroup,
+                                                     self._CtfGroupMaxDiff,
+                                                     self._CtfGroupMaxResol,
+                                                     self._SplitDefocusDocFile)
        else:
           self._NumberOfCtfGroups=1
 
@@ -975,10 +1002,12 @@ def execute_ctf_groups (_mylog,
                         _PaddingFactor,
                         _DataArePhaseFlipped,
                         _WienerConstant,
-                        _SplitDefocusDocFile,
-                        _CTFExtraCommands):
+                        _DoAutoCtfGroup,
+                        _CtfGroupMaxDiff,
+                        _CtfGroupMaxResol,
+                        _SplitDefocusDocFile):
 
-   import os,glob
+   import os,glob,sys
    import utils_xmipp
    import launch_job
 
@@ -992,11 +1021,20 @@ def execute_ctf_groups (_mylog,
            ' -o ' + CtfGroupDirectory + '/' + CtfGroupRootName + \
            ' -wiener -wc ' + str(_WienerConstant) + \
            ' -pad ' + str(_PaddingFactor)
-   if(len(_SplitDefocusDocFile) > 1):
-      command +=  ' -split ' + _SplitDefocusDocFile
    if (_DataArePhaseFlipped):
       command += ' -phase_flipped '
-   command += _CTFExtraCommands   
+   if (_DoAutoCtfGroup):
+      command += ' -error ' + str(_CtfGroupMaxDiff) + \
+                 ' -resol ' + str(_CtfGroupMaxResol)
+   else:
+      if (len(_SplitDefocusDocFile) > 0):
+         command += ' -split ' + _SplitDefocusDocFile
+      else:
+         message = "Error: for non-automated ctf grouping, please provide a docfile!"
+         print '* ',message
+         _mylog.info(message)
+         sys.exit()
+
    launch_job.launch_job("xmipp_ctf_group",
                          command,
                          _mylog,
@@ -1688,8 +1726,10 @@ if __name__ == '__main__':
                 DoCtfCorrection,
                 CTFDatName,
                 WienerConstant,
+                DoAutoCtfGroup,
+                CtfGroupMaxDiff,
+                CtfGroupMaxResol,
                 SplitDefocusDocFile,
-                CTFExtraCommands,
                 PaddingFactor,
                 DataArePhaseFlipped,
                 ReferenceIsCtfCorrected,
