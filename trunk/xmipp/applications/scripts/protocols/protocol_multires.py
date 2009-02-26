@@ -17,7 +17,7 @@
 # {file} Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
-SelFileName='all_images.sel'
+SelFileName='imgs.sel'
 
 # {file} Initial 3D reference map:
 ReferenceFileName='reference.vol'
@@ -33,7 +33,7 @@ WorkDirectory='MultiRes/run1'
 DoDeleteWorkingDir=False
 
 # Number of iterations to perform
-NumberofIterations=10
+NumberofIterations=3
 
 # Resume at iteration
 """ This option may be used to finish a previously performed run.
@@ -45,7 +45,7 @@ ResumeIteration=1
 # {expert} {dir} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
-ProjectDir='/home/scheres/work/test'
+ProjectDir='/media/usbdisk/Experiments/TestSencillo'
 
 # {expert} {dir} Directory name for logfiles:
 LogDir='Logs'
@@ -60,7 +60,7 @@ SkipPrealignment=True
 ParticleRadius=32
 
 # Particle mass (Daltons)
-ParticleMass=''
+ParticleMass='0'
 
 # Symmetry group
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
@@ -100,9 +100,9 @@ PyramidLevels='2 1 0'
     The discrete angular assignment is done with xmipp_angular_predict:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Angular_predict
 """
-AngularSteps='10 5'
+AngularSteps='20 5x5 3'
 
-# {expert} Quality percentil
+# Quality percentil
 """ The quality percentil indicates what is the percentil of images to be
     discarded according to several criteria. You can use different quality
     criteria along iterations. For instance, 2 5 8x10 means that in the
@@ -111,7 +111,7 @@ AngularSteps='10 5'
 """
 QualityPercentil='10'
 
-# {expert} Quality angle movement
+# Quality angle movement
 """ If an image moves from one iteration to the next more than this
     threshold (expressed in degrees), it will not be considered for this
     reconstruction. However, the image is not removed from the dataset
@@ -119,9 +119,9 @@ QualityPercentil='10'
     You may use different thresholds for the different iterations.
     If you don't want to use this feature, set it to 360.
 """
-QualityAngleMovement='360'
+QualityAngleMovement='5x360 5'
 
-# {expert} Quality shift movement
+# Quality shift movement
 """ If an image moves from one iteration to the next more than this
     threshold (expressed as a percentage of the image size),
     it will not be considered for this reconstruction. However, the image
@@ -130,7 +130,7 @@ QualityAngleMovement='360'
     You may use different thresholds for the different iterations.
     If you don't want to use this feature, set it to 100.
 """
-QualityShiftMovement='100'
+QualityShiftMovement='5x100 2'
 
 # {expert} {list}|fourier|wbp|art| Reconstruction method
 """ Choose between fourier, wbp or art
@@ -189,13 +189,13 @@ ContinuousAssignment='1'
 # {expert} Compute resolution using FSC
 """ The resolution is always computed in the last iteration
 """
-DoComputeFSC='1'
+DoComputeFSC='0'
 
 # {expert} Compute resolution using SSNR
 """ Computation of the spectral signal-to-noise ratio is slow, do not abuse it.
     The resolution is always computed in the last iteration
 """
-DoComputeSSNR='0'
+DoComputeSSNR='9x0 1'
 
 #-----------------------------------------------------------------------------
 # {section} CTF Amplitude Correction (assuming previous phase correction)
@@ -243,7 +243,7 @@ InitialReferenceMask='mask.vol'
     For more information about Fourier filtering, please visit:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/FourierFilter
 """
-FilterLowPassReference='50x0.25'
+FilterLowPassReference='0.25'
 
 # {expert} Reference Highpass filter (Normalized digital freq.)
 """ This vector specifies the frequency at which each reference volume
@@ -264,13 +264,13 @@ FilterHighPassReference='0'
     Segmentation is done with xmipp_segment:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Segment
 """
-SegmentUsingMass='50x0'
+SegmentUsingMass='0'
 
 # {expert} Recenter reference using center of mass
 """ Specify whether the reference for the next iteration must be recentered
     or not after each iteration.
 """
-Recenter=False
+Recenter=True
 
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
@@ -285,7 +285,7 @@ NumberOfThreads=1
 """ This option provides parallelization on clusters with distributed memory architecture.
     It requires mpi to be installed.
 """
-DoParallel=True
+DoParallel=False
 
 # Number of MPI processes to use:
 """ This option provides distributed-memory parallelization on multi-node machines. 
@@ -610,8 +610,7 @@ class MultiResClass:
        self.log("# Computing resolution ------------------------------------------------")
        
        # FSC ...............................................................
-       if self.getComputeFSC(_iteration)=="1" and \
-          not self.getReconstructionMethod(_iteration)=="fourier":
+       if self.getComputeFSC(_iteration)=="1":
           # Split the data in two halves
           self.execute("xmipp_selfile_split -i preproc_recons.sel -n 2 -o preproc_recons")
 
@@ -1065,7 +1064,7 @@ class MultiResClass:
        if self.resumeIteration==1:
           self.deleteDirectory("Iteration00")
           self.createDirectory("Iteration00")
-	  self.execute("sed 's/preproc/preproc_assign/' < ../Src/prealignment.txt > "+self.getAlignmentFilename(0))
+	  self.execute("sed 's/ScaledImgs/preproc_assign/' < ../Src/prealignment.txt > "+self.getAlignmentFilename(0))
 	  self.linkFile("../../Src/referenceScaledVolume.vol",self.getModelFilename(0))
 	  self.deleteFile("angle_convergence.txt")
 	  self.touchFile("angle_convergence.txt")
@@ -1106,22 +1105,26 @@ class MultiResClass:
              self.getQualityPercentil(_iteration)
 
        if self.getQualityPercentil(_iteration)>0:
-          cmd+=" -filter_normalization "+\
-               self.getModelFFilename(_iteration)+" "+\
-               str(math.ceil(self.particleWorkingRadius*factor))+" "+\
-               str(math.ceil(self.particleWorkingRadius*factor*1.1))+" "+\
-               self.getQualityPercentil(_iteration)
+	  cmd+=" -filter_normalization "+\
+	       self.getModelFFilename(_iteration)+" "+\
+	       str(math.ceil(self.particleWorkingRadius*factor))+" "+\
+	       str(math.ceil(self.particleWorkingRadius*factor*1.1))+" "+\
+	       self.getQualityPercentil(_iteration)
 
        if _iteration>1:
-          cmd+=" -filter_movement "+\
-               self.getAlignmentFFilename(_iteration)+" "+\
-               self.getQualityAngleMovement(_iteration)+" "+\
-               str(math.ceil(self.particleWorkingRadius*factor*\
-                  float(self.getQualityShiftMovement(_iteration))/100.0))
+	  cmd+=" -filter_movement "+\
+	       self.getAlignmentFFilename(_iteration)+" "+\
+	       self.getQualityAngleMovement(_iteration)+" "+\
+	       str(math.ceil(self.particleWorkingRadius*factor*\
+		  float(self.getQualityShiftMovement(_iteration))/100.0))
 
        self.execute(cmd)
        self.execute("cp preproc_recons.doc "+\
-          self.getReconstructionAnglesFilename(_iteration))
+         self.getReconstructionAnglesFilename(_iteration))
+#COSS:       self.execute("cp "+self.getAlignmentFilename(_iteration)+\
+#COSS:       	  " preproc_recons.doc")
+#COSS:       self.execute("cp preproc_assign.sel preproc_recons.sel")
+#COSS:       self.execute("xmipp_header_assign -i preproc_recons.doc")
        
        self.runReconstructionAlgorithm(_iteration,"preproc_recons",
 	  self.getReconstructionRootname(_iteration),True)
@@ -1215,9 +1218,9 @@ class MultiResClass:
 	         "-o "+_outputRootName+".vol "
           if not self.symmetryGroup=="":
 	     params+="-sym "+self.symmetryGroup+" "
-          if self.getComputeFSC(_iteration):
-            params+="-prepare_fsc "+self.getReconstructionRootname(_iteration)+\
-               ".fsc "
+# COSS          if self.getComputeFSC(_iteration):
+# COSS            params+="-prepare_fsc "+self.getReconstructionRootname(_iteration)+\
+# COSS               ".fsc "
 	  launch_job.launch_job("xmipp_reconstruct_fourier",
                                 params,
                                 self.mylog,
