@@ -441,7 +441,7 @@ void ShowSOM::showRepresentedAverageTogether()
     if (SFAvgs.ImgNo())
     {
         ShowSel *showsel = new ShowSel;
-        showsel->initWithObject(10, 10, SFAvgs, "Averages of assigned images");
+        showsel->initWithObject(NumRows, NumCols, SFAvgs, "Averages of assigned images");
         //for (u = 0; u < numMarked; u++)
         //  v->setCellLabel (u, hisLabels[u], cell_labels[u].c_str());
         showsel->show();
@@ -458,7 +458,7 @@ void ShowSOM::showRepresentedSel()
     if (SFNew.ImgNo())
     {
         ShowSel *showsel = new ShowSel;
-        showsel->initWithObject(NumRows, NumCols, SFNew, "Represented images");
+        showsel->initWithObject(10, 10, SFNew, "Represented images");
         showsel->apply_geo = apply_geo;
         showsel->show();
     }
