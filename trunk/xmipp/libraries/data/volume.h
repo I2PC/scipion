@@ -490,9 +490,8 @@ public:
                     FREAD(&p3, sizeof(float), 1, fh, reversed);
                     
                     std::complex<double> *p = (std::complex<double> *)ptr;
+                    (*p) += (std::complex<double>)(p2,p3);
 
-                    (*p).real() += p2;
-                    (*p).imag() += p3;
                 }
                 break;
            
