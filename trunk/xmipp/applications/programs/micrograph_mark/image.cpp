@@ -179,5 +179,5 @@ void QtImage::changeContrast(int _mingray, int _maxgray, float _gamma)
     {
         for (int i = 0; i < 256; i++) __img->setColor(i, qRgb(0, 0, 0));
     }
-    repaint(true);
+    repaint(false);
 }
