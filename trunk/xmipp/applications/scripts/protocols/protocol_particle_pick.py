@@ -37,7 +37,7 @@ PosName='Common'
 
 # Perform automatic particle picking
 """ Perform automatic particle picking """
-AutomaticPicking=True
+AutomaticPicking=False
 
 # {expert} Name of the model for automatic particle picking
 """ Different names can be used to distinguish between particle types
@@ -47,7 +47,7 @@ AutomaticName='automodel'
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/home/coss/temp/Far_from_focus'
+ProjectDir='/home/coss/temp/F22_cib'
 # {expert} Directory name for logfiles:
 LogDir='Logs'
 
@@ -262,8 +262,10 @@ class particle_pick_class:
  
         total=0
         total_auto=0
-        self.selectedForAutomaticPicking=[]
+        self.selectedForAutomaticPickingTrain=[]
+        self.selectedForAutomaticPickingAuto=[]
         self.selectedForAutomaticPickingName=[]
+        self.selectedForAutomaticPickingMark=[]
         if not self.IsPairList:
             for micrograph,state in self.sellines:
                 micrograph=micrograph.replace('.spi','.raw')
@@ -346,11 +348,22 @@ class particle_pick_class:
         l.grid(row=row, column=0, sticky=E)
 
         if (self.AutomaticPicking):
-            control = IntVar()
-            c=Checkbutton(self.frame, text="Auto", variable=control,
+            controlTrain = IntVar()
+            c=Checkbutton(self.frame, text="Train", variable=controlTrain,
+                          command=self.TrainSelectionChanged, 
                           selectcolor=self.BooleanSelectColour)
-            c.grid(row=row, column=1, sticky=N+S+W+E)
-            self.selectedForAutomaticPicking.append(control)
+            c.grid(row=row, column=1, sticky=N+W)
+            controlTrain.set(1)
+            self.selectedForAutomaticPickingTrain.append(controlTrain)
+
+            controlAuto = IntVar()
+            c=Checkbutton(self.frame, text="Auto", variable=controlAuto,
+                          command=self.AutoSelectionChanged, 
+                          selectcolor=self.BooleanSelectColour)
+            c.grid(row=row, column=1, sticky=S+E)
+            controlAuto.set(0)
+            self.selectedForAutomaticPickingAuto.append(controlAuto)
+
             self.selectedForAutomaticPickingName.append(micrograph)
             nextColumn=2
         else:
@@ -364,6 +377,7 @@ class particle_pick_class:
                       highlightbackground=self.HighlightBackgroundColour, 
                       selectcolor=self.ButtonActiveBackgroundColour)
         r.grid(row=row, column=nextColumn,sticky=N+S+W+E)
+        self.selectedForAutomaticPickingMark.append(r)
         nextColumn+=1
 
         label=str(count).zfill(5)
@@ -397,9 +411,28 @@ class particle_pick_class:
         return row
 
     def InvertSelection(self):
-        for i in range(0,len(self.selectedForAutomaticPicking)):
-            self.selectedForAutomaticPicking[i].set(1-
-                self.selectedForAutomaticPicking[i].get());
+        for i in range(0,len(self.selectedForAutomaticPickingAuto)):
+            self.selectedForAutomaticPickingAuto[i].set(1-
+                self.selectedForAutomaticPickingAuto[i].get());
+        self.AutoSelectionChanged();
+
+    def TrainSelectionChanged(self):
+        for i in range(0,len(self.selectedForAutomaticPickingTrain)):
+            if (self.selectedForAutomaticPickingTrain[i].get()):
+                self.selectedForAutomaticPickingMark[i].config(state=NORMAL)
+                self.selectedForAutomaticPickingAuto[i].set(0)
+            else:
+                self.selectedForAutomaticPickingMark[i].config(state=DISABLED)
+                self.selectedForAutomaticPickingAuto[i].set(1)
+
+    def AutoSelectionChanged(self):
+        for i in range(0,len(self.selectedForAutomaticPickingTrain)):
+            if (self.selectedForAutomaticPickingAuto[i].get()):
+                self.selectedForAutomaticPickingMark[i].config(state=DISABLED)
+                self.selectedForAutomaticPickingTrain[i].set(0)
+            else:
+                self.selectedForAutomaticPickingMark[i].config(state=NORMAL)
+                self.selectedForAutomaticPickingTrain[i].set(1)
 
     def AutomaticallyDetect(self):
         sendbuffer=[]
