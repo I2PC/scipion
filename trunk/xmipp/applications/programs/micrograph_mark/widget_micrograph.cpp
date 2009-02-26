@@ -305,8 +305,10 @@ QtWidgetMicrograph::QtWidgetMicrograph(QtMainWidgetMark *_mainWidget,
             __mImageOverview, SLOT(slotSetCoords(int, int)));
     connect(__mImage, SIGNAL(signalSetWidthHeight(int, int)),
             __mImageOverview, SLOT(slotSetWidthHeight(int, int)));
-    connect(__mImage, SIGNAL(signalRepaint(void)),
-            __mImageOverview, SLOT(repaint(void)));
+// COSS: Make this connection to update the overview when
+//       a particle is deleted or moved
+//    connect(__mImage, SIGNAL(signalRepaint(void)),
+//            __mImageOverview, SLOT(repaint(void)));
     connect(__mImageOverview, SIGNAL(signalRepaint(void)),
             __mImage, SLOT(repaint(void)));
     connect(__mImage, SIGNAL(signalRepaint(void)),
