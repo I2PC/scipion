@@ -369,7 +369,10 @@ void frc_dpr(Matrix3D< double > & m1,
     FOR_ALL_ELEMENTS_IN_MATRIX1D(freq)
     {
         freq(i) = (double) i / (XSIZE(m1) * sampling_rate);
-        frc(i) = num(i)/sqrt(den1(i)*den2(i));
+        if(num(i)!=0)
+           frc(i) = num(i)/sqrt(den1(i)*den2(i));
+        else
+           frc(i) = 0;
         frc_noise(i) = 2 / sqrt((double) radial_count(i));
         if (skipdpr)
             dpr(i)/=radial_count(i);
