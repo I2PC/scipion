@@ -458,7 +458,7 @@ void ShowSOM::showRepresentedSel()
     if (SFNew.ImgNo())
     {
         ShowSel *showsel = new ShowSel;
-        showsel->initWithObject(10, 10, SFNew, "Represented images");
+        showsel->initWithObject(NumRows, NumCols, SFNew, "Represented images");
         showsel->apply_geo = apply_geo;
         showsel->show();
     }
