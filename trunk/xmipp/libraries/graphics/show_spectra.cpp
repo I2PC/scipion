@@ -201,7 +201,6 @@ void ShowSpectra::paintCell(QPainter *p, int row, int col, const QRect & cr,
         myMinValue = minPixel;
     }
 
-
     // Calculate slope and intersection of linear transformation
     double slope = 0;
     if (myMinValue != myMaxValue)
@@ -257,18 +256,20 @@ void ShowSpectra::paintCell(QPainter *p, int row, int col, const QRect & cr,
     pen.setWidth(3);
     p->setPen(pen);
 
-    int      x = offX;
-    double myY = offY + slope * (V->theItems[i][0] - myMinValue);
-    int      y = scprojYdim - (int) myY;
-    p->translate(x, y);
-    p->drawPoint(x, y);
+    int      x0 = offX;
+    double myY0 = offY + slope * (V->theItems[i][0] - myMinValue);
+    int      y0 = scprojYdim - (int) myY0;
+
     for (int l = 1; l < N; l++)
     {
-        x = offX + (int)(l * scaleX);
-        myY = offY + slope * (V->theItems[i][l] - myMinValue);
-        y = scprojYdim - (int) myY;
-        p->drawLine(offX, offY, x, y);
+        int xF = offX + (int)(l * scaleX);
+        double myYF = offY + slope * (V->theItems[i][l] - myMinValue);
+        int yF = scprojYdim - (int) myYF;
+        p->drawLine(x0, y0, xF, yF);
+        x0=xF;
+        y0=yF;
     }
+
     // Draw Frame and label
     drawFrameAndLabel(p, row, col, i, 1);
 }
