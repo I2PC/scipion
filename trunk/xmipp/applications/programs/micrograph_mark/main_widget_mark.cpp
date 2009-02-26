@@ -554,8 +554,13 @@ void QtMainWidgetMark::generated(bool _this_is_tilted,
     }
 }
 
+void QtMainWidgetMark::slotAddCoordTilted(int _muX, int _muY, int _f)
+{
+    slotAddCoordTilted(_muX,_muY,_f,0.0);
+}
+
 void QtMainWidgetMark::slotAddCoordTilted(int _muX, int _muY, int _f,
-double _cost)
+    double _cost)
 {
     int mtX, mtY;
 
@@ -566,6 +571,11 @@ double _cost)
     __mTiltedWidget->slotDrawEllipse(mtX, mtY, _f);
     slotActualizeTiltedOverview(_muX, _muY);
     __mTiltedWidget->slotDrawLastEllipse(mtX, mtY, _f);
+}
+
+void QtMainWidgetMark::slotAddCoordUntilted(int _muX, int _muY, int _f)
+{
+    slotAddCoordTilted(_muX,_muY,_f,0.0);
 }
 
 void QtMainWidgetMark::slotAddCoordUntilted(int _mtX, int _mtY, int _f,

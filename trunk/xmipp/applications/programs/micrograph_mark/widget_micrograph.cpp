@@ -1937,12 +1937,7 @@ void QtWidgetMicrograph::loadModels(const FileName &fn)
     std::string dummy;
     std::ifstream fh_params;
     fh_params.open((__modelRootName + ".param").c_str());
-    if (!fh_params)
-    {
-        std::cerr << (std::string)"QtWidgetMicrograph::write: Cannot open file " +
-                      __modelRootName + ".param for input" << std::endl;
-        return;
-    }
+    if (!fh_params) return;
     fh_params >> dummy >> __gray_bins
               >> dummy >> __radial_bins
               >> dummy >> __piece_xsize
@@ -1998,56 +1993,58 @@ void QtWidgetMicrograph::saveAutoParticles()
 /* Save models ------------------------------------------------------------- */
 void QtWidgetMicrograph::saveModels(bool askFilename)
 {
-    // Get the rootname
-    std::string fn_root;
-    if (askFilename)
-    {
-        bool ok;
-        QString qfn_root = QInputDialog::getText("Saving model",
-                           "Model", QLineEdit::Normal,
-                           "Model", &ok);
-        if (!ok || qfn_root.isEmpty()) return;
-        fn_root = qfn_root.ascii();
+    if (__particle_radius!=0) {
+        // Get the rootname
+        std::string fn_root;
+        if (askFilename)
+        {
+            bool ok;
+            QString qfn_root = QInputDialog::getText("Saving model",
+                               "Model", QLineEdit::Normal,
+                               "Model", &ok);
+            if (!ok || qfn_root.isEmpty()) return;
+            fn_root = qfn_root.ascii();
+        }
+        else
+            fn_root=__modelRootName;
+
+        // Save the automatically selected particles
+        saveAutoParticles();
+
+        // Save the mask
+        ImageXmipp save;
+        typeCast(__mask.get_binary_mask2D(), save());
+        save.write(fn_root + ".mask");
+
+        // Save parameters
+        std::ofstream fh_params;
+        fh_params.open((fn_root + ".param").c_str());
+        if (!fh_params)
+            REPORT_ERROR(1, (std::string)"QtWidgetMicrograph::write: Cannot open file " +
+                         fn_root + ".param" + " for output");
+        fh_params << "gray_bins=                      " << __gray_bins                      << std::endl
+                  << "radial_bins=                    " << __radial_bins                    << std::endl
+                  << "piece_xsize=                    " << __piece_xsize                    << std::endl
+                  << "highpass=                       " << __highpass_cutoff                << std::endl
+                  << "particle_radius=                " << __particle_radius                << std::endl
+                  << "min_distance_between_particles= " << __min_distance_between_particles << std::endl
+                  << "particle_overlap=               " << __scan_overlap                   << std::endl
+                  << "penalization=                   " << __penalization                   << std::endl
+        ;
+        fh_params.close();
+
+        // Save training vectors
+        Classification_model aux_model;
+        aux_model = __training_model;
+        std::ofstream fh_training;
+        fh_training.open((fn_root + ".training").c_str());
+        if (!fh_training)
+            REPORT_ERROR(1, (std::string)"QtWidgetMicrograph::write: Cannot open file " +
+                         fn_root + ".training" + " for output");
+        fh_training << aux_model << std::endl;
+        fh_training.close();
+        std::cout << "The model has been saved..." << std::endl;
     }
-    else
-        fn_root=__modelRootName;
-
-    // Save the automatically selected particles
-    saveAutoParticles();
-
-    // Save the mask
-    ImageXmipp save;
-    typeCast(__mask.get_binary_mask2D(), save());
-    save.write(fn_root + ".mask");
-
-    // Save parameters
-    std::ofstream fh_params;
-    fh_params.open((fn_root + ".param").c_str());
-    if (!fh_params)
-        REPORT_ERROR(1, (std::string)"QtWidgetMicrograph::write: Cannot open file " +
-                     fn_root + ".param" + " for output");
-    fh_params << "gray_bins=                      " << __gray_bins                      << std::endl
-              << "radial_bins=                    " << __radial_bins                    << std::endl
-              << "piece_xsize=                    " << __piece_xsize                    << std::endl
-              << "highpass=                       " << __highpass_cutoff                << std::endl
-              << "particle_radius=                " << __particle_radius                << std::endl
-              << "min_distance_between_particles= " << __min_distance_between_particles << std::endl
-              << "particle_overlap=               " << __scan_overlap                   << std::endl
-              << "penalization=                   " << __penalization                   << std::endl
-    ;
-    fh_params.close();
-
-    // Save training vectors
-    Classification_model aux_model;
-    aux_model = __training_model;
-    std::ofstream fh_training;
-    fh_training.open((fn_root + ".training").c_str());
-    if (!fh_training)
-        REPORT_ERROR(1, (std::string)"QtWidgetMicrograph::write: Cannot open file " +
-                     fn_root + ".training" + " for output");
-    fh_training << aux_model << std::endl;
-    fh_training.close();
-    std::cout << "The model has been saved..." << std::endl;
 }
 
 /* Configure auto ---------------------------------------------------------- */

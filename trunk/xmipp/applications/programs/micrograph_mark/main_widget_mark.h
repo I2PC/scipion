@@ -172,6 +172,8 @@ public:
     // those images that were discarded in only one of them
     void generated(bool _this_is_tilted, const std::string &_label);
 public slots:
+    void slotAddCoordTilted(int _mX, int _mY, int _f);
+    void slotAddCoordUntilted(int _mX, int _mY, int _f);
     void slotAddCoordTilted(int _mX, int _mY, int _f, double _cost);
     void slotAddCoordUntilted(int _mX, int _mY, int _f, double _cost);
     void slotRecalculateTiltMatrix()
