@@ -566,10 +566,10 @@ class automated_gui_class:
     def GuiAddBooleanEntry(self,label,default,variable,expert,morehelp):
         row,self.l,self.r=self.GuiPositionLabel(label,default,variable,expert,morehelp)
         self.r1 = Radiobutton(self.frame, text="Yes", variable=variable, value=True, 
-                              bg=BackgroundColour, selectcolor=BooleanSelectColour)
+                              bg=BackgroundColour)
         self.r1.grid(row=row, column=self.columntextentry)
         self.r2 = Radiobutton(self.frame, text="No", variable=variable, value=False, 
-                              bg=BackgroundColour, selectcolor=BooleanSelectColour)
+                              bg=BackgroundColour)
         self.r2.grid(row=row, column=self.columntextentry+1)
         if (default=="True"):
             self.r1.select()
@@ -593,8 +593,7 @@ class automated_gui_class:
         for mode in radiooptions:
             c = c + 1
             self.r = Radiobutton(self.frame, text=mode, variable=variable,relief=FLAT, 
-                                 indicatoron=1, value=mode,selectcolor=ListSelectColour,
-                                 bg=BackgroundColour)
+                                 indicatoron=1, value=mode, bg=BackgroundColour)
             self.r.grid(row=row+c, column=self.columntextentry,sticky=W)
             if (default==mode):
                 self.r.select()
