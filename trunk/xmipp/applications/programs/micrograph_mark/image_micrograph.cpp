@@ -243,8 +243,8 @@ void QtImageMicrograph::mouseReleaseEvent(QMouseEvent *e)
                 getMicrograph()->coord(coord).valid = false;
                 getWidgetMicrograph()->delete_particle(coord);
                 emit signalDeleteMarkOther(coord);
+                emit signalRepaint();
             }
-            emit signalRepaint();
         }
     }
 }
