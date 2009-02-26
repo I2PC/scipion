@@ -330,7 +330,7 @@ class particle_pick_class:
                       bg=self.LabelBackgroundColour)
             l.grid(row=self.buttonrow,column=nextColumn)
 
-            b = Button(self.frame, text="Automatically\nDetect",
+            b = Button(self.frame, text="AutoSelect",
                        command=self.AutomaticallyDetect,underline=0, 
                        bg=self.ButtonBackgroundColour, 
                        activebackground=self.ButtonActiveBackgroundColour)
