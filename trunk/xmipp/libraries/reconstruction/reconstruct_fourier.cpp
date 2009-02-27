@@ -302,6 +302,7 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                             proj().selfApplyGeometryBSpline(localA, 3, IS_INV, WRAP);
                     }
 
+                    threadParams->weight = weight;
                     if (!parent->do_weights)
                     {
                         weight=1.0;
@@ -540,7 +541,7 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                                             ptrOut[0]+=w*ptrIn[0];
                                             if (conjugate) ptrOut[1]-=w*ptrIn[1];
                                             else           ptrOut[1]+=w*ptrIn[1];
-                                            (parent->FourierWeights)(iz,iy,ix)+=w;
+                                            (parent->FourierWeights)(iz,iy,ix)+=w*threadParams->weight;
                                         }
                                     }
                                 }

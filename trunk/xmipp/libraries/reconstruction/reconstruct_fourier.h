@@ -67,6 +67,7 @@ struct ImageThreadParams
         Matrix2D<double> * localAInv;
         int imageIndex;
         DocFile * docFile;
+        double weight;
 };
 
 /** Fourier reconstruction parameters. */
