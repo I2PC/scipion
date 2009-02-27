@@ -26,6 +26,35 @@ def visualize_volumes(Names,ShowSliceZ,ShowSliceX,ShowSliceY,ShowChimera):
             chimera_command+=' &'
             print '* ',chimera_command
             os.system(chimera_command)
+def angDistributionChimera(_ShowPlots,
+                           _displayVolList):
+    import string,spider_header,os
+    print "***********************************************************\n* "
+    for i in range(len(_ShowPlots)):
+        doc=_ShowPlots[i]
+        suffix = ".doc"
+        docfile_without_ext=doc[: -len(suffix)]
+        bildfile = docfile_without_ext + ".bild"
+        vol=_displayVolList[i]
+        myheader=spider_header.spiderheader(vol)
+        nslices=myheader.nz
+        radius = str(int(nslices/2.))
+        command  = "xmipp_angular_distribution_show "
+        command += "-ang " + doc + " "
+        command += "-R " + radius + " "
+        command += "-bild " + bildfile + " "
+        command += "-shift_center " + radius + " "
+        command += "-wcol 5 -r 5"
+        print "*" , command, "\n"
+        os.system(command)
+        chimera_command='chimera '  + 'spider:' + vol + ' ' + bildfile 
+        chimera_command+=' &'
+        print "*" , chimera_command, "\n"
+        os.system(chimera_command)
+        
+        #call chimera
+    print "***********************************************************\n* "
+
 
 def visualize_images(Names,
                      Areselfile=False,
