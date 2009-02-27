@@ -689,7 +689,6 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
         while (!SF.eof())
         {
             FileName fn_img=SF.NextImg();
-            if (SF.eof()) break;
 	    if (do_ctf_correction)
 	    {
 		SL = SF.current();
@@ -1147,7 +1146,6 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols)
     while ((!SFr.eof()))
     {
         FileName fn_img=SFr.NextImg();
-        if (SFr.eof()) break;
         img.read(fn_img, false, false, true, false);
         img().setXmippOrigin();
         Iref.push_back(img);
@@ -1229,7 +1227,6 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols)
             while (!SF.eof())
             {
                 fn_tmp = SF.NextImg();
-                if (SF.eof()) break;
                 if (DF.search_comment(fn_tmp))
                 {
                     if (limit_rot)
@@ -2557,7 +2554,6 @@ void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, std::vector< ImageXmippT
 	    focus = line.get_number() - 1;
 	}
         fn_img = SF.NextImg();
-        if (SF.eof()) break;
         fn_trans = fn_img.remove_directories(offsets_keepdir);
         fn_trans = fn_root + "_offsets/" + fn_trans + ".off";
         img.read(fn_img, false, false, false, false);
