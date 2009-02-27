@@ -357,7 +357,7 @@ def show_ang_distribution(_ShowPlots,
     import visualization
     print "_DisplayAngularDistributionWith:" , _DisplayAngularDistributionWith
     if(_DisplayAngularDistributionWith=='3D'):
-        visualization.angDistributionChimera(_ShowPlots,_displayVolList)
+        visualization.angDistributionChimera(_ShowPlots,_displayVolList,_mylog)
     elif(_DisplayAngularDistributionWith=='2D'):
         for i in range(len(_ShowPlots)):
             doc=docfiles.docfile(_ShowPlots[i])
@@ -387,6 +387,7 @@ def show_ang_distribution(_ShowPlots,
     else:
         print "Error: wrong utility to visualizeshow_ang_distribution"
         exit(1)
+
 def show_plots(_ShowPlots,_iteration_number,_title,_mylog):
         import os
         import docfiles
