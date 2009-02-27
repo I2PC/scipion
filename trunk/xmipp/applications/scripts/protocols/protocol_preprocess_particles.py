@@ -21,7 +21,7 @@
 # {dir} Working subdirectory:
 """ Use the same directory where you executed xmipp_protocol_preprocess_micrographs.py
 """
-WorkingDir="Preprocessing"
+WorkingDir='Preprocessing'
 # {file} Selfile with micrographs on which to perform processing
 MicrographSelfile='Preprocessing/all_micrographs.sel'
 # Is this selfile a list of untilted-tilted pairs?
@@ -41,9 +41,9 @@ OutSelFile='all_images.sel'
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir="/home2/bioinfo/scheres/work/protocols/"
+ProjectDir='/home/coss/temp/F22_cib'
 # {expert} Directory name for logfiles:
-LogDir="Logs"
+LogDir='Logs'
 #------------------------------------------------------------------------------------------------
 # {section} Extract particles
 #------------------------------------------------------------------------------------------------
@@ -53,25 +53,25 @@ DoExtract=True
 """ By default this is Common, and the posfiles are called <mic>.raw.Common.pos
     These files are supposed to be in the micrograph-related subdirectories
 """
-PosFile="Common"
+PosFile='Common'
 # Dimension of the particles to extract (in pix.)
-Size=64
+Size=80
 # {expert} Directory name for particle images:
 """ This directory will be placed in the project directory
 """
-ImagesDir="Images"
+ImagesDir='Images'
 #------------------------------------------------------------------------------------------------
 # {section} Normalization
 #------------------------------------------------------------------------------------------------
 # Perform particle normalization?
-DoNormalize=True
+DoNormalize=False
 # Pixels outside this circle are assumed to be noise and their stddev is set to 1.
 # Radius for background circle definition (in pix.)
 BackGroundRadius=30
 # Perform ramping background correction?
 """ Correct for inclined background densities by fitting a least-squares plane through the background pixels
 """
-DoUseRamp=True
+DoUseRamp=False
 # Perform black dust particles removal?
 """ Sets pixels with unusually low values (i.e. stddev<-3.5) to zero
 """
@@ -84,12 +84,12 @@ DoRemoveWhiteDust=False
 # {section} Particle sorting
 #------------------------------------------------------------------------------------------------
 # Perform particle sorting to identify junk particles?
-DoSorting=True
+DoSorting=False
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
 """
-AnalysisScript="visualize_preprocess_particles.py"
+AnalysisScript='visualize_preprocess_particles.py'
 #
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
@@ -264,9 +264,11 @@ class preprocess_particles_class:
         posname=self.shortname+'/'+self.downname+'.raw.'+self.PosFile+'.pos'
         if os.path.exists(posname):
             return True
+        posname=self.shortname+'/'+self.downname+'.raw.'+self.PosFile+'.auto.pos'
+        if os.path.exists(posname):
+            return True
         else:
             return False
-
 
     def perform_extract_pairs(self):
         import os,shutil
@@ -292,7 +294,6 @@ class preprocess_particles_class:
             shutil.copy(posname2,tilpos)
         angname=self.shortname+'/'+self.downname+'.ang'
         logname=self.shortname+'/scissor.log'
-
         # Make directories if necessary
         if not os.path.exists(imgsubdir):
             os.makedirs(imgsubdir)
@@ -320,7 +321,6 @@ class preprocess_particles_class:
         # Remove pairs with one image near the border
         self.remove_empty_images_pairs(selnameb,selnameb2)
         
-
     def remove_empty_images_pairs(self,selname,selname2):
         import os
         newsel=[]
@@ -409,6 +409,7 @@ class preprocess_particles_class:
         selname=self.allname+'.sel' 
         selnameb=self.shortname+'/'+self.allname+'.sel' 
         posname=self.shortname+'/'+self.downname+'.raw.'+self.PosFile+'.pos' 
+        posnameauto=self.shortname+'/'+self.downname+'.raw.'+self.PosFile+'.auto.pos' 
         imgsubdir=self.ProjectDir+'/'+self.ImagesDir+'/'+self.shortname
         rootname=imgsubdir+'/'+self.shortname+'_'
         logname=self.shortname+'/scissor.log'
@@ -418,11 +419,31 @@ class preprocess_particles_class:
         if not os.path.exists(imgsubdir):
             os.makedirs(imgsubdir)
 
-        command= ' -i ' + iname + ' -pos ' + posname + \
+        if os.path.exists(posname) and os.path.exists(posnameauto):
+            launch_job.launch_job("cat",
+                                  posname+" "+posnameauto+" > "+iname+"_all.pos",
+                                  self.log,
+                                  False,1,1,'')
+        elif os.path.exists(posname):
+            launch_job.launch_job("cp",
+                                  posname+" "+iname+"_all.pos",
+                                  self.log,
+                                  False,1,1,'')
+        elif os.path.exists(posnameauto):
+            launch_job.launch_job("cp",
+                                  posnameauto+" "+iname+"_all.pos",
+                                  self.log,
+                                  False,1,1,'')
+        
+        command= ' -i ' + iname + ' -pos ' + iname+"_all.pos" + \
                  ' -root ' + rootname + ' -Xdim ' + str(size) + \
                  '|grep "corresponding image is set to blank"> ' + logname
         launch_job.launch_job("xmipp_micrograph_scissor",
                               command,
+                              self.log,
+                              False,1,1,'')
+        launch_job.launch_job("rm",
+                              iname+"_all.pos",
                               self.log,
                               False,1,1,'')
         
