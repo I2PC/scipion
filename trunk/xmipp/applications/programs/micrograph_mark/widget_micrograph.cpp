@@ -415,13 +415,8 @@ void QtWidgetMicrograph::setNumThreads(int _numThreads)
 /* Learn particles --------------------------------------------------------- */
 void QtWidgetMicrograph::learnParticles()
 {
-    if (__particle_radius==0) {
-        QMessageBox helpmsg("Information",
-            "You cannot learn particles without configuring the model",
-            QMessageBox::Information, QMessageBox::Ok, 0, 0, 0, 0, false);
-        helpmsg.exec();
-        return;
-    }
+    if (__particle_radius==0)
+        configure_auto();
         
     std::cerr << "\n------------------Learning Phase-----------------------\n";
     createMask();
@@ -2053,51 +2048,23 @@ void QtWidgetMicrograph::saveModels(bool askFilename)
 void QtWidgetMicrograph::configure_auto()
 {
 
-    QDialog   setPropertiesDialog(this, 0, TRUE);
-    setPropertiesDialog.setCaption("Configure AutoSelect");
-#ifdef QT3_SUPPORT
-    Q3Grid    qgrid(2, &setPropertiesDialog);
-#else
-    QGrid     qgrid(2, &setPropertiesDialog);
-#endif
-    qgrid.setMinimumSize(250, 100);
+    __particle_radius = __ellipse_radius;
+    __penalization = 10;
 
-    QLabel    lparticle_radius("Particle radius: ", &qgrid);
-    QLineEdit particle_radius(&qgrid);
-    particle_radius.setText(integerToString(__particle_radius).c_str());
-
-    QLabel    lpenalization("Penalization: ", &qgrid);
-    QLineEdit penalization(&qgrid);
-    penalization.setText(removeSpaces(floatToString(__penalization)).c_str());
-
-    QPushButton okButton("Ok", &qgrid);
-    QPushButton cancelButton("Cancel", &qgrid);
-
-    connect(&okButton, SIGNAL(clicked(void)),
-            &setPropertiesDialog, SLOT(accept(void)));
-    connect(&cancelButton, SIGNAL(clicked(void)),
-            &setPropertiesDialog, SLOT(reject(void)));
-
-    if (setPropertiesDialog.exec())
-    {
-        __particle_radius = particle_radius.text().toInt();
-        __penalization = penalization.text().toFloat();
-
-        __gray_bins = 8;
-        __radial_bins = 16;
-        if (4*__particle_radius<512)
-            __piece_xsize = 512;
-        else
-            __piece_xsize = NEXT_POWER_OF_2(6*__particle_radius);
-        __highpass_cutoff = 0.02;
-        __mask_size = 2*__particle_radius;
-        __min_distance_between_particles = __particle_radius/2;
-        __scan_overlap = ROUND(__mask_size*0.9);
-        __learn_overlap = __particle_radius;
-// COSS:        if (__particle_radius>100) __output_scale=1;
-// COSS:        else __output_scale=0;
-        __reduction=(int)std::pow(2.0, __output_scale);
-    }
+    __gray_bins = 8;
+    __radial_bins = 16;
+    if (4*__particle_radius<512)
+        __piece_xsize = 512;
+    else
+        __piece_xsize = NEXT_POWER_OF_2(6*__particle_radius);
+    __highpass_cutoff = 0.02;
+    __mask_size = 2*__particle_radius;
+    __min_distance_between_particles = __particle_radius/2;
+    __scan_overlap = ROUND(__mask_size*0.9);
+    __learn_overlap = __particle_radius;
+// COSS: if (__particle_radius>100) __output_scale=1;
+// COSS: else __output_scale=0;
+    __reduction=(int)std::pow(2.0, __output_scale);
 }
 
 void QtWidgetMicrograph::changeContrast(int _mingray, int _maxgray, float _gamma)
