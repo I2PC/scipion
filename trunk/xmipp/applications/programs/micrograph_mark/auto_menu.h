@@ -1,7 +1,6 @@
 /***************************************************************************
  *
  * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
- *              Carlos Manzanares       (cmanzana@cnb.uam.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -36,20 +35,8 @@ public:
 
 
 public slots:
-    // Configuration
-    void slotConfig();
-
-    // Load models of particles
-    void slotLoadModels();
-
     // Automatically select particles
     void slotAutoSelectParticles();
-
-    // Load and Automatically select particles
-    void slotLoadAutoSelect();
-
-    // Learn particles
-    void slotLearnParticles();
 
     // Save models of particles
     void slotSaveModels();
