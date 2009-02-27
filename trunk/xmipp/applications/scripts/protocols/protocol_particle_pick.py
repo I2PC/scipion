@@ -18,8 +18,10 @@
 """ Use the same directory where you executed xmipp_protocol_preprocess_micrographs.py
 """
 WorkingDir='Preprocessing'
+
 # {file} Selfile with all micrographs to pick particles from:
 MicrographSelfile='Preprocessing/all_micrographs.sel'
+
 # Is this selfile a list of untilted-tilted pairs?
 """ True for RCT-processing. In that case, provide a 3-column selfile as follows:
     untilted_pair1.raw tilted_pair1.raw 1
@@ -39,11 +41,6 @@ PosName='Common'
 """ Perform automatic particle picking """
 AutomaticPicking=False
 
-# {expert} Name of the model for automatic particle picking
-""" Different names can be used to distinguish between particle types
-"""
-AutomaticName='automodel'
-
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
@@ -58,7 +55,7 @@ LogDir='Logs'
 """ This option provides shared-memory parallelization on multi-core machines. 
     It does not require any additional software, other than xmipp
 """
-NumberOfThreads=1
+NumberOfThreads=2
 # This script has been parallelized at python level
 """ This python script can be run as a parallel job,
     In order to use several CPUs you will need to
@@ -119,7 +116,6 @@ class particle_pick_class:
                  IsPairList,
                  PosName,
                  AutomaticPicking,
-                 AutomaticName,
                  ProjectDir,
                  LogDir,
                  NumberOfThreads,
@@ -145,7 +141,6 @@ class particle_pick_class:
         self.IsPairList=IsPairList
         self.PosName=PosName
         self.AutomaticPicking=AutomaticPicking
-        self.AutomaticName=AutomaticName
         self.ProjectDir=ProjectDir
         self.LogDir=LogDir
         self.NumberOfThreads=NumberOfThreads
@@ -271,7 +266,7 @@ class particle_pick_class:
                 micrograph=micrograph.replace('.spi','.raw')
                 if (state.find('-1') == -1):
                     c=self.CountPicked(micrograph,str(self.PosName))
-                    cauto=self.CountPicked(micrograph,'auto')
+                    cauto=self.CountPicked(micrograph,str(self.PosName+'.auto'))
                     total+=c
                     total_auto+=cauto
                     row=self.GuiAddSingleMarkEntry(micrograph,c,cauto)
@@ -506,7 +501,7 @@ class particle_pick_class:
         else:
             l.grid(row=self.buttonrow, column=2)
         if (self.AutomaticPicking):
-            totalAuto=self.CountAll('auto')
+            totalAuto=self.CountAll(self.PosName+'.auto')
             label=str(totalAuto).zfill(5)
             l=Label(self.frame, text=label, 
                     bg=self.LabelBackgroundColour)
@@ -543,7 +538,7 @@ class particle_pick_class:
             os.chdir(directory)
         arguments='-i '+micrograph
         if (self.AutomaticPicking):
-            arguments+=' -auto ../'+self.AutomaticName
+            arguments+=' -auto ../'+self.PosName+'.auto'
             if (self.NumberOfThreads>1):
                 arguments+=' -thr '+str(self.NumberOfThreads)
             if (autoSelect):
@@ -582,13 +577,11 @@ class particle_pick_class:
 if __name__ == '__main__':
 
    	# create preprocess_A_class object
-
 	particle_pick=particle_pick_class(WorkingDir,
                                           MicrographSelfile,
                                           IsPairList,
                                           PosName,
                                           AutomaticPicking,
-                                          AutomaticName,
                                           ProjectDir,
                                           LogDir,
                                           NumberOfThreads,
