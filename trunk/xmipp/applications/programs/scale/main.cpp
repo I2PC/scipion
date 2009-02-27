@@ -34,7 +34,7 @@ void Usage();
 int main(int argc, char **argv)
 {
     FileName        fn_input, fn_output, fn_oext, fn_in, fn_out;
-    SelFile         SF;
+    SelFile         SF, SF_out;
     ImageXmipp      image;
     VolumeXmipp     volume;
     int             zdim, ydim, xdim;
@@ -127,6 +127,7 @@ int main(int argc, char **argv)
         {
             SF.read(fn_input);
 
+            SF_out.clear();
             // Initialise progress bar
             time_config();
             int i = 0;
@@ -187,10 +188,13 @@ int main(int argc, char **argv)
                 }
                 else
                     std::cout << fn_in << " is not a SPIDER file\n";
+                SF_out.insert(fn_out);
 
                 if (i++ % 25 == 0) progress_bar(i);
             }
             progress_bar(SF.ImgNo());
+
+            SF_out.write((SF.name()).insert_before_extension(fn_oext));
         }
     }
     catch (Xmipp_error XE)
