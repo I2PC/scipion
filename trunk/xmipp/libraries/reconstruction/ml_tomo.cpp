@@ -111,7 +111,7 @@ void Prog_ml_tomo_prm::read(int argc, char **argv, bool ML3D)
     fn_ref = getParameter(argc2, argv2, "-ref", "");
     fn_doc = getParameter(argc2, argv2, "-doc", "");
     fn_sel = getParameter(argc2, argv2, "-i");
-    fn_root = getParameter(argc2, argv2, "-o", "ml2d");
+    fn_root = getParameter(argc2, argv2, "-o", "mltomo");
     Niter = textToInteger(getParameter(argc2, argv2, "-iter", "100"));
     istart = textToInteger(getParameter(argc2, argv2, "-istart", "1"));
     sigma_noise = textToFloat(getParameter(argc2, argv2, "-noise", "1"));
@@ -123,6 +123,8 @@ void Prog_ml_tomo_prm::read(int argc, char **argv, bool ML3D)
     eps = textToFloat(getParameter(argc2, argv2, "-eps", "5e-5"));
     verb = textToInteger(getParameter(argc2, argv2, "-verb", "1"));
 
+    no_SMALLANGLE = checkParameter(argc2, argv2, "-no_SMALLANGLE");
+
     // Normalization 
     do_norm = checkParameter(argc2, argv2, "-norm");
 
@@ -132,9 +134,11 @@ void Prog_ml_tomo_prm::read(int argc, char **argv, bool ML3D)
 
     // Angular sampling
     angular_sampling = textToFloat(getParameter(argc2, argv2, "-ang", "10"));
+    psi_sampling = textToFloat(getParameter(argc2, argv2, "-psi_sampling", "-1"));
     tilt_range0 = textToFloat(getParameter(argc2, argv2, "-tilt0", "-91."));
     tilt_rangeF = textToFloat(getParameter(argc2, argv2, "-tiltF", "91."));
-    fn_sym = getParameter(argc2, argv2, "-sym", "c1");
+    //fn_sym = getParameter(argc2, argv2, "-sym", "c1");
+    fn_sym="c1";
 
     // Missing data structures 
     do_wedge = checkParameter(argc2, argv2, "-wedges");
@@ -219,7 +223,7 @@ void Prog_ml_tomo_prm::show(bool ML3D)
 // Usage ===================================================================
 void Prog_ml_tomo_prm::usage()
 {
-    std::cerr << "Usage:  ml_align2d [options] " << std::endl;
+    std::cerr << "Usage:  ml_tomo [options] " << std::endl;
     std::cerr << "   -i <selfile>                : Selfile with input images \n";
     std::cerr << "   -nref <int>                 : Number of references to generate automatically (recommended)\n";
     std::cerr << "   OR -ref <selfile/image>         OR selfile with initial references/single reference image \n";
@@ -305,7 +309,10 @@ void Prog_ml_tomo_prm::produceSideInfo()
     // by default max_tilt= +91., min_tilt= -91.
     mysampling.Compute_sampling_points(false,tilt_rangeF,tilt_range0);
     mysampling.remove_redundant_points(symmetry, sym_order);
-    int nr_psi = CEIL(360. / angular_sampling);
+    if (psi_sampling < 0)
+        psi_sampling = angular_sampling;
+
+    int nr_psi = CEIL(360. / psi_sampling);
     angle_info myinfo;
     all_angle_info.clear();
     nr_ang = 0;
@@ -315,7 +322,11 @@ void Prog_ml_tomo_prm::produceSideInfo()
         double tilt = YY(mysampling.no_redundant_sampling_points_angles[i]);
         for (int ipsi = 0; ipsi < nr_psi; ipsi++)
         {
-            double psi = (double)(ipsi * 360. / nr_psi) + SMALLANGLE;
+            if (no_SMALLANGLE)
+                double psi = (double)(ipsi * 360. / nr_psi);
+            else
+                double psi = (double)(ipsi * 360. / nr_psi) + SMALLANGLE;
+
             myinfo.rot = rot;
             myinfo.tilt = tilt;
             myinfo.psi = psi;
@@ -524,7 +535,7 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
                 // at a later stage move this if upwards to save time!
                 if (do_wedge || do_pyramid || do_cone)
                 {
-                    imgs_missno[imgno] = (int)(DF(7)) - 1;
+                    imgs_missno[imgno] = (int)(DF(0)) - 1;
                 }
             } 
             else 
@@ -922,7 +933,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     annotate_time(&t1);
 #endif
 
-    Matrix3D<double> Maux, Mweight, Mmissing, Mzero(dim,dim,hdim+1), Mzero2(dim,dim,dim);
+    Matrix3D<double> Maux, Maux2, Mweight, Mmissing, Mzero(dim,dim,hdim+1), Mzero2(dim,dim,dim);
     Matrix3D<std::complex<double> > Faux, Faux2(dim,dim,hdim+1), Fimg, Fimg0, Fimg_rot;
     std::vector<Matrix3D<double> > mysumimgs;
     std::vector<Matrix3D<double> > mysumweds;
@@ -951,7 +962,9 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     sigdim = XMIPP_MIN(dim, sigdim);
     // Setup matrices and constants
     Maux.resize(dim, dim, dim);
+    Maux2.resize(dim, dim, dim);
     Maux.setXmippOrigin();
+    Maux2.setXmippOrigin();
     Mweight.initZeros(sigdim, sigdim, sigdim);
     Mweight.setXmippOrigin();
     Mzero.initZeros();
@@ -1023,6 +1036,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
             A_rot_inv = A_rot.inv();
             Maux.setXmippOrigin();
             applyGeometry(Maux, A_rot, Mimg, IS_NOT_INV, WRAP);
+            // From here on local_transformer will act on Maux and Faux
             local_transformer.FourierTransform(Maux,Faux,false);
             Fimg_rot=Faux;
 
@@ -1038,9 +1052,17 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                 // Now (inverse) rotate the reference and calculate its Fourier transform
                 // TODO: check the inverse rotation and its A2!!
                 // Do that by reenforcing the wedge, and recalculating A2
-                applyGeometry(Maux, A_rot_inv, Iref[refno](), IS_NOT_INV, DONT_WRAP);
+                
+                applyGeometry(Maux2, A_rot_inv, Iref[refno](), IS_NOT_INV, DONT_WRAP);
                 mycorrAA = corrA2[refno*nr_ang + angno];
-                Maux *= mycorrAA;
+                Maux = Maux2 * mycorrAA;
+
+#define DEBUG_MINDIFF
+#ifdef DEBUG_MINDIFF
+                Matrix3D<double> Maux_ori2=Maux2;
+                Matrix3D<double> Maux_ori=Iref[refno]();
+                Matrix3D<double> Maux_ori3=Maux;
+#endif
                 local_transformer.FourierTransform();
 
                 if (do_norm) 
@@ -1058,6 +1080,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
 #endif
 
                 // A. Backward FFT to calculate weights in real-space
+                Matrix3D<std::complex<double> > Faux_ori=Faux;
                 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
                 {
                     dVkij(Faux,k,i,j) = 
@@ -1067,7 +1090,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                 // Takes the input from Faux, and leaves the output in Maux
                 local_transformer.inverseFourierTransform();
                 CenterFFT(Maux, true);
-                            
+
                 // B. Calculate weights for each pixel within sigdim (Mweight)
                 my_sumweight = my_maxweight = 0.;
                 //std::cerr<<"rot= "<<all_angle_info[angno].rot<<" tilt= "<<all_angle_info[angno].tilt<<" psi= "<<all_angle_info[angno].psi<<" A2_plus_Xi2= "<< A2_plus_Xi2<<" XA= "<<VOL_ELEM(Maux, 0,0,0) * ddim3<<" diff= "<< A2_plus_Xi2 - ref_scale * VOL_ELEM(Maux, 0, 0, 0) * ddim3<<" mindiff= "<<mindiff<<std::endl;
@@ -1075,6 +1098,37 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                 {
                     diff = A2_plus_Xi2 - ref_scale * VOL_ELEM(Maux, k, i, j) * ddim3;
                     mindiff = XMIPP_MIN(mindiff,diff);
+#ifdef DEBUG_MINDIFF
+                    if (mindiff < 0)
+                    {
+                        std::cerr<<"k= "<<k<<" j= "<<j<<" i= "<<i<<std::endl;
+                        std::cerr<<"xaux="<<STARTINGX(Maux)<<" xw= "<<STARTINGX(Mweight)<<std::endl;
+                        std::cerr<<"yaux="<<STARTINGY(Maux)<<" yw= "<<STARTINGY(Mweight)<<std::endl;
+                        std::cerr<<"zaux="<<STARTINGZ(Maux)<<" zw= "<<STARTINGZ(Mweight)<<std::endl;
+                        std::cerr<<"diff= "<<diff<<" A2_plus_Xi"<<std::endl;
+                        std::cerr<<" mycorrAA= "<<mycorrAA<<" "<<std::endl;
+                        std::cerr<<"debug mindiff= " <<mindiff<<" trymindiff= "<<trymindiff<< std::endl;
+                        std::cerr<<"A2_plus_Xi2= "<<A2_plus_Xi2<<" myA2= "<<myA2<<" myXi2= "<<myXi2<<std::endl;
+                        std::cerr<<"ref_scale= "<<ref_scale<<" volMaux="<<VOL_ELEM(Maux, k, i, j)<<std::endl;
+                        std::cerr.flush();
+                        VolumeXmipp tt;
+                        tt()=Maux; tt.write("Maux.vol");
+                        tt()=Mweight; tt.write("Mweight.vol");
+                        
+                        local_transformer.inverseFourierTransform();
+                        tt()=Maux; tt.write("Faux.vol");
+                        Faux=Faux_ori;
+                        local_transformer.inverseFourierTransform();
+                        tt()=Maux; tt.write("Faux_ori.vol");
+                        tt()=Maux_ori; tt.write("Maux_ori.vol");
+                        tt()=Maux_ori2; tt.write("Maux_ori2.vol");
+                        tt()=Maux_ori3; tt.write("Maux_ori3.vol");
+                        std::cerr<<"Ainv= "<<A_rot_inv<<std::endl;
+                        std::cerr<<"A= "<<A_rot_inv.inv()<<std::endl;
+
+                        exit(1);
+                    }
+#endif
                     pdf = alpha_k[refno] * VOL_ELEM(P_phi, k, i, j);
                     // Normal distribution
                     aux = (diff - trymindiff) / sigma_noise2;
@@ -1108,7 +1162,6 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                     }
                         
                 } // close for over all elements in Mweight
-                    
                 // C. only for significant settings, store weighted sums
                 if (my_maxweight > SIGNIFICANT_WEIGHT_LOW*maxweight )
                 {
@@ -1130,6 +1183,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                         dVkij(Faux, k, i, j) = conj(dVkij(Faux,k,i,j)) * dVkij(Fimg0,k,i,j);
                     }
                     local_transformer.inverseFourierTransform();
+
                     Maux.selfApplyGeometry(A_rot, IS_NOT_INV, DONT_WRAP);
                     mysumimgs[refno] += Maux * ddim3;
                     if (do_missing)
@@ -1149,6 +1203,13 @@ void Prog_ml_tomo_prm::expectationSingleImage(
         // Use 500 to be on the save side?
         if (ABS((mindiff - trymindiff) / sigma_noise2) > 500.)
         {
+
+#define DEBUG_REDOCOUNTER
+#ifdef DEBUG_REDOCOUNTER
+            std::cerr<<"repeating mindiff "<<redo_counter<<"th time"<<std::endl;
+            std::cerr<<"trymindiff= "<<trymindiff<<" mindiff= "<<mindiff<<std::endl;
+            std::cerr<<"diff= "<<ABS((mindiff - trymindiff) / sigma_noise2)<<std::endl;
+#endif
             // Re-do whole calculation now with the real mindiff
             trymindiff = mindiff;
             redo_counter++;
@@ -1200,7 +1261,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     if (do_norm)
     {
         // 1. Calculate optimal setting of Mimg
-        Matrix3D<double> Maux2 = Mimg;
+        Maux2 = Mimg;
         Maux2.selfTranslate(opt_offsets, true);
 
         // 2. Calculate optimal setting of Iref[opt_refno]
