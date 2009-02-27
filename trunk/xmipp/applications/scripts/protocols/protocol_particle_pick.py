@@ -300,7 +300,7 @@ class particle_pick_class:
 
         if (self.AutomaticPicking):
             b = Button(self.frame, text="Invert Selection", 
-                       command=self.InvertSelection,underline=0, 
+                       command=self.InvertSelection, 
                        bg=self.ButtonBackgroundColour, 
                        activebackground=self.ButtonActiveBackgroundColour)
             b.grid(row=self.buttonrow,column=1,sticky=N+S+W+E)
@@ -309,10 +309,11 @@ class particle_pick_class:
             nextColumn=1
 
         b = Button(self.frame, text="Update Total Count:", 
-                   command=self.GuiUpdateCount, 
+                   command=self.GuiUpdateCount, underline=0,
                    bg=self.ButtonBackgroundColour, 
                    activebackground=self.ButtonActiveBackgroundColour)
         b.grid(row=self.buttonrow,column=nextColumn)
+        self.master.bind('<Control_L><U>', self.GuiUpdateCount)
         nextColumn+=1
 
         label=str(total).zfill(5)
