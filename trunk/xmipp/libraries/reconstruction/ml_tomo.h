@@ -159,11 +159,14 @@ public:
 
     typedef std::vector<angle_info> All_angle_info;
     /** Angular sampling  */
-    double angular_sampling;
+    double angular_sampling, psi_sampling;
     /** Vector with all angle combinations */
     All_angle_info all_angle_info;
     /** Number of angle combinations */
     int nr_ang;
+
+    /** Switch off SMALL_ANGLE addition (for phantoms) */
+    bool no_SMALLANGLE;
 
     // sampling object
     //XmippSampling mysampling;
