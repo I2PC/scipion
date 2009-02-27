@@ -388,7 +388,6 @@ void Prog_MLFalign2D_prm::produceSideInfo()
         while (!SF.eof())
         {
             fn_tmp = SF.NextImg();
-            if (fn_tmp=="") break;
             fn_tmp2 = fn_tmp.remove_directories(offsets_keepdir);
             if (fn_tmp == fn_tmp2) nomoredirs = true;
             SFtmp.insert(fn_tmp2);
@@ -400,7 +399,6 @@ void Prog_MLFalign2D_prm::produceSideInfo()
         {
             fn_tmp = SFtmp.NextImg();
             fn_tmp2 = SFtmp.NextImg();
-            if (fn_tmp=="" || fn_tmp2=="") break;
             if (fn_tmp == fn_tmp2)
             {
                 uniqname = false;
@@ -551,7 +549,6 @@ void Prog_MLFalign2D_prm::produceSideInfo()
 	{
 	    SL=SF.current();
 	    fnt=SF.NextImg();
-            if (fnt=="") break;
 	    // Find which CTF group it belongs to
 	    found = false;
 	    ctfdat.goFirstLine();
