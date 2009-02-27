@@ -25,16 +25,18 @@
 
 #include <data/denoise.h>
 
-void process_img(ImageXmipp &img, const Prog_parameters *prm)
+bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 {
     Denoising_parameters *eprm = (Denoising_parameters *) prm;
     eprm->denoise(img());
+    return true;
 }
 
-void process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
+bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
     Denoising_parameters *eprm = (Denoising_parameters *) prm;
     eprm->denoise(vol());
+    return true;
 }
 
 int main(int argc, char **argv)

@@ -74,7 +74,7 @@ public:
 
 };
 
-void process_img(ImageXmipp &img, const Prog_parameters *prm)
+bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 {
     Statis_parameters *eprm = (Statis_parameters *) prm;
     if (eprm->keep_first_header)
@@ -111,9 +111,10 @@ void process_img(ImageXmipp &img, const Prog_parameters *prm)
 	}
     }
     eprm->nI++;
+    return true;
 }
 
-void process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
+bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
     Statis_parameters *eprm = (Statis_parameters *) prm;
     eprm->sumV().resize(vol());
@@ -131,6 +132,7 @@ void process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 	}
     }
     eprm->nV++;
+    return true;
 }
 
 void Statis_parameters::final_process()

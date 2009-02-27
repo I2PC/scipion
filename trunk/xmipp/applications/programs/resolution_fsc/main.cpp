@@ -123,20 +123,22 @@ public:
     }
 };
 
-void process_img(ImageXmipp &img, const Prog_parameters *prm)
+bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 {
     Resolution_parameters *eprm = (Resolution_parameters *) prm;
     Matrix1D<double> freq, frc, dpr, frc_noise;
     frc_dpr(eprm->refI(), img(), eprm->sam, freq, frc, frc_noise, dpr,eprm->do_dpr);
     writeFiles(img.name(), freq, frc, frc_noise, dpr,eprm->do_dpr);
+    return true;
 }
 
-void process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
+bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
     Resolution_parameters *eprm = (Resolution_parameters *) prm;
     Matrix1D<double> freq, frc, dpr, frc_noise;
     frc_dpr(eprm->refV(), vol(), eprm->sam, freq, frc, frc_noise,dpr,eprm->do_dpr);
     writeFiles(vol.name(), freq, frc, frc_noise, dpr,eprm->do_dpr);
+    return true;
 }
 
 int main(int argc, char **argv)

@@ -142,7 +142,7 @@ public:
 };
 
 
-void process_img(ImageXmipp &img, const Prog_parameters *prm)
+bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 {
     Similarity_parameters *eprm = (Similarity_parameters *) prm;
 
@@ -168,10 +168,11 @@ void process_img(ImageXmipp &img, const Prog_parameters *prm)
     if (eprm->doeu) std::cout << " eu= " << eu;
     if (eprm->domi) std::cout << " mi= " << mi;
     std::cout << std::endl;
+    return true;
 }
 
 
-void process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
+bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
     Similarity_parameters *eprm = (Similarity_parameters *) prm;
 
@@ -196,7 +197,7 @@ void process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
     if (eprm->doeu) std::cout << " eu= " << eu;
     if (eprm->domi) std::cout << " mi= " << mi;
     std::cout << std::endl;
-
+    return true;
 }
 
 

@@ -25,16 +25,18 @@
 
 #include <data/normalize.h>
 
-void process_img(ImageXmipp &img, const Prog_parameters *prm)
+bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 {
     Normalize_parameters * eprm = (Normalize_parameters *) prm;
     if (eprm->apply_geo) eprm->apply_geo_mask(img);
     eprm->apply(img);
+    return true;
 }
 
-void process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
+bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
     vol().statisticsAdjust(0, 1);
+    return true;
 }
 
 int main(int argc, char **argv)
