@@ -26,8 +26,10 @@ def visualize_volumes(Names,ShowSliceZ,ShowSliceX,ShowSliceY,ShowChimera):
             chimera_command+=' &'
             print '* ',chimera_command
             os.system(chimera_command)
+
 def angDistributionChimera(_ShowPlots,
-                           _displayVolList):
+                           _displayVolList,
+                           _mylog):
     import string,spider_header,os
     print "***********************************************************\n* "
     for i in range(len(_ShowPlots)):
@@ -46,9 +48,11 @@ def angDistributionChimera(_ShowPlots,
         command += "-shift_center " + radius + " "
         command += "-wcol 5 -r 5"
         print "*" , command, "\n"
+        _mylog.debug(command)
         os.system(command)
         chimera_command='chimera '  + 'spider:' + vol + ' ' + bildfile 
         chimera_command+=' &'
+        _mylog.debug(chimera_command)
         print "*" , chimera_command, "\n"
         os.system(chimera_command)
         
