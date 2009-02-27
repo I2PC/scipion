@@ -17,7 +17,7 @@
     This can be done by a sequence of numbers (for instance, "2 8" 
     specifies iteration 2 and 8 (but not 3, 4, 5, 6 and 7)
 """
-DisplayIterationsNo='1 2 3 4'
+DisplayIterationsNo='1 2'
 #------------------------------------------------------------------------------------------------
 # {section} Display 3D volumes
 #------------------------------------------------------------------------------------------------
@@ -34,19 +34,7 @@ DisplayReconstruction=True
 """
 DisplayFilteredReconstruction=False
 #------------------------------------------------------------------------------------------------
-# {section} Display 2D projection galleries
-#------------------------------------------------------------------------------------------------
-#Show projection matching library and aligned classes
-DisplayProjectionMatchingAlign2d=False
-#------------------------------------------------------------------------------------------------
-# {section} Display 2D-plots
-#------------------------------------------------------------------------------------------------
-#display angular distribution after projection matching
-DisplayAngularDistribution=True
-#display resolution plots (FSC)
-DisplayResolutionPlots=True
-#------------------------------------------------------------------------------------------------
-# {section} Display options
+# {section} Display "3D volumes" options
 #------------------------------------------------------------------------------------------------
 # Display a b_factor corrected volume
 """ This utility boost up the high frequencies. Do not use the automated 
@@ -67,27 +55,60 @@ MaxRes=10
     for details. DEFAULT behaviour is -auto
 """
 CorrectBfactorExtraCommand='-auto'
-# Visualize volumes in slices along Z?
-VisualizeVolZ=True
-# {expert} Visualize volumes in slices along X?
-VisualizeVolX=False
-# {expert} Visualize volumes in slices along Y?
-VisualizeVolY=False
-# Visualize volumes in UCSF Chimera?
-""" For this to work, you need to have chimera installed!
+
+# {list}|x|y|z|surface| Display volumes as slices or surface rendering
+""" x -> Visualize volumes in slices along x
+    y -> Visualize volumes in slices along y
+    z -> Visualize volumes in slices along z
+    For surface rendering to work, you need to have chimera installed!
 """
-VisualizeVolChimera=False
+DisplayVolumeSlicesAlong='z'
+
 # {expert} Width of projection galleries
 """ In number of reference projections. This number will be multiplied by 3 if re-alignment of 
     classes was performed and multiplied by 2 otherwise.
 """
 MatrixWidth=3
 #------------------------------------------------------------------------------------------------
+# {section} Display 2D projection galleries
+#------------------------------------------------------------------------------------------------
+#Show projection matching library and aligned classes
+DisplayProjectionMatchingAlign2d=False
+#------------------------------------------------------------------------------------------------
+# {section} Display 2D-plots
+#------------------------------------------------------------------------------------------------
+#display angular distribution
+DisplayAngularDistribution=True
+#display resolution plots (FSC)
+DisplayResolutionPlots=True
+#------------------------------------------------------------------------------------------------
+# {section} Display "2D plots" options
+#------------------------------------------------------------------------------------------------
+#{list}|2D|3D| Display Angular distribution with
+""" 2D option uses gnuplot while 3D chimera
+"""
+DisplayAngularDistributionWith='3D'
+
+#------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 #
+VisualizeVolZ=False
+VisualizeVolX=False
+VisualizeVolY=False
+VisualizeVolChimera=False
+if (DisplayVolumeSlicesAlong=='x'):
+    VisualizeVolX=True
+elif(DisplayVolumeSlicesAlong=='y'):
+    VisualizeVolY=True
+elif(DisplayVolumeSlicesAlong=='z'):
+    VisualizeVolZ=True
+elif(DisplayVolumeSlicesAlong=='surface'):
+    VisualizeVolChimera=True
+
+
 class visualize_projmatch_class:
 
     #init variables
@@ -108,6 +129,7 @@ class visualize_projmatch_class:
                 _DisplayResolutionPlots,
                 _MatrixWidth,
                 _DisplayAngularDistribution,
+                _DisplayAngularDistributionWith,
                 _ProtocolName
                 ):
 	     
@@ -136,6 +158,7 @@ class visualize_projmatch_class:
         self._mylog.setLevel(logging.DEBUG)
         self._DisplayIterationsNo=arg.getListFromVector(_DisplayIterationsNo)
         self._ReconstrucedVolume=protocol.ReconstructedVolume
+        self._DisplayAngularDistributionWith=_DisplayAngularDistributionWith
         _user_suplied_Filtered_Image=os.path.abspath(
                                  protocol.ReferenceVolumeName)
         protocol.NumberofIterations += 1                         
@@ -178,16 +201,22 @@ class visualize_projmatch_class:
            if (_DisplayReference):
               self._DisplayReference_list.append(
                            self._Reference_volume[int(self._iteration_number)])
-           
-           if (_DisplayReconstruction):
-              self._DisplayReconstruction_list.append('..'+'/Iter_'+\
+           #Do it always
+           #if (_DisplayReconstruction):
+           self._DisplayReconstruction_list.append('..'+'/Iter_'+\
                                       str(self._iteration_number)+\
                                       '/Iter_'+str(self._iteration_number)+\
                                       '_'+self._ReconstrucedVolume+volExtension)
 
            if (_DisplayFilteredReconstruction):
-              self._DisplayFilteredReconstruction_list.append(
-                          self._Filtered_Image[int(self._iteration_number)]+volExtension)
+               self._DisplayFilteredReconstruction_list.append('..'+'/Iter_'+\
+                                      str(self._iteration_number)+\
+                                      '/Iter_'+ \
+                                      str(self._iteration_number)+\
+                                      '_filtered' +
+                                      '_'+self._ReconstrucedVolume+volExtension)             
+               #self._DisplayFilteredReconstruction_list.append(
+               #           self._Filtered_Image[int(self._iteration_number)]+volExtension)
 
 
            if (_DisplayProjectionMatchingAlign2d):
@@ -289,12 +318,19 @@ class visualize_projmatch_class:
                                                False)
 
         if (_DisplayAngularDistribution):
-           self._mylog.debug ( "_ShowPlotsList "+str(self._ShowPlotsList))
-           self._mylog.debug ( "_TitleList "+str(self._TitleList))
-           show_ang_distribution(self._ShowPlotsList,
-                                 self._iteration_number,
-                                 self._TitleList,
-                                 self._mylog)
+            self._mylog.debug ( "_ShowPlotsList "+str(self._ShowPlotsList))
+            self._mylog.debug ( "_TitleList "+str(self._TitleList))
+            displayVolList=self._DisplayReconstruction_list
+            if (_DisplayFilteredReconstruction):
+                displayVolList=self._DisplayFilteredReconstruction_list
+            print "kk", displayVolList
+            show_ang_distribution(self._ShowPlotsList,
+                                  self._iteration_number,
+                                  self._TitleList,
+                                  self._DisplayAngularDistributionWith,
+                                  displayVolList,
+                                  self._mylog
+                                  )
 
         if (_DisplayResolutionPlots):
            self._mylog.debug ( "_DisplayResolutionPlots_list "+str(self._DisplayResolutionPlots_list))
@@ -310,12 +346,20 @@ class visualize_projmatch_class:
         print '*',message
         print '*********************************************************************'
 
-def show_ang_distribution(_ShowPlots,_iteration_number,_title,_mylog=""):
-        import os
-        import docfiles
-        import visualization
+def show_ang_distribution(_ShowPlots,
+                          _iteration_number,
+                          _title,
+                          _DisplayAngularDistributionWith,
+                          _displayVolList,
+                          _mylog=""):
+    import os
+    import docfiles
+    import visualization
+    print "_DisplayAngularDistributionWith:" , _DisplayAngularDistributionWith
+    if(_DisplayAngularDistributionWith=='3D'):
+        visualization.angDistributionChimera(_ShowPlots,_displayVolList)
+    elif(_DisplayAngularDistributionWith=='2D'):
         for i in range(len(_ShowPlots)):
-#        for plots in _ShowPlots: 
             doc=docfiles.docfile(_ShowPlots[i])
             doc.check_angle_range()
             mini=doc.minimum_of_column(7)
@@ -340,6 +384,9 @@ def show_ang_distribution(_ShowPlots,_iteration_number,_title,_mylog=""):
                                                       'degrees',
                                                       3,
                                                       4)
+    else:
+        print "Error: wrong utility to visualizeshow_ang_distribution"
+        exit(1)
 def show_plots(_ShowPlots,_iteration_number,_title,_mylog):
         import os
         import docfiles
@@ -382,6 +429,7 @@ if __name__ == '__main__':
                                                   DisplayResolutionPlots,
                                                   MatrixWidth,
                                                   DisplayAngularDistribution,
+                                                  DisplayAngularDistributionWith,
                                                   ProtocolName)
     # close 
     visualize_projmatch.close()
