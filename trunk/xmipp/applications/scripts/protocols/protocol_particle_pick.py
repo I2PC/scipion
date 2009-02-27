@@ -44,7 +44,7 @@ AutomaticPicking=False
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/home/coss/temp/F22_cib'
+ProjectDir='/home/coss/Carmen'
 # {expert} Directory name for logfiles:
 LogDir='Logs'
 
@@ -55,7 +55,7 @@ LogDir='Logs'
 """ This option provides shared-memory parallelization on multi-core machines. 
     It does not require any additional software, other than xmipp
 """
-NumberOfThreads=2
+NumberOfThreads=1
 # This script has been parallelized at python level
 """ This python script can be run as a parallel job,
     In order to use several CPUs you will need to
@@ -433,8 +433,8 @@ class particle_pick_class:
         sendbuffer=[]
         if self.myrank==0:
             micrographs=[]
-            for i in range(0,len(self.selectedForAutomaticPicking)):
-                if (self.selectedForAutomaticPicking[i].get()):
+            for i in range(0,len(self.selectedForAutomaticPickingAuto)):
+                if (self.selectedForAutomaticPickingAuto[i].get()):
                     micrographs.append(self.selectedForAutomaticPickingName[i])
             sendbuffer="*".join(map(str, micrographs))
         if mpiActive:
