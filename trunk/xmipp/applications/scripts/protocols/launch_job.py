@@ -28,7 +28,7 @@ def launch_job(programname,
             mpicommand = 'mpiexec -n ' + str(NumberOfMpiProcesses) 
 
         elif (SystemFlavour=='PBS'): # like in Vermeer and FinisTerrae
-            mpicommand = 'mpirun -np ' + str(NumberOfMpiProcesses) + ' -machinefile ' + os.environ.get('PBS_NODEFILE')
+            mpicommand = 'mpirun -np ' + str(NumberOfMpiProcesses) + ' -hostfile ' + os.environ.get('PBS_NODEFILE')
 
         elif (SystemFlavour=='XMIPP_MACHINEFILE'): # environment variable $XMIPP_MACHINEFILE points to machinefile
             mpicommand = 'mpirun -np ' + str(NumberOfMpiProcesses) + ' -machinefile ' + os.environ.get('XMIPP_MACHINEFILE')
