@@ -1188,8 +1188,8 @@ def execute_projection_matching(_mylog,
                          parameters,
                          _mylog,
                          _DoParallel,
-                         _MyNumberOfMpiProcesses,
-                         _MyNumberOfThreads,
+                         _MyNumberOfMpiProcesses*_MyNumberOfThreads,
+                         1,
                          _MySystemFlavour)
 
 
@@ -1241,8 +1241,8 @@ def execute_projection_matching(_mylog,
                             parameters,
                             _mylog,
                             _DoParallel,
-                            _MyNumberOfMpiProcesses,
-                            _MyNumberOfThreads,
+                            _MyNumberOfMpiProcesses*_MyNumberOfThreads,
+                            1,
                             _MySystemFlavour)
 
       # Now make the class averages
@@ -1276,8 +1276,8 @@ def execute_projection_matching(_mylog,
                             parameters,
                             _mylog,
                             _DoParallel,
-                            _MyNumberOfMpiProcesses,
-                            _MyNumberOfThreads,
+                            _MyNumberOfMpiProcesses*_MyNumberOfThreads,
+                            1,
                             _MySystemFlavour)
 
       if (_DoAlign2D == '1'):
@@ -1421,15 +1421,6 @@ def execute_reconstruction(_mylog,
       print "Reconstruction method unknown. Quiting"
       exit(1)
     
-   # if using threads number of parallel jobs must be
-   # floor(_MyNumberOfMpiProcesses/_NumberOfThreads)
-   # if zero print error message
-   mpiThreadMyNumberOfMpiProcesses = str(math.floor(float(_MyNumberOfMpiProcesses)/
-                                   float(_MyNumberOfThreads)))
-   if(int(_MyNumberOfThreads) > int(_MyNumberOfMpiProcesses)):
-       print "NumberOfThreads cannot be greater than NumberOfMpiProcesses)"
-       exit(1)
-
    launch_job.launch_job(program,
                          parameters,
                          _mylog,
@@ -1520,14 +1511,7 @@ def  execute_resolution(_mylog,
           _mylog.error("Reconstruction method unknown. Quiting")
           print "Reconstruction method unknown. Quiting"
           exit(1)
-       # if using threads number of parallel jobs must be
-       # floor(_MyNumberOfMpiProcesses/_NumberOfThreads)
-       # if zero print error message
-       mpiThreadMyNumberOfMpiProcesses = str(math.floor(float(_MyNumberOfMpiProcesses)/
-                                       float(_MyNumberOfThreads)))
-       if(int(_MyNumberOfThreads) > int(_MyNumberOfMpiProcesses)):
-           print "NumberOfThreads cannot be greater than NumberOfMpiProcesses)"
-           exit(1)
+
        import launch_job
        launch_job.launch_job(program,
                              parameters,
