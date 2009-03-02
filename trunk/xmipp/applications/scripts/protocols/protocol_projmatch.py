@@ -30,7 +30,7 @@ ReferenceFileName='reference.vol'
 # Working subdirectory: 
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
-WorkDirectory='ProjMatch/run1'
+WorkingDir='ProjMatch/run1'
 
 # Delete working subdirectory if it already exists?
 """ Just be careful with this option...
@@ -585,7 +585,7 @@ class projection_matching_class:
                 _PaddingFactor,
                 _DataArePhaseFlipped,
                 _ReferenceIsCtfCorrected,
-                _WorkDirectory,
+                _WorkingDir,
                 _ProjectDir,
                 _LogDir,
                 _DoParallel,
@@ -606,7 +606,7 @@ class projection_matching_class:
        import launch_job
 
        self._CleanUpFiles=_CleanUpFiles
-       self._WorkDirectory=os.getcwd()+'/'+_WorkDirectory
+       self._WorkingDir=os.getcwd()+'/'+_WorkingDir
        self._SelFileName=_SelFileName
        selfile_without_ext=(os.path.splitext(str(os.path.basename(self._SelFileName))))[0]
        self._ReferenceFileName=os.path.abspath(_ReferenceFileName)
@@ -667,7 +667,7 @@ class projection_matching_class:
        self._mylog=log.init_log_system(_ProjectDir,
                                        _LogDir,
                                        sys.argv[0],
-                                       _WorkDirectory)
+                                       _WorkingDir)
                                       
        # Uncomment next line to get Debug level logging
        self._mylog.setLevel(logging.DEBUG)
@@ -679,18 +679,18 @@ class projection_matching_class:
           print " and start at iteration", _ContinueAtIteration
           exit(1)
        if (DoDeleteWorkingDir): 
-          delete_working_directory(self._mylog,self._WorkDirectory)
+          delete_working_directory(self._mylog,self._WorkingDir)
        else:
           self._mylog.info("Skipped DoDeleteWorkingDir") 
 
-       create_working_directory(self._mylog,self._WorkDirectory)
-       log.make_backup_of_script_file(sys.argv[0],self._WorkDirectory)
+       create_working_directory(self._mylog,self._WorkingDir)
+       log.make_backup_of_script_file(sys.argv[0],self._WorkingDir)
        
        # Create a selfile with absolute pathname in the WorkingDir
        mysel=selfile.selfile()
        mysel.read(_SelFileName)
        newsel=mysel.make_abspath()
-       self._SelFileName=os.path.abspath(self._WorkDirectory + '/' + _SelFileName)
+       self._SelFileName=os.path.abspath(self._WorkingDir + '/' + _SelFileName)
        newsel.write(self._SelFileName)
        
        # For ctf groups, also create a CTFdat file with absolute pathname in the WorkingDir
@@ -699,7 +699,7 @@ class projection_matching_class:
           myctfdat=ctfdat.ctfdat()
           myctfdat.read(_CTFDatName)
           newctfdat=myctfdat.make_abspath()
-          self._CTFDatName=os.path.abspath(self._WorkDirectory + '/' + _CTFDatName)
+          self._CTFDatName=os.path.abspath(self._WorkingDir + '/' + _CTFDatName)
           newctfdat.write(self._CTFDatName)
 
        # Set self._OuterRadius
@@ -716,20 +716,20 @@ class projection_matching_class:
        if (self._DocFileName==''):
 
           params=' -i ' + self._SelFileName + \
-                 ' -o ' + self._WorkDirectory + '/' + \
+                 ' -o ' + self._WorkingDir + '/' + \
                  DocFileWithOriginalAngles
           launch_job.launch_job("xmipp_header_extract",
                                 params,
                                 self._mylog,
                                 False,1,1,'')
        else:
-          command = "copy" , self._DocFileName ,  self._WorkDirectory + '/' + DocFileWithOriginalAngles
+          command = "copy" , self._DocFileName ,  self._WorkingDir + '/' + DocFileWithOriginalAngles
           self._mylog.info(command)
-          shutil.copy(self._DocFileName, self._WorkDirectory + '/' + DocFileWithOriginalAngles)
+          shutil.copy(self._DocFileName, self._WorkingDir + '/' + DocFileWithOriginalAngles)
 
        # Change to working dir
-       os.chdir(self._WorkDirectory)
-       self._SelFileName=self._WorkDirectory+'/'+\
+       os.chdir(self._WorkingDir)
+       self._SelFileName=self._WorkingDir+'/'+\
                          str(os.path.basename(self._SelFileName))
 
        # Make CTF groups
@@ -794,7 +794,7 @@ class projection_matching_class:
              exit(1)
 
           # Create working dir for this iteration and go there
-          Iteration_Working_Directory=self._WorkDirectory+'/Iter_'+\
+          Iteration_Working_Directory=self._WorkingDir+'/Iter_'+\
                                       str(_iteration_number)
           create_working_directory(self._mylog,Iteration_Working_Directory)
           os.chdir(Iteration_Working_Directory)
@@ -869,7 +869,7 @@ class projection_matching_class:
                                          self._MyNumberOfThreads,
                                          self._MySystemFlavour,
                                          self._MyMpiJobSize,
-                                         self._WorkDirectory,
+                                         self._WorkingDir,
                                          self._SymmetryGroup,
                                          self._AvailableMemory,
                                          self._DoComputeResolution,
@@ -966,32 +966,32 @@ class projection_matching_class:
 #------------------------------------------------------------------------
 #delete_working directory
 #------------------------------------------------------------------------
-def delete_working_directory(_mylog,_WorkDirectory):
+def delete_working_directory(_mylog,_WorkingDir):
     import os
     import shutil
     print '*********************************************************************'
     print '* Delete working directory tree'
     _mylog.info("Delete working directory tree")
 
-    if os.path.exists(_WorkDirectory):
-       shutil.rmtree(_WorkDirectory)
+    if os.path.exists(_WorkingDir):
+       shutil.rmtree(_WorkingDir)
        
 #------------------------------------------------------------------------
 #create_working directory
 #------------------------------------------------------------------------
-def create_working_directory(_mylog,_WorkDirectory):
+def create_working_directory(_mylog,_WorkingDir):
     import os
     print '*********************************************************************'
-    print '* Create directory ' + _WorkDirectory 
-    _mylog.info("Create working directory " + _WorkDirectory )
+    print '* Create directory ' + _WorkingDir 
+    _mylog.info("Create working directory " + _WorkingDir )
 
-    if not os.path.exists(_WorkDirectory):
-       os.makedirs(_WorkDirectory)
+    if not os.path.exists(_WorkingDir):
+       os.makedirs(_WorkingDir)
     # Also create subdirectories
-    if not os.path.exists(_WorkDirectory + "/" + LibraryDir):
-       os.makedirs(_WorkDirectory + "/" + LibraryDir)
-    if not os.path.exists(_WorkDirectory + "/" + ProjMatchDir):
-       os.makedirs(_WorkDirectory + "/" + ProjMatchDir)
+    if not os.path.exists(_WorkingDir + "/" + LibraryDir):
+       os.makedirs(_WorkingDir + "/" + LibraryDir)
+    if not os.path.exists(_WorkingDir + "/" + ProjMatchDir):
+       os.makedirs(_WorkingDir + "/" + ProjMatchDir)
 
 #------------------------------------------------------------------------
 #make ctf groups
@@ -1124,7 +1124,7 @@ def execute_projection_matching(_mylog,
                                 _MyNumberOfThreads,
                                 _MySystemFlavour,
                                 _MyMpiJobSize,
-                                _WorkDirectory,
+                                _WorkingDir,
                                 _SymmetryGroup,
                                 _AvailableMemory,
                                 _DoComputeResolution,
@@ -1733,7 +1733,7 @@ if __name__ == '__main__':
                 PaddingFactor,
                 DataArePhaseFlipped,
                 ReferenceIsCtfCorrected,
-                WorkDirectory,                  
+                WorkingDir,                  
                 ProjectDir,                     
                 LogDir,                         
                 DoParallel,                     

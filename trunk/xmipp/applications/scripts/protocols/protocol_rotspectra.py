@@ -31,7 +31,7 @@ SelFileName='all_images.sel'
 # Working subdirectory: 
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
-WorkDirectory='RotSpectra/test1'
+WorkingDir='RotSpectra/test1'
 # Delete working subdirectory if it already exists?
 """ Just be careful with this option...
 """
@@ -151,7 +151,7 @@ class rotational_spectra_class:
    
    def __init__(self,
                 _SelFileName,
-                _WorkDirectory,
+                _WorkingDir,
                 _DoDeleteWorkingDir,
                 _DisplayResults,
                 _ProjectDir,
@@ -184,7 +184,7 @@ class rotational_spectra_class:
        sys.path.append(scriptdir) # add default search path
        import log
 
-       self._WorkDirectory=os.getcwd()+'/'+_WorkDirectory
+       self._WorkingDir=os.getcwd()+'/'+_WorkingDir
        self._SelFileName=_SelFileName
        #os.path.abspath(_SelFileName)
        self._DisplayResults=_DisplayResults
@@ -210,19 +210,19 @@ class rotational_spectra_class:
        self.mylog=log.init_log_system(_ProjectDir,
                                       _LogDir,
                                       sys.argv[0],
-                                      _WorkDirectory)
+                                      _WorkingDir)
        if (_DoDeleteWorkingDir): 
           self.delete_working_directory()
        self.create_working_directory()
        
        #made backup of this script
-       log.make_backup_of_script_file(sys.argv[0],self._WorkDirectory)
+       log.make_backup_of_script_file(sys.argv[0],self._WorkingDir)
 
 
        if (_DoAlign2D):
           self.copy_images_to_working_dir()
        #change to working dir
-       os.chdir(self._WorkDirectory)
+       os.chdir(self._WorkingDir)
        if (_DoAlign2D):
           self.execute_align2d()
 
@@ -250,8 +250,8 @@ class rotational_spectra_class:
        print '* Delete working directory tree'
        self.mylog.info("Delete working directory tree")
        
-       if os.path.exists(self._WorkDirectory):
-          shutil.rmtree(self._WorkDirectory)
+       if os.path.exists(self._WorkingDir):
+          shutil.rmtree(self._WorkingDir)
    #------------------------------------------------------------------------
    #create_working directory
    #------------------------------------------------------------------------
@@ -261,8 +261,8 @@ class rotational_spectra_class:
        print '* Create working directory'
        self.mylog.info("Create working directory")
        
-       if not os.path.exists(self._WorkDirectory):
-          os.makedirs(self._WorkDirectory)
+       if not os.path.exists(self._WorkingDir):
+          os.makedirs(self._WorkingDir)
         
    #------------------------------------------------------------------------
    #copy_images_to_working_dir
@@ -273,8 +273,8 @@ class rotational_spectra_class:
       print '* Copying images to working directory ...'
       mysel=selfile.selfile()
       mysel.read(self._ProjectDir+'/'+self._SelFileName)
-      newsel=mysel.copy_sel(self._WorkDirectory)
-      newsel.write(self._WorkDirectory+'/'+self._SelFileName)
+      newsel=mysel.copy_sel(self._WorkingDir)
+      newsel.write(self._WorkingDir+'/'+self._SelFileName)
 
    #------------------------------------------------------------------------
    #execute_align2d
@@ -504,7 +504,7 @@ if __name__ == '__main__':
    #init variables
    
    myspectra=rotational_spectra_class(SelFileName,
-                                      WorkDirectory,
+                                      WorkingDir,
                                       DoDeleteWorkingDir,
                                       DisplayResults,
                                       ProjectDir,

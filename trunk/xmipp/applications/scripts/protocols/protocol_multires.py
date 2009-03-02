@@ -25,7 +25,7 @@ ReferenceFileName='reference.vol'
 # {dir} Working subdirectory: 
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
-WorkDirectory='MultiRes/run1'
+WorkingDir='MultiRes/run1'
 
 # Delete working directory if it already exists?
 """ Just be careful with this option...
@@ -338,7 +338,7 @@ class MultiResClass:
    def __init__(self,
       	        _SelFileName,
 		_ReferenceFileName,
-		_WorkDirectory,
+		_WorkingDir,
 		_DoDeleteWorkingDir,
 		_NumberofIterations,
 		_ProjectDir,
@@ -386,7 +386,7 @@ class MultiResClass:
        self.scriptFile=os.path.abspath(sys.argv[0])
        self.selFileName=os.path.abspath(_SelFileName)
        self.referenceFileName=os.path.abspath(_ReferenceFileName)
-       self.workDirectory=os.path.abspath(_WorkDirectory)
+       self.workDirectory=os.path.abspath(_WorkingDir)
        self.doDeleteWorkingDir=_DoDeleteWorkingDir
        self.numberOfIterations=_NumberofIterations
        self.logDir=os.path.abspath(_LogDir)
@@ -442,7 +442,7 @@ class MultiResClass:
 	  self.mylog=log.init_log_system(_ProjectDir,
                                 	 _LogDir,
                                 	 sys.argv[0],
-                                	 _WorkDirectory)
+                                	 _WorkingDir)
 	  self.logLevel='info'
        
        # Produce side info
@@ -1309,7 +1309,7 @@ if __name__ == '__main__':
    myMultiRes=MultiResClass(
       	        SelFileName,
 		ReferenceFileName,
-		WorkDirectory,
+		WorkingDir,
 		DoDeleteWorkingDir,
 		NumberofIterations,
 		ProjectDir,
