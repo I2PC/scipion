@@ -117,6 +117,15 @@ void Prog_RecFourier_prm::produce_Side_info()
     maxResolution2=maxResolution*maxResolution;
 
     // Read the input images
+    /*
+    if (fn_fsc != "")
+    {
+        SelFile auxSF;
+        auxSF.read(fn_sel);
+        SF = auxSF.randomize();
+    }
+    else
+    */
     SF.read(fn_sel);
     // Read docfile and get column numbers
 
