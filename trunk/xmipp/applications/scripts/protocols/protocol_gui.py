@@ -868,6 +868,7 @@ class MyQueueLaunch:
               text="Job submission command \n (e.g. bsub -q 1week)").grid(row=0,column=0,columnspan=2)
         self.e = Entry(self.top, bg=EntryBackgroundColour)
         self.e.grid(row=1,column=0,columnspan=2)
+        self.e.insert(0,"qsub.py")
         Button(self.top, text="Submit", command=self.ok,
                bg = ButtonBackgroundColour,
                activebackground=ButtonActiveBackgroundColour).grid(row=2,column=0)
