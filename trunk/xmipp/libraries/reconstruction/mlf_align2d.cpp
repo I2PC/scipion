@@ -688,13 +688,12 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
         int imgno = 0;
         while (!SF.eof())
         {
-            FileName fn_img=SF.NextImg();
 	    if (do_ctf_correction)
 	    {
 		SL = SF.current();
 		focus = SL.get_number() - 1;
 	    }
-            img.read(fn_img, false, false, false, false);
+            img.read(SF.NextImg(), false, false, false, false);
             img().setXmippOrigin();
             FourierTransform(img(), Fimg);
             FFT_magnitude(Fimg, Maux);
