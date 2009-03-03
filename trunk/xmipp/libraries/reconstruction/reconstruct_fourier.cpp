@@ -310,8 +310,9 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                         if (!localA.isIdentity())
                             proj().selfApplyGeometryBSpline(localA, 3, IS_INV, WRAP);
                     }
+
                     threadParams->weight = 1.;
-                    if(weight!=0)
+                    if(parent->do_weights)
                         threadParams->weight = weight;
                     if (!parent->do_weights)
                     {
