@@ -2,7 +2,7 @@
  *
  * Authors:     Roberto Marabini (roberto@cnb.csic.es)
  *              Carlos Oscar S. Sorzano (coss@cnb.csic.es)
- *              Jose Roman Bilbao-Castro (jrbcast@ace.ual.es)s
+ *              Jose Roman Bilbao-Castro (jrbcast@ace.ual.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -310,8 +310,9 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                         if (!localA.isIdentity())
                             proj().selfApplyGeometryBSpline(localA, 3, IS_INV, WRAP);
                     }
-
-                    threadParams->weight = weight;
+                    threadParams->weight = 1.;
+                    if(weight!=0)
+                        threadParams->weight = weight;
                     if (!parent->do_weights)
                     {
                         weight=1.0;
@@ -904,7 +905,6 @@ void Prog_RecFourier_prm::finishComputations( FileName out_name )
 
     // Tell threads what to do
     threadOpCode = PROCESS_WEIGHTS;
-
     // Awake threads
     barrier_wait( &barrier );
     // Threads are working now, wait for them to finish
