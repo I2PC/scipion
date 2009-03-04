@@ -43,7 +43,7 @@
 #include <reconstruction/blobs.h>
 #define BLOB_TABLE_SIZE 5000
 #define MINIMUMWEIGHT 0.001
-#define ACCURACY 0.000001
+#define ACCURACY 0.001
 
 #define EXIT_THREAD 0
 #define PROCESS_IMAGE 1
@@ -68,6 +68,7 @@ struct ImageThreadParams
         int imageIndex;
         DocFile * docFile;
         double weight;
+        double localweight;
 };
 
 /** Fourier reconstruction parameters. */
