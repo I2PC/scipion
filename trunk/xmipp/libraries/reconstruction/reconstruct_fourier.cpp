@@ -258,6 +258,8 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
     else
         minSeparation = parent->thrWidth;
 
+minSeparation+=1;
+
     Matrix2D<double>  localA(3, 3), localAinv;
     Matrix2D< std::complex<double> > localPaddedFourier;
     Matrix2D<double> localPaddedImg;
@@ -312,8 +314,10 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                     }
 
                     threadParams->weight = 1.;
+                    
                     if(parent->do_weights)
                         threadParams->weight = weight;
+                    
                     if (!parent->do_weights)
                     {
                         weight=1.0;
@@ -344,6 +348,7 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                     Euler_angles2matrix(rot, tilt, psi, localA);
                     localAinv=localA.transpose();
 
+                    threadParams->localweight = weight;
                     threadParams->localAInv = &localAinv;             
                     threadParams->localPaddedFourier = &localPaddedFourier;
                     threadParams->read = 1;
@@ -366,7 +371,7 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                         {
                             if (parent->FourierWeights(k,i,j)>XMIPP_EQUAL_ACCURACY)
                                 parent->FourierWeights(k,i,j)=1/parent->FourierWeights(k,i,j);
-
+                           
                             if (VOL_ELEM(parent->FourierWeights,k,i,j)!=0)
                                 VOL_ELEM(parent->VoutFourier,k,i,j)*=corr2D_3D*VOL_ELEM(parent->FourierWeights,k,i,j);
                         }
@@ -552,7 +557,8 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                                             ptrOut[0]+=w*ptrIn[0];
                                             if (conjugate) ptrOut[1]-=w*ptrIn[1];
                                             else           ptrOut[1]+=w*ptrIn[1];
-                                            (parent->FourierWeights)(iz,iy,ix)+=w*threadParams->weight;
+                                        
+                                            (parent->FourierWeights)(iz,iy,ix)+=w*threadParams->weight ;
                                         }
                                     }
                                 }
@@ -651,7 +657,8 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
                 processed = true;
                 if (verb && imgno++%repaint==0) progress_bar(imgno);
                 Ainv = th_args[nt].localAInv;
-
+            
+                double weight = th_args[nt].localweight;
                 paddedFourier = th_args[nt].localPaddedFourier;
 
                 // Initialized just once
@@ -681,6 +688,8 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
                         // Passing parameters to each thread
                         th_args[th].symmetry = &A_SL;
                         th_args[th].paddedFourier = paddedFourier;
+                       
+                        th_args[th].weight = weight;
                     }
 
                     // Init status array
@@ -703,7 +712,25 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
                     // Threads are working now, wait for them to finish
                     // processing current projection
                     barrier_wait( &barrier );
+                    //#define DEBUG2
+                    #ifdef DEBUG2
+                          
+                            {
+                            static int ii=0;
+                            if(ii%100==0) 
+                                {
+                                VolumeXmipp save;
+                                save().alias( FourierWeights );
+                                save.write((std::string) integerToString(ii)  + "_1_Weights.vol");
 
+                                FourierVolume save2;
+                                save2().alias( VoutFourier );
+                                save2.write((std::string) integerToString(ii)  + "_1_Fourier.vol");
+                                }
+                            ii++;
+                            }
+                    #endif
+                    #undef DEBUG2
                     // Esto no va aqui
                     if ( appliedFSC == 0 ) 
                     {
@@ -911,25 +938,22 @@ void Prog_RecFourier_prm::finishComputations( FileName out_name )
     // Threads are working now, wait for them to finish
     barrier_wait( &barrier );
 
-    //FourierWeights.clear();
-    Vout().initZeros(volPadSizeZ,volPadSizeY,volPadSizeX);
-    transformerVol.setReal(Vout());
-    //#define DEBUG_VOL
+//#define DEBUG_VOL
 #ifdef DEBUG_VOL
-    {
-        Matrix3D< std::complex<double> > kk;
-        transformerVol.getFourierAlias(kk);
-        std::cerr << "x y z " << XSIZE(kk) << " "
-        << YSIZE(kk) << " " 
-        << ZSIZE(kk) 
-        << std::endl;
-        VolumeXmipp test(ZSIZE(kk),YSIZE(kk),XSIZE(kk));
-        FOR_ALL_ELEMENTS_IN_MATRIX3D(kk) test(k, i, j) = log(1+abs(kk(k, i, j)));
-        test.write("test2.fft");
-        exit(1);
-    }
+	{
+         VolumeXmipp save;
+         save().alias( FourierWeights );
+         save.write((std::string) fn_out + "Weights.vol");
+
+         FourierVolume save2;
+         save2().alias( VoutFourier );
+         save2.write((std::string) fn_out + "FourierVol.vol");
+	}
 #endif
 
+    Vout().initZeros(volPadSizeZ,volPadSizeY,volPadSizeX);
+    transformerVol.setReal(Vout());
+    
     transformerVol.inverseFourierTransform();
     CenterFFT(Vout(),false);
 
