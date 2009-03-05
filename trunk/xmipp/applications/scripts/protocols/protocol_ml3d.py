@@ -15,25 +15,25 @@
 # {file} Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
-InSelFile="all_images.sel"
+InSelFile='all_images.sel'
 # {file} Initial 3D reference map:
 """ Spider-format 3D density map with the same dimensions as your particles. This file may be in any directory.
 """
-InitialReference="my_ref.vol"
+InitialReference='my_ref.vol'
 # Working subdirectory:
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
-WorkingDir="ML3D/test1"
+WorkingDir='ML3D/test1'
 # Delete working subdirectory if it already exists?
 """ Just be careful with this option...
 """
-DoDeleteWorkingDir=False
+DoDeleteWorkingDir=True
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
-ProjectDir="/home/scheres/proteinA/dataset1"
+ProjectDir='/home/scheres/proteinA/dataset1'
 # {expert} Directory name for logfiles:
-LogDir="Logs"
+LogDir='Logs'
 #------------------------------------------------------------------------------------------------
 # {section} MLF-specific parameters
 #------------------------------------------------------------------------------------------------
@@ -42,19 +42,23 @@ DoMlf=False
 # {file} CTFdat file with the input images:
 """ The names of both the images and the ctf-parameter files should be with absolute paths. If you want to use this, make sure also the images in the input selfile (see above) are with absolute paths.
 """
-InCtfDatFile="all_images.ctfdat"
-# Is the initial 3D reference map CTF-amplitude corrected?
-""" If coming from programs other than xmipp_mlf_refine3d this is usually not the case. If you will perform a grey-scale correction, this parameter becomes irrelevant as the output maps never have the CTF-amplitudes corrected.
-"""
-InitialMapIsAmplitudeCorrected=True
-# {expert} Are the seeds  CTF-amplitude corrected?
-""" This option is only relevant if you provide your own seeds! If the seeds are generated automatically, this parameter becomes irrelevant as they will always be amplitude-corrected
-"""
-SeedsAreAmplitudeCorrected=False
+InCtfDatFile='all_images.ctfdat'
 # High-resolution limit (in Angstroms)
 """ No frequencies higher than this limit will be taken into account. If zero is given, no limit is imposed
 """
 HighResLimit=20
+# Are the images CTF phase flipped?
+""" You can run MLF with or without having phase flipped the images.
+"""
+ImagesArePhaseFlipped=True
+# Is the initial 3D reference map CTF-amplitude corrected?
+""" If coming from programs other than xmipp_mlf_refine3d this is usually not the case. If you will perform a grey-scale correction, this parameter becomes irrelevant as the output maps never have the CTF-amplitudes corrected.
+"""
+InitialMapIsAmplitudeCorrected=False
+# {expert} Are the seeds  CTF-amplitude corrected?
+""" This option is only relevant if you provide your own seeds! If the seeds are generated automatically, this parameter becomes irrelevant as they will always be amplitude-corrected
+"""
+SeedsAreAmplitudeCorrected=False
 #------------------------------------------------------------------------------------------------
 # {section} Correct absolute grey scale of initial reference
 #------------------------------------------------------------------------------------------------
@@ -99,7 +103,7 @@ DoJustRefine=False
     Note that the options to generate unbiased seeds and to just
     refine the initial map should be set to False
 """
-SeedsSelfile=""
+SeedsSelfile=''
 #------------------------------------------------------------------------------------------------
 # {section} ML3D classification
 #------------------------------------------------------------------------------------------------
@@ -117,7 +121,7 @@ NumberOfIterations=25
     for a description of the point group symmetries
     Give c1 if no symmetry is present
 """
-Symmetry="c1"
+Symmetry='c1'
 # Refine the normalization parameters for each image?
 """ This variant of the algorithm deals with normalization errors.
     For more info see (and please cite) Scheres et. al. (2009) J. Struc. Biol., in press
@@ -144,7 +148,7 @@ RestartIter=0
 """ For a complete description see the manual pages:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/MLrefine3D
 """
-ExtraParamsMLrefine3D=""
+ExtraParamsMLrefine3D=''
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
@@ -168,12 +172,12 @@ NumberOfMpiProcesses=5
     different mpirun-like commands have to be given.
     Ask the person who installed your xmipp version, which option to use. Or read: xxx
 """
-SystemFlavour=""
+SystemFlavour=''
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
 """
-AnalysisScript="visualize_ml3d.py"
+AnalysisScript='visualize_ml3d.py'
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
@@ -191,6 +195,7 @@ class ML3D_class:
                  LogDir,
                  DoMlf,
                  InCtfDatFile,
+                 ImagesArePhaseFlipped,
                  InitialMapIsAmplitudeCorrected,
                  SeedsAreAmplitudeCorrected,
                  HighResLimit,
@@ -226,6 +231,7 @@ class ML3D_class:
         self.ProjectDir=ProjectDir
         self.DoMlf=DoMlf
         self.RefForSeedsIsAmplitudeCorrected=InitialMapIsAmplitudeCorrected
+        self.ImagesArePhaseFlipped=ImagesArePhaseFlipped
         self.SeedsAreAmplitudeCorrected=SeedsAreAmplitudeCorrected
         self.HighResLimit=HighResLimit
         self.NumberOfReferences=NumberOfReferences
@@ -488,6 +494,7 @@ class ML3D_class:
                                     self.AngularSampling,
                                     1,
                                     self.Symmetry,
+                                    self.ImagesArePhaseFlipped,
                                     self.RefForSeedsIsAmplitudeCorrected,
                                     self.ExtraParamsMLrefine3D)
             seedname=utils_xmipp.composeFileName(outname+'_it',1,'vol')
@@ -522,13 +529,14 @@ class ML3D_class:
                                 self.AngularSampling,
                                 self.NumberOfIterations,
                                 self.Symmetry,
+                                self.ImagesArePhaseFlipped,
                                 self.SeedsAreAmplitudeCorrected,
                                 self.ExtraParamsMLrefine3D)
 
 
     # Either for seeds generation or for ML3D-classification
     def execute_MLrefine3D(self,inselfile,outname,
-                           volname,sampling,iter,symmetry,amplitude_corrected,extraparam):
+                           volname,sampling,iter,symmetry,phase_flipped,amplitude_corrected,extraparam):
         import os
         import launch_job
 
@@ -549,6 +557,8 @@ class ML3D_class:
             params+=' -fourier '
         if (self.DoMlf):
             params+= ' -ctfdat my.ctfdat'
+            if (not phase_flipped):
+                params+= ' -not_phase_flipped'
             if (not amplitude_corrected):
                 params+= ' -ctf_affected_refs'
             if (self.HighResLimit > 0):
@@ -608,6 +618,7 @@ if __name__ == '__main__':
                     LogDir,
                     DoMlf,
                     InCtfDatFile,
+                    ImagesArePhaseFlipped,
                     InitialMapIsAmplitudeCorrected,
                     SeedsAreAmplitudeCorrected,
                     HighResLimit,
