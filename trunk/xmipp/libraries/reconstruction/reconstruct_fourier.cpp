@@ -317,7 +317,7 @@ minSeparation+=1;
                     
                     if(parent->do_weights)
                         threadParams->weight = weight;
-                    
+
                     if (!parent->do_weights)
                     {
                         weight=1.0;

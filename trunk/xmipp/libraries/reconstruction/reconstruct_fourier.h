@@ -69,6 +69,7 @@ struct ImageThreadParams
         DocFile * docFile;
         double weight;
         double localweight;
+
 };
 
 /** Fourier reconstruction parameters. */
