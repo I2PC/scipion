@@ -77,10 +77,21 @@ void Prog_Refine3d_prm::read(int argc, char ** argv, int &argc2, char ** &argv2)
         DFi.read(getParameter(argc, argv, "-restart"));
         DFi.go_beginning();
         comment = (DFi.get_current_line()).get_text();
-        if (strstr(comment.c_str(), "MLalign2D-logfile") == NULL)
+        if (fourier_mode)
         {
-            std::cerr << "Error!! Docfile is not of MLalign2D-logfile type. " << std::endl;
-            exit(1);
+            if (strstr(comment.c_str(), "MLFalign2D-logfile") == NULL)
+            {
+                std::cerr << "Error!! Docfile is not of MLFalign2D-logfile type. " << std::endl;
+                exit(1);
+            }
+        }
+        else
+        {
+            if (strstr(comment.c_str(), "MLalign2D-logfile") == NULL)
+            {
+                std::cerr << "Error!! Docfile is not of MLalign2D-logfile type. " << std::endl;
+                exit(1);
+            }
         }
         else
         {
