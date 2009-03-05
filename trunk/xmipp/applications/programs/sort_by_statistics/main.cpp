@@ -57,7 +57,7 @@ public:
         << " -i <selfile>            : Selfile with (normalized) input images\n"
         << " [-o <root=\"sort_junk\">] : Output rootname\n"
         << " [-train <selfile>]      : Train on selfile with good particles\n"
-        << " [-zcut <float=1>]       : Cut-off for Z-scores (negative for no cut-off) \n"
+        << " [-zcut <float=-1>]       : Cut-off for Z-scores (negative for no cut-off) \n"
         ;
     }
 
@@ -406,7 +406,7 @@ int main(int argc, char **argv)
         prm.fn_out = getParameter(argc, argv, "-o", "sort_junk");
         fn_train = getParameter(argc, argv, "-train", "");
         if (fn_train != "") SFtrain.read(fn_train);
-        prm.cutoff = textToFloat(getParameter(argc, argv, "-zcut", "1"));
+        prm.cutoff = textToFloat(getParameter(argc, argv, "-zcut", "-1"));
     }
     catch (Xmipp_error XE)
     {
@@ -434,7 +434,7 @@ int main(int argc, char **argv)
     {
         isort = sorted(imgno) - 1;
         SFout.insert(prm.names[isort]);
-        fh_zsum << prm.zscore(isort) << "   " << prm.names[isort] << std::endl;
+        fh_zsum << prm.zscore(isort)/14. << "   " << prm.names[isort] << std::endl;
         fh_zind << prm.names[isort]
         << " : " << prm.values[isort][0]
         << " " << prm.values[isort][1]
