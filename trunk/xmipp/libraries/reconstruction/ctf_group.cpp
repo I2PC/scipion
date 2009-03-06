@@ -129,6 +129,7 @@ void CtfGroupParams::produceSideInfo()
     double avgdef;
     std::vector<FileName> mics_fnctf;
 
+    std::cerr<<" Reading all data ..."<<std::endl;
     SF.read(fn_sel);
     SF.ImgSize(dim,ydim);
     if ( dim != ydim )
@@ -148,6 +149,9 @@ void CtfGroupParams::produceSideInfo()
     SF.go_beginning();
     is_first=true;
     imgno = 0;
+    int n= SF.ImgNo();
+    int c = XMIPP_MAX(1, n / 60);
+    init_progress_bar(n);
     while (!SF.eof())
     {
 	fnt=SF.NextImg();
@@ -236,7 +240,9 @@ void CtfGroupParams::produceSideInfo()
 	if (!found)
 	    REPORT_ERROR(1, "ctf_group ERROR%% Did not find image "+fnt+" in the CTFdat file");
         imgno++;
+        if (imgno % c == 0) progress_bar(imgno);
     }
+    progress_bar(n);
 
     // Precalculate denominator term of the Wiener filter
     if (do_wiener)
@@ -287,11 +293,11 @@ void CtfGroupParams::produceSideInfo()
     mics_count   = newmics_count;
     mics_fnimgs  = newmics_fnimgs;
     mics_defocus = sorted_defocus;
-    
-    /*
+
+/*    
     for (int isort = 0; isort < sorted_defocus.size(); isort++)
         std::cerr<<"sorted mic "<<isort<<" has "<<mics_count[isort]<<" images, and defocus "<<mics_defocus[isort] <<std::endl;
-    */
+*/
 }
 
 // Check whether a CTF is anisotropic
@@ -331,6 +337,7 @@ void CtfGroupParams::autoRun()
 
     // Make the actual groups
     nr_groups = 0;
+    init_progress_bar(mics_ctf2d.size());
     for (int imic=0; imic < mics_ctf2d.size(); imic++)
     {
         mindiff = 99999.;
@@ -369,7 +376,9 @@ void CtfGroupParams::autoRun()
             //add to existing group
             pointer_group2mic[iopt_group].push_back(imic);
         }
+        progress_bar(imic);
     }
+    progress_bar(mics_ctf2d.size());
     std::cerr<<" Number of CTF groups= "<<nr_groups<<std::endl;
 }
    
@@ -391,6 +400,9 @@ void CtfGroupParams::manualRun()
 
     // Loop over all splits
     DF.go_first_data_line();
+    int n=DF.dataLineNo();
+    int in = 0;
+    init_progress_bar(n);
     while (!DF.eof())
     {
         split=DF(0);
@@ -419,8 +431,10 @@ void CtfGroupParams::manualRun()
         }
         oldsplit = split;
         DF.next_data_line();
+        in++;
+        progress_bar(in);
     }
-
+    progress_bar(n);
 }
 
 void CtfGroupParams::writeOutputToDisc()
