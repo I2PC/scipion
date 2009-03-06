@@ -96,7 +96,7 @@ class VisualizeMultires3DClass:
        myMultiRes=MultiResClass(
       	            xmipp_protocol_multires.SelFileName,
 		    xmipp_protocol_multires.ReferenceFileName,
-		    xmipp_protocol_multires.WorkDirectory,
+		    xmipp_protocol_multires.WorkingDir,
 		    xmipp_protocol_multires.DoDeleteWorkingDir,
 		    xmipp_protocol_multires.NumberofIterations,
 		    xmipp_protocol_multires.ProjectDir,

@@ -145,7 +145,7 @@ class visualize_projmatch_class:
         import protocol
 
         self._MatrixWidth=_MatrixWidth
-        self._WorkDirectory=protocol.WorkDirectory
+        self._WorkingDir=protocol.WorkingDir
         self._LogDir=protocol.LogDir
         self._ProjectDir=protocol.ProjectDir
         self._multi_align2d_sel=protocol.MultiAlign2dSel
@@ -154,7 +154,7 @@ class visualize_projmatch_class:
         self._mylog=log.init_log_system(self._ProjectDir,
                                         self._LogDir,
                                         sys.argv[0],
-                                        self._WorkDirectory)
+                                        self._WorkingDir)
         self._mylog.setLevel(logging.DEBUG)
         self._DisplayIterationsNo=arg.getListFromVector(_DisplayIterationsNo)
         self._ReconstrucedVolume=protocol.ReconstructedVolume
@@ -249,7 +249,7 @@ class visualize_projmatch_class:
 
 
         #NAMES ARE RELATIVE TO ITER DIRECTORY  
-        self._Iteration_Working_Directory=self._WorkDirectory+'/Iter_1'
+        self._Iteration_Working_Directory=self._WorkingDir+'/Iter_1'
         self._mylog.debug ("cd " + self._Iteration_Working_Directory)
         os.chdir(self._Iteration_Working_Directory)
 

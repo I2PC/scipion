@@ -45,8 +45,8 @@ class visualize_rotspectra_class:
         pardir=os.path.abspath(os.getcwd())
         shutil.copy(ProtocolName,'protocol.py')
         import protocol
-        self._WorkDirectory=protocol.WorkDirectory
-        os.chdir(self._WorkDirectory)
+        self._WorkingDir=protocol.WorkingDir
+        os.chdir(self._WorkingDir)
 
         _LogDir=protocol.LogDir
         _ProjectDir=protocol.ProjectDir
@@ -56,7 +56,7 @@ class visualize_rotspectra_class:
         self.mylog=log.init_log_system(_ProjectDir,
                                        _LogDir,
                                        sys.argv[0],
-                                       self._WorkDirectory)
+                                       self._WorkingDir)
 
         if (_DoShowAlignedImages):
             self.visualize_AlignedImages(self._SelFileName)
