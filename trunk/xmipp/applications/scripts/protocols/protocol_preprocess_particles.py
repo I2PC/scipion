@@ -73,13 +73,17 @@ BackGroundRadius=30
 """
 DoUseRamp=False
 # Perform black dust particles removal?
-""" Sets pixels with unusually low values (i.e. stddev<-3.5) to zero
+""" Sets pixels with unusually low values to random values from a Gaussian with zero-mean and unity-standard deviation. For cryo, the default threshold value (see expert options) of 3.5 is a good value. For negative stain with high contrast signals, a higher value may be preferable.
 """
 DoRemoveBlackDust=False
 # Perform white dust particles removal?
-""" Sets pixels with unusually high values (i.e. stddev>3.5) to zero
+""" Sets pixels with unusually high values to random values from a Gaussian with zero-mean and unity-standard deviation. For cryo, the default threshold value (see expert options) of 3.5 is a good value. For negative stain with high contrast signals, a higher value may be preferable.
 """
 DoRemoveWhiteDust=False
+# {expert} Threshold for dust removal:
+""" Pixels with a signal higher or lower than this value times the standard devaition of the image will be affected. For cryo, 3.5 is a good value. For high-contrast negative stain, the signal itself may be affected so that a higher value may be preferable.
+"""
+DustRemovalThreshold=3.5
 #------------------------------------------------------------------------------------------------
 # {section} Particle sorting
 #------------------------------------------------------------------------------------------------
@@ -116,6 +120,7 @@ class preprocess_particles_class:
                  DoUseRamp,
                  DoRemoveBlackDust,
                  DoRemoveWhiteDust,
+                 DustRemovalThreshold,
                  DoSorting,
                  ):
 	     
@@ -138,6 +143,7 @@ class preprocess_particles_class:
         self.DoUseRamp=DoUseRamp
         self.DoRemoveBlackDust=DoRemoveBlackDust
         self.DoRemoveWhiteDust=DoRemoveWhiteDust
+        self.DustRemovalThreshold=DustRemovalThreshold
         self.DoSorting=DoSorting
         self.OutSelFile=OutSelFile
 
@@ -512,9 +518,11 @@ class preprocess_particles_class:
         if (self.DoUseRamp):
             param=param+' -method Ramp'
         if (self.DoRemoveBlackDust):
-            param=param+'  -remove_black_dust'
+            param=param+'  -remove_black_dust -thr_black_dust -' + \
+                str(self.DustRemovalThreshold)
         if (self.DoRemoveWhiteDust):
-            param=param+'  -remove_white_dust'
+            param=param+'  -remove_white_dust -thr_white_dust ' + \
+                str(self.DustRemovalThreshold)
         launch_job.launch_job("xmipp_normalize",
                               param,
                               self.log,
@@ -560,6 +568,7 @@ if __name__ == '__main__':
                                                         DoUseRamp,
                                                         DoRemoveBlackDust,
                                                         DoRemoveWhiteDust,
+                                                        DustRemovalThreshold,
                                                         DoSorting)
 
 	# close 
