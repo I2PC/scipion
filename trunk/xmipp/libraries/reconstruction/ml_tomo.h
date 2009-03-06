@@ -42,7 +42,7 @@
 #include <vector>
 
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
-#define SMALLANGLE 1.75
+#define SMALLANGLE 5.75
 #define MLTOMODATALINELENGTH 11
 class Prog_ml_tomo_prm;
 
@@ -146,6 +146,10 @@ public:
     double noimp_threshold;
     /** Number of missing data structures */
     int nr_miss;
+    /** Maximum resolution (dig.freq.) */
+    double max_resol;
+    double r2_max_resol, r2_min_resol;
+    Matrix3D<double> fourier_mask, real_mask;
     /** Vectors with angles for missing data structures */
     std::vector<double> miss_thy0, miss_thyF, miss_thx0, miss_thxF;
 
