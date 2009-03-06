@@ -258,7 +258,7 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
     else
         minSeparation = parent->thrWidth;
 
-minSeparation+=5;
+    minSeparation+=1;
 
     Matrix2D<double>  localA(3, 3), localAinv;
     Matrix2D< std::complex<double> > localPaddedFourier;
@@ -509,8 +509,8 @@ minSeparation+=5;
 
                     for (int i = minAssignedRow; i <= maxAssignedRow ; i ++ )
                     {
-						// Discarded rows can be between minAssignedRow and maxAssignedRow, check
-						if ( statusArray[i] == -1 )
+			// Discarded rows can be between minAssignedRow and maxAssignedRow, check
+			if ( statusArray[i] == -1 )
                             for (int j=STARTINGX(*paddedFourier); j<=FINISHINGX(*paddedFourier); j++)
                             {
                                 // Compute the frequency of this coefficient in the
@@ -562,7 +562,8 @@ minSeparation+=5;
                                                             ZZ(gcurrent) * ZZ(gcurrent));
                                             if (d > parent->blob.radius) continue;
                                             double w = parent->blob_table(ROUND(gcurrent.module()*parent->iDelta));
-
+                                            //if(w<MINIMUMWEIGHT)
+                                            //   continue;
                                             // Look for the location of this logical index
                                             // in the physical layout
 #ifdef DEBUG
@@ -857,61 +858,6 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
         auxFourierVolume.sumWithFile((std::string) fn_fsc + "_2_Fourier.vol",z,y,x, false, VCOMPLEX); 
     }
 }
-#undef DEBUG
-#ifdef NEVERDEFINED
-// Correct weight ----------------------------------------------------------
-void Prog_RecFourier_prm::correctWeight()
-{
-    FourierWeights.printStats(); std::cout << std::endl;
-    FourierWeightsConvolved.initZeros(FourierWeights);
-
-    // Compute the convolution of the kernel with the weights
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(kernel)
-    {
-        double wkij=kernel(k,i,j);
-        if (wkij==0) continue;
-        for (int kp=STARTINGZ(FourierWeights); kp<=FINISHINGZ(FourierWeights); kp++)
-        {
-            int iz=intWRAP(kp-k,0,ZSIZE(VoutFourier)-1);
-            for (int ip=STARTINGY(FourierWeights); ip<=FINISHINGY(FourierWeights); ip++)
-            {
-                int iy=intWRAP(ip-i,0,ZSIZE(VoutFourier)-1);
-                for (int jp=STARTINGX(FourierWeights); jp<=FINISHINGX(FourierWeights); jp++)
-                {
-                    int ix=intWRAP(jp-j,0,ZSIZE(VoutFourier)-1);
-                    if (ix>=XSIZE(VoutFourier))
-                    {
-                        iz=intWRAP(-iz,0,ZSIZE(VoutFourier)-1);
-                        iy=intWRAP(-iy,0,ZSIZE(VoutFourier)-1);
-                        ix=intWRAP(-ix,0,ZSIZE(VoutFourier)-1);
-                    }
-                    FourierWeightsConvolved(iz,iy,ix)+=wkij*
-                                                       VOL_ELEM(FourierWeights,kp,ip,jp);
-                }
-            }
-        }
-    }
-    /*
-     VolumeXmipp save;
-     save()=FourierWeights; 
-     FOR_ALL_ELEMENTS_IN_MATRIX3D(save())
-     save(k,i,j)=log10(save(k,i,j)+1);
-     save.write("PPPweights.vol");
-     save()=FourierWeightsConvolved;
-     FOR_ALL_ELEMENTS_IN_MATRIX3D(save())
-     save(k,i,j)=log10(save(k,i,j)+1);
-     save.write("PPPweightsConvolved.vol");
-     std::cout << "kernel=\n" << kernel << std::endl;
-     std::cout << "Press any key\n";
-     char c; std::cin >> c;
-     */
-
-    // Update the weights with the convolved values
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(FourierWeights)
-    if (FourierWeightsConvolved(k,i,j)>ACCURACY)
-        FourierWeights(k,i,j)/=FourierWeightsConvolved(k,i,j);
-}
-#endif
 
 // Main routine ------------------------------------------------------------
 void Prog_RecFourier_prm::run()
