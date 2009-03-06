@@ -148,7 +148,6 @@ public:
     int nr_miss;
     /** Maximum resolution (dig.freq.) */
     double max_resol;
-    double r2_max_resol, r2_min_resol;
     Matrix3D<double> fourier_mask, real_mask;
     /** Vectors with angles for missing data structures */
     std::vector<double> miss_thy0, miss_thyF, miss_thx0, miss_thxF;

@@ -268,7 +268,6 @@ void Prog_ml_tomo_prm::produceSideInfo()
     Matrix3D<double>            Maux, Maux2;
     Matrix3D<std::complex<double> >  Faux;
     Matrix1D<int>               center(3), radial_count;
-    float                       xx, yy;
     double                      av, aux, Q0;
     int                         im, jm;
 
@@ -302,10 +301,35 @@ void Prog_ml_tomo_prm::produceSideInfo()
         DIRECT_MULTIDIM_ELEM(real_mask,n) = (double)DIRECT_MULTIDIM_ELEM(int_mask,n);
     }
 
-    r2_max_resol=max_resol*dim;
-    r2_max_resol *= r2_max_resol;
-    r2_min_resol=1;
-    r2_min_resol *= r2_min_resol;
+    // Set-up fourier-space mask
+    Matrix3D<double> cosine_mask(dim,dim,dim);
+    cosine_mask.setXmippOrigin();
+    fourier_mask.resize(dim,dim,hdim+1);
+    int r_max_resol = max_resol * dim;
+    RaisedCosineMask(cosine_mask, r_max_resol - 2, r_max_resol, INNER_MASK);
+    // exclude origin voxel
+    VOL_ELEM(cosine_mask,0,0,0) = 0.;
+    int yy, zz;
+    int dimb = (dim - 1)/2;
+    for ( int z=0, ii=0; z<dim; z++ ) 
+    {
+        if ( z > dimb ) zz = z-dim;
+        else zz = z;
+        for ( int y=0; y<dim; y++ ) 
+        {
+            if ( y > dimb ) yy = y-dim;
+            else yy = y;
+            for ( int xx=0; xx<hdim + 1; xx++, ii++ ) 
+            {
+                DIRECT_MULTIDIM_ELEM(fourier_mask,ii) = VOL_ELEM(cosine_mask,xx,yy,zz);
+            }
+        }
+    }
+
+    // Set-up real-space mask
+    real_mask.resize(dim,dim,dim);
+    real_mask.setXmippOrigin();
+    RaisedCosineMask(real_mask, hdim - 1, hdim, INNER_MASK);
 
     // Get number of references
     if (fn_ref != "")
@@ -744,10 +768,8 @@ void Prog_ml_tomo_prm::getMissingWedge(Matrix3D<double> &Mmissing,
             else yy = y;
             for ( int xx=0; xx<hdim + 1; xx++, ii++ ) {
 
-                // Calculate resolution 
-                int r2= (double)(xx*xx + yy*yy + zz*zz);
-                // TODO: make a raised cosine mask instead of this discrete cutoff
-                if (r2 > r2_max_resol || r2 < r2_min_resol)
+                double maskvalue= DIRECT_MULTIDIM_ELEM(fourier_mask,ii);
+                if (maskvalue < XMIPP_EQUAL_ACCURACY)
                 {
                     DIRECT_MULTIDIM_ELEM(Mmissing,ii) = 0.;
                 }
@@ -763,14 +785,14 @@ void Prog_ml_tomo_prm::getMissingWedge(Matrix3D<double> &Mmissing,
                     if (zp >= 0)
                     {
                         if (xp <= limx0 || xp >= limxF)
-                            DIRECT_MULTIDIM_ELEM(Mmissing,ii) = 1.;
+                            DIRECT_MULTIDIM_ELEM(Mmissing,ii) = maskvalue;
                         else
                             DIRECT_MULTIDIM_ELEM(Mmissing,ii) = 0.;
                     }
                     else
                     {
                         if (xp <= limxF || xp >= limx0)
-                            DIRECT_MULTIDIM_ELEM(Mmissing,ii) = 1.;
+                            DIRECT_MULTIDIM_ELEM(Mmissing,ii) = maskvalue;
                         else
                             DIRECT_MULTIDIM_ELEM(Mmissing,ii) = 0.;
                     }
@@ -856,10 +878,10 @@ void Prog_ml_tomo_prm::calculatePdfInplane()
 /// Mask references 
 void Prog_ml_tomo_prm::maskReferences(std::vector< VolumeXmippT<double> > &Iref)
 {
+    // This is now obsolete because afterwards real_mask is applied to the references
+    /* 
     Matrix3D<int> mask, omask;
     double dum, avg;
-
-    // TODO: combine maskReferences and precalculateA2 ?
 
     // prepare masks
     mask.resize(dim, dim, dim);
@@ -870,14 +892,10 @@ void Prog_ml_tomo_prm::maskReferences(std::vector< VolumeXmippT<double> > &Iref)
     BinarySphericalMask(omask, hdim, OUTSIDE_MASK);
     for (int refno = 0; refno < nr_ref; refno++)
     {
-        // Rotate some arbitrary (off-axis) angle and rotate back again to remove high frequencies
-        // that will be affected by the interpolation due to rotation
-        // This makes that the A2 values of the rotated references are much less sensitive to rotation
-        Iref[refno]().selfApplyGeometry( Euler_rotation3DMatrix(32., 61., 53.), IS_NOT_INV, DONT_WRAP);
-        Iref[refno]().selfApplyGeometry( Euler_rotation3DMatrix(32., 61., 53.), IS_INV, DONT_WRAP);
         computeStats_within_binary_mask(omask, Iref[refno](), dum, dum, avg, dum);
         apply_binary_mask(mask, Iref[refno](), Iref[refno](), avg);
     }
+    */
 
 }
 
@@ -905,6 +923,13 @@ void Prog_ml_tomo_prm::precalculateA2(std::vector< VolumeXmippT<double> > &Iref)
     Maux.setXmippOrigin();
     for (int refno = 0; refno < nr_ref; refno++)
     {
+
+        // Rotate some arbitrary (off-axis) angle and rotate back again to remove high frequencies
+        // that will be affected by the interpolation due to rotation
+        // This makes that the A2 values of the rotated references are much less sensitive to rotation
+        Iref[refno]().selfApplyGeometry( Euler_rotation3DMatrix(32., 61., 53.), IS_NOT_INV, DONT_WRAP);
+        Iref[refno]().selfApplyGeometry( Euler_rotation3DMatrix(32., 61., 53.), IS_INV, DONT_WRAP);
+
         // Calculate A2 for all different orientations
         for (int angno = 0; angno < nr_ang; angno++)
         {
@@ -1543,10 +1568,7 @@ void Prog_ml_tomo_prm::expectation(
     bool fill_real_space;
     int num_img_tot;
     
-    // Apply spherical masks to references
-    maskReferences(Iref);
-
-    // Generate (FT of) each rotated version of all references
+    // Precalculate A2-values for all references
     precalculateA2(Iref);
 
     // Pre-calculate pdf of all in-plane transformations
@@ -1793,32 +1815,41 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
     {
         if (do_missing)
         {
-            double sum_complete_wedge = 0;
+            double sum_complete_wedge = 0.;
+            double sum_complete_fourier = 0.;
             Matrix3D<double> Mcomplete(dim,dim,dim);
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Mcomplete)
             {
                 if (j<XSIZE(Msumallwedges))
+                {
                     sum_complete_wedge += DIRECT_VOL_ELEM(Msumallwedges,k,i,j);
+                    sum_complete_fourier += DIRECT_VOL_ELEM(fourier_mask,k,i,j);
+                }
                 else
+                {
                     sum_complete_wedge += DIRECT_VOL_ELEM(Msumallwedges,
                                                           (dim-k)%dim,(dim-i)%dim,dim-j);
+                    sum_complete_fourier += DIRECT_VOL_ELEM(fourier_mask,
+                                                            (dim-k)%dim,(dim-i)%dim,dim-j);
+                }
             }
 #define DEBUG_UPDATE_SIGMA
 #ifdef DEBUG_UPDATE_SIGMA
-            std::cerr<<" sum_complete_wedge= "<<sum_complete_wedge<<" = "<<100*sum_complete_wedge/(sumw_allrefs*ddim3)<<"%"<<std::endl;
-            std::cerr<<" ddim3= "<<ddim3<<std::endl;
+            std::cerr<<" sum_complete_wedge= "<<sum_complete_wedge<<" = "<<100*sum_complete_wedge/(sumw_allrefs*sum_complete_fourier)<<"%"<<std::endl;
+            std::cerr<<" sum_complete_fourier= "<<sum_complete_fourier<<std::endl;
             std::cerr<<" sumw_allrefs= "<<sumw_allrefs<<std::endl;
             std::cerr<<" wsum_sigma_noise= "<<wsum_sigma_noise<<std::endl;
             std::cerr<<" sigma_noise_old= "<<sigma_noise<<std::endl;
-            std::cerr<<" sigma_new_impute= "<<sqrt((sigma_noise*(ddim3 -  ( sum_complete_wedge / sumw_allrefs ) ) + wsum_sigma_noise)/(sumw_allrefs * ddim3))<<std::endl;
+            std::cerr<<" sigma_new_impute= "<<sqrt((sigma_noise*(sumw_allrefs*sum_complete_fourier -  sum_complete_wedge  ) + wsum_sigma_noise)/(sumw_allrefs * sum_complete_fourier))<<std::endl;
             std::cerr<<" sigma_new_noimpute= "<<sqrt(wsum_sigma_noise / (sum_complete_wedge))<<std::endl;
-            std::cerr<<" sigma_new_nomissing= "<<sqrt(wsum_sigma_noise / (sumw_allrefs * ddim3))<<std::endl;
+            std::cerr<<" sigma_new_nomissing= "<<sqrt(wsum_sigma_noise / (sumw_allrefs * sum_complete_fourier))<<std::endl;
 #endif
             if (do_impute)
             {
-                sigma_noise *= ddim3 - ( sum_complete_wedge / sumw_allrefs );
+                sigma_noise *= sigma_noise;
+                sigma_noise *= sumw_allrefs*sum_complete_fourier - sum_complete_wedge ;
                 sigma_noise += wsum_sigma_noise;
-                sigma_noise =  sqrt(sigma_noise / (sumw_allrefs * ddim3));
+                sigma_noise =  sqrt(sigma_noise / (sumw_allrefs * sum_complete_fourier));
             }
             else
             {
@@ -1913,12 +1944,39 @@ void Prog_ml_tomo_prm::writeOutputFiles(const int iter, DocFile &DFo,
         fracline(1) = 1000 * conv[refno]; // Output 1000x the change for precision
         DFl.insert_comment(fn_tmp);
         DFl.insert_data_line(fracline);
+
         if (iter >= 1 && do_missing)
         {
-            Vt()=wsumweds[refno];
+
+            double sumw = alpha_k[refno]*sumw_allrefs;
+            Vt().resize(dim,dim,dim);
+            Vt().setXmippOrigin();
+            Vt().initZeros();
+            int yy, zz;
+            int dimb = (dim - 1)/2;
+            for ( int z=0, ii=0; z<dim; z++ ) 
+            {
+                if ( z > dimb ) zz = z-dim;
+                else zz = z;
+                for ( int y=0; y<dim; y++ ) 
+                {
+                    if ( y > dimb ) yy = y-dim;
+                    else yy = y;
+                    for ( int xx=0; xx<hdim + 1; xx++, ii++ ) 
+                    {
+                        if (xx <= FINISHINGX(Vt()))
+                        {
+                            VOL_ELEM(Vt(),zz,yy,xx)=
+                                DIRECT_MULTIDIM_ELEM(wsumweds[refno],ii) / sumw;
+                            VOL_ELEM(Vt(),zz,yy,-xx)=
+                                DIRECT_MULTIDIM_ELEM(wsumweds[refno],ii) / sumw;
+                        }
+                    } 
+                }
+            }
             fn_tmp = fn_base + "_ref";
             fn_tmp.compose(fn_tmp, refno + 1, "");
-            fn_tmp = fn_tmp + ".wsumwedge";
+            fn_tmp = fn_tmp + ".wedge";
             Vt.write(fn_tmp);
         }
     }
