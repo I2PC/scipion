@@ -1006,8 +1006,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     std::vector<double> &pdf_directions)
 {
 
-//#define DEBUG_EXPSINGLE
-#ifdef DEBUG_EXPSINGLE
+#ifdef DEBUG
     std::cerr<<"start expectationSingleImage"<<std::endl;
     TimeStamp t0, t1; 
     time_config();
@@ -1409,7 +1408,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
 
     pthread_mutex_unlock(  &mltomo_weightedsum_update_mutex );
 
-#ifdef DEBUG_EXPSINGLE
+#ifdef DEBUG
     std::cerr<<"finished expectationSingleImage"<<std::endl;
     print_elapsed_time(t0); 
 #endif
