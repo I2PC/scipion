@@ -101,7 +101,7 @@ void XmippFftw::setReal(MultidimArray<double> &input)
             fPlanBackward = fftw_plan_dft_c2r(ndim, N,
                 (fftw_complex*) MULTIDIM_ARRAY(fFourier), MULTIDIM_ARRAY(*fReal),
                 FFTW_ESTIMATE);
-            if (fPlanForward == NULL || fPlanForward == NULL)
+            if (fPlanForward == NULL || fPlanBackward == NULL)
                 REPORT_ERROR(1, "FFTW plans cannot be created");
             delete [] N;
             dataPtr=MULTIDIM_ARRAY(*fReal);
