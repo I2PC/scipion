@@ -24,7 +24,7 @@
  ***************************************************************************/
 #include "ml_tomo.h"
 
-#define DEBUG
+//#define DEBUG
 // For blocking of threads
 pthread_mutex_t mltomo_weightedsum_update_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mltomo_selfile_access_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -903,7 +903,6 @@ void Prog_ml_tomo_prm::maskReferences(std::vector< VolumeXmippT<double> > &Iref)
 void Prog_ml_tomo_prm::precalculateA2(std::vector< VolumeXmippT<double> > &Iref)
 {
 
-#define DEBUG
 #ifdef DEBUG
     std::cerr<<"start precalculateA2"<<std::endl;
     TimeStamp t0; 
@@ -1007,7 +1006,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     std::vector<double> &pdf_directions)
 {
 
-#define DEBUG_EXPSINGLE
+//#define DEBUG_EXPSINGLE
 #ifdef DEBUG_EXPSINGLE
     std::cerr<<"start expectationSingleImage"<<std::endl;
     TimeStamp t0, t1; 
@@ -1143,7 +1142,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                 mycorrAA = corrA2[refno*nr_ang + angno];
                 Maux = Maux2 * mycorrAA;
 
-#define DEBUG_MINDIFF
+//#define DEBUG_MINDIFF
 #ifdef DEBUG_MINDIFF
                 Matrix3D<double> Maux_ori2=Maux2;
                 Matrix3D<double> Maux_ori=Iref[refno]();
@@ -1293,7 +1292,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
         if (ABS((mindiff - trymindiff) / sigma_noise2) > 500.)
         {
 
-#define DEBUG_REDOCOUNTER
+//#define DEBUG_REDOCOUNTER
 #ifdef DEBUG_REDOCOUNTER
             std::cerr<<"repeating mindiff "<<redo_counter<<"th time"<<std::endl;
             std::cerr<<"trymindiff= "<<trymindiff<<" mindiff= "<<mindiff<<std::endl;
@@ -1440,7 +1439,7 @@ void * threadMLTomoExpectationSingleImage( void * data )
     std::vector<double> *sumwsc = thread_data->sumwsc;
     std::vector<double> *sumwsc2 = thread_data->sumwsc2;
 
-#define DEBUG_THREAD
+//#define DEBUG_THREAD
 #ifdef DEBUG_THREAD
     std::cerr<<"start threadMLTomoExpectationSingleImage"<<std::endl;
 #endif
@@ -1833,7 +1832,7 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
                                                             (dim-k)%dim,(dim-i)%dim,dim-j);
                 }
             }
-#define DEBUG_UPDATE_SIGMA
+//#define DEBUG_UPDATE_SIGMA
 #ifdef DEBUG_UPDATE_SIGMA
             std::cerr<<" sum_complete_wedge= "<<sum_complete_wedge<<" = "<<100*sum_complete_wedge/(sumw_allrefs*sum_complete_fourier)<<"%"<<std::endl;
             std::cerr<<" sum_complete_fourier= "<<sum_complete_fourier<<std::endl;
@@ -1974,9 +1973,9 @@ void Prog_ml_tomo_prm::writeOutputFiles(const int iter, DocFile &DFo,
                     } 
                 }
             }
-            fn_tmp = fn_base + "_ref";
+            fn_tmp = fn_base + "_wedge";
             fn_tmp.compose(fn_tmp, refno + 1, "");
-            fn_tmp = fn_tmp + ".wedge";
+            fn_tmp = fn_tmp + ".vol";
             Vt.write(fn_tmp);
         }
     }
