@@ -536,7 +536,13 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
         while(1)
         {
             if(counter++ > 1000)
-                error_exit("Too small amount of memory, please increase it with -mem option");
+                {
+                chunk_angular_distance= 0.001;
+                std::cerr << "****************************************************" << std::endl;
+                std::cerr << "* WARNING: The neighbourhood does not fit in memory " << std::endl;
+                std::cerr << "****************************************************" << std::endl;
+                break;
+                }
             double area_chunk=non_reduntant_area_of_ewald_sphere/number_cpus;
             //area chunk is area of spheric casket=2 PI h
             chunk_angular_distance=acos(1-area_chunk/(2*PI));
@@ -552,6 +558,7 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
                    ceil(area_chunck_neigh / areaVoronoiRegionReferenceLibrary);
             //#define DEBUG        
             #ifdef DEBUG
+            std::cerr << "\n\ncounter " << counter << std::endl;
             std::cerr << "area_chunk " << area_chunk << std::endl;
             std::cerr << "2*chunk_angular_distance " << 2*chunk_angular_distance << std::endl;
             //NEXT ONE IS SAMPLING NOT ANOTHERSAMPLING
