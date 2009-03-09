@@ -173,6 +173,9 @@ public:
     // List of image pointers
     std::vector < Matrix2D<double> *> img;
 
+    // Index of the image closest to 0 degrees in tilt
+    int iMinTilt;
+
     // List of tilt angles
     std::vector < double > tiltList;
 
