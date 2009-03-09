@@ -27,7 +27,7 @@
 
 #include <data/args.h>
 #include <data/filters.h>
-#include <data/fft.h>
+#include <data/fftw.h>
 #include <data/docfile.h>
 #include <data/de_solver.h>
 #include <fstream>
@@ -69,8 +69,34 @@ public:
        // Check it is approximately a rotation
        if (!showMode)
        {
-           double A12det=A12.det();
-           if (ABS(A12det)<0.9 || ABS(A12det)>1.1) return 1e20;
+           // Check that the eigenvalues are close to 1
+           std::complex<double> a=A12(0,0);
+           std::complex<double> b=A12(0,1);
+           std::complex<double> c=A12(1,0);
+           std::complex<double> d=A12(1,1);
+           std::complex<double> eig1=(a+d)/2.0+sqrt(4.0*b*c+(a-d)*(a-d))/2.0;
+           std::complex<double> eig2=(a+d)/2.0-sqrt(4.0*b*c+(a-d)*(a-d))/2.0;
+           double abs_eig1=abs(eig1);
+           double abs_eig2=abs(eig2);
+
+           if (abs_eig1<0.95 || abs_eig1>1.05) return 1e20*ABS(abs_eig1-1);
+           if (abs_eig2<0.95 || abs_eig2>1.05) return 1e20*ABS(abs_eig2-1);
+
+           // Compute the eigenvalues of A*A^t disregarding the shifts
+           // A*A^t=[a b; c d]
+       
+           a=A12(0,0)*A12(0,0)+A12(0,1)*A12(0,1);
+           b=A12(0,0)*A12(1,0)+A12(0,1)*A12(1,1);
+           c=b;
+           d=A12(1,0)*A12(1,0)+A12(1,1)*A12(1,1);
+           eig1=(a+d)/2.0+sqrt(4.0*b*c+(a-d)*(a-d))/2.0;
+           eig2=(a+d)/2.0-sqrt(4.0*b*c+(a-d)*(a-d))/2.0;
+           abs_eig1=abs(eig1);
+           abs_eig2=abs(eig2);
+
+           if (abs_eig1<0.95 || abs_eig1>1.05) return 1e20*ABS(abs_eig1-1);
+           if (abs_eig2<0.95 || abs_eig2>1.05) return 1e20*ABS(abs_eig2-1);
+           if (abs(c)>0.05)                    return 1e20*ABS(abs(c));
        }
 
        // Produce the transformed images
@@ -376,6 +402,8 @@ void Prog_tomograph_alignment::produceSideInfo() {
        init_progress_bar(Nimg);
        int n=0;
        SF.go_first_ACTIVE();
+       iMinTilt=-1;
+       double minTilt=1000;
        while (!SF.eof()) {
           FileName fn=SF.NextImg();
           if (fn=="") break;
@@ -385,6 +413,11 @@ void Prog_tomograph_alignment::produceSideInfo() {
           img_i->setXmippOrigin();
           img.push_back(img_i);
           tiltList.push_back(imgaux.tilt());
+          if (ABS(imgaux.tilt())<minTilt)
+          {
+             iMinTilt=n;
+             minTilt=ABS(imgaux.tilt());
+          }
           name_list.push_back(imgaux.name());
 
           progress_bar(n++);
@@ -479,15 +512,13 @@ void * threadComputeTransform( void * args )
 	std::cout << "Cost for [" << jj_1 << "] - ["
                   << jj << "] = " << cost << std::endl;
 	pthread_mutex_unlock( &printingMutex );
-	affineTransformations[jj_1][jj]=Aij;
-	affineTransformations[jj][jj_1]=Aji;
     }
 	
     return NULL;
 }
  
 /* Generate landmark set --------------------------------------------------- */
-#define DEBUG
+//#define DEBUG
 void Prog_tomograph_alignment::generateLandmarkSet() {
     if (!exists(fnRoot+"_landmarks.txt"))
     {
@@ -810,13 +841,15 @@ bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain)
     for (int K=0; K<2 && chain.size()>seqLength; K++)
     {
         sort(chain.begin(), chain.end());
-        int chainLength=chain.size();
         Matrix1D<double> rii(2), rjj(2), newrjj(2);
 
         // Refine every step
         for (int step=2; step<=maxStep; step++)
         {
+            int chainLength=chain.size();
+
             // Refine forwards every step
+            int ileft=-1;
             for (int i=0; i<chainLength-step; i++)
             {
                 int ii=chain[i].imgIdx;
@@ -830,12 +863,15 @@ bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain)
                     chain[i+step].x=XX(newrjj);
                     chain[i+step].y=YY(newrjj);
                 }
+                else
+                    ileft=i;
             }
 
             #ifdef DEBUG
                 // COSS showRefinement=(step==maxStep);
             #endif
             // Refine backwards all images
+            int iright=chainLength;
             for (int i=chainLength-1; i>=1; i--)
             {
                 int ii=chain[i].imgIdx;
@@ -849,12 +885,24 @@ bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain)
                     chain[i-1].x=XX(newrjj);
                     chain[i-1].y=YY(newrjj);
                 }
+                else
+                    iright=i;
             }
             #ifdef DEBUG
                 // COSS: showRefinement=false;
             #endif
+
+            LandmarkChain refinedChain;
+            for (int ll=ileft+1; ll<=iright-1; ll++)
+               refinedChain.push_back(chain[ll]);
+            chain=refinedChain;
+            double tilt0=tiltList[chain[0].imgIdx];
+            double tiltF=tiltList[chain[chain.size()-1].imgIdx];
+            double lengthThreshold=XMIPP_MAX(3,FLOOR(seqLength*cos(DEG2RAD(0.5*(tilt0+tiltF)))));
+            if (chain.size()<lengthThreshold) return false;
         }
 
+#ifdef NEVER_DEFINED
         // Check that all images in the stack correlate well with the
         // average of all pieces
         int halfSize=XMIPP_MAX(ROUND(localSize*XSIZE(*img[0]))/2,4);
@@ -911,6 +959,7 @@ bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain)
         avgCorr/=refinedChain.size();
         chain.clear();
         chain=refinedChain;
+#endif
     }
     
     // Check that the chain is of the desired length
@@ -1158,7 +1207,6 @@ void Prog_tomograph_alignment::run() {
 
     // Exhaustive search for rot
     double bestError=0, bestRot=-1;
-    // for (double rot=100; rot<=100; rot+=deltaRot)
     for (double rot=0; rot<=180-deltaRot; rot+=deltaRot)
     {
         alignment->clear();
@@ -1216,6 +1264,7 @@ void Prog_tomograph_alignment::run() {
     bestPreviousAlignment->tilt=axisAngles(1);
 
     // Save the alignment
+    writeLandmarkSet(fnRoot+"_good_landmarks.txt");
     std::ofstream fh_out;
     fh_out.open((fnRoot+"_alignment.txt").c_str());
     if (!fh_out)
@@ -1443,9 +1492,11 @@ void Alignment::updateModel()
         computeGeometryDependentOfRotation();
     }
     else
+    {
         // Update the individual di
         for (int i=0; i<Nimg; i++)
-            di[i]=prm->barpi[i]-Ai[i]*barri[i];
+            if (i!=prm->iMinTilt) di[i]=prm->barpi[i]-Ai[i]*barri[i]-diaxis[i];
+    }
     #ifdef DEBUG
         std::cout << "Step 2: error=" << computeError() << std::endl;
     #endif
