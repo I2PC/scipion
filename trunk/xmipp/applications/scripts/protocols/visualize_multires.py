@@ -11,17 +11,17 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # Iterations
-Iterations='1 2 3'
+Iterations='1 2'
 # Show model for angular assignment
 DoShowModelF=False
 # Show reconstructed volume
-DoShowVolume=True
+DoShowVolume=False
 # Show model after postprocessing
 DoShowModel=False
 # Show angle convergence
 DoShowAngleConvergence=False
 # Show vector difference
-DoShowVectorDifferences=False
+DoShowVectorDifferences=True
 # Show resolution
 DoShowResolution=False
 #------------------------------------------------------------------------------------------------
@@ -93,7 +93,6 @@ class VisualizeMultires3DClass:
 
        # Produce side info
        self.myMultiRes=xmipp_protocol_multires.MultiResClass(
-       myMultiRes=MultiResClass(
       	            xmipp_protocol_multires.SelFileName,
 		    xmipp_protocol_multires.ReferenceFileName,
 		    xmipp_protocol_multires.WorkingDir,
@@ -133,10 +132,10 @@ class VisualizeMultires3DClass:
 		    xmipp_protocol_multires.Recenter,
 
 		    xmipp_protocol_multires.DoParallel,
-		    xmipp_protocol_multires.MyNumberOfCPUs,
-		    xmipp_protocol_multires.MyNumberOfCPUsReduced,
-                    xmipp_protocol_multires.MyNumberOfThreads,
-		    xmipp_protocol_multires.MyMachineFile,
+		    xmipp_protocol_multires.NumberOfMpiProcesses,
+		    xmipp_protocol_multires.NumberOfMpiProcessesReduced,
+                    xmipp_protocol_multires.NumberOfThreads,
+		    xmipp_protocol_multires.SystemFlavour,
 
 		    False
                   )
@@ -165,7 +164,8 @@ class VisualizeMultires3DClass:
 	       lastIter=self.lastIteration()
 	       if lastIter>=0: self.iterationList+=[lastIter]
 	    else:
-	       self.iterationList+=[int(listaIntervalo[0])]
+	       if not listaIntervalo[0]=='':
+                  self.iterationList+=[int(listaIntervalo[0])]
 	 else:
 	    if listaIntervalo[1]=="last":
 	       lastIter=self.lastIteration()
@@ -290,8 +290,7 @@ class VisualizeMultires3DClass:
           plot.prepare_empty_plot("Vector differences","Degrees","Histogram")
 	  for i in range(len(self.iterationList)):
               diffFile="Iteration"+itoa(self.iterationList[i],2)+\
-	               "/diff_angles"+itoa(self.iterationList[i],2)+\
-		       "_vec_diff_hist.txt"
+	               "/angular_change_histogram.txt"
               if i==0:
                  plot.send(" plot '" + diffFile +
                     "' using 1:2 title 'Iteration "+
