@@ -5,7 +5,8 @@ def launch_job(programname,
                DoParallel,
                NumberOfMpiProcesses,
                NumberOfThreads,
-               SystemFlavour):
+               SystemFlavour,
+	       onlyBuildCommand=False):
 
     import os,sys
 
@@ -50,4 +51,5 @@ def launch_job(programname,
 
     print '* ',command,'\n'
     log.info(command)
-    os.system(command)
+    if (not onlyBuildCommand): os.system(command)
+    return(command);
