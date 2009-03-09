@@ -38,12 +38,14 @@ you can contact the author at fvandenb@iridia.ulb.ac.be
 #define maxDWORD 4294967295 //2^32-1;
 #define INF 1.7E+308 
 #define EOL 10
+#ifndef PI
 #define PI 3.1415926535897932384626433832795
+#endif
 #define ROOT2 1.41421356
  
-inline double abs( const double t1 )
+inline double condorabs( const double t1 )
 {
-	return t1 > 0.0 ? t1 : -t1;
+       return t1 > 0.0 ? t1 : -t1;
 }
 
 inline double sign( const double a )
