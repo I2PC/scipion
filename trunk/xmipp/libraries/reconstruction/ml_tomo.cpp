@@ -290,7 +290,7 @@ void Prog_ml_tomo_prm::produceSideInfo()
         REPORT_ERROR(1,"ml_tomo ERROR%: only cubic volumes are allowed");
 
 
-    // MAke fourier and real-space masks
+    // Make fourier and real-space masks
     Matrix3D<int> int_mask(dim,dim,dim);
     int_mask.setXmippOrigin();
     real_mask.resize(dim, dim, dim);
@@ -305,7 +305,7 @@ void Prog_ml_tomo_prm::produceSideInfo()
     Matrix3D<double> cosine_mask(dim,dim,dim);
     cosine_mask.setXmippOrigin();
     fourier_mask.resize(dim,dim,hdim+1);
-    int r_max_resol = max_resol * dim;
+    int r_max_resol = XMIPP_MIN(hdim, FLOOR(max_resol * dim));
     RaisedCosineMask(cosine_mask, r_max_resol - 2, r_max_resol, INNER_MASK);
     // exclude origin voxel
     VOL_ELEM(cosine_mask,0,0,0) = 0.;
@@ -321,7 +321,10 @@ void Prog_ml_tomo_prm::produceSideInfo()
             else yy = y;
             for ( int xx=0; xx<hdim + 1; xx++, ii++ ) 
             {
-                DIRECT_MULTIDIM_ELEM(fourier_mask,ii) = VOL_ELEM(cosine_mask,xx,yy,zz);
+                if (xx <= FINISHINGX(cosine_mask))
+                {
+                    DIRECT_MULTIDIM_ELEM(fourier_mask,ii) = VOL_ELEM(cosine_mask,xx,yy,zz);
+                }
             }
         }
     }
@@ -435,6 +438,44 @@ void Prog_ml_tomo_prm::produceSideInfo()
     }
 
 
+    // Fill average scales 
+    if (do_norm)
+    {
+        average_scale = 1.;
+        refs_avgscale.clear();
+        for (int refno=0;refno<nr_ref; refno++)
+        {
+            refs_avgscale.push_back(1.);
+        }
+    }
+
+    // read in model fractions if given on command line
+    if (fn_frac != "")
+    {
+        double sumfrac = 0.;
+        DocFile DF;
+        DocLine DL;
+        DF.read(fn_frac);
+        DF.go_first_data_line();
+        for (int refno = 0; refno < nr_ref; refno++)
+        {
+            DL = DF.get_current_line();
+            alpha_k[refno] = DL[0];
+            if (do_norm)
+            {
+                refs_avgscale[refno] = DL[3];
+            }
+            sumfrac += alpha_k[refno];
+            DF.next_data_line();
+        }
+        if (ABS(sumfrac - 1.) > 1e-3)
+            if (verb > 0) std::cerr << " ->WARNING: Sum of all expected model fractions (" << sumfrac << ") is not one!" << std::endl;
+        for (int refno = 0; refno < nr_ref; refno++)
+        {
+            alpha_k[refno] /= sumfrac;
+        }
+    }
+
 #ifdef DEBUG
     std::cerr<<"do_generate_refs ="<<do_generate_refs<<std::endl;
     std::cerr<<"nr_ref= "<<nr_ref<<std::endl; 
@@ -508,10 +549,8 @@ void Prog_ml_tomo_prm::generateInitialReferences()
 void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
 {
 
-    int                       c, idum, refno = 0;
+    int                       c, idum;
     DocFile                   DF;
-    DocLine                   DL;
-    double                    aux, sumfrac = 0.;
     FileName                  fn_tmp;
     VolumeXmipp               img;
     std::vector<Matrix1D<double> > Vdum;
@@ -538,13 +577,18 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
         FileName fn_img=SFr.NextImg();
         img.read(fn_img);
         img().setXmippOrigin();
+
+        // Rotate some arbitrary (off-axis) angle and rotate back again to remove high frequencies
+        // that will be affected by the interpolation due to rotation
+        // This makes that the A2 values of the rotated references are much less sensitive to rotation
+        img().selfApplyGeometry( Euler_rotation3DMatrix(32., 61., 53.), IS_NOT_INV, DONT_WRAP);
+        img().selfApplyGeometry( Euler_rotation3DMatrix(32., 61., 53.), IS_INV, DONT_WRAP);
+
         Iref.push_back(img);
         Iold.push_back(img);
         // Default start is all equal model fractions
         alpha_k.push_back((double)1 / SFr.ImgNo());
-        //Iref[refno].set_weight(alpha_k[refno] * (double)nr_exp_images);
         nr_ref++;
-        refno++;
     }
 
     // Store tomogram angles, offset vectors and missing wedge parameters
@@ -598,40 +642,6 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
         }
     } 
 
-    // Fill average scales 
-    if (do_norm)
-    {
-        average_scale = 1.;
-        refs_avgscale.clear();
-        for (int refno=0;refno<nr_ref; refno++)
-        {
-            refs_avgscale.push_back(1.);
-        }
-    }
-
-    // read in model fractions if given on command line
-    if (fn_frac != "")
-    {
-        DF.read(fn_frac);
-        DF.go_first_data_line();
-        for (refno = 0; refno < nr_ref; refno++)
-        {
-            DL = DF.get_current_line();
-            alpha_k[refno] = DL[0];
-            if (do_norm)
-            {
-                refs_avgscale[refno] = DL[3];
-            }
-            sumfrac += alpha_k[refno];
-            DF.next_data_line();
-        }
-        if (ABS(sumfrac - 1.) > 1e-3)
-            if (verb > 0) std::cerr << " ->WARNING: Sum of all expected model fractions (" << sumfrac << ") is not one!" << std::endl;
-        for (refno = 0; refno < nr_ref; refno++)
-        {
-            alpha_k[refno] /= sumfrac;
-        }
-    }
 
 #ifdef  DEBUG
     std::cerr<<"Finished produceSideInfo2"<<std::endl;
@@ -754,6 +764,8 @@ void Prog_ml_tomo_prm::getMissingWedge(Matrix3D<double> &Mmissing,
 #ifdef DEBUG_WEDGE
     std::cerr<<"tg0_y= "<<tg0_y<<std::endl;
     std::cerr<<"tgF_y= "<<tgF_y<<std::endl;
+    std::cerr<<"XMIPP_EQUAL_ACCURACY= "<<XMIPP_EQUAL_ACCURACY<<std::endl;
+    std::cerr<<"Ainv= "<<Ainv<<" A= "<<A<<std::endl;
 #endif
 
     int zz, yy;
@@ -922,13 +934,6 @@ void Prog_ml_tomo_prm::precalculateA2(std::vector< VolumeXmippT<double> > &Iref)
     Maux.setXmippOrigin();
     for (int refno = 0; refno < nr_ref; refno++)
     {
-
-        // Rotate some arbitrary (off-axis) angle and rotate back again to remove high frequencies
-        // that will be affected by the interpolation due to rotation
-        // This makes that the A2 values of the rotated references are much less sensitive to rotation
-        Iref[refno]().selfApplyGeometry( Euler_rotation3DMatrix(32., 61., 53.), IS_NOT_INV, DONT_WRAP);
-        Iref[refno]().selfApplyGeometry( Euler_rotation3DMatrix(32., 61., 53.), IS_INV, DONT_WRAP);
-
         // Calculate A2 for all different orientations
         for (int angno = 0; angno < nr_ang; angno++)
         {
