@@ -39,12 +39,13 @@ PosName='Common'
 
 # Perform automatic particle picking
 """ Perform automatic particle picking """
-AutomaticPicking=False
+AutomaticPicking=True
 
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/home/coss/Carmen'
+ProjectDir='/gpfs/fs1/home/cnb01/COSS/Carmen'
+
 # {expert} Directory name for logfiles:
 LogDir='Logs'
 
@@ -56,55 +57,21 @@ LogDir='Logs'
     It does not require any additional software, other than xmipp
 """
 NumberOfThreads=1
-# This script has been parallelized at python level
-""" This python script can be run as a parallel job,
-    In order to use several CPUs you will need to
-    answer yes to the "Use a job queing system" pop-up
-    window and after the queueing command add
-    mpirun -np N -machinefile machine.txt 
-    or whatever is adecuate in your computer
-    (N is the number of CPUs).  Each process will create a
-    different log file. The names of these files are the
-    same as the ones used by the sequential program plus the process number
-"""
-UselessVariable='read help'
 
-# {expert} Abort if mpi is not installed?
-"""If set to True the script will abort if mpi4py is not installed and one executes this script through mpirun
+# Number of MPI processes to use:
+NumberOfMpiProcesses=32
+
+# MPI system Flavour 
+""" Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
+    Ask the person who installed your xmipp version, which option to use. Or read: xxx
 """
-CheckMpi=False
+SystemFlavour=''
 
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
-#
-#Next lines will import mpi4py package, if import fails a dummy 
-#mpi class will be created. 
-#In this way the same file may be use for mpi and
-#serial jobs  
-try:
-    from mpi4py import MPI
-    mpi = MPI.COMM_WORLD
-    mpiActive=True
-except ImportError:
-    class DummyMPI:
-        '''A dummy MPI class for running serial jobs.'''
-        def Get_rank(dummy):
-            return 0
-        def Get_size(dummy):
-            return 1
-        def Get_processor_name(dummy):
-            return 'localhost' 
-        def Barrier(dummy):
-            return 1
-        def Bcast(sendbuffer):
-            return sendbuffer
-    MPI = DummyMPI()
-    mpi = DummyMPI()
-    mpiActive=False
-#
 #
 from Tkinter import *
 # Create a GUI automatically from a selfile of micrographs
@@ -119,7 +86,8 @@ class particle_pick_class:
                  ProjectDir,
                  LogDir,
                  NumberOfThreads,
-                 CheckMpi
+		 NumberOfMpiProcesses,
+                 SystemFlavour
                  ):
 
         import os,sys
@@ -144,48 +112,30 @@ class particle_pick_class:
         self.ProjectDir=ProjectDir
         self.LogDir=LogDir
         self.NumberOfThreads=NumberOfThreads
-        self.myrank = mpi.Get_rank()
-        self.nprocs = mpi.Get_size()
+        self.NumberOfMpiProcesses=NumberOfMpiProcesses
+        self.SystemFlavour=SystemFlavour
 
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
                                      LogDir,
-                                     sys.argv[0]+"_"+str(self.myrank),
+                                     sys.argv[0],
                                      self.WorkingDir)
                 
-        # Check MPI
-        if (mpiActive):
-            print "Python has mpi4py package, python parallel jobs are possible"
-            self.log.info("Python has mpi4py package, python parallel jobs are possible")        
-        else:
-            print "Python has NOT mpi4py package, python parallel jobs are NOT possible"
-            self.log.info("Python has NOT mpi4py package, python parallel jobs are NOT possible")
-            if (CheckMpi):
-                print "mpi is not installed and checkmpi flag is set to True"
-                print "disable mpi checking flag in the script" 
-                print "and launch it as a serial job" 
-                print "that is, without mpirun" 
-                exit(1)
-
         # Make working directory if it does not exist yet
-        if (self.myrank==0):
-            if not os.path.exists(self.WorkingDir):
-                os.makedirs(self.WorkingDir)
+        if not os.path.exists(self.WorkingDir):
+            os.makedirs(self.WorkingDir)
 
-            # Backup script
-            log.make_backup_of_script_file(sys.argv[0],
-                                           os.path.abspath(self.WorkingDir))
+        # Backup script
+        log.make_backup_of_script_file(sys.argv[0],
+        			       os.path.abspath(self.WorkingDir))
     
         # Execute protocol in the working directory
         os.chdir(self.WorkingDir)
         
         # Execute protocol in the working directory
-        if (self.myrank==0):
-            self.print_warning()
-            self.sellines=self.ReadSelfile()
-            self.MakeGui()
-        else:
-            self.AutomaticallyDetect()
+        self.print_warning()
+        self.sellines=self.ReadSelfile()
+        self.MakeGui()
 
         # Return to parent dir
         os.chdir(os.pardir)
@@ -431,20 +381,60 @@ class particle_pick_class:
                 self.selectedForAutomaticPickingTrain[i].set(1)
 
     def AutomaticallyDetect(self):
-        sendbuffer=[]
-        if self.myrank==0:
-            micrographs=[]
-            for i in range(0,len(self.selectedForAutomaticPickingAuto)):
-                if (self.selectedForAutomaticPickingAuto[i].get()):
-                    micrographs.append(self.selectedForAutomaticPickingName[i])
-            sendbuffer="*".join(map(str, micrographs))
-        if mpiActive:
-            sendbuffer = MPI.WORLD[0].Bcast(sendbuffer)
-        
-        micrographs=sendbuffer.split('*')
-        for i in range(len(micrographs)):
-            if ((i+1)%self.nprocs == self.myrank):
-                self.perform_picking(micrographs[i],True)
+        import os
+        command_file = open("pick.sh", "w")
+        for i in range(0,len(self.selectedForAutomaticPickingAuto)):
+            if (self.selectedForAutomaticPickingAuto[i].get()):
+               directory,micrograph=os.path.split(
+                  self.selectedForAutomaticPickingName[i])
+               command_file.write("( cd "+directory+
+                  "; xmipp_micrograph_mark -i "+micrograph+
+                  " -auto ../"+self.PosName+".auto -autoSelect )\n");
+        command_file.write("MPI_Barrier\n")
+        command_file.write("rm pick.sh pick.py\n")
+        command_file.close();
+
+        import tkMessageBox
+        answer=tkMessageBox._show("Execute autodetection",
+                                  "Use a job queueing system?",
+                                  tkMessageBox.QUESTION, 
+                                  tkMessageBox.YESNOCANCEL)
+        import launch_job
+        command=""
+        print("*"+answer+"*");
+        print(answer=="no" or answer==False);
+        if self.NumberOfMpiProcesses>1:
+            command=launch_job.launch_job("xmipp_run",
+                                 "-i pick.sh",
+                                 self.log,
+                                 True,
+                                 self.NumberOfMpiProcesses,
+                                 1,
+                                 self.SystemFlavour,
+                                 answer=="yes" or answer==True)
+        else:
+            os.system("chmod 755 pick.sh");
+            command=launch_job.launch_job("./pick.sh",
+                                 "",
+                                 self.log,
+                                 False,
+                                 self.NumberOfMpiProcesses,
+                                 1,
+                                 self.SystemFlavour,
+                                 answer=="yes" or answer==True)
+        if (answer=="yes" or answer==True):
+            import xmipp_protocol_gui
+            python_file = open("pick.py", "w")
+            python_file.write("WorkingDir='"+self.WorkingDir+"'\n")
+            python_file.write("NumberOfThreads=1\n")
+            python_file.write("DoParallel="+str(self.NumberOfMpiProcesses>1)+"\n")
+            python_file.write("NumberOfMpiProcesses="+str(self.NumberOfMpiProcesses)+"\n")
+            python_file.write("# {end-of-header}\n")
+            python_file.write("import os\n")
+            python_file.write('os.system("'+command+'")\n');
+            python_file.close();
+
+            d = xmipp_protocol_gui.MyQueueLaunch(self.master,"python pick.py")
 
     def CountPicked(self,micrograph,label):
         import os
@@ -528,7 +518,7 @@ class particle_pick_class:
                 sys.exit(1)
         print '*'
 
-    def perform_picking(self,name,autoSelect):
+    def perform_picking(self,name):
         import os
         import launch_job
         if name=='':
@@ -542,10 +532,7 @@ class particle_pick_class:
             arguments+=' -auto ../'+self.PosName+'.auto'
             if (self.NumberOfThreads>1):
                 arguments+=' -thr '+str(self.NumberOfThreads)
-            if (autoSelect):
-                arguments+=' -autoSelect'
-            else:
-                arguments+=' &'
+            arguments+=' &'
         launch_job.launch_job("xmipp_micrograph_mark",
                               arguments,
                               self.log,
@@ -586,7 +573,8 @@ if __name__ == '__main__':
                                           ProjectDir,
                                           LogDir,
                                           NumberOfThreads,
-                                          CheckMpi
+					  NumberOfMpiProcesses,
+                                          SystemFlavour
                                           )
 
 	# close 
