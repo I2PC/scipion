@@ -239,7 +239,7 @@ void Prog_Refine3d_prm::extended_usage()
     << " [ -k <float=0.5> ]            : wlsART-relaxation parameter for residual (kappa)\n"
     << " [ -n <int=10> ]               : Number of wlsART-iterations \n"
     << " [ -nostart ]                  : Start wlsART reconstructions from all-zero volumes \n"
-    << " [ -sym <symfile> ]            : Enforce symmetry \n"
+    << " [ -sym <symfile> ]            : Symmetry group \n"
     << " [ -filter <dig.freq.=-1> ]    : Low-pass filter volume every iteration \n"
     << " [ -sym_mask <maskfile> ]      : Local symmetry (only inside mask) \n"
     << " [ -tilt0 <float=-91.> ]       : Lower-value for restricted tilt angle search \n"
@@ -277,8 +277,7 @@ void Prog_Refine3d_prm::show()
         }
         std::cerr << "  Experimental images:     : " << fn_sel << std::endl;
         std::cerr << "  Angular sampling rate    : " << angular << std::endl;
-        if (fn_sym != "")
-            std::cerr << "  Symmetry file:           : " << fn_sym << std::endl;
+        std::cerr << "  Symmetry group:          : " << fn_sym << std::endl;
         if (fn_symmask != "")
             std::cerr << "  Local symmetry mask      : " << fn_symmask << std::endl;
         std::cerr << "  Output rootname          : " << fn_root << std::endl;
@@ -315,8 +314,7 @@ void Prog_Refine3d_prm::show()
         fh_hist << "  Initial reference volume : " << fn_vol << std::endl;
         fh_hist << "  Experimental images:     : " << fn_sel << std::endl;
         fh_hist << "  Angular sampling rate    : " << angular << std::endl;
-        if (fn_sym != "")
-            fh_hist << "  Symmetry file:           : " << fn_sym << std::endl;
+        fh_hist << "  Symmetry group:          : " << fn_sym << std::endl;
         fh_hist << "  Output rootname          : " << fn_root << std::endl;
         fh_hist << "  Convergence criterion    : " << eps << std::endl;
         if (lowpass > 0)
@@ -344,9 +342,9 @@ void Prog_Refine3d_prm::produceSideInfo(int rank)
     mysampling.SetSampling(angular);
     if (!mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
         REPORT_ERROR(3005, (std::string)"ml_refine3d::run Invalid symmetry" +  fn_sym);
-    // by default max_tilt= +91., min_tilt= -91.
-    mysampling.Compute_sampling_points(true,tilt_rangeF,tilt_range0);
-    mysampling.remove_redundant_points(symmetry, sym_order);
+    mysampling.SL.read_sym_file(fn_sym);
+    mysampling.Compute_sampling_points(true, tilt_rangeF, tilt_range0);
+    mysampling.remove_redundant_points_exhaustive(symmetry, sym_order, true, 0.75 * angular);
 
     //Only the master creates a docfile with the library angles
     if (rank == 0)
