@@ -476,7 +476,8 @@ void Prog_ml_tomo_prm::produceSideInfo()
         }
     }
 
-#ifdef DEBUG
+#define DEBUG_GENERAL
+#ifdef DEBUG_GENERAL
     std::cerr<<"do_generate_refs ="<<do_generate_refs<<std::endl;
     std::cerr<<"nr_ref= "<<nr_ref<<std::endl; 
     std::cerr<<"nr_miss= "<<nr_miss<<std::endl;
@@ -491,11 +492,14 @@ void Prog_ml_tomo_prm::produceSideInfo()
 void Prog_ml_tomo_prm::generateInitialReferences()
 {
 
-    SelFile SFtmp, SFout;
+    SelFile SFtmp;
     VolumeXmipp Iave, Itmp;
+    Matrix3D<double> Msumwedge, Mmissing;
+    Matrix3D<std::complex<double> > Fave;
     double dummy;
     FileName fn_tmp;
     SelLine line;
+    DocFile DF;
 
 #ifdef  DEBUG
     std::cerr<<"Start generateInitialReferences"<<std::endl;
@@ -507,28 +511,75 @@ void Prog_ml_tomo_prm::generateInitialReferences()
         init_progress_bar(nr_ref);
     }
 
-    // Make random subsets and calculate average images
+    if (fn_doc!="") {
+        DF.read(fn_doc);
+    }
+    // Make random subsets and calculate average images in random orientations
+    // and correct using conventional division by the sum of the wedges
+    randomize_random_generator();
     SFtmp = SF.randomize();
     int Nsub = ROUND((double)SFtmp.ImgNo() / nr_ref);
     for (int refno = 0; refno < nr_ref; refno++)
     {
-        SFout.clear();
-        SFout.reserve(Nsub);
         SFtmp.go_beginning();
         SFtmp.jump_lines(Nsub*refno);
         if (refno == nr_ref - 1) Nsub = SFtmp.ImgNo() - refno * Nsub;
         for (int nn = 0; nn < Nsub; nn++)
         {
-            SFout.insert(SFtmp.current());
-            SFtmp.NextImg();
+            fn_tmp=SFtmp.NextImg();
+            Itmp.read(fn_tmp);
+            Itmp().setXmippOrigin();
+            int iran= ROUND(rnd_unif(0., (float)(nr_ang-1)));
+            Itmp().selfApplyGeometry( all_angle_info[iran].A, IS_NOT_INV, DONT_WRAP);
+
+            // This is dirty coding...
+            // but let's first make it work...
+            if (do_wedge || do_pyramid || do_cone)
+            {
+                if (DF.search_comment(fn_tmp)) 
+                {
+                    int missno = (int)(DF(0)) - 1;
+                    getMissingWedge(Mmissing, all_angle_info[iran].A, missno);
+                }
+                else 
+                {
+                    std::cerr << "ERROR% "<<fn_tmp
+                              <<" not found in document file"
+                              <<std::endl;
+                    exit(0);
+                }
+            }
+            if (nn == 0)
+            {
+                Iave() = Itmp();
+                if (do_wedge || do_pyramid || do_cone) Msumwedge = Mmissing;
+            }
+            else
+            {
+                Iave() += Itmp();
+                if (do_wedge || do_pyramid || do_cone) Msumwedge += Mmissing;
+            }
         }
-        // TODO: rethink this all!!
-        //SFout.get_statistics(Iave, Itmp, dummy, dummy);
+        // Correct missing wedge by division by sumwedge in Fourier space
+        transformer.FourierTransform(Iave(),Fave,true);
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Fave)
+        {
+            if (DIRECT_MULTIDIM_ELEM(Msumwedge,n) > noimp_threshold)
+            {
+                DIRECT_MULTIDIM_ELEM(Fave,n) /= 
+                            DIRECT_MULTIDIM_ELEM(Msumwedge,n);
+            }
+            else
+            {
+                DIRECT_MULTIDIM_ELEM(Fave,n) = 0.;
+            }
+        }
+        transformer.inverseFourierTransform(Fave,Iave());
         fn_tmp = fn_root + "_it";
         fn_tmp.compose(fn_tmp, 0, "");
         fn_tmp = fn_tmp + "_ref";
         fn_tmp.compose(fn_tmp, refno + 1, "");
-        fn_tmp = fn_tmp + ".xmp";
+        fn_tmp = fn_tmp + ".vol";
         Iave.write(fn_tmp);
         SFr.insert(fn_tmp, SelLine::ACTIVE);
         if (verb > 0) progress_bar(refno);
@@ -926,7 +977,6 @@ void Prog_ml_tomo_prm::precalculateA2(std::vector< VolumeXmippT<double> > &Iref)
     Matrix2D<double>  A_rot_inv(4,4), I(4,4);
     Matrix3D<double> Maux(dim,dim,dim), Mmissing;
     Matrix3D<std::complex<double> > Faux, Faux2;
-    XmippFftw transformer;
 
     A2.clear();
     corrA2.clear();
@@ -1666,7 +1716,6 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
     FileName fn_tmp;
     double rr, thresh, aux, sumw_allrefs2 = 0.;
     int c;
-    XmippFftw transformer;
 
     // Update the reference images
     sumw_allrefs = 0.;
