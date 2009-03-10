@@ -23,21 +23,20 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
+#include <mpi.h>
+#include <cstring>
+#include <cstdlib>
+#include <data/funcs.h>
+#include <iostream>
+#include <sstream>
+#include <fstream>
+#include <iomanip>  
 
 #include <data/args.h>
 #include <data/image.h>
 #include <data/selfile.h>
 #include <data/docfile.h>
 #include <reconstruction/angular_class_average.h>
-
-#include <cstring>
-#include <cstdlib>
-#include <data/funcs.h>
-#include <mpi.h>
-#include <iostream>
-#include <sstream>
-#include <fstream>
-#include <iomanip>  
 
 #define TAG_WORKFORWORKER   0
 #define TAG_STOP   1

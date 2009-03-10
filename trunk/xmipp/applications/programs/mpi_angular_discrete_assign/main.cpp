@@ -25,9 +25,8 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <reconstruction/angular_discrete_assign.h>
-
 #include <mpi.h>
+#include <reconstruction/angular_discrete_assign.h>
 
 int main(int argc, char **argv)
 {

@@ -23,8 +23,8 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <reconstruction/ml_tomo.h>
 #include <mpi.h>
+#include <reconstruction/ml_tomo.h>
 
 #define TAG_DOCFILE 12
 #define TAG_DOCFILESIZE 13

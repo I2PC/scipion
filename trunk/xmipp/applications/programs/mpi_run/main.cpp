@@ -25,12 +25,12 @@
 
 //#include "mpi_run.h"
 
+#include <mpi.h>
 #include <data/args.h>
 
 #include <cstring>
 #include <cstdlib>
 #include <data/funcs.h>
-#include <mpi.h>
 
 #define TAG_WORK   0
 #define TAG_STOP   1

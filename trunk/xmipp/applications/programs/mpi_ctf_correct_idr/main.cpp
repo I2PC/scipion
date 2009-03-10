@@ -23,8 +23,8 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <reconstruction/ctf_correct_idr.h>
 #include <mpi.h>
+#include <reconstruction/ctf_correct_idr.h>
 
 /* ------------------------------------------------------------------------- */
 /* Main                                                                      */

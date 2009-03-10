@@ -25,10 +25,6 @@
 
 //#include "mpi_run.h"
 
-#include <data/args.h>
-#include <reconstruction/angular_project_library.h>
-#include <data/header.h>
-
 #include <cstring>
 #include <cstdlib>
 #include <data/funcs.h>
@@ -37,6 +33,10 @@
 #include <sstream>
 #include <fstream>
 #include <iomanip>  
+
+#include <data/args.h>
+#include <reconstruction/angular_project_library.h>
+#include <data/header.h>
 
 #define TAG_WORKFORWORKER   0
 #define TAG_STOP   1

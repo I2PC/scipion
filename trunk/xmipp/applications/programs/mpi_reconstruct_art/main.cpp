@@ -23,13 +23,13 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <reconstruction/reconstruct_art.h>
-#include <reconstruction/art_crystal.h>
-
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <unistd.h>
 #include <mpi.h>
+
+#include <reconstruction/reconstruct_art.h>
+#include <reconstruction/art_crystal.h>
 
 /* ------------------------------------------------------------------------- */
 /* Time managing stuff                                                       */

@@ -23,9 +23,9 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <reconstruction/reconstruct_wbp.h>
-
 #include <mpi.h>
+
+#include <reconstruction/reconstruct_wbp.h>
 
 int main(int argc, char **argv)
 {

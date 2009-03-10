@@ -23,9 +23,9 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <reconstruction/mlp_align2d.h>
-
 #include <mpi.h>
+
+#include <reconstruction/mlp_align2d.h>
 
 int main(int argc, char **argv)
 {

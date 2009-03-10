@@ -23,6 +23,7 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
+#include <mpi.h>
 #include <data/args.h>
 #include <reconstruction/reconstruct_fourier.h>
 #include <data/header.h>
@@ -32,7 +33,6 @@
 #include <data/funcs.h>
 #include <data/matrix2d.h>
 #include <sys/time.h>
-#include <mpi.h>
 #include <iostream>
 #include <sstream>
 #include <fstream>

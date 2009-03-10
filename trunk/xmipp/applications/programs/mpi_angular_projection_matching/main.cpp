@@ -25,20 +25,20 @@
 
 //#include "mpi_run.h"
 
+#include <mpi.h>
+#include <cstring>
+#include <cstdlib>
+#include <data/funcs.h>
+#include <iostream>
+#include <sstream>
+#include <fstream>
+#include <iomanip>
+
 #include <data/args.h>
 #include <reconstruction/angular_projection_matching.h>
 #include <data/header.h>
 #include <reconstruction/sampling.h>
 #include <reconstruction/symmetries.h>
-
-#include <cstring>
-#include <cstdlib>
-#include <data/funcs.h>
-#include <mpi.h>
-#include <iostream>
-#include <sstream>
-#include <fstream>
-#include <iomanip>
 
 #define TAG_WORKFORWORKER   0
 #define TAG_STOP   1

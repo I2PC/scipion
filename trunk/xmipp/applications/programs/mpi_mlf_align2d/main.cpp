@@ -23,9 +23,9 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <reconstruction/mlf_align2d.h>
-
 #include <mpi.h>
+
+#include <reconstruction/mlf_align2d.h>
 #define TAG_DOCFILE 12
 #define TAG_DOCFILESIZE 13
 
