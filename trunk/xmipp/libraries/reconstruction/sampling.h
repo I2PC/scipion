@@ -161,8 +161,18 @@ public:
 
     /* eliminate redundant points,
         symmetry group, symmetry order */
-
     void remove_redundant_points(const int symmetry, int sym_order);
+
+    /* eliminate redundant points,
+        symmetry group, symmetry order 
+        This function first calls remove_redundant_points,
+        and then checks each point versus all others to calculate an angular distance
+        If this distance is less than 0.8 times the angular sampling, the point is deleted
+    */
+    void remove_redundant_points_exhaustive(const int symmetry, 
+                                            int sym_order, 
+                                            bool only_half_sphere, 
+                                            double max_ang);
 
     /// Usage
     //void Usage();

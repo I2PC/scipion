@@ -1106,6 +1106,66 @@ void XmippSampling::remove_redundant_points(const int symmetry,
     }
 
 }
+
+void XmippSampling::remove_redundant_points_exhaustive(const int symmetry,
+                                                       int sym_order, 
+                                                       bool only_half_sphere,
+                                                       double max_ang)
+{
+    // Maximum distance
+    double cos_max_ang = cos(DEG2RAD(max_ang));
+    double my_dotProduct;
+    //int j_end=0;
+    Matrix1D<double>  direction(3), direction1(3);
+
+    // First call to conventional remove_redundant_points
+    remove_redundant_points(symmetry, sym_order);
+    std::vector <Matrix1D<double> > old_vector = no_redundant_sampling_points_vector;
+    std::vector <Matrix1D<double> > old_angles = no_redundant_sampling_points_angles;
+
+    // Reset no_redundant vectors
+    no_redundant_sampling_points_vector.clear();
+    no_redundant_sampling_points_angles.clear();
+
+    // Precalculate symmetry matrices
+    fill_L_R_repository();
+
+    // Then check all points versus each other
+    for (int i = 0; i < old_angles.size(); i++)
+    {
+        //direction1=(old_vector[i]).transpose();
+        direction1=old_vector[i];
+        bool uniq = true;
+        for (int j = 0; j < R_repository.size(); j++)
+        {
+            for (int k = 0; k < no_redundant_sampling_points_vector.size(); k++)
+            {
+                direction =  L_repository[j] * 
+                    (no_redundant_sampling_points_vector[k].transpose() * 
+                     R_repository[j]).transpose();
+                //Calculate distance
+                my_dotProduct = dotProduct(direction,direction1);
+                if (only_half_sphere)
+                    my_dotProduct = ABS(my_dotProduct);
+
+                if (my_dotProduct > cos_max_ang)
+                {
+                    uniq = false;
+                    break; 
+                }
+            }// for k
+            if (!uniq) break;
+        } // for j
+        if (uniq)
+        {
+            no_redundant_sampling_points_vector.push_back(old_vector[i]);
+            no_redundant_sampling_points_angles.push_back(old_angles[i]);
+        }
+    } // for i
+
+}
+
+
 //THIs FUNCTION IS NOW OBSOLETE 
 //SINCE read_sym_file does not longer need a file
 //use symmetry functions instead
@@ -1796,7 +1856,7 @@ void XmippSampling::fill_L_R_repository(void)
     Identity.initIdentity();
     R_repository.push_back(Identity);
     L_repository.push_back(Identity);
-     for (int isym = 0; isym < SL.SymsNo(); isym++)
+    for (int isym = 0; isym < SL.SymsNo(); isym++)
     {
         SL.get_matrices(isym, L, R);
         R.resize(3, 3);
