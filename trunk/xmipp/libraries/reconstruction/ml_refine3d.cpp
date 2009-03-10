@@ -180,7 +180,6 @@ void Prog_Refine3d_prm::read(int argc, char ** argv, int &argc2, char ** &argv2)
 
     // Hidden for now
     fn_solv = getParameter(argc2, argv2, "-solvent", "");
-    reconstruct_wbp = checkParameter(argc2, argv2, "-WBP");
     reconstruct_fourier = checkParameter(argc2, argv2, "-fourier");
     do_prob_solvent = checkParameter(argc2, argv2, "-prob_solvent");
     threshold_solvent = textToFloat(getParameter(argc2, argv2, "-threshold_solvent", "999"));
@@ -288,9 +287,7 @@ void Prog_Refine3d_prm::show()
             std::cerr << "  Limited tilt range       : " << tilt_range0 << "  " << tilt_rangeF << std::endl;
         if (wlsart_no_start)
             std::cerr << "  -> Start wlsART reconstructions from all-zero volumes " << std::endl;
-        if (reconstruct_wbp)
-            std::cerr << "  -> Use weighted back-projection instead of wlsART for reconstruction" << std::endl;
-        else if (reconstruct_fourier)
+        if (reconstruct_fourier)
             std::cerr << "  -> Use fourier-interpolation instead of wlsART for reconstruction" << std::endl;
         if (do_prob_solvent)
             std::cerr << "  -> Perform probabilistic solvent flattening" << std::endl;
@@ -323,9 +320,7 @@ void Prog_Refine3d_prm::show()
             fh_hist << "  Limited tilt range       : " << tilt_range0 << "  " << tilt_rangeF << std::endl;
         if (wlsart_no_start)
             fh_hist << "  -> Start wlsART reconstructions from all-zero volumes " << std::endl;
-        if (reconstruct_wbp)
-            fh_hist << "  -> Use weighted back-projection instead of wlsART for reconstruction" << std::endl;
-        else if (reconstruct_fourier)
+        if (reconstruct_fourier)
             fh_hist << "  -> Use fourier-interpolation instead of wlsART for reconstruction" << std::endl;
         if (do_prob_solvent)
             fh_hist << "  -> Perform probabilistic solvent flattening" << std::endl;
@@ -398,10 +393,9 @@ void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank, int s
     SFvol.go_beginning();
     while (!SFvol.eof())
     {
-        FileName fn_img=SFvol.NextImg();
-        if (fn_img=="") break;
+        
         eachvol_start.push_back(nr_dir);
-        vol.read(fn_img);
+        vol.read(SFvol.NextImg());
         vol().setXmippOrigin();
         
         for (int ilib = 0; ilib < mysampling.no_redundant_sampling_points_angles.size(); ilib++)
@@ -518,25 +512,7 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
         if (fn_blob != "") fn_blob += ".basis";
     }
 
-    if (reconstruct_wbp)
-    {
-        Prog_WBP_prm           wbp_prm;
-        if (verb > 0) std::cerr << "--> WBP reconstruction " << std::endl;
-
-        // read command line (fn_sym, angular etc.)
-        wbp_prm.read(argc, argv);
-        wbp_prm.fn_sel = fn_insel;
-        wbp_prm.do_weights = true;
-        wbp_prm.do_all_matrices = true;
-        wbp_prm.show();
-        wbp_prm.verb = verb;
-        if (volno > 0) wbp_prm.verb = 0;
-        wbp_prm.fn_out = fn_tmp + ".vol";
-        wbp_prm.produce_Side_info();
-        wbp_prm.apply_2Dfilter_arbitrary_geometry(wbp_prm.SF, new_vol);
-        new_vol.write(wbp_prm.fn_out);
-    }
-    else if (reconstruct_fourier)
+    if (reconstruct_fourier)
     {
         // read command line (fn_sym, angular etc.)
         Prog_RecFourier_prm   fourier_prm;
@@ -768,9 +744,7 @@ void Prog_Refine3d_prm::remake_SFvol(int iter, bool rewrite, bool include_noise)
         SFvol.go_beginning();
         while (!SFvol.eof())
         {
-            FileName fn_img=SFvol.NextImg();
-            if (fn_img=="") break;
-            ref_vol.read(fn_img);
+            ref_vol.read(SFvol.NextImg());
             ref_vol().setXmippOrigin();
             if (Nvols > 1)
             {
@@ -886,7 +860,6 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv)
         {
             // Read corresponding volume from disc
             fn_vol = SFvol.NextImg();
-            if (fn_vol=="") break;
             vol.read(fn_vol);
             vol().setXmippOrigin();
             dim = vol().rowNumber();
