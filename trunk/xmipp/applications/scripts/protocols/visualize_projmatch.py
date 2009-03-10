@@ -34,7 +34,7 @@ DisplayReconstruction=True
 """
 DisplayFilteredReconstruction=False
 #------------------------------------------------------------------------------------------------
-# {section} Display "3D volumes" options
+# {section} B-factor correction
 #------------------------------------------------------------------------------------------------
 # Display a b_factor corrected volume
 """ This utility boost up the high frequencies. Do not use the automated 
@@ -56,6 +56,9 @@ MaxRes=10
 """
 CorrectBfactorExtraCommand='-auto'
 
+#------------------------------------------------------------------------------------------------
+# {section} Display "3D volumes" options
+#------------------------------------------------------------------------------------------------
 # {list}|x|y|z|surface| Display volumes as slices or surface rendering
 """ x -> Visualize volumes in slices along x
     y -> Visualize volumes in slices along y
