@@ -2066,7 +2066,7 @@ void Prog_ml_tomo_prm::writeOutputFiles(const int iter, DocFile &DFo,
             DFo.next();
             fn_tmp = ((DFo.get_current_line()).get_text()).erase(0, 3);
             DFo.adjust_to_data_line();
-            if ((refno + 1) == (int)DFo(5)) SFo.insert(fn_tmp, SelLine::ACTIVE);
+            if ((refno + 1) == (int)DFo(6)) SFo.insert(fn_tmp, SelLine::ACTIVE);
         }
         fn_tmp = fn_root + "_ref";
         fn_tmp.compose(fn_tmp, refno + 1, "sel");
