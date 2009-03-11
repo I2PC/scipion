@@ -28,7 +28,7 @@ you can contact the author at fvandenb@iridia.ulb.ac.be
 //
 #include <stdlib.h>
 #include <stdio.h>
-#include <sys/timeb.h>
+#include <time.h>
 #include <string.h>
 #include "tools.h"
 #ifndef WIN32
@@ -101,10 +101,7 @@ double rand1()
 void initRandom(int i)
 {
     if (i) { mysrand=i; return; }
-     struct timeb t;
-     ftime(&t);
-     mysrand=t.millitm;
-//     printf("seed for random number generation: %i\n",mysrand);
+    mysrand=(unsigned long) (clock());
 }
 
 void error(char *s)
