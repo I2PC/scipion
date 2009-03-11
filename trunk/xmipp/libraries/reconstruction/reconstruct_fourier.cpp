@@ -197,7 +197,7 @@ void Prog_RecFourier_prm::produce_Side_info()
     kernel.setXmippOrigin();
     FOR_ALL_ELEMENTS_IN_MATRIX3D(kernel)
     {
-        double r=sqrt(k*k+i*i+j*j);
+        double r=sqrt((double)(k*k+i*i+j*j));
         if (r>=blob.radius) kernel(k,i,j)=0;
         else kernel(k,i,j)=blob_table(ROUND(r*iDelta));
     }
@@ -970,7 +970,7 @@ void Prog_RecFourier_prm::finishComputations( FileName out_name )
     pad_relation = (pad_relation * pad_relation * pad_relation);
     FOR_ALL_ELEMENTS_IN_MATRIX3D(Vout())
     {
-        double factor = Fourier_blob_table(ROUND(sqrt(k*k+i*i+j*j)
+        double factor = Fourier_blob_table(ROUND(sqrt((double)(k*k+i*i+j*j))
                                                  *iDeltaFourier));
         Vout(k,i,j) /= (factor/pad_relation);
     }
