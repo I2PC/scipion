@@ -55,6 +55,7 @@ public:
 #define BFACTOR_AUTO 1
 #define BFACTOR_REF 2
 #define BFACTOR_ADHOC 3
+#define ALLPOINTS_REF 4
     int mode;
 
     /** X-size of the original volume or image */
@@ -89,6 +90,13 @@ public:
  */
     void apply_bfactor(Matrix3D< std::complex< double > > &FT1,
                        double bfactor);
+
+/** Apply B-factor 
+ * @ingroup Correct Bfactor
+ * This will adjust the power spectrum according to the difference Guinier
+ */
+    void apply_allpoints(Matrix3D< std::complex< double > > &FT1,
+                         std::vector<fit_point2D> &guinier_diff);
 
 /** Read FSC file and convert to signal-to-noise weights
  * @ingroup Correct Bfactor

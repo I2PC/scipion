@@ -37,7 +37,10 @@ public:
         Prog_parameters::read(argc, argv);
         if (checkParameter(argc, argv, "-ref"))
         {
-            prmb.mode = BFACTOR_REF;
+            if (checkParameter(argc, argv, "-allpoints"))
+                prmb.mode = ALLPOINTS_REF;
+            else
+                prmb.mode = BFACTOR_REF;
             prmb.fn_ref= getParameter(argc, argv, "-ref");
         }
         else if (checkParameter(argc, argv, "-adhoc"))
@@ -102,6 +105,7 @@ public:
             << "   -maxres <float>          : High-resolution limit for B-factor correction \n"
             << "  [-fit_minres <f=15>]      : Low-resolution  limit (in Ang) for fit in -auto or -ref \n"
             << "  [-fit_maxres <f=maxres>]  : High-resolution limit (in Ang) for fit in -auto or -ref \n"
+            << "  [-allpoints]              : Do not fit B-factor, adjust power spectrum to reference \n"
             << "\n"
             << " Note: do not use the automated mode for maps with resolutions lower than 12-15 Angstroms!\n"
             ;

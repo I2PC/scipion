@@ -164,6 +164,29 @@ void  Prog_correct_bfactor_prm::apply_bfactor(Matrix3D< std::complex< double > >
     }
 }
 
+void  Prog_correct_bfactor_prm::apply_allpoints(Matrix3D< std::complex< double > > &FT1,
+                                                std::vector<fit_point2D> &guinier_diff)
+{
+
+    Matrix1D<double> f(3);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(FT1)
+    {
+        FFT_IDX2DIGFREQ(j,xsize,XX(f));
+        FFT_IDX2DIGFREQ(i,YSIZE(FT1),YY(f));
+        FFT_IDX2DIGFREQ(k,ZSIZE(FT1),ZZ(f));
+        double R=f.module();
+        if (R>0.5) continue;
+        int idx=ROUND(R*xsize);
+        if (guinier_diff[idx].w > 0.)
+        {
+            dVkij(FT1, k, i, j) *= exp( -guinier_diff[idx].y );
+        }
+    }
+
+}
+
+
+
 void  Prog_correct_bfactor_prm::write_guinierfile(FileName fn_guinier, 
                                                   std::vector<fit_point2D> &guinierin,
                                                   std::vector<fit_point2D> &guinierweighted,
@@ -222,7 +245,7 @@ void Prog_correct_bfactor_prm::bfactor_correction(Matrix3D< double > &m1, FileNa
         std::cerr<<" Fitted slope= "<<slope<<" intercept= "<<intercept<<std::endl;
         adhocB = 4. * slope;
     }
-    else if (mode == BFACTOR_REF)
+    else if (mode == BFACTOR_REF || mode == ALLPOINTS_REF)
     {
         VolumeXmipp ref;
         ref.read(fn_ref);
@@ -234,14 +257,27 @@ void Prog_correct_bfactor_prm::bfactor_correction(Matrix3D< double > &m1, FileNa
         {
             (guinierdiff[i]).y -= (guinierref[i]).y;
         }
-        least_squares_line_fit(guinierdiff, slope, intercept);
-        std::cerr<<" Fitted slope= "<<slope<<" intercept= "<<intercept<<std::endl;
-        adhocB = 4. * slope;
+        if (mode == BFACTOR_REF)
+        {
+            least_squares_line_fit(guinierdiff, slope, intercept);
+            std::cerr<<" Fitted slope= "<<slope<<" intercept= "<<intercept<<std::endl;
+            adhocB = 4. * slope;
+        }
     }
 
-    // Now apply the B-factor and back-transform
-    std::cerr<<"Applying B-factor of "<< adhocB << " squared Angstroms"<<std::endl;
-    apply_bfactor(FT1,adhocB);
+    if (mode == ALLPOINTS_REF)
+    {
+        // Now apply the allpoints correction
+        std::cerr<<"Adjust power spectrum to that of reference "<<std::endl;
+        apply_allpoints(FT1,guinierdiff);
+    }
+    else
+    {
+        // Now apply the B-factor
+        std::cerr<<"Applying B-factor of "<< adhocB << " squared Angstroms"<<std::endl;
+        apply_bfactor(FT1,adhocB);
+    }
+    // Now backtransform
     transformer.inverseFourierTransform(FT1,m1);
 
     // Write Guinier-plot
