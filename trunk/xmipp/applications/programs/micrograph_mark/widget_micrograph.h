@@ -201,31 +201,11 @@ public:
         Classification_model &_m);
 };
 
-/* Widget for the micrograph ----------------------------------------------- */
-class QtWidgetMicrograph : public QWidget
-{
-    Q_OBJECT
-
+/* Automatic particle picking ---------------------------------------------- */
+/** Class to perform the automatic particle picking */
+class AutoParticlePicking {
 public:
     Micrograph                *__m;
-    QtFiltersController       *__filtersController;
-    int                        __activeFamily;
-    QMenuBar                  *__menuBar;
-    QtImageMicrograph         *__mImage;
-    QtImageOverviewMicrograph *__mImageOverview;
-#ifdef QT3_SUPPORT
-    Q3VBoxLayout               *__gridLayout;
-#else
-    QVBoxLayout               *__gridLayout;
-#endif
-    QtFileMenu                *__file_menu;
-    bool                       __tilted;
-    int                        __mingray;
-    int                        __maxgray;
-    float                      __gamma;
-    float                      __ellipse_radius;
-    int                        __ellipse_type;
-
     FileName                   __modelRootName;
     int                        __numThreads;
     bool                       __learn_particles_done;
@@ -256,113 +236,23 @@ public:
     std::vector<Particle>      __auto_candidates;
     std::vector<Particle>      __rejected_particles;
     bool                       __is_model_loaded;
-    bool		       debugging;
     std::vector < Matrix2D<int> * >    __mask_classification;
     std::vector < Matrix1D<int> * >    __radial_val;
     std::vector < Matrix1D<double> * > __sector;
     std::vector < Matrix1D<double> * > __ring;
     std::vector < Matrix1D<int> * >    __Nsector;
-
 public:
-    // Constructor
-    QtWidgetMicrograph(QtMainWidgetMark *_mainWidget,
-                       QtFiltersController *_f,
-                       Micrograph *_m = NULL);
-    ~QtWidgetMicrograph();
+    /// Empty constructor
+    AutoParticlePicking(Micrograph *_m);
 
-    // Open all windows
-    void openAllWindows();
-
-    // Set Micrograph
-    void setMicrograph(Micrograph *_m);
-
-    // Get Micrograph
-    Micrograph *getMicrograph()
-    {
-        return(__m);
-    }
-
-    // Set this as tilted micrograph
-    void setTilted()
-    {
-        __tilted = TRUE;
-        __mImage->setTilted();
-    }
-
-    // Is tilted?
-    bool isTilted()
-    {
-        return __tilted;
-    }
-
-    // Get filters controller
-    QtFiltersController *getFiltersController()
-    {
-        return(__filtersController);
-    }
-
-    // Get active family
-    int activeFamily()
-    {
-        return(__activeFamily);
-    }
-
-    // Get overview
-    QtImageOverviewMicrograph *overview()
-    {
-        return(__mImageOverview);
-    }
-
-    // Get Image
-    QtImageMicrograph *image()
-    {
-        return(__mImage);
-    }
-
-    // Get Filemenu
-    QtFileMenu *file_menu()
-    {
-        return __file_menu;
-    }
-
-    // Add menu item
-    void addMenuItem(const char *_msg, const QtPopupMenuMark *_item)
-    {
-#ifdef QT3_SUPPORT
-        __menuBar->insertItem(_msg, (Q3PopupMenu*)_item);
-#else
-        __menuBar->insertItem(_msg, (QPopupMenu*) _item);
-#endif
-    }
-
-    // Draw axis
-    void draw_axis(double _ang)
-    {
-        __mImageOverview->enableAxis();
-        __mImageOverview->draw_axis(_ang);
-    }
-
-    // Open menu.
-    // Add your menus to this function
-    void openMenus();
-
-    // Change contrast
-    void changeContrast(int _mingray, int _maxgray, float _gamma);
-
-    // Change mark type
-    void changeMarkType(int _type);
-
-    // Change circle radius
-    void changeCircleRadius(float _circle_radius);
-
-    // Repaint
-    void repaint();
-
+    // Configure auto
+    void configure_auto(int _ellipse_radius);
+        
     // Set the number of threads
     void setNumThreads(int _numThreads);
 
     // Learn particles
-    void learnParticles();
+    void learnParticles(int _ellipse_radius);
 
     // Build Selection model. The selection model is made up of the training
     // and the automatically selected particles.
@@ -427,7 +317,8 @@ public:
                         std::vector< Matrix1D<int> > &_nbr);
 
     // Automatically Select Particles
-    void automaticallySelectParticles();
+    // Returns the number of particles selected.
+    int automaticallySelectParticles();
     
     // check if there are any particles in the actual scanning position
     bool anyParticle(int posx, int posy, int rect_size);
@@ -455,34 +346,15 @@ public:
     void refine_center(Particle &my_P);
     */
 
-    // Add family.
-    // The family label is returned
-    int add_family(std::vector<Particle> &_list,
-                   const std::string &_family_name);
-
-    // Move particle.
-    // The input index is the index of the moved particle in the micrograph list
-    void move_particle(int _idx);
-
-    // Delete particle.
-    // The input index is the index of the moved particle in the micrograph list
-    void delete_particle(int _idx);
-
-    // load models (ask the user about the name)
-    void loadModels();
-
     // load models with a name
     void loadModels(const FileName &fn);
 
     // Save models
-    void saveModels(bool askFilename);
+    void saveModels(const FileName &fn);
 
     // Save automatically selected particles
     void saveAutoParticles();
 
-    // Configure auto
-    void configure_auto();
-        
     // Get Features of the classification model
     void produceFeatures(const Classification_model &_model,
         std::vector < Matrix2D<double> > &_features);
@@ -496,6 +368,167 @@ public:
 
     // Get true positives automatically selected
     void getAutoTruePositives(Classification_model &_training_model);
+
+    // Restrict selection
+    void restrictSelection(float _cost);
+
+    // Move particle.
+    // The input index is the index of the moved particle in the micrograph list
+    void move_particle(int _idx);
+
+    // Delete particle.
+    // The input index is the index of the moved particle in the micrograph list
+    void delete_particle(int _idx);
+};
+
+// AutomaticallySelectThreadParams
+struct AutomaticallySelectThreadParams {
+    AutoParticlePicking *autoPicking;
+    int idThread;
+};
+
+// Automatically Select Particles thread
+void * automaticallySelectParticlesThread(void *);
+
+/* Widget for the micrograph ----------------------------------------------- */
+class QtWidgetMicrograph : public QWidget
+{
+    Q_OBJECT
+
+public:
+    Micrograph                *__m;
+    QtFiltersController       *__filtersController;
+    int                        __activeFamily;
+    QMenuBar                  *__menuBar;
+    QtImageMicrograph         *__mImage;
+    QtImageOverviewMicrograph *__mImageOverview;
+#ifdef QT3_SUPPORT
+    Q3VBoxLayout               *__gridLayout;
+#else
+    QVBoxLayout               *__gridLayout;
+#endif
+    QtFileMenu                *__file_menu;
+    bool                       __tilted;
+    int                        __mingray;
+    int                        __maxgray;
+    float                      __gamma;
+    float                      __ellipse_radius;
+    int                        __ellipse_type;
+    AutoParticlePicking       *__autoPicking;
+public:
+    // Constructor
+    QtWidgetMicrograph(QtMainWidgetMark *_mainWidget,
+                       QtFiltersController *_f,
+                       Micrograph *_m = NULL);
+    ~QtWidgetMicrograph();
+
+    // Open all windows
+    void openAllWindows();
+
+    // Set Micrograph
+    void setMicrograph(Micrograph *_m);
+
+    // Get Micrograph
+    Micrograph *getMicrograph()
+    {
+        return(__m);
+    }
+
+    // Set this as tilted micrograph
+    void setTilted()
+    {
+        __tilted = TRUE;
+        __mImage->setTilted();
+    }
+
+    // Is tilted?
+    bool isTilted()
+    {
+        return __tilted;
+    }
+
+    // Set Automatic Particle Picking
+    void setAutoParticlePicking(AutoParticlePicking *_autoPicking);
+
+    // Set Automatic Particle Picking
+    AutoParticlePicking * getAutoParticlePicking() const;
+
+    // Get filters controller
+    QtFiltersController *getFiltersController()
+    {
+        return(__filtersController);
+    }
+
+    // Get active family
+    int activeFamily()
+    {
+        return(__activeFamily);
+    }
+
+    // Get overview
+    QtImageOverviewMicrograph *overview()
+    {
+        return(__mImageOverview);
+    }
+
+    // Get Image
+    QtImageMicrograph *image()
+    {
+        return(__mImage);
+    }
+
+    // Get Filemenu
+    QtFileMenu *file_menu()
+    {
+        return __file_menu;
+    }
+
+    // Add menu item
+    void addMenuItem(const char *_msg, const QtPopupMenuMark *_item)
+    {
+#ifdef QT3_SUPPORT
+        __menuBar->insertItem(_msg, (Q3PopupMenu*)_item);
+#else
+        __menuBar->insertItem(_msg, (QPopupMenu*) _item);
+#endif
+    }
+
+    // Draw axis
+    void draw_axis(double _ang)
+    {
+        __mImageOverview->enableAxis();
+        __mImageOverview->draw_axis(_ang);
+    }
+
+    // Open menu.
+    // Add your menus to this function
+    void openMenus();
+
+    // Change contrast
+    void changeContrast(int _mingray, int _maxgray, float _gamma);
+
+    // Change mark type
+    void changeMarkType(int _type);
+
+    // Change circle radius
+    void changeCircleRadius(float _circle_radius);
+
+    // Repaint
+    void repaint();
+
+    // Add family.
+    // The family label is returned
+    int add_family(std::vector<Particle> &_list,
+                   const std::string &_family_name);
+
+    // Learn particles
+    void learnParticles();
+
+    // Automatically Select Particles
+    void automaticallySelectParticles();
+    
+    // Save models
+    void saveModels(bool askFilename);
 
 public slots:
     void slotActiveFamily(int _f);
@@ -518,16 +551,6 @@ signals:
     void signalAddFamily(const char *_familyName);
     void signalRepaint();
 };
-
-// AutomaticallySelectThreadParams
-struct AutomaticallySelectThreadParams {
-    QtWidgetMicrograph *widgetmicrograph;
-    int idThread;
-};
-
-// Automatically Select Particles thread
-void * automaticallySelectParticlesThread(void *);
-
 
 /** Class to adjust contrast
 */
@@ -594,5 +617,4 @@ private:
 private slots:
     void scrollValueChanged(int);
 };
-
 #endif
