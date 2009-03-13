@@ -344,7 +344,7 @@ void SF_main(int argc, char **argv,
                     {
                     case IMAGE2IMAGE:
                         fv2v = (bool(*)(VolumeXmipp &, const Prog_parameters *)) process_vol;
-                        fv2v(vol, prm);
+                        success = fv2v(vol, prm);
                         if (prm->each_image_produces_an_output)
                             vol.write(prm->fn_out);
                         break;
