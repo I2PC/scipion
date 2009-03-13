@@ -102,7 +102,7 @@ void QtDialogProperties::slotChangeFamily(int _f)
 void QtDialogProperties::slotDeleteMark()
 {
     __m->coord(__coord).valid = false;
-    __wm->delete_particle(__coord);
+    __wm->getAutoParticlePicking()->delete_particle(__coord);
     emit signalDeleteMarkOther(__coord);
     accept();
 }

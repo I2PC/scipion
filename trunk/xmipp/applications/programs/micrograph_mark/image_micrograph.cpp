@@ -206,7 +206,8 @@ void QtImageMicrograph::mouseReleaseEvent(QMouseEvent *e)
     // If moving a particle
     if (__movingMark != -1 && __pressed)
     {
-        getWidgetMicrograph()->move_particle(__movingMark);
+        getWidgetMicrograph()->getAutoParticlePicking()->
+            move_particle(__movingMark);
         __movingMark = -1;
         __pressed    = false;
         emit signalRecalculateTiltMatrix();
@@ -241,7 +242,8 @@ void QtImageMicrograph::mouseReleaseEvent(QMouseEvent *e)
                 emit signalAddCoordOther(mX, mY, __activeFamily);
             } else {
                 getMicrograph()->coord(coord).valid = false;
-                getWidgetMicrograph()->delete_particle(coord);
+                getWidgetMicrograph()->getAutoParticlePicking()->
+                    delete_particle(coord);
                 emit signalDeleteMarkOther(coord);
                 emit signalRepaint();
             }
