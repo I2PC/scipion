@@ -1416,6 +1416,16 @@ int AutoParticlePicking::automaticallySelectParticles()
                 __auto_label=i;
                 break;
             }
+        if (__auto_label==-1)
+        {
+            __m->add_label("auto");
+            for (int i = 0; i < __m->LabelNo(); i++)
+                if (__m->get_label(i)=="auto")
+                {
+                    __auto_label=i;
+                    break;
+                }
+        }
 
         int imax = __auto_candidates.size();
         // Get the maximum and minimum cost
