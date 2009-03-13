@@ -401,13 +401,6 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                     for (int i=STARTINGY(parent->FourierWeights); i<=FINISHINGY(parent->FourierWeights); i++)
                         for (int j=STARTINGX(parent->FourierWeights); j<=FINISHINGX(parent->FourierWeights); j++)
                         {
-/*
-                            if (parent->FourierWeights(k,i,j)>ACCURACY)
-                                parent->FourierWeights(k,i,j)=1/parent->FourierWeights(k,i,j);
-                           
-                            if (VOL_ELEM(parent->FourierWeights,k,i,j)!=0)
-                                VOL_ELEM(parent->VoutFourier,k,i,j)*=corr2D_3D*VOL_ELEM(parent->FourierWeights,k,i,j);
-*///ROB
                             if (parent->FourierWeights(k,i,j)>ACCURACY){
                                 parent->FourierWeights(k,i,j)=1/parent->FourierWeights(k,i,j);
                                 VOL_ELEM(parent->VoutFourier,k,i,j)*=corr2D_3D*VOL_ELEM(parent->FourierWeights,k,i,j);
@@ -778,7 +771,7 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
                             static int ii=0;
                             if(ii%1==0) 
                                 {
-                                VolumeXmipp save;
+                                VolumeT save;
                                 save().alias( FourierWeights );
                                 save.write((std::string) integerToString(ii)  + "_1_Weights.vol");
 
@@ -790,32 +783,33 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
                             }
                     #endif
                     #undef DEBUG2
-                    // Esto no va aqui
                     if ( appliedFSC == 0 ) 
                     {
                         if ( imgIndex >= FSCIndex && saveFSC )
                         {
                             // Save Current Fourier, Reconstruction and Weights
-                            VolumeXmipp save;
+                            VolumeT<double> save;
                             save().alias( FourierWeights );
-                            save.write((std::string) fn_fsc + "_1_Weights.vol");
-
+                            save.write((std::string)fn_fsc + "_1_Weights.vol",
+                                    false,VDOUBLE);
+                        
                             FourierVolume save2;
                             save2().alias( VoutFourier );
-                            save2.write((std::string) fn_fsc + "_1_Fourier.vol");
-
+                            save2.write((std::string) fn_fsc + "_1_Fourier.vol",
+                                    false,VDOUBLE);
+                            
                             finishComputations(FileName((std::string) fn_fsc + "_1_recons.vol"));
-
-                            Vout().initZeros(volPadSizeZ,volPadSizeY,volPadSizeX);
+                            Vout().initZeros(volPadSizeZ, volPadSizeY, volPadSizeX);
                             transformerVol.setReal(Vout());
-                            Vout().clear(); // Free the memory so that it is available for FourierWeights
+                            Vout().clear();
                             transformerVol.getFourierAlias(VoutFourier);
                             FourierWeights.initZeros(VoutFourier);
                             VoutFourier.initZeros();
 
+
                             // Reset volumes
                             // finishComputations changes this, set correct value
-                            threadOpCode = PROCESS_IMAGE;
+                            // threadOpCode = PROCESS_IMAGE;//This line is not needed
                             appliedFSC=1;
                         }
                     }
@@ -823,39 +817,52 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
             }
         }
     }while ( processed );
-
     if( appliedFSC == 1 )
     {
         // Save Current Fourier, Reconstruction and Weights
-        VolumeXmipp auxVolume;
-        FourierVolume auxFourierVolume;
-
+        VolumeT<double> auxVolume;
         auxVolume().alias( FourierWeights );
-        auxVolume.write((std::string) fn_fsc + "_2_Weights.vol");
+        auxVolume.write((std::string)fn_fsc + "_2_Weights.vol",
+                false,VDOUBLE);
 
+        FourierVolume auxFourierVolume;
         auxFourierVolume().alias( VoutFourier );
-        auxFourierVolume.write((std::string) fn_fsc + "_2_Fourier.vol");
+        auxFourierVolume.write((std::string) fn_fsc + "_2_Fourier.vol",
+                false,VDOUBLE);
 
         finishComputations(FileName((std::string) fn_fsc + "_2_recons.vol"));
 
-        Vout().initZeros(volPadSizeZ,volPadSizeY,volPadSizeX);
+        Vout().initZeros(volPadSizeZ, volPadSizeY, volPadSizeX);
         transformerVol.setReal(Vout());
-        Vout().clear(); // Free the memory so that it is available for FourierWeights
-
+        Vout().clear();
         transformerVol.getFourierAlias(VoutFourier);
         FourierWeights.initZeros(VoutFourier);
-        VoutFourier.initZeros();
+        VoutFourier.initZeros();   
 
-        // Recover "old" values and sum to get final reconstruction
-        int x,y,z;
 
-        auxVolume.sumWithFile(FileName((std::string) fn_fsc + "_1_Weights.vol")); 
-        auxVolume.sumWithFile(FileName((std::string) fn_fsc + "_2_Weights.vol")); 
+        //FourierWeights.getDimension(y,x,z);
 
-        VoutFourier.getDimension(y,x,z);
+        auxVolume.sumWithFile((std::string) fn_fsc + "_1_Weights.vol",/*z,y,x,*/false, VDOUBLE);
+        auxVolume.sumWithFile((std::string) fn_fsc + "_2_Weights.vol",/*z,y,x,*/false, VDOUBLE);
 
-        auxFourierVolume.sumWithFile((std::string) fn_fsc + "_1_Fourier.vol",z,y,x, false, VCOMPLEX); 
-        auxFourierVolume.sumWithFile((std::string) fn_fsc + "_2_Fourier.vol",z,y,x, false, VCOMPLEX); 
+        //VoutFourier.getDimension(y,x,z);
+
+        auxFourierVolume.sumWithFile((std::string) fn_fsc + "_1_Fourier.vol",/*z,y,x,*/false, VDOUBLE);
+        auxFourierVolume.sumWithFile((std::string) fn_fsc + "_2_Fourier.vol",/*z,y,x,*/false, VDOUBLE);
+        remove(((std::string) fn_fsc + "_1_Weights.vol").c_str());
+        remove(((std::string) fn_fsc + "_2_Weights.vol").c_str());
+	remove(((std::string) fn_fsc + "_1_Fourier.vol").c_str());
+	remove(((std::string) fn_fsc + "_2_Fourier.vol").c_str());
+
+/*
+//Save SUM
+                            //this is an image but not an xmipp image
+                            auxFourierVolume.write((std::string)fn_fsc + "_all_Fourier.vol",
+                                    false,VDOUBLE);
+                            auxVolume.write((std::string)fn_fsc + "_all_Weight.vol",
+                                    false,VDOUBLE);
+//
+*/
     }
 }
 
@@ -906,6 +913,19 @@ void Prog_RecFourier_prm::run()
 
 void Prog_RecFourier_prm::finishComputations( FileName out_name )
 {
+//#define DEBUG_VOL
+#ifdef DEBUG_VOL
+	{
+         VolumeXmipp save;
+         save().alias( FourierWeights );
+         save.write((std::string) fn_out + "Weights.vol");
+
+         FourierVolume save2;
+         save2().alias( VoutFourier );
+         save2.write((std::string) fn_out + "FourierVol.vol");
+	}
+#endif
+
     // Enforce symmetry in the Fourier values as well as the weights
     transformerVol.enforceHermitianSymmetry();
     int yHalf=YSIZE(FourierWeights)/2;
@@ -936,24 +956,23 @@ void Prog_RecFourier_prm::finishComputations( FileName out_name )
     }
 
     // Tell threads what to do
+//#define DEBUG_VOL1
+#ifdef DEBUG_VOL1
+	{
+         VolumeXmipp save;
+         save().alias( FourierWeights );
+         save.write((std::string) fn_out + "hermiticWeights.vol");
+
+         FourierVolume save2;
+         save2().alias( VoutFourier );
+         save2.write((std::string) fn_out + "hermiticFourierVol.vol");
+	}
+#endif
     threadOpCode = PROCESS_WEIGHTS;
     // Awake threads
     barrier_wait( &barrier );
     // Threads are working now, wait for them to finish
     barrier_wait( &barrier );
-
-//#define DEBUG_VOL
-#ifdef DEBUG_VOL
-	{
-         VolumeXmipp save;
-         save().alias( FourierWeights );
-         save.write((std::string) fn_out + "Weights.vol");
-
-         FourierVolume save2;
-         save2().alias( VoutFourier );
-         save2.write((std::string) fn_out + "FourierVol.vol");
-	}
-#endif
 
     Vout().initZeros(volPadSizeZ,volPadSizeY,volPadSizeX);
     transformerVol.setReal(Vout());
