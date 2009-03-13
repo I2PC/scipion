@@ -143,7 +143,7 @@ public:
             << std::endl;
             std::cerr << "numberOfJobs: " << numberOfJobs << std::endl <<std::endl;
 #endif
-#undef DEBUG
+#undef DEBUGDOUBLE
         }
         else
             verbose=false;
@@ -368,16 +368,18 @@ public:
                         }
                         free( recBuffer );
 
-                        VolumeXmipp save;
+                        VolumeT<double> save;
                         save().alias( FourierWeights );
-                        save.write((std::string)fn_fsc + "_1_Weights.vol");
+                        save.write((std::string)fn_fsc + "_1_Weights.vol",
+                                    false,VDOUBLE);
                         
                         FourierVolume save2;
                         save2().alias( VoutFourier );
-                        save2.write((std::string) fn_fsc + "_1_Fourier.vol");
+                        save2.write((std::string) fn_fsc + "_1_Fourier.vol",
+                                    false,VDOUBLE);
                         
                         // Normalize global volume and store data
-                        finishComputations(FileName((std::string) fn_fsc + "_1_recons.vol"));
+                        finishComputations(FileName((std::string) fn_fsc + "_split_1.vol"));
                         
                         Vout().initZeros(volPadSizeZ, volPadSizeY, volPadSizeX);
                         transformerVol.setReal(Vout());
@@ -510,16 +512,18 @@ public:
 
                         if( fn_fsc != "" )
                         {
-                            VolumeXmipp auxVolume;
+                            VolumeT<double> auxVolume;
                             auxVolume().alias( FourierWeights );
-                            auxVolume.write((std::string)fn_fsc + "_2_Weights.vol");
+                            auxVolume.write((std::string)fn_fsc + "_2_Weights.vol",
+                                    false,VDOUBLE);
                         
                             FourierVolume auxFourierVolume;
                             auxFourierVolume().alias( VoutFourier );
-                            auxFourierVolume.write((std::string) fn_fsc + "_2_Fourier.vol");
+                            auxFourierVolume.write((std::string) fn_fsc + "_2_Fourier.vol",
+                                    false,VDOUBLE);
                         
                             // Normalize global volume and store data
-                            finishComputations(FileName((std::string) fn_fsc + "_2_recons.vol"));
+                            finishComputations(FileName((std::string) fn_fsc + "_split_2.vol"));
                         
                             Vout().initZeros(volPadSizeZ, volPadSizeY, volPadSizeX);
                             transformerVol.setReal(Vout());
@@ -528,15 +532,29 @@ public:
                             FourierWeights.initZeros(VoutFourier);
                             VoutFourier.initZeros();   
                             
-                            int x,y,z;
+                            //int x,y,z;
+
+                            //FourierWeights.getDimension(y,x,z);
+
+                            auxVolume.sumWithFile((std::string) fn_fsc + "_1_Weights.vol",/*z,y,x,*/false, VDOUBLE);
+                            auxVolume.sumWithFile((std::string) fn_fsc + "_2_Weights.vol",/*z,y,x,*/false, VDOUBLE);
                             
-                            auxVolume.sumWithFile(FileName((std::string) fn_fsc + "_1_Weights.vol"));
-                            auxVolume.sumWithFile(FileName((std::string) fn_fsc + "_2_Weights.vol"));
+                            //VoutFourier.getDimension(y,x,z);
                             
-                            VoutFourier.getDimension(y,x,z);
-                            
-                            auxFourierVolume.sumWithFile((std::string) fn_fsc + "_1_Fourier.vol",z,y,x,false, VCOMPLEX);
-                            auxFourierVolume.sumWithFile((std::string) fn_fsc + "_2_Fourier.vol",z,y,x,false, VCOMPLEX);
+                            auxFourierVolume.sumWithFile((std::string) fn_fsc + "_1_Fourier.vol",/*z,y,x,*/false, VDOUBLE);
+                            auxFourierVolume.sumWithFile((std::string) fn_fsc + "_2_Fourier.vol",/*z,y,x,*/false, VDOUBLE);
+                            //remove temporary files
+			    remove(((std::string) fn_fsc + "_1_Weights.vol").c_str());
+			    remove(((std::string) fn_fsc + "_2_Weights.vol").c_str());
+			    remove(((std::string) fn_fsc + "_1_Fourier.vol").c_str());
+			    remove(((std::string) fn_fsc + "_2_Fourier.vol").c_str());
+/*Save SUM
+                            //this is an image but not an xmipp image
+                            auxFourierVolume.write((std::string)fn_fsc + "_all_Fourier.vol",
+                                    false,VDOUBLE);
+                            auxVolume.write((std::string)fn_fsc + "_all_Weights.vol",
+                                    false,VDOUBLE);
+*/
                         }
 
                         // Normalize global volume and store data
