@@ -112,6 +112,7 @@ void Prog_ml_tomo_prm::read(int argc, char **argv, bool ML3D)
     fn_doc = getParameter(argc2, argv2, "-doc", "");
     fn_sel = getParameter(argc2, argv2, "-i");
     fn_root = getParameter(argc2, argv2, "-o", "mltomo");
+    fn_sym = getParameter(argc2, argv2, "-sym", "c1");
     Niter = textToInteger(getParameter(argc2, argv2, "-iter", "100"));
     istart = textToInteger(getParameter(argc2, argv2, "-istart", "1"));
     sigma_noise = textToFloat(getParameter(argc2, argv2, "-noise", "1"));
@@ -122,7 +123,6 @@ void Prog_ml_tomo_prm::read(int argc, char **argv, bool ML3D)
     fix_sigma_noise = checkParameter(argc2, argv2, "-fix_sigma_noise");
     eps = textToFloat(getParameter(argc2, argv2, "-eps", "5e-5"));
     verb = textToInteger(getParameter(argc2, argv2, "-verb", "1"));
-
     no_SMALLANGLE = checkParameter(argc2, argv2, "-no_SMALLANGLE");
 
     // Normalization 
@@ -139,6 +139,8 @@ void Prog_ml_tomo_prm::read(int argc, char **argv, bool ML3D)
     tilt_rangeF = textToFloat(getParameter(argc2, argv2, "-tiltF", "91."));
     //fn_sym = getParameter(argc2, argv2, "-sym", "c1");
     fn_sym="c1";
+    // For local searches
+    ang_search = textToFloat(getParameter(argc2, argv2, "-ang_search", "-1."));
 
     // Missing data structures 
     do_wedge = checkParameter(argc2, argv2, "-wedges");
@@ -153,6 +155,7 @@ void Prog_ml_tomo_prm::read(int argc, char **argv, bool ML3D)
     max_resol = textToFloat(getParameter(argc2, argv2, "-max_resol", "0.5"));
 
     // Hidden arguments
+    do_esthetics = checkParameter(argc2, argv2, "-esthetics");
     trymindiff_factor = textToFloat(getParameter(argc2, argv2, "-trymindiff_factor", "0.9"));
 
     // Number of threads
@@ -214,7 +217,11 @@ void Prog_ml_tomo_prm::show(bool ML3D)
         {
             std::cerr << "  -> Using "<<threads<<" parallel threads"<<std::endl;
         }
-         
+        if (do_esthetics)
+        {
+            std::cerr << "  -> Perform esthetics on (0,0)-pixel artifacts" << std::endl;
+        }
+  
 
         std::cerr << " -----------------------------------------------------------------" << std::endl;
 
@@ -354,8 +361,17 @@ void Prog_ml_tomo_prm::produceSideInfo()
     if (!mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
         REPORT_ERROR(3005, (std::string)"ml_refine3d::run Invalid symmetry" +  fn_sym);
     // by default max_tilt= +91., min_tilt= -91.
-    mysampling.Compute_sampling_points(false,tilt_rangeF,tilt_range0);
-    mysampling.remove_redundant_points(symmetry, sym_order);
+    mysampling.Compute_sampling_points(false, // half sphere?
+                                       tilt_rangeF,
+                                       tilt_range0);
+    mysampling.remove_redundant_points_exhaustive(symmetry, 
+                                                  sym_order, 
+                                                  false, // half sphere?
+                                                  0.75 * angular_sampling);
+    mysampling.fill_L_R_repository();
+    if (fn_doc != "" && ang_search > 0.)
+        mysampling.fill_exp_data_projection_direction_by_L_R(fn_doc);
+
     if (psi_sampling < 0)
         psi_sampling = angular_sampling;
 
@@ -538,7 +554,7 @@ void Prog_ml_tomo_prm::generateInitialReferences()
             {
                 if (DF.search_comment(fn_tmp)) 
                 {
-                    int missno = (int)(DF(0)) - 1;
+                    int missno = (int)(DF(7)) - 1;
                     getMissingWedge(Mmissing, all_angle_info[iran].A, missno);
                 }
                 else 
@@ -679,8 +695,17 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
                 // at a later stage move this if upwards to save time!
                 if (do_wedge || do_pyramid || do_cone)
                 {
-                    imgs_missno[imgno] = (int)(DF(0)) - 1;
+                    imgs_missno[imgno] = (int)(DF(7)) - 1;
                 }
+                // TODO: to be added....
+                /*
+                if (do_norm)
+                {
+                    imgs_bgmean[imgno] = DF(9);
+                    imgs_scale[imgno] = DF(10);
+                }
+                */
+
             } 
             else 
             {
@@ -778,6 +803,9 @@ void Prog_ml_tomo_prm::getMissingWedge(Matrix3D<double> &Mmissing,
     exit(1);
 #else
 */
+
+    if (missno < 0)
+        REPORT_ERROR(1,"BUG: missno < 0");
 
     double theta0_alongy, thetaF_alongy, theta0_alongx, thetaF_alongx;
     Mmissing.resize(dim,dim,hdim+1);
@@ -890,7 +918,6 @@ void Prog_ml_tomo_prm::getMissingWedge(Matrix3D<double> &Mmissing,
     test().setXmippOrigin();
     Matrix3D<int> ress(dim,dim,dim);
     ress.setXmippOrigin();
-    // TODO: CHECK A or Ainv ...??!!
     BinaryWedgeMask(test(),theta0_alongy,thetaF_alongy, A);
     test.write("Mwedge.vol");
 #endif
@@ -1187,9 +1214,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                 if (refno >= nr_ref) refno-= nr_ref;
                 
                 // Now (inverse) rotate the reference and calculate its Fourier transform
-                // TODO: check the inverse rotation and its A2!!
-                // Do that by reenforcing the wedge, and recalculating A2
-                
+                // Do that by reenforcing the wedge, and recalculating A2                
                 Maux2.initZeros();
                 applyGeometry(Maux2, A_rot_inv, Iref[refno](), IS_NOT_INV, DONT_WRAP);
                 Maux2 *= real_mask;
@@ -1331,7 +1356,6 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                     if (do_missing)
                     {
                         // Store sum of wedges!
-                        // TODO: check A_rot or A_rot_inv...
                         getMissingWedge(Mmissing, A_rot, missno);
                         mysumweds[refno] += my_sumweight * Mmissing;
                     }
@@ -1402,6 +1426,11 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     // Update normalization parameters
     if (do_norm)
     {
+
+        // TODOOOOOOOOO: put imputation/wedge correction here!!!!!
+        // TODOOOOOOOOO: put imputation/wedge correction here!!!!!
+        // TODOOOOOOOOO: put imputation/wedge correction here!!!!!
+
         // 1. Calculate optimal setting of Mimg
         Maux2 = Mimg;
         Maux2.selfTranslate(opt_offsets, true);
@@ -1412,17 +1441,56 @@ void Prog_ml_tomo_prm::expectationSingleImage(
         applyGeometry(Maux, A_rot_inv, Iref[opt_refno](), IS_NOT_INV, WRAP);
         Maux *= opt_scale;
 
-        Maux2 = Maux2 - Maux;
-	if (debug==12) 
-        {  
-            std::cout<<std::endl;
-            std::cout<<"scale= "<<opt_scale<<" changes to "<<wsum_sc/wsum_sc2<<std::endl;
-            std::cout<<"bgmean= "<<bgmean<<" changes to "<<Maux2.computeAvg()<<std::endl;
+        if (do_missing)
+        {
+            // 3. Now either impute or apply missing wedge to the reference
+            getMissingWedge(Mmissing,I,missno);
+            if (do_impute)
+            {
+                // Imputation
+                local_transformer.FourierTransform(Maux, Faux, true);
+                local_transformer.FourierTransform(Maux2,Fimg, true);
+                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Fimg)
+                {
+                    DIRECT_MULTIDIM_ELEM(Fimg, n) *= 
+                        DIRECT_MULTIDIM_ELEM(Mmissing,n);
+                    DIRECT_MULTIDIM_ELEM(Fimg, n) += (std::complex<double>)
+                        ((1. - DIRECT_MULTIDIM_ELEM(Mmissing,n)) * DIRECT_MULTIDIM_ELEM(Faux,n));
+                }
+                local_transformer.inverseFourierTransform(Fimg,Maux2);
+            }
+            else
+            {
+                // Apply wedge to reference (and re-aply to image)
+                local_transformer.FourierTransform(Maux, Faux, true);
+                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
+                {
+                    DIRECT_MULTIDIM_ELEM(Faux, n) *= 
+                        DIRECT_MULTIDIM_ELEM(Mmissing,n);
+                }
+                local_transformer.inverseFourierTransform(Faux,Maux); 
+                local_transformer.FourierTransform(Maux2, Fimg, true);
+                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Fimg)
+                {
+                    DIRECT_MULTIDIM_ELEM(Fimg, n) *= 
+                        DIRECT_MULTIDIM_ELEM(Mmissing,n);
+                }
+                local_transformer.inverseFourierTransform(Fimg,Maux2);
+            }
         }
+
+        // 4. Calculate difference in bgmean
+        Maux2 = Maux2 - Maux;
+//#define DEBUG_UPDATE_NORM
+#ifdef DEBUG_UPDATE_NORM
+        std::cerr<<std::endl;
+        std::cerr<<"scale= "<<opt_scale<<" changes to "<<wsum_sc/wsum_sc2<<std::endl;
+        std::cerr<<"bgmean= "<<bgmean<<" changes to "<<Maux2.computeAvg()<<std::endl;
+#endif
         // non-ML update of bgmean (this is much cheaper than true-ML update...)
         old_bgmean = bgmean;
         bgmean = Maux2.computeAvg();
-        // ML-update of opt_scale
+        // ML-update of opt_scale (this is cheap anyway...)
         opt_scale = wsum_sc / wsum_sc2;
     }
 
@@ -1439,10 +1507,8 @@ void Prog_ml_tomo_prm::expectationSingleImage(
         sumw[refno] += refw[refno] / sum_refw;
         sumwsc[refno] += (refw[refno] * opt_scale) / sum_refw;
         sumwsc2[refno] += (refw[refno] * opt_scale * opt_scale) / sum_refw;
-        // Correct weighted sum of images for new bgmean (only first element=origin in Fimg)
+        // Correct weighted sum of images for new bgmean
         if (do_norm)
-            // TODO: check factor ddim3!
-            //mysumimgs[refno] -= refw[refno] * (bgmean - old_bgmean) / ddim3; 
             mysumimgs[refno] -= refw[refno] * (bgmean - old_bgmean); 
         // Sum mysumimgs to the global weighted sum
         wsumimgs[refno] += (opt_scale * mysumimgs[refno]) / sum_refw;
@@ -1584,12 +1650,14 @@ void * threadMLTomoExpectationSingleImage( void * data )
         (*docfiledata)[imgno](4) = opt_offsets(1);            // Yoff
         (*docfiledata)[imgno](5) = opt_offsets(2);            // Zoff
         (*docfiledata)[imgno](6) = (double)(opt_refno + 1);   // Ref
-        (*docfiledata)[imgno](7) = fracweight;                // P_max/P_tot
-        (*docfiledata)[imgno](8) = dLL;                       // log-likelihood
+        (*docfiledata)[imgno](7) = (double)(missno + 1);      // Wedge number
+
+        (*docfiledata)[imgno](8) = fracweight;                // P_max/P_tot
+        (*docfiledata)[imgno](9) = dLL;                       // log-likelihood
         if (prm->do_norm)
         {
-            (*docfiledata)[imgno](9)  = bgmean;               // background mean
-            (*docfiledata)[imgno](10) = opt_scale;            // image scale 
+            (*docfiledata)[imgno](10)  = bgmean;               // background mean
+            (*docfiledata)[imgno](11) = opt_scale;            // image scale 
         }
         if (prm->verb > 0 && thread_id==0) progress_bar(imgno+1);
 
@@ -1717,6 +1785,8 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
     double rr, thresh, aux, sumw_allrefs2 = 0.;
     int c;
 
+    // TODO: introduce symmetrization!
+
     // Update the reference images
     sumw_allrefs = 0.;
     Msumallwedges.initZeros();
@@ -1812,25 +1882,40 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
                     DIRECT_MULTIDIM_ELEM(Fwsumimgs,n) / sumwsc2[refno];
             }
         }
+
+        // General operations
+        // 1. Apply fourier mask to real space references
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
+        {
+            DIRECT_MULTIDIM_ELEM(Faux,n) *= DIRECT_MULTIDIM_ELEM(fourier_mask,n);
+        }
+        // 2. Inverse Fourier Transform
         transformer.inverseFourierTransform(Faux,Iref[refno]());
+        // 3. Correction of origin pixel artifacts
+        if (do_esthetics)
+        {
+            VOL_ELEM(Iref[refno](), 0, 0, 0) = 
+                VOL_ELEM(Iref[refno](), 1, 0, 0) +
+                VOL_ELEM(Iref[refno](), -1, 0, 0) +
+                VOL_ELEM(Iref[refno](), 0, 1, 0) +
+                VOL_ELEM(Iref[refno](), 0, -1, 0) +
+                VOL_ELEM(Iref[refno](), 0, 0, 1) +
+                VOL_ELEM(Iref[refno](), 0, 0, -1) / 6.;
+        }  
+    }  
 
-    }
-
-    // Adjust average scale (nr_classes will be smaller than nr_ref for the 3D case!)
+    // Adjust average scale
     if (do_norm) {
-        std::vector<double> wsum_scale(nr_ref), sumw_scale(nr_ref);
         average_scale = 0.;
         for (int refno=0;refno<nr_ref; refno++)
         {
             average_scale += sumwsc[refno];
-            wsum_scale[refno] += sumwsc[refno];
-            sumw_scale[refno] += sumw[refno];
         }
         for (int refno=0;refno<nr_ref; refno++)
         {
-            if (sumw_scale[refno]>0.)
+            if (sumw[refno]>0.)
             {
-                refs_avgscale[refno] = wsum_scale[refno]/sumw_scale[refno];
+                refs_avgscale[refno] =  sumwsc[refno]/sumw[refno];
                 Iref[refno]() *= refs_avgscale[refno];
             }
             else
@@ -2016,12 +2101,13 @@ void Prog_ml_tomo_prm::writeOutputFiles(const int iter, DocFile &DFo,
                     else yy = y;
                     for ( int xx=0; xx<hdim + 1; xx++, ii++ ) 
                     {
+                        // TODO improve this loop....
                         if (xx <= FINISHINGX(Vt()))
                         {
                             VOL_ELEM(Vt(),zz,yy,xx)=
                                 DIRECT_MULTIDIM_ELEM(wsumweds[refno],ii) / sumw;
-                            VOL_ELEM(Vt(),zz,yy,-xx)=
-                                DIRECT_MULTIDIM_ELEM(wsumweds[refno],ii) / sumw;
+                            //VOL_ELEM(Vt(),zz,yy,-xx)=
+                            //    DIRECT_MULTIDIM_ELEM(wsumweds[refno],ii) / sumw;
                         }
                     } 
                 }

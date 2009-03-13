@@ -43,7 +43,7 @@
 
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
 #define SMALLANGLE 5.75
-#define MLTOMODATALINELENGTH 11
+#define MLTOMODATALINELENGTH 12
 class Prog_ml_tomo_prm;
 
 // Thread declaration
@@ -121,6 +121,8 @@ public:
     Matrix3D<double> P_phi, Mr2;
     /** Flag for generation of initial models from random subsets */
     bool do_generate_refs;
+    /** Very crude origin pixel artifact correction */
+    bool do_esthetics;
 
     /// Re-normalize internally
     /** Flag to refine normalization of each experimental image */
@@ -135,6 +137,8 @@ public:
     double trymindiff_factor;
     /** Overall average scale (constrained to one) */
     double average_scale;
+    /** Local search angular distance */
+    double ang_search;
 
     /// Internally store all missing wedges or re-compute on the fly?
 
