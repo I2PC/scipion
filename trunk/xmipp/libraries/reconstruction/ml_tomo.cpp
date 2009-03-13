@@ -340,6 +340,8 @@ void Prog_ml_tomo_prm::produceSideInfo()
     real_mask.resize(dim,dim,dim);
     real_mask.setXmippOrigin();
     RaisedCosineMask(real_mask, hdim - 1, hdim, INNER_MASK);
+    real_omask.resize(real_mask);
+    real_omask = 1. - real_mask;
 
     // Get number of references
     if (fn_ref != "")
@@ -1009,15 +1011,28 @@ void Prog_ml_tomo_prm::precalculateA2(std::vector< VolumeXmippT<double> > &Iref)
     corrA2.clear();
     I.initIdentity();
     Maux.setXmippOrigin();
+    outside_density.clear();
     for (int refno = 0; refno < nr_ref; refno++)
     {
+        // Pre-calculate average density outside the real_mask;
+        double sumd = 0., sumdd = 0.;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(real_omask)
+        {
+            sumd += DIRECT_MULTIDIM_ELEM(Iref[refno](),n)*DIRECT_MULTIDIM_ELEM(real_omask,n);
+            sumdd += DIRECT_MULTIDIM_ELEM(real_omask,n);
+        }
+        outside_density.push_back(sumd/sumdd);
         // Calculate A2 for all different orientations
         for (int angno = 0; angno < nr_ang; angno++)
         {
             A_rot_inv = ((all_angle_info[angno]).A).inv();
             Maux.initZeros(); // This somehow seems necessary before applyGeometry!!
             applyGeometry(Maux, A_rot_inv, Iref[refno](), IS_NOT_INV, DONT_WRAP);
-            Maux *= real_mask;
+            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(real_omask)
+            {
+                DIRECT_MULTIDIM_ELEM(Maux,n) *= DIRECT_MULTIDIM_ELEM(real_mask,n);
+                DIRECT_MULTIDIM_ELEM(Maux,n) += outside_density[refno]*DIRECT_MULTIDIM_ELEM(real_omask,n);
+            }
             AA = Maux.sum2();
             if (angno==0) 
             {
@@ -1217,7 +1232,11 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                 // Do that by reenforcing the wedge, and recalculating A2                
                 Maux2.initZeros();
                 applyGeometry(Maux2, A_rot_inv, Iref[refno](), IS_NOT_INV, DONT_WRAP);
-                Maux2 *= real_mask;
+                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Maux2)
+                {
+                    DIRECT_MULTIDIM_ELEM(Maux2,n) *= DIRECT_MULTIDIM_ELEM(real_mask,n);
+                    DIRECT_MULTIDIM_ELEM(Maux2,n) += outside_density[refno] * DIRECT_MULTIDIM_ELEM(real_omask,n);
+                }
                 mycorrAA = corrA2[refno*nr_ang + angno];
                 Maux = Maux2 * mycorrAA;
 
@@ -1439,6 +1458,11 @@ void Prog_ml_tomo_prm::expectationSingleImage(
         A_rot_inv = (all_angle_info[opt_angno].A).inv();
         Maux.initZeros();
         applyGeometry(Maux, A_rot_inv, Iref[opt_refno](), IS_NOT_INV, WRAP);
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Maux)
+        {
+            DIRECT_MULTIDIM_ELEM(Maux,n) *= DIRECT_MULTIDIM_ELEM(real_mask,n);
+            DIRECT_MULTIDIM_ELEM(Maux,n) += outside_density[opt_refno]*DIRECT_MULTIDIM_ELEM(real_omask,n);
+        }
         Maux *= opt_scale;
 
         if (do_missing)

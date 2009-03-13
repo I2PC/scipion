@@ -152,7 +152,9 @@ public:
     int nr_miss;
     /** Maximum resolution (dig.freq.) */
     double max_resol;
-    Matrix3D<double> fourier_mask, real_mask;
+    Matrix3D<double> fourier_mask, real_mask, real_omask;
+    /** vector with average density outside each reference */
+    std::vector<double> outside_density;
     /** Vectors with angles for missing data structures */
     std::vector<double> miss_thy0, miss_thyF, miss_thx0, miss_thxF;
 
