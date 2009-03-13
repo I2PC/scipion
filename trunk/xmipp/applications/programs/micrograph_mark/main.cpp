@@ -121,11 +121,22 @@ int main(int argc, char **argv)
         }
 
         // Configure application .............................................
-        QApplication app(argc, argv);
-        QtMainWidgetMark *mainWidget;
+        AutoParticlePicking *autoPicking=NULL;
+        autoPicking=new AutoParticlePicking(&m);
 
-        if (fnRawTilted == "") mainWidget = new QtMainWidgetMark(&m);
-        else mainWidget = new QtMainWidgetMark(&m, &mTilted);
+        QApplication *app=NULL;
+        QtMainWidgetMark *mainWidget=NULL;
+        if (!autoSelect)
+        {
+            app=new QApplication(argc, argv);
+            if (fnRawTilted == "")
+            {
+                mainWidget = new QtMainWidgetMark(&m);
+                mainWidget->untilted_widget()->
+                    setAutoParticlePicking(autoPicking);
+            }
+            else mainWidget = new QtMainWidgetMark(&m, &mTilted);
+        }
 
         // Check if the PSDs must be shown ...................................
         if (fn_assign_CTF != "")
@@ -137,21 +148,21 @@ int main(int argc, char **argv)
         }
 
         // Check if a model has been provided ................................
-        mainWidget->untilted_widget()->setNumThreads(numThreads);
+        autoPicking->setNumThreads(numThreads);
         if (fnAutomaticModel!="")
-            mainWidget->untilted_widget()->loadModels(fnAutomaticModel);
+            autoPicking->loadModels(fnAutomaticModel);
 
         // Run application ...................................................
-        app.setMainWidget(mainWidget);
         if (!autoSelect)
         {
+            app->setMainWidget(mainWidget);
             mainWidget->openAllWindows();
-            app.exec();
+            app->exec();
         }
         else
         {
-            mainWidget->untilted_widget()->automaticallySelectParticles();
-            mainWidget->untilted_widget()->saveAutoParticles();
+            autoPicking->automaticallySelectParticles();
+            autoPicking->saveAutoParticles();
         }
     }
     catch (Xmipp_error XE)
