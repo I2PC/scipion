@@ -44,7 +44,7 @@ AutomaticPicking=True
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/gpfs/fs1/home/cnb01/COSS/Carmen'
+ProjectDir='/home/coss/temp/F22_cib'
 
 # {expert} Directory name for logfiles:
 LogDir='Logs'
@@ -56,10 +56,10 @@ LogDir='Logs'
 """ This option provides shared-memory parallelization on multi-core machines. 
     It does not require any additional software, other than xmipp
 """
-NumberOfThreads=1
+NumberOfThreads=2
 
 # Number of MPI processes to use:
-NumberOfMpiProcesses=32
+NumberOfMpiProcesses=1
 
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
@@ -472,7 +472,7 @@ class particle_pick_class:
         import os
         self.GuiUpdateCount()
         print "* Marking... "
-        self.perform_picking(self.whichmark.get(),False)
+        self.perform_picking(self.whichmark.get())
 
     def LaunchPairMark(self):
         import os
