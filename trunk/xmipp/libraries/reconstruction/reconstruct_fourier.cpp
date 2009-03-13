@@ -117,7 +117,7 @@ void Prog_RecFourier_prm::produce_Side_info()
     maxResolution2=maxResolution*maxResolution;
 
     // Read the input images
-    /*
+    
     if (fn_fsc != "")
     {
         SelFile auxSF;
@@ -125,7 +125,7 @@ void Prog_RecFourier_prm::produce_Side_info()
         SF = auxSF.randomize();
     }
     else
-    */
+    
     SF.read(fn_sel);
     // Read docfile and get column numbers
 
@@ -413,7 +413,7 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                 break;
             }
         case PROCESS_IMAGE:
-            {   //donde se rellena paddedFourier ROB
+            {   
                 Matrix2D< std::complex<double> > *paddedFourier = threadParams->paddedFourier;
                 int * statusArray = parent->statusArray;
 
