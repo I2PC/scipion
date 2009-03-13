@@ -937,7 +937,7 @@ public:
         T* ptr=NULL;
 	unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-            *ptr = static_cast< T >(a * static_cast< double >(*ptr + b));
+            *ptr = static_cast< T >(a * static_cast< double > (*ptr) + b);
     }
 
     /// @defgroup Arithmethic Arithmethic operations
