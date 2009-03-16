@@ -433,6 +433,23 @@ FourierReconstructionExtraCommand=' '
 """
 DoComputeResolution=True
 
+# Split references averages
+"""In theory each reference average should be splited
+   in two when computing the resolution. In this way each
+   projection direction will be represented in each of the
+   subvolumes used to compute the resolution. A much faster
+   but less accurate approach is to split the 
+   proyection directions in two but not the averages. We
+   recomend the first approach for small volumes and the second for
+   large volumes (expecially when using small angular
+   sampling rates.
+   IMPORTANT: the second option has ONLY been implemented for FOURIER
+   reconstruction method. Other reconstruction methods require this
+   flag to be set to True
+"""
+DoSplitReferenceImages=True
+
+
 # Pixel size (in Ang.)
 """ This will make that the X-axis in the resolution plots has units 1/Angstrom
 """
@@ -497,10 +514,15 @@ MpiJobSize='10'
 
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
-    Ask the person who installed your xmipp version, which option to use. Or read: xxx
+    Ask the person who installed your xmipp version, which option to use. Or read: http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParallelPage. The following values are available: 
+   SLURM-MPICH       : BSCs MareNostrum, LaPalma etc
+   TORQUE-OPENMPI    : Crunchy
+   SGE-OPENMPI       : Cluster at imp.ac.at
+   PBS               : Vermeer and FinisTerrae
+   XMIPP_MACHINEFILE : Environment variable $XMIPP_MACHINEFILE points to 
+machinefile
+   Leave it black    : Run locally, most personal computers
 """
-SystemFlavour=""
-
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
@@ -570,8 +592,9 @@ class projection_matching_class:
                 _ARTReconstructionExtraCommand,
                 _WBPReconstructionExtraCommand,
                 _FourierReconstructionExtraCommand,
-		_FourierMaxFrequencyOfInterest,
+                _FourierMaxFrequencyOfInterest,
                 _DoComputeResolution,
+                _DoSplitReferenceImages,
                 _ResolSam,
                 _SelFileName,
                 _DocFileName,
@@ -592,7 +615,7 @@ class projection_matching_class:
                 _MyNumberOfMpiProcesses,
                 _MySystemFlavour,
                 _MyMpiJobSize,
-		_MyNumberOfThreads,
+                _MyNumberOfThreads,
                 _SymmetryGroup,
                 _SetResolutiontoZero,
                 _ConstantToAddToFiltration
@@ -628,6 +651,7 @@ class projection_matching_class:
        self._DisplayResolution=_DisplayResolution
        self._DoReconstruction=_DoReconstruction
        self._DoComputeResolution=_DoComputeResolution
+       self._DoSplitReferenceImages=_DoSplitReferenceImages
        self._ResolSam=_ResolSam
        self._DoCtfCorrection=_DoCtfCorrection
        self._WienerConstant=_WienerConstant
@@ -682,7 +706,10 @@ class projection_matching_class:
           delete_working_directory(self._mylog,self._WorkingDir)
        else:
           self._mylog.info("Skipped DoDeleteWorkingDir") 
-
+       if ReconstructionMethod!='fourier' and not _DoSplitReferenceImages:
+          print "DoSplitReferenceImages must be set to True is"
+          print " reconstructin method is not fourier"
+          exit(1)
        create_working_directory(self._mylog,self._WorkingDir)
        log.make_backup_of_script_file(sys.argv[0],self._WorkingDir)
        
@@ -873,6 +900,7 @@ class projection_matching_class:
                                          self._SymmetryGroup,
                                          self._AvailableMemory,
                                          self._DoComputeResolution,
+                                         self._DoSplitReferenceImages,
                                          self._DoAlign2D,
                                          self._Align2DIterNr,
                                          self._Align2dMaxChangeOffset,
@@ -911,7 +939,9 @@ class projection_matching_class:
                                     globalFourierMaxFrequencyOfInterest,
                                     self._ARTLambda,
                                     self._SymmetryGroup,
-                                    self._ReconstructedVolume[_iteration_number]
+                                    self._ReconstructedVolume[_iteration_number],
+                                    self._DoComputeResolution,
+                                    self._DoSplitReferenceImages
                                     )
           else:
              self._mylog.info("Skipped Reconstruction") 
@@ -922,15 +952,15 @@ class projection_matching_class:
                                                   self._WBPReconstructionExtraCommand,
                                                   self._FourierReconstructionExtraCommand,
                                                   self._ReconstructionMethod,
-						  globalFourierMaxFrequencyOfInterest,
+                                                  globalFourierMaxFrequencyOfInterest,
                                                   _iteration_number,
                                                   self._DisplayReconstruction,
                                                   self._ResolSam,
                                                   self._DoParallel,
                                                   self._MyNumberOfMpiProcesses,
-						  self._MyNumberOfThreads,
+                                                  self._MyNumberOfThreads,
                                                   self._MySystemFlavour,
-						  self._MyMpiJobSize,
+                                                  self._MyMpiJobSize,
                                                   self._SymmetryGroup,
                                                   self._DisplayResolution,
                                                   self._ReconstructedVolume[_iteration_number],
@@ -1128,6 +1158,7 @@ def execute_projection_matching(_mylog,
                                 _SymmetryGroup,
                                 _AvailableMemory,
                                 _DoComputeResolution,
+                                _DoSplitReferenceImages,
                                 _DoAlign2D,
                                 _Align2DIterNr,
                                 _Align2dMaxChangeOffset,
@@ -1268,7 +1299,7 @@ def execute_projection_matching(_mylog,
                     ' -max_shift '        + str(_MaxChangeOffset) + \
                     ' -max_shift_change ' + str(_Align2dMaxChangeOffset) + \
                     ' -max_psi_change '   + str(_Align2dMaxChangeRot) 
-      if (_DoComputeResolution):
+      if (_DoComputeResolution and _DoSplitReferenceImages):
          parameters += \
                     ' -split '
 
@@ -1372,7 +1403,9 @@ def execute_reconstruction(_mylog,
                            _FourierMaxFrequencyOfInterest,
                            _ARTLambda,
                            _SymmetryGroup,
-                           _ReconstructedandfilteredVolume):
+                           _ReconstructedandfilteredVolume,
+                           _DoComputeResolution,
+                           _DoSplitReferenceImages):
 
    _mylog.debug("execute_reconstruction")
 
@@ -1410,11 +1443,13 @@ def execute_reconstruction(_mylog,
       parameters=' -i '    + ForReconstructionSel + \
                  ' -o '    + Outputvolume + '.vol ' + \
                  ' -sym '  + _SymmetryGroup + \
-		 ' -thr '  + str(_MyNumberOfThreads) + \
+                 ' -thr '  + str(_MyNumberOfThreads) + \
                  ' -weight ' + \
                  ' -max_resolution ' + str(_FourierMaxFrequencyOfInterest)
       if (_DoParallel):
          parameters = parameters + ' -mpi_job_size ' + str(_MyMpiJobSize)
+      if (_DoComputeResolution and not _DoSplitReferenceImages):
+         parameters = parameters + ' -prepare_fsc ' + Outputvolume + ' '
       parameters = parameters + _FourierReconstructionExtraCommand 
    else:
       _mylog.error("Reconstruction method unknown. Quiting")
@@ -1445,13 +1480,13 @@ def  execute_resolution(_mylog,
                         _WBPReconstructionExtraCommand,
                         _FourierReconstructionExtraCommand,
                         _ReconstructionMethod,
-			_FourierMaxFrequencyOfInterest,
+                        _FourierMaxFrequencyOfInterest,
                         _iteration_number,
                         _DisplayReconstruction,
                         _ResolSam,
                         _DoParallel,
                         _MyNumberOfMpiProcesses,
-			_MyNumberOfThreads,
+                        _MyNumberOfThreads,
                         _MySystemFlavour,
                         _MyMpiJobSize,
                         _SymmetryGroup,
@@ -1702,8 +1737,9 @@ if __name__ == '__main__':
                 ARTReconstructionExtraCommand,
                 WBPReconstructionExtraCommand,
                 FourierReconstructionExtraCommand,
-		FourierMaxFrequencyOfInterest,
+                FourierMaxFrequencyOfInterest,
                 DoComputeResolution,
+                DoSplitReferenceImages,
                 ResolSam,
                 SelFileName,                    
                 DocFileName,                    
@@ -1724,7 +1760,7 @@ if __name__ == '__main__':
                 NumberOfMpiProcesses,                   
                 SystemFlavour,
                 MpiJobSize,
-		NumberOfThreads,
+                NumberOfThreads,
                 SymmetryGroup,                        
                 SetResolutiontoZero,
                 ConstantToAddToFiltration
