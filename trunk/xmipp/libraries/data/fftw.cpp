@@ -28,7 +28,7 @@
 #include <string.h>
 #include <pthread.h>
 
-pthread_mutex_t fftw_plan_mutex = PTHREAD_MUTEX_INITIALIZER; 
+static pthread_mutex_t fftw_plan_mutex = PTHREAD_MUTEX_INITIALIZER; 
 
 // Constructors and destructors --------------------------------------------
 XmippFftw::XmippFftw()
