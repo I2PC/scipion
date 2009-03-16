@@ -257,19 +257,20 @@ public:
    
    /** remove all those points that are further away from experimental data
        than neighborhood_radius_rad */
+   void remove_points_far_away_from_experimental_data();
 
-   /** remove all those points that are further away from experimental data
-       than neighborhood_radius_rad */
-   void remove_points_far_away_from_experimental_data(FileName FnexperimentalImages);
    /** Find the closest sampling point for a docfile of experimental projections*/   
+   void find_closest_sampling_point(DocFile &DFi,
+                                    FileName output_file_root);
    void find_closest_sampling_point(FileName FnexperimentalImages,
                                     FileName output_file_root);
 
    /**for each sampling point find the experimental images
       closer to that point than to any other */
-   void  find_closest_experimental_point(FileName FnexperimentalImages);
+   void  find_closest_experimental_point();
 
    /** Precalculate exp_data by symmetry matrices (speeds up calculations)*/
+   void fill_exp_data_projection_direction_by_L_R(DocFile &DFi);
    void fill_exp_data_projection_direction_by_L_R(FileName FnexperimentalImages);
 };
 //@}

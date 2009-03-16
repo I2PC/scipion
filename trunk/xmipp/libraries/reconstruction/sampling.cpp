@@ -1558,12 +1558,9 @@ void XmippSampling::compute_neighbors(void)
     #undef CHIMERA
 
 }
-/** Read doc file with experimental images
-    and remove all those points no closer than neighborhood_radius_rad
+/** Remove all those points no closer than neighborhood_radius_rad
     */
-
-
-void XmippSampling::remove_points_far_away_from_experimental_data(FileName FnexperimentalImages)
+void XmippSampling::remove_points_far_away_from_experimental_data()
 {
     double my_dotProduct;
     Matrix1D<double>  row(3),direction(3);
@@ -1635,6 +1632,15 @@ void XmippSampling::remove_points_far_away_from_experimental_data(FileName Fnexp
 void XmippSampling::find_closest_sampling_point(FileName FnexperimentalImages,
                                                 FileName output_file_root)
 {
+    //read input files
+    DocFile          DFi;
+    DFi.read(FnexperimentalImages);//experiemntal points
+    find_closest_sampling_point(DFi,output_file_root);
+
+}
+void XmippSampling::find_closest_sampling_point(DocFile &DFi,
+                                                FileName output_file_root)
+{
     double my_dotProduct,my_dotProduct_aux;
     Matrix1D<double>  row(3),direction(3);
     Matrix1D<double> docline;
@@ -1646,9 +1652,6 @@ void XmippSampling::find_closest_sampling_point(FileName FnexperimentalImages,
     int winner_sampling=-1;
     int winner_exp_L_R=-1;
     
-    //read input files
-    DocFile          DFi;
-    DFi.read(FnexperimentalImages);//experiemntal points
     DFi.set(1,9,0);
     DFi.go_beginning();
     std::string   comment;
@@ -1739,7 +1742,7 @@ void XmippSampling::find_closest_sampling_point(FileName FnexperimentalImages,
 #undef DEBUG3
 }
 
-void XmippSampling::find_closest_experimental_point(FileName FnexperimentalImages)
+void XmippSampling::find_closest_experimental_point()
 {
     double my_dotProduct,my_dotProduct_aux;
     Matrix1D<double>  row(3),direction(3);
@@ -1874,14 +1877,20 @@ void XmippSampling::fill_L_R_repository(void)
 #endif
 #undef DEBUG3
 }
+
 void XmippSampling::fill_exp_data_projection_direction_by_L_R(FileName FnexperimentalImages)
+{
+    //read input files
+    DocFile          DFi;
+    DFi.read(FnexperimentalImages);//experimental points
+    fill_exp_data_projection_direction_by_L_R(DFi);
+}
+
+void XmippSampling::fill_exp_data_projection_direction_by_L_R(DocFile &DFi)
 {
     std::vector <Matrix1D<double> > exp_data_projection_direction;
     Matrix1D<double>  direction(3);
     double rotp, tiltp, psip;
-    //read input files
-    DocFile          DFi;
-    DFi.read(FnexperimentalImages);//experimental points
     DFi.go_first_data_line();
     //#define CHIMERA
     #ifdef CHIMERA

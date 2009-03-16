@@ -255,7 +255,7 @@ void Prog_angular_project_library_Parameters::run()
     if (FnexperimentalImages.size() > 0 && 
         remove_points_far_away_from_experimental_data_bool)
         {
-        mysampling.remove_points_far_away_from_experimental_data(FnexperimentalImages);
+        mysampling.remove_points_far_away_from_experimental_data();
         #ifdef  DEBUGTIME
         time (&end);
         time_dif = difftime (end,start); start=end;

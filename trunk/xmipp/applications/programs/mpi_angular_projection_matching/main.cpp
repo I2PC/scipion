@@ -175,10 +175,10 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
             //remove redundant sampling points: symmetry
             chunk_mysampling.remove_redundant_points(symmetry, sym_order);
             //remove sampling points too far away from experimental data
-            chunk_mysampling.remove_points_far_away_from_experimental_data(fn_exp);
+            chunk_mysampling.remove_points_far_away_from_experimental_data();
             //for each sampling point find the experimental images
             //closer to that point than to any other
-	        chunk_mysampling.find_closest_experimental_point(fn_exp);
+	        chunk_mysampling.find_closest_experimental_point();
             //print number of points per node
             //#define DEBUG
             #ifdef DEBUG
