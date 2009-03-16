@@ -818,23 +818,23 @@ void Prog_Refine3d_prm::concatenate_selfiles(int iter)
 {
 
     FileName fn_tmp, fn_class;
+    SelFile SFout;
 
     // Concatenate all hard-classification selfiles
-    // Only after an iteration has been performed, and thus rewrite==false...
     for (int volno = 0; volno < Nvols; volno++)
     {
         fn_class = fn_root + "_it";
         fn_class.compose(fn_class, iter, "");
         fn_class += "_class_vol";
         fn_class.compose(fn_class, volno + 1, "sel");
-        system(((std::string)"rm -f " + fn_class).c_str());
+        SFout.clear();
         for (int nr = eachvol_start[volno]; nr <= eachvol_end[volno]; nr++)
         {
             fn_tmp = fn_root + "_ref";
             fn_tmp.compose(fn_tmp, nr + 1, "sel");
-            system(((std::string)"cat " + fn_tmp + " >> " + fn_class).c_str());
-            system(((std::string)"rm -f " + fn_tmp).c_str());
+            SFout.append(fn_tmp);
         }
+        SFout.write(fn_class);
     }
 
 }
@@ -846,7 +846,6 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv)
     Prog_segment_prm       segm_prm;
     FileName               fn_vol, fn_tmp;
     VolumeXmipp            vol, Vaux, Vsymmask, Vsolv;
-    SymList                SL;
     Matrix3D<int>          mask3D;
     double                 avg, dummy, in, out;
     int                    dim;
@@ -871,8 +870,7 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv)
             if (fn_sym != "")
             {
                 Vaux().resize(vol());
-                SL.read_sym_file(fn_sym);
-                symmetrize(SL, vol, Vaux);
+                symmetrize(mysampling.SL, vol, Vaux);
                 // Read local symmetry mask if requested
                 if (fn_symmask != "")
                 {
