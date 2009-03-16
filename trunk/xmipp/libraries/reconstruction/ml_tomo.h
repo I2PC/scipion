@@ -178,7 +178,7 @@ public:
     bool no_SMALLANGLE;
 
     // sampling object
-    //XmippSampling mysampling;
+    XmippSampling mysampling;
     // For user-provided tilt range
     double tilt_range0, tilt_rangeF;
     // Symmetry setup
@@ -231,7 +231,7 @@ public:
     void precalculateA2(std::vector< VolumeXmippT<double> > &Iref);
 
     /// ML-integration over all (or -fast) translations
-    void expectationSingleImage(Matrix3D<double> &Mimg, int &missno,
+    void expectationSingleImage(Matrix3D<double> &Mimg, int imgno, int missno,
                                 std::vector< VolumeXmippT<double> > &Iref,
                                 std::vector<Matrix3D<double> > &wsumimgs,
                                 std::vector<Matrix3D<double> > &wsumweds,
