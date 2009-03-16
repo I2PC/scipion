@@ -523,6 +523,8 @@ MpiJobSize='10'
 machinefile
    Leave it black    : Run locally, most personal computers
 """
+SystemFlavour=''
+
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
