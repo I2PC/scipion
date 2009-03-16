@@ -94,9 +94,18 @@ DoParallel=False
 NumberOfMpiProcesses=5
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
-    Ask the person who installed your xmipp version, which option to use. Or read: xxx
+    Ask the person who installed your xmipp version, which option to use. Or read: http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParallelPage. The following values are available: 
+   SLURM-MPICH       : BSCs MareNostrum, LaPalma etc
+   TORQUE-OPENMPI    : Crunchy
+   SGE-OPENMPI       : Cluster at imp.ac.at
+   PBS               : Vermeer and FinisTerrae
+   XMIPP_MACHINEFILE : Environment variable $XMIPP_MACHINEFILE points to 
+machinefile
+   HOME_MACHINEFILE  : machinefile is called $HOME/machines.dat
+   Leave it black    : Run locally, most personal computers
 """
-SystemFlavour="SLURM-MPICH"
+SystemFlavour=''
+
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
