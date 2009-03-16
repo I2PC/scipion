@@ -735,7 +735,7 @@ class automated_gui_class:
     def GuiBrowseFile(self):
         import tkFileDialog
         import os
-        fileformats = [('All Files ','*.*')]
+        fileformats = [('All Files ','*')]
         fname = tkFileDialog.askopenfilename(title='Choose File',
                                              filetypes=fileformats)
         if (len(fname)>0):
