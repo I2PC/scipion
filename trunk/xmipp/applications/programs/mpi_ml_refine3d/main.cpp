@@ -273,9 +273,7 @@ int main(int argc, char **argv)
                 c = 0;
                 while (!ML2D_prm.SFr.eof())
                 {
-                    FileName fn_img=ML2D_prm.SFr.NextImg();
-                    if (fn_img=="") break;
-                    ML2D_prm.Iref[c].read(fn_img, false, false, false, false);
+                    ML2D_prm.Iref[c].read(ML2D_prm.SFr.NextImg(), false, false, false, false);
                     ML2D_prm.Iref[c]().setXmippOrigin();
                     c++;
                 }
