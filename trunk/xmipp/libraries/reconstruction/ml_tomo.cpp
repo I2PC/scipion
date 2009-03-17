@@ -24,7 +24,7 @@
  ***************************************************************************/
 #include "ml_tomo.h"
 
-//#define DEBUG
+#define DEBUG
 // For blocking of threads
 pthread_mutex_t mltomo_weightedsum_update_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mltomo_selfile_access_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -137,21 +137,10 @@ void Prog_ml_tomo_prm::read(int argc, char **argv, bool ML3D)
     psi_sampling = textToFloat(getParameter(argc2, argv2, "-psi_sampling", "-1"));
     tilt_range0 = textToFloat(getParameter(argc2, argv2, "-tilt0", "-91."));
     tilt_rangeF = textToFloat(getParameter(argc2, argv2, "-tiltF", "91."));
-    //fn_sym = getParameter(argc2, argv2, "-sym", "c1");
-    fn_sym="c1";
-    // For local searches
     ang_search = textToFloat(getParameter(argc2, argv2, "-ang_search", "-1."));
 
     // Missing data structures 
-    do_wedge = checkParameter(argc2, argv2, "-wedges");
-    do_pyramid = checkParameter(argc2, argv2, "-pyramids");
-    do_cone = checkParameter(argc2, argv2, "-cones");
-    if (do_wedge) 
-        fn_missing = getParameter(argc2, argv2, "-wedges");
-    else if (do_pyramid) 
-        fn_missing = getParameter(argc2, argv2, "-pyramids");
-    else if (do_cone) 
-        fn_missing = getParameter(argc2, argv2, "-cones");
+    fn_missing = getParameter(argc2, argv2, "-missing","");
     max_resol = textToFloat(getParameter(argc2, argv2, "-max_resol", "0.5"));
 
     // Hidden arguments
@@ -183,20 +172,27 @@ void Prog_ml_tomo_prm::show(bool ML3D)
         else
             std::cerr << "  Number of references:   : " << nr_ref << std::endl;
         std::cerr << "  Output rootname         : " << fn_root << std::endl;
-        std::cerr << "  Angular sampling rate   : " << angular_sampling<<std::endl;
+        std::cerr << "  Angular sampling rate   : " << angular_sampling<< "degrees"<<std::endl;
+        if (ang_search > 0.)
+        {
+            std::cerr << "  Local angular searches  : "<<ang_search<<" degrees"<<std::endl;
+        }
+        std::cerr << "  Symmetry group          : " << fn_sym<<std::endl;
         std::cerr << "  Stopping criterium      : " << eps << std::endl;
         std::cerr << "  initial sigma noise     : " << sigma_noise << std::endl;
         std::cerr << "  initial sigma offset    : " << sigma_offset << std::endl;
-        if (do_missing)
+        if (fn_missing!="")
         {
-            std::cerr << "  Maximum resolution      : " << max_resol << std::endl;
+            std::cerr << "  Missing data info       : "<<fn_missing <<std::endl;
             if (do_impute)
-                std::cerr << "  Use imputation for data with missing regions "<<std::endl;
+                std::cerr << "  Missing data treatment  : imputation "<<std::endl;
             else
-                std::cerr << "  Divide by number of observations for data with missing regions "<<std::endl;
+                std::cerr << "  Missing data treatment  : conventional division "<<std::endl;
+            std::cerr << "  Maximum resolution      : " << max_resol << std::endl;
         }
         if (fn_frac != "")
             std::cerr << "  Initial model fractions : " << fn_frac << std::endl;
+
         if (fix_fractions)
         {
             std::cerr << "  -> Do not update estimates of model fractions." << std::endl;
@@ -361,6 +357,8 @@ void Prog_ml_tomo_prm::produceSideInfo()
     mysampling.SetSampling(angular_sampling);
     if (!mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
         REPORT_ERROR(3005, (std::string)"ml_refine3d::run Invalid symmetry" +  fn_sym);
+    mysampling.SL.read_sym_file(fn_sym);
+    mysampling.fill_L_R_repository();
     // by default max_tilt= +91., min_tilt= -91.
     mysampling.Compute_sampling_points(false, // half sphere?
                                        tilt_rangeF,
@@ -374,38 +372,75 @@ void Prog_ml_tomo_prm::produceSideInfo()
 
     // Read in docfile with information about the missing wedges
     nr_miss = 0;
-    miss_thx0.clear();
-    miss_thxF.clear();
-    miss_thy0.clear();
-    miss_thyF.clear();
-    do_missing = (do_wedge || do_pyramid || do_cone);
-    if (do_missing)
+    all_missing_info.clear();
+    if (fn_missing=="")
     {
+        do_missing = false;
+    }
+    else
+    {
+        do_missing = true;
+        missing_info myinfo;
         DocFile DFm;
+        FileName fn_tst;
         DFm.read(fn_missing);
-        DFm.go_first_data_line();
-        while (!DFm.eof())
+        DFm.go_beginning();
+        if (DFm.get_current_line().Is_comment()) 
         {
-            if (do_wedge)
+            fn_tst = (DFm.get_current_line()).get_text();
+            if (strstr(fn_tst.c_str(), "Wedgeinfo") == NULL)
+                REPORT_ERROR(1,"Missing wedge info file does not have a header starting with:\n ; Wedgeinfo");
+            
+            int n = 0;
+            int nmax = DFm.dataLineNo();
+            while (n < nmax)
             {
-                miss_thy0.push_back(DFm(0));
-                miss_thyF.push_back(DFm(1));
+                n++;
+                DFm.next();
+                if (DFm.get_current_line().Is_comment()) 
+                    fn_tst = (DFm.get_current_line()).get_text();
+                DFm.adjust_to_data_line();
+
+                if (strstr(fn_tst.c_str(), "wedge_y") != NULL)
+                {
+                    myinfo.type=MISSING_WEDGE_Y;
+                    myinfo.thy0=DFm(0);
+                    myinfo.thyF=DFm(1);
+                    myinfo.thx0=-90.;
+                    myinfo.thxF=90.;
+                }
+                else if (strstr(fn_tst.c_str(), "wedge_x") != NULL)
+                {
+                    myinfo.type=MISSING_WEDGE_X;
+                    myinfo.thx0=DFm(0);
+                    myinfo.thxF=DFm(1);
+                    myinfo.thy0=-90.;
+                    myinfo.thyF=90.;
+                }
+                else if (strstr(fn_tst.c_str(), "pyramid") != NULL)
+                {
+                    myinfo.type=MISSING_PYRAMID;
+                    myinfo.thy0=DFm(0);
+                    myinfo.thyF=DFm(1);
+                    myinfo.thx0=DFm(2);
+                    myinfo.thxF=DFm(3);
+                }
+                else if (strstr(fn_tst.c_str(), "cone") != NULL)
+                {
+                    myinfo.type=MISSING_CONE;
+                    myinfo.thy0=DFm(0);
+                    myinfo.thyF=0.;
+                    myinfo.thx0=0.;
+                    myinfo.thxF=0.;
+                }
+                else
+                {
+                    std::cerr<<" Missing type= "<<fn_tst<<std::endl;
+                    REPORT_ERROR(1,"ERROR: unrecognized missing type!");
+                }
+                all_missing_info.push_back(myinfo);
+                nr_miss++;
             }
-            else if (do_pyramid)
-            {
-                miss_thy0.push_back(DFm(0));
-                miss_thyF.push_back(DFm(1));
-                miss_thx0.push_back(DFm(2));
-                miss_thxF.push_back(DFm(3));
-            }
-            else if (do_cone)
-            {
-                miss_thy0.push_back(DFm(0));
-            }
-            else
-                REPORT_ERROR(1,"BUG: resolved type of missing data structure!");
-            DFm.next_data_line();
-            nr_miss++;
         }
     }
 
@@ -448,14 +483,6 @@ void Prog_ml_tomo_prm::produceSideInfo()
         }
     }
 
-#define DEBUG_GENERAL
-#ifdef DEBUG_GENERAL
-    std::cerr<<"do_generate_refs ="<<do_generate_refs<<std::endl;
-    std::cerr<<"nr_ref= "<<nr_ref<<std::endl; 
-    std::cerr<<"nr_miss= "<<nr_miss<<std::endl;
-    std::cerr<<"dim= "<<dim<<std::endl;
-    std::cerr<<"Finished produceSideInfo"<<std::endl;
-#endif
 }
 
 // Generate initial references =============================================
@@ -504,12 +531,12 @@ void Prog_ml_tomo_prm::generateInitialReferences()
 
             // This is dirty coding...
             // but let's first make it work...
-            if (do_wedge || do_pyramid || do_cone)
+            if (do_missing)
             {
                 if (DF.search_comment(fn_tmp)) 
                 {
                     int missno = (int)(DF(7)) - 1;
-                    getMissingWedge(Mmissing, all_angle_info[iran].A, missno);
+                    getMissingRegion(Mmissing, all_angle_info[iran].A, missno);
                 }
                 else 
                 {
@@ -522,12 +549,12 @@ void Prog_ml_tomo_prm::generateInitialReferences()
             if (nn == 0)
             {
                 Iave() = Itmp();
-                if (do_wedge || do_pyramid || do_cone) Msumwedge = Mmissing;
+                if (do_missing) Msumwedge = Mmissing;
             }
             else
             {
                 Iave() += Itmp();
-                if (do_wedge || do_pyramid || do_cone) Msumwedge += Mmissing;
+                if (do_missing) Msumwedge += Mmissing;
             }
         }
         // Correct missing wedge by division by sumwedge in Fourier space
@@ -574,8 +601,8 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
     DocFile                   DF, DFsub;
     DocLine                   DL;
     FileName                  fn_tmp;
-    VolumeXmipp               img;
-    std::vector<Matrix1D<double> > Vdum;
+    VolumeXmipp               img, Vaux;
+    std::vector<Matrix1D<double> > Vdm;
 
 #ifdef  DEBUG
     std::cerr<<"Start produceSideInfo2"<<std::endl;
@@ -605,6 +632,19 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
         // This makes that the A2 values of the rotated references are much less sensitive to rotation
         img().selfApplyGeometry( Euler_rotation3DMatrix(32., 61., 53.), IS_NOT_INV, DONT_WRAP);
         img().selfApplyGeometry( Euler_rotation3DMatrix(32., 61., 53.), IS_INV, DONT_WRAP);
+
+        // Symmetrize references
+        if (mysampling.SL.SymsNo() > 1)
+        {
+            // Note that for no-imputation this is not correct!
+            // One would have to symmetrize the missing wedges and the sum of the images separately
+            if (do_missing && !do_impute)
+                REPORT_ERROR(1,"Symmetrization and dont_impute together are not implemented...");
+            Vaux().resize(img());
+            symmetrize(mysampling.SL, img, Vaux);
+            img = Vaux;
+            Vaux.write("sym.vol");
+        }
 
         Iref.push_back(img);
         Iold.push_back(img);
@@ -647,21 +687,17 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
             DF.go_beginning();
             if (DF.search_comment(fn_tmp)) 
             {
-                // TODO: If the only thing I want to get from the docfile is the missno, then
-                // at a later stage move this if upwards to save time!
-                if (do_wedge || do_pyramid || do_cone)
+                // Get missing wedge type
+                if (do_missing)
                 {
                     imgs_missno[imgno] = (int)(DF(7)) - 1;
                 }
-                // TODO: to be added....
-                /*
+                // Get prior normalization parameters
                 if (do_norm)
                 {
-                    imgs_bgmean[imgno] = DF(9);
-                    imgs_scale[imgno] = DF(10);
+                    imgs_bgmean[imgno] = DF(10);
+                    imgs_scale[imgno] = DF(11);
                 }
-                */
-
                 // Generate a docfile from the (possible subset of) images in SF
                 if (ang_search > 0.)
                 {
@@ -683,11 +719,16 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
         // Set up local searches
         if (ang_search > 0.)
         {
-            mysampling.fill_L_R_repository();
             mysampling.SetNeighborhoodRadius(ang_search);
             mysampling.fill_exp_data_projection_direction_by_L_R(DFsub);
-            mysampling.compute_neighbors();
             mysampling.remove_points_far_away_from_experimental_data();
+            mysampling.compute_neighbors();
+#ifdef DEBUG_ANG_SEARCH
+            for (int i = 0; i < mysampling.my_neighbors[5].size(); i++)
+            {
+                std::cerr<<"i= "<<i<<" my_neighbors[5][i]= "<<mysampling.my_neighbors[5][i]<<" rot= "<<XX(mysampling.no_redundant_sampling_points_angles[mysampling.my_neighbors[5][i]])<<" tilt= "<<YY(mysampling.no_redundant_sampling_points_angles[mysampling.my_neighbors[5][i]])<<std::endl;
+            }
+#endif
         }
 
     } 
@@ -717,6 +758,7 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
             myinfo.rot = rot;
             myinfo.tilt = tilt;
             myinfo.psi = psi;
+            myinfo.direction = i;
             myinfo.A = Euler_rotation3DMatrix(rot, tilt, psi);
             all_angle_info.push_back(myinfo);
             nr_ang ++;
@@ -731,139 +773,91 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
         double rot=all_angle_info[angno].rot;
         double tilt=all_angle_info[angno].tilt;
         double psi=all_angle_info[angno].psi;
-        std::cerr<<" rot= "<<rot<<" tilt= "<<tilt<<" psi= "<<psi<<std::endl;
+        std::cerr<<"angno= "<<angno<<" rot= "<<rot<<" tilt= "<<tilt<<" psi= "<<psi<<std::endl;
     }
 #endif
 
+#define DEBUG_GENERAL
 #ifdef DEBUG_GENERAL
+    std::cerr<<"do_generate_refs ="<<do_generate_refs<<std::endl;
+    std::cerr<<"nr_ref= "<<nr_ref<<std::endl; 
+    std::cerr<<"nr_miss= "<<nr_miss<<std::endl;
+    std::cerr<<"dim= "<<dim<<std::endl;
+    std::cerr<<"Finished produceSideInfo"<<std::endl;
     std::cerr<<"nr_ang= "<<nr_ang<<std::endl; 
     std::cerr<<"nr_psi= "<<nr_psi<<std::endl; 
 #endif
 
-#ifdef  DEBUG
+#ifdef DEBUG
     std::cerr<<"Finished produceSideInfo2"<<std::endl;
 #endif
 
 }
 
-void Prog_ml_tomo_prm::getMissingWedge(Matrix3D<double> &Mmissing,
+void Prog_ml_tomo_prm::getMissingRegion(Matrix3D<double> &Mmissing,
                                        Matrix2D<double> A,
                                        const int missno)
 {
 
-/*
-#define NEVER
-#ifdef NEVER
-
-    std::cerr<<"in"<<std::endl;
-    Matrix3D<double> mask(dim,dim,dim);
-    mask.setXmippOrigin();
-    double xp, yp, zp;
-    double tg0, tgF, limx0, limxF;
-
-    tg0 = -tan(PI * (-90. - miss_thyF[missno]) / 180.);
-    tgF = -tan(PI * (90. - miss_thy0[missno]) / 180.);
-    std::cerr<<"old tg0= "<<tg0<<" tgF= "<<tgF<<std::endl;
-
-    A = A.inv();
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(mask)
-    {
-        xp = dMij(A, 0, 0) * (double)j + dMij(A, 0, 1) * (double)i + dMij(A, 0, 2) * (double)k;
-        zp = dMij(A, 2, 0) * (double)j + dMij(A, 2, 1) * (double)i + dMij(A, 2, 2) * (double)k;
-        limx0 = tg0 * zp;
-        limxF = tgF * zp;
-        if (zp >= 0)
-        {
-            if (xp <= limx0 || xp >= limxF)
-                VOL_ELEM(mask, k, i, j) = 1.;
-            else
-                VOL_ELEM(mask, k, i, j) = 0.;
-        }
-        else
-        {
-            if (xp <= limxF || xp >= limx0)
-                VOL_ELEM(mask, k, i, j) = 1.;
-            else
-                VOL_ELEM(mask, k, i, j) = 0.;
-        }
-    }
-    VolumeXmipp Vt;
-    Vt()=mask;
-    Vt.write("mask.vol");
-
-
-    tg0 = -tan(PI * miss_thy0[missno] / 180.);
-    tgF = -tan(PI * miss_thyF[missno] / 180.);
-    std::cerr<<"tg0= "<<tg0<<" tgF= "<<tgF<<std::endl;
-
-    A = A.inv();
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(mask)
-    {
-        xp = dMij(A, 0, 0) * (double)j + dMij(A, 0, 1) * (double)i + dMij(A, 0, 2) * (double)k;
-        zp = dMij(A, 2, 0) * (double)j + dMij(A, 2, 1) * (double)i + dMij(A, 2, 2) * (double)k;
-        if (xp >= 0)
-        {
-            if (zp >= tgF * xp && zp <= tg0 * xp)
-               VOL_ELEM(mask, k, i, j) = 1.;
-            else
-               VOL_ELEM(mask, k, i, j) = 0.;
-        }
-        else
-        {
-            if (zp >= tg0 * xp && zp <= tgF * xp)
-                VOL_ELEM(mask, k, i, j) = 1.;
-            else
-                VOL_ELEM(mask, k, i, j) = 0.;
-        }
-
-    }
-    Vt()=mask;
-    Vt.write("masknew.vol");
-
-
-    exit(1);
-#else
-*/
-
     if (missno < 0)
-        REPORT_ERROR(1,"BUG: missno < 0");
-
-    double theta0_alongy, thetaF_alongy, theta0_alongx, thetaF_alongx;
-    Mmissing.resize(dim,dim,hdim+1);
-
-    if (do_wedge) 
     {
-        theta0_alongy=miss_thy0[missno];
-        thetaF_alongy=miss_thyF[missno];
-    }
-    else if (do_pyramid)
-    {
-        REPORT_ERROR(1,"Missing pyramides not implemented yet...");
-        theta0_alongy=miss_thy0[missno];
-        thetaF_alongy=miss_thyF[missno];
-        theta0_alongx=miss_thx0[missno];
-        thetaF_alongx=miss_thxF[missno];
-    }
-    else if (do_cone)
-    {
-        REPORT_ERROR(1,"Missing cones not implemented yet...");
-    }
-    else
-    {
-        REPORT_ERROR(1,"bug: not do_wedge, nor do_pyramid, nor do_cone; but inside getMissingWedge");
+        std::cerr<<" BUG: missno < 0"<<std::endl;
+        exit(1);
     }
 
     Matrix2D<double> Ainv = A.inv();
     double xp, yp, zp;
-    double tg0_y, tgF_y, tg0_x, tgF_x, limx0, limxF, limy0, limyF;
+    double tg0_y=0., tgF_y=0., tg0_x=0., tgF_x=0., tg=0., limx0=0., limxF=0., limy0=0., limyF=0., lim=0.;
+    bool do_limit_x, do_limit_y, do_cone, is_observed;
+    Mmissing.resize(dim,dim,hdim+1);
 
-    tg0_y = -tan(PI * (-90. - thetaF_alongy) / 180.);
-    tgF_y = -tan(PI * (90. - theta0_alongy) / 180.);
+    if (all_missing_info[missno].type==MISSING_WEDGE_Y)
+    {
+        do_limit_x = true;
+        do_limit_y = false;
+        do_cone    = false;
+         // TODO: Make this more logical!!
+        tg0_y = -tan(PI * (-90. - all_missing_info[missno].thyF) / 180.);
+        tgF_y = -tan(PI * (90. - all_missing_info[missno].thy0) / 180.);
+    }
+    else if (all_missing_info[missno].type==MISSING_WEDGE_X)
+    {
+        do_limit_x = false;
+        do_limit_y = true;
+        do_cone    = false;
+        tg0_x = -tan(PI * (-90. - all_missing_info[missno].thxF) / 180.);
+        tgF_x = -tan(PI * (90. - all_missing_info[missno].thx0) / 180.);
+    }
+    else if (all_missing_info[missno].type==MISSING_PYRAMID)
+    {
+        do_limit_x = true;
+        do_limit_y = true;
+        do_cone    = false;
+        tg0_y = -tan(PI * (-90. - all_missing_info[missno].thyF) / 180.);
+        tgF_y = -tan(PI * (90. - all_missing_info[missno].thy0) / 180.);
+        tg0_x = -tan(PI * (-90. - all_missing_info[missno].thxF) / 180.);
+        tgF_x = -tan(PI * (90. - all_missing_info[missno].thx0) / 180.);
+    }
+    else if (all_missing_info[missno].type==MISSING_CONE)
+    {
+        do_limit_x = false;
+        do_limit_y = false;
+        do_cone    = true;
+        tg = -tan(PI * (-90. - all_missing_info[missno].thy0) / 180.);    }
+    else
+    {
+        REPORT_ERROR(1,"bug: unrecognized type of missing region");
+    }
 
 //#define DEBUG_WEDGE
 #ifdef DEBUG_WEDGE
+    std::cerr<<"do_limit_x= "<<do_limit_x<<std::endl;
+    std::cerr<<"do_limit_y= "<<do_limit_y<<std::endl;
+    std::cerr<<"do_cone= "<<do_cone<<std::endl;
     std::cerr<<"tg0_y= "<<tg0_y<<std::endl;
     std::cerr<<"tgF_y= "<<tgF_y<<std::endl;
+    std::cerr<<"tg0_x= "<<tg0_x<<std::endl;
+    std::cerr<<"tgF_x= "<<tgF_x<<std::endl;
     std::cerr<<"XMIPP_EQUAL_ACCURACY= "<<XMIPP_EQUAL_ACCURACY<<std::endl;
     std::cerr<<"Ainv= "<<Ainv<<" A= "<<A<<std::endl;
 #endif
@@ -887,32 +881,73 @@ void Prog_ml_tomo_prm::getMissingWedge(Matrix3D<double> &Mmissing,
                 }
                 else
                 {
-
                     // Rotate the wedge
                     xp = dMij(Ainv, 0, 0) * xx + dMij(Ainv, 0, 1) * yy + dMij(Ainv, 0, 2) * zz;
+                    yp = dMij(Ainv, 1, 0) * xx + dMij(Ainv, 1, 1) * yy + dMij(Ainv, 1, 2) * zz;
                     zp = dMij(Ainv, 2, 0) * xx + dMij(Ainv, 2, 1) * yy + dMij(Ainv, 2, 2) * zz;
+
                     // Calculate the limits
-                    limx0 = tg0_y * zp;
-                    limxF = tgF_y * zp;
-                    if (zp >= 0)
+                    if (do_cone)
                     {
-                        if (xp <= limx0 || xp >= limxF)
-                            DIRECT_MULTIDIM_ELEM(Mmissing,ii) = maskvalue;
+                        lim = (tg * zp) * (tg * zp);
+                        // TODO: CHECK THIS!!
+                        if (xp*xp + yp*yp >= lim)
+                            is_observed = true;
                         else
-                            DIRECT_MULTIDIM_ELEM(Mmissing,ii) = 0.;
+                            is_observed = false;
                     }
                     else
                     {
-                        if (xp <= limxF || xp >= limx0)
-                            DIRECT_MULTIDIM_ELEM(Mmissing,ii) = maskvalue;
-                        else
-                            DIRECT_MULTIDIM_ELEM(Mmissing,ii) = 0.;
+                        is_observed = false; // for pyramid
+                        if (do_limit_x)
+                        {
+                            limx0 = tg0_y * zp;
+                            limxF = tgF_y * zp;
+                            if (zp >= 0)
+                            {
+                                if (xp <= limx0 || xp >= limxF)
+                                    is_observed = true;
+                                else
+                                    is_observed = false;
+                            }
+                            else
+                            {
+                                if (xp <= limxF || xp >= limx0)
+                                    is_observed = true;
+                                else
+                                    is_observed = false;
+                            }
+                        }
+                        if (do_limit_y && !is_observed)
+                        {
+                            limy0 = tg0_x * zp;
+                            limyF = tgF_x * zp;
+                            if (zp >= 0)
+                            {
+                                if (yp <= limy0 || yp >= limyF)
+                                    is_observed = true;
+                                else
+                                    is_observed = false;
+                            }
+                            else
+                            {
+                                if (yp <= limyF || yp >= limy0)
+                                    is_observed = true;
+                                else
+                                    is_observed = false;
+                            }
+                        }
                     }
+
+                    if (is_observed)
+                        DIRECT_MULTIDIM_ELEM(Mmissing,ii) = maskvalue;
+                    else
+                        DIRECT_MULTIDIM_ELEM(Mmissing,ii) = 0.;
                 }
             }
         }
     }
-//#define DEBUG_WEDGE
+
 #ifdef DEBUG_WEDGE
     VolumeXmipp test(dim,dim,dim), ori;
     ori()=Mmissing;
@@ -932,14 +967,12 @@ void Prog_ml_tomo_prm::getMissingWedge(Matrix3D<double> &Mmissing,
                                 dim-j);
 
     test.write("wedge.ftt");
-    Matrix1D<double> off(3);
-    off.initConstant(hdim);
-    test().selfTranslate(off);
+    CenterFFT(test(),true);
     test.write("Fwedge.vol");
     test().setXmippOrigin();
     Matrix3D<int> ress(dim,dim,dim);
     ress.setXmippOrigin();
-    BinaryWedgeMask(test(),theta0_alongy,thetaF_alongy, A);
+    BinaryWedgeMask(test(),all_missing_info[missno].thy0, all_missing_info[missno].thyF, A);
     test.write("Mwedge.vol");
 #endif
 
@@ -1065,7 +1098,7 @@ void Prog_ml_tomo_prm::precalculateA2(std::vector< VolumeXmippT<double> > &Iref)
                 transformer.FourierTransform(Maux,Faux,true);
                 for (int missno = 0; missno < nr_miss; missno++)
                 {
-                    getMissingWedge(Mmissing,I,missno);
+                    getMissingRegion(Mmissing,I,missno);
                     Faux2 = Faux;
                     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux2)
                     {
@@ -1175,7 +1208,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     if (do_missing)
     {
         // Enforce missing wedge
-        getMissingWedge(Mmissing,I,missno);
+        getMissingRegion(Mmissing,I,missno);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Fimg0)
         {
             DIRECT_MULTIDIM_ELEM(Fimg0,n) *= DIRECT_MULTIDIM_ELEM(Mmissing,n);
@@ -1230,11 +1263,17 @@ void Prog_ml_tomo_prm::expectationSingleImage(
             {
                 is_a_neighbor = false;
                 for (int i = 0; i < mysampling.my_neighbors[imgno].size(); i++)
-                    if (mysampling.my_neighbors[imgno][i] == angno)
+                {
+                    if (mysampling.my_neighbors[imgno][i] == (all_angle_info[angno]).direction)
                     {
+#ifdef DEBUG_ANG_SEARCH
+                        if (imgno==5)
+                            std::cerr<<"i= "<<i<<" my_neighbors[5][i]= "<<mysampling.my_neighbors[5][i]<<" rot= "<<XX(mysampling.no_redundant_sampling_points_angles[mysampling.my_neighbors[5][i]])<<" tilt= "<<YY(mysampling.no_redundant_sampling_points_angles[mysampling.my_neighbors[5][i]])<<" angno= "<<angno<<" direction= "<<(all_angle_info[angno]).direction<<std::endl;
+#endif
                         is_a_neighbor = true;
                         break;
                     }
+                }
             }
             else
             {
@@ -1410,7 +1449,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                         if (do_missing)
                         {
                             // Store sum of wedges!
-                            getMissingWedge(Mmissing, A_rot, missno);
+                            getMissingRegion(Mmissing, A_rot, missno);
                             mysumweds[refno] += my_sumweight * Mmissing;
                         }
                     } // close if SIGNIFICANT_WEIGHT_LOW
@@ -1471,6 +1510,11 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     YY(opt_offsets) = -(double)iopty;
     ZZ(opt_offsets) = -(double)ioptz;
 
+#ifdef DEBUG_ANG_SEARCH
+    if (imgno==5)
+        std::cerr<<" opt angno= "<<opt_angno<<" "<< all_angle_info[opt_angno].rot<<" "<< all_angle_info[opt_angno].tilt<<" "<< all_angle_info[opt_angno].psi<<" direction= "<< all_angle_info[opt_angno].direction <<std::endl;
+#endif
+
 //#define DEBUG_TRANSFORMATIONS
 #ifdef DEBUG_TRANSFORMATIONS
     std::cerr<<"exp mindiff= "<<mindiff<<" opt angno= "<<opt_angno<<" "<< all_angle_info[opt_angno].rot<<" "<< all_angle_info[opt_angno].tilt<<" "<< all_angle_info[opt_angno].psi<<std::endl;
@@ -1478,75 +1522,102 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     std::cerr<<"opt_offsets= "<<opt_offsets<<std::endl;
 #endif
 
+    /* 
+    // Because we exclude the origin pixel from the wedge: bgmean is always zero!!
     // Update normalization parameters
     if (do_norm)
     {
+        
+        Matrix3D<double>                normMref, normMimg;
+        Matrix3D<std::complex<double> > normFref, normFimg; 
 
         // 1. Calculate optimal setting of Mimg
-        Maux2 = Mimg;
-        Maux2.selfTranslate(opt_offsets, true);
+        normMimg = Mimg;
+        normMimg.selfTranslate(opt_offsets, true);
 
         // 2. Calculate optimal setting of Iref[opt_refno]
         A_rot_inv = (all_angle_info[opt_angno].A).inv();
-        Maux.initZeros();
-        applyGeometry(Maux, A_rot_inv, Iref[opt_refno](), IS_NOT_INV, WRAP);
+        normMref.resize(Iref[opt_refno]());
+        normMref.initZeros();
+        applyGeometry(normMref, A_rot_inv, Iref[opt_refno](), IS_NOT_INV, WRAP);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Maux)
         {
-            DIRECT_MULTIDIM_ELEM(Maux,n) *= DIRECT_MULTIDIM_ELEM(real_mask,n);
-            DIRECT_MULTIDIM_ELEM(Maux,n) += outside_density[opt_refno]*DIRECT_MULTIDIM_ELEM(real_omask,n);
+            DIRECT_MULTIDIM_ELEM(normMref,n) *= DIRECT_MULTIDIM_ELEM(real_mask,n);
+            DIRECT_MULTIDIM_ELEM(normMref,n) += outside_density[opt_refno]*DIRECT_MULTIDIM_ELEM(real_omask,n);
         }
-        Maux *= opt_scale;
+        normMref *= opt_scale;
 
         if (do_missing)
         {
             // 3. Now either impute or apply missing wedge to the reference
-            getMissingWedge(Mmissing,I,missno);
+            getMissingRegion(Mmissing,I,missno);
             if (do_impute)
             {
                 // Imputation
-                local_transformer.FourierTransform(Maux, Faux, true);
-                local_transformer.FourierTransform(Maux2,Fimg, true);
-                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Fimg)
+                Maux = normMref;
+                local_transformer.FourierTransform(); 
+                normFref = Faux;
+                Maux = normMimg;
+                local_transformer.FourierTransform(); 
+                normFimg = Faux;
+                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(normFimg)
                 {
-                    DIRECT_MULTIDIM_ELEM(Fimg, n) *= 
+                    DIRECT_MULTIDIM_ELEM(normFimg, n) *= 
                         DIRECT_MULTIDIM_ELEM(Mmissing,n);
-                    DIRECT_MULTIDIM_ELEM(Fimg, n) += (std::complex<double>)
-                        ((1. - DIRECT_MULTIDIM_ELEM(Mmissing,n)) * DIRECT_MULTIDIM_ELEM(Faux,n));
+                    DIRECT_MULTIDIM_ELEM(normFimg, n) += (std::complex<double>)
+                        ((1. - DIRECT_MULTIDIM_ELEM(Mmissing,n)) * DIRECT_MULTIDIM_ELEM(normFref,n));
                 }
-                local_transformer.inverseFourierTransform(Fimg,Maux2);
+                Faux = normFimg;
+                local_transformer.inverseFourierTransform();
+                normMimg = Maux;
             }
             else
             {
-                // Apply wedge to reference (and re-aply to image)
-                local_transformer.FourierTransform(Maux, Faux, true);
-                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
+                // Apply wedge to reference (and re-apply to image)
+                Maux = normMref;
+                local_transformer.FourierTransform(); 
+                normFref = Faux;
+                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(normFref)
                 {
-                    DIRECT_MULTIDIM_ELEM(Faux, n) *= 
+                    DIRECT_MULTIDIM_ELEM(normFref, n) *= 
                         DIRECT_MULTIDIM_ELEM(Mmissing,n);
                 }
-                local_transformer.inverseFourierTransform(Faux,Maux); 
-                local_transformer.FourierTransform(Maux2, Fimg, true);
-                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Fimg)
+                Faux = normFref;
+                local_transformer.inverseFourierTransform(); 
+                normMref = Maux;
+
+                Maux = normMimg;
+                local_transformer.FourierTransform(); 
+                normFimg = Faux;
+                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(normFimg)
                 {
-                    DIRECT_MULTIDIM_ELEM(Fimg, n) *= 
+                    DIRECT_MULTIDIM_ELEM(normFimg, n) *= 
                         DIRECT_MULTIDIM_ELEM(Mmissing,n);
                 }
-                local_transformer.inverseFourierTransform(Fimg,Maux2);
+                Faux = normFimg;
+                local_transformer.inverseFourierTransform(); 
+                normMimg = Maux;
             }
         }
 
         // 4. Calculate difference in bgmean
-        Maux2 = Maux2 - Maux;
-//#define DEBUG_UPDATE_NORM
+        Maux = normMimg - normMref;
+#define DEBUG_UPDATE_NORM
 #ifdef DEBUG_UPDATE_NORM
         std::cerr<<std::endl;
         std::cerr<<"scale= "<<opt_scale<<" changes to "<<wsum_sc/wsum_sc2<<std::endl;
-        std::cerr<<"bgmean= "<<bgmean<<" changes to "<<Maux2.computeAvg()<<std::endl;
+        std::cerr<<"bgmean= "<<bgmean<<" changes to "<<Maux.computeAvg()<<std::endl;
 #endif
         // non-ML update of bgmean (this is much cheaper than true-ML update...)
         old_bgmean = bgmean;
-        bgmean = Maux2.computeAvg();
+        bgmean = Maux.computeAvg();
         // ML-update of opt_scale (this is cheap anyway...)
+        opt_scale = wsum_sc / wsum_sc2;
+    }
+    */
+    if (do_norm)
+    {
+        // bgmean will always be zero because we omit the origin pixel in fourier_mask
         opt_scale = wsum_sc / wsum_sc2;
     }
 
@@ -1666,7 +1737,8 @@ void * threadMLTomoExpectationSingleImage( void * data )
         trymindiff = prm->imgs_trymindiff[imgno];
         opt_refno = prm->imgs_optrefno[imgno];
         opt_angno = prm->imgs_optangno[imgno];
-        if (prm->do_wedge || prm->do_pyramid || prm->do_cone)
+
+        if (prm->do_missing)
             missno = prm->imgs_missno[imgno];
         else
             missno = -1;
@@ -1837,6 +1909,7 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
     Matrix1D<int> center(3), radial_count;
     Matrix3D<std::complex<double> > Faux(dim,dim,hdim+1), Fwsumimgs;
     Matrix3D<double> Maux, Msumallwedges(dim,dim,hdim+1);
+    VolumeXmipp Vaux;
     FileName fn_tmp;
     double rr, thresh, aux, sumw_allrefs2 = 0.;
     int c;
@@ -1939,15 +2012,38 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
             }
         }
 
-        // General operations
-        // 1. Apply fourier mask to real space references
+        // General operations on reference volumes
+
+        // 1. Apply fourier mask
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
         {
             DIRECT_MULTIDIM_ELEM(Faux,n) *= DIRECT_MULTIDIM_ELEM(fourier_mask,n);
         }
+
         // 2. Inverse Fourier Transform
         transformer.inverseFourierTransform(Faux,Iref[refno]());
-        // 3. Correction of origin pixel artifacts
+
+        // 3. Apply symmetry
+        if (mysampling.SL.SymsNo() > 1)
+        {
+            // Note that for no-imputation this is not correct!
+            // One would have to symmetrize the missing wedges and the sum of the images separately
+            if (do_missing && !do_impute)
+                REPORT_ERROR(1,"Symmetrization and dont_impute together are not implemented...");
+
+            Vaux().resize(Iref[refno]());
+            symmetrize(mysampling.SL, Iref[refno], Vaux);
+            Iref[refno] = Vaux;
+        }
+
+        // 4. Apply real-space mask
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(real_omask)
+        {
+            DIRECT_MULTIDIM_ELEM(Iref[refno](),n) *= DIRECT_MULTIDIM_ELEM(real_mask,n);
+            DIRECT_MULTIDIM_ELEM(Iref[refno](),n) += outside_density[refno]*DIRECT_MULTIDIM_ELEM(real_omask,n);
+        }
+
+        // 5. Correction of origin pixel artifacts
         if (do_esthetics)
         {
             VOL_ELEM(Iref[refno](), 0, 0, 0) = 
@@ -2145,29 +2241,19 @@ void Prog_ml_tomo_prm::writeOutputFiles(const int iter, DocFile &DFo,
             Vt().resize(dim,dim,dim);
             Vt().setXmippOrigin();
             Vt().initZeros();
-            int yy, zz;
-            int dimb = (dim - 1)/2;
-            for ( int z=0, ii=0; z<dim; z++ ) 
-            {
-                if ( z > dimb ) zz = z-dim;
-                else zz = z;
-                for ( int y=0; y<dim; y++ ) 
-                {
-                    if ( y > dimb ) yy = y-dim;
-                    else yy = y;
-                    for ( int xx=0; xx<hdim + 1; xx++, ii++ ) 
-                    {
-                        // TODO improve this loop....
-                        if (xx <= FINISHINGX(Vt()))
-                        {
-                            VOL_ELEM(Vt(),zz,yy,xx)=
-                                DIRECT_MULTIDIM_ELEM(wsumweds[refno],ii) / sumw;
-                            //VOL_ELEM(Vt(),zz,yy,-xx)=
-                            //    DIRECT_MULTIDIM_ELEM(wsumweds[refno],ii) / sumw;
-                        }
-                    } 
-                }
-            }
+
+            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Vt())
+                if (j<hdim+1)
+                    DIRECT_VOL_ELEM(Vt(),k,i,j)=
+                        DIRECT_VOL_ELEM(wsumweds[refno],k,i,j) / sumw_allrefs;
+                else
+                    DIRECT_VOL_ELEM(Vt(),k,i,j)=
+                        DIRECT_VOL_ELEM(wsumweds[refno],
+                                        (dim-k)%dim,
+                                        (dim-i)%dim,
+                                        dim-j) / sumw_allrefs;
+
+            CenterFFT(Vt(),true);
             fn_tmp = fn_base + "_wedge";
             fn_tmp.compose(fn_tmp, refno + 1, "");
             fn_tmp = fn_tmp + ".vol";

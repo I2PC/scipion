@@ -38,6 +38,8 @@
 #include <data/mask.h>
 #include "ctf.h"
 #include "sampling.h"
+#include "symmetries.h"
+#include "symmetrize.h"
 #include <pthread.h>
 #include <vector>
 
@@ -155,17 +157,32 @@ public:
     Matrix3D<double> fourier_mask, real_mask, real_omask;
     /** vector with average density outside each reference */
     std::vector<double> outside_density;
-    /** Vectors with angles for missing data structures */
-    std::vector<double> miss_thy0, miss_thyF, miss_thx0, miss_thxF;
 
+    // Missing data information
+#define MISSING_WEDGE_Y 0
+#define MISSING_WEDGE_X 1
+#define MISSING_PYRAMID 2
+#define MISSING_CONE 3
+    struct missing_info
+    {
+        int type;
+        double thy0;
+        double thyF;
+        double thx0;
+        double thxF;
+    };
+    typedef std::vector<missing_info> All_missing_info;
+    All_missing_info all_missing_info;
+
+    // Angular samnpling information
     struct angle_info
     {
         double rot;
         double tilt;
         double psi;
+        int direction;
         Matrix2D<double> A;
     };
-
     typedef std::vector<angle_info> All_angle_info;
     /** Angular sampling  */
     double angular_sampling, psi_sampling;
@@ -220,9 +237,9 @@ public:
     void calculatePdfInplane();
 
     /// Get binary missing wedge (or pyramid) 
-    void getMissingWedge(Matrix3D<double> &Mmeasured,
-                         Matrix2D<double> A,
-                         const int missno);
+    void getMissingRegion(Matrix3D<double> &Mmeasured,
+                          Matrix2D<double> A,
+                          const int missno);
 
     /// Mask references 
     void maskReferences(std::vector< VolumeXmippT<double> > &Iref);
