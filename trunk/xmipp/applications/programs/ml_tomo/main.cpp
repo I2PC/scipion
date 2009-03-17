@@ -85,7 +85,7 @@ int main(int argc, char **argv)
                 prm.Iold[refno]() = prm.Iref[refno]();
 
             DFo.clear();
-            DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Zoff (6), Ref (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11)");
+            DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Zoff (6), Ref (7), Wedge (8), Pmax/sumP (9), LL (10), bgmean (11), scale (12)");
 
             // Integrate over all images
             prm.expectation(prm.SF, prm.Iref, iter,
