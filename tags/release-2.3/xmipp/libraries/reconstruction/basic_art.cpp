@@ -424,7 +424,9 @@ void sort_perpendicular(int numIMG, Recons_info *IMG_Inf,
     }
 
     // Choose randomly a projection as the first one to be presented
-    i = (int)rnd_unif(0, numIMG);
+    // THis sort is not random
+    //i = (int)rnd_unif(0, numIMG);
+    i = 0;
     VEC_ELEM(chosen, i) = 1;
     VEC_ELEM(ordered_list, 0) = i;
 
@@ -556,7 +558,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
             while (!SF_aux.eof())
             {
                 head.read(SF_aux.get_current_file());
-                if (head.Weight() != 0)
+                if (head.Weight() != 0.)
                 {
                     selfile.insert(SF_aux.current());
                 }
