@@ -41,10 +41,7 @@ int main(int argc, char **argv)
     std::vector<Matrix3D<double > > wsumimgs;
     std::vector<Matrix3D<double > > wsumweds;
     std::vector<double> sumw, sumw2, sumwsc, sumwsc2, sumw_mirror;
-    Matrix3D<double> P_phi, Mr2;
-    double *vin, *vout;
-    std::complex<double> *VIN, *VOUT;
-    int vsize;
+    Matrix3D<double> P_phi, Mr2, Maux, Maux2;
     FileName fn_img, fn_tmp;
     Matrix1D<double> oneline(0);
     DocFile DFo;
@@ -119,12 +116,11 @@ int main(int argc, char **argv)
 
     try
     {
+
         // For MPI_Allreduce statements
-        vsize = 2 * (prm.dim/2 + 1) * prm.dim * prm.dim;
-        vin = new double[vsize];
-        VIN = (std::complex<double> *) vin;
-        vout = new double[vsize];
-        VOUT = (std::complex<double> *) vout;
+        Maux.resize(prm.dim, prm.dim, prm.dim);
+        Maux.setXmippOrigin();
+        Maux2.resize(prm.dim, prm.dim, prm.hdim+1);
 
         // Loop over all iterations
         for (int iter = prm.istart; iter <= prm.Niter; iter++)
@@ -150,27 +146,16 @@ int main(int argc, char **argv)
             wsum_sigma_noise = aux;
             MPI_Allreduce(&wsum_sigma_offset, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             wsum_sigma_offset = aux;
-            for (int refno = 0;refno < prm.nr_ref; refno++)
+            for (int refno = 0; refno < prm.nr_ref; refno++)
             {
-                // Convert complex<double> Matrix3D from wsumimgs and wsumweds to arrays of doubles
-                for (int n = 0; n < vsize; n++)
-                    vin [n] = DIRECT_MULTIDIM_ELEM(wsumimgs[refno], n);
-                MPI_Allreduce(vin, vout,
-                              vsize, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                for (int n = 0; n < vsize; n++)
-                {
-                    DIRECT_MULTIDIM_ELEM(wsumimgs[refno], n) = vout[n];
-                }
+                MPI_Allreduce(MULTIDIM_ARRAY(wsumimgs[refno]), MULTIDIM_ARRAY(Maux),
+                              MULTIDIM_SIZE(wsumimgs[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                wsumimgs[refno] = Maux;
                 if (prm.do_missing)
                 {
-                    for (int n = 0; n < vsize; n++)
-                    {    
-                        vin [n] = DIRECT_MULTIDIM_ELEM(wsumweds[refno], n);
-                    }
-                    MPI_Allreduce(vin, vout,
-                                  vsize, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                    for (int n = 0; n < vsize; n++)
-                        DIRECT_MULTIDIM_ELEM(wsumweds[refno], n) = vout[n];
+                    MPI_Allreduce(MULTIDIM_ARRAY(wsumweds[refno]), MULTIDIM_ARRAY(Maux2),
+                                  MULTIDIM_SIZE(wsumweds[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                    wsumweds[refno] = Maux2;
                 }
                 MPI_Allreduce(&sumw[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 sumw[refno] = aux;
@@ -209,7 +194,7 @@ int main(int argc, char **argv)
                 FileName fn_tmp;
                 fn_tmp.compose(prm.fn_root + "_it",iter,"doc");
                 myDocFile.open (fn_tmp.c_str());
-                myDocFile << " ; Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Zoff (6), Ref (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11)\n";
+                myDocFile << " ; Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Zoff (6), Ref (7), Wedge (8), Pmax/sumP (9), LL (10), bgmean (11), scale (12)\n";
 
                 // Master's own contribution
                 myDocFile << DFo;
