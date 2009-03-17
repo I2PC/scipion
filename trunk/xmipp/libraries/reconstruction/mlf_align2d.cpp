@@ -817,8 +817,8 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
 	    {
 		dVi(Vsnr[ifocus], irr) *= dVi(Vavgctf2, irr);
 	    }
-	    // Take ini_highres_limit into account
-	    if ( iter == istart - 1 && ini_highres_limit > 0. && irr > int_ini_highres_limit )
+	    // Take ini_highres_limit into account (only for first iteration)
+	    if ( iter == 0 && ini_highres_limit > 0. && irr > int_ini_highres_limit )
 	    {
 		dVi(Vsnr[ifocus], irr) = 0.;
 	    }
