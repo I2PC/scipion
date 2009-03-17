@@ -209,7 +209,7 @@ MaxChangeInAngles='4x1000 2x20 2x9 2x6'
     evenly sampled projection directions of the reference library. 
     This may serve to decrease the effects of model bias.
 """
-PerturbProjectionDirections=True
+PerturbProjectionDirections=False
 
 # Maximum change in origin offset
 """ Maximum allowed change in shift in the 3D+2D searches (in +/- pixels).
