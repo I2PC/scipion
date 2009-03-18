@@ -148,6 +148,8 @@ public:
     bool do_missing, do_wedge, do_pyramid, do_cone;
     /** Do imputaion-like algorithm? */
     bool do_impute;
+    /** Do maximum-likelihood algorithm? */
+    bool do_ml;
     /** Threshold for no-imputation algorithm */
     double noimp_threshold;
     /** Number of missing data structures */
@@ -241,15 +243,12 @@ public:
                           Matrix2D<double> A,
                           const int missno);
 
-    /// Mask references 
-    void maskReferences(std::vector< VolumeXmippT<double> > &Iref);
-
     /// Fill vector of matrices with all rotations of reference
     void precalculateA2(std::vector< VolumeXmippT<double> > &Iref);
 
-    /// ML-integration over all (or -fast) translations
+    /// ML-integration over all hidden parameters
     void expectationSingleImage(Matrix3D<double> &Mimg, int imgno, int missno,
-                                std::vector< VolumeXmippT<double> > &Iref,
+                                std::vector<VolumeXmippT<double> > &Iref,
                                 std::vector<Matrix3D<double> > &wsumimgs,
                                 std::vector<Matrix3D<double> > &wsumweds,
                                 double &wsum_sigma_noise, double &wsum_sigma_offset,
@@ -257,8 +256,15 @@ public:
                                 std::vector<double> &sumwsc2, 
                                 double &LL, double &dLL, double &fracweight, double &sumfracweight, 
                                 double &opt_scale, double &bgmean, double &trymindiff,
-                                int &opt_refno, int &opt_angno, Matrix1D<double> &opt_offsets, 
-                                std::vector<double > &pdf_directions);
+                                int &opt_refno, int &opt_angno, Matrix1D<double> &opt_offsets);
+
+    /// Maximum constrained correlation search over all hidden parameters
+    void maxConstrainedCorrSingleImage(Matrix3D<double> &Mimg, int imgno, int missno,
+                                       std::vector<VolumeXmippT<double> > &Iref,
+                                       std::vector<Matrix3D<double> > &wsumimgs,
+                                       std::vector<Matrix3D<double> > &wsumweds,
+                                       std::vector<double> &sumw, double &maxCC, double &sumCC,
+                                       int &opt_refno, int &opt_angno, Matrix1D<double> &opt_offsets);
 
     /// Integrate over all experimental images
     void expectation(SelFile &SF, std::vector< VolumeXmippT<double> > &Iref, int iter,
