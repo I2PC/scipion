@@ -163,7 +163,7 @@ void Prog_ml_tomo_prm::show(bool ML3D)
         std::cerr << " | Read more about this program in the following publication:    |" << std::endl;
         std::cerr << " |  Scheres ea. in preparation                                   |" << std::endl;
         std::cerr << " |                                                               |" << std::endl;
-        std::cerr << " |  *** Please cite them if this program is of use to you! ***   |" << std::endl;
+        std::cerr << " |   *** Please cite it if this program is of use to you! ***    |" << std::endl;
         std::cerr << " -----------------------------------------------------------------" << std::endl;
         std::cerr << "--> Maximum-likelihood multi-reference refinement " << std::endl;
         std::cerr << "  Input images            : " << fn_sel << " (" << nr_exp_images << ")" << std::endl;
@@ -505,7 +505,7 @@ void Prog_ml_tomo_prm::generateInitialReferences()
     if (verb > 0)
     {
         std::cerr << "  Generating initial references by averaging over random subsets" << std::endl;
-        init_progress_bar(nr_ref);
+        init_progress_bar(SF.ImgNo());
     }
 
     if (fn_doc!="") {
@@ -516,6 +516,9 @@ void Prog_ml_tomo_prm::generateInitialReferences()
     randomize_random_generator();
     SFtmp = SF.randomize();
     int Nsub = ROUND((double)SFtmp.ImgNo() / nr_ref);
+    Matrix2D<double> random_A;
+    double random_rot, random_tilt, random_psi;
+    int c = 0, cc = XMIPP_MAX(1, SFtmp.ImgNo() / 60);
     for (int refno = 0; refno < nr_ref; refno++)
     {
         SFtmp.go_beginning();
@@ -526,17 +529,20 @@ void Prog_ml_tomo_prm::generateInitialReferences()
             fn_tmp=SFtmp.NextImg();
             Itmp.read(fn_tmp);
             Itmp().setXmippOrigin();
-            int iran= ROUND(rnd_unif(0., (float)(nr_ang-1)));
-            Itmp().selfApplyGeometry( all_angle_info[iran].A, IS_NOT_INV, DONT_WRAP);
+            random_rot = 360. * rnd_unif(0., 1.);
+            random_tilt= ACOSD((2.*rnd_unif(0., 1.) - 1));
+            random_psi = 360. * rnd_unif(0., 1.);
+            random_A = Euler_rotation3DMatrix(random_rot, random_tilt, random_psi);
+            Itmp().selfApplyGeometry( random_A, IS_NOT_INV, DONT_WRAP);
 
-            // This is dirty coding...
+            // Going through the docfile again here is a bit dirty coding...
             // but let's first make it work...
             if (do_missing)
             {
                 if (DF.search_comment(fn_tmp)) 
                 {
                     int missno = (int)(DF(7)) - 1;
-                    getMissingRegion(Mmissing, all_angle_info[iran].A, missno);
+                    getMissingRegion(Mmissing, random_A, missno);
                 }
                 else 
                 {
@@ -549,13 +555,17 @@ void Prog_ml_tomo_prm::generateInitialReferences()
             if (nn == 0)
             {
                 Iave() = Itmp();
-                if (do_missing) Msumwedge = Mmissing;
+                if (do_missing) 
+                    Msumwedge = Mmissing;
             }
             else
             {
                 Iave() += Itmp();
-                if (do_missing) Msumwedge += Mmissing;
+                if (do_missing) 
+                    Msumwedge += Mmissing;
             }
+            c++;
+            if (verb > 0 && c % cc == 0) progress_bar(c);
         }
         // Correct missing wedge by division by sumwedge in Fourier space
         transformer.FourierTransform(Iave(),Fave,true);
@@ -579,9 +589,9 @@ void Prog_ml_tomo_prm::generateInitialReferences()
         fn_tmp = fn_tmp + ".vol";
         Iave.write(fn_tmp);
         SFr.insert(fn_tmp, SelLine::ACTIVE);
-        if (verb > 0) progress_bar(refno);
+        
     }
-    if (verb > 0) progress_bar(nr_ref);
+    if (verb > 0) progress_bar(SF.ImgNo());
     fn_ref = fn_root + "_it";
     fn_ref.compose(fn_ref, 0, "sel");
     SFr.write(fn_ref);
