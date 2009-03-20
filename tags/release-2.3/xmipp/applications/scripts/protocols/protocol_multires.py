@@ -33,7 +33,7 @@ WorkingDir='MultiRes/run1'
 DoDeleteWorkingDir=False
 
 # Number of iterations to perform
-NumberofIterations=3
+NumberofIterations=15
 
 # Resume at iteration
 """ This option may be used to finish a previously performed run.
@@ -45,19 +45,19 @@ ResumeIteration=1
 # {expert} {dir} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
-ProjectDir='/media/usbdisk/Experiments/TestSencillo'
+ProjectDir='/gpfs/fs1/home/bioinfo/coss/Ribosome'
 
 # {expert} {dir} Directory name for logfiles:
 LogDir='Logs'
 
 # {expert} Skip prealignment:
-SkipPrealignment=True
+SkipPrealignment=False
 
 #-----------------------------------------------------------------------------
 # {section} Particle description
 #-----------------------------------------------------------------------------
 # Particle radius (pixels)
-ParticleRadius=32
+ParticleRadius=64
 
 # Particle mass (Daltons)
 ParticleMass='0'
@@ -89,7 +89,7 @@ SamplingRate=1
     Scaling is done via spline pyramids, please visit:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Pyramid
 """
-PyramidLevels='2 1 0'
+PyramidLevels='5x1 0'
 
 # Angular steps
 """ Angular steps for each of the iterations. This parameter is used to build
@@ -100,7 +100,7 @@ PyramidLevels='2 1 0'
     The discrete angular assignment is done with xmipp_angular_predict:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Angular_predict
 """
-AngularSteps='20 5x5 3'
+AngularSteps='5x3 2.5'
 
 # Quality percentil
 """ The quality percentil indicates what is the percentil of images to be
@@ -184,7 +184,7 @@ DiscreteAssignment='1'
     The discrete angular assignment is done with xmipp_angular_predict:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Angular_predict_continuous
 """
-ContinuousAssignment='1'
+ContinuousAssignment='3x0 1'
 
 # {expert} Compute resolution using FSC
 """ The resolution is always computed in the last iteration
@@ -195,7 +195,7 @@ DoComputeFSC='0'
 """ Computation of the spectral signal-to-noise ratio is slow, do not abuse it.
     The resolution is always computed in the last iteration
 """
-DoComputeSSNR='9x0 1'
+DoComputeSSNR='0'
 
 #-----------------------------------------------------------------------------
 # {section} CTF Amplitude Correction (assuming previous phase correction)
@@ -253,7 +253,7 @@ FilterLowPassReference='0.25'
     For more information about Fourier filtering, please visit:
     http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/FourierFilter
 """
-FilterHighPassReference='0'
+FilterHighPassReference='0.02'
 
 # {expert} Segment reference using particle mass
 """ This vector specifies which iterations will use the particle mass
@@ -279,36 +279,23 @@ Recenter=True
 """ This option provides shared-memory parallelization on multi-core machines. 
     It does not require any additional software, other than xmipp
 """
-NumberOfThreads=1
+NumberOfThreads=2
 
 # Use distributed-memory parallelization (MPI)?
 """ This option provides parallelization on clusters with distributed memory architecture.
     It requires mpi to be installed.
 """
-DoParallel=False
+DoParallel=True
 
 # Number of MPI processes to use:
 """ This option provides distributed-memory parallelization on multi-node machines. 
     It requires the installation of some MPI flavour, possibly together with a queueing system
 """
-NumberOfMpiProcesses=4
-
-# Number of MPI processes to use by memory-demanding algorithms:
-""" In fact only the Fourier reconstruction method is so large memory demanding
-"""
-NumberOfMpiProcessesReduced=2
+NumberOfMpiProcesses=16
 
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
-    Ask the person who installed your xmipp version, which option to use. Or read: http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParallelPage. The following values are available: 
-   SLURM-MPICH       : BSCs MareNostrum, LaPalma etc
-   TORQUE-OPENMPI    : Crunchy
-   SGE-OPENMPI       : Cluster at imp.ac.at
-   PBS               : Vermeer and FinisTerrae
-   XMIPP_MACHINEFILE : Environment variable $XMIPP_MACHINEFILE points to 
-machinefile
-   HOME_MACHINEFILE  : machinefile is called $HOME/machines.dat
-   Leave it black    : Run locally, most personal computers
+    Ask the person who installed your xmipp version, which option to use. Or read: xxx
 """
 SystemFlavour=''
 
@@ -384,7 +371,6 @@ class MultiResClass:
 
 		_DoParallel,
 		_NumberOfMpiProcesses,
-		_NumberOfMpiProcessesReduced,
                 _NumberOfThreads,
 		_SystemFlavour,
 		
@@ -441,7 +427,6 @@ class MultiResClass:
 
        self.doParallel=_DoParallel
        self.NumberOfMpiProcesses=_NumberOfMpiProcesses
-       self.NumberOfMpiProcessesReduced=_NumberOfMpiProcessesReduced
        self.NumberOfThreads=_NumberOfThreads
        self.SystemFlavour=SystemFlavour
 
@@ -534,12 +519,13 @@ class MultiResClass:
           params0="-i "+self.getModelFFilename(_iteration)+" "+\
                    " -sampling_rate "+self.getAngularSteps(_iteration)+" "+\
                    "-o ref -sym "+self.symmetryGroup
-             
+
+          factor=pow(2,-int(self.getPyramidLevel(_iteration)))
           params="-i "+self.getAlignmentFFilename(_iteration)+" "+\
                   "-ref ref.sel "+\
                   "-oang "+self.getDiscreteAnglesFilename(_iteration)+" "+\
                   "-psi_step "+self.getAngularSteps(_iteration)+" "+\
-		  "-max_shift_change "+str(self.particleWorkingRadius/5)
+		  "-max_shift_change "+str(self.particleWorkingRadius/5*factor)
           if (_iteration==1):
              params+=" -5D -shift_step 2"
           if not self.symmetryGroup=="c1":
@@ -549,15 +535,15 @@ class MultiResClass:
                                 params0,
                                 self.mylog,
                                 self.doParallel,
-                                self.NumberOfMpiProcesses,
-                                self.NumberOfThreads,
+                                self.NumberOfMpiProcesses*self.NumberOfThreads,
+                                1,
                                 self.SystemFlavour)
 	  launch_job.launch_job("xmipp_angular_discrete_assign",
                                 params,
                                 self.mylog,
                                 self.doParallel,
-                                self.NumberOfMpiProcesses,
-                                self.NumberOfThreads,
+                                self.NumberOfMpiProcesses*self.NumberOfThreads,
+                                1,
                                 self.SystemFlavour)
       	  self.execute("find . -name \"ref*\" -exec rm -f {} \; &")
        else:
@@ -576,8 +562,8 @@ class MultiResClass:
                                 params,
                                 self.mylog,
                                 self.doParallel,
-                                self.NumberOfMpiProcesses,
-                                self.NumberOfThreads,
+                                self.NumberOfMpiProcesses*self.NumberOfThreads,
+                                1,
                                 self.SystemFlavour)
        else:
           self.linkFile(removeDirectories(self.getDiscreteAnglesFilename(_iteration)),
@@ -853,16 +839,13 @@ class MultiResClass:
                                 params,
                                 self.mylog,
                                 self.doParallel,
-                                self.NumberOfMpiProcesses,
-                                self.NumberOfThreads,
+                                self.NumberOfMpiProcesses*NumberOfThreads,
+                                1,
                                 self.SystemFlavour)
           self.execute('xmipp_selfile_create "preproc_assign_IDR/*" > preproc_assign.sel')
 
        # Scale if necessary
-       if (not self.getPyramidLevel(_iteration)=="0" and
-          (_iteration==1 or _iteration>1 and
-             not self.getPyramidLevel(_iteration)==
-                self.getPyramidLevel(_iteration))):
+       if (not self.getPyramidLevel(_iteration)==0):
           self.execute("xmipp_scale_pyramid -i preproc_assign.sel -reduce -levels "+\
         	       str(self.getPyramidLevel(_iteration)))
           self.execute("xmipp_normalize -i preproc_assign.sel -method NewXmipp -background circle "+\
@@ -1191,6 +1174,8 @@ class MultiResClass:
 		 "-l "+self.getARTLambda(_iteration)
           if not self.symmetryGroup=="":
              params+=" -sym "+self.symmetryGroup
+          if not self.NumberOfThreads==1:
+             params+=" -thr "+str(self.NumberOfThreads)
 	  if _applyMasks:
 	     params+="-R "+str(math.ceil(self.particleWorkingRadius*1.1))
 	  doParallel=self.doParallel
@@ -1201,7 +1186,7 @@ class MultiResClass:
                                 self.mylog,
                                 doParallel,
                                 self.NumberOfMpiProcesses,
-                                self.NumberOfThreads,
+                                1,
                                 self.SystemFlavour)
 	  self.deleteFile(_outputRootName+".hist")
        elif self.getReconstructionMethod(_iteration)=="wbp":
@@ -1218,22 +1203,24 @@ class MultiResClass:
                                 params,
                                 self.mylog,
                                 self.doParallel,
-                                self.NumberOfMpiProcesses,
-                                self.NumberOfThreads,
+                                self.NumberOfMpiProcesses*self.NumberOfThreads,
+                                1,
                                 self.SystemFlavour)
        elif self.getReconstructionMethod(_iteration)=="fourier":
           params="-i "+selfile+" "+\
 	         "-o "+_outputRootName+".vol "
           if not self.symmetryGroup=="":
 	     params+="-sym "+self.symmetryGroup+" "
-# COSS          if self.getComputeFSC(_iteration):
-# COSS            params+="-prepare_fsc "+self.getReconstructionRootname(_iteration)+\
-# COSS               ".fsc "
+          if not self.NumberOfThreads==1:
+             params+=" -thr "+str(self.NumberOfThreads)
+# COSS         if self.getComputeFSC(_iteration):
+# COSS           params+=" -prepare_fsc "+self.getReconstructionRootname(_iteration)+\
+# COSS              ".fsc "
 	  launch_job.launch_job("xmipp_reconstruct_fourier",
                                 params,
                                 self.mylog,
                                 self.doParallel,
-                                self.NumberOfMpiProcessesReduced,
+                                self.NumberOfMpiProcesses,
                                 self.NumberOfThreads,
                                 self.SystemFlavour)
        else:
@@ -1355,7 +1342,6 @@ if __name__ == '__main__':
 
 		DoParallel,
 		NumberOfMpiProcesses,
-		NumberOfMpiProcessesReduced,
                 NumberOfThreads,
 		SystemFlavour,
 		
