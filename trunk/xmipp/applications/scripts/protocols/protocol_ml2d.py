@@ -99,8 +99,7 @@ NumberOfMpiProcesses=5
    TORQUE-OPENMPI    : Crunchy
    SGE-OPENMPI       : Cluster at imp.ac.at
    PBS               : Vermeer and FinisTerrae
-   XMIPP_MACHINEFILE : Environment variable $XMIPP_MACHINEFILE points to 
-machinefile
+   XMIPP_MACHINEFILE : Environment variable $XMIPP_MACHINEFILE points to machinefile 
    HOME_MACHINEFILE  : machinefile is called $HOME/machines.dat
    Leave it black    : Run locally, most personal computers
 """
