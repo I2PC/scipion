@@ -189,6 +189,9 @@ public:
     // coordinates of j
     std::vector< std::vector< Matrix2D<double> > > affineTransformations;
 
+    // List of affine costs
+    std::vector < double > correlationList;
+
     // Landmark matrix (X component)
     Matrix2D<double> allLandmarksX;
 
