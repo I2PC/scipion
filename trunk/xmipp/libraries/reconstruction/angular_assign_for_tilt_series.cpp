@@ -329,7 +329,7 @@ void Prog_tomograph_alignment::read(int argc, char **argv) {
    localSize=textToFloat(getParameter(argc,argv,"-localSize","0.04"));
    optimizeTiltAngle=checkParameter(argc,argv,"-optimizeTiltAngle");
    isCapillar=checkParameter(argc,argv,"-isCapillar");
-   corrThreshold=textToFloat(getParameter(argc,argv,"-threshold","0.9"));
+   corrThreshold=textToFloat(getParameter(argc,argv,"-threshold","-1"));
    maxShiftPercentage=textToFloat(getParameter(argc,argv,"-maxShiftPercentage","0.2"));
    maxIterDE=textToInteger(getParameter(argc,argv,"-maxIterDE","30"));
    showAffine=checkParameter(argc,argv,"-showAffine");
@@ -375,7 +375,7 @@ void Prog_tomograph_alignment::usage() const {
              << "  [-localSize <size=0.04>]        : In percentage\n"
              << "  [-optimizeTiltAngle]            : Optimize tilt angle\n"
              << "  [-isCapillar]                   : Set this flag if the tilt series is of a capillar\n"
-             << "  [-threshold <th=0.9>]           : threshold\n"
+             << "  [-threshold <th=-1>]            : threshold\n"
              << "  [-maxShiftPercentage <p=0.2>]   : Maximum shift as percentage of image size\n"
              << "  [-maxIterDE <n=30>]             : Maximum number of iteration in Differential Evolution\n"
              << "  [-showAffine]                   : Show affine transformations as PPP*\n"
@@ -440,8 +440,10 @@ void Prog_tomograph_alignment::produceSideInfo() {
         Matrix2D<double> A;
         emptyRow.push_back(A);
     }
-    for (int i=0; i<Nimg; i++)
+    for (int i=0; i<Nimg; i++) {
     	affineTransformations.push_back(emptyRow);
+        correlationList.push_back(-1);
+    }
 
     pthread_t * th_ids = new pthread_t[numThreads];
     ThreadParams * th_args= new ThreadParams[numThreads];
@@ -505,6 +507,7 @@ void * threadComputeTransform( void * args )
             "_"+integerToString(jj,3)+".txt", Aij, Aji,
             showAffine, thresholdAffine, localAffine,
             isMirror);
+        parent->correlationList[jj]=1-cost;
         
 	pthread_mutex_lock( &printingMutex );
         affineTransformations[jj_1][jj]=Aij;
@@ -795,7 +798,10 @@ bool Prog_tomograph_alignment::refineLandmark(int ii, int jj,
             }
         }
 
-        if (maxval>corrThreshold)
+        double actualCorrThreshold=corrThreshold;
+        if (actualCorrThreshold<0)
+            actualCorrThreshold=correlationList[XMIPP_MIN(ii,jj)];
+        if (maxval>actualCorrThreshold)
         {
             XX(rjj)+=jmax;
             if (reversed) YY(rjj)-=imax;
@@ -937,7 +943,10 @@ bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain)
             if (isCapillar && ABS(chain[n].imgIdx-chain[0].imgIdx)>Nimg/2)
                 pieceii.selfReverseY();
             double corr=correlation_index(pieceii,avgPiece);
-            if (corr>corrThreshold)
+            double actualCorrThreshold=corrThreshold;
+            if (actualCorrThreshold<0)
+                actualCorrThreshold=correlationList[ii];
+            if (corr>actualCorrThreshold)
             {
                avgCorr+=corr;
                refinedChain.push_back(chain[n]);
@@ -947,7 +956,7 @@ bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain)
                 save()=pieceii; save.write("PPPpieceiiRefine.xmp");
                 save()=avgPiece; save.write("PPPpieceAvg.xmp");
                 std::cout << "ii= " << ii << " corr=" << corr;
-                if (corr<=corrThreshold) std::cout << "  Removed!!";
+                if (corr<=actualCorrThreshold) std::cout << "  Removed!!";
                 std::cout << "\nAvgCorr=" << avgCorr/refinedChain.size() << std::endl
                           << "RefinedLength=" << refinedChain.size() << std::endl
                           << "K=" << K << std::endl
@@ -1025,77 +1034,156 @@ void Prog_tomograph_alignment::readLandmarkSet(const FileName &fnLandmark)
 }
 
 /* Align images ------------------------------------------------------------ */
+//#define DEBUG
 void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
 {
-   DocFile DF;
-   if (fnSelOrig!="")
-      SForig.go_first_ACTIVE();
-   DF.append_comment("in-plane rotation    Xshift      Yshift");
-   DF.append_comment("First shift by -(Xshift,Yshift)");
-   DF.append_comment("Then, rotate by in-plane rotation");
-   for (int i=0;i<Nimg; i++) {
-        // Align the normal image
-	ImageXmipp I;
-	I.read(name_list[i]);
-        Matrix2D<double> mask;
-        mask.initZeros(I());
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
-            if (I(i,j)!=0) mask(i,j)=1;
-	I().selfTranslate(-(alignment.di[i]+alignment.diaxis[i]),DONT_WRAP);
-	I().selfRotate(90-alignment.rot+alignment.psi(i),DONT_WRAP);
-	mask.selfTranslate(-(alignment.di[i]+alignment.diaxis[i]),DONT_WRAP);
-	mask.selfRotate(90-alignment.rot+alignment.psi(i),DONT_WRAP);
-	mask.binarize(0.5);
-	Matrix2D<int> iMask;
-	typeCast(mask,iMask);
-        double minval, maxval, avg, stddev;
-        computeStats_within_binary_mask(iMask,I(),minval, maxval, avg, stddev);
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(iMask)
-            if (iMask(i,j)==0) I(i,j)=0;
-            else I(i,j)=(I(i,j)-avg)/stddev;
-        double rot=0;
-        double tilt=tiltList[i];
-        double psi=0;
-	I.set_eulerAngles(rot, tilt, psi);
-	FileName fn_corrected=fnRoot+"_corrected_"+integerToString(i,3)+".xmp";
-	I.write(fn_corrected);
-	
-        // Align the original image
-        if (fnSelOrig!="")
-        {
-	    ImageXmipp Iorig;
-	    Iorig.read(SForig.NextImg());
-            mask.initZeros(Iorig());
-            FOR_ALL_ELEMENTS_IN_MATRIX2D(Iorig())
-                if (Iorig(i,j)!=0) mask(i,j)=1;
-	    Iorig().selfTranslate(-(alignment.di[i]+alignment.diaxis[i])*XSIZE(Iorig())/XSIZE(I()),
-                DONT_WRAP);
-	    Iorig().selfRotate(90-alignment.rot+alignment.psi(i),DONT_WRAP);
-	    mask.selfTranslate(-(alignment.di[i]+alignment.diaxis[i])*XSIZE(Iorig())/XSIZE(I()),
-                DONT_WRAP);
-	    mask.selfRotate(90-alignment.rot+alignment.psi(i),DONT_WRAP);
-	    mask.binarize(0.5);
-	    typeCast(mask,iMask);
-            computeStats_within_binary_mask(iMask,Iorig(),minval, maxval,
-                avg, stddev);
-            FOR_ALL_ELEMENTS_IN_MATRIX2D(iMask)
-                if (iMask(i,j)==0) Iorig(i,j)=0;
-                else Iorig(i,j)=(Iorig(i,j)-avg)/stddev;
-	    Iorig.set_eulerAngles(rot, tilt, psi);
-	    fn_corrected=fnRoot+"_corrected_originalsize_"+integerToString(i,3)+".xmp";
-	    I.write(fn_corrected);
-        }
+    // Correct all landmarks
+    Matrix1D<double> r(2);
+    for (int i=0; i<XSIZE(allLandmarksX); i++)
+    {
+        Matrix2D<double> R=rotation2DMatrix(90-alignment.rot+alignment.psi(i));
+        R.resize(2,2);
+        for (int j=0; j<YSIZE(allLandmarksX); j++)
+            if (allLandmarksX(j,i)!=XSIZE(*img[0]))
+            {
+                VECTOR_R2(r,allLandmarksX(j,i),allLandmarksY(j,i));
+                r=R*(r-alignment.di[i]+alignment.diaxis[i]);
+                allLandmarksX(j,i)=XX(r);
+                allLandmarksY(j,i)=YY(r);
+            }
+    }
 
-        // Prepare data for the docfile
-        Matrix1D<double> params(3);
-        params(0)=90-alignment.rot+alignment.psi(i);
-        params(1)=XX(alignment.di[i]+alignment.diaxis[i]);
-        params(2)=YY(alignment.di[i]+alignment.diaxis[i]);
-        DF.append_comment(fn_corrected);
-        DF.append_data_line(params);
-   }
-   DF.write(fnRoot+"_correction_parameters.txt");
+    // Compute the average height of the 3D landmarks seen at 0 degrees
+    Matrix1D<double> axis;
+    Euler_direction(alignment.rot, alignment.tilt, 0, axis);
+    double z0=0, z0N=0;
+    for (int j=0; j<YSIZE(allLandmarksX); j++)
+        if (allLandmarksX(j,iMinTilt)!=XSIZE(*img[0]))
+        {
+            Matrix2D<double> Raxismin=rotation3DMatrix(tiltList[iMinTilt],axis);
+            Raxismin.resize(3,3);
+            Matrix2D<double> Rmin=rotation2DMatrix(90-alignment.rot+alignment.psi(iMinTilt));
+            Matrix2D<double> RtiltYmin=rotation3DMatrix(-tiltList[iMinTilt],'Y');
+            RtiltYmin.resize(3,3);
+            Matrix1D<double> rjp=RtiltYmin*Rmin*Raxismin*alignment.rj[j];
+            z0+=ZZ(rjp);
+            z0N++;
+        }
+    if (z0N==0)
+        REPORT_ERROR(1,"There is no landmark at 0 degrees");
+    z0/=z0N;
+
+    DocFile DF;
+    if (fnSelOrig!="")
+       SForig.go_first_ACTIVE();
+    DF.append_comment("in-plane rotation    Xshift      Yshift");
+    DF.append_comment("First shift by -(Xshift,Yshift)");
+    DF.append_comment("Then, rotate by in-plane rotation");
+    for (int i=0;i<Nimg; i++) {
+         // Align the normal image
+         ImageXmipp I;
+         I.read(name_list[i]);
+         Matrix2D<double> mask;
+         mask.initZeros(I());
+         FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
+             if (I(i,j)!=0) mask(i,j)=1;
+         I().selfTranslate(-(alignment.di[i]+alignment.diaxis[i]),DONT_WRAP);
+         I().selfRotate(90-alignment.rot+alignment.psi(i),DONT_WRAP);
+         I().selfTranslate(vectorR2(-z0*sin(DEG2RAD(tiltList[i])),0),DONT_WRAP);
+         mask.selfTranslate(-(alignment.di[i]+alignment.diaxis[i]),DONT_WRAP);
+         mask.selfRotate(90-alignment.rot+alignment.psi(i),DONT_WRAP);
+         mask.selfTranslate(vectorR2(-z0*sin(DEG2RAD(tiltList[i])),0),DONT_WRAP);
+         mask.binarize(0.5);
+         Matrix2D<int> iMask;
+         typeCast(mask,iMask);
+         double minval, maxval, avg, stddev;
+         computeStats_within_binary_mask(iMask,I(),minval, maxval, avg, stddev);
+         FOR_ALL_ELEMENTS_IN_MATRIX2D(iMask)
+             if (iMask(i,j)==0) I(i,j)=0;
+             else I(i,j)=(I(i,j)-avg)/stddev;
+         double rot=0;
+         double tilt=tiltList[i];
+         double psi=0;
+         I.set_eulerAngles(rot, tilt, psi);
+         FileName fn_corrected=fnRoot+"_corrected_"+integerToString(i,3)+".xmp";
+         I.write(fn_corrected);
+
+         // Align the original image
+         if (fnSelOrig!="")
+         {
+             ImageXmipp Iorig;
+             Iorig.read(SForig.NextImg());
+             mask.initZeros(Iorig());
+             FOR_ALL_ELEMENTS_IN_MATRIX2D(Iorig())
+                 if (Iorig(i,j)!=0) mask(i,j)=1;
+             Iorig().selfTranslate(-(alignment.di[i]+alignment.diaxis[i])*XSIZE(Iorig())/XSIZE(I()),
+                 DONT_WRAP);
+             Iorig().selfRotate(90-alignment.rot+alignment.psi(i),DONT_WRAP);
+             mask.selfTranslate(-(alignment.di[i]+alignment.diaxis[i])*XSIZE(Iorig())/XSIZE(I()),
+                 DONT_WRAP);
+             mask.selfRotate(90-alignment.rot+alignment.psi(i),DONT_WRAP);
+             mask.binarize(0.5);
+             typeCast(mask,iMask);
+             computeStats_within_binary_mask(iMask,Iorig(),minval, maxval,
+                 avg, stddev);
+             FOR_ALL_ELEMENTS_IN_MATRIX2D(iMask)
+                 if (iMask(i,j)==0) Iorig(i,j)=0;
+                 else Iorig(i,j)=(Iorig(i,j)-avg)/stddev;
+             Iorig.set_eulerAngles(rot, tilt, psi);
+             fn_corrected=fnRoot+"_corrected_originalsize_"+integerToString(i,3)+".xmp";
+             I.write(fn_corrected);
+         }
+
+         // Prepare data for the docfile
+         Matrix1D<double> params(3);
+         params(0)=90-alignment.rot+alignment.psi(i);
+         params(1)=XX(alignment.di[i]+alignment.diaxis[i]);
+         params(2)=YY(alignment.di[i]+alignment.diaxis[i]);
+         DF.append_comment(fn_corrected);
+         DF.append_data_line(params);
+    }
+    DF.write(fnRoot+"_correction_parameters.txt");
+
+    #ifdef DEBUG
+        ImageXmipp save;
+        save().initZeros(*img[0]);
+        save().setXmippOrigin();
+        for (int j=0; j<YSIZE(allLandmarksX); j++)
+            if (allLandmarksX(j,iMinTilt)!=XSIZE(*img[0]))
+            {
+                Matrix2D<double> Raxismin=rotation3DMatrix(tiltList[iMinTilt],axis);
+                Raxismin.resize(3,3);
+                Matrix2D<double> Rmin=rotation2DMatrix(90-alignment.rot+alignment.psi(iMinTilt));
+                Matrix2D<double> RtiltYmin=rotation3DMatrix(-tiltList[iMinTilt],'Y');
+                RtiltYmin.resize(3,3);
+                Matrix1D<double> rjp=RtiltYmin*Rmin*Raxismin*alignment.rj[j];
+                std::cout << rjp.transpose() << std::endl;
+                for (int i=0; i<XSIZE(allLandmarksX); i++)
+                    if (allLandmarksX(j,i)!=XSIZE(*img[0]))
+                    {
+                        save(allLandmarksY(j,i),allLandmarksX(j,i))=ABS(i-iMinTilt);
+
+                        /*
+                        Matrix2D<double> Raxis=rotation3DMatrix(tiltList[i],axis);
+                        Raxis.resize(3,3);
+                        Matrix2D<double> R=rotation2DMatrix(90-alignment.rot+alignment.psi(i));
+                        Matrix1D<double> p=R*Raxis*alignment.rj[j];
+                        if (YY(p)>=STARTINGY(save()) && YY(p)<=FINISHINGY(save()) &&
+                            XX(p)>=STARTINGX(save()) && XX(p)<=FINISHINGX(save()))
+                           save(YY(p),XX(p))=-ABS(i-iMinTilt);
+                        */
+                        Matrix2D<double> RtiltY=rotation3DMatrix(-tiltList[i],'Y');
+                        RtiltY.resize(3,3);
+                        Matrix1D<double> p=RtiltY*rjp;
+                        if (YY(p)>=STARTINGY(save()) && YY(p)<=FINISHINGY(save()) &&
+                            XX(p)>=STARTINGX(save()) && XX(p)<=FINISHINGX(save()))
+                           save(YY(p),XX(p))=-ABS(i-iMinTilt);
+                    }
+            }
+        save.write("PPPmovementsLandmarks0.xmp");
+    #endif
 }
+#undef DEBUG
 
 /* Produce information from landmarks -------------------------------------- */
 void Prog_tomograph_alignment::produceInformationFromLandmarks()
@@ -1207,7 +1295,8 @@ void Prog_tomograph_alignment::run() {
 
     // Exhaustive search for rot
     double bestError=0, bestRot=-1;
-    for (double rot=0; rot<=180-deltaRot; rot+=deltaRot)
+    // COSS for (double rot=0; rot<=180-deltaRot; rot+=deltaRot)
+    for (double rot=90; rot<=90; rot+=deltaRot)
     {
         alignment->clear();
         alignment->rot=rot;
@@ -1274,6 +1363,7 @@ void Prog_tomograph_alignment::run() {
     
     // Correct the input images
     alignImages(*bestPreviousAlignment);
+    writeLandmarkSet(fnRoot+"_good_landmarks_corrected.txt");
 }
 #undef DEBUG
 
