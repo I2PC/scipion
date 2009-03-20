@@ -845,7 +845,7 @@ class MultiResClass:
           self.execute('xmipp_selfile_create "preproc_assign_IDR/*" > preproc_assign.sel')
 
        # Scale if necessary
-       if (not self.getPyramidLevel(_iteration)==0):
+       if (not int(self.getPyramidLevel(_iteration))==0):
           self.execute("xmipp_scale_pyramid -i preproc_assign.sel -reduce -levels "+\
         	       str(self.getPyramidLevel(_iteration)))
           self.execute("xmipp_normalize -i preproc_assign.sel -method NewXmipp -background circle "+\
