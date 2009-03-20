@@ -1295,8 +1295,7 @@ void Prog_tomograph_alignment::run() {
 
     // Exhaustive search for rot
     double bestError=0, bestRot=-1;
-    // COSS for (double rot=0; rot<=180-deltaRot; rot+=deltaRot)
-    for (double rot=90; rot<=90; rot+=deltaRot)
+    for (double rot=0; rot<=180-deltaRot; rot+=deltaRot)
     {
         alignment->clear();
         alignment->rot=rot;
