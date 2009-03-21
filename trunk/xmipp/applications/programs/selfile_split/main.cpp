@@ -56,7 +56,7 @@ int main(int argc, char **argv)
     try
     {
         if (!dont_randomize) SFtmp = SFin.randomize();
-        else                SFtmp = SFin;
+        else                 SFtmp = SFin;
         int Num_images = (int)SFtmp.ImgNo();
         int Num_groups = N;
         if (Num_groups > Num_images) Num_groups = Num_images;
@@ -67,7 +67,7 @@ int main(int argc, char **argv)
         int arr_groups[Num_groups];
 
         int i, j;
-
+        arr_groups[0]=Nsub_;
         for (i = 0;i < (Num_groups - Nres_);i++)
         {
             arr_groups[i] = Nsub_;
@@ -79,6 +79,7 @@ int main(int argc, char **argv)
         }
 
         SFtmp.go_beginning();
+            
         for (i = 0;i < Num_groups;i++)
         {
             SFout.clear();
@@ -93,8 +94,12 @@ int main(int argc, char **argv)
                 SFtmp2 = SFout.sort_by_filenames();
                 SFout  = SFtmp2;
             }
-            std::string num = "_" + integerToString(i + 1);
-            fn_out = fn_root + num;
+            fn_out = fn_root;
+            if (N!=1)
+            {
+                std::string num = "_" + integerToString(i + 1);
+                fn_out +=  num;
+            }
             fn_out += ".sel";
             SFout.write(fn_out);
         }
