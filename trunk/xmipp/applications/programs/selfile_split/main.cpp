@@ -34,6 +34,7 @@ int main(int argc, char **argv)
     SelFile  SFin, SFout, SFtmp, SFtmp2;
     SelLine  line;
     bool     dont_randomize;
+    bool     dont_sort;
     int N;
 
     try
@@ -42,6 +43,7 @@ int main(int argc, char **argv)
         N = textToInteger(getParameter(argc, argv, "-n", "2"));
         fn_root = getParameter(argc, argv, "-o", "");
         dont_randomize = checkParameter(argc, argv, "-dont_randomize");
+        dont_sort      = checkParameter(argc, argv, "-dont_sort");
         if (fn_root == "") fn_root = fn_in.without_extension();
         SFin.read(fn_in);
     }
@@ -54,7 +56,7 @@ int main(int argc, char **argv)
     try
     {
         if (!dont_randomize) SFtmp = SFin.randomize();
-        else                 SFtmp = SFin;
+        else                SFtmp = SFin;
         int Num_images = (int)SFtmp.ImgNo();
         int Num_groups = N;
         if (Num_groups > Num_images) Num_groups = Num_images;
@@ -86,8 +88,11 @@ int main(int argc, char **argv)
                 SFout.insert(SFtmp.current());
                 SFtmp.NextImg();
             }
-            SFtmp2 = SFout.sort_by_filenames();
-            SFout = SFtmp2;
+            if (!dont_sort)
+            {
+                SFtmp2 = SFout.sort_by_filenames();
+                SFout  = SFtmp2;
+            }
             std::string num = "_" + integerToString(i + 1);
             fn_out = fn_root + num;
             fn_out += ".sel";
@@ -111,5 +116,6 @@ void Usage()
     << "  [ -o <rootname=selfile> ] : Rootname for output selfiles\n"
     << "                              output will be: rootname_<n>.sel\n"
     << "  [ -dont_randomize ]       : Do not generate random groups\n"
+    << "  [ -dont_sort ]            : Do not sort the output sel\n"
     ;
 }
