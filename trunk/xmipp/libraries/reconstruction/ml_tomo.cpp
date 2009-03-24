@@ -1934,7 +1934,7 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
     Matrix3D<double> Maux, Msumallwedges(dim,dim,hdim+1);
     VolumeXmipp Vaux;
     FileName fn_tmp;
-    double rr, thresh, aux, sumw_allrefs2 = 0.;
+    double rr, thresh, aux, sumw_allrefs2 = 0., avg_origin=0.;
     int c;
 
     // Update the reference images
@@ -2070,16 +2070,13 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
 
         // 5. Correction of origin pixel artifacts
         if (do_esthetics)
-        {
-            VOL_ELEM(Iref[refno](), 0, 0, 0) = 
-                VOL_ELEM(Iref[refno](), 1, 0, 0) +
-                VOL_ELEM(Iref[refno](), -1, 0, 0) +
-                VOL_ELEM(Iref[refno](), 0, 1, 0) +
-                VOL_ELEM(Iref[refno](), 0, -1, 0) +
-                VOL_ELEM(Iref[refno](), 0, 0, 1) +
-                VOL_ELEM(Iref[refno](), 0, 0, -1) / 6.;
-        }  
+            avg_origin += VOL_ELEM(Iref[refno](), 0, 0, 0);
     }  
+
+    // Adjust origin pixel of all references
+    if (do_esthetics)
+        for (int refno=0;refno<nr_ref; refno++)
+            VOL_ELEM(Iref[refno](), 0, 0, 0) = avg_origin/(double)nr_ref;
 
     // Adjust average scale
     if (do_norm) {
