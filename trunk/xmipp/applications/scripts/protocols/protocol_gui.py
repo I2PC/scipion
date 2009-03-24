@@ -128,7 +128,7 @@ class automated_gui_class:
             self.is_analysis=True
         self.scriptname=scriptname
         self.master=Tk()
-        self.fontsize=10
+        self.fontsize=9
         self.master.option_add("*Font", FontName+str(self.fontsize)+" bold")
         self.expert_mode=False
         self.is_setupgui=False
