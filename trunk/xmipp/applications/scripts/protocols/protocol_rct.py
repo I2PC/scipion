@@ -218,14 +218,16 @@ class RCT_class:
         
         # Check whether the ML2D run has written docfiles already
         docfiles=glob.glob(ml2d_abs_rootname+'_it??????.doc')
-        if len(docfiles)==0:
-            message='No ML2D selfiles yet. Continue script after ML2D job completion... '
+        lastiter=len(docfiles)
+        if (lastiter==0):
+            message='No ML2D docfiles yet. Continue script after ML2D job completion... '
             print '* ',message
             self.log.error(message)
             sys.exit()
         else:
             # Check that no mirror option was used
-            lastlogfile=docfiles[-1].replace('.doc','.log')
+            lastitername=ml2d_abs_rootname+'_it'+str(lastiter).zfill(6)
+            lastlogfile=lastitername+'.log'
             fh=open(lastlogfile,'r')
             lines=fh.readlines()
             for line in lines:
@@ -236,7 +238,6 @@ class RCT_class:
                     self.log.error(message)
                     sys.exit()
             # Loop over all classes selected for 3D-reconstruction
-            lastitername=docfiles[-1].replace('.doc','')
             refs=self.SelectClasses.split(',')
             import utils_xmipp
             for ref in refs:
