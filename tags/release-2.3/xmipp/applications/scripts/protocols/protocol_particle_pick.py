@@ -56,22 +56,21 @@ LogDir='Logs'
 """ This option provides shared-memory parallelization on multi-core machines. 
     It does not require any additional software, other than xmipp
 """
-NumberOfThreads=2
+NumberOfThreads=1
+
+# Use distributed-memory parallelization (MPI)?
+""" This option provides parallelization on clusters with distributed memory architecture.
+    It requires mpi to be installed.
+"""
+DoParallel=False
 
 # Number of MPI processes to use:
 NumberOfMpiProcesses=1
 
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
-    Ask the person who installed your xmipp version, which option to use. Or read: http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParallelPage. The following values are available: 
-   SLURM-MPICH       : BSCs MareNostrum, LaPalma etc
-   TORQUE-OPENMPI    : Crunchy
-   SGE-OPENMPI       : Cluster at imp.ac.at
-   PBS               : Vermeer and FinisTerrae
-   XMIPP_MACHINEFILE : Environment variable $XMIPP_MACHINEFILE points to 
-machinefile
-   HOME_MACHINEFILE  : machinefile is called $HOME/machines.dat
-   Leave it black    : Run locally, most personal computers
+    Ask the person who installed your xmipp version, which option to use. 
+    Or read: http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParallelPage. 
 """
 SystemFlavour=''
 
@@ -94,6 +93,7 @@ class particle_pick_class:
                  ProjectDir,
                  LogDir,
                  NumberOfThreads,
+                 DoParallel,
 		 NumberOfMpiProcesses,
                  SystemFlavour
                  ):
@@ -120,6 +120,7 @@ class particle_pick_class:
         self.ProjectDir=ProjectDir
         self.LogDir=LogDir
         self.NumberOfThreads=NumberOfThreads
+        self.DoParallel=DoParallel
         self.NumberOfMpiProcesses=NumberOfMpiProcesses
         self.SystemFlavour=SystemFlavour
 
@@ -411,7 +412,7 @@ class particle_pick_class:
         command=""
         print("*"+answer+"*");
         print(answer=="no" or answer==False);
-        if self.NumberOfMpiProcesses>1:
+        if self.DoParallel:
             command=launch_job.launch_job("xmipp_run",
                                  "-i pick.sh",
                                  self.log,
@@ -435,7 +436,7 @@ class particle_pick_class:
             python_file = open("pick.py", "w")
             python_file.write("WorkingDir='"+self.WorkingDir+"'\n")
             python_file.write("NumberOfThreads=1\n")
-            python_file.write("DoParallel="+str(self.NumberOfMpiProcesses>1)+"\n")
+            python_file.write("DoParallel="+str(self.DoParallel)+"\n")
             python_file.write("NumberOfMpiProcesses="+str(self.NumberOfMpiProcesses)+"\n")
             python_file.write("# {end-of-header}\n")
             python_file.write("import os\n")
@@ -581,6 +582,7 @@ if __name__ == '__main__':
                                           ProjectDir,
                                           LogDir,
                                           NumberOfThreads,
+                                          DoParallel,
 					  NumberOfMpiProcesses,
                                           SystemFlavour
                                           )
