@@ -295,7 +295,8 @@ NumberOfMpiProcesses=16
 
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
-    Ask the person who installed your xmipp version, which option to use. Or read: xxx
+    Ask the person who installed your xmipp version, which option to use. 
+    Or read: http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParallelPage. 
 """
 SystemFlavour=''
 
