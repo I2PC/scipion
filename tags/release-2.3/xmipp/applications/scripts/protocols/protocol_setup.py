@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#------------------------------------------------------------------------
+#-----------------------------------------------------------------------
 # General script to setup standard Xmipp protocols
 #  - Preprocessing of micrographs
 #  - Manual particle picking
@@ -43,7 +43,7 @@ SetupMultiRes3d=False
 # {section} Global Parameters
 #------------------------------------------------------------------------
 # Absolute path to the root directory name for this project:
-ProjectDir='/home/scheres/xmipp/applications/scripts/protocols'
+ProjectDir='/home/scheres/test'
 # System flavour for parallelization
 SystemFlavour=''
 # Directory name for logfiles:
@@ -138,7 +138,7 @@ class setup_protocols_class:
                 for var in self.library:
                     if (self.library[var][0]):
                         self.setup_protocol(self.library[var][1])
-
+                        
         def modify_script_header(self,src):
 
             import sys
@@ -161,19 +161,21 @@ class setup_protocols_class:
 
             # Loop over all project-related directories and preset default directories
             for dir in self.DEFAULTDIRS:
-                newheader_lines=[]
-                for line in header_lines:
-                    if ( (not line[0]=="#" and
-                          not line[0]==" " and
-                          not line[0]=="\t" and
-                          not line[0]=="\n" and
-                          not line[0]=="\"") and (line.find(dir) > -1) ):
-                        args=line.split("=")
-                        lineb=str(args[0])+'=\"'+self.DEFAULTDIRS[dir]+'\"\n'
-                    else:
-                        lineb=line
-                    newheader_lines.append(lineb)
-                header_lines=newheader_lines
+                # Only change DEFAULTDIRS if entry is not empty in the setup protocol
+                if (len(self.DEFAULTDIRS[dir]) > 0):
+                    newheader_lines=[]
+                    for line in header_lines:
+                        if ( (not line[0]=="#" and
+                              not line[0]==" " and
+                              not line[0]=="\t" and
+                              not line[0]=="\n" and
+                              not line[0]=="\"") and (line.find(dir) > -1) ):
+                            args=line.split("=")
+                            lineb=str(args[0])+'=\"'+self.DEFAULTDIRS[dir]+'\"\n'
+                        else:
+                            lineb=line
+                        newheader_lines.append(lineb)
+                    header_lines=newheader_lines
             return header_lines+body_lines
 
         def setup_protocol(self,scripts):
