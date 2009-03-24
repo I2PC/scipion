@@ -913,7 +913,8 @@ class MyShowMoreHelp:
 
     def click(self,linkname):
         browser=self.get_browser()
-        os.system(browser+' '+linkname+'&')
+        if (browser != 'None'):
+            os.system(browser+' '+linkname+'&')
 
     def get_browser(self):
         import os
@@ -926,6 +927,7 @@ class MyShowMoreHelp:
             message+='e.g. for csh: setenv XMIPP_BROWSER netscape\n'
             message+='e.g. for bash: export XMIPP_BROWSER=netscape\n'
             tkMessageBox.showinfo('Define a browser',message)
+            return 'None'
 
 class HyperlinkManager:
 
