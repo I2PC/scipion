@@ -128,7 +128,7 @@ class automated_gui_class:
             self.is_analysis=True
         self.scriptname=scriptname
         self.master=Tk()
-        self.fontsize=10
+        self.fontsize=9
         self.master.option_add("*Font", FontName+str(self.fontsize)+" bold")
         self.expert_mode=False
         self.is_setupgui=False
@@ -913,7 +913,8 @@ class MyShowMoreHelp:
 
     def click(self,linkname):
         browser=self.get_browser()
-        os.system(browser+' '+linkname+'&')
+        if (browser != 'None'):
+            os.system(browser+' '+linkname+'&')
 
     def get_browser(self):
         import os
@@ -926,6 +927,7 @@ class MyShowMoreHelp:
             message+='e.g. for csh: setenv XMIPP_BROWSER netscape\n'
             message+='e.g. for bash: export XMIPP_BROWSER=netscape\n'
             tkMessageBox.showinfo('Define a browser',message)
+            return 'None'
 
 class HyperlinkManager:
 
