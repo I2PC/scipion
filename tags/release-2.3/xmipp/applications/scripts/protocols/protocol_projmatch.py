@@ -139,13 +139,22 @@ ReferenceIsCtfCorrected=True
 """
 DoMask=True
 
-# {expert} Show masked volume
-""" Masked volume will be shown. 
-    Do not set this option to true for non-interactive processing (jobs sent to queues)
+# Use a spherical mask?
+""" If set to true, provide the radius of the mask in the next input field
+    if set to false, provide a binary mask file in the second next input field
 """
-DisplayMask=False
+DoSphericalMask=True
 
-# {file} Binary mask-file used to mask the reference volume
+# Radius of spherical mask
+""" This is the radius (in pixels) of the spherical mask 
+"""
+MaskRadius=32
+
+# {file} Binary mask file
+""" This should be a binary (only 0/1-valued) Xmipp volume of equal dimension as your reference
+    The protein region should be white (1) and the solvent should be black (0).
+    Note that this entry is only relevant if no spherical mask is used.
+"""
 MaskFileName='mask.vol'
 
 #-----------------------------------------------------------------------------
@@ -433,7 +442,7 @@ FourierReconstructionExtraCommand=' '
 """
 DoComputeResolution=True
 
-# Split references averages
+# {expert} Split references averages
 """In theory each reference average should be splited
    in two when computing the resolution. In this way each
    projection direction will be represented in each of the
@@ -461,26 +470,30 @@ DisplayResolution=False
 #-----------------------------------------------------------------------------
 # {section} Low-pass filtering
 #-----------------------------------------------------------------------------
-# Provide your own filtration frequecy?
-"""By default the volume will be filtered at a frecuency equal to
-   the  resolution computed with resolution_fsc
-   plus a constant provided by the user in the next
-   input box. If this option is set to true then the
-   filtration will be made at the constant value provided by
-   the user WITHOUT adding the resolution computed by resolution_fsc.
+# Low-pass filter the reference?
+DoLowPassFilter=True
+
+# Use estimated resolution for low-pass filtering?
+"""If set to true, the volume will be filtered at a frecuency equal to
+   the  resolution computed with a FSC=0.5 threshold, possibly 
+   plus a constant provided by the user in the next input box. 
+
+   If set to false, then the filtration will be made at the constant 
+   value provided by the user in the next box (in digital frequency, 
+   i.e. pixel-1: minimum 0, maximum 0.5) 
 """
-SetResolutiontoZero=False
+UseFscForFilter=True
 
-
-# Constant to by add to the estimate resolution
+# Constant to by add to the estimated resolution
 """ The meaning of this field depends on the previous flag.
-    If set as False then  the volume will be filtered at a frecuency equal to
-    the  resolution computed with resolution_fsc
-    plus the value provided in this field (units pixel^-1)
-    If set to False  the volume will be filtered at the resolution
-    provided in this field.
-    Set this value to any value larger than .5 to avoid filtration.
-    You must specify this option for each iteration. 
+    If set to true, then the volume will be filtered at a frecuency equal to
+    the  resolution computed with resolution_fsc (FSC=0.5) plus the value 
+    provided in this field 
+    If set to false, the volume will be filtered at the resolution
+    provided in this field 
+    This value is in digital frequency, or pixel^-1: minimum 0, maximum 0.5
+
+    You can specify this option for each iteration. 
     This can be done by a sequence of numbers (for instance, ".15 .15 .1 .1" 
     specifies 4 iterations, the first two set the constant to .15
     and the last two to 0.1. An alternative compact notation 
@@ -556,7 +569,8 @@ class projection_matching_class:
                 _ContinueAtIteration,
                 _CleanUpFiles,
                 _DoMask, 
-                _DisplayMask,
+                _DoSphericalMask,
+                _MaskRadius,
                 _ReferenceFileName,
                 _MaskFileName,
                 _DoProjectionMatching,
@@ -613,7 +627,8 @@ class projection_matching_class:
                 _MyMpiJobSize,
                 _MyNumberOfThreads,
                 _SymmetryGroup,
-                _SetResolutiontoZero,
+                _DoLowPassFilter,
+                _UseFscForFilter,
                 _ConstantToAddToFiltration
                 ):
 
@@ -631,6 +646,8 @@ class projection_matching_class:
        self._ReferenceFileName=os.path.abspath(_ReferenceFileName)
        self._MaskFileName=os.path.abspath(_MaskFileName)
        self._DoMask=_DoMask
+       self._DoSphericalMask=_DoSphericalMask
+       self._MaskRadius=_MaskRadius
        self._DoProjectionMatching=_DoProjectionMatching
        self._DisplayProjectionMatching=_DisplayProjectionMatching
        self._DoRetricSearchbyTiltAngle=_DoRetricSearchbyTiltAngle
@@ -638,7 +655,6 @@ class projection_matching_class:
        self._Tilt0=_Tilt0
        self._TiltF=_TiltF
        self._ProjMatchingExtra=_ProjMatchingExtra
-       self._DisplayMask=_DisplayMask
        self._ProjectDir=_ProjectDir
        self._InnerRadius=_InnerRadius
        self._AvailableMemory=_AvailableMemory
@@ -668,7 +684,8 @@ class projection_matching_class:
        self._ARTReconstructionExtraCommand=_ARTReconstructionExtraCommand
        self._WBPReconstructionExtraCommand=_WBPReconstructionExtraCommand
        self._FourierReconstructionExtraCommand=_FourierReconstructionExtraCommand
-       self._SetResolutiontoZero=_SetResolutiontoZero
+       self._DoLowPassFilter=_DoLowPassFilter
+       self._UseFscForFilter=_UseFscForFilter
        # if we are not starting at the first iteration
        # globalFourierMaxFrequencyOfInterest must be computed
        # untill I fix this properlly let us set it at max_frequency,
@@ -823,12 +840,13 @@ class projection_matching_class:
           os.chdir(Iteration_Working_Directory)
 
           # Mask reference volume
-          execute_mask(_DoMask,
+          execute_mask(self._DoMask,
                        self._mylog,
                        self._ProjectDir,
                        self._ReconstructedandfilteredVolume[_iteration_number],#in
                        self._MaskFileName,
-                       self._DisplayMask,
+                       self._DoSphericalMask,
+                       self._MaskRadius,
                        _iteration_number,
                        self._ReferenceVolume[_iteration_number])#out
 
@@ -965,16 +983,17 @@ class projection_matching_class:
                                                   )
           else:
 	     filter_frequence=0
-             self._mylog.info("Skipped Resolution") 
+             self._mylog.info("Skipped Resolution calculation") 
           
           self._ConstantToAddToFiltration=arg.getComponentFromVector(\
                                                ConstantToAddToFiltration,\
                                                   _iteration_number-1)
 
-          globalFourierMaxFrequencyOfInterest=filter_at_given_resolution(_DoComputeResolution,
+          globalFourierMaxFrequencyOfInterest=filter_at_given_resolution(_DoLowPassFilter,
+                                     _DoComputeResolution,
                                      self._mylog, 
                                      _iteration_number,
-                                     self._SetResolutiontoZero,
+                                     self._UseFscForFilter,
                                      self._ConstantToAddToFiltration,
                                      filter_frequence,
                                      self._ReconstructedVolume[_iteration_number],
@@ -1078,7 +1097,8 @@ def execute_mask(_DoMask,
                  _ProjectDir,
                  _ReferenceFileName,
                  _MaskFileName,
-                 _DisplayMask,
+                 _DoSphericalMask,
+                 _MaskRadius,
                  _iteration_number,
                  _ReferenceVolume):
    import os,shutil
@@ -1089,25 +1109,22 @@ def execute_mask(_DoMask,
    else:   
       InPutVolume=_ReferenceFileName+".vol"
    if (_DoMask):
-       MaskVolume =_MaskFileName
        MaskedVolume=_ReferenceVolume
        print '*********************************************************************'
        print '* Mask the reference volume'
-       command=' -i '    + InPutVolume + \
-               ' -o '    + _ReferenceVolume + \
-               ' -mask ' + MaskVolume 
+       if (_DoSphericalMask):
+          command=' -i '    + InPutVolume + \
+                  ' -o '    + _ReferenceVolume + \
+                  ' -mask circular -' + str(_MaskRadius)
+       else:
+          command=' -i '    + InPutVolume + \
+                  ' -o '    + _ReferenceVolume + \
+                  ' -mask ' + _MaskFileName
        launch_job.launch_job("xmipp_mask",
                              command,
                              _mylog,
                              False,1,1,'')
 
-       if _DisplayMask==True:
-          command='xmipp_show -vol '+ MaskedVolume +' -w 10 &'
-          print '*********************************************************************'
-          print '* ',command
-          _mylog.info(command)
-          os.system(command)
-          
    else:
        shutil.copy(InPutVolume,_ReferenceVolume)
        _mylog.info("Skipped Mask")
@@ -1617,10 +1634,11 @@ def  execute_resolution(_mylog,
 #------------------------------------------------------------------------
 #           filter_at_given_resolution
 #------------------------------------------------------------------------
-def filter_at_given_resolution(_DoComputeResolution,
+def filter_at_given_resolution(_DoLowPassFilter,
+                               _DoComputeResolution,
                                _mylog, 
                                _iteration_number,
-                               _SetResolutiontoZero,
+                               _UseFscForFilter,
                                _ConstantToAddToFiltration,
                                _filter_frequence,
                                _ReconstructedVolume,
@@ -1632,24 +1650,35 @@ def filter_at_given_resolution(_DoComputeResolution,
     import launch_job
     Inputvolume   =_ReconstructedVolume+'.vol'
     Outputvolume  =_ReconstructedandfilteredVolume+'.vol'
-    if (_SetResolutiontoZero):
-       filter_in_pixels_at = float(_ConstantToAddToFiltration)
-    else:
-       filter_in_pixels_at = float(_filter_frequence) +\
-                             float(_ConstantToAddToFiltration)
-    print '**************************************************************'
-    print '* Filter reconstruction ' 
-    if (_ConstantToAddToFiltration<0.5 or (not _DoComputeResolution)):
+
+    filter_in_pixels_at=0.5
+    if (not _DoLowPassFilter):
         shutil.copy(Inputvolume,Outputvolume) 
         command ="shutilcopy" + Inputvolume + ' ' + Outputvolume
+        _mylog.info(command)
     else:   
-        command = " -i " + Inputvolume +\
-                  " -o " + Outputvolume + ' -low_pass ' +\
-                  str (filter_in_pixels_at)
-        launch_job.launch_job("xmipp_fourier_filter",
-                              command,
-                              _mylog,
-                              False,1,1,_MySystemFlavour)
+        print '**************************************************************'
+        print '* Filter reconstruction ' 
+        if (_UseFscForFilter):
+           filter_in_pixels_at = float(_filter_frequence) +\
+                                 float(_ConstantToAddToFiltration)
+        else:
+           filter_in_pixels_at = float(_ConstantToAddToFiltration)
+
+        if (filter_in_pixels_at>0.5):
+           shutil.copy(Inputvolume,Outputvolume) 
+           command ="shutilcopy" + Inputvolume + ' ' + Outputvolume
+           _mylog.info(command)
+           filter_in_pixels_at=0.5
+        else:
+           command = " -i " + Inputvolume +\
+                     " -o " + Outputvolume + ' -low_pass ' +\
+                     str (filter_in_pixels_at)
+           launch_job.launch_job("xmipp_fourier_filter",
+                                 command,
+                                 _mylog,
+                                 False,1,1,_MySystemFlavour)
+
     return filter_in_pixels_at
 
 
@@ -1701,7 +1730,8 @@ if __name__ == '__main__':
                 ContinueAtIteration,  
                 CleanUpFiles,
                 DoMask,   
-                DisplayMask,                    
+                DoSphericalMask,
+                MaskRadius,
                 ReferenceFileName,              
                 MaskFileName,                   
                 DoProjectionMatching,           
@@ -1757,7 +1787,8 @@ if __name__ == '__main__':
                 SystemFlavour,
                 MpiJobSize,
                 NumberOfThreads,
-                SymmetryGroup,                        
-                SetResolutiontoZero,
+                SymmetryGroup,  
+                DoLowPassFilter,
+                UseFscForFilter,
                 ConstantToAddToFiltration
                 )
