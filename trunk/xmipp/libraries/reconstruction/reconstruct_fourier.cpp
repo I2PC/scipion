@@ -791,7 +791,7 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
                 
                 if ( appliedFSC == 0 ) 
                 {
-                    if ( current_index > FSCIndex && saveFSC )
+                    if ( current_index == FSCIndex && saveFSC )
                     {
                         // Save Current Fourier, Reconstruction and Weights
                         VolumeT<double> save;
