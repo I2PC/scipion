@@ -655,6 +655,7 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
 
     // This index tells when to save work for later FSC usage
     int FSCIndex = (firstImageIndex + lastImageIndex)/2;
+    int current_index;
     
     do
     {
@@ -679,6 +680,7 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
         // Threads are working now, wait for them to finish
         // processing current projection
         barrier_wait( &barrier );
+        
         //each threads have read a different image and now
         // all the thread will work in a different part of a single image.
         threadOpCode = PROCESS_IMAGE;
@@ -697,6 +699,8 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
             
                 double weight = th_args[nt].localweight;
                 paddedFourier = th_args[nt].localPaddedFourier;
+                current_index = th_args[nt].imageIndex;
+                
                     //#define DEBUG22
                     #ifdef DEBUG22
                           
@@ -728,7 +732,6 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
                 // Loop over all symmetries
                 for (int isym = 0; isym < R_repository.size(); isym++)
                 {
-
                     rowsProcessed = 0;
 
                     // Compute the coordinate axes of the symmetrized projection
@@ -740,7 +743,6 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
                         // Passing parameters to each thread
                         th_args[th].symmetry = &A_SL;
                         th_args[th].paddedFourier = paddedFourier;
-                       
                         th_args[th].weight = weight;
                     }
 
@@ -764,6 +766,7 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
                     // Threads are working now, wait for them to finish
                     // processing current projection
                     barrier_wait( &barrier );
+                    
                     //#define DEBUG2
                     #ifdef DEBUG2
                           
@@ -783,40 +786,39 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
                             }
                     #endif
                     #undef DEBUG2
-                    if ( appliedFSC == 0 ) 
-                    {
-                        if ( imgIndex >= FSCIndex && saveFSC )
-                        {
-                            // Save Current Fourier, Reconstruction and Weights
-                            VolumeT<double> save;
-                            save().alias( FourierWeights );
-                            save.write((std::string)fn_fsc + "_1_Weights.vol",
-                                    false,VDOUBLE);
-                        
-                            FourierVolume save2;
-                            save2().alias( VoutFourier );
-                            save2.write((std::string) fn_fsc + "_1_Fourier.vol",
-                                    false,VDOUBLE);
-                            
-                            finishComputations(FileName((std::string) fn_fsc + "_1_recons.vol"));
-                            Vout().initZeros(volPadSizeZ, volPadSizeY, volPadSizeX);
-                            transformerVol.setReal(Vout());
-                            Vout().clear();
-                            transformerVol.getFourierAlias(VoutFourier);
-                            FourierWeights.initZeros(VoutFourier);
-                            VoutFourier.initZeros();
 
-
-                            // Reset volumes
-                            // finishComputations changes this, set correct value
-                            // threadOpCode = PROCESS_IMAGE;//This line is not needed
-                            appliedFSC=1;
-                        }
-                    }
                 }
+                
+                if ( appliedFSC == 0 ) 
+                {
+                    if ( current_index > FSCIndex && saveFSC )
+                    {
+                        // Save Current Fourier, Reconstruction and Weights
+                        VolumeT<double> save;
+                        save().alias( FourierWeights );
+                        save.write((std::string)fn_fsc + "_1_Weights.vol",
+                                false,VDOUBLE);
+                        
+                        FourierVolume save2;
+                        save2().alias( VoutFourier );
+                        save2.write((std::string) fn_fsc + "_1_Fourier.vol",
+                                false,VDOUBLE);
+                            
+                        finishComputations(FileName((std::string) fn_fsc + "_1_recons.vol"));
+                        Vout().initZeros(volPadSizeZ, volPadSizeY, volPadSizeX);
+                        transformerVol.setReal(Vout());
+                        Vout().clear();
+                        transformerVol.getFourierAlias(VoutFourier);
+                        FourierWeights.initZeros(VoutFourier);
+                        VoutFourier.initZeros();
+
+                        appliedFSC=1;
+                    }
+                }                
             }
         }
     }while ( processed );
+    
     if( appliedFSC == 1 )
     {
         // Save Current Fourier, Reconstruction and Weights
