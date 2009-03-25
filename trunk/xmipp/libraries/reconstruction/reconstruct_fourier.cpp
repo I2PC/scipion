@@ -113,22 +113,13 @@ void Prog_RecFourier_prm::usage()
 void Prog_RecFourier_prm::produce_Side_info()
 {
     // Translate the maximum resolution to digital frequency
-    //maxResolution=sampling_rate/maxResolution;
+    // maxResolution=sampling_rate/maxResolution;
     maxResolution2=maxResolution*maxResolution;
 
     // Read the input images
-    
-    if (fn_fsc != "")
-    {
-        SelFile auxSF;
-        auxSF.read(fn_sel);
-        SF = auxSF.randomize();
-    }
-    else
-    
     SF.read(fn_sel);
+    
     // Read docfile and get column numbers
-
     if (fn_doc != "")
     {
         DF.read(fn_doc);
@@ -154,13 +145,13 @@ void Prog_RecFourier_prm::produce_Side_info()
     if (Ydim!=Xdim)
         REPORT_ERROR(1,"This algorithm only works for squared images");
     imgSize=Xdim;
-    volPadSizeX = volPadSizeY = volPadSizeZ=Xdim*padding_factor_vol;
+     volPadSizeX = volPadSizeY = volPadSizeZ=Xdim*padding_factor_vol;
     Vout().initZeros(volPadSizeZ,volPadSizeY,volPadSizeX);
     transformerVol.setReal(Vout());
-    Vout().clear(); // Free the memory so that it is available for FourierWeights
+     Vout().clear(); // Free the memory so that it is available for FourierWeights
     transformerVol.getFourierAlias(VoutFourier);
     FourierWeights.initZeros(VoutFourier);
-
+   
     // Ask for memory for the padded images
     paddedImg.resize(Xdim*padding_factor_proj,Xdim*padding_factor_proj);
     paddedImg.setXmippOrigin();
@@ -252,7 +243,9 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
     ImageThreadParams * threadParams = (ImageThreadParams *) threadArgs;
     Prog_RecFourier_prm * parent = threadParams->parent;
     barrier_t * barrier = &(parent->barrier);
+    
     int minSeparation;
+    
     if ( (int)ceil(parent->blob.radius) > parent->thrWidth )
         minSeparation = (int)ceil(parent->blob.radius);
     else
@@ -260,7 +253,7 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
 
     minSeparation+=1;
 
-    Matrix2D<double>  localA(3, 3), localAinv;
+    Matrix2D<double>  localA(3, 3), localAinv(3, 3);
     Matrix2D< std::complex<double> > localPaddedFourier;
     Matrix2D<double> localPaddedImg;
     XmippFftw localTransformerImg;
@@ -280,7 +273,7 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                 if ( threadParams->imageIndex >= 0 )
                 {
                     FileName fn_img;
-
+                    
                     fn_img = parent->SF.get_file_number( threadParams->imageIndex );
 
                     // Read input image
@@ -307,7 +300,6 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                         proj.set_Yoff(yoff);
                         proj.set_flip(flip);
                         proj.set_weight(weight);
-                        Matrix2D<double> localA;
                         localA = proj.get_transformation_matrix(true);
                         if (!localA.isIdentity())
                             proj().selfApplyGeometryBSpline(localA, 3, IS_INV, WRAP);
@@ -390,7 +382,8 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
         case EXIT_THREAD: 
             return NULL;
         case PROCESS_WEIGHTS:
-            {// Get a first approximation of the reconstruction
+            {
+                // Get a first approximation of the reconstruction
                 double corr2D_3D=pow(parent->padding_factor_proj,2.)/
                                  (parent->imgSize* pow(parent->padding_factor_vol,3.)); 
                 // Divide by Zdim because of the
@@ -401,10 +394,11 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                     for (int i=STARTINGY(parent->FourierWeights); i<=FINISHINGY(parent->FourierWeights); i++)
                         for (int j=STARTINGX(parent->FourierWeights); j<=FINISHINGX(parent->FourierWeights); j++)
                         {
-                            if (parent->FourierWeights(k,i,j)>ACCURACY){
+                            if (parent->FourierWeights(k,i,j)>ACCURACY)
+                            {
                                 parent->FourierWeights(k,i,j)=1/parent->FourierWeights(k,i,j);
                                 VOL_ELEM(parent->VoutFourier,k,i,j)*=corr2D_3D*VOL_ELEM(parent->FourierWeights,k,i,j);
-                                }
+                            }
                             else
                                 VOL_ELEM(parent->VoutFourier,k,i,j)=0;
 
@@ -499,7 +493,6 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                     Matrix1D<int> corner1(3), corner2(3);
 
                     // Get i value for the thread
-
                     for (int i = minAssignedRow; i <= maxAssignedRow ; i ++ )
                     {
 			// Discarded rows can be between minAssignedRow and maxAssignedRow, check
@@ -645,16 +638,17 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
     int repaint = ceil((double)SF.ImgNo()/60);
 
     bool processed;
-    Matrix2D<double> *Ainv;
     int imgno = 0;
     int imgIndex = firstImageIndex;
     struct timeval start_time, end_time;
     long int total_usecs;
     double total_time;
-    int appliedFSC = 0;
-
+    
     // This index tells when to save work for later FSC usage
     int FSCIndex = (firstImageIndex + lastImageIndex)/2;
+    
+    // Index of the image that has just been processed. Used for
+    // FSC purposes
     int current_index;
     
     do
@@ -681,7 +675,7 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
         // processing current projection
         barrier_wait( &barrier );
         
-        //each threads have read a different image and now
+        // each threads have read a different image and now
         // all the thread will work in a different part of a single image.
         threadOpCode = PROCESS_IMAGE;
 
@@ -695,28 +689,29 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
             {
                 processed = true;
                 if (verb && imgno++%repaint==0) progress_bar(imgno);
-                Ainv = th_args[nt].localAInv;
             
                 double weight = th_args[nt].localweight;
                 paddedFourier = th_args[nt].localPaddedFourier;
                 current_index = th_args[nt].imageIndex;
-                
-                    //#define DEBUG22
-                    #ifdef DEBUG22
-                          
+                Matrix2D<double> *Ainv = th_args[nt].localAInv;
+            
+                //#define DEBUG22
+                #ifdef DEBUG22
+                      
+                        {
+                        static int ii=0;
+                        if(ii%1==0) 
                             {
-                            static int ii=0;
-                            if(ii%1==0) 
-                                {
-                                FourierImage save22;
-                                //save22()=*paddedFourier;
-                                save22().alias(*paddedFourier);
-                                save22.write((std::string) integerToString(ii)  + "_padded_fourier.spi");
-                                }
-                            ii++;
+                            FourierImage save22;
+                            //save22()=*paddedFourier;
+                            save22().alias(*paddedFourier);
+                            save22.write((std::string) integerToString(ii)  + "_padded_fourier.spi");
                             }
-                    #endif
-                    #undef DEBUG22
+                        ii++;
+                        }
+                #endif
+                #undef DEBUG22
+                
                 // Initialized just once
                 if ( statusArray == NULL )
                 {
@@ -788,38 +783,33 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
                     #undef DEBUG2
 
                 }
-                
-                if ( appliedFSC == 0 ) 
-                {
-                    if ( current_index == FSCIndex && saveFSC )
-                    {
-                        // Save Current Fourier, Reconstruction and Weights
-                        VolumeT<double> save;
-                        save().alias( FourierWeights );
-                        save.write((std::string)fn_fsc + "_1_Weights.vol",
-                                false,VDOUBLE);
-                        
-                        FourierVolume save2;
-                        save2().alias( VoutFourier );
-                        save2.write((std::string) fn_fsc + "_1_Fourier.vol",
-                                false,VDOUBLE);
-                            
-                        finishComputations(FileName((std::string) fn_fsc + "_1_recons.vol"));
-                        Vout().initZeros(volPadSizeZ, volPadSizeY, volPadSizeX);
-                        transformerVol.setReal(Vout());
-                        Vout().clear();
-                        transformerVol.getFourierAlias(VoutFourier);
-                        FourierWeights.initZeros(VoutFourier);
-                        VoutFourier.initZeros();
 
-                        appliedFSC=1;
-                    }
-                }                
+                if ( current_index == FSCIndex && saveFSC )
+                {
+                    // Save Current Fourier, Reconstruction and Weights
+                    VolumeT<double> save;
+                    save().alias( FourierWeights );
+                    save.write((std::string)fn_fsc + "_1_Weights.vol",
+                            false,VDOUBLE);
+                    
+                    FourierVolume save2;
+                    save2().alias( VoutFourier );
+                    save2.write((std::string) fn_fsc + "_1_Fourier.vol",
+                            false,VDOUBLE);
+                        
+                    finishComputations(FileName((std::string) fn_fsc + "_1_recons.vol"));
+                    Vout().initZeros(volPadSizeZ, volPadSizeY, volPadSizeX);
+                    transformerVol.setReal(Vout());
+                    Vout().clear();
+                    transformerVol.getFourierAlias(VoutFourier);
+                    FourierWeights.initZeros(VoutFourier);
+                    VoutFourier.initZeros();
+                }
             }
         }
     }while ( processed );
-    
-    if( appliedFSC == 1 )
+                      
+    if( saveFSC ) 
     {
         // Save Current Fourier, Reconstruction and Weights
         VolumeT<double> auxVolume;
@@ -841,16 +831,11 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
         FourierWeights.initZeros(VoutFourier);
         VoutFourier.initZeros();   
 
+        auxVolume.sumWithFile((std::string) fn_fsc + "_1_Weights.vol",false, VDOUBLE);
+        auxVolume.sumWithFile((std::string) fn_fsc + "_2_Weights.vol",false, VDOUBLE);
 
-        //FourierWeights.getDimension(y,x,z);
-
-        auxVolume.sumWithFile((std::string) fn_fsc + "_1_Weights.vol",/*z,y,x,*/false, VDOUBLE);
-        auxVolume.sumWithFile((std::string) fn_fsc + "_2_Weights.vol",/*z,y,x,*/false, VDOUBLE);
-
-        //VoutFourier.getDimension(y,x,z);
-
-        auxFourierVolume.sumWithFile((std::string) fn_fsc + "_1_Fourier.vol",/*z,y,x,*/false, VDOUBLE);
-        auxFourierVolume.sumWithFile((std::string) fn_fsc + "_2_Fourier.vol",/*z,y,x,*/false, VDOUBLE);
+        auxFourierVolume.sumWithFile((std::string) fn_fsc + "_1_Fourier.vol",false, VDOUBLE);
+        auxFourierVolume.sumWithFile((std::string) fn_fsc + "_2_Fourier.vol",false, VDOUBLE);
         remove(((std::string) fn_fsc + "_1_Weights.vol").c_str());
         remove(((std::string) fn_fsc + "_2_Weights.vol").c_str());
 	remove(((std::string) fn_fsc + "_1_Fourier.vol").c_str());
@@ -873,8 +858,6 @@ void Prog_RecFourier_prm::run()
 {
     // Process all images in the selfile
     if (verb) init_progress_bar(SF.ImgNo());
-    int imgno = 0;
-    int repaint = ceil((double)SF.ImgNo()/60);
 
     // Create threads stuff
     barrier_init( &barrier, numThreads+1 );
