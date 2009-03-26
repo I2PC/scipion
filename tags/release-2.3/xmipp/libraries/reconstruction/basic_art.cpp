@@ -663,72 +663,69 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
     /* Setting initial volumes ------------------------------------------------- */
     if (level >= FULL)
     {
-        if (!(tell & TELL_USE_INPUT_BASISVOLUME))
+        if (fn_start != "")
+            vol_basis0.read(fn_start);
+        else
         {
-            if (fn_start != "")
-                vol_basis0.read(fn_start);
-            else
+            Grid grid_basis;
+            if (R == -1)
             {
-                Grid grid_basis;
-                if (R == -1)
+                Matrix1D<double> corner;
+                if (basis.type == Basis::blobs)
                 {
-                    Matrix1D<double> corner;
-                    if (basis.type == Basis::blobs)
-                    {
-                        if (Zoutput_volume_size == 0)
-                            corner = vectorR3((double)projXdim / 2, (double)projXdim / 2,
-                                               (double)projXdim / 2);
-                        else
-                            corner = vectorR3(
-                                         (double)Xoutput_volume_size / 2,
-                                         (double)Youtput_volume_size / 2,
-                                         (double)Zoutput_volume_size / 2);
-                    }
+                    if (Zoutput_volume_size == 0)
+                        corner = vectorR3((double)projXdim / 2, (double)projXdim / 2,
+                                          (double)projXdim / 2);
                     else
-                    {
-                        if (Zoutput_volume_size == 0)
-                            corner = vectorR3(-(double)FIRST_XMIPP_INDEX(projXdim),
-                                -(double)FIRST_XMIPP_INDEX(projXdim),
-                                -(double)FIRST_XMIPP_INDEX(projXdim));
-                        else
-                            corner = vectorR3(-(double)FIRST_XMIPP_INDEX(Xoutput_volume_size),
-                                -(double)FIRST_XMIPP_INDEX(Youtput_volume_size),
-                                -(double)FIRST_XMIPP_INDEX(Zoutput_volume_size));
-                    }
-                    /* If you substract half the basis radius, you are forcing that the
-                       last basis touches slightly the volume border. By not substracting
-                       it there is a basis center as near the border as possible. */
-                    corner = corner + proj_ext/*CO: -blob.radius/2*/;
-                    switch (grid_type)
-                    {
-                    case (CC):
-                        grid_basis = Create_CC_grid(grid_relative_size, -corner, corner);
-                        break;
-                    case (FCC):
-                        grid_basis = Create_FCC_grid(grid_relative_size, -corner, corner);
-                        break;
-                    case (BCC):
-                        grid_basis = Create_BCC_grid(grid_relative_size, -corner, corner);
-                        break;
-                    }
+                        corner = vectorR3(
+                            (double)Xoutput_volume_size / 2,
+                            (double)Youtput_volume_size / 2,
+                            (double)Zoutput_volume_size / 2);
                 }
                 else
                 {
-                    switch (grid_type)
-                    {
-                    case (CC):
-                        grid_basis = Create_CC_grid(grid_relative_size, R);
-                        break;
-                    case (FCC):
-                        grid_basis = Create_FCC_grid(grid_relative_size, R);
-                        break;
-                    case (BCC):
-                        grid_basis = Create_BCC_grid(grid_relative_size, R);
-                        break;
-                    }
+                    if (Zoutput_volume_size == 0)
+                        corner = vectorR3(-(double)FIRST_XMIPP_INDEX(projXdim),
+                                          -(double)FIRST_XMIPP_INDEX(projXdim),
+                                          -(double)FIRST_XMIPP_INDEX(projXdim));
+                    else
+                        corner = vectorR3(-(double)FIRST_XMIPP_INDEX(Xoutput_volume_size),
+                                          -(double)FIRST_XMIPP_INDEX(Youtput_volume_size),
+                                          -(double)FIRST_XMIPP_INDEX(Zoutput_volume_size));
                 }
-                vol_basis0.adapt_to_grid(grid_basis);
+                /* If you substract half the basis radius, you are forcing that the
+                   last basis touches slightly the volume border. By not substracting
+                   it there is a basis center as near the border as possible. */
+                corner = corner + proj_ext/*CO: -blob.radius/2*/;
+                switch (grid_type)
+                {
+                case (CC):
+                    grid_basis = Create_CC_grid(grid_relative_size, -corner, corner);
+                    break;
+                case (FCC):
+                    grid_basis = Create_FCC_grid(grid_relative_size, -corner, corner);
+                    break;
+                case (BCC):
+                    grid_basis = Create_BCC_grid(grid_relative_size, -corner, corner);
+                    break;
+                }
             }
+            else
+            {
+                switch (grid_type)
+                {
+                case (CC):
+                    grid_basis = Create_CC_grid(grid_relative_size, R);
+                    break;
+                case (FCC):
+                    grid_basis = Create_FCC_grid(grid_relative_size, R);
+                    break;
+                case (BCC):
+                    grid_basis = Create_BCC_grid(grid_relative_size, R);
+                    break;
+                }
+            }
+            vol_basis0.adapt_to_grid(grid_basis);
         }
     }
 
@@ -739,14 +736,6 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
         basis.produce_side_info(vol_basis0.grid());
     }
 
-	if( !using_MPI )
-	{
-		// We can use threads
-		if ( threads > 1 )
-		{
-		}
-	}
-	
     /* Express the ray length in basis units ----------------------------------- */
     if (ray_length != -1) ray_length *= basis.max_length();
 }
