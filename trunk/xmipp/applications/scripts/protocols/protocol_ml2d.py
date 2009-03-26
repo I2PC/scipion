@@ -219,7 +219,7 @@ class ML2D_class:
                 params += ' -high ' + str(self.HighResLimit)
 
         if (self.DoMlf):
-            program="xmipp_mlf_alignd"
+            program="xmipp_mlf_align2d"
         else:
             program="xmipp_ml_align2d"
            
@@ -239,7 +239,7 @@ class ML2D_class:
         params= ' -restart ' + utils_xmipp.composeFileName('ml2d_it',iter,'log')
 
         if (self.DoMlf):
-            program="xmipp_mlf_alignd"
+            program="xmipp_mlf_align2d"
         else:
             program="xmipp_ml_align2d"
            
