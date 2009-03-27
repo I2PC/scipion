@@ -234,8 +234,8 @@ public:
 	/// Number of threads to use. Can not be different than 1 when using MPI.
 	int threads;
 
-#define TELL_IV           0x100
-#define TELL_ONLY_SYM       0x80
+#define TELL_IV                    0x100
+#define TELL_ONLY_SYM              0x80
 #define TELL_USE_INPUT_BASISVOLUME 0x40
 #define TELL_SHOW_ERROR            0x20
 #define TELL_MANUAL_ORDER          0x10
