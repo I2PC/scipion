@@ -64,14 +64,14 @@ ImagesDir='Images'
 # {section} Normalization
 #------------------------------------------------------------------------------------------------
 # Perform particle normalization?
-DoNormalize=False
+DoNormalize=True
 # Pixels outside this circle are assumed to be noise and their stddev is set to 1.
 # Radius for background circle definition (in pix.)
-BackGroundRadius=30
+BackGroundRadius=35
 # Perform ramping background correction?
 """ Correct for inclined background densities by fitting a least-squares plane through the background pixels
 """
-DoUseRamp=False
+DoUseRamp=True
 # Perform black dust particles removal?
 """ Sets pixels with unusually low values to random values from a Gaussian with zero-mean and unity-standard deviation. For cryo, the default threshold value (see expert options) of 3.5 is a good value. For negative stain with high contrast signals, a higher value may be preferable.
 """
@@ -88,7 +88,7 @@ DustRemovalThreshold=3.5
 # {section} Particle sorting
 #------------------------------------------------------------------------------------------------
 # Perform particle sorting to identify junk particles?
-DoSorting=False
+DoSorting=True
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results

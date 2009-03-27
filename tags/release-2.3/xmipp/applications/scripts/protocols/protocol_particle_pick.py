@@ -39,7 +39,7 @@ PosName='Common'
 
 # Perform automatic particle picking
 """ Perform automatic particle picking """
-AutomaticPicking=True
+AutomaticPicking=False
 
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
