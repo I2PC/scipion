@@ -294,9 +294,9 @@ class preprocess_particles_class:
         tilpos  = self.shortname2+'/'+self.allname2+'.'+self.PosFile+'.pos'
         posname = self.shortname+'/'+self.downname+'.raw.'+self.PosFile+'.pos'
         posname2= self.shortname2+'/'+self.downname2+'.raw.'+self.PosFile+'.pos'
-        if (not os.path.exists(self.shortname+'/'+unpos)):
+        if (not os.path.exists(unpos)):
             shutil.copy(posname,unpos)
-        if (not os.path.exists(self.shortname2+'/'+tilpos)):
+        if (not os.path.exists(tilpos)):
             shutil.copy(posname2,tilpos)
         angname=self.shortname+'/'+self.downname+'.ang'
         logname=self.shortname+'/scissor.log'
