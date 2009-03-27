@@ -331,7 +331,7 @@ class particle_pick_class:
                       activebackground=self.ButtonActiveBackgroundColour,
                       highlightbackground=self.HighlightBackgroundColour, 
                       selectcolor=self.ButtonActiveBackgroundColour)
-        r.grid(row=row, column=nextColumn,sticky=N+S+W+E)
+        r.grid(row=row, column=nextColumn,sticky=N)
         self.selectedForAutomaticPickingMark.append(r)
         nextColumn+=1
 
@@ -474,7 +474,7 @@ class particle_pick_class:
                 else:
                     l.grid(row=row, column=4)
             else:
-                l.grid(row=row, column=2)
+                l.grid(row=row, column=3)
         return total
         
     def LaunchSingleMark(self):
