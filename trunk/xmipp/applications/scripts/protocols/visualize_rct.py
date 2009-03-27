@@ -13,9 +13,9 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # For which classes do you want to perform the visualization?
-SelectClasses="1,2"
+SelectClasses="1,3,6-9,12"
 # Visualize volumes in slices along Z?
-VisualizeVolZ=False
+VisualizeVolZ=True
 # Visualize volumes in slices along X?
 VisualizeVolX=False
 # Visualize volumes in slices along Y?
@@ -23,7 +23,7 @@ VisualizeVolY=False
 # Visualize volumes in UCSF Chimera?
 """ For this to work, you need to have chimera installed!
 """
-VisualizeVolChimera=True
+VisualizeVolChimera=False
 # {expert} Width of selfile visualizations (preferably an even value):
 MatrixWidth=10
 #------------------------------------------------------------------------------------------------
@@ -79,12 +79,12 @@ class visualize_RCT_class:
         ShowSelfiles=[]
         ShowImages=[]
 
-        refs=SelectClasses.split(',')
+        refs=utils_xmipp.getCommaSeparatedIntegerList(SelectClasses)
         for ref in refs:
 
             basename=utils_xmipp.composeFileName('rct_ref',ref,'')
             if VisualizeUntiltedAverages:
-                ShowImages.append(basename+'_untilted.med.xmp')
+                ShowImages.append(basename+'_untilted_avg.xmp')
 
             if VisualizeUntiltedImages:
                 ShowSelfiles.append(basename+'_untilted.sel')
