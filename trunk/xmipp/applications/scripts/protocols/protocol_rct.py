@@ -38,14 +38,16 @@ LogDir="Logs"
 # {section} Previous ML2D classification (WITHOUT INCLUDING MIRRORS!)
 #------------------------------------------------------------------------------------------------
 # {dir} Directory of previous ML2D-classification on the untilted images
-PreviousDirML2D="ML2D/ML3ref"
+PreviousDirML2D="ML2D/ML12ref"
 # {expert} Rootname for ML2D run
 """ Only provide something if the ml2d output rootname was different from the default.
     This will never be the case when using the standardized protocols 
 """
 PreviousML2DRoot=""
-# Which of these classes do you want to reconstruct? (Separate numbers by comma's)
-SelectClasses="1,2"
+# Which of these classes do you want to reconstruct? 
+""" Use comma-separated lists, with the "-" sign to indicate ranges
+"""
+SelectClasses="1,3,6-9,12"
 #------------------------------------------------------------------------------------------------
 # {section} Prepare images
 #------------------------------------------------------------------------------------------------
@@ -139,12 +141,13 @@ class RCT_class:
         scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
         sys.path.append(scriptdir) # add default search path
         import log,selfile
+        import utils_xmipp
         
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir
         self.PreviousDirML2D=os.path.abspath(PreviousDirML2D)
         self.PreviousML2DRoot=PreviousML2DRoot
-        self.SelectClasses=SelectClasses
+        self.SelectClasses=utils_xmipp.getCommaSeparatedIntegerList(SelectClasses)
         self.CenterMaxShift=CenterMaxShift
         self.AlignTiltPairsAdditionalParams=AlignTiltPairsAdditionalParams
         self.ReconstructMethod=ReconstructMethod
@@ -227,6 +230,7 @@ class RCT_class:
         else:
             # Check that no mirror option was used
             lastitername=ml2d_abs_rootname+'_it'+str(lastiter).zfill(6)
+            self.lastdocfile=lastitername+'.doc'
             lastlogfile=lastitername+'.log'
             fh=open(lastlogfile,'r')
             lines=fh.readlines()
@@ -238,9 +242,8 @@ class RCT_class:
                     self.log.error(message)
                     sys.exit()
             # Loop over all classes selected for 3D-reconstruction
-            refs=self.SelectClasses.split(',')
             import utils_xmipp
-            for ref in refs:
+            for ref in self.SelectClasses:
                 # Copy selfile and average image of ML2DDir to WorkingDir
                 unt_selfile=utils_xmipp.composeFileName(ml2d_abs_rootname+'_ref',ref,'sel')
                 local_unt_selfile=utils_xmipp.composeFileName('rct_ref',ref,'')
@@ -259,6 +262,7 @@ class RCT_class:
     def make_local_copies(self):
         import os,shutil
         import selfile
+        import launch_job
         # Loop over all selected untilted classes
         for ref in self.untiltclasslist:
             local_unt_selfile=self.untiltclasslist[ref][0]
@@ -275,6 +279,13 @@ class RCT_class:
             message='Making a local copy of the images in '+local_unt_selfile+' and '+local_til_selfile
             print '* ',message
             self.log.info(message)
+            # Assign angles to the untilted images
+            local_unt_docfile = local_unt_selfile.replace('.sel','.doc')
+            command=' -i '+self.lastdocfile+' -sel '+local_unt_selfile+' -o '+local_unt_docfile
+            launch_job.launch_job("xmipp_docfile_select_subset",
+                                  command,
+                                  self.log,
+                                  False,1,1,'')
             mysel=selfile.selfile()
             mysel.read(local_unt_selfile)
             newsel=mysel.copy_sel('local_untilted_images')
@@ -305,15 +316,18 @@ class RCT_class:
         import launch_job
 
         print '*********************************************************************'
-        print '*  Re-aligning untilted images of each class to set image headers'
+        print '*  Assigning in-plane transformation from ML2D to headers of local untilted images'
         # Loop over all selected untilted classes
         for ref in self.untiltclasslist:
-
-            # Perform a quick align2d to handle image headers correctly
-            selfile=self.untiltclasslist[ref][0]
-            reference=self.untiltclasslist[ref][1]
-            command=' -i '+selfile+' -ref '+reference+' -iter 2'
-            launch_job.launch_job("xmipp_align2d",
+            local_unt_selfile=self.untiltclasslist[ref][0]
+            local_unt_docfile = local_unt_selfile.replace('.sel','.doc')
+            command=' -i '+local_unt_docfile+' -o '+local_unt_selfile+' -force -columns 0 0 3 4 5'
+            launch_job.launch_job("xmipp_header_assign",
+                                  command,
+                                  self.log,
+                                  False,1,1,'')
+            command=' -i '+local_unt_selfile+' -o '+local_unt_docfile
+            launch_job.launch_job("xmipp_header_extract",
                                   command,
                                   self.log,
                                   False,1,1,'')
