@@ -659,8 +659,11 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
 		}
 
 		// Destroy barrier and mutex, as they are no longer needed.
-		pthread_mutex_destroy( &project_mutex );
-		barrier_destroy( &project_barrier );
+                // Sjors, 27march2009
+                // NO, dont do this, because running a second threaded-ART
+                // in a single program will not have mutexes anymore...
+		//pthread_mutex_destroy( &project_mutex );
+		//barrier_destroy( &project_barrier );
 	}
 }
 
