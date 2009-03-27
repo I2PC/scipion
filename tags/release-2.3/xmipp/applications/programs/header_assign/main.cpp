@@ -138,15 +138,15 @@ int main(int argc, char *argv[])
                 img.read(fn_img);
                 img.clear_fFlag_flag();
                 DF.adjust_to_data_line();
-                if (col_rot == 0)  rot = 0.;
+                if (col_rot == 0)  rot = img.rot();
                 else rot    = DF(ABS(col_rot) - 1) * sign_rot;
-                if (col_tilt == 0) tilt = 0.;
+                if (col_tilt == 0) tilt = img.tilt();
                 else tilt   = DF(ABS(col_tilt) - 1) * sign_tilt;
-                if (col_psi == 0)  psi = 0.;
+                if (col_psi == 0)  psi = img.psi();
                 else psi    = DF(ABS(col_psi) - 1) * sign_psi;
-                if (col_xshift == 0) xshift = 0.;
+                if (col_xshift == 0) xshift = img.Xoff();
                 else xshift = DF(ABS(col_xshift) - 1) * sign_xshift;
-                if (col_yshift == 0) yshift = 0.;
+                if (col_yshift == 0) yshift = img.Yoff();
                 else yshift = DF(ABS(col_yshift) - 1) * sign_yshift;
                 if (do_weights) weight = DF(ABS(col_weight) - 1);
                 if (do_mirrors) mirror = DF(ABS(col_mirror) - 1);
@@ -196,15 +196,15 @@ int main(int argc, char *argv[])
                 img.read(fn_img);
                 img.clear_fFlag_flag();
                 DF.adjust_to_data_line();
-                if (col_rot == 0)  rot = 0.;
+                if (col_rot == 0)  rot = img.rot();
                 else rot    = DF(ABS(col_rot) - 1) * sign_rot;
-                if (col_tilt == 0) tilt = 0.;
+                if (col_tilt == 0) tilt = img.tilt();
                 else tilt   = DF(ABS(col_tilt) - 1) * sign_tilt;
-                if (col_psi == 0)  psi = 0.;
+                if (col_psi == 0)  psi = img.psi();
                 else psi    = DF(ABS(col_psi) - 1) * sign_psi;
-                if (col_xshift == 0) xshift = 0.;
+                if (col_xshift == 0) xshift = img.Xoff();
                 else xshift = DF(ABS(col_xshift) - 1) * sign_xshift;
-                if (col_yshift == 0) yshift = 0.;
+                if (col_yshift == 0) yshift = img.Yoff();
                 else yshift = DF(ABS(col_yshift) - 1) * sign_yshift;
                 if (do_weights) weight = DF(ABS(col_weight) - 1);
                 if (do_mirrors) mirror = DF(ABS(col_mirror) - 1);
@@ -263,7 +263,7 @@ void Usage()
            "                           : where the 5 integers are the column numbers for the \n"
            "                           : respective angles and offsets in the docfile\n"
            "                           : Negative column numbers result in a sign change\n"
-           "                           : Zeros result in zero values\n");
+           "                           : Zero means: leave this entry intact in the images\n");
     printf("       [-weight <col_w=6>] : Set ML-weights (from column number col_w) \n");
     printf("       [-mirror <col_m=7>] : Set mirror-flag (from column col_m) (0=no-flip; 1=flip)\n");
     printf("       [-round_shifts]     : Round shifts to integers \n");
