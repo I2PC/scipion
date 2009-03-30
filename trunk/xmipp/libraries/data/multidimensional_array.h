@@ -902,7 +902,6 @@ public:
                 static_cast< double >(*ptr - min0));
     }
 
-
     /** Adjust the average and stddev of the array to given values.
      * @ingroup Statistics
      *
@@ -938,6 +937,41 @@ public:
 	unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
             *ptr = static_cast< T >(a * static_cast< double > (*ptr) + b);
+    }
+
+    /** Adjust the range of the array to the range of another array in
+        a least squares sense.
+     * @ingroup Statistics
+     *
+     * A linear operation is performed on the values of the array such that
+     * after it, the values of the self array are as similar as possible
+     * (L2 sense) to the values of the array shown as sample
+     */
+    void rangeAdjust(const MultidimArray<T> &example)
+    {
+        if (MULTIDIM_SIZE(*this) <= 0)
+            return;
+        
+        // y=a+bx
+        double sumx=0, sumy=0, sumxy=0, sumx2=0;
+        double* ptrExample=MULTIDIM_ARRAY(example);
+        double* ptr=NULL;
+        unsigned long int n;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
+        {
+            double x=*ptr;
+            double y=*ptrExample;
+            sumy+=y;
+            sumxy+=x*y;
+            sumx+=x;
+            sumx2+=x*x;
+            ptrExample++;
+        }
+        double N=MULTIDIM_SIZE(*this);
+        double a=(sumy*sumx2-sumx*sumxy)/(N*sumx2-sumx*sumx);
+        double b=(N*sumxy-sumx*sumy)/(N*sumx2-sumx*sumx);
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
+            *ptr = static_cast< double >(a+b * static_cast< double > (*ptr));
     }
 
     /// @defgroup Arithmethic Arithmethic operations

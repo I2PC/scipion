@@ -1811,6 +1811,18 @@ public:
         MultidimArray<T>::rangeAdjust(minF,maxF);
     }
 
+    /** Adjust the range of the array to a given one.
+     * @ingroup MatricesUtilities
+     *
+     * A linear operation is performed on the values of the array such that
+     * after it, the values of the self array are as similar as possible
+     * (L2 sense) to the values of the array shown as sample
+     */
+    void rangeAdjust(const Matrix2D<T> &example)
+    {
+        MultidimArray<T>::rangeAdjust(example);
+    }
+
     /** Compute statistics.
      * @ingroup MatricesUtilities
      */

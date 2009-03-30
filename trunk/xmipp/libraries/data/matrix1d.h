@@ -1250,6 +1250,18 @@ public:
             MultidimArray<T>::initZeros();
     }
 
+    /** Adjust the range of the array to a given one.
+     * @ingroup VectorsUtilities
+     *
+     * A linear operation is performed on the values of the array such that
+     * after it, the values of the self array are as similar as possible
+     * (L2 sense) to the values of the array shown as sample
+     */
+    void rangeAdjust(const Matrix1D<T> &example)
+    {
+        MultidimArray<T>::rangeAdjust(example);
+    }
+
     /** Compute the center of mass within a mask.
       * If no mask is to be used, supply NULL.
       * @ingroup VectorsUtilities */
