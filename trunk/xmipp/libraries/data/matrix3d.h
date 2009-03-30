@@ -45,7 +45,8 @@ template<typename T> class Matrix3D;
 
 template<typename T>
 void applyGeometry(Matrix3D<T>& V2, Matrix2D< double > A,
-    const Matrix3D<T>& V1, bool inv, bool wrap);
+    const Matrix3D<T>& V1, bool inv, bool wrap,
+    T outside = 0);
 
 template<typename T>
 void applyGeometryBSpline(Matrix3D<T>& V2, Matrix2D< double > A,
@@ -1303,7 +1304,7 @@ public:
      * @endcode
      */
     friend void applyGeometry<>(Matrix3D<T>& V2, Matrix2D< double > A,
-                             const Matrix3D<T>& V1, bool inv, bool wrap);
+                             const Matrix3D<T>& V1, bool inv, bool wrap, T outside);
 
     /** Apply geom with B-spline interpolation.
      * @ingroup VolumesGeometrical
@@ -1317,10 +1318,10 @@ public:
      *
      * As apply geometry, but the result is kept in this object
      */
-    void selfApplyGeometry(Matrix2D< double > A, bool inv, bool wrap)
+    void selfApplyGeometry(Matrix2D< double > A, bool inv, bool wrap, T outside = 0)
     {
         Matrix3D<T> aux;
-        applyGeometry(aux, A, *this, inv, wrap);
+        applyGeometry(aux, A, *this, inv, wrap, outside);
         *this = aux;
     }
 
@@ -1347,10 +1348,10 @@ public:
      * @endcode
      */
     void rotate(double ang, char axis, Matrix3D<T>& result,
-        bool wrap = DONT_WRAP) const
+        bool wrap = DONT_WRAP, T outside = 0) const
     {
         Matrix2D< double > tmp = rotation3DMatrix(ang, axis);
-        applyGeometry(result, tmp, *this, IS_NOT_INV, wrap);
+        applyGeometry(result, tmp, *this, IS_NOT_INV, wrap, outside);
     }
 
     /** Rotate a volume arounf system axis (BSpline).
@@ -1396,10 +1397,10 @@ public:
      * @endcode
      */
     void rotate(double ang, const Matrix1D< double >& axis, Matrix3D<T>& result,
-                bool wrap = DONT_WRAP) const
+                bool wrap = DONT_WRAP, T outside = 0) const
     {
         Matrix2D< double > tmp = rotation3DMatrix(ang, axis);
-        applyGeometry(result, tmp, *this, IS_NOT_INV, wrap);
+        applyGeometry(result, tmp, *this, IS_NOT_INV, wrap, outside);
     }
 
     /** Rotate a volume around any axis (Bspline).
@@ -1448,30 +1449,30 @@ public:
      * @endcode
      */
     void translate(const Matrix1D< double >& v, Matrix3D<T>& result,
-        bool wrap = WRAP)
+        bool wrap = WRAP, T outside = 0)
     const
     {
         Matrix2D< double > tmp = translation3DMatrix(v);
-        applyGeometry(result, tmp, *this, IS_NOT_INV, wrap);
+        applyGeometry(result, tmp, *this, IS_NOT_INV, wrap, outside);
     }
 
     /** Translate a volume (Bspline).
      * @ingroup VolumesGeometrical
      */
     void translateBSpline(int Splinedegree, const Matrix1D< double >& v,
-                           Matrix3D<T>& result, bool wrap = WRAP) const
+                           Matrix3D<T>& result, bool wrap = WRAP, T outside = 0) const
     {
         Matrix2D< double > tmp = translation3DMatrix(v);
-        applyGeometry(result, tmp, *this, IS_NOT_INV, wrap);
+        applyGeometryBSpline(result, tmp, *this, Splinedegree, IS_NOT_INV, wrap, outside);
     }
 
     /** Translate a volume, keep in this object.
      * @ingroup VolumesGeometrical
      */
-    void selfTranslate(const Matrix1D< double >& v, bool wrap = WRAP)
+    void selfTranslate(const Matrix1D< double >& v, bool wrap = WRAP, T outside = 0)
     {
         Matrix3D<T> aux;
-        translate(v, aux, wrap);
+        translate(v, aux, wrap, outside);
         *this = aux;
     }
 
@@ -1479,10 +1480,10 @@ public:
      * @ingroup VolumesGeometrical
      */
     void selfTranslateBSpline(int Splinedegree, const Matrix1D< double >& v,
-                                bool wrap = WRAP)
+                                bool wrap = WRAP, T outside = 0)
     {
         Matrix3D<T> aux;
-        translateBSpline(Splinedegree, v, aux, wrap);
+        translateBSpline(Splinedegree, v, aux, wrap, outside);
         *this = aux;
     }
 
@@ -1952,7 +1953,7 @@ std::ostream& operator<<(std::ostream& ostrm,
 //#define DEBUG
 template<typename T>
 void applyGeometry(Matrix3D<T>& V2, Matrix2D< double > A,
-    const Matrix3D<T>& V1, bool inv, bool wrap)
+    const Matrix3D<T>& V1, bool inv, bool wrap, T outside)
 {
     int m1, n1, o1, m2, n2, o2;
     double x, y, z, xp, yp, zp;
@@ -2193,6 +2194,9 @@ void applyGeometry(Matrix3D<T>& V2, Matrix2D< double > A,
                         "tmp= " << tmp << std::endl;
 #endif
                 }
+                else
+                    dVkij(V2, k, i, j) = outside;
+
 
                 // Compute new point inside input image
                 xp += dMij(A, 0, 0);
