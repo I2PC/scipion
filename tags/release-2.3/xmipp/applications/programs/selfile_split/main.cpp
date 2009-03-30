@@ -34,6 +34,7 @@ int main(int argc, char **argv)
     SelFile  SFin, SFout, SFtmp, SFtmp2;
     SelLine  line;
     bool     dont_randomize;
+    bool     dont_sort;
     int N;
 
     try
@@ -42,6 +43,7 @@ int main(int argc, char **argv)
         N = textToInteger(getParameter(argc, argv, "-n", "2"));
         fn_root = getParameter(argc, argv, "-o", "");
         dont_randomize = checkParameter(argc, argv, "-dont_randomize");
+        dont_sort      = checkParameter(argc, argv, "-dont_sort");
         if (fn_root == "") fn_root = fn_in.without_extension();
         SFin.read(fn_in);
     }
@@ -65,7 +67,7 @@ int main(int argc, char **argv)
         int arr_groups[Num_groups];
 
         int i, j;
-
+        arr_groups[0]=Nsub_;
         for (i = 0;i < (Num_groups - Nres_);i++)
         {
             arr_groups[i] = Nsub_;
@@ -77,6 +79,7 @@ int main(int argc, char **argv)
         }
 
         SFtmp.go_beginning();
+            
         for (i = 0;i < Num_groups;i++)
         {
             SFout.clear();
@@ -86,10 +89,17 @@ int main(int argc, char **argv)
                 SFout.insert(SFtmp.current());
                 SFtmp.NextImg();
             }
-            SFtmp2 = SFout.sort_by_filenames();
-            SFout = SFtmp2;
-            std::string num = "_" + integerToString(i + 1);
-            fn_out = fn_root + num;
+            if (!dont_sort)
+            {
+                SFtmp2 = SFout.sort_by_filenames();
+                SFout  = SFtmp2;
+            }
+            fn_out = fn_root;
+            if (N!=1)
+            {
+                std::string num = "_" + integerToString(i + 1);
+                fn_out +=  num;
+            }
             fn_out += ".sel";
             SFout.write(fn_out);
         }
@@ -111,5 +121,6 @@ void Usage()
     << "  [ -o <rootname=selfile> ] : Rootname for output selfiles\n"
     << "                              output will be: rootname_<n>.sel\n"
     << "  [ -dont_randomize ]       : Do not generate random groups\n"
+    << "  [ -dont_sort ]            : Do not sort the output sel\n"
     ;
 }
