@@ -25,6 +25,7 @@
 #ifdef QT3_SUPPORT
 //Added by qt3to4:
 #include <QMouseEvent>
+#include <QResizeEvent>
 #endif
 
 /* Forward declarations ---------------------------------------------------- */
@@ -81,6 +82,7 @@ signals:
 protected:
     void mouseMoveEvent(QMouseEvent *e);
     void mouseReleaseEvent(QMouseEvent *e);
+    void resizeEvent(QResizeEvent *e);
 };
 
 #endif

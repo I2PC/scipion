@@ -272,6 +272,13 @@ void QtImageOverviewMicrograph::mouseReleaseEvent(QMouseEvent *e)
     mouseMoveEvent(e);
 }
 
+void QtImageOverviewMicrograph::resizeEvent(QResizeEvent *e)
+{
+    QtImage::resizeEvent(e);
+    if (getMicrograph() == NULL) return;
+    emit signalRepaint();
+}
+
 void QtImageOverviewMicrograph::slotSetWidthHeight(int _w, int _h)
 {
     __w = _w;
