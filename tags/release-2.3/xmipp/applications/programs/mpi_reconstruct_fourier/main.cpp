@@ -172,7 +172,7 @@ public:
                     
             nProcs = numberOfJobs;
         }
-            
+           	    
         if (rank == 0)
         {
             gettimeofday(&start_time,NULL);
@@ -215,17 +215,17 @@ public:
 
                 if( i == FSC && fn_fsc != "" )
                 {                
-                    // sending every worker COLLECT_FOR_FSC
+               	    // sending every worker COLLECT_FOR_FSC
                     for ( int worker = 1 ; worker <= nProcs ; worker ++ )
                     {
-		    	MPI_Recv(0, 
+                    	MPI_Recv(0, 
 			   	 0, 
 				 MPI_INT, 
 				 MPI_ANY_SOURCE, 
 				 TAG_FREEWORKER,
                          	 MPI_COMM_WORLD, 
 				 &status);
-			   
+                	   
 			MPI_Send( 0,
                                   0,
                                   MPI_INT,
@@ -250,8 +250,8 @@ public:
 			TAG_FREEWORKER,
                         MPI_COMM_WORLD, 
 			&status);	
-	    }   
-	    
+            }   
+            
             gettimeofday(&end_time,NULL);
 
             total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
@@ -334,7 +334,7 @@ public:
                              if ( nProcs > 2 )
                              {
                                  // Receive from other workers
-                                 for ( int i = 0 ; i < (nProcs-2) ; i++)
+                                 for ( int i = 2 ; i <= nProcs ; i++)
                                  {
                                      MPI_Recv(0,0, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
                                               MPI_COMM_WORLD, &status);
@@ -443,7 +443,7 @@ public:
                              transformerVol.getFourierAlias(VoutFourier);
                              FourierWeights.initZeros(VoutFourier);
                              VoutFourier.initZeros();
-                         }
+	                 }
                      }
                      else if (status.MPI_TAG == TAG_TRANSFER)
                      {
