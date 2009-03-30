@@ -31,13 +31,14 @@
 #include <data/wavelet.h>
 
 /* Fill Reconstruction info structure -------------------------------------- */
-void build_recons_info(SelFile &selfile, SelFile &selctf,
+void build_recons_info(SelFile &selfile, SelFile &selctf, SelFile &selmask,
                        const FileName &fn_ctf, const SymList &SL,
                        Recons_info * &IMG_Inf, bool do_not_use_symproj)
 {
     Matrix2D<double>  L(4, 4), R(4, 4);  // A matrix from the list
     FileName          fn_proj;
     FileName          fn_ctf1;
+    FileName          fn_mask1;
     Projection        read_proj;
     bool              is_there_ctf = false;
     bool              is_ctf_unique = false;
@@ -65,6 +66,9 @@ void build_recons_info(SelFile &selfile, SelFile &selctf,
         }
     }
 
+    int maskN=selmask.ImgNo();
+    selmask.go_first_ACTIVE();
+
     if (IMG_Inf != NULL) delete [] IMG_Inf;
     if ((IMG_Inf = new Recons_info[numIMG]) == NULL)
         REPORT_ERROR(3008, "Build_Recons_Info: No memory for the sorting");
@@ -77,6 +81,7 @@ void build_recons_info(SelFile &selfile, SelFile &selctf,
         fn_proj = selfile.NextImg();
         if (fn_proj=="") break;
         if (is_there_ctf && !is_ctf_unique) fn_ctf1 = selctf.NextImg();
+        if (maskN!=0) fn_mask1=selmask.NextImg();
         if (fn_proj != "")
         {
             read_proj.read(fn_proj);
@@ -85,6 +90,7 @@ void build_recons_info(SelFile &selfile, SelFile &selctf,
             IMG_Inf[i].fn_proj = fn_proj;
             if (is_ctf_unique) IMG_Inf[i].fn_ctf = fn_ctf;
             else if (is_there_ctf)  IMG_Inf[i].fn_ctf = fn_ctf1;
+            if (maskN!=0) IMG_Inf[i].fn_mask = fn_mask1;
             IMG_Inf[i].sym     = -1;
             IMG_Inf[i].seed    = ROUND(65535 * rnd_unif());
             read_proj.get_eulerAngles(IMG_Inf[i].rot, IMG_Inf[i].tilt, IMG_Inf[i].psi);
