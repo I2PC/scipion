@@ -34,6 +34,15 @@
              (Simultaneous assignment)
    @ingroup ReconsLibraryPrograms */
 //@{
+
+/** Compute the affine transformation between two images. */
+double computeAffineTransformation(const Matrix2D<double> &I1,
+    const Matrix2D<double> &I2, int maxShift, int maxIterDE,
+    const FileName &fn_affine, 
+    Matrix2D<double> &A12, Matrix2D<double> &A21, bool show,
+    double thresholdAffine, bool localAffine, bool isMirror,
+    bool checkRotation);
+
 /** Landmark class.
     A landmark is a position (x,y) and the index of the image
     from which this landmark has been taken.*/

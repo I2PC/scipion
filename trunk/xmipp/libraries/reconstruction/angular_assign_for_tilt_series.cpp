@@ -45,10 +45,12 @@ public:
     Matrix2D<double> Mask1;
     Matrix2D<double> Mask2;
     bool showMode;
+    bool checkRotation;
 
     AffineFitness()
     {
 	showMode=false;
+        checkRotation=true;
     }
 	
     double affine_fitness_individual(double *p)
@@ -67,7 +69,7 @@ public:
        A21=A12.inv();
 
        // Check it is approximately a rotation
-       if (!showMode)
+       if (!showMode && checkRotation)
        {
            // Check that the eigenvalues are close to 1
            std::complex<double> a=A12(0,0);
@@ -179,15 +181,17 @@ double computeAffineTransformation(const Matrix2D<double> &I1,
     const Matrix2D<double> &I2, int maxShift, int maxIterDE,
     const FileName &fn_affine, 
     Matrix2D<double> &A12, Matrix2D<double> &A21, bool show,
-    double thresholdAffine, bool localAffine, bool isMirror)
+    double thresholdAffine, bool localAffine, bool isMirror,
+    bool checkRotation)
 {
     try {
         AffineFitness fitness;
+        fitness.checkRotation=checkRotation;
 
         // Set images
         fitness.I1=I1;
         fitness.I1.setXmippOrigin();
-	    fitness.I2=I2;
+        fitness.I2=I2;
         fitness.I2.setXmippOrigin();
 
         fitness.Mask1=fitness.I1;
@@ -222,12 +226,12 @@ double computeAffineTransformation(const Matrix2D<double> &I1,
         fitness.maxAllowed(4)=fitness.maxAllowed(5)= maxShift;
 
         std::ifstream fh_in;
-        fh_in.open(fn_affine.c_str());
+        if (fn_affine!="") fh_in.open(fn_affine.c_str());
 
         // Return result
         double cost;
 
-        if (fh_in) {
+        if (fh_in && fn_affine!="") {
     	    A12.resize(3,3);
 	    A21.resize(3,3);
      	    fh_in >> A12 >> A21 >> cost;
@@ -294,10 +298,13 @@ double computeAffineTransformation(const Matrix2D<double> &I1,
 
             A21=A12.inv();
 
-            std::ofstream fh_out;
-            fh_out.open(fn_affine.c_str());
-            fh_out << A12 << std::endl << A21 << std::endl << cost;
-            fh_out.close();
+            if (fn_affine!="")
+            {
+                std::ofstream fh_out;
+                fh_out.open(fn_affine.c_str());
+                fh_out << A12 << std::endl << A21 << std::endl << cost;
+                fh_out.close();
+            }
         }   
         if (show)
         {
@@ -506,7 +513,7 @@ void * threadComputeTransform( void * args )
             maxIterDE,(std::string)"affine_"+integerToString(jj_1,3)+
             "_"+integerToString(jj,3)+".txt", Aij, Aji,
             showAffine, thresholdAffine, localAffine,
-            isMirror);
+            isMirror,true);
         parent->correlationList[jj]=1-cost;
         
 	pthread_mutex_lock( &printingMutex );
