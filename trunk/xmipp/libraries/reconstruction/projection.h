@@ -53,6 +53,7 @@ typedef struct {
         int eq_mode;
         const VolumeT<int> *VNeq;
         Matrix2D<double> *M;
+        const Matrix2D<double> *mask;
         double ray_length;  
         double rot,tilt,psi;
 	bool destroy;
@@ -66,7 +67,8 @@ void project_SimpleGrid(VolumeT<T> *vol, const SimpleGrid *grid,
                         const Basis *basis,
                         Projection *proj, Projection *norm_proj, int FORW, int eq_mode,
                         const VolumeT<int> *VNeq, Matrix2D<double> *M,
-			double ray_length = -1.0,
+			const Matrix2D<double> *mask=NULL,
+                        double ray_length = -1.0,
                         int thread_id = -1, int num_threads = 1);
 
 
@@ -117,6 +119,7 @@ void project_Volume(GridVolumeT<T> &vol, const Basis &basis,
                     Projection &proj, Projection &norm_proj, int Ydim, int Xdim,
                     double rot, double tilt, double psi, int FORW, int eq_mode = ARTK,
                     GridVolumeT<int> *GVNeq = NULL, Matrix2D<double> *M = NULL,
+                    const Matrix2D<double> *mask=NULL,
                     double ray_length = -1, int threads = 1);
 
 /** From voxel volumes.
@@ -265,8 +268,9 @@ void *project_SimpleGridThread( void * params )
 	
 	int FORW;
 	int eq_mode;
-	const VolumeT<int> *VNeq;
-	Matrix2D<double> *M;
+	const VolumeT<int> *VNeq=NULL;        
+	Matrix2D<double> *M=NULL;
+        const Matrix2D<double> *mask=NULL;
 	double ray_length;
 	
 	double rot,tilt,psi;
@@ -285,6 +289,7 @@ void *project_SimpleGridThread( void * params )
 		eq_mode = thread_data->eq_mode;
 		VNeq = thread_data->VNeq;
 		M = thread_data->M;
+		mask = thread_data->mask;
 		ray_length = thread_data->ray_length;
 		global_proj = thread_data->global_proj;
 		global_norm_proj = thread_data->global_norm_proj;
@@ -312,7 +317,7 @@ void *project_SimpleGridThread( void * params )
                         basis,
                         proj, 
 			norm_proj, FORW, eq_mode,
-                        VNeq, M,
+                        VNeq, M, mask,
 			ray_length,
 			thread_id,
 			threads_count
@@ -342,8 +347,9 @@ void project_SimpleGrid(VolumeT<T> *vol, const SimpleGrid *grid,
                         const Basis *basis,
                         Projection *proj, Projection *norm_proj, int FORW, int eq_mode,
                         const VolumeT<int> *VNeq, Matrix2D<double> *M,
+                        const Matrix2D<double> *mask,
                         double ray_length, 
-						int thread_id, int numthreads)
+                        int thread_id, int numthreads)
 {
     Matrix1D<double> zero(3);                // Origin (0,0,0)
     Matrix1D<double> prjPix(3);       // Position of the pixel within the
@@ -588,185 +594,190 @@ void project_SimpleGrid(VolumeT<T> *vol, const SimpleGrid *grid,
                             foot_U = foot_U1;
                             for (int x = XX_corner1; x <= XX_corner2; x++)
                             {
-#ifdef DEBUG
-                                if (condition)
+                                bool proceed=true;
+                                if (mask!=NULL)
+                                    if ((*mask)(y,x)<0.5) proceed=false;
+                                if (proceed)
                                 {
-                                    std::cout << "Position in projection (" << x << ","
-                                    << y << ") ";
-                                    double y, x;
-                                    if (basis->type == Basis::blobs)
+    #ifdef DEBUG
+                                    if (condition)
                                     {
-                                        std::cout << "in footprint ("
-                                        << foot_U << "," << foot_V << ")";
-                                        IMG2OVER(basis->blobprint, foot_V, foot_U, y, x);
-                                        std::cout << " (d= " << sqrt(y*y + x*x) << ") ";
-                                        fflush(stdout);
+                                        std::cout << "Position in projection (" << x << ","
+                                        << y << ") ";
+                                        double y, x;
+                                        if (basis->type == Basis::blobs)
+                                        {
+                                            std::cout << "in footprint ("
+                                            << foot_U << "," << foot_V << ")";
+                                            IMG2OVER(basis->blobprint, foot_V, foot_U, y, x);
+                                            std::cout << " (d= " << sqrt(y*y + x*x) << ") ";
+                                            fflush(stdout);
+                                        }
                                     }
-                                }
-#endif
-		             double a, a2;
-                                // Check if volumetric interpolation (i.e., SSNR)
-                                if (VSSNR_mode)
-                                {
-                                    // This is the VSSNR case
-                                    // Get the pixel position in the universal coordinate
-                                    // system
-                                    SPEED_UP_temps;
-                                    VECTOR_R3(prjPix, x, y, 0);
-                                    M3x3_BY_V3x1(prjPix, proj->eulert, prjPix);
-                                    V3_MINUS_V3(prjPix, prjPix, univ_position);
-                                    a = basis->value_at(prjPix);
-                                    a2 = a * a;
-                                }
-                                else
-                                {
-                                    // This is normal reconstruction from projections
-                                    if (basis->type == Basis::blobs)
+    #endif
+		                 double a, a2;
+                                    // Check if volumetric interpolation (i.e., SSNR)
+                                    if (VSSNR_mode)
                                     {
-                                        // Projection of a blob
-                                        a = IMGPIXEL(basis->blobprint, foot_V, foot_U);
-                                        a2 = IMGPIXEL(basis->blobprint2, foot_V, foot_U);
+                                        // This is the VSSNR case
+                                        // Get the pixel position in the universal coordinate
+                                        // system
+                                        SPEED_UP_temps;
+                                        VECTOR_R3(prjPix, x, y, 0);
+                                        M3x3_BY_V3x1(prjPix, proj->eulert, prjPix);
+                                        V3_MINUS_V3(prjPix, prjPix, univ_position);
+                                        a = basis->value_at(prjPix);
+                                        a2 = a * a;
                                     }
                                     else
                                     {
-                                        // Projection of other bases
-                                        // If the basis is big enough, then
-                                        // it is not necessary to integrate at several
-                                        // places. Big enough is being greater than
-                                        // 1.41 which is the maximum separation
-                                        // between two pixels
-                                        if (XX_footprint_size > 1.41)
+                                        // This is normal reconstruction from projections
+                                        if (basis->type == Basis::blobs)
                                         {
-                                            // Get the pixel in universal coordinates
-                                            SPEED_UP_temps;
-                                            VECTOR_R3(prjPix, x, y, 0);
-                                            // Express the point in a local coordinate system
-                                            M3x3_BY_V3x1(prjPix, proj->eulert, prjPix);
-#ifdef DEBUG
-                                            if (condition)
-                                                std::cout << " in volume coord ("
-                                                << prjPix.transpose() << ")";
-#endif
-                                            V3_MINUS_V3(prjPix, prjPix, univ_position);
-#ifdef DEBUG
-                                            if (condition)
-                                                std::cout << " in voxel coord ("
-                                                << prjPix.transpose() << ")";
-#endif
-                                            a = basis->projection_at(prjDir, prjPix);
-                                            a2 = a * a;
+                                            // Projection of a blob
+                                            a = IMGPIXEL(basis->blobprint, foot_V, foot_U);
+                                            a2 = IMGPIXEL(basis->blobprint2, foot_V, foot_U);
                                         }
                                         else
                                         {
-                                            // If the basis is too small (of the
-                                            // range of the voxel), then it is
-                                            // necessary to sample in a few places
-                                            const double p0 = 1.0 / (2 * ART_PIXEL_SUBSAMPLING) - 0.5;
-                                            const double pStep = 1.0 / ART_PIXEL_SUBSAMPLING;
-                                            const double pAvg = 1.0 / (ART_PIXEL_SUBSAMPLING * ART_PIXEL_SUBSAMPLING);
-                                            int ii, jj;
-                                            double px, py;
-                                            a = 0;
-#ifdef DEBUG
-                                            if (condition) std::cout << std::endl;
-#endif
-                                            for (ii = 0, px = p0; ii < ART_PIXEL_SUBSAMPLING; ii++, px += pStep)
-                                                for (jj = 0, py = p0; jj < ART_PIXEL_SUBSAMPLING; jj++, py += pStep)
-                                                {
-#ifdef DEBUG
-                                                    if (condition)
-                                                        std::cout << "    subsampling (" << ii << ","
-                                                        << jj << ") ";
-#endif
-                                                    SPEED_UP_temps;
-                                                   // Get the pixel in universal coordinates
-                                                    VECTOR_R3(prjPix, x + px, y + py, 0);
-                                                    // Express the point in a local coordinate system
-                                                    M3x3_BY_V3x1(prjPix, proj->eulert, prjPix);
-#ifdef DEBUG
-                                                    if (condition)
-                                                        std::cout << " in volume coord ("
-                                                        << prjPix.transpose() << ")";
-#endif
-                                                    V3_MINUS_V3(prjPix, prjPix, univ_position);
-#ifdef DEBUG
-                                                    if (condition)
-                                                        std::cout << " in voxel coord ("
-                                                        << prjPix.transpose() << ")";
-#endif 
-                                                    a += basis->projection_at(prjDir, prjPix);
-#ifdef DEBUG
-                                                    if (condition)
-                                                        std::cout << " partial a="
-                                                        << basis->projection_at(prjDir, prjPix)
-                                                        << std::endl;
-#endif
-                                                }
-                                    a *= pAvg;
-                                            a2 = a * a;
-#ifdef DEBUG
-                                            if (condition)
-                                                std::cout << "   Finally ";
-#endif
+                                            // Projection of other bases
+                                            // If the basis is big enough, then
+                                            // it is not necessary to integrate at several
+                                            // places. Big enough is being greater than
+                                            // 1.41 which is the maximum separation
+                                            // between two pixels
+                                            if (XX_footprint_size > 1.41)
+                                            {
+                                                // Get the pixel in universal coordinates
+                                                SPEED_UP_temps;
+                                                VECTOR_R3(prjPix, x, y, 0);
+                                                // Express the point in a local coordinate system
+                                                M3x3_BY_V3x1(prjPix, proj->eulert, prjPix);
+    #ifdef DEBUG
+                                                if (condition)
+                                                    std::cout << " in volume coord ("
+                                                    << prjPix.transpose() << ")";
+    #endif
+                                                V3_MINUS_V3(prjPix, prjPix, univ_position);
+    #ifdef DEBUG
+                                                if (condition)
+                                                    std::cout << " in voxel coord ("
+                                                    << prjPix.transpose() << ")";
+    #endif
+                                                a = basis->projection_at(prjDir, prjPix);
+                                                a2 = a * a;
+                                            }
+                                            else
+                                            {
+                                                // If the basis is too small (of the
+                                                // range of the voxel), then it is
+                                                // necessary to sample in a few places
+                                                const double p0 = 1.0 / (2 * ART_PIXEL_SUBSAMPLING) - 0.5;
+                                                const double pStep = 1.0 / ART_PIXEL_SUBSAMPLING;
+                                                const double pAvg = 1.0 / (ART_PIXEL_SUBSAMPLING * ART_PIXEL_SUBSAMPLING);
+                                                int ii, jj;
+                                                double px, py;
+                                                a = 0;
+    #ifdef DEBUG
+                                                if (condition) std::cout << std::endl;
+    #endif
+                                                for (ii = 0, px = p0; ii < ART_PIXEL_SUBSAMPLING; ii++, px += pStep)
+                                                    for (jj = 0, py = p0; jj < ART_PIXEL_SUBSAMPLING; jj++, py += pStep)
+                                                    {
+    #ifdef DEBUG
+                                                        if (condition)
+                                                            std::cout << "    subsampling (" << ii << ","
+                                                            << jj << ") ";
+    #endif
+                                                        SPEED_UP_temps;
+                                                       // Get the pixel in universal coordinates
+                                                        VECTOR_R3(prjPix, x + px, y + py, 0);
+                                                        // Express the point in a local coordinate system
+                                                        M3x3_BY_V3x1(prjPix, proj->eulert, prjPix);
+    #ifdef DEBUG
+                                                        if (condition)
+                                                            std::cout << " in volume coord ("
+                                                            << prjPix.transpose() << ")";
+    #endif
+                                                        V3_MINUS_V3(prjPix, prjPix, univ_position);
+    #ifdef DEBUG
+                                                        if (condition)
+                                                            std::cout << " in voxel coord ("
+                                                            << prjPix.transpose() << ")";
+    #endif 
+                                                        a += basis->projection_at(prjDir, prjPix);
+    #ifdef DEBUG
+                                                        if (condition)
+                                                            std::cout << " partial a="
+                                                            << basis->projection_at(prjDir, prjPix)
+                                                            << std::endl;
+    #endif
+                                                    }
+                                                a *= pAvg;
+                                                a2 = a * a;
+    #ifdef DEBUG
+                                                if (condition)
+                                                    std::cout << "   Finally ";
+    #endif
+                                            }
                                         }
                                     }
-                                }
-#ifdef DEBUG
-                                if (condition) std::cout << "=" << a << " , " << a2;
-#endif
-                                if (FORW)
-                                {
-                                    switch (eq_mode)
+    #ifdef DEBUG
+                                    if (condition) std::cout << "=" << a << " , " << a2;
+    #endif
+                                    if (FORW)
                                     {
-                                    case CAVARTK:
-                                    case ARTK:
-                                        IMGPIXEL(*proj, y, x) += VOLVOXEL(*vol, k, i, j) * a;
-                                        IMGPIXEL(*norm_proj, y, x) += a2;
-                                        if (M != NULL)
+                                        switch (eq_mode)
                                         {
-                                            int py, px;
-                                            (*proj)().toPhysical(y, x, py, px);
-                                            int number_of_pixel = py * XSIZE((*proj)()) + px;
-                                            (*M)(number_of_pixel, number_of_basis) = a;
+                                        case CAVARTK:
+                                        case ARTK:
+                                            IMGPIXEL(*proj, y, x) += VOLVOXEL(*vol, k, i, j) * a;
+                                            IMGPIXEL(*norm_proj, y, x) += a2;
+                                            if (M != NULL)
+                                            {
+                                                int py, px;
+                                                (*proj)().toPhysical(y, x, py, px);
+                                                int number_of_pixel = py * XSIZE((*proj)()) + px;
+                                                (*M)(number_of_pixel, number_of_basis) = a;
+                                            }
+                                            break;
+                                        case CAVK:
+                                            IMGPIXEL(*proj, y, x) += VOLVOXEL(*vol, k, i, j) * a;
+                                            IMGPIXEL(*norm_proj, y, x) += a2 * N_eq;
+                                            break;
+                                        case COUNT_EQ:
+                                            VOLVOXEL(*vol, k, i, j)++;
+                                            break;
+                                        case CAV:
+                                            IMGPIXEL(*proj, y, x) += VOLVOXEL(*vol, k, i, j) * a;
+                                            IMGPIXEL(*norm_proj, y, x) += a2 *
+                                                                         VOLVOXEL(*VNeq, k, i, j);
+                                            break;
                                         }
-                                        break;
-                                    case CAVK:
-                                        IMGPIXEL(*proj, y, x) += VOLVOXEL(*vol, k, i, j) * a;
-                                        IMGPIXEL(*norm_proj, y, x) += a2 * N_eq;
-                                        break;
-                                    case COUNT_EQ:
-                                        VOLVOXEL(*vol, k, i, j)++;
-                                        break;
-                                    case CAV:
-                                        IMGPIXEL(*proj, y, x) += VOLVOXEL(*vol, k, i, j) * a;
-                                        IMGPIXEL(*norm_proj, y, x) += a2 *
-                                                                     VOLVOXEL(*VNeq, k, i, j);
-                                        break;
-                                    }
 
-#ifdef DEBUG
-                                    if (condition)
-                                    {
-                                        std::cout << " proj= " << IMGPIXEL(*proj, y, x)
-                                        << " norm_proj=" << IMGPIXEL(*norm_proj, y, x) << std::endl;
-                                        std::cout.flush();
+    #ifdef DEBUG
+                                        if (condition)
+                                        {
+                                            std::cout << " proj= " << IMGPIXEL(*proj, y, x)
+                                            << " norm_proj=" << IMGPIXEL(*norm_proj, y, x) << std::endl;
+                                            std::cout.flush();
+                                        }
+    #endif
                                     }
-#endif
-                                }
-                                else
-                                {
-                                    vol_corr += IMGPIXEL(*norm_proj, y, x) * a;
-                                    if (a != 0) N_eq++;
-#ifdef DEBUG
-                                    if (condition)
+                                    else
                                     {
-                                        std::cout << " corr_img= " << IMGPIXEL(*norm_proj, y, x)
-                                        << " correction=" << vol_corr << std::endl;
-                                        std::cout.flush();
+                                        vol_corr += IMGPIXEL(*norm_proj, y, x) * a;
+                                        if (a != 0) N_eq++;
+    #ifdef DEBUG
+                                        if (condition)
+                                        {
+                                            std::cout << " corr_img= " << IMGPIXEL(*norm_proj, y, x)
+                                            << " correction=" << vol_corr << std::endl;
+                                            std::cout.flush();
+                                        }
+    #endif
                                     }
-#endif
                                 }
-
                                 // Prepare for next operation
                                 foot_U += Usampling;
                             }
@@ -832,14 +843,15 @@ void project_Volume(
     int              Xdim,
     double rot, double tilt, double psi,  // Euler angles
     int              FORW,                // 1 if we are projecting a volume
-    //   norm_proj is calculated
-    // 0 if we are backprojecting
-    //   norm_proj must be valid
+                                          //   norm_proj is calculated
+                                          // 0 if we are backprojecting
+                                          //   norm_proj must be valid
     int              eq_mode,             // ARTK, CAVARTK, CAVK or CAV
     GridVolumeT<int> *GVNeq,              // Number of equations per blob
     Matrix2D<double> *M,                  // System matrix
-    double            ray_length,		  // Ray length of the projection
-	int				  threads)         
+    const Matrix2D<double> *mask,         // mask(i,j)=0 => do not update this pixel
+    double            ray_length,	  // Ray length of the projection
+    int               threads)         
 	{
     // If projecting forward initialise projections
     if (FORW)
@@ -892,6 +904,7 @@ void project_Volume(
 				project_threads[c].vol = &(vol(i));
 				project_threads[c].grid = &(vol.grid(i));
 				project_threads[c].VNeq = VNeq;
+                                project_threads[c].mask = mask;
 			}
 			
 			barrier_wait( &project_barrier );  
@@ -902,9 +915,10 @@ void project_Volume(
 		}
 		else
 		{
-			// create on thread to do the job
+			// create no thread to do the job
 			project_SimpleGrid(&(vol(i)), &(vol.grid(i)), &basis,
-			                   &proj, &norm_proj, FORW, eq_mode, VNeq, M, ray_length);
+			                   &proj, &norm_proj, FORW, eq_mode,
+                                           VNeq, M, mask, ray_length);
 		}
 	
 #ifdef DEBUG

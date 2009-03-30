@@ -44,44 +44,6 @@ std::ostream & operator << (std::ostream &o, const Plain_ART_Parameters &eprm)
 }
 
 /* ------------------------------------------------------------------------- */
-/* Process correction                                                        */
-/* ------------------------------------------------------------------------- */
-//#define DEBUG
-void process_correction(Projection &corr_proj)
-{
-    // Mask correction
-    int Rmin = CEIL(XMIPP_MIN(XSIZE(corr_proj()), YSIZE(corr_proj())) / 2);
-    int R2 = Rmin * Rmin;
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(corr_proj())
-    if (i*i + j*j > R2) corr_proj(i, j) = 0;
-
-    // Denoise the corrections
-    Denoising_parameters denoiser;
-    denoiser.denoising_type = Denoising_parameters::ADAPTIVE_SOFT;
-    denoiser.scale = 3;
-    denoiser.output_scale = 0;
-    denoiser.produce_side_info();
-    Matrix2D<double> denoised = corr_proj();
-    denoiser.denoise(denoised);
-#ifdef DEBUG
-    ImageXmipp save;
-    save() = corr_proj();
-    save.write("PPPbefore.xmp");
-#endif
-    if (denoised(0, 0) == denoised(0, 0))
-        // This condition is not true if there are NaNs
-        corr_proj() = denoised;
-#ifdef DEBUG
-    save() = corr_proj();
-    save.write("PPPafter.xmp");
-    std::cout << "Press\n";
-    char c;
-    std::cin >> c;
-#endif
-}
-#undef DEBUG
-
-/* ------------------------------------------------------------------------- */
 /* Update residual vector for WLS                                            */
 /* ------------------------------------------------------------------------- */
 void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
@@ -124,7 +86,7 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
                        prm.IMG_Inf[iact_proj].rot,
                        prm.IMG_Inf[iact_proj].tilt,
                        prm.IMG_Inf[iact_proj].psi, BACKWARD, prm.eq_mode,
-                       prm.GVNeq, NULL, prm.ray_length, prm.threads);
+                       prm.GVNeq, NULL, NULL, prm.ray_length, prm.threads);
 
         if (!(prm.tell&TELL_SHOW_ERROR))
             if (iact_proj % XMIPP_MAX(1, prm.numIMG / 60) == 0) progress_bar(iact_proj);
@@ -164,7 +126,7 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
                        prm.IMG_Inf[iact_proj].rot,
                        prm.IMG_Inf[iact_proj].tilt,
                        prm.IMG_Inf[iact_proj].psi, FORWARD, prm.eq_mode,
-                       prm.GVNeq, A, prm.ray_length, prm.threads);
+                       prm.GVNeq, A, NULL, prm.ray_length, prm.threads);
 
         sqrtweight = sqrt(prm.residual_imgs[iact_proj].weight() / prm.sum_weight);
 
@@ -210,27 +172,28 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
 /* ART Single step                                                           */
 /* ------------------------------------------------------------------------- */
 void ART_single_step(
-    GridVolume            &vol_in,          // Input Reconstructed volume
-    GridVolume            *vol_out,         // Output Reconstructed volume
-    Basic_ART_Parameters    &prm,             // blob, lambda
-    Plain_ART_Parameters    &eprm,            // In this case, nothing
-    Projection            &theo_proj,       // Projection of the reconstruction
-    // It is outside to make it visible
-    // just if it needed for any
-    // other purpose
-    Projection              &read_proj,       // Real projection
-    int sym_no,                               // Symmetry matrix index
-    Projection            &diff_proj,       // Difference between read and
-    // theoretical projection
-    Projection            &corr_proj,       // Correcting projection
-    Projection              &alig_proj,       // Translation alignement aux proj
+    GridVolume              &vol_in,         // Input Reconstructed volume
+    GridVolume              *vol_out,        // Output Reconstructed volume
+    Basic_ART_Parameters    &prm,            // blob, lambda
+    Plain_ART_Parameters    &eprm,           // In this case, nothing
+    Projection              &theo_proj,      // Projection of the reconstruction
+                                             // It is outside to make it visible
+                                             // just if it needed for any
+                                             // other purpose
+    Projection             &read_proj,       // Real projection
+    int sym_no,                              // Symmetry matrix index
+    Projection             &diff_proj,       // Difference between read and
+                                             // theoretical projection
+    Projection             &corr_proj,       // Correcting projection
+    Projection             &alig_proj,       // Translation alignement aux proj
     double                 &mean_error,      // Mean error over the pixels
-    int                   numIMG,           // number of images in the set
-    // in SIRT the correction must
-    // be divided by this number
-    double                  lambda,           // Lambda to be used
-    int                     act_proj,         // Projection number
-    const FileName          &fn_ctf)          // CTF to apply
+    int                     numIMG,          // number of images in the set
+                                             // in SIRT the correction must
+                                             // be divided by this number
+    double                  lambda,          // Lambda to be used
+    int                     act_proj,        // Projection number
+    const FileName         &fn_ctf,          // CTF to apply
+    const FileName         &fn_mask)         // Mask to apply
 {
 // Prepare to work with CTF ................................................
     FourierMask ctf;
@@ -288,6 +251,16 @@ void ART_single_step(
         (*footprint2)() *= (*footprint2)();
     }
 
+// Check if there is a mask ................................................
+    ImageXmipp mask;
+    Matrix2D<double> *maskPtr=NULL;
+    if (fn_mask!="")
+    {
+        mask.read(fn_mask);
+        mask().setXmippOrigin();
+        maskPtr=&(mask());
+    }
+
 // Project structure .......................................................
     // The correction image is reused in this call to store the normalising
     // projection, ie, the projection of an all-1 volume
@@ -297,7 +270,7 @@ void ART_single_step(
     project_Volume(vol_in, prm.basis, theo_proj,
                    corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
                    read_proj.rot(), read_proj.tilt(), read_proj.psi(), FORWARD, prm.eq_mode,
-                   prm.GVNeq, A, prm.ray_length, prm.threads);
+                   prm.GVNeq, A, maskPtr, prm.ray_length, prm.threads);
 
     if (fn_ctf != "" && prm.unmatched)
     {
@@ -371,29 +344,29 @@ void ART_single_step(
     }
     else
     {
-
+        long int Nmean=0;
         FOR_ALL_ELEMENTS_IN_MATRIX2D(IMGMATRIX(read_proj))
         {
+            if (maskPtr!=NULL)
+                if ((*maskPtr)(i,j)<0.5) continue;
             // Compute difference image and error
             IMGPIXEL(diff_proj, i, j) = IMGPIXEL(read_proj, i, j) - IMGPIXEL(theo_proj, i, j);
             mean_error += IMGPIXEL(diff_proj, i, j) * IMGPIXEL(diff_proj, i, j);
+            Nmean++;
 
             // Compute the correction image
             IMGPIXEL(corr_proj, i, j) = XMIPP_MAX(IMGPIXEL(corr_proj, i, j), 1);
             IMGPIXEL(corr_proj, i, j) =
                 applied_lambda * IMGPIXEL(diff_proj, i, j) / IMGPIXEL(corr_proj, i, j);
         }
-        mean_error /= XSIZE(diff_proj()) * YSIZE(diff_proj());
+        mean_error /= Nmean;
     }
-
-    // Denoising of the correction image
-    if (prm.denoise) process_correction(corr_proj);
 
     // Backprojection of correction plane ......................................
     project_Volume(*vol_out, prm.basis, theo_proj,
                    corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
                    read_proj.rot(), read_proj.tilt(), read_proj.psi(), BACKWARD, prm.eq_mode,
-                   prm.GVNeq, NULL, prm.ray_length, prm.threads);
+                   prm.GVNeq, NULL, maskPtr, prm.ray_length, prm.threads);
 
     // Remove footprints if necessary
     if (remove_footprints)

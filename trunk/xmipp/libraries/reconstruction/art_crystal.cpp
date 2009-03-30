@@ -352,27 +352,29 @@ void Crystal_ART_Parameters::produce_Side_Info(
 /* ART Single step                                                           */
 /* ------------------------------------------------------------------------- */
 void ART_single_step(
-    GridVolume            &vol_in,          // Input Reconstructed volume
-    GridVolume            *vol_out,         // Output Reconstructed volume
+    GridVolume              &vol_in,          // Input Reconstructed volume
+    GridVolume              *vol_out,         // Output Reconstructed volume
     Basic_ART_Parameters    &prm,             // blob, lambda
     Crystal_ART_Parameters  &eprm,            // lattice vectors, ...
-    Projection            &theo_proj,       // Projection of the reconstruction
-    // It is outside to make it visible
-    // just if it needed for any
-    // other purpose
+    Projection              &theo_proj,       // Projection of the reconstruction
+                                              // It is outside to make it visible
+                                              // just if it needed for any
+                                              // other purpose
     Projection              &read_proj,       // Real projection
     int sym_no,                               // Symmetry matrix index
-    Projection            &diff_proj,       // Difference between read and
-    // theoretical projection
-    Projection            &corr_proj,       // Correcting projection
+    Projection              &diff_proj,       // Difference between read and
+                                              // theoretical projection
+    Projection              &corr_proj,       // Correcting projection
     Projection              &alig_proj,       // Translation alignement aux proj
-    double                 &mean_error,      // Mean error over the pixels
-    int                   numIMG,           // number of images in the set
-    // in SIRT the correction must
-    // be divided by this number
-    double                  lambda,           // Lambda to be used
-    int                     imagen_no,        // Projection number
-    const FileName         &fn_ctf)           // CTF to apply
+    double                  &mean_error,      // Mean error over the pixels
+    int                      numIMG,          // number of images in the set
+                                              // in SIRT the correction must
+                                              // be divided by this number
+    double                   lambda,          // Lambda to be used
+    int                      imagen_no,       // Projection number
+    const FileName          &fn_ctf,          // CTF to apply
+    const FileName          &fn_mask          // Mask to apply
+    )           
 {
 // Only works for blob volumes .............................................
     if (prm.basis.type != Basis::blobs)

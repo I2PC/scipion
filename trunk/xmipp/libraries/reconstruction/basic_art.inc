@@ -50,8 +50,8 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
    *prm.fh_hist << " Parameters -------------------------------------------------\n";
    *prm.fh_hist << " Projections file: " << prm.fn_sel << std::endl;
    *prm.fh_hist << " CTF file:         " << prm.fn_ctf << std::endl;
+   *prm.fh_hist << " Mask file:        " << prm.fn_maskSel << std::endl;
    *prm.fh_hist << " Unmatched projectors:" << prm.unmatched << std::endl;
-   *prm.fh_hist << " Denoise: " << prm.denoise << std::endl;
    *prm.fh_hist << " Sampling= " << prm.sampling << std::endl;
    *prm.fh_hist << prm.basis << std::endl;
    switch (prm.grid_type) {
@@ -403,7 +403,8 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
               theo_proj, read_proj, prm.IMG_Inf[iact_proj].sym , diff_proj,
 	      corr_proj, alig_proj,
               mean_error, ART_numIMG, prm.lambda(it),
-	      images, prm.IMG_Inf[iact_proj].fn_ctf);
+	      images, prm.IMG_Inf[iact_proj].fn_ctf,
+              prm.IMG_Inf[iact_proj].fn_mask);
 
           if (prm.WLS) {
             prm.residual_imgs[iact_proj]=alig_proj;
@@ -418,7 +419,8 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
         	 theo_proj, noisy_projection, prm.IMG_Inf[iact_proj].sym,
 		 diff_proj,  corr_proj, alig_proj,
         	 noise_mean_error, ART_numIMG, prm.lambda(it),
-		 images, prm.IMG_Inf[iact_proj].fn_ctf);
+		 images, prm.IMG_Inf[iact_proj].fn_ctf,
+                 prm.IMG_Inf[iact_proj].fn_mask);
 	  }
 
           // Force symmetry in the volume ..................................

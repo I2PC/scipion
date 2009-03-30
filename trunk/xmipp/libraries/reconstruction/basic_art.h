@@ -181,6 +181,9 @@ public:
     /// Selection file with all images to process
     FileName fn_sel;
 
+    /// Selection file with all image masks (1=process pixel, 0=don't process)
+    FileName fn_maskSel;
+
     /// Root of output filenames
     FileName fn_root;
 
@@ -198,9 +201,6 @@ public:
 
     /// Apply unmatched projectors to correct for the CTF
     bool unmatched;
-
-    /// Denoise difference images before backprojecting
-    bool denoise;
 
     /** Ray length.
         Basis functions are taken into account only if their distance
@@ -344,15 +344,6 @@ public:
         This volume contains the number of equations at which each basis
         is involved */
     GridVolumeT<int> *GVNeq;
-
-    /// CTF
-    FourierMask ctf;
-
-    /// multiple CTF mode
-    bool multiple_CTFs;
-
-    /// Set of CTFs
-    SelFile SF_ctf;
     //@}
 public:
     /** Generate default values for ART parameters.
@@ -533,6 +524,8 @@ struct Recons_info
     FileName fn_proj;
     /// CTF filename
     FileName fn_ctf;
+    /// Mask filename
+    FileName fn_mask;
     /// Rotational angle
     float  rot;
     /// Tilting angle
@@ -554,8 +547,9 @@ struct Recons_info
 /** Build from a Selection File and a Symmetry List.
     The result is stored in the Recons_info array which should point
     to NULL when it is not initialized. */
-void build_recons_info(SelFile &selfile, SelFile &selctf, const FileName &fn_ctf,
-                       const SymList &SL, Recons_info * &IMG_Inf, bool do_not_use_symproj);
+void build_recons_info(SelFile &selfile, SelFile &selctf, SelFile &selmask,
+    const FileName &fn_ctf, const SymList &SL, Recons_info * &IMG_Inf,
+    bool do_not_use_symproj);
 
 /* ------------------------------------------------------------------------- */
 /** Variability structure */

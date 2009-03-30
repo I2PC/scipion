@@ -81,7 +81,6 @@ void Basic_ART_Parameters::default_values()
     known_volume       = -1;
     positivity         = false;
     unmatched          = false;
-    denoise            = false;
     ray_length         = -1;
     apply_shifts       = true;
 
@@ -111,9 +110,9 @@ void Basic_ART_Parameters::default_values()
 #define GET_ART_PARAMS \
     default_values(); \
     fn_sel             =      GET_PARAM(         "i"                    ); \
+    fn_maskSel         =      GET_PARAM_WITH_DEF("masksel",     ""      ); \
     fn_ctf             =      GET_PARAM_WITH_DEF("CTF",     ""          ); \
     unmatched          =      CHECK_PARAM(       "unmatched"            );  \
-    denoise            =      CHECK_PARAM(       "denoise"              );  \
     if (CHECK_PARAM("o")) \
         fn_root       =      GET_PARAM(         "o"                    );  \
     else fn_root       =      fn_sel.without_extension();                   \
@@ -285,8 +284,6 @@ void Basic_ART_Parameters::usage()
     << "\n   [-sym symmfile]       Use a symmetry file"
     << "\n   [-n noit=1]           number of iterations"
     << "\n   [-l lambda=0.01]      relaxation factor (recommended range 0.0 - 0.1)"
-    << "\n   [-show_iv <n=10>]     show volumes/images as the reconstruction goes"
-    << "\n                         the volume is update every <n> projections"
     << "\n   [-more_help]          show all parameters"
     << "\n"
     ;
@@ -301,9 +298,9 @@ void Basic_ART_Parameters::usage_more()
     << "\nI/O parameters"
     << "\n    -i selfile           full name of sel file"
     << "\n   [-o name]             name of output files, extensions are added"
-    << "\n   [-CTF name]           name of a sel file or a file with a CTF"
+    << "\n   [-CTF name]           name of a sel file with CTFs"
+    << "\n   [-maskSel name]       name of a sel file with masks"
     << "\n   [-unmatched]          apply unmatched forward/backward projectors"
-    << "\n   [-denoise]            Denoise difference image before backprojecting"
     << "\n   [-start basisvolume]  Start from basisvolume"
     << "\n   [-sym symmfile]       Use a symmetry file"
     << "\n   [-sym_each n]         Force the reconstruction to be symmetric"
@@ -526,8 +523,7 @@ void sort_randomly(int numIMG, Matrix1D<int> &ordered_list)
 void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
         int rank)
 {
-    SelFile     selfile;
-    SelFile     selctf;
+    SelFile     selfile, selctf, selmask;
 
     /* If checking the variability --------------------------------------------- */
     if (variability_analysis)
@@ -575,18 +571,25 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
         selfile.ImgSize(projYdim, projXdim);
     }
 
-    /* Get the CTF correction file JPZ2002 ------------------------------------- */
-    // Read CTF
+    /* Get the masks ------------------------------------------------------- */
+    if (fn_maskSel != "")
+    {
+        selmask.read(fn_maskSel);
+        if (selmask.ImgNo() != selfile.ImgNo())
+            REPORT_ERROR(1, "Basic_ART_Parameters: The number of images in "
+                         "the mask and original selfiles do not match");
+    }
+
+    /* Get the CTF correction file ----------------------------------------- */
     if (fn_ctf != "")
     {
         selctf.read(fn_ctf);
         if (selctf.ImgNo() != selfile.ImgNo())
             REPORT_ERROR(1, "Basic_ART_Parameters: The number of images in "
                          "the ctf and original selfiles do not match");
-        multiple_CTFs = true;
     }
 
-    /* Read symmetry file ------------------------------------------------------ */
+    /* Read symmetry file -------------------------------------------------- */
     if (level >= FULL)
     {
         double accuracy = (do_not_generate_subgroup) ? -1 : 1e-6;
@@ -595,7 +598,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
         else                     numIMG = trueIMG;
     }
 
-    /* Read surface mask ------------------------------------------------------- */
+    /* Read surface mask --------------------------------------------------- */
     if (level >= FULL)
     {
         if (fn_surface_mask != "")
@@ -606,10 +609,11 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
         }
     }
 
-    /* Fill ART_sort_info structure and Sort ----------------------------------- */
+    /* Fill ART_sort_info structure and Sort ------------------------------- */
     if (level >= FULL)
     {
-        build_recons_info(selfile, selctf, fn_ctf, SL, IMG_Inf, do_not_use_symproj);
+        build_recons_info(selfile, selctf, selmask, fn_ctf, SL, IMG_Inf,
+            do_not_use_symproj);
 
         if (!(tell&TELL_MANUAL_ORDER))
             if (parallel_mode == SIRT ||
