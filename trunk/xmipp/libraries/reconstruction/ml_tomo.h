@@ -66,9 +66,10 @@ typedef struct{
     std::vector<Matrix3D<double> > *wsumweds;
     std::vector<VolumeXmippT<double> > *Iref;
     std::vector<Matrix1D<double> > *docfiledata;
-    std::vector<double> *sumw;
-    std::vector<double> *sumwsc;
-    std::vector<double> *sumwsc2;
+    Matrix1D<double> *sumw;
+    Matrix1D<double> *sumwsc;
+    Matrix1D<double> *sumwsc2;
+    Matrix1D<double> *sumw_rot;
 } structThreadExpectationSingleImage ;
 
 /**@defgroup ml_tomo ml_align2d (Maximum likelihood in 2D)
@@ -86,10 +87,8 @@ public:
     double sigma_noise;
     /** sigma-value for origin offsets */
     double sigma_offset;
-    /** Vector containing estimated fraction for each model */
-    std::vector<double> alpha_k;
-    /** Vector containing estimated fraction for mirror of each model */
-    std::vector<double> mirror_fraction;
+    /** Vector containing estimated fraction for (each orientation of) each model */
+    Matrix1D<double> alpha_k, alpha_k_rot;
     /** Flag whether to fix estimates for model fractions */
     bool fix_fractions;
     /** Flag whether to fix estimate for sigma of origin offset */
@@ -157,8 +156,6 @@ public:
     /** Maximum resolution (dig.freq.) */
     double max_resol;
     Matrix3D<double> fourier_mask, real_mask, real_omask;
-    /** vector with average density outside each reference */
-    std::vector<double> outside_density;
 
     // Missing data information
 #define MISSING_WEDGE_Y 0
@@ -236,12 +233,16 @@ public:
     void produceSideInfo2(int nr_vols = 1);
 
     /// Calculate probability density distribution for in-plane transformations
-    void calculatePdfInplane();
+    void calculatePdfTranslations();
 
     /// Get binary missing wedge (or pyramid) 
     void getMissingRegion(Matrix3D<double> &Mmeasured,
                           Matrix2D<double> A,
                           const int missno);
+
+    void maskSphericalAverageOutside(Matrix3D<double> &Min);
+
+    void postProcessVolume(VolumeXmipp &Vin);
 
     /// Fill vector of matrices with all rotations of reference
     void precalculateA2(std::vector< VolumeXmippT<double> > &Iref);
@@ -252,8 +253,8 @@ public:
                                 std::vector<Matrix3D<double> > &wsumimgs,
                                 std::vector<Matrix3D<double> > &wsumweds,
                                 double &wsum_sigma_noise, double &wsum_sigma_offset,
-                                std::vector<double> &sumw, std::vector<double> &sumwsc, 
-                                std::vector<double> &sumwsc2, 
+                                Matrix1D<double> &sumw, Matrix1D<double> &sumwsc, 
+                                Matrix1D<double> &sumwsc2, Matrix1D<double> &sumw_rot, 
                                 double &LL, double &dLL, double &fracweight, double &sumfracweight, 
                                 double &opt_scale, double &bgmean, double &trymindiff,
                                 int &opt_refno, int &opt_angno, Matrix1D<double> &opt_offsets);
@@ -263,7 +264,7 @@ public:
                                        std::vector<VolumeXmippT<double> > &Iref,
                                        std::vector<Matrix3D<double> > &wsumimgs,
                                        std::vector<Matrix3D<double> > &wsumweds,
-                                       std::vector<double> &sumw, double &maxCC, double &sumCC,
+                                       Matrix1D<double> &sumw, double &maxCC, double &sumCC,
                                        int &opt_refno, int &opt_angno, Matrix1D<double> &opt_offsets);
 
     /// Integrate over all experimental images
@@ -272,15 +273,15 @@ public:
                      std::vector<Matrix3D<double> > &wsumimgs,
                      std::vector<Matrix3D<double> > &wsumweds,
                      double &wsum_sigma_noise, double &wsum_sigma_offset,
-                     std::vector<double> &sumw, std::vector<double> &sumwsc, 
-                     std::vector<double> &sumwsc2);
+                     Matrix1D<double> &sumw, Matrix1D<double> &sumwsc, 
+                     Matrix1D<double> &sumwsc2, Matrix1D<double> &sumw_rot);
 
     /// Update all model parameters
     void maximization(std::vector<Matrix3D<double> > &wsumimgs,
                       std::vector<Matrix3D<double> > &wsumweds,
                       double &wsum_sigma_noise, double &wsum_sigma_offset, 
-                      std::vector<double> &sumw, 
-                      std::vector<double> &sumwsc, std::vector<double> &sumwsc2, 
+                      Matrix1D<double> &sumw, Matrix1D<double> &sumwsc, 
+                      Matrix1D<double> &sumwsc2, Matrix1D<double> &sumw_rot, 
                       double &sumfracweight, double &sumw_allrefs);
 
     /// check convergence

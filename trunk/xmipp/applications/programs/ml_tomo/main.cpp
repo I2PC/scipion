@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     double aux, wsum_sigma_noise, wsum_sigma_offset;
     std::vector<Matrix3D<double > > wsumimgs;
     std::vector<Matrix3D<double > > wsumweds;
-    std::vector<double> sumw, sumw2, sumwsc, sumwsc2, sumw_mirror;
+    Matrix1D<double> sumw, sumw2, sumwsc, sumwsc2, sumw_rot;
     Matrix3D<double> P_phi, Mr2, Maux;
     FileName fn_img, fn_tmp;
     Matrix1D<double> oneline(0);
@@ -91,12 +91,12 @@ int main(int argc, char **argv)
             prm.expectation(prm.SF, prm.Iref, iter,
                             LL, sumcorr, DFo, wsumimgs, wsumweds,
                             wsum_sigma_noise, wsum_sigma_offset, 
-                            sumw, sumwsc, sumwsc2);
+                            sumw, sumwsc, sumwsc2, sumw_rot);
 
             // Update model parameters
             prm.maximization(wsumimgs, wsumweds,
                              wsum_sigma_noise, wsum_sigma_offset, 
-                             sumw, sumwsc, sumwsc2, 
+                             sumw, sumwsc, sumwsc2, sumw_rot, 
                              sumcorr, sumw_allrefs);
 
             // Check convergence

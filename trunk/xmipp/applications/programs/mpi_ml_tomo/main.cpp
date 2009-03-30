@@ -40,7 +40,7 @@ int main(int argc, char **argv)
     double aux, wsum_sigma_noise, wsum_sigma_offset;
     std::vector<Matrix3D<double > > wsumimgs;
     std::vector<Matrix3D<double > > wsumweds;
-    std::vector<double> sumw, sumw2, sumwsc, sumwsc2, sumw_mirror;
+    Matrix1D<double> sumw, sumw2, sumwsc, sumwsc2, sumw_rot, sumw_mirror, Vaux;
     Matrix3D<double> P_phi, Mr2, Maux, Maux2;
     FileName fn_img, fn_tmp;
     Matrix1D<double> oneline(0);
@@ -135,7 +135,7 @@ int main(int argc, char **argv)
             prm.expectation(prm.SF, prm.Iref, iter,
                             LL, sumcorr, DFo, wsumimgs, wsumweds,
                             wsum_sigma_noise, wsum_sigma_offset, 
-                            sumw, sumwsc, sumwsc2);
+                            sumw, sumwsc, sumwsc2, sumw_rot);
 
             // Here MPI_allreduce of all wsums,LL and sumcorr !!!
             MPI_Allreduce(&LL, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -146,6 +146,20 @@ int main(int argc, char **argv)
             wsum_sigma_noise = aux;
             MPI_Allreduce(&wsum_sigma_offset, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             wsum_sigma_offset = aux;
+            Vaux.resize(prm.nr_ref);
+            MPI_Allreduce(MULTIDIM_ARRAY(sumw), MULTIDIM_ARRAY(Vaux), 
+                          MULTIDIM_SIZE(sumw), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            sumw = Vaux;
+            MPI_Allreduce(MULTIDIM_ARRAY(sumwsc), MULTIDIM_ARRAY(Vaux), 
+                          MULTIDIM_SIZE(sumwsc), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            sumwsc = Vaux;
+            MPI_Allreduce(MULTIDIM_ARRAY(sumwsc2), MULTIDIM_ARRAY(Vaux), 
+                          MULTIDIM_SIZE(sumwsc2), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            sumwsc = Vaux;
+            Vaux.resize(prm.nr_ref*prm.nr_ang);
+            MPI_Allreduce(MULTIDIM_ARRAY(sumw_rot), MULTIDIM_ARRAY(Vaux), 
+                          MULTIDIM_SIZE(sumw_rot), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            sumw_rot = Vaux;
             for (int refno = 0; refno < prm.nr_ref; refno++)
             {
                 MPI_Allreduce(MULTIDIM_ARRAY(wsumimgs[refno]), MULTIDIM_ARRAY(Maux),
@@ -157,18 +171,12 @@ int main(int argc, char **argv)
                                   MULTIDIM_SIZE(wsumweds[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                     wsumweds[refno] = Maux2;
                 }
-                MPI_Allreduce(&sumw[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                sumw[refno] = aux;
-                MPI_Allreduce(&sumwsc[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                sumwsc[refno] = aux;
-                MPI_Allreduce(&sumwsc2[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                sumwsc2[refno] = aux;
             }
 
             // Update model parameters
             prm.maximization(wsumimgs, wsumweds,
                              wsum_sigma_noise, wsum_sigma_offset, 
-                             sumw, sumwsc, sumwsc2, 
+                             sumw, sumwsc, sumwsc2, sumw_rot, 
                              sumcorr, sumw_allrefs);
 
             // Check convergence
