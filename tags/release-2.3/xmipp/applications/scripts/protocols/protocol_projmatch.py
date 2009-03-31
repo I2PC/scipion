@@ -38,7 +38,7 @@ WorkingDir='ProjMatch/run1'
 DoDeleteWorkingDir=True
 
 # Number of iterations to perform
-NumberofIterations=10
+NumberofIterations=4
 
 # Resume at iteration
 """ This option may be used to finish a previously performed run.
@@ -70,7 +70,7 @@ LogDir='Logs'
     and the data will be processed in CTF groups.
     Note that you cannot combine CTF-correction with re-alignment of the classes.
 """
-DoCtfCorrection=True
+DoCtfCorrection=False
 
 # {file} CTFDat file with CTF data:
 """ The input selfile may be a subset of the images in the CTFDat file, but all 
@@ -547,7 +547,8 @@ ReferenceVolumeName='reference_volume.vol'
 LibraryDir = "ReferenceLibrary"
 ProjectLibraryRootName= LibraryDir + "/ref"
 ProjMatchDir = "ProjMatchClasses"
-ProjMatchRootName= ProjMatchDir + "/proj_match"
+ProjMatchName = 'proj_match'
+ProjMatchRootName= ProjMatchDir + "/" + ProjMatchName
 ForReconstructionSel="reconstruction.sel"
 ForReconstructionDoc="reconstruction.doc"
 MultiAlign2dSel="multi_align2d.sel"
@@ -979,7 +980,8 @@ class projection_matching_class:
                                                   self._DisplayResolution,
                                                   self._ReconstructedVolume[_iteration_number],
                                                   self._ARTLambda,
-                                                  self._OuterRadius
+                                                  self._OuterRadius,
+						  self._DoSplitReferenceImages
                                                   )
           else:
 	     filter_frequence=0
@@ -1462,7 +1464,12 @@ def execute_reconstruction(_mylog,
       if (_DoParallel):
          parameters = parameters + ' -mpi_job_size ' + str(_MyMpiJobSize)
       if (_DoComputeResolution and not _DoSplitReferenceImages):
-         parameters = parameters + ' -prepare_fsc ' + Outputvolume + ' '
+         myFileName =  ProjMatchDir + '/' + ProjMatchName
+         parameters = parameters + ' -prepare_fsc ' + myFileName + ' '
+         rand_command  = ' xmipp_selfile_split -i '
+         rand_command += ForReconstructionSel + ' -dont_sort -n 1 ' 
+         os.system(rand_command)
+         _mylog.info(rand_command)
       parameters = parameters + _FourierReconstructionExtraCommand 
    else:
       _mylog.error("Reconstruction method unknown. Quiting")
@@ -1506,10 +1513,11 @@ def  execute_resolution(_mylog,
                         _DisplayResolution,
                         _ReconstructedVolume,
                         _ARTLambda,
-                        _OuterRadius):
+                        _OuterRadius,
+			_DoSplitReferenceImages):
 
     import os,shutil,math
-
+    PerformReconstruction=True
     split_sel_root_name=ProjMatchRootName+'_split'
     Outputvolumes=[]
     Outputvolumes.append(split_sel_root_name+'_1')
@@ -1554,6 +1562,8 @@ def  execute_resolution(_mylog,
                      ' -max_resolution ' + str(_FourierMaxFrequencyOfInterest)
           if (_DoParallel):
              parameters = parameters + ' -mpi_job_size ' + str(_MyMpiJobSize)
+          if ( not _DoSplitReferenceImages):
+	     PerformReconstruction=False
           parameters = parameters + _FourierReconstructionExtraCommand
        else:
           _mylog.error("Reconstruction method unknown. Quiting")
@@ -1561,7 +1571,8 @@ def  execute_resolution(_mylog,
           exit(1)
 
        import launch_job
-       launch_job.launch_job(program,
+       if(PerformReconstruction):
+           launch_job.launch_job(program,
                              parameters,
                              _mylog,
                              _DoParallel,
@@ -1587,6 +1598,14 @@ def  execute_resolution(_mylog,
     print '* Compute resolution ' 
     command = " -ref " + Outputvolumes[0] +\
               " -i " +Outputvolumes[1]  + ' -sam ' + str(_ResolSam)
+q    if ReconstructionMethod=='fourier':
+	import spider_header
+        myheader=spider_header.spiderheader(Outputvolumes[i] )
+        ncolumns=myheader.nx
+	#2.5 is the blob radius 
+	aux4 = 2.5 * 0.5 / ncolumns
+        command += " -max_sam " + str (_ResolSam/(aux4+_FourierMaxFrequencyOfInterest))
+	
     launch_job.launch_job("xmipp_resolution_fsc",
                           command,
                           _mylog,
