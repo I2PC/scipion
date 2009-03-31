@@ -2292,12 +2292,17 @@ bool Prog_ml_tomo_prm::regularize(double sumw_allrefs)
             // Fref = (sumw*Fref + reg_norm*Favg) /  (sumw + nr_ref * reg_norm)
 #define DEBUG_REGULARISE
 #ifdef DEBUG_REGULARISE
-            std::cerr<<"refno= "<<refno<<" sumw = "<<sumw<<" reg_norm= "<<reg_norm<<" Fref1= "<<DIRECT_MULTIDIM_ELEM(Fref,1) <<" Favg1= "<<DIRECT_MULTIDIM_ELEM(Favg,1)<<" (sumw + nr_ref * reg_norm)= "<<(sumw + nr_ref * reg_norm)<<std::endl;
+            if (verb>0)
+                std::cerr<<"refno= "<<refno<<" sumw = "<<sumw<<" reg_norm= "<<reg_norm<<" Fref1= "<<DIRECT_MULTIDIM_ELEM(Fref,1) <<" Favg1= "<<DIRECT_MULTIDIM_ELEM(Favg,1)<<" (sumw + nr_ref * reg_norm)= "<<(sumw + nr_ref * reg_norm)<<std::endl;
 #endif
             Fref *= sumw;
             Fref += Favg;
             Fref /= (sumw + nr_ref * reg_norm);
-            std::cerr<<" newFref1= "<<DIRECT_MULTIDIM_ELEM(Fref,1) <<std::endl;
+#ifdef DEBUG_REGULARISE
+            if (verb>0)
+                std::cerr<<" newFref1= "<<DIRECT_MULTIDIM_ELEM(Fref,1) <<std::endl;
+#endif
+            transformer.inverseFourierTransform(Fref,Iref[refno]());
         }
 
         // Update the regularized sigma_noise estimate
@@ -2305,11 +2310,15 @@ bool Prog_ml_tomo_prm::regularize(double sumw_allrefs)
         {
             double reg_sigma_noise2 = sigma_noise*sigma_noise*sumw_allrefs*ddim3;
 #ifdef DEBUG_REGULARISE
-            std::cerr<<"reg_sigma_noise2= "<<reg_sigma_noise2<<" sumw_allrefs="<<sumw_allrefs<<" ddim3= "<<ddim3<<" sigma_noise= "<<sigma_noise<<" sum_diff2= "<<sum_diff2<<" reg_norm= "<<reg_norm<<std::endl;
+            if (verb>0)
+                std::cerr<<"reg_sigma_noise2= "<<reg_sigma_noise2<<" sumw_allrefs="<<sumw_allrefs<<" ddim3= "<<ddim3<<" sigma_noise= "<<sigma_noise<<" sum_diff2= "<<sum_diff2<<" reg_norm= "<<reg_norm<<std::endl;
 #endif
             reg_sigma_noise2 += reg_norm * sum_diff2;
             sigma_noise = sqrt(reg_sigma_noise2/(sumw_allrefs*ddim3));
-            std::cerr<<"new sigma_noise= "<<sigma_noise<<std::endl;
+#ifdef DEBUG_REGULARISE
+            if (verb>0)
+                std::cerr<<"new sigma_noise= "<<sigma_noise<<std::endl;
+#endif
         }
 
 #ifdef DEBUG
