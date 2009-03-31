@@ -2230,6 +2230,9 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
     }
 
     regularize(sumw_allrefs);
+    // Update regularization constant
+    reg_current -= reg_step;
+    reg_current = XMIPP_MAX(reg_current, regF);
 
     // post-process reference volumes
     for (int refno=0; refno < nr_ref; refno++)
