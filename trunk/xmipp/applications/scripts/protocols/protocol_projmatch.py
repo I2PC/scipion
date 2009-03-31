@@ -1572,7 +1572,7 @@ def  execute_resolution(_mylog,
 
        import launch_job
        if(PerformReconstruction):
-       launch_job.launch_job(program,
+           launch_job.launch_job(program,
                              parameters,
                              _mylog,
                              _DoParallel,
@@ -1598,6 +1598,14 @@ def  execute_resolution(_mylog,
     print '* Compute resolution ' 
     command = " -ref " + Outputvolumes[0] +\
               " -i " +Outputvolumes[1]  + ' -sam ' + str(_ResolSam)
+    if ReconstructionMethod=='fourier':
+	import spider_header
+        myheader=spider_header.spiderheader(Outputvolumes[i] )
+        ncolumns=myheader.nx
+	#2.5 is the blob radius 
+	aux4 = 2.5 * 0.5 / ncolumns
+        command += " -max_sam " + str (_ResolSam/(aux4+_FourierMaxFrequencyOfInterest))
+	
     launch_job.launch_job("xmipp_resolution_fsc",
                           command,
                           _mylog,
