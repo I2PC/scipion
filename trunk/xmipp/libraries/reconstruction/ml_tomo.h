@@ -190,6 +190,9 @@ public:
     /** Number of angle combinations */
     int nr_ang;
 
+    /** Regularization parameters */
+    double reg0, regF, reg_step, reg_current;
+
     /** Switch off SMALL_ANGLE addition (for phantoms) */
     bool no_SMALLANGLE;
 
@@ -283,6 +286,9 @@ public:
                       Matrix1D<double> &sumw, Matrix1D<double> &sumwsc, 
                       Matrix1D<double> &sumwsc2, Matrix1D<double> &sumw_rot, 
                       double &sumfracweight, double &sumw_allrefs);
+
+    /// Apply regularization
+    bool regularize(double sumw_allrefs);
 
     /// check convergence
     bool checkConvergence(std::vector<double> &conv);

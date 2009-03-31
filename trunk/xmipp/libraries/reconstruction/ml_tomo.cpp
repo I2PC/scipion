@@ -128,6 +128,11 @@ void Prog_ml_tomo_prm::read(int argc, char **argv, bool ML3D)
     // Normalization 
     do_norm = checkParameter(argc2, argv2, "-norm");
 
+    // regularization
+    reg0=textToFloat(getParameter(argc2, argv2, "-reg0", "0."));
+    regF=textToFloat(getParameter(argc2, argv2, "-regF", "0."));
+    reg_step=textToFloat(getParameter(argc2, argv2, "-reg_step", "1."));
+
     // ML (with/without) imputation, or maxCC
     do_ml = !checkParameter(argc2, argv2, "-maxCC");
     do_impute = !checkParameter(argc2, argv2, "-dont_impute");
@@ -182,6 +187,11 @@ void Prog_ml_tomo_prm::show(bool ML3D)
         std::cerr << "  Stopping criterium      : " << eps << std::endl;
         std::cerr << "  initial sigma noise     : " << sigma_noise << std::endl;
         std::cerr << "  initial sigma offset    : " << sigma_offset << std::endl;
+        if (reg0 > 0.)
+        {
+            std::cerr << "  Regularization from     : "<<reg0<<" to "<<regF<<std::endl;
+            std::cerr << "  Regularization steps    : "<<reg_step<<std::endl;
+        }
         if (fn_missing!="")
         {
             std::cerr << "  Missing data info       : "<<fn_missing <<std::endl;
@@ -297,6 +307,9 @@ void Prog_ml_tomo_prm::produceSideInfo()
     if (YSIZE(vol()) != dim || ZSIZE(vol()) != dim)
         REPORT_ERROR(1,"ml_tomo ERROR%: only cubic volumes are allowed");
 
+    if (regF > reg0)
+        REPORT_ERROR(1,"regF should be smaller than reg0!");
+    reg_current = reg0;
 
     // Make fourier and real-space masks
     Matrix3D<int> int_mask(dim,dim,dim);
@@ -670,6 +683,9 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
         nr_ref++;
     }
 
+    // Regularization
+    regularize((double)SF.ImgNo());
+
     // Store tomogram angles, offset vectors and missing wedge parameters
     imgs_missno.clear();
     imgs_optrefno.clear();
@@ -907,7 +923,6 @@ void Prog_ml_tomo_prm::getMissingRegion(Matrix3D<double> &Mmissing,
                     if (do_cone)
                     {
                         lim = (tg * zp) * (tg * zp);
-                        // TODO: CHECK THIS!!
                         if (xp*xp + yp*yp >= lim)
                             is_observed = true;
                         else
@@ -1037,8 +1052,6 @@ void Prog_ml_tomo_prm::calculatePdfTranslations()
 
 }
 
-
-//// TODOOOOOOO check this function!!
 void Prog_ml_tomo_prm::maskSphericalAverageOutside(Matrix3D<double> &Min)
 {
     double outside_density = 0., sumdd = 0.;
@@ -2216,6 +2229,8 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
         }
     }
 
+    regularize(sumw_allrefs);
+
     // post-process reference volumes
     for (int refno=0; refno < nr_ref; refno++)
     {
@@ -2234,6 +2249,71 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
 #endif 
 }
 
+// Apply regularization
+bool Prog_ml_tomo_prm::regularize(double sumw_allrefs)
+{
+    if (reg_current > 0.)
+    {
+#ifdef DEBUG
+        std::cerr<<"start regularize"<<std::endl;
+#endif 
+
+        // Normalized regularization (in N/K)
+        double reg_norm = reg_current * sumw_allrefs / nr_ref;
+        Matrix3D<std::complex<double> > Fref, Favg, Fzero(dim,dim,hdim+1);
+        Matrix3D<double> Mavg, Mdiff;
+        double sum_diff2=0.;
+
+        // Calculate  FT of average of all references
+        // and sum of squared differences between all references
+        for (int refno = 0; refno < nr_ref; refno++)
+        {
+            if (refno==0) 
+                Mavg = Iref[refno]();
+            else
+                Mavg += Iref[refno]();
+            for (int refno2 = 0; refno2 < nr_ref; refno2++)
+            {
+                Mdiff = Iref[refno]() - Iref[refno2]();
+                sum_diff2 += Mdiff.sum2();
+            }
+        }
+        transformer.FourierTransform(Mavg,Favg,true);
+        Favg *= reg_norm;
+
+        // Update the regularized references
+        for (int refno = 0; refno < nr_ref; refno++)
+        {
+            transformer.FourierTransform(Iref[refno](),Fref,true);
+            double sumw = alpha_k(refno) * sumw_allrefs;
+            // Fref = (sumw*Fref + reg_norm*Favg) /  (sumw + nr_ref * reg_norm)
+#define DEBUG_REGULARISE
+#ifdef DEBUG_REGULARISE
+            std::cerr<<"refno= "<<refno<<" sumw = "<<sumw<<" reg_norm= "<<reg_norm<<" Fref1= "<<DIRECT_MULTIDIM_ELEM(Fref,1) <<" Favg1= "<<DIRECT_MULTIDIM_ELEM(Favg,1)<<" (sumw + nr_ref * reg_norm)= "<<(sumw + nr_ref * reg_norm)<<std::endl;
+#endif
+            Fref *= sumw;
+            Fref += Favg;
+            Fref /= (sumw + nr_ref * reg_norm);
+            std::cerr<<" newFref1= "<<DIRECT_MULTIDIM_ELEM(Fref,1) <<std::endl;
+        }
+
+        // Update the regularized sigma_noise estimate
+        if (!fix_sigma_noise)
+        {
+            double reg_sigma_noise2 = sigma_noise*sigma_noise*sumw_allrefs*ddim3;
+#ifdef DEBUG_REGULARISE
+            std::cerr<<"reg_sigma_noise2= "<<reg_sigma_noise2<<" sumw_allrefs="<<sumw_allrefs<<" ddim3= "<<ddim3<<" sigma_noise= "<<sigma_noise<<" sum_diff2= "<<sum_diff2<<" reg_norm= "<<reg_norm<<std::endl;
+#endif
+            reg_sigma_noise2 += reg_norm * sum_diff2;
+            sigma_noise = sqrt(reg_sigma_noise2/(sumw_allrefs*ddim3));
+            std::cerr<<"new sigma_noise= "<<sigma_noise<<std::endl;
+        }
+
+#ifdef DEBUG
+        std::cerr<<"finished regularize"<<std::endl;
+#endif 
+    }
+}
 // Check convergence
 bool Prog_ml_tomo_prm::checkConvergence(std::vector<double> &conv)
 {
