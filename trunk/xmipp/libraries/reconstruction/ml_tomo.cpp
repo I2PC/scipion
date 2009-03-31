@@ -1038,6 +1038,7 @@ void Prog_ml_tomo_prm::calculatePdfTranslations()
 }
 
 
+//// TODOOOOOOO check this function!!
 void Prog_ml_tomo_prm::maskSphericalAverageOutside(Matrix3D<double> &Min)
 {
     double outside_density = 0., sumdd = 0.;
@@ -2109,7 +2110,8 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
                 }
             }
         }
-
+        // Back to real space
+        transformer.inverseFourierTransform(Faux,Iref[refno]());
     }  
 
     // Adjust average scale
