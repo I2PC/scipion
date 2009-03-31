@@ -683,9 +683,6 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
         nr_ref++;
     }
 
-    // Regularization
-    regularize((double)SF.ImgNo());
-
     // Store tomogram angles, offset vectors and missing wedge parameters
     imgs_missno.clear();
     imgs_optrefno.clear();
@@ -798,6 +795,9 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
     alpha_k_rot.resize(nr_ref*nr_ang);
     alpha_k.initConstant(1./(double)nr_ref);
     alpha_k_rot.initConstant(1./(double)(nr_ref*nr_ang));
+
+    // Regularization
+    regularize((double)SF.ImgNo());
 
 //#define DEBUG_SAMPLING
 #ifdef DEBUG_SAMPLING
