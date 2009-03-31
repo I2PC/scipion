@@ -696,10 +696,19 @@ class automated_gui_class:
                              activebackground=ButtonActiveBackgroundColour)
         self.button.grid(row=self.buttonrow,column=0, sticky=W)
         self.master.bind('<Alt_L><c>', self.GuiClose)
+
+        have_backup=str(os.environ.get('XMIPP_BACKUP'))
+        if not (have_backup=='None'):
+            self.bGet = Button(self.frame, text="Backup Snapshot", command=self.OpenBackupWindow,
+                               underline=0, bg=ButtonBackgroundColour,
+                               activebackground=ButtonActiveBackgroundColour)
+            self.bGet.grid(row=self.buttonrow,column=1)
+            self.master.bind('<Alt_L><b>', self.OpenBackupWindow)
+
         self.bGet = Button(self.frame, text="Analyse Results", command=self.AnalyseResults,
                            underline=0, bg=ButtonBackgroundColour,
                            activebackground=ButtonActiveBackgroundColour)
-        self.bGet.grid(row=self.buttonrow,column=2)
+        self.bGet.grid(row=self.buttonrow,column=2, sticky=E)
         self.master.bind('<Alt_L><a>', self.AnalyseResults)
 
     def GuiTockleExpertMode(self,event=""):
@@ -763,6 +772,16 @@ class automated_gui_class:
                         column=self.columntextentry,
                         columnspan=2,sticky=W+E)
         self.master.update()
+
+    def OpenBackupWindow(self,event=""):
+        import os
+        if (os.path.exists("xmipp_protocol_backup.py")):
+            print "lets do it"
+            command='python '+str(self.SYSTEMSCRIPTDIR)+'/xmipp_protocol_gui.py xmipp_protocol_backup.py &'
+            print command
+            os.system(command)
+        else:
+            print "forget about it"
 
     def AnalyseResults(self,event=""):
         import os
