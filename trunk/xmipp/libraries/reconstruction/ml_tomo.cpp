@@ -796,7 +796,7 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
     alpha_k_rot.initConstant(1./(double)(nr_ref*nr_ang));
 
     // Regularization
-    regularize((double)SF.ImgNo());
+    regularize();
 
 //#define DEBUG_SAMPLING
 #ifdef DEBUG_SAMPLING
@@ -2228,10 +2228,11 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
         }
     }
 
-    regularize(sumw_allrefs);
-    // Update regularization constant
-    
-    reg_current -= (regF-reg0)/(double)reg_steps;
+    // Regularize
+    regularize();
+
+    // Update regularization constant in a linear manner    
+    reg_current -= (reg0-regF)/(double)reg_steps;
     reg_current = XMIPP_MAX(reg_current, regF);
 
     // post-process reference volumes
@@ -2253,7 +2254,7 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
 }
 
 // Apply regularization
-bool Prog_ml_tomo_prm::regularize(double sumw_allrefs)
+bool Prog_ml_tomo_prm::regularize()
 {
     if (reg_current > 0.)
     {
@@ -2262,7 +2263,7 @@ bool Prog_ml_tomo_prm::regularize(double sumw_allrefs)
 #endif 
 
         // Normalized regularization (in N/K)
-        double reg_norm = reg_current * sumw_allrefs / nr_ref;
+        double reg_norm = reg_current * (double)nr_exp_images / (double)nr_ref;
         Matrix3D<std::complex<double> > Fref, Favg, Fzero(dim,dim,hdim+1);
         Matrix3D<double> Mavg, Mdiff;
         double sum_diff2=0.;
@@ -2288,12 +2289,12 @@ bool Prog_ml_tomo_prm::regularize(double sumw_allrefs)
         for (int refno = 0; refno < nr_ref; refno++)
         {
             transformer.FourierTransform(Iref[refno](),Fref,true);
-            double sumw = alpha_k(refno) * sumw_allrefs;
+            double sumw = alpha_k(refno) * (double)nr_exp_images;
             // Fref = (sumw*Fref + reg_norm*Favg) /  (sumw + nr_ref * reg_norm)
 #define DEBUG_REGULARISE
 #ifdef DEBUG_REGULARISE
             if (verb>0)
-                std::cerr<<"refno= "<<refno<<" sumw = "<<sumw<<" reg_norm= "<<reg_norm<<" Fref1= "<<DIRECT_MULTIDIM_ELEM(Fref,1) <<" Favg1= "<<DIRECT_MULTIDIM_ELEM(Favg,1)<<" (sumw + nr_ref * reg_norm)= "<<(sumw + nr_ref * reg_norm)<<std::endl;
+                std::cerr<<"refno= "<<refno<<" sumw = "<<sumw<<" reg_current= "<<reg_current<<" reg_norm= "<<reg_norm<<" Fref1= "<<DIRECT_MULTIDIM_ELEM(Fref,1) <<" Favg1= "<<DIRECT_MULTIDIM_ELEM(Favg,1)<<" (sumw + nr_ref * reg_norm)= "<<(sumw + nr_ref * reg_norm)<<std::endl;
 #endif
             Fref *= sumw;
             Fref += Favg;
@@ -2308,13 +2309,13 @@ bool Prog_ml_tomo_prm::regularize(double sumw_allrefs)
         // Update the regularized sigma_noise estimate
         if (!fix_sigma_noise)
         {
-            double reg_sigma_noise2 = sigma_noise*sigma_noise*sumw_allrefs*ddim3;
+            double reg_sigma_noise2 = sigma_noise*sigma_noise*ddim3*(double)nr_exp_images;
 #ifdef DEBUG_REGULARISE
             if (verb>0)
-                std::cerr<<"reg_sigma_noise2= "<<reg_sigma_noise2<<" sumw_allrefs="<<sumw_allrefs<<" ddim3= "<<ddim3<<" sigma_noise= "<<sigma_noise<<" sum_diff2= "<<sum_diff2<<" reg_norm= "<<reg_norm<<std::endl;
+                std::cerr<<"reg_sigma_noise2= "<<reg_sigma_noise2<<" nr_exp_images="<<nr_exp_images<<" ddim3= "<<ddim3<<" sigma_noise= "<<sigma_noise<<" sum_diff2= "<<sum_diff2<<" reg_norm= "<<reg_norm<<std::endl;
 #endif
             reg_sigma_noise2 += reg_norm * sum_diff2;
-            sigma_noise = sqrt(reg_sigma_noise2/(sumw_allrefs*ddim3));
+            sigma_noise = sqrt(reg_sigma_noise2/((double)nr_exp_images*ddim3));
 #ifdef DEBUG_REGULARISE
             if (verb>0)
                 std::cerr<<"new sigma_noise= "<<sigma_noise<<std::endl;

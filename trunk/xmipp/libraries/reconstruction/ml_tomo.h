@@ -289,7 +289,7 @@ public:
                       double &sumfracweight, double &sumw_allrefs);
 
     /// Apply regularization
-    bool regularize(double sumw_allrefs);
+    bool regularize();
 
     /// check convergence
     bool checkConvergence(std::vector<double> &conv);
