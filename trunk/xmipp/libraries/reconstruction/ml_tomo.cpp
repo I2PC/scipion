@@ -131,7 +131,7 @@ void Prog_ml_tomo_prm::read(int argc, char **argv, bool ML3D)
     // regularization
     reg0=textToFloat(getParameter(argc2, argv2, "-reg0", "0."));
     regF=textToFloat(getParameter(argc2, argv2, "-regF", "0."));
-    reg_step=textToFloat(getParameter(argc2, argv2, "-reg_step", "1."));
+    reg_steps=textToInteger(getParameter(argc2, argv2, "-reg_steps", "5."));
 
     // ML (with/without) imputation, or maxCC
     do_ml = !checkParameter(argc2, argv2, "-maxCC");
@@ -189,8 +189,7 @@ void Prog_ml_tomo_prm::show(bool ML3D)
         std::cerr << "  initial sigma offset    : " << sigma_offset << std::endl;
         if (reg0 > 0.)
         {
-            std::cerr << "  Regularization from     : "<<reg0<<" to "<<regF<<std::endl;
-            std::cerr << "  Regularization steps    : "<<reg_step<<std::endl;
+            std::cerr << "  Regularization from     : "<<reg0<<" to "<<regF<<" in " <<reg_steps<<" steps"<<std::endl;
         }
         if (fn_missing!="")
         {
@@ -2231,7 +2230,8 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
 
     regularize(sumw_allrefs);
     // Update regularization constant
-    reg_current -= reg_step;
+    
+    reg_current -= (regF-reg0)/(double)reg_steps;
     reg_current = XMIPP_MAX(reg_current, regF);
 
     // post-process reference volumes

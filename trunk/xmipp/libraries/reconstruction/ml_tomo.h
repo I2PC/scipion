@@ -191,7 +191,8 @@ public:
     int nr_ang;
 
     /** Regularization parameters */
-    double reg0, regF, reg_step, reg_current;
+    double reg0, regF, reg_current;
+    int reg_steps;
 
     /** Switch off SMALL_ANGLE addition (for phantoms) */
     bool no_SMALLANGLE;
