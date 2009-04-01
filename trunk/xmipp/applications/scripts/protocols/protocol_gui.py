@@ -774,14 +774,14 @@ class automated_gui_class:
         self.master.update()
 
     def OpenBackupWindow(self,event=""):
-        import os
-        if (os.path.exists("xmipp_protocol_backup.py")):
-            print "lets do it"
-            command='python '+str(self.SYSTEMSCRIPTDIR)+'/xmipp_protocol_gui.py xmipp_protocol_backup.py &'
-            print command
-            os.system(command)
-        else:
-            print "forget about it"
+        import os, shutil
+        script="xmipp_protocol_backup.py"
+        if (not os.path.exists(script)):
+            # make a local copy
+            shutil.copy(str(self.SYSTEMSCRIPTDIR)+'/'+script,script)
+        command='python '+str(self.SYSTEMSCRIPTDIR)+'/xmipp_protocol_gui.py '+script+' &'
+        print command
+        os.system(command)
 
     def AnalyseResults(self,event=""):
         import os
