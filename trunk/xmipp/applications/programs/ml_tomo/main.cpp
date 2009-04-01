@@ -97,7 +97,7 @@ int main(int argc, char **argv)
             prm.maximization(wsumimgs, wsumweds,
                              wsum_sigma_noise, wsum_sigma_offset, 
                              sumw, sumwsc, sumwsc2, sumw_rot, 
-                             sumcorr, sumw_allrefs);
+                             sumcorr, sumw_allrefs, iter);
 
             // Check convergence
             converged = prm.checkConvergence(conv);

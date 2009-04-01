@@ -286,10 +286,10 @@ public:
                       double &wsum_sigma_noise, double &wsum_sigma_offset, 
                       Matrix1D<double> &sumw, Matrix1D<double> &sumwsc, 
                       Matrix1D<double> &sumwsc2, Matrix1D<double> &sumw_rot, 
-                      double &sumfracweight, double &sumw_allrefs);
+                      double &sumfracweight, double &sumw_allrefs, int iter);
 
     /// Apply regularization
-    bool regularize();
+    bool regularize(int iter);
 
     /// check convergence
     bool checkConvergence(std::vector<double> &conv);

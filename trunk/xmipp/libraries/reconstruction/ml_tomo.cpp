@@ -205,7 +205,7 @@ void Prog_ml_tomo_prm::show(bool ML3D)
 
         if (!do_ml) 
         {
-            std::cerr << "  -> Use constrained correlation coefficient instead of ML-approach." << std::endl;
+            std::cerr << "  -> Use constrained correlation coefficient instead of ML-imputation approach." << std::endl;
         }
         if (fix_fractions)
         {
@@ -795,8 +795,10 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
     alpha_k.initConstant(1./(double)nr_ref);
     alpha_k_rot.initConstant(1./(double)(nr_ref*nr_ang));
 
-    // Regularization
-    regularize();
+    // Regularization (do not regularize during restarts!)
+    if (istart == 1)
+        regularize(istart-1);
+    
 
 //#define DEBUG_SAMPLING
 #ifdef DEBUG_SAMPLING
@@ -2003,7 +2005,7 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
                                     double &wsum_sigma_noise, double &wsum_sigma_offset,
                                     Matrix1D<double> &sumw, Matrix1D<double> &sumwsc, 
                                     Matrix1D<double> &sumwsc2, Matrix1D<double> &sumw_rot,
-                                    double &sumfracweight, double &sumw_allrefs)
+                                    double &sumfracweight, double &sumw_allrefs, int iter)
 {
 #ifdef DEBUG
     std::cerr<<"started maximization"<<std::endl;
@@ -2033,7 +2035,8 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
         if (do_missing)
         {
             Msumallwedges += wsumweds[refno];
-            if (do_impute)
+            // Only impute for ML-approach (maxCC approach uses division by sumwedge)
+            if (do_ml && do_impute)
             {
                 transformer.FourierTransform(Iref[refno](),Faux,true);
                 if (sumw(refno) > 0.)
@@ -2229,11 +2232,7 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
     }
 
     // Regularize
-    regularize();
-
-    // Update regularization constant in a linear manner    
-    reg_current -= (reg0-regF)/(double)reg_steps;
-    reg_current = XMIPP_MAX(reg_current, regF);
+    regularize(iter);
 
     // post-process reference volumes
     for (int refno=0; refno < nr_ref; refno++)
@@ -2254,8 +2253,12 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
 }
 
 // Apply regularization
-bool Prog_ml_tomo_prm::regularize()
+bool Prog_ml_tomo_prm::regularize(int iter)
 {
+    // Update regularization constant in a linear manner    
+    reg_current = reg0 - (double)iter*(reg0-regF)/(double)reg_steps;
+    reg_current = XMIPP_MAX(reg_current, regF);
+
     if (reg_current > 0.)
     {
 #ifdef DEBUG
