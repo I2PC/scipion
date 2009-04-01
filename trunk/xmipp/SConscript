@@ -619,7 +619,7 @@ AddBatch('gui', 'applications/scripts/protocols')
 # Protocols
 AddProtocol('arg.py', 'applications/scripts/protocols')
 AddProtocol('apply_bfactor.py', 'applications/scripts/protocols')
-AddProtocol('config.py', 'applications/scripts/protocols')
+AddProtocol('xmipp_config.py', 'applications/scripts/protocols')
 AddProtocol('ctfdat.py', 'applications/scripts/protocols')
 AddProtocol('docfiles.py', 'applications/scripts/protocols')
 AddProtocol('launch_job.py', 'applications/scripts/protocols')
