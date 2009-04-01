@@ -390,7 +390,7 @@ ReconsSources = [
 #    'ml_align3d.cpp',
     'mlf_align2d.cpp',
     'ml_refine3d.cpp',
-#    'ml_tomo.cpp',
+    'ml_tomo.cpp',
 #    'mlf_newtomo.cpp',
     'nma_alignment.cpp',
     'phantom.cpp',
@@ -558,7 +558,7 @@ AddXmippProgram('ml_align2d_combine', ['XmippRecons'])
 AddXmippProgram('ml_refine3d', ['XmippRecons'])
 AddXmippProgram('mlf_refine3d', ['XmippRecons'])
 #AddXmippProgram('mlf_tomo', ['XmippRecons'])
-#AddXmippProgram('ml_tomo', ['XmippRecons'])
+AddXmippProgram('ml_tomo', ['XmippRecons'])
 AddXmippProgram('morphology')
 AddXmippProgram('nma_alignment', ['XmippRecons'])
 AddXmippProgram('normalize')
@@ -641,7 +641,6 @@ AddProtocol('visualize_rotspectra.py', 'applications/scripts/protocols')
 
 AddProtocol('protocol_gui.py', 'applications/scripts/protocols')
 AddProtocol('protocol_backup.py', 'applications/scripts/protocols')
-AddProtocol('protocol_config.py', 'applications/scripts/protocols')
 AddProtocol('protocol_kerdensom.py', 'applications/scripts/protocols')
 AddProtocol('protocol_ml2d.py', 'applications/scripts/protocols')
 AddProtocol('protocol_ml3d.py', 'applications/scripts/protocols')
@@ -767,6 +766,7 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ctf_correct_idr', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ml_align2d', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_ml_tomo', ['XmippRecons'])
     AddXmippMPIProgram('mpi_mlf_align2d', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ml_refine3d', ['XmippRecons'])
     AddXmippMPIProgram('mpi_mlf_refine3d', ['XmippRecons'])
