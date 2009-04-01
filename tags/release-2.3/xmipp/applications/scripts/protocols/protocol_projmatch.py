@@ -1598,7 +1598,7 @@ def  execute_resolution(_mylog,
     print '* Compute resolution ' 
     command = " -ref " + Outputvolumes[0] +\
               " -i " +Outputvolumes[1]  + ' -sam ' + str(_ResolSam)
-q    if ReconstructionMethod=='fourier':
+    if ReconstructionMethod=='fourier':
 	import spider_header
         myheader=spider_header.spiderheader(Outputvolumes[i] )
         ncolumns=myheader.nx
