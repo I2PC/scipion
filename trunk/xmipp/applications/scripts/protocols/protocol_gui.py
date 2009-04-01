@@ -120,6 +120,7 @@ class automated_gui_class:
 
         scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
         self.SYSTEMSCRIPTDIR=scriptdir
+        sys.path.append(scriptdir) # add default search path
 
         self.analyse_directory=analyse_directory
         if analyse_directory=='':
@@ -697,8 +698,8 @@ class automated_gui_class:
         self.button.grid(row=self.buttonrow,column=0, sticky=W)
         self.master.bind('<Alt_L><c>', self.GuiClose)
 
-        have_backup=str(os.environ.get('XMIPP_BACKUP'))
-        if not (have_backup=='None'):
+        import xmipp_config
+        if (xmipp_config.HaveBackupSystem):
             self.bGet = Button(self.frame, text="Backup Snapshot", command=self.OpenBackupWindow,
                                underline=0, bg=ButtonBackgroundColour,
                                activebackground=ButtonActiveBackgroundColour)
