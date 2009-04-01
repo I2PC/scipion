@@ -639,6 +639,7 @@ AddProtocol('visualize_rct.py', 'applications/scripts/protocols')
 AddProtocol('visualize_rotspectra.py', 'applications/scripts/protocols')
 
 AddProtocol('protocol_gui.py', 'applications/scripts/protocols')
+AddProtocol('protocol_backup.py', 'applications/scripts/protocols')
 AddProtocol('protocol_kerdensom.py', 'applications/scripts/protocols')
 AddProtocol('protocol_ml2d.py', 'applications/scripts/protocols')
 AddProtocol('protocol_ml3d.py', 'applications/scripts/protocols')
