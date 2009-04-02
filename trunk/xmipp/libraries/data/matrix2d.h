@@ -1818,9 +1818,10 @@ public:
      * after it, the values of the self array are as similar as possible
      * (L2 sense) to the values of the array shown as sample
      */
-    void rangeAdjust(const Matrix2D<T> &example)
+    void rangeAdjust(const Matrix2D<T> &example,
+        const Matrix2D<int> *mask=NULL)
     {
-        MultidimArray<T>::rangeAdjust(example);
+        MultidimArray<T>::rangeAdjust(example,mask);
     }
 
     /** Compute statistics.

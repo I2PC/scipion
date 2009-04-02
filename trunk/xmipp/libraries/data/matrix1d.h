@@ -1257,9 +1257,10 @@ public:
      * after it, the values of the self array are as similar as possible
      * (L2 sense) to the values of the array shown as sample
      */
-    void rangeAdjust(const Matrix1D<T> &example)
+    void rangeAdjust(const Matrix1D<T> &example,
+        const Matrix1D<int> *mask=NULL)
     {
-        MultidimArray<T>::rangeAdjust(example);
+        MultidimArray<T>::rangeAdjust(example,mask);
     }
 
     /** Compute the center of mass within a mask.

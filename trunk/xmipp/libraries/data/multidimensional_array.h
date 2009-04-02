@@ -947,7 +947,8 @@ public:
      * after it, the values of the self array are as similar as possible
      * (L2 sense) to the values of the array shown as sample
      */
-    void rangeAdjust(const MultidimArray<T> &example)
+    void rangeAdjust(const MultidimArray<T> &example,
+        const MultidimArray<int> *mask=NULL)
     {
         if (MULTIDIM_SIZE(*this) <= 0)
             return;
@@ -955,19 +956,29 @@ public:
         // y=a+bx
         double sumx=0, sumy=0, sumxy=0, sumx2=0;
         double* ptrExample=MULTIDIM_ARRAY(example);
+        int* ptrMask=NULL;
+        if (mask!=NULL) ptrMask=MULTIDIM_ARRAY(*mask);
         double* ptr=NULL;
         unsigned long int n;
+        double N=0;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
         {
-            double x=*ptr;
-            double y=*ptrExample;
-            sumy+=y;
-            sumxy+=x*y;
-            sumx+=x;
-            sumx2+=x*x;
+            bool process=true;
+            if (mask!=NULL)
+                if (*ptrMask==0) process=false;
+            if (process)
+            {
+                double x=*ptr;
+                double y=*ptrExample;
+                sumy+=y;
+                sumxy+=x*y;
+                sumx+=x;
+                sumx2+=x*x;
+                N++;
+            }
             ptrExample++;
+            if (mask!=NULL) ptrMask++;
         }
-        double N=MULTIDIM_SIZE(*this);
         double a=(sumy*sumx2-sumx*sumxy)/(N*sumx2-sumx*sumx);
         double b=(N*sumxy-sumx*sumy)/(N*sumx2-sumx*sumx);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
