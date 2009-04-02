@@ -248,6 +248,7 @@ def generate(env):
                    QT_BINPATH = os.path.join('$QTDIR', 'bin'),
                    QT_CPPPATH = os.path.join('$QTDIR', 'include'),
                    QT_LIBPATH = os.path.join('$QTDIR', 'lib'),
+                   QT_LIB64PATH = os.path.join('$QTDIR', 'lib64'),
                    QT_MOC = os.path.join('$QT_BINPATH','moc'),
                    QT_UIC = os.path.join('$QT_BINPATH','uic'),
                    QT_LIB = 'qt', # may be set to qt-mt
@@ -326,7 +327,7 @@ def generate(env):
                      LIBEMITTER  =[AutomocStatic],
                      # Of course, we need to link against the qt libraries
                      CPPPATH=["$QT_CPPPATH"],
-                     LIBPATH=["$QT_LIBPATH"],
+                     LIBPATH=["$QT_LIBPATH","$QT_LIB64PATH"],
                      LIBS=['$QT_LIB'])
 
 def exists(env):
