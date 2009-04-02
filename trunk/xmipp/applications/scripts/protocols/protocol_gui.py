@@ -938,14 +938,13 @@ class MyShowMoreHelp:
 
     def get_browser(self):
         import os
-        browser=str(os.environ.get('XMIPP_BROWSER'))
-        if not (browser=='None'):
+        import xmipp_config
+        browser=xmipp_config.XmippBrowser
+        if not (browser==''):
             return browser
         else:
             import tkMessageBox
-            message='Please define your favourite browser using the environment variable $XMIPP_BROWSER\n'
-            message+='e.g. for csh: setenv XMIPP_BROWSER netscape\n'
-            message+='e.g. for bash: export XMIPP_BROWSER=netscape\n'
+            message='Please define your favourite browser using the configuration file in XMIPP_INSTALLATION_DIR/applications/scripts/protocols/xmipp_config.py\n'
             tkMessageBox.showinfo('Define a browser',message)
             return 'None'
 
