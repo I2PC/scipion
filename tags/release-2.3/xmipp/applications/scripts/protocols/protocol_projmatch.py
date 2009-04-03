@@ -51,7 +51,7 @@ ContinueAtIteration=1
 """ Be careful, many options of the visualization protocol will not work anymore, 
     since all class averages, selfiles etc will be deleted.
 """
-CleanUpFiles=False
+CleanUpFiles=True
 
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
