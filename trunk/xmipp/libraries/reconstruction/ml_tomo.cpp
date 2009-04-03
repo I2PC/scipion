@@ -24,7 +24,7 @@
  ***************************************************************************/
 #include "ml_tomo.h"
 
-//#define DEBUG
+#define DEBUG
 // For blocking of threads
 pthread_mutex_t mltomo_weightedsum_update_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mltomo_selfile_access_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -178,7 +178,7 @@ void Prog_ml_tomo_prm::show(bool ML3D)
         else
             std::cerr << "  Number of references:   : " << nr_ref << std::endl;
         std::cerr << "  Output rootname         : " << fn_root << std::endl;
-        std::cerr << "  Angular sampling rate   : " << angular_sampling<< "degrees"<<std::endl;
+        std::cerr << "  Angular sampling rate   : " << angular_sampling<< " degrees"<<std::endl;
         if (ang_search > 0.)
         {
             std::cerr << "  Local angular searches  : "<<ang_search<<" degrees"<<std::endl;
@@ -456,6 +456,21 @@ void Prog_ml_tomo_prm::produceSideInfo()
                     REPORT_ERROR(1,"ERROR: unrecognized missing type!");
                 }
                 all_missing_info.push_back(myinfo);
+                // Pre-calculate number of observed elements in this missing data structure
+                double sum_observed_pixels=0.;
+                Matrix3D<double> Mcomplete(dim,dim,dim);
+                Matrix3D<double> Mmissing(dim,dim,hdim+1);
+                Matrix2D<double> I(4,4);
+                I.initIdentity();
+                getMissingRegion(Mmissing, I, nr_miss);
+                FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Mcomplete)
+                {
+                    if (j<XSIZE(Mmissing))
+                        sum_observed_pixels +=  DIRECT_VOL_ELEM(Mmissing,k,i,j);
+                    else
+                        sum_observed_pixels +=  DIRECT_VOL_ELEM( Mmissing,(dim-k)%dim,(dim-i)%dim,dim-j);
+                }
+                miss_nr_pixels.push_back(sum_observed_pixels);
                 nr_miss++;
             }
         }
@@ -487,7 +502,7 @@ void Prog_ml_tomo_prm::produceSideInfo()
             alpha_k(refno) = DL[0];
             if (do_norm)
             {
-                refs_avgscale[refno] = DL[3];
+                refs_avgscale[refno] = DL[2];
             }
             sumfrac += alpha_k(refno);
             DF.next_data_line();
@@ -791,9 +806,7 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
 
     // prepare priors
     alpha_k.resize(nr_ref);
-    alpha_k_rot.resize(nr_ref*nr_ang);
     alpha_k.initConstant(1./(double)nr_ref);
-    alpha_k_rot.initConstant(1./(double)(nr_ref*nr_ang));
 
     // Regularization (do not regularize during restarts!)
     if (istart == 1)
@@ -1098,7 +1111,8 @@ void Prog_ml_tomo_prm::postProcessVolume(VolumeXmipp &Vin)
         // Note that for no-imputation this is not correct!
         // One would have to symmetrize the missing wedges and the sum of the images separately
         if (do_missing && !do_impute)
-            REPORT_ERROR(1,"Symmetrization and dont_impute together are not implemented...");
+            std::cerr<<" WARNING: Symmetrization and dont_impute together are not implemented correctly... Proceed at your own risk"<<std::endl;
+        //REPORT_ERROR(1,"Symmetrization and dont_impute together are not implemented...");
 
         std::cerr<<"Symmetrizing... with SL.SymsNo()="<<mysampling.SL.SymsNo()<<std::endl;
         VolumeXmipp Vaux=Vin;
@@ -1370,7 +1384,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                     int refno = rr;
                     if (refno >= nr_ref) refno-= nr_ref;
                     
-                    fracpdf = alpha_k_rot(refno*nr_ang + angno);
+                    fracpdf = alpha_k(refno)*(1./nr_ang);
                     // Now (inverse) rotate the reference and calculate its Fourier transform
                     // Use DONT_WRAP and assume map has been omasked
                     applyGeometry(Maux2, A_rot_inv, Iref[refno](), IS_NOT_INV, 
@@ -1576,7 +1590,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     // TODO: check this!!
     dLL = log(sum_refw) 
         - my_mindiff / sigma_noise2 
-        - ddim3 * log( sqrt(2. * PI * sigma_noise2));
+        - miss_nr_pixels[missno] * log( sqrt(2. * PI * sigma_noise2));
     LL += dLL;
 
     pthread_mutex_unlock(  &mltomo_weightedsum_update_mutex );
@@ -2163,13 +2177,6 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
                 alpha_k(refno) = sumw(refno) / sumw_allrefs;
             else
                 alpha_k(refno) = 0.;
-            for (int angno = 0; angno < nr_ang; angno++)
-            {
-                if (sumw_rot(refno*nr_ang + angno) > 0.)
-                    alpha_k_rot(refno*nr_ang + angno) = sumw_rot(refno*nr_ang + angno) / sumw_allrefs;
-                else
-                    alpha_k_rot(refno*nr_ang + angno) = 0.;
-            }
         }
     }
 
@@ -2205,11 +2212,12 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
 //#define DEBUG_UPDATE_SIGMA
 #ifdef DEBUG_UPDATE_SIGMA
             std::cerr<<" sum_complete_wedge= "<<sum_complete_wedge<<" = "<<100*sum_complete_wedge/(sumw_allrefs*sum_complete_fourier)<<"%"<<std::endl;
+            std::cerr<<" ddim3= "<<ddim3<<std::endl;
             std::cerr<<" sum_complete_fourier= "<<sum_complete_fourier<<std::endl;
             std::cerr<<" sumw_allrefs= "<<sumw_allrefs<<std::endl;
             std::cerr<<" wsum_sigma_noise= "<<wsum_sigma_noise<<std::endl;
             std::cerr<<" sigma_noise_old= "<<sigma_noise<<std::endl;
-            std::cerr<<" sigma_new_impute= "<<sqrt((sigma_noise*(sumw_allrefs*sum_complete_fourier -  sum_complete_wedge  ) + wsum_sigma_noise)/(sumw_allrefs * sum_complete_fourier))<<std::endl;
+            std::cerr<<" sigma_new_impute= "<<sqrt((sigma_noise*sigma_noise*(sumw_allrefs*sum_complete_fourier -  sum_complete_wedge  ) + wsum_sigma_noise)/(sumw_allrefs * sum_complete_fourier))<<std::endl;
             std::cerr<<" sigma_new_noimpute= "<<sqrt(wsum_sigma_noise / (sum_complete_wedge))<<std::endl;
             std::cerr<<" sigma_new_nomissing= "<<sqrt(wsum_sigma_noise / (sumw_allrefs * sum_complete_fourier))<<std::endl;
 #endif
@@ -2294,7 +2302,7 @@ bool Prog_ml_tomo_prm::regularize(int iter)
             transformer.FourierTransform(Iref[refno](),Fref,true);
             double sumw = alpha_k(refno) * (double)nr_exp_images;
             // Fref = (sumw*Fref + reg_norm*Favg) /  (sumw + nr_ref * reg_norm)
-#define DEBUG_REGULARISE
+//#define DEBUG_REGULARISE
 #ifdef DEBUG_REGULARISE
             if (verb>0)
                 std::cerr<<"refno= "<<refno<<" sumw = "<<sumw<<" reg_current= "<<reg_current<<" reg_norm= "<<reg_norm<<" Fref1= "<<DIRECT_MULTIDIM_ELEM(Fref,1) <<" Favg1= "<<DIRECT_MULTIDIM_ELEM(Favg,1)<<" (sumw + nr_ref * reg_norm)= "<<(sumw + nr_ref * reg_norm)<<std::endl;
@@ -2394,7 +2402,7 @@ void Prog_ml_tomo_prm::writeOutputFiles(const int iter, DocFile &DFo,
         fn_base.compose(fn_base, iter, "");
     }
 
-    if (do_norm) fracline.resize(4);
+    if (do_norm) fracline.resize(3);
     // Write out current reference images and fill sel & log-file
     for (int refno=0;refno<nr_ref; refno++)
     {
@@ -2405,12 +2413,13 @@ void Prog_ml_tomo_prm::writeOutputFiles(const int iter, DocFile &DFo,
         SFo.insert(fn_tmp, SelLine::ACTIVE);
         fracline(0) = alpha_k(refno);
         fracline(1) = 1000 * conv[refno]; // Output 1000x the change for precision
+        if (do_norm) fracline(2) = refs_avgscale[refno];
+
         DFl.insert_comment(fn_tmp);
         DFl.insert_data_line(fracline);
 
         if (iter >= 1 && do_missing)
         {
-
             double sumw = alpha_k(refno)*sumw_allrefs;
             Vt().resize(dim,dim,dim);
             Vt().setXmippOrigin();
@@ -2449,7 +2458,7 @@ void Prog_ml_tomo_prm::writeOutputFiles(const int iter, DocFile &DFo,
     comment = "-noise " + floatToString(sigma_noise, 15, 12) + " -offset " + floatToString(sigma_offset, 15, 12) + " -istart " + integerToString(iter + 1) + " -doc " + fn_base + ".doc";
     DFl.insert_comment(comment);
     DFl.insert_comment(cline);
-    DFl.insert_comment("columns: model fraction (1); 1000x signal change (2)");
+    DFl.insert_comment("columns: model fraction (1); 1000x signal change (2); avg scale (3)");
     fn_tmp = fn_base + ".log";
     DFl.write(fn_tmp);
 

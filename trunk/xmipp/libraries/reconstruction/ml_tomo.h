@@ -87,8 +87,8 @@ public:
     double sigma_noise;
     /** sigma-value for origin offsets */
     double sigma_offset;
-    /** Vector containing estimated fraction for (each orientation of) each model */
-    Matrix1D<double> alpha_k, alpha_k_rot;
+    /** Vector containing estimated fraction for each model */
+    Matrix1D<double> alpha_k;
     /** Flag whether to fix estimates for model fractions */
     bool fix_fractions;
     /** Flag whether to fix estimate for sigma of origin offset */
@@ -129,7 +129,7 @@ public:
     /** Flag to refine normalization of each experimental image */
     bool do_norm;
     /** Store grey-scale correction values */
-    std::vector<double> imgs_scale, imgs_bgmean, imgs_trymindiff, refs_avgscale;
+    std::vector<double> imgs_scale, imgs_bgmean, imgs_trymindiff, refs_avgscale, miss_nr_pixels;
     /** Optimal refno and angno from previous iteration */
     std::vector<int> imgs_optrefno, imgs_optangno;
     /** Number for missing data structure group */
