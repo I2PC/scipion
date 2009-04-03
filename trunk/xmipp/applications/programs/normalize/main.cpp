@@ -35,6 +35,9 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 
 bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
+    Normalize_parameters * eprm = (Normalize_parameters *) prm;
+    if (eprm->invert_contrast)
+        vol() *= -1.;
     vol().statisticsAdjust(0, 1);
     return true;
 }

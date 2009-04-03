@@ -491,7 +491,6 @@ void Normalize_parameters::produce_side_info()
 void Normalize_parameters::show()
 {
     Prog_parameters::show();
-    std::cout << "Normalizing volumes: " << volume << std::endl;
     if (!volume)
     {
         std::cout << "Normalizing method: ";
@@ -570,6 +569,13 @@ void Normalize_parameters::show()
             std::cout << "Remove white dust particles, using threshold " <<
             floatToString(thresh_white_dust) << std::endl;
     }
+    else
+    {
+        std::cout << "Normalizing volumes: " << volume << std::endl;
+        if (invert_contrast)
+            std::cout << "Invert contrast "<< std::endl;
+
+    }
 
     if (method == NEWXMIPP && enable_mask)
         mask_prm.show();
@@ -580,7 +586,8 @@ void Normalize_parameters::usage()
     Prog_parameters::usage();
 
     std::cerr << "NORMALIZATION OF VOLUMES\n"
-    << "  [-vol]                    : Activate this mode\n";
+    << "  [-vol]                    : Activate this mode\n"
+    << "  [-invert]                 : Invert contrast \n";
 
     std::cerr << "NORMALIZATION OF IMAGES\n"
     << "  [-method <mth=NewXmipp>   : Normalizing method. Valid ones are:\n"
