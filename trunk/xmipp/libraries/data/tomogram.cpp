@@ -249,7 +249,7 @@ void Tomogram::get_piece(Matrix1D<int> &r0, Matrix1D<int> &length,
     for (kp = ZZ(r0), k = 0; k < ZSIZE(piece); k++, kp++)
         for (ip = YY(r0), i = 0; i < YSIZE(piece); i++, ip++)
             for (jp = XX(r0), j = 0; j < XSIZE(piece); j++, jp++)
-                DIRECT_VOL_ELEM(piece, k, i, j) = (*this)(ip, jp, kp);
+                DIRECT_VOL_ELEM(piece, k, i, j) = (*this)(jp, ip, kp);
 }
 
 /* Set piece --------------------------------------------------------------- */
