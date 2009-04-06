@@ -155,7 +155,7 @@ int main(int argc, char **argv)
             sumwsc = Vaux;
             MPI_Allreduce(MULTIDIM_ARRAY(sumwsc2), MULTIDIM_ARRAY(Vaux), 
                           MULTIDIM_SIZE(sumwsc2), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-            sumwsc = Vaux;
+            sumwsc2 = Vaux;
             Vaux.resize(prm.nr_ref*prm.nr_ang);
             MPI_Allreduce(MULTIDIM_ARRAY(sumw_rot), MULTIDIM_ARRAY(Vaux), 
                           MULTIDIM_SIZE(sumw_rot), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
