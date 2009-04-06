@@ -24,7 +24,7 @@
  ***************************************************************************/
 #include "ml_tomo.h"
 
-#define DEBUG
+//#define DEBUG
 // For blocking of threads
 pthread_mutex_t mltomo_weightedsum_update_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mltomo_selfile_access_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -1041,14 +1041,14 @@ void Prog_ml_tomo_prm::calculatePdfTranslations()
     FOR_ALL_ELEMENTS_IN_MATRIX3D(P_phi)
     {
         r2 = (double)(j * j + i * i + k * k);
-        if (sigma_offset > 0.)
+        if (sigma_offset > XMIPP_EQUAL_ACCURACY)
         {
             pdfpix = exp(- r2 / (2. * sigma_offset * sigma_offset));
             pdfpix *= pow(2. * PI * sigma_offset * sigma_offset, -3./2.);
         }
         else
         {
-            if (j == 0 && i == 0) pdfpix = 1.;
+            if (k== 0 && i == 0 && j == 0) pdfpix = 1.;
             else pdfpix = 0.;
         }
         VOL_ELEM(P_phi, k, i, j) = pdfpix;
@@ -1058,6 +1058,9 @@ void Prog_ml_tomo_prm::calculatePdfTranslations()
 //#define  DEBUG_PDF_SHIFT
 #ifdef DEBUG_PDF_SHIFT
     std::cerr<<" Sum of translation pdfs (should be one) = "<<P_phi.sum()<<std::endl;
+    VolumeXmipp Vt;
+    Vt()=P_phi;
+    Vt.write("pdf.vol");
 #endif 
 
 #ifdef  DEBUG
@@ -1254,7 +1257,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     std::vector<Matrix3D<double> > mysumimgs;
     std::vector<Matrix3D<double> > mysumweds;
     Matrix1D<double> refw, refw_rot;
-    double sigma_noise2, aux, pdf, fracpdf, myA2, mycorrAA, myXi2, A2_plus_Xi2;
+    double sigma_noise2, aux, pdf, fracpdf, myA2, mycorrAA, myXi2, A2_plus_Xi2, myXA;
     double mind, diff, mindiff, my_mindiff;
     double my_sumweight, weight, ref_scale = 1.;
     double wsum_sc, wsum_sc2, wsum_offset, old_bgmean;
@@ -1424,7 +1427,8 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                     my_sumweight = my_maxweight = 0.;
                     FOR_ALL_ELEMENTS_IN_MATRIX3D(Mweight)
                     {
-                        diff = A2_plus_Xi2 - ref_scale * VOL_ELEM(Maux, k, i, j) * ddim3;
+                        myXA = VOL_ELEM(Maux, k, i, j) * ddim3;
+                        diff = A2_plus_Xi2 - ref_scale * myXA;
                         mindiff = XMIPP_MIN(mindiff,diff);
 #ifdef DEBUG_MINDIFF
                         if (mindiff < 0)
@@ -1463,7 +1467,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                         if (do_norm)
                         {
                             // weighted sum of Sum_j ( X_ij*A_kj )
-                            wsum_sc += weight * (A2_plus_Xi2 - diff) / ref_scale;
+                            wsum_sc += weight * myXA;
                             // weighted sum of Sum_j ( A_kj*A_kj )
                             wsum_sc2 += weight * myA2;
                         }				
@@ -1555,17 +1559,23 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     XX(opt_offsets) = -(double)ioptx;
     YY(opt_offsets) = -(double)iopty;
     ZZ(opt_offsets) = -(double)ioptz;
-    if (do_norm)
-    {
-        // Note that bgmean will always be zero 
-        // because we omitted the origin pixel in fourier_mas
-        opt_scale = wsum_sc / wsum_sc2;
-    }
 
     // From here on lock threads
     pthread_mutex_lock( &mltomo_weightedsum_update_mutex );
 
+    if (do_norm)
+    {
+        // Note that bgmean will always be zero 
+        // because we omitted the origin pixel in fourier_mas
+//#define DEBUG_UPDATESCALE
+#ifdef DEBUG_UPDATESCALE
+        std::cerr<<"opt_scale old= "<<opt_scale<<" ref_scale_old= "<<ref_scale<<" opt_scale_new= "<<wsum_sc / wsum_sc2<<" = "<<wsum_sc<<"/"<<wsum_sc2<<std::endl;
+#endif
+        opt_scale = wsum_sc / wsum_sc2;
+    }
+
     // Update all global weighted sums after division by sum_refw
+    // TODO: check this because officially sigma-update should be with NEW scale (and background)!
     wsum_sigma_noise += (2 * wsum_corr / sum_refw);
     wsum_sigma_offset += (wsum_offset / sum_refw);
     sumfracweight += fracweight;
@@ -1582,15 +1592,21 @@ void Prog_ml_tomo_prm::expectationSingleImage(
         }
         for (int angno = 0; angno < nr_ang; angno++)
             sumw_rot(refno*nr_ang + angno) += refw_rot(refno*nr_ang + angno) / sum_refw;
-    }
+   }
 
     // 1st term: log(refw_i)
     // 2nd term: for subtracting mindiff
     // 3rd term: for (sqrt(2pi)*sigma_noise)^-1 term in formula (12) Sigworth (1998)
     // TODO: check this!!
-    dLL = log(sum_refw) 
-        - my_mindiff / sigma_noise2 
-        - miss_nr_pixels[missno] * log( sqrt(2. * PI * sigma_noise2));
+    if (do_missing)
+ 
+        dLL = log(sum_refw) 
+            - my_mindiff / sigma_noise2 
+            - miss_nr_pixels[missno] * log( sqrt(2. * PI * sigma_noise2));
+    else
+        dLL = log(sum_refw) 
+            - my_mindiff / sigma_noise2 
+            - ddim3 * log( sqrt(2. * PI * sigma_noise2));
     LL += dLL;
 
     pthread_mutex_unlock(  &mltomo_weightedsum_update_mutex );
@@ -2154,6 +2170,7 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
         {
             if (sumw(refno)>0.)
             {
+                //std::cerr<<"  refs_avgscale["<<refno<<"] = "<<sumwsc(refno)<<"/"<<sumw(refno)<<" = "<<sumwsc(refno)/sumw(refno)<<std::endl;
                 refs_avgscale[refno] =  sumwsc(refno)/sumw(refno);
                 Iref[refno]() *= refs_avgscale[refno];
             }
