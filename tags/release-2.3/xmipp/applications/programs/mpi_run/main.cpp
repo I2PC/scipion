@@ -79,6 +79,20 @@ class Prog_MPI_Run_Parameters
         MPI_Barrier(MPI_COMM_WORLD);
     }
 
+    /** Replace substrings of a std::string by other std::strings */
+    std::string replaceAll(
+      std::string result, 
+      const std::string& replaceWhat, 
+      const std::string& replaceWithWhat)
+    {
+      while(1)
+      {
+	const int pos = result.find(replaceWhat);
+	if (pos==-1) break;
+	result.replace(pos,replaceWhat.size(),replaceWithWhat);
+      }
+      return result;
+    }
 
     /* Read parameters --------------------------------------------------------- */
     void read(int argc, char **argv)
@@ -117,7 +131,7 @@ class Prog_MPI_Run_Parameters
             if (!fh_in)
                 REPORT_ERROR(1, (std::string)"Cannot open " + fn_commands);
 
-    #define MAX_LINE 1024
+    #define MAX_LINE 2048
             std::string line;
             char szline[MAX_LINE];
             int number_of_node_waiting = 0; // max is nprocs -1
@@ -128,6 +142,7 @@ class Prog_MPI_Run_Parameters
                          MPI_COMM_WORLD, &status);
                 number_of_node_waiting++;
                 getline(fh_in, line);
+		line=replaceAll(line,"MPI_NEWLINE","\n");
                 strcpy(szline, line.c_str());
                 std::string::size_type loc = line.find("MPI_Barrier", 0);
                 if (loc != std::string::npos)
