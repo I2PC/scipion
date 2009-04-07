@@ -281,7 +281,16 @@ void Prog_angular_project_library_Parameters::run()
     printf ("create_asym_unit_file (save file) after %.2lf seconds\n", time_dif );
     #endif
     //all nodes
-    inputVol.read(input_volume);
+    //If there is no reference available exit
+    try
+    {
+        inputVol.read(input_volume);
+    }
+    catch (Xmipp_error XE)
+    {
+        std::cout << XE;
+        exit(0);
+    }
     inputVol().setXmippOrigin();
     Xdim = XSIZE(inputVol());
     Ydim = YSIZE(inputVol());
