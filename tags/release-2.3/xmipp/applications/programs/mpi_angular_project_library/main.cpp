@@ -206,7 +206,15 @@ class Prog_mpi_angular_project_library_Parameters:Prog_angular_project_library_P
         
         if (rank != 0) 
         {
-        inputVol.read(input_volume);
+        try
+        {
+            inputVol.read(input_volume);
+        }
+        catch (Xmipp_error XE)
+        {
+            std::cout << XE;
+            error_exit("Error reading reference volume\n\n");
+        }
         inputVol().setXmippOrigin();
         Xdim = XSIZE(inputVol());
         Ydim = YSIZE(inputVol());
