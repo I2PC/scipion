@@ -632,8 +632,6 @@ class projection_matching_class:
                 _UseFscForFilter,
                 _ConstantToAddToFiltration
                 ):
-       #input files should exists
-       self.check_file_exists(_ReferenceFileName)
        # Import libraries and add Xmipp libs to default search path
        import os,sys,shutil
        scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
@@ -711,6 +709,8 @@ class projection_matching_class:
        # Uncomment next line to get Debug level logging
        self._mylog.setLevel(logging.DEBUG)
        self._mylog.debug("Debug level logging enabled")
+       #input files should exists
+       check_file_exists(_ReferenceFileName,self._mylog)
                                       
        _NumberofIterations +=1;
        if _ContinueAtIteration!=1 and DoDeleteWorkingDir==True:
@@ -1736,12 +1736,12 @@ def  fill_name_vector(_user_suplied_name,
                                    str(_iteration_number)+'_'+\
                                    _root_name)
                   
-def check_file_exists(self,name):
+def check_file_exists(name,log):
     import os
     if not os.path.exists(name):
         message='Error: File '+name+' does not exist, exiting...'
         print '*',message
-        self.log.error(message)
+        log.error(message)
         sys.exit()
 
 #
