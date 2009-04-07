@@ -632,7 +632,8 @@ class projection_matching_class:
                 _UseFscForFilter,
                 _ConstantToAddToFiltration
                 ):
-
+       #input files should exists
+       self.check_file_exists(_ReferenceFileName)
        # Import libraries and add Xmipp libs to default search path
        import os,sys,shutil
        scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
@@ -1735,6 +1736,14 @@ def  fill_name_vector(_user_suplied_name,
                                    str(_iteration_number)+'_'+\
                                    _root_name)
                   
+def check_file_exists(self,name):
+    import os
+    if not os.path.exists(name):
+        message='Error: File '+name+' does not exist, exiting...'
+        print '*',message
+        self.log.error(message)
+        sys.exit()
+
 #
 # main
 #     
