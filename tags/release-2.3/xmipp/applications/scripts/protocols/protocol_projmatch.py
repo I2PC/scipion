@@ -327,7 +327,7 @@ ProjMatchingExtra=''
     IMPORTANT: if you set this variable to 0 the output  of the projection
     muching step will be copied as output of align2d
 """
-DoAlign2D=' 0'
+DoAlign2D='0'
 
 # {expert} Number of align2d iterations:
 """ Use at least 3 iterations
@@ -828,7 +828,7 @@ class projection_matching_class:
           self._mylog.info(debug_string)
 
           # Never allow DoAlign2D and DoCtfCorrection together
-          if (arg.getComponentFromVector(_DoAlign2D,_iteration_number-1)==1 and
+          if (int(arg.getComponentFromVector(_DoAlign2D,_iteration_number))==1 and
               self._DoCtfCorrection):
              error_message="You cannot realign classes AND perform CTF-correction. Switch either of them off!"
              self._mylog.error(error_message)
