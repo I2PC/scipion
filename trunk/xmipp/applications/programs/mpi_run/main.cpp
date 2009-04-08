@@ -35,6 +35,7 @@
 #define TAG_WORK   0
 #define TAG_STOP   1
 #define TAG_WAIT   2
+//#define TAG_BYE    3
 class Prog_MPI_Run_Parameters
 {
     public:
@@ -79,6 +80,20 @@ class Prog_MPI_Run_Parameters
         MPI_Barrier(MPI_COMM_WORLD);
     }
 
+    /** Replace substrings of a std::string by other std::strings */
+    std::string replaceAll(
+      std::string result, 
+      const std::string& replaceWhat, 
+      const std::string& replaceWithWhat)
+    {
+      while(1)
+      {
+	const int pos = result.find(replaceWhat);
+	if (pos==-1) break;
+	result.replace(pos,replaceWhat.size(),replaceWithWhat);
+      }
+      return result;
+    }
 
     /* Read parameters --------------------------------------------------------- */
     void read(int argc, char **argv)
@@ -106,9 +121,10 @@ class Prog_MPI_Run_Parameters
 
 
     /* Run --------------------------------------------------------------------- */
+    #define MAX_LINE 2048
+    char szline[MAX_LINE+1];
     void run()
     {
-
 
         if (rank == 0)
         {
@@ -116,10 +132,7 @@ class Prog_MPI_Run_Parameters
             fh_in.open(fn_commands.c_str());
             if (!fh_in)
                 REPORT_ERROR(1, (std::string)"Cannot open " + fn_commands);
-
-    #define MAX_LINE 1024
             std::string line;
-            char szline[MAX_LINE];
             int number_of_node_waiting = 0; // max is nprocs -1
             while (!fh_in.eof())
             {
@@ -128,8 +141,10 @@ class Prog_MPI_Run_Parameters
                          MPI_COMM_WORLD, &status);
                 number_of_node_waiting++;
                 getline(fh_in, line);
+		line=replaceAll(line,"MPI_NEWLINE","\n");
                 strcpy(szline, line.c_str());
-                std::string::size_type loc = line.find("MPI_Barrier", 0);
+
+		std::string::size_type loc = line.find("MPI_Barrier", 0);
                 if (loc != std::string::npos)
                 {
                     while (number_of_node_waiting < (nprocs - 1))
@@ -150,6 +165,7 @@ class Prog_MPI_Run_Parameters
                     }
                     continue;
                 }
+
                 //send work
                 MPI_Send(&szline,
                          MAX_LINE,
@@ -158,13 +174,14 @@ class Prog_MPI_Run_Parameters
                          TAG_WORK,
                          MPI_COMM_WORLD);
                 number_of_node_waiting--;
-                //std::cout << line << std::endl;
             }
 
             fh_in.close();
             for (int i = 1; i < nprocs; i++)
             {
                 MPI_Send(0, 0, MPI_INT, i, TAG_STOP, MPI_COMM_WORLD);
+		//MPI_Recv(0, 0, MPI_INT, MPI_ANY_SOURCE, TAG_BYE,
+                //                 MPI_COMM_WORLD, &status);
             }
 
         }
@@ -173,29 +190,37 @@ class Prog_MPI_Run_Parameters
 
             while (1)
             {
-                char szline[1024];
                 //any message from de master, is tag is TAG_STOP then stop
                 MPI_Send(0, 0, MPI_INT, 0, 0, MPI_COMM_WORLD);
                 //get yor next task
                 MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
                 if (status.MPI_TAG == TAG_STOP)//I am free
                 {
+                    //MPI_Send(0, 0, MPI_INT, 0, TAG_BYE, MPI_COMM_WORLD);
                     break;
                 }
-                if (status.MPI_TAG == TAG_WAIT)//I am free
+                else if (status.MPI_TAG == TAG_WAIT)//I am free
                 {
                     MPI_Recv(&szline, 1, MPI_CHAR, 0, TAG_WAIT, MPI_COMM_WORLD, &status);
                     continue;
                 }
-                MPI_Recv(&szline, MAX_LINE, MPI_CHAR, 0, TAG_WORK, MPI_COMM_WORLD, &status);
-                std::cout << szline << std::endl;
-                //do the job
-                system(szline);
-
+                else if (status.MPI_TAG == TAG_WORK)//work to do
+                {
+                    MPI_Recv(&szline, MAX_LINE, MPI_CHAR, 0, TAG_WORK, MPI_COMM_WORLD, &status);
+                    //do the job
+                    if(strlen(szline)<1)
+		    {
+			std::cerr << "less than 1 " << strlen(szline) << std::endl;
+			continue;
+                    }
+		    else
+                	system(szline);
+                }
+		else
+		    std::cerr << "WRONG TAG RECEIVED" << std::endl;
 
             }
         }
-
         MPI_Finalize();
     }
 
