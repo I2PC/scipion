@@ -131,7 +131,7 @@ void QtFileMenu::slotMicrographInfo()
     std::string message = (std::string)"Micrograph name: "+m->micrograph_name();
     message+=(std::string)"\nSize YxX: "+integerToString(Ydim)+"x"+
         integerToString(Xdim);
-    QMessageBox helpmsg("Information", message,
+    QMessageBox helpmsg((QString)"Information", (QString) message.c_str(),
         QMessageBox::Information, QMessageBox::Ok, 0, 0, 0, 0, false);
     helpmsg.exec();
 }
