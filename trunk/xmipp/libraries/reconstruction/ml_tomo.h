@@ -69,7 +69,6 @@ typedef struct{
     Matrix1D<double> *sumw;
     Matrix1D<double> *sumwsc;
     Matrix1D<double> *sumwsc2;
-    Matrix1D<double> *sumw_rot;
 } structThreadExpectationSingleImage ;
 
 /**@defgroup ml_tomo ml_align2d (Maximum likelihood in 2D)
@@ -104,6 +103,8 @@ public:
     double ddim3;
     /** Number of reference images */
     int nr_ref;
+    /** Keep angles from docfile in generation of random subset averages */
+    bool do_keep_angles;
     /** Total number of experimental images */
     int nr_exp_images;
     /** Sum of squared amplitudes of the references */
@@ -258,7 +259,7 @@ public:
                                 std::vector<Matrix3D<double> > &wsumweds,
                                 double &wsum_sigma_noise, double &wsum_sigma_offset,
                                 Matrix1D<double> &sumw, Matrix1D<double> &sumwsc, 
-                                Matrix1D<double> &sumwsc2, Matrix1D<double> &sumw_rot, 
+                                Matrix1D<double> &sumwsc2,
                                 double &LL, double &dLL, double &fracweight, double &sumfracweight, 
                                 double &opt_scale, double &bgmean, double &trymindiff,
                                 int &opt_refno, int &opt_angno, Matrix1D<double> &opt_offsets);
@@ -278,14 +279,14 @@ public:
                      std::vector<Matrix3D<double> > &wsumweds,
                      double &wsum_sigma_noise, double &wsum_sigma_offset,
                      Matrix1D<double> &sumw, Matrix1D<double> &sumwsc, 
-                     Matrix1D<double> &sumwsc2, Matrix1D<double> &sumw_rot);
+                     Matrix1D<double> &sumwsc2);
 
     /// Update all model parameters
     void maximization(std::vector<Matrix3D<double> > &wsumimgs,
                       std::vector<Matrix3D<double> > &wsumweds,
                       double &wsum_sigma_noise, double &wsum_sigma_offset, 
                       Matrix1D<double> &sumw, Matrix1D<double> &sumwsc, 
-                      Matrix1D<double> &sumwsc2, Matrix1D<double> &sumw_rot, 
+                      Matrix1D<double> &sumwsc2, 
                       double &sumfracweight, double &sumw_allrefs, int iter);
 
     /// Apply regularization

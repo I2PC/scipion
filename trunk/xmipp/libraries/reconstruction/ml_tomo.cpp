@@ -124,6 +124,7 @@ void Prog_ml_tomo_prm::read(int argc, char **argv, bool ML3D)
     eps = textToFloat(getParameter(argc2, argv2, "-eps", "5e-5"));
     verb = textToInteger(getParameter(argc2, argv2, "-verb", "1"));
     no_SMALLANGLE = checkParameter(argc2, argv2, "-no_SMALLANGLE");
+    do_keep_angles = checkParameter(argc2, argv2, "-keep_angles");
 
     // Normalization 
     do_norm = checkParameter(argc2, argv2, "-norm");
@@ -525,10 +526,15 @@ void Prog_ml_tomo_prm::generateInitialReferences()
     VolumeXmipp Iave, Itmp;
     Matrix3D<double> Msumwedge, Mmissing;
     Matrix3D<std::complex<double> > Fave;
-    double dummy;
+    Matrix2D<double> my_A;
+    Matrix1D<double> my_offsets(3);
     FileName fn_tmp;
     SelLine line;
     DocFile DF;
+    int Nsub = ROUND((double)SF.ImgNo() / nr_ref);
+    double my_rot, my_tilt, my_psi, my_xoff, my_yoff, my_zoff;
+    DocLine DL;
+    int missno, c = 0, cc = XMIPP_MAX(1, SF.ImgNo() / 60);
 
 #ifdef  DEBUG
     std::cerr<<"Start generateInitialReferences"<<std::endl;
@@ -543,58 +549,64 @@ void Prog_ml_tomo_prm::generateInitialReferences()
     if (fn_doc!="") {
         DF.read(fn_doc);
     }
+
+    Iave().resize(dim,dim,dim);
+    Iave().setXmippOrigin();
+    Msumwedge.resize(dim,dim,hdim+1);
     // Make random subsets and calculate average images in random orientations
     // and correct using conventional division by the sum of the wedges
     randomize_random_generator();
     SFtmp = SF.randomize();
-    int Nsub = ROUND((double)SFtmp.ImgNo() / nr_ref);
-    Matrix2D<double> random_A;
-    double random_rot, random_tilt, random_psi;
-    int c = 0, cc = XMIPP_MAX(1, SFtmp.ImgNo() / 60);
     for (int refno = 0; refno < nr_ref; refno++)
     {
+        Iave().initZeros();
+        Msumwedge.initZeros();
         SFtmp.go_beginning();
         SFtmp.jump_lines(Nsub*refno);
         if (refno == nr_ref - 1) Nsub = SFtmp.ImgNo() - refno * Nsub;
         for (int nn = 0; nn < Nsub; nn++)
         {
             fn_tmp=SFtmp.NextImg();
-            Itmp.read(fn_tmp);
-            Itmp().setXmippOrigin();
-            random_rot = 360. * rnd_unif(0., 1.);
-            random_tilt= ACOSD((2.*rnd_unif(0., 1.) - 1));
-            random_psi = 360. * rnd_unif(0., 1.);
-            random_A = Euler_rotation3DMatrix(random_rot, random_tilt, random_psi);
-            Itmp().selfApplyGeometry( random_A, IS_NOT_INV, DONT_WRAP);
-
-            // Going through the docfile again here is a bit dirty coding...
-            // but let's first make it work...
-            if (do_missing)
+            if (do_keep_angles || do_missing)
             {
-                if (DF.search_comment(fn_tmp)) 
+                // Going through the docfile again here is a bit dirty coding...
+                // Now do nothing, leave DF pointer at relevant position and read below
+                if (!DF.search_comment(fn_tmp)) 
                 {
-                    int missno = (int)(DF(7)) - 1;
-                    getMissingRegion(Mmissing, random_A, missno);
-                }
-                else 
-                {
-                    std::cerr << "ERROR% "<<fn_tmp
-                              <<" not found in document file"
-                              <<std::endl;
+                    std::cerr << "ERROR% "<<fn_tmp<<" not found in document file"<<std::endl;
                     exit(0);
                 }
             }
-            if (nn == 0)
+            Itmp.read(fn_tmp);
+            Itmp().setXmippOrigin();
+            if (do_keep_angles)
             {
-                Iave() = Itmp();
-                if (do_missing) 
-                    Msumwedge = Mmissing;
+                // angles from docfile
+                my_rot = DF(0);
+                my_tilt = DF(1);
+                my_psi = DF(2);
+                my_offsets(0) = DF(3);
+                my_offsets(1) = DF(4);
+                my_offsets(2) = DF(5);
+                Itmp().selfTranslate(my_offsets, DONT_WRAP);
             }
             else
             {
-                Iave() += Itmp();
-                if (do_missing) 
-                    Msumwedge += Mmissing;
+                // reset to random angles
+                my_rot = 360. * rnd_unif(0., 1.);
+                my_tilt= ACOSD((2.*rnd_unif(0., 1.) - 1));
+                my_psi = 360. * rnd_unif(0., 1.);
+            }
+            my_A = Euler_rotation3DMatrix(my_rot, my_tilt, my_psi);
+            Itmp().selfApplyGeometry(my_A, IS_NOT_INV, DONT_WRAP);
+
+            // Store sum
+            Iave() += Itmp();
+            if (do_missing) 
+            {
+                missno = (int)(DF(7)) - 1;
+                getMissingRegion(Mmissing, my_A, missno);
+                Msumwedge += Mmissing;
             }
             c++;
             if (verb > 0 && c % cc == 0) progress_bar(c);
@@ -660,7 +672,6 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
 
 #ifdef  DEBUG
     std::cerr<<"Start produceSideInfo2"<<std::endl;
-    std::cerr<<"nr images= "<<SF.ImgNo()<<std::endl;
 #endif
 
     // Read in all reference images in memory
@@ -826,6 +837,7 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
 
 #define DEBUG_GENERAL
 #ifdef DEBUG_GENERAL
+    std::cerr<<"nr images= "<<SF.ImgNo()<<std::endl;
     std::cerr<<"do_generate_refs ="<<do_generate_refs<<std::endl;
     std::cerr<<"nr_ref= "<<nr_ref<<std::endl; 
     std::cerr<<"nr_miss= "<<nr_miss<<std::endl;
@@ -1115,9 +1127,7 @@ void Prog_ml_tomo_prm::postProcessVolume(VolumeXmipp &Vin)
         // One would have to symmetrize the missing wedges and the sum of the images separately
         if (do_missing && !do_impute)
             std::cerr<<" WARNING: Symmetrization and dont_impute together are not implemented correctly... Proceed at your own risk"<<std::endl;
-        //REPORT_ERROR(1,"Symmetrization and dont_impute together are not implemented...");
 
-        std::cerr<<"Symmetrizing... with SL.SymsNo()="<<mysampling.SL.SymsNo()<<std::endl;
         VolumeXmipp Vaux=Vin;
         Vaux().initZeros();
         symmetrize(mysampling.SL, Vin, Vaux);
@@ -1238,7 +1248,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     std::vector<Matrix3D<double> > &wsumweds,
     double &wsum_sigma_noise, double &wsum_sigma_offset,
     Matrix1D<double> &sumw, Matrix1D<double> &sumwsc, 
-    Matrix1D<double> &sumwsc2, Matrix1D<double> &sumw_rot, 
+    Matrix1D<double> &sumwsc2, 
     double &LL, double &dLL, double &fracweight, double &sumfracweight, 
     double &opt_scale, double &bgmean, double &trymindiff, 
     int &opt_refno, int &opt_angno, Matrix1D<double> &opt_offsets)
@@ -1590,8 +1600,6 @@ void Prog_ml_tomo_prm::expectationSingleImage(
         {
             wsumweds[refno] += mysumweds[refno] / sum_refw;
         }
-        for (int angno = 0; angno < nr_ang; angno++)
-            sumw_rot(refno*nr_ang + angno) += refw_rot(refno*nr_ang + angno) / sum_refw;
    }
 
     // 1st term: log(refw_i)
@@ -1804,7 +1812,6 @@ void * threadMLTomoExpectationSingleImage( void * data )
     Matrix1D<double> *sumw = thread_data->sumw;
     Matrix1D<double> *sumwsc = thread_data->sumwsc;
     Matrix1D<double> *sumwsc2 = thread_data->sumwsc2;
-    Matrix1D<double> *sumw_rot = thread_data->sumw_rot;
 
 //#define DEBUG_THREAD
 #ifdef DEBUG_THREAD
@@ -1841,6 +1848,7 @@ void * threadMLTomoExpectationSingleImage( void * data )
     if (prm->verb > 0 && thread_id==0) init_progress_bar(myNum);
 
     // Loop over all images
+    int cc = 0;
     for (int imgno = myFirst; imgno <= myLast; imgno++)
     {
         pthread_mutex_lock(  &mltomo_selfile_access_mutex );
@@ -1873,7 +1881,7 @@ void * threadMLTomoExpectationSingleImage( void * data )
             
             (*prm).expectationSingleImage(img(), imgno, missno, *Iref, *wsumimgs, *wsumweds, 
                                           *wsum_sigma_noise, *wsum_sigma_offset, 
-                                          *sumw, *sumwsc, *sumwsc2, *sumw_rot, 
+                                          *sumw, *sumwsc, *sumwsc2,
                                           *LL, dLL, fracweight, *sumfracweight, 
                                           opt_scale, bgmean, trymindiff, 
                                           opt_refno, opt_angno, opt_offsets);
@@ -1898,9 +1906,9 @@ void * threadMLTomoExpectationSingleImage( void * data )
 
         
         // Output docfile
-        (*docfiledata)[imgno](0) = (prm->all_angle_info[opt_angno]).rot;// rot
+        (*docfiledata)[imgno](0) = (prm->all_angle_info[opt_angno]).rot; // rot
         (*docfiledata)[imgno](1) = (prm->all_angle_info[opt_angno]).tilt;// tilt
-        (*docfiledata)[imgno](2) = (prm->all_angle_info[opt_angno]).psi;// psi
+        (*docfiledata)[imgno](2) = (prm->all_angle_info[opt_angno]).psi; // psi
         (*docfiledata)[imgno](3) = opt_offsets(0);            // Xoff
         (*docfiledata)[imgno](4) = opt_offsets(1);            // Yoff
         (*docfiledata)[imgno](5) = opt_offsets(2);            // Zoff
@@ -1911,17 +1919,16 @@ void * threadMLTomoExpectationSingleImage( void * data )
         (*docfiledata)[imgno](9) = dLL;                       // log-likelihood
         if (prm->do_norm)
         {
-            (*docfiledata)[imgno](10)  = bgmean;               // background mean
+            (*docfiledata)[imgno](10) = bgmean;                // background mean
             (*docfiledata)[imgno](11) = opt_scale;             // image scale 
         }
         else
         {
             (*docfiledata)[imgno](10)  = 0.;                   // background mean
             (*docfiledata)[imgno](11) = 1.;                    // image scale 
-
         }
-        if (prm->verb > 0 && thread_id==0) progress_bar(imgno+1);
-
+        if (prm->verb > 0 && thread_id==0) progress_bar(cc);
+        cc++;
     }
     if (prm->verb > 0 && thread_id==0) progress_bar(myNum);
 
@@ -1938,7 +1945,7 @@ void Prog_ml_tomo_prm::expectation(
         std::vector<Matrix3D<double> > &wsumweds,
         double &wsum_sigma_noise, double &wsum_sigma_offset, 
 	Matrix1D<double> &sumw, Matrix1D<double> &sumwsc, 
-        Matrix1D<double> &sumwsc2, Matrix1D<double> &sumw_rot)
+        Matrix1D<double> &sumwsc2)
 {
 
 #ifdef DEBUG
@@ -1967,7 +1974,6 @@ void Prog_ml_tomo_prm::expectation(
     sumw.initZeros(nr_ref);
     sumwsc.initZeros(nr_ref);
     sumwsc2.initZeros(nr_ref);
-    sumw_rot.initZeros(nr_ref*nr_ang);
     dataline.initZeros();
     for (int i = 0; i < SF.ImgNo(); i++)
         docfiledata.push_back(dataline);
@@ -2005,7 +2011,6 @@ void Prog_ml_tomo_prm::expectation(
         threads_d[c].sumw=&sumw;
         threads_d[c].sumwsc=&sumwsc;
         threads_d[c].sumwsc2=&sumwsc2;
-        threads_d[c].sumw_rot=&sumw_rot;
         pthread_create( (th_ids+c), NULL, threadMLTomoExpectationSingleImage, (void *)(threads_d+c) );
     }
 
@@ -2034,7 +2039,7 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
                                     std::vector<Matrix3D<double> > &wsumweds,
                                     double &wsum_sigma_noise, double &wsum_sigma_offset,
                                     Matrix1D<double> &sumw, Matrix1D<double> &sumwsc, 
-                                    Matrix1D<double> &sumwsc2, Matrix1D<double> &sumw_rot,
+                                    Matrix1D<double> &sumwsc2,
                                     double &sumfracweight, double &sumw_allrefs, int iter)
 {
 #ifdef DEBUG
