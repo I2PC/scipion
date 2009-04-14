@@ -34,6 +34,7 @@
 #include "funcs.h"
 #include "matrix2d.h"
 #include "gridding.h"
+#include "fftw.h"
 
 #define FULL_CIRCLES 0
 #define HALF_CIRCLES 1
@@ -41,20 +42,30 @@
 #define AVERAGE true
 #define DONT_CONJUGATE false
 #define CONJUGATE true
+#define DONT_KEEP_TRANSFORM false
+#define KEEP_TRANSFORM true
 
 /// @defgroup Polar Polar coordinates 
 /// @ingroup DataLibrary
 //@{
+
+/** Structure for fftw plans */
+typedef struct Polar_Fftw_Plans
+{
+    std::vector<XmippFftw>          transformers;
+    std::vector<Matrix1D<double> >  arrays;
+}
+Polar_fftw_plans;
 
 /** Class for polar coodinates */
 template<typename T>
 class Polar
 {
 protected:
-    FileName              fn_pol;       // name of the polar
+    FileName                   fn_pol;       // name of the polar
 public:
-    int                   mode;         // Use full or half circles
-    double                oversample;
+    int                        mode;         // Use full or half circles
+    double                     oversample;
     std::vector<double>        ring_radius;  // radius of each ring
     std::vector<Matrix1D<T> >  rings;        // vector with all rings
 public:
@@ -89,6 +100,14 @@ public:
 	mode = P.mode;
 	oversample = P.oversample;
     }
+
+    /** Destructor.
+     */
+     ~Polar()
+     {
+         rings.clear();
+         ring_radius.clear(); 
+     }
 
     /** Assignment
      */
@@ -335,6 +354,19 @@ public:
         return XSIZE(rings[iring]);
     }
 
+    /** Number of samples in outer ring access
+     *
+     * This function is used to know the number of samples in the outer ring.
+     *
+     * @code
+     * std::cout << "Number of samples in outer ring: " << P.getSampleNoOuterRing() << std::endl;
+     * @endcode
+     */
+    const int getSampleNoOuterRing() const
+    {
+        return XSIZE(rings[rings.size()-1]);
+    }
+
     /** The radius of each ring access
      *
      * This function is used to know the radius of a given ring.
@@ -356,7 +388,6 @@ public:
      * Matrix1D<double> secondring = P.getRing(1);
      * @endcode
      */
-    //@{
     Matrix1D< T >& getRing(int i)
     {
         return rings[i];
@@ -365,7 +396,6 @@ public:
     {
         return rings[i];
     }
-    //@}
 
     /** 1D Matrix access
      *
@@ -376,7 +406,7 @@ public:
      * P.setRing(1,ring);
      * @endcode
      */
-    void setRing(int i, Matrix1D< T > val) const
+    void setRing(int i, Matrix1D< T > val)
     {
         rings[i] = val;
     }
@@ -605,7 +635,7 @@ public:
 	maxyp = LAST_XMIPP_INDEX(YSIZE(M1)/2);
 
 	// Loop over all polar coordinates
-	for (int iring = first_ring; iring <= last_ring; iring++)
+	for (int iring = first_ring, ii = 0; iring <= last_ring; iring++, ii++)
 	{
 	    radius = (double) iring;
 	    // Non-constant sampling!! (always even for convenient Half2Whole of FTs)
@@ -717,159 +747,109 @@ public:
 	    rings.push_back(Mring);
 	    ring_radius.push_back(radius);
 	}
-
     }
 
-
-
-    /** Fourier transform all rings
+    /** Precalculate a vector with FFTW plans for all rings
      *
-     * 1D Fourier transform of all rings
-     * Only the assymetric half is stored
-     * 
-     * Note that both complex and real signals can be Fourier transformed!
-     *
-     * @code
-     * Polar<double> P;
-     * Polar<std::complex<double> > Pf;
-     * KaiserBessel kb;
-     * Matrix2D<double> Maux;
-     * produceReverseGriddingMatrix2D(img(),Maux,kb);
-     * P.getPolarFromCartesian(Maux,kb,1,15);
-     * Pf = P.fourierTransformRings();
-     * @endcode
      */
-    Polar<std::complex<double> > fourierTransformRings(bool conjugated = DONT_CONJUGATE) const
+    void calculateFftwPlans(Polar_fftw_plans &out)
     {
-	Polar<std::complex<double> > out;
-	Matrix1D<std::complex<double> > Fring;
-	out.clear();
-	for (int iring = 0; iring < rings.size(); iring++)
-	{ 
-	    FourierTransformHalf(rings[iring],Fring);
-	    if (conjugated)
-	    {
-		for (int i = 0; i < XSIZE(Fring); i++)
-		    Fring(i) = conj(Fring(i));
-	    }
-	    out.rings.push_back(Fring);
-	}
-
-	out.mode = mode;
-	out.ring_radius = ring_radius;
-	return out;
+        (out.transformers).resize(rings.size());
+        (out.arrays).resize(rings.size());
+        for (int iring = 0; iring < rings.size(); iring++)
+        { 
+            (out.arrays)[iring] = rings[iring];
+            ((out.transformers)[iring]).setReal((out.arrays)[iring]);
+        }
     }
 
 };
 
+/** Calculate FourierTransform of all rings
+ *
+ *  This function returns a polar of complex<double> by calculating
+ *  the FT of all rings
+ *
+ *  Note that the Polar_fftw_plans may be re-used for polars of the same size
+ * They should initially be calculated as in the example below
+ * 
+ * @code
+ * Matrix1D<double> angles, corr;
+ * Polar_fftw_plans plans;
+ * Polar<std::complex<double> > F1, F2;
+ * 
+ * M1.calculateFftwPlans(plans); // M1 is a Polar<double>
+ * fourierTransformRings(M1, F1, plans, false);
+ * fourierTransformRings(M1, F2, plans, true);// complex conjugated
+ * @endcode
+ *
+ *
+ */
+void fourierTransformRings(Polar<double > & in, 
+                           Polar<std::complex<double> > &out, 
+                           Polar_fftw_plans &plans,
+                           bool conjugated = DONT_CONJUGATE);
+
+/** Calculate inverse FourierTransform of all rings
+ *
+ *  This function returns a Polar<double> by calculating
+ *  the inverse FT of all rings in a Polar<std::complex<double> >
+ *
+ * Note that the Polar_fftw_plans may be re-used for polars of the same size
+ * They should initially be calculated as in the example below
+ * 
+ * @code
+ * Matrix1D<double> angles, corr;
+ * Polar_fftw_plans plans;
+ * Polar<std::complex<double> > F1, F2;
+ * 
+ * M1.calculateFftwPlans(plans); // M1 is a Polar<double>
+ * fourierTransformRings(M1, F1, plans);
+ * inverseFourierTransformRings(F1, M1, plans);
+ * @endcode
+ *
+ *
+ */
+void inverseFourierTransformRings(Polar<std::complex<double> > & in, 
+                                  Polar<double > &out, 
+                                  Polar_fftw_plans &plans,
+                                  bool conjugated = DONT_CONJUGATE);
+
 /** Fourier-space rotational Cross-Correlation Funtion
  *
  *  This function returns the rotational cross-correlation
- *  function of two Polars M1 and M2 using the
+ *  function of two complex Polars M1 and M2 using the
  *  cross-correlation convolution theorem. 
  *
- *  M2 is assumed to be the complex conjugated.
+ *  Note that the local_transformer should have corr (with the right size)
+ *  already in its fReal, and a Fourier Transform already calculated
+ * 
+ * @code
+ * Matrix1D<double> angles, corr;
+ * XmippFftw local_transformer;
+ * Polar_fftw_plans plans;
+ * Polar<std::complex<double> > F1, F2;
+ * 
+ * // M1 and M2 are already Polar<double>
+ *
+ * M1.calculateFftwPlans(plans); 
+ * fourierTransformRings(M1, F1, plans, false);
+ * fourierTransformRings(M1, F2, plans, true);// complex conjugated
+ * corr.resize(M1.getSampleNoOuterRing());
+ * local_transformer.setReal(corr, true);
+ * local_transformer.FourierTransform();
+ * rotationalCorrelation(F1,F2,angles,corr,local_transformer);
+ * @endcode
  *
  * Note that this function can be used for real-space and
  * fourier-space correlations!!
  *
  */
-template<typename T>
 void rotationalCorrelation(const Polar<std::complex<double> > &M1,
 			   const Polar<std::complex<double> > &M2,
-			   Matrix1D<double> &angles, 
-			   Matrix1D<T > &corr)
-{
+                           Matrix1D<double> &angles, 
+			   Matrix1D<double> &corr,
+                           XmippFftw &local_transformer);
 
-    Matrix1D<std::complex<double> > Fsum, Faux;
-    std::complex<double> aux;
-
-    int nrings = M1.getRingNo();
-    if (nrings != M2.getRingNo())
-	REPORT_ERROR(1,"rotationalCorrelation: polar structures have unequal number of rings!");
-
-    // Resize Fsum to the size of the last ring
-    int nsam_last = M1.getSampleNo(nrings - 1);
-    Fsum.resize(nsam_last);
-
-    // Multiply M1 and M2 over all rings and sum
-    // Assume M2 is already complex conjugated!
-    for (int iring = 0; iring < nrings; iring++)
-    { 
-	int nsam = M1.getSampleNo(iring);
-	// Penczeks weights is more-or-less 1/2piR, mine is reverse
-	// because it depends whether the FFT results X or X/nsam
-	double w = (2.* PI * M1.ring_radius[iring]);
-	for (int i = 0; i < nsam; i++)
-	{
-	    aux = M1(iring,i) * M2(iring,i);
-	    Fsum(i) += w * aux; 
-	}
-    }
-
-    // Inverse FFT to get real-space correlations
-    // As only half the FTs are stored, the original number of
-    // sampling points was 2 * (nsam - 1). Note that the latter is
-    // only true for even-valued whole-sizes!
-    nsam_last = 2 * (nsam_last - 1);
-    InverseFourierTransformHalf(Fsum,corr,nsam_last);
-    STARTINGX(corr)=0;
-    angles.resize(nsam_last);
-    for (int i = 0; i < nsam_last; i++)
-	angles(i)=(double)i*360./(nsam_last);
-}
-
-/** Inverse Fourier Transform of all rings
- *
- */
-void inverseFourierTransformRings(const Polar<std::complex<double> > & in, 
-				  Polar<double> & out, bool conjugated = false);
-
-/** Convert to a single vector
- *
- * Convert complex Polar structure to a single vector
- * This may be useful for parallelization purposes.
- * 
- */
-void convertPolarToSingleArray(const Polar<std::complex<double> > & in, 
-			       Matrix1D<double> & out);
-
-/** Convert to a single vector
- *
- * Convert real Polar structure to a single vector
- * This may be useful for parallelization purposes.
- * 
- */
-void convertPolarToSingleArray(const Polar<double> & in, 
-			       Matrix1D<double> & out);
-
-/** Convert back from a single vector to a complex polar structure
- *
- * Convert back from a single vector to a complex polar structure.
- * This may be useful for parallelization purposes.
- * The structure of the polar should be the correct one already
- * 
- */
-void convertSingleArrayToPolar(const Matrix1D<double> & in,
-			       Polar<std::complex<double> > & out);
-
-/** Convert back from a single vector to a real polar structure
- *
- * Convert back from a single vector to a real polar structure.
- * This may be useful for parallelization purposes.
- * The structure of the polar should be the correct one already
- * 
- */
-void convertSingleArrayToPolar(const Matrix1D<double> & in,
-			       Polar<double> & out);
-
-/** Compute a normalized polar Fourier transform of the input image.*/
-void normalizedPolarFourierTransform(const Matrix2D<double> &in,
-    Polar< std::complex<double> > &out, bool flag,
-    int first_ring, int last_ring);
-
-/** Best rotation between two normalized polar Fourier transforms. */
-double best_rotation(const Polar< std::complex<double> > &I1,
-    const Polar< std::complex<double> > &I2);
 //@}
 #endif
