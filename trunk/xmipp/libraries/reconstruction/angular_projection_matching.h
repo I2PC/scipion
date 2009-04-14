@@ -26,7 +26,6 @@
 #ifndef _angular_projection_matching_H
 #define _angular_projection_matching_H
 
-#include <data/fft.h>
 #include <data/args.h>
 #include <data/funcs.h>
 #include <data/selfile.h>
@@ -36,6 +35,9 @@
 #include <data/mask.h>
 #include <data/gridding.h>
 #include <data/polar.h>
+#include <data/fftw.h>
+#include <data/threads.h>
+#include <pthread.h>
 
 #include "projection.h"
 #include "symmetries.h"
@@ -43,6 +45,24 @@
 #include "ctf.h"
 
 #define MY_OUPUT_SIZE 9
+
+class Prog_angular_projection_matching_prm;
+
+// Thread declaration
+void * threadRotationallyAlignOneImage( void * data );
+
+// This structure is needed to pass parameters to threadRotationallyAlignOneImage
+typedef struct{
+    int thread_id;
+    int thread_num;
+    Prog_angular_projection_matching_prm *prm;
+    Matrix2D<double> *img;
+    int *this_image;
+    int *opt_refno;
+    double *opt_psi;
+    double *opt_flip; 
+    double *maxcorr;
+} structThreadRotationallyAlignOneImage ;
 
 /**@defgroup angular_projection_matching new_projmatch (Discrete angular assignment using a new projection matching)
    @ingroup ReconsLibraryPrograms */
@@ -85,12 +105,14 @@ public:
     /** Pointers for reference retrieval */
     std::vector<int> pointer_allrefs2refsinmem;
     std::vector<int> pointer_refsinmem2allrefs;
-    /** Vector with reference FTs of polar rings */
-    std::vector<Polar<std::complex<double> > > fP_ref;
-    /** Vector with reference images */
-    std::vector<Matrix2D<double> > proj_ref;
+    /** Array with Polars of references and of translated images and their mirrors */
+    Polar<std::complex<double> >   *fP_ref, *fP_img, *fPm_img;
+    /** Array with reference images */
+    Matrix2D<double> *proj_ref;
+    /** Global plans for fftw transformers of all polar rings */
+    Polar_fftw_plans global_plans;
     /** vector with stddevs for all reference projections */
-    std::vector<double> stddev_ref;
+    double *stddev_ref, *stddev_img;
     /** sampling object */
     XmippSampling mysampling;
     /** Flag whether to loop from low to high or from high to low
@@ -106,7 +128,12 @@ public:
     Matrix2D<double> Mctf;
     /** Are the experimental images phase flipped? */
     bool phase_flipped;
-    
+    /** Threads */
+    int threads;
+    /** Number of translations in 5D search */
+    int nr_trans;
+    /** Thread barrier */
+    barrier_t thread_barrier;
 
 public:
   /// Read arguments from command line
@@ -134,13 +161,13 @@ public:
    *  The optimal direction is re-projected from the volume
    */
   void translationallyAlignOneImage(Matrix2D<double> &img,
-				       const int &samplenr, const double &psi, const double &opt_flip,
-				       double &opt_xoff, double &opt_yoff, double &maxcorr);
+                                    const int &samplenr, const double &psi, const double &opt_flip,
+                                    double &opt_xoff, double &opt_yoff, double &maxcorr);
 
   /** Get pointer to the current reference image 
       If this image wasn't stored in memory yet, read it from disc and
       store FT of the polar transform as well as the original image */
-  int getCurrentReference(int refno);
+  int getCurrentReference(int refno, Polar_fftw_plans &local_plans);
 
   /** Loop over all images */
   void processSomeImages(int * my_images, double * my_output);
