@@ -26,7 +26,7 @@
 #ifndef _ANGULAR_CLASS_AVERAGE_H
 #define _ANGULAR_CLASS_AVERAGE_H
 
-#include <data/fft.h>
+#include <data/fftw.h>
 #include <data/args.h>
 #include <data/funcs.h>
 #include <data/selfile.h>
@@ -90,6 +90,10 @@ public:
     double max_shift;
     /** Maximum allowed shift in last iteration (shifts larger than this will be set to 0)*/
     double max_shift_change, max_psi_change;
+    /** transformers for all rings */
+    Polar_fftw_plans global_plans;
+    XmippFftw global_transformer;
+    Matrix1D<double> corr;
 
 public:
   /// Read arguments from command line

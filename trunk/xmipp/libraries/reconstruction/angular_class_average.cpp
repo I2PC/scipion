@@ -280,9 +280,22 @@ void Prog_angular_class_average_prm::produceSideInfo() {
     // Randomization
     if (do_split) randomize_random_generator();
 
+    // Set up FFTW transformers
+    Matrix2D<double> Maux;
+    Polar<double> P;
+    Polar<std::complex<double> > fP;
+
+    Iempty().produceSplineCoefficients(Maux,3);
+    P.getPolarFromCartesianBSpline(Maux,Ri,Ro);
+    P.calculateFftwPlans(global_plans);
+    fourierTransformRings(P,fP,global_plans,false);
+    corr.resize(P.getSampleNoOuterRing());
+    global_transformer.setReal(corr);
+    global_transformer.FourierTransform();
+
 }
 
-void Prog_angular_class_average_prm::getPolar(Matrix2D<double> &img, Polar<std::complex <double> > &fP, 
+void Prog_angular_class_average_prm::getPolar(Matrix2D<double> &img, Polar<std::complex <double> > &fP,
                                               bool conjugated, float xoff, float yoff)
 {
     Matrix2D<double> Maux;
@@ -291,7 +304,8 @@ void Prog_angular_class_average_prm::getPolar(Matrix2D<double> &img, Polar<std::
     // Calculate FTs of polar rings and its stddev
     img.produceSplineCoefficients(Maux,3);
     P.getPolarFromCartesianBSpline(Maux,Ri,Ro,xoff,yoff);
-    fP = P.fourierTransformRings(conjugated);
+    fourierTransformRings(P,fP,global_plans,conjugated);
+
 }
 
 void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
@@ -308,8 +322,8 @@ void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
 
     Polar<std::complex <double> >   fPref, fPrefm, fPimg;
     std::vector<double>             ccfs(splits.size());
-    Matrix1D<double>                ang, corr;
-    Matrix2D<double>                Mimg, Mref;
+    Matrix1D<double>                ang;
+    Matrix2D<double>                Mimg, Mref, Maux;
     double                          maxcorr, diff_psi, diff_shift, new_xoff, new_yoff;
     double                          w1, w2, opt_flip=0., opt_psi=0., opt_xoff=0., opt_yoff=0.;
     bool                            do_discard;
@@ -345,7 +359,7 @@ void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
             // Rotationally align
             getPolar(imgs[imgno](),fPimg,false,(float)-imgs[imgno].Xoff(),(float)-imgs[imgno].Yoff());
             // A. Check straight image
-            rotationalCorrelation(fPimg,fPref,ang,corr);
+            rotationalCorrelation(fPimg,fPref,ang,corr,global_transformer);
 	    for (int k = 0; k < XSIZE(corr); k++)
 	    {
 		if (corr(k)> maxcorr)
@@ -357,7 +371,7 @@ void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
 	    }
 
             // B. Check mirrored image
-            rotationalCorrelation(fPimg,fPrefm,ang,corr);
+            rotationalCorrelation(fPimg,fPrefm,ang,corr,global_transformer);
 	    for (int k = 0; k < XSIZE(corr); k++)
 	    {
 		if (corr(k)> maxcorr)
@@ -376,7 +390,7 @@ void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
                 {
                     do_discard = true;
 #ifdef DEBUG
-                    std::cerr<<"discard psi: "<<diff_psi<<opt_psi<<" "<<opt_flip<<" "<<imgs[imgno].Psi()<<std::endl;
+                    //std::cerr<<"discard psi: "<<diff_psi<<opt_psi<<" "<<opt_flip<<" "<<imgs[imgno].psi()<<std::endl;
 #endif
                 }
             }
@@ -454,18 +468,18 @@ void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
                     w2 += 1.;
                     avg2() += Mimg;
                 }
-            }
+         }
             else
             {
                 splits[imgno] = -1;
-                ccfs[imgno] = 0.;
-            }
+                ccfs[imgno] = 0.; 
+           }
         }
         Mref = avg1() + avg2();
 #ifdef DEBUG
-        It() = Mref;
-        It.weight()=w1+w2;
-        It.write("ref.xmp");
+        //It() = Mref;
+        //It.weight()=w1+w2;
+        //It.write("ref.xmp");
 #endif
     }
 
