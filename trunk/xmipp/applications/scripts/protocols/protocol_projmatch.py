@@ -1208,7 +1208,7 @@ def execute_projection_matching(_mylog,
 
    if ( string.atof(_MaxChangeInAngles) < 181.):
       parameters+= \
-              ' -angular_distance '    + str(_MaxChangeInAngles)
+              ' -near_exp_data -angular_distance '    + str(_MaxChangeInAngles)
    else:
       parameters+= \
               ' -angular_distance -1'
