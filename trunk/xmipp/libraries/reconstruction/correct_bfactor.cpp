@@ -63,7 +63,7 @@ void  Prog_correct_bfactor_prm::make_guinier_plot(Matrix3D< std::complex< double
     }
 
     guinier.clear();
-    for (int i = 1; i < XSIZE(radial_count); i++)
+    for (int i = 0; i < XSIZE(radial_count); i++)
     {
         double res = (xsize * sampling_rate)/(double)i;
         if (res >= apply_maxres)
@@ -159,7 +159,7 @@ void  Prog_correct_bfactor_prm::apply_bfactor(Matrix3D< std::complex< double > >
         double R = f.module() / sampling_rate;
         if (1./R >= apply_maxres)
         {
-            dVkij(FT1, k, i, j) *= exp( -bfactor / 4 * R * R);
+            dVkij(FT1, k, i, j) *= exp( -(bfactor / 4)  * R * R);
         }
     }
 }
@@ -177,12 +177,11 @@ void  Prog_correct_bfactor_prm::apply_allpoints(Matrix3D< std::complex< double >
         double R=f.module();
         if (R>0.5) continue;
         int idx=ROUND(R*xsize);
-        if (guinier_diff[idx].w > 0.)
+        if (idx < guinier_diff.size() && guinier_diff[idx].w > 0.) 
         {
             dVkij(FT1, k, i, j) *= exp( -guinier_diff[idx].y );
         }
     }
-
 }
 
 
@@ -205,7 +204,7 @@ void  Prog_correct_bfactor_prm::write_guinierfile(FileName fn_guinier,
         fh << (guinierin[i]).x << " " << (guinierin[i]).y << " " << (guinierweighted[i]).y << " " <<(guiniernew[i]).y;
         if (mode==BFACTOR_AUTO)
             fh << " " << intercept;
-        else if (mode==BFACTOR_REF)
+        else if (mode==BFACTOR_REF || mode==ALLPOINTS_REF)
         {
             fh << " " << (guinierref[i]).y + intercept;
         }
