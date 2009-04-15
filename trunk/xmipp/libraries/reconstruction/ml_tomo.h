@@ -158,6 +158,11 @@ public:
     double max_resol;
     Matrix3D<double> fourier_mask, real_mask, real_omask;
 
+    /* Adjust power spectra of all tilt series to average power spectrum */
+    bool do_adjust_spectra;
+    /** Arrays with power spectra for each tilt series */
+    double *spectra_series;
+
     // Missing data information
 #define MISSING_WEDGE_Y 0
 #define MISSING_WEDGE_X 1
@@ -229,6 +234,12 @@ public:
 
     /// Setup lots of stuff
     void produceSideInfo();
+
+    /// Adjust power spectra
+    void preparePowerSpectraAdjustment();
+
+    /// Apply power spectra Adjustment to a single fourier transform
+    void applyPowerSpectraAdjustment(Matrix3D<std::complex<double> > &M, int missno);
 
     /// Generate initial references from random subset averages
     void generateInitialReferences();

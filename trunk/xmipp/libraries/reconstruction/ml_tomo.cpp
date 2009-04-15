@@ -126,6 +126,9 @@ void Prog_ml_tomo_prm::read(int argc, char **argv, bool ML3D)
     no_SMALLANGLE = checkParameter(argc2, argv2, "-no_SMALLANGLE");
     do_keep_angles = checkParameter(argc2, argv2, "-keep_angles");
 
+    // Adjust power spectra
+    do_adjust_spectra = checkParameter(argc2, argv2, "-adjust_spectra");
+
     // Normalization 
     do_norm = checkParameter(argc2, argv2, "-norm");
 
@@ -223,6 +226,10 @@ void Prog_ml_tomo_prm::show(bool ML3D)
         if (do_norm)
         {
             std::cerr << "  -> Refine normalization for each experimental image"<<std::endl;
+        }
+        if (do_adjust_spectra)
+        {
+            std::cerr << "  -> Adjust power spectra of the subtomograms in each tilt series"<<std::endl;
         }
         if (threads>1)
         {
@@ -514,6 +521,146 @@ void Prog_ml_tomo_prm::produceSideInfo()
         {
             alpha_k(refno) /= sumfrac;
         }
+    }
+
+
+    // Prepare power spectrum adjustment
+    if (do_adjust_spectra)
+    {
+        if (!do_missing)
+            REPORT_ERROR(1,"ERROR: -adjust_spectra requires -missing argument as well!");
+        preparePowerSpectraAdjustment();
+    }
+
+}
+
+// Adjust power spectra ====================================================
+void Prog_ml_tomo_prm::preparePowerSpectraAdjustment()
+{
+
+    // If there is only one tilt series, then no power spectra adjustment is needed
+    if (nr_miss == 1)
+        return;
+
+    VolumeXmipp                     Itmp;
+    Matrix3D<double>                Mmissing;
+    Matrix3D<std::complex<double> > Fimg;
+    DocFile                         DF;
+    FileName                        fn_img, fn_out;
+    int                             missno, c = 0, cc = XMIPP_MAX(1, SF.ImgNo() / 60);;
+    Matrix2D<double>                my_A(4,4);
+    double                          aux;
+    double                          *spectra_avg;
+    int                             *count_series, *count_avg;
+    Matrix1D<double>                f(3);
+    std::ofstream                   fh;
+
+    // Initialize spectra
+    spectra_series = new double[nr_miss*(hdim+1)];
+    spectra_avg = new double[hdim+1];
+    count_series = new int[nr_miss*(hdim+1)];
+    count_avg = new int[hdim+1];
+    for (int i = 0; i < nr_miss*(hdim+1); i++)
+    {
+        spectra_series[i] = 0.;
+        count_series[i] = 0;
+    }
+    for (int i = 0; i < hdim+1; i++)
+    {
+        spectra_avg[i] = 0.;
+        count_avg[i] = 0;
+    }
+
+    if (verb > 0)
+    {
+        std::cerr << "  Calculating average power spectra for power spectra adjustment"<<std::endl;
+        init_progress_bar(SF.ImgNo());
+    }
+
+    if (fn_doc=="")
+        REPORT_ERROR(1,"ERROR: fn_doc should not be empty for preparePowerSpectraAdjustment");
+    DF.read(fn_doc);
+
+    // Initialize ampl2 matrices
+    my_A.initIdentity();
+
+    SF.go_beginning();
+    while (!SF.eof())
+    {
+        fn_img=SF.NextImg();
+        if (fn_img=="") break;
+        Itmp.read(fn_img);
+        if (!DF.search_comment(fn_img)) 
+        {
+            std::cerr << "ERROR% "<<fn_img<<" not found in document file"<<std::endl;
+            exit(0);
+        }
+        missno = (int)(DF(7)) - 1;
+        getMissingRegion(Mmissing, my_A, missno);
+        transformer.FourierTransform(Itmp(),Fimg,false);
+        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Fimg)
+        {
+            if ( dVkij(Mmissing,k,i,j) > 0.)
+            {
+                FFT_IDX2DIGFREQ(j,dim,XX(f));
+                FFT_IDX2DIGFREQ(i,dim,YY(f));
+                FFT_IDX2DIGFREQ(k,dim,ZZ(f));
+                double R = f.module();
+                if (R>0.5) continue;
+                aux = abs( dVkij(Fimg,k,i,j) );
+                aux *= aux;
+                int idx=ROUND(R*dim);
+                spectra_series[missno*(hdim+1) + idx] += aux;
+                spectra_avg[idx] += aux;
+                count_series[missno*(hdim+1) + idx]++;
+                count_avg[idx]++;
+            }
+        }
+        c++;
+        if (verb > 0 && c % cc == 0) progress_bar(c);
+    }
+
+    // Divide spectra_avg by all spectra_series for correction
+    fn_out = fn_root+"_adjust_spectra.txt";
+    fh.open((fn_out).c_str(), std::ios::out);
+    if (!fh) REPORT_ERROR(1, (std::string)"Prog_ml_tomo_prm: Cannot write file: " + fn_out);
+    
+    fh<<"# dig. freq.   AVG  series 1-n... \n";
+    for (int idx = 0; idx <= hdim; idx++)
+    {
+        if (count_avg[idx]>0)
+            spectra_avg[idx] /= count_avg[idx];
+
+        fh << (double)idx/dim <<" "<<1000.*spectra_avg[idx];
+        for (missno = 0; missno < nr_miss; missno++)
+        {
+            if (count_series[missno*(hdim+1) + idx] > 0)
+                spectra_series[missno*(hdim+1) + idx] /= (double)count_series[missno*(hdim+1) + idx];
+            fh <<" "<<1000.*spectra_series[missno*(hdim+1) + idx];
+            if (spectra_series[missno*(hdim+1) + idx] > 0)
+                spectra_series[missno*(hdim+1) + idx] = spectra_avg[idx] / spectra_series[missno*(hdim+1) + idx];
+        }
+        fh<<"\n";
+    }
+    fh.close();
+
+    if (verb > 0) progress_bar(SF.ImgNo());
+
+}
+
+void Prog_ml_tomo_prm::applyPowerSpectraAdjustment(Matrix3D<std::complex<double> > &M, int missno)
+{
+    Matrix1D<double> f(3);
+
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(M)
+    {
+        FFT_IDX2DIGFREQ(j,dim,XX(f));
+        FFT_IDX2DIGFREQ(i,dim,YY(f));
+        FFT_IDX2DIGFREQ(k,dim,ZZ(f));
+        double R =f.module();
+        if (R>0.5) continue;
+        int idx=ROUND(R*dim);
+        dVkij(M,k,i,j) *= spectra_series[missno*(hdim+1) + idx];
     }
 
 }
@@ -1311,6 +1458,9 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     local_transformer.FourierTransform(Maux, Faux, false);
     if (do_missing)
     {
+        if (do_adjust_spectra)
+            applyPowerSpectraAdjustment(Faux,missno);
+
         // Enforce missing wedge
         getMissingRegion(Mmissing,I,missno);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
@@ -1661,6 +1811,9 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
     local_transformer.FourierTransform(Maux, Faux, false);
     if (do_missing)
     {
+        if (do_adjust_spectra)
+            applyPowerSpectraAdjustment(Faux,missno);
+
         // Enforce missing wedge
         getMissingRegion(Mmissing,I,missno);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
@@ -1855,6 +2008,7 @@ void * threadMLTomoExpectationSingleImage( void * data )
         (*SF).go_beginning();
         (*SF).jump(imgno, SelLine::ACTIVE);
         fn_img = (*SF).get_current_file();
+        if (fn_img=="") break;
         pthread_mutex_unlock(  &mltomo_selfile_access_mutex );
 
         img.read(fn_img);
@@ -2410,7 +2564,6 @@ void Prog_ml_tomo_prm::writeOutputFiles(const int iter, DocFile &DFo,
     SelFile           SFo, SFc;
     DocFile           DFl;
     std::string       comment;
-    std::ofstream     fh;
     VolumeXmipp       Vt;
 
     DFl.clear();
