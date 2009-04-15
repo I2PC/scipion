@@ -1288,8 +1288,8 @@ def execute_projection_matching(_mylog,
                             parameters,
                             _mylog,
                             _DoParallel,
-                            _MyNumberOfMpiProcesses*_MyNumberOfThreads,
-                            1,
+                            _MyNumberOfMpiProcesses,
+                            _MyNumberOfThreads,
                             _MySystemFlavour)
 
       # Now make the class averages
