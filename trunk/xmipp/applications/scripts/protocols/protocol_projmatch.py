@@ -183,7 +183,11 @@ InnerRadius=0
 OuterRadius=64
 
 # {expert} Available memory to store all references (Gb)
-""" This is only for the storage of the references. If yuor memories so not fit in memory, the projection matching program will run MUCH slower. But, keep in mind that probably some additional memory is needed for the operating system etc.
+""" This is only for the storage of the references. If yuor memories so not fit in memory, 
+    the projection matching program will run MUCH slower. But, keep in mind that probably 
+    some additional memory is needed for the operating system etc.
+    Note that the memory per computing node needs to be given. That is, when using threads, 
+    this value will be multiplied automatically by the number of (shared-memory) threads.
 """
 AvailableMemory='2'
 
@@ -1272,7 +1276,7 @@ def execute_projection_matching(_mylog,
                   ' -max_shift '      + str(_MaxChangeOffset) + \
                   ' -search5d_shift ' + str(_Search5DShift) + \
                   ' -search5d_step  ' + str(_Search5DStep) + \
-                  ' -mem '            + str(_AvailableMemory) + \
+                  ' -mem '            + str(_AvailableMemory * _MyNumberOfThreads) + \
                   ' -sym '            + _SymmetryGroup + 'h'
 
       if (_DoCtfCorrection and _ReferenceIsCtfCorrected):
