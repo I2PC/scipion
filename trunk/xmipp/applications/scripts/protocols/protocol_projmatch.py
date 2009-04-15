@@ -1277,6 +1277,7 @@ def execute_projection_matching(_mylog,
                   ' -search5d_shift ' + str(_Search5DShift) + \
                   ' -search5d_step  ' + str(_Search5DStep) + \
                   ' -mem '            + str(_AvailableMemory * _MyNumberOfThreads) + \
+                  ' -thr '            + str(_MyNumberOfThreads) + \
                   ' -sym '            + _SymmetryGroup + 'h'
 
       if (_DoCtfCorrection and _ReferenceIsCtfCorrected):
