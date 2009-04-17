@@ -821,7 +821,7 @@ void Euler_mirrorXY(double rot,
  * R60.resize(3, 3); // Get rid of homogeneous part
  * Matrix2D< double > I(3, 3);
  * I.initIdentity();
- * Euler_apply_transf(L, rot, tilt, psi, newrot, newtilt, newpsi);
+ * Euler_apply_transf(I, R60, rot, tilt, psi, newrot, newtilt, newpsi);
  * @endcode
  */
 void Euler_apply_transf(const Matrix2D< double >& L,
