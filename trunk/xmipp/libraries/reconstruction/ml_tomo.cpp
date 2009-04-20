@@ -839,9 +839,6 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
         img.read(fn_img);
         img().setXmippOrigin();
 
-        // Enforce fourier_mask, symmetry and omask
-        postProcessVolume(img);
-
         // Rotate some arbitrary (off-axis) angle and rotate back again to remove high frequencies
         // that will be affected by the interpolation due to rotation
         // This makes that the A2 values of the rotated references are much less sensitive to rotation
@@ -854,6 +851,14 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
         Iold.push_back(img);
         nr_ref++;
     }
+
+    // prepare priors
+    alpha_k.resize(nr_ref);
+    alpha_k.initConstant(1./(double)nr_ref);
+
+    // Regularization (do not regularize during restarts!)
+    if (istart == 1)
+        regularize(istart-1);
 
     // Store tomogram angles, offset vectors and missing wedge parameters
     imgs_missno.clear();
@@ -932,54 +937,57 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
     // Now that we know where all experimental images are (for possible local searches)
     // we can finally calculate the sampling points for the references
     int nr_psi = CEIL(360. / psi_sampling);
+    double rot, tilt, psi, psip;
     angle_info myinfo;
+    Matrix2D< double > R, I(3,3);
+    if (!no_SMALLANGLE)
+    {
+        R = Euler_rotation3DMatrix(SMALLANGLE, SMALLANGLE, SMALLANGLE);
+        R.resize(3,3);
+        I.initIdentity();
+    }
     all_angle_info.clear();
     nr_ang = 0;
     for (int i = 0; i < mysampling.no_redundant_sampling_points_angles.size(); i++)
     {
-        double rot = XX(mysampling.no_redundant_sampling_points_angles[i]);
-        double tilt = YY(mysampling.no_redundant_sampling_points_angles[i]);
-        if (!no_SMALLANGLE)
-        {
-            rot  += SMALLANGLE;
-            tilt += SMALLANGLE;
-        }
         for (int ipsi = 0; ipsi < nr_psi; ipsi++)
         {
-            double psi = (double)(ipsi * 360. / nr_psi);
+            psip = (double)(ipsi * 360. / nr_psi);
             if (!no_SMALLANGLE)
             {
-                psi  += SMALLANGLE;
+                Euler_apply_transf(I, R, 
+                                   XX(mysampling.no_redundant_sampling_points_angles[i]),
+                                   YY(mysampling.no_redundant_sampling_points_angles[i]),
+                                   psip, rot, tilt, psi);
+            }
+            else
+            {
+                rot=XX(mysampling.no_redundant_sampling_points_angles[i]);
+                tilt=YY(mysampling.no_redundant_sampling_points_angles[i]);
+                psi = psip;
             }
             myinfo.rot = rot;
             myinfo.tilt = tilt;
             myinfo.psi = psi;
-            myinfo.direction = i;
             myinfo.A = Euler_rotation3DMatrix(rot, tilt, psi);
             all_angle_info.push_back(myinfo);
             nr_ang ++;
         }
     }
-
-
-    // prepare priors
-    alpha_k.resize(nr_ref);
-    alpha_k.initConstant(1./(double)nr_ref);
-
-    // Regularization (do not regularize during restarts!)
-    if (istart == 1)
-        regularize(istart-1);
     
 
 //#define DEBUG_SAMPLING
 #ifdef DEBUG_SAMPLING
+    DocFile DFt;
     for (int angno = 0; angno < nr_ang; angno++)
     {
         double rot=all_angle_info[angno].rot;
         double tilt=all_angle_info[angno].tilt;
         double psi=all_angle_info[angno].psi;
-        std::cerr<<"angno= "<<angno<<" rot= "<<rot<<" tilt= "<<tilt<<" psi= "<<psi<<std::endl;
+        DFt.append_angles(rot,tilt,psi,"rot","tilt","psi");
     }
+    DFt.write("angles.doc");
+    std::cerr<<"written docfile angles.doc"<<std::endl;
 #endif
 
 #define DEBUG_GENERAL
@@ -1055,7 +1063,7 @@ void Prog_ml_tomo_prm::getMissingRegion(Matrix3D<double> &Mmissing,
         REPORT_ERROR(1,"bug: unrecognized type of missing region");
     }
 
-//#define DEBUG_WEDGE
+#define DEBUG_WEDGE
 #ifdef DEBUG_WEDGE
     std::cerr<<"do_limit_x= "<<do_limit_x<<std::endl;
     std::cerr<<"do_limit_y= "<<do_limit_y<<std::endl;
@@ -1158,19 +1166,16 @@ void Prog_ml_tomo_prm::getMissingRegion(Matrix3D<double> &Mmissing,
     ori()=Mmissing;
     ori.write("oriwedge.fft");
     test().initZeros();
-    //test().setXmippOrigin();
-
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(test())
         if (j<hdim+1)
             DIRECT_VOL_ELEM(test(),k,i,j)=
-                DIRECT_VOL_ELEM(Mmissing,k,i,j);
+                DIRECT_VOL_ELEM(ori(),k,i,j);
         else
             DIRECT_VOL_ELEM(test(),k,i,j)=
-                DIRECT_VOL_ELEM(Mmissing,
+                DIRECT_VOL_ELEM(ori(),
                                 (dim-k)%dim,
                                 (dim-i)%dim,
                                 dim-j);
-
     test.write("wedge.ftt");
     CenterFFT(test(),true);
     test.write("Fwedge.vol");
@@ -1178,7 +1183,7 @@ void Prog_ml_tomo_prm::getMissingRegion(Matrix3D<double> &Mmissing,
     Matrix3D<int> ress(dim,dim,dim);
     ress.setXmippOrigin();
     BinaryWedgeMask(test(),all_missing_info[missno].thy0, all_missing_info[missno].thyF, A);
-    test.write("Mwedge.vol");
+    test.write("Mwedge.vol");    
 #endif
 
 }
@@ -1268,7 +1273,7 @@ void Prog_ml_tomo_prm::postProcessVolume(VolumeXmipp &Vin)
     transformer.inverseFourierTransform(Faux,Vin());
 
     // Apply symmetry
-    if (mysampling.SL.SymsNo() > 1)
+    if (mysampling.SL.SymsNo() > 1) // TODO check 0 or 1 ??
     {
         // Note that for no-imputation this is not correct!
         // One would have to symmetrize the missing wedges and the sum of the images separately
@@ -1413,7 +1418,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     Matrix3D<std::complex<double> > Faux, Faux2(dim,dim,hdim+1), Fimg, Fimg0, Fimg_rot;
     std::vector<Matrix3D<double> > mysumimgs;
     std::vector<Matrix3D<double> > mysumweds;
-    Matrix1D<double> refw, refw_rot;
+    Matrix1D<double> refw;
     double sigma_noise2, aux, pdf, fracpdf, myA2, mycorrAA, myXi2, A2_plus_Xi2, myXA;
     double mind, diff, mindiff, my_mindiff;
     double my_sumweight, weight, ref_scale = 1.;
@@ -1502,7 +1507,6 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                 mysumweds.push_back(Mzero); 
         }
         refw.initZeros(nr_ref);
-        refw_rot.initZeros(nr_ref*nr_ang);
         // The real stuff: now loop over all orientations, references and translations
         // Start the loop over all refno at old_optangno (=opt_angno from the previous iteration). 
         // This will speed-up things because we will find Pmax probably right away,
@@ -1551,7 +1555,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                     // Now (inverse) rotate the reference and calculate its Fourier transform
                     // Use DONT_WRAP and assume map has been omasked
                     applyGeometry(Maux2, A_rot_inv, Iref[refno](), IS_NOT_INV, 
-                                  WRAP, DIRECT_MULTIDIM_ELEM(Iref[refno](),0));
+                                  DONT_WRAP, DIRECT_MULTIDIM_ELEM(Iref[refno](),0));
                     mycorrAA = corrA2[refno*nr_ang + angno];
                     Maux = Maux2 * mycorrAA;
                     local_transformer.FourierTransform();
@@ -1650,7 +1654,6 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                     {
                         sum_refw += my_sumweight;
                         refw(refno) += my_sumweight;
-                        refw_rot(refno*nr_ang + angno) += my_sumweight;
                         // Back from smaller Mweight to original size of Maux
                         Maux.initZeros();
                         FOR_ALL_ELEMENTS_IN_MATRIX3D(Mweight)
@@ -1726,7 +1729,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     if (do_norm)
     {
         // Note that bgmean will always be zero 
-        // because we omitted the origin pixel in fourier_mas
+        // because we omitted the origin pixel in fourier_mask
 //#define DEBUG_UPDATESCALE
 #ifdef DEBUG_UPDATESCALE
         std::cerr<<"opt_scale old= "<<opt_scale<<" ref_scale_old= "<<ref_scale<<" opt_scale_new= "<<wsum_sc / wsum_sc2<<" = "<<wsum_sc<<"/"<<wsum_sc2<<std::endl;
