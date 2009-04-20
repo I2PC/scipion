@@ -838,6 +838,9 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
         FileName fn_img=SFr.NextImg();
         img.read(fn_img);
         img().setXmippOrigin();
+        
+        // From now on we will assume that all references are omasked, so enforce this here
+        maskSphericalAverageOutside(img());
 
         // Rotate some arbitrary (off-axis) angle and rotate back again to remove high frequencies
         // that will be affected by the interpolation due to rotation
@@ -1916,7 +1919,7 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
     XX(opt_offsets) = -(double)ioptx;
     YY(opt_offsets) = -(double)iopty;
     ZZ(opt_offsets) = -(double)ioptz;
-    Mimg0.selfTranslate(opt_offsets, DONT_WRAP);
+    Mimg0.selfTranslate(opt_offsets, WRAP);
     A_rot = (all_angle_info[opt_angno]).A;
 
     maskSphericalAverageOutside(Mimg0);
@@ -2117,7 +2120,7 @@ void Prog_ml_tomo_prm::expectation(
     
     if (do_ml)
     {
-        // Precalculate values outside real_mask and A2-values for all references
+        // Precalculate A2-values for all references
         precalculateA2(Iref);
         // Pre-calculate pdf of all in-plane transformations
         calculatePdfTranslations();
