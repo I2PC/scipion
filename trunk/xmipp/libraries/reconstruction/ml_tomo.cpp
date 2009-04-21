@@ -1275,22 +1275,36 @@ void Prog_ml_tomo_prm::postProcessVolume(VolumeXmipp &Vin)
     // Inverse Fourier Transform
     transformer.inverseFourierTransform(Faux,Vin());
 
+    // Spherical mask with average outside density
+    maskSphericalAverageOutside(Vin());
+
     // Apply symmetry
-    if (mysampling.SL.SymsNo() > 1) // TODO check 0 or 1 ??
+    if (mysampling.SL.SymsNo() > 0) 
     {
         // Note that for no-imputation this is not correct!
         // One would have to symmetrize the missing wedges and the sum of the images separately
         if (do_missing && !do_impute)
-            std::cerr<<" WARNING: Symmetrization and dont_impute together are not implemented correctly... Proceed at your own risk"<<std::endl;
+            std::cerr<<" WARNING: Symmetrization and dont_impute together are not implemented correctly...\n Proceed at your own risk"<<std::endl;
 
-        VolumeXmipp Vaux=Vin;
-        Vaux().initZeros();
-        symmetrize(mysampling.SL, Vin, Vaux);
-        Vin = Vaux;
+        VolumeXmipp Vaux, Vsym=Vin;
+        Matrix2D<double> L(4, 4), R(4, 4);
+        Matrix1D<double> sh(3);
+        Vaux().initZeros(dim,dim,dim);
+        for (int isym = 0; isym < mysampling.SL.SymsNo(); isym++)
+        {
+            mysampling.SL.get_matrices(isym, L, R);
+            mysampling.SL.get_shift(isym, sh);
+            R(3, 0) = sh(0) * dim;
+            R(3, 1) = sh(1) * dim;
+            R(3, 2) = sh(2) * dim;
+            applyGeometry(Vaux(), R.transpose(), Vin(), IS_NOT_INV, 
+                          DONT_WRAP, DIRECT_MULTIDIM_ELEM(Vin(),0));
+            Vsym() += Vaux();
+        }
+        Vsym()/=mysampling.SL.SymsNo()+1.;
+        Vin = Vsym;
     }
 
-    // Spherical mask with average outside density
-    maskSphericalAverageOutside(Vin());
 
 #ifdef DEBUG
     std::cerr<<"finished postProcessVolume"<<std::endl;
