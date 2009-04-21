@@ -1476,7 +1476,9 @@ def execute_reconstruction(_mylog,
       _mylog.error("Reconstruction method unknown. Quiting")
       print "Reconstruction method unknown. Quiting"
       exit(1)
-    
+   Back_Doparallel = _DoParallel
+   if ( _MyNumberOfMpiProcesses ==1):
+      _DoParallel=False 
    launch_job.launch_job(program,
                          parameters,
                          _mylog,
@@ -1484,7 +1486,7 @@ def execute_reconstruction(_mylog,
                          _MyNumberOfMpiProcesses,
                          _MyNumberOfThreads,
                          _MySystemFlavour)
-
+   _DoParallel=Back_Doparallel
    #_mylog.info(command+ ' ' + parameters)
    if _DisplayReconstruction==True:
       command='xmipp_show -vol '+ Outputvolume + '&'
@@ -1570,6 +1572,9 @@ def  execute_resolution(_mylog,
           _mylog.error("Reconstruction method unknown. Quiting")
           print "Reconstruction method unknown. Quiting"
           exit(1)
+       Back_Doparallel = _DoParallel
+       if ( _MyNumberOfMpiProcesses ==1):
+          _DoParallel=False
 
        import launch_job
        if(PerformReconstruction):
@@ -1580,7 +1585,7 @@ def  execute_resolution(_mylog,
                              _MyNumberOfMpiProcesses,
                              _MyNumberOfThreads,
                              _MySystemFlavour)
-
+       _DoParallel=Back_Doparallel
     # Prevent high-resolution correlation because of discrete mask from wbp
     innerrad = _OuterRadius - 2
     for i in range(len(Outputvolumes)):
