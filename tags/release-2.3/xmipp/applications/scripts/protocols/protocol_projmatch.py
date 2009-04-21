@@ -1422,7 +1422,8 @@ def execute_reconstruction(_mylog,
                            _ReconstructedandfilteredVolume,
                            _DoComputeResolution,
                            _DoSplitReferenceImages):
-
+   if ( _MyNumberOfMpiProcesses ==1):
+      _DoParallel=False
    _mylog.debug("execute_reconstruction")
 
    import os,shutil,math
@@ -1520,6 +1521,8 @@ def  execute_resolution(_mylog,
 			_DoSplitReferenceImages):
 
     import os,shutil,math
+    if ( _MyNumberOfMpiProcesses ==1):
+      _DoParallel=False
     PerformReconstruction=True
     split_sel_root_name=ProjMatchRootName+'_split'
     Outputvolumes=[]
