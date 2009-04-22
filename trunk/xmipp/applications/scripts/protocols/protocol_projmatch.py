@@ -1433,8 +1433,6 @@ def execute_reconstruction(_mylog,
    import os,shutil,math
    import launch_job
 
-   if ( _MyNumberOfMpiProcesses ==1):
-      _DoParallel=False
 
    Outputvolume = _ReconstructedandfilteredVolume
 
@@ -1463,6 +1461,8 @@ def execute_reconstruction(_mylog,
          parameters = parameters + ' -l '   + _ARTLambda + ' '
       parameters = parameters + _ARTReconstructionExtraCommand
    elif _ReconstructionMethod=='fourier':
+      if ( _MyNumberOfMpiProcesses ==1):
+	 _DoParallel=False
       program = 'xmipp_reconstruct_fourier'
       parameters=' -i '    + ForReconstructionSel + \
                  ' -o '    + Outputvolume + '.vol ' + \
@@ -1526,8 +1526,6 @@ def  execute_resolution(_mylog,
 			_DoSplitReferenceImages):
 
     import os,shutil,math
-    if ( _MyNumberOfMpiProcesses ==1):
-      _DoParallel=False
 
     PerformReconstruction=True
     split_sel_root_name=ProjMatchRootName+'_split'
@@ -1565,6 +1563,8 @@ def  execute_resolution(_mylog,
              parameters = parameters + ' -l '   + _ARTLambda + ' '
           parameters = parameters + _ARTReconstructionExtraCommand
        elif _ReconstructionMethod=='fourier':
+          if ( _MyNumberOfMpiProcesses ==1):
+	      _DoParallel=False
           program = 'xmipp_reconstruct_fourier'
           parameters=' -i '    +  Selfiles[i] + \
                      ' -o '    +  Outputvolumes[i] + '.vol ' + \
