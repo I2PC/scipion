@@ -191,6 +191,7 @@ void Prog_ml_tomo_prm::show(bool ML3D)
         std::cerr << "  Stopping criterium      : " << eps << std::endl;
         std::cerr << "  initial sigma noise     : " << sigma_noise << std::endl;
         std::cerr << "  initial sigma offset    : " << sigma_offset << std::endl;
+        std::cerr << "  Maximum resolution      : " << max_resol << " dim= "<<dim<<std::endl;
         if (reg0 > 0.)
         {
             std::cerr << "  Regularization from     : "<<reg0<<" to "<<regF<<" in " <<reg_steps<<" steps"<<std::endl;
@@ -202,7 +203,6 @@ void Prog_ml_tomo_prm::show(bool ML3D)
                 std::cerr << "  Missing data treatment  : imputation "<<std::endl;
             else
                 std::cerr << "  Missing data treatment  : conventional division "<<std::endl;
-            std::cerr << "  Maximum resolution      : " << max_resol << std::endl;
         }
         if (fn_frac != "")
             std::cerr << "  Initial model fractions : " << fn_frac << std::endl;
@@ -305,14 +305,22 @@ void Prog_ml_tomo_prm::produceSideInfo()
 
     // Get image sizes and total number of images
     SF.go_beginning();
+    nr_exp_images = SF.ImgNo();
+
+    // Get original dimension
     vol.read(SF.NextImg());
-    dim = XSIZE(vol());
+    oridim = XSIZE(vol());
+    if (YSIZE(vol()) != oridim || ZSIZE(vol()) != oridim)
+        REPORT_ERROR(1,"ml_tomo ERROR%: only cubic volumes are allowed");
+    // And get dimension for downscaled volumes 
+    dim = ROUND(max_resol * 2 * oridim);
+    // Keep both dim and oridim even or uneven
+    if (oridim%2 != dim%2)
+        dim++;
     hdim = dim / 2;
     dim3 = dim * dim * dim;
     ddim3 = (double)dim3;
-    nr_exp_images = SF.ImgNo();
-    if (YSIZE(vol()) != dim || ZSIZE(vol()) != dim)
-        REPORT_ERROR(1,"ml_tomo ERROR%: only cubic volumes are allowed");
+    scale_factor= (double)dim/(double)oridim;
 
     if (regF > reg0)
         REPORT_ERROR(1,"regF should be smaller than reg0!");
@@ -333,8 +341,7 @@ void Prog_ml_tomo_prm::produceSideInfo()
     Matrix3D<double> cosine_mask(dim,dim,dim);
     cosine_mask.setXmippOrigin();
     fourier_mask.resize(dim,dim,hdim+1);
-    int r_max_resol = XMIPP_MIN(hdim, FLOOR(max_resol * dim));
-    RaisedCosineMask(cosine_mask, r_max_resol - 2, r_max_resol, INNER_MASK);
+    RaisedCosineMask(cosine_mask, hdim - 2, hdim, INNER_MASK);
     // exclude origin voxel
     VOL_ELEM(cosine_mask,0,0,0) = 0.;
     int yy, zz;
@@ -360,7 +367,7 @@ void Prog_ml_tomo_prm::produceSideInfo()
     // Set-up real-space mask
     real_mask.resize(dim,dim,dim);
     real_mask.setXmippOrigin();
-    RaisedCosineMask(real_mask, hdim - 1, hdim, INNER_MASK);
+    RaisedCosineMask(real_mask, hdim - 2, hdim, INNER_MASK);
     real_omask.resize(real_mask);
     real_omask = 1. - real_mask;
 
@@ -590,6 +597,7 @@ void Prog_ml_tomo_prm::preparePowerSpectraAdjustment()
         fn_img=SF.NextImg();
         if (fn_img=="") break;
         Itmp.read(fn_img);
+        reScaleVolume(Itmp(),true);
         if (!DF.search_comment(fn_img)) 
         {
             std::cerr << "ERROR% "<<fn_img<<" not found in document file"<<std::endl;
@@ -726,15 +734,16 @@ void Prog_ml_tomo_prm::generateInitialReferences()
             }
             Itmp.read(fn_tmp);
             Itmp().setXmippOrigin();
+            reScaleVolume(Itmp(),true);
             if (do_keep_angles)
             {
                 // angles from docfile
                 my_rot = DF(0);
                 my_tilt = DF(1);
                 my_psi = DF(2);
-                my_offsets(0) = DF(3);
-                my_offsets(1) = DF(4);
-                my_offsets(2) = DF(5);
+                my_offsets(0) = DF(3) * scale_factor;
+                my_offsets(1) = DF(4) * scale_factor;
+                my_offsets(2) = DF(5) * scale_factor;
                 Itmp().selfTranslate(my_offsets, DONT_WRAP);
             }
             else
@@ -838,7 +847,8 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
         FileName fn_img=SFr.NextImg();
         img.read(fn_img);
         img().setXmippOrigin();
-        
+        reScaleVolume(img(),true);
+
         // From now on we will assume that all references are omasked, so enforce this here
         maskSphericalAverageOutside(img());
 
@@ -1255,6 +1265,51 @@ void Prog_ml_tomo_prm::maskSphericalAverageOutside(Matrix3D<double> &Min)
 
 }
 
+
+void Prog_ml_tomo_prm::reScaleVolume(Matrix3D<double> &Min, bool down_scale)
+{
+    Matrix3D<std::complex<double> > Fin;
+    Matrix3D<double> Mout;
+    XmippFftw local_transformer_in, local_transformer_out;
+    int newdim;
+
+    if (oridim==dim)
+        return;
+    else
+    {
+        if (down_scale)
+            newdim=dim;
+        else
+            newdim=oridim;
+
+        local_transformer_in.setReal(Min);
+        local_transformer_in.FourierTransform();
+        local_transformer_in.getCompleteFourier(Fin);
+        Mout.resize(newdim,newdim,newdim);
+        Mout.setXmippOrigin();
+        local_transformer_out.setReal(Mout);
+
+        CenterFFT(Fin,true);
+        Fin.setXmippOrigin();
+        Fin.window(STARTINGZ(Mout),STARTINGY(Mout),STARTINGX(Mout),
+                   FINISHINGZ(Mout),FINISHINGY(Mout), FINISHINGX(Mout),0.);
+        CenterFFT(Fin,false);
+        local_transformer_out.setFromCompleteFourier(Fin);
+        local_transformer_out.inverseFourierTransform();
+
+//#define DEBUG_RESCALE_VOLUME
+#ifdef DEBUG_RESCALE_VOLUME
+        VolumeXmipp Vt;
+        Vt()=Min;
+        Vt.write("Min.vol");
+        Vt()=Mout;
+        Vt.write("Mout.vol");
+#endif
+        Min = Mout;
+    }
+
+}
+
 void Prog_ml_tomo_prm::postProcessVolume(VolumeXmipp &Vin)
 {
 
@@ -1290,6 +1345,7 @@ void Prog_ml_tomo_prm::postProcessVolume(VolumeXmipp &Vin)
         Matrix2D<double> L(4, 4), R(4, 4);
         Matrix1D<double> sh(3);
         Vaux().initZeros(dim,dim,dim);
+        Vaux().setXmippOrigin();
         for (int isym = 0; isym < mysampling.SL.SymsNo(); isym++)
         {
             mysampling.SL.get_matrices(isym, L, R);
@@ -2033,7 +2089,8 @@ void * threadMLTomoExpectationSingleImage( void * data )
 
         img.read(fn_img);
         img().setXmippOrigin();
-        
+        prm->reScaleVolume(img(),true);
+
         if (prm->do_missing)
             missno = prm->imgs_missno[imgno];
         else
@@ -2083,9 +2140,9 @@ void * threadMLTomoExpectationSingleImage( void * data )
         (*docfiledata)[imgno](0) = (prm->all_angle_info[opt_angno]).rot; // rot
         (*docfiledata)[imgno](1) = (prm->all_angle_info[opt_angno]).tilt;// tilt
         (*docfiledata)[imgno](2) = (prm->all_angle_info[opt_angno]).psi; // psi
-        (*docfiledata)[imgno](3) = opt_offsets(0);            // Xoff
-        (*docfiledata)[imgno](4) = opt_offsets(1);            // Yoff
-        (*docfiledata)[imgno](5) = opt_offsets(2);            // Zoff
+        (*docfiledata)[imgno](3) = opt_offsets(0) / prm->scale_factor;   // Xoff
+        (*docfiledata)[imgno](4) = opt_offsets(1) / prm->scale_factor;   // Yoff
+        (*docfiledata)[imgno](5) = opt_offsets(2) / prm->scale_factor;   // Zoff
         (*docfiledata)[imgno](6) = (double)(opt_refno + 1);   // Ref
         (*docfiledata)[imgno](7) = (double)(missno + 1);      // Wedge number
 
@@ -2604,7 +2661,9 @@ void Prog_ml_tomo_prm::writeOutputFiles(const int iter, DocFile &DFo,
         fn_tmp = fn_base + "_ref";
         fn_tmp.compose(fn_tmp, refno + 1, "");
         fn_tmp = fn_tmp + ".vol";
-        Iref[refno].write(fn_tmp);
+        Vt=Iref[refno];
+        reScaleVolume(Vt(),false);
+        Vt.write(fn_tmp);
         SFo.insert(fn_tmp, SelLine::ACTIVE);
         fracline(0) = alpha_k(refno);
         fracline(1) = 1000 * conv[refno]; // Output 1000x the change for precision
@@ -2632,6 +2691,7 @@ void Prog_ml_tomo_prm::writeOutputFiles(const int iter, DocFile &DFo,
                                         dim-j) / sumw_allrefs;
 
             CenterFFT(Vt(),true);
+            reScaleVolume(Vt(),false);
             fn_tmp = fn_base + "_wedge";
             fn_tmp.compose(fn_tmp, refno + 1, "");
             fn_tmp = fn_tmp + ".vol";

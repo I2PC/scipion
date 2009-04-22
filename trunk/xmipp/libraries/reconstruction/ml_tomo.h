@@ -99,7 +99,7 @@ public:
     /** Number of iterations to be performed */
     int Niter;
     /** dimension of the images */
-    int dim, dim3, hdim;
+    int oridim, dim, dim3, hdim;
     double ddim3;
     /** Number of reference images */
     int nr_ref;
@@ -155,7 +155,7 @@ public:
     /** Number of missing data structures */
     int nr_miss;
     /** Maximum resolution (dig.freq.) */
-    double max_resol;
+    double max_resol, scale_factor;
     Matrix3D<double> fourier_mask, real_mask, real_omask;
 
     /* Adjust power spectra of all tilt series to average power spectrum */
@@ -257,6 +257,11 @@ public:
                           const int missno);
 
     void maskSphericalAverageOutside(Matrix3D<double> &Min);
+
+    // Resize a volume, based on the max_resol 
+    // if down_scale=true: go from oridim to dim
+    // if down_scale=false: go from dim to oridim
+    void reScaleVolume(Matrix3D<double> &Min, bool down_scale=true);
 
     void postProcessVolume(VolumeXmipp &Vin);
 
