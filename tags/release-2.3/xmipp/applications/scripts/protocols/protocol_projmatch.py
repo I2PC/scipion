@@ -1422,8 +1422,6 @@ def execute_reconstruction(_mylog,
                            _ReconstructedandfilteredVolume,
                            _DoComputeResolution,
                            _DoSplitReferenceImages):
-   if ( _MyNumberOfMpiProcesses ==1):
-      _DoParallel=False
    _mylog.debug("execute_reconstruction")
 
    import os,shutil,math
@@ -1456,6 +1454,8 @@ def execute_reconstruction(_mylog,
          parameters = parameters + ' -l '   + _ARTLambda + ' '
       parameters = parameters + _ARTReconstructionExtraCommand
    elif _ReconstructionMethod=='fourier':
+      if ( _MyNumberOfMpiProcesses ==1):
+	 _DoParallel=False
       program = 'xmipp_reconstruct_fourier'
       parameters=' -i '    + ForReconstructionSel + \
                  ' -o '    + Outputvolume + '.vol ' + \
@@ -1477,9 +1477,6 @@ def execute_reconstruction(_mylog,
       _mylog.error("Reconstruction method unknown. Quiting")
       print "Reconstruction method unknown. Quiting"
       exit(1)
-   Back_Doparallel = _DoParallel
-   if ( _MyNumberOfMpiProcesses ==1):
-      _DoParallel=False 
    launch_job.launch_job(program,
                          parameters,
                          _mylog,
@@ -1487,7 +1484,6 @@ def execute_reconstruction(_mylog,
                          _MyNumberOfMpiProcesses,
                          _MyNumberOfThreads,
                          _MySystemFlavour)
-   _DoParallel=Back_Doparallel
    #_mylog.info(command+ ' ' + parameters)
    if _DisplayReconstruction==True:
       command='xmipp_show -vol '+ Outputvolume + '&'
@@ -1521,8 +1517,6 @@ def  execute_resolution(_mylog,
 			_DoSplitReferenceImages):
 
     import os,shutil,math
-    if ( _MyNumberOfMpiProcesses ==1):
-      _DoParallel=False
     PerformReconstruction=True
     split_sel_root_name=ProjMatchRootName+'_split'
     Outputvolumes=[]
@@ -1559,6 +1553,8 @@ def  execute_resolution(_mylog,
              parameters = parameters + ' -l '   + _ARTLambda + ' '
           parameters = parameters + _ARTReconstructionExtraCommand
        elif _ReconstructionMethod=='fourier':
+	  if ( _MyNumberOfMpiProcesses ==1):
+             _DoParallel=False
           program = 'xmipp_reconstruct_fourier'
           parameters=' -i '    +  Selfiles[i] + \
                      ' -o '    +  Outputvolumes[i] + '.vol ' + \
@@ -1575,9 +1571,6 @@ def  execute_resolution(_mylog,
           _mylog.error("Reconstruction method unknown. Quiting")
           print "Reconstruction method unknown. Quiting"
           exit(1)
-       Back_Doparallel = _DoParallel
-       if ( _MyNumberOfMpiProcesses ==1):
-          _DoParallel=False
 
        import launch_job
        if(PerformReconstruction):
@@ -1588,7 +1581,6 @@ def  execute_resolution(_mylog,
                              _MyNumberOfMpiProcesses,
                              _MyNumberOfThreads,
                              _MySystemFlavour)
-       _DoParallel=Back_Doparallel
     # Prevent high-resolution correlation because of discrete mask from wbp
     innerrad = _OuterRadius - 2
     for i in range(len(Outputvolumes)):
