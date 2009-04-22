@@ -170,6 +170,35 @@ public:
             }
         }
 
+    /** Set one half of the FT in fFourier from the input complete Fourier transform (two halves).
+        The fReal and fFourier already should have the right sizes
+    */
+    template <typename T>
+        void setFromCompleteFourier(T& V) {
+        int ndim=3;
+        if (ZSIZE(*fReal)==1)
+        {
+            ndim=2;
+            if (YSIZE(*fReal)==1)
+                ndim=1;
+        }
+        switch (ndim)
+        {
+        case 1:
+            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(fFourier)
+                DIRECT_VEC_ELEM(fFourier,i)=DIRECT_VEC_ELEM(V,i);
+            break;
+        case 2:
+            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(fFourier)
+                DIRECT_MAT_ELEM(fFourier,i,j) = DIRECT_MAT_ELEM(V,i,j); 
+            break;
+        case 3:
+            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(fFourier)
+                DIRECT_VOL_ELEM(fFourier,k,i,j) = DIRECT_VOL_ELEM(V,k,i,j);
+            break;
+        }
+    }
+
 // Internal methods
 public:
     /* Pointer to the array of doubles with which the plan was computed */
