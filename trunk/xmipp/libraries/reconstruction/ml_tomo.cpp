@@ -191,7 +191,7 @@ void Prog_ml_tomo_prm::show(bool ML3D)
         std::cerr << "  Stopping criterium      : " << eps << std::endl;
         std::cerr << "  initial sigma noise     : " << sigma_noise << std::endl;
         std::cerr << "  initial sigma offset    : " << sigma_offset << std::endl;
-        std::cerr << "  Maximum resolution      : " << max_resol << " dim= "<<dim<<std::endl;
+        std::cerr << "  Maximum resolution      : " << max_resol << " (dim= "<<dim<<")"<<std::endl;
         if (reg0 > 0.)
         {
             std::cerr << "  Regularization from     : "<<reg0<<" to "<<regF<<" in " <<reg_steps<<" steps"<<std::endl;
@@ -321,6 +321,7 @@ void Prog_ml_tomo_prm::produceSideInfo()
     dim3 = dim * dim * dim;
     ddim3 = (double)dim3;
     scale_factor= (double)dim/(double)oridim;
+    sigma_offset *= scale_factor;
 
     if (regF > reg0)
         REPORT_ERROR(1,"regF should be smaller than reg0!");
@@ -983,6 +984,7 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
             myinfo.tilt = tilt;
             myinfo.psi = psi;
             myinfo.A = Euler_rotation3DMatrix(rot, tilt, psi);
+            myinfo.direction = i;
             all_angle_info.push_back(myinfo);
             nr_ang ++;
         }
@@ -1003,7 +1005,7 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
     std::cerr<<"written docfile angles.doc"<<std::endl;
 #endif
 
-#define DEBUG_GENERAL
+//#define DEBUG_GENERAL
 #ifdef DEBUG_GENERAL
     std::cerr<<"nr images= "<<SF.ImgNo()<<std::endl;
     std::cerr<<"do_generate_refs ="<<do_generate_refs<<std::endl;
@@ -1076,7 +1078,7 @@ void Prog_ml_tomo_prm::getMissingRegion(Matrix3D<double> &Mmissing,
         REPORT_ERROR(1,"bug: unrecognized type of missing region");
     }
 
-#define DEBUG_WEDGE
+//#define DEBUG_WEDGE
 #ifdef DEBUG_WEDGE
     std::cerr<<"do_limit_x= "<<do_limit_x<<std::endl;
     std::cerr<<"do_limit_y= "<<do_limit_y<<std::endl;
@@ -2710,7 +2712,7 @@ void Prog_ml_tomo_prm::writeOutputFiles(const int iter, DocFile &DFo,
     if (do_norm)
         comment+= " <scale>= " + floatToString(average_scale, 10, 5);
     DFl.insert_comment(comment);
-    comment = "-noise " + floatToString(sigma_noise, 15, 12) + " -offset " + floatToString(sigma_offset, 15, 12) + " -istart " + integerToString(iter + 1) + " -doc " + fn_base + ".doc";
+    comment = "-noise " + floatToString(sigma_noise, 15, 12) + " -offset " + floatToString(sigma_offset/scale_factor, 15, 12) + " -istart " + integerToString(iter + 1) + " -doc " + fn_base + ".doc";
     DFl.insert_comment(comment);
     DFl.insert_comment(cline);
     DFl.insert_comment("columns: model fraction (1); 1000x signal change (2); avg scale (3)");
