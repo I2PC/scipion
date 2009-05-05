@@ -327,7 +327,7 @@ void Prog_ml_tomo_prm::produceSideInfo()
         REPORT_ERROR(1,"regF should be smaller than reg0!");
     reg_current = reg0;
 
-    // Make fourier and real-space masks
+    // Make real-space masks
     Matrix3D<int> int_mask(dim,dim,dim);
     int_mask.setXmippOrigin();
     real_mask.resize(dim, dim, dim);
@@ -337,6 +337,8 @@ void Prog_ml_tomo_prm::produceSideInfo()
     {
         DIRECT_MULTIDIM_ELEM(real_mask,n) = (double)DIRECT_MULTIDIM_ELEM(int_mask,n);
     }
+    real_omask.resize(real_mask);
+    real_omask = 1. - real_mask;
 
     // Set-up fourier-space mask
     Matrix3D<double> cosine_mask(dim,dim,dim);
@@ -364,13 +366,6 @@ void Prog_ml_tomo_prm::produceSideInfo()
             }
         }
     }
-
-    // Set-up real-space mask
-    real_mask.resize(dim,dim,dim);
-    real_mask.setXmippOrigin();
-    RaisedCosineMask(real_mask, hdim - 2, hdim, INNER_MASK);
-    real_omask.resize(real_mask);
-    real_omask = 1. - real_mask;
 
     // Get number of references
     if (fn_ref != "")
