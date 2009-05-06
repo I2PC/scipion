@@ -1410,24 +1410,28 @@ void Prog_ml_tomo_prm::precalculateA2(std::vector< VolumeXmippT<double> > &Iref)
 #endif
             AA = Maux.sum2();
             if (angno==0) 
-            {
                 stdAA = AA;
-            }
-            if (AA > 0) corr = sqrt(stdAA / AA);
+            if (AA > 0) 
+                corr = sqrt(stdAA / AA);
+            else 
+                corr = 1.
             corrA2.push_back(corr);
             Maux *= corr;
             if (do_missing)
             {
                 transformer.FourierTransform(Maux,Faux,true);
+                // Save original Faux in copy Faux2
+                Faux2 = Faux;
                 for (int missno = 0; missno < nr_miss; missno++)
                 {
+                    // get original copy back
+                    Faux = Faux2;
                     getMissingRegion(Mmissing,I,missno);
-                    Faux2 = Faux;
-                    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux2)
+                    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
                     {
-                        DIRECT_MULTIDIM_ELEM(Faux2,n) *= DIRECT_MULTIDIM_ELEM(Mmissing,n);
+                        DIRECT_MULTIDIM_ELEM(Faux,n) *= DIRECT_MULTIDIM_ELEM(Mmissing,n);
                     }
-                    transformer.inverseFourierTransform(Faux2,Maux);
+                    transformer.inverseFourierTransform();
                     A2.push_back(Maux.sum2());
 //#define DEBUG_PRECALC_A2
 #ifdef DEBUG_PRECALC_A2
