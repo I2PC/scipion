@@ -1421,6 +1421,7 @@ void Prog_ml_tomo_prm::precalculateA2(std::vector< VolumeXmippT<double> > &Iref)
             {
                 transformer.FourierTransform(Maux,Faux,false);
                 // Save original copy of Faux in Faux2
+                Faux2.resize(Faux);
                 FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
                 {
                     DIRECT_MULTIDIM_ELEM(Faux2,n) = DIRECT_MULTIDIM_ELEM(Faux,n);
