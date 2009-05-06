@@ -346,8 +346,6 @@ void Prog_ml_tomo_prm::produceSideInfo()
     fourier_mask.resize(dim,dim,hdim+1);
     fourier_imask.resize(dim,dim,hdim+1);
     RaisedCosineMask(cosine_mask, hdim - 2, hdim, INNER_MASK);
-    // exclude origin voxel
-    VOL_ELEM(cosine_mask,0,0,0) = 0.;
     int yy, zz;
     int dimb = (dim - 1)/2;
     for ( int z=0, ii=0; z<dim; z++ ) 
@@ -368,6 +366,9 @@ void Prog_ml_tomo_prm::produceSideInfo()
             }
         }
     }
+    // exclude origin voxel from fourier masks
+    DIRECT_MULTIDIM_ELEM(fourier_mask,0) = 0.;
+    DIRECT_MULTIDIM_ELEM(fourier_imask,0) = 0.;
 
     // Get number of references
     if (fn_ref != "")
