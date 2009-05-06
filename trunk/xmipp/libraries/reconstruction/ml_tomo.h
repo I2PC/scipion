@@ -156,7 +156,7 @@ public:
     int nr_miss;
     /** Maximum resolution (dig.freq.) */
     double max_resol, scale_factor;
-    Matrix3D<double> fourier_mask, real_mask, real_omask;
+    Matrix3D<double> fourier_mask, fourier_imask, real_mask, real_omask;
 
     /* Adjust power spectra of all tilt series to average power spectrum */
     bool do_adjust_spectra;

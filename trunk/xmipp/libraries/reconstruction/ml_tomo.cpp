@@ -344,6 +344,7 @@ void Prog_ml_tomo_prm::produceSideInfo()
     Matrix3D<double> cosine_mask(dim,dim,dim);
     cosine_mask.setXmippOrigin();
     fourier_mask.resize(dim,dim,hdim+1);
+    fourier_imask.resize(dim,dim,hdim+1);
     RaisedCosineMask(cosine_mask, hdim - 2, hdim, INNER_MASK);
     // exclude origin voxel
     VOL_ELEM(cosine_mask,0,0,0) = 0.;
@@ -362,6 +363,7 @@ void Prog_ml_tomo_prm::produceSideInfo()
                 if (xx <= FINISHINGX(cosine_mask))
                 {
                     DIRECT_MULTIDIM_ELEM(fourier_mask,ii) = VOL_ELEM(cosine_mask,xx,yy,zz);
+                    DIRECT_MULTIDIM_ELEM(fourier_imask,ii) = VOL_ELEM(real_mask,xx,yy,zz);
                 }
             }
         }
@@ -795,6 +797,7 @@ void Prog_ml_tomo_prm::generateInitialReferences()
         fn_tmp = fn_tmp + "_ref";
         fn_tmp.compose(fn_tmp, refno + 1, "");
         fn_tmp = fn_tmp + ".vol";
+        reScaleVolume(Iave(),false);
         Iave.write(fn_tmp);
         SFr.insert(fn_tmp, SelLine::ACTIVE);
         
@@ -1098,7 +1101,7 @@ void Prog_ml_tomo_prm::getMissingRegion(Matrix3D<double> &Mmissing,
             else yy = y;
             for ( int xx=0; xx<hdim + 1; xx++, ii++ ) {
 
-                double maskvalue= DIRECT_MULTIDIM_ELEM(fourier_mask,ii);
+                double maskvalue= DIRECT_MULTIDIM_ELEM(fourier_imask,ii);
                 if (maskvalue < XMIPP_EQUAL_ACCURACY)
                 {
                     DIRECT_MULTIDIM_ELEM(Mmissing,ii) = 0.;
@@ -1747,13 +1750,22 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                         maskSphericalAverageOutside(Maux);
                         Maux.selfApplyGeometry(A_rot, IS_NOT_INV, 
                                                DONT_WRAP, DIRECT_MULTIDIM_ELEM(Maux,0));
-                        mysumimgs[refno] += Maux * ddim3;
                         if (do_missing)
                         {
                             // Store sum of wedges!
                             getMissingRegion(Mmissing, A_rot, missno);
                             mysumweds[refno] += my_sumweight * Mmissing;
+                            
+                            // Again enforce missing region to avoid filling it with artifacts from the rotation
+                            local_transformer.FourierTransform();
+                            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
+                            {
+                                DIRECT_MULTIDIM_ELEM(Faux,n) *= DIRECT_MULTIDIM_ELEM(Mmissing,n);
+                            }
+                            local_transformer.inverseFourierTransform();
                         }
+                        // Store sum of rotated images
+                        mysumimgs[refno] += Maux * ddim3;
                     } // close if SIGNIFICANT_WEIGHT_LOW
                 } // close for refno
             } // close if is_a_neighbor
@@ -2313,30 +2325,32 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
 //#define DEBUG_IMPUTE
 #ifdef DEBUG_IMPUTE
                     VolumeXmipp tt;
-                    FileName fnt;
+                    FileName fnt, base;
+                    base.compose("_it",iter,"");
                     FFT_magnitude(Faux,tt());
-                    fnt.compose("Fref0",refno,"ampl");
+                    fnt.compose("Fref0"+base+"_ref",refno+1,"ampl");
                     tt.write(fnt);
                     tt()=wsumweds[refno];
-                    fnt.compose("wsum0",refno,"ampl");
+                    tt()/=sumw(refno);
+                    fnt.compose("wsum"+base+"_ref",refno+1,"ampl");
                     tt.write(fnt);
                     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
                     {
                         // Impute old reference for missing pixels
                         DIRECT_MULTIDIM_ELEM(tt(),n) = 
                             (1. - DIRECT_MULTIDIM_ELEM(wsumweds[refno],n) / sumw(refno));
-                        DIRECT_MULTIDIM_ELEM(Faux,n) *= 
-                            (1. - DIRECT_MULTIDIM_ELEM(wsumweds[refno],n) / sumw(refno));
+                        DIRECT_MULTIDIM_ELEM(Faux,n) *= DIRECT_MULTIDIM_ELEM(tt(),n);
                     }
-                    fnt.compose("inv_wsum",refno,"ampl");
+                    fnt.compose("inv_wsum"+base+"_ref",refno+1,"ampl");
                     tt.write(fnt);
                     FFT_magnitude(Faux,tt());
-                    fnt.compose("Fref1",refno,"ampl");
+                    fnt.compose("Fref1"+base+"_ref",refno+1,"ampl");
                     tt.write(fnt);
-                    FFT_magnitude(Fwsumimgs,tt());
-                    fnt.compose("Fwsumimgs",refno,"ampl");
+                    Matrix3D<std::complex<double> > Ft;
+                    Ft=Fwsumimgs/sumwsc2(refno);
+                    FFT_magnitude(Ft,tt());
+                    fnt.compose("Fref2"+base+"_ref",refno+1,"ampl");
                     tt.write(fnt);
-                    std::cerr<<" sumw(refno)= "<<sumw(refno)<<" sumwsc2(refno)= "<<sumwsc2(refno)<<std::endl;
                     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
                     {
                         // And sum the weighted sum for observed pixels
@@ -2344,8 +2358,12 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
                             (DIRECT_MULTIDIM_ELEM(Fwsumimgs,n) / sumwsc2(refno));
                     }
                     FFT_magnitude(Faux,tt());
-                    fnt.compose("Fref2",refno,"ampl");
+                    fnt.compose("Fref3"+base+"_ref",refno+1,"ampl");
                     tt.write(fnt);
+
+                    std::cerr<<" sumw(refno)= "<<sumw(refno)<<" sumwsc2(refno)= "<<sumwsc2(refno)<<std::endl;
+
+ 
 #else
                     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
                     {
