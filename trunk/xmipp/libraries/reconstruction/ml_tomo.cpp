@@ -677,7 +677,7 @@ void Prog_ml_tomo_prm::generateInitialReferences()
 {
 
     SelFile SFtmp;
-    VolumeXmipp Iave, Itmp;
+    VolumeXmipp Iave, Itmp, Iout;
     Matrix3D<double> Msumwedge, Mmissing;
     Matrix3D<std::complex<double> > Fave;
     Matrix2D<double> my_A;
@@ -798,10 +798,10 @@ void Prog_ml_tomo_prm::generateInitialReferences()
         fn_tmp = fn_tmp + "_ref";
         fn_tmp.compose(fn_tmp, refno + 1, "");
         fn_tmp = fn_tmp + ".vol";
-        reScaleVolume(Iave(),false);
-        Iave.write(fn_tmp);
+        Iout=Iave;
+        reScaleVolume(Iout(),false);
+        Iout.write(fn_tmp);
         SFr.insert(fn_tmp, SelLine::ACTIVE);
-        
     }
     if (verb > 0) progress_bar(SF.ImgNo());
     fn_ref = fn_root + "_it";
@@ -1647,11 +1647,6 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                         myA2 = A2[refno*nr_ang + angno];
                     A2_plus_Xi2 = 0.5 * ( ref_scale*ref_scale*myA2 + myXi2 );
 
-//#define DEBUG_PRECALCULATE_A2
-#ifdef DEBUG_PRECALCULATE_A2
-                    std::cerr<<"A2_plus_Xi2 for refno= "<<refno<<" angno= "<<angno<<" = "<< A2_plus_Xi2<<" = 0.5 * ("<< ref_scale*ref_scale*myA2<<" + "<< myXi2<<")"<<std::endl;
-#endif
-                    
                     // A. Backward FFT to calculate weights in real-space
                     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
                     {
@@ -1662,11 +1657,6 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                     local_transformer.inverseFourierTransform();
                     CenterFFT(Maux, true);
                     
-//#define DEBUG_ALOT_SINGLEEXP
-#ifdef DEBUG_ALOT_SINGLEEXP
-                    std::cerr<<"rot= "<<all_angle_info[angno].rot<<" tilt= "<<all_angle_info[angno].tilt<<" psi= "<<all_angle_info[angno].psi<<" A2= "<<myA2<<" Xi2= "<<myXi2<<" corrA="<<mycorrAA <<" XA= "<<VOL_ELEM(Maux, 0,0,0) * ddim3<<" diff= "<< A2_plus_Xi2 - ref_scale * VOL_ELEM(Maux, 0, 0, 0) * ddim3<<" mindiff= "<<mindiff<<std::endl;
-#endif
-
                     // B. Calculate weights for each pixel within sigdim (Mweight)
                     my_sumweight = my_maxweight = 0.;
                     FOR_ALL_ELEMENTS_IN_MATRIX3D(Mweight)
@@ -2474,13 +2464,13 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
                 if (j<XSIZE(Msumallwedges))
                 {
                     sum_complete_wedge += DIRECT_VOL_ELEM(Msumallwedges,k,i,j);
-                    sum_complete_fourier += DIRECT_VOL_ELEM(fourier_mask,k,i,j);
+                    sum_complete_fourier += DIRECT_VOL_ELEM(fourier_imask,k,i,j);
                 }
                 else
                 {
                     sum_complete_wedge += DIRECT_VOL_ELEM(Msumallwedges,
                                                           (dim-k)%dim,(dim-i)%dim,dim-j);
-                    sum_complete_fourier += DIRECT_VOL_ELEM(fourier_mask,
+                    sum_complete_fourier += DIRECT_VOL_ELEM(fourier_imask,
                                                             (dim-k)%dim,(dim-i)%dim,dim-j);
                 }
             }
