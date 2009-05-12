@@ -24,6 +24,7 @@
  ***************************************************************************/
 #include "ml_tomo.h"
 
+#define USE_SPLINES
 //#define DEBUG
 // For blocking of threads
 pthread_mutex_t mltomo_weightedsum_update_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -548,33 +549,49 @@ void Prog_ml_tomo_prm::preparePowerSpectraAdjustment()
     if (nr_miss == 1)
         return;
 
-    VolumeXmipp                     Itmp;
-    Matrix3D<double>                Mmissing;
-    Matrix3D<std::complex<double> > Fimg;
-    DocFile                         DF;
-    FileName                        fn_img, fn_out;
-    int                             missno, c = 0, cc = XMIPP_MAX(1, SF.ImgNo() / 60);;
-    Matrix2D<double>                my_A(4,4);
-    double                          aux;
-    double                          *spectra_avg;
-    int                             *count_series, *count_avg;
-    Matrix1D<double>                f(3);
-    std::ofstream                   fh;
+    DocFile DF;
+    if (fn_doc=="")
+        REPORT_ERROR(1,"ERROR: fn_doc should not be empty for preparePowerSpectraAdjustment");
+    DF.read(fn_doc);
 
-    // Initialize spectra
-    spectra_series = new double[nr_miss*(hdim+1)];
-    spectra_avg = new double[hdim+1];
-    count_series = new int[nr_miss*(hdim+1)];
-    count_avg = new int[hdim+1];
-    for (int i = 0; i < nr_miss*(hdim+1); i++)
+    // 1. Get the size of the smallest tilt series (group)
+    Matrix1D<int > count_imgs(nr_miss);
+    FileName fn_img;
+    int smallest_group;
+    count_imgs.initZeros();
+    SF.go_beginning();
+    while (!SF.eof())
     {
-        spectra_series[i] = 0.;
-        count_series[i] = 0;
+        fn_img=SF.NextImg();
+        if (fn_img=="") break;
+        if (!DF.search_comment(fn_img)) 
+        {
+            std::cerr << "ERROR% "<<fn_img<<" not found in document file"<<std::endl;
+            exit(0);
+        }
+        int missno = (int)(DF(7)) - 1;
+        count_imgs(missno)++;
     }
-    for (int i = 0; i < hdim+1; i++)
+    smallest_group=count_imgs.computeMin();
+    std::cerr<<" Smallest group has "<<smallest_group<<" particles"<<std::endl;
+
+    // 2. Get sums of aligned particles of random subsets of all groups with size of smallest group
+    SelFile SFtmp;
+    VolumeXmipp Itmp;
+    std::vector< Matrix3D<double> > sumV, sumW;
+    Matrix3D<double> V(dim,dim,dim), W(dim,dim,hdim+1), Mmissing(dim,dim,hdim+1);
+    double my_rot, my_tilt, my_psi, my_xoff, my_yoff, my_zoff;
+    Matrix1D<double> my_offsets(3);
+    Matrix2D<double> my_A(4,4);
+    int c = 0, cc = XMIPP_MAX(1, SF.ImgNo() / 60);
+    count_imgs.initZeros();
+    W.initZeros();
+    V.initZeros();
+    V.setXmippOrigin();
+    for (int missno=0; missno < nr_miss; missno++)
     {
-        spectra_avg[i] = 0.;
-        count_avg[i] = 0;
+        sumV.push_back(V);
+        sumW.push_back(W);
     }
 
     if (verb > 0)
@@ -583,31 +600,88 @@ void Prog_ml_tomo_prm::preparePowerSpectraAdjustment()
         init_progress_bar(SF.ImgNo());
     }
 
-    if (fn_doc=="")
-        REPORT_ERROR(1,"ERROR: fn_doc should not be empty for preparePowerSpectraAdjustment");
-    DF.read(fn_doc);
-
-    // Initialize ampl2 matrices
-    my_A.initIdentity();
-
-    SF.go_beginning();
-    while (!SF.eof())
+    randomize_random_generator();
+    SFtmp = SF.randomize();
+    SFtmp.go_beginning();
+    while (!SFtmp.eof())
     {
-        fn_img=SF.NextImg();
+        fn_img=SFtmp.NextImg();
         if (fn_img=="") break;
-        Itmp.read(fn_img);
-        reScaleVolume(Itmp(),true);
         if (!DF.search_comment(fn_img)) 
         {
             std::cerr << "ERROR% "<<fn_img<<" not found in document file"<<std::endl;
             exit(0);
         }
-        missno = (int)(DF(7)) - 1;
-        getMissingRegion(Mmissing, my_A, missno);
-        transformer.FourierTransform(Itmp(),Fimg,false);
+        int missno = (int)(DF(7)) - 1;
+        if (count_imgs(missno) < smallest_group)
+        {
+            count_imgs(missno)++;
+            Itmp.read(fn_img);
+            Itmp().setXmippOrigin();
+            reScaleVolume(Itmp(),true);
+            if (do_keep_angles)
+            {
+                // angles from docfile
+                my_rot = DF(0);
+                my_tilt = DF(1);
+                my_psi = DF(2);
+                my_offsets(0) = DF(3) * scale_factor;
+                my_offsets(1) = DF(4) * scale_factor;
+                my_offsets(2) = DF(5) * scale_factor;
+                my_A = Euler_rotation3DMatrix(my_rot, my_tilt, my_psi);
+                // TODO: Do this in one step!!
+                Itmp().selfTranslate(my_offsets, DONT_WRAP);
+#ifdef USE_SPLINES
+                Itmp().selfApplyGeometryBSpline(my_A, 3, IS_NOT_INV, DONT_WRAP);
+#else
+                Itmp().selfApplyGeometry(my_A, IS_NOT_INV, DONT_WRAP);
+#endif
+            }
+            else
+            {
+                my_A.initIdentity();
+            }
+            getMissingRegion(Mmissing, my_A, missno);
+            sumV[missno] += Itmp();
+            sumW[missno] += Mmissing;
+        }
+        c++;
+        if (verb > 0 && c % cc == 0) progress_bar(c);
+    }
+    if (verb > 0) progress_bar(SFtmp.ImgNo());
+
+
+    // 3. Calculate average amplitude spectra for all groups
+    Matrix3D<std::complex<double> > Fimg;
+    FileName                        fn_out;
+    double                          aux, count;
+    double                          *spectra_avg, *count_series, *count_avg;
+    Matrix1D<double>                f(3);
+    std::ofstream                   fh;
+    int                             vsize=2*hdim+1;
+    // Initialize spectra
+    spectra_series = new double[nr_miss*vsize];
+    spectra_avg = new double[vsize];
+    count_series = new double[nr_miss*vsize];
+    count_avg = new double[vsize];
+    for (int i = 0; i < nr_miss*vsize; i++)
+    {
+        spectra_series[i] = 0.;
+        count_series[i] = 0;
+    }
+    for (int i = 0; i < vsize; i++)
+    {
+        spectra_avg[i] = 0.;
+        count_avg[i] = 0;
+    }
+    // Fill spectra
+    for (int missno=0; missno < nr_miss; missno++)
+    {
+        transformer.FourierTransform(sumV[missno],Fimg,false);
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Fimg)
         {
-            if ( dVkij(Mmissing,k,i,j) > 0.)
+            count = dVkij(sumW[missno],k,i,j);
+            if ( count > 0.)
             {
                 FFT_IDX2DIGFREQ(j,dim,XX(f));
                 FFT_IDX2DIGFREQ(i,dim,YY(f));
@@ -615,16 +689,13 @@ void Prog_ml_tomo_prm::preparePowerSpectraAdjustment()
                 double R = f.module();
                 if (R>0.5) continue;
                 aux = abs( dVkij(Fimg,k,i,j) );
-                aux *= aux;
-                int idx=ROUND(R*dim);
-                spectra_series[missno*(hdim+1) + idx] += aux;
+                int idx=ROUND(R*2*dim);
+                spectra_series[missno*vsize + idx] += aux;
                 spectra_avg[idx] += aux;
-                count_series[missno*(hdim+1) + idx]++;
-                count_avg[idx]++;
+                count_series[missno*vsize + idx] += count;
+                count_avg[idx] += count;
             }
         }
-        c++;
-        if (verb > 0 && c % cc == 0) progress_bar(c);
     }
 
     // Divide spectra_avg by all spectra_series for correction
@@ -633,32 +704,31 @@ void Prog_ml_tomo_prm::preparePowerSpectraAdjustment()
     if (!fh) REPORT_ERROR(1, (std::string)"Prog_ml_tomo_prm: Cannot write file: " + fn_out);
     
     fh<<"# dig. freq.   AVG  series 1-n... \n";
-    for (int idx = 0; idx <= hdim; idx++)
+    for (int idx = 0; idx < vsize; idx++)
     {
-        if (count_avg[idx]>0)
+        if (count_avg[idx]>0.)
             spectra_avg[idx] /= count_avg[idx];
 
-        fh << (double)idx/dim <<" "<<1000.*spectra_avg[idx];
-        for (missno = 0; missno < nr_miss; missno++)
+        fh << (double)idx/(2*dim) <<" "<<1000.*spectra_avg[idx];
+        for (int missno = 0; missno < nr_miss; missno++)
         {
-            if (count_series[missno*(hdim+1) + idx] > 0)
-                spectra_series[missno*(hdim+1) + idx] /= (double)count_series[missno*(hdim+1) + idx];
-            fh <<" "<<1000.*spectra_series[missno*(hdim+1) + idx];
-            if (spectra_series[missno*(hdim+1) + idx] > 0)
-                spectra_series[missno*(hdim+1) + idx] = spectra_avg[idx] / spectra_series[missno*(hdim+1) + idx];
+            if (count_series[missno*vsize + idx] > 0.)
+                spectra_series[missno*vsize + idx] /= count_series[missno*vsize + idx];
+            fh <<" "<<1000.*spectra_series[missno*vsize + idx];
+
+            if (spectra_series[missno*vsize + idx] > 0.)
+                spectra_series[missno*vsize + idx] = spectra_avg[idx] / spectra_series[missno*vsize + idx];
         }
         fh<<"\n";
     }
     fh.close();
-
-    if (verb > 0) progress_bar(SF.ImgNo());
 
 }
 
 void Prog_ml_tomo_prm::applyPowerSpectraAdjustment(Matrix3D<std::complex<double> > &M, int missno)
 {
     Matrix1D<double> f(3);
-
+    int vsize=2*hdim+1;
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(M)
     {
         FFT_IDX2DIGFREQ(j,dim,XX(f));
@@ -666,8 +736,8 @@ void Prog_ml_tomo_prm::applyPowerSpectraAdjustment(Matrix3D<std::complex<double>
         FFT_IDX2DIGFREQ(k,dim,ZZ(f));
         double R =f.module();
         if (R>0.5) continue;
-        int idx=ROUND(R*dim);
-        dVkij(M,k,i,j) *= spectra_series[missno*(hdim+1) + idx];
+        int idx=ROUND(R*2*dim);
+        dVkij(M,k,i,j) *= spectra_series[missno*vsize + idx];
     }
 
 }
@@ -753,7 +823,11 @@ void Prog_ml_tomo_prm::generateInitialReferences()
                 my_psi = 360. * rnd_unif(0., 1.);
             }
             my_A = Euler_rotation3DMatrix(my_rot, my_tilt, my_psi);
-            Itmp().selfApplyGeometry(my_A, IS_NOT_INV, DONT_WRAP);
+#ifdef USE_SPLINES
+                Itmp().selfApplyGeometryBSpline(my_A, 3, IS_NOT_INV, DONT_WRAP);
+#else
+                Itmp().selfApplyGeometry(my_A, IS_NOT_INV, DONT_WRAP);
+#endif
 
             // Store sum
             Iave() += Itmp();
@@ -802,6 +876,15 @@ void Prog_ml_tomo_prm::generateInitialReferences()
         reScaleVolume(Iout(),false);
         Iout.write(fn_tmp);
         SFr.insert(fn_tmp, SelLine::ACTIVE);
+        // Also write out average wedge of this reference
+        fn_tmp = fn_root + "_it";
+        fn_tmp.compose(fn_tmp, 0, "");
+        fn_tmp = fn_tmp + "_wedge";
+        fn_tmp.compose(fn_tmp, refno + 1, "");
+        fn_tmp = fn_tmp + ".vol";
+        Iout()=Msumwedge;
+        reScaleVolume(Iout(),false);
+        Iout.write(fn_tmp);
     }
     if (verb > 0) progress_bar(SF.ImgNo());
     fn_ref = fn_root + "_it";
@@ -855,11 +938,17 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
         // Rotate some arbitrary (off-axis) angle and rotate back again to remove high frequencies
         // that will be affected by the interpolation due to rotation
         // This makes that the A2 values of the rotated references are much less sensitive to rotation
+#ifdef USE_SPLINES
+        img().selfApplyGeometryBSpline( Euler_rotation3DMatrix(32., 61., 53.), 3, IS_NOT_INV, 
+                                        DONT_WRAP, DIRECT_MULTIDIM_ELEM(img(),0) );
+        img().selfApplyGeometryBSpline( Euler_rotation3DMatrix(32., 61., 53.), 3, IS_INV, 
+                                        DONT_WRAP, DIRECT_MULTIDIM_ELEM(img(),0) );
+#else
         img().selfApplyGeometry( Euler_rotation3DMatrix(32., 61., 53.), IS_NOT_INV, 
                                  DONT_WRAP, DIRECT_MULTIDIM_ELEM(img(),0) );
         img().selfApplyGeometry( Euler_rotation3DMatrix(32., 61., 53.), IS_INV, 
                                  DONT_WRAP, DIRECT_MULTIDIM_ELEM(img(),0) );
-
+#endif
         Iref.push_back(img);
         Iold.push_back(img);
         nr_ref++;
@@ -1354,8 +1443,13 @@ void Prog_ml_tomo_prm::postProcessVolume(VolumeXmipp &Vin)
             R(3, 0) = sh(0) * dim;
             R(3, 1) = sh(1) * dim;
             R(3, 2) = sh(2) * dim;
+#ifdef USE_SPLINES
+            applyGeometryBSpline(Vaux(), R.transpose(), Vin(), 3, IS_NOT_INV, 
+                          DONT_WRAP, DIRECT_MULTIDIM_ELEM(Vin(),0));
+#else
             applyGeometry(Vaux(), R.transpose(), Vin(), IS_NOT_INV, 
                           DONT_WRAP, DIRECT_MULTIDIM_ELEM(Vin(),0));
+#endif
             Vsym() += Vaux();
         }
         Vsym()/=mysampling.SL.SymsNo()+1.;
@@ -1398,8 +1492,13 @@ void Prog_ml_tomo_prm::precalculateA2(std::vector< VolumeXmippT<double> > &Iref)
             A_rot_inv = ((all_angle_info[angno]).A).inv();
             // use DONT_WRAP and put density of first element outside 
             // i.e. assume volume has been processed with omask
+#ifdef USE_SPLINES
+            applyGeometryBSpline(Maux, A_rot_inv, Iref[refno](), 3, IS_NOT_INV, 
+                          DONT_WRAP, DIRECT_MULTIDIM_ELEM(Iref[refno](),0));
+#else
             applyGeometry(Maux, A_rot_inv, Iref[refno](), IS_NOT_INV, 
                           DONT_WRAP, DIRECT_MULTIDIM_ELEM(Iref[refno](),0));
+#endif
 //#define DEBUG_PRECALC_A2_ROTATE
 #ifdef DEBUG_PRECALC_A2_ROTATE
             VolumeXmipp Vt;
@@ -1634,8 +1733,13 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                     fracpdf = alpha_k(refno)*(1./nr_ang);
                     // Now (inverse) rotate the reference and calculate its Fourier transform
                     // Use DONT_WRAP and assume map has been omasked
+#ifdef USE_SPLINES
+                    applyGeometryBSpline(Maux2, A_rot_inv, Iref[refno](), 3, IS_NOT_INV, 
+                                  DONT_WRAP, DIRECT_MULTIDIM_ELEM(Iref[refno](),0));
+#else
                     applyGeometry(Maux2, A_rot_inv, Iref[refno](), IS_NOT_INV, 
                                   DONT_WRAP, DIRECT_MULTIDIM_ELEM(Iref[refno](),0));
+#endif
                     mycorrAA = corrA2[refno*nr_ang + angno];
                     Maux = Maux2 * mycorrAA;
                     local_transformer.FourierTransform();
@@ -1739,8 +1843,13 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                         }
                         local_transformer.inverseFourierTransform();
                         maskSphericalAverageOutside(Maux);
+#ifdef USE_SPLINES
+                        Maux.selfApplyGeometryBSpline(A_rot, 3, IS_NOT_INV, 
+                                               DONT_WRAP, DIRECT_MULTIDIM_ELEM(Maux,0));
+#else
                         Maux.selfApplyGeometry(A_rot, IS_NOT_INV, 
                                                DONT_WRAP, DIRECT_MULTIDIM_ELEM(Maux,0));
+#endif
                         if (do_missing)
                         {
                             // Store sum of wedges!
@@ -1944,8 +2053,13 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
             {
                 // Now (inverse) rotate the reference and calculate its Fourier transform
                 // Use DONT_WRAP because the reference has been omasked
+#ifdef USE_SPLINES
+                applyGeometryBSpline(Maux, A_rot_inv, Iref[refno](), 3, IS_NOT_INV, 
+                              DONT_WRAP, DIRECT_MULTIDIM_ELEM(Iref[refno](),0));
+#else
                 applyGeometry(Maux, A_rot_inv, Iref[refno](), IS_NOT_INV, 
                               DONT_WRAP, DIRECT_MULTIDIM_ELEM(Iref[refno](),0));
+#endif
                 local_transformer.FourierTransform();
                 if (do_missing)
                 {
@@ -1999,8 +2113,13 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
     A_rot = (all_angle_info[opt_angno]).A;
 
     maskSphericalAverageOutside(Mimg0);
+#ifdef USE_SPLINES
+    Mimg0.selfApplyGeometryBSpline(A_rot, 3, IS_NOT_INV, 
+                            DONT_WRAP, DIRECT_MULTIDIM_ELEM(Mimg0,0));
+#else
     Mimg0.selfApplyGeometry(A_rot, IS_NOT_INV, 
                             DONT_WRAP, DIRECT_MULTIDIM_ELEM(Mimg0,0));
+#endif
     maxCC = maxcorr;
 
     // From here on lock threads
