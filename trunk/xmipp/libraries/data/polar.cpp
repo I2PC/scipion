@@ -67,7 +67,6 @@ void inverseFourierTransformRings(Polar<std::complex<double> > & in,
 void rotationalCorrelation(const Polar<std::complex<double> > &M1,
 			   const Polar<std::complex<double> > &M2,
                            Matrix1D<double> &angles, 
-			   Matrix1D<double> &corr,
                            XmippFftw &local_transformer)
 {
 
@@ -94,8 +93,53 @@ void rotationalCorrelation(const Polar<std::complex<double> > &M1,
     // The local_transformer should already have corr as setReal!!
     local_transformer.inverseFourierTransform();
 
-    angles.resize(corr);
+    angles.resize(XSIZE(local_transformer.getReal()));
     for (int i = 0; i < XSIZE(angles); i++)
 	angles(i)=(double)i*360./XSIZE(angles);
+}
 
+// Compute the normalized Polar Fourier transform --------------------------
+void normalizedPolarFourierTransform(const Matrix2D<double> &in,
+    Polar< std::complex<double> > &out, bool flag,
+    int first_ring, int last_ring, Polar_fftw_plans *&plans)
+{
+    Matrix2D<double> Maux;
+    in.produceSplineCoefficients(Maux,3);
+    Polar<double> polarIn;
+    polarIn.getPolarFromCartesianBSpline(Maux,first_ring,last_ring);
+    double mean = polarIn.computeSum(true);
+    double stddev = polarIn.computeSum2(true);
+    stddev = sqrt(stddev - mean * mean);
+    polarIn -= mean;
+    polarIn /= stddev;
+    if (plans==NULL)
+    {
+        plans=new Polar_fftw_plans();
+        polarIn.calculateFftwPlans(*plans);
+    }
+    fourierTransformRings(polarIn,out,*plans,flag);
+}
+
+// Best rotation -----------------------------------------------------------
+double best_rotation(const Polar< std::complex<double> > &I1,
+    const Polar< std::complex<double> > &I2, XmippFftw &local_transformer)
+{
+    Matrix1D<double> angles;
+    rotationalCorrelation(I1,I2,angles,local_transformer);
+    
+    // Compute the maximum of correlation (inside local_transformer)
+    const MultidimArray<double> &corr=local_transformer.getReal();
+    int imax=0;
+    double maxval=DIRECT_MULTIDIM_ELEM(corr,0);
+    double* ptr=NULL;
+    unsigned long int n;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(corr,n,ptr)
+        if (*ptr > maxval)
+        {
+            maxval = *ptr;
+            imax=n;
+        }
+    
+    // Return the corresponding angle
+    return angles(imax);
 }

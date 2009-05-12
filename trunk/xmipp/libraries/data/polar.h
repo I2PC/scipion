@@ -848,8 +848,17 @@ void inverseFourierTransformRings(Polar<std::complex<double> > & in,
 void rotationalCorrelation(const Polar<std::complex<double> > &M1,
 			   const Polar<std::complex<double> > &M2,
                            Matrix1D<double> &angles, 
-			   Matrix1D<double> &corr,
                            XmippFftw &local_transformer);
+
+/** Compute a normalized polar Fourier transform of the input image.
+    If plans is NULL, they are computed and returned. */
+void normalizedPolarFourierTransform(const Matrix2D<double> &in,
+    Polar< std::complex<double> > &out, bool flag,
+    int first_ring, int last_ring, Polar_fftw_plans *&plans);
+
+/** Best rotation between two normalized polar Fourier transforms. */
+double best_rotation(const Polar< std::complex<double> > &I1,
+    const Polar< std::complex<double> > &I2, XmippFftw &local_transformer);
 
 //@}
 #endif
