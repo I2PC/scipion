@@ -487,7 +487,7 @@ void * threadRotationallyAlignOneImage( void * data )
             for (int itrans = 0; itrans < prm->nr_trans; itrans++)
             {
                 // A. Check straight image
-                rotationalCorrelation(prm->fP_img[itrans],prm->fP_ref[refno],ang,corr,local_transformer);
+                rotationalCorrelation(prm->fP_img[itrans],prm->fP_ref[refno],ang,local_transformer);
                 corr /= prm->stddev_ref[refno] * prm->stddev_img[itrans]; // for normalized ccf
                 for (int k = 0; k < XSIZE(corr); k++)
                 {
@@ -504,7 +504,7 @@ void * threadRotationallyAlignOneImage( void * data )
 #endif	    
 
                 // B. Check mirrored image
-                rotationalCorrelation(prm->fPm_img[itrans],prm->fP_ref[refno],ang,corr,local_transformer);
+                rotationalCorrelation(prm->fPm_img[itrans],prm->fP_ref[refno],ang,local_transformer);
                 corr /= prm->stddev_ref[refno] * prm->stddev_img[itrans]; // for normalized ccf
                 for (int k = 0; k < XSIZE(corr); k++)
                 {

@@ -359,7 +359,7 @@ void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
             // Rotationally align
             getPolar(imgs[imgno](),fPimg,false,(float)-imgs[imgno].Xoff(),(float)-imgs[imgno].Yoff());
             // A. Check straight image
-            rotationalCorrelation(fPimg,fPref,ang,corr,global_transformer);
+            rotationalCorrelation(fPimg,fPref,ang,global_transformer);
 	    for (int k = 0; k < XSIZE(corr); k++)
 	    {
 		if (corr(k)> maxcorr)
@@ -371,7 +371,7 @@ void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
 	    }
 
             // B. Check mirrored image
-            rotationalCorrelation(fPimg,fPrefm,ang,corr,global_transformer);
+            rotationalCorrelation(fPimg,fPrefm,ang,global_transformer);
 	    for (int k = 0; k < XSIZE(corr); k++)
 	    {
 		if (corr(k)> maxcorr)
