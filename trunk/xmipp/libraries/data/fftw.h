@@ -215,6 +215,9 @@ public:
     */
     void Transform(int sign);
 
+    /** Get the Multidimarray that is being used as input. */
+    const MultidimArray<double> &getReal() const;
+
     /** Set a Multidimarray for input.
         The data of img will be the one of fReal. In forward
         transforms it is not modified, but in backward transforms,

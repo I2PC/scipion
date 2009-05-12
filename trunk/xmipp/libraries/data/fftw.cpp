@@ -56,6 +56,11 @@ XmippFftw::~XmippFftw()
 }
 
 // Initialization ----------------------------------------------------------
+const MultidimArray<double> &XmippFftw::getReal() const
+{
+    return (*fReal);
+}
+
 void XmippFftw::setReal(MultidimArray<double> &input)
 {
     bool recomputePlan=false;
