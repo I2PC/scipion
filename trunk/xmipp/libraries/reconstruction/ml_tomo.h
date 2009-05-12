@@ -158,6 +158,9 @@ public:
     double max_resol, scale_factor;
     Matrix3D<double> fourier_mask, fourier_imask, real_mask, real_omask;
 
+    /** Rotate image version */
+    bool do_rotate_image;
+
     /* Adjust power spectra of all tilt series to average power spectrum */
     bool do_adjust_spectra;
     /** Arrays with power spectra for each tilt series */
@@ -267,9 +270,20 @@ public:
 
     /// Fill vector of matrices with all rotations of reference
     void precalculateA2(std::vector< VolumeXmippT<double> > &Iref);
+    void precalculateA2RotateImage(std::vector< VolumeXmippT<double> > &Iref);
 
     /// ML-integration over all hidden parameters
     void expectationSingleImage(Matrix3D<double> &Mimg, int imgno, int missno,
+                                std::vector<VolumeXmippT<double> > &Iref,
+                                std::vector<Matrix3D<double> > &wsumimgs,
+                                std::vector<Matrix3D<double> > &wsumweds,
+                                double &wsum_sigma_noise, double &wsum_sigma_offset,
+                                Matrix1D<double> &sumw, Matrix1D<double> &sumwsc, 
+                                Matrix1D<double> &sumwsc2,
+                                double &LL, double &dLL, double &fracweight, double &sumfracweight, 
+                                double &opt_scale, double &bgmean, double &trymindiff,
+                                int &opt_refno, int &opt_angno, Matrix1D<double> &opt_offsets);
+    void expectationSingleImageRotateImage(Matrix3D<double> &Mimg, int imgno, int missno,
                                 std::vector<VolumeXmippT<double> > &Iref,
                                 std::vector<Matrix3D<double> > &wsumimgs,
                                 std::vector<Matrix3D<double> > &wsumweds,
