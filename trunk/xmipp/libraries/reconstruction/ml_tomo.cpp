@@ -2572,7 +2572,7 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
                                                             (dim-k)%dim,(dim-i)%dim,dim-j);
                 }
             }
-#define DEBUG_UPDATE_SIGMA
+//#define DEBUG_UPDATE_SIGMA
 #ifdef DEBUG_UPDATE_SIGMA
             std::cerr<<" sum_complete_wedge= "<<sum_complete_wedge<<" = "<<100*sum_complete_wedge/(sumw_allrefs*sum_complete_fourier)<<"%"<<std::endl;
             std::cerr<<" ddim3= "<<ddim3<<std::endl;
