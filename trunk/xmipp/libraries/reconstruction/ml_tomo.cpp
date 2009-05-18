@@ -2086,18 +2086,29 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
                             DONT_WRAP, DIRECT_MULTIDIM_ELEM(Mimg0,0));
     maxCC = maxcorr;
 
-    // From here on lock threads
+    if (do_missing)
+    {
+        // Store sum of wedges
+        getMissingRegion(Mmissing, A_rot, missno);
+        Maux = Mimg0;
+        // Again enforce missing region to avoid filling it with artifacts from the rotation
+        local_transformer.FourierTransform();
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
+        {
+            DIRECT_MULTIDIM_ELEM(Faux,n) *= DIRECT_MULTIDIM_ELEM(Mmissing,n);
+        }
+        local_transformer.inverseFourierTransform();
+        Mimg0 = Maux;
+    }
+
+    // From here on lock threads to add to sums
     pthread_mutex_lock( &mltomo_weightedsum_update_mutex );
 
     sumCC += maxCC;
     wsumimgs[opt_refno] += Mimg0;
     sumw(opt_refno)  += 1.;
     if (do_missing)
-    {
-        // Store sum of wedges
-        getMissingRegion(Mmissing, A_rot, missno);
         wsumweds[opt_refno] += Mmissing;
-    }
 
     pthread_mutex_unlock(  &mltomo_weightedsum_update_mutex );
 
