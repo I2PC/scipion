@@ -156,7 +156,6 @@ void Prog_ml_tomo_prm::read(int argc, char **argv, bool ML3D)
     maxres = textToFloat(getParameter(argc2, argv2, "-maxres", "0.5"));
 
     // Hidden arguments
-    do_esthetics = checkParameter(argc2, argv2, "-esthetics");
     trymindiff_factor = textToFloat(getParameter(argc2, argv2, "-trymindiff_factor", "0.9"));
 
     // Number of threads
@@ -242,11 +241,6 @@ void Prog_ml_tomo_prm::show(bool ML3D)
         {
             std::cerr << "  -> Using "<<threads<<" parallel threads"<<std::endl;
         }
-        if (do_esthetics)
-        {
-            std::cerr << "  -> Perform esthetics on (0,0)-pixel artifacts" << std::endl;
-        }
-  
 
         std::cerr << " -----------------------------------------------------------------" << std::endl;
 
@@ -2649,14 +2643,7 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
     for (int refno=0; refno < nr_ref; refno++)
     {
         postProcessVolume(Iref[refno]);
-        if (do_esthetics)
-            avg_origin += VOL_ELEM(Iref[refno](), 0, 0, 0);
     }
-
-    // Adjust origin pixel of all references
-    if (do_esthetics)
-        for (int refno=0;refno<nr_ref; refno++)
-            VOL_ELEM(Iref[refno](), 0, 0, 0) = avg_origin/(double)nr_ref;
 
 #ifdef DEBUG
     std::cerr<<"finished maximization"<<std::endl;

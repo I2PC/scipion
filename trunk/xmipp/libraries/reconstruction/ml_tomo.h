@@ -123,8 +123,6 @@ public:
     Matrix3D<double> P_phi, Mr2;
     /** Flag for generation of initial models from random subsets */
     bool do_generate_refs;
-    /** Very crude origin pixel artifact correction */
-    bool do_esthetics;
 
     /// Re-normalize internally
     /** Flag to refine normalization of each experimental image */
