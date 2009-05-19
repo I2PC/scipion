@@ -1055,6 +1055,7 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
                                    XX(mysampling.no_redundant_sampling_points_angles[i]),
                                    YY(mysampling.no_redundant_sampling_points_angles[i]),
                                    psip, rot, tilt, psi);
+                psi = psip + SMALLANGLE;
             }
             else
             {
