@@ -2079,7 +2079,7 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
     XX(opt_offsets) = -(double)ioptx;
     YY(opt_offsets) = -(double)iopty;
     ZZ(opt_offsets) = -(double)ioptz;
-    Mimg0.selfTranslate(opt_offsets, WRAP);
+    Mimg0.selfTranslate(opt_offsets, DONT_WRAP);
     A_rot = (all_angle_info[opt_angno]).A;
 
     maskSphericalAverageOutside(Mimg0);
