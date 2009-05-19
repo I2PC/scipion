@@ -44,7 +44,7 @@
 #include <vector>
 
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
-#define SMALLANGLE 5.75
+#define SMALLANGLE 2.75
 #define MLTOMODATALINELENGTH 12
 class Prog_ml_tomo_prm;
 
@@ -141,6 +141,8 @@ public:
     double average_scale;
     /** Local search angular distance */
     double ang_search;
+    /** Perturb angular samplin */
+    bool do_perturb;
 
     /// Internally store all missing wedges or re-compute on the fly?
 
@@ -247,6 +249,9 @@ public:
     /** Read reference images in memory & set offset vectors
         (This produce_side_info is Selfile-dependent!) */
     void produceSideInfo2(int nr_vols = 1);
+
+    /// Calculate Angular sampling
+    void calculateAngularSampling(int iter);
 
     /// Calculate probability density distribution for in-plane transformations
     void calculatePdfTranslations();

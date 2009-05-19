@@ -125,6 +125,7 @@ void Prog_ml_tomo_prm::read(int argc, char **argv, bool ML3D)
     verb = textToInteger(getParameter(argc2, argv2, "-verb", "1"));
     no_SMALLANGLE = checkParameter(argc2, argv2, "-no_SMALLANGLE");
     do_keep_angles = checkParameter(argc2, argv2, "-keep_angles");
+    do_perturb = checkParameter(argc2, argv2, "-perturb");
 
     // Adjust power spectra
     do_adjust_spectra = checkParameter(argc2, argv2, "-adjust_spectra");
@@ -201,7 +202,7 @@ void Prog_ml_tomo_prm::show(bool ML3D)
         if (fn_missing!="")
         {
             std::cerr << "  Missing data info       : "<<fn_missing <<std::endl;
-            if (do_impute)
+            if (do_impute && do_ml)
                 std::cerr << "  Missing data treatment  : imputation "<<std::endl;
             else
                 std::cerr << "  Missing data treatment  : conventional division "<<std::endl;
@@ -212,6 +213,10 @@ void Prog_ml_tomo_prm::show(bool ML3D)
         if (!do_ml) 
         {
             std::cerr << "  -> Use constrained correlation coefficient instead of ML-imputation approach." << std::endl;
+        }
+        if (do_perturb)
+        {
+            std::cerr << "  -> Perturb angular sampling." << std::endl;
         }
         if (fix_fractions)
         {
@@ -301,6 +306,9 @@ void Prog_ml_tomo_prm::produceSideInfo()
 #ifdef  DEBUG
     std::cerr<<"Start produceSideInfo"<<std::endl;
 #endif
+
+    // For several random operations
+    randomize_random_generator();
 
     // Read selfile with experimental images
     SF.read(fn_sel);
@@ -609,7 +617,6 @@ void Prog_ml_tomo_prm::preparePowerSpectraAdjustment()
         init_progress_bar(SF.ImgNo());
     }
 
-    randomize_random_generator();
     SFtmp = SF.randomize();
     SFtmp.go_beginning();
     while (!SFtmp.eof())
@@ -784,7 +791,6 @@ void Prog_ml_tomo_prm::generateInitialReferences()
     Msumwedge.resize(dim,dim,hdim+1);
     // Make random subsets and calculate average images in random orientations
     // and correct using conventional division by the sum of the wedges
-    randomize_random_generator();
     SFtmp = SF.randomize();
     for (int refno = 0; refno < nr_ref; refno++)
     {
@@ -1030,63 +1036,6 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
 
     } 
 
-    // Now that we know where all experimental images are (for possible local searches)
-    // we can finally calculate the sampling points for the references
-    int nr_psi = CEIL(360. / psi_sampling);
-    double rot, tilt, psi, psip;
-    angle_info myinfo;
-    Matrix2D< double > R, I(3,3);
-    if (!no_SMALLANGLE)
-    {
-        R = Euler_rotation3DMatrix(SMALLANGLE, SMALLANGLE, SMALLANGLE);
-        R.resize(3,3);
-        I.initIdentity();
-    }
-    all_angle_info.clear();
-    nr_ang = 0;
-    for (int i = 0; i < mysampling.no_redundant_sampling_points_angles.size(); i++)
-    {
-        for (int ipsi = 0; ipsi < nr_psi; ipsi++)
-        {
-            psip = (double)(ipsi * 360. / nr_psi);
-            if (!no_SMALLANGLE)
-            {
-                Euler_apply_transf(I, R, 
-                                   XX(mysampling.no_redundant_sampling_points_angles[i]),
-                                   YY(mysampling.no_redundant_sampling_points_angles[i]),
-                                   psip, rot, tilt, psi);
-                psi = psip + SMALLANGLE;
-            }
-            else
-            {
-                rot=XX(mysampling.no_redundant_sampling_points_angles[i]);
-                tilt=YY(mysampling.no_redundant_sampling_points_angles[i]);
-                psi = psip;
-            }
-            myinfo.rot = rot;
-            myinfo.tilt = tilt;
-            myinfo.psi = psi;
-            myinfo.A = Euler_rotation3DMatrix(rot, tilt, psi);
-            myinfo.direction = i;
-            all_angle_info.push_back(myinfo);
-            nr_ang ++;
-        }
-    }
-    
-
-//#define DEBUG_SAMPLING
-#ifdef DEBUG_SAMPLING
-    DocFile DFt;
-    for (int angno = 0; angno < nr_ang; angno++)
-    {
-        double rot=all_angle_info[angno].rot;
-        double tilt=all_angle_info[angno].tilt;
-        double psi=all_angle_info[angno].psi;
-        DFt.append_angles(rot,tilt,psi,"rot","tilt","psi");
-    }
-    DFt.write("angles.doc");
-    std::cerr<<"written docfile angles.doc"<<std::endl;
-#endif
 
 //#define DEBUG_GENERAL
 #ifdef DEBUG_GENERAL
@@ -1102,6 +1051,82 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
 
 #ifdef DEBUG
     std::cerr<<"Finished produceSideInfo2"<<std::endl;
+#endif
+
+}
+
+void Prog_ml_tomo_prm::calculateAngularSampling(int iter)
+{
+
+    // Now that we know where all experimental images are (for possible local searches)
+    // we can finally calculate the sampling points for the references
+    int nr_psi = CEIL(360. / psi_sampling);
+    double rot, tilt, psi, psip=0.;
+    angle_info myinfo;
+    Matrix2D< double > R, I(3,3);
+    
+
+    if (do_perturb)
+    {
+        double ran1, ran2, ran3;
+        // Note that each mpi process will have a different random perturbation!!
+        ran1 = rnd_gaus(0., angular_sampling/3.);
+        ran2 = rnd_gaus(0., angular_sampling/3.);
+        ran3 = rnd_gaus(0., angular_sampling/3.);
+//#define DEBUG_SAMPLING
+#ifdef DEBUG_SAMPLING
+        std::cerr<<" random perturbation= "<<ran1<<" "<<ran2<<" "<<ran3<<std::endl;
+#endif
+        R = Euler_rotation3DMatrix(ran1, ran2, ran3);
+        R.resize(3,3);
+        I.initIdentity();
+    } 
+
+    all_angle_info.clear();
+    nr_ang = 0;
+    for (int i = 0; i < mysampling.no_redundant_sampling_points_angles.size(); i++)
+    {
+        if (do_perturb)
+        {
+            Euler_apply_transf(I, R, 
+                               XX(mysampling.no_redundant_sampling_points_angles[i]),
+                               YY(mysampling.no_redundant_sampling_points_angles[i]),
+                               psip, rot, tilt, psi);
+        }
+        else
+        {
+            rot=XX(mysampling.no_redundant_sampling_points_angles[i]);
+            tilt=YY(mysampling.no_redundant_sampling_points_angles[i]);
+        }
+
+        for (int ipsi = 0; ipsi < nr_psi; ipsi++)
+        {
+            psi = (double)(ipsi * 360. / nr_psi);
+            if (!no_SMALLANGLE)
+                psi += SMALLANGLE;
+            myinfo.rot = rot;
+            myinfo.tilt = tilt;
+            myinfo.psi = psi;
+            myinfo.A = Euler_rotation3DMatrix(rot, tilt, psi);
+            myinfo.direction = i;
+            all_angle_info.push_back(myinfo);
+            nr_ang ++;
+        }
+    }
+    
+#ifdef DEBUG_SAMPLING
+    DocFile DFt;
+    for (int angno = 0; angno < nr_ang; angno++)
+    {
+        double rot=all_angle_info[angno].rot;
+        double tilt=all_angle_info[angno].tilt;
+        double psi=all_angle_info[angno].psi;
+        DFt.append_angles(rot,tilt,psi,"rot","tilt","psi");
+    }
+    FileName fnt;
+    fnt.compose(fn_root + "_it",iter,"");
+    fnt += "_angles.doc";
+    DFt.write(fnt);
 #endif
 
 }
@@ -2304,6 +2329,9 @@ void Prog_ml_tomo_prm::expectation(
     bool fill_real_space;
     int num_img_tot;
     
+    // Update angular sampling (if perturbed)
+    calculateAngularSampling(iter);
+    
     if (do_ml)
     {
         // Precalculate A2-values for all references
@@ -2647,7 +2675,14 @@ bool Prog_ml_tomo_prm::regularize(int iter)
 #ifdef DEBUG
         std::cerr<<"start regularize"<<std::endl;
 #endif 
-
+        // Write out original volumes (before regularization)
+        FileName fnt;
+        for (int refno = 0; refno < nr_ref; refno++)
+        {
+            fnt.compose(fn_root+"_it",iter,"");
+            fnt.compose(fnt+"_oriref",refno+1,"vol");
+            Iref[refno].write(fnt);
+        }
         // Normalized regularization (in N/K)
         double reg_norm = reg_current * (double)nr_exp_images / (double)nr_ref;
         Matrix3D<std::complex<double> > Fref, Favg, Fzero(dim,dim,hdim+1);
