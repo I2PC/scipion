@@ -40,7 +40,8 @@ int main(int argc, char **argv)
     double aux, wsum_sigma_noise, wsum_sigma_offset;
     std::vector<Matrix3D<double > > wsumimgs;
     std::vector<Matrix3D<double > > wsumweds;
-    Matrix1D<double> sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, Vaux;
+    std::vector<Matrix1D<double > > fsc;
+    Matrix1D<double> sumw,  Vaux;
     Matrix3D<double> P_phi, Mr2, Maux, Maux2;
     FileName fn_img, fn_tmp;
     Matrix1D<double> oneline(0);
@@ -135,7 +136,7 @@ int main(int argc, char **argv)
             prm.expectation(prm.SF, prm.Iref, iter,
                             LL, sumcorr, DFo, wsumimgs, wsumweds,
                             wsum_sigma_noise, wsum_sigma_offset, 
-                            sumw, sumwsc, sumwsc2);
+                            sumw);
 
             // Here MPI_allreduce of all wsums,LL and sumcorr !!!
             MPI_Allreduce(&LL, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -150,12 +151,6 @@ int main(int argc, char **argv)
             MPI_Allreduce(MULTIDIM_ARRAY(sumw), MULTIDIM_ARRAY(Vaux), 
                           MULTIDIM_SIZE(sumw), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             sumw = Vaux;
-            MPI_Allreduce(MULTIDIM_ARRAY(sumwsc), MULTIDIM_ARRAY(Vaux), 
-                          MULTIDIM_SIZE(sumwsc), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-            sumwsc = Vaux;
-            MPI_Allreduce(MULTIDIM_ARRAY(sumwsc2), MULTIDIM_ARRAY(Vaux), 
-                          MULTIDIM_SIZE(sumwsc2), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-            sumwsc2 = Vaux;
             for (int refno = 0; refno < prm.nr_ref; refno++)
             {
                 MPI_Allreduce(MULTIDIM_ARRAY(wsumimgs[refno]), MULTIDIM_ARRAY(Maux),
@@ -172,8 +167,7 @@ int main(int argc, char **argv)
             // Update model parameters
             prm.maximization(wsumimgs, wsumweds,
                              wsum_sigma_noise, wsum_sigma_offset, 
-                             sumw, sumwsc, sumwsc2,
-                             sumcorr, sumw_allrefs, iter);
+                             sumw, sumcorr, sumw_allrefs, fsc, iter);
 
             // Check convergence
             converged = prm.checkConvergence(conv);
@@ -222,7 +216,7 @@ int main(int argc, char **argv)
                 DFo.renum();
 
                 // Output all intermediate files
-                prm.writeOutputFiles(iter, DFo, wsumweds, sumw_allrefs, LL, sumcorr, conv);
+                prm.writeOutputFiles(iter, DFo, wsumweds, sumw_allrefs, LL, sumcorr, conv, fsc);
             }
             MPI_Barrier(MPI_COMM_WORLD);
             
@@ -240,7 +234,7 @@ int main(int argc, char **argv)
 
         } // end loop iterations
 	if (rank == 0)  
-	    prm.writeOutputFiles(-1, DFo, wsumweds, sumw_allrefs, LL, sumcorr, conv);
+	    prm.writeOutputFiles(-1, DFo, wsumweds, sumw_allrefs, LL, sumcorr, conv, fsc);
 
     }
     catch (Xmipp_error XE)

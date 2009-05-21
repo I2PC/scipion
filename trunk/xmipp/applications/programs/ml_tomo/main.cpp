@@ -34,7 +34,8 @@ int main(int argc, char **argv)
     double aux, wsum_sigma_noise, wsum_sigma_offset;
     std::vector<Matrix3D<double > > wsumimgs;
     std::vector<Matrix3D<double > > wsumweds;
-    Matrix1D<double> sumw, sumw2, sumwsc, sumwsc2;
+    std::vector<Matrix1D<double > > fsc;
+    Matrix1D<double> sumw;
     Matrix3D<double> P_phi, Mr2, Maux;
     FileName fn_img, fn_tmp;
     Matrix1D<double> oneline(0);
@@ -90,19 +91,17 @@ int main(int argc, char **argv)
             // Integrate over all images
             prm.expectation(prm.SF, prm.Iref, iter,
                             LL, sumcorr, DFo, wsumimgs, wsumweds,
-                            wsum_sigma_noise, wsum_sigma_offset, 
-                            sumw, sumwsc, sumwsc2);
+                            wsum_sigma_noise, wsum_sigma_offset, sumw);
 
             // Update model parameters
             prm.maximization(wsumimgs, wsumweds,
                              wsum_sigma_noise, wsum_sigma_offset, 
-                             sumw, sumwsc, sumwsc2, 
-                             sumcorr, sumw_allrefs, iter);
+                             sumw, sumcorr, sumw_allrefs, fsc, iter);
 
             // Check convergence
             converged = prm.checkConvergence(conv);
 
-            prm.writeOutputFiles(iter, DFo, wsumweds, sumw_allrefs, LL, sumcorr, conv);
+            prm.writeOutputFiles(iter, DFo, wsumweds, sumw_allrefs, LL, sumcorr, conv, fsc);
 
             if (converged)
             {
@@ -111,7 +110,7 @@ int main(int argc, char **argv)
             }
 
         } // end loop iterations
-        prm.writeOutputFiles(-1, DFo, wsumweds, sumw_allrefs, LL, sumcorr, conv);
+        prm.writeOutputFiles(-1, DFo, wsumweds, sumw_allrefs, LL, sumcorr, conv, fsc);
 
     }
     catch (Xmipp_error XE)
