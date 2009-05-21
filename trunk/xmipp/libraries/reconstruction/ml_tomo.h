@@ -45,7 +45,7 @@
 
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
 #define SMALLANGLE 2.75
-#define MLTOMODATALINELENGTH 12
+#define MLTOMODATALINELENGTH 10
 class Prog_ml_tomo_prm;
 
 // Thread declaration
@@ -67,8 +67,6 @@ typedef struct{
     std::vector<VolumeXmippT<double> > *Iref;
     std::vector<Matrix1D<double> > *docfiledata;
     Matrix1D<double> *sumw;
-    Matrix1D<double> *sumwsc;
-    Matrix1D<double> *sumwsc2;
 } structThreadExpectationSingleImage ;
 
 /**@defgroup ml_tomo ml_align2d (Maximum likelihood in 2D)
@@ -124,23 +122,19 @@ public:
     /** Flag for generation of initial models from random subsets */
     bool do_generate_refs;
 
-    /// Re-normalize internally
-    /** Flag to refine normalization of each experimental image */
-    bool do_norm;
-    /** Store grey-scale correction values */
-    std::vector<double> imgs_scale, imgs_bgmean, imgs_trymindiff, refs_avgscale, miss_nr_pixels;
     /** Optimal refno and angno from previous iteration */
     std::vector<int> imgs_optrefno, imgs_optangno;
+    std::vector<double> imgs_trymindiff, miss_nr_pixels;
     /** Number for missing data structure group */
     std::vector<int> imgs_missno;
     /** For initial guess of mindiff */
     double trymindiff_factor;
-    /** Overall average scale (constrained to one) */
-    double average_scale;
     /** Local search angular distance */
     double ang_search;
-    /** Perturb angular samplin */
+    /** Perturb angular sampling */
     bool do_perturb;
+    /** Low-pass filter at FSC=0.5 resolution in each step */
+    bool do_filter;
 
     /// Internally store all missing wedges or re-compute on the fly?
 
@@ -195,6 +189,8 @@ public:
     All_angle_info all_angle_info;
     /** Number of angle combinations */
     int nr_ang;
+    /** Pixel size */
+    double pixel_size;
 
     /** Regularization parameters */
     double reg0, regF, reg_current;
@@ -266,7 +262,7 @@ public:
     // if down_scale=false: go from dim to oridim
     void reScaleVolume(Matrix3D<double> &Min, bool down_scale=true);
 
-    void postProcessVolume(VolumeXmipp &Vin);
+    void postProcessVolume(VolumeXmipp &Vin, double &resolution);
 
     /// Fill vector of matrices with all rotations of reference
     void precalculateA2(std::vector< VolumeXmippT<double> > &Iref);
@@ -277,10 +273,8 @@ public:
                                 std::vector<Matrix3D<double> > &wsumimgs,
                                 std::vector<Matrix3D<double> > &wsumweds,
                                 double &wsum_sigma_noise, double &wsum_sigma_offset,
-                                Matrix1D<double> &sumw, Matrix1D<double> &sumwsc, 
-                                Matrix1D<double> &sumwsc2,
-                                double &LL, double &dLL, double &fracweight, double &sumfracweight, 
-                                double &opt_scale, double &bgmean, double &trymindiff,
+                                Matrix1D<double> &sumw, double &LL, double &dLL, 
+                                double &fracweight, double &sumfracweight, double &trymindiff,
                                 int &opt_refno, int &opt_angno, Matrix1D<double> &opt_offsets);
 
     /// Maximum constrained correlation search over all hidden parameters
@@ -297,16 +291,20 @@ public:
                      std::vector<Matrix3D<double> > &wsumimgs,
                      std::vector<Matrix3D<double> > &wsumweds,
                      double &wsum_sigma_noise, double &wsum_sigma_offset,
-                     Matrix1D<double> &sumw, Matrix1D<double> &sumwsc, 
-                     Matrix1D<double> &sumwsc2);
+                     Matrix1D<double> &sumw);
 
     /// Update all model parameters
     void maximization(std::vector<Matrix3D<double> > &wsumimgs,
                       std::vector<Matrix3D<double> > &wsumweds,
                       double &wsum_sigma_noise, double &wsum_sigma_offset, 
-                      Matrix1D<double> &sumw, Matrix1D<double> &sumwsc, 
-                      Matrix1D<double> &sumwsc2, 
-                      double &sumfracweight, double &sumw_allrefs, int iter);
+                      Matrix1D<double> &sumw, double &sumfracweight, 
+                      double &sumw_allrefs, std::vector<Matrix1D<double> > &fsc, int iter);
+
+    /// Calculate resolution by FSC
+    void calculateFsc(Matrix3D<double> &M1, Matrix3D<double> &M2,
+                      Matrix3D<double> &W1, Matrix3D<double> &W2,
+                      Matrix1D< double >& freq, Matrix1D< double >& fsc, 
+                      double &resolution);
 
     /// Apply regularization
     bool regularize(int iter);
@@ -318,7 +316,7 @@ public:
     void writeOutputFiles(const int iter, DocFile &DFo,
                           std::vector<Matrix3D<double> > &wsumweds,
                           double &sumw_allrefs, double &LL, double &avefracweight,
-                          std::vector<double> &conv);
+                          std::vector<double> &conv, std::vector<Matrix1D<double> > &fsc);
 
 };
 //@}
