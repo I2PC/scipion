@@ -744,7 +744,7 @@ void Prog_ml_tomo_prm::generateInitialReferences()
     SelLine line;
     DocFile DF;
     int Nsub = ROUND((double)SF.ImgNo() / nr_ref);
-    double my_rot, my_tilt, my_psi, my_xoff, my_yoff, my_zoff;
+    double my_rot, my_tilt, my_psi, my_xoff, my_yoff, my_zoff, resolution;
     DocLine DL;
     int missno, c = 0, cc = XMIPP_MAX(1, SF.ImgNo() / 60);
 
@@ -764,8 +764,6 @@ void Prog_ml_tomo_prm::generateInitialReferences()
 
     fsc.clear();
     fsc.resize(nr_ref+1);
-    refs_fsc.clear();
-    refs_fsc.resize(nr_ref);
     Iave1().resize(dim,dim,dim);
     Iave1().setXmippOrigin();
     Iave2().resize(dim,dim,dim);
@@ -841,7 +839,7 @@ void Prog_ml_tomo_prm::generateInitialReferences()
 
         // Calculate resolution
         calculateFsc(Iave1(), Iave2(), Msumwedge1, Msumwedge2,
-                     fsc[0], fsc[refno+1], refs_fsc[refno]);
+                     fsc[0], fsc[refno+1], resolution);
 
         Iave1() += Iave2();
         Msumwedge1 += Msumwedge2;
@@ -870,7 +868,7 @@ void Prog_ml_tomo_prm::generateInitialReferences()
         }
 
         // Enforce fourier_mask, symmetry and omask
-        postProcessVolume(Iave1, refs_fsc[refno]);
+        postProcessVolume(Iave1, resolution);
         
         fn_tmp = fn_root + "_it";
         fn_tmp.compose(fn_tmp, 0, "");
