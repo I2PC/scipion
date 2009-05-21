@@ -126,12 +126,13 @@ void Prog_ml_tomo_prm::read(int argc, char **argv, bool ML3D)
     no_SMALLANGLE = checkParameter(argc2, argv2, "-no_SMALLANGLE");
     do_keep_angles = checkParameter(argc2, argv2, "-keep_angles");
     do_perturb = checkParameter(argc2, argv2, "-perturb");
+    pixel_size = textToFloat(getParameter(argc2, argv2, "-pixel_size", "1"));
 
     // Adjust power spectra
     do_adjust_spectra = checkParameter(argc2, argv2, "-adjust_spectra");
-
-    // Normalization 
-    do_norm = checkParameter(argc2, argv2, "-norm");
+    
+    // Low-pass filter
+    do_filter = checkParameter(argc2, argv2, "-filter");
 
     // regularization
     reg0=textToFloat(getParameter(argc2, argv2, "-reg0", "0."));
@@ -228,10 +229,6 @@ void Prog_ml_tomo_prm::show(bool ML3D)
         if (fix_sigma_noise)
         {
             std::cerr << "  -> Do not update sigma-estimate of noise." << std::endl;
-        }
-        if (do_norm)
-        {
-            std::cerr << "  -> Refine normalization for each experimental image"<<std::endl;
         }
         if (do_adjust_spectra)
         {
@@ -502,18 +499,6 @@ void Prog_ml_tomo_prm::produceSideInfo()
         }
     }
 
-
-    // Fill average scales 
-    if (do_norm)
-    {
-        average_scale = 1.;
-        refs_avgscale.clear();
-        for (int refno=0;refno<nr_ref; refno++)
-        {
-            refs_avgscale.push_back(1.);
-        }
-    }
-
     // read in model fractions if given on command line
     if (fn_frac != "")
     {
@@ -526,10 +511,6 @@ void Prog_ml_tomo_prm::produceSideInfo()
         {
             DL = DF.get_current_line();
             alpha_k(refno) = DL[0];
-            if (do_norm)
-            {
-                refs_avgscale[refno] = DL[2];
-            }
             sumfrac += alpha_k(refno);
             DF.next_data_line();
         }
@@ -753,9 +734,10 @@ void Prog_ml_tomo_prm::generateInitialReferences()
 {
 
     SelFile SFtmp;
-    VolumeXmipp Iave, Itmp, Iout;
-    Matrix3D<double> Msumwedge, Mmissing;
+    VolumeXmipp Iave1, Iave2, Itmp, Iout;
+    Matrix3D<double> Msumwedge1, Msumwedge2, Mmissing;
     Matrix3D<std::complex<double> > Fave;
+    std::vector<Matrix1D<double> > fsc;
     Matrix2D<double> my_A;
     Matrix1D<double> my_offsets(3);
     FileName fn_tmp;
@@ -780,16 +762,25 @@ void Prog_ml_tomo_prm::generateInitialReferences()
         DF.read(fn_doc);
     }
 
-    Iave().resize(dim,dim,dim);
-    Iave().setXmippOrigin();
-    Msumwedge.resize(dim,dim,hdim+1);
+    fsc.clear();
+    fsc.resize(nr_ref+1);
+    refs_fsc.clear();
+    refs_fsc.resize(nr_ref);
+    Iave1().resize(dim,dim,dim);
+    Iave1().setXmippOrigin();
+    Iave2().resize(dim,dim,dim);
+    Iave2().setXmippOrigin();
+    Msumwedge1.resize(dim,dim,hdim+1);
+    Msumwedge2.resize(dim,dim,hdim+1);
     // Make random subsets and calculate average images in random orientations
     // and correct using conventional division by the sum of the wedges
     SFtmp = SF.randomize();
     for (int refno = 0; refno < nr_ref; refno++)
     {
-        Iave().initZeros();
-        Msumwedge.initZeros();
+        Iave1().initZeros();
+        Iave2().initZeros();
+        Msumwedge1.initZeros();
+        Msumwedge2.initZeros();
         SFtmp.go_beginning();
         SFtmp.jump_lines(Nsub*refno);
         if (refno == nr_ref - 1) Nsub = SFtmp.ImgNo() - refno * Nsub;
@@ -830,50 +821,63 @@ void Prog_ml_tomo_prm::generateInitialReferences()
             my_A = Euler_rotation3DMatrix(my_rot, my_tilt, my_psi);
             Itmp().selfApplyGeometry(my_A, IS_NOT_INV, DONT_WRAP);
 
-            // Store sum
-            Iave() += Itmp();
+            int iran_fsc = ROUND(rnd_unif());
+            if (iran_fsc==0)
+                Iave1() += Itmp();
+            else
+                Iave2() += Itmp();
             if (do_missing) 
             {
                 missno = (int)(DF(7)) - 1;
                 getMissingRegion(Mmissing, my_A, missno);
-                Msumwedge += Mmissing;
+                if (iran_fsc==0)
+                    Msumwedge1 += Mmissing;
+                else
+                    Msumwedge2 += Mmissing;
             }
             c++;
             if (verb > 0 && c % cc == 0) progress_bar(c);
         }
 
+        // Calculate resolution
+        calculateFsc(Iave1(), Iave2(), Msumwedge1, Msumwedge2,
+                     fsc[0], fsc[refno+1], refs_fsc[refno]);
+
+        Iave1() += Iave2();
+        Msumwedge1 += Msumwedge2;
+
         if (do_missing)
         {
             // 1. Correct for missing wedge by division of sumwedge
-            transformer.FourierTransform(Iave(),Fave,true);
+            transformer.FourierTransform(Iave1(),Fave,true);
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Fave)
             {
-                if (DIRECT_MULTIDIM_ELEM(Msumwedge,n) > noimp_threshold)
+                if (DIRECT_MULTIDIM_ELEM(Msumwedge1,n) > noimp_threshold)
                 {
                     DIRECT_MULTIDIM_ELEM(Fave,n) /= 
-                        DIRECT_MULTIDIM_ELEM(Msumwedge,n);
+                        DIRECT_MULTIDIM_ELEM(Msumwedge1,n);
                 }
                 else
                 {
                     DIRECT_MULTIDIM_ELEM(Fave,n) = 0.;
                 }
             }
-            transformer.inverseFourierTransform(Fave,Iave());
+            transformer.inverseFourierTransform(Fave,Iave1());
         }
         else
         {
-            Iave() /= (double)Nsub;
+            Iave1() /= (double)Nsub;
         }
 
         // Enforce fourier_mask, symmetry and omask
-        postProcessVolume(Iave);
+        postProcessVolume(Iave1, refs_fsc[refno]);
         
         fn_tmp = fn_root + "_it";
         fn_tmp.compose(fn_tmp, 0, "");
         fn_tmp = fn_tmp + "_ref";
         fn_tmp.compose(fn_tmp, refno + 1, "");
         fn_tmp = fn_tmp + ".vol";
-        Iout=Iave;
+        Iout=Iave1;
         reScaleVolume(Iout(),false);
         Iout.write(fn_tmp);
         SFr.insert(fn_tmp, SelLine::ACTIVE);
@@ -883,7 +887,7 @@ void Prog_ml_tomo_prm::generateInitialReferences()
         fn_tmp = fn_tmp + "_wedge";
         fn_tmp.compose(fn_tmp, refno + 1, "");
         fn_tmp = fn_tmp + ".vol";
-        Iout()=Msumwedge;
+        Iout()=Msumwedge1;
         reScaleVolume(Iout(),false);
         Iout.write(fn_tmp);
     }
@@ -961,8 +965,6 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
     imgs_optrefno.clear();
     imgs_optangno.clear();
     imgs_trymindiff.clear();
-    imgs_scale.clear();
-    imgs_bgmean.clear();
 
     for (int imgno = 0; imgno < SF.ImgNo(); imgno++)
     {
@@ -971,11 +973,6 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
         imgs_trymindiff.push_back(-1.);
         if (do_missing)
             imgs_missno.push_back(-1);
-        if (do_norm)
-        {
-            imgs_bgmean.push_back(0.);
-            imgs_scale.push_back(1.);
-        }
     }
 
     if (fn_doc!="") {
@@ -994,12 +991,6 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
                 if (do_missing)
                 {
                     imgs_missno[imgno] = (int)(DF(7)) - 1;
-                }
-                // Get prior normalization parameters
-                if (do_norm)
-                {
-                    imgs_bgmean[imgno] = DF(10);
-                    imgs_scale[imgno] = DF(11);
                 }
                 // Generate a docfile from the (possible subset of) images in SF
                 if (ang_search > 0.)
@@ -1414,7 +1405,7 @@ void Prog_ml_tomo_prm::reScaleVolume(Matrix3D<double> &Min, bool down_scale)
 
 }
 
-void Prog_ml_tomo_prm::postProcessVolume(VolumeXmipp &Vin)
+void Prog_ml_tomo_prm::postProcessVolume(VolumeXmipp &Vin, double &resolution)
 {
 
     Matrix3D<std::complex<double> > Faux;
@@ -1429,6 +1420,27 @@ void Prog_ml_tomo_prm::postProcessVolume(VolumeXmipp &Vin)
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
     {
         DIRECT_MULTIDIM_ELEM(Faux,n) *= DIRECT_MULTIDIM_ELEM(fourier_mask,n);
+    }
+
+    // Low-pass filter for given resolution
+    if (do_filter)
+    {
+        Matrix1D<double> w(3);
+        double raised_w=0.02;
+        double w1=resolution; // Somewhat less stringent than FSC=0.5
+        double w2=w1+raised_w;
+        
+        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
+        {
+            FFT_IDX2DIGFREQ(k,ZSIZE(Vin()),ZZ(w));
+            FFT_IDX2DIGFREQ(i,YSIZE(Vin()),YY(w));
+            FFT_IDX2DIGFREQ(j,XSIZE(Vin()),XX(w));
+            double absw=w.module();
+            if (absw>w2)
+                DIRECT_VOL_ELEM(Faux,k,i,j) *= 0.;
+            else if (absw>w1 && absw<w2)
+                DIRECT_VOL_ELEM(Faux,k,i,j) *= (1+cos(PI/raised_w*(absw-w1)))/2;
+        }
     }
 
     // Inverse Fourier Transform
@@ -1582,11 +1594,8 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     std::vector<Matrix3D<double> > &wsumimgs,
     std::vector<Matrix3D<double> > &wsumweds,
     double &wsum_sigma_noise, double &wsum_sigma_offset,
-    Matrix1D<double> &sumw, Matrix1D<double> &sumwsc, 
-    Matrix1D<double> &sumwsc2, 
-    double &LL, double &dLL, double &fracweight, double &sumfracweight, 
-    double &opt_scale, double &bgmean, double &trymindiff, 
-    int &opt_refno, int &opt_angno, Matrix1D<double> &opt_offsets)
+    Matrix1D<double> &sumw, double &LL, double &dLL, double &fracweight, double &sumfracweight, 
+    double &trymindiff, int &opt_refno, int &opt_angno, Matrix1D<double> &opt_offsets)
 {
 
 #ifdef DEBUG
@@ -1604,8 +1613,8 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     Matrix1D<double> refw;
     double sigma_noise2, aux, pdf, fracpdf, myA2, mycorrAA, myXi2, A2_plus_Xi2, myXA;
     double mind, diff, mindiff, my_mindiff;
-    double my_sumweight, weight, ref_scale = 1.;
-    double wsum_sc, wsum_sc2, wsum_offset, old_bgmean;
+    double my_sumweight, weight;
+    double wsum_sc, wsum_sc2, wsum_offset;
     double wsum_corr, sum_refw, maxweight, my_maxweight;
     double rot, tilt, psi;
     int irot, irefmir, sigdim, xmax, ymax;
@@ -1636,8 +1645,6 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     Mzero2.setXmippOrigin();
 
     sigma_noise2 = sigma_noise * sigma_noise;
-    if (!do_norm) 
-        opt_scale =1.;
 
     // Calculate the unrotated Fourier transform with enforced wedge of Mimg (store in Fimg0)
     // also calculate myXi2;
@@ -1742,14 +1749,11 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                     mycorrAA = corrA2[refno*nr_ang + angno];
                     Maux = Maux2 * mycorrAA;
                     local_transformer.FourierTransform();
-                    if (do_norm) 
-                        ref_scale = opt_scale / refs_avgscale[refno];
                     if (do_missing)
                         myA2 = A2[refno*nr_ang*nr_miss + angno*nr_miss + missno];
                     else
                         myA2 = A2[refno*nr_ang + angno];
-                    A2_plus_Xi2 = 0.5 * ( ref_scale*ref_scale*myA2 + myXi2 );
-
+                    A2_plus_Xi2 = 0.5 * ( myA2 + myXi2 );
                     // A. Backward FFT to calculate weights in real-space
                     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
                     {
@@ -1765,7 +1769,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                     FOR_ALL_ELEMENTS_IN_MATRIX3D(Mweight)
                     {
                         myXA = VOL_ELEM(Maux, k, i, j) * ddim3;
-                        diff = A2_plus_Xi2 - ref_scale * myXA;
+                        diff = A2_plus_Xi2 - myXA;
                         mindiff = XMIPP_MIN(mindiff,diff);
 #ifdef DEBUG_MINDIFF
                         if (mindiff < 0)
@@ -1778,7 +1782,6 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                             std::cerr<<" mycorrAA= "<<mycorrAA<<" "<<std::endl;
                             std::cerr<<"debug mindiff= " <<mindiff<<" trymindiff= "<<trymindiff<< std::endl;
                             std::cerr<<"A2_plus_Xi2= "<<A2_plus_Xi2<<" myA2= "<<myA2<<" myXi2= "<<myXi2<<std::endl;
-                            std::cerr<<"ref_scale= "<<ref_scale<<" volMaux="<<VOL_ELEM(Maux, k, i, j)<<std::endl;
                             std::cerr.flush();
                             VolumeXmipp tt;
                             tt()=Maux; tt.write("Maux.vol");
@@ -1801,13 +1804,6 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                         wsum_corr += weight * diff;
                         // calculated weighted sum of offsets as well
                         wsum_offset += weight * VOL_ELEM(Mr2, k, i, j);
-                        if (do_norm)
-                        {
-                            // weighted sum of Sum_j ( X_ij*A_kj )
-                            wsum_sc += weight * myXA;
-                            // weighted sum of Sum_j ( A_kj*A_kj )
-                            wsum_sc2 += weight * myA2;
-                        }				
                         // keep track of optimal parameters
                         my_maxweight = XMIPP_MAX(my_maxweight, weight);
                         if (weight > maxweight)
@@ -1825,6 +1821,10 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                     // C. only for significant settings, store weighted sums
                     if (my_maxweight > SIGNIFICANT_WEIGHT_LOW*maxweight )
                     {
+//#define DEBUG_EXP_A2
+#ifdef DEBUG_EXP_A2
+                        std::cout<<" imgno= "<<imgno<<" refno= "<<refno<<" angno= "<<angno<<" A2= "<<myA2<<" <<Xi2= "<<myXi2<<" my_maxweight= "<<my_maxweight<<std::endl;
+#endif 
                         sum_refw += my_sumweight;
                         refw(refno) += my_sumweight;
                         // Back from smaller Mweight to original size of Maux
@@ -1908,32 +1908,20 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     // From here on lock threads
     pthread_mutex_lock( &mltomo_weightedsum_update_mutex );
 
-    if (do_norm)
-    {
-        // Note that bgmean will always be zero 
-        // because we omitted the origin pixel in fourier_mask
-//#define DEBUG_UPDATESCALE
-#ifdef DEBUG_UPDATESCALE
-        std::cerr<<"opt_scale old= "<<opt_scale<<" ref_scale_old= "<<ref_scale<<" opt_scale_new= "<<wsum_sc / wsum_sc2<<" = "<<wsum_sc<<"/"<<wsum_sc2<<std::endl;
-#endif
-        opt_scale = wsum_sc / wsum_sc2;
-    }
-
     // Update all global weighted sums after division by sum_refw
-    // TODO: check this because officially sigma-update should be with NEW scale (and background)!
     wsum_sigma_noise += (2 * wsum_corr / sum_refw);
     wsum_sigma_offset += (wsum_offset / sum_refw);
     sumfracweight += fracweight;
+    // Randomly choose 0 or 1 for FSC calculation
+    int iran_fsc = ROUND(rnd_unif());
     for (int refno = 0; refno < nr_ref; refno++)
     {
         sumw(refno) += refw(refno) / sum_refw;
-        sumwsc(refno) += (refw(refno) * opt_scale) / sum_refw;
-        sumwsc2(refno) += (refw(refno) * opt_scale * opt_scale) / sum_refw;
         // Sum mysumimgs to the global weighted sum
-        wsumimgs[refno] += (opt_scale * mysumimgs[refno]) / sum_refw;
+        wsumimgs[iran_fsc*nr_ref + refno] += (mysumimgs[refno]) / sum_refw;
         if (do_missing)
         {
-            wsumweds[refno] += mysumweds[refno] / sum_refw;
+            wsumweds[iran_fsc*nr_ref + refno] += mysumweds[refno] / sum_refw;
         }
    }
 
@@ -2121,14 +2109,17 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
         Mimg0 = Maux;
     }
 
+    // Randomly choose 0 or 1 for FSC calculation
+    int iran_fsc = ROUND(rnd_unif());
+
     // From here on lock threads to add to sums
     pthread_mutex_lock( &mltomo_weightedsum_update_mutex );
 
     sumCC += maxCC;
-    wsumimgs[opt_refno] += Mimg0;
     sumw(opt_refno)  += 1.;
+    wsumimgs[iran_fsc*nr_ref + opt_refno] += Mimg0;
     if (do_missing)
-        wsumweds[opt_refno] += Mmissing;
+        wsumweds[iran_fsc*nr_ref + opt_refno] += Mmissing;
 
     pthread_mutex_unlock(  &mltomo_weightedsum_update_mutex );
 
@@ -2159,8 +2150,6 @@ void * threadMLTomoExpectationSingleImage( void * data )
     std::vector< VolumeXmippT<double> > *Iref = thread_data->Iref;
     std::vector<Matrix1D<double > > *docfiledata = thread_data->docfiledata;
     Matrix1D<double> *sumw = thread_data->sumw;
-    Matrix1D<double> *sumwsc = thread_data->sumwsc;
-    Matrix1D<double> *sumwsc2 = thread_data->sumwsc2;
 
 //#define DEBUG_THREAD
 #ifdef DEBUG_THREAD
@@ -2174,7 +2163,6 @@ void * threadMLTomoExpectationSingleImage( void * data )
     Matrix1D<double> opt_offsets(3);
     float old_phi = -999., old_theta = -999.;
     double fracweight, maxweight2, trymindiff, dLL;
-    double opt_scale = 1., bgmean;
     int opt_refno, opt_angno, missno;
 
     // Calculate myFirst and myLast image for this thread
@@ -2237,28 +2225,16 @@ void * threadMLTomoExpectationSingleImage( void * data )
             trymindiff = prm->imgs_trymindiff[imgno];
             opt_refno = prm->imgs_optrefno[imgno];
             opt_angno = prm->imgs_optangno[imgno];
-            if (prm->do_norm)
-            {
-                bgmean=prm->imgs_bgmean[imgno];
-                opt_scale = prm->imgs_scale[imgno];
-            }
             
             (*prm).expectationSingleImage(img(), imgno, missno, *Iref, *wsumimgs, *wsumweds, 
                                           *wsum_sigma_noise, *wsum_sigma_offset, 
-                                          *sumw, *sumwsc, *sumwsc2,
-                                          *LL, dLL, fracweight, *sumfracweight, 
-                                          opt_scale, bgmean, trymindiff, 
-                                          opt_refno, opt_angno, opt_offsets);
+                                          *sumw, *LL, dLL, fracweight, *sumfracweight, 
+                                          trymindiff, opt_refno, opt_angno, opt_offsets);
 
             // Store for next iteration
             prm->imgs_trymindiff[imgno] = trymindiff;
             prm->imgs_optrefno[imgno] = opt_refno;
             prm->imgs_optangno[imgno] = opt_angno;
-            if (prm->do_norm)
-            {
-                prm->imgs_scale[imgno] = opt_scale;
-                prm->imgs_bgmean[imgno]  = bgmean;
-            }
         }
         else
         {
@@ -2281,16 +2257,6 @@ void * threadMLTomoExpectationSingleImage( void * data )
 
         (*docfiledata)[imgno](8) = fracweight;                // P_max/P_tot
         (*docfiledata)[imgno](9) = dLL;                       // log-likelihood
-        if (prm->do_norm)
-        {
-            (*docfiledata)[imgno](10) = bgmean;                // background mean
-            (*docfiledata)[imgno](11) = opt_scale;             // image scale 
-        }
-        else
-        {
-            (*docfiledata)[imgno](10)  = 0.;                   // background mean
-            (*docfiledata)[imgno](11) = 1.;                    // image scale 
-        }
 #endif
         if (prm->verb > 0 && thread_id==0) progress_bar(cc);
         cc++;
@@ -2309,8 +2275,7 @@ void Prog_ml_tomo_prm::expectation(
         std::vector<Matrix3D<double> > &wsumimgs,
         std::vector<Matrix3D<double> > &wsumweds,
         double &wsum_sigma_noise, double &wsum_sigma_offset, 
-	Matrix1D<double> &sumw, Matrix1D<double> &sumwsc, 
-        Matrix1D<double> &sumwsc2)
+	Matrix1D<double> &sumw)
 {
 
 #ifdef DEBUG
@@ -2341,8 +2306,6 @@ void Prog_ml_tomo_prm::expectation(
     wsum_sigma_offset = 0.;
     sumfracweight = 0.;
     sumw.initZeros(nr_ref);
-    sumwsc.initZeros(nr_ref);
-    sumwsc2.initZeros(nr_ref);
     dataline.initZeros();
     for (int i = 0; i < SF.ImgNo(); i++)
         docfiledata.push_back(dataline);
@@ -2351,7 +2314,7 @@ void Prog_ml_tomo_prm::expectation(
     Mzero2.setXmippOrigin();
     wsumimgs.clear();
     wsumweds.clear();
-    for (int refno = 0; refno < nr_ref; refno++)
+    for (int refno = 0; refno < 2*nr_ref; refno++)
     {
         wsumimgs.push_back(Mzero2);
         if (do_missing)
@@ -2377,8 +2340,6 @@ void Prog_ml_tomo_prm::expectation(
         threads_d[c].Iref=&Iref;
         threads_d[c].docfiledata=&docfiledata;
         threads_d[c].sumw=&sumw;
-        threads_d[c].sumwsc=&sumwsc;
-        threads_d[c].sumwsc2=&sumwsc2;
         pthread_create( (th_ids+c), NULL, threadMLTomoExpectationSingleImage, (void *)(threads_d+c) );
     }
 
@@ -2407,9 +2368,9 @@ void Prog_ml_tomo_prm::expectation(
 void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
                                     std::vector<Matrix3D<double> > &wsumweds,
                                     double &wsum_sigma_noise, double &wsum_sigma_offset,
-                                    Matrix1D<double> &sumw, Matrix1D<double> &sumwsc, 
-                                    Matrix1D<double> &sumwsc2,
-                                    double &sumfracweight, double &sumw_allrefs, int iter)
+                                    Matrix1D<double> &sumw, double &sumfracweight, 
+                                    double &sumw_allrefs, std::vector<Matrix1D<double> > &fsc,
+                                    int iter)
 {
 #ifdef DEBUG
     std::cerr<<"started maximization"<<std::endl;
@@ -2419,21 +2380,30 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
     Matrix1D<int> center(3), radial_count;
     Matrix3D<std::complex<double> > Faux(dim,dim,hdim+1), Fwsumimgs;
     Matrix3D<double> Maux, Msumallwedges(dim,dim,hdim+1);
+    std::vector<double> refs_resol(nr_ref);
     VolumeXmipp Vaux;
     FileName fn_tmp;
     double rr, thresh, aux, sumw_allrefs2 = 0., avg_origin=0.;
     int c;
+
+    // Calculate resolutions
+    fsc.clear();
+    fsc.resize(nr_ref + 1);
+    for (int refno=0; refno<nr_ref; refno++)
+    {
+        calculateFsc(wsumimgs[refno], wsumimgs[nr_ref+refno],
+                     wsumweds[refno], wsumweds[nr_ref+refno],
+                     fsc[0], fsc[refno+1], refs_resol[refno]);
+        // Restore original wsumimgs and wsumweds
+        wsumimgs[refno] += wsumimgs[nr_ref + refno];
+        wsumweds[refno] += wsumweds[nr_ref + refno];
+    }
 
     // Update the reference images
     sumw_allrefs = 0.;
     Msumallwedges.initZeros();
     for (int refno=0;refno<nr_ref; refno++)
     {
-        if (!do_norm)
-        {
-            // This is needed for maxCC
-            sumwsc2(refno) = sumw(refno);
-        }
         sumw_allrefs += sumw(refno);
         transformer.FourierTransform(wsumimgs[refno],Fwsumimgs,true);
         if (do_missing)
@@ -2470,7 +2440,7 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
                     fnt.compose("Fref1"+base+"_ref",refno+1,"ampl");
                     tt.write(fnt);
                     Matrix3D<std::complex<double> > Ft;
-                    Ft=Fwsumimgs/sumwsc2(refno);
+                    Ft=Fwsumimgs/sumw(refno);
                     FFT_magnitude(Ft,tt());
                     fnt.compose("Fref2"+base+"_ref",refno+1,"ampl");
                     tt.write(fnt);
@@ -2478,15 +2448,12 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
                     {
                         // And sum the weighted sum for observed pixels
                         DIRECT_MULTIDIM_ELEM(Faux,n) += 
-                            (DIRECT_MULTIDIM_ELEM(Fwsumimgs,n) / sumwsc2(refno));
+                            (DIRECT_MULTIDIM_ELEM(Fwsumimgs,n) / sumw(refno));
                     }
                     FFT_magnitude(Faux,tt());
                     fnt.compose("Fref3"+base+"_ref",refno+1,"ampl");
                     tt.write(fnt);
 
-                    std::cerr<<" sumw(refno)= "<<sumw(refno)<<" sumwsc2(refno)= "<<sumwsc2(refno)<<std::endl;
-
- 
 #else
                     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
                     {
@@ -2495,7 +2462,7 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
                             (1. - DIRECT_MULTIDIM_ELEM(wsumweds[refno],n) / sumw(refno));
                         // And sum the weighted sum for observed pixels
                         DIRECT_MULTIDIM_ELEM(Faux,n) += 
-                            (DIRECT_MULTIDIM_ELEM(Fwsumimgs,n) / sumwsc2(refno));
+                            (DIRECT_MULTIDIM_ELEM(Fwsumimgs,n) / sumw(refno));
                     }
 #endif
                 }
@@ -2512,7 +2479,7 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
                             DIRECT_MULTIDIM_ELEM(Fwsumimgs,n) / 
                             DIRECT_MULTIDIM_ELEM(wsumweds[refno],n);
                         // TODO:  CHECK THE FOLLOWING LINE!!
-                        DIRECT_MULTIDIM_ELEM(Faux,n) *= sumw(refno) / sumwsc2(refno);
+                        DIRECT_MULTIDIM_ELEM(Faux,n) *= sumw(refno) / sumw(refno);
                     }
                     else
                     {
@@ -2527,40 +2494,16 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
             if (sumw(refno) > 0.)
             {   
                 // if no missing data: calculate straightforward average, 
-                // i.e. just divide wsumimgs[refno] by sumwsc2(refno)
                 FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
                 {
                     DIRECT_MULTIDIM_ELEM(Faux,n) = 
-                        DIRECT_MULTIDIM_ELEM(Fwsumimgs,n) / sumwsc2(refno);
+                        DIRECT_MULTIDIM_ELEM(Fwsumimgs,n) / sumw(refno);
                 }
             }
         }
         // Back to real space
         transformer.inverseFourierTransform(Faux,Iref[refno]());
     }  
-
-    // Adjust average scale
-    if (do_norm) {
-        average_scale = 0.;
-        for (int refno=0;refno<nr_ref; refno++)
-        {
-            average_scale += sumwsc(refno);
-        }
-        for (int refno=0;refno<nr_ref; refno++)
-        {
-            if (sumw(refno)>0.)
-            {
-                //std::cerr<<"  refs_avgscale["<<refno<<"] = "<<sumwsc(refno)<<"/"<<sumw(refno)<<" = "<<sumwsc(refno)/sumw(refno)<<std::endl;
-                refs_avgscale[refno] =  sumwsc(refno)/sumw(refno);
-                Iref[refno]() *= refs_avgscale[refno];
-            }
-            else
-            {
-                refs_avgscale[refno] = 1.;
-            }
-        }
-        average_scale /= sumw_allrefs;
-    }
 
     // Average fracweight
     sumfracweight /= sumw_allrefs;
@@ -2636,18 +2579,92 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
         }
     }
 
-    // Regularize
-    regularize(iter);
-
     // post-process reference volumes
     for (int refno=0; refno < nr_ref; refno++)
     {
-        postProcessVolume(Iref[refno]);
+        postProcessVolume(Iref[refno], refs_resol[refno]);
     }
+
+    // Regularize
+    regularize(iter);
 
 #ifdef DEBUG
     std::cerr<<"finished maximization"<<std::endl;
 #endif 
+}
+
+void Prog_ml_tomo_prm::calculateFsc(Matrix3D<double> &M1, Matrix3D<double> &M2,
+                                    Matrix3D<double> &W1, Matrix3D<double> &W2,
+                                    Matrix1D<double> &freq, Matrix1D<double> &fsc, 
+                                    double &resolution)
+{
+    
+    Matrix3D< std::complex< double > > FT1, FT2;
+    XmippFftw transformer1, transformer2;
+    transformer1.FourierTransform(M1, FT1, false);
+    transformer2.FourierTransform(M2, FT2, false);
+
+    int vsize = hdim + 1;
+    Matrix1D<double> num, den1, den2, f(3);
+    double w1, w2, R;
+    freq.initZeros(vsize);
+    fsc.initZeros(vsize);
+    num.initZeros(vsize);
+    den1.initZeros(vsize);
+    den2.initZeros(vsize);
+
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(FT1)
+    {
+        FFT_IDX2DIGFREQ(j,XSIZE(M1),XX(f));
+        FFT_IDX2DIGFREQ(i,YSIZE(M1),YY(f));
+        FFT_IDX2DIGFREQ(k,ZSIZE(M1),ZZ(f));
+        R=f.module();
+        if (R>0.5) continue;
+        int idx=ROUND(R*XSIZE(M1));
+        if (do_missing)
+        {
+            w1 = dVkij(W1, k, i, j);
+            w2 = dVkij(W2, k, i, j);
+        }
+        else
+        {
+            w1 = w2 = 1.;
+        }
+        std::complex<double> z1=w2*dVkij(FT1, k, i, j);
+        std::complex<double> z2=w1*dVkij(FT2, k, i, j);
+        double absz1=abs(z1);
+        double absz2=abs(z2);
+        num(idx)+=real(conj(z1) * (z2));
+        den1(idx)+= absz1*absz1;
+        den2(idx)+= absz2*absz2;
+    }
+
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(freq)
+    {
+        freq(i) = (double) i / (XSIZE(M1) * pixel_size);
+        if(num(i)!=0)
+           fsc(i) = num(i)/sqrt(den1(i)*den2(i));
+        else
+           fsc(i) = 0;
+    }
+
+    // Find resolution limit acc. to FSC=0.5 criterion
+    int idx;
+    for (idx = 1; idx < XSIZE(freq); idx++)
+        if (fsc(idx) < 0.5) break;
+    idx = XMIPP_MAX(idx - 1, 1);
+    resolution=freq(idx);
+
+//#define DEBUG_FSC
+#ifdef DEBUG_FSC
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(freq)
+    {
+        std::cerr<<freq(i)<<" "<<fsc(i)<<std::endl;
+    }
+    std::cerr<<"resolution= "<<resolution<<std::endl;
+#endif
+
+
 }
 
 // Apply regularization
@@ -2777,7 +2794,7 @@ bool Prog_ml_tomo_prm::checkConvergence(std::vector<double> &conv)
 void Prog_ml_tomo_prm::writeOutputFiles(const int iter, DocFile &DFo,
                                         std::vector<Matrix3D<double> > &wsumweds,
                                         double &sumw_allrefs, double &LL, double &avefracweight, 
-                                        std::vector<double> &conv)
+                                        std::vector<double> &conv, std::vector<Matrix1D<double> > &fsc)
 {
 
     FileName          fn_tmp, fn_base, fn_tmp2;
@@ -2798,7 +2815,6 @@ void Prog_ml_tomo_prm::writeOutputFiles(const int iter, DocFile &DFo,
         fn_base.compose(fn_base, iter, "");
     }
 
-    if (do_norm) fracline.resize(3);
     // Write out current reference images and fill sel & log-file
     for (int refno=0;refno<nr_ref; refno++)
     {
@@ -2811,8 +2827,6 @@ void Prog_ml_tomo_prm::writeOutputFiles(const int iter, DocFile &DFo,
         SFo.insert(fn_tmp, SelLine::ACTIVE);
         fracline(0) = alpha_k(refno);
         fracline(1) = 1000 * conv[refno]; // Output 1000x the change for precision
-        if (do_norm) fracline(2) = refs_avgscale[refno];
-
         DFl.insert_comment(fn_tmp);
         DFl.insert_data_line(fracline);
 
@@ -2851,13 +2865,11 @@ void Prog_ml_tomo_prm::writeOutputFiles(const int iter, DocFile &DFo,
     DFl.go_beginning();
     comment = "ml_tomo-logfile: Number of images= " + floatToString(sumw_allrefs);
     comment += " LL= " + floatToString(LL, 15, 10) + " <Pmax/sumP>= " + floatToString(avefracweight, 10, 5);
-    if (do_norm)
-        comment+= " <scale>= " + floatToString(average_scale, 10, 5);
     DFl.insert_comment(comment);
-    comment = "-noise " + floatToString(sigma_noise, 15, 12) + " -offset " + floatToString(sigma_offset/scale_factor, 15, 12) + " -istart " + integerToString(iter + 1) + " -doc " + fn_base + ".doc";
+    comment = "-noise " + floatToString(sigma_noise, 15, 12) + " -offset " + floatToString(sigma_offset/scale_factor, 15, 12) + " -istart " + integerToString(iter + 1);
     DFl.insert_comment(comment);
     DFl.insert_comment(cline);
-    DFl.insert_comment("columns: model fraction (1); 1000x signal change (2); avg scale (3)");
+    DFl.insert_comment("columns: model fraction (1); 1000x signal change (2); resolution (3)");
     fn_tmp = fn_base + ".log";
     DFl.write(fn_tmp);
 
@@ -2884,6 +2896,24 @@ void Prog_ml_tomo_prm::writeOutputFiles(const int iter, DocFile &DFo,
             SFo.write(fn_tmp);
         }
     }
+
+    // Write out FSC curves
+    std::ofstream  fh;
+    fn_tmp = fn_base + ".fsc";
+    fh.open((fn_tmp).c_str(), std::ios::out);
+    if (!fh) REPORT_ERROR(1, (std::string)"Prog_ml_tomo_prm: Cannot write file: " + fn_tmp);
+    
+    fh<<"# freq. FSC refno 1-n... \n";
+    for (int idx = 1; idx < hdim + 1; idx++)
+    {
+        fh << fsc[0](idx) <<" ";
+        for (int refno = 0; refno < nr_ref; refno++)
+        {
+            fh << fsc[refno+1](idx) <<" ";
+        }
+        fh<<"\n";
+    }
+    fh.close();
 
 }
 
