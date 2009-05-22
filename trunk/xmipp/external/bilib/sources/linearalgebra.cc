@@ -1000,6 +1000,91 @@ free(Help);
 
 return(!ERROR);
 }
+/*--------------------------------------------------------------------------*/
+int		multiply_4Matrices(	double	*A,			/* first matrix operand */
+							double	*B,			/* second maxtrix operand */
+							double	*C,			/* third maxtrix operand */
+							double	*D,			/* fourth maxtrix operand */
+							double	*X,			/* resulting matrix */
+							long	Lines,		/* height (first and resulting) */
+							long	CommonSizeH1,/* first width and second hight */
+							long	CommonSizeW1,/* third hight and second width */
+							long	CommonSizeW2,/* fourth hight and third width */
+							long	Columns	/* width (fourth and resulting) */ ) {
+
+/* Multiplies 3 matrices: X = A.B.C.D */
+/* the size of A is (Lines x CommonSizeH1) */
+/* the size of B is (CommonSizeH1 x CommonSizeW1) */
+/* the size of C is (CommonSizeW1 x CommonSizeW2) */
+/* the size of D is (CommonSizeW2 x Columns) */
+/* The size of X is (Lines x Columns) */
+double	*Help;
+
+Help = (double *)malloc((size_t)(CommonSizeH1 * Columns) * sizeof(double));
+if (Help == (double *)NULL){ 
+	WRITE_ERROR( multiply_3Matrices, "ERROR - Not enough memory for Help");
+	return(ERROR);
+}
+
+
+if (multiply_3Matrices(B, C, D, Help, CommonSizeH1, CommonSizeW1,
+						CommonSizeW2, Columns) == ERROR){ 
+	WRITE_ERROR( multiply_4Matrices, "Error returned by multiply_3Matrices");
+	return(ERROR);
+}
+if (MatrixMultiply(A, Help, X, Lines, CommonSizeH1, Columns) == ERROR){
+	WRITE_ERROR( multiply_3Matrices, "Error returned by MatrixMultiply"); 
+	return(ERROR);
+}
+
+free(Help);
+
+return(!ERROR);
+}/* End of multiply_4Matrices */
+/*--------------------------------------------------------------------------*/
+int		multiply_5Matrices(	double	*A,			/* first matrix operand */
+							double	*B,			/* second maxtrix operand */
+							double	*C,			/* third maxtrix operand */
+							double	*D,			/* fourth maxtrix operand */
+							double	*E,			/* fifth maxtrix operand */
+							double	*X,			/* resulting matrix */
+							long	Lines,		/* height (first and resulting) */
+							long	CommonSizeH1,/* first width and second hight */
+							long	CommonSizeW1,/* third hight and second width */
+							long	CommonSizeW2,/* fourth hight and third width */
+							long	CommonSizeH2,/* fifth hight and fourth width */
+							long	Columns	/* width (fourth and resulting) */ ) {
+
+/* Multiplies 3 matrices: X = A.B.C.D.E */
+/* the size of A is (Lines x CommonSizeH1) */
+/* the size of B is (CommonSizeH1 x CommonSizeW1) */
+/* the size of C is (CommonSizeW1 x CommonSizeW2) */
+/* the size of D is (CommonSizeW2 x CommonSizeH2) */
+/* the size of E is (CommonSizeH2 x Columns) */
+/* The size of X is (Lines x Columns) */
+double	*Help;
+
+Help = (double *)malloc((size_t)(CommonSizeH1 * Columns) * sizeof(double));
+if (Help == (double *)NULL){ 
+	WRITE_ERROR( multiply_5Matrices, "ERROR - Not enough memory for Help");
+	return(ERROR);
+}
+
+
+if (multiply_4Matrices(B, C, D, E, Help, CommonSizeH1, CommonSizeW1,
+						CommonSizeW2, CommonSizeH2, Columns) == ERROR){ 
+	WRITE_ERROR( multiply_5Matrices, "Error returned by multiply_4Matrices");
+	return(ERROR);
+}
+if (MatrixMultiply(A, Help, X, Lines, CommonSizeH1, Columns) == ERROR){
+	WRITE_ERROR( multiply_5Matrices, "Error returned by MatrixMultiply"); 
+	return(ERROR);
+}
+
+free(Help);
+
+return(!ERROR);
+}/* End of multiply_5Matrices */
 
 /*--------------------------------------------------------------------------*/
 extern int		QRdecomposition

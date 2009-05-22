@@ -196,6 +196,30 @@ int  multiply_3Matrices(double *A,
                         long Columns
                        );
 
+int multiply_4Matrices(	double	*A,			
+			double	*B,
+			double	*C,		
+			double	*D,		
+			double	*X,		
+			long	Lines,	
+			long	CommonSizeH1,
+			long	CommonSizeW1,
+			long	CommonSizeW2,
+			long	Columns);
+
+int multiply_5Matrices(	double	*A,			
+			double	*B,
+			double	*C,
+			double	*D,
+			double	*E,
+			double	*X,
+			long	Lines,
+			long	CommonSizeH1,
+			long	CommonSizeW1,
+			long	CommonSizeW2,
+			long	CommonSizeH2,
+			long	Columns );
+
 /*--------------------------------------------------------------------------*/
 /** Decompose the (Lines x Columns) input matrix Q into an orthonormal.
     Output matrix Q of same size (Lines x Columns) and an upper-diagonal.
