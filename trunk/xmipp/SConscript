@@ -401,6 +401,7 @@ ReconsSources = [
     'projectTomography.cpp',
     'project_crystal.cpp',
     'projection.cpp',
+    'projection_real_shears.cpp',
     'psd_enhance.cpp',
     'psd_sort.cpp',
     'radon.cpp',
@@ -575,6 +576,7 @@ AddXmippProgram('phantom_transform', ['XmippRecons_Interface','XmippRecons'])
 AddXmippProgram('precompute_sampling', ['XmippRecons'])
 AddXmippProgram('project', ['XmippRecons_Interface','XmippRecons'])
 AddXmippProgram('project_tomography', ['XmippRecons'])
+AddXmippProgram('projection_real_shears', ['XmippRecons'])
 AddXmippProgram('psd_enhance', ['XmippRecons'])
 AddXmippProgram('psd_sort', ['XmippRecons'])
 AddXmippProgram('range_adjust')
