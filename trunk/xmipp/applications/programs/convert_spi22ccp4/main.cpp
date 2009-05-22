@@ -2,6 +2,7 @@
  *
  * Authors:     Debora Gil
                 Roberto Marabini
+                Carlos Oscar Sánchez Sorzano
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -45,7 +46,7 @@ int main(int argc, char *argv[])
     double         y_length = 0;  // Cell Dimensions (Angstroms) for y-axis
     double         z_length = 0;  // Cell Dimensions (Angstroms) for z-axis
     bool           reverse_endian;
-    CCP4 mrcimage;
+    CCP4           mrcimage;
 
     /* Parameters ============================================================== */
     try
@@ -76,14 +77,35 @@ int main(int argc, char *argv[])
     try
     {
         if (Is_ImageXmipp(fn_in))
-        {//is this a spider image
+        {//is this a spider image?
             I.read(fn_in);
             mrcimage.write(fn_out, I, reverse_endian, x_length, y_length, z_length);
         }
         else if (Is_VolumeXmipp(fn_in))
-        {//is this a spider volume
+        {//is this a spider volume?
             V.read(fn_in);
             mrcimage.write(fn_out, V, reverse_endian, x_length, y_length, z_length);
+        }
+        else if (fn_in.get_extension()=="sel")
+        {// is this a selfile?
+            SelFile SF;
+            SF.read(fn_in);
+            int Zdim, Ydim, Xdim;
+            SF.ImgSize(Ydim,Xdim);
+            Zdim=SF.ImgNo();
+            V().initZeros(Zdim,Ydim,Xdim);
+            int k=0;
+            Matrix1D<double> tiltAngles;
+            tiltAngles.resize(Zdim);
+            while (!SF.eof())
+            {
+                I.read(SF.NextImg());
+                V().setSlice(k,I());
+                tiltAngles(k)=I.tilt();
+            }
+            mrcimage.write(fn_out, V, reverse_endian, Xdim, Ydim, Zdim);
+            if (fn_tilt!="")
+                tiltAngles.write(fn_tilt);
         }
         else
         {
