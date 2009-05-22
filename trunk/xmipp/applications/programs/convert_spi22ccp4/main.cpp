@@ -102,6 +102,7 @@ int main(int argc, char *argv[])
                 I.read(SF.NextImg());
                 V().setSlice(k,I());
                 tiltAngles(k)=I.tilt();
+                k++;
             }
             mrcimage.write(fn_out, V, reverse_endian, Xdim, Ydim, Zdim);
             if (fn_tilt!="")
