@@ -185,6 +185,118 @@ extern int		CopyDoubleToFloat
 	return(Status);
 } /* end CopyDoubleToFloat */
 
+
+/*--------------------------------------------------------------------------*/
+extern int		CopyDoubleToDouble
+				(
+					double	*VolumeSource,		/* double input data */
+					long	NxSource,			/* width of the input */
+					long	NySource,			/* height of the input */
+					long	NzSource,			/* depth of the input */
+					long	XSource,			/* x coordinate to get from */
+					long	YSource,			/* y coordinate to get from */
+					long	ZSource,			/* z coordinate to get from */
+					double	*VolumeDestination,	/* double output data */
+					long	NxDestination,		/* width of the output */
+					long	NyDestination,		/* height of the output */
+					long	NzDestination,		/* depth of the output */
+					long	XDestination,		/* x coordinate to put into */
+					long	YDestination,		/* y coordinate to put into */
+					long	ZDestination,		/* z coordinate to put into */
+					long	NxCopy,				/* width of the block to copy */
+					long	NyCopy,				/* height of the block to copy */
+					long	NzCopy				/* depth of the block to copy */
+				)
+
+/* copies a sub-volume from a double input volume into a portion of a double output volume */
+/* input and output may not share their memory space */
+/* success: return(!ERROR); failure: return(ERROR); */
+
+{ /* begin CopyDoubleToDouble */
+
+	double	*P, *Q;
+	const ptrdiff_t
+			NxNySource = (ptrdiff_t)(NxSource * NySource),
+			NxNyDestination = (ptrdiff_t)(NxDestination * NyDestination);
+	long	Y, Z;
+	int		Status = !ERROR;
+
+#if defined(CODEWARRIOR) && !defined(DEBUG)
+#pragma unused(NzSource, NzDestination)
+#endif
+/**/DEBUG_CHECK_NULL_POINTER(CopyDoubleToDouble, VolumeSource, Status,
+/**/	"No input")
+/**/DEBUG_CHECK_RANGE_LONG(CopyDoubleToDouble, NxSource, 1L, LONG_MAX, Status,
+/**/	"Invalid width (should be strictly positive)")
+/**/DEBUG_CHECK_RANGE_LONG(CopyDoubleToDouble, NySource, 1L, LONG_MAX, Status,
+/**/	"Invalid height (should be strictly positive)")
+/**/DEBUG_CHECK_RANGE_LONG(CopyDoubleToDouble, NzSource, 1L, LONG_MAX, Status,
+/**/	"Invalid depth (should be strictly positive)")
+/**/DEBUG_CHECK_RANGE_LONG(CopyDoubleToDouble, XSource, 0L, NxSource - 1L, Status,
+/**/	"Invalid X coordinate")
+/**/DEBUG_CHECK_RANGE_LONG(CopyDoubleToDouble, YSource, 0L, NySource - 1L, Status,
+/**/	"Invalid Y coordinate")
+/**/DEBUG_CHECK_RANGE_LONG(CopyDoubleToDouble, ZSource, 0L, NzSource - 1L, Status,
+/**/	"Invalid Z coordinate")
+/**/DEBUG_CHECK_NULL_POINTER(CopyDoubleToDouble, VolumeDestination, Status,
+/**/	"No output")
+/**/DEBUG_CHECK_RANGE_LONG(CopyDoubleToDouble, NxDestination, 1L, LONG_MAX, Status,
+/**/	"Invalid width (should be strictly positive)")
+/**/DEBUG_CHECK_RANGE_LONG(CopyDoubleToDouble, NyDestination, 1L, LONG_MAX, Status,
+/**/	"Invalid height (should be strictly positive)")
+/**/DEBUG_CHECK_RANGE_LONG(CopyDoubleToDouble, NzDestination, 1L, LONG_MAX, Status,
+/**/	"Invalid depth (should be strictly positive)")
+/**/DEBUG_CHECK_RANGE_LONG(CopyDoubleToDouble, XDestination, 0L, NxDestination - 1L, Status,
+/**/	"Invalid X coordinate")
+/**/DEBUG_CHECK_RANGE_LONG(CopyDoubleToDouble, YDestination, 0L, NyDestination - 1L, Status,
+/**/	"Invalid Y coordinate")
+/**/DEBUG_CHECK_RANGE_LONG(CopyDoubleToDouble, ZDestination, 0L, NzDestination - 1L, Status,
+/**/	"Invalid Z coordinate")
+/**/DEBUG_CHECK_RANGE_LONG(CopyDoubleToDouble, NxCopy, 1L, NxSource - XSource, Status,
+/**/	"Invalid width (negative or excessive)")
+/**/DEBUG_CHECK_RANGE_LONG(CopyDoubleToDouble, NyCopy, 1L, NySource - YSource, Status,
+/**/	"Invalid height (negative or excessive)")
+/**/DEBUG_CHECK_RANGE_LONG(CopyDoubleToDouble, NzCopy, 1L, NzSource - ZSource, Status,
+/**/	"Invalid depth (negative or excessive)")
+/**/DEBUG_CHECK_RANGE_LONG(CopyDoubleToDouble, NxCopy, 1L, NxDestination - XDestination, Status,
+/**/	"Invalid width (negative or excessive)")
+/**/DEBUG_CHECK_RANGE_LONG(CopyDoubleToDouble, NyCopy, 1L, NyDestination - YDestination, Status,
+/**/	"Invalid height (negative or excessive)")
+/**/DEBUG_CHECK_RANGE_LONG(CopyDoubleToDouble, NzCopy, 1L, NzDestination - ZDestination, Status,
+/**/	"Invalid depth (negative or excessive)")
+/**/DEBUG_RETURN_ON_ERROR(CopyDoubleToDouble, Status)
+/**/DEBUG_WRITE_ENTERING(CopyDoubleToDouble,
+/**/	"About to copy a double subvolume into a double subvolume")
+#ifdef DEBUG
+/**/if (((VolumeSource + (ptrdiff_t)(NxSource * NySource * NzSource))
+/**/	> (VolumeDestination + (ptrdiff_t)(XDestination + NxDestination
+/**/	* (YDestination + NyDestination * ZDestination))))
+/**/	&& ((VolumeDestination + (ptrdiff_t)(NxDestination * NyDestination
+/**/	* NzDestination)) > (VolumeSource + (ptrdiff_t)(XSource + NxSource
+/**/	* (YSource + NySource * ZSource))))) {
+/**/	WRITE_WARNING(CopyDoubleToDouble, "Data overlap: memcpy may fail")
+/**/}
+#endif
+
+	VolumeSource += (ptrdiff_t)(XSource + NxSource * (YSource + NySource * ZSource));
+	VolumeDestination += (ptrdiff_t)(XDestination + NxDestination * (YDestination
+		+ NyDestination * ZDestination));
+	for (Z = -NzCopy; (Z < 0L); Z++) {
+		P = VolumeSource;
+		Q = VolumeDestination;
+		for (Y = -NyCopy; (Y < 0L); Y++) {
+			Q = (double *)memcpy(Q, P, (size_t)(NxCopy * (long)sizeof(double)));
+			P += (ptrdiff_t)NxSource;
+			Q += (ptrdiff_t)NxDestination;
+		}
+		VolumeSource += NxNySource;
+		VolumeDestination += NxNyDestination;
+	}
+/**/DEBUG_WRITE_LEAVING(CopyDoubleToDouble, "Done")
+	return(Status);
+} /* end CopyDoubleToDouble */
+
+
 /*--------------------------------------------------------------------------*/
 extern int		CopyFloatToDouble
 				(

@@ -31,6 +31,28 @@ extern int  CopyDoubleToFloat
     );
 
 /*--------------------------------------------------------------------------*/
+extern int CopyDoubleToDouble
+    (
+	double	*VolumeSource,		/* double input data */
+	long	NxSource,			/* width of the input */
+	long	NySource,			/* height of the input */
+	long	NzSource,			/* depth of the input */
+	long	XSource,			/* x coordinate to get from */
+	long	YSource,			/* y coordinate to get from */
+	long	ZSource,			/* z coordinate to get from */
+	double	*VolumeDestination,	/* double output data */
+	long	NxDestination,		/* width of the output */
+	long	NyDestination,		/* height of the output */
+	long	NzDestination,		/* depth of the output */
+	long	XDestination,		/* x coordinate to put into */
+	long	YDestination,		/* y coordinate to put into */
+	long	ZDestination,		/* z coordinate to put into */
+	long	NxCopy,				/* width of the block to copy */
+	long	NyCopy,				/* height of the block to copy */
+	long	NzCopy				/* depth of the block to copy */
+    );
+
+/*--------------------------------------------------------------------------*/
 extern int  CopyFloatToDouble
     (
         float *VolumeSource,  /* float input data */
