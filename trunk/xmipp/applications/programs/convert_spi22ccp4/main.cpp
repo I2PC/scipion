@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
                 tiltAngles(k)=I.tilt();
                 k++;
             }
-            mrcimage.write(fn_out, V, reverse_endian, Xdim, Ydim, Zdim);
+            mrcimage.write(fn_out, V, reverse_endian, Xdim, Ydim, Zdim, true);
             if (fn_tilt!="")
                 tiltAngles.write(fn_tilt);
         }

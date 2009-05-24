@@ -67,12 +67,13 @@ void CCP4::write(const FileName &fn_out, const ImageXmipp &I, bool reversed,
 }
 
 void CCP4::write(const FileName &fn_out, const VolumeXmipp &V, bool reversed,
-                 double x_length, double y_length, double z_length)
+    double x_length, double y_length, double z_length, bool isStack)
 {
     FILE *fp;
 
     //fill mrc header and reverse if needed
-    fill_header_from_xmippvolume(V, reversed, x_length, y_length, z_length);
+    fill_header_from_xmippvolume(V, reversed, x_length, y_length, z_length,
+        isStack);
 
     //open file
     if ((fp = fopen(fn_out.c_str(), "wb")) == NULL)
@@ -261,7 +262,7 @@ void CCP4::clear()
 /* ------------------------------------------------------------------------- */
 /** Fill mrc header from xmipp image. */
 void CCP4::fill_header_from_xmippimage(ImageXmipp I, bool reversed,
-                                       double x_length, double y_length, double z_length)
+    double x_length, double y_length, double z_length)
 {
     clear();
     if (IsLittleEndian())
@@ -363,7 +364,7 @@ void CCP4::fill_header_from_xmippimage(ImageXmipp I, bool reversed,
 /* ------------------------------------------------------------------------- */
 /** Fill mrc header from xmipp image. */
 void CCP4::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed,
-                                        double x_length, double y_length, double z_length)
+    double x_length, double y_length, double z_length, bool isStack)
 {
     clear();
     (my_mrc_header.map)[0] = 'M';
@@ -375,6 +376,7 @@ void CCP4::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed,
         my_mrc_header.xlen = my_mrc_header.nx = my_mrc_header.mx = V().colNumber();
         my_mrc_header.ylen = my_mrc_header.ny = my_mrc_header.my = V().rowNumber();
         my_mrc_header.zlen = my_mrc_header.nz = my_mrc_header.mz = V().sliceNumber();
+        if (isStack) my_mrc_header.mz = 1;
         if (x_length != 0) my_mrc_header.xlen = x_length;
         if (y_length != 0) my_mrc_header.ylen = y_length;
         if (z_length != 0) my_mrc_header.zlen = z_length;
@@ -385,9 +387,17 @@ void CCP4::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed,
         my_mrc_header.alpha =
             my_mrc_header.beta  =
                 my_mrc_header.gamma = 90.;
-        my_mrc_header.nxstart = -1 * int(my_mrc_header.nx / 2);
-        my_mrc_header.nystart = -1 * int(my_mrc_header.ny / 2);
-        my_mrc_header.nzstart = -1 * int(my_mrc_header.nz / 2);
+        if (isStack)
+        {
+            my_mrc_header.nxstart = my_mrc_header.nystart =
+                my_mrc_header.nzstart = 0;
+        }
+        else
+        {
+            my_mrc_header.nxstart = -1 * int(my_mrc_header.nx / 2);
+            my_mrc_header.nystart = -1 * int(my_mrc_header.ny / 2);
+            my_mrc_header.nzstart = -1 * int(my_mrc_header.nz / 2);
+        }
         my_mrc_header.amin  = (float)(V().computeMin());
         my_mrc_header.amax  = (float)(V().computeMax());
         my_mrc_header.amean = (float)(V().computeAvg());
