@@ -114,6 +114,7 @@ void Prog_ml_tomo_prm::read(int argc, char **argv, bool ML3D)
     fn_root = getParameter(argc2, argv2, "-o", "mltomo");
     fn_sym = getParameter(argc2, argv2, "-sym", "c1");
     Niter = textToInteger(getParameter(argc2, argv2, "-iter", "100"));
+    Niter2 = textToInteger(getParameter(argc2, argv2, "-iter2", "1"));
     istart = textToInteger(getParameter(argc2, argv2, "-istart", "1"));
     sigma_noise = textToFloat(getParameter(argc2, argv2, "-noise", "1"));
     sigma_offset = textToFloat(getParameter(argc2, argv2, "-offset", "3"));
@@ -2315,8 +2316,7 @@ void Prog_ml_tomo_prm::expectation(
     for (int refno = 0; refno < 2*nr_ref; refno++)
     {
         wsumimgs.push_back(Mzero2);
-        if (do_missing)
-            wsumweds.push_back(Mzero);
+        wsumweds.push_back(Mzero);
     }
 
     // Call threads to calculate the expectation of each image in the selfile
@@ -2413,56 +2413,19 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
                 transformer.FourierTransform(Iref[refno](),Faux,true);
                 if (sumw(refno) > 0.)
                 {
-//#define DEBUG_IMPUTE
-#ifdef DEBUG_IMPUTE
-                    VolumeXmipp tt;
-                    FileName fnt, base;
-                    base.compose("_it",iter,"");
-                    FFT_magnitude(Faux,tt());
-                    fnt.compose("Fref0"+base+"_ref",refno+1,"ampl");
-                    tt.write(fnt);
-                    tt()=wsumweds[refno];
-                    tt()/=sumw(refno);
-                    fnt.compose("wsum"+base+"_ref",refno+1,"ampl");
-                    tt.write(fnt);
-                    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
+                    // inner iteration: marginalize over missing data only
+                    for (int iter2 = 0; iter2 < Niter2; iter2++)
                     {
-                        // Impute old reference for missing pixels
-                        DIRECT_MULTIDIM_ELEM(tt(),n) = 
-                            (1. - DIRECT_MULTIDIM_ELEM(wsumweds[refno],n) / sumw(refno));
-                        DIRECT_MULTIDIM_ELEM(Faux,n) *= DIRECT_MULTIDIM_ELEM(tt(),n);
+                        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
+                        {
+                            // Impute old reference for missing pixels
+                            DIRECT_MULTIDIM_ELEM(Faux,n) *= 
+                                (1. - DIRECT_MULTIDIM_ELEM(wsumweds[refno],n) / sumw(refno));
+                            // And sum the weighted sum for observed pixels
+                            DIRECT_MULTIDIM_ELEM(Faux,n) += 
+                                (DIRECT_MULTIDIM_ELEM(Fwsumimgs,n) / sumw(refno));
+                        }
                     }
-                    fnt.compose("inv_wsum"+base+"_ref",refno+1,"ampl");
-                    tt.write(fnt);
-                    FFT_magnitude(Faux,tt());
-                    fnt.compose("Fref1"+base+"_ref",refno+1,"ampl");
-                    tt.write(fnt);
-                    Matrix3D<std::complex<double> > Ft;
-                    Ft=Fwsumimgs/sumw(refno);
-                    FFT_magnitude(Ft,tt());
-                    fnt.compose("Fref2"+base+"_ref",refno+1,"ampl");
-                    tt.write(fnt);
-                    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
-                    {
-                        // And sum the weighted sum for observed pixels
-                        DIRECT_MULTIDIM_ELEM(Faux,n) += 
-                            (DIRECT_MULTIDIM_ELEM(Fwsumimgs,n) / sumw(refno));
-                    }
-                    FFT_magnitude(Faux,tt());
-                    fnt.compose("Fref3"+base+"_ref",refno+1,"ampl");
-                    tt.write(fnt);
-
-#else
-                    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
-                    {
-                        // Impute old reference for missing pixels
-                        DIRECT_MULTIDIM_ELEM(Faux,n) *= 
-                            (1. - DIRECT_MULTIDIM_ELEM(wsumweds[refno],n) / sumw(refno));
-                        // And sum the weighted sum for observed pixels
-                        DIRECT_MULTIDIM_ELEM(Faux,n) += 
-                            (DIRECT_MULTIDIM_ELEM(Fwsumimgs,n) / sumw(refno));
-                    }
-#endif
                 }
                 // else do nothing (i.e. impute old reference completely
             }
@@ -2561,10 +2524,13 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
 #endif
             if (do_impute)
             {
-                sigma_noise *= sigma_noise;
-                sigma_noise *= sumw_allrefs*sum_complete_fourier - sum_complete_wedge ;
-                sigma_noise += wsum_sigma_noise;
-                sigma_noise =  sqrt(sigma_noise / (sumw_allrefs * sum_complete_fourier));
+                for (int iter2 = 0; iter2 < Niter2; iter2++)
+                {                
+                    sigma_noise *= sigma_noise;
+                    sigma_noise *= sumw_allrefs*sum_complete_fourier - sum_complete_wedge ;
+                    sigma_noise += wsum_sigma_noise;
+                    sigma_noise =  sqrt(sigma_noise / (sumw_allrefs * sum_complete_fourier));
+                }
             }
             else
             {

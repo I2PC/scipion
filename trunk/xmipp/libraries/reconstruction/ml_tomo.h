@@ -95,7 +95,7 @@ public:
     /** Starting iteration */
     int istart;
     /** Number of iterations to be performed */
-    int Niter;
+    int Niter, Niter2;
     /** dimension of the images */
     int oridim, dim, dim3, hdim;
     double ddim3;
