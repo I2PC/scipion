@@ -75,8 +75,10 @@ void ShowSel::initWithFile(int _numRows, int _numCols,
     readFile(_fn, _minGray, _maxGray);
     if (_numRows != -1) NumRows = _numRows;
     else NumRows = FLOOR(700.0 / projYdim);
+    if (NumRows==0) NumRows=1;
     if (_numCols != -1) NumCols = _numCols;
     else NumCols = FLOOR(900.0 / projXdim);
+    if (NumCols==0) NumCols=1;
     initTable();
     initRightclickMenubar();
     repaint();
@@ -95,6 +97,8 @@ void ShowSel::initWithFile(int _numRows, int _numCols,
     {
         NumCols = FLOOR(900.0 / projXdim);
         NumRows = FLOOR(700.0 / projYdim);
+	if (NumRows==0) NumRows=1;
+	if (NumCols==0) NumCols=1;
     }
     initTable();
     initRightclickMenubar();
