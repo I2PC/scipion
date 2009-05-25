@@ -151,7 +151,7 @@ int main(int argc, char **argv)
             MPI_Allreduce(MULTIDIM_ARRAY(sumw), MULTIDIM_ARRAY(Vaux), 
                           MULTIDIM_SIZE(sumw), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             sumw = Vaux;
-            for (int refno = 0; refno < prm.nr_ref; refno++)
+            for (int refno = 0; refno < 2*prm.nr_ref; refno++)
             {
                 MPI_Allreduce(MULTIDIM_ARRAY(wsumimgs[refno]), MULTIDIM_ARRAY(Maux),
                               MULTIDIM_SIZE(wsumimgs[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
