@@ -30,7 +30,7 @@ pthread_mutex_t mltomo_weightedsum_update_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mltomo_selfile_access_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // Read arguments ==========================================================
-void Prog_ml_tomo_prm::read(int argc, char **argv, bool ML3D)
+void Prog_ml_tomo_prm::read(int argc, char **argv)
 {
     // Generate new command line for restart procedure
     cline = "";
@@ -59,35 +59,42 @@ void Prog_ml_tomo_prm::read(int argc, char **argv, bool ML3D)
             copy = NULL;
             DFi.next();
             comment = " -frac " + DFi.name();
-            if (!ML3D)
-            {
-                fn_sel = DFi.name();
-                fn_sel = fn_sel.without_extension() + "_restart.sel";
-                comment += " -ref " + fn_sel;
-            }
+            fn_sel = DFi.name();
+            fn_sel = fn_sel.without_extension() + "_restart.sel";
+            comment += " -ref " + fn_sel;
             comment += (DFi.get_current_line()).get_text();
             DFi.next();
             cline = (DFi.get_current_line()).get_text();
+            // Also read additional options upon restart
+            for (int i=1; i <argc; i+=2)
+            {
+                std::cerr<<"i= "<<i<<" argc= "<<argc<<" argv[i]"<<argv[i]<<std::endl;
+                if ((strcmp("-restart", argv[i]) != 0))
+                {
+                    comment += " ";
+                    comment += argv[i];
+                    comment += " ";
+                    comment += argv[i+1];
+                    comment += " ";
+                }
+            }
             comment = comment + cline;
             // regenerate command line
             generateCommandLine(comment, argc2, argv2, copy);
-            if (!ML3D)
+            // Read images names from restart file
+            DFi.next();
+            while (n < nmax)
             {
-                // Read images names from restart file
+                n++;
                 DFi.next();
-                while (n < nmax)
-                {
-                    n++;
-                    DFi.next();
-                    if (DFi.get_current_line().Is_comment()) fn_sel = ((DFi.get_current_line()).get_text()).erase(0, 3);
-                    SFr.insert(fn_sel, SelLine::ACTIVE);
-                    DFi.adjust_to_data_line();
-                }
-                fn_sel = DFi.name();
-                fn_sel = fn_sel.without_extension() + "_restart.sel";
-                SFr.write(fn_sel);
-                SFr.clear();
+                if (DFi.get_current_line().Is_comment()) fn_sel = ((DFi.get_current_line()).get_text()).erase(0, 3);
+                SFr.insert(fn_sel, SelLine::ACTIVE);
+                DFi.adjust_to_data_line();
             }
+            fn_sel = DFi.name();
+            fn_sel = fn_sel.without_extension() + "_restart.sel";
+            SFr.write(fn_sel);
+            SFr.clear();
         }
     }
     else
@@ -166,7 +173,7 @@ void Prog_ml_tomo_prm::read(int argc, char **argv, bool ML3D)
 }
 
 // Show ====================================================================
-void Prog_ml_tomo_prm::show(bool ML3D)
+void Prog_ml_tomo_prm::show()
 {
 
     if (verb > 0)
@@ -259,7 +266,7 @@ void Prog_ml_tomo_prm::usage()
 }
 
 // Extended usage ===================================================================
-void Prog_ml_tomo_prm::extendedUsage(bool ML3D)
+void Prog_ml_tomo_prm::extendedUsage()
 {
     std::cerr << "Additional options: " << std::endl;
     std::cerr << " [ -eps <float=5e-5> ]         : Stopping criterium \n";
@@ -267,8 +274,8 @@ void Prog_ml_tomo_prm::extendedUsage(bool ML3D)
     std::cerr << " [ -noise <float=1> ]          : Expected standard deviation for pixel noise \n";
     std::cerr << " [ -offset <float=3> ]         : Expected standard deviation for origin offset [pix]\n";
     std::cerr << " [ -frac <docfile=\"\"> ]        : Docfile with expected model fractions (default: even distr.)\n";
-    if (!ML3D) std::cerr << " [ -restart <logfile> ]        : restart a run with all parameters as in the logfile \n";
-    if (!ML3D) std::cerr << " [ -istart <int> ]             : number of initial iteration \n";
+    std::cerr << " [ -restart <logfile> ]        : restart a run with all parameters as in the logfile \n";
+    std::cerr << " [ -istart <int> ]             : number of initial iteration \n";
     std::cerr << " [ -fix_sigma_noise]           : Do not re-estimate the standard deviation in the pixel noise \n";
     std::cerr << " [ -fix_sigma_offset]          : Do not re-estimate the standard deviation in the origin offsets \n";
     std::cerr << " [ -fix_fractions]             : Do not re-estimate the model fractions \n";
@@ -499,30 +506,6 @@ void Prog_ml_tomo_prm::produceSideInfo()
             }
         }
     }
-
-    // read in model fractions if given on command line
-    if (fn_frac != "")
-    {
-        double sumfrac = 0.;
-        DocFile DF;
-        DocLine DL;
-        DF.read(fn_frac);
-        DF.go_first_data_line();
-        for (int refno = 0; refno < nr_ref; refno++)
-        {
-            DL = DF.get_current_line();
-            alpha_k(refno) = DL[0];
-            sumfrac += alpha_k(refno);
-            DF.next_data_line();
-        }
-        if (ABS(sumfrac - 1.) > 1e-3)
-            if (verb > 0) std::cerr << " ->WARNING: Sum of all expected model fractions (" << sumfrac << ") is not one!" << std::endl;
-        for (int refno = 0; refno < nr_ref; refno++)
-        {
-            alpha_k(refno) /= sumfrac;
-        }
-    }
-
 
     // Prepare power spectrum adjustment
     if (do_adjust_spectra)
@@ -951,9 +934,35 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
         nr_ref++;
     }
 
-    // prepare priors
+    // Prepare prior alpha_k
     alpha_k.resize(nr_ref);
-    alpha_k.initConstant(1./(double)nr_ref);
+    if (fn_frac != "")
+    {
+        // read in model fractions if given on command line
+        double sumfrac = 0.;
+        DocFile DF;
+        DocLine DL;
+        DF.read(fn_frac);
+        DF.go_first_data_line();
+        for (int refno = 0; refno < nr_ref; refno++)
+        {
+            DL = DF.get_current_line();
+            alpha_k(refno) = DL[0];
+            sumfrac += alpha_k(refno);
+            DF.next_data_line();
+        }
+        if (ABS(sumfrac - 1.) > 1e-3)
+            if (verb > 0) std::cerr << " ->WARNING: Sum of all expected model fractions (" << sumfrac << ") is not one!" << std::endl;
+        for (int refno = 0; refno < nr_ref; refno++)
+        {
+            alpha_k(refno) /= sumfrac;
+        }
+    }
+    else
+    {
+        // Even distribution
+        alpha_k.initConstant(1./(double)nr_ref);
+    }
 
     // Regularization (do not regularize during restarts!)
     if (istart == 1)

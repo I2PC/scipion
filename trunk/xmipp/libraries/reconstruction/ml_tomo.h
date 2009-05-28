@@ -217,16 +217,16 @@ public:
 
 public:
     /// Read arguments from command line
-    void read(int argc, char **argv, bool ML3D = false);
+    void read(int argc, char **argv);
 
     /// Show
-    void show(bool ML3D = false);
+    void show();
 
     /// Usage for ML mode
     void usage();
 
     /// Extended Usage
-    void extendedUsage(bool ML3D = false);
+    void extendedUsage();
 
     /// Setup lots of stuff
     void produceSideInfo();
