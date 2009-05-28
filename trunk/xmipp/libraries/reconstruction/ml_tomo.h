@@ -134,7 +134,7 @@ public:
     /** Perturb angular sampling */
     bool do_perturb;
     /** Low-pass filter at FSC=0.5 resolution in each step */
-    bool do_filter;
+    bool do_filter, do_ini_filter;
 
     /// Internally store all missing wedges or re-compute on the fly?
 
@@ -262,7 +262,7 @@ public:
     // if down_scale=false: go from dim to oridim
     void reScaleVolume(Matrix3D<double> &Min, bool down_scale=true);
 
-    void postProcessVolume(VolumeXmipp &Vin, double &resolution);
+    void postProcessVolume(VolumeXmipp &Vin, double resolution = -1.);
 
     /// Fill vector of matrices with all rotations of reference
     void precalculateA2(std::vector< VolumeXmippT<double> > &Iref);

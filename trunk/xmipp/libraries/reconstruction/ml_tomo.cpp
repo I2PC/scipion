@@ -141,6 +141,7 @@ void Prog_ml_tomo_prm::read(int argc, char **argv)
     
     // Low-pass filter
     do_filter = checkParameter(argc2, argv2, "-filter");
+    do_ini_filter = checkParameter(argc2, argv2, "-ini_filter");
 
     // regularization
     reg0=textToFloat(getParameter(argc2, argv2, "-reg0", "0."));
@@ -852,8 +853,11 @@ void Prog_ml_tomo_prm::generateInitialReferences()
         }
 
         // Enforce fourier_mask, symmetry and omask
-        postProcessVolume(Iave1, resolution);
-        
+        if (do_ini_filter)
+            postProcessVolume(Iave1, resolution);
+        else
+            postProcessVolume(Iave1);
+
         fn_tmp = fn_root + "_it";
         fn_tmp.compose(fn_tmp, 0, "");
         fn_tmp = fn_tmp + "_ref";
@@ -1413,7 +1417,7 @@ void Prog_ml_tomo_prm::reScaleVolume(Matrix3D<double> &Min, bool down_scale)
 
 }
 
-void Prog_ml_tomo_prm::postProcessVolume(VolumeXmipp &Vin, double &resolution)
+void Prog_ml_tomo_prm::postProcessVolume(VolumeXmipp &Vin, double resolution)
 {
 
     Matrix3D<std::complex<double> > Faux;
@@ -1431,11 +1435,11 @@ void Prog_ml_tomo_prm::postProcessVolume(VolumeXmipp &Vin, double &resolution)
     }
 
     // Low-pass filter for given resolution
-    if (do_filter)
+    if (resolution > 0.)
     {
         Matrix1D<double> w(3);
         double raised_w=0.02;
-        double w1=resolution; // Somewhat less stringent than FSC=0.5
+        double w1=resolution;
         double w2=w1+raised_w;
         
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
@@ -2555,7 +2559,10 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
     // post-process reference volumes
     for (int refno=0; refno < nr_ref; refno++)
     {
-        postProcessVolume(Iref[refno], refs_resol[refno]);
+        if (do_filter)
+            postProcessVolume(Iref[refno], refs_resol[refno]);
+        else
+            postProcessVolume(Iref[refno]);
     }
 
     // Regularize
@@ -2830,46 +2837,6 @@ void Prog_ml_tomo_prm::writeOutputFiles(const int iter, DocFile &DFo,
         }
     }
 
-
-    // Write out sel & log-file
-    fn_tmp = fn_base + ".sel";
-    SFo.write(fn_tmp);
-
-    DFl.go_beginning();
-    comment = "ml_tomo-logfile: Number of images= " + floatToString(sumw_allrefs);
-    comment += " LL= " + floatToString(LL, 15, 10) + " <Pmax/sumP>= " + floatToString(avefracweight, 10, 5);
-    DFl.insert_comment(comment);
-    comment = "-noise " + floatToString(sigma_noise, 15, 12) + " -offset " + floatToString(sigma_offset/scale_factor, 15, 12) + " -istart " + integerToString(iter + 1);
-    DFl.insert_comment(comment);
-    DFl.insert_comment(cline);
-    DFl.insert_comment("columns: model fraction (1); 1000x signal change (2); resolution (3)");
-    fn_tmp = fn_base + ".log";
-    DFl.write(fn_tmp);
-
-    // Write out docfile with optimal transformation & references
-    fn_tmp = fn_base + ".doc";
-    DFo.write(fn_tmp);
-
-    // Also write out selfiles of all experimental images,
-    // classified according to optimal reference image
-    if (iter >= 1)
-    {
-        for (int refno = 0;refno < nr_ref; refno++)
-        {
-            DFo.go_beginning();
-            SFo.clear();
-            for (int n = 0; n < DFo.dataLineNo(); n++)
-            {
-                DFo.next();
-                fn_tmp = ((DFo.get_current_line()).get_text()).erase(0, 3);
-                DFo.adjust_to_data_line();
-                if ((refno + 1) == (int)DFo(6)) SFo.insert(fn_tmp, SelLine::ACTIVE);
-            }
-            fn_tmp.compose(fn_base + "_ref", refno + 1, "sel");
-            SFo.write(fn_tmp);
-        }
-    }
-
     // Write out FSC curves
     std::ofstream  fh;
     fn_tmp = fn_base + ".fsc";
@@ -2887,6 +2854,45 @@ void Prog_ml_tomo_prm::writeOutputFiles(const int iter, DocFile &DFo,
         fh<<"\n";
     }
     fh.close();
+
+    // Write out sel & log-file
+    fn_tmp = fn_base + ".sel";
+    SFo.write(fn_tmp);
+
+    if (iter >= 1)
+    {
+        DFl.go_beginning();
+        comment = "ml_tomo-logfile: Number of images= " + floatToString(sumw_allrefs);
+        comment += " LL= " + floatToString(LL, 15, 10) + " <Pmax/sumP>= " + floatToString(avefracweight, 10, 5);
+        DFl.insert_comment(comment);
+        comment = "-noise " + floatToString(sigma_noise, 15, 12) + " -offset " + floatToString(sigma_offset/scale_factor, 15, 12) + " -istart " + integerToString(iter + 1);
+        DFl.insert_comment(comment);
+        DFl.insert_comment(cline);
+        DFl.insert_comment("columns: model fraction (1); 1000x signal change (2); resolution (3)");
+        fn_tmp = fn_base + ".log";
+        DFl.write(fn_tmp);
+
+        // Write out docfile with optimal transformation & references
+        fn_tmp = fn_base + ".doc";
+        DFo.write(fn_tmp);
+
+        // Also write out selfiles of all experimental images,
+        // classified according to optimal reference image
+        for (int refno = 0;refno < nr_ref; refno++)
+        {
+            DFo.go_beginning();
+            SFo.clear();
+            for (int n = 0; n < DFo.dataLineNo(); n++)
+            {
+                DFo.next();
+                fn_tmp = ((DFo.get_current_line()).get_text()).erase(0, 3);
+                DFo.adjust_to_data_line();
+                if ((refno + 1) == (int)DFo(6)) SFo.insert(fn_tmp, SelLine::ACTIVE);
+            }
+            fn_tmp.compose(fn_base + "_ref", refno + 1, "sel");
+            SFo.write(fn_tmp);
+        }
+    }
 
 }
 
