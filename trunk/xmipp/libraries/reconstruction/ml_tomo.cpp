@@ -121,7 +121,7 @@ void Prog_ml_tomo_prm::read(int argc, char **argv)
     fn_root = getParameter(argc2, argv2, "-o", "mltomo");
     fn_sym = getParameter(argc2, argv2, "-sym", "c1");
     Niter = textToInteger(getParameter(argc2, argv2, "-iter", "100"));
-    Niter2 = textToInteger(getParameter(argc2, argv2, "-iter2", "10"));
+    Niter2 = textToInteger(getParameter(argc2, argv2, "-impute_iter", "1"));
     istart = textToInteger(getParameter(argc2, argv2, "-istart", "1"));
     sigma_noise = textToFloat(getParameter(argc2, argv2, "-noise", "1"));
     sigma_offset = textToFloat(getParameter(argc2, argv2, "-offset", "3"));
