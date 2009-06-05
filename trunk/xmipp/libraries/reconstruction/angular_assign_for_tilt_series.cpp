@@ -1027,13 +1027,21 @@ void Prog_tomograph_alignment::readLandmarkSet(const FileName &fnLandmark)
     allLandmarksY.resize(Nlandmark,Nimg);
     allLandmarksX.initConstant(XSIZE(*img[0]));
     allLandmarksY.initConstant(XSIZE(*img[0]));
+    fhIn.exceptions ( std::ifstream::eofbit | 
+                      std::ifstream::failbit | 
+                      std::ifstream::badbit );
     while (!fhIn.eof())
     {
-        int dummyInt, x, y, i, j;
-        fhIn >> dummyInt >> x >> y >> i >> j;
-        i=i-1;
-        allLandmarksX(j,i)=x+STARTINGX(*img[0]);
-        allLandmarksY(j,i)=y+STARTINGY(*img[0]);
+        try {
+            int dummyInt, x, y, i, j;
+            fhIn >> dummyInt >> x >> y >> i >> j;
+            i=i-1;
+            allLandmarksX(j,i)=x+STARTINGX(*img[0]);
+            allLandmarksY(j,i)=y+STARTINGY(*img[0]);
+        } catch (std::ifstream::failure e)
+        {
+            // Do nothing with this line
+        }
     }
     fhIn.close();
     std::cout << "The file " << fnLandmark << " has been read for the landmarks\n"
@@ -1374,14 +1382,14 @@ void Prog_tomograph_alignment::run() {
 #undef DEBUG
 
 /* Optimize for rot -------------------------------------------------------- */
-#define DEBUG
+//#define DEBUG
 double Alignment::optimizeGivenAxisDirection()
 {
     double bestError;
     bool firstIteration=true, finish=false;
     int Niterations=0;
+    computeGeometryDependentOfAxis();
     do {
-        computeGeometryDependentOfAxis();
         computeGeometryDependentOfRotation();
         double error=computeError();
         #ifdef DEBUG
@@ -1591,7 +1599,8 @@ void Alignment::updateModel()
     {
         // Update the individual di
         for (int i=0; i<Nimg; i++)
-            if (i!=prm->iMinTilt) di[i]=prm->barpi[i]-Ai[i]*barri[i]-diaxis[i];
+            if (i!=prm->iMinTilt)
+                di[i]=prm->barpi[i]-Ai[i]*barri[i]-diaxis[i];
     }
     #ifdef DEBUG
         std::cout << "Step 2: error=" << computeError() << std::endl;
