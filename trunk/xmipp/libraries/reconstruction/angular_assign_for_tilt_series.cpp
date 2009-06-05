@@ -1365,6 +1365,7 @@ void Prog_tomograph_alignment::run() {
     }
     bestPreviousAlignment->rot=axisAngles(0);
     bestPreviousAlignment->tilt=axisAngles(1);
+    fitness=bestPreviousAlignment->optimizeGivenAxisDirection();
 
     // Save the alignment
     writeLandmarkSet(fnRoot+"_good_landmarks.txt");
