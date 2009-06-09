@@ -1319,8 +1319,9 @@ public:
      *
      * This function returns the indexes of a sorted vector. The input vector is
      * not modified at all. For instance, if the input vector is [3 2 -1 0] the
-     * result of this function would be [2 3 1 0] meaning that the lowest value
-     * is at index 2, then comes the element at index 3, ...
+     * result of this function would be [3 4 2 1] meaning that the lowest value
+     * is at index 3, then comes the element at index 4, ... Note that
+     * indexes start at 1.
      *
      * @code
      * v2 = v1.indexSort();
