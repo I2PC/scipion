@@ -832,7 +832,7 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
              ROUND(0.45*YSIZE(Ifiltered)), ROUND(0.45*XSIZE(Ifiltered)));
         histogram1D hist;
         compute_hist(Iaux, hist, 400);
-        double th=hist.percentil(0.25);
+        double th=hist.percentil(0.75);
         std::vector< Matrix1D<double> > Q;
         FOR_ALL_ELEMENTS_IN_MATRIX2D(Iaux)
             if (Ifiltered(i,j)<th)
@@ -1635,7 +1635,7 @@ double wrapperError(double *p, void *prm)
     return alignment.optimizeGivenAxisDirection();
 }
 
-#define DEBUG
+//#define DEBUG
 void Prog_tomograph_alignment::run() {
     generateLandmarkSet();
     produceInformationFromLandmarks();
