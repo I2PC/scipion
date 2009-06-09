@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Slavica JONIC (slavica.jonic@impmc.jussieu.fr, slavica.jonic@a3.epfl.ch)
- *		Jean-Noel PIOCHE (jnp95@hotmail.com) 
+ *		Jean-Noël PIOCHE (jnp95@hotmail.com) 
  *		
  * Biomedical Imaging Group, EPFL (Lausanne, Suisse).
  * Structures des Assemblages Macromoléculaires, IMPMC UMR 7590 (Paris, France).
@@ -32,26 +32,24 @@
 
 int main(int argc, char *argv[])
 {
-    Prog_Project_Parameters_2      prog_prm;
-    Projection                     proj;
-    SelFile                        SF;
+    Projection_real_shears projRS;
 
 // Check the command line
     try
     {
-        prog_prm.read(argc, argv);
+        projRS.prog_param.read(argc, argv);
     }
     catch (Xmipp_error &XE)
     {
         std::cout << XE;
-        prog_prm.usage();
+        projRS.prog_param.usage();
         exit(1);
     }
 
 // Really project
     try
     {
-        ROUT_project_real_shears(prog_prm, proj, SF);
+        projRS.ROUT_project_real_shears();
     }
     catch (Xmipp_error XE)
     {
