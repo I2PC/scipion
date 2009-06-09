@@ -88,6 +88,12 @@ public:
     /// Look for local affine transformation
     bool localAffine;
    
+    /// Use critical points
+    bool useCriticalPoints;
+
+    /// Number of critical points
+    int Ncritical;
+
     /// Sequence Length
     int seqLength;
 
@@ -149,16 +155,19 @@ public:
         
         The function returns whether the landmark is accepted or not. */
     bool refineLandmark(int ii, int jj, const Matrix1D<double> &rii,
-        Matrix1D<double> &rjj) const;
+        Matrix1D<double> &rjj, double &maxCorr) const;
 
     /** Refine chain. */
-    bool refineChain(LandmarkChain &chain);
+    bool refineChain(LandmarkChain &chain, double &corrChain);
 
-    /// Generate landmark set
+    /// Generate landmark set using a grid
     void generateLandmarkSet();
 
     /// Write landmark set
     void writeLandmarkSet(const FileName &fnLandmark) const;
+
+    /// Write affine transformations
+    void writeTransformations(const FileName &fnTransformations) const;
 
     /// Read landmark set
     void readLandmarkSet(const FileName &fnLandmark);
@@ -190,6 +199,12 @@ public:
 
     // List of names
     std::vector < std::string > name_list;
+
+    // Average forward patch correlation
+    Matrix1D<double> avgForwardPatchCorr;
+
+    // Average backward patch correlation
+    Matrix1D<double> avgBackwardPatchCorr;
 
     // Total number of images
     int Nimg;
@@ -225,16 +240,6 @@ public:
     // Show refinement
     bool showRefinement;
 };
-
-/// This struct is used to pass different parameters to each thread
-struct ThreadParams
-{
-	int myThreadID;
-	Prog_tomograph_alignment * parent;
-};
-
-/// Threads processing is done here
-void * threadComputeTransform( void * args );
 
 class Alignment {
 public:
@@ -400,7 +405,6 @@ public:
     into coordinates of 2, A21 is just the opposite.*/
 double computeAffineTransformation(const Matrix2D<double> &I1,
     const Matrix2D<double> &I2, int maxShift, int maxIterDE,
-    const FileName &fn_affine,
     Matrix2D<double> &A12, Matrix2D<double> &A21, bool show,
     double thresholdAffine, bool localAffine, bool isMirror);
 //@}

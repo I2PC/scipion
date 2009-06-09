@@ -34,6 +34,8 @@
 #include <queue>
 #include <iostream>
 
+#include "fourier_filter.h"
+
 /* Compute affine matrix --------------------------------------------------- */
 class AffineFitness
 {
@@ -179,7 +181,6 @@ private:
 static pthread_mutex_t localAffineMutex = PTHREAD_MUTEX_INITIALIZER;
 double computeAffineTransformation(const Matrix2D<double> &I1,
     const Matrix2D<double> &I2, int maxShift, int maxIterDE,
-    const FileName &fn_affine, 
     Matrix2D<double> &A12, Matrix2D<double> &A21, bool show,
     double thresholdAffine, bool localAffine, bool isMirror,
     bool checkRotation)
@@ -225,87 +226,70 @@ double computeAffineTransformation(const Matrix2D<double> &I1,
         fitness.minAllowed(4)=fitness.minAllowed(5)=-maxShift;
         fitness.maxAllowed(4)=fitness.maxAllowed(5)= maxShift;
 
-        std::ifstream fh_in;
-        if (fn_affine!="") fh_in.open(fn_affine.c_str());
-
         // Return result
         double cost;
 
-        if (fh_in && fn_affine!="") {
-    	    A12.resize(3,3);
-	    A21.resize(3,3);
-     	    fh_in >> A12 >> A21 >> cost;
-	    fh_in.close();
-        } else {
-            // Optimize with differential evolution
-            Matrix1D<double> A(6);
-            if (!localAffine)
+        // Optimize with differential evolution
+        Matrix1D<double> A(6);
+        if (!localAffine)
+        {
+            double bestEnergy=2, energy;
+            int n=0;
+            do
             {
-                double bestEnergy=2, energy;
-                int n=0;
-                do
+                AffineSolver solver(&fitness,6,6*10);
+                solver.Setup(MULTIDIM_ARRAY(fitness.minAllowed),
+                             MULTIDIM_ARRAY(fitness.maxAllowed),
+		             stBest2Bin, 0.5, 0.8);
+                solver.Solve(maxIterDE);
+                energy=solver.Energy();
+                if (n==0 || bestEnergy>energy)
                 {
-                    AffineSolver solver(&fitness,6,6*10);
-                    solver.Setup(MULTIDIM_ARRAY(fitness.minAllowed),
-                                 MULTIDIM_ARRAY(fitness.maxAllowed),
-		                 stBest2Bin, 0.5, 0.8);
-                    solver.Solve(maxIterDE);
-                    energy=solver.Energy();
-                    if (n==0 || bestEnergy>energy)
-                    {
-                        FOR_ALL_ELEMENTS_IN_MATRIX1D(A)
-                           A(i)=solver.Solution()[i];
-                        bestEnergy=energy;
-                    }
-                    n++;
-                } while ((n<3 || (n>=3 && n<10 && bestEnergy>1-thresholdAffine))
-                         && bestEnergy>=0.07);
-            }
+                    FOR_ALL_ELEMENTS_IN_MATRIX1D(A)
+                       A(i)=solver.Solution()[i];
+                    bestEnergy=energy;
+                }
+                n++;
+            } while ((n<3 || (n>=3 && n<10 && bestEnergy>1-thresholdAffine))
+                     && bestEnergy>=0.07);
+        }
+        else
+        {
+            A(0)=A(3)=1;
+            if (isMirror)
+                A(3)*=-1;
+            double tx, ty;
+            pthread_mutex_lock( &localAffineMutex );
+            if (!isMirror) best_shift(I1,I2,tx,ty);
             else
             {
-                A(0)=A(3)=1;
-                if (isMirror)
-                    A(3)*=-1;
-                double tx, ty;
-                pthread_mutex_lock( &localAffineMutex );
-                if (!isMirror) best_shift(I1,I2,tx,ty);
-                else
-                {
-                    Matrix2D<double> auxI2=I2;
-                    auxI2.selfReverseY();
-                    STARTINGX(auxI2)=STARTINGX(I2);
-                    STARTINGY(auxI2)=STARTINGY(I2);
-                    best_shift(I1,auxI2,tx,ty);
-                    ty=-ty;
-                }
-                pthread_mutex_unlock( &localAffineMutex );
-                A(4)=-tx;
-                A(5)=-ty;
+                Matrix2D<double> auxI2=I2;
+                auxI2.selfReverseY();
+                STARTINGX(auxI2)=STARTINGX(I2);
+                STARTINGY(auxI2)=STARTINGY(I2);
+                best_shift(I1,auxI2,tx,ty);
+                ty=-ty;
             }
+            pthread_mutex_unlock( &localAffineMutex );
+            A(4)=-tx;
+            A(5)=-ty;
+        }
 
-            // Optimize with Powell
-            Matrix1D<double> steps(A);
-            steps.initConstant(1);
-            int iter;
-            powellOptimizer(A, 1, XSIZE(A),
-                AffineFitness::Powell_affine_fitness_individual, &fitness, 0.005,
-                cost, iter, steps, false);
+        // Optimize with Powell
+        Matrix1D<double> steps(A);
+        steps.initConstant(1);
+        int iter;
+        powellOptimizer(A, 1, XSIZE(A),
+            AffineFitness::Powell_affine_fitness_individual, &fitness, 0.005,
+            cost, iter, steps, false);
 
-            // Separate solution
-            A12.initIdentity(3);
-            A12(0,0)=A(0); A12(0,1)=A(1); A12(0,2)=A(4);
-            A12(1,0)=A(2); A12(1,1)=A(3); A12(1,2)=A(5);
+        // Separate solution
+        A12.initIdentity(3);
+        A12(0,0)=A(0); A12(0,1)=A(1); A12(0,2)=A(4);
+        A12(1,0)=A(2); A12(1,1)=A(3); A12(1,2)=A(5);
 
-            A21=A12.inv();
+        A21=A12.inv();
 
-            if (fn_affine!="")
-            {
-                std::ofstream fh_out;
-                fh_out.open(fn_affine.c_str());
-                fh_out << A12 << std::endl << A21 << std::endl << cost;
-                fh_out.close();
-            }
-        }   
         if (show)
         {
     	    fitness.showMode=true;
@@ -328,6 +312,11 @@ void Prog_tomograph_alignment::read(int argc, char **argv) {
    if (fnRoot=="")
       fnRoot=fnSel.without_extension();
    localAffine=checkParameter(argc,argv,"-localAffine");
+   useCriticalPoints=checkParameter(argc,argv,"-useCriticalPoints");
+   if (useCriticalPoints)
+      Ncritical=textToInteger(getParameter(argc,argv,"-useCriticalPoints"));
+   else
+      Ncritical=0;
    seqLength=textToInteger(getParameter(argc,argv,"-seqLength","5"));
    maxStep=textToInteger(getParameter(argc,argv,"-maxStep","4"));
    gridSamples=textToInteger(getParameter(argc,argv,"-gridSamples","40"));
@@ -350,6 +339,8 @@ void Prog_tomograph_alignment::show() {
              << "Original images:    " << fnSelOrig          << std::endl
              << "Output rootname:    " << fnRoot             << std::endl
              << "Local affine:       " << localAffine        << std::endl
+             << "Use critical points:" << useCriticalPoints  << std::endl
+             << "Num critical points:" << Ncritical          << std::endl
              << "SeqLength:          " << seqLength          << std::endl
              << "MaxStep:            " << maxStep            << std::endl
              << "Grid samples:       " << gridSamples        << std::endl
@@ -373,6 +364,9 @@ void Prog_tomograph_alignment::usage() const {
              << "  [-iorig <selfile>]              : Selfile with images at original scale\n"
              << "  [-oroot <fn_out>]               : Output alignment\n"
              << "  [-localAffine]                  : Look for affine transformations close to I\n"
+             << "  [-useCriticalPoints <n>]        : Use critical points instead of a grid\n"
+             << "                                    n is the number of critical points to choose\n"
+             << "                                    in each image\n"
              << "  [-seqLength <n=5>]              : Sequence length\n"
              << "  [-maxStep <step=4>]             : Maximum step for chain refinement\n"
              << "  [-gridSamples <n=40>]           : Total number of samples=n*n\n"
@@ -392,93 +386,17 @@ void Prog_tomograph_alignment::usage() const {
 }
 
 /* Produce side info ------------------------------------------------------- */
-void Prog_tomograph_alignment::produceSideInfo() {
-   bestPreviousAlignment=new Alignment(this);
-   // Read input data
-   SF.read(fnSel);
-   Nimg=SF.ImgNo();
-   if (Nimg!=0)
-   {
-       // Clear the list of images if not empty
-       if (img.size()!=0) {
-          for (int i=0; i<img.size(); i++) delete img[i];
-          img.clear();
-       }
-
-       std::cerr << "Reading input data\n";
-       init_progress_bar(Nimg);
-       int n=0;
-       SF.go_first_ACTIVE();
-       iMinTilt=-1;
-       double minTilt=1000;
-       while (!SF.eof()) {
-          FileName fn=SF.NextImg();
-          if (fn=="") break;
-          ImageXmipp imgaux(fn);
-          Matrix2D<double>* img_i=new Matrix2D<double>;
-          *img_i=imgaux();
-          img_i->setXmippOrigin();
-          img.push_back(img_i);
-          tiltList.push_back(imgaux.tilt());
-          if (ABS(imgaux.tilt())<minTilt)
-          {
-             iMinTilt=n;
-             minTilt=ABS(imgaux.tilt());
-          }
-          name_list.push_back(imgaux.name());
-
-          progress_bar(n++);
-       }
-       progress_bar(Nimg);
-   }
-   
-    // Read images at original scale
-    if (fnSelOrig!="")
-    {
-        SForig.read(fnSelOrig);
-        if (SForig.ImgNo()!=SF.ImgNo())
-            REPORT_ERROR(1,"The number of images in both selfiles (-i and -iorig) is different");
-    }
-
-    // Fill the affine transformations with empty matrices
-    std::vector< Matrix2D<double> > emptyRow;
-    for (int i=0; i<Nimg; i++)
-    {
-        Matrix2D<double> A;
-        emptyRow.push_back(A);
-    }
-    for (int i=0; i<Nimg; i++) {
-    	affineTransformations.push_back(emptyRow);
-        correlationList.push_back(-1);
-    }
-
-    pthread_t * th_ids = new pthread_t[numThreads];
-    ThreadParams * th_args= new ThreadParams[numThreads];
-	
-    for( int nt = 0 ; nt < numThreads ; nt ++ )
-    {
-        // Passing parameters to each thread
-        th_args[nt].parent = this;
-        th_args[nt].myThreadID = nt;
-        pthread_create( (th_ids+nt) , NULL, threadComputeTransform, (void *)(th_args+nt) );
-    }
-		
-    // Waiting for threads to finish
-    for( int nt = 0 ; nt < numThreads ; nt ++ )
-        pthread_join(*(th_ids+nt), NULL);
-
-    // Threads structures are not needed any more
-    delete( th_ids );
-    delete( th_args );
-
-    // Do not show refinement
-    showRefinement=false;
-}
-
 static pthread_mutex_t printingMutex = PTHREAD_MUTEX_INITIALIZER;
+struct ThreadComputeTransformParams
+{
+	int myThreadID;
+	Prog_tomograph_alignment * parent;
+};
+
 void * threadComputeTransform( void * args )
 {
-    ThreadParams * master = (ThreadParams *) args;
+    ThreadComputeTransformParams * master =
+        (ThreadComputeTransformParams *) args;
 
     Prog_tomograph_alignment * parent = master->parent;
     int thread_id = master->myThreadID;
@@ -508,155 +426,582 @@ void * threadComputeTransform( void * args )
         Matrix2D<double>& img_i=*img[jj_1];
         Matrix2D<double>& img_j=*img[jj];
         bool isMirror=(jj==0) && (jj_1==Nimg-1);
-        Matrix2D<double> Aij, Aji;
-        cost = computeAffineTransformation(img_i, img_j, maxShift,
-            maxIterDE,(std::string)"affine_"+integerToString(jj_1,3)+
-            "_"+integerToString(jj,3)+".txt", Aij, Aji,
-            showAffine, thresholdAffine, localAffine,
-            isMirror,true);
-        parent->correlationList[jj]=1-cost;
+        if (XSIZE(affineTransformations[jj_1][jj])==0)
+        {
+            Matrix2D<double> Aij, Aji;
+            cost = computeAffineTransformation(img_i, img_j, maxShift,
+                maxIterDE, Aij, Aji,
+                showAffine, thresholdAffine, localAffine,
+                isMirror,true);
+            parent->correlationList[jj]=1-cost;
         
-	pthread_mutex_lock( &printingMutex );
-        affineTransformations[jj_1][jj]=Aij;
-        affineTransformations[jj][jj_1]=Aji;
-	std::cout << "Cost for [" << jj_1 << "] - ["
-                  << jj << "] = " << cost << std::endl;
-	pthread_mutex_unlock( &printingMutex );
+	    pthread_mutex_lock( &printingMutex );
+            affineTransformations[jj_1][jj]=Aij;
+            affineTransformations[jj][jj_1]=Aji;
+            parent->writeTransformations(
+                parent->fnRoot+"_transformations.txt");
+	    std::cout << "Cost for [" << jj_1 << "] - ["
+                      << jj << "] = " << cost << std::endl;
+	    pthread_mutex_unlock( &printingMutex );
+        }
     }
 	
     return NULL;
 }
  
+void Prog_tomograph_alignment::produceSideInfo() {
+   bestPreviousAlignment=new Alignment(this);
+   // Read input data
+   SF.read(fnSel);
+   Nimg=SF.ImgNo();
+   if (Nimg!=0)
+   {
+       // Clear the list of images if not empty
+       if (img.size()!=0) {
+          for (int i=0; i<img.size(); i++) delete img[i];
+          img.clear();
+       }
+
+       std::cerr << "Reading input data\n";
+       init_progress_bar(Nimg);
+       int n=0;
+       SF.go_first_ACTIVE();
+       iMinTilt=-1;
+       double minTilt=1000;
+       bool nonZeroTilt=false;
+       while (!SF.eof()) {
+          FileName fn=SF.NextImg();
+          if (fn=="") break;
+          ImageXmipp imgaux(fn);
+          Matrix2D<double>* img_i=new Matrix2D<double>;
+          *img_i=imgaux();
+          img_i->setXmippOrigin();
+          img.push_back(img_i);
+          tiltList.push_back(imgaux.tilt());
+          if (imgaux.tilt()!=0) nonZeroTilt=true;
+          if (ABS(imgaux.tilt())<minTilt)
+          {
+             iMinTilt=n;
+             minTilt=ABS(imgaux.tilt());
+          }
+          name_list.push_back(imgaux.name());
+
+          progress_bar(n++);
+       }
+       progress_bar(Nimg);
+       if (!nonZeroTilt)
+            REPORT_ERROR(1,"Tilt angles have not been assigned to the input selfile");
+   }
+   
+    // Read images at original scale
+    if (fnSelOrig!="")
+    {
+        SForig.read(fnSelOrig);
+        if (SForig.ImgNo()!=SF.ImgNo())
+            REPORT_ERROR(1,"The number of images in both selfiles (-i and -iorig) is different");
+    }
+
+    // Fill the affine transformations with empty matrices
+    std::vector< Matrix2D<double> > emptyRow;
+    for (int i=0; i<Nimg; i++)
+    {
+        Matrix2D<double> A;
+        emptyRow.push_back(A);
+    }
+    for (int i=0; i<Nimg; i++) {
+    	affineTransformations.push_back(emptyRow);
+        correlationList.push_back(-1);
+    }
+
+    // Check if there are transformations already calculated
+    if (exists(fnRoot+"_transformations.txt"))
+    {
+        std::ifstream fhIn;
+        fhIn.open((fnRoot+"_transformations.txt").c_str());
+        if (!fhIn)
+            REPORT_ERROR(1,(std::string)"Cannot open "+
+                fnRoot+"_transformations.txt");
+        int i=0;
+        while (!fhIn.eof())
+        {
+            std::string line;
+            getline(fhIn, line);
+            if (i<affineTransformations.size()-1 && line!="")
+            {
+                std::vector< double > data;
+                readFloatList(line.c_str(), 8, data, 1, "Error reading affine line", 1);
+                affineTransformations[i][i+1].resize(3,3);
+                affineTransformations[i][i+1].initIdentity(3);
+                affineTransformations[i][i+1](0,0)=data[2];
+                affineTransformations[i][i+1](1,0)=data[3];
+                affineTransformations[i][i+1](0,1)=data[4];
+                affineTransformations[i][i+1](1,1)=data[5];
+                affineTransformations[i][i+1](0,2)=data[6];
+                affineTransformations[i][i+1](1,2)=data[7];
+                
+                affineTransformations[i+1][i]=
+                    affineTransformations[i][i+1].inv();
+                i++;
+            }
+        }
+        fhIn.close();
+    }
+
+    // Compute the rest of transformations
+    pthread_t * th_ids = new pthread_t[numThreads];
+    ThreadComputeTransformParams * th_args=
+        new ThreadComputeTransformParams[numThreads];
+	
+    for( int nt = 0 ; nt < numThreads ; nt ++ )
+    {
+        // Passing parameters to each thread
+        th_args[nt].parent = this;
+        th_args[nt].myThreadID = nt;
+        pthread_create( (th_ids+nt) , NULL, threadComputeTransform, (void *)(th_args+nt) );
+    }
+		
+    // Waiting for threads to finish
+    for( int nt = 0 ; nt < numThreads ; nt ++ )
+        pthread_join(*(th_ids+nt), NULL);
+
+    // Threads structures are not needed any more
+    delete( th_ids );
+    delete( th_args );
+
+    // Do not show refinement
+    showRefinement=false;
+    
+    // Check which is the distribution of correlation
+    if (!useCriticalPoints)
+    {
+        int X0=STARTINGX(*(img[0]))+2*localSize*XSIZE(*(img[0]));
+        int XF=FINISHINGX(*(img[0]))-2*localSize*XSIZE(*(img[0]));
+        int Y0=STARTINGY(*(img[0]))+2*localSize*YSIZE(*(img[0]));
+        int YF=FINISHINGY(*(img[0]))-2*localSize*YSIZE(*(img[0]));
+        avgForwardPatchCorr.initZeros(Nimg);
+        avgBackwardPatchCorr.initZeros(Nimg);
+        avgForwardPatchCorr.initConstant(1);
+        avgBackwardPatchCorr.initConstant(1);
+        for (int ii=0; ii<Nimg; ++ii)
+        {
+            // Compute average forward patch corr
+            Matrix1D<double> corrList;
+            if (ii<=Nimg-2)
+            {
+                corrList.initZeros(200);
+                FOR_ALL_ELEMENTS_IN_MATRIX1D(corrList)
+                {
+                    Matrix1D<double> rii(3), rjj(3);
+                    do {
+                        XX(rii)=rnd_unif(X0,XF);
+                        YY(rii)=rnd_unif(Y0,YF);
+                        rjj=affineTransformations[ii][ii+1]*rii;
+                        refineLandmark(ii,ii+1,rii,rjj,corrList(i));
+                    } while (corrList(i)<-0.99);
+                }
+                avgForwardPatchCorr(ii)=corrList.computeAvg();
+            }
+
+            // Compute average backward patch corr
+            if (ii>0)
+            {
+                corrList.initZeros(200);
+                FOR_ALL_ELEMENTS_IN_MATRIX1D(corrList)
+                {
+                    Matrix1D<double> rii(3), rjj(3);
+                    do {
+                        XX(rii)=rnd_unif(X0,XF);
+                        YY(rii)=rnd_unif(Y0,YF);
+                        rjj=affineTransformations[ii][ii-1]*rii;
+                        refineLandmark(ii,ii-1,rii,rjj,corrList(i));
+                    } while (corrList(i)<-0.99);
+                }
+                avgBackwardPatchCorr(ii)=corrList.computeAvg();
+            }
+
+            std::cout << "Image " << ii << " forward=" << avgForwardPatchCorr(ii)
+                      << " backward=" << avgBackwardPatchCorr(ii) << std::endl;
+        }
+    }
+}
+
 /* Generate landmark set --------------------------------------------------- */
 //#define DEBUG
-void Prog_tomograph_alignment::generateLandmarkSet() {
-    if (!exists(fnRoot+"_landmarks.txt"))
+static pthread_mutex_t chainRefineMutex = PTHREAD_MUTEX_INITIALIZER;
+struct ThreadGenerateLandmarkSetParams
+{
+	int myThreadID;
+	Prog_tomograph_alignment * parent;
+        
+        std::vector<LandmarkChain> *chainList;
+};
+
+void * threadgenerateLandmarkSetGrid( void * args )
+{
+    ThreadGenerateLandmarkSetParams * master =
+        (ThreadGenerateLandmarkSetParams *) args;
+    Prog_tomograph_alignment * parent = master->parent;
+    int thread_id = master->myThreadID;
+    int Nimg=parent->Nimg;
+    int numThreads=parent->numThreads;
+    const std::vector< std::vector< Matrix2D<double> > > &affineTransformations=
+        parent->affineTransformations;
+    int gridSamples=parent->gridSamples;
+
+    int deltaShift=FLOOR(XSIZE(*(parent->img)[0])/gridSamples);
+    master->chainList=new std::vector<LandmarkChain>;
+    Matrix1D<double> rii(3), rjj(3);
+    ZZ(rii)=1;
+    ZZ(rjj)=1;
+    if (thread_id==0) init_progress_bar(gridSamples);
+    int totalPoints=0;
+    int includedPoints=0;
+    Matrix1D<int> visited(Nimg);
+    for (int nx=thread_id; nx<gridSamples; nx+=numThreads)
     {
-        int deltaShift=FLOOR(XSIZE(*img[0])/gridSamples);
-        std::vector<LandmarkChain> chainList;
+        XX(rii)=STARTINGX(*(parent->img)[0])+ROUND(deltaShift*(0.5+nx));
+        for (int ny=0; ny<gridSamples; ny+=1)
+        {
+            YY(rii)=STARTINGY(*(parent->img)[0])+ROUND(deltaShift*(0.5+ny));
+            for (int ii=0; ii<=Nimg-1; ++ii)
+            {
+                LandmarkChain chain;
+                chain.clear();
+                Landmark l;
+                l.x=XX(rii);
+                l.y=YY(rii);
+                l.imgIdx=ii;
+                chain.push_back(l);
+                visited.initZeros();
+                visited(ii)=1;
+
+                // Follow this landmark backwards
+                bool acceptLandmark=true;
+                int jjleft=ii, jj;
+                if (parent->isCapillar) jj=intWRAP(ii-1,0,Nimg-1);
+                else                    jj=ii-1;
+                Matrix2D<double> Aij, Aji;
+                Matrix1D<double> rcurrent=rii;
+                while (jj>=0 && acceptLandmark && !visited(jj))
+                {
+                    // Compute the affine transformation between ii and jj
+                    int jj_1;
+                    if (parent->isCapillar) jj_1=intWRAP(jj+1,0,Nimg-1);
+                    else                    jj_1=jj+1;
+                    visited(jj)=1;
+                    Aij=affineTransformations[jj][jj_1];
+	            Aji=affineTransformations[jj_1][jj];
+                    rjj=Aji*rcurrent;
+                    double corr;
+                    acceptLandmark=parent->refineLandmark(jj_1,jj,rcurrent,rjj,
+                        corr);
+                    if (acceptLandmark)
+                    {
+                        l.x=XX(rjj);
+                        l.y=YY(rjj);
+                        l.imgIdx=jj;
+                        chain.push_back(l);
+                        jjleft=jj;
+                        if (parent->isCapillar) jj=intWRAP(jj-1,0,Nimg-1);
+                        else                    jj=jj-1;
+                        rcurrent=rjj;
+                    }
+                }
+
+                // Follow this landmark forward
+                acceptLandmark=true;
+                if (parent->isCapillar) jj=intWRAP(ii+1,0,Nimg-1);
+                else jj=ii+1;
+                rcurrent=rii;
+                int jjright=ii;
+                while (jj<Nimg && acceptLandmark && !visited(jj))
+                {
+                    // Compute the affine transformation between ii and jj
+                    int jj_1;
+                    if (parent->isCapillar) jj_1=intWRAP(jj-1,0,Nimg-1);
+                    else                    jj_1=jj-1;
+                    visited(jj)=1;
+                    Aij=affineTransformations[jj_1][jj];
+	            Aji=affineTransformations[jj][jj_1];
+                    rjj=Aij*rcurrent;
+                    double corr;
+                    acceptLandmark=parent->refineLandmark(jj_1,jj,rcurrent,rjj,
+                        corr);
+                    if (acceptLandmark)
+                    {
+                        l.x=XX(rjj);
+                        l.y=YY(rjj);
+                        l.imgIdx=jj;
+                        chain.push_back(l);
+                        jjright=jj;
+                        if (parent->isCapillar) jj=intWRAP(jj+1,0,Nimg-1);
+                        else                    jj=jj+1;
+                        rcurrent=rjj;
+                    }
+                }
+
+                #ifdef DEBUG
+                    std::cout << "img=" << ii << " chain length="
+                              << chain.size() << " [" << jjleft 
+                              << " - " << jjright << "]";
+                #endif
+                if (chain.size()>parent->seqLength)
+                {
+                    double corrChain;
+                    bool accepted=parent->refineChain(chain,corrChain);
+                    if (accepted)
+                    {
+                        #ifdef DEBUG
+                            std::cout << " Accepted with length= "
+                                      << chain.size()
+                                      << " [" << chain[0].imgIdx << " - "
+                                      << chain[chain.size()-1].imgIdx << "]= ";
+                            for (int i=0; i<chain.size(); i++)
+                                std::cout << chain[i].imgIdx << " ";
+                        #endif
+                        master->chainList->push_back(chain);
+                        includedPoints+=chain.size();
+                    }
+                }
+                #ifdef DEBUG
+                    std::cout << std::endl;
+                #endif
+            }
+            #ifdef DEBUG
+                std::cout << "Point nx=" << nx << " ny=" << ny
+                          << " Number of points="
+                          << includedPoints
+                          << " Number of chains=" << master->chainList->size()
+                          << " ( " << ((double) includedPoints)/
+                              master->chainList->size() << " )\n";
+            #endif
+        }
+        if (thread_id==0) progress_bar(nx);
+    }
+    if (thread_id==0) progress_bar(gridSamples);
+}
+
+//#define DEBUG
+void * threadgenerateLandmarkSetCriticalPoints( void * args )
+{
+    ThreadGenerateLandmarkSetParams * master =
+        (ThreadGenerateLandmarkSetParams *) args;
+    Prog_tomograph_alignment * parent = master->parent;
+    int thread_id = master->myThreadID;
+    int Nimg=parent->Nimg;
+    int numThreads=parent->numThreads;
+    const std::vector< std::vector< Matrix2D<double> > > &affineTransformations=
+        parent->affineTransformations;
+
+    master->chainList=new std::vector<LandmarkChain>;
+    std::vector<LandmarkChain> candidateChainList;
+    if (thread_id==0) init_progress_bar(Nimg);
+    int halfSeqLength=parent->seqLength/2;
+
+    // Design a mask for the dilation
+    int radius=4;
+    Matrix2D<int> mask;
+    mask.resize(2*radius+1,2*radius+1);
+    mask.setXmippOrigin();
+    BinaryCircularMask(mask,4,OUTSIDE_MASK);
+
+    for (int ii=thread_id; ii<=Nimg-1; ii+=numThreads)
+    {
+        // Filter the image
+        Matrix2D<double> Ifiltered;
+        FourierMask FilterHP;
+        FilterHP.FilterBand=HIGHPASS;
+        FilterHP.w1=0.004;
+        FilterHP.raised_w=0.002;
+        Ifiltered=*(parent->img[ii]);
+        Ifiltered.setXmippOrigin();
+        FilterHP.generate_mask(Ifiltered);
+        FilterHP.apply_mask_Space(Ifiltered);
+
+        FourierMask FilterLP;
+        FilterLP.FilterBand=LOWPASS;
+        FilterLP.w1=0.25;
+        FilterLP.raised_w=0.02;
+        FilterLP.generate_mask(Ifiltered);
+        FilterLP.apply_mask_Space(Ifiltered);
+        
+        // Identify low valued points and perform dilation
+        Matrix2D<double> Iaux=Ifiltered;
+        Iaux.window(
+            -ROUND(0.45*YSIZE(Ifiltered)),-ROUND(0.45*XSIZE(Ifiltered)),
+             ROUND(0.45*YSIZE(Ifiltered)), ROUND(0.45*XSIZE(Ifiltered)));
+        histogram1D hist;
+        compute_hist(Iaux, hist, 200);
+        double th=hist.percentil(1);
+        std::vector< Matrix1D<double> > Q;
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(Iaux)
+            if (Ifiltered(i,j)<th)
+            {
+                // Check if it is a local minimum
+                bool localMinimum=true;
+                int x0=j;
+                int y0=i;
+                FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
+                {
+                    int x=x0+j;
+                    int y=y0+i;
+                    if (x>=STARTINGX(Iaux) && x<=FINISHINGX(Iaux) &&
+                        y>=STARTINGY(Iaux) && y<=FINISHINGY(Iaux))
+                        if (MAT_ELEM(Iaux,y,x)<MAT_ELEM(Iaux,y0,x0))
+                        {
+                            localMinimum=false;
+                            break;
+                        }
+                }
+                if (localMinimum)
+                    Q.push_back(vectorR2(x0,y0));
+            }
+        
+        int qmax=Q.size();
         Matrix1D<double> rii(3), rjj(3);
         ZZ(rii)=1;
         ZZ(rjj)=1;
-        init_progress_bar(gridSamples);
-        int totalPoints=0;
-        int includedPoints=0;
-        Matrix1D<int> visited(Nimg);
-        for (int nx=0; nx<gridSamples; ++nx)
+        Matrix1D<double> corrQ;
+        corrQ.initZeros(qmax);
+        for (int q=0; q<qmax; q++)
         {
-            XX(rii)=STARTINGX(*img[0])+ROUND(deltaShift*(0.5+nx));
-            for (int ny=0; ny<gridSamples; ++ny)
+            XX(rii)=XX(Q[q]);
+            YY(rii)=YY(Q[q]);
+            
+            // Initiate a chain here
+            LandmarkChain chain;
+            chain.clear();
+            Landmark l;
+            l.x=XX(rii);
+            l.y=YY(rii);
+            l.imgIdx=ii;
+            chain.push_back(l);
+
+            // Follow this landmark backwards
+            int jjmin=XMIPP_MAX(0,ii-halfSeqLength);
+            int jjmax=ii-1;
+            Matrix2D<double> Aij, Aji;
+            Matrix1D<double> rcurrent=rii;
+            for (int jj=jjmax; jj>=jjmin; --jj)
             {
-                YY(rii)=STARTINGY(*img[0])+ROUND(deltaShift*(0.5+ny));
-                for (int ii=0; ii<=Nimg-1; ++ii)
-                {
-                    LandmarkChain chain;
-                    chain.clear();
-                    Landmark l;
-                    l.x=XX(rii);
-                    l.y=YY(rii);
-                    l.imgIdx=ii;
-                    chain.push_back(l);
-                    visited.initZeros();
-                    visited(ii)=1;
-
-                    // Follow this landmark backwards
-                    bool acceptLandmark=true;
-                    int jjleft=ii, jj;
-                    if (isCapillar) jj=intWRAP(ii-1,0,Nimg-1);
-                    else            jj=ii-1;
-                    Matrix2D<double> Aij, Aji;
-                    Matrix1D<double> rcurrent=rii;
-                    while (jj>=0 && acceptLandmark && !visited(jj))
-                    {
-                        // Compute the affine transformation between ii and jj
-                        int jj_1;
-                        if (isCapillar) jj_1=intWRAP(jj+1,0,Nimg-1);
-                        else            jj_1=jj+1;
-                        visited(jj)=1;
-                        Aij=affineTransformations[jj][jj_1];
-	                Aji=affineTransformations[jj_1][jj];
-                        rjj=Aji*rcurrent;
-                        acceptLandmark=refineLandmark(jj_1,jj,rcurrent,rjj);
-                        if (acceptLandmark)
-                        {
-                            l.x=XX(rjj);
-                            l.y=YY(rjj);
-                            l.imgIdx=jj;
-                            chain.push_back(l);
-                            jjleft=jj;
-                            if (isCapillar) jj=intWRAP(jj-1,0,Nimg-1);
-                            else            jj=jj-1;
-                            rcurrent=rjj;
-                        }
-                    }
-
-                    // Follow this landmark forward
-                    acceptLandmark=true;
-                    if (isCapillar) jj=intWRAP(ii+1,0,Nimg-1);
-                    else jj=ii+1;
-                    rcurrent=rii;
-                    int jjright=ii;
-                    while (jj<Nimg && acceptLandmark && !visited(jj))
-                    {
-                        // Compute the affine transformation between ii and jj
-                        int jj_1;
-                        if (isCapillar) jj_1=intWRAP(jj-1,0,Nimg-1);
-                        else            jj_1=jj-1;
-                        visited(jj)=1;
-                        Aij=affineTransformations[jj_1][jj];
-	                Aji=affineTransformations[jj][jj_1];
-                        rjj=Aij*rcurrent;
-                        acceptLandmark=refineLandmark(jj_1,jj,rcurrent,rjj);
-                        if (acceptLandmark)
-                        {
-                            l.x=XX(rjj);
-                            l.y=YY(rjj);
-                            l.imgIdx=jj;
-                            chain.push_back(l);
-                            jjright=jj;
-                            if (isCapillar) jj=intWRAP(jj+1,0,Nimg-1);
-                            else            jj=jj+1;
-                            rcurrent=rjj;
-                        }
-                    }
-
-                    #ifdef DEBUG
-                        std::cout << "img=" << ii << " chain length="
-                                  << chain.size() << " [" << jjleft 
-                                  << " - " << jjright << "]";
-                    #endif
-                    if (chain.size()>seqLength)
-                    {
-                        bool accepted=refineChain(chain);
-                        if (accepted)
-                        {
-                            #ifdef DEBUG
-                                std::cout << " Accepted with length= "
-                                          << chain.size()
-                                          << " [" << chain[0].imgIdx << " - "
-                                          << chain[chain.size()-1].imgIdx << "]= ";
-                                for (int i=0; i<chain.size(); i++)
-                                    std::cout << chain[i].imgIdx << " ";
-                            #endif
-                            chainList.push_back(chain);
-                            includedPoints+=chain.size();
-                        }
-                    }
-                    #ifdef DEBUG
-                        std::cout << std::endl;
-                    #endif
-                }
-                #ifdef DEBUG
-                    std::cout << "Point nx=" << nx << " ny=" << ny
-                              << " Number of points="
-                              << includedPoints
-                              << " Number of chains=" << chainList.size()
-                              << " ( " << ((double) includedPoints)/chainList.size() << " )\n";
-                #endif
+                // Compute the affine transformation between jj+1 and jj
+                int jj_1=jj+1;
+                Aij=affineTransformations[jj][jj_1];
+	        Aji=affineTransformations[jj_1][jj];
+                rjj=Aji*rcurrent;
+                double corr;
+                parent->refineLandmark(jj,jj_1,rcurrent,rjj, corr);
+                l.x=XX(rjj);
+                l.y=YY(rjj);
+                l.imgIdx=jj;
+                chain.push_back(l);
+                rcurrent=rjj;
             }
-            progress_bar(nx);
+
+            // Follow this landmark forwards
+            jjmin=ii+1;
+            jjmax=XMIPP_MIN(Nimg-1,ii+halfSeqLength);
+            rcurrent=rii;
+            for (int jj=jjmin; jj<=jjmax; ++jj)
+            {
+                // Compute the affine transformation between jj-1 and jj
+                int jj_1=jj-1;
+                Aij=affineTransformations[jj_1][jj];
+	        Aji=affineTransformations[jj][jj_1];
+                rjj=Aij*rcurrent;
+                double corr;
+                parent->refineLandmark(jj_1,jj,rcurrent,rjj,corr);
+                l.x=XX(rjj);
+                l.y=YY(rjj);
+                l.imgIdx=jj;
+                chain.push_back(l);
+                rcurrent=rjj;
+            }
+            
+            
+            // Refine chain
+            bool accepted=parent->refineChain(chain,corrQ(q));
+            candidateChainList.push_back(chain);
         }
-        progress_bar(gridSamples);
+        if (thread_id==0) progress_bar(ii);
+
+        // Sort all chains according to its correlation
+        Matrix1D<int> idx=corrQ.indexSort();
+        int imax=XMIPP_MIN(XSIZE(idx),parent->Ncritical);
+        for (int iq=0; iq<imax; iq++)
+        {
+            int q=idx(XSIZE(idx)-1-iq)-1;
+            master->chainList->push_back(candidateChainList[q]);
+            #ifdef DEBUG
+                std::cout << "Corr " << iq << ": " << corrQ(q)
+                          << std::endl;
+            #endif
+        }
+
+        #ifdef DEBUG
+            ImageXmipp save;
+            save()=*(parent->img[ii]); save.write("PPPoriginal.xmp");
+            save()=Ifiltered; save.write("PPPfiltered.xmp");
+            double minval=Ifiltered.computeMin();
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(Ifiltered)
+            if (Ifiltered(i,j)>=th)
+                save(i,j)=th;
+            for (int q=0; q<Q.size(); q++)
+                FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
+                    if (YY(Q[q])+i>=STARTINGY(Ifiltered) && YY(Q[q])+i<=FINISHINGY(Ifiltered) &&
+                        XX(Q[q])+j>=STARTINGX(Ifiltered) && XX(Q[q])+j<=FINISHINGX(Ifiltered))
+                    save(YY(Q[q])+i,XX(Q[q])+j)=minval;
+            imax=XMIPP_MIN(XSIZE(idx),parent->Ncritical);
+            for (int iq=0; iq<imax; iq++)
+            {
+                int q=idx(XSIZE(idx)-1-iq)-1;
+                FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
+                    if (YY(Q[q])+i>=STARTINGY(Ifiltered) && YY(Q[q])+i<=FINISHINGY(Ifiltered) &&
+                        XX(Q[q])+j>=STARTINGX(Ifiltered) && XX(Q[q])+j<=FINISHINGX(Ifiltered))
+                    save(YY(Q[q])+i,XX(Q[q])+j)=(minval+th)/2;
+            }
+                
+            save.write("PPPcritical.xmp");
+            std::cout << "Number of critical points=" << Q.size() << std::endl;
+            std::cout << "CorrQ stats:"; corrQ.printStats(); std::cout << std::endl;
+            std::cout << "Press any key\n";
+            char c; std::cin >> c;
+        #endif
+    }
+    if (thread_id==0) progress_bar(Nimg);
+}
+#undef DEBUG
+
+void Prog_tomograph_alignment::generateLandmarkSet() {
+    if (!exists(fnRoot+"_landmarks.txt"))
+    {
+        pthread_t * th_ids = new pthread_t[numThreads];
+        ThreadGenerateLandmarkSetParams * th_args=
+            new ThreadGenerateLandmarkSetParams[numThreads];
+        for( int nt = 0 ; nt < numThreads ; nt ++ )
+        {
+            th_args[nt].parent = this;
+            th_args[nt].myThreadID = nt;
+            if (useCriticalPoints)
+                pthread_create( (th_ids+nt) , NULL, threadgenerateLandmarkSetCriticalPoints, (void *)(th_args+nt) );
+            else
+                pthread_create( (th_ids+nt) , NULL, threadgenerateLandmarkSetGrid, (void *)(th_args+nt) );
+        }
+        std::vector<LandmarkChain> chainList;
+        int includedPoints=0;
+        for( int nt = 0 ; nt < numThreads ; nt ++ )
+        {
+            pthread_join(*(th_ids+nt), NULL);
+            int imax=th_args[nt].chainList->size();
+            for (int i=0; i<imax; i++)
+            {
+                chainList.push_back((*th_args[nt].chainList)[i]);
+                includedPoints+=(*th_args[nt].chainList)[i].size();
+            }
+            delete th_args[nt].chainList;
+        }
+        delete( th_ids );
+        delete( th_args );
 
         // Generate the landmark "matrix"
         allLandmarksX.resize(chainList.size(),Nimg);
@@ -688,9 +1033,10 @@ void Prog_tomograph_alignment::generateLandmarkSet() {
 
 /* Refine landmark --------------------------------------------------------- */
 bool Prog_tomograph_alignment::refineLandmark(int ii, int jj,
-    const Matrix1D<double> &rii, Matrix1D<double> &rjj) const
+    const Matrix1D<double> &rii, Matrix1D<double> &rjj, double &maxCorr) const
 {
-    int halfSize=XMIPP_MAX(ROUND(localSize*XSIZE(*img[ii]))/2,4);
+    maxCorr=-1;
+    int halfSize=XMIPP_MAX(ROUND(localSize*XSIZE(*img[ii]))/2,5);
     if (XX(rii)-halfSize<STARTINGX(*img[ii])  || 
         XX(rii)+halfSize>FINISHINGX(*img[ii]) ||
         YY(rii)-halfSize<STARTINGY(*img[ii])  || 
@@ -732,15 +1078,25 @@ bool Prog_tomograph_alignment::refineLandmark(int ii, int jj,
         save()=pieceii; save.write("PPPpieceii.xmp");
         std::cout << "ii=" << ii << " jj=" << jj << std::endl;
     }
+
+    // Choose threshold
+    double actualCorrThreshold=corrThreshold;
+    if (actualCorrThreshold<0 && XSIZE(avgForwardPatchCorr)>0)
+        if (ii<jj)
+            actualCorrThreshold=XMIPP_MIN(avgForwardPatchCorr(ii),
+                avgBackwardPatchCorr(jj));
+        else
+            actualCorrThreshold=XMIPP_MIN(avgBackwardPatchCorr(ii),
+                avgForwardPatchCorr(jj));
     
     // Try all possible shifts
     Matrix2D<double> corr((int)(1.5*(2*halfSize+1)),(int)(1.5*(2*halfSize+1)));
     corr.setXmippOrigin();
     corr.initConstant(-1.1);
     bool accept=false;
+    double maxval=-1;
     if (stddev_ii>XMIPP_EQUAL_ACCURACY)
     {
-        double maxval=0;
         int imax=0, jmax=0;
         std::queue< Matrix1D<double> > Q;
         Q.push(vectorR2(0,0));
@@ -750,6 +1106,7 @@ bool Prog_tomograph_alignment::refineLandmark(int ii, int jj,
             int shifty=(int)YY(Q.front());
             int shiftx=(int)XX(Q.front());
             Q.pop();
+            if (!corr(shifty,shiftx)<-1) continue;
 
             // Select piece in image jj, compute its statistics and normalize
             double mean_jj=0, stddev_jj=0;
@@ -786,28 +1143,26 @@ bool Prog_tomograph_alignment::refineLandmark(int ii, int jj,
                 maxval=corrRef;
                 imax=shifty;
                 jmax=shiftx;
-                for (int stepy=-1; stepy<=1; stepy++)
-                    for (int stepx=-1; stepx<=1; stepx++)
-                    {
-                        int newshifty=shifty+stepy;
-                        int newshiftx=shiftx+stepx;
-                        if (newshifty>=STARTINGY(corr) &&
-                            newshifty<=FINISHINGY(corr) &&
-                            newshiftx>=STARTINGX(corr) &&
-                            newshiftx<=FINISHINGX(corr) &&
-                            XX(rjj)+newshiftx-halfSize>=STARTINGX(*img[jj]) &&
-                            XX(rjj)+newshiftx+halfSize<=FINISHINGX(*img[jj]) &&
-                            YY(rjj)+newshifty-halfSize>=STARTINGY(*img[jj]) &&
-                            YY(rjj)+newshifty+halfSize<=FINISHINGY(*img[jj]))
-                            if (corr(newshifty,newshiftx)<-1)
-                                Q.push(vectorR2(newshifty,newshiftx));
-                    }
+                for (int step=1; step<=5; step+=2)
+                    for (int stepy=-1; stepy<=1; stepy++)
+                        for (int stepx=-1; stepx<=1; stepx++)
+                        {
+                            int newshifty=shifty+stepy*step;
+                            int newshiftx=shiftx+stepx*step;
+                            if (newshifty>=STARTINGY(corr) &&
+                                newshifty<=FINISHINGY(corr) &&
+                                newshiftx>=STARTINGX(corr) &&
+                                newshiftx<=FINISHINGX(corr) &&
+                                (XX(rjj)+newshiftx-halfSize)>=STARTINGX(Ijj) &&
+                                (XX(rjj)+newshiftx+halfSize)<=FINISHINGX(Ijj) &&
+                                (YY(rjj)+newshifty-halfSize)>=STARTINGY(Ijj) &&
+                                (YY(rjj)+newshifty+halfSize)<=FINISHINGY(Ijj))
+                                if (corr(newshifty,newshiftx)<-1)
+                                    Q.push(vectorR2(newshiftx,newshifty));
+                        }
             }
         }
 
-        double actualCorrThreshold=corrThreshold;
-        if (actualCorrThreshold<0)
-            actualCorrThreshold=correlationList[XMIPP_MIN(ii,jj)];
         if (maxval>actualCorrThreshold)
         {
             XX(rjj)+=jmax;
@@ -837,12 +1192,14 @@ bool Prog_tomograph_alignment::refineLandmark(int ii, int jj,
         char c;
         std::cin >> c;
     }
+    maxCorr=maxval;
     return (accept);
 }
 
 /* Refine chain ------------------------------------------------------------ */
 //#define DEBUG
-bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain)
+bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain,
+    double &corrChain)
 {
     #ifdef DEBUG
         std::cout << "Chain for refinement: ";
@@ -851,7 +1208,7 @@ bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain)
         std::cout << std::endl;
     #endif        
 
-    for (int K=0; K<2 && chain.size()>seqLength; K++)
+    for (int K=0; K<2 && (chain.size()>seqLength || useCriticalPoints); K++)
     {
         sort(chain.begin(), chain.end());
         Matrix1D<double> rii(2), rjj(2), newrjj(2);
@@ -870,8 +1227,9 @@ bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain)
                 int jj=chain[i+step].imgIdx;
                 VECTOR_R2(rjj,chain[i+step].x,chain[i+step].y);
                 newrjj=rjj;
-                bool accepted=refineLandmark(ii,jj,rii,newrjj);
-                if ((newrjj-rjj).module()<4 && accepted)
+                double corr;
+                bool accepted=refineLandmark(ii,jj,rii,newrjj,corr);
+                if (((newrjj-rjj).module()<4 && accepted) || useCriticalPoints)
                 {
                     chain[i+step].x=XX(newrjj);
                     chain[i+step].y=YY(newrjj);
@@ -885,6 +1243,7 @@ bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain)
             #endif
             // Refine backwards all images
             int iright=chainLength;
+            corrChain=2;
             for (int i=chainLength-1; i>=1; i--)
             {
                 int ii=chain[i].imgIdx;
@@ -892,8 +1251,10 @@ bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain)
                 int jj=chain[i-1].imgIdx;
                 VECTOR_R2(rjj,chain[i-1].x,chain[i-1].y);
                 newrjj=rjj;
-                bool accepted=refineLandmark(ii,jj,rii,newrjj);
-                if ((newrjj-rjj).module()<4 && accepted)
+                double corr;
+                bool accepted=refineLandmark(ii,jj,rii,newrjj,corr);
+                corrChain=XMIPP_MIN(corrChain,corr);
+                if (((newrjj-rjj).module()<4 && accepted) || useCriticalPoints)
                 {
                     chain[i-1].x=XX(newrjj);
                     chain[i-1].y=YY(newrjj);
@@ -912,70 +1273,9 @@ bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain)
             double tilt0=tiltList[chain[0].imgIdx];
             double tiltF=tiltList[chain[chain.size()-1].imgIdx];
             double lengthThreshold=XMIPP_MAX(3,FLOOR(seqLength*cos(DEG2RAD(0.5*(tilt0+tiltF)))));
-            if (chain.size()<lengthThreshold) return false;
+            if (chain.size()<lengthThreshold && !useCriticalPoints)
+                return false;
         }
-
-#ifdef NEVER_DEFINED
-        // Check that all images in the stack correlate well with the
-        // average of all pieces
-        int halfSize=XMIPP_MAX(ROUND(localSize*XSIZE(*img[0]))/2,4);
-        Matrix2D<double> avgPiece(2*halfSize+1,2*halfSize+1), pieceAux;
-        avgPiece.setXmippOrigin();
-        pieceAux=avgPiece;
-        // compute average piece
-        for (int n=0; n<chainLength; n++)
-        {
-            int ii=chain[n].imgIdx;
-            VECTOR_R2(rii,chain[n].x,chain[n].y);
-            FOR_ALL_ELEMENTS_IN_MATRIX2D(avgPiece)
-                pieceAux(i,j)=(*img[ii])((int)(YY(rii)+i),(int)(XX(rii)+j));
-            if (isCapillar && ABS(chain[n].imgIdx-chain[0].imgIdx)>Nimg/2)
-                pieceAux.selfReverseY();
-            avgPiece+=pieceAux;
-        }
-        avgPiece/=chainLength;
-
-        // Compute correlation with the average
-        Matrix2D<double> pieceii(2*halfSize+1,2*halfSize+1);
-        pieceii.setXmippOrigin();
-        double avgCorr=0;
-        LandmarkChain refinedChain;
-        refinedChain.clear();
-        for (int n=0; n<chainLength; n++)
-        {
-            int ii=chain[n].imgIdx;
-            VECTOR_R2(rii,chain[n].x,chain[n].y);
-            FOR_ALL_ELEMENTS_IN_MATRIX2D(pieceii)
-                pieceii(i,j)=(*img[ii])((int)(YY(rii)+i),(int)(XX(rii)+j));
-            if (isCapillar && ABS(chain[n].imgIdx-chain[0].imgIdx)>Nimg/2)
-                pieceii.selfReverseY();
-            double corr=correlation_index(pieceii,avgPiece);
-            double actualCorrThreshold=corrThreshold;
-            if (actualCorrThreshold<0)
-                actualCorrThreshold=correlationList[ii];
-            if (corr>actualCorrThreshold)
-            {
-               avgCorr+=corr;
-               refinedChain.push_back(chain[n]);
-            }
-            #ifdef DEBUG
-                ImageXmipp save;
-                save()=pieceii; save.write("PPPpieceiiRefine.xmp");
-                save()=avgPiece; save.write("PPPpieceAvg.xmp");
-                std::cout << "ii= " << ii << " corr=" << corr;
-                if (corr<=actualCorrThreshold) std::cout << "  Removed!!";
-                std::cout << "\nAvgCorr=" << avgCorr/refinedChain.size() << std::endl
-                          << "RefinedLength=" << refinedChain.size() << std::endl
-                          << "K=" << K << std::endl
-                          << "Press any key\n";
-                char c;
-                std::cin >> c;
-            #endif
-        }
-        avgCorr/=refinedChain.size();
-        chain.clear();
-        chain=refinedChain;
-#endif
     }
     
     // Check that the chain is of the desired length
@@ -1046,6 +1346,37 @@ void Prog_tomograph_alignment::readLandmarkSet(const FileName &fnLandmark)
     fhIn.close();
     std::cout << "The file " << fnLandmark << " has been read for the landmarks\n"
               << Nlandmark << " landmarks are read\n";
+}
+
+/* Write affine transformations -------------------------------------------- */
+void Prog_tomograph_alignment::writeTransformations(
+    const FileName &fnTransformations) const
+{
+    std::ofstream fhOut;
+    fhOut.open(fnTransformations.c_str());
+    if (!fhOut)
+       REPORT_ERROR(1,(std::string)"Cannot open "+fnTransformations+" for output");
+    int imax=affineTransformations.size();
+    int counter=0;
+    for (int i=0; i<imax; i++)
+    {
+        int jmax=affineTransformations[i].size();
+        for (int j=i+1; j<jmax; j++)
+            if (XSIZE(affineTransformations[i][j])!=0)
+            {
+                fhOut << tiltList[i] << "\t0.0\t"
+                      << affineTransformations[i][j](0,0) << "\t"
+                      << affineTransformations[i][j](1,0) << "\t"
+                      << affineTransformations[i][j](0,1) << "\t"
+                      << affineTransformations[i][j](1,1) << "\t"
+                      << affineTransformations[i][j](0,2) << "\t"
+                      << affineTransformations[i][j](1,2) << std::endl;
+                counter++;
+            }
+    }
+    if (counter==imax-1)
+        fhOut << "1 0 0 1 0 0\n";
+    fhOut.close();
 }
 
 /* Align images ------------------------------------------------------------ */
