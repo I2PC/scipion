@@ -804,7 +804,7 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
     mask.resize(2*radius+1,2*radius+1);
     mask.setXmippOrigin();
     BinaryCircularMask(mask,4,OUTSIDE_MASK);
-
+    
     for (int ii=thread_id; ii<=Nimg-1; ii+=numThreads)
     {
         // Filter the image
@@ -831,8 +831,8 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
             -ROUND(0.45*YSIZE(Ifiltered)),-ROUND(0.45*XSIZE(Ifiltered)),
              ROUND(0.45*YSIZE(Ifiltered)), ROUND(0.45*XSIZE(Ifiltered)));
         histogram1D hist;
-        compute_hist(Iaux, hist, 200);
-        double th=hist.percentil(1);
+        compute_hist(Iaux, hist, 400);
+        double th=hist.percentil(0.25);
         std::vector< Matrix1D<double> > Q;
         FOR_ALL_ELEMENTS_IN_MATRIX2D(Iaux)
             if (Ifiltered(i,j)<th)
@@ -884,13 +884,13 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
             Matrix1D<double> rcurrent=rii;
             for (int jj=jjmax; jj>=jjmin; --jj)
             {
-                // Compute the affine transformation between jj+1 and jj
+                // Compute the affine transformation between jj and jj+1
                 int jj_1=jj+1;
                 Aij=affineTransformations[jj][jj_1];
 	        Aji=affineTransformations[jj_1][jj];
                 rjj=Aji*rcurrent;
                 double corr;
-                parent->refineLandmark(jj,jj_1,rcurrent,rjj, corr);
+                parent->refineLandmark(jj_1,jj,rcurrent,rjj, corr);
                 l.x=XX(rjj);
                 l.y=YY(rjj);
                 l.imgIdx=jj;
@@ -918,7 +918,6 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
                 rcurrent=rjj;
             }
             
-            
             // Refine chain
             bool accepted=parent->refineChain(chain,corrQ(q));
             candidateChainList.push_back(chain);
@@ -933,10 +932,13 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
             int q=idx(XSIZE(idx)-1-iq)-1;
             master->chainList->push_back(candidateChainList[q]);
             #ifdef DEBUG
-                std::cout << "Corr " << iq << ": " << corrQ(q)
-                          << std::endl;
+                std::cout << "Corr " << iq << ": " << corrQ(q) << ":";
+                for (int i=0; i<candidateChainList[q].size(); i++)
+                    std::cout << candidateChainList[q][i].imgIdx << " ";
+                std::cout << std::endl;
             #endif
         }
+        candidateChainList.clear();
 
         #ifdef DEBUG
             ImageXmipp save;
