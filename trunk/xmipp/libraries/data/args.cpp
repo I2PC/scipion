@@ -419,10 +419,10 @@ std::string nextToken(const std::string &str, int &i)
     std::string retval;
     if (i >= str.length())
         return retval;
-    int j = str.find_first_not_of(" \n", i);
+    int j = str.find_first_not_of(" \t\n", i);
     if (j == -1)
         return retval;
-    int k = str.find_first_of(" \n", j + 1);
+    int k = str.find_first_of(" \t\n", j + 1);
     if (k == -1)
         k = str.length();
     retval = str.substr(j, k - j + 1);

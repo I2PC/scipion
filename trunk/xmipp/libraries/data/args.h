@@ -352,7 +352,7 @@ int splitString(const std::string& input,
  */
 inline char* firstToken(const char* str)
 {
-    return strtok((char*) str, " \n");
+    return strtok((char*) str, " \t\n");
 }
 
 /** Returns first token (STL).
@@ -367,7 +367,7 @@ inline char* firstToken(const char* str)
 inline char* firstToken(const std::string& str)
 {
     // FIXME C-style cast
-    return strtok((char*) str.c_str(), " \n");
+    return strtok((char*) str.c_str(), " \t\n");
 }
 
 /** Returns next token.
@@ -391,7 +391,7 @@ inline char* firstToken(const std::string& str)
 inline char* nextToken()
 {
     // FIXME C-style cast
-    return strtok((char*) NULL, " \n");
+    return strtok((char*) NULL, " \t\n");
 }
 
 /** Returns next token.
