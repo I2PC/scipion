@@ -48,8 +48,8 @@ void Prog_RecFourier_prm::read(int argc, char **argv)
     //sampling_rate = textToFloat(getParameter(argc, argv, "-sampling_rate", "1"));
     maxResolution = textToFloat(getParameter(argc, argv,
                                              "-max_resolution",".5"));
-    numThreads = textToInt(getParameter(argc, argv, "-thr", "1"));
-    thrWidth = textToInt(getParameter(argc,argv, "-thr_width", "-1"));
+    numThreads = textToInteger(getParameter(argc, argv, "-thr", "1"));
+    thrWidth = textToInteger(getParameter(argc,argv, "-thr_width", "-1"));
 }
 
 // Show ====================================================================
