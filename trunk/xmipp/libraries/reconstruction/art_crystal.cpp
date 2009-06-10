@@ -373,7 +373,7 @@ void ART_single_step(
     double                   lambda,          // Lambda to be used
     int                      imagen_no,       // Projection number
     const FileName          &fn_ctf,          // CTF to apply
-    const FileName          &fn_mask          // Mask to apply
+    const Matrix2D<int> *    maskPtr          // Mask to apply
     )           
 {
 // Only works for blob volumes .............................................

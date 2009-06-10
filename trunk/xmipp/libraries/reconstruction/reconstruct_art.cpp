@@ -193,7 +193,7 @@ void ART_single_step(
     double                  lambda,          // Lambda to be used
     int                     act_proj,        // Projection number
     const FileName         &fn_ctf,          // CTF to apply
-    const FileName         &fn_mask)         // Mask to apply
+    const Matrix2D<int>    *maskPtr)         // Mask to apply
 {
 // Prepare to work with CTF ................................................
     FourierMask ctf;
@@ -249,16 +249,6 @@ void ART_single_step(
         // Create footprint2
         *footprint2 = *footprint;
         (*footprint2)() *= (*footprint2)();
-    }
-
-// Check if there is a mask ................................................
-    ImageXmipp mask;
-    Matrix2D<double> *maskPtr=NULL;
-    if (fn_mask!="")
-    {
-        mask.read(fn_mask);
-        mask().setXmippOrigin();
-        maskPtr=&(mask());
     }
 
 // Project structure .......................................................

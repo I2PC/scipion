@@ -53,7 +53,7 @@ typedef struct {
         int eq_mode;
         const VolumeT<int> *VNeq;
         Matrix2D<double> *M;
-        const Matrix2D<double> *mask;
+        const Matrix2D<int> *mask;
         double ray_length;  
         double rot,tilt,psi;
 	bool destroy;
@@ -67,7 +67,7 @@ void project_SimpleGrid(VolumeT<T> *vol, const SimpleGrid *grid,
                         const Basis *basis,
                         Projection *proj, Projection *norm_proj, int FORW, int eq_mode,
                         const VolumeT<int> *VNeq, Matrix2D<double> *M,
-			const Matrix2D<double> *mask=NULL,
+			const Matrix2D<int> *mask=NULL,
                         double ray_length = -1.0,
                         int thread_id = -1, int num_threads = 1);
 
@@ -119,7 +119,7 @@ void project_Volume(GridVolumeT<T> &vol, const Basis &basis,
                     Projection &proj, Projection &norm_proj, int Ydim, int Xdim,
                     double rot, double tilt, double psi, int FORW, int eq_mode = ARTK,
                     GridVolumeT<int> *GVNeq = NULL, Matrix2D<double> *M = NULL,
-                    const Matrix2D<double> *mask=NULL,
+                    const Matrix2D<int> *mask=NULL,
                     double ray_length = -1, int threads = 1);
 
 /** From voxel volumes.
@@ -270,7 +270,7 @@ void *project_SimpleGridThread( void * params )
 	int eq_mode;
 	const VolumeT<int> *VNeq=NULL;        
 	Matrix2D<double> *M=NULL;
-        const Matrix2D<double> *mask=NULL;
+        const Matrix2D<int> *mask=NULL;
 	double ray_length;
 	
 	double rot,tilt,psi;
@@ -347,7 +347,7 @@ void project_SimpleGrid(VolumeT<T> *vol, const SimpleGrid *grid,
                         const Basis *basis,
                         Projection *proj, Projection *norm_proj, int FORW, int eq_mode,
                         const VolumeT<int> *VNeq, Matrix2D<double> *M,
-                        const Matrix2D<double> *mask,
+                        const Matrix2D<int> *mask,
                         double ray_length, 
                         int thread_id, int numthreads)
 {
@@ -849,10 +849,10 @@ void project_Volume(
     int              eq_mode,             // ARTK, CAVARTK, CAVK or CAV
     GridVolumeT<int> *GVNeq,              // Number of equations per blob
     Matrix2D<double> *M,                  // System matrix
-    const Matrix2D<double> *mask,         // mask(i,j)=0 => do not update this pixel
+    const Matrix2D<int> *mask,            // mask(i,j)=0 => do not update this pixel
     double            ray_length,	  // Ray length of the projection
     int               threads)         
-	{
+{
     // If projecting forward initialise projections
     if (FORW)
     {
