@@ -142,8 +142,7 @@ public:
           std::cout << "A12=\n" << A12 << "A21=\n" << A21 << std::endl;
 	      std::cout << "dist=" << dist << std::endl;
           std::cout << "Press any key\n";
-	      char c;
-	      std::cin >> c;
+	  char c; std::cin >> c;
        }
 
        return dist;
@@ -832,7 +831,7 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
              ROUND(0.45*YSIZE(Ifiltered)), ROUND(0.45*XSIZE(Ifiltered)));
         histogram1D hist;
         compute_hist(Iaux, hist, 400);
-        double th=hist.percentil(0.75);
+        double th=hist.percentil(2);
         std::vector< Matrix1D<double> > Q;
         FOR_ALL_ELEMENTS_IN_MATRIX2D(Iaux)
             if (Ifiltered(i,j)<th)
@@ -911,6 +910,7 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
                 rjj=Aij*rcurrent;
                 double corr;
                 parent->refineLandmark(jj_1,jj,rcurrent,rjj,corr);
+                if (corr>0.3)
                 l.x=XX(rjj);
                 l.y=YY(rjj);
                 l.imgIdx=jj;
@@ -930,13 +930,17 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
         for (int iq=0; iq<imax; iq++)
         {
             int q=idx(XSIZE(idx)-1-iq)-1;
-            master->chainList->push_back(candidateChainList[q]);
-            #ifdef DEBUG
-                std::cout << "Corr " << iq << ": " << corrQ(q) << ":";
-                for (int i=0; i<candidateChainList[q].size(); i++)
-                    std::cout << candidateChainList[q][i].imgIdx << " ";
-                std::cout << std::endl;
-            #endif
+            if (corrQ(q)>0.5)
+            {
+                master->chainList->push_back(candidateChainList[q]);
+                #ifdef DEBUG
+                    std::cout << "Corr " << iq << ": " << corrQ(q) << ":";
+                    for (int i=0; i<candidateChainList[q].size(); i++)
+                        std::cout << candidateChainList[q][i].imgIdx << " ";
+                    std::cout << std::endl;
+                #endif
+            } else
+                std::cout << "It's recommended to reduce the number of critical points\n";
         }
         candidateChainList.clear();
 
@@ -1194,7 +1198,7 @@ bool Prog_tomograph_alignment::refineLandmark(const Matrix2D<double> &pieceii,
                 piecejj.selfReverseY();
             save()=piecejj; save.write("PPPpiecejj.xmp");
             save()=corr; save.write("PPPcorr.xmp");
-            std::cout << "rjj=" << rjj.transpose() << std::endl;
+            std::cout << "jj=" << jj << " rjj=" << rjj.transpose() << std::endl;
             std::cout << "imax=" << imax << " jmax=" << jmax << std::endl;
             std::cout << "maxval=" << maxval << std::endl;
         }
@@ -1203,8 +1207,7 @@ bool Prog_tomograph_alignment::refineLandmark(const Matrix2D<double> &pieceii,
     {
         std::cout << "Accepted=" << accept << std::endl;
         std::cout << "Press any key\n";
-        char c;
-        std::cin >> c;
+        char c; std::cin >> c;
     }
     maxCorr=maxval;
     return (accept);
@@ -1227,68 +1230,125 @@ bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain,
         sort(chain.begin(), chain.end());
         Matrix1D<double> rii(2), rjj(2), newrjj(2);
 
-        // Refine every step
-        for (int step=2; step<=maxStep; step++)
+        if (useCriticalPoints)
         {
+            // compute average piece
+            int halfSize=XMIPP_MAX(ROUND(localSize*XSIZE(*img[0]))/2,5);
             int chainLength=chain.size();
-
-            // Refine forwards every step
-            int ileft=-1;
-            for (int i=0; i<chainLength-step; i++)
+            Matrix2D<double> avgPiece(2*halfSize+1,2*halfSize+1), pieceAux;
+            avgPiece.setXmippOrigin();
+            pieceAux=avgPiece;
+            for (int n=0; n<chainLength; n++)
             {
-                int ii=chain[i].imgIdx;
-                VECTOR_R2(rii,chain[i].x,chain[i].y);
-                int jj=chain[i+step].imgIdx;
-                VECTOR_R2(rjj,chain[i+step].x,chain[i+step].y);
-                newrjj=rjj;
-                double corr;
-                bool accepted=refineLandmark(ii,jj,rii,newrjj,corr);
-                if (((newrjj-rjj).module()<4 && accepted) || useCriticalPoints)
+                int ii=chain[n].imgIdx;
+                VECTOR_R2(rii,chain[n].x,chain[n].y);
+                if (XX(rii)-halfSize<STARTINGX(*img[ii])  || 
+                    XX(rii)+halfSize>FINISHINGX(*img[ii]) ||
+                    YY(rii)-halfSize<STARTINGY(*img[ii])  || 
+                    YY(rii)+halfSize>FINISHINGY(*img[ii]))
                 {
-                    chain[i+step].x=XX(newrjj);
-                    chain[i+step].y=YY(newrjj);
+                    corrChain=0;
+                    return false;
                 }
-                else
-                    ileft=i;
+                FOR_ALL_ELEMENTS_IN_MATRIX2D(avgPiece)
+                    pieceAux(i,j)=(*img[ii])((int)(YY(rii)+i),(int)(XX(rii)+j));
+                if (isCapillar && ABS(chain[n].imgIdx-chain[0].imgIdx)>Nimg/2)
+                    pieceAux.selfReverseY();
+                avgPiece+=pieceAux;
             }
-
+            avgPiece/=chainLength;
             #ifdef DEBUG
-                // COSS showRefinement=(step==maxStep);
+                ImageXmipp save;
+                save()=avgPiece; save.write("PPPavg.xmp");
+                std::cout << "Average " << K << " -------------------  \n";
+                showRefinement=true;
             #endif
-            // Refine backwards all images
-            int iright=chainLength;
+            
+            // Align all images with respect to this average
             corrChain=2;
-            for (int i=chainLength-1; i>=1; i--)
+            for (int j=0; j<chainLength; j++)
             {
-                int ii=chain[i].imgIdx;
-                VECTOR_R2(rii,chain[i].x,chain[i].y);
-                int jj=chain[i-1].imgIdx;
-                VECTOR_R2(rjj,chain[i-1].x,chain[i-1].y);
-                newrjj=rjj;
+                int jj=chain[j].imgIdx;
+                VECTOR_R2(rjj,chain[j].x,chain[j].y);
                 double corr;
-                bool accepted=refineLandmark(ii,jj,rii,newrjj,corr);
-                corrChain=XMIPP_MIN(corrChain,corr);
-                if (((newrjj-rjj).module()<4 && accepted) || useCriticalPoints)
+                bool accepted=refineLandmark(avgPiece,jj,rjj,0,false,corr);
+                if (accepted)
                 {
-                    chain[i-1].x=XX(newrjj);
-                    chain[i-1].y=YY(newrjj);
+                    chain[j].x=XX(rjj);
+                    chain[j].y=YY(rjj);
+                    corrChain=XMIPP_MIN(corrChain,corr);
                 }
-                else
-                    iright=i;
             }
+            
             #ifdef DEBUG
-                // COSS: showRefinement=false;
+                showRefinement=false;
             #endif
+        }
+        else
+        {
+            // Refine every step
+            for (int step=2; step<=maxStep; step++)
+            {
+                int chainLength=chain.size();
 
-            LandmarkChain refinedChain;
-            for (int ll=ileft+1; ll<=iright-1; ll++)
-               refinedChain.push_back(chain[ll]);
-            chain=refinedChain;
-            double tilt0=tiltList[chain[0].imgIdx];
-            double tiltF=tiltList[chain[chain.size()-1].imgIdx];
-            double lengthThreshold=XMIPP_MAX(3,FLOOR(seqLength*cos(DEG2RAD(0.5*(tilt0+tiltF)))));
-            if (chain.size()<lengthThreshold && !useCriticalPoints)
-                return false;
+                // Refine forwards every step
+                int ileft=-1;
+                for (int i=0; i<chainLength-step; i++)
+                {
+                    int ii=chain[i].imgIdx;
+                    VECTOR_R2(rii,chain[i].x,chain[i].y);
+                    int jj=chain[i+step].imgIdx;
+                    VECTOR_R2(rjj,chain[i+step].x,chain[i+step].y);
+                    newrjj=rjj;
+                    double corr;
+                    bool accepted=refineLandmark(ii,jj,rii,newrjj,corr);
+                    if (((newrjj-rjj).module()<4 && accepted) || useCriticalPoints)
+                    {
+                        chain[i+step].x=XX(newrjj);
+                        chain[i+step].y=YY(newrjj);
+                    }
+                    else
+                        ileft=i;
+                }
+
+                #ifdef DEBUG
+                    // COSS showRefinement=(step==maxStep);
+                #endif
+                // Refine backwards all images
+                int iright=chainLength;
+                corrChain=2;
+                for (int i=chainLength-1; i>=1; i--)
+                {
+                    int ii=chain[i].imgIdx;
+                    VECTOR_R2(rii,chain[i].x,chain[i].y);
+                    int jj=chain[i-1].imgIdx;
+                    VECTOR_R2(rjj,chain[i-1].x,chain[i-1].y);
+                    newrjj=rjj;
+                    double corr;
+                    bool accepted=refineLandmark(ii,jj,rii,newrjj,corr);
+                    corrChain=XMIPP_MIN(corrChain,corr);
+                    if (((newrjj-rjj).module()<4 && accepted) || useCriticalPoints)
+                    {
+                        chain[i-1].x=XX(newrjj);
+                        chain[i-1].y=YY(newrjj);
+                    }
+                    else
+                        iright=i;
+                }
+                #ifdef DEBUG
+                    // COSS: showRefinement=false;
+                #endif
+
+                LandmarkChain refinedChain;
+                for (int ll=ileft+1; ll<=iright-1; ll++)
+                   refinedChain.push_back(chain[ll]);
+                chain=refinedChain;
+                double tilt0=tiltList[chain[0].imgIdx];
+                double tiltF=tiltList[chain[chain.size()-1].imgIdx];
+                double lengthThreshold=XMIPP_MAX(3,FLOOR(seqLength*cos(DEG2RAD(0.5*(tilt0+tiltF)))));
+                if (chain.size()<lengthThreshold && !useCriticalPoints)
+                    return false;
+            }
         }
     }
     
