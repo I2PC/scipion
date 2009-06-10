@@ -157,6 +157,14 @@ public:
     bool refineLandmark(int ii, int jj, const Matrix1D<double> &rii,
         Matrix1D<double> &rjj, double &maxCorr) const;
 
+
+    /** Refine landmark.
+        The same as the previous function but an image is provided
+        as pattern (ii) instead of an index and a position. */
+    bool refineLandmark(const Matrix2D<double> &pieceii, int jj,
+        Matrix1D<double> &rjj, double actualCorrThreshold,
+        bool reversed, double &maxCorr) const;
+
     /** Refine chain. */
     bool refineChain(LandmarkChain &chain, double &corrChain);
 

@@ -1053,32 +1053,18 @@ bool Prog_tomograph_alignment::refineLandmark(int ii, int jj,
     bool reversed=isCapillar && ABS(ii-jj)>Nimg/2;
 
     // Select piece in image ii, compute its statistics and normalize
-    Matrix2D<double> pieceii(2*halfSize+1,2*halfSize+1),
-        piecejj(2*halfSize+1,2*halfSize+1);
+    Matrix2D<double> pieceii(2*halfSize+1,2*halfSize+1);
     pieceii.setXmippOrigin();
-    piecejj.setXmippOrigin();
-    double mean_ii=0, stddev_ii=0;
     const Matrix2D<double> &Iii=(*img[ii]);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(pieceii)
-    {
         MAT_ELEM(pieceii,i,j)=MAT_ELEM(Iii,
            (int)(YY(rii)+i),(int)(XX(rii)+j));
-        mean_ii+=MAT_ELEM(pieceii,i,j);
-        stddev_ii+=MAT_ELEM(pieceii,i,j)*MAT_ELEM(pieceii,i,j);
-    }
-    mean_ii/=MULTIDIM_SIZE(pieceii);
-    stddev_ii = stddev_ii / MULTIDIM_SIZE(pieceii) - mean_ii * mean_ii;
-    stddev_ii *= MULTIDIM_SIZE(pieceii) / (MULTIDIM_SIZE(pieceii) - 1);
-    stddev_ii = sqrt(static_cast<double>((ABS(stddev_ii))));
-    if (stddev_ii>XMIPP_EQUAL_ACCURACY)
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pieceii)
-           DIRECT_MULTIDIM_ELEM(pieceii,n)=
-              (DIRECT_MULTIDIM_ELEM(pieceii,n)-mean_ii)/stddev_ii;
     if (showRefinement)
     {
         ImageXmipp save;
         save()=pieceii; save.write("PPPpieceii.xmp");
         std::cout << "ii=" << ii << " jj=" << jj << std::endl;
+        std::cout << "rii=" << rii.transpose() << std::endl;
     }
 
     // Choose threshold
@@ -1091,12 +1077,39 @@ bool Prog_tomograph_alignment::refineLandmark(int ii, int jj,
             actualCorrThreshold=XMIPP_MIN(avgBackwardPatchCorr(ii),
                 avgForwardPatchCorr(jj));
     
+    return refineLandmark(pieceii,jj,rjj,actualCorrThreshold,
+        reversed,maxCorr);
+}
+
+bool Prog_tomograph_alignment::refineLandmark(const Matrix2D<double> &pieceii,
+    int jj, Matrix1D<double> &rjj, double actualCorrThreshold,
+    bool reversed, double &maxCorr) const
+{
+    int halfSize=XSIZE(pieceii)/2;
+
+    double mean_ii=0, stddev_ii=0;
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(pieceii)
+    {
+        mean_ii+=MAT_ELEM(pieceii,i,j);
+        stddev_ii+=MAT_ELEM(pieceii,i,j)*MAT_ELEM(pieceii,i,j);
+    }
+    mean_ii/=MULTIDIM_SIZE(pieceii);
+    stddev_ii = stddev_ii / MULTIDIM_SIZE(pieceii) - mean_ii * mean_ii;
+    stddev_ii *= MULTIDIM_SIZE(pieceii) / (MULTIDIM_SIZE(pieceii) - 1);
+    stddev_ii = sqrt(static_cast<double>((ABS(stddev_ii))));
+    if (stddev_ii>XMIPP_EQUAL_ACCURACY)
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pieceii)
+           DIRECT_MULTIDIM_ELEM(pieceii,n)=
+              (DIRECT_MULTIDIM_ELEM(pieceii,n)-mean_ii)/stddev_ii;
+
     // Try all possible shifts
     Matrix2D<double> corr((int)(1.5*(2*halfSize+1)),(int)(1.5*(2*halfSize+1)));
     corr.setXmippOrigin();
     corr.initConstant(-1.1);
     bool accept=false;
     double maxval=-1;
+    Matrix2D<double> piecejj(2*halfSize+1,2*halfSize+1);
+    piecejj.setXmippOrigin();
     if (stddev_ii>XMIPP_EQUAL_ACCURACY)
     {
         int imax=0, jmax=0;
@@ -1181,7 +1194,6 @@ bool Prog_tomograph_alignment::refineLandmark(int ii, int jj,
                 piecejj.selfReverseY();
             save()=piecejj; save.write("PPPpiecejj.xmp");
             save()=corr; save.write("PPPcorr.xmp");
-            std::cout << "rii=" << rii.transpose() << std::endl;
             std::cout << "rjj=" << rjj.transpose() << std::endl;
             std::cout << "imax=" << imax << " jmax=" << jmax << std::endl;
             std::cout << "maxval=" << maxval << std::endl;
@@ -1420,6 +1432,8 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
     if (z0N==0)
         REPORT_ERROR(1,"There is no landmark at 0 degrees");
     z0/=z0N;
+    std::cout << "Average height of the landmarks at 0 degrees=" << z0
+              << std::endl;
 
     DocFile DF;
     if (fnSelOrig!="")
@@ -1591,7 +1605,7 @@ void Prog_tomograph_alignment::removeOutlierLandmarks(
     int invalidCounter=0;
     int Nlandmark=YSIZE(allLandmarksX);
     for (int j=0; j<Nlandmark; j++)
-        if (alignment.errorLandmark(j)<threshold0 ||
+        if (//COSS alignment.errorLandmark(j)<threshold0 ||
             alignment.errorLandmark(j)>thresholdF)
         {
             validLandmark.push_back(false);
@@ -1635,7 +1649,7 @@ double wrapperError(double *p, void *prm)
     return alignment.optimizeGivenAxisDirection();
 }
 
-//#define DEBUG
+#define DEBUG
 void Prog_tomograph_alignment::run() {
     generateLandmarkSet();
     produceInformationFromLandmarks();
