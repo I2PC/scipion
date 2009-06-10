@@ -110,7 +110,7 @@ void Basic_ART_Parameters::default_values()
 #define GET_ART_PARAMS \
     default_values(); \
     fn_sel             =      GET_PARAM(         "i"                    ); \
-    fn_maskSel         =      GET_PARAM_WITH_DEF("masksel",     ""      ); \
+    goldmask           = textToFloat(GET_PARAM_WITH_DEF("goldmask","1e6")); \
     fn_ctf             =      GET_PARAM_WITH_DEF("CTF",     ""          ); \
     unmatched          =      CHECK_PARAM(       "unmatched"            );  \
     if (CHECK_PARAM("o")) \
@@ -299,7 +299,7 @@ void Basic_ART_Parameters::usage_more()
     << "\n    -i selfile           full name of sel file"
     << "\n   [-o name]             name of output files, extensions are added"
     << "\n   [-CTF name]           name of a sel file with CTFs"
-    << "\n   [-maskSel name]       name of a sel file with masks"
+    << "\n   [-goldmask value]       name of a sel file with masks"
     << "\n   [-unmatched]          apply unmatched forward/backward projectors"
     << "\n   [-start basisvolume]  Start from basisvolume"
     << "\n   [-sym symmfile]       Use a symmetry file"
@@ -523,7 +523,7 @@ void sort_randomly(int numIMG, Matrix1D<int> &ordered_list)
 void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
         int rank)
 {
-    SelFile     selfile, selctf, selmask;
+    SelFile     selfile, selctf;
 
     /* If checking the variability --------------------------------------------- */
     if (variability_analysis)
@@ -571,15 +571,6 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
         selfile.ImgSize(projYdim, projXdim);
     }
 
-    /* Get the masks ------------------------------------------------------- */
-    if (fn_maskSel != "")
-    {
-        selmask.read(fn_maskSel);
-        if (selmask.ImgNo() != selfile.ImgNo())
-            REPORT_ERROR(1, "Basic_ART_Parameters: The number of images in "
-                         "the mask and original selfiles do not match");
-    }
-
     /* Get the CTF correction file ----------------------------------------- */
     if (fn_ctf != "")
     {
@@ -612,7 +603,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
     /* Fill ART_sort_info structure and Sort ------------------------------- */
     if (level >= FULL)
     {
-        build_recons_info(selfile, selctf, selmask, fn_ctf, SL, IMG_Inf,
+        build_recons_info(selfile, selctf, fn_ctf, SL, IMG_Inf,
             do_not_use_symproj);
 
         if (!(tell&TELL_MANUAL_ORDER))

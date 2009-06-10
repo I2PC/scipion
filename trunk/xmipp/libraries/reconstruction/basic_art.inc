@@ -50,7 +50,7 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
    *prm.fh_hist << " Parameters -------------------------------------------------\n";
    *prm.fh_hist << " Projections file: " << prm.fn_sel << std::endl;
    *prm.fh_hist << " CTF file:         " << prm.fn_ctf << std::endl;
-   *prm.fh_hist << " Mask file:        " << prm.fn_maskSel << std::endl;
+   *prm.fh_hist << " Goldmask:         " << prm.goldmask << std::endl;
    *prm.fh_hist << " Unmatched projectors:" << prm.unmatched << std::endl;
    *prm.fh_hist << " Sampling= " << prm.sampling << std::endl;
    *prm.fh_hist << prm.basis << std::endl;
@@ -396,6 +396,18 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
           // For wlsART: use alig_proj for residual image!!
 	  if (prm.WLS) alig_proj=prm.residual_imgs[iact_proj];
 
+          // Is there a mask ...............................................
+          Matrix2D<int> mask;
+          const Matrix2D<int> *maskPtr=NULL;
+          if (prm.goldmask<1e6)
+          {
+                mask.initZeros(read_proj());
+                FOR_ALL_ELEMENTS_IN_MATRIX2D(read_proj())
+                    if (read_proj(i,j)>prm.goldmask)
+                        mask(i,j)=1;
+                maskPtr=&mask;
+          }
+
           // Apply the reconstruction algorithm ............................
       	  // Notice that the following function is extern
 	  ART_single_step(vol_basis, ptr_vol_out,
@@ -403,8 +415,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
               theo_proj, read_proj, prm.IMG_Inf[iact_proj].sym , diff_proj,
 	      corr_proj, alig_proj,
               mean_error, ART_numIMG, prm.lambda(it),
-	      images, prm.IMG_Inf[iact_proj].fn_ctf,
-              prm.IMG_Inf[iact_proj].fn_mask);
+	      images, prm.IMG_Inf[iact_proj].fn_ctf, maskPtr);
 
           if (prm.WLS) {
             prm.residual_imgs[iact_proj]=alig_proj;
@@ -419,8 +430,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
         	 theo_proj, noisy_projection, prm.IMG_Inf[iact_proj].sym,
 		 diff_proj,  corr_proj, alig_proj,
         	 noise_mean_error, ART_numIMG, prm.lambda(it),
-		 images, prm.IMG_Inf[iact_proj].fn_ctf,
-                 prm.IMG_Inf[iact_proj].fn_mask);
+		 images, prm.IMG_Inf[iact_proj].fn_ctf,maskPtr);
 	  }
 
           // Force symmetry in the volume ..................................

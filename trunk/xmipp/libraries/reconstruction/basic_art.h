@@ -181,8 +181,8 @@ public:
     /// Selection file with all images to process
     FileName fn_sel;
 
-    /// Selection file with all image masks (1=process pixel, 0=don't process)
-    FileName fn_maskSel;
+    /// Goldmask
+    double goldmask;
 
     /// Root of output filenames
     FileName fn_root;
@@ -524,8 +524,6 @@ struct Recons_info
     FileName fn_proj;
     /// CTF filename
     FileName fn_ctf;
-    /// Mask filename
-    FileName fn_mask;
     /// Rotational angle
     float  rot;
     /// Tilting angle
@@ -547,7 +545,7 @@ struct Recons_info
 /** Build from a Selection File and a Symmetry List.
     The result is stored in the Recons_info array which should point
     to NULL when it is not initialized. */
-void build_recons_info(SelFile &selfile, SelFile &selctf, SelFile &selmask,
+void build_recons_info(SelFile &selfile, SelFile &selctf,
     const FileName &fn_ctf, const SymList &SL, Recons_info * &IMG_Inf,
     bool do_not_use_symproj);
 
