@@ -297,6 +297,7 @@ void Prog_Detect_Structures_Param::run()
     VolumeXmipp Vin(fnIn), Vout, Vaux, Vsigma;
     for (double sigma=sigma0; sigma<=sigmaF; sigma+=sigmaStep)
     {
+        std::cout << "Filtering with sigma=" << sigma << std::endl;
         Vaux()=Vin();
         Steerable *filter=new Steerable(sigma,Vaux(),angStep,filterType);
         
