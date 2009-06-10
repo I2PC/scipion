@@ -59,6 +59,7 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
       case BCC: *prm.fh_hist << " Grid Type: BCC "; break;
       case CC:  *prm.fh_hist << " Grid Type: CC ";  break;
    }
+   *prm.fh_hist << " Shifted tomograms:" << prm.shiftedTomograms << std::endl;
    *prm.fh_hist << " Ray length: " << prm.ray_length << std::endl;
    *prm.fh_hist << "\n Radius of the interest sphere= " << prm.R
                << " pixels" << std::endl;
@@ -399,12 +400,16 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
           // Is there a mask ...............................................
           Matrix2D<int> mask;
           const Matrix2D<int> *maskPtr=NULL;
-          if (prm.goldmask<1e6)
+          if (prm.goldmask<1e6 || prm.shiftedTomograms)
           {
-                mask.initZeros(read_proj());
+                mask.resize(read_proj());
                 FOR_ALL_ELEMENTS_IN_MATRIX2D(read_proj())
-                    if (read_proj(i,j)>prm.goldmask)
-                        mask(i,j)=1;
+                {
+                    mask(i,j)=1;
+                    if ((read_proj(i,j)<prm.goldmask && prm.goldmask<1e6) ||
+                        (ABS(read_proj(i,j))<1e-5 && prm.shiftedTomograms))
+                        mask(i,j)=0;
+                }
                 maskPtr=&mask;
           }
 

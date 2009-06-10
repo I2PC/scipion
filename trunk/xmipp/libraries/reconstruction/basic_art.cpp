@@ -110,11 +110,12 @@ void Basic_ART_Parameters::default_values()
 #define GET_ART_PARAMS \
     default_values(); \
     fn_sel             =      GET_PARAM(         "i"                    ); \
-    goldmask           = textToFloat(GET_PARAM_WITH_DEF("goldmask","1e6")); \
+    shiftedTomograms   =      CHECK_PARAM(       "shiftedTomograms"     ); \
+    goldmask    = textToFloat(GET_PARAM_WITH_DEF("goldmask","1e6")); \
     fn_ctf             =      GET_PARAM_WITH_DEF("CTF",     ""          ); \
     unmatched          =      CHECK_PARAM(       "unmatched"            );  \
     if (CHECK_PARAM("o")) \
-        fn_root       =      GET_PARAM(         "o"                    );  \
+        fn_root        =      GET_PARAM(         "o"                    );  \
     else fn_root       =      fn_sel.without_extension();                   \
     fn_start           =      GET_PARAM_WITH_DEF("start",     ""        );  \
     if      (CHECK_PARAM("pSART"))  parallel_mode=pSART;\
@@ -126,7 +127,7 @@ void Basic_ART_Parameters::default_values()
     else if (CHECK_PARAM("pCAV"))   parallel_mode=pCAV; \
     else                            parallel_mode=ART; \
     ray_length         = textToInteger(GET_PARAM_WITH_DEF("ray_length","-1"      )); \
-    block_size        = textToInteger(GET_PARAM_WITH_DEF("block_size","1" )); \
+    block_size         = textToInteger(GET_PARAM_WITH_DEF("block_size","1" )); \
     fn_sym             =      GET_PARAM_WITH_DEF("sym",       ""        );  \
     fn_control         =      GET_PARAM_WITH_DEF("control",       ""        );  \
     force_sym          = textToInteger(GET_PARAM_WITH_DEF("force_sym","0"        )); \

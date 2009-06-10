@@ -184,6 +184,9 @@ public:
     /// Goldmask
     double goldmask;
 
+    /// Shifted tomograms
+    bool shiftedTomograms;
+
     /// Root of output filenames
     FileName fn_root;
 
