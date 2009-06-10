@@ -910,7 +910,6 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
                 rjj=Aij*rcurrent;
                 double corr;
                 parent->refineLandmark(jj_1,jj,rcurrent,rjj,corr);
-                if (corr>0.3)
                 l.x=XX(rjj);
                 l.y=YY(rjj);
                 l.imgIdx=jj;
