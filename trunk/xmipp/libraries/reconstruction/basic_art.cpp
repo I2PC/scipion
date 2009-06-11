@@ -110,8 +110,6 @@ void Basic_ART_Parameters::default_values()
 #define GET_ART_PARAMS \
     default_values(); \
     fn_sel             =      GET_PARAM(         "i"                    ); \
-    shiftedTomograms   =      CHECK_PARAM(       "shiftedTomograms"     ); \
-    goldmask    = textToFloat(GET_PARAM_WITH_DEF("goldmask","1e6")); \
     fn_ctf             =      GET_PARAM_WITH_DEF("CTF",     ""          ); \
     unmatched          =      CHECK_PARAM(       "unmatched"            );  \
     if (CHECK_PARAM("o")) \
@@ -133,6 +131,8 @@ void Basic_ART_Parameters::default_values()
     force_sym          = textToInteger(GET_PARAM_WITH_DEF("force_sym","0"        )); \
     do_not_generate_subgroup= CHECK_PARAM(       "no_group"             );  \
     do_not_use_symproj = CHECK_PARAM(       "no_symproj"             );  \
+    shiftedTomograms   =      CHECK_PARAM(       "shiftedTomograms"     ); \
+    goldmask    = textToFloat(GET_PARAM_WITH_DEF("goldmask","1e6")); \
     fn_surface_mask    =      GET_PARAM_WITH_DEF("surface",   ""        );  \
     random_sort        =      CHECK_PARAM(       "random_sort"          );  \
     dont_sort          =      CHECK_PARAM(       "no_sort"          );  \
@@ -300,7 +300,6 @@ void Basic_ART_Parameters::usage_more()
     << "\n    -i selfile           full name of sel file"
     << "\n   [-o name]             name of output files, extensions are added"
     << "\n   [-CTF name]           name of a sel file with CTFs"
-    << "\n   [-goldmask value]       name of a sel file with masks"
     << "\n   [-unmatched]          apply unmatched forward/backward projectors"
     << "\n   [-start basisvolume]  Start from basisvolume"
     << "\n   [-sym symmfile]       Use a symmetry file"
@@ -322,7 +321,9 @@ void Basic_ART_Parameters::usage_more()
     << "\n   [-POCS_freq <f=1>]    Impose POCS conditions every <f> projections"
     << "\n   [-known_volume <vol=-1>] Volume of the reconstruction"
     << "\n   [-POCS_positivity]    Apply positivity constraint"
-    << "\n   [-dont_apply_shifts]  Do not apply shifts as stored in the 2D-image headers\n"
+    << "\n   [-goldmask value]     Pixels below this value are not considered for reconstruction"
+    << "\n   [-shiftedTomograms]   Remove border pixels created by alignment of tomograms"
+    << "\n   [-dont_apply_shifts]  Do not apply shifts as stored in the 2D-image headers"
     << "\n   [-variability]        Perform variability analysis"
     << "\n   [-noisy_reconstruction] Perform a companion noisy reconstruction"
     << "\n   [-ray_length <r=-1>]  In basis units\n"
