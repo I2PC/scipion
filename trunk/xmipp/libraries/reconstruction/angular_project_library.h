@@ -99,8 +99,11 @@ public:
         */
     int symmetry;
 
-    /// symmetry file
+    /// symmetry file for sampling
     FileName        fn_sym;
+
+    /// symmetry file for heighbors computation
+     FileName        fn_sym_neigh;
 
     /** For infinite groups symmetry order*/
     int sym_order;
@@ -116,6 +119,9 @@ public:
     
     /** projection y dim */
     int Ydim;
+    /** If true there will be only one neighbour per sampling
+     *  point, the closest */
+    bool only_winner;
 
     /** fil vector with symmetry axis */
     // std::vector <Matrix1D<double> > symmetry_vectors;
