@@ -124,12 +124,12 @@ class Prog_mpi_angular_project_library_Parameters:Prog_angular_project_library_P
         if (rank == 0) 
         {
             show();
-	    //randon numbers must be the same in all nodes
-        srand ( time(NULL) );
-        if(perturb_projection_vector!=0)
-	        {
-            my_seed=rand();
-	        }
+    	    //randon numbers must be the same in all nodes
+            srand ( time(NULL) );
+            if(perturb_projection_vector!=0)
+    	        {
+                my_seed=rand();
+    	        }
         }
 #ifdef  DEBUGTIME
         time (&end);
@@ -149,6 +149,7 @@ class Prog_mpi_angular_project_library_Parameters:Prog_angular_project_library_P
     }
     //all ranks
     mysampling.SetSampling(sampling);
+    //symmetry for sampling may be different from neighbourhs
 	if (!mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
 	     REPORT_ERROR(3005, (std::string)"angular_project_library::run Invalid symmetry" +  fn_sym);//set sampling must go before set noise
     if(angular_distance_bool!=0)	
@@ -164,9 +165,6 @@ class Prog_mpi_angular_project_library_Parameters:Prog_angular_project_library_P
     mysampling.SL.read_sym_file(fn_sym);
     //store symmetry matrices, this is faster than computing them each time
     mysampling.fill_L_R_repository();
-    //precompute product between symmetry matrices and experimental data
-    if (FnexperimentalImages.size() > 0)	
-         mysampling.fill_exp_data_projection_direction_by_L_R(FnexperimentalImages);
 
 #ifdef  DEBUGTIME
     time (&end);
@@ -174,7 +172,21 @@ class Prog_mpi_angular_project_library_Parameters:Prog_angular_project_library_P
     std::cerr<<" compute sampling points rank= "<<rank<<std::endl;
 #endif
 
+    // We first sample The  whole sphere
+    // Then we remove point redundant due to sampling symmetry
+    // use old symmetry, this is geometric does not use L_R
     mysampling.remove_redundant_points(symmetry, sym_order);
+
+    //=========================
+    //======================
+    //recompute symmetry with neigh symmetry 
+    if (!mysampling.SL.isSymmetryGroup(fn_sym_neigh, symmetry, sym_order))
+          REPORT_ERROR(3005, (std::string)"angular_project_library::run Invalid neig symmetry" +  fn_sym_neigh);
+    mysampling.SL.read_sym_file(fn_sym_neigh);
+    mysampling.fill_L_R_repository();
+    //precompute product between symmetry matrices and experimental data
+    if (FnexperimentalImages.size() > 0)	
+         mysampling.fill_exp_data_projection_direction_by_L_R(FnexperimentalImages);
 #ifdef  DEBUGTIME
     time (&end);
     time_dif = difftime (end,start); start=end;
@@ -223,7 +235,7 @@ class Prog_mpi_angular_project_library_Parameters:Prog_angular_project_library_P
         {
             if (compute_neighbors_bool)
                 {
-	            mysampling.compute_neighbors();
+	            mysampling.compute_neighbors(only_winner);
 	            mysampling.save_sampling_file(output_file_root,false);
                 }
 	    }
