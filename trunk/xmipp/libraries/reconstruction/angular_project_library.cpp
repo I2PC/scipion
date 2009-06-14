@@ -39,7 +39,11 @@ void Prog_angular_project_library_Parameters::read(int argc, char **argv)
 {
     input_volume = getParameter(argc, argv, "-i");
     output_file_root = getParameter(argc, argv, "-o");
-    fn_sym = getParameter(argc, argv, "-sym","c1");
+    fn_sym = getParameter(argc, argv, "-sym","c1"); 
+    if ( checkParameter(argc, argv,"-sym_neigh"))
+        fn_sym_neigh = getParameter(argc, argv, "-sym_neigh");
+    else
+        fn_sym_neigh = fn_sym;
     sampling = textToFloat(getParameter(argc, argv, "-sampling_rate", "5"));
     psi_sampling = textToFloat(getParameter(argc, argv, "-psi_sampling", "360"));
     max_tilt_angle = textToFloat(getParameter(argc, argv, "-max_tilt_angle","91"));
@@ -90,6 +94,7 @@ void Prog_angular_project_library_Parameters::read(int argc, char **argv)
          } 
         
     fn_groups = getParameter(argc, argv, "-groups","");
+    only_winner = checkParameter(argc, argv, "-only_winner");
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -98,12 +103,14 @@ void Prog_angular_project_library_Parameters::usage()
     std::cerr << "angular_project_library\n"
     << "   -i input_volume             : Input Volume\n"
     << "   -o root_file_name           : Root for output files\n"
-    << "  [-sym cn]   :One of the 17 possible symmetries in\n"
-    << "                                single particle electronmicroscopy\n"
-    << "                                i.e.  ci, cs, cn, cnv, cnh, sn, dn, dnv, "
-    << "                                dnh, t, td, th, o, oh, i1 (default MDB), i2, i3, i4, ih\n"
-    << "                                i1h (default MDB), i2h, i3h, i4h\n"
-    << "                               : where n may change from 1 to 99\n"
+    << "  [-sym cn]                    : Symmetry to define sampling "
+    << "                                 One of the 17 possible symmetries in\n"
+    << "                                 single particle electronmicroscopy\n"
+    << "                                 i.e.  ci, cs, cn, cnv, cnh, sn, dn, dnv, "
+    << "                                 dnh, t, td, th, o, oh, i1 (default MDB), i2, i3, i4, ih\n"
+    << "                                 i1h (default MDB), i2h, i3h, i4h\n"
+    << "  [-sym_neigh cn]              : symmetry used to define neighbourhs, by default"
+    << "                                 same as sym"
     << "  [-sampling_rate 5]           : Distance in degrees between sampling points\n"
     << "  [-psi_sampling 360]          : sampling in psi, 360 -> no sampling in psi\n"
     << "  [-max_tilt_angle  91]        : maximum tilt angle in degrees\n"
@@ -117,7 +124,9 @@ void Prog_angular_project_library_Parameters::usage()
     << "  [-perturb 0.0]               : gaussian noise projection unit vectors \n"
     << "			         a value=sin(sampling_rate)/4  \n"
     << "			         may be a good starting point \n"
-    << "   [-groups \"\"]                : selfile with groups\n"
+    << "  [-groups \"\"]                : selfile with groups\n"
+    << "  [-only_winner]                 : if set each experiemntal\n"
+    << "                                   point will have a unique neighbour\n"
     << "\n"
     << "Example of use: Sample at 2 degrees and use c6 symmetry\n"
     << "   xmipp_angular_project_library -i in.vol -o out "
@@ -132,11 +141,13 @@ void Prog_angular_project_library_Parameters::show()
     std::cout << "output input_volume root:  " << input_volume << std::endl
               << "output files root:         " << output_file_root << std::endl
               << "Sampling rate:             " << sampling    << std::endl
-              << "symmetry group:            " << fn_sym << std::endl
+              << "symmetry sampling group:   " << fn_sym << std::endl
+              << "symmetry neighbohound group: " << fn_sym_neigh << std::endl
               << "max_tilt_angle:            " << max_tilt_angle << std::endl
               << "min_tilt_angle:            " << min_tilt_angle << std::endl
               << "psi_sampling:              " << psi_sampling << std::endl
               << "compute_neighbors:         " << compute_neighbors_bool << std::endl
+              << "only_winner:               " << only_winner << std::endl
               << "quiet:                     " << quiet << std::endl
     ;
     if (angular_distance_bool)
@@ -214,12 +225,14 @@ void Prog_angular_project_library_Parameters::run()
     mysampling.SetSampling(sampling);
     srand ( time(NULL) );
     //process the symmetry file
+    //only checks symmetry and set pg_order and pg_group, no memory allocation
     if (!mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
          REPORT_ERROR(3005, (std::string)"angular_project_library::run Invalid symmetry" +  fn_sym);
     if(perturb_projection_vector!=0)
         {
         int my_seed;
         my_seed=rand();
+        // set noise deviation and seed
         mysampling.SetNoise(perturb_projection_vector,my_seed);
         }
     if(angular_distance_bool!=0)	
@@ -232,6 +245,23 @@ void Prog_angular_project_library_Parameters::run()
     mysampling.SL.read_sym_file(fn_sym);
     //store symmetry matrices, this is faster than computing them each time
     mysampling.fill_L_R_repository();
+    //mpi_barrier here
+    //all working nodes must read symmetry file
+    //and experimental docfile if apropiate
+    //symmetry_file = symmetry + ".sym";
+    //SL.read_sym_file(symmetry_file)
+    // We first sample The  whole sphere
+    // Then we remove point redundant due to sampling symmetry
+    // use old symmetry, this is geometric does not use L_R
+    mysampling.remove_redundant_points(symmetry, sym_order);
+
+    //=========================
+    //======================
+    //recompute symmetry with neigh symmetry 
+    if (!mysampling.SL.isSymmetryGroup(fn_sym_neigh, symmetry, sym_order))
+          REPORT_ERROR(3005, (std::string)"angular_project_library::run Invalid neig symmetry" +  fn_sym_neigh);
+    mysampling.SL.read_sym_file(fn_sym_neigh);
+    mysampling.fill_L_R_repository();
     //precompute product between symmetry matrices and experimental data
     if (FnexperimentalImages.size() > 0)	
         mysampling.fill_exp_data_projection_direction_by_L_R(FnexperimentalImages);
@@ -240,12 +270,7 @@ void Prog_angular_project_library_Parameters::run()
     time_dif = difftime (end,start); start=end;
     printf ("fill_exp_data_projection_direction_by_L_R after %.2lf seconds\n", time_dif );
     #endif
-    //mpi_barrier here
-    //all working nodes must read symmetry file
-    //and experimental docfile if apropiate
-    //symmetry_file = symmetry + ".sym";
-    //SL.read_sym_file(symmetry_file)
-    mysampling.remove_redundant_points(symmetry, sym_order);
+    
     //remove points not close to experimental points, only for no symmetric cases
     #ifdef  DEBUGTIME
     time (&end);
@@ -255,6 +280,7 @@ void Prog_angular_project_library_Parameters::run()
     if (FnexperimentalImages.size() > 0 && 
         remove_points_far_away_from_experimental_data_bool)
         {
+        // here we remove points no close to experimental data, neight symmetry must be use
         mysampling.remove_points_far_away_from_experimental_data();
         #ifdef  DEBUGTIME
         time (&end);
@@ -266,6 +292,7 @@ void Prog_angular_project_library_Parameters::run()
 	    {
 	    //find sampling point closer to experimental point (only 0) and bool
 	    //and save docfile with this information
+        // use neight symmetry
 	    mysampling.find_closest_sampling_point(FnexperimentalImages,output_file_root);
         #ifdef  DEBUGTIME
         time (&end);
@@ -274,6 +301,7 @@ void Prog_angular_project_library_Parameters::run()
         #endif
         }
     //only rank 0
+    //write docfil with vectors and angles
     mysampling.create_asym_unit_file(output_file_root);
     #ifdef  DEBUGTIME
     time (&end);
@@ -301,7 +329,8 @@ void Prog_angular_project_library_Parameters::run()
     #endif
     if (compute_neighbors_bool)
         {
-	    mysampling.compute_neighbors();
+        // new symmetry
+	    mysampling.compute_neighbors(only_winner);
 	    #ifdef  DEBUGTIME
 	    time (&end);
 	    time_dif = difftime (end,start); start=end;
@@ -390,7 +419,7 @@ void Prog_angular_project_library_Parameters::createGroupSamplingFiles(void)
             //save save_sampling_file
             if (compute_neighbors_bool)
             {
-                mysampling.compute_neighbors();
+                mysampling.compute_neighbors(only_winner);
                 mysampling.save_sampling_file(my_output_file_root,false);
             }
         }
