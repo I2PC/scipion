@@ -453,14 +453,21 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere,
 
 
 #endif
-    //#define DEBUG3
+#define DEBUG3
 #ifdef  DEBUG3
+    std::ofstream filestr; 
+    filestr.open ("sampling_file.bild");
+
+    filestr    << ".color yellow" 
+	       << std::endl
+	       ;
     for (int i = 0;
-         i < sampling_points_angles.size();
+         i < sampling_points_vector.size();
          i++)
     {
-        std::cout  <<  sampling_points_angles[i].transpose()  << " 1 1 " << std::endl;
+        filestr  <<  ".sphere " << sampling_points_vector[i].transpose()  << " 0.018 " << std::endl;
     }
+    filestr.close();
 #endif
 #undef DEBUG3
 
@@ -1297,7 +1304,7 @@ void XmippSampling::create_asym_unit_file(const FileName &docfilename)
     DFvectors.clear();
     DFangles.clear();
     FileName tmp_filename;
-    //#define CHIMERA
+    #define CHIMERA
     #ifdef CHIMERA
     std::ofstream filestr; 
     filestr.open ("create_asym_unit_file.bild");
@@ -1448,11 +1455,12 @@ void XmippSampling::read_sampling_file(FileName infilename, bool read_vectors)
     infile.close();
 }
 
-void XmippSampling::compute_neighbors(void)
+void XmippSampling::compute_neighbors(bool only_winner)
 {
     double rot,  tilt,  psi;
     double rotp, tiltp, psip;
     double my_dotProduct;
+    double winner_dotProduct;
     Matrix1D<double>  row(3);
     Matrix2D<double>  L(4, 4), R(4, 4);
     std::vector<int>  aux_neighbors;
@@ -1471,7 +1479,8 @@ void XmippSampling::compute_neighbors(void)
 #endif
         aux_neighbors.clear();
         for (int k = 0; k < R_repository.size(); k++,j++)
-        {
+        {   
+            winner_dotProduct=-1.;
             for (int i = 0; i < no_redundant_sampling_points_vector.size(); i++)
             {
                 my_dotProduct = dotProduct(no_redundant_sampling_points_vector[i],
@@ -1482,6 +1491,8 @@ void XmippSampling::compute_neighbors(void)
                     if(aux_neighbors.size()==0)
                     {
                         aux_neighbors.push_back(i);
+                        winner_dotProduct=my_dotProduct;
+
 #ifdef MYPSI    
                         aux_neighbors_psi.push_back(exp_data_projection_direction_by_L_R_psi[j]);
 #endif
@@ -1489,10 +1500,33 @@ void XmippSampling::compute_neighbors(void)
                     else
                     {   
                         new_reference=true;
-                        for( int l=0;l<  aux_neighbors.size();l++)
+                        if(only_winner)
                         {
-                             if (aux_neighbors[l]==i)
-                                 new_reference=false;
+                            if(winner_dotProduct<my_dotProduct)
+                            {
+                                if(winner_dotProduct!=-1)
+                                    aux_neighbors.pop_back();
+#ifdef MYPSI    
+                                if(winner_dotProduct!=-1)
+                                    aux_neighbors_psi.pop_back();
+#endif                      
+                                winner_dotProduct=my_dotProduct;
+                            }
+                            else 
+                            {
+                                new_reference=false;
+                            }
+                        }
+                        else
+                        {
+                            for( int l=0;l<  aux_neighbors.size();l++)
+                            {
+                                 if (aux_neighbors[l]==i)
+                                 {
+                                     new_reference=false;
+                                     break;
+                                 }
+                            }
                         }
                         if(new_reference)
                         {
@@ -1515,7 +1549,7 @@ void XmippSampling::compute_neighbors(void)
         my_neighbors_psi.push_back(aux_neighbors_psi);
 #endif
     }//for j
-    //#define CHIMERA
+    #define CHIMERA
     #ifdef CHIMERA
     std::ofstream filestr; 
     filestr.open ("compute_neighbors.bild");
@@ -1524,7 +1558,7 @@ void XmippSampling::compute_neighbors(void)
 	       << ".sphere 0 0 0 .95"
 	       << std::endl
 	       ;
-    int exp_image=0;
+    int exp_image=60;
     filestr    <<  ".color yellow" << std::endl
                <<  ".sphere "   << exp_data_projection_direction_by_L_R[exp_image*R_repository.size()].transpose()  
 		       <<  " .021"      << std::endl;
@@ -1534,10 +1568,10 @@ void XmippSampling::compute_neighbors(void)
         {
         filestr    <<  ".color red" << std::endl
                    <<  ".sphere "   << exp_data_projection_direction_by_L_R[i].transpose()  
-		           <<  " .020"      << std::endl;
+		           <<  " .017"      << std::endl;
         }
     double blue;    
-    for(int i=0; 
+    for(int i=0;
         i< my_neighbors[exp_image].size();
         i++)
         {
@@ -1603,7 +1637,7 @@ void XmippSampling::remove_points_far_away_from_experimental_data()
 	     i--;//since a point has been swaped we should repeat the same index  
        }// if(my_delete)
     }//for i end
-    //#define CHIMERA
+    #define CHIMERA
     #ifdef CHIMERA
     std::ofstream filestr; 
     filestr.open ("remove_points_far_away_from_experimental_data.bild");
@@ -1857,6 +1891,9 @@ void XmippSampling::fill_L_R_repository(void)
     Matrix2D<double>  L(4, 4), R(4, 4);
     Matrix2D<double>  Identity(3,3);
     Identity.initIdentity();
+    //NEXT 2 ROB
+    R_repository.clear();
+    L_repository.clear();
     R_repository.push_back(Identity);
     L_repository.push_back(Identity);
     for (int isym = 0; isym < SL.SymsNo(); isym++)
