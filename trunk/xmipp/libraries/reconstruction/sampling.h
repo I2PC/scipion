@@ -192,7 +192,7 @@ public:
     save not only the neighbors but the angle psi
     */
 
-    void compute_neighbors(void);
+    void compute_neighbors(bool only_winner=false);
    /** Save neighbors in a propietary ascii file. The structure is as
        follows 
       [vnum]
