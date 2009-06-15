@@ -291,7 +291,7 @@ SymmetryGroup='c1'
 """
 SymmetryGroupNeighbourhood=''
 
-# {expert} Only used if SymmetryGroupNeighbourhood !=''
+# {expert} compute only closest neighbor 
 """ This option is only relevant if SymmetryGroupNeighbourhood !=''
     If set to True only one neighbor will be computed per sampling point
 """    
