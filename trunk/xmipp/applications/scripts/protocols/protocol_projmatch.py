@@ -1858,6 +1858,8 @@ if __name__ == '__main__':
                 MpiJobSize,
                 NumberOfThreads,
                 SymmetryGroup,  
+                SymmetryGroupNeighbourhood,
+                OnlyWinner,
                 DoLowPassFilter,
                 UseFscForFilter,
                 ConstantToAddToFiltration
