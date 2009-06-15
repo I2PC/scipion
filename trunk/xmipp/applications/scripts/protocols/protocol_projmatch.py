@@ -281,6 +281,22 @@ TiltF=90
 """
 SymmetryGroup='c1'
 
+# {expert} Symmetry group for Neighbourhood computations
+""" If you do not know what this is leave it blank.
+    This symmetry will be using for compute neighboring points,
+    but not for sampling or reconstruction
+    See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
+    for a description of the symmetry groups format
+    If no symmetry is present, give c1
+"""
+SymmetryGroupNeighbourhood=''
+
+# {expert} Only used if SymmetryGroupNeighbourhood !=''
+""" This option is only relevant if SymmetryGroupNeighbourhood !=''
+    If set to True only one neighbor will be computed per sampling point
+"""    
+OnlyWinner=False
+
 # Discard images with ccf below
 """ Provide a sequence of numbers (for instance, "0.3 0.3 0.5 0.5" specifies 4 iterations,
     the first two set the value to 0.3, then two with 0.5.
@@ -632,6 +648,8 @@ class projection_matching_class:
                 _MyMpiJobSize,
                 _MyNumberOfThreads,
                 _SymmetryGroup,
+		_SymmetryGroupNeighbourhood,
+		_OnlyWinner,
                 _DoLowPassFilter,
                 _UseFscForFilter,
                 _ConstantToAddToFiltration
@@ -685,6 +703,8 @@ class projection_matching_class:
        self._DoParallel=_DoParallel
        self._MyNumberOfMpiProcesses=_MyNumberOfMpiProcesses
        self._SymmetryGroup=_SymmetryGroup
+       self._SymmetryGroupNeighbourhood=_SymmetryGroupNeighbourhood
+       self._OnlyWinner=_OnlyWinner
        self._ARTReconstructionExtraCommand=_ARTReconstructionExtraCommand
        self._WBPReconstructionExtraCommand=_WBPReconstructionExtraCommand
        self._FourierReconstructionExtraCommand=_FourierReconstructionExtraCommand
@@ -918,6 +938,8 @@ class projection_matching_class:
                                          self._MyMpiJobSize,
                                          self._WorkingDir,
                                          self._SymmetryGroup,
+					 self._SymmetryGroupNeighbourhood,
+					 self._OnlyWinner,
                                          self._AvailableMemory,
                                          self._DoComputeResolution,
                                          self._DoSplitReferenceImages,
@@ -1176,6 +1198,8 @@ def execute_projection_matching(_mylog,
                                 _MyMpiJobSize,
                                 _WorkingDir,
                                 _SymmetryGroup,
+				_SymmetryGroupNeighbourhood,
+				_OnlyWinner,
                                 _AvailableMemory,
                                 _DoComputeResolution,
                                 _DoSplitReferenceImages,
@@ -1234,6 +1258,13 @@ def execute_projection_matching(_mylog,
 
    if (_DoParallel):
       parameters = parameters + ' -mpi_job_size ' + str(_MyMpiJobSize)
+      
+   if (len(SymmetryGroupNeighbourhood)>1):
+      parameters+= \
+          ' -sym_neigh ' + SymmetryGroupNeighbourhood + 'h'
+      if (OnlyWinner):
+	  parameters+= \
+              ' -only_winner '
 
    launch_job.launch_job('xmipp_angular_project_library',
                          parameters,
