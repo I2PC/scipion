@@ -746,8 +746,8 @@ class projection_matching_class:
        else:
           self._mylog.info("Skipped DoDeleteWorkingDir") 
        if ReconstructionMethod!='fourier' and not _DoSplitReferenceImages:
-          print "DoSplitReferenceImages must be set to True is"
-          print " reconstructin method is not fourier"
+          print "DoSplitReferenceImages must be set to True if"
+          print " reconstruction method is not fourier"
           exit(1)
        create_working_directory(self._mylog,self._WorkingDir)
        log.make_backup_of_script_file(sys.argv[0],self._WorkingDir)
