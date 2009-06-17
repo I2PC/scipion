@@ -162,23 +162,37 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
             // find a value for chunk_angular_distance if != -1
             if( chunk_angular_distance == -1)
                 compute_chunk_angular_distance(symmetry, sym_order);
-            //first set sampling rate
-            chunk_mysampling.SetSampling(chunk_angular_distance);
-            //create sampling points in the whole sphere
-            chunk_mysampling.Compute_sampling_points(false,91.,-91.);
-            //store symmetry matrices, this is faster than computing them 
-            //each time we need them
-            chunk_mysampling.fill_L_R_repository();
-            //precompute product between symmetry matrices 
-            //and experimental data
-            chunk_mysampling.fill_exp_data_projection_direction_by_L_R(fn_exp);
-            //remove redundant sampling points: symmetry
-            chunk_mysampling.remove_redundant_points(symmetry, sym_order);
-            //remove sampling points too far away from experimental data
+	    //store symmetry matrices, this is faster than computing them 
+	    //each time we need them
+	    chunk_mysampling.fill_L_R_repository();
+            int remaining_points=0;
+	    while(remaining_points==0)
+	    {
+	        //first set sampling rate
+	        chunk_mysampling.SetSampling(chunk_angular_distance);
+	        //create sampling points in the whole sphere
+	        chunk_mysampling.Compute_sampling_points(false,91.,-91.);
+	        //precompute product between symmetry matrices 
+	        //and experimental data
+	        chunk_mysampling.fill_exp_data_projection_direction_by_L_R(fn_exp);
+	        //remove redundant sampling points: symmetry
+                chunk_mysampling.remove_redundant_points(symmetry, sym_order);
+                remaining_points=chunk_mysampling.no_redundant_sampling_points_angles.size();
+	        chunk_angular_distance -= 1;
+	        if(remaining_points ==0)
+		    std::cerr << "New chunk_angular_distance " 
+		              << chunk_angular_distance << std::endl;
+		if(chunk_angular_distance < 1)
+		{
+		std::cerr << " Can compute chunk_angular_distance\n";
+		exit(1);
+		}
+	    }
+	    //remove sampling points too far away from experimental data
             chunk_mysampling.remove_points_far_away_from_experimental_data();
             //for each sampling point find the experimental images
             //closer to that point than to any other
-	        chunk_mysampling.find_closest_experimental_point();
+	    chunk_mysampling.find_closest_experimental_point();
             //print number of points per node
             //#define DEBUG
             #ifdef DEBUG
