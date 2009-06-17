@@ -145,6 +145,9 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere,
     Matrix1D<double> starting_point, ending_point;
     double max_z;
     double min_z;
+    sampling_points_angles.clear();
+    sampling_points_vector.clear();
+    
 
     if(max_tilt >= 90.)
        max_z=10.;
@@ -575,7 +578,6 @@ void XmippSampling::remove_redundant_points(const int symmetry,
     bool valid = true;
     double rot, tilt, psi = 0;
     double rotp, tiltp, psip = 0.;
-    no_redundant_sampling_points_vector.clear();
     double aux1, aux2;
     bool match = false;
 
@@ -1044,7 +1046,6 @@ void XmippSampling::remove_redundant_points(const int symmetry,
         Matrix1D<double>  _3_fold_axis_by_2_fold_axis(3);
         _3_fold_axis_by_2_fold_axis = vectorR3(0.,1.,0.);
         _3_fold_axis_by_2_fold_axis.selfNormalize();
-
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if (
