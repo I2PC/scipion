@@ -178,8 +178,11 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
 	        //remove redundant sampling points: symmetry
                 chunk_mysampling.remove_redundant_points(symmetry, sym_order);
                 remaining_points=chunk_mysampling.no_redundant_sampling_points_angles.size();
-	        chunk_angular_distance -= 1;
-	        if(remaining_points ==0)
+                if (chunk_angular_distance>2)
+	            chunk_angular_distance -= 1;
+                else
+                    chunk_angular_distance /=2;
+	        //if(remaining_points ==0)
 		    std::cerr << "New chunk_angular_distance " 
 		              << chunk_angular_distance << std::endl;
 		if(chunk_angular_distance < 0)
