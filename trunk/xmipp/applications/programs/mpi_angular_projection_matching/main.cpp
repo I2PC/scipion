@@ -182,7 +182,7 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
 	        if(remaining_points ==0)
 		    std::cerr << "New chunk_angular_distance " 
 		              << chunk_angular_distance << std::endl;
-		if(chunk_angular_distance < 1)
+		if(chunk_angular_distance < 0)
 		{
 		std::cerr << " Can compute chunk_angular_distance\n";
 		exit(1);
