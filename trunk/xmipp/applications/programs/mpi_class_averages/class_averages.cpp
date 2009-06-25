@@ -479,7 +479,7 @@ void VQProjection::lookForNeighbours(const std::vector<VQProjection *> listP,
 //#define DEBUG
 void VQ::initialize(SelFile &_SF, int _Niter, int _Nneighbours,
     double _PminSize, std::vector< Matrix2D<double> > _codes0, int _Ncodes0,
-    bool _noMirror, int rank)
+    bool _noMirror, bool _fast, int rank)
 {
     // Only "parent" worker prints
     if( rank == 0 )
@@ -491,6 +491,7 @@ void VQ::initialize(SelFile &_SF, int _Niter, int _Nneighbours,
     Nneighbours=_Nneighbours;
     PminSize=_PminSize;
     noMirror=_noMirror;
+    fast=_fast;
     int Ydim, Xdim;
     int mpi_size;
     
@@ -634,30 +635,30 @@ void VQ::initialize(SelFile &_SF, int _Niter, int _Nneighbours,
     	ImageXmipp I;
     	if( n % mpi_size == rank )
 	{
-		I.read( SFv[n] );
-		I().setXmippOrigin();
-		I().statisticsAdjust(0,1);
+	    I.read( SFv[n] );
+	    I().setXmippOrigin();
+	    I().statisticsAdjust(0,1);
 
-   		Matrix2D<double> Iaux;
-            
-		int q=initNodeAssign[n];
-	    
-		double corrCode, likelihood;
-        	Iaux=I();
-        	P[q]->fit(Iaux, sigma, noMirror, corrCode, likelihood);
-        	P[q]->updateProjection(Iaux,corrCode,n);
-        	updateNonCode(I(),q);
-        	
-		for (int qp=0; qp<_Ncodes0; qp++)
-		{
-        	    if (q==qp) continue;
-        	    Matrix2D<double> Iaux=I();
-		    double corrNonCode, nonCodeLikelihood;
-		    P[qp]->fit(Iaux,sigma,noMirror,corrNonCode,nonCodeLikelihood);
-		    P[qp]->updateNonProjection(corrNonCode);
-		}
-                if( rank == 0 )
-		    if (n%100==0) progress_bar(n);
+   	    Matrix2D<double> Iaux;
+
+	    int q=initNodeAssign[n];
+
+	    double corrCode, likelihood;
+            Iaux=I();
+            P[q]->fit(Iaux, sigma, noMirror, corrCode, likelihood);
+            P[q]->updateProjection(Iaux,corrCode,n);
+            updateNonCode(I(),q);
+
+	    for (int qp=0; qp<_Ncodes0; qp++)
+	    {
+        	if (q==qp) continue;
+        	Matrix2D<double> Iaux=I();
+		double corrNonCode, nonCodeLikelihood;
+		P[qp]->fit(Iaux,sigma,noMirror,corrNonCode,nonCodeLikelihood);
+		P[qp]->updateNonProjection(corrNonCode);
+	    }
+            if( rank == 0 )
+		if (n%100==0) progress_bar(n);
     	}
     }
     
@@ -681,47 +682,47 @@ void VQ::initialize(SelFile &_SF, int _Niter, int _Nneighbours,
 	    
     	for( int ranks = 0 ; ranks < mpi_size ; ranks ++ )
     	{
-    		if( ranks == rank )
+    	    if( ranks == rank )
+	    {
+		MPI_Bcast( &oldSizeClassCorr, 1, MPI_INT, rank, MPI_COMM_WORLD );
+		MPI_Bcast( &(oldListClassCorr[0]), oldSizeClassCorr, MPI_DOUBLE, rank, MPI_COMM_WORLD );    
+
+		MPI_Bcast( &oldSizeNextListImg, 1, MPI_INT, rank, MPI_COMM_WORLD );
+		MPI_Bcast( &(oldListNextListImg[0]),oldSizeNextListImg, MPI_INT, rank, MPI_COMM_WORLD );
+
+		MPI_Bcast( &oldSizeNextNonClassCorr, 1, MPI_INT, rank, MPI_COMM_WORLD );
+		MPI_Bcast( &(oldListNextNonClassCorr[0]), oldSizeNextNonClassCorr, MPI_DOUBLE, rank, MPI_COMM_WORLD );   
+	    }
+	    else
+	    {
+	    	int size;
+		MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
+		std::vector<double> aux(size, 0);
+		MPI_Bcast( &(aux[0]), size, MPI_DOUBLE, ranks, MPI_COMM_WORLD );
+
+		for( int element = 0; element < size; element ++ )
 		{
-		    MPI_Bcast( &oldSizeClassCorr, 1, MPI_INT, rank, MPI_COMM_WORLD );
-		    MPI_Bcast( &(oldListClassCorr[0]), oldSizeClassCorr, MPI_DOUBLE, rank, MPI_COMM_WORLD );    
-	
-		    MPI_Bcast( &oldSizeNextListImg, 1, MPI_INT, rank, MPI_COMM_WORLD );
-		    MPI_Bcast( &(oldListNextListImg[0]),oldSizeNextListImg, MPI_INT, rank, MPI_COMM_WORLD );
-		
-		    MPI_Bcast( &oldSizeNextNonClassCorr, 1, MPI_INT, rank, MPI_COMM_WORLD );
-		    MPI_Bcast( &(oldListNextNonClassCorr[0]), oldSizeNextNonClassCorr, MPI_DOUBLE, rank, MPI_COMM_WORLD );   
+	            P[q]->nextClassCorr.push_back(aux[element]);
 		}
-		else
-		{
-	    	    int size;
-		    MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-		    std::vector<double> aux(size, 0);
-		    MPI_Bcast( &(aux[0]), size, MPI_DOUBLE, ranks, MPI_COMM_WORLD );
-				
-		    for( int element = 0; element < size; element ++ )
-		    {
-	                P[q]->nextClassCorr.push_back(aux[element]);
-		    }
-	    
-    	    	    MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-	    	    std::vector<int> aux2(size, 0);
-	    	    MPI_Bcast( &(aux2[0]), size, MPI_INT, ranks, MPI_COMM_WORLD );
-			
-	    	    for( int element = 0; element < size; element ++ )
-	    	    {
-                        P[q]->nextListImg.push_back(aux2[element]);
-	    	    }
-		    
-		    MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-	    	    std::vector<double> aux3(size, 0);
-	    	    MPI_Bcast( &(aux3[0]), size, MPI_DOUBLE, ranks, MPI_COMM_WORLD );
-			
-	    	    for( int element = 0; element < size; element ++ )
-	    	    {
-                        P[q]->nextNonClassCorr.push_back(aux3[element]);
-	    	    }
-	        }
+
+    	    	MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
+	    	std::vector<int> aux2(size, 0);
+	    	MPI_Bcast( &(aux2[0]), size, MPI_INT, ranks, MPI_COMM_WORLD );
+
+	    	for( int element = 0; element < size; element ++ )
+	    	{
+                    P[q]->nextListImg.push_back(aux2[element]);
+	    	}
+
+		MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
+	    	std::vector<double> aux3(size, 0);
+	    	MPI_Bcast( &(aux3[0]), size, MPI_DOUBLE, ranks, MPI_COMM_WORLD );
+
+	    	for( int element = 0; element < size; element ++ )
+	    	{
+                    P[q]->nextNonClassCorr.push_back(aux3[element]);
+	    	}
+	    }
     	 }
     }
 
@@ -784,38 +785,55 @@ void VQ::lookNode(Matrix2D<double> &I, int idx, int oldnode,
     Matrix2D<double> bestImg;
     Matrix1D<double> corrCodeList;
     corrCodeList.initZeros(Q);
+    int Nimg=SFv.size();
     for (int q=0; q<Q; q++)
     {
-        // Try this image
-        Matrix2D<double> Iaux=I;
-        double likelihood;
-	P[q]->fit(Iaux,sigma,noMirror,corrCodeList(q),likelihood);
-        if ((likelihood>ABS(bestLikelihood)) ||
-            (ABS(likelihood)>ABS(bestLikelihood) && bestLikelihood<0) ||
-            bestCorrCode<0)
+        // Check if q is neighbour of the oldnode
+        bool proceed=false;
+        bool neighbour=false;
+        if (oldnode!=-1)
         {
-            // Check if q is neighbour of the oldnode
-            bool proceed=false;
-            if (oldnode!=-1)
+            int imax=P[oldnode]->neighboursIdx.size();
+            for (int i=0; i<imax; i++)
             {
-                int imax=P[oldnode]->neighboursIdx.size();
-                for (int i=0; i<imax; i++)
+                if (P[oldnode]->neighboursIdx[i]==q)
                 {
-                    if (P[oldnode]->neighboursIdx[i]==q)
-                    {
-                        proceed=true;
-                        break;
-                    }
+                    proceed=true;
+                    neighbour=true;
+                    break;
                 }
             }
-            else
-                proceed=true;
-            if (proceed)
+            if (!proceed && fast)
             {
-                bestq=q;
-                bestImg=Iaux;
-                bestCorrCode=corrCodeList(q);
-                bestLikelihood=likelihood;
+                double threshold=3.0*P[oldnode]->currentListImg.size();
+                threshold=XMIPP_MAX(threshold,1000);
+                threshold=(double)(XMIPP_MIN(threshold,Nimg))/Nimg;
+                proceed=(rnd_unif(0,1)<threshold);
+            } else
+                proceed=true;
+        }
+        else
+        {
+            proceed=true;
+            neighbour=true;
+        }
+
+        if (proceed) {
+            // Try this image
+            Matrix2D<double> Iaux=I;
+            double likelihood;
+	    P[q]->fit(Iaux,sigma,noMirror,corrCodeList(q),likelihood);
+            if ((likelihood>ABS(bestLikelihood)) ||
+                (ABS(likelihood)>ABS(bestLikelihood) && bestLikelihood<0) ||
+                bestCorrCode<0)
+            {
+                if (neighbour)
+                {
+                    bestq=q;
+                    bestImg=Iaux;
+                    bestCorrCode=corrCodeList(q);
+                    bestLikelihood=likelihood;
+                }
             }
         }
     }
@@ -829,7 +847,7 @@ void VQ::lookNode(Matrix2D<double> &I, int idx, int oldnode,
     // of nodes if it was among the best
     P[newnode]->updateProjection(I,corrCode,idx);
     for (int q=0; q<Q; q++)
-    	if (q!=newnode)
+    	if (q!=newnode && corrCodeList(q)>0)
 	    P[q]->updateNonProjection(corrCodeList(q));
 }
 
@@ -1530,6 +1548,7 @@ void Prog_VQ_prm::read(int argc, char** argv)
     Ncodes=textToInteger(getParameter(argc,argv,"-codes","16"));
     PminSize=textToFloat(getParameter(argc,argv,"-minsize","20"));
     noMirror=checkParameter(argc,argv,"-no_mirror");
+    fast=checkParameter(argc,argv,"-fast");
 }
 
 void Prog_VQ_prm::show() const
@@ -1542,7 +1561,8 @@ void Prog_VQ_prm::show() const
               << "Codes:             " << Ncodes        << std::endl
               << "Neighbours:        " << Nneighbours   << std::endl
               << "Minimum node size: " << PminSize      << std::endl
-              << "No mirror:         " << noMirror      << std::endl;
+              << "No mirror:         " << noMirror      << std::endl
+              << "Fast:              " << fast          << std::endl;
 }
     
 void Prog_VQ_prm::usage() const
@@ -1558,6 +1578,7 @@ void Prog_VQ_prm::usage() const
               << "                         : Set -1 for all\n"
               << "   [-minsize <N=20>]     : Percentage minimum node size\n"
               << "   [-no_mirror]          : Do not check mirrors\n"
+              << "   [-fast]               : Fast calculations, suboptimal\n"
     ;
 }
     
@@ -1578,7 +1599,7 @@ void Prog_VQ_prm::produce_side_info(int rank)
         Ncodes0=codes0.size();
     }
     vq.initialize(SF,Niter,Nneighbours,PminSize,
-        codes0,Ncodes0,noMirror,rank);
+        codes0,Ncodes0,noMirror,fast,rank);
 }
 
 void Prog_VQ_prm::run(int rank)

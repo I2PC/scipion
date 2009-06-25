@@ -147,6 +147,9 @@ public:
     /// No mirror
     bool noMirror;
 
+    /// Fast
+    bool fast;
+
     /// Maximum number of iterations
     int Niter;
 
@@ -167,7 +170,7 @@ public:
     /// Initialize
     void initialize(SelFile &_SF, int _Niter,  int _Nneighbours,
         double _PminSize, std::vector< Matrix2D<double> > _codes0,
-        int _Ncodes0, bool _noMirror, int rank);
+        int _Ncodes0, bool _noMirror, bool _fast, int rank);
     
     /// Write the nodes
     void write(const FileName &fnRoot) const;
@@ -225,6 +228,9 @@ public:
 
     /// Minimum size of a node
     double PminSize;
+    
+    /// Fast
+    bool fast;
     
     /// No mirror
     bool noMirror;
