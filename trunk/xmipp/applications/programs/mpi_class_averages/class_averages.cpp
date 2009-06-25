@@ -891,10 +891,12 @@ void VQ::run(const FileName &fnOut, int rank)
 	{
 		std::cout << "Iteration " << n << " ...\n";
 		std::cerr << "Iteration " << n << " ...\n";
-        	for (int q=0; q<Q; q++)
-        	    std::cout << "Before q=" << q
-                              << " Nq=" << P[q]->currentListImg.size()
-                              << std::endl;
+                #ifdef DEBUG
+        	    for (int q=0; q<Q; q++)
+        	        std::cout << "Before q=" << q
+                                  << " Nq=" << P[q]->currentListImg.size()
+                                  << std::endl;
+                #endif
        		#ifndef DEBUG
             		init_progress_bar(N);
         	#endif
@@ -1049,15 +1051,17 @@ void VQ::run(const FileName &fnOut, int rank)
 
         transferUpdates();
 	
-	if( rank == 0 )
-	{
-        	for (int q=0; q<Q; q++)
-                {
-        	    std::cout << "After q=" << q << " Nq="
-                              << P[q]->currentListImg.size()
-                              << std::endl;
-                }
-	}
+        #ifdef DEBUG
+	    if( rank == 0 )
+	    {
+        	    for (int q=0; q<Q; q++)
+                    {
+        	        std::cout << "After q=" << q << " Nq="
+                                  << P[q]->currentListImg.size()
+                                  << std::endl;
+                    }
+	    }
+        #endif
 	
         // Check if there are empty nodes
         bool smallNodes;
@@ -1081,9 +1085,11 @@ void VQ::run(const FileName &fnOut, int rank)
             }
             if (sizeSmallestNode<PminSize*N/Q*0.01 )
             {
-                if (rank==0)
-                    std::cout << "Splitting node " << largestNode
-                              << " by overwriting " << smallNode << std::endl;
+                #ifdef DEBUG
+                    if (rank==0)
+                        std::cout << "Splitting node " << largestNode
+                                  << " by overwriting " << smallNode << std::endl;
+                #endif
                 smallNodes=true;
                 
                 // Clear the old assignment of the images in the small node
@@ -1138,7 +1144,7 @@ void VQ::run(const FileName &fnOut, int rank)
 	    write(fnOut+"_"+integerToString(Q,3)+"_");
         
 
-        if (n>0 && Nchanges<0.005*N && Q>1 || n>=Niter) 
+        if (n>0 && Nchanges<0.005*N && Q>1 || n>=(Niter-1)) 
 		goOn=false;
         n++;
     }
@@ -1163,6 +1169,7 @@ int VQ::cleanEmptyNodes()
 }
 
 /* Split ------------------------------------------------------------------- */
+//#define DEBUG
 void VQ::splitNode(VQProjection *node,
     VQProjection *&node1, VQProjection *&node2, int rank) const
 {
@@ -1287,8 +1294,7 @@ void VQ::splitNode(VQProjection *node,
                 	}
                     }
 		    if( rank == 0 )
-                	    if (i%25==0) 
-				    progress_bar(i);
+                	    if (i%25==0) progress_bar(i);
 		}
             }
             
@@ -1429,20 +1435,22 @@ void VQ::splitNode(VQProjection *node,
                 node1->transferUpdate();
                 node2->transferUpdate();
 
-                if( rank == 0 )
-                {
-	            std::cout
-                        << "  Split iteration " << it << std::endl
-                        << "  node1 Nq=" << node1->currentListImg.size()
-                        << std::endl
-                        << "  node2 Nq=" << node2->currentListImg.size()
-                        << std::endl;
-                    // std::cout << "Node1\n"; node1->show();
-                    // std::cout << "Node2\n"; node2->show();
-                    ImageXmipp save;
-                    save()=node1->P; save.write("PPPnode1.xmp");
-                    save()=node2->P; save.write("PPPnode2.xmp");
-                }
+                #ifdef DEBUG
+                    if( rank == 0 )
+                    {
+	                std::cout
+                            << "  Split iteration " << it << std::endl
+                            << "  node1 Nq=" << node1->currentListImg.size()
+                            << std::endl
+                            << "  node2 Nq=" << node2->currentListImg.size()
+                            << std::endl;
+                        // std::cout << "Node1\n"; node1->show();
+                        // std::cout << "Node2\n"; node2->show();
+                        ImageXmipp save;
+                        save()=node1->P; save.write("PPPnode1.xmp");
+                        save()=node2->P; save.write("PPPnode2.xmp");
+                    }
+                #endif
 
                 if (it>=2)
                 {
@@ -1469,8 +1477,10 @@ void VQ::splitNode(VQProjection *node,
 
         if (node1->currentListImg.size()<PminSize*0.01*imax/2)
         {
-	    if( rank == 0 )
-            	std::cout << "Removing node1, it's too small ...\n";
+            #ifdef DEBUG
+	        if( rank == 0 )
+            	    std::cout << "Removing node1, it's too small ...\n";
+            #endif
             delete node1;
             node1=new VQProjection();
             toDelete.push_back(node2);
@@ -1480,8 +1490,10 @@ void VQ::splitNode(VQProjection *node,
         }
         else if (node2->currentListImg.size()<PminSize*0.01*imax/2)
         {
-            if( rank == 0 )
-	    	std::cout << "Removing node2, it's too small ...\n";
+            #ifdef DEBUG
+                if( rank == 0 )
+	        	std::cout << "Removing node2, it's too small ...\n";
+            #endif
             delete node2;
             node2=new VQProjection();
             toDelete.push_back(node1);
@@ -1493,6 +1505,7 @@ void VQ::splitNode(VQProjection *node,
     for (int i=0; i<toDelete.size(); i++)
         delete toDelete[i];
 }
+#undef DEBUG
 
 void VQ::splitFirstNode(int rank) {
     std::sort(P.begin(),P.end(),SDescendingClusterSort());
@@ -1543,7 +1556,7 @@ void Prog_VQ_prm::usage() const
               << "   [-codes <N=16>]       : Final number of code vectors\n"
               << "   [-neigh <N=3>]        : Number of neighbour code vectors\n"
               << "                         : Set -1 for all\n"
-              << "   [-minsize <N=20>]     : Minimum node size\n"
+              << "   [-minsize <N=20>]     : Percentage minimum node size\n"
               << "   [-no_mirror]          : Do not check mirrors\n"
     ;
 }
