@@ -767,6 +767,7 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_angular_discrete_assign', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_class_averages', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ctf_correct_idr', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ml_align2d', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ml_tomo', ['XmippRecons'])
