@@ -82,3 +82,19 @@ void powellOptimizer(Matrix1D<double> &p, int i0, int n,
     // Exit
     free_Tvector(xi, 1, n*n);
 }
+
+/* Gaussian interpolator -------------------------------------------------- */
+void GaussianInterpolator::initialize(double _xmax, int N, bool normalize)
+{
+    xmax=_xmax;
+    xstep=xmax/N;
+    ixstep=1.0/xstep;
+    v.initZeros(N);
+    double inorm=1.0/sqrt(2*PI);
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(v)
+    {
+        double x=i*xstep;
+        v(i)=exp(-x*x/2);
+        if (normalize) v(i)*=inorm;
+    }
+}

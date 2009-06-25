@@ -1719,6 +1719,44 @@ void powellOptimizer(Matrix1D< double >& p,
                      const Matrix1D< double >& steps,
                      bool show = false);
 
+/** Gaussian interpolator
+ * @ingroup VectorsMiscellaneous 
+ *
+ * This class helps to perform a quick evaluation of the N(0,1) Gaussian.
+ * 1/sqrt(2*PI)*exp(-x^2)
+ *
+ * @code
+ *  GaussianInterpolator GI;
+ *  GI.initialize(6,60000);
+ *  double g=GI.getValue(1.96);
+ * @endcode
+ */
+class GaussianInterpolator {
+    Matrix1D<double> v;
+    double xstep;
+    double xmax;
+    double ixstep;
+public:
+    /** Constructor.
+        xmax is the maximum value considered by the interpolator.
+        N is the number of samples between 0 and xmax. 
+        If normalize is set to true, then the factor 1/sqrt(2*PI)
+        is introduced. */
+    void initialize(double xmax, int N, bool normalize=true);
+    
+    /** Value */
+    inline double getValue(double x) const {
+        x=ABS(x);
+        if (x>xmax) return 0;
+        else
+        {
+            double aux=x*ixstep;
+            int iaux=ROUND(aux);
+            return DIRECT_VEC_ELEM(v,iaux);
+        }
+    }
+};
+
 /** Show a vector.
   * @ingroup VectorsUtilities */
 template<typename T>
