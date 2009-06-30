@@ -770,7 +770,7 @@ void VQ::write(const FileName &fnRoot) const
             SFclass[currentAssignment(i)].insert(SFv[i]);
 
     for (int q=0; q<Q; q++)
-        SFclass[q].write(fnRoot+integerToString(q,5)+".sel");
+        SFclass[q].write(fnRoot+integerToString(q,6)+".sel");
 }
 
 void VQ::lookNode(Matrix2D<double> &I, int idx, int oldnode,
