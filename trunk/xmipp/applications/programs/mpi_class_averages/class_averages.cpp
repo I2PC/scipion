@@ -770,7 +770,7 @@ void VQ::write(const FileName &fnRoot) const
             SFclass[currentAssignment(i)].insert(SFv[i]);
 
     for (int q=0; q<Q; q++)
-        SFclass[q].write(fnRoot+integerToString(q,3)+".sel");
+        SFclass[q].write(fnRoot+integerToString(q,5)+".sel");
 }
 
 void VQ::lookNode(Matrix2D<double> &I, int idx, int oldnode,
@@ -1159,7 +1159,7 @@ void VQ::run(const FileName &fnOut, int rank)
         
         currentAssignment=newAssignment;
         if (rank==0)
-	    write(fnOut+"_"+integerToString(Q,3)+"_");
+	    write(fnOut+"_level_"+integerToString(n,2)+"_");
         
 
         if (n>0 && Nchanges<0.005*N && Q>1 || n>=(Niter-1)) 
@@ -1574,7 +1574,7 @@ void Prog_VQ_prm::usage() const
               << "   [-codes0 <N=2]        : Initial number of code vectors\n"
               << "   [-codesSel0 <selfile>]: Selfile with initial code vectors\n"
               << "   [-codes <N=16>]       : Final number of code vectors\n"
-              << "   [-neigh <N=3>]        : Number of neighbour code vectors\n"
+              << "   [-neigh <N=4>]        : Number of neighbour code vectors\n"
               << "                         : Set -1 for all\n"
               << "   [-minsize <N=20>]     : Percentage minimum node size\n"
               << "   [-no_mirror]          : Do not check mirrors\n"
