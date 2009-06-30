@@ -14,11 +14,11 @@
 # {file} Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
-InSelFile='imgs1000.sel'
+InSelFile='imgs.sel'
 # Working subdirectory:
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
-WorkingDir='CL2D/CL2ref'
+WorkingDir='CL2D/CL256ref'
 # Delete working subdirectory if it already exists?
 """ Just be careful with this option...
 """
@@ -35,7 +35,7 @@ LogDir='Logs'
 # {section} class_averages parameters
 #------------------------------------------------------------------------------------------------
 # Number of references (or classes) to be used:
-NumberOfReferences=2
+NumberOfReferences=256
 
 # {expert} Number of iterations
 """ Maximum number of iterations within each level
@@ -60,13 +60,15 @@ AdditionalParameters=''
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
 # Number of MPI processes to use:
-NumberOfMpiProcesses=8
+NumberOfMpiProcesses=32
+
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
     Ask the person who installed your xmipp version, which option to use. 
     Or read: http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParallelPage. 
 """
-SystemFlavour=''
+SystemFlavour='TORQUE-OPENMPI'
+DoParallel=True
 
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
@@ -78,6 +80,7 @@ AnalysisScript='visualize_cl2d.py'
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
+
 class CL2D_class:
 
     #init variables
