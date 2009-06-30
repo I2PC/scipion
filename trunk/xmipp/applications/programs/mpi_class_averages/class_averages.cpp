@@ -736,13 +736,14 @@ void VQ::initialize(SelFile &_SF, int _Niter, int _Nneighbours,
 void VQ::write(const FileName &fnRoot) const
 {
     int Q=P.size();
+    int Nimg=SFv.size();
     SelFile SFout;
     DocFile DFout;
     Matrix1D<double> aux, Nq, dq;
     aux.resize(2);
     Nq.resize(Q);
     dq.resize(Q);
-    DFout.append_comment("Number of imgs assigned, Cluster");
+    DFout.append_comment("Number of imgs assigned, Fraction of imgs assigned");
     for (int q=0; q<Q; q++)
     {
         FileName fnOut;
@@ -753,6 +754,7 @@ void VQ::write(const FileName &fnRoot) const
         SFout.insert(fnOut);
         DFout.append_comment(fnOut);
         Nq(q)=aux(0)=P[q]->currentListImg.size();
+        aux(1)=aux(0)/Nimg;
         DFout.append_data_line(aux);
     }
     SFout.write(fnRoot+".sel");
@@ -876,7 +878,7 @@ void VQ::updateNonCode(Matrix2D<double> &I, int newnode)
 
 /* Run VQ ------------------------------------------------------------------ */
 //#define DEBUG
-void VQ::run(const FileName &fnOut, int rank)
+void VQ::run(const FileName &fnOut, int level, int rank)
 {
     int N=SF->ImgNo();
     int Q=P.size();
@@ -1159,7 +1161,7 @@ void VQ::run(const FileName &fnOut, int rank)
         
         currentAssignment=newAssignment;
         if (rank==0)
-	    write(fnOut+"_level_"+integerToString(n,2)+"_");
+	    write(fnOut+"_level_"+integerToString(level,2)+"_");
         
 
         if (n>0 && Nchanges<0.005*N && Q>1 || n>=(Niter-1)) 
@@ -1604,7 +1606,8 @@ void Prog_VQ_prm::produce_side_info(int rank)
 
 void Prog_VQ_prm::run(int rank)
 {
-    vq.run(fnOut,rank);
+    int level=0;
+    vq.run(fnOut,level,rank);
     
     int Q=vq.P.size();
     
@@ -1620,7 +1623,8 @@ void Prog_VQ_prm::run(int rank)
             vq.splitFirstNode(rank);
         
 	Q=vq.P.size();	
-        vq.run(fnOut,rank);
+        level++;
+        vq.run(fnOut,level,rank);
     }
     if (rank==0)
     {

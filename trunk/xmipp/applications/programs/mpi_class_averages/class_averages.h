@@ -188,7 +188,7 @@ public:
     void transferUpdates();
 
     /** Quantize with the current number of codevectors */
-    void run(const FileName &fnOut, int rank);
+    void run(const FileName &fnOut, int level, int rank);
 
     /** Clean empty nodes.
         The number of nodes removed is returned. */
