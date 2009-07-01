@@ -18,7 +18,7 @@ InSelFile='imgs.sel'
 # Working subdirectory:
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
-WorkingDir='CL2D/CL256ref'
+WorkingDir='CL2D/CL64ref'
 # Delete working subdirectory if it already exists?
 """ Just be careful with this option...
 """
@@ -35,12 +35,17 @@ LogDir='Logs'
 # {section} class_averages parameters
 #------------------------------------------------------------------------------------------------
 # Number of references (or classes) to be used:
-NumberOfReferences=256
+NumberOfReferences=64
+
+# {expert} Number of initial references
+""" Initial number of initial models
+"""
+NumberOfReferences0=8
 
 # {expert} Number of iterations
 """ Maximum number of iterations within each level
 """
-NumberOfIterations=10
+NumberOfIterations=20
 
 # Also include mirror transformation in the alignment?
 """  Including the mirror transformation is useful if your particles have a handedness and may fall either face-up or face-down on the grid.
@@ -91,6 +96,7 @@ class CL2D_class:
                  ProjectDir,
                  LogDir,
                  NumberOfReferences,
+                 NumberOfReferences0,
                  NumberOfIterations,
                  DoMirror,
                  DoFast,
@@ -106,6 +112,7 @@ class CL2D_class:
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir
         self.NumberOfReferences=NumberOfReferences
+        self.NumberOfReferences0=NumberOfReferences0
         self.NumberOfIterations=NumberOfIterations
         self.DoMirror=DoMirror
         self.DoFast=DoFast
@@ -150,6 +157,7 @@ class CL2D_class:
         print '*  Executing class_averages program :' 
         params= '-i '+str(self.InSelFile)+' -o '+WorkingDir+'/class '+\
                 ' -codes '+str(self.NumberOfReferences)+\
+                ' -codes0 '+str(self.NumberOfReferences0)+\
                 ' -iter '+str(self.NumberOfIterations)
         params+=' '+self.AdditionalParameters
         if (self.DoFast):
@@ -182,6 +190,7 @@ if __name__ == '__main__':
                     ProjectDir,
                     LogDir,
                     NumberOfReferences,
+                    NumberOfReferences0,
                     NumberOfIterations,
                     DoMirror,
                     DoFast,
