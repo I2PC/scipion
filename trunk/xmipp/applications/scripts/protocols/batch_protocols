@@ -16,5 +16,9 @@ else
   echo " + Reading existing copy of xmipp_protocol_setup.py ... "
 endif
 echo " + Launching GUI ... " 
-python ${scriptdir}/xmipp_protocol_gui.py xmipp_protocol_setup.py
+if ($#argv == 0) then
+  python ${scriptdir}/xmipp_protocol_gui.py xmipp_protocol_setup.py
+else
+  python ${scriptdir}/xmipp_protocol_gui.py $argv[1]
+endif
 
