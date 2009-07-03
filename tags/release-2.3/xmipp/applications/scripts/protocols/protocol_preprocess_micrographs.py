@@ -722,8 +722,8 @@ class preprocess_A_class:
             os.remove(paramname)
         AngPix = (10000. * self.ScannedPixelSize * self.Down) / self.Magnification
         paramlist = []
-        paramlist.append('defocusU= -'+str(DF1)+'\n')
-        paramlist.append('defocusV= -'+str(DF2)+'\n')
+        paramlist.append('defocusU= '+str(-1. * float(DF1))+'\n')
+        paramlist.append('defocusV= '+str(-1. * float(DF2))+'\n')
         paramlist.append('azimuthal_angle= '+str(Angle)+'\n')
         paramlist.append('sampling_rate= '+str(AngPix)+'\n')
         paramlist.append('voltage= '+str(self.Voltage)+'\n')
