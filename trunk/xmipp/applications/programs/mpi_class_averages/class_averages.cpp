@@ -1238,7 +1238,8 @@ void VQ::splitNode(VQProjection *node,
         {
             node1->nextListImg.clear();
             node2->nextListImg.clear();
-            if( rank == 0 )
+            
+	    if( rank == 0 )
 	    {	
 	    	std::cerr << "Split iteration " << it << std::endl;
             	init_progress_bar(imax);
@@ -1251,6 +1252,9 @@ void VQ::splitNode(VQProjection *node,
                 compute_hist(corrList,hist,100);
                 corrThreshold=hist.percentil(50);
             }
+	    
+	    newAssignment.initZeros();
+	    
             for (int i=0; i<imax; i++)
             {
 	    	if( i % mpi_size == rank )
@@ -1317,11 +1321,10 @@ void VQ::splitNode(VQProjection *node,
                 	    if (i%25==0) progress_bar(i);
 		}
             }
-            
+	    
 	    // Share among other mpi workers
 	    MPI_Allreduce( newAssignment.data, auxAssignment.data, imax , MPI_INT, MPI_MAX, MPI_COMM_WORLD);
 	
-	    // CorrList
 	    if (it==0)
             {
              	Matrix1D<double> corrListAux;
