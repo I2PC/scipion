@@ -26,7 +26,7 @@
 
 __revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/script/scons.py 0.96.92.D002 2006/04/11 07:39:43 knight"
 
-__version__ = "0.96.92"
+__version__ = "1.2.0"
 
 __build__ = "D002"
 
