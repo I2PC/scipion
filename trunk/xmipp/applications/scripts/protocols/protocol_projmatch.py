@@ -1296,7 +1296,14 @@ def execute_projection_matching(_mylog,
       else:
          outputname   = ProjMatchRootName
          inputdocfile = _InputDocFileName
-
+      #THERE ARE PROBLEM WIT_H THREADAS AND projection matching
+      #I DISABLE IT TEMPORALY
+      _MyNumberOfMpiProcesses *= _MyNumberOfThreads
+      _MyNumberOfThreads = 1
+      #####################
+      ####################
+      ##################
+      ####################
       print '*********************************************************************'
       print '* Perform projection matching'
       parameters= ' -i '              + inputdocfile + \
