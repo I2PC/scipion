@@ -38,10 +38,19 @@ LogDir="Logs"
 #------------------------------------------------------------------------------------------------
 # Perform MLF2D instead of ML2D classification?
 DoMlf=False
+# Use CTF-amplitude correction inside MLF?
+""" If set to true, provide the ctfdat file in the field below. If set to false, one can ignore the ctfdat field, but has to provide the image pixel size in Angstrom"""
+DoCorrectAmplitudes=True
 # {file} CTFdat file with the input images:
 """ The names of both the images and the ctf-parameter files should be with absolute paths.
 """
 InCtfDatFile="all_images.ctfdat"
+# Image pixel size (in Angstroms)
+PixelSize=4.2
+# Are the images CTF phase flipped?
+""" You can run MLF with or without having phase flipped the images.
+"""
+ImagesArePhaseFlipped=True
 # High-resolution limit (in Angstroms)
 """ No frequencies higher than this limit will be taken into account. If zero is given, no limit is imposed
 """
@@ -119,7 +128,10 @@ class ML2D_class:
                  ProjectDir,
                  LogDir,
                  DoMlf,
+                 DoCorrectAmplitudes,
                  InCtfDatFile,
+                 PixelSize,
+                 ImagesArePhaseFlipped,
                  HighResLimit,
                  DoML2D,
                  NumberOfReferences,
@@ -141,7 +153,10 @@ class ML2D_class:
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir
         self.DoMlf=DoMlf
+        self.DoCorrectAmplitudes=DoCorrectAmplitudes
         self.HighResLimit=HighResLimit
+        self.PixelSize=PixelSize
+        self.ImagesArePhaseFlipped=ImagesArePhaseFlipped
         self.NumberOfReferences=NumberOfReferences
         self.DoMirror=DoMirror
         self.DoFast=DoFast
@@ -175,7 +190,7 @@ class ML2D_class:
             self.InSelFile=os.path.abspath(self.WorkingDir+'/'+InSelFile)
             newsel.write(self.InSelFile)
 
-            if (self.DoMlf):
+            if (self.DoMlf and self.DoCorrectAmplitudes):
                 # Copy CTFdat to the workingdir as well
                 shutil.copy(InCtfDatFile,self.WorkingDir+'/my.ctfdat')
 
@@ -214,7 +229,12 @@ class ML2D_class:
         if (self.NumberOfThreads > 1):
             params+= ' -thr ' + str(self.NumberOfThreads)
         if (self.DoMlf):
-            params+= ' -ctfdat my.ctfdat'
+            if (self.DoCorrectAmplitudes):
+                params+= ' -ctfdat my.ctfdat'
+            else:
+                params+= ' -no_ctf -pixel_size ' + str(self.PixelSize)
+            if (not self.ImagesArePhaseFlipped):
+                params+= ' -not_phase_flipped'
             if (self.HighResLimit > 0):
                 params += ' -high ' + str(self.HighResLimit)
 
@@ -269,7 +289,10 @@ if __name__ == '__main__':
                     ProjectDir,
                     LogDir,
                     DoMlf,
+                    DoCorrectAmplitudes,
                     InCtfDatFile,
+                    PixelSize,
+                    ImagesArePhaseFlipped,
                     HighResLimit,
                     DoML2D,
                     NumberOfReferences,
