@@ -27,7 +27,7 @@ WorkingDir='ML3D/test1'
 # Delete working subdirectory if it already exists?
 """ Just be careful with this option...
 """
-DoDeleteWorkingDir=True
+DoDeleteWorkingDir=False
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
@@ -39,6 +39,9 @@ LogDir='Logs'
 #------------------------------------------------------------------------------------------------
 # Perform MLF3D instead of ML3D classification?
 DoMlf=False
+# Use CTF-amplitude correction inside MLF?
+""" If set to true, provide the ctfdat file in the field below. If set to false, the ctfdat field can be ignored"""
+DoCorrectAmplitudes=True
 # {file} CTFdat file with the input images:
 """ The names of both the images and the ctf-parameter files should be with absolute paths. If you want to use this, make sure also the images in the input selfile (see above) are with absolute paths.
 """
@@ -195,6 +198,7 @@ class ML3D_class:
                  ProjectDir,
                  LogDir,
                  DoMlf,
+                 DoCorrectAmplitudes,
                  InCtfDatFile,
                  ImagesArePhaseFlipped,
                  InitialMapIsAmplitudeCorrected,
@@ -231,6 +235,7 @@ class ML3D_class:
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir
         self.DoMlf=DoMlf
+        self.DoCorrectAmplitudes=DoCorrectAmplitudes
         self.RefForSeedsIsAmplitudeCorrected=InitialMapIsAmplitudeCorrected
         self.ImagesArePhaseFlipped=ImagesArePhaseFlipped
         self.SeedsAreAmplitudeCorrected=SeedsAreAmplitudeCorrected
@@ -279,7 +284,7 @@ class ML3D_class:
             self.InSelFile=os.path.abspath(self.WorkingDir+'/'+InSelFile)
             newsel.write(self.InSelFile)
 
-            if (self.DoMlf):
+            if (self.DoMlf and self.DoCorrectAmplitudes):
                 # Copy CTFdat to the workingdir as well
                 shutil.copy(InCtfDatFile,self.WorkingDir+'/my.ctfdat')
 
@@ -557,7 +562,10 @@ class ML3D_class:
         if (self.DoFourier):
             params+=' -fourier '
         if (self.DoMlf):
-            params+= ' -ctfdat my.ctfdat'
+            if (self.DoCorrectAmplitudes):
+                params+= ' -ctfdat my.ctfdat'
+            else:
+                params+= ' -no_ctf -pixel_size ' + str(self.PixelSize)
             if (not phase_flipped):
                 params+= ' -not_phase_flipped'
             if (not amplitude_corrected):
@@ -618,6 +626,7 @@ if __name__ == '__main__':
                     ProjectDir,
                     LogDir,
                     DoMlf,
+                    DoCorrectAmplitudes,
                     InCtfDatFile,
                     ImagesArePhaseFlipped,
                     InitialMapIsAmplitudeCorrected,
