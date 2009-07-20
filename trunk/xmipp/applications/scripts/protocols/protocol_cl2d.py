@@ -18,7 +18,7 @@ InSelFile='imgs.sel'
 # Working subdirectory:
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
-WorkingDir='CL2D/CL64ref'
+WorkingDir='CL2D/test'
 # Delete working subdirectory if it already exists?
 """ Just be careful with this option...
 """
@@ -26,16 +26,32 @@ DoDeleteWorkingDir=False
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
-ProjectDir='/gpfs/fs1/home/bioinfo/coss/Tilted_and_Untilted'
+ProjectDir='/gpfs/fs1/home/bioinfo/coss/Rafa'
 # {expert} Directory name for logfiles:
 """ All logfiles will be stored here
 """
 LogDir='Logs'
+
 #------------------------------------------------------------------------------------------------
-# {section} class_averages parameters
+# {section} Preprocessing parameters
+#------------------------------------------------------------------------------------------------
+# Sampling rate
+""" Sampling rate (Angstroms/Pixel) """
+SamplingRate = 1
+
+# Highpass cutoff frequency
+""" In (Angstroms/Pixel). Set to 0 if not desired """
+Highpass =0
+
+# Lowpass cutoff frequency
+""" In (Angstroms/Pixel). Set to 0 if not desired """
+Lowpass =0.25
+
+#------------------------------------------------------------------------------------------------
+# {section} Class averages parameters
 #------------------------------------------------------------------------------------------------
 # Number of references (or classes) to be used:
-NumberOfReferences=64
+NumberOfReferences=4
 
 # {expert} Number of initial references
 """ Initial number of initial models
@@ -65,7 +81,7 @@ AdditionalParameters=''
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
 # Number of MPI processes to use:
-NumberOfMpiProcesses=32
+NumberOfMpiProcesses=6
 
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
@@ -86,6 +102,8 @@ AnalysisScript='visualize_cl2d.py'
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 
+import os,sys,shutil
+
 class CL2D_class:
 
     #init variables
@@ -95,6 +113,9 @@ class CL2D_class:
                  DoDeleteWorkingDir,
                  ProjectDir,
                  LogDir,
+                 SamplingRate,
+                 Highpass,
+                 Lowpass,
                  NumberOfReferences,
                  NumberOfReferences0,
                  NumberOfIterations,
@@ -104,13 +125,15 @@ class CL2D_class:
                  NumberOfMpiProcesses,
                  SystemFlavour):
 	     
-        import os,sys,shutil
         scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
         sys.path.append(scriptdir) # add default search path
         import log,selfile
 
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir
+        self.SamplingRate=SamplingRate
+        self.Highpass=Highpass
+        self.Lowpass=Lowpass
         self.NumberOfReferences=NumberOfReferences
         self.NumberOfReferences0=NumberOfReferences0
         self.NumberOfIterations=NumberOfIterations
@@ -151,8 +174,41 @@ class CL2D_class:
         self.close()
 
     def execute_CLalign2D(self):
-        import os
-        import launch_job
+        import selfile,launch_job
+        if not self.Highpass==0 or not self.Lowpass==0:
+            highCutoff=self.Highpass/self.SamplingRate
+            lowCutoff=self.Lowpass/self.SamplingRate
+            slope=max(self.Highpass/2,0.01)
+            preprocessedDir=self.WorkingDir+"/Imgs"
+            
+            if os.path.exists(preprocessedDir):
+                shutil.rmtree(preprocessedDir)
+            
+            print '*********************************************************************'
+            print '*  Copying input images' 
+            mysel=selfile.selfile()
+            mysel.read(self.InSelFile)
+            newsel=mysel.copy_sel(preprocessedDir)
+            newsel.write(self.InSelFile)
+            params= '-i '+str(self.InSelFile)+\
+                    ' -fourier_mask raised_cosine '+str(slope)
+            if self.Highpass>0 and self.Lowpass>0:
+                params+=" -band_pass "+str(lowCutoff)+" "+str(highCutoff)
+            elif self.Highpass>0:
+                params+=" -high_pass "+str(highCutoff)
+            elif self.Lowpass>0:
+                params+=" -low_pass "+str(lowCutoff)
+            
+            print '*********************************************************************'
+            print '*  Executing Fourier filtering program :' 
+            launch_job.launch_job("xmipp_fourier_filter",
+                                  params,
+                                  self.log,
+                                  False,
+                                  1,
+                                  1,
+                                  self.SystemFlavour)
+
         print '*********************************************************************'
         print '*  Executing class_averages program :' 
         params= '-i '+str(self.InSelFile)+' -o '+WorkingDir+'/class '+\
@@ -165,9 +221,7 @@ class CL2D_class:
         if (not self.DoMirror):
             params+= ' -no_mirror '
 
-        program="xmipp_class_averages"
-           
-        launch_job.launch_job(program,
+        launch_job.launch_job("xmipp_class_averages",
                               params,
                               self.log,
                               True,
@@ -189,6 +243,9 @@ if __name__ == '__main__':
                     DoDeleteWorkingDir,
                     ProjectDir,
                     LogDir,
+                    SamplingRate,
+                    Highpass,
+                    Lowpass,
                     NumberOfReferences,
                     NumberOfReferences0,
                     NumberOfIterations,
