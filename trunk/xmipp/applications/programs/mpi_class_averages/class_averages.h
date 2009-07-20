@@ -196,7 +196,8 @@ public:
 
     /** Split node */
     void splitNode(VQProjection *node,
-        VQProjection *&node1, VQProjection *&node2, int rank) const;
+        VQProjection *&node1, VQProjection *&node2, int rank,
+	std::vector<int> &finalAssignment) const;
 
     /** Split the widest node */
     void splitFirstNode(int rank);

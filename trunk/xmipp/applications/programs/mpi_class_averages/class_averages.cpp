@@ -1126,7 +1126,8 @@ void VQ::run(const FileName &fnOut, int level, int rank)
                 // Now split the largest node
                 VQProjection *node1=new VQProjection;
                 VQProjection *node2=new VQProjection;
-                splitNode(P[largestNode],node1,node2,rank);
+		std::vector<int> finalAssignment;
+                splitNode(P[largestNode],node1,node2,rank, finalAssignment);
                 delete P[largestNode];
                 delete P[smallNode];
                 P[largestNode]=node1;
@@ -1135,27 +1136,45 @@ void VQ::run(const FileName &fnOut, int level, int rank)
                 for (int i=0; i<toReassign.size(); i++)
                 {
                     ImageXmipp I;
-                    I.read(SFv[toReassign[i]]);
-                    I().setXmippOrigin();
-                    I().statisticsAdjust(0,1);
+		    
+		    newAssignment(toReassign[i]) = -1;
+		    
+		    for( int j=0; j<finalAssignment.size(); j+=2)
+		    {
+		    	if( finalAssignment[j] == toReassign[i])
+			{
+			     if (finalAssignment[j+1]==1)
+			         newAssignment(toReassign[i])=largestNode;
+			     else 
+			         newAssignment(toReassign[i])=smallNode;
+			     break;
+			}
+		    }
+		    
+		    if(  newAssignment(toReassign[i]) == -1 )
+		    {
+                         I.read(SFv[toReassign[i]]);
+                         I().setXmippOrigin();
+                         I().statisticsAdjust(0,1);
 
-                    Matrix2D<double> Iaux1;
-                    Iaux1=I();
-                    double corrCode1, likelihood1;
-                    node1->fit(Iaux1, sigma, noMirror, corrCode1, likelihood1);
+                         Matrix2D<double> Iaux1;
+                         Iaux1=I();
+               		 double corrCode1, likelihood1;
+               		 node1->fit(Iaux1, sigma, noMirror, corrCode1, likelihood1);
 
-                    Matrix2D<double> Iaux2;
-                    Iaux2=I();
-                    double corrCode2, likelihood2;
-                    node2->fit(Iaux2, sigma, noMirror, corrCode2, likelihood2);
+               		 Matrix2D<double> Iaux2;
+               		 Iaux2=I();
+               		 double corrCode2, likelihood2;
+                 	 node2->fit(Iaux2, sigma, noMirror, corrCode2, likelihood2);
 
-                    if (likelihood1>likelihood2 && likelihood1>0 ||
-                        likelihood1<0 && likelihood2<0 &&
-                           ABS(likelihood1)>ABS(likelihood2))
-                        newAssignment(toReassign[i])=largestNode;
-                    else
-                        newAssignment(toReassign[i])=smallNode;
-                }
+               		 if (likelihood1>likelihood2 && likelihood1>0 ||
+               		     likelihood1<0 && likelihood2<0 &&
+                      	     ABS(likelihood1)>ABS(likelihood2))
+                                  newAssignment(toReassign[i])=largestNode;
+                         else
+                             newAssignment(toReassign[i])=smallNode;
+                    }
+		}
             }
         } while (smallNodes);
         
@@ -1191,11 +1210,12 @@ int VQ::cleanEmptyNodes()
 /* Split ------------------------------------------------------------------- */
 //#define DEBUG
 void VQ::splitNode(VQProjection *node,
-    VQProjection *&node1, VQProjection *&node2, int rank) const
+    VQProjection *&node1, VQProjection *&node2, int rank, std::vector<int> &finalAssignment) const
 {
     bool finish=true;
-    std::vector<VQProjection *> toDelete;
-    
+    std::vector<VQProjection *> toDelete; 
+    Matrix1D<int> newAssignment;
+
     int mpi_size;
 	
     MPI_Comm_size( MPI_COMM_WORLD, &mpi_size );
@@ -1227,7 +1247,6 @@ void VQ::splitNode(VQProjection *node,
 	Matrix1D<int> oldAssignment;
         oldAssignment.resize(imax);
         oldAssignment.initConstant(-1);
-        Matrix1D<int> newAssignment;
         newAssignment.resize(imax);
         Matrix1D<int> auxAssignment;
         auxAssignment.resize(imax);
@@ -1527,6 +1546,12 @@ void VQ::splitNode(VQProjection *node,
     } while (!finish);
     for (int i=0; i<toDelete.size(); i++)
         delete toDelete[i];
+   
+    for (int i=0; i<node->currentListImg.size(); i++)
+    {
+        finalAssignment.push_back( node->currentListImg[i] ); 
+	finalAssignment.push_back( newAssignment(i) );
+    }    
 }
 #undef DEBUG
 
@@ -1535,7 +1560,8 @@ void VQ::splitFirstNode(int rank) {
     int Q=P.size();
     P.push_back(new VQProjection());
     P.push_back(new VQProjection());
-    splitNode(P[0],P[Q],P[Q+1],rank);
+    std::vector<int> finalAssignment;
+    splitNode(P[0],P[Q],P[Q+1],rank, finalAssignment);
     delete P[0];
     P[0]=NULL;
     P.erase(P.begin());    
