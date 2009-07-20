@@ -792,7 +792,7 @@ if int(env['tiff']):
 
 # QT
 if int(env['gui']):
-    envQT = env.Copy()
+    envQT = env.Clone()
     
     if int(env['QT4']):
         # FIXME see SConstruct

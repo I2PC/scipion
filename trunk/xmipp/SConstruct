@@ -17,9 +17,9 @@ env.SConsignFile(base_dir + 'SCons.dblite')
 
 # read -or not- the cached -non default- options
 if (ARGUMENTS['mode'] == 'configure'):
-    opts = Options(None, ARGUMENTS)
+    opts = Variables(None, ARGUMENTS)
 else:
-    opts = Options('options.cache', ARGUMENTS)
+    opts = Variables('options.cache', ARGUMENTS)
 
 opts.Add('CC', 'The C compiler', 'gcc')
 opts.Add('CXX', 'The C++ compiler', 'g++')
@@ -31,24 +31,24 @@ opts.Add('LINKERFORPROGRAMS', 'Linker for programs', 'g++')
 #opts.Add('CCFLAGS', 'The C compiler flags', None)
 opts.Add('CXXFLAGS', 'The C++ compiler flags', None)
 
-opts.Add(BoolOption('debug', 'Build debug version?', 'no'))
-opts.Add(BoolOption('warn', 'Show warnings?', 'no'))
-opts.Add(BoolOption('fast', 'Fast?', 'no'))
-opts.Add(BoolOption('static', 'Prevent dynamic linking?', 'no'))
+opts.Add(BoolVariable('debug', 'Build debug version?', 'no'))
+opts.Add(BoolVariable('warn', 'Show warnings?', 'no'))
+opts.Add(BoolVariable('fast', 'Fast?', 'no'))
+opts.Add(BoolVariable('static', 'Prevent dynamic linking?', 'no'))
 
-opts.Add(BoolOption('gui', 'Build the GUI (qt) programs?', 'yes'))
+opts.Add(BoolVariable('gui', 'Build the GUI (qt) programs?', 'yes'))
 opts.Add('QTDIR', 'Where is QT installed', '/usr/share/qt3')
 opts.Add('QT_LIB', 'QT library to use', 'qt-mt')
-opts.Add(BoolOption('QT4', 'Use Qt4 instead of Qt3?', 'no'))
+opts.Add(BoolVariable('QT4', 'Use Qt4 instead of Qt3?', 'no'))
 
 opts.Add('prepend', 'What to prepend to executable names', 'xmipp')
-opts.Add(BoolOption('quiet', 'Hide command line?', 'yes'))
+opts.Add(BoolVariable('quiet', 'Hide command line?', 'yes'))
 
-opts.Add(BoolOption('tiff', 'Build the Tiff programs?', 'yes'))
+opts.Add(BoolVariable('tiff', 'Build the Tiff programs?', 'yes'))
 opts.Add('TIFF_INCLUDE', 'TIFF headers dir', '/usr/include')
 opts.Add('TIFF_LIBDIR', 'TIFF libraries dir', '/usr/lib')
 
-opts.Add(BoolOption('mpi', 'Build the MPI programs?', 'yes'))
+opts.Add(BoolVariable('mpi', 'Build the MPI programs?', 'yes'))
 opts.Add('MPI_CC', 'MPI C compiler', 'mpicc')
 opts.Add('MPI_CXX', 'MPI C++ compiler', 'mpiCC')
 opts.Add('MPI_LINKERFORPROGRAMS', 'MPI Linker for programs', 'mpiCC')
@@ -56,15 +56,15 @@ opts.Add('MPI_INCLUDE', 'MPI headers dir ', '/usr/include')
 opts.Add('MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib')
 opts.Add('MPI_LIB', 'MPI library', 'mpich')
 
-opts.Add(BoolOption('swig', 'Build the Xmipp pythonization?', 'no'))
+opts.Add(BoolVariable('swig', 'Build the Xmipp pythonization?', 'no'))
 opts.Add('SWIG', 'SWIG compiler', 'swig')
 
 opts.Add('prefix', 'Base installation directory', Dir('.').abspath)
 
-opts.Add(BoolOption('matlab', 'Build the Matlab bindings?', 'no'))
+opts.Add(BoolVariable('matlab', 'Build the Matlab bindings?', 'no'))
 opts.Add('MATLAB_DIR', 'Matlab installation dir', '/usr/local/matlab')
 
-opts.Add(BoolOption('verbose_fftw', 'Verbose configuring of FFTW libraries?', 'no'))
+opts.Add(BoolVariable('verbose_fftw', 'Verbose configuring of FFTW libraries?', 'no'))
 opts.Add('FFTWFLAGS', 'Additional flags for FFTW configure', '')
 
 opts.Update(env)
