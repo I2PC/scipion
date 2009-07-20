@@ -179,7 +179,7 @@ void rawWriteLine(
     unsigned char* raw_buf, unsigned char* tif_buf,
     unsigned int y,
     unsigned int imageWidth, unsigned int imageLength,
-    unsigned short bitsPerSample, unsigned short imageSampleFormat,
+    unsigned short bitsPerSample, unsigned short samplesPerPixel, unsigned short imageSampleFormat,
     int byte_swapped,
     char * zsMinval, char * zsMaxval)
 {
@@ -200,13 +200,18 @@ void rawWriteLine(
     {
         if (imageSampleFormat == SAMPLEFORMAT_INT) aux_pointer = (unsigned char *) & iVal;
         else aux_pointer = (unsigned char *) & uiVal;
+        if (samplesPerPixel!=1)
+        {
+            std::cerr<<"ERROR: samplePerPixel is not 1: not implemented for 16-bit images";
+            exit(1);
+        }
     }
     for (x = 0; x < imageWidth; x++)
     {
         switch (bitsPerSample)
         {
         case  8:
-            ucVal = tif_buf[x];
+            ucVal = tif_buf[samplesPerPixel * x];
             if (((double)ucVal) < minval) minval = (double)ucVal;
             else if (((double)ucVal) > maxval) maxval = (double)ucVal;
             raw_buf[y*imageWidth + x] = ucVal;
@@ -307,12 +312,11 @@ int main(int argc, char *argv[])
     // Sjors 6nov07: some scanners set samplesPerPixel to a very high value
     // If this happens, set to 1 and write a warning message...
     // Greyscale images are usually samplesPerPixel=1
-    // RGB images are usually samplesPerPixel=3
-    if (samplesPerPixel != 1)
+    // RGB images are usually samplesPerPixel=3 (this is only implemented for untiled 8-bit tiffs)
+    if (samplesPerPixel != 1 && samplesPerPixel != 3)
     {
-      std::cerr <<"WARNING! This tif has a value for samplesPerPixel larger than 1 (i.e. "<<samplesPerPixel<<")"<<std::endl;
-      std::cerr <<"         This could mean you are saving colour images (e.g. samplesPerPixel= 3)"<<std::endl;
-      std::cerr <<"         or that your tiff file header is not correctly set"<<std::endl;
+      std::cerr <<"WARNING! This tif has a strange value for samplesPerPixel (i.e. "<<samplesPerPixel<<")"<<std::endl;
+      std::cerr <<"         Some scanners do not set this value correctly"<<std::endl;
       std::cerr <<"         Setting samplePerPixel to 1 and continuing execution ... "<<std::endl;
       samplesPerPixel = 1;      
     }
@@ -322,6 +326,11 @@ int main(int argc, char *argv[])
         TIFFGetField(tif, TIFFTAG_TILEWIDTH,       &tileWidth);
         TIFFGetField(tif, TIFFTAG_TILELENGTH,      &tileLength);
         tif_buf = (unsigned char*)_TIFFmalloc(TIFFTileSize(tif));
+        if (samplesPerPixel != 1)
+        {
+            std::cerr<<"ERROR: samplePerPixel is not 1: not implemented for tiled images";
+            exit(1);
+        }
     }
     else
     {
@@ -378,7 +387,7 @@ int main(int argc, char *argv[])
             TIFFReadScanline(tif, tif_buf, y);
             rawWriteLine(raw_buf, tif_buf, y,
                          imageWidth, imageLength,
-                         bitsPerSample, imageSampleFormat,
+                         bitsPerSample, samplesPerPixel, imageSampleFormat,
                          byte_swapped,
                          zsMinval, zsMaxval);
         }
