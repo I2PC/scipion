@@ -14,11 +14,11 @@
 # {file} Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
-InSelFile='imgs.sel'
+InSelFile='new.sel'
 # Working subdirectory:
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
-WorkingDir='CL2D/test'
+WorkingDir='CL2D/classes32filt'
 # Delete working subdirectory if it already exists?
 """ Just be careful with this option...
 """
@@ -41,22 +41,22 @@ SamplingRate = 1
 
 # Highpass cutoff frequency
 """ In (Angstroms/Pixel). Set to 0 if not desired """
-Highpass =0
+Highpass =0.01
 
 # Lowpass cutoff frequency
 """ In (Angstroms/Pixel). Set to 0 if not desired """
-Lowpass =0.25
+Lowpass =0.4
 
 #------------------------------------------------------------------------------------------------
 # {section} Class averages parameters
 #------------------------------------------------------------------------------------------------
 # Number of references (or classes) to be used:
-NumberOfReferences=4
+NumberOfReferences=32
 
 # {expert} Number of initial references
 """ Initial number of initial models
 """
-NumberOfReferences0=8
+NumberOfReferences0=4
 
 # {expert} Number of iterations
 """ Maximum number of iterations within each level
@@ -81,7 +81,7 @@ AdditionalParameters=''
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
 # Number of MPI processes to use:
-NumberOfMpiProcesses=6
+NumberOfMpiProcesses=64
 
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
@@ -193,7 +193,7 @@ class CL2D_class:
             params= '-i '+str(self.InSelFile)+\
                     ' -fourier_mask raised_cosine '+str(slope)
             if self.Highpass>0 and self.Lowpass>0:
-                params+=" -band_pass "+str(lowCutoff)+" "+str(highCutoff)
+                params+=" -band_pass "+str(highCutoff)+" "+str(lowCutoff)
             elif self.Highpass>0:
                 params+=" -high_pass "+str(highCutoff)
             elif self.Lowpass>0:
