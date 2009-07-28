@@ -67,7 +67,8 @@ public:
 #define CTF           5
 #define WEDGE         7
 #define GAUSSIAN      8
-    /** Pass band. LOWPASS, HIGHPASS, BANDPASS, STOPBAND, CTF, WEDGE,
+#define CONE          9
+    /** Pass band. LOWPASS, HIGHPASS, BANDPASS, STOPBAND, CTF, WEDGE, CONE
        GAUSSIAN, FROM_FILE */
     int FilterBand;
 

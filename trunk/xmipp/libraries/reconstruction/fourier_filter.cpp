@@ -97,6 +97,14 @@ void FourierMask::read(int argc, char **argv)
         FilterShape = WEDGE;
         do_generate_3dmask = true;
     }
+    else if (strcmp(argv[i+1], "cone") == 0)
+    {
+        if (i + 2 >= argc)
+            REPORT_ERROR(3000, "FourierMask: Cone needs one angle parameter");
+        w1 = textToFloat(argv[i+2]);
+        FilterShape = CONE;
+        do_generate_3dmask = true;
+    }
     else if (strcmp(argv[i+1], "gaussian") == 0)
     {
         FilterShape = GAUSSIAN;
@@ -152,6 +160,10 @@ void FourierMask::show()
     {
         std::cout << "Missing wedge for data between tilting angles of " << w1 << " and " << w2 << " deg\n";
     }
+    else if (FilterShape == CONE)
+    {
+        std::cout << "Missing cone for RCT data with tilting angles up to " << w1 << " deg\n";
+    }
     else
     {
         std::cout << "Filter Band: ";
@@ -198,7 +210,8 @@ void FourierMask::usage()
               << "   -band_pass <w1> <w2>              : Cutoff freq (<1/2 or A)\n"
               << "   -stop_band <w1> <w2>              : Cutoff freq (<1/2 or A)\n"
               << "   -fourier_mask raised_cosine <raisedw>: Use raised cosine edges (in dig.freq.)\n"
-              << "   -fourier_mask wedge <th0> <thF>   : Missing wedge for data between th0-thF \n"
+              << "   -fourier_mask wedge <th0> <thF>   : Missing wedge (along y) for data between th0-thF \n"
+              << "   -fourier_mask cone <th0>          : Missing cone for tilt angles up to th0 \n"
               << "   -fourier_mask gaussian            : sigma=<w1>\n"
               << "   -fourier_mask ctf                 : Provide a .ctfparam file\n"
               << "  [-sampling <sampling_rate>]        : If provided pass frequencies\n"
@@ -306,13 +319,25 @@ void FourierMask::generate_mask(Matrix3D<double> &v)
         maskFourier3D.resize(Fourier);
         Matrix3D<double> mask(v);
         mask.setXmippOrigin();
+        Matrix2D<double> A(3,3);
+        A.initIdentity();
+        Matrix3D<int> imask;
 
+        VolumeXmipp Vt;
         switch (FilterShape)
         {
             case WEDGE:
-                Matrix2D<double> A(3,3);
-                A.initIdentity();
                 BinaryWedgeMask(mask, w1, w2, A);
+                break;
+            case CONE:
+                imask.resize(v);
+                BinaryConeMask(imask,90. - w1);
+                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(imask)
+                {
+                    DIRECT_MULTIDIM_ELEM(mask,n)=(double)(DIRECT_MULTIDIM_ELEM(imask,n));
+                }
+                Vt=mask;
+                Vt.write("cone.vol");
                 break;
         }
         
