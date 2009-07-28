@@ -160,6 +160,11 @@ void Prog_ml_tomo_prm::read(int argc, char **argv)
     tilt_rangeF = textToFloat(getParameter(argc2, argv2, "-tiltF", "91."));
     ang_search = textToFloat(getParameter(argc2, argv2, "-ang_search", "-1."));
 
+    // Skip alignment (and classification)
+    dont_align = checkParameter(argc2, argv2, "-dont_align");
+    fn_mask = getParameter(argc2, argv2, "-mask", "");
+    do_only_average = checkParameter(argc2, argv2, "-only_average");
+
     // Missing data structures 
     fn_missing = getParameter(argc2, argv2, "-missing","");
     dim = textToInteger(getParameter(argc2, argv2, "-dim", "-1"));
@@ -193,10 +198,13 @@ void Prog_ml_tomo_prm::show()
         else
             std::cerr << "  Number of references:   : " << nr_ref << std::endl;
         std::cerr << "  Output rootname         : " << fn_root << std::endl;
-        std::cerr << "  Angular sampling rate   : " << angular_sampling<< " degrees"<<std::endl;
-        if (ang_search > 0.)
+        if (!(dont_align||do_only_average))
         {
-            std::cerr << "  Local angular searches  : "<<ang_search<<" degrees"<<std::endl;
+             std::cerr << "  Angular sampling rate   : " << angular_sampling<< " degrees"<<std::endl;
+            if (ang_search > 0.)
+            {
+                std::cerr << "  Local angular searches  : "<<ang_search<<" degrees"<<std::endl;
+            }
         }
         std::cerr << "  Symmetry group          : " << fn_sym<<std::endl;
         std::cerr << "  Stopping criterium      : " << eps << std::endl;
@@ -219,6 +227,16 @@ void Prog_ml_tomo_prm::show()
         if (fn_frac != "")
             std::cerr << "  Initial model fractions : " << fn_frac << std::endl;
 
+        if (dont_align)
+        {
+            std::cerr << "  -> Skip alignment, only classify "<< std::endl;
+            if (do_mask)
+                std::cerr << "  -> Classify within mask "<<fn_mask<< std::endl;
+        }
+        if (do_only_average)
+        {
+            std::cerr << "  -> Skip alignment and classification, only calculate weighted average "<<std::endl;
+        }
         if (!do_ml) 
         {
             std::cerr << "  -> Use constrained correlation coefficient instead of ML-imputation approach." << std::endl;
@@ -354,6 +372,26 @@ void Prog_ml_tomo_prm::produceSideInfo()
     real_omask.resize(real_mask);
     real_omask = 1. - real_mask;
 
+    if (fn_mask=="")
+    {
+        do_mask = false;
+    }
+    else
+    {
+        if (!dont_align)
+            REPORT_ERROR(1,"ERROR: option -mask is only valid in combination with -dont_align"); 
+        Imask.read(fn_mask);
+        Imask().setXmippOrigin();
+        // Remove any borders from the mask (to prevent problems rotating it later on)
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(int_mask)
+        {
+            DIRECT_MULTIDIM_ELEM(Imask(),n) *= (double)DIRECT_MULTIDIM_ELEM(int_mask,n);
+        }
+        if (Imask().computeMin() < 0. || Imask().computeMax() > 1.)
+            REPORT_ERROR(1,"ERROR: mask should have values within the range [0,1]");
+        nr_mask_pixels=Imask().sum();
+    }
+
     // Set-up fourier-space mask
     Matrix3D<double> cosine_mask(dim,dim,dim);
     cosine_mask.setXmippOrigin();
@@ -388,36 +426,57 @@ void Prog_ml_tomo_prm::produceSideInfo()
     DIRECT_MULTIDIM_ELEM(fourier_mask,0) = 0.;
     DIRECT_MULTIDIM_ELEM(fourier_imask,0) = 0.;
 
-    // Get number of references
-    if (fn_ref != "")
+    // Precalculate sampling
+    if (dont_align || do_only_average)
     {
-        do_generate_refs = false;
-        if (Is_VolumeXmipp(fn_ref)) nr_ref = 1;
-        else
-        {
-            SFr.read(fn_ref);
-            nr_ref = SFr.ImgNo();
-        }
+        if (fn_doc=="")
+            REPORT_ERROR(1,"Options -dont_align and -only_average require also option -doc");
+        ang_search = -1.;
     }
     else
-        do_generate_refs = true;
+    {
+        mysampling.SetSampling(angular_sampling);
+        if (!mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
+            REPORT_ERROR(3005, (std::string)"ml_refine3d::run Invalid symmetry" +  fn_sym);
+        mysampling.SL.read_sym_file(fn_sym);
+        mysampling.fill_L_R_repository();
+        // by default max_tilt= +91., min_tilt= -91.
+        mysampling.Compute_sampling_points(false, // half sphere?
+                                           tilt_rangeF,
+                                           tilt_range0);
+        mysampling.remove_redundant_points_exhaustive(symmetry, 
+                                                      sym_order, 
+                                                      false, // half sphere?
+                                                      0.75 * angular_sampling);
+        if (psi_sampling < 0)
+            psi_sampling = angular_sampling;
+    }
 
-    // Precalculate sampling
-    mysampling.SetSampling(angular_sampling);
-    if (!mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
-        REPORT_ERROR(3005, (std::string)"ml_refine3d::run Invalid symmetry" +  fn_sym);
-    mysampling.SL.read_sym_file(fn_sym);
-    mysampling.fill_L_R_repository();
-    // by default max_tilt= +91., min_tilt= -91.
-    mysampling.Compute_sampling_points(false, // half sphere?
-                                       tilt_rangeF,
-                                       tilt_range0);
-    mysampling.remove_redundant_points_exhaustive(symmetry, 
-                                                  sym_order, 
-                                                  false, // half sphere?
-                                                  0.75 * angular_sampling);
-    if (psi_sampling < 0)
-        psi_sampling = angular_sampling;
+    if (do_only_average)
+    {
+        DocFile DF;
+        DF.read(fn_doc);
+        Matrix1D<double> refnos=DF.col(6);
+        nr_ref=refnos.computeMax();
+        Niter=1;
+        do_impute=false;
+    }
+    else
+    {
+        // Get number of references
+        if (fn_ref != "")
+        {
+            do_generate_refs = false;
+            if (Is_VolumeXmipp(fn_ref)) nr_ref = 1;
+            else
+            {
+                SFr.read(fn_ref);
+                nr_ref = SFr.ImgNo();
+            }
+        }
+        else
+            do_generate_refs = true;
+    }
 
     // Read in docfile with information about the missing wedges
     nr_miss = 0;
@@ -595,7 +654,7 @@ void Prog_ml_tomo_prm::preparePowerSpectraAdjustment()
             Itmp.read(fn_img);
             Itmp().setXmippOrigin();
             reScaleVolume(Itmp(),true);
-            if (do_keep_angles)
+            if (do_keep_angles || dont_align || do_only_average)
             {
                 // angles from docfile
                 my_rot = DF(0);
@@ -766,11 +825,12 @@ void Prog_ml_tomo_prm::generateInitialReferences()
         Msumwedge2.initZeros();
         SFtmp.go_beginning();
         SFtmp.jump_lines(Nsub*refno);
-        if (refno == nr_ref - 1) Nsub = SFtmp.ImgNo() - refno * Nsub;
+        if (refno == nr_ref - 1) 
+            Nsub = SFtmp.ImgNo() - refno * Nsub;
         for (int nn = 0; nn < Nsub; nn++)
         {
             fn_tmp=SFtmp.NextImg();
-            if (do_keep_angles || do_missing)
+            if (do_keep_angles || do_missing || dont_align || do_only_average)
             {
                 // Going through the docfile again here is a bit dirty coding...
                 // Now do nothing, leave DF pointer at relevant position and read below
@@ -783,7 +843,7 @@ void Prog_ml_tomo_prm::generateInitialReferences()
             Itmp.read(fn_tmp);
             Itmp().setXmippOrigin();
             reScaleVolume(Itmp(),true);
-            if (do_keep_angles)
+            if (do_keep_angles || dont_align || do_only_average)
             {
                 // angles from docfile
                 my_rot = DF(0);
@@ -904,38 +964,153 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
     std::cerr<<"Start produceSideInfo2"<<std::endl;
 #endif
 
-    // Read in all reference images in memory
-    if (Is_VolumeXmipp(fn_ref))
+    // Regularization (do not regularize during restarts!)
+    if (istart == 1)
+        regularize(istart-1);
+
+    // Store tomogram angles, offset vectors and missing wedge parameters
+    imgs_missno.clear();
+    imgs_optrefno.clear();
+    imgs_optangno.clear();
+    imgs_trymindiff.clear();
+    imgs_optoffsets.clear();
+
+    for (int imgno = 0; imgno < SF.ImgNo(); imgno++)
     {
-        SFr.reserve(1);
-        SFr.insert(fn_ref);
+        Matrix1D<double> dum(3);
+        imgs_optrefno.push_back(0);
+        imgs_optangno.push_back(0);
+        imgs_trymindiff.push_back(-1.);
+        if (do_missing)
+            imgs_missno.push_back(-1);
+        if (dont_align || do_only_average)
+            imgs_optoffsets.push_back(dum);
+    }
+
+    if (fn_doc!="") {
+        DF.read(fn_doc);
+        SF.go_beginning();
+        int imgno = 0;
+        DFsub.clear();
+        while (!SF.eof()) 
+        {
+            fn_tmp=SF.NextImg();
+            if (fn_tmp=="") break;
+            DF.go_beginning();
+            if (DF.search_comment(fn_tmp)) 
+            {
+                // Get missing wedge type
+                if (do_missing)
+                {
+                    imgs_missno[imgno] = (int)(DF(7)) - 1;
+                }
+                // Generate a docfile from the (possible subset of) images in SF
+                if (ang_search > 0. || dont_align || do_only_average)
+                {
+                    DFsub.append_comment(fn_tmp);
+                    DL=DF.get_current_line();
+                    DFsub.append_line(DL);
+                    if (dont_align || do_only_average) 
+                    {
+                        imgs_optangno[imgno]=DFsub.dataLineNo()-1;
+                        imgs_optoffsets[imgno](0)=DL[3];
+                        imgs_optoffsets[imgno](1)=DL[4];
+                        imgs_optoffsets[imgno](2)=DL[5];
+                        imgs_optrefno[imgno]=DL[6]-1;
+                    }
+                }
+            } 
+            else 
+            {
+                std::cerr << "ERROR% "<<fn_tmp
+                          <<" not found in document file"
+                          <<std::endl;
+                exit(0);
+            }
+            imgno++;
+        }
+
+        // Set up local searches
+        if (ang_search > 0.)
+        {
+            mysampling.SetNeighborhoodRadius(ang_search);
+            mysampling.fill_exp_data_projection_direction_by_L_R(DFsub);
+            mysampling.remove_points_far_away_from_experimental_data();
+            mysampling.compute_neighbors();
+        }
+        // Or use sampling from docfile entries only
+        else if (dont_align || do_only_average)
+        {
+            angle_info myinfo;
+            //Rather than using mysampling use all entries in DFsub
+            all_angle_info.clear();
+            nr_ang = 0;
+            DFsub.go_first_data_line();
+            while (!DFsub.eof())
+            {
+                DL=DFsub.get_current_line();
+                myinfo.rot = DL[0];
+                myinfo.tilt = DL[1];
+                myinfo.psi = DL[2];
+                myinfo.A = Euler_rotation3DMatrix(myinfo.rot, myinfo.tilt, myinfo.psi);
+                myinfo.direction = nr_ang;
+                all_angle_info.push_back(myinfo);
+                nr_ang ++;
+                DFsub.next_data_line();
+            }
+        }
+    } 
+
+    // Prepare reference images
+    if (do_only_average)
+    {
+        img().initZeros(dim,dim,dim);
+        img().setXmippOrigin();
+        for (int refno = 0; refno < nr_ref; refno++)
+        {
+            Iref.push_back(img);
+            Iold.push_back(img);
+        }
     }
     else
     {
-        SFr.read(fn_ref);
-    }
-    nr_ref = 0;
-    SFr.go_beginning();
-    while ((!SFr.eof()))
-    {
-        FileName fn_img=SFr.NextImg();
-        img.read(fn_img);
-        img().setXmippOrigin();
-        reScaleVolume(img(),true);
-
-        // From now on we will assume that all references are omasked, so enforce this here
-        maskSphericalAverageOutside(img());
-
-        // Rotate some arbitrary (off-axis) angle and rotate back again to remove high frequencies
-        // that will be affected by the interpolation due to rotation
-        // This makes that the A2 values of the rotated references are much less sensitive to rotation
-        img().selfApplyGeometry( Euler_rotation3DMatrix(32., 61., 53.), IS_NOT_INV, 
-                                 DONT_WRAP, DIRECT_MULTIDIM_ELEM(img(),0) );
-        img().selfApplyGeometry( Euler_rotation3DMatrix(32., 61., 53.), IS_INV, 
-                                 DONT_WRAP, DIRECT_MULTIDIM_ELEM(img(),0) );
-        Iref.push_back(img);
-        Iold.push_back(img);
-        nr_ref++;
+        // Read in all reference images in memory
+        if (Is_VolumeXmipp(fn_ref))
+        {
+            SFr.reserve(1);
+            SFr.insert(fn_ref);
+        }
+        else
+        {
+            SFr.read(fn_ref);
+        }
+        nr_ref = 0;
+        SFr.go_beginning();
+        while ((!SFr.eof()))
+        {
+            FileName fn_img=SFr.NextImg();
+            img.read(fn_img);
+            img().setXmippOrigin();
+            if (do_mask)
+            {
+                img() *= Imask();
+            }
+            reScaleVolume(img(),true);
+            
+            // From now on we will assume that all references are omasked, so enforce this here
+            maskSphericalAverageOutside(img());
+            
+            // Rotate some arbitrary (off-axis) angle and rotate back again to remove high frequencies
+            // that will be affected by the interpolation due to rotation
+            // This makes that the A2 values of the rotated references are much less sensitive to rotation
+            img().selfApplyGeometry( Euler_rotation3DMatrix(32., 61., 53.), IS_NOT_INV, 
+                                     DONT_WRAP, DIRECT_MULTIDIM_ELEM(img(),0) );
+            img().selfApplyGeometry( Euler_rotation3DMatrix(32., 61., 53.), IS_INV, 
+                                     DONT_WRAP, DIRECT_MULTIDIM_ELEM(img(),0) );
+            Iref.push_back(img);
+            Iold.push_back(img);
+            nr_ref++;
+        }
     }
 
     // Prepare prior alpha_k
@@ -967,72 +1142,6 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
         // Even distribution
         alpha_k.initConstant(1./(double)nr_ref);
     }
-
-    // Regularization (do not regularize during restarts!)
-    if (istart == 1)
-        regularize(istart-1);
-
-    // Store tomogram angles, offset vectors and missing wedge parameters
-    imgs_missno.clear();
-    imgs_optrefno.clear();
-    imgs_optangno.clear();
-    imgs_trymindiff.clear();
-
-    for (int imgno = 0; imgno < SF.ImgNo(); imgno++)
-    {
-        imgs_optrefno.push_back(0);
-        imgs_optangno.push_back(0);
-        imgs_trymindiff.push_back(-1.);
-        if (do_missing)
-            imgs_missno.push_back(-1);
-    }
-
-    if (fn_doc!="") {
-        DF.read(fn_doc);
-        SF.go_beginning();
-        int imgno = 0;
-        DFsub.clear();
-        while (!SF.eof()) 
-        {
-            fn_tmp=SF.NextImg();
-            if (fn_tmp=="") break;
-            DF.go_beginning();
-            if (DF.search_comment(fn_tmp)) 
-            {
-                // Get missing wedge type
-                if (do_missing)
-                {
-                    imgs_missno[imgno] = (int)(DF(7)) - 1;
-                }
-                // Generate a docfile from the (possible subset of) images in SF
-                if (ang_search > 0.)
-                {
-                    DFsub.append_comment(fn_tmp);
-                    DL=DF.get_current_line();
-                    DFsub.append_line(DL);
-                }
-            } 
-            else 
-            {
-                std::cerr << "ERROR% "<<fn_tmp
-                          <<" not found in document file"
-                          <<std::endl;
-                exit(0);
-            }
-            imgno++;
-        }
-
-        // Set up local searches
-        if (ang_search > 0.)
-        {
-            mysampling.SetNeighborhoodRadius(ang_search);
-            mysampling.fill_exp_data_projection_direction_by_L_R(DFsub);
-            mysampling.remove_points_far_away_from_experimental_data();
-            mysampling.compute_neighbors();
-        }
-
-    } 
-
 
 //#define DEBUG_GENERAL
 #ifdef DEBUG_GENERAL
@@ -1632,13 +1741,22 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     int irot, irefmir, sigdim, xmax, ymax;
     int ioptpsi = 0, ioptlib = 0, ioptx = 0, iopty = 0, ioptz = 0, imax = 0;
     bool is_ok_trymindiff = false;
-    int old_optrefno = opt_refno;
-    int old_optangno = opt_angno;
+    int my_nr_ang, my_nr_ref, old_optangno = opt_angno, old_optrefno = opt_refno;
     std::vector<double> all_Xi2;
     Matrix2D<double> A_rot(4,4), I(4,4), A_rot_inv(4,4);
     bool is_a_neighbor;
     XmippFftw local_transformer;
 
+    if (dont_align || do_only_average)
+        my_nr_ang=1;
+    else
+        my_nr_ang=nr_ang;
+
+    if (do_only_average)
+        my_nr_ref=1;
+    else
+        my_nr_ref=nr_ref;
+        
     // Only translations smaller than 6 sigma_offset are considered!
     // TODO: perhaps 3 sigma??
     I.initIdentity();
@@ -1650,7 +1768,10 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     Maux2.resize(dim, dim, dim);
     Maux.setXmippOrigin();
     Maux2.setXmippOrigin();
-    Mweight.initZeros(sigdim, sigdim, sigdim);
+    if (dont_align || do_only_average)
+        Mweight.initZeros(1,1,1);
+    else
+        Mweight.initZeros(sigdim, sigdim, sigdim);
     Mweight.setXmippOrigin();
     Mzero.initZeros();
     Mzero2.initZeros();
@@ -1658,10 +1779,21 @@ void Prog_ml_tomo_prm::expectationSingleImage(
 
     sigma_noise2 = sigma_noise * sigma_noise;
 
+    Maux=Mimg;
+    // Apply inverse rotation to the mask and apply
+    if (do_mask)
+    {
+        if (!dont_align)
+            REPORT_ERROR(1,"BUG: !dont_align and do_mask cannot coincide at this stage...");
+        Matrix3D<double> Mmask;
+        A_rot = (all_angle_info[opt_angno]).A;
+        A_rot_inv = A_rot.inv();
+        applyGeometry(Mmask, A_rot_inv, Imask(), IS_NOT_INV, DONT_WRAP, 0.);
+        Maux *= Mmask; 
+    }
     // Calculate the unrotated Fourier transform with enforced wedge of Mimg (store in Fimg0)
     // also calculate myXi2;
     // Note that from here on local_transformer will act on Maux <-> Faux
-    Maux=Mimg;
     local_transformer.FourierTransform(Maux, Faux, false);
     if (do_missing)
     {
@@ -1714,7 +1846,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
         // This will speed-up things because we will find Pmax probably right away,
         // and this will make the if-statement that checks SIGNIFICANT_WEIGHT_LOW
         // effective right from the start
-        for (int aa = old_optangno; aa < old_optangno+nr_ang; aa++)
+        for (int aa = old_optangno; aa < old_optangno+my_nr_ang; aa++)
         {
             int angno = aa;
             if (angno >= nr_ang) angno -= nr_ang;
@@ -1740,7 +1872,6 @@ void Prog_ml_tomo_prm::expectationSingleImage(
             // If it is in the neighborhood: proceed
             if (is_a_neighbor)
             {
-
                 A_rot = (all_angle_info[angno]).A;
                 A_rot_inv = A_rot.inv();
 
@@ -1748,7 +1879,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                 // This will speed-up things because we will find Pmax probably right away,
                 // and this will make the if-statement that checks SIGNIFICANT_WEIGHT_LOW
                 // effective right from the start
-                for (int rr = old_optrefno; rr < old_optrefno+nr_ref; rr++)
+                for (int rr = old_optrefno; rr < old_optrefno+my_nr_ref; rr++)
                 {
                     int refno = rr;
                     if (refno >= nr_ref) refno-= nr_ref;
@@ -1984,15 +2115,37 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
     bool is_a_neighbor;
     double img_stddev, ref_stddev, corr, maxcorr=-9999.;
     int ioptx,iopty,ioptz;
+    int my_nr_ang, my_nr_ref, old_optangno = opt_angno, old_optrefno = opt_refno;
+
+    if (dont_align || do_only_average)
+        my_nr_ang=1;
+    else
+        my_nr_ang=nr_ang;
+    if (do_only_average)
+        my_nr_ref=1;
+    else
+        my_nr_ref=nr_ref;
+        
 
     I.initIdentity();
     Maux.resize(dim, dim, dim);
     Maux.setXmippOrigin();
 
+    Maux=Mimg;
+    // Apply inverse rotation to the mask and apply
+    if (do_mask)
+    {
+        if (!dont_align)
+            REPORT_ERROR(1,"BUG: !dont_align and do_mask cannot coincide at this stage...");
+        Matrix3D<double> Mmask;
+        A_rot = (all_angle_info[opt_angno]).A;
+        A_rot_inv = A_rot.inv();
+        applyGeometry(Mmask, A_rot_inv, Imask(), IS_NOT_INV, DONT_WRAP, 0.);
+        Maux *= Mmask; 
+    }
     // Calculate the unrotated Fourier transform with enforced wedge of Mimg (store in Fimg0)
     // also calculate myXi2;
     // Note that from here on local_transformer will act on Maux <-> Faux
-    Maux=Mimg;
     local_transformer.FourierTransform(Maux, Faux, false);
     if (do_missing)
     {
@@ -2017,8 +2170,11 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
     img_stddev = Mimg0.computeStddev();
 
     // Loop over all orientations
-    for (int angno = 0; angno < nr_ang; angno++)
+    for (int aa = old_optangno; aa < old_optangno+my_nr_ang; aa++)
     {
+        int angno = aa;
+        if (angno >= nr_ang) angno -= nr_ang;
+
         // See whether this image is in the neighborhoood for this imgno
         if (ang_search > 0.)
         {
@@ -2042,9 +2198,13 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
         {
             A_rot = (all_angle_info[angno]).A;
             A_rot_inv = A_rot.inv();
+
             // Loop over all references
-            for (int refno = 0; refno < nr_ref; refno++)
+            for (int rr = old_optrefno; rr < old_optrefno+my_nr_ref; rr++)
             {
+                int refno = rr;
+                if (refno >= nr_ref) refno-= nr_ref;
+
                 // Now (inverse) rotate the reference and calculate its Fourier transform
                 // Use DONT_WRAP because the reference has been omasked
                 applyGeometry(Maux, A_rot_inv, Iref[refno](), IS_NOT_INV, 
@@ -2077,17 +2237,33 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
                 local_transformer.inverseFourierTransform();
                 CenterFFT(Maux, true);
 
-                FOR_ALL_ELEMENTS_IN_MATRIX3D(Maux)
+                if (dont_align || do_only_average)
                 {
-                    corr = VOL_ELEM(Maux,k,i,j) / (img_stddev * ref_stddev);
+                    corr = VOL_ELEM(Maux,0,0,0) / (img_stddev * ref_stddev);
                     if (corr > maxcorr)
                     {
                         maxcorr = corr;
-                        ioptz = k;
-                        iopty = i;
-                        ioptx = j;
+                        ioptz = 0;
+                        iopty = 0;
+                        ioptx = 0;
                         opt_angno = angno;
                         opt_refno = refno;
+                    }
+                }
+                else
+                {
+                    FOR_ALL_ELEMENTS_IN_MATRIX3D(Maux)
+                    {
+                        corr = VOL_ELEM(Maux,k,i,j) / (img_stddev * ref_stddev);
+                        if (corr > maxcorr)
+                        {
+                            maxcorr = corr;
+                            ioptz = k;
+                            iopty = i;
+                            ioptx = j;
+                            opt_angno = angno;
+                            opt_refno = refno;
+                        }
                     }
                 }
             }
@@ -2209,6 +2385,12 @@ void * threadMLTomoExpectationSingleImage( void * data )
 
         img.read(fn_img);
         img().setXmippOrigin();
+
+        if (prm->dont_align || prm->do_only_average)
+        {
+            img().selfTranslate(prm->imgs_optoffsets[imgno], DONT_WRAP);
+        }
+
         prm->reScaleVolume(img(),true);
 
         if (prm->do_missing)
@@ -2229,24 +2411,18 @@ void * threadMLTomoExpectationSingleImage( void * data )
         Vt()=Maux;
         Vt.write(fn_img+".adjusted");
 #else
+        // These three parameters speed up expectationSingleImage
+        trymindiff = prm->imgs_trymindiff[imgno];
+        opt_refno = prm->imgs_optrefno[imgno];
+        opt_angno = prm->imgs_optangno[imgno];
+            
         if (prm->do_ml)
         {
             // A. Use maximum likelihood approach
-
-            // These three parameters speed up expectationSingleImage
-            trymindiff = prm->imgs_trymindiff[imgno];
-            opt_refno = prm->imgs_optrefno[imgno];
-            opt_angno = prm->imgs_optangno[imgno];
-            
             (*prm).expectationSingleImage(img(), imgno, missno, *Iref, *wsumimgs, *wsumweds, 
                                           *wsum_sigma_noise, *wsum_sigma_offset, 
                                           *sumw, *LL, dLL, fracweight, *sumfracweight, 
                                           trymindiff, opt_refno, opt_angno, opt_offsets);
-
-            // Store for next iteration
-            prm->imgs_trymindiff[imgno] = trymindiff;
-            prm->imgs_optrefno[imgno] = opt_refno;
-            prm->imgs_optangno[imgno] = opt_angno;
         }
         else
         {
@@ -2256,14 +2432,27 @@ void * threadMLTomoExpectationSingleImage( void * data )
                                                  opt_refno, opt_angno, opt_offsets);
         }
 
-        
+        // Store for next iteration
+        prm->imgs_trymindiff[imgno] = trymindiff;
+        prm->imgs_optrefno[imgno] = opt_refno;
+        prm->imgs_optangno[imgno] = opt_angno;
+       
         // Output docfile
-        (*docfiledata)[imgno](0) = (prm->all_angle_info[opt_angno]).rot; // rot
-        (*docfiledata)[imgno](1) = (prm->all_angle_info[opt_angno]).tilt;// tilt
-        (*docfiledata)[imgno](2) = (prm->all_angle_info[opt_angno]).psi; // psi
-        (*docfiledata)[imgno](3) = opt_offsets(0) / prm->scale_factor;   // Xoff
-        (*docfiledata)[imgno](4) = opt_offsets(1) / prm->scale_factor;   // Yoff
-        (*docfiledata)[imgno](5) = opt_offsets(2) / prm->scale_factor;   // Zoff
+        (*docfiledata)[imgno](0) = (prm->all_angle_info[opt_angno]).rot;     // rot
+        (*docfiledata)[imgno](1) = (prm->all_angle_info[opt_angno]).tilt;    // tilt
+        (*docfiledata)[imgno](2) = (prm->all_angle_info[opt_angno]).psi;     // psi
+        if (prm->dont_align || prm->do_only_average)
+        {
+            (*docfiledata)[imgno](3) = prm->imgs_optoffsets[imgno](0);       // Xoff
+            (*docfiledata)[imgno](4) = prm->imgs_optoffsets[imgno](1);       // Yoff
+            (*docfiledata)[imgno](5) = prm->imgs_optoffsets[imgno](2);       // zoff
+        }
+        else
+        {
+            (*docfiledata)[imgno](3) = opt_offsets(0) / prm->scale_factor;   // Xoff
+            (*docfiledata)[imgno](4) = opt_offsets(1) / prm->scale_factor;   // Yoff
+            (*docfiledata)[imgno](5) = opt_offsets(2) / prm->scale_factor;   // Zoff
+        }
         (*docfiledata)[imgno](6) = (double)(opt_refno + 1);   // Ref
         (*docfiledata)[imgno](7) = (double)(missno + 1);      // Wedge number
 
@@ -2300,8 +2489,9 @@ void Prog_ml_tomo_prm::expectation(
     bool fill_real_space;
     int num_img_tot;
     
-    // Update angular sampling (if perturbed)
-    calculateAngularSampling(iter);
+    // Update angular sampling (if perturbed and not dont_align)
+    if (!(dont_align || do_only_average)) 
+        calculateAngularSampling(iter);
     
     if (do_ml)
     {
@@ -2554,6 +2744,9 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
         {
             sigma_noise = sqrt(wsum_sigma_noise / (sumw_allrefs * ddim3));
         }
+        // Correct sigma_noise for number of pixels within the mask
+        if (do_mask)
+            sigma_noise *= ddim3/nr_mask_pixels; 
     }
 
     // post-process reference volumes

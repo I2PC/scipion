@@ -77,7 +77,7 @@ class Prog_ml_tomo_prm
 {
 public:
     /** Filenames reference selfile/image, fraction docfile & output rootname */
-    FileName fn_sel, fn_ref, fn_root, fn_frac, fn_sym, fn_missing, fn_doc;
+    FileName fn_sel, fn_ref, fn_root, fn_frac, fn_sym, fn_missing, fn_doc, fn_mask;
     /** Command line */
     std::string cline;
     /** Sigma value for expected pixel noise */
@@ -125,6 +125,7 @@ public:
     /** Optimal refno and angno from previous iteration */
     std::vector<int> imgs_optrefno, imgs_optangno;
     std::vector<double> imgs_trymindiff, miss_nr_pixels;
+    std::vector<Matrix1D<double> > imgs_optoffsets;
     /** Number for missing data structure group */
     std::vector<int> imgs_missno;
     /** For initial guess of mindiff */
@@ -151,6 +152,17 @@ public:
     /** Maximum resolution (dig.freq.) */
     double maxres, scale_factor;
     Matrix3D<double> fourier_mask, fourier_imask, real_mask, real_omask;
+
+    /** Do not search any rotation/translation, only classify */
+    bool dont_align;
+    /** Classify only in defined mask */
+    bool do_mask;
+    /** Volume with the mask */
+    VolumeXmippT<double> Imask;
+    /** Number of non-zero voxels in the mask */
+    double nr_mask_pixels;
+    /** Just apply optimal rotations and use weighted-averaging to get class averages */
+    bool do_only_average;
 
     /* Adjust power spectra of all tilt series to average power spectrum */
     bool do_adjust_spectra;
