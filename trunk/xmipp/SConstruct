@@ -177,7 +177,7 @@ if (ARGUMENTS['mode'] == 'configure'):
                 print '* Trying default value: ' + env['QTDIR']
 
         # Create a new environment with Qt tool enabled to see if it works
-        envQT = env.Copy()
+        envQT = env.Clone()
 
         if int(env['QT4']):
             # DBG
