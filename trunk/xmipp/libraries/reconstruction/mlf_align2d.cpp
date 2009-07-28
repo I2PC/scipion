@@ -978,7 +978,7 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
 	}
     }
     // Second, get the rest of the currently relevant pixels:
-    // These are within <current_probres_limit,current_highres_limit]
+    // These are within [0,lowres_limit> and between <current_probres_limit,current_highres_limit]
     nr_points_2d = nr_points_prob;
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
     {
