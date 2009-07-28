@@ -138,14 +138,16 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     do_norm = checkParameter(argc2, argv2, "-norm");
     do_ML3D = ML3D;
 
+    // Number of threads
+    threads = textToInteger(getParameter(argc2, argv2, "-thr","1"));
+
     // Hidden arguments
     do_esthetics = checkParameter(argc2, argv2, "-esthetics");
     fn_scratch = getParameter(argc2, argv2, "-scratch", "");
     debug = textToInteger(getParameter(argc2, argv2, "-debug","0"));
     do_student_sigma_trick = !checkParameter(argc2, argv2, "-no_sigma_trick");
     trymindiff_factor = textToFloat(getParameter(argc2, argv2, "-trymindiff_factor", "0.9"));
-    // Number of threads
-    threads = textToInteger(getParameter(argc2, argv2, "-thr","1"));
+    max_resol = textToFloat(getParameter(argc2, argv2, "-max_resol", "0.5"));
 
     // Only for interaction with refine3d:
     search_rot = textToFloat(getParameter(argc2, argv2, "-search_rot", "999."));
@@ -181,8 +183,9 @@ void Prog_MLalign2D_prm::show(bool ML3D)
         std::cerr << "  Output rootname         : " << fn_root << std::endl;
         std::cerr << "  Stopping criterium      : " << eps << std::endl;
         std::cerr << "  initial sigma noise     : " << sigma_noise << std::endl;
-        std::cerr << "  initial sigma offset    : " << sigma_offset << std::endl;
+        std::cerr << "  initial sigma offset    : " << sigma_offset * scale_factor << std::endl;
         std::cerr << "  Psi sampling interval   : " << psi_step << std::endl;
+        std::cerr << "  Maximum resolution      : " << max_resol << " (dim= "<<dim<<")"<<std::endl;
         if (do_mirror)
             std::cerr << "  Check mirrors           : true" << std::endl;
         else
@@ -307,13 +310,20 @@ void Prog_MLalign2D_prm::produceSideInfo()
 
     // Read selfile with experimental images
     SF.read(fn_sel);
+    nr_exp_images = SF.ImgNo();
 
-    // Get image sizes and total number of images
-    SF.ImgSize(dim, dim);
+    // Get original image size
+    SF.ImgSize(oridim, oridim);
+    // And get dimension for downscaled images 
+    dim = ROUND(max_resol * 2 * oridim);
+    // Keep both dim and oridim even or uneven
+    if (oridim%2 != dim%2)
+        dim++;
     hdim = dim / 2;
     dim2 = dim * dim;
     ddim2 = (double)dim2;
-    nr_exp_images = SF.ImgNo();
+    scale_factor= (double)dim/(double)oridim;
+    sigma_offset *= scale_factor;
     if (do_student) df2 = - ( df + ddim2 ) / 2. ;
 
     // Get number of references
@@ -454,6 +464,82 @@ void Prog_MLalign2D_prm::produceSideInfo()
 
 }
 
+void Prog_MLalign2D_prm::reScaleImage(Matrix2D<double> &Min, bool down_scale)
+{
+
+
+    if (oridim==dim)
+        return;
+    else
+    {
+        int newdim;
+        XmippFftw local_transformer_in, local_transformer_out;
+        Matrix2D<double> Mout;
+        Matrix2D<std::complex<double> > Fin, Fout;
+
+//#define DEBUG_RESCALE
+#ifdef DEBUG_RESCALE
+        std::cerr<<"entered rescale"<<std::endl;
+        ImageXmipp It;
+        It()=Min;
+        It.write("rescale_in.xmp");
+#endif
+        if (down_scale)
+        {
+            newdim=dim;
+            local_transformer_in.FourierTransform(Min, Fin, false);
+            Mout.resize(newdim,newdim);
+            local_transformer_out.setReal(Mout);
+            local_transformer_out.getFourierAlias(Fout);
+            int ihalf=YSIZE(Fout)/2 + 1;
+            for (int i=0; i<ihalf; i++)
+                for (int j=0; j<XSIZE(Fout); j++)
+                    Fout(i,j)=Fin(i,j);
+            
+            for (int i=ihalf; i<YSIZE(Fout); i++)
+            {
+                int ip=YSIZE(Fin)-YSIZE(Fout)+i;
+                for (int j=0; j<XSIZE(Fout); j++)
+                    Fout(i,j)=Fin(ip,j);
+            }
+        }
+        else
+        {
+            newdim=oridim;
+            local_transformer_in.FourierTransform(Min, Fin, false);
+            Mout.resize(newdim,newdim);
+            local_transformer_out.setReal(Mout);
+            local_transformer_out.getFourierAlias(Fout);
+            Fout.initZeros();
+            int ihalf=YSIZE(Fin)/2 + 1;
+            for (int i=0; i<ihalf; i++)
+                for (int j=0; j<XSIZE(Fin); j++)
+                    Fout(i,j)=Fin(i,j);
+            
+            for (int i=ihalf; i<YSIZE(Fin); i++)
+            {
+                int ip=YSIZE(Fout) - YSIZE(Fin) + i;
+                for (int j=0; j<XSIZE(Fin); j++)
+                    Fout(ip,j)=Fin(i,j);
+            }
+        }
+#ifdef DEBUG_RESCALE
+        FFT_magnitude(Fin,It());
+        It.write("rescale_in.ampl");
+        FFT_magnitude(Fout,It());
+        It.write("rescale_out.ampl");
+#endif
+        local_transformer_out.inverseFourierTransform();
+        Min = Mout;
+        Min.setXmippOrigin();
+#ifdef DEBUG_RESCALE
+    std::cerr<<"left rescale"<<std::endl;
+    It()=Min;
+    It.write("rescale_out.xmp");
+#endif
+    }
+}
+
 // Generate initial references =============================================
 void Prog_MLalign2D_prm::generateInitialReferences()
 {
@@ -514,7 +600,7 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
     double                    offx, offy, aux, sumfrac = 0.;
     FileName                  fn_tmp;
     ImageXmipp                img;
-    std::vector<double>            Vdum;
+    std::vector<double>       Vdum;
 
     // Read in all reference images in memory
     if (Is_ImageXmipp(fn_ref))
@@ -533,6 +619,7 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
         FileName fn_img=SFr.NextImg();
         img.read(fn_img, false, false, true, false);
         img().setXmippOrigin();
+        reScaleImage(img(),true);
         Iref.push_back(img);
         if (!save_mem3) Iold.push_back(img);
         // Default start is all equal model fractions
@@ -1529,7 +1616,7 @@ void * threadExpectationSingleImage( void * data )
         myLast = myFirst + Npart - 1;
     }
     myNum = myLast - myFirst + 1;
-            
+
     if (prm->verb > 0 && thread_id==0) init_progress_bar(myNum);
 
     // Loop over all images
@@ -1550,7 +1637,8 @@ void * threadExpectationSingleImage( void * data )
         
         img.read(fn_img, false, false, false, false);
         img().setXmippOrigin();
-        
+        prm->reScaleImage(img(),true);
+
         // These two parameters speed up expectationSingleImage
         trymindiff = prm->imgs_trymindiff[imgno];
         opt_refno = prm->imgs_optrefno[imgno];
@@ -1645,8 +1733,8 @@ void * threadExpectationSingleImage( void * data )
             (*docfiledata)[imgno](0) = prm->Iref[opt_refno].Phi();     // rot
             (*docfiledata)[imgno](1) = prm->Iref[opt_refno].Theta();   // tilt
             (*docfiledata)[imgno](2) = opt_psi + 360.;            // psi
-            (*docfiledata)[imgno](3) = opt_offsets(0);            // Xoff
-            (*docfiledata)[imgno](4) = opt_offsets(1);            // Yoff
+            (*docfiledata)[imgno](3) = opt_offsets(0) / prm->scale_factor;            // Xoff
+            (*docfiledata)[imgno](4) = opt_offsets(1) / prm->scale_factor;            // Yoff
             (*docfiledata)[imgno](5) = (double)(opt_refno + 1);   // Ref
             (*docfiledata)[imgno](6) = opt_flip;                  // Mirror
             (*docfiledata)[imgno](7) = fracweight;                // P_max/P_tot
@@ -1918,6 +2006,7 @@ void Prog_MLalign2D_prm::writeOutputFiles(const int iter, DocFile &DFo,
 {
 
     FileName          fn_tmp, fn_base, fn_tmp2;
+    ImageXmipp        Itmp;
     Matrix1D<double>  fracline(3);
     SelFile           SFo, SFc;
     DocFile           DFl;
@@ -1951,7 +2040,9 @@ void Prog_MLalign2D_prm::writeOutputFiles(const int iter, DocFile &DFo,
         fn_tmp = fn_base + "_ref";
         fn_tmp.compose(fn_tmp, refno + 1, "");
         fn_tmp = fn_tmp + ".xmp";
-        Iref[refno].write(fn_tmp);
+        Itmp=Iref[refno];
+        reScaleImage(Itmp(),false);
+        Itmp.write(fn_tmp);
         SFo.insert(fn_tmp, SelLine::ACTIVE);
         fracline(0) = alpha_k[refno];
         fracline(1) = mirror_fraction[refno];
@@ -1971,7 +2062,7 @@ void Prog_MLalign2D_prm::writeOutputFiles(const int iter, DocFile &DFo,
     if (do_norm)
         comment+= " <scale>= " + floatToString(average_scale, 10, 5);
     DFl.insert_comment(comment);
-    comment = "-noise " + floatToString(sigma_noise, 15, 12) + " -offset " + floatToString(sigma_offset, 15, 12) + " -istart " + integerToString(iter + 1) + " -doc " + fn_base + ".doc";
+    comment = "-noise " + floatToString(sigma_noise, 15, 12) + " -offset " + floatToString(sigma_offset/scale_factor, 15, 12) + " -istart " + integerToString(iter + 1) + " -doc " + fn_base + ".doc";
     DFl.insert_comment(comment);
     DFl.insert_comment(cline);
     if (do_norm) 

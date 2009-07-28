@@ -102,8 +102,10 @@ public:
     /** Number of iterations to be performed */
     int Niter;
     /** dimension of the images */
-    int dim, dim2, hdim;
+    int oridim, dim, dim2, hdim;
     double ddim2;
+    /** Maximum resolution (dig.freq.) */
+    double max_resol, scale_factor;
     /** Number of steps to sample in-plane rotation in 90 degrees */
     int nr_psi;
     /** Number of operations in "flip-array" (depending on do_mirror) */
@@ -214,6 +216,9 @@ public:
 
     /// Setup lots of stuff
     void produceSideInfo();
+
+    /// Rescale image from dim to oridim and vice versa
+    void reScaleImage(Matrix2D<double> &Min, bool down_scale);
 
     /// Generate initial references from random subset averages
     void generateInitialReferences();
