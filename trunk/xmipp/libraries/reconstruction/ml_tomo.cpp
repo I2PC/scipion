@@ -24,7 +24,7 @@
  ***************************************************************************/
 #include "ml_tomo.h"
 
-//#define DEBUG
+#define DEBUG
 // For blocking of threads
 pthread_mutex_t mltomo_weightedsum_update_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mltomo_selfile_access_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -457,6 +457,7 @@ void Prog_ml_tomo_prm::produceSideInfo()
         DocFile DF;
         DF.read(fn_doc);
         Matrix1D<double> refnos=DF.col(6);
+        fn_ref="tt";
         nr_ref=refnos.computeMax();
         Niter=1;
         do_impute=false;
@@ -964,10 +965,6 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
     std::cerr<<"Start produceSideInfo2"<<std::endl;
 #endif
 
-    // Regularization (do not regularize during restarts!)
-    if (istart == 1)
-        regularize(istart-1);
-
     // Store tomogram angles, offset vectors and missing wedge parameters
     imgs_missno.clear();
     imgs_optrefno.clear();
@@ -1113,6 +1110,7 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
         }
     }
 
+
     // Prepare prior alpha_k
     alpha_k.resize(nr_ref);
     if (fn_frac != "")
@@ -1142,6 +1140,11 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
         // Even distribution
         alpha_k.initConstant(1./(double)nr_ref);
     }
+
+
+    // Regularization (do not regularize during restarts!)
+    if (istart == 1)
+        regularize(istart-1);
 
 //#define DEBUG_GENERAL
 #ifdef DEBUG_GENERAL
@@ -2843,6 +2846,7 @@ void Prog_ml_tomo_prm::calculateFsc(Matrix3D<double> &M1, Matrix3D<double> &M2,
 // Apply regularization
 bool Prog_ml_tomo_prm::regularize(int iter)
 {
+
     // Update regularization constant in a linear manner    
     reg_current = reg0 - (double)iter*(reg0-regF)/(double)reg_steps;
     reg_current = XMIPP_MAX(reg_current, regF);
@@ -2866,6 +2870,10 @@ bool Prog_ml_tomo_prm::regularize(int iter)
         Matrix3D<double> Mavg, Mdiff;
         double sum_diff2=0.;
 
+//#define DEBUG_REGULARISE
+#ifdef DEBUG_REGULARISE
+        std::cerr<<"written out oriref volumes"<<std::endl;
+#endif
         // Calculate  FT of average of all references
         // and sum of squared differences between all references
         for (int refno = 0; refno < nr_ref; refno++)
@@ -2882,6 +2890,9 @@ bool Prog_ml_tomo_prm::regularize(int iter)
         }
         transformer.FourierTransform(Mavg,Favg,true);
         Favg *= reg_norm;
+#ifdef DEBUG_REGULARISE
+        std::cerr<<"calculated Favg"<<std::endl;
+#endif
 
         // Update the regularized references
         for (int refno = 0; refno < nr_ref; refno++)
@@ -2889,7 +2900,6 @@ bool Prog_ml_tomo_prm::regularize(int iter)
             transformer.FourierTransform(Iref[refno](),Fref,true);
             double sumw = alpha_k(refno) * (double)nr_exp_images;
             // Fref = (sumw*Fref + reg_norm*Favg) /  (sumw + nr_ref * reg_norm)
-//#define DEBUG_REGULARISE
 #ifdef DEBUG_REGULARISE
             if (verb>0)
                 std::cerr<<"refno= "<<refno<<" sumw = "<<sumw<<" reg_current= "<<reg_current<<" reg_norm= "<<reg_norm<<" Fref1= "<<DIRECT_MULTIDIM_ELEM(Fref,1) <<" Favg1= "<<DIRECT_MULTIDIM_ELEM(Favg,1)<<" (sumw + nr_ref * reg_norm)= "<<(sumw + nr_ref * reg_norm)<<std::endl;
