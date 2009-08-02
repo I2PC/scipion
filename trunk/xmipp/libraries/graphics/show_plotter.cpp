@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Author:     Javier Rodr�guez Fern�ndez (javrodri@gmail.com)
+ * Authors:     Javier Rodriguez Fernandez (javrodri@gmail.com)
  *             Carlos Oscar S. Sorzano (coss@cnb.uam.es)
  *
  * Universidad San Pablo CEU (Monteprincipe, Madrid)
@@ -257,38 +257,44 @@ void Plotter::setCurveData(int id, const Matrix1D<double> &X,
 
 void Plotter::setCurveData(int id, const Matrix2D<double> &data)
 {
+    std::cout << "Setting id=" << id << std::endl;
+
     curveMap[id] = data;
     curveActive[id] = true;
 
     // Determine the bounding box of this data
-    double data_minX, data_maxX, data_minY, data_maxY;
-    data_minX = data_maxX = data(0, 0);
-    data_minY = data_maxY = data(0, 1);
-    for (int i = 1; i < YSIZE(data); i++)
+    if (id!=4)
     {
-        data_minX = XMIPP_MIN(data_minX, data(i, 0));
-        data_maxX = XMIPP_MAX(data_minX, data(i, 0));
-        data_minY = XMIPP_MIN(data_minY, data(i, 1));
-        data_maxY = XMIPP_MAX(data_minY, data(i, 1));
-    }
+        double data_minX, data_maxX, data_minY, data_maxY;
+        data_minX = data_maxX = data(0, 0);
+        data_minY = data_maxY = data(0, 1);
+        for (int i = CEIL(0.05*YSIZE(data)); i < YSIZE(data); i++)
+        {
+            data_minX = XMIPP_MIN(data_minX, data(i, 0));
+            data_maxX = XMIPP_MAX(data_maxX, data(i, 0));
+            data_minY = XMIPP_MIN(data_minY, data(i, 1));
+            data_maxY = XMIPP_MAX(data_maxY, data(i, 1));
+        }
+        std::cout << "[" << data_minX << "," << data_maxX << "] ["
+                  << data_minY << "," << data_maxY << "]\n";
 
-    if (id == 0)
-    {
-        zoomStack[curZoom].minX = data_minX;
-        zoomStack[curZoom].maxX = data_maxX;
-        zoomStack[curZoom].minY = data_minY;
-        zoomStack[curZoom].maxY = data_maxY;
+        if (id == 1)
+        {
+            zoomStack[curZoom].minX = data_minX;
+            zoomStack[curZoom].maxX = data_maxX;
+            zoomStack[curZoom].minY = data_minY;
+            zoomStack[curZoom].maxY = data_maxY;
+        }
+        else
+        {
+            zoomStack[curZoom].minX = XMIPP_MIN(zoomStack[curZoom].minX, data_minX);
+            zoomStack[curZoom].maxX = XMIPP_MAX(zoomStack[curZoom].maxX, data_maxX);
+            zoomStack[curZoom].minY = XMIPP_MIN(zoomStack[curZoom].minY, data_minY);
+            zoomStack[curZoom].maxY = XMIPP_MAX(zoomStack[curZoom].maxY, data_maxY);
+        }
+        zoomStack[curZoom].adjust();
+        refreshCurves();
     }
-    else
-    {
-        zoomStack[curZoom].minX = XMIPP_MIN(zoomStack[curZoom].minX, data_minX);
-        zoomStack[curZoom].maxX = XMIPP_MAX(zoomStack[curZoom].maxX, data_maxX);
-        zoomStack[curZoom].minY = XMIPP_MIN(zoomStack[curZoom].minY, data_minY);
-        zoomStack[curZoom].maxY = XMIPP_MAX(zoomStack[curZoom].maxY, data_maxY);
-    }
-    zoomStack[curZoom].adjust();
-
-    refreshCurves();
 }
 
 /* Delete Curve ------------------------------------------------------------ */
