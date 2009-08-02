@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Javier Rodr�guez Fern�ndez (javrodri@gmail.com)
+ * Authors:     Javier Rodriguez Fernandez (javrodri@gmail.com)
  *              Carlos Oscar S. Sorzano (coss@cnb.uam.es)
  *
  * Universidad San Pablo CEU (Monteprincipe, Madrid)
@@ -398,6 +398,7 @@ void CTFViewer::photo()
     foto->copy(plotter);
     foto->setCaption("Photo");
     foto->show();
+    foto->repaint();
 }
 
 // Reset plot settings -----------------------------------------------------
@@ -673,7 +674,7 @@ void CTFViewer::drawAngle()
     static bool first_time_in_this_function = true;
     if (!ctf_valid) return;
     int angle = spinBoxAngle->value();
-    if (!first_time_in_this_function) imageViewer->drawAngle(old_angle);
+    if (!first_time_in_this_function) imageViewer->repaint();
     imageViewer->drawAngle(angle);
     first_time_in_this_function = false;
     old_angle = angle;
