@@ -183,7 +183,7 @@ InnerRadius=0
 OuterRadius=64
 
 # {expert} Available memory to store all references (Gb)
-""" This is only for the storage of the references. If yuor memories so not fit in memory, 
+""" This is only for the storage of the references. If your projections do not fit in memory, 
     the projection matching program will run MUCH slower. But, keep in mind that probably 
     some additional memory is needed for the operating system etc.
     Note that the memory per computing node needs to be given. That is, when using threads, 
@@ -470,7 +470,7 @@ DoComputeResolution=True
    but less accurate approach is to split the 
    proyection directions in two but not the averages. We
    recomend the first approach for small volumes and the second for
-   large volumes (expecially when using small angular
+   large volumes (especially when using small angular
    sampling rates.
    IMPORTANT: the second option has ONLY been implemented for FOURIER
    reconstruction method. Other reconstruction methods require this
