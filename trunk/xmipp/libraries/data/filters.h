@@ -147,6 +147,40 @@ void keep_biggest_component(Matrix2D< double >& I,
  */
 void fill_binary_object(Matrix2D< double >&I, int neighbourhood = 8);
 
+/** Segment an object using Otsu's method
+ * @ingroup Filters
+ *
+ * Otsu's method determines a threshold such that the variance of the
+ * two classes is minimized
+ *
+ * http://www.biomecardio.com/matlab/otsu.html
+ */
+void OtsuSegmentation(Matrix3D<double> &V);
+
+/** Segment an object using Entropy method
+ * @ingroup Filters
+ *
+ * Entropy method determines a threshold such that the entropy of the
+ * two classes is maximized
+ *
+ * http://rsbweb.nih.gov/ij/plugins/download/Entropy_Threshold.java
+ */
+void EntropySegmentation(Matrix3D<double> &V);
+
+/** Segment an object using a combination of Otsu and Entropy method
+ * @ingroup Filters
+ *
+ * The combination aims at minimizing Z(t)=-log10(sigma2B(t))/H(t)
+ * Minimizing the intraclass variance in Otsu is the same as
+ * maximizing sigma2B. H is the entropy of the two classes in the entropy
+ * method.
+ *
+ * Then, the lowest percentil of Z is computed. The threshold applied to the
+ * volume is the first value in the curve Z(t) falling below this
+ * percentil.
+ */
+void EntropyOtsuSegmentation(Matrix3D<double> &V, double percentil=0.05);
+
 /** Correlation 1D
  * @ingroup Filters
  *

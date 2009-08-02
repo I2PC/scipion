@@ -361,6 +361,194 @@ void fill_binary_object(Matrix2D<double> &I, int neighbourhood)
         I(i, j) = 1;
 }
 
+/* Otsu Segmentation ------------------------------------------------------- */
+void OtsuSegmentation(Matrix3D<double> &V)
+{
+    // Compute the probability density function
+    histogram1D hist;
+    hist.clear();
+    compute_hist(V,hist,200);
+    hist/=hist.sum();
+
+    // Compute the cumulative 0th and 1st order moments
+    double x;
+    Matrix1D<double> mom0, mom1;
+    mom0.initZeros(XSIZE(hist));
+    mom1.initZeros(XSIZE(hist));
+    mom0(0)=hist(0);
+    hist.index2val(0,x); mom1(0)=hist(0)*x;
+    for (int i=1; i<XSIZE(mom0); i++)
+    {
+        mom0(i)=mom0(i-1)+hist(i);
+        hist.index2val(i,x); mom1(i)=mom1(i-1)+hist(i)*x;
+    }
+
+    // Maximize sigma2B
+    double bestSigma2B=-1;
+    int ibestSigma2B=-1;
+    for (int i=0; i<XSIZE(hist)-1; i++)
+    {
+        double w1=mom0(i);
+        double w2=1-mom0(i);
+        double mu1=mom1(i);
+        double mu2=mom1(XSIZE(mom1)-1)-mom1(i);
+        double sigma2B=w1*w2*(mu1-mu2)*(mu1-mu2);
+        if (sigma2B>bestSigma2B)
+        {
+             bestSigma2B=sigma2B;
+             ibestSigma2B=i;
+        }
+        std::cout << sigma2B << std::endl;
+    }
+
+    hist.index2val(ibestSigma2B,x);
+    V.binarize(x); 
+}
+
+/* Entropy Segmentation ---------------------------------------------------- */
+void EntropySegmentation(Matrix3D<double> &V)
+{
+    // Compute the probability density function
+    histogram1D hist;
+    hist.clear();
+    compute_hist(V,hist,200);
+    hist/=hist.sum();
+
+    // Compute the cumulative 0th and 1st order moments
+    double x;
+    Matrix1D<double> mom0;
+    mom0.initZeros(XSIZE(hist));
+    mom0(0)=hist(0);
+    for (int i=1; i<XSIZE(mom0); i++)
+        mom0(i)=mom0(i-1)+hist(i);
+
+    // Entropy for black and white parts of the histogram
+    const double epsilon = 1e-15;
+    Matrix1D<double> h1, h2;
+    h1.initZeros(XSIZE(hist));
+    h2.initZeros(XSIZE(hist));
+    for (int i=0; i<XSIZE(hist); i++) {
+        // Entropy h1
+        double w1=mom0(i);
+        if (w1>epsilon)
+            for (int ii=0; ii<=i; ii++)
+                if (hist(ii)>epsilon)
+                {
+                    double aux=hist(ii)/w1;
+                    h1(i) -= aux*log10(aux);
+                }
+
+        // Entropy h2
+        double w2=1-mom0(i);
+        if (w2>epsilon)
+            for (int ii=i+1; ii<XSIZE(hist); ii++)
+                if (hist(ii)>epsilon)
+                {
+                    double aux=hist(ii)/w2;
+                    h2(i) -= aux*log10(aux);
+                }
+    }
+
+    // Find histogram index with maximum entropy
+    double Hmax=h1(0)+h2(0);
+    int iHmax=0;
+    for (int i=1; i<XSIZE(hist)-1; i++) {
+        double H = h1(i)+h2(i);
+        if (H > Hmax) {
+            Hmax = H;
+            iHmax = i;
+        }
+        std::cout << H << std::endl;
+    }
+
+    hist.index2val(iHmax,x);
+    V.binarize(x); 
+}
+
+/* Otsu+Entropy Segmentation ----------------------------------------------- */
+void EntropyOtsuSegmentation(Matrix3D<double> &V, double percentil)
+{
+    // Compute the probability density function
+    histogram1D hist;
+    hist.clear();
+    compute_hist(V,hist,200);
+    hist/=hist.sum();
+
+    // Compute the cumulative 0th and 1st order moments
+    double x;
+    Matrix1D<double> mom0,mom1;
+    mom0.initZeros(XSIZE(hist));
+    mom1.initZeros(XSIZE(hist));
+    mom0(0)=hist(0);
+    hist.index2val(0,x); mom1(0)=hist(0)*x;
+    for (int i=1; i<XSIZE(mom0); i++)
+    {
+        mom0(i)=mom0(i-1)+hist(i);
+        hist.index2val(i,x); mom1(i)=mom1(i-1)+hist(i)*x;
+    }
+
+    // Entropy for black and white parts of the histogram
+    const double epsilon = 1e-15;
+    Matrix1D<double> h1, h2;
+    h1.initZeros(XSIZE(hist));
+    h2.initZeros(XSIZE(hist));
+    for (int i=0; i<XSIZE(hist); i++) {
+        // Entropy h1
+        double w1=mom0(i);
+        if (w1>epsilon)
+            for (int ii=0; ii<=i; ii++)
+                if (hist(ii)>epsilon)
+                {
+                    double aux=hist(ii)/w1;
+                    h1(i) -= aux*log10(aux);
+                }
+
+        // Entropy h2
+        double w2=1-mom0(i);
+        if (w2>epsilon)
+            for (int ii=i+1; ii<XSIZE(hist); ii++)
+                if (hist(ii)>epsilon)
+                {
+                    double aux=hist(ii)/w2;
+                    h2(i) -= aux*log10(aux);
+                }
+    }
+
+    // Compute sigma2B and H
+    Matrix1D<double> sigma2B, H, HSigma2B;
+    sigma2B.initZeros(XSIZE(hist)-1);
+    H.initZeros(XSIZE(hist)-1);
+    HSigma2B.initZeros(XSIZE(hist)-1);
+    for (int i=0; i<XSIZE(hist)-1; i++)
+    {
+        double w1=mom0(i);
+        double w2=1-mom0(i);
+        double mu1=mom1(i);
+        double mu2=mom1(XSIZE(mom1)-1)-mom1(i);
+        sigma2B(i)=w1*w2*(mu1-mu2)*(mu1-mu2);
+        H(i) = h1(i)+h2(i);
+        HSigma2B(i)=-log10(sigma2B(i))/H(i);
+           // The logic behind this expression is
+           // Otsu:    max sigma2B -> max log10(sigma2B) -> min -log10(sigma2B)
+           // Entropy: max H       -> max H              -> min 1/H
+        std::cout << sigma2B(i) << " " << H(i) << " "
+                  << HSigma2B(i) << std::endl;
+    }
+    
+    // Sort HSigma2B and take a given percentage of it
+    Matrix1D<double> HSigma2Bsorted=HSigma2B.sort();
+    int iTh=ROUND(XSIZE(HSigma2B)*percentil);
+    double thhreshold=HSigma2Bsorted(iTh);
+    
+    // Find the first value within HSigma2B falling below this threshold
+    iTh=0;
+    while (HSigma2B(iTh)>thhreshold) iTh++;
+    iTh--;
+    
+    hist.index2val(iTh,x);
+    V.binarize(x); 
+}
+
 /* Best shift -------------------------------------------------------------- */
 void best_shift(const Matrix2D<double> &I1, const Matrix2D<double> &I2,
                 double &shiftX, double &shiftY, const Matrix2D<int> *mask)
