@@ -1786,7 +1786,7 @@ def  fill_name_vector(_user_suplied_name,
                                    _root_name)
                   
 def check_file_exists(name,log):
-    import os
+    import os,sys
     if not os.path.exists(name):
         message='Error: File '+name+' does not exist, exiting...'
         print '*',message
