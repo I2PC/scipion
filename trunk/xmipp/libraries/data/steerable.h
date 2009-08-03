@@ -95,6 +95,9 @@ public:
     
     /// Angular step
     double angStep;
+
+    /// Remove background
+    bool removeBackground;
 public:
     /// Read parameters from command line
     void read(int argc, char **argv);

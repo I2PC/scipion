@@ -27,6 +27,9 @@
 #include "steerable.h"
 #include "fft.h"
 #include "volume.h"
+#include "histogram.h"
+#include "filters.h"
+#include "morphology.h"
 
 // Constructor -------------------------------------------------------------
 Steerable::Steerable(double sigma, Matrix3D<double> &Vtomograph, 
@@ -263,18 +266,20 @@ void Prog_Detect_Structures_Param::read(int argc, char **argv)
     angStep=textToInteger(getParameter(argc,argv,"-angStep","5"));
     if (sigmaF<0) sigmaF=sigma0;
     if (sigmaStep<0) sigmaStep=1;
+    removeBackground=checkParameter(argc,argv,"-removeBackground");
 }
 
 void Prog_Detect_Structures_Param::show() const
 {
     std::cout
-        << "Input volume:    " << fnIn       << std::endl
-        << "Output rootname: " << fnOut      << std::endl
-        << "Filter type:     " << filterType << std::endl
-        << "Sigma0:          " << sigma0     << std::endl
-        << "SigmaF:          " << sigmaF     << std::endl
-        << "SigmaStep:       " << sigmaStep  << std::endl
-        << "AngStep:         " << angStep    << std::endl
+        << "Input volume:      " << fnIn             << std::endl
+        << "Output rootname:   " << fnOut            << std::endl
+        << "Filter type:       " << filterType       << std::endl
+        << "Sigma0:            " << sigma0           << std::endl
+        << "SigmaF:            " << sigmaF           << std::endl
+        << "SigmaStep:         " << sigmaStep        << std::endl
+        << "AngStep:           " << angStep          << std::endl
+        << "Remove Background: " << removeBackground << std::endl
     ;
 }
 
@@ -288,6 +293,7 @@ void Prog_Detect_Structures_Param::usage() const
         << "   [-sigmaF <s=-1>]     : Final width\n"
         << "   [-sigmaStep <s=-1>]  : Width step\n"
         << "   [-angStep <ang=5>]   : Angular step\n"
+        << "   [-removeBackground]  : Remove background\n"
     ;
 }
 
@@ -326,5 +332,15 @@ void Prog_Detect_Structures_Param::run()
         delete filter;
     }
     Vout.write(fnOut+"_energy.vol");
+
+    if (removeBackground)
+    {
+        Matrix3D<double> Voutmask=Vout();
+        EntropyOtsuSegmentation(Voutmask);
+        dilate3D(Voutmask,Vout(),18,0,2);
+        FOR_ALL_ELEMENTS_IN_MATRIX3D(Voutmask)
+            if (Vout(k,i,j)<0.5)
+                Vsigma(k,i,j)=0;
+    }
     Vsigma.write(fnOut+"_width.vol");
 }
