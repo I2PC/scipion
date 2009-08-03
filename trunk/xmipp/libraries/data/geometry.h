@@ -571,6 +571,9 @@ int line_plane_intersection(const Matrix1D< double > normal_plane,
  *
  * As an implementation note you might like to know that this function calls
  * always to Matrix2D::resize
+ *
+ * See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/EulerAngles for a
+ * description of the Euler angles.
  */
 void Euler_angles2matrix(double a, double b, double g, Matrix2D< double >& A);
 
