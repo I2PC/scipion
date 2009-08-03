@@ -42,6 +42,17 @@
  * The memory for the Fourier transform is handled by this object.
  * However, the memory for the real space image is handled externally
  * and this object only has a pointer to it.
+ *
+ * Here you have an example of use
+ * @code
+ * XmippFftw transformer;
+ * Matrix3D< std::complex<double> > Vfft;
+ * transformer.FourierTransform(V(),Vfft,false);
+ * Matrix3D<double> Vmag;
+ * Vmag.resize(Vfft);
+ * FOR_ALL_ELEMENTS_IN_MATRIX3D(Vmag)
+ *     Vmag(k,i,j)=20*log10(abs(Vfft(k,i,j)));
+ * @endcode
  */
 class XmippFftw
 {
