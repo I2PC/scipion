@@ -398,7 +398,6 @@ void OtsuSegmentation(Matrix3D<double> &V)
              bestSigma2B=sigma2B;
              ibestSigma2B=i;
         }
-        std::cout << sigma2B << std::endl;
     }
 
     hist.index2val(ibestSigma2B,x);
@@ -458,7 +457,6 @@ void EntropySegmentation(Matrix3D<double> &V)
             Hmax = H;
             iHmax = i;
         }
-        std::cout << H << std::endl;
     }
 
     hist.index2val(iHmax,x);
@@ -531,8 +529,6 @@ void EntropyOtsuSegmentation(Matrix3D<double> &V, double percentil)
            // The logic behind this expression is
            // Otsu:    max sigma2B -> max log10(sigma2B) -> min -log10(sigma2B)
            // Entropy: max H       -> max H              -> min 1/H
-        std::cout << sigma2B(i) << " " << H(i) << " "
-                  << HSigma2B(i) << std::endl;
     }
     
     // Sort HSigma2B and take a given percentage of it
