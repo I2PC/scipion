@@ -132,7 +132,8 @@ void Uproject_to_plane(const Matrix1D< double >& r,
  *
  * @code
  * Matrix1D< double > P = vectorR3(1, 1, 1), Pp(3);
- * Matrix2D< double > euler = Euler_angles2matrix(0, 0, 0);
+ * Matrix2D< double > euler;
+ * Euler_angles2matrix(0, 0, 0, euler);
  * Uproject_to_plane(P, euler, Pp);
  * std::cout << "After projecting: Pp=" << Pp.transpose() << std::endl;
  * @endcode
