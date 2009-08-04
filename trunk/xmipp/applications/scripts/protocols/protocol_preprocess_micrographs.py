@@ -493,11 +493,11 @@ class preprocess_A_class:
         oname=self.shortname+'/'+self.shortname+'.raw'
         fh_mpi.write ("echo '*********************************************************************';")
         fh_mpi.write ("echo '*  Generating RAW for micrograph: '"+self.name+";")
-        command='cp '+self.filename+' '+oname + ";"
+        command='ln -s '+self.filename+' '+oname + ";"
         fh_mpi.write ("echo '* '," + command +  ";")
         #self.log.info(command)
         #os.system(command)
-        command +='cp '+self.filename+'.inf '+oname+'.inf'
+        command +='ln -s '+self.filename+'.inf '+oname+'.inf'
         fh_mpi.write ("echo '* '" + command + ";")
         #self.log.info(command)
         #os.system(command)
