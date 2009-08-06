@@ -366,6 +366,46 @@ public:
         return header.fLenbyt;
     }
 
+    float fStack() const
+    {
+        return header.fStack;
+    }
+
+    float& fStack()
+    {
+        return header.fStack;
+    }
+
+    float fMaxim() const
+    {
+        return header.fMaxim;
+    }
+
+    float& fMaxim()
+    {
+        return header.fMaxim;
+    }
+
+    float fImgnum() const
+    {
+        return header.fImgnum;
+    }
+
+    float& fImgnum()
+    {
+        return header.fImgnum;
+    }
+
+    float fLastidx() const
+    {
+        return header.fLastidx;
+    }
+
+    float& fLastidx()
+    {
+        return header.fLastidx;
+    }
+
     Matrix2D< double > fGeo_matrix();
 
     // Origin offsets
@@ -622,7 +662,28 @@ private:
 
         /* 23*/
         float fLenbyt; // RECORD LENGTH IN BYTES
-        char  fNada[24]; // this is a spider incongruence
+
+        /* 24*/
+        float fStack; // >0 -> indicates a stack of images.
+
+        /* 25*/
+        float fUnused1; 
+
+        /* 26*/
+        float fMaxim; // Number of images in the stack
+
+        /* 27*/
+        float fImgnum; // Position is only used in a stacked image header.
+                       // There, this position contains the number of the
+                       // current image or zero if this image is unused.
+
+        /* 28*/
+        float fLastidx; // Position is only used in overall header of
+                        // indexed stacks. There, this position is the highest
+                        // index location currently in use.
+
+        /* 29*/
+        float fUnused2; 
 
         /* 30*/
         float fFlag; // THAT ANGLES ARE SET. 1 = ONE ADDITIONAL
