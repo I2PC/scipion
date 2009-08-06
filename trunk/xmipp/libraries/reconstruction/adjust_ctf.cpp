@@ -649,7 +649,7 @@ void Adjust_CTF_Parameters::produce_side_info()
             global_mask(YY(positions[idx]),XX(positions[idx]))+=1;
         }
     }
-
+    
     // Enhance PSD for ctfmodels
     Prog_Enhance_PSD_Parameters prm;
     prm.center = true;
@@ -674,12 +674,9 @@ void Adjust_CTF_Parameters::produce_side_info()
 
     // Divide by the number of count at each frequency
     // and mask between min_freq and max_freq
-    double max_val = enhanced_ctftomodel().computeMax();
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(global_mask)
-    	if (global_mask(i, j)>0) enhanced_ctftomodel(i, j) = max_val;
     double min_val = enhanced_ctftomodel().computeMin();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(global_mask)
-    	if (global_mask(i, j)>0) enhanced_ctftomodel(i, j) = min_val;
+    	if (global_mask(i, j)<=0) enhanced_ctftomodel(i, j) = min_val;
     Matrix2D<double> aux;
     median_filter3x3(enhanced_ctftomodel(), aux);
     enhanced_ctftomodel() = aux;
