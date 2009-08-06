@@ -1704,8 +1704,8 @@ void sortTwoVectors(Matrix1D<T>& v1, Matrix1D<T>& v2)
   * double fitness;
   * int iter;
   * steps.initConstant(1);
-  * x,initZeros();
-  * powellOptimizer(x,NULL,1,8,&wrapperFitness,0.01,fitness,iter,steps,true);
+  * x.initZeros();
+  * powellOptimizer(x,1,8,&wrapperFitness,NULL,0.01,fitness,iter,steps,true);
   * @endcode
   *
   */
