@@ -463,15 +463,11 @@ void headerXmipp::set_header()
         header.fNlabel = (float)((int)(256 / header.fNcol + 1));
         header.fLabrec = (float) ceil((float)(256 / (float)header.fNcol));
 
-        headrec = (int) 1024 / ((int)header.fNcol * 4); // temporary variable
+        headrec = CEIL(1024.0 / ((int)header.fNcol * 4)); // temporary variable
+        header.fNrec = header.fNrow+headrec;
 
         if ((1024 % (int)header.fNcol != 0))
-        {
-            header.fNrec = header.fNrow + 1;
             headrec++;
-        }
-        else
-            header.fNrec = header.fNrow;
 
         header.fLabbyt = header.fNcol * header.fLabrec * 4;
         header.fLenbyt = (float) header.fNcol * 4;
