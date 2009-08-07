@@ -188,9 +188,10 @@ void ImageXmippStack::writeAsStack(const FileName& name, bool force_reversed)
         !getImage(0).getHeader().reversed():getImage(0).getHeader().reversed();
     headerXmipp overallHeader;
     overallHeader=getImage(0).getHeader();
+    overallHeader.fIangle()=0;
     overallHeader.fStack()=1;
     overallHeader.fMaxim()=ImgNo();
-    overallHeader.fLastidx()=ImgNo()-1;
+    overallHeader.fLastidx()=0;
     overallHeader.write(fp, force_reversed);
     for (int i=0; i<ImgNo(); i++)
     {
