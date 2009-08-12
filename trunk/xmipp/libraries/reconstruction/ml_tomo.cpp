@@ -24,7 +24,7 @@
  ***************************************************************************/
 #include "ml_tomo.h"
 
-#define DEBUG
+//#define DEBUG
 // For blocking of threads
 pthread_mutex_t mltomo_weightedsum_update_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mltomo_selfile_access_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -120,7 +120,7 @@ void Prog_ml_tomo_prm::read(int argc, char **argv)
     fn_sel = getParameter(argc2, argv2, "-i");
     fn_root = getParameter(argc2, argv2, "-o", "mltomo");
     fn_sym = getParameter(argc2, argv2, "-sym", "c1");
-    Niter = textToInteger(getParameter(argc2, argv2, "-iter", "100"));
+    Niter = textToInteger(getParameter(argc2, argv2, "-iter", "25"));
     Niter2 = textToInteger(getParameter(argc2, argv2, "-impute_iter", "1"));
     istart = textToInteger(getParameter(argc2, argv2, "-istart", "1"));
     sigma_noise = textToFloat(getParameter(argc2, argv2, "-noise", "1"));
@@ -280,7 +280,25 @@ void Prog_ml_tomo_prm::usage()
     std::cerr << "   -i <selfile>                : Selfile with input images \n";
     std::cerr << "   -nref <int>                 : Number of references to generate automatically (recommended)\n";
     std::cerr << "   OR -ref <selfile/image>         OR selfile with initial references/single reference image \n";
-    std::cerr << " [ -o <rootname> ]             : Output rootname (default = \"ml2d\")\n";
+    std::cerr << " [ -o <rootname> ]             : Output rootname (default = \"mltomo\")\n";
+    std::cerr << " [ -doc <docfile> ]            : Docfile with orientations and missing data regions for all particles \n";
+    std::cerr << " [ -missing <docfile> ]        : Docfile with missing data region definitions\n";
+    std::cerr << " [ -ang <float=10> ]           : Angular sampling rate (in degrees)\n";
+    std::cerr << " [ -ang_search <float> ]       : Angular search range around orientations from docfile \n";
+    std::cerr << "                                    (by default, exhaustive searches are performed)\n";
+    std::cerr << " [ -reg0 <float=0.> ]          : Initial regularization parameters (in N/K^2) \n";
+    std::cerr << " [ -regF <float=0.> ]          : Final regularization parameters (in N/K^2) \n";
+    std::cerr << " [ -reg_steps <int=5> ]        : Number of iterations in which the regularization is changed from reg0 to regF\n";
+    std::cerr << " [ -dont_align ]               : Keep orientations from docfile fixed, only classify \n";
+    std::cerr << " [ -only_average ]             : Keep orientations and classes from docfile, only output weighted averages \n";
+
+    std::cerr << " [ -sym <symgroup=c1> ]        : Symmetry group \n";
+    std::cerr << " [ -iter <N=25> ]              : Number of iterations to perform \n";
+    std::cerr << " [ -keep_angles ]              : Keep transformations from docfile (otherwise start from random)\n";
+    std::cerr << " [ -perturb ]                  : Apply random perturbations to angular sampling in each iteration\n";
+    std::cerr << " [ -dim <int> ]                : Use downscaled (in fourier space) images of this size \n";
+    std::cerr << " [ -maxres <float=0.5> ]       : Maximum resolution (in pixel^-1) to use \n";
+    std::cerr << " [ -thr <int=1> ]              : Number of shared-memory threads to use in parallel \n"; 
     std::cerr << " [ -more_options ]             : Show all possible input parameters \n";
 }
 
@@ -288,18 +306,25 @@ void Prog_ml_tomo_prm::usage()
 void Prog_ml_tomo_prm::extendedUsage()
 {
     std::cerr << "Additional options: " << std::endl;
-    std::cerr << " [ -eps <float=5e-5> ]         : Stopping criterium \n";
+    std::cerr << " [ -impute_iter <int=1> ]      : Number of iterations for inner imputation loop \n";
     std::cerr << " [ -iter <int=100> ]           : Maximum number of iterations to perform \n";
+    std::cerr << " [ -istart <int> ]             : number of initial iteration \n";
     std::cerr << " [ -noise <float=1> ]          : Expected standard deviation for pixel noise \n";
     std::cerr << " [ -offset <float=3> ]         : Expected standard deviation for origin offset [pix]\n";
     std::cerr << " [ -frac <docfile=\"\"> ]        : Docfile with expected model fractions (default: even distr.)\n";
     std::cerr << " [ -restart <logfile> ]        : restart a run with all parameters as in the logfile \n";
-    std::cerr << " [ -istart <int> ]             : number of initial iteration \n";
     std::cerr << " [ -fix_sigma_noise]           : Do not re-estimate the standard deviation in the pixel noise \n";
     std::cerr << " [ -fix_sigma_offset]          : Do not re-estimate the standard deviation in the origin offsets \n";
     std::cerr << " [ -fix_fractions]             : Do not re-estimate the model fractions \n";
-    std::cerr << " [ -doc <docfile=\"\"> ]         : Read initial angles and offsets from docfile \n";
-    std::cerr << " [ -norm ]                     : Refined normalization parameters for each particle \n";
+    std::cerr << " [ -eps <float=5e-5> ]         : Stopping criterium \n";
+    std::cerr << " [ -pixel_size <float=1> ]     : Pixel size (in Anstrom) for resolution in FSC plots \n";
+    std::cerr << " [ -tilt0 <float=-91.> ]       : Limit tilt angle search from tilt0 to tiltF (in degrees) \n";
+    std::cerr << " [ -tiltF <float=91.> ]        : Limit tilt angle search from tilt0 to tiltF (in degrees) \n";
+    std::cerr << " [ -mask <maskfile> ]          : Mask particles; only valid in combination with -dont_align \n";
+    std::cerr << " [ -maxCC ]                    : Use constrained cross-correlation and weighted averaging instead of ML \n";
+    std::cerr << " [ -dont_impute ]              : Use weighted averaging, rather than imputation \n";
+    std::cerr << " [ -noimp_threshold <float=1>] : Threshold to avoid division by zero for weighted averaging \n";
+    std::cerr << " [ -adjust_sepctra ]           : Experimental: equalize power spectra of all tilt-series \n";
     std::cerr << std::endl;
     exit(1);
 }
@@ -381,14 +406,15 @@ void Prog_ml_tomo_prm::produceSideInfo()
         if (!dont_align)
             REPORT_ERROR(1,"ERROR: option -mask is only valid in combination with -dont_align"); 
         Imask.read(fn_mask);
+        if (Imask().computeMin() < 0. || Imask().computeMax() > 1.)
+            REPORT_ERROR(1,"ERROR: mask should have values within the range [0,1]");
         Imask().setXmippOrigin();
+        reScaleVolume(Imask(),true);
         // Remove any borders from the mask (to prevent problems rotating it later on)
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(int_mask)
         {
             DIRECT_MULTIDIM_ELEM(Imask(),n) *= (double)DIRECT_MULTIDIM_ELEM(int_mask,n);
         }
-        if (Imask().computeMin() < 0. || Imask().computeMax() > 1.)
-            REPORT_ERROR(1,"ERROR: mask should have values within the range [0,1]");
         nr_mask_pixels=Imask().sum();
     }
 
