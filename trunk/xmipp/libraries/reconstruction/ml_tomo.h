@@ -132,6 +132,8 @@ public:
     double trymindiff_factor;
     /** Local search angular distance */
     double ang_search;
+    /** Also limit psi search */
+    bool do_limit_psirange;
     /** Perturb angular sampling */
     bool do_perturb;
     /** Low-pass filter at FSC=0.5 resolution in each step */
@@ -280,7 +282,7 @@ public:
     void precalculateA2(std::vector< VolumeXmippT<double> > &Iref);
 
     /// ML-integration over all hidden parameters
-    void expectationSingleImage(Matrix3D<double> &Mimg, int imgno, int missno,
+    void expectationSingleImage(Matrix3D<double> &Mimg, int imgno, int missno, double old_psi,
                                 std::vector<VolumeXmippT<double> > &Iref,
                                 std::vector<Matrix3D<double> > &wsumimgs,
                                 std::vector<Matrix3D<double> > &wsumweds,
@@ -290,7 +292,7 @@ public:
                                 int &opt_refno, int &opt_angno, Matrix1D<double> &opt_offsets);
 
     /// Maximum constrained correlation search over all hidden parameters
-    void maxConstrainedCorrSingleImage(Matrix3D<double> &Mimg, int imgno, int missno,
+    void maxConstrainedCorrSingleImage(Matrix3D<double> &Mimg, int imgno, int missno, double old_psi,
                                        std::vector<VolumeXmippT<double> > &Iref,
                                        std::vector<Matrix3D<double> > &wsumimgs,
                                        std::vector<Matrix3D<double> > &wsumweds,

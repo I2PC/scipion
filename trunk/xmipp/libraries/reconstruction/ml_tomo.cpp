@@ -159,6 +159,7 @@ void Prog_ml_tomo_prm::read(int argc, char **argv)
     tilt_range0 = textToFloat(getParameter(argc2, argv2, "-tilt0", "-91."));
     tilt_rangeF = textToFloat(getParameter(argc2, argv2, "-tiltF", "91."));
     ang_search = textToFloat(getParameter(argc2, argv2, "-ang_search", "-1."));
+    do_limit_psirange = !checkParameter(argc2, argv2, "-dont_limit_psirange");
 
     // Skip alignment (and classification)
     dont_align = checkParameter(argc2, argv2, "-dont_align");
@@ -1739,7 +1740,7 @@ void Prog_ml_tomo_prm::precalculateA2(std::vector< VolumeXmippT<double> > &Iref)
 // Maximum Likelihood calculation for one image ============================================
 // Integration over all translation, given  model and in-plane rotation
 void Prog_ml_tomo_prm::expectationSingleImage(
-    Matrix3D<double> &Mimg, int imgno, int missno,
+    Matrix3D<double> &Mimg, int imgno, int missno, double old_psi,
     std::vector< VolumeXmippT<double> > &Iref,
     std::vector<Matrix3D<double> > &wsumimgs,
     std::vector<Matrix3D<double> > &wsumweds,
@@ -1773,7 +1774,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     int my_nr_ang, my_nr_ref, old_optangno = opt_angno, old_optrefno = opt_refno;
     std::vector<double> all_Xi2;
     Matrix2D<double> A_rot(4,4), I(4,4), A_rot_inv(4,4);
-    bool is_a_neighbor;
+    bool is_a_neighbor, is_within_psirange=true;
     XmippFftw local_transformer;
 
     if (dont_align || do_only_average)
@@ -1884,12 +1885,24 @@ void Prog_ml_tomo_prm::expectationSingleImage(
             if (ang_search > 0.)
             {
                 is_a_neighbor = false;
-                for (int i = 0; i < mysampling.my_neighbors[imgno].size(); i++)
+                if (do_limit_psirange)
                 {
-                    if (mysampling.my_neighbors[imgno][i] == (all_angle_info[angno]).direction)
+                    // also restrict psi-angle search
+                    if (ABS(realWRAP(old_psi - (all_angle_info[angno]).psi,-180.,180.)) <= ang_search)
+                        is_within_psirange=true;
+                    else
+                        is_within_psirange=false;
+                }
+
+                if (!do_limit_psirange || is_within_psirange)
+                {
+                    for (int i = 0; i < mysampling.my_neighbors[imgno].size(); i++)
                     {
-                        is_a_neighbor = true;
-                        break;
+                        if (mysampling.my_neighbors[imgno][i] == (all_angle_info[angno]).direction)
+                        {
+                            is_a_neighbor = true;
+                            break;
+                        }
                     }
                 }
             }
@@ -2122,7 +2135,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
 
 
 void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
-    Matrix3D<double> &Mimg, int imgno, int missno,
+    Matrix3D<double> &Mimg, int imgno, int missno, double old_psi,
     std::vector<VolumeXmippT<double> > &Iref,
     std::vector<Matrix3D<double> > &wsumimgs,
     std::vector<Matrix3D<double> > &wsumweds,
@@ -2145,6 +2158,7 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
     double img_stddev, ref_stddev, corr, maxcorr=-9999.;
     int ioptx,iopty,ioptz;
     int my_nr_ang, my_nr_ref, old_optangno = opt_angno, old_optrefno = opt_refno;
+    bool is_within_psirange=true;
 
     if (dont_align || do_only_average)
         my_nr_ang=1;
@@ -2208,12 +2222,24 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
         if (ang_search > 0.)
         {
             is_a_neighbor = false;
-            for (int i = 0; i < mysampling.my_neighbors[imgno].size(); i++)
+            if (do_limit_psirange)
             {
-                if (mysampling.my_neighbors[imgno][i] == (all_angle_info[angno]).direction)
+                // also restrict psi-angle search
+                if (ABS(realWRAP(old_psi - (all_angle_info[angno]).psi,-180.,180.)) <= ang_search)
+                    is_within_psirange=true;
+                else
+                    is_within_psirange=false;
+            }
+
+            if (!do_limit_psirange || is_within_psirange)
+            {
+                for (int i = 0; i < mysampling.my_neighbors[imgno].size(); i++)
                 {
-                    is_a_neighbor = true;
-                    break;
+                    if (mysampling.my_neighbors[imgno][i] == (all_angle_info[angno]).direction)
+                    {
+                        is_a_neighbor = true;
+                        break;
+                    }
                 }
             }
         }
@@ -2378,7 +2404,7 @@ void * threadMLTomoExpectationSingleImage( void * data )
     FileName fn_img, fn_trans;
     std::vector<Matrix1D<double> > allref_offsets;
     Matrix1D<double> opt_offsets(3);
-    float old_phi = -999., old_theta = -999.;
+    float old_phi = -999., old_theta = -999., old_psi = -999.;
     double fracweight, maxweight2, trymindiff, dLL;
     int opt_refno, opt_angno, missno;
 
@@ -2444,11 +2470,12 @@ void * threadMLTomoExpectationSingleImage( void * data )
         trymindiff = prm->imgs_trymindiff[imgno];
         opt_refno = prm->imgs_optrefno[imgno];
         opt_angno = prm->imgs_optangno[imgno];
+        old_psi = (prm->all_angle_info[opt_angno]).psi;
             
         if (prm->do_ml)
         {
             // A. Use maximum likelihood approach
-            (*prm).expectationSingleImage(img(), imgno, missno, *Iref, *wsumimgs, *wsumweds, 
+            (*prm).expectationSingleImage(img(), imgno, missno, old_psi, *Iref, *wsumimgs, *wsumweds, 
                                           *wsum_sigma_noise, *wsum_sigma_offset, 
                                           *sumw, *LL, dLL, fracweight, *sumfracweight, 
                                           trymindiff, opt_refno, opt_angno, opt_offsets);
@@ -2456,7 +2483,7 @@ void * threadMLTomoExpectationSingleImage( void * data )
         else
         {
             // B. Use constrained correlation coefficient approach
-            (*prm).maxConstrainedCorrSingleImage(img(), imgno, missno, *Iref, 
+            (*prm).maxConstrainedCorrSingleImage(img(), imgno, missno, old_psi, *Iref, 
                                                  *wsumimgs, *wsumweds, *sumw, fracweight, *sumfracweight, 
                                                  opt_refno, opt_angno, opt_offsets);
         }
