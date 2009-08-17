@@ -377,6 +377,11 @@ public:
      */
     void mpi_select_part2(int rank, int size, int& num_img_tot,int mpi_job_size);
 
+    /** Choose a subset of images.
+     * @ingroup SelFilesDisk
+     */
+    void chooseSubset(int firstImage, int lastImage, SelFile &SFsubset);
+
     /** Write a selection file to disk.
      * @ingroup SelFilesDisk
      *

@@ -537,6 +537,19 @@ void SelFile::mpi_select_part2(int jobNumber,
     *this = SFpart;
 }
 
+/* Choose subset ----------------------------------------------------------- */
+void SelFile::chooseSubset(int firstImage, int lastImage, SelFile &SFsubset)
+{
+    SFsubset.clear();
+    go_beginning();
+    jump(firstImage);
+    for (int i=firstImage; i<=lastImage; i++)
+    {
+        if (!eof()) SFsubset.insert(current());
+        next();
+    }
+}
+
 /* Adjust to label --------------------------------------------------------- */
 void SelFile::adjust_to_label(SelLine::Label label)
 {
