@@ -376,11 +376,15 @@ void CommonLine_Parameters::run(int rank)
 {
     // Process all blocks
     int maxBlock=CEIL(((float)Nimg)/Nblock);
+    if (rank==0)
+        init_progress_bar(maxBlock*maxBlock);
     for (int i=0; i<maxBlock; i++)
         for (int j=0; j<maxBlock; j++)
         {
             int numBlock=i*maxBlock+j;
             if ((numBlock+1)%Nmpi==rank)
                 processBlock(i,j);
+            if (rank==0) progress_bar(i*maxBlock+j);
         }
+    if (rank==0) progress_bar(maxBlock*maxBlock);
 }
