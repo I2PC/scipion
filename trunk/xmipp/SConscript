@@ -367,6 +367,7 @@ ReconsSources = [
     'basis.cpp',
     'blobs.cpp',
     'break_symmetry.cpp',
+    'common_lines.cpp',
     'correct_bfactor.cpp',
     'create_projection_library.cpp',
     'crystal_create_surface.cpp',
@@ -529,6 +530,7 @@ AddXmippProgram('ctf_estimate_from_micrograph', ['XmippRecons'])
 AddXmippProgram('ctf_estimate_from_psd', ['XmippRecons'])
 AddXmippProgram('ctf_profile', ['XmippRecons'])
 AddXmippProgram('ctf_group', ['XmippRecons'])
+AddXmippProgram('common_lines', ['XmippRecons'])
 AddXmippProgram('denoise')
 AddXmippProgram('detect_structures')
 AddXmippProgram('docfile_append')
