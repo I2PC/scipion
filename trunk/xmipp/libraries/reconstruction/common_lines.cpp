@@ -83,6 +83,7 @@ void CommonLine_Parameters::produceSideInfo()
     int Xdim, Ydim;
     SF.ImgSize(Ydim,Xdim);
     Nblock=FLOOR(sqrt(mem*pow(2.0,30.0)/(Ydim*Xdim*sizeof(double))));
+    Nblock=XMIPP_MIN(Nblock,CEIL(((float)Nimg)/Nmpi));
     
     // Ask for memory for the common line matrix
     CommonLine dummy;
@@ -282,11 +283,11 @@ void * threadCompareImages( void * args )
     int blockJsize=master->RTsj->size();
     for (int i=0; i<blockIsize; i++)
     {
-        int ii=parent->Nblock*master->i+i;
+        long int ii=parent->Nblock*master->i+i;
         for (int j=0; j<blockJsize; j++)
         {
             // Check if this two images have to be compared
-            int jj=parent->Nblock*master->j+j;
+            long int jj=parent->Nblock*master->j+j;
             if (ii>=jj) continue;
             if ((ii*blockJsize+jj+1)%parent->Nthr!=master->myThreadID)
                 continue;
