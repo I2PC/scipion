@@ -48,8 +48,8 @@ void CommonLine_Parameters::read(int argc, char **argv)
     hpf    = textToFloat(getParameter(argc, argv, "-hpf", "0.35"));
     stepAng= textToFloat(getParameter(argc, argv, "-stepAng", "3"));
     mem    = textToFloat(getParameter(argc, argv, "-mem", "1"));
-    Nmpi   = textToInteger(getParameter(argc, argv, "-nproc", "1"));
     Nthr   = textToInteger(getParameter(argc, argv, "-thr", "1"));
+    Nmpi   = 1;
     distance=CORRENTROPY;
     if (checkParameter(argc,argv,"-correlation"))
         distance=CORRELATION;
@@ -69,7 +69,6 @@ void CommonLine_Parameters::usage()
         << "   [-hpf <f=0.35>]      : high pass frequency (<0.5)\n"
         << "   [-stepAng <s=3>]     : angular step\n"
         << "   [-mem <m=1>]         : float number with the memory available in Gb\n"
-        << "   [-nproc <mpi=1>]     : number of processors\n"
         << "   [-thr <thr=1>]       : number of threads for each process\n"
     ;
 }
@@ -100,7 +99,7 @@ std::ostream & operator << (std::ostream &out, const CommonLine_Parameters &prm)
         << "Highpass:      " << prm.hpf     << std::endl
         << "StepAng:       " << prm.stepAng << std::endl
         << "Memory(Gb):    " << prm.mem     << std::endl
-        << "N.MPI Proc:    " << prm.Nmpi    << std::endl
+        << "Block size:    " << prm.Nblock  << std::endl
         << "N.Threads:     " << prm.Nthr    << std::endl;
     if (prm.distance==CORRENTROPY)
         out << "Distance:      Correntropy\n";
@@ -372,17 +371,15 @@ void CommonLine_Parameters::writeResults() {
 }
 
 /* Main program ------------------------------------------------------------ */
-void ROUT_commonlines(CommonLine_Parameters &prm, int rank)
+void CommonLine_Parameters::run(int rank)
 {
-    prm.produceSideInfo();
-    
     // Process all blocks
-    int maxBlock=CEIL(((float)(prm.Nimg))/prm.Nblock);
+    int maxBlock=CEIL(((float)Nimg)/Nblock);
     for (int i=0; i<maxBlock; i++)
         for (int j=0; j<maxBlock; j++)
         {
             int numBlock=i*maxBlock+j;
-            if ((numBlock+1)%prm.Nmpi==rank)
-                prm.processBlock(i,j);
+            if ((numBlock+1)%Nmpi==rank)
+                processBlock(i,j);
         }
 }

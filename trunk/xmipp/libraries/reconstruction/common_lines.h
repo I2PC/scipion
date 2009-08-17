@@ -97,6 +97,9 @@ public:
 
     /** Write results */
     void writeResults();
+    
+    /** Run */
+    void run(int rank=0);
 public:
     // Block size
     int Nblock;
@@ -113,9 +116,6 @@ public:
     // Common line matrix
     std::vector<CommonLine> CLmatrix;
 };
-
-/** Main program */
-void ROUT_commonlines(CommonLine_Parameters &prm, int rank=0);
 //@}
 
 #endif

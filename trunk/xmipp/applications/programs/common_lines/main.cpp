@@ -42,7 +42,9 @@ int main(int argc, char *argv[])
 
     try
     {
-        ROUT_commonlines(prm);
+        prm.produceSideInfo();
+        std::cout << prm;
+        prm.run();
         prm.writeResults();
     }
     catch (Xmipp_error XE)
