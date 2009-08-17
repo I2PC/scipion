@@ -817,6 +817,7 @@ void Prog_MLalign2D_prm::rotateReference(std::vector< ImageXmippT<double> > &Ire
     Matrix2D<std::complex<double> > Faux;
     Matrix2D<int> mask, omask;
     Matrix2D<double> cmask;
+    XmippFftw local_transformer;
 
     Maux.setXmippOrigin();
     A2.clear();
@@ -853,7 +854,7 @@ void Prog_MLalign2D_prm::rotateReference(std::vector< ImageXmippT<double> > &Ire
             if (fill_real_space)
                 mref.push_back(Maux);
             // Do the forward FFT 
-            transformer.FourierTransform(Maux,Faux,false);
+            local_transformer.FourierTransform(Maux,Faux,false);
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
             {
                 dMij(Faux, i, j) = conj(dMij(Faux, i, j));
@@ -875,6 +876,7 @@ void Prog_MLalign2D_prm::reverseRotateReference(
     double psi, dum, avg, ang;
     Matrix2D<double> Maux(dim, dim), Maux2(dim, dim);
     Matrix2D<int> mask, omask;
+    XmippFftw local_transformer;
     Maux.setXmippOrigin();
     Maux2.setXmippOrigin();
     
@@ -897,7 +899,7 @@ void Prog_MLalign2D_prm::reverseRotateReference(
             psi = (double)(ipsi * psi_max / nr_psi) + SMALLANGLE;
 
             // Do the backward FFT
-            transformer.inverseFourierTransform(fnew[refnoipsi],Maux);
+            local_transformer.inverseFourierTransform(fnew[refnoipsi],Maux);
             CenterFFT(Maux, true);
             computeStats_within_binary_mask(omask, Maux, dum, dum, avg, dum);
             Maux.rotateBSpline(3, -psi, Maux2, WRAP);
