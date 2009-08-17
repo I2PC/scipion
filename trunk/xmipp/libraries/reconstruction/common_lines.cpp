@@ -230,7 +230,7 @@ void commonLineTwoImages(std::vector< Matrix2D<double> > &RTsi, int idxi,
     result.distanceij=2;
     result.angi=-1;
     result.angj=-1;
-    for (int ii=0; ii<YSIZE(RTi); ii++)
+    for (int ii=0; ii<YSIZE(RTi)/2+1; ii++)
     {
         Matrix1D<double> linei;
         linei.initZeros(XSIZE(RTi));
