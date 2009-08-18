@@ -30,6 +30,7 @@
 #include <data/fftw.h>
 #include <data/docfile.h>
 #include <data/de_solver.h>
+#include <data/morphology.h>
 #include <fstream>
 #include <queue>
 #include <iostream>
@@ -624,6 +625,20 @@ void Prog_tomograph_alignment::produceSideInfo() {
     }
 }
 
+/* Generate mask ----------------------------------------------------------- */
+void generateMask(const Matrix2D<double> &I, Matrix2D<double> &mask,
+    int patchSize)
+{
+    mask.initZeros(I);
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
+        if (I(i,j)!=0) mask(i,j)=1;
+    
+    Matrix2D<double> maskDilated;
+    maskDilated.initZeros(mask);
+    erode2D(mask,maskDilated,8,0,patchSize);    
+    mask=maskDilated;
+}
+
 /* Generate landmark set --------------------------------------------------- */
 //#define DEBUG
 static pthread_mutex_t chainRefineMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -664,6 +679,12 @@ void * threadgenerateLandmarkSetGrid( void * args )
             YY(rii)=STARTINGY(*(parent->img)[0])+ROUND(deltaShift*(0.5+ny));
             for (int ii=0; ii<=Nimg-1; ++ii)
             {
+                // Generate mask
+                Matrix2D<double> largeMask;
+                generateMask(*(parent->img[ii]),largeMask,
+                    XMIPP_MAX(ROUND(parent->localSize*XSIZE(*(parent->img[ii])))/2,5));
+                if (!largeMask((int)YY(rii),(int)XX(rii))) continue;
+
                 LandmarkChain chain;
                 chain.clear();
                 Landmark l;
@@ -806,6 +827,11 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
     
     for (int ii=thread_id; ii<=Nimg-1; ii+=numThreads)
     {
+        // Generate mask
+        Matrix2D<double> largeMask;
+        generateMask(*(parent->img[ii]),largeMask,
+            XMIPP_MAX(ROUND(parent->localSize*XSIZE(*(parent->img[ii])))/2,5));
+
         // Filter the image
         Matrix2D<double> Ifiltered;
         FourierMask FilterHP;
@@ -834,7 +860,7 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
         double th=hist.percentil(2);
         std::vector< Matrix1D<double> > Q;
         FOR_ALL_ELEMENTS_IN_MATRIX2D(Iaux)
-            if (Ifiltered(i,j)<th)
+            if (Ifiltered(i,j)<th && largeMask(i,j))
             {
                 // Check if it is a local minimum
                 bool localMinimum=true;
@@ -949,8 +975,8 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
             save()=Ifiltered; save.write("PPPfiltered.xmp");
             double minval=Ifiltered.computeMin();
             FOR_ALL_ELEMENTS_IN_MATRIX2D(Ifiltered)
-            if (Ifiltered(i,j)>=th)
-                save(i,j)=th;
+                if (Ifiltered(i,j)>=th || !largeMask(i,j))
+                    save(i,j)=th;
             for (int q=0; q<Q.size(); q++)
                 FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
                     if (YY(Q[q])+i>=STARTINGY(Ifiltered) && YY(Q[q])+i<=FINISHINGY(Ifiltered) &&
