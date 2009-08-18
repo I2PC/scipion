@@ -41,6 +41,13 @@
     0. Ie, if more than 0 pixels meet the condition then the corresponding
     operation is applied.
 
+    Example of use:
+    @code
+    Matrix2D<double> maskDilated;
+    maskDilated.initZeros(mask);
+    dilate2D(mask,maskDilated,8,0,patchSize);    
+    @endcode
+
     Size is the size of the structuring element (box).
 
     The output image must be already resized to the desired shape*/
