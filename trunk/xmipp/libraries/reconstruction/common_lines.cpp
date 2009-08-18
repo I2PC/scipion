@@ -47,6 +47,7 @@ void CommonLine_Parameters::read(int argc, char **argv)
     lpf    = textToFloat(getParameter(argc, argv, "-lpf", "0.01"));
     hpf    = textToFloat(getParameter(argc, argv, "-hpf", "0.35"));
     stepAng= textToFloat(getParameter(argc, argv, "-stepAng", "3"));
+    qualify= checkParameter(argc, argv, "-qualify");
     mem    = textToFloat(getParameter(argc, argv, "-mem", "1"));
     Nthr   = textToInteger(getParameter(argc, argv, "-thr", "1"));
     Nmpi   = 1;
@@ -68,6 +69,7 @@ void CommonLine_Parameters::usage()
         << "   [-lpf <f=0.01>]      : low pass frequency (<0.5)\n"
         << "   [-hpf <f=0.35>]      : high pass frequency (<0.5)\n"
         << "   [-stepAng <s=3>]     : angular step\n"
+        << "   [-qualify]           : assess the quality of each common line\n"
         << "   [-mem <m=1>]         : float number with the memory available in Gb\n"
         << "   [-thr <thr=1>]       : number of threads for each process\n"
     ;
@@ -297,8 +299,15 @@ void * threadCompareImages( void * args )
                 continue;
             
             // Effectively compare the two images
+            long int idx_ij=ii*parent->Nimg+jj;
             commonLineTwoImages(*(master->RTsi),i,*(master->RTsj),j,
-                parent,parent->CLmatrix[ii*parent->Nimg+jj]);
+                parent,parent->CLmatrix[idx_ij]);
+            
+            // Compute the symmetric element
+            long int idx_ji=jj*parent->Nimg+ii;
+            parent->CLmatrix[idx_ji].distanceij=parent->CLmatrix[idx_ij].distanceij;
+            parent->CLmatrix[idx_ji].angi      =parent->CLmatrix[idx_ij].angj;
+            parent->CLmatrix[idx_ji].angj      =parent->CLmatrix[idx_ij].angi;
         }
     }
 }
@@ -341,8 +350,76 @@ void CommonLine_Parameters::processBlock(int i, int j)
     delete( th_args );
 }
 
+/* Qualify common lines ---------------------------------------------------- */
+void CommonLine_Parameters::qualifyCommonLines()
+{
+    if (!qualify) return;
+    qualification.resize(CLmatrix.size());
+    Matrix1D<double> peaks;
+    peaks.initZeros(Nimg*(Nimg-1)/2);
+    int iPeak=0;
+    for (int k1=0; k1<Nimg; k1++)
+        for (int k2=k1+1; k2<Nimg; k2++)
+        {
+            // Locate the common line between k1 and k2
+            long int idx12=k1*Nimg+k2;
+        
+            // Initialize alpha_12 angle histogram
+            Matrix1D<double> h;
+            h.initZeros(181);
+            
+            // Iterate over all images except k1 and k2
+            for (int k3=0; k3<Nimg; k3++)
+            {
+                if (k3==k1 || k3==k2) continue;
+                
+                // Locate the corresponding common lines
+                long int   idx13=k1*Nimg+k3;
+                long int   idx23=k2*Nimg+k3;
+                
+                // Compute a,b,c
+                double a=COSD(CLmatrix[idx23].angj-CLmatrix[idx13].angj);
+                double b=COSD(CLmatrix[idx23].angi-CLmatrix[idx12].angj);
+                double c=COSD(CLmatrix[idx13].angi-CLmatrix[idx12].angi);
+                
+                // Update histogram if necessary
+                if (1+2*a*b*c>a*a+b*b+c*c)
+                {
+                    double alpha12=180/PI*acos((a-b*c)/(sqrt(1-b*b)*sqrt(1-c*c)));
+                    int idxAlpha12=ROUND(alpha12);
+                    int idx0=XMIPP_MAX(  0,idxAlpha12-10);
+                    int idxF=XMIPP_MIN(180,idxAlpha12+10);
+                    for (int idx=idx0; idx<=idxF; idx++)
+                    {
+                        double diff=idx-alpha12;
+                        h(idx)+=exp(-0.5*diff*diff/9);
+                    }
+                }
+            }
+            
+            // Compute the histogram peak
+            qualification[idx12]=h.computeMax();
+            peaks(iPeak++)=qualification[idx12];
+        }
+    
+    // Compute the histogram of the peaks
+    histogram1D hist;
+    compute_hist(peaks,hist,400);
+    hist/=hist.sum();
+    hist.write("PPPpeakhist.txt");
+    
+    // Reevaluate the peaks
+    for (int k1=0; k1<Nimg; k1++)
+        for (int k2=k1+1; k2<Nimg; k2++)
+        {
+            long int idx12=k1*Nimg+k2;
+            qualification[idx12]=hist.mass_below(qualification[idx12]);
+        }
+}
+
 /* Write results ----------------------------------------------------------- */
-void CommonLine_Parameters::writeResults() {
+void CommonLine_Parameters::writeResults()
+{
     // Look for the minimum and maximum of the common line matrix
     double minVal=2, maxVal=-2;
     for (int i=0; i<Nimg; i++)
@@ -362,7 +439,7 @@ void CommonLine_Parameters::writeResults() {
     if (!fh_out)
         REPORT_ERROR(1,(std::string)"Cannot open "+fn_out+" for writing");
     for (int i=0; i<Nimg; i++)
-        for (int j=0; j<Nimg; j++)
+        for (int j=i+1; j<Nimg; j++)
         {
             int ii=i*Nimg+j;
             if (CLmatrix[ii].distanceij>0)
@@ -370,7 +447,10 @@ void CommonLine_Parameters::writeResults() {
                        << ROUND(65535*(CLmatrix[ii].distanceij-minVal)/
                              (maxVal-minVal)) << " "
                        << CLmatrix[ii].angi << " "
-                       << CLmatrix[ii].angj << std::endl;
+                       << CLmatrix[ii].angj;
+                if (qualify)
+                    fh_out << " " << qualification[ii];
+                fh_out << std::endl;
         }
     fh_out.close();
 }

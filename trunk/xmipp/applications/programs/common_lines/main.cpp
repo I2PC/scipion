@@ -45,6 +45,7 @@ int main(int argc, char *argv[])
         prm.produceSideInfo();
         std::cout << prm;
         prm.run();
+        prm.qualifyCommonLines();
         prm.writeResults();
     }
     catch (Xmipp_error XE)

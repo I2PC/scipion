@@ -67,6 +67,8 @@ public:
     double          hpf;
     /// Angular sampling
     double          stepAng;
+    /// Qualify
+    bool            qualify;
 
     /// Memory limit
     double          mem;
@@ -95,6 +97,9 @@ public:
     friend std::ostream & operator << (std::ostream &out,
         const CommonLine_Parameters &prm);
 
+    /** Qualify common lines */
+    void qualifyCommonLines();
+
     /** Write results */
     void writeResults();
     
@@ -115,6 +120,9 @@ public:
 
     // Common line matrix
     std::vector<CommonLine> CLmatrix;
+
+    // Common line matrix
+    std::vector<double> qualification;
 
     // Gaussian interpolator
     GaussianInterpolator gaussianInterpolator;

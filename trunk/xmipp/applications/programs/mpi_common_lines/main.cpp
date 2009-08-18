@@ -107,7 +107,11 @@ int main(int argc, char **argv)
             v[0]=-1;
             MPI_Send(v, 5, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
         }
-        if (rank == 0) prm.writeResults();
+        if (rank == 0)
+        {
+            prm.qualifyCommonLines();
+            prm.writeResults();
+        }
     }
     catch (Xmipp_error XE)
     {
