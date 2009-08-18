@@ -502,6 +502,21 @@ double correntropy(const Matrix1D<T> &x, const Matrix1D<T> &y,
     return retval;
 }
 
+/** Fast Correntropy 1D
+ * @ingroup Filters
+ */
+template <typename T>
+double fastCorrentropy(const Matrix1D<T> &x, const Matrix1D<T> &y,
+    double sigma, const GaussianInterpolator &G)
+{
+    double retval=0;
+    double isigma=1.0/sigma;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(x)
+        retval+=G.getValue(isigma*(DIRECT_VEC_ELEM(x,i)-DIRECT_VEC_ELEM(y,i)));
+    retval/=XSIZE(x);
+    return retval;
+}
+
 /** Correntropy 2D
  * @ingroup Filters
  */
