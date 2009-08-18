@@ -115,6 +115,9 @@ public:
 
     // Common line matrix
     std::vector<CommonLine> CLmatrix;
+
+    // Gaussian interpolator
+    GaussianInterpolator gaussianInterpolator;
 };
 //@}
 

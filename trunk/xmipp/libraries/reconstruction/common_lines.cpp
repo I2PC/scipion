@@ -89,6 +89,9 @@ void CommonLine_Parameters::produceSideInfo()
     CommonLine dummy;
     for (int i=0; i<Nimg*Nimg; i++)
         CLmatrix.push_back(dummy);
+
+    // Initialize the Gaussian interpolator
+    gaussianInterpolator.initialize(6,60000,false);
 }
 
 /* Show -------------------------------------------------------------------- */
@@ -249,7 +252,8 @@ void commonLineTwoImages(std::vector< Matrix2D<double> > &RTsi, int idxi,
             if (parent->distance==CORRELATION)
                 distance=1-(correlation_index(linei,linej)+1)/2;
             else if (parent->distance==CORRENTROPY)
-                distance=1-correntropy(linei,linej,parent->sigma);
+                distance=1-fastCorrentropy(linei,linej,parent->sigma,
+                    parent->gaussianInterpolator);
 
             // Check if this is the best match
             if (distance<result.distanceij)
