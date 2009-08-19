@@ -333,11 +333,19 @@ void Prog_Refine3d_prm::show()
 // Fill sampling and create DFlib
 void Prog_Refine3d_prm::produceSideInfo(int rank)
 {
+
+    FileName fn_sym_loc;
+
     // Precalculate sampling
     mysampling.SetSampling(angular);
-    if (!mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
-        REPORT_ERROR(3005, (std::string)"ml_refine3d::run Invalid symmetry" +  fn_sym);
-    mysampling.SL.read_sym_file(fn_sym);
+    if (fn_symmask != "")
+        fn_sym_loc="c1";
+    else 
+        fn_sym_loc=fn_sym;
+
+    if (!mysampling.SL.isSymmetryGroup(fn_sym_loc, symmetry, sym_order))
+        REPORT_ERROR(3005, (std::string)"ml_refine3d::run Invalid symmetry" +  fn_sym_loc);
+    mysampling.SL.read_sym_file(fn_sym_loc);
     mysampling.Compute_sampling_points(true, tilt_rangeF, tilt_range0);
     mysampling.remove_redundant_points_exhaustive(symmetry, sym_order, true, 0.75 * angular);
 
@@ -849,8 +857,14 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv)
     Matrix3D<int>          mask3D;
     double                 avg, dummy, in, out;
     int                    dim;
+    XmippSampling          locsampling;
 
-    if ((fn_sym != "") || (lowpass > 0) ||
+    // Use local sampling because of symmask
+    if (!locsampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
+        REPORT_ERROR(3005, (std::string)"ml_refine3d::run Invalid symmetry" +  fn_sym);
+    locsampling.SL.read_sym_file(fn_sym);
+
+    if ( !(fn_sym == "c1" || fn_sym == "C1" ) || (lowpass > 0) ||
         (fn_solv != "") || (do_prob_solvent) || (threshold_solvent != 999))
     {
 
@@ -870,7 +884,7 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv)
             if (fn_sym != "")
             {
                 Vaux().resize(vol());
-                symmetrize(mysampling.SL, vol, Vaux);
+                symmetrize(locsampling.SL, vol, Vaux);
                 // Read local symmetry mask if requested
                 if (fn_symmask != "")
                 {
