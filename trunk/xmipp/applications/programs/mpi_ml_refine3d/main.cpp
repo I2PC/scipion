@@ -125,7 +125,7 @@ int main(int argc, char **argv)
     try
     {
         // Initialize some additional stuff
-        Maux.resize(ML2D_prm.dim, ML2D_prm.dim);
+        Maux.resize(ML2D_prm.oridim, ML2D_prm.oridim);
         Maux.setXmippOrigin();
         for (int refno = 0; refno < ML2D_prm.n_ref; refno++) conv.push_back(-1.);
 
