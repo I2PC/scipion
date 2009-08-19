@@ -105,7 +105,13 @@ public:
     int oridim, dim, dim2, hdim;
     double ddim2;
     /** Maximum resolution (dig.freq.) */
-    double max_resol, scale_factor;
+    double ini_resol, max_resol, step_resol, curr_resol, scale_factor;
+    /** Calculate FRC curves for all references? */
+    bool do_frc;
+    /** Perform a multi-resolution optimization?*/
+    bool do_multires;
+    /** For FRC calculation */
+    int nr_random;
     /** Number of steps to sample in-plane rotation in 90 degrees */
     int nr_psi;
     /** Number of operations in "flip-array" (depending on do_mirror) */
@@ -138,15 +144,13 @@ public:
     /** vector for flipping (i.e. 90/180-degree rotations) matrices */
     std::vector<Matrix2D<double> > F;
     /** Vector for images to hold references (new & old) */
-    std::vector < ImageXmippT<double> > Iref, Iold;
+    std::vector < ImageXmippT<double> > Iref, Iref_split1, Iref_split2, Iold;
     /** Matrices for calculating PDF of (in-plane) translations */
     Matrix2D<double> P_phi, Mr2;
     /** Fast mode */
     bool fast_mode;
     /** Fast mode */
     double C_fast;
-    /** Very crude origin pixel artifact correction */
-    bool do_esthetics;
     /** Maximum shift to be trusted */
     double max_shift;
     /** Offsets for limited translations */
@@ -195,9 +199,6 @@ public:
     /** Threads */
     int threads;
 
-    /** FFTW objects */
-    XmippFftw transformer;
-
     /** debug flag */
     int debug;
 
@@ -216,6 +217,9 @@ public:
 
     /// Setup lots of stuff
     void produceSideInfo();
+
+    /// Set current resolution (image size)
+    void setCurrentResolution(double &resol);
 
     /// Rescale image from dim to oridim and vice versa
     void reScaleImage(Matrix2D<double> &Min, bool down_scale);
@@ -258,7 +262,7 @@ public:
                                   std::vector<double > &pdf_directions);
 
     /// ML-integration over all (or -fast) translations
-    void expectationSingleImage(Matrix2D<double> &Mimg,
+    void expectationSingleImage(Matrix2D<double> &Mimg, int irandom,
                                 std::vector<Matrix2D<std::complex<double> > > &fref,
                                 std::vector<Matrix2D<std::complex<double> > > &wsumimgs,
                                 Matrix2D<int> &Msignificant,
@@ -288,6 +292,13 @@ public:
                       std::vector<double> &sumw_mirror,
                       double &sumfracweight, double &sumw_allrefs, int refs_per_class=1);
 
+
+    /// Calculate FRC for all references
+    double calculateResolution(const int iter);
+
+    /// Update resolution
+    bool changeCurrentResolution(double new_resol);
+    
     /// check convergence
     bool checkConvergence(std::vector<double> &conv);
 

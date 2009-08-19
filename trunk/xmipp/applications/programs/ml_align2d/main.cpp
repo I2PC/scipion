@@ -28,7 +28,7 @@
 int main(int argc, char **argv)
 {
     int c, nn, imgno, opt_refno;
-    double LL, sumw_allrefs, convv, sumcorr;
+    double LL, sumw_allrefs, convv, sumcorr, new_resol;
     bool converged;
     std::vector<double> conv;
     double aux, wsum_sigma_noise, wsum_sigma_offset;
@@ -46,6 +46,7 @@ int main(int argc, char **argv)
     {
         prm.read(argc, argv);
         prm.produceSideInfo();
+        prm.curr_resol=prm.ini_resol;
         prm.show();
         if (prm.fn_ref == "")
         {
@@ -98,6 +99,13 @@ int main(int argc, char **argv)
 
             // Check convergence
             converged = prm.checkConvergence(conv);
+
+            // Calculate resolution (and update)
+            if (prm.do_frc)
+                new_resol = prm.calculateResolution(iter);
+            if (prm.do_multires)
+                if (prm.changeCurrentResolution(new_resol))
+                    converged = false;
 
             prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
 
