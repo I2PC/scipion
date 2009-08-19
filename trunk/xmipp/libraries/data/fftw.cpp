@@ -43,8 +43,11 @@ void XmippFftw::clear()
 {
     fReal=NULL;
     fFourier.clear();
-    if (fPlanForward !=NULL) fftw_destroy_plan(fPlanForward);
-    if (fPlanBackward!=NULL) fftw_destroy_plan(fPlanBackward);
+    // Anything to do with plans has to be protected for threads!
+    pthread_mutex_lock(&fftw_plan_mutex);
+        if (fPlanForward !=NULL) fftw_destroy_plan(fPlanForward);
+        if (fPlanBackward!=NULL) fftw_destroy_plan(fPlanBackward);
+    pthread_mutex_unlock(&fftw_plan_mutex);
     fPlanForward     = NULL;
     fPlanBackward    = NULL;
     dataPtr          = NULL;
