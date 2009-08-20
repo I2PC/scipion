@@ -1567,4 +1567,22 @@ void local_thresholding(Matrix2D< double >& img,
                         Matrix2D< int >& result,
                         Matrix2D< int >* mask = NULL);
 
+/** Center an image translationally
+ * @ingroup Filters
+ *
+ * Given an image, this function returns the image that has been centered
+ * translationally. For doing so, it compares this image with its mirrored
+ * (X, Y, XY) versions.
+ */
+void centerTranslationally(Matrix2D<double> &I);
+
+/** Center an image rotationally
+ * @ingroup Filters
+ *
+ * Given an image, this function returns the image that has been centered
+ * rotationally. For doing so, it compares this image with its mirrored
+ * (X) version.
+ */
+void centerRotationally(Matrix2D<double> &I);
+
 #endif

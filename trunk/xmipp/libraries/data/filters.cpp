@@ -25,6 +25,7 @@
 
 #include "filters.h"
 #include "fftw.h"
+#include "polar.h"
 #include <list>
 
 /* Substract background ---------------------------------------------------- */
@@ -1373,3 +1374,47 @@ void local_thresholding(Matrix2D<double> &img,
             result(i, j) = 1;
     }
 }
+
+/* Center translationally -------------------------------------------------- */
+void centerTranslationally(Matrix2D<double> &I)
+{
+    Matrix2D<double> Ix  = I; Ix.selfReverseX();   Ix.setXmippOrigin();
+    Matrix2D<double> Iy  = I; Iy.selfReverseY();   Iy.setXmippOrigin();
+    Matrix2D<double> Ixy = Ix; Ixy.selfReverseY(); Ixy.setXmippOrigin();
+    
+    double meanShiftX=0, meanShiftY=0, shiftX, shiftY;
+    best_shift(I,Ix, meanShiftX,meanShiftY);
+    best_shift(I,Iy, shiftX,shiftY);
+    meanShiftX+=shiftX; meanShiftY+=shiftY;
+    best_shift(I,Ixy,shiftX,shiftY);
+    meanShiftX+=shiftX; meanShiftY+=shiftY;
+    meanShiftX/=3; meanShiftY/=3;
+    
+    Matrix1D<double> shift(2);
+    VECTOR_R2(shift,-meanShiftX,-meanShiftY);
+    I.selfTranslateBSpline(3,shift);
+}
+
+/* Center rotationally ----------------------------------------------------- */
+void centerRotationally(Matrix2D<double> &I)
+{
+    Matrix2D<double> Ix  = I; Ix.selfReverseX();
+    Ix.setXmippOrigin();
+
+    Polar_fftw_plans *plans=NULL;
+    Polar< std::complex<double> > polarFourierI, polarFourierIx;
+    normalizedPolarFourierTransform(Ix,polarFourierIx,false,XSIZE(Ix)/5,
+        XSIZE(Ix)/2,plans);
+    normalizedPolarFourierTransform(I, polarFourierI, true, XSIZE(I)/5,
+        XSIZE(I)/2,plans);
+
+    XmippFftw local_transformer;
+    Matrix1D<double> rotationalCorr;
+    rotationalCorr.resize(2*polarFourierI.getSampleNoOuterRing()-1);
+    local_transformer.setReal(rotationalCorr);
+    double bestRot = best_rotation(polarFourierIx,polarFourierI,
+        local_transformer);
+
+    I.selfRotateBSpline(3,-bestRot/2,WRAP);
+}
+
