@@ -237,25 +237,8 @@ void VQProjection::transferUpdate()
 
 void VQProjection::computeTransforms()
 {
-   // Make sure the image is centered
-    double Xcenter=0, Ycenter=0, sumWeight=0;
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(P)
-    {
-        double val=P(i,j);
-        if (val>0 && MAT_ELEM(*mask,i,j))
-        {
-            sumWeight+=val;
-            Xcenter+=val*j;
-            Ycenter+=val*i;
-        }
-    }
-    if (sumWeight!=0)
-    {
-        Xcenter/=sumWeight;
-        Ycenter/=sumWeight;
-        if (sqrt(Xcenter*Xcenter+Ycenter*Ycenter)>1)
-            P.selfTranslateBSpline(3,vectorR2(-Xcenter,-Ycenter));
-    }
+    // Make sure the image is centered
+    centerImage(P);
 
     // Compute the polar Fourier transform of the full image
     normalizedPolarFourierTransform(P,polarFourierP,false,
