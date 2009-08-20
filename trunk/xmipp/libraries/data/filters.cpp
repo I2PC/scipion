@@ -1376,7 +1376,7 @@ void local_thresholding(Matrix2D<double> &img,
 }
 
 /* Center translationally -------------------------------------------------- */
-void centerTranslationally(Matrix2D<double> &I)
+void centerImageTranslationally(Matrix2D<double> &I)
 {
     Matrix2D<double> Ix  = I; Ix.selfReverseX();   Ix.setXmippOrigin();
     Matrix2D<double> Iy  = I; Iy.selfReverseY();   Iy.setXmippOrigin();
@@ -1396,7 +1396,7 @@ void centerTranslationally(Matrix2D<double> &I)
 }
 
 /* Center rotationally ----------------------------------------------------- */
-void centerRotationally(Matrix2D<double> &I)
+void centerImageRotationally(Matrix2D<double> &I)
 {
     Matrix2D<double> Ix  = I; Ix.selfReverseX();
     Ix.setXmippOrigin();
@@ -1418,3 +1418,52 @@ void centerRotationally(Matrix2D<double> &I)
     I.selfRotateBSpline(3,-bestRot/2,WRAP);
 }
 
+/* Center both rotationally and translationally ---------------------------- */
+void centerImage(Matrix2D<double> &I, int Niter)
+{
+    Matrix2D<double> Ix, Iy, Ixy, Iaux, A;
+    A.initIdentity(3);
+    Iaux=I;
+    
+    for (int i=0; i<Niter; i++)
+    {
+        // Center translationally
+        Ix  = Iaux;  Ix.selfReverseX();  Ix.setXmippOrigin();
+        Iy  = Iaux;  Iy.selfReverseY();  Iy.setXmippOrigin();
+        Ixy = Ix;   Ixy.selfReverseY(); Ixy.setXmippOrigin();
+
+        double meanShiftX=0, meanShiftY=0, shiftX, shiftY;
+        best_shift(Iaux,Ix, meanShiftX,meanShiftY);
+        best_shift(Iaux,Iy, shiftX,shiftY);
+        meanShiftX+=shiftX; meanShiftY+=shiftY;
+        best_shift(Iaux,Ixy,shiftX,shiftY);
+        meanShiftX+=shiftX; meanShiftY+=shiftY;
+        meanShiftX/=3; meanShiftY/=3;
+
+        A(0,2)+=-meanShiftX;
+        A(1,2)+=-meanShiftY;
+        applyGeometry(Iaux,A,I,IS_NOT_INV,WRAP);
+
+        // Center rotationally
+        Ix  = Iaux;  Ix.selfReverseX();  Ix.setXmippOrigin();
+
+        Polar_fftw_plans *plans=NULL;
+        Polar< std::complex<double> > polarFourierI, polarFourierIx;
+        normalizedPolarFourierTransform(Ix,polarFourierIx,false,XSIZE(Ix)/5,
+            XSIZE(Ix)/2,plans);
+        normalizedPolarFourierTransform(Iaux, polarFourierI, true, XSIZE(I)/5,
+            XSIZE(I)/2,plans);
+
+        XmippFftw local_transformer;
+        Matrix1D<double> rotationalCorr;
+        rotationalCorr.resize(2*polarFourierI.getSampleNoOuterRing()-1);
+        local_transformer.setReal(rotationalCorr);
+        double bestRot = best_rotation(polarFourierIx,polarFourierI,
+            local_transformer);
+
+        A=rotation2DMatrix(-bestRot/2)*A;
+        applyGeometry(Iaux,A,I,IS_NOT_INV,WRAP);
+    }
+    applyGeometryBSpline(Iaux,A,I,3,IS_NOT_INV,WRAP);
+    I=Iaux;
+}
