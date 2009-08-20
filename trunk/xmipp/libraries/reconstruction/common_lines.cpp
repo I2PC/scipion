@@ -54,6 +54,8 @@ void CommonLine_Parameters::read(int argc, char **argv)
     distance=CORRENTROPY;
     if (checkParameter(argc,argv,"-correlation"))
         distance=CORRELATION;
+    if (checkParameter(argc,argv,"-euclidean"))
+        distance=EUCLIDEAN;
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -66,6 +68,7 @@ void CommonLine_Parameters::usage()
         << "    -i <file_in>        : input selfile\n"
         << "   [-o <file_out>]      : if no name is given, commonlines.txt\n"
         << "   [-correlation]       : use correlation instead of correntropy\n"
+        << "   [-euclidean]         : use euclidean distance instead of correntropy\n"
         << "   [-lpf <f=0.01>]      : low pass frequency (<0.5)\n"
         << "   [-hpf <f=0.35>]      : high pass frequency (<0.5)\n"
         << "   [-stepAng <s=3>]     : angular step\n"
@@ -111,6 +114,8 @@ std::ostream & operator << (std::ostream &out, const CommonLine_Parameters &prm)
         out << "Distance:      Correntropy\n";
     else if (prm.distance==CORRELATION)
         out << "Distance:      Correlation\n";
+    else if (prm.distance==EUCLIDEAN)
+        out << "Distance:      Euclidean distance\n";
     return out;
 }
 
@@ -258,12 +263,21 @@ void commonLineTwoImages(std::vector< Matrix2D<double> > &RTsi, int idxi,
             FOR_ALL_ELEMENTS_IN_MATRIX1D(linej) linej(i) = RTj(jj,i);
             
             // Compute distance between the two lines
-            double distance;
+            double distance=0;
             if (parent->distance==CORRELATION)
                 distance=1-(correlation_index(linei,linej)+1)/2;
             else if (parent->distance==CORRENTROPY)
                 distance=1-fastCorrentropy(linei,linej,parent->sigma,
                     parent->gaussianInterpolator);
+            else if (parent->distance==EUCLIDEAN)
+            {
+                FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(linei)
+                {
+                    double diff=DIRECT_VEC_ELEM(linei,i)-
+                                DIRECT_VEC_ELEM(linej,i);
+                    distance+=diff*diff;
+                }
+            }
 
             // Check if this is the best match
             if (distance<result.distanceij)

@@ -34,7 +34,7 @@
    @ingroup ReconsLibraryPrograms */
 //@{
 /* Parameters -------------------------------------------------------------- */
-typedef enum {CORRENTROPY=0, CORRELATION=1} DistanceType;
+typedef enum {CORRENTROPY=0, CORRELATION=1, EUCLIDEAN=2} DistanceType;
 
 /// Commonline
 class CommonLine
