@@ -157,21 +157,29 @@ void * threadPrepareImages( void * args )
             I.read(SFi.NextImg());
             I().setXmippOrigin();
 
+            // Bandpass filter images
             if (first)
             {
                 Filter.generate_mask(I());
                 first=false;
             }
             Filter.apply_mask_Space(I());
-            Matrix2D<double> RT;
-            Radon_Transform(I(),parent->stepAng,RT);
-            (*(master->blockRTs))[i]=RT;
 
+            // Compute sigma outside the largest circle
             double min_val, max_val, avg, stddev;
             computeStats_within_binary_mask(mask,I(),
                 min_val, max_val, avg, stddev);
             master->sigma+=stddev;
             Nsigma++;
+
+            // Cut the image outside the largest circle
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
+                if (mask(i,j)) I(i,j)=0;
+
+            // Compute the Radon transform
+            Matrix2D<double> RT;
+            Radon_Transform(I(),parent->stepAng,RT);
+            (*(master->blockRTs))[i]=RT;
         }
         else
             SFi.next();
