@@ -199,6 +199,9 @@ public:
     // List of image pointers
     std::vector < Matrix2D<double> *> img;
 
+    // List of mask pointers
+    std::vector < Matrix2D<int> *> maskImg;
+
     // Index of the image closest to 0 degrees in tilt
     int iMinTilt;
 

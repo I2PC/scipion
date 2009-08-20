@@ -37,6 +37,21 @@
 
 #include "fourier_filter.h"
 
+/* Generate mask ----------------------------------------------------------- */
+void generateMask(const Matrix2D<double> &I, Matrix2D<int> &mask,
+    int patchSize)
+{
+    Matrix2D<double> dmask;
+    dmask.initZeros(I);
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(dmask)
+        if (I(i,j)!=0) dmask(i,j)=1;
+    
+    Matrix2D<double> maskEroded;
+    maskEroded.initZeros(dmask);
+    erode2D(dmask,maskEroded,8,0,patchSize);    
+    typeCast(maskEroded,mask);
+}
+
 /* Compute affine matrix --------------------------------------------------- */
 class AffineFitness
 {
@@ -462,6 +477,12 @@ void Prog_tomograph_alignment::produceSideInfo() {
           img.clear();
        }
 
+       // Clear the list of masks if not empty
+       if (maskImg.size()!=0) {
+          for (int i=0; i<maskImg.size(); i++) delete maskImg[i];
+          maskImg.clear();
+       }
+
        std::cerr << "Reading input data\n";
        init_progress_bar(Nimg);
        int n=0;
@@ -477,6 +498,15 @@ void Prog_tomograph_alignment::produceSideInfo() {
           *img_i=imgaux();
           img_i->setXmippOrigin();
           img.push_back(img_i);
+          
+          if (!useCriticalPoints)
+          {
+              Matrix2D<int>* mask_i=new Matrix2D<int>;
+              generateMask(*img_i,*mask_i,
+                XMIPP_MAX(ROUND(localSize*XSIZE(*img_i))/2,5));
+              maskImg.push_back(mask_i);
+          }
+          
           tiltList.push_back(imgaux.tilt());
           if (imgaux.tilt()!=0) nonZeroTilt=true;
           if (ABS(imgaux.tilt())<minTilt)
@@ -625,20 +655,6 @@ void Prog_tomograph_alignment::produceSideInfo() {
     }
 }
 
-/* Generate mask ----------------------------------------------------------- */
-void generateMask(const Matrix2D<double> &I, Matrix2D<double> &mask,
-    int patchSize)
-{
-    mask.initZeros(I);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
-        if (I(i,j)!=0) mask(i,j)=1;
-    
-    Matrix2D<double> maskDilated;
-    maskDilated.initZeros(mask);
-    erode2D(mask,maskDilated,8,0,patchSize);    
-    mask=maskDilated;
-}
-
 /* Generate landmark set --------------------------------------------------- */
 //#define DEBUG
 static pthread_mutex_t chainRefineMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -679,11 +695,9 @@ void * threadgenerateLandmarkSetGrid( void * args )
             YY(rii)=STARTINGY(*(parent->img)[0])+ROUND(deltaShift*(0.5+ny));
             for (int ii=0; ii<=Nimg-1; ++ii)
             {
-                // Generate mask
-                Matrix2D<double> largeMask;
-                generateMask(*(parent->img[ii]),largeMask,
-                    XMIPP_MAX(ROUND(parent->localSize*XSIZE(*(parent->img[ii])))/2,5));
-                if (!largeMask((int)YY(rii),(int)XX(rii))) continue;
+                // Check if inside the mask
+                if (!(*(parent->maskImg[ii]))((int)YY(rii),(int)XX(rii)))
+                    continue;
 
                 LandmarkChain chain;
                 chain.clear();
@@ -828,7 +842,7 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
     for (int ii=thread_id; ii<=Nimg-1; ii+=numThreads)
     {
         // Generate mask
-        Matrix2D<double> largeMask;
+        Matrix2D<int> largeMask;
         generateMask(*(parent->img[ii]),largeMask,
             XMIPP_MAX(ROUND(parent->localSize*XSIZE(*(parent->img[ii])))/2,5));
 
