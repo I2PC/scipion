@@ -488,7 +488,7 @@ AddXmippProgram('angular_projection_matching', ['XmippRecons'])
 AddXmippProgram('angular_project_library', ['XmippRecons'])
 AddXmippProgram('average')
 AddXmippProgram('break_symmetry',               ['XmippRecons'])
-# FIXME -Wno-deprecated
+AddXmippProgram('center_image')
 AddXmippProgram('classify_batch_som', ['XmippClassif'])
 AddXmippProgram('classify_fcmeans', ['XmippClassif'])
 AddXmippProgram('classify_fkcn', ['XmippClassif'])
