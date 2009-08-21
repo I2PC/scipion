@@ -167,8 +167,9 @@ public:
           save()=I2-transformedI1; save.write("PPPDiffImg2.xmp");
           std::cout << "A12=\n" << A12 << "A21=\n" << A21 << std::endl;
 	      std::cout << "dist=" << dist << std::endl;
-          std::cout << "Press any key\n";
+          std::cout << "Do you like the alignment? (y/n)\n";
 	  char c; std::cin >> c;
+          if (c=='n') dist=-1;
        }
 
        return dist;
@@ -235,17 +236,17 @@ double computeAffineTransformation(const Matrix2D<double> &I1,
         fitness.maxAllowed.resize(6);
 
         // Scale factors
-        fitness.minAllowed(0)=fitness.minAllowed(3)=0.5;
-        fitness.maxAllowed(0)=fitness.maxAllowed(3)=1.5;
+        fitness.minAllowed(0)=fitness.minAllowed(3)=0.9;
+        fitness.maxAllowed(0)=fitness.maxAllowed(3)=1.1;
         if (isMirror)
         {
-            fitness.minAllowed(3)=-1.5;
-            fitness.maxAllowed(3)=-0.5;
+            fitness.minAllowed(3)=-1.1;
+            fitness.maxAllowed(3)=-0.9;
         }
 
         // Rotation factors
-        fitness.minAllowed(1)=fitness.minAllowed(2)=-0.5;
-        fitness.maxAllowed(1)=fitness.maxAllowed(2)= 0.5;
+        fitness.minAllowed(1)=fitness.minAllowed(2)=-0.2;
+        fitness.maxAllowed(1)=fitness.maxAllowed(2)= 0.2;
 
         // Shifts
         fitness.minAllowed(4)=fitness.minAllowed(5)=-maxShift;
@@ -256,64 +257,67 @@ double computeAffineTransformation(const Matrix2D<double> &I1,
 
         // Optimize with differential evolution
         Matrix1D<double> A(6);
-        if (!localAffine)
+        if (XSIZE(A12)==0)
         {
-            double bestEnergy=2, energy;
-            int n=0;
-            do
+            if (!localAffine)
             {
-                AffineSolver solver(&fitness,6,6*10);
-                solver.Setup(MULTIDIM_ARRAY(fitness.minAllowed),
-                             MULTIDIM_ARRAY(fitness.maxAllowed),
-		             stBest2Bin, 0.5, 0.8);
-                solver.Solve(maxIterDE);
-                energy=solver.Energy();
-                if (n==0 || bestEnergy>energy)
+                double bestEnergy=2, energy;
+                int n=0;
+                do
                 {
-                    FOR_ALL_ELEMENTS_IN_MATRIX1D(A)
-                       A(i)=solver.Solution()[i];
-                    bestEnergy=energy;
-                }
-                n++;
-            } while ((n<3 || (n>=3 && n<10 && bestEnergy>1-thresholdAffine))
-                     && bestEnergy>=0.07);
-        }
-        else
-        {
-            A(0)=A(3)=1;
-            if (isMirror)
-                A(3)*=-1;
-            double tx, ty;
-            pthread_mutex_lock( &localAffineMutex );
-            if (!isMirror) best_shift(I1,I2,tx,ty);
+                    AffineSolver solver(&fitness,6,6*10);
+                    solver.Setup(MULTIDIM_ARRAY(fitness.minAllowed),
+                                 MULTIDIM_ARRAY(fitness.maxAllowed),
+		                 stBest2Bin, 0.5, 0.8);
+                    solver.Solve(maxIterDE);
+                    energy=solver.Energy();
+                    if (n==0 || bestEnergy>energy)
+                    {
+                        FOR_ALL_ELEMENTS_IN_MATRIX1D(A)
+                           A(i)=solver.Solution()[i];
+                        bestEnergy=energy;
+                    }
+                    n++;
+                } while ((n<3 || (n>=3 && n<10 && bestEnergy>1-thresholdAffine))
+                         && bestEnergy>=0.07);
+            }
             else
             {
-                Matrix2D<double> auxI2=I2;
-                auxI2.selfReverseY();
-                STARTINGX(auxI2)=STARTINGX(I2);
-                STARTINGY(auxI2)=STARTINGY(I2);
-                best_shift(I1,auxI2,tx,ty);
-                ty=-ty;
+                A(0)=A(3)=1;
+                if (isMirror)
+                    A(3)*=-1;
+                double tx, ty;
+                pthread_mutex_lock( &localAffineMutex );
+                if (!isMirror) best_shift(I1,I2,tx,ty);
+                else
+                {
+                    Matrix2D<double> auxI2=I2;
+                    auxI2.selfReverseY();
+                    STARTINGX(auxI2)=STARTINGX(I2);
+                    STARTINGY(auxI2)=STARTINGY(I2);
+                    best_shift(I1,auxI2,tx,ty);
+                    ty=-ty;
+                }
+                pthread_mutex_unlock( &localAffineMutex );
+                A(4)=-tx;
+                A(5)=-ty;
             }
-            pthread_mutex_unlock( &localAffineMutex );
-            A(4)=-tx;
-            A(5)=-ty;
+
+            // Optimize with Powell
+            Matrix1D<double> steps(A);
+            steps.initConstant(1);
+            int iter;
+            powellOptimizer(A, 1, XSIZE(A),
+                AffineFitness::Powell_affine_fitness_individual, &fitness, 0.005,
+                cost, iter, steps, false);
+
+            // Separate solution
+            A12.initIdentity(3);
+            A12(0,0)=A(0); A12(0,1)=A(1); A12(0,2)=A(4);
+            A12(1,0)=A(2); A12(1,1)=A(3); A12(1,2)=A(5);
+
+            A21=A12.inv();
         }
-
-        // Optimize with Powell
-        Matrix1D<double> steps(A);
-        steps.initConstant(1);
-        int iter;
-        powellOptimizer(A, 1, XSIZE(A),
-            AffineFitness::Powell_affine_fitness_individual, &fitness, 0.005,
-            cost, iter, steps, false);
-
-        // Separate solution
-        A12.initIdentity(3);
-        A12(0,0)=A(0); A12(0,1)=A(1); A12(0,2)=A(4);
-        A12(1,0)=A(2); A12(1,1)=A(3); A12(1,2)=A(5);
-
-        A21=A12.inv();
 
         if (show)
         {
@@ -321,7 +325,7 @@ double computeAffineTransformation(const Matrix2D<double> &I1,
             Matrix1D<double> p(6);
             p(0)=A12(0,0); p(1)=A12(0,1); p(4)=A12(0,2);
             p(2)=A12(1,0); p(3)=A12(1,1); p(5)=A12(1,2);
-            fitness.affine_fitness_individual(MULTIDIM_ARRAY(p));
+            cost = fitness.affine_fitness_individual(MULTIDIM_ARRAY(p));
     	    fitness.showMode=false;
         }
 
@@ -561,15 +565,27 @@ void Prog_tomograph_alignment::produceSideInfo() {
         if (!fhIn)
             REPORT_ERROR(1,(std::string)"Cannot open "+
                 fnRoot+"_transformations.txt");
-        int i=0;
+        int linesRead=0;
         while (!fhIn.eof())
         {
             std::string line;
             getline(fhIn, line);
-            if (i<affineTransformations.size()-1 && line!="")
+            if (linesRead<affineTransformations.size()-1 && line!="")
             {
                 std::vector< double > data;
                 readFloatList(line.c_str(), 8, data, 1, "Error reading affine line", 1);
+                double tilt=data[0];
+                int i=0;
+                double bestDistance=ABS(tilt-tiltList[0]);
+                for (int j=0; j<Nimg; j++)
+                {
+                    double distance=ABS(tilt-tiltList[j]);
+                    if (bestDistance>distance)
+                    {
+                        bestDistance=distance;
+                        i=j;
+                    }
+                }
                 affineTransformations[i][i+1].resize(3,3);
                 affineTransformations[i][i+1].initIdentity(3);
                 affineTransformations[i][i+1](0,0)=data[2];
@@ -578,11 +594,35 @@ void Prog_tomograph_alignment::produceSideInfo() {
                 affineTransformations[i][i+1](1,1)=data[5];
                 affineTransformations[i][i+1](0,2)=data[6];
                 affineTransformations[i][i+1](1,2)=data[7];
-                
+
                 affineTransformations[i+1][i]=
                     affineTransformations[i][i+1].inv();
-                i++;
+
+                if (showAffine)
+                {                
+                    Matrix2D<double>& img_i=*img[i];
+                    Matrix2D<double>& img_j=*img[i+1];
+                    int maxShift=FLOOR(XSIZE(*img[0])*maxShiftPercentage);
+                    Matrix2D<double> Aij, Aji;
+                    Aij=affineTransformations[i][i+1];
+                    Aji=affineTransformations[i+1][i];
+                    bool isMirror=false;
+                    std::cout << "Transformation between " << i << " ("
+                              << tiltList[i] << ") and " << i+1 << " ("
+                              << tiltList[i+1] << std::endl;
+                    double cost = computeAffineTransformation(img_i, img_j,
+                        maxShift, maxIterDE, Aij, Aji,
+                        showAffine, thresholdAffine, localAffine,
+                        isMirror,true);
+                    if (cost<0)
+                    {
+                        affineTransformations[i][i+1].clear();
+                        affineTransformations[i+1][i].clear();
+                        writeTransformations(fnRoot+"_transformations.txt");
+                    }
+                }
             }
+            linesRead++;
         }
         fhIn.close();
     }
