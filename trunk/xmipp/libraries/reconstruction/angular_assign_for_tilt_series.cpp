@@ -38,6 +38,7 @@
 #include "fourier_filter.h"
 
 /* Generate mask ----------------------------------------------------------- */
+//#define DEBUG
 void generateMask(const Matrix2D<double> &I, Matrix2D<int> &mask,
     int patchSize)
 {
@@ -50,7 +51,16 @@ void generateMask(const Matrix2D<double> &I, Matrix2D<int> &mask,
     maskEroded.initZeros(dmask);
     erode2D(dmask,maskEroded,8,0,patchSize);    
     typeCast(maskEroded,mask);
+    
+    #ifdef DEBUG
+        ImageXmipp save;
+        save()=I; save.write("PPP.xmp");
+        save()=maskEroded; save.write("PPPmask.xmp");
+        std::cout << "Masks saved. Press any key\n";
+        char c; std::cin >> c;
+    #endif
 }
+#undef DEBUG
 
 /* Compute affine matrix --------------------------------------------------- */
 class AffineFitness
