@@ -428,7 +428,6 @@ void CommonLine_Parameters::qualifyCommonLines()
     histogram1D hist;
     compute_hist(peaks,hist,400);
     hist/=hist.sum();
-    hist.write("PPPpeakhist.txt");
     
     // Reevaluate the peaks
     for (int k1=0; k1<Nimg; k1++)
@@ -460,8 +459,8 @@ void CommonLine_Parameters::writeResults()
     fh_out.open(fn_out.c_str());
     if (!fh_out)
         REPORT_ERROR(1,(std::string)"Cannot open "+fn_out+" for writing");
-    for (int i=0; i<Nimg; i++)
-        for (int j=i+1; j<Nimg; j++)
+    for (int j=1; j<Nimg; j++)
+        for (int i=0; i<j; i++)
         {
             int ii=i*Nimg+j;
             if (CLmatrix[ii].distanceij>0)
