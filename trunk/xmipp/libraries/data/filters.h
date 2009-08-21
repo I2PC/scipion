@@ -1593,6 +1593,6 @@ void centerImageRotationally(Matrix2D<double> &I);
  * with its mirrored (X, Y, XY) versions. The image is aligned translationally
  * and then rotationally Niter times.
  */
-void centerImage(Matrix2D<double> &I, int Niter=3);
+void centerImage(Matrix2D<double> &I, int Niter=10);
 
 #endif
