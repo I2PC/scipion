@@ -1419,51 +1419,129 @@ void centerImageRotationally(Matrix2D<double> &I)
 }
 
 /* Center both rotationally and translationally ---------------------------- */
+//#define DEBUG
 void centerImage(Matrix2D<double> &I, int Niter)
 {
+    I.setXmippOrigin();
+    double avg=I.computeAvg();
+    I-=avg;
+
     Matrix2D<double> Ix, Iy, Ixy, Iaux, A;
     A.initIdentity(3);
     Iaux=I;
     
+    Matrix2D<int> mask;
+    mask.initZeros(I);
+    BinaryCircularMask(mask,XSIZE(I)/2);
+    
+    Matrix1D<double> lineY, lineX;
+    lineY.initZeros(YSIZE(I)); STARTINGX(lineY)=STARTINGY(I);
+    lineX.initZeros(XSIZE(I)); STARTINGX(lineX)=STARTINGX(I);
+
+    Polar_fftw_plans *plans=NULL;
     for (int i=0; i<Niter; i++)
     {
+        // Mask Iaux
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
+            if (!mask(i,j)) Iaux(i,j)=0;
+
         // Center translationally
         Ix  = Iaux;  Ix.selfReverseX();  Ix.setXmippOrigin();
         Iy  = Iaux;  Iy.selfReverseY();  Iy.setXmippOrigin();
-        Ixy = Ix;   Ixy.selfReverseY(); Ixy.setXmippOrigin();
-
-        double meanShiftX=0, meanShiftY=0, shiftX, shiftY;
-        best_shift(Iaux,Ix, meanShiftX,meanShiftY);
+        Ixy = Ix;    Ixy.selfReverseY(); Ixy.setXmippOrigin();
+        
+        double meanShiftX=0, meanShiftY=0, shiftX, shiftY, Nx=0, Ny=0;
+        best_shift(Iaux,Ix, shiftX,shiftY);
+        if (ABS(shiftX)<XSIZE(I)/3) {meanShiftX+=shiftX; Nx++;}
+        if (ABS(shiftY)<YSIZE(I)/3) {meanShiftY+=shiftY; Ny++;}
         best_shift(Iaux,Iy, shiftX,shiftY);
-        meanShiftX+=shiftX; meanShiftY+=shiftY;
+        if (ABS(shiftX)<XSIZE(I)/3) {meanShiftX+=shiftX; Nx++;}
+        if (ABS(shiftY)<YSIZE(I)/3) {meanShiftY+=shiftY; Ny++;}
         best_shift(Iaux,Ixy,shiftX,shiftY);
-        meanShiftX+=shiftX; meanShiftY+=shiftY;
-        meanShiftX/=3; meanShiftY/=3;
+        if (ABS(shiftX)<XSIZE(I)/3) {meanShiftX+=shiftX; Nx++;}
+        if (ABS(shiftY)<YSIZE(I)/3) {meanShiftY+=shiftY; Ny++;}
+        if (Nx>0) meanShiftX/=Nx;
+        if (Ny>0) meanShiftY/=Ny;
 
         A(0,2)+=-meanShiftX;
         A(1,2)+=-meanShiftY;
-        applyGeometry(Iaux,A,I,IS_NOT_INV,WRAP);
+        Iaux.initZeros();
+        applyGeometry(Iaux,A,I,IS_NOT_INV,DONT_WRAP);
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
+            if (!mask(i,j)) Iaux(i,j)=0;
+        
+        #ifdef DEBUG
+            std::cout << "Iter " << i << std::endl;
+            std::cout << "shift=" << -meanShiftX << "," << -meanShiftY << std::endl;
+            ImageXmipp save;
+            save()=I; save.write("PPP.xmp");
+            save()=Iaux; save.write("PPPshift.xmp");
+        #endif
 
         // Center rotationally
         Ix  = Iaux;  Ix.selfReverseX();  Ix.setXmippOrigin();
-
-        Polar_fftw_plans *plans=NULL;
-        Polar< std::complex<double> > polarFourierI, polarFourierIx;
-        normalizedPolarFourierTransform(Ix,polarFourierIx,false,XSIZE(Ix)/5,
-            XSIZE(Ix)/2,plans);
+        
+        Polar< std::complex<double> > polarFourierI;
         normalizedPolarFourierTransform(Iaux, polarFourierI, true, XSIZE(I)/5,
             XSIZE(I)/2,plans);
-
         XmippFftw local_transformer;
         Matrix1D<double> rotationalCorr;
         rotationalCorr.resize(2*polarFourierI.getSampleNoOuterRing()-1);
         local_transformer.setReal(rotationalCorr);
+
+        Polar< std::complex<double> > polarFourierIx;
+        normalizedPolarFourierTransform(Ix,polarFourierIx,false,XSIZE(Ix)/5,
+            XSIZE(Ix)/2,plans);
         double bestRot = best_rotation(polarFourierIx,polarFourierI,
             local_transformer);
-
+        bestRot = realWRAP(bestRot,0,180);
+        if (bestRot>90) bestRot=bestRot-180;
+        
         A=rotation2DMatrix(-bestRot/2)*A;
+        Iaux.initZeros();
+        applyGeometry(Iaux,A,I,IS_NOT_INV,DONT_WRAP);
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
+            if (!mask(i,j)) Iaux(i,j)=0;
+
+        #ifdef DEBUG
+            std::cout << "rot=" << -bestRot/2 << std::endl;
+            save()=Iaux; save.write("PPProt.xmp");
+        #endif
+        
+        // Remove horizontal/vertical ambiguity
+        lineX.initZeros();
+        lineY.initZeros();
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(Iaux)
+        {
+            double val=Iaux(i,j);
+            if (j==0) lineY(i)=val;
+            else if (lineY(i)<val) lineY(i)=val;
+            if (i==0) lineX(j)=val;
+            else if (lineX(j)<val) lineX(j)=val;
+        }
+        
+        double thX=lineX.computeMin()+0.75*(lineX.computeMax()-lineX.computeMin());
+        double thY=lineY.computeMin()+0.75*(lineY.computeMax()-lineY.computeMin());
+        int x0=STARTINGX(lineX);  while (lineX(x0)<thX) x0++;
+        int y0=STARTINGX(lineY);  while (lineY(y0)<thY) y0++;
+        int xF=FINISHINGX(lineX); while (lineX(xF)<thX) xF--;
+        int yF=FINISHINGX(lineY); while (lineY(yF)<thY) yF--;
+        if ((xF-x0)>(yF-y0))
+            A=rotation2DMatrix(90)*A;
         applyGeometry(Iaux,A,I,IS_NOT_INV,WRAP);
+        #ifdef DEBUG
+            lineX.write("PPPlineX.txt");
+            lineY.write("PPPlineY.txt");
+            std::cout << "dev X=" << xF-x0 << std::endl;
+            std::cout << "dev Y=" << yF-y0 << std::endl;
+            save()=Iaux; save.write("PPPhorver.xmp");
+            std::cout << "Press any key\n";
+            char c; std::cin >> c;
+        #endif
     }
     applyGeometryBSpline(Iaux,A,I,3,IS_NOT_INV,WRAP);
     I=Iaux;
+    I+=avg;
+    if (plans!=NULL) delete plans;
 }
+#undef DEBUG
