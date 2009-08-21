@@ -468,8 +468,8 @@ void CommonLine_Parameters::writeResults()
                 fh_out << j << " " << i << " "
                        << ROUND(65535*(CLmatrix[ii].distanceij-minVal)/
                              (maxVal-minVal)) << " "
-                       << CLmatrix[ii].angi << " "
-                       << CLmatrix[ii].angj;
+                       << ROUND(CLmatrix[ii].angi/stepAng) << " "
+                       << ROUND(CLmatrix[ii].angj/stepAng);
                 if (qualify)
                     fh_out << " " << qualification[ii];
                 fh_out << std::endl;
