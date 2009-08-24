@@ -1642,7 +1642,7 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
                  else Iorig(i,j)=(Iorig(i,j)-avg)/stddev;
              Iorig.set_eulerAngles(rot, tilt, psi);
              fn_corrected=fnRoot+"_corrected_originalsize_"+integerToString(i,3)+".xmp";
-             I.write(fn_corrected);
+             Iorig.write(fn_corrected);
          }
 
          // Prepare data for the docfile
