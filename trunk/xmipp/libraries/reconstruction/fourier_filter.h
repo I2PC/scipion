@@ -68,8 +68,9 @@ public:
 #define WEDGE         7
 #define GAUSSIAN      8
 #define CONE          9
-    /** Pass band. LOWPASS, HIGHPASS, BANDPASS, STOPBAND, CTF, WEDGE, CONE
-       GAUSSIAN, FROM_FILE */
+#define CTFPOS       10
+    /** Pass band. LOWPASS, HIGHPASS, BANDPASS, STOPBAND, CTF, CTFPOS,
+       WEDGE, CONE, GAUSSIAN, FROM_FILE */
     int FilterBand;
 
     /** Cut frequency for Low and High pass filters, first freq for bandpass.

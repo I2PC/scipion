@@ -119,6 +119,16 @@ void FourierMask::read(int argc, char **argv)
         ctf.read(argv[i+2]);
         ctf.Produce_Side_Info();
     }
+    else if (strcmp(argv[i+1], "ctfpos") == 0)
+    {
+        if (i + 2 >= argc)
+            REPORT_ERROR(3000, "FourierMask: CTF needs a CTF file");
+        FilterShape = FilterBand = CTF;
+        ctf.enable_CTFnoise = false;
+        ctf.read(argv[i+2]);
+        ctf.Produce_Side_Info();
+        correctPhase=true;
+    }
     else
         REPORT_ERROR(3000, "FourierMask: Unknown filter type");
 
@@ -184,6 +194,9 @@ void FourierMask::show()
         case CTF:
             std::cout << "CTF\n";
             break;
+        case CTFPOS:
+            std::cout << "CTFPOS\n";
+            break;
         }
         std::cout << "Filter Shape: ";
         switch (FilterShape)
@@ -196,6 +209,7 @@ void FourierMask::show()
             std::cout << "Gaussian\n";
             break;
         case CTF:
+        case CTFPOS:
             std::cout << "CTF\n" << ctf;
             break;
         }
@@ -214,6 +228,8 @@ void FourierMask::usage()
               << "   -fourier_mask cone <th0>          : Missing cone for tilt angles up to th0 \n"
               << "   -fourier_mask gaussian            : sigma=<w1>\n"
               << "   -fourier_mask ctf                 : Provide a .ctfparam file\n"
+              << "   -fourier_mask ctfpos              : Provide a .ctfparam file\n"
+              << "                                       The CTF phase will be corrected before applying\n"
               << "  [-sampling <sampling_rate>]        : If provided pass frequencies\n"
               << "                                       are taken in Angstroms\n"
     ;
@@ -284,6 +300,9 @@ double FourierMask::maskValue(const Matrix1D<double> &w)
             break;
         case CTF:
             return ctf.CTF_at(XX(w)/ctf.Tm,YY(w)/ctf.Tm);
+            break;
+        case CTFPOS:
+            return ABS(ctf.CTF_at(XX(w)/ctf.Tm,YY(w)/ctf.Tm));
             break;
     }
 }
