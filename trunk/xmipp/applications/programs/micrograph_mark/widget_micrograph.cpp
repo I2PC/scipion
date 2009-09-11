@@ -1941,11 +1941,16 @@ bool AutoParticlePicking::build_vector(const Matrix2D<double> &piece,
 
     // Compute the sector averages and reorganize the data in rings
     for (int j = 0; j < angleBins; j++)
+    {
         FOR_ALL_ELEMENTS_IN_MATRIX1D(sector[j])
         {
-            sector[j](i)/=(*(__Nsector[j]))(i);
-            ring[i](j)=sector[j](i);
+            if ((*(__Nsector[j]))(i)>0)
+            {
+                sector[j](i)/=(*(__Nsector[j]))(i);
+                ring[i](j)=sector[j](i);
+            }
         }
+    }
 
     // Compute the histogram of the radial bins and store them  
     int idx_result=0;
@@ -2465,6 +2470,7 @@ void AutoParticlePicking::loadModels(const FileName &fn)
     __mask.generate_2Dmask();
     __mask.get_binary_mask2D().setXmippOrigin();
     __mask_size = XSIZE(__mask.get_binary_mask2D()) * __reduction;
+    
     classifyMask();
 
     // Load training vectors
