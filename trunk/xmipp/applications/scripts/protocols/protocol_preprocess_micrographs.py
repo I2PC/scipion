@@ -20,7 +20,7 @@
 # Working subdirectory:
 WorkingDir='Preprocessing'
 # Delete working subdirectory if it already exists?
-DoDeleteWorkingDir=True
+DoDeleteWorkingDir=False
 # {dir} Directory name from where to process all scanned micrographs
 DirMicrographs='Micrographs'
 # Which files in this directory to process
@@ -35,14 +35,14 @@ MicrographSelfile='all_micrographs.sel'
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/gpfs/fs1/home/bioinfo/roberto/Ad5GLflagIIIa'
+ProjectDir='/gpfs/fs1/home/bioinfo/coss/Trial_02'
 # {expert} Directory name for logfiles:
 LogDir='Logs'
 #------------------------------------------------------------------------------------------------
 # {section} Initial conversion to raw
 #------------------------------------------------------------------------------------------------
 # Perform micrograph conversion? 
-DoConversion=True
+DoConversion=False
 # {list}|Tif2Raw|Mrc2Raw|Spi2Raw|Raw2Raw| Which conversion to perform?
 """ Some TIF formats are not recognized. In that case, save your micrographs as spider, mrc or raw and try to convert those. Note that raw2raw assumes the raw files have an Xmipp-like raw.info file with the same rootname, and that in this case no conversion takes place, but only the required directory structure is made.
     
@@ -52,9 +52,9 @@ ConversionTask='Tif2Raw'
 # {section} Downsampling
 #------------------------------------------------------------------------------------------------
 # Perform downsampling?
-DoDownSample=True
+DoDownSample=False
 # Downsampling factor 
-Down=2
+Down=1
 # {expert}{list}|Fourier|Rectangle|Sinc| Which method to use for downsampling?
 """ Fourier is theoretically the best option, but it may take more memory than your machine can handle. Then, Rectangle is the fastest, but least accurate. Since is reasonably accurate, but painfully slow...
 """
@@ -67,11 +67,11 @@ DoCtfEstimate=True
 # Microscope voltage (in kV)
 Voltage=200
 # Spherical aberration
-SphericalAberration=2.26
+SphericalAberration=2.0
 # Magnification rate
-Magnification=50000
+Magnification=60000
 # Scanned pixel size (in um)
-ScannedPixelSize=7
+ScannedPixelSize=14
 # Amplitude Contrast
 AmplitudeContrast=0.1
 # {expert} Only perform power spectral density estimation?
@@ -89,7 +89,7 @@ LowResolCutoff=0.05
     This cut-off prevents high-resolution terms where only noise exists to interfere with CTF estimation.  
     The default value is 0.35, but it should be increased for micrographs with signals extending beyond this value
 """
-HighResolCutoff=0.35
+HighResolCutoff=0.5
 #------------------------------------------------------------------------------------------------
 # {section} CTFFIND
 #------------------------------------------------------------------------------------------------
@@ -97,7 +97,7 @@ HighResolCutoff=0.35
 """ Some people prefer the faster CTFFIND program.
     Note however that this option will yield no information about the CTF envelope, and therefore this option cannot be used with the high-resolution refinement protocol.
 """
-DoCtffind=True
+DoCtffind=False
 # {file} Location of the CTFFIND executable
 CtffindExec='/gpfs/fs1/bin/ctffind3.exe'
 # {expert} Window size
@@ -148,7 +148,7 @@ AnalysisScript='visualize_preprocess_micrographs.py'
 DoParallel=True
 
 # Number of MPI processes to use:
-NumberOfMpiProcesses=3
+NumberOfMpiProcesses=2
 
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
@@ -286,6 +286,7 @@ class preprocess_A_class:
     def process_all_micrographs(self,fh_mpi,xmpi_run_file):
         import os
         import glob
+        import log
         print '*********************************************************************'
         print '*  Processing the following micrographs: '
         for self.filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
@@ -335,10 +336,11 @@ class preprocess_A_class:
 
             if (self.DoDownSample):
                 self.perform_downsample(fh_mpi)
-        #Stop here untill downsampling is done
+        #Stop here until downsampling is done
         if(self._DoParallel):
             os.write(fh_mpi,"MPI_Barrier"+"\n");
 
+        # Estimate CTF
         job_index=0
         for self.filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
             (self.filepath, self.name) = os.path.split(self.filename)
@@ -361,6 +363,7 @@ class preprocess_A_class:
 	    os.write(fh_mpi,"MPI_Barrier"+"\n");
 	import sys,launch_job
 	os.close(fh_mpi)#file must be closed before executed
+        log.cat(self.log,xmpi_run_file + '_1.sh')
 	if(self._DoParallel):
 	    command =' -i '+ xmpi_run_file + '_1.sh'
 	    launch_job.launch_job("xmipp_run",
@@ -373,6 +376,8 @@ class preprocess_A_class:
 	else:
             self.log.info(xmpi_run_file + '_1.sh')
 	    os.system(xmpi_run_file + '_1.sh')
+        os.remove(xmpi_run_file + '_1.sh')
+        
 	fh_mpi  = os.open(self.xmpi_run_file+ '_2.sh',os.O_WRONLY|os.O_TRUNC|os.O_CREAT, 0700)
         job_index=0
         for self.filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
@@ -427,6 +432,7 @@ class preprocess_A_class:
                      fh.close()
 
 	os.close(fh_mpi)#file must be closed before executed
+        log.cat(self.log,xmpi_run_file + '_2.sh')
 	if(self._DoParallel):
 	    command =' -i '+ xmpi_run_file + '_2.sh'
 	    launch_job.launch_job("xmipp_run",
@@ -439,12 +445,14 @@ class preprocess_A_class:
 	else:
             self.log.info(xmpi_run_file+ '_2.sh')
 	    os.system(xmpi_run_file+ '_2.sh')
+        os.remove(xmpi_run_file + '_2.sh')
+
     def perform_tif2raw(self,fh_mpi):
         import os
         import launch_job
         oname=self.shortname+'/'+self.shortname+'.raw'
-        os.write (fh_mpi,"echo '*********************************************************************';")
-        os.write (fh_mpi,"echo '*  Generating RAW for micrograph: '"+self.name+";")
+        os.write (fh_mpi,"echo '*********************************************************************';\n")
+        os.write (fh_mpi,"echo '*  Generating RAW for micrograph: '"+self.name+";\n")
         command='xmipp_convert_tiff2raw '+self.filename+' '+oname 
         os.write(fh_mpi,command+ "\n");
         #launch_job.launch_job("xmipp_convert_tiff2raw",
@@ -457,8 +465,8 @@ class preprocess_A_class:
         import launch_job
         oname=self.shortname+'/'+self.shortname+'.raw'
         tname=self.shortname+'/'+self.shortname+'.spi'
-        fh_mpi.write ("echo '*********************************************************************';")
-        fh_mpi.write ("echo '*  Generating RAW for micrograph: '"+self.name+";")
+        os.write(fh_mpi,"echo '*********************************************************************';\n")
+        os.write(fh_mpi,"echo '*  Generating RAW for micrograph: '"+self.name+";\n")
         command ='xmipp_convert_spi22ccp4 -i '+self.filename+' -o '+tname
 #        launch_job.launch_job("xmipp_convert_spi22ccp4",
 #                              command,
@@ -479,8 +487,8 @@ class preprocess_A_class:
         import os
         import launch_job
         oname=self.shortname+'/'+self.shortname+'.raw'
-        fh_mpi.write ("echo '*********************************************************************';")
-        fh_mpi.write ("echo '*  Generating RAW for micrograph: '"+self.name +";")
+        os.write(fh_mpi,"echo '*********************************************************************';\n")
+        os.write(fh_mpi,"echo '*  Generating RAW for micrograph: '"+self.name +";\n")
         command='xmipp_convert_raw22spi -generate_inf -f -i '+self.filename+' -o '+oname
         #launch_job.launch_job("xmipp_convert_raw22spi",
         #                      command,
@@ -491,14 +499,15 @@ class preprocess_A_class:
     def perform_raw2raw(self,fh_mpi):
         import os
         oname=self.shortname+'/'+self.shortname+'.raw'
-        fh_mpi.write ("echo '*********************************************************************';")
-        fh_mpi.write ("echo '*  Generating RAW for micrograph: '"+self.name+";")
-        command='ln -s '+self.filename+' '+oname + ";"
-        fh_mpi.write ("echo '* '," + command +  ";")
+        os.write(fh_mpi,"echo '*********************************************************************';\n")
+        os.write(fh_mpi,"echo '*  Generating RAW for micrograph: '"+self.name+";\n")
+        command='ln -s '+self.filename+' '+oname + "\n"
+        os.write(fh_mpi,"echo '* '," + command)
+        os.write(fh_mpi,command);
         #self.log.info(command)
         #os.system(command)
-        command +='ln -s '+self.filename+'.inf '+oname+'.inf'
-        fh_mpi.write ("echo '* '" + command + ";")
+        command ='ln -s '+self.filename+'.inf '+oname+'.inf\n'
+        os.write(fh_mpi,"echo '* '" + command)
         #self.log.info(command)
         #os.system(command)
         os.write(fh_mpi,command+"\n");
@@ -509,7 +518,7 @@ class preprocess_A_class:
         iname=self.shortname+'/'+self.shortname+'.raw'
         oname=self.shortname+'/'+self.downname+'.raw'
         os.write(fh_mpi,"echo '*********************************************************************';")
-        os.write(fh_mpi,"echo '*  Downsampling micrograph: '"+iname+";")
+        os.write(fh_mpi,"echo '*  Downsampling micrograph: '"+iname+";\n")
         if (self.DownKernel=='Fourier'):
             scale = 1./self.Down
             command='xmipp_micrograph_downsample -i '+iname+' -o '+oname+' -output_bits 32 -fourier '+str(scale)
