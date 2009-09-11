@@ -17,6 +17,16 @@ class XmippLog:
         self.fh_log.close()
 
 # --------------------------------------------------------------------------
+# Cat a file into a log
+# --------------------------------------------------------------------------
+def cat(mylog,filename):
+    fh = open(filename,'r')
+    mylog.info("# Content of "+filename)
+    for line in fh:
+        mylog.info("#       "+line.strip())
+    fh.close()
+
+# --------------------------------------------------------------------------
 # Init log system
 # --------------------------------------------------------------------------
 def init_log_system(projectdir,logdir,scriptname,WorkDirectory):
