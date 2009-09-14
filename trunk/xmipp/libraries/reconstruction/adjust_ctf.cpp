@@ -686,7 +686,7 @@ void Adjust_CTF_Parameters::produce_side_info()
     FourierMask Filter;
     Filter.FilterShape = RAISED_COSINE;
     Filter.FilterBand = HIGHPASS;
-    Filter.w1 = 0.08;
+    Filter.w1 = 0.008;
     Filter.raised_w = 0.003;
     enhanced_ctftomodel().setXmippOrigin();
     Filter.generate_mask(enhanced_ctftomodel());
