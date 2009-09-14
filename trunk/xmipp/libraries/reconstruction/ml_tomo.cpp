@@ -1040,7 +1040,11 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
                         imgs_optoffsets[imgno](0)=DL[3];
                         imgs_optoffsets[imgno](1)=DL[4];
                         imgs_optoffsets[imgno](2)=DL[5];
-                        imgs_optrefno[imgno]=DL[6]-1;
+                        int aux = (int)DL[6] - 1;
+                        if (aux < 0 || aux >= nr_ref)
+                            imgs_optrefno[imgno]=0;
+                        else
+                            imgs_optrefno[imgno]=aux;
                     }
                 }
             } 
