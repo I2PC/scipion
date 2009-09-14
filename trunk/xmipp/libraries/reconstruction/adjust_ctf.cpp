@@ -496,7 +496,7 @@ void Adjust_CTF_Parameters::read(const FileName &fn_param)
     }
     f1 = textToFloat(getParameter(fh_param, "enhance_min_freq", 0, default_f1.c_str()));
     f2 = textToFloat(getParameter(fh_param, "enhance_max_freq", 0, default_f2.c_str()));
-    enhanced_weight = textToFloat(getParameter(fh_param, "enhance_weight", 0, "5"));
+    enhanced_weight = textToFloat(getParameter(fh_param, "enhance_weight", 0, "1"));
 }
 
 /* Write to a file --------------------------------------------------------- */
@@ -543,6 +543,7 @@ void Adjust_CTF_Parameters::show()
 	 << "ctfmodelSize:        " << ctfmodelSize        << std::endl
 	 << "Enhance min freq:    " << f1                  << std::endl
  	 << "Enhance max freq:    " << f2                  << std::endl
+ 	 << "Enhance weight:      " << enhanced_weight     << std::endl
          << "Model simplification:" << modelSimplification << std::endl
          << "Bootstrap:           " << bootstrap           << std::endl
 	 << "Starting:\n"           << initial_ctfmodel    << std::endl
@@ -680,13 +681,13 @@ void Adjust_CTF_Parameters::produce_side_info()
     Matrix2D<double> aux;
     median_filter3x3(enhanced_ctftomodel(), aux);
     enhanced_ctftomodel() = aux;
-    enhanced_ctftomodel().rangeAdjust(0, enhanced_weight);
+    enhanced_ctftomodel().rangeAdjust(0, 1);
 
     FourierMask Filter;
     Filter.FilterShape = RAISED_COSINE;
     Filter.FilterBand = HIGHPASS;
-    Filter.w1 = 0.04;
-    Filter.raised_w = 0.02;
+    Filter.w1 = 0.08;
+    Filter.raised_w = 0.003;
     enhanced_ctftomodel().setXmippOrigin();
     Filter.generate_mask(enhanced_ctftomodel());
     Filter.apply_mask_Space(enhanced_ctftomodel());
@@ -1004,8 +1005,10 @@ double CTF_fitness(double *p, void *)
         return global_heavy_penalization;
     }
     if (global_action > 3 && (
-            ABS(global_ctfmodel.DeltafU - global_ctfmodel_defoci.DeltafU) > 8000 ||
-            ABS(global_ctfmodel.DeltafV - global_ctfmodel_defoci.DeltafV) > 8000))
+            ABS(global_ctfmodel.DeltafU - global_ctfmodel_defoci.DeltafU)/
+                ABS(global_ctfmodel_defoci.DeltafU) > 0.2 ||
+            ABS(global_ctfmodel.DeltafV - global_ctfmodel_defoci.DeltafV)/
+                ABS(global_ctfmodel_defoci.DeltafU) > 0.2))
     {
         if (global_show >= 2) std::cout << "Too large defocus\n";
         return global_heavy_penalization;
@@ -1139,7 +1142,7 @@ double CTF_fitness(double *p, void *)
         else
         {
             correlation_coeff /= sigma1 * sigma2;
-            retval -= correlation_coeff;
+            retval -= global_prm->enhanced_weight*correlation_coeff;
         }
     }
 
