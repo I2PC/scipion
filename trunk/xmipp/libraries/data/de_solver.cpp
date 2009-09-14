@@ -457,7 +457,7 @@ double DESolver::RandomUniform(double minValue, double maxValue)
     if (idum2 < 0)
         idum2 += IM2;
 
-    j = iy / NDIV;
+    j = (iy / NDIV) % NTAB;
     iy = iv[j] - idum2;
     iv[j] = idum;
 
