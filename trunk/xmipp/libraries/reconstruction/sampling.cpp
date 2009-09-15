@@ -1305,7 +1305,7 @@ void XmippSampling::create_asym_unit_file(const FileName &docfilename)
     DFvectors.clear();
     DFangles.clear();
     FileName tmp_filename;
-    #define CHIMERA
+    //#define CHIMERA
     #ifdef CHIMERA
     std::ofstream filestr; 
     filestr.open ("create_asym_unit_file.bild");
@@ -1550,7 +1550,7 @@ void XmippSampling::compute_neighbors(bool only_winner)
         my_neighbors_psi.push_back(aux_neighbors_psi);
 #endif
     }//for j
-    #define CHIMERA
+    //#define CHIMERA
     #ifdef CHIMERA
     std::ofstream filestr; 
     filestr.open ("compute_neighbors.bild");
@@ -1638,7 +1638,7 @@ void XmippSampling::remove_points_far_away_from_experimental_data()
 	     i--;//since a point has been swaped we should repeat the same index  
        }// if(my_delete)
     }//for i end
-    #define CHIMERA
+    //#define CHIMERA
     #ifdef CHIMERA
     std::ofstream filestr; 
     filestr.open ("remove_points_far_away_from_experimental_data.bild");
@@ -1862,7 +1862,7 @@ void XmippSampling::find_closest_experimental_point()
 
     #endif
     #undef CHIMERA
-    #define DEBUG4
+    //#define DEBUG4
     #ifdef DEBUG4
     std::ofstream filestr; 
     filestr.open ("find_closest_experimental_point.txt");
