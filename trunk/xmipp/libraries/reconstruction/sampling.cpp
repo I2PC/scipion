@@ -456,7 +456,7 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere,
 
 
 #endif
-#define DEBUG3
+//#define DEBUG3
 #ifdef  DEBUG3
     std::ofstream filestr; 
     filestr.open ("sampling_file.bild");
