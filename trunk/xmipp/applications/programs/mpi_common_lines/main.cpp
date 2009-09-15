@@ -66,7 +66,8 @@ int main(int argc, char **argv)
         MPI_Barrier(MPI_COMM_WORLD);
 
         // Finally send all the results to node 0
-        double v[5];
+        std::vector<int> i_j;
+        std::vector<double> angi_angj_d;
         if (rank == 0)
         {
             std::cerr << "Gathering information ...\n";
@@ -74,18 +75,25 @@ int main(int argc, char **argv)
             while (toGo > 0)
             {
                 MPI_Status status;
-                MPI_Recv(v, 5, MPI_DOUBLE, MPI_ANY_SOURCE,
+                int N;
+                MPI_Recv(&N, 1, MPI_INT, MPI_ANY_SOURCE,
                          MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-                if (v[0]==-1) toGo--;
-                else
+                i_j.resize(2*N);
+                angi_angj_d.resize(3*N);
+                MPI_Recv(&i_j[0], 2*N, MPI_INT, status.MPI_SOURCE,
+                    MPI_ANY_TAG, MPI_COMM_WORLD, NULL);
+                MPI_Recv(&angi_angj_d[0], 3*N, MPI_DOUBLE, status.MPI_SOURCE,
+                    MPI_ANY_TAG, MPI_COMM_WORLD, NULL);
+                for (int i=0; i<N; i++)
                 {
-                    long int i=(int)v[0];
-                    long int j=(int)v[1];
-                    long int idx=i*prm.Nimg+j;
-                    prm.CLmatrix[idx].distanceij=v[2];
-                    prm.CLmatrix[idx].angi=v[3];
-                    prm.CLmatrix[idx].angj=v[4];
+                    long int ii=i_j[2*i];
+                    long int jj=i_j[2*i+1];
+                    long int idx=ii*prm.Nimg+jj;
+                    prm.CLmatrix[idx].angi=angi_angj_d[3*i];
+                    prm.CLmatrix[idx].angj=angi_angj_d[3*i+1];
+                    prm.CLmatrix[idx].distanceij=angi_angj_d[3*i+2];
                 }
+                toGo--;
             }
         }
         else
@@ -94,18 +102,20 @@ int main(int argc, char **argv)
                 for (int j=0; j<prm.Nimg; j++)
                 {
                     long int idx=i*prm.Nimg+j;
-                    v[2]=prm.CLmatrix[idx].distanceij;
-                    if (v[2]>0)
+                    double d=prm.CLmatrix[idx].distanceij;
+                    if (d>0)
                     {
-                        v[0]=i;
-                        v[1]=j;
-                        v[3]=prm.CLmatrix[idx].angi;
-                        v[4]=prm.CLmatrix[idx].angj;
-                        MPI_Send(v, 5, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+                        i_j.push_back(i);
+                        i_j.push_back(j);
+                        angi_angj_d.push_back(prm.CLmatrix[idx].angi);
+                        angi_angj_d.push_back(prm.CLmatrix[idx].angj);
+                        angi_angj_d.push_back(d);
                     }
                 }
-            v[0]=-1;
-            MPI_Send(v, 5, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+            int N=i_j.size()/2;
+            MPI_Send(&N,                1, MPI_INT,    0, 0, MPI_COMM_WORLD); 
+            MPI_Send(&i_j[0],         2*N, MPI_INT,    0, 0, MPI_COMM_WORLD);
+            MPI_Send(&angi_angj_d[0], 3*N, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
         }
         if (rank == 0)
         {
