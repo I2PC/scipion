@@ -190,11 +190,11 @@ public:
     // Angular samnpling information
     struct angle_info
     {
-        double rot;
-        double tilt;
-        double psi;
         int direction;
-        Matrix2D<double> A;
+        double rot, rot_ori;
+        double tilt, tilt_ori;
+        double psi, psi_ori;
+        Matrix2D<double> A, A_ori;
     };
     typedef std::vector<angle_info> All_angle_info;
     /** Angular sampling  */
@@ -259,7 +259,7 @@ public:
     void produceSideInfo2(int nr_vols = 1);
 
     /// Calculate Angular sampling
-    void calculateAngularSampling(int iter);
+    void perturbAngularSampling();
 
     /// Calculate probability density distribution for in-plane transformations
     void calculatePdfTranslations();
