@@ -87,7 +87,7 @@ void CommonLine_Parameters::produceSideInfo()
     // Compute the number of images in each block
     int Xdim, Ydim;
     SF.ImgSize(Ydim,Xdim);
-    Nblock=FLOOR(sqrt(mem*pow(2.0,30.0)/(Ydim*Xdim*sizeof(double))));
+    Nblock=FLOOR(sqrt(mem*pow(2.0,30.0)/(Ydim*(360/stepAng)*sizeof(double))));
     Nblock=XMIPP_MIN(Nblock,CEIL(((float)Nimg)/Nmpi));
     
     // Ask for memory for the common line matrix
@@ -464,6 +464,7 @@ void CommonLine_Parameters::writeResults()
         {
             int ii=i*Nimg+j;
             if (CLmatrix[ii].distanceij>0)
+            {
                 fh_out << j << " " << i << " "
                        << ROUND(65535*(CLmatrix[ii].distanceij-minVal)/
                              (maxVal-minVal)) << " "
@@ -472,6 +473,7 @@ void CommonLine_Parameters::writeResults()
                 if (qualify)
                     fh_out << " " << qualification[ii];
                 fh_out << std::endl;
+            }
         }
     fh_out.close();
 }
