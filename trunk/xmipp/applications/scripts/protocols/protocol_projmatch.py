@@ -1339,8 +1339,8 @@ def execute_projection_matching(_mylog,
       parameters =  ' -i '      + outputname + '.doc'  + \
                     ' -lib '    + ProjectLibraryRootName + '_angles.doc' + \
                     ' -dont_write_selfiles ' + \
-                    ' -limit0 ' + str(MinimumCrossCorrelation) + \
-                    ' -limitR ' + str(DiscardPercentage)
+                    ' -limit0 ' + str(_MinimumCrossCorrelation) + \
+                    ' -limitR ' + str(_DiscardPercentage)
       if (_DoCtfCorrection):
          # On-the fly apply Wiener-filter correction and add all CTF groups together
          parameters += \
