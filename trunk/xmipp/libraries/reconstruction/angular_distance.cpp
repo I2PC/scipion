@@ -89,6 +89,7 @@ double Prog_angular_distance_prm::second_angle_set(double rot1, double tilt1,
     SHOW_ANGLES(rot2, tilt2, psi2);
 #endif
 
+    /* Sjors: the following code was useles (and rather strange) ...
     // Distance based on angular values
     double ang_dist = ABS(rot1 - rot2) + ABS(tilt1 - tilt2) + ABS(psi1 - psi2);
     double rot2p, tilt2p, psi2p;
@@ -97,6 +98,7 @@ double Prog_angular_distance_prm::second_angle_set(double rot1, double tilt1,
     tilt2p = realWRAP(tilt2p, -180, 180);
     psi2p = realWRAP(psi2p, -180, 180);
     double ang_distp = ABS(rot1 - rot2p) + ABS(tilt1 - tilt2p) + ABS(psi1 - psi2p);
+
     if (ang_distp < ang_dist)
     {
         rot2 = rot2p;
@@ -104,6 +106,7 @@ double Prog_angular_distance_prm::second_angle_set(double rot1, double tilt1,
         psi2 = psi2p;
         ang_dist = ang_distp;
     }
+    */
 
     // Distance based on Euler axes
     Matrix2D<double> E1, E2;
@@ -125,6 +128,7 @@ double Prog_angular_distance_prm::second_angle_set(double rot1, double tilt1,
 #endif
     }
     axes_dist /= N;
+
 
 #ifdef DEBUG
     std::cout << "-->" << axes_dist << std::endl;
