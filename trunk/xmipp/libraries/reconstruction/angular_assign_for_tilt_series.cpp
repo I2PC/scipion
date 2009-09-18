@@ -699,7 +699,8 @@ void Prog_tomograph_alignment::produceSideInfo() {
                 avgBackwardPatchCorr(ii)=corrList.computeAvg();
             }
 
-            std::cout << "Image " << ii << " forward=" << avgForwardPatchCorr(ii)
+            std::cout << "Image " << ii << " Average correlation forward="
+                      << avgForwardPatchCorr(ii)
                       << " backward=" << avgBackwardPatchCorr(ii) << std::endl;
         }
     }
