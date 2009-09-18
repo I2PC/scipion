@@ -24,7 +24,8 @@ DoDeleteWorkingDir=False
 # {dir} Directory name from where to process all scanned micrographs
 DirMicrographs='Micrographs'
 # Which files in this directory to process
-""" This is typically *.tif, but may also be *.mrc or *.spi (see the expert options)
+""" This is typically *.tif or *.res, but may also be *.mrc, *.spi 
+    (see the expert options)
     Note that any wildcard is possible, e.g. *3[1,2].tif
 """
 ExtMicrographs='*.tif'
@@ -42,17 +43,23 @@ LogDir='Logs'
 # {section} Initial conversion to raw
 #------------------------------------------------------------------------------------------------
 # Perform micrograph conversion? 
-DoConversion=False
-# {list}|Tif2Raw|Mrc2Raw|Spi2Raw|Raw2Raw| Which conversion to perform?
-""" Some TIF formats are not recognized. In that case, save your micrographs as spider, mrc or raw and try to convert those. Note that raw2raw assumes the raw files have an Xmipp-like raw.info file with the same rootname, and that in this case no conversion takes place, but only the required directory structure is made.
+DoConversion=True
+# {list}|Tif2Raw|Mrc2Raw|Spi2Raw|Raw2Raw|Ser2Raw| Which conversion to perform?
+""" Some TIF formats are not recognized. In that case, save your micrographs 
+    as spider, mrc or raw and try to convert those. Note that raw2raw 
+    assumes the raw files have an Xmipp-like raw.info file with the 
+    same rootname, and that in this case no conversion takes place, but 
+    only the required directory structure is made.
     
 """
 ConversionTask='Tif2Raw'
+#{expert}"thershold at XX standard deviation (only for .res files)
+Stddev=5
 #------------------------------------------------------------------------------------------------
 # {section} Downsampling
 #------------------------------------------------------------------------------------------------
 # Perform downsampling?
-DoDownSample=False
+DoDownSample=True
 # Downsampling factor 
 Down=1
 # {expert}{list}|Fourier|Rectangle|Sinc| Which method to use for downsampling?
@@ -97,7 +104,7 @@ HighResolCutoff=0.5
 """ Some people prefer the faster CTFFIND program.
     Note however that this option will yield no information about the CTF envelope, and therefore this option cannot be used with the high-resolution refinement protocol.
 """
-DoCtffind=False
+DoCtffind=True
 # {file} Location of the CTFFIND executable
 CtffindExec='/gpfs/fs1/bin/ctffind3.exe'
 # {expert} Window size
@@ -176,6 +183,7 @@ class preprocess_A_class:
                  ProjectDir,
                  LogDir,
                  DoConversion,
+		 Stddev,
                  ConversionTask,
                  DoDownSample,
                  Down,
@@ -214,6 +222,7 @@ class preprocess_A_class:
         self.ProjectDir=os.path.abspath(ProjectDir)
         self.LogDir=LogDir
         self.DoConversion=DoConversion
+	self.Stddev=Stddev
         self.ConversionTask=ConversionTask
         self.DoDownSample=DoDownSample
         self.Down=Down
@@ -317,6 +326,8 @@ class preprocess_A_class:
                     self.perform_spi2raw(fh_mpi)
                 elif (self.ConversionTask=='Raw2Raw'):
                     self.perform_raw2raw(fh_mpi)
+                elif (self.ConversionTask=='Ser2Raw'):
+                    self.perform_ser2raw(fh_mpi,self.Stddev)
                 else:
                     message="Unrecognized ConversionTask: choose from list options"
                     print '*',message
@@ -374,8 +385,7 @@ class preprocess_A_class:
 				  1,
 				  self._MySystemFlavour)
 	else:
-            self.log.info(xmpi_run_file + '_1.sh')
-	    os.system(xmpi_run_file + '_1.sh')
+            self.log.info(xmpi_run_file + '_1.sh')     
         os.remove(xmpi_run_file + '_1.sh')
         
 	fh_mpi  = os.open(self.xmpi_run_file+ '_2.sh',os.O_WRONLY|os.O_TRUNC|os.O_CREAT, 0700)
@@ -388,7 +398,7 @@ class preprocess_A_class:
 
              if (self.DoCtfEstimate):
                   if (self.DoCtffind):
-                      self.perform_ctfestimate_ctffind(fh_mpi,False)
+                      self.perform_ctfestimate_ctffind(fh_mpi,False) 
 
              if (self.DoCtfPhaseFlipping):
                 self.perform_ctf_phase_flipping(fh_mpi)
@@ -468,19 +478,21 @@ class preprocess_A_class:
         os.write(fh_mpi,"echo '*********************************************************************';\n")
         os.write(fh_mpi,"echo '*  Generating RAW for micrograph: '"+self.name+";\n")
         command ='xmipp_convert_spi22ccp4 -i '+self.filename+' -o '+tname
-#        launch_job.launch_job("xmipp_convert_spi22ccp4",
-#                              command,
-#                              self.log,
-#                              False,1,1,'')
         command += ";"
         command +='xmipp_convert_raw22spi -generate_inf -f -i '+tname+' -o '+oname
-#        launch_job.launch_job("xmipp_convert_raw22spi",
-#                              command,
-#                              self.log,
-#                              False,1,1,'')
-#        os.remove(tname)
+
         command += ";"
         command += "rm " + tname
+        os.write(fh_mpi,command +"\n");
+        
+    def perform_ser2raw(self,fh_mpi,_Stddev):
+        import os
+        import launch_job
+        oname=self.shortname+'/'+self.shortname+'.raw'
+        os.write(fh_mpi,"echo '*********************************************************************';\n")
+        os.write(fh_mpi,"echo '*  Generating RAW for micrograph: '"+self.name+";\n")
+        command ='xmipp_convert_tia2raw -i '+self.filename+' -o '+oname + ' -s ' + str(_Stddev)
+
         os.write(fh_mpi,command +"\n");
         
     def perform_spi2raw(self,fh_mpi):
@@ -790,6 +802,7 @@ if __name__ == '__main__':
                                    ProjectDir,
                                    LogDir,
                                    DoConversion,
+				   Stddev,
                                    ConversionTask,
                                    DoDownSample,
                                    Down,
