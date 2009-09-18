@@ -14,7 +14,7 @@ convert  *.ser-files to raw.  Data format is described at
       import struct
     
       self.readMainHeader(filename)      
-      self.print_header()
+      #self.print_header()
       
       #####
       #LOOP THROUG THe IMAGES
@@ -58,7 +58,10 @@ convert  *.ser-files to raw.  Data format is described at
         inFh = open(filename,'rb')
         inFh.seek(position)
 
-        outFh = open(outfilename + '_' + str(ImageNum) + ".raw",'wb')
+        if(self.NUMBER_IMAGES==1):
+             outFh = open(outfilename,'wb')
+        else:
+	     outFh = open(outfilename + '_' + str(ImageNum) + ".raw",'wb')
 	size = self.IMAGE_HEIGHT * self.IMAGE_WIDTH
 	binvalues = array.array('h')
         binvalues.fromfile(inFh, size)
@@ -92,7 +95,10 @@ convert  *.ser-files to raw.  Data format is described at
         binvalues.tofile(outFh)
         inFh.close();
         outFh.close();
-        inInfFh = open(outfilename+ '_' + str(ImageNum) +'.raw.inf','w')
+        if(self.NUMBER_IMAGES==1):
+             inInfFh = open(outfilename+".inf",'w')
+        else:
+	     inInfFh = open(outfilename + '_' + str(ImageNum) + ".raw.inf",'w')
         inInfFh.write("# Bits per sample")
         inInfFh.write("\nbitspersample= " + str (self._DATA_TYPE_SIZE*8) )
         inInfFh.write("\n# Samples per pixel")
@@ -213,7 +219,10 @@ def command_line_options(parser):
 			help="Input 3D Map name")	    
       parser.add_option("-o", "--OutRootName", dest="szImageOutRootName",
 			default="OUT", type="string",
-			help="Root Name for Output Files (Default OUT)")	    
+			help="""Root Name for Output Files (Default OUT)
+			        If the .ser file contains a single image 
+				this is the name of the outfile
+			""")	    
       parser.add_option("-s", "--stddev", dest="dStddev",
 			default="5.", type="float",
 			help="Cut values above (below) s standard deviation (default=5)")	    
