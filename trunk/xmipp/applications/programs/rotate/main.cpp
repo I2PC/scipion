@@ -26,6 +26,7 @@
 #include <data/progs.h>
 #include <data/args.h>
 #include <data/geometry.h>
+#include <data/docfile.h>
 #include <data/gridding.h>
 
 class Rotate_parameters: public Prog_parameters
@@ -42,10 +43,17 @@ public:
     bool write_matrix;
 
     Matrix2D<double> A3D, A2D;
+    // Also allow rotation of docfiles
+    FileName fn_DFin, fn_DFout;
+    DocFile DF;
+    int col_rot, col_tilt, col_psi;
 
     void read(int argc, char **argv)
     {
-        Prog_parameters::read(argc, argv);
+        // Do not read Prog params for -doc options
+        if (!checkParameter(argc, argv, "-doc"))
+            Prog_parameters::read(argc, argv);
+
         Euler_mode = Align_mode = Axis_mode = false;
         if (checkParameter(argc, argv, "-euler"))
         {
@@ -79,7 +87,34 @@ public:
         wrap = !checkParameter(argc, argv, "-dont_wrap");
         gridding = checkParameter(argc, argv, "-gridding");
         write_matrix = checkParameter(argc, argv, "-write_matrix");
+        
+        if (checkParameter(argc, argv, "-inverse"))
+        {
+            A3D=A3D.inv();
+            if (XSIZE(A2D) > 0)
+                A2D=A2D.inv();
+        }
 
+        fn_DFin = getParameter(argc, argv, "-doc","");
+        fn_DFout = getParameter(argc, argv, "-o","");
+        if (fn_DFin != "")
+        {
+            if (checkParameter(argc, argv, "-cols"))
+            {
+                int i = paremeterPosition(argc, argv, "-cols");
+                if (i + 3 >= argc)
+                    REPORT_ERROR(1, "Not enough parameters after -cols");
+                col_rot  = textToInteger(argv[i+1]) - 1;
+                col_tilt = textToInteger(argv[i+2]) - 1;
+                col_psi  = textToInteger(argv[i+3]) - 1;
+            }
+            else
+            {
+                col_rot  = 0;
+                col_tilt = 1;
+                col_psi  = 2;
+            }
+        }
     }
 
     void show()
@@ -112,10 +147,46 @@ public:
         << "                                      represent optional parameters\n"
         << "  [-axis \"[<x>,<y>,<z>]\" -ang <ang>]: Rotate <ang> degrees around (x,y,z),\n"
         << "                                      by default (0,0,1)\n"
+        << "  [-inverse ]                       : Use the inverse rotation \n"
         << "  [-dont_wrap]                      : By default, the image/volume is wrapped\n"
         << "  [-write_matrix]                   : Print transformation matrix to screen\n"
-	<< "  [-gridding]                       : Use reverse gridding for interpolation\n";
+	<< "  [-gridding]                       : Use reverse gridding for interpolation\n"
+        << "\n"
+        << " OR rather than rotating image/volume(s), rotate all angles in a docfile\n"
+        << "  [-doc <docfile>]                  : Input docfile \n"
+        << "  [-o <output docfile>]             : Output docfile \n"
+        << "  [-cols <rot=1 tilt=2 psi=3> ]     : Columns for rot, tilt and psi in the docfile\n";    
+
     }
+
+    // Rotate all angles in a docfile
+    void rotateAnglesInDocFile()
+    {
+
+        Matrix2D< double > I(3,3);
+        I.initIdentity();
+        A3D.resize(3,3);
+
+        double rot, tilt, psi, newrot, newtilt, newpsi;
+
+        DF.read(fn_DFin);
+        DF.go_first_data_line();
+        while (!DF.eof())
+        {
+            rot = DF(col_rot);
+            tilt = DF(col_tilt);
+            psi = DF(col_psi);
+            Euler_apply_transf(A3D, I, rot, tilt, psi, newrot, newtilt, newpsi);
+            DF.set(col_rot,newrot);
+            DF.set(col_tilt,newtilt);
+            DF.set(col_psi,newpsi);
+            DF.next_data_line();
+        }
+        DF.write(fn_DFout);
+        std::cerr<<" Written output docfile "<<fn_DFout<<std::endl;
+    }
+
+
 };
 
 bool process_img(ImageXmipp &img, const Prog_parameters *prm)
@@ -163,8 +234,20 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 
 int main(int argc, char **argv)
 {
+
     Rotate_parameters prm;
-    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+
+    // Also allow rotation of the angles in a docfile.
+    if (checkParameter(argc, argv, "-doc"))
+    {
+        prm.read(argc, argv);
+        prm.rotateAnglesInDocFile();
+    }
+    else
+    {
+        // Normal rotation of images and volumes
+        SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+    }
 }
 
 /* Menus ------------------------------------------------------------------- */
