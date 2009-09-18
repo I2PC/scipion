@@ -1082,6 +1082,7 @@ void Prog_tomograph_alignment::generateLandmarkSet() {
             else
                 pthread_create( (th_ids+nt) , NULL, threadgenerateLandmarkSetGrid, (void *)(th_args+nt) );
         }
+
         std::vector<LandmarkChain> chainList;
         int includedPoints=0;
         for( int nt = 0 ; nt < numThreads ; nt ++ )
@@ -1113,11 +1114,16 @@ void Prog_tomograph_alignment::generateLandmarkSet() {
         }
         
         // Write landmarks
-        writeLandmarkSet(fnRoot+"_landmarks.txt");
-        std::cout << " Number of points="
-                  << includedPoints
-                  << " Number of chains=" << chainList.size()
-                  << " ( " << ((double) includedPoints)/chainList.size() << " )\n";
+        if (includedPoints>0)
+        {
+            writeLandmarkSet(fnRoot+"_landmarks.txt");
+            std::cout << " Number of points="
+                      << includedPoints
+                      << " Number of chains=" << chainList.size()
+                      << " ( " << ((double) includedPoints)/chainList.size() << " )\n";
+        }
+        else
+            REPORT_ERROR(1,"There are no landmarks meeting this threshold. Try to lower it");
     }
     else
     {
