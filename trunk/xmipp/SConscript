@@ -620,6 +620,7 @@ AddBatch('extract_sidechain_from_pdb',
 AddBatch('convert_pdb2surface', 'applications/scripts/convert_pdb2surface')
 AddBatch('protocols', 'applications/scripts/protocols')
 AddBatch('gui', 'applications/scripts/protocols')
+AddBatch('convert_tia2raw', 'applications/programs/convert_tia2raw')
 
 # Protocols
 AddProtocol('arg.py', 'applications/scripts/protocols')
