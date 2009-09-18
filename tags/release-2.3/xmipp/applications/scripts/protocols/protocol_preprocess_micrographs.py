@@ -24,7 +24,8 @@ DoDeleteWorkingDir=True
 # {dir} Directory name from where to process all scanned micrographs
 DirMicrographs='Micrographs'
 # Which files in this directory to process
-""" This is typically *.tif, but may also be *.mrc or *.spi (see the expert options)
+""" This is typically *.tif or *.res, but may also be *.mrc, *.spi 
+    (see the expert options)
     Note that any wildcard is possible, e.g. *3[1,2].tif
 """
 ExtMicrographs='*.tif'
@@ -35,7 +36,7 @@ MicrographSelfile='all_micrographs.sel'
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/gpfs/fs1/home/bioinfo/roberto/Ad5GLflagIIIa'
+ProjectDir='/gpfs/fs1/home/bioinfo/coss/Trial_02'
 # {expert} Directory name for logfiles:
 LogDir='Logs'
 #------------------------------------------------------------------------------------------------
@@ -43,11 +44,17 @@ LogDir='Logs'
 #------------------------------------------------------------------------------------------------
 # Perform micrograph conversion? 
 DoConversion=True
-# {list}|Tif2Raw|Mrc2Raw|Spi2Raw|Raw2Raw| Which conversion to perform?
-""" Some TIF formats are not recognized. In that case, save your micrographs as spider, mrc or raw and try to convert those. Note that raw2raw assumes the raw files have an Xmipp-like raw.info file with the same rootname, and that in this case no conversion takes place, but only the required directory structure is made.
+# {list}|Tif2Raw|Mrc2Raw|Spi2Raw|Raw2Raw|Ser2Raw| Which conversion to perform?
+""" Some TIF formats are not recognized. In that case, save your micrographs 
+    as spider, mrc or raw and try to convert those. Note that raw2raw 
+    assumes the raw files have an Xmipp-like raw.info file with the 
+    same rootname, and that in this case no conversion takes place, but 
+    only the required directory structure is made.
     
 """
 ConversionTask='Tif2Raw'
+#{expert}"thershold at XX standard deviation (only for .res files)
+Stddev=5
 #------------------------------------------------------------------------------------------------
 # {section} Downsampling
 #------------------------------------------------------------------------------------------------
@@ -176,6 +183,7 @@ class preprocess_A_class:
                  ProjectDir,
                  LogDir,
                  DoConversion,
+		 Stddev,
                  ConversionTask,
                  DoDownSample,
                  Down,
@@ -214,6 +222,7 @@ class preprocess_A_class:
         self.ProjectDir=os.path.abspath(ProjectDir)
         self.LogDir=LogDir
         self.DoConversion=DoConversion
+	self.Stddev=Stddev
         self.ConversionTask=ConversionTask
         self.DoDownSample=DoDownSample
         self.Down=Down
@@ -286,6 +295,7 @@ class preprocess_A_class:
     def process_all_micrographs(self,fh_mpi,xmpi_run_file):
         import os
         import glob
+        import log
         print '*********************************************************************'
         print '*  Processing the following micrographs: '
         for self.filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
@@ -316,6 +326,8 @@ class preprocess_A_class:
                     self.perform_spi2raw(fh_mpi)
                 elif (self.ConversionTask=='Raw2Raw'):
                     self.perform_raw2raw(fh_mpi)
+                elif (self.ConversionTask=='Ser2Raw'):
+                    self.perform_ser2raw(fh_mpi,self.Stddev)
                 else:
                     message="Unrecognized ConversionTask: choose from list options"
                     print '*',message
@@ -335,10 +347,11 @@ class preprocess_A_class:
 
             if (self.DoDownSample):
                 self.perform_downsample(fh_mpi)
-        #Stop here untill downsampling is done
+        #Stop here until downsampling is done
         if(self._DoParallel):
             os.write(fh_mpi,"MPI_Barrier"+"\n");
 
+        # Estimate CTF
         job_index=0
         for self.filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
             (self.filepath, self.name) = os.path.split(self.filename)
@@ -371,8 +384,10 @@ class preprocess_A_class:
 				  1,
 				  self._MySystemFlavour)
 	else:
-            self.log.info(xmpi_run_file + '_1.sh')
-	    os.system(xmpi_run_file + '_1.sh')
+            self.log.info(xmpi_run_file + '_1.sh')     
+            os.system(xmpi_run_file + '_1.sh') 
+        os.remove(xmpi_run_file + '_1.sh')
+        
 	fh_mpi  = os.open(self.xmpi_run_file+ '_2.sh',os.O_WRONLY|os.O_TRUNC|os.O_CREAT, 0700)
         job_index=0
         for self.filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
@@ -427,6 +442,7 @@ class preprocess_A_class:
                      fh.close()
 
 	os.close(fh_mpi)#file must be closed before executed
+        
 	if(self._DoParallel):
 	    command =' -i '+ xmpi_run_file + '_2.sh'
 	    launch_job.launch_job("xmipp_run",
@@ -439,6 +455,8 @@ class preprocess_A_class:
 	else:
             self.log.info(xmpi_run_file+ '_2.sh')
 	    os.system(xmpi_run_file+ '_2.sh')
+        os.remove(xmpi_run_file + '_2.sh')
+
     def perform_tif2raw(self,fh_mpi):
         import os
         import launch_job
@@ -460,19 +478,22 @@ class preprocess_A_class:
         fh_mpi.write ("echo '*********************************************************************';")
         fh_mpi.write ("echo '*  Generating RAW for micrograph: '"+self.name+";")
         command ='xmipp_convert_spi22ccp4 -i '+self.filename+' -o '+tname
-#        launch_job.launch_job("xmipp_convert_spi22ccp4",
-#                              command,
-#                              self.log,
-#                              False,1,1,'')
+
         command += ";"
         command +='xmipp_convert_raw22spi -generate_inf -f -i '+tname+' -o '+oname
-#        launch_job.launch_job("xmipp_convert_raw22spi",
-#                              command,
-#                              self.log,
-#                              False,1,1,'')
-#        os.remove(tname)
+
         command += ";"
         command += "rm " + tname
+        os.write(fh_mpi,command +"\n");
+        
+    def perform_ser2raw(self,fh_mpi,_Stddev):
+        import os
+        import launch_job
+        oname=self.shortname+'/'+self.shortname+'.raw'
+        os.write(fh_mpi,"echo '*********************************************************************';\n")
+        os.write(fh_mpi,"echo '*  Generating RAW for micrograph: '"+self.name+";\n")
+        command ='xmipp_convert_tia2raw -i '+self.filename+' -o '+oname + ' -s ' + str(_Stddev)
+
         os.write(fh_mpi,command +"\n");
         
     def perform_spi2raw(self,fh_mpi):
@@ -781,6 +802,7 @@ if __name__ == '__main__':
                                    ProjectDir,
                                    LogDir,
                                    DoConversion,
+				   Stddev,
                                    ConversionTask,
                                    DoDownSample,
                                    Down,
