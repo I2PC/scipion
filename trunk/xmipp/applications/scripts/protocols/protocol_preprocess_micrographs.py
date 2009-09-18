@@ -386,6 +386,7 @@ class preprocess_A_class:
 				  self._MySystemFlavour)
 	else:
             self.log.info(xmpi_run_file + '_1.sh')     
+	    os.system(xmpi_run_file + '_1.sh')     
         os.remove(xmpi_run_file + '_1.sh')
         
 	fh_mpi  = os.open(self.xmpi_run_file+ '_2.sh',os.O_WRONLY|os.O_TRUNC|os.O_CREAT, 0700)
