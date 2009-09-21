@@ -998,12 +998,14 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
     imgs_optangno.clear();
     imgs_trymindiff.clear();
     imgs_optoffsets.clear();
+    imgs_optpsi.clear();
 
     for (int imgno = 0; imgno < SF.ImgNo(); imgno++)
     {
         Matrix1D<double> dum(3);
         imgs_optrefno.push_back(0);
         imgs_optangno.push_back(0);
+        imgs_optpsi.push_back(0.);
         imgs_trymindiff.push_back(-1.);
         if (do_missing)
             imgs_missno.push_back(-1);
@@ -1011,6 +1013,7 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
             imgs_optoffsets.push_back(dum);
     }
 
+    // Read in docfile with wedge info, optimal angles, etc.
     if (fn_doc!="") {
         DF.read(fn_doc);
         SF.go_beginning();
@@ -1034,6 +1037,7 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
                     DFsub.append_comment(fn_tmp);
                     DL=DF.get_current_line();
                     DFsub.append_line(DL);
+                    imgs_optpsi[imgno]=DL[2]; // for limited psi searches
                     if (dont_align || do_only_average) 
                     {
                         imgs_optangno[imgno]=DFsub.dataLineNo()-1;
@@ -2485,7 +2489,7 @@ void * threadMLTomoExpectationSingleImage( void * data )
         trymindiff = prm->imgs_trymindiff[imgno];
         opt_refno = prm->imgs_optrefno[imgno];
         opt_angno = prm->imgs_optangno[imgno];
-        old_psi = (prm->all_angle_info[opt_angno]).psi;
+        old_psi = prm->imgs_optpsi[imgno];
             
         if (prm->do_ml)
         {

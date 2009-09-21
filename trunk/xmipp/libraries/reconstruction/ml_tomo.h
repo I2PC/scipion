@@ -124,7 +124,7 @@ public:
 
     /** Optimal refno and angno from previous iteration */
     std::vector<int> imgs_optrefno, imgs_optangno;
-    std::vector<double> imgs_trymindiff, miss_nr_pixels;
+    std::vector<double> imgs_trymindiff, miss_nr_pixels, imgs_optpsi;
     std::vector<Matrix1D<double> > imgs_optoffsets;
     /** Number for missing data structure group */
     std::vector<int> imgs_missno;
