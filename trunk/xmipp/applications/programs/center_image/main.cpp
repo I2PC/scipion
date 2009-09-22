@@ -31,30 +31,34 @@ class Center_parameters: public Prog_parameters
 {
 public:
     int Niter;
+    bool limitShift;
 
     void read(int argc, char **argv)
     {
         Prog_parameters::read(argc, argv);
         Niter = textToInteger(getParameter(argc, argv, "-iter","10"));
+        limitShift = checkParameter(argc, argv, "-limitShift");
     }
 
     void show()
     {
         Prog_parameters::show();
         std::cout << "Iterations = " << Niter << std::endl;
+        std::cout << "LimitShift = " << limitShift << std::endl;
     }
 
     void usage()
     {
         Prog_parameters::usage();
         std::cerr << "  [-iter <N=10>]           : Number of iterations\n";
+        std::cerr << "  [-limitShift]            : Limit the maximum shift allowed\n";
     }
 };
 
 bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 {
     Center_parameters *eprm = (Center_parameters *) prm;
-    centerImage(img(),eprm->Niter);
+    centerImage(img(),eprm->Niter,eprm->limitShift);
     return true;
 }
 
