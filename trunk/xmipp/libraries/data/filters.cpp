@@ -622,6 +622,72 @@ void best_shift(const Matrix2D<double> &I1, const Matrix2D<double> &I2,
     shiftY = ymax / sumcorr;
 }
 
+/* Best non-wrapping shift ------------------------------------------------- */
+//#define DEBUG
+void best_nonwrapping_shift(const Matrix2D<double> &I1,
+    const Matrix2D<double> &I2, double &shiftX, double &shiftY)
+{
+    best_shift(I1, I2, shiftX, shiftY);
+    double bestCorr, corr;
+    Matrix2D<double> Iaux;
+    I1.translate(vectorR2(-shiftX,-shiftY),Iaux, DONT_WRAP);
+    bestCorr=corr=correlation_index(I2,Iaux);
+    double finalX=shiftX;
+    double finalY=shiftY;
+    #ifdef DEBUG
+        std::cout << "shiftX=" << shiftX << " shiftY=" << shiftY
+                  << " corr=" << corr << std::endl;
+        ImageXmipp save;
+        save()=I1;   save.write("PPPI1.xmp");
+        save()=I2;   save.write("PPPI2.xmp");
+        save()=Iaux; save.write("PPPpp.xmp");
+    #endif        
+    
+    Iaux.initZeros();
+    double testX=(shiftX>0) ? (shiftX-XSIZE(I1)):(shiftX+XSIZE(I1));
+    double testY=shiftY;
+    I1.translate(vectorR2(-testX,-testY),Iaux,DONT_WRAP);
+    corr=correlation_index(I2,Iaux);
+    if (corr>bestCorr) finalX=testX;
+    #ifdef DEBUG
+        std::cout << "shiftX=" << testX << " shiftY=" << testY
+                  << " corr=" << corr << std::endl;
+        save()=Iaux; save.write("PPPmp.xmp");
+    #endif        
+
+    Iaux.initZeros();
+    testX=shiftX;
+    testY=(shiftY>0) ? (shiftY-YSIZE(I1)):(shiftY+YSIZE(I1));
+    I1.translate(vectorR2(-testX,-testY),Iaux,DONT_WRAP);
+    corr=correlation_index(I2,Iaux);
+    if (corr>bestCorr)
+        finalY=testY;
+    #ifdef DEBUG
+        std::cout << "shiftX=" << testX << " shiftY=" << testY
+                  << " corr=" << corr << std::endl;
+        save()=Iaux; save.write("PPPpm.xmp");
+    #endif        
+
+    Iaux.initZeros();
+    testX=(shiftX>0) ? (shiftX-XSIZE(I1)):(shiftX+XSIZE(I1));
+    testY=(shiftY>0) ? (shiftY-YSIZE(I1)):(shiftY+YSIZE(I1));
+    I1.translate(vectorR2(-testX,-testY),Iaux,DONT_WRAP);
+    corr=correlation_index(I2,Iaux);
+    if (corr>bestCorr) {
+        finalX=testX;
+        finalY=testY;
+    }
+    #ifdef DEBUG
+        std::cout << "shiftX=" << testX << " shiftY=" << testY
+                  << " corr=" << corr << std::endl;
+        save()=Iaux; save.write("PPPmm.xmp");
+    #endif        
+    
+    shiftX=finalX;
+    shiftY=finalY;
+}
+#undef DEBUG
+
 /* Estimate 2D Gaussian ---------------------------------------------------- */
 /* See Brandle, Chen, Bischof, Lapp. Robust parametric and semi-parametric
    spot fitting for spot array images. 2000 */
@@ -1383,10 +1449,10 @@ void centerImageTranslationally(Matrix2D<double> &I)
     Matrix2D<double> Ixy = Ix; Ixy.selfReverseY(); Ixy.setXmippOrigin();
     
     double meanShiftX=0, meanShiftY=0, shiftX, shiftY;
-    best_shift(I,Ix, meanShiftX,meanShiftY);
-    best_shift(I,Iy, shiftX,shiftY);
+    best_nonwrapping_shift(I,Ix, meanShiftX,meanShiftY);
+    best_nonwrapping_shift(I,Iy, shiftX,shiftY);
     meanShiftX+=shiftX; meanShiftY+=shiftY;
-    best_shift(I,Ixy,shiftX,shiftY);
+    best_nonwrapping_shift(I,Ixy,shiftX,shiftY);
     meanShiftX+=shiftX; meanShiftY+=shiftY;
     meanShiftX/=3; meanShiftY/=3;
     
@@ -1420,7 +1486,7 @@ void centerImageRotationally(Matrix2D<double> &I)
 
 /* Center both rotationally and translationally ---------------------------- */
 //#define DEBUG
-void centerImage(Matrix2D<double> &I, int Niter)
+void centerImage(Matrix2D<double> &I, int Niter, bool limitShift)
 {
     I.setXmippOrigin();
     double avg=I.computeAvg();
@@ -1451,29 +1517,41 @@ void centerImage(Matrix2D<double> &I, int Niter)
         Ixy = Ix;    Ixy.selfReverseY(); Ixy.setXmippOrigin();
         
         double meanShiftX=0, meanShiftY=0, shiftX, shiftY, Nx=0, Ny=0;
-        best_shift(Iaux,Ix, shiftX,shiftY);
-        if (ABS(shiftX)<XSIZE(I)/3) {meanShiftX+=shiftX; Nx++;}
-        if (ABS(shiftY)<YSIZE(I)/3) {meanShiftY+=shiftY; Ny++;}
-        best_shift(Iaux,Iy, shiftX,shiftY);
-        if (ABS(shiftX)<XSIZE(I)/3) {meanShiftX+=shiftX; Nx++;}
-        if (ABS(shiftY)<YSIZE(I)/3) {meanShiftY+=shiftY; Ny++;}
-        best_shift(Iaux,Ixy,shiftX,shiftY);
-        if (ABS(shiftX)<XSIZE(I)/3) {meanShiftX+=shiftX; Nx++;}
-        if (ABS(shiftY)<YSIZE(I)/3) {meanShiftY+=shiftY; Ny++;}
+        best_nonwrapping_shift(Iaux,Ix, shiftX,shiftY);
+        #ifdef DEBUG
+            ImageXmipp save;
+            save()=Ix; save.write("PPPx.xmp");
+            std::cout << "con Ix: " << shiftX << " " << shiftY << std::endl;
+        #endif
+        if (ABS(shiftX)<XSIZE(I)/3 || !limitShift) {meanShiftX+=shiftX; Nx++;}
+        if (ABS(shiftY)<YSIZE(I)/3 || !limitShift) {meanShiftY+=shiftY; Ny++;}
+        best_nonwrapping_shift(Iaux,Iy, shiftX,shiftY);
+        #ifdef DEBUG
+            save()=Iy; save.write("PPPy.xmp");
+            std::cout << "con Iy: " << shiftX << " " << shiftY << std::endl;
+        #endif
+        if (ABS(shiftX)<XSIZE(I)/3 || !limitShift) {meanShiftX+=shiftX; Nx++;}
+        if (ABS(shiftY)<YSIZE(I)/3 || !limitShift) {meanShiftY+=shiftY; Ny++;}
+        best_nonwrapping_shift(Iaux,Ixy,shiftX,shiftY);
+        #ifdef DEBUG
+            save()=Ixy; save.write("PPPxy.xmp");
+            std::cout << "con Ixy: " << shiftX << " " << shiftY << std::endl;
+        #endif
+        if (ABS(shiftX)<XSIZE(I)/3 || !limitShift) {meanShiftX+=shiftX; Nx++;}
+        if (ABS(shiftY)<YSIZE(I)/3 || !limitShift) {meanShiftY+=shiftY; Ny++;}
         if (Nx>0) meanShiftX/=Nx;
         if (Ny>0) meanShiftY/=Ny;
 
-        A(0,2)+=-meanShiftX;
-        A(1,2)+=-meanShiftY;
+        A(0,2)+=-meanShiftX/2;
+        A(1,2)+=-meanShiftY/2;
         Iaux.initZeros();
-        applyGeometry(Iaux,A,I,IS_NOT_INV,DONT_WRAP);
+        applyGeometry(Iaux,A,I,IS_NOT_INV,WRAP);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
             if (!mask(i,j)) Iaux(i,j)=0;
         
         #ifdef DEBUG
             std::cout << "Iter " << i << std::endl;
             std::cout << "shift=" << -meanShiftX << "," << -meanShiftY << std::endl;
-            ImageXmipp save;
             save()=I; save.write("PPP.xmp");
             save()=Iaux; save.write("PPPshift.xmp");
         #endif
@@ -1499,7 +1577,7 @@ void centerImage(Matrix2D<double> &I, int Niter)
         
         A=rotation2DMatrix(-bestRot/2)*A;
         Iaux.initZeros();
-        applyGeometry(Iaux,A,I,IS_NOT_INV,DONT_WRAP);
+        applyGeometry(Iaux,A,I,IS_NOT_INV,WRAP);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
             if (!mask(i,j)) Iaux(i,j)=0;
 
