@@ -28,8 +28,8 @@
 #include <data/volume.h>
 
 void Usage(char **argv);
-void raw22spi(const FileName &, const FileName &, char, int, int, int, int,
-              bool, bool);
+void raw22spi(const FileName &, const FileName &, char, bool,
+              int, int, int, int, bool, bool);
 
 int main(int argc, char *argv[])
 {
@@ -38,6 +38,7 @@ int main(int argc, char *argv[])
     FileName       sel_file; // selection file
     std::string    sel_ext;  // extension for output files in selection file.
     char           raw_type = 'b';
+    bool           force_byte=false;
     int            Zdim, Ydim, Xdim;
     int            size_arg;
     int            header_size;
@@ -77,6 +78,7 @@ int main(int argc, char *argv[])
 
         if (checkParameter(argc, argv, "-f"))  raw_type = 'f';
         if (checkParameter(argc, argv, "-16")) raw_type = 'h';
+        force_byte=checkParameter(argc, argv, "-8");
 
         if (checkParameter(argc, argv, "-s"))
         {
@@ -134,8 +136,9 @@ int main(int argc, char *argv[])
                     FileName out_name = in_name.without_extension();
                     out_name = out_name.add_extension(sel_ext);
                     SF_out.insert(out_name, (SelLine::Label)label);
-                    raw22spi(in_name, out_name, raw_type, header_size, Zdim, Ydim, Xdim,
-                             generate_inf, reverse_endian);
+                    raw22spi(in_name, out_name, raw_type, force_byte,
+                        header_size, Zdim, Ydim, Xdim,
+                        generate_inf, reverse_endian);
                 }
                 else if (line.Is_comment())
                 {
@@ -149,8 +152,8 @@ int main(int argc, char *argv[])
 
         else if (checkParameter(argc, argv, "-i") && checkParameter(argc, argv, "-o"))
         {
-            raw22spi(fn_in, fn_out, raw_type, header_size, Zdim, Ydim, Xdim, generate_inf,
-                     reverse_endian);
+            raw22spi(fn_in, fn_out, raw_type, force_byte,
+                header_size, Zdim, Ydim, Xdim, generate_inf, reverse_endian);
         }
 
     }
@@ -185,6 +188,7 @@ void Usage(char **argv)
         "\n   [-f]           raw file is read/written in float format "
         "\n                         (byte by default)."
         "\n   [-16]                 raw file is read/written in 16-bit integers"
+        "\n   [-8]                  raw file is read/written in 8-bit integers"
         "\n   [-reverse_endian]     by default, output has the same endiannes as input"
         "\n                         use this option to change endianness\n"
         "\n   [-header size=0]      Valid for raw to Xmipp conversions\n"
@@ -194,8 +198,10 @@ void Usage(char **argv)
         "\n                         from <file_in>.inf\n"
         , argv[0]);
 }
+
 void raw22spi(const FileName &fn_in, const FileName &fn_out,
-              char raw_type, int header_size, int Zdim,  int Ydim, int Xdim,
+              char raw_type, bool force_byte,
+              int header_size, int Zdim,  int Ydim, int Xdim,
               bool generate_inf, bool reverse_endian)
 {
 
@@ -207,6 +213,7 @@ void raw22spi(const FileName &fn_in, const FileName &fn_out,
     {
         Vx.read(fn_in);
         bool endianness = (reverse_endian) ? !Vx.reversed() : Vx.reversed();
+        if (!force_byte) raw_type='f';
         switch (raw_type)
         {
         case 'b':
@@ -225,6 +232,7 @@ void raw22spi(const FileName &fn_in, const FileName &fn_out,
     {
         Ix.read(fn_in);
         bool endianness = (reverse_endian) ? !Ix.reversed() : Ix.reversed();
+        if (!force_byte) raw_type='f';
         int bits;
         switch (raw_type)
         {
@@ -292,73 +300,3 @@ void raw22spi(const FileName &fn_in, const FileName &fn_out,
         Vx.write(fn_out);
     }
 }
-
-/* Menus ------------------------------------------------------------------- */
-/*Colimate:
-   PROGRAM Raw22spi {
-      url="http://www.cnb.uam.es/~bioinfo/NewXmipp/Applications/Src/Raw22spi/Help/raw22spi.html";
-      help="Converts one or several images and volumes from Raw format to
-            Xmipp and ivceversa.";
-      OPEN MENU menu_raw22spi;
-      COMMAND LINES {
- + single: xmipp_raw22spi -i $FILE_IN -o $FILE_OUT
-                      [-f] [-s $ZDIM $YDIM $XDIM]
-        + multiple: xmipp_raw22spi -sel $SELFILE_IN -osel $OEXT
-                      OPT(-f) OPT(-s)
-      }
-      PARAMETER DEFINITIONS {
-        $FILE_IN {
-    label="Input File";
-           help="Raw or Xmipp";
-    type=file existing;
- }
-        $FILE_OUT {
-    label="Output File";
-           help="Xmipp or Raw";
-    type=file;
- }
-        OPT(-f) {
-           label="The Raw file is a float raw";
-           help="Otherwise, it is a byte raw";
-        }
-        $SELFILE_IN {
-    label="Input SelFile";
-           help="All images to be converted";
-    type=file existing;
- }
-        $OEXT {
-    label="Output Extension";
-           help="This extension substitutes the one in the input files";
-    type=text;
- }
-        OPT(-s) {
-           label="Raw dimensions";
-           help="Only needed when input raw";
-        }
-           $ZDIM {
-              label="Z Dimension";
-              type=natural;
-           }
-           $YDIM {
-              label="Y Dimension";
-              type=natural;
-           }
-           $XDIM {
-              label="X Dimension";
-              type=natural;
-           }
-      }
-   }
-
-   MENU menu_raw22spi {
-      "Single conversion"
-      $FILE_IN
-      $FILE_OUT
-      "Multiple conversions"
-      $SELFILE_IN
-      $OEXT
-      "Size specifications"
-      OPT(-f)
-      OPT(-s)
-   }
-*/
