@@ -384,8 +384,8 @@ class preprocess_A_class:
 				  1,
 				  self._MySystemFlavour)
 	else:
-            self.log.info(xmpi_run_file + '_1.sh')     
-            os.system(xmpi_run_file + '_1.sh') 
+            self.log.info(xmpi_run_file + '_1.sh')
+	    os.system(xmpi_run_file + '_1.sh')     
         os.remove(xmpi_run_file + '_1.sh')
         
 	fh_mpi  = os.open(self.xmpi_run_file+ '_2.sh',os.O_WRONLY|os.O_TRUNC|os.O_CREAT, 0700)
@@ -475,8 +475,8 @@ class preprocess_A_class:
         import launch_job
         oname=self.shortname+'/'+self.shortname+'.raw'
         tname=self.shortname+'/'+self.shortname+'.spi'
-        fh_mpi.write ("echo '*********************************************************************';")
-        fh_mpi.write ("echo '*  Generating RAW for micrograph: '"+self.name+";")
+        os.write(fh_mpi,"echo '*********************************************************************';")
+        os.write(fh_mpi,"echo '*  Generating RAW for micrograph: '"+self.name+";")
         command ='xmipp_convert_spi22ccp4 -i '+self.filename+' -o '+tname
 
         command += ";"
@@ -500,8 +500,8 @@ class preprocess_A_class:
         import os
         import launch_job
         oname=self.shortname+'/'+self.shortname+'.raw'
-        fh_mpi.write ("echo '*********************************************************************';")
-        fh_mpi.write ("echo '*  Generating RAW for micrograph: '"+self.name +";")
+        os.write(fh_mpi,"echo '*********************************************************************';")
+        os.write(fh_mpi,"echo '*  Generating RAW for micrograph: '"+self.name +";")
         command='xmipp_convert_raw22spi -generate_inf -f -i '+self.filename+' -o '+oname
         #launch_job.launch_job("xmipp_convert_raw22spi",
         #                      command,
@@ -512,14 +512,14 @@ class preprocess_A_class:
     def perform_raw2raw(self,fh_mpi):
         import os
         oname=self.shortname+'/'+self.shortname+'.raw'
-        fh_mpi.write ("echo '*********************************************************************';")
-        fh_mpi.write ("echo '*  Generating RAW for micrograph: '"+self.name+";")
+        os.write(fh_mpi,"echo '*********************************************************************';")
+        os.write(fh_mpi,"echo '*  Generating RAW for micrograph: '"+self.name+";")
         command='cp '+self.filename+' '+oname + ";"
-        fh_mpi.write ("echo '* '," + command +  ";")
+        os.write(fh_mpi,"echo '* '," + command +  ";")
         #self.log.info(command)
         #os.system(command)
         command +='cp '+self.filename+'.inf '+oname+'.inf'
-        fh_mpi.write ("echo '* '" + command + ";")
+        os.write(fh_mpi,"echo '* '" + command + ";")
         #self.log.info(command)
         #os.system(command)
         os.write(fh_mpi,command+"\n");
