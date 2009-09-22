@@ -559,12 +559,27 @@ double correntropy(const Matrix3D<T> &x, const Matrix3D<T> &y,
  * This function returns the best interpolated shift for the alignment of two
  * images. You can restrict the shift to a region defined by a mask (the maximum
  * will be sought where the mask is 1).
+ *
+ * To apply these results you must shift I1 by (-shiftX,-shiftY) or 
+ * I2 by (shiftX, shiftY)
  */
 void best_shift(const Matrix2D< double >& I1,
                 const Matrix2D< double >& I2,
                 double& shiftX,
                 double& shiftY,
                 const Matrix2D< int >* mask = NULL);
+
+/** Translational search (non-wrapping)
+ * @ingroup Filters
+ *
+ * This function returns the best interpolated shift for the alignment of two
+ * images. You can restrict the shift to a region defined by a mask (the maximum
+ * will be sought where the mask is 1).
+ */
+void best_nonwrapping_shift(const Matrix2D< double >& I1,
+                const Matrix2D< double >& I2,
+                double& shiftX,
+                double& shiftY);
 
 /** Unnormalized 2D gaussian value using covariance
  * @ingroup NumericalFunctions
@@ -1593,6 +1608,6 @@ void centerImageRotationally(Matrix2D<double> &I);
  * with its mirrored (X, Y, XY) versions. The image is aligned translationally
  * and then rotationally Niter times.
  */
-void centerImage(Matrix2D<double> &I, int Niter=10);
+void centerImage(Matrix2D<double> &I, int Niter=10, bool limitShift=true);
 
 #endif
