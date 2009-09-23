@@ -24,7 +24,7 @@ DoDeleteWorkingDir=False
 # {dir} Directory name from where to process all scanned micrographs
 DirMicrographs='Micrographs'
 # Which files in this directory to process
-""" This is typically *.tif or *.res, but may also be *.mrc, *.spi 
+""" This is typically *.tif or *.ser, but may also be *.mrc, *.spi 
     (see the expert options)
     Note that any wildcard is possible, e.g. *3[1,2].tif
 """
@@ -53,7 +53,7 @@ DoConversion=True
     
 """
 ConversionTask='Tif2Raw'
-#{expert}"thershold at XX standard deviation (only for .res files)
+#{expert}"threshold at XX standard deviation (only for .ser files)
 Stddev=5
 #------------------------------------------------------------------------------------------------
 # {section} Downsampling
@@ -96,7 +96,7 @@ LowResolCutoff=0.05
     This cut-off prevents high-resolution terms where only noise exists to interfere with CTF estimation.  
     The default value is 0.35, but it should be increased for micrographs with signals extending beyond this value
 """
-HighResolCutoff=0.5
+HighResolCutoff=0.35
 #------------------------------------------------------------------------------------------------
 # {section} CTFFIND
 #------------------------------------------------------------------------------------------------
@@ -531,8 +531,12 @@ class preprocess_A_class:
         iname=self.shortname+'/'+self.shortname+'.raw'
         oname=self.shortname+'/'+self.downname+'.raw'
         os.write(fh_mpi,"echo '*********************************************************************';")
-        os.write(fh_mpi,"echo '*  Downsampling micrograph: '"+iname+";\n")
-        if (self.DownKernel=='Fourier'):
+        os.write(fh_mpi,"echo '*  Downsampling micrograph: '"+iname+";")
+	if(self.Down==1):
+	   command='mv ' + iname + ' ' + oname 
+	   command += '; ln -s ' + oname + ' ' + iname  
+	   command='cp ' + iname + '.inf ' + oname + '.inf' 
+        elif (self.DownKernel=='Fourier'):
             scale = 1./self.Down
             command='xmipp_micrograph_downsample -i '+iname+' -o '+oname+' -output_bits 32 -fourier '+str(scale)
         elif (self.DownKernel=='Sinc'):
