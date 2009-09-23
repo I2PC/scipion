@@ -534,7 +534,7 @@ class preprocess_A_class:
         os.write(fh_mpi,"echo '*  Downsampling micrograph: '"+iname+";")
 	if(self.Down==1):
 	   command='mv ' + iname + ' ' + oname 
-	   command += '; ln -s ' + oname + ' ' + iname  
+	   command += '; ln -s ' + os.path.abspath(oname) + ' ' + os.path.abspath(iname)  
 	   command='cp ' + iname + '.inf ' + oname + '.inf' 
         elif (self.DownKernel=='Fourier'):
             scale = 1./self.Down
