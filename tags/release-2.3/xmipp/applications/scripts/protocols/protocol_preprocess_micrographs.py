@@ -109,16 +109,14 @@ DoCtffind=True
 CtffindExec='/gpfs/fs1/bin/ctffind3.exe'
 # {expert} Window size
 WinSize=128
-# {expert} Minimum resolution (in Ang.)
-MinRes=200.0
-""" Lowest resolution to include in CTF estimation
+# {expert} Minimum resolution (in norm. freq.)
+""" Lowest resolution to include in CTF estimation. Valid range 0-0.5
 """
+MinResCTF=0.02
 # {expert} Maximum resolution factor
-""" The highest resolution used in the CTF estimation will be:
-    <this factor> x 10000 x Down x ScannedPixelSize / Magnification
-    recommended value: 3
+""" highest resolution to include in CTF estimation. Valid range 0-0.5
 """
-MaxResFactor=3
+MaxResCTF=0.35
 # {expert} Minimum defocus to search (in Ang.)
 """ Minimum defocus value (in Angstrom) to include in defocus search
 """
@@ -200,8 +198,8 @@ class preprocess_A_class:
                  DoCtffind,
                  CtffindExec,
                  WinSize,
-                 MinRes,
-                 MaxResFactor,
+                 MinResCTF,
+                 MaxResCTF,
                  MinFocus,
                  MaxFocus,
                  StepFocus,
@@ -238,8 +236,8 @@ class preprocess_A_class:
         self.HighResolCutoff=HighResolCutoff
         self.DoCtffind=DoCtffind
         self.WinSize=WinSize
-        self.MinRes=MinRes
-        self.MaxResFactor=MaxResFactor
+        self.MinResCTF=MinResCTF
+        self.MaxResCTF=MaxResCTF
         self.MinFocus=MinFocus
         self.MaxFocus=MaxFocus
         self.StepFocus=StepFocus
@@ -634,8 +632,10 @@ class preprocess_A_class:
     def perform_ctfestimate_ctffind(self,fh_mpi,split):
         import os
         # Prepare stuff
-        DStep = self.ScannedPixelSize * self.Down
-        MaxRes = (self.MaxResFactor * 10000. * DStep) / self.Magnification
+        DStep  = (self.ScannedPixelSize * 10000 *self.Down) / self.Magnification
+        MaxRes =  DStep / self.MaxResCTF
+        MinResCTF =  DStep / self.MinResCTF
+
         self.convert_raw_to_mrc(fh_mpi)
 
         # Execute CTFFIND
@@ -658,7 +658,7 @@ class preprocess_A_class:
                       str(self.Magnification) + ',' + \
                       str(DStep) +theNewLine
             command+= str(self.WinSize) + ',' + \
-                      str(self.MinRes) + ',' + \
+                      str(self.MinResCTF) + ',' + \
                       str(MaxRes) + ',' + \
                       str(self.MinFocus) + ',' + \
                       str(self.MaxFocus) + ',' + \
@@ -823,8 +823,8 @@ if __name__ == '__main__':
                                    DoCtffind,
                                    CtffindExec,
                                    WinSize,
-                                   MinRes,
-                                   MaxResFactor,
+                                   MinResCTF,
+                                   MaxResCTF,
                                    MinFocus,
                                    MaxFocus,
                                    StepFocus,
