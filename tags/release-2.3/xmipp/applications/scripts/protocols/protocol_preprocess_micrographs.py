@@ -532,7 +532,7 @@ class preprocess_A_class:
 	if(self.Down==1):
 	   command='mv ' + iname + ' ' + oname 
 	   command += '; ln -s ' + os.path.abspath(oname) + ' ' + os.path.abspath(iname)  
-	   command='cp ' + iname + '.inf ' + oname + '.inf' 
+	   command +=';cp ' + iname + '.inf ' + oname + '.inf' 
         elif (self.DownKernel=='Fourier'):
             scale = 1./self.Down
             command='xmipp_micrograph_downsample -i '+iname+' -o '+oname+' -output_bits 32 -fourier '+str(scale)
@@ -684,7 +684,10 @@ class preprocess_A_class:
         import launch_job
         command= 'xmipp_convert_raw22spi -i '+ self.shortname+'/'+self.downname+'.raw ' + \
                  ' -o '+ self.shortname+'/tmp.spi ' + \
-                 ' -is_micrograph -f'
+                 ' -is_micrograph '
+	if(self.Down!=1):#when down =1 inout image is integer
+	                #if down !=1 is float
+	         command += ' -f'
         os.write(fh_mpi,command+";");
         #launch_job.launch_job("xmipp_convert_raw22spi",
         #                      command,
