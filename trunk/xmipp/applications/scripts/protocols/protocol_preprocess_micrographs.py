@@ -634,7 +634,7 @@ class preprocess_A_class:
     def perform_ctfestimate_ctffind(self,fh_mpi,split):
         import os
         # Prepare stuff
-        DStep  = (self.ScannedPixelSize * 10000 *self.Down) / self.Magnification
+        DStep  = float(self.ScannedPixelSize * 10000 *self.Down) / self.Magnification
         MaxRes =  DStep / self.MaxResCTF
         MinResCTF =  DStep / self.MinResCTF
 
@@ -660,7 +660,7 @@ class preprocess_A_class:
                       str(self.Magnification) + ',' + \
                       str(DStep) +theNewLine
             command+= str(self.WinSize) + ',' + \
-                      str(self.MinResCTF) + ',' + \
+                      str(MinResCTF) + ',' + \
                       str(MaxRes) + ',' + \
                       str(self.MinFocus) + ',' + \
                       str(self.MaxFocus) + ',' + \
