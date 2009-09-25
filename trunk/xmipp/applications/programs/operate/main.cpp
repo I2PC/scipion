@@ -28,22 +28,28 @@
 void Usage(void);
 bool check_for_operation(int argc, char **argv, char *operation,
                          FileName &fn, int &operand_type);
-void compute(int operation, int operand_type1, int operand_type2, FileName &fn_1,
-             FileName &fn_2, FileName &fn_out);
-void operate_plus(int operand_type1, int operand_type2, FileName &fn_1, FileName &fn_2, FileName &fn_out);
-void operate_minus(int operand_type1, int operand_type2, FileName &fn_1, FileName &fn_2, FileName &fn_out);
-void multiplication(int operand_type1, int operand_type2, FileName &fn_1, FileName &fn_2, FileName &fn_out);
-void division(int operand_type1, int operand_type2, FileName &fn_1, FileName &fn_2, FileName &fn_out);
-void log10(int operand_type1, FileName &fn_1, FileName &fn_out);
-void sqrt(int operand_type1, FileName &fn_1, FileName &fn_out);
+void compute(int operation, int operand_type1, int operand_type2,
+    const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
+void operate_plus(int operand_type1, int operand_type2,
+    const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
+void operate_minus(int operand_type1, int operand_type2,
+    const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
+void multiplication(int operand_type1, int operand_type2,
+    const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
+void division(int operand_type1, int operand_type2,
+    const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
+void log10(int operand_type1, const FileName &fn_1,const FileName &fn_out);
+void sqrt(int operand_type1, const FileName &fn_1, const FileName &fn_out);
 void extract_row(int operand_type1, int operand_type2,
-                 FileName &fn_1, FileName &fn_2, FileName &fn_out);
+                 const FileName &fn_1, const FileName &fn_2,
+                 const FileName &fn_out);
 void extract_column(int operand_type1, int operand_type2,
-                    FileName &fn_1, FileName &fn_2, FileName &fn_out);
+                    const FileName &fn_1, const FileName &fn_2,
+                    const FileName &fn_out);
 void extract_slice(int operand_type1, int operand_type2,
-                   FileName &fn_1, FileName &fn_2, FileName &fn_out);
-void radial_avg(int operand_type1, FileName &fn_1, FileName &fn_out);
-
+                   const FileName &fn_1, const FileName &fn_2,
+                   const FileName &fn_out);
+void radial_avg(int operand_type1, const FileName &fn_1, const FileName &fn_out);
 
 // Operations suported
 #define    OPERATE_PLUS   1
@@ -61,6 +67,7 @@ void radial_avg(int operand_type1, FileName &fn_1, FileName &fn_out);
 #define    VOLUME    1
 #define    IMAGE     2
 #define    NUMBER    3
+#define    SELFILE   4
 
 /**************************************************************************
 
@@ -74,15 +81,15 @@ void radial_avg(int operand_type1, FileName &fn_1, FileName &fn_out);
 int main(int argc, char **argv)
 {
     FileName  fn_1, fn_2, fn_out;
-    int          operation = 0, operand_type1 = 0, operand_type2 = 0, operand_type_input2 = 0;
-
+    int          operation = 0,
+                 operand_type1 = 0,
+                 operand_type2 = 0,
+                 operand_type_input2 = 0;
 
     // Obtain command line parameters form the program
     try
     {
-        // Read the output image filename
-        fn_out  = getParameter(argc, argv, "-o");
-        // Check for #, which indicates a binary operation
+        fn_out  = getParameter(argc, argv, "-o","");
         check_for_operation(argc, argv, "-i", fn_1, operand_type1);
 
         // Check the operations supported
@@ -100,7 +107,6 @@ int main(int argc, char **argv)
             REPORT_ERROR(1, "No valid operation specified");
 
         compute(operation, operand_type1, operand_type2, fn_1, fn_2, fn_out);
-
     }
     catch (Xmipp_error XE)
     {
@@ -108,13 +114,11 @@ int main(int argc, char **argv)
         Usage();
         exit(1);
     }
-
 }
 
-
-bool check_for_operation(int argc, char **argv, char *operation, FileName &fn, int &operand_type)
+bool check_for_operation(int argc, char **argv, char *operation,
+    FileName &fn, int &operand_type)
 {
-
     if (checkParameter(argc, argv, operation))
     {
         fn  = getParameter(argc, argv, operation);
@@ -127,7 +131,7 @@ bool check_for_operation(int argc, char **argv, char *operation, FileName &fn, i
             else if (Is_VolumeXmipp(fn))
                 operand_type = VOLUME;
             else
-                REPORT_ERROR(1502, "One of the files is not a Xmipp image or volume\n");
+                operand_type = SELFILE;
         }
         // In other case check if it's a number
         else
@@ -142,11 +146,11 @@ bool check_for_operation(int argc, char **argv, char *operation, FileName &fn, i
     }
 
     return false;
-
 }
 
 // Insert new functions here and create its operations as in plus() or log10(), for example
-void compute(int operation, int operand_type1, int operand_type2, FileName &fn_1, FileName &fn_2, FileName &fn_out)
+void compute(int operation, int operand_type1, int operand_type2,
+    const FileName &fn_1, const FileName &fn_2, const FileName &fn_out)
 {
     switch (operation)
     {
@@ -183,7 +187,8 @@ void compute(int operation, int operand_type1, int operand_type2, FileName &fn_1
     }
 }
 
-void operate_plus(int operand_type1, int operand_type2, FileName &fn_1, FileName &fn_2, FileName &fn_out)
+void operate_plus(int operand_type1, int operand_type2, const FileName &fn_1,
+    const FileName &fn_2, const FileName &fn_out)
 {
     if (operand_type1 == NUMBER && operand_type2 == IMAGE)
     {
@@ -193,7 +198,8 @@ void operate_plus(int operand_type1, int operand_type2, FileName &fn_1, FileName
         out() = out() + number1;
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
-        out.write(fn_out);
+        if (fn_out=="") out.write(fn_2);
+        else out.write(fn_out);
     }
     else if (operand_type1 == IMAGE && operand_type2 == NUMBER)
     {
@@ -203,7 +209,8 @@ void operate_plus(int operand_type1, int operand_type2, FileName &fn_1, FileName
         out() = out() + number2;
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
-        out.write(fn_out);
+        if (fn_out=="") out.write(fn_1);
+        else out.write(fn_out);
     }
     else if (operand_type1 == IMAGE && operand_type2 == IMAGE)
     {
@@ -213,7 +220,8 @@ void operate_plus(int operand_type1, int operand_type2, FileName &fn_1, FileName
         out() = Op1() + out();
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
-        out.write(fn_out);
+        if (fn_out=="") out.write("result.xmp");
+        else out.write(fn_out);
     }
     else if (operand_type1 == NUMBER && operand_type2 == VOLUME)
     {
@@ -221,7 +229,8 @@ void operate_plus(int operand_type1, int operand_type2, FileName &fn_1, FileName
         out.read(fn_2);
         double number1 = textToFloat(fn_1);
         out() = out() + number1;
-        out.write(fn_out);
+        if (fn_out=="") out.write(fn_2);
+        else out.write(fn_out);
     }
     else if (operand_type1 == VOLUME && operand_type2 == NUMBER)
     {
@@ -229,7 +238,8 @@ void operate_plus(int operand_type1, int operand_type2, FileName &fn_1, FileName
         out.read(fn_1);
         double number2 = textToFloat(fn_2);
         out() = out() + number2;
-        out.write(fn_out);
+        if (fn_out=="") out.write(fn_1);
+        else out.write(fn_out);
     }
     else if (operand_type1 == VOLUME && operand_type2 == VOLUME)
     {
@@ -237,12 +247,26 @@ void operate_plus(int operand_type1, int operand_type2, FileName &fn_1, FileName
         Op1.read(fn_1);
         out.read(fn_2);
         out() = Op1() + out();
-        out.write(fn_out);
+        if (fn_out=="") out.write("result.vol");
+        else out.write(fn_out);
     }
-
+    else if (operand_type1 == SELFILE)
+    {
+        SelFile SF;
+        SF.read(fn_1);
+        init_progress_bar(SF.ImgNo());
+        int i=0;
+        while (!SF.eof())
+        {
+            operate_plus(IMAGE, operand_type2, SF.NextImg(), fn_2, "");
+            if ((i++ % 50) ==0) progress_bar(i);
+        }
+        progress_bar(SF.ImgNo());
+    }
 }
 
-void operate_minus(int operand_type1, int operand_type2, FileName &fn_1, FileName &fn_2, FileName &fn_out)
+void operate_minus(int operand_type1, int operand_type2,
+    const FileName &fn_1, const FileName &fn_2, const FileName &fn_out)
 {
     if (operand_type1 == NUMBER && operand_type2 == IMAGE)
     {
@@ -252,7 +276,8 @@ void operate_minus(int operand_type1, int operand_type2, FileName &fn_1, FileNam
         out() = number1 - out();
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
-        out.write(fn_out);
+        if (fn_out=="") out.write(fn_2);
+        else out.write(fn_out);
     }
     else if (operand_type1 == IMAGE && operand_type2 == NUMBER)
     {
@@ -262,7 +287,8 @@ void operate_minus(int operand_type1, int operand_type2, FileName &fn_1, FileNam
         out() = out() - number2;
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
-        out.write(fn_out);
+        if (fn_out=="") out.write(fn_1);
+        else out.write(fn_out);
     }
     else if (operand_type1 == IMAGE && operand_type2 == IMAGE)
     {
@@ -272,7 +298,8 @@ void operate_minus(int operand_type1, int operand_type2, FileName &fn_1, FileNam
         out() = Op1() - out();
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
-        out.write(fn_out);
+        if (fn_out=="") out.write("result.xmp");
+        else out.write(fn_out);
     }
     else if (operand_type1 == NUMBER && operand_type2 == VOLUME)
     {
@@ -280,7 +307,8 @@ void operate_minus(int operand_type1, int operand_type2, FileName &fn_1, FileNam
         out.read(fn_2);
         double number1 = textToFloat(fn_1);
         out() = out() - number1;
-        out.write(fn_out);
+        if (fn_out=="") out.write(fn_2);
+        else out.write(fn_out);
     }
     else if (operand_type1 == VOLUME && operand_type2 == NUMBER)
     {
@@ -288,7 +316,8 @@ void operate_minus(int operand_type1, int operand_type2, FileName &fn_1, FileNam
         out.read(fn_1);
         double number2 = textToFloat(fn_2);
         out() = out() - number2;
-        out.write(fn_out);
+        if (fn_out=="") out.write(fn_1);
+        else out.write(fn_out);
     }
     else if (operand_type1 == VOLUME && operand_type2 == VOLUME)
     {
@@ -296,34 +325,48 @@ void operate_minus(int operand_type1, int operand_type2, FileName &fn_1, FileNam
         Op1.read(fn_1);
         out.read(fn_2);
         out() = Op1() - out();
-        out.write(fn_out);
+        if (fn_out=="") out.write("result.vol");
+        else out.write(fn_out);
     }
-
+    else if (operand_type1 == SELFILE)
+    {
+        SelFile SF;
+        SF.read(fn_1);
+        init_progress_bar(SF.ImgNo());
+        int i=0;
+        while (!SF.eof())
+        {
+            operate_minus(IMAGE, operand_type2, SF.NextImg(), fn_2, "");
+            if ((i++ % 50) ==0) progress_bar(i);
+        }
+        progress_bar(SF.ImgNo());
+    }
 }
 
-void multiplication(int operand_type1, int operand_type2, FileName &fn_1, FileName &fn_2, FileName &fn_out)
+void multiplication(int operand_type1, int operand_type2,
+    const FileName &fn_1, const FileName &fn_2, const FileName &fn_out)
 {
     if (operand_type1 == NUMBER && operand_type2 == IMAGE)
     {
         ImageXmipp out;
         out.read(fn_2, false, false, true);
         double number1 = textToFloat(fn_1);
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
-        out(i, j) *= number1;
+        out() *= number1;
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
-        out.write(fn_out);
+        if (fn_out=="") out.write(fn_2);
+        else out.write(fn_out);
     }
     else if (operand_type1 == IMAGE && operand_type2 == NUMBER)
     {
         ImageXmipp out;
         out.read(fn_1, false, false, true);
         double number2 = textToFloat(fn_2);
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
-        out(i, j) *= number2;
+        out() *= number2;
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
-        out.write(fn_out);
+        if (fn_out=="") out.write(fn_1);
+        else out.write(fn_out);
     }
     else if (operand_type1 == IMAGE && operand_type2 == IMAGE)
     {
@@ -333,25 +376,26 @@ void multiplication(int operand_type1, int operand_type2, FileName &fn_1, FileNa
         multiplyElements(Op1(), out(), out());
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
-        out.write(fn_out);
+        if (fn_out=="") out.write("result.xmp");
+        else out.write(fn_out);
     }
     else if (operand_type1 == NUMBER && operand_type2 == VOLUME)
     {
         VolumeXmipp out;
         out.read(fn_2);
         double number1 = textToFloat(fn_1);
-        FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-        out(k, i, j) *= number1;
-        out.write(fn_out);
+        out() *= number1;
+        if (fn_out=="") out.write(fn_2);
+        else out.write(fn_out);
     }
     else if (operand_type1 == VOLUME && operand_type2 == NUMBER)
     {
         VolumeXmipp out;
         out.read(fn_1);
         double number2 = textToFloat(fn_2);
-        FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-        out(k, i, j) *= number2;
-        out.write(fn_out);
+        out() *= number2;
+        if (fn_out=="") out.write(fn_1);
+        else out.write(fn_out);
     }
     else if (operand_type1 == VOLUME && operand_type2 == VOLUME)
     {
@@ -359,13 +403,27 @@ void multiplication(int operand_type1, int operand_type2, FileName &fn_1, FileNa
         Op1.read(fn_1);
         out.read(fn_2);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-        out(k, i, j) = Op1(k, i, j) * out(k, i, j);
-        out.write(fn_out);
+            out(k, i, j) = Op1(k, i, j) * out(k, i, j);
+        if (fn_out=="") out.write("result.vol");
+        else out.write(fn_out);
     }
-
+    else if (operand_type1 == SELFILE)
+    {
+        SelFile SF;
+        SF.read(fn_1);
+        init_progress_bar(SF.ImgNo());
+        int i=0;
+        while (!SF.eof())
+        {
+            multiplication(IMAGE, operand_type2, SF.NextImg(), fn_2, "");
+            if ((i++ % 50) ==0) progress_bar(i);
+        }
+        progress_bar(SF.ImgNo());
+    }
 }
 
-void division(int operand_type1, int operand_type2, FileName &fn_1, FileName &fn_2, FileName &fn_out)
+void division(int operand_type1, int operand_type2,
+    const FileName &fn_1, const FileName &fn_2, const FileName &fn_out)
 {
     if (operand_type1 == NUMBER && operand_type2 == IMAGE)
     {
@@ -373,21 +431,22 @@ void division(int operand_type1, int operand_type2, FileName &fn_1, FileName &fn
         out.read(fn_2, false, false, true);
         double number1 = textToFloat(fn_1);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
-        out(i, j) = number1 / out(i, j);
+            out(i, j) = number1 / out(i, j);
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
-        out.write(fn_out);
+        if (fn_out=="") out.write(fn_2);
+        else out.write(fn_out);
     }
     else if (operand_type1 == IMAGE && operand_type2 == NUMBER)
     {
         ImageXmipp out;
         out.read(fn_1, false, false, true);
         double number2 = textToFloat(fn_2);
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
-        out(i, j) = out(i, j) / number2;
+        out() /= number2;
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
-        out.write(fn_out);
+        if (fn_out=="") out.write(fn_1);
+        else out.write(fn_out);
     }
     else if (operand_type1 == IMAGE && operand_type2 == IMAGE)
     {
@@ -395,10 +454,11 @@ void division(int operand_type1, int operand_type2, FileName &fn_1, FileName &fn
         Op1.read(fn_1, false, false, true);
         out.read(fn_2, false, false, true);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
-        out(i, j) = Op1(i, j) / out(i, j);
+            out(i, j) = Op1(i, j) / out(i, j);
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
-        out.write(fn_out);
+        if (fn_out=="") out.write("result.xmp");
+        else out.write(fn_out);
     }
     else if (operand_type1 == NUMBER && operand_type2 == VOLUME)
     {
@@ -406,17 +466,18 @@ void division(int operand_type1, int operand_type2, FileName &fn_1, FileName &fn
         out.read(fn_2);
         double number1 = textToFloat(fn_1);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-        out(k, i, j) = number1 / out(k, i, j);
-        out.write(fn_out);
+            out(k, i, j) = number1 / out(k, i, j);
+        if (fn_out=="") out.write(fn_2);
+        else out.write(fn_out);
     }
     else if (operand_type1 == VOLUME && operand_type2 == NUMBER)
     {
         VolumeXmipp out;
         out.read(fn_1);
         double number2 = textToFloat(fn_2);
-        FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-        out(k, i, j) = out(k, i, j) / number2;
-        out.write(fn_out);
+        out() /= number2;
+        if (fn_out=="") out.write(fn_2);
+        else out.write(fn_out);
     }
     else if (operand_type1 == VOLUME && operand_type2 == VOLUME)
     {
@@ -424,59 +485,101 @@ void division(int operand_type1, int operand_type2, FileName &fn_1, FileName &fn
         Op1.read(fn_1);
         out.read(fn_2);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-        out(k, i, j) = Op1(k, i, j) / out(k, i, j);
-        out.write(fn_out);
+            out(k, i, j) = Op1(k, i, j) / out(k, i, j);
+        if (fn_out=="") out.write("result.vol");
+        else out.write(fn_out);
     }
-
+    else if (operand_type1 == SELFILE)
+    {
+        SelFile SF;
+        SF.read(fn_1);
+        init_progress_bar(SF.ImgNo());
+        int i=0;
+        while (!SF.eof())
+        {
+            division(IMAGE, operand_type2, SF.NextImg(), fn_2, "");
+            if ((i++ % 50) ==0) progress_bar(i);
+        }
+        progress_bar(SF.ImgNo());
+    }
 }
 
-
-void log10(int operand_type1, FileName &fn_1, FileName &fn_out)
+void log10(int operand_type1, const FileName &fn_1, const FileName &fn_out)
 {
     if (operand_type1 == IMAGE)
     {
         ImageXmipp out;
         out.read(fn_1, false, false, true);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
-        out(i, j) = log10(1 + out(i, j));
+            out(i, j) = log10(1 + out(i, j));
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
-        out.write(fn_out);
+        if (fn_out=="") out.write(fn_1);
+        else out.write(fn_out);
     }
     else if (operand_type1 == VOLUME)
     {
         VolumeXmipp out;
         out.read(fn_1);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-        out(k, i, j) = log10(1 + out(k, i, j));
-        out.write(fn_out);
+            out(k, i, j) = log10(1 + out(k, i, j));
+        if (fn_out=="") out.write(fn_1);
+        else out.write(fn_out);
+    }
+    else if (operand_type1 == SELFILE)
+    {
+        SelFile SF;
+        SF.read(fn_1);
+        init_progress_bar(SF.ImgNo());
+        int i=0;
+        while (!SF.eof())
+        {
+            log10(IMAGE, SF.NextImg(), "");
+            if ((i++ % 50) ==0) progress_bar(i);
+        }
+        progress_bar(SF.ImgNo());
     }
 }
 
-void sqrt(int operand_type1, FileName &fn_1, FileName &fn_out)
+void sqrt(int operand_type1, const FileName &fn_1, const FileName &fn_out)
 {
     if (operand_type1 == IMAGE)
     {
         ImageXmipp out;
         out.read(fn_1, false, false, true);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
-        out(i, j) = sqrt(out(i, j));
+            out(i, j) = sqrt(out(i, j));
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
-        out.write(fn_out);
+        if (fn_out=="") out.write(fn_1);
+        else out.write(fn_out);
     }
     else if (operand_type1 == VOLUME)
     {
         VolumeXmipp out;
         out.read(fn_1);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-        out(k, i, j) = sqrt(out(k, i, j));
-        out.write(fn_out);
+            out(k, i, j) = sqrt(out(k, i, j));
+        if (fn_out=="") out.write(fn_1);
+        else out.write(fn_out);
+    }
+    else if (operand_type1 == SELFILE)
+    {
+        SelFile SF;
+        SF.read(fn_1);
+        init_progress_bar(SF.ImgNo());
+        int i=0;
+        while (!SF.eof())
+        {
+            sqrt(IMAGE, SF.NextImg(), "");
+            if ((i++ % 50) ==0) progress_bar(i);
+        }
+        progress_bar(SF.ImgNo());
     }
 }
 
-
-void extract_slice(int operand_type1, int operand_type2, FileName &fn_1, FileName &fn_2, FileName &fn_out)
+void extract_slice(int operand_type1, int operand_type2, const FileName &fn_1,
+    const FileName &fn_2, const FileName &fn_out)
 {
     if (operand_type1 == VOLUME && operand_type2 == NUMBER)
     {
@@ -499,7 +602,8 @@ void extract_slice(int operand_type1, int operand_type2, FileName &fn_1, FileNam
     }
 }
 
-void extract_column(int operand_type1, int operand_type2, FileName &fn_1, FileName &fn_2, FileName &fn_out)
+void extract_column(int operand_type1, int operand_type2, const FileName &fn_1,
+    const FileName &fn_2, const FileName &fn_out)
 {
     if (operand_type1 == VOLUME && operand_type2 == NUMBER)
     {
@@ -541,7 +645,8 @@ void extract_column(int operand_type1, int operand_type2, FileName &fn_1, FileNa
 }
 
 
-void extract_row(int operand_type1, int operand_type2, FileName &fn_1, FileName &fn_2, FileName &fn_out)
+void extract_row(int operand_type1, int operand_type2, const FileName &fn_1,
+    const FileName &fn_2, const FileName &fn_out)
 {
     if (operand_type1 == VOLUME && operand_type2 == NUMBER)
     {
@@ -582,7 +687,7 @@ void extract_row(int operand_type1, int operand_type2, FileName &fn_1, FileName 
     }
 }
 
-void radial_avg(int operand_type1, FileName &fn_1, FileName &fn_out)
+void radial_avg(int operand_type1, const FileName &fn_1, const FileName &fn_out)
 {
     if (operand_type1 == IMAGE)
     {
@@ -600,7 +705,6 @@ void radial_avg(int operand_type1, FileName &fn_1, FileName &fn_out)
         int my_rad;
         FOR_ALL_ELEMENTS_IN_MATRIX2D(input())
         {
-//              my_rad=(int)ROUND(sqrt((double)(i*i+j*j))); // bug corrected by JA Velazquez-Muriel
             my_rad = (int)floor(sqrt((double)(i * i + j * j)));
             input(i, j) = radial_mean(my_rad);
         }
@@ -622,7 +726,6 @@ void radial_avg(int operand_type1, FileName &fn_1, FileName &fn_out)
         int my_rad;
         FOR_ALL_ELEMENTS_IN_MATRIX3D(input())
         {
-//              my_rad=(int)ROUND(sqrt((double)(i*i+j*j+k*k))); // bug corrected by JA Velazquez-Muriel
             my_rad = (int)floor(sqrt((double)(i * i + j * j + k * k)));
             input(k, i, j) = radial_mean(my_rad);
         }
@@ -643,8 +746,12 @@ void Usage()
 {
     std::cout  << " A simple Xmipp images calculator. Binary and unary operations\n"
     << " Parameters:\n"
-    << " -i xmipp image or volume. This is the input for the program. \n"
-    << " -o output of the program. An xmipp image or volue. \n"
+    << " -i xmipp image, selfile or volume. This is the input to the program. \n"
+    << "                                    Only image selfiles are allowed\n"
+    << "[-o <file>]                         If no output is given, the input\n"
+    << "                                    images are rewritten. In case of\n"
+    << "                                    two input images, or volumes, the\n"
+    << "                                    result is called result.xmp or result.vol\n"
     << "\n"
     << " CURRENTLY SUPPORTED OPERATIONS \n"
     << "================================\n"
