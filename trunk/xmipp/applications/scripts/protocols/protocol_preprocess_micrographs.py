@@ -20,7 +20,7 @@
 # Working subdirectory:
 WorkingDir='Preprocessing'
 # Delete working subdirectory if it already exists?
-DoDeleteWorkingDir=False
+DoDeleteWorkingDir=True
 # {dir} Directory name from where to process all scanned micrographs
 DirMicrographs='Micrographs'
 # Which files in this directory to process
@@ -61,7 +61,7 @@ Stddev=5
 # Perform downsampling?
 DoDownSample=True
 # Downsampling factor 
-Down=1
+Down=2
 # {expert}{list}|Fourier|Rectangle|Sinc| Which method to use for downsampling?
 """ Fourier is theoretically the best option, but it may take more memory than your machine can handle. Then, Rectangle is the fastest, but least accurate. Since is reasonably accurate, but painfully slow...
 """
@@ -74,11 +74,11 @@ DoCtfEstimate=True
 # Microscope voltage (in kV)
 Voltage=200
 # Spherical aberration
-SphericalAberration=2.0
+SphericalAberration=2.26
 # Magnification rate
-Magnification=60000
+Magnification=50000
 # Scanned pixel size (in um)
-ScannedPixelSize=14
+ScannedPixelSize=7
 # Amplitude Contrast
 AmplitudeContrast=0.1
 # {expert} Only perform power spectral density estimation?
@@ -153,7 +153,7 @@ AnalysisScript='visualize_preprocess_micrographs.py'
 DoParallel=True
 
 # Number of MPI processes to use:
-NumberOfMpiProcesses=2
+NumberOfMpiProcesses=3
 
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
@@ -686,7 +686,10 @@ class preprocess_A_class:
         import launch_job
         command= 'xmipp_convert_raw22spi -i '+ self.shortname+'/'+self.downname+'.raw ' + \
                  ' -o '+ self.shortname+'/tmp.spi ' + \
-                 ' -is_micrograph -f'
+                 ' -is_micrograph '
+	if(self.Down!=1):#when down =1 inout image is integer
+	                #if down !=1 is float
+	         command += ' -f'
         os.write(fh_mpi,command+";");
         #launch_job.launch_job("xmipp_convert_raw22spi",
         #                      command,
