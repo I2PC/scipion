@@ -718,7 +718,7 @@ void VQ::initialize(SelFile &_SF, int _Niter, int _Nneighbours,
 #undef DEBUG
 
 /* VQ write --------------------------------------------------------- */
-#define DEBUG
+//#define DEBUG
 void VQ::write(const FileName &fnRoot) const
 {
     int Q=P.size();
@@ -867,7 +867,7 @@ void VQ::updateNonCode(Matrix2D<double> &I, int newnode)
 }
 
 /* Run VQ ------------------------------------------------------------------ */
-#define DEBUG
+//#define DEBUG
 void VQ::run(const FileName &fnOut, int level, int rank)
 {
     int N=SF->ImgNo();
@@ -1193,7 +1193,7 @@ int VQ::cleanEmptyNodes()
 }
 
 /* Split ------------------------------------------------------------------- */
-#define DEBUG
+//#define DEBUG
 void VQ::splitNode(VQProjection *node,
     VQProjection *&node1, VQProjection *&node2, int rank, std::vector<int> &finalAssignment) const
 {
