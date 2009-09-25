@@ -147,6 +147,9 @@ public:
     /// No mirror
     bool noMirror;
 
+    /// Corr split
+    bool corrSplit;
+
     /// Fast
     bool fast;
 
@@ -170,7 +173,7 @@ public:
     /// Initialize
     void initialize(SelFile &_SF, int _Niter,  int _Nneighbours,
         double _PminSize, std::vector< Matrix2D<double> > _codes0,
-        int _Ncodes0, bool _noMirror, bool _fast, int rank);
+        int _Ncodes0, bool _noMirror, bool _corrSplit, bool _fast, int rank);
     
     /// Write the nodes
     void write(const FileName &fnRoot) const;
@@ -232,6 +235,9 @@ public:
     
     /// Fast
     bool fast;
+    
+    /// CorrSplit
+    bool corrSplit;
     
     /// No mirror
     bool noMirror;
