@@ -71,6 +71,7 @@ void CommonLine_Parameters::usage()
         << "   [-euclidean]         : use euclidean distance instead of correntropy\n"
         << "   [-lpf <f=0.01>]      : low pass frequency (0<lpf<0.5)\n"
         << "   [-hpf <f=0.35>]      : high pass frequency (lpf<hpf<0.5)\n"
+        << "                          Set both frequencies to -1 for no filter\n"
         << "   [-stepAng <s=3>]     : angular step\n"
         << "   [-qualify]           : assess the quality of each common line\n"
         << "   [-mem <m=1>]         : float number with the memory available in Gb\n"
@@ -145,9 +146,23 @@ void * threadPrepareImages( void * args )
     BinaryCircularMask(mask,Xdim/2, OUTSIDE_MASK);
 
     FourierMask Filter;
-    Filter.FilterBand=BANDPASS;
-    Filter.w1=parent->lpf;
-    Filter.w2=parent->hpf;
+    Filter.w1=-1;
+    if (parent->lpf>0 && parent->hpf>0)
+    {
+        Filter.FilterBand=BANDPASS;
+        Filter.w1=parent->lpf;
+        Filter.w2=parent->hpf;
+    }
+    else if (parent->lpf>0)
+    {
+        Filter.FilterBand=LOWPASS;
+        Filter.w1=parent->lpf;
+    }
+    else if (parent->hpf>0)
+    {
+        Filter.FilterBand=HIGHPASS;
+        Filter.w1=parent->hpf;
+    }
     Filter.raised_w=Filter.w1/3;
 
     int i=0;
@@ -163,12 +178,15 @@ void * threadPrepareImages( void * args )
             I().setXmippOrigin();
 
             // Bandpass filter images
-            if (first)
+            if (Filter.w1>0)
             {
-                Filter.generate_mask(I());
-                first=false;
+                if (first)
+                {
+                    Filter.generate_mask(I());
+                    first=false;
+                }
+                Filter.apply_mask_Space(I());
             }
-            Filter.apply_mask_Space(I());
 
             // Compute sigma outside the largest circle
             double min_val, max_val, avg, stddev;
