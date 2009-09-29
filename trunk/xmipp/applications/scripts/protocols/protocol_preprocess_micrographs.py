@@ -658,7 +658,7 @@ class preprocess_A_class:
                       str(self.Voltage) + ',' + \
                       str(self.AmplitudeContrast) + ',' + \
                       str(self.Magnification) + ',' + \
-                      str(self.ScannedPixelSize) +theNewLine
+                      str(self.ScannedPixelSize*self.Down) +theNewLine
             command+= str(self.WinSize) + ',' + \
                       str(MinResCTF) + ',' + \
                       str(MaxRes) + ',' + \
