@@ -113,7 +113,7 @@ WinSize=128
 """ Lowest resolution to include in CTF estimation. Valid range 0-0.5
 """
 MinResCTF=0.02
-# {expert} Maximum resolution factor
+# {expert} Maximum resolution (in norm. freq.)
 """ highest resolution to include in CTF estimation. Valid range 0-0.5
 """
 MaxResCTF=0.35
