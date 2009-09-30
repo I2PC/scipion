@@ -38,6 +38,7 @@ int main(int argc, char **argv)
     ImageXmipp      image;
     VolumeXmipp     volume;
     int             zdim, ydim, xdim;
+    double          factor=-1;
     bool            gridding;
     bool            linear;
     Matrix2D< double > A(3, 3), B(4, 4);
@@ -52,9 +53,18 @@ int main(int argc, char **argv)
         fn_oext  = getParameter(argc, argv, "-oext", "");
         if (!Is_ImageXmipp(fn_input) && !Is_VolumeXmipp(fn_input))
             SF.read(fn_input);
-        zdim = textToInteger(getParameter(argc, argv, "-zdim", "0"));
-        ydim = textToInteger(getParameter(argc, argv, "-ydim", "0"));
-        xdim = textToInteger(getParameter(argc, argv, "-xdim"));
+        if (checkParameter(argc,argv,"-factor"))
+        {
+            factor=textToFloat(getParameter(argc, argv, "-factor"));
+            if (factor<=0)
+                REPORT_ERROR(1,"Factor must be a positive number");
+        }
+        else
+        {
+            zdim = textToInteger(getParameter(argc, argv, "-zdim", "0"));
+            ydim = textToInteger(getParameter(argc, argv, "-ydim", "0"));
+            xdim = textToInteger(getParameter(argc, argv, "-xdim"));
+        }
         gridding = checkParameter(argc, argv, "-gridding");
         linear = checkParameter(argc, argv, "-linear");
 
@@ -75,6 +85,12 @@ int main(int argc, char **argv)
         if (Is_ImageXmipp(fn_input))
         {
             image.read(fn_input);
+            if (factor>0)
+            {
+                ydim=YSIZE(image())*factor;
+                xdim=XSIZE(image())*factor;
+            }
+            
 	    if (gridding)
 	    {
 		KaiserBessel kb;
@@ -100,6 +116,12 @@ int main(int argc, char **argv)
         else if (Is_VolumeXmipp(fn_input))
         {
             volume.read(fn_input);
+            if (factor>0)
+            {
+                zdim=ZSIZE(volume())*factor;
+                ydim=YSIZE(volume())*factor;
+                xdim=XSIZE(volume())*factor;
+            }
 	    if (gridding)
 	    {
 		KaiserBessel kb;
@@ -142,6 +164,11 @@ int main(int argc, char **argv)
                 if (Is_ImageXmipp(fn_in))
                 {
                     image.read(fn_in);
+                    if (factor>0)
+                    {
+                        ydim=YSIZE(image())*factor;
+                        xdim=XSIZE(image())*factor;
+                    }
 		    if (gridding)
 		    {
 			KaiserBessel kb;
@@ -165,6 +192,12 @@ int main(int argc, char **argv)
                 else if (Is_VolumeXmipp(fn_in))
                 {
                     volume.read(fn_in);
+                    if (factor>0)
+                    {
+                        zdim=ZSIZE(volume())*factor;
+                        ydim=YSIZE(volume())*factor;
+                        xdim=XSIZE(volume())*factor;
+                    }
 		    if (gridding)
 		    {
 			KaiserBessel kb;
@@ -213,9 +246,10 @@ void Usage()
     std::cerr << "Usage: scale <parameters>\n"
     << "   -i <image or volume> [-o <image_out or volume_out]\n"
     << "   -i <selfile> [-oext <output extension>]\n"
-    << "   -xdim <new x dimension>\n"
-    << "  [-ydim <new y dimension=new x dimension>\n"
-    << "  [-zdim <new z dimension=new x dimension>\n"
+    << "  [-xdim <new x dimension>]\n"
+    << "  [-ydim <new y dimension=new x dimension>]\n"
+    << "  [-zdim <new z dimension=new x dimension>]\n"
+    << "  [-factor <scale factor>]\n"
     << "  [-gridding]       : Use reverse gridding for interpolation\n"
     << "  [-linear]         : Use bilinear/trilinear interpolation\n";
     
