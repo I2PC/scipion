@@ -1,6 +1,7 @@
 /***************************************************************************
  *
  * Authors:    Sjors Scheres
+                R. Marabini - add scale factor
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -62,9 +63,9 @@ int main(int argc, char *argv[])
 
         DF.reserve(SF.ImgNo());
         Matrix1D<double> docline;
-        DF.append_comment("Headerinfo columns: rot (1) , tilt (2), psi (3), Xoff (4), Yoff (5), Weight (6), Flip (7)");
+        DF.append_comment("Headerinfo columns: rot (1) , tilt (2), psi (3), Xoff (4), Yoff (5), Weight (6), Flip (7), Scale (8)");
 
-        docline.initZeros(7);
+        docline.initZeros(8);
         SF.go_beginning();
         while (!SF.eof())
         {
@@ -84,6 +85,7 @@ int main(int argc, char *argv[])
             docline(4) = yy;
             docline(5) = head.Weight();
             docline(6) = head.Flip();
+            docline(7) = head.Scale();
             DF.append_comment(fn_img);
             DF.append_data_line(docline);
         }
