@@ -500,7 +500,7 @@ void headerXmipp::set_header()
         break;
     }
 
-    // Set scale to 1 (never used by XMipp)
+    // Set scale to 1 
     header.fScale = 1;
 
     // Set Angle of rotation used by Xmipp = 0 (won't be used again)
