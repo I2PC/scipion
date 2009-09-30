@@ -868,6 +868,7 @@ void DocFile::get_image(int key, ImageXmipp &I, bool apply_geo)
     I.set_Xoff(DL[3]);
     I.set_Yoff(DL[4]);
     I.set_flip(0.);
+    //I.set_scale(1.);
 
     if (apply_geo)
     {
