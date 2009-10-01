@@ -3208,11 +3208,16 @@ void applyGeometry(Matrix2D<T>& M2, Matrix2D< double > A, const Matrix2D<T>& M1,
 
 #undef DEBUG_APPLYGEO
 
-// TODO Document
+// Special case for complex numbers
+template <>
+void applyGeometryBSpline(Matrix2D< std::complex<double> > &M2,
+    Matrix2D<double> A, const Matrix2D< std::complex<double> > &M1,
+    int Splinedegree, bool inv, bool wrap, std::complex<double> outside);
+
 //#define DEBUG
 template<typename T>
-void applyGeometryBSpline(Matrix2D<T>& M2, Matrix2D< double > A, const Matrix2D<T>& M1,
-                        int Splinedegree, bool inv, bool wrap, T outside)
+void applyGeometryBSpline(Matrix2D<T>& M2, Matrix2D< double > A,
+    const Matrix2D<T>& M1, int Splinedegree, bool inv, bool wrap, T outside)
 {
     int m1, n1, m2, n2;
     double x, y, xp, yp;
