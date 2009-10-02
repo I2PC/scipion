@@ -175,8 +175,6 @@ public:
     // Scale
     float  Scale() const
     {
-        if (header.fScale == 0) 
-             return (1.);
         return header.fScale;
     }
 
