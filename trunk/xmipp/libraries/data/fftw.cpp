@@ -386,3 +386,39 @@ void frc_dpr(Matrix3D< double > & m1,
             dpr(i)/=radial_count(i);
     }
 }
+void selfScaleToSizeBSpline(int Ydim, int Xdim,Matrix2D<double>& Mpmem) 
+ {
+     //Mmem = *this
+     //memory for fourier transform output
+     Matrix2D<std::complex<double> > MmemFourier;
+     // Perform the Fourier transform
+     XmippFftw transformerM;
+     transformerM.FourierTransform(Mpmem, MmemFourier, false);
+
+     // Create space for the downsampled image and its Fourier transform
+     Mpmem.resize(Ydim, Xdim);
+     Matrix2D<std::complex<double> > MpmemFourier;
+     XmippFftw transformerMp;
+     transformerMp.setReal(Mpmem);
+     transformerMp.getFourierAlias(MpmemFourier);
+
+     int ihalf = XMIPP_MIN((YSIZE(MpmemFourier)/2+1),(YSIZE(MmemFourier)/2+1));
+     int xsize = XMIPP_MIN((XSIZE(MmemFourier)),(XSIZE(MpmemFourier)));
+     int ysize = XMIPP_MIN((YSIZE(MmemFourier)),(YSIZE(MpmemFourier)));
+     //Init with zero
+     MpmemFourier.initZeros();
+     for (int i=0; i<ihalf; i++)
+         for (int j=0; j<xsize; j++)
+             MpmemFourier(i,j)=MmemFourier(i,j);
+     for (int i=YSIZE(MpmemFourier)-1; i>=ihalf; i--)
+     {   
+         int ip = i + YSIZE(MmemFourier)-YSIZE(MpmemFourier) ;
+         for (int j=0; j<XSIZE(MpmemFourier); j++)
+             MpmemFourier(i,j)=MmemFourier(ip,j);
+     }
+
+     // Transform data
+     transformerMp.inverseFourierTransform();
+ }
+
+
