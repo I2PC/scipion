@@ -33,8 +33,8 @@ void dilate2D_step(const Matrix2D<double> &in, Matrix2D<double> &out, int neig,
                    int count)
 {
     int sum = 0;
-    for (int i = STARTINGX(in) + 1;i < FINISHINGX(in); i++)
-        for (int j = STARTINGY(in) + 1;j < FINISHINGY(in); j++)
+    for (int i = STARTINGY(in) + 1;i < FINISHINGY(in); i++)
+        for (int j = STARTINGX(in) + 1;j < FINISHINGX(in); j++)
         {
             if (in(i, j) == 0)
             {
@@ -66,8 +66,8 @@ void erode2D_step(const Matrix2D<double> &in, Matrix2D<double> &out, int neig,
                   int count)
 {
     int sum = 0;
-    for (int i = STARTINGX(in) + 1;i < FINISHINGX(in); i++)
-        for (int j = STARTINGY(in) + 1;j < FINISHINGY(in); j++)
+    for (int i = STARTINGY(in) + 1;i < FINISHINGY(in); i++)
+        for (int j = STARTINGX(in) + 1;j < FINISHINGX(in); j++)
         {
             if (in(i, j) == 1)
             {
