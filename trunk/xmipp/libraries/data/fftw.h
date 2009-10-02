@@ -448,7 +448,7 @@ void frc_dpr(Matrix3D< double > & m1,
  * @param Xdim output size
  * @param Mpmem matrix to scale
  */
-void selfScaleToSizeBSpline(int Ydim, int Xdim,Matrix2D<double>& Mpmem);
+void selfScaleToSizeFourier(int Ydim, int Xdim,Matrix2D<double>& Mpmem);
 
 
 #endif
