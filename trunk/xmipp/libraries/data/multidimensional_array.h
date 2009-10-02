@@ -896,10 +896,10 @@ public:
 
         // Get median
         if (MULTIDIM_SIZE(*this)%2==0)
-            return 0.5*(DIRECT_MULTIDIM_ELEM(*this,MULTIDIM_SIZE(*this)/2-1)+
-                        DIRECT_MULTIDIM_ELEM(*this,MULTIDIM_SIZE(*this)/2  ));
+            return 0.5*(DIRECT_MULTIDIM_ELEM(temp,MULTIDIM_SIZE(*this)/2-1)+
+                        DIRECT_MULTIDIM_ELEM(temp,MULTIDIM_SIZE(*this)/2  ));
         else
-            return DIRECT_MULTIDIM_ELEM(*this,MULTIDIM_SIZE(*this)/2);
+            return DIRECT_MULTIDIM_ELEM(temp,MULTIDIM_SIZE(*this)/2);
     }
 
     /** Adjust the range of the array to a given one.
