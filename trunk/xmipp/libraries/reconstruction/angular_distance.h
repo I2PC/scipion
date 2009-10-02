@@ -47,6 +47,8 @@ public:
     FileName fn_ang_out;
     /** Check mirrors for Spider APMQ */
     bool check_mirrors;
+    /** Use object rotations */
+    bool object_rotation;
 public:
     // DocFile 1
     DocFile DF1;

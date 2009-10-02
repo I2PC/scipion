@@ -36,6 +36,7 @@ void Prog_angular_distance_prm::read(int argc, char **argv)
     fn_ang_out = getParameter(argc, argv, "-o", "");
     fn_sym = getParameter(argc, argv, "-sym", "");
     check_mirrors = checkParameter(argc, argv, "-check_mirrors");
+    object_rotation = checkParameter(argc, argv, "-object_rotation");
 }
 
 // Show ====================================================================
@@ -46,6 +47,7 @@ void Prog_angular_distance_prm::show()
               << "Angular output   : " << fn_ang_out    << std::endl
               << "Symmetry file    : " << fn_sym        << std::endl
               << "Check mirrors    : " << check_mirrors << std::endl
+              << "Object rotation  : " << object_rotation<<std::endl
     ;
 }
 
@@ -58,6 +60,7 @@ void Prog_angular_distance_prm::usage()
               << "                               not generated\n"
               << "  [-sym <symmetry file>]     : Symmetry file if any\n"
               << "  [-check_mirrors]           : Check if mirrored axes give better\n"
+              << "  [-object_rotation]         : Use object rotations rather than projection directions\n"
               << "                               fit (Spider, APMQ)\n"
     ;
 }
@@ -79,7 +82,7 @@ void Prog_angular_distance_prm::produce_side_info()
     std::cout << #rot  << "=" << rot << " " \
     << #tilt << "=" << tilt << " " \
     << #psi  << "=" << psi << " ";
-//#define DEBUG
+#define DEBUG
 double Prog_angular_distance_prm::second_angle_set(double rot1, double tilt1,
         double psi1, double &rot2, double &tilt2, double &psi2,
         bool projdir_mode)
@@ -88,25 +91,6 @@ double Prog_angular_distance_prm::second_angle_set(double rot1, double tilt1,
     std::cout << "   ";
     SHOW_ANGLES(rot2, tilt2, psi2);
 #endif
-
-    /* Sjors: the following code was useles (and rather strange) ...
-    // Distance based on angular values
-    double ang_dist = ABS(rot1 - rot2) + ABS(tilt1 - tilt2) + ABS(psi1 - psi2);
-    double rot2p, tilt2p, psi2p;
-    Euler_another_set(rot2, tilt2, psi2, rot2p, tilt2p, psi2p);
-    rot2p = realWRAP(rot2p, -180, 180);
-    tilt2p = realWRAP(tilt2p, -180, 180);
-    psi2p = realWRAP(psi2p, -180, 180);
-    double ang_distp = ABS(rot1 - rot2p) + ABS(tilt1 - tilt2p) + ABS(psi1 - psi2p);
-
-    if (ang_distp < ang_dist)
-    {
-        rot2 = rot2p;
-        tilt2 = tilt2p;
-        psi2 = psi2p;
-        ang_dist = ang_distp;
-    }
-    */
 
     // Distance based on Euler axes
     Matrix2D<double> E1, E2;
@@ -169,7 +153,10 @@ double Prog_angular_distance_prm::check_symmetries(double rot1, double tilt1,
             L.resize(3, 3); // Erase last row and column
             R.resize(3, 3); // as only the relative orientation
             // is useful and not the translation
-            Euler_apply_transf(L, R, rot2, tilt2, psi2, rot2p, tilt2p, psi2p);
+            if (object_rotation)
+                Euler_apply_transf(R, L, rot2, tilt2, psi2, rot2p, tilt2p, psi2p);
+            else
+                Euler_apply_transf(L, R, rot2, tilt2, psi2, rot2p, tilt2p, psi2p);
         }
 
         double ang_dist = second_angle_set(rot1, tilt1, psi1, rot2p, tilt2p, psi2p,
