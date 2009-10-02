@@ -204,6 +204,50 @@ private:
 };
 #undef DEBUG
 
+void setupAffineFitness(AffineFitness &fitness, const Matrix2D<double> &I1,
+    const Matrix2D<double> &I2, int maxShift, bool isMirror,
+    bool checkRotation)
+{
+    fitness.checkRotation=checkRotation;
+
+    // Set images
+    fitness.I1=I1;
+    fitness.I1.setXmippOrigin();
+    fitness.I2=I2;
+    fitness.I2.setXmippOrigin();
+
+    fitness.Mask1=fitness.I1;
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(I1)
+    	if (I1(i,j)!=0) fitness.Mask1(i,j)=1;
+
+    fitness.Mask2=fitness.I2;
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(I2)
+    	if (I2(i,j)!=0) fitness.Mask2(i,j)=1;
+
+    // Set limits for the affine matrices
+    // Order: 1->2: 4 affine params+2 translations
+    // Order: 2->1: 4 affine params+2 translations
+    fitness.minAllowed.resize(6);
+    fitness.maxAllowed.resize(6);
+
+    // Scale factors
+    fitness.minAllowed(0)=fitness.minAllowed(3)=0.9;
+    fitness.maxAllowed(0)=fitness.maxAllowed(3)=1.1;
+    if (isMirror)
+    {
+        fitness.minAllowed(3)=-1.1;
+        fitness.maxAllowed(3)=-0.9;
+    }
+
+    // Rotation factors
+    fitness.minAllowed(1)=fitness.minAllowed(2)=-0.2;
+    fitness.maxAllowed(1)=fitness.maxAllowed(2)= 0.2;
+
+    // Shifts
+    fitness.minAllowed(4)=fitness.minAllowed(5)=-maxShift;
+    fitness.maxAllowed(4)=fitness.maxAllowed(5)= maxShift;
+}
+
 static pthread_mutex_t localAffineMutex = PTHREAD_MUTEX_INITIALIZER;
 double computeAffineTransformation(const Matrix2D<double> &I1,
     const Matrix2D<double> &I2, int maxShift, int maxIterDE,
@@ -213,44 +257,7 @@ double computeAffineTransformation(const Matrix2D<double> &I1,
 {
     try {
         AffineFitness fitness;
-        fitness.checkRotation=checkRotation;
-
-        // Set images
-        fitness.I1=I1;
-        fitness.I1.setXmippOrigin();
-        fitness.I2=I2;
-        fitness.I2.setXmippOrigin();
-
-        fitness.Mask1=fitness.I1;
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(I1)
-    	    if (I1(i,j)!=0) fitness.Mask1(i,j)=1;
-
-        fitness.Mask2=fitness.I2;
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(I2)
-    	    if (I2(i,j)!=0) fitness.Mask2(i,j)=1;
-
-        // Set limits for the affine matrices
-        // Order: 1->2: 4 affine params+2 translations
-        // Order: 2->1: 4 affine params+2 translations
-        fitness.minAllowed.resize(6);
-        fitness.maxAllowed.resize(6);
-
-        // Scale factors
-        fitness.minAllowed(0)=fitness.minAllowed(3)=0.9;
-        fitness.maxAllowed(0)=fitness.maxAllowed(3)=1.1;
-        if (isMirror)
-        {
-            fitness.minAllowed(3)=-1.1;
-            fitness.maxAllowed(3)=-0.9;
-        }
-
-        // Rotation factors
-        fitness.minAllowed(1)=fitness.minAllowed(2)=-0.2;
-        fitness.maxAllowed(1)=fitness.maxAllowed(2)= 0.2;
-
-        // Shifts
-        fitness.minAllowed(4)=fitness.minAllowed(5)=-maxShift;
-        fitness.maxAllowed(4)=fitness.maxAllowed(5)= maxShift;
+        setupAffineFitness(fitness, I1, I2, maxShift, isMirror, checkRotation);
 
         // Return result
         double cost;
@@ -347,6 +354,7 @@ void Prog_tomograph_alignment::read(int argc, char **argv) {
    else
       Ncritical=0;
    seqLength=textToInteger(getParameter(argc,argv,"-seqLength","5"));
+   blindSeqLength=textToInteger(getParameter(argc,argv,"-blindSeqLength","-1"));
    maxStep=textToInteger(getParameter(argc,argv,"-maxStep","4"));
    gridSamples=textToInteger(getParameter(argc,argv,"-gridSamples","40"));
    psiMax=textToFloat(getParameter(argc,argv,"-psiMax","-1"));
@@ -359,6 +367,7 @@ void Prog_tomograph_alignment::read(int argc, char **argv) {
    maxIterDE=textToInteger(getParameter(argc,argv,"-maxIterDE","30"));
    showAffine=checkParameter(argc,argv,"-showAffine");
    thresholdAffine=textToFloat(getParameter(argc,argv,"-thresholdAffine","0.85"));
+   identifyOutliers = textToInteger(getParameter(argc, argv, "-identifyOutliers","-1"));
    numThreads = textToInteger(getParameter(argc, argv, "-thr", "1"));
    if (numThreads<1) numThreads = 1;
 }
@@ -371,6 +380,7 @@ void Prog_tomograph_alignment::show() {
              << "Use critical points:" << useCriticalPoints  << std::endl
              << "Num critical points:" << Ncritical          << std::endl
              << "SeqLength:          " << seqLength          << std::endl
+             << "BlindSeqLength:     " << blindSeqLength     << std::endl
              << "MaxStep:            " << maxStep            << std::endl
              << "Grid samples:       " << gridSamples        << std::endl
              << "Maximum psi:        " << psiMax             << std::endl
@@ -383,6 +393,7 @@ void Prog_tomograph_alignment::show() {
              << "MaxIterDE:          " << maxIterDE          << std::endl
              << "Show Affine:        " << showAffine         << std::endl
              << "Threshold Affine:   " << thresholdAffine    << std::endl
+             << "Identify outliers:  " << identifyOutliers   << std::endl
              << "Threads to use:     " << numThreads         << std::endl
    ;
 }
@@ -397,6 +408,7 @@ void Prog_tomograph_alignment::usage() const {
              << "                                    n is the number of critical points to choose\n"
              << "                                    in each image\n"
              << "  [-seqLength <n=5>]              : Sequence length\n"
+             << "  [-blindSeqLength <n=-1>]        : Blind sequence length, -1=No blind landmarks\n"
              << "  [-maxStep <step=4>]             : Maximum step for chain refinement\n"
              << "  [-gridSamples <n=40>]           : Total number of samples=n*n\n"
              << "  [-psiMax <psi=-1>]              : Maximum psi in absolute value (degrees)\n"
@@ -410,6 +422,7 @@ void Prog_tomograph_alignment::usage() const {
              << "  [-maxIterDE <n=30>]             : Maximum number of iteration in Differential Evolution\n"
              << "  [-showAffine]                   : Show affine transformations as PPP*\n"
              << "  [-thresholdAffine <th=0.85>]    : Threshold affine\n"
+             << "  [-identifyOutliers <z=-1>]      : Z-score to be an outlier\n"
              << "  [-thr <num=1>]                  : Parallel processing using \"num\" threads\n"
    ;
 }
@@ -469,6 +482,24 @@ void * threadComputeTransform( void * args )
             affineTransformations[jj][jj_1]=Aji;
             parent->writeTransformations(
                 parent->fnRoot+"_transformations.txt");
+	    std::cout << "Cost for [" << jj_1 << "] - ["
+                      << jj << "] = " << cost << std::endl;
+	    pthread_mutex_unlock( &printingMutex );
+        }
+        else
+        {
+            Matrix2D<double> Aij;
+            Aij=affineTransformations[jj_1][jj];
+
+            AffineFitness fitness;
+            setupAffineFitness(fitness, img_i, img_j, maxShift, isMirror, false);
+            Matrix1D<double> p(6);
+            p(0)=Aij(0,0); p(1)=Aij(0,1); p(4)=Aij(0,2);
+            p(2)=Aij(1,0); p(3)=Aij(1,1); p(5)=Aij(1,2);
+            cost = fitness.affine_fitness_individual(MULTIDIM_ARRAY(p));
+            parent->correlationList[jj]=1-cost;
+        
+	    pthread_mutex_lock( &printingMutex );
 	    std::cout << "Cost for [" << jj_1 << "] - ["
                       << jj << "] = " << cost << std::endl;
 	    pthread_mutex_unlock( &printingMutex );
@@ -662,6 +693,7 @@ void Prog_tomograph_alignment::produceSideInfo() {
         avgBackwardPatchCorr.initZeros(Nimg);
         avgForwardPatchCorr.initConstant(1);
         avgBackwardPatchCorr.initConstant(1);
+
         for (int ii=0; ii<Nimg; ++ii)
         {
             // Compute average forward patch corr
@@ -702,6 +734,34 @@ void Prog_tomograph_alignment::produceSideInfo() {
             std::cout << "Image " << ii << " Average correlation forward="
                       << avgForwardPatchCorr(ii)
                       << " backward=" << avgBackwardPatchCorr(ii) << std::endl;
+        }
+    }
+    
+    // Identify outliers
+    isOutlier.initZeros(Nimg);
+    if (identifyOutliers>0)
+    {
+        Matrix1D<double> correlationListAux(Nimg);
+        for (int i=0; i<Nimg; i++)
+            correlationListAux(i)=correlationList[i];
+
+        Matrix1D<double> diff;
+        double medianCorr=correlationListAux.computeMedian();
+        diff=correlationListAux-medianCorr;
+        diff.selfABSnD();
+        double madCorr=diff.computeMedian();
+
+        std::cout << "Corr distribution= " << medianCorr << " +- "
+                  << madCorr << std::endl;
+        
+        double thresholdCorr=medianCorr-identifyOutliers*madCorr;
+        for (int i=1; i<XSIZE(isOutlier); i++)
+        {
+            isOutlier(i)=(correlationListAux(i)<thresholdCorr);
+            if (isOutlier(i))
+                std::cout << name_list[i] << " is considered as an outlier. "
+                          << "Its correlation is " << correlationListAux(i)
+                          << std::endl;
         }
     }
 }
@@ -749,6 +809,7 @@ void * threadgenerateLandmarkSetGrid( void * args )
                 // Check if inside the mask
                 if (!(*(parent->maskImg[ii]))((int)YY(rii),(int)XX(rii)))
                     continue;
+                if (parent->isOutlier(ii)) continue;
 
                 LandmarkChain chain;
                 chain.clear();
@@ -767,7 +828,8 @@ void * threadgenerateLandmarkSetGrid( void * args )
                 else                    jj=ii-1;
                 Matrix2D<double> Aij, Aji;
                 Matrix1D<double> rcurrent=rii;
-                while (jj>=0 && acceptLandmark && !visited(jj))
+                while (jj>=0 && acceptLandmark && !visited(jj) &&
+                        !parent->isOutlier(jj))
                 {
                     // Compute the affine transformation between ii and jj
                     int jj_1;
@@ -799,7 +861,8 @@ void * threadgenerateLandmarkSetGrid( void * args )
                 else jj=ii+1;
                 rcurrent=rii;
                 int jjright=ii;
-                while (jj<Nimg && acceptLandmark && !visited(jj))
+                while (jj<Nimg && acceptLandmark && !visited(jj) &&
+                    !parent->isOutlier(jj))
                 {
                     // Compute the affine transformation between ii and jj
                     int jj_1;
@@ -866,6 +929,137 @@ void * threadgenerateLandmarkSetGrid( void * args )
     if (thread_id==0) progress_bar(gridSamples);
 }
 
+void * threadgenerateLandmarkSetBlind( void * args )
+{
+    ThreadGenerateLandmarkSetParams * master =
+        (ThreadGenerateLandmarkSetParams *) args;
+    Prog_tomograph_alignment * parent = master->parent;
+    int thread_id = master->myThreadID;
+    int Nimg=parent->Nimg;
+    int numThreads=parent->numThreads;
+    const std::vector< std::vector< Matrix2D<double> > > &affineTransformations=
+        parent->affineTransformations;
+    int gridSamples=parent->gridSamples;
+
+    int deltaShift=FLOOR(XSIZE(*(parent->img)[0])/gridSamples);
+    master->chainList=new std::vector<LandmarkChain>;
+    Matrix1D<double> rii(3), rjj(3);
+    ZZ(rii)=1;
+    ZZ(rjj)=1;
+    if (thread_id==0) init_progress_bar(gridSamples);
+    int totalPoints=0;
+    int includedPoints=0;
+    int maxSideLength=(parent->blindSeqLength-1)/2;
+    for (int nx=thread_id; nx<gridSamples; nx+=numThreads)
+    {
+        XX(rii)=STARTINGX(*(parent->img)[0])+ROUND(deltaShift*(0.5+nx));
+        for (int ny=0; ny<gridSamples; ny+=1)
+        {
+            YY(rii)=STARTINGY(*(parent->img)[0])+ROUND(deltaShift*(0.5+ny));
+            for (int ii=0; ii<=Nimg-1; ++ii)
+            {
+                // Check if inside the mask
+                if (!(*(parent->maskImg[ii]))((int)YY(rii),(int)XX(rii)))
+                    continue;
+                if (parent->isOutlier(ii)) continue;
+
+                LandmarkChain chain;
+                chain.clear();
+                Landmark l;
+                l.x=XX(rii);
+                l.y=YY(rii);
+                l.imgIdx=ii;
+                chain.push_back(l);
+
+                // Follow this landmark backwards
+                bool acceptLandmark=true;
+                int jjleft=ii, jj;
+                int sideLength=0;
+                if (parent->isCapillar) jj=intWRAP(ii-1,0,Nimg-1);
+                else                    jj=ii-1;
+                Matrix2D<double> Aij, Aji;
+                Matrix1D<double> rcurrent=rii;
+                while (jj>=0 && acceptLandmark && sideLength<maxSideLength &&
+                    !parent->isOutlier(jj))
+                {
+                    // Compute the affine transformation between ii and jj
+                    int jj_1;
+                    if (parent->isCapillar) jj_1=intWRAP(jj+1,0,Nimg-1);
+                    else                    jj_1=jj+1;
+                    Aij=affineTransformations[jj][jj_1];
+	            Aji=affineTransformations[jj_1][jj];
+                    rjj=Aji*rcurrent;
+                    acceptLandmark=
+                        (*(parent->maskImg[jj]))((int)YY(rjj),(int)XX(rjj));
+                    if (acceptLandmark)
+                    {
+                        l.x=XX(rjj);
+                        l.y=YY(rjj);
+                        l.imgIdx=jj;
+                        chain.push_back(l);
+                        jjleft=jj;
+                        if (parent->isCapillar) jj=intWRAP(jj-1,0,Nimg-1);
+                        else                    jj=jj-1;
+                        rcurrent=rjj;
+                        sideLength++;
+                    }
+                }
+
+                // Follow this landmark forward
+                acceptLandmark=true;
+                if (parent->isCapillar) jj=intWRAP(ii+1,0,Nimg-1);
+                else jj=ii+1;
+                rcurrent=rii;
+                int jjright=ii;
+                sideLength=0;
+                while (jj<Nimg && acceptLandmark && sideLength<maxSideLength &&
+                    !parent->isOutlier(jj))
+                {
+                    // Compute the affine transformation between ii and jj
+                    int jj_1;
+                    if (parent->isCapillar) jj_1=intWRAP(jj-1,0,Nimg-1);
+                    else                    jj_1=jj-1;
+                    Aij=affineTransformations[jj_1][jj];
+	            Aji=affineTransformations[jj][jj_1];
+                    rjj=Aij*rcurrent;
+                    acceptLandmark=
+                        (*(parent->maskImg[jj]))((int)YY(rjj),(int)XX(rjj));
+                    if (acceptLandmark)
+                    {
+                        l.x=XX(rjj);
+                        l.y=YY(rjj);
+                        l.imgIdx=jj;
+                        chain.push_back(l);
+                        jjright=jj;
+                        if (parent->isCapillar) jj=intWRAP(jj+1,0,Nimg-1);
+                        else                    jj=jj+1;
+                        rcurrent=rjj;
+                        sideLength++;
+                    }
+                }
+
+                #ifdef DEBUG
+                    std::cout << "img=" << ii << " chain length="
+                              << chain.size() << " [" << jjleft 
+                              << " - " << jjright << "]\n";
+                #endif
+                master->chainList->push_back(chain);
+                includedPoints+=chain.size();
+            }
+            #ifdef DEBUG
+                std::cout << "Point nx=" << nx << " ny=" << ny
+                          << " Number of points="
+                          << includedPoints
+                          << " Number of chains=" << master->chainList->size()
+                          << " ( " << ((double) includedPoints)/
+                              master->chainList->size() << " )\n";
+            #endif
+        }
+        if (thread_id==0) progress_bar(nx);
+    }
+    if (thread_id==0) progress_bar(gridSamples);
+}
+
 //#define DEBUG
 void * threadgenerateLandmarkSetCriticalPoints( void * args )
 {
@@ -892,6 +1086,8 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
     
     for (int ii=thread_id; ii<=Nimg-1; ii+=numThreads)
     {
+        if (parent->isOutlier(ii)) continue;
+    
         // Generate mask
         Matrix2D<int> largeMask;
         generateMask(*(parent->img[ii]),largeMask,
@@ -974,6 +1170,8 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
             Matrix1D<double> rcurrent=rii;
             for (int jj=jjmax; jj>=jjmin; --jj)
             {
+                if (parent->isOutlier(jj)) break;
+
                 // Compute the affine transformation between jj and jj+1
                 int jj_1=jj+1;
                 Aij=affineTransformations[jj][jj_1];
@@ -994,6 +1192,8 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
             rcurrent=rii;
             for (int jj=jjmin; jj<=jjmax; ++jj)
             {
+                if (parent->isOutlier(jj)) break;
+
                 // Compute the affine transformation between jj-1 and jj
                 int jj_1=jj-1;
                 Aij=affineTransformations[jj_1][jj];
@@ -1099,6 +1299,32 @@ void Prog_tomograph_alignment::generateLandmarkSet() {
         }
         delete( th_ids );
         delete( th_args );
+        
+        // Add blind landmarks
+        if (blindSeqLength>0) {
+            th_ids  = new pthread_t[numThreads];
+            th_args = new ThreadGenerateLandmarkSetParams[numThreads];
+            for( int nt = 0 ; nt < numThreads ; nt ++ )
+            {
+                th_args[nt].parent = this;
+                th_args[nt].myThreadID = nt;
+                pthread_create( (th_ids+nt) , NULL, threadgenerateLandmarkSetBlind, (void *)(th_args+nt) );
+            }
+
+            for( int nt = 0 ; nt < numThreads ; nt ++ )
+            {
+                pthread_join(*(th_ids+nt), NULL);
+                int imax=th_args[nt].chainList->size();
+                for (int i=0; i<imax; i++)
+                {
+                    chainList.push_back((*th_args[nt].chainList)[i]);
+                    includedPoints+=(*th_args[nt].chainList)[i].size();
+                }
+                delete th_args[nt].chainList;
+            }
+            delete( th_ids );
+            delete( th_args );
+        }
 
         // Generate the landmark "matrix"
         allLandmarksX.resize(chainList.size(),Nimg);
@@ -1176,6 +1402,8 @@ bool Prog_tomograph_alignment::refineLandmark(int ii, int jj,
         else
             actualCorrThreshold=XMIPP_MIN(avgBackwardPatchCorr(ii),
                 avgForwardPatchCorr(jj));
+    if (showRefinement)
+        std::cout << "actualCorrThreshold=" << actualCorrThreshold << std::endl;
     
     return refineLandmark(pieceii,jj,rjj,actualCorrThreshold,
         reversed,maxCorr);

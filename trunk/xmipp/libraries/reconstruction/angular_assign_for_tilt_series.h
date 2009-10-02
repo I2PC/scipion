@@ -97,6 +97,10 @@ public:
     /// Sequence Length
     int seqLength;
 
+    /** Add blind landmarks.
+        Set to -1 for no blind landmarks */
+    int blindSeqLength;
+
     /// Grid samples
     int gridSamples;
     
@@ -132,6 +136,9 @@ public:
     
     /// Threshold affine
     double thresholdAffine;
+    
+    /// Identify outlier micrographs
+    int identifyOutliers;
 
     /// Read parameters from argument line
     void read(int argc, char **argv);
@@ -216,6 +223,9 @@ public:
 
     // Average backward patch correlation
     Matrix1D<double> avgBackwardPatchCorr;
+
+    // Outlier
+    Matrix1D<int> isOutlier;
 
     // Total number of images
     int Nimg;
