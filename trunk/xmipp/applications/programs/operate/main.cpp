@@ -24,6 +24,7 @@
 #include <data/image.h>
 #include <data/volume.h>
 #include <data/funcs.h>
+#include <algorithm>
 
 void Usage(void);
 bool check_for_operation(int argc, char **argv, char *operation,
@@ -39,6 +40,7 @@ void multiplication(int operand_type1, int operand_type2,
 void division(int operand_type1, int operand_type2,
     const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
 void log10(int operand_type1, const FileName &fn_1,const FileName &fn_out);
+void forcePositive(int operand_type1, const FileName &fn_1,const FileName &fn_out);
 void sqrt(int operand_type1, const FileName &fn_1, const FileName &fn_out);
 void extract_row(int operand_type1, int operand_type2,
                  const FileName &fn_1, const FileName &fn_2,
@@ -52,16 +54,17 @@ void extract_slice(int operand_type1, int operand_type2,
 void radial_avg(int operand_type1, const FileName &fn_1, const FileName &fn_out);
 
 // Operations suported
-#define    OPERATE_PLUS   1
-#define    OPERATE_MINUS  2
-#define    MULTIPLICATION 3
-#define    DIVISION       4
-#define    LOG10          5
-#define    SQRT           6
-#define    SLICE    7
-#define    COLUMN    8
-#define    ROW   9
-#define    RADIAL_AVG    10
+#define    OPERATE_PLUS    1
+#define    OPERATE_MINUS   2
+#define    MULTIPLICATION  3
+#define    DIVISION        4
+#define    LOG10           5
+#define    SQRT            6 
+#define    SLICE           7
+#define    COLUMN          8
+#define    ROW             9
+#define    RADIAL_AVG     10
+#define    FORCE_POSITIVE 11
 
 // types supported
 #define    VOLUME    1
@@ -103,6 +106,7 @@ int main(int argc, char **argv)
         else if (check_for_operation(argc, argv, "-column", fn_2, operand_type2)) operation = COLUMN;
         else if (check_for_operation(argc, argv, "-row", fn_2, operand_type2)) operation = ROW;
         else if (checkParameter(argc, argv, "-radial_avg")) operation = RADIAL_AVG;
+        else if (checkParameter(argc, argv, "-forcePositive")) operation = FORCE_POSITIVE;
         else
             REPORT_ERROR(1, "No valid operation specified");
 
@@ -183,6 +187,9 @@ void compute(int operation, int operand_type1, int operand_type2,
         break;
     case    RADIAL_AVG:
         radial_avg(operand_type1, fn_1, fn_out);
+        break;
+    case    FORCE_POSITIVE:
+        forcePositive(operand_type1, fn_1, fn_out);
         break;
     }
 }
@@ -535,6 +542,110 @@ void log10(int operand_type1, const FileName &fn_1, const FileName &fn_out)
         while (!SF.eof())
         {
             log10(IMAGE, SF.NextImg(), "");
+            if ((i++ % 50) ==0) progress_bar(i);
+        }
+        progress_bar(SF.ImgNo());
+    }
+}
+
+void forcePositive(int operand_type1, const FileName &fn_1,
+    const FileName &fn_out)
+{
+    if (operand_type1 == IMAGE)
+    {
+        ImageXmipp out;
+        out.read(fn_1, false, false, true);
+        bool negativeRemaining=false;
+        do
+        {
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
+                if (out(i, j)<=0)
+                {
+                    std::vector<double> neighbours;
+                    for (int ii=-2; ii<=2; ii++)
+                    {
+                        int iii=i+ii;
+                        if (iii<0 || iii>=YSIZE(out())) continue;
+                        for (int jj=-2; jj<=2; jj++)
+                        {
+                            int jjj=j+jj;
+                            if (jjj<0 || jjj>=XSIZE(out())) continue;
+                            double val=out(iii,jjj);
+                            if (val>0) neighbours.push_back(val);
+                        }
+                    }
+                    int N=neighbours.size();
+                    if (N==0)
+                        negativeRemaining=true;
+                    else
+                    {
+                        std::sort(neighbours.begin(),neighbours.end());
+                        if (N%2==0)
+                            out(i,j)=0.5*(neighbours[N/2-1]+neighbours[N/2]);
+                        else
+                            out(i,j)=neighbours[N/2];
+                    }
+                }
+        } while (negativeRemaining);
+        out.set_originOffsets(0., 0.);
+        out.set_eulerAngles(0., 0., 0.);
+        if (fn_out=="") out.write(fn_1);
+        else out.write(fn_out);
+    }
+    else if (operand_type1 == VOLUME)
+    {
+        VolumeXmipp out;
+        out.read(fn_1);
+        bool negativeRemaining=false;
+        do
+        {
+            FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
+                if (out(k, i, j)<=0)
+                {
+                    std::vector<double> neighbours;
+                    for (int kk=-2; kk<=2; kk++)
+                    {
+                        int kkk=k+kk;
+                        if (kkk<0 || kkk>=ZSIZE(out())) continue;
+                        for (int ii=-2; ii<=2; ii++)
+                        {
+                            int iii=i+ii;
+                            if (iii<0 || iii>=YSIZE(out())) continue;
+                            for (int jj=-2; jj<=2; jj++)
+                            {
+                                int jjj=j+jj;
+                                if (jjj<0 || jjj>=XSIZE(out())) continue;
+                                double val=out(kkk,iii,jjj);
+                                if (val>0) neighbours.push_back(val);
+                            }
+                        }
+                        int N=neighbours.size();
+                        if (N==0)
+                            negativeRemaining=true;
+                        else
+                        {
+                            std::sort(neighbours.begin(),neighbours.end());
+                            if (N%2==0)
+                                out(k,i,j)=0.5*(neighbours[N/2-1]+
+                                    neighbours[N/2]);
+                            else
+                                out(k,i,j)=neighbours[N/2];
+                        }
+                    }
+                }
+        } while (negativeRemaining);
+        if (fn_out=="") out.write(fn_1);
+        else out.write(fn_out);
+    }
+    else if (operand_type1 == SELFILE)
+    {
+        SelFile SF;
+        SF.read(fn_1);
+        init_progress_bar(SF.ImgNo());
+        int i=0;
+        while (!SF.eof())
+        {
+            forcePositive(IMAGE, SF.NextImg(), "");
             if ((i++ % 50) ==0) progress_bar(i);
         }
         progress_bar(SF.ImgNo());
