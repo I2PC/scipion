@@ -386,7 +386,7 @@ void frc_dpr(Matrix3D< double > & m1,
             dpr(i)/=radial_count(i);
     }
 }
-void selfScaleToSizeBSpline(int Ydim, int Xdim,Matrix2D<double>& Mpmem) 
+void selfScaleToSizeFourier(int Ydim, int Xdim,Matrix2D<double>& Mpmem) 
  {
      //Mmem = *this
      //memory for fourier transform output
