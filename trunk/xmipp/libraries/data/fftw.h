@@ -441,4 +441,14 @@ void frc_dpr(Matrix3D< double > & m1,
              Matrix1D< double >& frc_noise,
              Matrix1D< double >& dpr,
              bool skipdpr=false);
+/**
+ * Scale matrix using Fourier transform
+ * 
+ * @param Ydim output size
+ * @param Xdim output size
+ * @param Mpmem matrix to scale
+ */
+void selfScaleToSizeBSpline(int Ydim, int Xdim,Matrix2D<double>& Mpmem);
+
+
 #endif
