@@ -866,6 +866,42 @@ public:
             stddev = 0;
     }
 
+    /** Median
+     * @ingroup Statistics
+     *
+     * Sort in ascending order the vector elements. You can use the "reverse"
+     * function to sort in descending order.
+     *
+     * @code
+     * v2 = v1.sort();
+     * @endcode
+     */
+    double computeMedian() const
+    {
+        if (XSIZE(*this) == 0)
+            return 0;
+
+        if (XSIZE(*this) == 1)
+            return DIRECT_MULTIDIM_ELEM(*this,0);
+
+        // Initialise data
+        MultidimArray< double > temp;
+        temp.resize(*this);
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(*this)
+            DIRECT_MULTIDIM_ELEM(temp,n)=DIRECT_MULTIDIM_ELEM(*this,n);
+
+        // Sort indexes
+        double* temp_array = MULTIDIM_ARRAY(temp)-1;
+        qcksrt(MULTIDIM_SIZE(*this), temp_array);
+
+        // Get median
+        if (MULTIDIM_SIZE(*this)%2==0)
+            return 0.5*(DIRECT_MULTIDIM_ELEM(*this,MULTIDIM_SIZE(*this)/2-1)+
+                        DIRECT_MULTIDIM_ELEM(*this,MULTIDIM_SIZE(*this)/2  ));
+        else
+            return DIRECT_MULTIDIM_ELEM(*this,MULTIDIM_SIZE(*this)/2);
+    }
+
     /** Adjust the range of the array to a given one.
      * @ingroup Statistics
      *
