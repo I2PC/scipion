@@ -1165,25 +1165,7 @@ public:
         return header.Flip();
     }
 
-     /** Another function for set scale
-     */
-    void set_scale(float  _Scale)
-    {
-        header.Scale() = _Scale;
-    }
-
-    /** Get flip
-     *
-     * @code
-     * std::cout << "Flip: " << IX.flip() << std::endl;
-     * @endcode
-     */
-    float scale() const
-    {
-        return header.Scale();
-    }
-
-   /** Set angles. (default position)
+    /** Set angles. (default position)
      *
      * @code
      * IX.set_eulerAngles(30, -10, 350);
