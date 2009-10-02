@@ -38,15 +38,14 @@ int main(int argc, char *argv[])
 {
     float           rot, tilt, psi, xshift, yshift;
     int             i, ncol, col_rot = 1, col_tilt = 2, col_psi = 3;
-    int             col_xshift = 4, col_yshift = 5, col_weight = -1, col_mirror = -1,col_scale = -1;
+    int             col_xshift = 4, col_yshift = 5, col_weight = -1, col_mirror = -1;
     float           sign_rot = PLUS, sign_tilt = PLUS, sign_psi = PLUS;
     float           sign_xshift = PLUS, sign_yshift = PLUS;
     int             key_img;
     std::string     root, ext;
     bool            verb, do_weights = false, do_mirrors = false, round_shifts = false;
-    bool            do_scale = false;
     bool            force = false;
-    float           weight, mirror,scale;
+    float           weight, mirror;
     FileName        fn_img, fn_out, fn_tst;
     SelFile         SF;
     DocFile         DF;
@@ -89,7 +88,7 @@ int main(int argc, char *argv[])
 
         }
 
-        // Also assign weights, mirror or scale flags?
+        // Also assign weights or mirror flags?
         ncol = 5;
         do_weights = checkParameter(argc, argv, "-weight");
         if (do_weights)
@@ -101,12 +100,6 @@ int main(int argc, char *argv[])
         if (do_mirrors)
         {
             col_mirror = textToInteger(getParameter(argc, argv, "-mirror", "7"));
-            ncol++;
-        }
-        do_scale = checkParameter(argc, argv, "-scale");
-        if (do_scale)
-        {   
-            col_scale = textToInteger(getParameter(argc, argv, "-scale", "8"));
             ncol++;
         }
 
@@ -157,7 +150,6 @@ int main(int argc, char *argv[])
                 else yshift = DF(ABS(col_yshift) - 1) * sign_yshift;
                 if (do_weights) weight = DF(ABS(col_weight) - 1);
                 if (do_mirrors) mirror = DF(ABS(col_mirror) - 1);
-                if (do_scale)   scale  = DF(ABS(col_scale) - 1);
                 // Take into account the difference due to the pyramid
                 if (levels != 0)
                 {
@@ -175,14 +167,12 @@ int main(int argc, char *argv[])
                 img.set_originOffsets(xshift, yshift);
                 if (do_weights) img.set_weight(weight);
                 if (do_mirrors) img.set_flip(mirror);
-                if (do_scale)   img.set_scale(scale);
                 if (verb)
                 {
                     std::cout << fn_img  << " : rot = " << rot << " tilt = " << tilt
                               << " psi = " << psi << " Xoff = " << xshift << " Yoff = " << yshift;
                     if (do_weights) std::cout << " Weight = " << weight;
                     if (do_mirrors) std::cout << " Mirror = " << DF(ABS(col_mirror) - 1);
-                    if (do_scale)   std::cout << " Scale = "  << DF(ABS(col_scale) - 1);
                     std::cout << std::endl;
                 }
                 img.write(fn_img);
@@ -218,7 +208,6 @@ int main(int argc, char *argv[])
                 else yshift = DF(ABS(col_yshift) - 1) * sign_yshift;
                 if (do_weights) weight = DF(ABS(col_weight) - 1);
                 if (do_mirrors) mirror = DF(ABS(col_mirror) - 1);
-                if (do_scale)    scale = DF(ABS(col_scale) - 1);
                 // Take into account the difference due to the pyramid
                 if (levels != 0)
                 {
@@ -237,14 +226,12 @@ int main(int argc, char *argv[])
                 img.set_originOffsets(xshift, yshift);
                 if (do_weights) img.set_weight(weight);
                 if (do_mirrors) img.set_flip(mirror);
-                if (do_scale)   img.set_scale(scale);
                 if (verb)
                 {
                     std::cout << fn_img  << " : rot = " << rot << " tilt = " << tilt
                               << " psi = " << psi << " Xoff = " << xshift << " Yoff = " << yshift;
                     if (do_weights) std::cout << " Weight = " << weight;
                     if (do_mirrors) std::cout << " Mirror = " << DF(ABS(col_mirror) - 1);
-                    if (do_scale)   std::cout << " Scale =  " << DF(ABS(col_scale) - 1);
                     std::cout << std::endl;
                 }
                 img.write(fn_img);
@@ -277,9 +264,8 @@ void Usage()
            "                           : respective angles and offsets in the docfile\n"
            "                           : Negative column numbers result in a sign change\n"
            "                           : Zero means: leave this entry intact in the images\n");
-    printf("       [-weight <col_w=6>] : Set ML-weights  (from column number col_w) \n");
+    printf("       [-weight <col_w=6>] : Set ML-weights (from column number col_w) \n");
     printf("       [-mirror <col_m=7>] : Set mirror-flag (from column col_m) (0=no-flip; 1=flip)\n");
-    printf("       [-scale  <col_m=8>] : Set scale-flag  (from column col_m)\n");
     printf("       [-round_shifts]     : Round shifts to integers \n");
     printf("       [-levels <n=0>]     : Levels of pyramidal reduction, n=1, 2, ...\n");
     exit(1);
