@@ -511,7 +511,7 @@ void log10(int operand_type1, const FileName &fn_1, const FileName &fn_out)
         ImageXmipp out;
         out.read(fn_1, false, false, true);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
-            out(i, j) = log10(1 + out(i, j));
+            out(i, j) = log10(out(i, j));
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
         if (fn_out=="") out.write(fn_1);
@@ -522,7 +522,7 @@ void log10(int operand_type1, const FileName &fn_1, const FileName &fn_out)
         VolumeXmipp out;
         out.read(fn_1);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-            out(k, i, j) = log10(1 + out(k, i, j));
+            out(k, i, j) = log10(out(k, i, j));
         if (fn_out=="") out.write(fn_1);
         else out.write(fn_out);
     }
