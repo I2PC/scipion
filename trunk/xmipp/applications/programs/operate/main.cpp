@@ -220,7 +220,7 @@ void operate_plus(int operand_type1, int operand_type2, const FileName &fn_1,
         out() = Op1() + out();
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
-        if (fn_out=="") out.write("result.xmp");
+        if (fn_out=="") out.write(fn_1);
         else out.write(fn_out);
     }
     else if (operand_type1 == NUMBER && operand_type2 == VOLUME)
@@ -298,7 +298,7 @@ void operate_minus(int operand_type1, int operand_type2,
         out() = Op1() - out();
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
-        if (fn_out=="") out.write("result.xmp");
+        if (fn_out=="") out.write(fn_1);
         else out.write(fn_out);
     }
     else if (operand_type1 == NUMBER && operand_type2 == VOLUME)
@@ -376,7 +376,7 @@ void multiplication(int operand_type1, int operand_type2,
         multiplyElements(Op1(), out(), out());
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
-        if (fn_out=="") out.write("result.xmp");
+        if (fn_out=="") out.write(fn_1);
         else out.write(fn_out);
     }
     else if (operand_type1 == NUMBER && operand_type2 == VOLUME)
@@ -457,7 +457,7 @@ void division(int operand_type1, int operand_type2,
             out(i, j) = Op1(i, j) / out(i, j);
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
-        if (fn_out=="") out.write("result.xmp");
+        if (fn_out=="") out.write(fn_1);
         else out.write(fn_out);
     }
     else if (operand_type1 == NUMBER && operand_type2 == VOLUME)
@@ -749,9 +749,7 @@ void Usage()
     << " -i xmipp image, selfile or volume. This is the input to the program. \n"
     << "                                    Only image selfiles are allowed\n"
     << "[-o <file>]                         If no output is given, the input\n"
-    << "                                    images are rewritten. In case of\n"
-    << "                                    two input images, or volumes, the\n"
-    << "                                    result is called result.xmp or result.vol\n"
+    << "                                    images are rewritten.\n"
     << "\n"
     << " CURRENTLY SUPPORTED OPERATIONS \n"
     << "================================\n"
