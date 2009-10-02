@@ -1,6 +1,7 @@
 /***************************************************************************
  *
  * Authors:    Carlos Oscar            coss@cnb.uam.es (2000)
+               Roberto Marabini (added fourier option)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -28,6 +29,7 @@
 #include <data/args.h>
 #include <data/selfile.h>
 #include <data/gridding.h>
+#include <data/fftw.h>
 
 void Usage();
 
@@ -41,6 +43,7 @@ int main(int argc, char **argv)
     double          factor=-1;
     bool            gridding;
     bool            linear;
+    bool            fourier;
     Matrix2D< double > A(3, 3), B(4, 4);
     A.initIdentity();
     B.initIdentity();
@@ -65,8 +68,9 @@ int main(int argc, char **argv)
             ydim = textToInteger(getParameter(argc, argv, "-ydim", "0"));
             xdim = textToInteger(getParameter(argc, argv, "-xdim"));
         }
-        gridding = checkParameter(argc, argv, "-gridding");
+        //gridding = checkParameter(argc, argv, "-gridding");
         linear = checkParameter(argc, argv, "-linear");
+        fourier =   checkParameter(argc, argv, "-fourier");
 
         if (ydim == 0) ydim = xdim;
         if (zdim == 0) zdim = xdim;
@@ -91,15 +95,19 @@ int main(int argc, char **argv)
                 xdim=XSIZE(image())*factor;
             }
             
-	    if (gridding)
-	    {
-		KaiserBessel kb;
-		Matrix2D<double> Maux;
-		produceReverseGriddingMatrix2D(image(),Maux,kb);
-		DIRECT_MAT_ELEM(A, 0, 0) = (double) xdim / (double) XSIZE(image());
-		DIRECT_MAT_ELEM(A, 1, 1) = (double) ydim / (double) YSIZE(image());
-		applyGeometryReverseGridding(image(), A, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim);
-	    }
+	    //if (gridding)
+	    //{
+		//KaiserBessel kb;
+		//Matrix2D<double> Maux;
+		//produceReverseGriddingMatrix2D(image(),Maux,kb);
+		//DIRECT_MAT_ELEM(A, 0, 0) = (double) xdim / (double) XSIZE(image());
+		//DIRECT_MAT_ELEM(A, 1, 1) = (double) ydim / (double) YSIZE(image());
+		//applyGeometryReverseGridding(image(), A, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim);
+	    //}
+            if (fourier)
+            {
+                selfScaleToSizeFourier(ydim,xdim,image());
+            }
             else if (linear)
             {
 		image().selfScaleToSize(ydim, xdim);
@@ -169,7 +177,11 @@ int main(int argc, char **argv)
                         ydim=YSIZE(image())*factor;
                         xdim=XSIZE(image())*factor;
                     }
-		    if (gridding)
+        	    if (fourier)
+        	    {
+                	selfScaleToSizeFourier(ydim,xdim,image());
+        	    }
+		    /*if (gridding)
 		    {
 			KaiserBessel kb;
 			Matrix2D<double> Maux;
@@ -177,7 +189,7 @@ int main(int argc, char **argv)
 			DIRECT_MAT_ELEM(A, 0, 0) = (double) xdim / (double) XSIZE(image());
 			DIRECT_MAT_ELEM(A, 1, 1) = (double) ydim / (double) YSIZE(image());
 			applyGeometryReverseGridding(image(), A, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim);
-		    }
+		    }*/
                     else if (linear)
                     {
 			image().selfScaleToSize(ydim, xdim);
@@ -250,7 +262,8 @@ void Usage()
     << "  [-ydim <new y dimension=new x dimension>]\n"
     << "  [-zdim <new z dimension=new x dimension>]\n"
     << "  [-factor <scale factor>]\n"
-    << "  [-gridding]       : Use reverse gridding for interpolation\n"
-    << "  [-linear]         : Use bilinear/trilinear interpolation\n";
+    //<< "  [-gridding]       : Use reverse gridding for interpolation\n"
+    << "  [-linear]         : Use bilinear/trilinear interpolation\n"
+    << "  [-fourier]        : Use padding/windowing in Fourier Space (only for 2D)\n";
     
 }
