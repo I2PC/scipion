@@ -38,6 +38,9 @@
 /** VQProjection class */
 class VQProjection {
 public:
+    // Use correlation instead of correntropy
+    bool useCorrelation;
+
     // Gaussian interpolator
     const GaussianInterpolator *gaussianInterpolator;
 
@@ -153,6 +156,9 @@ public:
     /// Fast
     bool fast;
 
+    /// Use correlation instead of correntropy
+    bool useCorrelation;
+
     /// Maximum number of iterations
     int Niter;
 
@@ -173,7 +179,8 @@ public:
     /// Initialize
     void initialize(SelFile &_SF, int _Niter,  int _Nneighbours,
         double _PminSize, std::vector< Matrix2D<double> > _codes0,
-        int _Ncodes0, bool _noMirror, bool _corrSplit, bool _fast, int rank);
+        int _Ncodes0, bool _noMirror, bool _corrSplit, 
+        bool _useCorrelation, bool _fast, int rank);
     
     /// Write the nodes
     void write(const FileName &fnRoot) const;
@@ -233,6 +240,9 @@ public:
     /// Minimum size of a node
     double PminSize;
     
+    /// Use Correlation instead of Correntropy
+    bool useCorrelation;
+
     /// Fast
     bool fast;
     

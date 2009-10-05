@@ -342,11 +342,20 @@ void VQProjection::fitBasic(Matrix2D<double> &I,
     applyGeometryBSpline(IauxSR,ASR,I,3,IS_NOT_INV,WRAP);
 
     // Compute the correntropy
-    double sigmaPI=sigma*sqrt(1+1.0/currentListImg.size());
-    double corrCodeRS=fastCorrentropy(P,IauxRS,sigmaPI,
-        *gaussianInterpolator,*mask);
-    double corrCodeSR=fastCorrentropy(P,IauxSR,sigmaPI,
-        *gaussianInterpolator,*mask);
+    double corrCodeRS, corrCodeSR;
+    if (useCorrelation)
+    {
+        corrCodeRS=correlation(P,IauxRS,mask);
+        corrCodeSR=correlation(P,IauxSR,mask);
+    }
+    else
+    {
+        double sigmaPI=sigma*sqrt(1+1.0/currentListImg.size());
+        corrCodeRS=fastCorrentropy(P,IauxRS,sigmaPI,
+            *gaussianInterpolator,*mask);
+        corrCodeSR=fastCorrentropy(P,IauxSR,sigmaPI,
+            *gaussianInterpolator,*mask);
+    }
     if (corrCodeRS>corrCodeSR)
     {
         I=IauxRS;
@@ -463,7 +472,8 @@ void VQProjection::lookForNeighbours(const std::vector<VQProjection *> listP,
 //#define DEBUG
 void VQ::initialize(SelFile &_SF, int _Niter, int _Nneighbours,
     double _PminSize, std::vector< Matrix2D<double> > _codes0, int _Ncodes0,
-    bool _noMirror, bool _corrSplit, bool _fast, int rank)
+    bool _noMirror, bool _corrSplit, bool _useCorrelation,
+    bool _fast, int rank)
 {
     // Only "parent" worker prints
     if( rank == 0 )
@@ -476,6 +486,7 @@ void VQ::initialize(SelFile &_SF, int _Niter, int _Nneighbours,
     PminSize=_PminSize;
     noMirror=_noMirror;
     corrSplit=_corrSplit;
+    useCorrelation=_useCorrelation;
     fast=_fast;
     int Ydim, Xdim;
     int mpi_size;
@@ -497,6 +508,7 @@ void VQ::initialize(SelFile &_SF, int _Niter, int _Nneighbours,
         P[q]->mask=&mask;
         P[q]->Pupdate.initZeros(Ydim,Xdim);
         P[q]->Pupdate.setXmippOrigin();
+        P[q]->useCorrelation=useCorrelation;
     }	
 	
     sigma = 0;
@@ -718,7 +730,7 @@ void VQ::initialize(SelFile &_SF, int _Niter, int _Nneighbours,
 #undef DEBUG
 
 /* VQ write --------------------------------------------------------- */
-//#define DEBUG
+#define DEBUG
 void VQ::write(const FileName &fnRoot) const
 {
     int Q=P.size();
@@ -867,7 +879,7 @@ void VQ::updateNonCode(Matrix2D<double> &I, int newnode)
 }
 
 /* Run VQ ------------------------------------------------------------------ */
-//#define DEBUG
+#define DEBUG
 void VQ::run(const FileName &fnOut, int level, int rank)
 {
     int N=SF->ImgNo();
@@ -1124,6 +1136,8 @@ void VQ::run(const FileName &fnOut, int level, int rank)
                 }
                 VQProjection *node1=new VQProjection;
                 VQProjection *node2=new VQProjection;
+                node1->useCorrelation=useCorrelation;
+                node2->useCorrelation=useCorrelation;
                 #ifdef DEBUG
                     if (rank==0) {
                         std::cout << "Node1 address: " << node1 << std::endl;
@@ -1193,7 +1207,7 @@ int VQ::cleanEmptyNodes()
 }
 
 /* Split ------------------------------------------------------------------- */
-//#define DEBUG
+#define DEBUG
 void VQ::splitNode(VQProjection *node,
     VQProjection *&node1, VQProjection *&node2, int rank, std::vector<int> &finalAssignment) const
 {
@@ -1560,9 +1574,11 @@ void VQ::splitNode(VQProjection *node,
             #endif
             delete node1;
             node1=new VQProjection();
+            node1->useCorrelation=useCorrelation;
             toDelete.push_back(node2);
             node=node2;
             node2=new VQProjection();
+            node2->useCorrelation=useCorrelation;
             #ifdef DEBUG
                 if (rank==0)
                     std::cout << "New node1= " << node1 << std::endl
@@ -1580,9 +1596,11 @@ void VQ::splitNode(VQProjection *node,
             #endif
             delete node2;
             node2=new VQProjection();
+            node2->useCorrelation=useCorrelation;
             toDelete.push_back(node1);
             node=node1;
             node1=new VQProjection();
+            node1->useCorrelation=useCorrelation;
             #ifdef DEBUG
                 if (rank==0)
                     std::cout << "New node2= " << node2 << std::endl
@@ -1613,6 +1631,8 @@ void VQ::splitFirstNode(int rank) {
     int Q=P.size();
     P.push_back(new VQProjection());
     P.push_back(new VQProjection());
+    P[Q]->useCorrelation=useCorrelation;
+    P[Q+1]->useCorrelation=useCorrelation;
     std::vector<int> finalAssignment;
     splitNode(P[0],P[Q],P[Q+1],rank, finalAssignment);
     delete P[0];
@@ -1634,21 +1654,23 @@ void Prog_VQ_prm::read(int argc, char** argv)
     noMirror=checkParameter(argc,argv,"-no_mirror");
     corrSplit=checkParameter(argc,argv,"-corr_split");
     fast=checkParameter(argc,argv,"-fast");
+    useCorrelation=checkParameter(argc,argv,"-useCorrelation");
 }
 
 void Prog_VQ_prm::show() const
 {
-    std::cout << "Input images:      " << fnSel         << std::endl
-              << "Output images:     " << fnOut         << std::endl
-              << "Iterations:        " << Niter         << std::endl
-              << "CodesSel0:         " << fnCodes0      << std::endl
-              << "Codes0:            " << Ncodes0       << std::endl
-              << "Codes:             " << Ncodes        << std::endl
-              << "Neighbours:        " << Nneighbours   << std::endl
-              << "Minimum node size: " << PminSize      << std::endl
-              << "No mirror:         " << noMirror      << std::endl
-              << "Corr Split:        " << corrSplit     << std::endl
-              << "Fast:              " << fast          << std::endl;
+    std::cout << "Input images:      " << fnSel          << std::endl
+              << "Output images:     " << fnOut          << std::endl
+              << "Iterations:        " << Niter          << std::endl
+              << "CodesSel0:         " << fnCodes0       << std::endl
+              << "Codes0:            " << Ncodes0        << std::endl
+              << "Codes:             " << Ncodes         << std::endl
+              << "Neighbours:        " << Nneighbours    << std::endl
+              << "Minimum node size: " << PminSize       << std::endl
+              << "No mirror:         " << noMirror       << std::endl
+              << "Corr Split:        " << corrSplit      << std::endl
+              << "Fast:              " << fast           << std::endl
+              << "Use Correlation:   " << useCorrelation << std::endl;
 }
     
 void Prog_VQ_prm::usage() const
@@ -1666,6 +1688,7 @@ void Prog_VQ_prm::usage() const
               << "   [-no_mirror]          : Do not check mirrors\n"
               << "   [-corr_split]         : Correlation split\n"
               << "   [-fast]               : Fast calculations, suboptimal\n"
+              << "   [-useCorrelation]     : Instead of correntropy\n"
     ;
 }
     
@@ -1686,7 +1709,8 @@ void Prog_VQ_prm::produce_side_info(int rank)
         Ncodes0=codes0.size();
     }
     vq.initialize(SF,Niter,Nneighbours,PminSize,
-        codes0,Ncodes0,noMirror,corrSplit,fast,rank);
+        codes0,Ncodes0,noMirror,corrSplit,useCorrelation,
+        fast,rank);
 }
 
 void Prog_VQ_prm::run(int rank)
