@@ -150,7 +150,7 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     
     // Dynamic resolution change for multi-resolution version
     max_resol = textToFloat(getParameter(argc2, argv2, "-max_resol", "0.5"));
-    ini_resol = textToFloat(getParameter(argc2, argv2, "-ini_resol", "0.5"));
+    ini_resol = textToFloat(getParameter(argc2, argv2, "-ini_resol", "0.1"));
     step_resol = textToFloat(getParameter(argc2, argv2, "-step_resol", "-1"));
     do_frc = checkParameter(argc2, argv2, "-frc");
     do_multires = checkParameter(argc2, argv2, "-multires");
