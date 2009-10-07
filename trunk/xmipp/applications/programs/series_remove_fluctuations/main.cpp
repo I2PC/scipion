@@ -23,11 +23,11 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <data/detect_missing_wedge.h>
+#include <data/series_remove_fluctuations.h>
 
 int main(int argc, char **argv)
 {
-    DetectMissingWedge_parameters prm;
+    Series_remove_fluctuations_parameters prm;
     try
     {
         prm.read(argc,argv);
