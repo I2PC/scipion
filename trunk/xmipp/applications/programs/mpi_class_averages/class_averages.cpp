@@ -730,7 +730,7 @@ void VQ::initialize(SelFile &_SF, int _Niter, int _Nneighbours,
 #undef DEBUG
 
 /* VQ write --------------------------------------------------------- */
-#define DEBUG
+//#define DEBUG
 void VQ::write(const FileName &fnRoot) const
 {
     int Q=P.size();
@@ -879,7 +879,7 @@ void VQ::updateNonCode(Matrix2D<double> &I, int newnode)
 }
 
 /* Run VQ ------------------------------------------------------------------ */
-#define DEBUG
+//#define DEBUG
 void VQ::run(const FileName &fnOut, int level, int rank)
 {
     int N=SF->ImgNo();
@@ -913,12 +913,10 @@ void VQ::run(const FileName &fnOut, int level, int rank)
 	{
 		std::cout << "Iteration " << n << " ...\n";
 		std::cerr << "Iteration " << n << " ...\n";
-                #ifdef DEBUG
-        	    for (int q=0; q<Q; q++)
-        	        std::cout << "Before q=" << q
-                                  << " Nq=" << P[q]->currentListImg.size()
-                                  << std::endl;
-                #endif
+        	for (int q=0; q<Q; q++)
+        	    std::cout << "Before q=" << q
+                              << " Nq=" << P[q]->currentListImg.size()
+                              << std::endl;
        		#ifndef DEBUG
             		init_progress_bar(N);
         	#endif
@@ -1073,17 +1071,15 @@ void VQ::run(const FileName &fnOut, int level, int rank)
 
         transferUpdates();
 	
-        #ifdef DEBUG
-	    if( rank == 0 )
-	    {
-        	    for (int q=0; q<Q; q++)
-                    {
-        	        std::cout << "After q=" << q << " Nq="
-                                  << P[q]->currentListImg.size()
-                                  << std::endl;
-                    }
-	    }
-        #endif
+	if( rank == 0 )
+	{
+        	for (int q=0; q<Q; q++)
+                {
+        	    std::cout << "After q=" << q << " Nq="
+                              << P[q]->currentListImg.size()
+                              << std::endl;
+                }
+	}
 	
         // Check if there are empty nodes
         bool smallNodes;
@@ -1107,11 +1103,9 @@ void VQ::run(const FileName &fnOut, int level, int rank)
             }
             if (sizeSmallestNode<PminSize*N/Q*0.01 )
             {
-                #ifdef DEBUG
-                    if (rank==0)
-                        std::cout << "Splitting node " << largestNode
-                                  << " by overwriting " << smallNode << std::endl;
-                #endif
+                if (rank==0)
+                    std::cout << "Splitting node " << largestNode
+                              << " by overwriting " << smallNode << std::endl;
                 smallNodes=true;
                 
                 // Clear the old assignment of the images in the small node
@@ -1128,7 +1122,6 @@ void VQ::run(const FileName &fnOut, int level, int rank)
                 // Now split the largest node
                 if (rank==0)
                 {
-                    std::cout << "Splitting node " << largestNode << std::endl;
                     #ifdef DEBUG
                         std::cout << "Largest node address: " << P[largestNode] << std::endl;
                         std::cout << "Small node address: " << P[smallNode] << std::endl;
@@ -1159,8 +1152,6 @@ void VQ::run(const FileName &fnOut, int level, int rank)
                 
                 for (int i=0; i<toReassign.size(); i++)
                 {
-                    ImageXmipp I;
-		    
 		    newAssignment(toReassign[i]) = -1;
 		    
 		    for( int j=0; j<finalAssignment.size(); j+=2)
@@ -1174,6 +1165,44 @@ void VQ::run(const FileName &fnOut, int level, int rank)
 			     break;
 			}
 		    }
+                    
+                    // If not assigned yet, reassign it to any of the two
+                    // outcoming nodes
+                    if (newAssignment(toReassign[i])==-1)
+                    {
+                        ImageXmipp I;
+                        I.read(SFv[toReassign[i]]);
+                        I().setXmippOrigin();
+                    
+                	Matrix2D<double> Iaux1;
+                	Iaux1=I();
+                	double corrCode1, likelihood1;
+                	P[largestNode]->fit(Iaux1, sigma, noMirror,
+                            corrCode1, likelihood1);
+
+                	Matrix2D<double> Iaux2;
+                	Iaux2=I();
+                	double corrCode2, likelihood2;
+                	P[smallNode]->fit(Iaux2, sigma, noMirror,
+                            corrCode2, likelihood2);
+
+                	if (likelihood1>likelihood2 && likelihood1>0 ||
+                            likelihood1<0 && likelihood2<0 &&
+                               ABS(likelihood1)>ABS(likelihood2))
+                	{
+                            P[largestNode]->updateProjection(Iaux1,
+                                corrCode1,toReassign[i]);
+                            newAssignment(toReassign[i])=largestNode;
+                            P[smallNode]->updateNonProjection(corrCode2);
+                	}
+                	else
+                	{
+                            P[smallNode]->updateProjection(Iaux2,corrCode2,
+                                toReassign[i]);
+                            newAssignment(toReassign[i])=smallNode;
+                            P[largestNode]->updateNonProjection(corrCode1);
+                	}
+                    }
 		}
             }
         } while (smallNodes);
@@ -1207,7 +1236,7 @@ int VQ::cleanEmptyNodes()
 }
 
 /* Split ------------------------------------------------------------------- */
-#define DEBUG
+//#define DEBUG
 void VQ::splitNode(VQProjection *node,
     VQProjection *&node1, VQProjection *&node2, int rank, std::vector<int> &finalAssignment) const
 {
@@ -1572,7 +1601,7 @@ void VQ::splitNode(VQProjection *node,
                               << PminSize*0.01*imax/2 << "...\n"
                               << "Deleted node1= " << node1 << std::endl;
             #endif
-            delete node1;
+            if (node1!=node) delete node1;
             node1=new VQProjection();
             node1->useCorrelation=useCorrelation;
             toDelete.push_back(node2);
@@ -1594,7 +1623,7 @@ void VQ::splitNode(VQProjection *node,
                           << PminSize*0.01*imax/2 << "...\n"
                           << "Deleted node2= " << node2 << std::endl;
             #endif
-            delete node2;
+            if (node2!=node) delete node2;
             node2=new VQProjection();
             node2->useCorrelation=useCorrelation;
             toDelete.push_back(node1);
@@ -1615,7 +1644,7 @@ void VQ::splitNode(VQProjection *node,
             if (rank==0)
                 std::cout << "Deleting from list= " << toDelete[i] << std::endl;
         #endif
-        delete toDelete[i];
+        if (toDelete[i]!=node) delete toDelete[i];
     }
    
     for (int i=0; i<node->currentListImg.size(); i++)
