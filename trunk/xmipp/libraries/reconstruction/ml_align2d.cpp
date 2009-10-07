@@ -2163,7 +2163,7 @@ double Prog_MLalign2D_prm::calculateResolution(int iter)
                     }
                     else
                     {
-                        is_above_limit=true;
+                        is_above_limit=false;
                     }
                 }
             }
@@ -2191,15 +2191,8 @@ bool Prog_MLalign2D_prm::changeCurrentResolution(double new_resol)
     // Check resolution increase
     change_to_resol = new_resol + step_resol;
     change_to_resol = XMIPP_MIN(max_resol, change_to_resol);
-    if (change_to_resol > curr_resol)
+    if (change_to_resol != curr_resol)
     {
-        change_to_resol = new_resol + step_resol;
-        setCurrentResolution(change_to_resol);
-        return true;
-    }
-    else if (new_resol < curr_resol - step_resol)
-    {
-        change_to_resol = new_resol - step_resol;
         setCurrentResolution(change_to_resol);
         return true;
     }
