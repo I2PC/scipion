@@ -224,6 +224,35 @@ void drawWedge(double rotPos, double tiltPos, double rotNeg, double tiltNeg,
     }
 }
 
+// Remove wedge ------------------------------------------------------------
+void MissingWedge::removeWedge(Matrix3D<double> &V) const
+{
+    Matrix2D<double> Epos, Eneg;
+    Euler_angles2matrix(rotPos,tiltPos,0,Epos);
+    Euler_angles2matrix(rotNeg,tiltNeg,0,Eneg);
+    
+    Matrix1D<double> freq(3), freqPos, freqNeg;
+    Matrix1D<int> idx(3);
+
+    XmippFftw transformer;
+    Matrix3D< std::complex<double> > Vfft;
+    transformer.FourierTransform(V,Vfft,false);
+
+    FOR_ALL_ELEMENTS_IN_MATRIX3D(Vfft)
+    {
+        // Frequency in the coordinate system of the volume
+        VECTOR_R3(idx,j,i,k);
+        FFT_idx2digfreq(V,idx,freq);
+
+        // Frequency in the coordinate system of the plane
+        freqPos=Epos*freq;
+        freqNeg=Eneg*freq;
+        if (ZZ(freqPos)<0 || ZZ(freqNeg)>0)
+            Vfft(k,i,j)=0;
+    }
+    transformer.inverseFourierTransform();
+}
+
 // Read from command line --------------------------------------------------
 void DetectMissingWedge_parameters::read(int argc, char **argv)
 {

@@ -34,6 +34,24 @@
 
 /// Parameters for the program detecting the missing wedge
 /// @ingroup DetectMissingWedge
+class MissingWedge
+{
+public:
+    /// Rot of the positive plane
+    double rotPos;
+    /// Tilt of the positive plane
+    double tiltPos;
+    /// Rot of the negative plane
+    double rotNeg;
+    /// Tilt of the negative plane
+    double tiltNeg;
+public:
+    /// Remove wedge
+    void removeWedge(Matrix3D<double> &V) const;
+};
+
+/// Parameters for the program detecting the missing wedge
+/// @ingroup DetectMissingWedge
 class DetectMissingWedge_parameters
 {
 public:
