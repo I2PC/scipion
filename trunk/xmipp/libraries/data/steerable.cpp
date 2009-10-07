@@ -33,8 +33,9 @@
 
 // Constructor -------------------------------------------------------------
 Steerable::Steerable(double sigma, Matrix3D<double> &Vtomograph, 
-    double deltaAng, const std::string &filterType) 
-{    
+    double deltaAng, const std::string &filterType, const MissingWedge *_MW) 
+{
+    MW=_MW;
     buildBasis(Vtomograph,sigma);
  
     // Choose a,b,c parameters as a function of the filterType
@@ -177,7 +178,11 @@ void Steerable::singleFilter(const Matrix3D<double>& Vin,
             InverseFourierTransform(Aux,aux);
             for (int k=0; k<ZSIZE(Vin); k++)
                 DIRECT_VOL_ELEM(Vout,k,i,j)=XSIZE(Aux)*DIRECT_VEC_ELEM(aux,k);
-        }        
+        }
+    
+    // If Missing wedge
+    if (MW!=NULL)
+        MW->removeWedge(Vout);
 }
 
 /* Filter generation ------------------------------------------------------- */
@@ -267,20 +272,35 @@ void Prog_Detect_Structures_Param::read(int argc, char **argv)
     if (sigmaF<0) sigmaF=sigma0;
     if (sigmaStep<0) sigmaStep=1;
     removeBackground=checkParameter(argc,argv,"-removeBackground");
+    removeMissingWedge=checkParameter(argc,argv,"-missing");
+    if (removeMissingWedge)
+    {
+        int i=paremeterPosition(argc, argv, "-missing");
+        if (i+4 >= argc)
+            REPORT_ERROR(1, "Not enough parameters behind -missing");
+        rot1  = textToFloat(argv[i+1]);
+        tilt1 = textToFloat(argv[i+2]);
+        rot2  = textToFloat(argv[i+3]);
+        tilt2 = textToFloat(argv[i+4]);
+    }
 }
 
 void Prog_Detect_Structures_Param::show() const
 {
     std::cout
-        << "Input volume:      " << fnIn             << std::endl
-        << "Output rootname:   " << fnOut            << std::endl
-        << "Filter type:       " << filterType       << std::endl
-        << "Sigma0:            " << sigma0           << std::endl
-        << "SigmaF:            " << sigmaF           << std::endl
-        << "SigmaStep:         " << sigmaStep        << std::endl
-        << "AngStep:           " << angStep          << std::endl
-        << "Remove Background: " << removeBackground << std::endl
+        << "Input volume:         " << fnIn               << std::endl
+        << "Output rootname:      " << fnOut              << std::endl
+        << "Filter type:          " << filterType         << std::endl
+        << "Sigma0:               " << sigma0             << std::endl
+        << "SigmaF:               " << sigmaF             << std::endl
+        << "SigmaStep:            " << sigmaStep          << std::endl
+        << "AngStep:              " << angStep            << std::endl
+        << "Remove Background:    " << removeBackground   << std::endl
+        << "Remove Missing Wedge: " << removeMissingWedge << std::endl
     ;
+    if (removeMissingWedge)
+        std::cout << "Plane 1: " << rot1 << " " << tilt1 << std::endl
+                  << "Plane 2: " << rot2 << " " << tilt2 << std::endl;
 }
 
 void Prog_Detect_Structures_Param::usage() const
@@ -294,6 +314,7 @@ void Prog_Detect_Structures_Param::usage() const
         << "   [-sigmaStep <s=-1>]  : Width step\n"
         << "   [-angStep <ang=5>]   : Angular step\n"
         << "   [-removeBackground]  : Remove background\n"
+        << "   [-missing <rot1> <tilt1> <rot2> <tilt2>] : Remove missing wedge\n"
     ;
 }
 
@@ -305,7 +326,17 @@ void Prog_Detect_Structures_Param::run()
     {
         std::cout << "Filtering with sigma=" << sigma << std::endl;
         Vaux()=Vin();
-        Steerable *filter=new Steerable(sigma,Vaux(),angStep,filterType);
+        MissingWedge *MW=NULL;
+        if (removeMissingWedge)
+        {
+            MW=new MissingWedge();
+            MW->rotPos=rot1;
+            MW->tiltPos=tilt1;
+            MW->rotNeg=rot2;
+            MW->tiltNeg=tilt2;
+        }
+        
+        Steerable *filter=new Steerable(sigma,Vaux(),angStep,filterType,MW);
         
         // Compute energy percentage
         double totalEnergy=Vaux().sum2();

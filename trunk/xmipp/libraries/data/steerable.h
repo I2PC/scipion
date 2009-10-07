@@ -28,6 +28,7 @@
 #define STEERABLE_H
 
 #include "matrix3d.h"
+#include "detect_missing_wedge.h"
 #include <vector>
 
 /// @defgroup Steerable Steerable filters
@@ -41,6 +42,8 @@ public:
     // Basis functions for the steerability
     std::vector< Matrix3D<double> > basis;
 
+    // Missing wedge
+    const MissingWedge *MW;
 public:
     /** Constructor.
        Sigma controls the width of the filter,
@@ -48,7 +51,8 @@ public:
        Vtomograph is the volume to filter.
        filterType is wall or filament. */
     Steerable(double sigma, Matrix3D<double> &Vtomograph, 
-        double deltaAng, const std::string &filterType);
+        double deltaAng, const std::string &filterType,
+        const MissingWedge *_MW);
     
     /** This function is the one really filtering */
     void buildBasis(const Matrix3D<double> &Vtomograph, double sigma);
@@ -98,6 +102,21 @@ public:
 
     /// Remove background
     bool removeBackground;
+    
+    /// Remove missing wedge
+    bool removeMissingWedge;
+
+    /// Plane 1 rot
+    double rot1;
+
+    /// Plane 1 tilt
+    double tilt1;
+
+    /// Plane 2 rot
+    double rot2;
+
+    /// Plane 2 tilt
+    double tilt2;
 public:
     /// Read parameters from command line
     void read(int argc, char **argv);
