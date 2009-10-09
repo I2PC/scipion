@@ -68,10 +68,13 @@ def init_log_system(projectdir,logdir,scriptname,WorkDirectory):
             
 def make_backup_of_script_file(script_file_name,
                                absolute_path_to_working_dir):
-    import shutil,os
+    import shutil,os,re
+    #check is temporal name, i.e. ends with _ddddd.py
+    #where d is a digit 
+    in_file_name=script_file_name
+    script_file_name=re.sub('_\d\d\d\d\d\d.py$','.py',in_file_name)
 
     protocol_name=str(os.path.basename(script_file_name)).replace('.py','')
-    in_file_name=script_file_name
     out_file_name=absolute_path_to_working_dir +\
                    '/' + protocol_name + "_backup.py"
     shutil.copy(in_file_name,out_file_name)
