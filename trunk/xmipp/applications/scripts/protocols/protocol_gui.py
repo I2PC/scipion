@@ -859,10 +859,11 @@ class automated_gui_class:
     def GuiLoad(self,event=""):
         import tkFileDialog
         import os,shutil
-        fname = tkFileDialog.askdirectory()       
+
+        fileformats = [('Protocol Scripts ','xmipp_protocol_*_backup.py')]
+        fname = tkFileDialog.askopenfilename(title='Choose a Protocol',filetypes=fileformats)
         if (len(fname)>0):
-            print "* Loading protocol from "+os.path.basename(fname)+" ..."
-            fname=fname+'/'+self.scriptname.replace('.py','')+'_backup.py'
+            print "* Loading protocol " + os.path.basename(fname)+" ..."
             shutil.copy(fname,self.scriptname)
             self.master.destroy()
             self.master=Tk()
