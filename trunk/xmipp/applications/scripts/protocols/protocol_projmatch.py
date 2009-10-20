@@ -189,7 +189,7 @@ OuterRadius=64
     Note that the memory per computing node needs to be given. That is, when using threads, 
     this value will be multiplied automatically by the number of (shared-memory) threads.
 """
-AvailableMemory='2'
+AvailableMemory=2
 
 # Angular sampling rate
 """Angular distance (in degrees) between neighboring projection  points
