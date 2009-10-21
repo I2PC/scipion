@@ -41,6 +41,9 @@ public:
     // Use correlation instead of correntropy
     bool useCorrelation;
 
+    // Classical Multiref
+    bool classicalMultiref;
+    
     // Gaussian interpolator
     const GaussianInterpolator *gaussianInterpolator;
 
@@ -159,6 +162,12 @@ public:
     /// Use correlation instead of correntropy
     bool useCorrelation;
 
+    /// Classical Multiref
+    bool classicalMultiref;
+    
+    /// Align original images
+    bool alignImages;
+    
     /// Maximum number of iterations
     int Niter;
 
@@ -180,10 +189,11 @@ public:
     void initialize(SelFile &_SF, int _Niter,  int _Nneighbours,
         double _PminSize, std::vector< Matrix2D<double> > _codes0,
         int _Ncodes0, bool _noMirror, bool _corrSplit, 
-        bool _useCorrelation, bool _fast, int rank);
+        bool _useCorrelation, bool _classicalMultiref, 
+        bool _alignImages, bool _fast, int rank);
     
     /// Write the nodes
-    void write(const FileName &fnRoot) const;
+    void write(const FileName &fnRoot, bool final=false) const;
 
     /** Look for a node suitable for this image.
         The image is rotationally and translationally aligned with
@@ -243,6 +253,12 @@ public:
     /// Use Correlation instead of Correntropy
     bool useCorrelation;
 
+    /// Classical Multiref
+    bool classicalMultiref;
+    
+    /// Align original images
+    bool alignImages;
+    
     /// Fast
     bool fast;
     
