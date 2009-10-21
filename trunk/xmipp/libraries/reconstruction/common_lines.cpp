@@ -144,6 +144,7 @@ void * threadPrepareImages( void * args )
     mask.resize(Ydim,Xdim);
     mask.setXmippOrigin();
     BinaryCircularMask(mask,Xdim/2, OUTSIDE_MASK);
+    int NInsideMask=XSIZE(mask)*YSIZE(mask)-mask.sum();
 
     FourierMask Filter;
     Filter.w1=-1;
@@ -196,8 +197,16 @@ void * threadPrepareImages( void * args )
             Nsigma++;
 
             // Cut the image outside the largest circle
+            // And compute the DC value inside the mask
+            double meanInside=0;
             FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
                 if (mask(i,j)) I(i,j)=0;
+                else meanInside+=I(i,j);
+            meanInside/=NInsideMask;
+            
+            // Substract the mean inside the circle
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
+                if (!mask(i,j)) I(i,j)-=meanInside;
 
             // Compute the Radon transform
             Matrix2D<double> RT;
