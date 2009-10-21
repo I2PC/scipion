@@ -92,7 +92,9 @@ int main(int argc, char **argv)
     // Obtain command line parameters form the program
     try
     {
-        fn_out  = getParameter(argc, argv, "-o","");
+        fn_out  = getParameter(argc, argv, "-oext","");
+        if (fn_out=="")
+            fn_out  = getParameter(argc, argv, "-o","");
         check_for_operation(argc, argv, "-i", fn_1, operand_type1);
 
         // Check the operations supported
@@ -265,7 +267,12 @@ void operate_plus(int operand_type1, int operand_type2, const FileName &fn_1,
         int i=0;
         while (!SF.eof())
         {
-            operate_plus(IMAGE, operand_type2, SF.NextImg(), fn_2, "");
+            FileName fnl_out, fn_img=SF.NextImg();
+            if (fn_out!="")
+                fnl_out = fn_img.without_extension() + "." + fn_out;
+            else
+                fnl_out="";
+            operate_plus(IMAGE, operand_type2, fn_img, fn_2, fnl_out);
             if ((i++ % 50) ==0) progress_bar(i);
         }
         progress_bar(SF.ImgNo());
@@ -343,7 +350,12 @@ void operate_minus(int operand_type1, int operand_type2,
         int i=0;
         while (!SF.eof())
         {
-            operate_minus(IMAGE, operand_type2, SF.NextImg(), fn_2, "");
+            FileName fnl_out, fn_img=SF.NextImg();
+            if (fn_out!="")
+                fnl_out = fn_img.without_extension() + "." + fn_out;
+            else
+                fnl_out="";
+            operate_minus(IMAGE, operand_type2, fn_img, fn_2, fnl_out);
             if ((i++ % 50) ==0) progress_bar(i);
         }
         progress_bar(SF.ImgNo());
@@ -422,7 +434,12 @@ void multiplication(int operand_type1, int operand_type2,
         int i=0;
         while (!SF.eof())
         {
-            multiplication(IMAGE, operand_type2, SF.NextImg(), fn_2, "");
+            FileName fnl_out, fn_img=SF.NextImg();
+            if (fn_out!="")
+                fnl_out = fn_img.without_extension() + "." + fn_out;
+            else
+                fnl_out="";
+            multiplication(IMAGE, operand_type2, fn_img, fn_2, fnl_out);
             if ((i++ % 50) ==0) progress_bar(i);
         }
         progress_bar(SF.ImgNo());
@@ -504,7 +521,12 @@ void division(int operand_type1, int operand_type2,
         int i=0;
         while (!SF.eof())
         {
-            division(IMAGE, operand_type2, SF.NextImg(), fn_2, "");
+            FileName fnl_out, fn_img=SF.NextImg();
+            if (fn_out!="")
+                fnl_out = fn_img.without_extension() + "." + fn_out;
+            else
+                fnl_out="";
+            division(IMAGE, operand_type2, fn_img, fn_2, fnl_out);
             if ((i++ % 50) ==0) progress_bar(i);
         }
         progress_bar(SF.ImgNo());
@@ -541,7 +563,12 @@ void log10(int operand_type1, const FileName &fn_1, const FileName &fn_out)
         int i=0;
         while (!SF.eof())
         {
-            log10(IMAGE, SF.NextImg(), "");
+            FileName fnl_out, fn_img=SF.NextImg();
+            if (fn_out!="")
+                fnl_out = fn_img.without_extension() + "." + fn_out;
+            else
+                fnl_out="";
+            log10(IMAGE, fn_img, fnl_out);
             if ((i++ % 50) ==0) progress_bar(i);
         }
         progress_bar(SF.ImgNo());
@@ -645,7 +672,12 @@ void forcePositive(int operand_type1, const FileName &fn_1,
         int i=0;
         while (!SF.eof())
         {
-            forcePositive(IMAGE, SF.NextImg(), "");
+            FileName fnl_out, fn_img=SF.NextImg();
+            if (fn_out!="")
+                fnl_out = fn_img.without_extension() + "." + fn_out;
+            else
+                fnl_out="";
+            forcePositive(IMAGE, fn_img, fnl_out);
             if ((i++ % 50) ==0) progress_bar(i);
         }
         progress_bar(SF.ImgNo());
@@ -682,7 +714,12 @@ void sqrt(int operand_type1, const FileName &fn_1, const FileName &fn_out)
         int i=0;
         while (!SF.eof())
         {
-            sqrt(IMAGE, SF.NextImg(), "");
+            FileName fnl_out, fn_img=SF.NextImg();
+            if (fn_out!="")
+                fnl_out = fn_img.without_extension() + "." + fn_out;
+            else
+                fnl_out="";
+            sqrt(IMAGE, fn_img, fnl_out);
             if ((i++ % 50) ==0) progress_bar(i);
         }
         progress_bar(SF.ImgNo());
@@ -859,7 +896,7 @@ void Usage()
     << " Parameters:\n"
     << " -i xmipp image, selfile or volume. This is the input to the program. \n"
     << "                                    Only image selfiles are allowed\n"
-    << "[-o <file>]                         If no output is given, the input\n"
+    << "[-o <file> / -oext <extension>]     If no output is given, the input\n"
     << "                                    images are rewritten.\n"
     << "\n"
     << " CURRENTLY SUPPORTED OPERATIONS \n"
